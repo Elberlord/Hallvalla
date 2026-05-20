@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HallValla Online 0.1</title>
+<title>HallValla Online 0.2</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -168,8 +168,8 @@ button{font-family:inherit}
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>HallValla Online 0.1</h1>
-    <p>Primera mesa conectada: crea una partida o únete con código. Cada jugador ve solo su propia mano. El tablero se comparte en Firebase.</p>
+    <h1>HallValla Online 0.2</h1>
+    <p>Mesa conectada con autoavance inteligente: si no quedan jugadas legales, el sistema pasa de fase o turno automáticamente.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -215,7 +215,7 @@ button{font-family:inherit}
   <div class="scenery"><div class="sun"></div><div class="path"></div><div class="pyramid py1"></div><div class="pyramid py2"></div><div class="palm p1a"></div><div class="palm p1b"></div><div class="palm p2a"></div><div class="palm p2b"></div></div>
   <div class="hud top-left"><div class="hud-name p1">Jugador 1 <span id="p1Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">20</strong></div><div class="hud-mini">Recurso<strong id="p1Res">0</strong></div><div class="hud-mini">Mazo<strong id="p1Deck">0</strong></div><div class="hud-mini">Mano<strong id="p1Hand">0</strong></div></div></div>
   <div class="hud top-right"><div class="hud-name p2">Jugador 2 <span id="p2Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">20</strong></div><div class="hud-mini">Recurso<strong id="p2Res">0</strong></div><div class="hud-mini">Mazo<strong id="p2Deck">0</strong></div><div class="hud-mini">Mano<strong id="p2Hand">0</strong></div></div></div>
-  <div class="phase-banner" id="phaseBanner">ONLINE</div>
+  <div class="phase-banner" id="phaseBanner">ONLINE</div><div class="auto-advance-toast" id="autoAdvanceToast"></div>
   <div class="grid-wrap"><div class="grid" id="grid"></div></div>
   <aside class="side">
     <div class="panel"><div class="icon-bar"><button class="icon-btn" id="copyCodeBtn" title="Copiar código">🔗</button><button class="icon-btn" id="openHandBtn" title="Abrir mano">🃏</button><button class="icon-btn" id="cancelBtn" title="Cancelar">✖</button><button class="icon-btn primary" id="phaseBtn" title="Pasar fase">▶</button></div><div class="hint" id="hint">Esperando partida...</div></div>
@@ -268,6 +268,8 @@ const cardPool=[
 let uid=null, gameId=null, myPlayer=null;
 let publicState=null, privateState=null;
 let handOpen=false, selectedCard=null, selectedUnitId=null, highlights=[], highlightType="summon", summonDisplay=null, manualDrag=null;
+let autoAdvanceTimer=null;
+let autoAdvanceLock=false;
 let publicUnsub=null, privateUnsub=null;
 
 const $=id=>document.getElementById(id);
@@ -290,7 +292,7 @@ signInAnonymously(auth).catch(e=>setLobby("Error de auth: "+e.message));
 $("createGameBtn").addEventListener("click",createGame);
 $("joinGameBtn").addEventListener("click",()=>joinGame(normalizeCode($("joinCodeInput").value)));
 $("copyCodeBtn").addEventListener("click",()=>{if(gameId) navigator.clipboard?.writeText(gameId); setHint("Código copiado: "+gameId)});
-$("openHandBtn").addEventListener("click",()=>{if(!isMyTurn())return setHint("No es tu turno."); if(publicState?.phase!=="prep")return setHint("La mano solo se abre en fase de casteo."); handOpen=!handOpen;render()});
+$("openHandBtn").addEventListener("click",()=>{cancelAutoAdvance();if(!isMyTurn())return setHint("No es tu turno."); if(publicState?.phase!=="prep")return setHint("La mano solo se abre en fase de casteo."); handOpen=!handOpen;render()});
 $("closeHandBtn").addEventListener("click",()=>{handOpen=false;render()});
 $("cancelBtn").addEventListener("click",clearSelection);
 $("phaseBtn").addEventListener("click",phaseButton);
@@ -365,9 +367,114 @@ async function maybeStartMyTurn(){
  await pushLog(`Jugador ${myPlayer} inicia turno: +1 recurso y roba 2.`);
 }
 
+
+function showAutoToast(text){
+  const el=$("autoAdvanceToast");
+  if(!el) return;
+  el.textContent=text;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),1600);
+}
+function getPlayableCards(){
+  if(!privateState || !publicState) return [];
+  const hand=privateState.hand||[];
+  const res=privateState.res||0;
+  return hand.filter(card=>{
+    if(card.cost>res) return false;
+    if(card.spell==="buffAtk"){
+      return (publicState.units||[]).some(u=>u.owner===myPlayer);
+    }
+    if(card.spell==="damage1"){
+      return (publicState.units||[]).some(u=>u.owner!==myPlayer);
+    }
+    if(!card.spell){
+      if(privateState.summoned) return false;
+      return summonZones(myPlayer).length>0;
+    }
+    return false;
+  });
+}
+function playerUnits(player){
+  return (publicState?.units||[]).filter(u=>u.owner===player);
+}
+function unitHasMove(u){
+  return moveZones(u).length>0;
+}
+function unitHasAttack(u){
+  return attackZones(u).length>0;
+}
+function hasBattleActions(){
+  return playerUnits(myPlayer).some(u=>{
+    const canMove=!u.moved && unitHasMove(u);
+    const canAttack=!u.acted && unitHasAttack(u);
+    return canMove || canAttack;
+  });
+}
+function hasCasteoActions(){
+  return getPlayableCards().length>0;
+}
+function canUseBattleTechniqueBeforeEnd(){
+  // Por ahora las técnicas solo se juegan en fase de casteo.
+  // Esta función queda separada para cuando permitamos magias rápidas en batalla.
+  return false;
+}
+function scheduleAutoAdvance(reason, action){
+  if(autoAdvanceTimer || autoAdvanceLock) return;
+  autoAdvanceLock=true;
+  showAutoToast(reason);
+  setHint(reason);
+  autoAdvanceTimer=setTimeout(async()=>{
+    autoAdvanceTimer=null;
+    try{
+      await action();
+    }finally{
+      setTimeout(()=>{autoAdvanceLock=false},350);
+    }
+  },1200);
+}
+function cancelAutoAdvance(){
+  if(autoAdvanceTimer){
+    clearTimeout(autoAdvanceTimer);
+    autoAdvanceTimer=null;
+  }
+  autoAdvanceLock=false;
+}
+async function checkAutoAdvance(){
+  if(!publicState || !privateState || !isMyTurn() || autoAdvanceLock) return;
+  if(publicState.phase==="prep"){
+    // Espera a que el jugador haya visto su turno y no haya selección activa.
+    if(selectedCard || selectedUnitId || handOpen) return;
+    if(!hasCasteoActions()){
+      scheduleAutoAdvance("Sin cartas, maná u objetivos jugables. Pasando a fase de batalla...", async()=>{
+        if(isMyTurn() && publicState?.phase==="prep" && !hasCasteoActions()){
+          await update(ref(db,`games/${gameId}/public`),{phase:"action"});
+          await pushLog(`J${myPlayer} no tiene jugadas de casteo. Pasa automáticamente a batalla.`);
+        }
+      });
+    }
+  }else if(publicState.phase==="action"){
+    if(selectedCard || selectedUnitId) return;
+    if(!hasBattleActions() && !canUseBattleTechniqueBeforeEnd()){
+      scheduleAutoAdvance("Sin movimientos ni ataques disponibles. Terminando turno...", async()=>{
+        if(isMyTurn() && publicState?.phase==="action" && !hasBattleActions()){
+          await endMyTurnAuto();
+        }
+      });
+    }
+  }
+}
+async function endMyTurnAuto(){
+  const next=myPlayer===1?2:1;
+  const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
+  await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"prep",turn,turnKey:`${turn}-${next}`});
+  clearSelection();
+  await pushLog(`Turno de J${myPlayer} termina automáticamente. Ahora juega J${next}.`);
+}
+
 function render(){
  if(!publicState)return;
  renderHud(); renderBoard(); renderSide(); renderHand(); renderLog();
+ setTimeout(checkAutoAdvance,120);
 }
 function renderHud(){
  [1,2].forEach(p=>{
@@ -406,8 +513,8 @@ function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxH
 function showInspector(title,sub,stats,desc,art,icon,actions,bind){$("inspectTitle").textContent=title;$("inspectSub").textContent=sub;$("inspectStats").innerHTML=stats.map(s=>`<div class="inspect-stat">${s.label}<strong>${s.value}</strong></div>`).join("");$("inspectDesc").innerHTML=desc;$("inspectActions").innerHTML=actions;const a=$("inspectArt");if(art){a.textContent="";a.style.background="none";a.style.backgroundImage=`url('${art}')`;a.style.backgroundSize="cover";a.style.backgroundPosition="center top"}else{a.style.backgroundImage="";a.style.background="linear-gradient(180deg,rgba(214,168,93,.96),rgba(90,57,24,.96))";a.textContent=icon||"⚔️"}$("inspectOverlay").classList.add("show");bind?.()}
 function closeInspector(){$("inspectOverlay").classList.remove("show")}
 
-function selectCard(id){if(!isMyTurn()||publicState.phase!=="prep")return setHint("No puedes jugar carta ahora.");const card=(privateState.hand||[]).find(c=>c.id===id);if(!card)return;if(card.cost>(privateState.res||0)){setHint("No tienes recurso suficiente.");return}selectedCard=card;selectedUnitId=null;if(card.spell==="buffAtk"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint("Elige una unidad aliada.")}else if(card.spell==="damage1"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige una unidad enemiga.")}else{if(privateState.summoned)return setHint("Ya convocaste este turno.");highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla verde junto a tu líder.")}render()}
-function selectUnit(u){if(!isMyTurn()||publicState.phase!=="action"){showUnitInspector(u);return}if(u.owner!==myPlayer)return setHint("Solo tus unidades.");selectedUnitId=u.id;selectedCard=null;highlights=[...moveZones(u),...attackZones(u)];highlightType="move";setHint("Verde: mover. Rojo: atacar.");render()}
+function selectCard(id){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="prep")return setHint("No puedes jugar carta ahora.");const card=(privateState.hand||[]).find(c=>c.id===id);if(!card)return;if(card.cost>(privateState.res||0)){setHint("No tienes recurso suficiente.");return}selectedCard=card;selectedUnitId=null;if(card.spell==="buffAtk"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint("Elige una unidad aliada.")}else if(card.spell==="damage1"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige una unidad enemiga.")}else{if(privateState.summoned)return setHint("Ya convocaste este turno.");highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla verde junto a tu líder.")}render()}
+function selectUnit(u){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="action"){showUnitInspector(u);return}if(u.owner!==myPlayer)return setHint("Solo tus unidades.");selectedUnitId=u.id;selectedCard=null;highlights=[...moveZones(u),...attackZones(u)];highlightType="move";setHint("Verde: mover. Rojo: atacar.");render()}
 function clearSelection(){selectedCard=null;selectedUnitId=null;highlights=[];summonDisplay=null;setHint("Selección cancelada.");render()}
 async function cellClick(x,y){
  if(!publicState||!isMyTurn()){const u=getUnitAt(x,y); if(u)showUnitInspector(u); return}
@@ -429,7 +536,7 @@ async function combat(a,d){const units=(publicState.units||[]).map(u=>u.id===a.i
 function showCombat(a,d){$("combatLeftName").textContent=a.name;$("combatRightName").textContent=d.name;$("combatLeftStats").textContent=`HP ${a.hp} · AT ${effectiveAtk(a)}`;$("combatRightStats").textContent=`HP ${d.hp} · AT ${effectiveAtk(d)}`; $("combatLeftArt").style.backgroundImage=a.leader?`url('${leaderPortrait({...a,pose:"attack"})}')`:"";$("combatLeftArt").style.background=a.leader?"":genericPortrait(a);$("combatRightArt").style.backgroundImage=d.leader?`url('${leaderPortrait(d)}')`:"";$("combatRightArt").style.background=d.leader?"":genericPortrait(d);$("combatOverlay").classList.add("show")}
 async function updatePublicUnits(units){await update(ref(db,`games/${gameId}/public`),{units})}
 async function cleanupAndUpdate(units){const live=[];for(const u of units){if(u.hp<=0){await pushLog(`${u.name} cae.`)}else live.push(u)}await updatePublicUnits(live)}
-async function phaseButton(){if(!isMyTurn())return setHint("No es tu turno.");if(publicState.phase==="prep"){await update(ref(db,`games/${gameId}/public`),{phase:"action"});clearSelection();await pushLog(`J${myPlayer} entra en fase de batalla.`)}else{const next=myPlayer===1?2:1;const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"prep",turn,turnKey:`${turn}-${next}`});clearSelection();await pushLog(`Fin de turno. Ahora juega J${next}.`)}}
+async function phaseButton(){cancelAutoAdvance();if(!isMyTurn())return setHint("No es tu turno.");if(publicState.phase==="prep"){await update(ref(db,`games/${gameId}/public`),{phase:"action"});clearSelection();await pushLog(`J${myPlayer} entra en fase de batalla.`)}else{const next=myPlayer===1?2:1;const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"prep",turn,turnKey:`${turn}-${next}`});clearSelection();await pushLog(`Fin de turno. Ahora juega J${next}.`)}}
 
 function setupManualDrag(card,el,e){if(!isMyTurn()||publicState.phase!=="prep")return;let started=false,sx=e.clientX,sy=e.clientY;const move=ev=>{if(!started&&(Math.abs(ev.clientX-sx)>6||Math.abs(ev.clientY-sy)>6)){started=true;startManualDrag(card,el,ev)}};const up=()=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up)};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up,{once:true})}
 function startManualDrag(card,el,e){selectCard(card.id);const ghost=el.cloneNode(true);ghost.classList.add("drag-ghost");ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";document.body.appendChild(ghost);manualDrag={ghost,over:null,moved:false};window.addEventListener("pointermove",manualMove);window.addEventListener("pointerup",manualEnd,{once:true})}
