@@ -1,0 +1,42 @@
+HALLVALLA ONLINE - SIGUIENTE PASO
+
+1. En Firebase:
+   - Crear proyecto.
+   - Registrar app web.
+   - Activar Authentication > Anonymous.
+   - Crear Realtime Database.
+
+2. Copiar firebaseConfig en firebase-config.js.
+
+3. Estructura planeada:
+
+games/
+  GAME_ID/
+    public/
+      currentPlayer
+      phase
+      turn
+      units
+      log
+      playerSlots/
+        player1Uid
+        player2Uid
+
+    private/
+      player1/
+        ownerUid
+        hand
+        deck
+
+      player2/
+        ownerUid
+        hand
+        deck
+
+4. Regla clave:
+   - Lo público lo ven ambos.
+   - La mano de player1 solo la lee player1.
+   - La mano de player2 solo la lee player2.
+
+5. Primero montamos GitHub Pages con index.html.
+6. Luego hacemos HallValla Online 0.1 con crear/unirse a partida.
