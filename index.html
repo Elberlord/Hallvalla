@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.10 - Ciclado básico</title>
+<title>ROK Online 0.11 - Límite de kasteos</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -481,15 +481,15 @@ button{font-family:inherit}
   }
 }
 
-/* ROK 0.10: Paso 3 aplicado.
-   Ciclado básico real: la Fuente entrega elementos al stock elemental. */
+/* ROK 0.11: Paso 4 aplicado.
+   Límite de 3 kasteos de invocación por fase de kasteo. */
 </style>
 </head>
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.10</h1>
-    <p>Paso 3: ciclado básico real. La Fuente entrega elementos al stock elemental.</p>
+    <h1>ROK Online 0.11</h1>
+    <p>Paso 4: límite de 3 kasteos de invocación por fase de kasteo.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -663,7 +663,7 @@ async function createGame(){
    units:[makeLeader(1,4,17),makeLeader(2,4,0)],
    summonDisplay:null, log:["Duelo ROK creado. Esperando Jugador 2."]
  };
- const priv={ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summoned:false,lastTurnStarted:""};
+ const priv={ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summonCount:0,summoned:false,lastTurnStarted:""};
  await set(ref(db,`games/${code}/public`),pub);
  await set(ref(db,`games/${code}/private/player1`),priv);
  await enterGame(code,1);
@@ -682,7 +682,7 @@ async function joinGame(code){
    "playerStats/2":{res:0,deck:source.length,hand:initial.hand.length},
    log:["Jugador 2 se unió.",...(pub.log||[])]
  });
- await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summoned:false,lastTurnStarted:""});
+ await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summonCount:0,summoned:false,lastTurnStarted:""});
  await enterGame(code,2);
 }
 
@@ -728,6 +728,7 @@ async function maybeStartMyTurn(){
    source:extracted.source,
    res,
    cycleCount:cycleCount+1,
+   summonCount:0,
    summoned:false,
    lastTurnStarted:publicState.turnKey
   });
@@ -818,7 +819,7 @@ function getPlayableCards(){
       return (publicState.units||[]).some(u=>u.owner!==myPlayer);
     }
     if(!card.spell){
-      if(privateState.summoned) return false;
+      if((privateState.summonCount||0)>=3) return false;
       return summonZones(myPlayer).length>0;
     }
     return false;
@@ -946,7 +947,7 @@ function renderBoard(){
  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const cell=document.createElement("div");cell.className="cell";cell.dataset.coord=`${x+1},${y+1}`;cell.dataset.x=x;cell.dataset.y=y;const key=`${x},${y}`; if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid"); if(publicState.summonDisplay&&publicState.summonDisplay.x===x&&publicState.summonDisplay.y===y){const d=document.createElement("div");d.className="summon-display";cell.appendChild(d)} const u=getUnitAt(x,y); if(u){if(selectedUnitId===u.id)cell.classList.add("selected");const sh=document.createElement("div");sh.className="field-shadow";cell.appendChild(sh);const card=document.createElement("div");card.className=`field-card ${u.owner===1?"p1card":"p2card"} ${u.leader?"leader":""} ${u.moved?"moved":""}`;const ps=u.leader?`background-image:url('${leaderPortrait(u)}');background-size:cover;background-position:center top;`:`background:${genericPortrait(u)};`;const mark=u.leader?"":`<div class="board-unit-mark">${u.icon||"⚔️"}</div>`;card.innerHTML=`<div class="field-frame"><div class="portrait" style="${ps}"><div class="name-strip">${u.name}</div>${mark}</div><div class="divider"></div><div class="field-stats"><div class="field-stat">HP<strong>${u.hp}</strong></div><div class="field-stat">AT<strong>${effectiveAtk(u)}</strong></div><div class="field-stat">MV<strong>${effectiveMov(u)}</strong></div><div class="field-stat">RG<strong>${u.range}</strong></div></div></div>`;cell.appendChild(card)} cell.addEventListener("click",()=>cellClick(x,y)); cell.appendChild(document.createTextNode("")); grid.appendChild(cell)}
 }
 function renderSide(){
- $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Código: ${gameId||"..."}</div>`;
+ $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Kasteos ${privateState?.summonCount||0}/3 · Código: ${gameId||"..."}</div>`;
  if(selectedCard){$("detailBox").innerHTML=`<h3 class="side-title">${selectedCard.icon} ${selectedCard.name}</h3><p><strong>Costo:</strong> ${selectedCard.cost}</p><p>${selectedCard.text||""}</p><p><strong>Efecto:</strong> ${selectedCard.effect||"Sin efecto."}</p>`;return}
  if(selectedUnitId){const u=getUnit(selectedUnitId);$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p>`;return}
  $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la spellbook o selecciona una unidad.":"Espera al rival."}</p>`;
@@ -992,10 +993,13 @@ function selectCard(id){
   highlightType="attack";
   setHint("Elige una unidad enemiga.");
  }else{
-  if(privateState.summoned)return setHint("Ya kasteaste este turno.");
+  if((privateState.summonCount||0)>=3){
+   playSound("error");
+   return setHint("Ya alcanzaste el límite de 3 kasteos de invocación esta fase.");
+  }
   highlights=summonZones(myPlayer);
   highlightType="summon";
-  setHint("Elige una coordenada verde junto a tu kaster.");
+  setHint(`Elige una coordenada verde junto a tu kaster. Kasteos: ${privateState.summonCount||0}/3`);
  }
  render();
 }
@@ -1056,9 +1060,9 @@ async function playCard(x,y,u){
  }
 
  if(!card.spell){
-   if(privateState.summoned){
+   if((privateState.summonCount||0)>=3){
      playSound("error");
-     return setHint("Ya kasteaste este turno.");
+     return setHint("Ya alcanzaste el límite de 3 kasteos de invocación esta fase.");
    }
    if(!summonZones(myPlayer).includes(`${x},${y}`)){
      playSound("error");
@@ -1067,7 +1071,7 @@ async function playCard(x,y,u){
    await summon(card,x,y);
  }
 }
-async function commitPrivateCard(card,extra={}){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const data={hand,res:extra.res??privateState.res,deck:privateState.deck||[],summoned:extra.summoned??privateState.summoned,lastTurnStarted:privateState.lastTurnStarted||""};await update(ref(db,`games/${gameId}/private/player${myPlayer}`),data);await update(ref(db,`games/${gameId}/public/playerStats/${myPlayer}`),{res:data.res,deck:data.deck.length,hand:data.hand.length})}
+async function commitPrivateCard(card,extra={}){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const data={hand,res:extra.res??privateState.res,deck:privateState.deck||[],source:privateState.source||[],cycleCount:privateState.cycleCount||0,summonCount:extra.summonCount??(privateState.summonCount||0),summoned:extra.summoned??privateState.summoned,lastTurnStarted:privateState.lastTurnStarted||""};await update(ref(db,`games/${gameId}/private/player${myPlayer}`),data);await update(ref(db,`games/${gameId}/public/playerStats/${myPlayer}`),{res:data.res,deck:(data.source||[]).length,hand:data.hand.length})}
 async function summon(card,x,y){const leader=getLeader(myPlayer); const units=(publicState.units||[]).map(u=>u.id===leader.id?{...u,pose:"summon"}:u); await update(ref(db,`games/${gameId}/public`),{units,summonDisplay:{x,y}}); setHint("Kasteando..."); setTimeout(async()=>{const latest=await get(ref(db,`games/${gameId}/public/units`));const curr=latest.val()||[];const clean=curr.map(u=>u.id===leader.id?{...u,pose:"idle"}:u);clean.push(makeUnit(card,x,y));await update(ref(db,`games/${gameId}/public`),{units:clean,summonDisplay:null});await commitPrivateCard(card,{res:(privateState.res||0)-card.cost,summoned:true});playSound('summon');await pushLog(`J${myPlayer} kastea ${card.name}.`);selectedCard=null;highlights=[];handOpen=false;render()},900)}
 async function moveUnit(u,x,y){const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updatePublicUnits(units);playSound('move');await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}
 async function combat(a,d){const units=(publicState.units||[]).map(u=>u.id===a.id?{...u,pose:"attack"}:u);await updatePublicUnits(units);showCombat(a,d);setTimeout(async()=>{const fresh=(await get(ref(db,`games/${gameId}/public/units`))).val()||[];let newUnits=fresh.map(u=>{if(u.id===a.id)return{...u,pose:"idle",acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u});await cleanupAndUpdate(newUnits);playSound('hit');await pushLog(`${a.name} ataca a ${d.name}.`);selectedUnitId=null;highlights=[];$("combatOverlay").classList.remove("show")},1300)}
