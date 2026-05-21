@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.14 - Restauración manual</title>
+<title>ROK Online 0.18 - Restauración post combate</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -481,8 +481,8 @@ button{font-family:inherit}
   }
 }
 
-/* ROK 0.14: Paso 7 aplicado.
-   Restauración manual al nexo para invocaciones propias. */
+/* ROK 0.18: Paso 11 aplicado.
+   Restauración automática básica del atacante después de combate entre invocaciones. */
 
 .field-card.off-nexo .field-frame{
   box-shadow:0 10px 16px rgba(0,0,0,.42),0 0 0 2px rgba(255,209,102,.18)!important;
@@ -512,8 +512,8 @@ button{font-family:inherit}
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.14</h1>
-    <p>Paso 7: restauración manual al nexo para invocaciones propias.</p>
+    <h1>ROK Online 0.18</h1>
+    <p>Paso 11: restauración automática básica del atacante después de combate entre invocaciones.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -618,6 +618,7 @@ let handOpen=false, selectedCard=null, selectedUnitId=null, highlights=[], highl
 let autoAdvanceTimer=null;
 let autoAdvanceLock=false;
 let cycleStartLock=false;
+let autoAdvanceUnitsLock=false;
 let publicUnsub=null, privateUnsub=null;
 
 const $=id=>document.getElementById(id);
@@ -744,6 +745,64 @@ function canRestoreToNexo(u){
  const occupant=getUnitAt(u.nexoX,u.nexoY);
  return !occupant || occupant.id===u.id;
 }
+function isFirstTurnNoAdvance(player=myPlayer){
+ return isMyTurn() && player===myPlayer && (privateState?.cycleCount||0)<=1;
+}
+function autoAdvanceFlagKey(){
+ return `autoAdvanceDone_${publicState?.turnKey||"none"}_${myPlayer}`;
+}
+function getStepTowardTarget(u,target){
+ const dx=Math.sign(target.x-u.x);
+ const dy=Math.sign(target.y-u.y);
+ if(dy!==0) return {x:u.x,y:u.y+dy};
+ if(dx!==0) return {x:u.x+dx,y:u.y};
+ return {x:u.x,y:u.y};
+}
+function applyAutoAdvanceUnits(units,player){
+ const enemyLeader=units.find(u=>u.owner!==player && u.leader);
+ if(!enemyLeader) return {units,moved:[]};
+ const occupied=new Map();
+ units.forEach(u=>occupied.set(`${u.x},${u.y}`,u.id));
+ const moved=[];
+ const nextUnits=units.map(u=>({...u}));
+ for(const u of nextUnits){
+  if(u.owner!==player || u.leader) continue;
+  if(u.hp<=0) continue;
+  const step=getStepTowardTarget(u,enemyLeader);
+  const key=`${step.x},${step.y}`;
+  if(step.x<0 || step.x>=COLS || step.y<0 || step.y>=ROWS) continue;
+  if(step.x===u.x && step.y===u.y) continue;
+  if(occupied.has(key)) continue;
+  occupied.delete(`${u.x},${u.y}`);
+  u.x=step.x;
+  u.y=step.y;
+  u.moved=true;
+  occupied.set(key,u.id);
+  moved.push(u.name);
+ }
+ return {units:nextUnits,moved};
+}
+async function runMandatoryAutoAdvance(){
+ if(!publicState || !privateState || !isMyTurn()) return;
+ if(publicState.phase!=="action") return;
+ if(isFirstTurnNoAdvance(myPlayer)) return;
+ const key=autoAdvanceFlagKey();
+ if(privateState[key]) return;
+ if(autoAdvanceUnitsLock) return;
+ autoAdvanceUnitsLock=true;
+ try{
+  const result=applyAutoAdvanceUnits(publicState.units||[],myPlayer);
+  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),{[key]:true});
+  if(result.moved.length){
+   await updatePublicUnits(result.units);
+   await pushLog(`Avance obligatorio de J${myPlayer}: ${result.moved.join(", ")} avanzan 1 casilla hacia el kaster rival.`);
+  }else{
+   await pushLog(`Avance obligatorio de J${myPlayer}: ninguna invocación pudo avanzar.`);
+  }
+ }finally{
+  autoAdvanceUnitsLock=false;
+ }
+}
 async function restoreUnitToNexo(unitId){
  const u=getUnit(unitId);
  if(!u) return;
@@ -764,8 +823,11 @@ function effectiveMov(u){return (u?.mov||0)+(hasCommandBuff(u)?1:0)}
 function leaderPortrait(u){if(!u)return""; if(u.owner===1){if(u.pose==="attack")return ART.pharaohAttack;if(u.pose==="summon")return ART.pharaohSummon;return ART.pharaohIdle} if(u.pose==="attack")return ART.mageAttack;if(u.pose==="summon")return ART.mageCast;return ART.mageIdle}
 function genericPortrait(u){const g={spearman:"linear-gradient(180deg,#d6a85d,#6a4120)",archer:"linear-gradient(180deg,#c6a15a,#5a3918)",guardian:"linear-gradient(180deg,#c9a55f,#604126)",scout:"linear-gradient(180deg,#c99c4c,#573617)",spell:"linear-gradient(180deg,#d7b97c,#7a5530)"};return g[u?.key]||"linear-gradient(180deg,#d6a85d,#6a4120)"}
 function summonZones(player){const l=getLeader(player); const cells=[]; if(!l)return cells; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(dx===0&&dy===0)continue;const x=l.x+dx,y=l.y+dy;if(x>=0&&x<COLS&&y>=0&&y<ROWS&&!getUnitAt(x,y))cells.push(`${x},${y}`)} return cells}
-function moveZones(u){if(!u||u.moved)return[];const c=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(!getUnitAt(x,y)&&dist(u,{x,y})<=effectiveMov(u))c.push(`${x},${y}`)}return c}
+function moveZones(u){if(!u||u.moved)return[];if(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))return[];const c=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(!getUnitAt(x,y)&&dist(u,{x,y})<=effectiveMov(u))c.push(`${x},${y}`)}return c}
 function attackZones(u){if(!u||u.acted)return[];return (publicState?.units||[]).filter(t=>t.owner!==u.owner&&dist(u,t)<=u.range).map(t=>`${t.x},${t.y}`)}
+function mustTakeTarget(u){
+ return !!u && !u.leader && u.owner===myPlayer && publicState?.phase==="action" && attackZones(u).length>0;
+}
 
 async function maybeStartMyTurn(){
  if(!publicState||!privateState||!isMyTurn()) return;
@@ -800,8 +862,8 @@ async function maybeStartMyTurn(){
   });
 
   const msg=gained
-   ? `J${myPlayer} cicla y extrae ${gained} elemento(s) de la Fuente: ${elementNames(extracted.drawn)}.`
-   : `J${myPlayer} intenta ciclar, pero su Fuente no tiene elementos.`;
+   ? `J${myPlayer} cicla y extrae ${gained} elemento(s) de la Fuente: ${elementNames(extracted.drawn)}.${cycleCount===0?" Primer turno: sus invocaciones no pueden avanzar.":""}`
+   : `J${myPlayer} intenta ciclar, pero su Fuente no tiene elementos.${cycleCount===0?" Primer turno: sus invocaciones no pueden avanzar.":""}`;
   await pushLog(msg);
  }finally{
   cycleStartLock=false;
@@ -950,6 +1012,7 @@ async function checkAutoAdvance(){
           await update(ref(db,`games/${gameId}/public`),{phase:"action"});
           playSound('phase');
           await pushLog(`J${myPlayer} no tiene jugadas de kasteo. Pasa automáticamente a combate.`);
+          setTimeout(runMandatoryAutoAdvance,220);
         }
       });
     }
@@ -976,7 +1039,7 @@ async function endMyTurnAuto(){
 function render(){
  if(!publicState)return;
  renderHud(); renderBoard(); renderSide(); renderHand(); renderLog(); updateSettingsButtons();
- setTimeout(checkAutoAdvance,120);
+ setTimeout(()=>{runMandatoryAutoAdvance();checkAutoAdvance();},120);
 }
 function phaseName(){
  if(!isMyTurn()) return "FASE DE ESPERA";
@@ -1007,7 +1070,7 @@ function renderBoard(){
 function renderSide(){
  $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Kasteos ${privateState?.summonCount||0}/3 · Invocaciones ${ownInvocationCount(myPlayer)}/6 · Código: ${gameId||"..."}</div>`;
  if(selectedCard){$("detailBox").innerHTML=`<h3 class="side-title">${selectedCard.icon} ${selectedCard.name}</h3><p><strong>Costo:</strong> ${selectedCard.cost}</p><p>${selectedCard.text||""}</p><p><strong>Efecto:</strong> ${selectedCard.effect||"Sin efecto."}</p>`;return}
- if(selectedUnitId){const u=getUnit(selectedUnitId);const restoreHtml=canRestoreToNexo(u)?`<button class="btn primary full" id="restoreBtn">Restaurar al nexo</button>`:"";$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p><p>${u.leader?"Kaster sin nexo.":`Nexo: ${nexoText(u)} · ${isAtNexo(u)?"en nexo":"fuera del nexo"}`}</p>${restoreHtml}`;const rb=$("restoreBtn");if(rb)rb.addEventListener("click",()=>restoreUnitToNexo(u.id));return}
+ if(selectedUnitId){const u=getUnit(selectedUnitId);const restoreHtml=canRestoreToNexo(u)?`<button class="btn primary full" id="restoreBtn">Restaurar al nexo</button>`:"";$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p><p>${u.leader?"Kaster sin nexo.":`Nexo: ${nexoText(u)} · ${isAtNexo(u)?"en nexo":"fuera del nexo"}`}</p>${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?`<p>Primer turno: no puede avanzar.</p>`:""}${mustTakeTarget(u)?`<p>Objetivo obligatorio: debe atacar a un rival en rango.</p>`:""}${(!u.leader&&u.moved&&!isFirstTurnNoAdvance(u.owner))?`<p>Ya realizó avance/movimiento.</p>`:""}${restoreHtml}`;const rb=$("restoreBtn");if(rb)rb.addEventListener("click",()=>restoreUnitToNexo(u.id));return}
  $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la spellbook o selecciona una unidad.":"Espera al rival."}</p>`;
 }
 function renderHand(){
@@ -1023,7 +1086,7 @@ function showCardInspector(card){
  const stats=card.spell?[{label:"Costo",value:card.cost},{label:"Tipo",value:"Técnica"},{label:"Rol",value:card.rol}]:[{label:"Costo",value:card.cost},{label:"Vida",value:card.hp},{label:"Ataque",value:card.atk},{label:"Movimiento",value:card.mov},{label:"Alcance",value:card.range},{label:"Rol",value:card.rol}];
  showInspector(card.name,`Carta en spellbook · J${myPlayer}`,stats,`<strong>${card.tipo}</strong><br>${card.text}<br><br><strong>Efecto:</strong> ${card.effect}`,null,card.icon,`<button class="btn primary" id="inspectSelect">Seleccionar para jugar</button><button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectSelect").addEventListener("click",()=>{selectCard(card.id);closeInspector()});$("inspectClose").addEventListener("click",closeInspector)})
 }
-function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Nexo",value:u.leader?"No aplica":nexoText(u)},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;const nexoInfo=u.leader?"El kaster no tiene nexo.":`Nexo de restauración: ${nexoText(u)}. ${isAtNexo(u)?"Está sobre su nexo.":"Está fuera de su nexo."}`;const restoreBtn=canRestoreToNexo(u)?`<button class="btn primary" id="inspectRestore">Restaurar al nexo</button>`:"";showInspector(u.name,u.leader?`Kaster · J${u.owner}`:`Invocación · J${u.owner}`,stats,`${nexoInfo}<br>${u.moved?"Ya se movió.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`${restoreBtn}<button class="btn" id="inspectClose">Cerrar</button>`,()=>{const rb=$("inspectRestore");if(rb)rb.addEventListener("click",()=>{closeInspector();restoreUnitToNexo(u.id)});$("inspectClose").addEventListener("click",closeInspector)})}
+function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Nexo",value:u.leader?"No aplica":nexoText(u)},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;const nexoInfo=u.leader?"El kaster no tiene nexo.":`Nexo de restauración: ${nexoText(u)}. ${isAtNexo(u)?"Está sobre su nexo.":"Está fuera de su nexo."}`;const restoreBtn=canRestoreToNexo(u)?`<button class="btn primary" id="inspectRestore">Restaurar al nexo</button>`:"";showInspector(u.name,u.leader?`Kaster · J${u.owner}`:`Invocación · J${u.owner}`,stats,`${nexoInfo}<br>${mustTakeTarget(u)?"Objetivo obligatorio: debe atacar a un rival en rango.<br>":""}${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?"Primer turno: no puede avanzar.<br>":""}${(!u.leader&&u.moved)?"Ya realizó avance/movimiento.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`${restoreBtn}<button class="btn" id="inspectClose">Cerrar</button>`,()=>{const rb=$("inspectRestore");if(rb)rb.addEventListener("click",()=>{closeInspector();restoreUnitToNexo(u.id)});$("inspectClose").addEventListener("click",closeInspector)})}
 function showInspector(title,sub,stats,desc,art,icon,actions,bind){$("inspectTitle").textContent=title;$("inspectSub").textContent=sub;$("inspectStats").innerHTML=stats.map(s=>`<div class="inspect-stat">${s.label}<strong>${s.value}</strong></div>`).join("");$("inspectDesc").innerHTML=desc;$("inspectActions").innerHTML=actions;const a=$("inspectArt");if(art){a.textContent="";a.style.background="none";a.style.backgroundImage=`url('${art}')`;a.style.backgroundSize="cover";a.style.backgroundPosition="center top"}else{a.style.backgroundImage="";a.style.background="linear-gradient(180deg,rgba(214,168,93,.96),rgba(90,57,24,.96))";a.textContent=icon||"⚔️"}$("inspectOverlay").classList.add("show");bind?.()}
 function closeInspector(){$("inspectOverlay").classList.remove("show")}
 
@@ -1065,14 +1128,23 @@ function selectCard(id){
  }
  render();
 }
-function selectUnit(u){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="action"){showUnitInspector(u);return}if(u.owner!==myPlayer)return setHint("Solo tus unidades.");selectedUnitId=u.id;selectedCard=null;highlights=[...moveZones(u),...attackZones(u)];highlightType="move";setHint("Verde: mover. Rojo: atacar.");render()}
+function selectUnit(u){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="action"){showUnitInspector(u);return}if(u.owner!==myPlayer)return setHint("Solo tus unidades.");selectedUnitId=u.id;selectedCard=null;if(mustTakeTarget(u)){highlights=attackZones(u);highlightType="attack";setHint("Objetivo obligatorio: esta invocación tiene un rival en rango y debe atacar.");}else{highlights=[...moveZones(u),...attackZones(u)];highlightType="move";if(!u.leader&&isFirstTurnNoAdvance(u.owner)){setHint("Primer turno: las invocaciones no pueden avanzar. Rojo: atacar si hay objetivo.");}else if(!u.leader&&u.moved){setHint("Esta invocación ya realizó su avance/movimiento. Rojo: atacar si hay objetivo.");}else{setHint("Verde: mover. Rojo: atacar.");}}render()}
 function clearSelection(){selectedCard=null;selectedUnitId=null;highlights=[];summonDisplay=null;setHint("Selección cancelada.");render()}
 async function cellClick(x,y){
  if(!publicState||!isMyTurn()){const u=getUnitAt(x,y); if(u)showUnitInspector(u); return}
  if(publicState.phase==="cycle"){setHint("Estás en fase de ciclado. Pasa a kasteo para jugar cartas.");return}
  const u=getUnitAt(x,y);
  if(publicState.phase==="prep"&&selectedCard) return playCard(x,y,u);
- if(publicState.phase==="action"&&selectedUnitId){const s=getUnit(selectedUnitId); if(u&&u.owner!==myPlayer&&dist(s,u)<=s.range&&!s.acted)return combat(s,u); if(!u&&moveZones(s).includes(`${x},${y}`))return moveUnit(s,x,y)}
+ if(publicState.phase==="action"&&selectedUnitId){
+  const s=getUnit(selectedUnitId);
+  if(mustTakeTarget(s)){
+   if(u&&u.owner!==myPlayer&&dist(s,u)<=s.range&&!s.acted)return combat(s,u);
+   playSound("error");
+   return setHint("Objetivo obligatorio: debes atacar una invocación rival en rango antes de moverte.");
+  }
+  if(u&&u.owner!==myPlayer&&dist(s,u)<=s.range&&!s.acted)return combat(s,u);
+  if(!u&&moveZones(s).includes(`${x},${y}`))return moveUnit(s,x,y);
+ }
  if(u) selectUnit(u);
 }
 async function playCard(x,y,u){
@@ -1139,8 +1211,55 @@ async function playCard(x,y,u){
 }
 async function commitPrivateCard(card,extra={}){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const data={hand,res:extra.res??privateState.res,deck:privateState.deck||[],source:privateState.source||[],cycleCount:privateState.cycleCount||0,summonCount:extra.summonCount??(privateState.summonCount||0),summoned:extra.summoned??privateState.summoned,lastTurnStarted:privateState.lastTurnStarted||""};await update(ref(db,`games/${gameId}/private/player${myPlayer}`),data);await update(ref(db,`games/${gameId}/public/playerStats/${myPlayer}`),{res:data.res,deck:(data.source||[]).length,hand:data.hand.length})}
 async function summon(card,x,y){const leader=getLeader(myPlayer); const units=(publicState.units||[]).map(u=>u.id===leader.id?{...u,pose:"summon"}:u); await update(ref(db,`games/${gameId}/public`),{units,summonDisplay:{x,y}}); setHint("Kasteando..."); setTimeout(async()=>{const latest=await get(ref(db,`games/${gameId}/public/units`));const curr=latest.val()||[];const clean=curr.map(u=>u.id===leader.id?{...u,pose:"idle"}:u);clean.push(makeUnit(card,x,y));await update(ref(db,`games/${gameId}/public`),{units:clean,summonDisplay:null});await commitPrivateCard(card,{res:(privateState.res||0)-card.cost,summoned:true});playSound('summon');await pushLog(`J${myPlayer} kastea ${card.name}.`);selectedCard=null;highlights=[];handOpen=false;render()},900)}
-async function moveUnit(u,x,y){const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updatePublicUnits(units);playSound('move');await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}
-async function combat(a,d){const units=(publicState.units||[]).map(u=>u.id===a.id?{...u,pose:"attack"}:u);await updatePublicUnits(units);showCombat(a,d);setTimeout(async()=>{const fresh=(await get(ref(db,`games/${gameId}/public/units`))).val()||[];let newUnits=fresh.map(u=>{if(u.id===a.id)return{...u,pose:"idle",acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u});await cleanupAndUpdate(newUnits);playSound('hit');await pushLog(`${a.name} ataca a ${d.name}.`);selectedUnitId=null;highlights=[];$("combatOverlay").classList.remove("show")},1300)}
+async function moveUnit(u,x,y){if(mustTakeTarget(u)){playSound("error");return setHint("Objetivo obligatorio: esta invocación debe atacar antes de moverse.");}const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updatePublicUnits(units);playSound('move');await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}
+async 
+function restoreAttackerAfterCombat(units,attackerId){
+ const idx=units.findIndex(u=>u.id===attackerId);
+ if(idx<0)return{units,restored:false,reason:"no-unit"};
+ const u=units[idx];
+ if(!u||u.leader||u.hp<=0||u.nexoX===undefined||u.nexoY===undefined)return{units,restored:false,reason:"invalid"};
+ if(u.x===u.nexoX&&u.y===u.nexoY)return{units,restored:false,reason:"already"};
+ const occupied=units.find(o=>o.id!==u.id&&o.hp>0&&o.x===u.nexoX&&o.y===u.nexoY);
+ if(occupied)return{units,restored:false,reason:"occupied"};
+ const next=units.map(it=>it.id===u.id?{...it,x:it.nexoX,y:it.nexoY,moved:true,acted:true}:it);
+ return{units:next,restored:true,reason:"ok"};
+}
+function combat(a,d){
+ const units=(publicState.units||[]).map(u=>u.id===a.id?{...u,pose:"attack"}:u);
+ updatePublicUnits(units);
+ showCombat(a,d);
+ setTimeout(async()=>{
+  const fresh=(await get(ref(db,`games/${gameId}/public/units`))).val()||[];
+  let newUnits=fresh.map(u=>{
+   if(u.id===a.id)return{...u,pose:"idle",acted:true};
+   if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};
+   return u;
+  });
+
+  const targetIsInvocation=!d.leader;
+  const attackerIsInvocation=!a.leader;
+  let restoreResult={units:newUnits,restored:false,reason:"skip"};
+
+  // Restauración básica: invocación vs invocación.
+  if(attackerIsInvocation && targetIsInvocation){
+   restoreResult=restoreAttackerAfterCombat(newUnits,a.id);
+   newUnits=restoreResult.units;
+  }
+
+  await cleanupAndUpdate(newUnits);
+  playSound('hit');
+
+  let msg=`${a.name} ataca a ${d.name}.`;
+  if(attackerIsInvocation && targetIsInvocation){
+   if(restoreResult.restored) msg+=` ${a.name} se restaura a su nexo.`;
+   else if(restoreResult.reason==="occupied") msg+=` ${a.name} no puede restaurarse: su nexo está ocupado.`;
+  }
+  await pushLog(msg);
+  selectedUnitId=null;
+  highlights=[];
+  $("combatOverlay").classList.remove("show");
+ },1300)
+}
 function showCombat(a,d){$("combatLeftName").textContent=a.name;$("combatRightName").textContent=d.name;$("combatLeftStats").textContent=`HP ${a.hp} · AT ${effectiveAtk(a)}`;$("combatRightStats").textContent=`HP ${d.hp} · AT ${effectiveAtk(d)}`; $("combatLeftArt").style.backgroundImage=a.leader?`url('${leaderPortrait({...a,pose:"attack"})}')`:"";$("combatLeftArt").style.background=a.leader?"":genericPortrait(a);$("combatRightArt").style.backgroundImage=d.leader?`url('${leaderPortrait(d)}')`:"";$("combatRightArt").style.background=d.leader?"":genericPortrait(d);$("combatOverlay").classList.add("show")}
 async function updatePublicUnits(units){await update(ref(db,`games/${gameId}/public`),{units})}
 async function cleanupAndUpdate(units){const live=[];for(const u of units){if(u.hp<=0){await pushLog(`${u.name} cae.`)}else live.push(u)}await updatePublicUnits(live)}
@@ -1164,6 +1283,7 @@ async function phaseButton(){
   clearSelection();
   playSound('phase');
   await pushLog(`J${myPlayer} entra en fase de combate.`);
+  setTimeout(runMandatoryAutoAdvance,220);
  }else{
   const next=myPlayer===1?2:1;
   const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
