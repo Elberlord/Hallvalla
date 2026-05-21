@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.19 - Cartas de campo grandes</title>
+<title>ROK Online 0.20 - Restauración al dañar kaster</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -576,8 +576,8 @@ button{font-family:inherit}
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.19</h1>
-    <p>Ajuste visual: cartas kasteadas en campo un poco más grandes.</p>
+    <h1>ROK Online 0.20</h1>
+    <p>Paso 12: una invocación que daña al kaster rival intenta restaurarse a su nexo.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -1301,11 +1301,14 @@ function combat(a,d){
   });
 
   const targetIsInvocation=!d.leader;
+  const targetIsKaster=!!d.leader;
   const attackerIsInvocation=!a.leader;
   let restoreResult={units:newUnits,restored:false,reason:"skip"};
 
-  // Restauración básica: invocación vs invocación.
-  if(attackerIsInvocation && targetIsInvocation){
+  // Restauración básica:
+  // 1) invocación vs invocación
+  // 2) invocación que daña al kaster rival
+  if(attackerIsInvocation && (targetIsInvocation || targetIsKaster)){
    restoreResult=restoreAttackerAfterCombat(newUnits,a.id);
    newUnits=restoreResult.units;
   }
@@ -1318,6 +1321,11 @@ function combat(a,d){
    if(restoreResult.restored) msg+=` ${a.name} se restaura a su nexo.`;
    else if(restoreResult.reason==="occupied") msg+=` ${a.name} no puede restaurarse: su nexo está ocupado.`;
   }
+  if(attackerIsInvocation && targetIsKaster){
+   if(restoreResult.restored) msg+=` ${a.name} dañó al kaster rival y se restaura a su nexo.`;
+   else if(restoreResult.reason==="occupied") msg+=` ${a.name} dañó al kaster rival, pero no puede restaurarse: su nexo está ocupado.`;
+  }
+
   await pushLog(msg);
   selectedUnitId=null;
   highlights=[];
