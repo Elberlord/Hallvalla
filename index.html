@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.9 - Fases</title>
+<title>ROK Online 0.10 - Ciclado básico</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -481,15 +481,15 @@ button{font-family:inherit}
   }
 }
 
-/* ROK 0.9: Paso 2 aplicado.
-   Fases visibles: ciclado, kasteo, espera y combate provisional. */
+/* ROK 0.10: Paso 3 aplicado.
+   Ciclado básico real: la Fuente entrega elementos al stock elemental. */
 </style>
 </head>
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.9</h1>
-    <p>Paso 2: fases ROK aplicadas. Ciclado, Kasteo, Espera y Combate provisional.</p>
+    <h1>ROK Online 0.10</h1>
+    <p>Paso 3: ciclado básico real. La Fuente entrega elementos al stock elemental.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -593,6 +593,7 @@ let publicState=null, privateState=null;
 let handOpen=false, selectedCard=null, selectedUnitId=null, highlights=[], highlightType="summon", summonDisplay=null, manualDrag=null;
 let autoAdvanceTimer=null;
 let autoAdvanceLock=false;
+let cycleStartLock=false;
 let publicUnsub=null, privateUnsub=null;
 
 const $=id=>document.getElementById(id);
@@ -601,6 +602,33 @@ function gameCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
 function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
 function makeDeck(owner){const d=[];cardPool.forEach(c=>{for(let i=0;i<c.copies;i++)d.push({...c,id:uid8(),owner})});return shuffle(d)}
 function drawFrom(deck,hand,n){const d=[...deck], h=[...hand];for(let i=0;i<n;i++){if(d.length)h.push(d.shift())}return {deck:d,hand:h}}
+
+const elementPool=[
+ {name:"Elemento de Fuego",element:"fuego",icon:"🔥"},
+ {name:"Elemento de Agua",element:"agua",icon:"💧"},
+ {name:"Elemento de Tierra",element:"tierra",icon:"🪨"},
+ {name:"Elemento de Rayo",element:"rayo",icon:"⚡"},
+ {name:"Elemento de Luz",element:"luz",icon:"☀️"},
+ {name:"Elemento de Oscuridad",element:"oscuridad",icon:"🌑"}
+];
+function makeElementSource(owner){
+ const source=[];
+ for(let i=0;i<24;i++){
+  const e=elementPool[i%elementPool.length];
+  source.push({...e,id:uid8(),owner,tipo:"Elemento"});
+ }
+ return shuffle(source);
+}
+function drawElementsFromSource(source,n){
+ const s=[...(source||[])], drawn=[];
+ for(let i=0;i<n;i++){
+  if(s.length) drawn.push(s.shift());
+ }
+ return {source:s,drawn};
+}
+function elementNames(list){
+ return (list||[]).map(e=>e.icon+" "+e.element).join(", ");
+}
 function makeLeader(owner,x,y){return {id:`L${owner}`,owner,leader:true,name:owner===1?"Faraón de la Lanza Solar":"Hierofante del Sol Negro",key:owner===1?"leader_pharaoh":"leader_mage",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:1,mov:3,range:1,pose:"idle",moved:false,acted:false,buffAtk:0}}
 function makeUnit(card,x,y){return {id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,hp:card.hp,maxHp:card.hp,atk:card.atk,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
 function logLocal(t){const d=document.createElement("div");d.textContent=t;$("logPanel").prepend(d)}
@@ -627,15 +655,15 @@ $("inspectOverlay").addEventListener("click",e=>{if(e.target.id==="inspectOverla
 async function createGame(){
  if(!uid) return setLobby("Aún conectando auth...");
  const code=gameCode();
- const deck=makeDeck(1); const initial=drawFrom(deck,[],4);
+ const deck=makeDeck(1); const initial=drawFrom(deck,[],4); const source=makeElementSource(1);
  const pub={
    code, createdAt:Date.now(), currentPlayer:1, phase:"cycle", turn:1, turnKey:"1-1",
    playerSlots:{player1Uid:uid,player2Uid:null},
-   playerStats:{1:{res:1,deck:initial.deck.length,hand:initial.hand.length},2:{res:0,deck:0,hand:0}},
+   playerStats:{1:{res:0,deck:source.length,hand:initial.hand.length},2:{res:0,deck:0,hand:0}},
    units:[makeLeader(1,4,17),makeLeader(2,4,0)],
-   summonDisplay:null, log:["Partida creada. Esperando Jugador 2."]
+   summonDisplay:null, log:["Duelo ROK creado. Esperando Jugador 2."]
  };
- const priv={ownerUid:uid,deck:initial.deck,hand:initial.hand,res:1,summoned:false,lastTurnStarted:"1-1"};
+ const priv={ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summoned:false,lastTurnStarted:""};
  await set(ref(db,`games/${code}/public`),pub);
  await set(ref(db,`games/${code}/private/player1`),priv);
  await enterGame(code,1);
@@ -648,13 +676,13 @@ async function joinGame(code){
  if(!pubSnap.exists()) return setLobby("No existe esa partida.");
  const pub=pubSnap.val();
  if(pub.playerSlots?.player2Uid && pub.playerSlots.player2Uid!==uid) return setLobby("La partida ya tiene Jugador 2.");
- const deck=makeDeck(2); const initial=drawFrom(deck,[],4);
+ const deck=makeDeck(2); const initial=drawFrom(deck,[],4); const source=makeElementSource(2);
  await update(ref(db,`games/${code}/public`),{
    "playerSlots/player2Uid":uid,
-   "playerStats/2":{res:0,deck:initial.deck.length,hand:initial.hand.length},
+   "playerStats/2":{res:0,deck:source.length,hand:initial.hand.length},
    log:["Jugador 2 se unió.",...(pub.log||[])]
  });
- await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,deck:initial.deck,hand:initial.hand,res:0,summoned:false,lastTurnStarted:""});
+ await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summoned:false,lastTurnStarted:""});
  await enterGame(code,2);
 }
 
@@ -685,12 +713,41 @@ function attackZones(u){if(!u||u.acted)return[];return (publicState?.units||[]).
 async function maybeStartMyTurn(){
  if(!publicState||!privateState||!isMyTurn()) return;
  if(privateState.lastTurnStarted===publicState.turnKey) return;
- const drawn=drawFrom(privateState.deck||[],privateState.hand||[],2);
- const res=(privateState.res||0)+1;
- const units=(publicState.units||[]).map(u=>u.owner===myPlayer?{...u,moved:false,acted:false,buffAtk:0,pose:"idle"}:u);
- await update(ref(db,`games/${gameId}/private/player${myPlayer}`),{deck:drawn.deck,hand:drawn.hand,res,summoned:false,lastTurnStarted:publicState.turnKey});
- await update(ref(db,`games/${gameId}/public`),{units,[`playerStats/${myPlayer}`]:{res,deck:drawn.deck.length,hand:drawn.hand.length}});
- await pushLog(`J${myPlayer} inicia fase de ciclado: +1 stock elemental y extrae 2 cartas del spellbook de prueba.`);
+ if(cycleStartLock) return;
+ cycleStartLock=true;
+ try{
+  const oldSource=(privateState.source&&privateState.source.length)?privateState.source:makeElementSource(myPlayer);
+  const cycleCount=privateState.cycleCount||0;
+  const extractAmount=cycleCount===0?2:1;
+  const extracted=drawElementsFromSource(oldSource,extractAmount);
+  const gained=extracted.drawn.length;
+  const res=(privateState.res||0)+gained;
+  const units=(publicState.units||[]).map(u=>u.owner===myPlayer?{...u,moved:false,acted:false,buffAtk:0,pose:"idle"}:u);
+
+  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),{
+   source:extracted.source,
+   res,
+   cycleCount:cycleCount+1,
+   summoned:false,
+   lastTurnStarted:publicState.turnKey
+  });
+
+  await update(ref(db,`games/${gameId}/public`),{
+   units,
+   [`playerStats/${myPlayer}`]:{
+    res,
+    deck:extracted.source.length,
+    hand:(privateState.hand||[]).length
+   }
+  });
+
+  const msg=gained
+   ? `J${myPlayer} cicla y extrae ${gained} elemento(s) de la Fuente: ${elementNames(extracted.drawn)}.`
+   : `J${myPlayer} intenta ciclar, pero su Fuente no tiene elementos.`;
+  await pushLog(msg);
+ }finally{
+  cycleStartLock=false;
+ }
 }
 
 
@@ -817,6 +874,7 @@ async function checkAutoAdvance(){
   if(!publicState || !privateState || !isMyTurn() || autoAdvanceLock) return;
 
   if(publicState.phase==="cycle"){
+    if(privateState.lastTurnStarted!==publicState.turnKey){ setHint("Resolviendo fase de ciclado..."); return; }
     if(selectedCard || selectedUnitId || handOpen) return;
     scheduleAutoAdvance("Fase de ciclado resuelta. Pasando a fase de kasteo...", async()=>{
       if(isMyTurn() && publicState?.phase==="cycle"){
@@ -1023,6 +1081,10 @@ async function phaseButton(){
   return setHint("No es tu turno.");
  }
  if(publicState.phase==="cycle"){
+  if(privateState?.lastTurnStarted!==publicState.turnKey){
+   await maybeStartMyTurn();
+   return setHint("Resolviendo fase de ciclado. Presiona otra vez para pasar a kasteo.");
+  }
   await update(ref(db,`games/${gameId}/public`),{phase:"prep"});
   clearSelection();
   playSound('phase');
