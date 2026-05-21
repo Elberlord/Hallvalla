@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HallValla Online 0.7C - Campo usuario 18x9 ajustado</title>
+<title>ROK Online 0.9 - Fases</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -216,7 +216,7 @@ button{font-family:inherit}
    Mantiene el campo funcional anterior para pruebas rápidas. */
 
 
-/* HallValla Online 0.7B - Campo del usuario 18x9
+/* ROK Online 0.7B - Campo del usuario 18x9
    La imagen NO se modifica.
    Lógica vertical: 18 filas x 9 columnas.
    Grilla transparente encima.
@@ -481,13 +481,15 @@ button{font-family:inherit}
   }
 }
 
+/* ROK 0.9: Paso 2 aplicado.
+   Fases visibles: ciclado, kasteo, espera y combate provisional. */
 </style>
 </head>
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>HallValla Online 0.7C</h1>
-    <p>Versión ajustada: mismo campo del usuario, con la grilla y líderes mejor alineados.</p>
+    <h1>ROK Online 0.9</h1>
+    <p>Paso 2: fases ROK aplicadas. Ciclado, Kasteo, Espera y Combate provisional.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -531,16 +533,16 @@ button{font-family:inherit}
 <div class="game-shell">
 <section class="battlefield">
   <div class="scenery"><div class="sun"></div><div class="path"></div><div class="pyramid py1"></div><div class="pyramid py2"></div><div class="palm p1a"></div><div class="palm p1b"></div><div class="palm p2a"></div><div class="palm p2b"></div></div>
-  <div class="hud top-left"><div class="hud-name p1">Jugador 1 <span id="p1Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">20</strong></div><div class="hud-mini">Recurso<strong id="p1Res">0</strong></div><div class="hud-mini">Mazo<strong id="p1Deck">0</strong></div><div class="hud-mini">Mano<strong id="p1Hand">0</strong></div></div></div>
-  <div class="hud top-right"><div class="hud-name p2">Jugador 2 <span id="p2Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">20</strong></div><div class="hud-mini">Recurso<strong id="p2Res">0</strong></div><div class="hud-mini">Mazo<strong id="p2Deck">0</strong></div><div class="hud-mini">Mano<strong id="p2Hand">0</strong></div></div></div>
+  <div class="hud top-left"><div class="hud-name p1">Jugador 1 <span id="p1Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">20</strong></div><div class="hud-mini">Stock elemental<strong id="p1Res">0</strong></div><div class="hud-mini">Fuente<strong id="p1Deck">0</strong></div><div class="hud-mini">Spellbook<strong id="p1Hand">0</strong></div></div></div>
+  <div class="hud top-right"><div class="hud-name p2">Jugador 2 <span id="p2Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">20</strong></div><div class="hud-mini">Stock elemental<strong id="p2Res">0</strong></div><div class="hud-mini">Fuente<strong id="p2Deck">0</strong></div><div class="hud-mini">Spellbook<strong id="p2Hand">0</strong></div></div></div>
   <div class="phase-banner" id="phaseBanner">ONLINE</div><div class="auto-advance-toast" id="autoAdvanceToast"></div>
   <div class="grid-wrap"><div class="grid" id="grid"></div></div>
   <aside class="side">
-    <div class="panel"><div class="icon-bar"><button class="icon-btn" id="copyCodeBtn" title="Copiar código">🔗</button><button class="icon-btn" id="soundBtn" title="Sonido ON/OFF">🔇</button><button class="icon-btn" id="autoBtn" title="Autoavance ON/OFF">⚙️</button><button class="icon-btn" id="openHandBtn" title="Abrir mano">🃏</button><button class="icon-btn primary" id="phaseBtn" title="Pasar fase">▶</button></div><div class="hint" id="hint">Esperando partida...</div><button class="btn full" id="cancelBtn" style="margin-top:8px">Cancelar selección</button></div>
+    <div class="panel"><div class="icon-bar"><button class="icon-btn" id="copyCodeBtn" title="Copiar código">🔗</button><button class="icon-btn" id="soundBtn" title="Sonido ON/OFF">🔇</button><button class="icon-btn" id="autoBtn" title="Autoavance ON/OFF">⚙️</button><button class="icon-btn" id="openHandBtn" title="Abrir spellbook">🃏</button><button class="icon-btn primary" id="phaseBtn" title="Pasar fase">▶</button></div><div class="hint" id="hint">Esperando partida...</div><button class="btn full" id="cancelBtn" style="margin-top:8px">Cancelar selección</button></div>
     <div class="panel"><h3 class="side-title" id="sideTitle">Jugador</h3><div id="sideBox" class="hand-card"><div class="hand-icon">⚔️</div><div class="hand-name">Estado</div><div class="hand-stats">Online</div></div></div>
     <div class="panel detail" id="detailBox"><h3 class="side-title">Sin selección</h3><p>Selecciona carta o unidad.</p></div>
   </aside>
-  <div class="hand-drawer" id="handDrawer"><div class="hand-drawer-head"><div class="hand-drawer-title" id="drawerTitle">Mano</div><button class="btn" id="closeHandBtn">Ocultar</button></div><div class="hand-row" id="handRow"></div><div class="hand-drop-hint">Desliza la barra para ver cartas. Click: detalles. Doble click o arrastra: jugar rápido.</div></div>
+  <div class="hand-drawer" id="handDrawer"><div class="hand-drawer-head"><div class="hand-drawer-title" id="drawerTitle">Spellbook</div><button class="btn" id="closeHandBtn">Ocultar</button></div><div class="hand-row" id="handRow"></div><div class="hand-drop-hint">Desliza la barra para ver cartas. Click: detalles. Doble click o arrastra: jugar rápido.</div></div>
   <div class="log" id="logPanel"></div>
 </section>
 </div>
@@ -616,7 +618,7 @@ $("joinGameBtn").addEventListener("click",()=>joinGame(normalizeCode($("joinCode
 $("copyCodeBtn").addEventListener("click",()=>{if(gameId) navigator.clipboard?.writeText(gameId); setHint("Código copiado: "+gameId)});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;localStorage.setItem("hallvalla_sound",soundOn?"1":"0");if(soundOn){ensureAudio();setTimeout(()=>playSound("toggle"),20)}updateSettingsButtons();setHint(soundOn?"Sonido activado.":"Sonido apagado.");});
 $("autoBtn").addEventListener("click",()=>{autoAdvanceOn=!autoAdvanceOn;localStorage.setItem("hallvalla_auto",autoAdvanceOn?"1":"0");if(!autoAdvanceOn)cancelAutoAdvance();updateSettingsButtons();setHint(autoAdvanceOn?"Autoavance activado.":"Autoavance apagado.");if(autoAdvanceOn)setTimeout(checkAutoAdvance,200);});
-$("openHandBtn").addEventListener("click",()=>{cancelAutoAdvance();if(!isMyTurn())playSound("error");return setHint("No es tu turno."); if(publicState?.phase!=="prep")return setHint("La mano solo se abre en fase de casteo."); handOpen=!handOpen;render()});
+$("openHandBtn").addEventListener("click",()=>{cancelAutoAdvance();if(!isMyTurn()){playSound("error");return setHint("No es tu turno.");} if(publicState?.phase!=="prep")return setHint("El spellbook solo se abre en fase de kasteo."); handOpen=!handOpen;render()});
 $("closeHandBtn").addEventListener("click",()=>{handOpen=false;render()});
 $("cancelBtn").addEventListener("click",clearSelection);
 $("phaseBtn").addEventListener("click",phaseButton);
@@ -627,7 +629,7 @@ async function createGame(){
  const code=gameCode();
  const deck=makeDeck(1); const initial=drawFrom(deck,[],4);
  const pub={
-   code, createdAt:Date.now(), currentPlayer:1, phase:"prep", turn:1, turnKey:"1-1",
+   code, createdAt:Date.now(), currentPlayer:1, phase:"cycle", turn:1, turnKey:"1-1",
    playerSlots:{player1Uid:uid,player2Uid:null},
    playerStats:{1:{res:1,deck:initial.deck.length,hand:initial.hand.length},2:{res:0,deck:0,hand:0}},
    units:[makeLeader(1,4,17),makeLeader(2,4,0)],
@@ -688,7 +690,7 @@ async function maybeStartMyTurn(){
  const units=(publicState.units||[]).map(u=>u.owner===myPlayer?{...u,moved:false,acted:false,buffAtk:0,pose:"idle"}:u);
  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),{deck:drawn.deck,hand:drawn.hand,res,summoned:false,lastTurnStarted:publicState.turnKey});
  await update(ref(db,`games/${gameId}/public`),{units,[`playerStats/${myPlayer}`]:{res,deck:drawn.deck.length,hand:drawn.hand.length}});
- await pushLog(`Jugador ${myPlayer} inicia turno: +1 recurso y roba 2.`);
+ await pushLog(`J${myPlayer} inicia fase de ciclado: +1 stock elemental y extrae 2 cartas del spellbook de prueba.`);
 }
 
 
@@ -785,8 +787,8 @@ function hasCasteoActions(){
   return getPlayableCards().length>0;
 }
 function canUseBattleTechniqueBeforeEnd(){
-  // Por ahora las técnicas solo se juegan en fase de casteo.
-  // Esta función queda separada para cuando permitamos magias rápidas en batalla.
+  // Por ahora las técnicas solo se juegan en fase de kasteo.
+  // Esta función queda separada para cuando permitamos magias rápidas en combate.
   return false;
 }
 function scheduleAutoAdvance(reason, action){
@@ -813,14 +815,24 @@ function cancelAutoAdvance(){
 async function checkAutoAdvance(){
   if(!autoAdvanceOn) return;
   if(!publicState || !privateState || !isMyTurn() || autoAdvanceLock) return;
-  if(publicState.phase==="prep"){
-    // Espera a que el jugador haya visto su turno y no haya selección activa.
+
+  if(publicState.phase==="cycle"){
+    if(selectedCard || selectedUnitId || handOpen) return;
+    scheduleAutoAdvance("Fase de ciclado resuelta. Pasando a fase de kasteo...", async()=>{
+      if(isMyTurn() && publicState?.phase==="cycle"){
+        await update(ref(db,`games/${gameId}/public`),{phase:"prep"});
+        playSound('phase');
+        await pushLog(`J${myPlayer} termina fase de ciclado e inicia fase de kasteo.`);
+      }
+    });
+  }else if(publicState.phase==="prep"){
     if(selectedCard || selectedUnitId || handOpen) return;
     if(!hasCasteoActions()){
-      scheduleAutoAdvance("Sin cartas, maná u objetivos jugables. Pasando a fase de batalla...", async()=>{
+      scheduleAutoAdvance("Sin cartas, stock elemental u objetivos jugables. Pasando a fase de combate...", async()=>{
         if(isMyTurn() && publicState?.phase==="prep" && !hasCasteoActions()){
           await update(ref(db,`games/${gameId}/public`),{phase:"action"});
-          playSound('phase');await pushLog(`J${myPlayer} no tiene jugadas de casteo. Pasa automáticamente a batalla.`);
+          playSound('phase');
+          await pushLog(`J${myPlayer} no tiene jugadas de kasteo. Pasa automáticamente a combate.`);
         }
       });
     }
@@ -838,15 +850,27 @@ async function checkAutoAdvance(){
 async function endMyTurnAuto(){
   const next=myPlayer===1?2:1;
   const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
-  await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"prep",turn,turnKey:`${turn}-${next}`});
+  await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"cycle",turn,turnKey:`${turn}-${next}`});
   clearSelection();
-  playSound('phase');await pushLog(`Turno de J${myPlayer} termina automáticamente. Ahora juega J${next}.`);
+  playSound('phase');
+  await pushLog(`Fin de turno. Ahora J${next} entra en fase de ciclado.`);
 }
 
 function render(){
  if(!publicState)return;
  renderHud(); renderBoard(); renderSide(); renderHand(); renderLog(); updateSettingsButtons();
  setTimeout(checkAutoAdvance,120);
+}
+function phaseName(){
+ if(!isMyTurn()) return "FASE DE ESPERA";
+ if(publicState.phase==="cycle") return "FASE DE CICLADO";
+ if(publicState.phase==="prep") return "FASE DE KASTEO";
+ if(publicState.phase==="action") return "FASE DE COMBATE";
+ return "ONLINE";
+}
+function phaseButtonIcon(){
+ if(publicState.phase==="action") return "⏭";
+ return "▶";
 }
 function renderHud(){
  [1,2].forEach(p=>{
@@ -855,8 +879,9 @@ function renderHud(){
   $(`p${p}Res`).textContent=st.res??0; $(`p${p}Deck`).textContent=st.deck??0; $(`p${p}Hand`).textContent=st.hand??0;
   const b=$(`p${p}Badge`); b.textContent=publicState.currentPlayer===p?"Turno":"Espera"; b.style.color=publicState.currentPlayer===p?"#ffd166":"#c7c7c7";
  });
- $("phaseBanner").textContent=publicState.phase==="prep"?"FASE DE CASTEO":publicState.phase==="action"?"FASE DE BATALLA":"ONLINE";
- $("phaseBtn").textContent=publicState.phase==="prep"?"▶":"⏭";
+ $("phaseBanner").textContent=phaseName();
+ $("phaseBtn").textContent=phaseButtonIcon();
+ $("phaseBtn").title=publicState.phase==="cycle"?"Pasar a fase de kasteo":publicState.phase==="prep"?"Pasar a fase de combate":"Finalizar turno";
 }
 function renderBoard(){
  const grid=$("grid"); grid.innerHTML="";
@@ -866,12 +891,12 @@ function renderSide(){
  $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Código: ${gameId||"..."}</div>`;
  if(selectedCard){$("detailBox").innerHTML=`<h3 class="side-title">${selectedCard.icon} ${selectedCard.name}</h3><p><strong>Costo:</strong> ${selectedCard.cost}</p><p>${selectedCard.text||""}</p><p><strong>Efecto:</strong> ${selectedCard.effect||"Sin efecto."}</p>`;return}
  if(selectedUnitId){const u=getUnit(selectedUnitId);$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p>`;return}
- $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la mano o selecciona una unidad.":"Espera al rival."}</p>`;
+ $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la spellbook o selecciona una unidad.":"Espera al rival."}</p>`;
 }
 function renderHand(){
  const drawer=$("handDrawer"), row=$("handRow"); row.innerHTML="";
  drawer.classList.toggle("show",handOpen&&isMyTurn()&&publicState.phase==="prep");
- $("drawerTitle").textContent=`Mano del Jugador ${myPlayer}`;
+ $("drawerTitle").textContent=`Spellbook del Jugador ${myPlayer}`;
  if(!privateState)return;
  (privateState.hand||[]).forEach(card=>{const div=document.createElement("div");div.className="hand-card"+(selectedCard?.id===card.id?" selected":"");const stat=card.spell?card.rol:`V${card.hp} A${card.atk} M${card.mov} R${card.range}`;div.innerHTML=`<div class="cost">${card.cost}</div><div class="hand-icon">${card.icon}</div><div class="hand-name">${card.name}</div><div class="hand-stats">${stat}</div>`;div.addEventListener("click",()=>showCardInspector(card));div.addEventListener("dblclick",()=>selectCard(card.id));div.addEventListener("pointerdown",e=>setupManualDrag(card,div,e));row.appendChild(div)})
 }
@@ -879,17 +904,48 @@ function renderLog(){$("logPanel").innerHTML=(publicState.log||[]).map(t=>`<div>
 
 function showCardInspector(card){
  const stats=card.spell?[{label:"Costo",value:card.cost},{label:"Tipo",value:"Técnica"},{label:"Rol",value:card.rol}]:[{label:"Costo",value:card.cost},{label:"Vida",value:card.hp},{label:"Ataque",value:card.atk},{label:"Movimiento",value:card.mov},{label:"Alcance",value:card.range},{label:"Rol",value:card.rol}];
- showInspector(card.name,`Carta en mano · J${myPlayer}`,stats,`<strong>${card.tipo}</strong><br>${card.text}<br><br><strong>Efecto:</strong> ${card.effect}`,null,card.icon,`<button class="btn primary" id="inspectSelect">Seleccionar para jugar</button><button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectSelect").addEventListener("click",()=>{selectCard(card.id);closeInspector()});$("inspectClose").addEventListener("click",closeInspector)})
+ showInspector(card.name,`Carta en spellbook · J${myPlayer}`,stats,`<strong>${card.tipo}</strong><br>${card.text}<br><br><strong>Efecto:</strong> ${card.effect}`,null,card.icon,`<button class="btn primary" id="inspectSelect">Seleccionar para jugar</button><button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectSelect").addEventListener("click",()=>{selectCard(card.id);closeInspector()});$("inspectClose").addEventListener("click",closeInspector)})
 }
 function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;showInspector(u.name,u.leader?`Líder · J${u.owner}`:`Unidad · J${u.owner}`,stats,`${u.moved?"Ya se movió.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`<button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectClose").addEventListener("click",closeInspector)})}
 function showInspector(title,sub,stats,desc,art,icon,actions,bind){$("inspectTitle").textContent=title;$("inspectSub").textContent=sub;$("inspectStats").innerHTML=stats.map(s=>`<div class="inspect-stat">${s.label}<strong>${s.value}</strong></div>`).join("");$("inspectDesc").innerHTML=desc;$("inspectActions").innerHTML=actions;const a=$("inspectArt");if(art){a.textContent="";a.style.background="none";a.style.backgroundImage=`url('${art}')`;a.style.backgroundSize="cover";a.style.backgroundPosition="center top"}else{a.style.backgroundImage="";a.style.background="linear-gradient(180deg,rgba(214,168,93,.96),rgba(90,57,24,.96))";a.textContent=icon||"⚔️"}$("inspectOverlay").classList.add("show");bind?.()}
 function closeInspector(){$("inspectOverlay").classList.remove("show")}
 
-function selectCard(id){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="prep")playSound("error");return setHint("No puedes jugar carta ahora.");const card=(privateState.hand||[]).find(c=>c.id===id);if(!card)return;if(card.cost>(privateState.res||0)){setHint("No tienes recurso suficiente.");return}selectedCard=card;selectedUnitId=null;if(card.spell==="buffAtk"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint("Elige una unidad aliada.")}else if(card.spell==="damage1"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige una unidad enemiga.")}else{if(privateState.summoned)return setHint("Ya convocaste este turno.");highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla verde junto a tu líder.")}render()}
+function selectCard(id){
+ cancelAutoAdvance();
+ if(!isMyTurn()||publicState.phase!=="prep"){
+  playSound("error");
+  return setHint("No puedes kastear esta carta ahora.");
+ }
+ const card=(privateState.hand||[]).find(c=>c.id===id);
+ if(!card)return;
+ if(card.cost>(privateState.res||0)){
+  playSound("error");
+  setHint("No tienes stock elemental suficiente.");
+  return;
+ }
+ selectedCard=card;
+ selectedUnitId=null;
+ if(card.spell==="buffAtk"){
+  highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);
+  highlightType="move";
+  setHint("Elige una unidad aliada.");
+ }else if(card.spell==="damage1"){
+  highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);
+  highlightType="attack";
+  setHint("Elige una unidad enemiga.");
+ }else{
+  if(privateState.summoned)return setHint("Ya kasteaste este turno.");
+  highlights=summonZones(myPlayer);
+  highlightType="summon";
+  setHint("Elige una coordenada verde junto a tu kaster.");
+ }
+ render();
+}
 function selectUnit(u){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="action"){showUnitInspector(u);return}if(u.owner!==myPlayer)return setHint("Solo tus unidades.");selectedUnitId=u.id;selectedCard=null;highlights=[...moveZones(u),...attackZones(u)];highlightType="move";setHint("Verde: mover. Rojo: atacar.");render()}
 function clearSelection(){selectedCard=null;selectedUnitId=null;highlights=[];summonDisplay=null;setHint("Selección cancelada.");render()}
 async function cellClick(x,y){
  if(!publicState||!isMyTurn()){const u=getUnitAt(x,y); if(u)showUnitInspector(u); return}
+ if(publicState.phase==="cycle"){setHint("Estás en fase de ciclado. Pasa a kasteo para jugar cartas.");return}
  const u=getUnitAt(x,y);
  if(publicState.phase==="prep"&&selectedCard) return playCard(x,y,u);
  if(publicState.phase==="action"&&selectedUnitId){const s=getUnit(selectedUnitId); if(u&&u.owner!==myPlayer&&dist(s,u)<=s.range&&!s.acted)return combat(s,u); if(!u&&moveZones(s).includes(`${x},${y}`))return moveUnit(s,x,y)}
@@ -900,17 +956,17 @@ async function playCard(x,y,u){
  if(!card) return;
  if(!isMyTurn() || publicState.phase!=="prep"){
    playSound("error");
-   return setHint("No puedes jugar carta ahora.");
+   return setHint("No puedes kastear esta carta ahora.");
  }
  const resNow=privateState.res||0;
  if(card.cost>resNow){
    playSound("error");
-   return setHint("No tienes recurso suficiente.");
+   return setHint("No tienes stock elemental suficiente.");
  }
 
  // IMPORTANTE 0.3B:
  // Primero validamos y aplicamos el efecto en una copia del tablero.
- // Solo si todo sale bien se descuenta recurso y se elimina la carta.
+ // Solo si todo sale bien se descuenta stock elemental y se elimina la carta.
  let units=[...(publicState.units||[])].map(unit=>({...unit}));
  const targetIndex = u ? units.findIndex(unit=>unit.id===u.id) : -1;
 
@@ -944,23 +1000,47 @@ async function playCard(x,y,u){
  if(!card.spell){
    if(privateState.summoned){
      playSound("error");
-     return setHint("Ya convocaste este turno.");
+     return setHint("Ya kasteaste este turno.");
    }
    if(!summonZones(myPlayer).includes(`${x},${y}`)){
      playSound("error");
-     return setHint("Casilla inválida.");
+     return setHint("Coordenada inválida.");
    }
    await summon(card,x,y);
  }
 }
 async function commitPrivateCard(card,extra={}){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const data={hand,res:extra.res??privateState.res,deck:privateState.deck||[],summoned:extra.summoned??privateState.summoned,lastTurnStarted:privateState.lastTurnStarted||""};await update(ref(db,`games/${gameId}/private/player${myPlayer}`),data);await update(ref(db,`games/${gameId}/public/playerStats/${myPlayer}`),{res:data.res,deck:data.deck.length,hand:data.hand.length})}
-async function summon(card,x,y){const leader=getLeader(myPlayer); const units=(publicState.units||[]).map(u=>u.id===leader.id?{...u,pose:"summon"}:u); await update(ref(db,`games/${gameId}/public`),{units,summonDisplay:{x,y}}); setHint("Invocando..."); setTimeout(async()=>{const latest=await get(ref(db,`games/${gameId}/public/units`));const curr=latest.val()||[];const clean=curr.map(u=>u.id===leader.id?{...u,pose:"idle"}:u);clean.push(makeUnit(card,x,y));await update(ref(db,`games/${gameId}/public`),{units:clean,summonDisplay:null});await commitPrivateCard(card,{res:(privateState.res||0)-card.cost,summoned:true});playSound('summon');await pushLog(`J${myPlayer} convoca ${card.name}.`);selectedCard=null;highlights=[];handOpen=false;render()},900)}
+async function summon(card,x,y){const leader=getLeader(myPlayer); const units=(publicState.units||[]).map(u=>u.id===leader.id?{...u,pose:"summon"}:u); await update(ref(db,`games/${gameId}/public`),{units,summonDisplay:{x,y}}); setHint("Kasteando..."); setTimeout(async()=>{const latest=await get(ref(db,`games/${gameId}/public/units`));const curr=latest.val()||[];const clean=curr.map(u=>u.id===leader.id?{...u,pose:"idle"}:u);clean.push(makeUnit(card,x,y));await update(ref(db,`games/${gameId}/public`),{units:clean,summonDisplay:null});await commitPrivateCard(card,{res:(privateState.res||0)-card.cost,summoned:true});playSound('summon');await pushLog(`J${myPlayer} kastea ${card.name}.`);selectedCard=null;highlights=[];handOpen=false;render()},900)}
 async function moveUnit(u,x,y){const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updatePublicUnits(units);playSound('move');await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}
 async function combat(a,d){const units=(publicState.units||[]).map(u=>u.id===a.id?{...u,pose:"attack"}:u);await updatePublicUnits(units);showCombat(a,d);setTimeout(async()=>{const fresh=(await get(ref(db,`games/${gameId}/public/units`))).val()||[];let newUnits=fresh.map(u=>{if(u.id===a.id)return{...u,pose:"idle",acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u});await cleanupAndUpdate(newUnits);playSound('hit');await pushLog(`${a.name} ataca a ${d.name}.`);selectedUnitId=null;highlights=[];$("combatOverlay").classList.remove("show")},1300)}
 function showCombat(a,d){$("combatLeftName").textContent=a.name;$("combatRightName").textContent=d.name;$("combatLeftStats").textContent=`HP ${a.hp} · AT ${effectiveAtk(a)}`;$("combatRightStats").textContent=`HP ${d.hp} · AT ${effectiveAtk(d)}`; $("combatLeftArt").style.backgroundImage=a.leader?`url('${leaderPortrait({...a,pose:"attack"})}')`:"";$("combatLeftArt").style.background=a.leader?"":genericPortrait(a);$("combatRightArt").style.backgroundImage=d.leader?`url('${leaderPortrait(d)}')`:"";$("combatRightArt").style.background=d.leader?"":genericPortrait(d);$("combatOverlay").classList.add("show")}
 async function updatePublicUnits(units){await update(ref(db,`games/${gameId}/public`),{units})}
 async function cleanupAndUpdate(units){const live=[];for(const u of units){if(u.hp<=0){await pushLog(`${u.name} cae.`)}else live.push(u)}await updatePublicUnits(live)}
-async function phaseButton(){cancelAutoAdvance();if(!isMyTurn())playSound("error");return setHint("No es tu turno.");if(publicState.phase==="prep"){await update(ref(db,`games/${gameId}/public`),{phase:"action"});clearSelection();playSound('phase');await pushLog(`J${myPlayer} entra en fase de batalla.`)}else{const next=myPlayer===1?2:1;const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"prep",turn,turnKey:`${turn}-${next}`});clearSelection();playSound('phase');await pushLog(`Fin de turno. Ahora juega J${next}.`)}}
+async function phaseButton(){
+ cancelAutoAdvance();
+ if(!isMyTurn()){
+  playSound("error");
+  return setHint("No es tu turno.");
+ }
+ if(publicState.phase==="cycle"){
+  await update(ref(db,`games/${gameId}/public`),{phase:"prep"});
+  clearSelection();
+  playSound('phase');
+  await pushLog(`J${myPlayer} termina fase de ciclado e inicia fase de kasteo.`);
+ }else if(publicState.phase==="prep"){
+  await update(ref(db,`games/${gameId}/public`),{phase:"action"});
+  clearSelection();
+  playSound('phase');
+  await pushLog(`J${myPlayer} entra en fase de combate.`);
+ }else{
+  const next=myPlayer===1?2:1;
+  const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
+  await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"cycle",turn,turnKey:`${turn}-${next}`});
+  clearSelection();
+  playSound('phase');
+  await pushLog(`Fin de turno. Ahora J${next} entra en fase de ciclado.`);
+ }
+}
 
 function setupManualDrag(card,el,e){if(!isMyTurn()||publicState.phase!=="prep")return;let started=false,sx=e.clientX,sy=e.clientY;const move=ev=>{if(!started&&(Math.abs(ev.clientX-sx)>6||Math.abs(ev.clientY-sy)>6)){started=true;startManualDrag(card,el,ev)}};const up=()=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up)};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up,{once:true})}
 function startManualDrag(card,el,e){selectCard(card.id);const ghost=el.cloneNode(true);ghost.classList.add("drag-ghost");ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";document.body.appendChild(ghost);manualDrag={ghost,over:null,moved:false};window.addEventListener("pointermove",manualMove);window.addEventListener("pointerup",manualEnd,{once:true})}
