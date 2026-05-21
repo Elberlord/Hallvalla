@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.18 - Restauración post combate</title>
+<title>ROK Online 0.19 - Cartas de campo grandes</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -507,13 +507,77 @@ button{font-family:inherit}
   font-size:11px;
 }
 
+
+/* ROK 0.19: cartas/figuras de campo más grandes.
+   Solo ajuste visual, no cambia reglas. */
+.field-card{
+  width:40px!important;
+  height:56px!important;
+  margin-top:-9px!important;
+}
+.field-card.leader{
+  width:46px!important;
+  height:64px!important;
+  margin-top:-13px!important;
+}
+.portrait{
+  height:31px!important;
+}
+.field-card.leader .portrait{
+  height:37px!important;
+}
+.field-stats{
+  height:20px!important;
+}
+.name-strip{
+  font-size:5.5px!important;
+}
+.field-stat{
+  font-size:4.5px!important;
+}
+.field-stat strong{
+  font-size:6.5px!important;
+}
+.board-unit-mark{
+  height:34px!important;
+  font-size:24px!important;
+}
+.summon-display{
+  width:48px!important;
+  height:48px!important;
+  margin-top:-12px!important;
+}
+
+/* En móvil las agrandamos menos para que no se monten demasiado. */
+@media(max-width:980px){
+  .field-card{
+    width:28px!important;
+    height:40px!important;
+    margin-top:-6px!important;
+  }
+  .field-card.leader{
+    width:32px!important;
+    height:46px!important;
+    margin-top:-9px!important;
+  }
+  .portrait{
+    height:23px!important;
+  }
+  .field-card.leader .portrait{
+    height:27px!important;
+  }
+  .field-stats{
+    height:15px!important;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.18</h1>
-    <p>Paso 11: restauración automática básica del atacante después de combate entre invocaciones.</p>
+    <h1>ROK Online 0.19</h1>
+    <p>Ajuste visual: cartas kasteadas en campo un poco más grandes.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
