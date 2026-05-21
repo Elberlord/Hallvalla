@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.11 - Límite de kasteos</title>
+<title>ROK Online 0.14 - Restauración manual</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -481,15 +481,39 @@ button{font-family:inherit}
   }
 }
 
-/* ROK 0.11: Paso 4 aplicado.
-   Límite de 3 kasteos de invocación por fase de kasteo. */
+/* ROK 0.14: Paso 7 aplicado.
+   Restauración manual al nexo para invocaciones propias. */
+
+.field-card.off-nexo .field-frame{
+  box-shadow:0 10px 16px rgba(0,0,0,.42),0 0 0 2px rgba(255,209,102,.18)!important;
+}
+.field-card.off-nexo:after{
+  content:"◆";
+  position:absolute;
+  right:-3px;
+  top:-5px;
+  color:#ffd166;
+  font-size:10px;
+  text-shadow:0 0 6px rgba(0,0,0,.8);
+  z-index:5;
+}
+
+
+#detailBox .btn.full{
+  width:100%;
+  margin-top:6px;
+  padding:7px 8px;
+  border-radius:9px;
+  font-size:11px;
+}
+
 </style>
 </head>
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.11</h1>
-    <p>Paso 4: límite de 3 kasteos de invocación por fase de kasteo.</p>
+    <h1>ROK Online 0.14</h1>
+    <p>Paso 7: restauración manual al nexo para invocaciones propias.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -630,7 +654,7 @@ function elementNames(list){
  return (list||[]).map(e=>e.icon+" "+e.element).join(", ");
 }
 function makeLeader(owner,x,y){return {id:`L${owner}`,owner,leader:true,name:owner===1?"Faraón de la Lanza Solar":"Hierofante del Sol Negro",key:owner===1?"leader_pharaoh":"leader_mage",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:1,mov:3,range:1,pose:"idle",moved:false,acted:false,buffAtk:0}}
-function makeUnit(card,x,y){return {id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,hp:card.hp,maxHp:card.hp,atk:card.atk,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
+function makeUnit(card,x,y){return {id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
 function logLocal(t){const d=document.createElement("div");d.textContent=t;$("logPanel").prepend(d)}
 async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,16);await update(ref(db,`games/${gameId}/public`),{log:logs})}
 function setHint(t){$("hint").textContent=t}
@@ -700,6 +724,39 @@ function isMyTurn(){return publicState && publicState.currentPlayer===myPlayer}
 function getUnitAt(x,y){return (publicState?.units||[]).find(u=>u.x===x&&u.y===y)}
 function getUnit(id){return (publicState?.units||[]).find(u=>u.id===id)}
 function getLeader(p){return (publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
+function ownInvocationCount(player=myPlayer){
+ return (publicState?.units||[]).filter(u=>u.owner===player && !u.leader).length;
+}
+function canKasteInvocation(){
+ return ownInvocationCount(myPlayer) < 6;
+}
+function nexoText(u){
+ if(!u || u.leader || u.nexoX===undefined || u.nexoY===undefined) return "Sin nexo";
+ return `${u.nexoX+1},${u.nexoY+1}`;
+}
+function isAtNexo(u){
+ return !!u && !u.leader && u.nexoX!==undefined && u.nexoY!==undefined && u.x===u.nexoX && u.y===u.nexoY;
+}
+function canRestoreToNexo(u){
+ if(!u || u.leader || u.owner!==myPlayer || !isMyTurn()) return false;
+ if(isAtNexo(u)) return false;
+ if(u.nexoX===undefined || u.nexoY===undefined) return false;
+ const occupant=getUnitAt(u.nexoX,u.nexoY);
+ return !occupant || occupant.id===u.id;
+}
+async function restoreUnitToNexo(unitId){
+ const u=getUnit(unitId);
+ if(!u) return;
+ if(!canRestoreToNexo(u)){
+  playSound("error");
+  return setHint("No puedes restaurar esta invocación ahora o su nexo está ocupado.");
+ }
+ const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x:it.nexoX,y:it.nexoY,moved:true,acted:true}:it);
+ await updatePublicUnits(units);
+ clearSelection();
+ playSound("phase");
+ await pushLog(`${u.name} se restaura a su nexo ${u.nexoX+1},${u.nexoY+1}.`);
+}
 function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}
 function hasCommandBuff(u){return false}
 function effectiveAtk(u){return (u?.atk||0)+(u?.buffAtk||0)+(hasCommandBuff(u)?1:0)}
@@ -820,6 +877,7 @@ function getPlayableCards(){
     }
     if(!card.spell){
       if((privateState.summonCount||0)>=3) return false;
+      if(!canKasteInvocation()) return false;
       return summonZones(myPlayer).length>0;
     }
     return false;
@@ -944,12 +1002,12 @@ function renderHud(){
 }
 function renderBoard(){
  const grid=$("grid"); grid.innerHTML="";
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const cell=document.createElement("div");cell.className="cell";cell.dataset.coord=`${x+1},${y+1}`;cell.dataset.x=x;cell.dataset.y=y;const key=`${x},${y}`; if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid"); if(publicState.summonDisplay&&publicState.summonDisplay.x===x&&publicState.summonDisplay.y===y){const d=document.createElement("div");d.className="summon-display";cell.appendChild(d)} const u=getUnitAt(x,y); if(u){if(selectedUnitId===u.id)cell.classList.add("selected");const sh=document.createElement("div");sh.className="field-shadow";cell.appendChild(sh);const card=document.createElement("div");card.className=`field-card ${u.owner===1?"p1card":"p2card"} ${u.leader?"leader":""} ${u.moved?"moved":""}`;const ps=u.leader?`background-image:url('${leaderPortrait(u)}');background-size:cover;background-position:center top;`:`background:${genericPortrait(u)};`;const mark=u.leader?"":`<div class="board-unit-mark">${u.icon||"⚔️"}</div>`;card.innerHTML=`<div class="field-frame"><div class="portrait" style="${ps}"><div class="name-strip">${u.name}</div>${mark}</div><div class="divider"></div><div class="field-stats"><div class="field-stat">HP<strong>${u.hp}</strong></div><div class="field-stat">AT<strong>${effectiveAtk(u)}</strong></div><div class="field-stat">MV<strong>${effectiveMov(u)}</strong></div><div class="field-stat">RG<strong>${u.range}</strong></div></div></div>`;cell.appendChild(card)} cell.addEventListener("click",()=>cellClick(x,y)); cell.appendChild(document.createTextNode("")); grid.appendChild(cell)}
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const cell=document.createElement("div");cell.className="cell";cell.dataset.coord=`${x+1},${y+1}`;cell.dataset.x=x;cell.dataset.y=y;const key=`${x},${y}`; if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid"); if(publicState.summonDisplay&&publicState.summonDisplay.x===x&&publicState.summonDisplay.y===y){const d=document.createElement("div");d.className="summon-display";cell.appendChild(d)} const u=getUnitAt(x,y); if(u){if(selectedUnitId===u.id)cell.classList.add("selected");const sh=document.createElement("div");sh.className="field-shadow";cell.appendChild(sh);const card=document.createElement("div");card.className=`field-card ${u.owner===1?"p1card":"p2card"} ${u.leader?"leader":""} ${u.moved?"moved":""} ${(!u.leader && !isAtNexo(u))?"off-nexo":""}`;card.title=u.leader?u.name:`${u.name} · Nexo ${nexoText(u)}`;const ps=u.leader?`background-image:url('${leaderPortrait(u)}');background-size:cover;background-position:center top;`:`background:${genericPortrait(u)};`;const mark=u.leader?"":`<div class="board-unit-mark">${u.icon||"⚔️"}</div>`;card.innerHTML=`<div class="field-frame"><div class="portrait" style="${ps}"><div class="name-strip">${u.name}</div>${mark}</div><div class="divider"></div><div class="field-stats"><div class="field-stat">HP<strong>${u.hp}</strong></div><div class="field-stat">AT<strong>${effectiveAtk(u)}</strong></div><div class="field-stat">MV<strong>${effectiveMov(u)}</strong></div><div class="field-stat">RG<strong>${u.range}</strong></div></div></div>`;cell.appendChild(card)} cell.addEventListener("click",()=>cellClick(x,y)); cell.appendChild(document.createTextNode("")); grid.appendChild(cell)}
 }
 function renderSide(){
- $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Kasteos ${privateState?.summonCount||0}/3 · Código: ${gameId||"..."}</div>`;
+ $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Kasteos ${privateState?.summonCount||0}/3 · Invocaciones ${ownInvocationCount(myPlayer)}/6 · Código: ${gameId||"..."}</div>`;
  if(selectedCard){$("detailBox").innerHTML=`<h3 class="side-title">${selectedCard.icon} ${selectedCard.name}</h3><p><strong>Costo:</strong> ${selectedCard.cost}</p><p>${selectedCard.text||""}</p><p><strong>Efecto:</strong> ${selectedCard.effect||"Sin efecto."}</p>`;return}
- if(selectedUnitId){const u=getUnit(selectedUnitId);$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p>`;return}
+ if(selectedUnitId){const u=getUnit(selectedUnitId);const restoreHtml=canRestoreToNexo(u)?`<button class="btn primary full" id="restoreBtn">Restaurar al nexo</button>`:"";$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p><p>${u.leader?"Kaster sin nexo.":`Nexo: ${nexoText(u)} · ${isAtNexo(u)?"en nexo":"fuera del nexo"}`}</p>${restoreHtml}`;const rb=$("restoreBtn");if(rb)rb.addEventListener("click",()=>restoreUnitToNexo(u.id));return}
  $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la spellbook o selecciona una unidad.":"Espera al rival."}</p>`;
 }
 function renderHand(){
@@ -965,7 +1023,7 @@ function showCardInspector(card){
  const stats=card.spell?[{label:"Costo",value:card.cost},{label:"Tipo",value:"Técnica"},{label:"Rol",value:card.rol}]:[{label:"Costo",value:card.cost},{label:"Vida",value:card.hp},{label:"Ataque",value:card.atk},{label:"Movimiento",value:card.mov},{label:"Alcance",value:card.range},{label:"Rol",value:card.rol}];
  showInspector(card.name,`Carta en spellbook · J${myPlayer}`,stats,`<strong>${card.tipo}</strong><br>${card.text}<br><br><strong>Efecto:</strong> ${card.effect}`,null,card.icon,`<button class="btn primary" id="inspectSelect">Seleccionar para jugar</button><button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectSelect").addEventListener("click",()=>{selectCard(card.id);closeInspector()});$("inspectClose").addEventListener("click",closeInspector)})
 }
-function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;showInspector(u.name,u.leader?`Líder · J${u.owner}`:`Unidad · J${u.owner}`,stats,`${u.moved?"Ya se movió.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`<button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectClose").addEventListener("click",closeInspector)})}
+function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Nexo",value:u.leader?"No aplica":nexoText(u)},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;const nexoInfo=u.leader?"El kaster no tiene nexo.":`Nexo de restauración: ${nexoText(u)}. ${isAtNexo(u)?"Está sobre su nexo.":"Está fuera de su nexo."}`;const restoreBtn=canRestoreToNexo(u)?`<button class="btn primary" id="inspectRestore">Restaurar al nexo</button>`:"";showInspector(u.name,u.leader?`Kaster · J${u.owner}`:`Invocación · J${u.owner}`,stats,`${nexoInfo}<br>${u.moved?"Ya se movió.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`${restoreBtn}<button class="btn" id="inspectClose">Cerrar</button>`,()=>{const rb=$("inspectRestore");if(rb)rb.addEventListener("click",()=>{closeInspector();restoreUnitToNexo(u.id)});$("inspectClose").addEventListener("click",closeInspector)})}
 function showInspector(title,sub,stats,desc,art,icon,actions,bind){$("inspectTitle").textContent=title;$("inspectSub").textContent=sub;$("inspectStats").innerHTML=stats.map(s=>`<div class="inspect-stat">${s.label}<strong>${s.value}</strong></div>`).join("");$("inspectDesc").innerHTML=desc;$("inspectActions").innerHTML=actions;const a=$("inspectArt");if(art){a.textContent="";a.style.background="none";a.style.backgroundImage=`url('${art}')`;a.style.backgroundSize="cover";a.style.backgroundPosition="center top"}else{a.style.backgroundImage="";a.style.background="linear-gradient(180deg,rgba(214,168,93,.96),rgba(90,57,24,.96))";a.textContent=icon||"⚔️"}$("inspectOverlay").classList.add("show");bind?.()}
 function closeInspector(){$("inspectOverlay").classList.remove("show")}
 
@@ -996,6 +1054,10 @@ function selectCard(id){
   if((privateState.summonCount||0)>=3){
    playSound("error");
    return setHint("Ya alcanzaste el límite de 3 kasteos de invocación esta fase.");
+  }
+  if(!canKasteInvocation()){
+   playSound("error");
+   return setHint("Ya tienes 6 invocaciones en la arena.");
   }
   highlights=summonZones(myPlayer);
   highlightType="summon";
@@ -1063,6 +1125,10 @@ async function playCard(x,y,u){
    if((privateState.summonCount||0)>=3){
      playSound("error");
      return setHint("Ya alcanzaste el límite de 3 kasteos de invocación esta fase.");
+   }
+   if(!canKasteInvocation()){
+     playSound("error");
+     return setHint("Ya tienes 6 invocaciones en la arena.");
    }
    if(!summonZones(myPlayer).includes(`${x},${y}`)){
      playSound("error");
