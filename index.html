@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.20 - Restauración al dañar kaster</title>
+<title>ROK Online 0.24 - Defensa física y mágica</title>
 <style>
 :root {
   --text:#f8f1e6;
@@ -576,8 +576,8 @@ button{font-family:inherit}
 <body>
 <div class="lobby" id="lobby">
   <div class="lobby-card">
-    <h1>ROK Online 0.20</h1>
-    <p>Paso 12: una invocación que daña al kaster rival intenta restaurarse a su nexo.</p>
+    <h1>ROK Online 0.24</h1>
+    <p>Paso 16: defensa física y defensa mágica para personajes en spellbook y arena.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
         <h3>Crear partida</h3>
@@ -667,10 +667,10 @@ const ART={
 const cardPool=[
  {name:"Lancero del Nilo",key:"spearman",icon:"🗡️",cost:1,hp:2,atk:1,mov:4,range:1,copies:4,tipo:"Unidad",rol:"Infantería rápida",text:"Unidad cuerpo a cuerpo para formar línea.",effect:"Sin efecto especial por ahora."},
  {name:"Arquero del Oasis",key:"archer",icon:"🏹",cost:2,hp:1,atk:1,mov:3,range:4,copies:3,tipo:"Unidad",rol:"Ataque a distancia",text:"Ataca desde atrás, pero es frágil.",effect:"No sufre desgaste melee al atacar a distancia."},
- {name:"Guardia de Arena Negra",key:"guardian",icon:"🛡️",cost:2,hp:4,atk:1,mov:3,range:1,copies:3,tipo:"Unidad",rol:"Defensa",text:"Protector ideal para el líder.",effect:"Alta resistencia inicial."},
+ {name:"Guardia de Arena Negra",key:"guardian",icon:"🛡️",cost:2,hp:4,atk:1,physicalDef:1,magicDef:1,damageType:'physical',counterDamage:1,mov:3,range:1,copies:3,tipo:"Unidad",rol:"Defensa",text:"Protector ideal para el líder.",effect:"Alta resistencia inicial."},
  {name:"Explorador del Desierto",key:"scout",icon:"🐫",cost:2,hp:2,atk:1,mov:6,range:1,copies:3,tipo:"Unidad",rol:"Movilidad",text:"Cruza terreno rápido para flanquear.",effect:"Movimiento alto."},
  {name:"Bendición Solar",key:"spell",icon:"✨",cost:1,spell:"buffAtk",copies:2,tipo:"Técnica",rol:"Mejora",text:"+1 ataque a una unidad aliada este turno.",effect:"Selecciona una unidad aliada."},
- {name:"Maldición de Arena",key:"spell",icon:"🔥",cost:1,spell:"damage1",copies:2,tipo:"Técnica",rol:"Daño directo",text:"Causa 1 daño a una unidad enemiga.",effect:"Selecciona una unidad enemiga."}
+ {name:"Maldición de Arena",key:"spell",icon:"🔥",cost:1,spell:"damage1",damageType:"magic",copies:2,tipo:"Técnica",rol:"Daño directo",text:"Causa 1 daño a una unidad enemiga.",effect:"Selecciona una unidad enemiga."}
 ];
 
 let uid=null, gameId=null, myPlayer=null;
@@ -718,8 +718,8 @@ function drawElementsFromSource(source,n){
 function elementNames(list){
  return (list||[]).map(e=>e.icon+" "+e.element).join(", ");
 }
-function makeLeader(owner,x,y){return {id:`L${owner}`,owner,leader:true,name:owner===1?"Faraón de la Lanza Solar":"Hierofante del Sol Negro",key:owner===1?"leader_pharaoh":"leader_mage",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:1,mov:3,range:1,pose:"idle",moved:false,acted:false,buffAtk:0}}
-function makeUnit(card,x,y){return {id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
+function makeLeader(owner,x,y){return {id:`L${owner}`,owner,leader:true,name:owner===1?"Faraón de la Lanza Solar":"Hierofante del Sol Negro",key:owner===1?"leader_pharaoh":"leader_mage",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:1,physicalDef:1,magicDef:1,damageType:'physical',counterDamage:1,mov:3,range:1,pose:"idle",moved:false,acted:false,buffAtk:0}}
+function makeUnit(card,x,y){return {id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,physicalDef:card.physicalDef||0,magicDef:card.magicDef||0,damageType:card.damageType||'physical',mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
 function logLocal(t){const d=document.createElement("div");d.textContent=t;$("logPanel").prepend(d)}
 async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,16);await update(ref(db,`games/${gameId}/public`),{log:logs})}
 function setHint(t){$("hint").textContent=t}
@@ -883,6 +883,11 @@ async function restoreUnitToNexo(unitId){
 function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}
 function hasCommandBuff(u){return false}
 function effectiveAtk(u){return (u?.atk||0)+(u?.buffAtk||0)+(hasCommandBuff(u)?1:0)}
+function effectivePhysicalDef(u){return Math.max(0,u?.physicalDef??u?.def??0)}
+function effectiveMagicDef(u){return Math.max(0,u?.magicDef||0)}
+function defenseForDamage(u,type){return type==="magic"?effectiveMagicDef(u):effectivePhysicalDef(u)}
+function damageTypeLabel(type){return type==="magic"?"mágico":"físico"}
+function effectiveCounter(u){return Math.max(0,u?.counterDamage||0)}
 function effectiveMov(u){return (u?.mov||0)+(hasCommandBuff(u)?1:0)}
 function leaderPortrait(u){if(!u)return""; if(u.owner===1){if(u.pose==="attack")return ART.pharaohAttack;if(u.pose==="summon")return ART.pharaohSummon;return ART.pharaohIdle} if(u.pose==="attack")return ART.mageAttack;if(u.pose==="summon")return ART.mageCast;return ART.mageIdle}
 function genericPortrait(u){const g={spearman:"linear-gradient(180deg,#d6a85d,#6a4120)",archer:"linear-gradient(180deg,#c6a15a,#5a3918)",guardian:"linear-gradient(180deg,#c9a55f,#604126)",scout:"linear-gradient(180deg,#c99c4c,#573617)",spell:"linear-gradient(180deg,#d7b97c,#7a5530)"};return g[u?.key]||"linear-gradient(180deg,#d6a85d,#6a4120)"}
@@ -1134,7 +1139,7 @@ function renderBoard(){
 function renderSide(){
  $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Kasteos ${privateState?.summonCount||0}/3 · Invocaciones ${ownInvocationCount(myPlayer)}/6 · Código: ${gameId||"..."}</div>`;
  if(selectedCard){$("detailBox").innerHTML=`<h3 class="side-title">${selectedCard.icon} ${selectedCard.name}</h3><p><strong>Costo:</strong> ${selectedCard.cost}</p><p>${selectedCard.text||""}</p><p><strong>Efecto:</strong> ${selectedCard.effect||"Sin efecto."}</p>`;return}
- if(selectedUnitId){const u=getUnit(selectedUnitId);const restoreHtml=canRestoreToNexo(u)?`<button class="btn primary full" id="restoreBtn">Restaurar al nexo</button>`:"";$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p><p>${u.leader?"Kaster sin nexo.":`Nexo: ${nexoText(u)} · ${isAtNexo(u)?"en nexo":"fuera del nexo"}`}</p>${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?`<p>Primer turno: no puede avanzar.</p>`:""}${mustTakeTarget(u)?`<p>Objetivo obligatorio: debe atacar a un rival en rango.</p>`:""}${(!u.leader&&u.moved&&!isFirstTurnNoAdvance(u.owner))?`<p>Ya realizó avance/movimiento.</p>`:""}${restoreHtml}`;const rb=$("restoreBtn");if(rb)rb.addEventListener("click",()=>restoreUnitToNexo(u.id));return}
+ if(selectedUnitId){const u=getUnit(selectedUnitId);const restoreHtml=canRestoreToNexo(u)?`<button class="btn primary full" id="restoreBtn">Restaurar al nexo</button>`:"";$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · DF ${effectivePhysicalDef(u)} · DM ${effectiveMagicDef(u)}${u.leader?` · COUNTER ${effectiveCounter(u)}`:""} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p><p>${u.leader?"Kaster sin nexo.":`Nexo: ${nexoText(u)} · ${isAtNexo(u)?"en nexo":"fuera del nexo"}`}</p>${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?`<p>Primer turno: no puede avanzar.</p>`:""}${mustTakeTarget(u)?`<p>Objetivo obligatorio: debe atacar a un rival en rango.</p>`:""}${(!u.leader&&u.moved&&!isFirstTurnNoAdvance(u.owner))?`<p>Ya realizó avance/movimiento.</p>`:""}${restoreHtml}`;const rb=$("restoreBtn");if(rb)rb.addEventListener("click",()=>restoreUnitToNexo(u.id));return}
  $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la spellbook o selecciona una unidad.":"Espera al rival."}</p>`;
 }
 function renderHand(){
@@ -1150,7 +1155,7 @@ function showCardInspector(card){
  const stats=card.spell?[{label:"Costo",value:card.cost},{label:"Tipo",value:"Técnica"},{label:"Rol",value:card.rol}]:[{label:"Costo",value:card.cost},{label:"Vida",value:card.hp},{label:"Ataque",value:card.atk},{label:"Movimiento",value:card.mov},{label:"Alcance",value:card.range},{label:"Rol",value:card.rol}];
  showInspector(card.name,`Carta en spellbook · J${myPlayer}`,stats,`<strong>${card.tipo}</strong><br>${card.text}<br><br><strong>Efecto:</strong> ${card.effect}`,null,card.icon,`<button class="btn primary" id="inspectSelect">Seleccionar para jugar</button><button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectSelect").addEventListener("click",()=>{selectCard(card.id);closeInspector()});$("inspectClose").addEventListener("click",closeInspector)})
 }
-function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Nexo",value:u.leader?"No aplica":nexoText(u)},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;const nexoInfo=u.leader?"El kaster no tiene nexo.":`Nexo de restauración: ${nexoText(u)}. ${isAtNexo(u)?"Está sobre su nexo.":"Está fuera de su nexo."}`;const restoreBtn=canRestoreToNexo(u)?`<button class="btn primary" id="inspectRestore">Restaurar al nexo</button>`:"";showInspector(u.name,u.leader?`Kaster · J${u.owner}`:`Invocación · J${u.owner}`,stats,`${nexoInfo}<br>${mustTakeTarget(u)?"Objetivo obligatorio: debe atacar a un rival en rango.<br>":""}${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?"Primer turno: no puede avanzar.<br>":""}${(!u.leader&&u.moved)?"Ya realizó avance/movimiento.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`${restoreBtn}<button class="btn" id="inspectClose">Cerrar</button>`,()=>{const rb=$("inspectRestore");if(rb)rb.addEventListener("click",()=>{closeInspector();restoreUnitToNexo(u.id)});$("inspectClose").addEventListener("click",closeInspector)})}
+function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Def. física",value:effectivePhysicalDef(u)},{label:"Def. mágica",value:effectiveMagicDef(u)},{label:"Counter",value:u.leader?effectiveCounter(u):"—"},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Nexo",value:u.leader?"No aplica":nexoText(u)},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;const nexoInfo=u.leader?"El kaster no tiene nexo.":`Nexo de restauración: ${nexoText(u)}. ${isAtNexo(u)?"Está sobre su nexo.":"Está fuera de su nexo."}`;const restoreBtn=canRestoreToNexo(u)?`<button class="btn primary" id="inspectRestore">Restaurar al nexo</button>`:"";showInspector(u.name,u.leader?`Kaster · J${u.owner}`:`Invocación · J${u.owner}`,stats,`${nexoInfo}<br>${mustTakeTarget(u)?"Objetivo obligatorio: debe atacar a un rival en rango.<br>":""}${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?"Primer turno: no puede avanzar.<br>":""}${(!u.leader&&u.moved)?"Ya realizó avance/movimiento.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`${restoreBtn}<button class="btn" id="inspectClose">Cerrar</button>`,()=>{const rb=$("inspectRestore");if(rb)rb.addEventListener("click",()=>{closeInspector();restoreUnitToNexo(u.id)});$("inspectClose").addEventListener("click",closeInspector)})}
 function showInspector(title,sub,stats,desc,art,icon,actions,bind){$("inspectTitle").textContent=title;$("inspectSub").textContent=sub;$("inspectStats").innerHTML=stats.map(s=>`<div class="inspect-stat">${s.label}<strong>${s.value}</strong></div>`).join("");$("inspectDesc").innerHTML=desc;$("inspectActions").innerHTML=actions;const a=$("inspectArt");if(art){a.textContent="";a.style.background="none";a.style.backgroundImage=`url('${art}')`;a.style.backgroundSize="cover";a.style.backgroundPosition="center top"}else{a.style.backgroundImage="";a.style.background="linear-gradient(180deg,rgba(214,168,93,.96),rgba(90,57,24,.96))";a.textContent=icon||"⚔️"}$("inspectOverlay").classList.add("show");bind?.()}
 function closeInspector(){$("inspectOverlay").classList.remove("show")}
 
@@ -1248,7 +1253,7 @@ async function playCard(x,y,u){
      playSound("error");
      return setHint("Objetivo inválido para Maldición de Arena.");
    }
-   units[targetIndex].hp=(units[targetIndex].hp||0)-1;
+   units[targetIndex].hp=(units[targetIndex].hp||0)-Math.max(0,1-effectiveMagicDef(units[targetIndex]));
    await cleanupAndUpdate(units);
    await commitPrivateCard(card,{res:resNow-card.cost});
    playSound("hit");
@@ -1294,21 +1299,51 @@ function combat(a,d){
  showCombat(a,d);
  setTimeout(async()=>{
   const fresh=(await get(ref(db,`games/${gameId}/public/units`))).val()||[];
-  let newUnits=fresh.map(u=>{
-   if(u.id===a.id)return{...u,pose:"idle",acted:true};
-   if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};
-   return u;
-  });
 
   const targetIsInvocation=!d.leader;
   const targetIsKaster=!!d.leader;
   const attackerIsInvocation=!a.leader;
-  let restoreResult={units:newUnits,restored:false,reason:"skip"};
 
-  // Restauración básica:
-  // 1) invocación vs invocación
-  // 2) invocación que daña al kaster rival
-  if(attackerIsInvocation && (targetIsInvocation || targetIsKaster)){
+  const attackType=a.damageType||"physical";
+  const rawDamage=effectiveAtk(a);
+  const defense=(targetIsKaster && attackerIsInvocation)?defenseForDamage(d,attackType):defenseForDamage(d,attackType);
+  let finalDamage=Math.max(0,rawDamage-defense);
+
+  let counterUsed=false;
+  const counterAvailable=(targetIsKaster && attackerIsInvocation)?effectiveCounter(d):0;
+
+  const kasterBeforeHit=fresh.find(u=>u.id===d.id);
+  const wouldBeFatal=targetIsKaster && attackerIsInvocation && kasterBeforeHit && (kasterBeforeHit.hp-finalDamage)<=0;
+  if(targetIsKaster && attackerIsInvocation && counterAvailable>0 && wouldBeFatal){
+   counterUsed=true;
+   finalDamage=0;
+  }
+
+  const kasterCounterType=d.damageType||"physical";
+  const kasterCounterRaw=(targetIsKaster && attackerIsInvocation)?effectiveAtk(d):0;
+  const kasterCounterDamage=(targetIsKaster && attackerIsInvocation)?Math.max(0,kasterCounterRaw-defenseForDamage(a,kasterCounterType)):0;
+
+  let newUnits=fresh.map(u=>{
+   if(u.id===a.id)return{...u,pose:"idle",acted:true};
+   if(u.id===d.id){
+    const next={...u,hp:u.hp-finalDamage};
+    if(counterUsed) next.counterDamage=Math.max(0,(u.counterDamage||0)-1);
+    return next;
+   }
+   return u;
+  });
+
+  if(targetIsKaster && attackerIsInvocation){
+   const kasterAfter=newUnits.find(u=>u.id===d.id);
+   if(kasterAfter && kasterAfter.hp>0 && kasterCounterDamage>0){
+    newUnits=newUnits.map(u=>u.id===a.id?{...u,hp:u.hp-kasterCounterDamage}:u);
+   }
+  }
+
+  let restoreResult={units:newUnits,restored:false,reason:"skip"};
+  const attackerAfterCounter=newUnits.find(u=>u.id===a.id);
+
+  if(attackerIsInvocation && attackerAfterCounter && attackerAfterCounter.hp>0 && (targetIsInvocation || targetIsKaster)){
    restoreResult=restoreAttackerAfterCombat(newUnits,a.id);
    newUnits=restoreResult.units;
   }
@@ -1316,14 +1351,38 @@ function combat(a,d){
   await cleanupAndUpdate(newUnits);
   playSound('hit');
 
-  let msg=`${a.name} ataca a ${d.name}.`;
+  let msg=`${a.name} ataca a ${d.name} con daño ${damageTypeLabel(attackType)}.`;
+  msg+=` Defensa aplicada: ${defense}.`;
+  if(targetIsKaster && attackerIsInvocation){
+   if(counterUsed){
+    msg+=` Counter Damage automático usado para evitar daño fatal: daño recibido 0.`;
+   }else{
+    msg+=` Daño recibido: ${finalDamage}.`;
+   }
+   const kasterAfter=newUnits.find(u=>u.id===d.id);
+   if(kasterAfter && kasterAfter.hp>0 && kasterCounterDamage>0){
+    msg+=` ${d.name} contraataca automáticamente e inflige ${kasterCounterDamage} daño ${damageTypeLabel(kasterCounterType)}.`;
+   }else if(!kasterAfter || kasterAfter.hp<=0){
+    msg+=` ${d.name} cae y no puede contraatacar.`;
+   }
+  }else{
+   msg+=` Daño recibido: ${finalDamage}.`;
+  }
+
   if(attackerIsInvocation && targetIsInvocation){
    if(restoreResult.restored) msg+=` ${a.name} se restaura a su nexo.`;
    else if(restoreResult.reason==="occupied") msg+=` ${a.name} no puede restaurarse: su nexo está ocupado.`;
   }
+
   if(attackerIsInvocation && targetIsKaster){
-   if(restoreResult.restored) msg+=` ${a.name} dañó al kaster rival y se restaura a su nexo.`;
-   else if(restoreResult.reason==="occupied") msg+=` ${a.name} dañó al kaster rival, pero no puede restaurarse: su nexo está ocupado.`;
+   const attackerStillAlive=newUnits.find(u=>u.id===a.id);
+   if(!attackerStillAlive){
+    msg+=` ${a.name} es destruido por el contraataque y no se restaura.`;
+   }else if(restoreResult.restored){
+    msg+=` ${a.name} sobrevive y se restaura a su nexo.`;
+   }else if(restoreResult.reason==="occupied"){
+    msg+=` ${a.name} sobrevive, pero no puede restaurarse: su nexo está ocupado.`;
+   }
   }
 
   await pushLog(msg);
