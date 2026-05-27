@@ -1,1435 +1,656 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ROK Online 0.24 - Defensa física y mágica</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HallValla Home 0.6 Lite Lite - GitHub</title>
 <style>
-:root {
-  --text:#f8f1e6;
-  --muted:#d9c8ac;
-  --panel:rgba(34,22,14,.84);
-  --panel2:rgba(14,15,18,.86);
-  --gold:#ffd166;
-  --valid:rgba(106,220,128,.62);
-  --attack:rgba(239,71,111,.82);
-  --p1:#67cfff;
-  --p2:#ff79b7;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  min-height:100vh;
+:root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2;--p1:#66d9ff;--p2:#ff74b8;--ok:#70e08a;--bad:#ef476f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#090604}button{font-family:inherit}
+
+.asset-home{
+  position:fixed;
+  inset:0;
+  z-index:120;
+  overflow:hidden;
+  background:#050403;
   color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
-  background:radial-gradient(circle at 50% -10%,rgba(255,228,157,.14),transparent 28%),linear-gradient(180deg,#2a1b10,#090b0d 76%);
 }
-button{font-family:inherit}
-.lobby{
-  position:fixed; inset:0; z-index:3000;
-  display:flex; align-items:center; justify-content:center;
-  padding:18px; background:radial-gradient(circle at center,rgba(78,50,26,.97),rgba(4,5,7,.98));
-}
-.lobby.hidden{display:none}
-.lobby-card{
-  width:min(720px,96vw);
-  border-radius:26px;
-  padding:24px;
-  background:linear-gradient(180deg,rgba(34,22,14,.96),rgba(14,15,18,.97));
-  border:1px solid rgba(236,201,114,.36);
-  box-shadow:0 30px 100px rgba(0,0,0,.62);
-}
-.lobby h1{margin:0 0 8px;font-family:Georgia,"Times New Roman",serif;font-size:34px;color:#fff4cf}
-.lobby p{color:var(--muted);line-height:1.4}
-.lobby-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-.lobby-box{padding:14px;border-radius:18px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08)}
-.input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#111;color:white;font-size:16px}
-.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:900;cursor:pointer;background:#343a46;color:white}
-.btn.primary{background:var(--gold);color:#111}
-.btn.full{width:100%;margin-top:10px}
-.status{margin-top:12px;color:#ffe2a3;font-size:13px;min-height:18px}
-.game-shell{width:100%;padding:14px}
-.battlefield{
-  position:relative; min-height:calc(100vh - 28px);
-  border-radius:28px; overflow:hidden;
-  border:2px solid rgba(232,200,123,.38);
-  background:radial-gradient(ellipse at 50% 100%,rgba(189,137,61,.75) 0%,rgba(166,117,46,.50) 34%,transparent 62%),linear-gradient(180deg,#f1c87b 0%,#e0b15e 24%,#c8863f 60%,#7a4921 100%);
-  box-shadow:inset 0 0 110px rgba(0,0,0,.34),0 24px 64px rgba(0,0,0,.38);
-}
-.scenery{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-.sun{position:absolute;width:250px;height:250px;top:-60px;left:80px;border-radius:50%;background:radial-gradient(circle,rgba(255,241,179,.45),rgba(255,215,115,.18) 36%,transparent 72%);filter:blur(6px)}
-.path{position:absolute;left:22%;right:22%;bottom:36px;height:240px;background:radial-gradient(ellipse at center,rgba(239,210,145,.42) 0 24%,rgba(170,118,65,.28) 43%,transparent 72%);filter:blur(2px);transform:perspective(220px) rotateX(70deg);opacity:.88}
-.pyramid{position:absolute;bottom:190px;width:0;height:0;border-left:80px solid transparent;border-right:80px solid transparent;border-bottom:118px solid rgba(189,142,75,.92)}
-.pyramid:after{content:"";position:absolute;left:-78px;top:8px;width:0;height:0;border-left:78px solid transparent;border-right:78px solid transparent;border-bottom:106px solid rgba(224,181,104,.42)}
-.py1{left:70px;transform:scale(.92)}.py2{right:110px;transform:scale(.82)}
-.palm{position:absolute;bottom:154px;width:16px;height:82px;background:linear-gradient(180deg,#764728,#482b15);border-radius:8px}
-.palm:before{content:"";position:absolute;left:-34px;top:-20px;width:84px;height:46px;border-radius:50%;background:radial-gradient(circle,rgba(69,116,56,.95) 0 45%,rgba(43,82,35,.92) 58%,transparent 70%)}
-.p1a{left:5%}.p1b{left:29%;bottom:144px}.p2a{right:25%}.p2b{right:7%;bottom:146px}
-.hud{
-  position:absolute;z-index:22;width:270px;padding:10px;border-radius:14px;
-  background:linear-gradient(180deg,var(--panel),rgba(25,17,12,.80));
-  border:1px solid rgba(236,201,114,.24);
-  box-shadow:0 10px 24px rgba(0,0,0,.24);
-  backdrop-filter:blur(4px);
-}
-.top-left{left:16px;top:16px}.top-right{right:16px;top:16px}
-.hud-name{display:flex;justify-content:space-between;font-weight:900;margin-bottom:8px;font-size:14px}
-.hud-name span{color:#ffe2a3;font-size:12px}
-.p1{color:var(--p1)}.p2{color:var(--p2)}
-.hud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.hud-mini{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px;text-align:center;color:var(--muted);font-size:10px}
-.hud-mini strong{display:block;color:#fff;font-size:16px;margin-top:2px}
-.phase-banner{
-  position:absolute;top:26px;left:50%;transform:translateX(-50%);z-index:23;
-  min-width:240px;padding:10px 18px;border-radius:999px;text-align:center;
-  font-family:Georgia,"Times New Roman",serif;font-size:20px;font-weight:900;letter-spacing:.6px;
-  color:#fff4cf;background:linear-gradient(180deg,rgba(34,22,14,.84),rgba(22,16,12,.74));
-  border:1px solid rgba(236,201,114,.32);box-shadow:0 10px 24px rgba(0,0,0,.22);
-}
-.grid-wrap{position:absolute;left:18px;top:100px;right:250px;bottom:18px;display:flex;align-items:center;justify-content:center;z-index:6}
-.grid{
-  display:grid;grid-template-columns:repeat(14,54px);grid-template-rows:repeat(6,58px);
-  gap:4px;padding:9px;border-radius:24px;
-  background:radial-gradient(ellipse at center,rgba(0,0,0,.10),rgba(0,0,0,.18));
-  box-shadow:0 20px 42px rgba(0,0,0,.22), inset 0 0 60px rgba(255,236,170,.045);
-}
-.cell{position:relative;border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,231,171,.18);background:rgba(70,54,28,.10);cursor:pointer}
-.cell:after{content:attr(data-coord);position:absolute;right:4px;bottom:3px;color:rgba(255,245,210,.22);font-size:9px}
-.cell.valid{box-shadow:inset 0 0 0 3px var(--valid),0 0 14px rgba(123,216,143,.28)}
-.cell.attackable{box-shadow:inset 0 0 0 3px var(--attack),0 0 14px rgba(239,71,111,.32)}
-.cell.selected{outline:3px solid var(--gold);outline-offset:-3px}
-.cell.manual-drop-ready{box-shadow:inset 0 0 0 3px rgba(255,209,102,.95),0 0 22px rgba(255,209,102,.48)!important}
-.field-shadow{position:absolute;left:8px;right:8px;bottom:4px;height:7px;border-radius:50%;background:rgba(0,0,0,.32);filter:blur(4px);z-index:1}
-.field-card{position:relative;z-index:2;width:44px;height:56px;border-radius:9px}
-.field-frame{position:absolute;inset:0;overflow:hidden;border-radius:9px;background:linear-gradient(180deg,#3a2616,#18120d);border:2px solid rgba(244,228,196,.92);box-shadow:0 10px 16px rgba(0,0,0,.42)}
-.field-card.p1card .field-frame{border-color:rgba(96,212,255,.96)}.field-card.p2card .field-frame{border-color:rgba(255,113,180,.96)}
-.field-card.leader .field-frame{border-color:#ffe66d;box-shadow:0 0 0 2px rgba(255,230,109,.18),0 10px 18px rgba(0,0,0,.46)}
-.field-card.moved .field-frame{filter:grayscale(.35) brightness(.78)}
-.portrait{height:31px;position:relative;background-size:cover;background-position:center top}
-.name-strip{position:absolute;top:2px;left:2px;right:2px;padding:1px;border-radius:5px;background:rgba(9,10,12,.62);text-align:center;font-weight:800;font-size:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.board-unit-mark{position:absolute;top:2px;left:2px;right:2px;display:flex;justify-content:center;align-items:center;height:28px;font-size:20px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
-.divider{height:5px;background:linear-gradient(180deg,rgba(125,90,45,.98),rgba(67,44,20,.98))}
-.field-stats{height:20px;padding:2px;display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:linear-gradient(180deg,rgba(60,41,22,.98),rgba(22,18,16,.99))}
-.field-stat{border-radius:4px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.08);text-align:center;color:#efe6d4;font-size:5px;line-height:1.05}
-.field-stat strong{display:block;color:#fff;font-size:6px}
-.summon-display{position:absolute;width:42px;height:42px;border-radius:50%;background:radial-gradient(circle,rgba(255,245,193,.95) 0 18%,rgba(255,209,102,.58) 19% 38%,rgba(255,209,102,0) 39%),radial-gradient(circle,rgba(255,209,102,.22),rgba(255,209,102,0) 70%);box-shadow:0 0 16px rgba(255,209,102,.65),inset 0 0 0 2px rgba(255,245,193,.75);animation:summonPulse .8s ease-in-out infinite;z-index:4}
-.summon-display:before{content:"✦";position:absolute;inset:0;display:grid;place-items:center;color:#fff6c4;font-size:18px;text-shadow:0 0 10px rgba(255,209,102,.9)}
-@keyframes summonPulse{0%,100%{transform:scale(.92);opacity:.78}50%{transform:scale(1.08);opacity:1}}
-.side{position:absolute;top:108px;right:16px;bottom:92px;width:218px;z-index:18;display:grid;grid-template-rows:auto minmax(170px,1fr) auto;gap:10px}
-.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid rgba(236,201,114,.24);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.24);backdrop-filter:blur(4px);padding:10px}
-.icon-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.icon-btn{width:100%;aspect-ratio:1/1;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#343a46;color:#fff;font-size:22px;display:grid;place-items:center;cursor:pointer}
-.icon-btn.primary{background:var(--gold);color:#111}
-.hint{margin-top:8px;min-height:30px;border-radius:10px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.06);color:#ffe2a3;font-size:11px;line-height:1.25;padding:7px 8px}
-.side-title{margin:0 0 8px;font-family:Georgia,"Times New Roman",serif;font-size:15px}
-.hand-card{position:relative;min-height:72px;border-radius:12px;background:linear-gradient(180deg,rgba(82,58,31,.98),rgba(27,21,20,.98));border:1px solid rgba(218,177,94,.28);padding:6px;cursor:pointer;display:grid;gap:4px;align-content:center;text-align:center;user-select:none}
-.hand-card.selected{border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(255,230,109,.14)}
-.cost{position:absolute;right:5px;top:5px;width:18px;height:18px;border-radius:50%;background:#0d111b;color:var(--gold);display:grid;place-items:center;font-size:10px;font-weight:900}
-.hand-icon{margin:2px auto 0;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(0,0,0,.22);border:1px solid rgba(255,231,171,.25);font-size:17px}
-.hand-name{font-size:10px;font-weight:800;line-height:1.05}.hand-stats{font-size:8px;color:var(--muted)}
-.detail p{margin:0 0 8px;color:var(--muted);font-size:12px;line-height:1.3}
-.hand-drawer{position:absolute;left:312px;right:250px;bottom:16px;z-index:40;display:none;padding:10px;border-radius:18px;background:linear-gradient(180deg,rgba(34,22,14,.92),rgba(22,16,12,.88));border:1px solid rgba(236,201,114,.30);box-shadow:0 14px 38px rgba(0,0,0,.36);backdrop-filter:blur(5px)}
-.hand-drawer.show{display:block}
-.hand-drawer-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
-.hand-drawer-title{font-family:Georgia,"Times New Roman",serif;font-size:15px;font-weight:900;color:#fff}
-.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
-.hand-row .hand-card{min-width:118px;max-width:130px;min-height:82px}
-.hand-drop-hint{font-size:11px;color:#ffe2a3;margin-top:6px}
-.drag-ghost{position:fixed;z-index:2000;width:124px;min-height:86px;pointer-events:none;opacity:.92;transform:translate(-50%,-50%) scale(.96);box-shadow:0 18px 44px rgba(0,0,0,.48)}
-.log{position:absolute;left:16px;bottom:16px;width:280px;max-height:112px;z-index:18;padding:10px;overflow-y:auto;color:#d8deea;font-size:12px;background:linear-gradient(180deg,rgba(34,22,14,.84),rgba(22,16,12,.82));border:1px solid rgba(236,201,114,.20);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.24);backdrop-filter:blur(4px)}
-.log div{padding-bottom:4px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.04)}
-.inspect{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(5,6,8,.72);backdrop-filter:blur(3px)}
-.inspect.show{display:flex}
-.inspect-card{width:min(920px,96vw);max-height:92vh;overflow:auto;display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:16px;padding:16px;border-radius:24px;background:linear-gradient(180deg,rgba(34,22,14,.96),rgba(14,15,18,.97));border:1px solid rgba(236,201,114,.34);box-shadow:0 28px 90px rgba(0,0,0,.62)}
-.inspect-art{min-height:430px;border-radius:18px;background-size:cover;background-position:center top;border:2px solid rgba(244,228,196,.72);box-shadow:inset 0 -80px 90px rgba(0,0,0,.30),0 18px 42px rgba(0,0,0,.42);display:grid;place-items:center;font-size:72px}
-.inspect-title{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:28px;color:#fff4cf}
-.inspect-sub{color:#ffe2a3;font-size:13px;font-weight:800}
-.inspect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
-.inspect-stat{padding:10px;border-radius:12px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:12px}
-.inspect-stat strong{display:block;color:#fff;font-size:20px}
-.inspect-desc{padding:12px;border-radius:14px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.07);color:#e9dcc4;line-height:1.35;font-size:13px;margin-bottom:12px}
-.inspect-actions{display:flex;gap:8px;flex-wrap:wrap}
-.combat{position:fixed;inset:0;display:none;z-index:1000;align-items:center;justify-content:center;background:rgba(5,6,8,.78);backdrop-filter:blur(4px);padding:20px}
-.combat.show{display:flex}
-.combat-card{width:min(860px,96vw);border-radius:24px;padding:18px;background:linear-gradient(180deg,rgba(74,46,25,.98),rgba(14,15,18,.97));border:1px solid rgba(236,201,114,.34);box-shadow:0 28px 90px rgba(0,0,0,.62)}
-.combat-title{font-family:Georgia,"Times New Roman",serif;text-align:center;font-size:26px;color:#fff4cf;margin-bottom:12px}
-.combat-row{display:grid;grid-template-columns:1fr 70px 1fr;gap:12px;align-items:center}
-.combat-unit{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;background:rgba(0,0,0,.24);border-radius:18px;padding:12px;min-height:220px}
-.combat-unit.right{grid-template-columns:1fr 150px;text-align:right}
-.combat-portrait{height:200px;border-radius:16px;background-size:cover;background-position:center top;border:2px solid rgba(244,228,196,.72)}
-.vs{font-family:Georgia,"Times New Roman",serif;color:#ffe66d;font-size:32px;text-align:center;font-weight:900}
-@media(max-width:980px){
-  .battlefield{min-height:1200px}.hud{width:calc(50% - 12px);padding:8px}.top-left{left:10px;top:10px}.top-right{right:10px;top:10px}.hud-grid{grid-template-columns:repeat(2,1fr)}.phase-banner{top:88px;font-size:15px;min-width:190px}
-  .grid-wrap{left:10px;right:10px;top:170px;height:360px;bottom:auto}.grid{grid-template-columns:repeat(14,32px);grid-template-rows:repeat(6,42px);gap:3px;padding:6px}.field-card{width:28px;height:38px}.portrait{height:21px}.divider{height:4px}.field-stats{height:13px;padding:1px}.field-stat{font-size:4px}.field-stat strong{font-size:5px}.name-strip{font-size:4px}
-  .side{left:10px;right:10px;width:auto;top:548px;bottom:96px}.hand-drawer{left:10px;right:10px;bottom:96px}.hand-row .hand-card{min-width:104px}.log{left:10px;right:10px;width:auto;bottom:10px;max-height:80px}.inspect-card{grid-template-columns:1fr}.inspect-art{min-height:320px}.lobby-actions{grid-template-columns:1fr}
-}
-
-/* 0.3B mobile hand fix */
-.hand-row{
-  flex-wrap:nowrap!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  scrollbar-width:auto;
-  -webkit-overflow-scrolling:touch;
-  scroll-snap-type:x proximity;
-}
-.hand-row .hand-card{
-  flex:0 0 122px!important;
-  width:122px!important;
-  min-width:122px!important;
-  max-width:122px!important;
-  scroll-snap-align:start;
-}
-.hand-row::-webkit-scrollbar{height:10px}
-.hand-row::-webkit-scrollbar-track{background:rgba(0,0,0,.22);border-radius:999px}
-.hand-row::-webkit-scrollbar-thumb{background:rgba(255,209,102,.72);border-radius:999px}
-@media(max-width:980px){
-  .hand-drawer{
-    position:absolute!important;
-    left:10px!important;
-    right:10px!important;
-    bottom:90px!important;
-    z-index:80!important;
-    max-height:190px!important;
-    overflow:hidden!important;
-  }
-  .hand-row{
-    display:flex!important;
-    flex-direction:row!important;
-    gap:8px!important;
-    padding:4px 4px 12px!important;
-  }
-  .hand-row .hand-card{
-    flex:0 0 116px!important;
-    width:116px!important;
-    min-width:116px!important;
-    max-width:116px!important;
-    min-height:76px!important;
-  }
-  .hand-card .hand-name{font-size:9px!important}
-  .hand-card .hand-stats{font-size:7px!important}
-  .hand-drop-hint{font-size:10px!important}
-}
-
-
-/* 0.3C seguro: sin campo perspectivo experimental.
-   Mantiene el campo funcional anterior para pruebas rápidas. */
-
-
-/* ROK Online 0.7B - Campo del usuario 18x9
-   La imagen NO se modifica.
-   Lógica vertical: 18 filas x 9 columnas.
-   Grilla transparente encima.
-*/
-.battlefield{
-  background-image:
-    linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,.16)),
-    url("assets/campo_faraon_18x9.jpeg") !important;
-  background-size:auto 100% !important;
-  background-position:center center !important;
-  background-repeat:no-repeat !important;
-  background-color:#070503 !important;
-  border-color:rgba(255,211,122,.48)!important;
-}
-.scenery{
-  display:none!important;
-}
-.game-shell{
-  padding:6px!important;
-}
-.battlefield{
-  min-height:calc(100vh - 12px)!important;
-  border-radius:18px!important;
-}
-
-/* UI compacta */
-.hud{
-  width:205px!important;
-  padding:7px!important;
-  border-radius:12px!important;
-  background:linear-gradient(180deg,rgba(24,15,9,.88),rgba(10,8,6,.78))!important;
-}
-.top-left{left:10px!important;top:10px!important}
-.top-right{right:10px!important;top:10px!important}
-.hud-name{font-size:12px!important;margin-bottom:5px!important}
-.hud-name span{font-size:10px!important}
-.hud-grid{gap:4px!important}
-.hud-mini{padding:4px!important;border-radius:8px!important;font-size:9px!important}
-.hud-mini strong{font-size:13px!important}
-.phase-banner{
-  top:12px!important;
-  min-width:185px!important;
-  padding:7px 13px!important;
-  font-size:15px!important;
-}
-.side{
-  top:96px!important;
-  right:10px!important;
-  bottom:auto!important;
-  width:166px!important;
-  display:block!important;
-}
-.side .panel{
-  padding:7px!important;
-  border-radius:12px!important;
-  margin-bottom:7px!important;
-  background:linear-gradient(180deg,rgba(24,15,9,.88),rgba(10,8,6,.78))!important;
-}
-.icon-bar{
-  grid-template-columns:repeat(5,30px)!important;
-  justify-content:end!important;
-  gap:5px!important;
-}
-.icon-btn{
-  width:30px!important;
-  height:30px!important;
-  aspect-ratio:auto!important;
-  border-radius:8px!important;
-  font-size:15px!important;
-}
-#cancelBtn.btn.full{
-  margin-top:6px!important;
-  padding:6px 8px!important;
-  border-radius:8px!important;
-  font-size:10px!important;
-}
-.hint{
-  margin-top:6px!important;
-  min-height:24px!important;
-  padding:5px 6px!important;
-  font-size:10px!important;
-}
-.side-title{font-size:12px!important;margin-bottom:5px!important}
-#sideBox.hand-card{min-height:46px!important;padding:5px!important}
-#sideBox .hand-icon{width:22px!important;height:22px!important;font-size:13px!important}
-#sideBox .hand-name{font-size:9px!important}
-#sideBox .hand-stats{font-size:7px!important}
-#detailBox{max-height:110px!important;overflow:auto!important}
-#detailBox p{font-size:10px!important;line-height:1.2!important}
-.log{
-  left:10px!important;
-  bottom:10px!important;
-  width:260px!important;
-  max-height:82px!important;
-  padding:7px!important;
-  font-size:10px!important;
-  border-radius:12px!important;
-  background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76))!important;
-}
-.hand-drawer{
-  left:300px!important;
-  right:195px!important;
-  bottom:10px!important;
-  padding:8px!important;
-  border-radius:14px!important;
-}
-.hand-row .hand-card{
-  flex:0 0 104px!important;
-  width:104px!important;
-  min-width:104px!important;
-  max-width:104px!important;
-  min-height:68px!important;
-}
-
-/* Grilla transparente 18x9 sobre la imagen */
-.grid-wrap{
-  --arenaH: calc(100vh - 12px);
-  --imgW: calc(var(--arenaH) * 0.75000000);
-  width: calc(var(--imgW) * 0.514) !important;
-  height: calc(var(--arenaH) * 0.729) !important;
-  left:50%!important;
-  top:calc(var(--arenaH) * 0.183)!important;
-  right:auto!important;
-  bottom:auto!important;
-  transform:translateX(-50%)!important;
-  perspective:none!important;
-  align-items:stretch!important;
-  justify-content:stretch!important;
-  pointer-events:none!important;
-  z-index:6!important;
-}
-.grid{
-  width:100%!important;
-  height:100%!important;
-  display:grid!important;
-  grid-template-columns:repeat(9,1fr)!important;
-  grid-template-rows:repeat(18,1fr)!important;
-  gap:0!important;
-  padding:0!important;
-  transform:none!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  border:none!important;
-  pointer-events:auto!important;
-}
-.cell{
-  border-radius:3px!important;
-  background:rgba(255,255,255,.006)!important;
-  border:1px solid rgba(255,232,170,.030)!important;
-  box-shadow:none!important;
-}
-.cell:after{display:none!important}
-.cell:hover{
-  background:rgba(255,220,140,.08)!important;
-  border-color:rgba(255,232,170,.24)!important;
-}
-.cell.valid{
-  background:rgba(95,230,128,.18)!important;
-  border-color:rgba(95,230,128,.58)!important;
-  box-shadow:inset 0 0 0 2px rgba(95,230,128,.82),0 0 14px rgba(95,230,128,.34)!important;
-}
-.cell.attackable{
-  background:rgba(239,71,111,.16)!important;
-  border-color:rgba(239,71,111,.62)!important;
-  box-shadow:inset 0 0 0 2px rgba(239,71,111,.84),0 0 14px rgba(239,71,111,.35)!important;
-}
-.cell.manual-drop-ready{
-  background:rgba(255,209,102,.18)!important;
-  box-shadow:inset 0 0 0 2px rgba(255,209,102,.95),0 0 18px rgba(255,209,102,.40)!important;
-}
-.field-card{
-  width:28px!important;
-  height:40px!important;
-  transform:none!important;
-  margin-top:-6px!important;
-  filter:drop-shadow(0 8px 8px rgba(0,0,0,.45))!important;
-}
-.field-card.leader{
-  width:34px!important;
-  height:48px!important;
-  margin-top:-9px!important;
-}
-.portrait{height:22px!important}
-.field-card.leader .portrait{height:27px!important}
-.field-stats{height:15px!important}
-.name-strip{font-size:5px!important}
-.field-stat{font-size:4px!important}
-.field-stat strong{font-size:6px!important}
-.summon-display{
-  transform:none!important;
-  margin-top:-8px!important;
-}
-
-/* móvil */
-@media(max-width:980px){
-  .battlefield{
-    min-height:100vh!important;
-    background-size:auto 100%!important;
-    background-position:center center!important;
-  }
-  .hud{
-    width:calc(50% - 10px)!important;
-    padding:6px!important;
-  }
-  .top-left{left:6px!important;top:6px!important}
-  .top-right{right:6px!important;top:6px!important}
-  .hud-grid{grid-template-columns:repeat(4,1fr)!important}
-  .hud-mini{font-size:7px!important;padding:3px!important}
-  .hud-mini strong{font-size:11px!important}
-  .phase-banner{top:64px!important;font-size:12px!important;min-width:150px!important;padding:5px 9px!important}
-  .grid-wrap{
-    --arenaH:100vh;
-    --imgW:calc(var(--arenaH) * 0.75000000);
-    width:calc(var(--imgW) * 0.514)!important;
-    height:calc(var(--arenaH) * 0.729)!important;
-    left:50%!important;
-    top:calc(var(--arenaH) * 0.183)!important;
-    transform:translateX(-50%)!important;
-  }
-  .field-card{
-    width:22px!important;
-    height:31px!important;
-    margin-top:-4px!important;
-  }
-  .field-card.leader{
-    width:26px!important;
-    height:37px!important;
-    margin-top:-7px!important;
-  }
-  .portrait{height:19px!important}
-  .field-card.leader .portrait{height:23px!important}
-  .side{
-    top:auto!important;
-    left:6px!important;
-    right:6px!important;
-    bottom:6px!important;
-    width:auto!important;
-    display:grid!important;
-    grid-template-columns:1fr!important;
-    gap:5px!important;
-  }
-  .side .panel{margin-bottom:0!important;padding:6px!important}
-  .icon-bar{grid-template-columns:repeat(5,34px)!important;justify-content:center!important;gap:8px!important}
-  .icon-btn{width:34px!important;height:34px!important;font-size:16px!important}
-  .side .panel:nth-child(2){display:none!important}
-  #detailBox{max-height:74px!important}
-  .log{
-    left:6px!important;
-    right:6px!important;
-    bottom:188px!important;
-    width:auto!important;
-    max-height:54px!important;
-    font-size:9px!important;
-    padding:5px!important;
-  }
-  .hand-drawer{
-    left:6px!important;
-    right:6px!important;
-    bottom:104px!important;
-    max-height:150px!important;
-    padding:6px!important;
-  }
-}
-
-/* ROK 0.18: Paso 11 aplicado.
-   Restauración automática básica del atacante después de combate entre invocaciones. */
-
-.field-card.off-nexo .field-frame{
-  box-shadow:0 10px 16px rgba(0,0,0,.42),0 0 0 2px rgba(255,209,102,.18)!important;
-}
-.field-card.off-nexo:after{
-  content:"◆";
+.asset-home.hidden{display:none!important}
+.asset-home-bg{
   position:absolute;
-  right:-3px;
-  top:-5px;
-  color:#ffd166;
-  font-size:10px;
-  text-shadow:0 0 6px rgba(0,0,0,.8);
+  inset:0;
+  background:url("assets/home/bg_home.webp") center center/cover no-repeat;
+  filter:saturate(.92) contrast(1.02) brightness(.82);
+}
+.asset-vignette{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.12) 26%,rgba(0,0,0,.12) 74%,rgba(0,0,0,.72)),
+    linear-gradient(180deg,rgba(0,0,0,.55),transparent 16%,transparent 74%,rgba(0,0,0,.80));
+  pointer-events:none;
+}
+.asset-topbar{
+  position:absolute;
   z-index:5;
+  left:12px;
+  right:12px;
+  top:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
 }
-
-
-#detailBox .btn.full{
+.asset-profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:min(470px,36vw);
+  min-height:92px;
+  border:0;
+  border-radius:18px;
+  padding:8px 12px;
+  background:linear-gradient(180deg,rgba(18,13,9,.92),rgba(6,5,4,.86));
+  box-shadow:0 18px 42px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,220,140,.10);
+  cursor:pointer;
+  color:#fff1cb;
+  text-align:left;
+  border:1px solid rgba(255,209,102,.25);
+}
+.asset-profile-img{
+  width:70px;
+  height:70px;
+  object-fit:cover;
+  border-radius:14px;
+  border:2px solid rgba(255,210,110,.55);
+  box-shadow:0 0 20px rgba(255,209,102,.10);
+}
+.asset-profile-info{flex:1;min-width:0}
+.asset-profile-name{
+  font-family:Georgia,serif;
+  font-size:30px;
+  font-weight:1000;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#fff1c4;
+  text-shadow:0 2px 4px #000, 0 0 8px rgba(255,209,102,.18);
+}
+.asset-profile-sub{
+  margin-top:5px;
+  display:flex;
+  gap:10px;
+  font-size:12px;
+  color:#e0c699;
+}
+.asset-profile-sub span:first-child{color:#ffd166;font-weight:900}
+.asset-xp{
+  position:relative;
+  height:14px;
+  margin-top:7px;
+  border-radius:999px;
+  border:1px solid rgba(255,209,102,.55);
+  background:rgba(0,0,0,.72);
+  overflow:hidden;
+}
+.asset-xp-fill{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:0%;
+  background:linear-gradient(90deg,#9b621d,#e0a039,#ffe087);
+  transition:width .85s cubic-bezier(.2,.8,.2,1);
+}
+.asset-xp span{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:9px;
+  font-weight:900;
+  color:#fff1c5;
+  text-shadow:0 1px 2px #000;
+}
+.asset-resource-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.asset-resource,.asset-small-icon{
+  border:1px solid rgba(255,209,102,.18);
+  border-radius:13px;
+  cursor:pointer;
+  background:linear-gradient(180deg,rgba(15,12,9,.82),rgba(6,5,4,.68));
+  box-shadow:0 14px 34px rgba(0,0,0,.38);
+  color:#fff1cb;
+}
+.asset-resource{
+  height:48px;
+  min-width:126px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:4px 10px;
+}
+.asset-resource img{
+  width:34px;
+  height:34px;
+  object-fit:contain;
+}
+.asset-resource b{
+  font-size:20px;
+  min-width:20px;
+  text-align:right;
+}
+.asset-resource span{
+  color:#ffd166;
+  font-size:24px;
+  font-weight:1000;
+  line-height:1;
+}
+.asset-small-icon{
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  padding:4px;
+}
+.asset-small-icon img{
+  width:36px;
+  height:36px;
+  object-fit:contain;
+}
+.asset-main{
+  position:absolute;
+  z-index:3;
+  left:14px;
+  right:14px;
+  top:122px;
+  bottom:128px;
+  display:grid;
+  grid-template-columns:minmax(300px,29vw) 1fr minmax(300px,29vw);
+  gap:20px;
+  align-items:center;
+}
+.asset-column{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.image-button,.play-image-button,.asset-promo{
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  filter:drop-shadow(0 16px 22px rgba(0,0,0,.42));
+  transition:transform .16s ease,filter .16s ease;
+}
+.image-button:hover,.play-image-button:hover,.asset-promo:hover,.bottom-asset-tab:hover,.asset-profile:hover,.asset-resource:hover,.asset-small-icon:hover{
+  transform:translateY(-3px) scale(1.012);
+  filter:brightness(1.08) drop-shadow(0 0 18px rgba(255,209,102,.20));
+}
+.image-button:active,.play-image-button:active,.asset-promo:active,.bottom-asset-tab:active{
+  transform:translateY(1px) scale(.992);
+}
+.image-button img{
+  display:block;
   width:100%;
-  margin-top:6px;
-  padding:7px 8px;
-  border-radius:9px;
-  font-size:11px;
+  height:clamp(92px,14.4vh,138px);
+  object-fit:fill;
+  border-radius:12px;
 }
-
-
-/* ROK 0.19: cartas/figuras de campo más grandes.
-   Solo ajuste visual, no cambia reglas. */
-.field-card{
-  width:40px!important;
-  height:56px!important;
-  margin-top:-9px!important;
+.asset-center{
+  position:relative;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
 }
-.field-card.leader{
-  width:46px!important;
-  height:64px!important;
-  margin-top:-13px!important;
+.asset-logo{
+  position:absolute;
+  top:-18px;
+  text-align:center;
+  text-shadow:0 8px 16px rgba(0,0,0,.62);
 }
-.portrait{
-  height:31px!important;
+.asset-logo-mark{
+  font-family:Georgia,serif;
+  font-size:clamp(36px,5vw,76px);
+  color:#fff0c6;
+  font-weight:1000;
+  letter-spacing:1px;
 }
-.field-card.leader .portrait{
-  height:37px!important;
+.asset-logo-sub{
+  margin-top:-4px;
+  color:#e6c892;
+  font-family:Georgia,serif;
+  letter-spacing:3px;
+  font-size:clamp(10px,1vw,16px);
 }
-.field-stats{
-  height:20px!important;
+.play-image-button{
+  width:min(260px,22vw);
+  pointer-events:auto;
+  margin-top:28vh;
 }
-.name-strip{
-  font-size:5.5px!important;
+.play-image-button img{
+  width:100%;
+  display:block;
+  border-radius:50%;
 }
-.field-stat{
-  font-size:4.5px!important;
+.asset-promo{
+  position:absolute;
+  z-index:4;
 }
-.field-stat strong{
-  font-size:6.5px!important;
+.asset-promo img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:fill;
 }
-.board-unit-mark{
-  height:34px!important;
-  font-size:24px!important;
+.daily-panel{
+  left:14px;
+  bottom:34px;
+  width:20vw;
+  height:8.8vh;
 }
-.summon-display{
-  width:48px!important;
-  height:48px!important;
-  margin-top:-12px!important;
+.welcome-panel{
+  right:14px;
+  bottom:34px;
+  width:26vw;
+  height:8.8vh;
 }
-
-/* En móvil las agrandamos menos para que no se monten demasiado. */
+.asset-bottom{
+  position:absolute;
+  z-index:5;
+  left:50%;
+  bottom:12px;
+  transform:translateX(-50%);
+  display:flex;
+  gap:12px;
+  padding:6px 9px;
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(14,11,8,.80),rgba(5,4,3,.64));
+  box-shadow:0 16px 36px rgba(0,0,0,.44);
+}
+.bottom-asset-tab{
+  border:1px solid rgba(255,209,102,.22);
+  border-radius:14px;
+  min-width:132px;
+  height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:2px;
+  background:linear-gradient(180deg,rgba(26,20,14,.88),rgba(7,6,5,.78));
+  color:#ffe9b7;
+  cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,230,179,.08);
+}
+.bottom-asset-tab img{
+  width:42px;
+  height:42px;
+  object-fit:contain;
+}
+.bottom-asset-tab span{
+  font-family:Georgia,serif;
+  font-size:12px;
+  font-weight:900;
+}
+.overlay-panel{position:fixed;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:18px}
+.overlay-panel.hidden{display:none!important}
+.modal-card{width:min(520px,94vw);padding:20px;border-radius:24px;background:linear-gradient(180deg,rgba(34,22,14,.96),rgba(10,8,6,.96));border:1px solid rgba(255,209,102,.30);box-shadow:0 30px 90px rgba(0,0,0,.7)}
+.modal-card h2{margin:0 0 10px;font-family:Georgia,serif;color:#fff1c4}
+.modal-card p{color:var(--muted);line-height:1.4}
+.setting-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);color:var(--muted)}
+.setting-line select{background:#111;color:white;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:8px}
+.pass-lanes{display:grid;gap:10px;margin:14px 0}
+.pass-lanes div{padding:12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,209,102,.14)}
+.pass-lanes b{display:block;color:#ffe2a3;margin-bottom:4px}
+.pass-lanes span{color:#d7c3a2;font-size:13px}
+.hidden{display:none!important}
 @media(max-width:980px){
-  .field-card{
-    width:28px!important;
-    height:40px!important;
-    margin-top:-6px!important;
-  }
-  .field-card.leader{
-    width:32px!important;
-    height:46px!important;
-    margin-top:-9px!important;
-  }
-  .portrait{
-    height:23px!important;
-  }
-  .field-card.leader .portrait{
-    height:27px!important;
-  }
-  .field-stats{
-    height:15px!important;
-  }
+  .asset-topbar{left:6px;right:6px;top:6px;gap:6px}
+  .asset-profile{width:40vw;min-height:60px;padding:5px 7px;border-radius:12px;gap:6px}
+  .asset-profile-img{width:46px;height:46px;border-radius:9px}
+  .asset-profile-name{font-size:15px}
+  .asset-profile-sub{font-size:8px;margin-top:2px;gap:4px}
+  .asset-xp{height:8px;margin-top:3px}
+  .asset-xp span{font-size:6px}
+  .asset-resource-row{gap:4px}
+  .asset-resource{height:30px;min-width:61px;gap:3px;padding:2px 4px;border-radius:8px}
+  .asset-resource img{width:22px;height:22px}
+  .asset-resource b{font-size:11px;min-width:8px}
+  .asset-resource span{font-size:12px}
+  .asset-small-icon{width:30px;height:30px;border-radius:8px;padding:2px}
+  .asset-small-icon img{width:24px;height:24px}
+  .asset-main{left:7px;right:7px;top:78px;bottom:88px;grid-template-columns:30vw 1fr 30vw;gap:8px}
+  .asset-column{gap:5px}
+  .image-button img{height:clamp(48px,13vh,76px);border-radius:7px}
+  .asset-logo{top:-5px}
+  .asset-logo-mark{font-size:30px}
+  .asset-logo-sub{font-size:7px;letter-spacing:1.4px}
+  .play-image-button{width:110px;margin-top:25vh}
+  .daily-panel{left:7px;bottom:30px;width:22vw;height:7.4vh}
+  .welcome-panel{right:7px;bottom:30px;width:29vw;height:7.4vh}
+  .asset-bottom{bottom:5px;gap:5px;padding:4px 5px;border-radius:10px}
+  .bottom-asset-tab{min-width:78px;height:45px;border-radius:8px}
+  .bottom-asset-tab img{width:24px;height:24px}
+  .bottom-asset-tab span{font-size:7px}
 }
-
+.lobby{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at center,rgba(87,51,22,.95),rgba(4,5,7,.98))}
+.lobby.hidden{display:none}.lobby-card{width:min(720px,96vw);padding:22px;border-radius:24px;background:linear-gradient(180deg,rgba(34,22,14,.96),rgba(10,8,6,.96));border:1px solid rgba(255,209,102,.28);box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.lobby h1{margin:0 0 8px;font-size:34px;font-family:Georgia,serif;color:#fff1c4}.lobby p{color:var(--muted);line-height:1.4}.lobby-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.lobby-box{padding:14px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08)}
+.input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#111;color:white;font-size:16px}.btn{border:0;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;background:#30343f;color:white}.btn.primary{background:var(--gold);color:#111}.btn.full{width:100%;margin-top:10px}.status{margin-top:12px;color:#ffe2a3;font-size:13px;min-height:18px}
+.game-shell{padding:6px}.battlefield{position:relative;min-height:calc(100vh - 12px);border-radius:18px;overflow:hidden;border:2px solid rgba(255,211,122,.42);background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.16)),url("assets/board_oscuro_11x6.webp") center center/auto 100% no-repeat,#070503;box-shadow:inset 0 0 120px rgba(0,0,0,.45)}
+.hud{position:absolute;z-index:20;width:218px;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.8));border:1px solid rgba(255,209,102,.22);box-shadow:0 10px 24px rgba(0,0,0,.28);backdrop-filter:blur(4px)}
+.top-left{left:10px;top:10px}.top-right{right:10px;top:10px}.hud-name{display:flex;justify-content:space-between;gap:8px;font-weight:900;font-size:12px;margin-bottom:6px}.hud-name span{font-size:10px;color:#ffe2a3}.hud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.hud-mini{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:4px;text-align:center;color:var(--muted);font-size:9px}.hud-mini strong{display:block;color:#fff;font-size:14px;margin-top:2px}
+.phase-banner{position:absolute;z-index:22;top:14px;left:50%;transform:translateX(-50%);min-width:210px;padding:8px 14px;border-radius:999px;text-align:center;font-weight:900;font-family:Georgia,serif;letter-spacing:.5px;color:#fff1c4;background:linear-gradient(180deg,rgba(34,22,14,.88),rgba(12,8,6,.74));border:1px solid rgba(255,209,102,.3)}
+.grid-wrap{--arenaH:calc(100vh - 12px);--imgW:calc(var(--arenaH)*1.7779);position:absolute;width:calc(var(--imgW)*0.318);height:calc(var(--arenaH)*0.805);left:50%;top:calc(var(--arenaH)*0.095);transform:translateX(-50%);z-index:5}.grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(11,1fr);gap:0;background:transparent}.cell{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;overflow:hidden}.cell:hover{background:rgba(255,220,140,.05);border-color:rgba(255,232,170,.10)}.cell.valid,.cell.attackable{background:transparent;box-shadow:none}.cell.valid::after,.cell.attackable::after{content:"";position:absolute;inset:3px;border-radius:4px;pointer-events:none}.cell.valid::after{background:rgba(112,224,138,.12);box-shadow:inset 0 0 0 2px rgba(112,224,138,.78),0 0 8px rgba(112,224,138,.20)}.cell.attackable::after{background:rgba(239,71,111,.12);box-shadow:inset 0 0 0 2px rgba(239,71,111,.78),0 0 8px rgba(239,71,111,.20)}
+.unit-card{position:relative;z-index:2;width:24px;height:30px;border-radius:6px;background:linear-gradient(180deg,#3a2616,#17110c);border:2px solid rgba(244,228,196,.92);box-shadow:0 5px 8px rgba(0,0,0,.38);overflow:hidden;transform:none;user-select:none;display:grid;place-items:center}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{width:24px;height:30px;border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.28),0 5px 8px rgba(0,0,0,.38)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;font-size:12px;background:radial-gradient(circle,#b9863d,#4a2d16)}.unit-card.leader .unit-portrait{font-size:12px}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
+.side{position:absolute;z-index:18;right:10px;top:102px;width:190px}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}
+.hand-drawer{position:absolute;z-index:30;left:310px;right:210px;bottom:10px;padding:8px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.94),rgba(10,8,6,.9));border:1px solid rgba(255,209,102,.28);box-shadow:0 20px 60px rgba(0,0,0,.45);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 120px;min-height:88px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.95),rgba(20,13,9,.95));border:1px solid rgba(255,209,102,.26);cursor:pointer}.hand-card.selected{outline:2px solid var(--gold)}.hand-icon{font-size:24px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
+.inspector{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspector.show{display:flex}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412)}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
+@media(max-width:980px){.hud{width:calc(50% - 10px);padding:6px}.top-left{left:6px;top:6px}.top-right{right:6px;top:6px}.hud-grid{grid-template-columns:repeat(4,1fr)}.hud-mini{font-size:7px;padding:3px}.hud-mini strong{font-size:11px}.phase-banner{top:64px;font-size:12px;min-width:160px;padding:6px 9px}.side{top:auto;left:6px;right:6px;bottom:6px;width:auto}.panel:nth-child(2){display:none}.log{left:6px;right:6px;bottom:154px;width:auto;max-height:58px}.hand-drawer{left:6px;right:6px;bottom:76px;max-height:170px}.grid-wrap{top:calc(100vh * .095);height:calc(100vh * .805)}.unit-card{width:18px;height:22px}.unit-card.leader{width:18px;height:22px}.unit-portrait{font-size:10px}.unit-card.leader .unit-portrait{font-size:10px}}
 </style>
 </head>
 <body>
-<div class="lobby" id="lobby">
+
+<div id="mainMenu" class="asset-home">
+  <div class="asset-home-bg"></div>
+  <div class="asset-vignette"></div>
+
+  <header class="asset-topbar">
+    <button id="profileBtn" class="asset-profile" type="button">
+      <img class="asset-profile-img" src="assets/home/icon_profile.webp" alt="Perfil">
+      <div class="asset-profile-info">
+        <div id="playerName" class="asset-profile-name">Nuevo jugador</div>
+        <div class="asset-profile-sub">
+          <span id="playerLevel">Nv. 1</span>
+          <span id="playerRank">Recluta</span>
+        </div>
+        <div class="asset-xp">
+          <div id="xpFill" class="asset-xp-fill"></div>
+          <span id="xpText">0/100</span>
+        </div>
+      </div>
+    </button>
+
+    <div class="asset-resource-row">
+      <button class="asset-resource" id="goldPlusBtn" type="button">
+        <img src="assets/home/icon_gold.webp" alt="Oro">
+        <b id="goldValue">0</b>
+        <span>+</span>
+      </button>
+      <button class="asset-resource" id="gemsPlusBtn" type="button">
+        <img src="assets/home/icon_gems.webp" alt="Gemas">
+        <b id="gemsValue">0</b>
+        <span>+</span>
+      </button>
+      <button class="asset-resource" id="fragmentsPlusBtn" type="button">
+        <img src="assets/home/icon_fragments.webp" alt="Fragmentos">
+        <b id="fragmentsValue">0</b>
+        <span>+</span>
+      </button>
+      <button id="friendsBtn" class="asset-small-icon" type="button" aria-label="Amigos">
+        <img src="assets/home/icon_friends.webp" alt="">
+      </button>
+      <button id="settingsBtn" class="asset-small-icon" type="button" aria-label="Configuración">
+        <img src="assets/home/icon_settings.webp" alt="">
+      </button>
+    </div>
+  </header>
+
+  <main class="asset-main">
+    <section class="asset-column asset-left-column">
+      <button id="adventureBtn" class="image-button" type="button">
+        <img src="assets/home/btn_adventure.webp" alt="Aventura">
+      </button>
+      <button id="onlineBtn" class="image-button" type="button">
+        <img src="assets/home/btn_online.webp" alt="Competir en línea">
+      </button>
+      <button id="missionsBtn" class="image-button" type="button">
+        <img src="assets/home/btn_missions.webp" alt="Misiones">
+      </button>
+      <button id="mineBtn" class="image-button" type="button">
+        <img src="assets/home/btn_mine.webp" alt="Mina">
+      </button>
+    </section>
+
+    <section class="asset-center">
+      <div class="asset-logo">
+        <div class="asset-logo-mark">HALLVALLA</div>
+        <div class="asset-logo-sub">LA LEYENDA ERES TÚ</div>
+      </div>
+      <button id="playBtn" class="play-image-button" type="button">
+        <img src="assets/home/btn_play.webp" alt="Jugar">
+      </button>
+    </section>
+
+    <section class="asset-column asset-right-column">
+      <button id="collectionBtn" class="image-button" type="button">
+        <img src="assets/home/btn_collection.webp" alt="Colección">
+      </button>
+      <button id="forgeBtn" class="image-button" type="button">
+        <img src="assets/home/btn_forge.webp" alt="Forja">
+      </button>
+      <button id="storeBtn" class="image-button" type="button">
+        <img src="assets/home/btn_store.webp" alt="Tienda">
+      </button>
+      <button id="eventsBtn" class="image-button" type="button">
+        <img src="assets/home/btn_events.webp" alt="Eventos">
+      </button>
+    </section>
+  </main>
+
+  <button id="dailyBtn" class="asset-promo daily-panel" type="button">
+    <img src="assets/home/panel_daily.webp" alt="Recompensa diaria">
+  </button>
+
+  <button id="welcomeBtn" class="asset-promo welcome-panel" type="button">
+    <img src="assets/home/panel_welcome.webp" alt="Paquete de bienvenida">
+  </button>
+
+  <footer class="asset-bottom">
+    <button id="clansBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_clans.webp" alt="">
+      <span>CLANES</span>
+    </button>
+    <button id="rankingBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_ranking.webp" alt="">
+      <span>RANKING</span>
+    </button>
+    <button id="passBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_pass.webp" alt="">
+      <span>PASE DE HONOR</span>
+    </button>
+  </footer>
+</div>
+
+<div id="onlineLobby" class="lobby hidden">
   <div class="lobby-card">
-    <h1>ROK Online 0.24</h1>
-    <p>Paso 16: defensa física y defensa mágica para personajes en spellbook y arena.</p>
+    <h1>Competir en línea</h1>
+    <p>Crea una partida o únete con código.</p>
     <div class="lobby-actions">
       <div class="lobby-box">
-        <h3>Crear partida</h3>
-        <p>Serás Jugador 1: Faraón.</p>
-        <button class="btn primary full" id="createGameBtn">Crear partida</button>
+        <h3>Crear duelo</h3>
+        <button id="createBtn" class="btn primary full">Crear partida</button>
       </div>
       <div class="lobby-box">
-        <h3>Unirse a partida</h3>
-        <input class="input" id="joinCodeInput" placeholder="Código de partida" />
-        <button class="btn primary full" id="joinGameBtn">Unirse como J2</button>
+        <h3>Unirse</h3>
+        <input id="joinCode" class="input" placeholder="Código de partida"/>
+        <button id="joinBtn" class="btn full">Unirse</button>
       </div>
     </div>
-    <div class="status" id="lobbyStatus">Conectando con Firebase...</div>
+    <button id="backMenuFromLobby" class="btn full">Volver al inicio</button>
+    <div id="lobbyStatus" class="status"></div>
   </div>
 </div>
 
-<div class="inspect" id="inspectOverlay">
-  <div class="inspect-card">
-    <div class="inspect-art" id="inspectArt"></div>
-    <div>
-      <h2 class="inspect-title" id="inspectTitle">Detalle</h2>
-      <div class="inspect-sub" id="inspectSub">Información</div>
-      <div class="inspect-grid" id="inspectStats"></div>
-      <div class="inspect-desc" id="inspectDesc"></div>
-      <div class="inspect-actions" id="inspectActions"></div>
+<div id="adventurePanel" class="overlay-panel hidden">
+  <div class="modal-card">
+    <h2>Aventura</h2>
+    <p>Modo aventura próximamente. Aquí irá la campaña, tutoriales, recompensas y batallas contra IA.</p>
+    <button id="closeAdventureBtn" class="btn primary full">Volver</button>
+  </div>
+</div>
+
+<div id="settingsPanel" class="overlay-panel hidden">
+  <div class="modal-card">
+    <h2>Configuración</h2>
+    <label class="setting-line"><span>Música</span><input type="checkbox" checked></label>
+    <label class="setting-line"><span>Efectos</span><input type="checkbox" checked></label>
+    <label class="setting-line"><span>Idioma</span><select><option>Español</option><option>English</option></select></label>
+    <button id="closeSettingsBtn" class="btn primary full">Guardar y volver</button>
+  </div>
+</div>
+
+<div id="passPanel" class="overlay-panel hidden">
+  <div class="modal-card pass-card">
+    <h2>Pase de Honor</h2>
+    <p>Completa misiones, gana EXP del pase y desbloquea recompensas.</p>
+    <div class="pass-lanes">
+      <div><b>Ruta gratuita</b><span>Oro, fragmentos, sobres básicos.</span></div>
+      <div><b>Ruta premium</b><span>Gemas, cosméticos, marcos y cartas promocionales.</span></div>
     </div>
+    <button id="closePassBtn" class="btn primary full">Volver</button>
   </div>
 </div>
-
-<div class="combat" id="combatOverlay">
-  <div class="combat-card">
-    <div class="combat-title">Combate</div>
-    <div class="combat-row">
-      <div class="combat-unit"><div class="combat-portrait" id="combatLeftArt"></div><div><h3 id="combatLeftName"></h3><p id="combatLeftStats"></p></div></div>
-      <div class="vs">VS</div>
-      <div class="combat-unit right"><div><h3 id="combatRightName"></h3><p id="combatRightStats"></p></div><div class="combat-portrait" id="combatRightArt"></div></div>
-    </div>
-  </div>
-</div>
-
-<div class="game-shell">
-<section class="battlefield">
-  <div class="scenery"><div class="sun"></div><div class="path"></div><div class="pyramid py1"></div><div class="pyramid py2"></div><div class="palm p1a"></div><div class="palm p1b"></div><div class="palm p2a"></div><div class="palm p2b"></div></div>
-  <div class="hud top-left"><div class="hud-name p1">Jugador 1 <span id="p1Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">20</strong></div><div class="hud-mini">Stock elemental<strong id="p1Res">0</strong></div><div class="hud-mini">Fuente<strong id="p1Deck">0</strong></div><div class="hud-mini">Spellbook<strong id="p1Hand">0</strong></div></div></div>
-  <div class="hud top-right"><div class="hud-name p2">Jugador 2 <span id="p2Badge">Espera</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">20</strong></div><div class="hud-mini">Stock elemental<strong id="p2Res">0</strong></div><div class="hud-mini">Fuente<strong id="p2Deck">0</strong></div><div class="hud-mini">Spellbook<strong id="p2Hand">0</strong></div></div></div>
-  <div class="phase-banner" id="phaseBanner">ONLINE</div><div class="auto-advance-toast" id="autoAdvanceToast"></div>
-  <div class="grid-wrap"><div class="grid" id="grid"></div></div>
-  <aside class="side">
-    <div class="panel"><div class="icon-bar"><button class="icon-btn" id="copyCodeBtn" title="Copiar código">🔗</button><button class="icon-btn" id="soundBtn" title="Sonido ON/OFF">🔇</button><button class="icon-btn" id="autoBtn" title="Autoavance ON/OFF">⚙️</button><button class="icon-btn" id="openHandBtn" title="Abrir spellbook">🃏</button><button class="icon-btn primary" id="phaseBtn" title="Pasar fase">▶</button></div><div class="hint" id="hint">Esperando partida...</div><button class="btn full" id="cancelBtn" style="margin-top:8px">Cancelar selección</button></div>
-    <div class="panel"><h3 class="side-title" id="sideTitle">Jugador</h3><div id="sideBox" class="hand-card"><div class="hand-icon">⚔️</div><div class="hand-name">Estado</div><div class="hand-stats">Online</div></div></div>
-    <div class="panel detail" id="detailBox"><h3 class="side-title">Sin selección</h3><p>Selecciona carta o unidad.</p></div>
-  </aside>
-  <div class="hand-drawer" id="handDrawer"><div class="hand-drawer-head"><div class="hand-drawer-title" id="drawerTitle">Spellbook</div><button class="btn" id="closeHandBtn">Ocultar</button></div><div class="hand-row" id="handRow"></div><div class="hand-drop-hint">Desliza la barra para ver cartas. Click: detalles. Doble click o arrastra: jugar rápido.</div></div>
-  <div class="log" id="logPanel"></div>
-</section>
-</div>
-
+<div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="hud top-left"><div class="hud-name"><b class="p1">J1</b><span id="p1Badge">...</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">0</strong></div><div class="hud-mini">Honor<strong id="p1Honor">0</strong></div><div class="hud-mini">Mazo<strong id="p1Deck">0</strong></div><div class="hud-mini">Mano<strong id="p1Hand">0</strong></div></div></div><div class="hud top-right"><div class="hud-name"><b class="p2">J2</b><span id="p2Badge">...</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">0</strong></div><div class="hud-mini">Honor<strong id="p2Honor">0</strong></div><div class="hud-mini">Mazo<strong id="p2Deck">0</strong></div><div class="hud-mini">Mano<strong id="p2Hand">0</strong></div></div></div><div id="phaseBanner" class="phase-banner">ONLINE</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="panel"><h3 class="side-title">Acciones</h3><div class="icon-bar"><button id="handBtn" class="icon-btn">📖</button><button id="cancelBtn" class="icon-btn">✖</button><button id="endBtn" class="icon-btn">⏭</button></div><div id="hint" class="hint">Crea o únete a una partida.</div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+<div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><p id="inspectText" style="color:var(--muted);line-height:1.35"></p><button id="inspectClose" class="btn full">Cerrar</button></div></div>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getDatabase,ref,set,update,get,onValue} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
+const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
+const ROWS=11,COLS=6,$=id=>document.getElementById(id);let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,highlights=[],highlightType="move",handOpen=false,unsubPub=null,unsubPriv=null,turnStartLock=false;
+const CARD_TEMPLATES=[{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",cost:1,hp:4,atk:2,mov:2,range:1,text:"Unidad básica cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",cost:1,hp:3,atk:2,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",cost:2,hp:6,atk:1,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",cost:1,hp:2,atk:1,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"✨",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
+function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}function makeCard(t,owner){return {...t,id:uid8(),owner}}function makeDeck(owner){const deck=[];for(let i=0;i<60;i++)deck.push(makeCard(CARD_TEMPLATES[i%CARD_TEMPLATES.length],owner));return shuffle(deck)}function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
+function makeLeader(owner,x,y){return{id:`leader${owner}`,owner,leader:true,name:owner===1?"Kaster J1":"Kaster J2",key:"kaster",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:2,mov:2,range:1,moved:false,acted:false,buffAtk:0}}function makeUnit(card,x,y){return{id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
+function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}function effectiveAtk(u){return Math.max(0,(u?.atk||0)+(u?.buffAtk||0))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function setHint(t){$("hint").textContent=t}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}
+async function createGame(){const code=code4(),deck=makeDeck(1);const pub={code,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"main",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:null},playerStats:{1:{hp:20,honor:0,maxHonor:0,deck:60,hand:0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1),makeLeader(2,Math.floor(COLS/2),0)],log:["Duelo creado. Esperando Jugador 2."]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,deck,hand:[],honor:0,maxHonor:0,lastTurnStarted:""});enterGame(code,1)}
+async function joinGame(){const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";const deck=makeDeck(2);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerStats/2":{hp:20,honor:0,maxHonor:0,deck:60,hand:0},log:["Jugador 2 se unió.",...(pub.log||[])]});await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,deck,hand:[],honor:0,maxHonor:0,lastTurnStarted:""});enterGame(code,2)}
+function enterGame(code,player){gameId=code;myPlayer=player;$("onlineLobby").classList.add("hidden");$("mainMenu").classList.add("hidden");$("gameShell").classList.remove("hidden");if(unsubPub)unsubPub();if(unsubPriv)unsubPriv();unsubPub=onValue(ref(db,`games/${code}/public`),snap=>{publicState=snap.val();render();maybeStartTurn()});unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>{privateState=snap.val();render();maybeStartTurn()})}
+async function maybeStartTurn(){if(!publicState||!privateState||!isMyTurn())return;if(privateState.lastTurnStarted===publicState.turnKey)return;if(turnStartLock)return;turnStartLock=true;try{const drawn=drawCards(privateState.deck||[],privateState.hand||[],2);const maxHonor=(privateState.maxHonor||0)+1;const honor=maxHonor;await updatePrivate({deck:drawn.deck,hand:drawn.hand,honor,maxHonor,lastTurnStarted:publicState.turnKey});const units=(publicState.units||[]).map(u=>u.owner===myPlayer?{...u,moved:false,acted:false,buffAtk:0}:u);await updatePublic({units,[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||20,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length}});await pushLog(`J${myPlayer} inicia turno: Honor máximo +1, recarga a ${honor} y roba 2 cartas.`)}finally{turnStartLock=false}}
+function summonZones(player){const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}function moveZones(u){if(!u||u.moved)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(getUnitAt(x,y))continue;if(dist(u,{x,y})<=u.mov)res.push(`${x},${y}`)}return res}function attackZones(u){if(!u||u.acted)return[];return(publicState.units||[]).filter(t=>t.owner!==u.owner&&dist(u,t)<=u.range).map(t=>`${t.x},${t.y}`)}function clearSelection(){selectedCard=null;selectedUnitId=null;highlights=[];highlightType="move";render()}
+function selectCard(card){if(!isMyTurn())return setHint("No es tu turno.");if((privateState.honor||0)<card.cost)return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu kaster para kastear.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint("Elige una unidad aliada para recibir +1 AT.")}render()}
+function selectUnit(u){showUnit(u);if(!isMyTurn()||u.owner!==myPlayer)return;selectedUnitId=u.id;selectedCard=null;highlights=[...moveZones(u),...attackZones(u)];highlightType="move";setHint("Verde: mover. Rojo: atacar. Click en la carta para ver detalles.");render()}
+async function playCardOn(x,y,target){const card=selectedCard;if(!card)return;if((privateState.honor||0)<card.cost)return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");units.push(makeUnit(card,x,y));await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");units=units.map(u=>u.id===target.id?{...u,hp:u.hp-card.damage}:u).filter(u=>u.hp>0);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} recibe ${card.damage} daño.`)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");units=units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+card.buff}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.buff} AT este turno.`)}clearSelection()}
+async function removeCardAndPay(card){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const honor=(privateState.honor||0)-card.cost;const maxHonor=privateState.maxHonor||0;await updatePrivate({hand,honor});await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}})}
+async function moveUnit(u,x,y){if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);await pushLog(`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`);clearSelection()}async function endTurn(){if(!isMyTurn())return setHint("No es tu turno.");const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);await updatePublic({currentPlayer:next,turn,turnKey:`${turn}-${next}`});clearSelection();await pushLog(`Fin de turno. Ahora juega J${next}.`)}
+async function cellClick(x,y){const u=getUnitAt(x,y);if(selectedCard)return playCardOn(x,y,u);if(selectedUnitId){const s=getUnit(selectedUnitId);if(u&&u.owner!==myPlayer)return attackUnit(s,u);if(!u)return moveUnit(s,x,y)}if(u)selectUnit(u)}
+function showUnit(u){$("inspectTitle").textContent=u.name;$("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;$("inspectArt").textContent=u.icon;const stats=[["Vida",`${u.hp}/${u.maxHp}`],["Ataque",effectiveAtk(u)],["Mov",u.mov],["Rango",u.range]];$("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat">${l}<strong>${v}</strong></div>`).join("");$("inspectText").innerHTML=u.leader?"Si tu kaster llega a 0, pierdes.":`Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>${u.name}`;$("inspector").classList.add("show")}
+function render(){if(!publicState)return;renderHud();renderBoard();renderHand();renderLog();renderDetail()}function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);b.textContent=publicState.currentPlayer===p?"Turno":"Espera";b.style.color=publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isMyTurn()?"TU TURNO":"ESPERA"}
+function renderBoard(){const grid=$("grid");grid.innerHTML="";for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const cell=document.createElement("div");cell.className="cell";const key=`${x},${y}`;if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid");const u=getUnitAt(x,y);if(u){const c=document.createElement("div");c.className=`unit-card ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""}`;c.innerHTML=`<div class="unit-portrait">${u.icon}</div>`;c.title=`${u.name} · HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)}`;cell.appendChild(c)}cell.addEventListener("click",()=>cellClick(x,y));grid.appendChild(cell)}}
+function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];$("handInfo").textContent=`Honor ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas`;$("handRow").innerHTML=hand.map(c=>`<div class="hand-card ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}"><div class="hand-icon">${c.icon}</div><div class="hand-name">${c.name}</div><div class="hand-stats">Costo ${c.cost}${c.type==="unit"?` · AT ${c.atk} · HP ${c.hp} · MV ${c.mov} · RG ${c.range}`:` · Hechizo`}</div><div class="hand-text">${c.text}</div></div>`).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>el.addEventListener("click",()=>{const card=hand.find(c=>c.id===el.dataset.id);if(card)selectCard(card)}))}
+function renderLog(){$("log").innerHTML=(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}function renderDetail(){if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><p>Costo: ${selectedCard.cost}</p><p>${selectedCard.text}</p>`;return}if(selectedUnitId){const u=getUnit(selectedUnitId);if(u){$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)} · MV ${u.mov} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>`;return}}$("detail").innerHTML=`<p>Jugador ${myPlayer||"?"}</p><p>Código: ${gameId||"..."}</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Todas las piezas usan el mismo tamaño visual. Haz click sobre una carta para verla ampliada.</p>`}function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+$("createBtn").addEventListener("click",createGame);$("joinBtn").addEventListener("click",joinGame);$("handBtn").addEventListener("click",()=>{if(!gameId)return;handOpen=!handOpen;render()});$("cancelBtn").addEventListener("click",clearSelection);$("endBtn").addEventListener("click",endTurn);$("inspectClose").addEventListener("click",()=>$("inspector").classList.remove("show"));
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",
-  authDomain: "hallvalla-online.firebaseapp.com",
-  databaseURL: "https://hallvalla-online-default-rtdb.firebaseio.com",
-  projectId: "hallvalla-online",
-  storageBucket: "hallvalla-online.firebasestorage.app",
-  messagingSenderId: "496903032464",
-  appId: "1:496903032464:web:d1e63bfead7109fc905215"
+const defaultPlayerProfile = {
+  name: "Nuevo jugador",
+  level: 1,
+  xp: 0,
+  xpToNext: 100,
+  gold: 0,
+  gems: 0,
+  fragments: 0
 };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const ROWS=18, COLS=9;
-const ART={
-  pharaohIdle:"assets/asset_01_c8daaaaa78.png",
-  pharaohAttack:"assets/asset_02_b014dc5914.png",
-  pharaohSummon:"assets/asset_03_eab238a991.png",
-  mageIdle:"assets/asset_04_afe19ba5c5.png",
-  mageAttack:"assets/asset_05_7f8cf40b74.png",
-  mageCast:"assets/asset_06_f7e78af1b1.png"
-};
-
-const cardPool=[
- {name:"Lancero del Nilo",key:"spearman",icon:"🗡️",cost:1,hp:2,atk:1,mov:4,range:1,copies:4,tipo:"Unidad",rol:"Infantería rápida",text:"Unidad cuerpo a cuerpo para formar línea.",effect:"Sin efecto especial por ahora."},
- {name:"Arquero del Oasis",key:"archer",icon:"🏹",cost:2,hp:1,atk:1,mov:3,range:4,copies:3,tipo:"Unidad",rol:"Ataque a distancia",text:"Ataca desde atrás, pero es frágil.",effect:"No sufre desgaste melee al atacar a distancia."},
- {name:"Guardia de Arena Negra",key:"guardian",icon:"🛡️",cost:2,hp:4,atk:1,physicalDef:1,magicDef:1,damageType:'physical',counterDamage:1,mov:3,range:1,copies:3,tipo:"Unidad",rol:"Defensa",text:"Protector ideal para el líder.",effect:"Alta resistencia inicial."},
- {name:"Explorador del Desierto",key:"scout",icon:"🐫",cost:2,hp:2,atk:1,mov:6,range:1,copies:3,tipo:"Unidad",rol:"Movilidad",text:"Cruza terreno rápido para flanquear.",effect:"Movimiento alto."},
- {name:"Bendición Solar",key:"spell",icon:"✨",cost:1,spell:"buffAtk",copies:2,tipo:"Técnica",rol:"Mejora",text:"+1 ataque a una unidad aliada este turno.",effect:"Selecciona una unidad aliada."},
- {name:"Maldición de Arena",key:"spell",icon:"🔥",cost:1,spell:"damage1",damageType:"magic",copies:2,tipo:"Técnica",rol:"Daño directo",text:"Causa 1 daño a una unidad enemiga.",effect:"Selecciona una unidad enemiga."}
-];
-
-let uid=null, gameId=null, myPlayer=null;
-let soundOn = localStorage.getItem('hallvalla_sound') === '1';
-let autoAdvanceOn = localStorage.getItem('hallvalla_auto') !== '0';
-let audioCtx = null;
-let publicState=null, privateState=null;
-let handOpen=false, selectedCard=null, selectedUnitId=null, highlights=[], highlightType="summon", summonDisplay=null, manualDrag=null;
-let autoAdvanceTimer=null;
-let autoAdvanceLock=false;
-let cycleStartLock=false;
-let autoAdvanceUnitsLock=false;
-let publicUnsub=null, privateUnsub=null;
-
-const $=id=>document.getElementById(id);
-function uid8(){return Math.random().toString(36).slice(2,10)}
-function gameCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
-function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
-function makeDeck(owner){const d=[];cardPool.forEach(c=>{for(let i=0;i<c.copies;i++)d.push({...c,id:uid8(),owner})});return shuffle(d)}
-function drawFrom(deck,hand,n){const d=[...deck], h=[...hand];for(let i=0;i<n;i++){if(d.length)h.push(d.shift())}return {deck:d,hand:h}}
-
-const elementPool=[
- {name:"Elemento de Fuego",element:"fuego",icon:"🔥"},
- {name:"Elemento de Agua",element:"agua",icon:"💧"},
- {name:"Elemento de Tierra",element:"tierra",icon:"🪨"},
- {name:"Elemento de Rayo",element:"rayo",icon:"⚡"},
- {name:"Elemento de Luz",element:"luz",icon:"☀️"},
- {name:"Elemento de Oscuridad",element:"oscuridad",icon:"🌑"}
-];
-function makeElementSource(owner){
- const source=[];
- for(let i=0;i<24;i++){
-  const e=elementPool[i%elementPool.length];
-  source.push({...e,id:uid8(),owner,tipo:"Elemento"});
- }
- return shuffle(source);
-}
-function drawElementsFromSource(source,n){
- const s=[...(source||[])], drawn=[];
- for(let i=0;i<n;i++){
-  if(s.length) drawn.push(s.shift());
- }
- return {source:s,drawn};
-}
-function elementNames(list){
- return (list||[]).map(e=>e.icon+" "+e.element).join(", ");
-}
-function makeLeader(owner,x,y){return {id:`L${owner}`,owner,leader:true,name:owner===1?"Faraón de la Lanza Solar":"Hierofante del Sol Negro",key:owner===1?"leader_pharaoh":"leader_mage",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:1,physicalDef:1,magicDef:1,damageType:'physical',counterDamage:1,mov:3,range:1,pose:"idle",moved:false,acted:false,buffAtk:0}}
-function makeUnit(card,x,y){return {id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,physicalDef:card.physicalDef||0,magicDef:card.magicDef||0,damageType:card.damageType||'physical',mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
-function logLocal(t){const d=document.createElement("div");d.textContent=t;$("logPanel").prepend(d)}
-async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,16);await update(ref(db,`games/${gameId}/public`),{log:logs})}
-function setHint(t){$("hint").textContent=t}
-function setLobby(t){$("lobbyStatus").textContent=t}
-function normalizeCode(v){return (v||"").trim().toUpperCase()}
-
-onAuthStateChanged(auth, user=>{ if(user){uid=user.uid;setLobby("Conectado. Puedes crear o unirte a una partida.");} });
-signInAnonymously(auth).catch(e=>setLobby("Error de auth: "+e.message));
-setTimeout(updateSettingsButtons,100);
-
-$("createGameBtn").addEventListener("click",createGame);
-$("joinGameBtn").addEventListener("click",()=>joinGame(normalizeCode($("joinCodeInput").value)));
-$("copyCodeBtn").addEventListener("click",()=>{if(gameId) navigator.clipboard?.writeText(gameId); setHint("Código copiado: "+gameId)});
-$("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;localStorage.setItem("hallvalla_sound",soundOn?"1":"0");if(soundOn){ensureAudio();setTimeout(()=>playSound("toggle"),20)}updateSettingsButtons();setHint(soundOn?"Sonido activado.":"Sonido apagado.");});
-$("autoBtn").addEventListener("click",()=>{autoAdvanceOn=!autoAdvanceOn;localStorage.setItem("hallvalla_auto",autoAdvanceOn?"1":"0");if(!autoAdvanceOn)cancelAutoAdvance();updateSettingsButtons();setHint(autoAdvanceOn?"Autoavance activado.":"Autoavance apagado.");if(autoAdvanceOn)setTimeout(checkAutoAdvance,200);});
-$("openHandBtn").addEventListener("click",()=>{cancelAutoAdvance();if(!isMyTurn()){playSound("error");return setHint("No es tu turno.");} if(publicState?.phase!=="prep")return setHint("El spellbook solo se abre en fase de kasteo."); handOpen=!handOpen;render()});
-$("closeHandBtn").addEventListener("click",()=>{handOpen=false;render()});
-$("cancelBtn").addEventListener("click",clearSelection);
-$("phaseBtn").addEventListener("click",phaseButton);
-$("inspectOverlay").addEventListener("click",e=>{if(e.target.id==="inspectOverlay")closeInspector()});
-
-async function createGame(){
- if(!uid) return setLobby("Aún conectando auth...");
- const code=gameCode();
- const deck=makeDeck(1); const initial=drawFrom(deck,[],4); const source=makeElementSource(1);
- const pub={
-   code, createdAt:Date.now(), currentPlayer:1, phase:"cycle", turn:1, turnKey:"1-1",
-   playerSlots:{player1Uid:uid,player2Uid:null},
-   playerStats:{1:{res:0,deck:source.length,hand:initial.hand.length},2:{res:0,deck:0,hand:0}},
-   units:[makeLeader(1,4,17),makeLeader(2,4,0)],
-   summonDisplay:null, log:["Duelo ROK creado. Esperando Jugador 2."]
- };
- const priv={ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summonCount:0,summoned:false,lastTurnStarted:""};
- await set(ref(db,`games/${code}/public`),pub);
- await set(ref(db,`games/${code}/private/player1`),priv);
- await enterGame(code,1);
-}
-
-async function joinGame(code){
- if(!uid) return setLobby("Aún conectando auth...");
- if(!code) return setLobby("Escribe el código.");
- const pubSnap=await get(ref(db,`games/${code}/public`));
- if(!pubSnap.exists()) return setLobby("No existe esa partida.");
- const pub=pubSnap.val();
- if(pub.playerSlots?.player2Uid && pub.playerSlots.player2Uid!==uid) return setLobby("La partida ya tiene Jugador 2.");
- const deck=makeDeck(2); const initial=drawFrom(deck,[],4); const source=makeElementSource(2);
- await update(ref(db,`games/${code}/public`),{
-   "playerSlots/player2Uid":uid,
-   "playerStats/2":{res:0,deck:source.length,hand:initial.hand.length},
-   log:["Jugador 2 se unió.",...(pub.log||[])]
- });
- await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,deck:initial.deck,hand:initial.hand,source,res:0,cycleCount:0,summonCount:0,summoned:false,lastTurnStarted:""});
- await enterGame(code,2);
-}
-
-async function enterGame(code,player){
- gameId=code; myPlayer=player;
- $("lobby").classList.add("hidden");
- $("sideTitle").textContent=`Jugador ${myPlayer} · ${myPlayer===1?"Faraón":"Hechicero"}`;
- if(publicUnsub) publicUnsub(); if(privateUnsub) privateUnsub();
- publicUnsub=onValue(ref(db,`games/${gameId}/public`),snap=>{publicState=snap.val(); if(publicState){maybeStartMyTurn(); render();}});
- privateUnsub=onValue(ref(db,`games/${gameId}/private/player${myPlayer}`),snap=>{privateState=snap.val(); render();});
- setHint(`Entraste como J${myPlayer}. Código: ${gameId}`);
-}
-
-function isMyTurn(){return publicState && publicState.currentPlayer===myPlayer}
-function getUnitAt(x,y){return (publicState?.units||[]).find(u=>u.x===x&&u.y===y)}
-function getUnit(id){return (publicState?.units||[]).find(u=>u.id===id)}
-function getLeader(p){return (publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
-function ownInvocationCount(player=myPlayer){
- return (publicState?.units||[]).filter(u=>u.owner===player && !u.leader).length;
-}
-function canKasteInvocation(){
- return ownInvocationCount(myPlayer) < 6;
-}
-function nexoText(u){
- if(!u || u.leader || u.nexoX===undefined || u.nexoY===undefined) return "Sin nexo";
- return `${u.nexoX+1},${u.nexoY+1}`;
-}
-function isAtNexo(u){
- return !!u && !u.leader && u.nexoX!==undefined && u.nexoY!==undefined && u.x===u.nexoX && u.y===u.nexoY;
-}
-function canRestoreToNexo(u){
- if(!u || u.leader || u.owner!==myPlayer || !isMyTurn()) return false;
- if(isAtNexo(u)) return false;
- if(u.nexoX===undefined || u.nexoY===undefined) return false;
- const occupant=getUnitAt(u.nexoX,u.nexoY);
- return !occupant || occupant.id===u.id;
-}
-function isFirstTurnNoAdvance(player=myPlayer){
- return isMyTurn() && player===myPlayer && (privateState?.cycleCount||0)<=1;
-}
-function autoAdvanceFlagKey(){
- return `autoAdvanceDone_${publicState?.turnKey||"none"}_${myPlayer}`;
-}
-function getStepTowardTarget(u,target){
- const dx=Math.sign(target.x-u.x);
- const dy=Math.sign(target.y-u.y);
- if(dy!==0) return {x:u.x,y:u.y+dy};
- if(dx!==0) return {x:u.x+dx,y:u.y};
- return {x:u.x,y:u.y};
-}
-function applyAutoAdvanceUnits(units,player){
- const enemyLeader=units.find(u=>u.owner!==player && u.leader);
- if(!enemyLeader) return {units,moved:[]};
- const occupied=new Map();
- units.forEach(u=>occupied.set(`${u.x},${u.y}`,u.id));
- const moved=[];
- const nextUnits=units.map(u=>({...u}));
- for(const u of nextUnits){
-  if(u.owner!==player || u.leader) continue;
-  if(u.hp<=0) continue;
-  const step=getStepTowardTarget(u,enemyLeader);
-  const key=`${step.x},${step.y}`;
-  if(step.x<0 || step.x>=COLS || step.y<0 || step.y>=ROWS) continue;
-  if(step.x===u.x && step.y===u.y) continue;
-  if(occupied.has(key)) continue;
-  occupied.delete(`${u.x},${u.y}`);
-  u.x=step.x;
-  u.y=step.y;
-  u.moved=true;
-  occupied.set(key,u.id);
-  moved.push(u.name);
- }
- return {units:nextUnits,moved};
-}
-async function runMandatoryAutoAdvance(){
- if(!publicState || !privateState || !isMyTurn()) return;
- if(publicState.phase!=="action") return;
- if(isFirstTurnNoAdvance(myPlayer)) return;
- const key=autoAdvanceFlagKey();
- if(privateState[key]) return;
- if(autoAdvanceUnitsLock) return;
- autoAdvanceUnitsLock=true;
- try{
-  const result=applyAutoAdvanceUnits(publicState.units||[],myPlayer);
-  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),{[key]:true});
-  if(result.moved.length){
-   await updatePublicUnits(result.units);
-   await pushLog(`Avance obligatorio de J${myPlayer}: ${result.moved.join(", ")} avanzan 1 casilla hacia el kaster rival.`);
-  }else{
-   await pushLog(`Avance obligatorio de J${myPlayer}: ninguna invocación pudo avanzar.`);
-  }
- }finally{
-  autoAdvanceUnitsLock=false;
- }
-}
-async function restoreUnitToNexo(unitId){
- const u=getUnit(unitId);
- if(!u) return;
- if(!canRestoreToNexo(u)){
-  playSound("error");
-  return setHint("No puedes restaurar esta invocación ahora o su nexo está ocupado.");
- }
- const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x:it.nexoX,y:it.nexoY,moved:true,acted:true}:it);
- await updatePublicUnits(units);
- clearSelection();
- playSound("phase");
- await pushLog(`${u.name} se restaura a su nexo ${u.nexoX+1},${u.nexoY+1}.`);
-}
-function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}
-function hasCommandBuff(u){return false}
-function effectiveAtk(u){return (u?.atk||0)+(u?.buffAtk||0)+(hasCommandBuff(u)?1:0)}
-function effectivePhysicalDef(u){return Math.max(0,u?.physicalDef??u?.def??0)}
-function effectiveMagicDef(u){return Math.max(0,u?.magicDef||0)}
-function defenseForDamage(u,type){return type==="magic"?effectiveMagicDef(u):effectivePhysicalDef(u)}
-function damageTypeLabel(type){return type==="magic"?"mágico":"físico"}
-function effectiveCounter(u){return Math.max(0,u?.counterDamage||0)}
-function effectiveMov(u){return (u?.mov||0)+(hasCommandBuff(u)?1:0)}
-function leaderPortrait(u){if(!u)return""; if(u.owner===1){if(u.pose==="attack")return ART.pharaohAttack;if(u.pose==="summon")return ART.pharaohSummon;return ART.pharaohIdle} if(u.pose==="attack")return ART.mageAttack;if(u.pose==="summon")return ART.mageCast;return ART.mageIdle}
-function genericPortrait(u){const g={spearman:"linear-gradient(180deg,#d6a85d,#6a4120)",archer:"linear-gradient(180deg,#c6a15a,#5a3918)",guardian:"linear-gradient(180deg,#c9a55f,#604126)",scout:"linear-gradient(180deg,#c99c4c,#573617)",spell:"linear-gradient(180deg,#d7b97c,#7a5530)"};return g[u?.key]||"linear-gradient(180deg,#d6a85d,#6a4120)"}
-function summonZones(player){const l=getLeader(player); const cells=[]; if(!l)return cells; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(dx===0&&dy===0)continue;const x=l.x+dx,y=l.y+dy;if(x>=0&&x<COLS&&y>=0&&y<ROWS&&!getUnitAt(x,y))cells.push(`${x},${y}`)} return cells}
-function moveZones(u){if(!u||u.moved)return[];if(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))return[];const c=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(!getUnitAt(x,y)&&dist(u,{x,y})<=effectiveMov(u))c.push(`${x},${y}`)}return c}
-function attackZones(u){if(!u||u.acted)return[];return (publicState?.units||[]).filter(t=>t.owner!==u.owner&&dist(u,t)<=u.range).map(t=>`${t.x},${t.y}`)}
-function mustTakeTarget(u){
- return !!u && !u.leader && u.owner===myPlayer && publicState?.phase==="action" && attackZones(u).length>0;
-}
-
-async function maybeStartMyTurn(){
- if(!publicState||!privateState||!isMyTurn()) return;
- if(privateState.lastTurnStarted===publicState.turnKey) return;
- if(cycleStartLock) return;
- cycleStartLock=true;
- try{
-  const oldSource=(privateState.source&&privateState.source.length)?privateState.source:makeElementSource(myPlayer);
-  const cycleCount=privateState.cycleCount||0;
-  const extractAmount=cycleCount===0?2:1;
-  const extracted=drawElementsFromSource(oldSource,extractAmount);
-  const gained=extracted.drawn.length;
-  const res=(privateState.res||0)+gained;
-  const units=(publicState.units||[]).map(u=>u.owner===myPlayer?{...u,moved:false,acted:false,buffAtk:0,pose:"idle"}:u);
-
-  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),{
-   source:extracted.source,
-   res,
-   cycleCount:cycleCount+1,
-   summonCount:0,
-   summoned:false,
-   lastTurnStarted:publicState.turnKey
-  });
-
-  await update(ref(db,`games/${gameId}/public`),{
-   units,
-   [`playerStats/${myPlayer}`]:{
-    res,
-    deck:extracted.source.length,
-    hand:(privateState.hand||[]).length
-   }
-  });
-
-  const msg=gained
-   ? `J${myPlayer} cicla y extrae ${gained} elemento(s) de la Fuente: ${elementNames(extracted.drawn)}.${cycleCount===0?" Primer turno: sus invocaciones no pueden avanzar.":""}`
-   : `J${myPlayer} intenta ciclar, pero su Fuente no tiene elementos.${cycleCount===0?" Primer turno: sus invocaciones no pueden avanzar.":""}`;
-  await pushLog(msg);
- }finally{
-  cycleStartLock=false;
- }
-}
-
-
-function showAutoToast(text){
-  const el=$("autoAdvanceToast");
-  if(!el) return;
-  el.textContent=text;
-  el.classList.add("show");
-  setTimeout(()=>el.classList.remove("show"),1600);
-}
-
-function updateSettingsButtons(){
-  const sound=$("soundBtn");
-  const auto=$("autoBtn");
-  if(sound){
-    sound.textContent=soundOn?"🔊":"🔇";
-    sound.classList.toggle("active",soundOn);
-  }
-  if(auto){
-    auto.textContent=autoAdvanceOn?"⚙️":"⏸️";
-    auto.classList.toggle("active",autoAdvanceOn);
-    auto.title=autoAdvanceOn?"Autoavance ON":"Autoavance OFF";
-  }
-}
-function ensureAudio(){
+function getPlayerProfile(){
   try{
-    const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC) return false;
-    if(!audioCtx) audioCtx=new AC();
-    if(audioCtx.state==="suspended") audioCtx.resume();
-    return true;
-  }catch(e){return false}
-}
-function tone(freq,duration,type="sine",gain=.06,delay=0){
-  if(!soundOn||!audioCtx) return;
-  const now=audioCtx.currentTime+delay;
-  const osc=audioCtx.createOscillator();
-  const amp=audioCtx.createGain();
-  osc.type=type;
-  osc.frequency.setValueAtTime(freq,now);
-  amp.gain.setValueAtTime(.0001,now);
-  amp.gain.exponentialRampToValueAtTime(gain,now+.01);
-  amp.gain.exponentialRampToValueAtTime(.0001,now+duration);
-  osc.connect(amp); amp.connect(audioCtx.destination);
-  osc.start(now); osc.stop(now+duration+.04);
-}
-function playSound(kind){
-  if(!soundOn) return;
-  ensureAudio();
-  if(kind==="toggle"){tone(660,.08,"sine",.08);tone(880,.08,"triangle",.06,.07)}
-  if(kind==="summon"){tone(330,.12,"sine",.06);tone(660,.14,"triangle",.055,.07)}
-  if(kind==="move"){tone(260,.07,"triangle",.035)}
-  if(kind==="hit"){tone(130,.1,"square",.06);tone(90,.08,"sawtooth",.035,.04)}
-  if(kind==="phase"){tone(520,.08,"sine",.05);tone(390,.10,"triangle",.04,.07)}
-  if(kind==="error"){tone(160,.12,"sawtooth",.045)}
-}
-
-function getPlayableCards(){
-  if(!privateState || !publicState) return [];
-  const hand=privateState.hand||[];
-  const res=privateState.res||0;
-  return hand.filter(card=>{
-    if(card.cost>res) return false;
-    if(card.spell==="buffAtk"){
-      return (publicState.units||[]).some(u=>u.owner===myPlayer);
-    }
-    if(card.spell==="damage1"){
-      return (publicState.units||[]).some(u=>u.owner!==myPlayer);
-    }
-    if(!card.spell){
-      if((privateState.summonCount||0)>=3) return false;
-      if(!canKasteInvocation()) return false;
-      return summonZones(myPlayer).length>0;
-    }
-    return false;
-  });
-}
-function playerUnits(player){
-  return (publicState?.units||[]).filter(u=>u.owner===player);
-}
-function unitHasMove(u){
-  return moveZones(u).length>0;
-}
-function unitHasAttack(u){
-  return attackZones(u).length>0;
-}
-function hasBattleActions(){
-  return playerUnits(myPlayer).some(u=>{
-    const canMove=!u.moved && unitHasMove(u);
-    const canAttack=!u.acted && unitHasAttack(u);
-    return canMove || canAttack;
-  });
-}
-function hasCasteoActions(){
-  return getPlayableCards().length>0;
-}
-function canUseBattleTechniqueBeforeEnd(){
-  // Por ahora las técnicas solo se juegan en fase de kasteo.
-  // Esta función queda separada para cuando permitamos magias rápidas en combate.
-  return false;
-}
-function scheduleAutoAdvance(reason, action){
-  if(autoAdvanceTimer || autoAdvanceLock) return;
-  autoAdvanceLock=true;
-  showAutoToast(reason);
-  setHint(reason);
-  autoAdvanceTimer=setTimeout(async()=>{
-    autoAdvanceTimer=null;
-    try{
-      await action();
-    }finally{
-      setTimeout(()=>{autoAdvanceLock=false},350);
-    }
-  },1200);
-}
-function cancelAutoAdvance(){
-  if(autoAdvanceTimer){
-    clearTimeout(autoAdvanceTimer);
-    autoAdvanceTimer=null;
-  }
-  autoAdvanceLock=false;
-}
-async function checkAutoAdvance(){
-  if(!autoAdvanceOn) return;
-  if(!publicState || !privateState || !isMyTurn() || autoAdvanceLock) return;
-
-  if(publicState.phase==="cycle"){
-    if(privateState.lastTurnStarted!==publicState.turnKey){ setHint("Resolviendo fase de ciclado..."); return; }
-    if(selectedCard || selectedUnitId || handOpen) return;
-    scheduleAutoAdvance("Fase de ciclado resuelta. Pasando a fase de kasteo...", async()=>{
-      if(isMyTurn() && publicState?.phase==="cycle"){
-        await update(ref(db,`games/${gameId}/public`),{phase:"prep"});
-        playSound('phase');
-        await pushLog(`J${myPlayer} termina fase de ciclado e inicia fase de kasteo.`);
-      }
-    });
-  }else if(publicState.phase==="prep"){
-    if(selectedCard || selectedUnitId || handOpen) return;
-    if(!hasCasteoActions()){
-      scheduleAutoAdvance("Sin cartas, stock elemental u objetivos jugables. Pasando a fase de combate...", async()=>{
-        if(isMyTurn() && publicState?.phase==="prep" && !hasCasteoActions()){
-          await update(ref(db,`games/${gameId}/public`),{phase:"action"});
-          playSound('phase');
-          await pushLog(`J${myPlayer} no tiene jugadas de kasteo. Pasa automáticamente a combate.`);
-          setTimeout(runMandatoryAutoAdvance,220);
-        }
-      });
-    }
-  }else if(publicState.phase==="action"){
-    if(selectedCard || selectedUnitId) return;
-    if(!hasBattleActions() && !canUseBattleTechniqueBeforeEnd()){
-      scheduleAutoAdvance("Sin movimientos ni ataques disponibles. Terminando turno...", async()=>{
-        if(isMyTurn() && publicState?.phase==="action" && !hasBattleActions()){
-          await endMyTurnAuto();
-        }
-      });
-    }
+    const saved = JSON.parse(localStorage.getItem("hallvalla_player_profile") || "null");
+    return {...defaultPlayerProfile, ...(saved || {})};
+  }catch(e){
+    return {...defaultPlayerProfile};
   }
 }
-async function endMyTurnAuto(){
-  const next=myPlayer===1?2:1;
-  const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
-  await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"cycle",turn,turnKey:`${turn}-${next}`});
-  clearSelection();
-  playSound('phase');
-  await pushLog(`Fin de turno. Ahora J${next} entra en fase de ciclado.`);
+function savePlayerProfile(profile){
+  localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
 }
-
-function render(){
- if(!publicState)return;
- renderHud(); renderBoard(); renderSide(); renderHand(); renderLog(); updateSettingsButtons();
- setTimeout(()=>{runMandatoryAutoAdvance();checkAutoAdvance();},120);
+function xpNeededForLevel(level){
+  return 100 + Math.max(0, level - 1) * 50;
 }
-function phaseName(){
- if(!isMyTurn()) return "FASE DE ESPERA";
- if(publicState.phase==="cycle") return "FASE DE CICLADO";
- if(publicState.phase==="prep") return "FASE DE KASTEO";
- if(publicState.phase==="action") return "FASE DE COMBATE";
- return "ONLINE";
+function renderPlayerProfile(profile=getPlayerProfile()){
+  profile.xpToNext = profile.xpToNext || xpNeededForLevel(profile.level || 1);
+  $("playerName").textContent = profile.name || "Nuevo jugador";
+  $("playerLevel").textContent = `Nv. ${profile.level || 1}`;
+  $("goldValue").textContent = profile.gold || 0;
+  $("gemsValue").textContent = profile.gems || 0;
+  $("fragmentsValue").textContent = profile.fragments || 0;
+  const pct = Math.max(0, Math.min(100, ((profile.xp || 0) / profile.xpToNext) * 100));
+  $("xpText").textContent = `${profile.xp || 0}/${profile.xpToNext}`;
+  requestAnimationFrame(()=>{$("xpFill").style.width = pct + "%";});
 }
-function phaseButtonIcon(){
- if(publicState.phase==="action") return "⏭";
- return "▶";
-}
-function renderHud(){
- [1,2].forEach(p=>{
-  const l=getLeader(p), st=publicState.playerStats?.[p]||{res:0,deck:0,hand:0};
-  $(`p${p}Life`).textContent=l?Math.max(0,l.hp):0;
-  $(`p${p}Res`).textContent=st.res??0; $(`p${p}Deck`).textContent=st.deck??0; $(`p${p}Hand`).textContent=st.hand??0;
-  const b=$(`p${p}Badge`); b.textContent=publicState.currentPlayer===p?"Turno":"Espera"; b.style.color=publicState.currentPlayer===p?"#ffd166":"#c7c7c7";
- });
- $("phaseBanner").textContent=phaseName();
- $("phaseBtn").textContent=phaseButtonIcon();
- $("phaseBtn").title=publicState.phase==="cycle"?"Pasar a fase de kasteo":publicState.phase==="prep"?"Pasar a fase de combate":"Finalizar turno";
-}
-function renderBoard(){
- const grid=$("grid"); grid.innerHTML="";
- for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const cell=document.createElement("div");cell.className="cell";cell.dataset.coord=`${x+1},${y+1}`;cell.dataset.x=x;cell.dataset.y=y;const key=`${x},${y}`; if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid"); if(publicState.summonDisplay&&publicState.summonDisplay.x===x&&publicState.summonDisplay.y===y){const d=document.createElement("div");d.className="summon-display";cell.appendChild(d)} const u=getUnitAt(x,y); if(u){if(selectedUnitId===u.id)cell.classList.add("selected");const sh=document.createElement("div");sh.className="field-shadow";cell.appendChild(sh);const card=document.createElement("div");card.className=`field-card ${u.owner===1?"p1card":"p2card"} ${u.leader?"leader":""} ${u.moved?"moved":""} ${(!u.leader && !isAtNexo(u))?"off-nexo":""}`;card.title=u.leader?u.name:`${u.name} · Nexo ${nexoText(u)}`;const ps=u.leader?`background-image:url('${leaderPortrait(u)}');background-size:cover;background-position:center top;`:`background:${genericPortrait(u)};`;const mark=u.leader?"":`<div class="board-unit-mark">${u.icon||"⚔️"}</div>`;card.innerHTML=`<div class="field-frame"><div class="portrait" style="${ps}"><div class="name-strip">${u.name}</div>${mark}</div><div class="divider"></div><div class="field-stats"><div class="field-stat">HP<strong>${u.hp}</strong></div><div class="field-stat">AT<strong>${effectiveAtk(u)}</strong></div><div class="field-stat">MV<strong>${effectiveMov(u)}</strong></div><div class="field-stat">RG<strong>${u.range}</strong></div></div></div>`;cell.appendChild(card)} cell.addEventListener("click",()=>cellClick(x,y)); cell.appendChild(document.createTextNode("")); grid.appendChild(cell)}
-}
-function renderSide(){
- $("sideBox").innerHTML=`<div class="hand-icon">${myPlayer===1?"👑":"🔮"}</div><div class="hand-name">J${myPlayer} · ${isMyTurn()?"Tu turno":"Espera"}</div><div class="hand-stats">Kasteos ${privateState?.summonCount||0}/3 · Invocaciones ${ownInvocationCount(myPlayer)}/6 · Código: ${gameId||"..."}</div>`;
- if(selectedCard){$("detailBox").innerHTML=`<h3 class="side-title">${selectedCard.icon} ${selectedCard.name}</h3><p><strong>Costo:</strong> ${selectedCard.cost}</p><p>${selectedCard.text||""}</p><p><strong>Efecto:</strong> ${selectedCard.effect||"Sin efecto."}</p>`;return}
- if(selectedUnitId){const u=getUnit(selectedUnitId);const restoreHtml=canRestoreToNexo(u)?`<button class="btn primary full" id="restoreBtn">Restaurar al nexo</button>`:"";$("detailBox").innerHTML=`<h3 class="side-title">${u.icon} ${u.name}</h3><p>HP ${u.hp}/${u.maxHp||u.hp} · AT ${effectiveAtk(u)} · DF ${effectivePhysicalDef(u)} · DM ${effectiveMagicDef(u)}${u.leader?` · COUNTER ${effectiveCounter(u)}`:""} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>Posición: ${u.x+1},${u.y+1}</p><p>${u.leader?"Kaster sin nexo.":`Nexo: ${nexoText(u)} · ${isAtNexo(u)?"en nexo":"fuera del nexo"}`}</p>${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?`<p>Primer turno: no puede avanzar.</p>`:""}${mustTakeTarget(u)?`<p>Objetivo obligatorio: debe atacar a un rival en rango.</p>`:""}${(!u.leader&&u.moved&&!isFirstTurnNoAdvance(u.owner))?`<p>Ya realizó avance/movimiento.</p>`:""}${restoreHtml}`;const rb=$("restoreBtn");if(rb)rb.addEventListener("click",()=>restoreUnitToNexo(u.id));return}
- $("detailBox").innerHTML=`<h3 class="side-title">Sin selección</h3><p>${isMyTurn()?"Abre la spellbook o selecciona una unidad.":"Espera al rival."}</p>`;
-}
-function renderHand(){
- const drawer=$("handDrawer"), row=$("handRow"); row.innerHTML="";
- drawer.classList.toggle("show",handOpen&&isMyTurn()&&publicState.phase==="prep");
- $("drawerTitle").textContent=`Spellbook del Jugador ${myPlayer}`;
- if(!privateState)return;
- (privateState.hand||[]).forEach(card=>{const div=document.createElement("div");div.className="hand-card"+(selectedCard?.id===card.id?" selected":"");const stat=card.spell?card.rol:`V${card.hp} A${card.atk} M${card.mov} R${card.range}`;div.innerHTML=`<div class="cost">${card.cost}</div><div class="hand-icon">${card.icon}</div><div class="hand-name">${card.name}</div><div class="hand-stats">${stat}</div>`;div.addEventListener("click",()=>showCardInspector(card));div.addEventListener("dblclick",()=>selectCard(card.id));div.addEventListener("pointerdown",e=>setupManualDrag(card,div,e));row.appendChild(div)})
-}
-function renderLog(){$("logPanel").innerHTML=(publicState.log||[]).map(t=>`<div>${t}</div>`).join("")}
-
-function showCardInspector(card){
- const stats=card.spell?[{label:"Costo",value:card.cost},{label:"Tipo",value:"Técnica"},{label:"Rol",value:card.rol}]:[{label:"Costo",value:card.cost},{label:"Vida",value:card.hp},{label:"Ataque",value:card.atk},{label:"Movimiento",value:card.mov},{label:"Alcance",value:card.range},{label:"Rol",value:card.rol}];
- showInspector(card.name,`Carta en spellbook · J${myPlayer}`,stats,`<strong>${card.tipo}</strong><br>${card.text}<br><br><strong>Efecto:</strong> ${card.effect}`,null,card.icon,`<button class="btn primary" id="inspectSelect">Seleccionar para jugar</button><button class="btn" id="inspectClose">Cerrar</button>`,()=>{$("inspectSelect").addEventListener("click",()=>{selectCard(card.id);closeInspector()});$("inspectClose").addEventListener("click",closeInspector)})
-}
-function showUnitInspector(u){const stats=[{label:"Vida",value:`${u.hp}/${u.maxHp||u.hp}`},{label:"Ataque",value:effectiveAtk(u)},{label:"Def. física",value:effectivePhysicalDef(u)},{label:"Def. mágica",value:effectiveMagicDef(u)},{label:"Counter",value:u.leader?effectiveCounter(u):"—"},{label:"Movimiento",value:effectiveMov(u)},{label:"Alcance",value:u.range},{label:"Posición",value:`${u.x+1},${u.y+1}`},{label:"Nexo",value:u.leader?"No aplica":nexoText(u)},{label:"Dueño",value:`J${u.owner}`}];const art=u.leader?leaderPortrait(u):null;const nexoInfo=u.leader?"El kaster no tiene nexo.":`Nexo de restauración: ${nexoText(u)}. ${isAtNexo(u)?"Está sobre su nexo.":"Está fuera de su nexo."}`;const restoreBtn=canRestoreToNexo(u)?`<button class="btn primary" id="inspectRestore">Restaurar al nexo</button>`:"";showInspector(u.name,u.leader?`Kaster · J${u.owner}`:`Invocación · J${u.owner}`,stats,`${nexoInfo}<br>${mustTakeTarget(u)?"Objetivo obligatorio: debe atacar a un rival en rango.<br>":""}${(!u.leader&&u.owner===myPlayer&&isFirstTurnNoAdvance(u.owner))?"Primer turno: no puede avanzar.<br>":""}${(!u.leader&&u.moved)?"Ya realizó avance/movimiento.":"No se ha movido."} ${u.acted?"Ya atacó.":"No ha atacado."}`,art,u.icon,`${restoreBtn}<button class="btn" id="inspectClose">Cerrar</button>`,()=>{const rb=$("inspectRestore");if(rb)rb.addEventListener("click",()=>{closeInspector();restoreUnitToNexo(u.id)});$("inspectClose").addEventListener("click",closeInspector)})}
-function showInspector(title,sub,stats,desc,art,icon,actions,bind){$("inspectTitle").textContent=title;$("inspectSub").textContent=sub;$("inspectStats").innerHTML=stats.map(s=>`<div class="inspect-stat">${s.label}<strong>${s.value}</strong></div>`).join("");$("inspectDesc").innerHTML=desc;$("inspectActions").innerHTML=actions;const a=$("inspectArt");if(art){a.textContent="";a.style.background="none";a.style.backgroundImage=`url('${art}')`;a.style.backgroundSize="cover";a.style.backgroundPosition="center top"}else{a.style.backgroundImage="";a.style.background="linear-gradient(180deg,rgba(214,168,93,.96),rgba(90,57,24,.96))";a.textContent=icon||"⚔️"}$("inspectOverlay").classList.add("show");bind?.()}
-function closeInspector(){$("inspectOverlay").classList.remove("show")}
-
-function selectCard(id){
- cancelAutoAdvance();
- if(!isMyTurn()||publicState.phase!=="prep"){
-  playSound("error");
-  return setHint("No puedes kastear esta carta ahora.");
- }
- const card=(privateState.hand||[]).find(c=>c.id===id);
- if(!card)return;
- if(card.cost>(privateState.res||0)){
-  playSound("error");
-  setHint("No tienes stock elemental suficiente.");
-  return;
- }
- selectedCard=card;
- selectedUnitId=null;
- if(card.spell==="buffAtk"){
-  highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);
-  highlightType="move";
-  setHint("Elige una unidad aliada.");
- }else if(card.spell==="damage1"){
-  highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);
-  highlightType="attack";
-  setHint("Elige una unidad enemiga.");
- }else{
-  if((privateState.summonCount||0)>=3){
-   playSound("error");
-   return setHint("Ya alcanzaste el límite de 3 kasteos de invocación esta fase.");
+function addPlayerXp(amount){
+  const profile = getPlayerProfile();
+  profile.xp += amount;
+  while(profile.xp >= xpNeededForLevel(profile.level)){
+    profile.xp -= xpNeededForLevel(profile.level);
+    profile.level += 1;
   }
-  if(!canKasteInvocation()){
-   playSound("error");
-   return setHint("Ya tienes 6 invocaciones en la arena.");
-  }
-  highlights=summonZones(myPlayer);
-  highlightType="summon";
-  setHint(`Elige una coordenada verde junto a tu kaster. Kasteos: ${privateState.summonCount||0}/3`);
- }
- render();
+  profile.xpToNext = xpNeededForLevel(profile.level);
+  savePlayerProfile(profile);
+  renderPlayerProfile(profile);
 }
-function selectUnit(u){cancelAutoAdvance();if(!isMyTurn()||publicState.phase!=="action"){showUnitInspector(u);return}if(u.owner!==myPlayer)return setHint("Solo tus unidades.");selectedUnitId=u.id;selectedCard=null;if(mustTakeTarget(u)){highlights=attackZones(u);highlightType="attack";setHint("Objetivo obligatorio: esta invocación tiene un rival en rango y debe atacar.");}else{highlights=[...moveZones(u),...attackZones(u)];highlightType="move";if(!u.leader&&isFirstTurnNoAdvance(u.owner)){setHint("Primer turno: las invocaciones no pueden avanzar. Rojo: atacar si hay objetivo.");}else if(!u.leader&&u.moved){setHint("Esta invocación ya realizó su avance/movimiento. Rojo: atacar si hay objetivo.");}else{setHint("Verde: mover. Rojo: atacar.");}}render()}
-function clearSelection(){selectedCard=null;selectedUnitId=null;highlights=[];summonDisplay=null;setHint("Selección cancelada.");render()}
-async function cellClick(x,y){
- if(!publicState||!isMyTurn()){const u=getUnitAt(x,y); if(u)showUnitInspector(u); return}
- if(publicState.phase==="cycle"){setHint("Estás en fase de ciclado. Pasa a kasteo para jugar cartas.");return}
- const u=getUnitAt(x,y);
- if(publicState.phase==="prep"&&selectedCard) return playCard(x,y,u);
- if(publicState.phase==="action"&&selectedUnitId){
-  const s=getUnit(selectedUnitId);
-  if(mustTakeTarget(s)){
-   if(u&&u.owner!==myPlayer&&dist(s,u)<=s.range&&!s.acted)return combat(s,u);
-   playSound("error");
-   return setHint("Objetivo obligatorio: debes atacar una invocación rival en rango antes de moverte.");
-  }
-  if(u&&u.owner!==myPlayer&&dist(s,u)<=s.range&&!s.acted)return combat(s,u);
-  if(!u&&moveZones(s).includes(`${x},${y}`))return moveUnit(s,x,y);
- }
- if(u) selectUnit(u);
+renderPlayerProfile();
+
+function showOnlineLobby(){
+  $("mainMenu").classList.add("hidden");
+  $("onlineLobby").classList.remove("hidden");
+  $("gameShell").classList.add("hidden");
 }
-async function playCard(x,y,u){
- const card=selectedCard;
- if(!card) return;
- if(!isMyTurn() || publicState.phase!=="prep"){
-   playSound("error");
-   return setHint("No puedes kastear esta carta ahora.");
- }
- const resNow=privateState.res||0;
- if(card.cost>resNow){
-   playSound("error");
-   return setHint("No tienes stock elemental suficiente.");
- }
-
- // IMPORTANTE 0.3B:
- // Primero validamos y aplicamos el efecto en una copia del tablero.
- // Solo si todo sale bien se descuenta stock elemental y se elimina la carta.
- let units=[...(publicState.units||[])].map(unit=>({...unit}));
- const targetIndex = u ? units.findIndex(unit=>unit.id===u.id) : -1;
-
- if(card.spell==="buffAtk"){
-   if(targetIndex<0 || units[targetIndex].owner!==myPlayer){
-     playSound("error");
-     return setHint("Objetivo inválido para Bendición Solar.");
-   }
-   units[targetIndex].buffAtk=(units[targetIndex].buffAtk||0)+1;
-   await updatePublicUnits(units);
-   await commitPrivateCard(card,{res:resNow-card.cost});
-   await pushLog(`${units[targetIndex].name} recibe Bendición Solar.`);
-   clearSelection();
-   return;
- }
-
- if(card.spell==="damage1"){
-   if(targetIndex<0 || units[targetIndex].owner===myPlayer){
-     playSound("error");
-     return setHint("Objetivo inválido para Maldición de Arena.");
-   }
-   units[targetIndex].hp=(units[targetIndex].hp||0)-Math.max(0,1-effectiveMagicDef(units[targetIndex]));
-   await cleanupAndUpdate(units);
-   await commitPrivateCard(card,{res:resNow-card.cost});
-   playSound("hit");
-   await pushLog(`${units[targetIndex].name} recibe Maldición de Arena y pierde 1 vida.`);
-   clearSelection();
-   return;
- }
-
- if(!card.spell){
-   if((privateState.summonCount||0)>=3){
-     playSound("error");
-     return setHint("Ya alcanzaste el límite de 3 kasteos de invocación esta fase.");
-   }
-   if(!canKasteInvocation()){
-     playSound("error");
-     return setHint("Ya tienes 6 invocaciones en la arena.");
-   }
-   if(!summonZones(myPlayer).includes(`${x},${y}`)){
-     playSound("error");
-     return setHint("Coordenada inválida.");
-   }
-   await summon(card,x,y);
- }
+function backToMainMenu(){
+  $("onlineLobby").classList.add("hidden");
+  $("gameShell").classList.add("hidden");
+  $("mainMenu").classList.remove("hidden");
 }
-async function commitPrivateCard(card,extra={}){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const data={hand,res:extra.res??privateState.res,deck:privateState.deck||[],source:privateState.source||[],cycleCount:privateState.cycleCount||0,summonCount:extra.summonCount??(privateState.summonCount||0),summoned:extra.summoned??privateState.summoned,lastTurnStarted:privateState.lastTurnStarted||""};await update(ref(db,`games/${gameId}/private/player${myPlayer}`),data);await update(ref(db,`games/${gameId}/public/playerStats/${myPlayer}`),{res:data.res,deck:(data.source||[]).length,hand:data.hand.length})}
-async function summon(card,x,y){const leader=getLeader(myPlayer); const units=(publicState.units||[]).map(u=>u.id===leader.id?{...u,pose:"summon"}:u); await update(ref(db,`games/${gameId}/public`),{units,summonDisplay:{x,y}}); setHint("Kasteando..."); setTimeout(async()=>{const latest=await get(ref(db,`games/${gameId}/public/units`));const curr=latest.val()||[];const clean=curr.map(u=>u.id===leader.id?{...u,pose:"idle"}:u);clean.push(makeUnit(card,x,y));await update(ref(db,`games/${gameId}/public`),{units:clean,summonDisplay:null});await commitPrivateCard(card,{res:(privateState.res||0)-card.cost,summoned:true});playSound('summon');await pushLog(`J${myPlayer} kastea ${card.name}.`);selectedCard=null;highlights=[];handOpen=false;render()},900)}
-async function moveUnit(u,x,y){if(mustTakeTarget(u)){playSound("error");return setHint("Objetivo obligatorio: esta invocación debe atacar antes de moverse.");}const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updatePublicUnits(units);playSound('move');await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}
-async 
-function restoreAttackerAfterCombat(units,attackerId){
- const idx=units.findIndex(u=>u.id===attackerId);
- if(idx<0)return{units,restored:false,reason:"no-unit"};
- const u=units[idx];
- if(!u||u.leader||u.hp<=0||u.nexoX===undefined||u.nexoY===undefined)return{units,restored:false,reason:"invalid"};
- if(u.x===u.nexoX&&u.y===u.nexoY)return{units,restored:false,reason:"already"};
- const occupied=units.find(o=>o.id!==u.id&&o.hp>0&&o.x===u.nexoX&&o.y===u.nexoY);
- if(occupied)return{units,restored:false,reason:"occupied"};
- const next=units.map(it=>it.id===u.id?{...it,x:it.nexoX,y:it.nexoY,moved:true,acted:true}:it);
- return{units:next,restored:true,reason:"ok"};
-}
-function combat(a,d){
- const units=(publicState.units||[]).map(u=>u.id===a.id?{...u,pose:"attack"}:u);
- updatePublicUnits(units);
- showCombat(a,d);
- setTimeout(async()=>{
-  const fresh=(await get(ref(db,`games/${gameId}/public/units`))).val()||[];
-
-  const targetIsInvocation=!d.leader;
-  const targetIsKaster=!!d.leader;
-  const attackerIsInvocation=!a.leader;
-
-  const attackType=a.damageType||"physical";
-  const rawDamage=effectiveAtk(a);
-  const defense=(targetIsKaster && attackerIsInvocation)?defenseForDamage(d,attackType):defenseForDamage(d,attackType);
-  let finalDamage=Math.max(0,rawDamage-defense);
-
-  let counterUsed=false;
-  const counterAvailable=(targetIsKaster && attackerIsInvocation)?effectiveCounter(d):0;
-
-  const kasterBeforeHit=fresh.find(u=>u.id===d.id);
-  const wouldBeFatal=targetIsKaster && attackerIsInvocation && kasterBeforeHit && (kasterBeforeHit.hp-finalDamage)<=0;
-  if(targetIsKaster && attackerIsInvocation && counterAvailable>0 && wouldBeFatal){
-   counterUsed=true;
-   finalDamage=0;
-  }
-
-  const kasterCounterType=d.damageType||"physical";
-  const kasterCounterRaw=(targetIsKaster && attackerIsInvocation)?effectiveAtk(d):0;
-  const kasterCounterDamage=(targetIsKaster && attackerIsInvocation)?Math.max(0,kasterCounterRaw-defenseForDamage(a,kasterCounterType)):0;
-
-  let newUnits=fresh.map(u=>{
-   if(u.id===a.id)return{...u,pose:"idle",acted:true};
-   if(u.id===d.id){
-    const next={...u,hp:u.hp-finalDamage};
-    if(counterUsed) next.counterDamage=Math.max(0,(u.counterDamage||0)-1);
-    return next;
-   }
-   return u;
-  });
-
-  if(targetIsKaster && attackerIsInvocation){
-   const kasterAfter=newUnits.find(u=>u.id===d.id);
-   if(kasterAfter && kasterAfter.hp>0 && kasterCounterDamage>0){
-    newUnits=newUnits.map(u=>u.id===a.id?{...u,hp:u.hp-kasterCounterDamage}:u);
-   }
-  }
-
-  let restoreResult={units:newUnits,restored:false,reason:"skip"};
-  const attackerAfterCounter=newUnits.find(u=>u.id===a.id);
-
-  if(attackerIsInvocation && attackerAfterCounter && attackerAfterCounter.hp>0 && (targetIsInvocation || targetIsKaster)){
-   restoreResult=restoreAttackerAfterCombat(newUnits,a.id);
-   newUnits=restoreResult.units;
-  }
-
-  await cleanupAndUpdate(newUnits);
-  playSound('hit');
-
-  let msg=`${a.name} ataca a ${d.name} con daño ${damageTypeLabel(attackType)}.`;
-  msg+=` Defensa aplicada: ${defense}.`;
-  if(targetIsKaster && attackerIsInvocation){
-   if(counterUsed){
-    msg+=` Counter Damage automático usado para evitar daño fatal: daño recibido 0.`;
-   }else{
-    msg+=` Daño recibido: ${finalDamage}.`;
-   }
-   const kasterAfter=newUnits.find(u=>u.id===d.id);
-   if(kasterAfter && kasterAfter.hp>0 && kasterCounterDamage>0){
-    msg+=` ${d.name} contraataca automáticamente e inflige ${kasterCounterDamage} daño ${damageTypeLabel(kasterCounterType)}.`;
-   }else if(!kasterAfter || kasterAfter.hp<=0){
-    msg+=` ${d.name} cae y no puede contraatacar.`;
-   }
-  }else{
-   msg+=` Daño recibido: ${finalDamage}.`;
-  }
-
-  if(attackerIsInvocation && targetIsInvocation){
-   if(restoreResult.restored) msg+=` ${a.name} se restaura a su nexo.`;
-   else if(restoreResult.reason==="occupied") msg+=` ${a.name} no puede restaurarse: su nexo está ocupado.`;
-  }
-
-  if(attackerIsInvocation && targetIsKaster){
-   const attackerStillAlive=newUnits.find(u=>u.id===a.id);
-   if(!attackerStillAlive){
-    msg+=` ${a.name} es destruido por el contraataque y no se restaura.`;
-   }else if(restoreResult.restored){
-    msg+=` ${a.name} sobrevive y se restaura a su nexo.`;
-   }else if(restoreResult.reason==="occupied"){
-    msg+=` ${a.name} sobrevive, pero no puede restaurarse: su nexo está ocupado.`;
-   }
-  }
-
-  await pushLog(msg);
-  selectedUnitId=null;
-  highlights=[];
-  $("combatOverlay").classList.remove("show");
- },1300)
-}
-function showCombat(a,d){$("combatLeftName").textContent=a.name;$("combatRightName").textContent=d.name;$("combatLeftStats").textContent=`HP ${a.hp} · AT ${effectiveAtk(a)}`;$("combatRightStats").textContent=`HP ${d.hp} · AT ${effectiveAtk(d)}`; $("combatLeftArt").style.backgroundImage=a.leader?`url('${leaderPortrait({...a,pose:"attack"})}')`:"";$("combatLeftArt").style.background=a.leader?"":genericPortrait(a);$("combatRightArt").style.backgroundImage=d.leader?`url('${leaderPortrait(d)}')`:"";$("combatRightArt").style.background=d.leader?"":genericPortrait(d);$("combatOverlay").classList.add("show")}
-async function updatePublicUnits(units){await update(ref(db,`games/${gameId}/public`),{units})}
-async function cleanupAndUpdate(units){const live=[];for(const u of units){if(u.hp<=0){await pushLog(`${u.name} cae.`)}else live.push(u)}await updatePublicUnits(live)}
-async function phaseButton(){
- cancelAutoAdvance();
- if(!isMyTurn()){
-  playSound("error");
-  return setHint("No es tu turno.");
- }
- if(publicState.phase==="cycle"){
-  if(privateState?.lastTurnStarted!==publicState.turnKey){
-   await maybeStartMyTurn();
-   return setHint("Resolviendo fase de ciclado. Presiona otra vez para pasar a kasteo.");
-  }
-  await update(ref(db,`games/${gameId}/public`),{phase:"prep"});
-  clearSelection();
-  playSound('phase');
-  await pushLog(`J${myPlayer} termina fase de ciclado e inicia fase de kasteo.`);
- }else if(publicState.phase==="prep"){
-  await update(ref(db,`games/${gameId}/public`),{phase:"action"});
-  clearSelection();
-  playSound('phase');
-  await pushLog(`J${myPlayer} entra en fase de combate.`);
-  setTimeout(runMandatoryAutoAdvance,220);
- }else{
-  const next=myPlayer===1?2:1;
-  const turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
-  await update(ref(db,`games/${gameId}/public`),{currentPlayer:next,phase:"cycle",turn,turnKey:`${turn}-${next}`});
-  clearSelection();
-  playSound('phase');
-  await pushLog(`Fin de turno. Ahora J${next} entra en fase de ciclado.`);
- }
+function showComingSoon(name){
+  alert(`${name} estará disponible próximamente.`);
 }
 
-function setupManualDrag(card,el,e){if(!isMyTurn()||publicState.phase!=="prep")return;let started=false,sx=e.clientX,sy=e.clientY;const move=ev=>{if(!started&&(Math.abs(ev.clientX-sx)>6||Math.abs(ev.clientY-sy)>6)){started=true;startManualDrag(card,el,ev)}};const up=()=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up)};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up,{once:true})}
-function startManualDrag(card,el,e){selectCard(card.id);const ghost=el.cloneNode(true);ghost.classList.add("drag-ghost");ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";document.body.appendChild(ghost);manualDrag={ghost,over:null,moved:false};window.addEventListener("pointermove",manualMove);window.addEventListener("pointerup",manualEnd,{once:true})}
-function manualMove(e){if(!manualDrag)return;manualDrag.moved=true;manualDrag.ghost.style.left=e.clientX+"px";manualDrag.ghost.style.top=e.clientY+"px";const el=document.elementFromPoint(e.clientX,e.clientY);const cell=el?.closest(".cell");if(manualDrag.over&&manualDrag.over!==cell)manualDrag.over.classList.remove("manual-drop-ready");manualDrag.over=cell;if(cell){const x=+cell.dataset.x,y=+cell.dataset.y;if(selectedCard&&highlights.includes(`${x},${y}`))cell.classList.add("manual-drop-ready")}}
-function manualEnd(e){window.removeEventListener("pointermove",manualMove);if(!manualDrag)return;const cell=manualDrag.over;if(cell)cell.classList.remove("manual-drop-ready");manualDrag.ghost.remove();const moved=manualDrag.moved;manualDrag=null;if(!moved)return;if(cell){const x=+cell.dataset.x,y=+cell.dataset.y;if(selectedCard&&highlights.includes(`${x},${y}`))return cellClick(x,y)}setHint("Soltaste la carta en una casilla inválida.")}
+$("onlineBtn").addEventListener("click",showOnlineLobby);
+$("playBtn").addEventListener("click",showOnlineLobby);
+$("backMenuFromLobby").addEventListener("click",backToMainMenu);
 
+$("adventureBtn").addEventListener("click",()=>$("adventurePanel").classList.remove("hidden"));
+$("closeAdventureBtn").addEventListener("click",()=>$("adventurePanel").classList.add("hidden"));
+$("settingsBtn").addEventListener("click",()=>$("settingsPanel").classList.remove("hidden"));
+$("closeSettingsBtn").addEventListener("click",()=>$("settingsPanel").classList.add("hidden"));
+$("passBtn").addEventListener("click",()=>$("passPanel").classList.remove("hidden"));
+$("closePassBtn").addEventListener("click",()=>$("passPanel").classList.add("hidden"));
+
+$("missionsBtn").addEventListener("click",()=>showComingSoon("Misiones"));
+$("mineBtn").addEventListener("click",()=>showComingSoon("Mina"));
+$("collectionBtn").addEventListener("click",()=>showComingSoon("Colección"));
+$("forgeBtn").addEventListener("click",()=>showComingSoon("Forja"));
+$("storeBtn").addEventListener("click",()=>showComingSoon("Tienda"));
+$("eventsBtn").addEventListener("click",()=>showComingSoon("Eventos"));
+$("clansBtn").addEventListener("click",()=>showComingSoon("Clanes"));
+$("rankingBtn").addEventListener("click",()=>showComingSoon("Ranking"));
+$("profileBtn").addEventListener("click",()=>showComingSoon("Perfil"));
+$("friendsBtn").addEventListener("click",()=>showComingSoon("Amigos"));
+$("goldPlusBtn").addEventListener("click",()=>showComingSoon("Conseguir oro"));
+$("gemsPlusBtn").addEventListener("click",()=>showComingSoon("Comprar gemas"));
+$("fragmentsPlusBtn").addEventListener("click",()=>showComingSoon("Conseguir fragmentos"));
+$("welcomeBtn").addEventListener("click",()=>showComingSoon("Paquete de bienvenida"));
+$("dailyBtn").addEventListener("click",()=>{
+  const profile = getPlayerProfile();
+  profile.gold = (profile.gold || 0) + 25;
+  savePlayerProfile(profile);
+  renderPlayerProfile(profile);
+  alert("Recompensa diaria: +25 Oro");
+});
+
+document.addEventListener("keydown",(e)=>{
+  if(e.shiftKey && e.key.toLowerCase()==="x"){
+    addPlayerXp(25);
+  }
+});
+onAuthStateChanged(auth,u=>{if(u){uid=u.uid;$("lobbyStatus").textContent="Listo para jugar."}});signInAnonymously(auth).catch(e=>$("lobbyStatus").textContent=e.message);
 </script>
 </body>
 </html>
