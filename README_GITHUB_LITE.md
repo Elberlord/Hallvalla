@@ -27,3 +27,7 @@ HallValla Home 0.7:
 - Botones Crear partida, Unirse y Volver al inicio como imágenes separadas WebP.
 - Input real HTML sobre el espacio visual del código.
 - Mantiene versión ligera para GitHub.
+
+
+0.7B:
+- Corregido el input del código de partida para que no se vea doble el texto.

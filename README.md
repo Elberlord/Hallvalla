@@ -74,3 +74,7 @@ HallValla Home 0.5 - UI por assets:
 
 
 HallValla Home 0.6: Home visual + board oscuro sin cuadros visibles, grilla invisible uniforme 11x6.
+
+
+0.7B:
+- Corregido el input del código de partida para que no se vea doble el texto.
