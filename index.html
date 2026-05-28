@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>HallValla Home 0.6 Lite Lite - GitHub</title>
+<title>HallValla Home 0.7 - Modal visual online</title>
 <style>
 :root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2;--p1:#66d9ff;--p2:#ff74b8;--ok:#70e08a;--bad:#ef476f}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#090604}button{font-family:inherit}
@@ -313,6 +313,22 @@
 .pass-lanes b{display:block;color:#ffe2a3;margin-bottom:4px}
 .pass-lanes span{color:#d7c3a2;font-size:13px}
 .hidden{display:none!important}
+
+.hand-action-btn{
+  font-size:11px;
+  color:#ffe2a3;
+  letter-spacing:.5px;
+}
+.hand-top{
+  color:#fff1c4;
+  font-size:12px;
+}
+.hand-top b::after{
+  content:" abierto";
+  color:#d7c3a2;
+  font-weight:400;
+}
+
 @media(max-width:980px){
   .asset-topbar{left:6px;right:6px;top:6px;gap:6px}
   .asset-profile{width:40vw;min-height:60px;padding:5px 7px;border-radius:12px;gap:6px}
@@ -342,6 +358,151 @@
   .bottom-asset-tab img{width:24px;height:24px}
   .bottom-asset-tab span{font-size:7px}
 }
+
+/* === HallValla 0.7 Visual Online Modal === */
+.online-visual{
+  position:fixed;
+  inset:0;
+  z-index:130;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(124,70,24,.42), transparent 34%),
+    linear-gradient(90deg,rgba(0,0,0,.88),rgba(22,11,5,.76) 45%,rgba(0,0,0,.88));
+}
+.online-visual.hidden{display:none!important}
+.online-visual-bg{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, rgba(255,176,64,.12), transparent 36%),
+    linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.75));
+  pointer-events:none;
+}
+.online-modal-art{
+  position:relative;
+  width:min(1060px,92vw);
+  aspect-ratio: 4 / 2.78;
+  filter:drop-shadow(0 32px 70px rgba(0,0,0,.72));
+}
+.online-modal-base{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+}
+.visual-btn{
+  position:absolute;
+  z-index:4;
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.35));
+  transition:transform .14s ease, filter .14s ease;
+}
+.visual-btn img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+}
+.visual-btn:hover{
+  transform:translateY(-2px) scale(1.018);
+  filter:brightness(1.10) drop-shadow(0 0 18px rgba(255,209,102,.26));
+}
+.visual-btn:active{
+  transform:translateY(1px) scale(.99);
+}
+
+/* These positions match the generated base modal. */
+.visual-create{
+  left:13.7%;
+  top:55.9%;
+  width:34.2%;
+  height:13.6%;
+}
+.visual-input-wrap{
+  position:absolute;
+  z-index:5;
+  left:54.0%;
+  top:49.2%;
+  width:34.5%;
+  height:8.2%;
+  display:flex;
+  align-items:center;
+}
+.visual-code-input{
+  width:100%;
+  height:100%;
+  border:0;
+  outline:0;
+  background:rgba(4,4,4,.22);
+  color:#ffe8b7;
+  font-size:clamp(13px,1.35vw,22px);
+  font-weight:800;
+  letter-spacing:1.4px;
+  padding:0 8% 0 9%;
+  border-radius:10px;
+  text-transform:uppercase;
+  text-shadow:0 2px 3px rgba(0,0,0,.85);
+  box-shadow:inset 0 0 14px rgba(0,0,0,.38);
+}
+.visual-code-input::placeholder{
+  color:rgba(225,210,180,.58);
+  text-transform:none;
+  letter-spacing:0;
+  font-weight:700;
+}
+.visual-join{
+  left:54.0%;
+  top:61.9%;
+  width:34.5%;
+  height:12.3%;
+}
+.visual-back{
+  left:18.0%;
+  top:79.2%;
+  width:68.0%;
+  height:10.2%;
+}
+.visual-status{
+  position:absolute;
+  z-index:5;
+  left:30%;
+  right:30%;
+  bottom:5.4%;
+  text-align:center;
+  color:#ffd166;
+  font-size:clamp(10px,1vw,15px);
+  font-weight:800;
+  text-shadow:0 2px 4px #000;
+  min-height:18px;
+}
+
+/* Hide old lobby styles only for the old .lobby, keep battle logic unchanged. */
+@media(max-width:980px){
+  .online-modal-art{
+    width:96vw;
+  }
+  .visual-code-input{
+    font-size:10px;
+    border-radius:6px;
+  }
+  .visual-status{
+    font-size:8px;
+  }
+}
+/* === End Visual Online Modal === */
+
 .lobby{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at center,rgba(87,51,22,.95),rgba(4,5,7,.98))}
 .lobby.hidden{display:none}.lobby-card{width:min(720px,96vw);padding:22px;border-radius:24px;background:linear-gradient(180deg,rgba(34,22,14,.96),rgba(10,8,6,.96));border:1px solid rgba(255,209,102,.28);box-shadow:0 30px 90px rgba(0,0,0,.6)}
 .lobby h1{margin:0 0 8px;font-size:34px;font-family:Georgia,serif;color:#fff1c4}.lobby p{color:var(--muted);line-height:1.4}.lobby-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.lobby-box{padding:14px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08)}
@@ -353,9 +514,25 @@
 .grid-wrap{--arenaH:calc(100vh - 12px);--imgW:calc(var(--arenaH)*1.7779);position:absolute;width:calc(var(--imgW)*0.318);height:calc(var(--arenaH)*0.805);left:50%;top:calc(var(--arenaH)*0.095);transform:translateX(-50%);z-index:5}.grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(11,1fr);gap:0;background:transparent}.cell{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;overflow:hidden}.cell:hover{background:rgba(255,220,140,.05);border-color:rgba(255,232,170,.10)}.cell.valid,.cell.attackable{background:transparent;box-shadow:none}.cell.valid::after,.cell.attackable::after{content:"";position:absolute;inset:3px;border-radius:4px;pointer-events:none}.cell.valid::after{background:rgba(112,224,138,.12);box-shadow:inset 0 0 0 2px rgba(112,224,138,.78),0 0 8px rgba(112,224,138,.20)}.cell.attackable::after{background:rgba(239,71,111,.12);box-shadow:inset 0 0 0 2px rgba(239,71,111,.78),0 0 8px rgba(239,71,111,.20)}
 .unit-card{position:relative;z-index:2;width:24px;height:30px;border-radius:6px;background:linear-gradient(180deg,#3a2616,#17110c);border:2px solid rgba(244,228,196,.92);box-shadow:0 5px 8px rgba(0,0,0,.38);overflow:hidden;transform:none;user-select:none;display:grid;place-items:center}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{width:24px;height:30px;border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.28),0 5px 8px rgba(0,0,0,.38)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;font-size:12px;background:radial-gradient(circle,#b9863d,#4a2d16)}.unit-card.leader .unit-portrait{font-size:12px}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
 .side{position:absolute;z-index:18;right:10px;top:102px;width:190px}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}
-.hand-drawer{position:absolute;z-index:30;left:310px;right:210px;bottom:10px;padding:8px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.94),rgba(10,8,6,.9));border:1px solid rgba(255,209,102,.28);box-shadow:0 20px 60px rgba(0,0,0,.45);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 120px;min-height:88px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.95),rgba(20,13,9,.95));border:1px solid rgba(255,209,102,.26);cursor:pointer}.hand-card.selected{outline:2px solid var(--gold)}.hand-icon{font-size:24px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
+.hand-drawer{position:absolute;z-index:35;left:300px;right:220px;bottom:10px;padding:8px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.97),rgba(10,8,6,.94));border:1px solid rgba(255,209,102,.38);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 24px rgba(255,209,102,.10);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 130px;min-height:94px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.97),rgba(20,13,9,.96));border:1px solid rgba(255,209,102,.34);cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.32)}.hand-card.selected{outline:2px solid var(--gold)}.hand-icon{font-size:24px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
 .inspector{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspector.show{display:flex}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412)}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
-@media(max-width:980px){.hud{width:calc(50% - 10px);padding:6px}.top-left{left:6px;top:6px}.top-right{right:6px;top:6px}.hud-grid{grid-template-columns:repeat(4,1fr)}.hud-mini{font-size:7px;padding:3px}.hud-mini strong{font-size:11px}.phase-banner{top:64px;font-size:12px;min-width:160px;padding:6px 9px}.side{top:auto;left:6px;right:6px;bottom:6px;width:auto}.panel:nth-child(2){display:none}.log{left:6px;right:6px;bottom:154px;width:auto;max-height:58px}.hand-drawer{left:6px;right:6px;bottom:76px;max-height:170px}.grid-wrap{top:calc(100vh * .095);height:calc(100vh * .805)}.unit-card{width:18px;height:22px}.unit-card.leader{width:18px;height:22px}.unit-portrait{font-size:10px}.unit-card.leader .unit-portrait{font-size:10px}}
+
+.hand-action-btn{
+  font-size:11px;
+  color:#ffe2a3;
+  letter-spacing:.5px;
+}
+.hand-top{
+  color:#fff1c4;
+  font-size:12px;
+}
+.hand-top b::after{
+  content:" abierto";
+  color:#d7c3a2;
+  font-weight:400;
+}
+
+@media(max-width:980px){.hud{width:calc(50% - 10px);padding:6px}.top-left{left:6px;top:6px}.top-right{right:6px;top:6px}.hud-grid{grid-template-columns:repeat(4,1fr)}.hud-mini{font-size:7px;padding:3px}.hud-mini strong{font-size:11px}.phase-banner{top:64px;font-size:12px;min-width:160px;padding:6px 9px}.side{top:auto;left:6px;right:6px;bottom:6px;width:auto}.panel:nth-child(2){display:none}.log{left:6px;right:6px;bottom:154px;width:auto;max-height:58px}.hand-drawer{left:6px;right:6px;bottom:70px;max-height:178px}.grid-wrap{top:calc(100vh * .095);height:calc(100vh * .805)}.unit-card{width:18px;height:22px}.unit-card.leader{width:18px;height:22px}.unit-portrait{font-size:10px}.unit-card.leader .unit-portrait{font-size:10px}}
 </style>
 </head>
 <body>
@@ -471,23 +648,29 @@
   </footer>
 </div>
 
-<div id="onlineLobby" class="lobby hidden">
-  <div class="lobby-card">
-    <h1>Competir en línea</h1>
-    <p>Crea una partida o únete con código.</p>
-    <div class="lobby-actions">
-      <div class="lobby-box">
-        <h3>Crear duelo</h3>
-        <button id="createBtn" class="btn primary full">Crear partida</button>
-      </div>
-      <div class="lobby-box">
-        <h3>Unirse</h3>
-        <input id="joinCode" class="input" placeholder="Código de partida"/>
-        <button id="joinBtn" class="btn full">Unirse</button>
-      </div>
+
+<div id="onlineLobby" class="online-visual hidden">
+  <div class="online-visual-bg"></div>
+  <div class="online-modal-art">
+    <img class="online-modal-base" src="assets/modal/modal_online_base.webp" alt="Competir en línea">
+
+    <button id="createBtn" class="visual-btn visual-create" type="button" aria-label="Crear partida">
+      <img src="assets/modal/btn_create_match.webp" alt="">
+    </button>
+
+    <div class="visual-input-wrap">
+      <input id="joinCode" class="visual-code-input" placeholder="Código de partida" maxlength="8" autocomplete="off"/>
     </div>
-    <button id="backMenuFromLobby" class="btn full">Volver al inicio</button>
-    <div id="lobbyStatus" class="status"></div>
+
+    <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">
+      <img src="assets/modal/btn_join_match.webp" alt="">
+    </button>
+
+    <button id="backMenuFromLobby" class="visual-btn visual-back" type="button" aria-label="Volver al inicio">
+      <img src="assets/modal/btn_back_home.webp" alt="">
+    </button>
+
+    <div id="lobbyStatus" class="visual-status">Listo para jugar.</div>
   </div>
 </div>
 
@@ -520,7 +703,7 @@
     <button id="closePassBtn" class="btn primary full">Volver</button>
   </div>
 </div>
-<div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="hud top-left"><div class="hud-name"><b class="p1">J1</b><span id="p1Badge">...</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">0</strong></div><div class="hud-mini">Honor<strong id="p1Honor">0</strong></div><div class="hud-mini">Mazo<strong id="p1Deck">0</strong></div><div class="hud-mini">Mano<strong id="p1Hand">0</strong></div></div></div><div class="hud top-right"><div class="hud-name"><b class="p2">J2</b><span id="p2Badge">...</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">0</strong></div><div class="hud-mini">Honor<strong id="p2Honor">0</strong></div><div class="hud-mini">Mazo<strong id="p2Deck">0</strong></div><div class="hud-mini">Mano<strong id="p2Hand">0</strong></div></div></div><div id="phaseBanner" class="phase-banner">ONLINE</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="panel"><h3 class="side-title">Acciones</h3><div class="icon-bar"><button id="handBtn" class="icon-btn">📖</button><button id="cancelBtn" class="icon-btn">✖</button><button id="endBtn" class="icon-btn">⏭</button></div><div id="hint" class="hint">Crea o únete a una partida.</div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+<div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="hud top-left"><div class="hud-name"><b class="p1">J1</b><span id="p1Badge">...</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p1Life">0</strong></div><div class="hud-mini">Honor<strong id="p1Honor">0</strong></div><div class="hud-mini">Mazo<strong id="p1Deck">0</strong></div><div class="hud-mini">Mano<strong id="p1Hand">0</strong></div></div></div><div class="hud top-right"><div class="hud-name"><b class="p2">J2</b><span id="p2Badge">...</span></div><div class="hud-grid"><div class="hud-mini">Vida<strong id="p2Life">0</strong></div><div class="hud-mini">Honor<strong id="p2Honor">0</strong></div><div class="hud-mini">Mazo<strong id="p2Deck">0</strong></div><div class="hud-mini">Mano<strong id="p2Hand">0</strong></div></div></div><div id="phaseBanner" class="phase-banner">ONLINE</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="panel"><h3 class="side-title">Acciones</h3><div class="icon-bar"><button id="handBtn" class="icon-btn hand-action-btn">MANO</button><button id="cancelBtn" class="icon-btn">✖</button><button id="endBtn" class="icon-btn">⏭</button></div><div id="hint" class="hint">Crea o únete a una partida.</div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><p id="inspectText" style="color:var(--muted);line-height:1.35"></p><button id="inspectClose" class="btn full">Cerrar</button></div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -528,7 +711,7 @@ import {getDatabase,ref,set,update,get,onValue} from "https://www.gstatic.com/fi
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
-const ROWS=11,COLS=6,$=id=>document.getElementById(id);let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,highlights=[],highlightType="move",handOpen=false,unsubPub=null,unsubPriv=null,turnStartLock=false;
+const ROWS=11,COLS=6,$=id=>document.getElementById(id);let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,highlights=[],highlightType="move",handOpen=true,unsubPub=null,unsubPriv=null,turnStartLock=false;
 const CARD_TEMPLATES=[{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",cost:1,hp:4,atk:2,mov:2,range:1,text:"Unidad básica cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",cost:1,hp:3,atk:2,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",cost:2,hp:6,atk:1,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",cost:1,hp:2,atk:1,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"✨",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
 function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}function makeCard(t,owner){return {...t,id:uid8(),owner}}function makeDeck(owner){const deck=[];for(let i=0;i<60;i++)deck.push(makeCard(CARD_TEMPLATES[i%CARD_TEMPLATES.length],owner));return shuffle(deck)}function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
 function makeLeader(owner,x,y){return{id:`leader${owner}`,owner,leader:true,name:owner===1?"Kaster J1":"Kaster J2",key:"kaster",icon:owner===1?"👑":"🔮",x,y,hp:20,maxHp:20,atk:2,mov:2,range:1,moved:false,acted:false,buffAtk:0}}function makeUnit(card,x,y){return{id:uid8(),owner:card.owner,leader:false,name:card.name,key:card.key,icon:card.icon,x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0}}
@@ -650,6 +833,11 @@ document.addEventListener("keydown",(e)=>{
     addPlayerXp(25);
   }
 });
+
+const joinInputEl = document.getElementById("joinCode");
+if(joinInputEl){
+  joinInputEl.addEventListener("input",()=>{joinInputEl.value = joinInputEl.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8);});
+}
 onAuthStateChanged(auth,u=>{if(u){uid=u.uid;$("lobbyStatus").textContent="Listo para jugar."}});signInAnonymously(auth).catch(e=>$("lobbyStatus").textContent=e.message);
 </script>
 </body>
