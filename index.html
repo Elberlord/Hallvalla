@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>HallValla Home 0.7B - Modal input corregido</title>
+<title>HallValla Home 0.7C - Modal visual limpio</title>
 <style>
 :root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2;--p1:#66d9ff;--p2:#ff74b8;--ok:#70e08a;--bad:#ef476f}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#090604}button{font-family:inherit}
@@ -445,7 +445,7 @@
   height:100%;
   border:0;
   outline:0;
-  background:linear-gradient(180deg,rgba(8,8,8,.96),rgba(1,1,1,.92));
+  background:transparent;
   color:#ffe8b7;
   font-size:clamp(13px,1.35vw,22px);
   font-weight:800;
@@ -454,7 +454,8 @@
   border-radius:10px;
   text-transform:uppercase;
   text-shadow:0 2px 3px rgba(0,0,0,.85);
-  box-shadow:inset 0 0 18px rgba(0,0,0,.78),0 0 0 1px rgba(255,209,102,.18);
+  box-shadow:none;
+  caret-color:#ffd166;
 }
 .visual-code-input::placeholder{
   color:rgba(225,210,180,.62);
@@ -659,7 +660,7 @@
     </button>
 
     <div class="visual-input-wrap">
-      <input id="joinCode" class="visual-code-input" placeholder="Código de partida" maxlength="8" autocomplete="off"/>
+      <input id="joinCode" class="visual-code-input" aria-label="Código de partida" maxlength="8" autocomplete="off"/>
     </div>
 
     <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">
