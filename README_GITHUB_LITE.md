@@ -31,3 +31,14 @@ HallValla Home 0.7:
 
 0.7B:
 - Corregido el input del código de partida para que no se vea doble el texto.
+
+## Estructura separada
+
+Esta versión separa el código en:
+
+- `index.html`: estructura de la página.
+- `styles.css`: estilos visuales.
+- `script.js`: lógica, Firebase y comportamiento del juego/home.
+- `assets/`: imágenes y recursos.
+
+Para GitHub Pages o un repo estático, sube todos estos archivos manteniendo la misma estructura. No cambia la URL principal: sigue abriendo `index.html`.
