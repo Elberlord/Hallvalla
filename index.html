@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>HallValla Home 0.7S - historia aventura inicial</title>
+<title>HallValla Home 0.7AF - profile rename</title>
 <link rel="stylesheet" href="styles.css"/>
 
 </head>
@@ -412,6 +412,28 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <h3>Mazo actual</h3>
         <div id="currentDeckList" class="current-deck-list"></div>
       </section>
+    </div>
+  </div>
+</div>
+
+
+<div id="profilePanel" class="overlay-panel hidden">
+  <div class="modal-card profile-card">
+    <h2>Perfil del jugador</h2>
+    <p class="profile-help">Cambia tu nombre de usuario. El primer cambio es gratis; desde el segundo cambio cuesta 100 gemas.</p>
+    <div class="profile-name-box">
+      <label for="profileNameInput">Nombre de usuario</label>
+      <input id="profileNameInput" class="profile-name-input" type="text" maxlength="18" placeholder="Escribe tu nombre">
+      <small id="profileRenameRule">Primer cambio gratis.</small>
+    </div>
+    <div class="profile-cost-box">
+      <span>Gemas disponibles</span>
+      <b id="profileGemsValue">0</b>
+    </div>
+    <p id="profileRenameMessage" class="profile-message"></p>
+    <div class="adventure-actions">
+      <button id="saveProfileNameBtn" class="btn primary" type="button">Guardar nombre</button>
+      <button id="closeProfilePanelBtn" class="btn ghost" type="button">Cerrar</button>
     </div>
   </div>
 </div>

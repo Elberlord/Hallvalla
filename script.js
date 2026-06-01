@@ -288,6 +288,7 @@ function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const ha
 function renderLog(){$("log").innerHTML=(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}function renderDetail(){if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><p>Costo: ${selectedCard.cost}</p><p>${selectedCard.text}</p>`;return}if(selectedUnitId){const u=getUnit(selectedUnitId);if(u){$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)} · GD ${u.guard||0} · DX ${u.dex||0} · MV ${u.mov} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>`;return}}$("detail").innerHTML=`<p>Jugador ${myPlayer||"?"}</p><p>Código: ${gameId||"..."}</p><p>${publicState?.mode==="adventure"?"Modo: Aventura":"Modo: Online"}</p><p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: unidades +2 GD/+2 VIDA. Arquero: unidades +3 AT/+3 DX. Hechicero: magias/trampas -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Todas las piezas usan el mismo tamaño visual. Haz click sobre una carta para verla ampliada.</p>`}function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;handOpen=!handOpen;render()});on("cancelBtn","click",clearSelection);on("endBtn","click",endTurn);on("inspectClose","click",()=>$("inspector").classList.remove("show"));
 
+const RENAME_COST_GEMS = 100;
 const defaultPlayerProfile = {
   name: "Nuevo jugador",
   level: 1,
@@ -295,7 +296,8 @@ const defaultPlayerProfile = {
   xpToNext: 100,
   gold: 0,
   gems: 0,
-  fragments: 0
+  fragments: 0,
+  nameChangeCount: 0
 };
 function getPlayerProfile(){
   try{
@@ -307,6 +309,56 @@ function getPlayerProfile(){
 }
 function savePlayerProfile(profile){
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
+}
+function cleanPlayerName(name){
+  return String(name||"").trim().replace(/\s+/g," ").slice(0,18);
+}
+function getRenameCost(profile=getPlayerProfile()){
+  return (profile.nameChangeCount||0) <= 0 ? 0 : RENAME_COST_GEMS;
+}
+function openProfilePanel(){
+  const profile=getPlayerProfile();
+  const panel=$("profilePanel"),input=$("profileNameInput"),rule=$("profileRenameRule"),gems=$("profileGemsValue"),msg=$("profileRenameMessage");
+  if(!panel)return showComingSoon("Perfil");
+  const cost=getRenameCost(profile);
+  if(input)input.value=profile.name||"Nuevo jugador";
+  if(rule)rule.textContent=cost===0?"Este cambio de nombre es gratis.":`Cambiar el nombre cuesta ${RENAME_COST_GEMS} gemas.`;
+  if(gems)gems.textContent=profile.gems||0;
+  if(msg){msg.textContent="";msg.className="profile-message";}
+  panel.classList.remove("hidden");
+  setTimeout(()=>{if(input){input.focus();input.select();}},40);
+}
+function closeProfilePanel(){
+  const panel=$("profilePanel");
+  if(panel)panel.classList.add("hidden");
+}
+function setProfileMessage(text,type=""){
+  const msg=$("profileRenameMessage");
+  if(!msg)return;
+  msg.textContent=text;
+  msg.className=`profile-message ${type}`.trim();
+}
+function saveProfileNameChange(){
+  const input=$("profileNameInput");
+  const profile=getPlayerProfile();
+  const currentName=cleanPlayerName(profile.name||"Nuevo jugador");
+  const nextName=cleanPlayerName(input?.value||"");
+  if(!nextName)return setProfileMessage("Escribe un nombre válido.","error");
+  if(nextName.length<3)return setProfileMessage("El nombre debe tener al menos 3 caracteres.","error");
+  if(nextName===currentName)return setProfileMessage("Ese ya es tu nombre actual.","error");
+  const cost=getRenameCost(profile);
+  if(cost>0 && (profile.gems||0)<cost){
+    return setProfileMessage(`Necesitas ${cost} gemas para cambiar el nombre. Tienes ${profile.gems||0}.`,"error");
+  }
+  if(cost>0)profile.gems=(profile.gems||0)-cost;
+  profile.name=nextName;
+  profile.nameChangeCount=(profile.nameChangeCount||0)+1;
+  savePlayerProfile(profile);
+  renderPlayerProfile(profile);
+  const rule=$("profileRenameRule"),gems=$("profileGemsValue");
+  if(rule)rule.textContent=`Tu próximo cambio costará ${RENAME_COST_GEMS} gemas.`;
+  if(gems)gems.textContent=profile.gems||0;
+  setProfileMessage(cost===0?"Nombre actualizado. Este primer cambio fue gratis.":`Nombre actualizado. Se descontaron ${cost} gemas.`,"success");
 }
 
 const BASIC_MAGIC_TRAP_PACK = [
@@ -1034,6 +1086,10 @@ on("deckTypeFilter","change",renderDeckBuilder);
 on("deckRarityFilter","change",renderDeckBuilder);
 on("saveDeckBtn","click",saveCurrentDeck);
 
+on("saveProfileNameBtn","click",saveProfileNameChange);
+on("closeProfilePanelBtn","click",closeProfilePanel);
+on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();});
+
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
@@ -1047,7 +1103,7 @@ on("storeBtn","click",()=>showComingSoon("Tienda"));
 on("eventsBtn","click",()=>showComingSoon("Eventos"));
 on("clansBtn","click",()=>showComingSoon("Clanes"));
 on("rankingBtn","click",()=>showComingSoon("Ranking"));
-on("profileBtn","click",()=>showComingSoon("Perfil"));
+on("profileBtn","click",openProfilePanel);
 on("friendsBtn","click",()=>showComingSoon("Amigos"));
 on("goldPlusBtn","click",()=>showComingSoon("Conseguir oro"));
 on("gemsPlusBtn","click",()=>showComingSoon("Comprar gemas"));
