@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HallValla Home 0.7S - historia aventura inicial</title>
+<link rel="stylesheet" href="styles.css"/>
+
+</head>
+<body>
+
+<div id="mainMenu" class="asset-home">
+  <div class="asset-home-bg"></div>
+  <div class="asset-vignette"></div>
+
+  <header class="asset-topbar">
+    <button id="profileBtn" class="asset-profile" type="button">
+      <img class="asset-profile-img" src="assets/home/icon_profile.webp" alt="Perfil">
+      <div class="asset-profile-info">
+        <div id="playerName" class="asset-profile-name">Nuevo jugador</div>
+        <div class="asset-profile-sub">
+          <span id="playerLevel">Nv. 1</span>
+          <span id="playerRank">Recluta</span>
+        </div>
+        <div class="asset-xp">
+          <div id="xpFill" class="asset-xp-fill"></div>
+          <span id="xpText">0/100</span>
+        </div>
+      </div>
+    </button>
+
+    <div class="asset-resource-row">
+      <button class="asset-resource" id="goldPlusBtn" type="button">
+        <img src="assets/home/icon_gold.webp" alt="Oro">
+        <b id="goldValue">0</b>
+        <span>+</span>
+      </button>
+      <button class="asset-resource" id="gemsPlusBtn" type="button">
+        <img src="assets/home/icon_gems.webp" alt="Gemas">
+        <b id="gemsValue">0</b>
+        <span>+</span>
+      </button>
+      <button class="asset-resource" id="fragmentsPlusBtn" type="button">
+        <img src="assets/home/icon_fragments.webp" alt="Fragmentos">
+        <b id="fragmentsValue">0</b>
+        <span>+</span>
+      </button>
+      <button id="friendsBtn" class="asset-small-icon" type="button" aria-label="Amigos">
+        <img src="assets/home/icon_friends.webp" alt="">
+      </button>
+      <button id="notificationsBtn" class="asset-small-icon notification-btn" type="button" aria-label="Notificaciones">
+        <span class="notification-icon">🔔</span>
+        <b id="notificationBadge" class="notification-badge hidden">0</b>
+      </button>
+      <button id="settingsBtn" class="asset-small-icon" type="button" aria-label="Configuración">
+        <img src="assets/home/icon_settings.webp" alt="">
+      </button>
+    </div>
+  </header>
+
+  <section id="homeProgressPanel" class="home-progress-panel">
+    <div>
+      <b id="homeProgressTitle">Aventura 1.1</b>
+      <span id="homeProgressText">Progreso: 0/5 batallas completadas.</span>
+    </div>
+    <div>
+      <b id="homeDeckStatus">Mazos bloqueados</b>
+      <span id="homeCollectionStatus">Completa 1.1 para editar mazos.</span>
+    </div>
+  </section>
+
+  <main class="asset-main">
+    <section class="asset-column asset-left-column">
+      <button id="adventureBtn" class="image-button" type="button">
+        <img src="assets/home/btn_adventure.webp" alt="Aventura">
+      </button>
+      <button id="onlineBtn" class="image-button" type="button">
+        <img src="assets/home/btn_online.webp" alt="Competir en línea">
+      </button>
+      <button id="missionsBtn" class="image-button" type="button">
+        <img src="assets/home/btn_missions.webp" alt="Misiones">
+      </button>
+      <button id="mineBtn" class="image-button" type="button">
+        <img src="assets/home/btn_mine.webp" alt="Mina">
+      </button>
+    </section>
+
+    <section class="asset-center">
+      <div class="asset-logo">
+        <div class="asset-logo-mark">HALLVALLA</div>
+        <div class="asset-logo-sub">LA LEYENDA ERES TÚ</div>
+      </div>
+      <button id="playBtn" class="play-image-button" type="button">
+        <img src="assets/home/btn_play.webp" alt="Jugar">
+      </button>
+    </section>
+
+    <section class="asset-column asset-right-column">
+      <button id="collectionBtn" class="image-button" type="button">
+        <img src="assets/home/btn_collection.webp" alt="Colección">
+      </button>
+      <button id="forgeBtn" class="image-button" type="button">
+        <img src="assets/home/btn_forge.webp" alt="Forja">
+      </button>
+      <button id="storeBtn" class="image-button" type="button">
+        <img src="assets/home/btn_store.webp" alt="Tienda">
+      </button>
+      <button id="eventsBtn" class="image-button" type="button">
+        <img src="assets/home/btn_events.webp" alt="Eventos">
+      </button>
+    </section>
+  </main>
+
+  <button id="dailyBtn" class="asset-promo daily-panel" type="button">
+    <img src="assets/home/panel_daily.webp" alt="Recompensa diaria">
+  </button>
+
+  <button id="welcomeBtn" class="asset-promo welcome-panel" type="button">
+    <img src="assets/home/panel_welcome.webp" alt="Paquete de bienvenida">
+  </button>
+
+  <footer class="asset-bottom">
+    <button id="clansBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_clans.webp" alt="">
+      <span>CLANES</span>
+    </button>
+    <button id="rankingBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_ranking.webp" alt="">
+      <span>RANKING</span>
+    </button>
+    <button id="passBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_pass.webp" alt="">
+      <span>PASE DE HONOR</span>
+    </button>
+  </footer>
+</div>
+
+
+
+<div id="leaderSelectOverlay" class="leader-select-overlay hidden">
+  <div class="leader-select-card">
+    <h1 class="leader-select-title">Elige tu líder</h1>
+    <p class="leader-select-sub">Esta elección se guarda en Firebase para tu perfil. Define el icono de tu kaster y el primer estilo de juego de HallValla.</p>
+    <div class="leader-choice-grid">
+      <button class="leader-choice" type="button" data-leader-choice="warrior">
+        <img src="assets/leaders/leader_warrior.png" alt="Guerrero">
+        <h3>Guerrero</h3>
+        <p>Tus unidades reciben <b>+2 GUARDIA</b> y <b>+2 VIDA</b>.</p>
+        <span class="leader-pill">Muro frontal</span>
+      </button>
+      <button class="leader-choice" type="button" data-leader-choice="archer">
+        <img src="assets/leaders/leader_archer.png" alt="Arquero">
+        <h3>Arquero</h3>
+        <p>Tus unidades reciben <b>+3 ATAQUE</b> y <b>+3 DESTREZA</b>.</p>
+        <span class="leader-pill">Presión precisa</span>
+      </button>
+      <button class="leader-choice" type="button" data-leader-choice="mage">
+        <img src="assets/leaders/leader_mage.png" alt="Hechicero">
+        <h3>Hechicero</h3>
+        <p>Tus magias y trampas cuestan <b>-2 Honor</b> y sus efectos numéricos reciben <b>+3</b>.</p>
+        <span class="leader-pill">Poder arcano</span>
+      </button>
+    </div>
+    <div id="leaderCurrentBadge" class="leader-current-badge"></div>
+  </div>
+</div>
+
+<div id="onlineLobby" class="online-visual hidden">
+  <div class="online-visual-bg"></div>
+  <div class="online-modal-art">
+    <img class="online-modal-base" src="assets/modal/modal_online_base.webp" alt="Competir en línea">
+
+    <button id="createBtn" class="visual-btn visual-create" type="button" aria-label="Crear partida">
+      <img src="assets/modal/btn_create_match.webp" alt="">
+    </button>
+
+    <div class="visual-input-wrap">
+      <input id="joinCode" class="visual-code-input" aria-label="Código de partida" maxlength="8" autocomplete="off"/>
+    </div>
+
+    <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">
+      <img src="assets/modal/btn_join_match.webp" alt="">
+    </button>
+
+    <button id="backMenuFromLobby" class="visual-btn visual-back" type="button" aria-label="Volver al inicio">
+      <img src="assets/modal/btn_back_home.webp" alt="">
+    </button>
+
+    <div id="lobbyStatus" class="visual-status">Listo para jugar.</div>
+  </div>
+</div>
+
+<div id="adventurePanel" class="overlay-panel hidden">
+  <div class="modal-card adventure-card">
+    <div id="adventureStoryStage" class="adventure-stage">
+      <div id="adventureSceneVisual" class="adventure-scene-visual scene-call">
+        <div id="adventureSceneMark" class="adventure-scene-mark hidden"></div>
+        <div id="adventureSceneActors" class="story-actors hidden">
+          <img id="adventureSceneActorLeft" class="story-actor left" alt="">
+          <img id="adventureSceneActorRight" class="story-actor right" alt="">
+        </div>
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy">
+            <div id="adventureProgress" class="adventure-progress">1/2</div>
+            <h2 id="adventureStoryTitle" class="adventure-story-title">El llamado de HallValla</h2>
+            <p id="adventureStoryText" class="adventure-story-text"></p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Historia de aventura</span>
+        <div class="adventure-actions">
+          <button id="skipAdventureStoryBtn" class="btn ghost" type="button">Saltar</button>
+          <button id="nextAdventureStoryBtn" class="btn primary" type="button">Continuar</button>
+        </div>
+      </div>
+    </div>
+    <div id="adventureChoiceStage" class="adventure-stage hidden">
+      <div class="adventure-choice-hero">
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy narrow">
+            <div class="adventure-progress">Elección de leyenda</div>
+            <h2 class="adventure-choice-title">Elige tu primer aliado</h2>
+            <p class="adventure-story-text">Antes de entrar al campo, elige tu carta especial inicial. Tu rival usará el mismo mazo básico, pero sin esta carta especial.</p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-choice-grid">
+        <button class="adventure-choice" type="button" data-adventure-special="mulan">
+          <img src="assets/story/mulan_choice.webp" alt="Mulan">
+          <div class="adventure-choice-copy">
+            <h3>Mulan</h3>
+            <p>Infiltradora veloz. Ideal para jugar alrededor del posicionamiento y castigar ataques por la espalda.</p>
+            <div class="adventure-stats">Costo 2 · AT 4 · HP 4 · GD 3 · DX 4 · MV 3 · RG 1</div>
+          </div>
+        </button>
+        <button class="adventure-choice" type="button" data-adventure-special="wallace">
+          <img src="assets/story/wallace_choice.webp" alt="William Wallace">
+          <div class="adventure-choice-copy">
+            <h3>William Wallace</h3>
+            <p>Tanque ofensivo. Aguanta el frente y recupera Vigor cuando su Guardia anula daño.</p>
+            <div class="adventure-stats">Costo 3 · AT 6 · HP 6 · GD 5 · DX 6 · MV 2 · RG 1</div>
+          </div>
+        </button>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Ambos son héroes de su propia historia. Esta elección define tu primera carta especial de aventura.</span>
+        <div class="adventure-actions">
+          <button id="closeAdventureBtn" class="btn ghost" type="button">Volver</button>
+        </div>
+      </div>
+    </div>
+    <div id="adventureWoundedStage" class="adventure-stage hidden">
+      <div id="adventureWoundedVisual" class="adventure-scene-visual scene-wallace-wounded">
+        <div id="adventureWoundedMark" class="adventure-scene-mark hidden"></div>
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy">
+            <div class="adventure-progress">Antes del guardián</div>
+            <h2 id="adventureWoundedTitle" class="adventure-story-title">El peso del acero</h2>
+            <p id="adventureWoundedText" class="adventure-story-text"></p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">El héroe no elegido queda fuera de esta primera prueba.</span>
+        <div class="adventure-actions">
+          <button id="skipWoundedSceneBtn" class="btn ghost" type="button">Saltar</button>
+          <button id="continueWoundedSceneBtn" class="btn primary" type="button">Continuar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adventureMapStage" class="adventure-stage hidden">
+      <div class="adventure-map-hero">
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy narrow">
+            <div id="adventureMapMeta" class="adventure-progress">Aliado elegido</div>
+            <h2 id="adventureMapTitle" class="adventure-story-title">1.1 El inicio de la travesía</h2>
+            <p id="adventureMapText" class="adventure-story-text">Los rebeldes intentan usurpar el trono y crear un golpe de estado.</p>
+          </div>
+        </div>
+      </div>
+      <div id="adventureMapNodes" class="adventure-map-nodes"></div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Cada combate entrega EXP una sola vez al completarse.</span>
+        <div class="adventure-actions">
+          <button id="closeAdventureMapBtn" class="btn ghost" type="button">Volver al inicio</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adventureGuardianStage" class="adventure-stage hidden">
+      <div id="adventureGuardianVisual" class="adventure-scene-visual scene-guardian">
+        <div id="adventureGuardianMark" class="adventure-scene-mark hidden"></div>
+        <div id="adventureGuardianActorWrap" class="guardian-actor hidden">
+          <img id="adventureGuardianActor" alt="Hechicero guardián">
+        </div>
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy">
+            <div class="adventure-progress">Combate inicial</div>
+            <h2 id="adventureGuardianTitle" class="adventure-story-title">El primer guardián</h2>
+            <p id="adventureGuardianText" class="adventure-story-text">Del otro lado del tablero, un hechicero guardián se alza cubierto por energía oscura.
+
+Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor y la fuerza del aliado que acabas de elegir.</p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">El rival es un Hechicero controlado por la IA.</span>
+        <div class="adventure-actions">
+          <button id="backToAdventureChoiceBtn" class="btn ghost" type="button">Volver</button>
+          <button id="startAdventureBattleBtn" class="btn primary" type="button">Iniciar combate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="adventureResultPanel" class="overlay-panel hidden">
+  <div id="adventureResultCard" class="modal-card adventure-result-card">
+    <button id="adventureResultCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="adventure-result-visual">
+      <div class="adventure-result-backdrop"></div>
+      <img id="adventureResultHero" class="adventure-result-hero" alt="Héroe victorioso">
+      <img id="adventureResultEnemy" class="adventure-result-enemy" alt="Kaster enemigo">
+      <div class="adventure-result-slash"></div>
+      <div id="adventureResultCaption" class="adventure-result-caption">Golpe final</div>
+    </div>
+    <div class="adventure-result-copy">
+      <div id="adventureResultKicker" class="adventure-progress">Misión 1 completada</div>
+      <h2 id="adventureResultTitle" class="adventure-story-title">Victoria</h2>
+      <p id="adventureResultText" class="adventure-story-text">Completaste la primera misión, buen trabajo.</p>
+      <p id="adventureResultNote" class="adventure-result-note">Tu héroe atraviesa al kaster enemigo y abre el camino de HallValla.</p>
+      <div class="adventure-actions">
+        <button id="adventureResultRetryBtn" class="btn primary" type="button">Reintentar</button>
+        <button id="adventureResultMapBtn" class="btn ghost hidden" type="button">Volver al mapa</button>
+        <button id="adventureResultNextBtn" class="btn primary hidden" type="button">Siguiente batalla</button>
+        <button id="adventureResultHomeBtn" class="btn ghost" type="button">Volver al inicio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="packOpeningPanel" class="overlay-panel hidden">
+  <div class="modal-card pack-opening-card">
+    <button id="closePackOpeningBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="pack-opening-scene">
+      <div class="pack-opening-glow"></div>
+      <div id="packOpeningObject" class="pack-object" role="button" tabindex="0" aria-label="Abrir paquete">
+        <div class="pack-rune">✦</div>
+        <div class="pack-title">Paquete básico</div>
+        <div class="pack-sub">Magias y trampas</div>
+      </div>
+      <div id="packOpeningHint" class="pack-opening-hint">Toca el paquete para abrirlo</div>
+      <div id="packRevealGrid" class="pack-reveal-grid hidden"></div>
+    </div>
+    <div class="pack-opening-footer">
+      <div>
+        <b id="packOpeningTitle">Paquete básico</b>
+        <span id="packOpeningStatus">Pendiente de apertura</span>
+      </div>
+      <div class="adventure-actions">
+        <button id="openNextPackBtn" class="btn ghost hidden" type="button">Abrir otro</button>
+        <button id="confirmPackCardsBtn" class="btn primary hidden" type="button">Agregar a colección</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="deckBuilderPanel" class="overlay-panel hidden">
+  <div class="modal-card deckbuilder-card">
+    <button id="closeDeckBuilderBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="deckbuilder-head">
+      <div>
+        <div class="adventure-progress">Colección / Mazo</div>
+        <h2 class="adventure-story-title">Forja de mazos</h2>
+        <p class="deckbuilder-sub">Cartas básicas: máximo 10 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 60 cartas.</p>
+      </div>
+      <div class="deckbuilder-status">
+        <b id="deckCountText">0/60</b>
+        <span id="deckValidText">Mazo incompleto</span>
+      </div>
+    </div>
+    <div class="deckbuilder-layout">
+      <aside class="deckbuilder-filters">
+        <input id="deckSearchInput" class="deck-search" placeholder="Buscar carta..." autocomplete="off">
+        <select id="deckTypeFilter" class="deck-select">
+          <option value="all">Todos los tipos</option>
+          <option value="unit">Invocaciones</option>
+          <option value="spell">Magias</option>
+          <option value="trap">Trampas</option>
+        </select>
+        <select id="deckRarityFilter" class="deck-select">
+          <option value="all">Todas las rarezas</option>
+          <option value="basic">Básica</option>
+          <option value="epic">Épica</option>
+          <option value="glorious">Gloriosa</option>
+          <option value="mythic">Mítica</option>
+          <option value="legendary">Legendaria</option>
+          <option value="demigod">Semidiós</option>
+        </select>
+        <button id="saveDeckBtn" class="btn primary full" type="button">Guardar mazo</button>
+      </aside>
+      <section class="deckbuilder-collection">
+        <h3>Cartas disponibles</h3>
+        <div id="deckCollectionGrid" class="deck-card-grid"></div>
+      </section>
+      <section class="deckbuilder-current">
+        <h3>Mazo actual</h3>
+        <div id="currentDeckList" class="current-deck-list"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="notificationsPanel" class="overlay-panel hidden">
+  <div class="modal-card notifications-card">
+    <h2>Notificaciones</h2>
+    <div id="notificationsList" class="notifications-list"></div>
+    <div class="adventure-actions">
+      <button id="openPacksFromNotificationsBtn" class="btn primary hidden" type="button">Abrir paquetes</button>
+      <button id="openDeckBuilderFromNotificationsBtn" class="btn ghost hidden" type="button">Ir a mazos</button>
+    </div>
+    <div class="deck-rule-box">
+      <b>Regla de mazo</b>
+      <p>Cartas básicas: máximo 10 copias por mazo. Todas las demás rarezas: máximo 1 copia por mazo.</p>
+    </div>
+    <button id="closeNotificationsBtn" class="btn primary full" type="button">Cerrar</button>
+  </div>
+</div>
+
+<div id="settingsPanel" class="overlay-panel hidden">
+  <div class="modal-card">
+    <h2>Configuración</h2>
+    <label class="setting-line"><span>Música</span><input type="checkbox" checked></label>
+    <label class="setting-line"><span>Efectos</span><input type="checkbox" checked></label>
+    <label class="setting-line"><span>Idioma</span><select><option>Español</option><option>English</option></select></label>
+    <button id="closeSettingsBtn" class="btn primary full">Guardar y volver</button>
+  </div>
+</div>
+
+<div id="passPanel" class="overlay-panel hidden">
+  <div class="modal-card pass-card">
+    <h2>Pase de Honor</h2>
+    <p>Completa misiones, gana EXP del pase y desbloquea recompensas.</p>
+    <div class="pass-lanes">
+      <div><b>Ruta gratuita</b><span>Oro, fragmentos, sobres básicos.</span></div>
+      <div><b>Ruta premium</b><span>Gemas, cosméticos, marcos y cartas promocionales.</span></div>
+    </div>
+    <button id="closePassBtn" class="btn primary full">Volver</button>
+  </div>
+</div>
+<div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="hud top-left"><div class="hud-shell"><div class="hud-header"><div class="hud-name"><b class="p1">J1</b></div><div class="hud-badge"><span id="p1Badge">...</span></div></div><div class="hud-grid"><div class="hud-mini"><span class="label">Vida</span><strong id="p1Life">0</strong></div><div class="hud-mini"><span class="label">Honor</span><strong id="p1Honor">0</strong></div><div class="hud-mini"><span class="label">Mazo</span><strong id="p1Deck">0</strong></div><div class="hud-mini"><span class="label">Mano</span><strong id="p1Hand">0</strong></div></div></div></div><div class="hud top-right"><div class="hud-shell"><div class="hud-header"><div class="hud-name"><b class="p2">J2</b></div><div class="hud-badge"><span id="p2Badge">...</span></div></div><div class="hud-grid"><div class="hud-mini"><span class="label">Vida</span><strong id="p2Life">0</strong></div><div class="hud-mini"><span class="label">Honor</span><strong id="p2Honor">0</strong></div><div class="hud-mini"><span class="label">Mazo</span><strong id="p2Deck">0</strong></div><div class="hud-mini"><span class="label">Mano</span><strong id="p2Hand">0</strong></div></div></div></div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mano"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mano"></button><button id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"></button><button id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"></button></div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+<div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><p id="inspectText" style="color:var(--muted);line-height:1.35"></p><button id="inspectClose" class="btn full">Cerrar</button></div></div>
+<script type="module" src="script.js"></script>
+</body>
+</html>
