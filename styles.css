@@ -929,3 +929,93 @@
   .inspect-stat strong{font-size:17px;}
   .unit-card::after{inset:-12px;}
 }
+
+/* === v0.7AQ: Mobile battle controls, collapsible actions and in-duel menu === */
+.battle-tools{
+  position:absolute;
+  z-index:60;
+  top:58px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+  pointer-events:auto;
+}
+.battle-tool-btn{
+  border:1px solid rgba(255,209,102,.34);
+  border-radius:999px;
+  padding:7px 12px;
+  min-height:34px;
+  background:linear-gradient(180deg,rgba(34,22,14,.94),rgba(10,8,6,.88));
+  color:#fff1c4;
+  font-family:Georgia,serif;
+  font-weight:900;
+  letter-spacing:.2px;
+  box-shadow:0 8px 22px rgba(0,0,0,.42);
+  cursor:pointer;
+}
+.battle-tool-btn:active{transform:translateY(1px)}
+.side.actions-collapsed .actions-visual-panel{display:none}
+.side.actions-collapsed{pointer-events:none}
+.side.actions-collapsed .panel{display:none!important}
+.battle-menu-panel{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.62);
+}
+.battle-menu-panel.hidden{display:none!important}
+.battle-menu-card{
+  width:min(420px,94vw);
+  padding:18px;
+  border-radius:22px;
+  background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));
+  border:1px solid rgba(255,209,102,.38);
+  box-shadow:0 30px 90px rgba(0,0,0,.72);
+}
+.battle-menu-card h2{
+  margin:0 0 6px;
+  font-family:Georgia,serif;
+  color:#fff1c4;
+  font-size:24px;
+}
+.battle-menu-note{margin:0 0 12px;color:#d7c3a2;font-size:13px}
+@media(max-width:980px){
+  .battle-tools{
+    top:104px;
+    right:8px;
+    left:auto;
+    transform:none;
+    justify-content:flex-end;
+  }
+  .battle-tool-btn{
+    min-height:32px;
+    padding:6px 10px;
+    font-size:11px;
+  }
+  .side:not(.actions-collapsed){
+    bottom:8px;
+    z-index:55;
+  }
+  .side:not(.actions-collapsed) .actions-visual-panel{
+    max-width:260px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .side:not(.actions-collapsed) + .log{
+    bottom:128px;
+  }
+  .hand-drawer.open{
+    bottom:8px;
+    z-index:42;
+  }
+  .side:not(.actions-collapsed) ~ .hand-drawer.open{
+    bottom:118px;
+  }
+}

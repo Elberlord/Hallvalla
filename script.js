@@ -19,7 +19,11 @@ const LEADER_DATA={
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Unidades +3 ATAQUE y +3 DESTREZA."},
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Magias y trampas -2 costo y +3 efecto."}
 };
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,highlights=[],highlightType="move",handOpen=true,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null;
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,highlights=[],highlightType="move",handOpen=true,actionsCollapsed=(typeof window!=="undefined"&&window.matchMedia?window.matchMedia("(max-width:980px)").matches:false),unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null;
+const GAME_SETTINGS_KEY="hallvalla_game_settings";
+let gameSettings=loadGameSettings();
+function loadGameSettings(){try{return{sound:true,...(JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{})};}catch(e){return{sound:true};}}
+function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stringify(gameSettings));}catch(e){}}
 const CARD_TEMPLATES=[{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",cost:1,hp:4,atk:2,guard:2,dex:4,mov:2,range:1,text:"Unidad básica cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",cost:1,hp:3,atk:2,guard:1,dex:5,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",cost:2,hp:6,atk:1,guard:4,dex:2,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",cost:1,hp:2,atk:1,guard:1,dex:5,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Mulan",type:"unit",icon:"🐉",cost:2,hp:4,atk:4,guard:3,dex:4,mov:3,range:1,special:true,text:"Ataque por la espalda: si Mulan ataca desde la espalda, obtiene +6 ATQ durante ese ataque."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🛡️",cost:3,hp:6,atk:6,guard:5,dex:6,mov:2,range:1,special:true,text:"Guardia Inquebrantable: cuando su Guardia reduce el daño recibido a 0, recupera +1 Vigor."}};
 const ADVENTURE_RESULT_ART={mulan:{name:"Mulan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp"},wallace:{name:"William Wallace",heroImage:"assets/story/scene_wallace_actor.webp",cardImage:"assets/story/wallace_choice.webp"}};
@@ -546,7 +550,8 @@ function showUnit(u){
     : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca fuera/cerrar para volver al duelo.`;
   inspector.classList.add("show");
 }
-function render(){if(!publicState)return;renderHud();renderBoard();renderHand();renderLog();renderDetail();const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowBattleResult()}function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?"TU TURNO":"ESPERA")}
+function render(){if(!publicState)return;renderHud();renderBoard();renderHand();renderLog();renderDetail();renderBattleChrome();const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowBattleResult()}function renderBattleChrome(){const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Sonido: activado":"Sonido: apagado";}
+function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?"TU TURNO":"ESPERA")}
 function renderBoard(){
   const grid=$("grid");
   grid.innerHTML="";
@@ -606,7 +611,26 @@ function renderDetail(){
   $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: unidades +2 GD/+2 VIDA. Arquero: unidades +3 AT/+3 DX. Hechicero: magias/trampas -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
-on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;handOpen=!handOpen;render()});on("cancelBtn","click",clearSelection);on("endBtn","click",endTurn);on("inspectClose","click",()=>$("inspector").classList.remove("show"));
+
+function openBattleMenu(){const panel=$("battleMenuPanel");if(panel){panel.classList.remove("hidden");renderBattleChrome();}}
+function closeBattleMenu(){const panel=$("battleMenuPanel");if(panel)panel.classList.add("hidden");}
+function toggleBattleActions(){actionsCollapsed=!actionsCollapsed;renderBattleChrome();}
+function toggleBattleSound(){gameSettings.sound=!gameSettings.sound;saveGameSettings();renderBattleChrome();}
+function resetCurrentDuelFromMenu(){
+  closeBattleMenu();
+  if(!gameId||!publicState){return;}
+  if(publicState.mode==="adventure"){
+    if(confirm("¿Reiniciar este duelo de aventura desde el inicio?"))retryCurrentAdventureBattle();
+    return;
+  }
+  alert("Para no romper la partida del otro jugador, el reinicio directo queda reservado para aventura contra IA. En online, salgan al menú y creen una sala nueva cuando ambos estén listos.");
+}
+function leaveCurrentGameFromMenu(){
+  closeBattleMenu();
+  if(!gameId){leaveCurrentGame();return;}
+  if(confirm("¿Salir del duelo y volver al menú principal?"))leaveCurrentGame();
+}
+on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;handOpen=!handOpen;render()});on("cancelBtn","click",clearSelection);on("endBtn","click",endTurn);on("toggleActionsBtn","click",toggleBattleActions);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("inspectClose","click",()=>$("inspector").classList.remove("show"));
 const inspectorEl=$("inspector");
 if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspectorEl)inspectorEl.classList.remove("show")});
 
@@ -876,6 +900,7 @@ function getPackCards(pack){
 }
 function getPendingPackCount(){return getPendingPacks().length;}
 function tryPlaySound(name){
+  if(!gameSettings.sound)return;
   try{const audio=new Audio(`assets/sfx/${name}.ogg`);audio.volume=.45;audio.play().catch(()=>{});}catch(e){}
 }
 function openPackOpening(){
