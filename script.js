@@ -135,7 +135,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
-  const pub={code,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureAiLevel:battle.aiLevel||1,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiCardsPerTurn:battle.aiCardsPerTurn||2,adventureAiStyle:battle.aiStyle||"Básica",adventureSpecial:specialKey,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"main",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerStats:{1:{hp:20,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:20,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType),makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType)],log:[`${battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number}: ${battle.title}. Rival: ${battle.enemyName}. IA nivel ${battle.aiLevel||1}. Recompensa: ${getBattleRewardLabel(battle)}.`]};
+  const pub={code,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureAiLevel:battle.aiLevel||1,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiCardsPerTurn:battle.aiCardsPerTurn||2,adventureAiStyle:battle.aiStyle||"Básica",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"main",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerStats:{1:{hp:20,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:20,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType),makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType)],log:[`${battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number}: ${battle.title}. Rival: ${battle.enemyName}. IA nivel ${battle.aiLevel||1}. Recompensa: ${getBattleRewardLabel(battle)}.`]};
   await set(ref(db,`games/${code}/public`),pub);
   await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});
   await set(ref(db,`games/${code}/private/player2`),{ownerUid:"ADVENTURE_AI",leaderType:enemyLeaderType,deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});
@@ -152,7 +152,15 @@ function maybeTriggerAdventureAI(){
   lastAiTurnKey=key;
   setTimeout(async()=>{
     try{await adventureEnemyTurn();}
-    catch(e){console.error("[HallValla] Error en turno de IA:",e);lastAiTurnKey="";setHint("La IA tuvo un problema al actuar. Vuelve a presionar Siguiente fase si el turno queda detenido.");}
+    catch(e){
+      console.error("[HallValla] Error en turno de IA:",e);
+      lastAiTurnKey="";
+      setHint("La IA encontró un tropiezo. Recuperando el turno automáticamente para J1.");
+      try{
+        const nextTurn=(publicState?.turn||1)+1;
+        await update(ref(db,`games/${gameId}/public`),{currentPlayer:1,turn:nextTurn,turnKey:`${nextTurn}-1`,log:["Sistema: la IA tuvo un tropiezo y el turno fue recuperado para J1.",...(publicState?.log||[])].slice(0,18)});
+      }catch(recoverError){console.warn("[HallValla] No se pudo recuperar automáticamente el turno de IA:",recoverError);}
+    }
     finally{aiTurnLock=false;}
   },650);
 }
@@ -169,9 +177,16 @@ async function adventureEnemyTurn(){
   if(!pubSnap.exists())return;
   const pub=pubSnap.val();
   if(pub.mode!=="adventure"||pub.currentPlayer!==2||pub.phase==="ended")return;
-  const privSnap=await get(ref(db,`games/${gameId}/private/player2`));
-  if(!privSnap.exists())return;
-  const ai=privSnap.val();
+  let ai=pub.adventureAiState||null;
+  if(!ai){
+    try{
+      const privSnap=await get(ref(db,`games/${gameId}/private/player2`));
+      if(privSnap.exists())ai=privSnap.val();
+    }catch(e){
+      console.warn("[HallValla] No se pudo leer el estado privado de IA; se usará estado público de aventura.",e);
+    }
+  }
+  if(!ai)ai={deck:[],hand:[],honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:false};
   if(ai.lastTurnStarted===pub.turnKey){
     const nextTurn=(pub.turn||1)+1;
     await update(ref(db,`games/${gameId}/public`),{
@@ -466,7 +481,12 @@ async function adventureEnemyTurn(){
   if(cardsPlayed===0&&!living(2).some(u=>u.moved||u.acted))logs.push("Rival conserva recursos: no encontró una jugada útil este turno.");
 
   const outcome=getBattleOutcome(units);
-  await update(ref(db,`games/${gameId}/private/player2`),{deck,hand,honor,maxHonor,lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false});
+  const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
+  try{
+    await update(ref(db,`games/${gameId}/private/player2`),nextAiState);
+  }catch(e){
+    console.warn("[HallValla] Estado privado de IA no actualizado; el estado público de aventura queda como respaldo.",e);
+  }
   if(outcome.ended){
     const finalLogs=[...logs,outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`,...(pub.log||[])].slice(0,18);
     await update(ref(db,`games/${gameId}/public`),{
@@ -477,6 +497,7 @@ async function adventureEnemyTurn(){
       loser:outcome.loser,
       endedAt:Date.now(),
       currentPlayer:0,
+      adventureAiState:nextAiState,
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0},
       [`playerStats/2`]:{...(pub.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0,honor,maxHonor,deck:deck.length,hand:hand.length},
       log:finalLogs
@@ -488,6 +509,7 @@ async function adventureEnemyTurn(){
   await update(ref(db,`games/${gameId}/public`),{
     units,
     currentPlayer:1,
+    adventureAiState:nextAiState,
     turn:nextTurn,
     turnKey:`${nextTurn}-1`,
     [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0},
@@ -495,10 +517,62 @@ async function adventureEnemyTurn(){
     log:finalLogs
   });
 }
-async function cellClick(x,y){const u=getUnitAt(x,y);if(selectedCard)return playCardOn(x,y,u);if(selectedUnitId){const s=getUnit(selectedUnitId);if(u&&u.owner!==myPlayer)return attackUnit(s,u);if(!u)return moveUnit(s,x,y)}if(u)selectUnit(u)}
-function showUnit(u){$("inspectTitle").textContent=u.name;$("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;$("inspectArt").textContent=u.icon;const stats=[["Vida",`${u.hp}/${u.maxHp}`],["Ataque",effectiveAtk(u)],["Guardia",u.guard||0],["Destreza",u.dex||0],["Mov",u.mov],["Rango",u.range]];$("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat">${l}<strong>${v}</strong></div>`).join("");$("inspectText").innerHTML=u.leader?"Si tu kaster llega a 0, pierdes.":`Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>${u.name}`;$("inspector").classList.add("show")}
+async function cellClick(x,y){
+  const u=getUnitAt(x,y);
+  if(selectedCard)return playCardOn(x,y,u);
+  if(selectedUnitId){
+    const s=getUnit(selectedUnitId);
+    if(u&&u.owner!==myPlayer)return attackUnit(s,u);
+    if(!u)return moveUnit(s,x,y);
+  }
+  if(u)selectUnit(u);
+}
+function getUnitPortraitHtml(u){
+  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
+  if(portrait)return `<img src="${portrait}" alt="${escapeHtml(u.name||"Unidad")}">`;
+  return `<span>${u?.icon||"✦"}</span>`;
+}
+function showUnit(u){
+  if(!u)return;
+  const inspector=$("inspector");
+  $("inspectTitle").textContent=u.name;
+  $("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;
+  $("inspectArt").innerHTML=getUnitPortraitHtml(u);
+  const stats=[["Vida",`${Math.max(0,u.hp)}/${u.maxHp}`],["Ataque",effectiveAtk(u)],["Guardia",u.guard||0],["Destreza",u.dex||0],["Mov",u.mov||0],["Rango",u.range||1]];
+  $("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat">${l}<strong>${v}</strong></div>`).join("");
+  const ownerLabel=u.owner===myPlayer?"Tu unidad":"Unidad rival";
+  $("inspectText").innerHTML=u.leader
+    ? `${ownerLabel}. Si un kaster llega a 0, pierde la batalla.`
+    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca fuera/cerrar para volver al duelo.`;
+  inspector.classList.add("show");
+}
 function render(){if(!publicState)return;renderHud();renderBoard();renderHand();renderLog();renderDetail();const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowBattleResult()}function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?"TU TURNO":"ESPERA")}
-function renderBoard(){const grid=$("grid");grid.innerHTML="";for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){const cell=document.createElement("div");cell.className="cell";const key=`${x},${y}`;if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid");const u=getUnitAt(x,y);if(u){const c=document.createElement("div");c.className=`unit-card ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""}`;const leaderPortrait=(u.leader&&u.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u.portrait;const portraitHtml=leaderPortrait?`<img src="${leaderPortrait}" alt="${u.name}">`:u.icon;c.innerHTML=`<div class="unit-portrait">${portraitHtml}</div>`;c.title=`${u.name} · HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)}`;cell.appendChild(c)}cell.addEventListener("click",()=>cellClick(x,y));grid.appendChild(cell)}}
+function renderBoard(){
+  const grid=$("grid");
+  grid.innerHTML="";
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const cell=document.createElement("div");
+    cell.className="cell";
+    const key=`${x},${y}`;
+    if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":"valid");
+    const u=getUnitAt(x,y);
+    if(u){
+      const c=document.createElement("div");
+      c.className=`unit-card ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""}`;
+      c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>`;
+      c.title=`${u.name} · HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)}`;
+      c.addEventListener("click",ev=>{
+        if(!selectedCard){
+          ev.stopPropagation();
+          cellClick(x,y);
+        }
+      });
+      cell.appendChild(c);
+    }
+    cell.addEventListener("click",()=>cellClick(x,y));
+    grid.appendChild(cell);
+  }
+}
 
 function getCardVisualClass(card){
   const parts=[`card-type-${card?.type||"unknown"}`];
@@ -520,8 +594,21 @@ function cardTypeLabel(card){
   return card?.type==="spell"?"Magia":"Carta";
 }
 function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];$("handInfo").textContent=`Honor ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas`;$("handRow").innerHTML=hand.map(c=>`<div class="hand-card ${getCardVisualClass(c)} ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}"><div class="hand-icon"><span>${c.icon}</span></div><div class="hand-tag">${cardTypeLabel(c)}</div><div class="hand-name">${c.name}</div><div class="hand-stats">Costo ${c.cost}${c.type==="unit"?` · AT ${c.atk} · HP ${c.hp} · GD ${c.guard||0} · DX ${c.dex||0} · MV ${c.mov} · RG ${c.range}`:` · Hechizo`}</div><div class="hand-text">${c.text}</div></div>`).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>el.addEventListener("click",()=>{const card=hand.find(c=>c.id===el.dataset.id);if(card)selectCard(card)}))}
-function renderLog(){$("log").innerHTML=(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}function renderDetail(){if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><p>Costo: ${selectedCard.cost}</p><p>${selectedCard.text}</p>`;return}if(selectedUnitId){const u=getUnit(selectedUnitId);if(u){$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)} · GD ${u.guard||0} · DX ${u.dex||0} · MV ${u.mov} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>`;return}}$("detail").innerHTML=`<p>Jugador ${myPlayer||"?"}</p><p>Código: ${gameId||"..."}</p><p>${publicState?.mode==="adventure"?"Modo: Aventura":"Modo: Online"}</p><p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: unidades +2 GD/+2 VIDA. Arquero: unidades +3 AT/+3 DX. Hechicero: magias/trampas -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Todas las piezas usan el mismo tamaño visual. Haz click sobre una carta para verla ampliada.</p>`}function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function renderLog(){$("log").innerHTML=(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}
+function renderDetail(){
+  const isAdventure=publicState?.mode==="adventure";
+  if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><p>Costo: ${selectedCard.cost}</p><p>${selectedCard.text}</p>`;return}
+  if(selectedUnitId){
+    const u=getUnit(selectedUnitId);
+    if(u){$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)} · GD ${u.guard||0} · DX ${u.dex||0} · MV ${u.mov} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>`;return}
+  }
+  const modeLine=isAdventure?`<p><b>Modo:</b> Aventura contra IA</p><p><b>Batalla:</b> ${escapeHtml(publicState?.adventureBattleTitle||"Aventura")}</p>`:`<p><b>Jugador:</b> ${myPlayer||"?"}</p><p><b>Código:</b> ${gameId||"..."}</p><p><b>Modo:</b> Online</p>`;
+  $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: unidades +2 GD/+2 VIDA. Arquero: unidades +3 AT/+3 DX. Hechicero: magias/trampas -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;handOpen=!handOpen;render()});on("cancelBtn","click",clearSelection);on("endBtn","click",endTurn);on("inspectClose","click",()=>$("inspector").classList.remove("show"));
+const inspectorEl=$("inspector");
+if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspectorEl)inspectorEl.classList.remove("show")});
 
 const RENAME_COST_GEMS = 100;
 const defaultPlayerProfile = {
