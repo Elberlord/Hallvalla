@@ -1090,3 +1090,20 @@
   .card-inspect-stat{font-size:10px;padding:7px}
   .card-inspect-stat strong{font-size:17px}
 }
+
+
+/* === v0.7AS: Log de duelo oculto por defecto === */
+.log.log-collapsed{
+  display:none!important;
+}
+#toggleLogBtn{
+  min-width:64px;
+}
+@media(max-width:980px){
+  .battle-tools{
+    gap:6px;
+  }
+  #toggleLogBtn{
+    min-width:54px;
+  }
+}
