@@ -785,7 +785,6 @@ function addPlayerXp(amount){
   renderPlayerProfile(profile);
   return {profile, beforeLevel, levelUps, amount};
 }
-renderHomeProgress();
 
 renderSelectedLeaderBadge();
 document.querySelectorAll("[data-leader-choice]").forEach(btn=>{
@@ -1066,8 +1065,18 @@ if(resultMapBtn)resultMapBtn.addEventListener("click",showAdventureMapFromResult
 const resultRetryBtn=$("adventureResultRetryBtn");
 if(resultRetryBtn)resultRetryBtn.addEventListener("click",retryCurrentAdventureBattle);
 
-on("adventureResultMapBtn","click",()=>{leaveCurrentGame();openAdventureMap(getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan")});
-on("adventureResultNextBtn","click",()=>{const nextId=getNextAdventureBattleId();if(nextId){const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";leaveCurrentGame();showAdventureGuardianIntro(special,nextId);$("adventurePanel").classList.remove("hidden");}});
+on("adventureResultNextBtn","click",()=>{
+  const panel=$("adventureResultPanel");
+  if(panel)panel.classList.add("hidden");
+  const nextId=getNextAdventureBattleId();
+  if(nextId){
+    const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
+    leaveCurrentGame();
+    $("mainMenu").classList.add("hidden");
+    showAdventureGuardianIntro(special,nextId);
+    $("adventurePanel").classList.remove("hidden");
+  }
+});
 on("adventureResultCloseBtn","click",()=>$("adventureResultPanel").classList.add("hidden"));
 document.querySelectorAll("[data-adventure-special]").forEach(btn=>btn.addEventListener("click",()=>showAdventureWoundedIntro(btn.dataset.adventureSpecial)));
 on("notificationsBtn","click",openNotifications);
@@ -1133,6 +1142,12 @@ document.addEventListener("keydown",async(e)=>{
     requireLeaderSelection();
   }
 });
+
+
+// Inicialización segura: se ejecuta al final para evitar usar constantes antes de que existan.
+renderHomeProgress();
+renderSelectedLeaderBadge();
+renderNotificationBadge();
 
 const joinInputEl = document.getElementById("joinCode");
 if(joinInputEl){
