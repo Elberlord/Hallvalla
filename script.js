@@ -13,7 +13,7 @@ function on(id,event,handler){
 function setText(id,value){const el=$(id);if(el)el.textContent=value;}
 function showEl(id){const el=$(id);if(el)el.classList.remove("hidden");}
 function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
-const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.png",archer:"assets/leaders/leader_archer.png",mage:"assets/leaders/leader_mage.png"};
+const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.webp",archer:"assets/leaders/leader_archer.webp",mage:"assets/leaders/leader_mage.webp"};
 const LEADER_DATA={
   warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Unidades +2 GUARDIA y +2 VIDA."},
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Unidades +3 ATAQUE y +3 DESTREZA."},
