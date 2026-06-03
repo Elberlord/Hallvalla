@@ -32,6 +32,10 @@ const LEADER_DATA={
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=(typeof window!=="undefined"&&window.matchMedia?window.matchMedia("(max-width:980px)").matches:false),unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="";
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
+const AI_THINK_DELAY_MS=850;
+const AI_ACTION_DELAY_MS=1150;
+const AI_PHASE_DELAY_MS=700;
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function getTurnPhase(){return publicState?.turnPhase||publicState?.phase||"main"}
 function isHandPlayPhase(){const p=getTurnPhase();return p==="main"||p==="last"}
 function isActionPhase(){return getTurnPhase()==="actions"}
@@ -601,6 +605,20 @@ async function adventureEnemyTurn(){
 
   const logs=[];
   const aiLevel=Number(pub.adventureAiLevel||1);
+  const publishAiStep=async(extra={})=>{
+    const p1Leader=units.find(u=>u.owner===1&&u.leader);
+    const p2Leader=units.find(u=>u.owner===2&&u.leader);
+    const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:"__AI_IN_PROGRESS__",skipFirstTurnDraw:false};
+    await update(ref(db,`games/${gameId}/public`),{
+      units,
+      adventureAiState:nextAiState,
+      currentPlayer:2,
+      [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0},
+      [`playerStats/2`]:{hp:p2Leader?.hp||20,honor,maxHonor,deck:deck.length,hand:hand.length},
+      log:[...logs,...(pub.log||[])].slice(0,18),
+      ...extra
+    });
+  };
   const firstTurnNoDraw=ai.skipFirstTurnDraw===true;
   const aiDrawCount=2+(pub.adventureAiDrawBonus||0);
   const drawn=firstTurnNoDraw?{deck:[...(ai.deck||[])],hand:[...(ai.hand||[])]}:drawCards(ai.deck||[],ai.hand||[],aiDrawCount);
@@ -823,47 +841,60 @@ async function adventureEnemyTurn(){
   };
 
   logs.push(firstTurnNoDraw?`${pub.adventureEnemyName||"Rival"} Draw Phase: IA nivel ${aiLevel}. Honor ${honor}/${maxHonor}. Mano inicial: ${hand.length} cartas.`:`${pub.adventureEnemyName||"Rival"} Draw Phase: roba ${aiDrawCount} cartas. IA ${pub.adventureAiStyle||"Básica"}. Honor ${honor}/${maxHonor}.`);
-  logs.push(`${pub.adventureEnemyName||"Rival"} resuelve Main Phase y Action Phase automáticamente.`);
+  await publishAiStep({turnPhase:"draw"});
+  await sleep(AI_PHASE_DELAY_MS);
+
+  logs.push(`${pub.adventureEnemyName||"Rival"} entra en Main Phase: prepara cartas y kasteos.`);
+  await publishAiStep({turnPhase:"main"});
+  await sleep(AI_THINK_DELAY_MS);
 
   // Plan táctico: remate primero, preparación después, presión al final.
   let cardsPlayed=0;
   const maxCards=Math.max(1,Number(pub.adventureAiCardsPerTurn||2));
   for(let step=0;step<maxCards;step++){
+    let acted=false;
     const damageChoice=chooseBestDamageSpell();
     if(damageChoice&&damageChoice.target&&(damageChoice.card.damage||0)>=(damageChoice.target.hp||0)){
-      playDamageSpell(damageChoice);cardsPlayed++;continue;
+      acted=playDamageSpell(damageChoice);
+    }else{
+      const buffChoice=chooseBestBuff();
+      if(buffChoice&&buffChoice.score>=130){
+        acted=playBuff(buffChoice);
+      }else{
+        const guardChoice=chooseBestGuard();
+        if(guardChoice&&guardChoice.score>=115){
+          acted=playGuard(guardChoice);
+        }else{
+          const slowChoice=chooseBestSlow();
+          if(slowChoice&&slowChoice.score>=110){
+            acted=playSlow(slowChoice);
+          }else{
+            const summonChoice=chooseBestSummon();
+            const damageAgain=chooseBestDamageSpell();
+            if(damageAgain&&(!summonChoice||damageAgain.score>=summonChoice.score+20||aiLevel>=4&&damageAgain.target?.leader)){
+              acted=playDamageSpell(damageAgain);
+            }else if(summonChoice){
+              acted=playSummon(summonChoice);
+            }else if(buffChoice){
+              acted=playBuff(buffChoice);
+            }else if(guardChoice){
+              acted=playGuard(guardChoice);
+            }else if(slowChoice){
+              acted=playSlow(slowChoice);
+            }
+          }
+        }
+      }
     }
-    const buffChoice=chooseBestBuff();
-    if(buffChoice&&buffChoice.score>=130){
-      playBuff(buffChoice);cardsPlayed++;continue;
-    }
-    const guardChoice=chooseBestGuard();
-    if(guardChoice&&guardChoice.score>=115){
-      playGuard(guardChoice);cardsPlayed++;continue;
-    }
-    const slowChoice=chooseBestSlow();
-    if(slowChoice&&slowChoice.score>=110){
-      playSlow(slowChoice);cardsPlayed++;continue;
-    }
-    const summonChoice=chooseBestSummon();
-    const damageAgain=chooseBestDamageSpell();
-    if(damageAgain&&(!summonChoice||damageAgain.score>=summonChoice.score+20||aiLevel>=4&&damageAgain.target?.leader)){
-      playDamageSpell(damageAgain);cardsPlayed++;continue;
-    }
-    if(summonChoice){
-      playSummon(summonChoice);cardsPlayed++;continue;
-    }
-    if(buffChoice){
-      playBuff(buffChoice);cardsPlayed++;continue;
-    }
-    if(guardChoice){
-      playGuard(guardChoice);cardsPlayed++;continue;
-    }
-    if(slowChoice){
-      playSlow(slowChoice);cardsPlayed++;continue;
-    }
-    break;
+    if(!acted)break;
+    cardsPlayed++;
+    await publishAiStep({turnPhase:"main"});
+    await sleep(AI_ACTION_DELAY_MS);
   }
+
+  logs.push(`${pub.adventureEnemyName||"Rival"} pasa a Action Phase: mueve y ataca con sus unidades.`);
+  await publishAiStep({turnPhase:"actions"});
+  await sleep(AI_PHASE_DELAY_MS);
 
   // Unidades inteligentes: atacan si conviene, si no, se reposicionan para quedar con mejor amenaza.
   const aiUnits=()=>living(2).filter(u=>!u.leader).sort((a,b)=>{
@@ -871,16 +902,34 @@ async function adventureEnemyTurn(){
     return bHas-aHas||effectiveAtk(b)-effectiveAtk(a);
   });
   for(const u of aiUnits()){
-    if(!attackWith(u)){
-      moveUnitSmart(u);
-      attackWith(u);
+    let didSomething=false;
+    if(attackWith(u)){
+      didSomething=true;
+      await publishAiStep({turnPhase:"actions"});
+      await sleep(AI_ACTION_DELAY_MS);
+    }else if(moveUnitSmart(u)){
+      didSomething=true;
+      await publishAiStep({turnPhase:"actions"});
+      await sleep(AI_ACTION_DELAY_MS);
+      if(attackWith(u)){
+        await publishAiStep({turnPhase:"actions"});
+        await sleep(AI_ACTION_DELAY_MS);
+      }
     }
+    if(didSomething&&getBattleOutcome(units).ended)break;
   }
   // El kaster rival también puede atacar si el jugador se expone, pero no se lanza a lo loco.
   const el=enemyLeaderNow();
-  if(el)attackWith(el);
+  if(el&&!getBattleOutcome(units).ended&&attackWith(el)){
+    await publishAiStep({turnPhase:"actions"});
+    await sleep(AI_ACTION_DELAY_MS);
+  }
 
-  if(cardsPlayed===0&&!living(2).some(u=>u.moved||u.acted))logs.push("Rival conserva recursos: no encontró una jugada útil este turno.");
+  if(cardsPlayed===0&&!living(2).some(u=>u.moved||u.acted)){
+    logs.push("Rival conserva recursos: no encontró una jugada útil este turno.");
+    await publishAiStep({turnPhase:"actions"});
+    await sleep(AI_PHASE_DELAY_MS);
+  }
 
   const outcome=getBattleOutcome(units);
   const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
