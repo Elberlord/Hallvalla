@@ -32,9 +32,9 @@ const LEADER_DATA={
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=(typeof window!=="undefined"&&window.matchMedia?window.matchMedia("(max-width:980px)").matches:false),unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="";
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
-const AI_THINK_DELAY_MS=850;
-const AI_ACTION_DELAY_MS=1150;
-const AI_PHASE_DELAY_MS=700;
+const AI_THINK_DELAY_MS=1400;
+const AI_ACTION_DELAY_MS=2200;
+const AI_PHASE_DELAY_MS=1200;
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function getTurnPhase(){return publicState?.turnPhase||publicState?.phase||"main"}
 function isHandPlayPhase(){const p=getTurnPhase();return p==="main"||p==="last"}
@@ -616,6 +616,8 @@ async function adventureEnemyTurn(){
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0},
       [`playerStats/2`]:{hp:p2Leader?.hp||20,honor,maxHonor,deck:deck.length,hand:hand.length},
       log:[...logs,...(pub.log||[])].slice(0,18),
+      aiActionText:logs[logs.length-1]||`${pub.adventureEnemyName||"Rival"} está pensando su jugada...`,
+      aiStepAt:Date.now(),
       ...extra
     });
   };
@@ -951,7 +953,8 @@ async function adventureEnemyTurn(){
       adventureAiState:nextAiState,
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0},
       [`playerStats/2`]:{...(pub.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0,honor,maxHonor,deck:deck.length,hand:hand.length},
-      log:finalLogs
+      log:finalLogs,
+      aiActionText:""
     });
     return;
   }
@@ -966,7 +969,8 @@ async function adventureEnemyTurn(){
     turnKey:`${nextTurn}-1`,
     [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0},
     [`playerStats/2`]:{hp:outcome.p2Leader?.hp||20,honor,maxHonor,deck:deck.length,hand:hand.length},
-    log:finalLogs
+    log:finalLogs,
+    aiActionText:""
   });
 }
 async function cellClick(x,y){
@@ -1056,15 +1060,26 @@ function renderUnitContextMenu(){
     const disabled=(o.key==="mov"&&(!canAct||u.moved))||(o.key==="attk"&&(!canAct||u.acted))||(o.key==="effect"&&!canAct);
     return `<button class="unit-context-btn" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
-  const grid=$("grid"), battlefield=document.querySelector(".battlefield");
-  if(grid&&battlefield){
+  const grid=$("grid");
+  if(grid){
     const g=grid.getBoundingClientRect();
-    const b=battlefield.getBoundingClientRect();
     const cellW=g.width/COLS, cellH=g.height/ROWS;
-    let left=(g.left-b.left)+(unitContextSelection.x+.5)*cellW;
-    let top=(g.top-b.top)+(unitContextSelection.y+.5)*cellH;
+    let left=g.left+(unitContextSelection.x+.5)*cellW;
+    let top=g.top+(unitContextSelection.y+.5)*cellH;
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;
+    menu.classList.remove("below");
+    requestAnimationFrame(()=>{
+      const rect=menu.getBoundingClientRect();
+      const margin=8;
+      const vw=window.innerWidth||document.documentElement.clientWidth||0;
+      const vh=window.innerHeight||document.documentElement.clientHeight||0;
+      const clampedLeft=Math.min(Math.max(left,rect.width/2+margin),Math.max(rect.width/2+margin,vw-rect.width/2-margin));
+      menu.style.left=`${clampedLeft}px`;
+      const wouldClipTop=(top-rect.height-18)<margin;
+      const wouldClipBottom=(top+rect.height+18)>vh;
+      menu.classList.toggle("below",wouldClipTop&&!wouldClipBottom);
+    });
   }
   menu.classList.remove("hidden");
   menu.querySelectorAll(".unit-context-btn").forEach(btn=>btn.addEventListener("click",ev=>{
@@ -1105,7 +1120,7 @@ function handleUnitContextAction(action){
   render();
 }
 
-function render(){if(!publicState)return;syncHandAutoClose();renderHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowBattleResult()}function renderBattleChrome(){const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
+function render(){if(!publicState)return;syncHandAutoClose();renderHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowBattleResult()}function renderBattleChrome(){const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
 function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`)}
 function renderBoard(){
   const grid=$("grid");
@@ -1121,10 +1136,16 @@ function renderBoard(){
       c.className=`unit-card ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>`;
       c.title=`${u.name} · HP ${u.hp}/${u.maxHp} · AT ${effectiveAtk(u)}`;
+      c.addEventListener("pointerdown",ev=>ev.stopPropagation());
+      c.addEventListener("contextmenu",ev=>{
+        ev.preventDefault();
+        ev.stopPropagation();
+        openUnitContextMenu(u,x,y);
+      });
       c.addEventListener("click",ev=>{
         if(!selectedCard){
           ev.stopPropagation();
-          cellClick(x,y);
+          openUnitContextMenu(u,x,y);
         }
       });
       cell.appendChild(c);

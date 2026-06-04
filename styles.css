@@ -1226,8 +1226,8 @@
 
 /* === v0.7AX: Menú contextual principal para invocaciones === */
 .unit-context-menu{
-  position:absolute;
-  z-index:95;
+  position:fixed;
+  z-index:260;
   min-width:168px;
   max-width:220px;
   padding:10px;
@@ -1244,6 +1244,18 @@
   animation:unitContextPop .14s ease-out both;
 }
 .unit-context-menu.hidden{display:none!important}
+.unit-context-menu.below{
+  transform:translate(-50%,14px);
+}
+.unit-context-menu.below::after{
+  top:-9px;
+  bottom:auto;
+  transform:translateX(-50%) rotate(45deg);
+  border-left:1px solid rgba(255,209,102,.34);
+  border-top:1px solid rgba(255,209,102,.34);
+  border-right:0;
+  border-bottom:0;
+}
 .unit-context-menu::after{
   content:"";
   position:absolute;
