@@ -553,14 +553,51 @@ function syncHandAutoClose(){
 }
 function cardInspectStats(card){
   const base=[["Costo",card.cost??0]];
-  if(card.type==="unit")base.push(["AT",card.atk||0],["HP",card.hp||0],["Guardia",card.guard||0],["Destreza",card.dex||0],["Mov",card.mov||0],["Rango",card.range||0]);
+  if(card.type==="unit")base.push(["AT",card.atk||0],["HP",card.hp||0],["GD",card.guard||0],["DX",card.dex||0],["MV",card.mov||0],["RG",card.range||0]);
   else{
     if(card.damage)base.push(["Daño",card.damage]);
     if(card.buff)base.push(["AT +",card.buff]);
-    if(card.guard)base.push(["Guardia +",card.guard]);
-    if(card.slow)base.push(["Mov -",card.slow]);
+    if(card.guard)base.push(["GD +",card.guard]);
+    if(card.slow)base.push(["MV -",card.slow]);
   }
   return base;
+}
+function statHelpText(label){
+  const key=String(label||"").toLowerCase().replace(/\s+/g,"");
+  if(key==="costo")return "Honor necesario para jugar la carta desde tu mano.";
+  if(key==="at"||key==="ataque"||key==="at+")return "Ataque: daño base que causa cuando golpea o cuando recibe un aumento de poder.";
+  if(key==="hp"||key==="vida")return "Vida: resistencia de la unidad; si llega a 0, sale del campo.";
+  if(key==="gd"||key==="guardia"||key==="gd+")return "Guardia: protección que reduce o absorbe daño antes de perder vida.";
+  if(key==="dx"||key==="destreza")return "Destreza: agilidad/técnica usada para precisión, evasión o efectos de habilidad.";
+  if(key==="mv"||key==="mov"||key==="movimiento"||key==="mv-"||key==="mov-")return "Movimiento: cantidad de casillas que puede avanzar al usar MOV.";
+  if(key==="rg"||key==="rango")return "Rango: distancia máxima desde la que puede atacar.";
+  if(key==="daño")return "Daño: vida que pierde el objetivo al resolverse esta carta.";
+  return "Valor de juego de esta carta.";
+}
+function statHelpHtml(stats){
+  const seen=new Set();
+  return stats.map(([label])=>{
+    const clean=String(label||"");
+    const key=clean.toLowerCase();
+    if(seen.has(key))return "";
+    seen.add(key);
+    return `<div class="stat-help-line"><b>${escapeHtml(clean)}</b>: ${escapeHtml(statHelpText(clean))}</div>`;
+  }).join("");
+}
+function cardRuleHelpHtml(card){
+  const stats=cardInspectStats(card);
+  let lines=statHelpHtml(stats);
+  const effectText=card?.text||card?.effectText||card?.ability||"";
+  if(effectText)lines+=`<div class="stat-help-line"><b>Efecto</b>: ${escapeHtml(effectText)}</div>`;
+  return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}</div>`;
+}
+function unitRuleHelpHtml(u){
+  const stats=[["HP",`${Math.max(0,u.hp)}/${u.maxHp}`],["AT",effectiveAtk(u)],["GD",u.guard||0],["DX",u.dex||0],["MV",u.mov||0],["RG",u.range||1]];
+  let lines=statHelpHtml(stats);
+  const effectText=u?.text||u?.effectText||u?.ability||"";
+  if(effectText)lines+=`<div class="stat-help-line"><b>Destreza/Efecto</b>: ${escapeHtml(effectText)}</div>`;
+  else lines+=`<div class="stat-help-line"><b>Destreza/Efecto</b>: si la unidad tiene una habilidad especial, aquí se explica cuándo y cómo aplica.</div>`;
+  return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}</div>`;
 }
 function closeHandForBoardFocus(){
   handOpen=false;
@@ -586,8 +623,9 @@ function showCardInspectModal(card){
   if(title)title.textContent=card.name;
   if(sub)sub.textContent=`${cardTypeLabel(card)} · ${card.rarity||"básica"}`;
   if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
-  if(stats)stats.innerHTML=cardInspectStats(card).map(([l,v])=>`<div class="card-inspect-stat">${l}<strong>${v}</strong></div>`).join("");
-  if(text)text.textContent=card.text||"Sin texto.";
+  const inspectStats=cardInspectStats(card);
+  if(stats)stats.innerHTML=inspectStats.map(([l,v])=>`<div class="card-inspect-stat" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></div>`).join("");
+  if(text)text.innerHTML=`<div class="card-main-text">${escapeHtml(card.text||"Sin texto.")}</div>${cardRuleHelpHtml(card)}`;
   const state=getCardPlayState(card);
   if(reason)reason.textContent=state.canPlay?"Puedes jugar esta carta. Al tocar Jugar, elige el objetivo o la casilla válida en el tablero.":state.reason;
   if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
@@ -1080,12 +1118,12 @@ function showUnit(u){
   $("inspectTitle").textContent=u.name;
   $("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
-  const stats=[["Vida",`${Math.max(0,u.hp)}/${u.maxHp}`],["Ataque",effectiveAtk(u)],["Guardia",u.guard||0],["Destreza",u.dex||0],["Mov",u.mov||0],["Rango",u.range||1]];
-  $("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat">${l}<strong>${v}</strong></div>`).join("");
+  const stats=[["HP",`${Math.max(0,u.hp)}/${u.maxHp}`],["AT",effectiveAtk(u)],["GD",u.guard||0],["DX",u.dex||0],["MV",u.mov||0],["RG",u.range||1]];
+  $("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></div>`).join("");
   const ownerLabel=u.owner===myPlayer?"Tu unidad":"Unidad rival";
-  $("inspectText").innerHTML=u.leader
+  $("inspectText").innerHTML=(u.leader
     ? `${ownerLabel}. Si un kaster llega a 0, pierde la batalla.`
-    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca fuera/cerrar para volver al duelo.`;
+    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca fuera/cerrar para volver al duelo.`) + unitRuleHelpHtml(u);
   inspector.classList.add("show");
 }
 
@@ -1264,7 +1302,11 @@ function cardTypeLabel(card){
   if(card?.spell==="shield")return "Guardia";
   return card?.type==="spell"?"Magia":"Carta";
 }
-function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];const playableCount=getPlayableCardsInHand().length;const phaseStatus=isMyTurn()?` · ${turnPhaseLabel()}`:"";const status=isMyTurn()?` · ${playableCount} jugable${playableCount===1?"":"s"}`:"";$("handInfo").textContent=`Honor ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas${status}${phaseStatus}`;$("handRow").innerHTML=hand.map(c=>{const playState=getCardPlayState(c);return `<div class="hand-card ${getCardVisualClass(c)} ${playState.canPlay?"":"not-playable"} ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}" title="${escapeHtml(playState.reason)}">${getCardVisualHtml(c,"hand-icon")}<div class="hand-tag">${cardTypeLabel(c)}</div><div class="hand-name">${c.name}</div><div class="hand-stats">Costo ${c.cost}${c.type==="unit"?` · AT ${c.atk} · HP ${c.hp} · GD ${c.guard||0} · DX ${c.dex||0} · MV ${c.mov} · RG ${c.range}`:` · Hechizo`}</div><div class="hand-text">${c.text}</div></div>`}).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>el.addEventListener("click",()=>{const card=hand.find(c=>c.id===el.dataset.id);if(card)showCardInspectModal(card)}))}
+function handQuickStats(card){
+  if(card?.type==="unit")return `Costo ${card.cost||0} · AT ${card.atk||0} · HP ${card.hp||0}`;
+  return `Costo ${card?.cost||0}`;
+}
+function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];const playableCount=getPlayableCardsInHand().length;const phaseStatus=isMyTurn()?` · ${turnPhaseLabel()}`:"";const status=isMyTurn()?` · ${playableCount} jugable${playableCount===1?"":"s"}`:"";$("handInfo").textContent=`Honor ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas${status}${phaseStatus}`;$("handRow").innerHTML=hand.map(c=>{const playState=getCardPlayState(c);return `<div class="hand-card hand-card-visual ${getCardVisualClass(c)} ${playState.canPlay?"":"not-playable"} ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}" title="${escapeHtml(playState.reason)}"><div class="hand-art-wrap">${getCardVisualHtml(c,"hand-icon hand-art")}</div><div class="hand-card-footer"><div class="hand-name">${escapeHtml(c.name)}</div><div class="hand-quick-row"><span class="hand-stats">${handQuickStats(c)}</span></div></div></div>`}).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>el.addEventListener("click",()=>{const card=hand.find(c=>c.id===el.dataset.id);if(card)showCardInspectModal(card)}))}
 function renderLog(){const el=$("log");if(!el)return;el.classList.toggle("log-collapsed",!!logCollapsed);el.setAttribute("aria-hidden",String(!!logCollapsed));el.innerHTML=logCollapsed?"":(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}
 function renderDetail(){
   const isAdventure=publicState?.mode==="adventure";

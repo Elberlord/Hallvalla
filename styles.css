@@ -1602,3 +1602,108 @@
 @media (prefers-reduced-motion: reduce){
   .demigod-summon-modal{transition:none}
 }
+
+/* 7BM - Mano visual compacta: arte grande, texto mínimo. */
+.hand-card.hand-card-visual{
+  flex:0 0 146px;
+  min-height:190px;
+  padding:7px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:6px;
+  background:linear-gradient(180deg,rgba(61,38,19,.98),rgba(15,10,7,.98));
+}
+.hand-card-visual .hand-art-wrap{
+  flex:1;
+  min-height:128px;
+  border-radius:11px;
+  overflow:hidden;
+  border:1px solid rgba(255,209,102,.24);
+  background:radial-gradient(circle at 50% 28%,rgba(255,222,150,.16),rgba(0,0,0,.22) 56%,rgba(0,0,0,.38));
+  box-shadow:inset 0 0 18px rgba(0,0,0,.35);
+}
+.hand-card-visual .hand-icon.hand-art,
+.hand-card-visual .hand-icon.hand-art.card-portrait{
+  width:100%;
+  height:100%;
+  min-height:128px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  display:block;
+}
+.hand-card-visual .hand-icon.hand-art img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+}
+.hand-card-visual .hand-icon.hand-art span{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  font-size:42px;
+}
+.hand-card-visual .hand-card-footer{
+  position:relative;
+  z-index:1;
+  padding:4px 4px 2px;
+}
+.hand-card-visual .hand-name{
+  margin:0 0 4px;
+  font-size:12px;
+  line-height:1.05;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.hand-card-visual .hand-quick-row{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.hand-card-visual .hand-tag{
+  margin:0;
+  font-size:7px;
+  padding:2px 5px;
+}
+.hand-card-visual .hand-stats{
+  margin:0;
+  font-size:8px;
+  line-height:1.05;
+  color:#ffe0a4;
+}
+.hand-card-visual .hand-text{display:none!important;}
+@media(max-width:980px){
+  .hand-card.hand-card-visual{flex:0 0 118px;min-width:118px;max-width:118px;min-height:158px;padding:6px;}
+  .hand-card-visual .hand-art-wrap{min-height:98px;}
+  .hand-card-visual .hand-icon.hand-art,
+  .hand-card-visual .hand-icon.hand-art.card-portrait{min-height:98px;}
+  .hand-card-visual .hand-name{font-size:10px;}
+  .hand-card-visual .hand-stats{font-size:7px;}
+}
+
+/* 7BN: mano limpia. La carta en mano solo muestra arte + datos mínimos.
+   Unidad: nombre, costo, AT y HP. Magia/trampa: nombre y costo. */
+.hand-card-visual .hand-tag{display:none!important;}
+.hand-card-visual .hand-quick-row{justify-content:center;gap:0;margin-top:2px;}
+.hand-card-visual .hand-stats{font-size:10px;line-height:1.15;text-align:center;white-space:normal;color:#ffe7b8;}
+.hand-card-visual .hand-name{font-size:12px;line-height:1.05;text-align:center;min-height:24px;display:flex;align-items:center;justify-content:center;}
+.hand-card.hand-card-visual{min-height:176px;}
+.hand-card-visual .hand-art-wrap{min-height:118px;}
+.hand-card-visual .hand-icon.hand-art,
+.hand-card-visual .hand-icon.hand-art.card-portrait{min-height:118px;}
+@media (max-width:900px){
+  .hand-card.hand-card-visual{min-height:146px;}
+  .hand-card-visual .hand-art-wrap{min-height:92px;}
+  .hand-card-visual .hand-icon.hand-art,
+  .hand-card-visual .hand-icon.hand-art.card-portrait{min-height:92px;}
+  .hand-card-visual .hand-name{font-size:10px;min-height:21px;}
+  .hand-card-visual .hand-stats{font-size:8px;}
+}
