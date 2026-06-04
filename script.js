@@ -39,6 +39,7 @@ function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function getTurnPhase(){return publicState?.turnPhase||publicState?.phase||"main"}
 function isHandPlayPhase(){const p=getTurnPhase();return p==="main"||p==="last"}
 function isActionPhase(){return getTurnPhase()==="actions"}
+function isUnitMovePhase(){const p=getTurnPhase();return p==="main"||p==="actions"||p==="last"}
 function turnPhaseLabel(){return TURN_PHASE_LABELS[getTurnPhase()]||String(getTurnPhase()||"TURNO").toUpperCase()}
 function shouldAutoOpenHand(){return isMyTurn()&&getTurnPhase()==="main"}
 function canManuallyOpenHandNow(){return isMyTurn()&&isHandPlayPhase()}
@@ -540,9 +541,9 @@ function selectUnit(u){
   if(!u)return;
   return openUnitContextMenu(u,u.x,u.y);
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<card.cost)return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");units.push(makeUnit(card,x,y));await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${card.damage} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-card.damage}:u).filter(u=>u.hp>0);await updateUnits(units);await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+card.buff}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.buff} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+(card.guard||0)}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.guard||0} GUARDIA.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,mov:Math.max(0,(u.mov||0)-(card.slow||0))}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} activa ${card.name}: ${target.name} pierde ${card.slow||0} MOV.`)}clearSelection()}
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<card.cost)return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");units.push(makeUnit(card,x,y));await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${card.damage} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-card.damage}:u).filter(u=>u.hp>0);await updateUnits(units);await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+card.buff}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.buff} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+(card.guard||0)}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.guard||0} GUARDIA.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,mov:Math.max(0,(u.mov||0)-(card.slow||0))}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} activa ${card.name}: ${target.name} pierde ${card.slow||0} MOV.`)}clearSelection()}
 async function removeCardAndPay(card){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const honor=(privateState.honor||0)-card.cost;const maxHonor=privateState.maxHonor||0;await updatePrivate({hand,honor});await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}})}
-async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes mover unidades en Action Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const actionLog=`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
+async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isUnitMovePhase())return setHint("Puedes mover unidades en Main, Action o Last Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const actionLog=`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
   const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
@@ -1026,9 +1027,10 @@ function getUnitContextOptions(u){
   const mine=u.owner===myPlayer;
   const opts=[];
   if(mine){
-    opts.push({key:"mov",label:"MOV",hint:u.moved?"Ya se movió":"Mover"});
+    const moveHint=u.moved?"Ya se movió":isUnitMovePhase()?"Mover ahora":"Mover en Main / Action / Last Phase";
+    opts.push({key:"mov",label:"MOV",hint:moveHint});
     if(unitHasContextEffect(u))opts.push({key:"effect",label:"EFFECT",hint:"Efecto"});
-    opts.push({key:"attk",label:"ATTK",hint:u.acted?"Ya atacó":"Atacar"});
+    opts.push({key:"attk",label:"ATTK",hint:u.acted?"Ya atacó":"Atacar en Action Phase"});
   }
   opts.push({key:"det",label:"DET",hint:"Detalles"});
   return opts;
@@ -1055,9 +1057,10 @@ function renderUnitContextMenu(){
   const u=getUnit(unitContextSelection.unitId);
   if(!u){menu.classList.add("hidden");return;}
   const options=getUnitContextOptions(u);
-  const canAct=isMyTurn()&&u.owner===myPlayer&&isActionPhase()&&!isBattleEnded();
+  const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMovePhase()&&!isBattleEnded();
+  const canAction=isMyTurn()&&u.owner===myPlayer&&isActionPhase()&&!isBattleEnded();
   menu.innerHTML=`<div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div><div class="unit-context-actions">${options.map(o=>{
-    const disabled=(o.key==="mov"&&(!canAct||u.moved))||(o.key==="attk"&&(!canAct||u.acted))||(o.key==="effect"&&!canAct);
+    const disabled=(o.key==="mov"&&(!canMove||u.moved))||(o.key==="attk"&&(!canAction||u.acted))||(o.key==="effect"&&!canAction);
     return `<button class="unit-context-btn" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
   const grid=$("grid");
@@ -1097,7 +1100,8 @@ function handleUnitContextAction(action){
   }
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn()||u.owner!==myPlayer)return setHint("Solo puedes usar acciones de tus invocaciones.");
-  if(!isActionPhase())return setHint("Las invocaciones actúan en Action Phase.");
+  if(action==="mov"&&!isUnitMovePhase())return setHint("Puedes mover invocaciones en Main, Action o Last Phase. Las recién kasteadas no tienen mareo de invocación.");
+  if((action==="attk"||action==="effect")&&!isActionPhase())return setHint("ATTK y EFFECT se resuelven en Action Phase.");
   selectedCard=null;
   selectedUnitId=u.id;
   selectedUnitActionMode=action;
