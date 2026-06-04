@@ -468,6 +468,73 @@ function getPlayableCardsInHand(){
   return hand.filter(c=>getCardPlayState(c).canPlay);
 }
 function hasPlayableCardsInHand(){return getPlayableCardsInHand().length>0}
+function canPlayCardWithSnapshot(card,honor,phase,units,player){
+  if(!card)return false;
+  if(!(phase==="main"||phase==="last"))return false;
+  if((honor||0)<(card.cost||0))return false;
+  const unitsList=units||[];
+  const unitAt=(x,y)=>unitsList.find(u=>u.x===x&&u.y===y);
+  const leader=unitsList.find(u=>u.owner===player&&u.leader);
+  const hasSummonZone=()=>{
+    if(!leader)return false;
+    for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++){
+      if(unitAt(xx,yy))continue;
+      if(Math.max(Math.abs(leader.x-xx),Math.abs(leader.y-yy))<=1)return true;
+    }
+    return false;
+  };
+  if(card.type==="unit")return hasSummonZone();
+  if(card.spell==="damage")return unitsList.some(u=>u.owner!==player);
+  if(card.spell==="buff")return unitsList.some(u=>u.owner===player);
+  if(card.spell==="shield"||card.trap==="guard")return unitsList.some(u=>u.owner===player);
+  if(card.trap==="slow")return unitsList.some(u=>u.owner!==player&&!u.leader);
+  return true;
+}
+function handHasPlayableWithSnapshot(hand,honor,phase,units,player){
+  return (hand||[]).some(c=>canPlayCardWithSnapshot(c,honor,phase,units,player));
+}
+function scheduleAutoAdvanceIfHandEmptyAfterPlay(handSnapshot,honorSnapshot){
+  if(!gameId||!publicState||!privateState||!isMyTurn()||!isHandPlayPhase())return;
+  const phaseAtPlay=getTurnPhase();
+  if(handHasPlayableWithSnapshot(handSnapshot,honorSnapshot,phaseAtPlay,publicState.units||[],myPlayer))return;
+  const localGameId=gameId;
+  const localPlayer=myPlayer;
+  const localTurnKey=publicState.turnKey||"";
+  setTimeout(async()=>{
+    try{
+      if(gameId!==localGameId||myPlayer!==localPlayer)return;
+      const [pubSnap,privSnap]=await Promise.all([
+        get(ref(db,`games/${localGameId}/public`)),
+        get(ref(db,`games/${localGameId}/private/player${localPlayer}`))
+      ]);
+      if(!pubSnap.exists()||!privSnap.exists())return;
+      const pub=pubSnap.val();
+      const priv=privSnap.val();
+      if(pub.phase==="ended"||pub.battleEnded||pub.currentPlayer!==localPlayer)return;
+      if(localTurnKey&&pub.turnKey!==localTurnKey)return;
+      const phase=pub.turnPhase||pub.phase||"main";
+      if(!(phase==="main"||phase==="last"))return;
+      if(handHasPlayableWithSnapshot(priv.hand||[],priv.honor||0,phase,pub.units||[],localPlayer))return;
+      if(phase==="main"){
+        await update(ref(db,`games/${localGameId}/public`),{
+          turnPhase:"actions",
+          log:[`J${localPlayer} no tiene cartas jugables en mano: avanza automáticamente a Action Phase.`,...(pub.log||[])].slice(0,18)
+        });
+      }else if(phase==="last"){
+        const next=localPlayer===1?2:1;
+        const nextTurn=next===1?(pub.turn||1)+1:(pub.turn||1);
+        await update(ref(db,`games/${localGameId}/public`),{
+          currentPlayer:next,
+          turn:nextTurn,
+          turnPhase:"draw",
+          turnKey:`${nextTurn}-${next}`,
+          log:[`J${localPlayer} no tiene cartas jugables en Last Phase: termina turno. Ahora juega J${next}.`,...(pub.log||[])].slice(0,18)
+        });
+        if(pub.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
+      }
+    }catch(e){console.warn("[HallValla] Auto avance por mano vacía falló:",e);}
+  },220);
+}
 function getHandAvailabilityKey(){
   const ids=(privateState?.hand||[]).map(c=>c.id).join("|");
   return `${gameId||"no-game"}:${publicState?.turnKey||"no-turn"}:${privateState?.honor||0}:${ids}`;
@@ -542,7 +609,14 @@ function selectUnit(u){
   return openUnitContextMenu(u,u.x,u.y);
 }
 async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<card.cost)return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");units.push(makeUnit(card,x,y));await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${card.damage} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-card.damage}:u).filter(u=>u.hp>0);await updateUnits(units);await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+card.buff}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.buff} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+(card.guard||0)}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${card.guard||0} GUARDIA.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,mov:Math.max(0,(u.mov||0)-(card.slow||0))}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} activa ${card.name}: ${target.name} pierde ${card.slow||0} MOV.`)}clearSelection()}
-async function removeCardAndPay(card){const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);const honor=(privateState.honor||0)-card.cost;const maxHonor=privateState.maxHonor||0;await updatePrivate({hand,honor});await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}})}
+async function removeCardAndPay(card){
+  const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
+  const honor=(privateState.honor||0)-(card.cost||0);
+  const maxHonor=privateState.maxHonor||0;
+  await updatePrivate({hand,honor});
+  await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
+  scheduleAutoAdvanceIfHandEmptyAfterPlay(hand,honor);
+}
 async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isUnitMovePhase())return setHint("Puedes mover unidades en Main, Action o Last Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const actionLog=`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
@@ -1105,6 +1179,7 @@ function handleUnitContextAction(action){
   selectedCard=null;
   selectedUnitId=u.id;
   selectedUnitActionMode=action;
+  unitContextSelection=null;
   hideUnitContextMenu();
   if(action==="mov"){
     if(u.moved)return setHint(`${u.name} ya se movió este turno.`);
