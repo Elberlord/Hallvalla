@@ -1260,10 +1260,12 @@ function renderBoard(){
         openUnitContextMenu(u,x,y);
       });
       c.addEventListener("click",ev=>{
-        if(!selectedCard){
-          ev.stopPropagation();
-          openUnitContextMenu(u,x,y);
-        }
+        // Si hay una carta o unidad seleccionada, el click debe llegar a la celda.
+        // Esto permite seleccionar objetivos de magias/ataques en Battle Phase.
+        // Para ver detalles en ese estado, se mantiene el menú con click derecho / pulsación larga.
+        if(selectedCard||selectedUnitId)return;
+        ev.stopPropagation();
+        openUnitContextMenu(u,x,y);
       });
       cell.appendChild(c);
     }
