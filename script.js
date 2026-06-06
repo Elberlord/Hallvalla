@@ -22,7 +22,9 @@ const CARD_PORTRAITS={
   paladin:"assets/cards/basic/paladin.webp",
   darkMage:"assets/cards/basic/dark_mage.webp",
   wallace:"assets/cards/basic/wallace.webp",
-  mulan:"assets/cards/basic/mulan.webp"
+  mulan:"assets/cards/basic/mulan.webp",
+  simo:"assets/cards/basic/archer.webp",
+  sunTzu:"assets/cards/basic/mage.webp"
 };
 const LEADER_DATA={
   warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Unidades +2 GUARDIA y +2 VIDA."},
@@ -274,7 +276,9 @@ function validateDeckList(cards=[]){
 const RICHARD_CARD={key:"richard_lionheart",name:"Richard Corazón de León",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.richard,cost:4,hp:6,atk:5,guard:5,dex:6,mov:3,range:1,rarity:"Gloriosa",special:true,text:"Corazón Indomable: una vez por turno, Richard puede elegir un aliado; ese aliado obtiene +5 VIDA máxima y +5 VIDA actual mientras siga en campo. Es moral de batalla, no magia."};
 const MULAN_CARD={...ADVENTURE_SPECIALS.mulan,rarity:"Heroica",text:"Ataque por la espalda: si Mulan ataca desde la espalda, obtiene +6 ATQ durante ese ataque."};
 const WALLACE_CARD={...ADVENTURE_SPECIALS.wallace,icon:"🏴",rarity:"Heroica",text:"Guardia Inquebrantable: cuando su Guardia reduce el daño recibido a 0, recupera +1 Vigor."};
-const LEGENDARY_ALLY_CARDS=[RICHARD_CARD,MULAN_CARD,WALLACE_CARD];
+const SIMO_CARD={key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:4,hp:4,atk:4,guard:2,dex:9,mov:2,range:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió VIDA este turno, obtiene +2 ATQ y +2 DESTREZA durante ese ataque."};
+const SUN_TZU_CARD={key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:4,hp:4,atk:2,guard:3,dex:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, puedes sumar +1 Honor/Maná temporal que solo puede usarse durante este turno."};
+const LEGENDARY_ALLY_CARDS=[RICHARD_CARD,MULAN_CARD,WALLACE_CARD,SIMO_CARD,SUN_TZU_CARD];
 const CARD_VISUALS_BY_KEY={
   spearman:{portrait:CARD_PORTRAITS.richard,icon:"🛡️"},
   archer:{portrait:CARD_PORTRAITS.archer,icon:"🏹"},
@@ -282,7 +286,9 @@ const CARD_VISUALS_BY_KEY={
   scout:{portrait:CARD_PORTRAITS.rogue,icon:"🐍"},
   richard_lionheart:{portrait:CARD_PORTRAITS.richard,icon:"🦁"},
   mulan:{portrait:CARD_PORTRAITS.mulan,icon:"🐉"},
-  wallace:{portrait:CARD_PORTRAITS.wallace,icon:"🏴"}
+  wallace:{portrait:CARD_PORTRAITS.wallace,icon:"🏴"},
+  simo_hayha:{portrait:CARD_PORTRAITS.simo,icon:"❄️"},
+  sun_tzu:{portrait:CARD_PORTRAITS.sunTzu,icon:"📜"}
 };
 function hydrateCardVisualData(card){
   if(!card||typeof card!=="object")return card;
@@ -298,7 +304,7 @@ const IMPROVED_MAGIC_TRAP_PACK=[
 ];
 
 const ADVENTURE_PROGRESS_KEY="hallvalla_adventure_progress";
-const ADVENTURE_GUARDIAN_BATTLE={id:"guardian_mage",num:0,isGuardian:true,title:"El guardián hechicero",enemyName:"Hechicero guardián",enemyLeaderType:"mage",image:"assets/story/guardian_intro.webp",enemyIntro:"Antes de tocar el mapa 1.1, una figura se interpone entre las ruinas del umbral. Es un mago guardián, cubierto por energía oscura y rodeado por símbolos antiguos.\n\nEsta no es todavía la campaña del mapa: es la prueba que decide si puedes entrar en ella. Derrota al Hechicero guardián para desbloquear el mapa 1.1 El inicio de la travesía.",xp:5,gold:10,cardPack:false,aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiCardsPerTurn:1,aiStyle:"Tutorial mágico",desc:"Derrota al Hechicero guardián para desbloquear el mapa 1.1."};
+const ADVENTURE_GUARDIAN_BATTLE={id:"guardian_mage",num:0,isGuardian:true,title:"El guardián hechicero",enemyName:"Hechicero guardián",enemyLeaderType:"mage",image:"assets/story/guardian_intro.webp",enemyIntro:"Antes de tocar el mapa 1.1, una figura se interpone entre las ruinas del umbral. Es un mago guardián, cubierto por energía oscura y rodeado por símbolos antiguos.\n\nEsta no es todavía la campaña del mapa: es la prueba que decide si puedes entrar en ella. Derrota al Hechicero guardián para desbloquear el mapa 1.1 El inicio de la travesía.",xp:5,gold:10,cardPack:false,rewardCard:"wallace",aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiCardsPerTurn:1,aiStyle:"Tutorial mágico",desc:"Derrota al Hechicero guardián para desbloquear el mapa 1.1."};
 const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"El inicio de la travesía",desc:"Los rebeldes intentan usurpar el trono y crear un golpe de estado. La primera campaña empieza en la frontera, atraviesa rutas tomadas por la rebelión y termina con Richard Corazón de León poniendo a prueba al jugador antes de aceptar unir fuerzas.",introTitle:"1.1 El inicio de la travesía",introText:"El reino de HallValla apenas comienza a respirar después de años de disputas internas. El trono sigue en pie, pero su autoridad ya no pesa igual en las tierras lejanas.\n\nEn la frontera, los rumores llegan antes que los mensajeros: aldeas cerradas, caminos bloqueados, estandartes quemados y soldados que ya no responden al llamado real. Lo que al principio parece una revuelta menor pronto revela una amenaza mayor.\n\nUn grupo de rebeldes intenta usurpar el trono y provocar un golpe de estado. No buscan solamente conquistar fortalezas: quieren quebrar la confianza del pueblo, aislar al reino y entrar al salón del trono antes de que las fuerzas leales puedan reunirse.",battles:[
 {id:"battle1",num:1,title:"La flecha en la frontera",legacyTitle:"Rumores en la frontera",enemyName:"Arquero rebelde",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La primera señal llega desde los puestos fronterizos. Humo en el horizonte. Torres abandonadas. Caminos que antes eran seguros ahora están cubiertos por patrullas sin emblema.\n\nUn arquero rebelde vigila los pasos de frontera. No busca honor, busca detener tu avance antes de que comprendas la escala del golpe.",xp:5,gold:10,cardPack:true,aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiCardsPerTurn:1,aiStyle:"Tutorial agresivo",desc:"Confirma la presencia rebelde y derrota al arquero que protege las rutas del levantamiento."},
 {id:"battle2",num:2,title:"El guerrero del puente",legacyTitle:"El puente tomado",enemyName:"Guerrero rebelde",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"El camino hacia la capital pasa por un antiguo puente de piedra. Durante generaciones fue símbolo de unión entre las provincias, pero ahora ondean sobre él estandartes rebeldes.\n\nEl puente está tomado por un guerrero rebelde que convirtió el cruce en una muralla de escudos. Tendrás que romper su frente para avanzar.",xp:8,gold:12,cardPack:true,aiLevel:2,aiDrawBonus:0,aiHonorBonus:0,aiCardsPerTurn:2,aiStyle:"Presión frontal",desc:"Recupera el puente tomado y obliga al guerrero rebelde a retirarse."},
@@ -309,9 +315,14 @@ const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"El inicio de la
 const ADVENTURE_CHAPTER_2_1={id:"chapter2_1",number:"2.1",title:"Ecos del estandarte roto",desc:"Tras la prueba de Richard, la rebelión deja de pelear como una banda dispersa. Un nuevo consejo de estrategas roba tácticas del reino y usa leyendas invocadas contra ti: Corazón de León, Mulan y Wallace aparecen ahora en manos enemigas junto a magias y trampas reforzadas.",introTitle:"2.1 Ecos del estandarte roto",introText:"El golpe fue detenido, pero no destruido. Entre cartas quemadas y juramentos rotos, los rebeldes aprendieron a copiar la fuerza de las leyendas. Ahora cada comandante enemigo carga cartas básicas, magias reforzadas, trampas más crueles y tres nombres capaces de cambiar una batalla: Richard, Mulan y Wallace.",requiresChapter:"chapter1_1",packType:"improved_magic_trap",battles:[
 {id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu kaster antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiCardsPerTurn:4,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El enemigo usa cartas básicas, tres aliados legendarios y magias/trampas reforzadas."},
 {id:"chapter2_1_battle2",num:2,title:"La arquera del paso silencioso",enemyName:"Arquera del Paso Silencioso",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La ruta de mensajeros aparece limpia, demasiado limpia. Desde las colinas, una arquera rebelde dirige disparos calculados y usa trampas reforzadas para cortar movimiento. Si dejas una unidad herida, la convertirá en una puerta abierta hacia tu kaster.",xp:28,gold:32,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:7,aiDrawBonus:1,aiHonorBonus:3,aiCardsPerTurn:5,aiStyle:"Control a distancia",desc:"Segundo combate del mapa 2.1. La IA prioriza daño, rango y remates con apoyo legendario."},
-{id:"chapter2_1_battle3",num:3,title:"El mago del eco quebrado",enemyName:"Mago del Eco Quebrado",enemyLeaderType:"mage",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"En una cámara cubierta de runas, el verdadero avance rebelde se revela: no quieren solo usurpar el trono, quieren reescribir las leyendas a su favor. El mago del eco quebrado combina hechizos baratos, trampas reforzadas y aliados legendarios para obligarte a decidir rápido o caer bajo una avalancha de conjuros.",xp:35,gold:40,cardPack:false,rewardCard:"improved_magic_trap_pack",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:8,aiDrawBonus:2,aiHonorBonus:3,aiCardsPerTurn:5,aiStyle:"Conjuros reforzados y remate",desc:"Jefe del mapa 2.1. El enemigo usa a Richard, Mulan y Wallace con magias/trampas mejoradas."}
+{id:"chapter2_1_battle3",num:3,title:"El blanco de invierno",enemyName:"Simo Häyhä",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"La nieve no cae en esta cámara, pero el silencio corta igual. Simo Häyhä espera al fondo del eco quebrado, protegido por trampas reforzadas y leyendas copiadas. Si dejas una unidad herida, su precisión la convertirá en sentencia. Al vencerlo, su carta se unirá a tu colección.",xp:35,gold:40,cardPack:false,packType:"improved_magic_trap",rewardCard:"simo_hayha",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha"],aiLevel:8,aiDrawBonus:2,aiHonorBonus:3,aiCardsPerTurn:5,aiStyle:"Francotirador de precisión",desc:"Jefe del mapa 2.1. Simo usa rango, precisión, Richard, Mulan, Wallace y magias/trampas mejoradas."}
 ]};
-const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1];
+const ADVENTURE_CHAPTER_3_1={id:"chapter3_1",number:"3.1",title:"El Tratado de la Guerra",desc:"Tras vencer a Simo, la rebelión cambia de rostro: menos fuerza bruta, más planificación. Los enemigos ahora preparan trampas, gastan Honor con mayor precisión y buscan ganar ventaja antes de atacar. Al final del capítulo espera Sun Tzu, una leyenda débil en cuerpo, pero peligrosa por estrategia.",introTitle:"3.1 El Tratado de la Guerra",introText:"El invierno del mapa 2 dejó una lección clara: los rebeldes ya no quieren solamente derrotarte, quieren estudiarte. En los campamentos capturados aparecen tablillas, mapas de rutas, formaciones falsas y notas de batalla escritas como si alguien estuviera enseñando a la rebelión a pensar. Ese alguien es Sun Tzu.",requiresChapter:"chapter2_1",packType:"improved_magic_trap",battles:[
+{id:"chapter3_1_battle1",num:1,title:"La patrulla del falso retiro",enemyName:"Guerrero del Falso Retiro",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"El primer paso del nuevo frente no es una emboscada directa. Es una retirada demasiado perfecta. Un guerrero rebelde te deja avanzar entre señales falsas, esperando que gastes tus mejores cartas antes de cerrar el camino.",xp:38,gold:42,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha"],aiLevel:9,aiDrawBonus:1,aiHonorBonus:3,aiCardsPerTurn:5,aiStyle:"Falso retiro",desc:"Primer combate del mapa 3.1. La IA usa las cuatro leyendas desbloqueadas y busca castigar avances descuidados."},
+{id:"chapter3_1_battle2",num:2,title:"La arquera de la ruta partida",enemyName:"Arquera de la Ruta Partida",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"Las rutas de suministro se dividen en tres caminos. La arquera que vigila el paso no dispara para vencer de inmediato: dispara para obligarte a moverte donde las trampas ya están esperando.",xp:42,gold:46,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha"],aiLevel:10,aiDrawBonus:1,aiHonorBonus:3,aiCardsPerTurn:5,aiStyle:"Control de rutas",desc:"Segundo combate del mapa 3.1. El enemigo presiona con rango, trampas reforzadas y remates calculados."},
+{id:"chapter3_1_battle3",num:3,title:"El maestro sin espada",enemyName:"Sun Tzu",enemyLeaderType:"mage",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"En el centro del campamento no espera un monstruo ni una muralla. Espera un hombre con mapas abiertos y una guerra escrita antes de empezar. Sun Tzu no parece el más fuerte, pero cada movimiento suyo intenta convertir tu propio impulso en una trampa. Véncelo y su carta se unirá a tu colección.",xp:50,gold:55,cardPack:false,packType:"improved_magic_trap",rewardCard:"sun_tzu",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu"],aiLevel:11,aiDrawBonus:2,aiHonorBonus:4,aiCardsPerTurn:6,aiStyle:"Estratega de Honor",desc:"Jefe del mapa 3.1. Sun Tzu es frágil, pero usa Honor extra, presión táctica y leyendas copiadas."}
+]};
+const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_CHAPTER_3_1];
 const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,ch]));
 function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 function getSelectedLeaderType(){return selectedLeaderType||localStorage.getItem("hallvalla_selected_leader")||""}
@@ -376,7 +387,7 @@ function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior"){const dec
 function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior"){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:"kaster",icon:owner===1?"👑":"🔮",portrait:data.portrait,leaderType,x,y,hp:20,maxHp:20,atk:2,guard:0,dex:0,mov:1,range:1,moved:false,acted:false,buffAtk:0}}
 function getCardEffectTextByKey(key){
   if(!key)return "";
-  const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],Object.values(ADVENTURE_SPECIALS||{}),[RICHARD_CARD,MULAN_CARD,WALLACE_CARD].filter(Boolean)];
+  const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS.filter(Boolean)];
   for(const pool of pools){
     const found=(pool||[]).find(c=>c&&c.key===key);
     if(found)return found.text||found.effectText||found.ability||"";
@@ -386,7 +397,7 @@ function getCardEffectTextByKey(key){
 function getUnitEffectText(u){return u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||""}
 function makeUnit(card,x,y){return{id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,guard:card.guard||0,dex:card.dex||0,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0,leaderType:card.leaderType||""}}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}function effectiveAtk(u){return Math.max(0,(u?.atk||0)+(u?.buffAtk||0))}function effectiveMov(u){return u?.leader?1:(u?.mov||0)}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");playMusic("home_theme_loop");renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
-const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Kaster enemigo"}if(card)card.classList.toggle("defeat",!win);if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.battle?.rewardCard==="richard_lionheart"&&award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:`${art.name} atraviesa al kaster enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
+const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Kaster enemigo"}if(card)card.classList.toggle("defeat",!win);if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. William Wallace se une a tus fuerzas como carta de recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:`${art.name} atraviesa al kaster enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
 async function createGame(){const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:null},playerLeaders:{1:leaderType,2:"mage"},playerStats:{1:{hp:20,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType),makeLeader(2,Math.floor(COLS/2),0,"mage")],log:[`Duelo creado. J1 eligió ${LEADER_DATA[leaderType].name}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
 async function joinGame(){const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerLeaders/2":leaderType,"units":units,"playerStats/2":{hp:20,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`Jugador 2 se unió con ${LEADER_DATA[leaderType].name}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,leaderType,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
 
@@ -1499,7 +1510,10 @@ function formatRewardLine(reward){
 
 function getRewardCardsForBattle(battle){
   if(!battle)return[];
+  if(battle.rewardCard==="wallace")return[{...WALLACE_CARD}];
   if(battle.rewardCard==="richard_lionheart")return[{...RICHARD_CARD}];
+  if(battle.rewardCard==="simo_hayha")return[{...SIMO_CARD}];
+  if(battle.rewardCard==="sun_tzu")return[{...SUN_TZU_CARD}];
   if(battle.rewardCard==="improved_magic_trap_pack")return IMPROVED_MAGIC_TRAP_PACK.map(c=>({...c}));
   if(battle.cardPack)return (battle.packType==="improved_magic_trap"?IMPROVED_MAGIC_TRAP_PACK:BASIC_MAGIC_TRAP_PACK).map(c=>({...c}));
   return[];
@@ -1509,7 +1523,10 @@ function getBattleRewardLabel(battle){
   const parts=[];
   if(battle.xp)parts.push(`${battle.xp} EXP`);
   if(battle.gold)parts.push(`${battle.gold} Oro`);
-  if(battle.rewardCard==="richard_lionheart")parts.push("Carta: Richard Corazón de León");
+  if(battle.rewardCard==="wallace")parts.push("Carta: William Wallace");
+  else if(battle.rewardCard==="richard_lionheart")parts.push("Carta: Richard Corazón de León");
+  else if(battle.rewardCard==="simo_hayha")parts.push("Carta: Simo Häyhä");
+  else if(battle.rewardCard==="sun_tzu")parts.push("Carta: Sun Tzu");
   else if(battle.cardPack)parts.push(battle.packType==="improved_magic_trap"?"Paquete reforzado de 5 magia/trampa":"Paquete básico de 5 magia/trampa");
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   return parts.join(" · ");
@@ -1621,6 +1638,8 @@ function removePendingPack(packId){
 function getPackCards(pack){
   if(!pack)return[];
   if(pack.rewardCard==="richard_lionheart")return[{...RICHARD_CARD}];
+  if(pack.rewardCard==="simo_hayha")return[{...SIMO_CARD}];
+  if(pack.rewardCard==="sun_tzu")return[{...SUN_TZU_CARD}];
   if(pack.type==="improved_magic_trap")return IMPROVED_MAGIC_TRAP_PACK.map(c=>({...c}));
   return BASIC_MAGIC_TRAP_PACK.map(c=>({...c}));
 }
@@ -1954,10 +1973,12 @@ function completeAdventureBattleOnce(pub){
     const xpResult=addPlayerXp(battle.xp||0);
     const profile=getPlayerProfile();
     profile.gold=(profile.gold||0)+(battle.gold||0);
+    const rewardCards=getRewardCardsForBattle(battle);
+    if(rewardCards.length)addCardsToCollection(rewardCards);
     savePlayerProfile(profile);
     renderPlayerProfile(profile);
     renderHomeProgress();
-    return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:[],battle,progress,profile,guardianUnlocked:true};
+    return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,guardianUnlocked:true};
   }
   const chapter=progress.chapters[chapterForBattle.id];
   if(chapter.completedBattles[battle.id]){
@@ -1975,7 +1996,7 @@ function completeAdventureBattleOnce(pub){
   renderPlayerProfile(profile);
 
   let rewardCards=[];
-  if(battle.rewardCard==="richard_lionheart"||battle.rewardCard==="improved_magic_trap_pack"){
+  if(battle.rewardCard){
     rewardCards=getRewardCardsForBattle(battle);
     if(rewardCards.length)addCardsToCollection(rewardCards);
   }else if(battle.cardPack){
@@ -2009,6 +2030,38 @@ function openAdventureMap(specialKey=pendingAdventureSpecial||getAdventureProgre
   showAdventureStage("adventureMapStage");
   renderAdventureMap();
 }
+function getAdventureMapTheme(chapter){
+  const major=String(chapter?.number||"1").split(".")[0]||"1";
+  const pointsByChapter={
+    chapter1_1:[{x:15,y:72},{x:29,y:32},{x:49,y:46},{x:69,y:74},{x:84,y:36}],
+    chapter2_1:[{x:20,y:68},{x:49,y:42},{x:80,y:28}],
+    chapter3_1:[{x:18,y:70},{x:42,y:38},{x:76,y:58}]
+  };
+  const defaults=(chapter?.battles||[]).map((_,i,arr)=>({x:14+((72/(Math.max(arr.length-1,1)))*i),y:i%2?36:68}));
+  const points=pointsByChapter[chapter?.id]||defaults;
+  const majorBg=major==="3"?"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp":major==="2"?"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp":"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp";
+  return {
+    key:chapter?.id||`chapter-${major}`,
+    major,
+    background:chapter?.mapBackground||majorBg,
+    accent:major==="3"?"rgba(180,120,255,.30)":major==="2"?"rgba(111,181,255,.30)":"rgba(255,209,102,.30)",
+    points
+  };
+}
+function buildAdventureMapPath(points){
+  if(!Array.isArray(points)||!points.length)return "";
+  let d=`M ${points[0].x} ${points[0].y}`;
+  for(let i=1;i<points.length;i++){
+    const prev=points[i-1],cur=points[i];
+    const midX=((prev.x+cur.x)/2).toFixed(2);
+    d+=` C ${midX} ${prev.y}, ${midX} ${cur.y}, ${cur.x} ${cur.y}`;
+  }
+  return d;
+}
+function getAdventureBattleCode(chapter,battle){
+  const major=String(chapter?.number||"1").split(".")[0]||"1";
+  return `${major}-${battle?.num||1}`;
+}
 function renderAdventureMap(){
   const progress=getAdventureProgress();
   const activeChapter=getCurrentAdventureChapter(progress);
@@ -2018,20 +2071,50 @@ function renderAdventureMap(){
   if(title)title.textContent=`${activeChapter.number} ${activeChapter.title}`;
   if(text)text.textContent=activeChapter.desc;
   const completedCount=Object.values(chapter.completedBattles||{}).filter(Boolean).length;
-  if(meta)meta.textContent=`Aliado: ${special.name} · Batallas completadas: ${completedCount}/${activeChapter.battles.length}`;
+  if(meta)meta.textContent=`Aliado: ${special.name} · Progreso del mapa: ${completedCount}/${activeChapter.battles.length} batallas`;
   if(!nodes)return;
-  nodes.innerHTML=activeChapter.battles.map(b=>{
-    const completed=!!chapter.completedBattles[b.id];
-    const unlocked=b.num<=chapter.unlockedBattle;
-    const state=completed?"completed":unlocked?"unlocked":"locked";
-    const label=completed?"Completada":unlocked?"Iniciar combate":"Bloqueada";
-    return `<button class="map-node ${state}" type="button" data-battle-id="${b.id}" ${unlocked?"":"disabled"}>
-      <span class="map-node-number">${activeChapter.number}.${b.num}</span>
-      <strong>${escapeHtml(b.title)}</strong>
-      <small>${escapeHtml(b.desc)}</small>
-      <em>${getBattleRewardLabel(b)} · ${label}</em>
-    </button>`;
-  }).join("");
+  const theme=getAdventureMapTheme(activeChapter);
+  const boss=activeChapter.battles[activeChapter.battles.length-1];
+  const pathD=buildAdventureMapPath(theme.points);
+  nodes.innerHTML=`<div class="adventure-map-visual ${escapeHtml(theme.key)}" style="--map-bg-image:url('${escapeHtml(theme.background)}');--map-accent:${escapeHtml(theme.accent)};">
+    <div class="adventure-map-topbar">
+      <div class="adventure-map-chip">Mapa ${escapeHtml(activeChapter.number)} · ${activeChapter.battles.length} batallas</div>
+      <div class="adventure-map-chip">${completedCount}/${activeChapter.battles.length} completadas</div>
+      <div class="adventure-map-chip">Jefe: ${escapeHtml(boss?.enemyName||boss?.title||"Final")}</div>
+    </div>
+    <svg class="adventure-map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path class="map-path-shadow" d="${pathD}" pathLength="100"></path>
+      <path class="map-path-main" d="${pathD}" pathLength="100"></path>
+    </svg>
+    ${(activeChapter.battles||[]).map((b,i)=>{
+      const point=theme.points[i]||{x:14+((72/(Math.max(activeChapter.battles.length-1,1)))*i),y:i%2?36:68};
+      const completed=!!chapter.completedBattles[b.id];
+      const unlocked=b.num<=chapter.unlockedBattle;
+      const state=completed?"completed":unlocked?"unlocked":"locked";
+      const label=completed?"Completada":unlocked?"Iniciar combate":"Bloqueada";
+      const reward=getBattleRewardLabel(b);
+      const bossClass=i===activeChapter.battles.length-1?" boss":"";
+      const stars=completed?"★★★":unlocked?"★☆☆":"☆☆☆";
+      return `<button class="map-node ${state}${bossClass}" type="button" data-battle-id="${b.id}" style="left:${point.x}%;top:${point.y}%;" ${unlocked?"":"disabled"} title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
+        <span class="map-node-ring"></span>
+        <span class="map-node-number">${getAdventureBattleCode(activeChapter,b)}</span>
+        <span class="map-node-title">${escapeHtml(b.enemyName||b.title)}</span>
+        <span class="map-node-status">${label}</span>
+        <span class="map-node-stars">${stars}</span>
+      </button>
+      <div class="map-node-caption ${state}${bossClass}" style="left:${point.x}%;top:${point.y}%;">
+        <strong>${escapeHtml(b.title)}</strong>
+        <small>${escapeHtml(reward)}</small>
+      </div>`;
+    }).join("")}
+    <div class="adventure-map-track" aria-hidden="true">${(activeChapter.battles||[]).map((b,i)=>`<span class="track-stop ${chapter.completedBattles&&chapter.completedBattles[b.id]?"completed":b.num<=chapter.unlockedBattle?"unlocked":"locked"}${i===activeChapter.battles.length-1?" boss":""}">${getAdventureBattleCode(activeChapter,b)}</span>`).join("")}</div>
+  </div>
+  <div class="adventure-map-legend">
+    <span><i class="legend-dot unlocked"></i> Disponible</span>
+    <span><i class="legend-dot completed"></i> Completada</span>
+    <span><i class="legend-dot boss"></i> Jefe final</span>
+    <span><i class="legend-dot locked"></i> Bloqueada</span>
+  </div>`;
   nodes.querySelectorAll(".map-node:not(.locked)").forEach(btn=>{
     btn.addEventListener("click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,btn.dataset.battleId));
   });
