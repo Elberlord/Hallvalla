@@ -2162,3 +2162,30 @@
   visibility:hidden !important;
   pointer-events:none !important;
 }
+
+
+/* PATCH 7CN - iconos/unidades del campo un poco más grandes en PC y móvil */
+.unit-card{
+  width:clamp(40px, 96%, 72px) !important;
+  height:clamp(40px, 96%, 72px) !important;
+  border-radius:11px !important;
+}
+.unit-portrait{
+  font-size:15px !important;
+}
+.unit-card.leader .unit-portrait{
+  font-size:15px !important;
+}
+@media (max-width:900px){
+  .unit-card{
+    width:clamp(36px, 96%, 62px) !important;
+    height:clamp(36px, 96%, 62px) !important;
+    border-radius:10px !important;
+  }
+  .unit-portrait{
+    font-size:14px !important;
+  }
+  .unit-card.leader .unit-portrait{
+    font-size:14px !important;
+  }
+}
