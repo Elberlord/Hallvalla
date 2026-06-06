@@ -522,7 +522,7 @@ async function maybeStartTurn(){
     });
   }finally{turnStartLock=false}
 }
-function summonZones(player){const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}function moveZones(u){if(!u||u.moved)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(getUnitAt(x,y))continue;if(dist(u,{x,y})<=effectiveMov(u))res.push(`${x},${y}`)}return res}function attackZones(u){if(!u||u.acted)return[];return(publicState.units||[]).filter(t=>t.owner!==u.owner&&dist(u,t)<=u.range).map(t=>`${t.x},${t.y}`)}function clearSelection(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();hideCardInspectModal();highlights=[];highlightType="move";render()}
+function summonZones(player){const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}function moveZones(u){if(!u||u.moved)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(getUnitAt(x,y))continue;if(dist(u,{x,y})<=effectiveMov(u))res.push(`${x},${y}`)}return res}function attackZones(u){if(!u||u.acted||!isActionPhase())return[];return(publicState.units||[]).filter(t=>t.owner!==u.owner&&dist(u,t)<=u.range).map(t=>`${t.x},${t.y}`)}function clearSelection(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();hideCardInspectModal();highlights=[];highlightType="move";render()}
 function getCardPlayState(card){
   if(!card)return{canPlay:false,reason:"Carta no disponible."};
   if(isBattleEnded())return{canPlay:false,reason:"La batalla ya terminó."};
@@ -543,6 +543,10 @@ function getPlayableCardsInHand(){
   return hand.filter(c=>getCardPlayState(c).canPlay);
 }
 function hasPlayableCardsInHand(){return getPlayableCardsInHand().length>0}
+function hasAvailableFieldMoves(player=myPlayer){
+  if(!publicState||isBattleEnded())return false;
+  return (publicState.units||[]).some(u=>u.owner===player&&!u.moved&&moveZones(u).length>0);
+}
 function canPlayCardWithSnapshot(card,honor,phase,units,player){
   if(!card)return false;
   if(!(phase==="main"||phase==="last"))return false;
@@ -730,7 +734,7 @@ async function removeCardAndPay(card){
   await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
   scheduleAutoAdvanceIfHandEmptyAfterPlay(hand,honor);
 }
-async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isUnitMovePhase())return setHint("Puedes mover unidades en Main, Action o Last Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const actionLog=`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
+async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isUnitMovePhase())return setHint("Puedes mover unidades en Main, Action o Last Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const actionLog=`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
   const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
@@ -752,7 +756,19 @@ async function advanceTurnPhase(){
   }
   if(phase==="actions"){
     handOpen=false;handManualCloseKey="";clearSelection();
-    await updatePublic({turnPhase:"last",log:[`J${myPlayer} pasa a Last Phase: puede abrir la mano manualmente si aún tiene cartas jugables.`,...(publicState.log||[])].slice(0,18)});
+    const playableCards=getPlayableCardsInHand().length;
+    const availableMoves=hasAvailableFieldMoves(myPlayer);
+    if(playableCards<=0&&!availableMoves){
+      await updatePublic({turnPhase:"end",log:[`J${myPlayer} no tiene cartas jugables ni movimientos disponibles después de Action Phase. Se salta Last Phase y termina turno.`,...(publicState.log||[])].slice(0,18)});
+      await finishTurn();
+      return;
+    }
+    const reason=playableCards>0&&availableMoves
+      ?`cartas jugables y movimientos disponibles`
+      :playableCards>0
+        ?`cartas jugables`
+        :`movimientos disponibles`;
+    await updatePublic({turnPhase:"last",log:[`J${myPlayer} pasa a Last Phase: aún tiene ${reason}.`,...(publicState.log||[])].slice(0,18)});
     return;
   }
   if(phase==="last"){
