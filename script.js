@@ -27,9 +27,9 @@ const CARD_PORTRAITS={
   sunTzu:"assets/cards/basic/mage.webp"
 };
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Unidades +2 GUARDIA y +2 VIDA."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Soldados pesados +2 VIDA y +2 GUARDIA por turno."},
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Arqueros +1 ATAQUE y +3 DESTREZA."},
-  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Magias y trampas -2 costo y +3 efecto."}
+  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Magias -2 costo y +3 efecto."}
 };
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=(typeof window!=="undefined"&&window.matchMedia?window.matchMedia("(max-width:980px)").matches:false),unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="";
 const TURN_PHASES=["draw","main","actions","last","end"];
@@ -247,8 +247,8 @@ function getAttackSoundForUnit(unit){
   if(cls==="fx-heroic"||cls==="fx-glorious"||cls==="fx-epic"||cls==="fx-mythic")return "attack_heroic";
   return "attack_slash";
 }
-const CARD_TEMPLATES=[{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.richard,cost:1,hp:4,atk:2,guard:2,dex:4,mov:2,range:1,text:"Unidad básica cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:3,atk:2,guard:1,dex:5,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:2,hp:6,atk:1,guard:4,dex:2,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:1,dex:5,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
-const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Mulan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,mov:3,range:1,special:true,text:"Ataque por la espalda: si Mulan ataca desde la espalda, obtiene +6 ATQ durante ese ataque."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,mov:2,range:1,special:true,text:"Guardia Inquebrantable: cuando su Guardia reduce el daño recibido a 0, recupera +1 Vigor."}};
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.richard,cost:3,hp:4,atk:4,guard:4,dex:4,agi:4,mov:7,range:1,text:"Unidad básica rápida y resistente. Ideal para cerrar distancia contra arqueras."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.wallace,cost:5,hp:10,atk:8,guard:2,dex:3,agi:4,mov:2,range:1,text:"Unidad básica de arma a dos manos. Mucha vida y ataque brutal, pero poca guardia y poco movimiento."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.richard,cost:1,hp:4,atk:2,guard:2,dex:4,agi:2,mov:2,range:1,text:"Unidad básica cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:3,atk:2,guard:1,dex:5,agi:3,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:2,hp:6,atk:1,guard:4,dex:2,agi:1,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:1,dex:5,agi:5,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Mulan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,agi:5,mov:3,range:1,special:true,text:"Ataque por la espalda: si Mulan ataca desde la espalda, obtiene +6 ATQ durante ese ataque."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,agi:3,mov:2,range:1,special:true,text:"Guardia Inquebrantable: cuando su Guardia reduce el daño recibido a 0, recupera +1 Vigor."}};
 const ADVENTURE_RESULT_ART={mulan:{name:"Mulan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp"},wallace:{name:"William Wallace",heroImage:"assets/story/scene_wallace_actor.webp",cardImage:"assets/story/wallace_choice.webp"}};
 
 
@@ -273,14 +273,16 @@ function validateDeckList(cards=[]){
   return{valid:errors.length===0,errors,counts};
 }
 
-const RICHARD_CARD={key:"richard_lionheart",name:"Richard Corazón de León",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.richard,cost:4,hp:6,atk:5,guard:5,dex:6,mov:3,range:1,rarity:"Gloriosa",special:true,text:"Corazón Indomable: una vez por turno, Richard puede elegir un aliado; ese aliado obtiene +5 VIDA máxima y +5 VIDA actual mientras siga en campo. Es moral de batalla, no magia."};
+const RICHARD_CARD={key:"richard_lionheart",name:"Richard Corazón de León",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.richard,cost:4,hp:6,atk:5,guard:5,dex:6,agi:3,mov:3,range:1,rarity:"Gloriosa",special:true,text:"Corazón Indomable: una vez por turno, Richard puede elegir un aliado; ese aliado obtiene +5 VIDA máxima y +5 VIDA actual mientras siga en campo. Es moral de batalla, no magia."};
 const MULAN_CARD={...ADVENTURE_SPECIALS.mulan,rarity:"Heroica",text:"Ataque por la espalda: si Mulan ataca desde la espalda, obtiene +6 ATQ durante ese ataque."};
 const WALLACE_CARD={...ADVENTURE_SPECIALS.wallace,icon:"🏴",rarity:"Heroica",text:"Guardia Inquebrantable: cuando su Guardia reduce el daño recibido a 0, recupera +1 Vigor."};
-const SIMO_CARD={key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:4,hp:4,atk:4,guard:2,dex:9,mov:2,range:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió VIDA este turno, obtiene +2 ATQ y +2 DESTREZA durante ese ataque."};
-const SUN_TZU_CARD={key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:4,hp:4,atk:2,guard:3,dex:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, puedes sumar +1 Honor/Maná temporal que solo puede usarse durante este turno."};
+const SIMO_CARD={key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:4,hp:4,atk:4,guard:2,dex:9,agi:4,mov:2,range:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió VIDA este turno, obtiene +2 ATQ y +2 DESTREZA durante ese ataque."};
+const SUN_TZU_CARD={key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:4,hp:4,atk:2,guard:3,dex:5,agi:4,mov:2,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, puedes sumar +1 Honor/Maná temporal que solo puede usarse durante este turno."};
 const LEGENDARY_ALLY_CARDS=[RICHARD_CARD,MULAN_CARD,WALLACE_CARD,SIMO_CARD,SUN_TZU_CARD];
 const CARD_VISUALS_BY_KEY={
   spearman:{portrait:CARD_PORTRAITS.richard,icon:"🛡️"},
+  cavalry:{portrait:CARD_PORTRAITS.richard,icon:"🐎"},
+  berserker:{portrait:CARD_PORTRAITS.wallace,icon:"🪓"},
   archer:{portrait:CARD_PORTRAITS.archer,icon:"🏹"},
   guardian:{portrait:CARD_PORTRAITS.paladin,icon:"🗿"},
   scout:{portrait:CARD_PORTRAITS.rogue,icon:"🐍"},
@@ -383,8 +385,34 @@ function requireLeaderSelection(force=false){
 function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=LEADER_DATA[type];const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${data.desc}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
 function applyLeaderToCard(card,leaderType){return {...card}}
 function makeCard(t,owner,leaderType){return {...t,id:uid8(),owner,leaderType}}
-function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior"){const deck=[];for(let i=0;i<60;i++)deck.push(makeCard(CARD_TEMPLATES[i%CARD_TEMPLATES.length],owner,leaderType));return shuffle(deck)}function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
-function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior"){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:"kaster",icon:owner===1?"👑":"🔮",portrait:data.portrait,leaderType,x,y,hp:20,maxHp:20,atk:2,guard:0,dex:0,mov:1,range:1,moved:false,acted:false,buffAtk:0}}
+function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior"){
+  const deck=[];
+  const units=CARD_TEMPLATES.filter(c=>c.type==="unit");
+  const tools=(typeof BASIC_MAGIC_TRAP_PACK!=="undefined"&&Array.isArray(BASIC_MAGIC_TRAP_PACK)?BASIC_MAGIC_TRAP_PACK:CARD_TEMPLATES.filter(c=>c.type==="spell"||c.type==="trap"));
+  units.forEach(card=>{for(let i=0;i<7;i++)deck.push(makeCard(card,owner,leaderType));});
+  tools.forEach(card=>{for(let i=0;i<3;i++)deck.push(makeCard(card,owner,leaderType));});
+  return shuffle(replaceBerserkersWithSpecials(deck,getSpecialDeckCardsForOwner(owner,leaderType)));
+}
+function getSpecialDeckCardsForOwner(owner,leaderType){
+  if(owner!==1)return [];
+  const saved=getSavedDeck?getSavedDeck():[];
+  const specialKeys=new Set(["mulan","wallace","richard_lionheart","simo_hayha","sun_tzu"]);
+  return (saved||[])
+    .filter(c=>specialKeys.has(c.key))
+    .slice(0,6)
+    .map(c=>makeCard(c,owner,leaderType));
+}
+function replaceBerserkersWithSpecials(deck,specials){
+  const next=[...(deck||[])];
+  for(const special of specials||[]){
+    const idx=next.findIndex(c=>c.key==="berserker");
+    if(idx>=0)next.splice(idx,1,special);
+    else next.push(special);
+  }
+  return next;
+}
+function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
+function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior"){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:"kaster",icon:owner===1?"👑":"🔮",portrait:data.portrait,leaderType,x,y,hp:20,maxHp:20,atk:2,baseGuard:0,guard:0,dex:0,agi:0,mov:1,range:1,moved:false,acted:false,buffAtk:0}}
 function getCardEffectTextByKey(key){
   if(!key)return "";
   const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS.filter(Boolean)];
@@ -395,7 +423,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||""}
-function makeUnit(card,x,y){return{id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,guard:card.guard||0,dex:card.dex||0,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0,leaderType:card.leaderType||""}}
+function makeUnit(card,x,y){const baseGuard=card.guard||0;return{id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,range:card.range,moved:false,acted:false,buffAtk:0,leaderType:card.leaderType||""}}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
@@ -409,15 +437,20 @@ function isHeavySoldierUnit(u){
     "paladin",
     "knight",
     "cavalier",
+    "cavalry",
+    "berserker",
     "richard_lionheart",
     "wallace"
   ].includes(key)
+  || name.includes("caballería")
+  || name.includes("caballeria")
   || name.includes("caballero")
   || name.includes("guardián")
   || name.includes("guardian")
   || name.includes("paladín")
   || name.includes("paladin")
   || name.includes("lancero")
+  || name.includes("berserker")
   || name.includes("wallace")
   || name.includes("richard");
 }
@@ -436,20 +469,55 @@ function isArcherUnit(u){
   || name.includes("simo");
 }
 function getLeaderBonus(u){
-  if(!u||u.leader||!hasActiveLeader(u.owner))return {atk:0,hp:0,guard:0,dex:0};
+  if(!u||u.leader||!hasActiveLeader(u.owner))return {atk:0,hp:0,guard:0,dex:0,agi:0};
   const type=getLeaderTypeForOwner(u.owner);
-  if(type==="warrior"&&isHeavySoldierUnit(u))return {atk:0,hp:2,guard:2,dex:0};
-  if(type==="archer"&&isArcherUnit(u))return {atk:1,hp:0,guard:0,dex:3};
-  return {atk:0,hp:0,guard:0,dex:0};
+  if(type==="warrior"&&isHeavySoldierUnit(u))return {atk:0,hp:2,guard:2,dex:0,agi:0};
+  if(type==="archer"&&isArcherUnit(u))return {atk:1,hp:0,guard:0,dex:3,agi:1};
+  return {atk:0,hp:0,guard:0,dex:0,agi:0};
 }
 function getMageLeaderTypeForPlayer(player){return getLeaderTypeForOwner(player)}
 function effectiveCardCost(card,player=card?.owner){return getMageLeaderTypeForPlayer(player)==="mage"&&card?.type==="spell"?Math.max(0,(card?.cost||0)-2):(card?.cost||0)}
 function effectiveCardValue(card,field){return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&typeof card?.[field]==="number"?card[field]+3:(card?.[field]||0)}
 function effectiveAtk(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.atk||0)+(u?.buffAtk||0)+(bonus.atk||0))}
-function effectiveGuard(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.guard||0)+(bonus.guard||0))}
 function effectiveDex(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.dex||0)+(bonus.dex||0))}
+function effectiveAgi(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.agi||0)+(bonus.agi||0))}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0))}
-function effectiveMov(u){return u?.leader?1:(u?.mov||0)}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");playMusic("home_theme_loop");renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function effectiveMov(u){return u?.leader?1:(u?.mov||0)}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}
+function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
+function maxTurnGuard(u){
+  if(!u)return 0;
+  const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
+  return Math.max(0,base+(getLeaderBonus(u).guard||0));
+}
+function effectiveGuard(u){return Math.max(0,u?.guard||0)}
+function restoreTurnGuardForOwner(units,owner){
+  return (units||[]).map(u=>u.owner===owner?{...u,guard:maxTurnGuard(u)}:u);
+}
+function getHitChance(attacker,defender){
+  const attackScore=effectiveDex(attacker)+effectiveAgi(attacker);
+  const defenseScore=effectiveDex(defender)+effectiveAgi(defender);
+  const diff=attackScore-defenseScore;
+  return clamp(70+(diff*5),25,95);
+}
+function rollHit(attacker,defender){
+  const chance=getHitChance(attacker,defender);
+  const roll=Math.floor(Math.random()*100)+1;
+  return {hit:roll<=chance,roll,chance};
+}
+function applyGuardDamage(defender,damage){
+  const incoming=Math.max(0,Number(damage)||0);
+  const currentGuard=Math.max(0,Number(defender.guard)||0);
+  const guardDamage=Math.min(currentGuard,incoming);
+  const remaining=incoming-guardDamage;
+  return {
+    ...defender,
+    guard:Math.max(0,currentGuard-guardDamage),
+    hp:(defender.hp||0)-remaining,
+    lastGuardLoss:guardDamage,
+    lastHpLoss:remaining
+  };
+}
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");playMusic("home_theme_loop");renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Kaster enemigo"}if(card)card.classList.toggle("defeat",!win);if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:`${art.name} atraviesa al kaster enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
 async function createGame(){const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerStats:{1:{hp:20,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType),makeLeader(2,Math.floor(COLS/2),0,"mage")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
 async function joinGame(){const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"units":units,"playerStats/2":{hp:20,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,leaderType,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
@@ -529,11 +597,12 @@ function getCardPlayState(card){
   if(!isMyTurn())return{canPlay:false,reason:"No es tu turno."};
   if(!isHandPlayPhase())return{canPlay:false,reason:`Solo puedes jugar cartas desde la mano en Main Phase o Last Phase. Fase actual: ${turnPhaseLabel()}.`};
   const honor=privateState?.honor||0;
-  if(honor<card.cost)return{canPlay:false,reason:`Necesitas ${card.cost} Honor. Tienes ${honor}.`};
+  if(honor<effectiveCardCost(card,myPlayer))return{canPlay:false,reason:`Necesitas ${effectiveCardCost(card,myPlayer)} Honor. Tienes ${honor}.`};
   if(card.type==="unit"&&summonZones(myPlayer).length===0)return{canPlay:false,reason:"No hay casillas libres junto a tu kaster."};
   if(card.spell==="damage"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer))return{canPlay:false,reason:"No hay objetivos rivales para este hechizo."};
   if(card.spell==="buff"&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para potenciar."};
   if((card.spell==="shield"||card.trap==="guard")&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para proteger."};
+  if(card.spell==="heal"&&!(publicState.units||[]).some(u=>u.owner===myPlayer&&u.hp<effectiveMaxHp(u)))return{canPlay:false,reason:"No hay unidades aliadas heridas para sanar."};
   if(card.trap==="slow"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer&&!u.leader))return{canPlay:false,reason:"No hay invocaciones rivales válidas para esta trampa."};
   return{canPlay:true,reason:"Lista para jugar."};
 }
@@ -550,7 +619,7 @@ function hasAvailableFieldMoves(player=myPlayer){
 function canPlayCardWithSnapshot(card,honor,phase,units,player){
   if(!card)return false;
   if(!(phase==="main"||phase==="last"))return false;
-  if((honor||0)<(card.cost||0))return false;
+  if((honor||0)<(typeof effectiveCardCost==="function"?effectiveCardCost(card,player):(card.cost||0)))return false;
   const unitsList=units||[];
   const unitAt=(x,y)=>unitsList.find(u=>u.x===x&&u.y===y);
   const leader=unitsList.find(u=>u.owner===player&&u.leader);
@@ -566,6 +635,7 @@ function canPlayCardWithSnapshot(card,honor,phase,units,player){
   if(card.spell==="damage")return unitsList.some(u=>u.owner!==player);
   if(card.spell==="buff")return unitsList.some(u=>u.owner===player);
   if(card.spell==="shield"||card.trap==="guard")return unitsList.some(u=>u.owner===player);
+  if(card.spell==="heal")return unitsList.some(u=>u.owner===player&&u.hp<((typeof effectiveMaxHp==="function"?effectiveMaxHp(u):(u.maxHp||u.hp||0))));
   if(card.trap==="slow")return unitsList.some(u=>u.owner!==player&&!u.leader);
   return true;
 }
@@ -632,12 +702,13 @@ function syncHandAutoClose(){
 }
 function cardInspectStats(card){
   const base=[["Costo",card.cost??0]];
-  if(card.type==="unit")base.push(["AT",card.atk||0],["HP",card.hp||0],["GD",card.guard||0],["DX",card.dex||0],["MV",card.mov||0],["RG",card.range||0]);
+  if(card.type==="unit")base.push(["AT",card.atk||0],["HP",card.hp||0],["GD",card.guard||0],["DX",card.dex||0],["AGI",card.agi||0],["MV",card.mov||0],["RG",card.range||0]);
   else{
     if(card.damage)base.push(["Daño",card.damage]);
     if(card.buff)base.push(["AT +",card.buff]);
     if(card.guard)base.push(["GD +",card.guard]);
     if(card.slow)base.push(["MV -",card.slow]);
+    if(card.heal)base.push(["Heal",card.heal]);
   }
   return base;
 }
@@ -647,10 +718,12 @@ function statHelpText(label){
   if(key==="at"||key==="ataque"||key==="at+")return "Ataque: daño base que causa cuando golpea o cuando recibe un aumento de poder.";
   if(key==="hp"||key==="vida")return "Vida: resistencia de la unidad; si llega a 0, sale del campo.";
   if(key==="gd"||key==="guardia"||key==="gd+")return "Guardia: protección que reduce o absorbe daño antes de perder vida.";
-  if(key==="dx"||key==="destreza")return "Destreza: agilidad/técnica usada para precisión, evasión o efectos de habilidad.";
+  if(key==="dx"||key==="destreza")return "Destreza: técnica y precisión usada para calcular si un ataque acierta.";
+  if(key==="agi"||key==="agilidad")return "Agilidad: suma en ataque y defensa para calcular si un golpe acierta o se evade.";
   if(key==="mv"||key==="mov"||key==="movimiento"||key==="mv-"||key==="mov-")return "Movimiento: cantidad de casillas que puede avanzar al usar MOV.";
   if(key==="rg"||key==="rango")return "Rango: distancia máxima desde la que puede atacar.";
   if(key==="daño")return "Daño: vida que pierde el objetivo al resolverse esta carta.";
+  if(key==="heal"||key==="curación"||key==="curacion")return "Curación: HP que recupera el objetivo sin superar su vida máxima.";
   return "Valor de juego de esta carta.";
 }
 function statHelpHtml(stats){
@@ -671,7 +744,7 @@ function cardRuleHelpHtml(card){
   return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}</div>`;
 }
 function unitRuleHelpHtml(u){
-  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
+  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
   let lines=statHelpHtml(stats);
   const effectText=getUnitEffectText(u);
   if(effectText)lines+=`<div class="stat-help-line"><b>Destreza/Efecto</b>: ${escapeHtml(effectText)}</div>`;
@@ -720,12 +793,12 @@ function playInspectedCard(){
   tryPlaySound("card_play",.70);
   selectCard(card);
 }
-function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu kaster para kastear.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"||card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}render()}
+function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu kaster para kastear.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"||card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer&&u.hp<effectiveMaxHp(u)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada herida para curar ${effectiveCardValue(card,"heal")} HP.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}render()}
 function selectUnit(u){
   if(!u)return;
   return openUnitContextMenu(u,u.x,u.y);
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");units.push(makeUnit(card,x,y));await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updateUnits(units);await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,mov:Math.max(0,(u.mov||0)-effectiveCardValue(card,"slow"))}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} activa ${card.name}: ${target.name} pierde ${effectiveCardValue(card,"slow")} MOV.`)}clearSelection()}
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");units.push(makeUnit(card,x,y));await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updateUnits(units);await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);units=units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida.");if(target.hp>=effectiveMaxHp(target))return setHint("Esa unidad ya tiene la vida completa.");tryPlaySound("spell_cast",.66);const healAmount=effectiveCardValue(card,"heal");units=units.map(u=>u.id===target.id?{...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} cura ${healAmount} HP.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,mov:Math.max(0,(u.mov||0)-effectiveCardValue(card,"slow"))}:u);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} activa ${card.name}: ${target.name} pierde ${effectiveCardValue(card,"slow")} MOV.`)}clearSelection()}
 async function removeCardAndPay(card){
   const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
   const honor=(privateState.honor||0)-(card.cost||0);
@@ -734,13 +807,14 @@ async function removeCardAndPay(card){
   await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
   scheduleAutoAdvanceIfHandEmptyAfterPlay(hand,honor);
 }
-async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isUnitMovePhase())return setHint("Puedes mover unidades en Main, Action o Last Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const actionLog=`${a.name} ataca a ${d.name} e inflige ${effectiveAtk(a)} daño.`;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id)return{...u,hp:u.hp-effectiveAtk(a)};return u}).filter(u=>u.hp>0);await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
+async function moveUnit(u,x,y){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isUnitMovePhase())return setHint("Puedes mover unidades en Main, Action o Last Phase.");if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");const units=(publicState.units||[]).map(it=>it.id===u.id?{...it,x,y,moved:true}:it);await updateUnits(units);await pushLog(`${u.name} se mueve a ${x+1},${y+1}.`);clearSelection()}async function attackUnit(a,d){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");const hit=rollHit(a,d);let guardLoss=0,hpLoss=0;let units=(publicState.units||[]).map(u=>{if(u.id===a.id)return{...u,acted:true};if(u.id===d.id){if(!hit.hit)return u;const damaged=applyGuardDamage(u,effectiveAtk(a));guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;delete damaged.lastGuardLoss;delete damaged.lastHpLoss;return damaged;}return u}).filter(u=>u.hp>0);const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}). ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).`;await updateUnits(units);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog);clearSelection()}async function finishTurn(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
   const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
+  const refreshedUnits=restoreTurnGuardForOwner(publicState.units||[],next);
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,log:[`J${myPlayer} End Phase: termina turno. Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({units:refreshedUnits,currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,log:[`J${myPlayer} End Phase: termina turno. Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
 }
@@ -832,7 +906,7 @@ async function adventureEnemyTurn(){
   const honorGain=(pub.turn||1)>=3?2:1;
   const maxHonor=(ai.maxHonor||0)+honorGain;
   let honor=maxHonor+(pub.adventureAiHonorBonus||0);
-  let units=(pub.units||[]).map(u=>u.owner===2?{...u,moved:false,acted:false,buffAtk:0}:u);
+  let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?{...u,moved:false,acted:false,buffAtk:0}:u);
 
   const d=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
   const at=(x,y)=>units.find(u=>u.x===x&&u.y===y);
@@ -870,7 +944,7 @@ async function adventureEnemyTurn(){
     const target=bestAttackTarget(attacker);
     if(!target)return false;
     const damage=effectiveAtk(attacker);
-    target.hp-=damage;
+    const hit=rollHit(attacker,target);if(hit.hit){Object.assign(target,applyGuardDamage(target,damage));}else{attacker.acted=true;logs.push(`${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).`);return true;}
     attacker.acted=true;
     logs.push(`Rival: ${attacker.name} ataca a ${target.name} e inflige ${damage} daño.`);
     killDead();
@@ -945,6 +1019,19 @@ async function adventureEnemyTurn(){
     return options.sort((a,b)=>b.score-a.score)[0]||null;
   };
 
+  const chooseBestHeal=()=>{
+    const options=[];
+    for(const card of hand.filter(c=>c.spell==="heal"&&effectiveCardCost(c,2)<=honor)){
+      for(const ally of living(2).filter(u=>u.owner===2&&u.hp<effectiveMaxHp(u))){
+        const missing=Math.max(0,effectiveMaxHp(ally)-(ally.hp||0));
+        let score=Math.min(missing,effectiveCardValue(card,"heal"))*22+(ally.atk||0)*3+(ally.key==="wallace"?25:0);
+        if(missing>=2)score+=35;
+        options.push({card,ally,score});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+
   const chooseBestSlow=()=>{
     const options=[];
     for(const card of hand.filter(c=>c.trap==="slow"&&effectiveCardCost(c,2)<=honor)){
@@ -1003,7 +1090,7 @@ async function adventureEnemyTurn(){
   const playDamageSpell=(choice)=>{
     if(!choice?.card||!choice?.target)return false;
     choice.target.hp-=effectiveCardValue(choice.card,"damage");
-    honor-=choice.card.cost||0;
+    honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     logs.push(`Rival usa ${choice.card.name}: ${choice.target.name} recibe ${choice.card.damage||0} daño.`);
     killDead();
@@ -1013,7 +1100,7 @@ async function adventureEnemyTurn(){
   const playSummon=(choice)=>{
     if(!choice?.card||!choice?.cell)return false;
     units.push(makeUnit(choice.card,choice.cell.x,choice.cell.y));
-    honor-=choice.card.cost||0;
+    honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     logs.push(`Rival kastea ${choice.card.name} en ${choice.cell.x+1},${choice.cell.y+1}.`);
     return true;
@@ -1022,7 +1109,7 @@ async function adventureEnemyTurn(){
   const playBuff=(choice)=>{
     if(!choice?.card||!choice?.ally)return false;
     choice.ally.buffAtk=(choice.ally.buffAtk||0)+effectiveCardValue(choice.card,"buff");
-    honor-=choice.card.cost||0;
+    honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     logs.push(`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${choice.card.buff||0} AT este turno.`);
     return true;
@@ -1031,16 +1118,26 @@ async function adventureEnemyTurn(){
   const playGuard=(choice)=>{
     if(!choice?.card||!choice?.ally)return false;
     choice.ally.guard=(choice.ally.guard||0)+effectiveCardValue(choice.card,"guard");
-    honor-=choice.card.cost||0;
+    honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     logs.push(`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${choice.card.guard||0} GUARDIA.`);
+    return true;
+  };
+
+  const playHeal=(choice)=>{
+    if(!choice?.card||!choice?.ally)return false;
+    const healAmount=effectiveCardValue(choice.card,"heal");
+    choice.ally.hp=Math.min(effectiveMaxHp(choice.ally),(choice.ally.hp||0)+healAmount);
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    logs.push(`Rival usa ${choice.card.name}: ${choice.ally.name} cura ${healAmount} HP.`);
     return true;
   };
 
   const playSlow=(choice)=>{
     if(!choice?.card||!choice?.target)return false;
     choice.target.mov=Math.max(0,(choice.target.mov||0)-effectiveCardValue(choice.card,"slow"));
-    honor-=choice.card.cost||0;
+    honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     logs.push(`Rival activa ${choice.card.name}: ${choice.target.name} pierde ${choice.card.slow||0} MOV.`);
     return true;
@@ -1067,11 +1164,15 @@ async function adventureEnemyTurn(){
       if(buffChoice&&buffChoice.score>=130){
         acted=playBuff(buffChoice);
       }else{
-        const guardChoice=chooseBestGuard();
-        if(guardChoice&&guardChoice.score>=115){
-          acted=playGuard(guardChoice);
+        const healChoice=chooseBestHeal();
+        if(healChoice&&healChoice.score>=95){
+          acted=playHeal(healChoice);
         }else{
-          const slowChoice=chooseBestSlow();
+          const guardChoice=chooseBestGuard();
+          if(guardChoice&&guardChoice.score>=115){
+            acted=playGuard(guardChoice);
+          }else{
+            const slowChoice=chooseBestSlow();
           if(slowChoice&&slowChoice.score>=110){
             acted=playSlow(slowChoice);
           }else{
@@ -1165,7 +1266,7 @@ async function adventureEnemyTurn(){
   const nextTurn=(pub.turn||1)+1;
   const finalLogs=[...logs,`Rival termina turno. Ahora juega J1.`,...(pub.log||[])].slice(0,18);
   await update(ref(db,`games/${gameId}/public`),{
-    units,
+    units:restoreTurnGuardForOwner(units,1),
     currentPlayer:1,
     turnPhase:"draw",
     adventureAiState:nextAiState,
@@ -1209,7 +1310,7 @@ function showUnit(u){
   $("inspectTitle").textContent=u.name;
   $("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
-  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
+  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
   $("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></div>`).join("");
   const ownerLabel=u.owner===myPlayer?"Tu unidad":"Unidad rival";
   $("inspectText").innerHTML=(u.leader
@@ -1408,13 +1509,13 @@ function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const ha
 function renderLog(){const el=$("log");if(!el)return;el.classList.toggle("log-collapsed",!!logCollapsed);el.setAttribute("aria-hidden",String(!!logCollapsed));el.innerHTML=logCollapsed?"":(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}
 function renderDetail(){
   const isAdventure=publicState?.mode==="adventure";
-  if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><p>Costo: ${selectedCard.cost}</p><p>${selectedCard.text}</p>`;return}
+  if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p>${selectedCard.type==="unit"?`<p>Costo: ${selectedCard.cost} · AT ${selectedCard.atk||0} · HP ${selectedCard.hp||0} · GD ${selectedCard.guard||0} · DX ${selectedCard.dex||0} · AGI ${selectedCard.agi||0} · MV ${selectedCard.mov||0} · RG ${selectedCard.range||0}</p>`:`<p>Costo: ${selectedCard.cost}</p>`}<p>${selectedCard.text}</p>`;return}
   if(selectedUnitId){
     const u=getUnit(selectedUnitId);
-    if(u){const fx=getUnitEffectText(u);$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}`;return}
+    if(u){const fx=getUnitEffectText(u);$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}`;return}
   }
   const modeLine=isAdventure?`<p><b>Modo:</b> Aventura contra IA</p><p><b>Batalla:</b> ${escapeHtml(publicState?.adventureBattleTitle||"Aventura")}</p>`:`<p><b>Jugador:</b> ${myPlayer||"?"}</p><p><b>Código:</b> ${gameId||"..."}</p><p><b>Modo:</b> Online</p>`;
-  $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: unidades +2 GD/+2 VIDA. Arquero: unidades +3 AT/+3 DX. Hechicero: magias/trampas -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
+  $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: soldados pesados/caballería +2 GD/+2 VIDA. Arquero: arqueros +1 AT/+3 DX/+1 AGI. Hechicero: magias -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 
@@ -1542,7 +1643,8 @@ const BASIC_MAGIC_TRAP_PACK = [
   {key:"pharaoh_blessing_basic",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},
   {key:"dust_guard_basic",name:"Guardia de polvo",type:"spell",icon:"🛡️",cost:1,spell:"shield",guard:2,text:"+2 GUARDIA a una unidad aliada hasta el final del turno."},
   {key:"snare_trap_basic",name:"Trampa de lazo",type:"trap",icon:"🪤",cost:1,trap:"slow",slow:1,text:"Cuando un enemigo se mueva, reduce su MOV en 1 durante este turno."},
-  {key:"warning_rune_basic",name:"Runa de advertencia",type:"trap",icon:"◆",cost:1,trap:"guard",guard:1,text:"Cuando una unidad aliada sea atacada, obtiene +1 GUARDIA durante ese combate."}
+  {key:"warning_rune_basic",name:"Runa de advertencia",type:"trap",icon:"◆",cost:1,trap:"guard",guard:1,text:"Cuando una unidad aliada sea atacada, obtiene +1 GUARDIA durante ese combate."},
+  {key:"healing_light_basic",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}
 ];
 
 function getPlayerCollection(){

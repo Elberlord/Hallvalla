@@ -2189,3 +2189,10 @@
     font-size:14px !important;
   }
 }
+
+
+/* PATCH 7CQ - AGI añadida como stat visible */
+.unit-detail-stats,
+.detail{
+  word-spacing:.5px;
+}
