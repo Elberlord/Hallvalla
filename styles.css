@@ -2068,3 +2068,97 @@
   .map-node{width:72px;min-height:72px}
   .map-node-number{padding-top:20px;font-size:20px}
 }
+
+
+/* PATCH 7CJ - controles de batalla arriba al centro para no tapar el campo */
+.battle-menu,
+.battle-controls,
+.duel-controls,
+.combat-controls,
+#battleMenu,
+#battleControls,
+#battleMenuBtn,
+#battleToggleSoundBtn,
+#battleResetBtn,
+#battleLeaveBtn{
+  z-index:80;
+}
+
+/* Botones flotantes individuales: engranaje/menu y sonido/control */
+#battleMenuBtn,
+#battleToggleSoundBtn{
+  position:fixed !important;
+  top:12px !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translateX(-50%) !important;
+  width:42px !important;
+  height:42px !important;
+  min-width:42px !important;
+  min-height:42px !important;
+  border-radius:999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(18,13,10,.78) !important;
+  border:1px solid rgba(255,209,102,.38) !important;
+  color:#fff1c4 !important;
+  box-shadow:0 8px 24px rgba(0,0,0,.34), inset 0 0 16px rgba(255,209,102,.06) !important;
+  backdrop-filter:blur(7px) !important;
+}
+
+/* Separación entre ambos botones al centro */
+#battleMenuBtn{
+  margin-left:-28px !important;
+}
+#battleToggleSoundBtn{
+  margin-left:28px !important;
+}
+
+/* Si el menú desplegable usa panel propio, también lo mandamos arriba-centro */
+#battleMenuPanel,
+.battle-menu-panel,
+.battle-menu-popover{
+  position:fixed !important;
+  top:62px !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translateX(-50%) !important;
+  z-index:90 !important;
+  max-width:min(92vw,360px) !important;
+}
+
+/* En móviles los controles quedan un poco más arriba y compactos */
+@media (max-width:900px){
+  #battleMenuBtn,
+  #battleToggleSoundBtn{
+    top:8px !important;
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    min-height:38px !important;
+  }
+  #battleMenuBtn{margin-left:-24px !important;}
+  #battleToggleSoundBtn{margin-left:24px !important;}
+  #battleMenuPanel,
+  .battle-menu-panel,
+  .battle-menu-popover{
+    top:54px !important;
+  }
+}
+
+
+/* PATCH 7CK - ocultar log visual innecesario de batalla */
+#log,
+#battleLog,
+.battle-log,
+.combat-log,
+.duel-log,
+.log-panel,
+.battle-log-panel{
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}

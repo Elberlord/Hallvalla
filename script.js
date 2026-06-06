@@ -28,7 +28,7 @@ const CARD_PORTRAITS={
 };
 const LEADER_DATA={
   warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Unidades +2 GUARDIA y +2 VIDA."},
-  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Unidades +3 ATAQUE y +3 DESTREZA."},
+  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Arqueros +1 ATAQUE y +3 DESTREZA."},
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Magias y trampas -2 costo y +3 efecto."}
 };
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=(typeof window!=="undefined"&&window.matchMedia?window.matchMedia("(max-width:980px)").matches:false),unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="";
@@ -399,16 +399,52 @@ function makeUnit(card,x,y){return{id:uid8(),owner:card.owner,leader:false,type:
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
+function isHeavySoldierUnit(u){
+  if(!u||u.leader)return false;
+  const key=String(u.key||"").toLowerCase();
+  const name=String(u.name||"").toLowerCase();
+  return [
+    "spearman",
+    "guardian",
+    "paladin",
+    "knight",
+    "cavalier",
+    "richard_lionheart",
+    "wallace"
+  ].includes(key)
+  || name.includes("caballero")
+  || name.includes("guardián")
+  || name.includes("guardian")
+  || name.includes("paladín")
+  || name.includes("paladin")
+  || name.includes("lancero")
+  || name.includes("wallace")
+  || name.includes("richard");
+}
+function isArcherUnit(u){
+  if(!u||u.leader)return false;
+  const key=String(u.key||"").toLowerCase();
+  const name=String(u.name||"").toLowerCase();
+  return [
+    "archer",
+    "simo",
+    "simo_hayha"
+  ].includes(key)
+  || name.includes("arquera")
+  || name.includes("arquero")
+  || name.includes("archer")
+  || name.includes("simo");
+}
 function getLeaderBonus(u){
   if(!u||u.leader||!hasActiveLeader(u.owner))return {atk:0,hp:0,guard:0,dex:0};
   const type=getLeaderTypeForOwner(u.owner);
-  if(type==="warrior")return {atk:0,hp:2,guard:2,dex:0};
-  if(type==="archer")return {atk:3,hp:0,guard:0,dex:3};
+  if(type==="warrior"&&isHeavySoldierUnit(u))return {atk:0,hp:2,guard:2,dex:0};
+  if(type==="archer"&&isArcherUnit(u))return {atk:1,hp:0,guard:0,dex:3};
   return {atk:0,hp:0,guard:0,dex:0};
 }
 function getMageLeaderTypeForPlayer(player){return getLeaderTypeForOwner(player)}
-function effectiveCardCost(card,player=card?.owner){return getMageLeaderTypeForPlayer(player)==="mage"&&(card?.type==="spell"||card?.type==="trap")?Math.max(0,(card?.cost||0)-2):(card?.cost||0)}
-function effectiveCardValue(card,field){return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&(card?.type==="spell"||card?.type==="trap")&&typeof card?.[field]==="number"?card[field]+3:(card?.[field]||0)}
+function effectiveCardCost(card,player=card?.owner){return getMageLeaderTypeForPlayer(player)==="mage"&&card?.type==="spell"?Math.max(0,(card?.cost||0)-2):(card?.cost||0)}
+function effectiveCardValue(card,field){return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&typeof card?.[field]==="number"?card[field]+3:(card?.[field]||0)}
 function effectiveAtk(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.atk||0)+(u?.buffAtk||0)+(bonus.atk||0))}
 function effectiveGuard(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.guard||0)+(bonus.guard||0))}
 function effectiveDex(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.dex||0)+(bonus.dex||0))}
@@ -2139,12 +2175,12 @@ function getAdventureMapTheme(chapter){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
   const pointsByChapter={
     chapter1_1:[{x:15,y:69},{x:27,y:43},{x:46,y:43},{x:64,y:61},{x:84,y:36}],
-    chapter2_1:[{x:20,y:68},{x:49,y:42},{x:80,y:28}],
-    chapter3_1:[{x:18,y:70},{x:42,y:38},{x:76,y:58}]
+    chapter2_1:[{x:18,y:72},{x:50,y:49},{x:82,y:22}],
+    chapter3_1:[{x:18,y:68},{x:45,y:31},{x:79,y:26}]
   };
   const defaults=(chapter?.battles||[]).map((_,i,arr)=>({x:14+((72/(Math.max(arr.length-1,1)))*i),y:i%2?36:68}));
   const points=pointsByChapter[chapter?.id]||defaults;
-  const majorBg=chapter?.id==="chapter1_1"?"assets/story/map_hallvalla_chapter_1_1.webp":major==="3"?"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp":major==="2"?"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp":"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp";
+  const majorBg=chapter?.id==="chapter1_1"?"assets/story/map_hallvalla_chapter_1_1.webp":chapter?.id==="chapter2_1"?"assets/story/map_hallvalla_chapter_2_1.webp":chapter?.id==="chapter3_1"?"assets/story/map_hallvalla_chapter_3_1.webp":major==="3"?"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp":major==="2"?"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp":"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp";
   return {
     key:chapter?.id||`chapter-${major}`,
     major,
