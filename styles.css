@@ -2266,3 +2266,114 @@
   color:#fff1c4;
   border:1px solid rgba(255,209,102,.24);
 }
+
+
+/* === v7DC First Duel Stats Tutorial === */
+.stats-tutorial-modal{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:radial-gradient(circle at center,rgba(72,38,14,.82),rgba(0,0,0,.78) 62%,rgba(0,0,0,.90));
+}
+.stats-tutorial-modal.hidden{display:none!important}
+.stats-tutorial-card{
+  width:min(860px,96vw);
+  max-height:92svh;
+  overflow:auto;
+  padding:18px;
+  border-radius:26px;
+  background:linear-gradient(180deg,rgba(34,22,14,.98),rgba(7,6,5,.98));
+  border:1px solid rgba(255,209,102,.38);
+  box-shadow:0 30px 90px rgba(0,0,0,.78), inset 0 1px 0 rgba(255,235,180,.10);
+}
+.stats-tutorial-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:8px;
+}
+.stats-tutorial-kicker{
+  color:#ffd166;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  font-size:11px;
+}
+.stats-tutorial-head h2{
+  margin:3px 0 0;
+  font-family:Georgia,serif;
+  color:#fff1c4;
+  font-size:clamp(26px,4vw,42px);
+}
+.stats-tutorial-x{
+  width:38px;
+  height:38px;
+  border-radius:999px;
+  border:1px solid rgba(255,209,102,.28);
+  background:rgba(0,0,0,.36);
+  color:#fff1c4;
+  font-size:28px;
+  line-height:1;
+  cursor:pointer;
+}
+.stats-tutorial-intro{
+  color:#e6d0a9;
+  line-height:1.42;
+  margin:8px 0 14px;
+}
+.stats-tutorial-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.stats-tutorial-stat{
+  padding:12px;
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.18));
+  border:1px solid rgba(255,209,102,.18);
+}
+.stats-tutorial-stat b{
+  display:block;
+  color:#ffd166;
+  font-family:Georgia,serif;
+  font-size:16px;
+  margin-bottom:4px;
+}
+.stats-tutorial-stat span{
+  display:block;
+  color:#e7d4b2;
+  font-size:13px;
+  line-height:1.35;
+}
+.stats-tutorial-leaders{
+  margin-top:12px;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(255,209,102,.10);
+  border:1px solid rgba(255,209,102,.28);
+}
+.stats-tutorial-leaders b{
+  display:block;
+  color:#fff1c4;
+  margin-bottom:4px;
+}
+.stats-tutorial-leaders span{
+  color:#e7d4b2;
+  line-height:1.35;
+}
+.stats-tutorial-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+@media(max-width:680px){
+  .stats-tutorial-grid{grid-template-columns:1fr}
+  .stats-tutorial-actions .btn{width:100%}
+}

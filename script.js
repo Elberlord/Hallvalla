@@ -209,6 +209,7 @@ const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_pending_packs",
   "hallvalla_adventure_progress"
 ];
+const HALLVALLA_STATS_TUTORIAL_KEY="hallvalla_stats_tutorial_seen_v1";
 function clearHallVallaRewardFlags(){
   try{
     Object.keys(localStorage)
@@ -397,7 +398,7 @@ const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_
 const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,ch]));
 function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 function getSelectedLeaderType(){return selectedLeaderType||localStorage.getItem("hallvalla_selected_leader")||""}
-async function loadLeaderProfile(){
+async function loadLeaderProfile(forcePrompt=false){
   leaderProfileLoaded=false;
   const cached=localStorage.getItem("hallvalla_selected_leader")||"";
   selectedLeaderType=LEADER_DATA[cached]?cached:"";
@@ -423,7 +424,7 @@ async function loadLeaderProfile(){
   if(getSelectedLeaderType()){
     const overlay=$("leaderSelectOverlay");
     if(overlay)overlay.classList.add("hidden");
-  }else{
+  }else if(forcePrompt){
     requireLeaderSelection(true);
   }
 }
@@ -441,7 +442,8 @@ async function setSelectedLeaderType(type){
 
   const nextAction=pendingAfterLeaderSelection;
   pendingAfterLeaderSelection="";
-  if(nextAction==="adventure")openAdventureStory();
+  if(nextAction==="adventure")runFirstTimeTutorialBefore(openAdventureStory);
+  if(nextAction==="online")runFirstTimeTutorialBefore(openOnlineLobby);
 }
 function requireLeaderSelection(force=false){
   if((force||leaderProfileLoaded)&&!getSelectedLeaderType()){
@@ -1611,6 +1613,77 @@ function hvDialog(message,{title="Información",confirmText="Aceptar",cancelText
 function hvAlert(message,title="Información"){return hvDialog(message,{title,confirmText:"Aceptar"});}
 function hvConfirm(message,title="Confirmar",confirmText="Aceptar",cancelText="Cancelar",danger=false){return hvDialog(message,{title,confirmText,cancelText,showCancel:true,danger});}
 
+function markStatsTutorialSeen(){
+  try{localStorage.setItem(HALLVALLA_STATS_TUTORIAL_KEY,"true");}catch(e){}
+}
+function hasSeenStatsTutorial(){
+  try{return localStorage.getItem(HALLVALLA_STATS_TUTORIAL_KEY)==="true";}catch(e){return false;}
+}
+function ensureStatsTutorialModal(){
+  let modal=$("statsTutorialModal");
+  if(modal)return modal;
+  modal=document.createElement("div");
+  modal.id="statsTutorialModal";
+  modal.className="stats-tutorial-modal hidden";
+  modal.innerHTML=`
+    <div class="stats-tutorial-card">
+      <div class="stats-tutorial-head">
+        <div>
+          <div class="stats-tutorial-kicker">Mini tutorial</div>
+          <h2>Stats básicos de HallValla</h2>
+        </div>
+        <button id="statsTutorialCloseX" class="stats-tutorial-x" type="button" aria-label="Cerrar tutorial">×</button>
+      </div>
+      <p class="stats-tutorial-intro">Antes del primer duelo, aprende qué significa cada número. No necesitas memorizarlo todo: piensa en esto como tu brújula de batalla.</p>
+      <div class="stats-tutorial-grid">
+        <div class="stats-tutorial-stat"><b>HP / Vida</b><span>Cuánto daño puede resistir la unidad antes de caer.</span></div>
+        <div class="stats-tutorial-stat"><b>AT / Ataque</b><span>Daño base que causa al atacar. Más AT significa golpes más fuertes.</span></div>
+        <div class="stats-tutorial-stat"><b>GD / Guardia</b><span>Reduce el daño recibido. Ideal para aguantar la línea frontal.</span></div>
+        <div class="stats-tutorial-stat"><b>DX / Destreza</b><span>Representa precisión y calidad del ataque. Las arqueras dependen mucho de esto.</span></div>
+        <div class="stats-tutorial-stat"><b>AGI / Agilidad</b><span>Velocidad táctica de la unidad. Ayuda a unidades rápidas y evasivas.</span></div>
+        <div class="stats-tutorial-stat"><b>MV / Movimiento</b><span>Cuántas casillas puede moverse una unidad durante su acción.</span></div>
+        <div class="stats-tutorial-stat"><b>RG / Rango</b><span>Distancia máxima de ataque. Rango 1 es cuerpo a cuerpo.</span></div>
+        <div class="stats-tutorial-stat"><b>Costo / Honor</b><span>Honor necesario para jugar cartas. El Honor crece durante la partida.</span></div>
+      </div>
+      <div class="stats-tutorial-leaders">
+        <b>Recuerda los líderes</b>
+        <span>Guerrero mejora solo infantería pesada. Arquero mejora solo arqueras. Hechicero mejora solo magias.</span>
+      </div>
+      <div class="stats-tutorial-actions">
+        <button id="statsTutorialLaterBtn" class="btn ghost" type="button">Ver luego</button>
+        <button id="statsTutorialOkBtn" class="btn primary" type="button">Entendido, continuar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  return modal;
+}
+function showStatsTutorial({force=false,onDone=null}={}){
+  return new Promise(resolve=>{
+    if(!force&&hasSeenStatsTutorial()){
+      if(typeof onDone==="function")onDone();
+      resolve(false);
+      return;
+    }
+    const modal=ensureStatsTutorialModal();
+    const finish=(seen)=>{
+      modal.classList.add("hidden");
+      if(seen)markStatsTutorialSeen();
+      if(typeof onDone==="function")onDone();
+      resolve(seen);
+    };
+    const ok=$("statsTutorialOkBtn");
+    const later=$("statsTutorialLaterBtn");
+    const x=$("statsTutorialCloseX");
+    if(ok)ok.onclick=()=>finish(true);
+    if(later)later.onclick=()=>finish(false);
+    if(x)x.onclick=()=>finish(false);
+    modal.classList.remove("hidden");
+  });
+}
+function runFirstTimeTutorialBefore(action){
+  return showStatsTutorial({force:false,onDone:action});
+}
+
 function openBattleMenu(){const panel=$("battleMenuPanel");if(panel){panel.classList.remove("hidden");renderBattleChrome();}}
 function closeBattleMenu(){const panel=$("battleMenuPanel");if(panel)panel.classList.add("hidden");}
 function toggleBattleActions(){actionsCollapsed=!actionsCollapsed;renderBattleChrome();}
@@ -2568,10 +2641,18 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   const introConflict=introChapter.id===ADVENTURE_CHAPTER_2_1.id?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas.":"Los rebeldes intentan usurpar el trono y crear un golpe de estado.";
   $("adventureGuardianText").textContent=`${battle.enemyIntro||battle.desc}\n\n${introConflict} Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.\n\nIA enemiga: nivel ${battle.aiLevel||1} · ${battle.aiStyle||"Básica"}\nRecompensa al ganar: ${getBattleRewardLabel(battle)}.`;
 }
-function showOnlineLobby(){
+function openOnlineLobby(){
   $("mainMenu").classList.add("hidden");
   $("onlineLobby").classList.remove("hidden");
   $("gameShell").classList.add("hidden");
+}
+function showOnlineLobby(){
+  if(!getSelectedLeaderType()){
+    pendingAfterLeaderSelection="online";
+    requireLeaderSelection(true);
+    return;
+  }
+  runFirstTimeTutorialBefore(openOnlineLobby);
 }
 function backToMainMenu(){
   leaveCurrentGame();
@@ -2591,7 +2672,7 @@ function handleAdventureHomeClick(ev){
     requireLeaderSelection(true);
     return;
   }
-  openAdventureStory();
+  runFirstTimeTutorialBefore(openAdventureStory);
 }
 on("adventureBtn","click",handleAdventureHomeClick);
 on("closeAdventureBtn","click",()=>$("adventurePanel").classList.add("hidden"));
@@ -2648,6 +2729,7 @@ on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();}
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
+on("showStatsTutorialBtn","click",()=>showStatsTutorial({force:true}));
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
@@ -2697,7 +2779,7 @@ renderHudCollapseState();
 renderHomeProgress();
 renderSelectedLeaderBadge();
 renderNotificationBadge();
-loadLeaderProfile();
+loadLeaderProfile(false);
 
 const joinInputEl = document.getElementById("joinCode");
 if(joinInputEl){
@@ -2707,7 +2789,7 @@ onAuthStateChanged(auth,async u=>{
   if(u){
     uid=u.uid;
     setText("lobbyStatus","Cargando perfil...");
-    await loadLeaderProfile();
+    await loadLeaderProfile(false);
     setText("lobbyStatus","Listo para jugar.");
   }
 });
