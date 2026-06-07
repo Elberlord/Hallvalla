@@ -1,5 +1,5 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getDatabase,ref,set,update,get,onValue} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
@@ -16,19 +16,22 @@ function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
 const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.webp",archer:"assets/leaders/leader_archer.webp",mage:"assets/leaders/leader_mage.webp"};
 const CARD_PORTRAITS={
   richard:"assets/cards/basic/richard_lionheart.webp",
+  cavalry:"assets/cards/basic/cavalry_light.webp",
   archer:"assets/cards/basic/archer.webp",
   mage:"assets/cards/basic/mage.webp",
   rogue:"assets/cards/basic/rogue.webp",
   paladin:"assets/cards/basic/paladin.webp",
+  heavyInfantry:"assets/cards/basic/heavy_infantry_paladin.webp",
   darkMage:"assets/cards/basic/dark_mage.webp",
   wallace:"assets/cards/basic/wallace.webp",
+  berserker:"assets/cards/basic/berserker_north.webp",
   mulan:"assets/cards/basic/mulan.webp",
   simo:"assets/cards/basic/archer.webp",
   sunTzu:"assets/cards/basic/mage.webp"
 };
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Soldados pesados +2 VIDA y +2 GUARDIA por turno."},
-  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Arqueros +1 ATAQUE y +3 DESTREZA."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Infantería pesada +2 VIDA y +2 GUARDIA por turno."},
+  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Arqueras +1 ATAQUE, +3 DESTREZA y +1 AGILIDAD."},
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Magias -2 costo y +3 efecto."}
 };
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=(typeof window!=="undefined"&&window.matchMedia?window.matchMedia("(max-width:980px)").matches:false),unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="";
@@ -198,6 +201,72 @@ let gameSettings=loadGameSettings();
 let currentMusic=null,currentMusicName="",audioUnlocked=false;
 function loadGameSettings(){try{return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.52,...(JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{})};}catch(e){return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.52};}}
 function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stringify(gameSettings));}catch(e){}}
+
+
+const HALLVALLA_LOCAL_PROGRESS_KEYS=[
+  "hallvalla_player_collection",
+  "hallvalla_current_deck",
+  "hallvalla_pending_packs",
+  "hallvalla_adventure_progress"
+];
+function clearHallVallaRewardFlags(){
+  try{
+    Object.keys(localStorage)
+      .filter(key=>key.startsWith("hallvalla_reward_claimed_"))
+      .forEach(key=>localStorage.removeItem(key));
+  }catch(e){console.warn("No se pudieron limpiar recompensas locales:",e);}
+}
+function resetHallVallaLocalProgress(){
+  const previousProfile=getPlayerProfile?.();
+  const preservedName=previousProfile?.name||"Nuevo jugador";
+  const preservedNameChanges=previousProfile?.nameChangeCount||0;
+  HALLVALLA_LOCAL_PROGRESS_KEYS.forEach(key=>localStorage.removeItem(key));
+  clearHallVallaRewardFlags();
+  savePlayerProfile({...defaultPlayerProfile,name:preservedName,nameChangeCount:preservedNameChanges});
+  renderPlayerProfile(getPlayerProfile());
+  renderNotificationBadge();
+  renderHomeProgress();
+}
+async function resetLocalProgressFromSettings(){
+  const status=$("settingsResetStatus");
+  if(!await hvConfirm("¿Crear una partida local nueva? Se borrarán progreso, colección, mazo, oro, EXP, paquetes y recompensas locales. No se borrará Firebase ni tu líder elegido.","Nueva partida local","Crear partida","Cancelar",true))return;
+  try{
+    resetHallVallaLocalProgress();
+    if(status)status.textContent="Partida local reiniciada. Firebase no fue modificado.";
+    await hvAlert("Partida local reiniciada. Abre Aventura para crear una batalla nueva con el mazo actualizado.","Partida local reiniciada");
+  }catch(e){
+    console.error(e);
+    if(status)status.textContent="No se pudo reiniciar la partida local.";
+    await hvAlert("No se pudo reiniciar la partida local. Revisa la consola para más detalle.","Error");
+  }
+}
+async function deleteCurrentFirebaseBattleSafe(){
+  if(!gameId){await hvAlert("No hay un duelo activo en Firebase para borrar.","Sin duelo activo");return false;}
+  if(!publicState){await hvAlert("El duelo activo aún no terminó de cargar.","Cargando duelo");return false;}
+  const isAdventure=publicState.mode==="adventure";
+  const msg=isAdventure
+    ? `¿Borrar solo esta batalla de aventura en Firebase (${gameId}) y volver al menú? Tu perfil de usuario no se tocará.`
+    : `¿Borrar solo esta sala online en Firebase (${gameId})? Esto cerrará la partida para ambos jugadores, pero no tocará users/{uid}.`;
+  if(!await hvConfirm(msg,"Borrar duelo en Firebase","Borrar duelo","Cancelar",true))return false;
+  try{
+    const code=gameId;
+    if(unsubPub){unsubPub();unsubPub=null;}
+    if(unsubPriv){unsubPriv();unsubPriv=null;}
+    await remove(ref(db,`games/${code}`));
+    resetBattleState();
+    $("gameShell")?.classList.add("hidden");
+    $("adventurePanel")?.classList.add("hidden");
+    $("onlineLobby")?.classList.add("hidden");
+    $("mainMenu")?.classList.remove("hidden");
+    renderHomeProgress();
+    await hvAlert("Duelo actual borrado de Firebase. No se borró el perfil del usuario.","Firebase limpio");
+    return true;
+  }catch(e){
+    console.error(e);
+    await hvAlert("No se pudo borrar el duelo actual de Firebase. No se modificó users/{uid}.","Error");
+    return false;
+  }
+}
 function unlockAudio(){audioUnlocked=true;if(currentMusic&&gameSettings.sound&&gameSettings.music){currentMusic.play().catch(()=>{});}else if(!currentMusic&&$("mainMenu")&&!$("mainMenu").classList.contains("hidden")){playMusic("home_theme_loop");}}
 if(typeof window!=="undefined"){
   window.addEventListener("pointerdown",unlockAudio,{once:true});
@@ -247,7 +316,7 @@ function getAttackSoundForUnit(unit){
   if(cls==="fx-heroic"||cls==="fx-glorious"||cls==="fx-epic"||cls==="fx-mythic")return "attack_heroic";
   return "attack_slash";
 }
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.richard,cost:3,hp:4,atk:4,guard:4,dex:4,agi:4,mov:7,range:1,text:"Unidad básica rápida y resistente. Ideal para cerrar distancia contra arqueras."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.wallace,cost:5,hp:10,atk:8,guard:2,dex:3,agi:4,mov:2,range:1,text:"Unidad básica de arma a dos manos. Mucha vida y ataque brutal, pero poca guardia y poco movimiento."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.richard,cost:1,hp:4,atk:2,guard:2,dex:4,agi:2,mov:2,range:1,text:"Unidad básica cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:3,atk:2,guard:1,dex:5,agi:3,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:2,hp:6,atk:1,guard:4,dex:2,agi:1,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:1,dex:5,agi:5,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:4,atk:4,guard:4,dex:4,agi:4,mov:7,range:1,text:"Unidad básica rápida y resistente. Ideal para cerrar distancia contra arqueras."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:10,atk:8,guard:2,dex:3,agi:4,mov:2,range:1,text:"Unidad básica de arma a dos manos. Mucha vida y ataque brutal, pero poca guardia y poco movimiento."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:4,atk:2,guard:2,dex:4,agi:2,mov:2,range:1,text:"Unidad básica de infantería pesada cuerpo a cuerpo."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:3,atk:2,guard:1,dex:5,agi:3,mov:2,range:3,text:"Ataca a distancia."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:2,hp:6,atk:1,guard:4,dex:2,agi:1,mov:1,range:1,text:"Unidad resistente."},{key:"scout",name:"Explorador de arena",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:1,dex:5,agi:5,mov:4,range:1,text:"Unidad rápida."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Mulan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,agi:5,mov:3,range:1,special:true,text:"Ataque por la espalda: si Mulan ataca desde la espalda, obtiene +6 ATQ durante ese ataque."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,agi:3,mov:2,range:1,special:true,text:"Guardia Inquebrantable: cuando su Guardia reduce el daño recibido a 0, recupera +1 Vigor."}};
 const ADVENTURE_RESULT_ART={mulan:{name:"Mulan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp"},wallace:{name:"William Wallace",heroImage:"assets/story/scene_wallace_actor.webp",cardImage:"assets/story/wallace_choice.webp"}};
 
@@ -280,9 +349,9 @@ const SIMO_CARD={key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",
 const SUN_TZU_CARD={key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:4,hp:4,atk:2,guard:3,dex:5,agi:4,mov:2,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, puedes sumar +1 Honor/Maná temporal que solo puede usarse durante este turno."};
 const LEGENDARY_ALLY_CARDS=[RICHARD_CARD,MULAN_CARD,WALLACE_CARD,SIMO_CARD,SUN_TZU_CARD];
 const CARD_VISUALS_BY_KEY={
-  spearman:{portrait:CARD_PORTRAITS.richard,icon:"🛡️"},
-  cavalry:{portrait:CARD_PORTRAITS.richard,icon:"🐎"},
-  berserker:{portrait:CARD_PORTRAITS.wallace,icon:"🪓"},
+  spearman:{portrait:CARD_PORTRAITS.heavyInfantry,icon:"🛡️"},
+  cavalry:{portrait:CARD_PORTRAITS.cavalry,icon:"🐎"},
+  berserker:{portrait:CARD_PORTRAITS.berserker,icon:"🪓"},
   archer:{portrait:CARD_PORTRAITS.archer,icon:"🏹"},
   guardian:{portrait:CARD_PORTRAITS.paladin,icon:"🗿"},
   scout:{portrait:CARD_PORTRAITS.rogue,icon:"🐍"},
@@ -427,51 +496,35 @@ function makeUnit(card,x,y){const baseGuard=card.guard||0;return{id:uid8(),owner
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
-function isHeavySoldierUnit(u){
+function isHeavyInfantryUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
   const name=String(u.name||"").toLowerCase();
   return [
-    "spearman",
     "guardian",
     "paladin",
     "knight",
-    "cavalier",
-    "cavalry",
-    "berserker",
-    "richard_lionheart",
-    "wallace"
+    "spearman"
   ].includes(key)
-  || name.includes("caballería")
-  || name.includes("caballeria")
-  || name.includes("caballero")
+  || name.includes("infantería pesada")
+  || name.includes("infanteria pesada")
   || name.includes("guardián")
   || name.includes("guardian")
   || name.includes("paladín")
   || name.includes("paladin")
-  || name.includes("lancero")
-  || name.includes("berserker")
-  || name.includes("wallace")
-  || name.includes("richard");
+  || name.includes("lancero solar");
 }
 function isArcherUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
   const name=String(u.name||"").toLowerCase();
-  return [
-    "archer",
-    "simo",
-    "simo_hayha"
-  ].includes(key)
-  || name.includes("arquera")
-  || name.includes("arquero")
-  || name.includes("archer")
-  || name.includes("simo");
+  return key==="archer"
+  || name.includes("arquera");
 }
 function getLeaderBonus(u){
   if(!u||u.leader||!hasActiveLeader(u.owner))return {atk:0,hp:0,guard:0,dex:0,agi:0};
   const type=getLeaderTypeForOwner(u.owner);
-  if(type==="warrior"&&isHeavySoldierUnit(u))return {atk:0,hp:2,guard:2,dex:0,agi:0};
+  if(type==="warrior"&&isHeavyInfantryUnit(u))return {atk:0,hp:2,guard:2,dex:0,agi:0};
   if(type==="archer"&&isArcherUnit(u))return {atk:1,hp:0,guard:0,dex:3,agi:1};
   return {atk:0,hp:0,guard:0,dex:0,agi:0};
 }
@@ -528,7 +581,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const specialTemplate=ADVENTURE_SPECIALS[specialKey];
   if(!specialTemplate)return;
   const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
-  if(!isBattleUnlocked(battle)){alert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.");openAdventureMap(specialKey);return;}
+  if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
   const playerBase=makeDeck(1,leaderType);
   const playerDraw=drawCards(playerBase,[],3);
@@ -1447,7 +1500,7 @@ function renderBoard(){
     const u=getUnitAt(x,y);
     if(u){
       const c=document.createElement("div");
-      c.className=`unit-card ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
+      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>`;
       c.title=`${u.name} · HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.addEventListener("pointerdown",ev=>ev.stopPropagation());
@@ -1515,30 +1568,69 @@ function renderDetail(){
     if(u){const fx=getUnitEffectText(u);$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?"Kaster":`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}`;return}
   }
   const modeLine=isAdventure?`<p><b>Modo:</b> Aventura contra IA</p><p><b>Batalla:</b> ${escapeHtml(publicState?.adventureBattleTitle||"Aventura")}</p>`:`<p><b>Jugador:</b> ${myPlayer||"?"}</p><p><b>Código:</b> ${gameId||"..."}</p><p><b>Modo:</b> Online</p>`;
-  $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: soldados pesados/caballería +2 GD/+2 VIDA. Arquero: arqueros +1 AT/+3 DX/+1 AGI. Hechicero: magias -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
+  $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero: solo infantería pesada +2 GD/+2 VIDA. Arquero: solo arqueras +1 AT/+3 DX/+1 AGI. Hechicero: solo magias -2 costo y +3 efecto.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+
+function ensureHallVallaModal(){
+  let modal=$("hvModal");
+  if(modal)return modal;
+  modal=document.createElement("div");
+  modal.id="hvModal";
+  modal.className="hv-modal hidden";
+  modal.innerHTML=`<div class="hv-modal-card"><h2 id="hvModalTitle">Información</h2><p id="hvModalMessage"></p><div id="hvModalActions" class="hv-modal-actions"></div></div>`;
+  document.body.appendChild(modal);
+  return modal;
+}
+function hvDialog(message,{title="Información",confirmText="Aceptar",cancelText="Cancelar",showCancel=false,danger=false}={}){
+  return new Promise(resolve=>{
+    const modal=ensureHallVallaModal();
+    const titleEl=$("hvModalTitle"),messageEl=$("hvModalMessage"),actions=$("hvModalActions");
+    if(titleEl)titleEl.textContent=title;
+    if(messageEl)messageEl.textContent=message;
+    if(actions){
+      actions.innerHTML="";
+      if(showCancel){
+        const cancel=document.createElement("button");
+        cancel.type="button";
+        cancel.className="btn ghost";
+        cancel.textContent=cancelText;
+        cancel.addEventListener("click",()=>{modal.classList.add("hidden");resolve(false);},{once:true});
+        actions.appendChild(cancel);
+      }
+      const ok=document.createElement("button");
+      ok.type="button";
+      ok.className=danger?"btn danger":"btn primary";
+      ok.textContent=confirmText;
+      ok.addEventListener("click",()=>{modal.classList.add("hidden");resolve(true);},{once:true});
+      actions.appendChild(ok);
+    }
+    modal.classList.remove("hidden");
+  });
+}
+function hvAlert(message,title="Información"){return hvDialog(message,{title,confirmText:"Aceptar"});}
+function hvConfirm(message,title="Confirmar",confirmText="Aceptar",cancelText="Cancelar",danger=false){return hvDialog(message,{title,confirmText,cancelText,showCancel:true,danger});}
 
 function openBattleMenu(){const panel=$("battleMenuPanel");if(panel){panel.classList.remove("hidden");renderBattleChrome();}}
 function closeBattleMenu(){const panel=$("battleMenuPanel");if(panel)panel.classList.add("hidden");}
 function toggleBattleActions(){actionsCollapsed=!actionsCollapsed;renderBattleChrome();}
 function toggleBattleLog(){logCollapsed=!logCollapsed;render();}
 function toggleBattleSound(){gameSettings.sound=!gameSettings.sound;saveGameSettings();if(!gameSettings.sound)stopMusic(false);else refreshAudioState();renderBattleChrome();}
-function resetCurrentDuelFromMenu(){
+async function resetCurrentDuelFromMenu(){
   closeBattleMenu();
   if(!gameId||!publicState){return;}
   if(publicState.mode==="adventure"){
-    if(confirm("¿Reiniciar este duelo de aventura desde el inicio?"))retryCurrentAdventureBattle();
+    if(await hvConfirm("¿Reiniciar este duelo de aventura desde el inicio?","Reiniciar duelo","Reiniciar","Cancelar",true))retryCurrentAdventureBattle();
     return;
   }
-  alert("Para no romper la partida del otro jugador, el reinicio directo queda reservado para aventura contra IA. En online, salgan al menú y creen una sala nueva cuando ambos estén listos.");
+  await hvAlert("Para no romper la partida del otro jugador, el reinicio directo queda reservado para aventura contra IA. En online, salgan al menú y creen una sala nueva cuando ambos estén listos.","Reinicio online bloqueado");
 }
-function leaveCurrentGameFromMenu(){
+async function leaveCurrentGameFromMenu(){
   closeBattleMenu();
   if(!gameId){leaveCurrentGame();return;}
-  if(confirm("¿Salir del duelo y volver al menú principal?"))leaveCurrentGame();
+  if(await hvConfirm("¿Salir del duelo y volver al menú principal?","Salir del duelo","Salir","Cancelar"))leaveCurrentGame();
 }
-on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!hasPlayableCardsInHand()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("toggleLogBtn","click",toggleBattleLog);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("inspectClose","click",()=>$("inspector").classList.remove("show"));on("cardInspectCancel","click",hideCardInspectModal);on("cardInspectX","click",hideCardInspectModal);on("cardInspectPlay","click",playInspectedCard);
+on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!hasPlayableCardsInHand()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("toggleLogBtn","click",toggleBattleLog);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("battleDeleteCloudBattleBtn","click",deleteCurrentFirebaseBattleSafe);on("inspectClose","click",()=>$("inspector").classList.remove("show"));on("cardInspectCancel","click",hideCardInspectModal);on("cardInspectX","click",hideCardInspectModal);on("cardInspectPlay","click",playInspectedCard);
 const inspectorEl=$("inspector");
 if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspectorEl)inspectorEl.classList.remove("show")});const cardInspectEl=$("cardInspectModal");if(cardInspectEl)cardInspectEl.addEventListener("click",ev=>{if(ev.target===cardInspectEl)hideCardInspectModal()});const packShopEl=$("packShopPanel");if(packShopEl)packShopEl.addEventListener("click",ev=>{if(ev.target===packShopEl)closePackShop()});const unitContextEl=$("unitContextMenu");if(unitContextEl)unitContextEl.addEventListener("click",ev=>ev.stopPropagation());const battlefieldEl=document.querySelector(".battlefield");if(battlefieldEl)battlefieldEl.addEventListener("click",ev=>{if(unitContextSelection&&!ev.target.closest(".unit-card")&&!ev.target.closest(".unit-context-menu")){unitContextSelection=null;hideUnitContextMenu();}});
 
@@ -1793,7 +1885,7 @@ function canAccessPackShop(){
 function openCollectionOrLocked(){
   const total=getCollectionCardTotal();
   if(!canAccessDecks()){
-    alert(`Mazos bloqueados: completa el mapa 1.1 El inicio de la travesía para poder editar tus mazos. Cartas guardadas: ${total}. Paquetes pendientes: ${getPendingPackCount()}.`);
+    hvAlert(`Mazos bloqueados: completa el mapa 1.1 El inicio de la travesía para poder editar tus mazos. Cartas guardadas: ${total}. Paquetes pendientes: ${getPendingPackCount()}.`,"Mazos bloqueados");
     return;
   }
   openDeckBuilder();
@@ -1831,17 +1923,17 @@ function closePackShop(){
   const panel=$("packShopPanel");
   if(panel)panel.classList.add("hidden");
 }
-function buyBasicPackWithGold(){
-  if(!canAccessPackShop()){alert("La compra de packs se desbloquea al completar el mapa 2.1.");return;}
+async function buyBasicPackWithGold(){
+  if(!canAccessPackShop()){await hvAlert("La compra de packs se desbloquea al completar el mapa 2.1.","Tienda bloqueada");return;}
   const profile=getPlayerProfile();
-  if((profile.gold||0)<BASIC_PACK_GOLD_COST){alert(`Necesitas ${BASIC_PACK_GOLD_COST} oro para comprar el Pack básico. Tienes ${profile.gold||0}.`);return;}
+  if((profile.gold||0)<BASIC_PACK_GOLD_COST){await hvAlert(`Necesitas ${BASIC_PACK_GOLD_COST} oro para comprar el Pack básico. Tienes ${profile.gold||0}.`,"Oro insuficiente");return;}
   profile.gold=(profile.gold||0)-BASIC_PACK_GOLD_COST;
   savePlayerProfile(profile);
   addPendingPack({name:"Pack básico",type:"basic_magic_trap",source:"shop",costGold:BASIC_PACK_GOLD_COST});
   renderPlayerProfile(profile);
   renderHomeProgress();
   closePackShop();
-  if(confirm("Compraste un Pack básico. ¿Abrirlo ahora?"))openPackOpening();
+  if(await hvConfirm("Compraste un Pack básico. ¿Abrirlo ahora?","Compra realizada","Abrir pack","Después"))openPackOpening();
 }
 function getLegendaryCardByKey(key){
   return LEGENDARY_ALLY_CARDS.find(c=>c.key===key)||null;
@@ -1900,7 +1992,7 @@ function getPackCards(pack){
 function getPendingPackCount(){return getPendingPacks().length;}
 function openPackOpening(){
   const packs=getPendingPacks();
-  if(!packs.length){alert("No tienes paquetes pendientes por abrir.");return;}
+  if(!packs.length){hvAlert("No tienes paquetes pendientes por abrir.","Sin paquetes");return;}
   activePackOpening=packs[0];
   activePackCards=getPackCards(activePackOpening);
   const panel=$("packOpeningPanel"),grid=$("packRevealGrid"),obj=$("packOpeningObject"),hint=$("packOpeningHint"),confirm=$("confirmPackCardsBtn"),next=$("openNextPackBtn");
@@ -1952,7 +2044,7 @@ function saveDeck(deck){localStorage.setItem("hallvalla_current_deck",JSON.strin
 function getCollectionCardsExpanded(){const collection=getPlayerCollection();return (collection.cards||[]).map(c=>({...c,qty:c.qty||1}))}
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
 function openDeckBuilder(){
-  if(!canAccessDecks()){alert(`Mazos bloqueados: completa el mapa 1.1 para editar mazos. Paquetes pendientes: ${getPendingPackCount()}. Cartas guardadas: ${getCollectionCardTotal()}.`);return;}
+  if(!canAccessDecks()){hvAlert(`Mazos bloqueados: completa el mapa 1.1 para editar mazos. Paquetes pendientes: ${getPendingPackCount()}. Cartas guardadas: ${getCollectionCardTotal()}.`,"Mazos bloqueados");return;}
   currentDeckDraft=getSavedDeck();
   $("deckBuilderPanel").classList.remove("hidden");
   renderDeckBuilder();
@@ -2015,9 +2107,9 @@ function renderDeckBuilder(){
 }
 function saveCurrentDeck(){
   const validation=validateDeckList(currentDeckDraft);
-  if(!validation.valid){alert(`No se puede guardar todavía: ${validation.errors.join(" ")}`);return;}
+  if(!validation.valid){hvAlert(`No se puede guardar todavía: ${validation.errors.join(" ")}`,"Mazo inválido");return;}
   saveDeck(currentDeckDraft);
-  alert("Mazo guardado.");
+  hvAlert("Mazo guardado.","Mazo guardado");
 }
 
 function getNotificationState(){
@@ -2152,7 +2244,7 @@ document.querySelectorAll("[data-leader-choice]").forEach(btn=>{
     const type=btn.dataset.leaderChoice;
     await setSelectedLeaderType(type);
     const data=LEADER_DATA[type];
-    if(data)alert(`Líder elegido: ${data.name}. ${data.desc}`);
+    if(data)await hvAlert(`Líder elegido: ${data.name}. ${data.desc}`,"Líder elegido");
   });
 });
 
@@ -2485,7 +2577,7 @@ function backToMainMenu(){
   leaveCurrentGame();
 }
 function showComingSoon(name){
-  alert(`${name} estará disponible próximamente.`);
+  hvAlert(`${name} estará disponible próximamente.`,"Próximamente");
 }
 
 on("onlineBtn","click",showOnlineLobby);
@@ -2555,6 +2647,7 @@ on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();}
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
+on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
@@ -2577,7 +2670,7 @@ on("dailyBtn","click",()=>{
   profile.gold = (profile.gold || 0) + 25;
   savePlayerProfile(profile);
   renderHomeProgress();
-  alert("Recompensa diaria: +25 Oro");
+  hvAlert("Recompensa diaria: +25 Oro","Recompensa diaria");
 });
 
 document.addEventListener("keydown",async(e)=>{

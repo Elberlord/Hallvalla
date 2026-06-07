@@ -145,19 +145,19 @@
       <button class="leader-choice" type="button" data-leader-choice="warrior">
         <img src="assets/leaders/leader_warrior.webp" alt="Guerrero">
         <h3>Guerrero</h3>
-        <p>Tus unidades reciben <b>+2 GUARDIA</b> y <b>+2 VIDA</b>.</p>
+        <p>Solo tu <b>infantería pesada</b> recibe <b>+2 GUARDIA</b> y <b>+2 VIDA</b>.</p>
         <span class="leader-pill">Muro frontal</span>
       </button>
       <button class="leader-choice" type="button" data-leader-choice="archer">
         <img src="assets/leaders/leader_archer.webp" alt="Arquero">
         <h3>Arquero</h3>
-        <p>Tus unidades reciben <b>+3 ATAQUE</b> y <b>+3 DESTREZA</b>.</p>
+        <p>Solo tus <b>arqueras</b> reciben <b>+1 ATAQUE</b>, <b>+3 DESTREZA</b> y <b>+1 AGILIDAD</b>.</p>
         <span class="leader-pill">Presión precisa</span>
       </button>
       <button class="leader-choice" type="button" data-leader-choice="mage">
         <img src="assets/leaders/leader_mage.webp" alt="Hechicero">
         <h3>Hechicero</h3>
-        <p>Tus magias y trampas cuestan <b>-2 Honor</b> y sus efectos numéricos reciben <b>+3</b>.</p>
+        <p>Solo tus <b>magias</b> cuestan <b>-2 Honor</b> y sus efectos numéricos reciben <b>+3</b>.</p>
         <span class="leader-pill">Poder arcano</span>
       </button>
     </div>
@@ -482,6 +482,12 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <label class="setting-line"><span>Música</span><input type="checkbox" checked></label>
     <label class="setting-line"><span>Efectos</span><input type="checkbox" checked></label>
     <label class="setting-line"><span>Idioma</span><select><option>Español</option><option>English</option></select></label>
+    <div class="settings-danger-zone">
+      <b>Pruebas / partida nueva</b>
+      <p>Reinicia solo los datos locales del progreso. No borra Firebase, no borra usuarios y conserva el líder elegido.</p>
+      <button id="resetLocalProgressBtn" class="btn ghost full" type="button">Nueva partida local segura</button>
+      <p id="settingsResetStatus" class="settings-reset-status"></p>
+    </div>
     <button id="closeSettingsBtn" class="btn primary full">Guardar y volver</button>
   </div>
 </div>
@@ -500,7 +506,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
 <div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button><button id="toggleLogBtn" class="battle-tool-btn" type="button" aria-label="Mostrar u ocultar registro del duelo">Log ▴</button><button id="toggleActionsBtn" class="battle-tool-btn battle-tool-actions" type="button" aria-label="Mostrar u ocultar acciones">Acciones ▾</button></div><div class="hud top-left collapsed" id="hudP1"><div class="hud-shell"><div class="hud-header"><button id="hudToggleP1" class="hud-name hud-toggle" type="button" aria-expanded="false" aria-controls="hudGridP1"><b id="p1HudName" class="p1">Jugador 1</b></button><div class="hud-badge"><span id="p1Badge">...</span></div></div><div id="hudGridP1" class="hud-grid"><div class="hud-mini"><span class="label">Vida</span><strong id="p1Life">0</strong></div><div class="hud-mini"><span class="label">Honor</span><strong id="p1Honor">0</strong></div><div class="hud-mini"><span class="label">Mazo</span><strong id="p1Deck">0</strong></div><div class="hud-mini"><span class="label">Mano</span><strong id="p1Hand">0</strong></div></div></div></div><div class="hud top-right collapsed" id="hudP2"><div class="hud-shell"><div class="hud-header"><button id="hudToggleP2" class="hud-name hud-toggle" type="button" aria-expanded="false" aria-controls="hudGridP2"><b id="p2HudName" class="p2">Jugador 2</b></button><div class="hud-badge"><span id="p2Badge">...</span></div></div><div id="hudGridP2" class="hud-grid"><div class="hud-mini"><span class="label">Vida</span><strong id="p2Life">0</strong></div><div class="hud-mini"><span class="label">Honor</span><strong id="p2Honor">0</strong></div><div class="hud-mini"><span class="label">Mazo</span><strong id="p2Deck">0</strong></div><div class="hud-mini"><span class="label">Mano</span><strong id="p2Hand">0</strong></div></div></div></div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mazo"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mazo"><span class="action-btn-label">Mazo</span></button><button id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><p id="inspectText" style="color:var(--muted);line-height:1.35"></p><button id="inspectClose" class="btn full">Cerrar</button></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card"><div class="card-inspect-head"><div><h2 id="cardInspectTitle" class="card-inspect-title"></h2><div id="cardInspectSub" class="card-inspect-sub"></div></div><button id="cardInspectX" class="card-inspect-x" type="button" aria-label="Cerrar carta">×</button></div><div id="cardInspectVisual" class="card-inspect-visual"></div><div id="cardInspectStats" class="card-inspect-grid"></div><p id="cardInspectText" class="card-inspect-text"></p><p id="cardInspectReason" class="card-inspect-reason"></p><div class="card-inspect-actions"><button id="cardInspectCancel" class="btn full" type="button">Cancelar</button><button id="cardInspectPlay" class="btn primary full" type="button">Jugar</button></div></div></div>
-<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Sonido: activado</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
+<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Sonido: activado</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 <script type="module" src="script.js"></script>
 </body>
 </html>
