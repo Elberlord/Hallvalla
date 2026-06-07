@@ -2540,3 +2540,78 @@
     min-height:32px!important;
   }
 }
+
+/* === v7DK Initial guardian intro: separated background, actor and centered text === */
+.adventure-scene-visual.scene-guardian.has-guardian-actor{
+  background-size:cover!important;
+  background-position:center center!important;
+}
+.adventure-scene-visual.scene-guardian.has-guardian-actor::before{
+  background:
+    radial-gradient(circle at 78% 52%,rgba(132,83,255,.18),transparent 30%),
+    linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.22) 36%,rgba(0,0,0,.12) 64%,rgba(0,0,0,.56)),
+    linear-gradient(180deg,rgba(0,0,0,.10),transparent 36%,rgba(0,0,0,.58));
+}
+.adventure-scene-visual.scene-guardian.has-guardian-actor .guardian-actor{
+  z-index:4;
+}
+.adventure-scene-visual.scene-guardian.has-guardian-actor .guardian-actor img{
+  left:auto;
+  right:3%;
+  bottom:-2%;
+  transform:none;
+  height:min(92%,620px);
+  max-width:34%;
+}
+.adventure-scene-visual.scene-guardian.has-guardian-actor .adventure-scene-overlay{
+  z-index:3;
+  justify-content:center!important;
+  align-items:center!important;
+  padding:22px 270px 22px 42px!important;
+}
+.adventure-scene-visual.scene-guardian.has-guardian-actor .adventure-scene-copy{
+  width:min(660px,58vw)!important;
+  max-width:min(660px,58vw)!important;
+  max-height:none!important;
+  overflow:visible!important;
+  text-align:center;
+  margin:0 auto;
+  background:linear-gradient(180deg,rgba(8,7,12,.50),rgba(8,7,12,.70));
+}
+@media(max-width:980px){
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .adventure-scene-overlay{
+    align-items:flex-start!important;
+    padding:16px 150px 16px 18px!important;
+  }
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .adventure-scene-copy{
+    width:min(620px,64vw)!important;
+    max-width:min(620px,64vw)!important;
+  }
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .guardian-actor img{
+    right:-3%;
+    height:76%;
+    max-width:36%;
+  }
+}
+@media(max-width:680px){
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .adventure-scene-overlay{
+    align-items:flex-start!important;
+    padding:14px!important;
+  }
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .adventure-scene-copy{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto;
+  }
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .guardian-actor{
+    z-index:2;
+    opacity:.58;
+  }
+  .adventure-scene-visual.scene-guardian.has-guardian-actor .guardian-actor img{
+    right:50%;
+    transform:translateX(50%);
+    height:46%;
+    max-width:none;
+    bottom:-4%;
+  }
+}
