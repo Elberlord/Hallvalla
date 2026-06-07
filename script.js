@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7DF";
+const HALLVALLA_BUILD_VERSION="v7DG";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1248,6 +1248,7 @@ async function adventureEnemyTurn(){
           }
         }
       }
+    }
     }
     if(!acted)break;
     cardsPlayed++;
