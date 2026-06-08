@@ -2615,3 +2615,113 @@
     bottom:-4%;
   }
 }
+
+/* === v7DS mobile repair: leader selector + adventure intro cards === */
+.leader-choice img{
+  background:transparent!important;
+}
+@media(max-width:900px), (pointer:coarse){
+  .leader-select-overlay{
+    align-items:flex-start!important;
+    justify-content:center!important;
+    padding:12px!important;
+    overflow:auto!important;
+  }
+  .leader-select-card{
+    width:calc(100vw - 24px)!important;
+    max-height:none!important;
+    min-height:auto!important;
+    padding:14px!important;
+    border-radius:22px!important;
+    overflow:visible!important;
+  }
+  .leader-choice-grid{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+  .leader-choice{
+    display:grid!important;
+    grid-template-columns:112px 1fr!important;
+    align-items:center!important;
+    text-align:left!important;
+    gap:12px!important;
+    padding:10px!important;
+    min-height:138px!important;
+  }
+  .leader-choice img{
+    width:112px!important;
+    height:126px!important;
+    max-height:126px!important;
+    object-fit:contain!important;
+    margin:0!important;
+  }
+  .leader-choice h3{
+    margin:0 0 4px!important;
+    font-size:20px!important;
+  }
+  .leader-choice p{
+    font-size:12px!important;
+    line-height:1.28!important;
+  }
+  .leader-pill{
+    margin-top:7px!important;
+    font-size:11px!important;
+    padding:6px 9px!important;
+  }
+}
+
+/* Battle/adventure detail cards: keep the text panel readable on phones. */
+@media(max-width:900px), (pointer:coarse){
+  .adventure-card{
+    width:calc(100vw - 24px)!important;
+    height:auto!important;
+    max-height:calc(100svh - 24px)!important;
+    overflow:auto!important;
+    border-radius:24px!important;
+  }
+  #adventureGuardianStage{
+    gap:10px!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor){
+    min-height:520px!important;
+    max-height:62svh!important;
+    background-size:cover!important;
+    background-position:center center!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor)::before{
+    background:
+      linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.10) 34%,rgba(0,0,0,.72)),
+      linear-gradient(90deg,rgba(0,0,0,.32),transparent 36%,rgba(0,0,0,.24))!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor) .adventure-scene-overlay{
+    align-items:flex-end!important;
+    justify-content:center!important;
+    padding:12px!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor) .adventure-scene-copy{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:42svh!important;
+    overflow:auto!important;
+    padding:14px 16px!important;
+    border-radius:18px!important;
+    background:linear-gradient(180deg,rgba(8,7,5,.52),rgba(8,7,5,.78))!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor) .adventure-story-title{
+    font-size:clamp(28px,8vw,42px)!important;
+    line-height:1.04!important;
+    margin-bottom:8px!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor) .adventure-story-text{
+    font-size:clamp(14px,4vw,17px)!important;
+    line-height:1.45!important;
+  }
+}
+@media(max-width:430px){
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor){
+    min-height:500px!important;
+  }
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor) .adventure-scene-copy{
+    max-height:40svh!important;
+  }
+}
