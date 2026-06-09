@@ -3363,6 +3363,46 @@
   .battle-fx-guard-ring,.battle-fx-guard-glow,.battle-fx-guard-shield,.battle-fx-guard-crack,.battle-fx-guard-shard{animation-duration:.18s!important}
 }
 
+/* === PATCH 7FT - Dodge FX === */
+.battle-fx-dodge{position:absolute;transform:translate(-50%,-50%);width:106px;height:94px;pointer-events:none;filter:drop-shadow(0 0 12px rgba(255,255,255,.12))}
+.battle-fx-dodge-ring,
+.battle-fx-dodge-swish,
+.battle-fx-dodge-afterimage,
+.battle-fx-dodge-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.battle-fx-dodge-ring{width:64px;height:64px;border-radius:999px;border:2px dashed rgba(235,244,255,.76);box-shadow:0 0 18px rgba(188,217,255,.16);animation:dodgeRingBurst .9s ease-out forwards}
+.battle-fx-dodge.player .battle-fx-dodge-ring{border-color:rgba(143,211,255,.88);box-shadow:0 0 18px rgba(143,211,255,.22)}
+.battle-fx-dodge.enemy .battle-fx-dodge-ring{border-color:rgba(255,164,208,.88);box-shadow:0 0 18px rgba(255,164,208,.20)}
+.battle-fx-dodge-swish{width:48px;height:18px;border-top:3px solid rgba(243,248,255,.90);border-radius:999px;opacity:0;filter:drop-shadow(0 0 6px rgba(255,255,255,.18))}
+.battle-fx-dodge.player .battle-fx-dodge-swish{border-top-color:rgba(189,233,255,.96)}
+.battle-fx-dodge.enemy .battle-fx-dodge-swish{border-top-color:rgba(255,205,230,.96)}
+.battle-fx-dodge .swish-1{transform:translate(calc(-50% - 14px),calc(-50% + 4px)) rotate(-16deg);animation:dodgeSwishLeft .9s ease-out forwards}
+.battle-fx-dodge .swish-2{transform:translate(calc(-50% + 14px),calc(-50% - 2px)) rotate(20deg);animation:dodgeSwishRight .9s ease-out forwards}
+.battle-fx-dodge-afterimage{width:34px;height:44px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.16);opacity:0;mix-blend-mode:screen;backdrop-filter:blur(1px)}
+.battle-fx-dodge.player .battle-fx-dodge-afterimage{background:linear-gradient(180deg,rgba(189,233,255,.22),rgba(189,233,255,.04));border-color:rgba(189,233,255,.18)}
+.battle-fx-dodge.enemy .battle-fx-dodge-afterimage{background:linear-gradient(180deg,rgba(255,205,230,.22),rgba(255,205,230,.04));border-color:rgba(255,205,230,.18)}
+.battle-fx-dodge .afterimage-1{animation:dodgeAfterimageLeft .9s ease-out forwards}
+.battle-fx-dodge .afterimage-2{animation:dodgeAfterimageRight .9s ease-out forwards}
+.battle-fx-dodge-label{top:18%;padding:3px 8px 4px;border-radius:999px;background:linear-gradient(180deg,rgba(22,31,47,.94),rgba(10,16,26,.98));border:1px solid rgba(255,255,255,.18);color:#eef6ff;font-size:12px;font-weight:900;letter-spacing:.08em;text-shadow:0 1px 4px rgba(0,0,0,.42);box-shadow:0 8px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.10);animation:dodgeLabelRise .9s ease-out forwards}
+.battle-fx-dodge.player .battle-fx-dodge-label{color:#dff7ff;border-color:rgba(143,211,255,.28)}
+.battle-fx-dodge.enemy .battle-fx-dodge-label{color:#ffe6f1;border-color:rgba(255,164,208,.28)}
+
+@media(max-width:980px){
+  .battle-fx-dodge{width:82px;height:72px}
+  .battle-fx-dodge-ring{width:48px;height:48px}
+  .battle-fx-dodge-swish{width:36px;height:14px}
+  .battle-fx-dodge-afterimage{width:24px;height:32px}
+  .battle-fx-dodge-label{font-size:10px;padding:2px 6px 3px}
+}
+@media(prefers-reduced-motion:reduce){
+  .battle-fx-dodge-ring,.battle-fx-dodge-swish,.battle-fx-dodge-afterimage,.battle-fx-dodge-label{animation-duration:.18s!important}
+}
+@keyframes dodgeRingBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}24%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+@keyframes dodgeSwishLeft{0%{opacity:0;transform:translate(calc(-50% - 2px),calc(-50% + 8px)) rotate(-10deg) scale(.65)}26%{opacity:.95}100%{opacity:0;transform:translate(calc(-50% - 28px),calc(-50% + 14px)) rotate(-22deg) scale(1.08)}}
+@keyframes dodgeSwishRight{0%{opacity:0;transform:translate(calc(-50% + 2px),calc(-50% - 6px)) rotate(14deg) scale(.65)}26%{opacity:.92}100%{opacity:0;transform:translate(calc(-50% + 28px),calc(-50% - 16px)) rotate(28deg) scale(1.08)}}
+@keyframes dodgeAfterimageLeft{0%{opacity:0;transform:translate(-50%,-50%) scale(.82)}16%{opacity:.55}100%{opacity:0;transform:translate(calc(-50% - 20px),calc(-50% + 6px)) scale(.92)}}
+@keyframes dodgeAfterimageRight{0%{opacity:0;transform:translate(-50%,-50%) scale(.82)}16%{opacity:.45}100%{opacity:0;transform:translate(calc(-50% + 22px),calc(-50% - 8px)) scale(.90)}}
+@keyframes dodgeLabelRise{0%{opacity:0;transform:translate(-50%,-50%) translateY(10px) scale(.86)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) translateY(-12px) scale(1)}}
+
 /* === PATCH 7FG - Status emblem FX (bleed / poison) === */
 @keyframes statusRingPulse{0%{opacity:0;transform:translate(-50%,-50%) scale(.42)}16%{opacity:.92}100%{opacity:0;transform:translate(-50%,-50%) scale(1.42)}}
 @keyframes statusGlowFloat{0%{opacity:0;transform:translate(-50%,-50%) scale(.46)}16%{opacity:.82}100%{opacity:0;transform:translate(-50%,-72%) scale(1.02)}}
@@ -3437,6 +3477,9 @@
 .battle-fx-float.poison .battle-fx-float-badge{background:linear-gradient(180deg,rgba(78,48,11,.96),rgba(44,27,6,.98));color:#fff0cd;border-color:rgba(255,212,124,.30)}
 .battle-fx-float.debuff .battle-fx-float-badge::before,
 .battle-fx-float.poison .battle-fx-float-badge::before{background:radial-gradient(circle,rgba(255,201,83,.22) 0,rgba(255,201,83,.10) 42%,transparent 72%)}
+
+.battle-fx-float.dodge .battle-fx-float-badge{background:linear-gradient(180deg,rgba(22,31,47,.96),rgba(10,16,26,.98));color:#eef6ff;border-color:rgba(184,216,255,.28)}
+.battle-fx-float.dodge .battle-fx-float-badge::before{background:radial-gradient(circle,rgba(184,216,255,.22) 0,rgba(184,216,255,.10) 42%,transparent 72%)}
 
 .battle-fx-float.player .battle-fx-float-badge{box-shadow:0 10px 18px rgba(0,0,0,.22),0 0 14px rgba(126,214,255,.12), inset 0 1px 0 rgba(255,255,255,.12)}
 .battle-fx-float.enemy .battle-fx-float-badge{box-shadow:0 10px 18px rgba(0,0,0,.22),0 0 14px rgba(255,140,186,.10), inset 0 1px 0 rgba(255,255,255,.12)}
@@ -3513,4 +3556,88 @@
     height:calc(100% - 1px) !important;
     border-radius:6px !important;
   }
+}
+
+/* v7FP: burbujas persistentes de estados sobre la unidad */
+.unit-status-bubbles{
+  position:absolute;
+  left:50%;
+  top:-10px;
+  transform:translateX(-50%);
+  display:flex;
+  gap:3px;
+  align-items:center;
+  justify-content:center;
+  z-index:6;
+  pointer-events:none;
+  max-width:88px;
+  flex-wrap:wrap;
+}
+.unit-status-bubble{
+  min-width:28px;
+  padding:2px 5px;
+  border-radius:999px;
+  border:1px solid rgba(255,244,205,.86);
+  background:linear-gradient(180deg,rgba(27,18,12,.94),rgba(8,6,5,.88));
+  color:#fff4cf;
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.02em;
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 9px rgba(255,204,91,.18);
+  white-space:nowrap;
+}
+.unit-status-bubble.mov-debuff{
+  border-color:rgba(113,219,255,.9);
+  color:#d9f7ff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(113,219,255,.25);
+}
+.unit-status-bubble.eva-debuff{
+  border-color:rgba(198,146,255,.9);
+  color:#f0ddff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(198,146,255,.25);
+}
+.unit-status-bubble.bleed{
+  border-color:rgba(255,104,124,.92);
+  color:#ffd3d8;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(255,104,124,.25);
+}
+@media(max-width:980px){
+  .unit-status-bubbles{top:-8px;gap:2px;max-width:72px}
+  .unit-status-bubble{font-size:7px;padding:2px 4px;min-width:24px}
+}
+
+/* v7FP.1: burbujas para cualquier buff/debuff activo */
+.unit-status-bubble.buff,
+.unit-status-bubble.mov-buff,
+.unit-status-bubble.atk-buff,
+.unit-status-bubble.dex-buff,
+.unit-status-bubble.agi-buff,
+.unit-status-bubble.guard-buff,
+.unit-status-bubble.hp-buff{
+  border-color:rgba(142,255,178,.9);
+  color:#d9ffe7;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(142,255,178,.24);
+}
+.unit-status-bubble.debuff,
+.unit-status-bubble.atk-debuff,
+.unit-status-bubble.dex-debuff,
+.unit-status-bubble.agi-debuff,
+.unit-status-bubble.guard-debuff,
+.unit-status-bubble.lock,
+.unit-status-bubble.silence,
+.unit-status-bubble.curse{
+  border-color:rgba(255,147,119,.9);
+  color:#ffe1d8;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(255,147,119,.24);
+}
+.unit-status-bubble.poison{
+  border-color:rgba(101,233,139,.9);
+  color:#d9ffe7;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(101,233,139,.24);
+}
+.unit-status-bubble.neutral{
+  border-color:rgba(255,244,205,.86);
+  color:#fff4cf;
 }
