@@ -285,6 +285,18 @@ function playBattleFx(attacker,target){
   spawnBattleFxNode(`battle-fx-slash ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`},640,`<div class="battle-fx-slash-core"></div>${slashExtra}`);
   spawnBattleFxNode(`battle-fx-impact ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
 }
+function playDestroyFx(unit){
+  if(!unit)return;
+  const point=getGridCellCenter(unit.x,unit.y);
+  if(!point)return;
+  setTimeout(()=>tryPlaySound("attack_impact",.7),40);
+  const rarityClass=getFxRarityClass(unit);
+  const sideClass=unit.owner===1?"player":"enemy";
+  const embers=Array.from({length:8},(_,i)=>`<span class="battle-fx-ember ember-${i+1}"></span>`).join("");
+  const ash=Array.from({length:6},(_,i)=>`<span class="battle-fx-ash ash-${i+1}"></span>`).join("");
+  const ttl=["fx-mythic","fx-demigod"].includes(rarityClass)?1380:["fx-glorious","fx-epic"].includes(rarityClass)?1260:1180;
+  spawnBattleFxNode(`battle-fx-destroy ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-destroy-flash"></div><div class="battle-fx-destroy-core"></div><div class="battle-fx-destroy-ring"></div><div class="battle-fx-destroy-burst"></div><div class="battle-fx-destroy-smoke"></div><div class="battle-fx-destroy-embers">${embers}</div><div class="battle-fx-destroy-ash">${ash}</div>`);
+}
 function maybePlayBattleFx(prevPub,nextPub){
   if(!prevPub||!nextPub||!Array.isArray(prevPub.units)||!Array.isArray(nextPub.units))return;
   if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units))return;
@@ -297,8 +309,9 @@ function maybePlayBattleFx(prevPub,nextPub){
   const nextMap=Object.fromEntries(nextUnits.map(u=>[u.id,u]));
   const added=nextUnits.filter(u=>!prevMap[u.id]&&!u.leader);
   const damaged=[...nextUnits.filter(u=>prevMap[u.id]&&u.hp<prevMap[u.id].hp),...prevUnits.filter(u=>!nextMap[u.id]&&u.hp>0)];
+  const destroyed=prevUnits.filter(u=>u.hp>0&&((!nextMap[u.id])||(nextMap[u.id]&&nextMap[u.id].hp<=0)));
   const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted);
-  if(!added.length&&!attackers.length)return;
+  if(!added.length&&!attackers.length&&!destroyed.length)return;
   lastBattleFxKey=fxKey;
   added.forEach(u=>setTimeout(()=>playSummonFx(u),80));
   const demigodAdded=added.find(u=>getFxRarityClass(u)==="fx-demigod");
@@ -319,6 +332,7 @@ function maybePlayBattleFx(prevPub,nextPub){
     }
     if(target){taken.add(target.id||`${target.x},${target.y}`);setTimeout(()=>playBattleFx(attacker,target),140+(i*120));}
   });
+  destroyed.forEach((unit,i)=>setTimeout(()=>playDestroyFx(unit),280+(i*130)));
 }
 
 const GAME_SETTINGS_KEY="hallvalla_game_settings";

@@ -3118,3 +3118,104 @@
     0 0 10px rgba(255,196,64,.20),
     0 0 18px rgba(255,196,64,.16);
 }
+
+
+/* === PATCH 7FA - Move mobile actions panel to upper center area === */
+@media(max-width:980px), (pointer:coarse){
+  .side:not(.actions-collapsed){
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:calc(118px + env(safe-area-inset-top, 0px))!important;
+    bottom:auto!important;
+    width:min(240px,68vw)!important;
+    transform:translateX(-50%)!important;
+    z-index:185!important;
+    pointer-events:none!important;
+  }
+  .side:not(.actions-collapsed) .actions-visual-panel{
+    width:100%!important;
+    max-width:none!important;
+    margin:0 auto!important;
+    pointer-events:auto!important;
+  }
+  .side:not(.actions-collapsed) .panel{display:none!important;}
+  .battlefield.hand-open .side:not(.actions-collapsed){
+    top:calc(118px + env(safe-area-inset-top, 0px))!important;
+    bottom:auto!important;
+    left:50%!important;
+    right:auto!important;
+    width:min(240px,68vw)!important;
+    transform:translateX(-50%)!important;
+    z-index:185!important;
+    pointer-events:none!important;
+  }
+  .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+    width:100%!important;
+    max-width:none!important;
+    margin:0 auto!important;
+    pointer-events:auto!important;
+  }
+  .battlefield.hand-open .hand-drawer.open{
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px))!important;
+    max-height:min(36svh,220px)!important;
+    z-index:170!important;
+  }
+  .battlefield.hand-open .log{
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px) + min(36svh,220px) + 8px)!important;
+    max-height:48px!important;
+  }
+}
+@media(max-height:720px) and (max-width:980px), (max-height:720px) and (pointer:coarse){
+  .side:not(.actions-collapsed),
+  .battlefield.hand-open .side:not(.actions-collapsed){
+    top:calc(104px + env(safe-area-inset-top, 0px))!important;
+    width:min(220px,64vw)!important;
+  }
+}
+
+/* === PATCH 7FB - Destroyed unit explosion / burn FX === */
+.battle-fx-destroy{position:absolute;transform:translate(-50%,-50%);width:108px;height:108px;filter:drop-shadow(0 0 14px rgba(255,146,68,.24))}
+.battle-fx-destroy-flash,
+.battle-fx-destroy-core,
+.battle-fx-destroy-ring,
+.battle-fx-destroy-burst,
+.battle-fx-destroy-smoke,
+.battle-fx-destroy-embers,
+.battle-fx-destroy-ash{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.battle-fx-destroy-flash{width:42px;height:42px;border-radius:999px;background:radial-gradient(circle,rgba(255,255,255,.98) 0 16%,rgba(255,238,166,.96) 30%,rgba(255,183,84,.72) 48%,rgba(255,112,52,.18) 72%,transparent 78%);animation:destroyFlash .52s ease-out forwards}
+.battle-fx-destroy-core{width:34px;height:34px;border-radius:999px;background:radial-gradient(circle,rgba(255,249,226,.98) 0 14%,rgba(255,210,118,.96) 34%,rgba(255,120,56,.82) 56%,rgba(126,20,6,.22) 76%,transparent 80%);animation:destroyCore .92s ease-out forwards}
+.battle-fx-destroy-ring{width:54px;height:54px;border-radius:999px;border:2px solid rgba(255,215,122,.78);box-shadow:0 0 18px rgba(255,173,73,.28);animation:destroyRing 1s ease-out forwards}
+.battle-fx-destroy-burst{width:92px;height:92px;border-radius:999px;background:conic-gradient(from 0deg, transparent 0 8%, rgba(255,244,184,.92) 8% 11%, transparent 11% 20%, rgba(255,193,88,.76) 20% 24%, transparent 24% 35%, rgba(255,136,69,.76) 35% 39%, transparent 39% 52%, rgba(255,244,184,.88) 52% 56%, transparent 56% 68%, rgba(255,160,80,.72) 68% 72%, transparent 72% 84%, rgba(255,214,122,.80) 84% 88%, transparent 88% 100%);filter:blur(.35px);animation:destroyBurst 1.05s ease-out forwards}
+.battle-fx-destroy-smoke{width:84px;height:84px;border-radius:999px;background:radial-gradient(circle at 50% 58%,rgba(24,16,10,.0) 0 22%,rgba(58,46,38,.34) 38%,rgba(23,18,16,.22) 54%,transparent 72%);filter:blur(6px);animation:destroySmoke 1.12s ease-out forwards}
+.battle-fx-destroy-embers,.battle-fx-destroy-ash{width:100px;height:100px}
+.battle-fx-ember,.battle-fx-ash{position:absolute;left:50%;top:50%;display:block;border-radius:999px;opacity:0}
+.battle-fx-ember{width:7px;height:7px;background:radial-gradient(circle,rgba(255,251,232,.96) 0 24%,rgba(255,204,98,.92) 44%,rgba(255,119,52,.58) 74%,transparent 82%);box-shadow:0 0 10px rgba(255,173,73,.34);animation:emberFly 1s ease-out forwards}
+.battle-fx-ash{width:5px;height:5px;background:radial-gradient(circle,rgba(194,185,170,.72) 0 46%,rgba(78,68,60,.20) 72%,transparent 80%);animation:ashFly 1.12s ease-out forwards}
+.ember-1{--dx:-32px;--dy:-34px;animation-delay:.02s}.ember-2{--dx:-18px;--dy:-42px;animation-delay:.06s}.ember-3{--dx:0px;--dy:-48px;animation-delay:.03s}.ember-4{--dx:20px;--dy:-40px;animation-delay:.08s}.ember-5{--dx:34px;--dy:-26px;animation-delay:.05s}.ember-6{--dx:24px;--dy:-10px;animation-delay:.01s}.ember-7{--dx:-24px;--dy:-12px;animation-delay:.09s}.ember-8{--dx:8px;--dy:-22px;animation-delay:.04s}
+.ash-1{--dx:-20px;--dy:-18px;animation-delay:.10s}.ash-2{--dx:-8px;--dy:-28px;animation-delay:.14s}.ash-3{--dx:12px;--dy:-20px;animation-delay:.12s}.ash-4{--dx:22px;--dy:-10px;animation-delay:.16s}.ash-5{--dx:-28px;--dy:-8px;animation-delay:.18s}.ash-6{--dx:2px;--dy:-36px;animation-delay:.11s}
+.battle-fx-destroy.fx-heroic .battle-fx-destroy-ring{border-color:rgba(121,244,201,.78);box-shadow:0 0 18px rgba(121,244,201,.28)}
+.battle-fx-destroy.fx-heroic .battle-fx-destroy-core{background:radial-gradient(circle,rgba(255,251,232,.98) 0 14%,rgba(121,244,201,.94) 30%,rgba(255,160,92,.78) 58%,rgba(126,20,6,.20) 78%,transparent 82%)}
+.battle-fx-destroy.fx-glorious .battle-fx-destroy-ring{border-color:rgba(255,224,138,.82);box-shadow:0 0 22px rgba(255,208,110,.34)}
+.battle-fx-destroy.fx-epic .battle-fx-destroy-ring{border-color:rgba(189,148,255,.80);box-shadow:0 0 20px rgba(189,148,255,.32)}
+.battle-fx-destroy.fx-epic .battle-fx-destroy-core{background:radial-gradient(circle,rgba(255,251,255,.98) 0 14%,rgba(189,148,255,.94) 32%,rgba(255,136,69,.72) 58%,rgba(72,28,114,.24) 78%,transparent 82%)}
+.battle-fx-destroy.fx-mythic .battle-fx-destroy-ring{border-color:rgba(255,123,217,.82);box-shadow:0 0 22px rgba(255,123,217,.34)}
+.battle-fx-destroy.fx-mythic .battle-fx-destroy-core{background:radial-gradient(circle,rgba(255,251,255,.98) 0 14%,rgba(255,123,217,.94) 30%,rgba(255,170,84,.74) 56%,rgba(108,28,126,.24) 78%,transparent 82%)}
+.battle-fx-destroy.fx-demigod .battle-fx-destroy-ring{border-color:rgba(255,247,167,.86);box-shadow:0 0 26px rgba(255,247,167,.36)}
+.battle-fx-destroy.fx-demigod .battle-fx-destroy-core{background:radial-gradient(circle,rgba(255,255,255,.99) 0 14%,rgba(255,247,167,.96) 28%,rgba(255,158,228,.58) 48%,rgba(145,160,255,.36) 66%,rgba(126,20,6,.12) 80%,transparent 84%)}
+@keyframes destroyFlash{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(2.25)}}
+@keyframes destroyCore{0%{opacity:0;transform:translate(-50%,-50%) scale(.32)}18%{opacity:1}52%{opacity:.96;transform:translate(-50%,-50%) scale(1.26)}100%{opacity:0;transform:translate(-50%,-50%) scale(.66)}}
+@keyframes destroyRing{0%{opacity:.1;transform:translate(-50%,-50%) scale(.34)}30%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(2.05)}}
+@keyframes destroyBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.24) rotate(0deg)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.34) rotate(56deg)}}
+@keyframes destroySmoke{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}26%{opacity:.42}100%{opacity:0;transform:translate(-50%,-64%) scale(1.2)}}
+@keyframes emberFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}10%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.9)}}
+@keyframes ashFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}24%{opacity:.78}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1)}}
+@media(max-width:980px){
+  .battle-fx-destroy{width:86px;height:86px}
+  .battle-fx-destroy-burst{width:74px;height:74px}
+  .battle-fx-destroy-smoke{width:66px;height:66px}
+  .battle-fx-destroy-embers,.battle-fx-destroy-ash{width:80px;height:80px}
+}
+@media(prefers-reduced-motion:reduce){
+  .battle-fx-destroy-flash,.battle-fx-destroy-core,.battle-fx-destroy-ring,.battle-fx-destroy-burst,.battle-fx-destroy-smoke,.battle-fx-ember,.battle-fx-ash{animation-duration:.18s!important}
+}
