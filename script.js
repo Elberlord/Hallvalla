@@ -1150,7 +1150,7 @@ function effectiveAtk(u){const bonus=getLeaderBonus(u);let v=(u?.atk||0)+(u?.buf
 function effectiveDex(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+(bonus.dex||0))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+(bonus.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,v)}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u))}
-function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?1:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}
+function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?1:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxTurnGuard(u){
   if(!u)return 0;
@@ -1355,7 +1355,7 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
   return {units:out,traps,logs,statusFxEvent,floatFxEvent};
 }
 function resolveMovementLegendaryTraps(unit,dest,units){
-  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],cancel=false;
+  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],cancel=false,statusFxEvent=null,floatFxEvent=null;
   const moving=unit;
   for(const trap of [...traps]){
     if(trap.targetId!==moving.id)continue;
@@ -2103,9 +2103,10 @@ async function attackUnit(a,d){
   units=units.filter(u=>u.hp>0);
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods);
   let bleedText="";
+  let alreadyBleeding=false;
   if(hit.hit&&hpLoss>0&&a.key==="scout"&&units.some(u=>u.id===d.id)){
     const targetAfterBleed=units.find(u=>u.id===d.id);
-    const alreadyBleeding=hasBleeding(targetAfterBleed);
+    alreadyBleeding=hasBleeding(targetAfterBleed);
     units=units.map(u=>u.id===d.id?{...u,bleedDamage:Math.max(1,Number(u.bleedDamage||0)),bleedSourceName:a.name}:u);
     bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado.`:` ${d.name} queda con Sangrado: pierde 1 Vida al inicio de su turno.`;
   }
@@ -2450,9 +2451,10 @@ async function adventureEnemyTurn(){
     units=applyAfterDamageBonuses(units,attacker,target,hpLoss,defenderFell,mods);
 
     let bleedText="";
+    let alreadyBleeding=false;
     if(hit.hit&&hpLoss>0&&attacker.key==="scout"&&units.some(u=>u.id===target.id)){
       const targetAfterBleed=units.find(u=>u.id===target.id);
-      const alreadyBleeding=hasBleeding(targetAfterBleed);
+      alreadyBleeding=hasBleeding(targetAfterBleed);
       units=units.map(u=>u.id===target.id?{...u,bleedDamage:Math.max(1,Number(u.bleedDamage||0)),bleedSourceName:attacker.name}:u);
       bleedText=alreadyBleeding?` ${target.name} mantiene Sangrado.`:` ${target.name} queda con Sangrado: pierde 1 Vida al inicio de su turno.`;
     }
