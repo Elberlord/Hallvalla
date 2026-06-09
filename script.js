@@ -1573,19 +1573,111 @@ function cardInspectStats(card){
   }
   return base;
 }
+function normalizeStatKey(label){return String(label||"").toLowerCase().replace(/\s+/g,"").replace(/[+\-]/g,"");}
 function statHelpText(label){
-  const key=String(label||"").toLowerCase().replace(/\s+/g,"");
+  const key=normalizeStatKey(label);
   if(key==="costo")return "Honor necesario para jugar la carta desde tu mano.";
-  if(key==="at"||key==="ataque"||key==="at+")return "Ataque: daño base que causa cuando golpea o cuando recibe un aumento de poder.";
-  if(key==="hp"||key==="vida")return "Vida: resistencia de la unidad; si llega a 0, sale del campo.";
-  if(key==="gd"||key==="guardia"||key==="gd+")return "Guardia: protección que reduce o absorbe daño antes de perder vida.";
-  if(key==="dx"||key==="destreza")return "Destreza: técnica y precisión usada para calcular si un ataque acierta.";
-  if(key==="agi"||key==="agilidad")return "Agilidad: suma en ataque y defensa para calcular si un golpe acierta o se evade.";
-  if(key==="mv"||key==="mov"||key==="movimiento"||key==="mv-"||key==="mov-")return "Movimiento: cantidad de casillas que puede avanzar al usar MOV.";
-  if(key==="rg"||key==="rango")return "Rango: distancia máxima desde la que puede atacar.";
-  if(key==="daño")return "Daño: vida que pierde el objetivo al resolverse esta carta.";
+  if(key==="at"||key==="ataque")return "Ataque: daño base del golpe. Si el ataque acierta, primero presiona la Guardia enemiga y solo el daño sobrante baja HP.";
+  if(key==="hp"||key==="vida")return "Vida: resistencia real de la unidad. Si llega a 0, sale del campo.";
+  if(key==="gd"||key==="guardia")return "Guardia: amortigua el daño recibido durante el turno. El daño consume Guardia antes de tocar la Vida; al iniciar el turno de su dueño, la Guardia se restaura si la unidad sobrevivió.";
+  if(key==="dx"||key==="destreza")return "Destreza: técnica del golpe. En ataque suma a la precisión; en defensa ayuda a la evasión.";
+  if(key==="agi"||key==="agilidad")return "Agilidad: rapidez táctica. En ataque ayuda a conectar el golpe; en defensa ayuda a esquivar.";
+  if(key==="mv"||key==="mov"||key==="movimiento")return "Movimiento: cantidad de casillas que puede avanzar al usar MOV.";
+  if(key==="rg"||key==="rango")return "Rango: distancia máxima desde la que puede atacar. Rango 1 es cuerpo a cuerpo.";
+  if(key==="daño")return "Daño: cantidad de daño que intenta aplicar una magia, trampa o efecto.";
   if(key==="heal"||key==="curación"||key==="curacion")return "Curación: HP que recupera el objetivo sin superar su vida máxima.";
   return "Valor de juego de esta carta.";
+}
+function weaponGuideData(entity){
+  const key=String(entity?.key||"").toLowerCase();
+  const name=String(entity?.name||"").toLowerCase();
+  const text=String(entity?.text||entity?.effectText||entity?.ability||"");
+  const range=Number(entity?.range??getCardDisplayRange(entity)??1)||1;
+  const atk=Number(entity?.atk||0)||0;
+  const guard=Number(entity?.guard??entity?.baseGuard??0)||0;
+  const dex=Number(entity?.dex||0)||0;
+  const agi=Number(entity?.agi||0)||0;
+  const isSpell=entity?.type==="spell"||!!entity?.spell;
+  const isTrap=entity?.type==="trap"||!!entity?.trap;
+  if(isSpell)return {title:"Canalizador mágico",short:"Esta carta no usa arma física: usa magia, bendición, maldición o energía táctica.",formula:"Ventaja: puede cambiar el combate sin depender del rango normal de una unidad. Normalmente elige un objetivo válido y aplica daño, curación, Guardia, movimiento reducido o mejora temporal.",example:`${entity?.name||"Magia"}: ${text||"resuelve su efecto al jugarse."}`};
+  if(isTrap)return {title:"Trampa / recurso táctico",short:"Esta carta no usa arma física: prepara una condición o castigo táctico.",formula:"Ventaja: castiga una acción enemiga, marca un objetivo o altera una estadística sin jugar como unidad común.",example:`${entity?.name||"Trampa"}: ${text||"se activa cuando se cumple su condición."}`};
+  if(entity?.leader){
+    const lt=String(entity.leaderType||"").toLowerCase();
+    if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de kaster.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
+    if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: controla el ritmo de las magias.",formula:"Ventaja: reduce costos y aumenta efectos mágicos por nivel de buff. Su arma real es acelerar el spellbook.",example:"Un hechicero fuerte convierte magias baratas en cambios grandes de tablero."};
+    return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de kaster.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
+  }
+  if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Lanza ligera de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: si la unidad se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate. Eso hace más fácil conectar y reduce la evasión enemiga.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación."};
+  if(key==="berserker"||name.includes("berserker"))return {title:"Hacha / arma de dos manos",short:"Arma pesada de ruptura. Pega muy duro, pero deja poca defensa propia.",formula:"Ventaja: mucho AT y presión sobre Guardia enemiga. Su función es abrir unidades resistentes, no aguantar una lluvia de ataques.",example:"Si entra contra una unidad con poca AGI o Guardia ya gastada, puede partir la defensa en un solo golpe."};
+  if(key==="spearman"||name.includes("lancero"))return {title:"Lanza y escudo",short:"Arma de control. Tiene más alcance que una espada común y castiga cargas enemigas.",formula:"Ventaja: RG 2 le permite golpear antes que muchas unidades cuerpo a cuerpo. También puede contraatacar si sobrevive y es especialmente peligroso contra Caballería.",example:"Colócalo en el frente para proteger casillas clave y obligar al rival a pensar antes de entrar."};
+  if(key==="archer"||name.includes("arquera")||name.includes("arquero"))return {title:"Arco",short:"Arma de hostigamiento. Hace daño desde distancia y obliga al rival a moverse mal.",formula:"Ventaja: ataca fuera del cuerpo a cuerpo. Además, su disparo puede reducir MOV del objetivo, cortando persecuciones o retiradas.",example:"Una arquera bien colocada gana valor si dispara sin quedar atrapada al siguiente turno."};
+  if(key==="guardian"||name.includes("guardián")||name.includes("guardian")||name.includes("piedra"))return {title:"Escudo pesado",short:"Arma defensiva. No busca matar rápido: busca absorber, bloquear y romper el ritmo del rival.",formula:"Ventaja: mucha Guardia y efectos que bajan AGI/MOV. Sirve como muro para que tus unidades frágiles trabajen detrás.",example:"Si el rival gasta ataques en él y no lo elimina, la Guardia volverá y el intercambio puede salirte gratis."};
+  if(key==="scout"||name.includes("asesina"))return {title:"Dagas curvas y veneno",short:"Arma de ejecución. No pelea limpio: entra, atraviesa defensa y deja sangrado.",formula:"Ventaja: sus ataques ignoran Guardia/defensa. Si logra tocar HP, aplica Sangrado y el objetivo pierde 1 Vida al inicio de su turno.",example:"Úsala contra objetivos con mucha Guardia pero poca Vida. Es una aguja venenosa, no un martillo."};
+  if(name.includes("samur")||name.includes("musashi")||name.includes("tomoe"))return {title:"Katana / arma samurái",short:"Arma de precisión. Premia entrar en el combate correcto y no malgastar el ataque.",formula:"Ventaja: suele combinar buena técnica con daño confiable. Revisa DX/AGI para saber si su golpe será consistente contra unidades evasivas.",example:"Busca objetivos donde tu precisión sea alta o donde el rival ya perdió Guardia."};
+  if(range>=3)return {title:"Arma a distancia",short:"Ataca desde lejos. Su valor está en pegar sin recibir contraataque inmediato.",formula:"Ventaja: mientras mantenga distancia, puede forzar al rival a gastar movimiento antes de responder. DX y AGI definen qué tan confiable será el disparo.",example:"Protege esta unidad con frontales para que pueda disparar varios turnos."};
+  if(range===2)return {title:"Arma de alcance medio",short:"Golpea más lejos que una espada común, pero todavía necesita buena posición.",formula:"Ventaja: puede atacar desde una casilla extra, controlar pasillos y amenazar sin exponerse tanto al cuerpo a cuerpo.",example:"Ideal para pelear detrás de un tanque o cubrir una línea estrecha."};
+  if(atk>=7)return {title:"Arma pesada cuerpo a cuerpo",short:"Mucho daño, poca sutileza. Quiere romper una pieza importante cuando por fin llega.",formula:"Ventaja: AT alto castiga Guardia baja o unidades lentas. Debilidad: si tiene poco MOV o AGI, necesita apoyo para alcanzar buenos objetivos.",example:"No la mandes sola al centro si el rival puede kitearla o rodearla."};
+  if(guard>=5)return {title:"Arma defensiva / escudo",short:"Su equipo está pensado para aguantar más que para borrar enemigos rápido.",formula:"Ventaja: absorbe daño, protege casillas y compra turnos. Mientras sobreviva, su Guardia puede restaurarse en su turno.",example:"Excelente para formar pared delante de arqueros o líderes."};
+  if(dex+agi>=7)return {title:"Arma ligera",short:"Equipo rápido y técnico. Depende de precisión, evasión y buenos objetivos.",formula:"Ventaja: DX + AGI alto mejora la probabilidad de acertar y también la evasión al defender.",example:"Úsala para atacar objetivos lentos o entrar donde una unidad pesada fallaría."};
+  return {title:"Arma cuerpo a cuerpo",short:"Equipo estándar para intercambiar golpes a corta distancia.",formula:"Ventaja: simple y confiable. Revisa AT para daño, GD para aguante, y DX + AGI para saber si conectará el golpe.",example:"Si no tiene mucho rango, necesita buena posición antes de atacar."};
+}
+function weaponSummaryHtml(entity){
+  const data=weaponGuideData(entity);
+  return `<div class="weapon-summary"><b>Arma:</b> ${escapeHtml(data.title)}<br><span>${escapeHtml(data.short)}</span></div>`;
+}
+function openWeaponGuide(entity){
+  openStatGuideModal(weaponGuideData(entity));
+}
+function statGuideData(label=""){
+  if(label&&typeof label==="object")return label;
+  const key=normalizeStatKey(label);
+  const base={title:"Guía de combate",short:"Toca cualquier stat para abrir su explicación.",formula:"Precisión de golpe = 70 + ((DX atacante + AGI atacante) - (DX defensor + AGI defensor)) × 5. El resultado se limita entre 25% y 95%. Si un líder participa en el ataque o la defensa, el golpe acierta automáticamente.",example:"Ejemplo: atacante con DX 4 + AGI 4 = 8. Defensor con DX 3 + AGI 2 = 5. Diferencia 3, entonces 70 + 15 = 85% de acierto."};
+  const map={
+    costo:{title:"Costo / Honor",short:"Honor necesario para jugar la carta desde la mano.",formula:"Si tu Honor actual es menor que el costo, la carta no se puede jugar.",example:"Costo 3 necesita al menos 3 de Honor disponible."},
+    at:{title:"AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
+    ataque:{title:"AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
+    hp:{title:"HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
+    vida:{title:"HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
+    gd:{title:"GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
+    guardia:{title:"GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
+    dx:{title:"DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
+    destreza:{title:"DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
+    agi:{title:"AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
+    agilidad:{title:"AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
+    mv:{title:"MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
+    mov:{title:"MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
+    movimiento:{title:"MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
+    rg:{title:"RG / Rango",short:"Distancia máxima de ataque.",formula:"Puedes atacar objetivos dentro de RG. Rango 1 es cuerpo a cuerpo; rango 3 o más permite atacar desde más lejos.",example:"RG 3 puede atacar a un enemigo a 3 casillas."},
+    rango:{title:"RG / Rango",short:"Distancia máxima de ataque.",formula:"Puedes atacar objetivos dentro de RG. Rango 1 es cuerpo a cuerpo; rango 3 o más permite atacar desde más lejos.",example:"RG 3 puede atacar a un enemigo a 3 casillas."}
+  };
+  return map[key]||base;
+}
+function openStatGuideModal(label=""){
+  const data=statGuideData(label);
+  let modal=$("statGuideModal");
+  if(!modal){
+    modal=document.createElement("div");
+    modal.id="statGuideModal";
+    modal.className="stat-guide-modal hidden";
+    modal.innerHTML=`<div class="stat-guide-card"><div class="stat-guide-head"><div><div class="stat-guide-kicker">Guía de reglas</div><h2 id="statGuideTitle"></h2></div><button id="statGuideClose" class="stat-guide-x" type="button" aria-label="Cerrar guía">×</button></div><p id="statGuideShort" class="stat-guide-short"></p><div class="stat-guide-box"><b>Regla / fórmula</b><span id="statGuideFormula"></span></div><div class="stat-guide-box"><b>Ejemplo</b><span id="statGuideExample"></span></div><div class="stat-guide-actions"><button id="statGuideCombatBtn" class="btn ghost" type="button">Ver precisión/evasión</button><button id="statGuideOk" class="btn primary" type="button">Entendido</button></div></div>`;
+    document.body.appendChild(modal);
+    const close=()=>modal.classList.add("hidden");
+    $("statGuideClose").onclick=close;
+    $("statGuideOk").onclick=close;
+    $("statGuideCombatBtn").onclick=()=>openStatGuideModal("formula");
+    modal.addEventListener("click",ev=>{if(ev.target===modal)close();});
+  }
+  $("statGuideTitle").textContent=data.title;
+  $("statGuideShort").textContent=data.short;
+  $("statGuideFormula").textContent=data.formula;
+  $("statGuideExample").textContent=data.example;
+  modal.classList.remove("hidden");
+}
+function bindStatGuideClicks(container){
+  if(!container)return;
+  container.querySelectorAll("[data-stat]").forEach(el=>{
+    el.addEventListener("click",ev=>{ev.stopPropagation();openStatGuideModal(el.dataset.stat||el.textContent||"");});
+  });
 }
 function statHelpHtml(stats){
   const seen=new Set();
@@ -1602,7 +1694,8 @@ function cardRuleHelpHtml(card){
   let lines=statHelpHtml(stats);
   const effectText=card?.text||card?.effectText||card?.ability||"";
   if(effectText)lines+=`<div class="stat-help-line"><b>Efecto</b>: ${escapeHtml(effectText)}</div>`;
-  return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}</div>`;
+  lines+=weaponSummaryHtml(card);
+  return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}<button id="cardWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja táctica</button></div>`;
 }
 function unitRuleHelpHtml(u){
   const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
@@ -1610,7 +1703,8 @@ function unitRuleHelpHtml(u){
   const effectText=getUnitEffectText(u);
   if(effectText)lines+=`<div class="stat-help-line"><b>Destreza/Efecto</b>: ${escapeHtml(effectText)}</div>`;
   else lines+=`<div class="stat-help-line"><b>Destreza/Efecto</b>: si la unidad tiene una habilidad especial, aquí se explica cuándo y cómo aplica.</div>`;
-  return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}</div>`;
+  lines+=weaponSummaryHtml(u);
+  return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}<button id="unitWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja táctica</button></div>`;
 }
 function closeHandForBoardFocus(){
   handOpen=false;
@@ -1637,8 +1731,15 @@ function showCardInspectModal(card){
   if(sub)sub.textContent=`${cardTypeLabel(card)} · ${card.rarity||"básica"}`;
   if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
   const inspectStats=cardInspectStats(card);
-  if(stats)stats.innerHTML=inspectStats.map(([l,v])=>`<div class="card-inspect-stat" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></div>`).join("");
-  if(text)text.innerHTML=`<div class="card-main-text">${escapeHtml(card.text||"Sin texto.")}</div>${cardRuleHelpHtml(card)}`;
+  if(stats){
+    stats.innerHTML=inspectStats.map(([l,v])=>`<button class="card-inspect-stat stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></button>`).join("");
+    bindStatGuideClicks(stats);
+  }
+  if(text)text.innerHTML=`<div class="card-main-text">${escapeHtml(card.text||"Sin texto.")}</div>${cardRuleHelpHtml(card)}<button id="cardStatsGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Guía de stats y fórmula de precisión</button>`;
+  const statsGuideBtn=$("cardStatsGuideBtn");
+  if(statsGuideBtn)statsGuideBtn.onclick=()=>openStatGuideModal("formula");
+  const weaponGuideBtn=$("cardWeaponGuideBtn");
+  if(weaponGuideBtn)weaponGuideBtn.onclick=()=>openWeaponGuide(card);
   const state=getCardPlayState(card);
   if(reason)reason.textContent=state.canPlay?"Puedes jugar esta carta. Al tocar Jugar, elige el objetivo o la casilla válida en el tablero.":state.reason;
   if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
@@ -2688,11 +2789,16 @@ function showUnit(u){
   $("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
   const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
-  $("inspectStats").innerHTML=stats.map(([l,v])=>`<div class="inspect-stat" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></div>`).join("");
+  const inspectStatsEl=$("inspectStats");
+  inspectStatsEl.innerHTML=stats.map(([l,v])=>`<button class="inspect-stat stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></button>`).join("");
+  bindStatGuideClicks(inspectStatsEl);
   const ownerLabel=u.owner===myPlayer?"Tu unidad":"Unidad rival";
-  $("inspectText").innerHTML=(u.leader
+  const fx=getUnitEffectText(u);
+  $("inspectText").innerHTML=`<span>${u.leader
     ? `${ownerLabel}. Si un kaster llega a 0, pierde la batalla.`
-    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca fuera/cerrar para volver al duelo.`) + unitRuleHelpHtml(u);
+    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca un stat para ver su regla exacta.`}</span>${fx?`<br/><br/><b>Efecto:</b> ${escapeHtml(fx)}`:""}<br/><br/><button id="unitStatsGuideBtn" class="btn ghost full" type="button">Guía de stats y fórmula de precisión</button>`;
+  const guideBtn=$("unitStatsGuideBtn");
+  if(guideBtn)guideBtn.onclick=()=>openStatGuideModal("formula");
   inspector.classList.add("show");
 }
 
@@ -3015,14 +3121,26 @@ function handQuickStats(card){
 function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];const playableCount=getPlayableCardsInHand().length;const phaseStatus=isMyTurn()?` · ${turnPhaseLabel()}`:"";const status=isMyTurn()?` · ${playableCount} jugable${playableCount===1?"":"s"}`:"";$("handInfo").textContent=`Honor ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas${status}${phaseStatus}`;$("handRow").innerHTML=hand.map(c=>{const playState=getCardPlayState(c);return `<div class="hand-card hand-card-visual ${getCardVisualClass(c)} ${playState.canPlay?"":"not-playable"} ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}" title="${escapeHtml(playState.reason)}"><div class="hand-art-wrap">${getCardVisualHtml(c,"hand-icon hand-art")}</div><div class="hand-card-footer"><div class="hand-name">${escapeHtml(c.name)}</div><div class="hand-quick-row"><span class="hand-stats">${handQuickStats(c)}</span></div></div></div>`}).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>el.addEventListener("click",()=>{const card=hand.find(c=>c.id===el.dataset.id);if(card)showCardInspectModal(card)}))}
 function renderLog(){const el=$("log");if(!el)return;el.classList.toggle("log-collapsed",!!logCollapsed);el.setAttribute("aria-hidden",String(!!logCollapsed));el.innerHTML=logCollapsed?"":(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}
 function renderDetail(){
+  const detailEl=$("detail");
   const isAdventure=publicState?.mode==="adventure";
-  if(selectedCard){$("detail").innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p>${selectedCard.type==="unit"?`<p>Costo: ${selectedCard.cost} · AT ${selectedCard.atk||0} · HP ${selectedCard.hp||0} · GD ${selectedCard.guard||0} · DX ${selectedCard.dex||0} · AGI ${selectedCard.agi||0} · MV ${selectedCard.mov||0} · RG ${selectedCard.range||0}</p>`:`<p>Costo: ${selectedCard.cost}</p>`}<p>${selectedCard.text}</p>`;return}
+  if(selectedCard){
+    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p>${selectedCard.type==="unit"?`<p>Costo: ${selectedCard.cost} · AT ${selectedCard.atk||0} · HP ${selectedCard.hp||0} · GD ${selectedCard.guard||0} · DX ${selectedCard.dex||0} · AGI ${selectedCard.agi||0} · MV ${selectedCard.mov||0} · RG ${selectedCard.range||0}</p>`:`<p>Costo: ${selectedCard.cost}</p>`}<p>${escapeHtml(selectedCard.text||"")}</p>${weaponSummaryHtml(selectedCard)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
+    const btn=$("detailWeaponGuideBtn");
+    if(btn)btn.onclick=()=>openWeaponGuide(selectedCard);
+    return;
+  }
   if(selectedUnitId){
     const u=getUnit(selectedUnitId);
-    if(u){const fx=getUnitEffectText(u);$("detail").innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}`;return}
+    if(u){
+      const fx=getUnitEffectText(u);
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}${weaponSummaryHtml(u)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
+      const btn=$("detailWeaponGuideBtn");
+      if(btn)btn.onclick=()=>openWeaponGuide(u);
+      return;
+    }
   }
   const modeLine=isAdventure?`<p><b>Modo:</b> Aventura contra IA</p><p><b>Batalla:</b> ${escapeHtml(publicState?.adventureBattleTitle||"Aventura")}</p>`:`<p><b>Jugador:</b> ${myPlayer||"?"}</p><p><b>Código:</b> ${gameId||"..."}</p><p><b>Modo:</b> Online</p>`;
-  $("detail").innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero mejora infantería pesada según nivel de buff. Arquero mejora arqueras según nivel de buff. Hechicero reduce costo y aumenta efecto de magias según nivel de buff.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
+  detailEl.innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero mejora infantería pesada según nivel de buff. Arquero mejora arqueras según nivel de buff. Hechicero reduce costo y aumenta efecto de magias según nivel de buff.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Toca una carta o unidad para ver detalles.</p>`
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 
@@ -3090,12 +3208,16 @@ function ensureStatsTutorialModal(){
       <div class="stats-tutorial-grid">
         <div class="stats-tutorial-stat"><b>HP / Vida</b><span>Cuánto daño puede resistir la unidad antes de caer.</span></div>
         <div class="stats-tutorial-stat"><b>AT / Ataque</b><span>Daño base que causa al atacar. Más AT significa golpes más fuertes.</span></div>
-        <div class="stats-tutorial-stat"><b>GD / Guardia</b><span>Reduce el daño recibido. Ideal para aguantar la línea frontal.</span></div>
-        <div class="stats-tutorial-stat"><b>DX / Destreza</b><span>Representa precisión y calidad del ataque. Las arqueras dependen mucho de esto.</span></div>
-        <div class="stats-tutorial-stat"><b>AGI / Agilidad</b><span>Velocidad táctica de la unidad. Ayuda a unidades rápidas y evasivas.</span></div>
+        <div class="stats-tutorial-stat"><b>GD / Guardia</b><span>Amortigua el daño recibido durante el turno. Se consume antes de la Vida y se restaura al inicio del turno de su dueño si la unidad sobrevive.</span></div>
+        <div class="stats-tutorial-stat"><b>DX / Destreza</b><span>Técnica de combate. En ataque suma a la precisión; en defensa suma a la evasión.</span></div>
+        <div class="stats-tutorial-stat"><b>AGI / Agilidad</b><span>Velocidad táctica. También suma a precisión y evasión, por eso las unidades ágiles golpean y esquivan mejor.</span></div>
         <div class="stats-tutorial-stat"><b>MV / Movimiento</b><span>Cuántas casillas puede moverse una unidad durante su acción.</span></div>
         <div class="stats-tutorial-stat"><b>RG / Rango</b><span>Distancia máxima de ataque. Rango 1 es cuerpo a cuerpo.</span></div>
         <div class="stats-tutorial-stat"><b>Costo / Honor</b><span>Honor necesario para jugar cartas. El Honor crece durante la partida.</span></div>
+      </div>
+      <div class="stats-tutorial-leaders">
+        <b>Fórmula de precisión y evasión</b>
+        <span>Probabilidad de acierto = 70 + ((DX atacante + AGI atacante) - (DX defensor + AGI defensor)) × 5. El resultado mínimo es 25% y el máximo 95%. Si un líder participa, el golpe acierta automáticamente.</span>
       </div>
       <div class="stats-tutorial-leaders">
         <b>Recuerda los líderes</b>
