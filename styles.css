@@ -2838,3 +2838,91 @@
     padding:28px 20px 24px !important;
   }
 }
+
+/* === PATCH 7EJ - Mobile adventure modal image fit repair ===
+   Objetivo: corregir recortes SOLO en móvil. En PC no cambia nada.
+   El problema venía de background-size: cover + max-height en móviles.
+*/
+@media(max-width:900px), (pointer:coarse){
+  /* Escenas de aventura con arte completo: no cortar los bordes en móvil */
+  #adventureGuardianVisual.scene-guardian,
+  .adventure-scene-visual.scene-call.has-art,
+  .adventure-scene-visual.scene-heroes.has-art,
+  .adventure-scene-visual.scene-guardian.has-art{
+    background-size:contain!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+    background-color:#050404!important;
+  }
+
+  /* Modal del guardián sin actor separado: quitar la guillotina de altura móvil */
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor){
+    max-height:none!important;
+    min-height:min(520px,72svh)!important;
+    background-size:contain!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+  }
+
+  /* Si hay actor separado, mantener el actor visible sin forzar recorte del fondo */
+  .adventure-scene-visual.scene-guardian.has-guardian-actor{
+    background-size:contain!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+  }
+
+  /* Cartas de selección de aventura/líder: mostrar personaje completo en móvil */
+  .adventure-choice img{
+    object-fit:contain!important;
+    object-position:center center!important;
+    background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.14),rgba(0,0,0,.18))!important;
+  }
+
+  /* Resultado/victoria de aventura: el fondo no debe cortar el arte principal en móvil */
+  .adventure-result-backdrop{
+    background-size:contain!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+    background-color:#050404!important;
+  }
+}
+
+@media(max-width:430px){
+  #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor){
+    min-height:min(500px,72svh)!important;
+    background-size:contain!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+  }
+}
+
+
+/* === v7EK Mobile duel opening hand fix ===
+   En móvil la mano debe verse al iniciar el duelo igual que en PC.
+   Se deja como overlay fijo para que no quede escondida bajo el panel inferior ni bajo la barra del navegador. */
+@media(max-width:980px), (pointer:coarse){
+  .hand-drawer.open{
+    position:fixed!important;
+    left:8px!important;
+    right:8px!important;
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px))!important;
+    width:auto!important;
+    max-width:none!important;
+    transform:none!important;
+    z-index:140!important;
+    display:block!important;
+    max-height:min(44svh, 260px)!important;
+    overflow:hidden!important;
+  }
+  .hand-drawer.open .hand-row{
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .side:not(.actions-collapsed) ~ .hand-drawer.open{
+    bottom:calc(118px + env(safe-area-inset-bottom, 0px))!important;
+  }
+  .side.actions-collapsed ~ .hand-drawer.open{
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px))!important;
+  }
+}
