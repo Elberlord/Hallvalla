@@ -3529,7 +3529,7 @@ function getUnitHealthBubbleHtml(u){
   const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
   const pct=clamp(Math.round((hp/max)*100),0,100);
   const low=pct<=35?" low":pct<=65?" mid":"";
-  return `<div class="unit-info-bubble unit-health-bubble${low}" title="Salud: ${hp}/${max}"><span class="unit-info-icon">❤</span><b>${hp}/${max}</b></div>`;
+  return `<div class="unit-info-bubble unit-health-bubble${low}" title="Salud: ${hp}/${max}"><span class="unit-health-vial" aria-hidden="true"><span class="unit-health-vial-fill" style="height:${pct}%"></span><span class="unit-health-vial-shine"></span></span><b>${hp}/${max}</b></div>`;
 }
 
 function getAttackChanceBubbleHtml(target){
@@ -3543,7 +3543,8 @@ function getAttackChanceBubbleHtml(target){
   const directChance=chance;
   if(arjunaReroll)chance=Math.min(98,Math.round(100-((100-chance)*(100-chance)/100)));
   const title=arjunaReroll?`Probabilidad de acierto aprox.: ${chance}% con repetición (${directChance}% base).`:`Probabilidad de acierto: ${chance}%.`;
-  return `<div class="unit-info-bubble unit-hit-bubble" title="${escapeHtml(title)}"><span class="unit-info-icon">◎</span><b>${chance}%</b></div>`;
+  const tier=chance>=75?"high":chance>=45?"mid":"low";
+  return `<div class="unit-info-bubble unit-hit-bubble ${tier}" title="${escapeHtml(title)}"><span class="unit-hit-emblem" aria-hidden="true"><span class="unit-hit-crosshair"></span></span><b>${chance}%</b></div>`;
 }
 
 function renderBoard(){
