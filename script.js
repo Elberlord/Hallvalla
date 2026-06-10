@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7EU";
+const HALLVALLA_BUILD_VERSION="v7FW_all_units_target_fix";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -12,6 +12,21 @@ function on(id,event,handler){
   return el;
 }
 function setText(id,value){const el=$(id);if(el)el.textContent=value;}
+let lastBoardTargetTapAt=0;
+function shouldDirectBoardTarget(){return !!(selectedCard||selectedUnitId);}
+function handleDirectBoardTargetEvent(ev,x,y){
+  if(!shouldDirectBoardTarget())return false;
+  const now=Date.now();
+  if(ev&&ev.type==="click"&&now-lastBoardTargetTapAt<350){
+    ev.preventDefault();
+    ev.stopPropagation();
+    return true;
+  }
+  lastBoardTargetTapAt=now;
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  cellClick(x,y);
+  return true;
+}
 function showEl(id){const el=$(id);if(el)el.classList.remove("hidden");}
 function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
 const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.webp",archer:"assets/leaders/leader_archer.webp",mage:"assets/leaders/leader_mage.webp"};
@@ -3473,6 +3488,16 @@ function getUnitStatusBubblesHtml(u){
 
 function renderBoard(){
   const grid=$("grid");
+  if(!grid.dataset.boardTargetDelegateBound){
+    grid.dataset.boardTargetDelegateBound="1";
+    grid.addEventListener("pointerup",ev=>{
+      if(!shouldDirectBoardTarget())return;
+      const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
+      if(!cell||!grid.contains(cell))return;
+      const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
+      if(Number.isFinite(x)&&Number.isFinite(y))handleDirectBoardTargetEvent(ev,x,y);
+    },true);
+  }
   grid.innerHTML="";
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
     const cell=document.createElement("div");
@@ -3487,23 +3512,33 @@ function renderBoard(){
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}`;
       c.title=`${u.name} · HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
-      c.addEventListener("pointerdown",ev=>ev.stopPropagation());
+      c.dataset.x=String(x);
+      c.dataset.y=String(y);
+      c.addEventListener("pointerdown",ev=>ev.stopPropagation(),true);
+      c.addEventListener("pointerup",ev=>{
+        // Blindaje global de objetivos: cualquier unidad renderizada en el tablero
+        // resuelve su celda directamente cuando hay carta/ATTK/MOV/EFFECT activo.
+        // Así ninguna capa visual, retrato, burbuja o móvil puede tragarse el toque.
+        if(handleDirectBoardTargetEvent(ev,x,y))return;
+      },true);
       c.addEventListener("contextmenu",ev=>{
         ev.preventDefault();
         ev.stopPropagation();
         openUnitContextMenu(u,x,y);
       });
       c.addEventListener("click",ev=>{
-        // Si hay una carta o unidad seleccionada, el click debe llegar a la celda.
-        // Esto permite seleccionar objetivos de magias/ataques en Battle Phase.
-        // Para ver detalles en ese estado, se mantiene el menú con click derecho / pulsación larga.
-        if(selectedCard||selectedUnitId)return;
+        if(handleDirectBoardTargetEvent(ev,x,y))return;
         ev.stopPropagation();
         openUnitContextMenu(u,x,y);
       });
       cell.appendChild(c);
     }
-    cell.addEventListener("click",()=>cellClick(x,y));
+    cell.dataset.x=String(x);
+    cell.dataset.y=String(y);
+    cell.addEventListener("click",ev=>{
+      if(shouldDirectBoardTarget())return handleDirectBoardTargetEvent(ev,x,y);
+      cellClick(x,y);
+    });
     grid.appendChild(cell);
   }
 }
