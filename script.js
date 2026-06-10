@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7FW_all_units_target_fix";
+const HALLVALLA_BUILD_VERSION="v7FZ_bug_sweep_status_health_hit";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -645,7 +645,7 @@ function getAttackSoundForUnit(unit){
   if(cls==="fx-heroic"||cls==="fx-glorious"||cls==="fx-epic"||cls==="fx-mythic")return "attack_heroic";
   return "attack_slash";
 }
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:6,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:8,atk:8,guard:1,dex:3,agi:2,mov:2,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:2,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:2,hp:2,atk:3,guard:1,dex:3,agi:3,mov:2,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:4,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:2,hp:2,atk:1,guard:0,dex:4,agi:3,mov:4,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. Si el objetivo es líder, el Sangrado dura solo 2 turnos. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:6,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:8,atk:8,guard:1,dex:3,agi:2,mov:2,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:2,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:2,hp:2,atk:3,guard:1,dex:3,agi:3,mov:2,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:4,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:2,hp:2,atk:1,guard:0,dex:4,agi:3,mov:4,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,agi:7,mov:3,range:1,vigor:5,rarity:"Épica",special:true,text:"Ataque por la espalda: si Hua Lan ataca a una unidad que ya está adyacente a otro aliado, obtiene +4 Ataque durante ese combate. Si derrota al objetivo con este ataque, puede moverse 1 casilla después del combate."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,agi:3,mov:2,range:1,vigor:6,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -783,7 +783,7 @@ function applyDesertAssassinRule(card){
   card.baseGuard=0;
   card.noSwordGuardBonus=true;
   delete card.swordGuardBonusApplied;
-  card.text="Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. Si el objetivo es líder, el Sangrado dura solo 2 turnos. El sangrado ignora Guardia.";
+  card.text="Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia.";
   card.effectText=card.text;
   return card;
 }
@@ -793,11 +793,10 @@ function shouldIgnoreGuardForAttack(attacker){return isDesertAssassinUnit(attack
 function applyBleedToUnit(target,sourceName=""){
   if(!target)return target;
   const bleed={...target,bleedDamage:Math.max(1,Number(target.bleedDamage||0)||1),bleedSourceName:sourceName||target.bleedSourceName||"Sangrado"};
-  if(target.leader)bleed.bleedTurnsRemaining=2;
   return bleed;
 }
 function getBleedTurnsText(u){
-  return u?.leader&&Number(u?.bleedTurnsRemaining||0)>0?` durante ${Number(u.bleedTurnsRemaining||0)} turno(s)`:"";
+  return " hasta que sea curada o destruida";
 }
 
 function applyBleedingToOwnerAtTurnStart(units,owner){
@@ -807,17 +806,10 @@ function applyBleedingToOwnerAtTurnStart(units,owner){
   let out=(units||[]).map(u=>{
     if(u.owner!==owner||!hasBleeding(u))return u;
     const dmg=Math.max(1,Number(u.bleedDamage||1));
-    const turnsBefore=Number(u.bleedTurnsRemaining||0);
-    const isTimedLeaderBleed=!!u.leader&&turnsBefore>0;
-    const turnsAfter=isTimedLeaderBleed?Math.max(0,turnsBefore-1):turnsBefore;
     if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("bleed_tick",u,dmg);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"🩸"});
-    logs.push(`${u.name} pierde ${dmg} Vida por Sangrado${isTimedLeaderBleed?` (${turnsAfter} turno(s) restante(s)).`:"."}`);
+    logs.push(`${u.name} pierde ${dmg} Vida por Sangrado.`);
     const damaged={...u,hp:(u.hp||0)-dmg,damagedThisTurn:true};
-    if(isTimedLeaderBleed){
-      if(turnsAfter>0)damaged.bleedTurnsRemaining=turnsAfter;
-      else{delete damaged.bleedDamage;delete damaged.bleedSourceName;delete damaged.bleedTurnsRemaining;}
-    }
     return damaged;
   });
   const fallenIds=out.filter(u=>u.hp<=0).map(u=>u.id);
@@ -1763,7 +1755,7 @@ function getCardPlayState(card){
   if(card.spell==="damage"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer))return{canPlay:false,reason:"No hay objetivos rivales para este hechizo."};
   if(card.spell==="buff"&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para potenciar."};
   if((card.spell==="shield"||card.trap==="guard")&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para proteger."};
-  if(card.spell==="heal"&&!(publicState.units||[]).some(u=>u.owner===myPlayer&&u.hp<effectiveMaxHp(u)))return{canPlay:false,reason:"No hay unidades aliadas heridas para sanar."};
+  if(card.spell==="heal"&&!(publicState.units||[]).some(u=>canHealOrCleanseUnit(u,myPlayer)))return{canPlay:false,reason:"No hay unidades aliadas heridas o con estados curables."};
   if(card.trap==="slow"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer&&!u.leader))return{canPlay:false,reason:"No hay invocaciones rivales válidas para esta trampa."};
   if(card.trap==="legendary_mark"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer&&!u.leader))return{canPlay:false,reason:"No hay unidades rivales válidas para marcar."};
   if(card.trap==="legendary_mark"&&getActiveLegendaryTraps().some(t=>t.owner===myPlayer&&t.cardKey===card.key))return{canPlay:false,reason:"Ya tienes esta Trampa Legendaria activa."};
@@ -1798,7 +1790,10 @@ function canPlayCardWithSnapshot(card,honor,phase,units,player){
   if(card.spell==="damage")return unitsList.some(u=>u.owner!==player);
   if(card.spell==="buff")return unitsList.some(u=>u.owner===player);
   if(card.spell==="shield"||card.trap==="guard")return unitsList.some(u=>u.owner===player);
-  if(card.spell==="heal")return unitsList.some(u=>u.owner===player&&u.hp<((typeof effectiveMaxHp==="function"?effectiveMaxHp(u):(u.maxHp||u.hp||0))));
+  if(card.spell==="heal")return unitsList.some(u=>{
+    const max=(typeof effectiveMaxHp==="function"?effectiveMaxHp(u):(u.maxHp||u.hp||0));
+    return u.owner===player&&!u.noHealWhilePoisoned&&((u.hp||0)<max||hasCurableStatus(u));
+  });
   if(card.trap==="slow")return unitsList.some(u=>u.owner!==player&&!u.leader);
   return true;
 }
@@ -2059,12 +2054,51 @@ function playInspectedCard(){
   tryPlaySound("card_play",.70);
   selectCard(card);
 }
-function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu kaster para kastear.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"||card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer&&u.hp<effectiveMaxHp(u)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada herida para curar ${effectiveCardValue(card,"heal")} HP.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}else if(card.trap==="legendary_mark"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canMarkWithLegendaryTrap(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige la unidad enemiga que quedará marcada por ${card.name}.`)}render()}
+function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu kaster para kastear.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"||card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>canHealOrCleanseUnit(u,myPlayer)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada herida o con estado curable para curar ${effectiveCardValue(card,"heal")} HP y limpiar Sangrado/Veneno normal.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}else if(card.trap==="legendary_mark"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canMarkWithLegendaryTrap(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige la unidad enemiga que quedará marcada por ${card.name}.`)}render()}
 function selectUnit(u){
   if(!u)return;
   return openUnitContextMenu(u,u.x,u.y);
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida.");if(target.hp>=effectiveMaxHp(target))return setHint("Esa unidad ya tiene la vida completa.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,healAmount,{iconText:"✚"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} cura ${healAmount} HP.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+function clearCurableStatuses(u){
+  if(!u)return u;
+  const next={...u};
+  delete next.bleedDamage;
+  delete next.bleedSourceName;
+  delete next.bleedTurnsRemaining;
+  delete next.poisonDamage;
+  delete next.poisonTurns;
+  delete next.noHealWhilePoisoned;
+  return next;
+}
+function hasCurableStatus(u){
+  if(!u)return false;
+  const poisoned=Number(u.poisonTurns||0)>0&&Number(u.poisonDamage||0)>0&&!u.noHealWhilePoisoned;
+  return hasBleeding(u)||poisoned;
+}
+function canHealOrCleanseUnit(u,owner=null){
+  if(!u)return false;
+  if(owner!==null&&u.owner!==owner)return false;
+  if(u.noHealTurnKey&&u.noHealTurnKey===publicState?.turnKey)return false;
+  if(u.noHealWhilePoisoned)return false;
+  return (u.hp||0)<effectiveMaxHp(u)||hasCurableStatus(u);
+}
+function getStatusEntryIconHtml(entry){
+  const icon=entry?.icon||"generic";
+  const label=escapeHtml(entry?.name||entry?.label||"Estado");
+  if(icon==="bleed")return `<span class="status-icon status-icon-bleed" aria-label="${label}"></span>`;
+  if(icon==="poison")return `<span class="status-icon status-icon-poison" aria-label="${label}"><span></span><span></span><span></span></span>`;
+  if(icon==="burn")return `<span class="status-icon status-icon-burn" aria-label="${label}"></span>`;
+  if(icon==="paralysis")return `<span class="status-icon status-icon-paralysis" aria-label="${label}"></span>`;
+  if(icon==="silence")return `<span class="status-icon status-icon-silence" aria-label="${label}"></span>`;
+  if(icon==="curse")return `<span class="status-icon status-icon-curse" aria-label="${label}">✠</span>`;
+  if(icon==="lock")return `<span class="status-icon status-icon-lock" aria-label="${label}"></span>`;
+  if(icon==="buff")return `<span class="status-icon status-icon-buff" aria-label="${label}"></span>`;
+  if(icon==="debuff")return `<span class="status-icon status-icon-debuff" aria-label="${label}"></span>`;
+  if(icon==="hp")return `<span class="status-icon status-icon-hp" aria-label="${label}"></span>`;
+  if(icon==="control")return `<span class="status-icon status-icon-control" aria-label="${label}"></span>`;
+  return `<span class="status-icon status-icon-generic" aria-label="${label}">✦</span>`;
+}
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -2733,10 +2767,12 @@ async function adventureEnemyTurn(){
   const chooseBestHeal=()=>{
     const options=[];
     for(const card of hand.filter(c=>c.spell==="heal"&&effectiveCardCost(c,2)<=honor)){
-      for(const ally of living(2).filter(u=>u.owner===2&&u.hp<effectiveMaxHp(u))){
+      for(const ally of living(2).filter(u=>u.owner===2&&canHealOrCleanseUnit(u,2))){
         const missing=Math.max(0,effectiveMaxHp(ally)-(ally.hp||0));
+        const curable=hasCurableStatus(ally);
         let score=Math.min(missing,effectiveCardValue(card,"heal"))*22+(ally.atk||0)*3+(ally.key==="wallace"?25:0);
         if(missing>=2)score+=35;
+        if(curable)score+=65;
         options.push({card,ally,score});
       }
     }
@@ -2913,7 +2949,7 @@ async function adventureEnemyTurn(){
     if(choice.ally.noHealTurnKey===pub.turnKey||choice.ally.noHealWhilePoisoned)return false;
     const healAmount=effectiveCardValue(choice.card,"heal");
     const bhTrap=withAiPublicState(()=>resolveBuffHealLegendaryTraps(choice.ally,"curación",units));
-    units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===choice.ally.id?{...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}:u);
+    units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===choice.ally.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
@@ -3189,7 +3225,7 @@ function showUnit(u){
   const ownerLabel=u.owner===myPlayer?"Tu unidad":"Unidad rival";
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
-  const activeText=activeEntries.length?`<br/><br/><b>Buffs / debuffs activos:</b><br/>${activeEntries.map(e=>`${escapeHtml(e.label)}: ${escapeHtml(e.desc)}`).join("<br/>")}`:"";
+  const activeText=activeEntries.length?`<br/><br/><b>Buffs / debuffs activos:</b><br/>${activeEntries.map(e=>`${escapeHtml(e.name||e.label)}: ${escapeHtml(e.desc)}`).join("<br/>")}`:"";
   $("inspectText").innerHTML=`<span>${u.leader
     ? `${ownerLabel}. Si un kaster llega a 0, pierde la batalla.`
     : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca un stat para ver su regla exacta.`}</span>${fx?`<br/><br/><b>Efecto:</b> ${escapeHtml(fx)}`:""}${activeText}<br/><br/><button id="unitStatsGuideBtn" class="btn ghost full" type="button">Guía de stats y fórmula de precisión</button>`;
@@ -3447,43 +3483,67 @@ function setupHudToggles(){const a=$("hudToggleP1"),b=$("hudToggleP2");if(a&&!a.
 function getUnitStatusEntries(u){
   if(!u)return [];
   const entries=[];
-  const add=(label,desc,kind="neutral")=>entries.push({label,desc,kind});
+  const add=(label,name,desc,kind="neutral",icon="generic")=>entries.push({label,name,desc,kind,icon});
   const n=v=>Number(v||0);
-  if(n(u.tempMovDebuff)>0)add(`-${n(u.tempMovDebuff)} MOV`,`Movimiento reducido hasta el inicio de su próximo turno.${u.tempMovDebuffSource?` Origen: ${u.tempMovDebuffSource}.`:""}`,"debuff mov-debuff");
-  if(n(u.tempMovBuff)>0)add(`+${n(u.tempMovBuff)} MOV`,`Movimiento aumentado este turno o hasta que el efecto expire.`,"buff mov-buff");
-  if(n(u.buffAtk)>0)add(`+${n(u.buffAtk)} AT`,`Ataque aumentado temporalmente por magia o efecto.`,"buff atk-buff");
-  if(n(u.tempAtkBuff)>0)add(`+${n(u.tempAtkBuff)} AT`,`Ataque aumentado por efecto temporal.`,"buff atk-buff");
-  if(n(u.tempAtkDebuff)>0)add(`-${n(u.tempAtkDebuff)} AT`,`Ataque reducido por efecto temporal.`,"debuff atk-debuff");
-  if(n(u.tempDexBuff)>0)add(`+${n(u.tempDexBuff)} DX`,`Destreza aumentada por efecto temporal.`,"buff dex-buff");
-  if(n(u.tempDexDebuff)>0)add(`-${n(u.tempDexDebuff)} DX`,`Destreza reducida por presión, trampa o efecto temporal.`,"debuff dex-debuff");
-  if(n(u.tempAgiBuff)>0)add(`+${n(u.tempAgiBuff)} AGI`,`Agilidad aumentada por efecto temporal.`,"buff agi-buff");
-  if(n(u.tempAgiDebuff)>0)add(`-${n(u.tempAgiDebuff)} AGI`,`Agilidad reducida por efecto temporal.`,"debuff agi-debuff");
-  if(n(u.tempGuardBuff)>0)add(`+${n(u.tempGuardBuff)} GD`,`Guardia temporal adicional.`,"buff guard-buff");
-  if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff");
+  if(n(u.tempMovDebuff)>0)add(`-${n(u.tempMovDebuff)} MOV`,`Movimiento reducido`,`Movimiento reducido hasta el inicio de su próximo turno.${u.tempMovDebuffSource?` Origen: ${u.tempMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
+  if(n(u.tempMovBuff)>0)add(`+${n(u.tempMovBuff)} MOV`,`Movimiento aumentado`,`Movimiento aumentado este turno o hasta que el efecto expire.`,"buff mov-buff","buff");
+  if(n(u.buffAtk)>0)add(`+${n(u.buffAtk)} AT`,`Ataque aumentado`,`Ataque aumentado temporalmente por magia o efecto.`,"buff atk-buff","buff");
+  if(n(u.tempAtkBuff)>0)add(`+${n(u.tempAtkBuff)} AT`,`Ataque aumentado`,`Ataque aumentado por efecto temporal.`,"buff atk-buff","buff");
+  if(n(u.tempAtkDebuff)>0)add(`-${n(u.tempAtkDebuff)} AT`,`Ataque reducido`,`Ataque reducido por efecto temporal.`,"debuff atk-debuff","debuff");
+  if(n(u.tempDexBuff)>0)add(`+${n(u.tempDexBuff)} DX`,`Destreza aumentada`,`Destreza aumentada por efecto temporal.`,"buff dex-buff","buff");
+  if(n(u.tempDexDebuff)>0)add(`-${n(u.tempDexDebuff)} DX`,`Destreza reducida`,`Destreza reducida por presión, trampa o efecto temporal.`,"debuff dex-debuff","debuff");
+  if(n(u.tempAgiBuff)>0)add(`+${n(u.tempAgiBuff)} AGI`,`Agilidad aumentada`,`Agilidad aumentada por efecto temporal.`,"buff agi-buff","buff");
+  if(n(u.tempAgiDebuff)>0)add(`-${n(u.tempAgiDebuff)} AGI`,`Agilidad reducida`,`Agilidad reducida por efecto temporal.`,"debuff agi-debuff","debuff");
+  if(n(u.tempGuardBuff)>0)add(`+${n(u.tempGuardBuff)} GD`,`Guardia aumentada`,`Guardia temporal adicional.`,"buff guard-buff","buff");
+  if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff","debuff");
   const evasionSpent=getEvasionPressure(u);
-  if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión disponible gastada por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff");
-  if(hasBleeding(u))add(`SANG`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed");
-  if(n(u.poisonTurns)>0&&n(u.poisonDamage)>0)add(`VEN ${n(u.poisonDamage)}`,`Veneno: pierde ${n(u.poisonDamage)} Vida al inicio de su turno durante ${n(u.poisonTurns)} turno(s).`,"debuff poison");
-  if(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey)add(`NO MOV`,`No puede moverse este turno.`,"debuff lock");
-  if(u.noAttackTurnKey&&u.noAttackTurnKey===publicState?.turnKey)add(`NO ATK`,`No puede atacar este turno.`,"debuff lock");
-  if(u.noCounterTurnKey&&u.noCounterTurnKey===publicState?.turnKey)add(`NO CTR`,`No puede contraatacar este turno.`,"debuff lock");
-  if(u.silencedTurnKey&&u.silencedTurnKey===publicState?.turnKey)add(`SIL`,`Silenciada: no puede activar efectos este turno.`,"debuff silence");
-  if(u.noHealTurnKey&&u.noHealTurnKey===publicState?.turnKey)add(`NO CURA`,`No puede recibir curación este turno.`,"debuff curse");
-  if(u.noReductionTurnKey&&u.noReductionTurnKey===publicState?.turnKey)add(`SIN RED`,`No puede usar reducciones especiales de daño este turno.`,"debuff curse");
-  if(u.ignoreGuardNextDamageTurnKey&&u.ignoreGuardNextDamageTurnKey===publicState?.turnKey)add(`SIN GD`,`El próximo daño contra esta unidad ignora Guardia.`,"debuff guard-debuff");
-  if(u.doubleNextDamageTurnKey&&u.doubleNextDamageTurnKey===publicState?.turnKey)add(`x2 DAÑO`,`El próximo daño recibido se duplica.`,"debuff curse");
-  if(u.noHealWhilePoisoned)add(`NO CURA`,`No puede curarse mientras dure el veneno.`,"debuff poison");
-  if(u.richardBuffSource)add(`+2 VIDA`,`Vida máxima y actual aumentada mientras Richard siga en campo.`,"buff hp-buff");
-  if(u.convertedByTrap)add(`CONTROL`,`Unidad convertida temporalmente por trampa legendaria.`,"debuff curse");
+  if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Evasión disponible gastada por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
+  if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
+  if(n(u.poisonTurns)>0&&n(u.poisonDamage)>0)add(`Veneno ${n(u.poisonDamage)}`,`Veneno`,`Veneno: pierde ${n(u.poisonDamage)} Vida al inicio de su turno durante ${n(u.poisonTurns)} turno(s).`,"debuff poison","poison");
+  if(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey)add(`No mover`,`Movimiento bloqueado`,`No puede moverse este turno.`,"debuff lock","lock");
+  if(u.noAttackTurnKey&&u.noAttackTurnKey===publicState?.turnKey)add(`No atacar`,`Ataque bloqueado`,`No puede atacar este turno.`,"debuff lock","lock");
+  if(u.noCounterTurnKey&&u.noCounterTurnKey===publicState?.turnKey)add(`No contraataque`,`Contraataque bloqueado`,`No puede contraatacar este turno.`,"debuff lock","lock");
+  if(u.silencedTurnKey&&u.silencedTurnKey===publicState?.turnKey)add(`Silencio`,`Silencio`,`Silenciada: no puede activar efectos este turno.`,"debuff silence","silence");
+  if(u.noHealTurnKey&&u.noHealTurnKey===publicState?.turnKey)add(`No cura`,`Curación bloqueada`,`No puede recibir curación este turno.`,"debuff curse","curse");
+  if(u.noReductionTurnKey&&u.noReductionTurnKey===publicState?.turnKey)add(`Sin reducción`,`Reducción bloqueada`,`No puede usar reducciones especiales de daño este turno.`,"debuff curse","curse");
+  if(u.ignoreGuardNextDamageTurnKey&&u.ignoreGuardNextDamageTurnKey===publicState?.turnKey)add(`Sin guardia`,`Guardia ignorada`,`El próximo daño contra esta unidad ignora Guardia.`,"debuff guard-debuff","debuff");
+  if(u.doubleNextDamageTurnKey&&u.doubleNextDamageTurnKey===publicState?.turnKey)add(`Daño x2`,`Daño duplicado`,`El próximo daño recibido se duplica.`,"debuff curse","curse");
+  if(u.noHealWhilePoisoned)add(`No cura`,`Curación bloqueada`,`No puede curarse mientras dure el veneno.`,"debuff poison","poison");
+  if(u.richardBuffSource)add(`+2 Vida`,`Vida aumentada`,`Vida máxima y actual aumentada mientras Richard siga en campo.`,"buff hp-buff","hp");
+  if(u.convertedByTrap)add(`Control`,`Control alterado`,`Unidad convertida temporalmente por trampa legendaria.`,"debuff curse","control");
   return entries;
 }
 
 function getUnitStatusBubblesHtml(u){
   if(!u)return "";
-  const bubbles=getUnitStatusEntries(u).slice(0,6).map(e=>`<span class="unit-status-bubble ${escapeHtml(e.kind||"neutral")}" title="${escapeHtml(e.desc)}">${escapeHtml(e.label)}</span>`);
-  const extra=Math.max(0,getUnitStatusEntries(u).length-6);
-  if(extra>0)bubbles.push(`<span class="unit-status-bubble neutral" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</span>`);
+  const entries=getUnitStatusEntries(u);
+  const bubbles=entries.slice(0,6).map(e=>`<span class="unit-status-bubble ${escapeHtml(e.kind||"neutral")}" title="${escapeHtml(e.desc)}">${getStatusEntryIconHtml(e)}</span>`);
+  const extra=Math.max(0,entries.length-6);
+  if(extra>0)bubbles.push(`<span class="unit-status-bubble neutral extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</span>`);
   return bubbles.length?`<div class="unit-status-bubbles">${bubbles.join("")}</div>`:"";
+}
+
+function getUnitHealthBubbleHtml(u){
+  if(!u)return "";
+  const hp=Math.max(0,Number(u.hp||0));
+  const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
+  const pct=clamp(Math.round((hp/max)*100),0,100);
+  const low=pct<=35?" low":pct<=65?" mid":"";
+  return `<div class="unit-info-bubble unit-health-bubble${low}" title="Salud: ${hp}/${max}"><span class="unit-info-icon">❤</span><b>${hp}/${max}</b></div>`;
+}
+
+function getAttackChanceBubbleHtml(target){
+  if(!target||selectedUnitActionMode!=="attk"||!selectedUnitId)return "";
+  const attacker=getUnit(selectedUnitId);
+  if(!attacker||attacker.owner===target.owner)return "";
+  if(!attackZones(attacker).includes(`${target.x},${target.y}`))return "";
+  const mods=getCombatMods(attacker,target);
+  let chance=getHitChance(attacker,target,mods);
+  const arjunaReroll=attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn;
+  const directChance=chance;
+  if(arjunaReroll)chance=Math.min(98,Math.round(100-((100-chance)*(100-chance)/100)));
+  const title=arjunaReroll?`Probabilidad de acierto aprox.: ${chance}% con repetición (${directChance}% base).`:`Probabilidad de acierto: ${chance}%.`;
+  return `<div class="unit-info-bubble unit-hit-bubble" title="${escapeHtml(title)}"><span class="unit-info-icon">◎</span><b>${chance}%</b></div>`;
 }
 
 function renderBoard(){
@@ -3510,7 +3570,7 @@ function renderBoard(){
     if(u){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}`;
+      c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitHealthBubbleHtml(u)}${getAttackChanceBubbleHtml(u)}`;
       c.title=`${u.name} · HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
