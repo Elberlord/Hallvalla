@@ -1150,7 +1150,7 @@ function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}
   return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
 function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
-function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[leaderAbility]?leaderAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:"kaster",icon:owner===1?"👑":"🔮",portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
+function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[leaderAbility]?leaderAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:"kaster",icon:owner===1?"👑":"🔮",portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
 function getCardEffectTextByKey(key){
   if(!key)return "";
   const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],LEGENDARY_TRAP_CARDS||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS.filter(Boolean)];
@@ -1161,7 +1161,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||""}
-function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:isLanceUnitCardLike(card)?Math.max(2,(card.range||1)+getArcherRangeBonus(card)):(card.range||1)+getArcherRangeBonus(card),vigor:card.vigor||0,moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:card.leaderType||""};unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:isLanceUnitCardLike(card)?Math.max(2,(card.range||1)+getArcherRangeBonus(card)):(card.range||1)+getArcherRangeBonus(card),vigor:card.vigor||0,moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:card.leaderType||"",cost:Number(card.cost||0)};unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
@@ -3538,16 +3538,54 @@ function getAttackChanceData(target){
   return {chance,title,tier};
 }
 
+function getDisplayEvasionPercent(target){
+  if(!target||target.leader)return 0;
+  const preview=getAttackChanceData(target);
+  if(preview&&typeof preview.chance==="number")return clamp(100-preview.chance,5,75);
+  return clamp(30+(getAvailableEvasionScore(target,{})*5),5,75);
+}
+function getUnitTopLeftText(u){
+  if(!u)return "";
+  if(u.leader){
+    const st=publicState?.playerStats?.[u.owner]||{};
+    return `${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
+  }
+  return String(Number(u.cost||0));
+}
+function getUnitTopLeftTitle(u){
+  if(!u)return "";
+  if(u.leader){
+    const st=publicState?.playerStats?.[u.owner]||{};
+    return `Honor disponible: ${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
+  }
+  return `Costo de Honor: ${Number(u.cost||0)}`;
+}
+function getUnitAuxStatData(u){
+  if(!u)return {text:"",kind:"guard",title:""};
+  if(u.leader||publicState?.currentPlayer===u.owner){
+    const guard=effectiveGuard(u);
+    return {text:String(guard),kind:"guard",title:`Guardia/armadura actual: ${guard}`};
+  }
+  const evaPct=getDisplayEvasionPercent(u);
+  const evaScore=getAvailableEvasionScore(u,{});
+  return {text:`${evaPct}%`,kind:"eva",title:`Probabilidad de evasión aproximada: ${evaPct}% (evasión disponible: ${evaScore}).`};
+}
 function getUnitBottomFrameHtml(u){
   if(!u)return "";
   const hp=Math.max(0,Number(u.hp||0));
   const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
   const pct=clamp(Math.round((hp/max)*100),0,100);
   const hpTier=pct<=35?"low":pct<=65?"mid":"high";
-  const hit=getAttackChanceData(u);
-  const hitHtml=hit?`<span class="unit-stat-slot unit-hit-slot ${hit.tier}" title="${escapeHtml(hit.title)}"><span class="unit-stat-emblem crosshair" aria-hidden="true"></span><b>${hit.chance}%</b></span>`:"";
-  const hpHtml=`<span class="unit-stat-slot unit-hp-slot ${hpTier}" title="Salud: ${hp}/${max}"><span class="unit-hp-fill" style="width:${pct}%"></span><span class="unit-stat-emblem vial" aria-hidden="true"></span><b>${hp}/${max}</b></span>`;
-  return `<div class="unit-bottom-frame${hit?` show-hit ${hit.tier}`:" solo-hp"}">${hitHtml}${hpHtml}</div>`;
+  const aux=getUnitAuxStatData(u);
+  const atk=Math.max(0,effectiveAtk(u));
+  const topLeftText=getUnitTopLeftText(u);
+  const topLeftTitle=getUnitTopLeftTitle(u);
+  return `<div class="unit-ornate-ui">
+    <span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>
+    <span class="unit-stat-orb stat-orb-hp ${hpTier}" title="Salud actual: ${hp}/${max}"><span class="unit-orb-liquid" style="height:${pct}%"></span><b>${hp}/${max}</b></span>
+    <span class="unit-stat-orb stat-orb-atk" title="Ataque actual: ${atk}"><b>${atk}</b></span>
+    <span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>
+  </div>`;
 }
 
 function renderBoard(){
@@ -3574,7 +3612,7 @@ function renderBoard(){
     if(u){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
       c.title=`${u.name} · HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
