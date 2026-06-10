@@ -3523,20 +3523,11 @@ function getUnitStatusBubblesHtml(u){
   return bubbles.length?`<div class="unit-status-bubbles">${bubbles.join("")}</div>`:"";
 }
 
-function getUnitHealthBubbleHtml(u){
-  if(!u)return "";
-  const hp=Math.max(0,Number(u.hp||0));
-  const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
-  const pct=clamp(Math.round((hp/max)*100),0,100);
-  const low=pct<=35?" low":pct<=65?" mid":"";
-  return `<div class="unit-info-bubble unit-health-bubble${low}" title="Salud: ${hp}/${max}"><span class="unit-health-vial" aria-hidden="true"><span class="unit-health-vial-fill" style="height:${pct}%"></span><span class="unit-health-vial-shine"></span></span><b>${hp}/${max}</b></div>`;
-}
-
-function getAttackChanceBubbleHtml(target){
-  if(!target||selectedUnitActionMode!=="attk"||!selectedUnitId)return "";
+function getAttackChanceData(target){
+  if(!target||selectedUnitActionMode!=="attk"||!selectedUnitId)return null;
   const attacker=getUnit(selectedUnitId);
-  if(!attacker||attacker.owner===target.owner)return "";
-  if(!attackZones(attacker).includes(`${target.x},${target.y}`))return "";
+  if(!attacker||attacker.owner===target.owner)return null;
+  if(!attackZones(attacker).includes(`${target.x},${target.y}`))return null;
   const mods=getCombatMods(attacker,target);
   let chance=getHitChance(attacker,target,mods);
   const arjunaReroll=attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn;
@@ -3544,7 +3535,19 @@ function getAttackChanceBubbleHtml(target){
   if(arjunaReroll)chance=Math.min(98,Math.round(100-((100-chance)*(100-chance)/100)));
   const title=arjunaReroll?`Probabilidad de acierto aprox.: ${chance}% con repetición (${directChance}% base).`:`Probabilidad de acierto: ${chance}%.`;
   const tier=chance>=75?"high":chance>=45?"mid":"low";
-  return `<div class="unit-info-bubble unit-hit-bubble ${tier}" title="${escapeHtml(title)}"><span class="unit-hit-emblem" aria-hidden="true"><span class="unit-hit-crosshair"></span></span><b>${chance}%</b></div>`;
+  return {chance,title,tier};
+}
+
+function getUnitBottomFrameHtml(u){
+  if(!u)return "";
+  const hp=Math.max(0,Number(u.hp||0));
+  const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
+  const pct=clamp(Math.round((hp/max)*100),0,100);
+  const hpTier=pct<=35?"low":pct<=65?"mid":"high";
+  const hit=getAttackChanceData(u);
+  const hitHtml=hit?`<span class="unit-stat-slot unit-hit-slot ${hit.tier}" title="${escapeHtml(hit.title)}"><span class="unit-stat-emblem crosshair" aria-hidden="true"></span><b>${hit.chance}%</b></span>`:"";
+  const hpHtml=`<span class="unit-stat-slot unit-hp-slot ${hpTier}" title="Salud: ${hp}/${max}"><span class="unit-hp-fill" style="width:${pct}%"></span><span class="unit-stat-emblem vial" aria-hidden="true"></span><b>${hp}/${max}</b></span>`;
+  return `<div class="unit-bottom-frame${hit?` show-hit ${hit.tier}`:" solo-hp"}">${hitHtml}${hpHtml}</div>`;
 }
 
 function renderBoard(){
@@ -3571,7 +3574,7 @@ function renderBoard(){
     if(u){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitHealthBubbleHtml(u)}${getAttackChanceBubbleHtml(u)}`;
+      c.innerHTML=`<div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
       c.title=`${u.name} · HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
