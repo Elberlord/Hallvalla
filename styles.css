@@ -4231,3 +4231,147 @@
     animation:none !important;
   }
 }
+
+
+/* v7GK FIX: preview tactico tambien en circulos, sin rectangulos */
+.grid .cell.valid,
+.grid .cell.attackable,
+.grid .cell.summonable,
+.grid .cell.move-range-preview,
+.grid .cell.attack-range-preview,
+.grid .cell.mixed-range-preview,
+.grid .cell.acted-range-preview,
+.grid .cell.enemy-threat-preview,
+.grid .cell.enemy-acted-threat-preview{
+  background:transparent !important;
+  border-color:transparent !important;
+  outline:0 !important;
+  box-shadow:none !important;
+}
+
+.grid .cell.valid::after,
+.grid .cell.attackable::after,
+.grid .cell.summonable::after,
+.grid .cell.move-range-preview::after,
+.grid .cell.attack-range-preview::after,
+.grid .cell.mixed-range-preview::after,
+.grid .cell.acted-range-preview::after,
+.grid .cell.enemy-threat-preview::after,
+.grid .cell.enemy-acted-threat-preview::after{
+  content:"" !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  inset:auto !important;
+  width:19px !important;
+  height:19px !important;
+  transform:translate(-50%,-50%) !important;
+  border-radius:999px !important;
+  pointer-events:none !important;
+  opacity:.95 !important;
+}
+
+/* movimiento propio: verde */
+.grid .cell.valid::after,
+.grid .cell.move-range-preview::after{
+  border:1px solid rgba(118,255,166,.96) !important;
+  background:
+    radial-gradient(circle,rgba(118,255,166,.42) 0 18%,rgba(118,255,166,.14) 19% 45%,rgba(0,0,0,0) 46%) !important;
+  box-shadow:
+    0 0 9px rgba(118,255,166,.55),
+    0 0 18px rgba(118,255,166,.18),
+    inset 0 0 6px rgba(118,255,166,.22) !important;
+  animation:rokNeonGreenPulse 1.28s ease-in-out infinite !important;
+}
+
+/* rango/ataque propio y amenaza enemiga: rojo */
+.grid .cell.attackable::after,
+.grid .cell.attack-range-preview::after,
+.grid .cell.enemy-threat-preview::after{
+  border:1px solid rgba(255,86,132,.96) !important;
+  background:
+    radial-gradient(circle,rgba(255,86,132,.42) 0 18%,rgba(255,86,132,.14) 19% 45%,rgba(0,0,0,0) 46%) !important;
+  box-shadow:
+    0 0 9px rgba(255,86,132,.58),
+    0 0 18px rgba(255,86,132,.2),
+    inset 0 0 6px rgba(255,86,132,.24) !important;
+  animation:rokNeonRedCirclePulse 1.08s ease-in-out infinite !important;
+}
+
+/* mixto: morado */
+.grid .cell.mixed-range-preview::after{
+  border:1px solid rgba(190,106,255,.96) !important;
+  background:
+    radial-gradient(circle,rgba(190,106,255,.42) 0 18%,rgba(190,106,255,.14) 19% 45%,rgba(0,0,0,0) 46%) !important;
+  box-shadow:
+    0 0 9px rgba(190,106,255,.56),
+    0 0 18px rgba(190,106,255,.2),
+    inset 0 0 6px rgba(190,106,255,.24) !important;
+  animation:rokNeonPurpleCirclePulse 1.2s ease-in-out infinite !important;
+}
+
+/* ya usado / amenaza actuada: azul */
+.grid .cell.acted-range-preview::after,
+.grid .cell.enemy-acted-threat-preview::after{
+  border:1px solid rgba(96,188,255,.96) !important;
+  background:
+    radial-gradient(circle,rgba(96,188,255,.38) 0 18%,rgba(96,188,255,.12) 19% 45%,rgba(0,0,0,0) 46%) !important;
+  box-shadow:
+    0 0 9px rgba(96,188,255,.52),
+    0 0 18px rgba(96,188,255,.18),
+    inset 0 0 6px rgba(96,188,255,.2) !important;
+  animation:rokNeonBlueCirclePulse 1.3s ease-in-out infinite !important;
+}
+
+/* invocacion conserva dorado */
+.grid .cell.summonable::after{
+  border:1px solid rgba(255,215,118,.96) !important;
+  background:
+    radial-gradient(circle,rgba(255,230,142,.48) 0 20%,rgba(255,191,71,.18) 22% 50%,rgba(0,0,0,0) 51%),
+    conic-gradient(from 45deg,rgba(255,215,118,0),rgba(255,215,118,.48),rgba(255,215,118,0),rgba(255,215,118,.48),rgba(255,215,118,0)) !important;
+  box-shadow:
+    0 0 10px rgba(255,202,95,.52),
+    0 0 20px rgba(255,202,95,.18),
+    inset 0 0 6px rgba(255,224,138,.24) !important;
+  animation:rokNeonGoldPulse 1.38s ease-in-out infinite !important;
+}
+
+@keyframes rokNeonPurpleCirclePulse{
+  0%,100%{opacity:.62;transform:translate(-50%,-50%) scale(.92);box-shadow:0 0 6px rgba(190,106,255,.28),0 0 14px rgba(190,106,255,.12),inset 0 0 5px rgba(190,106,255,.16)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.12);box-shadow:0 0 12px rgba(190,106,255,.82),0 0 24px rgba(190,106,255,.3),inset 0 0 8px rgba(190,106,255,.34)}
+}
+@keyframes rokNeonBlueCirclePulse{
+  0%,100%{opacity:.62;transform:translate(-50%,-50%) scale(.92);box-shadow:0 0 6px rgba(96,188,255,.28),0 0 14px rgba(96,188,255,.12),inset 0 0 5px rgba(96,188,255,.16)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.12);box-shadow:0 0 12px rgba(96,188,255,.78),0 0 24px rgba(96,188,255,.28),inset 0 0 8px rgba(96,188,255,.3)}
+}
+
+@media(max-width:980px){
+  .grid .cell.valid::after,
+  .grid .cell.attackable::after,
+  .grid .cell.summonable::after,
+  .grid .cell.move-range-preview::after,
+  .grid .cell.attack-range-preview::after,
+  .grid .cell.mixed-range-preview::after,
+  .grid .cell.acted-range-preview::after,
+  .grid .cell.enemy-threat-preview::after,
+  .grid .cell.enemy-acted-threat-preview::after{
+    width:16px !important;
+    height:16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .grid .cell.valid::after,
+  .grid .cell.attackable::after,
+  .grid .cell.summonable::after,
+  .grid .cell.move-range-preview::after,
+  .grid .cell.attack-range-preview::after,
+  .grid .cell.mixed-range-preview::after,
+  .grid .cell.acted-range-preview::after,
+  .grid .cell.enemy-threat-preview::after,
+  .grid .cell.enemy-acted-threat-preview::after{
+    animation:none !important;
+  }
+}
