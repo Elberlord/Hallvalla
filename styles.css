@@ -4468,3 +4468,219 @@
     height:16px !important;
   }
 }
+
+
+/* === v7GM creatures: life bar like leaders + stronger rarity frame on board units === */
+
+/* vida de criaturas similar a lideres: barra en la base */
+.cell > .unit-card:not(.leader){
+  position:relative !important;
+  overflow:visible !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame{
+  left:2px !important;
+  right:2px !important;
+  bottom:2px !important;
+  min-height:0 !important;
+  display:block !important;
+  pointer-events:none !important;
+  z-index:16 !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit{
+  display:block !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot{
+  position:relative !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:15px !important;
+  padding:0 4px !important;
+  gap:2px !important;
+  border-radius:0 0 7px 7px !important;
+  clip-path:none !important;
+  overflow:hidden !important;
+  border:1px solid rgba(255,214,120,.96) !important;
+  background:linear-gradient(180deg,rgba(62,41,20,.98),rgba(13,8,5,.98)) !important;
+  color:#fff6df !important;
+  box-shadow:0 0 0 1px rgba(0,0,0,.72),0 3px 6px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,246,205,.18),inset 0 -1px 0 rgba(97,51,12,.72) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:1px !important;
+  border-radius:0 0 6px 6px !important;
+  background:linear-gradient(180deg,rgba(255,248,226,.18),rgba(0,0,0,0) 45%) !important;
+  opacity:1 !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-fill{
+  left:1px !important;
+  top:1px !important;
+  bottom:1px !important;
+  min-width:1px !important;
+  border-radius:0 0 6px 6px !important;
+  background:linear-gradient(180deg,rgba(255,165,171,.98),rgba(223,42,68,.98) 54%,rgba(116,0,15,.98)) !important;
+  box-shadow:0 0 8px rgba(255,70,95,.24), inset 0 -1px 0 rgba(70,0,0,.35) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot.mid .unit-hp-fill{
+  background:linear-gradient(180deg,rgba(255,220,143,.98),rgba(227,132,38,.98) 54%,rgba(137,49,0,.98)) !important;
+  box-shadow:0 0 8px rgba(255,186,74,.2), inset 0 -1px 0 rgba(70,25,0,.35) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot.low .unit-hp-fill{
+  background:linear-gradient(180deg,rgba(255,184,192,.98),rgba(234,52,75,.98) 54%,rgba(92,0,10,.98)) !important;
+  box-shadow:0 0 10px rgba(255,76,101,.32), inset 0 -1px 0 rgba(70,0,0,.4) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot b{
+  position:relative !important;
+  z-index:3 !important;
+  font-size:8px !important;
+  line-height:1 !important;
+  letter-spacing:-.04em !important;
+  white-space:nowrap !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.85) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame .unit-stat-emblem.vial{
+  width:6px !important;
+  height:10px !important;
+  margin-top:0 !important;
+}
+
+/* % de precision visible cuando ATTK: plaquita pequeña encima de la barra */
+.cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-hit-slot{
+  position:absolute !important;
+  right:-1px !important;
+  bottom:16px !important;
+  min-width:30px !important;
+  height:14px !important;
+  padding:0 5px !important;
+  border-radius:999px !important;
+  clip-path:none !important;
+  gap:2px !important;
+  background:linear-gradient(180deg,rgba(49,33,18,.98),rgba(10,7,5,.98)) !important;
+  box-shadow:0 0 0 1px rgba(0,0,0,.72),0 3px 7px rgba(0,0,0,.56),inset 0 1px 0 rgba(255,246,205,.16) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-hit-slot::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:1px !important;
+  border-radius:999px !important;
+  background:linear-gradient(180deg,rgba(255,245,206,.18),rgba(0,0,0,0) 45%) !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-hit-slot b{
+  font-size:8px !important;
+}
+.cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-stat-emblem.crosshair{
+  width:9px !important;
+  height:9px !important;
+}
+
+/* marcos de rareza en unidades del tablero */
+.cell > .unit-card:not(.leader)[class*="card-rarity-"]{
+  border-width:2px !important;
+}
+.cell > .unit-card:not(.leader)[class*="card-rarity-"]::before,
+.cell > .unit-card:not(.leader)[class*="card-rarity-"]::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  z-index:1;
+}
+.cell > .unit-card:not(.leader)[class*="card-rarity-"]::before{
+  inset:-1px;
+  border-radius:10px;
+  border:1px solid var(--unit-rarity-edge, rgba(255,214,120,.42));
+  box-shadow:inset 0 0 0 1px var(--unit-rarity-inner, rgba(255,255,255,.06)),0 0 10px var(--unit-rarity-glow, rgba(255,214,120,.10));
+}
+.cell > .unit-card:not(.leader)[class*="card-rarity-"]::after{
+  inset:2px;
+  border-radius:7px;
+  background:
+    linear-gradient(135deg,var(--unit-rarity-shine, rgba(255,255,255,.08)),rgba(255,255,255,0) 26%,rgba(255,255,255,0) 74%,var(--unit-rarity-shine, rgba(255,255,255,.08))),
+    linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,0) 28%,rgba(0,0,0,0) 72%,rgba(0,0,0,.14));
+  opacity:.95;
+}
+.cell > .unit-card:not(.leader).card-rarity-basic{
+  --unit-rarity-edge:rgba(224,194,138,.62);
+  --unit-rarity-inner:rgba(255,235,204,.08);
+  --unit-rarity-glow:rgba(224,194,138,.12);
+  --unit-rarity-shine:rgba(255,235,204,.10);
+  border-color:rgba(224,194,138,.82) !important;
+  box-shadow:0 0 0 1px rgba(224,194,138,.28),0 0 9px rgba(224,194,138,.12),0 6px 9px rgba(0,0,0,.38) !important;
+}
+.cell > .unit-card:not(.leader).card-rarity-improved{
+  --unit-rarity-edge:rgba(143,211,255,.84);
+  --unit-rarity-inner:rgba(224,245,255,.10);
+  --unit-rarity-glow:rgba(143,211,255,.18);
+  --unit-rarity-shine:rgba(228,247,255,.12);
+  border-color:rgba(143,211,255,.94) !important;
+  box-shadow:0 0 0 1px rgba(143,211,255,.38),0 0 12px rgba(143,211,255,.18),0 6px 9px rgba(0,0,0,.38) !important;
+}
+.cell > .unit-card:not(.leader).card-rarity-heroic{
+  --unit-rarity-edge:rgba(121,244,201,.90);
+  --unit-rarity-inner:rgba(225,255,247,.10);
+  --unit-rarity-glow:rgba(121,244,201,.20);
+  --unit-rarity-shine:rgba(225,255,247,.14);
+  border-color:rgba(121,244,201,.98) !important;
+  box-shadow:0 0 0 1px rgba(121,244,201,.42),0 0 13px rgba(121,244,201,.20),0 6px 9px rgba(0,0,0,.38) !important;
+}
+.cell > .unit-card:not(.leader).card-rarity-glorious{
+  --unit-rarity-edge:rgba(255,224,138,.94);
+  --unit-rarity-inner:rgba(255,250,220,.12);
+  --unit-rarity-glow:rgba(255,199,92,.24);
+  --unit-rarity-shine:rgba(255,247,210,.16);
+  border-color:rgba(255,224,138,.98) !important;
+  box-shadow:0 0 0 1px rgba(255,224,138,.48),0 0 15px rgba(255,199,92,.24),0 6px 9px rgba(0,0,0,.40) !important;
+}
+.cell > .unit-card:not(.leader).card-rarity-epic{
+  --unit-rarity-edge:rgba(189,148,255,.90);
+  --unit-rarity-inner:rgba(246,236,255,.10);
+  --unit-rarity-glow:rgba(189,148,255,.22);
+  --unit-rarity-shine:rgba(246,236,255,.14);
+  border-color:rgba(189,148,255,.96) !important;
+  box-shadow:0 0 0 1px rgba(189,148,255,.42),0 0 14px rgba(189,148,255,.20),0 6px 9px rgba(0,0,0,.40) !important;
+}
+.cell > .unit-card:not(.leader).card-rarity-mythic{
+  --unit-rarity-edge:rgba(255,123,217,.94);
+  --unit-rarity-inner:rgba(255,231,248,.10);
+  --unit-rarity-glow:rgba(255,123,217,.24);
+  --unit-rarity-shine:rgba(255,231,248,.16);
+  border-color:rgba(255,123,217,.98) !important;
+  box-shadow:0 0 0 1px rgba(255,123,217,.44),0 0 15px rgba(255,123,217,.22),0 6px 9px rgba(0,0,0,.40) !important;
+}
+.cell > .unit-card:not(.leader).card-rarity-demigod{
+  --unit-rarity-edge:rgba(255,247,167,.98);
+  --unit-rarity-inner:rgba(255,255,238,.14);
+  --unit-rarity-glow:rgba(255,247,167,.28);
+  --unit-rarity-shine:rgba(255,255,238,.18);
+  border-color:rgba(255,247,167,.98) !important;
+  box-shadow:0 0 0 1px rgba(255,247,167,.54),0 0 18px rgba(255,247,167,.28),0 6px 9px rgba(0,0,0,.42) !important;
+}
+
+/* mantiene limpio el retrato encima del marco */
+.cell > .unit-card:not(.leader) .unit-portrait{
+  position:relative;
+  z-index:0;
+}
+
+@media(max-width:980px){
+  .cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot{
+    height:13px !important;
+    padding:0 3px !important;
+  }
+  .cell > .unit-card:not(.leader) .unit-bottom-frame .unit-hp-slot b,
+  .cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-hit-slot b{
+    font-size:7px !important;
+  }
+  .cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-hit-slot{
+    min-width:26px !important;
+    height:12px !important;
+    bottom:14px !important;
+    padding:0 4px !important;
+  }
+  .cell > .unit-card:not(.leader) .unit-bottom-frame.show-hit .unit-stat-emblem.crosshair{
+    width:8px !important;
+    height:8px !important;
+  }
+}
