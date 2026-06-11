@@ -3514,13 +3514,50 @@ function getUnitStatusEntries(u){
   return entries;
 }
 
+function getUnitStatusSealShortText(entry){
+  const label=String(entry?.label||"").trim();
+  if(!label)return "";
+  const signed=label.match(/[+-]?\d+/);
+  if(signed)return signed[0];
+  const poison=label.match(/Veneno\s*(\d+)/i);
+  if(poison)return poison[1];
+  if(/sangrado/i.test(label))return "!";
+  if(/silencio/i.test(label))return "!";
+  if(/no\s+/i.test(label))return "×";
+  if(/control/i.test(label))return "✦";
+  return "";
+}
+function isHelpfulStatusEntry(entry){
+  const kind=String(entry?.kind||"");
+  const icon=String(entry?.icon||"");
+  return kind.includes("buff")||icon==="buff"||icon==="hp";
+}
+function renderUnitStatusSeal(entry){
+  const kind=escapeHtml(entry?.kind||"neutral");
+  const shortText=getUnitStatusSealShortText(entry);
+  const title=escapeHtml(`${entry?.name||entry?.label||"Estado"}: ${entry?.desc||""}`.trim());
+  return `<span class="unit-status-bubble unit-status-seal ${kind}" title="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</span>`;
+}
 function getUnitStatusBubblesHtml(u){
   if(!u)return "";
   const entries=getUnitStatusEntries(u);
-  const bubbles=entries.slice(0,6).map(e=>`<span class="unit-status-bubble ${escapeHtml(e.kind||"neutral")}" title="${escapeHtml(e.desc)}">${getStatusEntryIconHtml(e)}</span>`);
-  const extra=Math.max(0,entries.length-6);
-  if(extra>0)bubbles.push(`<span class="unit-status-bubble neutral extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</span>`);
-  return bubbles.length?`<div class="unit-status-bubbles">${bubbles.join("")}</div>`:"";
+  if(!entries.length)return "";
+  const helpful=[];
+  const harmful=[];
+  entries.forEach(entry=>{(isHelpfulStatusEntry(entry)?helpful:harmful).push(entry);});
+  const left=harmful.slice(0,4);
+  const right=helpful.slice(0,4);
+  let remaining=[...harmful.slice(4),...helpful.slice(4)];
+  while(remaining.length&&(left.length<4||right.length<4)){
+    if(left.length<4&&remaining.length)left.push(remaining.shift());
+    if(right.length<4&&remaining.length)right.push(remaining.shift());
+  }
+  if(!right.length&&left.length>2)right.push(...left.splice(2));
+  if(!left.length&&right.length>2)left.push(...right.splice(0,Math.min(2,right.length-1)));
+  const extra=remaining.length;
+  const leftHtml=left.map(renderUnitStatusSeal).join("");
+  const rightHtml=right.map(renderUnitStatusSeal).join("");
+  return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
 }
 
 function getAttackChanceData(target){
