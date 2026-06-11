@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7FZ_bug_sweep_status_health_hit";
+const HALLVALLA_BUILD_VERSION="v7HB_hallvalla_fresh_summon_action_fix";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -492,13 +492,15 @@ function maybePlayBattleFx(prevPub,nextPub){
   }
   if(explicitAttackFx&&explicitAttackFx.type==="attack"){
     setTimeout(()=>playBattleFxEvent(explicitAttackFx),140);
-  }else{
+  }else if(!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&(damaged.length||destroyed.length)){
+    // Fallback visual only for old/non-explicit damage updates.
+    // DEF/EFFECT also flip acted:false -> true, so never infer an attack from acted alone.
     const taken=new Set();
     attackers.forEach((attacker,i)=>{
       const candidates=damaged.filter(t=>t.owner!==attacker.owner&&!taken.has(t.id||`${t.x},${t.y}`));
       let target=candidates.sort((a,b)=>dist(attacker,a)-dist(attacker,b))[0]||null;
-      if(!target){
-        const fallback=prevUnits.filter(t=>t.owner!==attacker.owner).sort((a,b)=>dist(attacker,a)-dist(attacker,b))[0];
+      if(!target&&damaged.length){
+        const fallback=prevUnits.filter(t=>t.owner!==attacker.owner&&damaged.some(d=>d.id===t.id)).sort((a,b)=>dist(attacker,a)-dist(attacker,b))[0];
         target=fallback||null;
       }
       if(target){taken.add(target.id||`${target.x},${target.y}`);setTimeout(()=>playBattleFx(attacker,target),140+(i*120));}
@@ -1161,7 +1163,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||""}
-function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:isLanceUnitCardLike(card)?Math.max(2,(card.range||1)+getArcherRangeBonus(card)):(card.range||1)+getArcherRangeBonus(card),vigor:card.vigor||0,moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:card.leaderType||"",cost:Number(card.cost||0)};unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:isLanceUnitCardLike(card)?Math.max(2,(card.range||1)+getArcherRangeBonus(card)):(card.range||1)+getArcherRangeBonus(card),vigor:card.vigor||0,moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:card.leaderType||"",cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true};unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
@@ -1718,7 +1720,38 @@ async function maybeStartTurn(){
     });
   }finally{turnStartLock=false}
 }
-function summonZones(player){const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}function moveZones(u){if(!u||u.moved||u.acted)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===u.x&&y===u.y)continue;if(getUnitAt(x,y))continue;if(dist(u,{x,y})<=effectiveMov(u))res.push(`${x},${y}`)}return res}function attackZones(u){if(!u||u.acted||!isActionPhase())return[];return(publicState.units||[]).filter(t=>t.owner!==u.owner&&dist(u,t)<=u.range).map(t=>`${t.x},${t.y}`)}
+function summonZones(player){const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}
+function isFreshSummonedThisTurn(u){return !!(u&&u.summonedTurnKey&&publicState?.turnKey&&u.summonedTurnKey===publicState.turnKey&&u.owner===publicState.currentPlayer)}
+function normalizeFreshSummonsForActionPhase(units,player,turnKey){
+  return (units||[]).map(u=>{
+    if(!u||u.leader||u.owner!==player||!turnKey||u.summonedTurnKey!==turnKey)return u;
+    return {...u,hallvallaReadyOnSummon:true,acted:false,moved:false,movedSpaces:0};
+  });
+}
+function isUnitActionWindow(u){return !!(u&&isMyTurn()&&u.owner===myPlayer&&isActionPhase())}
+function isUnitMoveWindow(u){return isUnitActionWindow(u)}
+function unitActionPhaseHint(action="acción"){return `En HallValla, las invocaciones usan ${action} en Action Phase, incluso si fueron kasteadas este mismo turno.`}
+function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
+  const id=typeof unitOrId==="string"?unitOrId:unitOrId?.id;
+  return (id?(units||[]).find(u=>u.id===id):null)||((unitOrId&&typeof unitOrId==="object")?unitOrId:null);
+}
+function getUnitAttackRange(u){return Math.max(1,Number(u?.range||1)||1)}
+function canUnitDeclareAttack(u){
+  const live=getLiveUnitRef(u);
+  if(!live||live.leader)return false;
+  if(!isMyTurn()||!isActionPhase()||live.owner!==myPlayer)return false;
+  if(live.acted)return false;
+  if(live.noAttackTurnKey&&live.noAttackTurnKey===publicState?.turnKey)return false;
+  return true;
+}
+function getAttackableTargets(u,units=publicState?.units||[]){
+  const live=getLiveUnitRef(u,units);
+  if(!canUnitDeclareAttack(live))return[];
+  const rg=getUnitAttackRange(live);
+  return (units||[]).filter(t=>t&&t.id!==live.id&&t.owner!==live.owner&&(t.hp===undefined||t.hp>0)&&dist(live,t)<=rg);
+}
+function moveZones(u){const live=getLiveUnitRef(u);if(!live||live.moved||live.acted||!isUnitMoveWindow(live))return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===live.x&&y===live.y)continue;if(getUnitAt(x,y))continue;if(dist(live,{x,y})<=effectiveMov(live))res.push(`${x},${y}`)}return res}
+function attackZones(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`)}
 function attackRangeCells(u){
   if(!u)return[];
   const rg=Math.max(1,u.range||1);
@@ -1832,9 +1865,11 @@ function scheduleAutoAdvanceIfHandEmptyAfterPlay(handSnapshot,honorSnapshot){
       if(!(phase==="main"||phase==="last"))return;
       if(handHasPlayableWithSnapshot(priv.hand||[],priv.honor||0,phase,pub.units||[],localPlayer))return;
       if(phase==="main"){
+        const readyUnits=normalizeFreshSummonsForActionPhase(pub.units||[],localPlayer,pub.turnKey||localTurnKey);
         await update(ref(db,`games/${localGameId}/public`),{
+          units:readyUnits,
           turnPhase:"actions",
-          log:[`J${localPlayer} no tiene cartas jugables en mano: avanza automáticamente a Action Phase.`,...(pub.log||[])].slice(0,18)
+          log:[`J${localPlayer} no tiene cartas jugables en mano: avanza automáticamente a Action Phase. Invocaciones recién kasteadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(pub.log||[])].slice(0,18)
         });
       }else if(phase==="last"){
         const next=localPlayer===1?2:1;
@@ -2108,7 +2143,7 @@ function getStatusEntryIconHtml(entry){
   if(icon==="defense")return `<span class="status-icon status-icon-defense" aria-label="${label}"></span>`;
   return `<span class="status-icon status-icon-generic" aria-label="${label}">✦</span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno en Action Phase.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV en Action Phase.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -2124,7 +2159,7 @@ async function removeCardAndPay(card){
 }
 async function moveUnit(u,x,y){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
-  if(!isUnitMovePhase())return setHint("MOV solo se resuelve en Action Phase.");
+  if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
   if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");
   if(u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse este turno.`);
   const movedNow=dist(u,{x,y});
@@ -2192,15 +2227,23 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
 }
 async function attackUnit(a,d){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
-  if(!isActionPhase())return setHint("Solo puedes atacar con unidades en Action Phase.");
+  let liveUnits=[...(publicState?.units||[])];
+  a=getLiveUnitRef(a,liveUnits);
+  d=getLiveUnitRef(d,liveUnits);
   if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");
+  if(!isMyTurn()||!isActionPhase()||a.owner!==myPlayer)return setHint(unitActionPhaseHint("ATTK"));
+  if(a.acted)return setHint(`${a.name} ya atacó o defendió este turno.`);
   if(a.noAttackTurnKey&&a.noAttackTurnKey===publicState.turnKey)return setHint(`${a.name} no puede atacar este turno.`);
-  if(!attackZones(a).includes(`${d.x},${d.y}`))return setHint("Objetivo fuera de rango.");
-  let preTrap=resolvePreAttackLegendaryTraps(a,d,publicState.units||[]);
+  const rg=getUnitAttackRange(a);
+  const distance=dist(a,d);
+  if(distance>rg)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
+  let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
   if(preTrap.cancel){await updatePublic({units:preTrap.units.map(u=>u.id===a.id?{...u,acted:true}:u),legendaryTraps:preTrap.traps});await pushLog(preTrap.logs.join(" "));clearSelection();return;}
-  if(preTrap.redirect){d=preTrap.redirect;a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
+  let units=[...(preTrap.units||liveUnits)];
+  a=getLiveUnitRef(a,units);
+  d=preTrap.redirect?getLiveUnitRef(preTrap.redirect,units):getLiveUnitRef(d,units);
+  if(preTrap.redirect){a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
   let mods=getCombatMods(a,d);
-  let units=[...(preTrap.units||publicState.units||[])];
   const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
   units=defensePrep.units;
   mods=defensePrep.mods;
@@ -2370,7 +2413,8 @@ async function advanceTurnPhase(){
   if(phase==="draw")return setHint("Draw Phase se resuelve automáticamente: roba cartas y recarga Honor/Mana.");
   if(phase==="main"){
     handOpen=false;handManualCloseKey="";clearSelection();
-    await updatePublic({turnPhase:"actions",log:[`J${myPlayer} pasa a Action Phase: acciones de unidades en campo.`,...(publicState.log||[])].slice(0,18)});
+    const readyUnits=normalizeFreshSummonsForActionPhase(publicState.units||[],myPlayer,publicState.turnKey||"");
+    await updatePublic({units:readyUnits,turnPhase:"actions",log:[`J${myPlayer} pasa a Action Phase: acciones de unidades en campo. Las invocaciones recién kasteadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(publicState.log||[])].slice(0,18)});
     return;
   }
   if(phase==="actions"){
@@ -3239,7 +3283,7 @@ async function cellClick(x,y){
     const s=getUnit(selectedUnitId);
     if(!s){clearSelection();return;}
     if(selectedUnitActionMode==="attk"){
-      if(u&&u.owner!==myPlayer)return attackUnit(s,u);
+      if(u&&u.owner!==myPlayer)return attackUnit(s.id,u.id);
       return setHint("ATTK: elige una unidad rival marcada en rojo.");
     }
     if(selectedUnitActionMode==="mov"){
@@ -3254,7 +3298,7 @@ async function cellClick(x,y){
       if(u&&u.owner===myPlayer)return activateUnitEffect(s,u);
       return setHint("EFFECT: elige una unidad aliada marcada.");
     }
-    if(u&&u.owner!==myPlayer)return attackUnit(s,u);
+    if(u&&u.owner!==myPlayer)return attackUnit(s.id,u.id);
     if(!u)return moveUnit(s,x,y);
   }
   if(u)return openUnitContextMenu(u,x,y);
@@ -3300,7 +3344,7 @@ function getUnitContextOptions(u){
   const mine=u.owner===myPlayer;
   const opts=[];
   if(mine){
-    const moveHint=u.acted?"Ya usó su acción":u.moved?"Ya se movió":isUnitMovePhase()?"Mover ahora":"Mover en Action Phase";
+    const moveHint=u.acted?"Ya usó su acción":u.moved?"Ya se movió":isUnitMoveWindow(u)?"Mover ahora":"Mover en Action Phase";
     opts.push({key:"mov",label:"MOV",hint:moveHint});
     opts.push({key:"def",label:"DEF",hint:u.defenseModeReady?"Ya está en guardia defensiva":(u.acted?"Ya usó su acción":"Postura defensiva: +2 GD y -10% precisión al primer ataque")});
     if(unitHasContextEffect(u))opts.push({key:"effect",label:"EFFECT",hint:"Efecto"});
@@ -3336,15 +3380,15 @@ function renderUnitContextMenu(){
   const u=getUnit(unitContextSelection.unitId);
   if(!u){menu.classList.add("hidden");return;}
   const options=getUnitContextOptions(u);
-  const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMovePhase()&&!isBattleEnded();
-  const canAction=isMyTurn()&&u.owner===myPlayer&&isActionPhase()&&!isBattleEnded();
+  const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMoveWindow(u)&&!isBattleEnded();
+  const canAction=isMyTurn()&&u.owner===myPlayer&&isUnitActionWindow(u)&&!isBattleEnded();
   const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
   const portraitHtml=getUnitPortraitHtml(u);
   const hpLabel=`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`;
   const atkLabel=effectiveAtk(u);
   const guardLabel=displayEffectiveGuard(u);
   menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
-    const disabled=(o.key==="mov"&&(!canMove||u.moved||u.acted))||(o.key==="attk"&&(!canAction||u.acted))||(o.key==="effect"&&(!canAction||u.acted))||(o.key==="def"&&(!canAction||u.acted||u.defenseModeReady));
+    const disabled=(o.key==="mov"&&(!canMove||u.moved||u.acted))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted))||(o.key==="def"&&(!canAction||u.acted||u.defenseModeReady));
     return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
   const grid=$("grid");
@@ -3473,7 +3517,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   return{success:true,units:out,log};
 }
 async function activateUnitEffect(u,choice=null){
-  if(!u||u.owner!==myPlayer||!isActionPhase())return setHint("EFFECT solo se usa en Action Phase con tus unidades.");
+  if(!u||u.owner!==myPlayer||!isUnitActionWindow(u))return setHint(unitActionPhaseHint("EFFECT"));
   if(u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
   const mode=getUnitEffectMode(u);
   if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante combate/turno.");
@@ -3498,11 +3542,16 @@ async function activateUnitEffect(u,choice=null){
 
 async function activateDefenseStance(u){
   if(!u||u.owner!==myPlayer||!isMyTurn())return setHint("Solo puedes usar DEF con tus invocaciones.");
-  if(!isActionPhase())return setHint("DEF se usa en Action Phase.");
+  if(!isUnitActionWindow(u))return setHint(unitActionPhaseHint("DEF"));
   if(u.acted)return setHint(`${u.name} ya usó su acción ofensiva este turno.`);
   if(u.defenseModeReady)return setHint(`${u.name} ya está en guardia defensiva.`);
   const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true}:it);
-  await updateUnits(units);
+  const defenderNow=units.find(it=>it.id===u.id)||u;
+  await updatePublic({
+    units,
+    defenseFxEvent:makeDefenseFxEvent("guard_block",defenderNow),
+    floatFxEvent:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
+  });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
   clearSelection();
 }
@@ -3516,8 +3565,9 @@ function handleUnitContextAction(action){
   }
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn()||u.owner!==myPlayer)return setHint("Solo puedes usar acciones de tus invocaciones.");
-  if(action==="mov"&&!isUnitMovePhase())return setHint("MOV solo se resuelve en Action Phase. Las recién kasteadas sí pueden moverse, pero en esa fase.");
-  if((action==="attk"||action==="effect")&&!isActionPhase())return setHint("ATTK y EFFECT se resuelven en Action Phase.");
+  if(action==="mov"&&!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
+  if((action==="attk"||action==="effect")&&!isUnitActionWindow(u))return setHint(unitActionPhaseHint(action.toUpperCase()));
+  if(action==="def"&&!isUnitActionWindow(u))return setHint(unitActionPhaseHint("DEF"));
   selectedCard=null;
   selectedUnitId=u.id;
   selectedUnitActionMode=action;
@@ -3530,10 +3580,16 @@ function handleUnitContextAction(action){
     highlightType="move";
     setHint(`MOV: elige una casilla verde para mover a ${u.name}.`);
   }else if(action==="attk"){
-    if(u.acted)return setHint(`${u.name} ya atacó o defendió este turno.`);
-    highlights=attackZones(u);
+    const live=getLiveUnitRef(u);
+    if(live.acted)return setHint(`${live.name} ya atacó o defendió este turno.`);
+    highlights=attackZones(live);
     highlightType="attack";
-    setHint(`ATTK: elige un objetivo rojo para atacar con ${u.name}.`);
+    if(!highlights.length){
+      const rg=getUnitAttackRange(live);
+      setHint(`ATTK: ${live.name} está listo para atacar, pero no tiene enemigos dentro de RG ${rg}.`);
+    }else{
+      setHint(`ATTK: elige un objetivo rojo para atacar con ${live.name}.`);
+    }
   }else if(action==="def"){
     activateDefenseStance(u);
     return;
