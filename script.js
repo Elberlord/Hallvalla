@@ -3301,8 +3301,12 @@ function renderUnitContextMenu(){
   const options=getUnitContextOptions(u);
   const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMovePhase()&&!isBattleEnded();
   const canAction=isMyTurn()&&u.owner===myPlayer&&isActionPhase()&&!isBattleEnded();
-  const slotMap={mov:"slot-top",def:"slot-left-top",effect:"slot-left-bottom",attk:"slot-right-top",det:"slot-right-bottom"};
-  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-core-star" aria-hidden="true">✦</div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
+  const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
+  const portraitHtml=getUnitPortraitHtml(u);
+  const hpLabel=`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`;
+  const atkLabel=effectiveAtk(u);
+  const guardLabel=effectiveGuard(u);
+  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
     const disabled=(o.key==="mov"&&(!canMove||u.moved))||(o.key==="attk"&&(!canAction||u.acted))||(o.key==="effect"&&(!canAction||u.acted))||(o.key==="def"&&(!canAction||u.acted||u.defenseModeReady));
     return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
