@@ -172,7 +172,7 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
   return normalizeLeaderLevel(leader?.leaderLevel||1)>=5?(leader?.leaderAbility||""):"";
 }
 
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="";
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",nearDeathSoundPlayedKeys=new Set();
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
 const AI_THINK_DELAY_MS=1400;
@@ -610,6 +610,19 @@ function audioPath(kind,name){return `assets/${kind}/${name}.ogg`;}
 function tryPlaySound(name,volume=1){
   if(!gameSettings.sound||!gameSettings.sfx||!name)return;
   try{const audio=new Audio(audioPath("sfx",name));audio.volume=Math.max(0,Math.min(1,(gameSettings.sfxVolume??.52)*volume));audio.play().catch(()=>{});}catch(e){}
+}
+function maybePlayNearDeathSound(){
+  if(!publicState||isBattleEnded()||!gameSettings.sound||!gameSettings.sfx)return;
+  const leaders=(publicState.units||[]).filter(u=>u&&u.leader&&u.hp>0);
+  for(const leader of leaders){
+    const maxHp=Math.max(1,Number(effectiveMaxHp(leader)||leader.maxHp||leader.hp||1));
+    const threshold=Math.max(3,Math.ceil(maxHp*.25));
+    if(Number(leader.hp||0)>threshold)continue;
+    const key=`${gameId||"local"}:${leader.owner}:near-death`;
+    if(nearDeathSoundPlayedKeys.has(key))continue;
+    nearDeathSoundPlayedKeys.add(key);
+    tryPlaySound("near_death_chant",leader.owner===myPlayer ? .82 : .66);
+  }
 }
 function playMusic(name){
   if(!name||!gameSettings.sound||!gameSettings.music)return;
@@ -1673,7 +1686,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   enterGame(code,1);
 }
 
-function enterGame(code,player){gameId=code;myPlayer=player;shownBattleResultKey="";aiTurnLock=false;lastAiTurnKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden");$("onlineLobby").classList.add("hidden");$("mainMenu").classList.add("hidden");$("gameShell").classList.remove("hidden");tryPlaySound("battle_chant_intro",.78);setTimeout(()=>tryPlaySound("battle_start",.58),1650);if(unsubPub)unsubPub();if(unsubPriv)unsubPriv();unsubPub=onValue(ref(db,`games/${code}/public`),snap=>{const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=snap.val();syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>{privateState=snap.val();render();maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});aiWatchdogTimer=setInterval(()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI()},1800)}
+function enterGame(code,player){gameId=code;myPlayer=player;shownBattleResultKey="";aiTurnLock=false;lastAiTurnKey="";lastBattleFxKey="";lastDemigodSummonKey="";nearDeathSoundPlayedKeys=new Set();clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden");$("onlineLobby").classList.add("hidden");$("mainMenu").classList.add("hidden");$("gameShell").classList.remove("hidden");tryPlaySound("battle_chant_intro",.78);setTimeout(()=>tryPlaySound("battle_start",.54),4300);if(unsubPub)unsubPub();if(unsubPriv)unsubPriv();unsubPub=onValue(ref(db,`games/${code}/public`),snap=>{const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=snap.val();syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>{privateState=snap.val();render();maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});aiWatchdogTimer=setInterval(()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI()},1800)}
 function maybeTriggerAdventureAI(){
   if(!gameId||!publicState||publicState.mode!=="adventure"||publicState.currentPlayer!==2||isBattleEnded())return;
   const key=`${gameId}:${publicState.turnKey||""}:${publicState.turn||0}`;
@@ -3603,7 +3616,7 @@ function handleUnitContextAction(action){
 }
 
 function render(){if(!publicState)return;syncHandAutoClose();renderHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
-function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);const nameEl=$("p"+p+"HudName");if(nameEl)nameEl.textContent=getHudPlayerDisplayName(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);renderHudCollapseState()}
+function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);const nameEl=$("p"+p+"HudName");if(nameEl)nameEl.textContent=getHudPlayerDisplayName(p);$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);renderHudCollapseState();maybePlayNearDeathSound()}
 let expandedHudPlayer=0;
 function toggleHudPanel(player){expandedHudPlayer=expandedHudPlayer===player?0:player;renderHudCollapseState()}
 function renderHudCollapseState(){[1,2].forEach(player=>{const hud=$(player===1?"hudP1":"hudP2");const toggle=$(player===1?"hudToggleP1":"hudToggleP2");if(!hud||!toggle)return;const expanded=expandedHudPlayer===player;hud.classList.toggle("collapsed",!expanded);hud.classList.toggle("expanded",expanded);toggle.setAttribute("aria-expanded",String(expanded));toggle.title=expanded?`Ocultar datos de J${player}`:`Mostrar datos de J${player}`;});}
