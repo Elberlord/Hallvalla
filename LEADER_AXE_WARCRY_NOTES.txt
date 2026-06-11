@@ -1,0 +1,29 @@
+Hallvalla v7HN - Líder de Hacha y Grito de Guerra
+
+Nuevo líder:
+- Caudillo del Hacha
+- Tipo interno: axe
+- Portrait: usa berserker_north.webp para no crear assets nuevos ni romper rutas.
+
+Buff base:
+- Afecta unidades con hacha / berserker.
+- Buff por tier:
+  Tier 1: +1 AT / +1 DX
+  Tier 2: +2 AT / +1 DX
+  Tier 3: +2 AT / +2 DX
+  Tier 4: +3 AT / +2 DX
+
+Nueva regla:
+- Grito de Guerra:
+  Cada vez que una unidad con hacha aliada rompe completamente la Guardia de una unidad enemiga,
+  las otras unidades aliadas ganan +1 AT temporal hasta el final del turno.
+
+Habilidad Nv.5 añadida:
+- Victoria sangrienta:
+  Si una unidad con hacha aliada destruye una unidad enemiga y el líder tiene esta habilidad,
+  todos los aliados vivos ganan +1 Vida actual, sin superar su máximo.
+
+Notas técnicas:
+- Se aplica tanto al jugador como a la IA.
+- El bonus de Grito de Guerra usa tempAtkBuff y se limpia al inicio del próximo turno del dueño.
+- No se tocaron sonidos ni la base del modal.
