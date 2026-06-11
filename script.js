@@ -1298,6 +1298,12 @@ function getCombatMods(attacker,defender){
   }
   return mods;
 }
+function consumeDefensiveStanceForAttack(defender,units,mods={}){
+  if(!defender?.defenseModeReady)return{defender,units,mods,consumed:false};
+  const nextMods={...mods,defenderGuard:(mods.defenderGuard||0)+2,defenseStancePenalty:Math.max(10,Number(mods.defenseStancePenalty||0)),notes:[...(mods.notes||[]),`${defender.name} activa Guardia defensiva: +2 GD y -10% precisión al primer ataque.`]};
+  const nextUnits=(units||[]).map(u=>u.id===defender.id?{...u,defenseModeReady:false}:u);
+  return {defender:nextUnits.find(u=>u.id===defender.id)||{...defender,defenseModeReady:false},units:nextUnits,mods:nextMods,consumed:true};
+}
 function getAttackPrecisionScore(attacker,mods={}){return effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)}
 function getDefenseEvasionScore(defender,mods={}){
   if(typeof mods.defenderDefenseOverride==="number")return Math.max(0,mods.defenderDefenseOverride);
@@ -1308,7 +1314,9 @@ function getHitChance(attacker,defender,mods={}){
   const attackScore=getAttackPrecisionScore(attacker,mods);
   const defenseScore=getDefenseEvasionScore(defender,mods);
   const diff=attackScore-defenseScore;
-  return clamp(70+(diff*5),25,95);
+  const baseChance=clamp(70+(diff*5),25,95);
+  const stancePenalty=Math.max(0,Number(mods?.defenseStancePenalty||0))||((defender?.defenseModeReady&&!mods?.counterIgnoresGuard)?10:0);
+  return clamp(baseChance-stancePenalty,10,95);
 }
 function rollHit(attacker,defender,mods={}){
   const chance=getHitChance(attacker,defender,mods);
@@ -2096,6 +2104,7 @@ function getStatusEntryIconHtml(entry){
   if(icon==="debuff")return `<span class="status-icon status-icon-debuff" aria-label="${label}"></span>`;
   if(icon==="hp")return `<span class="status-icon status-icon-hp" aria-label="${label}"></span>`;
   if(icon==="control")return `<span class="status-icon status-icon-control" aria-label="${label}"></span>`;
+  if(icon==="defense")return `<span class="status-icon status-icon-defense" aria-label="${label}"></span>`;
   return `<span class="status-icon status-icon-generic" aria-label="${label}">✦</span>`;
 }
 async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse este mismo turno desde su menú MOV.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?{...u,hp:u.hp-effectiveCardValue(card,"damage")}:u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
@@ -2189,8 +2198,12 @@ async function attackUnit(a,d){
   let preTrap=resolvePreAttackLegendaryTraps(a,d,publicState.units||[]);
   if(preTrap.cancel){await updatePublic({units:preTrap.units.map(u=>u.id===a.id?{...u,acted:true}:u),legendaryTraps:preTrap.traps});await pushLog(preTrap.logs.join(" "));clearSelection();return;}
   if(preTrap.redirect){d=preTrap.redirect;a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
-  const mods=getCombatMods(a,d);
+  let mods=getCombatMods(a,d);
   let units=[...(preTrap.units||publicState.units||[])];
+  const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
+  units=defensePrep.units;
+  mods=defensePrep.mods;
+  d=defensePrep.defender;
   let firstStrikeText="";
   const canDemigodLanceFirstStrike=d&&!d.leader&&isDemigodLanceUnitCardLike(d)&&!d.counterUsedTurn&&dist(a,d)<=getCounterRange(d);
   if(canDemigodLanceFirstStrike){
@@ -2591,6 +2604,10 @@ async function adventureEnemyTurn(){
       }
     }
 
+    const defensePrep=consumeDefensiveStanceForAttack(target,units,mods);
+    units=defensePrep.units;
+    mods=defensePrep.mods;
+    target=defensePrep.defender;
     let hit=rollHit(attacker,target,mods);
     let rerollText="";
     if(!hit.hit&&attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn){
@@ -3248,8 +3265,9 @@ function getUnitContextOptions(u){
   if(mine){
     const moveHint=u.moved?"Ya se movió":isUnitMovePhase()?"Mover ahora":"Mover en Main / Action / Last Phase";
     opts.push({key:"mov",label:"MOV",hint:moveHint});
+    opts.push({key:"def",label:"DEF",hint:u.defenseModeReady?"Ya está en guardia defensiva":(u.acted?"Ya usó su acción":"Postura defensiva: +2 GD y -10% precisión al primer ataque")});
     if(unitHasContextEffect(u))opts.push({key:"effect",label:"EFFECT",hint:"Efecto"});
-    opts.push({key:"attk",label:"ATTK",hint:u.acted?"Ya atacó":"Atacar en Action Phase"});
+    opts.push({key:"attk",label:"ATTK",hint:u.acted?"Ya atacó o defendió":"Atacar en Action Phase"});
   }
   opts.push({key:"det",label:"DET",hint:"Detalles"});
   return opts;
@@ -3269,9 +3287,9 @@ function openUnitContextMenu(u,x,y){
   hideCardInspectModal();
   render();
   if(u.owner!==myPlayer){
-    setHint(`${u.name}: amenaza enemiga marcada en rojo. Si ya atacó este turno, se marca en azul.`);
+    setHint(`${u.name}: abre DET desde la estrella táctica para revisar sus datos.`);
   }else{
-    setHint(`${u.name}: verde = movimiento, rojo = ataque, morado = ambos, azul = ataque gastado.`);
+    setHint(`${u.name}: elige MOV, DEF, ATTK, EFFECT o DET desde la estrella táctica.`);
   }
 }
 function renderUnitContextMenu(){
@@ -3283,9 +3301,10 @@ function renderUnitContextMenu(){
   const options=getUnitContextOptions(u);
   const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMovePhase()&&!isBattleEnded();
   const canAction=isMyTurn()&&u.owner===myPlayer&&isActionPhase()&&!isBattleEnded();
-  menu.innerHTML=`<div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div><div class="unit-context-actions">${options.map(o=>{
-    const disabled=(o.key==="mov"&&(!canMove||u.moved))||(o.key==="attk"&&(!canAction||u.acted))||(o.key==="effect"&&!canAction);
-    return `<button class="unit-context-btn" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
+  const slotMap={mov:"slot-top",def:"slot-left-top",effect:"slot-left-bottom",attk:"slot-right-top",det:"slot-right-bottom"};
+  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-core-star" aria-hidden="true">✦</div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
+    const disabled=(o.key==="mov"&&(!canMove||u.moved))||(o.key==="attk"&&(!canAction||u.acted))||(o.key==="effect"&&(!canAction||u.acted))||(o.key==="def"&&(!canAction||u.acted||u.defenseModeReady));
+    return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
   const grid=$("grid");
   if(grid){
@@ -3295,17 +3314,15 @@ function renderUnitContextMenu(){
     let top=g.top+(unitContextSelection.y+.5)*cellH;
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;
-    menu.classList.remove("below");
     requestAnimationFrame(()=>{
       const rect=menu.getBoundingClientRect();
-      const margin=8;
+      const margin=10;
       const vw=window.innerWidth||document.documentElement.clientWidth||0;
       const vh=window.innerHeight||document.documentElement.clientHeight||0;
       const clampedLeft=Math.min(Math.max(left,rect.width/2+margin),Math.max(rect.width/2+margin,vw-rect.width/2-margin));
+      const clampedTop=Math.min(Math.max(top,rect.height/2+margin),Math.max(rect.height/2+margin,vh-rect.height/2-margin));
       menu.style.left=`${clampedLeft}px`;
-      const wouldClipTop=(top-rect.height-18)<margin;
-      const wouldClipBottom=(top+rect.height+18)>vh;
-      menu.classList.toggle("below",wouldClipTop&&!wouldClipBottom);
+      menu.style.top=`${clampedTop}px`;
     });
   }
   menu.classList.remove("hidden");
@@ -3438,6 +3455,16 @@ async function activateUnitEffect(u,choice=null){
   clearSelection();
 }
 
+async function activateDefenseStance(u){
+  if(!u||u.owner!==myPlayer||!isMyTurn())return setHint("Solo puedes usar DEF con tus invocaciones.");
+  if(!isActionPhase())return setHint("DEF se usa en Action Phase.");
+  if(u.acted)return setHint(`${u.name} ya usó su acción ofensiva este turno.`);
+  if(u.defenseModeReady)return setHint(`${u.name} ya está en guardia defensiva.`);
+  const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true}:it);
+  await updateUnits(units);
+  await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión.`);
+  clearSelection();
+}
 function handleUnitContextAction(action){
   const u=unitContextSelection?getUnit(unitContextSelection.unitId):null;
   if(!u)return hideUnitContextMenu();
@@ -3461,10 +3488,13 @@ function handleUnitContextAction(action){
     highlightType="move";
     setHint(`MOV: elige una casilla verde para mover a ${u.name}.`);
   }else if(action==="attk"){
-    if(u.acted)return setHint(`${u.name} ya atacó este turno.`);
+    if(u.acted)return setHint(`${u.name} ya atacó o defendió este turno.`);
     highlights=attackZones(u);
     highlightType="attack";
     setHint(`ATTK: elige un objetivo rojo para atacar con ${u.name}.`);
+  }else if(action==="def"){
+    activateDefenseStance(u);
+    return;
   }else if(action==="effect"){
     activateUnitEffect(u);
     return;
@@ -3496,6 +3526,7 @@ function getUnitStatusEntries(u){
   if(n(u.tempAgiDebuff)>0)add(`-${n(u.tempAgiDebuff)} AGI`,`Agilidad reducida`,`Agilidad reducida por efecto temporal.`,"debuff agi-debuff","debuff");
   if(n(u.tempGuardBuff)>0)add(`+${n(u.tempGuardBuff)} GD`,`Guardia aumentada`,`Guardia temporal adicional.`,"buff guard-buff","buff");
   if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff","debuff");
+  if(u.defenseModeReady)add(`DEF`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Se consume después de ese ataque.`,"buff guard-buff","defense");
   const evasionSpent=getEvasionPressure(u);
   if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Evasión disponible gastada por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
   if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
@@ -3558,6 +3589,62 @@ function getUnitStatusBubblesHtml(u){
   const leftHtml=left.map(renderUnitStatusSeal).join("");
   const rightHtml=right.map(renderUnitStatusSeal).join("");
   return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
+}
+
+
+function getShortStatusSummaryLabel(entry){
+  const icon=String(entry?.icon||"generic");
+  const label=String(entry?.label||entry?.name||"Estado").trim();
+  const name=String(entry?.name||label||"Estado").trim();
+  if(icon==="bleed")return "Sangrado";
+  if(icon==="poison")return label||"Veneno";
+  if(icon==="silence")return "Silencio";
+  if(icon==="curse")return name||"Maldición";
+  if(icon==="lock")return label||"Bloqueo";
+  if(icon==="buff")return label||name||"Buff";
+  if(icon==="debuff")return label||name||"Debuff";
+  if(icon==="hp")return label||"Vida";
+  if(icon==="control")return "Control";
+  if(icon==="defense")return "DEF";
+  return label||name||"Estado";
+}
+function getShortStatusSummaryDesc(entry){
+  const desc=String(entry?.desc||"").trim();
+  if(!desc)return "";
+  return desc
+    .replace(/\s+/g," ")
+    .replace(/Movimiento reducido hasta el inicio de su próximo turno\./i,"MOV reducido.")
+    .replace(/Movimiento aumentado este turno o hasta que el efecto expire\./i,"MOV aumentado.")
+    .replace(/Ataque aumentado temporalmente por magia o efecto\./i,"AT aumentado.")
+    .replace(/Ataque aumentado por efecto temporal\./i,"AT aumentado.")
+    .replace(/Ataque reducido por efecto temporal\./i,"AT reducido.")
+    .replace(/Destreza aumentada por efecto temporal\./i,"DX aumentada.")
+    .replace(/Destreza reducida por presión, trampa o efecto temporal\./i,"DX reducida.")
+    .replace(/Agilidad aumentada por efecto temporal\./i,"AGI aumentada.")
+    .replace(/Agilidad reducida por efecto temporal\./i,"AGI reducida.")
+    .replace(/Guardia temporal adicional\./i,"GD aumentada.")
+    .replace(/Guardia reducida por trampa o efecto temporal\./i,"GD reducida.")
+    .replace(/Silenciada: no puede activar efectos este turno\./i,"No puede activar efectos.")
+    .replace(/No puede moverse este turno\./i,"No puede moverse.")
+    .replace(/No puede atacar este turno\./i,"No puede atacar.")
+    .replace(/No puede contraatacar este turno\./i,"No contraataca.")
+    .replace(/No puede recibir curación este turno\./i,"No puede curarse.")
+    .replace(/No puede usar reducciones especiales de daño este turno\./i,"Sin reducción de daño.")
+    .replace(/El próximo daño contra esta unidad ignora Guardia\./i,"Próximo daño ignora GD.")
+    .replace(/El próximo daño recibido se duplica\./i,"Próximo daño x2.")
+    .replace(/No puede curarse mientras dure el veneno\./i,"No puede curarse.");
+}
+function getUnitDetailStatusSummaryHtml(u){
+  const entries=getUnitStatusEntries(u);
+  if(!entries.length)return "";
+  const shown=entries.slice(0,5);
+  const extra=Math.max(0,entries.length-shown.length);
+  const rows=shown.map(e=>{
+    const label=escapeHtml(getShortStatusSummaryLabel(e));
+    const desc=escapeHtml(getShortStatusSummaryDesc(e));
+    return `<li class="detail-status-item ${escapeHtml(e.kind||"neutral")}"><span class="detail-status-icon">${getStatusEntryIconHtml(e)}</span><span><b>${label}</b>${desc?`<small>${desc}</small>`:""}</span></li>`;
+  }).join("");
+  return `<div class="detail-status-summary"><p><b>Estados activos:</b></p><ul>${rows}${extra>0?`<li class="detail-status-more">+${extra} más en DET</li>`:""}</ul></div>`;
 }
 
 function getAttackChanceData(target){
@@ -3731,7 +3818,8 @@ function renderDetail(){
     const u=getUnit(selectedUnitId);
     if(u){
       const fx=getUnitEffectText(u);
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}${weaponSummaryHtml(u)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
+      const statusSummary=getUnitDetailStatusSummaryHtml(u);
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}${statusSummary}${weaponSummaryHtml(u)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
       const btn=$("detailWeaponGuideBtn");
       if(btn)btn.onclick=()=>openWeaponGuide(u);
       return;
