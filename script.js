@@ -1241,6 +1241,7 @@ function maxTurnGuard(u){
   return Math.max(0,base+(getLeaderBonus(u).guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+attilaEnemyAura(u).guard);
 }
 function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+attilaEnemyAura(u).guard)}
+function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function restoreTurnGuardForOwner(units,owner){
   return (units||[]).map(u=>u.owner===owner?{...u,guard:maxTurnGuard(u),evasionSpent:0}:u);
 }
@@ -1310,12 +1311,12 @@ function getDefenseEvasionScore(defender,mods={}){
   return getAvailableEvasionScore(defender,mods);
 }
 function getHitChance(attacker,defender,mods={}){
-  if(attacker?.leader||defender?.leader)return 100;
+  const stancePenalty=Math.max(0,Number(mods?.defenseStancePenalty||0))||((defender?.defenseModeReady&&!mods?.counterIgnoresGuard)?10:0);
+  if(attacker?.leader||defender?.leader)return clamp(100-stancePenalty,10,100);
   const attackScore=getAttackPrecisionScore(attacker,mods);
   const defenseScore=getDefenseEvasionScore(defender,mods);
   const diff=attackScore-defenseScore;
   const baseChance=clamp(70+(diff*5),25,95);
-  const stancePenalty=Math.max(0,Number(mods?.defenseStancePenalty||0))||((defender?.defenseModeReady&&!mods?.counterIgnoresGuard)?10:0);
   return clamp(baseChance-stancePenalty,10,95);
 }
 function rollHit(attacker,defender,mods={}){
@@ -2005,7 +2006,7 @@ function cardRuleHelpHtml(card){
   return `<div class="stat-help-box"><div class="stat-help-title">Guía rápida</div>${lines}<button id="cardWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja táctica</button></div>`;
 }
 function unitRuleHelpHtml(u){
-  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
+  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
   let lines=statHelpHtml(stats);
   const effectText=getUnitEffectText(u);
   if(effectText)lines+=`<div class="stat-help-line"><b>Destreza/Efecto</b>: ${escapeHtml(effectText)}</div>`;
@@ -3235,7 +3236,7 @@ function showUnit(u){
   $("inspectTitle").textContent=u.name;
   $("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
-  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",effectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
+  const stats=[["HP",`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
   const inspectStatsEl=$("inspectStats");
   inspectStatsEl.innerHTML=stats.map(([l,v])=>`<button class="inspect-stat stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></button>`).join("");
   bindStatGuideClicks(inspectStatsEl);
@@ -3280,7 +3281,7 @@ function openUnitContextMenu(u,x,y){
   if(!u)return;
   unitContextSelection={unitId:u.id,x,y};
   selectedCard=null;
-  selectedUnitId=null;
+  selectedUnitId=u.id;
   selectedUnitActionMode=null;
   highlights=[];
   highlightType="move";
@@ -3305,7 +3306,7 @@ function renderUnitContextMenu(){
   const portraitHtml=getUnitPortraitHtml(u);
   const hpLabel=`${Math.max(0,u.hp)}/${effectiveMaxHp(u)}`;
   const atkLabel=effectiveAtk(u);
-  const guardLabel=effectiveGuard(u);
+  const guardLabel=displayEffectiveGuard(u);
   menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
     const disabled=(o.key==="mov"&&(!canMove||u.moved))||(o.key==="attk"&&(!canAction||u.acted))||(o.key==="effect"&&(!canAction||u.acted))||(o.key==="def"&&(!canAction||u.acted||u.defenseModeReady));
     return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
@@ -3530,7 +3531,7 @@ function getUnitStatusEntries(u){
   if(n(u.tempAgiDebuff)>0)add(`-${n(u.tempAgiDebuff)} AGI`,`Agilidad reducida`,`Agilidad reducida por efecto temporal.`,"debuff agi-debuff","debuff");
   if(n(u.tempGuardBuff)>0)add(`+${n(u.tempGuardBuff)} GD`,`Guardia aumentada`,`Guardia temporal adicional.`,"buff guard-buff","buff");
   if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff","debuff");
-  if(u.defenseModeReady)add(`DEF`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Se consume después de ese ataque.`,"buff guard-buff","defense");
+  if(u.defenseModeReady)add(`DEF +2 GD`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Se consume después de ese ataque.`,"buff guard-buff","defense");
   const evasionSpent=getEvasionPressure(u);
   if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Evasión disponible gastada por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
   if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
@@ -3691,8 +3692,8 @@ function getUnitTopLeftTitle(u){
 function getUnitAuxStatData(u){
   if(!u)return {text:"",kind:"guard",title:""};
   if(u.leader||publicState?.currentPlayer===u.owner){
-    const guard=effectiveGuard(u);
-    return {text:String(guard),kind:"guard",title:`Guardia/armadura actual: ${guard}`};
+    const guard=displayEffectiveGuard(u);
+    return {text:String(guard),kind:"guard",title:`Guardia/armadura actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}`};
   }
   const evaPct=getDisplayEvasionPercent(u);
   const evaScore=getAvailableEvasionScore(u,{});
@@ -3823,7 +3824,7 @@ function renderDetail(){
     if(u){
       const fx=getUnitEffectText(u);
       const statusSummary=getUnitDetailStatusSummaryHtml(u);
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${effectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}${statusSummary}${weaponSummaryHtml(u)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${displayEffectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}${statusSummary}${weaponSummaryHtml(u)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
       const btn=$("detailWeaponGuideBtn");
       if(btn)btn.onclick=()=>openWeaponGuide(u);
       return;
