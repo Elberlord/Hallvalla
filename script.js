@@ -1982,29 +1982,30 @@ function weaponSummaryHtml(entity){
   return `<div class="weapon-summary"><b>Arma:</b> ${escapeHtml(data.title)}<br><span>${escapeHtml(data.short)}</span></div>`;
 }
 function openWeaponGuide(entity){
-  openStatGuideModal(weaponGuideData(entity));
+  const data=weaponGuideData(entity);
+  openStatGuideModal({...data,title:`⚜ ${data.title}`});
 }
 function statGuideData(label=""){
   if(label&&typeof label==="object")return label;
   const key=normalizeStatKey(label);
-  const base={title:"Guía de combate",short:"Toca cualquier stat para abrir su explicación.",formula:"Precisión de golpe = 70 + ((DX atacante + AGI atacante) - (DX defensor + AGI defensor)) × 5. El resultado se limita entre 25% y 95%. Si un líder participa en el ataque o la defensa, el golpe acierta automáticamente.",example:"Ejemplo: atacante con DX 4 + AGI 4 = 8. Defensor con DX 3 + AGI 2 = 5. Diferencia 3, entonces 70 + 15 = 85% de acierto."};
+  const base={title:"⚔ Guía de combate",short:"Toca cualquier stat para abrir su explicación.",formula:"Precisión de golpe = 70 + ((DX atacante + AGI atacante) - (DX defensor + AGI defensor)) × 5. El resultado se limita entre 25% y 95%. Si un líder participa en el ataque o la defensa, el golpe acierta automáticamente.",example:"Ejemplo: atacante con DX 4 + AGI 4 = 8. Defensor con DX 3 + AGI 2 = 5. Diferencia 3, entonces 70 + 15 = 85% de acierto."};
   const map={
-    costo:{title:"Costo / Honor",short:"Honor necesario para jugar la carta desde la mano.",formula:"Si tu Honor actual es menor que el costo, la carta no se puede jugar.",example:"Costo 3 necesita al menos 3 de Honor disponible."},
-    at:{title:"AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
-    ataque:{title:"AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
-    hp:{title:"HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
-    vida:{title:"HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
-    gd:{title:"GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
-    guardia:{title:"GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
-    dx:{title:"DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
-    destreza:{title:"DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
-    agi:{title:"AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
-    agilidad:{title:"AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
-    mv:{title:"MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
-    mov:{title:"MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
-    movimiento:{title:"MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
-    rg:{title:"RG / Rango",short:"Distancia máxima de ataque.",formula:"Puedes atacar objetivos dentro de RG. Rango 1 es cuerpo a cuerpo; rango 3 o más permite atacar desde más lejos.",example:"RG 3 puede atacar a un enemigo a 3 casillas."},
-    rango:{title:"RG / Rango",short:"Distancia máxima de ataque.",formula:"Puedes atacar objetivos dentro de RG. Rango 1 es cuerpo a cuerpo; rango 3 o más permite atacar desde más lejos.",example:"RG 3 puede atacar a un enemigo a 3 casillas."}
+    costo:{title:"✦ Costo / Honor",short:"Honor necesario para jugar la carta desde la mano.",formula:"Si tu Honor actual es menor que el costo, la carta no se puede jugar.",example:"Costo 3 necesita al menos 3 de Honor disponible."},
+    at:{title:"⚔ AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
+    ataque:{title:"⚔ AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
+    hp:{title:"♥ HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
+    vida:{title:"♥ HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
+    gd:{title:"🛡 GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
+    guardia:{title:"🛡 GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
+    dx:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
+    destreza:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
+    agi:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
+    agilidad:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
+    mv:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
+    mov:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
+    movimiento:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
+    rg:{title:"◎ RG / Rango",short:"Distancia máxima de ataque.",formula:"Puedes atacar objetivos dentro de RG. Rango 1 es cuerpo a cuerpo; rango 3 o más permite atacar desde más lejos.",example:"RG 3 puede atacar a un enemigo a 3 casillas."},
+    rango:{title:"◎ RG / Rango",short:"Distancia máxima de ataque.",formula:"Puedes atacar objetivos dentro de RG. Rango 1 es cuerpo a cuerpo; rango 3 o más permite atacar desde más lejos.",example:"RG 3 puede atacar a un enemigo a 3 casillas."}
   };
   return map[key]||base;
 }
@@ -2034,6 +2035,49 @@ function bindStatGuideClicks(container){
   container.querySelectorAll("[data-stat]").forEach(el=>{
     el.addEventListener("click",ev=>{ev.stopPropagation();openStatGuideModal(el.dataset.stat||el.textContent||"");});
   });
+}
+function detailStatGridHtml(stats){
+  return `<div class="detail-stat-grid">${stats.map(([l,v])=>`<button class="detail-stat-chip stat-click" type="button" data-stat="${escapeHtml(l)}"><span>${escapeHtml(String(l))}</span><strong>${escapeHtml(String(v))}</strong></button>`).join("")}</div>`;
+}
+function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=true,effectLabel="Ver efecto"}={}){
+  const buttons=[];
+  if(showEffect)buttons.push(`<button class="detail-token-btn guide-effect-btn" type="button">${escapeHtml(effectLabel)}</button>`);
+  if(showWeapon)buttons.push(`<button class="detail-token-btn guide-weapon-btn" type="button">Arma / ventaja</button>`);
+  if(showFormula)buttons.push(`<button class="detail-token-btn guide-formula-btn" type="button">Precisión / evasión</button>`);
+  return buttons.length?`<div class="detail-guide-row">${buttons.join("")}</div>`:"";
+}
+function detailStatusButtonsHtml(entries=[]){
+  if(!entries.length)return "";
+  return `<div class="detail-guide-block"><div class="detail-guide-caption">Estados activos</div><div class="detail-chip-row">${entries.map((entry,idx)=>`<button class="detail-status-chip guide-status-btn" type="button" data-status-index="${idx}">${getStatusEntryIconHtml(entry)}<span>${escapeHtml(entry.name||entry.label||"Estado")}</span></button>`).join("")}</div></div>`;
+}
+function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",statuses=[]}={}){
+  if(!container)return;
+  const effectBtn=container.querySelector('.guide-effect-btn');
+  if(effectBtn)effectBtn.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    openStatGuideModal({
+      title:effectTitle?`✦ ${effectTitle}`:`✦ Efecto de ${entity?.name||'la carta'}`,
+      short:entity?.name?`Explicación del efecto de ${entity.name}.`:'Explicación del efecto.',
+      formula:effectText||'Esta pieza no tiene un efecto especial visible en este momento.',
+      example:entity?.type==='unit'||entity?.leader?'Revisa el momento del duelo y el objetivo correcto para aprovechar este efecto.':'Juega esta carta cuando el objetivo o la condición te den el mejor intercambio.'
+    });
+  });
+  const weaponBtn=container.querySelector('.guide-weapon-btn');
+  if(weaponBtn)weaponBtn.addEventListener('click',ev=>{ev.stopPropagation();openWeaponGuide(entity);});
+  const formulaBtn=container.querySelector('.guide-formula-btn');
+  if(formulaBtn)formulaBtn.addEventListener('click',ev=>{ev.stopPropagation();openStatGuideModal('formula');});
+  container.querySelectorAll('.guide-status-btn').forEach(btn=>btn.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const idx=Number(btn.dataset.statusIndex||0);
+    const entry=statuses[idx];
+    if(!entry)return;
+    openStatGuideModal({
+      title:`✦ ${entry.name||entry.label||'Estado activo'}`,
+      short:entity?.name?`${entity.name} tiene este estado activo.`:'Estado activo.',
+      formula:entry.desc||'Estado activo sin descripción adicional.',
+      example:entry.extra||'Puedes revisar este estado cuando necesites recordar qué está afectando a la unidad.'
+    });
+  }));
 }
 function statHelpHtml(stats){
   const seen=new Set();
@@ -2091,11 +2135,11 @@ function showCardInspectModal(card){
     stats.innerHTML=inspectStats.map(([l,v])=>`<button class="card-inspect-stat stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}">${l}<strong>${v}</strong></button>`).join("");
     bindStatGuideClicks(stats);
   }
-  if(text)text.innerHTML=`<div class="card-main-text">${escapeHtml(card.text||"Sin texto.")}</div>${cardRuleHelpHtml(card)}<button id="cardStatsGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Guía de stats y fórmula de precisión</button>`;
-  const statsGuideBtn=$("cardStatsGuideBtn");
-  if(statsGuideBtn)statsGuideBtn.onclick=()=>openStatGuideModal("formula");
-  const weaponGuideBtn=$("cardWeaponGuideBtn");
-  if(weaponGuideBtn)weaponGuideBtn.onclick=()=>openWeaponGuide(card);
+  if(text){
+    const effectText=String(card.text||card.effectText||card.ability||"").trim();
+    text.innerHTML=`<div class="detail-helper-note">Toca un stat o uno de los botones para ver la explicación sin llenar esta ventana de texto.</div>${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,effectLabel:'Ver efecto de la carta'})}`;
+    bindEntityGuideButtons(text,card,{effectText,effectTitle:`Efecto de ${card.name}`});
+  }
   const state=getCardPlayState(card);
   if(reason)reason.textContent=state.canPlay?"Puedes jugar esta carta. Al tocar Jugar, elige el objetivo o la casilla válida en el tablero.":state.reason;
   if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
@@ -3336,12 +3380,11 @@ function showUnit(u){
   const ownerLabel=u.owner===myPlayer?"Tu unidad":"Unidad rival";
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
-  const activeText=activeEntries.length?`<br/><br/><b>Buffs / debuffs activos:</b><br/>${activeEntries.map(e=>`${escapeHtml(e.name||e.label)}: ${escapeHtml(e.desc)}`).join("<br/>")}`:"";
-  $("inspectText").innerHTML=`<span>${u.leader
+  const inspectTextEl=$("inspectText");
+  inspectTextEl.innerHTML=`<div class="detail-helper-note">${u.leader
     ? `${ownerLabel}. Si un kaster llega a 0, pierde la batalla.`
-    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}<br/>Toca un stat para ver su regla exacta.`}</span>${fx?`<br/><br/><b>Efecto:</b> ${escapeHtml(fx)}`:""}${activeText}<br/><br/><button id="unitStatsGuideBtn" class="btn ghost full" type="button">Guía de stats y fórmula de precisión</button>`;
-  const guideBtn=$("unitStatsGuideBtn");
-  if(guideBtn)guideBtn.onclick=()=>openStatGuideModal("formula");
+    : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}. Toca un stat, el efecto o un estado para revisar la explicación.`}</div>${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
+  bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
   inspector.classList.add("show");
 }
 
@@ -3920,19 +3963,24 @@ function renderDetail(){
   const detailEl=$("detail");
   const isAdventure=publicState?.mode==="adventure";
   if(selectedCard){
-    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p>${selectedCard.type==="unit"?`<p>Costo: ${selectedCard.cost} · AT ${selectedCard.atk||0} · HP ${selectedCard.hp||0} · GD ${selectedCard.guard||0} · DX ${selectedCard.dex||0} · AGI ${selectedCard.agi||0} · MV ${selectedCard.mov||0} · RG ${selectedCard.range||0}</p>`:`<p>Costo: ${selectedCard.cost}</p>`}<p>${escapeHtml(selectedCard.text||"")}</p>${weaponSummaryHtml(selectedCard)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
-    const btn=$("detailWeaponGuideBtn");
-    if(btn)btn.onclick=()=>openWeaponGuide(selectedCard);
+    const cardStats=selectedCard.type==="unit"
+      ? [["Costo",selectedCard.cost||0],["AT",selectedCard.atk||0],["HP",selectedCard.hp||0],["GD",selectedCard.guard||0],["DX",selectedCard.dex||0],["AGI",selectedCard.agi||0],["MV",selectedCard.mov||0],["RG",selectedCard.range||0]]
+      : [["Costo",selectedCard.cost||0]];
+    const effectText=String(selectedCard.text||selectedCard.effectText||selectedCard.ability||"").trim();
+    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><div class="detail-helper-note">Toca un stat o un botón para ver la explicación.</div>${detailStatGridHtml(cardStats)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,effectLabel:'Ver efecto de la carta'})}`;
+    bindStatGuideClicks(detailEl);
+    bindEntityGuideButtons(detailEl,selectedCard,{effectText,effectTitle:`Efecto de ${selectedCard.name}`});
     return;
   }
   if(selectedUnitId){
     const u=getUnit(selectedUnitId);
     if(u){
       const fx=getUnitEffectText(u);
-      const statusSummary=getUnitDetailStatusSummaryHtml(u);
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>HP ${u.hp}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)} · GD ${displayEffectiveGuard(u)} · DX ${effectiveDex(u)} · AGI ${effectiveAgi(u)} · MV ${effectiveMov(u)} · RG ${u.range}</p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${fx?`<p><b>Efecto:</b> ${escapeHtml(fx)}</p>`:""}${statusSummary}${weaponSummaryHtml(u)}<button id="detailWeaponGuideBtn" class="btn ghost full stat-guide-inline-btn" type="button">Ver arma y ventaja</button>`;
-      const btn=$("detailWeaponGuideBtn");
-      if(btn)btn.onclick=()=>openWeaponGuide(u);
+      const activeEntries=getUnitStatusEntries(u);
+      const unitStats=[["HP",`${u.hp}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p><div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
+      bindStatGuideClicks(detailEl);
+      bindEntityGuideButtons(detailEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
       return;
     }
   }
