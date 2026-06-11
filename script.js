@@ -360,7 +360,7 @@ function playBattleFx(attacker,target){
 function playBattleFxEvent(fx,attackerRef=null){
   if(!fx||!fx.from||!fx.to)return;
   const soundUnit=attackerRef||{owner:fx.attackerOwner||0,rarity:"",special:["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(fx.rarityClass||""),key:""};
-  tryPlaySound(getAttackSoundForUnit(soundUnit),.82);
+  tryPlaySound(fx.attackStyle==="ranged"?"attack_ranged":getAttackSoundForUnit(soundUnit),.82);
   const from=getGridCellCenter(fx.from.x,fx.from.y);
   const to=getGridCellCenter(fx.to.x,fx.to.y);
   if(!from||!to)return;
@@ -387,7 +387,8 @@ function playDefenseFxEvent(fx){
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
-  setTimeout(()=>tryPlaySound("attack_impact",.42),30);
+  const guardSound=fx.type==="guard_break"?"guard_break":(fx.type==="defend_stance"?"defend_stance":"guard_block");
+  setTimeout(()=>tryPlaySound(guardSound,.62),30);
   const sideClass=fx.unitOwner===1?"player":"enemy";
   const rarityClass=fx.rarityClass||"fx-basic";
   const typeClass=fx.type==="guard_break"?"break":"block";
@@ -400,6 +401,7 @@ function playDodgeFxEvent(fx){
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
+  tryPlaySound("dodge",.58);
   const sideClass=fx.unitOwner===1?"player":"enemy";
   const rarityClass=fx.rarityClass||"fx-basic";
   spawnBattleFxNode(`battle-fx-dodge ${sideClass} ${rarityClass}`,point.x,point.y,{},900,`<div class="battle-fx-dodge-ring"></div><div class="battle-fx-dodge-swish swish-1"></div><div class="battle-fx-dodge-swish swish-2"></div><div class="battle-fx-dodge-afterimage afterimage-1"></div><div class="battle-fx-dodge-afterimage afterimage-2"></div><div class="battle-fx-dodge-label">ESQUIVA</div>`);
@@ -1671,7 +1673,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   enterGame(code,1);
 }
 
-function enterGame(code,player){gameId=code;myPlayer=player;shownBattleResultKey="";aiTurnLock=false;lastAiTurnKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden");$("onlineLobby").classList.add("hidden");$("mainMenu").classList.add("hidden");$("gameShell").classList.remove("hidden");if(unsubPub)unsubPub();if(unsubPriv)unsubPriv();unsubPub=onValue(ref(db,`games/${code}/public`),snap=>{const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=snap.val();syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>{privateState=snap.val();render();maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});aiWatchdogTimer=setInterval(()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI()},1800)}
+function enterGame(code,player){gameId=code;myPlayer=player;shownBattleResultKey="";aiTurnLock=false;lastAiTurnKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden");$("onlineLobby").classList.add("hidden");$("mainMenu").classList.add("hidden");$("gameShell").classList.remove("hidden");tryPlaySound("battle_chant_intro",.78);setTimeout(()=>tryPlaySound("battle_start",.58),1650);if(unsubPub)unsubPub();if(unsubPriv)unsubPriv();unsubPub=onValue(ref(db,`games/${code}/public`),snap=>{const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=snap.val();syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>{privateState=snap.val();render();maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});aiWatchdogTimer=setInterval(()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI()},1800)}
 function maybeTriggerAdventureAI(){
   if(!gameId||!publicState||publicState.mode!=="adventure"||publicState.currentPlayer!==2||isBattleEnded())return;
   const key=`${gameId}:${publicState.turnKey||""}:${publicState.turn||0}`;
@@ -3549,7 +3551,7 @@ async function activateDefenseStance(u){
   const defenderNow=units.find(it=>it.id===u.id)||u;
   await updatePublic({
     units,
-    defenseFxEvent:makeDefenseFxEvent("guard_block",defenderNow),
+    defenseFxEvent:makeDefenseFxEvent("defend_stance",defenderNow),
     floatFxEvent:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);

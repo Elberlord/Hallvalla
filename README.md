@@ -166,3 +166,7 @@ Al completar la batalla 1.1.5, el jugador desbloquea el acceso a mazos/colecció
 - La batalla 1.1.5 entrega directamente la carta Richard Corazón de León.
 - El deckbuilder se abre desde Colección solo si el mapa 1.1 fue completado.
 - Reglas de mazo: 60 cartas, básicas máximo 10 copias, demás rarezas máximo 1 copia.
+
+## v7HH audio intro
+- Añadido `assets/sfx/battle_chant_intro.ogg/.wav`: intro coral original tipo eco ceremonial, sin copiar melodías ni voces de terceros.
+- Al entrar al duelo suena primero el canto y luego el golpe de tambor `battle_start` con menor volumen.
