@@ -5414,3 +5414,42 @@
     display:none;
   }
 }
+/* Beastmaster / Cacería Salvaje */
+.beast-trap-marker{position:absolute;inset:auto 6px 6px auto;z-index:4;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;background:rgba(30,18,8,.84);border:1px solid rgba(255,204,90,.75);box-shadow:0 0 10px rgba(255,192,75,.35);pointer-events:none}
+.beast-trap-marker.p2{background:rgba(30,8,8,.86);border-color:rgba(255,120,100,.75)}
+.stealth-silhouette{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:34px;color:rgba(255,255,255,.72);text-shadow:0 0 14px rgba(120,220,255,.85);filter:blur(.2px);opacity:.72}
+.unit-key-bengal-tiger.p1:not(.leader),.unit-key-bengal-tiger.p2:not(.leader){box-shadow:0 0 18px rgba(255,184,75,.35), inset 0 0 18px rgba(30,12,0,.5)}
+.unit-card:has(.stealth-silhouette){opacity:.72;filter:saturate(.75);}
+
+
+/* Beastmaster real asset patch: visual polish for new non-recycled portraits */
+.card-portrait img[src*="assets/cards/beasts/"],
+.hand-icon.card-portrait img[src*="assets/cards/beasts/"],
+.card-inspect-portrait.card-portrait img[src*="assets/cards/beasts/"],
+.demigod-summon-portrait.card-portrait img[src*="assets/cards/beasts/"]{
+  object-fit:cover;
+  object-position:center;
+  filter:saturate(1.08) contrast(1.05);
+}
+
+.card-portrait img[src*="leader_beastmaster"],
+.leader-card img[src*="leader_beastmaster"],
+.leader-portrait img[src*="leader_beastmaster"]{
+  object-fit:cover;
+  object-position:center;
+  filter:saturate(1.08) contrast(1.08);
+}
+
+.card-portrait:has(img[src*="assets/cards/beasts/"]),
+.card-inspect-portrait:has(img[src*="assets/cards/beasts/"]){
+  box-shadow:0 0 0 1px rgba(120,255,80,.22),0 0 18px rgba(73,210,64,.18), inset 0 0 20px rgba(0,0,0,.32);
+}
+
+.card-portrait:has(img[src*="iron_jaw_trap"]),
+.card-portrait:has(img[src*="covered_pit"]),
+.card-portrait:has(img[src*="hunting_net"]),
+.card-portrait:has(img[src*="blood_bait"]),
+.card-portrait:has(img[src*="tracking_smoke"]),
+.card-portrait:has(img[src*="rope_cage"]){
+  box-shadow:0 0 0 1px rgba(210,90,255,.24),0 0 18px rgba(160,70,220,.20), inset 0 0 20px rgba(0,0,0,.36);
+}

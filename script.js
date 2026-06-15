@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HB_hallvalla_fresh_summon_action_fix";
+const HALLVALLA_BUILD_VERSION="v7HW_beastmaster_event_ai_max_allfix_2026_06_14";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -29,7 +29,7 @@ function handleDirectBoardTargetEvent(ev,x,y){
 }
 function showEl(id){const el=$(id);if(el)el.classList.remove("hidden");}
 function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
-const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.webp",archer:"assets/leaders/leader_archer.webp",mage:"assets/leaders/leader_mage.webp",axe:"assets/leaders/leader_axe.webp",cavalry:"assets/leaders/leader_cavalry.webp",assassin:"assets/leaders/leader_assassin.webp"};
+const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.webp",archer:"assets/leaders/leader_archer.webp",mage:"assets/leaders/leader_mage.webp",axe:"assets/leaders/leader_axe.webp",cavalry:"assets/leaders/leader_cavalry.webp",assassin:"assets/leaders/leader_assassin.webp",beastmaster:"assets/leaders/leader_beastmaster.webp"};
 const CARD_PORTRAITS={
   richard:"assets/cards/basic/richard_lionheart.webp",
   cavalry:"assets/cards/basic/cavalry_light.webp",
@@ -70,7 +70,24 @@ const CARD_PORTRAITS={
   caesar:"assets/cards/basic/heavy_infantry_paladin.webp",
   cuChulainn:"assets/cards/basic/berserker_north.webp",
   gilgamesh:"assets/cards/basic/paladin.webp",
-  arjuna:"assets/cards/basic/archer.webp"
+  arjuna:"assets/cards/basic/archer.webp",
+  honeyBadger:"assets/cards/beasts/honey_badger.webp",
+  porcupine:"assets/cards/beasts/porcupine.webp",
+  wildBoar:"assets/cards/beasts/wild_boar.webp",
+  blackRaven:"assets/cards/beasts/black_raven.webp",
+  constrictor:"assets/cards/beasts/constrictor_snake.webp",
+  buffalo:"assets/cards/beasts/african_buffalo.webp",
+  peregrineFalcon:"assets/cards/beasts/peregrine_falcon.webp",
+  inlandTaipan:"assets/cards/beasts/inland_taipan.webp",
+  africanLion:"assets/cards/beasts/african_lion.webp",
+  bengalTiger:"assets/cards/beasts/bengal_tiger.webp",
+  whiteRhino:"assets/cards/beasts/white_rhino.webp",
+  ironJawTrap:"assets/cards/beasts/iron_jaw_trap.webp",
+  coveredPit:"assets/cards/beasts/covered_pit.webp",
+  huntingNet:"assets/cards/beasts/hunting_net.webp",
+  bloodBait:"assets/cards/beasts/blood_bait.webp",
+  trackingSmoke:"assets/cards/beasts/tracking_smoke.webp",
+  ropeCage:"assets/cards/beasts/rope_cage.webp"
 };
 const LEADER_DATA={
   warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo: AT 3, GD 4, RG 1. Infantería pesada + VIDA/GUARDIA."},
@@ -78,7 +95,8 @@ const LEADER_DATA={
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de larga distancia: AT 2, GD 1, RG 3. Mejora magias."},
   axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: los berserkers rompen Guardia y activan Grito de Guerra para subir AT aliado."},
   cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder móvil: potencia Caballería Ligera con MOV/AGI y puede llamar refuerzos al nivel 5."},
-  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con AGI/DX y extiende Sangrado cuando ejecutan enemigos."}
+  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con AGI/DX y extiende Sangrado cuando ejecutan enemigos."},
+  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Usa trampas y bestias; no lanza buffs mágicos."}
 };
 const LEADER_LEVEL_MAX=9;
 const LEADER_LEVEL_TABLE={
@@ -92,9 +110,9 @@ const LEADER_LEVEL_TABLE={
   8:{hp:34,atk:5,buffTier:3},
   9:{hp:36,atk:6,buffTier:4}
 };
-const LEADER_BASE_ATK={warrior:3,archer:3,mage:2,axe:4,cavalry:3,assassin:2};
-const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1};
-const LEADER_BASE_RANGE={warrior:1,archer:2,mage:3,axe:1,cavalry:1,assassin:1};
+const LEADER_BASE_ATK={warrior:3,archer:3,mage:2,axe:4,cavalry:3,assassin:2,beastmaster:2};
+const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
+const LEADER_BASE_RANGE={warrior:1,archer:2,mage:3,axe:1,cavalry:1,assassin:1,beastmaster:1};
 function getLeaderAttack(type,level=1){return LEADER_BASE_ATK[type]??3}
 function getLeaderGuard(type,level=1){return Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3))}
 function getLeaderRange(type,level=1){return LEADER_BASE_RANGE[type]??1}
@@ -104,7 +122,8 @@ const LEADER_BUFF_TABLE={
   mage:{1:{costReduction:2,effectBonus:3},2:{costReduction:2,effectBonus:4},3:{costReduction:3,effectBonus:5},4:{costReduction:3,effectBonus:6}},
   axe:{1:{atk:1,dex:1},2:{atk:2,dex:1},3:{atk:2,dex:2},4:{atk:3,dex:2}},
   cavalry:{1:{mov:1,agi:1},2:{mov:1,agi:2},3:{mov:2,agi:2},4:{mov:2,agi:3,atk:1}},
-  assassin:{1:{agi:2,dex:1},2:{agi:3,dex:1},3:{agi:4,dex:2},4:{agi:5,dex:2,atk:1}}
+  assassin:{1:{agi:2,dex:1},2:{agi:3,dex:1},3:{agi:4,dex:2},4:{agi:5,dex:2,atk:1}},
+  beastmaster:{1:{},2:{},3:{},4:{}}
 };
 const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"heroic_vigor",name:"Vitalidad heroica",short:"+5 HP al líder",desc:"El líder entra al combate con +5 vida máxima."},
@@ -114,7 +133,8 @@ const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"arcane_bolt",name:"Descarga arcana",short:"EFFECT: 2 daño directo al líder enemigo",desc:"Con el Hechicero, una vez por turno puede usar EFFECT para infligir 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats."},
   {key:"blood_victory",name:"Victoria sangrienta",short:"berserker destruye: aliados +1 VIDA",desc:"Con el Caudillo del Hacha, cada vez que un berserker aliado destruye una unidad enemiga, todos tus aliados vivos ganan +1 Vida actual, sin superar su máximo."},
   {key:"cavalry_call",name:"Llamado de la carga",short:"EFFECT: convoca hasta 2 Caballerías Ligeras",desc:"Con el Señor de la Carga, el líder puede usar EFFECT para convocar hasta dos Caballerías Ligeras aliadas en casillas libres adyacentes."},
-  {key:"blood_mist",name:"Niebla de sangre",short:"asesino destruye: Sangrado a todos los enemigos",desc:"Con el Maestro de Sombras, cada vez que un asesino aliado destruye una unidad enemiga, todos los enemigos vivos reciben Sangrado."}
+  {key:"blood_mist",name:"Niebla de sangre",short:"asesino destruye: Sangrado a todos los enemigos",desc:"Con el Maestro de Sombras, cada vez que un asesino aliado destruye una unidad enemiga, todos los enemigos vivos reciben Sangrado."},
+  {key:"prepare_hunt",name:"Preparar la Cacería",short:"EFFECT: coloca una Trampa de Caza básica",desc:"Con el Señor de las Bestias, una vez por turno puede colocar una Trampa de Caza básica en una celda libre dentro de rango 3. Las trampas de cacería aliadas no afectan Bestias aliadas."}
 ];
 const LEADER_LEVEL5_ABILITY_MAP=Object.fromEntries(LEADER_LEVEL5_ABILITY_POOL.map(a=>[a.key,a]));
 const LEADER_LEVEL5_DEFAULTS={
@@ -123,7 +143,8 @@ const LEADER_LEVEL5_DEFAULTS={
   mage:"arcane_bolt",
   axe:"blood_victory",
   cavalry:"cavalry_call",
-  assassin:"blood_mist"
+  assassin:"blood_mist",
+  beastmaster:"prepare_hunt"
 };
 function normalizeLeaderLevel(level){return clamp(Math.floor(Number(level)||1),1,LEADER_LEVEL_MAX)}
 function getLeaderLevelStats(level){return LEADER_LEVEL_TABLE[normalizeLeaderLevel(level)]||LEADER_LEVEL_TABLE[1]}
@@ -159,7 +180,8 @@ function normalizeLeaderLevels(levels={},profileLevel=1){
     mage:normalizeLeaderLevel(levels.mage||fallback),
     axe:normalizeLeaderLevel(levels.axe||fallback),
     cavalry:normalizeLeaderLevel(levels.cavalry||fallback),
-    assassin:normalizeLeaderLevel(levels.assassin||fallback)
+    assassin:normalizeLeaderLevel(levels.assassin||fallback),
+    beastmaster:normalizeLeaderLevel(levels.beastmaster||fallback)
   };
 }
 function getProfileLeaderLevel(type,profile=getPlayerProfile()){
@@ -187,6 +209,7 @@ function getLeaderProgressText(type,level,abilityKey=""){
   if(type==="axe"){const b=LEADER_BUFF_TABLE.axe[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: hachas +${b.atk} AT/+${b.dex} DX · Grito de Guerra: al romper toda la Guardia enemiga, aliados +1 AT hasta fin de turno${abilityLine}`;}
   if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería ligera +${b.mov||0} MOV/+${b.agi||0} AGI${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
   if(type==="assassin"){const b=LEADER_BUFF_TABLE.assassin[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: asesinos +${b.agi||0} AGI/+${b.dex||0} DX${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
+  if(type==="beastmaster"){return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Cacería: las trampas aliadas no afectan Bestias aliadas${abilityLine}`;}
   const b=LEADER_BUFF_TABLE.mage[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: magias -${b.costReduction} costo/+${b.effectBonus} efecto${abilityLine}`;
 }
 function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
@@ -682,7 +705,7 @@ function getAttackSoundForUnit(unit){
   if(cls==="fx-heroic"||cls==="fx-glorious"||cls==="fx-epic"||cls==="fx-mythic")return "attack_heroic";
   return "attack_sword";
 }
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:2,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:2,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:4,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:2,hp:2,atk:1,guard:0,dex:4,agi:3,mov:2,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:2,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:2,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:4,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:2,hp:2,atk:1,guard:0,dex:4,agi:3,mov:2,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,vigor:5,rarity:"Épica",special:true,text:"Ataque por la espalda: si Hua Lan ataca a una unidad que ya está adyacente a otro aliado, obtiene +4 Ataque durante ese combate. Si derrota al objetivo con este ataque, puede moverse 1 casilla después del combate."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,vigor:6,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -722,6 +745,105 @@ function applyGuardianVictoryVisual(specialKey){
 }
 
 
+
+const BEAST_CARD_TEMPLATES=[
+  {key:"honey_badger",name:"Tejón Mielero",type:"unit",icon:"🦡",portrait:CARD_PORTRAITS.honeyBadger,rarity:"Básica",cost:3,hp:5,atk:2,guard:4,dex:2,agi:3,mov:2,range:1,beast:true,text:"No Retrocede: la primera vez por turno que recibe daño cuerpo a cuerpo, reduce 1 daño adicional. Bestia Irritante: enemigos adyacentes tienen -1 DX si atacan a otra unidad que no sea el Tejón. Mordida Fastidiosa: si hace daño real, el objetivo pierde -1 MOV en su próximo turno."},
+  {key:"porcupine",name:"Puercoespín",type:"unit",icon:"🦔",portrait:CARD_PORTRAITS.porcupine,rarity:"Básica",cost:2,hp:4,atk:1,guard:3,dex:1,agi:2,mov:1,range:1,beast:true,text:"Espinas Defensivas: cuando una unidad enemiga le hace un ataque cuerpo a cuerpo, recibe 1 daño directo después del combate si sigue adyacente."},
+  {key:"wild_boar",name:"Jabalí Salvaje",type:"unit",icon:"🐗",portrait:CARD_PORTRAITS.wildBoar,rarity:"Básica",cost:3,hp:6,atk:3,guard:2,dex:2,agi:3,mov:3,range:1,beast:true,text:"Carga Brusca: si se movió 2+ casillas antes de atacar, gana +1 AT. Empuje Salvaje: si hace daño real con Carga Brusca, empuja al objetivo 1 casilla si hay espacio."},
+  {key:"black_raven",name:"Cuervo Negro",type:"unit",icon:"🐦‍⬛",portrait:CARD_PORTRAITS.blackRaven,rarity:"Básica",cost:2,hp:2,atk:1,guard:0,dex:3,agi:5,mov:4,range:1,beast:true,text:"Ojo del Cazador: EFFECT revela unidades enemigas con Sigilo en radio 2. Graznido Inquietante: una unidad enemiga adyacente pierde -1 DX hasta el final del turno."},
+  {key:"constrictor_snake",name:"Serpiente Constrictora",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.constrictor,rarity:"Básica",cost:3,hp:4,atk:2,guard:1,dex:3,agi:3,mov:2,range:1,beast:true,text:"Constricción: si hace daño real, el objetivo pierde -1 MOV y -1 AGI hasta su próximo turno. Agarre: si ya tenía MOV reducido, no podrá moverse en su próximo turno."},
+  {key:"african_buffalo",name:"Búfalo Africano",type:"unit",icon:"🐃",portrait:CARD_PORTRAITS.buffalo,rarity:"Épica",cost:4,hp:12,atk:2,guard:0,dex:1,agi:3,mov:2,range:1,beast:true,text:"Instinto de Cornada: cuando una unidad enemiga adyacente declare un ataque cuerpo a cuerpo contra él, hace 2 daño primero. Si el atacante cae, su ataque se cancela."},
+  {key:"peregrine_falcon",name:"Halcón Peregrino",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.peregrineFalcon,rarity:"Gloriosa",cost:4,hp:2,atk:1,guard:0,dex:0,agi:0,mov:7,range:1,beast:true,aerial:true,text:"Aéreo: solo unidades con rango mayor a 3 o Antiaéreo pueden atacarlo. Ataque en Picada: si se movió 3+ casillas antes de atacar, siempre golpea y hace 3 daño. Si impacta contra Guardia, recibe daño igual a la Guardia actual del objetivo."},
+  {key:"inland_taipan",name:"Taipán del Interior",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.inlandTaipan,rarity:"Gloriosa",cost:4,hp:1,atk:1,guard:0,dex:4,agi:5,mov:3,range:1,beast:true,text:"Mordida Letal: si hace daño real, aplica Veneno 1/2/4 durante 3 turnos. Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere. El líder sí se envenena, pero no muere automáticamente por doble mordida de la misma unidad."},
+  {key:"african_lion",name:"León Africano",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.africanLion,rarity:"Mítica",cost:5,hp:8,atk:5,guard:2,dex:3,agi:4,mov:3,range:1,beast:true,text:"Rugido del Rey: EFFECT revela unidades enemigas con Sigilo en radio 3. Es el buffer natural de las bestias."},
+  {key:"bengal_tiger",name:"Tigre de Bengala",type:"unit",icon:"🐅",portrait:CARD_PORTRAITS.bengalTiger,rarity:"Mítica",cost:5,hp:7,atk:6,guard:1,dex:4,agi:5,mov:3,range:1,beast:true,stealth:true,text:"Sigilo de Depredador: no puede ser objetivo directo mientras esté oculto. Salto de Emboscada: desde Sigilo puede atacar con +2 alcance de movimiento. Desgarro Salvaje: 50% de Sangrado al hacer daño real; 100% si atacó desde Sigilo."},
+  {key:"white_rhino",name:"Rinoceronte Blanco",type:"unit",icon:"🦏",portrait:CARD_PORTRAITS.whiteRhino,rarity:"Legendaria",cost:6,hp:12,atk:14,guard:10,dex:1,agi:1,mov:4,range:1,beast:true,text:"Embestida Devastadora: si se movió 4 casillas antes de atacar, usa AT 22. Aturdido por Impacto: después de embestir pierde su próximo turno. Bestia Torpe: no se beneficia de bonos de DX ni AGI."}
+];
+const BEAST_TRAP_CARD_TEMPLATES=[
+  {key:"iron_jaw_trap",name:"Cepo de Hierro",type:"trap",icon:"🪤",portrait:CARD_PORTRAITS.ironJawTrap,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"iron_jaw",text:"Coloca un cepo en una celda libre. La primera unidad enemiga que entre recibe 1 daño directo y pierde 1 MOV en su próximo turno."},
+  {key:"covered_pit",name:"Foso Cubierto",type:"trap",icon:"🕳️",portrait:CARD_PORTRAITS.coveredPit,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"covered_pit",text:"Coloca un foso en una celda libre. La primera unidad enemiga que entre queda Inmovilizada hasta el final de su próximo turno."},
+  {key:"hunting_net",name:"Red de Caza",type:"trap",icon:"🕸️",portrait:CARD_PORTRAITS.huntingNet,rarity:"Básica",cost:1,trap:"beast_target",beastTrap:"hunting_net",text:"Elige una unidad enemiga en rango 3 del líder: pierde -2 AGI hasta el final del turno."},
+  {key:"blood_bait",name:"Carnada Sangrienta",type:"trap",icon:"🥩",portrait:CARD_PORTRAITS.bloodBait,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"blood_bait",text:"Coloca carnada en una celda. La primera Bestia aliada que ataque a un enemigo adyacente a la carnada gana +1 AT durante ese ataque."},
+  {key:"tracking_smoke",name:"Humo de Rastreo",type:"trap",icon:"💨",portrait:CARD_PORTRAITS.trackingSmoke,rarity:"Básica",cost:1,trap:"reveal_stealth",radius:2,text:"Revela unidades enemigas con Sigilo en un área de radio 2."},
+  {key:"rope_cage",name:"Jaula de Cuerda",type:"trap",icon:"🪢",portrait:CARD_PORTRAITS.ropeCage,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"rope_cage",text:"Coloca una jaula de cuerda. La primera unidad enemiga que entre no puede atacar hasta el final de su próximo turno."}
+];
+CARD_TEMPLATES.push(...BEAST_CARD_TEMPLATES,...BEAST_TRAP_CARD_TEMPLATES);
+const BEASTMASTER_DECK_KEYS=["honey_badger","honey_badger","porcupine","porcupine","wild_boar","wild_boar","black_raven","black_raven","constrictor_snake","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","iron_jaw_trap","iron_jaw_trap","covered_pit","covered_pit","hunting_net","hunting_net","blood_bait","tracking_smoke","rope_cage"];
+function getBeastmasterDeckTemplates(){const pool=[...CARD_TEMPLATES];return BEASTMASTER_DECK_KEYS.map(k=>pool.find(c=>c.key===k)).filter(Boolean).slice(0,DECK_RULES.deckSize);}
+const BEAST_EVENT_REWARD_KEYS=[
+  {key:"honey_badger",w:14},{key:"porcupine",w:12},{key:"wild_boar",w:12},{key:"black_raven",w:10},{key:"constrictor_snake",w:10},
+  {key:"african_buffalo",w:9},{key:"peregrine_falcon",w:8},{key:"inland_taipan",w:8},{key:"african_lion",w:6},{key:"bengal_tiger",w:6},{key:"white_rhino",w:5}
+];
+const BEASTMASTER_EVENT_BATTLE={
+  id:"beastmaster_annual_hunt",
+  num:1,
+  beastEvent:true,
+  title:"La Cacería del Rey Salvaje",
+  enemyName:"Señor de las Bestias",
+  enemyLeaderType:"beastmaster",
+  enemyLeaderLevel:9,
+  enemyLeaderAbility:"prepare_hunt",
+  image:"assets/ui/beastmaster/ui_board_beastmaster.webp",
+  enemyIntro:"Durante una semana al año, el bosque antiguo abre sus puertas. El Señor de las Bestias espera entre trampas, rastros y criaturas molestas. Derrótalo para reclamar un Paquete de Bestias.",
+  xp:60,
+  gold:60,
+  cardPack:true,
+  packType:"beast_pack",
+  aiLevel:10,
+  aiDrawBonus:0,
+  aiHonorBonus:0,
+  aiStyle:"Cacería máxima: trampas, presión y bestias agresivas",
+  desc:"Evento anual. Derrota al Señor de las Bestias para recibir un Paquete de Bestias. La recompensa especial solo se reclama una vez por año."
+};
+function getBeastEventYear(){return new Date().getFullYear();}
+function getBeastEventClaimKey(){return `hallvalla_beast_event_claimed_${getBeastEventYear()}`;}
+function hasClaimedBeastEventThisYear(){return localStorage.getItem(getBeastEventClaimKey())==="1";}
+function markBeastEventClaimedThisYear(){localStorage.setItem(getBeastEventClaimKey(),"1");}
+function getRandomBeastEventCard(){
+  const total=BEAST_EVENT_REWARD_KEYS.reduce((sum,it)=>sum+(it.w||1),0);
+  let roll=Math.random()*total;
+  const item=BEAST_EVENT_REWARD_KEYS.find(it=>((roll-=(it.w||1))<=0))||BEAST_EVENT_REWARD_KEYS[0];
+  const card=CARD_TEMPLATES.find(c=>c.key===item.key);
+  return card?{...card}:null;
+}
+
+function isBeastUnit(u){return !!u&&!u.leader&&(u.beast===true||["honey_badger","porcupine","wild_boar","black_raven","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino"].includes(String(u.key||"")));}
+function isStealthedUnit(u){return !!u&&!u.leader&&(u.stealth===true||u.hidden===true)&&!u.revealed;}
+function canTargetStealth(source,target){return !isStealthedUnit(target)||source?.trap==="reveal_stealth"||source?.revealStealth;}
+function revealUnit(u,reason="revelada"){return isStealthedUnit(u)?{...u,revealed:true,stealth:false,text:`${u.text||""} Revelada por ${reason}.`.trim()}:u;}
+function revealStealthInRadius(units,owner,center,radius,reason="detección"){let count=0;const out=(units||[]).map(u=>{if(u.owner!==owner&&isStealthedUnit(u)&&dist(u,center)<=radius){count++;return revealUnit(u,reason);}return u;});return{units:out,count};}
+function getBeastTraps(state=publicState){return Array.isArray(state?.beastTraps)?state.beastTraps:[];}
+function makeBeastTrap(card,owner,x,y){return {id:uid8(),owner,x,y,cardKey:card.key,cardName:card.name,trapKey:card.beastTrap||"basic_hunt",createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};}
+function removeBeastTrapById(traps,id){return (traps||[]).filter(t=>t.id!==id);}
+function ownerHasBeastmaster(owner,units=publicState?.units||[]){return (units||[]).some(u=>u.owner===owner&&u.leader&&u.leaderType==="beastmaster"&&u.hp>0);}
+function isIgnoredByBeastTrap(unit,trap,units=publicState?.units||[]){return !!(trap&&unit&&unit.owner===trap.owner&&isBeastUnit(unit)&&ownerHasBeastmaster(trap.owner,units));}
+function getCellBeastTrapAt(x,y,state=publicState){return getBeastTraps(state).find(t=>t.x===x&&t.y===y)||null;}
+function nextTurnKeyForOwner(owner,state=publicState){
+  const currentTurn=Number(state?.turn||1)||1;
+  const currentPlayer=Number(state?.currentPlayer||1)||1;
+  const target=Number(owner||currentPlayer)||currentPlayer;
+  if(target===currentPlayer)return `${currentTurn+1}-${target}`;
+  if(currentPlayer===1&&target===2)return `${currentTurn}-${target}`;
+  return `${currentTurn+1}-${target}`;
+}
+function currentOrNextTurnKeyForOwner(owner,state=publicState){
+  const currentPlayer=Number(state?.currentPlayer||1)||1;
+  return Number(owner||currentPlayer)===currentPlayer ? (state?.turnKey||`${state?.turn||1}-${currentPlayer}`) : nextTurnKeyForOwner(owner,state);
+}
+function canDirectlyTarget(source,target){return canTargetStealth(source,target);}
+function isBeastTrapCard(card){return !!card&&card.type==="trap"&&["beast_cell","beast_target","reveal_stealth"].includes(card.trap);}
+function isCellSafeFromEnemyBeastTrap(cell,owner,unit,units,beastTraps){
+  const trap=(beastTraps||[]).find(t=>t.x===cell.x&&t.y===cell.y&&t.owner!==owner);
+  if(!trap)return true;
+  return isIgnoredByBeastTrap(unit||{owner},trap,units);
+}
+function applyBloodBaitAttackBonus(attacker,defender,units){
+  if(!attacker||!defender||!isBeastUnit(attacker))return {mods:{},logs:[]};
+  const ready=(units||[]).find(u=>u.id===defender.id&&u.bloodBaitReadyTurnKey&&(u.bloodBaitOwner===attacker.owner||String(u.bloodBaitOwner)===String(attacker.owner)));
+  if(!ready)return {mods:{},logs:[]};
+  return {mods:{attackerAtk:1},logs:[`Carnada Sangrienta: ${attacker.name} gana +1 AT contra ${defender.name}.`]};
+}
+
 const DECK_RULES={basicMaxCopies:3,nonBasicMaxCopies:1,deckSize:25};
 function cardRarity(card){
   return String(card?.rarity||card?.rareza||"Básica").toLowerCase();
@@ -752,7 +874,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"yi_sun_sin",name:"Yi Sun-sin",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.yiSunSin,cost:4,hp:6,atk:3,guard:5,dex:6,agi:4,mov:1,range:1,vigor:7,rarity:"Gloriosa",special:true,text:"Bloqueo Naval: mientras Yi Sun-sin esté en campo, las unidades enemigas invocadas entran con -1 Destreza y -1 Guardia hasta el final de su próximo turno."},
   {key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:4,hp:4,atk:4,guard:2,dex:9,agi:5,mov:1,range:5,vigor:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió Vida este turno, obtiene +2 Ataque durante ese ataque. Si ataca desde Rango 4 o más, también ignora 1 Guardia."},
   {key:"boudica",name:"Boudica",type:"unit",icon:"🔥",portrait:CARD_PORTRAITS.boudica,cost:4,hp:6,atk:5,guard:4,dex:6,agi:5,mov:2,range:1,vigor:7,rarity:"Gloriosa",special:true,text:"Ira de Iceni: una vez por turno, cuando un aliado sea derrotado, Boudica obtiene +2 Ataque hasta el final de tu próximo turno. Si el aliado derrotado era especial, Boudica también obtiene +1 Movimiento."},
-  {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:4,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,vigor:6,rarity:"Mística",special:true,text:"Estratega de Ítaca: único. Mientras Ulises esté en campo, una vez por turno puedes mover una unidad aliada 1 casilla después de que ataque. Ese movimiento no permite atacar otra vez."},
+  {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:4,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,vigor:6,rarity:"Mítica",special:true,text:"Estratega de Ítaca: único. Mientras Ulises esté en campo, una vez por turno puedes mover una unidad aliada 1 casilla después de que ataque. Ese movimiento no permite atacar otra vez."},
   {key:"joan_of_arc",name:"Juana de Arco",type:"unit",icon:"🕯️",portrait:CARD_PORTRAITS.joan,cost:4,hp:5,atk:3,guard:4,dex:4,agi:4,mov:1,range:1,vigor:7,rarity:"Mítica",special:true,text:"Llama de Orléans: una vez por turno, cuando un aliado fuera a recibir daño, reduce ese daño en 1. Si ese aliado queda con 1 Vida, obtiene +1 Guardia hasta el final de su próximo turno."},
   {key:"leonidas",name:"Leónidas",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.leonidas,cost:5,hp:8,atk:5,guard:7,dex:4,agi:3,mov:2,range:1,vigor:8,rarity:"Mítica",special:true,text:"Última Formación: mientras Leónidas esté adyacente a una unidad aliada básica, ambos reciben +1 Guardia. Una vez por duelo, cuando Leónidas fuera a recibir daño fatal, queda con 1 de Vida."},
   {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:4,hp:4,atk:4,guard:3,dex:9,agi:8,mov:2,range:4,vigor:5,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -1 Guardia durante ese combate. Si acierta, el objetivo conserva -1 Guardia hasta el final de su próximo turno. No acumulable."},
@@ -1045,7 +1167,7 @@ const SIMO_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="simo_hayha");
 const SUN_TZU_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="sun_tzu");
 const ULYSSES_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="ulysses");
 const ACHILLES_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="achilles");
-const SALADIN_TOKEN_CARD=applyArcherRangeRule({key:"saladin_archer_cavalry",name:"Caballería Arquera de Saladino",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.cavalry,cost:0,hp:3,atk:3,guard:2,dex:7,agi:7,mov:3,range:3,vigor:4,rarity:"Token",special:true,token:true,text:"Unidad convocada por Media Luna del Desierto de Saladino."});
+const SALADIN_TOKEN_CARD=applyArcherRangeRule({key:"saladin_archer_cavalry",name:"Caballería Arquera de Saladino",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.cavalry,cost:0,hp:3,atk:3,guard:2,dex:7,agi:7,mov:3,range:3,vigor:4,rarity:"Básica",special:true,token:true,text:"Unidad convocada por Media Luna del Desierto de Saladino."});
 const CARD_VISUALS_BY_KEY={
   spearman:{portrait:CARD_PORTRAITS.heavyInfantry,icon:"🛡️"},
   cavalry:{portrait:CARD_PORTRAITS.cavalry,icon:"🐎"},
@@ -1079,11 +1201,11 @@ const LEGENDARY_TRAP_CARDS=[
 ];
 
 const IMPROVED_MAGIC_TRAP_PACK=[
-  {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",cost:2,spell:"damage",damage:4,rarity:"Poco ordinaria",text:"Hace 4 de daño a una unidad o kaster rival. Versión mejorada de Maldición de arena."},
-  {key:"pharaoh_blessing_plus",name:"Bendición real del faraón",type:"spell",icon:"👑",cost:2,spell:"buff",buff:3,rarity:"Poco ordinaria",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
-  {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",cost:2,spell:"shield",guard:4,rarity:"Poco ordinaria",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
-  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",cost:2,trap:"slow",slow:2,rarity:"Poco ordinaria",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante este turno."},
-  {key:"warning_rune_plus",name:"Runa de contraataque",type:"trap",icon:"◇",cost:2,trap:"guard",guard:3,rarity:"Poco ordinaria",text:"Cuando una unidad aliada sea atacada, obtiene +3 GUARDIA durante ese combate."},
+  {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",cost:2,spell:"damage",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
+  {key:"pharaoh_blessing_plus",name:"Bendición real del faraón",type:"spell",icon:"👑",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
+  {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
+  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante este turno."},
+  {key:"warning_rune_plus",name:"Runa de contraataque",type:"trap",icon:"◇",cost:2,trap:"guard",guard:3,rarity:"Épica",text:"Cuando una unidad aliada sea atacada, obtiene +3 GUARDIA durante ese combate."},
   ...LEGENDARY_TRAP_CARDS
 ];
 
@@ -1093,12 +1215,12 @@ const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"El inicio de la
 {id:"battle1",num:1,title:"La flecha en la frontera",legacyTitle:"Rumores en la frontera",enemyName:"Arquero rebelde",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La primera señal llega desde los puestos fronterizos. Humo en el horizonte. Torres abandonadas. Caminos que antes eran seguros ahora están cubiertos por patrullas sin emblema.\n\nUn arquero rebelde vigila los pasos de frontera. No busca honor, busca detener tu avance antes de que comprendas la escala del golpe.",xp:5,gold:10,cardPack:true,aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial agresivo",desc:"Confirma la presencia rebelde y derrota al arquero que protege las rutas del levantamiento."},
 {id:"battle2",num:2,title:"El guerrero del puente",legacyTitle:"El puente tomado",enemyName:"Guerrero rebelde",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"El camino hacia la capital pasa por un antiguo puente de piedra. Durante generaciones fue símbolo de unión entre las provincias, pero ahora ondean sobre él estandartes rebeldes.\n\nEl puente está tomado por un guerrero rebelde que convirtió el cruce en una muralla de escudos. Tendrás que romper su frente para avanzar.",xp:8,gold:12,cardPack:true,aiLevel:2,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Presión frontal",desc:"Recupera el puente tomado y obliga al guerrero rebelde a retirarse."},
 {id:"battle3",num:3,title:"El hechicero del estandarte",legacyTitle:"La noche del estandarte",enemyName:"Hechicero conspirador",enemyLeaderType:"mage",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"La rebelión no solo ataca con espadas. También ataca símbolos.\n\nDurante la noche, un hechicero rebelde intenta alzar un estandarte falso para quebrar la moral del reino. Sus conjuros no perdonan errores. No se trata solo de vencer: se trata de impedir que el miedo cambie de bando.",xp:12,gold:15,cardPack:true,aiLevel:3,aiDrawBonus:1,aiHonorBonus:0,aiStyle:"Control y daño directo",desc:"Derrota al hechicero que intenta convertir el símbolo rebelde en una señal de victoria."},
-{id:"battle4",num:4,title:"El guerrero que no cayó",legacyTitle:"Asedio al salón del trono",enemyName:"Guerrero rebelde vengativo",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"Los rebeldes han avanzado más rápido de lo esperado. Sus fuerzas llegan a las puertas del salón del trono, donde los últimos guardias leales intentan resistir.\n\nEl guerrero del puente sobrevivió a su derrota y te siguió hasta las puertas. Esta vez no viene a defender una posición: viene a cazarte.",xp:16,gold:18,cardPack:true,aiLevel:4,aiDrawBonus:1,aiHonorBonus:1,aiStyle:"Caza del kaster",desc:"Resiste el asedio y derrota de nuevo al guerrero rebelde antes de que abra paso al golpe de estado."},
+{id:"battle4",num:4,title:"El guerrero que no cayó",legacyTitle:"Asedio al salón del trono",enemyName:"Guerrero rebelde vengativo",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"Los rebeldes han avanzado más rápido de lo esperado. Sus fuerzas llegan a las puertas del salón del trono, donde los últimos guardias leales intentan resistir.\n\nEl guerrero del puente sobrevivió a su derrota y te siguió hasta las puertas. Esta vez no viene a defender una posición: viene a cazarte.",xp:16,gold:18,cardPack:true,aiLevel:4,aiDrawBonus:1,aiHonorBonus:1,aiStyle:"Caza del líder",desc:"Resiste el asedio y derrota de nuevo al guerrero rebelde antes de que abra paso al golpe de estado."},
 {id:"battle5",num:5,title:"La prueba de Richard",legacyTitle:"El usurpador",enemyName:"Richard Corazón de León",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_5_el_usurpador.webp",enemyIntro:"La última defensa se rompe entre humo y acero. En el interior del salón, frente al trono, espera Richard Corazón de León.\n\nNo viene como usurpador. Viene a medir tu temple. Asegura que el reino necesita guerreros capaces de sostener la corona cuando el mundo se parte. Si sobrevives a su prueba, te aceptará como aliado.",xp:20,gold:25,cardPack:false,rewardCard:"richard_lionheart",enemyLegendaryCards:["mulan","wallace","richard_lionheart"],aiLevel:5,aiDrawBonus:0,aiHonorBonus:2,aiStyle:"Despiadada y orientada a victoria",desc:"Supera la prueba final de Richard Corazón de León para completar el mapa 1.1 y ganar su carta."}
 ]};
 const ADVENTURE_CHAPTER_2_1={id:"chapter2_1",number:"2.1",title:"Ecos del estandarte roto",desc:"Tras la prueba de Richard, la rebelión deja de pelear como una banda dispersa. Un nuevo consejo de estrategas roba tácticas del reino y usa leyendas invocadas contra ti: Corazón de León, Mulan y Wallace aparecen ahora en manos enemigas junto a magias y trampas reforzadas.",introTitle:"2.1 Ecos del estandarte roto",introText:"El golpe fue detenido, pero no destruido. Entre cartas quemadas y juramentos rotos, los rebeldes aprendieron a copiar la fuerza de las leyendas. Ahora cada comandante enemigo carga cartas básicas, magias reforzadas, trampas más crueles y tres nombres capaces de cambiar una batalla: Richard, Mulan y Wallace.",requiresChapter:"chapter1_1",packType:"improved_magic_trap",battles:[
-{id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu kaster antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El enemigo usa cartas básicas, tres aliados legendarios y magias/trampas reforzadas."},
-{id:"chapter2_1_battle2",num:2,title:"La arquera del paso silencioso",enemyName:"Arquera del Paso Silencioso",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La ruta de mensajeros aparece limpia, demasiado limpia. Desde las colinas, una arquera rebelde dirige disparos calculados y usa trampas reforzadas para cortar movimiento. Si dejas una unidad herida, la convertirá en una puerta abierta hacia tu kaster.",xp:28,gold:32,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:7,aiDrawBonus:1,aiHonorBonus:3,aiStyle:"Control a distancia",desc:"Segundo combate del mapa 2.1. La IA prioriza daño, rango y remates con apoyo legendario."},
+{id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu líder antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El enemigo usa cartas básicas, tres aliados legendarios y magias/trampas reforzadas."},
+{id:"chapter2_1_battle2",num:2,title:"La arquera del paso silencioso",enemyName:"Arquera del Paso Silencioso",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La ruta de mensajeros aparece limpia, demasiado limpia. Desde las colinas, una arquera rebelde dirige disparos calculados y usa trampas reforzadas para cortar movimiento. Si dejas una unidad herida, la convertirá en una puerta abierta hacia tu líder.",xp:28,gold:32,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:7,aiDrawBonus:1,aiHonorBonus:3,aiStyle:"Control a distancia",desc:"Segundo combate del mapa 2.1. La IA prioriza daño, rango y remates con apoyo legendario."},
 {id:"chapter2_1_battle3",num:3,title:"El blanco de invierno",enemyName:"Simo Häyhä",enemyLeaderType:"archer",image:"assets/story/adventure_2_1/2_1_3_el_blanco_de_invierno.webp",enemyIntro:"La nieve no cae en esta cámara, pero el silencio corta igual. Simo Häyhä espera al fondo del eco quebrado, protegido por trampas reforzadas y leyendas copiadas. Si dejas una unidad herida, su precisión la convertirá en sentencia. Al vencerlo, su carta se unirá a tu colección.",xp:35,gold:40,cardPack:false,packType:"improved_magic_trap",rewardCard:"simo_hayha",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha"],aiLevel:8,aiDrawBonus:2,aiHonorBonus:3,aiStyle:"Francotirador de precisión",desc:"Jefe del mapa 2.1. Simo usa rango, precisión, Richard, Mulan, Wallace y magias/trampas mejoradas."}
 ]};
 const ADVENTURE_CHAPTER_3_1={id:"chapter3_1",number:"3.1",title:"El Tratado de la Guerra",desc:"Tras vencer a Simo, la rebelión cambia de rostro: menos fuerza bruta, más planificación. Los enemigos ahora preparan trampas, gastan Honor con mayor precisión y buscan ganar ventaja antes de atacar. Al final del capítulo espera Sun Tzu, una leyenda débil en cuerpo, pero peligrosa por estrategia.",introTitle:"3.1 El Tratado de la Guerra",introText:"El invierno del mapa 2 dejó una lección clara: los rebeldes ya no quieren solamente derrotarte, quieren estudiarte. En los campamentos capturados aparecen tablillas, mapas de rutas, formaciones falsas y notas de batalla escritas como si alguien estuviera enseñando a la rebelión a pensar. Ese alguien es Sun Tzu.",requiresChapter:"chapter2_1",packType:"improved_magic_trap",battles:[
@@ -1182,6 +1304,7 @@ async function setSelectedLeaderType(type){
   pendingAfterLeaderSelection="";
   if(nextAction==="adventure")runFirstTimeTutorialBefore(openAdventureStory);
   if(nextAction==="online")runFirstTimeTutorialBefore(openOnlineLobby);
+  if(nextAction==="beast_event")runFirstTimeTutorialBefore(openBeastmasterEvent);
 }
 function requireLeaderSelection(force=false){
   if((force||leaderProfileLoaded)&&!getSelectedLeaderType()){
@@ -1214,11 +1337,11 @@ function getPlayableSavedDeckTemplates(){
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
   const useSaved=!options.ai;
   const savedTemplates=useSaved?getPlayableSavedDeckTemplates():[];
-  const templates=savedTemplates.length?savedTemplates:getDefaultDeckTemplates();
+  const templates=savedTemplates.length?savedTemplates:(leaderType==="beastmaster"?getBeastmasterDeckTemplates():getDefaultDeckTemplates());
   return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
 function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
-function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[leaderAbility]?leaderAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:"kaster",icon:owner===1?"👑":"🔮",portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
+function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[leaderAbility]?leaderAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:leaderType==="beastmaster"?"beastmaster":"leader",icon:leaderType==="beastmaster"?"🐾":(owner===1?"👑":"🔮"),portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
 function getCardEffectTextByKey(key){
   if(!key)return "";
   const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],LEGENDARY_TRAP_CARDS||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS.filter(Boolean)];
@@ -1229,7 +1352,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||""}
-function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:isLanceUnitCardLike(card)?Math.max(2,(card.range||1)+getArcherRangeBonus(card)):(card.range||1)+getArcherRangeBonus(card),vigor:card.vigor||0,moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,leaderType:card.leaderType||"",cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true};const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:isLanceUnitCardLike(card)?Math.max(2,(card.range||1)+getArcherRangeBonus(card)):(card.range||1)+getArcherRangeBonus(card),vigor:card.vigor||0,moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,leaderType:card.leaderType||"",cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false};const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
@@ -1323,8 +1446,8 @@ function hectorGuardAura(u,units=publicState?.units||[]){
   return bonus;
 }
 function effectiveAtk(u){const bonus=getLeaderBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)+(bonus.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);return Math.max(0,v)}
-function effectiveDex(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+(bonus.dex||0))}
-function effectiveAgi(u){const bonus=getLeaderBonus(u);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+(bonus.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,v)}
+function effectiveDex(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);return Math.max(0,(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b)}
+function effectiveAgi(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b;if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,v)}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u))}
 function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?1:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
@@ -1383,6 +1506,12 @@ function getCombatMods(attacker,defender){
   const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
   if(joan&&!joan.joanUsedTurn&&defender.noReductionTurnKey!==publicState?.turnKey){mods.damageReduction+=1;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 1 daño recibido por un aliado.`);}
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionTurnKey!==publicState?.turnKey){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
+  if(melee&&attacker.key==="bengal_tiger"&&isStealthedUnit(attacker)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
+  if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
+  if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
+  if(melee&&attacker.key==="white_rhino"&&(attacker.movedSpaces||0)>=4){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
+  if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
+  if(melee&&defender.key==="honey_badger"&&!defender.honeyBadgerReducedTurn){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por No Retrocede.`);}
   if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
   if(melee&&attacker.key==="berserker"){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
   if(melee&&attacker.key==="guardian"){if(defenderUsesEvasion){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.notes.push(`${defender.name} -1 MOV por Aplastamiento.`)}}
@@ -1447,6 +1576,17 @@ function applyGuardDamage(defender,damage,guardMod=0,minHpDamage=0){
     lastHpLoss:remaining
   });
 }
+
+function pushUnitBackIfPossible(units,target,source,steps=1){
+  if(!target||!source)return units;
+  const dx=Math.sign((target.x||0)-(source.x||0));
+  const dy=Math.sign((target.y||0)-(source.y||0));
+  const nx=(target.x||0)+(dx*steps),ny=(target.y||0)+(dy*steps);
+  if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return units;
+  if((units||[]).some(u=>u.id!==target.id&&u.x===nx&&u.y===ny))return units;
+  return (units||[]).map(u=>u.id===target.id?{...u,x:nx,y:ny}:u);
+}
+
 function applyAttackSideEffects(attacker,defender,units){
   if(!attacker||!defender)return units;
   const melee=dist(attacker,defender)<=1;
@@ -1517,7 +1657,7 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
     const dmg=Math.max(0,u.poisonDamage||0);
     if(!statusFxEvent&&dmg>0)statusFxEvent=makeStatusFxEvent("poison_tick",u,dmg);
     if(!floatFxEvent&&dmg>0)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"☠"});
-    const next=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,poisonTurns:(u.poisonTurns||0)-1,damagedThisTurn:true});
+    let next=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,poisonTurns:(u.poisonTurns||0)-1,damagedThisTurn:true}); if(next.poisonStage){next.poisonStage+=1;next.poisonDamage=next.poisonStage===2?2:next.poisonStage===3?4:next.poisonDamage;}
     logs.push(`${u.name} sufre ${dmg} daño directo por veneno mítico.`);
     if(next.poisonTurns<=0){delete next.poisonTurns;delete next.poisonDamage;delete next.noHealWhilePoisoned;}
     return next;
@@ -1728,7 +1868,7 @@ if(win&&publicState.adventureIsGuardian){
   panel.classList.remove("hidden");
   return;
 }
-if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Kaster enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al kaster enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
+if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
 async function createGame(){const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
 async function joinGame(){const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player2`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
 
@@ -1754,7 +1894,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
-  const playerProfileName=getLocalProfileName();const pub={code,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureAiLevel:battle.aiLevel||1,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Básica",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number}: ${battle.title}. Rival: ${battle.enemyName}. IA nivel ${battle.aiLevel||1}. Recompensa: ${getBattleRewardLabel(battle)}.`]};
+  const playerProfileName=getLocalProfileName();const pub={code,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureAiLevel:battle.aiLevel||1,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Básica",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA nivel ${battle.aiLevel||1}. Recompensa: ${getBattleRewardLabel(battle)}.`]};
   await set(ref(db,`games/${code}/public`),pub);
   await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});
   await set(ref(db,`games/${code}/private/player2`),{ownerUid:"ADVENTURE_AI",leaderType:enemyLeaderType,leaderLevel:enemyLeaderLevel,leaderAbility:enemyLeaderAbility,deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});
@@ -1791,23 +1931,27 @@ async function maybeStartTurn(){
   try{
     const firstTurnNoDraw=privateState.skipFirstTurnDraw===true;
     const drawn=firstTurnNoDraw?{deck:[...(privateState.deck||[])],hand:[...(privateState.hand||[])]}:drawCards(privateState.deck||[],privateState.hand||[],2);
-    const honorGain=(publicState.turn||1)>=3?2:1;
+    const honorGain=(publicState.turn||1)>3?2:1;
     const maxHonor=(privateState.maxHonor||0)+honorGain;
     const honor=maxHonor;
     await updatePrivate({deck:drawn.deck,hand:drawn.hand,honor,maxHonor,lastTurnStarted:publicState.turnKey,skipFirstTurnDraw:false});
-    let units=restoreTurnGuardForOwner(publicState.units||[],myPlayer).map(u=>u.owner===myPlayer?{...u,moved:false,movedSpaces:0,acted:false,buffAtk:0,tempMovDebuff:0,tempMovDebuffSource:"",tempMovBuff:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,tempDexDebuff:0,tempAgiBuff:0,tempAgiDebuff:0,counterUsedTurn:false,caesarUsedTurn:false,hannibalUsedTurn:false,joanUsedTurn:false,boudicaUsedTurn:false,luBuUsedTurn:false,ragnarUsedTurn:false,achillesFuryUsedTurn:false,arjunaRerollUsedTurn:false,sunTzuUsedTurn:false,subotaiUsedTurn:false,ulyssesUsedTurn:false,genghisUsedTurn:false,alexanderUsedTurn:false,damagedThisTurn:false,evasionSpent:0,warCryBuffs:0,steelWallBuffs:0,coverFireBuffs:0,cavalryCallUsedTurn:false,arrowRainUsedTurn:false,arcaneBoltUsedTurn:false}:u);units=units.map(u=>u.owner===myPlayer&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
+    let units=restoreTurnGuardForOwner(publicState.units||[],myPlayer).map(u=>u.owner===myPlayer?{...u,moved:false,movedSpaces:0,acted:false,buffAtk:0,tempMovDebuff:0,tempMovDebuffSource:"",tempMovBuff:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,tempDexDebuff:0,tempAgiBuff:0,tempAgiDebuff:0,counterUsedTurn:false,caesarUsedTurn:false,hannibalUsedTurn:false,joanUsedTurn:false,boudicaUsedTurn:false,luBuUsedTurn:false,ragnarUsedTurn:false,achillesFuryUsedTurn:false,arjunaRerollUsedTurn:false,sunTzuUsedTurn:false,subotaiUsedTurn:false,ulyssesUsedTurn:false,genghisUsedTurn:false,alexanderUsedTurn:false,damagedThisTurn:false,evasionSpent:0,warCryBuffs:0,steelWallBuffs:0,coverFireBuffs:0,cavalryCallUsedTurn:false,arrowRainUsedTurn:false,arcaneBoltUsedTurn:false,prepareHuntUsedTurn:false}:u);units=units.map(u=>u.owner===myPlayer&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
+    const startTrap=resolveStartTurnLegendaryTraps(units,myPlayer,publicState.turnKey);
+    units=startTrap.units;
     const bleedStart=applyBleedingToOwnerAtTurnStart(units,myPlayer);
     units=bleedStart.units;
-    if(bleedStart.logs.length&&await finalizeBattle(units,bleedStart.logs.join(" ")))return;
+    const startLogs=[...(startTrap.logs||[]),...(bleedStart.logs||[])];
+    if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
     if(firstTurnNoDraw)tryPlaySound("mana_charge",.42);else{tryPlaySound("draw_card",.50);setTimeout(()=>tryPlaySound("mana_charge",.42),120);}
     const logText=firstTurnNoDraw?`J${myPlayer} Draw Phase: Honor máximo +${honorGain}, recarga a ${honor}. Mano inicial: ${drawn.hand.length} cartas. Pasa a Main Phase.`:`J${myPlayer} Draw Phase: Honor máximo +${honorGain}, recarga a ${honor} y roba 2 cartas. Pasa a Main Phase.`;
     await updatePublic({
       units,
+      legendaryTraps:startTrap.traps||getActiveLegendaryTraps(),
       turnPhase:"main",
       [`playerStats/${myPlayer}`]:{hp:units.find(u=>u.owner===myPlayer&&u.leader)?.hp||0,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length},
-      statusFxEvent:bleedStart.statusFxEvent||null,
-      floatFxEvent:bleedStart.floatFxEvent||null,
-      log:[logText,...(bleedStart.logs||[]),...(publicState.log||[])].slice(0,18)
+      statusFxEvent:bleedStart.statusFxEvent||startTrap.statusFxEvent||null,
+      floatFxEvent:bleedStart.floatFxEvent||startTrap.floatFxEvent||null,
+      log:[logText,...startLogs,...(publicState.log||[])].slice(0,18)
     });
   }finally{turnStartLock=false}
 }
@@ -1821,7 +1965,7 @@ function normalizeFreshSummonsForActionPhase(units,player,turnKey){
 }
 function isUnitActionWindow(u){return !!(u&&isMyTurn()&&u.owner===myPlayer&&isActionPhase())}
 function isUnitMoveWindow(u){return isUnitActionWindow(u)}
-function unitActionPhaseHint(action="acción"){return `En HallValla, las invocaciones usan ${action} en Action Phase, incluso si fueron kasteadas este mismo turno.`}
+function unitActionPhaseHint(action="acción"){return `En HallValla, las invocaciones usan ${action} en Action Phase, incluso si fueron invocadas este mismo turno.`}
 function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
   const id=typeof unitOrId==="string"?unitOrId:unitOrId?.id;
   return (id?(units||[]).find(u=>u.id===id):null)||((unitOrId&&typeof unitOrId==="object")?unitOrId:null);
@@ -1829,7 +1973,7 @@ function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
 function getUnitAttackRange(u){return Math.max(1,Number(u?.range||1)||1)}
 function canUnitDeclareAttack(u){
   const live=getLiveUnitRef(u);
-  if(!live||live.leader)return false;
+  if(!live)return false;
   if(!isMyTurn()||!isActionPhase()||live.owner!==myPlayer)return false;
   if(live.acted)return false;
   if(live.noAttackTurnKey&&live.noAttackTurnKey===publicState?.turnKey)return false;
@@ -1838,10 +1982,10 @@ function canUnitDeclareAttack(u){
 function getAttackableTargets(u,units=publicState?.units||[]){
   const live=getLiveUnitRef(u,units);
   if(!canUnitDeclareAttack(live))return[];
-  const rg=getUnitAttackRange(live);
-  return (units||[]).filter(t=>t&&t.id!==live.id&&t.owner!==live.owner&&(t.hp===undefined||t.hp>0)&&dist(live,t)<=rg);
+  const rg=getUnitAttackRange(live)+(live.key==="bengal_tiger"&&isStealthedUnit(live)?2:0);
+  return (units||[]).filter(t=>t&&t.id!==live.id&&t.owner!==live.owner&&(t.hp===undefined||t.hp>0)&&dist(live,t)<=rg&&canTargetStealth(live,t)&&(!(t.aerial)||((live.range||1)>3||live.antiaerial)));
 }
-function moveZones(u){const live=getLiveUnitRef(u);if(!live||live.moved||live.acted||!isUnitMoveWindow(live))return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===live.x&&y===live.y)continue;if(getUnitAt(x,y))continue;if(dist(live,{x,y})<=effectiveMov(live))res.push(`${x},${y}`)}return res}
+function moveZones(u){const live=getLiveUnitRef(u);if(!live||live.moved||live.acted||!isUnitMoveWindow(live))return[];if(live.noMoveTurnKey&&live.noMoveTurnKey===publicState?.turnKey)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===live.x&&y===live.y)continue;if(getUnitAt(x,y))continue;if(dist(live,{x,y})<=effectiveMov(live))res.push(`${x},${y}`)}return res}
 function attackZones(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`)}
 function attackRangeCells(u){
   if(!u)return[];
@@ -1884,7 +2028,7 @@ function getCardPlayState(card){
   if(!isHandPlayPhase())return{canPlay:false,reason:`Solo puedes jugar cartas desde la mano en Main Phase o Last Phase. Fase actual: ${turnPhaseLabel()}.`};
   const honor=privateState?.honor||0;
   if(honor<effectiveCardCost(card,myPlayer))return{canPlay:false,reason:`Necesitas ${effectiveCardCost(card,myPlayer)} Honor. Tienes ${honor}.`};
-  if(card.type==="unit"&&summonZones(myPlayer).length===0)return{canPlay:false,reason:"No hay casillas libres junto a tu kaster."};
+  if(card.type==="unit"&&summonZones(myPlayer).length===0)return{canPlay:false,reason:"No hay casillas libres junto a tu líder."};
   if(card.spell==="damage"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer))return{canPlay:false,reason:"No hay objetivos rivales para este hechizo."};
   if(card.spell==="buff"&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para potenciar."};
   if((card.spell==="shield"||card.trap==="guard")&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para proteger."};
@@ -1960,7 +2104,7 @@ function scheduleAutoAdvanceIfHandEmptyAfterPlay(handSnapshot,honorSnapshot){
         await update(ref(db,`games/${localGameId}/public`),{
           units:readyUnits,
           turnPhase:"actions",
-          log:[`J${localPlayer} no tiene cartas jugables en mano: avanza automáticamente a Action Phase. Invocaciones recién kasteadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(pub.log||[])].slice(0,18)
+          log:[`J${localPlayer} no tiene cartas jugables en mano: avanza automáticamente a Action Phase. Invocaciones recién invocadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(pub.log||[])].slice(0,18)
         });
       }else if(phase==="last"){
         const next=localPlayer===1?2:1;
@@ -2037,9 +2181,9 @@ function weaponGuideData(entity){
   if(isTrap)return {title:"Trampa / recurso táctico",short:"Esta carta no usa arma física: prepara una condición o castigo táctico.",formula:"Ventaja: castiga una acción enemiga, marca un objetivo o altera una estadística sin jugar como unidad común.",example:`${entity?.name||"Trampa"}: ${text||"se activa cuando se cumple su condición."}`};
   if(entity?.leader){
     const lt=String(entity.leaderType||"").toLowerCase();
-    if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de kaster.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
+    if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
     if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: controla el ritmo de las magias.",formula:"Ventaja: reduce costos y aumenta efectos mágicos por nivel de buff. Su arma real es acelerar el spellbook.",example:"Un hechicero fuerte convierte magias baratas en cambios grandes de tablero."};
-    return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de kaster.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
+    return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
   }
   if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Lanza ligera de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: si la unidad se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate. Eso hace más fácil conectar y reduce la evasión enemiga.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación."};
   if(isAxeUnitCardLike(entity)||key==="berserker"||name.includes("berserker"))return {title:"Hacha / arma de dos manos",short:"Arma pesada de ruptura. Recibe +2 Destreza base para conectar mejor sus golpes.",formula:"Ventaja: mucho AT, +2 DX por regla de hacha y presión sobre Guardia enemiga. Su función es abrir unidades resistentes, no aguantar una lluvia de ataques.",example:"Si entra contra una unidad con poca AGI, Guardia ya gastada o Evasión presionada, puede partir la defensa en un solo golpe."};
@@ -2233,7 +2377,7 @@ function playInspectedCard(){
   tryPlaySound("card_play",.70);
   selectCard(card);
 }
-function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu kaster para kastear.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"||card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>canHealOrCleanseUnit(u,myPlayer)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada herida o con estado curable para curar ${effectiveCardValue(card,"heal")} HP y limpiar Sangrado/Veneno normal.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}else if(card.trap==="legendary_mark"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canMarkWithLegendaryTrap(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige la unidad enemiga que quedará marcada por ${card.name}.`)}render()}
+function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu líder para invocar.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&canDirectlyTarget(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"||card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>canHealOrCleanseUnit(u,myPlayer)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada herida o con estado curable para curar ${effectiveCardValue(card,"heal")} HP y limpiar Sangrado/Veneno normal.`)}else if(card.trap==="beast_cell"){highlights=[];for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++){if(!getUnitAt(xx,yy)&&!getCellBeastTrapAt(xx,yy))highlights.push(`${xx},${yy}`);}highlightType="summon";setHint(`Elige una celda libre para colocar ${card.name}.`)}else if(card.trap==="beast_target"){const leader=getLeader(myPlayer)||{x:0,y:0};highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&dist(leader,u)<=3&&canTargetStealth(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una unidad enemiga en rango 3 para ${card.name}.`)}else if(card.trap==="reveal_stealth"){highlights=[];for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++)highlights.push(`${xx},${yy}`);highlightType="attack";setHint(`Elige el centro del área para revelar Sigilo.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canTargetStealth(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}else if(card.trap==="legendary_mark"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canTargetStealth(card,u)&&canMarkWithLegendaryTrap(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige la unidad enemiga que quedará marcada por ${card.name}.`)}render()}
 function selectUnit(u){
   if(!u)return;
   return openUnitContextMenu(u,u.x,u.y);
@@ -2278,7 +2422,7 @@ function getStatusEntryIconHtml(entry){
   if(icon==="defense")return `<span class="status-icon status-icon-defense" aria-label="${label}"></span>`;
   return `<span class="status-icon status-icon-generic" aria-label="${label}">✦</span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para kasteo.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} kastea ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue kasteada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer)return setHint("Elige un objetivo rival.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-effectiveCardValue(card,"damage")}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader)return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint("No tienes Honor suficiente.");let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);await updateUnits(units);await removeCardAndPay(card);await pushLog(`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`);setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${effectiveCardValue(card,"damage")} daño.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-effectiveCardValue(card,"damage")}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"damage"))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -2292,6 +2436,32 @@ async function removeCardAndPay(card){
   await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
   scheduleAutoAdvanceIfHandEmptyAfterPlay(hand,honor);
 }
+
+function resolveBeastCellTraps(moving,units,traps){
+  let out=[...(units||[])],nextTraps=[...(traps||[])],logs=[];
+  if(!moving)return{units:out,traps:nextTraps,logs};
+  const trap=nextTraps.find(t=>t.x===moving.x&&t.y===moving.y&&t.owner!==moving.owner);
+  if(!trap||isIgnoredByBeastTrap(moving,trap,out))return{units:out,traps:nextTraps,logs};
+  let n={...moving};
+  if(trap.trapKey==="iron_jaw"||trap.trapKey==="basic_hunt"){
+    n=applyDirectHpDamage(n,1);n.tempMovDebuff=Math.max(Number(n.tempMovDebuff||0),1);n.tempMovDebuffSource=trap.cardName;n.noMoveTurnKey=nextTurnKeyForOwner(n.owner);
+    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 1 daño directo y pierde 1 MOV.`);
+  }else if(trap.trapKey==="covered_pit"){
+    n.noMoveTurnKey=nextTurnKeyForOwner(n.owner);n.tempMovDebuff=Math.max(Number(n.tempMovDebuff||0),99);
+    logs.push(`${trap.cardName} se activa: ${moving.name} queda Inmovilizada.`);
+  }else if(trap.trapKey==="rope_cage"){
+    n.noAttackTurnKey=nextTurnKeyForOwner(n.owner);
+    logs.push(`${trap.cardName} se activa: ${moving.name} no puede atacar en su próximo turno.`);
+  }else if(trap.trapKey==="blood_bait"){
+    n.bloodBaitReadyTurnKey=publicState?.turnKey;n.bloodBaitOwner=trap.owner;
+    logs.push(`${trap.cardName} atrae la cacería alrededor de ${moving.name}.`);
+  }
+  out=out.map(u=>u.id===moving.id?n:u).filter(u=>u.hp>0);
+  nextTraps=removeBeastTrapById(nextTraps,trap.id);
+  if(logs.length&&publicState&&gameId){setTimeout(()=>pushLog(logs.join(" ")),0);}
+  return{units:out,traps:nextTraps,logs};
+}
+
 async function moveUnit(u,x,y){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
@@ -2300,6 +2470,8 @@ async function moveUnit(u,x,y){
   const movedNow=dist(u,{x,y});
   let trapMove=resolveMovementLegendaryTraps(u,{x,y},publicState.units||[]);
   let units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x,y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow}:it);
+  let beastTrapResult=resolveBeastCellTraps(units.find(it=>it.id===u.id)||u,units,publicState.beastTraps||[]);
+  units=beastTrapResult.units;
   const moved=units.find(it=>it.id===u.id);
   const hannibalTriggers=units.filter(h=>h.key==="hannibal_barca"&&h.owner!==moved?.owner&&h.hp>0&&!h.hannibalUsedTurn);
   let extra="";
@@ -2312,8 +2484,8 @@ async function moveUnit(u,x,y){
       }
     }
   }
-  await updatePublic({units,legendaryTraps:trapMove.traps});
-  await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}`].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}`,...trapMove.logs].join(" "));
+  await updatePublic({units,beastTraps:beastTrapResult.traps,legendaryTraps:trapMove.traps});
+  await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}`].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}`,...trapMove.logs,...beastTrapResult.logs].join(" "));
   clearSelection();
 }
 function getBattleDamage(attacker,mods={}){return Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0))}
@@ -2417,16 +2589,35 @@ async function attackUnit(a,d){
   if(!isMyTurn()||!isActionPhase()||a.owner!==myPlayer)return setHint(unitActionPhaseHint("ATTK"));
   if(a.acted)return setHint(`${a.name} ya atacó o defendió este turno.`);
   if(a.noAttackTurnKey&&a.noAttackTurnKey===publicState.turnKey)return setHint(`${a.name} no puede atacar este turno.`);
-  const rg=getUnitAttackRange(a);
+  const rg=getUnitAttackRange(a)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0);
   const distance=dist(a,d);
   if(distance>rg)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
+  if(isStealthedUnit(d))return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
+  if(d.aerial&&!((a.range||1)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
   let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
   if(preTrap.cancel){await updatePublic({units:preTrap.units.map(u=>u.id===a.id?{...u,acted:true}:u),legendaryTraps:preTrap.traps});await pushLog(preTrap.logs.join(" "));clearSelection();return;}
   let units=[...(preTrap.units||liveUnits)];
   a=getLiveUnitRef(a,units);
   d=preTrap.redirect?getLiveUnitRef(preTrap.redirect,units):getLiveUnitRef(d,units);
   if(preTrap.redirect){a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
+  const tigerFromStealthBefore=a.key==="bengal_tiger"&&isStealthedUnit(a);
+  if(tigerFromStealthBefore){
+    units=units.map(u=>u.id===a.id?revealUnit(u,"declarar ataque desde Sigilo"):u);
+    a=units.find(u=>u.id===a.id)||a;
+  }
+  if(dist(a,d)<=1&&d.key==="african_buffalo"){
+    units=units.map(u=>u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
+    if(!units.some(u=>u.id===a.id)){
+      const log=`${d.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${a.name} cae. El ataque se cancela.`;
+      await updatePublic({units,legendaryTraps:preTrap.traps});
+      if(!(await finalizeBattle(units,log)))await pushLog(log);
+      clearSelection();return;
+    }
+    a=units.find(u=>u.id===a.id)||a;
+  }
   let mods=getCombatMods(a,d);
+  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,units);
+  if(bloodBaitBonus.mods?.attackerAtk)mods={...mods,attackerAtk:(mods.attackerAtk||0)+bloodBaitBonus.mods.attackerAtk};
   const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
   units=defensePrep.units;
   mods=defensePrep.mods;
@@ -2472,7 +2663,7 @@ async function attackUnit(a,d){
       d=units.find(u=>u.id===d.id)||d;
     }
   }
-  let hit=rollHit(a,d,mods);
+  let hit=mods.falconDive?{hit:true,roll:1,chance:100}:rollHit(a,d,mods);
   let rerollText="";
   if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedTurn){
     const first=hit;
@@ -2525,6 +2716,30 @@ async function attackUnit(a,d){
     const bleedTurnsInfo=d.leader?" durante 2 turnos":"";
     bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado${d.leader?" y reinicia su duración a 2 turnos":""}.`:` ${d.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
   }
+  if(hit.hit&&hpLoss>0&&a.key==="bengal_tiger"&&units.some(u=>u.id===d.id)){
+    const tigerFromStealth=tigerFromStealthBefore;
+    if(tigerFromStealth||Math.random()<0.5){units=units.map(u=>u.id===d.id?applyBleedToUnit(u,a.name):u);bleedText+=` ${d.name} queda con Sangrado por Desgarro Salvaje.`;}
+  }
+  if(hit.hit&&hpLoss>0&&a.key==="inland_taipan"&&units.some(u=>u.id===d.id)){
+    units=units.map(u=>{
+      if(u.id!==d.id)return u;
+      if(u.poisonTurns&&u.poisonSourceId===a.id&&!u.leader)return {...u,hp:0};
+      return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:a.id,poisonSourceName:a.name};
+    });
+    bleedText+=` ${d.name} queda envenenado: 1/2/4 durante 3 turnos.`;
+  }
+  if(hit.hit&&hpLoss>0&&a.key==="constrictor_snake"&&units.some(u=>u.id===d.id)){
+    units=units.map(u=>u.id===d.id?{...u,tempMovDebuff:Math.max(Number(u.tempMovDebuff||0),1),tempAgiDebuff:(u.tempAgiDebuff||0)+1,noMoveTurnKey:(u.tempMovDebuff?nextTurnKeyForOwner(u.owner):u.noMoveTurnKey)}:u);
+  }
+  if(hit.hit&&hpLoss>0&&a.key==="wild_boar"&&(a.movedSpaces||0)>=2){
+    units=pushUnitBackIfPossible(units,d,a,1);
+  }
+  if(d&&units.some(u=>u.id===d.id&&u.bloodBaitReadyTurnKey)){
+    units=units.map(u=>u.id===d.id?(()=>{const n={...u};delete n.bloodBaitReadyTurnKey;delete n.bloodBaitOwner;return n;})():u);
+  }
+  if(hit.hit&&a.key==="white_rhino"&&mods.rhinoCharge){
+    units=units.map(u=>u.id===a.id?{...u,noMoveTurnKey:publicState.turnKey,noAttackTurnKey:publicState.turnKey,rhinoStunned:true}:u);
+  }
   const exileTrap=defenderFell?resolveAfterKillLegendaryTraps(a,d,units):{units,traps:dmgTrap.traps,logs:[]};
   units=exileTrap.units;
   let attackerAfter=units.find(u=>u.id===a.id),defenderAfter=units.find(u=>u.id===d.id);
@@ -2566,7 +2781,8 @@ async function attackUnit(a,d){
   const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
   const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bleedText}${counterText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${counterText}`;
+  const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${counterText}`;
   const battleFxEvent=makeBattleFxEvent("attack",a,d);
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
@@ -2596,11 +2812,9 @@ async function finishTurn(){
   if(!isMyTurn())return setHint("No es tu turno.");
   const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
   let refreshedUnits=restoreTurnGuardForOwner(publicState.units||[],next);
-  const startTrap=resolveStartTurnLegendaryTraps(refreshedUnits,next,`${turn}-${next}`);
-  refreshedUnits=startTrap.units;
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({units:refreshedUnits,legendaryTraps:startTrap.traps,statusFxEvent:startTrap.statusFxEvent||null,floatFxEvent:startTrap.floatFxEvent||null,currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,log:[...startTrap.logs,`J${myPlayer} End Phase: termina turno. Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({units:refreshedUnits,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,log:[`J${myPlayer} End Phase: termina turno. Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
 }
@@ -2612,7 +2826,7 @@ async function advanceTurnPhase(){
   if(phase==="main"){
     handOpen=false;handManualCloseKey="";clearSelection();
     const readyUnits=normalizeFreshSummonsForActionPhase(publicState.units||[],myPlayer,publicState.turnKey||"");
-    await updatePublic({units:readyUnits,turnPhase:"actions",log:[`J${myPlayer} pasa a Action Phase: acciones de unidades en campo. Las invocaciones recién kasteadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(publicState.log||[])].slice(0,18)});
+    await updatePublic({units:readyUnits,turnPhase:"actions",log:[`J${myPlayer} pasa a Action Phase: acciones de unidades en campo. Las invocaciones recién invocadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(publicState.log||[])].slice(0,18)});
     return;
   }
   if(phase==="actions"){
@@ -2663,7 +2877,7 @@ async function adventureEnemyTurn(){
   }
 
   const logs=[];
-  const aiLevel=Number(pub.adventureAiLevel||1);
+  const aiLevel=Math.max(10,Number(pub.adventureAiLevel||1));
   const publishAiStep=async(extra={})=>{
     const p1Leader=units.find(u=>u.owner===1&&u.leader);
     const p2Leader=units.find(u=>u.owner===2&&u.leader);
@@ -2676,6 +2890,7 @@ async function adventureEnemyTurn(){
     await update(ref(db,`games/${gameId}/public`),{
       units,
       legendaryTraps,
+      beastTraps,
       battleFxEvent,
       defenseFxEvent,
       dodgeFxEvent,
@@ -2697,14 +2912,15 @@ async function adventureEnemyTurn(){
     pendingAiFloatFxEvent=null;
   };
   const firstTurnNoDraw=ai.skipFirstTurnDraw===true;
-  const aiDrawCount=2+(pub.adventureAiDrawBonus||0);
+  const aiDrawCount=2;
   const drawn=firstTurnNoDraw?{deck:[...(ai.deck||[])],hand:[...(ai.hand||[])]}:drawCards(ai.deck||[],ai.hand||[],aiDrawCount);
   let deck=drawn.deck, hand=drawn.hand;
-  const honorGain=(pub.turn||1)>=3?2:1;
+  const honorGain=(pub.turn||1)>3?2:1;
   const maxHonor=(ai.maxHonor||0)+honorGain;
-  let honor=maxHonor+(pub.adventureAiHonorBonus||0);
-  let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?{...u,moved:false,movedSpaces:0,acted:false,buffAtk:0,tempMovDebuff:0,tempMovDebuffSource:"",tempMovBuff:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,tempDexDebuff:0,tempAgiBuff:0,tempAgiDebuff:0,counterUsedTurn:false,caesarUsedTurn:false,hannibalUsedTurn:false,joanUsedTurn:false,boudicaUsedTurn:false,luBuUsedTurn:false,ragnarUsedTurn:false,achillesFuryUsedTurn:false,arjunaRerollUsedTurn:false,sunTzuUsedTurn:false,subotaiUsedTurn:false,ulyssesUsedTurn:false,genghisUsedTurn:false,alexanderUsedTurn:false,damagedThisTurn:false,evasionSpent:0,warCryBuffs:0,steelWallBuffs:0,coverFireBuffs:0,cavalryCallUsedTurn:false,arrowRainUsedTurn:false,arcaneBoltUsedTurn:false}:u);units=units.map(u=>u.owner===2&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
+  let honor=maxHonor;
+  let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?{...u,moved:false,movedSpaces:0,acted:false,buffAtk:0,tempMovDebuff:0,tempMovDebuffSource:"",tempMovBuff:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,tempDexDebuff:0,tempAgiBuff:0,tempAgiDebuff:0,counterUsedTurn:false,caesarUsedTurn:false,hannibalUsedTurn:false,joanUsedTurn:false,boudicaUsedTurn:false,luBuUsedTurn:false,ragnarUsedTurn:false,achillesFuryUsedTurn:false,arjunaRerollUsedTurn:false,sunTzuUsedTurn:false,subotaiUsedTurn:false,ulyssesUsedTurn:false,genghisUsedTurn:false,alexanderUsedTurn:false,damagedThisTurn:false,evasionSpent:0,warCryBuffs:0,steelWallBuffs:0,coverFireBuffs:0,cavalryCallUsedTurn:false,arrowRainUsedTurn:false,arcaneBoltUsedTurn:false,prepareHuntUsedTurn:false}:u);units=units.map(u=>u.owner===2&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
   let legendaryTraps=[...(pub.legendaryTraps||[])];
+  let beastTraps=[...(pub.beastTraps||[])];
   let pendingAiBattleFxEvent=null;
   let pendingAiDefenseFxEvent=null;
   let pendingAiDodgeFxEvent=null;
@@ -2712,18 +2928,20 @@ async function adventureEnemyTurn(){
   let pendingAiFloatFxEvent=null;
   const withAiPublicState=(fn)=>{
     const prev=publicState;
-    publicState={...pub,units,legendaryTraps,currentPlayer:2,turnKey:pub.turnKey,turn:pub.turn,phase:pub.phase};
+    publicState={...pub,units,legendaryTraps,beastTraps,currentPlayer:2,turnKey:pub.turnKey,turn:pub.turn,phase:pub.phase};
     try{return fn();}
     finally{publicState=prev;}
   };
+  const startTrap=withAiPublicState(()=>resolveStartTurnLegendaryTraps(units,2,pub.turnKey));
+  units=startTrap.units;
+  legendaryTraps=startTrap.traps||legendaryTraps;
+  if(startTrap.logs.length)logs.push(...startTrap.logs);
   const bleedStart=applyBleedingToOwnerAtTurnStart(units,2);
   units=bleedStart.units;
-  if(bleedStart.logs.length){
-    logs.push(...bleedStart.logs);
-    pendingAiStatusFxEvent=bleedStart.statusFxEvent||null;
-    pendingAiFloatFxEvent=bleedStart.floatFxEvent||null;
-  }
-  if(bleedStart.logs.length&&await finalizeBattle(units,logs.join(" ")))return;
+  if(bleedStart.logs.length){logs.push(...bleedStart.logs);}
+  pendingAiStatusFxEvent=bleedStart.statusFxEvent||startTrap.statusFxEvent||null;
+  pendingAiFloatFxEvent=bleedStart.floatFxEvent||startTrap.floatFxEvent||null;
+  if((startTrap.logs.length||bleedStart.logs.length)&&await finalizeBattle(units,logs.join(" ")))return;
 
   const d=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
   const at=(x,y)=>units.find(u=>u.x===x&&u.y===y);
@@ -2731,7 +2949,7 @@ async function adventureEnemyTurn(){
   const removeCard=(card)=>{hand=hand.filter(c=>c.id!==card.id)};
   const killDead=()=>{units=units.filter(u=>u.hp>0)};
   const living=(owner)=>units.filter(u=>u.owner===owner);
-  const canHit=(a,t)=>!!a&&!!t&&!a.acted&&d(a,t)<=a.range;
+  const canHit=(a,t)=>!!a&&!!t&&!a.acted&&!(a.noAttackTurnKey&&a.noAttackTurnKey===pub.turnKey)&&d(a,t)<=((a.range||1)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0))&&canTargetStealth(a,t)&&(!(t.aerial)||((a.range||1)>3||a.antiaerial));
   const playerLeaderNow=()=>leader(1);
   const enemyLeaderNow=()=>leader(2);
   const inBounds=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS;
@@ -2772,7 +2990,7 @@ async function adventureEnemyTurn(){
 
   const bestTargetForDamage=(card)=>{
     const dmg=effectiveCardValue(card,"damage")||card.damage||0;
-    return living(1).map(t=>({target:t,score:scoreTarget(t,dmg)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
+    return living(1).filter(t=>canDirectlyTarget(card,t)).map(t=>({target:t,score:scoreTarget(t,dmg)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
 
   const bestAttackTarget=(attacker)=>{
@@ -2814,8 +3032,15 @@ async function adventureEnemyTurn(){
       return true;
     }
     if(preTrap.redirect){target=preTrap.redirect;attacker={...attacker,tempAtkBuff:(attacker.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
+    const tigerFromStealthBefore=attacker.key==="bengal_tiger"&&isStealthedUnit(attacker);
+    if(tigerFromStealthBefore){
+      units=units.map(u=>u.id===attacker.id?revealUnit(u,"declarar ataque desde Sigilo"):u);
+      attacker=units.find(u=>u.id===attacker.id)||attacker;
+    }
 
     let mods=withAiPublicState(()=>getCombatMods(attacker,target));
+    const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,units);
+    if(bloodBaitBonus.mods?.attackerAtk)mods={...mods,attackerAtk:(mods.attackerAtk||0)+bloodBaitBonus.mods.attackerAtk};
     let firstStrikeText="";
     const canDemigodLanceFirstStrike=target&&!target.leader&&isDemigodLanceUnitCardLike(target)&&!target.counterUsedTurn&&d(attacker,target)<=getCounterRange(target);
     if(canDemigodLanceFirstStrike){
@@ -2900,6 +3125,29 @@ async function adventureEnemyTurn(){
       const bleedTurnsInfo=target.leader?" durante 2 turnos":"";
       bleedText=alreadyBleeding?` ${target.name} mantiene Sangrado${target.leader?" y reinicia su duración a 2 turnos":""}.`:` ${target.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
     }
+    if(hit.hit&&hpLoss>0&&attacker.key==="bengal_tiger"&&units.some(u=>u.id===target.id)){
+      if(tigerFromStealthBefore||Math.random()<0.5){units=units.map(u=>u.id===target.id?applyBleedToUnit(u,attacker.name):u);bleedText+=` ${target.name} queda con Sangrado por Desgarro Salvaje.`;}
+    }
+    if(hit.hit&&hpLoss>0&&attacker.key==="inland_taipan"&&units.some(u=>u.id===target.id)){
+      units=units.map(u=>{
+        if(u.id!==target.id)return u;
+        if(u.poisonTurns&&u.poisonSourceId===attacker.id&&!u.leader)return {...u,hp:0};
+        return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:attacker.id,poisonSourceName:attacker.name};
+      });
+      bleedText+=` ${target.name} queda envenenado: 1/2/4 durante 3 turnos.`;
+    }
+    if(hit.hit&&hpLoss>0&&attacker.key==="constrictor_snake"&&units.some(u=>u.id===target.id)){
+      units=units.map(u=>u.id===target.id?{...u,tempMovDebuff:Math.max(Number(u.tempMovDebuff||0),1),tempAgiDebuff:(u.tempAgiDebuff||0)+1,noMoveTurnKey:(u.tempMovDebuff?nextTurnKeyForOwner(u.owner):u.noMoveTurnKey)}:u);
+    }
+    if(hit.hit&&hpLoss>0&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){
+      units=pushUnitBackIfPossible(units,target,attacker,1);
+    }
+    if(target&&units.some(u=>u.id===target.id&&u.bloodBaitReadyTurnKey)){
+      units=units.map(u=>u.id===target.id?(()=>{const n={...u};delete n.bloodBaitReadyTurnKey;delete n.bloodBaitOwner;return n;})():u);
+    }
+    if(hit.hit&&attacker.key==="white_rhino"&&mods.rhinoCharge){
+      units=units.map(u=>u.id===attacker.id?{...u,noMoveTurnKey:nextTurnKeyForOwner(u.owner),noAttackTurnKey:nextTurnKeyForOwner(u.owner),rhinoStunned:true}:u);
+    }
 
     const exileTrap=defenderFell?withAiPublicState(()=>resolveAfterKillLegendaryTraps(attacker,target,units)):{units,traps:legendaryTraps,logs:[]};
     units=exileTrap.units;
@@ -2937,7 +3185,7 @@ async function adventureEnemyTurn(){
     pendingAiDodgeFxEvent=!hit.hit&&defenderStillAlive
       ? makeDodgeFxEvent(defenderUnitNow)
       : null;
-    pendingAiStatusFxEvent=hit.hit&&hpLoss>0&&attacker.key==="scout"&&defenderStillAlive
+    pendingAiStatusFxEvent=hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
       : null;
     pendingAiFloatFxEvent=hit.hit&&defenderStillAlive
@@ -2953,7 +3201,8 @@ async function adventureEnemyTurn(){
     const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
     const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
     const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bleedText}${counterText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${counterText}`;
+    const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${counterText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -3051,7 +3300,7 @@ async function adventureEnemyTurn(){
   const chooseBestSlow=()=>{
     const options=[];
     for(const card of hand.filter(c=>c.trap==="slow"&&effectiveCardCost(c,2)<=honor)){
-      for(const enemy of living(1).filter(u=>!u.leader)){
+      for(const enemy of living(1).filter(u=>!u.leader&&canTargetStealth(card,u))){
         const pl=playerLeaderNow(), el=enemyLeaderNow();
         let score=(card.slow||0)*10+(enemy.mov||0)*5+(enemy.atk||0)*4;
         if(el&&d(enemy,el)<=4)score+=45;
@@ -3062,9 +3311,85 @@ async function adventureEnemyTurn(){
     return options.sort((a,b)=>b.score-a.score)[0]||null;
   };
 
+  const chooseBestBeastTargetTrap=()=>{
+    const options=[];
+    const el=enemyLeaderNow();
+    for(const card of hand.filter(c=>c.trap==="beast_target"&&effectiveCardCost(c,2)<=honor)){
+      for(const target of living(1).filter(u=>!u.leader&&canTargetStealth(card,u))){
+        if(el&&d(el,target)>3)continue;
+        let score=70+(effectiveAgi(target)||0)*12+(effectiveMov(target)||0)*8+(effectiveAtk(target)||0)*5;
+        if(bestAttackTarget(target))score+=45;
+        if(d(target,enemyLeaderNow()||target)<=4)score+=35;
+        options.push({card,target,score});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+  const playBeastTargetTrap=(choice)=>{
+    if(!choice?.card||!choice?.target)return false;
+    units=units.map(u=>u.id===choice.target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    logs.push(`Rival usa ${choice.card.name}: ${choice.target.name} pierde -2 AGI hasta el final del turno.`);
+    return true;
+  };
+  const chooseBestRevealTrap=()=>{
+    const options=[];
+    for(const card of hand.filter(c=>c.trap==="reveal_stealth"&&effectiveCardCost(c,2)<=honor)){
+      for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+        const center={x,y};
+        const count=living(1).filter(u=>isStealthedUnit(u)&&d(u,center)<=Number(card.radius||2)).length;
+        if(count<=0)continue;
+        options.push({card,cell:center,score:120*count});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+  const playRevealTrap=(choice)=>{
+    if(!choice?.card||!choice?.cell)return false;
+    const rev=withAiPublicState(()=>revealStealthInRadius(units,2,choice.cell,choice.card.radius||2,choice.card.name));
+    units=rev.units;
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    logs.push(`Rival usa ${choice.card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`);
+    return true;
+  };
+  const chooseBestBeastCellTrap=()=>{
+    const options=[];
+    const pl=playerLeaderNow(), el=enemyLeaderNow();
+    const existing=new Set((beastTraps||[]).map(t=>`${t.x},${t.y}`));
+    for(const card of hand.filter(c=>c.trap==="beast_cell"&&effectiveCardCost(c,2)<=honor)){
+      for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+        if(at(x,y)||existing.has(`${x},${y}`))continue;
+        const cell={x,y};
+        let score=0;
+        if(pl)score+=Math.max(0,9-d(cell,pl))*8;
+        if(el)score+=Math.max(0,7-d(cell,el))*6;
+        const nearEnemy=living(1).filter(u=>!u.leader&&d(u,cell)<=Math.max(1,effectiveMov(u)||1)+1);
+        score+=nearEnemy.length*35;
+        if(card.beastTrap==="covered_pit")score+=nearEnemy.some(u=>(effectiveMov(u)||0)>=3)?45:20;
+        if(card.beastTrap==="rope_cage")score+=nearEnemy.some(u=>(effectiveAtk(u)||0)>=4)?45:20;
+        if(card.beastTrap==="iron_jaw")score+=nearEnemy.some(u=>(u.hp||0)<=2)?45:15;
+        if(card.beastTrap==="blood_bait")score+=living(2).some(b=>isBeastUnit(b)&&d(b,cell)<=3)?55:10;
+        score-=living(2).some(a=>d(a,cell)<=1)?20:0;
+        if(score>25)options.push({card,cell,score});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+  const playBeastCellTrap=(choice)=>{
+    if(!choice?.card||!choice?.cell)return false;
+    const trap=withAiPublicState(()=>makeBeastTrap(choice.card,2,choice.cell.x,choice.cell.y));
+    beastTraps=[...beastTraps,trap];
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    logs.push(`Rival coloca ${choice.card.name} en una celda de cacería.`);
+    return true;
+  };
+
   const aiCanMarkLegendaryTrap=(card,target)=>{
     if(!card||card.trap!=="legendary_mark")return false;
-    if(!target||target.owner!==1||target.leader)return false;
+    if(!target||target.owner!==1||target.leader||!canTargetStealth(card,target))return false;
     if(legendaryTraps.some(t=>t.owner===2&&t.cardKey===card.key))return false;
     if(card.legendaryTrap==="traitors_bed"&&target.acted)return false;
     if(card.legendaryTrap==="ash_banquet"&&target.hp<effectiveMaxHp(target))return false;
@@ -3153,6 +3478,12 @@ async function adventureEnemyTurn(){
     const trapMove=withAiPublicState(()=>resolveMovementLegendaryTraps(u,{x:best.x,y:best.y},units));
     units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x:best.x,y:best.y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow}:it);
     legendaryTraps=trapMove.traps;
+    let beastTrapResult={units,traps:beastTraps,logs:[]};
+    if(!trapMove.cancel){
+      beastTrapResult=withAiPublicState(()=>resolveBeastCellTraps(units.find(it=>it.id===u.id)||u,units,beastTraps));
+      units=beastTrapResult.units;
+      beastTraps=beastTrapResult.traps;
+    }
     const moved=units.find(it=>it.id===u.id);
     const hannibalTriggers=units.filter(h=>h.key==="hannibal_barca"&&h.owner!==moved?.owner&&h.hp>0&&!h.hannibalUsedTurn);
     let extra="";
@@ -3165,7 +3496,7 @@ async function adventureEnemyTurn(){
         }
       }
     }
-    logs.push(trapMove.cancel?[...trapMove.logs,`Rival: ${u.name} no completa el movimiento.${extra}`].join(" "):[`Rival: ${u.name} se posiciona en ${best.x+1},${best.y+1}.${extra}`,...trapMove.logs].join(" "));
+    logs.push(trapMove.cancel?[...trapMove.logs,`Rival: ${u.name} no completa el movimiento.${extra}`].join(" "):[`Rival: ${u.name} se posiciona en ${best.x+1},${best.y+1}.${extra}`,...trapMove.logs,...beastTrapResult.logs].join(" "));
     return true;
   };
 
@@ -3190,10 +3521,16 @@ async function adventureEnemyTurn(){
   const playDamageSpell=(choice)=>{
     if(!choice?.card||!choice?.target)return false;
     const dmg=effectiveCardValue(choice.card,"damage");
-    choice.target=resolveBlessedArmorTransition(choice.target,{...choice.target,hp:choice.target.hp-dmg});
+    const originalTarget=choice.target;
+    let damagedTarget=null;
+    units=units.map(u=>{
+      if(u.id!==originalTarget.id)return u;
+      damagedTarget=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true});
+      return damagedTarget;
+    });
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(`Rival usa ${choice.card.name}: ${choice.target.name} recibe ${dmg} daño.`);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${dmg} daño.`);
     killDead();
     return true;
   };
@@ -3205,7 +3542,7 @@ async function adventureEnemyTurn(){
     units.push(newUnit);
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(`Rival kastea ${choice.card.name} en ${choice.cell.x+1},${choice.cell.y+1}.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia.":""}`);
+    logs.push(`Rival invoca ${choice.card.name} en ${choice.cell.x+1},${choice.cell.y+1}.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia.":""}`);
     return true;
   };
 
@@ -3258,11 +3595,11 @@ async function adventureEnemyTurn(){
     return true;
   };
 
-  logs.push(firstTurnNoDraw?`${pub.adventureEnemyName||"Rival"} Draw Phase: IA nivel ${aiLevel}. Honor ${honor}/${maxHonor}. Mano inicial: ${hand.length} cartas.`:`${pub.adventureEnemyName||"Rival"} Draw Phase: roba ${aiDrawCount} cartas. IA ${pub.adventureAiStyle||"Básica"}. Honor ${honor}/${maxHonor}.`);
+  logs.push(firstTurnNoDraw?`${pub.adventureEnemyName||"Rival"} Draw Phase: IA nivel ${aiLevel}. Honor ${honor}/${maxHonor}. Mano inicial: ${hand.length} cartas.`:`${pub.adventureEnemyName||"Rival"} Draw Phase: roba ${aiDrawCount} cartas. IA agresiva máxima. Honor ${honor}/${maxHonor}.`);
   await publishAiStep({turnPhase:"draw"});
   await sleep(AI_PHASE_DELAY_MS);
 
-  logs.push(`${pub.adventureEnemyName||"Rival"} entra en Main Phase: prepara cartas y kasteos.`);
+  logs.push(`${pub.adventureEnemyName||"Rival"} entra en Main Phase: prepara cartas y invocacións.`);
   await publishAiStep({turnPhase:"main"});
   await sleep(AI_THINK_DELAY_MS);
 
@@ -3284,6 +3621,18 @@ async function adventureEnemyTurn(){
     const legendaryTrapChoice=acted?null:chooseBestLegendaryTrap();
     if(!acted&&legendaryTrapChoice&&legendaryTrapChoice.score>=110){
       acted=playLegendaryTrap(legendaryTrapChoice);
+    }
+    const revealTrapChoice=acted?null:chooseBestRevealTrap();
+    if(!acted&&revealTrapChoice&&revealTrapChoice.score>=100){
+      acted=playRevealTrap(revealTrapChoice);
+    }
+    const beastTargetTrapChoice=acted?null:chooseBestBeastTargetTrap();
+    if(!acted&&beastTargetTrapChoice&&beastTargetTrapChoice.score>=95){
+      acted=playBeastTargetTrap(beastTargetTrapChoice);
+    }
+    const beastCellTrapChoice=acted?null:chooseBestBeastCellTrap();
+    if(!acted&&beastCellTrapChoice&&beastCellTrapChoice.score>=70){
+      acted=playBeastCellTrap(beastCellTrapChoice);
     }
     if(acted){
       cardsPlayed++;
@@ -3311,6 +3660,8 @@ async function adventureEnemyTurn(){
           if(slowChoice&&slowChoice.score>=110){
             acted=playSlow(slowChoice);
           }else{
+            const beastTargetFallback=chooseBestBeastTargetTrap();
+            const beastCellFallback=chooseBestBeastCellTrap();
             const summonChoice=chooseBestSummon();
             const damageAgain=chooseBestDamageSpell();
             const aiHasBoard=living(2).some(u=>!u.leader);
@@ -3320,6 +3671,10 @@ async function adventureEnemyTurn(){
               acted=playSummon(summonChoice);
             }else if(damageAgain&&(!summonChoice||damageAgain.score>=summonChoice.score+20||aiLevel>=4&&damageAgain.target?.leader)){
               acted=playDamageSpell(damageAgain);
+            }else if(beastTargetFallback&&beastTargetFallback.score>=75){
+              acted=playBeastTargetTrap(beastTargetFallback);
+            }else if(beastCellFallback&&beastCellFallback.score>=55){
+              acted=playBeastCellTrap(beastCellFallback);
             }else if(summonChoice){
               acted=playSummon(summonChoice);
             }else if(buffChoice){
@@ -3346,7 +3701,7 @@ async function adventureEnemyTurn(){
   if(battleTrap.logs.length)logs.push(...battleTrap.logs);
   if(getBattleOutcome(units).ended){
     const outcome=getBattleOutcome(units);
-    await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
+    await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,beastTraps,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
     return;
   }
   logs.push(`${pub.adventureEnemyName||"Rival"} pasa a Action Phase: mueve y ataca con sus unidades.`);
@@ -3366,6 +3721,7 @@ async function adventureEnemyTurn(){
       const result=applyUnitEffectState(u,null,units);
       if(!result.success)return false;
       units=result.units;
+      if(result.beastTraps)beastTraps=result.beastTraps;
       logs.push(`Rival: ${result.log}`);
       return true;
     }
@@ -3383,6 +3739,7 @@ async function adventureEnemyTurn(){
     const result=applyUnitEffectState(u,target,units);
     if(!result.success)return false;
     units=result.units;
+    if(result.beastTraps)beastTraps=result.beastTraps;
     logs.push(`Rival: ${result.log}`);
     return true;
   };
@@ -3423,7 +3780,7 @@ async function adventureEnemyTurn(){
     }
     if(didSomething&&getBattleOutcome(units).ended)break;
   }
-  // El kaster rival también puede moverse y levantar DEF si no tiene golpe bueno.
+  // El líder rival también puede moverse y levantar DEF si no tiene golpe bueno.
   const el=enemyLeaderNow();
   if(el&&!getBattleOutcome(units).ended){
     if(attackWith(el)){
@@ -3464,6 +3821,7 @@ async function adventureEnemyTurn(){
     await update(ref(db,`games/${gameId}/public`),{
       units,
       legendaryTraps,
+      beastTraps,
       phase:"ended",
       battleEnded:true,
       winner:outcome.winner,
@@ -3483,6 +3841,7 @@ async function adventureEnemyTurn(){
   await update(ref(db,`games/${gameId}/public`),{
     units:restoreTurnGuardForOwner(units,1),
     legendaryTraps,
+    beastTraps,
     currentPlayer:1,
     turnPhase:"draw",
     adventureAiState:nextAiState,
@@ -3509,8 +3868,8 @@ async function cellClick(x,y){
       return setHint("MOV: elige una casilla verde vacía.");
     }
     if(selectedUnitActionMode==="effect"){
-      if(s.key==="saladin"){
-        if(u)return setHint("EFFECT: elige una casilla libre adyacente para Saladino.");
+      if(s.key==="saladin"||s.leaderType==="beastmaster"){
+        if(u)return setHint("EFFECT: elige una casilla libre válida.");
         return activateUnitEffect(s,{x,y,cellTarget:true});
       }
       if(u&&u.owner===myPlayer)return activateUnitEffect(s,u);
@@ -3524,6 +3883,7 @@ async function cellClick(x,y){
   hideUnitContextMenu();
 }
 function getUnitPortraitHtml(u){
+  if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
   const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
   if(portrait)return `<img src="${portrait}" alt="${escapeHtml(u.name||"Unidad")}">`;
   return `<span>${u?.icon||"✦"}</span>`;
@@ -3532,7 +3892,7 @@ function showUnit(u){
   if(!u)return;
   const inspector=$("inspector");
   $("inspectTitle").textContent=u.name;
-  $("inspectSub").textContent=(u.leader?"Kaster":"Invocación")+` · J${u.owner}`;
+  $("inspectSub").textContent=(u.leader?"Líder":"Invocación")+` · J${u.owner}`;
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
   const stats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
   const inspectStatsEl=$("inspectStats");
@@ -3543,7 +3903,7 @@ function showUnit(u){
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
   inspectTextEl.innerHTML=`<div class="detail-helper-note">${u.leader
-    ? `${ownerLabel}. Si un kaster llega a 0, pierde la batalla.`
+    ? `${ownerLabel}. Si un líder llega a 0, pierde la batalla.`
     : `${ownerLabel}. Nexo: ${u.nexoX+1},${u.nexoY+1}. Toca un stat, el efecto o un estado para revisar la explicación.`}</div>${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
   bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
   inspector.classList.add("show");
@@ -3607,7 +3967,7 @@ function renderUnitContextMenu(){
   const hpLabel=`${getDisplayHp(u)}/${effectiveMaxHp(u)}`;
   const atkLabel=effectiveAtk(u);
   const guardLabel=displayEffectiveGuard(u);
-  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Kaster":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
+  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Líder":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
     const disabled=(o.key==="mov"&&(!canMove||u.moved||u.acted))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted))||(o.key==="def"&&(!canAction||u.acted||u.defenseModeReady));
     return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
@@ -3642,6 +4002,8 @@ function getUnitEffectMode(u){
   if(u.leader&&u.leaderType==="cavalry"&&getLeaderAbilityForOwner(u.owner)==="cavalry_call")return "self";
   if(u.leader&&u.leaderType==="archer"&&getLeaderAbilityForOwner(u.owner)==="arrow_rain")return "self";
   if(u.leader&&u.leaderType==="mage"&&getLeaderAbilityForOwner(u.owner)==="arcane_bolt")return "self";
+  if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "target";
+  if(["african_lion","black_raven"].includes(u.key))return "self";
   if(["richard_lionheart","saladin","sun_tzu","subotai"].includes(u.key))return "target";
   if(u.key==="ulysses")return "self";
   return "passive";
@@ -3675,6 +4037,13 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     if(caster.arcaneBoltUsedTurn)return[];
     return (units||[]).some(it=>it.owner!==owner&&it.leader&&it.hp>0)?[caster]:[];
   }
+  if(caster.leader&&caster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
+    if(caster.prepareHuntUsedTurn)return[];
+    const spots=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(!units.some(it=>it.x===x&&it.y===y)&&!getCellBeastTrapAt(x,y)&&dist(caster,{x,y})<=3)spots.push({x,y,cellTarget:true});}
+    return spots;
+  }
+  if(caster.key==="african_lion"){return [caster];}
+  if(caster.key==="black_raven"){return [caster];}
   if(caster.key==="richard_lionheart"){
     return adjacentAllies(caster,units).filter(a=>a.id!==caster.id&&!a.richardBuffSource);
   }
@@ -3705,7 +4074,11 @@ function smartEffectScore(caster,target,units=publicState?.units||[]){
   const nearbyEnemy=enemies.some(e=>dist(e,target)<=Math.max(1,e.range||1)+1);
   let score=0;
   if(target.leader)score-=85; // líder solo gana si no hay alternativas mejores
-  if(caster.key==="richard_lionheart"){
+  if(caster.leader&&caster.leaderType==="beastmaster"){
+    if(!target.cellTarget)return -9999;
+    const enemyPressure=enemies.reduce((sum,e)=>sum+(Math.max(0,7-dist(target,e))*10),0);
+    score+=enemyPressure+(enemyLeader?Math.max(0,8-dist(target,enemyLeader))*8:0)+45;
+  }else if(caster.key==="richard_lionheart"){
     score+=missing*35+(target.atk||0)*5+(target.guard||0)*3;
     if(nearbyEnemy)score+=55;
     if((target.hp||0)<=2)score+=60;
@@ -3779,6 +4152,17 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     const tokens=spots.map(s=>makeLightCavalryToken(owner,s.x,s.y));
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,cavalryCallUsedTurn:true}:it).concat(tokens);
     log=`${liveCaster.name} activa Llamado de la carga: convoca ${tokens.length} Caballería${tokens.length===1?" Ligera":"s Ligeras"} junto a él.`;
+  }else if(liveCaster.leader&&liveCaster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
+    if(liveCaster.prepareHuntUsedTurn)return{success:false,reason:"Preparar la Cacería ya fue usado este turno."};
+    const trap={id:uid8(),owner,x:target.x,y:target.y,cardKey:"beastmaster_basic_hunt",cardName:"Trampa de Caza básica",trapKey:"basic_hunt",createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};
+    const traps=[...getBeastTraps(),trap];
+    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,prepareHuntUsedTurn:true}:it);
+    publicState.beastTraps=traps;
+    return{success:true,units:out,beastTraps:traps,log:`${liveCaster.name} prepara una Trampa de Caza básica en ${target.x+1},${target.y+1}.`};
+  }else if(liveCaster.key==="african_lion"){
+    const rev=revealStealthInRadius(out,owner,liveCaster,3,"Rugido del Rey");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Rugido del Rey y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
+  }else if(liveCaster.key==="black_raven"){
+    const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
   }else if(liveCaster.key==="richard_lionheart"){
     out=out.map(it=>it.id===target.id?{...it,richardBuffSource:liveCaster.id,hp:(it.hp||0)+2}:it.id===liveCaster.id?{...it,acted:true}:it);
     log=`${liveCaster.name} activa Corazón Indomable: ${target.name} gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo.`;
@@ -3821,7 +4205,7 @@ async function activateUnitEffect(u,choice=null){
   const result=applyUnitEffectState(u,choice,units);
   if(!result.success)return setHint(result.reason||"No se pudo activar el efecto.");
   if(await finalizeBattle(result.units,result.log)){clearSelection();return;}
-  await updateUnits(result.units);
+  await updatePublic({units:result.units,beastTraps:result.beastTraps||publicState.beastTraps||[]});
   await pushLog(result.log);
   clearSelection();
 }
@@ -4119,12 +4503,14 @@ function renderBoard(){
     const tacticalClasses=getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
     if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
+    const trap=getCellBeastTrapAt(x,y);
+    if(trap){const m=document.createElement("div");m.className=`beast-trap-marker ${trap.owner===1?"p1":"p2"}`;m.title=trap.owner===myPlayer?trap.cardName:"Trampa de cacería";m.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";cell.appendChild(m);}
     const u=getUnitAt(x,y);
     if(u){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
-      c.title=`${u.name} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
+      c.title=isStealthedUnit(u)&&u.owner!==myPlayer?"Presencia Oculta · Sigilo":`${u.name} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
       c.addEventListener("pointerdown",ev=>ev.stopPropagation(),true);
@@ -4211,7 +4597,7 @@ function renderDetail(){
       const fx=getUnitEffectText(u);
       const activeEntries=getUnitStatusEntries(u);
       const unitStats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Kaster · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p><div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Líder · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p><div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
       bindStatGuideClicks(detailEl);
       bindEntityGuideButtons(detailEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
       return;
@@ -4467,7 +4853,7 @@ function saveProfileNameChange(){
 }
 
 const BASIC_MAGIC_TRAP_PACK = [
-  {key:"sand_curse_basic",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o kaster rival."},
+  {key:"sand_curse_basic",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},
   {key:"pharaoh_blessing_basic",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},
   {key:"dust_guard_basic",name:"Guardia de polvo",type:"spell",icon:"🛡️",cost:1,spell:"shield",guard:2,text:"+2 GUARDIA a una unidad aliada hasta el final del turno."},
   {key:"snare_trap_basic",name:"Trampa de lazo",type:"trap",icon:"🪤",cost:1,trap:"slow",slow:1,text:"Cuando un enemigo se mueva, reduce su MOV en 1 durante este turno."},
@@ -4572,7 +4958,7 @@ function getBattleRewardLabel(battle){
   if(battle.gold)parts.push(`${battle.gold} Oro`);
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
-  else if(battle.cardPack)parts.push(battle.packType==="improved_magic_trap"?"Paquete reforzado de 5 magia/trampa":"Paquete básico de 5 magia/trampa");
+  else if(battle.cardPack)parts.push(battle.packType==="beast_pack"?"Paquete de Bestias x1":(battle.packType==="improved_magic_trap"?"Paquete reforzado de 5 magia/trampa":"Paquete básico de 5 magia/trampa"));
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   return parts.join(" · ");
 }
@@ -4589,6 +4975,7 @@ function getNextAdventureBattle(battle){
 }
 function isBattleUnlocked(battle){
   if(!battle)return false;
+  if(battle.beastEvent)return true;
   const progress=getAdventureProgress();
   if(battle.isGuardian)return true;
   if(!progress.guardianDefeated)return false;
@@ -4714,6 +5101,11 @@ function removeOneTemplateByKey(templates,key){
   return next;
 }
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
+  if(battle?.beastEvent||enemyLeaderType==="beastmaster"){
+    const beastDeck=getBeastmasterDeckTemplates();
+    const draw=drawCards(shuffle(beastDeck.map(c=>makeCard(c,2,enemyLeaderType))),[],4);
+    return{deck:draw.deck,hand:draw.hand};
+  }
   const baseTemplates=getDefaultDeckTemplates();
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
   // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
@@ -4751,7 +5143,7 @@ let currentDeckDraft=[];
 
 function normalizeBasicCards(){
   BASIC_MAGIC_TRAP_PACK.forEach(c=>{if(!c.rarity)c.rarity="Básica";});
-  IMPROVED_MAGIC_TRAP_PACK.forEach(c=>{if(!c.rarity)c.rarity="Poco ordinaria";});
+  IMPROVED_MAGIC_TRAP_PACK.forEach(c=>{if(!c.rarity)c.rarity="Épica";});
 }
 normalizeBasicCards();
 
@@ -4776,9 +5168,10 @@ function removePendingPack(packId){
 }
 function getPackCards(pack){
   if(!pack)return[];
-  const special=getLegendaryCardByKey(pack.rewardCard);
+  const special=getLegendaryCardByKey(pack.rewardCard)||CARD_TEMPLATES.find(c=>c.key===pack.rewardCard);
   if(special)return[{...special}];
   if(pack.type==="improved_magic_trap")return IMPROVED_MAGIC_TRAP_PACK.map(c=>({...c}));
+  if(pack.type==="beast_pack"){const beast=getRandomBeastEventCard();return beast?[beast]:[];}
   return BASIC_MAGIC_TRAP_PACK.map(c=>({...c}));
 }
 function getPendingPackCount(){return getPendingPacks().length;}
@@ -5053,10 +5446,11 @@ document.querySelectorAll("[data-leader-choice]").forEach(btn=>{
 
 
 function getAdventureChapterForBattle(battle){
-  if(!battle||battle.isGuardian)return null;
+  if(!battle||battle.isGuardian||battle.beastEvent)return null;
   return ADVENTURE_CHAPTERS.find(ch=>ch.battles.some(b=>b.id===battle.id))||ADVENTURE_CHAPTER_1_1;
 }
 function getAdventureBattle(battleId){
+  if(battleId===BEASTMASTER_EVENT_BATTLE.id)return BEASTMASTER_EVENT_BATTLE;
   if(battleId===ADVENTURE_GUARDIAN_BATTLE.id)return ADVENTURE_GUARDIAN_BATTLE;
   for(const chapter of ADVENTURE_CHAPTERS){
     const found=chapter.battles.find(b=>b.id===battleId);
@@ -5121,6 +5515,22 @@ function setAdventureSpecialInProgress(specialKey){
 function completeAdventureBattleOnce(pub){
   if(!pub||pub.mode!=="adventure"||pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
+  if(battle.beastEvent){
+    const already=hasClaimedBeastEventThisYear();
+    let xpResult={levelUps:0};
+    if(!already){
+      xpResult=addPlayerXp(battle.xp||0);
+      const profile=getPlayerProfile();
+      profile.gold=(profile.gold||0)+(battle.gold||0);
+      savePlayerProfile(profile);
+      const beastReward=getRandomBeastEventCard();
+      addPendingPack({name:"Paquete de Bestias",type:"beast_pack",source:"beast_event",eventYear:getBeastEventYear(),rewardCard:beastReward?.key||"honey_badger"});
+      markBeastEventClaimedThisYear();
+      renderPlayerProfile(profile);
+    }
+    renderHomeProgress();
+    return{awarded:!already,xp:battle.xp||0,gold:already?0:(battle.gold||0),levelUps:xpResult.levelUps||0,cards:[],battle,progress:getAdventureProgress(),packPending:!already,beastEvent:true};
+  }
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   const progress=getAdventureProgress();
   if(pub.adventureSpecial)progress.selectedSpecial=pub.adventureSpecial;
@@ -5429,6 +5839,22 @@ function showComingSoon(name){
   hvAlert(`${name} estará disponible próximamente.`,"Próximamente");
 }
 
+async function openBeastmasterEvent(){
+  if(!getSelectedLeaderType()){
+    pendingAfterLeaderSelection="beast_event";
+    requireLeaderSelection(true);
+    return;
+  }
+  const claimed=hasClaimedBeastEventThisYear();
+  const msg=claimed
+    ? "Ya reclamaste el Paquete de Bestias de este año. Puedes repetir la cacería por desafío, pero no dará otra recompensa especial hasta el próximo año."
+    : "Evento activo: derrota al Señor de las Bestias para ganar 1 Paquete de Bestias. El paquete puede dar una bestia Básica molesta o una bestia superior.";
+  const go=await hvConfirm(`${msg}\n\nIA: dificultad máxima. Mazo: trampas y bestias.`,"La Cacería del Rey Salvaje","Entrar al evento","Ahora no");
+  if(!go)return;
+  const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
+  await startAdventure(special,BEASTMASTER_EVENT_BATTLE.id);
+}
+
 on("onlineBtn","click",showOnlineLobby);
 on("playBtn","click",showOnlineLobby);
 on("backMenuFromLobby","click",backToMainMenu);
@@ -5506,7 +5932,7 @@ on("mineBtn","click",()=>showComingSoon("Mina"));
 on("collectionBtn","click",openCollectionOrLocked);
 on("forgeBtn","click",()=>showComingSoon("Forja"));
 on("storeBtn","click",openPackShop);
-on("eventsBtn","click",()=>showComingSoon("Eventos"));
+on("eventsBtn","click",openBeastmasterEvent);
 on("clansBtn","click",()=>showComingSoon("Clanes"));
 on("rankingBtn","click",()=>showComingSoon("Ranking"));
 on("profileBtn","click",openProfilePanel);

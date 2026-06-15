@@ -30,7 +30,7 @@ La batalla extra contra Aquiles queda intencionalmente absurda:
 - Draw +2 por turno.
 - Honor/Maná normal, sin bonus artificial.
 - IA de nivel muy alto.
-- Mazo exacto de 60 cartas.
+- Mazo exacto de 25 cartas, sincronizado con `DECK_RULES.deckSize`.
 - El mazo de Aquiles contiene todas las cartas especiales disponibles:
   - Mulan
   - William Wallace

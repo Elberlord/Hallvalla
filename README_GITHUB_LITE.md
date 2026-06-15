@@ -108,7 +108,7 @@ Al completar la batalla 1.1.5, el jugador desbloquea el acceso a mazos/colecció
 - El home refleja nivel, EXP, oro, progreso del mapa 1.1 y estado de mazos.
 - El botón de notificaciones avisa cuando hay cartas/paquetes nuevos y cuando los mazos quedan desbloqueados.
 - La colección/mazos se desbloquea al completar la batalla 1.1.5.
-- Regla de mazo: cartas básicas hasta 10 copias; todas las demás rarezas solo 1 copia por mazo.
+- Regla de mazo: cartas básicas hasta 3 copias; todas las demás rarezas solo 1 copia por mazo; tamaño válido 25 cartas.
 
 
 
@@ -118,4 +118,4 @@ Al completar la batalla 1.1.5, el jugador desbloquea el acceso a mazos/colecció
 - Al confirmar apertura, las 5 cartas pasan a colección.
 - La batalla 1.1.5 entrega directamente la carta Richard Corazón de León.
 - El deckbuilder se abre desde Colección solo si el mapa 1.1 fue completado.
-- Reglas de mazo: 60 cartas, básicas máximo 10 copias, demás rarezas máximo 1 copia.
+- Reglas de mazo: 25 cartas, básicas máximo 3 copias, demás rarezas máximo 1 copia.

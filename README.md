@@ -1,7 +1,7 @@
 # ROK Lite 1.0 - Base simple desde cero
 
 Reglas activas:
-- Mazo de 60 cartas por jugador.
+- Mazo de 25 cartas por jugador.
 - Cada turno propio: +1 Honor.
 - Sin máximo de Honor.
 - Cada turno propio: roba 2 cartas.
@@ -9,7 +9,7 @@ Reglas activas:
 - Movimiento manual.
 - Ataque básico.
 - Si una unidad llega a 0 HP, sale de la arena.
-- Kaster en arena desde el inicio.
+- Líder en arena desde el inicio.
 
 No incluye:
 - ruling avanzado del documento Word.
@@ -20,7 +20,7 @@ No incluye:
 - defensa física/mágica.
 - daño mixto.
 - buffs separados.
-- límite de kasteos.
+- límite de invocacións.
 - límite de invocaciones.
 
 Sube todo al repo:
@@ -155,7 +155,7 @@ Al completar la batalla 1.1.5, el jugador desbloquea el acceso a mazos/colecció
 - El home refleja nivel, EXP, oro, progreso del mapa 1.1 y estado de mazos.
 - El botón de notificaciones avisa cuando hay cartas/paquetes nuevos y cuando los mazos quedan desbloqueados.
 - La colección/mazos se desbloquea al completar la batalla 1.1.5.
-- Regla de mazo: cartas básicas hasta 10 copias; todas las demás rarezas solo 1 copia por mazo.
+- Regla de mazo: cartas básicas hasta 3 copias; todas las demás rarezas solo 1 copia por mazo; tamaño válido 25 cartas.
 
 
 
@@ -165,8 +165,10 @@ Al completar la batalla 1.1.5, el jugador desbloquea el acceso a mazos/colecció
 - Al confirmar apertura, las 5 cartas pasan a colección.
 - La batalla 1.1.5 entrega directamente la carta Richard Corazón de León.
 - El deckbuilder se abre desde Colección solo si el mapa 1.1 fue completado.
-- Reglas de mazo: 60 cartas, básicas máximo 10 copias, demás rarezas máximo 1 copia.
+- Reglas de mazo: 25 cartas, básicas máximo 3 copias, demás rarezas máximo 1 copia.
 
-## v7HH audio intro
-- Añadido `assets/sfx/battle_chant_intro.ogg/.wav`: intro coral original tipo eco ceremonial, sin copiar melodías ni voces de terceros.
-- Al entrar al duelo suena primero el canto y luego el golpe de tambor `battle_start` con menor volumen.
+## v7HW deep review fixed
+- Versión interna sincronizada: `HALLVALLA_BUILD_VERSION = "v7HW_deep_review_fixed"`.
+- Cache bust del HTML actualizado a `script.js?v=7HW` para forzar al navegador a cargar la versión nueva.
+- Reglas visibles del deckbuilder actualizadas al estado real del código: mazo de 25 cartas, básicas máximo 3 copias y no básicas máximo 1 copia.
+- Audio actual: música/fondos desactivados; el duelo usa efectos de sonido cortos desde `assets/sfx/*.ogg`.
