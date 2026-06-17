@@ -1359,6 +1359,25 @@ function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
 function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const label=ownerUsesMana(owner)?"Mana":"Honor";return caps?label.toUpperCase():label}
 function getResourcePairText(owner,honor,maxHonor,opts={}){return `${getResourceLabel(owner,opts)} ${Number(honor||0)}/${Number(maxHonor||0)}`}
+function getOwnerResourceState(owner){
+  const pubStats=publicState?.playerStats?.[owner]||{};
+  const privOwner=(owner===myPlayer&&privateState)?privateState:null;
+  const honor=Number((privOwner?privOwner.honor:pubStats.honor)||0);
+  const maxHonor=Number((privOwner?privOwner.maxHonor:pubStats.maxHonor)||0);
+  return {honor,maxHonor,label:getResourceLabel(owner,{caps:true}),softLabel:getResourceLabel(owner)};
+}
+function resourceDetailHtml(owner,{compact=false,includeReason=true}={}){
+  const st=getOwnerResourceState(owner);
+  const usesMana=ownerUsesMana(owner);
+  const leaderType=getLeaderTypeForOwner(owner);
+  const leaderName=LEADER_DATA[leaderType]?.name||"líder";
+  const reason=usesMana
+    ? `Como ${leaderName} es Hechicero, el recurso de cartas se muestra como MANA en vez de Honor.`
+    : `Este líder usa HONOR como recurso de cartas.`;
+  const main=`${st.label} ${st.honor}/${st.maxHonor}`;
+  if(compact)return `<div class="detail-helper-note"><b>Recurso:</b> ${escapeHtml(main)}. ${includeReason?escapeHtml(reason):""}</div>`;
+  return `<div class="stat-help-box"><div class="stat-help-title">Recurso del turno</div><div class="stat-help-line"><b>${escapeHtml(st.label)}</b>: ${escapeHtml(`${st.honor}/${st.maxHonor}`)} restante.</div><div class="stat-help-line"><b>Regla</b>: ${escapeHtml(reason)} Se recarga al iniciar el turno del dueño y baja cuando juegas cartas.</div></div>`;
+}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
 function isHeavyInfantryUnit(u){
   if(!u||u.leader)return false;
@@ -2251,8 +2270,14 @@ function openWeaponGuide(entity){
 function statGuideData(label=""){
   if(label&&typeof label==="object")return label;
   const key=normalizeStatKey(label);
-  const base={title:"⚔ Guía de combate",short:"Toca cualquier stat para abrir su explicación.",formula:"Precisión de golpe = 70 + ((DX atacante + AGI atacante) - (DX defensor + AGI defensor)) × 5. El resultado se limita entre 25% y 95%. Si un líder participa en el ataque o la defensa, el golpe acierta automáticamente.",example:"Ejemplo: atacante con DX 4 + AGI 4 = 8. Defensor con DX 3 + AGI 2 = 5. Diferencia 3, entonces 70 + 15 = 85% de acierto."};
+  const base={title:"⌁ PREC/EVA",short:"Precisión y evasión usan la misma reserva táctica: DX + AGI. Esa reserva se desgasta durante el turno actual y se restaura al inicio del próximo turno del dueño.",formula:"Precisión disponible = DX + AGI - stats gastados este turno. Evasión disponible = DX + AGI - stats gastados este turno. Al atacar, la unidad gasta solo la precisión necesaria para superar la evasión disponible del objetivo. Al defender, cada ataque recibido reduce más su evasión disponible.",example:"Ejemplo: una unidad con DX 6 + AGI 4 tiene 10. Si ataca a un rival con 4 de evasión disponible, gasta 4 y conserva 6 para defenderse. Si luego recibe ataques, esa reserva baja más. Contra líderes el golpe impacta fijo: no se consume precisión y la Guardia del líder absorbe daño primero."};
   const map={
+    formula:base,
+    "prec/eva":base,
+    "prec eva":base,
+    precision:base,
+    evasión:base,
+    evasion:base,
     costo:{title:"✦ Costo / Honor/Mana",short:"Recurso necesario para jugar la carta desde la mano.",formula:"Si tu Honor/Mana actual es menor que el costo, la carta no se puede jugar.",example:"Costo 3 necesita al menos 3 de recurso disponible."},
     at:{title:"⚔ AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
     ataque:{title:"⚔ AT / Ataque",short:"Daño base que la unidad intenta causar cuando golpea.",formula:"Daño que entra = AT del atacante, más o menos modificadores. Luego ese daño choca contra la Guardia del defensor.",example:"AT 5 contra GD 2 consume 2 de Guardia y causa 3 de daño a Vida, salvo efectos especiales."},
@@ -2260,10 +2285,10 @@ function statGuideData(label=""){
     vida:{title:"♥ HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
     gd:{title:"🛡 GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
     guardia:{title:"🛡 GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
-    dx:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
-    destreza:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"Precisión atacante = DX atacante + AGI atacante. Evasión defensiva = DX defensor + AGI defensor.",example:"Una arquera con mucho DX falla menos, especialmente contra enemigos lentos."},
-    agi:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
-    agilidad:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX en los dos lados: ataque y defensa. Por eso una unidad ágil puede ser buena atacando y difícil de golpear.",example:"Un asesino con AGI alta puede tener buena precisión y también mucha evasión."},
+    dx:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"DX se suma con AGI para crear la reserva PREC/EVA del turno. Esa reserva baja al atacar o recibir ataques y vuelve al inicio del próximo turno del dueño.",example:"Una unidad técnica puede conservar defensa si ataca a objetivos con poca evasión, porque solo gasta lo necesario."},
+    destreza:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"DX se suma con AGI para crear la reserva PREC/EVA del turno. Esa reserva baja al atacar o recibir ataques y vuelve al inicio del próximo turno del dueño.",example:"Una unidad técnica puede conservar defensa si ataca a objetivos con poca evasión, porque solo gasta lo necesario."},
+    agi:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX para crear la reserva PREC/EVA del turno. Atacar y recibir ataques gastan esa reserva; se restaura al inicio del próximo turno del dueño.",example:"Un asesino ágil puede atacar y aún conservar defensa si el objetivo exigía poca evasión."},
+    agilidad:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX para crear la reserva PREC/EVA del turno. Atacar y recibir ataques gastan esa reserva; se restaura al inicio del próximo turno del dueño.",example:"Un asesino ágil puede atacar y aún conservar defensa si el objetivo exigía poca evasión."},
     mv:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
     mov:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
     movimiento:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
@@ -2306,7 +2331,7 @@ function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=t
   const buttons=[];
   if(showEffect)buttons.push(`<button class="detail-token-btn guide-effect-btn" type="button">${escapeHtml(effectLabel)}</button>`);
   if(showWeapon)buttons.push(`<button class="detail-token-btn guide-weapon-btn" type="button">Arma / ventaja</button>`);
-  if(showFormula)buttons.push(`<button class="detail-token-btn guide-formula-btn" type="button">Precisión / evasión</button>`);
+  if(showFormula)buttons.push(`<button class="detail-token-btn guide-formula-btn" type="button">PREC/EVA</button>`);
   return buttons.length?`<div class="detail-guide-row">${buttons.join("")}</div>`:"";
 }
 function detailStatusButtonsHtml(entries=[]){
@@ -2400,7 +2425,7 @@ function showCardInspectModal(card){
   }
   if(text){
     const effectText=String(card.text||card.effectText||card.ability||"").trim();
-    text.innerHTML=`<div class="detail-helper-note">Toca un stat o uno de los botones para ver la explicación sin llenar esta ventana de texto.</div>${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,effectLabel:'Ver efecto de la carta'})}`;
+    text.innerHTML=`<div class="detail-helper-note">Toca un stat o uno de los botones para ver la explicación sin llenar esta ventana de texto.</div>${resourceDetailHtml(card.owner||myPlayer,{compact:true})}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,effectLabel:'Ver efecto de la carta'})}`;
     bindEntityGuideButtons(text,card,{effectText,effectTitle:`Efecto de ${card.name}`});
   }
   const state=getCardPlayState(card);
@@ -4694,7 +4719,7 @@ function renderDetail(){
       ? [["Costo",selectedCard.cost||0],["AT",selectedCard.atk||0],["HP",selectedCard.hp||0],["GD",selectedCard.guard||0],["DX",selectedCard.dex||0],["AGI",selectedCard.agi||0],["MV",selectedCard.mov||0],["RG",selectedCard.range||0]]
       : [["Costo",selectedCard.cost||0]];
     const effectText=String(selectedCard.text||selectedCard.effectText||selectedCard.ability||"").trim();
-    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><div class="detail-helper-note">Toca un stat o un botón para ver la explicación.</div>${detailStatGridHtml(cardStats)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,effectLabel:'Ver efecto de la carta'})}`;
+    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><div class="detail-helper-note">Toca un stat o un botón para ver la explicación.</div>${resourceDetailHtml(selectedCard.owner||myPlayer,{compact:true})}${detailStatGridHtml(cardStats)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,effectLabel:'Ver efecto de la carta'})}`;
     bindStatGuideClicks(detailEl);
     bindEntityGuideButtons(detailEl,selectedCard,{effectText,effectTitle:`Efecto de ${selectedCard.name}`});
     return;
@@ -4705,14 +4730,14 @@ function renderDetail(){
       const fx=getUnitEffectText(u);
       const activeEntries=getUnitStatusEntries(u);
       const unitStats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Líder · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p><div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Líder · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${u.leader?resourceDetailHtml(u.owner,{compact:true}):""}<div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
       bindStatGuideClicks(detailEl);
       bindEntityGuideButtons(detailEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
       return;
     }
   }
   const modeLine=isAdventure?`<p><b>Modo:</b> Aventura contra IA</p><p><b>Batalla:</b> ${escapeHtml(publicState?.adventureBattleTitle||"Aventura")}</p>`:`<p><b>Jugador:</b> ${myPlayer||"?"}</p><p><b>Código:</b> ${gameId||"..."}</p><p><b>Modo:</b> Online</p>`;
-  detailEl.innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero mejora infantería pesada según nivel de buff. Arquero mejora arqueras según nivel de buff. Hechicero reduce costo y aumenta efecto de magias según nivel de buff.</p><p>Honor disponible/máximo se recarga al iniciar tu turno. Si eliges Hechicero, ese recurso se muestra como Mana. Toca una carta o unidad para ver detalles.</p>`
+  detailEl.innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero mejora infantería pesada según nivel de buff. Arquero mejora arqueras según nivel de buff. Hechicero reduce costo y aumenta efecto de magias según nivel de buff.</p>${resourceDetailHtml(myPlayer||1,{compact:false})}<p>Toca una carta o unidad para ver sus detalles: el costo usa HONOR normalmente, pero con Hechicero se muestra y se consume como MANA.</p>`
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 
@@ -4789,7 +4814,7 @@ function ensureStatsTutorialModal(){
       </div>
       <div class="stats-tutorial-leaders">
         <b>Fórmula de precisión y evasión</b>
-        <span>Probabilidad de acierto = 70 + ((DX atacante + AGI atacante) - (DX defensor + AGI defensor)) × 5. El resultado mínimo es 25% y el máximo 95%. Si un líder participa, el golpe acierta automáticamente.</span>
+        <span>PREC/EVA = DX + AGI - stats gastados este turno. Atacar consume solo la precisión necesaria para superar la evasión disponible del objetivo. Recibir ataques reduce más la evasión. La reserva vuelve al inicio del próximo turno del dueño. Contra líderes, el golpe impacta fijo y la Guardia absorbe daño primero.</span>
       </div>
       <div class="stats-tutorial-leaders">
         <b>Recuerda los líderes</b>

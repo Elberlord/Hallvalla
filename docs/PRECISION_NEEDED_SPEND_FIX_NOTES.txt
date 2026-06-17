@@ -6,7 +6,7 @@ Regla aplicada:
 - Si el defensor es lider, el consumo ofensivo es 0 porque los ataques contra lider impactan por regla fija.
 - Si el ataque falla contra una unidad no lider, consume la precision disponible usada en el intento.
 - La presion defensiva por recibir ataques se conserva.
-- Los stats gastados se restauran al inicio del proximo turno del dueno de la unidad.
+- Los stats gastados este turno se restauran al inicio del proximo turno del dueno de la unidad.
 - Jugador e IA usan la misma regla.
 
 Archivos tocados:

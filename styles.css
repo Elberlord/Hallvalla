@@ -5525,3 +5525,171 @@
   .turn-honor-hud strong{font-size:14px;}
   .honor-recharge-modal{top:18%;min-width:190px;padding:12px 18px;}
 }
+
+/* === PATCH 7HM - Medieval premium restyle for DET buttons only === */
+.detail-token-btn,
+.detail-status-chip,
+.detail-stat-chip,
+.inspect-stat.stat-click,
+.card-inspect-stat.stat-click{
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+}
+
+.detail-token-btn,
+.detail-status-chip{
+  min-height: 38px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(211,169,83,.74);
+  background:
+    linear-gradient(180deg, rgba(86,66,32,.26) 0%, rgba(38,28,14,.16) 14%, rgba(18,14,10,.98) 15%, rgba(7,6,5,.99) 72%, rgba(55,40,20,.34) 100%);
+  color: #f5dc98;
+  box-shadow:
+    0 0 0 1px rgba(255,226,149,.08),
+    0 7px 16px rgba(0,0,0,.30),
+    0 0 18px rgba(255,196,64,.12),
+    inset 0 1px 0 rgba(255,243,205,.22),
+    inset 0 -1px 0 rgba(78,54,21,.70),
+    inset 0 0 0 1px rgba(118,85,33,.32);
+  text-shadow: 0 0 6px rgba(255,223,133,.28);
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+
+.detail-token-btn::before,
+.detail-status-chip::before{
+  inset: 2px;
+  opacity: .75;
+  background:
+    linear-gradient(180deg, rgba(255,230,162,.14), transparent 48%),
+    linear-gradient(90deg, transparent 0 28%, rgba(255,226,149,.10) 48%, transparent 68% 100%);
+}
+
+.detail-token-btn::after{
+  content: "✦";
+  margin-left: 9px;
+  color: #ffecc1;
+  text-shadow: 0 0 10px rgba(255,216,112,.55);
+  font-size: 11px;
+}
+
+.detail-token-btn:hover,
+.detail-status-chip:hover{
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  border-color: rgba(247,210,119,.96);
+  box-shadow:
+    0 0 0 1px rgba(255,226,149,.12),
+    0 10px 18px rgba(0,0,0,.34),
+    0 0 24px rgba(255,196,64,.18),
+    inset 0 1px 0 rgba(255,243,205,.26),
+    inset 0 -1px 0 rgba(100,67,26,.78),
+    inset 0 0 0 1px rgba(134,97,37,.38);
+}
+
+.detail-token-btn:active,
+.detail-status-chip:active{
+  transform: translateY(1px) scale(.99);
+  filter: brightness(.98);
+  box-shadow:
+    0 0 0 1px rgba(255,226,149,.10),
+    0 4px 10px rgba(0,0,0,.28),
+    inset 0 2px 4px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,243,205,.14),
+    inset 0 -1px 0 rgba(73,51,23,.84);
+}
+
+.detail-token-btn:focus-visible,
+.detail-status-chip:focus-visible,
+.detail-stat-chip:focus-visible,
+.inspect-stat.stat-click:focus-visible,
+.card-inspect-stat.stat-click:focus-visible{
+  outline: 2px solid rgba(255,221,139,.82);
+  outline-offset: 2px;
+}
+
+.detail-stat-chip,
+.inspect-stat.stat-click,
+.card-inspect-stat.stat-click{
+  border-radius: 12px;
+  border: 1px solid rgba(211,169,83,.46);
+  background:
+    linear-gradient(180deg, rgba(95,72,34,.22) 0%, rgba(22,16,11,.98) 16%, rgba(10,8,6,.98) 100%);
+  box-shadow:
+    0 6px 16px rgba(0,0,0,.24),
+    0 0 14px rgba(255,196,64,.08),
+    inset 0 1px 0 rgba(255,243,205,.16),
+    inset 0 -1px 0 rgba(84,59,24,.62);
+}
+
+.detail-stat-chip:hover,
+.inspect-stat.stat-click:hover,
+.card-inspect-stat.stat-click:hover{
+  border-color: rgba(247,210,119,.80);
+  box-shadow:
+    0 9px 18px rgba(0,0,0,.28),
+    0 0 18px rgba(255,196,64,.12),
+    inset 0 1px 0 rgba(255,243,205,.22),
+    inset 0 -1px 0 rgba(108,75,29,.72);
+}
+
+.detail-guide-caption{
+  color: #f2d48b;
+  letter-spacing: .45px;
+}
+
+/* === PATCH 7HN - Move HONOR/MANA HUD above left gear button === */
+.turn-honor-hud{
+  left:26px;
+  top:318px;
+  transform:none;
+  z-index:42;
+  min-width:96px;
+  justify-content:center;
+}
+
+.honor-recharge-modal{
+  left:18px;
+  top:252px;
+  transform:translateY(-12px) scale(.96);
+  min-width:210px;
+  max-width:260px;
+}
+
+.honor-recharge-modal.show{
+  animation:honorRechargeDriftLeft 2.55s ease forwards;
+}
+
+.turn-honor-hud.pulse{
+  animation:honorHudPulseLeft .72s ease;
+}
+
+@keyframes honorRechargeDriftLeft{
+  0%{opacity:0;transform:translateY(-18px) scale(.92);filter:blur(2px)}
+  16%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+  68%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-56px) scale(.86);filter:blur(1px)}
+}
+
+@keyframes honorHudPulseLeft{
+  0%{transform:scale(1);box-shadow:0 0 18px rgba(255,205,78,.22), inset 0 0 14px rgba(255,210,90,.07), 0 10px 22px rgba(0,0,0,.38)}
+  42%{transform:scale(1.07);box-shadow:0 0 30px rgba(255,213,96,.45), inset 0 0 20px rgba(255,210,90,.14), 0 10px 22px rgba(0,0,0,.38)}
+  100%{transform:scale(1);box-shadow:0 0 18px rgba(255,205,78,.22), inset 0 0 14px rgba(255,210,90,.07), 0 10px 22px rgba(0,0,0,.38)}
+}
+
+@media(max-width:980px){
+  .turn-honor-hud{
+    left:18px;
+    top:292px;
+    transform:none;
+    padding:6px 11px;
+  }
+  .honor-recharge-modal{
+    left:12px;
+    top:228px;
+    min-width:185px;
+    max-width:230px;
+  }
+}
