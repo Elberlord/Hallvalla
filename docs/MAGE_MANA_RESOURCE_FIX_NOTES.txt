@@ -1,0 +1,7 @@
+MAGE MANA RESOURCE FIX
+
+- Si el líder del dueño es Hechicero (leaderType: mage), el recurso se muestra como Mana/MANA en HUD, modal de recarga, mano, logs y títulos.
+- Los demás líderes siguen mostrando Honor/HONOR.
+- No se cambió la lógica interna de coste/recarga: sigue usando los campos honor/maxHonor para evitar romper partidas guardadas o Firebase.
+- La IA usa la misma presentación: enemigos Hechicero muestran Mana en sus logs/HUD.
+- No se tocaron stats, combate, historia, assets, mazos ni evento Beastmaster.

@@ -1,0 +1,19 @@
+HallValla v7HW - Honor HUD / Recharge Modal Fix
+
+Cambios aplicados:
+- Agregado aviso animado de inicio de turno: muestra +N HONOR y HONOR restante/total.
+- Agregado HUD compacto fijo con fondo negro y texto dorado neón: HONOR actual/total.
+- El HUD se actualiza al gastar cartas y al recargarse el turno.
+- El aviso solo se muestra al jugador dueño del turno cuando su Draw Phase se resuelve.
+
+Archivos tocados:
+- index.html: nuevos contenedores honorRechargeModal y turnHonorHud; cache bust actualizado.
+- styles.css: estilos y animaciones para modal/HUD de honor.
+- script.js: evento honorRechargeEvent en inicio de turno, renderTurnHonorHud, maybeShowHonorRecharge y pulso al gastar honor.
+
+No tocado:
+- Stats de cartas/unidades.
+- IA y lógica de decisión.
+- Historia/capítulos/evento Beastmaster.
+- Assets.
+- Combate, movimiento, daño, guardia, precisión/evasión.

@@ -5453,3 +5453,75 @@
 .card-portrait:has(img[src*="rope_cage"]){
   box-shadow:0 0 0 1px rgba(210,90,255,.24),0 0 18px rgba(160,70,220,.20), inset 0 0 20px rgba(0,0,0,.36);
 }
+
+/* HONOR HUD FIX: compact black + neon-gold turn honor display */
+.honor-recharge-modal{
+  position:absolute;
+  z-index:95;
+  left:50%;
+  top:20%;
+  transform:translate(-50%,-12px) scale(.96);
+  min-width:220px;
+  max-width:min(360px,82vw);
+  padding:14px 22px;
+  border-radius:18px;
+  border:1px solid rgba(255,213,96,.68);
+  background:linear-gradient(180deg,rgba(8,7,5,.96),rgba(0,0,0,.90));
+  color:#ffd76a;
+  font-family:Georgia,serif;
+  font-weight:900;
+  text-align:center;
+  letter-spacing:1.5px;
+  box-shadow:0 0 24px rgba(255,205,78,.28), inset 0 0 18px rgba(255,210,90,.08), 0 14px 34px rgba(0,0,0,.48);
+  text-shadow:0 0 10px rgba(255,216,102,.86),0 0 20px rgba(255,186,50,.34);
+  opacity:0;
+  pointer-events:none;
+}
+.honor-recharge-modal.show{
+  animation:honorRechargeDrift 2.55s ease forwards;
+}
+.honor-recharge-main{display:block;font-size:clamp(24px,4vw,38px);line-height:1;}
+.honor-recharge-sub{display:block;margin-top:7px;font-size:clamp(11px,1.4vw,13px);color:#fff0bd;letter-spacing:.7px;}
+@keyframes honorRechargeDrift{
+  0%{opacity:0;transform:translate(-50%,-18px) scale(.92);filter:blur(2px)}
+  16%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)}
+  68%{opacity:1;transform:translate(-50%,0) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-56px) scale(.86);filter:blur(1px)}
+}
+.turn-honor-hud{
+  position:absolute;
+  z-index:38;
+  left:50%;
+  top:58px;
+  transform:translateX(-50%);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,213,96,.58);
+  background:rgba(0,0,0,.84);
+  color:#ffd76a;
+  font-family:Georgia,serif;
+  font-weight:900;
+  letter-spacing:.8px;
+  box-shadow:0 0 18px rgba(255,205,78,.22), inset 0 0 14px rgba(255,210,90,.07), 0 10px 22px rgba(0,0,0,.38);
+  text-shadow:0 0 9px rgba(255,216,102,.80),0 0 18px rgba(255,186,50,.28);
+  pointer-events:none;
+  opacity:.94;
+}
+.turn-honor-hud.hidden{display:none;}
+.turn-honor-label{font-size:11px;color:#fff0bd;}
+.turn-honor-hud strong{font-size:16px;color:#ffd76a;}
+.turn-honor-hud.pulse{animation:honorHudPulse .72s ease;}
+@keyframes honorHudPulse{
+  0%{transform:translateX(-50%) scale(1);box-shadow:0 0 18px rgba(255,205,78,.22), inset 0 0 14px rgba(255,210,90,.07), 0 10px 22px rgba(0,0,0,.38)}
+  42%{transform:translateX(-50%) scale(1.07);box-shadow:0 0 30px rgba(255,213,96,.45), inset 0 0 20px rgba(255,210,90,.14), 0 10px 22px rgba(0,0,0,.38)}
+  100%{transform:translateX(-50%) scale(1);box-shadow:0 0 18px rgba(255,205,78,.22), inset 0 0 14px rgba(255,210,90,.07), 0 10px 22px rgba(0,0,0,.38)}
+}
+@media(max-width:980px){
+  .turn-honor-hud{top:52px;padding:6px 12px;gap:6px;}
+  .turn-honor-label{font-size:10px;}
+  .turn-honor-hud strong{font-size:14px;}
+  .honor-recharge-modal{top:18%;min-width:190px;padding:12px 18px;}
+}
