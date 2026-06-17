@@ -5765,3 +5765,19 @@
     max-height:92px;
   }
 }
+
+
+/* === PATCH 7HO - Raise HONOR/MANA HUD above gear button === */
+.turn-honor-hud{
+  left:26px;
+  top:244px;
+  transform:none;
+  z-index:46;
+}
+
+.honor-recharge-modal{
+  left:18px;
+  top:188px;
+  transform:translateY(-12px) scale(.96);
+  z-index:96;
+}

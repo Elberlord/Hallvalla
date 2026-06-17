@@ -1,0 +1,1 @@
+Moved HONOR/MANA HUD higher above the left gear button. CSS-only patch. No JS or gameplay logic changed.
