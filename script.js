@@ -4057,7 +4057,7 @@ function renderUnitContextMenu(){
   const canAction=isMyTurn()&&u.owner===myPlayer&&isUnitActionWindow(u)&&!isBattleEnded();
   const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
   const portraitHtml=getUnitPortraitHtml(u);
-  const hpLabel=`${getDisplayHp(u)}/${effectiveMaxHp(u)}`;
+  const hpLabel=String(getDisplayHp(u));
   const atkLabel=effectiveAtk(u);
   const guardLabel=displayEffectiveGuard(u);
   menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Líder":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
@@ -4612,7 +4612,7 @@ function getUnitBottomFrameHtml(u){
   const topLeftTitle=getUnitTopLeftTitle(u);
   return `<div class="unit-ornate-ui">
     <span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>
-    <span class="unit-stat-orb stat-orb-hp ${hpTier}" title="Salud actual: ${hp}/${max}"><span class="unit-orb-liquid" style="height:${pct}%"></span><b>${hp}/${max}</b></span>
+    <span class="unit-stat-orb stat-orb-hp ${hpTier}" title="Salud actual: ${hp}/${max}"><span class="unit-orb-liquid" style="height:${pct}%"></span><b>${hp}</b></span>
     <span class="unit-stat-orb stat-orb-atk" title="Ataque actual: ${atk}"><b>${atk}</b></span>
     <span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>
   </div>`;

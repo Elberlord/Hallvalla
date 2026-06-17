@@ -1,0 +1,27 @@
+HP CURRENT ONLY UI FIX
+
+Cambios realizados:
+- En el campo, el orbe de vida ahora muestra solo la vida actual.
+- En el mini menú radial/contextual, la vida también muestra solo la vida actual.
+- El máximo de vida se conserva internamente y sigue disponible en el title/tooltip como actual/máxima.
+- El porcentaje visual del relleno de vida sigue usando HP actual / HP máximo, así que la vida consumida se sigue viendo sin crear barras nuevas.
+
+Archivos tocados:
+- script.js
+
+No tocado:
+- styles.css
+- assets
+- efectos
+- daño
+- curación
+- vida máxima real
+- guardia
+- precisión/evasión
+- IA
+- movimiento
+- historia
+- evento
+- online
+- HUD
+- Log
