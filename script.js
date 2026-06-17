@@ -1467,6 +1467,12 @@ function getAvailableEvasionScore(u,mods={}){
   if(!u||u.leader)return 0;
   return Math.max(0,getBaseEvasionScore(u)+(mods.defenderDex||0)+(mods.defenderAgi||0)-getEvasionPressure(u));
 }
+function applyTurnStatSpendToUnit(u,spent){
+  if(!u||u.leader)return u;
+  const n=Math.max(0,Math.ceil(Number(spent)||0));
+  if(n<=0)return u;
+  return {...u,evasionSpent:getEvasionPressure(u)+n};
+}
 function spendEvasionByAttack(attacker,defender,units,mods={}){
   if(!attacker||!defender||defender.leader)return {units,spent:0,remaining:null};
   const spent=Math.max(0,getAttackPrecisionScore(attacker,mods));
@@ -1474,14 +1480,40 @@ function spendEvasionByAttack(attacker,defender,units,mods={}){
   let remaining=null;
   const out=(units||[]).map(u=>{
     if(u.id!==defender.id)return u;
-    const next={...u,evasionSpent:getEvasionPressure(u)+spent};
+    const next=applyTurnStatSpendToUnit(u,spent);
     remaining=getAvailableEvasionScore(next,mods);
+    return next;
+  });
+  return {units:out,spent,remaining};
+}
+function spendActionStatsByAttack(attacker,defender,units,mods={},hitResult=null){
+  if(!attacker||attacker.leader)return {units,spent:0,remaining:null};
+  const attackAvailable=Math.max(0,getAttackPrecisionScore(attacker,mods));
+  const currentAttacker=(units||[]).find(u=>u.id===attacker.id)||attacker;
+  const currentDefender=(units||[]).find(u=>u.id===defender?.id)||defender;
+  // Los líderes no usan evasión y los ataques contra líderes impactan por regla fija:
+  // no se gasta Precisión/Evasión para acertarles.
+  if(!currentDefender||currentDefender.leader||attackAvailable<=0){
+    return {units,spent:0,remaining:Math.max(0,getBaseEvasionScore(currentAttacker)-getEvasionPressure(currentAttacker))};
+  }
+  const defenseNeeded=Math.max(0,getDefenseEvasionScore(currentDefender,mods));
+  const missed=hitResult&&hitResult.hit===false;
+  const spent=missed?attackAvailable:Math.min(attackAvailable,defenseNeeded);
+  if(spent<=0)return {units,spent:0,remaining:Math.max(0,getBaseEvasionScore(currentAttacker)-getEvasionPressure(currentAttacker))};
+  let remaining=null;
+  const out=(units||[]).map(u=>{
+    if(u.id!==attacker.id)return u;
+    const next=applyTurnStatSpendToUnit(u,spent);
+    remaining=Math.max(0,getBaseEvasionScore(next)-getEvasionPressure(next));
     return next;
   });
   return {units:out,spent,remaining};
 }
 function evasionPressureText(unitName,spent,remaining){
   return spent>0?` Presión: ${unitName} pierde ${spent} Evasión disponible hasta su próximo turno${typeof remaining==="number"?` (resta ${remaining})`:""}.`:"";
+}
+function actionStatSpendText(unitName,spent,remaining){
+  return spent>0?` Esfuerzo: ${unitName} gasta ${spent} Precisión/Evasión hasta su próximo turno${typeof remaining==="number"?` (evasión restante ${remaining})`:""}.`:"";
 }
 function getCombatMods(attacker,defender){
   const mods={attackerAtk:0,attackerAgi:0,attackerDex:0,attackerGuard:0,defenderAgi:0,defenderDex:0,defenderGuard:0,damageReduction:0,reroll:false,notes:[]};
@@ -1527,7 +1559,10 @@ function consumeDefensiveStanceForAttack(defender,units,mods={}){
   const nextUnits=(units||[]).map(u=>u.id===defender.id?{...u,defenseModeReady:false}:u);
   return {defender:nextUnits.find(u=>u.id===defender.id)||{...defender,defenseModeReady:false},units:nextUnits,mods:nextMods,consumed:true};
 }
-function getAttackPrecisionScore(attacker,mods={}){return effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)}
+function getAttackPrecisionScore(attacker,mods={}){
+  if(!attacker||attacker.leader)return 0;
+  return Math.max(0,effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)-getEvasionPressure(attacker));
+}
 function getDefenseEvasionScore(defender,mods={}){
   if(typeof mods.defenderDefenseOverride==="number")return Math.max(0,mods.defenderDefenseOverride);
   return getAvailableEvasionScore(defender,mods);
@@ -2595,7 +2630,12 @@ async function attackUnit(a,d){
   if(isStealthedUnit(d))return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
   if(d.aerial&&!((a.range||1)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
   let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
-  if(preTrap.cancel){await updatePublic({units:preTrap.units.map(u=>u.id===a.id?{...u,acted:true}:u),legendaryTraps:preTrap.traps});await pushLog(preTrap.logs.join(" "));clearSelection();return;}
+  if(preTrap.cancel){
+    const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
+    await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true}:u),legendaryTraps:preTrap.traps});
+    await pushLog(`${preTrap.logs.join(" ")}${actionStatSpendText(a.name,cancelSpend.spent,cancelSpend.remaining)}`);
+    clearSelection();return;
+  }
   let units=[...(preTrap.units||liveUnits)];
   a=getLiveUnitRef(a,units);
   d=preTrap.redirect?getLiveUnitRef(preTrap.redirect,units):getLiveUnitRef(d,units);
@@ -2628,6 +2668,9 @@ async function attackUnit(a,d){
     const fsDefenseRemainder=getCounterDefenseRemainder(a,d,mods);
     const fsMods=prepareCounterMods(d,a,getCombatMods(d,a),fsDefenseRemainder);
     const fsHit=rollHit(d,a,fsMods);
+    const fsSpend=spendActionStatsByAttack(d,a,units,fsMods,fsHit);
+    units=fsSpend.units;
+    d=units.find(u=>u.id===d.id)||d;
     if(fsHit.hit){
       let fsGuard=0,fsHp=0;
       const fsAtk=getBattleDamage(d,fsMods);
@@ -2675,6 +2718,8 @@ async function attackUnit(a,d){
   units=applyAttackSideEffects(a,d,units);
   const evasionPressure=spendEvasionByAttack(a,d,units,mods);
   units=evasionPressure.units;
+  const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
+  units=actionSpend.units;
   const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),units);
   units=dmgTrap.traps?units:units;
   const battleAtk=dmgTrap.damage;
@@ -2683,7 +2728,7 @@ async function attackUnit(a,d){
     if(u.id===d.id){
       if(!hit.hit)return u;
       const attackIgnoresGuard=shouldIgnoreGuardForAttack(a);
-      const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,u.leader?1:0);
+      const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
       guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;
       damaged.damagedThisTurn=hpLoss>0||damaged.damagedThisTurn;
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -2753,6 +2798,9 @@ async function attackUnit(a,d){
     }
     if(defenderAfter.key==="miyamoto_musashi")cMods.defenderGuard-=2;
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
+    const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
+    units=cSpend.units;
+    defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     if(cHit.hit){
       let cGuard=0,cHp=0;
       const cAtk=getBattleDamage(defenderAfter,cMods);
@@ -2776,13 +2824,14 @@ async function attackUnit(a,d){
   }
   const assassinIgnoreText=shouldIgnoreGuardForAttack(a)&&hit.hit?" Ignora Guardia/defensa.":"";
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
+  const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
   const bloodVictoryText=bloodVictoryTriggered?` Victoria sangrienta: todos los aliados ganan +1 Vida.`:"";
   const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
   const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
   const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${counterText}`;
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${counterText}`;
   const battleFxEvent=makeBattleFxEvent("attack",a,d);
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
@@ -3027,7 +3076,8 @@ async function adventureEnemyTurn(){
     let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,target,units));
     legendaryTraps=preTrap.traps;
     if(preTrap.cancel){
-      units=preTrap.units.map(u=>u.id===attacker.id?{...u,acted:true}:u);
+      const cancelSpend=spendActionStatsByAttack(attacker,target,preTrap.units,getCombatMods(attacker,target),{hit:false});
+        units=cancelSpend.units.map(u=>u.id===attacker.id?{...u,acted:true}:u);
       logs.push(preTrap.logs.join(" "));
       return true;
     }
@@ -3047,7 +3097,9 @@ async function adventureEnemyTurn(){
       const fsDefenseRemainder=withAiPublicState(()=>getCounterDefenseRemainder(attacker,target,mods));
       const fsMods=withAiPublicState(()=>prepareCounterMods(target,attacker,getCombatMods(target,attacker),fsDefenseRemainder));
       const fsHit=rollHit(target,attacker,fsMods);
-      units=units.map(u=>u.id===target.id?{...u,counterUsedTurn:true}:u);
+      const fsSpend=spendActionStatsByAttack(target,attacker,units,fsMods,fsHit);
+      units=fsSpend.units.map(u=>u.id===target.id?{...u,counterUsedTurn:true}:u);
+      target=units.find(u=>u.id===target.id)||target;
       if(fsHit.hit){
         const fsAtk=getBattleDamage(target,fsMods);
         units=units.map(u=>u.id===attacker.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-fsAtk,acted:true,damagedThisTurn:true}):u);
@@ -3083,6 +3135,8 @@ async function adventureEnemyTurn(){
     units=applyAttackSideEffects(attacker,target,units);
     const evasionPressure=spendEvasionByAttack(attacker,target,units,mods);
     units=evasionPressure.units;
+    const actionSpend=spendActionStatsByAttack(attacker,target,units,mods,hit);
+    units=actionSpend.units;
     const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),units));
     legendaryTraps=dmgTrap.traps;
     const battleAtk=dmgTrap.damage;
@@ -3091,7 +3145,7 @@ async function adventureEnemyTurn(){
       if(u.id===target.id){
         if(!hit.hit)return u;
         const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker);
-        const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,u.leader?1:0);
+        const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
         guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;
         damaged.damagedThisTurn=hpLoss>0||damaged.damagedThisTurn;
         delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -3164,6 +3218,9 @@ async function adventureEnemyTurn(){
       }
       if(defenderAfter.key==="miyamoto_musashi")cMods.defenderGuard-=2;
       const cHit=rollHit(defenderAfter,attackerAfter,cMods);
+      const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
+      units=cSpend.units;
+      defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
       if(cHit.hit){
         const cAtk=getBattleDamage(defenderAfter,cMods);
         units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u.id===attackerAfter.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-cAtk,damagedThisTurn:true}):u);
@@ -3196,13 +3253,14 @@ async function adventureEnemyTurn(){
           ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
           : null);
     const pressureText=evasionPressureText(target.name,evasionPressure.spent,evasionPressure.remaining);
+    const actionSpendText=actionStatSpendText(attacker.name,actionSpend.spent,actionSpend.remaining);
     const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
     const bloodVictoryText=bloodVictoryTriggered?` Victoria sangrienta: todos los aliados ganan +1 Vida.`:"";
     const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
     const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
     const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
     const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${counterText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${counterText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -4296,7 +4354,7 @@ function getUnitStatusEntries(u){
   if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff","debuff");
   if(u.defenseModeReady)add(`DEF +2 GD`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Se consume con ese ataque o al inicio de su próximo turno, lo que ocurra primero.`,"buff guard-buff","defense");
   const evasionSpent=getEvasionPressure(u);
-  if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Evasión disponible gastada por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
+  if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Destreza/Agilidad gastadas por atacar o por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
   if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}${u.leader&&u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
   if(hasActiveBlessedArmor(u))add(`1ra muerte negada`,`Armadura bendita`,`La primera muerte del líder fue negada. Su vida quedó en 1 y no puede perder Vida durante el resto de este turno.`,"buff guard-buff","buff");
   if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Lluvia ${Math.max(0,3-Number(u.arrowRainUses||0))}/3`,`Lluvia de flechas`,`Habilidad Nv.5 activa: una vez por turno, hasta 3 veces por duelo, puede infligir 2 de daño directo a todas las unidades enemigas ignorando Guardia y stats. Usos gastados: ${Number(u.arrowRainUses||0)}.`,"buff dex-buff","buff");
