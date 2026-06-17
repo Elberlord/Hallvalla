@@ -2864,9 +2864,10 @@ async function attackUnit(a,d){
   const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
   const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
   const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${counterText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${counterText}`;
-  const battleFxEvent=makeBattleFxEvent("attack",a,d);
-  const defenderStillAlive=units.some(u=>u.id===d.id);
+  const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
+  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
+  const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
     ? makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow)
     : null;
@@ -3265,9 +3266,10 @@ async function adventureEnemyTurn(){
     }
 
     const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
-    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attacker,target);
-    const defenderStillAlive=units.some(u=>u.id===target.id);
+    const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
+    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
+    const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
       ? makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow)
       : null;

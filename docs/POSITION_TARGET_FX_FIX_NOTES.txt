@@ -1,0 +1,6 @@
+
+POSITION_TARGET_FX_FIX_NOTES.txt
+- Reparación mínima en script.js.
+- El evento visual de ataque ahora refresca atacante y objetivo desde la lista actual de units justo antes de crear battleFxEvent.
+- Evita que la animación del ataque apunte a coordenadas viejas si una unidad cambió de celda antes de mostrar el efecto.
+- No cambia daño, precisión, evasión, guardia, IA, historia, evento, online, CSS ni assets.
