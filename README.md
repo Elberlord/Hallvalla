@@ -1,174 +1,241 @@
-# ROK Lite 1.0 - Base simple desde cero
+# HallValla
 
-Reglas activas:
-- Mazo de 25 cartas por jugador.
-- Cada turno propio: +1 Honor.
-- Sin máximo de Honor.
-- Cada turno propio: roba 2 cartas.
-- Kastear cartas cuesta Honor.
-- Movimiento manual.
-- Ataque básico.
-- Si una unidad llega a 0 HP, sale de la arena.
-- Líder en arena desde el inicio.
+HallValla es un juego de cartas táctico con tablero, líderes, unidades, magias, trampas, aventura, colección, construcción de mazos y duelos contra IA.
 
-No incluye:
-- ruling avanzado del documento Word.
-- Fuente elemental.
-- restauración automática.
-- avance automático.
-- counter.
-- defensa física/mágica.
-- daño mixto.
-- buffs separados.
-- límite de invocacións.
-- límite de invocaciones.
+> Build interno detectado en el código: `v7HW_beastmaster_event_ai_max_allfix_2026_06_14`.
 
-Sube todo al repo:
-- index.html
-- README.md
-- assets/
+## Estado actual
 
+Esta versión ya no corresponde a una base simple ni a ROK Lite. El proyecto activo se llama **HallValla**.
 
-Versión 1.1: piezas del campo con tamaño estándar e inspector ampliado al hacer click.
+El juego incluye:
 
+- Home visual por capas.
+- Lobby local/online con Firebase.
+- Modo aventura contra IA.
+- Sistema de líderes.
+- Sistema de colección y deckbuilder.
+- Apertura de paquetes.
+- Mapa de historia 1.1.
+- Capítulos posteriores configurados.
+- Evento especial Beastmaster.
+- Sistema de fases por turno.
+- Sistema de Honor/Maná recargable.
+- Combate táctico con movimiento, rango, Guardia, Destreza, Agilidad, precisión/evasión, contraataques y efectos especiales.
+- Magias, trampas, unidades básicas, cartas legendarias y cartas de evento.
 
-Versión 1.3: líderes reducidos un poco más para que se vean mejor encuadrados dentro del tablero.
+## Estructura del proyecto
 
+Archivos principales:
 
-Versión 1.4: cuadros de movimiento/ataque ajustados para verse uniformes y más pequeños visualmente, sin desbordarse.
+- `index.html`: estructura principal de la página.
+- `styles.css`: estilos visuales, HUD, tablero, modales, home y efectos.
+- `script.js`: lógica del juego, Firebase, aventura, IA, cartas, combate, colección, deckbuilder y UI.
+- `firebase-config.js`: configuración de Firebase.
+- `assets/`: imágenes, cartas, tablero, home, sonidos y recursos visuales.
+- `docs/`: notas internas de parches y revisiones.
 
+Para GitHub Pages o un repo estático, el archivo `index.html` debe quedar en la raíz junto con `script.js`, `styles.css`, `firebase-config.js` y la carpeta `assets/`.
 
-Versión 1.5: todas las piezas del campo (líderes e invocaciones) usan exactamente el mismo tamaño visual.
+## Flujo de turno
 
+El duelo usa fases:
 
-Versión 1.6: Honor/Maná recargable.
-- El Honor ya no se acumula como bolsa gastable.
-- Al inicio de tu turno:
-  - maxHonor +1
-  - honor disponible = maxHonor
-  - robas 2 cartas
-- Ejemplo:
-  - turno 1: 1/1
-  - gastas 1: 0/1
-  - turno 2: 2/2
-  - gastas 2: 0/2
-  - turno 3: 3/3
+1. **Draw Phase**
+   - Se recarga el recurso del jugador activo.
+   - Se roban cartas según la regla activa del turno.
+   - En el primer turno/inicio configurado puede mantenerse la mano inicial sin robo adicional.
 
+2. **Main Phase**
+   - El jugador puede jugar cartas desde la mano si tiene recurso suficiente y cumple las condiciones.
+   - Si no hay cartas jugables, el sistema puede avanzar el flujo.
 
-HallValla Home 0.5 - UI por assets:
-- Home montado con imágenes separadas por capas.
-- Los botones visibles son botones reales, no hotspots invisibles.
-- Usa: fondo, botones laterales, jugar, perfil, oro, gemas, fragmentos, amigos, configuración, clanes, ranking y pase.
-- JUGAR y Competir en línea abren el lobby online.
-- Pase de Honor tiene popup de ruta gratis y ruta premium.
-- Recompensa diaria suma 25 oro.
-- Shift + X suma 25 EXP para probar la barra.
+3. **Action Phase**
+   - Las unidades del campo pueden moverse, atacar o usar acciones disponibles.
+   - El combate considera movimiento, rango, Guardia, Destreza, Agilidad y efectos activos.
 
+4. **Last Phase**
+   - Ventana final para jugar cartas posibles desde la mano.
+   - Si no hay cartas jugables, el turno puede avanzar.
 
-0.5B:
-- Se corrigieron los assets PNG que venían en RGB sin canal alpha.
-- Se eliminó el fondo de cuadritos/zonas claras conectadas al borde en iconos, botón JUGAR y paneles promocionales.
+5. **End Phase**
+   - Cierra el turno del jugador activo.
+   - Se pasa el turno al rival.
 
+## Recurso: Honor / Maná
 
-0.5C: perfil más ancho, nombre más grande y con más contraste.
+El recurso es recargable, no una bolsa acumulativa infinita.
 
+Regla general visible en el motor:
 
-HallValla Home 0.6: Home visual + board oscuro sin cuadros visibles, grilla invisible uniforme 11x6.
+- El recurso máximo aumenta al inicio del turno.
+- El recurso disponible se recarga hasta el máximo.
+- Los líderes tipo mago/hechicero usan **Maná** en lugar de **Honor**.
+- El HUD muestra el recurso como `disponible/máximo`.
 
+Regla base detectada:
 
-0.7B:
-- Corregido el input del código de partida para que no se vea doble el texto.
+- En turnos tempranos, el crecimiento normal es menor.
+- A partir de turnos avanzados, la recarga base aumenta.
+- Algunas batallas de aventura tienen modificadores de IA configurados, como `aiDrawBonus` y `aiHonorBonus`, para ajustar dificultad.
 
-## Estructura separada
+## Mazo y colección
 
-Esta versión separa el código en:
+Reglas actuales de deckbuilder:
 
-- `index.html`: estructura de la página.
-- `styles.css`: estilos visuales.
-- `script.js`: lógica, Firebase y comportamiento del juego/home.
-- `assets/`: imágenes y recursos.
+- Tamaño válido de mazo: **25 cartas**.
+- Cartas básicas: máximo **3 copias**.
+- Cartas no básicas: máximo **1 copia**.
+- La colección/mazos se desbloquea al completar la batalla final del mapa 1.1.
+- Los paquetes ganados se guardan y pueden abrirse desde notificaciones.
 
-Para GitHub Pages o un repo estático, sube todos estos archivos manteniendo la misma estructura. No cambia la URL principal: sigue abriendo `index.html`.
+## Combate táctico
 
+El combate usa estadísticas de unidad/líder:
 
-## Recompensas de aventura 1.1
-Cada batalla del mapa 1.1 entrega poca EXP, un pequeño monto de oro y un paquete básico de 5 cartas de magia/trampa. Las recompensas se marcan como reclamadas en localStorage para evitar duplicados.
-- 1.1.1: 5 EXP + 10 Oro + paquete básico
-- 1.1.2: 8 EXP + 12 Oro + paquete básico
-- 1.1.3: 12 EXP + 15 Oro + paquete básico
-- 1.1.4: 16 EXP + 18 Oro + paquete básico
-- 1.1.5: 20 EXP + 25 Oro + paquete básico
+- **HP / Vida**: si llega a 0, la unidad sale de la arena.
+- **ATK / Ataque**: daño ofensivo base.
+- **Guardia**: defensa que reduce o absorbe daño según el caso.
+- **Destreza**: precisión ofensiva.
+- **Agilidad**: evasión defensiva.
+- **Movimiento**: casillas que puede avanzar.
+- **Rango**: distancia de ataque.
 
+El sistema también contempla:
 
-## Mapa 1.1 actualizado: combatientes, IA y recompensas
-El mapa 1.1 tiene 5 batallas:
-1. La flecha en la frontera: rival Arquero rebelde, mazo básico, IA nivel 1, recompensa paquete básico.
-2. El guerrero del puente: rival Guerrero rebelde, mazo básico, IA nivel 2, recompensa paquete básico.
-3. El hechicero del estandarte: rival Hechicero conspirador, mazo básico, IA nivel 3, recompensa paquete básico.
-4. El guerrero que no cayó: vuelve el Guerrero rebelde, mazo básico, IA nivel 4, recompensa paquete básico.
-5. La prueba de Richard: Richard Corazón de León pone a prueba al jugador, usa mazo con Richard, IA nivel 5, recompensa la carta Richard Corazón de León en lugar del paquete.
+- Ataques cuerpo a cuerpo y a distancia.
+- Contraataques cuando corresponda.
+- Bonos o penalizadores por habilidades.
+- Sangrado, veneno, trampas y efectos persistentes.
+- Reglas especiales de líderes y cartas legendarias.
 
-La colección/mazos permanece bloqueada hasta completar la batalla 1.1.5. Los paquetes ganados se guardan, pero no se pueden usar para editar mazos hasta terminar el mapa.
+## Precisión y evasión
 
+La precisión/evasión se maneja como una mecánica táctica conectada a Destreza y Agilidad.
 
+El juego muestra información de acierto y gasto de estadísticas durante el turno. La explicación visible de la mecánica debe mantenerse sincronizada con el modal de **Prec/Eva** dentro de detalles.
 
-# Historia integrada del mapa 1.1
+Resumen conceptual:
 
-## 1.1 El inicio de la travesía
+- La Destreza ayuda a conectar ataques.
+- La Agilidad ayuda a evitar ataques.
+- Durante el turno pueden gastarse estadísticas asociadas al esfuerzo ofensivo o defensivo.
+- Esas estadísticas se restauran al inicio del próximo turno correspondiente.
 
-El reino de HallValla apenas comienza a respirar después de años de disputas internas. El trono sigue en pie, pero su autoridad ya no pesa igual en las tierras lejanas.
+## Modo aventura
 
-En la frontera, los rumores llegan antes que los mensajeros: aldeas cerradas, caminos bloqueados, estandartes quemados y soldados que ya no responden al llamado real. Lo que al principio parece una revuelta menor pronto revela una amenaza mayor.
+HallValla incluye una aventura contra IA con batallas progresivas.
 
-Un grupo de rebeldes intenta usurpar el trono y provocar un golpe de estado. No buscan solamente conquistar fortalezas: quieren quebrar la confianza del pueblo, aislar al reino y entrar al salón del trono antes de que las fuerzas leales puedan reunirse.
+### Prueba previa
 
-## Batallas
+Antes del mapa 1.1 existe una prueba de guardián:
 
-1. **La flecha en la frontera / Rumores en la frontera**  
-   Rival: Arquero rebelde. Recompensa: EXP, oro y paquete básico.
+- **El guardián hechicero**
+- Sirve como combate de entrada antes de iniciar el mapa 1.1.
 
-2. **El guerrero del puente / El puente tomado**  
-   Rival: Guerrero rebelde. Recompensa: EXP, oro y paquete básico.
+### Mapa 1.1: El inicio de la travesía
 
-3. **El hechicero del estandarte / La noche del estandarte**  
-   Rival: Hechicero conspirador. Recompensa: EXP, oro y paquete básico.
+El mapa 1.1 contiene 5 batallas:
 
-4. **El guerrero que no cayó / Asedio al salón del trono**  
-   Rival: Guerrero rebelde vengativo. Recompensa: EXP, oro y paquete básico.
+1. **La flecha en la frontera**
+   - Rival: Arquero rebelde.
+   - Recompensa: EXP, oro y paquete básico.
 
-5. **La prueba de Richard / El usurpador**  
-   Rival: Richard Corazón de León. Recompensa final: carta Richard Corazón de León.
+2. **El guerrero del puente**
+   - Rival: Guerrero rebelde.
+   - Recompensa: EXP, oro y paquete básico.
 
-Al completar la batalla 1.1.5, el jugador desbloquea el acceso a mazos/colección.
+3. **El hechicero del estandarte**
+   - Rival: Hechicero conspirador.
+   - Recompensa: EXP, oro y paquete básico.
 
+4. **El guerrero que no cayó**
+   - Rival: Guerrero rebelde vengativo.
+   - Recompensa: EXP, oro y paquete básico.
 
+5. **La prueba de Richard**
+   - Rival: Richard Corazón de León.
+   - Recompensa final: carta **Richard Corazón de León**.
 
-## Flujo de victoria/derrota del mapa 1.1
-- Al ganar una batalla: se entregan recompensas una sola vez, se marca como completada y se desbloquea la siguiente pelea.
-- Al perder una batalla: no se entregan recompensas. El jugador puede reintentar o volver al mapa.
-- Cada pelea debe ganarse para desbloquear la siguiente.
-- Las recompensas de paquetes se guardan, pero los mazos/colección siguen bloqueados hasta completar 1.1.5.
+Al completar la batalla 1.1.5, el jugador desbloquea colección/mazos.
 
+## Capítulos posteriores
 
+El código contiene capítulos posteriores configurados, incluyendo enfrentamientos con cartas legendarias y recompensas especiales.
 
-## Home, notificaciones y reglas de mazo
-- El home refleja nivel, EXP, oro, progreso del mapa 1.1 y estado de mazos.
-- El botón de notificaciones avisa cuando hay cartas/paquetes nuevos y cuando los mazos quedan desbloqueados.
-- La colección/mazos se desbloquea al completar la batalla 1.1.5.
-- Regla de mazo: cartas básicas hasta 3 copias; todas las demás rarezas solo 1 copia por mazo; tamaño válido 25 cartas.
+Entre las recompensas detectadas están cartas como:
 
+- Richard Corazón de León.
+- Simo Häyhä.
+- Sun Tzu.
+- Ulises.
+- Aquiles.
 
+Estas batallas forman parte del avance de aventura y deben revisarse junto con sus efectos especiales para asegurar que texto y código estén sincronizados.
 
-## Pack opening y deckbuilder de prueba
-- Las batallas 1.1.1 a 1.1.4 entregan paquetes pendientes, no cartas directas.
-- Los paquetes se abren desde notificaciones con una escena visual usando el arte del home.
-- Al confirmar apertura, las 5 cartas pasan a colección.
-- La batalla 1.1.5 entrega directamente la carta Richard Corazón de León.
-- El deckbuilder se abre desde Colección solo si el mapa 1.1 fue completado.
-- Reglas de mazo: 25 cartas, básicas máximo 3 copias, demás rarezas máximo 1 copia.
+## Evento Beastmaster
 
-## v7HW deep review fixed
-- Versión interna sincronizada: `HALLVALLA_BUILD_VERSION = "v7HW_deep_review_fixed"`.
-- Cache bust del HTML actualizado a `script.js?v=7HW` para forzar al navegador a cargar la versión nueva.
-- Reglas visibles del deckbuilder actualizadas al estado real del código: mazo de 25 cartas, básicas máximo 3 copias y no básicas máximo 1 copia.
-- Audio actual: música/fondos desactivados; el duelo usa efectos de sonido cortos desde `assets/sfx/*.ogg`.
+El proyecto incluye evento **Beastmaster / Señor de las Bestias**.
+
+Incluye cartas de bestias, assets y reglas especiales vinculadas a sigilo, trampas, revelación, embestidas, efectos de ataque y habilidades de evento.
+
+Este evento está integrado como contenido especial del juego, pero sus reglas concretas deben mantenerse revisadas carta por carta para asegurar que cada texto coincida con su implementación real.
+
+## IA
+
+La IA de aventura:
+
+- Juega desde el primer duelo.
+- Usa cartas desde la mano cuando puede.
+- Mueve unidades.
+- Ataca objetivos.
+- Evalúa acciones ofensivas.
+- Usa trampas/magias según su estado y disponibilidad.
+- Tiene dificultad configurada por batalla mediante nivel, estilo y bonus de aventura.
+
+Los campos de dificultad de batalla incluyen:
+
+- `aiLevel`
+- `aiDrawBonus`
+- `aiHonorBonus`
+- `aiStyle`
+
+Estos campos deben permanecer sincronizados con la lógica real de IA en `script.js`.
+
+## Home, HUD y notificaciones
+
+El home refleja:
+
+- Perfil.
+- Nivel y EXP.
+- Oro.
+- Progreso de aventura.
+- Estado de colección/mazos.
+- Notificaciones.
+- Recompensas y paquetes pendientes.
+
+El HUD de duelo muestra:
+
+- Vida de líderes.
+- Honor/Maná disponible y máximo.
+- Cartas en deck.
+- Cartas en mano.
+- Fase actual.
+- Estado de turno.
+
+## Audio
+
+El duelo usa efectos de sonido cortos desde `assets/sfx/*.ogg`.
+
+La música/fondos largos pueden estar desactivados según build.
+
+## Notas de mantenimiento
+
+Este README describe el estado actual general de HallValla. Si se cambia una regla en `script.js`, debe actualizarse este archivo para evitar contradicciones entre documentación y juego.
+
+Pendientes recomendados para revisión futura:
+
+- Sincronizar textos de cartas legendarias con implementación real.
+- Revisar efectos Beastmaster carta por carta.
+- Separar `script.js` por módulos cuando el sistema esté más estable.
+- Mantener una “ruling bible” oficial dentro de `docs/` cuando las reglas finales estén cerradas.
