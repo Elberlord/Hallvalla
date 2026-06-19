@@ -876,12 +876,12 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"yi_sun_sin",name:"Yi Sun-sin",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.yiSunSin,cost:4,hp:6,atk:3,guard:5,dex:6,agi:4,mov:1,range:1,vigor:7,rarity:"Gloriosa",special:true,text:"Bloqueo Naval: mientras Yi Sun-sin esté en campo, las unidades enemigas invocadas entran con -1 Destreza y -1 Guardia hasta el final de su próximo turno."},
   {key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:4,hp:4,atk:4,guard:2,dex:9,agi:5,mov:1,range:5,vigor:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió Vida este turno, obtiene +2 Ataque durante ese ataque. Si ataca desde Rango 4 o más, también ignora 1 Guardia."},
   {key:"boudica",name:"Boudica",type:"unit",icon:"🔥",portrait:CARD_PORTRAITS.boudica,cost:4,hp:6,atk:5,guard:4,dex:6,agi:5,mov:2,range:1,vigor:7,rarity:"Gloriosa",special:true,text:"Ira de Iceni: una vez por turno, cuando un aliado sea derrotado, Boudica obtiene +2 Ataque hasta el final de tu próximo turno. Si el aliado derrotado era especial, Boudica también obtiene +1 Movimiento."},
-  {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:4,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,vigor:6,rarity:"Mítica",special:true,text:"Estratega de Ítaca: único. Mientras Ulises esté en campo, una vez por turno puedes mover una unidad aliada 1 casilla después de que ataque. Ese movimiento no permite atacar otra vez."},
+  {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:4,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,vigor:6,rarity:"Mítica",special:true,text:"Estratega de Ítaca: cuando Ulises ataca, todas las unidades aliadas en radio 2 alrededor de él obtienen +1 Guardia y +1 MOV. No afecta líderes ni al propio Ulises. El bonus de MOV se mantiene hasta el próximo turno del dueño."},
   {key:"joan_of_arc",name:"Juana de Arco",type:"unit",icon:"🕯️",portrait:CARD_PORTRAITS.joan,cost:4,hp:5,atk:3,guard:4,dex:4,agi:4,mov:1,range:1,vigor:7,rarity:"Mítica",special:true,text:"Llama de Orléans: una vez por turno, cuando un aliado fuera a recibir daño, reduce ese daño en 1. Si ese aliado queda con 1 Vida, obtiene +1 Guardia hasta el final de su próximo turno."},
   {key:"leonidas",name:"Leónidas",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.leonidas,cost:5,hp:8,atk:5,guard:7,dex:4,agi:3,mov:2,range:1,vigor:8,rarity:"Mítica",special:true,text:"Última Formación: mientras Leónidas esté adyacente a una unidad aliada básica, ambos reciben +1 Guardia. Una vez por duelo, cuando Leónidas fuera a recibir daño fatal, queda con 1 de Vida."},
   {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:4,hp:4,atk:4,guard:3,dex:9,agi:8,mov:2,range:4,vigor:5,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -1 Guardia durante ese combate. Si acierta, el objetivo conserva -1 Guardia hasta el final de su próximo turno. No acumulable."},
   {key:"tomoe_gozen",name:"Tomoe Gozen",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.tomoe,cost:4,hp:5,atk:5,guard:4,dex:8,agi:7,mov:3,range:1,vigor:6,rarity:"Mítica",special:true,text:"Jinete de la Luna Cortante: si Tomoe se movió 2 o más casillas este turno antes de atacar, el objetivo recibe -2 Agilidad durante ese combate. Si el objetivo tiene Rango 2 o más, Tomoe obtiene +1 Ataque."},
-  {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:5,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,vigor:7,rarity:"Mítica",special:true,text:"Emboscada Magistral: la primera vez por turno que una unidad enemiga entra al rango de ataque de una unidad aliada, esa unidad aliada gana +1 Ataque para ese ataque. Una vez por duelo, Hannibal puede mover una unidad aliada básica 2 casillas antes de atacar."},
+  {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:5,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,vigor:7,rarity:"Mítica",special:true,text:"Trampa de Cannas: una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde 1 AT y 1 MOV hasta su próximo turno."},
   {key:"subotai",name:"Subotai / Subutai",type:"unit",icon:"🏇",portrait:CARD_PORTRAITS.subotai,cost:4,hp:5,atk:4,guard:4,dex:5,agi:5,mov:2,range:1,vigor:6,rarity:"Mítica",special:true,text:"Marcha de Mil Horizontes: una vez por turno, elige una unidad aliada. Esa unidad puede moverse 2 casillas adicionales este turno. No puede usarse sobre la misma unidad dos turnos seguidos."},
   {key:"lu_bu",name:"Lü Bu",type:"unit",icon:"🐴",portrait:CARD_PORTRAITS.luBu,cost:5,hp:6,atk:7,guard:4,dex:8,agi:6,mov:2,range:1,vigor:7,rarity:"Mítica",special:true,text:"Furia de la Alabarda: la primera vez por turno que Lü Bu derrota a una unidad enemiga, obtiene +1 Ataque permanente mientras siga en campo. Máximo +3 Ataque por esta habilidad."},
   {key:"ragnar_lodbrok",name:"Ragnar Lodbrok",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ragnar,cost:4,hp:6,atk:6,guard:4,dex:6,agi:5,mov:2,range:1,vigor:7,rarity:"Mítica",special:true,text:"Saqueo del Norte: una vez por turno, cuando Ragnar haga daño a un líder, estructura o unidad con más Vida máxima que él, recupera 1 Vida."},
@@ -891,9 +891,9 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:5,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,vigor:7,rarity:"Legendaria",special:true,text:"Muralla de Troya: tus aliados adyacentes a Héctor obtienen +1 Guardia. Si Héctor está defendiendo a un líder, obtiene +1 Guardia adicional."},
   {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:5,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,vigor:8,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +2 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
   {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:5,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,vigor:7,rarity:"Legendaria",special:true,text:"Dos Cielos: una vez por turno, si Musashi evita un ataque cuerpo a cuerpo, puede contraatacar inmediatamente. Ese contraataque ignora 2 Guardia."},
-  {key:"khalid_ibn_al_walid",name:"Khalid ibn al-Walid",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.khalid,cost:5,hp:6,atk:6,guard:5,dex:7,agi:5,mov:2,range:1,vigor:7,rarity:"Legendaria",special:true,text:"Espada Invicta: una vez por turno, si Khalid derrota a una unidad enemiga, puede moverse hasta 2 casillas. Si termina adyacente a otro enemigo, puede hacer un segundo ataque con -2 Ataque."},
+  {key:"khalid_ibn_al_walid",name:"Khalid ibn al-Walid",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.khalid,cost:5,hp:6,atk:6,guard:5,dex:7,agi:5,mov:2,range:1,vigor:7,rarity:"Legendaria",special:true,text:"Espada Invicta: cuando Khalid destruye una unidad enemiga con un ataque, puede seguir atacando mientras tenga objetivos válidos. Cada ataque adicional aplica -2 AT acumulativo hasta el próximo turno de Khalid. La Precisión se consume normalmente; con 0 Precisión tiene 0% de golpear."},
   {key:"attila_hun",name:"Atila el Huno",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.attila,cost:5,hp:6,atk:6,guard:4,dex:7,agi:6,mov:3,range:1,vigor:7,rarity:"Legendaria",special:true,text:"Azote de Imperios: mientras Atila esté en campo, los enemigos con la mitad o menos de su Vida máxima reciben -2 Guardia y -2 Agilidad."},
-  {key:"genghis_khan",name:"Gengis Kan",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.genghis,cost:5,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,vigor:8,rarity:"Legendaria",special:true,text:"Horda de la Estepa: una vez por turno, cuando una unidad enemiga sea derrotada, puedes mover hasta 2 unidades aliadas 1 casilla cada una."},
+  {key:"genghis_khan",name:"Gengis Kan",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.genghis,cost:5,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,vigor:8,rarity:"Legendaria",special:true,text:"Horda de la Estepa: cuando Gengis Kan destruye una unidad enemiga, todas las unidades enemigas en radio 2 alrededor de él pierden 2 Guardia y 1 MOV hasta su próximo turno."},
   {key:"alexander_magnus",name:"Alejandro Magno",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.alexander,cost:5,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,vigor:8,rarity:"Legendaria",special:true,text:"General Ofensivo: la primera vez cada turno que un aliado derrota una unidad enemiga, todos tus aliados obtienen +1 Movimiento hasta el final del turno."},
   {key:"julius_caesar",name:"Julio César",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.caesar,cost:5,hp:7,atk:4,guard:5,dex:7,agi:4,mov:1,range:1,vigor:8,rarity:"Legendaria",special:true,text:"Disciplina de las Legiones: mientras Julio César esté en campo, la primera vez por turno que una unidad enemiga ataque, recibe -1 Ataque y -1 Destreza durante ese combate."},
   {key:"cu_chulainn",name:"Cú Chulainn",type:"unit",icon:"🐕",portrait:CARD_PORTRAITS.cuChulainn,cost:6,hp:7,atk:7,guard:4,dex:8,agi:7,mov:2,range:1,vigor:8,rarity:"Semidiós",special:true,text:"Furia del Sabueso: mientras Cú Chulainn tenga la mitad o menos de su Vida máxima, obtiene +2 Ataque y +2 Agilidad. Contraataque del Sabueso: una vez por turno, cuando recibe un ataque cuerpo a cuerpo, puede contraatacar si sobrevive."},
@@ -1009,6 +1009,9 @@ function applyFearToUnit(unit,sourceName="Puercoespín"){
 }
 function clearTurnTempStatsForOwnerUnit(u,turnKey){
   const fearStillActive=!!(u&&u.fearTurnKey&&u.fearTurnKey===turnKey);
+  const genghisMovStillActive=!!(u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===turnKey);
+  const hannibalAtkStillActive=!!(u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===turnKey);
+  const hannibalMovStillActive=!!(u&&u.hannibalMovDebuffTurnKey&&u.hannibalMovDebuffTurnKey===turnKey);
   return {
     ...u,
     moved:false,
@@ -1018,11 +1021,20 @@ function clearTurnTempStatsForOwnerUnit(u,turnKey){
     buffAtk:0,
     tempMovDebuff:0,
     tempMovDebuffSource:"",
+    genghisMovDebuff:genghisMovStillActive?Math.max(1,Number(u.genghisMovDebuff||1)):0,
+    genghisMovDebuffTurnKey:genghisMovStillActive?u.genghisMovDebuffTurnKey:"",
+    genghisMovDebuffSource:genghisMovStillActive?(u.genghisMovDebuffSource||"Gengis Kan"):"",
+    hannibalMovDebuff:hannibalMovStillActive?Math.max(1,Number(u.hannibalMovDebuff||1)):0,
+    hannibalMovDebuffTurnKey:hannibalMovStillActive?u.hannibalMovDebuffTurnKey:"",
+    hannibalMovDebuffSource:hannibalMovStillActive?(u.hannibalMovDebuffSource||"Hannibal Barca"):"",
     tempMovBuff:0,
     tempAtkBuff:0,
     tempAtkDebuff: fearStillActive ? 3 : 0,
     fearSourceName: fearStillActive ? (u.fearSourceName||"Miedo") : "",
     fearTurnKey: fearStillActive ? u.fearTurnKey : "",
+    hannibalAtkDebuff:hannibalAtkStillActive?Math.max(1,Number(u.hannibalAtkDebuff||1)):0,
+    hannibalAtkDebuffTurnKey:hannibalAtkStillActive?u.hannibalAtkDebuffTurnKey:"",
+    hannibalAtkDebuffSource:hannibalAtkStillActive?(u.hannibalAtkDebuffSource||"Hannibal Barca"):"",
     lionFearAppliedTurnKey:"",
     tempDexBuff:0,
     tempDexDebuff:0,
@@ -1044,6 +1056,8 @@ function clearTurnTempStatsForOwnerUnit(u,turnKey){
     alexanderUsedTurn:false,
     mulanExecutionMoveReady:false,
     mulanExecutionChoiceReady:false,
+    khalidChainReady:false,
+    khalidAttackPenalty:0,
     damagedThisTurn:false,
     evasionSpent:0,
     warCryBuffs:0,
@@ -1601,13 +1615,13 @@ function hectorGuardAura(u,units=publicState?.units||[]){
   else if(isBasicUnit(u)&&leonidasUnits.some(l=>dist(l,u)<=1))bonus+=1;
   return bonus;
 }
-function effectiveAtk(u){const bonus=getLeaderBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)+(bonus.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);return Math.max(0,v)}
+function effectiveAtk(u){const bonus=getLeaderBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)+(bonus.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
 function effectiveDex(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b;if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=2;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u))}
-function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?1:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
+function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?1:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxTurnGuard(u){
   if(!u)return 0;
@@ -1686,6 +1700,8 @@ function getCombatMods(attacker,defender){
   const defenderUsesEvasion=!defender.leader;
   const attackerUsesEvasion=!attacker.leader;
 
+  const khalidPenalty=getKhalidAttackPenalty(attacker);
+  if(khalidPenalty>0)mods.notes.push(`${attacker.name} -${khalidPenalty} AT por Espada Invicta.`);
   if(isMulanBackstabAttack(attacker,defender)){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Ataque por la espalda.`);}
   if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por estar rodeado.`);}}
   if(attacker.key==="simo_hayha"&&defender.damagedThisTurn){mods.attackerAtk+=2;mods.notes.push(`${attacker.name} +2 AT contra objetivo herido este turno.`);}
@@ -1733,12 +1749,16 @@ function getDefenseEvasionScore(defender,mods={}){
 }
 function getHitChance(attacker,defender,mods={}){
   const stancePenalty=Math.max(0,Number(mods?.defenseStancePenalty||0))||((defender?.defenseModeReady&&!mods?.counterIgnoresGuard)?10:0);
-  if(attacker?.leader||defender?.leader)return clamp(100-stancePenalty,10,100);
+  if(!attacker)return 0;
+  if(attacker.leader)return clamp(100-stancePenalty,0,100);
   const attackScore=getAttackPrecisionScore(attacker,mods);
+  if(attackScore<=0)return 0;
+  if(defender?.leader)return clamp(100-stancePenalty,0,100);
   const defenseScore=getDefenseEvasionScore(defender,mods);
+  if(defenseScore<=0)return clamp(100-stancePenalty,0,100);
   const diff=attackScore-defenseScore;
   const baseChance=clamp(70+(diff*5),25,95);
-  return clamp(baseChance-stancePenalty,10,95);
+  return clamp(baseChance-stancePenalty,0,95);
 }
 function rollHit(attacker,defender,mods={}){
   const chance=getHitChance(attacker,defender,mods);
@@ -2197,11 +2217,16 @@ function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
 function getUnitAttackRange(u){return Math.max(1,Number(u?.range||1)||1)}
 function isMulanExecutionMoveReady(u){return !!(u&&u.key==="mulan"&&u.mulanExecutionMoveReady);}
 function isMulanExecutionChoiceReady(u){return !!(u&&u.key==="mulan"&&u.mulanExecutionChoiceReady);}
+function isKhalidChainAttackReady(u){return !!(u&&u.key==="khalid_ibn_al_walid"&&u.khalidChainReady);}
+function getKhalidAttackPenalty(u){return u?.key==="khalid_ibn_al_walid"?Math.max(0,Number(u.khalidAttackPenalty||0)):0;}
+function getGenghisMovDebuff(u){return u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.genghisMovDebuff||1)):0;}
+function getHannibalMovDebuff(u){return u&&u.hannibalMovDebuffTurnKey&&u.hannibalMovDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.hannibalMovDebuff||1)):0;}
+function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.hannibalAtkDebuff||1)):0;}
 function canUnitDeclareAttack(u){
   const live=getLiveUnitRef(u);
   if(!live)return false;
   if(!isMyTurn()||!isActionPhase()||live.owner!==myPlayer)return false;
-  if(live.acted&&!isMulanExecutionChoiceReady(live))return false;
+  if(live.acted&&!isMulanExecutionChoiceReady(live)&&!isKhalidChainAttackReady(live))return false;
   if(live.noAttackTurnKey&&live.noAttackTurnKey===publicState?.turnKey)return false;
   return true;
 }
@@ -2719,8 +2744,9 @@ async function moveUnit(u,x,y){
   if(moved&&!moved.leader){
     for(const h of hannibalTriggers){
       if(adjacentEnemies(moved,units).filter(a=>a.owner===h.owner).length>=2){
-        units=units.map(it=>it.id===moved.id?{...it,tempDexDebuff:(it.tempDexDebuff||0)+1,tempGuardBuff:(it.tempGuardBuff||0)-2}:it.id===h.id?{...it,hannibalUsedTurn:true}:it);
-        extra=` Trampa de Cannas: ${moved.name} pierde -1 DX y -2 Guardia este turno.`;
+        const nextKey=nextTurnKeyForOwner(moved.owner);
+        units=units.map(it=>it.id===moved.id?{...it,hannibalAtkDebuff:Math.max(1,Number(it.hannibalAtkDebuff||0),1),hannibalAtkDebuffTurnKey:nextKey,hannibalAtkDebuffSource:h.name||"Hannibal Barca",hannibalMovDebuff:Math.max(1,Number(it.hannibalMovDebuff||0),1),hannibalMovDebuffTurnKey:nextKey,hannibalMovDebuffSource:h.name||"Hannibal Barca"}:it.id===h.id?{...it,hannibalUsedTurn:true}:it);
+        extra=` Trampa de Cannas: ${moved.name} pierde -1 AT y -1 MOV hasta su próximo turno.`;
         break;
       }
     }
@@ -2785,7 +2811,6 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
       let n={...u};
       if(u.owner===owner&&u.key==="alexander_magnus"&&!u.alexanderUsedTurn){n.alexanderUsedTurn=true;n.alexanderBoostOwner=owner;}
       if(u.owner===owner&&ownerHasUnit(owner,"alexander_magnus",out)&&!u.leader)n.tempMovBuff=(n.tempMovBuff||0)+1;
-      if(u.owner===owner&&u.key==="genghis_khan"&&!u.genghisUsedTurn)n.genghisUsedTurn=true;
       if(u.owner!==owner&&u.key==="boudica"&&!u.boudicaUsedTurn){n.tempAtkBuff=(n.tempAtkBuff||0)+2;n.boudicaUsedTurn=true;if(defenderBefore.special)n.tempMovBuff=(n.tempMovBuff||0)+1;}
       return n;
     });
@@ -2839,6 +2864,30 @@ function applyCoverFire(units,owner,sourceId){
     return {...u,tempDexBuff:(u.tempDexBuff||0)+1,coverFireBuffs:(u.coverFireBuffs||0)+1};
   });
 }
+function applyUlyssesAttackTactic(units,attacker){
+  if(!attacker||attacker.key!=="ulysses")return{units,affected:[],log:""};
+  const affected=(units||[]).filter(u=>u.owner===attacker.owner&&!u.leader&&u.id!==attacker.id&&u.hp>0&&dist(attacker,u)<=2);
+  if(!affected.length)return{units,affected:[],log:""};
+  const affectedIds=new Set(affected.map(u=>u.id));
+  const out=(units||[]).map(u=>affectedIds.has(u.id)?{...u,guard:(u.guard||0)+1,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffTurnKey:publicState?.turnKey||""}:u);
+  return{units:out,affected,log:` Estratega de Ítaca: ${affected.length} unidad${affected.length===1?" aliada gana":"es aliadas ganan"} +1 Guardia y +1 MOV en radio 2.`};
+}
+function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defenderFell){
+  let out=[...(units||[])];
+  if(!defenderFell||!attackerBefore||attackerBefore.key!=="genghis_khan"||!defenderBefore||defenderBefore.leader)return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
+  const genghis=out.find(u=>u.id===attackerBefore.id&&u.hp>0)||attackerBefore;
+  if(!out.some(u=>u.id===genghis.id&&u.hp>0))return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
+  const affected=out.filter(u=>u.owner!==genghis.owner&&!u.leader&&u.hp>0&&dist(genghis,u)<=2);
+  if(!affected.length)return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
+  const affectedIds=new Set(affected.map(u=>u.id));
+  out=out.map(u=>{
+    if(!affectedIds.has(u.id))return u;
+    const nextKey=nextTurnKeyForOwner(u.owner);
+    return {...u,guard:Math.max(0,Number(u.guard||0)-2),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffTurnKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
+  });
+  const first=out.find(u=>affectedIds.has(u.id))||affected[0];
+  return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
+}
 async function attackUnit(a,d){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   let liveUnits=[...(publicState?.units||[])];
@@ -2847,7 +2896,8 @@ async function attackUnit(a,d){
   if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");
   if(!isMyTurn()||!isActionPhase()||a.owner!==myPlayer)return setHint(unitActionPhaseHint("ATTK"));
   const mulanChoiceAttack=isMulanExecutionChoiceReady(a);
-  if(a.acted&&!mulanChoiceAttack)return setHint(`${a.name} ya atacó o defendió este turno.`);
+  const khalidChainAttack=isKhalidChainAttackReady(a);
+  if(a.acted&&!mulanChoiceAttack&&!khalidChainAttack)return setHint(`${a.name} ya atacó o defendió este turno.`);
   if(a.noAttackTurnKey&&a.noAttackTurnKey===publicState.turnKey)return setHint(`${a.name} no puede atacar este turno.`);
   const rg=getUnitAttackRange(a)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0);
   const distance=dist(a,d);
@@ -2857,7 +2907,7 @@ async function attackUnit(a,d){
   let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
   if(preTrap.cancel){
     const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
-    await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true}:u),legendaryTraps:preTrap.traps});
+    await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true,khalidChainReady:false}:u),legendaryTraps:preTrap.traps});
     await pushLog(`${preTrap.logs.join(" ")}${actionStatSpendText(a.name,cancelSpend.spent,cancelSpend.remaining)}`);
     clearSelection();return;
   }
@@ -2906,7 +2956,7 @@ async function attackUnit(a,d){
           fsGuard=0;fsHp=fsAtk;
           damaged.damagedThisTurn=fsHp>0||damaged.damagedThisTurn;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
-          return {...damaged,acted:true};
+          return {...damaged,acted:true,khalidChainReady:false};
         }
         return u;
       });
@@ -2925,7 +2975,7 @@ async function attackUnit(a,d){
       a=units.find(u=>u.id===a.id)||a;
       d=units.find(u=>u.id===d.id)||d;
     }else{
-      units=units.map(u=>u.id===d.id?{...u,counterUsedTurn:true}:u.id===a.id?{...u,acted:true}:u);
+      units=units.map(u=>u.id===d.id?{...u,counterUsedTurn:true}:u.id===a.id?{...u,acted:true,khalidChainReady:false}:u);
       firstStrikeText=` ${d.name} activa Atacar Primero: falla (${fsHit.roll}/${fsHit.chance}).${counterDefenseText(fsDefenseRemainder)}`;
       a=units.find(u=>u.id===a.id)||a;
       d=units.find(u=>u.id===d.id)||d;
@@ -2941,6 +2991,8 @@ async function attackUnit(a,d){
   }
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText;
   units=applyAttackSideEffects(a,d,units);
+  const ulyssesAttackTactic=applyUlyssesAttackTactic(units,a);
+  units=ulyssesAttackTactic.units;
   const evasionPressure=spendEvasionByAttack(a,d,units,mods);
   units=evasionPressure.units;
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
@@ -2949,7 +3001,7 @@ async function attackUnit(a,d){
   units=dmgTrap.traps?units:units;
   const battleAtk=dmgTrap.damage;
   units=units.map(u=>{
-    if(u.id===a.id)return{...u,acted:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
+    if(u.id===a.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
     if(u.id===d.id){
       if(!hit.hit)return u;
       const attackIgnoresGuard=shouldIgnoreGuardForAttack(a);
@@ -3028,10 +3080,16 @@ async function attackUnit(a,d){
   const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
   const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
   const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanChoiceAttack&&!d.leader;
+  const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&units.some(u=>u.id===a.id);
   const exileTrap=defenderFell?resolveAfterKillLegendaryTraps(a,d,units):{units,traps:dmgTrap.traps,logs:[]};
   units=exileTrap.units;
+  const genghisDebuffResult=applyGenghisKhanKillDebuff(units,a,d,defenderFell);
+  units=genghisDebuffResult.units;
   if(mulanExecutionTriggered&&units.some(u=>u.id===a.id)){
     units=units.map(u=>u.id===a.id?{...u,mulanExecutionMoveReady:true,mulanExecutionChoiceReady:false}:u);
+  }
+  if(khalidChainTriggered&&units.some(u=>u.id===a.id)){
+    units=units.map(u=>u.id===a.id?{...u,acted:false,khalidChainReady:true,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
   }
   let attackerAfter=units.find(u=>u.id===a.id),defenderAfter=units.find(u=>u.id===d.id);
   const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&(isLanceUnitCardLike(defenderAfter)?dist(attackerAfter,defenderAfter)<=getCounterRange(defenderAfter):(dist(attackerAfter,defenderAfter)<=1&&(defenderAfter.key==="miyamoto_musashi")));
@@ -3076,9 +3134,12 @@ async function attackUnit(a,d){
   const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
   const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
+  const ulyssesTacticText=ulyssesAttackTactic.log||"";
   const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
+  const genghisDebuffText=genghisDebuffResult.log||"";
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`:"";
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${counterText}${mulanExecutionText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${porcupineText}${lionFearText}${counterText}`;
+  const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${counterText}${mulanExecutionText}${khalidChainText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
@@ -3089,10 +3150,10 @@ async function attackUnit(a,d){
   const dodgeFxEvent=!hit.hit&&defenderStillAlive
     ? makeDodgeFxEvent(defenderUnitNow)
     : null;
-  const statusFxEvent=lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
+  const statusFxEvent=lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
     ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
     : null));
-  const floatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
+  const floatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
     ? (hpLoss>0
         ? makeFloatFxEvent("damage", defenderUnitNow, hpLoss)
         : (guardLoss>0 ? makeFloatFxEvent("debuff", defenderUnitNow, guardLoss,{iconText:"🛡"}) : null))
@@ -3252,7 +3313,7 @@ async function adventureEnemyTurn(){
   const removeCard=(card)=>{hand=hand.filter(c=>c.id!==card.id)};
   const killDead=()=>{units=units.filter(u=>u.hp>0)};
   const living=(owner)=>units.filter(u=>u.owner===owner);
-  const canHit=(a,t)=>!!a&&!!t&&!a.acted&&!(a.noAttackTurnKey&&a.noAttackTurnKey===pub.turnKey)&&d(a,t)<=((a.range||1)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0))&&canTargetStealth(a,t)&&(!(t.aerial)||((a.range||1)>3||a.antiaerial));
+  const canHit=(a,t)=>!!a&&!!t&&(!a.acted||isKhalidChainAttackReady(a))&&!(a.noAttackTurnKey&&a.noAttackTurnKey===pub.turnKey)&&d(a,t)<=((a.range||1)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0))&&canTargetStealth(a,t)&&(!(t.aerial)||((a.range||1)>3||a.antiaerial));
   const playerLeaderNow=()=>leader(1);
   const enemyLeaderNow=()=>leader(2);
   const inBounds=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS;
@@ -3322,7 +3383,7 @@ async function adventureEnemyTurn(){
   };
 
   const attackWith=(attacker)=>{
-    if(!attacker||attacker.acted)return false;
+    if(!attacker|| (attacker.acted&&!isKhalidChainAttackReady(attacker)))return false;
     let target=bestAttackTarget(attacker);
     if(!target)return false;
     if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===pub.turnKey)return false;
@@ -3331,7 +3392,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=preTrap.traps;
     if(preTrap.cancel){
       const cancelSpend=spendActionStatsByAttack(attacker,target,preTrap.units,getCombatMods(attacker,target),{hit:false});
-        units=cancelSpend.units.map(u=>u.id===attacker.id?{...u,acted:true}:u);
+        units=cancelSpend.units.map(u=>u.id===attacker.id?{...u,acted:true,khalidChainReady:false}:u);
       logs.push(preTrap.logs.join(" "));
       return true;
     }
@@ -3356,7 +3417,7 @@ async function adventureEnemyTurn(){
       target=units.find(u=>u.id===target.id)||target;
       if(fsHit.hit){
         const fsAtk=getBattleDamage(target,fsMods);
-        units=units.map(u=>u.id===attacker.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-fsAtk,acted:true,damagedThisTurn:true}):u);
+        units=units.map(u=>u.id===attacker.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-fsAtk,acted:true,khalidChainReady:false,damagedThisTurn:true}):u);
         units=applyLegendaryFatalSaves(units,[attacker.id]);
         const attackerFell=!!units.find(u=>u.id===attacker.id&&u.hp<=0);
         units=units.filter(u=>u.hp>0);
@@ -3387,6 +3448,8 @@ async function adventureEnemyTurn(){
 
     let guardLoss=0,hpLoss=0,counterText=firstStrikeText;
     units=applyAttackSideEffects(attacker,target,units);
+    const ulyssesAttackTactic=applyUlyssesAttackTactic(units,attacker);
+    units=ulyssesAttackTactic.units;
     const evasionPressure=spendEvasionByAttack(attacker,target,units,mods);
     units=evasionPressure.units;
     const actionSpend=spendActionStatsByAttack(attacker,target,units,mods,hit);
@@ -3395,7 +3458,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=dmgTrap.traps;
     const battleAtk=dmgTrap.damage;
     units=units.map(u=>{
-      if(u.id===attacker.id)return{...u,acted:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(attacker,target)?true:u.arjunaRerollUsedTurn};
+      if(u.id===attacker.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(attacker,target)?true:u.arjunaRerollUsedTurn};
       if(u.id===target.id){
         if(!hit.hit)return u;
         const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker);
@@ -3474,9 +3537,15 @@ async function adventureEnemyTurn(){
     const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
     const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${attacker.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
 
+    const khalidChainTriggered=hit.hit&&defenderFell&&attacker.key==="khalid_ibn_al_walid"&&!target.leader&&units.some(u=>u.id===attacker.id);
     const exileTrap=defenderFell?withAiPublicState(()=>resolveAfterKillLegendaryTraps(attacker,target,units)):{units,traps:legendaryTraps,logs:[]};
     units=exileTrap.units;
     legendaryTraps=exileTrap.traps||legendaryTraps;
+    const genghisDebuffResult=withAiPublicState(()=>applyGenghisKhanKillDebuff(units,attacker,target,defenderFell));
+    units=genghisDebuffResult.units;
+    if(khalidChainTriggered&&units.some(u=>u.id===attacker.id)){
+      units=units.map(u=>u.id===attacker.id?{...u,acted:false,khalidChainReady:true,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
+    }
 
     let attackerAfter=units.find(u=>u.id===attacker.id),defenderAfter=units.find(u=>u.id===target.id);
     const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&(isLanceUnitCardLike(defenderAfter)?d(attackerAfter,defenderAfter)<=getCounterRange(defenderAfter):(d(attackerAfter,defenderAfter)<=1&&(defenderAfter.key==="miyamoto_musashi")));
@@ -3514,10 +3583,10 @@ async function adventureEnemyTurn(){
     pendingAiDodgeFxEvent=!hit.hit&&defenderStillAlive
       ? makeDodgeFxEvent(defenderUnitNow)
       : null;
-    pendingAiStatusFxEvent=lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
+    pendingAiStatusFxEvent=lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
       : null));
-    pendingAiFloatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
+    pendingAiFloatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
       ? (hpLoss>0
           ? makeFloatFxEvent("damage", defenderUnitNow, hpLoss)
           : (guardLoss>0 ? makeFloatFxEvent("debuff", defenderUnitNow, guardLoss,{iconText:"🛡"}) : null))
@@ -3531,8 +3600,11 @@ async function adventureEnemyTurn(){
     const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
     const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
     const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
+    const ulyssesTacticText=ulyssesAttackTactic.log||"";
     const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${bloodBaitText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${counterText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${porcupineText}${lionFearText}${counterText}`;
+    const genghisDebuffText=genghisDebuffResult.log||"";
+    const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${bloodMistText}${steelWallText}${coverFireText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${counterText}${khalidChainText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -3826,8 +3898,9 @@ async function adventureEnemyTurn(){
     if(moved&&!moved.leader){
       for(const h of hannibalTriggers){
         if(adjacentEnemies(moved,units).filter(a=>a.owner===h.owner).length>=2){
-          units=units.map(it=>it.id===moved.id?{...it,tempDexDebuff:(it.tempDexDebuff||0)+1,tempGuardBuff:(it.tempGuardBuff||0)-2}:it.id===h.id?{...it,hannibalUsedTurn:true}:it);
-          extra=` Trampa de Cannas: ${moved.name} pierde -1 DX y -2 Guardia este turno.`;
+          const nextKey=nextTurnKeyForOwner(moved.owner);
+          units=units.map(it=>it.id===moved.id?{...it,hannibalAtkDebuff:Math.max(1,Number(it.hannibalAtkDebuff||0),1),hannibalAtkDebuffTurnKey:nextKey,hannibalAtkDebuffSource:h.name||"Hannibal Barca",hannibalMovDebuff:Math.max(1,Number(it.hannibalMovDebuff||0),1),hannibalMovDebuffTurnKey:nextKey,hannibalMovDebuffSource:h.name||"Hannibal Barca"}:it.id===h.id?{...it,hannibalUsedTurn:true}:it);
+          extra=` Trampa de Cannas: ${moved.name} pierde -1 AT y -1 MOV hasta su próximo turno.`;
           break;
         }
       }
@@ -4099,6 +4172,14 @@ async function adventureEnemyTurn(){
       didSomething=true;
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
+      let chainGuard=0;
+      while(chainGuard++<8){
+        const liveKhalid=units.find(it=>it.id===u.id&&isKhalidChainAttackReady(it));
+        if(!liveKhalid||!attackWith(liveKhalid))break;
+        await publishAiStep({turnPhase:"actions"});
+        await sleep(AI_ACTION_DELAY_MS);
+        if(getBattleOutcome(units).ended)break;
+      }
     }else if(moveUnitSmart(u)){
       didSomething=true;
       await publishAiStep({turnPhase:"actions"});
@@ -4107,6 +4188,14 @@ async function adventureEnemyTurn(){
       if(attackWith(movedUnit)){
         await publishAiStep({turnPhase:"actions"});
         await sleep(AI_ACTION_DELAY_MS);
+        let chainGuard=0;
+        while(chainGuard++<8){
+          const liveKhalid=units.find(it=>it.id===movedUnit.id&&isKhalidChainAttackReady(it));
+          if(!liveKhalid||!attackWith(liveKhalid))break;
+          await publishAiStep({turnPhase:"actions"});
+          await sleep(AI_ACTION_DELAY_MS);
+          if(getBattleOutcome(units).ended)break;
+        }
       }else if(tryAiDefenseStance(movedUnit)){
         await publishAiStep({turnPhase:"actions"});
         await sleep(AI_ACTION_DELAY_MS);
@@ -4277,7 +4366,7 @@ function getUnitContextOptions(u){
     opts.push({key:"mov",label:"MOV",hint:moveHint});
     opts.push({key:"def",label:"DEF",hint:(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)?"No puede defenderse este turno":(u.defenseModeReady?"Ya está en guardia defensiva":(u.acted?"Ya usó su acción":"Postura defensiva: +2 GD y -10% precisión al primer ataque"))});
     if(unitHasContextEffect(u))opts.push({key:"effect",label:"EFFECT",hint:"Efecto"});
-    opts.push({key:"attk",label:"ATTK",hint:u.acted?"Ya atacó o defendió":"Atacar en Action Phase"});
+    opts.push({key:"attk",label:"ATTK",hint:isKhalidChainAttackReady(u)?"Espada Invicta: puede seguir atacando con penalización acumulada.":(u.acted?"Ya atacó o defendió":"Atacar en Action Phase")});
   }
   opts.push({key:"det",label:"DET",hint:"Detalles"});
   return opts;
@@ -4356,7 +4445,6 @@ function getUnitEffectMode(u){
   if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "target";
   if(["african_lion","black_raven"].includes(u.key))return "self";
   if(["richard_lionheart","saladin","sun_tzu","subotai"].includes(u.key))return "target";
-  if(u.key==="ulysses")return "self";
   return "passive";
 }
 function getAdjacentFreeCells(unit,units=publicState?.units||[]){
@@ -4527,10 +4615,6 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else if(liveCaster.key==="subotai"){
     out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedTurn:true,lastSubotaiTarget:target.id}:it);
     log=`${liveCaster.name} activa Marcha de Mil Horizontes: ${target.name} gana +2 Movimiento este turno.`;
-  }else if(liveCaster.key==="ulysses"){
-    if(liveCaster.ulyssesUsedTurn)return{success:false,reason:"Ulises ya preparó su Estratega de Ítaca este turno."};
-    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,ulyssesUsedTurn:true,ulyssesReady:true}:it);
-    log=`${liveCaster.name} prepara Estratega de Ítaca: después del próximo ataque aliado, una unidad aliada podrá reposicionarse 1 casilla.`;
   }else{
     return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante combate/turno."};
   }
@@ -4679,10 +4763,14 @@ function getUnitStatusEntries(u){
   const add=(label,name,desc,kind="neutral",icon="generic")=>entries.push({label,name,desc,kind,icon});
   const n=v=>Number(v||0);
   if(n(u.tempMovDebuff)>0)add(`-${n(u.tempMovDebuff)} MOV`,`Movimiento reducido`,`Movimiento reducido hasta el inicio de su próximo turno.${u.tempMovDebuffSource?` Origen: ${u.tempMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
+  if(getGenghisMovDebuff(u)>0)add(`-${getGenghisMovDebuff(u)} MOV`,`Horda de la Estepa`,`Movimiento reducido por Gengis Kan hasta su próximo turno.${u.genghisMovDebuffSource?` Origen: ${u.genghisMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
+  if(getHannibalMovDebuff(u)>0)add(`-${getHannibalMovDebuff(u)} MOV`,`Trampa de Cannas`,`Movimiento reducido por Hannibal Barca hasta su próximo turno.${u.hannibalMovDebuffSource?` Origen: ${u.hannibalMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
   if(n(u.tempMovBuff)>0)add(`+${n(u.tempMovBuff)} MOV`,`Movimiento aumentado`,`Movimiento aumentado este turno o hasta que el efecto expire.`,"buff mov-buff","buff");
   if(n(u.buffAtk)>0)add(`+${n(u.buffAtk)} AT`,`Ataque aumentado`,`Ataque aumentado temporalmente por magia o efecto.`,"buff atk-buff","buff");
   if(n(u.tempAtkBuff)>0)add(`+${n(u.tempAtkBuff)} AT`,`Ataque aumentado`,n(u.warCryBuffs)>0?`Ataque aumentado por Grito de Guerra (${n(u.warCryBuffs)} acumulación${n(u.warCryBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Ataque aumentado por efecto temporal.`,"buff atk-buff","buff");
   if(n(u.tempAtkDebuff)>0)add(`-${n(u.tempAtkDebuff)} AT`,`Ataque reducido`,`Ataque reducido por efecto temporal.`,"debuff atk-debuff","debuff");
+  if(getHannibalAtkDebuff(u)>0)add(`-${getHannibalAtkDebuff(u)} AT`,`Trampa de Cannas`,`Ataque reducido por Hannibal Barca hasta su próximo turno.${u.hannibalAtkDebuffSource?` Origen: ${u.hannibalAtkDebuffSource}.`:""}`,"debuff atk-debuff","debuff");
+  if(getKhalidAttackPenalty(u)>0)add(`-${getKhalidAttackPenalty(u)} AT`,`Espada Invicta`,`Penalización acumulada de Khalid por ataques encadenados. Se restaura al inicio de su próximo turno.`,"debuff atk-debuff","debuff");
   if(n(u.tempDexBuff)>0)add(`+${n(u.tempDexBuff)} DX`,`Destreza aumentada`,n(u.coverFireBuffs)>0?`Destreza aumentada por Fuego de cobertura (${n(u.coverFireBuffs)} acumulación${n(u.coverFireBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Destreza aumentada por efecto temporal.`,"buff dex-buff","buff");
   if(n(u.tempDexDebuff)>0)add(`-${n(u.tempDexDebuff)} DX`,`Destreza reducida`,`Destreza reducida por presión, trampa o efecto temporal.`,"debuff dex-debuff","debuff");
   if(n(u.tempAgiBuff)>0)add(`+${n(u.tempAgiBuff)} AGI`,`Agilidad aumentada`,`Agilidad aumentada por efecto temporal.`,"buff agi-buff","buff");
