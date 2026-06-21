@@ -10093,3 +10093,83 @@
   min-height:150px!important;
   max-height:150px!important;
 }
+
+
+/* === v42 status icons only in DET === */
+#inspector.show #inspectText > .det-status-section,
+#inspector:not(.hidden) #inspectText > .det-status-section,
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  overflow:hidden!important;
+}
+#inspector.show #inspectText .det-leader-history-wrap,
+#inspector:not(.hidden) #inspectText .det-leader-history-wrap,
+#cardInspectModal:not(.hidden) #cardInspectText .det-leader-history-wrap{
+  flex:0 0 auto!important;
+  padding:0 8px!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+#inspector.show #inspectText .det-status-list,
+#inspector:not(.hidden) #inspectText .det-status-list,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
+  flex:1 1 auto!important;
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:wrap!important;
+  align-content:flex-start!important;
+  align-items:flex-start!important;
+  gap:8px!important;
+  padding:0 8px 8px!important;
+  margin:0!important;
+  overflow:auto!important;
+}
+#inspector.show #inspectText .det-status-row.det-status-icon-only,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-only,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only{
+  width:38px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  height:38px!important;
+  min-height:38px!important;
+  max-height:38px!important;
+  padding:0!important;
+  margin:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 38px!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 30% 30%, rgba(255,220,120,.18), rgba(18,14,9,.98) 65%)!important;
+  border:1px solid rgba(238,190,91,.38)!important;
+  box-shadow:0 0 10px rgba(230,177,70,.12), inset 0 0 0 1px rgba(255,232,164,.05)!important;
+  overflow:hidden!important;
+  cursor:pointer!important;
+}
+#inspector.show #inspectText .det-status-row.det-status-icon-only .det-status-icon,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-only .det-status-icon,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only .det-status-icon{
+  width:auto!important;
+  min-width:0!important;
+  height:auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:19px!important;
+  line-height:1!important;
+  background:none!important;
+  border:none!important;
+  filter:drop-shadow(0 0 6px rgba(255,220,120,.28))!important;
+}
+#inspector.show #inspectText .det-status-row.det-status-icon-only .det-status-copy,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-only .det-status-copy,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only .det-status-copy{
+  display:none!important;
+}
+#inspector.show #inspectText .det-empty-line,
+#inspector:not(.hidden) #inspectText .det-empty-line,
+#cardInspectModal:not(.hidden) #cardInspectText .det-empty-line{
+  padding:6px 2px!important;
+}

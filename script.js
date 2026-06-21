@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_status_icons_compact_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_status_icon_only_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1257,16 +1257,24 @@ function renderDetAbilitiesHtml(entity,effectText=""){
 
 function getStatusGlyphFromName(name=""){
   const s=String(name||"").toLowerCase();
-  if(s.includes("sang"))return "🩸";
-  if(s.includes("veneno"))return "☠";
-  if(s.includes("quem")||s.includes("ard"))return "🔥";
-  if(s.includes("par")||s.includes("atur")||s.includes("shock"))return "⚡";
-  if(s.includes("silencio"))return "🔇";
+  if(s.includes("sang")||s.includes("bleed"))return "🩸";
+  if(s.includes("veneno")||s.includes("poison"))return "☠";
+  if(s.includes("quem")||s.includes("ard")||s.includes("burn")||s.includes("fire"))return "🔥";
+  if(s.includes("par")||s.includes("atur")||s.includes("shock")||s.includes("stun")||s.includes("lock"))return "⚡";
+  if(s.includes("silencio")||s.includes("silence"))return "🔇";
   if(s.includes("mald")||s.includes("curse"))return "✠";
-  if(s.includes("guard")||s.includes("defens"))return "🛡";
-  if(s.includes("debuff")||s.includes("pierde")||s.includes("miedo"))return "▼";
-  if(s.includes("buff")||s.includes("gana"))return "▲";
+  if(s.includes("guard")||s.includes("defens")||s.includes("armor"))return "🛡";
+  if(s.includes("debuff")||s.includes("pierde")||s.includes("miedo")||s.includes("reduce")||s.includes("bloque"))return "▼";
+  if(s.includes("buff")||s.includes("gana")||s.includes("aument")||s.includes("mejora"))return "▲";
   return "◆";
+}
+
+function getStatusEntryGlyph(entry={}){
+  const raw=String(entry.glyph||entry.icon||"").trim();
+  const keywordLike=/^[a-z0-9_\-\s]+$/i.test(raw);
+  const looksLikeGlyph=raw && !keywordLike && raw.length<=4;
+  if(looksLikeGlyph)return raw;
+  return getStatusGlyphFromName(`${entry.kind||""} ${raw} ${entry.name||""} ${entry.label||""}`);
 }
 
 function renderDetStatusesHtml(activeEntries=[],card=null){
@@ -1274,11 +1282,8 @@ function renderDetStatusesHtml(activeEntries=[],card=null){
   const historyHtml=card&&card.leader?renderDetLeaderRecordHtml(card):"";
   const rows=entries.map((entry,idx)=>{
     const safeName=escapeHtml(entry.name||entry.label||"Estado activo");
-    const icon=entry.icon||entry.glyph||getStatusGlyphFromName(safeName)||"◆";
-    return `<button class="det-status-row det-status-icon-row" type="button" data-status-index="${idx}" title="${safeName}">
-      <span class="det-status-icon">${icon}</span>
-      <span class="det-status-copy"><strong>${safeName}</strong></span>
-    </button>`;
+    const glyph=getStatusEntryGlyph(entry);
+    return `<button class="det-status-row det-status-icon-only" type="button" data-status-index="${idx}" title="${safeName}" aria-label="${safeName}"><span class="det-status-icon" aria-hidden="true">${glyph}</span></button>`;
   }).join("");
   const empty=rows?"":`<div class="det-empty-line">Sin estados activos.</div>`;
   return `<section class="det-status-section">
@@ -3031,7 +3036,7 @@ function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",s
       example:'Este texto es narrativo: no cambia reglas, stats ni efectos de juego.'
     });
   });
-  container.querySelectorAll('.guide-status-btn').forEach(btn=>btn.addEventListener('click',ev=>{
+  container.querySelectorAll('.guide-status-btn, .det-status-row').forEach(btn=>btn.addEventListener('click',ev=>{
     ev.stopPropagation();
     const idx=Number(btn.dataset.statusIndex||0);
     const entry=statuses[idx];
