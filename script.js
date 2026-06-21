@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_render_leader_record_fix_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_status_icons_compact_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1254,16 +1254,30 @@ function renderDetAbilitiesHtml(entity,effectText=""){
     }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }
+
+function getStatusGlyphFromName(name=""){
+  const s=String(name||"").toLowerCase();
+  if(s.includes("sang"))return "🩸";
+  if(s.includes("veneno"))return "☠";
+  if(s.includes("quem")||s.includes("ard"))return "🔥";
+  if(s.includes("par")||s.includes("atur")||s.includes("shock"))return "⚡";
+  if(s.includes("silencio"))return "🔇";
+  if(s.includes("mald")||s.includes("curse"))return "✠";
+  if(s.includes("guard")||s.includes("defens"))return "🛡";
+  if(s.includes("debuff")||s.includes("pierde")||s.includes("miedo"))return "▼";
+  if(s.includes("buff")||s.includes("gana"))return "▲";
+  return "◆";
+}
+
 function renderDetStatusesHtml(activeEntries=[],card=null){
   const entries=Array.isArray(activeEntries)?activeEntries:[];
   const historyHtml=card&&card.leader?renderDetLeaderRecordHtml(card):"";
   const rows=entries.map((entry,idx)=>{
     const safeName=escapeHtml(entry.name||entry.label||"Estado activo");
-    const safeDesc=escapeHtml(entry.desc||entry.description||entry.text||"");
-    const icon=entry.icon||entry.glyph||"◆";
-    return `<button class="det-status-row" type="button" data-status-index="${idx}">
+    const icon=entry.icon||entry.glyph||getStatusGlyphFromName(safeName)||"◆";
+    return `<button class="det-status-row det-status-icon-row" type="button" data-status-index="${idx}" title="${safeName}">
       <span class="det-status-icon">${icon}</span>
-      <span class="det-status-copy"><strong>${safeName}</strong>${safeDesc?`<small>${safeDesc}</small>`:""}</span>
+      <span class="det-status-copy"><strong>${safeName}</strong></span>
     </button>`;
   }).join("");
   const empty=rows?"":`<div class="det-empty-line">Sin estados activos.</div>`;

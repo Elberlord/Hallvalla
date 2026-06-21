@@ -9998,3 +9998,98 @@
   overflow:auto!important;
   padding:0 8px 8px!important;
 }
+
+
+/* === v41 Compact active status rows: icon + short label only === */
+
+/* Status list compact: no long paragraphs inside DET. */
+#inspector.show #inspectText .det-status-list,
+#inspector:not(.hidden) #inspectText .det-status-list,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:wrap!important;
+  align-content:flex-start!important;
+  gap:7px!important;
+  overflow:auto!important;
+  padding:5px 8px 8px!important;
+}
+
+/* Each active state is a compact clickable pill. */
+#inspector.show #inspectText .det-status-row.det-status-icon-row,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row{
+  width:auto!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:4px 10px 4px 6px!important;
+  display:inline-flex!important;
+  flex:0 0 auto!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  border-radius:999px!important;
+  background:linear-gradient(180deg,rgba(29,23,13,.98),rgba(8,8,7,.98))!important;
+  border:1px solid rgba(238,190,91,.34)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,229,142,.05),0 0 12px rgba(230,177,70,.10)!important;
+  color:#ffe8a4!important;
+  cursor:pointer!important;
+  overflow:hidden!important;
+}
+
+/* Icon is the visual protagonist. */
+#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-icon,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-icon,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-icon{
+  width:26px!important;
+  min-width:26px!important;
+  height:26px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+  font-size:16px!important;
+  line-height:1!important;
+  background:radial-gradient(circle,rgba(255,222,118,.16),rgba(0,0,0,.25))!important;
+  border:1px solid rgba(238,190,91,.20)!important;
+  filter:drop-shadow(0 0 6px rgba(255,215,95,.28))!important;
+}
+
+/* Only label, no description. */
+#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-copy,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-copy,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy{
+  display:inline-flex!important;
+  min-width:0!important;
+  max-width:170px!important;
+  overflow:hidden!important;
+}
+#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-copy strong,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-copy strong,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy strong{
+  font-size:10.5px!important;
+  line-height:1!important;
+  color:#ffe8a4!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-copy small,
+#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-copy small,
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy small{
+  display:none!important;
+}
+
+/* Active status box can be shorter now. */
+#inspector.show #inspectText,
+#inspector:not(.hidden) #inspectText{
+  grid-template-rows:minmax(0,1fr) 150px 56px!important;
+}
+#inspector.show #inspectText > .det-status-section,
+#inspector:not(.hidden) #inspectText > .det-status-section{
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+}
