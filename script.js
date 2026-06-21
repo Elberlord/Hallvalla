@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_det_real_rarity_status_fix_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_status_unblock_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";

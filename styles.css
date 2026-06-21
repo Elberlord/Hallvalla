@@ -9665,3 +9665,136 @@
     overflow:visible!important;
   }
 }
+
+
+/* === v38 Status unblock: leader DEF/statuses visible, no blocked status row === */
+
+/* Give the right lower area enough room and keep it above the footer. */
+#inspector.show #inspectText,
+#inspector:not(.hidden) #inspectText{
+  grid-template-rows:minmax(0,1fr) 154px 56px!important;
+}
+
+/* Status section is one clean container, not an overflowing stack. */
+#inspector.show #inspectText > .det-status-section,
+#inspector:not(.hidden) #inspectText > .det-status-section{
+  grid-area:states!important;
+  height:154px!important;
+  min-height:154px!important;
+  max-height:154px!important;
+  overflow:hidden!important;
+  margin:0!important;
+  padding:0!important;
+  align-self:stretch!important;
+  position:relative!important;
+  z-index:4!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+
+/* Title only occupies its own small header. */
+#inspector.show #inspectText > .det-status-section > .det-section-title,
+#inspector:not(.hidden) #inspectText > .det-status-section > .det-section-title{
+  flex:0 0 30px!important;
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  margin:0!important;
+  padding:7px 10px!important;
+  line-height:14px!important;
+  box-sizing:border-box!important;
+  position:static!important;
+  z-index:1!important;
+}
+
+/* Leader history stays inside the same status box and leaves space for buffs. */
+#inspector.show #inspectText > .det-status-section .det-leader-history,
+#inspector:not(.hidden) #inspectText > .det-status-section .det-leader-history{
+  flex:0 0 auto!important;
+  margin:7px 8px 4px!important;
+  padding:6px 8px!important;
+  max-height:58px!important;
+  min-height:50px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  position:static!important;
+}
+
+/* Actual active statuses use remaining space and are visible/clickable. */
+#inspector.show #inspectText > .det-status-section .det-status-list,
+#inspector:not(.hidden) #inspectText > .det-status-section .det-status-list{
+  flex:1 1 auto!important;
+  min-height:42px!important;
+  max-height:none!important;
+  overflow:auto!important;
+  margin:0!important;
+  padding:4px 8px 7px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  position:relative!important;
+  z-index:3!important;
+}
+
+/* Status rows must not be dimmed or hidden under the footer. */
+#inspector.show #inspectText > .det-status-section .det-status-row,
+#inspector:not(.hidden) #inspectText > .det-status-section .det-status-row{
+  min-height:28px!important;
+  height:auto!important;
+  opacity:1!important;
+  visibility:visible!important;
+  transform:none!important;
+  filter:none!important;
+  margin:0!important;
+  padding:5px 8px!important;
+  border-radius:10px!important;
+  position:relative!important;
+  z-index:5!important;
+  background:linear-gradient(180deg,rgba(26,22,15,.96),rgba(9,9,8,.98))!important;
+}
+
+/* If status renderer produced a second title, hide the duplicate only, not the status rows. */
+#inspector.show #inspectText > .det-status-section .det-section-title ~ .det-section-title,
+#inspector:not(.hidden) #inspectText > .det-status-section .det-section-title ~ .det-section-title{
+  display:none!important;
+}
+
+/* Footer must stay below states and never cover them. */
+#inspector.show #inspectText > .detail-guide-row,
+#inspector:not(.hidden) #inspectText > .detail-guide-row{
+  grid-area:buttons!important;
+  position:static!important;
+  z-index:2!important;
+  height:56px!important;
+  min-height:56px!important;
+  align-self:stretch!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+
+/* Effects and tactical stay contained so they don't steal status/footer space. */
+#inspector.show #inspectText > .det-section-block:first-child,
+#inspector:not(.hidden) #inspectText > .det-section-block:first-child,
+#inspector.show #inspectText > .det-tactical-card,
+#inspector:not(.hidden) #inspectText > .det-tactical-card{
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+/* Hand modal gets same status safety, without changing combat logic. */
+#cardInspectModal:not(.hidden) #cardInspectText{
+  grid-template-rows:minmax(0,1fr) 136px 56px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section > .det-section-title{
+  flex:0 0 30px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section .det-status-list{
+  flex:1 1 auto!important;
+  overflow:auto!important;
+  padding:6px 8px!important;
+}
