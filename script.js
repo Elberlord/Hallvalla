@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_rarity_colors_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_det_real_rarity_status_fix_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -2959,6 +2959,7 @@ function openStatGuideModal(label=""){
   $("statGuideShort").textContent=data.short;
   $("statGuideFormula").textContent=data.formula;
   $("statGuideExample").textContent=data.example;
+  applyRarityClassToElement(modal,card);
   modal.classList.remove("hidden");
 }
 function bindStatGuideClicks(container){
@@ -4920,6 +4921,7 @@ function showUnit(u){
   const inspectTextEl=$("inspectText");
   inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:true,effectLabel:'Ver efecto'})}`;
   bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
+  applyRarityClassToElement(inspector,u);
   inspector.classList.add("show");
 }
 
@@ -5643,6 +5645,15 @@ function getCardVisualClass(card){
   if(card?.trap)parts.push("card-type-trap");
   return [...new Set(parts)].join(" ");
 }
+
+function applyRarityClassToElement(el,card){
+  if(!el)return;
+  const classes=["card-rarity-basic","card-rarity-improved","card-rarity-heroic","card-rarity-epic","card-rarity-glorious","card-rarity-mythic","card-rarity-legendary","card-rarity-demigod"];
+  el.classList.remove(...classes);
+  const visual=String(getCardVisualClass(card)||"");
+  classes.forEach(cls=>{if(visual.includes(cls))el.classList.add(cls);});
+}
+
 function cardTypeLabel(card){
   if(card?.type==="unit")return card.special?"Leyenda":"Unidad";
   if(card?.type==="trap")return "Trampa";

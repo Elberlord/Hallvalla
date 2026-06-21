@@ -9391,3 +9391,277 @@
   border-color:rgba(255,230,109,.80)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 36px rgba(255,230,109,.25)!important;
 }
+
+
+/* === v37 DET real fix: rarity classes, hand modal, active states === */
+
+/* Rarity chips and modal border must respond when class is placed on modal root. */
+#inspector.card-rarity-basic .inspect-card,
+#cardInspectModal.card-rarity-basic .card-inspect-card{
+  border-color:rgba(25,25,28,.90)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.82),0 0 26px rgba(25,25,28,.55)!important;
+}
+#inspector.card-rarity-basic .inspect-title,
+#cardInspectModal.card-rarity-basic .card-inspect-title{
+  text-shadow:0 0 16px rgba(30,30,34,.85)!important;
+}
+#inspector.card-rarity-basic .det-head-chip,
+#cardInspectModal.card-rarity-basic .det-head-chip,
+#cardInspectModal.card-rarity-basic .card-inspect-pill,
+#inspector.card-rarity-basic .inspect-pill{
+  border-color:rgba(45,45,50,.85)!important;
+  box-shadow:0 0 12px rgba(35,35,38,.45)!important;
+}
+
+#inspector.card-rarity-epic .inspect-card,
+#cardInspectModal.card-rarity-epic .card-inspect-card{
+  border-color:rgba(216,221,230,.86)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 32px rgba(216,221,230,.30)!important;
+}
+#inspector.card-rarity-glorious .inspect-card,
+#cardInspectModal.card-rarity-glorious .card-inspect-card{
+  border-color:rgba(68,255,138,.86)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 34px rgba(68,255,138,.30)!important;
+}
+#inspector.card-rarity-mythic .inspect-card,
+#cardInspectModal.card-rarity-mythic .card-inspect-card{
+  border-color:rgba(85,199,255,.88)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 36px rgba(85,199,255,.34)!important;
+}
+#inspector.card-rarity-legendary .inspect-card,
+#cardInspectModal.card-rarity-legendary .card-inspect-card{
+  border-color:rgba(216,106,255,.90)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 38px rgba(216,106,255,.36)!important;
+}
+#inspector.card-rarity-demigod .inspect-card,
+#cardInspectModal.card-rarity-demigod .card-inspect-card{
+  border-color:rgba(255,230,109,.94)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 40px rgba(255,230,109,.38)!important;
+}
+
+/* CARD-IN-HAND MODAL: force real layout even if older CSS wins */
+#cardInspectModal:not(.hidden){
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:8px!important;
+  overflow:hidden!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-card{
+  width:min(1110px,96vw)!important;
+  height:min(558px,82vh)!important;
+  max-height:min(558px,82vh)!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:300px minmax(0,1fr)!important;
+  grid-template-rows:auto 220px minmax(0,1fr) 52px!important;
+  grid-template-areas:
+    "visual head"
+    "visual text"
+    "stats text"
+    "actions text"!important;
+  gap:10px 14px!important;
+  padding:14px 18px 12px 14px!important;
+  box-sizing:border-box!important;
+}
+
+/* Some versions use direct children without class names. These IDs are decisive. */
+#cardInspectModal:not(.hidden) #cardInspectVisual{
+  grid-area:visual!important;
+  width:100%!important;
+  height:220px!important;
+  min-height:220px!important;
+  max-height:220px!important;
+  overflow:hidden!important;
+  margin:0!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats{
+  grid-area:stats!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  grid-auto-rows:37px!important;
+  align-content:start!important;
+  gap:7px!important;
+  height:100%!important;
+  max-height:none!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  margin:0!important;
+  padding:0!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-actions,
+#cardInspectModal:not(.hidden) #cardInspectActions{
+  grid-area:actions!important;
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  height:52px!important;
+  min-height:52px!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  margin:0!important;
+  padding:0!important;
+  align-self:end!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-actions .btn,
+#cardInspectModal:not(.hidden) #cardInspectActions .btn{
+  height:50px!important;
+  min-height:50px!important;
+  margin:0!important;
+}
+
+/* If stats are too many, show without being covered. */
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-row,
+#cardInspectModal:not(.hidden) #cardInspectStats .card-inspect-stat{
+  height:37px!important;
+  min-height:37px!important;
+  padding:3px 8px!important;
+  box-sizing:border-box!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-icon-btn{
+  width:31px!important;
+  height:31px!important;
+  min-width:31px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-img{
+  width:28px!important;
+  height:28px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats strong{
+  font-size:15px!important;
+}
+
+/* Right side of hand modal */
+#cardInspectModal:not(.hidden) #cardInspectText{
+  grid-area:text!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 408px!important;
+  grid-template-rows:minmax(0,1fr) 136px 56px!important;
+  grid-template-areas:
+    "effects tactical"
+    "effects states"
+    "buttons buttons"!important;
+  gap:9px!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  padding:0!important;
+  margin:0!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-section-block:first-child{
+  grid-area:effects!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
+  grid-area:tactical!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
+  grid-area:states!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  margin:0!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .detail-guide-row{
+  grid-area:buttons!important;
+  position:static!important;
+  inset:auto!important;
+  height:56px!important;
+  min-height:56px!important;
+  margin:0!important;
+  padding:8px 10px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-quote-block{
+  display:none!important;
+}
+
+/* Hand modal: avoid huge tactical explanation in the card view. The icon modal explains it. */
+#cardInspectModal:not(.hidden) .det-tactical-card .det-mini-note{
+  display:none!important;
+}
+
+/* ACTIVE STATUS BLOCK: never cut the actual status rows */
+#inspector:not(.hidden) #inspectText > .det-status-section,
+#inspector.show #inspectText > .det-status-section{
+  min-height:128px!important;
+  height:100%!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#inspector:not(.hidden) #inspectText .det-status-section .det-section-title,
+#inspector.show #inspectText .det-status-section .det-section-title{
+  min-height:29px!important;
+  height:29px!important;
+  line-height:15px!important;
+  padding:7px 10px!important;
+  box-sizing:border-box!important;
+}
+#inspector:not(.hidden) #inspectText .det-status-list,
+#inspector.show #inspectText .det-status-list{
+  min-height:48px!important;
+  max-height:84px!important;
+  overflow:auto!important;
+  padding:6px 9px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+}
+#inspector:not(.hidden) #inspectText .det-status-row,
+#inspector.show #inspectText .det-status-row{
+  min-height:28px!important;
+  height:auto!important;
+  padding:5px 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+#inspector:not(.hidden) #inspectText .det-empty-line,
+#inspector.show #inspectText .det-empty-line{
+  min-height:28px!important;
+  padding:7px 9px!important;
+  overflow:visible!important;
+}
+
+/* If a leader has historial + active state, stack cleanly. */
+#inspector:not(.hidden) #inspectText .det-leader-history,
+#inspector.show #inspectText .det-leader-history{
+  margin:7px 8px 5px!important;
+  padding:7px 9px!important;
+  max-height:62px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+
+/* Remove any accidental duplicate-looking title bars inside status area caused by grid compression */
+#inspector:not(.hidden) #inspectText .det-status-section > .det-section-title + .det-section-title,
+#inspector.show #inspectText .det-status-section > .det-section-title + .det-section-title{
+  display:none!important;
+}
+
+@media(max-width:920px){
+  #cardInspectModal:not(.hidden) .card-inspect-card{
+    height:min(92vh,820px)!important;
+    overflow:auto!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto 220px auto 56px auto!important;
+    grid-template-areas:
+      "head"
+      "visual"
+      "stats"
+      "actions"
+      "text"!important;
+  }
+  #cardInspectModal:not(.hidden) #cardInspectText{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:visible!important;
+  }
+}
