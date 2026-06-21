@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_home_balance_pass_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HW_home_compact_pass_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";

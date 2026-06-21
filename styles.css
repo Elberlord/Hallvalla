@@ -11191,3 +11191,163 @@
     width:136px!important;
   }
 }
+
+
+/* === v47 HOME compact pass: remove logo header and recover space === */
+#mainMenu .asset-logo,
+#mainMenu .asset-logo-mark,
+#mainMenu .asset-logo-sub{
+  display:none!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  height:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+#mainMenu .asset-topbar{
+  top:10px!important;
+  left:14px!important;
+  right:14px!important;
+  height:82px!important;
+  max-height:82px!important;
+}
+#mainMenu .asset-profile{
+  width:min(450px,33vw)!important;
+  min-height:72px!important;
+  height:72px!important;
+  padding:7px 12px!important;
+}
+#mainMenu .asset-profile-img{
+  width:64px!important;
+  height:64px!important;
+}
+#mainMenu .asset-profile-name{
+  font-size:20px!important;
+  line-height:1!important;
+}
+#mainMenu .asset-profile-sub{
+  font-size:11px!important;
+  gap:8px!important;
+}
+
+#mainMenu .asset-resource-row{ gap:5px!important; }
+#mainMenu .asset-resource{
+  min-width:78px!important;
+  width:78px!important;
+  height:54px!important;
+  padding:4px 7px!important;
+  gap:5px!important;
+}
+#mainMenu .asset-resource img,
+#mainMenu .asset-small-icon img{
+  width:30px!important;
+  height:30px!important;
+}
+#mainMenu .asset-resource b{
+  font-size:15px!important;
+}
+#mainMenu .asset-small-icon{
+  width:54px!important;
+  min-width:54px!important;
+  height:54px!important;
+}
+
+#mainMenu .asset-main{
+  top:98px!important;
+  bottom:92px!important;
+  left:22px!important;
+  right:22px!important;
+  gap:26px!important;
+  grid-template-columns:minmax(360px,30vw) minmax(230px,1fr) minmax(360px,30vw)!important;
+}
+#mainMenu .asset-column{
+  gap:12px!important;
+}
+#mainMenu .image-button img{
+  height:88px!important;
+}
+#mainMenu .asset-center{
+  justify-content:center!important;
+  gap:10px!important;
+  padding-top:8px!important;
+}
+#mainMenu .play-image-button img{
+  width:min(272px,21vw)!important;
+  max-height:205px!important;
+}
+
+#mainMenu .asset-promo.daily-panel,
+#mainMenu .asset-promo.welcome-panel{
+  width:min(352px,26vw)!important;
+  height:64px!important;
+  bottom:14px!important;
+}
+#mainMenu .asset-promo.daily-panel{ left:22px!important; }
+#mainMenu .asset-promo.welcome-panel{ right:22px!important; }
+
+#mainMenu .asset-bottom{
+  bottom:10px!important;
+  max-width:410px!important;
+  gap:10px!important;
+}
+#mainMenu .bottom-asset-tab{
+  width:126px!important;
+  height:64px!important;
+}
+#mainMenu .bottom-asset-tab img{
+  width:126px!important;
+  height:64px!important;
+}
+
+@media (min-width:1280px) and (max-width:1440px){
+  #mainMenu .asset-profile{
+    width:min(430px,32vw)!important;
+    height:70px!important;
+    min-height:70px!important;
+  }
+  #mainMenu .asset-profile-name{ font-size:18px!important; }
+  #mainMenu .asset-profile-sub{ font-size:10px!important; }
+  #mainMenu .asset-resource{
+    width:74px!important;
+    min-width:74px!important;
+    height:52px!important;
+  }
+  #mainMenu .asset-small-icon{
+    width:50px!important;
+    min-width:50px!important;
+    height:52px!important;
+  }
+  #mainMenu .asset-main{
+    top:96px!important;
+    bottom:88px!important;
+    gap:22px!important;
+    grid-template-columns:minmax(350px,29vw) minmax(220px,1fr) minmax(350px,29vw)!important;
+  }
+  #mainMenu .image-button img{ height:84px!important; }
+  #mainMenu .asset-promo.daily-panel,
+  #mainMenu .asset-promo.welcome-panel{
+    width:340px!important;
+    height:62px!important;
+    bottom:12px!important;
+  }
+  #mainMenu .bottom-asset-tab,
+  #mainMenu .bottom-asset-tab img{
+    width:122px!important;
+    height:62px!important;
+  }
+  #mainMenu .play-image-button img{
+    width:264px!important;
+    max-height:198px!important;
+  }
+}
+
+@media (max-height:800px){
+  #mainMenu .asset-topbar{ height:78px!important; max-height:78px!important; }
+  #mainMenu .asset-main{ top:94px!important; bottom:86px!important; }
+  #mainMenu .image-button img{ height:82px!important; }
+  #mainMenu .asset-promo.daily-panel,
+  #mainMenu .asset-promo.welcome-panel{ height:60px!important; bottom:10px!important; }
+  #mainMenu .bottom-asset-tab,
+  #mainMenu .bottom-asset-tab img{ height:60px!important; width:120px!important; }
+}
