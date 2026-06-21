@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_class_review_leader_records_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_ui_overlap_fix_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
