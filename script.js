@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_status_structure_fix_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_render_leader_record_fix_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1256,7 +1256,7 @@ function renderDetAbilitiesHtml(entity,effectText=""){
 }
 function renderDetStatusesHtml(activeEntries=[],card=null){
   const entries=Array.isArray(activeEntries)?activeEntries:[];
-  const historyHtml=card&&card.leader?renderLeaderRecordHtml(card):"";
+  const historyHtml=card&&card.leader?renderDetLeaderRecordHtml(card):"";
   const rows=entries.map((entry,idx)=>{
     const safeName=escapeHtml(entry.name||entry.label||"Estado activo");
     const safeDesc=escapeHtml(entry.desc||entry.description||entry.text||"");
