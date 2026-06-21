@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_det_premium_base_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_fix_floatfx_syntax_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -3544,7 +3544,7 @@ async function attackUnit(a,d){
         : (guardLoss>0 ? makeFloatFxEvent("debuff", defenderUnitNow, guardLoss,{iconText:"🛡"}) : null))
     : (!hit.hit&&defenderStillAlive
         ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
-        : null);
+        : null));
   await updatePublic({units,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent});
   const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" ");
   if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
