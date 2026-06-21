@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_det_iconic_compact_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_det_real_icons_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1155,26 +1155,29 @@ function getEntityAbilitySections(entity,effectText=""){
 
 function getDetStatMeta(label=""){
   const key=normalizeStatKey(label);
-  if(key==="costo")return {icon:"◈",short:"Costo",title:"Costo"};
-  if(key==="at"||key==="ataque")return {icon:"⚔",short:"AT",title:"Ataque"};
-  if(key==="hp"||key==="vida")return {icon:"♥",short:"HP",title:"Vida"};
-  if(key==="gd"||key==="guardia")return {icon:"🛡",short:"GD",title:"Guardia"};
-  if(key==="dx"||key==="destreza")return {icon:"◎",short:"DX",title:"Destreza"};
-  if(key==="agi"||key==="agilidad")return {icon:"🪽",short:"AGI",title:"Agilidad"};
-  if(key==="mv"||key==="mov"||key==="movimiento")return {icon:"👢",short:"MV",title:"Movimiento"};
-  if(key==="rg"||key==="rango")return {icon:"🏹",short:"RG",title:"Rango"};
-  if(key==="daño")return {icon:"✹",short:"DMG",title:"Daño"};
-  if(key==="heal"||key==="curación"||key==="curacion")return {icon:"✚",short:"Heal",title:"Curación"};
-  return {icon:"✦",short:String(label||"STAT"),title:String(label||"Stat")};
+  const iconBase="assets/ui/det_icons/";
+  if(key==="costo")return {icon:`${iconBase}tactical.png`,short:"Costo",title:"Costo"};
+  if(key==="at"||key==="ataque")return {icon:`${iconBase}attack.png`,short:"AT",title:"Ataque"};
+  if(key==="hp"||key==="vida")return {icon:`${iconBase}hp.png`,short:"HP",title:"Vida"};
+  if(key==="gd"||key==="guardia")return {icon:`${iconBase}guard.png`,short:"GD",title:"Guardia"};
+  if(key==="dx"||key==="destreza")return {icon:`${iconBase}dexterity.png`,short:"DX",title:"Destreza"};
+  if(key==="agi"||key==="agilidad")return {icon:`${iconBase}agility.png`,short:"AGI",title:"Agilidad"};
+  if(key==="mv"||key==="mov"||key==="movimiento")return {icon:`${iconBase}movement.png`,short:"MV",title:"Movimiento"};
+  if(key==="rg"||key==="rango")return {icon:`${iconBase}range.png`,short:"RG",title:"Rango"};
+  if(key==="daño")return {icon:`${iconBase}attack.png`,short:"DMG",title:"Daño"};
+  if(key==="heal"||key==="curación"||key==="curacion")return {icon:`${iconBase}hp.png`,short:"Heal",title:"Curación"};
+  return {icon:`${iconBase}tactical.png`,short:String(label||"STAT"),title:String(label||"Stat")};
 }
 function renderDetStatButtons(stats,clsName){
   return stats.map(([l,v])=>{
     const meta=getDetStatMeta(l);
-    return `<button class="${clsName} stat-click det-stat-btn" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}">
-      <span class="det-stat-icon-wrap" data-stat="${escapeHtml(l)}" aria-hidden="true"><span class="det-stat-icon">${meta.icon}</span></span>
+    return `<div class="${clsName} det-stat-row" data-stat-row="${escapeHtml(l)}">
+      <button class="det-stat-icon-btn stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}" aria-label="${escapeHtml(meta.title)}">
+        <img class="det-stat-img" src="${escapeHtml(meta.icon)}" alt="${escapeHtml(meta.title)}">
+      </button>
       <span class="det-stat-key">${escapeHtml(meta.short)}</span>
       <strong>${escapeHtml(String(v))}</strong>
-    </button>`;
+    </div>`;
   }).join("");
 }
 function classifyDetAbility(section){
@@ -1187,13 +1190,14 @@ function classifyDetAbility(section){
   return "effect";
 }
 function getDetAbilityMeta(kind="effect"){
+  const iconBase="assets/ui/det_icons/";
   const map={
-    passive:{icon:"◉",label:"Pasivo"},
-    trigger:{icon:"✦",label:"Trigger"},
-    aura:{icon:"◌",label:"Aura"},
-    buff:{icon:"▲",label:"Buff"},
-    debuff:{icon:"▼",label:"Debuff"},
-    effect:{icon:"◆",label:"Efecto"}
+    passive:{icon:`${iconBase}passive.png`,glyph:"◉",label:"Pasivo"},
+    trigger:{icon:`${iconBase}trigger.png`,glyph:"✦",label:"Trigger"},
+    aura:{icon:`${iconBase}passive.png`,glyph:"◌",label:"Aura"},
+    buff:{icon:`${iconBase}passive.png`,glyph:"▲",label:"Buff"},
+    debuff:{icon:`${iconBase}trigger.png`,glyph:"▼",label:"Debuff"},
+    effect:{icon:`${iconBase}trigger.png`,glyph:"◆",label:"Efecto"}
   };
   return map[kind]||map.effect;
 }
@@ -1216,13 +1220,14 @@ function renderDetTacticalHtml(entity){
   const clsLabel=getWeaponClassLabel(entity);
   const wins=getWeaponAdvantageTargets(entity);
   const loses=getWeaponDisadvantageSources(entity);
+  const icon="assets/ui/det_icons/tactical.png";
   return `<div class="det-info-card det-tactical-card">
     <div class="det-section-title">Clase táctica</div>
-    <div class="det-info-row"><span>Arma</span><strong>${escapeHtml(getEntityWeaponText(entity))}</strong></div>
+    <div class="det-info-row det-info-row-weapon"><span class="det-inline-with-icon"><button class="det-inline-icon-btn guide-weapon-btn" type="button" aria-label="Clase táctica"><img class="det-inline-icon-img" src="${icon}" alt="Clase táctica"></button><span>Arma</span></span><strong>${escapeHtml(getEntityWeaponText(entity))}</strong></div>
     <div class="det-info-row"><span>Clase</span><strong>${escapeHtml(clsLabel)}</strong></div>
     <div class="det-info-row"><span>Ventaja contra</span><strong>${escapeHtml(wins.length?wins.join(", "):"ninguna")}</strong></div>
     <div class="det-info-row"><span>Desventaja contra</span><strong>${escapeHtml(loses.length?loses.join(", "):"ninguna")}</strong></div>
-    <div class="det-mini-note">Si esta unidad ataca a una clase sobre la que tiene ventaja, gana +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza durante ese combate.</div>
+    <div class="det-mini-note">Ventaja de armas activa: Espada vence a Lanza, Lanza vence a Caballería, Caballería vence a Arco y Arco vence a Espada / infantería. Si esta unidad ataca a una clase sobre la que tiene ventaja, gana +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza durante ese combate.</div>
   </div>`;
 }
 function renderDetAbilitiesHtml(entity,effectText=""){
@@ -1232,11 +1237,11 @@ function renderDetAbilitiesHtml(entity,effectText=""){
     <div class="det-ability-list">${sections.length?sections.map(sec=>{
       const kind=classifyDetAbility(sec);
       const meta=getDetAbilityMeta(kind);
-      return `<button class="det-ability-card guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}">
-        <div class="det-ability-top"><span class="det-ability-icon kind-${escapeHtml(kind)}" aria-hidden="true">${meta.icon}</span><span class="det-ability-kind">${escapeHtml(meta.label)}</span></div>
+      return `<div class="det-ability-card" data-ability-block="${escapeHtml(sec.title)}">
+        <div class="det-ability-top"><button class="det-ability-icon-btn guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="${escapeHtml(meta.label)}"><img class="det-ability-img kind-${escapeHtml(kind)}" src="${escapeHtml(meta.icon)}" alt="${escapeHtml(meta.label)}"></button><span class="det-ability-kind">${escapeHtml(meta.label)}</span></div>
         <div class="det-ability-name">${escapeHtml(sec.title)}</div>
         <div class="det-ability-text">${escapeHtml(sec.body)}</div>
-      </button>`;
+      </div>`;
     }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }
@@ -2882,16 +2887,14 @@ function detailStatGridHtml(stats){
   return `<div class="detail-stat-grid">${stats.map(([l,v])=>`<button class="detail-stat-chip stat-click" type="button" data-stat="${escapeHtml(l)}"><span>${escapeHtml(String(l))}</span><strong>${escapeHtml(String(v))}</strong></button>`).join("")}</div>`;
 }
 function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=true,showLore=false,effectLabel="Ver efecto"}={}){
-  const buttons=[];
-  if(showEffect)buttons.push(`<button class="detail-token-btn guide-effect-btn" type="button"><span class="det-btn-icon">◆</span><span>${escapeHtml(effectLabel)}</span></button>`);
-  if(showWeapon)buttons.push(`<button class="detail-token-btn guide-weapon-btn" type="button"><span class="det-btn-icon">⚔</span><span>Arma / ventaja</span></button>`);
-  if(showFormula)buttons.push(`<button class="detail-token-btn guide-formula-btn" type="button"><span class="det-btn-icon">◎</span><span>PREC / EVA</span></button>`);
-  if(showLore)buttons.push(`<button class="detail-token-btn guide-lore-btn" type="button"><span class="det-btn-icon">📖</span><span>Conóceme</span></button>`);
-  return buttons.length?`<div class="detail-guide-row">${buttons.join("")}</div>`:"";
+  const chips=[];
+  if(showFormula)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-formula-btn" type="button" aria-label="PREC / EVA"><img class="det-btn-img" src="assets/ui/det_icons/dexterity.png" alt="PREC / EVA"></button><span>PREC / EVA</span></div>`);
+  if(showLore)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-lore-btn" type="button" aria-label="Conóceme"><img class="det-btn-img" src="assets/ui/det_icons/lore.png" alt="Conóceme"></button><span>Conóceme</span></div>`);
+  return chips.length?`<div class="detail-guide-row">${chips.join("")}</div>`:"";
 }
 function detailStatusButtonsHtml(entries=[]){
   if(!entries.length)return "";
-  return `<div class="detail-guide-block"><div class="detail-guide-caption">Estados activos</div><div class="detail-chip-row">${entries.map((entry,idx)=>`<button class="detail-status-chip guide-status-btn" type="button" data-status-index="${idx}">${getStatusEntryIconHtml(entry)}<span>${escapeHtml(entry.name||entry.label||"Estado")}</span></button>`).join("")}</div></div>`;
+  return `<div class="detail-guide-block"><div class="detail-guide-caption">Estados activos</div><div class="detail-chip-row">${entries.map((entry,idx)=>`<div class="detail-status-chip"><button class="guide-status-btn det-status-icon-btn" type="button" data-status-index="${idx}" aria-label="${escapeHtml(entry.name||entry.label||"Estado")}">${getStatusEntryIconHtml(entry)}</button><span>${escapeHtml(entry.name||entry.label||"Estado")}</span></div>`).join("")}</div></div>`;
 }
 function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",statuses=[]}={}){
   if(!container)return;
