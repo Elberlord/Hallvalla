@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_real_selector_fix_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_det_leader_layout_clean_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -2512,7 +2512,76 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   enterGame(code,1);
 }
 
-function enterGame(code,player){gameId=code;myPlayer=player;shownBattleResultKey="";aiTurnLock=false;lastAiTurnKey="";lastBattleFxKey="";lastDemigodSummonKey="";nearDeathSoundPlayedKeys=new Set();clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden");$("onlineLobby").classList.add("hidden");$("mainMenu").classList.add("hidden");$("gameShell").classList.remove("hidden");stopMusic(true);if(unsubPub)unsubPub();if(unsubPriv)unsubPriv();unsubPub=onValue(ref(db,`games/${code}/public`),snap=>{const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=snap.val();syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>{privateState=snap.val();render();maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI()});aiWatchdogTimer=setInterval(()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI()},1800)}
+let lastFirebaseListenerErrorKey="";
+function handleBattleListenerError(label,e){
+  const key=`${label}:${e?.name||"Error"}:${e?.message||String(e||"")}`;
+  if(lastFirebaseListenerErrorKey!==key){
+    lastFirebaseListenerErrorKey=key;
+    console.error(`[HallValla] Error controlado en listener ${label}:`,e);
+  }
+  setHint("Hubo un tropiezo cargando el duelo. Recarga la página si el tablero no responde.");
+}
+function safeBattleTick(label,fn){
+  try{fn();}
+  catch(e){handleBattleListenerError(label,e);}
+}
+function enterGame(code,player){
+  gameId=code;
+  myPlayer=player;
+  shownBattleResultKey="";
+  aiTurnLock=false;
+  lastAiTurnKey="";
+  lastBattleFxKey="";
+  lastDemigodSummonKey="";
+  lastFirebaseListenerErrorKey="";
+  nearDeathSoundPlayedKeys=new Set();
+  clearBattleFxLayer();
+  hideDemigodSummonPresentation();
+  if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
+  const resultPanel=$("adventureResultPanel");
+  if(resultPanel)resultPanel.classList.add("hidden");
+  $("onlineLobby")?.classList.add("hidden");
+  $("mainMenu")?.classList.add("hidden");
+  $("gameShell")?.classList.remove("hidden");
+  stopMusic(true);
+  if(unsubPub)unsubPub();
+  if(unsubPriv)unsubPriv();
+  unsubPub=onValue(ref(db,`games/${code}/public`),snap=>safeBattleTick("public",()=>{
+    const val=snap.val();
+    if(!val){
+      publicState=null;
+      setHint("El duelo no existe o fue borrado de Firebase.");
+      return;
+    }
+    const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
+    publicState=val;
+    syncBattleMusic();
+    render();
+    maybePlayBattleFx(prevPublic,publicState);
+    maybeShowBattleResult();
+    maybeStartTurn();
+    maybeTriggerAdventureAI();
+  }),e=>handleBattleListenerError("public:onValue",e));
+  unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>safeBattleTick("private",()=>{
+    const val=snap.val();
+    if(!val){
+      privateState=null;
+      render();
+      setHint("Esperando datos privados del jugador...");
+      return;
+    }
+    privateState=val;
+    render();
+    maybeShowBattleResult();
+    maybeStartTurn();
+    maybeTriggerAdventureAI();
+  }),e=>handleBattleListenerError("private:onValue",e));
+  aiWatchdogTimer=setInterval(()=>{
+    safeBattleTick("aiWatchdog",()=>{
+      if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();
+    });
+  },1800);
+}
 function maybeTriggerAdventureAI(){
   if(!gameId||!publicState||publicState.mode!=="adventure"||publicState.currentPlayer!==2||isBattleEnded())return;
   const key=`${gameId}:${publicState.turnKey||""}:${publicState.turn||0}`;
@@ -2522,8 +2591,8 @@ function maybeTriggerAdventureAI(){
   setTimeout(async()=>{
     try{await adventureEnemyTurn();}
     catch(e){
-      console.error("[HallValla] Error en turno de IA:",e);
-      lastAiTurnKey="";
+      handleBattleListenerError("turno IA",e);
+      lastAiTurnKey=key;
       setHint("La IA encontró un tropiezo. Recuperando el turno automáticamente para J1.");
       try{
         const nextTurn=(publicState?.turn||1)+1;
