@@ -139,54 +139,89 @@
 
 
 <div id="leaderSelectOverlay" class="leader-select-overlay hidden">
-  <div class="leader-select-card">
+  <div class="leader-select-card leader-select-card-v54">
+    <button id="leaderSelectCloseBtn" class="leader-select-x" type="button" aria-label="Cerrar">×</button>
     <h1 class="leader-select-title">Elige tu líder</h1>
-    <p class="leader-select-sub">Esta elección se guarda en Firebase para tu perfil. Define el icono de tu líder y el primer estilo de juego de HallValla.</p>
-    <div class="leader-choice-grid">
-      <button class="leader-choice" type="button" data-leader-choice="warrior">
+    <p class="leader-select-sub">El líder define tu estilo de juego. Los detalles explican niveles, tiers y habilidad de nivel 5.</p>
+    <div class="leader-choice-grid leader-choice-grid-v54">
+      <article class="leader-choice" data-leader-card="warrior">
         <img src="assets/leaders/leader_warrior.webp" alt="Guerrero">
         <h3>Guerrero</h3>
-        <p>Solo tu <b>infantería pesada</b> recibe <b>+2 GUARDIA</b> y <b>+2 VIDA</b>.</p>
-        <span class="leader-pill">Muro frontal</span>
-      </button>
-      <button class="leader-choice" type="button" data-leader-choice="archer">
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="warrior">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="warrior">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="archer">
         <img src="assets/leaders/leader_archer.webp" alt="Arquero">
         <h3>Arquero</h3>
-        <p>Solo tus <b>arqueras</b> reciben <b>+1 ATAQUE</b>, <b>+3 DESTREZA</b> y <b>+1 AGILIDAD</b>.</p>
-        <span class="leader-pill">Presión precisa</span>
-      </button>
-      <button class="leader-choice" type="button" data-leader-choice="mage">
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="archer">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="archer">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="mage">
         <img src="assets/leaders/leader_mage.webp" alt="Hechicero">
         <h3>Hechicero</h3>
-        <p>Solo tus <b>magias</b> cuestan <b>-2 Honor</b> y sus efectos numéricos reciben <b>+3</b>.</p>
-        <span class="leader-pill">Poder arcano</span>
-      </button>
-      <button class="leader-choice" type="button" data-leader-choice="axe">
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="mage">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="mage">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="axe">
         <img src="assets/leaders/leader_axe.webp" alt="Caudillo del Hacha">
         <h3>Caudillo del Hacha</h3>
-        <p>Tus <b>hachas</b> reciben AT/DX. Si un berserker rompe toda la Guardia enemiga, activa <b>Grito de Guerra</b>.</p>
-        <span class="leader-pill">Ruptura brutal</span>
-      </button>
-      <button class="leader-choice" type="button" data-leader-choice="cavalry">
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="axe">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="axe">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="cavalry">
         <img src="assets/leaders/leader_cavalry.webp" alt="Señor de la Carga">
         <h3>Señor de la Carga</h3>
-        <p>Tu <b>caballería ligera</b> gana MOV/AGI. Al nivel 5 puede convocar hasta <b>2 caballerías</b> junto a él.</p>
-        <span class="leader-pill">Movimiento total</span>
-      </button>
-      <button class="leader-choice" type="button" data-leader-choice="assassin">
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="cavalry">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="cavalry">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="assassin">
         <img src="assets/leaders/leader_assassin.webp" alt="Maestro de Sombras">
         <h3>Maestro de Sombras</h3>
-        <p>Tus <b>asesinos</b> ganan AGI/DX. Al nivel 5, cuando un asesino mata, aplica Sangrado a todos los enemigos.</p>
-        <span class="leader-pill">Ejecución sombría</span>
-      </button>
-      <button class="leader-choice" type="button" data-leader-choice="beastmaster">
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="assassin">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="assassin">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="beastmaster">
         <img src="assets/leaders/leader_beastmaster.webp" alt="Señor de las Bestias">
         <h3>Señor de las Bestias</h3>
-        <p>Usa <b>bestias</b> y <b>trampas de cacería</b>. Sus bestias aliadas ignoran sus trampas y el Nv.5 prepara el terreno.</p>
-        <span class="leader-pill">Cacería salvaje</span>
-      </button>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="beastmaster">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="beastmaster">Seleccionar</button>
+        </div>
+      </article>
     </div>
     <div id="leaderCurrentBadge" class="leader-current-badge"></div>
+  </div>
+</div>
+
+<div id="leaderDetailModal" class="leader-info-modal hidden" aria-hidden="true">
+  <div class="leader-info-card">
+    <button id="leaderDetailCloseBtn" class="leader-info-x" type="button" aria-label="Cerrar">×</button>
+    <div id="leaderDetailBody"></div>
+  </div>
+</div>
+
+<div id="leaderAbilityModal" class="leader-info-modal hidden" aria-hidden="true">
+  <div class="leader-info-card leader-ability-card">
+    <button id="leaderAbilityCloseBtn" class="leader-info-x" type="button" aria-label="Cerrar">×</button>
+    <div id="leaderAbilityBody"></div>
   </div>
 </div>
 

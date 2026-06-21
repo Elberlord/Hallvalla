@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_counter_guard_status_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HW_leader_select_modals_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -210,7 +210,7 @@ function getLeaderProgressText(type,level,abilityKey=""){
   if(type==="axe"){const b=LEADER_BUFF_TABLE.axe[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: hachas +${b.atk} AT/+${b.dex} DX · Grito de Guerra: al romper toda la Guardia enemiga, aliados +1 AT hasta fin de turno${abilityLine}`;}
   if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería ligera +${b.mov||0} MOV/+${b.agi||0} AGI${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
   if(type==="assassin"){const b=LEADER_BUFF_TABLE.assassin[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: asesinos +${b.agi||0} AGI/+${b.dex||0} DX${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
-  if(type==="beastmaster"){return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Cacería: las trampas aliadas no afectan Bestias aliadas${abilityLine}`;}
+  if(type==="beastmaster"){const b=LEADER_BUFF_TABLE.beastmaster[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: bestias +${b.atk||0} AT/+${b.agi||0} AGI${abilityLine}`;}
   const b=LEADER_BUFF_TABLE.mage[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: magias -${b.costReduction} costo/+${b.effectBonus} efecto${abilityLine}`;
 }
 function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
@@ -6659,14 +6659,175 @@ function addPlayerXp(amount){
 }
 
 renderSelectedLeaderBadge();
-document.querySelectorAll("[data-leader-choice]").forEach(btn=>{
-  btn.addEventListener("click",async()=>{
+
+const LEADER_DETAIL_META={
+  warrior:{
+    target:"Infantería pesada",
+    stats:"AT 3 · GD 4 · RG 1",
+    tiers:[
+      "Tier 1 (niveles 1–3): +2 VIDA / +2 GUARDIA",
+      "Tier 2 (niveles 4–6): +3 VIDA / +3 GUARDIA",
+      "Tier 3 (niveles 7–8): +4 VIDA / +4 GUARDIA",
+      "Tier 4 (nivel 9): +5 VIDA / +5 GUARDIA"
+    ],
+    abilityName:"Armadura bendita",
+    ability:"Desde nivel 5, la primera vez que el Guerrero fuera a recibir daño fatal, queda en 1 de vida y no puede perder vida durante el resto de ese turno."
+  },
+  archer:{
+    target:"Arqueras",
+    stats:"AT 3 · GD 2 · RG 2",
+    tiers:[
+      "Tier 1 (niveles 1–3): +1 AT / +3 DX / +1 AGI",
+      "Tier 2 (niveles 4–6): +2 AT / +4 DX / +1 AGI",
+      "Tier 3 (niveles 7–8): +2 AT / +5 DX / +2 AGI",
+      "Tier 4 (nivel 9): +3 AT / +6 DX / +2 AGI"
+    ],
+    abilityName:"Lluvia de flechas",
+    ability:"Desde nivel 5, puede usar EFFECT hasta 3 veces por duelo y solo 1 vez por turno para hacer 2 de daño directo a todas las unidades enemigas."
+  },
+  mage:{
+    target:"Magias",
+    stats:"AT 2 · GD 1 · RG 3",
+    tiers:[
+      "Tier 1 (niveles 1–3): -2 costo / +3 efecto",
+      "Tier 2 (niveles 4–6): -2 costo / +4 efecto",
+      "Tier 3 (niveles 7–8): -3 costo / +5 efecto",
+      "Tier 4 (nivel 9): -3 costo / +6 efecto"
+    ],
+    abilityName:"Descarga arcana",
+    ability:"Desde nivel 5, una vez por turno puede usar EFFECT para hacer 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats."
+  },
+  axe:{
+    target:"Unidades de hacha / berserkers",
+    stats:"AT 4 · GD 3 · RG 1",
+    tiers:[
+      "Tier 1 (niveles 1–3): +1 AT / +1 DX",
+      "Tier 2 (niveles 4–6): +2 AT / +1 DX",
+      "Tier 3 (niveles 7–8): +2 AT / +2 DX",
+      "Tier 4 (nivel 9): +3 AT / +2 DX"
+    ],
+    abilityName:"Victoria sangrienta",
+    ability:"Desde nivel 5, cada vez que un berserker aliado destruye una unidad enemiga, todos tus aliados vivos recuperan +1 vida actual sin superar su máximo."
+  },
+  cavalry:{
+    target:"Caballería ligera",
+    stats:"AT 3 · GD 3 · RG 1",
+    tiers:[
+      "Tier 1 (niveles 1–3): +1 MOV / +1 AGI",
+      "Tier 2 (niveles 4–6): +1 MOV / +2 AGI",
+      "Tier 3 (niveles 7–8): +2 MOV / +2 AGI",
+      "Tier 4 (nivel 9): +2 MOV / +3 AGI / +1 AT"
+    ],
+    abilityName:"Llamado de la carga",
+    ability:"Desde nivel 5, puede usar EFFECT para convocar hasta 2 Caballerías Ligeras aliadas en casillas libres adyacentes al líder."
+  },
+  assassin:{
+    target:"Asesinos",
+    stats:"AT 2 · GD 1 · RG 1",
+    tiers:[
+      "Tier 1 (niveles 1–3): +2 AGI / +1 DX",
+      "Tier 2 (niveles 4–6): +3 AGI / +1 DX",
+      "Tier 3 (niveles 7–8): +4 AGI / +2 DX",
+      "Tier 4 (nivel 9): +5 AGI / +2 DX / +1 AT"
+    ],
+    abilityName:"Niebla de sangre",
+    ability:"Desde nivel 5, los asesinos aliados ignoran Guardia al atacar. Además, cuando un asesino aliado debería gastar Precisión o Evasión por la fórmula, solo gasta la mitad redondeada hacia arriba. Ejemplo: si debía gastar 8 EVA, gasta 4; si tenía 10, queda con 6."
+  },
+  beastmaster:{
+    target:"Bestias aliadas",
+    stats:"AT 2 · GD 2 · RG 1",
+    tiers:[
+      "Tier 1 (niveles 1–3): +1 AT / +1 AGI",
+      "Tier 2 (niveles 4–6): +2 AT / +1 AGI",
+      "Tier 3 (niveles 7–8): +3 AT / +2 AGI",
+      "Tier 4 (nivel 9): +4 AT / +2 AGI"
+    ],
+    abilityName:"Veneno de la Manada",
+    ability:"Desde nivel 5, todas las unidades aliadas causan Veneno cuando hacen daño real a HP, incluso en contrataque si atraviesan Guardia. El veneno dura 5 turnos y se duplica cada tick: 1 → 2 → 4 → 8 → 16."
+  }
+};
+function leaderTierExplanationHtml(meta){
+  return `<div class="leader-tier-list">${meta.tiers.map(t=>`<div class="leader-tier-row">${escapeHtml(t)}</div>`).join("")}</div>`;
+}
+function openLeaderDetailModal(type){
+  const data=LEADER_DATA[type];
+  const meta=LEADER_DETAIL_META[type];
+  if(!data||!meta)return;
+  const level=getLocalLeaderLevel(type);
+  const tier=getLeaderBuffTierFromLevel(level);
+  const body=$("leaderDetailBody");
+  if(!body)return;
+  body.innerHTML=`<div class="leader-info-head">
+    <img src="${escapeHtml(data.portrait||"")}" alt="${escapeHtml(data.name)}">
+    <div>
+      <h2>${escapeHtml(data.name)}</h2>
+      <p>${escapeHtml(meta.stats)}</p>
+      <p>Tu nivel actual: <b>${normalizeLeaderLevel(level)}</b> · Tier actual: <b>${tier}</b></p>
+    </div>
+  </div>
+  <section class="leader-info-section">
+    <h3>Buff por tier</h3>
+    <p>Objetivo del buff: <b>${escapeHtml(meta.target)}</b>.</p>
+    <p>Tier no es nivel. Cada tier agrupa varios niveles.</p>
+    ${leaderTierExplanationHtml(meta)}
+  </section>
+  <section class="leader-info-actions">
+    <button class="leader-info-ability-btn" type="button" data-leader-ability="${escapeHtml(type)}">Ver habilidad Nv.5</button>
+    <button class="leader-info-select-btn" type="button" data-leader-choice="${escapeHtml(type)}">Seleccionar</button>
+  </section>`;
+  const modal=$("leaderDetailModal");
+  if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
+  body.querySelector("[data-leader-ability]")?.addEventListener("click",()=>openLeaderAbilityModal(type));
+  body.querySelector("[data-leader-choice]")?.addEventListener("click",async()=>{await setSelectedLeaderType(type);closeLeaderDetailModal();});
+}
+function closeLeaderDetailModal(){const modal=$("leaderDetailModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");}}
+function openLeaderAbilityModal(type){
+  const data=LEADER_DATA[type];
+  const meta=LEADER_DETAIL_META[type];
+  if(!data||!meta)return;
+  const body=$("leaderAbilityBody");
+  if(!body)return;
+  body.innerHTML=`<div class="leader-info-head compact">
+    <img src="${escapeHtml(data.portrait||"")}" alt="${escapeHtml(data.name)}">
+    <div>
+      <h2>${escapeHtml(meta.abilityName)}</h2>
+      <p>${escapeHtml(data.name)} · Habilidad especial de nivel 5</p>
+    </div>
+  </div>
+  <section class="leader-info-section">
+    <h3>Se desbloquea en nivel 5</h3>
+    <p><b>Importante:</b> nivel 5 sigue siendo Tier 2. El tier define el tamaño del buff; la habilidad Nv.5 es un desbloqueo aparte.</p>
+    <p>${escapeHtml(meta.ability)}</p>
+  </section>
+  <section class="leader-info-actions">
+    <button class="leader-info-select-btn" type="button" data-leader-choice="${escapeHtml(type)}">Seleccionar</button>
+  </section>`;
+  const modal=$("leaderAbilityModal");
+  if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
+  body.querySelector("[data-leader-choice]")?.addEventListener("click",async()=>{await setSelectedLeaderType(type);closeLeaderAbilityModal();closeLeaderDetailModal();});
+}
+function closeLeaderAbilityModal(){const modal=$("leaderAbilityModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");}}
+
+document.querySelectorAll(".leader-select-btn[data-leader-choice]").forEach(btn=>{
+  btn.addEventListener("click",async ev=>{
+    ev.stopPropagation();
     const type=btn.dataset.leaderChoice;
     await setSelectedLeaderType(type);
     const data=LEADER_DATA[type];
     if(data)await hvAlert(`Líder elegido: ${data.name}. ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`,"Líder elegido");
   });
 });
+document.querySelectorAll("[data-leader-detail]").forEach(btn=>{
+  btn.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    openLeaderDetailModal(btn.dataset.leaderDetail);
+  });
+});
+$("leaderDetailCloseBtn")?.addEventListener("click",closeLeaderDetailModal);
+$("leaderAbilityCloseBtn")?.addEventListener("click",closeLeaderAbilityModal);
+$("leaderSelectCloseBtn")?.addEventListener("click",()=>$("leaderSelectOverlay")?.classList.add("hidden"));
+$("leaderDetailModal")?.addEventListener("click",ev=>{if(ev.target?.id==="leaderDetailModal")closeLeaderDetailModal();});
+$("leaderAbilityModal")?.addEventListener("click",ev=>{if(ev.target?.id==="leaderAbilityModal")closeLeaderAbilityModal();});
 
 
 
