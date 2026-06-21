@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_det_layout_fixed_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_det_repair_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1004,8 +1004,16 @@ const WEAPON_CLASS_BY_KEY={
   saladin_archer_cavalry:"cavalry"
 };
 function getWeaponClassForCard(card){
-  if(!card||card.type==="leader")return "";
+  if(!card)return "";
   const key=String(card.key||"").toLowerCase();
+  const leaderType=String(card.leaderType||"").toLowerCase();
+  if(card.type==="leader"||card.leader){
+    if(leaderType==="archer"||key.includes("archer"))return "bow";
+    if(leaderType==="cavalry"||key.includes("cavalry"))return "cavalry";
+    if(leaderType==="beastmaster")return "beast";
+    if(leaderType==="mage")return "";
+    return "sword";
+  }
   if(WEAPON_CLASS_BY_KEY[key])return WEAPON_CLASS_BY_KEY[key];
   if(card.beast)return "beast";
   if(isLanceUnitCardLike(card))return "spear";
@@ -1133,11 +1141,11 @@ function getEntityQuote(entity){
 }
 function getEntityWeaponText(entity){
   const cls=getWeaponClassForCard(entity);
-  const label=WEAPON_CLASS_LABELS[cls]||"Sin clase";
   if(cls==="spear")return "Lanza";
-  if(cls==="bow")return "Arco";
+  if(cls==="bow")return "Arco / distancia";
   if(cls==="cavalry")return "Caballería";
   if(cls==="beast")return "Natural";
+  if(!cls)return "Sin arma táctica";
   return "Espada / cuerpo a cuerpo";
 }
 function getEntityAbilitySections(entity,effectText=""){
