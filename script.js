@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_det_repair_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_class_review_leader_records_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -972,7 +972,7 @@ const WEAPON_CLASS_BY_KEY={
   bengal_tiger:"beast",
   white_rhino:"beast",
   richard_lionheart:"sword",
-  saladin:"sword",
+  saladin:"cavalry",
   shaka_zulu:"spear",
   yi_sun_sin:"sword",
   simo_hayha:"bow",
@@ -981,9 +981,9 @@ const WEAPON_CLASS_BY_KEY={
   joan_of_arc:"sword",
   leonidas:"spear",
   nasu_no_yoichi:"bow",
-  tomoe_gozen:"sword",
-  hannibal_barca:"sword",
-  subotai:"sword",
+  tomoe_gozen:"cavalry",
+  hannibal_barca:"cavalry",
+  subotai:"cavalry",
   lu_bu:"spear",
   ragnar_lodbrok:"sword",
   el_cid:"sword",
@@ -1012,6 +1012,7 @@ function getWeaponClassForCard(card){
     if(leaderType==="cavalry"||key.includes("cavalry"))return "cavalry";
     if(leaderType==="beastmaster")return "beast";
     if(leaderType==="mage")return "";
+    if(leaderType==="axe"||leaderType==="assassin"||leaderType==="warrior")return "sword";
     return "sword";
   }
   if(WEAPON_CLASS_BY_KEY[key])return WEAPON_CLASS_BY_KEY[key];
@@ -1253,10 +1254,16 @@ function renderDetAbilitiesHtml(entity,effectText=""){
     }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }
-function renderDetStatusesHtml(entries=[]){
-  return entries.length
-    ? `<div class="det-section-block det-status-section"><div class="det-section-title">Estados activos</div>${detailStatusButtonsHtml(entries)}</div>`
-    : `<div class="det-section-block det-status-section det-status-empty"><div class="det-section-title">Estados activos</div><div class="det-empty-line">Sin estados activos.</div></div>`;
+function renderDetStatusesHtml(entries=[],entity=null){
+  const recordHtml=renderDetLeaderRecordHtml(entity);
+  const statusHtml=entries.length
+    ? detailStatusButtonsHtml(entries)
+    : `<div class="det-empty-line">Sin estados activos.</div>`;
+  return `<div class="det-section-block det-status-section ${entries.length?"":"det-status-empty"}">
+    <div class="det-section-title">Estados activos</div>
+    ${recordHtml}
+    ${statusHtml}
+  </div>`;
 }
 function renderDetQuoteHtml(entity){
   const quote=getEntityQuote(entity);
@@ -2453,7 +2460,7 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
 }
 
 function combatSummary(mods){return mods?.notes?.length?` ${mods.notes.join(" ")}`:""}
-function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -3013,7 +3020,7 @@ function showCardInspectModal(card){
   }
   if(text){
     const effectText=String(card.text||card.effectText||card.ability||"").trim();
-    text.innerHTML=`${renderDetAbilitiesHtml(card,effectText)}${renderDetTacticalHtml(card)}${renderDetStatusesHtml([])}${renderDetQuoteHtml(card)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,showLore:card.type==='unit',effectLabel:'Ver efecto de la carta'})}`;
+    text.innerHTML=`${renderDetAbilitiesHtml(card,effectText)}${renderDetTacticalHtml(card)}${renderDetStatusesHtml([],card)}${renderDetQuoteHtml(card)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,showLore:card.type==='unit',effectLabel:'Ver efecto de la carta'})}`;
     bindEntityGuideButtons(text,card,{effectText,effectTitle:`Efecto de ${card.name}`});
   }
   const state=getCardPlayState(card);
@@ -4757,6 +4764,7 @@ async function adventureEnemyTurn(){
   }
   if(outcome.ended){
     const finalLogs=[...logs,outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`,...(pub.log||[])].slice(0,18);
+    recordLocalLeaderBattleOutcome(outcome,pub.mode||"adventure");
     await update(ref(db,`games/${gameId}/public`),{
       units,
       legendaryTraps,
@@ -4841,7 +4849,7 @@ function showUnit(u){
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
-  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:!u.leader,effectLabel:'Ver efecto'})}`;
+  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:!u.leader,effectLabel:'Ver efecto'})}`;
   bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
   inspector.classList.add("show");
 }
@@ -5759,8 +5767,66 @@ const defaultPlayerProfile = {
   fragments: 0,
   nameChangeCount: 0,
   leaderLevels: {warrior:1, archer:1, mage:1},
-  leaderLevel5Abilities: {}
+  leaderLevel5Abilities: {},
+  leaderRecords: {}
 };
+function emptyLeaderRecord(){return {ai:{wins:0,losses:0},pvp:{wins:0,losses:0}}}
+function normalizeLeaderRecords(records={}){
+  const out={};
+  Object.keys(LEADER_DATA||{}).forEach(type=>{
+    const saved=records?.[type]||{};
+    out[type]={
+      ai:{wins:Number(saved.ai?.wins||0),losses:Number(saved.ai?.losses||0)},
+      pvp:{wins:Number(saved.pvp?.wins||0),losses:Number(saved.pvp?.losses||0)}
+    };
+  });
+  return out;
+}
+function getRecordedBattleKeys(){
+  try{return JSON.parse(localStorage.getItem("hallvalla_recorded_battles")||"{}")||{};}catch(e){return{}}
+}
+function markBattleRecordKey(key){
+  try{
+    const records=getRecordedBattleKeys();
+    records[key]=Date.now();
+    const entries=Object.entries(records).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,120);
+    localStorage.setItem("hallvalla_recorded_battles",JSON.stringify(Object.fromEntries(entries)));
+  }catch(e){}
+}
+function hasBattleRecordKey(key){
+  try{return !!getRecordedBattleKeys()[key];}catch(e){return false}
+}
+function getLeaderRecord(type,profile=getPlayerProfile()){
+  const records=normalizeLeaderRecords(profile.leaderRecords||{});
+  return records[type]||emptyLeaderRecord();
+}
+function recordLocalLeaderBattleOutcome(outcome,mode=publicState?.mode||"pvp"){
+  try{
+    if(!outcome?.ended||!myPlayer||!outcome.winner)return;
+    const localLeader=outcome[`p${myPlayer}Leader`]||getLeader(myPlayer);
+    const type=localLeader?.leaderType||getSelectedLeaderType()||"warrior";
+    if(!LEADER_DATA[type])return;
+    const battleKey=`${gameId||publicState?.code||"local"}:${mode||"pvp"}:${myPlayer}:${outcome.winner}:${outcome.loser}`;
+    if(hasBattleRecordKey(battleKey))return;
+    const profile=getPlayerProfile();
+    const leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
+    const bucket=mode==="adventure"?"ai":"pvp";
+    const won=outcome.winner===myPlayer;
+    leaderRecords[type][bucket][won?"wins":"losses"]+=1;
+    savePlayerProfile({...profile,leaderRecords});
+    markBattleRecordKey(battleKey);
+  }catch(e){console.warn("[HallValla] No se pudo registrar historial del líder:",e);}
+}
+function renderDetLeaderRecordHtml(entity){
+  if(!entity||!entity.leader||entity.owner!==myPlayer)return "";
+  const type=entity.leaderType||getSelectedLeaderType()||"warrior";
+  const record=getLeaderRecord(type);
+  return `<div class="det-leader-record">
+    <div class="det-record-title">Historial del líder</div>
+    <div class="det-record-row"><span>Contra IA</span><strong>${record.ai.wins}V / ${record.ai.losses}D</strong></div>
+    <div class="det-record-row"><span>Contra jugador</span><strong>${record.pvp.wins}V / ${record.pvp.losses}D</strong></div>
+  </div>`;
+}
 function getPlayerProfile(){
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_profile") || "null");
@@ -5769,12 +5835,14 @@ function getPlayerProfile(){
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     const beforeAbilities=JSON.stringify(profile.leaderLevel5Abilities||{});
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
+    profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities)savePlayerProfile(profile);
     return profile;
   }catch(e){
     const profile={...defaultPlayerProfile};
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
+    profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     return profile;
   }
 }
