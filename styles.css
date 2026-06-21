@@ -11533,3 +11533,70 @@
   .leader-info-head{grid-template-columns:1fr!important;text-align:center!important;padding-right:0!important;}
   .leader-info-head img{margin:auto!important;}
 }
+
+
+/* v57 status assets: two-layer clickable state icons */
+.status-icon.status-icon-asset{
+  position:relative!important;
+  width:24px!important;
+  height:24px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:0!important;
+  background:none!important;
+  overflow:visible!important;
+  font-size:0!important;
+}
+.status-icon-asset .status-icon-bg{
+  position:absolute!important;
+  inset:2px!important;
+  border-radius:999px!important;
+  background:radial-gradient(circle at 45% 35%,rgba(255,221,139,.15),rgba(0,0,0,.32) 58%,rgba(0,0,0,.12) 100%)!important;
+  border:1px solid rgba(238,190,91,.18)!important;
+  box-shadow:0 0 7px rgba(0,0,0,.42)!important;
+  opacity:.42!important;
+}
+.status-icon-asset .status-icon-img{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.65)) drop-shadow(0 0 4px rgba(238,190,91,.12))!important;
+  transform:scale(1.08)!important;
+  pointer-events:none!important;
+}
+.det-status-icon .status-icon-asset,
+.det-status-icon-btn .status-icon-asset{
+  width:30px!important;
+  height:30px!important;
+}
+.detail-status-icon .status-icon-asset{
+  width:23px!important;
+  height:23px!important;
+}
+.unit-status-seal .status-icon-asset{
+  width:20px!important;
+  height:20px!important;
+}
+.unit-status-seal .status-icon-asset .status-icon-bg{
+  opacity:.24!important;
+  inset:3px!important;
+}
+.unit-status-seal .status-icon-asset .status-icon-img{
+  transform:scale(1.2)!important;
+}
+.unit-status-seal{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  border-style:solid!important;
+}
+.unit-status-seal:hover,
+.det-status-icon-btn:hover,
+.det-status-row:hover{
+  filter:brightness(1.08)!important;
+}
+.det-status-row.det-status-icon-only{
+  cursor:pointer!important;
+}

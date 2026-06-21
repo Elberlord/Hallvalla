@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_starter_special_draw_normal_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HW_status_icon_assets_clickable_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1312,8 +1312,7 @@ function renderDetStatusesHtml(activeEntries=[],card=null){
   const historyHtml=card&&card.leader?renderDetLeaderRecordHtml(card):"";
   const rows=entries.map((entry,idx)=>{
     const safeName=escapeHtml(entry.name||entry.label||"Estado activo");
-    const glyph=getStatusEntryGlyph(entry);
-    return `<button class="det-status-row det-status-icon-only" type="button" data-status-index="${idx}" title="${safeName}" aria-label="${safeName}"><span class="det-status-icon" aria-hidden="true">${glyph}</span></button>`;
+    return `<button class="det-status-row det-status-icon-only" type="button" data-status-index="${idx}" title="${safeName}" aria-label="${safeName}"><span class="det-status-icon" aria-hidden="true">${getStatusEntryIconHtml(entry)}</span></button>`;
   }).join("");
   const empty=rows?"":`<div class="det-empty-line">Sin estados activos.</div>`;
   return `<section class="det-status-section">
@@ -3066,6 +3065,15 @@ function detailStatusButtonsHtml(entries=[]){
   if(!entries.length)return "";
   return `<div class="detail-guide-block"><div class="detail-guide-caption">Estados activos</div><div class="detail-chip-row">${entries.map((entry,idx)=>`<div class="detail-status-chip"><button class="guide-status-btn det-status-icon-btn" type="button" data-status-index="${idx}" aria-label="${escapeHtml(entry.name||entry.label||"Estado")}">${getStatusEntryIconHtml(entry)}</button><span>${escapeHtml(entry.name||entry.label||"Estado")}</span></div>`).join("")}</div></div>`;
 }
+function openStatusGuideModal(entry={},entity=null){
+  if(!entry)return;
+  openStatGuideModal({
+    title:`${entry.name||entry.label||"Estado activo"}`,
+    short:entity?.name?`${entity.name} tiene este estado activo.`:"Estado activo.",
+    formula:entry.desc||"Estado activo sin descripción adicional.",
+    example:entry.extra||"Toca el icono del estado cuando necesites recordar qué afecta a la unidad."
+  });
+}
 function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",statuses=[]}={}){
   if(!container)return;
   const effectBtn=container.querySelector('.guide-effect-btn');
@@ -3098,12 +3106,7 @@ function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",s
     const idx=Number(btn.dataset.statusIndex||0);
     const entry=statuses[idx];
     if(!entry)return;
-    openStatGuideModal({
-      title:`✦ ${entry.name||entry.label||'Estado activo'}`,
-      short:entity?.name?`${entity.name} tiene este estado activo.`:'Estado activo.',
-      formula:entry.desc||'Estado activo sin descripción adicional.',
-      example:entry.extra||'Puedes revisar este estado cuando necesites recordar qué está afectando a la unidad.'
-    });
+    openStatusGuideModal(entry,entity);
   }));
   container.querySelectorAll('.guide-ability-btn').forEach(btn=>btn.addEventListener('click',ev=>{
     ev.stopPropagation();
@@ -3221,22 +3224,45 @@ function canHealOrCleanseUnit(u,owner=null){
   if(u.noHealWhilePoisoned)return false;
   return (u.hp||0)<effectiveMaxHp(u)||hasCurableStatus(u);
 }
+const STATUS_ICON_ASSET_PATHS={
+  buff:"assets/ui/status_icons/status_buff.png",
+  debuff:"assets/ui/status_icons/status_debuff.png",
+  bleed:"assets/ui/status_icons/status_bleed.png",
+  poison:"assets/ui/status_icons/status_poison.png",
+  burn:"assets/ui/status_icons/status_burn.png",
+  paralysis:"assets/ui/status_icons/status_paralysis.png",
+  silence:"assets/ui/status_icons/status_silence.png",
+  curse:"assets/ui/status_icons/status_curse.png",
+  lock:"assets/ui/status_icons/status_lock.png",
+  defense:"assets/ui/status_icons/status_defense.png",
+  guard:"assets/ui/status_icons/status_guard.png",
+  hp:"assets/ui/status_icons/status_hp.png",
+  control:"assets/ui/status_icons/status_control.png",
+  generic:"assets/ui/status_icons/status_generic.png"
+};
+function getStatusAssetKey(entry={}){
+  const icon=String(entry?.icon||"").toLowerCase();
+  const kind=String(entry?.kind||"").toLowerCase();
+  const name=String(`${entry?.name||""} ${entry?.label||""}`).toLowerCase();
+  if(icon&&STATUS_ICON_ASSET_PATHS[icon])return icon;
+  if(kind.includes("bleed")||name.includes("sangrado"))return "bleed";
+  if(kind.includes("poison")||name.includes("veneno"))return "poison";
+  if(kind.includes("burn")||name.includes("quem")||name.includes("fuego"))return "burn";
+  if(kind.includes("silence")||name.includes("silencio"))return "silence";
+  if(kind.includes("curse")||name.includes("mald")||name.includes("cura")||name.includes("reducción")||name.includes("duplicado"))return "curse";
+  if(kind.includes("lock")||name.includes("bloque")||name.includes("aturdido")||name.includes("no mover")||name.includes("no atacar"))return "lock";
+  if(kind.includes("guard")||name.includes("guardia")||name.includes("defens"))return "defense";
+  if(kind.includes("hp")||name.includes("vida"))return "hp";
+  if(kind.includes("control")||name.includes("control"))return "control";
+  if(kind.includes("debuff")||name.includes("reduc")||name.includes("pierde")||name.includes("evasión reducida"))return "debuff";
+  if(kind.includes("buff")||name.includes("aument")||name.includes("gana"))return "buff";
+  return "generic";
+}
 function getStatusEntryIconHtml(entry){
-  const icon=entry?.icon||"generic";
+  const key=getStatusAssetKey(entry);
+  const src=STATUS_ICON_ASSET_PATHS[key]||STATUS_ICON_ASSET_PATHS.generic;
   const label=escapeHtml(entry?.name||entry?.label||"Estado");
-  if(icon==="bleed")return `<span class="status-icon status-icon-bleed" aria-label="${label}"></span>`;
-  if(icon==="poison")return `<span class="status-icon status-icon-poison" aria-label="${label}"><span></span><span></span><span></span></span>`;
-  if(icon==="burn")return `<span class="status-icon status-icon-burn" aria-label="${label}"></span>`;
-  if(icon==="paralysis")return `<span class="status-icon status-icon-paralysis" aria-label="${label}"></span>`;
-  if(icon==="silence")return `<span class="status-icon status-icon-silence" aria-label="${label}"></span>`;
-  if(icon==="curse")return `<span class="status-icon status-icon-curse" aria-label="${label}">✠</span>`;
-  if(icon==="lock")return `<span class="status-icon status-icon-lock" aria-label="${label}"></span>`;
-  if(icon==="buff")return `<span class="status-icon status-icon-buff" aria-label="${label}"></span>`;
-  if(icon==="debuff")return `<span class="status-icon status-icon-debuff" aria-label="${label}"></span>`;
-  if(icon==="hp")return `<span class="status-icon status-icon-hp" aria-label="${label}"></span>`;
-  if(icon==="control")return `<span class="status-icon status-icon-control" aria-label="${label}"></span>`;
-  if(icon==="defense")return `<span class="status-icon status-icon-defense" aria-label="${label}"></span>`;
-  return `<span class="status-icon status-icon-generic" aria-label="${label}">✦</span>`;
+  return `<span class="status-icon status-icon-asset status-icon-${escapeHtml(key)}" role="img" aria-label="${label}"><span class="status-icon-bg" aria-hidden="true"></span><img class="status-icon-img" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async"></span>`;
 }
 async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:spellDamage>0||u.damagedThisTurn}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage)});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
@@ -5535,11 +5561,11 @@ function isHelpfulStatusEntry(entry){
   const icon=String(entry?.icon||"");
   return kind.includes("buff")||icon==="buff"||icon==="hp";
 }
-function renderUnitStatusSeal(entry){
+function renderUnitStatusSeal(entry,idx=0){
   const kind=escapeHtml(entry?.kind||"neutral");
   const shortText=getUnitStatusSealShortText(entry);
   const title=escapeHtml(`${entry?.name||entry?.label||"Estado"}: ${entry?.desc||""}`.trim());
-  return `<span class="unit-status-bubble unit-status-seal ${kind}" title="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</span>`;
+  return `<button class="unit-status-bubble unit-status-seal ${kind}" type="button" data-status-index="${idx}" title="${title}" aria-label="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</button>`;
 }
 function getUnitStatusBubblesHtml(u){
   if(!u)return "";
@@ -5558,8 +5584,8 @@ function getUnitStatusBubblesHtml(u){
   if(!right.length&&left.length>2)right.push(...left.splice(2));
   if(!left.length&&right.length>2)left.push(...right.splice(0,Math.min(2,right.length-1)));
   const extra=remaining.length;
-  const leftHtml=left.map(renderUnitStatusSeal).join("");
-  const rightHtml=right.map(renderUnitStatusSeal).join("");
+  const leftHtml=left.map((entry,idx)=>renderUnitStatusSeal(entry,idx)).join("");
+  const rightHtml=right.map((entry,idx)=>renderUnitStatusSeal(entry,left.length+idx)).join("");
   return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
 }
 
@@ -5711,6 +5737,17 @@ function renderBoard(){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
+      const unitStatusEntries=getUnitStatusEntries(u);
+      c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
+        btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
+        btn.addEventListener("pointerup",ev=>{ev.stopPropagation();},true);
+        btn.addEventListener("click",ev=>{
+          ev.preventDefault();
+          ev.stopPropagation();
+          const entry=unitStatusEntries[Number(btn.dataset.statusIndex||0)];
+          if(entry)openStatusGuideModal(entry,u);
+        });
+      });
       c.title=isStealthedUnit(u)&&u.owner!==myPlayer?"Presencia Oculta · Sigilo":`${u.name} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
