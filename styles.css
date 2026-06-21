@@ -10798,3 +10798,258 @@
 .main-menu [style*="white"]{
   text-shadow:none!important;
 }
+
+
+/* === v45 HOME exact selector layout repair ===
+   Real home selectors:
+   #mainMenu.asset-home
+   .asset-topbar
+   #homeProgressPanel
+   .asset-main
+   .asset-column
+   .image-button img
+   .daily-panel
+   .welcome-panel
+   .asset-bottom
+*/
+
+/* Kill the unreadable white progress strip behind the title/top bar. */
+#mainMenu #homeProgressPanel.home-progress-panel{
+  display:none!important;
+}
+
+/* Topbar slightly slimmer so the logo has breathing room. */
+#mainMenu .asset-topbar{
+  top:12px!important;
+  left:14px!important;
+  right:14px!important;
+  height:86px!important;
+  max-height:86px!important;
+  align-items:center!important;
+  z-index:30!important;
+}
+
+#mainMenu .asset-profile{
+  min-height:76px!important;
+  height:76px!important;
+  width:min(490px,36vw)!important;
+  padding:7px 10px!important;
+}
+
+#mainMenu .asset-profile-img{
+  width:62px!important;
+  height:62px!important;
+}
+
+#mainMenu .asset-profile-name{
+  font-size:25px!important;
+}
+
+#mainMenu .asset-resource{
+  height:48px!important;
+  min-height:48px!important;
+  padding:5px 10px!important;
+}
+
+#mainMenu .asset-resource img,
+#mainMenu .asset-small-icon img{
+  max-height:36px!important;
+}
+
+/* Main cards get a protected area. 
+   Bottom is raised so Mina/Eventos do NOT collide with promo banners. */
+#mainMenu .asset-main{
+  top:118px!important;
+  bottom:184px!important;
+  left:20px!important;
+  right:20px!important;
+  display:grid!important;
+  grid-template-columns:minmax(300px,29vw) 1fr minmax(300px,29vw)!important;
+  gap:22px!important;
+  align-items:center!important;
+  z-index:4!important;
+}
+
+/* More spacing but smaller cards so the 4-card columns fit cleanly. */
+#mainMenu .asset-column{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:14px!important;
+  min-height:0!important;
+  height:100%!important;
+  overflow:visible!important;
+}
+
+#mainMenu .image-button{
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  flex:0 0 auto!important;
+  overflow:visible!important;
+}
+
+#mainMenu .image-button img{
+  width:100%!important;
+  height:clamp(74px,10.6vh,96px)!important;
+  object-fit:fill!important;
+  display:block!important;
+  border-radius:12px!important;
+}
+
+/* Center logo/play button gets shifted just a little up to avoid bottom tabs. */
+#mainMenu .asset-center{
+  justify-content:center!important;
+  transform:translateY(-8px)!important;
+  z-index:3!important;
+}
+
+#mainMenu .asset-logo{
+  margin-bottom:10px!important;
+}
+
+#mainMenu .asset-logo-mark{
+  font-size:clamp(48px,5.3vw,76px)!important;
+  line-height:.9!important;
+}
+
+#mainMenu .asset-logo-sub{
+  font-size:clamp(12px,1.2vw,18px)!important;
+}
+
+#mainMenu .play-image-button img{
+  width:min(300px,24vw)!important;
+  max-height:230px!important;
+  object-fit:contain!important;
+}
+
+/* Promos are pinned below the main card columns, not over Mina/Eventos. */
+#mainMenu .asset-promo.daily-panel{
+  left:22px!important;
+  bottom:24px!important;
+  width:min(330px,24vw)!important;
+  height:76px!important;
+  z-index:8!important;
+}
+
+#mainMenu .asset-promo.welcome-panel{
+  right:22px!important;
+  bottom:24px!important;
+  width:min(390px,28vw)!important;
+  height:76px!important;
+  z-index:8!important;
+}
+
+#mainMenu .asset-promo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:fill!important;
+}
+
+/* Bottom tabs stay in the center lane and below JUGAR, not over side promos. */
+#mainMenu .asset-bottom{
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  bottom:16px!important;
+  width:auto!important;
+  max-width:430px!important;
+  gap:12px!important;
+  z-index:9!important;
+}
+
+#mainMenu .bottom-asset-tab{
+  width:138px!important;
+  height:74px!important;
+  padding:7px 8px!important;
+}
+
+/* Avoid any accidental old overlay panels in home. */
+#mainMenu .home-progress-panel,
+#mainMenu #homeProgressTitle,
+#mainMenu #homeProgressText,
+#mainMenu #homeDeckStatus,
+#mainMenu #homeCollectionStatus{
+  display:none!important;
+}
+
+/* Small desktop fallback, including current screenshot width around 1365px. */
+@media(max-width:1400px){
+  #mainMenu .asset-main{
+    top:126px!important;
+    bottom:168px!important;
+    left:20px!important;
+    right:20px!important;
+    gap:18px!important;
+  }
+  #mainMenu .asset-column{
+    gap:12px!important;
+  }
+  #mainMenu .image-button img{
+    height:clamp(70px,10.2vh,90px)!important;
+  }
+  #mainMenu .asset-promo.daily-panel{
+    width:29vw!important;
+    max-width:390px!important;
+    height:74px!important;
+    bottom:18px!important;
+  }
+  #mainMenu .asset-promo.welcome-panel{
+    width:29vw!important;
+    max-width:390px!important;
+    height:74px!important;
+    bottom:18px!important;
+  }
+  #mainMenu .asset-bottom{
+    bottom:16px!important;
+    max-width:410px!important;
+  }
+  #mainMenu .bottom-asset-tab{
+    width:130px!important;
+    height:72px!important;
+  }
+}
+
+/* Short screens need the main columns even more compact. */
+@media(max-height:780px){
+  #mainMenu .asset-topbar{
+    height:82px!important;
+  }
+  #mainMenu .asset-main{
+    top:122px!important;
+    bottom:160px!important;
+  }
+  #mainMenu .asset-column{
+    gap:10px!important;
+  }
+  #mainMenu .image-button img{
+    height:clamp(66px,9.8vh,82px)!important;
+  }
+  #mainMenu .asset-logo-mark{
+    font-size:clamp(44px,5vw,66px)!important;
+  }
+  #mainMenu .play-image-button img{
+    width:min(270px,22vw)!important;
+    max-height:210px!important;
+  }
+  #mainMenu .asset-promo.daily-panel,
+  #mainMenu .asset-promo.welcome-panel{
+    height:68px!important;
+    bottom:14px!important;
+  }
+  #mainMenu .bottom-asset-tab{
+    height:68px!important;
+  }
+}
+
+/* Extra narrow desktop: if columns cannot fit, sacrifice promo size first. */
+@media(max-width:1150px){
+  #mainMenu .asset-main{
+    grid-template-columns:29vw 1fr 29vw!important;
+    gap:10px!important;
+  }
+  #mainMenu .asset-promo.daily-panel,
+  #mainMenu .asset-promo.welcome-panel{
+    width:25vw!important;
+  }
+}
