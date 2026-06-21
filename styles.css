@@ -9798,3 +9798,203 @@
   overflow:auto!important;
   padding:6px 8px!important;
 }
+
+
+/* === v39 Status structure fix: one history block + one active-state list === */
+
+/* Combat DET gets stable right column: tactical above, status below, footer below all. */
+#inspector.show #inspectText,
+#inspector:not(.hidden) #inspectText{
+  grid-template-columns:minmax(0,1fr) 408px!important;
+  grid-template-rows:minmax(0,1fr) 174px 56px!important;
+  grid-template-areas:
+    "effects tactical"
+    "effects states"
+    "buttons buttons"!important;
+  gap:9px!important;
+  overflow:hidden!important;
+}
+
+/* Tactical cannot bleed downward into states. */
+#inspector.show #inspectText > .det-tactical-card,
+#inspector:not(.hidden) #inspectText > .det-tactical-card{
+  grid-area:tactical!important;
+  height:100%!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+  z-index:2!important;
+}
+
+/* Status section final structure. */
+#inspector.show #inspectText > .det-status-section,
+#inspector:not(.hidden) #inspectText > .det-status-section{
+  grid-area:states!important;
+  height:174px!important;
+  min-height:174px!important;
+  max-height:174px!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-rows:30px auto minmax(34px,1fr)!important;
+  gap:5px!important;
+  padding:0!important;
+  margin:0!important;
+  position:relative!important;
+  z-index:5!important;
+  box-sizing:border-box!important;
+}
+
+/* There should be only one title. */
+#inspector.show #inspectText > .det-status-section > .det-section-title,
+#inspector:not(.hidden) #inspectText > .det-status-section > .det-section-title{
+  grid-row:1!important;
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  margin:0!important;
+  padding:7px 10px!important;
+  box-sizing:border-box!important;
+  position:static!important;
+  z-index:1!important;
+}
+
+/* History is its own wrapper, no fake second status title. */
+#inspector.show #inspectText .det-leader-history-wrap,
+#inspector:not(.hidden) #inspectText .det-leader-history-wrap{
+  grid-row:2!important;
+  min-height:0!important;
+  max-height:62px!important;
+  overflow:hidden!important;
+  padding:0 8px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+#inspector.show #inspectText .det-leader-history,
+#inspector:not(.hidden) #inspectText .det-leader-history{
+  margin:0!important;
+  padding:7px 9px!important;
+  min-height:50px!important;
+  max-height:58px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  position:static!important;
+  z-index:1!important;
+}
+
+/* Real active statuses, always visible. */
+#inspector.show #inspectText > .det-status-section > .det-status-list,
+#inspector:not(.hidden) #inspectText > .det-status-section > .det-status-list{
+  grid-row:3!important;
+  min-height:34px!important;
+  max-height:100%!important;
+  overflow:auto!important;
+  padding:0 8px 8px!important;
+  margin:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:5px!important;
+  position:relative!important;
+  z-index:6!important;
+  box-sizing:border-box!important;
+}
+#inspector.show #inspectText .det-status-row,
+#inspector:not(.hidden) #inspectText .det-status-row{
+  width:100%!important;
+  min-height:30px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:5px 8px!important;
+  opacity:1!important;
+  visibility:visible!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  pointer-events:auto!important;
+  position:relative!important;
+  z-index:8!important;
+  background:linear-gradient(180deg,rgba(28,23,14,.96),rgba(8,8,7,.98))!important;
+  border:1px solid rgba(238,190,91,.24)!important;
+  border-radius:10px!important;
+  box-sizing:border-box!important;
+  color:#fff4bd!important;
+}
+#inspector.show #inspectText .det-status-icon,
+#inspector:not(.hidden) #inspectText .det-status-icon{
+  width:24px!important;
+  min-width:24px!important;
+  height:24px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:16px!important;
+  filter:drop-shadow(0 0 6px rgba(255,220,120,.30))!important;
+}
+#inspector.show #inspectText .det-status-copy,
+#inspector:not(.hidden) #inspectText .det-status-copy{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  line-height:1.1!important;
+}
+#inspector.show #inspectText .det-status-copy strong,
+#inspector:not(.hidden) #inspectText .det-status-copy strong{
+  font-size:10.5px!important;
+  color:#ffe08d!important;
+}
+#inspector.show #inspectText .det-status-copy small,
+#inspector:not(.hidden) #inspectText .det-status-copy small{
+  font-size:9.4px!important;
+  color:#e8d8aa!important;
+  opacity:.92!important;
+}
+
+/* Empty line visible but small. */
+#inspector.show #inspectText .det-empty-line,
+#inspector:not(.hidden) #inspectText .det-empty-line{
+  min-height:28px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:6px 8px!important;
+  opacity:1!important;
+  visibility:visible!important;
+  color:#d8c792!important;
+  font-size:10.5px!important;
+  position:relative!important;
+}
+
+/* Footer is not allowed to cover states. */
+#inspector.show #inspectText > .detail-guide-row,
+#inspector:not(.hidden) #inspectText > .detail-guide-row{
+  grid-area:buttons!important;
+  position:static!important;
+  inset:auto!important;
+  z-index:2!important;
+  height:56px!important;
+  min-height:56px!important;
+  margin:0!important;
+  align-self:stretch!important;
+  overflow:hidden!important;
+}
+
+/* Hide any accidental duplicated title inside the status list only. */
+#inspector.show #inspectText .det-status-list .det-section-title,
+#inspector:not(.hidden) #inspectText .det-status-list .det-section-title{
+  display:none!important;
+}
+
+/* Hand modal status block follows same structure but smaller. */
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
+  display:grid!important;
+  grid-template-rows:30px auto minmax(28px,1fr)!important;
+  gap:5px!important;
+  overflow:hidden!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-leader-history-wrap{
+  max-height:58px!important;
+  overflow:hidden!important;
+  padding:0 8px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
+  overflow:auto!important;
+  padding:0 8px 8px!important;
+}

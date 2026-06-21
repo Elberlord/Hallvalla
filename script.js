@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_status_unblock_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_status_structure_fix_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1254,17 +1254,26 @@ function renderDetAbilitiesHtml(entity,effectText=""){
     }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }
-function renderDetStatusesHtml(entries=[],entity=null){
-  const recordHtml=renderDetLeaderRecordHtml(entity);
-  const statusHtml=entries.length
-    ? detailStatusButtonsHtml(entries)
-    : `<div class="det-empty-line">Sin estados activos.</div>`;
-  return `<div class="det-section-block det-status-section ${entries.length?"":"det-status-empty"}">
-    <div class="det-section-title">Estados activos</div>
-    ${recordHtml}
-    ${statusHtml}
-  </div>`;
+function renderDetStatusesHtml(activeEntries=[],card=null){
+  const entries=Array.isArray(activeEntries)?activeEntries:[];
+  const historyHtml=card&&card.leader?renderLeaderRecordHtml(card):"";
+  const rows=entries.map((entry,idx)=>{
+    const safeName=escapeHtml(entry.name||entry.label||"Estado activo");
+    const safeDesc=escapeHtml(entry.desc||entry.description||entry.text||"");
+    const icon=entry.icon||entry.glyph||"◆";
+    return `<button class="det-status-row" type="button" data-status-index="${idx}">
+      <span class="det-status-icon">${icon}</span>
+      <span class="det-status-copy"><strong>${safeName}</strong>${safeDesc?`<small>${safeDesc}</small>`:""}</span>
+    </button>`;
+  }).join("");
+  const empty=rows?"":`<div class="det-empty-line">Sin estados activos.</div>`;
+  return `<section class="det-status-section">
+    <div class="det-section-title">ESTADOS ACTIVOS</div>
+    ${historyHtml?`<div class="det-leader-history-wrap">${historyHtml}</div>`:""}
+    <div class="det-status-list">${rows||empty}</div>
+  </section>`;
 }
+
 function renderDetQuoteHtml(entity){
   const quote=getEntityQuote(entity);
   if(!quote)return "";
