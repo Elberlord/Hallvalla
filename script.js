@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_leader_select_modals_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HW_starter_special_draw_normal_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -771,6 +771,29 @@ const BEAST_TRAP_CARD_TEMPLATES=[
   {key:"rope_cage",name:"Jaula de Cuerda",type:"trap",icon:"🪢",portrait:CARD_PORTRAITS.ropeCage,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"rope_cage",text:"Coloca una jaula de cuerda. La primera unidad enemiga que entre no puede atacar hasta el final de su próximo turno."}
 ];
 CARD_TEMPLATES.push(...BEAST_CARD_TEMPLATES,...BEAST_TRAP_CARD_TEMPLATES);
+
+const STARTER_BASIC_DECK_KEYS=[
+  "archer","archer","archer",
+  "cavalry","cavalry","cavalry",
+  "spearman","spearman","spearman",
+  "guardian","guardian","guardian",
+  "scout","scout","scout",
+  "berserker","berserker","berserker",
+  "fireball","fireball",
+  "heal","heal",
+  "shield_wall",
+  "smoke_bomb",
+  "inspiration"
+];
+function isStarterBasicCard(card){
+  const rarity=String(card?.rarity||card?.rareza||"Básica").toLowerCase();
+  return !!card&&STARTER_BASIC_DECK_KEYS.includes(card.key)&&(rarity==="básica"||rarity==="basica"||rarity==="basic")&&!card.beast&&!card.special;
+}
+function getStarterBasicCardByKey(key){
+  const pool=[...CARD_TEMPLATES,...(typeof BASIC_MAGIC_TRAP_PACK!=="undefined"&&Array.isArray(BASIC_MAGIC_TRAP_PACK)?BASIC_MAGIC_TRAP_PACK:[])];
+  return pool.find(c=>c&&c.key===key&&isStarterBasicCard(c))||null;
+}
+
 const BEASTMASTER_DECK_KEYS=["honey_badger","honey_badger","porcupine","porcupine","wild_boar","wild_boar","black_raven","black_raven","constrictor_snake","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","iron_jaw_trap","iron_jaw_trap","covered_pit","covered_pit","hunting_net","hunting_net","blood_bait","tracking_smoke","rope_cage"];
 function getBeastmasterDeckTemplates(){const pool=[...CARD_TEMPLATES];return BEASTMASTER_DECK_KEYS.map(k=>pool.find(c=>c.key===k)).filter(Boolean).slice(0,DECK_RULES.deckSize);}
 const BEAST_EVENT_REWARD_KEYS=[
@@ -1778,7 +1801,18 @@ const ADVENTURE_CHAPTER_6_1={id:"chapter6_1",number:"6.1",mapBackground:"assets/
 const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_CHAPTER_3_1,ADVENTURE_CHAPTER_4_1,ADVENTURE_CHAPTER_5_1,ADVENTURE_CHAPTER_6_1];
 const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,ch]));
 function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
-function getSelectedLeaderType(){return selectedLeaderType||localStorage.getItem("hallvalla_selected_leader")||""}
+
+function isInitialLeaderAllowed(type){
+  return !!LEADER_DATA[type]&&type!=="beastmaster";
+}
+
+function getSelectedLeaderType(){
+  if(!isInitialLeaderAllowed(selectedLeaderType)){
+    selectedLeaderType="";
+    if(localStorage.getItem("hallvalla_selected_leader")==="beastmaster")localStorage.removeItem("hallvalla_selected_leader");
+  }
+  return isInitialLeaderAllowed(selectedLeaderType)?selectedLeaderType:"";
+}
 async function loadLeaderProfile(forcePrompt=false){
   leaderProfileLoaded=false;
   const cached=localStorage.getItem("hallvalla_selected_leader")||"";
@@ -1810,7 +1844,10 @@ async function loadLeaderProfile(forcePrompt=false){
   }
 }
 async function setSelectedLeaderType(type){
-  if(!LEADER_DATA[type])return;
+  if(!isInitialLeaderAllowed(type)){
+    await hvAlert("Señor de las Bestias no está disponible como líder inicial. Debe desbloquearse por evento o progresión.","Líder bloqueado");
+    return;
+  }
   selectedLeaderType=type;
   localStorage.setItem("hallvalla_selected_leader",type);
   renderSelectedLeaderBadge();
@@ -1835,20 +1872,17 @@ function requireLeaderSelection(force=false){
   }
   return false;
 }
-function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=LEADER_DATA[type];const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
+function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=isInitialLeaderAllowed(type)?LEADER_DATA[type]:null;const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
 function applyLeaderToCard(card,leaderType){return {...card}}
 function makeCard(t,owner,leaderType){return {...t,id:uid8(),owner,leaderType}}
 function getDefaultDeckTemplates(){
-  const units=CARD_TEMPLATES.filter(c=>c.type==="unit");
-  const tools=(typeof BASIC_MAGIC_TRAP_PACK!=="undefined"&&Array.isArray(BASIC_MAGIC_TRAP_PACK)?BASIC_MAGIC_TRAP_PACK:CARD_TEMPLATES.filter(c=>c.type==="spell"||c.type==="trap"));
-  const deck=[];
-  units.forEach(card=>{for(let i=0;i<3;i++)deck.push(card);});
-  const toolSlots=Math.max(0,DECK_RULES.deckSize-deck.length);
-  for(let i=0;i<toolSlots;i++){
-    const card=tools[i%Math.max(1,tools.length)];
-    if(card)deck.push(card);
-  }
+  const deck=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
   return deck.slice(0,DECK_RULES.deckSize);
+}
+function getStarterAdventureDeckTemplates(selectedSpecial=""){
+  const base=getDefaultDeckTemplates().slice(0,Math.max(0,DECK_RULES.deckSize-1));
+  const special=ADVENTURE_SPECIALS[selectedSpecial]?{...ADVENTURE_SPECIALS[selectedSpecial]}:null;
+  return special?[...base,special].slice(0,DECK_RULES.deckSize):getDefaultDeckTemplates();
 }
 function getPlayableSavedDeckTemplates(){
   if(!canAccessDecks())return [];
@@ -1858,9 +1892,19 @@ function getPlayableSavedDeckTemplates(){
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
   const useSaved=!options.ai;
   const savedTemplates=useSaved?getPlayableSavedDeckTemplates():[];
-  const templates=savedTemplates.length?savedTemplates:(leaderType==="beastmaster"?getBeastmasterDeckTemplates():getDefaultDeckTemplates());
+  const starterTemplates=getDefaultDeckTemplates();
+  const templates=savedTemplates.length?savedTemplates:starterTemplates;
   return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
+
+function getStarterDeckAudit(){
+  const deck=getDefaultDeckTemplates();
+  return {
+    size:deck.length,
+    invalid:deck.filter(c=>!isStarterBasicCard(c)).map(c=>`${c.name||c.key} (${c.rarity||"sin rareza"})`)
+  };
+}
+
 function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
 function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const normalizedAbility=normalizeLeaderAbilityKey(leaderAbility);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[normalizedAbility]?normalizedAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:leaderType==="beastmaster"?"beastmaster":"leader",icon:leaderType==="beastmaster"?"🐾":(owner===1?"👑":"🔮"),portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
 function getCardEffectTextByKey(key){
@@ -2532,11 +2576,13 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
-  const playerBase=makeDeck(1,leaderType);
-  const playerDraw=drawCards(playerBase,[],3);
-  const specialCard=makeCard(specialTemplate,1,leaderType);
+  const starterLocked=!canAccessDecks();
+  const playerBase=starterLocked
+    ? shuffle(getStarterAdventureDeckTemplates(specialKey).map(card=>makeCard(card,1,leaderType)))
+    : makeDeck(1,leaderType);
+  const playerDraw=drawCards(playerBase,[],4);
   const playerDeck=playerDraw.deck;
-  const playerHand=[specialCard,...playerDraw.hand];
+  const playerHand=playerDraw.hand;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   const enemyLeaderLevel=normalizeLeaderLevel(battle.enemyLeaderLevel||1);
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||rollLeaderLevel5Ability()):"";
