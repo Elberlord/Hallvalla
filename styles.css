@@ -8932,3 +8932,462 @@
     overflow:visible!important;
   }
 }
+
+
+/* === v35 Card Inspect Modal Fix: cards in hand/deck use #cardInspectModal === */
+
+#cardInspectModal.card-inspect-modal{
+  padding:10px!important;
+  overflow:hidden!important;
+}
+
+/* Main modal for cards in hand: separate portrait, stats, actions and right data. */
+#cardInspectModal .card-inspect-card{
+  width:min(1100px,96vw)!important;
+  height:min(560px,82vh)!important;
+  max-height:min(560px,82vh)!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  padding:14px!important;
+  display:grid!important;
+  grid-template-columns:300px minmax(0,1fr)!important;
+  grid-template-rows:62px 220px minmax(0,1fr) 50px!important;
+  grid-template-areas:
+    "visual head"
+    "visual text"
+    "stats text"
+    "actions text"!important;
+  gap:10px 14px!important;
+}
+
+/* Header */
+#cardInspectModal .card-inspect-head{
+  grid-area:head!important;
+  margin:0!important;
+  padding:0 54px 0 0!important;
+  display:block!important;
+}
+#cardInspectModal .card-inspect-title{
+  margin:0!important;
+  padding:0!important;
+  font-size:30px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#cardInspectModal .card-inspect-sub{
+  margin-top:7px!important;
+  display:flex!important;
+  gap:6px!important;
+  flex-wrap:wrap!important;
+}
+#cardInspectModal .card-inspect-x{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  z-index:30!important;
+}
+
+/* Portrait obeys modal */
+#cardInspectModal #cardInspectVisual.card-inspect-visual{
+  grid-area:visual!important;
+  width:100%!important;
+  height:220px!important;
+  min-height:220px!important;
+  max-height:220px!important;
+  margin:0!important;
+  align-self:start!important;
+  overflow:hidden!important;
+  border-radius:16px!important;
+}
+#cardInspectModal #cardInspectVisual .card-inspect-portrait,
+#cardInspectModal #cardInspectVisual .card-inspect-portrait.card-portrait,
+#cardInspectModal #cardInspectVisual .card-inspect-portrait.card-portrait img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center 18%!important;
+}
+
+/* Stats below portrait, not behind buttons */
+#cardInspectModal #cardInspectStats.card-inspect-grid{
+  grid-area:stats!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-rows:37px!important;
+  gap:7px!important;
+  overflow:hidden!important;
+}
+#cardInspectModal #cardInspectStats .card-inspect-stat,
+#cardInspectModal #cardInspectStats .det-stat-row{
+  min-height:37px!important;
+  height:37px!important;
+  padding:3px 8px!important;
+  border-radius:11px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  box-sizing:border-box!important;
+}
+#cardInspectModal #cardInspectStats .det-stat-icon-btn{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  min-height:32px!important;
+}
+#cardInspectModal #cardInspectStats .det-stat-img{
+  width:29px!important;
+  height:29px!important;
+}
+#cardInspectModal #cardInspectStats .det-stat-key{
+  font-size:9.5px!important;
+  min-width:28px!important;
+}
+#cardInspectModal #cardInspectStats strong{
+  font-size:15px!important;
+}
+
+/* Cancel/Jugar are their own row below stats */
+#cardInspectModal .card-inspect-actions{
+  grid-area:actions!important;
+  position:static!important;
+  width:100%!important;
+  margin:0!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  align-self:stretch!important;
+}
+#cardInspectModal .card-inspect-actions .btn{
+  min-height:44px!important;
+  height:44px!important;
+  border-radius:12px!important;
+  font-size:14px!important;
+}
+
+/* Right panel layout */
+#cardInspectModal #cardInspectText.card-inspect-text{
+  grid-area:text!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.05fr) minmax(285px,.95fr)!important;
+  grid-template-rows:minmax(0,1fr) 118px 48px!important;
+  grid-template-areas:
+    "effects tactical"
+    "effects states"
+    "buttons buttons"!important;
+  gap:9px!important;
+  box-sizing:border-box!important;
+}
+
+/* Direct child placement */
+#cardInspectModal #cardInspectText > .det-section-block:first-child{
+  grid-area:effects!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+#cardInspectModal #cardInspectText > .det-tactical-card{
+  grid-area:tactical!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+#cardInspectModal #cardInspectText > .det-status-section{
+  grid-area:states!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  margin:0!important;
+}
+#cardInspectModal #cardInspectText > .det-quote-block{
+  display:none!important;
+}
+
+/* Footer inside grid, not floating */
+#cardInspectModal #cardInspectText > .detail-guide-row{
+  grid-area:buttons!important;
+  position:static!important;
+  left:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:100%!important;
+  height:48px!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:6px 10px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(238,190,91,.20)!important;
+  background:linear-gradient(180deg,rgba(22,18,12,.88),rgba(8,8,7,.94))!important;
+  box-sizing:border-box!important;
+}
+
+/* Effects compact */
+#cardInspectModal .det-ability-list{
+  height:calc(100% - 29px)!important;
+  max-height:none!important;
+  overflow:auto!important;
+  align-content:start!important;
+  padding:7px!important;
+  gap:7px!important;
+}
+#cardInspectModal .det-ability-card{
+  min-height:auto!important;
+  padding:8px 9px!important;
+}
+#cardInspectModal .det-ability-card:only-child{
+  min-height:104px!important;
+}
+#cardInspectModal .det-ability-name{
+  font-size:11.5px!important;
+}
+#cardInspectModal .det-ability-text{
+  font-size:10.7px!important;
+  line-height:1.22!important;
+  -webkit-line-clamp:4!important;
+}
+
+/* Tactical compact: full explanation stays in icon modal */
+#cardInspectModal .det-tactical-card .det-mini-note{
+  display:none!important;
+}
+#cardInspectModal .det-section-title{
+  padding:7px 9px!important;
+  font-size:11px!important;
+}
+#cardInspectModal .det-info-row{
+  padding:6px 10px!important;
+  min-height:28px!important;
+  font-size:11px!important;
+}
+#cardInspectModal .det-info-row strong{
+  font-size:10.8px!important;
+  line-height:1.12!important;
+}
+
+/* States compact */
+#cardInspectModal .det-empty-line{
+  padding:7px 9px!important;
+  font-size:10.5px!important;
+}
+
+/* Footer button sizes */
+#cardInspectModal .detail-token-btn{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  min-height:32px!important;
+}
+#cardInspectModal .det-btn-img{
+  width:29px!important;
+  height:29px!important;
+}
+#cardInspectModal .detail-guide-chip span{
+  font-size:11.5px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+
+/* Reason text should not reserve hidden weird space */
+#cardInspectModal .card-inspect-reason{
+  display:none!important;
+}
+
+/* Responsive fallback */
+@media(max-width:920px){
+  #cardInspectModal .card-inspect-card{
+    height:min(92vh,820px)!important;
+    overflow:auto!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto 220px auto auto auto!important;
+    grid-template-areas:
+      "head"
+      "visual"
+      "stats"
+      "actions"
+      "text"!important;
+  }
+  #cardInspectModal #cardInspectText.card-inspect-text{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:visible!important;
+  }
+}
+
+
+/* === v36 Rareza final colors ===
+   Básica: negro
+   Épica: plateado
+   Gloriosa: verde
+   Mítica: azul
+   Legendaria: púrpura
+   Semidiós: dorado
+*/
+
+:root{
+  --rarity-basic-main:#0a0a0b;
+  --rarity-basic-glow:rgba(35,35,38,.62);
+
+  --rarity-epic-main:#d8dde6;
+  --rarity-epic-glow:rgba(214,222,236,.58);
+
+  --rarity-glorious-main:#44ff8a;
+  --rarity-glorious-glow:rgba(68,255,138,.52);
+
+  --rarity-mythic-main:#55c7ff;
+  --rarity-mythic-glow:rgba(85,199,255,.58);
+
+  --rarity-legendary-main:#d86aff;
+  --rarity-legendary-glow:rgba(216,106,255,.58);
+
+  --rarity-demigod-main:#ffe66d;
+  --rarity-demigod-glow:rgba(255,230,109,.64);
+}
+
+/* Basic / black */
+.card-rarity-basic .hand-icon.card-portrait,
+.card-rarity-basic .deck-card-icon.card-portrait,
+.card-rarity-basic .card-icon.card-portrait,
+.card-rarity-basic .card-inspect-portrait,
+.card-rarity-basic.unit-card,
+.unit-card.card-rarity-basic{
+  border-color:rgba(24,24,28,.90)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 0 18px var(--rarity-basic-glow)!important;
+}
+.card-rarity-basic .det-head-chip,
+.card-rarity-basic .card-inspect-sub,
+.card-rarity-basic .inspect-sub{
+  color:#d7d7dc!important;
+}
+
+/* Epic / silver */
+.card-rarity-epic .hand-icon.card-portrait,
+.card-rarity-epic .deck-card-icon.card-portrait,
+.card-rarity-epic .card-icon.card-portrait,
+.card-rarity-epic .card-inspect-portrait,
+.card-rarity-epic.unit-card,
+.unit-card.card-rarity-epic{
+  border-color:var(--rarity-epic-main)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.20),0 0 20px var(--rarity-epic-glow)!important;
+}
+.card-rarity-epic .det-head-chip,
+.card-rarity-epic .card-inspect-sub,
+.card-rarity-epic .inspect-sub{
+  color:#edf2ff!important;
+}
+
+/* Glorious / green */
+.card-rarity-glorious .hand-icon.card-portrait,
+.card-rarity-glorious .deck-card-icon.card-portrait,
+.card-rarity-glorious .card-icon.card-portrait,
+.card-rarity-glorious .card-inspect-portrait,
+.card-rarity-glorious.unit-card,
+.unit-card.card-rarity-glorious{
+  border-color:var(--rarity-glorious-main)!important;
+  box-shadow:inset 0 0 0 1px rgba(210,255,225,.20),0 0 22px var(--rarity-glorious-glow)!important;
+}
+.card-rarity-glorious .det-head-chip,
+.card-rarity-glorious .card-inspect-sub,
+.card-rarity-glorious .inspect-sub{
+  color:#8dffb8!important;
+}
+
+/* Mythic / blue */
+.card-rarity-mythic .hand-icon.card-portrait,
+.card-rarity-mythic .deck-card-icon.card-portrait,
+.card-rarity-mythic .card-icon.card-portrait,
+.card-rarity-mythic .card-inspect-portrait,
+.card-rarity-mythic.unit-card,
+.unit-card.card-rarity-mythic{
+  border-color:var(--rarity-mythic-main)!important;
+  box-shadow:inset 0 0 0 1px rgba(210,245,255,.18),0 0 24px var(--rarity-mythic-glow)!important;
+}
+.card-rarity-mythic .det-head-chip,
+.card-rarity-mythic .card-inspect-sub,
+.card-rarity-mythic .inspect-sub{
+  color:#8edcff!important;
+}
+
+/* Legendary / purple */
+.card-rarity-legendary .hand-icon.card-portrait,
+.card-rarity-legendary .deck-card-icon.card-portrait,
+.card-rarity-legendary .card-icon.card-portrait,
+.card-rarity-legendary .card-inspect-portrait,
+.card-rarity-legendary.unit-card,
+.unit-card.card-rarity-legendary{
+  border-color:var(--rarity-legendary-main)!important;
+  box-shadow:inset 0 0 0 1px rgba(246,221,255,.18),0 0 26px var(--rarity-legendary-glow)!important;
+}
+.card-rarity-legendary .det-head-chip,
+.card-rarity-legendary .card-inspect-sub,
+.card-rarity-legendary .inspect-sub{
+  color:#e58cff!important;
+}
+
+/* Demigod / gold */
+.card-rarity-demigod .hand-icon.card-portrait,
+.card-rarity-demigod .deck-card-icon.card-portrait,
+.card-rarity-demigod .card-icon.card-portrait,
+.card-rarity-demigod .card-inspect-portrait,
+.card-rarity-demigod.unit-card,
+.unit-card.card-rarity-demigod{
+  border-color:var(--rarity-demigod-main)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,248,192,.24),0 0 28px var(--rarity-demigod-glow)!important;
+}
+.card-rarity-demigod .det-head-chip,
+.card-rarity-demigod .card-inspect-sub,
+.card-rarity-demigod .inspect-sub{
+  color:#ffe66d!important;
+}
+
+/* Modal shell glow by rarity */
+#inspector.card-rarity-basic .inspect-card,
+#cardInspectModal.card-rarity-basic .card-inspect-card{
+  border-color:rgba(40,40,44,.72)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.80),0 0 24px rgba(35,35,38,.30)!important;
+}
+#inspector.card-rarity-epic .inspect-card,
+#cardInspectModal.card-rarity-epic .card-inspect-card{
+  border-color:rgba(216,221,230,.72)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 28px rgba(216,221,230,.22)!important;
+}
+#inspector.card-rarity-glorious .inspect-card,
+#cardInspectModal.card-rarity-glorious .card-inspect-card{
+  border-color:rgba(68,255,138,.72)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 30px rgba(68,255,138,.20)!important;
+}
+#inspector.card-rarity-mythic .inspect-card,
+#cardInspectModal.card-rarity-mythic .card-inspect-card{
+  border-color:rgba(85,199,255,.74)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 32px rgba(85,199,255,.22)!important;
+}
+#inspector.card-rarity-legendary .inspect-card,
+#cardInspectModal.card-rarity-legendary .card-inspect-card{
+  border-color:rgba(216,106,255,.76)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 34px rgba(216,106,255,.24)!important;
+}
+#inspector.card-rarity-demigod .inspect-card,
+#cardInspectModal.card-rarity-demigod .card-inspect-card{
+  border-color:rgba(255,230,109,.80)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 36px rgba(255,230,109,.25)!important;
+}
