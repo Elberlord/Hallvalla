@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_home_compact_pass_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HW_counter_guard_status_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -95,8 +95,8 @@ const LEADER_DATA={
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de larga distancia: AT 2, GD 1, RG 3. Mejora magias."},
   axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: los berserkers rompen Guardia y activan Grito de Guerra para subir AT aliado."},
   cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder móvil: potencia Caballería Ligera con MOV/AGI y puede llamar refuerzos al nivel 5."},
-  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con AGI/DX y extiende Sangrado cuando ejecutan enemigos."},
-  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Usa trampas y bestias; no lanza buffs mágicos."}
+  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con AGI/DX; en Nv.5 vuelve sus ataques más limpios y su desgaste táctico más eficiente."},
+  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias crecen por tier hasta llegar a +4 AT y +2 AGI."}
 };
 const LEADER_LEVEL_MAX=9;
 const LEADER_LEVEL_TABLE={
@@ -114,7 +114,7 @@ const LEADER_BASE_ATK={warrior:3,archer:3,mage:2,axe:4,cavalry:3,assassin:2,beas
 const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
 const LEADER_BASE_RANGE={warrior:1,archer:2,mage:3,axe:1,cavalry:1,assassin:1,beastmaster:1};
 function getLeaderAttack(type,level=1){return LEADER_BASE_ATK[type]??3}
-function getLeaderGuard(type,level=1){return Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3))}
+function getLeaderGuard(type,level=1){if(type==="beastmaster")return 2;return Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3))}
 function getLeaderRange(type,level=1){return LEADER_BASE_RANGE[type]??1}
 const LEADER_BUFF_TABLE={
   warrior:{1:{hp:2,guard:2},2:{hp:3,guard:3},3:{hp:4,guard:4},4:{hp:5,guard:5}},
@@ -123,7 +123,7 @@ const LEADER_BUFF_TABLE={
   axe:{1:{atk:1,dex:1},2:{atk:2,dex:1},3:{atk:2,dex:2},4:{atk:3,dex:2}},
   cavalry:{1:{mov:1,agi:1},2:{mov:1,agi:2},3:{mov:2,agi:2},4:{mov:2,agi:3,atk:1}},
   assassin:{1:{agi:2,dex:1},2:{agi:3,dex:1},3:{agi:4,dex:2},4:{agi:5,dex:2,atk:1}},
-  beastmaster:{1:{},2:{},3:{},4:{}}
+  beastmaster:{1:{atk:1,agi:1},2:{atk:2,agi:1},3:{atk:3,agi:2},4:{atk:4,agi:2}}
 };
 const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"heroic_vitality",name:"Vitalidad heroica",short:"+5 HP al líder",desc:"El líder entra al combate con +5 vida máxima."},
@@ -133,8 +133,8 @@ const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"arcane_bolt",name:"Descarga arcana",short:"EFFECT: 2 daño directo al líder enemigo",desc:"Con el Hechicero, una vez por turno puede usar EFFECT para infligir 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats."},
   {key:"blood_victory",name:"Victoria sangrienta",short:"berserker destruye: aliados +1 VIDA",desc:"Con el Caudillo del Hacha, cada vez que un berserker aliado destruye una unidad enemiga, todos tus aliados vivos ganan +1 Vida actual, sin superar su máximo."},
   {key:"cavalry_call",name:"Llamado de la carga",short:"EFFECT: convoca hasta 2 Caballerías Ligeras",desc:"Con el Señor de la Carga, el líder puede usar EFFECT para convocar hasta dos Caballerías Ligeras aliadas en casillas libres adyacentes."},
-  {key:"blood_mist",name:"Niebla de sangre",short:"asesino destruye: Sangrado a todos los enemigos",desc:"Con el Maestro de Sombras, cada vez que un asesino aliado destruye una unidad enemiga, todos los enemigos vivos reciben Sangrado."},
-  {key:"prepare_hunt",name:"Preparar la Cacería",short:"EFFECT: coloca una Trampa de Caza básica",desc:"Con el Señor de las Bestias, una vez por turno puede colocar una Trampa de Caza básica en una celda libre dentro de rango 3. Las trampas de cacería aliadas no afectan Bestias aliadas."}
+  {key:"blood_mist",name:"Niebla de sangre",short:"Asesinos ignoran Guardia y gastan solo la mitad de PREC/EVA",desc:"Con el Maestro de Sombras, los asesinos aliados ignoran Guardia al atacar. Además, cuando un asesino aliado debería gastar Precisión o Evasión por la fórmula, solo gasta la mitad redondeada hacia arriba. Ejemplo: si debía gastar 8 EVA, gasta 4; si tenía 10, queda con 6."},
+  {key:"prepare_hunt",name:"Veneno de la Manada",short:"Aliados causan Veneno; dura +2 turnos",desc:"Con el Señor de las Bestias, todas las unidades aliadas causan Veneno cuando hacen daño real a HP. Ese Veneno dura 2 turnos más que su duración normal y se duplica cada tick mientras dure."}
 ];
 const LEADER_LEVEL5_ABILITY_MAP=Object.fromEntries(LEADER_LEVEL5_ABILITY_POOL.map(a=>[a.key,a]));
 function normalizeLeaderAbilityKey(key){return key||""}
@@ -819,6 +819,13 @@ function getBeastTraps(state=publicState){return Array.isArray(state?.beastTraps
 function makeBeastTrap(card,owner,x,y){return {id:uid8(),owner,x,y,cardKey:card.key,cardName:card.name,trapKey:card.beastTrap||"basic_hunt",createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};}
 function removeBeastTrapById(traps,id){return (traps||[]).filter(t=>t.id!==id);}
 function ownerHasBeastmaster(owner,units=publicState?.units||[]){return (units||[]).some(u=>u.owner===owner&&u.leader&&u.leaderType==="beastmaster"&&u.hp>0);}
+function ownerHasBeastmasterVenom(owner,units=publicState?.units||[]){return (units||[]).some(u=>u.owner===owner&&u.leader&&u.leaderType==="beastmaster"&&u.hp>0&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt");}
+function applyBeastmasterVenomToTarget(target,source,turns=5){
+  if(!target||!source)return target;
+  if(isPoisonImmuneUnit(target))return clearPoisonStatus(target);
+  const existingTurns=Math.max(0,Number(target.poisonTurns||0));
+  return {...target,poisonTurns:Math.max(existingTurns,turns),poisonStage:target.poisonStage||1,poisonDamage:Math.max(1,Number(target.poisonDamage||0)||1),poisonSourceId:source.id,poisonSourceName:source.name||"Veneno de la Manada"};
+}
 function isIgnoredByBeastTrap(unit,trap,units=publicState?.units||[]){return !!(trap&&unit&&unit.owner===trap.owner&&isBeastUnit(unit)&&ownerHasBeastmaster(trap.owner,units));}
 function getCellBeastTrapAt(x,y,state=publicState){return getBeastTraps(state).find(t=>t.x===x&&t.y===y)||null;}
 function nextTurnKeyForOwner(owner,state=publicState){
@@ -1317,7 +1324,7 @@ function applyDesertAssassinRule(card){
 }
 function hasBleeding(u){return !!u&&Number(u.bleedDamage||0)>0;}
 function isDesertAssassinUnit(u){return !!u&&u.key==="scout";}
-function shouldIgnoreGuardForAttack(attacker){return isDesertAssassinUnit(attacker);}
+function shouldIgnoreGuardForAttack(attacker,units=publicState?.units||[]){return isDesertAssassinUnit(attacker)||hasShadowMistAssassin(attacker,units);}
 function applyBleedToUnit(target,sourceName=""){
   if(!target)return target;
   const bleed={
@@ -1940,6 +1947,7 @@ function getLeaderBonus(u){
   if(type==="axe"&&isAxeUnitCardLike(u)){const b=LEADER_BUFF_TABLE.axe[tier]||LEADER_BUFF_TABLE.axe[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
   if(type==="cavalry"&&isLightCavalryUnit(u)){const b=LEADER_BUFF_TABLE.cavalry[tier]||LEADER_BUFF_TABLE.cavalry[1];bonus.mov+=(b.mov||0);bonus.agi+=(b.agi||0);bonus.atk+=(b.atk||0);}
   if(type==="assassin"&&isAssassinUnit(u)){const b=LEADER_BUFF_TABLE.assassin[tier]||LEADER_BUFF_TABLE.assassin[1];bonus.agi+=(b.agi||0);bonus.dex+=(b.dex||0);bonus.atk+=(b.atk||0);}
+  if(type==="beastmaster"&&isBeastUnit(u)){const b=LEADER_BUFF_TABLE.beastmaster[tier]||LEADER_BUFF_TABLE.beastmaster[1];bonus.atk+=(b.atk||0);bonus.agi+=(b.agi||0);}
   return bonus;
 }
 function syncLeaderHpBonuses(units){
@@ -2031,7 +2039,9 @@ function applyTurnStatSpendToUnit(u,spent){
 }
 function spendEvasionByAttack(attacker,defender,units,mods={}){
   if(!attacker||!defender||defender.leader)return {units,spent:0,remaining:null};
-  const spent=Math.max(0,getAttackPrecisionScore(attacker,mods));
+  const spentRaw=Math.max(0,getAttackPrecisionScore(attacker,mods));
+  const currentDefender=(units||[]).find(u=>u.id===defender.id)||defender;
+  const spent=shadowMistSpendAmount(currentDefender,spentRaw,units);
   if(spent<=0)return {units,spent:0,remaining:getAvailableEvasionScore(defender,mods)};
   let remaining=null;
   const out=(units||[]).map(u=>{
@@ -2054,7 +2064,8 @@ function spendActionStatsByAttack(attacker,defender,units,mods={},hitResult=null
   }
   const defenseNeeded=Math.max(0,getDefenseEvasionScore(currentDefender,mods));
   const missed=hitResult&&hitResult.hit===false;
-  const spent=missed?attackAvailable:Math.min(attackAvailable,defenseNeeded);
+  const spentRaw=missed?attackAvailable:Math.min(attackAvailable,defenseNeeded);
+  const spent=shadowMistSpendAmount(currentAttacker,spentRaw,units);
   if(spent<=0)return {units,spent:0,remaining:Math.max(0,getBaseEvasionScore(currentAttacker)-getEvasionPressure(currentAttacker))};
   let remaining=null;
   const out=(units||[]).map(u=>{
@@ -2162,7 +2173,7 @@ function getCounterDefenseRemainder(originalAttacker,originalDefender,originalMo
   return Math.max(0,attackScore-defenseScore);
 }
 function prepareCounterMods(counterAttacker,counterDefender,baseMods={},defenseRemainder=null){
-  const mods={...baseMods,defenderGuard:-999,counterIgnoresGuard:true};
+  const mods={...baseMods,counterIgnoresGuard:false};
   if(typeof defenseRemainder==="number")mods.defenderDefenseOverride=Math.max(0,defenseRemainder);
   return mods;
 }
@@ -2290,7 +2301,7 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
     const dmg=Math.max(0,u.poisonDamage||0);
     if(!statusFxEvent&&dmg>0)statusFxEvent=makeStatusFxEvent("poison_tick",u,dmg);
     if(!floatFxEvent&&dmg>0)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"☠"});
-    let next=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,poisonTurns:(u.poisonTurns||0)-1,damagedThisTurn:true}); if(next.poisonStage){next.poisonStage+=1;next.poisonDamage=next.poisonStage===2?2:next.poisonStage===3?4:next.poisonDamage;}
+    let next=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,poisonTurns:(u.poisonTurns||0)-1,damagedThisTurn:true}); if(next.poisonStage){next.poisonStage+=1;next.poisonDamage=Math.max(1,dmg*2);}
     logs.push(`${u.name} sufre ${dmg} daño directo por veneno mítico.`);
     if(next.poisonTurns<=0){delete next.poisonTurns;delete next.poisonDamage;delete next.noHealWhilePoisoned;}
     return next;
@@ -3356,8 +3367,16 @@ function applyBloodVictory(units,owner){
   });
 }
 function hasBloodMist(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="assassin"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_mist"}
+function hasShadowMistAssassin(unit,units=publicState?.units||[]){
+  return !!(unit&&!unit.leader&&isAssassinUnit(unit)&&hasBloodMist(unit.owner,units));
+}
+function shadowMistSpendAmount(unit,spent,units=publicState?.units||[]){
+  const raw=Math.max(0,Number(spent)||0);
+  if(raw<=0)return 0;
+  return hasShadowMistAssassin(unit,units)?Math.ceil(raw/2):raw;
+}
 function applyBloodMist(units,owner,sourceName="Niebla de sangre"){
-  return (units||[]).map(u=>u.owner!==owner?applyBleedToUnit(u,sourceName):u);
+  return units||[];
 }
 function hasSteelWall(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="warrior"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="steel_wall"}
 function hasCoverFire(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="archer"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="cover_fire"}
@@ -3469,8 +3488,8 @@ async function attackUnit(a,d){
       units=units.map(u=>{
         if(u.id===d.id)return{...u,counterUsedTurn:true};
         if(u.id===a.id){
-          const damaged=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-fsAtk,lastGuardLoss:0,lastHpLoss:fsAtk});
-          fsGuard=0;fsHp=fsAtk;
+          const damaged=applyGuardDamage(u,fsAtk,fsMods.defenderGuard||0,0);
+          fsGuard=damaged.lastGuardLoss||0;fsHp=damaged.lastHpLoss||0;
           damaged.damagedThisTurn=fsHp>0||damaged.damagedThisTurn;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
           return {...damaged,acted:true,khalidChainReady:false};
@@ -3481,7 +3500,7 @@ async function attackUnit(a,d){
       units=applyLegendaryFatalSaves(units,[a.id]);
       attackerFell=!!units.find(u=>u.id===a.id&&u.hp<=0);
       units=units.filter(u=>u.hp>0);
-      firstStrikeText=` ${d.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}) e ignora Guardia; inflige ${fsHp} daño a HP.${counterDefenseText(fsDefenseRemainder)}`;
+      firstStrikeText=` ${d.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}). ${fsGuard>0?`Consume ${fsGuard} GD. `:""}${fsHp>0?`Inflige ${fsHp} daño a HP.`:"No atraviesa la Guardia."}${counterDefenseText(fsDefenseRemainder)}`;
       if(attackerFell){
         const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`;
         await updatePublic({units,legendaryTraps:preTrap.traps});
@@ -3522,7 +3541,7 @@ async function attackUnit(a,d){
     if(u.id===a.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
     if(u.id===d.id){
       if(!hit.hit)return u;
-      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a);
+      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,units);
       const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
       guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;
       damaged.damagedThisTurn=hpLoss>0||damaged.damagedThisTurn;
@@ -3543,8 +3562,7 @@ async function attackUnit(a,d){
   if(warCryTriggered)units=applyAxeWarCry(units,a.owner,a.id);
   const bloodVictoryTriggered=defenderFell&&hasBloodVictory(a.owner,units)&&isAxeUnitCardLike(a);
   if(bloodVictoryTriggered)units=applyBloodVictory(units,a.owner);
-  const bloodMistTriggered=defenderFell&&hasBloodMist(a.owner,units)&&isAssassinUnit(a);
-  if(bloodMistTriggered)units=applyBloodMist(units,a.owner,a.name);
+  const bloodMistTriggered=false;
   const steelWallTriggered=shouldTriggerSteelWall(d,guardLoss,hit.hit);
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
   const coverFireTriggered=shouldTriggerCoverFire(a,hpLoss,hit.hit);
@@ -3585,6 +3603,16 @@ async function attackUnit(a,d){
         return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:a.id,poisonSourceName:a.name};
       });
       bleedText+=` ${d.name} queda envenenado por Flecha del Dharma: 1/2/4 durante 3 turnos.`;
+    }
+  }
+  if(hit.hit&&hpLoss>0&&ownerHasBeastmasterVenom(a.owner,units)&&units.some(u=>u.id===d.id)){
+    const targetBeforeVenom=units.find(u=>u.id===d.id)||d;
+    if(isPoisonImmuneUnit(targetBeforeVenom)){
+      units=units.map(u=>u.id===d.id?clearPoisonStatus(u):u);
+      bleedText+=` ${targetBeforeVenom.name} ignora el Veneno de la Manada.`;
+    }else{
+      units=units.map(u=>u.id===d.id?applyBeastmasterVenomToTarget(u,a,5):u);
+      bleedText+=` Veneno de la Manada: ${targetBeforeVenom.name} queda envenenado durante 5 turnos.`;
     }
   }
   if(hit.hit&&hpLoss>0&&a.key==="constrictor_snake"&&units.some(u=>u.id===d.id)){
@@ -3659,9 +3687,7 @@ async function attackUnit(a,d){
       units=units.map(u=>{
         if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
         if(u.id===attackerAfter.id){
-          const damaged=isMiyamotoCounter
-            ? applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0)
-            : resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-cAtk,lastGuardLoss:0,lastHpLoss:cAtk});
+          const damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
           cGuard=damaged.lastGuardLoss||0;cHp=damaged.lastHpLoss||0;
           damaged.damagedThisTurn=cHp>0||damaged.damagedThisTurn;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -3679,21 +3705,39 @@ async function attackUnit(a,d){
         miyamotoCounterBleedEvent=makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply",bleedTargetAfter,1);
         miyamotoBleedText=` ${bleedTargetAfter.name} ${alreadyBleeding?"mantiene Sangrado":"queda con Sangrado"} por Dos Cielos.`;
       }
+      let counterVenomText="";
+      if(cHp>0&&ownerHasBeastmasterVenom(defenderAfter.owner,units)&&units.some(u=>u.id===attackerAfter.id)){
+        const venomTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
+        if(isPoisonImmuneUnit(venomTargetBefore)){
+          units=units.map(u=>u.id===attackerAfter.id?clearPoisonStatus(u):u);
+          counterVenomText=` ${venomTargetBefore.name} ignora el Veneno de la Manada.`;
+        }else{
+          units=units.map(u=>u.id===attackerAfter.id?applyBeastmasterVenomToTarget(u,defenderAfter,5):u);
+          counterVenomText=` Veneno de la Manada: ${venomTargetBefore.name} queda envenenado durante 5 turnos.`;
+        }
+      }
+      let counterBleedText="";
+      if(cHp>0&&defenderAfter.key==="scout"&&units.some(u=>u.id===attackerAfter.id)){
+        const bleedTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
+        const already=hasBleeding(bleedTargetBefore);
+        units=units.map(u=>u.id===attackerAfter.id?applyBleedToUnit(u,defenderAfter.name):u);
+        counterBleedText=` ${bleedTargetBefore.name} ${already?"mantiene Sangrado":"queda con Sangrado"} por contraataque.`;
+      }
       const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
-      const guardText=`ignora Guardia e inflige ${cHp} daño a HP`;
-      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
+      const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
+      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
       units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
     }
   }
-  const assassinIgnoreText=shouldIgnoreGuardForAttack(a)&&hit.hit?" Ignora Guardia/defensa.":"";
+  const assassinIgnoreText=shouldIgnoreGuardForAttack(a,units)&&hit.hit?" Ignora Guardia/defensa.":"";
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
   const bloodVictoryText=bloodVictoryTriggered?` Victoria sangrienta: todos los aliados ganan +1 Vida.`:"";
   const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
-  const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
+  const bloodMistText=hasShadowMistAssassin(a,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
   const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
   const ulyssesTacticText=ulyssesAttackTactic.log||"";
@@ -4089,6 +4133,16 @@ async function adventureEnemyTurn(){
         bleedText+=` ${target.name} queda envenenado por Flecha del Dharma: 1/2/4 durante 3 turnos.`;
       }
     }
+    if(hit.hit&&hpLoss>0&&ownerHasBeastmasterVenom(attacker.owner,units)&&units.some(u=>u.id===target.id)){
+      const targetBeforeVenom=units.find(u=>u.id===target.id)||target;
+      if(isPoisonImmuneUnit(targetBeforeVenom)){
+        units=units.map(u=>u.id===target.id?clearPoisonStatus(u):u);
+        bleedText+=` ${targetBeforeVenom.name} ignora el Veneno de la Manada.`;
+      }else{
+        units=units.map(u=>u.id===target.id?applyBeastmasterVenomToTarget(u,attacker,5):u);
+        bleedText+=` Veneno de la Manada: ${targetBeforeVenom.name} queda envenenado durante 5 turnos.`;
+      }
+    }
     if(hit.hit&&hpLoss>0&&attacker.key==="constrictor_snake"&&units.some(u=>u.id===target.id)){
       units=units.map(u=>u.id===target.id?{...u,tempMovDebuff:Math.max(Number(u.tempMovDebuff||0),1),tempAgiDebuff:(u.tempAgiDebuff||0)+1,noMoveTurnKey:(u.tempMovDebuff?nextTurnKeyForOwner(u.owner):u.noMoveTurnKey)}:u);
     }
@@ -4180,7 +4234,7 @@ async function adventureEnemyTurn(){
           miyamotoBleedText=` ${bleedTargetAfter.name} ${alreadyBleeding?"mantiene Sangrado":"queda con Sangrado"} por Dos Cielos.`;
         }
         const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
-        const guardText=`ignora Guardia e inflige ${cHp} daño a HP`;
+        const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
         counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
       }else{
         units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
@@ -4214,7 +4268,7 @@ async function adventureEnemyTurn(){
     const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
     const bloodVictoryText=bloodVictoryTriggered?` Victoria sangrienta: todos los aliados ganan +1 Vida.`:"";
     const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
-    const bloodMistText=bloodMistTriggered?` Niebla de sangre: todos los enemigos quedan con Sangrado.`:"";
+    const bloodMistText=hasShadowMistAssassin(a,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
     const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
     const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
     const ulyssesTacticText=ulyssesAttackTactic.log||"";
@@ -5094,9 +5148,7 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     return (units||[]).some(it=>it.owner!==owner&&it.leader&&it.hp>0)?[caster]:[];
   }
   if(caster.leader&&caster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
-    if(caster.prepareHuntUsedTurn)return[];
-    const spots=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(!units.some(it=>it.x===x&&it.y===y)&&!getCellBeastTrapAt(x,y)&&dist(caster,{x,y})<=3)spots.push({x,y,cellTarget:true});}
-    return spots;
+    return[];
   }
   if(caster.key==="african_lion"){return [caster];}
   if(caster.key==="black_raven"){return [caster];}
@@ -5209,12 +5261,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,cavalryCallUsedTurn:true}:it).concat(tokens);
     log=`${liveCaster.name} activa Llamado de la carga: convoca ${tokens.length} Caballería${tokens.length===1?" Ligera":"s Ligeras"} junto a él.`;
   }else if(liveCaster.leader&&liveCaster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
-    if(liveCaster.prepareHuntUsedTurn)return{success:false,reason:"Preparar la Cacería ya fue usado este turno."};
-    const trap={id:uid8(),owner,x:target.x,y:target.y,cardKey:"beastmaster_basic_hunt",cardName:"Trampa de Caza básica",trapKey:"basic_hunt",createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};
-    const traps=[...getBeastTraps(),trap];
-    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,prepareHuntUsedTurn:true}:it);
-    publicState.beastTraps=traps;
-    return{success:true,units:out,beastTraps:traps,log:`${liveCaster.name} prepara una Trampa de Caza básica en ${target.x+1},${target.y+1}.`};
+    return{success:false,reason:"Veneno de la Manada es una habilidad pasiva."};
   }else if(liveCaster.key==="african_lion"){
     const rev=revealStealthInRadius(out,owner,liveCaster,3,"Rugido del Rey");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Rugido del Rey y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
   }else if(liveCaster.key==="black_raven"){
@@ -5407,7 +5454,7 @@ function getUnitStatusEntries(u){
   if(hasActiveBlessedArmor(u))add(`1ra muerte negada`,`Armadura bendita`,`La primera muerte del líder fue negada. Su vida quedó en 1 y no puede perder Vida durante el resto de este turno.`,"buff guard-buff","buff");
   if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Lluvia ${Math.max(0,3-Number(u.arrowRainUses||0))}/3`,`Lluvia de flechas`,`Habilidad Nv.5 activa: una vez por turno, hasta 3 veces por duelo, puede infligir 2 de daño directo a todas las unidades enemigas ignorando Guardia y stats. Usos gastados: ${Number(u.arrowRainUses||0)}.`,"buff dex-buff","buff");
   if(u.leader&&u.leaderType==="mage"&&u.leaderAbility==="arcane_bolt")add(`Descarga arcana`,`Descarga arcana`,`Habilidad Nv.5 activa: una vez por turno puede infligir 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats.`,"buff dex-buff","buff");
-  if(n(u.poisonTurns)>0&&n(u.poisonDamage)>0)add(`Veneno ${n(u.poisonDamage)}`,`Veneno`,`Veneno: pierde ${n(u.poisonDamage)} Vida al inicio de su turno durante ${n(u.poisonTurns)} turno(s).`,"debuff poison","poison");
+  if(n(u.poisonTurns)>0&&n(u.poisonDamage)>0)add(`Veneno ${n(u.poisonDamage)}`,`Veneno`,`Veneno: pierde ${n(u.poisonDamage)} Vida al inicio de su turno durante ${n(u.poisonTurns)} turno(s). El daño se duplica en cada tick hasta que termine el efecto.`,"debuff poison","poison");
   if(isRhinoStunnedNow(u))add(`Aturdido`,`Aturdido por Impacto`,`No puede moverse, defenderse ni atacar durante el turno afectado. Su Guardia se mantiene igual y su Destreza/Agilidad quedan a la mitad.`,"debuff lock","lock");
   if(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey)add(`No mover`,`Movimiento bloqueado`,`No puede moverse este turno.`,"debuff lock","lock");
   if(u.noAttackTurnKey&&u.noAttackTurnKey===publicState?.turnKey)add(`No atacar`,`Ataque bloqueado`,`No puede atacar este turno.`,"debuff lock","lock");
