@@ -11053,3 +11053,141 @@
     width:25vw!important;
   }
 }
+
+
+/* === v46 HOME balance pass: equalize sizes, improve readability, remove plus signs === */
+#mainMenu .asset-resource-row{
+  gap:6px!important;
+  align-items:center!important;
+}
+#mainMenu .asset-resource{
+  min-width:108px!important;
+  width:108px!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  padding:5px 10px 5px 8px!important;
+}
+#mainMenu .asset-resource span{
+  display:none!important;
+}
+#mainMenu .asset-resource b{
+  margin-left:auto!important;
+  text-align:right!important;
+}
+
+#mainMenu .asset-topbar{
+  top:12px!important;
+  left:16px!important;
+  right:16px!important;
+  height:90px!important;
+  max-height:90px!important;
+}
+#mainMenu .asset-profile{
+  width:min(480px,35vw)!important;
+  min-height:78px!important;
+  height:78px!important;
+}
+#mainMenu .asset-profile-name{
+  font-size:24px!important;
+}
+#mainMenu .asset-profile-sub{
+  font-size:13px!important;
+}
+
+#mainMenu .asset-main{
+  top:126px!important;
+  bottom:110px!important;
+  left:22px!important;
+  right:22px!important;
+  gap:26px!important;
+  grid-template-columns:minmax(350px,29.5vw) minmax(260px,1fr) minmax(350px,29.5vw)!important;
+}
+#mainMenu .asset-column{
+  gap:14px!important;
+  justify-content:flex-start!important;
+}
+#mainMenu .image-button img{
+  height:clamp(82px,11.8vh,98px)!important;
+  width:100%!important;
+  object-fit:fill!important;
+}
+#mainMenu .asset-center{
+  transform:translateY(0)!important;
+  justify-content:center!important;
+}
+#mainMenu .asset-logo{
+  top:-2px!important;
+  margin-bottom:8px!important;
+}
+#mainMenu .asset-logo-mark{
+  font-size:clamp(54px,5.8vw,80px)!important;
+  line-height:.92!important;
+}
+#mainMenu .asset-logo-sub{
+  font-size:clamp(13px,1.2vw,18px)!important;
+}
+#mainMenu .play-image-button img{
+  width:min(288px,22vw)!important;
+  max-height:220px!important;
+}
+
+/* Make both bottom promos feel balanced and equally readable. */
+#mainMenu .asset-promo.daily-panel,
+#mainMenu .asset-promo.welcome-panel{
+  width:min(390px,28.5vw)!important;
+  height:72px!important;
+  bottom:18px!important;
+}
+#mainMenu .asset-promo.daily-panel{ left:22px!important; }
+#mainMenu .asset-promo.welcome-panel{ right:22px!important; }
+
+#mainMenu .asset-bottom{
+  bottom:12px!important;
+  max-width:450px!important;
+  gap:12px!important;
+}
+#mainMenu .bottom-asset-tab{
+  width:142px!important;
+  height:72px!important;
+}
+
+/* Current screenshot range tuning: 1366x768-like desktop */
+@media (min-width:1280px) and (max-width:1440px){
+  #mainMenu .asset-main{
+    top:126px!important;
+    bottom:108px!important;
+    left:24px!important;
+    right:24px!important;
+    gap:24px!important;
+    grid-template-columns:minmax(360px,30vw) minmax(240px,1fr) minmax(360px,30vw)!important;
+  }
+  #mainMenu .asset-column{ gap:14px!important; }
+  #mainMenu .image-button img{ height:92px!important; }
+  #mainMenu .asset-promo.daily-panel,
+  #mainMenu .asset-promo.welcome-panel{
+    width:360px!important;
+    height:70px!important;
+    bottom:16px!important;
+  }
+  #mainMenu .play-image-button img{
+    width:280px!important;
+    max-height:214px!important;
+  }
+}
+
+@media (max-height:800px){
+  #mainMenu .asset-main{
+    top:124px!important;
+    bottom:106px!important;
+  }
+  #mainMenu .image-button img{ height:88px!important; }
+  #mainMenu .asset-promo.daily-panel,
+  #mainMenu .asset-promo.welcome-panel{
+    height:68px!important;
+    bottom:14px!important;
+  }
+  #mainMenu .bottom-asset-tab{
+    height:68px!important;
+    width:136px!important;
+  }
+}
