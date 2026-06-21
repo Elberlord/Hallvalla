@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_battle_controls_det_leader_fix_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_real_selector_fix_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -4849,7 +4849,7 @@ function showUnit(u){
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
-  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:!u.leader,effectLabel:'Ver efecto'})}`;
+  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:true,effectLabel:'Ver efecto'})}`;
   bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
   inspector.classList.add("show");
 }

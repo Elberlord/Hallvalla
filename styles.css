@@ -7766,3 +7766,306 @@
     max-height:none!important;
   }
 }
+
+
+/* === v30 REAL SELECTOR FIX === */
+
+/* 1) Real battle controls: this is the actual left button group. */
+#gameShell .battlefield .battle-tools{
+  position:absolute!important;
+  left:26px!important;
+  top:auto!important;
+  bottom:34px!important;
+  right:auto!important;
+  transform:none!important;
+  z-index:74!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  pointer-events:auto!important;
+  max-width:170px!important;
+}
+#gameShell .battlefield .battle-tools #battleMenuBtn,
+#gameShell .battlefield .battle-tools #toggleLogBtn,
+#gameShell .battlefield .battle-tools #toggleActionsBtn{
+  position:static!important;
+  transform:none!important;
+  margin:0!important;
+}
+#gameShell .battlefield .battle-tools #battleMenuBtn{
+  width:46px!important;
+  min-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
+  padding:0!important;
+  border-radius:999px!important;
+}
+#gameShell .battlefield .battle-tools #toggleLogBtn,
+#gameShell .battlefield .battle-tools #toggleActionsBtn{
+  min-width:138px!important;
+  min-height:40px!important;
+  text-align:center!important;
+}
+
+/* 2) Real honor HUD: move it to a clean readable position above the lowered buttons. */
+#gameShell .battlefield #turnHonorHud.turn-honor-hud{
+  position:absolute!important;
+  left:26px!important;
+  top:214px!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  z-index:76!important;
+  min-width:132px!important;
+  justify-content:center!important;
+  padding:8px 14px!important;
+  background:rgba(0,0,0,.88)!important;
+  border-color:rgba(255,213,96,.70)!important;
+  pointer-events:none!important;
+}
+#gameShell .battlefield #honorRechargeModal.honor-recharge-modal{
+  left:22px!important;
+  top:164px!important;
+  transform:translateY(-12px) scale(.96)!important;
+  z-index:78!important;
+}
+
+/* 3) Real inspector layout: stop overlaying stats on portrait. */
+#inspector .inspect-card{
+  width:min(1120px,96vw)!important;
+  height:min(620px,84vh)!important;
+  max-height:min(620px,84vh)!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:360px minmax(0,1fr)!important;
+  grid-template-rows:54px 38px 268px minmax(0,1fr)!important;
+  grid-template-areas:
+    "art title"
+    "art sub"
+    "art text"
+    "stats text"!important;
+  gap:10px 16px!important;
+  padding:16px!important;
+  box-sizing:border-box!important;
+}
+
+/* Header */
+#inspector #inspectTitle.inspect-title{
+  grid-area:title!important;
+  margin:0!important;
+  padding:0 62px 0 0!important;
+  align-self:end!important;
+  font-size:34px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#inspector #inspectSub.inspect-sub{
+  grid-area:sub!important;
+  margin:0!important;
+  align-self:start!important;
+}
+
+/* Portrait is only portrait. */
+#inspector #inspectArt.inspect-art{
+  grid-area:art!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  align-self:stretch!important;
+  justify-self:stretch!important;
+  overflow:hidden!important;
+  border-radius:18px!important;
+}
+#inspector #inspectArt.inspect-art img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+
+/* Stats are only below portrait. No margin hack, no overlap. */
+#inspector #inspectStats.inspect-grid{
+  grid-area:stats!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  margin:0!important;
+  align-self:stretch!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-rows:42px!important;
+  gap:8px!important;
+  overflow:hidden!important;
+}
+#inspector #inspectStats .inspect-stat,
+#inspector #inspectStats .det-stat-row{
+  min-height:42px!important;
+  height:42px!important;
+  padding:4px 9px!important;
+  border-radius:12px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+#inspector #inspectStats .det-stat-img{
+  width:32px!important;
+  height:32px!important;
+}
+
+/* Right side content: effects, tactical, states, buttons. */
+#inspector #inspectText.inspect-text{
+  grid-area:text!important;
+  margin:0!important;
+  padding:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.06fr) minmax(290px,.94fr)!important;
+  grid-template-rows:minmax(0,1fr) minmax(116px,auto) 58px!important;
+  grid-template-areas:
+    "effects tactical"
+    "effects states"
+    "buttons buttons"!important;
+  gap:10px!important;
+}
+
+/* Direct children by their real order/classes. */
+#inspector #inspectText > .det-section-block:first-child{
+  grid-area:effects!important;
+  min-height:0!important;
+  height:100%!important;
+}
+#inspector #inspectText > .det-tactical-card{
+  grid-area:tactical!important;
+  min-height:0!important;
+  height:auto!important;
+  align-self:start!important;
+}
+#inspector #inspectText > .det-status-section{
+  grid-area:states!important;
+  min-height:0!important;
+  height:auto!important;
+  align-self:stretch!important;
+  margin:0!important;
+}
+#inspector #inspectText > .det-quote-block{
+  display:none!important;
+}
+#inspector #inspectText > .detail-guide-row{
+  grid-area:buttons!important;
+}
+
+/* Effects should not become an empty cave. */
+#inspector .det-ability-list{
+  height:auto!important;
+  max-height:calc(100% - 30px)!important;
+  overflow:auto!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:8px!important;
+  align-content:start!important;
+  padding:8px!important;
+}
+#inspector .det-ability-card{
+  min-height:auto!important;
+  padding:9px 10px!important;
+}
+#inspector .det-ability-card:only-child{
+  min-height:126px!important;
+}
+#inspector .det-ability-text{
+  -webkit-line-clamp:5!important;
+}
+
+/* Tactical note compact. */
+#inspector .det-mini-note{
+  font-size:10px!important;
+  line-height:1.18!important;
+  max-height:58px!important;
+  overflow:auto!important;
+}
+
+/* Buttons tray inside, visible, not stuck at lower-right. */
+#inspector #inspectText > .detail-guide-row{
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:100%!important;
+  min-height:54px!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(238,190,91,.20)!important;
+  background:linear-gradient(180deg,rgba(22,18,12,.82),rgba(8,8,7,.92))!important;
+  box-sizing:border-box!important;
+}
+#inspector .detail-guide-chip{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+#inspector .detail-guide-chip span{
+  color:#ead29a!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+#inspector .detail-token-btn{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  min-height:36px!important;
+}
+
+/* Close button top right. */
+#inspector #inspectClose{
+  position:absolute!important;
+  top:16px!important;
+  right:16px!important;
+  left:auto!important;
+  bottom:auto!important;
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  min-height:46px!important;
+  border-radius:14px!important;
+  z-index:30!important;
+}
+
+/* 4) Keep card inspect modal from inheriting broken unit-only grid. */
+#cardInspectModal .card-inspect-card{
+  overflow:hidden!important;
+}
+
+/* Responsive fallback. */
+@media(max-width:920px){
+  #inspector .inspect-card{
+    height:min(92vh,820px)!important;
+    overflow:auto!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto 240px auto auto!important;
+    grid-template-areas:
+      "title"
+      "sub"
+      "art"
+      "stats"
+      "text"!important;
+  }
+  #inspector #inspectText.inspect-text{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:visible!important;
+  }
+}
