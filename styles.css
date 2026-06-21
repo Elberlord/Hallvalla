@@ -4247,13 +4247,14 @@
   --frame-glow:rgba(255,200,118,.18);
   --frame-shadow:rgba(0,0,0,.55);
   --frame-filter:none;
+  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
 }
 .unit-card .unit-frame-skin{
   position:absolute;
   inset:0;
   z-index:4;
   pointer-events:none;
-  background:url("assets/ui/gothic_frame_unit_ui.png") center/100% 100% no-repeat;
+  background:var(--frame-image) center/100% 100% no-repeat;
   filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 8px var(--frame-glow)) var(--frame-filter);
 }
 .unit-card .unit-portrait{
@@ -5780,4 +5781,597 @@
   top:188px;
   transform:translateY(-12px) scale(.96);
   z-index:96;
+}
+
+/* PATCH 02: rareza neón sobre el marco existente de las cartas.
+   No reemplaza el marco gótico ni mueve orbes de vida/guardia/ataque. */
+.hand-card,.deck-card,.revealed-card,.card-inspect-card,.unit-card{
+  --rarity-neon:rgba(255,209,102,.24);
+  --rarity-neon-soft:rgba(255,209,102,.12);
+  --rarity-neon-core:rgba(255,255,255,.46);
+}
+.card-rarity-basic{--rarity-neon:rgba(255,205,125,.22);--rarity-neon-soft:rgba(255,205,125,.10);--rarity-neon-core:rgba(255,235,190,.36);}
+.card-rarity-improved{--rarity-neon:rgba(123,216,255,.46);--rarity-neon-soft:rgba(123,216,255,.20);--rarity-neon-core:rgba(218,247,255,.58);}
+.card-rarity-heroic{--rarity-neon:rgba(102,255,190,.50);--rarity-neon-soft:rgba(102,255,190,.22);--rarity-neon-core:rgba(222,255,237,.62);}
+.card-rarity-glorious{--rarity-neon:rgba(255,220,92,.58);--rarity-neon-soft:rgba(255,184,59,.24);--rarity-neon-core:rgba(255,250,205,.72);}
+.card-rarity-epic{--rarity-neon:rgba(190,143,255,.58);--rarity-neon-soft:rgba(190,143,255,.24);--rarity-neon-core:rgba(242,226,255,.70);}
+.card-rarity-mythic{--rarity-neon:rgba(255,112,222,.62);--rarity-neon-soft:rgba(255,112,222,.26);--rarity-neon-core:rgba(255,226,249,.74);}
+.card-rarity-demigod{--rarity-neon:rgba(255,246,134,.82);--rarity-neon-soft:rgba(255,202,61,.36);--rarity-neon-core:rgba(255,255,244,.92);}
+
+.card-rarity-basic.hand-card,.card-rarity-basic.deck-card,.card-rarity-basic.revealed-card,
+.card-rarity-improved.hand-card,.card-rarity-improved.deck-card,.card-rarity-improved.revealed-card,
+.card-rarity-heroic.hand-card,.card-rarity-heroic.deck-card,.card-rarity-heroic.revealed-card,
+.card-rarity-glorious.hand-card,.card-rarity-glorious.deck-card,.card-rarity-glorious.revealed-card,
+.card-rarity-epic.hand-card,.card-rarity-epic.deck-card,.card-rarity-epic.revealed-card,
+.card-rarity-mythic.hand-card,.card-rarity-mythic.deck-card,.card-rarity-mythic.revealed-card,
+.card-rarity-demigod.hand-card,.card-rarity-demigod.deck-card,.card-rarity-demigod.revealed-card{
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.42),
+    0 0 0 1px var(--rarity-neon),
+    0 0 18px var(--rarity-neon-soft),
+    inset 0 0 18px rgba(255,255,255,.045) !important;
+}
+
+.card-rarity-demigod.hand-card,.card-rarity-demigod.deck-card,.card-rarity-demigod.revealed-card{
+  animation:demigodNeonPulse 2.7s ease-in-out infinite !important;
+}
+
+.card-rarity-demigod .hand-icon.card-portrait,
+.card-rarity-demigod .deck-card-icon.card-portrait,
+.card-rarity-demigod .card-icon.card-portrait,
+.card-rarity-demigod .card-inspect-portrait{
+  border-color:var(--rarity-neon-core) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.28),
+    0 0 0 1px rgba(255,210,75,.82),
+    0 0 20px rgba(255,246,134,.64),
+    0 0 36px rgba(255,202,61,.32) !important;
+}
+
+.card-inspect-modal.card-rarity-demigod .card-inspect-card{
+  border-color:var(--rarity-neon-core) !important;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.74),
+    0 0 0 1px rgba(255,255,244,.72),
+    0 0 34px rgba(255,246,134,.58),
+    0 0 72px rgba(255,202,61,.28) !important;
+  animation:demigodNeonPulse 2.7s ease-in-out infinite !important;
+}
+
+.unit-card.card-rarity-basic{--frame-glow:rgba(255,205,125,.22);--frame-filter:saturate(1.04) brightness(1.02);}
+.unit-card.card-rarity-improved{--frame-glow:rgba(123,216,255,.42);--frame-filter:hue-rotate(10deg) saturate(1.15) brightness(1.05);}
+.unit-card.card-rarity-heroic{--frame-glow:rgba(102,255,190,.46);--frame-filter:hue-rotate(38deg) saturate(1.18) brightness(1.06);}
+.unit-card.card-rarity-glorious{--frame-glow:rgba(255,220,92,.54);--frame-filter:hue-rotate(-8deg) saturate(1.20) brightness(1.10);}
+.unit-card.card-rarity-epic{--frame-glow:rgba(190,143,255,.56);--frame-filter:hue-rotate(86deg) saturate(1.18) brightness(1.06);}
+.unit-card.card-rarity-mythic{--frame-glow:rgba(255,112,222,.60);--frame-filter:hue-rotate(132deg) saturate(1.22) brightness(1.07);}
+.unit-card.card-rarity-demigod{--frame-glow:rgba(255,246,134,.92);--frame-filter:saturate(1.26) brightness(1.16);--frame-image:url("assets/ui/gothic_frame_unit_ui_demigod.png");}
+
+.unit-card.card-rarity-basic .unit-frame-skin,
+.unit-card.card-rarity-improved .unit-frame-skin,
+.unit-card.card-rarity-heroic .unit-frame-skin,
+.unit-card.card-rarity-glorious .unit-frame-skin,
+.unit-card.card-rarity-epic .unit-frame-skin,
+.unit-card.card-rarity-mythic .unit-frame-skin,
+.unit-card.card-rarity-demigod .unit-frame-skin{
+  filter:
+    drop-shadow(0 4px 10px var(--frame-shadow))
+    drop-shadow(0 0 8px var(--frame-glow))
+    drop-shadow(0 0 18px var(--frame-glow))
+    var(--frame-filter) !important;
+}
+
+.unit-card.card-rarity-demigod .unit-frame-skin{
+  filter:
+    drop-shadow(0 4px 10px var(--frame-shadow))
+    drop-shadow(0 0 10px rgba(255,255,244,.92))
+    drop-shadow(0 0 24px rgba(255,246,134,.86))
+    drop-shadow(0 0 42px rgba(255,202,61,.52))
+    drop-shadow(0 0 60px rgba(255,180,32,.26))
+    var(--frame-filter) !important;
+  animation:unitDemigodFramePulse 2.4s ease-in-out infinite;
+}
+
+.unit-card.card-rarity-demigod .unit-portrait{
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,244,.16),
+    inset 0 0 16px rgba(255,202,61,.10),
+    0 0 14px rgba(255,246,134,.32) !important;
+}
+
+.unit-card.card-rarity-demigod::before{
+  content:"";
+  position:absolute;
+  inset:-8%;
+  z-index:1;
+  pointer-events:none;
+  border-radius:18px;
+  background:radial-gradient(circle at 50% 50%,rgba(255,246,134,.22),rgba(255,202,61,.10) 34%,transparent 68%);
+  filter:blur(6px);
+  opacity:.75;
+  animation:unitDemigodAuraPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes demigodNeonPulse{
+  0%,100%{box-shadow:0 12px 28px rgba(0,0,0,.42),0 0 0 1px rgba(255,246,134,.70),0 0 18px rgba(255,202,61,.26),inset 0 0 18px rgba(255,255,255,.045)}
+  50%{box-shadow:0 14px 34px rgba(0,0,0,.46),0 0 0 1px rgba(255,255,244,.92),0 0 30px rgba(255,246,134,.58),0 0 54px rgba(255,202,61,.30),inset 0 0 24px rgba(255,246,134,.10)}
+}
+@keyframes unitDemigodFramePulse{
+  0%,100%{opacity:.96;}
+  50%{opacity:1;}
+}
+@keyframes unitDemigodAuraPulse{
+  0%,100%{opacity:.55;transform:scale(.98);}
+  50%{opacity:.90;transform:scale(1.04);}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .card-rarity-demigod.hand-card,.card-rarity-demigod.deck-card,.card-rarity-demigod.revealed-card,
+  .card-inspect-modal.card-rarity-demigod .card-inspect-card,
+  .unit-card.card-rarity-demigod .unit-frame-skin,
+  .unit-card.card-rarity-demigod::before{animation:none!important;}
+}
+
+
+/* Legendary neon purple */
+.card-rarity-legendary{--rarity-neon:rgba(197,92,255,.82);--rarity-neon-soft:rgba(197,92,255,.28);--rarity-neon-core:rgba(248,228,255,.82);}
+.card-rarity-legendary.hand-card,.card-rarity-legendary.deck-card,.card-rarity-legendary.revealed-card{border-color:rgba(208,112,255,.84);box-shadow:0 14px 34px rgba(105,24,142,.28),0 0 0 1px rgba(208,112,255,.22),inset 0 0 20px rgba(229,148,255,.07)}
+.card-rarity-legendary.hand-card::before,.card-rarity-legendary.deck-card::before,.card-rarity-legendary.revealed-card::before{background:linear-gradient(180deg,#ffe8ff,#d581ff,#7b2bca)}
+.card-rarity-legendary .hand-tag{color:#ffe9ff;border-color:rgba(208,112,255,.52)}
+.card-rarity-legendary .hand-icon.card-portrait,.card-rarity-legendary .deck-card-icon.card-portrait,.card-rarity-legendary .card-icon.card-portrait,.card-rarity-legendary .card-inspect-portrait{border-color:rgba(208,112,255,.82);box-shadow:inset 0 0 0 1px rgba(255,236,255,.16),0 0 0 1px rgba(99,35,123,.68),0 0 26px rgba(208,112,255,.34)}
+.card-inspect-modal.card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.84);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 36px rgba(208,112,255,.24)}
+.unit-card.card-rarity-legendary{box-shadow:0 0 0 1px rgba(208,112,255,.60),0 0 16px rgba(208,112,255,.24),0 5px 8px rgba(0,0,0,.38);--frame-glow:rgba(213,114,255,.88);--frame-filter:saturate(1.22) brightness(1.11);--frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.png");}
+.unit-card.card-rarity-legendary .unit-frame-skin{filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 10px rgba(255,240,255,.90)) drop-shadow(0 0 24px rgba(224,136,255,.84)) drop-shadow(0 0 42px rgba(175,68,255,.48)) drop-shadow(0 0 60px rgba(147,32,236,.24)) var(--frame-filter) !important;animation:unitLegendaryFramePulse 2.6s ease-in-out infinite;}
+.unit-card.card-rarity-legendary .unit-portrait{filter:saturate(1.08) contrast(1.04) brightness(1.02);}
+.unit-card.card-rarity-legendary::before{content:"";position:absolute;inset:-3px;border-radius:18px;pointer-events:none;background:radial-gradient(circle at 50% 18%,rgba(248,216,255,.16),transparent 36%),radial-gradient(circle at 50% 82%,rgba(184,84,255,.14),transparent 44%);box-shadow:0 0 18px rgba(208,112,255,.22),0 0 38px rgba(172,60,255,.16);animation:unitLegendaryFramePulse 2.6s ease-in-out infinite;}
+@keyframes unitLegendaryFramePulse{0%,100%{opacity:.78;transform:scale(1)}50%{opacity:1;transform:scale(1.01)}}
+
+
+/* Mythic neon blue override */
+.card-rarity-mythic{--rarity-neon:rgba(88,190,255,.82);--rarity-neon-soft:rgba(88,190,255,.30);--rarity-neon-core:rgba(230,250,255,.84);}
+.card-rarity-mythic.hand-card,.card-rarity-mythic.deck-card,.card-rarity-mythic.revealed-card{
+  border-color:rgba(92,194,255,.82)!important;
+  box-shadow:0 14px 34px rgba(20,88,170,.30),0 0 0 1px rgba(92,194,255,.24),inset 0 0 20px rgba(92,194,255,.08)!important;
+}
+.card-rarity-mythic.hand-card::before,.card-rarity-mythic.deck-card::before,.card-rarity-mythic.revealed-card::before{
+  background:linear-gradient(180deg,#e8fbff,#77d6ff,#1d6bff)!important;
+}
+.card-rarity-mythic .hand-tag{color:#e8fbff!important;border-color:rgba(92,194,255,.52)!important;}
+.card-rarity-mythic .hand-icon.card-portrait,
+.card-rarity-mythic .deck-card-icon.card-portrait,
+.card-rarity-mythic .card-icon.card-portrait,
+.card-rarity-mythic .card-inspect-portrait{
+  border-color:rgba(92,194,255,.82)!important;
+  box-shadow:inset 0 0 0 1px rgba(232,251,255,.18),0 0 0 1px rgba(24,86,150,.68),0 0 26px rgba(92,194,255,.36)!important;
+}
+.card-inspect-modal.card-rarity-mythic .card-inspect-card{
+  border-color:rgba(92,194,255,.84)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 36px rgba(92,194,255,.25)!important;
+}
+.unit-card.card-rarity-mythic{
+  box-shadow:0 0 0 1px rgba(92,194,255,.60),0 0 16px rgba(92,194,255,.26),0 5px 8px rgba(0,0,0,.38)!important;
+  --frame-glow:rgba(92,194,255,.88);
+  --frame-filter:saturate(1.24) brightness(1.12);
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.png");
+}
+.unit-card.card-rarity-mythic .unit-frame-skin{
+  filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 10px rgba(232,251,255,.90)) drop-shadow(0 0 24px rgba(92,194,255,.86)) drop-shadow(0 0 42px rgba(34,120,255,.50)) drop-shadow(0 0 60px rgba(22,80,220,.26)) var(--frame-filter)!important;
+  animation:unitMythicBlueFramePulse 2.6s ease-in-out infinite!important;
+}
+.unit-card.card-rarity-mythic .unit-portrait{filter:saturate(1.08) contrast(1.04) brightness(1.02);}
+.unit-card.card-rarity-mythic::before{
+  content:"";position:absolute;inset:-3px;border-radius:18px;pointer-events:none;
+  background:radial-gradient(circle at 50% 18%,rgba(232,251,255,.16),transparent 36%),radial-gradient(circle at 50% 82%,rgba(92,194,255,.15),transparent 44%);
+  box-shadow:0 0 18px rgba(92,194,255,.23),0 0 38px rgba(34,120,255,.16);
+  animation:unitMythicBlueFramePulse 2.6s ease-in-out infinite;
+}
+@keyframes unitMythicBlueFramePulse{0%,100%{opacity:.78;transform:scale(1)}50%{opacity:1;transform:scale(1.01)}}
+
+
+/* Weapon advantage detail panel */
+.weapon-advantage-summary{
+  margin:8px 0 10px;
+  padding:9px 10px;
+  border:1px solid rgba(231,188,91,.36);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(17,12,6,.82),rgba(5,4,3,.72));
+  box-shadow:inset 0 0 16px rgba(231,188,91,.06),0 0 16px rgba(0,0,0,.28);
+}
+.weapon-class-pill{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:7px 9px;
+  border:1px solid rgba(74,188,255,.46);
+  border-radius:10px;
+  color:#eaf8ff;
+  background:linear-gradient(180deg,rgba(19,47,78,.65),rgba(7,17,35,.82));
+  box-shadow:0 0 12px rgba(74,188,255,.18),inset 0 0 10px rgba(74,188,255,.08);
+  cursor:pointer;
+}
+.weapon-class-pill span{
+  color:#9bdcff;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.weapon-class-pill strong{
+  color:#fff4c7;
+  font-size:12px;
+  text-align:right;
+}
+.weapon-match-row{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:7px;
+  font-size:11px;
+  line-height:1.25;
+}
+.weapon-match-row b{color:#f0c96b;white-space:nowrap;}
+.weapon-match-row.good span{color:#a9f6ff;text-align:right;}
+.weapon-match-row.bad span{color:#ffb5d6;text-align:right;}
+.weapon-match-note{
+  margin-top:7px;
+  color:#d8c9a5;
+  font-size:10px;
+  line-height:1.25;
+  opacity:.94;
+}
+
+
+/* Small lore line in DET */
+.unit-lore-summary{
+  margin:8px 0 10px;
+  padding:8px 10px;
+  border:1px solid rgba(231,188,91,.30);
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(25,18,8,.70),rgba(8,6,4,.62));
+  color:#d9c79b;
+  font-size:11px;
+  line-height:1.3;
+}
+.unit-lore-summary b{
+  color:#f4cf72;
+  letter-spacing:.03em;
+}
+.unit-lore-summary span{
+  color:#e9ddbd;
+}
+
+
+/* === DET premium base model === */
+.inspector,
+.card-inspect-modal{
+  backdrop-filter:blur(6px);
+}
+.inspect-card,
+.card-inspect-card{
+  position:relative;
+  width:min(1120px,96vw)!important;
+  max-height:min(92svh,940px);
+  overflow:auto;
+  border-radius:28px;
+  padding:24px 24px 22px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,219,120,.09),transparent 36%),
+    linear-gradient(180deg,rgba(22,16,11,.98),rgba(8,8,8,.98));
+  border:1px solid rgba(236,190,95,.36);
+  box-shadow:0 30px 90px rgba(0,0,0,.72), inset 0 0 0 1px rgba(255,240,196,.05);
+  display:grid;
+  grid-template-columns:minmax(270px,350px) minmax(0,1fr);
+  grid-template-areas:
+    "head head"
+    "visual text"
+    "stats text"
+    "bottom text";
+  column-gap:24px;
+  row-gap:14px;
+}
+.inspect-card::before,
+.card-inspect-card::before{
+  border-radius:28px;
+}
+.inspect-title,.card-inspect-title{
+  grid-area:head;
+  margin:0;
+  padding-right:84px;
+  font-family:Georgia,serif;
+  font-size:42px;
+  line-height:1;
+  color:#f7df96;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.inspect-sub,.card-inspect-sub{
+  grid-area:head;
+  align-self:end;
+  margin-top:48px;
+  color:#d8c6a2;
+}
+.inspect-art,.card-inspect-visual{
+  grid-area:visual;
+  min-height:430px;
+  height:auto;
+  border-radius:22px;
+  background:
+    linear-gradient(180deg,rgba(0,0,0,.38),rgba(0,0,0,.46)),
+    radial-gradient(circle at 50% 18%,rgba(255,235,185,.16),rgba(64,41,22,.45) 50%,rgba(7,7,8,.98));
+  border:1px solid rgba(229,183,84,.24);
+  box-shadow:inset 0 0 30px rgba(255,255,255,.03),0 18px 34px rgba(0,0,0,.32);
+}
+.inspect-art img,.card-inspect-portrait.card-portrait img{
+  object-fit:cover;
+}
+.inspect-grid,.card-inspect-grid{
+  grid-area:stats;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:0;
+}
+.inspect-text,.card-inspect-text{
+  grid-area:text;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-self:start;
+}
+.card-inspect-reason{
+  grid-area:bottom;
+  min-height:unset;
+  margin:0;
+  padding:10px 12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(35,24,9,.70),rgba(12,11,8,.78));
+  border:1px solid rgba(234,191,92,.16);
+  color:#e3cca2;
+}
+.card-inspect-actions{
+  grid-area:bottom;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-self:end;
+}
+#inspectClose{
+  position:absolute;
+  top:16px;
+  right:16px;
+  width:52px;
+  height:52px;
+  min-width:52px;
+  padding:0;
+  border-radius:14px;
+  font-size:0;
+  background:linear-gradient(180deg,#8c250d,#531108);
+  border:1px solid rgba(255,156,122,.48);
+  box-shadow:0 8px 16px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+#inspectClose::before{
+  content:"×";
+  font-size:28px;
+  color:#ffd9b4;
+  line-height:1;
+}
+.card-inspect-x{
+  top:16px;
+  right:16px;
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#8c250d,#531108);
+  border:1px solid rgba(255,156,122,.48);
+}
+.card-inspect-stat,
+.inspect-stat{
+  position:relative;
+  min-height:68px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:3px;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(234,191,92,.14);
+  background:linear-gradient(180deg,rgba(28,23,16,.92),rgba(11,10,9,.92));
+  text-align:left;
+}
+.card-inspect-stat span,
+.inspect-stat span{
+  color:#d8b96f;
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.card-inspect-stat strong,
+.inspect-stat strong{
+  margin-top:0!important;
+  color:#fff4cc;
+  font-size:24px!important;
+  line-height:1;
+}
+.det-identity-block{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:6px;
+}
+.det-head-chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.det-head-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:6px 12px;
+  border-radius:12px;
+  border:1px solid rgba(236,190,95,.22);
+  background:linear-gradient(180deg,rgba(26,20,12,.84),rgba(8,8,8,.84));
+  color:#ead7a9;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.det-chip-rarity{
+  color:#fff4c4;
+  box-shadow:0 0 16px rgba(255,220,127,.08), inset 0 0 10px rgba(255,255,255,.03);
+}
+.det-summary-copy{
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid rgba(236,190,95,.18);
+  background:linear-gradient(180deg,rgba(24,20,13,.84),rgba(10,10,10,.84));
+  color:#dcc8a0;
+  line-height:1.55;
+  font-size:15px;
+}
+.det-info-card,
+.det-section-block,
+.det-quote-block,
+.detail-guide-block{
+  border:1px solid rgba(236,190,95,.18);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(23,19,12,.92),rgba(9,9,9,.92));
+  box-shadow:inset 0 0 20px rgba(255,255,255,.02),0 12px 24px rgba(0,0,0,.18);
+  overflow:hidden;
+}
+.det-section-title,
+.detail-guide-caption{
+  padding:14px 16px;
+  border-bottom:1px solid rgba(236,190,95,.12);
+  background:linear-gradient(180deg,rgba(63,44,15,.24),rgba(16,15,13,.08));
+  color:#f0cd77;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.det-info-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 16px;
+  border-bottom:1px solid rgba(236,190,95,.08);
+  font-size:14px;
+}
+.det-info-row:last-of-type{border-bottom:none}
+.det-info-row span{color:#c7b188}
+.det-info-row strong{color:#fff0c7;text-align:right}
+.det-mini-note{
+  padding:12px 16px 15px;
+  color:#d8c6a2;
+  font-size:13px;
+  line-height:1.45;
+}
+.det-ability-list{
+  display:flex;
+  flex-direction:column;
+}
+.det-ability-card{
+  padding:14px 16px;
+  border-top:1px solid rgba(236,190,95,.08);
+}
+.det-ability-card:first-child{border-top:none}
+.det-ability-name{
+  color:#f2cf72;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:.03em;
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+.det-ability-text{
+  color:#e7d7b2;
+  font-size:14px;
+  line-height:1.55;
+}
+.det-empty-line{
+  padding:14px 16px 16px;
+  color:#bfaf8d;
+  font-size:14px;
+  line-height:1.45;
+}
+.det-quote-block{
+  padding:20px 18px;
+}
+.det-quote{
+  color:#e8bb63;
+  text-align:center;
+  font-size:18px;
+  line-height:1.6;
+  font-style:italic;
+  font-family:Georgia,serif;
+}
+.detail-guide-row{
+  margin-top:2px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.detail-token-btn{
+  min-height:48px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.03em;
+}
+.weapon-advantage-summary,
+.unit-lore-summary{
+  display:none!important;
+}
+.detail-chip-row{
+  padding:12px;
+  gap:10px;
+}
+.detail-status-chip{
+  min-height:44px;
+  border-radius:12px;
+}
+.detail-helper-note{display:none}
+.card-rarity-legendary .det-chip-rarity,
+.inspector.card-rarity-legendary .det-chip-rarity{color:#f3c3ff;border-color:rgba(208,112,255,.44);box-shadow:0 0 20px rgba(208,112,255,.16)}
+.card-rarity-mythic .det-chip-rarity,
+.inspector.card-rarity-mythic .det-chip-rarity{color:#d9f4ff;border-color:rgba(92,194,255,.44);box-shadow:0 0 20px rgba(92,194,255,.16)}
+.card-rarity-demigod .det-chip-rarity,
+.inspector.card-rarity-demigod .det-chip-rarity{color:#fff6c6;border-color:rgba(255,236,141,.46);box-shadow:0 0 20px rgba(255,236,141,.18)}
+.card-rarity-legendary .inspect-card,
+.card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 40px rgba(208,112,255,.16)}
+.card-rarity-mythic .inspect-card,
+.card-rarity-mythic .card-inspect-card{border-color:rgba(92,194,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 40px rgba(92,194,255,.16)}
+.card-rarity-demigod .inspect-card,
+.card-rarity-demigod .card-inspect-card{border-color:rgba(255,236,141,.68);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 42px rgba(255,236,141,.18)}
+@media (max-width:900px){
+  .inspect-card,
+  .card-inspect-card{
+    width:min(96vw,720px)!important;
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "head"
+      "visual"
+      "stats"
+      "text"
+      "bottom";
+    row-gap:12px;
+    padding:18px 16px 18px!important;
+  }
+  .inspect-title,.card-inspect-title{font-size:30px;padding-right:64px}
+  .inspect-sub,.card-inspect-sub{margin-top:40px}
+  .inspect-art,.card-inspect-visual{min-height:300px}
+  .detail-guide-row{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .inspect-title,.card-inspect-title{font-size:25px}
+  .inspect-grid,.card-inspect-grid{grid-template-columns:1fr 1fr}
+  .inspect-art,.card-inspect-visual{min-height:240px}
+  .det-summary-copy,.det-ability-text,.det-mini-note,.det-empty-line,.det-info-row{font-size:13px}
+  .det-quote{font-size:16px}
+  .detail-guide-row{grid-template-columns:1fr}
+  #inspectClose,.card-inspect-x{width:46px;height:46px}
 }
