@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_det_real_icons_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_det_layout_fixed_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1247,8 +1247,8 @@ function renderDetAbilitiesHtml(entity,effectText=""){
 }
 function renderDetStatusesHtml(entries=[]){
   return entries.length
-    ? `<div class="det-section-block"><div class="det-section-title">Estados activos</div>${detailStatusButtonsHtml(entries)}</div>`
-    : `<div class="det-section-block"><div class="det-section-title">Estados activos</div><div class="det-empty-line">Sin estados activos.</div></div>`;
+    ? `<div class="det-section-block det-status-section"><div class="det-section-title">Estados activos</div>${detailStatusButtonsHtml(entries)}</div>`
+    : `<div class="det-section-block det-status-section det-status-empty"><div class="det-section-title">Estados activos</div><div class="det-empty-line">Sin estados activos.</div></div>`;
 }
 function renderDetQuoteHtml(entity){
   const quote=getEntityQuote(entity);
@@ -3005,7 +3005,7 @@ function showCardInspectModal(card){
   }
   if(text){
     const effectText=String(card.text||card.effectText||card.ability||"").trim();
-    text.innerHTML=`${renderDetTacticalHtml(card)}${renderDetAbilitiesHtml(card,effectText)}${renderDetStatusesHtml([])}${renderDetQuoteHtml(card)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,showLore:card.type==='unit',effectLabel:'Ver efecto de la carta'})}`;
+    text.innerHTML=`${renderDetAbilitiesHtml(card,effectText)}${renderDetTacticalHtml(card)}${renderDetStatusesHtml([])}${renderDetQuoteHtml(card)}${detailGuideButtonsHtml({showEffect:!!effectText,showWeapon:true,showFormula:true,showLore:card.type==='unit',effectLabel:'Ver efecto de la carta'})}`;
     bindEntityGuideButtons(text,card,{effectText,effectTitle:`Efecto de ${card.name}`});
   }
   const state=getCardPlayState(card);
@@ -4833,7 +4833,7 @@ function showUnit(u){
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
-  inspectTextEl.innerHTML=`${renderDetTacticalHtml(u)}${renderDetAbilitiesHtml(u,fx)}${renderDetStatusesHtml(activeEntries)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:!u.leader,effectLabel:'Ver efecto'})}`;
+  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:!u.leader,effectLabel:'Ver efecto'})}`;
   bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
   inspector.classList.add("show");
 }
