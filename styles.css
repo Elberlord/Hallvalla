@@ -10531,3 +10531,270 @@
     overflow:visible!important;
   }
 }
+
+
+/* === v44 HOME layout cleanup ===
+   Only home/menu visual layout. No battle, card, DET or combat logic touched.
+*/
+
+/* Home gets breathing room below browser/header. */
+.home-screen,
+#homeScreen,
+.home,
+.main-menu,
+.menu-screen{
+  overflow:hidden!important;
+}
+
+/* Top profile / currency bar: smaller and less invasive. */
+.home-top,
+.home-header,
+.profile-bar,
+.player-topbar,
+.top-resources,
+.resource-bar{
+  max-height:104px!important;
+  z-index:20!important;
+}
+
+/* Hide unreadable ghost/white helper text behind the title. */
+.home-screen .home-subtitle,
+.home-screen .home-helper,
+.home-screen .home-hint,
+.home-screen .unlock-note,
+.home-screen .coming-note,
+.home-screen .small-note,
+#homeScreen .home-subtitle,
+#homeScreen .home-helper,
+#homeScreen .home-hint,
+#homeScreen .unlock-note,
+#homeScreen .coming-note,
+#homeScreen .small-note,
+.main-menu .home-subtitle,
+.main-menu .home-helper,
+.main-menu .home-hint,
+.main-menu .unlock-note,
+.main-menu .coming-note,
+.main-menu .small-note{
+  display:none!important;
+}
+
+/* Some text is directly inside center under resources. Make it invisible if it is floating over the logo. */
+.home-screen > p,
+#homeScreen > p,
+.main-menu > p,
+.home-screen .center-note,
+#homeScreen .center-note,
+.main-menu .center-note{
+  display:none!important;
+}
+
+/* Central title should own the middle without being covered. */
+.home-title,
+.logo-title,
+.main-title,
+#homeTitle{
+  position:relative!important;
+  z-index:10!important;
+  margin-top:18px!important;
+  pointer-events:none!important;
+}
+
+/* Main menu columns: more vertical spacing, less overlap. */
+.home-actions,
+.home-menu,
+.menu-panels,
+.mode-grid,
+.home-options{
+  gap:18px!important;
+  row-gap:18px!important;
+  align-content:center!important;
+}
+
+/* Left and right option columns get air between cards. */
+.home-left,
+.home-right,
+.home-menu-left,
+.home-menu-right,
+.menu-column,
+.menu-left,
+.menu-right{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:20px!important;
+}
+
+/* Big menu buttons/cards: prevent caption overlays from spilling into next card. */
+.home-card,
+.home-option,
+.menu-card,
+.menu-option,
+.mode-card,
+.home-panel,
+.menu-panel{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:92px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+
+/* Text overlays inside home cards: keep inside the card. */
+.home-card *,
+.home-option *,
+.menu-card *,
+.menu-option *,
+.mode-card *,
+.home-panel *,
+.menu-panel *{
+  box-sizing:border-box!important;
+}
+.home-card .caption,
+.home-card .subtitle,
+.home-card .desc,
+.home-option .caption,
+.home-option .subtitle,
+.home-option .desc,
+.menu-card .caption,
+.menu-card .subtitle,
+.menu-card .desc,
+.menu-option .caption,
+.menu-option .subtitle,
+.menu-option .desc,
+.mode-card .caption,
+.mode-card .subtitle,
+.mode-card .desc{
+  max-width:78%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+/* Reward labels must stay inside Mina, not over the card. */
+.home-card .reward,
+.home-card .badge,
+.home-option .reward,
+.home-option .badge,
+.menu-card .reward,
+.menu-card .badge,
+.menu-option .reward,
+.menu-option .badge,
+.mode-card .reward,
+.mode-card .badge{
+  position:absolute!important;
+  left:auto!important;
+  right:18px!important;
+  bottom:12px!important;
+  top:auto!important;
+  max-width:52%!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  z-index:4!important;
+}
+
+/* Event/welcome pack banner: pin inside Eventos and stop overlapping the row above. */
+.event-banner,
+.welcome-pack-banner,
+.home-event-banner,
+.event-card .banner,
+.events-card .banner,
+#eventsCard .banner,
+#eventCard .banner{
+  position:absolute!important;
+  left:22px!important;
+  right:22px!important;
+  bottom:12px!important;
+  top:auto!important;
+  max-height:38px!important;
+  overflow:hidden!important;
+  z-index:5!important;
+  pointer-events:none!important;
+}
+
+/* Specific common labels as plain text nodes/classes: reduce their footprint. */
+.daily-reward,
+.reward-daily,
+.mine-reward,
+.welcome-pack,
+.welcome-bundle,
+.event-offer{
+  position:absolute!important;
+  bottom:12px!important;
+  top:auto!important;
+  max-height:34px!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  z-index:5!important;
+}
+
+/* Bottom center buttons should not climb into the big PLAY emblem. */
+.home-bottom,
+.home-footer,
+.bottom-actions,
+.bottom-menu{
+  bottom:16px!important;
+  z-index:12!important;
+  gap:14px!important;
+}
+
+/* Big play button gets protected space. */
+.play-button,
+.home-play,
+#playBtn,
+.main-play{
+  z-index:15!important;
+  margin-bottom:8px!important;
+}
+
+/* Prevent resource bar from covering title/logo on narrower desktop. */
+@media(max-width:1180px){
+  .home-card,
+  .home-option,
+  .menu-card,
+  .menu-option,
+  .mode-card,
+  .home-panel,
+  .menu-panel{
+    min-height:86px!important;
+  }
+  .home-left,
+  .home-right,
+  .home-menu-left,
+  .home-menu-right,
+  .menu-column,
+  .menu-left,
+  .menu-right{
+    gap:16px!important;
+  }
+  .home-title,
+  .logo-title,
+  .main-title,
+  #homeTitle{
+    transform:scale(.92)!important;
+    transform-origin:center!important;
+  }
+}
+
+/* Strong cleanup for known image-card overlays: text stays on top-left, rewards bottom-right. */
+[class*="mina"],
+[class*="mine"],
+[class*="evento"],
+[class*="event"],
+[class*="aventura"],
+[class*="adventure"],
+[class*="coleccion"],
+[class*="collection"],
+[class*="forja"],
+[class*="forge"],
+[class*="tienda"],
+[class*="shop"]{
+  overflow:hidden!important;
+}
+
+/* If a decorative white paragraph is absolutely placed over the throne/title, silence it. */
+.home-screen [style*="white"],
+#homeScreen [style*="white"],
+.main-menu [style*="white"]{
+  text-shadow:none!important;
+}
