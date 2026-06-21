@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_fix_floatfx_syntax_2026_06_20";
+const HALLVALLA_BUILD_VERSION="v7HW_det_iconic_compact_2026_06_20";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1152,6 +1152,51 @@ function getEntityAbilitySections(entity,effectText=""){
   if(sections.length)return sections.slice(0,4);
   return [{title:entity?.leader?"Pasiva":"Habilidad",body:txt}];
 }
+
+function getDetStatMeta(label=""){
+  const key=normalizeStatKey(label);
+  if(key==="costo")return {icon:"◈",short:"Costo",title:"Costo"};
+  if(key==="at"||key==="ataque")return {icon:"⚔",short:"AT",title:"Ataque"};
+  if(key==="hp"||key==="vida")return {icon:"♥",short:"HP",title:"Vida"};
+  if(key==="gd"||key==="guardia")return {icon:"🛡",short:"GD",title:"Guardia"};
+  if(key==="dx"||key==="destreza")return {icon:"◎",short:"DX",title:"Destreza"};
+  if(key==="agi"||key==="agilidad")return {icon:"🪽",short:"AGI",title:"Agilidad"};
+  if(key==="mv"||key==="mov"||key==="movimiento")return {icon:"👢",short:"MV",title:"Movimiento"};
+  if(key==="rg"||key==="rango")return {icon:"🏹",short:"RG",title:"Rango"};
+  if(key==="daño")return {icon:"✹",short:"DMG",title:"Daño"};
+  if(key==="heal"||key==="curación"||key==="curacion")return {icon:"✚",short:"Heal",title:"Curación"};
+  return {icon:"✦",short:String(label||"STAT"),title:String(label||"Stat")};
+}
+function renderDetStatButtons(stats,clsName){
+  return stats.map(([l,v])=>{
+    const meta=getDetStatMeta(l);
+    return `<button class="${clsName} stat-click det-stat-btn" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}">
+      <span class="det-stat-icon-wrap" data-stat="${escapeHtml(l)}" aria-hidden="true"><span class="det-stat-icon">${meta.icon}</span></span>
+      <span class="det-stat-key">${escapeHtml(meta.short)}</span>
+      <strong>${escapeHtml(String(v))}</strong>
+    </button>`;
+  }).join("");
+}
+function classifyDetAbility(section){
+  const text=`${section?.title||""} ${section?.body||""}`.toLowerCase();
+  if(/aura|rango\s*[12]|adyacente|alrededor/.test(text))return "aura";
+  if(/cuando|una vez por turno|si recibe|si ataca|si destruye|si falla|si acierta/.test(text))return "trigger";
+  if(/pierde|reduce|bloquea|veneno|sangrado|aturdi|debuff|penaliza/.test(text))return "debuff";
+  if(/gana|\+\d|aumenta|cura|recupera|protege|niega/.test(text))return "buff";
+  if(/pasiva|mientras|siempre|regla/.test(text))return "passive";
+  return "effect";
+}
+function getDetAbilityMeta(kind="effect"){
+  const map={
+    passive:{icon:"◉",label:"Pasivo"},
+    trigger:{icon:"✦",label:"Trigger"},
+    aura:{icon:"◌",label:"Aura"},
+    buff:{icon:"▲",label:"Buff"},
+    debuff:{icon:"▼",label:"Debuff"},
+    effect:{icon:"◆",label:"Efecto"}
+  };
+  return map[kind]||map.effect;
+}
 function renderDetIdentityHtml(entity,ownerLabel=""){
   const summary=getEntitySummaryText(entity);
   const rarity=getEntityRarityLabel(entity);
@@ -1183,11 +1228,16 @@ function renderDetTacticalHtml(entity){
 function renderDetAbilitiesHtml(entity,effectText=""){
   const sections=getEntityAbilitySections(entity,effectText);
   return `<div class="det-section-block">
-    <div class="det-section-title">Habilidades</div>
-    <div class="det-ability-list">${sections.length?sections.map(sec=>`<div class="det-ability-card">
-      <div class="det-ability-name">${escapeHtml(sec.title)}</div>
-      <div class="det-ability-text">${escapeHtml(sec.body)}</div>
-    </div>`).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
+    <div class="det-section-title">Efectos</div>
+    <div class="det-ability-list">${sections.length?sections.map(sec=>{
+      const kind=classifyDetAbility(sec);
+      const meta=getDetAbilityMeta(kind);
+      return `<button class="det-ability-card guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}">
+        <div class="det-ability-top"><span class="det-ability-icon kind-${escapeHtml(kind)}" aria-hidden="true">${meta.icon}</span><span class="det-ability-kind">${escapeHtml(meta.label)}</span></div>
+        <div class="det-ability-name">${escapeHtml(sec.title)}</div>
+        <div class="det-ability-text">${escapeHtml(sec.body)}</div>
+      </button>`;
+    }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }
 function renderDetStatusesHtml(entries=[]){
@@ -2833,10 +2883,10 @@ function detailStatGridHtml(stats){
 }
 function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=true,showLore=false,effectLabel="Ver efecto"}={}){
   const buttons=[];
-  if(showEffect)buttons.push(`<button class="detail-token-btn guide-effect-btn" type="button">${escapeHtml(effectLabel)}</button>`);
-  if(showWeapon)buttons.push(`<button class="detail-token-btn guide-weapon-btn" type="button">Arma / ventaja</button>`);
-  if(showFormula)buttons.push(`<button class="detail-token-btn guide-formula-btn" type="button">PREC/EVA</button>`);
-  if(showLore)buttons.push(`<button class="detail-token-btn guide-lore-btn" type="button">Conóceme</button>`);
+  if(showEffect)buttons.push(`<button class="detail-token-btn guide-effect-btn" type="button"><span class="det-btn-icon">◆</span><span>${escapeHtml(effectLabel)}</span></button>`);
+  if(showWeapon)buttons.push(`<button class="detail-token-btn guide-weapon-btn" type="button"><span class="det-btn-icon">⚔</span><span>Arma / ventaja</span></button>`);
+  if(showFormula)buttons.push(`<button class="detail-token-btn guide-formula-btn" type="button"><span class="det-btn-icon">◎</span><span>PREC / EVA</span></button>`);
+  if(showLore)buttons.push(`<button class="detail-token-btn guide-lore-btn" type="button"><span class="det-btn-icon">📖</span><span>Conóceme</span></button>`);
   return buttons.length?`<div class="detail-guide-row">${buttons.join("")}</div>`:"";
 }
 function detailStatusButtonsHtml(entries=[]){
@@ -2880,6 +2930,17 @@ function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",s
       short:entity?.name?`${entity.name} tiene este estado activo.`:'Estado activo.',
       formula:entry.desc||'Estado activo sin descripción adicional.',
       example:entry.extra||'Puedes revisar este estado cuando necesites recordar qué está afectando a la unidad.'
+    });
+  }));
+  container.querySelectorAll('.guide-ability-btn').forEach(btn=>btn.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const kind=btn.dataset.abilityKind||"effect";
+    const meta=getDetAbilityMeta(kind);
+    openStatGuideModal({
+      title:`${meta.icon} ${btn.dataset.abilityTitle||'Efecto'}`,
+      short:`Tipo: ${meta.label}.`,
+      formula:btn.dataset.abilityText||'Sin explicación adicional.',
+      example:'Este icono abre la explicación de la habilidad específica de la unidad.'
     });
   }));
 }
@@ -2936,7 +2997,7 @@ function showCardInspectModal(card){
   if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
   const inspectStats=cardInspectStats(card);
   if(stats){
-    stats.innerHTML=inspectStats.map(([l,v])=>`<button class="card-inspect-stat stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}"><span>${l}</span><strong>${v}</strong></button>`).join("");
+    stats.innerHTML=renderDetStatButtons(inspectStats,"card-inspect-stat");
     bindStatGuideClicks(stats);
   }
   if(text){
@@ -2945,7 +3006,7 @@ function showCardInspectModal(card){
     bindEntityGuideButtons(text,card,{effectText,effectTitle:`Efecto de ${card.name}`});
   }
   const state=getCardPlayState(card);
-  if(reason)reason.textContent=state.canPlay?"Puedes jugar esta carta. Al tocar Jugar, elige el objetivo o la casilla válida en el tablero.":state.reason;
+  if(reason)reason.textContent=state.canPlay?"Lista para jugar.":state.reason;
   if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
   modal.classList.remove("hidden");
 }
@@ -4764,7 +4825,7 @@ function showUnit(u){
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
   const stats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",u.range||1]];
   const inspectStatsEl=$("inspectStats");
-  inspectStatsEl.innerHTML=stats.map(([l,v])=>`<button class="inspect-stat stat-click" type="button" data-stat="${escapeHtml(l)}" title="${escapeHtml(statHelpText(l))}"><span>${l}</span><strong>${v}</strong></button>`).join("");
+  inspectStatsEl.innerHTML=renderDetStatButtons(stats,"inspect-stat");
   bindStatGuideClicks(inspectStatsEl);
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
