@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_status_icon_only_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HW_card_hand_det_layout_final_2026_06_21";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";

@@ -10173,3 +10173,361 @@
 #cardInspectModal:not(.hidden) #cardInspectText .det-empty-line{
   padding:6px 2px!important;
 }
+
+
+/* === v43 FINAL: card-in-hand DET layout repair ===
+   This targets ONLY #cardInspectModal, not the in-field #inspector.
+*/
+
+#cardInspectModal:not(.hidden){
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:8px!important;
+  overflow:hidden!important;
+}
+
+/* Stable two-column modal. */
+#cardInspectModal:not(.hidden) .card-inspect-card{
+  width:min(1260px,96vw)!important;
+  height:min(560px,82vh)!important;
+  max-height:min(560px,82vh)!important;
+  min-height:0!important;
+  padding:14px 18px 14px 14px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:346px minmax(0,1fr)!important;
+  grid-template-rows:62px 1fr!important;
+  grid-template-areas:
+    "left head"
+    "left body"!important;
+  gap:10px 16px!important;
+}
+
+/* Header right only. */
+#cardInspectModal:not(.hidden) .card-inspect-head{
+  grid-area:head!important;
+  min-height:0!important;
+  height:62px!important;
+  margin:0!important;
+  padding:0 56px 0 0!important;
+  overflow:hidden!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-title{
+  margin:0!important;
+  padding:0!important;
+  font-size:31px!important;
+  line-height:1.02!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-sub{
+  margin-top:7px!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-x{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  min-height:46px!important;
+  z-index:40!important;
+}
+
+/* Left column is real, predictable, and does not let actions overlap stats. */
+#cardInspectModal:not(.hidden) .card-inspect-card{
+  --hv-hand-portrait-h:206px;
+  --hv-hand-actions-h:54px;
+}
+#cardInspectModal:not(.hidden) #cardInspectVisual,
+#cardInspectModal:not(.hidden) #cardInspectStats,
+#cardInspectModal:not(.hidden) .card-inspect-actions,
+#cardInspectModal:not(.hidden) #cardInspectActions{
+  grid-column:1!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectVisual{
+  grid-area:left!important;
+  align-self:start!important;
+  width:100%!important;
+  height:var(--hv-hand-portrait-h)!important;
+  min-height:var(--hv-hand-portrait-h)!important;
+  max-height:var(--hv-hand-portrait-h)!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border-radius:15px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectVisual .card-inspect-portrait,
+#cardInspectModal:not(.hidden) #cardInspectVisual .card-inspect-portrait.card-portrait,
+#cardInspectModal:not(.hidden) #cardInspectVisual .card-inspect-portrait.card-portrait img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center 20%!important;
+}
+
+/* Stats occupy the middle of left column. */
+#cardInspectModal:not(.hidden) #cardInspectStats{
+  grid-area:left!important;
+  align-self:stretch!important;
+  justify-self:stretch!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  min-height:0!important;
+  margin:calc(var(--hv-hand-portrait-h) + 10px) 0 calc(var(--hv-hand-actions-h) + 10px) 0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  grid-auto-rows:38px!important;
+  align-content:start!important;
+  gap:7px!important;
+  box-sizing:border-box!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-row,
+#cardInspectModal:not(.hidden) #cardInspectStats .card-inspect-stat{
+  height:38px!important;
+  min-height:38px!important;
+  max-height:38px!important;
+  padding:3px 8px!important;
+  border-radius:12px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-icon-btn{
+  width:31px!important;
+  height:31px!important;
+  min-width:31px!important;
+  min-height:31px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-img{
+  width:28px!important;
+  height:28px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-key{
+  font-size:9.5px!important;
+  min-width:33px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectStats strong{
+  font-size:15.5px!important;
+}
+
+/* Actions are pinned to bottom of left column, below stats. */
+#cardInspectModal:not(.hidden) .card-inspect-actions,
+#cardInspectModal:not(.hidden) #cardInspectActions{
+  grid-area:left!important;
+  align-self:end!important;
+  width:100%!important;
+  height:var(--hv-hand-actions-h)!important;
+  min-height:var(--hv-hand-actions-h)!important;
+  max-height:var(--hv-hand-actions-h)!important;
+  margin:0!important;
+  padding:0!important;
+  position:static!important;
+  inset:auto!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  z-index:3!important;
+}
+#cardInspectModal:not(.hidden) .card-inspect-actions .btn,
+#cardInspectModal:not(.hidden) #cardInspectActions .btn{
+  height:52px!important;
+  min-height:52px!important;
+  margin:0!important;
+  border-radius:13px!important;
+  font-size:14px!important;
+}
+
+/* Right body: effects left, tactical/status right, footer bottom. */
+#cardInspectModal:not(.hidden) #cardInspectText{
+  grid-area:body!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 418px!important;
+  grid-template-rows:minmax(0,1fr) 132px 56px!important;
+  grid-template-areas:
+    "effects tactical"
+    "effects states"
+    "buttons buttons"!important;
+  gap:9px!important;
+  box-sizing:border-box!important;
+}
+
+/* Effects panel: contained, scroll only inside list. */
+#cardInspectModal:not(.hidden) #cardInspectText > .det-section-block:first-child{
+  grid-area:effects!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  margin:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-section-block:first-child > .det-section-title{
+  flex:0 0 30px!important;
+  height:30px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-ability-list{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:auto!important;
+  padding:8px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-ability-card{
+  min-height:auto!important;
+  padding:9px 10px!important;
+  flex:0 0 auto!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-ability-top{
+  gap:8px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-ability-name{
+  font-size:12px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-ability-text{
+  font-size:10.6px!important;
+  line-height:1.2!important;
+  -webkit-line-clamp:4!important;
+}
+
+/* Tactical card: contained and compact. */
+#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
+  grid-area:tactical!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+  margin:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card > .det-section-title{
+  flex:0 0 30px!important;
+  height:30px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-info-row{
+  flex:0 0 28px!important;
+  min-height:28px!important;
+  height:28px!important;
+  padding:5px 10px!important;
+  font-size:10.8px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-info-row strong{
+  font-size:10.8px!important;
+  line-height:1.05!important;
+  max-width:245px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-tactical-card .det-mini-note{
+  display:none!important;
+}
+
+/* Status section stays small and clean. */
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
+  grid-area:states!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+  margin:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section > .det-section-title{
+  flex:0 0 30px!important;
+  height:30px!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:auto!important;
+  padding:7px 9px!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:7px!important;
+}
+
+/* Footer buttons are below both columns. */
+#cardInspectModal:not(.hidden) #cardInspectText > .detail-guide-row{
+  grid-area:buttons!important;
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  height:56px!important;
+  min-height:56px!important;
+  margin:0!important;
+  padding:8px 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:16px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  z-index:2!important;
+}
+#cardInspectModal:not(.hidden) #cardInspectText > .det-quote-block,
+#cardInspectModal:not(.hidden) .card-inspect-reason{
+  display:none!important;
+}
+
+/* On shorter screens, shrink portrait slightly so stats stay visible. */
+@media(max-height:740px){
+  #cardInspectModal:not(.hidden) .card-inspect-card{
+    --hv-hand-portrait-h:190px;
+    height:min(540px,82vh)!important;
+  }
+  #cardInspectModal:not(.hidden) #cardInspectStats{
+    grid-auto-rows:36px!important;
+    gap:6px!important;
+  }
+  #cardInspectModal:not(.hidden) #cardInspectStats .det-stat-row,
+  #cardInspectModal:not(.hidden) #cardInspectStats .card-inspect-stat{
+    height:36px!important;
+    min-height:36px!important;
+  }
+}
+
+/* Mobile fallback */
+@media(max-width:920px){
+  #cardInspectModal:not(.hidden) .card-inspect-card{
+    height:min(92vh,820px)!important;
+    overflow:auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  #cardInspectModal:not(.hidden) #cardInspectVisual,
+  #cardInspectModal:not(.hidden) #cardInspectStats,
+  #cardInspectModal:not(.hidden) .card-inspect-actions,
+  #cardInspectModal:not(.hidden) #cardInspectActions,
+  #cardInspectModal:not(.hidden) #cardInspectText{
+    grid-area:auto!important;
+    margin:0!important;
+  }
+  #cardInspectModal:not(.hidden) #cardInspectText{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:visible!important;
+  }
+}
