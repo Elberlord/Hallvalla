@@ -8377,3 +8377,354 @@
     height:auto!important;
   }
 }
+
+
+/* === v33 DET compact final: portrait obeys the modal === */
+/* Target only the real in-battle DET modal. */
+
+#inspector.inspector{
+  padding:10px!important;
+  overflow:hidden!important;
+}
+
+/* Main modal: shorter, stable, no page-level scroll needed */
+#inspector .inspect-card{
+  width:min(1100px,96vw)!important;
+  height:min(560px,82vh)!important;
+  max-height:min(560px,82vh)!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  padding:14px!important;
+  display:grid!important;
+  grid-template-columns:300px minmax(0,1fr)!important;
+  grid-template-rows:52px 32px minmax(0,1fr) 54px!important;
+  grid-template-areas:
+    "visual title"
+    "visual sub"
+    "visual body"
+    "stats buttons"!important;
+  gap:10px 14px!important;
+}
+
+/* Title and chips */
+#inspector #inspectTitle.inspect-title{
+  grid-area:title!important;
+  margin:0!important;
+  padding:0 54px 0 0!important;
+  align-self:end!important;
+  font-size:31px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+#inspector #inspectSub.inspect-sub{
+  grid-area:sub!important;
+  margin:0!important;
+  align-self:start!important;
+  display:flex!important;
+  gap:6px!important;
+  flex-wrap:wrap!important;
+}
+
+/* Portrait: compact, contained, never pushes stats */
+#inspector #inspectArt.inspect-art{
+  grid-area:visual!important;
+  width:100%!important;
+  height:220px!important;
+  min-height:220px!important;
+  max-height:220px!important;
+  margin:0!important;
+  align-self:start!important;
+  justify-self:stretch!important;
+  overflow:hidden!important;
+  border-radius:16px!important;
+}
+
+#inspector #inspectArt.inspect-art img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center 18%!important;
+  display:block!important;
+}
+
+/* Stats: directly under portrait using same left column */
+#inspector #inspectStats.inspect-grid{
+  grid-area:visual!important;
+  align-self:end!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  margin:232px 0 0 0!important;
+  padding:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-rows:37px!important;
+  gap:7px!important;
+  overflow:hidden!important;
+  z-index:2!important;
+}
+
+#inspector #inspectStats .inspect-stat,
+#inspector #inspectStats .det-stat-row{
+  min-height:37px!important;
+  height:37px!important;
+  padding:3px 8px!important;
+  border-radius:11px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  box-sizing:border-box!important;
+}
+
+#inspector #inspectStats .det-stat-icon-btn{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  min-height:32px!important;
+  border-radius:10px!important;
+}
+
+#inspector #inspectStats .det-stat-img{
+  width:29px!important;
+  height:29px!important;
+}
+
+#inspector #inspectStats .det-stat-key{
+  font-size:9.5px!important;
+  min-width:28px!important;
+}
+
+#inspector #inspectStats strong{
+  font-size:15px!important;
+}
+
+/* Right body: all content lives here, compact and balanced */
+#inspector #inspectText.inspect-text{
+  grid-area:body!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.08fr) minmax(285px,.92fr)!important;
+  grid-template-rows:minmax(0,1fr) 128px!important;
+  grid-template-areas:
+    "effects tactical"
+    "effects states"!important;
+  gap:9px!important;
+}
+
+/* Make buttons row independent and always visible */
+#inspector #inspectText > .detail-guide-row{
+  grid-area:unset!important;
+  position:absolute!important;
+  left:328px!important;
+  right:14px!important;
+  bottom:14px!important;
+  height:44px!important;
+  min-height:44px!important;
+  width:auto!important;
+  margin:0!important;
+  padding:5px 9px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(238,190,91,.20)!important;
+  background:linear-gradient(180deg,rgba(22,18,12,.88),rgba(8,8,7,.94))!important;
+  box-sizing:border-box!important;
+  z-index:12!important;
+}
+
+/* Direct child placement */
+#inspector #inspectText > .det-section-block:first-child{
+  grid-area:effects!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+#inspector #inspectText > .det-tactical-card{
+  grid-area:tactical!important;
+  height:100%!important;
+  min-height:0!important;
+  align-self:stretch!important;
+  overflow:hidden!important;
+}
+
+#inspector #inspectText > .det-status-section{
+  grid-area:states!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  align-self:stretch!important;
+  overflow:hidden!important;
+}
+
+#inspector #inspectText > .det-quote-block{
+  display:none!important;
+}
+
+/* Effects: internal scroll only */
+#inspector .det-ability-list{
+  height:calc(100% - 29px)!important;
+  max-height:none!important;
+  overflow:auto!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+  align-content:start!important;
+  padding:7px!important;
+  box-sizing:border-box!important;
+}
+
+#inspector .det-ability-card{
+  min-height:auto!important;
+  padding:8px 9px!important;
+}
+
+#inspector .det-ability-card:only-child{
+  min-height:104px!important;
+}
+
+#inspector .det-ability-name{
+  font-size:11.5px!important;
+}
+
+#inspector .det-ability-text{
+  font-size:10.7px!important;
+  line-height:1.22!important;
+  -webkit-line-clamp:4!important;
+}
+
+/* Tactical compact */
+#inspector .det-section-title{
+  padding:7px 9px!important;
+  font-size:11px!important;
+}
+
+#inspector .det-info-row{
+  padding:5px 9px!important;
+  min-height:26px!important;
+  font-size:11px!important;
+}
+
+#inspector .det-info-row strong{
+  font-size:10.8px!important;
+}
+
+#inspector .det-mini-note{
+  font-size:9px!important;
+  line-height:1.12!important;
+  max-height:38px!important;
+  overflow:hidden!important;
+  padding:5px 9px!important;
+}
+
+/* States / record compact */
+#inspector .det-leader-record{
+  margin:6px 7px!important;
+  padding:6px 8px!important;
+}
+
+#inspector .det-record-title{
+  font-size:9.5px!important;
+  margin-bottom:4px!important;
+}
+
+#inspector .det-record-row{
+  font-size:10px!important;
+  line-height:1.25!important;
+}
+
+#inspector .det-empty-line{
+  padding:6px 8px!important;
+  font-size:10.5px!important;
+}
+
+/* Buttons inside footer tray */
+#inspector .detail-token-btn{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  min-height:32px!important;
+}
+
+#inspector .det-btn-img{
+  width:29px!important;
+  height:29px!important;
+}
+
+#inspector .detail-guide-chip{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+
+#inspector .detail-guide-chip span{
+  font-size:11.5px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  color:#ead29a!important;
+}
+
+/* Close button */
+#inspector #inspectClose{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  left:auto!important;
+  bottom:auto!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  border-radius:14px!important;
+  z-index:30!important;
+}
+
+/* Prevent older absolute/margin hacks from reviving */
+#inspector #inspectStats.inspect-grid,
+#inspector #inspectArt.inspect-art,
+#inspector #inspectText.inspect-text{
+  position:relative!important;
+}
+
+/* Responsive fallback */
+@media(max-width:920px){
+  #inspector .inspect-card{
+    height:min(92vh,820px)!important;
+    overflow:auto!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto 220px auto auto!important;
+    grid-template-areas:
+      "title"
+      "sub"
+      "visual"
+      "stats"
+      "body"!important;
+  }
+  #inspector #inspectStats.inspect-grid{
+    grid-area:stats!important;
+    margin:0!important;
+  }
+  #inspector #inspectText.inspect-text{
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:visible!important;
+  }
+  #inspector #inspectText > .detail-guide-row{
+    position:relative!important;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    height:auto!important;
+  }
+}
