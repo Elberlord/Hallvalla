@@ -317,23 +317,64 @@ function makeBattleFxEvent(type,attacker,target){
   };
 }
 
+
+
+
+/* Patch 79 - FX routing helpers */
 function isFixedLeaderUnit(unit){
-  return !!(unit&&unit.leader);
+  return !!(unit && unit.leader);
 }
-function shouldSuppressLeaderFx(type,unit){
-  if(!isFixedLeaderUnit(unit))return false;
-  const fxType=String(type||"");
-  return fxType==="defend_stance"||fxType==="guard_buff"||fxType==="guard_block"||fxType==="guard_break"||fxType==="dodge"||fxType==="status"||fxType==="buff";
+function getFxUnitFromEvent(fx, unitsList){
+  if(!fx)return null;
+  const units = Array.isArray(unitsList) ? unitsList : (publicState?.units || []);
+  const ids = [fx.unitId, fx.targetId, fx.attackerId, fx.id].filter(Boolean);
+  for(const id of ids){
+    const fromList = units.find(u=>u && u.id===id);
+    if(fromList)return fromList;
+    const live = getUnit(id);
+    if(live)return live;
+  }
+  return null;
 }
-function shouldSuppressFixedLeaderBoardFxEvent(ev,units=[]){
-  if(!ev)return false;
-  const ids=[ev.unitId,ev.targetId,ev.attackerId,ev.id].filter(Boolean);
-  const found=ids.map(id=>units.find(u=>u&&u.id===id)||getUnit(id)).filter(Boolean);
-  return found.some(u=>u&&u.leader);
+function shouldSuppressFixedLeaderBoardFxEvent(fx, unitsList){
+  const unit = getFxUnitFromEvent(fx, unitsList);
+  return !!(unit && unit.leader);
+}
+function getLeaderBaseElement(unit){
+  if(!unit)return null;
+  return document.querySelector(`.leader-base[data-unit-id="${unit.id}"], .leader-base[data-leader-id="${unit.id}"], .leader-base[data-id="${unit.id}"]`);
+}
+function playLeaderUiFx(unit, fx={}){
+  const base = getLeaderBaseElement(unit);
+  if(!base)return;
+  const node = document.createElement("div");
+  const type = String(fx.type || "info").replace(/[^a-z0-9_-]+/gi,"-");
+  node.className = `leader-ui-fx leader-ui-fx-${type}`;
+  const icon = fx.iconText || (fx.type==="guard_buff" || fx.type==="defend_stance" ? "🛡" : "✦");
+  const label = fx.labelText ? `<span class="leader-ui-fx-label">${fx.labelText}</span>` : "";
+  node.innerHTML = `<span class="leader-ui-fx-icon">${icon}</span>${label}`;
+  base.appendChild(node);
+  setTimeout(()=>node.remove(), 920);
+}
+function makeLeaderOrBoardDefenseFx(type, unit){
+  if(!unit)return null;
+  if(unit.leader){
+    queueMicrotask(()=>playLeaderUiFx(unit,{type:type||"defend_stance",iconText:"🛡",labelText:"DEF"}));
+    return null;
+  }
+  return makeDefenseFxEvent(type, unit);
+}
+function makeLeaderOrBoardFloatFx(type, unit, amount=0, extra={}){
+  if(!unit)return null;
+  if(unit.leader){
+    queueMicrotask(()=>playLeaderUiFx(unit,{type, amount, ...(extra||{})}));
+    return null;
+  }
+  return makeFloatFxEvent(type, unit, amount, extra);
 }
 
 function makeDefenseFxEvent(type,defender){
-  if(!defender||shouldSuppressLeaderFx(type,defender))return null;
+  if(!defender)return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:type||"guard_block",
@@ -345,7 +386,7 @@ function makeDefenseFxEvent(type,defender){
   };
 }
 function makeDodgeFxEvent(unit){
-  if(!unit||isFixedLeaderUnit(unit))return null;
+  if(!unit)return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:"dodge",
@@ -357,7 +398,7 @@ function makeDodgeFxEvent(unit){
   };
 }
 function makeStatusFxEvent(type,unit,amount=0){
-  if(!unit||shouldSuppressLeaderFx(type,unit))return null;
+  if(!unit)return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:type||"status",
@@ -370,7 +411,7 @@ function makeStatusFxEvent(type,unit,amount=0){
   };
 }
 function makeFloatFxEvent(type,unit,amount=0,extra={}){
-  if(!unit||shouldSuppressLeaderFx(type,unit))return null;
+  if(!unit)return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:type||"info",
@@ -419,6 +460,7 @@ function playSummonFx(unit){
   spawnBattleFxNode(`battle-fx-summon ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-ring"></div><div class="battle-fx-ring battle-fx-ring-2"></div><div class="battle-fx-core"></div><div class="battle-fx-rays"></div>${extraBurst}`);
 }
 function playBattleFx(attacker,target){
+  if(isFixedLeaderUnit(attacker) || isFixedLeaderUnit(target))return;
   if(isFixedLeaderUnit(attacker)||isFixedLeaderUnit(target))return;
   if(!attacker||!target)return;
   playBattleFxEvent(makeBattleFxEvent("attack",attacker,target),attacker);
@@ -450,7 +492,8 @@ function playBattleFxEvent(fx,attackerRef=null){
   spawnBattleFxNode(`battle-fx-slash ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`},640,`<div class="battle-fx-slash-core"></div>${slashExtra}`);
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
 }
-function if(!fx?.leader) playDefenseFxEvent(fx){
+function playDefenseFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
   if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
@@ -468,6 +511,7 @@ function if(!fx?.leader) playDefenseFxEvent(fx){
   spawnBattleFxNode(`battle-fx-guard ${typeClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-guard-ring"></div><div class="battle-fx-guard-glow"></div><div class="battle-fx-guard-shield"></div>${crackMarkup}${shardMarkup}`);
 }
 function playDodgeFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
   if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
@@ -478,6 +522,7 @@ function playDodgeFxEvent(fx){
   spawnBattleFxNode(`battle-fx-dodge ${sideClass} ${rarityClass}`,point.x,point.y,{},900,`<div class="battle-fx-dodge-ring"></div><div class="battle-fx-dodge-swish swish-1"></div><div class="battle-fx-dodge-swish swish-2"></div><div class="battle-fx-dodge-afterimage afterimage-1"></div><div class="battle-fx-dodge-afterimage afterimage-2"></div><div class="battle-fx-dodge-label">ESQUIVA</div>`);
 }
 function playFloatFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
   if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
@@ -495,6 +540,7 @@ function playFloatFxEvent(fx){
   spawnBattleFxNode(`battle-fx-float ${cls} ${sideClass} ${rarityClass}`,point.x,point.y,{},980,`<div class="battle-fx-float-badge"><span class="battle-fx-float-icon">${iconText}</span>${amountText?`<span class="battle-fx-float-amount">${amountText}</span>`:""}</div>`);
 }
 function playStatusFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
   if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
@@ -594,7 +640,7 @@ function maybePlayBattleFx(prevPub,nextPub){
   }
   if(explicitDefenseFx&&(explicitDefenseFx.type==="guard_block"||explicitDefenseFx.type==="guard_break")){
     const defenseDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?360:300):120;
-    setTimeout(()=>if(!explicitDefenseFx?.leader) playDefenseFxEvent(explicitDefenseFx),defenseDelay);
+    setTimeout(()=>playDefenseFxEvent(explicitDefenseFx),defenseDelay);
   }
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"){
     const dodgeDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?360:300):120;
@@ -3391,7 +3437,7 @@ function getStatusEntryIconHtml(entry){
   const label=escapeHtml(entry?.name||entry?.label||"Estado");
   return `<span class="status-icon status-icon-asset status-icon-${escapeHtml(key)}" role="img" aria-label="${label}"><span class="status-icon-bg" aria-hidden="true"></span><img class="status-icon-img" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async"></span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:spellDamage>0||u.damagedThisTurn}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage)});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:spellDamage>0||u.damagedThisTurn}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage)});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeLeaderOrBoardFloatFx("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -5526,8 +5572,8 @@ async function activateDefenseStance(u){
   const defenderNow=units.find(it=>it.id===u.id)||u;
   await updatePublic({
     units,
-    defenseFxEvent:makeDefenseFxEvent('defend_stance',defenderNow),
-    floatFxEvent:defenderNow&&defenderNow.leader?null:routeFxToLeaderOrBoard(defenderNow,'guard_buff',()=>makeFloatFxEvent('guard_buff',defenderNow,2,{iconText:'🛡'}),playLeaderFx)
+    defenseFxEvent:makeLeaderOrBoardDefenseFx("defend_stance",defenderNow),
+    floatFxEvent:makeLeaderOrBoardFloatFx("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
   clearSelection();
@@ -7838,42 +7884,4 @@ document.addEventListener("DOMContentLoaded",()=>{
   applyLeaderCssToolSettings();
 });
 
-/* Patch 75 helper: los líderes fijos no usan banda FX de DEF */
-function shouldSuppressLeaderGuardFxEvent(ev){
-  if(!ev)return false;
-  const type=String(ev.type||ev.kind||ev.fxType||"");
-  if(type!=="guard_buff")return false;
-  const id=ev.unitId||ev.targetId||ev.id||"";
-  const u=id?getUnit(id):null;
-  return !!(u&&u.leader);
-}
 
-/* PATCH 78 - Leader FX Engine (UI LAYER) */
-function getLeaderEl(unit){
-  if(!unit) return null;
-  return document.querySelector(`.leader-base[data-leader-id="${unit.id}"]`);
-}
-
-function playLeaderFx(unit, fx){
-  const el = getLeaderEl(unit);
-  if(!el || !fx) return;
-
-  const node = document.createElement("div");
-  node.className = `leader-fx leader-fx-${fx.type||"info"}`;
-
-  const icon = fx.iconText || "🛡";
-  node.innerHTML = `<span class="leader-fx-icon">${icon}</span>`;
-
-  el.appendChild(node);
-
-  setTimeout(()=>node.remove(), 900);
-}
-
-function routeFxToLeaderOrBoard(unit, fxType, boardFn, leaderFn){
-  if(unit && unit.leader){
-    leaderFn(unit, {type:fxType});
-    return true;
-  }
-  boardFn();
-  return false;
-}

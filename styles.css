@@ -12249,26 +12249,45 @@
 
 /* Patch 77: el FX de tablero de líderes queda bloqueado desde script.js. */
 
-/* PATCH 78 - Leader FX UI */
-.leader-base{ position:relative; }
 
-.leader-fx{
+/* Patch 79 - Leader UI FX */
+.leader-base{
   position:absolute;
-  top:50%;
+}
+.leader-ui-fx{
+  position:absolute;
   left:50%;
-  transform:translate(-50%,-50%);
+  top:42%;
+  transform:translate(-50%,-50%) scale(.72);
+  z-index:80;
   pointer-events:none;
-  z-index:9999;
-  animation: leaderFxPop 0.9s ease-out forwards;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:3px 6px;
+  border-radius:999px;
+  border:1px solid rgba(255,224,138,.58);
+  background:radial-gradient(circle at 50% 40%,rgba(255,240,190,.28),rgba(30,18,6,.86) 62%,rgba(0,0,0,.18));
+  box-shadow:0 0 14px rgba(255,210,110,.32), inset 0 1px 0 rgba(255,255,255,.18);
+  animation:leaderUiFxPop .92s ease-out forwards;
 }
-
-@keyframes leaderFxPop{
-  0%{ transform:translate(-50%,-50%) scale(0.4); opacity:0; }
-  30%{ opacity:1; }
-  100%{ transform:translate(-50%,-60%) scale(1.2); opacity:0; }
+.leader-ui-fx-icon{
+  font-size:17px;
+  line-height:1;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.68));
 }
-
-.leader-fx-icon{
-  font-size:18px;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));
+.leader-ui-fx-label{
+  font-family:Georgia,serif;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.5px;
+  color:#ffe7a6;
+  text-shadow:0 1px 3px rgba(0,0,0,.75);
+}
+@keyframes leaderUiFxPop{
+  0%{opacity:0;transform:translate(-50%,-45%) scale(.42)}
+  18%{opacity:1;transform:translate(-50%,-58%) scale(1.06)}
+  60%{opacity:.94;transform:translate(-50%,-68%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-88%) scale(.86)}
 }
