@@ -333,8 +333,15 @@ function getFxUnitFromEvent(fx, unitsList){
     if(fromList)return fromList;
     const live = getUnit(id);
     if(live)return live;
+    if(String(id)==="leader1")return (units.find(u=>u&&u.owner===1&&u.leader)||{id:"leader1",owner:1,leader:true});
+    if(String(id)==="leader2")return (units.find(u=>u&&u.owner===2&&u.leader)||{id:"leader2",owner:2,leader:true});
   }
   return null;
+}
+function shouldSuppressLeaderFx(type,unit){
+  if(!unit || !unit.leader)return false;
+  const fxType=String(type||"");
+  return fxType==="defend_stance" || fxType==="guard_buff" || fxType==="guard_block" || fxType==="guard_break";
 }
 function shouldSuppressFixedLeaderBoardFxEvent(fx, unitsList){
   const unit = getFxUnitFromEvent(fx, unitsList);
@@ -494,7 +501,6 @@ function playBattleFxEvent(fx,attackerRef=null){
 }
 function playDefenseFxEvent(fx){
   if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -512,7 +518,6 @@ function playDefenseFxEvent(fx){
 }
 function playDodgeFxEvent(fx){
   if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
@@ -523,7 +528,6 @@ function playDodgeFxEvent(fx){
 }
 function playFloatFxEvent(fx){
   if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -541,7 +545,6 @@ function playFloatFxEvent(fx){
 }
 function playStatusFxEvent(fx){
   if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -6017,7 +6020,7 @@ function renderLeaderBases(){
     const side=u.owner===1?"south":"north";
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
-    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid"):""].filter(Boolean).join(" ");
+    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
     return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span>${getUnitStatusBubblesHtml(u)}<span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
   }).join("");
 }

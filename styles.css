@@ -12291,3 +12291,36 @@
   60%{opacity:.94;transform:translate(-50%,-68%) scale(1)}
   100%{opacity:0;transform:translate(-50%,-88%) scale(.86)}
 }
+
+
+/* Patch 80 - Fix real de banda en líderes:
+   los líderes fijos ya no usan el pseudo-halo de target del tablero.
+   Ese pseudo-elemento era el óvalo/banda que se quedaba pegado abajo. */
+.leader-base.attackable .leader-base-token::after,
+.leader-base.valid .leader-base-token::after,
+.leader-base.summonable .leader-base-token::after,
+.leader-base.leader-targetable .leader-base-token::after{
+  content:none!important;
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  min-width:0!important;
+  min-height:0!important;
+  opacity:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+
+/* Indicador pequeño y seguro para líderes seleccionables, sin banda horizontal */
+.leader-base.leader-targetable .leader-base-token{
+  filter:drop-shadow(0 0 8px rgba(255,221,123,.42)) drop-shadow(0 12px 14px rgba(0,0,0,.62));
+}
+.leader-base.leader-targetable .leader-base-pedestal{
+  box-shadow:0 0 0 1px rgba(255,224,138,.55),0 0 10px rgba(255,209,102,.24),inset 0 0 10px rgba(255,221,123,.15)!important;
+}
+
+/* Si algún slash viejo queda apuntando desde/hacia líder, no debe parecer una banda persistente */
+.battle-fx-slash.leader-fx-blocked,
+.battle-fx-impact.leader-fx-blocked{
+  display:none!important;
+}
