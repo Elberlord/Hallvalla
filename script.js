@@ -5660,7 +5660,7 @@ function getUnitStatusSealShortText(entry){
 function isHelpfulStatusEntry(entry){
   const kind=String(entry?.kind||"");
   const icon=String(entry?.icon||"");
-  return kind.includes("buff")||icon==="buff"||icon==="hp";
+  return kind.includes("buff")||kind.includes("defense")||icon==="buff"||icon==="hp";
 }
 function renderUnitStatusSeal(entry,idx=0){
   const kind=escapeHtml(entry?.kind||"neutral");
@@ -5674,20 +5674,17 @@ function getUnitStatusBubblesHtml(u){
   if(!entries.length)return "";
   const helpful=[];
   const harmful=[];
-  entries.forEach(entry=>{(isHelpfulStatusEntry(entry)?helpful:harmful).push(entry);});
-  const left=harmful.slice(0,4);
-  const right=helpful.slice(0,4);
-  let remaining=[...harmful.slice(4),...helpful.slice(4)];
-  while(remaining.length&&(left.length<4||right.length<4)){
-    if(left.length<4&&remaining.length)left.push(remaining.shift());
-    if(right.length<4&&remaining.length)right.push(remaining.shift());
-  }
-  if(!right.length&&left.length>2)right.push(...left.splice(2));
-  if(!left.length&&right.length>2)left.push(...right.splice(0,Math.min(2,right.length-1)));
+  entries.forEach((entry,idx)=>{
+    const wrapped={entry,idx};
+    (isHelpfulStatusEntry(entry)?helpful:harmful).push(wrapped);
+  });
+  const left=helpful.slice(0,4);
+  const right=harmful.slice(0,4);
+  const remaining=[...helpful.slice(4),...harmful.slice(4)];
   const extra=remaining.length;
-  const leftHtml=left.map((entry,idx)=>renderUnitStatusSeal(entry,idx)).join("");
-  const rightHtml=right.map((entry,idx)=>renderUnitStatusSeal(entry,left.length+idx)).join("");
-  return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
+  const leftHtml=left.map(item=>renderUnitStatusSeal(item.entry,item.idx)).join("");
+  const rightHtml=right.map(item=>renderUnitStatusSeal(item.entry,item.idx)).join("");
+  return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left status-seal-rail-buffs">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right status-seal-rail-harmful">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
 }
 
 
