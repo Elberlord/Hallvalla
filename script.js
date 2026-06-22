@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HY_enemy_det_modal_click_fix_2026_06_22";
+const HALLVALLA_BUILD_VERSION="v7HZ_3d_leader_assets_fixed_bases_2026_06_22";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -29,7 +29,7 @@ function handleDirectBoardTargetEvent(ev,x,y){
 }
 function showEl(id){const el=$(id);if(el)el.classList.remove("hidden");}
 function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
-const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior.webp",archer:"assets/leaders/leader_archer.webp",mage:"assets/leaders/leader_mage.webp",axe:"assets/leaders/leader_axe.webp",cavalry:"assets/leaders/leader_cavalry.webp",assassin:"assets/leaders/leader_assassin.webp",beastmaster:"assets/leaders/leader_beastmaster.webp"};
+const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior_3d.png",archer:"assets/leaders/leader_archer_3d.png",mage:"assets/leaders/leader_mage_3d.png",axe:"assets/leaders/leader_axe_3d.png",cavalry:"assets/leaders/leader_cavalry_3d.png",assassin:"assets/leaders/leader_assassin_3d.png",beastmaster:"assets/leaders/leader_beastmaster_3d.png"};
 const CARD_PORTRAITS={
   richard:"assets/cards/basic/richard_lionheart.webp",
   cavalry:"assets/cards/basic/cavalry_light.webp",
@@ -5902,7 +5902,7 @@ function renderLeaderBases(){
     const side=u.owner===1?"south":"north";
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
-    const classes=["leader-base",`leader-base-${side}`,u.owner===1?"p1":"p2",isMarked?(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid"):""].filter(Boolean).join(" ");
+    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid"):""].filter(Boolean).join(" ");
     return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)} · Base ${side==="north"?"Norte":"Sur"}"><span class="leader-base-label">${side==="north"?"Base Norte":"Base Sur"}</span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b>❤ ${getDisplayHp(u)}</b><b>⚔ ${effectiveAtk(u)}</b><b>RG ${u.range||1}</b></span></button>`;
   }).join("");
   layer.querySelectorAll(".leader-base").forEach(btn=>{
