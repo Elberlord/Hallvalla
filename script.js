@@ -2877,7 +2877,14 @@ function attackRangeCells(u){
   }
   return res;
 }
+
+/* Patch 88 - helper mínimo: celda ocupada por líder */
+function isLeaderCoordForVisualGuard(x,y,unitsList=publicState?.units||[]){
+  return (unitsList||[]).some(u=>u&&u.leader&&u.hp>0&&Number(u.x)===Number(x)&&Number(u.y)===Number(y));
+}
+
 function getTacticalPreviewClasses(x,y){
+  if(isLeaderCoordForVisualGuard(x,y))return[];
   if(selectedCard||selectedUnitActionMode||!unitContextSelection||!publicState)return[];
   const u=getUnit(unitContextSelection.unitId);
   if(!u)return[];
@@ -5949,7 +5956,7 @@ function renderBoard(){
     const cell=document.createElement("div");
     cell.className="cell";
     const key=`${x},${y}`;
-    const tacticalClasses=isLeaderCoord(x,y)?[]:getTacticalPreviewClasses(x,y);
+    const tacticalClasses=getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
     if(highlights.includes(key)&&isBoardHighlightAllowedAt(x,y))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
     const trap=getCellBeastTrapAt(x,y);
@@ -6001,7 +6008,6 @@ function renderBoard(){
     });
     grid.appendChild(cell);
   }
-  cleanLeaderGridCellVisuals();
   renderLeaderBases();
 }
 

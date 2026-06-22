@@ -12372,9 +12372,7 @@ body.leader-board-fx-suppressed .battle-fx-dodge{
 }
 
 
-/* Patch 86 - seguro: líderes sin pseudo-overlay heredado */
-.leader-base::before,
-.leader-base::after,
+/* Patch 88 - seguridad mínima: sin pseudo-overlay en token de líder */
 .leader-base-token::before,
 .leader-base-token::after{
   content:none!important;
