@@ -11699,9 +11699,9 @@
 .leader-bases-layer{
   --arenaH:calc(100vh - 12px);
   --imgW:calc(var(--arenaH)*1.7779);
-  --leaderTokenScale:1;
-  --leaderNorthOffset:0px;
-  --leaderSouthOffset:0px;
+  --leaderTokenScale:1.2;
+  --leaderNorthOffset:-22px;
+  --leaderSouthOffset:9px;
   position:absolute;
   inset:0;
   z-index:24;
@@ -11965,91 +11965,4 @@
 /* Patch 69: moved enemy leader higher in the north base zone */
 
 
-/* Patch 70: panel de ajuste rápido para fichas de líderes y refresco CSS */
-.leader-css-tools{
-  position:fixed;
-  left:16px;
-  bottom:92px;
-  z-index:1200;
-  width:min(280px,calc(100vw - 32px));
-  padding:12px;
-  border:1px solid rgba(255,217,117,.42);
-  border-radius:18px;
-  background:linear-gradient(180deg,rgba(19,15,9,.96),rgba(5,4,3,.94));
-  box-shadow:0 14px 40px rgba(0,0,0,.58), inset 0 0 0 1px rgba(255,244,206,.06);
-  color:#ffe8ae;
-  font-family:Georgia,serif;
-  display:none;
-}
-.leader-css-tools.show{display:block}
-.leader-css-tools h3{
-  margin:0 0 8px;
-  font-size:14px;
-  color:#ffe071;
-  text-shadow:0 2px 3px #000;
-}
-.leader-css-tools label{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:6px;
-  align-items:center;
-  margin:8px 0 4px;
-  font-size:11px;
-  color:#f6dca0;
-}
-.leader-css-tools output{
-  min-width:44px;
-  text-align:right;
-  color:#fff6d2;
-  font-weight:900;
-}
-.leader-css-tools input[type="range"]{
-  width:100%;
-  accent-color:#e7bd4c;
-}
-.leader-css-tools-row{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-.leader-css-tools button{
-  flex:1;
-  border:1px solid rgba(255,217,117,.45);
-  border-radius:999px;
-  padding:8px 9px;
-  background:linear-gradient(180deg,rgba(88,64,26,.95),rgba(13,10,6,.95));
-  color:#fff0bd;
-  font-weight:900;
-  font-family:Georgia,serif;
-  cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.32);
-}
-.leader-css-tools button:hover{
-  filter:brightness(1.12);
-}
-.leader-css-tools-note{
-  margin-top:8px;
-  font-size:10px;
-  line-height:1.25;
-  color:#cdb785;
-}
-.leader-css-tools-toggle{
-  position:fixed;
-  left:38px;
-  bottom:46px;
-  z-index:1201;
-  width:54px;
-  height:36px;
-  border-radius:999px;
-  border:1px solid rgba(255,217,117,.48);
-  background:linear-gradient(180deg,rgba(33,24,12,.96),rgba(6,5,3,.96));
-  color:#ffe59b;
-  font-family:Georgia,serif;
-  font-weight:900;
-  box-shadow:0 8px 22px rgba(0,0,0,.48),0 0 14px rgba(255,210,96,.12);
-  cursor:pointer;
-}
-@media(max-width:720px){
-  .leader-css-tools{left:10px;bottom:82px;width:min(260px,calc(100vw - 20px));}
-  .leader-css-tools-toggle{left:22px;bottom:38px;}
-}
+/* Patch 71: controles CSS removidos; posiciones fijas de líderes aplicadas. */
