@@ -1,0 +1,12 @@
+PATCH 7GQ - Doble capa visual para unidades y líderes
+
+Cambios realizados:
+- getUnitPortraitHtml ahora acepta un segundo parámetro opcional: depthLayer.
+- El tablero llama getUnitPortraitHtml(u, true) para renderizar unidades/líderes con doble capa.
+- Se añadió una capa trasera usando el mismo retrato como sombra recortada, desplazada y oscurecida.
+- Se añadió una capa frontal limpia, ligeramente elevada y con drop-shadow.
+- No se tocaron reglas, stats, IA, fases, movimiento, ataque, guardia, destreza, agilidad, cartas ni líderes.
+- El inspector, menú contextual y cartas de mano siguen usando el retrato normal de una sola capa.
+
+Objetivo visual:
+Que unidades y líderes parezcan levantados sobre el marco/carta del tablero, con más profundidad y presencia.

@@ -11600,3 +11600,97 @@
 .det-status-row.det-status-icon-only{
   cursor:pointer!important;
 }
+
+/* PATCH 7GQ - doble capa visual para unidades y líderes del tablero
+   Capa trasera: sombra recortada del mismo retrato, desplazada hacia abajo.
+   Capa frontal: retrato limpio, levantado visualmente dentro del marco. */
+.cell > .unit-card .unit-portrait{
+  overflow:visible !important;
+  background:radial-gradient(circle at 50% 18%,rgba(88,71,53,.20),rgba(8,8,8,.76));
+}
+.cell > .unit-card .unit-depth-stack{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  transform:translateZ(0);
+}
+.cell > .unit-card .unit-depth-stack img{
+  position:absolute;
+  inset:0;
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center 18% !important;
+  display:block;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.cell > .unit-card .unit-depth-shadow{
+  z-index:1;
+  transform:translate(7%, 9%) scale(1.03);
+  opacity:.58;
+  filter:brightness(0) blur(2.2px) drop-shadow(0 12px 10px rgba(0,0,0,.86)) !important;
+}
+.cell > .unit-card .unit-depth-front{
+  z-index:2;
+  transform:translateY(-3%) scale(1.035);
+  filter:saturate(1.08) contrast(1.04) drop-shadow(0 7px 7px rgba(0,0,0,.48)) !important;
+}
+.cell > .unit-card.leader .unit-depth-stack img{
+  object-position:center 15% !important;
+}
+.cell > .unit-card.leader .unit-depth-shadow{
+  opacity:.64;
+  transform:translate(7%, 10%) scale(1.04);
+  filter:brightness(0) blur(2.6px) drop-shadow(0 14px 12px rgba(0,0,0,.90)) !important;
+}
+.cell > .unit-card.unit-key-spearman .unit-depth-stack img{
+  object-position:center 20% !important;
+}
+@media(max-width:980px){
+  .cell > .unit-card .unit-depth-shadow{
+    transform:translate(6%, 8%) scale(1.025);
+    opacity:.52;
+    filter:brightness(0) blur(1.8px) drop-shadow(0 9px 8px rgba(0,0,0,.82)) !important;
+  }
+  .cell > .unit-card .unit-depth-front{
+    transform:translateY(-2%) scale(1.025);
+  }
+}
+
+/* === Patch 60: DET enemy modal click shield ===
+   Ensures every guide/status/lore/stat icon inside enemy AI DET keeps pointer events.
+   This only affects interaction layers inside the DET modal. */
+#inspector.show .inspect-card,
+#inspector.show #inspectText,
+#inspector.show #inspectStats,
+#inspector.show .det-section-block,
+#inspector.show .det-tactical-card,
+#inspector.show .det-status-section,
+#inspector.show .detail-guide-row{
+  pointer-events:auto!important;
+}
+#inspector.show .det-stat-icon-btn,
+#inspector.show .det-ability-icon-btn,
+#inspector.show .detail-token-btn,
+#inspector.show .det-inline-icon-btn,
+#inspector.show .det-status-icon-btn,
+#inspector.show .guide-status-btn,
+#inspector.show .det-status-row,
+#inspector.show .stat-click{
+  pointer-events:auto!important;
+  position:relative!important;
+  z-index:12!important;
+  touch-action:manipulation!important;
+}
+#inspector.show .det-status-icon,
+#inspector.show .det-status-copy,
+#inspector.show .det-status-copy *,
+#inspector.show .detail-guide-chip span,
+#inspector.show .det-btn-img,
+#inspector.show .det-inline-icon-img,
+#inspector.show .det-ability-img,
+#inspector.show .det-stat-img{
+  pointer-events:none!important;
+}

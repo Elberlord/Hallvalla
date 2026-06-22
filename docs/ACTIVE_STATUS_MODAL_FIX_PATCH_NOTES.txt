@@ -1,0 +1,19 @@
+HallValla patch 59 - Active status modal fix
+
+Objetivo:
+- Todos los estados activos/buffs/debuffs deben abrir modal explicativo al hacer click.
+- Guardia defensiva / DEF +2 GD ahora se muestra como píldora clickeable con nombre visible y descripción.
+
+Cambios:
+- renderDetStatusesHtml ahora renderiza cada estado como botón con clase guide-status-btn.
+- Cada estado activo incluye icono, nombre visible y descripción en title.
+- openStatusGuideModal ahora identifica si el estado es buff/debuff/estado y muestra un título más claro.
+- Se agregó delegación de clicks como respaldo para que los estados activos no pierdan el click aunque cambie el render interno.
+
+No tocado:
+- Stats.
+- Daño.
+- Guardia real.
+- IA.
+- Fases.
+- Reglas de combate.

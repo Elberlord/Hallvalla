@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HW_status_icon_assets_clickable_2026_06_21";
+const HALLVALLA_BUILD_VERSION="v7HY_enemy_det_modal_click_fix_2026_06_22";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1312,7 +1312,8 @@ function renderDetStatusesHtml(activeEntries=[],card=null){
   const historyHtml=card&&card.leader?renderDetLeaderRecordHtml(card):"";
   const rows=entries.map((entry,idx)=>{
     const safeName=escapeHtml(entry.name||entry.label||"Estado activo");
-    return `<button class="det-status-row det-status-icon-only" type="button" data-status-index="${idx}" title="${safeName}" aria-label="${safeName}"><span class="det-status-icon" aria-hidden="true">${getStatusEntryIconHtml(entry)}</span></button>`;
+    const safeDesc=escapeHtml(entry.desc||"Toca para revisar este estado activo.");
+    return `<button class="det-status-row det-status-icon-row guide-status-btn" type="button" data-status-index="${idx}" title="${safeName}: ${safeDesc}" aria-label="Abrir explicación de ${safeName}"><span class="det-status-icon" aria-hidden="true">${getStatusEntryIconHtml(entry)}</span><span class="det-status-copy"><strong>${safeName}</strong><small>${safeDesc}</small></span></button>`;
   }).join("");
   const empty=rows?"":`<div class="det-empty-line">Sin estados activos.</div>`;
   return `<section class="det-status-section">
@@ -3067,13 +3068,105 @@ function detailStatusButtonsHtml(entries=[]){
 }
 function openStatusGuideModal(entry={},entity=null){
   if(!entry)return;
+  const label=entry.name||entry.label||"Estado activo";
+  const rawKind=String(entry.kind||entry.icon||"").toLowerCase();
+  const isBuff=rawKind.includes("buff")||["buff","defense","guard","hp"].includes(String(entry.icon||""));
+  const isDebuff=rawKind.includes("debuff")||["debuff","bleed","poison","burn","paralysis","silence","curse","lock","control"].includes(String(entry.icon||""));
   openStatGuideModal({
-    title:`${entry.name||entry.label||"Estado activo"}`,
-    short:entity?.name?`${entity.name} tiene este estado activo.`:"Estado activo.",
+    title:`${getStatusEntryGlyph(entry)} ${label}`,
+    short:entity?.name?`${entity.name} tiene este ${isBuff?"buff":isDebuff?"debuff":"estado"} activo.`:`${isBuff?"Buff":isDebuff?"Debuff":"Estado"} activo.`,
     formula:entry.desc||"Estado activo sin descripción adicional.",
-    example:entry.extra||"Toca el icono del estado cuando necesites recordar qué afecta a la unidad."
+    example:entry.extra||"Todos los estados activos son clickeables desde DET y desde sus iconos sobre la unidad para revisar qué modifican."
   });
 }
+
+function bindStatusGuideDelegation(container,entity,getStatuses){
+  if(!container)return;
+  container._hvStatusGuideEntity=entity;
+  container._hvStatusGuideGetter=getStatuses;
+  if(container.dataset.statusGuideDelegationBound)return;
+  container.dataset.statusGuideDelegationBound="1";
+  container.addEventListener("click",ev=>{
+    const btn=ev.target&&ev.target.closest?ev.target.closest(".guide-status-btn,.det-status-row,[data-status-index]"):null;
+    if(!btn||!container.contains(btn))return;
+    const idx=Number(btn.dataset.statusIndex);
+    if(!Number.isFinite(idx))return;
+    const statuses=typeof container._hvStatusGuideGetter==="function"?container._hvStatusGuideGetter():[];
+    const entry=statuses[idx];
+    if(!entry)return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    openStatusGuideModal(entry,container._hvStatusGuideEntity||entity);
+  },true);
+}
+
+function bindInspectorDetModalDelegation(inspector){
+  if(!inspector||inspector.dataset.detModalDelegationBound)return;
+  inspector.dataset.detModalDelegationBound="1";
+  const resolveEntity=()=>inspector._hvInspectedEntity||null;
+  const resolveStatuses=()=>Array.isArray(inspector._hvActiveStatuses)?inspector._hvActiveStatuses:[];
+  const handleGuideTap=(ev)=>{
+    const target=ev.target&&ev.target.closest?ev.target.closest('.guide-formula-btn,.guide-lore-btn,.guide-weapon-btn,.guide-effect-btn,.guide-ability-btn,.guide-status-btn,.det-status-row,.stat-click,[data-stat]'):null;
+    if(!target||!inspector.contains(target))return;
+    const entity=resolveEntity();
+    if(target.closest('#inspectClose'))return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    ev.stopImmediatePropagation&&ev.stopImmediatePropagation();
+    if(target.matches('[data-stat],.stat-click')){
+      openStatGuideModal(target.dataset.stat||target.dataset.statRow||target.textContent||'formula');
+      return;
+    }
+    if(target.matches('.guide-formula-btn')){
+      openStatGuideModal('formula');
+      return;
+    }
+    if(target.matches('.guide-weapon-btn')){
+      openWeaponGuide(entity);
+      return;
+    }
+    if(target.matches('.guide-lore-btn')){
+      const lore=getUnitLoreData(entity);
+      openStatGuideModal({
+        title:`✦ ${entity?.name||'Leyenda'}`,
+        short:lore.short||'Leyenda de la unidad.',
+        formula:lore.legend||'Esta unidad todavía no tiene leyenda extendida.',
+        example:'Este texto es narrativo: no cambia reglas, stats ni efectos de juego.'
+      });
+      return;
+    }
+    if(target.matches('.guide-effect-btn')){
+      const effectText=inspector._hvEffectText||getUnitEffectText(entity)||'';
+      openStatGuideModal({
+        title:inspector._hvEffectTitle||`✦ Efecto de ${entity?.name||'la carta'}`,
+        short:entity?.name?`Explicación del efecto de ${entity.name}.`:'Explicación del efecto.',
+        formula:effectText||'Esta pieza no tiene un efecto especial visible en este momento.',
+        example:entity?.type==='unit'||entity?.leader?'Revisa el momento del duelo y el objetivo correcto para aprovechar este efecto.':'Juega esta carta cuando el objetivo o la condición te den el mejor intercambio.'
+      });
+      return;
+    }
+    if(target.matches('.guide-ability-btn')){
+      const kind=target.dataset.abilityKind||'effect';
+      const meta=getDetAbilityMeta(kind);
+      openStatGuideModal({
+        title:`${meta.glyph||'✦'} ${target.dataset.abilityTitle||'Efecto'}`,
+        short:`Tipo: ${meta.label}.`,
+        formula:target.dataset.abilityText||'Sin explicación adicional.',
+        example:'Este icono abre la explicación de la habilidad específica de la unidad.'
+      });
+      return;
+    }
+    if(target.matches('.guide-status-btn,.det-status-row')||target.hasAttribute('data-status-index')){
+      const idx=Number(target.dataset.statusIndex||0);
+      const entry=resolveStatuses()[idx];
+      if(entry)openStatusGuideModal(entry,entity);
+      return;
+    }
+  };
+  inspector.addEventListener('click',handleGuideTap,true);
+  inspector.addEventListener('pointerup',handleGuideTap,true);
+}
+
 function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",statuses=[]}={}){
   if(!container)return;
   const effectBtn=container.querySelector('.guide-effect-btn');
@@ -5053,10 +5146,16 @@ async function cellClick(x,y){
   unitContextSelection=null;
   hideUnitContextMenu();
 }
-function getUnitPortraitHtml(u){
+function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
   const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
-  if(portrait)return `<img src="${portrait}" alt="${escapeHtml(u.name||"Unidad")}">`;
+  if(portrait){
+    const alt=escapeHtml(u.name||"Unidad");
+    if(depthLayer){
+      return `<div class="unit-depth-stack"><img class="unit-depth-shadow" src="${portrait}" alt="" aria-hidden="true"><img class="unit-depth-front" src="${portrait}" alt="${alt}"></div>`;
+    }
+    return `<img src="${portrait}" alt="${alt}">`;
+  }
   return `<span>${u?.icon||"✦"}</span>`;
 }
 function showUnit(u){
@@ -5074,7 +5173,13 @@ function showUnit(u){
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
   inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:true,effectLabel:'Ver efecto'})}`;
+  inspector._hvInspectedEntity=u;
+  inspector._hvActiveStatuses=activeEntries;
+  inspector._hvEffectText=fx;
+  inspector._hvEffectTitle=`✦ Efecto de ${u.name}`;
+  bindInspectorDetModalDelegation(inspector);
   bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
+  bindStatusGuideDelegation(inspectTextEl,u,()=>activeEntries);
   applyRarityClassToElement(inspector,u);
   inspector.classList.add("show");
 }
@@ -5736,7 +5841,7 @@ function renderBoard(){
     if(u){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u,true)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
