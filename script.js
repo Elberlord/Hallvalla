@@ -5932,23 +5932,6 @@ function getNonLeaderHighlights(){
   });
 }
 
-
-/* Patch 85 - helper seguro: excluir líderes del highlight visual del grid */
-function isLeaderCoord(x,y,unitsList=publicState?.units||[]){
-  return (unitsList||[]).some(u=>u&&u.leader&&u.hp>0&&Number(u.x)===Number(x)&&Number(u.y)===Number(y));
-}
-function cleanLeaderGridCellVisuals(){
-  const grid=$("grid");
-  if(!grid||!publicState)return;
-  (publicState.units||[]).forEach(u=>{
-    if(!u||!u.leader)return;
-    const cell=grid.querySelector(`.cell[data-x="${Number(u.x)}"][data-y="${Number(u.y)}"]`);
-    if(cell){
-      cell.classList.remove("valid","attackable","summonable","move-range-preview","attack-range-preview","mixed-range-preview","acted-range-preview","enemy-threat-preview","enemy-acted-threat-preview");
-    }
-  });
-}
-
 function renderBoard(){
   const grid=$("grid");
   if(!grid.dataset.boardTargetDelegateBound){

@@ -12372,7 +12372,7 @@ body.leader-board-fx-suppressed .battle-fx-dodge{
 }
 
 
-/* Patch 85 - seguro: ninguna celda de líder debe retener overlay visual del grid */
+/* Patch 86 - seguro: líderes sin pseudo-overlay heredado */
 .leader-base::before,
 .leader-base::after,
 .leader-base-token::before,
