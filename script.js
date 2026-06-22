@@ -450,7 +450,7 @@ function playBattleFxEvent(fx,attackerRef=null){
   spawnBattleFxNode(`battle-fx-slash ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`},640,`<div class="battle-fx-slash-core"></div>${slashExtra}`);
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
 }
-function playDefenseFxEvent(fx){
+function if(!fx?.leader) playDefenseFxEvent(fx){
   if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
@@ -594,7 +594,7 @@ function maybePlayBattleFx(prevPub,nextPub){
   }
   if(explicitDefenseFx&&(explicitDefenseFx.type==="guard_block"||explicitDefenseFx.type==="guard_break")){
     const defenseDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?360:300):120;
-    setTimeout(()=>playDefenseFxEvent(explicitDefenseFx),defenseDelay);
+    setTimeout(()=>if(!explicitDefenseFx?.leader) playDefenseFxEvent(explicitDefenseFx),defenseDelay);
   }
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"){
     const dodgeDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?360:300):120;
@@ -5526,8 +5526,8 @@ async function activateDefenseStance(u){
   const defenderNow=units.find(it=>it.id===u.id)||u;
   await updatePublic({
     units,
-    defenseFxEvent:defenderNow&&defenderNow.leader?null:makeDefenseFxEvent("defend_stance",defenderNow),
-    floatFxEvent:defenderNow&&defenderNow.leader?null:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
+    defenseFxEvent:makeDefenseFxEvent('defend_stance',defenderNow),
+    floatFxEvent:defenderNow&&defenderNow.leader?null:routeFxToLeaderOrBoard(defenderNow,'guard_buff',()=>makeFloatFxEvent('guard_buff',defenderNow,2,{iconText:'🛡'}),playLeaderFx)
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
   clearSelection();
@@ -7846,4 +7846,34 @@ function shouldSuppressLeaderGuardFxEvent(ev){
   const id=ev.unitId||ev.targetId||ev.id||"";
   const u=id?getUnit(id):null;
   return !!(u&&u.leader);
+}
+
+/* PATCH 78 - Leader FX Engine (UI LAYER) */
+function getLeaderEl(unit){
+  if(!unit) return null;
+  return document.querySelector(`.leader-base[data-leader-id="${unit.id}"]`);
+}
+
+function playLeaderFx(unit, fx){
+  const el = getLeaderEl(unit);
+  if(!el || !fx) return;
+
+  const node = document.createElement("div");
+  node.className = `leader-fx leader-fx-${fx.type||"info"}`;
+
+  const icon = fx.iconText || "🛡";
+  node.innerHTML = `<span class="leader-fx-icon">${icon}</span>`;
+
+  el.appendChild(node);
+
+  setTimeout(()=>node.remove(), 900);
+}
+
+function routeFxToLeaderOrBoard(unit, fxType, boardFn, leaderFn){
+  if(unit && unit.leader){
+    leaderFn(unit, {type:fxType});
+    return true;
+  }
+  boardFn();
+  return false;
 }

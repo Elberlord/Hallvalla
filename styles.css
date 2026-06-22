@@ -12248,3 +12248,27 @@
 
 
 /* Patch 77: el FX de tablero de líderes queda bloqueado desde script.js. */
+
+/* PATCH 78 - Leader FX UI */
+.leader-base{ position:relative; }
+
+.leader-fx{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:9999;
+  animation: leaderFxPop 0.9s ease-out forwards;
+}
+
+@keyframes leaderFxPop{
+  0%{ transform:translate(-50%,-50%) scale(0.4); opacity:0; }
+  30%{ opacity:1; }
+  100%{ transform:translate(-50%,-60%) scale(1.2); opacity:0; }
+}
+
+.leader-fx-icon{
+  font-size:18px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
