@@ -1,7 +1,0 @@
-RESOURCE DETAILS FIX
-
-Agrega la regla HONOR/MANA en los detalles del juego.
-- Si el líder es Hechicero, los detalles muestran que el recurso de cartas se presenta como MANA.
-- Otros líderes siguen mostrando HONOR.
-- Se agrega explicación en detalle vacío, detalles de carta y detalle de líder.
-- No cambia stats, combate, IA, assets, historia ni reglas internas de honor/maxHonor.

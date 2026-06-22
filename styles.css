@@ -402,7 +402,7 @@
   .play-image-button{width:110px;margin-top:25vh}
   .daily-panel{left:7px;bottom:30px;width:22vw;height:7.4vh}
   .welcome-panel{right:7px;bottom:30px;width:29vw;height:7.4vh}
-  .asset-bottom{bottom:5px;gap:5px;padding:4px 5px;border-radius:10px}
+  .asset-bottom{bottom:5px;gap:4px;padding:4px 5px;border-radius:10px}
   .bottom-asset-tab{min-width:78px;height:45px;border-radius:8px}
   .bottom-asset-tab img{width:24px;height:24px}
   .bottom-asset-tab span{font-size:7px}
@@ -991,7 +991,7 @@
   .log{left:8px;right:8px;bottom:246px;max-height:46px;font-size:9px;z-index:40;}
   .hand-drawer{left:8px;right:8px;bottom:82px;width:auto;max-width:none;transform:none;padding:7px 8px;max-height:158px;z-index:43;}
   .hand-top{margin-bottom:5px;font-size:10px;}
-  .hand-row{gap:5px;overflow-x:auto;padding-bottom:2px;}
+  .hand-row{gap:4px;overflow-x:auto;padding-bottom:2px;}
   .hand-card{flex:1 1 0;min-width:72px;max-width:96px;min-height:92px;padding:6px;border-radius:10px;}
   .hand-icon{font-size:18px;line-height:1;}
   .hand-tag{font-size:7px;}
@@ -1711,7 +1711,7 @@
 .hand-card-visual .hand-quick-row{
   display:flex;
   align-items:center;
-  gap:5px;
+  gap:4px;
   flex-wrap:wrap;
 }
 .hand-card-visual .hand-tag{
@@ -1940,7 +1940,7 @@
     top:20%;
     left:8%;
     right:8%;
-    gap:5px;
+    gap:4px;
   }
   .hud .hud-name{font-size:11px;padding-left:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .hud-toggle::after{font-size:10px;right:-1px;}
@@ -3485,7 +3485,7 @@
 
 @media(max-width:980px){
   .battle-fx-float{width:84px;height:74px}
-  .battle-fx-float-badge{top:24%;gap:5px;padding:3px 7px 4px}
+  .battle-fx-float-badge{top:24%;gap:4px;padding:3px 7px 4px}
   .battle-fx-float-icon{font-size:12px}
   .battle-fx-float-amount{font-size:12px}
 }
@@ -4643,7 +4643,7 @@
   margin:0;
   padding:0;
   display:grid;
-  gap:5px;
+  gap:4px;
 }
 .detail-status-item{
   display:grid;
@@ -11708,8 +11708,8 @@
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  width:clamp(82px,10vh,120px);
-  min-height:clamp(112px,16.2vh,168px);
+  width:clamp(68px,8.5vh,98px);
+  min-height:clamp(96px,13.8vh,142px);
   border:0;
   padding:0;
   background:transparent;
@@ -11723,17 +11723,17 @@
   filter:drop-shadow(0 14px 16px rgba(0,0,0,.62));
   touch-action:manipulation;
 }
-.leader-base-north{top:calc(var(--arenaH)*.056)}
-.leader-base-south{bottom:calc(var(--arenaH)*.02)}
-.leader-base-cavalry{width:clamp(94px,11.3vh,132px)}
-.leader-base-cavalry .leader-base-portrait{width:112%}
-.leader-base-assassin .leader-base-portrait{height:88%}
-.leader-base-mage .leader-base-portrait{height:90%}
-.leader-base-beastmaster .leader-base-portrait{height:90%}
+.leader-base-north{top:calc(var(--arenaH)*.058)}
+.leader-base-south{bottom:calc(var(--arenaH)*.022)}
+.leader-base-cavalry{width:clamp(76px,9.4vh,110px)}
+.leader-base-cavalry .leader-base-portrait{width:106%}
+.leader-base-assassin .leader-base-portrait{height:84%}
+.leader-base-mage .leader-base-portrait{height:86%}
+.leader-base-beastmaster .leader-base-portrait{height:86%}
 .leader-base-token{
   position:relative;
   width:100%;
-  aspect-ratio:.8/1;
+  aspect-ratio:.76/1;
   display:grid;
   place-items:end center;
   isolation:isolate;
@@ -11741,9 +11741,9 @@
 .leader-base-aura{
   position:absolute;
   left:50%;
-  bottom:18%;
-  width:84%;
-  height:62%;
+  bottom:16%;
+  width:78%;
+  height:54%;
   transform:translateX(-50%);
   border-radius:50%;
   background:radial-gradient(circle,rgba(255,218,101,.18),rgba(255,218,101,.06) 42%,rgba(0,0,0,0) 70%);
@@ -11753,10 +11753,10 @@
 .leader-base-portrait{
   position:absolute;
   left:50%;
-  bottom:18%;
+  bottom:15%;
   transform:translateX(-50%);
-  width:100%;
-  height:92%;
+  width:92%;
+  height:84%;
   z-index:2;
   display:grid;
   place-items:center;
@@ -11792,9 +11792,9 @@
 .leader-base-pedestal{
   position:absolute;
   left:50%;
-  bottom:5%;
-  width:88%;
-  height:22%;
+  bottom:4%;
+  width:80%;
+  height:18%;
   transform:translateX(-50%) perspective(130px) rotateX(54deg);
   border-radius:50%;
   z-index:1;
@@ -11804,22 +11804,22 @@
 }
 .leader-base-stats{
   display:flex;
-  gap:5px;
+  gap:4px;
   justify-content:center;
   align-items:center;
-  transform:translateY(-5px);
+  transform:translateY(-2px);
   position:relative;
   z-index:5;
 }
 .leader-base-stats b{
-  min-width:26px;
-  height:24px;
-  padding:0 6px;
+  min-width:24px;
+  height:22px;
+  padding:0 5px;
   border-radius:999px;
   background:linear-gradient(180deg,rgba(18,14,9,.94),rgba(6,5,3,.94));
   border:1px solid rgba(255,216,111,.36);
   color:#fff1b9;
-  font-size:clamp(8px,1vh,10px);
+  font-size:clamp(7px,.92vh,9px);
   line-height:1;
   text-align:center;
   box-shadow:0 2px 7px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,244,209,.05);
@@ -11828,7 +11828,7 @@
   justify-content:center;
   gap:4px;
 }
-.leader-stat-icon{font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;opacity:.95}
+.leader-stat-icon{font-size:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;opacity:.95}
 .leader-stat-value{font-weight:900;letter-spacing:.01em}
 .leader-base-stats b.hp{border-color:rgba(255,196,146,.45)}
 .leader-base-stats b.atk{border-color:rgba(255,214,115,.45)}
@@ -11856,44 +11856,44 @@
 .leader-base:active .leader-base-token{transform:translateY(1px) scale(.98)}
 
 .leader-base .unit-status-bubbles.unit-status-seals{
-  inset:-2% -24% 12% -24%;
+  inset:2% -18% 18% -18%;
   z-index:4;
 }
-.leader-base .status-seal-rail{
-  top:20%;
-  gap:6px;
+ .leader-base .status-seal-rail{
+  top:24%;
+  gap:5px;
 }
-.leader-base .status-seal-rail.left{left:0;transform:translateX(-20%)}
-.leader-base .status-seal-rail.right{right:0;transform:translateX(20%)}
-.leader-base .unit-status-seal{
-  width:23px;
-  height:23px;
-  min-width:23px;
+.leader-base .status-seal-rail.left{left:2%;transform:translateX(-10%)}
+.leader-base .status-seal-rail.right{right:2%;transform:translateX(10%)}
+ .leader-base .unit-status-seal{
+  width:20px;
+  height:20px;
+  min-width:20px;
 }
-.leader-base .unit-status-seal .status-icon{width:13px;height:13px}
-.leader-base .unit-status-seal .status-icon-bleed{width:11px;height:14px}
+.leader-base .unit-status-seal .status-icon{width:11px;height:11px}
+.leader-base .unit-status-seal .status-icon-bleed{width:10px;height:12px}
 .leader-base .unit-status-seal .status-icon-burn,
-.leader-base .unit-status-seal .status-icon-paralysis{width:11px;height:14px}
+.leader-base .unit-status-seal .status-icon-paralysis{width:10px;height:12px}
 .leader-base .unit-status-seal .status-icon-buff{border-left-width:6px;border-right-width:6px;border-bottom-width:11px}
 .leader-base .unit-status-seal .status-icon-debuff{border-left-width:6px;border-right-width:6px;border-top-width:11px}
 .leader-base .unit-status-seal-stack{min-width:11px;height:11px;font-size:7px;right:-4px;bottom:-4px}
-.leader-base .unit-status-seal-extra{bottom:6%;height:17px;font-size:8px;z-index:5}
+.leader-base .unit-status-seal-extra{bottom:7%;height:15px;font-size:7px;z-index:5}
 
 @media(max-width:980px){
   .leader-bases-layer{--arenaH:100svh}
-  .leader-base{width:clamp(68px,8.9vh,92px);min-height:clamp(98px,14.2vh,130px)}
+  .leader-base{width:clamp(60px,7.9vh,82px);min-height:clamp(86px,12.2vh,116px)}
   .leader-base-north{top:calc(100svh * .056)}
   .leader-base-south{bottom:calc(100svh * .02)}
-  .leader-base-cavalry{width:clamp(78px,10vh,102px)}
-  .leader-base-stats{gap:3px;transform:translateY(-4px)}
-  .leader-base-stats b{min-width:22px;height:21px;padding:0 5px;font-size:8px}
-  .leader-stat-icon{font-size:10px}
-  .leader-base .unit-status-bubbles.unit-status-seals{inset:-1% -22% 13% -22%}
-  .leader-base .status-seal-rail{top:20%;gap:4px}
-  .leader-base .unit-status-seal{width:20px;height:20px;min-width:20px}
+  .leader-base-cavalry{width:clamp(68px,8.8vh,92px)}
+  .leader-base-stats{gap:3px;transform:translateY(-1px)}
+  .leader-base-stats b{min-width:20px;height:19px;padding:0 4px;font-size:7px}
+  .leader-stat-icon{font-size:9px}
+  .leader-base .unit-status-bubbles.unit-status-seals{inset:2% -16% 18% -16%}
+  .leader-base .status-seal-rail{top:24%;gap:3px}
+  .leader-base .unit-status-seal{width:18px;height:18px;min-width:18px}
   .leader-base .unit-status-seal .status-icon{transform:scale(.92)}
   .leader-base .unit-status-seal-stack{font-size:6px;min-width:9px;height:9px;right:-3px;bottom:-3px}
-  .leader-base .unit-status-seal-extra{height:15px;font-size:7px;bottom:5%}
+  .leader-base .unit-status-seal-extra{height:14px;font-size:6px;bottom:6%}
 }
 
 
@@ -11907,12 +11907,12 @@
   pointer-events:auto!important;
   z-index:3;
 }
-.leader-base-hitbox{
+ .leader-base-hitbox{
   position:absolute;
   left:50%;
   top:50%;
-  width:138%;
-  height:118%;
+  width:126%;
+  height:106%;
   transform:translate(-50%,-50%);
   border-radius:28px;
   background:transparent;
@@ -11947,3 +11947,6 @@
 .leader-base.summonable .leader-base-hitbox{
   cursor:pointer;
 }
+
+
+/* Patch 66: leaders reduced proportionally to occupy less field space without widening silhouette */
