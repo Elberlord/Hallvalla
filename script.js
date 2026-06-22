@@ -5490,13 +5490,17 @@ async function activateDefenseStance(u){
   if(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)return setHint(`${u.name} no puede defenderse este turno.`);
   const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false}:it);
   const defenderNow=units.find(it=>it.id===u.id)||u;
+
+  // Clean Core v1:
+  // DEF queda como estado lógico + sello visual.
+  // No dispara defenseFxEvent de tablero porque ese FX es el que puede dejar cuadro/óvalo residual.
+  clearSelection();
   await updatePublic({
     units,
-    defenseFxEvent:makeDefenseFxEvent("defend_stance",defenderNow),
-    floatFxEvent:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
+    defenseFxEvent:null,
+    floatFxEvent:null
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
-  clearSelection();
 }
 function handleUnitContextAction(action){
   const u=unitContextSelection?getUnit(unitContextSelection.unitId):null;
