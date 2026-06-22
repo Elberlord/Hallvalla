@@ -12342,3 +12342,31 @@ body.leader-board-fx-suppressed .battle-fx-dodge{
   opacity:0!important;
   visibility:hidden!important;
 }
+
+
+/* Patch 82 - Leader isolation from board grid layer */
+/* El grid ya no debe pintar valid/attackable/summonable en coordenadas de líderes.
+   Esto queda como cinturón de seguridad si una clase vieja vuelve a caer en líderes. */
+.leader-base.attackable,
+.leader-base.valid,
+.leader-base.summonable{
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.leader-base.attackable .leader-base-token::after,
+.leader-base.valid .leader-base-token::after,
+.leader-base.summonable .leader-base-token::after,
+.leader-base.leader-targetable .leader-base-token::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* Target visual de líder: solo pedestal, no celda, no banda, no pseudo-elemento */
+.leader-base.leader-targetable{
+  filter:drop-shadow(0 0 8px rgba(255,221,123,.26)) drop-shadow(0 14px 16px rgba(0,0,0,.62))!important;
+}
+.leader-base.leader-targetable .leader-base-pedestal{
+  background:radial-gradient(circle at 50% 42%,rgba(255,235,166,.22),rgba(62,43,17,.80) 48%,rgba(8,7,5,.94) 72%)!important;
+  border-color:rgba(255,224,138,.64)!important;
+}

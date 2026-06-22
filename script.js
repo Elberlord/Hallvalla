@@ -5917,6 +5917,21 @@ function getUnitBottomFrameHtml(u){
   </div>`;
 }
 
+
+/* Patch 82 - Leader isolation from board highlight/grid layer */
+function isLeaderCoord(x,y,unitsList=publicState?.units||[]){
+  return (unitsList||[]).some(u=>u&&u.leader&&u.hp>0&&Number(u.x)===Number(x)&&Number(u.y)===Number(y));
+}
+function isBoardHighlightAllowedAt(x,y){
+  return !isLeaderCoord(x,y);
+}
+function getNonLeaderHighlights(){
+  return (highlights||[]).filter(key=>{
+    const [x,y]=String(key).split(",").map(Number);
+    return Number.isFinite(x)&&Number.isFinite(y)&&isBoardHighlightAllowedAt(x,y);
+  });
+}
+
 function renderBoard(){
   const grid=$("grid");
   if(!grid.dataset.boardTargetDelegateBound){
@@ -5926,7 +5941,7 @@ function renderBoard(){
       const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
       if(!cell||!grid.contains(cell))return;
       const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
-      if(Number.isFinite(x)&&Number.isFinite(y))handleDirectBoardTargetEvent(ev,x,y);
+      if(Number.isFinite(x)&&Number.isFinite(y)&&!isLeaderCoord(x,y))handleDirectBoardTargetEvent(ev,x,y);
     },true);
   }
   grid.innerHTML="";
@@ -5936,7 +5951,7 @@ function renderBoard(){
     const key=`${x},${y}`;
     const tacticalClasses=getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
-    if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
+    if(highlights.includes(key)&&isBoardHighlightAllowedAt(x,y))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
     const trap=getCellBeastTrapAt(x,y);
     if(trap){const m=document.createElement("div");m.className=`beast-trap-marker ${trap.owner===1?"p1":"p2"}`;m.title=trap.owner===myPlayer?trap.cardName:"Trampa de cacería";m.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";cell.appendChild(m);}
     const u=getUnitAt(x,y);
@@ -5980,6 +5995,7 @@ function renderBoard(){
     cell.dataset.x=String(x);
     cell.dataset.y=String(y);
     cell.addEventListener("click",ev=>{
+      if(isLeaderCoord(x,y))return;
       if(shouldDirectBoardTarget())return handleDirectBoardTargetEvent(ev,x,y);
       cellClick(x,y);
     });
