@@ -316,8 +316,18 @@ function makeBattleFxEvent(type,attacker,target){
     attackSound:getAttackSoundForUnit(attacker)
   };
 }
+
+function isFixedLeaderUnit(unit){
+  return !!(unit&&unit.leader);
+}
+function shouldSuppressLeaderFx(type,unit){
+  const fxType=String(type||"");
+  if(!isFixedLeaderUnit(unit))return false;
+  return fxType==="defend_stance"||fxType==="guard_buff";
+}
+
 function makeDefenseFxEvent(type,defender){
-  if(!defender)return null;
+  if(!defender||shouldSuppressLeaderFx(type,defender))return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:type||"guard_block",
@@ -341,7 +351,7 @@ function makeDodgeFxEvent(unit){
   };
 }
 function makeStatusFxEvent(type,unit,amount=0){
-  if(!unit)return null;
+  if(!unit||shouldSuppressLeaderFx(type,unit))return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:type||"status",
@@ -354,7 +364,7 @@ function makeStatusFxEvent(type,unit,amount=0){
   };
 }
 function makeFloatFxEvent(type,unit,amount=0,extra={}){
-  if(!unit)return null;
+  if(!unit||shouldSuppressLeaderFx(type,unit))return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:type||"info",
@@ -434,6 +444,8 @@ function playBattleFxEvent(fx,attackerRef=null){
 }
 function playDefenseFxEvent(fx){
   if(!fx||!fx.at)return;
+  const fxUnit=fx.unitId?getUnit(fx.unitId):null;
+  if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const guardSound=fx.type==="guard_break"?"guard_break":(fx.type==="defend_stance"?"defend_stance":"guard_block");
@@ -457,6 +469,8 @@ function playDodgeFxEvent(fx){
 }
 function playFloatFxEvent(fx){
   if(!fx||!fx.at)return;
+  const fxUnit=fx.unitId?getUnit(fx.unitId):null;
+  if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const sideClass=fx.unitOwner===1?"player":"enemy";
@@ -471,6 +485,8 @@ function playFloatFxEvent(fx){
 }
 function playStatusFxEvent(fx){
   if(!fx||!fx.at)return;
+  const fxUnit=fx.unitId?getUnit(fx.unitId):null;
+  if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const sideClass=fx.unitOwner===1?"player":"enemy";

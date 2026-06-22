@@ -12242,3 +12242,6 @@
 .leader-base .unit-status-seal.guard-buff{
   z-index:20!important;
 }
+
+
+/* Patch 76: FX de DEF/guard_buff para líderes se bloquea desde script.js; CSS ya no intenta corregirlo con bandas. */
