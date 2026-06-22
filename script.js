@@ -317,9 +317,6 @@ function makeBattleFxEvent(type,attacker,target){
   };
 }
 
-
-
-
 /* Patch 79 - FX routing helpers */
 function isFixedLeaderUnit(unit){
   return !!(unit && unit.leader);
@@ -682,13 +679,11 @@ function maybePlayBattleFx(prevPub,nextPub){
   destroyed.forEach((unit,i)=>setTimeout(()=>playDestroyFx(unit),280+(i*130)));
 }
 
-
 const GAME_SETTINGS_KEY="hallvalla_game_settings";
 let gameSettings=loadGameSettings();
 let currentMusic=null,currentMusicName="",audioUnlocked=false;
 function loadGameSettings(){try{return{sound:true,music:false,sfx:true,musicVolume:0,sfxVolume:.58,...(JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{}),music:false,musicVolume:0};}catch(e){return{sound:true,music:false,sfx:true,musicVolume:0,sfxVolume:.58};}}
 function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stringify(gameSettings));}catch(e){}}
-
 
 const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_player_collection",
@@ -851,8 +846,6 @@ function applyGuardianVictoryVisual(specialKey){
   if(enemy){enemy.src=info.allyImage;enemy.alt=info.allyName;}
   return {art,info};
 }
-
-
 
 const BEAST_CARD_TEMPLATES=[
   {key:"honey_badger",name:"Tejón Mielero",type:"unit",icon:"🦡",portrait:CARD_PORTRAITS.honeyBadger,rarity:"Básica",cost:3,hp:5,atk:2,guard:4,dex:2,agi:3,mov:2,range:1,beast:true,text:"Armadura Natural: cada vez que recibe daño, reduce ese daño en 1. Inmune al Veneno: no puede recibir Veneno ni daño causado por Veneno. Bestia Irritante: enemigos adyacentes tienen -1 DX si atacan a otra unidad que no sea el Tejón. Mordida Fastidiosa: si hace daño real, el objetivo pierde -1 MOV en su próximo turno."},
@@ -1434,7 +1427,6 @@ function renderDetQuoteHtml(entity){
   return `<div class="det-quote-block"><div class="det-quote">${escapeHtml(quote)}</div></div>`;
 }
 
-
 // v7ER - Asesina del desierto.
 // Reemplaza al antiguo Explorador de arena sin cambiar su key interna (scout),
 // para que mazos guardados y recompensas sigan funcionando.
@@ -1893,7 +1885,6 @@ const ADVENTURE_CHAPTER_5_1={id:"chapter5_1",number:"5.1",mapBackground:"assets/
 {id:"chapter5_1_battle4",num:4,title:"General de la Horda",enemyName:"General de la Horda",enemyLeaderType:"mage",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"Antes de llegar a Eldrheim, la horda levanta un campamento de mando. El general enemigo no busca una victoria hermosa: busca dejarte sin recursos antes de Atila.\n\nCada carta que gastes aquí será una sombra menos cuando llegue el jefe.",xp:95,gold:100,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","shaka_zulu","boudica"],aiLevel:19,aiDrawBonus:2,aiHonorBonus:5,aiStyle:"Mando de desgaste",desc:"Cuarta batalla del mapa 5.1. Prejefe con más Honor, más robo y leyendas de presión."},
 {id:"chapter5_1_battle5",num:5,title:"La Leyenda de la Horda",enemyName:"Atila el Huno",enemyLeaderType:"warrior",image:"assets/story/adventure_5_1/5_1_5_la_leyenda_de_la_horda.webp",enemyIntro:"La tierra tiembla antes de que el ejército aparezca.\n\nPrimero llegan los cuernos. Luego los cascos. Después, el silencio de quienes entienden que no defienden un camino, sino el último muro entre la civilización y la tormenta.\n\nAtila observa el campo sin prisa. Para él, la victoria no es una posibilidad. Es una costumbre.\n\nSi quieres detener la horda, tendrás que romper algo más que su ejército. Tendrás que romper su leyenda.",xp:110,gold:120,cardPack:false,packType:"improved_magic_trap",rewardCard:"attila_hun",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","shaka_zulu","boudica","hannibal_barca","subotai","ragnar_lodbrok","attila_hun"],aiLevel:21,aiDrawBonus:2,aiHonorBonus:6,aiStyle:"Conquista total",desc:"Jefe del mapa 5.1. Atila castiga unidades heridas y presiona hasta quebrar la línea defensiva."}
 ]};
-
 
 const ADVENTURE_CHAPTER_6_1={id:"chapter6_1",number:"6.1",mapBackground:"assets/story/adventure_6_1/6_1_5_la_corona_de_ceniza.webp",title:"La Corona de Ceniza",desc:"Después de vencer a Atila el Huno, el enemigo cambia de estilo. Ya no viene una horda aplastando la puerta: ahora viene una guerra más sucia, con emboscadas, traiciones, presión táctica y comandantes que castigan cada mala posición.",introTitle:"6.1 La Corona de Ceniza",introText:"Después de vencer a Atila el Huno, el enemigo cambia de estilo. Ya no viene una horda aplastando la puerta. Ahora viene una guerra más sucia: emboscadas, traiciones, presión táctica y comandantes que atacan desde dentro del reino.\n\nLa victoria contra la horda dejó caminos quemados, fortalezas cansadas y generales demasiado seguros de haber sobrevivido a lo peor. Ese exceso de confianza abre la siguiente herida.\n\nLos estandartes enemigos ya no marchan al frente. Aparecen detrás de los muros, entre mensajeros falsos, guardias comprados y rutas que parecían seguras. Cada mala posición se convierte en una trampa. Cada avance sin cuidado, en una sentencia.\n\nHannibal Barca no llega como un monstruo de fuerza bruta. Llega como una mente de guerra. Si Atila fue el martillo, Hannibal es la mano que mueve el tablero antes de que te des cuenta.",requiresChapter:"chapter5_1",packType:"improved_magic_trap",battles:[
 {id:"chapter6_1_battle1",num:1,title:"Guardia Traidor",enemyName:"Guardia Traidor",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"La primera señal no viene del campo enemigo, sino desde dentro de tus propias líneas. Un guardia abre una puerta secundaria, apaga las antorchas correctas y convierte una defensa segura en una emboscada.\n\nEsta batalla enseña el nuevo tono del capítulo: nadie ataca de frente si puede clavarte una daga desde el costado.",xp:115,gold:125,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","attila_hun"],aiLevel:22,aiDrawBonus:2,aiHonorBonus:6,aiStyle:"Traición y castigo posicional",desc:"Primera batalla del mapa 6.1. El enemigo usa presión táctica y castiga avances descuidados."},
@@ -2877,14 +2868,7 @@ function attackRangeCells(u){
   }
   return res;
 }
-
-/* Patch 88 - helper mínimo: celda ocupada por líder */
-function isLeaderCoordForVisualGuard(x,y,unitsList=publicState?.units||[]){
-  return (unitsList||[]).some(u=>u&&u.leader&&u.hp>0&&Number(u.x)===Number(x)&&Number(u.y)===Number(y));
-}
-
 function getTacticalPreviewClasses(x,y){
-  if(isLeaderCoordForVisualGuard(x,y))return[];
   if(selectedCard||selectedUnitActionMode||!unitContextSelection||!publicState)return[];
   const u=getUnit(unitContextSelection.unitId);
   if(!u)return[];
@@ -5709,7 +5693,6 @@ function toggleHudPanel(player){expandedHudPlayer=expandedHudPlayer===player?0:p
 function renderHudCollapseState(){[1,2].forEach(player=>{const hud=$(player===1?"hudP1":"hudP2");const toggle=$(player===1?"hudToggleP1":"hudToggleP2");if(!hud||!toggle)return;const expanded=expandedHudPlayer===player;hud.classList.toggle("collapsed",!expanded);hud.classList.toggle("expanded",expanded);toggle.setAttribute("aria-expanded",String(expanded));toggle.title=expanded?`Ocultar datos de J${player}`:`Mostrar datos de J${player}`;});}
 function setupHudToggles(){const a=$("hudToggleP1"),b=$("hudToggleP2");if(a&&!a.dataset.bound){a.dataset.bound="1";a.addEventListener("click",ev=>{ev.stopPropagation();toggleHudPanel(1)});}if(b&&!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",ev=>{ev.stopPropagation();toggleHudPanel(2)});}if(!document.body.dataset.hudCollapseBound){document.body.dataset.hudCollapseBound="1";document.addEventListener("click",ev=>{if(ev.target.closest(".hud"))return;if(expandedHudPlayer){expandedHudPlayer=0;renderHudCollapseState();}});}}
 
-
 function getUnitStatusEntries(u){
   if(!u)return [];
   const entries=[];
@@ -5802,7 +5785,6 @@ function getUnitStatusBubblesHtml(u){
   const rightHtml=right.map(item=>renderUnitStatusSeal(item.entry,item.idx)).join("");
   return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left status-seal-rail-buffs">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right status-seal-rail-harmful">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
 }
-
 
 function getShortStatusSummaryLabel(entry){
   const icon=String(entry?.icon||"generic");
@@ -5923,7 +5905,6 @@ function getUnitBottomFrameHtml(u){
     <span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>
   </div>`;
 }
-
 
 /* Patch 82 - Leader isolation from board highlight/grid layer */
 function isLeaderCoord(x,y,unitsList=publicState?.units||[]){
@@ -6540,7 +6521,6 @@ function formatRewardLine(reward){
   return parts.join(" · ") || "Sin recompensa.";
 }
 
-
 function getStarterComplementCard(selectedSpecial=""){
   return selectedSpecial==="wallace"?{...MULAN_CARD}:{...WALLACE_CARD};
 }
@@ -6735,9 +6715,6 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   const draw=drawCards(shuffle(fullTemplates.map(c=>makeCard(c,2,enemyLeaderType))),[],4);
   return{deck:draw.deck,hand:draw.hand};
 }
-
-
-
 
 let activePackOpening=null;
 let activePackCards=[];
@@ -7205,8 +7182,6 @@ $("leaderAbilityCloseBtn")?.addEventListener("click",closeLeaderAbilityModal);
 $("leaderSelectCloseBtn")?.addEventListener("click",()=>$("leaderSelectOverlay")?.classList.add("hidden"));
 $("leaderDetailModal")?.addEventListener("click",ev=>{if(ev.target?.id==="leaderDetailModal")closeLeaderDetailModal();});
 $("leaderAbilityModal")?.addEventListener("click",ev=>{if(ev.target?.id==="leaderAbilityModal")closeLeaderAbilityModal();});
-
-
 
 function getAdventureChapterForBattle(battle){
   if(!battle||battle.isGuardian||battle.beastEvent)return null;
@@ -7745,7 +7720,6 @@ document.addEventListener("keydown",async(e)=>{
   }
 });
 
-
 // Inicialización segura: se ejecuta al final para evitar usar constantes antes de que existan.
 setupHudToggles();
 renderHudCollapseState();
@@ -7770,9 +7744,7 @@ signInAnonymously(auth).catch(e=>setText("lobbyStatus",e.message));
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
 
-
 /* Patch 71: controles CSS removidos. */
-
 
 /* Patch 74: controles CSS para héroes/líderes fijos */
 const LEADER_CSS_TOOL_DEFAULTS={
@@ -7935,5 +7907,4 @@ document.addEventListener("DOMContentLoaded",()=>{
   setupLeaderCssTools();
   applyLeaderCssToolSettings();
 });
-
 

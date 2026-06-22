@@ -12370,11 +12370,3 @@ body.leader-board-fx-suppressed .battle-fx-dodge{
   background:radial-gradient(circle at 50% 42%,rgba(255,235,166,.22),rgba(62,43,17,.80) 48%,rgba(8,7,5,.94) 72%)!important;
   border-color:rgba(255,224,138,.64)!important;
 }
-
-
-/* Patch 88 - seguridad mínima: sin pseudo-overlay en token de líder */
-.leader-base-token::before,
-.leader-base-token::after{
-  content:none!important;
-  display:none!important;
-}
