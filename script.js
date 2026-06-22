@@ -321,9 +321,15 @@ function isFixedLeaderUnit(unit){
   return !!(unit&&unit.leader);
 }
 function shouldSuppressLeaderFx(type,unit){
-  const fxType=String(type||"");
   if(!isFixedLeaderUnit(unit))return false;
-  return fxType==="defend_stance"||fxType==="guard_buff";
+  const fxType=String(type||"");
+  return fxType==="defend_stance"||fxType==="guard_buff"||fxType==="guard_block"||fxType==="guard_break"||fxType==="dodge"||fxType==="status"||fxType==="buff";
+}
+function shouldSuppressFixedLeaderBoardFxEvent(ev,units=[]){
+  if(!ev)return false;
+  const ids=[ev.unitId,ev.targetId,ev.attackerId,ev.id].filter(Boolean);
+  const found=ids.map(id=>units.find(u=>u&&u.id===id)||getUnit(id)).filter(Boolean);
+  return found.some(u=>u&&u.leader);
 }
 
 function makeDefenseFxEvent(type,defender){
@@ -339,7 +345,7 @@ function makeDefenseFxEvent(type,defender){
   };
 }
 function makeDodgeFxEvent(unit){
-  if(!unit)return null;
+  if(!unit||isFixedLeaderUnit(unit))return null;
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:"dodge",
@@ -413,10 +419,12 @@ function playSummonFx(unit){
   spawnBattleFxNode(`battle-fx-summon ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-ring"></div><div class="battle-fx-ring battle-fx-ring-2"></div><div class="battle-fx-core"></div><div class="battle-fx-rays"></div>${extraBurst}`);
 }
 function playBattleFx(attacker,target){
+  if(isFixedLeaderUnit(attacker)||isFixedLeaderUnit(target))return;
   if(!attacker||!target)return;
   playBattleFxEvent(makeBattleFxEvent("attack",attacker,target),attacker);
 }
 function playBattleFxEvent(fx,attackerRef=null){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.from||!fx.to)return;
   const soundUnit=attackerRef||{owner:fx.attackerOwner||0,rarity:"",special:["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(fx.rarityClass||""),key:""};
   tryPlaySound(fx.attackSound||(fx.attackStyle==="ranged"?"attack_arrow":getAttackSoundForUnit(soundUnit)),.82);
@@ -443,6 +451,7 @@ function playBattleFxEvent(fx,attackerRef=null){
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
 }
 function playDefenseFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -459,6 +468,7 @@ function playDefenseFxEvent(fx){
   spawnBattleFxNode(`battle-fx-guard ${typeClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-guard-ring"></div><div class="battle-fx-guard-glow"></div><div class="battle-fx-guard-shield"></div>${crackMarkup}${shardMarkup}`);
 }
 function playDodgeFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
@@ -468,6 +478,7 @@ function playDodgeFxEvent(fx){
   spawnBattleFxNode(`battle-fx-dodge ${sideClass} ${rarityClass}`,point.x,point.y,{},900,`<div class="battle-fx-dodge-ring"></div><div class="battle-fx-dodge-swish swish-1"></div><div class="battle-fx-dodge-swish swish-2"></div><div class="battle-fx-dodge-afterimage afterimage-1"></div><div class="battle-fx-dodge-afterimage afterimage-2"></div><div class="battle-fx-dodge-label">ESQUIVA</div>`);
 }
 function playFloatFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -484,6 +495,7 @@ function playFloatFxEvent(fx){
   spawnBattleFxNode(`battle-fx-float ${cls} ${sideClass} ${rarityClass}`,point.x,point.y,{},980,`<div class="battle-fx-float-badge"><span class="battle-fx-float-icon">${iconText}</span>${amountText?`<span class="battle-fx-float-amount">${amountText}</span>`:""}</div>`);
 }
 function playStatusFxEvent(fx){
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -528,11 +540,17 @@ function playDestroyFx(unit){
 }
 function maybePlayBattleFx(prevPub,nextPub){
   if(!prevPub||!nextPub||!Array.isArray(prevPub.units)||!Array.isArray(nextPub.units))return;
-  const explicitAttackFx=nextPub.battleFxEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
-  const explicitDefenseFx=nextPub.defenseFxEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
-  const explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
-  const explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
-  const explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
+  let explicitAttackFx=nextPub.battleFxEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
+  let explicitDefenseFx=nextPub.defenseFxEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
+  let explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
+  let explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
+  let explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
+  const fxUnits=nextPub.units||[];
+  explicitAttackFx=shouldSuppressFixedLeaderBoardFxEvent(explicitAttackFx,fxUnits)?null:explicitAttackFx;
+  explicitDefenseFx=shouldSuppressFixedLeaderBoardFxEvent(explicitDefenseFx,fxUnits)?null:explicitDefenseFx;
+  explicitDodgeFx=shouldSuppressFixedLeaderBoardFxEvent(explicitDodgeFx,fxUnits)?null:explicitDodgeFx;
+  explicitStatusFx=shouldSuppressFixedLeaderBoardFxEvent(explicitStatusFx,fxUnits)?null:explicitStatusFx;
+  explicitFloatFx=shouldSuppressFixedLeaderBoardFxEvent(explicitFloatFx,fxUnits)?null:explicitFloatFx;
   if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx)
     ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}`
@@ -546,7 +564,7 @@ function maybePlayBattleFx(prevPub,nextPub){
   const added=nextUnits.filter(u=>!prevMap[u.id]&&!u.leader);
   const damaged=[...nextUnits.filter(u=>prevMap[u.id]&&u.hp<prevMap[u.id].hp),...prevUnits.filter(u=>!nextMap[u.id]&&u.hp>0)];
   const destroyed=prevUnits.filter(u=>u.hp>0&&((!nextMap[u.id])||(nextMap[u.id]&&nextMap[u.id].hp<=0)));
-  const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted);
+  const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted&&!u.leader);
   if(!added.length&&!attackers.length&&!destroyed.length&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   lastBattleFxKey=fxKey;
   added.forEach(u=>setTimeout(()=>playSummonFx(u),80));
@@ -5508,8 +5526,8 @@ async function activateDefenseStance(u){
   const defenderNow=units.find(it=>it.id===u.id)||u;
   await updatePublic({
     units,
-    defenseFxEvent:makeDefenseFxEvent("defend_stance",defenderNow),
-    floatFxEvent:(defenderNow&&defenderNow.leader?null:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"}))
+    defenseFxEvent:defenderNow&&defenderNow.leader?null:makeDefenseFxEvent("defend_stance",defenderNow),
+    floatFxEvent:defenderNow&&defenderNow.leader?null:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
   clearSelection();
