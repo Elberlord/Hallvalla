@@ -5892,6 +5892,43 @@ function ensureLeaderBasesLayer(){
     layer.className="leader-bases-layer";
     battlefield.appendChild(layer);
   }
+  if(!layer.dataset.boundLeaderBaseClicks){
+    layer.dataset.boundLeaderBaseClicks="1";
+    layer.addEventListener("pointerdown",ev=>{
+      const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.unit-status-seal"):null;
+      if(hit)ev.stopPropagation();
+    },true);
+    layer.addEventListener("click",ev=>{
+      const seal=ev.target&&ev.target.closest?ev.target.closest(".unit-status-seal[data-status-index]"):null;
+      if(seal){
+        const btn=seal.closest(".leader-base");
+        const u=btn?getUnit(btn.dataset.leaderId):null;
+        const entry=u?getUnitStatusEntries(u)[Number(seal.dataset.statusIndex||0)]:null;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if(entry&&u)openStatusGuideModal(entry,u);
+        return;
+      }
+      const btn=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox"):null;
+      const base=btn&&btn.classList.contains("leader-base")?btn:btn?btn.closest(".leader-base"):null;
+      if(!base)return;
+      const u=getUnit(base.dataset.leaderId);
+      const x=Number(base.dataset.x),y=Number(base.dataset.y);
+      if(handleDirectBoardTargetEvent(ev,x,y))return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(u)openUnitContextMenu(u,x,y);
+    },true);
+    layer.addEventListener("contextmenu",ev=>{
+      const btn=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox"):null;
+      const base=btn&&btn.classList.contains("leader-base")?btn:btn?btn.closest(".leader-base"):null;
+      if(!base)return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const u=getUnit(base.dataset.leaderId);
+      if(u)openUnitContextMenu(u,Number(base.dataset.x),Number(base.dataset.y));
+    },true);
+  }
   return layer;
 }
 function renderLeaderBases(){
@@ -5903,30 +5940,8 @@ function renderLeaderBases(){
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
     const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid"):""].filter(Boolean).join(" ");
-    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)} · Base ${side==="north"?"Norte":"Sur"}"><span class="leader-base-label">${side==="north"?"Base Norte":"Base Sur"}</span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b>❤ ${getDisplayHp(u)}</b><b>⚔ ${effectiveAtk(u)}</b><b>RG ${u.range||1}</b></span></button>`;
+    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span>${getUnitStatusBubblesHtml(u)}<span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
   }).join("");
-  layer.querySelectorAll(".leader-base").forEach(btn=>{
-    btn.addEventListener("pointerdown",ev=>ev.stopPropagation(),true);
-    btn.addEventListener("pointerup",ev=>{
-      const x=Number(btn.dataset.x),y=Number(btn.dataset.y);
-      if(handleDirectBoardTargetEvent(ev,x,y))return;
-    },true);
-    btn.addEventListener("click",ev=>{
-      const id=btn.dataset.leaderId;
-      const u=getUnit(id);
-      const x=Number(btn.dataset.x),y=Number(btn.dataset.y);
-      if(handleDirectBoardTargetEvent(ev,x,y))return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      if(u)openUnitContextMenu(u,x,y);
-    });
-    btn.addEventListener("contextmenu",ev=>{
-      ev.preventDefault();
-      ev.stopPropagation();
-      const u=getUnit(btn.dataset.leaderId);
-      if(u)openUnitContextMenu(u,Number(btn.dataset.x),Number(btn.dataset.y));
-    });
-  });
 }
 
 function getCardVisualClass(card){

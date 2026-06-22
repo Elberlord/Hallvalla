@@ -1,0 +1,5 @@
+Patch 63
+- Removed visible Base Norte / Base Sur labels.
+- Leader fixed HUD now shows only HP, ATK and GD.
+- Leader buff/debuff icons are rendered around the token and remain clickable.
+- Cleaned assets/leaders to keep only the active 3D leader PNG files used by the code.

@@ -1,0 +1,5 @@
+Patch 64
+- Adds a real transparent hitbox over fixed leader tokens.
+- Keeps leader status icons clickable with their own modal.
+- Fixes DET/action context not opening when clicking new 3D leader assets, including enemy leader.
+- Does not change stats, damage, phases, IA, cards or combat rules.
