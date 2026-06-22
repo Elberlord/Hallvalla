@@ -11699,12 +11699,9 @@
 .leader-bases-layer{
   --arenaH:calc(100vh - 12px);
   --imgW:calc(var(--arenaH)*1.7779);
-  --leaderTokenScale:1.2;
-  --leaderNorthOffset:-22px;
-  --leaderSouthOffset:9px;
-  --leaderStatusSideGap:34%;
-  --leaderHaloWidth:54%;
-  --leaderHaloHeight:15%;
+  --leaderTokenScale:1;
+  --leaderNorthOffset:0px;
+  --leaderSouthOffset:0px;
   position:absolute;
   inset:0;
   z-index:24;
@@ -11968,140 +11965,13 @@
 /* Patch 69: moved enemy leader higher in the north base zone */
 
 
-/* Patch 71: controles CSS removidos; posiciones fijas de líderes aplicadas. */
-
-
-/* Patch 72: buffs a un lado, debuffs/estados al otro en líderes fijos */
-.leader-base .unit-status-bubbles.unit-status-seals{
-  inset:2% -28% 18% -28%;
-  z-index:8;
-}
-.leader-base .status-seal-rail{
-  top:50%;
-  gap:3px;
-  transform:translateY(-50%);
-}
-.leader-base .status-seal-rail.left{
-  left:-6px;
-  right:auto;
-  transform:translate(-100%,-50%);
-}
-.leader-base .status-seal-rail.right{
-  right:-6px;
-  left:auto;
-  transform:translate(100%,-50%);
-}
-.leader-base .status-seal-rail-buffs .unit-status-seal{
-  box-shadow:0 0 0 1px rgba(0,0,0,.52),0 3px 8px rgba(0,0,0,.45),0 0 10px rgba(110,220,170,.22), inset 0 0 0 1px rgba(255,241,200,.08);
-}
-.leader-base .status-seal-rail-harmful .unit-status-seal{
-  box-shadow:0 0 0 1px rgba(0,0,0,.52),0 3px 8px rgba(0,0,0,.45),0 0 10px rgba(255,113,145,.18), inset 0 0 0 1px rgba(255,241,200,.08);
-}
-.leader-base .unit-status-seal-extra{
-  top:8%;
-  bottom:auto;
-  left:50%;
-  transform:translateX(-50%);
-}
-@media(max-width:980px){
-  .leader-base .unit-status-bubbles.unit-status-seals{inset:4% -24% 18% -24%;}
-  .leader-base .status-seal-rail{top:50%;gap:2px;}
-  .leader-base .status-seal-rail.left{left:-4px;transform:translate(-100%,-50%);}
-  .leader-base .status-seal-rail.right{right:-4px;transform:translate(100%,-50%);}
-}
-
-
-/* Patch 73: reparar banda dorada gigante en líderes fijos */
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after{
-  left:50%!important;
-  right:auto!important;
-  bottom:8%!important;
-  width:var(--leaderHaloWidth,54%)!important;
-  max-width:var(--leaderHaloWidth,54%)!important;
-  min-width:0!important;
-  height:var(--leaderHaloHeight,15%)!important;
-  max-height:var(--leaderHaloHeight,15%)!important;
-  transform:translateX(-50%) perspective(120px) rotateX(58deg)!important;
-  border-radius:50%!important;
-  pointer-events:none!important;
-  overflow:hidden!important;
-}
-
-.leader-base.valid .leader-base-token::after{
-  box-shadow:0 0 0 1px rgba(112,224,138,.72),0 0 8px rgba(112,224,138,.24)!important;
-  background:rgba(112,224,138,.08)!important;
-}
-.leader-base.attackable .leader-base-token::after{
-  box-shadow:0 0 0 1px rgba(239,71,111,.78),0 0 8px rgba(239,71,111,.28)!important;
-  background:rgba(239,71,111,.09)!important;
-}
-.leader-base.summonable .leader-base-token::after{
-  box-shadow:0 0 0 1px rgba(255,209,102,.78),0 0 8px rgba(255,209,102,.26)!important;
-  background:rgba(255,209,102,.08)!important;
-}
-
-/* Mantener buffs/debuffs a los lados sin empujar ningún efecto hacia abajo */
-.leader-base .unit-status-bubbles.unit-status-seals{
-  inset:0 calc(var(--leaderStatusSideGap,34%) * -1) 0 calc(var(--leaderStatusSideGap,34%) * -1)!important;
-  overflow:visible!important;
-}
-.leader-base .status-seal-rail{
-  top:50%!important;
-  gap:3px!important;
-}
-.leader-base .status-seal-rail.left{
-  left:-8px!important;
-  right:auto!important;
-  transform:translate(-100%,-50%)!important;
-}
-.leader-base .status-seal-rail.right{
-  right:-8px!important;
-  left:auto!important;
-  transform:translate(100%,-50%)!important;
-}
-.leader-base .unit-status-seal-extra{
-  top:-6px!important;
-  bottom:auto!important;
-  left:50%!important;
-  transform:translateX(-50%)!important;
-}
-
-/* Si algún FX de estado cae dentro del layer del líder, no debe ocupar ancho de tablero */
-.leader-base .status-fx,
-.leader-base .float-fx,
-.leader-base [class*="status-fx"],
-.leader-base [class*="float-fx"]{
-  max-width:44px!important;
-  max-height:44px!important;
-  overflow:hidden!important;
-}
-
-@media(max-width:980px){
-  .leader-base.attackable .leader-base-token::after,
-  .leader-base.valid .leader-base-token::after,
-  .leader-base.summonable .leader-base-token::after{
-    width:50%!important;
-    max-width:50%!important;
-    height:13%!important;
-    max-height:13%!important;
-  }
-  .leader-base .unit-status-bubbles.unit-status-seals{
-    inset:0 -30% 0 -30%!important;
-  }
-  .leader-base .status-seal-rail.left{left:-6px!important;}
-  .leader-base .status-seal-rail.right{right:-6px!important;}
-}
-
-
-/* Patch 74: panel CSS para mover/ajustar héroes y depurar halo/estados */
+/* Patch 70: panel de ajuste rápido para fichas de líderes y refresco CSS */
 .leader-css-tools{
   position:fixed;
   left:16px;
   bottom:92px;
-  z-index:1300;
-  width:min(300px,calc(100vw - 32px));
+  z-index:1200;
+  width:min(280px,calc(100vw - 32px));
   padding:12px;
   border:1px solid rgba(255,217,117,.42);
   border-radius:18px;
@@ -12128,7 +11998,7 @@
   color:#f6dca0;
 }
 .leader-css-tools output{
-  min-width:52px;
+  min-width:44px;
   text-align:right;
   color:#fff6d2;
   font-weight:900;
@@ -12154,7 +12024,9 @@
   cursor:pointer;
   box-shadow:0 2px 8px rgba(0,0,0,.32);
 }
-.leader-css-tools button:hover{filter:brightness(1.12)}
+.leader-css-tools button:hover{
+  filter:brightness(1.12);
+}
 .leader-css-tools-note{
   margin-top:8px;
   font-size:10px;
@@ -12165,7 +12037,7 @@
   position:fixed;
   left:38px;
   bottom:46px;
-  z-index:1301;
+  z-index:1201;
   width:54px;
   height:36px;
   border-radius:999px;
@@ -12178,195 +12050,6 @@
   cursor:pointer;
 }
 @media(max-width:720px){
-  .leader-css-tools{left:10px;bottom:82px;width:min(280px,calc(100vw - 20px));}
+  .leader-css-tools{left:10px;bottom:82px;width:min(260px,calc(100vw - 20px));}
   .leader-css-tools-toggle{left:22px;bottom:38px;}
-}
-
-
-/* Patch 75: apagar banda horizontal forzada de DEF en líderes fijos */
-/* Si un líder fijo entra en DEF, solo debe quedar el icono lateral. Nada de banda global. */
-.leader-bases-layer::before,
-.leader-bases-layer::after,
-.leader-base::before,
-.leader-base::after,
-.leader-base-token::before{
-  content:none!important;
-  display:none!important;
-}
-
-/* Mantener cualquier halo de líder absolutamente pequeño o invisible si el control está en 0 */
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after{
-  width:var(--leaderHaloWidth,0%)!important;
-  max-width:var(--leaderHaloWidth,0%)!important;
-  height:var(--leaderHaloHeight,0%)!important;
-  max-height:var(--leaderHaloHeight,0%)!important;
-  min-width:0!important;
-  min-height:0!important;
-  opacity:calc(min(var(--leaderHaloWidth,0),1))!important;
-}
-
-/* Cualquier FX de defensa que se dibuje como banda no debe ocupar el tablero */
-.battlefield .leader-defense-band,
-.battlefield .leader-def-band,
-.battlefield .defense-band,
-.battlefield .def-band,
-.battlefield .guard-band,
-.battlefield .status-band,
-.battlefield [class*="defense"][class*="band"],
-.battlefield [class*="guard"][class*="band"],
-.battlefield [class*="status"][class*="band"]{
-  display:none!important;
-  width:0!important;
-  height:0!important;
-  opacity:0!important;
-  pointer-events:none!important;
-}
-
-/* Clamp agresivo para FX gigantes cerca de líderes fijos */
-.leader-bases-layer .battle-fx,
-.leader-bases-layer .status-fx,
-.leader-bases-layer .float-fx,
-.leader-bases-layer [class*="fx"],
-.leader-bases-layer [class*="FX"]{
-  width:28px!important;
-  max-width:28px!important;
-  height:28px!important;
-  max-height:28px!important;
-  overflow:hidden!important;
-}
-
-/* En líderes fijos, el estado DEF se representa solo como sello lateral */
-.leader-base .unit-status-seal.defense,
-.leader-base .unit-status-seal.guard-buff{
-  z-index:20!important;
-}
-
-
-/* Patch 76: FX de DEF/guard_buff para líderes se bloquea desde script.js; CSS ya no intenta corregirlo con bandas. */
-
-
-/* Patch 77: el FX de tablero de líderes queda bloqueado desde script.js. */
-
-
-/* Patch 79 - Leader UI FX */
-.leader-base{
-  position:absolute;
-}
-.leader-ui-fx{
-  position:absolute;
-  left:50%;
-  top:42%;
-  transform:translate(-50%,-50%) scale(.72);
-  z-index:80;
-  pointer-events:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  padding:3px 6px;
-  border-radius:999px;
-  border:1px solid rgba(255,224,138,.58);
-  background:radial-gradient(circle at 50% 40%,rgba(255,240,190,.28),rgba(30,18,6,.86) 62%,rgba(0,0,0,.18));
-  box-shadow:0 0 14px rgba(255,210,110,.32), inset 0 1px 0 rgba(255,255,255,.18);
-  animation:leaderUiFxPop .92s ease-out forwards;
-}
-.leader-ui-fx-icon{
-  font-size:17px;
-  line-height:1;
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.68));
-}
-.leader-ui-fx-label{
-  font-family:Georgia,serif;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.5px;
-  color:#ffe7a6;
-  text-shadow:0 1px 3px rgba(0,0,0,.75);
-}
-@keyframes leaderUiFxPop{
-  0%{opacity:0;transform:translate(-50%,-45%) scale(.42)}
-  18%{opacity:1;transform:translate(-50%,-58%) scale(1.06)}
-  60%{opacity:.94;transform:translate(-50%,-68%) scale(1)}
-  100%{opacity:0;transform:translate(-50%,-88%) scale(.86)}
-}
-
-
-/* Patch 80 - Fix real de banda en líderes:
-   los líderes fijos ya no usan el pseudo-halo de target del tablero.
-   Ese pseudo-elemento era el óvalo/banda que se quedaba pegado abajo. */
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after,
-.leader-base.leader-targetable .leader-base-token::after{
-  content:none!important;
-  display:none!important;
-  width:0!important;
-  height:0!important;
-  min-width:0!important;
-  min-height:0!important;
-  opacity:0!important;
-  box-shadow:none!important;
-  background:transparent!important;
-}
-
-/* Indicador pequeño y seguro para líderes seleccionables, sin banda horizontal */
-.leader-base.leader-targetable .leader-base-token{
-  filter:drop-shadow(0 0 8px rgba(255,221,123,.42)) drop-shadow(0 12px 14px rgba(0,0,0,.62));
-}
-.leader-base.leader-targetable .leader-base-pedestal{
-  box-shadow:0 0 0 1px rgba(255,224,138,.55),0 0 10px rgba(255,209,102,.24),inset 0 0 10px rgba(255,221,123,.15)!important;
-}
-
-/* Si algún slash viejo queda apuntando desde/hacia líder, no debe parecer una banda persistente */
-.battle-fx-slash.leader-fx-blocked,
-.battle-fx-impact.leader-fx-blocked{
-  display:none!important;
-}
-
-
-/* Patch 81 - durante DEF de líder fijo no se permite FX de tablero */
-body.leader-board-fx-suppressed #battleFxLayer,
-body.leader-board-fx-suppressed .battle-fx-slash,
-body.leader-board-fx-suppressed .battle-fx-slash-core,
-body.leader-board-fx-suppressed .battle-fx-projectile,
-body.leader-board-fx-suppressed .battle-fx-projectile-shaft,
-body.leader-board-fx-suppressed .battle-fx-projectile-trail,
-body.leader-board-fx-suppressed .battle-fx-impact,
-body.leader-board-fx-suppressed .battle-fx-guard,
-body.leader-board-fx-suppressed .battle-fx-float,
-body.leader-board-fx-suppressed .battle-fx-status,
-body.leader-board-fx-suppressed .battle-fx-dodge{
-  display:none!important;
-  opacity:0!important;
-  visibility:hidden!important;
-}
-
-
-/* Patch 82 - Leader isolation from board grid layer */
-/* El grid ya no debe pintar valid/attackable/summonable en coordenadas de líderes.
-   Esto queda como cinturón de seguridad si una clase vieja vuelve a caer en líderes. */
-.leader-base.attackable,
-.leader-base.valid,
-.leader-base.summonable{
-  outline:0!important;
-  box-shadow:none!important;
-  background:transparent!important;
-}
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after,
-.leader-base.leader-targetable .leader-base-token::after{
-  content:none!important;
-  display:none!important;
-}
-
-/* Target visual de líder: solo pedestal, no celda, no banda, no pseudo-elemento */
-.leader-base.leader-targetable{
-  filter:drop-shadow(0 0 8px rgba(255,221,123,.26)) drop-shadow(0 14px 16px rgba(0,0,0,.62))!important;
-}
-.leader-base.leader-targetable .leader-base-pedestal{
-  background:radial-gradient(circle at 50% 42%,rgba(255,235,166,.22),rgba(62,43,17,.80) 48%,rgba(8,7,5,.94) 72%)!important;
-  border-color:rgba(255,224,138,.64)!important;
 }
