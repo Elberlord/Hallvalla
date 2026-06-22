@@ -5994,7 +5994,7 @@ function renderBoard(){
     }
     cell.dataset.x=String(x);
     cell.dataset.y=String(y);
-    cell.addEventListener("click",ev=>{
+    cell.addEventListener("click", ev=>{ if(isLeaderCoord(x,y)) return;
       if(isLeaderCoord(x,y))return;
       if(shouldDirectBoardTarget())return handleDirectBoardTargetEvent(ev,x,y);
       cellClick(x,y);
