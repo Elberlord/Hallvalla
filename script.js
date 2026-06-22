@@ -434,6 +434,7 @@ function playBattleFxEvent(fx,attackerRef=null){
 }
 function playDefenseFxEvent(fx){
   if(!fx||!fx.at)return;
+  if(fx.type==="defend_stance")return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const guardSound=fx.type==="guard_break"?"guard_break":(fx.type==="defend_stance"?"defend_stance":"guard_block");
@@ -457,6 +458,7 @@ function playDodgeFxEvent(fx){
 }
 function playFloatFxEvent(fx){
   if(!fx||!fx.at)return;
+  if(fx.type==="guard_buff")return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const sideClass=fx.unitOwner===1?"player":"enemy";
@@ -5489,11 +5491,6 @@ async function activateDefenseStance(u){
   if(u.defenseModeReady)return setHint(`${u.name} ya está en guardia defensiva.`);
   if(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)return setHint(`${u.name} no puede defenderse este turno.`);
   const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false}:it);
-  const defenderNow=units.find(it=>it.id===u.id)||u;
-
-  // Clean Core v1:
-  // DEF queda como estado lógico + sello visual.
-  // No dispara defenseFxEvent de tablero porque ese FX es el que puede dejar cuadro/óvalo residual.
   clearSelection();
   await updatePublic({
     units,
@@ -5944,7 +5941,7 @@ function renderLeaderBases(){
     const side=u.owner===1?"south":"north";
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
-    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid"):""].filter(Boolean).join(" ");
+    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
     return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span>${getUnitStatusBubblesHtml(u)}<span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
   }).join("");
 }
