@@ -5493,7 +5493,7 @@ async function activateDefenseStance(u){
   await updatePublic({
     units,
     defenseFxEvent:makeDefenseFxEvent("defend_stance",defenderNow),
-    floatFxEvent:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
+    floatFxEvent:(defenderNow&&defenderNow.leader?null:makeFloatFxEvent("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"}))
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
   clearSelection();
@@ -7803,3 +7803,13 @@ document.addEventListener("DOMContentLoaded",()=>{
   setupLeaderCssTools();
   applyLeaderCssToolSettings();
 });
+
+/* Patch 75 helper: los líderes fijos no usan banda FX de DEF */
+function shouldSuppressLeaderGuardFxEvent(ev){
+  if(!ev)return false;
+  const type=String(ev.type||ev.kind||ev.fxType||"");
+  if(type!=="guard_buff")return false;
+  const id=ev.unitId||ev.targetId||ev.id||"";
+  const u=id?getUnit(id):null;
+  return !!(u&&u.leader);
+}

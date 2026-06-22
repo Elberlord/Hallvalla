@@ -12181,3 +12181,64 @@
   .leader-css-tools{left:10px;bottom:82px;width:min(280px,calc(100vw - 20px));}
   .leader-css-tools-toggle{left:22px;bottom:38px;}
 }
+
+
+/* Patch 75: apagar banda horizontal forzada de DEF en líderes fijos */
+/* Si un líder fijo entra en DEF, solo debe quedar el icono lateral. Nada de banda global. */
+.leader-bases-layer::before,
+.leader-bases-layer::after,
+.leader-base::before,
+.leader-base::after,
+.leader-base-token::before{
+  content:none!important;
+  display:none!important;
+}
+
+/* Mantener cualquier halo de líder absolutamente pequeño o invisible si el control está en 0 */
+.leader-base.attackable .leader-base-token::after,
+.leader-base.valid .leader-base-token::after,
+.leader-base.summonable .leader-base-token::after{
+  width:var(--leaderHaloWidth,0%)!important;
+  max-width:var(--leaderHaloWidth,0%)!important;
+  height:var(--leaderHaloHeight,0%)!important;
+  max-height:var(--leaderHaloHeight,0%)!important;
+  min-width:0!important;
+  min-height:0!important;
+  opacity:calc(min(var(--leaderHaloWidth,0),1))!important;
+}
+
+/* Cualquier FX de defensa que se dibuje como banda no debe ocupar el tablero */
+.battlefield .leader-defense-band,
+.battlefield .leader-def-band,
+.battlefield .defense-band,
+.battlefield .def-band,
+.battlefield .guard-band,
+.battlefield .status-band,
+.battlefield [class*="defense"][class*="band"],
+.battlefield [class*="guard"][class*="band"],
+.battlefield [class*="status"][class*="band"]{
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Clamp agresivo para FX gigantes cerca de líderes fijos */
+.leader-bases-layer .battle-fx,
+.leader-bases-layer .status-fx,
+.leader-bases-layer .float-fx,
+.leader-bases-layer [class*="fx"],
+.leader-bases-layer [class*="FX"]{
+  width:28px!important;
+  max-width:28px!important;
+  height:28px!important;
+  max-height:28px!important;
+  overflow:hidden!important;
+}
+
+/* En líderes fijos, el estado DEF se representa solo como sello lateral */
+.leader-base .unit-status-seal.defense,
+.leader-base .unit-status-seal.guard-buff{
+  z-index:20!important;
+}
