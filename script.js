@@ -5931,6 +5931,7 @@ function ensureLeaderBasesLayer(){
 function renderLeaderBases(){
   const layer=ensureLeaderBasesLayer();
   if(!layer||!publicState)return;
+  applyLeaderCssToolSettings();
   const leaders=(publicState.units||[]).filter(u=>u&&u.leader&&u.hp>0).sort((a,b)=>a.owner-b.owner);
   layer.innerHTML=leaders.map(u=>{
     const side=u.owner===1?"south":"north";
@@ -7639,3 +7640,166 @@ try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("hom
 
 
 /* Patch 71: controles CSS removidos. */
+
+
+/* Patch 74: controles CSS para héroes/líderes fijos */
+const LEADER_CSS_TOOL_DEFAULTS={
+  scale:1.2,
+  northOffset:-22,
+  southOffset:9,
+  statusGap:34,
+  haloWidth:54,
+  haloHeight:15
+};
+function getLeaderCssToolSettings(){
+  try{
+    const saved=JSON.parse(localStorage.getItem("hallvallaLeaderCssTools")||"{}");
+    return {
+      scale:Number.isFinite(Number(saved.scale))?Number(saved.scale):LEADER_CSS_TOOL_DEFAULTS.scale,
+      northOffset:Number.isFinite(Number(saved.northOffset))?Number(saved.northOffset):LEADER_CSS_TOOL_DEFAULTS.northOffset,
+      southOffset:Number.isFinite(Number(saved.southOffset))?Number(saved.southOffset):LEADER_CSS_TOOL_DEFAULTS.southOffset,
+      statusGap:Number.isFinite(Number(saved.statusGap))?Number(saved.statusGap):LEADER_CSS_TOOL_DEFAULTS.statusGap,
+      haloWidth:Number.isFinite(Number(saved.haloWidth))?Number(saved.haloWidth):LEADER_CSS_TOOL_DEFAULTS.haloWidth,
+      haloHeight:Number.isFinite(Number(saved.haloHeight))?Number(saved.haloHeight):LEADER_CSS_TOOL_DEFAULTS.haloHeight
+    };
+  }catch(_){
+    return {...LEADER_CSS_TOOL_DEFAULTS};
+  }
+}
+function saveLeaderCssToolSettings(settings){
+  localStorage.setItem("hallvallaLeaderCssTools",JSON.stringify(settings));
+}
+function applyLeaderCssToolSettings(settings=getLeaderCssToolSettings()){
+  const targets=[document.documentElement,document.getElementById("leaderBasesLayer")].filter(Boolean);
+  targets.forEach(target=>{
+    target.style.setProperty("--leaderTokenScale",String(settings.scale));
+    target.style.setProperty("--leaderNorthOffset",`${settings.northOffset}px`);
+    target.style.setProperty("--leaderSouthOffset",`${settings.southOffset}px`);
+    target.style.setProperty("--leaderStatusSideGap",`${settings.statusGap}%`);
+    target.style.setProperty("--leaderHaloWidth",`${settings.haloWidth}%`);
+    target.style.setProperty("--leaderHaloHeight",`${settings.haloHeight}%`);
+  });
+}
+function refreshHallvallaCss(){
+  const links=[...document.querySelectorAll('link[rel="stylesheet"]')].filter(link=>{
+    const href=String(link.getAttribute("href")||"");
+    return href.includes("style.css")||href.includes("styles.css");
+  });
+  const stamp=Date.now();
+  links.forEach(link=>{
+    const raw=link.getAttribute("href")||"styles.css";
+    const clean=raw.split("?")[0];
+    link.setAttribute("href",`${clean}?cssv=${stamp}`);
+  });
+  setTimeout(()=>applyLeaderCssToolSettings(),80);
+  return links.length;
+}
+function setupLeaderCssTools(){
+  if(document.getElementById("leaderCssTools"))return;
+  const toggle=document.createElement("button");
+  toggle.id="leaderCssToolsToggle";
+  toggle.className="leader-css-tools-toggle";
+  toggle.type="button";
+  toggle.textContent="CSS";
+  toggle.title="Ajustar héroes/líderes y refrescar CSS";
+  document.body.appendChild(toggle);
+
+  const panel=document.createElement("section");
+  panel.id="leaderCssTools";
+  panel.className="leader-css-tools";
+  panel.innerHTML=`
+    <h3>Fichas de líderes</h3>
+    <label>Escala general <output id="leaderScaleOut"></output></label>
+    <input id="leaderScaleRange" type="range" min="0.40" max="1.35" step="0.01">
+    <label>Enemigo arriba/abajo <output id="leaderNorthOut"></output></label>
+    <input id="leaderNorthRange" type="range" min="-120" max="120" step="1">
+    <label>Jugador arriba/abajo <output id="leaderSouthOut"></output></label>
+    <input id="leaderSouthRange" type="range" min="-120" max="120" step="1">
+    <label>Estados a los lados <output id="leaderStatusGapOut"></output></label>
+    <input id="leaderStatusGapRange" type="range" min="8" max="70" step="1">
+    <label>Halo ancho <output id="leaderHaloWidthOut"></output></label>
+    <input id="leaderHaloWidthRange" type="range" min="0" max="80" step="1">
+    <label>Halo alto <output id="leaderHaloHeightOut"></output></label>
+    <input id="leaderHaloHeightRange" type="range" min="0" max="30" step="1">
+    <div class="leader-css-tools-row">
+      <button id="leaderCssRefreshBtn" type="button">Refrescar CSS</button>
+      <button id="leaderCssResetBtn" type="button">Reset</button>
+    </div>
+    <div class="leader-css-tools-note">Ajuste local. Cuando quede bien, pásame captura o valores y lo fijo en el código.</div>
+  `;
+  document.body.appendChild(panel);
+
+  const els={
+    scale:$("leaderScaleRange"),
+    north:$("leaderNorthRange"),
+    south:$("leaderSouthRange"),
+    statusGap:$("leaderStatusGapRange"),
+    haloWidth:$("leaderHaloWidthRange"),
+    haloHeight:$("leaderHaloHeightRange"),
+    scaleOut:$("leaderScaleOut"),
+    northOut:$("leaderNorthOut"),
+    southOut:$("leaderSouthOut"),
+    statusGapOut:$("leaderStatusGapOut"),
+    haloWidthOut:$("leaderHaloWidthOut"),
+    haloHeightOut:$("leaderHaloHeightOut"),
+    refreshBtn:$("leaderCssRefreshBtn"),
+    resetBtn:$("leaderCssResetBtn")
+  };
+  function paint(settings=getLeaderCssToolSettings()){
+    els.scale.value=String(settings.scale);
+    els.north.value=String(settings.northOffset);
+    els.south.value=String(settings.southOffset);
+    els.statusGap.value=String(settings.statusGap);
+    els.haloWidth.value=String(settings.haloWidth);
+    els.haloHeight.value=String(settings.haloHeight);
+    els.scaleOut.textContent=`${Math.round(settings.scale*100)}%`;
+    els.northOut.textContent=`${settings.northOffset}px`;
+    els.southOut.textContent=`${settings.southOffset}px`;
+    els.statusGapOut.textContent=`${settings.statusGap}%`;
+    els.haloWidthOut.textContent=`${settings.haloWidth}%`;
+    els.haloHeightOut.textContent=`${settings.haloHeight}%`;
+    applyLeaderCssToolSettings(settings);
+  }
+  function readAndApply(){
+    const settings={
+      scale:Number(els.scale.value),
+      northOffset:Number(els.north.value),
+      southOffset:Number(els.south.value),
+      statusGap:Number(els.statusGap.value),
+      haloWidth:Number(els.haloWidth.value),
+      haloHeight:Number(els.haloHeight.value)
+    };
+    saveLeaderCssToolSettings(settings);
+    paint(settings);
+  }
+  ["input","change"].forEach(evt=>{
+    els.scale.addEventListener(evt,readAndApply);
+    els.north.addEventListener(evt,readAndApply);
+    els.south.addEventListener(evt,readAndApply);
+    els.statusGap.addEventListener(evt,readAndApply);
+    els.haloWidth.addEventListener(evt,readAndApply);
+    els.haloHeight.addEventListener(evt,readAndApply);
+  });
+  toggle.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    panel.classList.toggle("show");
+  });
+  els.refreshBtn.addEventListener("click",ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    const n=refreshHallvallaCss();
+    els.refreshBtn.textContent=n?"CSS OK":"Sin CSS";
+    setTimeout(()=>els.refreshBtn.textContent="Refrescar CSS",900);
+  });
+  els.resetBtn.addEventListener("click",ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    saveLeaderCssToolSettings({...LEADER_CSS_TOOL_DEFAULTS});
+    paint({...LEADER_CSS_TOOL_DEFAULTS});
+  });
+  paint();
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  setupLeaderCssTools();
+  applyLeaderCssToolSettings();
+});
