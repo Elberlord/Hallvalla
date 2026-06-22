@@ -2057,7 +2057,7 @@ function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunned
 function effectiveDex(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b;if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u))}
-function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?1:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
+function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?0:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxTurnGuard(u){
   if(!u)return 0;
@@ -2732,7 +2732,7 @@ function normalizeFreshSummonsForActionPhase(units,player,turnKey){
   });
 }
 function isUnitActionWindow(u){return !!(u&&isMyTurn()&&u.owner===myPlayer&&isActionPhase())}
-function isUnitMoveWindow(u){return isUnitActionWindow(u)}
+function isUnitMoveWindow(u){return !!(u&&!u.leader&&isUnitActionWindow(u))}
 function unitActionPhaseHint(action="acción"){return `En HallValla, las invocaciones usan ${action} en Action Phase, incluso si fueron invocadas este mismo turno.`}
 function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
   const id=typeof unitOrId==="string"?unitOrId:unitOrId?.id;
@@ -3400,6 +3400,7 @@ function resolveBeastCellTraps(moving,units,traps){
 
 async function moveUnit(u,x,y){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
+  if(u?.leader)return setHint("Los líderes están anclados en su Base y no pueden moverse.");
   if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
   const mulanExecMove=isMulanExecutionMoveReady(u);
   if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");
@@ -4679,7 +4680,7 @@ async function adventureEnemyTurn(){
   };
 
   const bestMoveFor=(u)=>{
-    if(!u||u.moved||u.acted)return null;
+    if(!u||u.leader||u.moved||u.acted)return null;
     if(u.noMoveTurnKey&&u.noMoveTurnKey===pub.turnKey)return null;
     const start={x:u.x,y:u.y};
     const pl=playerLeaderNow(), el=enemyLeaderNow();
@@ -5043,23 +5044,12 @@ async function adventureEnemyTurn(){
     }
     if(didSomething&&getBattleOutcome(units).ended)break;
   }
-  // El líder rival también puede moverse y levantar DEF si no tiene golpe bueno.
+  // El líder rival queda anclado en Base: puede atacar y usar DEF, pero no moverse.
   const el=enemyLeaderNow();
   if(el&&!getBattleOutcome(units).ended){
     if(attackWith(el)){
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
-    }else if(moveUnitSmart(el)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
-      const movedLeader=enemyLeaderNow();
-      if(attackWith(movedLeader)){
-        await publishAiStep({turnPhase:"actions"});
-        await sleep(AI_ACTION_DELAY_MS);
-      }else if(tryAiDefenseStance(movedLeader)){
-        await publishAiStep({turnPhase:"actions"});
-        await sleep(AI_ACTION_DELAY_MS);
-      }
     }else if(tryAiDefenseStance(el)){
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
@@ -5210,8 +5200,10 @@ function getUnitContextOptions(u){
       opts.push({key:"det",label:"DET",hint:"Detalles"});
       return opts;
     }
-    const moveHint=u.acted?"Ya usó su acción":u.moved?"Ya se movió":isUnitMoveWindow(u)?"Mover ahora":"Mover en Action Phase";
-    opts.push({key:"mov",label:"MOV",hint:moveHint});
+    if(!u.leader){
+      const moveHint=u.acted?"Ya usó su acción":u.moved?"Ya se movió":isUnitMoveWindow(u)?"Mover ahora":"Mover en Action Phase";
+      opts.push({key:"mov",label:"MOV",hint:moveHint});
+    }
     opts.push({key:"def",label:"DEF",hint:(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)?"No puede defenderse este turno":(u.defenseModeReady?"Ya está en guardia defensiva":(u.acted?"Ya usó su acción":"Postura defensiva: +2 GD y -10% precisión al primer ataque"))});
     if(unitHasContextEffect(u))opts.push({key:"effect",label:"EFFECT",hint:"Efecto"});
     opts.push({key:"attk",label:"ATTK",hint:isKhalidChainAttackReady(u)?"Espada Invicta: puede seguir atacando con penalización acumulada.":(u.acted?"Ya atacó o defendió":"Atacar en Action Phase")});
@@ -5236,7 +5228,7 @@ function openUnitContextMenu(u,x,y){
   if(u.owner!==myPlayer){
     setHint(`${u.name}: abre DET desde la estrella táctica para revisar sus datos.`);
   }else{
-    setHint(`${u.name}: elige MOV, DEF, ATTK, EFFECT o DET desde la estrella táctica.`);
+    setHint(u.leader?`${u.name}: Base fija. Puede usar DEF, ATTK, EFFECT o DET, pero no MOV.`:`${u.name}: elige MOV, DEF, ATTK, EFFECT o DET desde la estrella táctica.`);
   }
 }
 function renderUnitContextMenu(){
@@ -5265,6 +5257,10 @@ function renderUnitContextMenu(){
     const cellW=g.width/COLS, cellH=g.height/ROWS;
     let left=g.left+(unitContextSelection.x+.5)*cellW;
     let top=g.top+(unitContextSelection.y+.5)*cellH;
+    if(u.leader){
+      const base=document.querySelector(`.leader-base[data-leader-id="${CSS.escape(u.id)}"]`);
+      if(base){const r=base.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2;}
+    }
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;
     requestAnimationFrame(()=>{
@@ -5838,7 +5834,7 @@ function renderBoard(){
     const trap=getCellBeastTrapAt(x,y);
     if(trap){const m=document.createElement("div");m.className=`beast-trap-marker ${trap.owner===1?"p1":"p2"}`;m.title=trap.owner===myPlayer?trap.cardName:"Trampa de cacería";m.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";cell.appendChild(m);}
     const u=getUnitAt(x,y);
-    if(u){
+    if(u&&!u.leader){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u,true)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
@@ -5883,6 +5879,54 @@ function renderBoard(){
     });
     grid.appendChild(cell);
   }
+  renderLeaderBases();
+}
+
+function ensureLeaderBasesLayer(){
+  const battlefield=document.querySelector(".battlefield");
+  if(!battlefield)return null;
+  let layer=document.getElementById("leaderBasesLayer");
+  if(!layer){
+    layer=document.createElement("div");
+    layer.id="leaderBasesLayer";
+    layer.className="leader-bases-layer";
+    battlefield.appendChild(layer);
+  }
+  return layer;
+}
+function renderLeaderBases(){
+  const layer=ensureLeaderBasesLayer();
+  if(!layer||!publicState)return;
+  const leaders=(publicState.units||[]).filter(u=>u&&u.leader&&u.hp>0).sort((a,b)=>a.owner-b.owner);
+  layer.innerHTML=leaders.map(u=>{
+    const side=u.owner===1?"south":"north";
+    const key=`${u.x},${u.y}`;
+    const isMarked=highlights.includes(key);
+    const classes=["leader-base",`leader-base-${side}`,u.owner===1?"p1":"p2",isMarked?(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid"):""].filter(Boolean).join(" ");
+    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)} · Base ${side==="north"?"Norte":"Sur"}"><span class="leader-base-label">${side==="north"?"Base Norte":"Base Sur"}</span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b>❤ ${getDisplayHp(u)}</b><b>⚔ ${effectiveAtk(u)}</b><b>RG ${u.range||1}</b></span></button>`;
+  }).join("");
+  layer.querySelectorAll(".leader-base").forEach(btn=>{
+    btn.addEventListener("pointerdown",ev=>ev.stopPropagation(),true);
+    btn.addEventListener("pointerup",ev=>{
+      const x=Number(btn.dataset.x),y=Number(btn.dataset.y);
+      if(handleDirectBoardTargetEvent(ev,x,y))return;
+    },true);
+    btn.addEventListener("click",ev=>{
+      const id=btn.dataset.leaderId;
+      const u=getUnit(id);
+      const x=Number(btn.dataset.x),y=Number(btn.dataset.y);
+      if(handleDirectBoardTargetEvent(ev,x,y))return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(u)openUnitContextMenu(u,x,y);
+    });
+    btn.addEventListener("contextmenu",ev=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+      const u=getUnit(btn.dataset.leaderId);
+      if(u)openUnitContextMenu(u,Number(btn.dataset.x),Number(btn.dataset.y));
+    });
+  });
 }
 
 function getCardVisualClass(card){
