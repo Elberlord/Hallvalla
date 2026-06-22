@@ -2877,7 +2877,7 @@ function attackRangeCells(u){
   }
   return res;
 }
-function (isLeaderCoord(x,y) ? [] : getTacticalPreviewClasses(x,y)){
+function getTacticalPreviewClasses(x,y){
   if(selectedCard||selectedUnitActionMode||!unitContextSelection||!publicState)return[];
   const u=getUnit(unitContextSelection.unitId);
   if(!u)return[];
@@ -5932,6 +5932,23 @@ function getNonLeaderHighlights(){
   });
 }
 
+
+/* Patch 85 - helper seguro: excluir líderes del highlight visual del grid */
+function isLeaderCoord(x,y,unitsList=publicState?.units||[]){
+  return (unitsList||[]).some(u=>u&&u.leader&&u.hp>0&&Number(u.x)===Number(x)&&Number(u.y)===Number(y));
+}
+function cleanLeaderGridCellVisuals(){
+  const grid=$("grid");
+  if(!grid||!publicState)return;
+  (publicState.units||[]).forEach(u=>{
+    if(!u||!u.leader)return;
+    const cell=grid.querySelector(`.cell[data-x="${Number(u.x)}"][data-y="${Number(u.y)}"]`);
+    if(cell){
+      cell.classList.remove("valid","attackable","summonable","move-range-preview","attack-range-preview","mixed-range-preview","acted-range-preview","enemy-threat-preview","enemy-acted-threat-preview");
+    }
+  });
+}
+
 function renderBoard(){
   const grid=$("grid");
   if(!grid.dataset.boardTargetDelegateBound){
@@ -5949,9 +5966,9 @@ function renderBoard(){
     const cell=document.createElement("div");
     cell.className="cell";
     const key=`${x},${y}`;
-    const tacticalClasses=(isLeaderCoord(x,y) ? [] : getTacticalPreviewClasses(x,y));
+    const tacticalClasses=isLeaderCoord(x,y)?[]:getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
-    if(highlights.includes(key) && !isLeaderCoord(x,y)&&isBoardHighlightAllowedAt(x,y))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
+    if(highlights.includes(key)&&isBoardHighlightAllowedAt(x,y))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
     const trap=getCellBeastTrapAt(x,y);
     if(trap){const m=document.createElement("div");m.className=`beast-trap-marker ${trap.owner===1?"p1":"p2"}`;m.title=trap.owner===myPlayer?trap.cardName:"Trampa de cacería";m.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";cell.appendChild(m);}
     const u=getUnitAt(x,y);
@@ -6001,6 +6018,7 @@ function renderBoard(){
     });
     grid.appendChild(cell);
   }
+  cleanLeaderGridCellVisuals();
   renderLeaderBases();
 }
 
@@ -6061,7 +6079,7 @@ function renderLeaderBases(){
   layer.innerHTML=leaders.map(u=>{
     const side=u.owner===1?"south":"north";
     const key=`${u.x},${u.y}`;
-    const isMarked=highlights.includes(key) && !isLeaderCoord(x,y);
+    const isMarked=highlights.includes(key);
     const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
     return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span>${getUnitStatusBubblesHtml(u)}<span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
   }).join("");

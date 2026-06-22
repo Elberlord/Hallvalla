@@ -12372,9 +12372,11 @@ body.leader-board-fx-suppressed .battle-fx-dodge{
 }
 
 
-/* FINAL SINGLE SOURCE RULE */
-.cell.leader-locked{
-  background:transparent !important;
-  box-shadow:none !important;
-  border:0 !important;
+/* Patch 85 - seguro: ninguna celda de líder debe retener overlay visual del grid */
+.leader-base::before,
+.leader-base::after,
+.leader-base-token::before,
+.leader-base-token::after{
+  content:none!important;
+  display:none!important;
 }
