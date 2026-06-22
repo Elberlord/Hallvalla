@@ -351,6 +351,25 @@ function getLeaderBaseElement(unit){
   if(!unit)return null;
   return document.querySelector(`.leader-base[data-unit-id="${unit.id}"], .leader-base[data-leader-id="${unit.id}"], .leader-base[data-id="${unit.id}"]`);
 }
+
+/* Patch 81 - bloqueo duro de FX de tablero durante DEF de líderes fijos */
+function suppressLeaderBoardFx(ms=1500){
+  try{
+    clearBattleFxLayer();
+    document.body.classList.add("leader-board-fx-suppressed");
+    const layer=$("battleFxLayer");
+    if(layer){
+      [...layer.children].forEach(n=>{
+        const cls=String(n.className||"");
+        if(/battle-fx-(slash|impact|guard|projectile|float|status|dodge)/.test(cls))n.remove();
+      });
+    }
+    setTimeout(()=>clearBattleFxLayer(),60);
+    setTimeout(()=>clearBattleFxLayer(),180);
+    setTimeout(()=>document.body.classList.remove("leader-board-fx-suppressed"),ms);
+  }catch(e){}
+}
+
 function playLeaderUiFx(unit, fx={}){
   const base = getLeaderBaseElement(unit);
   if(!base)return;
@@ -366,7 +385,9 @@ function playLeaderUiFx(unit, fx={}){
 function makeLeaderOrBoardDefenseFx(type, unit){
   if(!unit)return null;
   if(unit.leader){
+    suppressLeaderBoardFx(1600);
     queueMicrotask(()=>playLeaderUiFx(unit,{type:type||"defend_stance",iconText:"🛡",labelText:"DEF"}));
+    setTimeout(()=>suppressLeaderBoardFx(1000),30);
     return null;
   }
   return makeDefenseFxEvent(type, unit);
@@ -374,6 +395,7 @@ function makeLeaderOrBoardDefenseFx(type, unit){
 function makeLeaderOrBoardFloatFx(type, unit, amount=0, extra={}){
   if(!unit)return null;
   if(unit.leader){
+    suppressLeaderBoardFx(1400);
     queueMicrotask(()=>playLeaderUiFx(unit,{type, amount, ...(extra||{})}));
     return null;
   }
@@ -467,7 +489,7 @@ function playSummonFx(unit){
   spawnBattleFxNode(`battle-fx-summon ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-ring"></div><div class="battle-fx-ring battle-fx-ring-2"></div><div class="battle-fx-core"></div><div class="battle-fx-rays"></div>${extraBurst}`);
 }
 function playBattleFx(attacker,target){
-  if(isFixedLeaderUnit(attacker) || isFixedLeaderUnit(target))return;
+  if(isFixedLeaderUnit(attacker) || isFixedLeaderUnit(target)){suppressLeaderBoardFx(1200);return;}
   if(isFixedLeaderUnit(attacker)||isFixedLeaderUnit(target))return;
   if(!attacker||!target)return;
   playBattleFxEvent(makeBattleFxEvent("attack",attacker,target),attacker);
@@ -500,7 +522,7 @@ function playBattleFxEvent(fx,attackerRef=null){
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
 }
 function playDefenseFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -517,7 +539,7 @@ function playDefenseFxEvent(fx){
   spawnBattleFxNode(`battle-fx-guard ${typeClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-guard-ring"></div><div class="battle-fx-guard-glow"></div><div class="battle-fx-guard-shield"></div>${crackMarkup}${shardMarkup}`);
 }
 function playDodgeFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
@@ -527,7 +549,7 @@ function playDodgeFxEvent(fx){
   spawnBattleFxNode(`battle-fx-dodge ${sideClass} ${rarityClass}`,point.x,point.y,{},900,`<div class="battle-fx-dodge-ring"></div><div class="battle-fx-dodge-swish swish-1"></div><div class="battle-fx-dodge-swish swish-2"></div><div class="battle-fx-dodge-afterimage afterimage-1"></div><div class="battle-fx-dodge-afterimage afterimage-2"></div><div class="battle-fx-dodge-label">ESQUIVA</div>`);
 }
 function playFloatFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -544,7 +566,7 @@ function playFloatFxEvent(fx){
   spawnBattleFxNode(`battle-fx-float ${cls} ${sideClass} ${rarityClass}`,point.x,point.y,{},980,`<div class="battle-fx-float-badge"><span class="battle-fx-float-icon">${iconText}</span>${amountText?`<span class="battle-fx-float-amount">${amountText}</span>`:""}</div>`);
 }
 function playStatusFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || []))return;
+  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
   const fxUnit=fx.unitId?getUnit(fx.unitId):null;
   if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
@@ -5573,6 +5595,10 @@ async function activateDefenseStance(u){
   if(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)return setHint(`${u.name} no puede defenderse este turno.`);
   const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false}:it);
   const defenderNow=units.find(it=>it.id===u.id)||u;
+  if(defenderNow&&defenderNow.leader){
+    highlights=[];
+    suppressLeaderBoardFx(1600);
+  }
   await updatePublic({
     units,
     defenseFxEvent:makeLeaderOrBoardDefenseFx("defend_stance",defenderNow),

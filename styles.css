@@ -12324,3 +12324,21 @@
 .battle-fx-impact.leader-fx-blocked{
   display:none!important;
 }
+
+
+/* Patch 81 - durante DEF de líder fijo no se permite FX de tablero */
+body.leader-board-fx-suppressed #battleFxLayer,
+body.leader-board-fx-suppressed .battle-fx-slash,
+body.leader-board-fx-suppressed .battle-fx-slash-core,
+body.leader-board-fx-suppressed .battle-fx-projectile,
+body.leader-board-fx-suppressed .battle-fx-projectile-shaft,
+body.leader-board-fx-suppressed .battle-fx-projectile-trail,
+body.leader-board-fx-suppressed .battle-fx-impact,
+body.leader-board-fx-suppressed .battle-fx-guard,
+body.leader-board-fx-suppressed .battle-fx-float,
+body.leader-board-fx-suppressed .battle-fx-status,
+body.leader-board-fx-suppressed .battle-fx-dodge{
+  display:none!important;
+  opacity:0!important;
+  visibility:hidden!important;
+}
