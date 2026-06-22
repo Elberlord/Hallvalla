@@ -12006,3 +12006,87 @@
   .leader-base .status-seal-rail.left{left:-4px;transform:translate(-100%,-50%);}
   .leader-base .status-seal-rail.right{right:-4px;transform:translate(100%,-50%);}
 }
+
+
+/* Patch 73: reparar banda dorada gigante en líderes fijos */
+.leader-base.attackable .leader-base-token::after,
+.leader-base.valid .leader-base-token::after,
+.leader-base.summonable .leader-base-token::after{
+  left:50%!important;
+  right:auto!important;
+  bottom:8%!important;
+  width:54%!important;
+  max-width:54%!important;
+  min-width:0!important;
+  height:15%!important;
+  max-height:15%!important;
+  transform:translateX(-50%) perspective(120px) rotateX(58deg)!important;
+  border-radius:50%!important;
+  pointer-events:none!important;
+  overflow:hidden!important;
+}
+
+.leader-base.valid .leader-base-token::after{
+  box-shadow:0 0 0 1px rgba(112,224,138,.72),0 0 8px rgba(112,224,138,.24)!important;
+  background:rgba(112,224,138,.08)!important;
+}
+.leader-base.attackable .leader-base-token::after{
+  box-shadow:0 0 0 1px rgba(239,71,111,.78),0 0 8px rgba(239,71,111,.28)!important;
+  background:rgba(239,71,111,.09)!important;
+}
+.leader-base.summonable .leader-base-token::after{
+  box-shadow:0 0 0 1px rgba(255,209,102,.78),0 0 8px rgba(255,209,102,.26)!important;
+  background:rgba(255,209,102,.08)!important;
+}
+
+/* Mantener buffs/debuffs a los lados sin empujar ningún efecto hacia abajo */
+.leader-base .unit-status-bubbles.unit-status-seals{
+  inset:0 -34% 0 -34%!important;
+  overflow:visible!important;
+}
+.leader-base .status-seal-rail{
+  top:50%!important;
+  gap:3px!important;
+}
+.leader-base .status-seal-rail.left{
+  left:-8px!important;
+  right:auto!important;
+  transform:translate(-100%,-50%)!important;
+}
+.leader-base .status-seal-rail.right{
+  right:-8px!important;
+  left:auto!important;
+  transform:translate(100%,-50%)!important;
+}
+.leader-base .unit-status-seal-extra{
+  top:-6px!important;
+  bottom:auto!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+}
+
+/* Si algún FX de estado cae dentro del layer del líder, no debe ocupar ancho de tablero */
+.leader-base .status-fx,
+.leader-base .float-fx,
+.leader-base [class*="status-fx"],
+.leader-base [class*="float-fx"]{
+  max-width:44px!important;
+  max-height:44px!important;
+  overflow:hidden!important;
+}
+
+@media(max-width:980px){
+  .leader-base.attackable .leader-base-token::after,
+  .leader-base.valid .leader-base-token::after,
+  .leader-base.summonable .leader-base-token::after{
+    width:50%!important;
+    max-width:50%!important;
+    height:13%!important;
+    max-height:13%!important;
+  }
+  .leader-base .unit-status-bubbles.unit-status-seals{
+    inset:0 -30% 0 -30%!important;
+  }
+  .leader-base .status-seal-rail.left{left:-6px!important;}
+  .leader-base .status-seal-rail.right{right:-6px!important;}
+}
