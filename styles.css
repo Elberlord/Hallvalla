@@ -12372,15 +12372,9 @@ body.leader-board-fx-suppressed .battle-fx-dodge{
 }
 
 
-/* CLEAN FINAL FIX */
-.leader-base::before,
-.leader-base::after{
-  display:none !important;
-  content:none !important;
-}
-.cell.leader-highlight,
-.cell.leader-attack,
-.cell.leader-valid{
+/* FINAL SINGLE SOURCE RULE */
+.cell.leader-locked{
   background:transparent !important;
   box-shadow:none !important;
+  border:0 !important;
 }
