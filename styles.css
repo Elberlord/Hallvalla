@@ -12255,3 +12255,115 @@ El CSS original se conserva para no romper visuales. El bloque final
   pointer-events:none!important;
   overflow:hidden!important;
 }
+
+/* ============================================================
+   PATCH: ICONOS DE ESTADO SEGUROS PARA LÍDERES FIJOS
+   Reintroduce el icono visual de DEF sin usar botones anidados
+   ni el contenedor unit-status-bubbles que causaba el óvalo.
+   ============================================================ */
+.leader-base > .leader-status-bubbles{
+  position:absolute!important;
+  left:50%!important;
+  top:-6px!important;
+  transform:translateX(-50%)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  width:max-content!important;
+  max-width:72px!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  z-index:12!important;
+  pointer-events:none!important;
+}
+.leader-base > .leader-status-bubbles .leader-status-seal,
+.leader-base > .leader-status-bubbles .unit-status-seal{
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+  flex:0 0 14px!important;
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:999px!important;
+  pointer-events:none!important;
+  cursor:default!important;
+  overflow:visible!important;
+}
+.leader-base > .leader-status-bubbles .unit-status-seal::after{
+  content:none!important;
+  display:none!important;
+}
+.leader-base > .leader-status-bubbles .unit-status-seal::before{
+  inset:-1px!important;
+}
+.leader-base > .leader-status-bubbles .unit-status-seal-core{
+  width:100%!important;
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.leader-base > .leader-status-bubbles .status-icon{
+  width:10px!important;
+  height:10px!important;
+  transform:scale(.72)!important;
+}
+.leader-base > .leader-status-bubbles .status-icon-buff{
+  border-left-width:5px!important;
+  border-right-width:5px!important;
+  border-bottom-width:9px!important;
+}
+.leader-base > .leader-status-bubbles .status-icon-debuff{
+  border-left-width:5px!important;
+  border-right-width:5px!important;
+  border-top-width:9px!important;
+}
+.leader-base > .leader-status-bubbles .unit-status-seal-stack{
+  min-width:9px!important;
+  height:9px!important;
+  right:-4px!important;
+  bottom:-4px!important;
+  font-size:6px!important;
+  line-height:1!important;
+}
+.leader-base > .leader-status-bubbles .leader-status-extra{
+  min-width:12px!important;
+  height:10px!important;
+  padding:0 3px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:linear-gradient(180deg,rgba(33,24,18,.98),rgba(10,8,6,.96))!important;
+  border:1px solid rgba(255,230,177,.82)!important;
+  color:#fff2cd!important;
+  font-size:6px!important;
+  font-weight:900!important;
+}
+@media(max-width:980px){
+  .leader-base > .leader-status-bubbles{
+    top:-5px!important;
+    max-width:64px!important;
+  }
+  .leader-base > .leader-status-bubbles .leader-status-seal,
+  .leader-base > .leader-status-bubbles .unit-status-seal{
+    width:12px!important;
+    height:12px!important;
+    min-width:12px!important;
+    flex-basis:12px!important;
+  }
+  .leader-base > .leader-status-bubbles .status-icon{
+    transform:scale(.66)!important;
+  }
+}

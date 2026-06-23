@@ -5792,6 +5792,23 @@ function getUnitStatusBubblesHtml(u){
 }
 
 
+function renderLeaderStatusSeal(entry,idx=0){
+  const kind=escapeHtml(entry?.kind||"neutral");
+  const shortText=getUnitStatusSealShortText(entry);
+  const title=escapeHtml(`${entry?.name||entry?.label||"Estado"}: ${entry?.desc||""}`.trim());
+  return `<span class="leader-status-seal unit-status-seal ${kind}" data-status-index="${idx}" title="${title}" aria-label="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</span>`;
+}
+function getLeaderStatusBubblesHtml(u){
+  if(!u)return "";
+  const entries=getUnitStatusEntries(u);
+  if(!entries.length)return "";
+  const visible=entries.slice(0,4);
+  const extra=Math.max(0,entries.length-visible.length);
+  const seals=visible.map((entry,idx)=>renderLeaderStatusSeal(entry,idx)).join("");
+  return `<span class="leader-status-bubbles" aria-hidden="true">${seals}${extra>0?`<span class="leader-status-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</span>`:""}</span>`;
+}
+
+
 function getShortStatusSummaryLabel(entry){
   const icon=String(entry?.icon||"generic");
   const label=String(entry?.label||entry?.name||"Estado").trim();
@@ -6055,7 +6072,7 @@ function renderLeaderBases(){
       La lógica de DEF sigue viva: displayEffectiveGuard(u) mantiene el +2 GD y
       renderDetail() sigue mostrando el estado al abrir DET.
     */
-    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
+    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
   }).join("");
 }
 
