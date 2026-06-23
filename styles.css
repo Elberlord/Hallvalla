@@ -12502,3 +12502,147 @@ El CSS original se conserva para no romper visuales. El bloque final
   .hud-css-tool{right:10px;top:78px;}
   .hud-css-tool-panel{width:min(320px,calc(100vw - 20px));}
 }
+
+
+/* ============================================================
+   NUEVO HUD JUGADOR / IA + CONTROL VISUAL
+   Reemplaza visualmente el HUD viejo de nombre unido al marco.
+   ============================================================ */
+:root{
+  --hud-new-p1-left:52px;
+  --hud-new-p1-top:20px;
+  --hud-new-p2-right:52px;
+  --hud-new-p2-top:20px;
+  --hud-new-x-nudge:0px;
+  --hud-new-scale:1;
+  --hud-new-width:230px;
+  --hud-new-name-font:15px;
+  --hud-new-stat-font:16px;
+  --hud-new-mini-height:42px;
+  --hud-new-gap:6px;
+}
+.player-status-hud{
+  position:absolute;
+  top:20px;
+  z-index:72;
+  width:var(--hud-new-width);
+  pointer-events:none;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.50));
+}
+#hudP1.player-status-hud{
+  left:var(--hud-new-p1-left)!important;
+  top:var(--hud-new-p1-top)!important;
+  transform:translateX(var(--hud-new-x-nudge)) scale(var(--hud-new-scale));
+  transform-origin:top left;
+}
+#hudP2.player-status-hud{
+  right:var(--hud-new-p2-right)!important;
+  top:var(--hud-new-p2-top)!important;
+  transform:translateX(calc(var(--hud-new-x-nudge) * -1)) scale(var(--hud-new-scale));
+  transform-origin:top right;
+}
+.player-status-card{
+  position:relative;
+  width:100%;
+  box-sizing:border-box;
+  padding:9px 10px 10px;
+  border:1px solid rgba(255,209,102,.42);
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,rgba(28,20,12,.94),rgba(8,7,6,.90)),
+    radial-gradient(circle at 50% 0%,rgba(255,209,102,.14),transparent 52%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.045),0 0 22px rgba(255,209,102,.08);
+  pointer-events:auto;
+}
+.player-status-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  margin-bottom:7px;
+}
+.player-status-name{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:Georgia,serif;
+  font-size:var(--hud-new-name-font);
+  font-weight:900;
+  color:#fff1ca;
+  letter-spacing:.1px;
+  text-shadow:0 1px 2px #000,0 0 10px rgba(255,209,102,.22);
+}
+.player-status-turn{
+  display:inline-grid;
+  place-items:center;
+  min-width:48px;
+  height:22px;
+  padding:0 8px;
+  border:1px solid rgba(255,209,102,.34);
+  border-radius:999px;
+  background:rgba(0,0,0,.34);
+  color:#ffd166;
+  font-family:Georgia,serif;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 1px 2px #000;
+}
+.player-status-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:var(--hud-new-gap);
+}
+.player-status-mini{
+  min-height:var(--hud-new-mini-height);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  box-sizing:border-box;
+  border-radius:11px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.25));
+}
+.player-status-mini span{
+  font-family:Georgia,serif;
+  font-size:10px;
+  font-weight:900;
+  color:#d8c39a;
+  line-height:1;
+}
+.player-status-mini strong{
+  font-family:Georgia,serif;
+  font-size:var(--hud-new-stat-font);
+  font-weight:900;
+  color:#fff7df;
+  line-height:1;
+  text-shadow:0 1px 2px #000;
+}
+.player-status-life{border-color:rgba(255,100,100,.18);}
+.player-status-hand{border-color:rgba(255,209,102,.18);}
+.player-status-deck{border-color:rgba(120,211,255,.18);}
+.hud-hidden-value{display:none!important;}
+
+/* Oculta cualquier residuo visual del HUD viejo si quedó en caché/clases antiguas */
+#hudP1.hud,#hudP2.hud{background:none!important;}
+
+@media(max-width:980px){
+  :root{
+    --hud-new-p1-left:14px;
+    --hud-new-p1-top:12px;
+    --hud-new-p2-right:14px;
+    --hud-new-p2-top:12px;
+    --hud-new-width:185px;
+    --hud-new-scale:.88;
+    --hud-new-name-font:12px;
+    --hud-new-stat-font:13px;
+    --hud-new-mini-height:34px;
+    --hud-new-gap:4px;
+  }
+  .player-status-card{padding:7px 8px 8px;border-radius:12px;}
+  .player-status-turn{min-width:42px;height:19px;font-size:8px;padding:0 6px;}
+  .player-status-mini span{font-size:8px;}
+}

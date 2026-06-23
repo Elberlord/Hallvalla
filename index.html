@@ -555,43 +555,67 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <button id="closePassBtn" class="btn primary full">Volver</button>
   </div>
 </div>
-<div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button><button id="toggleLogBtn" class="battle-tool-btn" type="button" aria-label="Mostrar u ocultar registro del duelo">Log ▴</button><button id="toggleActionsBtn" class="battle-tool-btn battle-tool-actions" type="button" aria-label="Mostrar u ocultar acciones">Acciones ▾</button></div><div class="hud top-left collapsed" id="hudP1"><div class="hud-shell"><div class="hud-header"><button id="hudToggleP1" class="hud-name hud-toggle" type="button" aria-expanded="false" aria-controls="hudGridP1"><b id="p1HudName" class="p1">Jugador 1</b></button><div class="hud-badge"><span id="p1Badge">...</span></div></div><div id="hudGridP1" class="hud-grid"><div class="hud-mini"><span class="label">Vida</span><strong id="p1Life">0</strong></div><div class="hud-mini"><span class="label">Honor</span><strong id="p1Honor">0</strong></div><div class="hud-mini"><span class="label">Mazo</span><strong id="p1Deck">0</strong></div><div class="hud-mini"><span class="label">Mano</span><strong id="p1Hand">0</strong></div></div></div></div><div class="hud top-right collapsed" id="hudP2"><div class="hud-shell"><div class="hud-header"><button id="hudToggleP2" class="hud-name hud-toggle" type="button" aria-expanded="false" aria-controls="hudGridP2"><b id="p2HudName" class="p2">Jugador 2</b></button><div class="hud-badge"><span id="p2Badge">...</span></div></div><div id="hudGridP2" class="hud-grid"><div class="hud-mini"><span class="label">Vida</span><strong id="p2Life">0</strong></div><div class="hud-mini"><span class="label">Honor</span><strong id="p2Honor">0</strong></div><div class="hud-mini"><span class="label">Mazo</span><strong id="p2Deck">0</strong></div><div class="hud-mini"><span class="label">Mano</span><strong id="p2Hand">0</strong></div></div></div></div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></div><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mazo"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mazo"><span class="action-btn-label">Mazo</span></button><button id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+<div id="gameShell" class="game-shell hidden"><div class="battlefield"><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button><button id="toggleLogBtn" class="battle-tool-btn" type="button" aria-label="Mostrar u ocultar registro del duelo">Log ▴</button><button id="toggleActionsBtn" class="battle-tool-btn battle-tool-actions" type="button" aria-label="Mostrar u ocultar acciones">Acciones ▾</button></div><div id="hudP1" class="player-status-hud hud-player-left" aria-label="HUD del jugador">
+  <div class="player-status-card">
+    <div class="player-status-head">
+      <b id="p1HudName" class="player-status-name">Nuevo jugador</b>
+      <span id="p1Badge" class="player-status-turn">Turno</span>
+    </div>
+    <div class="player-status-row">
+      <div class="player-status-mini player-status-life"><span>Vida</span><strong id="p1Life">0</strong></div>
+      <div class="player-status-mini player-status-hand"><span>Mano</span><strong id="p1Hand">0</strong></div>
+      <div class="player-status-mini player-status-deck"><span>Mazo</span><strong id="p1Deck">0</strong></div>
+    </div>
+    <span id="p1Honor" class="hud-hidden-value" aria-hidden="true">0</span>
+  </div>
+</div>
+<div id="hudP2" class="player-status-hud hud-player-right" aria-label="HUD de la IA">
+  <div class="player-status-card">
+    <div class="player-status-head">
+      <b id="p2HudName" class="player-status-name">Hechicero guardián</b>
+      <span id="p2Badge" class="player-status-turn">Espera</span>
+    </div>
+    <div class="player-status-row">
+      <div class="player-status-mini player-status-life"><span>Vida</span><strong id="p2Life">0</strong></div>
+      <div class="player-status-mini player-status-hand"><span>Mano</span><strong id="p2Hand">0</strong></div>
+      <div class="player-status-mini player-status-deck"><span>Mazo</span><strong id="p2Deck">0</strong></div>
+    </div>
+    <span id="p2Honor" class="hud-hidden-value" aria-hidden="true">0</span>
+  </div>
+</div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></div><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mazo"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mazo"><span class="action-btn-label">Mazo</span></button><button id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><div class="panel"><h3 class="side-title">Detalle</h3><div id="detail" class="detail">Selecciona una carta o unidad.</div></div></div><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><div id="inspectText" class="inspect-text"></div><button id="inspectClose" class="btn full">Cerrar</button></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card"><div class="card-inspect-head"><div><h2 id="cardInspectTitle" class="card-inspect-title"></h2><div id="cardInspectSub" class="card-inspect-sub"></div></div><button id="cardInspectX" class="card-inspect-x" type="button" aria-label="Cerrar carta">×</button></div><div id="cardInspectVisual" class="card-inspect-visual"></div><div id="cardInspectStats" class="card-inspect-grid"></div><div id="cardInspectText" class="card-inspect-text"></div><p id="cardInspectReason" class="card-inspect-reason"></p><div class="card-inspect-actions"><button id="cardInspectCancel" class="btn full" type="button">Cancelar</button><button id="cardInspectPlay" class="btn primary full" type="button">Jugar</button></div></div></div>
 <div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Sonido: activado</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 
-<!-- HUD DEBUG CONTROL: nombres + vida/mano -->
+<!-- HUD DEBUG CONTROL: nuevo HUD jugador / IA -->
 <div id="hudCssTool" class="hud-css-tool" aria-label="Control visual HUD">
   <button id="hudCssToolToggle" class="hud-css-tool-toggle" type="button" aria-expanded="false">HUD</button>
   <div id="hudCssToolPanel" class="hud-css-tool-panel hidden">
     <div class="hud-css-tool-head">
-      <b>Control HUD</b>
+      <b>Control nuevo HUD</b>
       <button id="hudCssToolClose" class="hud-css-tool-close" type="button" aria-label="Cerrar">×</button>
     </div>
     <div class="hud-css-tool-section">
-      <strong>Nombres jugador / IA</strong>
-      <label><span>Arriba / abajo</span><output data-hud-output="--hud-name-top">10px</output><input data-hud-var="--hud-name-top" type="range" min="0" max="90" step="1" value="10" data-unit="px"></label>
-      <label><span>Jugador izquierda</span><output data-hud-output="--hud-p1-left">10px</output><input data-hud-var="--hud-p1-left" type="range" min="0" max="180" step="1" value="10" data-unit="px"></label>
-      <label><span>IA derecha</span><output data-hud-output="--hud-p2-right">10px</output><input data-hud-var="--hud-p2-right" type="range" min="0" max="180" step="1" value="10" data-unit="px"></label>
-      <label><span>Escala nombres</span><output data-hud-output="--hud-name-scale">100%</output><input data-hud-var="--hud-name-scale" type="range" min="60" max="140" step="1" value="100" data-unit="scale"></label>
-      <label><span>Ancho nombre</span><output data-hud-output="--hud-name-width">160px</output><input data-hud-var="--hud-name-width" type="range" min="110" max="230" step="1" value="160" data-unit="px"></label>
-      <label><span>Tamaño texto</span><output data-hud-output="--hud-name-font">14px</output><input data-hud-var="--hud-name-font" type="range" min="9" max="20" step="1" value="14" data-unit="px"></label>
+      <strong>Posición</strong>
+      <label><span>Jugador izquierda</span><output data-hud-output="--hud-new-p1-left">52px</output><input data-hud-var="--hud-new-p1-left" type="range" min="0" max="260" step="1" value="52" data-unit="px"></label>
+      <label><span>Jugador arriba/abajo</span><output data-hud-output="--hud-new-p1-top">20px</output><input data-hud-var="--hud-new-p1-top" type="range" min="0" max="140" step="1" value="20" data-unit="px"></label>
+      <label><span>IA derecha</span><output data-hud-output="--hud-new-p2-right">52px</output><input data-hud-var="--hud-new-p2-right" type="range" min="0" max="260" step="1" value="52" data-unit="px"></label>
+      <label><span>IA arriba/abajo</span><output data-hud-output="--hud-new-p2-top">20px</output><input data-hud-var="--hud-new-p2-top" type="range" min="0" max="140" step="1" value="20" data-unit="px"></label>
+      <label><span>Separar horizontal</span><output data-hud-output="--hud-new-x-nudge">0px</output><input data-hud-var="--hud-new-x-nudge" type="range" min="-80" max="80" step="1" value="0" data-unit="px"></label>
     </div>
     <div class="hud-css-tool-section">
-      <strong>Vida / Mano / Mazo / Honor</strong>
-      <label><span>Ancho panel stats</span><output data-hud-output="--hud-mini-panel-width">236px</output><input data-hud-var="--hud-mini-panel-width" type="range" min="130" max="340" step="1" value="236" data-unit="px"></label>
-      <label><span>Panel stats arriba/abajo</span><output data-hud-output="--hud-mini-panel-y">12px</output><input data-hud-var="--hud-mini-panel-y" type="range" min="0" max="90" step="1" value="12" data-unit="px"></label>
-      <label><span>Escala panel stats</span><output data-hud-output="--hud-mini-panel-scale">100%</output><input data-hud-var="--hud-mini-panel-scale" type="range" min="55" max="150" step="1" value="100" data-unit="scale"></label>
-      <label><span>Alto cajitas</span><output data-hud-output="--hud-mini-height">54px</output><input data-hud-var="--hud-mini-height" type="range" min="28" max="95" step="1" value="54" data-unit="px"></label>
-      <label><span>Texto label</span><output data-hud-output="--hud-mini-label-font">10px</output><input data-hud-var="--hud-mini-label-font" type="range" min="6" max="16" step="1" value="10" data-unit="px"></label>
-      <label><span>Número vida/mano</span><output data-hud-output="--hud-mini-value-font">16px</output><input data-hud-var="--hud-mini-value-font" type="range" min="9" max="28" step="1" value="16" data-unit="px"></label>
-      <label><span>Separación cajitas</span><output data-hud-output="--hud-mini-gap">8px</output><input data-hud-var="--hud-mini-gap" type="range" min="0" max="18" step="1" value="8" data-unit="px"></label>
+      <strong>Tamaño / lectura</strong>
+      <label><span>Escala completa</span><output data-hud-output="--hud-new-scale">100%</output><input data-hud-var="--hud-new-scale" type="range" min="55" max="145" step="1" value="100" data-unit="scale"></label>
+      <label><span>Ancho HUD</span><output data-hud-output="--hud-new-width">230px</output><input data-hud-var="--hud-new-width" type="range" min="150" max="360" step="1" value="230" data-unit="px"></label>
+      <label><span>Tamaño nombre</span><output data-hud-output="--hud-new-name-font">15px</output><input data-hud-var="--hud-new-name-font" type="range" min="9" max="24" step="1" value="15" data-unit="px"></label>
+      <label><span>Tamaño números</span><output data-hud-output="--hud-new-stat-font">16px</output><input data-hud-var="--hud-new-stat-font" type="range" min="9" max="28" step="1" value="16" data-unit="px"></label>
+      <label><span>Alto cajitas</span><output data-hud-output="--hud-new-mini-height">42px</output><input data-hud-var="--hud-new-mini-height" type="range" min="24" max="80" step="1" value="42" data-unit="px"></label>
+      <label><span>Separación cajitas</span><output data-hud-output="--hud-new-gap">6px</output><input data-hud-var="--hud-new-gap" type="range" min="0" max="20" step="1" value="6" data-unit="px"></label>
     </div>
-    <div class="hud-css-tool-actions">
-      <button id="hudCssToolExpand" type="button">Abrir HUDs</button>
+    <div class="hud-css-tool-actions hud-css-tool-actions-single">
       <button id="hudCssToolReset" type="button">Reset</button>
     </div>
-    <p class="hud-css-tool-note">Temporal: se guarda en este navegador. Cuando encuentres los valores finales, los dejamos fijos en CSS.</p>
+    <p class="hud-css-tool-note">Temporal: se guarda en este navegador. Cuando encuentres el tamaño final, lo dejamos fijo y quitamos este panel.</p>
   </div>
 </div>
 <script type="module" src="script.js?v=v8-organized-clean"></script>

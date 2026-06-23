@@ -5689,7 +5689,34 @@ function maybeShowHonorRecharge(){
   if(honorRechargeTimer)clearTimeout(honorRechargeTimer);
   honorRechargeTimer=setTimeout(()=>{modal.classList.remove("show");pulseTurnHonorHud();},2550);
 }
-function renderHud(){[1,2].forEach(p=>{const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0},leader=getLeader(p);const nameEl=$("p"+p+"HudName");if(nameEl)nameEl.textContent=getHudPlayerDisplayName(p);const resourceLabel=getResourceLabel(p);const resourceLabelEl=document.querySelector(`#hudP${p} .hud-grid .hud-mini:nth-child(2) .label`);if(resourceLabelEl)resourceLabelEl.textContent=resourceLabel;$(`p${p}Life`).textContent=leader?Math.max(0,leader.hp):st.hp||0;$(`p${p}Honor`).textContent=`${st.honor||0}/${st.maxHonor||0}`;$(`p${p}Deck`).textContent=st.deck||0;$(`p${p}Hand`).textContent=st.hand||0;const b=$(`p${p}Badge`);const ended=isBattleEnded();b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2"});$("phaseBanner").textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);renderHudCollapseState();maybePlayNearDeathSound()}
+function renderHud(){
+  [1,2].forEach(p=>{
+    const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0};
+    const leader=getLeader(p);
+    const nameEl=$("p"+p+"HudName");
+    if(nameEl)nameEl.textContent=getHudPlayerDisplayName(p);
+
+    const lifeEl=$("p"+p+"Life");
+    const honorEl=$("p"+p+"Honor");
+    const deckEl=$("p"+p+"Deck");
+    const handEl=$("p"+p+"Hand");
+    if(lifeEl)lifeEl.textContent=leader?Math.max(0,leader.hp):st.hp||0;
+    if(honorEl)honorEl.textContent=`${st.honor||0}/${st.maxHonor||0}`;
+    if(deckEl)deckEl.textContent=st.deck||0;
+    if(handEl)handEl.textContent=st.hand||0;
+
+    const b=$("p"+p+"Badge");
+    if(b){
+      const ended=isBattleEnded();
+      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";
+      b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2";
+    }
+  });
+  const banner=$("phaseBanner");
+  if(banner)banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);
+  renderHudCollapseState();
+  maybePlayNearDeathSound();
+}
 let expandedHudPlayer=0;
 function toggleHudPanel(player){expandedHudPlayer=expandedHudPlayer===player?0:player;renderHudCollapseState()}
 function renderHudCollapseState(){[1,2].forEach(player=>{const hud=$(player===1?"hudP1":"hudP2");const toggle=$(player===1?"hudToggleP1":"hudToggleP2");if(!hud||!toggle)return;const expanded=expandedHudPlayer===player;hud.classList.toggle("collapsed",!expanded);hud.classList.toggle("expanded",expanded);toggle.setAttribute("aria-expanded",String(expanded));toggle.title=expanded?`Ocultar datos de J${player}`:`Mostrar datos de J${player}`;});}
@@ -7803,62 +7830,53 @@ try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("hom
    ============================================================ */
 function initHudCssTool(){
   const tool=document.getElementById('hudCssTool');
-  if(!tool)return;
+  if(!tool||tool.dataset.bound==='1')return;
   const panel=document.getElementById('hudCssToolPanel');
   const toggle=document.getElementById('hudCssToolToggle');
   const close=document.getElementById('hudCssToolClose');
   const reset=document.getElementById('hudCssToolReset');
-  const expand=document.getElementById('hudCssToolExpand');
-  const root=document.documentElement;
-  const storageKey='hallvalla:hud-css-tool:v1';
+  const storageKey='hallvalla:new-status-hud-tool:v1';
   const defaults={
-    '--hud-name-top':{value:10,unit:'px'},
-    '--hud-p1-left':{value:10,unit:'px'},
-    '--hud-p2-right':{value:10,unit:'px'},
-    '--hud-name-scale':{value:100,unit:'scale'},
-    '--hud-name-width':{value:160,unit:'px'},
-    '--hud-name-font':{value:14,unit:'px'},
-    '--hud-mini-panel-width':{value:236,unit:'px'},
-    '--hud-mini-panel-y':{value:12,unit:'px'},
-    '--hud-mini-panel-scale':{value:100,unit:'scale'},
-    '--hud-mini-height':{value:54,unit:'px'},
-    '--hud-mini-label-font':{value:10,unit:'px'},
-    '--hud-mini-value-font':{value:16,unit:'px'},
-    '--hud-mini-gap':{value:8,unit:'px'}
+    '--hud-new-p1-left':{value:52,unit:'px'},
+    '--hud-new-p1-top':{value:20,unit:'px'},
+    '--hud-new-p2-right':{value:52,unit:'px'},
+    '--hud-new-p2-top':{value:20,unit:'px'},
+    '--hud-new-x-nudge':{value:0,unit:'px'},
+    '--hud-new-scale':{value:100,unit:'scale'},
+    '--hud-new-width':{value:230,unit:'px'},
+    '--hud-new-name-font':{value:15,unit:'px'},
+    '--hud-new-stat-font':{value:16,unit:'px'},
+    '--hud-new-mini-height':{value:42,unit:'px'},
+    '--hud-new-gap':{value:6,unit:'px'}
   };
-  function readSaved(){
-    try{return JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}
-    catch(e){return {};}
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch(e){saved={};}
+  function format(name,value,unit){
+    const n=Number(value);
+    if(unit==='scale')return Math.round(n)+'%';
+    if(unit==='px')return `${Math.round(n)}px`;
+    return String(value);
   }
-  function writeSaved(values){
-    try{localStorage.setItem(storageKey,JSON.stringify(values));}
-    catch(e){}
-  }
-  function cssValue(raw,unit){
-    const n=Number(raw);
+  function cssValue(value,unit){
+    const n=Number(value);
     if(unit==='scale')return String(n/100);
-    return `${n}${unit||''}`;
+    if(unit==='px')return `${n}px`;
+    return String(value);
   }
-  function labelValue(raw,unit){
-    const n=Number(raw);
-    if(unit==='scale')return `${Math.round(n)}%`;
-    return `${n}${unit||''}`;
-  }
-  function setVar(name,raw,unit,save=true){
-    root.style.setProperty(name,cssValue(raw,unit));
+  function setVar(name,value,unit,store=true){
+    document.documentElement.style.setProperty(name,cssValue(value,unit));
     const out=tool.querySelector(`[data-hud-output="${name}"]`);
-    if(out)out.textContent=labelValue(raw,unit);
-    if(save){
-      const values=readSaved();
-      values[name]=Number(raw);
-      writeSaved(values);
+    if(out)out.textContent=format(name,value,unit);
+    if(store){
+      saved[name]={value:Number(value),unit};
+      try{localStorage.setItem(storageKey,JSON.stringify(saved));}catch(e){}
     }
   }
-  const saved=readSaved();
+  tool.dataset.bound='1';
   tool.querySelectorAll('[data-hud-var]').forEach(input=>{
     const name=input.dataset.hudVar;
     const unit=input.dataset.unit||defaults[name]?.unit||'';
-    const start=saved[name] ?? defaults[name]?.value ?? input.value;
+    const start=saved[name]?.value ?? defaults[name]?.value ?? input.value;
     input.value=start;
     setVar(name,start,unit,false);
     input.addEventListener('input',()=>setVar(name,input.value,unit,true));
@@ -7872,22 +7890,13 @@ function initHudCssTool(){
   close?.addEventListener('click',()=>openPanel(false));
   reset?.addEventListener('click',()=>{
     try{localStorage.removeItem(storageKey);}catch(e){}
+    saved={};
     tool.querySelectorAll('[data-hud-var]').forEach(input=>{
       const name=input.dataset.hudVar;
       const unit=input.dataset.unit||defaults[name]?.unit||'';
       const val=defaults[name]?.value ?? input.defaultValue ?? input.value;
       input.value=val;
       setVar(name,val,unit,false);
-    });
-  });
-  expand?.addEventListener('click',()=>{
-    ['hudP1','hudP2'].forEach(id=>{
-      const hud=document.getElementById(id);
-      if(hud){hud.classList.remove('collapsed');hud.classList.add('expanded');}
-    });
-    ['hudToggleP1','hudToggleP2'].forEach(id=>{
-      const btn=document.getElementById(id);
-      if(btn)btn.setAttribute('aria-expanded','true');
     });
   });
 }
