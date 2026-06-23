@@ -12136,3 +12136,100 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
+
+/* ============================================================
+   CONTROL MANUAL DE LÍDERES
+   Cambia solo estos valores para ajustar tamaño y posición.
+   Bloque agregado al FINAL de styles.css.
+   ============================================================ */
+
+:root{
+  /* Tamaño general del líder */
+  --leader-size-min: 50px;
+  --leader-size-vh: 6.2vh;
+  --leader-size-max: 72px;
+
+  /* Alto visual del contenedor del líder */
+  --leader-box-min: 70px;
+  --leader-box-vh: 9.4vh;
+  --leader-box-max: 96px;
+
+  /* Posición vertical */
+  --leader-enemy-top: 6.2%;
+  --leader-player-bottom: 3.2%;
+
+  /* Movimiento horizontal general */
+  --leader-x-offset: 0px;
+
+  /* Escala interna del dibujo */
+  --leader-portrait-scale: .78;
+
+  /* Pedestal / óvalo pequeño bajo el líder */
+  --leader-pedestal-scale: .74;
+
+  /* Stats debajo del líder */
+  --leader-stats-y: -2px;
+}
+
+/* Tamaño base */
+.leader-base{
+  width:clamp(var(--leader-size-min), var(--leader-size-vh), var(--leader-size-max)) !important;
+  min-height:clamp(var(--leader-box-min), var(--leader-box-vh), var(--leader-box-max)) !important;
+  transform:translateX(calc(-50% + var(--leader-x-offset))) !important;
+}
+
+/* Posición del líder enemigo */
+.leader-base-north{
+  top:var(--leader-enemy-top) !important;
+}
+
+/* Posición del líder jugador */
+.leader-base-south{
+  bottom:var(--leader-player-bottom) !important;
+}
+
+/* Tamaño interno del personaje */
+.leader-base-portrait{
+  width:calc(92% * var(--leader-portrait-scale)) !important;
+  height:calc(84% * var(--leader-portrait-scale)) !important;
+}
+
+/* Tamaño del pedestal */
+.leader-base-pedestal{
+  width:calc(80% * var(--leader-pedestal-scale)) !important;
+  height:calc(18% * var(--leader-pedestal-scale)) !important;
+}
+
+/* Posición de stats */
+.leader-base-stats{
+  transform:translateY(var(--leader-stats-y)) !important;
+}
+
+/* Ajuste especial si el líder es cavalry */
+.leader-base-cavalry{
+  width:clamp(
+    calc(var(--leader-size-min) + 4px),
+    calc(var(--leader-size-vh) + .6vh),
+    calc(var(--leader-size-max) + 10px)
+  ) !important;
+}
+
+/* Mobile */
+@media(max-width:980px){
+  :root{
+    --leader-size-min: 48px;
+    --leader-size-vh: 6.4vh;
+    --leader-size-max: 68px;
+
+    --leader-box-min: 68px;
+    --leader-box-vh: 9.4vh;
+    --leader-box-max: 92px;
+
+    --leader-enemy-top: 5.8%;
+    --leader-player-bottom: 2.6%;
+
+    --leader-portrait-scale: .84;
+    --leader-pedestal-scale: .78;
+    --leader-stats-y: -1px;
+  }
+}
