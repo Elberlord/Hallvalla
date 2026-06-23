@@ -559,6 +559,41 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
 <div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><div id="inspectText" class="inspect-text"></div><button id="inspectClose" class="btn full">Cerrar</button></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card"><div class="card-inspect-head"><div><h2 id="cardInspectTitle" class="card-inspect-title"></h2><div id="cardInspectSub" class="card-inspect-sub"></div></div><button id="cardInspectX" class="card-inspect-x" type="button" aria-label="Cerrar carta">×</button></div><div id="cardInspectVisual" class="card-inspect-visual"></div><div id="cardInspectStats" class="card-inspect-grid"></div><div id="cardInspectText" class="card-inspect-text"></div><p id="cardInspectReason" class="card-inspect-reason"></p><div class="card-inspect-actions"><button id="cardInspectCancel" class="btn full" type="button">Cancelar</button><button id="cardInspectPlay" class="btn primary full" type="button">Jugar</button></div></div></div>
 <div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Sonido: activado</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
+
+<!-- HUD DEBUG CONTROL: nombres + vida/mano -->
+<div id="hudCssTool" class="hud-css-tool" aria-label="Control visual HUD">
+  <button id="hudCssToolToggle" class="hud-css-tool-toggle" type="button" aria-expanded="false">HUD</button>
+  <div id="hudCssToolPanel" class="hud-css-tool-panel hidden">
+    <div class="hud-css-tool-head">
+      <b>Control HUD</b>
+      <button id="hudCssToolClose" class="hud-css-tool-close" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <div class="hud-css-tool-section">
+      <strong>Nombres jugador / IA</strong>
+      <label><span>Arriba / abajo</span><output data-hud-output="--hud-name-top">10px</output><input data-hud-var="--hud-name-top" type="range" min="0" max="90" step="1" value="10" data-unit="px"></label>
+      <label><span>Jugador izquierda</span><output data-hud-output="--hud-p1-left">10px</output><input data-hud-var="--hud-p1-left" type="range" min="0" max="180" step="1" value="10" data-unit="px"></label>
+      <label><span>IA derecha</span><output data-hud-output="--hud-p2-right">10px</output><input data-hud-var="--hud-p2-right" type="range" min="0" max="180" step="1" value="10" data-unit="px"></label>
+      <label><span>Escala nombres</span><output data-hud-output="--hud-name-scale">100%</output><input data-hud-var="--hud-name-scale" type="range" min="60" max="140" step="1" value="100" data-unit="scale"></label>
+      <label><span>Ancho nombre</span><output data-hud-output="--hud-name-width">160px</output><input data-hud-var="--hud-name-width" type="range" min="110" max="230" step="1" value="160" data-unit="px"></label>
+      <label><span>Tamaño texto</span><output data-hud-output="--hud-name-font">14px</output><input data-hud-var="--hud-name-font" type="range" min="9" max="20" step="1" value="14" data-unit="px"></label>
+    </div>
+    <div class="hud-css-tool-section">
+      <strong>Vida / Mano / Mazo / Honor</strong>
+      <label><span>Ancho panel stats</span><output data-hud-output="--hud-mini-panel-width">236px</output><input data-hud-var="--hud-mini-panel-width" type="range" min="130" max="340" step="1" value="236" data-unit="px"></label>
+      <label><span>Panel stats arriba/abajo</span><output data-hud-output="--hud-mini-panel-y">12px</output><input data-hud-var="--hud-mini-panel-y" type="range" min="0" max="90" step="1" value="12" data-unit="px"></label>
+      <label><span>Escala panel stats</span><output data-hud-output="--hud-mini-panel-scale">100%</output><input data-hud-var="--hud-mini-panel-scale" type="range" min="55" max="150" step="1" value="100" data-unit="scale"></label>
+      <label><span>Alto cajitas</span><output data-hud-output="--hud-mini-height">54px</output><input data-hud-var="--hud-mini-height" type="range" min="28" max="95" step="1" value="54" data-unit="px"></label>
+      <label><span>Texto label</span><output data-hud-output="--hud-mini-label-font">10px</output><input data-hud-var="--hud-mini-label-font" type="range" min="6" max="16" step="1" value="10" data-unit="px"></label>
+      <label><span>Número vida/mano</span><output data-hud-output="--hud-mini-value-font">16px</output><input data-hud-var="--hud-mini-value-font" type="range" min="9" max="28" step="1" value="16" data-unit="px"></label>
+      <label><span>Separación cajitas</span><output data-hud-output="--hud-mini-gap">8px</output><input data-hud-var="--hud-mini-gap" type="range" min="0" max="18" step="1" value="8" data-unit="px"></label>
+    </div>
+    <div class="hud-css-tool-actions">
+      <button id="hudCssToolExpand" type="button">Abrir HUDs</button>
+      <button id="hudCssToolReset" type="button">Reset</button>
+    </div>
+    <p class="hud-css-tool-note">Temporal: se guarda en este navegador. Cuando encuentres los valores finales, los dejamos fijos en CSS.</p>
+  </div>
+</div>
 <script type="module" src="script.js?v=v8-organized-clean"></script>
 </body>
 </html>

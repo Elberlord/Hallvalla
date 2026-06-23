@@ -12368,152 +12368,137 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
+
 /* ============================================================
-   CONTROL MANUAL HUD NOMBRES JUGADOR / IA
-   Poner al FINAL de styles.css
+   CONTROL VISUAL HUD: NOMBRES + VIDA/MANO
+   Agregado temporal para calibrar posición/tamaño en pantalla.
    ============================================================ */
-
 :root{
-  /* Posición general */
-  --hud-name-top: 16px;
-
-  /* HUD jugador izquierda */
-  --hud-p1-left: 34px;
-  --hud-p1-x: 0px;
-  --hud-p1-y: 0px;
-
-  /* HUD IA derecha */
-  --hud-p2-right: 34px;
-  --hud-p2-x: 0px;
-  --hud-p2-y: 0px;
-
-  /* Tamaño caja */
-  --hud-name-width: 150px;
-  --hud-name-height: 34px;
-
-  /* Tamaño texto */
-  --hud-name-font: 14px;
-  --hud-badge-font: 8px;
-
-  /* Tamaño icono / placa pequeña */
-  --hud-badge-width: 42px;
-  --hud-badge-height: 20px;
-
-  /* Separación entre nombre y placa */
-  --hud-header-gap: 6px;
-
-  /* Escala visual completa */
-  --hud-name-scale: 1;
+  --hud-name-top:10px;
+  --hud-p1-left:10px;
+  --hud-p2-right:10px;
+  --hud-name-scale:1;
+  --hud-name-width:160px;
+  --hud-name-font:14px;
+  --hud-badge-font:9px;
+  --hud-mini-panel-width:236px;
+  --hud-mini-panel-y:12px;
+  --hud-mini-panel-scale:1;
+  --hud-mini-height:54px;
+  --hud-mini-label-font:10px;
+  --hud-mini-value-font:16px;
+  --hud-mini-gap:8px;
 }
-
-/* Contenedores principales */
-#hudP1,
-#hudP2{
-  top:var(--hud-name-top) !important;
-  width:auto !important;
-  transform:scale(var(--hud-name-scale)) !important;
-  transform-origin:top center !important;
-  z-index:60 !important;
+#hudP1,#hudP2{
+  top:var(--hud-name-top)!important;
+  width:var(--hud-name-width)!important;
+  min-width:var(--hud-name-width)!important;
+  z-index:34!important;
 }
-
-/* Jugador */
 #hudP1{
-  left:var(--hud-p1-left) !important;
-  right:auto !important;
-  transform:
-    translate(var(--hud-p1-x), var(--hud-p1-y))
-    scale(var(--hud-name-scale)) !important;
-  transform-origin:top left !important;
+  left:var(--hud-p1-left)!important;
+  right:auto!important;
+  transform:scale(var(--hud-name-scale))!important;
+  transform-origin:top left!important;
 }
-
-/* IA */
 #hudP2{
-  right:var(--hud-p2-right) !important;
-  left:auto !important;
-  transform:
-    translate(var(--hud-p2-x), var(--hud-p2-y))
-    scale(var(--hud-name-scale)) !important;
-  transform-origin:top right !important;
+  right:var(--hud-p2-right)!important;
+  left:auto!important;
+  transform:scale(var(--hud-name-scale))!important;
+  transform-origin:top right!important;
 }
-
-/* Caja interna */
-#hudP1 .hud-shell,
-#hudP2 .hud-shell{
-  width:var(--hud-name-width) !important;
-  min-width:var(--hud-name-width) !important;
-  min-height:var(--hud-name-height) !important;
-  padding:4px 6px !important;
-  border-radius:10px !important;
+#hudP1 .hud-name,#hudP2 .hud-name,#p1HudName,#p2HudName{
+  font-size:var(--hud-name-font)!important;
 }
-
-/* Línea nombre + badge */
-#hudP1 .hud-header,
-#hudP2 .hud-header{
-  gap:var(--hud-header-gap) !important;
-  align-items:center !important;
+#hudP1 .hud-badge span,#hudP2 .hud-badge span,#p1Badge,#p2Badge{
+  font-size:var(--hud-badge-font)!important;
 }
-
-/* Nombre */
-#hudP1 .hud-name,
-#hudP2 .hud-name{
-  min-height:var(--hud-name-height) !important;
-  font-size:var(--hud-name-font) !important;
-  line-height:1 !important;
-  padding:2px 4px !important;
+#hudP1 .hud-grid,#hudP1.collapsed .hud-grid,#hudP1.expanded .hud-grid,
+#hudP2 .hud-grid,#hudP2.collapsed .hud-grid,#hudP2.expanded .hud-grid{
+  top:calc(100% + var(--hud-mini-panel-y))!important;
+  width:var(--hud-mini-panel-width)!important;
+  gap:var(--hud-mini-gap)!important;
+  transform:translateY(-8px) scale(calc(var(--hud-mini-panel-scale) * .96))!important;
+  transform-origin:top left!important;
 }
-
-/* Texto dentro del nombre */
-#p1HudName,
-#p2HudName{
-  font-size:var(--hud-name-font) !important;
-  line-height:1 !important;
-  white-space:nowrap !important;
+#hudP2 .hud-grid,#hudP2.collapsed .hud-grid,#hudP2.expanded .hud-grid{
+  transform-origin:top right!important;
 }
-
-/* Badge de turno / espera */
-#hudP1 .hud-badge,
-#hudP2 .hud-badge{
-  width:var(--hud-badge-width) !important;
-  min-width:var(--hud-badge-width) !important;
-  height:var(--hud-badge-height) !important;
-  min-height:var(--hud-badge-height) !important;
-  font-size:var(--hud-badge-font) !important;
-  padding:1px 3px !important;
+#hudP1.expanded .hud-grid,#hudP2.expanded .hud-grid{
+  transform:translateY(0) scale(var(--hud-mini-panel-scale))!important;
 }
-
-/* Texto del badge */
-#p1Badge,
-#p2Badge{
-  font-size:var(--hud-badge-font) !important;
-  line-height:1 !important;
-  white-space:nowrap !important;
+#hudP1 .hud-mini,#hudP2 .hud-mini{
+  min-height:var(--hud-mini-height)!important;
 }
-
-/* Cuando el HUD está colapsado, que no crezca raro */
-#hudP1.collapsed .hud-grid,
-#hudP2.collapsed .hud-grid{
-  display:none !important;
+#hudP1 .hud-mini .label,#hudP2 .hud-mini .label{
+  font-size:var(--hud-mini-label-font)!important;
 }
-
-/* Ajuste móvil */
+#hudP1 .hud-mini strong,#hudP2 .hud-mini strong,
+#p1Life,#p1Hand,#p1Deck,#p1Honor,#p2Life,#p2Hand,#p2Deck,#p2Honor{
+  font-size:var(--hud-mini-value-font)!important;
+}
+.hud-css-tool{
+  position:fixed;
+  z-index:9999;
+  right:18px;
+  top:92px;
+  font-family:Georgia,serif;
+  color:#fff1ca;
+}
+.hud-css-tool-toggle{
+  min-width:66px;
+  height:42px;
+  border-radius:999px;
+  border:1px solid rgba(255,209,102,.62);
+  background:linear-gradient(180deg,rgba(38,26,15,.94),rgba(10,8,6,.94));
+  color:#ffe2a2;
+  font-weight:900;
+  box-shadow:0 0 18px rgba(255,209,102,.14),0 12px 26px rgba(0,0,0,.45);
+  cursor:pointer;
+}
+.hud-css-tool-panel{
+  position:absolute;
+  right:0;
+  top:50px;
+  width:min(350px,calc(100vw - 32px));
+  max-height:calc(100vh - 125px);
+  overflow:auto;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,209,102,.42);
+  background:linear-gradient(180deg,rgba(30,20,13,.97),rgba(8,7,6,.96));
+  box-shadow:0 22px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,245,220,.06);
+  backdrop-filter:blur(10px);
+}
+.hud-css-tool-panel.hidden{display:none!important;}
+.hud-css-tool-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:16px;}
+.hud-css-tool-close{
+  width:30px;height:30px;border-radius:999px;
+  border:1px solid rgba(255,209,102,.45);
+  background:rgba(0,0,0,.28);color:#ffe5ad;font-weight:900;cursor:pointer;
+}
+.hud-css-tool-section{
+  display:grid;
+  gap:8px;
+  padding:10px 0;
+  border-top:1px solid rgba(255,209,102,.18);
+}
+.hud-css-tool-section strong{color:#ffe5ad;font-size:13px;}
+.hud-css-tool label{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;font-size:12px;font-weight:900;}
+.hud-css-tool output{color:#78e8ff;font-family:Arial,sans-serif;font-weight:900;}
+.hud-css-tool input[type=range]{grid-column:1 / -1;width:100%;accent-color:#ffd166;}
+.hud-css-tool-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.hud-css-tool-actions button{
+  border:1px solid rgba(255,209,102,.45);
+  border-radius:12px;
+  padding:9px 10px;
+  background:rgba(255,209,102,.08);
+  color:#ffe2a2;
+  font-weight:900;
+  cursor:pointer;
+}
+.hud-css-tool-note{font-size:11px;line-height:1.25;color:#ccb990;margin:10px 0 0;}
 @media(max-width:980px){
-  :root{
-    --hud-name-top: 14px;
-
-    --hud-p1-left: 18px;
-    --hud-p2-right: 18px;
-
-    --hud-name-width: 126px;
-    --hud-name-height: 30px;
-
-    --hud-name-font: 12px;
-    --hud-badge-font: 7px;
-
-    --hud-badge-width: 36px;
-    --hud-badge-height: 18px;
-
-    --hud-header-gap: 4px;
-    --hud-name-scale: .92;
-  }
+  .hud-css-tool{right:10px;top:78px;}
+  .hud-css-tool-panel{width:min(320px,calc(100vw - 20px));}
 }
-

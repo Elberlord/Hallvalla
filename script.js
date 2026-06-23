@@ -7795,3 +7795,105 @@ onAuthStateChanged(auth,async u=>{
 signInAnonymously(auth).catch(e=>setText("lobbyStatus",e.message));
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
+
+
+/* ============================================================
+   HUD CSS TOOL: panel visual temporal para calibrar HUDs.
+   No toca combate, IA, cartas ni lógica del duelo.
+   ============================================================ */
+function initHudCssTool(){
+  const tool=document.getElementById('hudCssTool');
+  if(!tool)return;
+  const panel=document.getElementById('hudCssToolPanel');
+  const toggle=document.getElementById('hudCssToolToggle');
+  const close=document.getElementById('hudCssToolClose');
+  const reset=document.getElementById('hudCssToolReset');
+  const expand=document.getElementById('hudCssToolExpand');
+  const root=document.documentElement;
+  const storageKey='hallvalla:hud-css-tool:v1';
+  const defaults={
+    '--hud-name-top':{value:10,unit:'px'},
+    '--hud-p1-left':{value:10,unit:'px'},
+    '--hud-p2-right':{value:10,unit:'px'},
+    '--hud-name-scale':{value:100,unit:'scale'},
+    '--hud-name-width':{value:160,unit:'px'},
+    '--hud-name-font':{value:14,unit:'px'},
+    '--hud-mini-panel-width':{value:236,unit:'px'},
+    '--hud-mini-panel-y':{value:12,unit:'px'},
+    '--hud-mini-panel-scale':{value:100,unit:'scale'},
+    '--hud-mini-height':{value:54,unit:'px'},
+    '--hud-mini-label-font':{value:10,unit:'px'},
+    '--hud-mini-value-font':{value:16,unit:'px'},
+    '--hud-mini-gap':{value:8,unit:'px'}
+  };
+  function readSaved(){
+    try{return JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}
+    catch(e){return {};}
+  }
+  function writeSaved(values){
+    try{localStorage.setItem(storageKey,JSON.stringify(values));}
+    catch(e){}
+  }
+  function cssValue(raw,unit){
+    const n=Number(raw);
+    if(unit==='scale')return String(n/100);
+    return `${n}${unit||''}`;
+  }
+  function labelValue(raw,unit){
+    const n=Number(raw);
+    if(unit==='scale')return `${Math.round(n)}%`;
+    return `${n}${unit||''}`;
+  }
+  function setVar(name,raw,unit,save=true){
+    root.style.setProperty(name,cssValue(raw,unit));
+    const out=tool.querySelector(`[data-hud-output="${name}"]`);
+    if(out)out.textContent=labelValue(raw,unit);
+    if(save){
+      const values=readSaved();
+      values[name]=Number(raw);
+      writeSaved(values);
+    }
+  }
+  const saved=readSaved();
+  tool.querySelectorAll('[data-hud-var]').forEach(input=>{
+    const name=input.dataset.hudVar;
+    const unit=input.dataset.unit||defaults[name]?.unit||'';
+    const start=saved[name] ?? defaults[name]?.value ?? input.value;
+    input.value=start;
+    setVar(name,start,unit,false);
+    input.addEventListener('input',()=>setVar(name,input.value,unit,true));
+  });
+  function openPanel(open){
+    if(!panel)return;
+    panel.classList.toggle('hidden',!open);
+    if(toggle)toggle.setAttribute('aria-expanded',String(open));
+  }
+  toggle?.addEventListener('click',()=>openPanel(panel.classList.contains('hidden')));
+  close?.addEventListener('click',()=>openPanel(false));
+  reset?.addEventListener('click',()=>{
+    try{localStorage.removeItem(storageKey);}catch(e){}
+    tool.querySelectorAll('[data-hud-var]').forEach(input=>{
+      const name=input.dataset.hudVar;
+      const unit=input.dataset.unit||defaults[name]?.unit||'';
+      const val=defaults[name]?.value ?? input.defaultValue ?? input.value;
+      input.value=val;
+      setVar(name,val,unit,false);
+    });
+  });
+  expand?.addEventListener('click',()=>{
+    ['hudP1','hudP2'].forEach(id=>{
+      const hud=document.getElementById(id);
+      if(hud){hud.classList.remove('collapsed');hud.classList.add('expanded');}
+    });
+    ['hudToggleP1','hudToggleP2'].forEach(id=>{
+      const btn=document.getElementById(id);
+      if(btn)btn.setAttribute('aria-expanded','true');
+    });
+  });
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',initHudCssTool,{once:true});
+}else{
+  initHudCssTool();
+}
