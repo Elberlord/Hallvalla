@@ -12233,3 +12233,131 @@ El CSS original se conserva para no romper visuales. El bloque final
     --leader-stats-y: -1px;
   }
 }
+
+
+/* ============================================================
+   PANEL VISUAL DE CONTROL DE LÍDERES
+   Botón flotante LÍDER. Solo afecta variables CSS locales.
+   ============================================================ */
+.leader-css-tools-toggle{
+  position:fixed!important;
+  right:14px!important;
+  top:112px!important;
+  z-index:999999!important;
+  width:58px!important;
+  height:34px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(255,220,132,.55)!important;
+  background:linear-gradient(180deg,rgba(40,25,10,.98),rgba(13,9,5,.96))!important;
+  color:#ffe7a6!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.55),0 0 14px rgba(255,209,102,.16)!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+}
+.leader-css-tools-toggle:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.62),0 0 18px rgba(255,209,102,.24)!important;
+}
+.leader-css-tools{
+  position:fixed!important;
+  right:14px!important;
+  top:154px!important;
+  z-index:999998!important;
+  width:min(310px,calc(100vw - 28px))!important;
+  max-height:calc(100vh - 174px)!important;
+  overflow:auto!important;
+  padding:12px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(255,220,132,.42)!important;
+  background:linear-gradient(180deg,rgba(24,16,9,.98),rgba(7,6,5,.97))!important;
+  color:#ffe7a6!important;
+  box-shadow:0 20px 70px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,245,205,.05)!important;
+  display:none!important;
+  pointer-events:auto!important;
+  font-family:inherit!important;
+}
+.leader-css-tools.show{display:block!important}
+.leader-css-tools-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-bottom:8px!important;
+}
+.leader-css-tools h3{
+  margin:0!important;
+  color:#fff0bf!important;
+  font-size:14px!important;
+  letter-spacing:.02em!important;
+}
+#leaderCssCloseBtn{
+  width:28px!important;
+  height:28px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(255,220,132,.35)!important;
+  background:rgba(0,0,0,.28)!important;
+  color:#ffe7a6!important;
+  font-size:18px!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+.leader-css-tools label{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:10px 0 4px!important;
+  color:#f9dda0!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+.leader-css-tools output{
+  color:#7ee7ff!important;
+  font-weight:900!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.leader-css-tools input[type="range"]{
+  width:100%!important;
+  accent-color:#ffd166!important;
+  cursor:pointer!important;
+}
+.leader-css-tools-row{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  margin-top:12px!important;
+}
+.leader-css-tools-row button{
+  min-height:34px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(255,220,132,.38)!important;
+  background:rgba(255,209,102,.10)!important;
+  color:#ffe7a6!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+.leader-css-tools-row button:hover{
+  background:rgba(255,209,102,.18)!important;
+}
+.leader-css-tools-note{
+  margin-top:10px!important;
+  color:rgba(255,231,166,.68)!important;
+  font-size:10px!important;
+  line-height:1.35!important;
+}
+@media(max-width:760px){
+  .leader-css-tools-toggle{
+    top:82px!important;
+    right:10px!important;
+  }
+  .leader-css-tools{
+    top:122px!important;
+    right:10px!important;
+    width:min(292px,calc(100vw - 20px))!important;
+    max-height:calc(100vh - 136px)!important;
+  }
+}

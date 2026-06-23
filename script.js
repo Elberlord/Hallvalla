@@ -7755,19 +7755,27 @@ signInAnonymously(auth).catch(e=>setText("lobbyStatus",e.message));
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
 
 
-/* Patch 70: controles de tamaño para líderes fijos + refresco CSS */
+/* Patch 70: panel visual para ajustar líderes en vivo */
 const LEADER_CSS_TOOL_DEFAULTS={
-  scale:1,
-  northOffset:0,
-  southOffset:0
+  sizeVh:6.2,
+  portraitScale:.78,
+  enemyTop:6.2,
+  playerBottom:3.2,
+  xOffset:0,
+  pedestalScale:.74,
+  statsY:-2
 };
 function getLeaderCssToolSettings(){
   try{
     const saved=JSON.parse(localStorage.getItem("hallvallaLeaderCssTools")||"{}");
     return {
-      scale:Number.isFinite(Number(saved.scale))?Number(saved.scale):LEADER_CSS_TOOL_DEFAULTS.scale,
-      northOffset:Number.isFinite(Number(saved.northOffset))?Number(saved.northOffset):LEADER_CSS_TOOL_DEFAULTS.northOffset,
-      southOffset:Number.isFinite(Number(saved.southOffset))?Number(saved.southOffset):LEADER_CSS_TOOL_DEFAULTS.southOffset
+      sizeVh:Number.isFinite(Number(saved.sizeVh))?Number(saved.sizeVh):LEADER_CSS_TOOL_DEFAULTS.sizeVh,
+      portraitScale:Number.isFinite(Number(saved.portraitScale))?Number(saved.portraitScale):LEADER_CSS_TOOL_DEFAULTS.portraitScale,
+      enemyTop:Number.isFinite(Number(saved.enemyTop))?Number(saved.enemyTop):LEADER_CSS_TOOL_DEFAULTS.enemyTop,
+      playerBottom:Number.isFinite(Number(saved.playerBottom))?Number(saved.playerBottom):LEADER_CSS_TOOL_DEFAULTS.playerBottom,
+      xOffset:Number.isFinite(Number(saved.xOffset))?Number(saved.xOffset):LEADER_CSS_TOOL_DEFAULTS.xOffset,
+      pedestalScale:Number.isFinite(Number(saved.pedestalScale))?Number(saved.pedestalScale):LEADER_CSS_TOOL_DEFAULTS.pedestalScale,
+      statsY:Number.isFinite(Number(saved.statsY))?Number(saved.statsY):LEADER_CSS_TOOL_DEFAULTS.statsY
     };
   }catch(_){
     return {...LEADER_CSS_TOOL_DEFAULTS};
@@ -7777,15 +7785,15 @@ function saveLeaderCssToolSettings(settings){
   localStorage.setItem("hallvallaLeaderCssTools",JSON.stringify(settings));
 }
 function applyLeaderCssToolSettings(settings=getLeaderCssToolSettings()){
-  document.documentElement.style.setProperty("--leaderTokenScale",String(settings.scale));
-  document.documentElement.style.setProperty("--leaderNorthOffset",`${settings.northOffset}px`);
-  document.documentElement.style.setProperty("--leaderSouthOffset",`${settings.southOffset}px`);
-  const layer=document.getElementById("leaderBasesLayer");
-  if(layer){
-    layer.style.setProperty("--leaderTokenScale",String(settings.scale));
-    layer.style.setProperty("--leaderNorthOffset",`${settings.northOffset}px`);
-    layer.style.setProperty("--leaderSouthOffset",`${settings.southOffset}px`);
-  }
+  const root=document.documentElement;
+  root.style.setProperty("--leader-size-vh",`${settings.sizeVh}vh`);
+  root.style.setProperty("--leader-box-vh",`${Math.max(6,settings.sizeVh+3.2)}vh`);
+  root.style.setProperty("--leader-portrait-scale",String(settings.portraitScale));
+  root.style.setProperty("--leader-enemy-top",`${settings.enemyTop}%`);
+  root.style.setProperty("--leader-player-bottom",`${settings.playerBottom}%`);
+  root.style.setProperty("--leader-x-offset",`${settings.xOffset}px`);
+  root.style.setProperty("--leader-pedestal-scale",String(settings.pedestalScale));
+  root.style.setProperty("--leader-stats-y",`${settings.statsY}px`);
 }
 function refreshHallvallaCss(){
   const links=[...document.querySelectorAll('link[rel="stylesheet"]')].filter(link=>{
@@ -7798,90 +7806,111 @@ function refreshHallvallaCss(){
     const clean=raw.split("?")[0];
     link.setAttribute("href",`${clean}?cssv=${stamp}`);
   });
-  applyLeaderCssToolSettings();
+  setTimeout(()=>applyLeaderCssToolSettings(),60);
   return links.length;
 }
 function setupLeaderCssTools(){
   if(document.getElementById("leaderCssTools"))return;
+
   const toggle=document.createElement("button");
   toggle.id="leaderCssToolsToggle";
   toggle.className="leader-css-tools-toggle";
   toggle.type="button";
-  toggle.textContent="CSS";
-  toggle.title="Ajustar fichas de líderes y refrescar CSS";
+  toggle.textContent="LÍDER";
+  toggle.title="Abrir controles visuales de líderes";
   document.body.appendChild(toggle);
 
   const panel=document.createElement("section");
   panel.id="leaderCssTools";
   panel.className="leader-css-tools";
   panel.innerHTML=`
-    <h3>Fichas de líderes</h3>
-    <label>Escala general <output id="leaderScaleOut"></output></label>
-    <input id="leaderScaleRange" type="range" min="0.45" max="1.20" step="0.01">
-    <label>Enemigo arriba/abajo <output id="leaderNorthOut"></output></label>
-    <input id="leaderNorthRange" type="range" min="-80" max="80" step="1">
-    <label>Jugador arriba/abajo <output id="leaderSouthOut"></output></label>
-    <input id="leaderSouthRange" type="range" min="-80" max="80" step="1">
+    <div class="leader-css-tools-head">
+      <h3>Control de líderes</h3>
+      <button id="leaderCssCloseBtn" type="button" aria-label="Cerrar">×</button>
+    </div>
+
+    <label>Tamaño general <output id="leaderSizeOut"></output></label>
+    <input id="leaderSizeRange" type="range" min="4.5" max="9.5" step="0.1">
+
+    <label>Escala del dibujo <output id="leaderPortraitOut"></output></label>
+    <input id="leaderPortraitRange" type="range" min="0.55" max="1.10" step="0.01">
+
+    <label>Enemigo: arriba/abajo <output id="leaderEnemyOut"></output></label>
+    <input id="leaderEnemyRange" type="range" min="1" max="14" step="0.1">
+
+    <label>Jugador: arriba/abajo <output id="leaderPlayerOut"></output></label>
+    <input id="leaderPlayerRange" type="range" min="0" max="12" step="0.1">
+
+    <label>Movimiento horizontal <output id="leaderXOut"></output></label>
+    <input id="leaderXRange" type="range" min="-120" max="120" step="1">
+
+    <label>Pedestal <output id="leaderPedestalOut"></output></label>
+    <input id="leaderPedestalRange" type="range" min="0.35" max="1.15" step="0.01">
+
+    <label>Stats arriba/abajo <output id="leaderStatsOut"></output></label>
+    <input id="leaderStatsRange" type="range" min="-28" max="22" step="1">
+
     <div class="leader-css-tools-row">
       <button id="leaderCssRefreshBtn" type="button">Refrescar CSS</button>
       <button id="leaderCssResetBtn" type="button">Reset</button>
     </div>
-    <div class="leader-css-tools-note">Estos controles solo ajustan vista local. Para dejarlo fijo en el repo, copia los valores finales al CSS.</div>
+    <div class="leader-css-tools-note">Temporal: guarda en este navegador. Cuando encuentres los valores finales, se pueden fijar en styles.css.</div>
   `;
   document.body.appendChild(panel);
 
-  const scale=$("leaderScaleRange");
-  const north=$("leaderNorthRange");
-  const south=$("leaderSouthRange");
-  const scaleOut=$("leaderScaleOut");
-  const northOut=$("leaderNorthOut");
-  const southOut=$("leaderSouthOut");
-  const refreshBtn=$("leaderCssRefreshBtn");
-  const resetBtn=$("leaderCssResetBtn");
+  const controls={
+    sizeVh:{input:$("leaderSizeRange"),out:$("leaderSizeOut"),format:v=>`${v.toFixed(1)}vh`},
+    portraitScale:{input:$("leaderPortraitRange"),out:$("leaderPortraitOut"),format:v=>`${Math.round(v*100)}%`},
+    enemyTop:{input:$("leaderEnemyRange"),out:$("leaderEnemyOut"),format:v=>`${v.toFixed(1)}%`},
+    playerBottom:{input:$("leaderPlayerRange"),out:$("leaderPlayerOut"),format:v=>`${v.toFixed(1)}%`},
+    xOffset:{input:$("leaderXRange"),out:$("leaderXOut"),format:v=>`${Math.round(v)}px`},
+    pedestalScale:{input:$("leaderPedestalRange"),out:$("leaderPedestalOut"),format:v=>`${Math.round(v*100)}%`},
+    statsY:{input:$("leaderStatsRange"),out:$("leaderStatsOut"),format:v=>`${Math.round(v)}px`}
+  };
 
   function paint(settings=getLeaderCssToolSettings()){
-    scale.value=String(settings.scale);
-    north.value=String(settings.northOffset);
-    south.value=String(settings.southOffset);
-    scaleOut.textContent=`${Math.round(settings.scale*100)}%`;
-    northOut.textContent=`${settings.northOffset}px`;
-    southOut.textContent=`${settings.southOffset}px`;
+    Object.entries(controls).forEach(([key,cfg])=>{
+      cfg.input.value=String(settings[key]);
+      cfg.out.textContent=cfg.format(Number(settings[key]));
+    });
     applyLeaderCssToolSettings(settings);
   }
   function readAndApply(){
-    const settings={
-      scale:Number(scale.value),
-      northOffset:Number(north.value),
-      southOffset:Number(south.value)
-    };
+    const settings={};
+    Object.entries(controls).forEach(([key,cfg])=>settings[key]=Number(cfg.input.value));
     saveLeaderCssToolSettings(settings);
     paint(settings);
   }
-  ["input","change"].forEach(evt=>{
-    scale.addEventListener(evt,readAndApply);
-    north.addEventListener(evt,readAndApply);
-    south.addEventListener(evt,readAndApply);
+  Object.values(controls).forEach(cfg=>{
+    ["input","change"].forEach(evt=>cfg.input.addEventListener(evt,readAndApply));
   });
   toggle.addEventListener("click",ev=>{
     ev.stopPropagation();
     panel.classList.toggle("show");
   });
-  refreshBtn.addEventListener("click",ev=>{
+  $("leaderCssCloseBtn").addEventListener("click",ev=>{
     ev.preventDefault();
-    ev.stopPropagation();
-    const n=refreshHallvallaCss();
-    refreshBtn.textContent=n?"CSS OK":"Sin CSS";
-    setTimeout(()=>refreshBtn.textContent="Refrescar CSS",900);
+    panel.classList.remove("show");
   });
-  resetBtn.addEventListener("click",ev=>{
+  $("leaderCssRefreshBtn").addEventListener("click",ev=>{
     ev.preventDefault();
-    ev.stopPropagation();
-    saveLeaderCssToolSettings({...LEADER_CSS_TOOL_DEFAULTS});
+    const n=refreshHallvallaCss();
+    ev.currentTarget.textContent=n?"CSS OK":"Sin CSS";
+    setTimeout(()=>ev.currentTarget.textContent="Refrescar CSS",900);
+  });
+  $("leaderCssResetBtn").addEventListener("click",ev=>{
+    ev.preventDefault();
+    localStorage.removeItem("hallvallaLeaderCssTools");
     paint({...LEADER_CSS_TOOL_DEFAULTS});
   });
   paint();
 }
-document.addEventListener("DOMContentLoaded",()=>{
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",()=>{
+    setupLeaderCssTools();
+    applyLeaderCssToolSettings();
+  });
+}else{
   setupLeaderCssTools();
   applyLeaderCssToolSettings();
-});
+}
