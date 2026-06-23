@@ -1,4 +1,47 @@
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_REBUILD_3FILES_FULL_CARDS_DEF_CLEAN_2026_06_23";
+/*
+================================================================================
+HALLVALLA ORGANIZED V2
+================================================================================
+Archivo único conservado para GitHub Pages.
+
+REGLA DE ESTA VERSIÓN:
+- No se borran cartas.
+- No se elimina aventura.
+- No se cambia Firebase todavía.
+- No se convierte el juego en demo.
+- DEF no debe crear FX global.
+- guard_buff / defend_stance no deben pintar overlays del tablero.
+
+MAPA INTERNO DEL SCRIPT:
+01_BOOT_CONFIG_IMPORTS       Firebase, constantes globales, helpers DOM.
+02_ASSET_DATABASE            portraits, líderes, cartas, rutas de assets.
+03_LEADER_SYSTEM             niveles, buffs, habilidades Nv.5.
+04_RUNTIME_STATE_PHASES      estado global, fases, turnos, selección.
+05_FX_ENGINE                 FX centralizado, defensa, dodge, status, destroy.
+06_AUDIO_SETTINGS            audio, música, sfx, settings.
+07_CARD_DATABASE             cartas base, bestias, especiales, aventura.
+08_PROFILE_COLLECTION_DECK   perfil, colección, deck, progreso.
+09_RENDER_CORE               render principal, grid, board, HUD.
+10_UNIT_LEADER_RENDER        render de unidades, líderes y modales.
+11_COMBAT_ENGINE             movimiento, ataque, daño, guardia, DEF.
+12_CARD_EFFECTS              spells, buffs, curación, efectos especiales.
+13_AI_ENGINE                 IA local/adventure/online.
+14_ADVENTURE_ENGINE          aventura, recompensas, historia.
+15_UI_EVENTS_BOOT            listeners, navegación, inicialización.
+
+IMPORTANTE:
+Este archivo está organizado con separadores seguros, pero no se reordenaron
+bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
+================================================================================
+*/
+
+
+/*
+-------------------------------------------------------------------------------
+01_BOOT_CONFIG_IMPORTS
+-------------------------------------------------------------------------------
+*/
+const HALLVALLA_BUILD_VERSION="v8_ORGANIZED_3FILES_FULL_CARDS_DEF_CLEAN_2026_06_23";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -29,6 +72,12 @@ function handleDirectBoardTargetEvent(ev,x,y){
 }
 function showEl(id){const el=$(id);if(el)el.classList.remove("hidden");}
 function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
+
+/*
+-------------------------------------------------------------------------------
+02_ASSET_DATABASE
+-------------------------------------------------------------------------------
+*/
 const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior_3d.png",archer:"assets/leaders/leader_archer_3d.png",mage:"assets/leaders/leader_mage_3d.png",axe:"assets/leaders/leader_axe_3d.png",cavalry:"assets/leaders/leader_cavalry_3d.png",assassin:"assets/leaders/leader_assassin_3d.png",beastmaster:"assets/leaders/leader_beastmaster_3d.png"};
 const CARD_PORTRAITS={
   richard:"assets/cards/basic/richard_lionheart.webp",
@@ -89,6 +138,12 @@ const CARD_PORTRAITS={
   trackingSmoke:"assets/cards/beasts/tracking_smoke.webp",
   ropeCage:"assets/cards/beasts/rope_cage.webp"
 };
+
+/*
+-------------------------------------------------------------------------------
+03_LEADER_SYSTEM
+-------------------------------------------------------------------------------
+*/
 const LEADER_DATA={
   warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo: AT 3, GD 4, RG 1. Infantería pesada + VIDA/GUARDIA."},
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras."},
@@ -218,6 +273,12 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
   return normalizeLeaderLevel(leader?.leaderLevel||1)>=5?(leader?.leaderAbility||""):"";
 }
 
+
+/*
+-------------------------------------------------------------------------------
+04_RUNTIME_STATE_PHASES
+-------------------------------------------------------------------------------
+*/
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",nearDeathSoundPlayedKeys=new Set();
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 const TURN_PHASES=["draw","main","actions","last","end"];
@@ -266,6 +327,12 @@ function maybeShowPhaseAnnouncement(){
   showPhaseAnnouncement(info);
 }
 
+
+/*
+-------------------------------------------------------------------------------
+05_FX_ENGINE
+-------------------------------------------------------------------------------
+*/
 function clearBattleFxLayer(){
   const layer=$("battleFxLayer");
   if(layer)layer.innerHTML="";
@@ -580,6 +647,12 @@ function maybePlayBattleFx(prevPub,nextPub){
 }
 
 
+
+/*
+-------------------------------------------------------------------------------
+06_AUDIO_SETTINGS
+-------------------------------------------------------------------------------
+*/
 const GAME_SETTINGS_KEY="hallvalla_game_settings";
 let gameSettings=loadGameSettings();
 let currentMusic=null,currentMusicName="",audioUnlocked=false;
@@ -587,6 +660,12 @@ function loadGameSettings(){try{return{sound:true,music:false,sfx:true,musicVolu
 function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stringify(gameSettings));}catch(e){}}
 
 
+
+/*
+-------------------------------------------------------------------------------
+08_PROFILE_COLLECTION_DECK
+-------------------------------------------------------------------------------
+*/
 const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_player_collection",
   "hallvalla_current_deck",
@@ -710,6 +789,12 @@ function getAttackSoundForUnit(unit){
   if(cls==="fx-heroic"||cls==="fx-glorious"||cls==="fx-epic"||cls==="fx-mythic")return "attack_heroic";
   return "attack_sword";
 }
+
+/*
+-------------------------------------------------------------------------------
+07_CARD_DATABASE
+-------------------------------------------------------------------------------
+*/
 const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:2,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:2,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:4,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:2,hp:2,atk:1,guard:0,dex:4,agi:3,mov:2,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. La Precisión se calcula y se consume normalmente. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
@@ -5484,6 +5569,15 @@ async function activateUnitEffect(u,choice=null){
   clearSelection();
 }
 
+
+/*
+-------------------------------------------------------------------------------
+11_COMBAT_ENGINE_DEF_ENTRY
+-------------------------------------------------------------------------------
+*/
+// DEF limpio: estado lógico solamente.
+// No debe crear defenseFxEvent ni floatFxEvent.
+// Esto evita el óvalo/bloque gigante que se generaba en la capa FX.
 async function activateDefenseStance(u){
   if(!u||u.owner!==myPlayer||!isMyTurn())return setHint("Solo puedes usar DEF con tus invocaciones.");
   if(!isUnitActionWindow(u))return setHint(unitActionPhaseHint("DEF"));
@@ -5545,6 +5639,12 @@ function handleUnitContextAction(action){
   render();
 }
 
+
+/*
+-------------------------------------------------------------------------------
+09_RENDER_CORE
+-------------------------------------------------------------------------------
+*/
 function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
 
 function getVisibleHonorState(){
@@ -5932,6 +6032,12 @@ function ensureLeaderBasesLayer(){
   }
   return layer;
 }
+
+/*
+-------------------------------------------------------------------------------
+10_UNIT_LEADER_RENDER
+-------------------------------------------------------------------------------
+*/
 function renderLeaderBases(){
   const layer=ensureLeaderBasesLayer();
   if(!layer||!publicState)return;
@@ -7630,6 +7736,12 @@ const joinInputEl = document.getElementById("joinCode");
 if(joinInputEl){
   joinInputEl.addEventListener("input",()=>{joinInputEl.value = joinInputEl.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8);});
 }
+
+/*
+-------------------------------------------------------------------------------
+15_UI_EVENTS_BOOT
+-------------------------------------------------------------------------------
+*/
 onAuthStateChanged(auth,async u=>{
   if(u){
     uid=u.uid;

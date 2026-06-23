@@ -1,3 +1,25 @@
+/*
+================================================================================
+HALLVALLA STYLES ORGANIZED V2
+================================================================================
+Mapa recomendado:
+01_BASE_LAYOUT          estilos generales, body, panels.
+02_HOME_LOBBY           home, lobby, selector.
+03_BATTLEFIELD_GRID     campo, grid, celdas.
+04_UNITS                unidades normales.
+05_LEADERS              líderes 3D y bases.
+06_CARDS_HAND           cartas, mano, deck.
+07_MODALS               modales, detalles, overlays.
+08_FX                   efectos visuales.
+09_MOBILE               responsive.
+10_DEF_LEADER_FIX       contrato limpio DEF/líder al final.
+
+Nota:
+El CSS original se conserva para no romper visuales. El bloque final
+10_DEF_LEADER_FIX tiene prioridad con !important donde hacía falta.
+================================================================================
+*/
+
 :root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2;--p1:#66d9ff;--p2:#ff74b8;--ok:#70e08a;--bad:#ef476f}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#090604}button{font-family:inherit}
 
@@ -11953,7 +11975,7 @@
 
 
 /* ============================================================
-   HallValla v8 - 3 files rebuild clean contract
+   10_DEF_LEADER_FIX - v8 organized clean contract
    Objetivo:
    - Mantener cartas, líderes 3D, UI y assets actuales.
    - DEF es estado lógico, no FX global.
