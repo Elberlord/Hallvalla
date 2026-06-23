@@ -12281,7 +12281,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:none!important;
   overflow:visible!important;
   z-index:12!important;
-  pointer-events:none!important;
+  pointer-events:auto!important;
 }
 .leader-base > .leader-status-bubbles .leader-status-seal,
 .leader-base > .leader-status-bubbles .unit-status-seal{
@@ -12296,8 +12296,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   padding:0!important;
   margin:0!important;
   border-radius:999px!important;
-  pointer-events:none!important;
-  cursor:default!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
   overflow:visible!important;
 }
 .leader-base > .leader-status-bubbles .unit-status-seal::after{

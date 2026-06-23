@@ -5796,7 +5796,7 @@ function renderLeaderStatusSeal(entry,idx=0){
   const kind=escapeHtml(entry?.kind||"neutral");
   const shortText=getUnitStatusSealShortText(entry);
   const title=escapeHtml(`${entry?.name||entry?.label||"Estado"}: ${entry?.desc||""}`.trim());
-  return `<span class="leader-status-seal unit-status-seal ${kind}" data-status-index="${idx}" title="${title}" aria-label="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</span>`;
+  return `<span class="leader-status-seal unit-status-seal ${kind}" role="button" tabindex="0" data-status-index="${idx}" title="${title}" aria-label="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</span>`;
 }
 function getLeaderStatusBubblesHtml(u){
   if(!u)return "";
