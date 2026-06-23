@@ -12646,3 +12646,64 @@ El CSS original se conserva para no romper visuales. El bloque final
   .player-status-turn{min-width:42px;height:19px;font-size:8px;padding:0 6px;}
   .player-status-mini span{font-size:8px;}
 }
+
+/* ============================================================
+   PATCH PRIORIDAD CONTROL NUEVO HUD
+   Corrige conflicto con controles/HUD viejos que usaban !important.
+   ============================================================ */
+#hudP1.player-status-hud,
+#hudP2.player-status-hud{
+  width:var(--hud-new-width)!important;
+  min-width:0!important;
+  max-width:none!important;
+  z-index:72!important;
+}
+
+#hudP1.player-status-hud{
+  left:var(--hud-new-p1-left)!important;
+  right:auto!important;
+  top:var(--hud-new-p1-top)!important;
+  transform:translateX(var(--hud-new-x-nudge)) scale(var(--hud-new-scale))!important;
+  transform-origin:top left!important;
+}
+
+#hudP2.player-status-hud{
+  right:var(--hud-new-p2-right)!important;
+  left:auto!important;
+  top:var(--hud-new-p2-top)!important;
+  transform:translateX(calc(var(--hud-new-x-nudge) * -1)) scale(var(--hud-new-scale))!important;
+  transform-origin:top right!important;
+}
+
+#p1HudName.player-status-name,
+#p2HudName.player-status-name{
+  font-size:var(--hud-new-name-font)!important;
+  line-height:1!important;
+}
+
+#p1Badge.player-status-turn,
+#p2Badge.player-status-turn{
+  font-size:10px!important;
+  line-height:1!important;
+}
+
+#hudP1.player-status-hud .player-status-row,
+#hudP2.player-status-hud .player-status-row{
+  gap:var(--hud-new-gap)!important;
+}
+
+#hudP1.player-status-hud .player-status-mini,
+#hudP2.player-status-hud .player-status-mini{
+  min-height:var(--hud-new-mini-height)!important;
+  height:auto!important;
+}
+
+#p1Life,
+#p1Hand,
+#p1Deck,
+#p2Life,
+#p2Hand,
+#p2Deck{
+  font-size:var(--hud-new-stat-font)!important;
+  line-height:1!important;
+}
