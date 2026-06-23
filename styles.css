@@ -12725,16 +12725,16 @@ El CSS original se conserva para no romper visuales. El bloque final
   --hud-new-mini-height:35px;
   --hud-new-gap:18px;
 
-  --honor-hud-left:26px;
-  --honor-hud-top:214px;
-  --honor-hud-scale:1;
-  --honor-hud-min-width:132px;
-  --honor-hud-pad-x:14px;
+  --honor-hud-left:25px;
+  --honor-hud-top:97px;
+  --honor-hud-scale:.87;
+  --honor-hud-min-width:104px;
+  --honor-hud-pad-x:12px;
   --honor-hud-pad-y:8px;
-  --honor-hud-label-font:11px;
+  --honor-hud-label-font:15px;
   --honor-hud-number-font:16px;
-  --honor-hud-gap:8px;
-  --honor-pop-left:22px;
+  --honor-hud-gap:18px;
+  --honor-pop-left:60px;
   --honor-pop-top:164px;
   --honor-pop-scale:.96;
 }
@@ -12859,4 +12859,102 @@ El CSS original se conserva para no romper visuales. El bloque final
 @media(max-width:980px){
   .honor-css-tool{right:10px;top:228px;}
   .honor-css-tool-panel{width:min(340px,calc(100vw - 20px));}
+}
+
+
+/* ============================================================
+   HONOR HUD FIJO FINAL - control visual retirado
+   Valores fijados según captura aprobada.
+   ============================================================ */
+:root{
+  --honor-hud-left:25px;
+  --honor-hud-top:97px;
+  --honor-hud-scale:.87;
+  --honor-hud-min-width:104px;
+  --honor-hud-pad-x:12px;
+  --honor-hud-pad-y:8px;
+  --honor-hud-label-font:15px;
+  --honor-hud-number-font:16px;
+  --honor-hud-gap:18px;
+  --honor-pop-left:60px;
+  --honor-pop-top:164px;
+  --honor-pop-scale:.96;
+}
+#honorCssTool,.honor-css-tool{display:none!important;}
+#gameShell .battlefield #turnHonorHud.turn-honor-hud{
+  left:var(--honor-hud-left)!important;
+  top:var(--honor-hud-top)!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--honor-hud-scale))!important;
+  transform-origin:top left!important;
+  min-width:var(--honor-hud-min-width)!important;
+  padding:var(--honor-hud-pad-y) var(--honor-hud-pad-x)!important;
+  gap:var(--honor-hud-gap)!important;
+}
+#gameShell .battlefield #turnHonorHud .turn-honor-label{font-size:var(--honor-hud-label-font)!important;}
+#gameShell .battlefield #turnHonorHud strong{font-size:var(--honor-hud-number-font)!important;}
+#gameShell .battlefield #honorRechargeModal.honor-recharge-modal{
+  left:var(--honor-pop-left)!important;
+  top:var(--honor-pop-top)!important;
+  right:auto!important;
+  transform:translateY(-12px) scale(var(--honor-pop-scale))!important;
+  transform-origin:top left!important;
+}
+
+/* ============================================================
+   PATCH - Battle settings modal sound button safe layout
+   El botón de Audio vive dentro del modal, así que no debe usar
+   las reglas de botón flotante del HUD/menú de batalla.
+   ============================================================ */
+#battleMenuPanel .battle-menu-card{
+  position:relative !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+}
+
+#battleMenuPanel .battle-menu-card h2{
+  margin:0 0 4px !important;
+  padding-right:0 !important;
+  max-width:100% !important;
+  line-height:1.05 !important;
+}
+
+#battleMenuPanel .battle-menu-note{
+  margin:0 0 8px !important;
+}
+
+#battleMenuPanel #battleToggleSoundBtn,
+.battle-menu-card #battleToggleSoundBtn{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+  margin:0 !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:46px !important;
+  min-height:46px !important;
+  border-radius:12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 14px !important;
+  z-index:1 !important;
+  background:#313744 !important;
+  border:0 !important;
+  box-shadow:none !important;
+  color:#fff7dc !important;
+  font-family:Georgia,serif !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+}
+
+#battleMenuPanel .battle-menu-card .btn.full{
+  width:100% !important;
+  max-width:100% !important;
 }
