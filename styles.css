@@ -12959,35 +12959,78 @@ El CSS original se conserva para no romper visuales. El bloque final
   max-width:100% !important;
 }
 
-/* PATCH 8A - recorte limpio de retratos en unidades del tablero
-   Solo corrige que el personaje se salga del marco de la carta en campo. */
+/* ============================================================
+   PATCH 8B - BOARD UNIT CARD FRAME ALIGNMENT
+   Objetivo:
+   - Centrar visualmente la unidad dentro del marco gótico del tablero.
+   - Recortar únicamente el retrato dentro de la zona interna de la carta.
+
+   Alcance:
+   - Solo afecta .unit-card cuando está directamente dentro de .cell.
+   - No toca cartas de la mano, HUD, modales, líderes, IA ni lógica.
+
+   Diagnóstico rápido:
+   - Si el marco se ve corrido, revisar .unit-portrait.
+   - Si el personaje flota fuera del marco, revisar .unit-depth-stack / img.
+   - Si aparece doble silueta separada, revisar .unit-depth-shadow.
+   ============================================================ */
+.cell > .unit-card{
+  display:grid !important;
+  place-items:center !important;
+}
+
+.cell > .unit-card .unit-frame-skin{
+  inset:0 !important;
+  transform:none !important;
+}
+
 .cell > .unit-card .unit-portrait{
+  left:13.8% !important;
+  right:13.8% !important;
+  top:12.2% !important;
+  bottom:24.2% !important;
   overflow:hidden !important;
+  contain:paint !important;
   clip-path:inset(0 round 13px 13px 20px 20px) !important;
 }
+
 .cell > .unit-card .unit-depth-stack{
-  inset:0 !important;
+  position:absolute !important;
+  left:0 !important;
+  top:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  width:100% !important;
+  height:100% !important;
   overflow:hidden !important;
+  contain:paint !important;
+  clip-path:inset(0 round 13px 13px 20px 20px) !important;
 }
-.cell > .unit-card .unit-depth-shadow{
-  transform:translate(4%, 6%) scale(1.01) !important;
-  opacity:.48 !important;
-}
-.cell > .unit-card .unit-depth-front{
-  transform:translateY(0) scale(1) !important;
-}
+
 .cell > .unit-card .unit-depth-stack img{
-  max-width:100% !important;
-  max-height:100% !important;
+  position:absolute !important;
+  left:0 !important;
+  top:0 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center 18% !important;
 }
+
+.cell > .unit-card .unit-depth-shadow{
+  display:none !important;
+}
+
+.cell > .unit-card .unit-depth-front{
+  transform:none !important;
+  filter:saturate(1.05) contrast(1.03) drop-shadow(0 4px 5px rgba(0,0,0,.38)) !important;
+}
+
 @media(max-width:980px){
-  .cell > .unit-card .unit-portrait{
+  .cell > .unit-card .unit-portrait,
+  .cell > .unit-card .unit-depth-stack{
     clip-path:inset(0 round 11px 11px 18px 18px) !important;
-  }
-  .cell > .unit-card .unit-depth-shadow{
-    transform:translate(3%, 5%) scale(1.005) !important;
-  }
-  .cell > .unit-card .unit-depth-front{
-    transform:translateY(0) scale(1) !important;
   }
 }
