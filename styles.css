@@ -12958,3 +12958,36 @@ El CSS original se conserva para no romper visuales. El bloque final
   width:100% !important;
   max-width:100% !important;
 }
+
+/* PATCH 8A - recorte limpio de retratos en unidades del tablero
+   Solo corrige que el personaje se salga del marco de la carta en campo. */
+.cell > .unit-card .unit-portrait{
+  overflow:hidden !important;
+  clip-path:inset(0 round 13px 13px 20px 20px) !important;
+}
+.cell > .unit-card .unit-depth-stack{
+  inset:0 !important;
+  overflow:hidden !important;
+}
+.cell > .unit-card .unit-depth-shadow{
+  transform:translate(4%, 6%) scale(1.01) !important;
+  opacity:.48 !important;
+}
+.cell > .unit-card .unit-depth-front{
+  transform:translateY(0) scale(1) !important;
+}
+.cell > .unit-card .unit-depth-stack img{
+  max-width:100% !important;
+  max-height:100% !important;
+}
+@media(max-width:980px){
+  .cell > .unit-card .unit-portrait{
+    clip-path:inset(0 round 11px 11px 18px 18px) !important;
+  }
+  .cell > .unit-card .unit-depth-shadow{
+    transform:translate(3%, 5%) scale(1.005) !important;
+  }
+  .cell > .unit-card .unit-depth-front{
+    transform:translateY(0) scale(1) !important;
+  }
+}
