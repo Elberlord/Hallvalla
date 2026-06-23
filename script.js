@@ -6041,14 +6041,21 @@ function ensureLeaderBasesLayer(){
 function renderLeaderBases(){
   const layer=ensureLeaderBasesLayer();
   if(!layer||!publicState)return;
-  applyLeaderCssToolSettings();
   const leaders=(publicState.units||[]).filter(u=>u&&u.leader&&u.hp>0).sort((a,b)=>a.owner-b.owner);
   layer.innerHTML=leaders.map(u=>{
     const side=u.owner===1?"south":"north";
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
     const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
-    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span>${getUnitStatusBubblesHtml(u)}<span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
+    /*
+      Los líderes fijos NO renderizan getUnitStatusBubblesHtml(u).
+      Motivo: al activar DEF, ese HUD de estados entraba dentro del token 3D del líder,
+      deformaba el layout, encogía el retrato, creaba el óvalo fantasma y podía empujar
+      los stats hacia la zona del líder rival.
+      La lógica de DEF sigue viva: displayEffectiveGuard(u) mantiene el +2 GD y
+      renderDetail() sigue mostrando el estado al abrir DET.
+    */
+    return `<button class="${classes}" type="button" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span><span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></button>`;
   }).join("");
 }
 
@@ -7753,164 +7760,3 @@ onAuthStateChanged(auth,async u=>{
 signInAnonymously(auth).catch(e=>setText("lobbyStatus",e.message));
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
-
-
-/* Patch 70: panel visual para ajustar líderes en vivo */
-const LEADER_CSS_TOOL_DEFAULTS={
-  sizeVh:6.2,
-  portraitScale:.78,
-  enemyTop:6.2,
-  playerBottom:3.2,
-  xOffset:0,
-  pedestalScale:.74,
-  statsY:-2
-};
-function getLeaderCssToolSettings(){
-  try{
-    const saved=JSON.parse(localStorage.getItem("hallvallaLeaderCssTools")||"{}");
-    return {
-      sizeVh:Number.isFinite(Number(saved.sizeVh))?Number(saved.sizeVh):LEADER_CSS_TOOL_DEFAULTS.sizeVh,
-      portraitScale:Number.isFinite(Number(saved.portraitScale))?Number(saved.portraitScale):LEADER_CSS_TOOL_DEFAULTS.portraitScale,
-      enemyTop:Number.isFinite(Number(saved.enemyTop))?Number(saved.enemyTop):LEADER_CSS_TOOL_DEFAULTS.enemyTop,
-      playerBottom:Number.isFinite(Number(saved.playerBottom))?Number(saved.playerBottom):LEADER_CSS_TOOL_DEFAULTS.playerBottom,
-      xOffset:Number.isFinite(Number(saved.xOffset))?Number(saved.xOffset):LEADER_CSS_TOOL_DEFAULTS.xOffset,
-      pedestalScale:Number.isFinite(Number(saved.pedestalScale))?Number(saved.pedestalScale):LEADER_CSS_TOOL_DEFAULTS.pedestalScale,
-      statsY:Number.isFinite(Number(saved.statsY))?Number(saved.statsY):LEADER_CSS_TOOL_DEFAULTS.statsY
-    };
-  }catch(_){
-    return {...LEADER_CSS_TOOL_DEFAULTS};
-  }
-}
-function saveLeaderCssToolSettings(settings){
-  localStorage.setItem("hallvallaLeaderCssTools",JSON.stringify(settings));
-}
-function applyLeaderCssToolSettings(settings=getLeaderCssToolSettings()){
-  const root=document.documentElement;
-  root.style.setProperty("--leader-size-vh",`${settings.sizeVh}vh`);
-  root.style.setProperty("--leader-box-vh",`${Math.max(6,settings.sizeVh+3.2)}vh`);
-  root.style.setProperty("--leader-portrait-scale",String(settings.portraitScale));
-  root.style.setProperty("--leader-enemy-top",`${settings.enemyTop}%`);
-  root.style.setProperty("--leader-player-bottom",`${settings.playerBottom}%`);
-  root.style.setProperty("--leader-x-offset",`${settings.xOffset}px`);
-  root.style.setProperty("--leader-pedestal-scale",String(settings.pedestalScale));
-  root.style.setProperty("--leader-stats-y",`${settings.statsY}px`);
-}
-function refreshHallvallaCss(){
-  const links=[...document.querySelectorAll('link[rel="stylesheet"]')].filter(link=>{
-    const href=String(link.getAttribute("href")||"");
-    return href.includes("style.css")||href.includes("styles.css");
-  });
-  const stamp=Date.now();
-  links.forEach(link=>{
-    const raw=link.getAttribute("href")||"styles.css";
-    const clean=raw.split("?")[0];
-    link.setAttribute("href",`${clean}?cssv=${stamp}`);
-  });
-  setTimeout(()=>applyLeaderCssToolSettings(),60);
-  return links.length;
-}
-function setupLeaderCssTools(){
-  if(document.getElementById("leaderCssTools"))return;
-
-  const toggle=document.createElement("button");
-  toggle.id="leaderCssToolsToggle";
-  toggle.className="leader-css-tools-toggle";
-  toggle.type="button";
-  toggle.textContent="LÍDER";
-  toggle.title="Abrir controles visuales de líderes";
-  document.body.appendChild(toggle);
-
-  const panel=document.createElement("section");
-  panel.id="leaderCssTools";
-  panel.className="leader-css-tools";
-  panel.innerHTML=`
-    <div class="leader-css-tools-head">
-      <h3>Control de líderes</h3>
-      <button id="leaderCssCloseBtn" type="button" aria-label="Cerrar">×</button>
-    </div>
-
-    <label>Tamaño general <output id="leaderSizeOut"></output></label>
-    <input id="leaderSizeRange" type="range" min="4.5" max="9.5" step="0.1">
-
-    <label>Escala del dibujo <output id="leaderPortraitOut"></output></label>
-    <input id="leaderPortraitRange" type="range" min="0.55" max="1.10" step="0.01">
-
-    <label>Enemigo: arriba/abajo <output id="leaderEnemyOut"></output></label>
-    <input id="leaderEnemyRange" type="range" min="1" max="14" step="0.1">
-
-    <label>Jugador: arriba/abajo <output id="leaderPlayerOut"></output></label>
-    <input id="leaderPlayerRange" type="range" min="0" max="12" step="0.1">
-
-    <label>Movimiento horizontal <output id="leaderXOut"></output></label>
-    <input id="leaderXRange" type="range" min="-120" max="120" step="1">
-
-    <label>Pedestal <output id="leaderPedestalOut"></output></label>
-    <input id="leaderPedestalRange" type="range" min="0.35" max="1.15" step="0.01">
-
-    <label>Stats arriba/abajo <output id="leaderStatsOut"></output></label>
-    <input id="leaderStatsRange" type="range" min="-28" max="22" step="1">
-
-    <div class="leader-css-tools-row">
-      <button id="leaderCssRefreshBtn" type="button">Refrescar CSS</button>
-      <button id="leaderCssResetBtn" type="button">Reset</button>
-    </div>
-    <div class="leader-css-tools-note">Temporal: guarda en este navegador. Cuando encuentres los valores finales, se pueden fijar en styles.css.</div>
-  `;
-  document.body.appendChild(panel);
-
-  const controls={
-    sizeVh:{input:$("leaderSizeRange"),out:$("leaderSizeOut"),format:v=>`${v.toFixed(1)}vh`},
-    portraitScale:{input:$("leaderPortraitRange"),out:$("leaderPortraitOut"),format:v=>`${Math.round(v*100)}%`},
-    enemyTop:{input:$("leaderEnemyRange"),out:$("leaderEnemyOut"),format:v=>`${v.toFixed(1)}%`},
-    playerBottom:{input:$("leaderPlayerRange"),out:$("leaderPlayerOut"),format:v=>`${v.toFixed(1)}%`},
-    xOffset:{input:$("leaderXRange"),out:$("leaderXOut"),format:v=>`${Math.round(v)}px`},
-    pedestalScale:{input:$("leaderPedestalRange"),out:$("leaderPedestalOut"),format:v=>`${Math.round(v*100)}%`},
-    statsY:{input:$("leaderStatsRange"),out:$("leaderStatsOut"),format:v=>`${Math.round(v)}px`}
-  };
-
-  function paint(settings=getLeaderCssToolSettings()){
-    Object.entries(controls).forEach(([key,cfg])=>{
-      cfg.input.value=String(settings[key]);
-      cfg.out.textContent=cfg.format(Number(settings[key]));
-    });
-    applyLeaderCssToolSettings(settings);
-  }
-  function readAndApply(){
-    const settings={};
-    Object.entries(controls).forEach(([key,cfg])=>settings[key]=Number(cfg.input.value));
-    saveLeaderCssToolSettings(settings);
-    paint(settings);
-  }
-  Object.values(controls).forEach(cfg=>{
-    ["input","change"].forEach(evt=>cfg.input.addEventListener(evt,readAndApply));
-  });
-  toggle.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    panel.classList.toggle("show");
-  });
-  $("leaderCssCloseBtn").addEventListener("click",ev=>{
-    ev.preventDefault();
-    panel.classList.remove("show");
-  });
-  $("leaderCssRefreshBtn").addEventListener("click",ev=>{
-    ev.preventDefault();
-    const n=refreshHallvallaCss();
-    ev.currentTarget.textContent=n?"CSS OK":"Sin CSS";
-    setTimeout(()=>ev.currentTarget.textContent="Refrescar CSS",900);
-  });
-  $("leaderCssResetBtn").addEventListener("click",ev=>{
-    ev.preventDefault();
-    localStorage.removeItem("hallvallaLeaderCssTools");
-    paint({...LEADER_CSS_TOOL_DEFAULTS});
-  });
-  paint();
-}
-if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded",()=>{
-    setupLeaderCssTools();
-    applyLeaderCssToolSettings();
-  });
-}else{
-  setupLeaderCssTools();
-  applyLeaderCssToolSettings();
-}
