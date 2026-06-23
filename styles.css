@@ -402,7 +402,7 @@
   .play-image-button{width:110px;margin-top:25vh}
   .daily-panel{left:7px;bottom:30px;width:22vw;height:7.4vh}
   .welcome-panel{right:7px;bottom:30px;width:29vw;height:7.4vh}
-  .asset-bottom{bottom:5px;gap:3px;padding:4px 5px;border-radius:10px}
+  .asset-bottom{bottom:5px;gap:4px;padding:4px 5px;border-radius:10px}
   .bottom-asset-tab{min-width:78px;height:45px;border-radius:8px}
   .bottom-asset-tab img{width:24px;height:24px}
   .bottom-asset-tab span{font-size:7px}
@@ -559,7 +559,7 @@
 .input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#111;color:white;font-size:16px}.btn{border:0;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;background:#30343f;color:white}.btn.primary{background:var(--gold);color:#111}.btn.full{width:100%;margin-top:10px}.status{margin-top:12px;color:#ffe2a3;font-size:13px;min-height:18px}
 .game-shell{padding:6px}.battlefield{position:relative;min-height:calc(100vh - 12px);border-radius:18px;overflow:hidden;border:2px solid rgba(255,211,122,.42);background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.16)),url("assets/board_oscuro_11x6.webp") center center/auto 100% no-repeat,#070503;box-shadow:inset 0 0 120px rgba(0,0,0,.45)}
 .battle-fx-layer{position:absolute;inset:0;pointer-events:none;z-index:18;overflow:hidden}
-.hud{position:absolute;z-index:20;width:clamp(170px,14vw,210px);min-width:170px}.top-left{left:10px;top:10px}.top-right{right:10px;top:10px}.hud-shell{position:relative;width:100%;aspect-ratio:1451/725;background:url("assets/ui/HUD_Base_Panel.webp") center/contain no-repeat;filter:drop-shadow(0 10px 18px rgba(0,0,0,.30));transition:filter .16s ease}.hud-header{position:absolute;left:7.8%;right:7.8%;top:12.5%;display:grid;grid-template-columns:1fr .82fr;gap:6px;align-items:center}.hud-name{display:flex;align-items:center;justify-content:flex-start;height:100%;padding-left:10px;font-weight:900;font-family:Georgia,serif;font-size:clamp(12px,.98vw,16px);color:#fff1ca;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud-toggle{appearance:none;border:0;background:transparent;cursor:pointer}.hud-toggle:focus-visible{outline:2px solid #ffe39a;outline-offset:2px;border-radius:10px}.hud-badge{position:relative;aspect-ratio:2172/724;background:url("assets/ui/HUD_Status_Pill.webp") center/contain no-repeat;display:grid;place-items:center;padding:0 8px}.hud-badge span{display:block;font-size:clamp(7px,.64vw,9px);line-height:1;font-weight:900;font-family:Georgia,serif;color:#ffe1a1;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud-grid{position:absolute;left:8.2%;right:8.2%;bottom:14%;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;opacity:1;transform:translateY(0);transition:opacity .14s ease,transform .14s ease}.hud-mini{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:34px;padding:2px;border-radius:8px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);text-align:center}.hud-mini .label{display:block;color:#d5c3a2;font-size:clamp(6px,.52vw,7px);line-height:1}.hud-mini strong{display:block;color:#fff;font-size:clamp(9px,.78vw,11px);line-height:1.05;margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud.collapsed{width:clamp(132px,11vw,160px)}.hud.collapsed .hud-grid{opacity:0;transform:translateY(-8px);pointer-events:none}.hud.collapsed .hud-shell{filter:drop-shadow(0 8px 14px rgba(0,0,0,.26))}.hud.collapsed .hud-mini{visibility:hidden}.hud.expanded{width:clamp(220px,18vw,270px)}
+.hud{position:absolute;z-index:20;width:clamp(170px,14vw,210px);min-width:170px}.top-left{left:10px;top:10px}.top-right{right:10px;top:10px}.hud-shell{position:relative;width:100%;aspect-ratio:1451/725;background:url("assets/ui/HUD_Base_Panel.webp") center/contain no-repeat;filter:drop-shadow(0 10px 18px rgba(0,0,0,.30));transition:filter .16s ease}.hud-header{position:absolute;left:7.8%;right:7.8%;top:12.5%;display:grid;grid-template-columns:1fr .82fr;gap:6px;align-items:center}.hud-name{display:flex;align-items:center;justify-content:flex-start;height:100%;padding-left:10px;font-weight:900;font-family:Georgia,serif;font-size:clamp(12px,.98vw,16px);color:#fff1ca;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud-toggle{appearance:none;border:0;background:transparent;cursor:pointer}.hud-toggle:focus-visible{outline:2px solid #ffe39a;outline-offset:2px;border-radius:10px}.hud-badge{position:relative;aspect-ratio:2172/724;background:url("assets/ui/HUD_Status_Pill.webp") center/contain no-repeat;display:grid;place-items:center;padding:0 8px}.hud-badge span{display:block;font-size:clamp(7px,.64vw,9px);line-height:1;font-weight:900;font-family:Georgia,serif;color:#ffe1a1;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud-grid{position:absolute;left:8.2%;right:8.2%;bottom:14%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;opacity:1;transform:translateY(0);transition:opacity .14s ease,transform .14s ease}.hud-mini{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:34px;padding:2px;border-radius:8px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);text-align:center}.hud-mini .label{display:block;color:#d5c3a2;font-size:clamp(6px,.52vw,7px);line-height:1}.hud-mini strong{display:block;color:#fff;font-size:clamp(9px,.78vw,11px);line-height:1.05;margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud.collapsed{width:clamp(132px,11vw,160px)}.hud.collapsed .hud-grid{opacity:0;transform:translateY(-8px);pointer-events:none}.hud.collapsed .hud-shell{filter:drop-shadow(0 8px 14px rgba(0,0,0,.26))}.hud.collapsed .hud-mini{visibility:hidden}.hud.expanded{width:clamp(220px,18vw,270px)}
 .phase-banner{position:absolute;z-index:22;top:14px;left:50%;transform:translateX(-50%);min-width:210px;padding:8px 14px;border-radius:999px;text-align:center;font-weight:900;font-family:Georgia,serif;letter-spacing:.5px;color:#fff1c4;background:linear-gradient(180deg,rgba(34,22,14,.88),rgba(12,8,6,.74));border:1px solid rgba(255,209,102,.3)}
 .grid-wrap{--arenaH:calc(100vh - 12px);--imgW:calc(var(--arenaH)*1.7779);position:absolute;width:calc(var(--imgW)*0.318);height:calc(var(--arenaH)*0.805);left:50%;top:calc(var(--arenaH)*0.095);transform:translateX(-50%);z-index:5}.grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(7,1fr);gap:0;background:transparent}.cell{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;overflow:hidden}.cell:hover{background:rgba(255,220,140,.05);border-color:rgba(255,232,170,.10)}.cell.valid,.cell.attackable,.cell.summonable,.cell.move-range-preview,.cell.attack-range-preview,.cell.mixed-range-preview,.cell.acted-range-preview,.cell.enemy-threat-preview,.cell.enemy-acted-threat-preview{background:transparent;box-shadow:none}.cell.valid::after,.cell.attackable::after,.cell.summonable::after,.cell.move-range-preview::after,.cell.attack-range-preview::after,.cell.mixed-range-preview::after,.cell.acted-range-preview::after,.cell.enemy-threat-preview::after,.cell.enemy-acted-threat-preview::after{content:"";position:absolute;inset:3px;border-radius:4px;pointer-events:none}.cell.valid::after,.cell.move-range-preview::after{background:rgba(112,224,138,.12);box-shadow:inset 0 0 0 2px rgba(112,224,138,.78),0 0 8px rgba(112,224,138,.20)}.cell.attackable::after,.cell.attack-range-preview::after,.cell.enemy-threat-preview::after{background:rgba(239,71,111,.14);box-shadow:inset 0 0 0 2px rgba(239,71,111,.88),0 0 11px rgba(239,71,111,.30)}.cell.summonable::after{background:rgba(255,209,102,.13);box-shadow:inset 0 0 0 2px rgba(255,209,102,.82),0 0 10px rgba(255,209,102,.24)}.cell.mixed-range-preview::after{background:rgba(183,91,255,.14);box-shadow:inset 0 0 0 2px rgba(183,91,255,.84),0 0 10px rgba(183,91,255,.26)}.cell.acted-range-preview::after,.cell.enemy-acted-threat-preview::after{background:rgba(73,169,255,.13);box-shadow:inset 0 0 0 2px rgba(73,169,255,.84),0 0 10px rgba(73,169,255,.26)}
 .unit-card{position:relative;z-index:2;width:clamp(34px,92%,64px);height:clamp(34px,92%,64px);border-radius:10px;background:rgba(0,0,0,.18);border:2px solid rgba(244,228,196,.92);box-shadow:0 6px 10px rgba(0,0,0,.42);overflow:hidden;transform:none;user-select:none;display:grid;place-items:center;padding:1px}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.30),0 6px 10px rgba(0,0,0,.42);background:rgba(0,0,0,.12)}.unit-card.unit-key-spearman{width:clamp(38px,96%,70px);height:clamp(38px,96%,70px);border-width:2px;box-shadow:0 8px 14px rgba(0,0,0,.46)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;font-size:13px;background:transparent}.unit-portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.38))}.unit-card.unit-key-spearman .unit-portrait img{object-position:center 22%}.unit-card.leader .unit-portrait{font-size:13px}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
@@ -722,7 +722,7 @@
   align-items:center;
 }
 .adventure-choice:hover{
-  transform:translateY(-1px);
+  transform:translateY(-2px);
   filter:brightness(1.08);
   border-color:rgba(255,226,150,.68);
 }
@@ -991,7 +991,7 @@
   .log{left:8px;right:8px;bottom:246px;max-height:46px;font-size:9px;z-index:40;}
   .hand-drawer{left:8px;right:8px;bottom:82px;width:auto;max-width:none;transform:none;padding:7px 8px;max-height:158px;z-index:43;}
   .hand-top{margin-bottom:5px;font-size:10px;}
-  .hand-row{gap:3px;overflow-x:auto;padding-bottom:2px;}
+  .hand-row{gap:4px;overflow-x:auto;padding-bottom:2px;}
   .hand-card{flex:1 1 0;min-width:72px;max-width:96px;min-height:92px;padding:6px;border-radius:10px;}
   .hand-icon{font-size:18px;line-height:1;}
   .hand-tag{font-size:7px;}
@@ -1711,7 +1711,7 @@
 .hand-card-visual .hand-quick-row{
   display:flex;
   align-items:center;
-  gap:3px;
+  gap:4px;
   flex-wrap:wrap;
 }
 .hand-card-visual .hand-tag{
@@ -1940,7 +1940,7 @@
     top:20%;
     left:8%;
     right:8%;
-    gap:3px;
+    gap:4px;
   }
   .hud .hud-name{font-size:11px;padding-left:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .hud-toggle::after{font-size:10px;right:-1px;}
@@ -3485,7 +3485,7 @@
 
 @media(max-width:980px){
   .battle-fx-float{width:84px;height:74px}
-  .battle-fx-float-badge{top:24%;gap:3px;padding:3px 7px 4px}
+  .battle-fx-float-badge{top:24%;gap:4px;padding:3px 7px 4px}
   .battle-fx-float-icon{font-size:12px}
   .battle-fx-float-amount{font-size:12px}
 }
@@ -3644,7 +3644,7 @@
 /* v7FX: iconos persistentes para estados en tablero */
 .unit-status-bubbles{
   top:-7px;
-  gap:3px;
+  gap:4px;
   max-width:96px;
 }
 .unit-status-bubble{
@@ -4643,7 +4643,7 @@
   margin:0;
   padding:0;
   display:grid;
-  gap:3px;
+  gap:4px;
 }
 .detail-status-item{
   display:grid;
@@ -11699,12 +11699,6 @@
 .leader-bases-layer{
   --arenaH:calc(100vh - 12px);
   --imgW:calc(var(--arenaH)*1.7779);
-  --leaderTokenScale:1.2;
-  --leaderNorthOffset:-22px;
-  --leaderSouthOffset:9px;
-  --leaderStatusSideGap:34%;
-  --leaderHaloWidth:54%;
-  --leaderHaloHeight:15%;
   position:absolute;
   inset:0;
   z-index:24;
@@ -11713,10 +11707,9 @@
 .leader-base{
   position:absolute;
   left:50%;
-  transform:translateX(-50%) scale(var(--leaderTokenScale,1));
-  transform-origin:center center;
-  width:clamp(46px,5.9vh,68px);
-  min-height:clamp(64px,9vh,92px);
+  transform:translateX(-50%);
+  width:clamp(68px,8.5vh,98px);
+  min-height:clamp(96px,13.8vh,142px);
   border:0;
   padding:0;
   background:transparent;
@@ -11730,17 +11723,17 @@
   filter:drop-shadow(0 14px 16px rgba(0,0,0,.62));
   touch-action:manipulation;
 }
-.leader-base-north{top:calc((var(--arenaH)*.018) + var(--leaderNorthOffset,0px))}
-.leader-base-south{bottom:calc((var(--arenaH)*.024) + var(--leaderSouthOffset,0px))}
-.leader-base-cavalry{width:clamp(50px,6.5vh,74px)}
-.leader-base-cavalry .leader-base-portrait{width:92%}
-.leader-base-assassin .leader-base-portrait{height:72%}
-.leader-base-mage .leader-base-portrait{height:72%}
-.leader-base-beastmaster .leader-base-portrait{height:72%}
+.leader-base-north{top:calc(var(--arenaH)*.058)}
+.leader-base-south{bottom:calc(var(--arenaH)*.022)}
+.leader-base-cavalry{width:clamp(76px,9.4vh,110px)}
+.leader-base-cavalry .leader-base-portrait{width:106%}
+.leader-base-assassin .leader-base-portrait{height:84%}
+.leader-base-mage .leader-base-portrait{height:86%}
+.leader-base-beastmaster .leader-base-portrait{height:86%}
 .leader-base-token{
   position:relative;
   width:100%;
-  aspect-ratio:.68/1;
+  aspect-ratio:.76/1;
   display:grid;
   place-items:end center;
   isolation:isolate;
@@ -11748,9 +11741,9 @@
 .leader-base-aura{
   position:absolute;
   left:50%;
-  bottom:13%;
-  width:62%;
-  height:38%;
+  bottom:16%;
+  width:78%;
+  height:54%;
   transform:translateX(-50%);
   border-radius:50%;
   background:radial-gradient(circle,rgba(255,218,101,.18),rgba(255,218,101,.06) 42%,rgba(0,0,0,0) 70%);
@@ -11760,10 +11753,10 @@
 .leader-base-portrait{
   position:absolute;
   left:50%;
-  bottom:12%;
+  bottom:15%;
   transform:translateX(-50%);
-  width:74%;
-  height:66%;
+  width:92%;
+  height:84%;
   z-index:2;
   display:grid;
   place-items:center;
@@ -11799,9 +11792,9 @@
 .leader-base-pedestal{
   position:absolute;
   left:50%;
-  bottom:3%;
-  width:62%;
-  height:13%;
+  bottom:4%;
+  width:80%;
+  height:18%;
   transform:translateX(-50%) perspective(130px) rotateX(54deg);
   border-radius:50%;
   z-index:1;
@@ -11811,31 +11804,31 @@
 }
 .leader-base-stats{
   display:flex;
-  gap:3px;
+  gap:4px;
   justify-content:center;
   align-items:center;
-  transform:translateY(-1px);
+  transform:translateY(-2px);
   position:relative;
   z-index:5;
 }
 .leader-base-stats b{
-  min-width:17px;
-  height:16px;
-  padding:0 3px;
+  min-width:24px;
+  height:22px;
+  padding:0 5px;
   border-radius:999px;
   background:linear-gradient(180deg,rgba(18,14,9,.94),rgba(6,5,3,.94));
   border:1px solid rgba(255,216,111,.36);
   color:#fff1b9;
-  font-size:clamp(5px,.68vh,7px);
+  font-size:clamp(7px,.92vh,9px);
   line-height:1;
   text-align:center;
   box-shadow:0 2px 7px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,244,209,.05);
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:3px;
+  gap:4px;
 }
-.leader-stat-icon{font-size:7px;line-height:1;display:inline-flex;align-items:center;justify-content:center;opacity:.95}
+.leader-stat-icon{font-size:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;opacity:.95}
 .leader-stat-value{font-weight:900;letter-spacing:.01em}
 .leader-base-stats b.hp{border-color:rgba(255,196,146,.45)}
 .leader-base-stats b.atk{border-color:rgba(255,214,115,.45)}
@@ -11863,44 +11856,44 @@
 .leader-base:active .leader-base-token{transform:translateY(1px) scale(.98)}
 
 .leader-base .unit-status-bubbles.unit-status-seals{
-  inset:8% -10% 25% -10%;
+  inset:2% -18% 18% -18%;
   z-index:4;
 }
  .leader-base .status-seal-rail{
-  top:28%;
-  gap:3px;
+  top:24%;
+  gap:5px;
 }
 .leader-base .status-seal-rail.left{left:2%;transform:translateX(-10%)}
 .leader-base .status-seal-rail.right{right:2%;transform:translateX(10%)}
  .leader-base .unit-status-seal{
-  width:14px;
-  height:14px;
-  min-width:14px;
+  width:20px;
+  height:20px;
+  min-width:20px;
 }
-.leader-base .unit-status-seal .status-icon{width:8px;height:8px}
-.leader-base .unit-status-seal .status-icon-bleed{width:7px;height:9px}
+.leader-base .unit-status-seal .status-icon{width:11px;height:11px}
+.leader-base .unit-status-seal .status-icon-bleed{width:10px;height:12px}
 .leader-base .unit-status-seal .status-icon-burn,
-.leader-base .unit-status-seal .status-icon-paralysis{width:7px;height:9px}
+.leader-base .unit-status-seal .status-icon-paralysis{width:10px;height:12px}
 .leader-base .unit-status-seal .status-icon-buff{border-left-width:6px;border-right-width:6px;border-bottom-width:11px}
 .leader-base .unit-status-seal .status-icon-debuff{border-left-width:6px;border-right-width:6px;border-top-width:11px}
 .leader-base .unit-status-seal-stack{min-width:11px;height:11px;font-size:7px;right:-4px;bottom:-4px}
-.leader-base .unit-status-seal-extra{bottom:10%;height:11px;font-size:5px;z-index:5}
+.leader-base .unit-status-seal-extra{bottom:7%;height:15px;font-size:7px;z-index:5}
 
 @media(max-width:980px){
   .leader-bases-layer{--arenaH:100svh}
-  .leader-base{width:clamp(42px,5.5vh,58px);min-height:clamp(58px,8.2vh,78px)}
-  .leader-base-north{top:calc((100svh * .02) + var(--leaderNorthOffset,0px))}
-  .leader-base-south{bottom:calc((100svh * .02) + var(--leaderSouthOffset,0px))}
-  .leader-base-cavalry{width:clamp(46px,6vh,64px)}
+  .leader-base{width:clamp(60px,7.9vh,82px);min-height:clamp(86px,12.2vh,116px)}
+  .leader-base-north{top:calc(100svh * .056)}
+  .leader-base-south{bottom:calc(100svh * .02)}
+  .leader-base-cavalry{width:clamp(68px,8.8vh,92px)}
   .leader-base-stats{gap:3px;transform:translateY(-1px)}
-  .leader-base-stats b{min-width:15px;height:14px;padding:0 2px;font-size:5px}
-  .leader-stat-icon{font-size:6px}
-  .leader-base .unit-status-bubbles.unit-status-seals{inset:8% -9% 25% -9%}
-  .leader-base .status-seal-rail{top:31%;gap:2px}
-  .leader-base .unit-status-seal{width:12px;height:12px;min-width:12px}
+  .leader-base-stats b{min-width:20px;height:19px;padding:0 4px;font-size:7px}
+  .leader-stat-icon{font-size:9px}
+  .leader-base .unit-status-bubbles.unit-status-seals{inset:2% -16% 18% -16%}
+  .leader-base .status-seal-rail{top:24%;gap:3px}
+  .leader-base .unit-status-seal{width:18px;height:18px;min-width:18px}
   .leader-base .unit-status-seal .status-icon{transform:scale(.92)}
   .leader-base .unit-status-seal-stack{font-size:6px;min-width:9px;height:9px;right:-3px;bottom:-3px}
-  .leader-base .unit-status-seal-extra{height:10px;font-size:5px;bottom:9%}
+  .leader-base .unit-status-seal-extra{height:14px;font-size:6px;bottom:6%}
 }
 
 
@@ -11918,8 +11911,8 @@
   position:absolute;
   left:50%;
   top:50%;
-  width:102%;
-  height:86%;
+  width:126%;
+  height:106%;
   transform:translate(-50%,-50%);
   border-radius:28px;
   background:transparent;
@@ -11959,414 +11952,165 @@
 /* Patch 66: leaders reduced proportionally to occupy less field space without widening silhouette */
 
 
-/* Patch 67: second proportional reduction for fixed 3D leaders in field */
+/* ============================================================
+   HallValla v8 - 3 files rebuild clean contract
+   Objetivo:
+   - Mantener cartas, líderes 3D, UI y assets actuales.
+   - DEF es estado lógico, no FX global.
+   - Ningún sello/leader pseudo-element puede crear óvalos gigantes.
+   - Líderes fijos no usan attackable/valid/summonable.
+   ============================================================ */
 
-
-/* Patch 68: stronger reduction and normalized leader size, including mage parity */
-
-
-/* Patch 69: moved enemy leader higher in the north base zone */
-
-
-/* Patch 71: controles CSS removidos; posiciones fijas de líderes aplicadas. */
-
-
-/* Patch 72: buffs a un lado, debuffs/estados al otro en líderes fijos */
-.leader-base .unit-status-bubbles.unit-status-seals{
-  inset:2% -28% 18% -28%;
-  z-index:8;
-}
-.leader-base .status-seal-rail{
-  top:50%;
-  gap:3px;
-  transform:translateY(-50%);
-}
-.leader-base .status-seal-rail.left{
-  left:-6px;
-  right:auto;
-  transform:translate(-100%,-50%);
-}
-.leader-base .status-seal-rail.right{
-  right:-6px;
-  left:auto;
-  transform:translate(100%,-50%);
-}
-.leader-base .status-seal-rail-buffs .unit-status-seal{
-  box-shadow:0 0 0 1px rgba(0,0,0,.52),0 3px 8px rgba(0,0,0,.45),0 0 10px rgba(110,220,170,.22), inset 0 0 0 1px rgba(255,241,200,.08);
-}
-.leader-base .status-seal-rail-harmful .unit-status-seal{
-  box-shadow:0 0 0 1px rgba(0,0,0,.52),0 3px 8px rgba(0,0,0,.45),0 0 10px rgba(255,113,145,.18), inset 0 0 0 1px rgba(255,241,200,.08);
-}
-.leader-base .unit-status-seal-extra{
-  top:8%;
-  bottom:auto;
-  left:50%;
-  transform:translateX(-50%);
-}
-@media(max-width:980px){
-  .leader-base .unit-status-bubbles.unit-status-seals{inset:4% -24% 18% -24%;}
-  .leader-base .status-seal-rail{top:50%;gap:2px;}
-  .leader-base .status-seal-rail.left{left:-4px;transform:translate(-100%,-50%);}
-  .leader-base .status-seal-rail.right{right:-4px;transform:translate(100%,-50%);}
-}
-
-
-/* Patch 73: reparar banda dorada gigante en líderes fijos */
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after{
-  left:50%!important;
-  right:auto!important;
-  bottom:8%!important;
-  width:var(--leaderHaloWidth,54%)!important;
-  max-width:var(--leaderHaloWidth,54%)!important;
-  min-width:0!important;
-  height:var(--leaderHaloHeight,15%)!important;
-  max-height:var(--leaderHaloHeight,15%)!important;
-  transform:translateX(-50%) perspective(120px) rotateX(58deg)!important;
-  border-radius:50%!important;
-  pointer-events:none!important;
-  overflow:hidden!important;
-}
-
-.leader-base.valid .leader-base-token::after{
-  box-shadow:0 0 0 1px rgba(112,224,138,.72),0 0 8px rgba(112,224,138,.24)!important;
-  background:rgba(112,224,138,.08)!important;
-}
-.leader-base.attackable .leader-base-token::after{
-  box-shadow:0 0 0 1px rgba(239,71,111,.78),0 0 8px rgba(239,71,111,.28)!important;
-  background:rgba(239,71,111,.09)!important;
-}
-.leader-base.summonable .leader-base-token::after{
-  box-shadow:0 0 0 1px rgba(255,209,102,.78),0 0 8px rgba(255,209,102,.26)!important;
-  background:rgba(255,209,102,.08)!important;
-}
-
-/* Mantener buffs/debuffs a los lados sin empujar ningún efecto hacia abajo */
-.leader-base .unit-status-bubbles.unit-status-seals{
-  inset:0 calc(var(--leaderStatusSideGap,34%) * -1) 0 calc(var(--leaderStatusSideGap,34%) * -1)!important;
-  overflow:visible!important;
-}
-.leader-base .status-seal-rail{
-  top:50%!important;
-  gap:3px!important;
-}
-.leader-base .status-seal-rail.left{
-  left:-8px!important;
-  right:auto!important;
-  transform:translate(-100%,-50%)!important;
-}
-.leader-base .status-seal-rail.right{
-  right:-8px!important;
-  left:auto!important;
-  transform:translate(100%,-50%)!important;
-}
-.leader-base .unit-status-seal-extra{
-  top:-6px!important;
-  bottom:auto!important;
-  left:50%!important;
-  transform:translateX(-50%)!important;
-}
-
-/* Si algún FX de estado cae dentro del layer del líder, no debe ocupar ancho de tablero */
-.leader-base .status-fx,
-.leader-base .float-fx,
-.leader-base [class*="status-fx"],
-.leader-base [class*="float-fx"]{
-  max-width:44px!important;
-  max-height:44px!important;
-  overflow:hidden!important;
-}
-
-@media(max-width:980px){
-  .leader-base.attackable .leader-base-token::after,
-  .leader-base.valid .leader-base-token::after,
-  .leader-base.summonable .leader-base-token::after{
-    width:50%!important;
-    max-width:50%!important;
-    height:13%!important;
-    max-height:13%!important;
-  }
-  .leader-base .unit-status-bubbles.unit-status-seals{
-    inset:0 -30% 0 -30%!important;
-  }
-  .leader-base .status-seal-rail.left{left:-6px!important;}
-  .leader-base .status-seal-rail.right{right:-6px!important;}
-}
-
-
-/* Patch 74: panel CSS para mover/ajustar héroes y depurar halo/estados */
-.leader-css-tools{
-  position:fixed;
-  left:16px;
-  bottom:92px;
-  z-index:1300;
-  width:min(300px,calc(100vw - 32px));
-  padding:12px;
-  border:1px solid rgba(255,217,117,.42);
-  border-radius:18px;
-  background:linear-gradient(180deg,rgba(19,15,9,.96),rgba(5,4,3,.94));
-  box-shadow:0 14px 40px rgba(0,0,0,.58), inset 0 0 0 1px rgba(255,244,206,.06);
-  color:#ffe8ae;
-  font-family:Georgia,serif;
-  display:none;
-}
-.leader-css-tools.show{display:block}
-.leader-css-tools h3{
-  margin:0 0 8px;
-  font-size:14px;
-  color:#ffe071;
-  text-shadow:0 2px 3px #000;
-}
-.leader-css-tools label{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:6px;
-  align-items:center;
-  margin:8px 0 4px;
-  font-size:11px;
-  color:#f6dca0;
-}
-.leader-css-tools output{
-  min-width:52px;
-  text-align:right;
-  color:#fff6d2;
-  font-weight:900;
-}
-.leader-css-tools input[type="range"]{
-  width:100%;
-  accent-color:#e7bd4c;
-}
-.leader-css-tools-row{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-.leader-css-tools button{
-  flex:1;
-  border:1px solid rgba(255,217,117,.45);
-  border-radius:999px;
-  padding:8px 9px;
-  background:linear-gradient(180deg,rgba(88,64,26,.95),rgba(13,10,6,.95));
-  color:#fff0bd;
-  font-weight:900;
-  font-family:Georgia,serif;
-  cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.32);
-}
-.leader-css-tools button:hover{filter:brightness(1.12)}
-.leader-css-tools-note{
-  margin-top:8px;
-  font-size:10px;
-  line-height:1.25;
-  color:#cdb785;
-}
-.leader-css-tools-toggle{
-  position:fixed;
-  left:38px;
-  bottom:46px;
-  z-index:1301;
-  width:54px;
-  height:36px;
-  border-radius:999px;
-  border:1px solid rgba(255,217,117,.48);
-  background:linear-gradient(180deg,rgba(33,24,12,.96),rgba(6,5,3,.96));
-  color:#ffe59b;
-  font-family:Georgia,serif;
-  font-weight:900;
-  box-shadow:0 8px 22px rgba(0,0,0,.48),0 0 14px rgba(255,210,96,.12);
-  cursor:pointer;
-}
-@media(max-width:720px){
-  .leader-css-tools{left:10px;bottom:82px;width:min(280px,calc(100vw - 20px));}
-  .leader-css-tools-toggle{left:22px;bottom:38px;}
-}
-
-
-/* Patch 75: apagar banda horizontal forzada de DEF en líderes fijos */
-/* Si un líder fijo entra en DEF, solo debe quedar el icono lateral. Nada de banda global. */
-.leader-bases-layer::before,
-.leader-bases-layer::after,
+/* 1) Kill-switch de los pseudo-elementos que estaban generando formas fantasma. */
+.unit-status-seal::after,
 .leader-base::before,
 .leader-base::after,
-.leader-base-token::before{
-  content:none!important;
-  display:none!important;
-}
-
-/* Mantener cualquier halo de líder absolutamente pequeño o invisible si el control está en 0 */
+.leader-base-token::before,
+.leader-base-token::after,
 .leader-base.attackable .leader-base-token::after,
 .leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after{
-  width:var(--leaderHaloWidth,0%)!important;
-  max-width:var(--leaderHaloWidth,0%)!important;
-  height:var(--leaderHaloHeight,0%)!important;
-  max-height:var(--leaderHaloHeight,0%)!important;
-  min-width:0!important;
-  min-height:0!important;
-  opacity:calc(min(var(--leaderHaloWidth,0),1))!important;
-}
-
-/* Cualquier FX de defensa que se dibuje como banda no debe ocupar el tablero */
-.battlefield .leader-defense-band,
-.battlefield .leader-def-band,
-.battlefield .defense-band,
-.battlefield .def-band,
-.battlefield .guard-band,
-.battlefield .status-band,
-.battlefield [class*="defense"][class*="band"],
-.battlefield [class*="guard"][class*="band"],
-.battlefield [class*="status"][class*="band"]{
+.leader-base.summonable .leader-base-token::after,
+.leader-base.leader-targetable .leader-base-token::after{
+  content:none!important;
   display:none!important;
   width:0!important;
   height:0!important;
   opacity:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+
+/* 2) Hitbox del líder invisible. Nunca debe pintar bloque, sello ni fondo. */
+.leader-base-hitbox{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  outline:0!important;
+  opacity:1!important;
+}
+
+/* 3) El target del líder se marca solo en el pedestal, pequeño y controlado. */
+.leader-base.leader-targetable .leader-base-pedestal{
+  box-shadow:
+    0 0 0 1px rgba(255,224,138,.58),
+    0 0 12px rgba(255,209,102,.24),
+    inset 0 0 10px rgba(255,221,123,.14)!important;
+}
+
+/* 4) Los estados del líder se colocan como HUD compacto.
+      No ocupan una caja gigante dentro del campo. */
+.leader-base .unit-status-bubbles.unit-status-seals{
+  position:absolute!important;
+  inset:auto!important;
+  left:50%!important;
+  top:-8px!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:max-content!important;
+  max-width:88px!important;
+  height:auto!important;
+  min-height:0!important;
+  transform:translateX(-50%)!important;
+  display:flex!important;
+  flex-direction:row!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:2px!important;
+  z-index:9!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  margin:0!important;
+}
+.leader-base .status-seal-rail,
+.leader-base .status-seal-rail.left,
+.leader-base .status-seal-rail.right{
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  display:flex!important;
+  flex-direction:row!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:2px!important;
+  width:auto!important;
+  height:auto!important;
+  pointer-events:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+.leader-base .unit-status-seal{
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+  flex:0 0 14px!important;
+  position:relative!important;
+  z-index:10!important;
+  pointer-events:auto!important;
+}
+.leader-base .unit-status-seal .status-icon{
+  transform:scale(.78)!important;
+}
+.leader-base .unit-status-seal-extra{
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:12px!important;
+  max-width:22px!important;
+  height:10px!important;
+  line-height:10px!important;
+  font-size:5px!important;
+  padding:0 3px!important;
+  margin:0!important;
+}
+
+/* 5) DEF/guard_buff de stance no puede pintar float de tablero.
+      guard_block y guard_break de combate siguen funcionando. */
+.battle-fx-float.guard_buff,
+.battle-fx-float.defend_stance{
+  display:none!important;
+}
+
+/* 6) Si un estado DEF se muestra en líder, no puede expandir la tarjeta/layer. */
+.leader-base-token{
+  overflow:visible!important;
+}
+.leader-base-stats{
   pointer-events:none!important;
 }
 
-/* Clamp agresivo para FX gigantes cerca de líderes fijos */
-.leader-bases-layer .battle-fx,
-.leader-bases-layer .status-fx,
-.leader-bases-layer .float-fx,
-.leader-bases-layer [class*="fx"],
-.leader-bases-layer [class*="FX"]{
-  width:28px!important;
-  max-width:28px!important;
-  height:28px!important;
-  max-height:28px!important;
-  overflow:hidden!important;
+/* 7) Mantener el layer de FX como capa visual, sin afectar layout. */
+#battleFxLayer,
+.battle-fx-layer{
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+  contain:layout paint style!important;
 }
 
-/* En líderes fijos, el estado DEF se representa solo como sello lateral */
-.leader-base .unit-status-seal.defense,
-.leader-base .unit-status-seal.guard-buff{
-  z-index:20!important;
+@media(max-width:980px){
+  .leader-base .unit-status-bubbles.unit-status-seals{
+    top:-6px!important;
+    max-width:72px!important;
+  }
+  .leader-base .unit-status-seal{
+    width:12px!important;
+    height:12px!important;
+    min-width:12px!important;
+    flex-basis:12px!important;
+  }
 }
 
-
-/* Patch 76: FX de DEF/guard_buff para líderes se bloquea desde script.js; CSS ya no intenta corregirlo con bandas. */
-
-
-/* Patch 77: el FX de tablero de líderes queda bloqueado desde script.js. */
-
-
-/* Patch 79 - Leader UI FX */
-.leader-base{
-  position:absolute;
-}
-.leader-ui-fx{
-  position:absolute;
-  left:50%;
-  top:42%;
-  transform:translate(-50%,-50%) scale(.72);
-  z-index:80;
-  pointer-events:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  padding:3px 6px;
-  border-radius:999px;
-  border:1px solid rgba(255,224,138,.58);
-  background:radial-gradient(circle at 50% 40%,rgba(255,240,190,.28),rgba(30,18,6,.86) 62%,rgba(0,0,0,.18));
-  box-shadow:0 0 14px rgba(255,210,110,.32), inset 0 1px 0 rgba(255,255,255,.18);
-  animation:leaderUiFxPop .92s ease-out forwards;
-}
-.leader-ui-fx-icon{
-  font-size:17px;
-  line-height:1;
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.68));
-}
-.leader-ui-fx-label{
-  font-family:Georgia,serif;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.5px;
-  color:#ffe7a6;
-  text-shadow:0 1px 3px rgba(0,0,0,.75);
-}
-@keyframes leaderUiFxPop{
-  0%{opacity:0;transform:translate(-50%,-45%) scale(.42)}
-  18%{opacity:1;transform:translate(-50%,-58%) scale(1.06)}
-  60%{opacity:.94;transform:translate(-50%,-68%) scale(1)}
-  100%{opacity:0;transform:translate(-50%,-88%) scale(.86)}
-}
-
-
-/* Patch 80 - Fix real de banda en líderes:
-   los líderes fijos ya no usan el pseudo-halo de target del tablero.
-   Ese pseudo-elemento era el óvalo/banda que se quedaba pegado abajo. */
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after,
-.leader-base.leader-targetable .leader-base-token::after{
-  content:none!important;
-  display:none!important;
-  width:0!important;
-  height:0!important;
-  min-width:0!important;
-  min-height:0!important;
-  opacity:0!important;
-  box-shadow:none!important;
-  background:transparent!important;
-}
-
-/* Indicador pequeño y seguro para líderes seleccionables, sin banda horizontal */
-.leader-base.leader-targetable .leader-base-token{
-  filter:drop-shadow(0 0 8px rgba(255,221,123,.42)) drop-shadow(0 12px 14px rgba(0,0,0,.62));
-}
-.leader-base.leader-targetable .leader-base-pedestal{
-  box-shadow:0 0 0 1px rgba(255,224,138,.55),0 0 10px rgba(255,209,102,.24),inset 0 0 10px rgba(255,221,123,.15)!important;
-}
-
-/* Si algún slash viejo queda apuntando desde/hacia líder, no debe parecer una banda persistente */
-.battle-fx-slash.leader-fx-blocked,
-.battle-fx-impact.leader-fx-blocked{
-  display:none!important;
-}
-
-
-/* Patch 81 - durante DEF de líder fijo no se permite FX de tablero */
-body.leader-board-fx-suppressed #battleFxLayer,
-body.leader-board-fx-suppressed .battle-fx-slash,
-body.leader-board-fx-suppressed .battle-fx-slash-core,
-body.leader-board-fx-suppressed .battle-fx-projectile,
-body.leader-board-fx-suppressed .battle-fx-projectile-shaft,
-body.leader-board-fx-suppressed .battle-fx-projectile-trail,
-body.leader-board-fx-suppressed .battle-fx-impact,
-body.leader-board-fx-suppressed .battle-fx-guard,
-body.leader-board-fx-suppressed .battle-fx-float,
-body.leader-board-fx-suppressed .battle-fx-status,
-body.leader-board-fx-suppressed .battle-fx-dodge{
-  display:none!important;
-  opacity:0!important;
-  visibility:hidden!important;
-}
-
-
-/* Patch 82 - Leader isolation from board grid layer */
-/* El grid ya no debe pintar valid/attackable/summonable en coordenadas de líderes.
-   Esto queda como cinturón de seguridad si una clase vieja vuelve a caer en líderes. */
-.leader-base.attackable,
-.leader-base.valid,
-.leader-base.summonable{
-  outline:0!important;
-  box-shadow:none!important;
-  background:transparent!important;
-}
-.leader-base.attackable .leader-base-token::after,
-.leader-base.valid .leader-base-token::after,
-.leader-base.summonable .leader-base-token::after,
-.leader-base.leader-targetable .leader-base-token::after{
-  content:none!important;
-  display:none!important;
-}
-
-/* Target visual de líder: solo pedestal, no celda, no banda, no pseudo-elemento */
-.leader-base.leader-targetable{
-  filter:drop-shadow(0 0 8px rgba(255,221,123,.26)) drop-shadow(0 14px 16px rgba(0,0,0,.62))!important;
-}
-.leader-base.leader-targetable .leader-base-pedestal{
-  background:radial-gradient(circle at 50% 42%,rgba(255,235,166,.22),rgba(62,43,17,.80) 48%,rgba(8,7,5,.94) 72%)!important;
-  border-color:rgba(255,224,138,.64)!important;
-}

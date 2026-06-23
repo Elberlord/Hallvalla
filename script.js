@@ -1,4 +1,4 @@
-const HALLVALLA_BUILD_VERSION="v7HZ_3d_leader_assets_fixed_bases_2026_06_22";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_REBUILD_3FILES_FULL_CARDS_DEF_CLEAN_2026_06_23";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -316,92 +316,6 @@ function makeBattleFxEvent(type,attacker,target){
     attackSound:getAttackSoundForUnit(attacker)
   };
 }
-
-
-
-
-/* Patch 79 - FX routing helpers */
-function isFixedLeaderUnit(unit){
-  return !!(unit && unit.leader);
-}
-function getFxUnitFromEvent(fx, unitsList){
-  if(!fx)return null;
-  const units = Array.isArray(unitsList) ? unitsList : (publicState?.units || []);
-  const ids = [fx.unitId, fx.targetId, fx.attackerId, fx.id].filter(Boolean);
-  for(const id of ids){
-    const fromList = units.find(u=>u && u.id===id);
-    if(fromList)return fromList;
-    const live = getUnit(id);
-    if(live)return live;
-    if(String(id)==="leader1")return (units.find(u=>u&&u.owner===1&&u.leader)||{id:"leader1",owner:1,leader:true});
-    if(String(id)==="leader2")return (units.find(u=>u&&u.owner===2&&u.leader)||{id:"leader2",owner:2,leader:true});
-  }
-  return null;
-}
-function shouldSuppressLeaderFx(type,unit){
-  if(!unit || !unit.leader)return false;
-  const fxType=String(type||"");
-  return fxType==="defend_stance" || fxType==="guard_buff" || fxType==="guard_block" || fxType==="guard_break";
-}
-function shouldSuppressFixedLeaderBoardFxEvent(fx, unitsList){
-  const unit = getFxUnitFromEvent(fx, unitsList);
-  return !!(unit && unit.leader);
-}
-function getLeaderBaseElement(unit){
-  if(!unit)return null;
-  return document.querySelector(`.leader-base[data-unit-id="${unit.id}"], .leader-base[data-leader-id="${unit.id}"], .leader-base[data-id="${unit.id}"]`);
-}
-
-/* Patch 81 - bloqueo duro de FX de tablero durante DEF de líderes fijos */
-function suppressLeaderBoardFx(ms=1500){
-  try{
-    clearBattleFxLayer();
-    document.body.classList.add("leader-board-fx-suppressed");
-    const layer=$("battleFxLayer");
-    if(layer){
-      [...layer.children].forEach(n=>{
-        const cls=String(n.className||"");
-        if(/battle-fx-(slash|impact|guard|projectile|float|status|dodge)/.test(cls))n.remove();
-      });
-    }
-    setTimeout(()=>clearBattleFxLayer(),60);
-    setTimeout(()=>clearBattleFxLayer(),180);
-    setTimeout(()=>document.body.classList.remove("leader-board-fx-suppressed"),ms);
-  }catch(e){}
-}
-
-function playLeaderUiFx(unit, fx={}){
-  const base = getLeaderBaseElement(unit);
-  if(!base)return;
-  const node = document.createElement("div");
-  const type = String(fx.type || "info").replace(/[^a-z0-9_-]+/gi,"-");
-  node.className = `leader-ui-fx leader-ui-fx-${type}`;
-  const icon = fx.iconText || (fx.type==="guard_buff" || fx.type==="defend_stance" ? "🛡" : "✦");
-  const label = fx.labelText ? `<span class="leader-ui-fx-label">${fx.labelText}</span>` : "";
-  node.innerHTML = `<span class="leader-ui-fx-icon">${icon}</span>${label}`;
-  base.appendChild(node);
-  setTimeout(()=>node.remove(), 920);
-}
-function makeLeaderOrBoardDefenseFx(type, unit){
-  if(!unit)return null;
-  if(unit.leader){
-    suppressLeaderBoardFx(1600);
-    queueMicrotask(()=>playLeaderUiFx(unit,{type:type||"defend_stance",iconText:"🛡",labelText:"DEF"}));
-    setTimeout(()=>suppressLeaderBoardFx(1000),30);
-    return null;
-  }
-  return makeDefenseFxEvent(type, unit);
-}
-function makeLeaderOrBoardFloatFx(type, unit, amount=0, extra={}){
-  if(!unit)return null;
-  if(unit.leader){
-    suppressLeaderBoardFx(1400);
-    queueMicrotask(()=>playLeaderUiFx(unit,{type, amount, ...(extra||{})}));
-    return null;
-  }
-  return makeFloatFxEvent(type, unit, amount, extra);
-}
-
 function makeDefenseFxEvent(type,defender){
   if(!defender)return null;
   return {
@@ -489,13 +403,10 @@ function playSummonFx(unit){
   spawnBattleFxNode(`battle-fx-summon ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-ring"></div><div class="battle-fx-ring battle-fx-ring-2"></div><div class="battle-fx-core"></div><div class="battle-fx-rays"></div>${extraBurst}`);
 }
 function playBattleFx(attacker,target){
-  if(isFixedLeaderUnit(attacker) || isFixedLeaderUnit(target)){suppressLeaderBoardFx(1200);return;}
-  if(isFixedLeaderUnit(attacker)||isFixedLeaderUnit(target))return;
   if(!attacker||!target)return;
   playBattleFxEvent(makeBattleFxEvent("attack",attacker,target),attacker);
 }
 function playBattleFxEvent(fx,attackerRef=null){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx,publicState?.units||[]))return;
   if(!fx||!fx.from||!fx.to)return;
   const soundUnit=attackerRef||{owner:fx.attackerOwner||0,rarity:"",special:["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(fx.rarityClass||""),key:""};
   tryPlaySound(fx.attackSound||(fx.attackStyle==="ranged"?"attack_arrow":getAttackSoundForUnit(soundUnit)),.82);
@@ -522,10 +433,8 @@ function playBattleFxEvent(fx,attackerRef=null){
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
 }
 function playDefenseFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
-  const fxUnit=fx.unitId?getUnit(fx.unitId):null;
-  if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
+  if(fx.type==="defend_stance"||fx.type==="guard_buff")return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const guardSound=fx.type==="guard_break"?"guard_break":(fx.type==="defend_stance"?"defend_stance":"guard_block");
@@ -539,7 +448,6 @@ function playDefenseFxEvent(fx){
   spawnBattleFxNode(`battle-fx-guard ${typeClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-guard-ring"></div><div class="battle-fx-guard-glow"></div><div class="battle-fx-guard-shield"></div>${crackMarkup}${shardMarkup}`);
 }
 function playDodgeFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
@@ -549,10 +457,8 @@ function playDodgeFxEvent(fx){
   spawnBattleFxNode(`battle-fx-dodge ${sideClass} ${rarityClass}`,point.x,point.y,{},900,`<div class="battle-fx-dodge-ring"></div><div class="battle-fx-dodge-swish swish-1"></div><div class="battle-fx-dodge-swish swish-2"></div><div class="battle-fx-dodge-afterimage afterimage-1"></div><div class="battle-fx-dodge-afterimage afterimage-2"></div><div class="battle-fx-dodge-label">ESQUIVA</div>`);
 }
 function playFloatFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
-  const fxUnit=fx.unitId?getUnit(fx.unitId):null;
-  if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
+  if(fx.type==="guard_buff"||fx.type==="defend_stance")return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const sideClass=fx.unitOwner===1?"player":"enemy";
@@ -566,10 +472,7 @@ function playFloatFxEvent(fx){
   spawnBattleFxNode(`battle-fx-float ${cls} ${sideClass} ${rarityClass}`,point.x,point.y,{},980,`<div class="battle-fx-float-badge"><span class="battle-fx-float-icon">${iconText}</span>${amountText?`<span class="battle-fx-float-amount">${amountText}</span>`:""}</div>`);
 }
 function playStatusFxEvent(fx){
-  if(shouldSuppressFixedLeaderBoardFxEvent(fx, publicState?.units || [])){suppressLeaderBoardFx(1200);return;}
   if(!fx||!fx.at)return;
-  const fxUnit=fx.unitId?getUnit(fx.unitId):null;
-  if(shouldSuppressLeaderFx(fx.type,fxUnit))return;
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const sideClass=fx.unitOwner===1?"player":"enemy";
@@ -611,17 +514,11 @@ function playDestroyFx(unit){
 }
 function maybePlayBattleFx(prevPub,nextPub){
   if(!prevPub||!nextPub||!Array.isArray(prevPub.units)||!Array.isArray(nextPub.units))return;
-  let explicitAttackFx=nextPub.battleFxEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
-  let explicitDefenseFx=nextPub.defenseFxEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
-  let explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
-  let explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
-  let explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
-  const fxUnits=nextPub.units||[];
-  explicitAttackFx=shouldSuppressFixedLeaderBoardFxEvent(explicitAttackFx,fxUnits)?null:explicitAttackFx;
-  explicitDefenseFx=shouldSuppressFixedLeaderBoardFxEvent(explicitDefenseFx,fxUnits)?null:explicitDefenseFx;
-  explicitDodgeFx=shouldSuppressFixedLeaderBoardFxEvent(explicitDodgeFx,fxUnits)?null:explicitDodgeFx;
-  explicitStatusFx=shouldSuppressFixedLeaderBoardFxEvent(explicitStatusFx,fxUnits)?null:explicitStatusFx;
-  explicitFloatFx=shouldSuppressFixedLeaderBoardFxEvent(explicitFloatFx,fxUnits)?null:explicitFloatFx;
+  const explicitAttackFx=nextPub.battleFxEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
+  const explicitDefenseFx=nextPub.defenseFxEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
+  const explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
+  const explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
+  const explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
   if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx)
     ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}`
@@ -635,7 +532,7 @@ function maybePlayBattleFx(prevPub,nextPub){
   const added=nextUnits.filter(u=>!prevMap[u.id]&&!u.leader);
   const damaged=[...nextUnits.filter(u=>prevMap[u.id]&&u.hp<prevMap[u.id].hp),...prevUnits.filter(u=>!nextMap[u.id]&&u.hp>0)];
   const destroyed=prevUnits.filter(u=>u.hp>0&&((!nextMap[u.id])||(nextMap[u.id]&&nextMap[u.id].hp<=0)));
-  const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted&&!u.leader);
+  const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted);
   if(!added.length&&!attackers.length&&!destroyed.length&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   lastBattleFxKey=fxKey;
   added.forEach(u=>setTimeout(()=>playSummonFx(u),80));
@@ -3462,7 +3359,7 @@ function getStatusEntryIconHtml(entry){
   const label=escapeHtml(entry?.name||entry?.label||"Estado");
   return `<span class="status-icon status-icon-asset status-icon-${escapeHtml(key)}" role="img" aria-label="${label}"><span class="status-icon-bg" aria-hidden="true"></span><img class="status-icon-img" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async"></span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:spellDamage>0||u.damagedThisTurn}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage)});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeLeaderOrBoardFloatFx("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:spellDamage>0||u.damagedThisTurn}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage)});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -5594,18 +5491,13 @@ async function activateDefenseStance(u){
   if(u.defenseModeReady)return setHint(`${u.name} ya está en guardia defensiva.`);
   if(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)return setHint(`${u.name} no puede defenderse este turno.`);
   const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false}:it);
-  const defenderNow=units.find(it=>it.id===u.id)||u;
-  if(defenderNow&&defenderNow.leader){
-    highlights=[];
-    suppressLeaderBoardFx(1600);
-  }
+  clearSelection();
   await updatePublic({
     units,
-    defenseFxEvent:makeLeaderOrBoardDefenseFx("defend_stance",defenderNow),
-    floatFxEvent:makeLeaderOrBoardFloatFx("guard_buff",defenderNow,2,{iconText:"🛡",labelText:"DEF"})
+    defenseFxEvent:null,
+    floatFxEvent:null
   });
   await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
-  clearSelection();
 }
 function handleUnitContextAction(action){
   const u=unitContextSelection?getUnit(unitContextSelection.unitId):null;
@@ -5769,7 +5661,7 @@ function getUnitStatusSealShortText(entry){
 function isHelpfulStatusEntry(entry){
   const kind=String(entry?.kind||"");
   const icon=String(entry?.icon||"");
-  return kind.includes("buff")||kind.includes("defense")||icon==="buff"||icon==="hp";
+  return kind.includes("buff")||icon==="buff"||icon==="hp";
 }
 function renderUnitStatusSeal(entry,idx=0){
   const kind=escapeHtml(entry?.kind||"neutral");
@@ -5783,17 +5675,20 @@ function getUnitStatusBubblesHtml(u){
   if(!entries.length)return "";
   const helpful=[];
   const harmful=[];
-  entries.forEach((entry,idx)=>{
-    const wrapped={entry,idx};
-    (isHelpfulStatusEntry(entry)?helpful:harmful).push(wrapped);
-  });
-  const left=helpful.slice(0,4);
-  const right=harmful.slice(0,4);
-  const remaining=[...helpful.slice(4),...harmful.slice(4)];
+  entries.forEach(entry=>{(isHelpfulStatusEntry(entry)?helpful:harmful).push(entry);});
+  const left=harmful.slice(0,4);
+  const right=helpful.slice(0,4);
+  let remaining=[...harmful.slice(4),...helpful.slice(4)];
+  while(remaining.length&&(left.length<4||right.length<4)){
+    if(left.length<4&&remaining.length)left.push(remaining.shift());
+    if(right.length<4&&remaining.length)right.push(remaining.shift());
+  }
+  if(!right.length&&left.length>2)right.push(...left.splice(2));
+  if(!left.length&&right.length>2)left.push(...right.splice(0,Math.min(2,right.length-1)));
   const extra=remaining.length;
-  const leftHtml=left.map(item=>renderUnitStatusSeal(item.entry,item.idx)).join("");
-  const rightHtml=right.map(item=>renderUnitStatusSeal(item.entry,item.idx)).join("");
-  return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left status-seal-rail-buffs">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right status-seal-rail-harmful">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
+  const leftHtml=left.map((entry,idx)=>renderUnitStatusSeal(entry,idx)).join("");
+  const rightHtml=right.map((entry,idx)=>renderUnitStatusSeal(entry,left.length+idx)).join("");
+  return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
 }
 
 
@@ -5917,21 +5812,6 @@ function getUnitBottomFrameHtml(u){
   </div>`;
 }
 
-
-/* Patch 82 - Leader isolation from board highlight/grid layer */
-function isLeaderCoord(x,y,unitsList=publicState?.units||[]){
-  return (unitsList||[]).some(u=>u&&u.leader&&u.hp>0&&Number(u.x)===Number(x)&&Number(u.y)===Number(y));
-}
-function isBoardHighlightAllowedAt(x,y){
-  return !isLeaderCoord(x,y);
-}
-function getNonLeaderHighlights(){
-  return (highlights||[]).filter(key=>{
-    const [x,y]=String(key).split(",").map(Number);
-    return Number.isFinite(x)&&Number.isFinite(y)&&isBoardHighlightAllowedAt(x,y);
-  });
-}
-
 function renderBoard(){
   const grid=$("grid");
   if(!grid.dataset.boardTargetDelegateBound){
@@ -5941,7 +5821,7 @@ function renderBoard(){
       const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
       if(!cell||!grid.contains(cell))return;
       const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
-      if(Number.isFinite(x)&&Number.isFinite(y)&&!isLeaderCoord(x,y))handleDirectBoardTargetEvent(ev,x,y);
+      if(Number.isFinite(x)&&Number.isFinite(y))handleDirectBoardTargetEvent(ev,x,y);
     },true);
   }
   grid.innerHTML="";
@@ -5951,7 +5831,7 @@ function renderBoard(){
     const key=`${x},${y}`;
     const tacticalClasses=getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
-    if(highlights.includes(key)&&isBoardHighlightAllowedAt(x,y))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
+    if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
     const trap=getCellBeastTrapAt(x,y);
     if(trap){const m=document.createElement("div");m.className=`beast-trap-marker ${trap.owner===1?"p1":"p2"}`;m.title=trap.owner===myPlayer?trap.cardName:"Trampa de cacería";m.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";cell.appendChild(m);}
     const u=getUnitAt(x,y);
@@ -5995,7 +5875,6 @@ function renderBoard(){
     cell.dataset.x=String(x);
     cell.dataset.y=String(y);
     cell.addEventListener("click",ev=>{
-      if(isLeaderCoord(x,y))return;
       if(shouldDirectBoardTarget())return handleDirectBoardTargetEvent(ev,x,y);
       cellClick(x,y);
     });
@@ -7764,17 +7643,11 @@ signInAnonymously(auth).catch(e=>setText("lobbyStatus",e.message));
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
 
 
-/* Patch 71: controles CSS removidos. */
-
-
-/* Patch 74: controles CSS para héroes/líderes fijos */
+/* Patch 70: controles de tamaño para líderes fijos + refresco CSS */
 const LEADER_CSS_TOOL_DEFAULTS={
-  scale:1.2,
-  northOffset:-22,
-  southOffset:9,
-  statusGap:34,
-  haloWidth:54,
-  haloHeight:15
+  scale:1,
+  northOffset:0,
+  southOffset:0
 };
 function getLeaderCssToolSettings(){
   try{
@@ -7782,10 +7655,7 @@ function getLeaderCssToolSettings(){
     return {
       scale:Number.isFinite(Number(saved.scale))?Number(saved.scale):LEADER_CSS_TOOL_DEFAULTS.scale,
       northOffset:Number.isFinite(Number(saved.northOffset))?Number(saved.northOffset):LEADER_CSS_TOOL_DEFAULTS.northOffset,
-      southOffset:Number.isFinite(Number(saved.southOffset))?Number(saved.southOffset):LEADER_CSS_TOOL_DEFAULTS.southOffset,
-      statusGap:Number.isFinite(Number(saved.statusGap))?Number(saved.statusGap):LEADER_CSS_TOOL_DEFAULTS.statusGap,
-      haloWidth:Number.isFinite(Number(saved.haloWidth))?Number(saved.haloWidth):LEADER_CSS_TOOL_DEFAULTS.haloWidth,
-      haloHeight:Number.isFinite(Number(saved.haloHeight))?Number(saved.haloHeight):LEADER_CSS_TOOL_DEFAULTS.haloHeight
+      southOffset:Number.isFinite(Number(saved.southOffset))?Number(saved.southOffset):LEADER_CSS_TOOL_DEFAULTS.southOffset
     };
   }catch(_){
     return {...LEADER_CSS_TOOL_DEFAULTS};
@@ -7795,15 +7665,15 @@ function saveLeaderCssToolSettings(settings){
   localStorage.setItem("hallvallaLeaderCssTools",JSON.stringify(settings));
 }
 function applyLeaderCssToolSettings(settings=getLeaderCssToolSettings()){
-  const targets=[document.documentElement,document.getElementById("leaderBasesLayer")].filter(Boolean);
-  targets.forEach(target=>{
-    target.style.setProperty("--leaderTokenScale",String(settings.scale));
-    target.style.setProperty("--leaderNorthOffset",`${settings.northOffset}px`);
-    target.style.setProperty("--leaderSouthOffset",`${settings.southOffset}px`);
-    target.style.setProperty("--leaderStatusSideGap",`${settings.statusGap}%`);
-    target.style.setProperty("--leaderHaloWidth",`${settings.haloWidth}%`);
-    target.style.setProperty("--leaderHaloHeight",`${settings.haloHeight}%`);
-  });
+  document.documentElement.style.setProperty("--leaderTokenScale",String(settings.scale));
+  document.documentElement.style.setProperty("--leaderNorthOffset",`${settings.northOffset}px`);
+  document.documentElement.style.setProperty("--leaderSouthOffset",`${settings.southOffset}px`);
+  const layer=document.getElementById("leaderBasesLayer");
+  if(layer){
+    layer.style.setProperty("--leaderTokenScale",String(settings.scale));
+    layer.style.setProperty("--leaderNorthOffset",`${settings.northOffset}px`);
+    layer.style.setProperty("--leaderSouthOffset",`${settings.southOffset}px`);
+  }
 }
 function refreshHallvallaCss(){
   const links=[...document.querySelectorAll('link[rel="stylesheet"]')].filter(link=>{
@@ -7816,7 +7686,7 @@ function refreshHallvallaCss(){
     const clean=raw.split("?")[0];
     link.setAttribute("href",`${clean}?cssv=${stamp}`);
   });
-  setTimeout(()=>applyLeaderCssToolSettings(),80);
+  applyLeaderCssToolSettings();
   return links.length;
 }
 function setupLeaderCssTools(){
@@ -7826,7 +7696,7 @@ function setupLeaderCssTools(){
   toggle.className="leader-css-tools-toggle";
   toggle.type="button";
   toggle.textContent="CSS";
-  toggle.title="Ajustar héroes/líderes y refrescar CSS";
+  toggle.title="Ajustar fichas de líderes y refrescar CSS";
   document.body.appendChild(toggle);
 
   const panel=document.createElement("section");
@@ -7835,88 +7705,63 @@ function setupLeaderCssTools(){
   panel.innerHTML=`
     <h3>Fichas de líderes</h3>
     <label>Escala general <output id="leaderScaleOut"></output></label>
-    <input id="leaderScaleRange" type="range" min="0.40" max="1.35" step="0.01">
+    <input id="leaderScaleRange" type="range" min="0.45" max="1.20" step="0.01">
     <label>Enemigo arriba/abajo <output id="leaderNorthOut"></output></label>
-    <input id="leaderNorthRange" type="range" min="-120" max="120" step="1">
+    <input id="leaderNorthRange" type="range" min="-80" max="80" step="1">
     <label>Jugador arriba/abajo <output id="leaderSouthOut"></output></label>
-    <input id="leaderSouthRange" type="range" min="-120" max="120" step="1">
-    <label>Estados a los lados <output id="leaderStatusGapOut"></output></label>
-    <input id="leaderStatusGapRange" type="range" min="8" max="70" step="1">
-    <label>Halo ancho <output id="leaderHaloWidthOut"></output></label>
-    <input id="leaderHaloWidthRange" type="range" min="0" max="80" step="1">
-    <label>Halo alto <output id="leaderHaloHeightOut"></output></label>
-    <input id="leaderHaloHeightRange" type="range" min="0" max="30" step="1">
+    <input id="leaderSouthRange" type="range" min="-80" max="80" step="1">
     <div class="leader-css-tools-row">
       <button id="leaderCssRefreshBtn" type="button">Refrescar CSS</button>
       <button id="leaderCssResetBtn" type="button">Reset</button>
     </div>
-    <div class="leader-css-tools-note">Ajuste local. Cuando quede bien, pásame captura o valores y lo fijo en el código.</div>
+    <div class="leader-css-tools-note">Estos controles solo ajustan vista local. Para dejarlo fijo en el repo, copia los valores finales al CSS.</div>
   `;
   document.body.appendChild(panel);
 
-  const els={
-    scale:$("leaderScaleRange"),
-    north:$("leaderNorthRange"),
-    south:$("leaderSouthRange"),
-    statusGap:$("leaderStatusGapRange"),
-    haloWidth:$("leaderHaloWidthRange"),
-    haloHeight:$("leaderHaloHeightRange"),
-    scaleOut:$("leaderScaleOut"),
-    northOut:$("leaderNorthOut"),
-    southOut:$("leaderSouthOut"),
-    statusGapOut:$("leaderStatusGapOut"),
-    haloWidthOut:$("leaderHaloWidthOut"),
-    haloHeightOut:$("leaderHaloHeightOut"),
-    refreshBtn:$("leaderCssRefreshBtn"),
-    resetBtn:$("leaderCssResetBtn")
-  };
+  const scale=$("leaderScaleRange");
+  const north=$("leaderNorthRange");
+  const south=$("leaderSouthRange");
+  const scaleOut=$("leaderScaleOut");
+  const northOut=$("leaderNorthOut");
+  const southOut=$("leaderSouthOut");
+  const refreshBtn=$("leaderCssRefreshBtn");
+  const resetBtn=$("leaderCssResetBtn");
+
   function paint(settings=getLeaderCssToolSettings()){
-    els.scale.value=String(settings.scale);
-    els.north.value=String(settings.northOffset);
-    els.south.value=String(settings.southOffset);
-    els.statusGap.value=String(settings.statusGap);
-    els.haloWidth.value=String(settings.haloWidth);
-    els.haloHeight.value=String(settings.haloHeight);
-    els.scaleOut.textContent=`${Math.round(settings.scale*100)}%`;
-    els.northOut.textContent=`${settings.northOffset}px`;
-    els.southOut.textContent=`${settings.southOffset}px`;
-    els.statusGapOut.textContent=`${settings.statusGap}%`;
-    els.haloWidthOut.textContent=`${settings.haloWidth}%`;
-    els.haloHeightOut.textContent=`${settings.haloHeight}%`;
+    scale.value=String(settings.scale);
+    north.value=String(settings.northOffset);
+    south.value=String(settings.southOffset);
+    scaleOut.textContent=`${Math.round(settings.scale*100)}%`;
+    northOut.textContent=`${settings.northOffset}px`;
+    southOut.textContent=`${settings.southOffset}px`;
     applyLeaderCssToolSettings(settings);
   }
   function readAndApply(){
     const settings={
-      scale:Number(els.scale.value),
-      northOffset:Number(els.north.value),
-      southOffset:Number(els.south.value),
-      statusGap:Number(els.statusGap.value),
-      haloWidth:Number(els.haloWidth.value),
-      haloHeight:Number(els.haloHeight.value)
+      scale:Number(scale.value),
+      northOffset:Number(north.value),
+      southOffset:Number(south.value)
     };
     saveLeaderCssToolSettings(settings);
     paint(settings);
   }
   ["input","change"].forEach(evt=>{
-    els.scale.addEventListener(evt,readAndApply);
-    els.north.addEventListener(evt,readAndApply);
-    els.south.addEventListener(evt,readAndApply);
-    els.statusGap.addEventListener(evt,readAndApply);
-    els.haloWidth.addEventListener(evt,readAndApply);
-    els.haloHeight.addEventListener(evt,readAndApply);
+    scale.addEventListener(evt,readAndApply);
+    north.addEventListener(evt,readAndApply);
+    south.addEventListener(evt,readAndApply);
   });
   toggle.addEventListener("click",ev=>{
     ev.stopPropagation();
     panel.classList.toggle("show");
   });
-  els.refreshBtn.addEventListener("click",ev=>{
+  refreshBtn.addEventListener("click",ev=>{
     ev.preventDefault();
     ev.stopPropagation();
     const n=refreshHallvallaCss();
-    els.refreshBtn.textContent=n?"CSS OK":"Sin CSS";
-    setTimeout(()=>els.refreshBtn.textContent="Refrescar CSS",900);
+    refreshBtn.textContent=n?"CSS OK":"Sin CSS";
+    setTimeout(()=>refreshBtn.textContent="Refrescar CSS",900);
   });
-  els.resetBtn.addEventListener("click",ev=>{
+  resetBtn.addEventListener("click",ev=>{
     ev.preventDefault();
     ev.stopPropagation();
     saveLeaderCssToolSettings({...LEADER_CSS_TOOL_DEFAULTS});
@@ -7928,5 +7773,3 @@ document.addEventListener("DOMContentLoaded",()=>{
   setupLeaderCssTools();
   applyLeaderCssToolSettings();
 });
-
-
