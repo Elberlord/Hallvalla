@@ -7824,34 +7824,36 @@ signInAnonymously(auth).catch(e=>setText("lobbyStatus",e.message));
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
 
 
+
 /* ============================================================
-   HUD CSS TOOL: panel visual temporal para calibrar HUDs.
+   HONOR CSS TOOL: panel visual temporal para calibrar HUD de honor.
    No toca combate, IA, cartas ni lógica del duelo.
    ============================================================ */
-function initHudCssTool(){
-  const tool=document.getElementById('hudCssTool');
+function initHonorCssTool(){
+  const tool=document.getElementById('honorCssTool');
   if(!tool||tool.dataset.bound==='1')return;
-  const panel=document.getElementById('hudCssToolPanel');
-  const toggle=document.getElementById('hudCssToolToggle');
-  const close=document.getElementById('hudCssToolClose');
-  const reset=document.getElementById('hudCssToolReset');
-  const storageKey='hallvalla:new-status-hud-tool:v1';
+  const panel=document.getElementById('honorCssToolPanel');
+  const toggle=document.getElementById('honorCssToolToggle');
+  const close=document.getElementById('honorCssToolClose');
+  const reset=document.getElementById('honorCssToolReset');
+  const storageKey='hallvalla:honor-hud-tool:v1';
   const defaults={
-    '--hud-new-p1-left':{value:52,unit:'px'},
-    '--hud-new-p1-top':{value:20,unit:'px'},
-    '--hud-new-p2-right':{value:52,unit:'px'},
-    '--hud-new-p2-top':{value:20,unit:'px'},
-    '--hud-new-x-nudge':{value:0,unit:'px'},
-    '--hud-new-scale':{value:100,unit:'scale'},
-    '--hud-new-width':{value:230,unit:'px'},
-    '--hud-new-name-font':{value:15,unit:'px'},
-    '--hud-new-stat-font':{value:16,unit:'px'},
-    '--hud-new-mini-height':{value:42,unit:'px'},
-    '--hud-new-gap':{value:6,unit:'px'}
+    '--honor-hud-left':{value:26,unit:'px'},
+    '--honor-hud-top':{value:214,unit:'px'},
+    '--honor-hud-scale':{value:100,unit:'scale'},
+    '--honor-hud-min-width':{value:132,unit:'px'},
+    '--honor-hud-pad-x':{value:14,unit:'px'},
+    '--honor-hud-pad-y':{value:8,unit:'px'},
+    '--honor-hud-label-font':{value:11,unit:'px'},
+    '--honor-hud-number-font':{value:16,unit:'px'},
+    '--honor-hud-gap':{value:8,unit:'px'},
+    '--honor-pop-left':{value:22,unit:'px'},
+    '--honor-pop-top':{value:164,unit:'px'},
+    '--honor-pop-scale':{value:96,unit:'scale'}
   };
   let saved={};
   try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch(e){saved={};}
-  function format(name,value,unit){
+  function format(value,unit){
     const n=Number(value);
     if(unit==='scale')return Math.round(n)+'%';
     if(unit==='px')return `${Math.round(n)}px`;
@@ -7865,16 +7867,16 @@ function initHudCssTool(){
   }
   function setVar(name,value,unit,store=true){
     document.documentElement.style.setProperty(name,cssValue(value,unit));
-    const out=tool.querySelector(`[data-hud-output="${name}"]`);
-    if(out)out.textContent=format(name,value,unit);
+    const out=tool.querySelector(`[data-honor-output="${name}"]`);
+    if(out)out.textContent=format(value,unit);
     if(store){
       saved[name]={value:Number(value),unit};
       try{localStorage.setItem(storageKey,JSON.stringify(saved));}catch(e){}
     }
   }
   tool.dataset.bound='1';
-  tool.querySelectorAll('[data-hud-var]').forEach(input=>{
-    const name=input.dataset.hudVar;
+  tool.querySelectorAll('[data-honor-var]').forEach(input=>{
+    const name=input.dataset.honorVar;
     const unit=input.dataset.unit||defaults[name]?.unit||'';
     const start=saved[name]?.value ?? defaults[name]?.value ?? input.value;
     input.value=start;
@@ -7891,8 +7893,8 @@ function initHudCssTool(){
   reset?.addEventListener('click',()=>{
     try{localStorage.removeItem(storageKey);}catch(e){}
     saved={};
-    tool.querySelectorAll('[data-hud-var]').forEach(input=>{
-      const name=input.dataset.hudVar;
+    tool.querySelectorAll('[data-honor-var]').forEach(input=>{
+      const name=input.dataset.honorVar;
       const unit=input.dataset.unit||defaults[name]?.unit||'';
       const val=defaults[name]?.value ?? input.defaultValue ?? input.value;
       input.value=val;
@@ -7902,7 +7904,8 @@ function initHudCssTool(){
 }
 
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',initHudCssTool,{once:true});
+  document.addEventListener('DOMContentLoaded',initHonorCssTool,{once:true});
 }else{
-  initHudCssTool();
+  initHonorCssTool();
 }
+

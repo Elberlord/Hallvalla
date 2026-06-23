@@ -587,35 +587,39 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card"><div class="card-inspect-head"><div><h2 id="cardInspectTitle" class="card-inspect-title"></h2><div id="cardInspectSub" class="card-inspect-sub"></div></div><button id="cardInspectX" class="card-inspect-x" type="button" aria-label="Cerrar carta">×</button></div><div id="cardInspectVisual" class="card-inspect-visual"></div><div id="cardInspectStats" class="card-inspect-grid"></div><div id="cardInspectText" class="card-inspect-text"></div><p id="cardInspectReason" class="card-inspect-reason"></p><div class="card-inspect-actions"><button id="cardInspectCancel" class="btn full" type="button">Cancelar</button><button id="cardInspectPlay" class="btn primary full" type="button">Jugar</button></div></div></div>
 <div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Sonido: activado</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 
-<!-- HUD DEBUG CONTROL: nuevo HUD jugador / IA -->
-<div id="hudCssTool" class="hud-css-tool" aria-label="Control visual HUD">
-  <button id="hudCssToolToggle" class="hud-css-tool-toggle" type="button" aria-expanded="false">HUD</button>
-  <div id="hudCssToolPanel" class="hud-css-tool-panel hidden">
-    <div class="hud-css-tool-head">
-      <b>Control nuevo HUD</b>
-      <button id="hudCssToolClose" class="hud-css-tool-close" type="button" aria-label="Cerrar">×</button>
+<!-- HONOR HUD DEBUG CONTROL: control visual temporal para HUD de honor -->
+<div id="honorCssTool" class="honor-css-tool" aria-label="Control visual Honor">
+  <button id="honorCssToolToggle" class="honor-css-tool-toggle" type="button" aria-expanded="false">HONOR</button>
+  <div id="honorCssToolPanel" class="honor-css-tool-panel hidden">
+    <div class="honor-css-tool-head">
+      <b>Control HUD Honor</b>
+      <button id="honorCssToolClose" class="honor-css-tool-close" type="button" aria-label="Cerrar">×</button>
     </div>
-    <div class="hud-css-tool-section">
+    <div class="honor-css-tool-section">
       <strong>Posición</strong>
-      <label><span>Jugador izquierda</span><output data-hud-output="--hud-new-p1-left">52px</output><input data-hud-var="--hud-new-p1-left" type="range" min="0" max="260" step="1" value="52" data-unit="px"></label>
-      <label><span>Jugador arriba/abajo</span><output data-hud-output="--hud-new-p1-top">20px</output><input data-hud-var="--hud-new-p1-top" type="range" min="0" max="140" step="1" value="20" data-unit="px"></label>
-      <label><span>IA derecha</span><output data-hud-output="--hud-new-p2-right">52px</output><input data-hud-var="--hud-new-p2-right" type="range" min="0" max="260" step="1" value="52" data-unit="px"></label>
-      <label><span>IA arriba/abajo</span><output data-hud-output="--hud-new-p2-top">20px</output><input data-hud-var="--hud-new-p2-top" type="range" min="0" max="140" step="1" value="20" data-unit="px"></label>
-      <label><span>Separar horizontal</span><output data-hud-output="--hud-new-x-nudge">0px</output><input data-hud-var="--hud-new-x-nudge" type="range" min="-80" max="80" step="1" value="0" data-unit="px"></label>
+      <label><span>Izquierda</span><output data-honor-output="--honor-hud-left">26px</output><input data-honor-var="--honor-hud-left" type="range" min="0" max="360" step="1" value="26" data-unit="px"></label>
+      <label><span>Arriba/abajo</span><output data-honor-output="--honor-hud-top">214px</output><input data-honor-var="--honor-hud-top" type="range" min="0" max="520" step="1" value="214" data-unit="px"></label>
+      <label><span>Escala completa</span><output data-honor-output="--honor-hud-scale">100%</output><input data-honor-var="--honor-hud-scale" type="range" min="60" max="160" step="1" value="100" data-unit="scale"></label>
     </div>
-    <div class="hud-css-tool-section">
+    <div class="honor-css-tool-section">
       <strong>Tamaño / lectura</strong>
-      <label><span>Escala completa</span><output data-hud-output="--hud-new-scale">100%</output><input data-hud-var="--hud-new-scale" type="range" min="55" max="145" step="1" value="100" data-unit="scale"></label>
-      <label><span>Ancho HUD</span><output data-hud-output="--hud-new-width">230px</output><input data-hud-var="--hud-new-width" type="range" min="150" max="360" step="1" value="230" data-unit="px"></label>
-      <label><span>Tamaño nombre</span><output data-hud-output="--hud-new-name-font">15px</output><input data-hud-var="--hud-new-name-font" type="range" min="9" max="24" step="1" value="15" data-unit="px"></label>
-      <label><span>Tamaño números</span><output data-hud-output="--hud-new-stat-font">16px</output><input data-hud-var="--hud-new-stat-font" type="range" min="9" max="28" step="1" value="16" data-unit="px"></label>
-      <label><span>Alto cajitas</span><output data-hud-output="--hud-new-mini-height">42px</output><input data-hud-var="--hud-new-mini-height" type="range" min="24" max="80" step="1" value="42" data-unit="px"></label>
-      <label><span>Separación cajitas</span><output data-hud-output="--hud-new-gap">6px</output><input data-hud-var="--hud-new-gap" type="range" min="0" max="20" step="1" value="6" data-unit="px"></label>
+      <label><span>Ancho mínimo</span><output data-honor-output="--honor-hud-min-width">132px</output><input data-honor-var="--honor-hud-min-width" type="range" min="80" max="260" step="1" value="132" data-unit="px"></label>
+      <label><span>Padding horizontal</span><output data-honor-output="--honor-hud-pad-x">14px</output><input data-honor-var="--honor-hud-pad-x" type="range" min="4" max="40" step="1" value="14" data-unit="px"></label>
+      <label><span>Padding vertical</span><output data-honor-output="--honor-hud-pad-y">8px</output><input data-honor-var="--honor-hud-pad-y" type="range" min="2" max="26" step="1" value="8" data-unit="px"></label>
+      <label><span>Tamaño HONOR</span><output data-honor-output="--honor-hud-label-font">11px</output><input data-honor-var="--honor-hud-label-font" type="range" min="7" max="24" step="1" value="11" data-unit="px"></label>
+      <label><span>Tamaño números</span><output data-honor-output="--honor-hud-number-font">16px</output><input data-honor-var="--honor-hud-number-font" type="range" min="9" max="32" step="1" value="16" data-unit="px"></label>
+      <label><span>Separación</span><output data-honor-output="--honor-hud-gap">8px</output><input data-honor-var="--honor-hud-gap" type="range" min="0" max="30" step="1" value="8" data-unit="px"></label>
     </div>
-    <div class="hud-css-tool-actions hud-css-tool-actions-single">
-      <button id="hudCssToolReset" type="button">Reset</button>
+    <div class="honor-css-tool-section">
+      <strong>Animación +Honor</strong>
+      <label><span>Popup izquierda</span><output data-honor-output="--honor-pop-left">22px</output><input data-honor-var="--honor-pop-left" type="range" min="0" max="360" step="1" value="22" data-unit="px"></label>
+      <label><span>Popup arriba/abajo</span><output data-honor-output="--honor-pop-top">164px</output><input data-honor-var="--honor-pop-top" type="range" min="0" max="520" step="1" value="164" data-unit="px"></label>
+      <label><span>Popup escala</span><output data-honor-output="--honor-pop-scale">96%</output><input data-honor-var="--honor-pop-scale" type="range" min="60" max="140" step="1" value="96" data-unit="scale"></label>
     </div>
-    <p class="hud-css-tool-note">Temporal: se guarda en este navegador. Cuando encuentres el tamaño final, lo dejamos fijo y quitamos este panel.</p>
+    <div class="honor-css-tool-actions honor-css-tool-actions-single">
+      <button id="honorCssToolReset" type="button">Reset</button>
+    </div>
+    <p class="honor-css-tool-note">Temporal: se guarda en este navegador. Cuando lo dejes perfecto, lo fijamos y quitamos este panel.</p>
   </div>
 </div>
 <script type="module" src="script.js?v=v8-organized-clean"></script>

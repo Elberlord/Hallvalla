@@ -12707,3 +12707,156 @@ El CSS original se conserva para no romper visuales. El bloque final
   font-size:var(--hud-new-stat-font)!important;
   line-height:1!important;
 }
+
+/* ============================================================
+   HUD JUGADOR / IA FIJO SEGÚN CAPTURA FINAL
+   Control visual removido. Valores finales pegados aquí.
+   ============================================================ */
+:root{
+  --hud-new-p1-left:85px;
+  --hud-new-p1-top:7px;
+  --hud-new-p2-right:82px;
+  --hud-new-p2-top:6px;
+  --hud-new-x-nudge:-61px;
+  --hud-new-scale:1;
+  --hud-new-width:276px;
+  --hud-new-name-font:15px;
+  --hud-new-stat-font:14px;
+  --hud-new-mini-height:35px;
+  --hud-new-gap:18px;
+
+  --honor-hud-left:26px;
+  --honor-hud-top:214px;
+  --honor-hud-scale:1;
+  --honor-hud-min-width:132px;
+  --honor-hud-pad-x:14px;
+  --honor-hud-pad-y:8px;
+  --honor-hud-label-font:11px;
+  --honor-hud-number-font:16px;
+  --honor-hud-gap:8px;
+  --honor-pop-left:22px;
+  --honor-pop-top:164px;
+  --honor-pop-scale:.96;
+}
+
+/* ============================================================
+   CONTROL VISUAL TEMPORAL: HUD HONOR
+   ============================================================ */
+.honor-css-tool{
+  position:fixed;
+  right:18px;
+  top:238px;
+  z-index:9998;
+  font-family:Georgia,serif;
+  color:#ffe5ad;
+}
+.honor-css-tool-toggle{
+  width:82px;
+  height:50px;
+  border-radius:999px;
+  border:1px solid rgba(255,209,102,.72);
+  background:rgba(13,10,7,.92);
+  color:#ffe5ad;
+  font-family:Georgia,serif;
+  font-weight:900;
+  letter-spacing:.6px;
+  box-shadow:0 0 22px rgba(255,209,102,.14),0 12px 28px rgba(0,0,0,.50);
+  cursor:pointer;
+}
+.honor-css-tool-panel{
+  position:absolute;
+  right:0;
+  top:58px;
+  width:380px;
+  max-height:min(72vh,620px);
+  overflow:auto;
+  box-sizing:border-box;
+  padding:14px 16px 16px;
+  border:1px solid rgba(255,209,102,.45);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(28,18,10,.97),rgba(10,8,6,.96));
+  box-shadow:0 20px 58px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,255,255,.035);
+}
+.honor-css-tool-panel.hidden{display:none!important;}
+.honor-css-tool-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-size:18px;
+}
+.honor-css-tool-close{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:1px solid rgba(255,209,102,.42);
+  background:rgba(0,0,0,.35);
+  color:#ffe5ad;
+  font-weight:900;
+  cursor:pointer;
+}
+.honor-css-tool-section{
+  display:grid;
+  gap:10px;
+  padding:12px 0;
+  border-top:1px solid rgba(255,209,102,.22);
+}
+.honor-css-tool-section strong{color:#ffe5ad;font-size:15px;}
+.honor-css-tool label{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:4px 8px;
+  align-items:center;
+  font-size:13px;
+  font-weight:900;
+}
+.honor-css-tool output{color:#78e8ff;font-family:Arial,sans-serif;font-weight:900;}
+.honor-css-tool input[type=range]{grid-column:1 / -1;width:100%;accent-color:#ffd166;}
+.honor-css-tool-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px;}
+.honor-css-tool-actions button{
+  min-height:38px;
+  border-radius:14px;
+  border:1px solid rgba(255,209,102,.42);
+  background:rgba(0,0,0,.32);
+  color:#ffe5ad;
+  font-family:Georgia,serif;
+  font-weight:900;
+  cursor:pointer;
+}
+.honor-css-tool-note{font-size:11px;line-height:1.25;color:#ccb990;margin:10px 0 0;}
+
+/* Prioridad final del HUD de honor, ahora controlado por variables. */
+#gameShell .battlefield #turnHonorHud.turn-honor-hud{
+  position:absolute!important;
+  left:var(--honor-hud-left)!important;
+  top:var(--honor-hud-top)!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:scale(var(--honor-hud-scale))!important;
+  transform-origin:top left!important;
+  z-index:76!important;
+  min-width:var(--honor-hud-min-width)!important;
+  justify-content:center!important;
+  gap:var(--honor-hud-gap)!important;
+  padding:var(--honor-hud-pad-y) var(--honor-hud-pad-x)!important;
+  background:rgba(0,0,0,.88)!important;
+  border-color:rgba(255,213,96,.70)!important;
+  pointer-events:none!important;
+}
+#gameShell .battlefield #turnHonorHud .turn-honor-label{
+  font-size:var(--honor-hud-label-font)!important;
+}
+#gameShell .battlefield #turnHonorHud strong{
+  font-size:var(--honor-hud-number-font)!important;
+}
+#gameShell .battlefield #honorRechargeModal.honor-recharge-modal{
+  left:var(--honor-pop-left)!important;
+  top:var(--honor-pop-top)!important;
+  transform:translateY(-12px) scale(var(--honor-pop-scale))!important;
+  z-index:78!important;
+}
+
+@media(max-width:980px){
+  .honor-css-tool{right:10px;top:228px;}
+  .honor-css-tool-panel{width:min(340px,calc(100vw - 20px));}
+}
