@@ -5990,13 +5990,17 @@ function getUnitTopLeftTitle(u){
 }
 function getUnitAuxStatData(u){
   if(!u)return {text:"",kind:"guard",title:""};
-  if(u.leader||publicState?.currentPlayer===u.owner){
+  if(u.leader){
     const guard=displayEffectiveGuard(u);
     return {text:String(guard),kind:"guard",title:`Guardia/armadura actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}`};
   }
-  const evaPct=getDisplayEvasionPercent(u);
-  const evaScore=getAvailableEvasionScore(u,{});
-  return {text:`${evaPct}%`,kind:"eva",title:`Probabilidad de evasión aproximada: ${evaPct}% (evasión disponible: ${evaScore}).`};
+  const activeOwner=Number(publicState?.currentPlayer||0);
+  if(activeOwner&&activeOwner===Number(u.owner)){
+    const precisionScore=getAttackPrecisionScore(u,{});
+    return {text:`PR ${precisionScore}`,kind:"precision",title:`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`};
+  }
+  const evasionScore=getAvailableEvasionScore(u,{});
+  return {text:`EV ${evasionScore}`,kind:"eva",title:`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`};
 }
 function getUnitBottomFrameHtml(u){
   if(!u)return "";

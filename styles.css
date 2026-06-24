@@ -4336,11 +4336,12 @@ El CSS original se conserva para no romper visuales. El bloque final
   height:14.5%;
 }
 .stat-orb-atk{left:8.2%;}
-.stat-orb-aux{right:8.2%;}
+.stat-orb-aux{right:7.2%;width:26.5%;font-size:7px;letter-spacing:-.055em;}
 .stat-orb-cost,.stat-orb-atk,.stat-orb-aux{background:radial-gradient(circle at 35% 28%,rgba(53,49,40,.92),rgba(9,8,8,.98));}
 .stat-orb-atk{color:#ffe1d0;}
 .stat-orb-cost{color:#ffeec8;}
 .stat-orb-aux.guard{color:#e6f4ff;}
+.stat-orb-aux.precision{color:#fff1b9;}
 .stat-orb-aux.eva{color:#f3e1ff;}
 .stat-orb-hp{background:rgba(12,10,11,.96);}
 .stat-orb-hp b{font-size:7px;}
@@ -4370,7 +4371,9 @@ El CSS original se conserva para no romper visuales. El bloque final
   .unit-stat-orb{font-size:6px;}
   .stat-orb-hp b{font-size:5.8px;}
   .stat-orb-cost,.stat-orb-hp{top:7.5%;width:19.2%;height:13%;}
-  .stat-orb-atk,.stat-orb-aux{bottom:6.6%;width:22.8%;height:14.6%;}
+  .stat-orb-atk,.stat-orb-aux{bottom:6.6%;height:14.6%;}
+  .stat-orb-atk{width:22.8%;}
+  .stat-orb-aux{width:28.5%;font-size:6px;}
 }
 
 
