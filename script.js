@@ -6169,6 +6169,9 @@ function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const ha
 function renderLog(){const el=$("log");if(!el)return;el.classList.toggle("log-collapsed",!!logCollapsed);el.setAttribute("aria-hidden",String(!!logCollapsed));el.innerHTML=logCollapsed?"":(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}
 function renderDetail(){
   const detailEl=$("detail");
+  // DETAIL HUD REMOVED: el panel #detail ya no existe en index.html.
+  // Esta salida evita errores cuando render() intenta actualizarlo.
+  if(!detailEl)return;
   const isAdventure=publicState?.mode==="adventure";
   if(selectedCard){
     const cardStats=selectedCard.type==="unit"
