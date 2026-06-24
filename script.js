@@ -1963,7 +1963,18 @@ function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const da
 function applyLeaderToCard(card,leaderType){return {...card}}
 function makeCard(t,owner,leaderType){return {...t,id:uid8(),owner,leaderType}}
 function getDefaultDeckTemplates(){
-  const deck=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
+  const missing=[];
+  const deck=STARTER_BASIC_DECK_KEYS.map(key=>{
+    const card=getStarterBasicCardByKey(key);
+    if(!card)missing.push(key);
+    return card;
+  }).filter(Boolean);
+  if(missing.length){
+    console.warn(`[HallValla] Starter deck incompleto. Faltan keys básicas: ${[...new Set(missing)].join(", ")}`);
+  }
+  if(deck.length!==DECK_RULES.deckSize){
+    console.warn(`[HallValla] Starter deck tiene ${deck.length}/${DECK_RULES.deckSize} cartas.`);
+  }
   return deck.slice(0,DECK_RULES.deckSize);
 }
 function getStarterAdventureDeckTemplates(selectedSpecial=""){
@@ -6504,13 +6515,25 @@ function saveProfileNameChange(){
   setProfileMessage(cost===0?"Nombre actualizado. Este primer cambio fue gratis.":`Nombre actualizado. Se descontaron ${cost} gemas.`,"success");
 }
 
+/* ============================================================
+   PATCH 8I - STARTER BASIC MAGIC/TRAP KEYS RESTORED
+   Objetivo:
+   - Restaurar las cartas básicas que el mazo inicial ya buscaba:
+     fireball, heal, shield_wall, smoke_bomb, inspiration.
+   - Mantener nombres simples y fáciles de detectar en el código.
+   - Hacer que el starter vuelva a completar 25 cartas.
+
+   Alcance:
+   - Solo cambia las keys/nombres del pack básico de magias/trampas.
+   - No toca HUD, tablero, estilos, index.html ni reglas de tamaño de mazo.
+   ============================================================ */
 const BASIC_MAGIC_TRAP_PACK = [
-  {key:"sand_curse_basic",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},
-  {key:"pharaoh_blessing_basic",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},
-  {key:"dust_guard_basic",name:"Guardia de polvo",type:"spell",icon:"🛡️",cost:1,spell:"shield",guard:2,text:"+2 GUARDIA a una unidad aliada hasta el final del turno."},
-  {key:"snare_trap_basic",name:"Trampa de lazo",type:"trap",icon:"🪤",cost:1,trap:"slow",slow:1,text:"Cuando un enemigo se mueva, reduce su MOV en 1 durante este turno."},
-  {key:"warning_rune_basic",name:"Runa de advertencia",type:"trap",icon:"◆",cost:1,trap:"guard",guard:1,text:"Cuando una unidad aliada sea atacada, obtiene +1 GUARDIA durante ese combate."},
-  {key:"healing_light_basic",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}
+  {key:"fireball",name:"Fireball",type:"spell",icon:"🔥",rarity:"Básica",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},
+  {key:"heal",name:"Heal",type:"spell",icon:"✨",rarity:"Básica",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."},
+  {key:"shield_wall",name:"Shield Wall",type:"spell",icon:"🛡️",rarity:"Básica",cost:1,spell:"shield",guard:2,text:"+2 GUARDIA a una unidad aliada hasta el final del turno."},
+  {key:"smoke_bomb",name:"Smoke Bomb",type:"trap",icon:"💨",rarity:"Básica",cost:1,trap:"slow",slow:1,text:"Cuando un enemigo se mueva, reduce su MOV en 1 durante este turno."},
+  {key:"inspiration",name:"Inspiration",type:"spell",icon:"☀️",rarity:"Básica",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},
+  {key:"warning_rune",name:"Warning Rune",type:"trap",icon:"◆",rarity:"Básica",cost:1,trap:"guard",guard:1,text:"Cuando una unidad aliada sea atacada, obtiene +1 GUARDIA durante ese combate."}
 ];
 
 function getPlayerCollection(){
