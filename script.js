@@ -7796,8 +7796,88 @@ document.addEventListener("keydown",async(e)=>{
 });
 
 
+
+
+/* ============================================================
+   PATCH 8G - CSS CONTROLS: HUD ACCIONES
+   Objetivo:
+   - Crear controles visuales para mover y escalar el panel de Acciones.
+   - Solo afecta el HUD con los botones Mazo, Cancelar y Siguiente fase.
+   - Guarda valores en localStorage para no perder el acomodo al recargar.
+   ============================================================ */
+const ACTIONS_HUD_CSS_DEFAULTS={
+  "--actions-hud-right":"34px",
+  "--actions-hud-top":"170px",
+  "--actions-hud-width":"390px",
+  "--actions-hud-scale":"0.92",
+  "--actions-hud-buttons-x":"50%",
+  "--actions-hud-buttons-y":"44%",
+  "--actions-hud-buttons-width":"62%",
+  "--actions-hud-buttons-gap":"10px",
+  "--actions-hud-label-font":"11px"
+};
+const ACTIONS_HUD_CSS_STORAGE_KEY="hallvalla_actions_hud_css_values_v8g";
+function getActionsHudCssSavedValues(){
+  try{return JSON.parse(localStorage.getItem(ACTIONS_HUD_CSS_STORAGE_KEY)||"{}");}
+  catch(e){return {};}
+}
+function saveActionsHudCssValues(values){
+  try{localStorage.setItem(ACTIONS_HUD_CSS_STORAGE_KEY,JSON.stringify(values||{}));}
+  catch(e){console.warn("No se pudo guardar HUD Acciones:",e);}
+}
+function applyActionsHudCssValue(name,value){
+  if(!name)return;
+  document.documentElement.style.setProperty(name,String(value));
+}
+function applyActionsHudCssValues(values){
+  const merged={...ACTIONS_HUD_CSS_DEFAULTS,...(values||{})};
+  Object.entries(merged).forEach(([name,value])=>applyActionsHudCssValue(name,value));
+}
+function syncActionsHudCssControl(input,values){
+  const name=input.dataset.actionsHudVar;
+  const unit=input.dataset.unit||"";
+  const raw=String(values[name]||ACTIONS_HUD_CSS_DEFAULTS[name]||input.value+unit);
+  const numeric=parseFloat(raw);
+  if(Number.isFinite(numeric))input.value=String(numeric);
+  const output=input.closest("label")?.querySelector("output");
+  if(output)output.textContent=`${input.value}${unit}`;
+}
+function setupActionsHudCssTool(){
+  const tool=$("actionsHudCssTool");
+  if(!tool)return;
+  const panel=$("actionsHudCssPanel"),toggle=$("actionsHudCssToggle"),close=$("actionsHudCssClose"),reset=$("actionsHudCssReset"),copy=$("actionsHudCssCopy");
+  const inputs=[...tool.querySelectorAll("input[data-actions-hud-var]")];
+  let values={...ACTIONS_HUD_CSS_DEFAULTS,...getActionsHudCssSavedValues()};
+  applyActionsHudCssValues(values);
+  inputs.forEach(input=>syncActionsHudCssControl(input,values));
+  toggle?.addEventListener("click",()=>panel?.classList.toggle("hidden"));
+  close?.addEventListener("click",()=>panel?.classList.add("hidden"));
+  inputs.forEach(input=>{
+    input.addEventListener("input",()=>{
+      const name=input.dataset.actionsHudVar;
+      const unit=input.dataset.unit||"";
+      values[name]=`${input.value}${unit}`;
+      applyActionsHudCssValue(name,values[name]);
+      const output=input.closest("label")?.querySelector("output");
+      if(output)output.textContent=values[name];
+      saveActionsHudCssValues(values);
+    });
+  });
+  reset?.addEventListener("click",()=>{
+    values={...ACTIONS_HUD_CSS_DEFAULTS};
+    saveActionsHudCssValues(values);
+    applyActionsHudCssValues(values);
+    inputs.forEach(input=>syncActionsHudCssControl(input,values));
+  });
+  copy?.addEventListener("click",async()=>{
+    const css=`:root{\n${Object.entries(values).map(([k,v])=>`  ${k}:${v};`).join("\n")}\n}`;
+    try{await navigator.clipboard.writeText(css);copy.textContent="CSS copiado";setTimeout(()=>copy.textContent="Copiar CSS final",1200);}catch(e){console.warn("No se pudo copiar CSS:",e);}
+  });
+}
+
 // Inicialización segura: se ejecuta al final para evitar usar constantes antes de que existan.
 setupHudToggles();
+setupActionsHudCssTool();
 renderHudCollapseState();
 renderHomeProgress();
 renderSelectedLeaderBadge();

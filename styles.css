@@ -13075,3 +13075,174 @@ El CSS original se conserva para no romper visuales. El bloque final
     border-radius:12px !important;
   }
 }
+
+/* ============================================================
+   PATCH 8G - ACTIONS HUD CSS CONTROLS
+   Objetivo:
+   - Dar controles visuales al HUD de Acciones para acomodarlo sin tocar JS.
+   - Controla posición, ancho, escala y botones internos con variables CSS.
+
+   Alcance:
+   - Solo afecta .side, .actions-visual-panel, .actions-visual-buttons,
+     .action-img-btn y .action-btn-label dentro de #gameShell .battlefield.
+   - No toca HUD de honor, HUD jugador/IA, tablero, cartas, mano ni modales.
+
+   Diagnóstico futuro:
+   - Si el panel de Acciones se ve mal, revisar primero estas variables.
+   ============================================================ */
+:root{
+  --actions-hud-right:34px;
+  --actions-hud-top:170px;
+  --actions-hud-width:390px;
+  --actions-hud-scale:.92;
+  --actions-hud-buttons-x:50%;
+  --actions-hud-buttons-y:44%;
+  --actions-hud-buttons-width:62%;
+  --actions-hud-buttons-gap:10px;
+  --actions-hud-label-font:11px;
+}
+
+#gameShell .battlefield .side{
+  position:absolute!important;
+  left:auto!important;
+  right:var(--actions-hud-right)!important;
+  top:var(--actions-hud-top)!important;
+  bottom:auto!important;
+  width:var(--actions-hud-width)!important;
+  transform:scale(var(--actions-hud-scale))!important;
+  transform-origin:top right!important;
+  max-height:none!important;
+  z-index:84!important;
+  pointer-events:none!important;
+}
+
+#gameShell .battlefield .side .actions-visual-panel{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  pointer-events:auto!important;
+}
+
+#gameShell .battlefield .side .actions-visual-buttons{
+  left:var(--actions-hud-buttons-x)!important;
+  top:var(--actions-hud-buttons-y)!important;
+  width:var(--actions-hud-buttons-width)!important;
+  gap:var(--actions-hud-buttons-gap)!important;
+  transform:translate(-50%,-50%)!important;
+}
+
+#gameShell .battlefield .side .action-img-btn{
+  width:100%!important;
+  min-width:0!important;
+}
+
+#gameShell .battlefield .side .action-btn-label{
+  font-size:var(--actions-hud-label-font)!important;
+}
+
+#gameShell .battlefield .side.actions-collapsed,
+#gameShell .battlefield .side.actions-collapsed .actions-visual-panel{
+  display:none!important;
+}
+
+.actions-hud-css-tool{
+  position:fixed;
+  right:18px;
+  top:305px;
+  z-index:9998;
+  font-family:Georgia,serif;
+  color:#ffe5ad;
+}
+.actions-hud-css-tool-toggle{
+  width:124px;
+  min-height:46px;
+  border-radius:999px;
+  border:1px solid rgba(255,209,102,.72);
+  background:rgba(13,10,7,.94);
+  color:#ffe5ad;
+  font-family:Georgia,serif;
+  font-weight:900;
+  letter-spacing:.4px;
+  box-shadow:0 0 22px rgba(255,209,102,.14),0 12px 28px rgba(0,0,0,.50);
+  cursor:pointer;
+}
+.actions-hud-css-tool-panel{
+  position:absolute;
+  right:0;
+  top:56px;
+  width:395px;
+  max-height:min(72vh,640px);
+  overflow:auto;
+  box-sizing:border-box;
+  padding:14px 16px 16px;
+  border:1px solid rgba(255,209,102,.45);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(28,18,10,.97),rgba(10,8,6,.96));
+  box-shadow:0 20px 58px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,255,255,.035);
+}
+.actions-hud-css-tool-panel.hidden{display:none!important;}
+.actions-hud-css-tool-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-size:18px;
+}
+.actions-hud-css-tool-close{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:1px solid rgba(255,209,102,.42);
+  background:rgba(0,0,0,.35);
+  color:#ffe5ad;
+  font-weight:900;
+  cursor:pointer;
+}
+.actions-hud-css-tool-section{
+  display:grid;
+  gap:10px;
+  padding:12px 0;
+  border-top:1px solid rgba(255,209,102,.22);
+}
+.actions-hud-css-tool-section strong{color:#ffe5ad;font-size:15px;}
+.actions-hud-css-tool label{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:4px 8px;
+  align-items:center;
+  font-size:13px;
+  font-weight:900;
+}
+.actions-hud-css-tool output{color:#78e8ff;font-family:Arial,sans-serif;font-weight:900;}
+.actions-hud-css-tool input[type=range]{grid-column:1 / -1;width:100%;accent-color:#ffd166;}
+.actions-hud-css-tool-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.actions-hud-css-tool-actions button{
+  min-height:38px;
+  border-radius:14px;
+  border:1px solid rgba(255,209,102,.42);
+  background:rgba(0,0,0,.32);
+  color:#ffe5ad;
+  font-family:Georgia,serif;
+  font-weight:900;
+  cursor:pointer;
+}
+.actions-hud-css-tool-note{font-size:11px;line-height:1.25;color:#ccb990;margin:10px 0 0;}
+
+@media(max-width:980px), (pointer:coarse){
+  #gameShell .battlefield .side,
+  #gameShell .battlefield.hand-open .side:not(.actions-collapsed){
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:calc(118px + env(safe-area-inset-top, 0px))!important;
+    bottom:auto!important;
+    width:min(240px,68vw)!important;
+    transform:translateX(-50%)!important;
+    transform-origin:top center!important;
+    z-index:185!important;
+  }
+  .actions-hud-css-tool{right:10px;top:284px;}
+  .actions-hud-css-tool-panel{width:min(360px,calc(100vw - 20px));}
+  .actions-hud-css-tool-actions{grid-template-columns:1fr;}
+}
+
