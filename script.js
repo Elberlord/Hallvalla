@@ -815,8 +815,10 @@ function getUnitWeaponKind(unit){
   const icon=String(unit?.icon||"");
   const range=Number(unit?.range||1);
   if(key.includes("archer")||name.includes("arquera")||name.includes("arquero")||name.includes("simo")||icon.includes("🏹")||range>=3)return "arrow";
+  // La caballería ligera pertenece a la clase táctica Caballería,
+  // pero su arma de ataque básica es espada, no lanza.
+  if(name.includes("caballer")||key.includes("cavalry"))return "sword";
   if(key.includes("spearman")||name.includes("lancero")||name.includes("lanza")||text.includes("lanza"))return "spear";
-  if(name.includes("caballer")||key.includes("cavalry"))return "spear";
   if(name.includes("berserker")||icon.includes("🪓"))return "axe";
   return "sword";
 }
@@ -3102,7 +3104,7 @@ function weaponGuideData(entity){
     if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: controla el ritmo de las magias.",formula:"Ventaja: reduce costos y aumenta efectos mágicos por nivel de buff. Su arma real es acelerar el spellbook.",example:"Un hechicero fuerte convierte magias baratas en cambios grandes de tablero."};
     return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
   }
-  if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Lanza ligera de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: si la unidad se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate. Eso hace más fácil conectar y reduce la evasión enemiga.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación."};
+  if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Espada de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: aunque pertenece a la clase táctica Caballería, esta unidad ataca con espada. Si se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación. Cuidado con lanceros: son su respuesta natural."};
   if(isAxeUnitCardLike(entity)||key==="berserker"||name.includes("berserker"))return {title:"Hacha / arma de dos manos",short:"Arma pesada de ruptura. Recibe +2 Destreza base para conectar mejor sus golpes.",formula:"Ventaja: mucho AT, +2 DX por regla de hacha y presión sobre Guardia enemiga. Su función es abrir unidades resistentes, no aguantar una lluvia de ataques.",example:"Si entra contra una unidad con poca AGI, Guardia ya gastada o Evasión presionada, puede partir la defensa en un solo golpe."};
   if(key==="spearman"||name.includes("lancero"))return {title:"Lanza y escudo",short:"Arma de control. Tiene más alcance que una espada común y castiga cargas enemigas.",formula:"Ventaja: RG 2 le permite golpear antes que muchas unidades cuerpo a cuerpo. También puede contraatacar si sobrevive y es especialmente peligroso contra Caballería.",example:"Colócalo en el frente para proteger casillas clave y obligar al rival a pensar antes de entrar."};
   if(key==="archer"||name.includes("arquera")||name.includes("arquero"))return {title:"Arco",short:"Arma de hostigamiento. Hace daño desde distancia y obliga al rival a moverse mal.",formula:"Ventaja: ataca fuera del cuerpo a cuerpo. Además, su disparo puede reducir MOV del objetivo, cortando persecuciones o retiradas.",example:"Una arquera bien colocada gana valor si dispara sin quedar atrapada al siguiente turno."};
@@ -4220,6 +4222,49 @@ async function adventureEnemyTurn(){
   const enemyLeaderNow=()=>leader(2);
   const inBounds=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS;
 
+  const aiBasicTacticRole=(cardOrUnit)=>{
+    const key=(cardOrUnit?.key||"").toLowerCase();
+    const name=(cardOrUnit?.name||"").toLowerCase();
+    const text=(cardOrUnit?.text||"").toLowerCase();
+    const range=Number(cardOrUnit?.range||1);
+    if(key==="guardian"||name.includes("guardián")||name.includes("guardian"))return "tank";
+    if(key==="spearman"||name.includes("lancero")||name.includes("lanza")||text.includes("lanza"))return "spear";
+    if(key==="scout"||name.includes("asesina")||name.includes("asesino"))return "assassin";
+    if(key==="archer"||name.includes("arquera")||name.includes("arquero")||range>=3)return "ranged";
+    if(key==="bolt"||cardOrUnit?.spell==="damage")return "directDamage";
+    return "other";
+  };
+  const aiBasicTacticState=()=>{
+    const aiUnits=living(2).filter(u=>!u.leader);
+    const playerUnits=living(1).filter(u=>!u.leader);
+    return {
+      tanks:aiUnits.filter(u=>aiBasicTacticRole(u)==="tank"),
+      spears:aiUnits.filter(u=>aiBasicTacticRole(u)==="spear"),
+      ranged:aiUnits.filter(u=>aiBasicTacticRole(u)==="ranged"),
+      assassins:aiUnits.filter(u=>aiBasicTacticRole(u)==="assassin"),
+      enemyBerserkers:playerUnits.filter(u=>u.key==="berserker"||(u.name||"").toLowerCase().includes("berserker"))
+    };
+  };
+  const aiEnemyBerserkerPressure=()=>{
+    const el=enemyLeaderNow();
+    if(!el)return null;
+    return aiBasicTacticState().enemyBerserkers
+      .map(u=>({unit:u,score:260-Math.max(0,d(u,el))*28+(effectiveAtk(u)||0)*10+(u.hp||0)*8}))
+      .sort((a,b)=>b.score-a.score)[0]||null;
+  };
+  const aiEnemyCavalryPressure=()=>{
+    const el=enemyLeaderNow();
+    const cavalryThreats=living(1).filter(u=>!u.leader&&(u.key==="cavalry"||getWeaponClassForCard(u)==="cavalry"||isLightCavalryUnit(u)));
+    if(!cavalryThreats.length)return null;
+    return cavalryThreats
+      .map(u=>{
+        const distanceToLeader=el?d(u,el):4;
+        const reach=(effectiveMov(u)||0)+(u.range||1);
+        return {unit:u,score:340-Math.max(0,distanceToLeader)*34+reach*18+(effectiveAtk(u)||0)*12+(u.hp||0)*6};
+      })
+      .sort((a,b)=>b.score-a.score)[0]||null;
+  };
+
   const aiUnitValue=(u)=>{
     if(!u)return 0;
     const tier=getUnitTrapTier(u);
@@ -4260,7 +4305,13 @@ async function adventureEnemyTurn(){
   };
 
   const bestAttackTarget=(attacker)=>{
-    return living(1).filter(t=>canHit(attacker,t)).map(t=>({target:t,score:scoreTarget(t,0,attacker)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
+    return living(1).filter(t=>canHit(attacker,t)).map(t=>{
+      let score=scoreTarget(t,0,attacker);
+      if(aiBasicTacticRole(attacker)==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
+      if((attacker?.range||1)>=3&&t.leader)score+=130;
+      if(aiBasicTacticRole(attacker)==="spear"&&(t.key==="cavalry"||getWeaponClassForCard(t)==="cavalry"))score+=260;
+      return{target:t,score};
+    }).sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
 
   const playerThreatAtCell=(cell,unitLike=null)=>{
@@ -4583,6 +4634,10 @@ async function adventureEnemyTurn(){
     const cardRange=card.range||1;
     const cardAtk=card.atk||0;
     const cardHp=card.hp||0;
+    const role=aiBasicTacticRole(card);
+    const tactic=aiBasicTacticState();
+    const berserkerPressure=aiEnemyBerserkerPressure();
+    const cavalryPressure=aiEnemyCavalryPressure();
     const distToCaster=pl?d(cell,pl):6;
     score+=Math.max(0,12-distToCaster)*6;
     if(pl&&distToCaster<=cardRange)score+=160+cardAtk*8;
@@ -4599,6 +4654,46 @@ async function adventureEnemyTurn(){
     if(card.key==="archer"||cardRange>1)score+=aiLevel>=3?45:20;
     if(card.key==="scout")score+=living(1).some(e=>!e.leader&&d(cell,e)<=cardRange)?55:10;
     if(card.key==="guardian"&&el&&living(1).some(e=>d(e,el)<=3))score+=75;
+
+    // Estrategia del mazo básico: levantar línea defensiva, esperar con rango y castigar amenazas.
+    if(role==="tank"){
+      if(!tactic.tanks.length)score+=260;
+      if(el&&d(cell,el)<=1)score+=95;
+      if(el&&pl&&d(cell,el)<d(pl,el))score+=55;
+      if(berserkerPressure)score+=80;
+    }
+    if(role==="spear"){
+      score+=tactic.tanks.length?170:70;
+      if(tactic.spears.length<2)score+=90;
+      if(el&&d(cell,el)<=2)score+=80;
+      if(pl&&d(cell,pl)<=cardRange+1)score+=55;
+      if(berserkerPressure)score+=55;
+      if(cavalryPressure){
+        const cav=cavalryPressure.unit;
+        const controlRange=Math.max(2,cardRange);
+        score+=360;
+        if(d(cell,cav)<=controlRange)score+=260;
+        else if(d(cell,cav)<=controlRange+(card.mov||1))score+=120;
+        if(el&&d(cell,el)<=2)score+=120;
+      }
+    }
+    if(role==="ranged"){
+      score+=(tactic.tanks.length||tactic.spears.length)?185:65;
+      if(pl&&d(cell,pl)<=cardRange)score+=170;
+      if(el&&d(cell,el)>=1&&d(cell,el)<=2)score+=65;
+      score+=Math.max(0,cardRange-2)*45;
+    }
+    if(role==="assassin"){
+      if(berserkerPressure){
+        const b=berserkerPressure.unit;
+        const reach=(card.mov||0)+cardRange;
+        score+=220+Math.max(0,8-d(cell,b))*28;
+        if(d(cell,b)<=cardRange)score+=280;
+        else if(d(cell,b)<=reach)score+=130;
+      }else{
+        score+=living(1).some(e=>!e.leader&&d(cell,e)<=Math.max(1,cardRange+(card.mov||0)))?70:5;
+      }
+    }
     return score;
   };
 
@@ -4804,9 +4899,116 @@ async function adventureEnemyTurn(){
   const chooseBestDamageSpell=()=>{
     return hand.filter(c=>c.spell==="damage"&&effectiveCardCost(c,2)<=honor&&living(1).length).map(card=>{
       const target=bestTargetForDamage(card);
-      const score=scoreTarget(target,card.damage||0)-(card.cost||0)*2;
+      let score=scoreTarget(target,card.damage||0)-(card.cost||0)*2;
+      // Con el mazo básico de Hechicero, el daño mágico directo al líder es presión central.
+      if(target?.leader)score+=260;
+      if(pub.adventureEnemyLeader==="mage"&&target?.leader)score+=120;
       return{card,target,score};
     }).sort((a,b)=>b.score-a.score)[0]||null;
+  };
+
+
+  const aiChoiceCostPenalty=(choice)=>effectiveCardCost(choice?.card,2)*7;
+  const aiMainChoiceMinimumScore=(choice)=>{
+    if(!choice)return 999999;
+    const aiHasBoard=living(2).some(u=>!u.leader);
+    const danger=leaderDangerScore();
+    if(choice.kind==="damage")return choice.target?.leader?70:85;
+    if(choice.kind==="summon")return aiHasBoard?55:18;
+    if(choice.kind==="buff")return choice.immediate?85:120;
+    if(choice.kind==="heal")return danger>=80?45:70;
+    if(choice.kind==="guard")return danger>=80?55:90;
+    if(choice.kind==="slow")return 75;
+    if(choice.kind==="legendaryTrap")return 80;
+    if(choice.kind==="revealTrap")return 65;
+    if(choice.kind==="beastTargetTrap")return 70;
+    if(choice.kind==="beastCellTrap")return 50;
+    return 75;
+  };
+
+  const chooseBestAiMainPlay=()=>{
+    const choices=[];
+    const pushChoice=(kind,choice,base=0)=>{
+      if(!choice||!choice.card)return;
+      let score=(Number(choice.score)||0)+base-aiChoiceCostPenalty(choice);
+      const cost=effectiveCardCost(choice.card,2);
+      if(cost>honor)return;
+      if(kind==="damage"){
+        if(!choice.target)return;
+        const dmg=effectiveCardValue(choice.card,"damage")||choice.card.damage||0;
+        if(choice.target.leader)score+=390;
+        if(pub.adventureEnemyLeader==="mage"&&choice.target.leader)score+=130;
+        if(dmg>=(choice.target.hp||0))score+=choice.target.leader?1600:360;
+        score+=Math.max(0,6-(choice.target.hp||0))*18;
+      }
+      if(kind==="summon"){
+        const aiHasBoard=living(2).some(u=>!u.leader);
+        const role=aiBasicTacticRole(choice.card);
+        const tactic=aiBasicTacticState();
+        const berserkerPressure=aiEnemyBerserkerPressure();
+        if(!aiHasBoard)score+=95;
+        if(choice.cell&&playerLeaderNow()&&d(choice.cell,playerLeaderNow())<=(choice.card.range||1))score+=140;
+        score+=(choice.card.special?45:0)+(choice.card.rarity?12:0);
+        const cavalryPressure=aiEnemyCavalryPressure();
+        if(role==="tank"&&!tactic.tanks.length)score+=360;
+        if(role==="spear"&&tactic.tanks.length&&tactic.spears.length<2)score+=240;
+        if(role==="spear"&&cavalryPressure)score+=520;
+        if(role==="ranged"&&(tactic.tanks.length||tactic.spears.length))score+=255;
+        if(role==="ranged"&&Number(choice.card.range||1)>=3)score+=Math.max(0,Number(choice.card.range||1)-2)*70;
+        if(role==="assassin"&&berserkerPressure)score+=520;
+        if(role==="assassin"&&berserkerPressure&&choice.cell&&d(choice.cell,berserkerPressure.unit)<=Math.max(1,(choice.card.range||1)+(choice.card.mov||0)))score+=180;
+      }
+      if(kind==="buff"){
+        const target=choice.ally?bestAttackTarget(choice.ally):null;
+        choice.immediate=!!target;
+        if(target)score+=target.leader?260:120;
+        else score-=35;
+      }
+      if(kind==="heal"){
+        const missing=choice.ally?Math.max(0,effectiveMaxHp(choice.ally)-(choice.ally.hp||0)):0;
+        if(choice.ally?.leader)score+=leaderDangerScore()>=55?130:30;
+        if(missing<=0&&!hasCurableStatus(choice.ally))score-=120;
+      }
+      if(kind==="guard"){
+        if(choice.ally?.leader)score+=leaderDangerScore()>=55?135:25;
+        if(choice.ally&&playerThreatAtCell(choice.ally,choice.ally)>=35)score+=80;
+      }
+      if(kind==="slow"&&choice.target){
+        if(d(choice.target,enemyLeaderNow()||choice.target)<=3)score+=75;
+        if(d(choice.target,playerLeaderNow()||choice.target)<=3)score+=45;
+      }
+      choices.push({...choice,kind,score});
+    };
+
+    pushChoice("damage",chooseBestDamageSpell());
+    pushChoice("summon",chooseBestSummon());
+    pushChoice("buff",chooseBestBuff());
+    pushChoice("heal",chooseBestHeal());
+    pushChoice("guard",chooseBestGuard());
+    pushChoice("slow",chooseBestSlow());
+    pushChoice("legendaryTrap",chooseBestLegendaryTrap());
+    pushChoice("revealTrap",chooseBestRevealTrap());
+    pushChoice("beastTargetTrap",chooseBestBeastTargetTrap());
+    pushChoice("beastCellTrap",chooseBestBeastCellTrap());
+
+    const best=choices.sort((a,b)=>b.score-a.score)[0]||null;
+    if(!best)return null;
+    return best.score>=aiMainChoiceMinimumScore(best)?best:null;
+  };
+
+  const playAiMainChoice=(choice)=>{
+    if(!choice)return false;
+    if(choice.kind==="damage")return playDamageSpell(choice);
+    if(choice.kind==="summon")return playSummon(choice);
+    if(choice.kind==="buff")return playBuff(choice);
+    if(choice.kind==="heal")return playHeal(choice);
+    if(choice.kind==="guard")return playGuard(choice);
+    if(choice.kind==="slow")return playSlow(choice);
+    if(choice.kind==="legendaryTrap")return playLegendaryTrap(choice);
+    if(choice.kind==="revealTrap")return playRevealTrap(choice);
+    if(choice.kind==="beastTargetTrap")return playBeastTargetTrap(choice);
+    if(choice.kind==="beastCellTrap")return playBeastCellTrap(choice);
+    return false;
   };
 
   const bestMoveFor=(u)=>{
@@ -4832,6 +5034,16 @@ async function adventureEnemyTurn(){
         if(pl&&d(pos,pl)<d(start,pl))score+=25;
         if((u.range||1)>1&&pl&&d(pos,pl)<=u.range)score+=55;
         if((u.range||1)>1&&targets.length&&living(1).some(e=>d(e,pos)<=1))score-=45;
+        if(aiBasicTacticRole(u)==="spear"){
+          const cavalryThreat=aiEnemyCavalryPressure();
+          if(cavalryThreat){
+            const cav=cavalryThreat.unit;
+            const controlRange=Math.max(2,u.range||1);
+            if(d(pos,cav)<=controlRange)score+=220;
+            else if(d(pos,cav)<=controlRange+(effectiveMov(u)||1))score+=95;
+            if(el&&d(pos,el)<=2)score+=85;
+          }
+        }
         score+=allySupportAtCell(pos)*0.45;
         score-=playerThreatAtCell(pos,u)*0.7;
         options.push({x,y,score});
@@ -4985,88 +5197,15 @@ async function adventureEnemyTurn(){
   await publishAiStep({turnPhase:"main"});
   await sleep(AI_THINK_DELAY_MS);
 
-  // Plan táctico: remate primero, preparación después, presión al final.
-  // Regla global de aventura: TODAS las IA juegan sin límite artificial de cartas por turno.
-  // Igual que el jugador, siguen jugando mientras tengan cartas en mano, recurso suficiente y una jugada válida.
+  // Plan táctico: la IA ya no juega por una fila rígida de categorías.
+  // Ahora compara TODAS las cartas jugables de la mano, puntúa cada opción y ejecuta la mejor.
+  // Mantiene robo 2 / honor normal: la dificultad sube por decisión, no por recursos inflados.
   let cardsPlayed=0;
   let aiMainSafety=0;
   while(aiMainSafety++<40){
-    let acted=false;
-    const dangerNow=leaderDangerScore();
-    const urgentHeal=chooseBestHeal();
-    const urgentGuard=chooseBestGuard();
-    if(dangerNow>=95&&urgentHeal&&urgentHeal.score>=80){
-      acted=playHeal(urgentHeal);
-    }else if(dangerNow>=95&&urgentGuard&&urgentGuard.score>=85){
-      acted=playGuard(urgentGuard);
-    }
-    const legendaryTrapChoice=acted?null:chooseBestLegendaryTrap();
-    if(!acted&&legendaryTrapChoice&&legendaryTrapChoice.score>=110){
-      acted=playLegendaryTrap(legendaryTrapChoice);
-    }
-    const revealTrapChoice=acted?null:chooseBestRevealTrap();
-    if(!acted&&revealTrapChoice&&revealTrapChoice.score>=100){
-      acted=playRevealTrap(revealTrapChoice);
-    }
-    const beastTargetTrapChoice=acted?null:chooseBestBeastTargetTrap();
-    if(!acted&&beastTargetTrapChoice&&beastTargetTrapChoice.score>=95){
-      acted=playBeastTargetTrap(beastTargetTrapChoice);
-    }
-    const beastCellTrapChoice=acted?null:chooseBestBeastCellTrap();
-    if(!acted&&beastCellTrapChoice&&beastCellTrapChoice.score>=70){
-      acted=playBeastCellTrap(beastCellTrapChoice);
-    }
-    if(acted){
-      cardsPlayed++;
-      await publishAiStep({turnPhase:"main"});
-      await sleep(AI_ACTION_DELAY_MS);
-      continue;
-    }
-    const damageChoice=chooseBestDamageSpell();
-    if(damageChoice&&damageChoice.target&&(damageChoice.card.damage||0)>=(damageChoice.target.hp||0)){
-      acted=playDamageSpell(damageChoice);
-    }else{
-      const buffChoice=chooseBestBuff();
-      if(buffChoice&&buffChoice.score>=130){
-        acted=playBuff(buffChoice);
-      }else{
-        const healChoice=chooseBestHeal();
-        if(healChoice&&healChoice.score>=95){
-          acted=playHeal(healChoice);
-        }else{
-          const guardChoice=chooseBestGuard();
-          if(guardChoice&&guardChoice.score>=115){
-            acted=playGuard(guardChoice);
-          }else{
-            const slowChoice=chooseBestSlow();
-          if(slowChoice&&slowChoice.score>=110){
-            acted=playSlow(slowChoice);
-          }else{
-            const beastTargetFallback=chooseBestBeastTargetTrap();
-            const beastCellFallback=chooseBestBeastCellTrap();
-            const summonChoice=chooseBestSummon();
-            const damageAgain=chooseBestDamageSpell();
-            const aiHasBoard=living(2).some(u=>!u.leader);
-            if(damageAgain&&(!summonChoice||damageAgain.score>=summonChoice.score+20||damageAgain.target?.leader)){
-              acted=playDamageSpell(damageAgain);
-            }else if(beastTargetFallback&&beastTargetFallback.score>=75){
-              acted=playBeastTargetTrap(beastTargetFallback);
-            }else if(beastCellFallback&&beastCellFallback.score>=55){
-              acted=playBeastCellTrap(beastCellFallback);
-            }else if(summonChoice){
-              acted=playSummon(summonChoice);
-            }else if(buffChoice){
-              acted=playBuff(buffChoice);
-            }else if(guardChoice){
-              acted=playGuard(guardChoice);
-            }else if(slowChoice){
-              acted=playSlow(slowChoice);
-            }
-          }
-        }
-      }
-    }
-    }
+    const bestMainChoice=chooseBestAiMainPlay();
+    if(!bestMainChoice)break;
+    const acted=playAiMainChoice(bestMainChoice);
     if(!acted)break;
     cardsPlayed++;
     await publishAiStep({turnPhase:"main"});
