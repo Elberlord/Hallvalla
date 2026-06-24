@@ -4265,6 +4265,56 @@ async function adventureEnemyTurn(){
       .sort((a,b)=>b.score-a.score)[0]||null;
   };
 
+  const aiRangedAllies=()=>living(2).filter(u=>!u.leader&&aiBasicTacticRole(u)==="ranged");
+  const aiRangedProtectionNeed=()=>{
+    const ranged=aiRangedAllies();
+    if(!ranged.length)return null;
+    const threats=living(1).filter(u=>u.hp>0);
+    const needs=ranged.map(r=>{
+      let score=0;
+      const closeThreats=[];
+      for(const e of threats){
+        const reach=(effectiveMov(e)||0)+(e.range||1);
+        const distance=d(e,r);
+        if(distance<=reach+1){
+          const danger=(effectiveAtk(e)||1)*18+Math.max(0,reach+1-distance)*32+aiUnitValue(e)*0.08;
+          score+=danger;
+          closeThreats.push({unit:e,score:danger});
+        }
+      }
+      const exposedSupport=living(2).filter(a=>a.id!==r.id&&d(a,r)<=2).length;
+      if(exposedSupport===0)score+=75;
+      if((r.hp||0)<=Math.max(2,Math.ceil((effectiveMaxHp(r)||r.hp||1)*0.55)))score+=70;
+      return {unit:r,score,threats:closeThreats.sort((a,b)=>b.score-a.score)};
+    }).sort((a,b)=>b.score-a.score)[0];
+    return needs&&needs.score>=55?needs:null;
+  };
+  const aiProtectRangedCellScore=(cell,protector=null)=>{
+    const need=aiRangedProtectionNeed();
+    if(!need||!cell)return 0;
+    const ranged=need.unit;
+    let score=0;
+    const role=aiBasicTacticRole(protector);
+    const distToRanged=d(cell,ranged);
+    if(distToRanged===1)score+=190;
+    else if(distToRanged===2)score+=115;
+    else if(distToRanged===3)score+=35;
+    for(const t of need.threats.slice(0,3)){
+      const enemy=t.unit;
+      const distToThreat=d(cell,enemy);
+      if(role==="spear"&&(enemy.key==="cavalry"||getWeaponClassForCard(enemy)==="cavalry"||isLightCavalryUnit(enemy))){
+        if(distToThreat<=Math.max(2,protector?.range||2))score+=230;
+        else if(distToThreat<=Math.max(2,protector?.range||2)+(effectiveMov(protector)||protector?.mov||1))score+=95;
+      }
+      if(role==="tank"||role==="spear"){
+        if(distToThreat<=1)score+=120;
+        if(distToRanged<=2&&distToThreat<d(enemy,ranged))score+=85;
+      }
+      if(role==="assassin"&&enemy.key==="berserker"&&distToThreat<=Math.max(1,(protector?.range||1)+(protector?.mov||0)))score+=110;
+    }
+    return score;
+  };
+
   const aiUnitValue=(u)=>{
     if(!u)return 0;
     const tier=getUnitTrapTier(u);
@@ -4638,6 +4688,7 @@ async function adventureEnemyTurn(){
     const tactic=aiBasicTacticState();
     const berserkerPressure=aiEnemyBerserkerPressure();
     const cavalryPressure=aiEnemyCavalryPressure();
+    const rangedNeed=aiRangedProtectionNeed();
     const distToCaster=pl?d(cell,pl):6;
     score+=Math.max(0,12-distToCaster)*6;
     if(pl&&distToCaster<=cardRange)score+=160+cardAtk*8;
@@ -4658,12 +4709,14 @@ async function adventureEnemyTurn(){
     // Estrategia del mazo básico: levantar línea defensiva, esperar con rango y castigar amenazas.
     if(role==="tank"){
       if(!tactic.tanks.length)score+=260;
+      if(rangedNeed)score+=230+aiProtectRangedCellScore(cell,card);
       if(el&&d(cell,el)<=1)score+=95;
       if(el&&pl&&d(cell,el)<d(pl,el))score+=55;
       if(berserkerPressure)score+=80;
     }
     if(role==="spear"){
       score+=tactic.tanks.length?170:70;
+      if(rangedNeed)score+=190+aiProtectRangedCellScore(cell,card);
       if(tactic.spears.length<2)score+=90;
       if(el&&d(cell,el)<=2)score+=80;
       if(pl&&d(cell,pl)<=cardRange+1)score+=55;
@@ -4678,7 +4731,10 @@ async function adventureEnemyTurn(){
       }
     }
     if(role==="ranged"){
-      score+=(tactic.tanks.length||tactic.spears.length)?185:65;
+      score+=(tactic.tanks.length||tactic.spears.length)?185:15;
+      if(!tactic.tanks.length&&!tactic.spears.length)score-=90;
+      if(playerThreatAtCell(cell,card)>=35)score-=170;
+      if(allySupportAtCell(cell)<=10)score-=55;
       if(pl&&d(cell,pl)<=cardRange)score+=170;
       if(el&&d(cell,el)>=1&&d(cell,el)<=2)score+=65;
       score+=Math.max(0,cardRange-2)*45;
@@ -4946,14 +5002,21 @@ async function adventureEnemyTurn(){
         const role=aiBasicTacticRole(choice.card);
         const tactic=aiBasicTacticState();
         const berserkerPressure=aiEnemyBerserkerPressure();
+        const rangedNeed=aiRangedProtectionNeed();
         if(!aiHasBoard)score+=95;
         if(choice.cell&&playerLeaderNow()&&d(choice.cell,playerLeaderNow())<=(choice.card.range||1))score+=140;
         score+=(choice.card.special?45:0)+(choice.card.rarity?12:0);
         const cavalryPressure=aiEnemyCavalryPressure();
         if(role==="tank"&&!tactic.tanks.length)score+=360;
+        if(rangedNeed&&(role==="tank"||role==="spear")){
+          score+=role==="tank"?260:210;
+          if(choice.cell)score+=aiProtectRangedCellScore(choice.cell,choice.card);
+        }
         if(role==="spear"&&tactic.tanks.length&&tactic.spears.length<2)score+=240;
         if(role==="spear"&&cavalryPressure)score+=520;
         if(role==="ranged"&&(tactic.tanks.length||tactic.spears.length))score+=255;
+        if(role==="ranged"&&!tactic.tanks.length&&!tactic.spears.length)score-=85;
+        if(role==="ranged"&&choice.cell&&playerThreatAtCell(choice.cell,choice.card)>=35)score-=150;
         if(role==="ranged"&&Number(choice.card.range||1)>=3)score+=Math.max(0,Number(choice.card.range||1)-2)*70;
         if(role==="assassin"&&berserkerPressure)score+=520;
         if(role==="assassin"&&berserkerPressure&&choice.cell&&d(choice.cell,berserkerPressure.unit)<=Math.max(1,(choice.card.range||1)+(choice.card.mov||0)))score+=180;
@@ -4967,11 +5030,13 @@ async function adventureEnemyTurn(){
       if(kind==="heal"){
         const missing=choice.ally?Math.max(0,effectiveMaxHp(choice.ally)-(choice.ally.hp||0)):0;
         if(choice.ally?.leader)score+=leaderDangerScore()>=55?130:30;
+        if(choice.ally&&aiBasicTacticRole(choice.ally)==="ranged")score+=playerThreatAtCell(choice.ally,choice.ally)>=30?175:70;
         if(missing<=0&&!hasCurableStatus(choice.ally))score-=120;
       }
       if(kind==="guard"){
         if(choice.ally?.leader)score+=leaderDangerScore()>=55?135:25;
         if(choice.ally&&playerThreatAtCell(choice.ally,choice.ally)>=35)score+=80;
+        if(choice.ally&&aiBasicTacticRole(choice.ally)==="ranged")score+=playerThreatAtCell(choice.ally,choice.ally)>=25?210:90;
       }
       if(kind==="slow"&&choice.target){
         if(d(choice.target,enemyLeaderNow()||choice.target)<=3)score+=75;
@@ -5024,6 +5089,7 @@ async function adventureEnemyTurn(){
         const pos={x,y};
         let score=0;
         const ghost={...u,x:pos.x,y:pos.y};
+        const role=aiBasicTacticRole(u);
         const targets=living(1).filter(t=>d(pos,t)<=u.range);
         if(targets.length){
           score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
@@ -5033,8 +5099,14 @@ async function adventureEnemyTurn(){
         if(el&&leaderDangerScore()>80&&d(pos,el)<=2)score+=75;
         if(pl&&d(pos,pl)<d(start,pl))score+=25;
         if((u.range||1)>1&&pl&&d(pos,pl)<=u.range)score+=55;
+        if(role==="ranged"){
+          if(playerThreatAtCell(pos,u)>=30)score-=160;
+          if(allySupportAtCell(pos)<=12)score-=60;
+          if(targets.length&&!living(1).some(e=>d(e,pos)<=1))score+=80;
+        }
+        if(role==="tank"||role==="spear")score+=aiProtectRangedCellScore(pos,u);
         if((u.range||1)>1&&targets.length&&living(1).some(e=>d(e,pos)<=1))score-=45;
-        if(aiBasicTacticRole(u)==="spear"){
+        if(role==="spear"){
           const cavalryThreat=aiEnemyCavalryPressure();
           if(cavalryThreat){
             const cav=cavalryThreat.unit;
@@ -5099,9 +5171,11 @@ async function adventureEnemyTurn(){
     const threatHere=playerThreatAtCell(u,u);
     const el=enemyLeaderNow();
     const protectingLeader=!!(el&&d(u,el)<=2&&leaderDangerScore()>=55);
+    const rangedNeed=aiRangedProtectionNeed();
+    const protectingRanged=!!(rangedNeed&&(aiBasicTacticRole(u)==="tank"||aiBasicTacticRole(u)==="spear")&&d(u,rangedNeed.unit)<=2&&rangedNeed.score>=55);
     const lowHp=(u.hp||0)<=Math.max(2,Math.ceil((effectiveMaxHp(u)||u.hp||1)*0.45));
     const valuable=aiUnitValue(u)>=95;
-    if(threatHere<18&&!protectingLeader&&!lowHp&&!valuable)return false;
+    if(threatHere<18&&!protectingLeader&&!protectingRanged&&!lowHp&&!valuable)return false;
     units=units.map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true}:it);
     logs.push(`Rival: ${u.name} entra en Guardia defensiva: +2 GD y -10% precisión al primer ataque. Dura hasta recibir ese ataque o hasta su próximo turno.`);
     return true;
