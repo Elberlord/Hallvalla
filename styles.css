@@ -13034,3 +13034,124 @@ El CSS original se conserva para no romper visuales. El bloque final
     clip-path:inset(0 round 11px 11px 18px 18px) !important;
   }
 }
+
+/* ============================================================
+   PATCH 8C - BOARD UNIT CARD SIZE + PORTRAIT CONTAINMENT
+   Motivo:
+   - El bloque v7GO/v7GP estaba forzando la carta del tablero con
+     height/max-width y eso apretaba el marco.
+   - El bloque 7GQ dejaba el retrato con overflow visible para el
+     efecto 3D, causando que el personaje flotara fuera del marco.
+
+   Alcance:
+   - Solo afecta unidades dentro de celdas del tablero: .cell > .unit-card.
+   - No toca HUD, mano, modales, líderes de base, lógica ni JS.
+
+   Diagnóstico futuro:
+   - Tamaño del marco: revisar --board-unit-card-height / --board-unit-card-max-width.
+   - Recorte interno: revisar .unit-portrait y .unit-depth-stack.
+   - Posición del personaje: revisar object-position en .unit-depth-stack img.
+   ============================================================ */
+:root{
+  --board-unit-card-height:118%;
+  --board-unit-card-max-height:124%;
+  --board-unit-card-max-width:84%;
+  --board-unit-card-portrait-left:13.8%;
+  --board-unit-card-portrait-right:13.8%;
+  --board-unit-card-portrait-top:12.2%;
+  --board-unit-card-portrait-bottom:24.2%;
+  --board-unit-card-art-position:center center;
+}
+
+.cell > .unit-card,
+.cell > .unit-card.leader,
+.cell > .unit-card.unit-key-spearman{
+  aspect-ratio:2 / 3 !important;
+  width:auto !important;
+  height:var(--board-unit-card-height) !important;
+  max-width:var(--board-unit-card-max-width) !important;
+  max-height:var(--board-unit-card-max-height) !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:auto !important;
+  display:block !important;
+  position:relative !important;
+  overflow:visible !important;
+  transform:none !important;
+}
+
+.cell > .unit-card .unit-frame-skin{
+  position:absolute !important;
+  inset:0 !important;
+  width:auto !important;
+  height:auto !important;
+  transform:none !important;
+  background-size:100% 100% !important;
+  z-index:4 !important;
+}
+
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card.leader .unit-portrait{
+  position:absolute !important;
+  left:var(--board-unit-card-portrait-left) !important;
+  right:var(--board-unit-card-portrait-right) !important;
+  top:var(--board-unit-card-portrait-top) !important;
+  bottom:var(--board-unit-card-portrait-bottom) !important;
+  width:auto !important;
+  height:auto !important;
+  overflow:hidden !important;
+  contain:paint !important;
+  clip-path:inset(0 round 13px 13px 20px 20px) !important;
+  z-index:2 !important;
+}
+
+.cell > .unit-card .unit-depth-stack{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:hidden !important;
+  contain:paint !important;
+  transform:none !important;
+  clip-path:inset(0 round 13px 13px 20px 20px) !important;
+}
+
+.cell > .unit-card .unit-depth-stack img,
+.cell > .unit-card .unit-depth-front{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:contain !important;
+  object-position:var(--board-unit-card-art-position) !important;
+  transform:none !important;
+}
+
+.cell > .unit-card .unit-depth-shadow{
+  display:none !important;
+}
+
+.cell > .unit-card .unit-depth-front{
+  z-index:2 !important;
+  filter:saturate(1.05) contrast(1.03) drop-shadow(0 4px 5px rgba(0,0,0,.38)) !important;
+}
+
+.cell > .unit-card .unit-ornate-ui{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+}
+
+@media(max-width:980px){
+  :root{
+    --board-unit-card-height:118%;
+    --board-unit-card-max-height:124%;
+    --board-unit-card-max-width:86%;
+  }
+  .cell > .unit-card .unit-portrait,
+  .cell > .unit-card .unit-depth-stack{
+    clip-path:inset(0 round 11px 11px 18px 18px) !important;
+  }
+}
