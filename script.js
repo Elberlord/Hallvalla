@@ -1963,18 +1963,7 @@ function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const da
 function applyLeaderToCard(card,leaderType){return {...card}}
 function makeCard(t,owner,leaderType){return {...t,id:uid8(),owner,leaderType}}
 function getDefaultDeckTemplates(){
-  const missing=[];
-  const deck=STARTER_BASIC_DECK_KEYS.map(key=>{
-    const card=getStarterBasicCardByKey(key);
-    if(!card)missing.push(key);
-    return card;
-  }).filter(Boolean);
-  if(missing.length){
-    console.warn(`[HallValla] Starter deck incompleto. Faltan keys básicas: ${[...new Set(missing)].join(", ")}`);
-  }
-  if(deck.length!==DECK_RULES.deckSize){
-    console.warn(`[HallValla] Starter deck tiene ${deck.length}/${DECK_RULES.deckSize} cartas.`);
-  }
+  const deck=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
   return deck.slice(0,DECK_RULES.deckSize);
 }
 function getStarterAdventureDeckTemplates(selectedSpecial=""){
@@ -6516,24 +6505,89 @@ function saveProfileNameChange(){
 }
 
 /* ============================================================
-   PATCH 8I - STARTER BASIC MAGIC/TRAP KEYS RESTORED
+   PATCH 8J - BASIC SPELL/TRAP PORTRAITS + STARTER KEYS
    Objetivo:
-   - Restaurar las cartas básicas que el mazo inicial ya buscaba:
-     fireball, heal, shield_wall, smoke_bomb, inspiration.
-   - Mantener nombres simples y fáciles de detectar en el código.
-   - Hacer que el starter vuelva a completar 25 cartas.
-
+   - Restaurar las cartas básicas mágicas/trampa usadas por el starter.
+   - Conectar cada carta con su asset .webp en assets/cards/basic/.
+   - Mantener nombres y keys legibles: fireball, heal, shield_wall,
+     smoke_bomb, inspiration y warning_rune.
    Alcance:
-   - Solo cambia las keys/nombres del pack básico de magias/trampas.
-   - No toca HUD, tablero, estilos, index.html ni reglas de tamaño de mazo.
+   - Solo afecta el pack básico de magias/trampas.
+   - No toca HUD, tablero, estilos ni HTML.
    ============================================================ */
 const BASIC_MAGIC_TRAP_PACK = [
-  {key:"fireball",name:"Fireball",type:"spell",icon:"🔥",rarity:"Básica",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},
-  {key:"heal",name:"Heal",type:"spell",icon:"✨",rarity:"Básica",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."},
-  {key:"shield_wall",name:"Shield Wall",type:"spell",icon:"🛡️",rarity:"Básica",cost:1,spell:"shield",guard:2,text:"+2 GUARDIA a una unidad aliada hasta el final del turno."},
-  {key:"smoke_bomb",name:"Smoke Bomb",type:"trap",icon:"💨",rarity:"Básica",cost:1,trap:"slow",slow:1,text:"Cuando un enemigo se mueva, reduce su MOV en 1 durante este turno."},
-  {key:"inspiration",name:"Inspiration",type:"spell",icon:"☀️",rarity:"Básica",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},
-  {key:"warning_rune",name:"Warning Rune",type:"trap",icon:"◆",rarity:"Básica",cost:1,trap:"guard",guard:1,text:"Cuando una unidad aliada sea atacada, obtiene +1 GUARDIA durante ese combate."}
+  {
+    key:"fireball",
+    name:"Fireball",
+    type:"spell",
+    icon:"🔥",
+    portrait:"assets/cards/basic/fireball.webp",
+    rarity:"Básica",
+    cost:1,
+    spell:"damage",
+    damage:2,
+    text:"Hace 2 de daño a una unidad o líder rival."
+  },
+  {
+    key:"heal",
+    name:"Heal",
+    type:"spell",
+    icon:"✨",
+    portrait:"assets/cards/basic/heal.webp",
+    rarity:"Básica",
+    cost:2,
+    spell:"heal",
+    heal:3,
+    text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."
+  },
+  {
+    key:"shield_wall",
+    name:"Shield Wall",
+    type:"spell",
+    icon:"🛡️",
+    portrait:"assets/cards/basic/shield_wall.webp",
+    rarity:"Básica",
+    cost:1,
+    spell:"shield",
+    guard:2,
+    text:"+2 GUARDIA a una unidad aliada hasta el final del turno."
+  },
+  {
+    key:"smoke_bomb",
+    name:"Smoke Bomb",
+    type:"trap",
+    icon:"💨",
+    portrait:"assets/cards/basic/smoke_bomb.webp",
+    rarity:"Básica",
+    cost:1,
+    trap:"slow",
+    slow:1,
+    text:"Cuando un enemigo se mueva, reduce su MOV en 1 durante este turno."
+  },
+  {
+    key:"inspiration",
+    name:"Inspiration",
+    type:"spell",
+    icon:"☀️",
+    portrait:"assets/cards/basic/inspiration.webp",
+    rarity:"Básica",
+    cost:1,
+    spell:"buff",
+    buff:1,
+    text:"+1 ataque a una unidad aliada este turno."
+  },
+  {
+    key:"warning_rune",
+    name:"Warning Rune",
+    type:"trap",
+    icon:"◆",
+    portrait:"assets/cards/basic/warning_rune.webp",
+    rarity:"Básica",
+    cost:1,
+    trap:"guard",
+    guard:1,
+    text:"Cuando una unidad aliada sea atacada, obtiene +1 GUARDIA durante ese combate."
+  }
 ];
 
 function getPlayerCollection(){
