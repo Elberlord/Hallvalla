@@ -2213,10 +2213,12 @@ function applyTurnStatSpendToUnit(u,spent){
 }
 function spendEvasionByAttack(attacker,defender,units,mods={}){
   if(!attacker||!defender||defender.leader)return {units,spent:0,remaining:null};
-  const spentRaw=Math.max(0,getAttackPrecisionScore(attacker,mods));
+  const attackPressure=Math.max(0,getAttackPrecisionScore(attacker,mods));
   const currentDefender=(units||[]).find(u=>u.id===defender.id)||defender;
+  const defenderAvailable=Math.max(0,getAvailableEvasionScore(currentDefender,mods));
+  const spentRaw=Math.min(attackPressure,defenderAvailable);
   const spent=shadowMistSpendAmount(currentDefender,spentRaw,units);
-  if(spent<=0)return {units,spent:0,remaining:getAvailableEvasionScore(defender,mods)};
+  if(spent<=0)return {units,spent:0,remaining:defenderAvailable};
   let remaining=null;
   const out=(units||[]).map(u=>{
     if(u.id!==defender.id)return u;
@@ -2323,22 +2325,19 @@ function getDefenseEvasionScore(defender,mods={}){
   return getAvailableEvasionScore(defender,mods);
 }
 function getHitChance(attacker,defender,mods={}){
-  const stancePenalty=Math.max(0,Number(mods?.defenseStancePenalty||0))||((defender?.defenseModeReady&&!mods?.counterIgnoresGuard)?10:0);
   if(!attacker)return 0;
-  if(attacker.leader)return clamp(100-stancePenalty,0,100);
+  if(attacker.leader)return 100;
   const attackScore=getAttackPrecisionScore(attacker,mods);
   if(attackScore<=0)return 0;
-  if(defender?.leader)return clamp(100-stancePenalty,0,100);
+  if(defender?.leader)return 100;
   const defenseScore=getDefenseEvasionScore(defender,mods);
-  if(defenseScore<=0)return clamp(100-stancePenalty,0,100);
-  const diff=attackScore-defenseScore;
-  const baseChance=clamp(70+(diff*5),25,95);
-  return clamp(baseChance-stancePenalty,0,95);
+  return attackScore>=defenseScore?100:0;
 }
 function rollHit(attacker,defender,mods={}){
   const chance=getHitChance(attacker,defender,mods);
-  const roll=Math.floor(Math.random()*100)+1;
-  return {hit:roll<=chance,roll,chance};
+  const attackScore=attacker?.leader?"LÍDER":Math.max(0,Number(getAttackPrecisionScore(attacker,mods)||0));
+  const defenseScore=defender?.leader?"LÍDER":Math.max(0,Number(getDefenseEvasionScore(defender,mods)||0));
+  return {hit:chance>=100,roll:`PREC ${attackScore}`,chance:`EVA ${defenseScore}`};
 }
 function getCounterDefenseRemainder(originalAttacker,originalDefender,originalMods={}){
   if(!originalAttacker||!originalDefender||originalAttacker.leader)return null;
@@ -6171,11 +6170,16 @@ function getAttackChanceData(target){
   if(!attackZones(attacker).includes(`${target.x},${target.y}`))return null;
   const mods=getCombatMods(attacker,target);
   let chance=getHitChance(attacker,target,mods);
-  const arjunaReroll=attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn;
+  const attackScore=attacker?.leader?"LÍDER":Math.max(0,Number(getAttackPrecisionScore(attacker,mods)||0));
+  const defenseScore=target?.leader?"LÍDER":Math.max(0,Number(getDefenseEvasionScore(target,mods)||0));
+  const arjunaReroll=attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn&&chance<100;
   const directChance=chance;
-  if(arjunaReroll)chance=Math.min(98,Math.round(100-((100-chance)*(100-chance)/100)));
-  const title=arjunaReroll?`Probabilidad de acierto aprox.: ${chance}% con repetición (${directChance}% base).`:`Probabilidad de acierto: ${chance}%.`;
-  const tier=chance>=75?"high":chance>=45?"mid":"low";
+  if(arjunaReroll){
+    const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
+    chance=getHitChance(attacker,target,dharmaMods);
+  }
+  const title=arjunaReroll?`Acierto determinístico: ${chance>=100?"acierta":"falla"} con Flecha del Dharma (${directChance>=100?"acierta":"falla"} base). PREC ${attackScore} vs EVA ${defenseScore}.`:`Acierto determinístico: ${chance>=100?"acierta":"falla"}. PREC ${attackScore} vs EVA ${defenseScore}.`;
+  const tier=chance>=100?"high":"low";
   return {chance,title,tier};
 }
 
@@ -6209,11 +6213,11 @@ function getUnitAuxStatData(u){
   }
   const activeOwner=Number(publicState?.currentPlayer||0);
   if(activeOwner&&activeOwner===Number(u.owner)){
-    const precisionScore=getAttackPrecisionScore(u,{});
-    return {text:`PR ${precisionScore}`,kind:"precision",title:`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`};
+    const precisionScore=Math.max(0,Number(getAttackPrecisionScore(u,{})||0));
+    return {text:String(precisionScore),kind:"precision",title:`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`};
   }
-  const evasionScore=getAvailableEvasionScore(u,{});
-  return {text:`EV ${evasionScore}`,kind:"eva",title:`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`};
+  const evasionScore=Math.max(0,Number(getAvailableEvasionScore(u,{})||0));
+  return {text:String(evasionScore),kind:"eva",title:`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`};
 }
 function getUnitBottomFrameHtml(u){
   if(!u)return "";
