@@ -13288,3 +13288,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 .hv-board-drag-ghost.unit-card{width:64px;height:64px;}
 .hv-board-drag-ghost.hand-card{width:118px;min-height:158px;}
 .unit-card,.leader-base,.hand-card{touch-action:none;}
+
+/* Drag táctico: evita que el navegador capture el arrastre de cartas de mano */
+.hand-card,.hand-card *,.hv-board-drag-ghost,.hv-board-drag-ghost *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.hand-card{
+  touch-action:none!important;
+  cursor:grab;
+}
+.hv-dragging-board .hand-card{
+  cursor:grabbing;
+}
