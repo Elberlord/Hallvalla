@@ -280,6 +280,7 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
 -------------------------------------------------------------------------------
 */
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",nearDeathSoundPlayedKeys=new Set();
+let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
@@ -2949,6 +2950,11 @@ function attackRangeCells(u){
   return res;
 }
 function getTacticalPreviewClasses(x,y){
+  const dragKey=`${x},${y}`;
+  if(dragMoveHighlights.includes(dragKey)&&dragAttackHighlights.includes(dragKey))return["mixed-range-preview"];
+  if(dragMoveHighlights.includes(dragKey))return["move-range-preview"];
+  if(dragAttackHighlights.includes(dragKey))return["attack-range-preview"];
+  if(dragSummonHighlights.includes(dragKey))return["summonable"];
   if(selectedCard||selectedUnitActionMode||!unitContextSelection||!publicState)return[];
   const u=getUnit(unitContextSelection.unitId);
   if(!u)return[];
@@ -2971,7 +2977,7 @@ function getTacticalPreviewClasses(x,y){
   if(attackSet.has(key))return["attack-range-preview"];
   return[];
 }
-function clearSelection(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();hideCardInspectModal();highlights=[];highlightType="move";render()}
+function clearSelection(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();hideCardInspectModal();highlights=[];highlightType="move";dragMoveHighlights=[];dragAttackHighlights=[];dragSummonHighlights=[];render()}
 function getCardPlayState(card){
   if(!card)return{canPlay:false,reason:"Carta no disponible."};
   if(isBattleEnded())return{canPlay:false,reason:"La batalla ya terminó."};
@@ -5592,6 +5598,166 @@ async function adventureEnemyTurn(){
     aiActionText:""
   });
 }
+
+function getBoardCellFromPoint(clientX,clientY){
+  const el=document.elementFromPoint(clientX,clientY);
+  const cell=el&&el.closest?el.closest(".cell"):null;
+  const grid=$("grid");
+  if(!cell||!grid||!grid.contains(cell))return null;
+  const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
+  if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+  return {x,y,unit:getUnitAt(x,y)};
+}
+function clearBoardDragVisuals({rerender=true}={}){
+  dragMoveHighlights=[];
+  dragAttackHighlights=[];
+  dragSummonHighlights=[];
+  if(boardDragGhost){boardDragGhost.remove();boardDragGhost=null;}
+  document.body.classList.remove("hv-dragging-board");
+  if(rerender&&publicState)render();
+}
+function makeBoardDragGhost(sourceEl,label=""){
+  const ghost=sourceEl&&sourceEl.cloneNode?sourceEl.cloneNode(true):document.createElement("div");
+  ghost.classList.add("hv-board-drag-ghost");
+  ghost.style.left="-999px";
+  ghost.style.top="-999px";
+  ghost.setAttribute("aria-hidden","true");
+  if(label)ghost.title=label;
+  document.body.appendChild(ghost);
+  return ghost;
+}
+function moveBoardDragGhost(ev){
+  if(!boardDragGhost)return;
+  boardDragGhost.style.left=`${ev.clientX}px`;
+  boardDragGhost.style.top=`${ev.clientY}px`;
+}
+function getDragUnitMoveKeys(u){return moveZones(u);}
+function getDragUnitAttackKeys(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`);}
+function startUnitBoardDrag(ev,u,sourceEl){
+  if(!u||u.owner!==myPlayer||!isMyTurn()||isBattleEnded())return false;
+  const canMoveNow=!u.leader&&getDragUnitMoveKeys(u).length>0;
+  const canAttackNow=getDragUnitAttackKeys(u).length>0;
+  if(!canMoveNow&&!canAttackNow)return false;
+  boardDragState={kind:"unit",unitId:u.id,pointerId:ev.pointerId,startX:ev.clientX,startY:ev.clientY,dragging:false,sourceEl};
+  window.addEventListener("pointermove",handleBoardDragMove,true);
+  window.addEventListener("pointerup",handleBoardDragEnd,true);
+  window.addEventListener("pointercancel",handleBoardDragCancel,true);
+  return true;
+}
+function startHandCardBoardDrag(ev,card,sourceEl){
+  if(!card||card.type!=="unit")return false;
+  const playState=getCardPlayState(card);
+  if(!playState.canPlay)return false;
+  boardDragState={kind:"hand-unit",cardId:card.id,pointerId:ev.pointerId,startX:ev.clientX,startY:ev.clientY,dragging:false,sourceEl};
+  window.addEventListener("pointermove",handleBoardDragMove,true);
+  window.addEventListener("pointerup",handleBoardDragEnd,true);
+  window.addEventListener("pointercancel",handleBoardDragCancel,true);
+  return true;
+}
+function beginBoardDragVisual(ev){
+  if(!boardDragState||boardDragState.dragging)return;
+  const dx=Math.abs(ev.clientX-boardDragState.startX),dy=Math.abs(ev.clientY-boardDragState.startY);
+  if(Math.max(dx,dy)<8)return;
+  boardDragState.dragging=true;
+  document.body.classList.add("hv-dragging-board");
+  if(boardDragState.kind==="unit"){
+    const u=getUnit(boardDragState.unitId);
+    if(!u){handleBoardDragCancel();return;}
+    selectedCard=null;
+    selectedUnitId=u.id;
+    selectedUnitActionMode=null;
+    unitContextSelection=null;
+    hideUnitContextMenu();
+    dragMoveHighlights=getDragUnitMoveKeys(u);
+    dragAttackHighlights=getDragUnitAttackKeys(u);
+    dragSummonHighlights=[];
+    setHint(`${u.name}: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.`);
+    boardDragGhost=makeBoardDragGhost(boardDragState.sourceEl,u.name);
+    render();
+  }else if(boardDragState.kind==="hand-unit"){
+    const card=(privateState?.hand||[]).find(c=>c.id===boardDragState.cardId);
+    if(!card){handleBoardDragCancel();return;}
+    selectedCard=card;
+    selectedUnitId=null;
+    selectedUnitActionMode=null;
+    unitContextSelection=null;
+    hideUnitContextMenu();
+    closeHandForBoardFocus();
+    dragMoveHighlights=[];
+    dragAttackHighlights=[];
+    dragSummonHighlights=summonZones(myPlayer);
+    highlights=[...dragSummonHighlights];
+    highlightType="summon";
+    setHint(`${card.name}: suéltala en una casilla amarilla junto a tu líder para invocar.`);
+    boardDragGhost=makeBoardDragGhost(boardDragState.sourceEl,card.name);
+    render();
+  }
+  moveBoardDragGhost(ev);
+}
+function handleBoardDragMove(ev){
+  if(!boardDragState||ev.pointerId!==boardDragState.pointerId)return;
+  beginBoardDragVisual(ev);
+  if(boardDragState?.dragging){ev.preventDefault();moveBoardDragGhost(ev);}
+}
+async function handleBoardDragEnd(ev){
+  if(!boardDragState||ev.pointerId!==boardDragState.pointerId)return;
+  window.removeEventListener("pointermove",handleBoardDragMove,true);
+  window.removeEventListener("pointerup",handleBoardDragEnd,true);
+  window.removeEventListener("pointercancel",handleBoardDragCancel,true);
+  const state=boardDragState;
+  boardDragState=null;
+  if(!state.dragging){return;}
+  ev.preventDefault();
+  lastBoardDragEndedAt=Date.now();
+  const drop=getBoardCellFromPoint(ev.clientX,ev.clientY);
+  if(!drop){clearBoardDragVisuals();setHint("Arrastre cancelado.");return;}
+  try{
+    if(state.kind==="unit"){
+      const u=getUnit(state.unitId);
+      if(!u){clearBoardDragVisuals();return;}
+      const target=drop.unit;
+      const moveKey=`${drop.x},${drop.y}`;
+      clearBoardDragVisuals({rerender:false});
+      if(target&&target.owner!==myPlayer&&getDragUnitAttackKeys(u).includes(moveKey)){
+        selectedUnitId=u.id;selectedUnitActionMode="attk";
+        await attackUnit(u.id,target.id);
+        return;
+      }
+      if(!target&&getDragUnitMoveKeys(u).includes(moveKey)){
+        selectedUnitId=u.id;selectedUnitActionMode="mov";
+        await moveUnit(u,drop.x,drop.y);
+        return;
+      }
+      clearSelection();
+      setHint("Destino inválido: suelta en verde para mover o en rojo para atacar.");
+    }else if(state.kind==="hand-unit"){
+      const card=(privateState?.hand||[]).find(c=>c.id===state.cardId);
+      const moveKey=`${drop.x},${drop.y}`;
+      clearBoardDragVisuals({rerender:false});
+      if(!card){clearSelection();return;}
+      selectedCard=card;
+      if(!drop.unit&&summonZones(myPlayer).includes(moveKey)){
+        await playCardOn(drop.x,drop.y,null);
+        return;
+      }
+      clearSelection();
+      setHint("Casilla inválida para invocación: suelta junto a tu líder.");
+    }
+  }catch(err){
+    console.warn("[HallValla] Error en arrastre táctico:",err);
+    clearSelection();
+    setHint("No se pudo completar el arrastre táctico.");
+  }
+}
+function handleBoardDragCancel(){
+  window.removeEventListener("pointermove",handleBoardDragMove,true);
+  window.removeEventListener("pointerup",handleBoardDragEnd,true);
+  window.removeEventListener("pointercancel",handleBoardDragCancel,true);
+  boardDragState=null;
+  clearBoardDragVisuals();
+  setHint("Arrastre cancelado.");
+}
+
 async function cellClick(x,y){
   const u=getUnitAt(x,y);
   if(selectedCard)return playCardOn(x,y,u);
@@ -6422,7 +6588,10 @@ function renderBoard(){
       c.title=isStealthedUnit(u)&&u.owner!==myPlayer?"Presencia Oculta · Sigilo":`${u.name} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
-      c.addEventListener("pointerdown",ev=>ev.stopPropagation(),true);
+      c.addEventListener("pointerdown",ev=>{
+        if(startUnitBoardDrag(ev,u,c)){ev.preventDefault();ev.stopPropagation();return;}
+        ev.stopPropagation();
+      },true);
       c.addEventListener("pointerup",ev=>{
         // Blindaje global de objetivos: cualquier unidad renderizada en el tablero
         // resuelve su celda directamente cuando hay carta/ATTK/MOV/EFFECT activo.
@@ -6465,6 +6634,9 @@ function ensureLeaderBasesLayer(){
   if(!layer.dataset.boundLeaderBaseClicks){
     layer.dataset.boundLeaderBaseClicks="1";
     layer.addEventListener("pointerdown",ev=>{
+      const base=ev.target&&ev.target.closest?ev.target.closest(".leader-base"):null;
+      const u=base?getUnit(base.dataset.leaderId):null;
+      if(u&&startUnitBoardDrag(ev,u,base)){ev.preventDefault();ev.stopPropagation();return;}
       const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.unit-status-seal"):null;
       if(hit)ev.stopPropagation();
     },true);
@@ -6572,7 +6744,7 @@ function handQuickStats(card){
   if(card?.type==="unit")return `Costo ${card.cost||0} · AT ${card.atk||0} · HP ${card.hp||0}`;
   return `Costo ${card?.cost||0}`;
 }
-function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];const playableCount=getPlayableCardsInHand().length;const phaseStatus=isMyTurn()?` · ${turnPhaseLabel()}`:"";const status=isMyTurn()?` · ${playableCount} jugable${playableCount===1?"":"s"}`:"";$("handInfo").textContent=`${getResourceLabel(myPlayer)} ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas${status}${phaseStatus}`;$("handRow").innerHTML=hand.map(c=>{const playState=getCardPlayState(c);return `<div class="hand-card hand-card-visual ${getCardVisualClass(c)} ${playState.canPlay?"":"not-playable"} ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}" title="${escapeHtml(playState.reason)}"><div class="hand-art-wrap">${getCardVisualHtml(c,"hand-icon hand-art")}</div><div class="hand-card-footer"><div class="hand-name">${escapeHtml(c.name)}</div><div class="hand-quick-row"><span class="hand-stats">${handQuickStats(c)}</span></div></div></div>`}).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>el.addEventListener("click",()=>{const card=hand.find(c=>c.id===el.dataset.id);if(card)showCardInspectModal(card)}))}
+function renderHand(){$("handDrawer").classList.toggle("open",handOpen);const hand=privateState?.hand||[];const playableCount=getPlayableCardsInHand().length;const phaseStatus=isMyTurn()?` · ${turnPhaseLabel()}`:"";const status=isMyTurn()?` · ${playableCount} jugable${playableCount===1?"":"s"}`:"";$("handInfo").textContent=`${getResourceLabel(myPlayer)} ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas${status}${phaseStatus}`;$("handRow").innerHTML=hand.map(c=>{const playState=getCardPlayState(c);return `<div class="hand-card hand-card-visual ${getCardVisualClass(c)} ${playState.canPlay?"":"not-playable"} ${selectedCard?.id===c.id?"selected":""}" data-id="${c.id}" title="${escapeHtml(playState.reason)}"><div class="hand-art-wrap">${getCardVisualHtml(c,"hand-icon hand-art")}</div><div class="hand-card-footer"><div class="hand-name">${escapeHtml(c.name)}</div><div class="hand-quick-row"><span class="hand-stats">${handQuickStats(c)}</span></div></div></div>`}).join("");[...document.querySelectorAll(".hand-card")].forEach(el=>{el.addEventListener("pointerdown",ev=>{const card=hand.find(c=>c.id===el.dataset.id);if(card&&startHandCardBoardDrag(ev,card,el)){/* clic normal sigue abriendo DET si no se arrastra */}});el.addEventListener("click",ev=>{if(Date.now()-lastBoardDragEndedAt<450){ev.preventDefault();ev.stopPropagation();return;}const card=hand.find(c=>c.id===el.dataset.id);if(card)showCardInspectModal(card)})})}
 function renderLog(){const el=$("log");if(!el)return;el.classList.toggle("log-collapsed",!!logCollapsed);el.setAttribute("aria-hidden",String(!!logCollapsed));el.innerHTML=logCollapsed?"":(publicState.log||[]).map(t=>`<div>${escapeHtml(t)}</div>`).join("")}
 function renderDetail(){
   const detailEl=$("detail");

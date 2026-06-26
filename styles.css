@@ -13280,3 +13280,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   #adventureChoiceStage .adventure-choice{grid-template-columns:96px 1fr;}
   #adventureChoiceStage .adventure-choice img{width:96px;height:112px;}
 }
+
+/* Drag táctico: unidades/carta de unidad hacia tablero */
+.hv-dragging-board,
+.hv-dragging-board *{cursor:grabbing!important;user-select:none!important;}
+.hv-board-drag-ghost{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%) scale(1.04);opacity:.88;filter:drop-shadow(0 18px 26px rgba(0,0,0,.55));max-width:140px;max-height:190px;}
+.hv-board-drag-ghost.unit-card{width:64px;height:64px;}
+.hv-board-drag-ghost.hand-card{width:118px;min-height:158px;}
+.unit-card,.leader-base,.hand-card{touch-action:none;}
