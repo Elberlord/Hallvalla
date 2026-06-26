@@ -13178,3 +13178,105 @@ El CSS original se conserva para no romper visuales. El bloque final
     z-index:185!important;
   }
 }
+
+
+/* === PATCH: Adventure ally choice fits viewport === */
+#adventureChoiceStage.adventure-stage{
+  gap:10px;
+  padding:14px;
+  min-height:0;
+  overflow:hidden;
+}
+#adventureChoiceStage .adventure-choice-hero{
+  min-height:210px;
+  flex:0 0 210px;
+}
+#adventureChoiceStage .adventure-scene-overlay{
+  padding:16px 22px;
+}
+#adventureChoiceStage .adventure-scene-copy.narrow{
+  padding:16px 20px;
+  max-width:min(560px,70%);
+}
+#adventureChoiceStage .adventure-choice-title{
+  font-size:clamp(28px,3.2vw,38px);
+  margin-bottom:6px!important;
+}
+#adventureChoiceStage .adventure-story-text{
+  font-size:clamp(13px,1vw,15px);
+  line-height:1.45!important;
+}
+#adventureChoiceStage .adventure-choice-grid{
+  flex:1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  align-items:stretch;
+}
+#adventureChoiceStage .adventure-choice{
+  min-height:0;
+  padding:10px;
+  grid-template-columns:128px 1fr;
+  gap:12px;
+  align-items:center;
+  overflow:hidden;
+}
+#adventureChoiceStage .adventure-choice img{
+  width:128px;
+  height:134px;
+  border-radius:13px;
+}
+#adventureChoiceStage .adventure-choice-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+}
+#adventureChoiceStage .adventure-choice h3{
+  margin:0 0 2px;
+  font-size:23px;
+  line-height:1.05;
+}
+#adventureChoiceStage .adventure-choice p{
+  margin:0;
+  font-size:12.5px;
+  line-height:1.28;
+}
+#adventureChoiceStage .adventure-choice .adventure-stats{
+  margin-top:2px;
+  font-size:11.4px;
+  line-height:1.25;
+}
+#adventureChoiceStage .adventure-story-footer{
+  flex:0 0 auto;
+  gap:10px;
+  padding-top:2px;
+}
+#adventureChoiceStage .adventure-note{
+  font-size:11.5px;
+  line-height:1.25;
+}
+
+@media (max-height:760px){
+  #adventureChoiceStage.adventure-stage{padding:12px;gap:8px;}
+  #adventureChoiceStage .adventure-choice-hero{min-height:180px;flex-basis:180px;}
+  #adventureChoiceStage .adventure-scene-copy.narrow{padding:14px 18px;}
+  #adventureChoiceStage .adventure-choice-title{font-size:clamp(25px,3vw,34px);}
+  #adventureChoiceStage .adventure-story-text{font-size:13px;line-height:1.35!important;}
+  #adventureChoiceStage .adventure-choice{padding:9px;grid-template-columns:116px 1fr;gap:10px;}
+  #adventureChoiceStage .adventure-choice img{width:116px;height:118px;}
+  #adventureChoiceStage .adventure-choice h3{font-size:21px;}
+  #adventureChoiceStage .adventure-choice p{font-size:12px;line-height:1.22;}
+  #adventureChoiceStage .adventure-choice .adventure-stats{font-size:10.8px;line-height:1.18;}
+}
+
+@media (max-width:760px){
+  #adventureChoiceStage{overflow:auto;}
+  #adventureChoiceStage .adventure-choice-hero{min-height:190px;flex-basis:auto;}
+  #adventureChoiceStage .adventure-scene-copy.narrow{max-width:100%;}
+  #adventureChoiceStage .adventure-choice-grid{grid-template-columns:1fr;overflow:visible;}
+  #adventureChoiceStage .adventure-choice{grid-template-columns:96px 1fr;}
+  #adventureChoiceStage .adventure-choice img{width:96px;height:112px;}
+}
