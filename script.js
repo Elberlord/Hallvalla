@@ -1681,6 +1681,36 @@ function applyBleedingToOwnerAtTurnStart(units,owner){
   return {units:out,logs,statusFxEvent,floatFxEvent};
 }
 
+function hasBurning(u){return !!u&&!u.leader&&Number(u.burnTurns||0)>0&&Number(u.burnDamage||0)>0;}
+function applyBurnToUnit(target,sourceName="Fireball",turns=2,damage=1){
+  if(!target||target.leader)return target;
+  const next={...target};
+  next.burnTurns=Math.max(Number(next.burnTurns||0),Math.max(1,Number(turns||2)));
+  next.burnDamage=Math.max(Number(next.burnDamage||0),Math.max(1,Number(damage||1)));
+  next.burnSourceName=sourceName||next.burnSourceName||"Quemadura";
+  return next;
+}
+function applyBurnAtTurnEnd(units){
+  let logs=[];
+  let statusFxEvent=null;
+  let floatFxEvent=null;
+  let out=(units||[]).map(u=>{
+    if(!hasBurning(u))return u;
+    const dmg=Math.max(1,Number(u.burnDamage||1));
+    const turnsBefore=Math.max(1,Number(u.burnTurns||1));
+    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("burn_tick",u,dmg);
+    if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"🔥"});
+    logs.push(`${u.name} sufre ${dmg} daño directo por Quemadura (${turnsBefore} turno${turnsBefore===1?"":"s"} restante${turnsBefore===1?"":"s"}).`);
+    let next=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,burnTurns:turnsBefore-1,damagedThisTurn:true});
+    if(next.burnTurns<=0){delete next.burnTurns;delete next.burnDamage;delete next.burnSourceName;}
+    return next;
+  });
+  const fallenIds=out.filter(u=>u.hp<=0).map(u=>u.id);
+  if(fallenIds.length)out=applyLegendaryFatalSaves(out,fallenIds);
+  out=out.filter(u=>u.hp>0);
+  return {units:out,logs,statusFxEvent,floatFxEvent};
+}
+
 // v7EO - Regla global de espadas.
 // Todas las unidades que usan espada reciben +3 Guardia base.
 const SWORD_UNIT_KEYS=new Set([
@@ -3488,7 +3518,7 @@ function getStatusEntryIconHtml(entry){
   const label=escapeHtml(entry?.name||entry?.label||"Estado");
   return `<span class="status-icon status-icon-asset status-icon-${escapeHtml(key)}" role="img" aria-label="${label}"><span class="status-icon-bg" aria-hidden="true"></span><img class="status-icon-img" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async"></span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}.`;units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:(spellDamage>0)||!!u.damagedThisTurn}):u).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage)});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const appliesBurn=card.key==="fireball"&&!target.leader;const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}.`;units=units.map(u=>{if(u.id!==target.id)return u;let next=resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:(spellDamage>0)||!!u.damagedThisTurn});return appliesBurn&&next.hp>0?applyBurnToUnit(next,card.name,card.burnTurns||2,card.burnDamage||1):next;}).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage),statusFxEvent:appliesBurn?makeStatusFxEvent("burn_apply", units.find(u=>u.id===target.id)||target,1):null});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -4071,11 +4101,13 @@ async function attackUnit(a,d){
 async function finishTurn(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
+  const burnEnd=applyBurnAtTurnEnd(publicState.units||[]);
+  if(burnEnd.logs.length&&await finalizeBattle(burnEnd.units,burnEnd.logs.join(" ")))return;
   const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
-  let refreshedUnits=restoreTurnGuardForOwner(publicState.units||[],next);
+  let refreshedUnits=restoreTurnGuardForOwner(burnEnd.units,next);
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({units:refreshedUnits,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,log:[`J${myPlayer} End Phase: termina turno. Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({units:refreshedUnits,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,statusFxEvent:burnEnd.statusFxEvent||null,floatFxEvent:burnEnd.floatFxEvent||null,log:[`J${myPlayer} End Phase: termina turno. ${burnEnd.logs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
 }
@@ -5241,15 +5273,18 @@ async function adventureEnemyTurn(){
     if(!choice?.card||!choice?.target)return false;
     const originalTarget=choice.target;
     const dmg=reduceDamageForHoneyBadger(originalTarget,effectiveCardValue(choice.card,"damage"));
+    const appliesBurn=choice.card.key==="fireball"&&!originalTarget.leader;
     let damagedTarget=null;
     units=units.map(u=>{
       if(u.id!==originalTarget.id)return u;
       damagedTarget=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:(dmg>0)||!!u.damagedThisTurn});
+      if(appliesBurn&&damagedTarget.hp>0)damagedTarget=applyBurnToUnit(damagedTarget,choice.card.name,choice.card.burnTurns||2,choice.card.burnDamage||1);
       return damagedTarget;
     });
+    if(appliesBurn&&damagedTarget&&damagedTarget.hp>0)pendingAiStatusFxEvent=makeStatusFxEvent("burn_apply",damagedTarget,1);
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${dmg} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}.`);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${dmg} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}.`);
     killDead();
     return true;
   };
@@ -5462,6 +5497,13 @@ async function adventureEnemyTurn(){
     await sleep(AI_PHASE_DELAY_MS);
   }
 
+  const burnEnd=applyBurnAtTurnEnd(units);
+  units=burnEnd.units;
+  if(burnEnd.logs.length){
+    logs.push(...burnEnd.logs);
+    if(burnEnd.statusFxEvent)pendingAiStatusFxEvent=burnEnd.statusFxEvent;
+    if(burnEnd.floatFxEvent)pendingAiFloatFxEvent=burnEnd.floatFxEvent;
+  }
   const outcome=getBattleOutcome(units);
   const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
   try{
@@ -6069,6 +6111,7 @@ function getUnitStatusEntries(u){
   if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Lluvia ${Math.max(0,3-Number(u.arrowRainUses||0))}/3`,`Lluvia de flechas`,`Habilidad Nv.5 activa: una vez por turno, hasta 3 veces por duelo, puede infligir 2 de daño directo a todas las unidades enemigas ignorando Guardia y stats. Usos gastados: ${Number(u.arrowRainUses||0)}.`,"buff dex-buff","buff");
   if(u.leader&&u.leaderType==="mage"&&u.leaderAbility==="arcane_bolt")add(`Descarga arcana`,`Descarga arcana`,`Habilidad Nv.5 activa: una vez por turno puede infligir 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats.`,"buff dex-buff","buff");
   if(n(u.poisonTurns)>0&&n(u.poisonDamage)>0)add(`Veneno ${n(u.poisonDamage)}`,`Veneno`,`Veneno: pierde ${n(u.poisonDamage)} Vida al inicio de su turno durante ${n(u.poisonTurns)} turno(s). El daño se duplica en cada tick hasta que termine el efecto.`,"debuff poison","poison");
+  if(n(u.burnTurns)>0&&n(u.burnDamage)>0)add(`Quemadura ${n(u.burnDamage)}`,`Quemadura`,`Quemadura: pierde ${n(u.burnDamage)} Vida directa al final de cada turno durante ${n(u.burnTurns)} turno(s). Ignora Guardia y no afecta líderes.`,"debuff burn","burn");
   if(isRhinoStunnedNow(u))add(`Aturdido`,`Aturdido por Impacto`,`No puede moverse, defenderse ni atacar durante el turno afectado. Su Guardia se mantiene igual y su Destreza/Agilidad quedan a la mitad.`,"debuff lock","lock");
   if(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey)add(`No mover`,`Movimiento bloqueado`,`No puede moverse este turno.`,"debuff lock","lock");
   if(u.noAttackTurnKey&&u.noAttackTurnKey===publicState?.turnKey)add(`No atacar`,`Ataque bloqueado`,`No puede atacar este turno.`,"debuff lock","lock");
@@ -6847,7 +6890,9 @@ const BASIC_MAGIC_TRAP_PACK = [
     cost:1,
     spell:"damage",
     damage:2,
-    text:"Hace 2 de daño a una unidad o líder rival."
+    burnDamage:1,
+    burnTurns:2,
+    text:"Hace 2 de daño a una unidad o líder rival. Si el objetivo es una unidad, aplica Quemadura: +1 daño directo al final de cada turno durante 2 turnos. No afecta líderes."
   },
   {
     key:"heal",
