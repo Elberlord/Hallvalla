@@ -2761,7 +2761,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
-  const enemyLeaderLevel=normalizeLeaderLevel(battle.enemyLeaderLevel||1);
+  const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle);
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||rollLeaderLevel5Ability()):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
@@ -7750,13 +7750,13 @@ const LEADER_DETAIL_META={
     target:"Infantería pesada",
     stats:"AT 3 · GD 4 · RG 1",
     tiers:[
-      "Tier 1 (niveles 1–3): +2 VIDA / +2 GUARDIA",
-      "Tier 2 (niveles 4–6): +3 VIDA / +3 GUARDIA",
-      "Tier 3 (niveles 7–8): +4 VIDA / +4 GUARDIA",
-      "Tier 4 (nivel 9): +5 VIDA / +5 GUARDIA"
+      "Tier 1 (niveles 1–3): +3 VIDA / +3 GUARDIA",
+      "Tier 2 (niveles 4–6): +4 VIDA / +4 GUARDIA",
+      "Tier 3 (niveles 7–8): +5 VIDA / +5 GUARDIA",
+      "Tier 4 (nivel 9): +6 VIDA / +6 GUARDIA"
     ],
-    abilityName:"Armadura bendita",
-    ability:"Desde nivel 5, la primera vez que el Guerrero fuera a recibir daño fatal, queda en 1 de vida y no puede perder vida durante el resto de ese turno."
+    abilityName:"Muralla de unidades",
+    ability:"Mientras quede al menos una unidad aliada viva, los ataques de unidades enemigas no bajan la Vida del líder Warrior. Hechizos, trampas y efectos de líderes rivales sí hacen daño normalmente."
   },
   archer:{
     target:"Arqueras",
@@ -7920,6 +7920,20 @@ function getAdventureChapterForBattle(battle){
   if(!battle||battle.isGuardian||battle.beastEvent)return null;
   return ADVENTURE_CHAPTERS.find(ch=>ch.battles.some(b=>b.id===battle.id))||ADVENTURE_CHAPTER_1_1;
 }
+
+function getAdventureEnemyLeaderLevel(battle){
+  const explicitLevel=normalizeLeaderLevel(battle?.enemyLeaderLevel||1);
+  const chapter=getAdventureChapterForBattle(battle);
+  const chapterNumber=parseFloat(String(chapter?.number||"").replace(",","."));
+  if(Number.isFinite(chapterNumber)&&chapterNumber>=4){
+    return LEADER_LEVEL_MAX;
+  }
+  if(Number.isFinite(chapterNumber)&&chapterNumber>=2){
+    return Math.max(explicitLevel,5);
+  }
+  return explicitLevel;
+}
+
 function getAdventureBattle(battleId){
   if(battleId===BEASTMASTER_EVENT_BATTLE.id)return BEASTMASTER_EVENT_BATTLE;
   if(battleId===ADVENTURE_GUARDIAN_BATTLE.id)return ADVENTURE_GUARDIAN_BATTLE;
