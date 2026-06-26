@@ -184,10 +184,10 @@ const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"heroic_vitality",name:"Vitalidad heroica",short:"+5 HP al líder",desc:"El líder entra al combate con +5 vida máxima."},
   {key:"heroic_edge",name:"Filo de mando",short:"+3 AT al líder",desc:"El líder gana +3 ataque base."},
   {key:"blessed_armor",name:"Armadura bendita",short:"1ra muerte: queda en 1 e inmune al daño ese turno",desc:"Con el Guerrero, la primera vez que fuera a recibir daño letal, su vida queda en 1, obtiene Armadura bendita y hasta terminar ese turno no pierde Vida bajo ninguna circunstancia."},
-  {key:"arrow_rain",name:"Lluvia de flechas",short:"EFFECT: 2 daño directo a todas las unidades enemigas",desc:"Con el Arquero, hasta 3 veces por duelo y solo 1 vez por turno, puede lanzar Lluvia de flechas para infligir 2 de daño directo a todas las unidades enemigas, ignorando Guardia y stats."},
+  {key:"arrow_rain",name:"Lluvia de flechas",short:"EFFECT: 1 daño directo a todas las unidades enemigas",desc:"Con el Arquero, una vez por turno puede lanzar Lluvia de flechas para infligir 1 daño directo a todas las unidades enemigas, ignorando Guardia y stats."},
   {key:"arcane_bolt",name:"Descarga arcana",short:"EFFECT: 2 daño directo al líder enemigo",desc:"Con el Hechicero, una vez por turno puede usar EFFECT para infligir 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats."},
-  {key:"blood_victory",name:"Victoria sangrienta",short:"berserker destruye: aliados +1 VIDA",desc:"Con el Caudillo del Hacha, cada vez que un berserker aliado destruye una unidad enemiga, todos tus aliados vivos ganan +1 Vida actual, sin superar su máximo."},
-  {key:"cavalry_call",name:"Llamado de la carga",short:"EFFECT: convoca hasta 2 Caballerías Ligeras",desc:"Con el Señor de la Carga, el líder puede usar EFFECT para convocar hasta dos Caballerías Ligeras aliadas en casillas libres adyacentes."},
+  {key:"blood_victory",name:"Victoria sangrienta",short:"aliado cae: demás unidades +3 AT",desc:"Con el Caudillo del Hacha, cada vez que una unidad aliada muere, las demás unidades aliadas vivas en el campo ganan +3 Ataque permanente."},
+  {key:"cavalry_call",name:"Llamado de la carga",short:"EFFECT: convoca hasta 3 Caballerías Ligeras",desc:"Con el Señor de la Carga, el líder puede usar EFFECT para convocar hasta tres Caballerías Ligeras aliadas en casillas libres adyacentes."},
   {key:"blood_mist",name:"Niebla de sangre",short:"Asesinos ignoran Guardia y gastan solo la mitad de PREC/EVA",desc:"Con el Maestro de Sombras, los asesinos aliados ignoran Guardia al atacar. Además, cuando un asesino aliado debería gastar Precisión o Evasión por la fórmula, solo gasta la mitad redondeada hacia arriba. Ejemplo: si debía gastar 8 EVA, gasta 4; si tenía 10, queda con 6."},
   {key:"prepare_hunt",name:"Veneno de la Manada",short:"Aliados causan Veneno; dura +2 turnos",desc:"Con el Señor de las Bestias, todas las unidades aliadas causan Veneno cuando hacen daño real a HP. Ese Veneno dura 2 turnos más que su duración normal y se duplica cada tick mientras dure."}
 ];
@@ -3540,7 +3540,7 @@ function getStatusEntryIconHtml(entry){
   const label=escapeHtml(entry?.name||entry?.label||"Estado");
   return `<span class="status-icon status-icon-asset status-icon-${escapeHtml(key)}" role="img" aria-label="${label}"><span class="status-icon-bg" aria-hidden="true"></span><img class="status-icon-img" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async"></span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const appliesBurn=card.key==="fireball"&&!target.leader;const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}.`;units=units.map(u=>{if(u.id!==target.id)return u;let next=resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:(spellDamage>0)||!!u.damagedThisTurn});return appliesBurn&&next.hp>0?applyBurnToUnit(next,card.name,card.burnTurns||2,card.burnDamage||1):next;}).filter(u=>u.hp>0);await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage),statusFxEvent:appliesBurn?makeStatusFxEvent("burn_apply", units.find(u=>u.id===target.id)||target,1):null});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+1,tempGuardBuff:(newUnit.tempGuardBuff||0)-1,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card);await pushLog([`J${myPlayer} invoca ${card.name}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -1 DX y -1 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada. Regla HallValla: puede moverse, defender o atacar este mismo turno desde la estrella táctica.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound("spell_damage",.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const appliesBurn=card.key==="fireball"&&!target.leader;const beforeSpellDamage=[...units];units=units.map(u=>{if(u.id!==target.id)return u;let next=resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:(spellDamage>0)||!!u.damagedThisTurn});return appliesBurn&&next.hp>0?applyBurnToUnit(next,card.name,card.burnTurns||2,card.burnDamage||1):next;}).filter(u=>u.hp>0);const bloodVictoryResult=applyBloodVictoryForDeaths(beforeSpellDamage,units);units=bloodVictoryResult.units;const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage),statusFxEvent:appliesBurn?makeStatusFxEvent("burn_apply", units.find(u=>u.id===target.id)||target,1):null});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"||card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound(card.trap?"trap_trigger":"spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,guard:(u.guard||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada herida o con estado curable.");if(!canHealOrCleanseUnit(target,myPlayer))return setHint("Esa unidad no está herida ni tiene estados curables.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const hadCurableStatus=hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const amount=effectiveCardValue(card,"slow");
         const current=Number(u.tempMovDebuff||0);
@@ -3709,11 +3709,34 @@ function applyAxeWarCry(units,owner,sourceId){
     return {...u,tempAtkBuff:(u.tempAtkBuff||0)+1,warCryBuffs:(u.warCryBuffs||0)+1};
   });
 }
-function applyBloodVictory(units,owner){
+function applyBloodVictory(units,owner,stacks=1){
+  const bonus=Math.max(1,Number(stacks)||1)*3;
+  const stackCount=Math.max(1,Number(stacks)||1);
   return (units||[]).map(u=>{
-    if(u.owner!==owner)return u;
-    return {...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+1),bloodVictoryBuffs:(u.bloodVictoryBuffs||0)+1};
+    if(u.owner!==owner||u.leader||u.hp<=0)return u;
+    return {...u,permAtk:(u.permAtk||0)+bonus,bloodVictoryBuffs:(u.bloodVictoryBuffs||0)+stackCount};
   });
+}
+function findFallenNonLeaderUnits(beforeUnits,afterUnits){
+  const aliveAfter=new Set((afterUnits||[]).filter(u=>u&&u.hp>0).map(u=>u.id));
+  return (beforeUnits||[]).filter(u=>u&&u.hp>0&&!u.leader&&!aliveAfter.has(u.id));
+}
+function applyBloodVictoryForDeaths(beforeUnits,afterUnits){
+  let out=[...(afterUnits||[])];
+  const fallen=findFallenNonLeaderUnits(beforeUnits,out);
+  const logs=[];
+  if(!fallen.length)return{units:out,logs,triggered:false};
+  const owners=[...new Set(fallen.map(u=>u.owner))];
+  for(const owner of owners){
+    const count=fallen.filter(u=>u.owner===owner).length;
+    if(count<=0||!hasBloodVictory(owner,out))continue;
+    const affected=out.filter(u=>u.owner===owner&&!u.leader&&u.hp>0).length;
+    if(!affected)continue;
+    out=applyBloodVictory(out,owner,count);
+    const bonus=count*3;
+    logs.push(`Victoria sangrienta: ${count} unidad${count===1?" aliada cae":"es aliadas caen"}; ${affected} unidad${affected===1?" aliada viva gana":"es aliadas vivas ganan"} +${bonus} AT permanente.`);
+  }
+  return{units:out,logs,triggered:logs.length>0};
 }
 function hasBloodMist(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="assassin"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_mist"}
 function hasShadowMistAssassin(unit,units=publicState?.units||[]){
@@ -3915,8 +3938,9 @@ async function attackUnit(a,d){
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods);
   const warCryTriggered=shouldTriggerWarCry(a,d,guardLoss,hit.hit);
   if(warCryTriggered)units=applyAxeWarCry(units,a.owner,a.id);
-  const bloodVictoryTriggered=defenderFell&&hasBloodVictory(a.owner,units)&&isAxeUnitCardLike(a);
-  if(bloodVictoryTriggered)units=applyBloodVictory(units,a.owner);
+  const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
+  units=bloodVictoryResult.units;
+  const bloodVictoryTriggered=bloodVictoryResult.triggered;
   const bloodMistTriggered=false;
   const steelWallTriggered=shouldTriggerSteelWall(d,guardLoss,hit.hit);
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
@@ -4094,7 +4118,7 @@ async function attackUnit(a,d){
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
-  const bloodVictoryText=bloodVictoryTriggered?` Victoria sangrienta: todos los aliados ganan +1 Vida.`:"";
+  const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryResult.logs.join(" ")}`:"";
   const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
   const bloodMistText=hasShadowMistAssassin(a,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
@@ -4510,6 +4534,7 @@ async function adventureEnemyTurn(){
     let target=bestAttackTarget(attacker);
     if(!target)return false;
     if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===pub.turnKey)return false;
+    const aiAttackBefore=[...units];
 
     let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,target,units));
     legendaryTraps=preTrap.traps;
@@ -4555,7 +4580,9 @@ async function adventureEnemyTurn(){
         units=units.filter(u=>u.hp>0);
         firstStrikeText=` ${target.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}), ignora Guardia${fsWarriorShieldBlocked?" y no logra bajar Vida por Muralla del Warrior":` e inflige ${fsAtk} daño a HP`}.${counterDefenseText(fsDefenseRemainder)}`;
         if(attackerFell){
-          logs.push([...(preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`].filter(Boolean).join(" "));
+          const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
+          units=bloodVictoryResult.units;
+          logs.push([...(preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
           return true;
         }
         attacker=units.find(u=>u.id===attacker.id)||attacker;
@@ -4616,8 +4643,9 @@ async function adventureEnemyTurn(){
     units=applyAfterDamageBonuses(units,attacker,target,hpLoss,defenderFell,mods);
     const warCryTriggered=withAiPublicState(()=>shouldTriggerWarCry(attacker,target,guardLoss,hit.hit));
     if(warCryTriggered)units=applyAxeWarCry(units,attacker.owner,attacker.id);
-    const bloodVictoryTriggered=defenderFell&&withAiPublicState(()=>hasBloodVictory(attacker.owner,units))&&isAxeUnitCardLike(attacker);
-    if(bloodVictoryTriggered)units=applyBloodVictory(units,attacker.owner);
+    const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
+    units=bloodVictoryResult.units;
+    const bloodVictoryTriggered=bloodVictoryResult.triggered;
     const bloodMistTriggered=defenderFell&&withAiPublicState(()=>hasBloodMist(attacker.owner,units))&&isAssassinUnit(attacker);
     if(bloodMistTriggered)units=applyBloodMist(units,attacker.owner,attacker.name);
     const steelWallTriggered=withAiPublicState(()=>shouldTriggerSteelWall(target,guardLoss,hit.hit));
@@ -4799,7 +4827,7 @@ async function adventureEnemyTurn(){
     const pressureText=evasionPressureText(target.name,evasionPressure.spent,evasionPressure.remaining);
     const actionSpendText=actionStatSpendText(attacker.name,actionSpend.spent,actionSpend.remaining);
     const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
-    const bloodVictoryText=bloodVictoryTriggered?` Victoria sangrienta: todos los aliados ganan +1 Vida.`:"";
+    const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryResult.logs.join(" ")}`:"";
     const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
     const bloodMistText=hasShadowMistAssassin(attacker,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
     const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
@@ -5963,8 +5991,7 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     return getAdjacentFreeCells(caster,units).length?[caster]:[];
   }
   if(caster.leader&&caster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
-    const uses=Math.max(0,Number(caster.arrowRainUses||0));
-    if(caster.arrowRainUsedTurn||uses>=3)return[];
+    if(caster.arrowRainUsedTurn)return[];
     return (units||[]).some(it=>it.owner!==owner&&!it.leader&&it.hp>0)?[caster]:[];
   }
   if(caster.leader&&caster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"){
@@ -6064,22 +6091,23 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.filter(it=>it.hp>0);
     log=`${liveCaster.name} lanza Descarga arcana: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats.`;
   }else if(liveCaster.leader&&liveCaster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
-    const uses=Math.max(0,Number(liveCaster.arrowRainUses||0));
     if(liveCaster.arrowRainUsedTurn)return{success:false,reason:"Lluvia de flechas ya fue usada este turno."};
-    if(uses>=3)return{success:false,reason:"Lluvia de flechas ya agotó sus 3 usos por duelo."};
     const enemyIds=out.filter(it=>it.owner!==owner&&!it.leader&&it.hp>0).map(it=>it.id);
     if(!enemyIds.length)return{success:false,reason:"No hay unidades enemigas válidas para Lluvia de flechas."};
+    const beforeRain=[...out];
     out=out.map(it=>{
-      if(it.id===liveCaster.id)return{...it,acted:true,arrowRainUsedTurn:true,arrowRainUses:uses+1};
-      if(enemyIds.includes(it.id))return {...it,hp:(it.hp||0)-2,damagedThisTurn:true};
+      if(it.id===liveCaster.id)return{...it,acted:true,arrowRainUsedTurn:true};
+      if(enemyIds.includes(it.id))return {...it,hp:(it.hp||0)-1,damagedThisTurn:true};
       return it;
     });
     out=applyLegendaryFatalSaves(out,enemyIds);
     out=out.filter(it=>it.hp>0);
-    log=`${liveCaster.name} lanza Lluvia de flechas: inflige 2 de daño directo a ${enemyIds.length} unidad${enemyIds.length===1?"":"es"} enemiga${enemyIds.length===1?"":"s"}. Uso ${uses+1}/3.`;
+    const bloodVictoryResult=applyBloodVictoryForDeaths(beforeRain,out);
+    out=bloodVictoryResult.units;
+    log=`${liveCaster.name} lanza Lluvia de flechas: inflige 1 daño directo a ${enemyIds.length} unidad${enemyIds.length===1?"":"es"} enemiga${enemyIds.length===1?"":"s"}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
   }else if(liveCaster.leader&&liveCaster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call"){
     if(liveCaster.cavalryCallUsedTurn)return{success:false,reason:"El Llamado de la carga ya fue usado este turno."};
-    const spots=getAdjacentFreeCells(liveCaster,out).slice(0,2);
+    const spots=getAdjacentFreeCells(liveCaster,out).slice(0,3);
     if(!spots.length)return{success:false,reason:"No hay espacio junto al líder para convocar Caballería Ligera."};
     const tokens=spots.map(s=>makeLightCavalryToken(owner,s.x,s.y));
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,cavalryCallUsedTurn:true}:it).concat(tokens);
@@ -6296,6 +6324,7 @@ function getUnitStatusEntries(u){
   if(getHannibalMovDebuff(u)>0)add(`-${getHannibalMovDebuff(u)} MOV`,`Trampa de Cannas`,`Movimiento reducido por Hannibal Barca hasta su próximo turno.${u.hannibalMovDebuffSource?` Origen: ${u.hannibalMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
   if(n(u.tempMovBuff)>0)add(`+${n(u.tempMovBuff)} MOV`,`Movimiento aumentado`,`Movimiento aumentado este turno o hasta que el efecto expire.`,"buff mov-buff","buff");
   if(n(u.buffAtk)>0)add(`+${n(u.buffAtk)} AT`,`Ataque aumentado`,`Ataque aumentado temporalmente por magia o efecto.`,"buff atk-buff","buff");
+  if(n(u.permAtk)>0)add(`+${n(u.permAtk)} AT`,`Ataque permanente`,n(u.bloodVictoryBuffs)>0?`Ataque aumentado por Victoria sangrienta (${n(u.bloodVictoryBuffs)} caída${n(u.bloodVictoryBuffs)===1?"":"s"} aliada${n(u.bloodVictoryBuffs)===1?"":"s"}). Permanece mientras la unidad esté en campo.`:`Ataque permanente acumulado.`,"buff atk-buff","buff");
   if(n(u.tempAtkBuff)>0)add(`+${n(u.tempAtkBuff)} AT`,`Ataque aumentado`,n(u.warCryBuffs)>0?`Ataque aumentado por Grito de Guerra (${n(u.warCryBuffs)} acumulación${n(u.warCryBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Ataque aumentado por efecto temporal.`,"buff atk-buff","buff");
   if(n(u.tempAtkDebuff)>0)add(`-${n(u.tempAtkDebuff)} AT`,`Ataque reducido`,`Ataque reducido por efecto temporal.`,"debuff atk-debuff","debuff");
   if(getHannibalAtkDebuff(u)>0)add(`-${getHannibalAtkDebuff(u)} AT`,`Trampa de Cannas`,`Ataque reducido por Hannibal Barca hasta su próximo turno.${u.hannibalAtkDebuffSource?` Origen: ${u.hannibalAtkDebuffSource}.`:""}`,"debuff atk-debuff","debuff");
@@ -6317,7 +6346,7 @@ function getUnitStatusEntries(u){
   if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Destreza/Agilidad gastadas por atacar o por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
   if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}${u.leader&&u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
   if(hasActiveBlessedArmor(u))add(`1ra muerte negada`,`Armadura bendita`,`La primera muerte del líder fue negada. Su vida quedó en 1 y no puede perder Vida durante el resto de este turno.`,"buff guard-buff","buff");
-  if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Lluvia ${Math.max(0,3-Number(u.arrowRainUses||0))}/3`,`Lluvia de flechas`,`Habilidad Nv.5 activa: una vez por turno, hasta 3 veces por duelo, puede infligir 2 de daño directo a todas las unidades enemigas ignorando Guardia y stats. Usos gastados: ${Number(u.arrowRainUses||0)}.`,"buff dex-buff","buff");
+  if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Lluvia 1/turno`,`Lluvia de flechas`,`Habilidad Nv.5 activa: una vez por turno puede infligir 1 daño directo a todas las unidades enemigas, ignorando Guardia y stats.`,"buff dex-buff","buff");
   if(u.leader&&u.leaderType==="mage"&&u.leaderAbility==="arcane_bolt")add(`Descarga arcana`,`Descarga arcana`,`Habilidad Nv.5 activa: una vez por turno puede infligir 2 de daño directo al líder enemigo, ignorando Guardia, evasión y stats.`,"buff dex-buff","buff");
   if(n(u.poisonTurns)>0&&n(u.poisonDamage)>0)add(`Veneno ${n(u.poisonDamage)}`,`Veneno`,`Veneno: pierde ${n(u.poisonDamage)} Vida al inicio de su turno durante ${n(u.poisonTurns)} turno(s). El daño se duplica en cada tick hasta que termine el efecto.`,"debuff poison","poison");
   if(n(u.burnTurns)>0&&n(u.burnDamage)>0)add(`Quemadura ${n(u.burnDamage)}`,`Quemadura`,`Quemadura: pierde ${n(u.burnDamage)} Vida directa al final de cada turno durante ${n(u.burnTurns)} turno(s). Ignora Guardia y no afecta líderes.`,"debuff burn","burn");
@@ -7768,7 +7797,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +3 AT / +6 DX / +2 AGI"
     ],
     abilityName:"Lluvia de flechas",
-    ability:"Desde nivel 5, puede usar EFFECT hasta 3 veces por duelo y solo 1 vez por turno para hacer 2 de daño directo a todas las unidades enemigas."
+    ability:"Desde nivel 5, puede usar EFFECT una vez por turno para hacer 1 daño directo a todas las unidades enemigas."
   },
   mage:{
     target:"Magias",
@@ -7792,7 +7821,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +3 AT / +2 DX"
     ],
     abilityName:"Victoria sangrienta",
-    ability:"Desde nivel 5, cada vez que un berserker aliado destruye una unidad enemiga, todos tus aliados vivos recuperan +1 vida actual sin superar su máximo."
+    ability:"Desde nivel 5, cada vez que una unidad aliada muere, las demás unidades aliadas vivas en el campo ganan +3 AT permanente."
   },
   cavalry:{
     target:"Caballería ligera",
@@ -7804,7 +7833,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +2 MOV / +3 AGI / +1 AT"
     ],
     abilityName:"Llamado de la carga",
-    ability:"Desde nivel 5, puede usar EFFECT para convocar hasta 2 Caballerías Ligeras aliadas en casillas libres adyacentes al líder."
+    ability:"Desde nivel 5, puede usar EFFECT para convocar hasta 3 Caballerías Ligeras aliadas en casillas libres adyacentes al líder."
   },
   assassin:{
     target:"Asesinos",
