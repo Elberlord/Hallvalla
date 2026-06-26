@@ -4356,9 +4356,22 @@ async function adventureEnemyTurn(){
   const bestAttackTarget=(attacker)=>{
     return living(1).filter(t=>canHit(attacker,t)).map(t=>{
       let score=scoreTarget(t,0,attacker);
-      if(aiBasicTacticRole(attacker)==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
+      const role=aiBasicTacticRole(attacker);
+      const leaderNeed=aiLeaderProtectionNeed();
+      const rangedNeed=aiRangedProtectionNeed();
+      if(role==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
       if((attacker?.range||1)>=3&&t.leader)score+=130;
-      if(aiBasicTacticRole(attacker)==="spear"&&(t.key==="cavalry"||getWeaponClassForCard(t)==="cavalry"))score+=260;
+      if(role==="spear"&&(t.key==="cavalry"||getWeaponClassForCard(t)==="cavalry"))score+=260;
+      if(leaderNeed){
+        const threat=leaderNeed.threats.find(th=>th.unit.id===t.id);
+        if(threat)score+=520+threat.score*0.45;
+        if(d(t,leaderNeed.unit)<=2)score+=260;
+      }
+      if(rangedNeed){
+        const threat=rangedNeed.threats.find(th=>th.unit.id===t.id);
+        if(threat)score+=360+threat.score*0.35;
+        if(d(t,rangedNeed.unit)<=1)score+=210;
+      }
       return{target:t,score};
     }).sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
@@ -4382,6 +4395,49 @@ async function adventureEnemyTurn(){
     const el=enemyLeaderNow();
     if(!el)return 0;
     return living(1).reduce((sum,e)=>sum+(d(e,el)<=((e.range||1)+(effectiveMov(e)||0))?effectiveAtk(e)*12+aiUnitValue(e)*0.08:0),0);
+  };
+  const aiLeaderProtectionNeed=()=>{
+    const el=enemyLeaderNow();
+    if(!el)return null;
+    const threats=living(1).filter(u=>u.hp>0&&!u.leader).map(e=>{
+      const reach=(effectiveMov(e)||0)+(e.range||1);
+      const distance=d(e,el);
+      const canPressure=distance<=reach+1;
+      const isInvader=distance<=3;
+      const score=(canPressure?190:0)+(isInvader?170:0)+Math.max(0,reach+2-distance)*38+(effectiveAtk(e)||1)*16+aiUnitValue(e)*0.10;
+      return {unit:e,score,distance,reach,canPressure,isInvader};
+    }).filter(t=>t.score>=120).sort((a,b)=>b.score-a.score);
+    const danger=leaderDangerScore();
+    const total=threats.reduce((sum,t)=>sum+t.score,0)+danger;
+    return (threats.length||danger>=55)?{unit:el,score:total,threats}:null;
+  };
+  const aiProtectLeaderCellScore=(cell,protector=null)=>{
+    const need=aiLeaderProtectionNeed();
+    if(!need||!cell)return 0;
+    const el=need.unit;
+    const role=aiBasicTacticRole(protector);
+    const distToLeader=d(cell,el);
+    let score=0;
+    if(role==="tank"||role==="spear"){
+      if(distToLeader===1)score+=260;
+      else if(distToLeader===2)score+=175;
+      else if(distToLeader===3)score+=70;
+    }else if(role==="assassin"){
+      if(distToLeader<=2)score+=80;
+    }else if((protector?.range||1)>1){
+      if(distToLeader>=2&&distToLeader<=4)score+=45;
+    }
+    for(const t of need.threats.slice(0,4)){
+      const enemy=t.unit;
+      const distToThreat=d(cell,enemy);
+      const currentThreatDistance=d(enemy,el);
+      if(distToThreat<=Math.max(1,protector?.range||1))score+=240+t.score*0.18;
+      if(distToThreat<currentThreatDistance)score+=110;
+      if((role==="tank"||role==="spear")&&distToThreat<=1)score+=135;
+      if(role==="spear"&&(enemy.key==="cavalry"||getWeaponClassForCard(enemy)==="cavalry"||isLightCavalryUnit(enemy)))score+=210;
+      if((protector?.range||1)>1&&distToThreat<=1)score-=120;
+    }
+    return score;
   };
 
   const attackWith=(attacker)=>{
@@ -5104,6 +5160,7 @@ async function adventureEnemyTurn(){
           if(targets.length&&!living(1).some(e=>d(e,pos)<=1))score+=80;
         }
         if(role==="tank"||role==="spear")score+=aiProtectRangedCellScore(pos,u);
+        score+=aiProtectLeaderCellScore(pos,u);
         if((u.range||1)>1&&targets.length&&living(1).some(e=>d(e,pos)<=1))score-=45;
         if(role==="spear"){
           const cavalryThreat=aiEnemyCavalryPressure();
@@ -5333,6 +5390,7 @@ async function adventureEnemyTurn(){
     logs.push(`Rival: ${result.log}`);
     return true;
   };
+  // Prioridad de presión: si el líder mago rival tiene Descarga arcana disponible, la usa antes de mover unidades.
   const aiLeaderEffect=enemyLeaderNow();
   if(aiLeaderEffect&&tryAiLegendEffect(aiLeaderEffect)){
     await publishAiStep({turnPhase:"actions"});
