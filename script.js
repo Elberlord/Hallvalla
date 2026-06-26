@@ -145,7 +145,7 @@ const CARD_PORTRAITS={
 -------------------------------------------------------------------------------
 */
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo: AT 3, GD 4, RG 1. Infantería pesada + VIDA/GUARDIA."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo: AT 3, GD 4, RG 1. Infantería pesada + VIDA/GUARDIA. Mientras tenga una unidad aliada viva, ataques de unidades no bajan su Vida."},
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras."},
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de larga distancia: AT 2, GD 1, RG 3. Mejora magias."},
   axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: los berserkers rompen Guardia y activan Grito de Guerra para subir AT aliado."},
@@ -172,7 +172,7 @@ function getLeaderAttack(type,level=1){return LEADER_BASE_ATK[type]??3}
 function getLeaderGuard(type,level=1){if(type==="beastmaster")return 2;return Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3))}
 function getLeaderRange(type,level=1){return LEADER_BASE_RANGE[type]??1}
 const LEADER_BUFF_TABLE={
-  warrior:{1:{hp:2,guard:2},2:{hp:3,guard:3},3:{hp:4,guard:4},4:{hp:5,guard:5}},
+  warrior:{1:{hp:3,guard:3},2:{hp:4,guard:4},3:{hp:5,guard:5},4:{hp:6,guard:6}},
   archer:{1:{atk:1,dex:3,agi:1},2:{atk:2,dex:4,agi:1},3:{atk:2,dex:5,agi:2},4:{atk:3,dex:6,agi:2}},
   mage:{1:{costReduction:2,effectBonus:3},2:{costReduction:2,effectBonus:4},3:{costReduction:3,effectBonus:5},4:{costReduction:3,effectBonus:6}},
   axe:{1:{atk:1,dex:1},2:{atk:2,dex:1},3:{atk:2,dex:2},4:{atk:3,dex:2}},
@@ -260,7 +260,7 @@ function getLeaderProgressText(type,level,abilityKey=""){
   const stats=getLeaderBattleStats(type,level,abilityKey);
   const tier=stats.buffTier;
   const abilityLine=normalizeLeaderLevel(level)>=5?` · Hab. Nv.5: ${getLeaderAbilityText(abilityKey)}`:"";
-  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.hp} VIDA/+${b.guard} GUARDIA${abilityLine}`;}
+  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.hp} VIDA/+${b.guard} GUARDIA · Muralla: si queda una unidad aliada viva, ataques de unidades no bajan Vida al líder${abilityLine}`;}
   if(type==="archer"){const b=LEADER_BUFF_TABLE.archer[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: arqueras +${b.atk} AT/+${b.dex} DX/+${b.agi} AGI${abilityLine}`;}
   if(type==="axe"){const b=LEADER_BUFF_TABLE.axe[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: hachas +${b.atk} AT/+${b.dex} DX · Grito de Guerra: al romper toda la Guardia enemiga, aliados +1 AT hasta fin de turno${abilityLine}`;}
   if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería ligera +${b.mov||0} MOV/+${b.agi||0} AGI${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
@@ -2103,6 +2103,22 @@ function resourceDetailHtml(owner,{compact=false,includeReason=true}={}){
   return `<div class="stat-help-box"><div class="stat-help-title">Recurso del turno</div><div class="stat-help-line"><b>${escapeHtml(st.label)}</b>: ${escapeHtml(`${st.honor}/${st.maxHonor}`)} restante.</div><div class="stat-help-line"><b>Regla</b>: ${escapeHtml(reason)} Se recarga al iniciar el turno del dueño y baja cuando juegas cartas.</div></div>`;
 }
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
+function hasWarriorLeaderUnitShield(defender,attacker,units=publicState?.units||[]){
+  return !!(defender&&attacker
+    && defender.leader
+    && defender.leaderType==="warrior"
+    && !attacker.leader
+    && attacker.owner!==defender.owner
+    && (units||[]).some(u=>u&&u.owner===defender.owner&&!u.leader&&u.hp>0));
+}
+function applyWarriorLeaderUnitShield(defenderBefore,attacker,damaged,units=publicState?.units||[]){
+  if(!hasWarriorLeaderUnitShield(defenderBefore,attacker,units))return{unit:damaged,blocked:false};
+  const hpBefore=Number(defenderBefore?.hp||0);
+  const hpAfter=Number(damaged?.hp||0);
+  const hpLoss=Math.max(0,Number(damaged?.lastHpLoss||0),hpBefore-hpAfter);
+  if(hpLoss<=0)return{unit:damaged,blocked:false};
+  return{unit:{...damaged,hp:hpBefore,lastHpLoss:0,warriorUnitShieldBlocked:true},blocked:true};
+}
 function isHeavyInfantryUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
@@ -3810,13 +3826,16 @@ async function attackUnit(a,d){
     units=fsSpend.units;
     d=units.find(u=>u.id===d.id)||d;
     if(fsHit.hit){
-      let fsGuard=0,fsHp=0;
+      let fsGuard=0,fsHp=0,fsWarriorShieldBlocked=false;
       const fsAtk=getBattleDamage(d,fsMods);
       units=units.map(u=>{
         if(u.id===d.id)return{...u,counterUsedTurn:true};
         if(u.id===a.id){
-          const damaged=applyGuardDamage(u,fsAtk,fsMods.defenderGuard||0,0);
+          let damaged=applyGuardDamage(u,fsAtk,fsMods.defenderGuard||0,0);
+          const warriorShield=applyWarriorLeaderUnitShield(a,d,damaged,units);
+          damaged=warriorShield.unit;
           fsGuard=damaged.lastGuardLoss||0;fsHp=damaged.lastHpLoss||0;
+          fsWarriorShieldBlocked=fsWarriorShieldBlocked||warriorShield.blocked;
           damaged.damagedThisTurn=(fsHp>0)||!!damaged.damagedThisTurn;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
           return {...damaged,acted:true,khalidChainReady:false};
@@ -3827,7 +3846,7 @@ async function attackUnit(a,d){
       units=applyLegendaryFatalSaves(units,[a.id]);
       attackerFell=!!units.find(u=>u.id===a.id&&u.hp<=0);
       units=units.filter(u=>u.hp>0);
-      firstStrikeText=` ${d.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}). ${fsGuard>0?`Consume ${fsGuard} GD. `:""}${fsHp>0?`Inflige ${fsHp} daño a HP.`:"No atraviesa la Guardia."}${counterDefenseText(fsDefenseRemainder)}`;
+      firstStrikeText=` ${d.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}). ${fsGuard>0?`Consume ${fsGuard} GD. `:""}${fsHp>0?`Inflige ${fsHp} daño a HP.`:"No atraviesa la Guardia."}${fsWarriorShieldBlocked?` Muralla del Warrior: ${a.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterDefenseText(fsDefenseRemainder)}`;
       if(attackerFell){
         const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`;
         await updatePublic({units,legendaryTraps:preTrap.traps});
@@ -3853,7 +3872,7 @@ async function attackUnit(a,d){
     if(hit.hit){mods=dharmaMods;arjunaDharmaPoison=true;}
     rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
   }
-  let guardLoss=0,hpLoss=0,counterText=firstStrikeText;
+  let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false;
   units=applyAttackSideEffects(a,d,units);
   const ulyssesAttackTactic=applyUlyssesAttackTactic(units,a);
   units=ulyssesAttackTactic.units;
@@ -3869,7 +3888,10 @@ async function attackUnit(a,d){
     if(u.id===d.id){
       if(!hit.hit)return u;
       const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,units);
-      const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
+      let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
+      const warriorShield=applyWarriorLeaderUnitShield(d,a,damaged,units);
+      damaged=warriorShield.unit;
+      warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
       guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;
       damaged.damagedThisTurn=(hpLoss>0)||!!damaged.damagedThisTurn;
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -3977,6 +3999,7 @@ async function attackUnit(a,d){
   units=lionFearCombat.units;
   const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
   const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
+  const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${d.name} no pierde Vida por ataques de unidades.`:"";
   const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanChoiceAttack&&!d.leader;
   const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&units.some(u=>u.id===a.id);
   const exileTrap=defenderFell?resolveAfterKillLegendaryTraps(a,d,units):{units,traps:dmgTrap.traps,logs:[]};
@@ -4009,13 +4032,16 @@ async function attackUnit(a,d){
     units=cSpend.units;
     defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     if(cHit.hit){
-      let cGuard=0,cHp=0;
+      let cGuard=0,cHp=0,cWarriorShieldBlocked=false;
       const cAtk=getBattleDamage(defenderAfter,cMods);
       units=units.map(u=>{
         if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
         if(u.id===attackerAfter.id){
-          const damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
+          let damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
+          const warriorShield=applyWarriorLeaderUnitShield(attackerAfter,defenderAfter,damaged,units);
+          damaged=warriorShield.unit;
           cGuard=damaged.lastGuardLoss||0;cHp=damaged.lastHpLoss||0;
+          cWarriorShieldBlocked=cWarriorShieldBlocked||warriorShield.blocked;
           damaged.damagedThisTurn=(cHp>0)||!!damaged.damagedThisTurn;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
           return damaged;
@@ -4052,7 +4078,7 @@ async function attackUnit(a,d){
       }
       const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
+      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
       units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -4072,7 +4098,7 @@ async function attackUnit(a,d){
   const genghisDebuffText=genghisDebuffResult.log||"";
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`:"";
   const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${counterText}${mulanExecutionText}${khalidChainText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
@@ -4367,6 +4393,7 @@ async function adventureEnemyTurn(){
   };
   const scoreTarget=(target,damage=0,attacker=null)=>{
     if(!target)return -9999;
+    if(attacker&&hasWarriorLeaderUnitShield(target,attacker,units))return -9999;
     const combat=attacker?estimateCombat(attacker,target):{chance:100,damage,expected:damage};
     const realDamage=attacker?combat.damage:damage;
     const expected=attacker?combat.expected:damage;
@@ -4506,12 +4533,21 @@ async function adventureEnemyTurn(){
       units=fsSpend.units.map(u=>u.id===target.id?{...u,counterUsedTurn:true}:u);
       target=units.find(u=>u.id===target.id)||target;
       if(fsHit.hit){
+        let fsWarriorShieldBlocked=false;
         const fsAtk=getBattleDamage(target,fsMods);
-        units=units.map(u=>u.id===attacker.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-fsAtk,acted:true,khalidChainReady:false,damagedThisTurn:true}):u);
+        units=units.map(u=>{
+          if(u.id!==attacker.id)return u;
+          let damaged=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-fsAtk,acted:true,khalidChainReady:false,damagedThisTurn:true,lastGuardLoss:0,lastHpLoss:fsAtk});
+          const warriorShield=applyWarriorLeaderUnitShield(attacker,target,damaged,units);
+          damaged=warriorShield.unit;
+          if(warriorShield.blocked){damaged={...damaged,damagedThisTurn:!!u.damagedThisTurn};fsWarriorShieldBlocked=true;}
+          delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
+          return damaged;
+        });
         units=applyLegendaryFatalSaves(units,[attacker.id]);
         const attackerFell=!!units.find(u=>u.id===attacker.id&&u.hp<=0);
         units=units.filter(u=>u.hp>0);
-        firstStrikeText=` ${target.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}), ignora Guardia e inflige ${fsAtk} daño a HP.${counterDefenseText(fsDefenseRemainder)}`;
+        firstStrikeText=` ${target.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}), ignora Guardia${fsWarriorShieldBlocked?" y no logra bajar Vida por Muralla del Warrior":` e inflige ${fsAtk} daño a HP`}.${counterDefenseText(fsDefenseRemainder)}`;
         if(attackerFell){
           logs.push([...(preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`].filter(Boolean).join(" "));
           return true;
@@ -4537,7 +4573,7 @@ async function adventureEnemyTurn(){
       rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
     }
 
-    let guardLoss=0,hpLoss=0,counterText=firstStrikeText;
+    let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false;
     units=applyAttackSideEffects(attacker,target,units);
     const ulyssesAttackTactic=applyUlyssesAttackTactic(units,attacker);
     units=ulyssesAttackTactic.units;
@@ -4553,7 +4589,10 @@ async function adventureEnemyTurn(){
       if(u.id===target.id){
         if(!hit.hit)return u;
         const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker);
-        const damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
+        let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
+        const warriorShield=applyWarriorLeaderUnitShield(target,attacker,damaged,units);
+        damaged=warriorShield.unit;
+        warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
         guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;
         damaged.damagedThisTurn=(hpLoss>0)||!!damaged.damagedThisTurn;
         delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -4662,6 +4701,7 @@ async function adventureEnemyTurn(){
     units=lionFearCombat.units;
     const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
     const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${attacker.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
+    const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${target.name} no pierde Vida por ataques de unidades.`:"";
 
     const khalidChainTriggered=hit.hit&&defenderFell&&attacker.key==="khalid_ibn_al_walid"&&!target.leader&&units.some(u=>u.id===attacker.id);
     const exileTrap=defenderFell?withAiPublicState(()=>resolveAfterKillLegendaryTraps(attacker,target,units)):{units,traps:legendaryTraps,logs:[]};
@@ -4693,14 +4733,17 @@ async function adventureEnemyTurn(){
       defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
       if(cHit.hit){
         const cAtk=getBattleDamage(defenderAfter,cMods);
-        let cGuard=0,cHp=0;
+        let cGuard=0,cHp=0,cWarriorShieldBlocked=false;
         units=units.map(u=>{
           if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
           if(u.id===attackerAfter.id){
-            const damaged=isMiyamotoCounter
+            let damaged=isMiyamotoCounter
               ? applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0)
               : resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-cAtk,lastGuardLoss:0,lastHpLoss:cAtk});
+            const warriorShield=applyWarriorLeaderUnitShield(attackerAfter,defenderAfter,damaged,units);
+            damaged=warriorShield.unit;
             cGuard=damaged.lastGuardLoss||0;cHp=damaged.lastHpLoss||0;
+            cWarriorShieldBlocked=cWarriorShieldBlocked||warriorShield.blocked;
             damaged.damagedThisTurn=(cHp>0)||!!damaged.damagedThisTurn;
             delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
             return damaged;
@@ -4719,7 +4762,7 @@ async function adventureEnemyTurn(){
         }
         const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
         const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
+        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
       }else{
         units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
         counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -4759,7 +4802,7 @@ async function adventureEnemyTurn(){
     const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
     const genghisDebuffText=genghisDebuffResult.log||"";
     const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${counterText}${khalidChainText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
