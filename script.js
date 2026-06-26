@@ -7970,7 +7970,8 @@ function getAdventureProgress(){
   try{
     const saved=JSON.parse(localStorage.getItem(ADVENTURE_PROGRESS_KEY)||"null")||{};
     const progress=blank();
-    progress.selectedSpecial=saved.selectedSpecial||"";
+    const savedSpecial=ADVENTURE_SPECIALS[saved.selectedSpecial]?saved.selectedSpecial:"";
+    progress.selectedSpecial=savedSpecial;
     progress.guardianDefeated=!!saved.guardianDefeated;
     progress.guardianRewardClaimed=!!saved.guardianRewardClaimed;
     ADVENTURE_CHAPTERS.forEach(ch=>{
@@ -8363,7 +8364,30 @@ on("backToAdventureChoiceBtn","click",()=>openAdventureMap(pendingAdventureSpeci
 on("closeAdventureMapBtn","click",()=>$("adventurePanel").classList.add("hidden"));
 on("skipWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 on("continueWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
-on("startAdventureBattleBtn","click",()=>{if(pendingAdventureSpecial)startAdventure(pendingAdventureSpecial,pendingAdventureBattleId)});
+async function startPendingAdventureBattle(){
+  const progress=getAdventureProgress();
+  const safeSpecial=ADVENTURE_SPECIALS[pendingAdventureSpecial]?pendingAdventureSpecial:(ADVENTURE_SPECIALS[progress.selectedSpecial]?progress.selectedSpecial:"");
+  if(!safeSpecial){
+    pendingAdventureSpecial="";
+    showAdventureChoice();
+    setHint("Elige primero a Mulan o William Wallace para iniciar la prueba.");
+    return;
+  }
+  pendingAdventureSpecial=safeSpecial;
+  const safeBattleId=pendingAdventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id;
+  const btn=$("startAdventureBattleBtn");
+  if(btn){btn.disabled=true;btn.textContent="Creando combate...";}
+  try{
+    await startAdventure(pendingAdventureSpecial,safeBattleId);
+  }catch(e){
+    console.error("[HallValla] No se pudo iniciar aventura:",e);
+    setHint("No se pudo iniciar el combate de aventura. Revisa conexión/Firebase y vuelve a intentar.");
+    if(typeof hvAlert==="function")await hvAlert("No se pudo iniciar el combate de aventura. Revisa conexión/Firebase y vuelve a intentar.","Aventura");
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent="Iniciar combate";}
+  }
+}
+on("startAdventureBattleBtn","click",startPendingAdventureBattle);
 on("adventureResultHomeBtn","click",backToMainMenu);
 
 const resultMapBtn=$("adventureResultMapBtn");
