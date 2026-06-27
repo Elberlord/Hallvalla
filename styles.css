@@ -13302,3 +13302,43 @@ El CSS original se conserva para no romper visuales. El bloque final
 .hv-dragging-board .hand-card{
   cursor:grabbing;
 }
+
+/* === HallValla tactical cell aim glow: muestra exactamente qué cuadro estás marcando === */
+.grid .cell.board-hover::before,
+.grid .cell.board-selected::before{
+  content:"";
+  position:absolute;
+  inset:2px;
+  border-radius:7px;
+  pointer-events:none;
+  z-index:4;
+}
+.grid .cell.board-hover::before{
+  background:radial-gradient(circle at 50% 50%,rgba(126,255,211,.26),rgba(126,255,211,.08) 48%,rgba(126,255,211,0) 72%);
+  box-shadow:inset 0 0 0 2px rgba(126,255,211,.92),0 0 14px rgba(126,255,211,.50),0 0 26px rgba(126,255,211,.18);
+}
+.grid .cell.board-selected::before{
+  background:radial-gradient(circle at 50% 50%,rgba(255,232,150,.34),rgba(255,232,150,.10) 48%,rgba(255,232,150,0) 74%);
+  box-shadow:inset 0 0 0 2px rgba(255,232,150,.98),0 0 18px rgba(255,232,150,.72),0 0 34px rgba(255,232,150,.32);
+  animation:hvCellSelectedPulse .72s ease-in-out infinite alternate;
+}
+.grid .cell.board-hover.valid::before,
+.grid .cell.board-selected.valid::before{
+  box-shadow:inset 0 0 0 2px rgba(112,255,174,.98),0 0 18px rgba(112,255,174,.70),0 0 34px rgba(112,255,174,.28);
+}
+.grid .cell.board-hover.attackable::before,
+.grid .cell.board-selected.attackable::before{
+  box-shadow:inset 0 0 0 2px rgba(255,96,132,.98),0 0 18px rgba(255,96,132,.72),0 0 34px rgba(255,96,132,.30);
+}
+.grid .cell.board-hover.summonable::before,
+.grid .cell.board-selected.summonable::before{
+  box-shadow:inset 0 0 0 2px rgba(255,213,105,.98),0 0 18px rgba(255,213,105,.70),0 0 34px rgba(255,213,105,.28);
+}
+.grid .cell.board-hover .unit-card,
+.grid .cell.board-selected .unit-card{
+  filter:drop-shadow(0 0 10px rgba(126,255,211,.46));
+}
+@keyframes hvCellSelectedPulse{
+  from{opacity:.72;transform:scale(.985)}
+  to{opacity:1;transform:scale(1.02)}
+}

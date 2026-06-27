@@ -281,6 +281,7 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
 */
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",nearDeathSoundPlayedKeys=new Set();
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
+let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
@@ -5786,6 +5787,43 @@ function handleBoardDragCancel(){
   setHint("Arrastre cancelado.");
 }
 
+function getBoardCellKey(x,y){return `${x},${y}`;}
+function updateBoardAimClasses(){
+  const grid=$("grid");
+  if(!grid)return;
+  grid.querySelectorAll(".cell.board-hover,.cell.board-selected").forEach(cell=>{
+    const key=getBoardCellKey(cell.dataset.x,cell.dataset.y);
+    cell.classList.toggle("board-hover",key===boardHoverCellKey);
+    cell.classList.toggle("board-selected",key===boardSelectedCellKey);
+  });
+  if(boardHoverCellKey){
+    const hover=grid.querySelector(`.cell[data-x="${boardHoverCellKey.split(",")[0]}"][data-y="${boardHoverCellKey.split(",")[1]}"]`);
+    if(hover)hover.classList.add("board-hover");
+  }
+  if(boardSelectedCellKey){
+    const selected=grid.querySelector(`.cell[data-x="${boardSelectedCellKey.split(",")[0]}"][data-y="${boardSelectedCellKey.split(",")[1]}"]`);
+    if(selected)selected.classList.add("board-selected");
+  }
+}
+function setBoardHoverCell(x,y){
+  const key=Number.isFinite(x)&&Number.isFinite(y)?getBoardCellKey(x,y):"";
+  if(boardHoverCellKey===key)return;
+  boardHoverCellKey=key;
+  updateBoardAimClasses();
+}
+function flashBoardSelectedCell(x,y){
+  if(!Number.isFinite(x)||!Number.isFinite(y))return;
+  boardSelectedCellKey=getBoardCellKey(x,y);
+  if(boardSelectedCellTimer)clearTimeout(boardSelectedCellTimer);
+  boardSelectedCellTimer=setTimeout(()=>{
+    if(boardSelectedCellKey===getBoardCellKey(x,y)){
+      boardSelectedCellKey="";
+      updateBoardAimClasses();
+    }
+  },1200);
+  updateBoardAimClasses();
+}
+
 async function cellClick(x,y){
   const u=getUnitAt(x,y);
   if(selectedCard)return playCardOn(x,y,u);
@@ -6595,6 +6633,8 @@ function renderBoard(){
     const key=`${x},${y}`;
     const tacticalClasses=getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
+    if(key===boardHoverCellKey)cell.classList.add("board-hover");
+    if(key===boardSelectedCellKey)cell.classList.add("board-selected");
     if(highlights.includes(key))cell.classList.add(highlightType==="attack"?"attackable":highlightType==="summon"?"summonable":"valid");
     const trap=getCellBeastTrapAt(x,y);
     if(trap){const m=document.createElement("div");m.className=`beast-trap-marker ${trap.owner===1?"p1":"p2"}`;m.title=trap.owner===myPlayer?trap.cardName:"Trampa de cacería";m.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";cell.appendChild(m);}
@@ -6641,7 +6681,12 @@ function renderBoard(){
     }
     cell.dataset.x=String(x);
     cell.dataset.y=String(y);
+    cell.addEventListener("pointerenter",()=>setBoardHoverCell(x,y));
+    cell.addEventListener("pointermove",()=>setBoardHoverCell(x,y));
+    cell.addEventListener("pointerleave",()=>setBoardHoverCell(NaN,NaN));
+    cell.addEventListener("pointerdown",()=>flashBoardSelectedCell(x,y));
     cell.addEventListener("click",ev=>{
+      flashBoardSelectedCell(x,y);
       if(shouldDirectBoardTarget())return handleDirectBoardTargetEvent(ev,x,y);
       cellClick(x,y);
     });
