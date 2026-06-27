@@ -8171,8 +8171,12 @@ function openAdventureMap(specialKey=pendingAdventureSpecial||getAdventureProgre
     showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id);
     return;
   }
-  showAdventureStage("adventureMapStage");
   renderAdventureMap();
+  showAdventureStage("adventureMapIntroStage");
+}
+function showAdventureMapOnly(){
+  renderAdventureMap();
+  showAdventureStage("adventureMapStage");
 }
 function getAdventureMapTheme(chapter){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
@@ -8226,19 +8230,25 @@ function renderAdventureMap(){
   const activeChapter=getCurrentAdventureChapter(progress);
   const chapter=getChapterProgress(progress,activeChapter);
   const special=ADVENTURE_SPECIALS[progress.selectedSpecial||pendingAdventureSpecial]||ADVENTURE_SPECIALS.mulan;
-  const title=$("adventureMapTitle"), text=$("adventureMapText"), meta=$("adventureMapMeta"), nodes=$("adventureMapNodes");
-  if(title)title.textContent=`${activeChapter.number} ${activeChapter.title}`;
-  if(text)text.textContent=activeChapter.desc;
+  const introTitle=$("adventureMapIntroTitle"), introText=$("adventureMapIntroText"), introMeta=$("adventureMapIntroMeta"), nodes=$("adventureMapNodes");
+  const chapterLabel=`${activeChapter.number} ${activeChapter.title}`;
+  if(introTitle)introTitle.textContent=chapterLabel;
+  if(introText)introText.textContent=activeChapter.desc;
   const requiredBattles=getRequiredChapterBattles(activeChapter);
   const optionalBattles=getOptionalChapterBattles(activeChapter);
   const completedRequired=requiredBattles.filter(b=>chapter.completedBattles?.[b.id]).length;
   const completedOptional=optionalBattles.filter(b=>chapter.completedBattles?.[b.id]).length;
   const optionalText=optionalBattles.length?` · Extra opcional: ${completedOptional}/${optionalBattles.length}`:"";
-  if(meta)meta.textContent=`Aliado: ${special.name} · Progreso obligatorio: ${completedRequired}/${requiredBattles.length}${optionalText}`;
+  const progressLabel=`Aliado: ${special.name} · Progreso obligatorio: ${completedRequired}/${requiredBattles.length}${optionalText}`;
+  if(introMeta)introMeta.textContent=progressLabel;
   if(!nodes)return;
   const theme=getAdventureMapTheme(activeChapter);
   const boss=getRequiredChapterBattles(activeChapter).slice(-1)[0]||activeChapter.battles[activeChapter.battles.length-1];
   nodes.innerHTML=`<div class="adventure-map-visual ${escapeHtml(theme.key)}" style="--map-bg-image:url('${escapeHtml(theme.background)}');--map-accent:${escapeHtml(theme.accent)};">
+    <div class="adventure-map-topbar">
+      <span class="adventure-map-chip">${escapeHtml(chapterLabel)}</span>
+      <span class="adventure-map-chip">${escapeHtml(progressLabel)}</span>
+    </div>
     <div class="adventure-map-connectors">${buildAdventureMapConnectors(theme.points)}</div>
     ${(activeChapter.battles||[]).map((b,i)=>{
       const point=theme.points[i]||{x:14+((72/(Math.max(activeChapter.battles.length-1,1)))*i),y:i%2?36:68};
@@ -8285,7 +8295,7 @@ function scrollAdventureToTop(){
   if(panel) panel.scrollTop=0;
 }
 function showAdventureStage(stage){
-  ["adventureStoryStage","adventureChoiceStage","adventureWoundedStage","adventureGuardianStage","adventureMapStage"].forEach(id=>$(id).classList.toggle("hidden",id!==stage));
+  ["adventureStoryStage","adventureChoiceStage","adventureWoundedStage","adventureGuardianStage","adventureMapIntroStage","adventureMapStage"].forEach(id=>$(id).classList.toggle("hidden",id!==stage));
   requestAnimationFrame(scrollAdventureToTop);
 }
 function applyAdventureSceneVisual(visualId, markId, cls, mark, image){
@@ -8449,6 +8459,9 @@ on("closeAdventureBtn","click",()=>$("adventurePanel").classList.add("hidden"));
 on("skipAdventureStoryBtn","click",showAdventureChoice);
 on("nextAdventureStoryBtn","click",nextAdventureStoryScene);
 on("backToAdventureChoiceBtn","click",()=>openAdventureMap(pendingAdventureSpecial));
+on("continueAdventureMapIntroBtn","click",showAdventureMapOnly);
+on("skipAdventureMapIntroBtn","click",showAdventureMapOnly);
+on("reopenAdventureMapStoryBtn","click",()=>{ renderAdventureMap(); showAdventureStage("adventureMapIntroStage"); });
 on("closeAdventureMapBtn","click",()=>$("adventurePanel").classList.add("hidden"));
 on("skipWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 on("continueWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));

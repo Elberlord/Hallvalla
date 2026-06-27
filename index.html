@@ -322,20 +322,31 @@
       </div>
     </div>
 
-    <div id="adventureMapStage" class="adventure-stage hidden">
+    <div id="adventureMapIntroStage" class="adventure-stage hidden">
       <div class="adventure-map-hero">
         <div class="adventure-scene-overlay">
           <div class="adventure-scene-copy narrow">
-            <div id="adventureMapMeta" class="adventure-progress">Aliado elegido</div>
-            <h2 id="adventureMapTitle" class="adventure-story-title">1.1 El inicio de la travesía</h2>
-            <p id="adventureMapText" class="adventure-story-text">Los rebeldes intentan usurpar el trono y crear un golpe de estado.</p>
+            <div id="adventureMapIntroMeta" class="adventure-progress">Aliado elegido</div>
+            <h2 id="adventureMapIntroTitle" class="adventure-story-title">1.1 El inicio de la travesía</h2>
+            <p id="adventureMapIntroText" class="adventure-story-text">Los rebeldes intentan usurpar el trono y crear un golpe de estado.</p>
           </div>
         </div>
       </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Lee la introducción y luego entra al mapa del capítulo.</span>
+        <div class="adventure-actions">
+          <button id="skipAdventureMapIntroBtn" class="btn ghost" type="button">Ir al mapa</button>
+          <button id="continueAdventureMapIntroBtn" class="btn primary" type="button">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adventureMapStage" class="adventure-stage hidden">
       <div id="adventureMapNodes" class="adventure-map-nodes"></div>
       <div class="adventure-story-footer">
         <span class="adventure-note">Cada combate entrega EXP una sola vez al completarse.</span>
         <div class="adventure-actions">
+          <button id="reopenAdventureMapStoryBtn" class="btn ghost" type="button">Historia</button>
           <button id="closeAdventureMapBtn" class="btn ghost" type="button">Volver al inicio</button>
         </div>
       </div>

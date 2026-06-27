@@ -13502,3 +13502,59 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   #adventureMapNodes{min-height:320px!important;}
 }
+
+/* === PATCH v47 - Historia del mapa en modal separado ===
+   Separa la historia del capítulo del mapa jugable para liberar espacio visual. */
+#adventureMapIntroStage.adventure-stage:not(.hidden){
+  padding:14px!important;
+  gap:12px!important;
+}
+#adventureMapIntroStage .adventure-map-hero{
+  flex:1 1 auto!important;
+  min-height:320px!important;
+  border-radius:20px!important;
+}
+#adventureMapIntroStage .adventure-map-hero .adventure-scene-overlay{
+  align-items:flex-end!important;
+  padding:18px!important;
+}
+#adventureMapIntroStage .adventure-scene-copy.narrow{
+  max-width:min(600px,58vw)!important;
+  padding:16px 18px!important;
+}
+#adventureMapStage.adventure-stage:not(.hidden){
+  padding:12px!important;
+  gap:10px!important;
+}
+#adventureMapStage #adventureMapNodes{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  display:block!important;
+}
+#adventureMapStage .adventure-story-footer{
+  flex:0 0 auto!important;
+  min-height:38px!important;
+  padding-top:0!important;
+}
+#adventureMapStage .adventure-note{
+  flex:1 1 auto!important;
+}
+#adventureMapStage .adventure-actions{
+  margin-left:auto!important;
+}
+#adventureMapStage .adventure-actions .btn{
+  white-space:nowrap;
+}
+
+@media(max-width:900px){
+  #adventureMapIntroStage .adventure-map-hero{
+    min-height:220px!important;
+  }
+  #adventureMapIntroStage .adventure-scene-copy.narrow{
+    max-width:100%!important;
+    padding:14px!important;
+  }
+  #adventureMapStage.adventure-stage:not(.hidden){
+    padding:10px!important;
+  }
+}
