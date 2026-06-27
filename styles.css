@@ -2766,15 +2766,38 @@ El CSS original se conserva para no romper visuales. El bloque final
 .map-node-status,
 .map-node-stars,
 .map-node-caption{display:none !important;}
-.adventure-map-connectors{position:absolute;inset:0;z-index:1;pointer-events:none;}
-.map-connector{
-  position:absolute;
-  height:18px;
-  border-radius:999px;
-  background:repeating-linear-gradient(90deg,rgba(243,193,84,.98) 0 24px,transparent 24px 42px);
-  filter:drop-shadow(0 0 6px rgba(255,190,73,.42)) drop-shadow(0 2px 4px rgba(0,0,0,.45));
-  opacity:.98;
+.adventure-map-connectors{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.map-route-svg{
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
 }
+.map-route-svg path{
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.map-route-under{
+  stroke:rgba(0,0,0,.42);
+  stroke-width:8.8;
+}
+.map-route-glow{
+  stroke:rgba(255,196,86,.24);
+  stroke-width:7.1;
+  filter:drop-shadow(0 0 10px rgba(255,196,86,.36));
+}
+.map-route-main{
+  stroke:rgba(120,86,28,.78);
+  stroke-width:5.4;
+}
+.map-route-dash{
+  stroke:rgba(244,199,91,.98);
+  stroke-width:4.2;
+  stroke-dasharray:2.7 2.05;
+  filter:drop-shadow(0 0 6px rgba(255,208,111,.32));
+}
+.map-connector{display:none!important;}
 .map-node{width:86px !important;min-height:86px !important;z-index:3 !important;}
 .map-node .map-node-ring{
   border:3px solid rgba(230,180,92,.94) !important;
@@ -2810,7 +2833,10 @@ El CSS original se conserva para no romper visuales. El bloque final
   .adventure-map-visual{min-height:520px !important;background-position:center !important;}
   .map-node{width:72px !important;min-height:72px !important;}
   .map-node-number{padding-top:20px !important;font-size:20px !important;}
-  .map-connector{height:15px;}
+  .map-route-under{stroke-width:7.4;}
+  .map-route-glow{stroke-width:6.0;}
+  .map-route-main{stroke-width:4.8;}
+  .map-route-dash{stroke-width:3.6;}
 }
 
 .adventure-result-card.guardian-reunion .adventure-result-backdrop{filter:saturate(1.04) !important;}

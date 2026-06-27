@@ -8204,22 +8204,25 @@ function buildAdventureMapPath(points){
   let d=`M ${points[0].x} ${points[0].y}`;
   for(let i=1;i<points.length;i++){
     const prev=points[i-1],cur=points[i];
-    const midX=((prev.x+cur.x)/2).toFixed(2);
-    d+=` C ${midX} ${prev.y}, ${midX} ${cur.y}, ${cur.x} ${cur.y}`;
+    const dx=cur.x-prev.x;
+    const tension=Math.min(Math.max(Math.abs(dx)*0.38,8),18);
+    const c1x=(prev.x+tension).toFixed(2);
+    const c1y=prev.y.toFixed(2);
+    const c2x=(cur.x-tension).toFixed(2);
+    const c2y=cur.y.toFixed(2);
+    d+=` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${cur.x} ${cur.y}`;
   }
   return d;
 }
 function buildAdventureMapConnectors(points){
   if(!Array.isArray(points)||points.length<2)return "";
-  return points.slice(1).map((cur,i)=>{
-    const prev=points[i];
-    const dx=(cur.x-prev.x),dy=(cur.y-prev.y);
-    const dist=Math.sqrt((dx*dx)+(dy*dy));
-    const angle=Math.atan2(dy,dx)*180/Math.PI;
-    const midX=(prev.x+cur.x)/2;
-    const midY=(prev.y+cur.y)/2;
-    return `<div class="map-connector" aria-hidden="true" style="left:${midX}%;top:${midY}%;width:${dist}%;transform:translate(-50%,-50%) rotate(${angle}deg);"></div>`;
-  }).join("");
+  const path=buildAdventureMapPath(points);
+  return `<svg class="map-route-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="map-route-under" d="${path}"></path>
+    <path class="map-route-glow" d="${path}"></path>
+    <path class="map-route-main" d="${path}"></path>
+    <path class="map-route-dash" d="${path}"></path>
+  </svg>`;
 }
 function getAdventureBattleCode(chapter,battle){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
