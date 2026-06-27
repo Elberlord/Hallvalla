@@ -13342,3 +13342,79 @@ El CSS original se conserva para no romper visuales. El bloque final
   from{opacity:.72;transform:scale(.985)}
   to{opacity:1;transform:scale(1.02)}
 }
+
+/* === PATCH v45 - Adventure map viewport repair ===
+   Repara el mapa de aventura que quedaba gigante en pantallas 1366x768.
+   Solo toca el layout visual del panel de aventura, no combate ni lógica. */
+#adventurePanel:not(.hidden){
+  align-items:center!important;
+  justify-content:center!important;
+  padding:10px!important;
+}
+#adventurePanel:not(.hidden) .adventure-card{
+  height:min(90vh,760px)!important;
+  max-height:90vh!important;
+  width:min(1180px,94vw)!important;
+  overflow:hidden!important;
+}
+#adventureMapStage.adventure-stage:not(.hidden){
+  height:100%!important;
+  min-height:0!important;
+  padding:14px!important;
+  gap:10px!important;
+  overflow:hidden!important;
+}
+#adventureMapStage .adventure-map-hero{
+  flex:0 0 clamp(150px,25vh,210px)!important;
+  min-height:clamp(150px,25vh,210px)!important;
+  border-radius:18px!important;
+}
+#adventureMapStage .adventure-scene-copy.narrow{
+  max-width:min(560px,58vw)!important;
+  padding:18px 22px!important;
+}
+#adventureMapStage .adventure-story-title{
+  font-size:clamp(26px,3.2vw,42px)!important;
+  line-height:1.02!important;
+  margin-bottom:8px!important;
+}
+#adventureMapStage .adventure-story-text{
+  font-size:clamp(13px,1.32vw,16px)!important;
+  line-height:1.38!important;
+}
+#adventureMapNodes{
+  flex:1 1 auto!important;
+  min-height:280px!important;
+  display:block!important;
+  overflow:hidden!important;
+}
+#adventureMapNodes .adventure-map-visual{
+  height:100%!important;
+  min-height:0!important;
+  border-radius:18px!important;
+}
+#adventureMapStage .adventure-story-footer{
+  flex:0 0 auto!important;
+  padding-top:6px!important;
+  margin:0!important;
+}
+
+@media(max-width:900px){
+  #adventurePanel:not(.hidden){padding:8px!important;}
+  #adventurePanel:not(.hidden) .adventure-card{
+    height:min(92svh,760px)!important;
+    max-height:92svh!important;
+    width:96vw!important;
+  }
+  #adventureMapStage.adventure-stage:not(.hidden){padding:10px!important;gap:8px!important;}
+  #adventureMapStage .adventure-map-hero{
+    flex-basis:150px!important;
+    min-height:150px!important;
+  }
+  #adventureMapStage .adventure-scene-copy.narrow{
+    max-width:92%!important;
+    padding:14px 16px!important;
+  }
+  #adventureMapNodes{min-height:320px!important;}
+  #adventureMapStage .adventure-story-footer{font-size:12px!important;}
+}
