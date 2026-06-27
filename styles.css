@@ -2766,7 +2766,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .map-node-status,
 .map-node-stars,
 .map-node-caption{display:none !important;}
-.adventure-map-connectors{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.adventure-map-connectors{display:none!important;}
 .map-route-svg{
   width:100%;
   height:100%;
@@ -13584,3 +13584,5 @@ El CSS original se conserva para no romper visuales. El bloque final
     padding:10px!important;
   }
 }
+
+.map-route-svg,.map-route-svg path,.map-connector{display:none!important;}
