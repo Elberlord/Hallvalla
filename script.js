@@ -8215,14 +8215,7 @@ function buildAdventureMapPath(points){
   return d;
 }
 function buildAdventureMapConnectors(points){
-  if(!Array.isArray(points)||points.length<2)return "";
-  const path=buildAdventureMapPath(points);
-  return `<svg class="map-route-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-    <path class="map-route-under" d="${path}"></path>
-    <path class="map-route-glow" d="${path}"></path>
-    <path class="map-route-main" d="${path}"></path>
-    <path class="map-route-dash" d="${path}"></path>
-  </svg>`;
+  return "";
 }
 function getAdventureBattleCode(chapter,battle){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
@@ -8252,7 +8245,6 @@ function renderAdventureMap(){
       <span class="adventure-map-chip">${escapeHtml(chapterLabel)}</span>
       <span class="adventure-map-chip">${escapeHtml(progressLabel)}</span>
     </div>
-    <div class="adventure-map-connectors">${buildAdventureMapConnectors(theme.points)}</div>
     ${(activeChapter.battles||[]).map((b,i)=>{
       const point=theme.points[i]||{x:14+((72/(Math.max(activeChapter.battles.length-1,1)))*i),y:i%2?36:68};
       const completed=!!chapter.completedBattles[b.id];

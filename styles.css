@@ -13586,3 +13586,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 .map-route-svg,.map-route-svg path,.map-connector{display:none!important;}
+
+/* PATCH v50 - mapa solo con burbujas */
+.adventure-map-connectors,.adventure-map-path,.map-route-svg,.map-route-svg path,.map-connector{display:none!important;opacity:0!important;visibility:hidden!important;}
