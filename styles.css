@@ -12174,14 +12174,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 :root{
   /* Tamaño general del líder */
-  --leader-size-min: 50px;
-  --leader-size-vh: 9.5vh;
-  --leader-size-max: 72px;
+  --leader-size-min: 40px;
+  --leader-size-vh: 7.6vh;
+  --leader-size-max: 58px;
 
   /* Alto visual del contenedor del líder */
-  --leader-box-min: 70px;
-  --leader-box-vh: 12.7vh;
-  --leader-box-max: 96px;
+  --leader-box-min: 56px;
+  --leader-box-vh: 10.2vh;
+  --leader-box-max: 77px;
 
   /* Posición vertical */
   --leader-enemy-top: 1%;
@@ -12246,13 +12246,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* Mobile */
 @media(max-width:980px){
   :root{
-    --leader-size-min: 48px;
-    --leader-size-vh: 6.4vh;
-    --leader-size-max: 68px;
+    --leader-size-min: 38px;
+    --leader-size-vh: 5.1vh;
+    --leader-size-max: 54px;
 
-    --leader-box-min: 68px;
-    --leader-box-vh: 9.4vh;
-    --leader-box-max: 92px;
+    --leader-box-min: 54px;
+    --leader-box-vh: 7.5vh;
+    --leader-box-max: 74px;
 
     --leader-enemy-top: 5.8%;
     --leader-player-bottom: 2.6%;
