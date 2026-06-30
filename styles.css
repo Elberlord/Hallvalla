@@ -13794,3 +13794,52 @@ El CSS original se conserva para no romper visuales. El bloque final
     transform:translateX(0%) translateY(-3%) scale(1.18) !important;
   }
 }
+
+
+/* ============================================================
+   PATCH 8S - BOARD ART CLEAN CROP + BLACK FILL
+   Objetivo:
+   - Para el tablero, usar una versión del retrato sin el marco original de la carta.
+   - Fondo negro limpio y figura centrada.
+   - No afectar mano, inspector ni otras vistas.
+   ============================================================ */
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card.leader .unit-portrait,
+.cell > .unit-card.unit-key-spearman .unit-portrait,
+.cell > .unit-card .unit-depth-stack{
+  left:10.5% !important;
+  right:10.5% !important;
+  top:10.5% !important;
+  bottom:21% !important;
+  width:auto !important;
+  height:auto !important;
+  border-radius:12px 12px 17px 17px / 9px 9px 14px 14px !important;
+  overflow:hidden !important;
+  background:#000 !important;
+}
+
+.cell > .unit-card .unit-depth-front.board-cropped-art{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  transform:none !important;
+  filter:saturate(1.03) contrast(1.02) drop-shadow(0 5px 6px rgba(0,0,0,.35)) !important;
+  display:block !important;
+}
+
+.cell > .unit-card .unit-depth-shadow{display:none !important;}
+
+@media(max-width:980px){
+  .cell > .unit-card .unit-portrait,
+  .cell > .unit-card.leader .unit-portrait,
+  .cell > .unit-card.unit-key-spearman .unit-portrait,
+  .cell > .unit-card .unit-depth-stack{
+    left:11% !important;
+    right:11% !important;
+    top:11% !important;
+    bottom:21.5% !important;
+  }
+}

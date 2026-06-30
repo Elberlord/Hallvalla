@@ -5853,13 +5853,21 @@ async function cellClick(x,y){
   unitContextSelection=null;
   hideUnitContextMenu();
 }
+function getBoardPortraitPath(portrait){
+  const raw=String(portrait||"");
+  if(!raw)return raw;
+  if(raw.includes("assets/cards/"))return raw.replace("assets/cards/","assets/board_cards/");
+  return raw;
+}
+
 function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
   const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
   if(portrait){
     const alt=escapeHtml(u.name||"Unidad");
     if(depthLayer){
-      return `<div class="unit-depth-stack"><img class="unit-depth-shadow" src="${portrait}" alt="" aria-hidden="true"><img class="unit-depth-front" src="${portrait}" alt="${alt}"></div>`;
+      const boardPortrait=getBoardPortraitPath(portrait);
+      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${boardPortrait}" alt="${alt}"></div>`;
     }
     return `<img src="${portrait}" alt="${alt}">`;
   }
