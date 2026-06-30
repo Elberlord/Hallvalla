@@ -5867,7 +5867,8 @@ function getUnitPortraitHtml(u,depthLayer=false){
     const alt=escapeHtml(u.name||"Unidad");
     if(depthLayer){
       const boardPortrait=getBoardPortraitPath(portrait);
-      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${boardPortrait}" alt="${alt}"></div>`;
+      const safeOriginal=String(portrait).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
     }
     return `<img src="${portrait}" alt="${alt}">`;
   }
