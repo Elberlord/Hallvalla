@@ -47,7 +47,7 @@ import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
-const ROWS=7,COLS=5,$=id=>document.getElementById(id);
+const ROWS=6,COLS=5,$=id=>document.getElementById(id);
 function on(id,event,handler){
   const el=$(id);
   if(!el){console.warn(`[HallValla] Elemento no encontrado: #${id}`);return null;}
