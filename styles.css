@@ -13729,3 +13729,68 @@ El CSS original se conserva para no romper visuales. El bloque final
     max-height:92% !important;
   }
 }
+
+/* ============================================================
+   PATCH 8R - SQUARE BOARD UNITS: BIGGER + CENTERED ART
+   Objetivo:
+   - Mantener el marco/orbes aprobados.
+   - Hacer el retrato más grande y mejor centrado.
+   - Evitar que el personaje quede chiquito o corrido a un costado.
+   ============================================================ */
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card.leader .unit-portrait,
+.cell > .unit-card.unit-key-spearman .unit-portrait,
+.cell > .unit-card .unit-depth-stack{
+  left:10.8% !important;
+  right:10.8% !important;
+  top:10.6% !important;
+  bottom:21.2% !important;
+  border-radius:12px 12px 17px 17px / 9px 9px 14px 14px !important;
+}
+
+.cell > .unit-card .unit-depth-front,
+.cell > .unit-card .unit-depth-stack img,
+.cell > .unit-card .unit-portrait > img{
+  object-fit:cover !important;
+  object-position:center 16% !important;
+}
+
+.cell > .unit-card .unit-depth-front{
+  transform:translateX(0%) translateY(-4%) scale(1.26) !important;
+  transform-origin:center center !important;
+  filter:saturate(1.08) contrast(1.04) drop-shadow(0 7px 7px rgba(0,0,0,.42)) !important;
+}
+
+.cell > .unit-card .unit-depth-shadow{
+  display:none !important;
+}
+
+@media(max-width:980px){
+  .cell > .unit-card .unit-portrait,
+  .cell > .unit-card.leader .unit-portrait,
+  .cell > .unit-card.unit-key-spearman .unit-portrait,
+  .cell > .unit-card .unit-depth-stack{
+    left:11.3% !important;
+    right:11.3% !important;
+    top:11.2% !important;
+    bottom:21.8% !important;
+  }
+  .cell > .unit-card .unit-depth-front{
+    transform:translateX(0%) translateY(-3.5%) scale(1.22) !important;
+  }
+}
+
+@media(max-width:560px){
+  .cell > .unit-card .unit-portrait,
+  .cell > .unit-card.leader .unit-portrait,
+  .cell > .unit-card.unit-key-spearman .unit-portrait,
+  .cell > .unit-card .unit-depth-stack{
+    left:11.8% !important;
+    right:11.8% !important;
+    top:11.5% !important;
+    bottom:22% !important;
+  }
+  .cell > .unit-card .unit-depth-front{
+    transform:translateX(0%) translateY(-3%) scale(1.18) !important;
+  }
+}
