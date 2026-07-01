@@ -1,3 +1,24 @@
+
+/* PATCH 7GU - renderHomeProgress global seguro.
+   Debe existir antes de cualquier inicialización del home. */
+function renderHomeProgress(){
+  try{
+    const levelEls=document.querySelectorAll('[data-home-level], .home-level, #homeLevel, #playerLevel');
+    levelEls.forEach(el=>{
+      if(!el)return;
+      if(!String(el.textContent||'').trim())el.textContent='Nv. 1 Recluta';
+    });
+
+    const progressEls=document.querySelectorAll('[data-home-progress], .home-progress-fill, #homeProgressFill');
+    progressEls.forEach(el=>{
+      if(!el)return;
+      if(el.style&&(!el.style.width||el.style.width==='0px'))el.style.width='0%';
+    });
+  }catch(e){
+    console.warn('[HOME] renderHomeProgress safe fallback:', e);
+  }
+}
+
 /*
 HALLVALLA ORGANIZED V2
 Archivo único conservado para GitHub Pages.
