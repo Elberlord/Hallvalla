@@ -1168,7 +1168,9 @@ const WEAPON_CLASS_BY_KEY={
 function getWeaponClassForCard(card){
   if(!card)return "";
   const key=String(card.key||"").toLowerCase();
+  const name=String(card.name||"").toLowerCase();
   const leaderType=String(card.leaderType||"").toLowerCase();
+
   if(card.type==="leader"||card.leader){
     if(leaderType==="archer"||key.includes("archer"))return "bow";
     if(leaderType==="cavalry"||key.includes("cavalry"))return "cavalry";
@@ -1177,9 +1179,42 @@ function getWeaponClassForCard(card){
     if(leaderType==="axe"||leaderType==="assassin"||leaderType==="warrior")return "sword";
     return "sword";
   }
+
   if(WEAPON_CLASS_BY_KEY[key])return WEAPON_CLASS_BY_KEY[key];
+
+  // Fallback semántico: evita que una unidad nueva quede mal clasificada
+  // si su key cambia pero su nombre/clase sigue indicando el arma.
+  if(
+    key.includes("cavalry")||key.includes("caballeria")||key.includes("caballería")||
+    name.includes("caballería")||name.includes("caballeria")||name.includes("cavalry")
+  )return "cavalry";
+
+  if(
+    key.includes("spear")||key.includes("lance")||key.includes("lanza")||key.includes("lancer")||
+    name.includes("lanza")||name.includes("lancero")||name.includes("pica")
+  )return "spear";
+
   if(card.beast)return "beast";
+
+  if(
+    key.includes("beast")||key.includes("wolf")||key.includes("lion")||key.includes("tiger")||
+    key.includes("boar")||key.includes("rhino")||key.includes("snake")||key.includes("falcon")||
+    key.includes("raven")||key.includes("buffalo")||key.includes("porcupine")||
+    name.includes("bestia")||name.includes("león")||name.includes("leon")||name.includes("tigre")||
+    name.includes("jabalí")||name.includes("jabali")||name.includes("rinoceronte")||
+    name.includes("serpiente")||name.includes("halcón")||name.includes("halcon")||
+    name.includes("cuervo")||name.includes("búfalo")||name.includes("bufalo")||
+    name.includes("puercoespín")||name.includes("puercoespin")
+  )return "beast";
+
   if(isLanceUnitCardLike(card))return "spear";
+
+  if(
+    key.includes("archer")||key.includes("bow")||key.includes("arrow")||
+    name.includes("arquera")||name.includes("arquero")||name.includes("arco")||
+    name.includes("flecha")||name.includes("tirador")
+  )return "bow";
+
   if(Number(card.range||0)>=3)return "bow";
   return "sword";
 }
@@ -2152,6 +2187,24 @@ function isLightCavalryUnit(u){
   const name=String(u.name||"").toLowerCase();
   return key==="cavalry"||key==="saladin_archer_cavalry"||name.includes("caballería ligera")||name.includes("caballeria ligera");
 }
+
+function isAntiCavalryTargetUnit(u){
+  if(!u||u.leader)return false;
+  const key=String(u.key||"").toLowerCase();
+  const name=String(u.name||"").toLowerCase();
+  const weapon=String(getWeaponClassForCard(u)||"").toLowerCase();
+  return key==="cavalry"
+    || key==="cavalry_light"
+    || key==="light_cavalry"
+    || key==="saladin_archer_cavalry"
+    || weapon==="cavalry"
+    || isLightCavalryUnit(u)
+    || name.includes("caballería")
+    || name.includes("caballeria")
+    || name.includes("cavalry");
+}
+
+
 function isAssassinUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
@@ -2353,7 +2406,7 @@ function getCombatMods(attacker,defender){
   if(melee&&attacker.key==="berserker"){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
   if(melee&&attacker.key==="guardian"){if(defenderUsesEvasion){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.notes.push(`${defender.name} -1 MOV por Aplastamiento.`)}}
   if(melee&&defender.key==="spearman"){
-    if(attacker.key==="cavalry"){if(attackerUsesEvasion)mods.attackerAgi-=999;mods.attackerGuard-=999;mods.notes.push(`${attacker.name} queda con AGI 0 y Guardia 0 por Anticaballería.`);}
+    if(isAntiCavalryTargetUnit(attacker)){if(attackerUsesEvasion)mods.attackerAgi-=999;mods.attackerGuard-=999;mods.notes.push(`${attacker.name} queda con AGI 0 y Guardia 0 por Anticaballería.`);}
     else{if(attackerUsesEvasion)mods.attackerAgi-=2;mods.attackerGuard-=2;mods.notes.push(`${attacker.name} -2 AGI y -2 Guardia por Formación de picas.`);}
   }
   return mods;
@@ -4055,7 +4108,7 @@ async function attackUnit(a,d){
       ? prepareMiyamotoCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!!miyamotoEvaded)
       : prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder);
     if(defenderAfter.key==="spearman"){
-      if(attackerAfter.key==="cavalry"){cMods.defenderAgi-=999;cMods.defenderGuard-=999;}
+      if(isAntiCavalryTargetUnit(attackerAfter)){cMods.defenderAgi-=999;cMods.defenderGuard-=999;cMods.notes.push(`${attackerAfter.name} queda con AGI 0 y Guardia 0 por Anticaballería durante el contraataque.`);}
       else{cMods.defenderAgi-=2;cMods.defenderGuard-=2;}
     }
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
