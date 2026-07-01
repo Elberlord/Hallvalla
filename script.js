@@ -1,4 +1,54 @@
 
+/* PATCH 7GV - funciones seguras del HOME.
+   Evita que el menú principal se rompa durante la carga por funciones visuales faltantes. */
+function renderHomeProgress(){
+  try{
+    const levelEls=document.querySelectorAll('[data-home-level], .home-level, #homeLevel, #playerLevel');
+    levelEls.forEach(el=>{
+      if(!el)return;
+      if(!String(el.textContent||'').trim())el.textContent='Nv. 1 Recluta';
+    });
+
+    const progressEls=document.querySelectorAll('[data-home-progress], .home-progress-fill, #homeProgressFill');
+    progressEls.forEach(el=>{
+      if(!el)return;
+      if(el.style&&(!el.style.width||el.style.width==='0px'))el.style.width='0%';
+    });
+  }catch(e){
+    console.warn('[HOME] renderHomeProgress safe fallback:', e);
+  }
+}
+
+function renderNotificationBadge(){
+  try{
+    const badge=document.getElementById('notificationBadge')
+      || document.querySelector('[data-notification-badge], .notification-badge, .home-notification-badge');
+    if(!badge)return;
+    const count=Number(window.homeNotificationCount||window.notificationCount||0);
+    badge.textContent=count>99?'99+':String(Math.max(0,count));
+    badge.style.display=count>0?'grid':'none';
+  }catch(e){
+    console.warn('[HOME] renderNotificationBadge safe fallback:', e);
+  }
+}
+
+function updateNotificationBadge(){
+  try{
+    renderNotificationBadge();
+  }catch(e){
+    console.warn('[HOME] updateNotificationBadge safe fallback:', e);
+  }
+}
+
+function renderHomeBadges(){
+  try{
+    renderNotificationBadge();
+  }catch(e){
+    console.warn('[HOME] renderHomeBadges safe fallback:', e);
+  }
+}
+
+
 /* PATCH 7GU - renderHomeProgress global seguro.
    Debe existir antes de cualquier inicialización del home. */
 function renderHomeProgress(){
@@ -224,6 +274,18 @@ function normalizeLeaderLevel(level){return clamp(Math.floor(Number(level)||1),1
 function getLeaderLevelStats(level){return LEADER_LEVEL_TABLE[normalizeLeaderLevel(level)]||LEADER_LEVEL_TABLE[1]}
 function getLeaderBuffTierFromLevel(level){return getLeaderLevelStats(level).buffTier||1}
 function getLeaderDefaultLevel5Ability(type){return LEADER_LEVEL5_DEFAULTS[type]||"heroic_vitality"}
+/* PATCH 7GW - habilidad Nv.5 aleatoria segura para líderes enemigos de aventura. */
+function rollLeaderLevel5Ability(){
+  try{
+    const pool=Array.isArray(LEADER_LEVEL5_ABILITY_POOL)?LEADER_LEVEL5_ABILITY_POOL:[];
+    const valid=pool.map(a=>a&&a.key).filter(Boolean);
+    if(valid.length)return valid[Math.floor(Math.random()*valid.length)];
+  }catch(e){
+    console.warn('[LEADER] rollLeaderLevel5Ability fallback:', e);
+  }
+  return 'heroic_vitality';
+}
+
 function normalizeLeaderLevel5Abilities(abilities={},leaderLevels={}){
   const out={...(abilities||{})};
   for(const type of Object.keys(LEADER_DATA)){
