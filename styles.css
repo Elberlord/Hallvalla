@@ -1,5 +1,7 @@
 /*
+================================================================================
 HALLVALLA STYLES ORGANIZED V2
+================================================================================
 Mapa recomendado:
 01_BASE_LAYOUT          estilos generales, body, panels.
 02_HOME_LOBBY           home, lobby, selector.
@@ -15,6 +17,7 @@ Mapa recomendado:
 Nota:
 El CSS original se conserva para no romper visuales. El bloque final
 10_DEF_LEADER_FIX tiene prioridad con !important donde hacía falta.
+================================================================================
 */
 
 :root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2;--p1:#66d9ff;--p2:#ff74b8;--ok:#70e08a;--bad:#ef476f}
@@ -12007,6 +12010,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    - DEF es estado lógico, no FX global.
    - Ningún sello/leader pseudo-element puede crear óvalos gigantes.
    - Líderes fijos no usan attackable/valid/summonable.
+   ============================================================ */
 
 /* 1) Kill-switch de los pseudo-elementos que estaban generando formas fantasma. */
 .unit-status-seal::after,
@@ -12166,6 +12170,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    AJUSTE FIJO DE LÍDERES
    Valores fijados según la posición/tamaño elegidos en el panel visual.
    El panel de control fue retirado.
+   ============================================================ */
 
 :root{
   /* Tamaño general del líder */
@@ -12262,6 +12267,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    PATCH: LÍDERES SIN HUD DE ESTADOS EN TABLERO
    El estado DEF sigue funcionando en lógica y DET, pero no se
    pinta dentro del líder fijo para evitar el óvalo fantasma.
+   ============================================================ */
 .leader-base > .unit-status-bubbles,
 .leader-base .leader-base-token > .unit-status-bubbles,
 .leader-base .leader-base-token > .unit-status-seals,
@@ -12283,6 +12289,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    PATCH: ICONOS DE ESTADO SEGUROS PARA LÍDERES FIJOS
    Reintroduce el icono visual de DEF sin usar botones anidados
    ni el contenedor unit-status-bubbles que causaba el óvalo.
+   ============================================================ */
 .leader-base > .leader-status-bubbles{
   position:absolute!important;
   left:50%!important;
@@ -12394,6 +12401,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* ============================================================
    CONTROL VISUAL HUD: NOMBRES + VIDA/MANO
    Agregado temporal para calibrar posición/tamaño en pantalla.
+   ============================================================ */
 :root{
   --hud-name-top:10px;
   --hud-p1-left:10px;
@@ -12528,6 +12536,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* ============================================================
    NUEVO HUD JUGADOR / IA + CONTROL VISUAL
    Reemplaza visualmente el HUD viejo de nombre unido al marco.
+   ============================================================ */
 :root{
   --hud-new-p1-left:52px;
   --hud-new-p1-top:20px;
@@ -12670,6 +12679,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* ============================================================
    PATCH PRIORIDAD CONTROL NUEVO HUD
    Corrige conflicto con controles/HUD viejos que usaban !important.
+   ============================================================ */
 #hudP1.player-status-hud,
 #hudP2.player-status-hud{
   width:var(--hud-new-width)!important;
@@ -12730,6 +12740,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* ============================================================
    HUD JUGADOR / IA FIJO SEGÚN CAPTURA FINAL
    Control visual removido. Valores finales pegados aquí.
+   ============================================================ */
 :root{
   --hud-new-p1-left:85px;
   --hud-new-p1-top:7px;
@@ -12759,6 +12770,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* ============================================================
    CONTROL VISUAL TEMPORAL: HUD HONOR
+   ============================================================ */
 .honor-css-tool{
   position:fixed;
   right:18px;
@@ -12882,6 +12894,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* ============================================================
    HONOR HUD FIJO FINAL - control visual retirado
    Valores fijados según captura aprobada.
+   ============================================================ */
 :root{
   --honor-hud-left:25px;
   --honor-hud-top:97px;
@@ -12922,6 +12935,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    PATCH - Battle settings modal sound button safe layout
    El botón de Audio vive dentro del modal, así que no debe usar
    las reglas de botón flotante del HUD/menú de batalla.
+   ============================================================ */
 #battleMenuPanel .battle-menu-card{
   position:relative !important;
   display:flex !important;
@@ -12989,6 +13003,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    - Ajuste de imagen: revisar --board-unit-art-fit.
    - Posición del personaje: revisar --board-unit-art-position.
    - Si se ve deformado: cambiar --board-unit-art-fit de fill a cover o contain.
+   ============================================================ */
 :root{
   --board-unit-art-fit:fill;
   --board-unit-art-position:center center;
@@ -13114,6 +13129,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    Diagnóstico futuro:
    - Si el HUD de Acciones se desacomoda, revisar primero estas variables.
    - Si se quiere recuperar el control visual, buscar el parche 8G anterior.
+   ============================================================ */
 :root{
   --actions-hud-right:5px;
   --actions-hud-top:89px;
@@ -13582,6 +13598,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    - Reacomodar retrato/orbes para que no se vea atorado.
    Alcance:
    - Solo .cell > .unit-card del tablero.
+   ============================================================ */
 :root{
   --board-unit-art-fit:cover;
   --board-unit-art-position:center 18%;
@@ -13719,6 +13736,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    - Mantener el marco/orbes aprobados.
    - Hacer el retrato más grande y mejor centrado.
    - Evitar que el personaje quede chiquito o corrido a un costado.
+   ============================================================ */
 .cell > .unit-card .unit-portrait,
 .cell > .unit-card.leader .unit-portrait,
 .cell > .unit-card.unit-key-spearman .unit-portrait,
@@ -13784,6 +13802,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    - Para el tablero, usar una versión del retrato sin el marco original de la carta.
    - Fondo negro limpio y figura centrada.
    - No afectar mano, inspector ni otras vistas.
+   ============================================================ */
 .cell > .unit-card .unit-portrait,
 .cell > .unit-card.leader .unit-portrait,
 .cell > .unit-card.unit-key-spearman .unit-portrait,
@@ -13825,21 +13844,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
-/* PATCH 7GT - doble capa para la carta de unidad del tablero
-   Capa 1: fondo a tamaño del marco.
-   Capa 2: personaje recortado y centrado automáticamente. */
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card.leader .unit-portrait,
-.cell > .unit-card.unit-key-spearman .unit-portrait{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
+
+/* PATCH MINIMO - Unidades del tablero en doble capa.
+   Capa 1: fondo llena el marco.
+   Capa 2: personaje centrado encima. */
+.cell > .unit-card .unit-portrait{
   overflow:hidden !important;
-  border-radius:14px !important;
   background:#050505 !important;
-  box-shadow:none !important;
-  z-index:2 !important;
 }
 
 .cell > .unit-card .unit-portrait-stack{
@@ -13851,7 +13862,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-radius:inherit !important;
 }
 
-.cell > .unit-card .unit-portrait-bg{
+.cell > .unit-card .unit-card-bg-layer{
   position:absolute !important;
   inset:0 !important;
   width:100% !important;
@@ -13859,39 +13870,29 @@ El CSS original se conserva para no romper visuales. El bloque final
   object-fit:cover !important;
   object-position:center center !important;
   transform:scale(1.08) !important;
-  filter:brightness(.34) saturate(.82) blur(1.8px) !important;
+  filter:brightness(.42) saturate(.85) blur(1.2px) !important;
   opacity:.95 !important;
-  user-select:none;
-  -webkit-user-drag:none;
+  z-index:1 !important;
+  user-select:none !important;
+  -webkit-user-drag:none !important;
 }
 
-.cell > .unit-card .unit-portrait-character-stage{
+.cell > .unit-card .unit-card-character-layer{
   position:absolute !important;
-  left:8% !important;
-  right:8% !important;
-  top:7% !important;
-  bottom:15% !important;
-  overflow:hidden !important;
+  left:50% !important;
+  top:50% !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  transform:translate(-50%,-50%) scale(1.26) !important;
   z-index:2 !important;
+  filter:drop-shadow(0 8px 8px rgba(0,0,0,.58)) saturate(1.07) contrast(1.04) !important;
+  user-select:none !important;
+  -webkit-user-drag:none !important;
 }
 
-.cell > .unit-card .unit-portrait-character{
-  position:absolute !important;
-  max-width:none !important;
-  max-height:none !important;
-  width:auto;
-  height:auto;
-  display:block !important;
-  user-select:none;
-  -webkit-user-drag:none;
-  filter:drop-shadow(0 10px 10px rgba(0,0,0,.52)) saturate(1.08) contrast(1.04) !important;
+.cell > .unit-card.unit-key-spearman .unit-card-character-layer{
+  transform:translate(-50%,-50%) scale(1.18) !important;
 }
 
-@media(max-width:980px){
-  .cell > .unit-card .unit-portrait-character-stage{
-    left:7% !important;
-    right:7% !important;
-    top:6.5% !important;
-    bottom:14% !important;
-  }
-}

@@ -1,48 +1,7 @@
-/* PATCH 7GY - Home boot guards, una sola definición global. */
-function renderHomeProgress(){
-  try{
-    const levelEls=document.querySelectorAll('[data-home-level], .home-level, #homeLevel, #playerLevel');
-    levelEls.forEach(el=>{
-      if(!el)return;
-      if(!String(el.textContent||'').trim())el.textContent='Nv. 1 Recluta';
-    });
-
-    const progressEls=document.querySelectorAll('[data-home-progress], .home-progress-fill, #homeProgressFill');
-    progressEls.forEach(el=>{
-      if(!el)return;
-      if(el.style&&(!el.style.width||el.style.width==='0px'))el.style.width='0%';
-    });
-  }catch(e){
-    console.warn('[HOME] renderHomeProgress fallback:', e);
-  }
-}
-
-function renderNotificationBadge(){
-  try{
-    const badge=document.getElementById('notificationBadge')
-      || document.querySelector('[data-notification-badge], .notification-badge, .home-notification-badge');
-    if(!badge)return;
-    const count=Number(window.homeNotificationCount||window.notificationCount||0);
-    badge.textContent=count>99?'99+':String(Math.max(0,count));
-    badge.style.display=count>0?'grid':'none';
-  }catch(e){
-    console.warn('[HOME] renderNotificationBadge fallback:', e);
-  }
-}
-
-function updateNotificationBadge(){
-  try{ renderNotificationBadge(); }
-  catch(e){ console.warn('[HOME] updateNotificationBadge fallback:', e); }
-}
-
-function renderHomeBadges(){
-  try{ renderNotificationBadge(); }
-  catch(e){ console.warn('[HOME] renderHomeBadges fallback:', e); }
-}
-
-
 /*
+================================================================================
 HALLVALLA ORGANIZED V2
+================================================================================
 Archivo único conservado para GitHub Pages.
 
 REGLA DE ESTA VERSIÓN:
@@ -73,6 +32,7 @@ MAPA INTERNO DEL SCRIPT:
 IMPORTANTE:
 Este archivo está organizado con separadores seguros, pero no se reordenaron
 bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
+================================================================================
 */
 
 
@@ -246,18 +206,6 @@ function normalizeLeaderLevel(level){return clamp(Math.floor(Number(level)||1),1
 function getLeaderLevelStats(level){return LEADER_LEVEL_TABLE[normalizeLeaderLevel(level)]||LEADER_LEVEL_TABLE[1]}
 function getLeaderBuffTierFromLevel(level){return getLeaderLevelStats(level).buffTier||1}
 function getLeaderDefaultLevel5Ability(type){return LEADER_LEVEL5_DEFAULTS[type]||"heroic_vitality"}
-/* PATCH 7GW - habilidad Nv.5 aleatoria segura para líderes enemigos de aventura. */
-function rollLeaderLevel5Ability(){
-  try{
-    const pool=Array.isArray(LEADER_LEVEL5_ABILITY_POOL)?LEADER_LEVEL5_ABILITY_POOL:[];
-    const valid=pool.map(a=>a&&a.key).filter(Boolean);
-    if(valid.length)return valid[Math.floor(Math.random()*valid.length)];
-  }catch(e){
-    console.warn('[LEADER] rollLeaderLevel5Ability fallback:', e);
-  }
-  return 'heroic_vitality';
-}
-
 function normalizeLeaderLevel5Abilities(abilities={},leaderLevels={}){
   const out={...(abilities||{})};
   for(const type of Object.keys(LEADER_DATA)){
@@ -5927,9 +5875,6 @@ function getUnitPortraitHtml(u,depthLayer=false){
   return `<span>${u?.icon||"✦"}</span>`;
 }
 
-const boardPortraitCropCache=new Map();
-let boardPortraitResizeRaf=0;
-
 function getBoardUnitPortraitHtml(u){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
   const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
@@ -5937,103 +5882,11 @@ function getBoardUnitPortraitHtml(u){
     const alt=escapeHtml(u.name||"Unidad");
     const boardPortrait=getBoardPortraitPath(portrait);
     const safeOriginal=String(portrait).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-    const onError=`this.onerror=null;this.src='${safeOriginal}'`;
-    return `<div class="unit-portrait-stack"><img class="unit-portrait-bg" src="${boardPortrait}" alt="" aria-hidden="true" onerror="${onError}"><div class="unit-portrait-character-stage"><img class="unit-portrait-character" src="${boardPortrait}" alt="${alt}" onerror="${onError}"></div></div>`;
+    return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${boardPortrait}" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='${safeOriginal}'"><img class="unit-card-character-layer" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
   }
   return `<span>${u?.icon||"✦"}</span>`;
 }
 
-function getBoardPortraitCropBounds(img){
-  const fallback={x:0,y:0,w:Math.max(1,Number(img?.naturalWidth||1)),h:Math.max(1,Number(img?.naturalHeight||1))};
-  if(!img||!img.naturalWidth||!img.naturalHeight)return fallback;
-  const cacheKey=img.currentSrc||img.src||"";
-  if(cacheKey&&boardPortraitCropCache.has(cacheKey))return boardPortraitCropCache.get(cacheKey);
-  let bounds={x:0,y:0,w:img.naturalWidth,h:img.naturalHeight};
-  try{
-    const canvas=document.createElement("canvas");
-    canvas.width=img.naturalWidth;
-    canvas.height=img.naturalHeight;
-    const ctx=canvas.getContext("2d",{willReadFrequently:true});
-    if(ctx){
-      ctx.drawImage(img,0,0);
-      const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-      let minX=canvas.width,minY=canvas.height,maxX=-1,maxY=-1;
-      for(let y=0;y<canvas.height;y++){
-        for(let x=0;x<canvas.width;x++){
-          const i=(y*canvas.width+x)*4;
-          const r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
-          if(a<20)continue;
-          const luminance=(r*0.2126)+(g*0.7152)+(b*0.0722);
-          const chroma=Math.max(r,g,b)-Math.min(r,g,b);
-          if(luminance<24&&chroma<14)continue;
-          if(x<minX)minX=x;
-          if(y<minY)minY=y;
-          if(x>maxX)maxX=x;
-          if(y>maxY)maxY=y;
-        }
-      }
-      if(maxX>=minX&&maxY>=minY){
-        const rawW=maxX-minX+1;
-        const rawH=maxY-minY+1;
-        const padX=Math.max(4,Math.round(rawW*0.045));
-        const padY=Math.max(4,Math.round(rawH*0.05));
-        const x0=Math.max(0,minX-padX);
-        const y0=Math.max(0,minY-padY);
-        const x1=Math.min(canvas.width,maxX+padX+1);
-        const y1=Math.min(canvas.height,maxY+padY+1);
-        bounds={x:x0,y:y0,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0)};
-      }
-    }
-  }catch(err){
-    bounds=fallback;
-  }
-  if(cacheKey)boardPortraitCropCache.set(cacheKey,bounds);
-  return bounds;
-}
-
-function fitBoardPortraitCharacter(stack){
-  if(!stack)return;
-  const stage=stack.querySelector('.unit-portrait-character-stage');
-  const img=stack.querySelector('.unit-portrait-character');
-  if(!stage||!img||!img.naturalWidth||!img.naturalHeight)return;
-  const stageW=Math.max(1,stage.clientWidth||0);
-  const stageH=Math.max(1,stage.clientHeight||0);
-  if(!stageW||!stageH)return;
-  const crop=getBoardPortraitCropBounds(img);
-  const fitScale=Math.min(stageW/Math.max(1,crop.w),stageH/Math.max(1,crop.h));
-  const scale=fitScale*1.03;
-  const drawW=img.naturalWidth*scale;
-  const drawH=img.naturalHeight*scale;
-  const offsetX=((stageW-(crop.w*scale))/2)-(crop.x*scale);
-  const offsetY=((stageH-(crop.h*scale))/2)-(crop.y*scale);
-  img.style.width=`${drawW}px`;
-  img.style.height=`${drawH}px`;
-  img.style.left=`${offsetX}px`;
-  img.style.top=`${offsetY}px`;
-}
-
-function bindBoardPortraitStack(stack){
-  if(!stack||stack.dataset.boardPortraitBound==='1')return;
-  stack.dataset.boardPortraitBound='1';
-  const img=stack.querySelector('.unit-portrait-character');
-  if(!img)return;
-  const render=()=>fitBoardPortraitCharacter(stack);
-  if(img.complete&&img.naturalWidth)requestAnimationFrame(render);
-  img.addEventListener('load',render);
-}
-
-function layoutBoardPortraitLayers(root=document){
-  const scope=root&&typeof root.querySelectorAll==='function'?root:document;
-  scope.querySelectorAll('.unit-portrait-stack').forEach(stack=>{
-    bindBoardPortraitStack(stack);
-    fitBoardPortraitCharacter(stack);
-  });
-}
-
-window.addEventListener('resize',()=>{
-  if(boardPortraitResizeRaf)cancelAnimationFrame(boardPortraitResizeRaf);
-  boardPortraitResizeRaf=requestAnimationFrame(()=>layoutBoardPortraitLayers(document));
-});
 function showUnit(u){
   if(!u)return;
   const inspector=$("inspector");
@@ -6861,7 +6714,6 @@ function renderBoard(){
     });
     grid.appendChild(cell);
   }
-  requestAnimationFrame(()=>layoutBoardPortraitLayers(grid));
   renderLeaderBases();
 }
 
@@ -7337,6 +7189,7 @@ function saveProfileNameChange(){
    Alcance:
    - Solo afecta el pack básico de magias/trampas.
    - No toca HUD, tablero, estilos ni HTML.
+   ============================================================ */
 const BASIC_MAGIC_TRAP_PACK = [
   {
     key:"fireball",
