@@ -1,7 +1,5 @@
 /*
-================================================================================
 HALLVALLA ORGANIZED V2
-================================================================================
 Archivo único conservado para GitHub Pages.
 
 REGLA DE ESTA VERSIÓN:
@@ -32,7 +30,6 @@ MAPA INTERNO DEL SCRIPT:
 IMPORTANTE:
 Este archivo está organizado con separadores seguros, pero no se reordenaron
 bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
-================================================================================
 */
 
 
@@ -7285,7 +7282,6 @@ function saveProfileNameChange(){
    Alcance:
    - Solo afecta el pack básico de magias/trampas.
    - No toca HUD, tablero, estilos ni HTML.
-   ============================================================ */
 const BASIC_MAGIC_TRAP_PACK = [
   {
     key:"fireball",
