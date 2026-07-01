@@ -47,7 +47,7 @@ import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
-const ROWS=7,COLS=5,$=id=>document.getElementById(id);
+const ROWS=6,COLS=5,$=id=>document.getElementById(id);
 function on(id,event,handler){
   const el=$(id);
   if(!el){console.warn(`[HallValla] Elemento no encontrado: #${id}`);return null;}
@@ -840,8 +840,8 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:5,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:2,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:2,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:4,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:2,hp:2,atk:1,guard:0,dex:4,agi:3,mov:2,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
-const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:2,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. La Precisión se calcula y se consume normalmente. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:3,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:2,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:3,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:2,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. La Precisión se calcula y se consume normalmente. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
   wallace:{name:"William Wallace",heroImage:"assets/story/scene_wallace_actor.webp",cardImage:"assets/story/wallace_choice.webp",allyImage:"assets/story/scene_mulan_actor.webp",allyName:"Hua Lan",guardianScene:"assets/story/mulan_wounded.webp"}
@@ -882,17 +882,17 @@ function applyGuardianVictoryVisual(specialKey){
 
 
 const BEAST_CARD_TEMPLATES=[
-  {key:"honey_badger",name:"Tejón Mielero",type:"unit",icon:"🦡",portrait:CARD_PORTRAITS.honeyBadger,rarity:"Básica",cost:3,hp:5,atk:2,guard:4,dex:2,agi:3,mov:2,range:1,beast:true,text:"Armadura Natural: cada vez que recibe daño, reduce ese daño en 1. Inmune al Veneno: no puede recibir Veneno ni daño causado por Veneno. Bestia Irritante: enemigos adyacentes tienen -1 DX si atacan a otra unidad que no sea el Tejón. Mordida Fastidiosa: si hace daño real, el objetivo pierde -1 MOV en su próximo turno."},
-  {key:"porcupine",name:"Puercoespín",type:"unit",icon:"🦔",portrait:CARD_PORTRAITS.porcupine,rarity:"Básica",cost:2,hp:4,atk:1,guard:3,dex:1,agi:2,mov:1,range:1,beast:true,text:"Espinas Defensivas: cuando una unidad enemiga lo ataca cuerpo a cuerpo, el atacante recibe 2 daño directo después del combate, aunque no le cause daño. Miedo: después de activar Espinas Defensivas, cada otra unidad enemiga adyacente al Puercoespín tiene 25% de recibir Miedo. Miedo reduce el AT en 3 hasta el próximo turno de esa unidad."},
-  {key:"wild_boar",name:"Jabalí Salvaje",type:"unit",icon:"🐗",portrait:CARD_PORTRAITS.wildBoar,rarity:"Básica",cost:3,hp:6,atk:3,guard:2,dex:2,agi:3,mov:3,range:1,beast:true,text:"Carga Brusca: si se movió 2+ casillas antes de atacar, gana +1 AT. Empuje Salvaje: si hace daño real con Carga Brusca, empuja al objetivo 1 casilla si hay espacio."},
-  {key:"black_raven",name:"Cuervo Negro",type:"unit",icon:"🐦‍⬛",portrait:CARD_PORTRAITS.blackRaven,rarity:"Básica",cost:2,hp:2,atk:1,guard:0,dex:3,agi:5,mov:4,range:1,beast:true,text:"Ojo del Cazador: EFFECT revela unidades enemigas con Sigilo en radio 2. Graznido Inquietante: efecto pasivo; las unidades enemigas en rango 2 alrededor del Cuervo Negro pierden -2 AGI hasta su próximo turno."},
-  {key:"constrictor_snake",name:"Serpiente Constrictora",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.constrictor,rarity:"Básica",cost:3,hp:4,atk:2,guard:1,dex:3,agi:3,mov:2,range:1,beast:true,text:"Constricción: si hace daño real, el objetivo pierde -1 MOV y -1 AGI hasta su próximo turno. Agarre: si ya tenía MOV reducido, no podrá moverse en su próximo turno."},
-  {key:"african_buffalo",name:"Búfalo Africano",type:"unit",icon:"🐃",portrait:CARD_PORTRAITS.buffalo,rarity:"Épica",cost:4,hp:12,atk:2,guard:0,dex:1,agi:3,mov:2,range:1,beast:true,text:"Instinto de Cornada: cuando una unidad enemiga adyacente declare un ataque cuerpo a cuerpo contra él, hace 2 daño primero. Si el atacante cae, su ataque se cancela."},
-  {key:"peregrine_falcon",name:"Halcón Peregrino",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.peregrineFalcon,rarity:"Gloriosa",cost:4,hp:2,atk:1,guard:0,dex:0,agi:0,mov:7,range:1,beast:true,aerial:true,text:"Aéreo: solo unidades con rango mayor a 3 o Antiaéreo pueden atacarlo. Ataque en Picada: si se movió 3+ casillas antes de atacar, siempre golpea y hace 3 daño. Si impacta contra Guardia, recibe daño igual a la Guardia actual del objetivo."},
-  {key:"inland_taipan",name:"Taipán del Interior",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.inlandTaipan,rarity:"Gloriosa",cost:4,hp:1,atk:1,guard:0,dex:4,agi:5,mov:3,range:1,beast:true,text:"Mordida Letal: si hace daño real, aplica Veneno 1/2/4 durante 3 turnos. Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere. El líder sí se envenena, pero no muere automáticamente por doble mordida de la misma unidad."},
-  {key:"african_lion",name:"León Africano",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.africanLion,rarity:"Mítica",cost:5,hp:8,atk:5,guard:2,dex:3,agi:4,mov:3,range:1,beast:true,text:"Rugido del Rey: EFFECT revela unidades enemigas con Sigilo en radio 3. Presencia Alfa: las unidades enemigas en rango 1 alrededor del León reciben Miedo (-3 AT hasta su próximo turno). Liderazgo de Manada: unidades aliadas en rango 2 alrededor del León obtienen +2 AT."},
-  {key:"bengal_tiger",name:"Tigre de Bengala",type:"unit",icon:"🐅",portrait:CARD_PORTRAITS.bengalTiger,rarity:"Mítica",cost:5,hp:7,atk:6,guard:1,dex:4,agi:5,mov:3,range:1,beast:true,stealth:true,text:"Sigilo de Depredador: no puede ser objetivo directo mientras esté oculto. Salto de Emboscada: desde Sigilo puede atacar con +2 alcance de movimiento. Desgarro Salvaje: 50% de Sangrado al hacer daño real; 100% si atacó desde Sigilo."},
-  {key:"white_rhino",name:"Rinoceronte Blanco",type:"unit",icon:"🦏",portrait:CARD_PORTRAITS.whiteRhino,rarity:"Legendaria",cost:6,hp:12,atk:14,guard:10,dex:1,agi:1,mov:4,range:1,beast:true,text:"Embestida Devastadora: si se mueve 2 casillas en línea recta antes de atacar, usa AT 22. Después de atacar con Embestida, impacte o no, el Rinoceronte Blanco queda Aturdido hasta su próximo turno: no puede moverse, defenderse ni atacar; su Guardia no cambia y su Destreza/Agilidad se reducen a la mitad. Bestia Torpe: no se beneficia de bonos de DX ni AGI."}
+  {key:"honey_badger",name:"Tejón Mielero",type:"unit",icon:"🦡",portrait:CARD_PORTRAITS.honeyBadger,rarity:"Básica",cost:2,hp:5,atk:2,guard:4,dex:2,agi:3,mov:2,range:1,beast:true,text:"Armadura Natural: cada vez que recibe daño, reduce ese daño en 1. Inmune al Veneno: no puede recibir Veneno ni daño causado por Veneno. Bestia Irritante: enemigos adyacentes tienen -1 DX si atacan a otra unidad que no sea el Tejón. Mordida Fastidiosa: si hace daño real, el objetivo pierde -1 MOV en su próximo turno."},
+  {key:"porcupine",name:"Puercoespín",type:"unit",icon:"🦔",portrait:CARD_PORTRAITS.porcupine,rarity:"Básica",cost:1,hp:4,atk:1,guard:3,dex:1,agi:2,mov:1,range:1,beast:true,text:"Espinas Defensivas: cuando una unidad enemiga lo ataca cuerpo a cuerpo, el atacante recibe 2 daño directo después del combate, aunque no le cause daño. Miedo: después de activar Espinas Defensivas, cada otra unidad enemiga adyacente al Puercoespín tiene 25% de recibir Miedo. Miedo reduce el AT en 3 hasta el próximo turno de esa unidad."},
+  {key:"wild_boar",name:"Jabalí Salvaje",type:"unit",icon:"🐗",portrait:CARD_PORTRAITS.wildBoar,rarity:"Básica",cost:2,hp:6,atk:3,guard:2,dex:2,agi:3,mov:3,range:1,beast:true,text:"Carga Brusca: si se movió 2+ casillas antes de atacar, gana +1 AT. Empuje Salvaje: si hace daño real con Carga Brusca, empuja al objetivo 1 casilla si hay espacio."},
+  {key:"black_raven",name:"Cuervo Negro",type:"unit",icon:"🐦‍⬛",portrait:CARD_PORTRAITS.blackRaven,rarity:"Básica",cost:1,hp:2,atk:1,guard:0,dex:3,agi:5,mov:4,range:1,beast:true,text:"Ojo del Cazador: EFFECT revela unidades enemigas con Sigilo en radio 2. Graznido Inquietante: efecto pasivo; las unidades enemigas en rango 2 alrededor del Cuervo Negro pierden -2 AGI hasta su próximo turno."},
+  {key:"constrictor_snake",name:"Serpiente Constrictora",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.constrictor,rarity:"Básica",cost:2,hp:4,atk:2,guard:1,dex:3,agi:3,mov:2,range:1,beast:true,text:"Constricción: si hace daño real, el objetivo pierde -1 MOV y -1 AGI hasta su próximo turno. Agarre: si ya tenía MOV reducido, no podrá moverse en su próximo turno."},
+  {key:"african_buffalo",name:"Búfalo Africano",type:"unit",icon:"🐃",portrait:CARD_PORTRAITS.buffalo,rarity:"Épica",cost:3,hp:12,atk:2,guard:0,dex:1,agi:3,mov:2,range:1,beast:true,text:"Instinto de Cornada: cuando una unidad enemiga adyacente declare un ataque cuerpo a cuerpo contra él, hace 2 daño primero. Si el atacante cae, su ataque se cancela."},
+  {key:"peregrine_falcon",name:"Halcón Peregrino",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.peregrineFalcon,rarity:"Gloriosa",cost:3,hp:2,atk:1,guard:0,dex:0,agi:0,mov:7,range:1,beast:true,aerial:true,text:"Aéreo: solo unidades con rango mayor a 3 o Antiaéreo pueden atacarlo. Ataque en Picada: si se movió 3+ casillas antes de atacar, siempre golpea y hace 3 daño. Si impacta contra Guardia, recibe daño igual a la Guardia actual del objetivo."},
+  {key:"inland_taipan",name:"Taipán del Interior",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.inlandTaipan,rarity:"Gloriosa",cost:3,hp:1,atk:1,guard:0,dex:4,agi:5,mov:3,range:1,beast:true,text:"Mordida Letal: si hace daño real, aplica Veneno 1/2/4 durante 3 turnos. Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere. El líder sí se envenena, pero no muere automáticamente por doble mordida de la misma unidad."},
+  {key:"african_lion",name:"León Africano",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.africanLion,rarity:"Mítica",cost:4,hp:8,atk:5,guard:2,dex:3,agi:4,mov:3,range:1,beast:true,text:"Rugido del Rey: EFFECT revela unidades enemigas con Sigilo en radio 3. Presencia Alfa: las unidades enemigas en rango 1 alrededor del León reciben Miedo (-3 AT hasta su próximo turno). Liderazgo de Manada: unidades aliadas en rango 2 alrededor del León obtienen +2 AT."},
+  {key:"bengal_tiger",name:"Tigre de Bengala",type:"unit",icon:"🐅",portrait:CARD_PORTRAITS.bengalTiger,rarity:"Mítica",cost:4,hp:7,atk:6,guard:1,dex:4,agi:5,mov:3,range:1,beast:true,stealth:true,text:"Sigilo de Depredador: no puede ser objetivo directo mientras esté oculto. Salto de Emboscada: desde Sigilo puede atacar con +2 alcance de movimiento. Desgarro Salvaje: 50% de Sangrado al hacer daño real; 100% si atacó desde Sigilo."},
+  {key:"white_rhino",name:"Rinoceronte Blanco",type:"unit",icon:"🦏",portrait:CARD_PORTRAITS.whiteRhino,rarity:"Legendaria",cost:5,hp:12,atk:14,guard:10,dex:1,agi:1,mov:4,range:1,beast:true,text:"Embestida Devastadora: si se mueve 2 casillas en línea recta antes de atacar, usa AT 22. Después de atacar con Embestida, impacte o no, el Rinoceronte Blanco queda Aturdido hasta su próximo turno: no puede moverse, defenderse ni atacar; su Guardia no cambia y su Destreza/Agilidad se reducen a la mitad. Bestia Torpe: no se beneficia de bonos de DX ni AGI."}
 ];
 const BEAST_TRAP_CARD_TEMPLATES=[
   {key:"iron_jaw_trap",name:"Cepo de Hierro",type:"trap",icon:"🪤",portrait:CARD_PORTRAITS.ironJawTrap,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"iron_jaw",text:"Coloca un cepo en una celda libre. La primera unidad enemiga que entre recibe 1 daño directo y pierde 1 MOV en su próximo turno."},
@@ -1033,36 +1033,36 @@ function validateDeckList(cards=[]){
 const SPECIAL_HUMAN_CARD_DATA=[
   {...ADVENTURE_SPECIALS.mulan},
   {...ADVENTURE_SPECIALS.wallace},
-  {key:"richard_lionheart",name:"Richard Corazón de León",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.richard,cost:4,hp:6,atk:5,guard:5,dex:6,agi:4,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Corazón Indomable: una vez por turno, Richard puede elegir un aliado adyacente. Ese aliado obtiene +2 Vida máxima y +2 Vida actual mientras Richard siga en campo. No acumulable sobre la misma unidad."},
-  {key:"saladin",name:"Saladino",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.saladin,cost:4,hp:6,atk:4,guard:5,dex:6,agi:5,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Media Luna del Desierto: una vez por turno, si Saladino está en campo y no controlas una Caballería Arquera de Saladino, invoca una en una casilla libre adyacente."},
-  {key:"shaka_zulu",name:"Shaka Zulu",type:"unit",icon:"🦬",portrait:CARD_PORTRAITS.shaka,cost:4,hp:6,atk:5,guard:4,dex:6,agi:5,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Cuernos del Búfalo: cuando un aliado ataque a un enemigo adyacente a otro aliado tuyo, obtiene +1 Ataque durante ese combate. Si el enemigo está rodeado por 2 o más aliados tuyos, también recibe -2 Agilidad durante ese combate."},
-  {key:"yi_sun_sin",name:"Yi Sun-sin",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.yiSunSin,cost:4,hp:6,atk:3,guard:5,dex:6,agi:4,mov:1,range:1,rarity:"Gloriosa",special:true,text:"Bloqueo Naval: mientras Yi Sun-sin esté en campo, las unidades enemigas invocadas entran con -1 Destreza y -1 Guardia hasta el final de su próximo turno."},
-  {key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:4,hp:4,atk:4,guard:2,dex:9,agi:5,mov:1,range:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió Vida este turno, obtiene +2 Ataque durante ese ataque. Si ataca desde Rango 4 o más, también ignora 1 Guardia."},
-  {key:"boudica",name:"Boudica",type:"unit",icon:"🔥",portrait:CARD_PORTRAITS.boudica,cost:4,hp:6,atk:5,guard:4,dex:6,agi:5,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Ira de Iceni: una vez por turno, cuando un aliado sea derrotado, Boudica obtiene +2 Ataque hasta el final de tu próximo turno. Si el aliado derrotado era especial, Boudica también obtiene +1 Movimiento."},
-  {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:4,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,rarity:"Mítica",special:true,text:"Estratega de Ítaca: cuando Ulises ataca, todas las unidades aliadas en radio 2 alrededor de él obtienen +1 Guardia y +1 MOV. No afecta líderes ni al propio Ulises. El bonus de MOV se mantiene hasta el próximo turno del dueño."},
-  {key:"joan_of_arc",name:"Juana de Arco",type:"unit",icon:"🕯️",portrait:CARD_PORTRAITS.joan,cost:4,hp:5,atk:3,guard:4,dex:4,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Llama de Orléans: una vez por turno, cuando un aliado fuera a recibir daño, reduce ese daño en 1. Si ese aliado queda con 1 Vida, obtiene +1 Guardia hasta el final de su próximo turno."},
-  {key:"leonidas",name:"Leónidas",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.leonidas,cost:5,hp:8,atk:5,guard:7,dex:4,agi:3,mov:2,range:1,rarity:"Mítica",special:true,text:"Última Formación: mientras Leónidas esté adyacente a una unidad aliada básica, ambos reciben +2 Guardia. Última Resistencia: cuando Leónidas recibe daño fatal por un ataque, su asesino pierde 3 Vida. Si ese daño derrota al asesino, Leónidas queda con 1 Vida."},
-  {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:4,hp:4,atk:4,guard:3,dex:9,agi:8,mov:2,range:4,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -1 Guardia durante ese combate. Si acierta, el objetivo conserva -1 Guardia hasta el final de su próximo turno. No acumulable."},
-  {key:"tomoe_gozen",name:"Tomoe Gozen",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.tomoe,cost:4,hp:5,atk:5,guard:4,dex:8,agi:7,mov:3,range:1,rarity:"Mítica",special:true,text:"Jinete de la Luna Cortante: si Tomoe se movió 2 o más casillas este turno antes de atacar, el objetivo recibe -2 Agilidad durante ese combate. Si el objetivo tiene Rango 2 o más, Tomoe obtiene +1 Ataque."},
-  {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:5,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,rarity:"Mítica",special:true,text:"Trampa de Cannas: una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde 1 AT y 1 MOV hasta su próximo turno."},
-  {key:"subotai",name:"Subotai / Subutai",type:"unit",icon:"🏇",portrait:CARD_PORTRAITS.subotai,cost:4,hp:5,atk:4,guard:4,dex:5,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Marcha de Mil Horizontes: una vez por turno, elige una unidad aliada. Esa unidad puede moverse 2 casillas adicionales este turno. No puede usarse sobre la misma unidad dos turnos seguidos."},
-  {key:"lu_bu",name:"Lü Bu",type:"unit",icon:"🐴",portrait:CARD_PORTRAITS.luBu,cost:5,hp:6,atk:7,guard:4,dex:8,agi:6,mov:2,range:1,rarity:"Mítica",special:true,text:"Furia de la Alabarda: la primera vez por turno que Lü Bu derrota a una unidad enemiga, obtiene +1 Ataque permanente mientras siga en campo. Máximo +3 Ataque por esta habilidad."},
-  {key:"ragnar_lodbrok",name:"Ragnar Lodbrok",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ragnar,cost:4,hp:6,atk:6,guard:4,dex:6,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Saqueo del Norte: una vez por turno, cuando Ragnar haga daño a un líder, estructura o unidad con más Vida máxima que él, recupera 1 Vida."},
-  {key:"el_cid",name:"El Cid Campeador",type:"unit",icon:"⚜️",portrait:CARD_PORTRAITS.cid,cost:4,hp:6,atk:5,guard:5,dex:7,agi:4,mov:2,range:1,rarity:"Mítica",special:true,text:"Campeador: cuando El Cid ataque o sea atacado por una unidad con mayor Ataque que él, obtiene +2 Guardia y +2 Destreza durante ese combate."},
-  {key:"spartacus",name:"Espartaco",type:"unit",icon:"⛓️",portrait:CARD_PORTRAITS.spartacus,cost:4,hp:6,atk:6,guard:4,dex:7,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Romper Cadenas: mientras Espartaco esté en campo, tus unidades básicas obtienen +1 Ataque cuando atacan cartas especiales."},
-  {key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:4,hp:4,atk:2,guard:3,dex:5,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, puedes elegir un aliado. Ese aliado obtiene +1 Destreza y +1 Guardia hasta el final de su próximo turno."},
-  {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:5,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Muralla de Troya: aura pasiva. Cuenta cuántas unidades enemigas están en rango 1 de Héctor. Cada una de esas unidades pierde 1 AT por cada enemigo en ese mismo rango. Ejemplo: si hay 3 enemigos en rango 1 de Héctor, cada uno pierde 3 AT."},
-  {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:5,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
-  {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:5,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,rarity:"Legendaria",special:true,text:"Dos Cielos: una vez por turno, si Musashi evade un ataque cuerpo a cuerpo, contraataca inmediatamente con +2 AT. Si recibe daño cuerpo a cuerpo y sobrevive, contraataca normalmente. Al acertar un contraataque, tiene 20% de dejar Sangrado en la unidad enemiga."},
-  {key:"khalid_ibn_al_walid",name:"Khalid ibn al-Walid",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.khalid,cost:5,hp:6,atk:6,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Espada Invicta: cuando Khalid destruye una unidad enemiga con un ataque, puede seguir atacando mientras tenga objetivos válidos. Cada ataque adicional aplica -2 AT acumulativo hasta el próximo turno de Khalid. La Precisión se consume normalmente; con 0 Precisión tiene 0% de golpear."},
-  {key:"attila_hun",name:"Atila el Huno",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.attila,cost:5,hp:6,atk:6,guard:4,dex:7,agi:6,mov:3,range:1,rarity:"Legendaria",special:true,text:"Azote de Imperios: mientras Atila esté en campo, los enemigos con la mitad o menos de su Vida máxima reciben -3 Guardia y -3 Agilidad."},
-  {key:"genghis_khan",name:"Gengis Kan",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.genghis,cost:5,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Horda de la Estepa: cuando Gengis Kan destruye una unidad enemiga, todas las unidades enemigas en radio 2 alrededor de él pierden 2 Guardia y 1 MOV hasta su próximo turno."},
-  {key:"alexander_magnus",name:"Alejandro Magno",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.alexander,cost:5,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Muro de Macedonia: mientras Alejandro Magno esté en el campo, las unidades aliadas que bloqueen un ataque satisfactoriamente sin recibir daño ganan +1 Vida máxima y +1 Vida actual."},
-  {key:"julius_caesar",name:"Julio César",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.caesar,cost:5,hp:7,atk:4,guard:5,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Disciplina de las Legiones: mientras Julio César esté en campo, la primera vez por turno que una unidad enemiga ataque, recibe -2 Ataque y -1 Destreza durante ese combate."},
-  {key:"cu_chulainn",name:"Cú Chulainn",type:"unit",icon:"🐕",portrait:CARD_PORTRAITS.cuChulainn,cost:6,hp:7,atk:7,guard:4,dex:8,agi:7,mov:2,range:1,rarity:"Semidiós",special:true,text:"Furia del Sabueso: mientras Cú Chulainn tenga la mitad o menos de su Vida máxima, obtiene +5 Ataque y +5 Agilidad. Contraataque del Sabueso: una vez por turno, cuando recibe un ataque cuerpo a cuerpo, puede contraatacar si sobrevive."},
-  {key:"gilgamesh",name:"Gilgamesh",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.gilgamesh,cost:6,hp:8,atk:7,guard:6,dex:8,agi:5,mov:1,range:1,rarity:"Semidiós",special:true,text:"Peso del Rey de Uruk: mientras Gilgamesh esté en campo, los enemigos adyacentes a él tienen -3 Ataque y -3 Agilidad. Además, el daño que Gilgamesh recibe de proyectiles, arqueros o ataques mágicos a distancia se reduce en 2."},
-  {key:"arjuna",name:"Arjuna",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.arjuna,cost:6,hp:6,atk:6,guard:4,dex:10,agi:7,mov:2,range:5,rarity:"Semidiós",special:true,text:"Flecha del Dharma: una vez por turno, cuando Arjuna falle un ataque a distancia, puede repetir la tirada con +6 Destreza. Si acierta con esa repetición, provoca Veneno."},
-  {key:"achilles",name:"Aquiles",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.achilles,cost:6,hp:7,atk:8,guard:6,dex:10,agi:8,mov:2,range:2,rarity:"Semidiós",special:true,text:"Cólera del Pélida: la primera vez por turno que Aquiles ataca, obtiene +2 Ataque durante ese combate. Concentración del Pélida: si Aquiles tiene 2 o más enemigos adyacentes, obtiene +6 Guardia. Sangre del Pélida: al inicio de tu turno, Aquiles recupera 1 Vida. Regla de lanza: tiene Rango 2 y puede contraatacar una vez por turno contra enemigos dentro de su rango si sobrevive."}
+  {key:"richard_lionheart",name:"Richard Corazón de León",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.richard,cost:3,hp:6,atk:5,guard:5,dex:6,agi:4,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Corazón Indomable: una vez por turno, Richard puede elegir un aliado adyacente. Ese aliado obtiene +2 Vida máxima y +2 Vida actual mientras Richard siga en campo. No acumulable sobre la misma unidad."},
+  {key:"saladin",name:"Saladino",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.saladin,cost:3,hp:6,atk:4,guard:5,dex:6,agi:5,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Media Luna del Desierto: una vez por turno, si Saladino está en campo y no controlas una Caballería Arquera de Saladino, invoca una en una casilla libre adyacente."},
+  {key:"shaka_zulu",name:"Shaka Zulu",type:"unit",icon:"🦬",portrait:CARD_PORTRAITS.shaka,cost:3,hp:6,atk:5,guard:4,dex:6,agi:5,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Cuernos del Búfalo: cuando un aliado ataque a un enemigo adyacente a otro aliado tuyo, obtiene +1 Ataque durante ese combate. Si el enemigo está rodeado por 2 o más aliados tuyos, también recibe -2 Agilidad durante ese combate."},
+  {key:"yi_sun_sin",name:"Yi Sun-sin",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.yiSunSin,cost:3,hp:6,atk:3,guard:5,dex:6,agi:4,mov:1,range:1,rarity:"Gloriosa",special:true,text:"Bloqueo Naval: mientras Yi Sun-sin esté en campo, las unidades enemigas invocadas entran con -1 Destreza y -1 Guardia hasta el final de su próximo turno."},
+  {key:"simo_hayha",name:"Simo Häyhä",type:"unit",icon:"❄️",portrait:CARD_PORTRAITS.simo,cost:3,hp:4,atk:4,guard:2,dex:9,agi:5,mov:1,range:5,rarity:"Gloriosa",special:true,text:"Blanco de Invierno: si Simo ataca a una unidad que ya perdió Vida este turno, obtiene +2 Ataque durante ese ataque. Si ataca desde Rango 4 o más, también ignora 1 Guardia."},
+  {key:"boudica",name:"Boudica",type:"unit",icon:"🔥",portrait:CARD_PORTRAITS.boudica,cost:3,hp:6,atk:5,guard:4,dex:6,agi:5,mov:2,range:1,rarity:"Gloriosa",special:true,text:"Ira de Iceni: una vez por turno, cuando un aliado sea derrotado, Boudica obtiene +2 Ataque hasta el final de tu próximo turno. Si el aliado derrotado era especial, Boudica también obtiene +1 Movimiento."},
+  {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:3,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,rarity:"Mítica",special:true,text:"Estratega de Ítaca: cuando Ulises ataca, todas las unidades aliadas en radio 2 alrededor de él obtienen +1 Guardia y +1 MOV. No afecta líderes ni al propio Ulises. El bonus de MOV se mantiene hasta el próximo turno del dueño."},
+  {key:"joan_of_arc",name:"Juana de Arco",type:"unit",icon:"🕯️",portrait:CARD_PORTRAITS.joan,cost:3,hp:5,atk:3,guard:4,dex:4,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Llama de Orléans: una vez por turno, cuando un aliado fuera a recibir daño, reduce ese daño en 1. Si ese aliado queda con 1 Vida, obtiene +1 Guardia hasta el final de su próximo turno."},
+  {key:"leonidas",name:"Leónidas",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.leonidas,cost:4,hp:8,atk:5,guard:7,dex:4,agi:3,mov:2,range:1,rarity:"Mítica",special:true,text:"Última Formación: mientras Leónidas esté adyacente a una unidad aliada básica, ambos reciben +2 Guardia. Última Resistencia: cuando Leónidas recibe daño fatal por un ataque, su asesino pierde 3 Vida. Si ese daño derrota al asesino, Leónidas queda con 1 Vida."},
+  {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:3,hp:4,atk:4,guard:3,dex:9,agi:8,mov:2,range:4,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -1 Guardia durante ese combate. Si acierta, el objetivo conserva -1 Guardia hasta el final de su próximo turno. No acumulable."},
+  {key:"tomoe_gozen",name:"Tomoe Gozen",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.tomoe,cost:3,hp:5,atk:5,guard:4,dex:8,agi:7,mov:3,range:1,rarity:"Mítica",special:true,text:"Jinete de la Luna Cortante: si Tomoe se movió 2 o más casillas este turno antes de atacar, el objetivo recibe -2 Agilidad durante ese combate. Si el objetivo tiene Rango 2 o más, Tomoe obtiene +1 Ataque."},
+  {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:4,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,rarity:"Mítica",special:true,text:"Trampa de Cannas: una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde 1 AT y 1 MOV hasta su próximo turno."},
+  {key:"subotai",name:"Subotai / Subutai",type:"unit",icon:"🏇",portrait:CARD_PORTRAITS.subotai,cost:3,hp:5,atk:4,guard:4,dex:5,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Marcha de Mil Horizontes: una vez por turno, elige una unidad aliada. Esa unidad puede moverse 2 casillas adicionales este turno. No puede usarse sobre la misma unidad dos turnos seguidos."},
+  {key:"lu_bu",name:"Lü Bu",type:"unit",icon:"🐴",portrait:CARD_PORTRAITS.luBu,cost:4,hp:6,atk:7,guard:4,dex:8,agi:6,mov:2,range:1,rarity:"Mítica",special:true,text:"Furia de la Alabarda: la primera vez por turno que Lü Bu derrota a una unidad enemiga, obtiene +1 Ataque permanente mientras siga en campo. Máximo +3 Ataque por esta habilidad."},
+  {key:"ragnar_lodbrok",name:"Ragnar Lodbrok",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ragnar,cost:3,hp:6,atk:6,guard:4,dex:6,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Saqueo del Norte: una vez por turno, cuando Ragnar haga daño a un líder, estructura o unidad con más Vida máxima que él, recupera 1 Vida."},
+  {key:"el_cid",name:"El Cid Campeador",type:"unit",icon:"⚜️",portrait:CARD_PORTRAITS.cid,cost:3,hp:6,atk:5,guard:5,dex:7,agi:4,mov:2,range:1,rarity:"Mítica",special:true,text:"Campeador: cuando El Cid ataque o sea atacado por una unidad con mayor Ataque que él, obtiene +2 Guardia y +2 Destreza durante ese combate."},
+  {key:"spartacus",name:"Espartaco",type:"unit",icon:"⛓️",portrait:CARD_PORTRAITS.spartacus,cost:3,hp:6,atk:6,guard:4,dex:7,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Romper Cadenas: mientras Espartaco esté en campo, tus unidades básicas obtienen +1 Ataque cuando atacan cartas especiales."},
+  {key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:3,hp:4,atk:2,guard:3,dex:5,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, puedes elegir un aliado. Ese aliado obtiene +1 Destreza y +1 Guardia hasta el final de su próximo turno."},
+  {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:4,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Muralla de Troya: aura pasiva. Cuenta cuántas unidades enemigas están en rango 1 de Héctor. Cada una de esas unidades pierde 1 AT por cada enemigo en ese mismo rango. Ejemplo: si hay 3 enemigos en rango 1 de Héctor, cada uno pierde 3 AT."},
+  {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:4,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
+  {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:4,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,rarity:"Legendaria",special:true,text:"Dos Cielos: una vez por turno, si Musashi evade un ataque cuerpo a cuerpo, contraataca inmediatamente con +2 AT. Si recibe daño cuerpo a cuerpo y sobrevive, contraataca normalmente. Al acertar un contraataque, tiene 20% de dejar Sangrado en la unidad enemiga."},
+  {key:"khalid_ibn_al_walid",name:"Khalid ibn al-Walid",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.khalid,cost:4,hp:6,atk:6,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Espada Invicta: cuando Khalid destruye una unidad enemiga con un ataque, puede seguir atacando mientras tenga objetivos válidos. Cada ataque adicional aplica -2 AT acumulativo hasta el próximo turno de Khalid. La Precisión se consume normalmente; con 0 Precisión tiene 0% de golpear."},
+  {key:"attila_hun",name:"Atila el Huno",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.attila,cost:4,hp:6,atk:6,guard:4,dex:7,agi:6,mov:3,range:1,rarity:"Legendaria",special:true,text:"Azote de Imperios: mientras Atila esté en campo, los enemigos con la mitad o menos de su Vida máxima reciben -3 Guardia y -3 Agilidad."},
+  {key:"genghis_khan",name:"Gengis Kan",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.genghis,cost:4,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Horda de la Estepa: cuando Gengis Kan destruye una unidad enemiga, todas las unidades enemigas en radio 2 alrededor de él pierden 2 Guardia y 1 MOV hasta su próximo turno."},
+  {key:"alexander_magnus",name:"Alejandro Magno",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.alexander,cost:4,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Muro de Macedonia: mientras Alejandro Magno esté en el campo, las unidades aliadas que bloqueen un ataque satisfactoriamente sin recibir daño ganan +1 Vida máxima y +1 Vida actual."},
+  {key:"julius_caesar",name:"Julio César",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.caesar,cost:4,hp:7,atk:4,guard:5,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Disciplina de las Legiones: mientras Julio César esté en campo, la primera vez por turno que una unidad enemiga ataque, recibe -2 Ataque y -1 Destreza durante ese combate."},
+  {key:"cu_chulainn",name:"Cú Chulainn",type:"unit",icon:"🐕",portrait:CARD_PORTRAITS.cuChulainn,cost:5,hp:7,atk:7,guard:4,dex:8,agi:7,mov:2,range:1,rarity:"Semidiós",special:true,text:"Furia del Sabueso: mientras Cú Chulainn tenga la mitad o menos de su Vida máxima, obtiene +5 Ataque y +5 Agilidad. Contraataque del Sabueso: una vez por turno, cuando recibe un ataque cuerpo a cuerpo, puede contraatacar si sobrevive."},
+  {key:"gilgamesh",name:"Gilgamesh",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.gilgamesh,cost:5,hp:8,atk:7,guard:6,dex:8,agi:5,mov:1,range:1,rarity:"Semidiós",special:true,text:"Peso del Rey de Uruk: mientras Gilgamesh esté en campo, los enemigos adyacentes a él tienen -3 Ataque y -3 Agilidad. Además, el daño que Gilgamesh recibe de proyectiles, arqueros o ataques mágicos a distancia se reduce en 2."},
+  {key:"arjuna",name:"Arjuna",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.arjuna,cost:5,hp:6,atk:6,guard:4,dex:10,agi:7,mov:2,range:5,rarity:"Semidiós",special:true,text:"Flecha del Dharma: una vez por turno, cuando Arjuna falle un ataque a distancia, puede repetir la tirada con +6 Destreza. Si acierta con esa repetición, provoca Veneno."},
+  {key:"achilles",name:"Aquiles",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.achilles,cost:5,hp:7,atk:8,guard:6,dex:10,agi:8,mov:2,range:2,rarity:"Semidiós",special:true,text:"Cólera del Pélida: la primera vez por turno que Aquiles ataca, obtiene +2 Ataque durante ese combate. Concentración del Pélida: si Aquiles tiene 2 o más enemigos adyacentes, obtiene +6 Guardia. Sangre del Pélida: al inicio de tu turno, Aquiles recupera 1 Vida. Regla de lanza: tiene Rango 2 y puede contraatacar una vez por turno contra enemigos dentro de su rango si sobrevive."}
 ];
 const LEGENDARY_ALLY_CARDS=SPECIAL_HUMAN_CARD_DATA.map(c=>({...c}));
 
@@ -5853,18 +5853,135 @@ async function cellClick(x,y){
   unitContextSelection=null;
   hideUnitContextMenu();
 }
+function getBoardPortraitPath(portrait){
+  const raw=String(portrait||"");
+  if(!raw)return raw;
+  if(raw.includes("assets/cards/"))return raw.replace("assets/cards/","assets/board_cards/");
+  return raw;
+}
+
 function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
   const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
   if(portrait){
     const alt=escapeHtml(u.name||"Unidad");
     if(depthLayer){
-      return `<div class="unit-depth-stack"><img class="unit-depth-shadow" src="${portrait}" alt="" aria-hidden="true"><img class="unit-depth-front" src="${portrait}" alt="${alt}"></div>`;
+      const boardPortrait=getBoardPortraitPath(portrait);
+      const safeOriginal=String(portrait).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
     }
     return `<img src="${portrait}" alt="${alt}">`;
   }
   return `<span>${u?.icon||"✦"}</span>`;
 }
+
+const boardPortraitCropCache=new Map();
+let boardPortraitResizeRaf=0;
+
+function getBoardUnitPortraitHtml(u){
+  if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
+  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
+  if(portrait){
+    const alt=escapeHtml(u.name||"Unidad");
+    const boardPortrait=getBoardPortraitPath(portrait);
+    const safeOriginal=String(portrait).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+    const onError=`this.onerror=null;this.src='${safeOriginal}'`;
+    return `<div class="unit-portrait-stack"><img class="unit-portrait-bg" src="${boardPortrait}" alt="" aria-hidden="true" onerror="${onError}"><div class="unit-portrait-character-stage"><img class="unit-portrait-character" src="${boardPortrait}" alt="${alt}" onerror="${onError}"></div></div>`;
+  }
+  return `<span>${u?.icon||"✦"}</span>`;
+}
+
+function getBoardPortraitCropBounds(img){
+  const fallback={x:0,y:0,w:Math.max(1,Number(img?.naturalWidth||1)),h:Math.max(1,Number(img?.naturalHeight||1))};
+  if(!img||!img.naturalWidth||!img.naturalHeight)return fallback;
+  const cacheKey=img.currentSrc||img.src||"";
+  if(cacheKey&&boardPortraitCropCache.has(cacheKey))return boardPortraitCropCache.get(cacheKey);
+  let bounds={x:0,y:0,w:img.naturalWidth,h:img.naturalHeight};
+  try{
+    const canvas=document.createElement("canvas");
+    canvas.width=img.naturalWidth;
+    canvas.height=img.naturalHeight;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    if(ctx){
+      ctx.drawImage(img,0,0);
+      const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      let minX=canvas.width,minY=canvas.height,maxX=-1,maxY=-1;
+      for(let y=0;y<canvas.height;y++){
+        for(let x=0;x<canvas.width;x++){
+          const i=(y*canvas.width+x)*4;
+          const r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
+          if(a<20)continue;
+          const luminance=(r*0.2126)+(g*0.7152)+(b*0.0722);
+          const chroma=Math.max(r,g,b)-Math.min(r,g,b);
+          if(luminance<24&&chroma<14)continue;
+          if(x<minX)minX=x;
+          if(y<minY)minY=y;
+          if(x>maxX)maxX=x;
+          if(y>maxY)maxY=y;
+        }
+      }
+      if(maxX>=minX&&maxY>=minY){
+        const rawW=maxX-minX+1;
+        const rawH=maxY-minY+1;
+        const padX=Math.max(4,Math.round(rawW*0.045));
+        const padY=Math.max(4,Math.round(rawH*0.05));
+        const x0=Math.max(0,minX-padX);
+        const y0=Math.max(0,minY-padY);
+        const x1=Math.min(canvas.width,maxX+padX+1);
+        const y1=Math.min(canvas.height,maxY+padY+1);
+        bounds={x:x0,y:y0,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0)};
+      }
+    }
+  }catch(err){
+    bounds=fallback;
+  }
+  if(cacheKey)boardPortraitCropCache.set(cacheKey,bounds);
+  return bounds;
+}
+
+function fitBoardPortraitCharacter(stack){
+  if(!stack)return;
+  const stage=stack.querySelector('.unit-portrait-character-stage');
+  const img=stack.querySelector('.unit-portrait-character');
+  if(!stage||!img||!img.naturalWidth||!img.naturalHeight)return;
+  const stageW=Math.max(1,stage.clientWidth||0);
+  const stageH=Math.max(1,stage.clientHeight||0);
+  if(!stageW||!stageH)return;
+  const crop=getBoardPortraitCropBounds(img);
+  const fitScale=Math.min(stageW/Math.max(1,crop.w),stageH/Math.max(1,crop.h));
+  const scale=fitScale*1.03;
+  const drawW=img.naturalWidth*scale;
+  const drawH=img.naturalHeight*scale;
+  const offsetX=((stageW-(crop.w*scale))/2)-(crop.x*scale);
+  const offsetY=((stageH-(crop.h*scale))/2)-(crop.y*scale);
+  img.style.width=`${drawW}px`;
+  img.style.height=`${drawH}px`;
+  img.style.left=`${offsetX}px`;
+  img.style.top=`${offsetY}px`;
+}
+
+function bindBoardPortraitStack(stack){
+  if(!stack||stack.dataset.boardPortraitBound==='1')return;
+  stack.dataset.boardPortraitBound='1';
+  const img=stack.querySelector('.unit-portrait-character');
+  if(!img)return;
+  const render=()=>fitBoardPortraitCharacter(stack);
+  if(img.complete&&img.naturalWidth)requestAnimationFrame(render);
+  img.addEventListener('load',render);
+}
+
+function layoutBoardPortraitLayers(root=document){
+  const scope=root&&typeof root.querySelectorAll==='function'?root:document;
+  scope.querySelectorAll('.unit-portrait-stack').forEach(stack=>{
+    bindBoardPortraitStack(stack);
+    fitBoardPortraitCharacter(stack);
+  });
+}
+
+window.addEventListener('resize',()=>{
+  if(boardPortraitResizeRaf)cancelAnimationFrame(boardPortraitResizeRaf);
+  boardPortraitResizeRaf=requestAnimationFrame(()=>layoutBoardPortraitLayers(document));
+});
 function showUnit(u){
   if(!u)return;
   const inspector=$("inspector");
@@ -6018,7 +6135,7 @@ function getAdjacentFreeCells(unit,units=publicState?.units||[]){
   return spots;
 }
 function makeLightCavalryToken(owner,x,y){
-  const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:3,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
+  const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
   return makeUnit(makeCard(template,owner),x,y);
 }
 function getEffectTargetOptions(caster,units=publicState?.units||[]){
@@ -6642,7 +6759,7 @@ function renderBoard(){
     if(u&&!u.leader){
       const c=document.createElement("div");
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getUnitPortraitHtml(u,true)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
@@ -6692,6 +6809,7 @@ function renderBoard(){
     });
     grid.appendChild(cell);
   }
+  requestAnimationFrame(()=>layoutBoardPortraitLayers(grid));
   renderLeaderBases();
 }
 
