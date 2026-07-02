@@ -111,7 +111,7 @@ const CARD_PORTRAITS={
   spartacus:"assets/cards/basic/berserker_north.webp",
   hector:"assets/cards/special/hector_troy.webp",
   beowulf:"assets/cards/special/beowulf.webp",
-  musashi:"assets/cards/basic/rogue.webp",
+  musashi:"assets/cards/special/miyamoto_musashi.webp",
   khalid:"assets/cards/special/khalid_ibn_al_walid.webp",
   attila:"assets/cards/special/attila.webp",
   genghis:"assets/cards/special/genghis_khan.webp",
