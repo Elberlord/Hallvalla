@@ -1,0 +1,9 @@
+CAMBIOS DE BALANCE 7GZD
+
+- Líder Mago / Hechicero: AT 2 -> AT 3
+- Líder Mago / Hechicero: RG 3 -> RG 2
+- Caballería Ligera: MOV -> 4
+- Halcón Peregrino: MOV -> 6
+- Rinoceronte Blanco: MOV -> 3
+
+Base usada: doble capa + anticaballería + ventajas tácticas auditadas 7GZA.
