@@ -175,7 +175,7 @@ const LEADER_BUFF_TABLE={
   warrior:{1:{hp:3,guard:3},2:{hp:4,guard:4},3:{hp:5,guard:5},4:{hp:6,guard:6}},
   archer:{1:{atk:1,dex:2,agi:1,range:1},2:{atk:1,dex:3,agi:1,range:2},3:{atk:2,dex:5,agi:2,range:2},4:{atk:3,dex:6,agi:3,range:2}},
   mage:{1:{costReduction:2,effectBonus:3},2:{costReduction:2,effectBonus:4},3:{costReduction:3,effectBonus:5},4:{costReduction:3,effectBonus:6}},
-  axe:{1:{atk:1,dex:1},2:{atk:2,dex:1},3:{atk:2,dex:2},4:{atk:3,dex:2}},
+  axe:{1:{atk:4,dex:2},2:{atk:8,dex:4},3:{atk:12,dex:6},4:{atk:16,dex:8}},
   cavalry:{1:{mov:1,agi:1},2:{mov:1,agi:2},3:{mov:2,agi:2},4:{mov:2,agi:3,atk:1}},
   assassin:{1:{agi:2,dex:1},2:{agi:3,dex:1},3:{agi:4,dex:2},4:{agi:5,dex:2,atk:1}},
   beastmaster:{1:{atk:1,agi:1},2:{atk:2,agi:1},3:{atk:3,agi:2},4:{atk:4,agi:2}}
