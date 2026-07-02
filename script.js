@@ -84,6 +84,7 @@ const CARD_PORTRAITS={
   cavalry:"assets/cards/basic/cavalry_light.webp",
   archer:"assets/cards/basic/archer.webp",
   mage:"assets/cards/basic/mage.webp",
+  arcaneAdept:"assets/cards/basic/mage.webp",
   rogue:"assets/cards/basic/rogue.webp",
   paladin:"assets/cards/basic/paladin.webp",
   heavyInfantry:"assets/cards/basic/heavy_infantry_paladin.webp",
@@ -840,7 +841,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. La Precisión se calcula y se consume normalmente. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -1118,6 +1119,7 @@ const WEAPON_CLASS_BY_KEY={
   berserker:"sword",
   spearman:"spear",
   archer:"bow",
+  arcane_adept:"mage",
   guardian:"sword",
   scout:"sword",
   mulan:"sword",
@@ -1184,6 +1186,11 @@ function getWeaponClassForCard(card){
 
   // Fallback semántico: evita que una unidad nueva quede mal clasificada
   // si su key cambia pero su nombre/clase sigue indicando el arma.
+  if(
+    key.includes("mage")||key.includes("mago")||key.includes("arcane")||
+    name.includes("adepto arcano")||name.includes("hechicero")||name.includes("mago")
+  )return "mage";
+
   if(
     key.includes("cavalry")||key.includes("caballeria")||key.includes("caballería")||
     name.includes("caballería")||name.includes("caballeria")||name.includes("cavalry")
@@ -1727,6 +1734,34 @@ function applyBurnToUnit(target,sourceName="Fireball",turns=2,damage=1){
   next.burnSourceName=sourceName||next.burnSourceName||"Quemadura";
   return next;
 }
+
+function applyArcaneAdeptRandomStatus(target,source){
+  if(!target||target.leader)return {unit:target,label:""};
+  const roll=Math.floor(Math.random()*5);
+  if(roll===0){
+    const already=hasBleeding(target);
+    return {unit:applyBleedToUnit(target,source?.name||"Adepto Arcano"),label:already?"mantiene Sangrado":"queda con Sangrado"};
+  }
+  if(roll===1){
+    if(isPoisonImmuneUnit(target))return {unit:clearPoisonStatus(target),label:"ignora el Veneno"};
+    return {unit:{...target,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:source?.id||"",poisonSourceName:source?.name||"Adepto Arcano"},label:"queda con Veneno leve"};
+  }
+  if(roll===2){
+    return {unit:applyBurnToUnit(target,source?.name||"Adepto Arcano",2,1),label:"queda con Quemadura leve"};
+  }
+  if(roll===3){
+    return {unit:{...target,tempMovDebuff:Math.max(Number(target.tempMovDebuff||0),1),tempMovDebuffSource:source?.name||"Adepto Arcano"},label:"recibe -1 MOV"};
+  }
+  return {unit:{...target,tempAgiDebuff:(Number(target.tempAgiDebuff||0)+2),tempAgiDebuffSource:source?.name||"Adepto Arcano"},label:"recibe -2 AGI"};
+}
+function arcaneAdeptStatusFxType(label=""){
+  const s=String(label||"").toLowerCase();
+  if(s.includes("sangrado"))return "bleed_apply";
+  if(s.includes("veneno"))return "poison";
+  if(s.includes("quemadura"))return "burn";
+  return "debuff";
+}
+
 function applyBurnAtTurnEnd(units){
   let logs=[];
   let statusFxEvent=null;
@@ -2282,11 +2317,27 @@ function achillesConcentrationGuard(u,units=publicState?.units||[]){
   const nearbyEnemies=unitsInPlay(units).filter(e=>e.owner!==u.owner&&!e.leader&&e.hp>0&&dist(e,u)<=1).length;
   return nearbyEnemies>=2?6:0;
 }
-function effectiveAtk(u){const bonus=getLeaderBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)+(bonus.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);return Math.max(0,v)}
+
+function isArcaneAdeptUnit(u){return !!u&&u.key==="arcane_adept";}
+function getArcaneAdeptLinkBonus(u,units=publicState?.units||[]){
+  if(!isArcaneAdeptUnit(u)||u.leader)return {atk:0,dex:0,agi:0,range:0};
+  const mageLeader=(units||[]).find(l=>l&&l.owner===u.owner&&l.leader&&l.leaderType==="mage"&&l.hp>0&&dist(l,u)<=1);
+  if(!mageLeader)return {atk:0,dex:0,agi:0,range:0};
+  const tier=Math.max(1,Math.min(4,Number(getLeaderBuffTierForOwner(u.owner,units)||1)));
+  const table={
+    1:{atk:1,dex:0,agi:0,range:1},
+    2:{atk:2,dex:2,agi:0,range:1},
+    3:{atk:3,dex:3,agi:0,range:1},
+    4:{atk:4,dex:4,agi:3,range:1}
+  };
+  return table[tier]||table[1];
+}
+
+function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
-function effectiveDex(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b;return Math.max(0,halveForRhinoStun(v,u))}
-function effectiveAgi(u){const bonus=getLeaderBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b;if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveDex(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u))}
 function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?0:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
@@ -2972,7 +3023,8 @@ function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
 function getUnitAttackRange(u){
   const baseRange=Number(u?.range||1)||1;
   const bonus=getLeaderBonus(u);
-  let range=baseRange+Number(bonus.range||0);
+  const arcaneLink=getArcaneAdeptLinkBonus(u);
+  let range=baseRange+Number(bonus.range||0)+Number(arcaneLink.range||0);
   if(!u?.leader&&getWeaponClassForCard(u)==="bow")range=Math.min(4,range);
   return Math.max(1,range);
 }
@@ -4016,6 +4068,20 @@ async function attackUnit(a,d){
     const bleedTurnsInfo=d.leader?" durante 2 turnos":"";
     bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado${d.leader?" y reinicia su duración a 2 turnos":""}.`:` ${d.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
   }
+  let arcaneAdeptStatusEvent=null;
+  if(hit.hit&&hpLoss>0&&a.key==="arcane_adept"&&units.some(u=>u.id===d.id)){
+    const beforeArcane=units.find(u=>u.id===d.id)||d;
+    let arcaneLabel="";
+    units=units.map(u=>{
+      if(u.id!==d.id)return u;
+      const result=applyArcaneAdeptRandomStatus(u,a);
+      arcaneLabel=result.label;
+      return result.unit;
+    });
+    const afterArcane=units.find(u=>u.id===d.id)||beforeArcane;
+    arcaneAdeptStatusEvent=makeStatusFxEvent(arcaneAdeptStatusFxType(arcaneLabel),afterArcane,1);
+    bleedText+=` Ruptura Arcana: ${afterArcane.name} ${arcaneLabel}.`;
+  }
   if(hit.hit&&hpLoss>0&&a.key==="bengal_tiger"&&units.some(u=>u.id===d.id)){
     const tigerFromStealth=tigerFromStealthBefore;
     if(tigerFromStealth||Math.random()<0.5){units=units.map(u=>u.id===d.id?applyBleedToUnit(u,a.name):u);bleedText+=` ${d.name} queda con Sangrado por Desgarro Salvaje.`;}
@@ -4107,7 +4173,8 @@ async function attackUnit(a,d){
   let miyamotoCounterBleedEvent=null;
   const miyamotoEvaded=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&dist(attackerAfter,defenderAfter)<=1&&!hit.hit;
   const miyamotoDamagedSurvived=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&dist(attackerAfter,defenderAfter)<=1&&hit.hit&&hpLoss>0;
-  const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&(isLanceUnitCardLike(defenderAfter)?dist(attackerAfter,defenderAfter)<=getCounterRange(defenderAfter):(miyamotoEvaded||miyamotoDamagedSurvived));
+  const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&isRangedAttack(attackerAfter,defenderAfter);
+  const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&(isLanceUnitCardLike(defenderAfter)?dist(attackerAfter,defenderAfter)<=getCounterRange(defenderAfter):(miyamotoEvaded||miyamotoDamagedSurvived||arcaneAdeptRangedCounter));
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=getCounterDefenseRemainder(a,d,mods);
     const isMiyamotoCounter=defenderAfter.key==="miyamoto_musashi";
@@ -4200,7 +4267,7 @@ async function attackUnit(a,d){
   const dodgeFxEvent=!hit.hit&&defenderStillAlive
     ? makeDodgeFxEvent(defenderUnitNow)
     : null;
-  const statusFxEvent=miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
+  const statusFxEvent=arcaneAdeptStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
     ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
     : null));
   const floatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
@@ -4723,6 +4790,20 @@ async function adventureEnemyTurn(){
       const bleedTurnsInfo=target.leader?" durante 2 turnos":"";
       bleedText=alreadyBleeding?` ${target.name} mantiene Sangrado${target.leader?" y reinicia su duración a 2 turnos":""}.`:` ${target.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
     }
+    let arcaneAdeptStatusEvent=null;
+    if(hit.hit&&hpLoss>0&&attacker.key==="arcane_adept"&&units.some(u=>u.id===target.id)){
+      const beforeArcane=units.find(u=>u.id===target.id)||target;
+      let arcaneLabel="";
+      units=units.map(u=>{
+        if(u.id!==target.id)return u;
+        const result=applyArcaneAdeptRandomStatus(u,attacker);
+        arcaneLabel=result.label;
+        return result.unit;
+      });
+      const afterArcane=units.find(u=>u.id===target.id)||beforeArcane;
+      arcaneAdeptStatusEvent=makeStatusFxEvent(arcaneAdeptStatusFxType(arcaneLabel),afterArcane,1);
+      bleedText+=` Ruptura Arcana: ${afterArcane.name} ${arcaneLabel}.`;
+    }
     if(hit.hit&&hpLoss>0&&attacker.key==="bengal_tiger"&&units.some(u=>u.id===target.id)){
       if(tigerFromStealthBefore||Math.random()<0.5){units=units.map(u=>u.id===target.id?applyBleedToUnit(u,attacker.name):u);bleedText+=` ${target.name} queda con Sangrado por Desgarro Salvaje.`;}
     }
@@ -4811,7 +4892,8 @@ async function adventureEnemyTurn(){
     let attackerAfter=units.find(u=>u.id===attacker.id),defenderAfter=units.find(u=>u.id===target.id);
     const miyamotoEvaded=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&d(attackerAfter,defenderAfter)<=1&&!hit.hit;
     const miyamotoDamagedSurvived=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&d(attackerAfter,defenderAfter)<=1&&hit.hit&&hpLoss>0;
-    const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&(isLanceUnitCardLike(defenderAfter)?d(attackerAfter,defenderAfter)<=getCounterRange(defenderAfter):(miyamotoEvaded||miyamotoDamagedSurvived));
+    const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&isRangedAttack(attackerAfter,defenderAfter);
+    const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&(isLanceUnitCardLike(defenderAfter)?d(attackerAfter,defenderAfter)<=getCounterRange(defenderAfter):(miyamotoEvaded||miyamotoDamagedSurvived||arcaneAdeptRangedCounter));
     if(defenderAfter&&attackerAfter&&canSpecialCounter){
       const counterDefenseRemainder=withAiPublicState(()=>getCounterDefenseRemainder(attacker,target,mods));
       const isMiyamotoCounter=defenderAfter.key==="miyamoto_musashi";
@@ -4875,7 +4957,7 @@ async function adventureEnemyTurn(){
     pendingAiDodgeFxEvent=!hit.hit&&defenderStillAlive
       ? makeDodgeFxEvent(defenderUnitNow)
       : null;
-    pendingAiStatusFxEvent=lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
+    pendingAiStatusFxEvent=arcaneAdeptStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
       : null));
     pendingAiFloatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive

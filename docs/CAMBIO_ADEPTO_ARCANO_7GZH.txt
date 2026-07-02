@@ -1,0 +1,29 @@
+CAMBIO 7GZH - ADEPTO ARCANO
+
+Se creó la unidad básica Adepto Arcano.
+
+Stats:
+- Costo 2
+- HP 3
+- AT 2
+- GD 0
+- DX 4
+- AGI 2
+- MOV 1
+- RG 2
+- Rareza: Básica
+
+Efectos:
+- Ruptura Arcana: si causa al menos 1 daño directo a HP de una unidad enemiga, aplica un estado negativo aleatorio.
+  Bolsa: Sangrado, Veneno leve, Quemadura leve, -1 MOV, -2 AGI.
+- Respuesta Mística: puede contraatacar ataques de rango.
+- Vínculo Arcano: si está junto al líder Hechicero aliado, obtiene bonus por tier:
+  T1: +1 AT / +1 RG
+  T2: +2 AT / +1 RG / +2 DX
+  T3: +3 AT / +1 RG / +3 DX
+  T4: +4 AT / +1 RG / +4 DX / +3 AGI
+
+Notas:
+- Se agregó a CARD_TEMPLATES como unidad básica.
+- Se usa temporalmente el arte básico de mago existente: assets/cards/basic/mage.webp.
+- No se modificaron stats ni efectos de otras unidades.
