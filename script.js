@@ -717,6 +717,7 @@ const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_adventure_progress"
 ];
 const HALLVALLA_STATS_TUTORIAL_KEY="hallvalla_stats_tutorial_seen_v1";
+const HALLVALLA_BASIC_TUTORIAL_KEY="hallvalla_basic_battle_tutorial_seen_v1";
 function clearHallVallaRewardFlags(){
   try{
     Object.keys(localStorage)
@@ -4295,11 +4296,11 @@ async function finishTurn(){
   if(!isMyTurn())return setHint("No es tu turno.");
   const burnEnd=applyBurnAtTurnEnd(publicState.units||[]);
   if(burnEnd.logs.length&&await finalizeBattle(burnEnd.units,burnEnd.logs.join(" ")))return;
-  const next=myPlayer===1?2:1,turn=next===1?(publicState.turn||1)+1:(publicState.turn||1);
+  const tutorialMode=publicState?.mode==="tutorial";const next=tutorialMode?1:(myPlayer===1?2:1),turn=tutorialMode?(publicState.turn||1)+1:(next===1?(publicState.turn||1)+1:(publicState.turn||1));
   let refreshedUnits=restoreTurnGuardForOwner(burnEnd.units,next);
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({units:refreshedUnits,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,statusFxEvent:burnEnd.statusFxEvent||null,floatFxEvent:burnEnd.floatFxEvent||null,log:[`J${myPlayer} End Phase: termina turno. ${burnEnd.logs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({units:refreshedUnits,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,statusFxEvent:burnEnd.statusFxEvent||null,floatFxEvent:burnEnd.floatFxEvent||null,log:[tutorialMode?`Tutorial: termina el turno de práctica. ${burnEnd.logs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${burnEnd.logs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
 }
@@ -6442,7 +6443,7 @@ function handleUnitContextAction(action){
 09_RENDER_CORE
 -------------------------------------------------------------------------------
 */
-function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
+function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
 
 function getVisibleHonorState(){
   if(!publicState)return{honor:0,maxHonor:0,hidden:true};
@@ -7065,6 +7066,160 @@ function markStatsTutorialSeen(){
 function hasSeenStatsTutorial(){
   try{return localStorage.getItem(HALLVALLA_STATS_TUTORIAL_KEY)==="true";}catch(e){return false;}
 }
+
+function hasSeenBasicBattleTutorial(){try{return localStorage.getItem(HALLVALLA_BASIC_TUTORIAL_KEY)==="true";}catch(e){return true;}}
+function markBasicBattleTutorialSeen(){try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_KEY,"true");}catch(e){}}
+function ensureBasicTutorialGate(){
+  let modal=$("basicTutorialGate");
+  if(modal)return modal;
+  modal=document.createElement("div");
+  modal.id="basicTutorialGate";
+  modal.className="basic-tutorial-gate hidden";
+  modal.innerHTML=`
+    <div class="basic-tutorial-gate-card">
+      <div class="basic-tutorial-kicker">Primer entrenamiento</div>
+      <h2>Aprende HallValla en una batalla guiada</h2>
+      <p>Juega una práctica corta con 4 cartas. Aprenderás a abrir la mano, convocar, pasar fases, mover, defender, atacar y entender PREC/EVA sin entrar todavía a una partida completa.</p>
+      <div class="basic-tutorial-list">
+        <span>🃏 Mano y mazo: cómo usar tus cartas.</span>
+        <span>✨ Convocar: baja unidades al tablero usando Honor/Mana.</span>
+        <span>🟩 Movimiento y defensa: elige acciones de unidad.</span>
+        <span>⚔️ Ataque, rango, precisión y evasión: cómo se decide el golpe.</span>
+      </div>
+      <div class="basic-tutorial-actions">
+        <button id="basicTutorialSkipBtn" class="btn ghost" type="button">Omitir por ahora</button>
+        <button id="basicTutorialStartBtn" class="btn primary" type="button">Iniciar tutorial</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  return modal;
+}
+function showBasicTutorialGate({force=false}={}){
+  return new Promise(resolve=>{
+    if(!force&&hasSeenBasicBattleTutorial()){resolve(false);return;}
+    const modal=ensureBasicTutorialGate();
+    const finish=async(start)=>{
+      modal.classList.add("hidden");
+      markBasicBattleTutorialSeen();
+      resolve(start);
+      if(start)await startBasicTutorialBattle();
+    };
+    const skip=$("basicTutorialSkipBtn");
+    const start=$("basicTutorialStartBtn");
+    if(skip)skip.onclick=()=>finish(false);
+    if(start)start.onclick=()=>finish(true);
+    modal.classList.remove("hidden");
+  });
+}
+function maybeShowBasicTutorialGate(){
+  if(hasSeenBasicBattleTutorial())return;
+  setTimeout(()=>showBasicTutorialGate({force:false}),1200);
+}
+function getTutorialCardTemplate(key){
+  const card=getStarterBasicCardByKey(key);
+  return card?{...card}:null;
+}
+async function startBasicTutorialBattle(){
+  if(!(await ensureFirebaseAuthReady("tutorial")))return;
+  const leaderType=getSelectedLeaderType()||"warrior";
+  const leaderLevel=getLocalLeaderLevel(leaderType)||1;
+  const leaderAbility=getLocalLeaderAbility(leaderType)||"";
+  const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);
+  const code=`TUT${code4()}`;
+  const handKeys=["archer","spearman","guardian","arcane_adept"];
+  const hand=handKeys.map(k=>getTutorialCardTemplate(k)).filter(Boolean).map(card=>makeCard(card,1,leaderType));
+  const deck=[];
+  const enemyLeaderType="warrior";
+  const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,1,"");
+  const enemyTargetCard={...getTutorialCardTemplate("guardian"),owner:2,leaderType:enemyLeaderType};
+  const enemyTarget=makeUnit(enemyTargetCard,Math.floor(COLS/2),2);
+  enemyTarget.name="Guardia de práctica";
+  enemyTarget.hp=5;
+  enemyTarget.maxHp=5;
+  enemyTarget.guard=2;
+  enemyTarget.baseGuard=2;
+  enemyTarget.dex=2;
+  enemyTarget.agi=1;
+  enemyTarget.acted=true;
+  enemyTarget.moved=true;
+  const pub={
+    code,
+    mode:"tutorial",
+    tutorialBasic:true,
+    createdAt:Date.now(),
+    currentPlayer:1,
+    turn:1,
+    phase:"active",
+    turnPhase:"main",
+    turnKey:"1-1",
+    playerSlots:{player1Uid:uid,player2Uid:"TUTORIAL_DUMMY"},
+    playerNames:{1:getLocalProfileName(),2:"Instructor de práctica"},
+    playerLeaders:{1:leaderType,2:enemyLeaderType},
+    playerLeaderLevels:{1:leaderLevel,2:1},
+    playerLeaderAbilities:{1:leaderAbility,2:""},
+    playerStats:{1:{hp:leaderStats.hp,honor:3,maxHonor:3,deck:deck.length,hand:hand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:0,hand:0}},
+    units:[
+      makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
+      makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,1,""),
+      enemyTarget
+    ],
+    log:["Tutorial básico: abre la mano, convoca una unidad y sigue las instrucciones del instructor."]
+  };
+  await set(ref(db,`games/${code}/public`),pub);
+  await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:3,maxHonor:3,lastTurnStarted:"1-1",skipFirstTurnDraw:false});
+  const main=$("mainMenu");if(main)main.classList.add("hidden");
+  enterGame(code,1);
+}
+function ensureBasicTutorialCoach(){
+  let coach=$("basicTutorialCoach");
+  if(coach)return coach;
+  coach=document.createElement("div");
+  coach.id="basicTutorialCoach";
+  coach.className="basic-tutorial-coach hidden";
+  coach.innerHTML=`
+    <div class="basic-tutorial-coach-card">
+      <div class="basic-tutorial-coach-top">
+        <div>
+          <div id="basicTutorialStepText" class="basic-tutorial-step">Paso 1/8</div>
+          <h3 id="basicTutorialCoachTitle">Tutorial</h3>
+        </div>
+        <button id="basicTutorialCloseCoachBtn" class="basic-tutorial-mini-btn" type="button">Ocultar</button>
+      </div>
+      <p id="basicTutorialCoachBody"></p>
+      <div class="basic-tutorial-coach-buttons">
+        <button id="basicTutorialPrevBtn" class="basic-tutorial-mini-btn" type="button">Anterior</button>
+        <button id="basicTutorialNextBtn" class="basic-tutorial-mini-btn primary" type="button">Siguiente</button>
+        <button id="basicTutorialFinishBtn" class="basic-tutorial-mini-btn" type="button">Terminar práctica</button>
+      </div>
+    </div>`;
+  document.body.appendChild(coach);
+  on("basicTutorialCloseCoachBtn","click",()=>coach.classList.add("hidden"));
+  on("basicTutorialPrevBtn","click",()=>{basicTutorialCoachStep=Math.max(0,basicTutorialCoachStep-1);renderBasicTutorialCoach(true);});
+  on("basicTutorialNextBtn","click",()=>{basicTutorialCoachStep=Math.min(BASIC_TUTORIAL_STEPS.length-1,basicTutorialCoachStep+1);renderBasicTutorialCoach(true);});
+  on("basicTutorialFinishBtn","click",()=>backToMainMenu());
+  return coach;
+}
+const BASIC_TUTORIAL_STEPS=[
+  {title:"1. Mano, mazo y recurso",body:"Toca MANO para abrir u ocultar tus 4 cartas. Tienes Honor/Mana 3/3 para practicar. El mazo puede estar vacío en este entrenamiento: aquí importan las acciones básicas."},
+  {title:"2. Convocar una unidad",body:"En Main Phase juega una carta de unidad desde la mano. Las casillas de invocación aparecen cerca de tu líder. Convocar pone una pieza en el tablero."},
+  {title:"3. Pasar de fase",body:"Cuando termines de jugar cartas, pulsa Siguiente fase. Pasarás a Action Phase, donde las unidades pueden moverse, defender, atacar o usar efectos."},
+  {title:"4. Movimiento",body:"Selecciona una unidad aliada y elige MOV. Las casillas verdes muestran dónde puede moverse según su MV. MOV 1 avanza una casilla."},
+  {title:"5. Defensa",body:"Elige DEF para poner una unidad en postura defensiva. La Guardia ayuda a absorber daño antes de que la Vida baje."},
+  {title:"6. Ataque y rango",body:"Elige ATTK y selecciona un enemigo en rojo. RG 1 es cuerpo a cuerpo; arqueras y magos pueden atacar a distancia si su RG alcanza al objetivo."},
+  {title:"7. Precisión y evasión",body:"PREC/EVA sale de DX + AGI. El atacante necesita superar la evasión del objetivo. Atacar y recibir ataques desgasta esa reserva durante el turno."},
+  {title:"8. Acciones rápidas",body:"Puedes ocultar la mano, abrir Log, cancelar selección y pasar de fase. Cuando quieras repetir, vuelve al menú y pulsa Practicar básico."}
+];
+let basicTutorialCoachStep=0;
+function renderBasicTutorialCoach(forceShow=false){
+  if(!publicState||publicState.mode!=="tutorial")return;
+  const coach=ensureBasicTutorialCoach();
+  const step=BASIC_TUTORIAL_STEPS[basicTutorialCoachStep]||BASIC_TUTORIAL_STEPS[0];
+  setText("basicTutorialStepText",`Paso ${basicTutorialCoachStep+1}/${BASIC_TUTORIAL_STEPS.length}`);
+  setText("basicTutorialCoachTitle",step.title);
+  setText("basicTutorialCoachBody",step.body);
+  if(forceShow||coach.classList.contains("hidden"))coach.classList.remove("hidden");
+}
+
 function ensureStatsTutorialModal(){
   let modal=$("statsTutorialModal");
   if(modal)return modal;
@@ -8699,6 +8854,8 @@ on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
 on("showStatsTutorialBtn","click",()=>showStatsTutorial({force:true}));
+on("startBasicTutorialFromSettingsBtn","click",()=>{const p=$("settingsPanel");if(p)p.classList.add("hidden");startBasicTutorialBattle();});
+on("basicTutorialHomeBtn","click",()=>startBasicTutorialBattle());
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
@@ -8781,6 +8938,7 @@ onAuthStateChanged(auth,async u=>{
 signInAnonymously(auth).catch(e=>{authReady=false;updateAuthActionButtons();setText("lobbyStatus",e.message);});
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
+maybeShowBasicTutorialGate();
 
 
 

@@ -1,0 +1,23 @@
+CAMBIO 7GZP - BATALLA GUIADA BÁSICA
+
+Nuevo sistema:
+- Aparece una invitación al tutorial básico solo la primera vez que se inicia el juego.
+- El jugador puede iniciar u omitir. Omitir guarda que ya fue visto para no molestar otra vez.
+- Se agregó botón 'Practicar básico' en el menú principal.
+- Se agregó botón 'Practicar batalla básica' en Configuración.
+
+Batalla guiada:
+- Modo nuevo: tutorial.
+- Mano inicial de 4 cartas: Arquera, Lancero Solar, Guardián de piedra, Adepto Arcano.
+- Honor/Mana inicial 3/3 para poder practicar invocaciones.
+- Enemigo de práctica pasivo: líder dummy + Guardia de práctica.
+- El modo tutorial no entrega recompensas ni toca aventura.
+- Al terminar turno en tutorial, vuelve a J1 en un nuevo turno de práctica.
+
+Coach / guía:
+- 8 pasos explican mano/mazo, convocar, pasar de fase, mover, defender, atacar, precisión/evasión y acciones rápidas.
+- El coach puede ocultarse y la práctica se puede terminar desde el botón de tutorial.
+
+No se tocaron stats, balance, efectos, rarezas, arte ni reglas de combate reales.
+
+Verificación interna: pasos del coach detectados: 8.
