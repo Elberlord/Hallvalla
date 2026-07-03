@@ -1063,7 +1063,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"cu_chulainn",name:"Cú Chulainn",type:"unit",icon:"🐕",portrait:CARD_PORTRAITS.cuChulainn,cost:5,hp:7,atk:7,guard:4,dex:8,agi:7,mov:2,range:1,rarity:"Semidiós",special:true,text:"Furia del Sabueso: mientras Cú Chulainn tenga la mitad o menos de su Vida máxima, obtiene +5 Ataque y +5 Agilidad. Contraataque del Sabueso: una vez por turno, cuando recibe un ataque cuerpo a cuerpo, puede contraatacar si sobrevive."},
   {key:"gilgamesh",name:"Gilgamesh",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.gilgamesh,cost:5,hp:8,atk:7,guard:6,dex:8,agi:5,mov:1,range:1,rarity:"Semidiós",special:true,text:"Peso del Rey de Uruk: mientras Gilgamesh esté en campo, los enemigos adyacentes a él tienen -3 Ataque y -3 Agilidad. Además, el daño que Gilgamesh recibe de proyectiles, arqueros o ataques mágicos a distancia se reduce en 2."},
   {key:"arjuna",name:"Arjuna",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.arjuna,cost:5,hp:6,atk:6,guard:4,dex:10,agi:7,mov:2,range:2,rarity:"Semidiós",special:true,text:"Flecha del Dharma: una vez por turno, cuando Arjuna falle un ataque a distancia, puede repetir la tirada con +6 Destreza. Si acierta con esa repetición, provoca Veneno."},
-  {key:"achilles",name:"Aquiles",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.achilles,cost:5,hp:7,atk:8,guard:6,dex:10,agi:8,mov:2,range:2,rarity:"Semidiós",special:true,text:"Cólera del Pélida: la primera vez por turno que Aquiles ataca, obtiene +2 Ataque durante ese combate. Concentración del Pélida: si Aquiles tiene 2 o más enemigos adyacentes, obtiene +6 Guardia. Sangre del Pélida: al inicio de tu turno, Aquiles recupera 1 Vida. Regla de lanza: tiene Rango 2 y puede contraatacar una vez por turno contra enemigos dentro de su rango si sobrevive."}
+  {key:"achilles",name:"Aquiles",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.achilles,cost:5,hp:7,atk:8,guard:6,dex:10,agi:8,mov:2,range:2,rarity:"Semidiós",special:true,text:"Cólera del Pélida: la primera vez por turno que Aquiles ataca, obtiene +2 Ataque durante ese combate. Concentración del Pélida: si Aquiles tiene 2 o más enemigos adyacentes, obtiene +6 Guardia. Sangre del Pélida: al inicio de tu turno, Aquiles recupera 1 Vida. Regla de lanza: puede contraatacar una vez por turno si sobrevive."}
 ];
 const LEGENDARY_ALLY_CARDS=SPECIAL_HUMAN_CARD_DATA.map(c=>({...c}));
 
@@ -1088,8 +1088,10 @@ function isLanceUnitCardLike(card){
 }
 function applyLanceWeaponRule(card){
   if(!isLanceUnitCardLike(card))return card;
-  card.range=Math.max(2,card.range||1);
-  const ruleText=" Regla de lanza: tiene Rango 2 y puede contraatacar una vez por turno contra enemigos dentro de su rango si sobrevive.";
+  // Balance 7GZK: las lanzas ya no reciben RG mínimo 2 global.
+  // Su rango normal queda definido por la carta. El contraataque se mantiene separado en getCounterRange.
+  card.range=Math.max(1,card.range||1);
+  const ruleText=" Regla de lanza: puede contraatacar una vez por turno si sobrevive.";
   const current=String(card.text||card.effectText||card.ability||"");
   if(!current.includes("Regla de lanza"))card.text=(current+ruleText).trim();
   if(card.effectText&&!String(card.effectText).includes("Regla de lanza"))card.effectText=(String(card.effectText)+ruleText).trim();
