@@ -1,0 +1,19 @@
+FIX 7GZO - STARTER DE 30 CARTAS CON ADEPTO ARCANO
+
+Problema corregido:
+- El límite del mazo ya era 30, pero STARTER_BASIC_DECK_KEYS seguía teniendo 25 cartas.
+- En aventura, se tomaban 24 básicas + 1 especial o 25 básicas + 1 especial según flujo, causando mazos de 26 o incompletos.
+
+Cambio aplicado:
+- Se agregó Adepto Arcano x3 al starter básico.
+- Fireball pasa a x3.
+- Heal pasa a x3.
+- Starter básico ahora suma 30 cartas.
+
+Composición:
+- 7 unidades básicas x3 = 21 cartas.
+- Fireball x3, Heal x3, Shield Wall x1, Smoke Bomb x1, Inspiration x1 = 9 cartas.
+- Total starter básico: 30 cartas.
+- En aventura: 29 básicas + 1 especial = 30 cartas.
+
+No se tocaron stats, efectos, visuales, Firebase ni reglas de combate.

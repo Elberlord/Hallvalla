@@ -912,8 +912,9 @@ const STARTER_BASIC_DECK_KEYS=[
   "guardian","guardian","guardian",
   "scout","scout","scout",
   "berserker","berserker","berserker",
-  "fireball","fireball",
-  "heal","heal",
+  "arcane_adept","arcane_adept","arcane_adept",
+  "fireball","fireball","fireball",
+  "heal","heal","heal",
   "shield_wall",
   "smoke_bomb",
   "inspiration"
