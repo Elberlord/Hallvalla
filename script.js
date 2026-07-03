@@ -1010,7 +1010,7 @@ function applyBloodBaitAttackBonus(attacker,defender,units){
   return {mods:{attackerAtk:1},logs:[`Carnada Sangrienta: ${attacker.name} gana +1 AT contra ${defender.name}.`]};
 }
 
-const DECK_RULES={basicMaxCopies:3,nonBasicMaxCopies:1,deckSize:25};
+const DECK_RULES={basicMaxCopies:3,nonBasicMaxCopies:1,deckSize:30};
 function cardRarity(card){
   return String(card?.rarity||card?.rareza||"Básica").toLowerCase();
 }

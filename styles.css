@@ -13975,3 +13975,66 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:0 0 0 1px rgba(255,247,167,.64),0 0 16px rgba(255,247,167,.36),0 0 28px rgba(255,234,140,.28);
   animation:rarityFramePulseStrong 2.8s ease-in-out infinite;
 }
+
+
+/* === 7GZN: glow SOLO en marco, nunca en el interior de la carta === */
+.unit-card{
+  --rarity-border: transparent;
+  --rarity-glow-a: transparent;
+  --rarity-glow-b: transparent;
+}
+/* El marco conserva sombra oscura normal, sin glow de color en el skin mismo */
+.unit-card .unit-frame-skin{
+  filter:drop-shadow(0 4px 10px var(--frame-shadow)) var(--frame-filter) !important;
+}
+/* El retrato/interior queda limpio */
+.unit-card .unit-portrait{
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.unit-card .unit-portrait img{
+  filter:none !important;
+}
+/* El glow se genera en una capa de borde separada */
+.unit-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:12px;
+  border:1px solid transparent;
+  box-shadow:none;
+  opacity:0;
+  pointer-events:none;
+  z-index:6;
+}
+.unit-card.card-rarity-basic::after,
+.unit-card.card-rarity-basic .unit-frame-skin::after{
+  opacity:0 !important;
+  box-shadow:none !important;
+}
+.unit-card.card-rarity-improved{--rarity-border:rgba(143,211,255,.76);--rarity-glow-a:rgba(143,211,255,.24);--rarity-glow-b:rgba(143,211,255,.14);}
+.unit-card.card-rarity-heroic{--rarity-border:rgba(121,244,201,.80);--rarity-glow-a:rgba(121,244,201,.26);--rarity-glow-b:rgba(121,244,201,.15);}
+.unit-card.card-rarity-glorious{--rarity-border:rgba(255,224,138,.84);--rarity-glow-a:rgba(255,199,92,.28);--rarity-glow-b:rgba(255,199,92,.16);}
+.unit-card.card-rarity-epic{--rarity-border:rgba(189,148,255,.82);--rarity-glow-a:rgba(189,148,255,.28);--rarity-glow-b:rgba(189,148,255,.16);}
+.unit-card.card-rarity-mythic{--rarity-border:rgba(255,123,217,.86);--rarity-glow-a:rgba(255,123,217,.30);--rarity-glow-b:rgba(255,123,217,.18);}
+.unit-card.card-rarity-legendary{--rarity-border:rgba(255,174,86,.88);--rarity-glow-a:rgba(255,174,86,.32);--rarity-glow-b:rgba(255,210,120,.18);}
+.unit-card.card-rarity-demigod,
+.unit-card.leader{--rarity-border:rgba(255,247,167,.92);--rarity-glow-a:rgba(255,247,167,.34);--rarity-glow-b:rgba(255,234,140,.20);}
+.unit-card.card-rarity-improved::after,
+.unit-card.card-rarity-heroic::after,
+.unit-card.card-rarity-glorious::after,
+.unit-card.card-rarity-epic::after,
+.unit-card.card-rarity-mythic::after,
+.unit-card.card-rarity-legendary::after,
+.unit-card.card-rarity-demigod::after,
+.unit-card.leader::after{
+  opacity:1;
+  border-color:var(--rarity-border);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rarity-border) 60%, transparent),
+    0 0 10px var(--rarity-glow-a),
+    0 0 18px var(--rarity-glow-b);
+}
+/* Si hay highlight de celda válida/ataque, se suma en el marco, no en la imagen */
+.grid .cell.attackable:has(.unit-card)::after,
+.grid .cell.valid:has(.unit-card)::after{pointer-events:none}
