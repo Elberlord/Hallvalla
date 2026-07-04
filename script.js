@@ -2157,7 +2157,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||""}
-function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);const unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:(card.range||1)+getArcherRangeBonus(card),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false};const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:(card.range||1)+getArcherRangeBonus(card),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -3999,7 +3999,9 @@ async function attackUnit(a,d){
       units=units.filter(u=>u.hp>0);
       firstStrikeText=` ${d.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}). ${fsGuard>0?`Consume ${fsGuard} GD. `:""}${fsHp>0?`Inflige ${fsHp} daño a HP.`:"No atraviesa la Guardia."}${fsWarriorShieldBlocked?` Muralla del Warrior: ${a.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterDefenseText(fsDefenseRemainder)}`;
       if(attackerFell){
-        const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`;
+        const masteryResult=registerLocalUnitMasteryKill(d,a);
+        units=applyUnitMasteryRankUpToUnits(units,d,masteryResult);
+        const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${unitMasteryRankUpText(masteryResult)}`;
         await updatePublic({units,legendaryTraps:preTrap.traps});
         if(!(await finalizeBattle(units,fsLog)))await pushLog([...preTrap.logs,fsLog].filter(Boolean).join(" "));
         clearSelection();
@@ -4057,6 +4059,8 @@ async function attackUnit(a,d){
   units=applyLegendaryFatalSaves(units,[d.id]);
   defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   units=units.filter(u=>u.hp>0);
+  const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
+  units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods);
   const warCryTriggered=shouldTriggerWarCry(a,d,guardLoss,hit.hit);
   if(warCryTriggered)units=applyAxeWarCry(units,a.owner,a.id);
@@ -4216,6 +4220,8 @@ async function attackUnit(a,d){
         return u;
       });
       units=applyLegendaryFatalSaves(units,[attackerAfter.id]).filter(u=>u.hp>0);
+      const counterMasteryResult=!units.some(u=>u.id===attackerAfter.id)?registerLocalUnitMasteryKill(defenderAfter,attackerAfter):null;
+      units=applyUnitMasteryRankUpToUnits(units,defenderAfter,counterMasteryResult);
       let miyamotoBleedText="";
       if(isMiyamotoCounter&&units.some(u=>u.id===attackerAfter.id)&&Math.random()<0.2){
         const bleedTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
@@ -4245,7 +4251,7 @@ async function attackUnit(a,d){
       }
       const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
+      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
       units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -4265,7 +4271,8 @@ async function attackUnit(a,d){
   const genghisDebuffText=genghisDebuffResult.log||"";
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`:"";
   const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
+  const masteryKillText=unitMasteryRankUpText(masteryKillResult);
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
@@ -4711,9 +4718,11 @@ async function adventureEnemyTurn(){
         units=units.filter(u=>u.hp>0);
         firstStrikeText=` ${target.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}), ignora Guardia${fsWarriorShieldBlocked?" y no logra bajar Vida por Muralla del Warrior":` e inflige ${fsAtk} daño a HP`}.${counterDefenseText(fsDefenseRemainder)}`;
         if(attackerFell){
+          const masteryResult=registerLocalUnitMasteryKill(target,attacker);
+          units=applyUnitMasteryRankUpToUnits(units,target,masteryResult);
           const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
           units=bloodVictoryResult.units;
-          logs.push([...(preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
+          logs.push([...(preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${unitMasteryRankUpText(masteryResult)}${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
           return true;
         }
         attacker=units.find(u=>u.id===attacker.id)||attacker;
@@ -4771,6 +4780,8 @@ async function adventureEnemyTurn(){
     units=applyLegendaryFatalSaves(units,[target.id]);
     defenderFell=!!units.find(u=>u.id===target.id&&u.hp<=0);
     units=units.filter(u=>u.hp>0);
+    const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(attacker,target):null;
+    units=applyUnitMasteryRankUpToUnits(units,attacker,masteryKillResult);
     units=applyAfterDamageBonuses(units,attacker,target,hpLoss,defenderFell,mods);
     const warCryTriggered=withAiPublicState(()=>shouldTriggerWarCry(attacker,target,guardLoss,hit.hit));
     if(warCryTriggered)units=applyAxeWarCry(units,attacker.owner,attacker.id);
@@ -4931,6 +4942,8 @@ async function adventureEnemyTurn(){
           return u;
         });
         units=applyLegendaryFatalSaves(units,[attackerAfter.id]).filter(u=>u.hp>0);
+        const counterMasteryResult=!units.some(u=>u.id===attackerAfter.id)?registerLocalUnitMasteryKill(defenderAfter,attackerAfter):null;
+        units=applyUnitMasteryRankUpToUnits(units,defenderAfter,counterMasteryResult);
         let miyamotoBleedText="";
         if(isMiyamotoCounter&&units.some(u=>u.id===attackerAfter.id)&&Math.random()<0.2){
           const bleedTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
@@ -4942,7 +4955,7 @@ async function adventureEnemyTurn(){
         }
         const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
         const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${miyamotoBleedText}${counterDefenseText(counterDefenseRemainder)}`;
+        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
       }else{
         units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
         counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -4982,7 +4995,8 @@ async function adventureEnemyTurn(){
     const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
     const genghisDebuffText=genghisDebuffResult.log||"";
     const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
+    const masteryKillText=unitMasteryRankUpText(masteryKillResult);
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}${masteryKillText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -6740,7 +6754,7 @@ function getUnitTopLeftText(u){
     const st=publicState?.playerStats?.[u.owner]||{};
     return `${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
-  return String(Number(u.cost||0));
+  return romanUnitRank(getUnitMasteryRank(u));
 }
 function getUnitTopLeftTitle(u){
   if(!u)return "";
@@ -6748,7 +6762,9 @@ function getUnitTopLeftTitle(u){
     const st=publicState?.playerStats?.[u.owner]||{};
     return `${getResourceLabel(u.owner)} disponible: ${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
-  return `Costo de ${getResourceLabel(u.owner||myPlayer)}: ${Number(u.cost||0)}`;
+  const rank=getUnitMasteryRank(u);
+  const bonus=getUnitMasteryHpBonusByRank(rank);
+  return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} Vida máxima. Máximo: Rango X.`;
 }
 function getUnitAuxStatData(u){
   if(!u)return {text:"",kind:"guard",title:""};
@@ -7393,6 +7409,7 @@ function getPlayerProfile(){
     const beforeAbilities=JSON.stringify(profile.leaderLevel5Abilities||{});
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
+    profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities)savePlayerProfile(profile);
     return profile;
   }catch(e){
@@ -7400,11 +7417,93 @@ function getPlayerProfile(){
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
+    profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     return profile;
   }
 }
 function savePlayerProfile(profile){
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
+}
+
+const UNIT_MASTERY_KILLS_PER_RANK=100;
+const UNIT_MASTERY_MAX_RANK=10;
+function romanUnitRank(n){
+  const v=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(n)||1)));
+  return ["","I","II","III","IV","V","VI","VII","VIII","IX","X"][v]||"I";
+}
+function normalizeUnitMasteryName(name){return String(name||"").trim().replace(/\s+/g," ");}
+function getUnitMasteryKey(entity){return normalizeUnitMasteryName(entity?.name||"").toLowerCase();}
+function normalizeUnitMasteryBook(book={}){
+  const out={};
+  try{
+    Object.entries(book||{}).forEach(([key,rec])=>{
+      const name=normalizeUnitMasteryName(rec?.name||key);
+      const safeKey=normalizeUnitMasteryName(key).toLowerCase()||name.toLowerCase();
+      if(!safeKey)return;
+      out[safeKey]={name:name||safeKey,kills:Math.max(0,Math.floor(Number(rec?.kills||0)))};
+    });
+  }catch(e){}
+  return out;
+}
+function getUnitMasteryRecord(entity,profile=getPlayerProfile()){
+  const key=getUnitMasteryKey(entity);
+  const book=normalizeUnitMasteryBook(profile.unitMastery||{});
+  return book[key]||{name:normalizeUnitMasteryName(entity?.name||key),kills:0};
+}
+function getUnitMasteryRankFromKills(kills){return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,1+Math.floor(Math.max(0,Number(kills)||0)/UNIT_MASTERY_KILLS_PER_RANK)));}
+function getUnitMasteryRank(entity){
+  if(!entity||entity.leader)return 1;
+  if(Number(entity.masteryRank)>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(entity.masteryRank)||1));
+  return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
+}
+function getUnitMasteryHpBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
+function getUnitMasteryHpBonus(entity){return getUnitMasteryHpBonusByRank(getUnitMasteryRank(entity));}
+function getUnitMasteryProgressText(entity){
+  const rec=getUnitMasteryRecord(entity);
+  const rank=getUnitMasteryRankFromKills(rec.kills);
+  if(rank>=UNIT_MASTERY_MAX_RANK)return `${rec.kills} bajas · Rango máximo`;
+  const next=rank*UNIT_MASTERY_KILLS_PER_RANK;
+  return `${rec.kills}/${next} bajas`;
+}
+function registerLocalUnitMasteryKill(killer,victim){
+  try{
+    if(!killer||!victim||killer.leader||victim.leader)return null;
+    if(!myPlayer||Number(killer.owner)!==Number(myPlayer))return null;
+    if(Number(killer.owner)===Number(victim.owner))return null;
+    const key=getUnitMasteryKey(killer);
+    if(!key)return null;
+    const profile=getPlayerProfile();
+    const book=normalizeUnitMasteryBook(profile.unitMastery||{});
+    const before=book[key]||{name:normalizeUnitMasteryName(killer.name||key),kills:0};
+    const beforeKills=Math.max(0,Number(before.kills||0));
+    const beforeRank=getUnitMasteryRankFromKills(beforeKills);
+    const afterKills=beforeKills+1;
+    const afterRank=getUnitMasteryRankFromKills(afterKills);
+    book[key]={name:normalizeUnitMasteryName(killer.name||before.name||key),kills:afterKills};
+    savePlayerProfile({...profile,unitMastery:book});
+    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,hpGain:getUnitMasteryHpBonusByRank(afterRank)-getUnitMasteryHpBonusByRank(beforeRank)};
+  }catch(e){console.warn("[HallValla] No se pudo registrar maestría de unidad:",e);return null;}
+}
+function applyUnitMasteryRankUpToUnits(units,killer,result){
+  if(!result||!result.rankedUp||!killer||!Array.isArray(units))return units;
+  const hpGain=Math.max(0,Number(result.hpGain||0));
+  if(hpGain<=0)return units;
+  const key=result.key||getUnitMasteryKey(killer);
+  return units.map(u=>{
+    if(!u||u.leader||Number(u.owner)!==Number(killer.owner)||getUnitMasteryKey(u)!==key)return u;
+    const nextMax=Number(u.maxHp||u.hp||0)+hpGain;
+    return {...u,maxHp:nextMax,hp:Math.min(nextMax,Number(u.hp||0)+hpGain),masteryRank:result.afterRank,masteryHpBonus:getUnitMasteryHpBonusByRank(result.afterRank)};
+  });
+}
+function unitMasteryRankUpText(result){
+  if(!result||!result.rankedUp)return "";
+  return ` Maestría: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} y las unidades con ese mismo nombre ganan +${result.hpGain} Vida máxima.`;
+}
+function annotateUnitWithMastery(unit){
+  if(!unit||unit.leader)return unit;
+  const rank=getUnitMasteryRank(unit);
+  const bonus=getUnitMasteryHpBonusByRank(rank);
+  return {...unit,masteryRank:rank,masteryHpBonus:bonus};
 }
 function cleanPlayerName(name){
   return String(name||"").trim().replace(/\s+/g," ").slice(0,18);
