@@ -1,0 +1,8 @@
+CAMBIO 7GZS
+
+Ajuste correctivo del brillo de rareza del marco:
+- Se devolvió el marco por debajo de los stats para que no tape HP/AT/costo/aux.
+- Se reforzó el brillo visible solo en .unit-frame-skin.
+- La imagen del personaje no recibe glow.
+- El brillo usa el color de la rareza.
+- Las básicas siguen sin brillo.

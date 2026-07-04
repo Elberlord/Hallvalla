@@ -14390,3 +14390,85 @@ El CSS original se conserva para no romper visuales. El bloque final
     saturate(1.12) brightness(1.06) !important;
   animation:hvFrameNeonOnlyPulse 2.8s ease-in-out infinite !important;
 }
+
+
+/* === 7GZS: glow visible SOLO en el marco, sin tapar stats === */
+@keyframes hvRarityFramePulse7gzs{
+  0%,100%{opacity:.93;}
+  50%{opacity:1;}
+}
+
+/* Garantizar capas correctas dentro de la carta del tablero */
+.cell > .unit-card{
+  overflow:visible !important;
+}
+.cell > .unit-card .unit-portrait{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:2 !important;
+}
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  z-index:2 !important;
+  box-shadow:none !important;
+}
+.cell > .unit-card .unit-frame-skin{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:4 !important; /* debajo de stats/burbujas, encima del retrato */
+  pointer-events:none !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+}
+.cell > .unit-card .unit-ornate-ui{
+  z-index:9 !important;
+}
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals,
+.cell > .unit-card .status-seal-rail,
+.cell > .unit-card .unit-status-seal-extra{
+  z-index:10 !important;
+}
+
+/* Nada de glow en la imagen */
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  filter:none !important;
+}
+
+/* Colores de rareza para el marco */
+.cell > .unit-card.card-rarity-basic{--hv7gzs-glow1:transparent;--hv7gzs-glow2:transparent;--hv7gzs-glow3:transparent;}
+.cell > .unit-card.card-rarity-improved{--hv7gzs-glow1:rgba(116,211,255,.95);--hv7gzs-glow2:rgba(116,211,255,.66);--hv7gzs-glow3:rgba(116,211,255,.38);}
+.cell > .unit-card.card-rarity-heroic{--hv7gzs-glow1:rgba(82,255,166,.98);--hv7gzs-glow2:rgba(82,255,166,.70);--hv7gzs-glow3:rgba(82,255,166,.42);}
+.cell > .unit-card.card-rarity-glorious{--hv7gzs-glow1:rgba(255,214,95,.98);--hv7gzs-glow2:rgba(255,214,95,.72);--hv7gzs-glow3:rgba(255,214,95,.44);}
+.cell > .unit-card.card-rarity-epic{--hv7gzs-glow1:rgba(190,122,255,.98);--hv7gzs-glow2:rgba(190,122,255,.70);--hv7gzs-glow3:rgba(190,122,255,.42);}
+.cell > .unit-card.card-rarity-mythic{--hv7gzs-glow1:rgba(255,100,201,.99);--hv7gzs-glow2:rgba(255,100,201,.72);--hv7gzs-glow3:rgba(255,100,201,.44);}
+.cell > .unit-card.card-rarity-legendary{--hv7gzs-glow1:rgba(255,157,69,.99);--hv7gzs-glow2:rgba(255,157,69,.74);--hv7gzs-glow3:rgba(255,157,69,.46);}
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{--hv7gzs-glow1:rgba(255,244,157,.99);--hv7gzs-glow2:rgba(255,244,157,.76);--hv7gzs-glow3:rgba(255,244,157,.48);}
+
+/* Básicas sin brillo */
+.cell > .unit-card.card-rarity-basic .unit-frame-skin{
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.55)) !important;
+  animation:none !important;
+}
+
+/* Brillo visible SOLO del marco con el color de rareza */
+.cell > .unit-card.card-rarity-improved .unit-frame-skin,
+.cell > .unit-card.card-rarity-heroic .unit-frame-skin,
+.cell > .unit-card.card-rarity-glorious .unit-frame-skin,
+.cell > .unit-card.card-rarity-epic .unit-frame-skin,
+.cell > .unit-card.card-rarity-mythic .unit-frame-skin,
+.cell > .unit-card.card-rarity-legendary .unit-frame-skin,
+.cell > .unit-card.card-rarity-demigod .unit-frame-skin,
+.cell > .unit-card.leader .unit-frame-skin{
+  filter:
+    drop-shadow(0 4px 8px rgba(0,0,0,.56))
+    drop-shadow(0 0 5px var(--hv7gzs-glow1))
+    drop-shadow(0 0 11px var(--hv7gzs-glow2))
+    drop-shadow(0 0 19px var(--hv7gzs-glow3))
+    var(--frame-filter) !important;
+  animation:hvRarityFramePulse7gzs 2.4s ease-in-out infinite !important;
+}
