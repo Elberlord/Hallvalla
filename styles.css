@@ -14168,3 +14168,225 @@ El CSS original se conserva para no romper visuales. El bloque final
   .basic-tutorial-coach-card{padding:12px}
   .basic-tutorial-gate-card h2{font-size:26px}
 }
+
+
+/* === 7GZQ: brillo neón SOLO en el color de rareza del marco === */
+@keyframes rarityFrameNeonPulse{
+  0%,100%{transform:scale(1);opacity:.96;filter:drop-shadow(0 4px 10px rgba(0,0,0,.55)) drop-shadow(0 0 5px var(--rarity-neon-soft)) drop-shadow(0 0 10px var(--rarity-neon)) drop-shadow(0 0 18px var(--rarity-neon-strong));}
+  50%{transform:scale(1.01);opacity:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.62)) drop-shadow(0 0 7px var(--rarity-neon-soft)) drop-shadow(0 0 14px var(--rarity-neon)) drop-shadow(0 0 24px var(--rarity-neon-strong));}
+}
+
+/* Quitar totalmente el brillo cuadrado/sintético del contenedor */
+.cell > .unit-card::before,
+.cell > .unit-card::after,
+.cell > .unit-card.card-rarity-basic::before,
+.cell > .unit-card.card-rarity-improved::before,
+.cell > .unit-card.card-rarity-heroic::before,
+.cell > .unit-card.card-rarity-glorious::before,
+.cell > .unit-card.card-rarity-epic::before,
+.cell > .unit-card.card-rarity-mythic::before,
+.cell > .unit-card.card-rarity-legendary::before,
+.cell > .unit-card.card-rarity-demigod::before{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  border:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+
+/* Dejar limpio el interior: sin glow, sin borde brillante */
+.cell > .unit-card,
+.cell > .unit-card.card-rarity-basic,
+.cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-demigod{
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack{
+  box-shadow:none !important;
+}
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  box-shadow:none !important;
+}
+
+/* Variables de color por rareza */
+.cell > .unit-card{--rarity-neon:transparent;--rarity-neon-soft:transparent;--rarity-neon-strong:transparent;}
+.cell > .unit-card.card-rarity-basic{--rarity-neon:transparent;--rarity-neon-soft:transparent;--rarity-neon-strong:transparent;}
+.cell > .unit-card.card-rarity-improved{--rarity-neon:rgba(143,211,255,.85);--rarity-neon-soft:rgba(143,211,255,.42);--rarity-neon-strong:rgba(143,211,255,.95);}
+.cell > .unit-card.card-rarity-heroic{--rarity-neon:rgba(121,244,201,.92);--rarity-neon-soft:rgba(121,244,201,.45);--rarity-neon-strong:rgba(121,244,201,1);}
+.cell > .unit-card.card-rarity-glorious{--rarity-neon:rgba(255,209,102,.94);--rarity-neon-soft:rgba(255,209,102,.46);--rarity-neon-strong:rgba(255,224,138,1);}
+.cell > .unit-card.card-rarity-epic{--rarity-neon:rgba(189,148,255,.94);--rarity-neon-soft:rgba(189,148,255,.44);--rarity-neon-strong:rgba(189,148,255,1);}
+.cell > .unit-card.card-rarity-mythic{--rarity-neon:rgba(255,123,217,.96);--rarity-neon-soft:rgba(255,123,217,.48);--rarity-neon-strong:rgba(255,123,217,1);}
+.cell > .unit-card.card-rarity-legendary{--rarity-neon:rgba(255,174,86,.97);--rarity-neon-soft:rgba(255,174,86,.48);--rarity-neon-strong:rgba(255,210,120,1);}
+.cell > .unit-card.card-rarity-demigod{--rarity-neon:rgba(255,247,167,.98);--rarity-neon-soft:rgba(255,247,167,.52);--rarity-neon-strong:rgba(255,247,167,1);}
+
+/* El brillo vive solo en el PNG del marco */
+.cell > .unit-card .unit-frame-skin{
+  z-index:5 !important;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.58)) !important;
+  animation:none !important;
+}
+.cell > .unit-card.card-rarity-basic .unit-frame-skin{
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.58)) !important;
+  animation:none !important;
+}
+.cell > .unit-card.card-rarity-improved .unit-frame-skin,
+.cell > .unit-card.card-rarity-heroic .unit-frame-skin,
+.cell > .unit-card.card-rarity-glorious .unit-frame-skin,
+.cell > .unit-card.card-rarity-epic .unit-frame-skin,
+.cell > .unit-card.card-rarity-mythic .unit-frame-skin,
+.cell > .unit-card.card-rarity-legendary .unit-frame-skin,
+.cell > .unit-card.card-rarity-demigod .unit-frame-skin{
+  animation:rarityFrameNeonPulse 2.9s ease-in-out infinite !important;
+}
+
+
+/* === 7GZR: SOLO el marco de rareza brilla en neón === */
+@keyframes hvFrameNeonOnlyPulse{
+  0%,100%{opacity:.92;}
+  50%{opacity:1;}
+}
+
+/* En tablero: eliminar cualquier glow del contenedor o de la imagen */
+.cell > .unit-card,
+.cell > .unit-card.card-rarity-basic,
+.cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-demigod{
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+
+.cell > .unit-card::before,
+.cell > .unit-card::after,
+.cell > .unit-card.card-rarity-basic::before,
+.cell > .unit-card.card-rarity-improved::before,
+.cell > .unit-card.card-rarity-heroic::before,
+.cell > .unit-card.card-rarity-glorious::before,
+.cell > .unit-card.card-rarity-epic::before,
+.cell > .unit-card.card-rarity-mythic::before,
+.cell > .unit-card.card-rarity-legendary::before,
+.cell > .unit-card.card-rarity-demigod::before,
+.cell > .unit-card.card-rarity-basic::after,
+.cell > .unit-card.card-rarity-improved::after,
+.cell > .unit-card.card-rarity-heroic::after,
+.cell > .unit-card.card-rarity-glorious::after,
+.cell > .unit-card.card-rarity-epic::after,
+.cell > .unit-card.card-rarity-mythic::after,
+.cell > .unit-card.card-rarity-legendary::after,
+.cell > .unit-card.card-rarity-demigod::after{
+  content:none !important;
+  display:none !important;
+  box-shadow:none !important;
+  border:none !important;
+  background:none !important;
+  opacity:0 !important;
+  animation:none !important;
+}
+
+/* La imagen interior NO recibe glow de rareza */
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  box-shadow:none !important;
+}
+.cell > .unit-card .unit-portrait{
+  background:#050505 !important;
+  filter:none !important;
+}
+.cell > .unit-card .unit-card-bg-layer{
+  filter:brightness(.42) saturate(.85) blur(1.2px) !important;
+}
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  filter:none !important;
+}
+
+/* Variables de color según rareza: SOLO las usa el marco */
+.cell > .unit-card{
+  --hv-rarity-neon-1: transparent;
+  --hv-rarity-neon-2: transparent;
+  --hv-rarity-neon-3: transparent;
+}
+.cell > .unit-card.card-rarity-basic{
+  --hv-rarity-neon-1: transparent;
+  --hv-rarity-neon-2: transparent;
+  --hv-rarity-neon-3: transparent;
+}
+.cell > .unit-card.card-rarity-improved{
+  --hv-rarity-neon-1: rgba(110, 205, 255, .88);
+  --hv-rarity-neon-2: rgba(110, 205, 255, .62);
+  --hv-rarity-neon-3: rgba(110, 205, 255, .34);
+}
+.cell > .unit-card.card-rarity-heroic{
+  --hv-rarity-neon-1: rgba(86, 255, 165, .92);
+  --hv-rarity-neon-2: rgba(86, 255, 165, .64);
+  --hv-rarity-neon-3: rgba(86, 255, 165, .36);
+}
+.cell > .unit-card.card-rarity-glorious{
+  --hv-rarity-neon-1: rgba(255, 211, 92, .94);
+  --hv-rarity-neon-2: rgba(255, 211, 92, .68);
+  --hv-rarity-neon-3: rgba(255, 211, 92, .38);
+}
+.cell > .unit-card.card-rarity-epic{
+  --hv-rarity-neon-1: rgba(186, 112, 255, .94);
+  --hv-rarity-neon-2: rgba(186, 112, 255, .66);
+  --hv-rarity-neon-3: rgba(186, 112, 255, .36);
+}
+.cell > .unit-card.card-rarity-mythic{
+  --hv-rarity-neon-1: rgba(255, 96, 196, .96);
+  --hv-rarity-neon-2: rgba(255, 96, 196, .68);
+  --hv-rarity-neon-3: rgba(255, 96, 196, .38);
+}
+.cell > .unit-card.card-rarity-legendary{
+  --hv-rarity-neon-1: rgba(255, 153, 63, .97);
+  --hv-rarity-neon-2: rgba(255, 153, 63, .70);
+  --hv-rarity-neon-3: rgba(255, 153, 63, .40);
+}
+.cell > .unit-card.card-rarity-demigod{
+  --hv-rarity-neon-1: rgba(255, 244, 149, .98);
+  --hv-rarity-neon-2: rgba(255, 244, 149, .72);
+  --hv-rarity-neon-3: rgba(255, 244, 149, .44);
+}
+
+/* El único brillo vive en el PNG del marco de rareza */
+.cell > .unit-card .unit-frame-skin{
+  z-index:6 !important;
+  pointer-events:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+.cell > .unit-card.card-rarity-basic .unit-frame-skin{
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.58)) !important;
+}
+.cell > .unit-card.card-rarity-improved .unit-frame-skin,
+.cell > .unit-card.card-rarity-heroic .unit-frame-skin,
+.cell > .unit-card.card-rarity-glorious .unit-frame-skin,
+.cell > .unit-card.card-rarity-epic .unit-frame-skin,
+.cell > .unit-card.card-rarity-mythic .unit-frame-skin,
+.cell > .unit-card.card-rarity-legendary .unit-frame-skin,
+.cell > .unit-card.card-rarity-demigod .unit-frame-skin{
+  filter:
+    drop-shadow(0 4px 8px rgba(0,0,0,.58))
+    drop-shadow(0 0 4px var(--hv-rarity-neon-1))
+    drop-shadow(0 0 10px var(--hv-rarity-neon-2))
+    drop-shadow(0 0 18px var(--hv-rarity-neon-3))
+    saturate(1.12) brightness(1.06) !important;
+  animation:hvFrameNeonOnlyPulse 2.8s ease-in-out infinite !important;
+}

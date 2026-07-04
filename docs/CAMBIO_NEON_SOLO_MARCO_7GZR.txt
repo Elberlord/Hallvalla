@@ -1,0 +1,14 @@
+CAMBIO 7GZR - NEÓN SOLO EN EL MARCO DE RAREZA
+
+Objetivo aplicado exactamente:
+- NO brilla la imagen de la unidad.
+- NO brilla el interior de la carta.
+- NO brilla un borde cuadrado externo.
+- SOLO brilla en neón el color del marco de rareza.
+
+Aplicación:
+- Se anularon pseudo-elementos ::before/::after del contenedor de unidad.
+- Se anuló box-shadow del contenedor de la carta en tablero.
+- Se anuló cualquier filter de rareza sobre el retrato y personaje.
+- Se dejó el glow únicamente sobre .unit-frame-skin, usando el color de rareza.
+- Las cartas básicas no brillan.
