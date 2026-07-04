@@ -14472,3 +14472,98 @@ El CSS original se conserva para no romper visuales. El bloque final
     var(--frame-filter) !important;
   animation:hvRarityFramePulse7gzs 2.4s ease-in-out infinite !important;
 }
+
+
+/* === 7GZT: separar brillo neón en capa independiente del marco === */
+@keyframes hvFrameNeonPulse7gzt{0%,100%{opacity:.78}50%{opacity:1}}
+
+/* Apaga los experimentos anteriores que metían brillo al rectángulo completo */
+.cell > .unit-card::before{
+  opacity:0 !important;
+  animation:none !important;
+  border:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  filter:none !important;
+}
+
+/* Desactivar cualquier glow viejo que bañe la carta completa */
+.cell > .unit-card,
+.cell > .unit-card.card-rarity-basic,
+.cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{
+  box-shadow:0 7px 13px rgba(0,0,0,.44) !important;
+  background:rgba(0,0,0,.18) !important;
+  overflow:visible !important;
+}
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer{
+  box-shadow:none !important;
+}
+
+/* El marco base se conserva normal, sin glow de rareza */
+.cell > .unit-card .unit-frame-skin{
+  z-index:4 !important;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.54)) !important;
+  background:var(--frame-image) center/100% 100% no-repeat !important;
+}
+
+/* Capa neón separada: solo usa la máscara del borde real del marco. */
+.cell > .unit-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:3 !important; /* detrás del marco y delante del retrato */
+  pointer-events:none;
+  opacity:0;
+  background:var(--hv-rarity-neon, transparent);
+  -webkit-mask:url("assets/ui/gothic_frame_unit_neon_mask.png") center/100% 100% no-repeat;
+  mask:url("assets/ui/gothic_frame_unit_neon_mask.png") center/100% 100% no-repeat;
+  filter:
+    blur(.45px)
+    drop-shadow(0 0 4px var(--hv-rarity-neon-core, transparent))
+    drop-shadow(0 0 8px var(--hv-rarity-neon-soft, transparent))
+    drop-shadow(0 0 14px var(--hv-rarity-neon-soft, transparent));
+  mix-blend-mode:screen;
+  animation:hvFrameNeonPulse7gzt 2.3s ease-in-out infinite;
+}
+
+/* Básicas no brillan */
+.cell > .unit-card.card-rarity-basic::after,
+.cell > .unit-card:not(.card-rarity-improved):not(.card-rarity-heroic):not(.card-rarity-glorious):not(.card-rarity-epic):not(.card-rarity-mythic):not(.card-rarity-legendary):not(.card-rarity-demigod):not(.leader)::after{
+  opacity:0 !important;
+  animation:none !important;
+}
+
+/* Rarezas: brillo SOLO del marco según color de rareza */
+.cell > .unit-card.card-rarity-improved{--hv-rarity-neon:rgba(109,212,255,.88);--hv-rarity-neon-core:rgba(220,245,255,.92);--hv-rarity-neon-soft:rgba(109,212,255,.52);}
+.cell > .unit-card.card-rarity-heroic{--hv-rarity-neon:rgba(84,255,158,.90);--hv-rarity-neon-core:rgba(220,255,238,.94);--hv-rarity-neon-soft:rgba(84,255,158,.54);}
+.cell > .unit-card.card-rarity-glorious{--hv-rarity-neon:rgba(255,214,88,.90);--hv-rarity-neon-core:rgba(255,248,214,.95);--hv-rarity-neon-soft:rgba(255,214,88,.54);}
+.cell > .unit-card.card-rarity-epic{--hv-rarity-neon:rgba(118,197,255,.90);--hv-rarity-neon-core:rgba(225,245,255,.95);--hv-rarity-neon-soft:rgba(118,197,255,.54);}
+.cell > .unit-card.card-rarity-mythic{--hv-rarity-neon:rgba(255,122,216,.92);--hv-rarity-neon-core:rgba(255,233,246,.96);--hv-rarity-neon-soft:rgba(255,122,216,.56);}
+.cell > .unit-card.card-rarity-legendary{--hv-rarity-neon:rgba(197,92,255,.92);--hv-rarity-neon-core:rgba(245,226,255,.96);--hv-rarity-neon-soft:rgba(197,92,255,.58);}
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{--hv-rarity-neon:rgba(255,244,167,.94);--hv-rarity-neon-core:rgba(255,252,231,.98);--hv-rarity-neon-soft:rgba(255,244,167,.60);}
+.cell > .unit-card.card-rarity-improved::after,
+.cell > .unit-card.card-rarity-heroic::after,
+.cell > .unit-card.card-rarity-glorious::after,
+.cell > .unit-card.card-rarity-epic::after,
+.cell > .unit-card.card-rarity-mythic::after,
+.cell > .unit-card.card-rarity-legendary::after,
+.cell > .unit-card.card-rarity-demigod::after,
+.cell > .unit-card.leader::after{
+  opacity:.96 !important;
+}
+
+/* Stats y sellos siempre por encima del glow */
+.cell > .unit-card .unit-ornate-ui{z-index:8 !important;}
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals{z-index:9 !important;}

@@ -1,0 +1,13 @@
+CAMBIO 7GZT
+
+Se separó el brillo del marco en una capa independiente.
+
+NUEVO:
+- assets/ui/gothic_frame_unit_neon_mask.png
+
+AJUSTES:
+- El glow de rareza ahora vive en .unit-card::after usando solo la máscara del borde real.
+- El marco base (.unit-frame-skin) queda normal.
+- Se desactivó el antiguo ::before que estaba creando brillo cuadrado.
+- Las cartas básicas no brillan.
+- Los stats y sellos quedan por encima del glow.
