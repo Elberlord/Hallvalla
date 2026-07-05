@@ -3465,7 +3465,7 @@ Habilidad Nv.5:
     card:entity
   };
 }
-function getExactEffectGuideData(entity,effectText=""){
+function getExactEffectGuideDataLegacy7haj(entity,effectText=""){
   if(entity?.leader)return getLeaderExactEffectGuideData(entity);
   const name=entity?.name||"Esta unidad";
   const raw=String(effectText||getUnitEffectText(entity)||entity?.text||entity?.effectText||entity?.ability||"").trim();
