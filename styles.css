@@ -14922,3 +14922,9 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   .action-btn-label{font-size:8px!important;}
 }
+
+
+/* PATCH 7GZY - permite leer reglas exactas con saltos de línea en DET */
+.stat-guide-box span{white-space:pre-line;}
+.detail-guide-row{align-items:start;}
+.guide-effect-btn img{filter:drop-shadow(0 0 8px rgba(255,209,102,.20));}

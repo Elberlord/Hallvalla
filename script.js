@@ -842,7 +842,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si declara ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. La Precisión se calcula y se consume normalmente. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -2548,20 +2548,23 @@ function pushUnitBackIfPossible(units,target,source,steps=1){
   return (units||[]).map(u=>u.id===target.id?{...u,x:nx,y:ny}:u);
 }
 
-function applyAttackSideEffects(attacker,defender,units){
+function applyAttackSideEffects(attacker,defender,units,options={}){
   if(!attacker||!defender)return units;
   const melee=dist(attacker,defender)<=1;
   const ranged=!melee&&(attacker.range||1)>1;
+  const hpLoss=Number(options.hpLoss||0);
+  const allowArcherSuppression=hpLoss>0;
+  const allowGuardianSlow=options.allowGuardian!==false;
   return (units||[]).map(u=>{
     if(u.id!==defender.id)return u;
     let next={...u};
-    if(attacker.key==="archer"&&ranged){
+    if(attacker.key==="archer"&&ranged&&allowArcherSuppression){
       const amount=1;
       const current=Number(next.tempMovDebuff||0);
       next.tempMovDebuff=Math.max(current,amount);
       if(amount>=current)next.tempMovDebuffSource=`Disparo de supresión de ${attacker.name||"Arquera"}`;
     }
-    if(attacker.key==="guardian"&&melee&&(u.guard||0)<=2){
+    if(allowGuardianSlow&&attacker.key==="guardian"&&melee&&(u.guard||0)<=2){
       const amount=1;
       const current=Number(next.tempMovDebuff||0);
       next.tempMovDebuff=Math.max(current,amount);
@@ -2570,7 +2573,6 @@ function applyAttackSideEffects(attacker,defender,units){
     return next;
   });
 }
-
 function getUnitTrapTier(u){
   if(!u)return "basic";
   const rarity=String(u.rarity||"").toLowerCase();
@@ -3360,8 +3362,290 @@ function bindStatGuideClicks(container){
 function detailStatGridHtml(stats){
   return `<div class="detail-stat-grid">${stats.map(([l,v])=>`<button class="detail-stat-chip stat-click" type="button" data-stat="${escapeHtml(l)}"><span>${escapeHtml(String(l))}</span><strong>${escapeHtml(String(v))}</strong></button>`).join("")}</div>`;
 }
+
+function normalizeEffectGuideKey(entity){
+  return String(entity?.key||entity?.name||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9_]+/g,"_");
+}
+function getLeaderExactEffectGuideData(entity){
+  const type=String(entity?.leaderType||"warrior").toLowerCase();
+  const data=LEADER_DATA[type]||LEADER_DATA.warrior;
+  const level=normalizeLeaderLevel(entity?.leaderLevel||getLocalLeaderLevel(type)||1);
+  const tier=getLeaderBuffTierFromLevel(level);
+  const abilityKey=normalizeLeaderAbilityKey(entity?.leaderAbility||getLeaderDefaultLevel5Ability(type)||"");
+  const abilityData=level>=5?getLeaderAbilityData(abilityKey):null;
+  const buff=LEADER_BUFF_TABLE[type]?.[tier]||{};
+  const leaderStats=getLeaderBattleStats(type,level,entity?.leaderAbility||"");
+  const meta={
+    warrior:{
+      target:"Infantería pesada aliada",
+      affected:"Afecta a unidades aliadas que el sistema reconoce como infantería pesada: Guardián de piedra, Lancero solar y otras cartas marcadas como guardianes, paladines, knights o infantería pesada.",
+      notAffected:"No afecta arqueras, magias, caballería ligera, asesinos, bestias ni al propio líder.",
+      buff:`+${buff.hp||0} Vida máxima y +${buff.guard||0} Guardia base a cada infantería pesada aliada. La Vida extra se añade al entrar o al sincronizar el campo; la Guardia se usa como reserva de armadura del turno.`,
+      passive:`Muralla de unidades: mientras este líder tenga al menos una unidad aliada viva en el campo, los ataques de unidades enemigas no bajan la Vida del líder. La Guardia puede recibir daño, pero la Vida queda protegida contra ataques de unidades. Hechizos, trampas y efectos de líderes sí pueden dañar al líder normalmente.`,
+      example:"Si el Guerrero tiene un Guardián aliado vivo y una unidad enemiga le pega al líder, ese ataque no baja la Vida del líder. Si no queda ninguna unidad aliada viva, la protección se apaga."
+    },
+    archer:{
+      target:"Arqueras aliadas",
+      affected:"Afecta a unidades aliadas reconocidas como arqueras, principalmente Arquera del desierto y cartas cuyo nombre/texto/clase indiquen arquera, arquero, arco, flecha o archer.",
+      notAffected:"No afecta infantería pesada, caballería ligera, asesinos, bestias, magias ni al propio líder.",
+      buff:`+${buff.atk||0} AT, +${buff.dex||0} DX, +${buff.agi||0} AGI${buff.range?` y +${buff.range} RG`:""} a cada arquera aliada.`,
+      passive:"El bonus mejora disparo, precisión/evasión y alcance. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
+      example:"Una Arquera con este líder puede pegar desde más lejos y conectar mejor, pero si su disparo solo rompe Guardia y no toca Vida, no aplica el -1 MOV."
+    },
+    mage:{
+      target:"Magias aliadas",
+      affected:"Afecta a cartas de tipo magia/hechizo jugadas por el dueño de este líder.",
+      notAffected:"No afecta unidades normales, arqueras, bestias, caballería ni ataques básicos. Tampoco cambia el costo de invocar unidades.",
+      buff:`Las magias cuestan -${buff.costReduction||0} recurso y sus valores numéricos de efecto suben +${buff.effectBonus||0}. Esto aplica a daño, curación, buffs o escudos cuando la carta tenga un campo numérico compatible.`,
+      passive:"El recurso del Hechicero se muestra como MANA. La reducción de costo no baja de 0. Si una magia no tiene objetivo válido, la mejora no la vuelve jugable automáticamente.",
+      example:"Una magia de daño con costo 3 y daño 2, con buff -2 costo/+4 efecto, pasa a costar 1 y hacer 6 de daño si tiene objetivo válido."
+    },
+    axe:{
+      target:"Unidades de hacha / berserkers aliados",
+      affected:"Afecta a unidades aliadas reconocidas como hacha, principalmente Berserker del norte y cartas con icono/texto/nombre de hacha o axe.",
+      notAffected:"No afecta espadas, lanzas, arqueras, caballería, magias, bestias ni al propio líder.",
+      buff:`+${buff.atk||0} AT y +${buff.dex||0} DX a cada unidad de hacha aliada.`,
+      passive:"Grito de Guerra: cuando una unidad aliada rompe toda la Guardia enemiga, el equipo aliado puede recibir presión ofensiva extra según la regla de combate vigente. La habilidad Nv.5 del Caudillo añade además Victoria sangrienta.",
+      example:"Un Berserker bajo este líder se vuelve un rompearmaduras: pega más fuerte y tiene más Destreza para conectar sus ataques."
+    },
+    cavalry:{
+      target:"Caballería ligera aliada",
+      affected:"Afecta a Caballería ligera aliada y unidades marcadas como cavalry o Caballería Arquera de Saladino.",
+      notAffected:"No afecta infantería pesada, arqueras normales, asesinos, bestias, magias ni al propio líder.",
+      buff:`+${buff.mov||0} MOV y +${buff.agi||0} AGI${buff.atk?` y +${buff.atk} AT`:""} a cada caballería ligera aliada.`,
+      passive:"El bonus ayuda a cargar, reposicionarse y aprovechar efectos que dependen de moverse antes de atacar. La Caballería ligera puede activar su carga si se movió 3 o más espacios antes de atacar cuerpo a cuerpo.",
+      example:"Con más MOV, la Caballería ligera llega más fácil a los 3 espacios necesarios para activar Carga desestabilizadora."
+    },
+    assassin:{
+      target:"Asesinos aliados",
+      affected:"Afecta a unidades aliadas reconocidas como asesinos, principalmente Asesina del desierto y cartas con nombre de asesina/asesino.",
+      notAffected:"No afecta guerreros pesados, arqueras, caballería, bestias, magias ni al propio líder.",
+      buff:`+${buff.agi||0} AGI, +${buff.dex||0} DX${buff.atk?` y +${buff.atk} AT`:""} a cada asesino aliado.`,
+      passive:"El bonus aumenta precisión/evasión. Con la habilidad Nv.5 Niebla de sangre, los asesinos aliados ignoran Guardia al atacar y gastan solo la mitad de PREC/EVA cuando la fórmula les exige gastar.",
+      example:"La Asesina del desierto se vuelve más difícil de esquivar y más difícil de alcanzar. Si además está activa Niebla de sangre, su daño atraviesa Guardia."
+    },
+    beastmaster:{
+      target:"Bestias aliadas",
+      affected:"Afecta a unidades aliadas marcadas como bestia: Tejón Mielero, Puercoespín, Jabalí Salvaje, Cuervo Negro, Serpiente, Búfalo, Halcón, Taipán, León, Tigre, Rinoceronte y futuras bestias.",
+      notAffected:"No afecta humanos, arqueras, magias, caballería común, asesinos ni al propio líder.",
+      buff:`+${buff.atk||0} AT y +${buff.agi||0} AGI a cada bestia aliada.`,
+      passive:"La mejora vuelve a las bestias más agresivas y móviles. Con la habilidad Nv.5 Veneno de la Manada, cualquier unidad aliada que cause daño real a HP aplica Veneno, incluso si no es bestia.",
+      example:"Un Jabalí o Tigre bajo este líder golpea más fuerte. Si está activa Veneno de la Manada, el daño real a HP también deja veneno."
+    }
+  }[type]||{};
+  const abilityLine=abilityData
+    ? `${abilityData.name}: ${abilityData.desc||abilityData.short}`
+    : level>=5
+      ? "Este líder está en nivel 5 o más, pero no tiene una habilidad Nv.5 activa reconocida."
+      : "La habilidad especial Nv.5 todavía no está desbloqueada para este líder.";
+  return {
+    title:`✦ Efecto exacto: ${entity?.name||data.name}`,
+    short:`${data.name} · Nivel ${level} · Tier de buff ${tier}. Este modal explica qué mejora, a quién afecta y qué hace su efecto especial.`,
+    formula:`Stats del líder:
+• HP ${leaderStats.hp} · AT ${leaderStats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)}
+
+A quién afecta el buff:
+• ${meta.target||"Aliados compatibles"}
+
+Cómo los reconoce el sistema:
+• ${meta.affected||"Solo cartas compatibles con este líder."}
+
+Qué NO afecta:
+• ${meta.notAffected||"Cartas fuera de su categoría."}
+
+Buff actual por tier ${tier}:
+• ${meta.buff||"Sin buff de categoría visible."}
+
+Efecto / regla especial del líder:
+• ${meta.passive||"Este líder usa la regla general de líder: sus ataques y ataques contra él impactan sin PREC/EVA, pero la Guardia reduce daño."}
+
+Habilidad Nv.5:
+• ${abilityLine}`,
+    example:meta.example||"Revisa la categoría de la unidad antes de asumir que recibe el buff. Si no pertenece al grupo del líder, no recibe esos stats.",
+    card:entity
+  };
+}
+function getExactEffectGuideData(entity,effectText=""){
+  if(entity?.leader)return getLeaderExactEffectGuideData(entity);
+  const name=entity?.name||"Esta unidad";
+  const raw=String(effectText||getUnitEffectText(entity)||entity?.text||entity?.effectText||entity?.ability||"").trim();
+  const key=normalizeEffectGuideKey(entity);
+  const isUnit=entity?.type==="unit"||(!entity?.spell&&!entity?.trap);
+  const generic={
+    title:`✦ Efecto exacto: ${name}`,
+    short:raw?`Esta ventana explica cuándo se activa y qué pasa realmente con ${name}.`:`${name} no tiene una habilidad especial visible.`,
+    formula:raw||"Sin efecto especial visible.",
+    example:isUnit?"Regla general: si un efecto dice que debe hacer daño real, significa daño a Vida/HP. Si la Guardia absorbe todo, ese efecto no se activa.":"Lee el objetivo y el momento de uso antes de jugar la carta.",
+    card:entity
+  };
+  const map={
+    cavalry:{short:"Unidad de presión. Su efecto castiga al objetivo cuando entra en combate después de una carga larga.",formula:`Condición:
+• Debe moverse 3 o más espacios este turno.
+• Luego debe declarar un ataque cuerpo a cuerpo.
+
+Resultado:
+• El objetivo recibe -3 AGI solo durante ese combate.
+• Esa reducción ayuda a que el ataque sea más fácil de conectar.`,example:"Si se mueve solo 1 o 2 casillas, no activa Carga desestabilizadora."},
+    berserker:{short:"Unidad agresiva. Rompe la defensa del objetivo al iniciar su ataque.",formula:`Condición:
+• Debe declarar un ataque cuerpo a cuerpo.
+
+Resultado:
+• El objetivo recibe -3 Guardia durante ese combate.
+• Si la Guardia baja lo suficiente, el daño sobrante puede tocar Vida.`,example:"Funciona aunque el Berserker no haya recibido daño antes. Es una herramienta para abrir tanques."},
+    spearman:{short:"Unidad defensiva. Castiga ataques recibidos y es especialmente fuerte contra Caballería.",formula:`Contraataque de lanza:
+• Si recibe un ataque dentro de su rango y sobrevive, contraataca una vez por turno.
+• Si el contraataque acierta, causa mínimo 1 daño.
+
+Anticaballería:
+• Si una Caballería lo ataca cuerpo a cuerpo, esa Caballería queda con Guardia 0 y Agilidad 0 durante ese combate.`,example:"Si el Lancero muere por el ataque recibido, no llega a contraatacar."},
+    archer:{short:"Unidad de rango. Su debuff solo entra si el disparo realmente hiere la Vida enemiga.",formula:`Condición:
+• Debe atacar a distancia.
+• El ataque debe causar al menos 1 daño a Vida/HP.
+
+Resultado:
+• El objetivo recibe -1 MOV hasta el final de su próximo turno.
+• No acumulable.
+
+Importante:
+• Si falla, no aplica MOV.
+• Si la Guardia absorbe todo el daño, no aplica MOV.`,example:"Arquera AT 3 contra Guardia 3: baja Guardia, pero no baja Vida, por lo tanto no reduce MOV."},
+    arcane_adept:{short:"Unidad mágica. Aplica estados negativos cuando logra herir Vida y también puede responder a distancia.",formula:`Ruptura Arcana:
+• Si causa al menos 1 daño directo a Vida de una unidad enemiga, aplica un estado negativo aleatorio.
+
+Respuesta Mística:
+• Puede contraatacar ataques de rango.
+
+Vínculo Arcano:
+• Si está junto al líder Hechicero aliado, recibe bonus según el tier del líder.`,example:"Si el ataque solo rompe Guardia y no baja Vida, Ruptura Arcana no aplica estado negativo."},
+    guardian:{short:"Tanque de control. Reduce la evasión del enemigo y puede afectar movimiento si el objetivo está débil de Guardia.",formula:`Condición principal:
+• Debe declarar ataque cuerpo a cuerpo.
+
+Resultado base:
+• El objetivo recibe -2 AGI durante ese combate.
+
+Condición adicional:
+• Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno.`,example:"Sirve para encerrar objetivos que ya perdieron buena parte de su Guardia."},
+    scout:{short:"Asesina. Ignora Guardia y aplica Sangrado cuando logra daño real.",formula:`Asesinato preciso:
+• Sus ataques ignoran Guardia/defensa. El daño puede ir directo a Vida.
+
+Sangrado:
+• Si logra hacer daño a HP, el objetivo queda con Sangrado.
+• Sangrado causa 1 daño al inicio del turno del objetivo.
+• El Sangrado permanece hasta que la unidad sea curada o destruida.
+• El daño de Sangrado ignora Guardia.`,example:"Si por alguna razón no hace daño a HP, no aplica Sangrado."},
+    mulan:{short:"Unidad de ejecución. Premia el posicionamiento detrás de la línea enemiga y puede encadenar una acción limitada tras destruir.",formula:`Ataque por la espalda:
+• Si Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 AT durante ese combate.
+• La precisión se calcula y se consume normalmente.
+
+Después de destruir:
+• Si destruye una unidad con su ataque normal, puede moverse 1 casilla extra.
+• Luego debe elegir ATK o DEF. Esa elección consume su acción restante.
+• Después queda sin más acciones ese turno.`,example:"No es daño gratis: si falla la precisión, no aprovecha el golpe aunque esté bien posicionada."},
+    wallace:{short:"Unidad resistente. Tiene una supervivencia única contra daño fatal.",formula:`Condición:
+• La primera vez que William Wallace recibiría daño fatal.
+
+Resultado:
+• No cae.
+• Sobrevive y recupera 1 de Vida.
+
+Límite:
+• Solo ocurre una vez.`,example:"Después de gastar Último Aliento, el próximo daño fatal sí puede destruirlo."},
+    honey_badger:{short:"Bestia tanque molesta. Reduce daño, ignora veneno y obliga al enemigo a prestarle atención.",formula:`Armadura Natural:
+• Cada vez que recibe daño, reduce ese daño en 1.
+
+Inmune al Veneno:
+• No puede recibir Veneno ni daño causado por Veneno.
+
+Bestia Irritante:
+• Enemigos adyacentes tienen -1 DX si atacan a otra unidad que no sea el Tejón.
+
+Mordida Fastidiosa:
+• Si hace daño real, el objetivo pierde -1 MOV en su próximo turno.`,example:"Si el Tejón no hace daño a Vida, Mordida Fastidiosa no reduce MOV."},
+    porcupine:{short:"Bestia defensiva. Castiga ataques cuerpo a cuerpo contra él.",formula:`Espinas Defensivas:
+• Cuando una unidad enemiga lo ataca cuerpo a cuerpo, el atacante recibe 2 daño directo después del combate.
+• Esto ocurre aunque el atacante no le cause daño al Puercoespín.
+
+Miedo:
+• Después de activar Espinas, otras unidades enemigas adyacentes al Puercoespín tienen 25% de recibir Miedo.
+• Miedo reduce AT en 3 hasta el próximo turno de esa unidad.`,example:"Atacarlo cuerpo a cuerpo tiene costo incluso si logras bloquear su daño."},
+    wild_boar:{short:"Bestia de carga. Necesita moverse antes de atacar para activar su presión.",formula:`Carga Brusca:
+• Si se movió 2 o más casillas antes de atacar, gana +1 AT.
+
+Empuje Salvaje:
+• Si hace daño real con Carga Brusca, empuja al objetivo 1 casilla si hay espacio.`,example:"Si no hay espacio detrás del objetivo, puede hacer daño pero no empujar."},
+    black_raven:{short:"Bestia de utilidad. Revela Sigilo y debilita Agilidad en área.",formula:`Ojo del Cazador:
+• EFFECT revela unidades enemigas con Sigilo en radio 2.
+
+Graznido Inquietante:
+• Pasivo. Las unidades enemigas en rango 2 alrededor del Cuervo pierden -2 AGI hasta su próximo turno.`,example:"El Cuervo no necesita hacer daño para que su aura de AGI moleste en radio 2."},
+    constrictor_snake:{short:"Bestia de control. Castiga objetivos que ya tienen movimiento reducido.",formula:`Constricción:
+• Si hace daño real, el objetivo pierde -1 MOV y -1 AGI hasta su próximo turno.
+
+Agarre:
+• Si el objetivo ya tenía MOV reducido, no podrá moverse en su próximo turno.`,example:"Primero hiere, luego reduce. Si la Guardia bloquea todo el daño, Constricción no entra."},
+    inland_taipan:{short:"Bestia venenosa letal. Su veneno escala según el tipo de objetivo.",formula:`Mordida Letal:
+• Si hace daño real, aplica Veneno.
+• El valor de Veneno puede variar según el objetivo.
+• Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere.
+• Los líderes sí pueden ser envenenados, pero siguen reglas menos letales que una unidad normal.`,example:"La mordida debe tocar Vida/HP. Si solo pega en Guardia, no aplica Veneno."},
+    peregrine_falcon:{short:"Bestia aérea. Es difícil de alcanzar y premia ataques después de moverse mucho.",formula:`Aéreo:
+• Solo unidades con rango mayor a 3 o Antiaéreo pueden atacarlo.
+
+Ataque en Picada:
+• Si se movió 3 o más casillas antes de atacar, siempre golpea y hace 3 daño.
+• Aplica la regla propia del ataque en picada indicada por la carta.`,example:"Si no se movió lo suficiente, no obtiene el golpe garantizado de Picada."},
+    african_lion:{short:"Bestia alfa. Revela Sigilo y controla enemigos cercanos con Miedo.",formula:`Rugido del Rey:
+• EFFECT revela unidades enemigas con Sigilo en radio 3.
+
+Presencia Alfa:
+• Enemigos en rango 1 alrededor del León reciben Miedo.
+• Miedo reduce AT según indique el estado.`,example:"El León funciona como centro de presión: castiga a quienes se acercan demasiado."},
+    bengal_tiger:{short:"Bestia asesina. Usa Sigilo para entrar, saltar y aplicar daño persistente.",formula:`Sigilo de Depredador:
+• No puede ser objetivo directo mientras esté oculto.
+
+Salto de Emboscada:
+• Desde Sigilo puede atacar con +2 alcance de movimiento.
+
+Desgarro:
+• Su efecto de daño persistente depende de hacer daño real según la regla de la carta.`,example:"Si el Tigre revela su posición, pierde parte de su protección táctica."},
+    white_rhino:{short:"Bestia de impacto. Tiene una embestida enorme, pero queda vulnerable después.",formula:`Embestida Devastadora:
+• Si se mueve 2 casillas en línea recta antes de atacar, usa AT 22.
+
+Después de embestir:
+• Impacte o no, queda expuesto según la penalización indicada por su carta/código.`,example:"Es un golpe de martillo: muy fuerte, pero necesita línea recta y buen momento."},
+    richard_lionheart:{short:"Leyenda de soporte. Fortalece la Vida de un aliado adyacente mientras permanezca en campo.",formula:`Condición:
+• Una vez por turno, Richard puede elegir un aliado adyacente.
+
+Resultado:
+• Ese aliado obtiene +2 Vida máxima y +2 Vida actual.
+• El bonus dura mientras Richard siga en campo.`,example:"Si Richard cae, el soporte de Vida puede perderse."},
+    saladin:{short:"Leyenda de invocación. Crea presión con una Caballería Arquera especial.",formula:`Condición:
+• Una vez por turno.
+• Saladino debe estar en campo.
+• No debes controlar ya una Caballería Arquera de Saladino.
+
+Resultado:
+• Invoca una Caballería Arquera en una casilla libre adyacente válida.`,example:"Si no hay casilla libre o ya existe su Caballería Arquera, no puede invocarla."}
+  };
+  const custom=map[key];
+  if(custom)return {...generic,...custom,title:`✦ Efecto exacto: ${name}`,card:entity};
+  const sections=getEntityAbilitySections(entity,raw);
+  if(sections.length){
+    return {...generic,formula:sections.map(sec=>`${sec.title}:
+• ${sec.body}`).join("\n\n"),example:"Si una habilidad dice 'si hace daño real', debe causar daño a Vida/HP. Si solo baja Guardia, esa parte no se activa."};
+  }
+  return generic;
+}
+function openExactEntityEffectGuide(entity,effectText="",effectTitle=""){
+  const data=getExactEffectGuideData(entity,effectText);
+  if(effectTitle)data.title=`✦ ${effectTitle}`;
+  openStatGuideModal(data);
+}
+
 function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=true,showLore=false,effectLabel="Ver efecto"}={}){
   const chips=[];
+  if(showEffect)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-effect-btn" type="button" aria-label="${escapeHtml(effectLabel)}"><img class="det-btn-img" src="assets/ui/det_icons/trigger.png" alt="${escapeHtml(effectLabel)}"></button><span>${escapeHtml(effectLabel)}</span></div>`);
+  if(showWeapon)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-weapon-btn" type="button" aria-label="Arma / clase"><img class="det-btn-img" src="assets/ui/det_icons/tactical.png" alt="Arma"></button><span>Arma</span></div>`);
   if(showFormula)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-formula-btn" type="button" aria-label="PREC / EVA"><img class="det-btn-img" src="assets/ui/det_icons/dexterity.png" alt="PREC / EVA"></button><span>PREC / EVA</span></div>`);
   if(showLore)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-lore-btn" type="button" aria-label="Conóceme"><img class="det-btn-img" src="assets/ui/det_icons/lore.png" alt="Conóceme"></button><span>Conóceme</span></div>`);
   return chips.length?`<div class="detail-guide-row">${chips.join("")}</div>`:"";
@@ -3441,12 +3725,7 @@ function bindInspectorDetModalDelegation(inspector){
     }
     if(target.matches('.guide-effect-btn')){
       const effectText=inspector._hvEffectText||getUnitEffectText(entity)||'';
-      openStatGuideModal({
-        title:inspector._hvEffectTitle||`✦ Efecto de ${entity?.name||'la carta'}`,
-        short:entity?.name?`Explicación del efecto de ${entity.name}.`:'Explicación del efecto.',
-        formula:effectText||'Esta pieza no tiene un efecto especial visible en este momento.',
-        example:entity?.type==='unit'||entity?.leader?'Revisa el momento del duelo y el objetivo correcto para aprovechar este efecto.':'Juega esta carta cuando el objetivo o la condición te den el mejor intercambio.'
-      });
+      openExactEntityEffectGuide(entity,effectText,inspector._hvEffectTitle||`Efecto exacto de ${entity?.name||'la carta'}`);
       return;
     }
     if(target.matches('.guide-ability-btn')){
@@ -3476,12 +3755,7 @@ function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",s
   const effectBtn=container.querySelector('.guide-effect-btn');
   if(effectBtn)effectBtn.addEventListener('click',ev=>{
     ev.stopPropagation();
-    openStatGuideModal({
-      title:effectTitle?`✦ ${effectTitle}`:`✦ Efecto de ${entity?.name||'la carta'}`,
-      short:entity?.name?`Explicación del efecto de ${entity.name}.`:'Explicación del efecto.',
-      formula:effectText||'Esta pieza no tiene un efecto especial visible en este momento.',
-      example:entity?.type==='unit'||entity?.leader?'Revisa el momento del duelo y el objetivo correcto para aprovechar este efecto.':'Juega esta carta cuando el objetivo o la condición te den el mejor intercambio.'
-    });
+    openExactEntityEffectGuide(entity,effectText,effectTitle||`Efecto exacto de ${entity?.name||'la carta'}`);
   });
   const weaponBtn=container.querySelector('.guide-weapon-btn');
   if(weaponBtn)weaponBtn.addEventListener('click',ev=>{ev.stopPropagation();openWeaponGuide(entity);});
@@ -4052,6 +4326,7 @@ async function attackUnit(a,d){
     }
     return u;
   });
+  if(hit.hit&&hpLoss>0)units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});
   if(dmgTrap.forceKill)units=units.map(u=>u.id===d.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
   let defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,d.id,a.id):{units,triggered:false,killerFell:false,saved:false};
@@ -4773,6 +5048,7 @@ async function adventureEnemyTurn(){
       }
       return u;
     });
+    if(hit.hit&&hpLoss>0)units=applyAttackSideEffects(attacker,target,units,{hpLoss,allowGuardian:false});
     if(dmgTrap.forceKill)units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
     let defenderFell=!!units.find(u=>u.id===target.id&&u.hp<=0);
     const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,target.id,attacker.id):{units,triggered:false,killerFell:false,saved:false};
@@ -6061,7 +6337,7 @@ function showUnit(u){
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
-  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:true,effectLabel:'Ver efecto'})}`;
+  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,showLore:true,effectLabel:u.leader?'Ver líder':'Ver efecto'})}`;
   inspector._hvInspectedEntity=u;
   inspector._hvActiveStatuses=activeEntries;
   inspector._hvEffectText=fx;
@@ -7026,7 +7302,7 @@ function renderDetail(){
       const fx=getUnitEffectText(u);
       const activeEntries=getUnitStatusEntries(u);
       const unitStats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Líder · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${u.leader?resourceDetailHtml(u.owner,{compact:true}):""}<div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:'Ver efecto'})}`;
+      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Líder · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${u.leader?resourceDetailHtml(u.owner,{compact:true}):""}<div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:!!fx,showWeapon:true,showFormula:true,effectLabel:u.leader?'Ver líder':'Ver efecto'})}`;
       bindStatGuideClicks(detailEl);
       bindEntityGuideButtons(detailEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
       return;
