@@ -1,4 +1,4 @@
-AUDITORIA DE VENTAJAS TACTICAS - Hallvalla
+zAUDITORIA DE VENTAJAS TACTICAS - Hallvalla
 
 Regla actual: si la clase del atacante supera la clase del defensor, gana +5 DX durante ese combate.
 
