@@ -7101,7 +7101,7 @@ function renderBoard(){
     const u=getUnitAt(x,y);
     if(u&&!u.leader){
       const c=document.createElement("div");
-      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
+      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
@@ -7221,7 +7221,7 @@ function renderLeaderBases(){
     const side=u.owner===1?"south":"north";
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
-    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
+    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
     /*
       Los líderes fijos NO renderizan getUnitStatusBubblesHtml(u).
       Motivo: al activar DEF, ese HUD de estados entraba dentro del token 3D del líder,

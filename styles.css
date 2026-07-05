@@ -14928,3 +14928,266 @@ El CSS original se conserva para no romper visuales. El bloque final
 .stat-guide-box span{white-space:pre-line;}
 .detail-guide-row{align-items:start;}
 .guide-effect-btn img{filter:drop-shadow(0 0 8px rgba(255,209,102,.20));}
+
+
+/* =====================================================================
+   7HAA — FIX DEFINITIVO DE GLOW DE RAREZA EN CARTAS DEL TABLERO
+   Objetivo:
+   - Que SOLO brille el marco real de la carta
+   - Que NUNCA brille el retrato / imagen interna
+   - Que el color del neón siga la rareza real
+   - Que los estados attackable/valid NO repinten la carta en rojo/cian
+   ===================================================================== */
+
+@keyframes hvFrameRarityPulse7haa{
+  0%,100%{ opacity:.90; }
+  50%{ opacity:1; }
+}
+
+/* 1) Apagar por completo las capas viejas que estaban bañando toda la carta */
+.cell > .unit-card::before,
+.cell > .unit-card::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  animation:none !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  -webkit-mask:none !important;
+  mask:none !important;
+}
+
+/* 2) El contenedor del tablero no debe emitir glow ni teñir el interior */
+.cell > .unit-card,
+.cell > .unit-card.card-rarity-basic,
+.cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{
+  background:transparent !important;
+  box-shadow:0 6px 12px rgba(0,0,0,.42) !important;
+  overflow:visible !important;
+  isolation:isolate !important;
+}
+
+/* 3) Blindaje: retrato e imagen interna sin glow ni filtro luminoso */
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer img,
+.cell > .unit-card .unit-card-character-layer img{
+  filter:none !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+}
+
+/* 4) Variables de color finales del glow por rareza.
+      Básica = sin brillo.
+      Improved = celeste suave.
+      Heroic = verde esmeralda.
+      Glorious = verde/dorado suave.
+      Epic = plateado.
+      Mythic = azul.
+      Legendary = púrpura.
+      Demigod = dorado.
+*/
+.cell > .unit-card{
+  --hv-frame-glow-1: transparent;
+  --hv-frame-glow-2: transparent;
+  --hv-frame-glow-3: transparent;
+}
+.cell > .unit-card.card-rarity-basic{
+  --hv-frame-glow-1: transparent;
+  --hv-frame-glow-2: transparent;
+  --hv-frame-glow-3: transparent;
+}
+.cell > .unit-card.card-rarity-improved{
+  --hv-frame-glow-1: rgba(120,225,255,.92);
+  --hv-frame-glow-2: rgba(120,225,255,.58);
+  --hv-frame-glow-3: rgba(120,225,255,.32);
+}
+.cell > .unit-card.card-rarity-heroic{
+  --hv-frame-glow-1: rgba(94,255,170,.95);
+  --hv-frame-glow-2: rgba(94,255,170,.60);
+  --hv-frame-glow-3: rgba(94,255,170,.34);
+}
+.cell > .unit-card.card-rarity-glorious{
+  --hv-frame-glow-1: rgba(131,255,164,.95);
+  --hv-frame-glow-2: rgba(131,255,164,.60);
+  --hv-frame-glow-3: rgba(131,255,164,.34);
+}
+.cell > .unit-card.card-rarity-epic{
+  --hv-frame-glow-1: rgba(236,242,255,.98);
+  --hv-frame-glow-2: rgba(199,212,235,.64);
+  --hv-frame-glow-3: rgba(199,212,235,.36);
+}
+.cell > .unit-card.card-rarity-mythic{
+  --hv-frame-glow-1: rgba(110,212,255,.96);
+  --hv-frame-glow-2: rgba(110,212,255,.62);
+  --hv-frame-glow-3: rgba(110,212,255,.36);
+}
+.cell > .unit-card.card-rarity-legendary{
+  --hv-frame-glow-1: rgba(205,122,255,.96);
+  --hv-frame-glow-2: rgba(205,122,255,.62);
+  --hv-frame-glow-3: rgba(205,122,255,.36);
+}
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader:not(.card-rarity-basic):not(.card-rarity-improved):not(.card-rarity-heroic):not(.card-rarity-glorious):not(.card-rarity-epic):not(.card-rarity-mythic):not(.card-rarity-legendary):not(.card-rarity-demigod){
+  --hv-frame-glow-1: rgba(255,238,148,.98);
+  --hv-frame-glow-2: rgba(255,238,148,.66);
+  --hv-frame-glow-3: rgba(255,238,148,.38);
+}
+
+/* 5) Glow SOLO sobre la imagen del marco, nunca sobre la carta completa */
+.cell > .unit-card .unit-frame-skin{
+  z-index:4 !important;
+  background:var(--frame-image) center/100% 100% no-repeat !important;
+  filter:
+    drop-shadow(0 4px 9px rgba(0,0,0,.56))
+    drop-shadow(0 0 4px var(--hv-frame-glow-1))
+    drop-shadow(0 0 9px var(--hv-frame-glow-2))
+    drop-shadow(0 0 15px var(--hv-frame-glow-3))
+    var(--frame-filter) !important;
+  animation:hvFrameRarityPulse7haa 2.4s ease-in-out infinite !important;
+}
+
+/* Básicas: sin pulso visible */
+.cell > .unit-card.card-rarity-basic .unit-frame-skin{
+  filter:drop-shadow(0 4px 9px rgba(0,0,0,.56)) var(--frame-filter) !important;
+  animation:none !important;
+}
+
+/* 6) Los estados de targeting NO deben cambiar el color de rareza del marco.
+      El tablero ya resalta las celdas; no repintamos la carta. */
+.grid .cell.attackable:has(.unit-card) .unit-frame-skin,
+.grid .cell.valid:has(.unit-card) .unit-frame-skin,
+.grid .cell.selected:has(.unit-card) .unit-frame-skin{
+  filter:
+    drop-shadow(0 4px 9px rgba(0,0,0,.56))
+    drop-shadow(0 0 4px var(--hv-frame-glow-1))
+    drop-shadow(0 0 9px var(--hv-frame-glow-2))
+    drop-shadow(0 0 15px var(--hv-frame-glow-3))
+    var(--frame-filter) !important;
+}
+
+/* 7) HUD de stats y sellos por encima del marco sin ser tapados */
+.cell > .unit-card .unit-ornate-ui{ z-index:8 !important; }
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals,
+.cell > .unit-card .status-seal-rail,
+.cell > .unit-card .unit-status-seal-extra{ z-index:10 !important; }
+
+
+/* =====================================================================
+   7HAB — Base táctica de equipo debajo de unidades y líderes
+   Objetivo:
+   - identificar aliado/enemigo sin pintar encima del arte
+   - conservar rareza en el marco
+   - usar una peana luminosa debajo de cada ficha
+   ===================================================================== */
+@keyframes hvTeamBasePulse7hab{
+  0%,100%{ transform:translateX(-50%) scale(1); opacity:.88; }
+  50%{ transform:translateX(-50%) scale(1.04); opacity:1; }
+}
+
+/* Unidades normales */
+.grid .cell > .unit-card.ally::before,
+.grid .cell > .unit-card.enemy::before{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  left:50% !important;
+  bottom:-10px !important;
+  width:72% !important;
+  height:16px !important;
+  transform:translateX(-50%) !important;
+  border-radius:999px !important;
+  pointer-events:none !important;
+  z-index:0 !important;
+  opacity:.96 !important;
+  animation:hvTeamBasePulse7hab 2.4s ease-in-out infinite !important;
+}
+.grid .cell > .unit-card.ally::before{
+  background:radial-gradient(ellipse at center,
+    rgba(116,242,255,.62) 0%,
+    rgba(77,198,255,.46) 28%,
+    rgba(34,112,255,.24) 56%,
+    rgba(0,0,0,0) 76%) !important;
+  box-shadow:0 0 10px rgba(96,224,255,.44),0 0 18px rgba(66,154,255,.24) !important;
+}
+.grid .cell > .unit-card.enemy::before{
+  background:radial-gradient(ellipse at center,
+    rgba(255,118,171,.66) 0%,
+    rgba(255,92,124,.50) 28%,
+    rgba(182,34,79,.26) 56%,
+    rgba(0,0,0,0) 76%) !important;
+  box-shadow:0 0 10px rgba(255,110,166,.44),0 0 18px rgba(220,54,107,.24) !important;
+}
+
+/* Líderes */
+.leader-base.ally .leader-base-token::before,
+.leader-base.enemy .leader-base-token::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:10%;
+  width:88%;
+  height:16%;
+  transform:translateX(-50%);
+  border-radius:999px;
+  pointer-events:none;
+  z-index:0;
+  opacity:.96;
+  animation:hvTeamBasePulse7hab 2.4s ease-in-out infinite;
+}
+.leader-base.ally .leader-base-token::before{
+  background:radial-gradient(ellipse at center,
+    rgba(116,242,255,.62) 0%,
+    rgba(77,198,255,.46) 28%,
+    rgba(34,112,255,.24) 56%,
+    rgba(0,0,0,0) 76%);
+  box-shadow:0 0 12px rgba(96,224,255,.44),0 0 20px rgba(66,154,255,.24);
+}
+.leader-base.enemy .leader-base-token::before{
+  background:radial-gradient(ellipse at center,
+    rgba(255,118,171,.66) 0%,
+    rgba(255,92,124,.50) 28%,
+    rgba(182,34,79,.26) 56%,
+    rgba(0,0,0,0) 76%);
+  box-shadow:0 0 12px rgba(255,110,166,.44),0 0 20px rgba(220,54,107,.24);
+}
+
+/* Mantener el contenido principal por encima de la base */
+.grid .cell > .unit-card .unit-frame-skin,
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-status-bubbles,
+.grid .cell > .unit-card .unit-ornate-ui,
+.grid .cell > .unit-card .unit-status-seals,
+.grid .cell > .unit-card .status-seal-rail,
+.grid .cell > .unit-card .unit-status-seal-extra{
+  position:relative;
+}
+
+/* Tamaños móviles */
+@media (max-width:980px){
+  .grid .cell > .unit-card.ally::before,
+  .grid .cell > .unit-card.enemy::before{
+    bottom:-8px !important;
+    height:13px !important;
+    width:74% !important;
+  }
+  .leader-base.ally .leader-base-token::before,
+  .leader-base.enemy .leader-base-token::before{
+    width:86%;
+    height:14%;
+    bottom:11%;
+  }
+}
