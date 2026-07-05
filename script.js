@@ -2129,12 +2129,47 @@ function getPlayableSavedDeckTemplates(){
   const saved=(typeof getSavedDeck==="function"?getSavedDeck():[]).map(hydrateCardVisualData);
   return validateDeckList(saved).valid?saved:[];
 }
+
+
+/* === 7HAV · debug mano inicial: carta elegida para probar rarezas === */
+function hvRarityDebugFindTemplateByKey(key){
+  const target=String(key||"").trim();
+  if(!target)return null;
+  const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],LEGENDARY_TRAP_CARDS||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS||[]];
+  for(const pool of pools){
+    const found=(pool||[]).find(c=>c&&String(c.key)===target);
+    if(found)return {...found};
+  }
+  return null;
+}
+function hvRarityDebugEnabled(){
+  try{return localStorage.getItem("hv_rarity_debug_force_hand")!=="0";}catch(_){return true;}
+}
+function hvRarityDebugSelectedKey(){
+  try{return localStorage.getItem("hv_rarity_debug_card_key")||"miyamoto_musashi";}catch(_){return "miyamoto_musashi";}
+}
+function applyRarityDebugFirstHandCard(deck=[],owner=1,leaderType=getSelectedLeaderType()||"warrior"){
+  if(!hvRarityDebugEnabled())return deck;
+  const key=hvRarityDebugSelectedKey();
+  const arr=[...(deck||[])];
+  const idx=arr.findIndex(c=>c&&c.key===key);
+  if(idx>=0){
+    const [card]=arr.splice(idx,1);
+    return [card,...arr];
+  }
+  const tpl=hvRarityDebugFindTemplateByKey(key);
+  if(!tpl)return arr;
+  const made=makeCard(tpl,owner,leaderType);
+  const without=arr.filter(c=>c&&c.key!==key);
+  return [made,...without].slice(0,Math.max(arr.length,DECK_RULES?.deckSize||30));
+}
+
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
   const useSaved=!options.ai;
   const savedTemplates=useSaved?getPlayableSavedDeckTemplates():[];
   const starterTemplates=getDefaultDeckTemplates();
   const templates=savedTemplates.length?savedTemplates:starterTemplates;
-  return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
+  return applyRarityDebugFirstHandCard(shuffle(templates.map(card=>makeCard(card,owner,leaderType))),owner,leaderType);
 }
 
 function getStarterDeckAudit(){
@@ -2869,9 +2904,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
   const starterLocked=!canAccessDecks();
-  const playerBase=starterLocked
+  const playerBase=applyRarityDebugFirstHandCard(starterLocked
     ? shuffle(getStarterAdventureDeckTemplates(specialKey).map(card=>makeCard(card,1,leaderType)))
-    : makeDeck(1,leaderType);
+    : makeDeck(1,leaderType),1,leaderType);
   const playerDraw=drawCards(playerBase,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
@@ -9811,3 +9846,73 @@ function getExactEffectGuideData(entity,effectText=""){
   ].filter(Boolean).join("\n\n");
   return {title:`✦ Efecto exacto: ${name}`,short:truthIntro.join(" "),formula,example:"Esta carta no tiene una ficha manual completa todavía, pero el modal ya muestra sus reglas globales y límites generales.",card:entity};
 }
+
+
+/* === 7HAV · panel de controles en tablero real === */
+(function(){
+  const DEFAULTS={
+    cardOpacity:1,cardScale:1,cardBgAlpha:.18,cardShadowPx:10,cardShadowAlpha:.45,
+    portraitOpacity:1,portraitBrightness:1,portraitSaturation:1,portraitContrast:1,portraitBlur:0,
+    frameOpacity:1,frameBrightness:1,frameSaturation:1,frameContrast:1,frameShadowPx:8,frameShadowAlpha:.55,
+    ornamentOpacity:1,ornamentBrightness:1,ornamentSaturation:1,ornamentContrast:1,ornamentBlur:0,
+    bakedOpacity:1,bakedBrightness:1,bakedSaturation:1,bakedContrast:1,bakedBlur:0,
+    cssGlowOpacity:.75,cssGlowWhiteAlpha:.20,cssGlowWhitePx:1,cssGlowNearPx:2,cssGlowMidPx:5,cssGlowFarPx:9,
+    pulseDuration:10,pulseMin:.10,pulseMax:1.5,
+    statsOpacity:1,teamOpacity:1,teamBlur:0,teamSize:100
+  };
+  const CONTROL_GROUPS=[
+    ["Carta",[["cardOpacity","Opacidad carta",0,1,.01],["cardScale","Tamaño carta",.5,1.6,.01],["cardBgAlpha","Fondo interior",0,1,.01],["cardShadowPx","Sombra carta px",0,30,.5],["cardShadowAlpha","Sombra carta alpha",0,1,.01]]],
+    ["Retrato",[["portraitOpacity","Opacidad retrato",0,1,.01],["portraitBrightness","Brillo retrato",0,2,.01],["portraitSaturation","Saturación retrato",0,2,.01],["portraitContrast","Contraste retrato",0,2,.01],["portraitBlur","Blur retrato",0,10,.1]]],
+    ["Marco base",[["frameOpacity","Opacidad marco",0,1,.01],["frameBrightness","Brillo marco",0,2,.01],["frameSaturation","Saturación marco",0,2,.01],["frameContrast","Contraste marco",0,2,.01],["frameShadowPx","Sombra marco px",0,30,.5],["frameShadowAlpha","Sombra marco alpha",0,1,.01]]],
+    ["Ornamento normal",[["ornamentOpacity","Opacidad ornamento",0,1,.01],["ornamentBrightness","Brillo ornamento",0,2,.01],["ornamentSaturation","Saturación ornamento",0,2,.01],["ornamentContrast","Contraste ornamento",0,2,.01],["ornamentBlur","Blur ornamento",0,10,.1]]],
+    ["PNG glow",[["bakedOpacity","Opacidad glow PNG",0,1,.01],["bakedBrightness","Brillo glow PNG",0,2,.01],["bakedSaturation","Saturación glow PNG",0,2,.01],["bakedContrast","Contraste glow PNG",0,2,.01],["bakedBlur","Blur glow PNG",0,10,.1]]],
+    ["Glow CSS",[["cssGlowOpacity","Opacidad glow CSS",0,1,.01],["cssGlowWhiteAlpha","Núcleo blanco alpha",0,1,.01],["cssGlowWhitePx","Núcleo blanco px",0,12,.1],["cssGlowNearPx","Halo cercano px",0,20,.1],["cssGlowMidPx","Halo medio px",0,35,.1],["cssGlowFarPx","Halo externo px",0,60,.1]]],
+    ["Pulso",[["pulseDuration","Duración pulso",1,30,.25],["pulseMin","Opacidad mínima pulso",0,1,.01],["pulseMax","Opacidad máxima pulso",0,2,.01]]],
+    ["Stats y base",[["statsOpacity","Opacidad stats",0,1,.01],["teamOpacity","Opacidad base equipo",0,1,.01],["teamBlur","Blur base equipo",0,10,.1],["teamSize","Tamaño base equipo",0,180,1]]]
+  ];
+  const cssName={cardOpacity:"--card-opacity",cardScale:"--card-scale",cardBgAlpha:"--card-bg-alpha",cardShadowPx:"--card-shadow-px",cardShadowAlpha:"--card-shadow-alpha",portraitOpacity:"--portrait-opacity",portraitBrightness:"--portrait-brightness",portraitSaturation:"--portrait-saturation",portraitContrast:"--portrait-contrast",portraitBlur:"--portrait-blur",frameOpacity:"--frame-opacity",frameBrightness:"--frame-brightness",frameSaturation:"--frame-saturation",frameContrast:"--frame-contrast",frameShadowPx:"--frame-shadow-px",frameShadowAlpha:"--frame-shadow-alpha",ornamentOpacity:"--ornament-opacity",ornamentBrightness:"--ornament-brightness",ornamentSaturation:"--ornament-saturation",ornamentContrast:"--ornament-contrast",ornamentBlur:"--ornament-blur",bakedOpacity:"--baked-opacity",bakedBrightness:"--baked-brightness",bakedSaturation:"--baked-saturation",bakedContrast:"--baked-contrast",bakedBlur:"--baked-blur",cssGlowOpacity:"--css-glow-opacity",cssGlowWhiteAlpha:"--css-glow-white-alpha",cssGlowWhitePx:"--css-glow-white-px",cssGlowNearPx:"--css-glow-near-px",cssGlowMidPx:"--css-glow-mid-px",cssGlowFarPx:"--css-glow-far-px",pulseDuration:"--pulse-duration",pulseMin:"--pulse-min",pulseMax:"--pulse-max",statsOpacity:"--stats-opacity",teamOpacity:"--team-opacity",teamBlur:"--team-blur",teamSize:"--team-size"};
+  const units={cardShadowPx:"px",portraitBlur:"px",frameShadowPx:"px",ornamentBlur:"px",bakedBlur:"px",cssGlowWhitePx:"px",cssGlowNearPx:"px",cssGlowMidPx:"px",cssGlowFarPx:"px",pulseDuration:"s",teamBlur:"px",teamSize:"%"};
+  function load(){try{return {...DEFAULTS,...JSON.parse(localStorage.getItem("hv_rarity_real_controls")||"{}")} }catch(_){return {...DEFAULTS}}}
+  let values=load();
+  function cssBlock(){
+    const lines=Object.keys(cssName).map(k=>`${cssName[k]}:${values[k]}${units[k]||""};`).join("\n    ");
+    return `.grid .cell > .unit-card,.cell > .unit-card{\n    ${lines}\n  }`;
+  }
+  function apply(){
+    let st=document.getElementById("hvRealRarityControlStyle");
+    if(!st){st=document.createElement("style");st.id="hvRealRarityControlStyle";document.head.appendChild(st);}
+    st.textContent=cssBlock();
+    try{localStorage.setItem("hv_rarity_real_controls",JSON.stringify(values));}catch(_){ }
+    const out=document.getElementById("hvRarityCssOut");
+    if(out)out.textContent=Object.keys(cssName).map(k=>`${cssName[k]}: ${values[k]}${units[k]||""};`).join("\n");
+  }
+  function cardOptions(){
+    return [
+      ["miyamoto_musashi","Miyamoto Musashi - Legendaria"],
+      ["ulysses","Ulises - Mítica"],
+      ["richard_lionheart","Richard - Gloriosa"],
+      ["mulan","Hua Mulan - Heroic"],
+      ["berserker","Berserker - Improved"],
+      ["cu_chulainn","Cú Chulainn - Semidiós"],
+      ["alexander_magnus","Alejandro - Legendaria"],
+      ["achilles","Aquiles - Semidiós"]
+    ];
+  }
+  function build(){
+    if(document.getElementById("hvRarityRealPanel"))return;
+    const btn=document.createElement("button");btn.id="hvRarityRealToggle";btn.textContent="Rareza CTRL";document.body.appendChild(btn);
+    const panel=document.createElement("aside");panel.id="hvRarityRealPanel";panel.innerHTML=`<div class="hv-rr-head"><b>Controles reales de rareza</b><button id="hvRrClose">×</button></div><div class="hv-rr-note">Estos sliders actúan sobre el tablero real. La carta elegida queda forzada en la primera mano si el selector está activo.</div><div class="hv-rr-force"><label><input id="hvForceHand" type="checkbox"> Forzar carta en primera mano</label><select id="hvForceCard"></select><button id="hvApplyForce">Guardar</button></div><div id="hvRrControls"></div><div class="hv-rr-actions"><button id="hvRrPortraitClean">Retrato limpio</button><button id="hvRrOnlyOrnament">Solo ornamento</button><button id="hvRrReset">Reset</button></div><pre id="hvRarityCssOut"></pre>`;document.body.appendChild(panel);
+    document.getElementById("hvForceCard").innerHTML=cardOptions().map(([k,n])=>`<option value="${k}">${n}</option>`).join("");
+    try{document.getElementById("hvForceHand").checked=localStorage.getItem("hv_rarity_debug_force_hand")!=="0";document.getElementById("hvForceCard").value=localStorage.getItem("hv_rarity_debug_card_key")||"miyamoto_musashi";}catch(_){ }
+    const wrap=document.getElementById("hvRrControls");
+    CONTROL_GROUPS.forEach(([title,items])=>{const box=document.createElement("section");box.className="hv-rr-box";box.innerHTML=`<h4>${title}</h4>`+items.map(([k,l,min,max,step])=>`<label><span>${l}</span><input data-k="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${values[k]}"><b id="hvv_${k}">${values[k]}${units[k]||""}</b></label>`).join("");wrap.appendChild(box);});
+    panel.addEventListener("input",e=>{const k=e.target?.dataset?.k;if(!k)return;values[k]=Number(e.target.value);const b=document.getElementById("hvv_"+k);if(b)b.textContent=`${values[k]}${units[k]||""}`;apply();});
+    btn.onclick=()=>panel.classList.toggle("open");document.getElementById("hvRrClose").onclick=()=>panel.classList.remove("open");
+    document.getElementById("hvRrReset").onclick=()=>{values={...DEFAULTS};document.querySelectorAll('#hvRrControls input[data-k]').forEach(i=>{i.value=values[i.dataset.k];i.dispatchEvent(new Event('input',{bubbles:true}));});apply();};
+    document.getElementById("hvRrPortraitClean").onclick=()=>{Object.assign(values,{portraitOpacity:1,portraitBrightness:1,portraitSaturation:1,portraitContrast:1,portraitBlur:0});document.querySelectorAll('#hvRrControls input[data-k]').forEach(i=>{i.value=values[i.dataset.k];const b=document.getElementById("hvv_"+i.dataset.k);if(b)b.textContent=`${values[i.dataset.k]}${units[i.dataset.k]||""}`;});apply();};
+    document.getElementById("hvRrOnlyOrnament").onclick=()=>{Object.assign(values,{cardOpacity:1,portraitOpacity:1,frameOpacity:1,ornamentOpacity:1,bakedOpacity:1,cssGlowOpacity:.75,cssGlowWhiteAlpha:.2,cssGlowWhitePx:1,cssGlowNearPx:2,cssGlowMidPx:5,cssGlowFarPx:9});document.querySelectorAll('#hvRrControls input[data-k]').forEach(i=>{i.value=values[i.dataset.k];i.dispatchEvent(new Event('input',{bubbles:true}));});apply();};
+    document.getElementById("hvApplyForce").onclick=()=>{try{localStorage.setItem("hv_rarity_debug_force_hand",document.getElementById("hvForceHand").checked?"1":"0");localStorage.setItem("hv_rarity_debug_card_key",document.getElementById("hvForceCard").value);}catch(_){ } alert("Guardado. Inicia una batalla nueva para ver esa carta en la primera mano.");};
+    apply();
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build);else build();
+})();

@@ -16139,3 +16139,22 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card.card-rarity-basic .unit-frame-rarity{
   display:none !important;
 }
+
+/* === 7HAV · panel real de control de rarezas en tablero === */
+#hvRarityRealToggle{position:fixed;right:14px;bottom:14px;z-index:99999;border:1px solid rgba(255,215,120,.55);border-radius:12px;background:rgba(20,13,5,.92);color:#ffe7a6;font:900 12px Georgia,serif;padding:9px 12px;box-shadow:0 0 18px rgba(0,0,0,.55),inset 0 0 12px rgba(255,205,100,.08);cursor:pointer}
+#hvRarityRealPanel{position:fixed;right:12px;top:12px;bottom:12px;width:min(430px,calc(100vw - 24px));z-index:99998;display:none;overflow:auto;border:1px solid rgba(255,211,112,.38);border-radius:16px;background:rgba(8,6,4,.96);color:#ffe7a6;box-shadow:0 16px 60px rgba(0,0,0,.72);padding:12px;font-family:Georgia,serif}
+#hvRarityRealPanel.open{display:block}
+#hvRarityRealPanel .hv-rr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;color:#ffdf8d;font-size:18px}
+#hvRarityRealPanel button{border:1px solid rgba(255,211,112,.35);border-radius:10px;background:#1b1308;color:#ffe7a6;font-weight:900;padding:7px 9px;cursor:pointer}
+#hvRarityRealPanel button:hover{background:#2a1c0b}
+#hvRarityRealPanel .hv-rr-note{font-size:12px;line-height:1.35;color:#d6c097;margin-bottom:10px;border-left:3px solid rgba(89,224,255,.7);padding:8px 10px;background:rgba(89,224,255,.07);border-radius:8px}
+#hvRarityRealPanel .hv-rr-force{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px;border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;background:rgba(0,0,0,.25)}
+#hvRarityRealPanel .hv-rr-force select{background:#0d0904;color:#ffe7a6;border:1px solid rgba(255,211,112,.30);border-radius:9px;padding:8px}
+#hvRarityRealPanel .hv-rr-box{border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;margin:10px 0;background:rgba(0,0,0,.28)}
+#hvRarityRealPanel .hv-rr-box h4{margin:0 0 8px;color:#ffdf8d;font-size:14px}
+#hvRarityRealPanel label{display:grid;grid-template-columns:130px 1fr 58px;align-items:center;gap:8px;margin:7px 0;font-size:12px;color:#f5d792}
+#hvRarityRealPanel input[type="range"]{width:100%}
+#hvRarityRealPanel label b{font-family:Consolas,monospace;text-align:right;color:#fff3c9;font-size:11px}
+#hvRarityRealPanel .hv-rr-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+#hvRarityCssOut{max-height:240px;overflow:auto;white-space:pre-wrap;background:#020201;border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;color:#fff3c9;font:11px/1.35 Consolas,monospace}
+@media(max-width:720px){#hvRarityRealPanel{left:8px;right:8px;top:8px;bottom:8px;width:auto}#hvRarityRealPanel label{grid-template-columns:1fr}#hvRarityRealToggle{right:10px;bottom:10px}}
