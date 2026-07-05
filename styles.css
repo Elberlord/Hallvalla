@@ -15191,3 +15191,114 @@ El CSS original se conserva para no romper visuales. El bloque final
     bottom:11%;
   }
 }
+
+
+/* =====================================================================
+   7HAC — FIX VISIBILIDAD STATS EN CARTAS DEL CAMPO
+   Causa: el parche de base táctica dejó capas internas como position:relative,
+   y eso podía sacar los orbes/stats de su sistema absoluto.
+   Solución: restaurar jerarquía absoluta:
+   base debajo -> retrato -> marco -> HUD/stats/sellos.
+   ===================================================================== */
+.cell > .unit-card{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.cell > .unit-card .unit-frame-skin{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:4 !important;
+  pointer-events:none !important;
+}
+
+.cell > .unit-card .unit-portrait{
+  position:absolute !important;
+  left:15.8% !important;
+  right:15.8% !important;
+  top:14.2% !important;
+  bottom:26.8% !important;
+  z-index:2 !important;
+  pointer-events:none !important;
+}
+
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  position:relative !important;
+  z-index:2 !important;
+}
+
+.cell > .unit-card .unit-ornate-ui{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:9 !important;
+  pointer-events:none !important;
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+.cell > .unit-card .unit-stat-orb{
+  position:absolute !important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:11 !important;
+  pointer-events:none !important;
+}
+
+.cell > .unit-card .stat-orb-cost,
+.cell > .unit-card .stat-orb-hp{
+  top:7.2% !important;
+  width:18.8% !important;
+  height:12.8% !important;
+}
+.cell > .unit-card .stat-orb-cost{left:7.6% !important;}
+.cell > .unit-card .stat-orb-hp{right:7.6% !important;}
+.cell > .unit-card .stat-orb-atk,
+.cell > .unit-card .stat-orb-aux{
+  bottom:6.2% !important;
+  height:14.5% !important;
+}
+.cell > .unit-card .stat-orb-atk{left:8.2% !important;width:22% !important;}
+.cell > .unit-card .stat-orb-aux{right:7.2% !important;width:26.5% !important;}
+
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals,
+.cell > .unit-card .status-seal-rail,
+.cell > .unit-card .unit-status-seal-extra{
+  position:absolute !important;
+  z-index:12 !important;
+  display:flex !important;
+  visibility:visible !important;
+}
+
+/* La base táctica siempre queda detrás de todo */
+.grid .cell > .unit-card.ally::before,
+.grid .cell > .unit-card.enemy::before{
+  z-index:0 !important;
+}
+
+@media(max-width:980px){
+  .cell > .unit-card .unit-portrait{
+    left:15.5% !important;
+    right:15.5% !important;
+    top:13.8% !important;
+    bottom:26.4% !important;
+  }
+  .cell > .unit-card .stat-orb-cost,
+  .cell > .unit-card .stat-orb-hp{
+    top:7.5% !important;
+    width:19.2% !important;
+    height:13% !important;
+  }
+  .cell > .unit-card .stat-orb-atk,
+  .cell > .unit-card .stat-orb-aux{
+    bottom:6.6% !important;
+    height:14.6% !important;
+  }
+  .cell > .unit-card .stat-orb-atk{width:22.8% !important;}
+  .cell > .unit-card .stat-orb-aux{width:28.5% !important;}
+}
