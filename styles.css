@@ -15302,3 +15302,108 @@ El CSS original se conserva para no romper visuales. El bloque final
   .cell > .unit-card .stat-orb-atk{width:22.8% !important;}
   .cell > .unit-card .stat-orb-aux{width:28.5% !important;}
 }
+
+/* === 7HAD: fix definitivo - glow SOLO en marco, nunca en retrato === */
+/* Causa del "bombillo": la capa ::after con máscara del marco seguía bañando el interior en algunos navegadores.
+   Se elimina esa capa en tablero y el brillo vuelve a vivir únicamente en el PNG del marco. */
+
+.grid .cell > .unit-card::after,
+.grid .cell > .unit-card.card-rarity-basic::after,
+.grid .cell > .unit-card.card-rarity-improved::after,
+.grid .cell > .unit-card.card-rarity-heroic::after,
+.grid .cell > .unit-card.card-rarity-glorious::after,
+.grid .cell > .unit-card.card-rarity-epic::after,
+.grid .cell > .unit-card.card-rarity-mythic::after,
+.grid .cell > .unit-card.card-rarity-legendary::after,
+.grid .cell > .unit-card.card-rarity-demigod::after,
+.grid .cell > .unit-card.leader::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  -webkit-mask:none !important;
+  mask:none !important;
+}
+
+/* Interior completamente limpio */
+.grid .cell > .unit-card,
+.grid .cell > .unit-card.card-rarity-basic,
+.grid .cell > .unit-card.card-rarity-improved,
+.grid .cell > .unit-card.card-rarity-heroic,
+.grid .cell > .unit-card.card-rarity-glorious,
+.grid .cell > .unit-card.card-rarity-epic,
+.grid .cell > .unit-card.card-rarity-mythic,
+.grid .cell > .unit-card.card-rarity-legendary,
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader{
+  background:rgba(0,0,0,.18) !important;
+  box-shadow:0 7px 13px rgba(0,0,0,.44) !important;
+}
+
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.grid .cell > .unit-card .unit-portrait img{
+  filter:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+  mix-blend-mode:normal !important;
+}
+.grid .cell > .unit-card .unit-portrait{background:#050505 !important;}
+
+/* El brillo se aplica SOLO al marco real */
+@keyframes hvRarityFramePulse7had{0%,100%{opacity:.94}50%{opacity:1}}
+
+.grid .cell > .unit-card .unit-frame-skin{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:4 !important;
+  pointer-events:none !important;
+  box-shadow:none !important;
+  background:var(--frame-image) center/100% 100% no-repeat !important;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
+  animation:none !important;
+}
+
+/* Básicas: sin glow */
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-skin{
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
+  animation:none !important;
+}
+
+/* Colores definitivos por rareza, alineados al color visible del marco */
+.grid .cell > .unit-card.card-rarity-improved{--hv7had-g1:rgba(116,211,255,.96);--hv7had-g2:rgba(116,211,255,.72);--hv7had-g3:rgba(116,211,255,.46);} /* azul */
+.grid .cell > .unit-card.card-rarity-heroic{--hv7had-g1:rgba(82,255,166,.98);--hv7had-g2:rgba(82,255,166,.74);--hv7had-g3:rgba(82,255,166,.48);} /* verde */
+.grid .cell > .unit-card.card-rarity-glorious{--hv7had-g1:rgba(255,214,95,.98);--hv7had-g2:rgba(255,214,95,.74);--hv7had-g3:rgba(255,214,95,.48);} /* dorado */
+.grid .cell > .unit-card.card-rarity-epic{--hv7had-g1:rgba(190,122,255,.98);--hv7had-g2:rgba(190,122,255,.74);--hv7had-g3:rgba(190,122,255,.48);} /* violeta */
+.grid .cell > .unit-card.card-rarity-mythic{--hv7had-g1:rgba(255,100,201,.98);--hv7had-g2:rgba(255,100,201,.74);--hv7had-g3:rgba(255,100,201,.48);} /* rosa */
+.grid .cell > .unit-card.card-rarity-legendary{--hv7had-g1:rgba(255,157,69,.99);--hv7had-g2:rgba(255,157,69,.76);--hv7had-g3:rgba(255,157,69,.50);} /* naranja */
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader{--hv7had-g1:rgba(255,244,157,.99);--hv7had-g2:rgba(255,244,157,.78);--hv7had-g3:rgba(255,244,157,.52);} /* crema / líder */
+
+.grid .cell > .unit-card.card-rarity-improved .unit-frame-skin,
+.grid .cell > .unit-card.card-rarity-heroic .unit-frame-skin,
+.grid .cell > .unit-card.card-rarity-glorious .unit-frame-skin,
+.grid .cell > .unit-card.card-rarity-epic .unit-frame-skin,
+.grid .cell > .unit-card.card-rarity-mythic .unit-frame-skin,
+.grid .cell > .unit-card.card-rarity-legendary .unit-frame-skin,
+.grid .cell > .unit-card.card-rarity-demigod .unit-frame-skin,
+.grid .cell > .unit-card.leader .unit-frame-skin{
+  filter:
+    drop-shadow(0 4px 10px rgba(0,0,0,.56))
+    drop-shadow(0 0 4px var(--hv7had-g1))
+    drop-shadow(0 0 10px var(--hv7had-g2))
+    drop-shadow(0 0 18px var(--hv7had-g3)) !important;
+  animation:hvRarityFramePulse7had 2.6s ease-in-out infinite !important;
+}
+
+/* Stats y sellos siempre arriba */
+.grid .cell > .unit-card .unit-ornate-ui{z-index:8 !important;}
+.grid .cell > .unit-card .unit-status-bubbles,
+.grid .cell > .unit-card .unit-status-seals,
+.grid .cell > .unit-card .status-seal-rail,
+.grid .cell > .unit-card .unit-status-seal-extra{z-index:9 !important;}
