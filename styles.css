@@ -15502,3 +15502,113 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid .cell > .unit-card .unit-status-seals,
 .grid .cell > .unit-card .status-seal-rail,
 .grid .cell > .unit-card .unit-status-seal-extra{z-index:9 !important;}
+
+/* ===== 7HAF: brillo neon SOLO en el ornamental de rareza ===== */
+.grid .cell > .unit-card,
+.cell > .unit-card{
+  box-shadow:0 5px 8px rgba(0,0,0,.38) !important;
+}
+
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer{
+  filter:none !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+  opacity:1 !important;
+}
+
+.grid .cell > .unit-card .unit-frame-rarity,
+.cell > .unit-card .unit-frame-rarity{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  background-color:transparent !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+  -webkit-mask-image:none !important;
+  mask-image:none !important;
+  mix-blend-mode:normal !important;
+  opacity:0 !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity{
+  display:none !important;
+}
+
+.grid .cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-improved{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");--hv-ornament-glow-a:rgba(109,212,255,.92);--hv-ornament-glow-b:rgba(109,212,255,.55);--hv-ornament-glow-c:rgba(109,212,255,.28);}
+.grid .cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-heroic{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");--hv-ornament-glow-a:rgba(84,255,158,.96);--hv-ornament-glow-b:rgba(84,255,158,.60);--hv-ornament-glow-c:rgba(84,255,158,.30);}
+.grid .cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-glorious{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");--hv-ornament-glow-a:rgba(255,214,95,.94);--hv-ornament-glow-b:rgba(255,214,95,.58);--hv-ornament-glow-c:rgba(255,214,95,.30);}
+.grid .cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-epic{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");--hv-ornament-glow-a:rgba(190,122,255,.94);--hv-ornament-glow-b:rgba(190,122,255,.58);--hv-ornament-glow-c:rgba(190,122,255,.30);}
+.grid .cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-mythic{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");--hv-ornament-glow-a:rgba(255,100,201,.95);--hv-ornament-glow-b:rgba(255,100,201,.60);--hv-ornament-glow-c:rgba(255,100,201,.32);}
+.grid .cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-legendary{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");--hv-ornament-glow-a:rgba(255,157,69,.96);--hv-ornament-glow-b:rgba(255,157,69,.60);--hv-ornament-glow-c:rgba(255,157,69,.32);}
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");--hv-ornament-glow-a:rgba(255,244,157,.98);--hv-ornament-glow-b:rgba(255,244,157,.66);--hv-ornament-glow-c:rgba(255,244,157,.34);}
+
+.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
+.grid .cell > .unit-card.leader .unit-frame-rarity,
+.cell > .unit-card.card-rarity-improved .unit-frame-rarity,
+.cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
+.cell > .unit-card.card-rarity-epic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
+.cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
+.cell > .unit-card.leader .unit-frame-rarity{
+  display:block !important;
+  opacity:1 !important;
+  background-image:var(--hv-ornament-image) !important;
+  filter:
+    drop-shadow(0 0 2px rgba(255,255,255,.35))
+    drop-shadow(0 0 8px var(--hv-ornament-glow-a))
+    drop-shadow(0 0 16px var(--hv-ornament-glow-b))
+    drop-shadow(0 0 28px var(--hv-ornament-glow-c)) !important;
+  animation:hvOrnamentalNeonPulse7hag 6s cubic-bezier(.35,0,.2,1) infinite !important;
+}
+
+@keyframes hvOrnamentalNeonPulse7hag{
+  0%{
+    opacity:.90;
+    filter:drop-shadow(0 0 2px rgba(255,255,255,.28)) drop-shadow(0 0 7px var(--hv-ornament-glow-a)) drop-shadow(0 0 14px var(--hv-ornament-glow-b)) drop-shadow(0 0 24px var(--hv-ornament-glow-c));
+  }
+  22%{
+    opacity:.94;
+    filter:drop-shadow(0 0 2.4px rgba(255,255,255,.34)) drop-shadow(0 0 9px var(--hv-ornament-glow-a)) drop-shadow(0 0 18px var(--hv-ornament-glow-b)) drop-shadow(0 0 30px var(--hv-ornament-glow-c));
+  }
+  50%{
+    opacity:1;
+    filter:drop-shadow(0 0 3.1px rgba(255,255,255,.44)) drop-shadow(0 0 12px var(--hv-ornament-glow-a)) drop-shadow(0 0 24px var(--hv-ornament-glow-b)) drop-shadow(0 0 38px var(--hv-ornament-glow-c));
+  }
+  74%{
+    opacity:.96;
+    filter:drop-shadow(0 0 2.7px rgba(255,255,255,.38)) drop-shadow(0 0 10px var(--hv-ornament-glow-a)) drop-shadow(0 0 20px var(--hv-ornament-glow-b)) drop-shadow(0 0 32px var(--hv-ornament-glow-c));
+  }
+  100%{
+    opacity:.90;
+    filter:drop-shadow(0 0 2px rgba(255,255,255,.28)) drop-shadow(0 0 7px var(--hv-ornament-glow-a)) drop-shadow(0 0 14px var(--hv-ornament-glow-b)) drop-shadow(0 0 24px var(--hv-ornament-glow-c));
+  }
+}

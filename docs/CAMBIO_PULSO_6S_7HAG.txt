@@ -1,0 +1,2 @@
+Pulso del neon del ornamental cambiado a ciclo completo de 6 segundos con subida y bajada gradual.
+Pico aprox al segundo 3.0. Retorno progresivo, no brusco.
