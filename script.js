@@ -842,7 +842,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y Agilidad 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: si lo atacan cuerpo a cuerpo unidades que no sean Caballería, el atacante recibe -2 AGI y -2 Guardia durante ese combate. Contraataque de lanza: si recibe ataque dentro de su rango y sobrevive, contraataca una vez por turno causando mínimo 1 daño si acierta. Anticaballería: si lo ataca una Caballería cuerpo a cuerpo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -2 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. La Precisión se calcula y se consume normalmente. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y recupera 1 de Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -3318,10 +3318,10 @@ function statGuideData(label=""){
     vida:{title:"♥ HP / Vida",short:"Resistencia real de la unidad.",formula:"Cuando HP llega a 0, la unidad sale del campo. La Guardia puede evitar que el daño toque el HP.",example:"Una unidad con 2 HP y 0 Guardia cae si recibe 2 de daño a Vida."},
     gd:{title:"🛡 GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
     guardia:{title:"🛡 GD / Guardia",short:"Armadura temporal. Amortigua daño durante el turno y se restaura al inicio del turno de su dueño si la unidad sobrevive.",formula:"Daño a Vida = Daño recibido - Guardia disponible. La Guardia consumida baja durante ese turno. Al iniciar el turno de su dueño se restaura a su valor base más buffs activos.",example:"Si recibes 4 de daño con 3 GD, pierdes 3 GD y solo 1 HP. Si sobrevives, tu GD vuelve al iniciar tu próximo turno."},
-    dx:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"DX se suma con AGI para crear la reserva PREC/EVA del turno. Esa reserva baja al atacar o recibir ataques y vuelve al inicio del próximo turno del dueño.",example:"Una unidad técnica puede conservar defensa si ataca a objetivos con poca evasión, porque solo gasta lo necesario."},
-    destreza:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"DX se suma con AGI para crear la reserva PREC/EVA del turno. Esa reserva baja al atacar o recibir ataques y vuelve al inicio del próximo turno del dueño.",example:"Una unidad técnica puede conservar defensa si ataca a objetivos con poca evasión, porque solo gasta lo necesario."},
-    agi:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX para crear la reserva PREC/EVA del turno. Atacar y recibir ataques gastan esa reserva; se restaura al inicio del próximo turno del dueño.",example:"Un asesino ágil puede atacar y aún conservar defensa si el objetivo exigía poca evasión."},
-    agilidad:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX para crear la reserva PREC/EVA del turno. Atacar y recibir ataques gastan esa reserva; se restaura al inicio del próximo turno del dueño.",example:"Un asesino ágil puede atacar y aún conservar defensa si el objetivo exigía poca evasión."},
+    dx:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"DX se suma con AGI para crear la reserva PREC/EVA del turno. Al atacar, el golpe primero presiona/consume EVA del defensor y luego se compara contra la EVA restante. Al atacar o recibir presión, la reserva gastada vuelve al inicio del próximo turno del dueño.",example:"Una unidad técnica puede conservar defensa si ataca a objetivos con poca evasión, porque solo gasta lo necesario."},
+    destreza:{title:"⌁ DX / Destreza",short:"Técnica. Sirve para precisión al atacar y evasión al defender.",formula:"DX se suma con AGI para crear la reserva PREC/EVA del turno. Al atacar, el golpe primero presiona/consume EVA del defensor y luego se compara contra la EVA restante. Al atacar o recibir presión, la reserva gastada vuelve al inicio del próximo turno del dueño.",example:"Una unidad técnica puede conservar defensa si ataca a objetivos con poca evasión, porque solo gasta lo necesario."},
+    agi:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX para crear la reserva PREC/EVA del turno. Al atacar, el golpe primero presiona/consume EVA del defensor y luego se compara contra la EVA restante. Atacar y recibir presión gastan reserva; se restaura al inicio del próximo turno del dueño.",example:"Un asesino ágil puede atacar y aún conservar defensa si el objetivo exigía poca evasión."},
+    agilidad:{title:"➤ AGI / Agilidad",short:"Velocidad. Suma tanto para conectar ataques como para esquivarlos.",formula:"AGI se suma con DX para crear la reserva PREC/EVA del turno. Al atacar, el golpe primero presiona/consume EVA del defensor y luego se compara contra la EVA restante. Atacar y recibir presión gastan reserva; se restaura al inicio del próximo turno del dueño.",example:"Un asesino ágil puede atacar y aún conservar defensa si el objetivo exigía poca evasión."},
     mv:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
     mov:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
     movimiento:{title:"» MV / Movimiento",short:"Casillas que puede avanzar al usar MOV.",formula:"Una unidad puede moverse hasta su MV en fases donde MOV esté permitido. Efectos temporales pueden subir o bajar ese número.",example:"MV 4 permite avanzar hasta 4 casillas libres."},
@@ -3478,6 +3478,19 @@ function getExactEffectGuideData(entity,effectText=""){
     example:isUnit?"Regla general: si un efecto dice que debe hacer daño real, significa daño a Vida/HP. Si la Guardia absorbe todo, ese efecto no se activa.":"Lee el objetivo y el momento de uso antes de jugar la carta.",
     card:entity
   };
+  const systemLines=[];
+  if(isUnit){
+    const weapon=getWeaponClassForCard(entity);
+    if(weapon)systemLines.push(`Clase de arma real: ${WEAPON_CLASS_LABELS?.[weapon]||weapon}. Ventaja de arma: Espada > Lanza, Lanza > Caballería, Caballería > Arco, Arco > Espada/Bestia y Bestia > Caballería. Si esta unidad tiene ventaja al atacar, gana +${WEAPON_ADVANTAGE_DEX_BONUS} DX durante ese combate.`);
+    if(isSwordUnitCardLike(entity))systemLines.push("Regla global de espada: esta carta recibe +3 Guardia base si todavía no está aplicado en sus stats.");
+    if(isAxeUnitCardLike(entity))systemLines.push("Regla global de hacha: esta carta recibe +2 DX base si todavía no está aplicado en sus stats.");
+    if(isArcherWeaponUnitCardLike(entity))systemLines.push("Regla global de arco: esta carta recibe +1 RG base si todavía no está aplicado en sus stats. El rango efectivo de arqueros no líderes se limita por el sistema.");
+    if(isLanceUnitCardLike(entity))systemLines.push("Regla global de lanza: puede contraatacar una vez por turno si sobrevive; el contraataque de lanza puede responder hasta RG 2 aunque su rango normal sea 1.");
+    const mode=getUnitEffectMode(entity);
+    systemLines.push(mode==="passive"?"Botón EFFECT: este efecto no se activa manualmente; se ejecuta automáticamente cuando se cumple su condición.":`Botón EFFECT: esta unidad sí tiene uso manual (${mode==="self"?"autoobjetivo":"objetivo/casilla"}), si hay objetivo válido y no gastó acción.`);
+    systemLines.push("Regla PREC/EVA actual: el ataque presiona/consume EVA del defensor antes de decidir el impacto. Luego se compara PREC contra la EVA restante. Si un efecto exige daño real, debe bajar Vida/HP; romper Guardia no basta.");
+  }
+  const systemNote=systemLines.length?`\n\nReglas reales del sistema aplicadas a esta carta:\n• ${systemLines.join("\n• ")}`:"";
   const map={
     cavalry:{short:"Unidad de presión. Su efecto castiga al objetivo cuando entra en combate después de una carga larga.",formula:`Condición:
 • Debe moverse 3 o más espacios este turno.
@@ -3486,18 +3499,30 @@ function getExactEffectGuideData(entity,effectText=""){
 Resultado:
 • El objetivo recibe -3 AGI solo durante ese combate.
 • Esa reducción ayuda a que el ataque sea más fácil de conectar.`,example:"Si se mueve solo 1 o 2 casillas, no activa Carga desestabilizadora."},
-    berserker:{short:"Unidad agresiva. Rompe la defensa del objetivo al iniciar su ataque.",formula:`Condición:
-• Debe declarar un ataque cuerpo a cuerpo.
+    berserker:{short:"Unidad agresiva de hacha. El sistema le suma +2 Destreza base y rompe Guardia al declarar ataque cuerpo a cuerpo.",formula:`Regla de hacha:
+• El Berserker recibe +2 DX base por usar hacha.
+• Ese +2 ya está incluido en el DX que ves en DET y entra en la fórmula PREC/EVA.
 
-Resultado:
-• El objetivo recibe -3 Guardia durante ese combate.
-• Si la Guardia baja lo suficiente, el daño sobrante puede tocar Vida.`,example:"Funciona aunque el Berserker no haya recibido daño antes. Es una herramienta para abrir tanques."},
-    spearman:{short:"Unidad defensiva. Castiga ataques recibidos y es especialmente fuerte contra Caballería.",formula:`Contraataque de lanza:
+Ruptura brutal:
+• Al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 Guardia durante ese combate.
+• La reducción ocurre antes de calcular el daño contra Guardia.
+• Si la Guardia restante no alcanza, el sobrante baja Vida/HP.
+
+PREC/EVA:
+• El ataque primero presiona/consume la EVA disponible del defensor.
+• Luego se comprueba el golpe contra la EVA restante.
+• Si la EVA restante ya no alcanza para defenderse, el ataque impacta.`,example:"Berserker con DX aumentado por hacha puede abrir unidades resistentes. Contra Lancero solar, también recibe la penalización de Formación de picas si lo ataca cuerpo a cuerpo."},
+    spearman:{short:"Unidad defensiva. El sistema castiga a quien lo ataca cuerpo a cuerpo y es especialmente fuerte contra Caballería.",formula:`Formación de picas:
+• Si una unidad que NO es Caballería lo ataca cuerpo a cuerpo, el atacante recibe -2 AGI y -2 Guardia durante ese combate.
+• Esta penalización afecta la PREC del atacante porque la AGI suma a PREC/EVA.
+• También deja al atacante con menos Guardia para recibir contraataques o daño posterior.
+
+Contraataque de lanza:
 • Si recibe un ataque dentro de su rango y sobrevive, contraataca una vez por turno.
 • Si el contraataque acierta, causa mínimo 1 daño.
 
 Anticaballería:
-• Si una Caballería lo ataca cuerpo a cuerpo, esa Caballería queda con Guardia 0 y Agilidad 0 durante ese combate.`,example:"Si el Lancero muere por el ataque recibido, no llega a contraatacar."},
+• Si una Caballería lo ataca cuerpo a cuerpo, esa Caballería queda con Guardia 0 y AGI 0 durante ese combate.`,example:"Si un Berserker lo ataca cuerpo a cuerpo, el Berserker aplica -3 Guardia al Lancero, pero también recibe -2 AGI/-2 Guardia por Formación de picas."},
     archer:{short:"Unidad de rango. Su debuff solo entra si el disparo realmente hiere la Vida enemiga.",formula:`Condición:
 • Debe atacar a distancia.
 • El ataque debe causar al menos 1 daño a Vida/HP.
@@ -3625,16 +3650,241 @@ Resultado:
 • No debes controlar ya una Caballería Arquera de Saladino.
 
 Resultado:
-• Invoca una Caballería Arquera en una casilla libre adyacente válida.`,example:"Si no hay casilla libre o ya existe su Caballería Arquera, no puede invocarla."}
+• Invoca una Caballería Arquera en una casilla libre adyacente válida.`,example:"Si no hay casilla libre o ya existe su Caballería Arquera, no puede invocarla."},
+    african_buffalo:{short:"Bestia reactiva. Su cornada ocurre antes del ataque cuerpo a cuerpo enemigo.",formula:`Instinto de Cornada:
+• Cuando una unidad enemiga adyacente declara un ataque cuerpo a cuerpo contra el Búfalo Africano, el Búfalo hace 2 daño directo primero.
+• Si ese daño destruye al atacante, el ataque enemigo se cancela.
+• Si el atacante sobrevive, el combate continúa normalmente.
+
+Importante:
+• Solo se activa contra ataques cuerpo a cuerpo adyacentes.
+• No necesita que el Búfalo ataque primero.
+• El daño es directo a Vida/HP.`,example:"Si una unidad con 2 Vida intenta atacarlo cuerpo a cuerpo, puede caer antes de golpear."},
+    shaka_zulu:{short:"Leyenda de formación. Premia atacar objetivos rodeados por tus aliados.",formula:`Cuernos del Búfalo:
+• Mientras Shaka Zulu esté en campo, si una unidad aliada ataca a un enemigo adyacente a otro aliado tuyo, el atacante obtiene +1 AT durante ese combate.
+• Si el objetivo está adyacente a 2 o más aliados tuyos, el objetivo recibe además -2 AGI durante ese combate.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.
+• Su contraataque usa rango de contraataque de lanza.`,example:"No basta con atacar: debes tener aliados rodeando o presionando al objetivo."},
+    yi_sun_sin:{short:"Leyenda de bloqueo. Castiga invocaciones enemigas al entrar.",formula:`Bloqueo Naval:
+• Mientras Yi Sun-sin esté en campo, las unidades enemigas invocadas entran con -1 DX y -1 MOV durante su primer turno.
+
+Importante:
+• Afecta unidades nuevas del enemigo.
+• No reduce unidades que ya estaban en el campo antes de que Yi Sun-sin aplicara la presión.
+• Es una penalización temporal de entrada.`,example:"Una unidad rival recién invocada queda menos precisa y con menos movilidad para ese primer turno."},
+    simo_hayha:{short:"Arquero de remate. Castiga objetivos ya heridos y gana valor desde larga distancia.",formula:`Blanco de Invierno:
+• Si Simo ataca a una unidad que ya perdió Vida/HP este turno, obtiene +2 AT durante ese ataque.
+• Si ataca a distancia desde rango 4 o más, ignora 1 Guardia del objetivo durante ese combate.
+
+Regla de arco:
+• Recibe +1 RG base.
+• Los arqueros tienen rango máximo efectivo limitado por el sistema de rango.`,example:"Simo es mejor rematando unidades que ya fueron heridas antes en el mismo turno."},
+    boudica:{short:"Leyenda de venganza. Se fortalece cuando cae un aliado.",formula:`Ira de Iceni:
+• Una vez por turno, cuando una unidad aliada es derrotada, Boudica obtiene +2 AT.
+• Si el aliado derrotado era especial/legendario, también obtiene +1 MOV.
+• El buff queda como bonus temporal según el sistema de limpieza de turnos.
+
+Importante:
+• Se activa por caída aliada, no por ataque propio.
+• Solo una vez por turno.`,example:"Si pierdes una unidad especial, Boudica gana ataque y movimiento para responder."},
+    ulysses:{short:"Leyenda táctica. Al atacar, mejora la formación aliada cercana.",formula:`Estratega de Ítaca:
+• Cuando Ulises ataca, todas las unidades aliadas en radio 2 alrededor de él obtienen +1 Guardia y +1 MOV.
+• No afecta líderes.
+• No afecta al propio Ulises.
+• El bonus de MOV dura hasta el próximo turno del dueño.
+
+Importante:
+• Se activa cuando Ulises declara/realiza ataque, no desde el botón EFFECT.`,example:"Atacar con Ulises cerca de tu formación puede preparar un avance defensivo del resto de tus unidades."},
+    joan_of_arc:{short:"Leyenda protectora. Reduce daño aliado una vez por turno y puede dejar Guardia extra.",formula:`Llama de Orléans:
+• Una vez por turno, cuando un aliado vaya a recibir daño, Juana reduce ese daño en 1.
+• Si después de esa reducción el aliado queda en 1 Vida, obtiene +1 Guardia.
+• No se activa si la unidad afectada tiene bloqueada la reducción de daño.
+
+Importante:
+• La reducción se consume automáticamente.
+• Protege aliados, no aumenta el daño de Juana.`,example:"Si una unidad iba a recibir 3 daño, Juana puede reducirlo a 2 una vez por turno."},
+    leonidas:{short:"Leyenda de formación defensiva. Mejora básicos cercanos y puede castigar a quien lo derriba.",formula:`Última Formación:
+• Si Leónidas está adyacente a una unidad aliada básica, ambos reciben +2 Guardia.
+• Las unidades básicas aliadas adyacentes a Leónidas también reciben este bonus.
+
+Última resistencia:
+• Si Leónidas cae y el atacante no cae por el castigo, queda marcado como usado.
+• Si el castigo destruye al atacante, Leónidas puede quedar con 1 Vida según la regla de salvamento del código.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.`,example:"Funciona mejor pegado a unidades básicas, formando un muro."},
+    nasu_no_yoichi:{short:"Arquero de precisión. Debilita Guardia desde distancia larga.",formula:`Marca del Abanico:
+• Si Nasu ataca a distancia desde rango 3 o más, el objetivo recibe -1 Guardia durante ese combate.
+• Si además causa daño real a Vida/HP, el código deja una reducción de Guardia persistente adicional sobre el objetivo.
+
+Regla de arco:
+• Recibe +1 RG base.`,example:"Nasu debe atacar desde lejos para abrir la Guardia del objetivo."},
+    tomoe_gozen:{short:"Caballería de presión. Necesita moverse antes de atacar.",formula:`Jinete de la Luna Cortante:
+• Si Tomoe se movió 2 o más casillas este turno antes de atacar, el objetivo recibe -2 AGI durante ese combate.
+• Si el objetivo tiene RG 2 o más, Tomoe obtiene +1 AT durante ese combate.
+
+Importante:
+• Si no se movió al menos 2 casillas, no activa la penalización.
+• Es Caballería para reglas de arma y anticaballería.`,example:"Úsala como golpe móvil contra unidades de rango o unidades que dependen de AGI."},
+    hannibal_barca:{short:"Leyenda de cerco. Castiga enemigos que quedan atrapados junto a varios aliados de Hannibal.",formula:`Trampa de Cannas:
+• Una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde -1 AT y -1 MOV hasta su próximo turno.
+• La penalización se guarda con duración de próximo turno del dueño del objetivo.
+
+Importante:
+• Depende de posición.
+• Se activa por quedar adyacente a una formación, no por daño.`,example:"Si empujas o atraes una unidad enemiga junto a dos aliados de Hannibal, queda debilitada."},
+    subotai:{short:"Leyenda de movilidad. Da movimiento extra a un aliado, pero no al mismo dos turnos seguidos.",formula:`Marcha de Mil Horizontes:
+• Una vez por turno, elige una unidad aliada.
+• Esa unidad obtiene +2 MOV este turno.
+• No puede usarse sobre la misma unidad dos turnos seguidos.
+
+Uso:
+• Es un EFFECT manual con objetivo aliado.
+• No puede usarse si Subotai ya lo usó este turno.`,example:"Sirve para reposicionar una amenaza o alcanzar un ataque que normalmente no llegaba."},
+    lu_bu:{short:"Leyenda de ejecución. Gana Ataque permanente al destruir, con límite.",formula:`Furia de la Alabarda:
+• La primera vez por turno que Lü Bu destruye una unidad enemiga, obtiene +1 AT permanente.
+• El aumento permanente tiene límite de +3 por esta regla.
+• Solo ocurre si la unidad enemiga cae por su ataque.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.`,example:"Lü Bu escala si logra remates, pero no gana AT infinito."},
+    ragnar_lodbrok:{short:"Leyenda saqueadora. Se cura al herir objetivos importantes.",formula:`Saqueo del Norte:
+• Una vez por turno, si Ragnar hace daño real a un líder, estructura o unidad con más Vida máxima que él, recupera 1 Vida.
+• Debe causar daño a Vida/HP.
+• Si solo rompe Guardia, no se cura.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"Ragnar se sostiene mejor atacando objetivos grandes o líderes."},
+    el_cid:{short:"Leyenda duelista. Mejora contra enemigos con más Ataque.",formula:`Campeador:
+• Cuando El Cid ataca a una unidad con mayor AT que él, obtiene +2 DX y +2 Guardia durante ese combate.
+• Cuando El Cid es atacado por una unidad con mayor AT que él, también obtiene +2 DX y +2 Guardia durante ese combate.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"No se activa contra enemigos con AT igual o menor que el suyo."},
+    spartacus:{short:"Leyenda de rebelión. Mejora unidades básicas contra cartas especiales.",formula:`Romper Cadenas:
+• Mientras Espartaco esté en campo, tus unidades básicas obtienen +1 AT cuando atacan cartas especiales/legendarias.
+• El bonus se aplica al atacante básico durante ese combate.
+
+Importante:
+• No mejora cartas especiales.
+• No se activa si el objetivo no es especial.`,example:"Convierte unidades básicas en amenaza contra leyendas."},
+    sun_tzu:{short:"Leyenda de soporte táctico. Su EFFECT mejora precisión y Guardia de un aliado.",formula:`Arte de la Guerra:
+• Una vez por turno, elige una unidad aliada.
+• Ese aliado obtiene +1 DX y +1 Guardia.
+• No puede usarse si Sun Tzu ya lo usó este turno.
+
+Uso:
+• Es un EFFECT manual con objetivo aliado.`,example:"Úsalo antes de un ataque clave o para reforzar una unidad que va a recibir presión."},
+    hector_troy:{short:"Leyenda de aura defensiva/ofensiva. Debilita enemigos que se agrupan junto a él.",formula:`Muralla de Troya:
+• Aura pasiva.
+• Cuenta cuántas unidades enemigas están en rango 1 de Héctor.
+• Cada una de esas unidades enemigas pierde AT igual a esa cantidad.
+• La penalización aparece como estado/debuff mientras estén cerca.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.`,example:"Si 3 enemigos rodean a Héctor, cada uno puede perder 3 AT mientras siga en esa zona."},
+    beowulf:{short:"Leyenda cazamonstruos. Gana fuerza contra objetivos con más Vida máxima.",formula:`Matador de Monstruos:
+• Cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 AT durante ese combate.
+• Si destruye a ese objetivo, recupera 2 Vida.
+• La curación no supera su Vida máxima efectiva.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"Especialmente útil contra tanques, bestias grandes o semidioses con mucha Vida."},
+    miyamoto_musashi:{short:"Leyenda de contraataque. Responde en cuerpo a cuerpo cuando evade o sobrevive herido.",formula:`Dos Cielos:
+• Una vez por turno, si Musashi evade un ataque cuerpo a cuerpo, contraataca inmediatamente con +2 AT.
+• Si recibe daño real y sobrevive a un ataque cuerpo a cuerpo, también puede contraatacar.
+• Si ese contraataque hace daño real, puede aplicar Sangrado según la resolución del combate.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"No es un ataque manual extra: se activa como respuesta defensiva durante combate cuerpo a cuerpo."},
+    khalid_ibn_al_walid:{short:"Leyenda de cadena. Puede seguir atacando tras destruir, pero cada ataque encadenado se vuelve más pesado.",formula:`Espada Invicta:
+• Cuando Khalid destruye una unidad enemiga con un ataque, puede volver a atacar si sigue vivo.
+• Cada ataque encadenado aplica una penalización acumulada de -2 AT.
+• La penalización se muestra como presión de ataque y se resta en combate.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"Puede barrer unidades heridas, pero cada remate hace que el siguiente golpe sea menos fuerte."},
+    attila_hun:{short:"Leyenda de terror. Debilita enemigos heridos por debajo de la mitad de Vida.",formula:`Azote de Imperios:
+• Mientras Atila esté en campo, los enemigos con la mitad o menos de su Vida máxima pierden -3 Guardia y -3 AGI.
+• Es un aura global contra enemigos heridos.
+• No afecta líderes.
+
+Regla de arco:
+• Recibe +1 RG base.
+• También está clasificado como Caballería para ventaja de arma.`,example:"Atila vuelve vulnerables a las unidades que ya están a media Vida o menos."},
+    genghis_khan:{short:"Leyenda de conquista. Al destruir, debilita a enemigos cercanos.",formula:`Horda de la Estepa:
+• Cuando Gengis Kan destruye una unidad enemiga, todas las unidades enemigas no líderes en radio 2 pierden -2 Guardia.
+• Además reciben -1 MOV hasta su próximo turno.
+• Solo se activa si el objetivo destruido no era líder.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"Después de un remate, abre a las unidades cercanas para el resto de tu ofensiva."},
+    alexander_magnus:{short:"Leyenda de muro. Premia bloquear ataques sin perder Vida.",formula:`Muro de Macedonia:
+• Mientras Alejandro Magno esté en campo, una unidad aliada que recibe un ataque y bloquea sin perder Vida gana +1 Vida máxima y +1 Vida actual.
+• El aumento ocurre sobre la unidad que defendió.
+• No se activa si recibió daño real a Vida/HP.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.`,example:"Si la Guardia absorbe todo el daño, la unidad puede crecer en Vida."},
+    julius_caesar:{short:"Leyenda de disciplina. Debilita el primer ataque enemigo de cada turno.",formula:`Disciplina de las Legiones:
+• Mientras Julio César esté en campo, la primera vez por turno que una unidad enemiga ataque a una unidad de su dueño, ese atacante recibe -2 AT y -1 DX durante ese combate.
+• La regla se marca como usada en César.
+• No se repite hasta que se limpie en un nuevo turno.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"El primer ataque enemigo contra tu línea bajo César llega más débil y menos preciso."},
+    cu_chulainn:{short:"Semidiós de furia. Se vuelve más fuerte herido y puede contraatacar cuerpo a cuerpo.",formula:`Furia del Sabueso:
+• Mientras Cú Chulainn tenga la mitad o menos de su Vida máxima, obtiene +5 AT y +5 AGI.
+
+Contraataque del Sabueso:
+• Una vez por turno, cuando recibe un ataque cuerpo a cuerpo y sobrevive, puede contraatacar.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.`,example:"Herido se vuelve más peligroso, no más débil."},
+    gilgamesh:{short:"Semidiós de presencia. Debilita enemigos adyacentes y reduce daño de ataques a distancia.",formula:`Peso del Rey de Uruk:
+• Los enemigos adyacentes a Gilgamesh reciben -3 AT y -3 AGI.
+• Si Gilgamesh recibe daño de proyectiles, arqueros o ataques mágicos a distancia, reduce ese daño en 2.
+• La reducción no aplica si tiene bloqueadas reducciones especiales.
+
+Regla de espada:
+• Recibe +3 Guardia base.`,example:"Acercarse a Gilgamesh debilita el ataque y la evasión del enemigo."},
+    arjuna:{short:"Semidiós arquero. Puede repetir un disparo fallido una vez por turno.",formula:`Flecha del Dharma:
+• Una vez por turno, cuando Arjuna falla un ataque a distancia, puede repetir el intento con +6 DX.
+• Si acierta con esa repetición, provoca Veneno.
+• La repetición se marca como usada ese turno.
+
+Regla de arco:
+• Recibe +1 RG base.`,example:"Su primer fallo a distancia no siempre termina el ataque: puede tener una segunda oportunidad mejorada."},
+    achilles:{short:"Semidiós ofensivo. Primer ataque más fuerte, Guardia por concentración y curación al inicio.",formula:`Cólera del Pélida:
+• La primera vez por turno que Aquiles ataca, obtiene +2 AT durante ese combate.
+
+Concentración del Pélida:
+• Si Aquiles tiene 2 o más enemigos adyacentes, obtiene +6 Guardia.
+
+Sangre del Pélida:
+• Al inicio de tu turno, Aquiles recupera 1 Vida sin superar su máximo.
+
+Regla de lanza:
+• Puede contraatacar una vez por turno si sobrevive.`,example:"Aquiles quiere estar en el centro del choque, pero su primer ataque del turno es el más fuerte."},
+    saladin_archer_cavalry:{short:"Unidad token de Saladino. Funciona como caballería arquera rápida.",formula:`Origen:
+• Es invocada por Media Luna del Desierto de Saladino.
+• No se juega desde la mano normalmente.
+
+Reglas:
+• Cuenta como Caballería para reglas de arma y anticaballería.
+• Cuenta como arquera para Regla de arco: recibe +1 RG base.
+• Puede aprovechar movilidad alta para presión de rango.`,example:"Si un Lancero solar la recibe cuerpo a cuerpo, puede aplicarle Anticaballería por ser Caballería."}
   };
   const custom=map[key];
-  if(custom)return {...generic,...custom,title:`✦ Efecto exacto: ${name}`,card:entity};
+  if(custom)return {...generic,...custom,formula:`${custom.formula||generic.formula}${systemNote}`,title:`✦ Efecto exacto: ${name}`,card:entity};
   const sections=getEntityAbilitySections(entity,raw);
   if(sections.length){
-    return {...generic,formula:sections.map(sec=>`${sec.title}:
-• ${sec.body}`).join("\n\n"),example:"Si una habilidad dice 'si hace daño real', debe causar daño a Vida/HP. Si solo baja Guardia, esa parte no se activa."};
+    return {...generic,formula:`${sections.map(sec=>`${sec.title}:
+• ${sec.body}`).join("\n\n")}${systemNote}`,example:"Si una habilidad dice 'si hace daño real', debe causar daño a Vida/HP. Si solo baja Guardia, esa parte no se activa."};
   }
-  return generic;
+  return {...generic,formula:`${generic.formula}${systemNote}`};
 }
 function openExactEntityEffectGuide(entity,effectText="",effectTitle=""){
   const data=getExactEffectGuideData(entity,effectText);
@@ -4290,7 +4540,13 @@ async function attackUnit(a,d){
       d=units.find(u=>u.id===d.id)||d;
     }
   }
-  let hit=mods.falconDive?{hit:true,roll:1,chance:100}:rollHit(a,d,mods);
+  let evasionPressure={units,spent:0,remaining:typeof d?.leader!=="undefined"&&d.leader?null:getDefenseEvasionScore(d,mods)};
+  if(!mods.falconDive){
+    evasionPressure=spendEvasionByAttack(a,d,units,mods);
+    units=evasionPressure.units;
+    d=units.find(u=>u.id===d.id)||d;
+  }
+  let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(a,d,mods);
   let rerollText="",arjunaDharmaPoison=false;
   if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedTurn){
     const first=hit;
@@ -4303,8 +4559,6 @@ async function attackUnit(a,d){
   units=applyAttackSideEffects(a,d,units);
   const ulyssesAttackTactic=applyUlyssesAttackTactic(units,a);
   units=ulyssesAttackTactic.units;
-  const evasionPressure=spendEvasionByAttack(a,d,units,mods);
-  units=evasionPressure.units;
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
   units=actionSpend.units;
   const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),units);
@@ -5011,6 +5265,10 @@ async function adventureEnemyTurn(){
     units=defensePrep.units;
     mods=defensePrep.mods;
     target=defensePrep.defender;
+    let evasionPressure=withAiPublicState(()=>({units,spent:0,remaining:target?.leader?null:getDefenseEvasionScore(target,mods)}));
+    evasionPressure=withAiPublicState(()=>spendEvasionByAttack(attacker,target,units,mods));
+    units=evasionPressure.units;
+    target=units.find(u=>u.id===target.id)||target;
     let hit=rollHit(attacker,target,mods);
     let rerollText="",arjunaDharmaPoison=false;
     if(!hit.hit&&attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn){
@@ -5025,8 +5283,6 @@ async function adventureEnemyTurn(){
     units=applyAttackSideEffects(attacker,target,units);
     const ulyssesAttackTactic=applyUlyssesAttackTactic(units,attacker);
     units=ulyssesAttackTactic.units;
-    const evasionPressure=spendEvasionByAttack(attacker,target,units,mods);
-    units=evasionPressure.units;
     const actionSpend=spendActionStatsByAttack(attacker,target,units,mods,hit);
     units=actionSpend.units;
     const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),units));
@@ -9444,3 +9700,114 @@ maybeShowBasicTutorialGate();
 
 
 
+
+
+/* =====================================================================
+   7HAI - DET: reglas reales por código
+   Esta sección sobrescribe el modal "Ver efecto" para que explique lo que
+   el sistema realmente ejecuta: condiciones, resultado, límites y reglas
+   globales invisibles como espada/lance/arco/hacha/ventaja de arma.
+   ===================================================================== */
+function getCodeTruthGlobalRuleLines7hai(entity){
+  const lines=[];
+  if(!entity||entity.spell||entity.trap||entity.leader)return lines;
+  const cls=getWeaponClassForCard(entity);
+  if(cls)lines.push(`Clase táctica usada por el sistema: ${WEAPON_CLASS_LABELS[cls]||cls}.`);
+  if(isSwordUnitCardLike(entity))lines.push(`Regla global de espada: recibe +3 Guardia base. Este bonus ya está incluido en la GD que ves en DET.`);
+  if(isAxeUnitCardLike(entity))lines.push(`Regla global de hacha: recibe +2 Destreza base. Este bonus ya está incluido en la DX que ves en DET y suma a PREC.`);
+  if(isArcherWeaponUnitCardLike(entity))lines.push(`Regla global de arco: recibe +1 Rango base. Este bonus ya está incluido en el RG que ves en DET.`);
+  if(isLanceUnitCardLike(entity))lines.push(`Regla global de lanza: puede contraatacar una vez por turno si sobrevive. Para contraataques usa rango mínimo 2, aunque su RG normal de ataque no sube por esta regla.`);
+  if(cls&&WEAPON_ADVANTAGE[cls]?.length){
+    const wins=WEAPON_ADVANTAGE[cls].map(c=>WEAPON_CLASS_LABELS[c]||c).join(", ");
+    lines.push(`Ventaja de arma: si ataca a ${wins}, obtiene +${WEAPON_ADVANTAGE_DEX_BONUS} DX durante ese combate.`);
+  }
+  return lines;
+}
+function truthBlock7hai(title,items){
+  const clean=(items||[]).filter(Boolean);
+  return clean.length?`${title}:\n${clean.map(x=>`• ${x}`).join("\n")}`:"";
+}
+const CODE_TRUTH_EFFECTS_7HAI={
+  cavalry:{trigger:["Debe moverse 3 o más espacios este turno.","Luego debe declarar un ataque cuerpo a cuerpo."],does:["El objetivo recibe -3 AGI solo durante ese combate.","Ese -3 AGI reduce su EVA para ese golpe."],doesNot:["Si se movió 0, 1 o 2 espacios, no activa Carga desestabilizadora.","No causa daño extra por sí misma."],example:"La Caballería puede abrir objetivos evasivos, pero necesita carrera real antes del golpe."},
+  berserker:{trigger:["Regla de hacha activa siempre: +2 DX base ya incluida en DET.","Ruptura brutal se activa al declarar ataque cuerpo a cuerpo."],does:["El objetivo recibe -3 Guardia durante ese combate.","Primero se presiona/consume EVA del defensor y luego se decide si el golpe impacta contra la EVA restante.","Si impacta, el daño baja Guardia y el sobrante baja Vida."],doesNot:["Ruptura brutal no es daño directo: solo reduce Guardia para ese combate.","Si lo ataca un Lancero solar, también recibe la penalización defensiva del Lancero."],example:"Berserker vs Lancero: Berserker reduce Guardia del Lancero, pero el Lancero puede responder con Formación de picas."},
+  spearman:{trigger:["Formación de picas se activa cuando lo atacan cuerpo a cuerpo.","Anticaballería se activa si el atacante cuenta como Caballería."],does:["Contra no Caballería: el atacante recibe -2 AGI y -2 Guardia durante ese combate.","Contra Caballería: el atacante queda con AGI 0 y Guardia 0 durante ese combate.","Si sobrevive y el ataque estuvo dentro de su rango de contraataque, puede contraatacar una vez por turno."],doesNot:["No reduce al atacante si el ataque no es cuerpo a cuerpo.","Su contraataque también debe acertar por PREC/EVA, salvo reglas especiales."],example:"Si un Berserker lo ataca cuerpo a cuerpo, ambos efectos entran: Berserker rompe Guardia, Lancero baja AGI/GD del Berserker."},
+  archer:{trigger:["Debe atacar a distancia.","Debe causar al menos 1 daño real a Vida/HP."],does:["Aplica -1 MOV al objetivo hasta el final de su próximo turno.","El debuff no se acumula: conserva el mayor valor vigente."],doesNot:["Si falla, no reduce MOV.","Si solo rompe Guardia y no baja Vida, no reduce MOV."],example:"AT 3 contra Guardia 3: baja Guardia, pero no hiere Vida, así que no aplica supresión."},
+  arcane_adept:{trigger:["Ruptura Arcana se activa cuando causa al menos 1 daño directo a Vida de una unidad enemiga."],does:["Aplica un estado negativo aleatorio: Sangrado, Veneno leve, Quemadura leve, -1 MOV o -2 AGI.","Puede contraatacar ataques de rango por Respuesta Mística.","Si está junto al líder Hechicero aliado, recibe bonus por Vínculo Arcano según tier del líder."],doesNot:["Si la Guardia absorbe todo, no aplica estado.","No aplica estados a líderes con la misma regla de unidad normal."],example:"El Adepto necesita herir HP. Romper solo Guardia no basta."},
+  guardian:{trigger:["Golpe de escudo se evalúa al declarar ataque cuerpo a cuerpo."],does:["El objetivo recibe -2 AGI durante ese combate.","Si el objetivo tiene Guardia actual 2 o menos, además recibe -1 MOV hasta el final de su próximo turno."],doesNot:["El -1 MOV no entra si el objetivo tiene Guardia 3 o más al momento de evaluar el efecto.","No afecta movimiento si el ataque no es cuerpo a cuerpo."],example:"Primero desgasta Guardia; cuando el objetivo ya está bajo, el Guardián puede encerrarlo."},
+  scout:{trigger:["Sus ataques tienen Asesinato preciso.","Sangrado se activa solo si hace daño real a HP."],does:["Ignora Guardia/defensa al dañar.","Si hace daño a HP, aplica Sangrado: 1 daño al inicio del turno del objetivo.","Sangrado ignora Guardia y dura hasta curación o destrucción."],doesNot:["Si no causa daño a HP, no aplica Sangrado."],example:"La Asesina no necesita romper Guardia, pero sí necesita impactar y causar HP."},
+  mulan:{trigger:["Ataque por la espalda: ataca desde una celda más cercana al líder rival que la celda del objetivo."],does:["Obtiene +6 AT durante ese combate.","Si destruye una unidad con ataque normal, puede moverse 1 casilla extra.","Después debe elegir ATK o DEF para gastar su acción restante; luego queda sin más acciones."],doesNot:["No gana +6 AT si no cumple la condición de posición.","La precisión se calcula y se consume normalmente."],example:"Es ejecución por posicionamiento, no golpe gratis."},
+  wallace:{trigger:["La primera vez que recibiría daño fatal."],does:["Sobrevive y queda con 1 Vida.","Marca Último Aliento como usado."],doesNot:["No se repite: el siguiente daño fatal sí puede destruirlo."],example:"Wallace aguanta una muerte, no todas."},
+  honey_badger:{trigger:["Armadura Natural aplica cada vez que recibe daño.","Mordida Fastidiosa requiere daño real a HP."],does:["Reduce el daño recibido en 1.","No puede recibir Veneno ni daño de Veneno.","Enemigos adyacentes tienen -1 DX si atacan a otro objetivo que no sea el Tejón.","Si hace daño real, aplica -1 MOV al objetivo en su próximo turno."],doesNot:["Si no hiere HP, Mordida Fastidiosa no baja MOV."],example:"Es tanque y ancla de molestia: obliga al rival a decidir si lo ignora o lo golpea."},
+  porcupine:{trigger:["Espinas se activa cuando una unidad enemiga lo ataca cuerpo a cuerpo."],does:["El atacante recibe 2 daño directo después del combate, aunque no haya dañado al Puercoespín.","Después, otras unidades enemigas adyacentes al Puercoespín tienen 25% de recibir Miedo.","Miedo aplica -3 AT hasta el próximo turno de esa unidad."],doesNot:["No castiga ataques a distancia con Espinas."],example:"Atacarlo cuerpo a cuerpo siempre tiene precio."},
+  wild_boar:{trigger:["Debe moverse 2 o más casillas antes de atacar."],does:["Gana +1 AT por Carga Brusca.","Si hace daño real con esa carga, empuja al objetivo 1 casilla si hay espacio."],doesNot:["No empuja si no hizo daño real o si no hay celda libre detrás del objetivo."],example:"Necesita carrera y espacio para desplazar."},
+  black_raven:{trigger:["EFFECT: Ojo del Cazador.","Pasiva: Graznido Inquietante."],does:["EFFECT revela unidades enemigas con Sigilo en radio 2.","Pasivamente, enemigos en rango 2 del Cuervo pierden -2 AGI hasta su próximo turno."],doesNot:["El reveal no causa daño.","La reducción de AGI depende de estar dentro del rango del aura."],example:"Es detector y aura de control, no atacante principal."},
+  constrictor_snake:{trigger:["Debe hacer daño real a HP."],does:["El objetivo pierde -1 MOV y -1 AGI hasta su próximo turno.","Si el objetivo ya tenía MOV reducido, queda sin poder moverse en su próximo turno."],doesNot:["Si solo baja Guardia, no aplica Constricción."],example:"Primero hiere, luego amarra."},
+  african_buffalo:{trigger:["Una unidad enemiga adyacente declara ataque cuerpo a cuerpo contra él."],does:["Hace 2 daño primero al atacante.","Si ese daño derrota al atacante, el ataque se cancela antes de completarse."],doesNot:["No se activa contra ataques a distancia."],example:"Atacarlo de frente puede morir antes de pegar."},
+  peregrine_falcon:{trigger:["Aéreo aplica siempre mientras está en campo.","Ataque en Picada requiere moverse 3 o más casillas antes de atacar."],does:["Solo unidades con rango mayor a 3 o Antiaéreo pueden atacarlo.","Con Picada obtiene golpe seguro y AT 3.","Si impacta contra Guardia, recibe daño igual a la Guardia actual del objetivo."],doesNot:["Sin moverse 3+ no usa Picada.","La Picada puede castigarlo si choca contra mucha Guardia."],example:"El Halcón entra fuerte, pero no debe estrellarse contra tanques."},
+  inland_taipan:{trigger:["Debe hacer daño real a HP."],does:["Aplica Veneno 1/2/4 durante 3 turnos.","Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere.","El líder puede envenenarse, pero no muere automáticamente por doble mordida de la misma unidad."],doesNot:["Si no hiere HP, no envenena."],example:"Es letal contra unidades ya marcadas por veneno."},
+  african_lion:{trigger:["EFFECT: Rugido del Rey.","Auras pasivas mientras está vivo."],does:["EFFECT revela Sigilo enemigo en radio 3.","Enemigos en rango 1 reciben Miedo: -3 AT hasta su próximo turno.","Aliados en rango 2 reciben +2 AT."],doesNot:["El Rugido no daña.","Las auras dependen de rango y de que el León siga vivo."],example:"El León transforma el centro del tablero en territorio peligroso."},
+  bengal_tiger:{trigger:["Inicia con Sigilo.","Desde Sigilo puede atacar con +2 alcance de movimiento.","Desgarro requiere daño real a HP."],does:["Mientras está oculto no puede ser objetivo directo.","Al atacar desde Sigilo reduce -3 AGI del defensor durante ese combate.","Si hay una Bestia aliada adyacente al defensor, el defensor recibe -2 AGI adicional.","Al hacer daño real aplica Sangrado: 50%, o 100% si atacó desde Sigilo."],doesNot:["Si se revela, pierde parte de la protección y del bonus de emboscada."],example:"Es asesino de entrada: sigilo, salto, presión de AGI y posible Sangrado."},
+  white_rhino:{trigger:["Debe moverse 2 casillas en línea recta antes de atacar."],does:["Usa Embestida Devastadora: AT 22.","Después de atacar con Embestida, impacte o falle, queda Aturdido hasta su próximo turno.","Aturdido: no puede moverse, defenderse ni atacar; su Guardia no cambia y su DX/AGI se reducen a la mitad."],doesNot:["Bestia Torpe: no se beneficia de bonos de DX ni AGI."],example:"Es un martillo de una línea recta, pero queda expuesto después."},
+  richard_lionheart:{trigger:["EFFECT una vez por turno sobre un aliado adyacente."],does:["El aliado gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo."],doesNot:["No se acumula sobre la misma unidad.","Si Richard cae, el bonus puede desaparecer."],example:"Soporte de vida sostenido por presencia en campo."},
+  saladin:{trigger:["EFFECT una vez por turno.","Debe haber una casilla libre adyacente y no controlar ya una Caballería Arquera de Saladino."],does:["Invoca una Caballería Arquera de Saladino en una casilla adyacente válida."],doesNot:["No puede invocar si ya controlas ese token o no hay espacio."],example:"Presiona con token, no con daño directo inmediato."},
+  saladin_archer_cavalry:{trigger:["Unidad token convocada por Saladino."],does:["Cuenta como Caballería y arquera para reglas de clase/rango.","Recibe la regla global de arco: +1 RG base si aplica desde el sistema."],doesNot:["No tiene EFFECT propio fuera de ser token de presión."],example:"Su valor está en movilidad, rango y ocupación del tablero."},
+  shaka_zulu:{trigger:["Mientras esté en campo, cuando un aliado ataque a un enemigo adyacente a otro aliado tuyo."],does:["Ese aliado atacante obtiene +1 AT durante el combate.","Si el enemigo está rodeado por 2 o más aliados tuyos, también recibe -2 AGI durante ese combate."],doesNot:["No aplica si el objetivo no está coordinadamente presionado por aliados."],example:"Premia rodear al enemigo."},
+  yi_sun_sin:{trigger:["Mientras Yi Sun-sin está en campo, al invocar unidades enemigas."],does:["Las unidades enemigas invocadas entran con -1 DX y -1 Guardia hasta el final de su próximo turno."],doesNot:["No afecta unidades que ya estaban en campo antes de la condición."],example:"Controla el despliegue enemigo."},
+  simo_hayha:{trigger:["Ataca a una unidad que ya perdió Vida este turno, o ataca desde rango 4 o más."],does:["Contra objetivo herido este turno: +2 AT durante ese ataque.","Desde rango 4 o más: ignora 1 Guardia."],doesNot:["Si el objetivo solo perdió Guardia, no cuenta como herido para +2 AT."],example:"Remata objetivos que ya sangraron HP."},
+  boudica:{trigger:["Una vez por turno, cuando un aliado de Boudica sea derrotado."],does:["Boudica obtiene +2 AT hasta el final de tu próximo turno.","Si el aliado derrotado era especial, también obtiene +1 MOV."],doesNot:["No se acumula múltiples veces en el mismo turno."],example:"Castiga al rival por limpiar tus piezas."},
+  ulysses:{trigger:["Cuando Ulises ataca."],does:["Todas las unidades aliadas en radio 2 alrededor de él ganan +1 Guardia y +1 MOV.","No afecta líderes ni al propio Ulises.","El MOV dura hasta el próximo turno del dueño."],doesNot:["No se activa si solo se mueve o defiende."],example:"Atacar con Ulises puede preparar una rotación de aliados."},
+  joan_of_arc:{trigger:["Una vez por turno, cuando un aliado vaya a recibir daño."],does:["Reduce ese daño en 1.","Si ese aliado queda con 1 Vida, obtiene +1 Guardia hasta el final de su próximo turno."],doesNot:["No reduce si está bloqueada por efectos que cancelan reducciones."],example:"Puede convertir una muerte justa en supervivencia al límite."},
+  leonidas:{trigger:["Pasiva de adyacencia y reacción a daño fatal."],does:["Si Leónidas está adyacente a una unidad aliada básica, ambos reciben +2 Guardia.","Cuando recibe daño fatal por ataque, su asesino pierde 3 Vida.","Si ese daño derrota al asesino, Leónidas queda con 1 Vida."],doesNot:["La Guardia de formación depende de seguir adyacente a básica aliada."],example:"Es muro y castigo final contra quien lo remata."},
+  nasu_no_yoichi:{trigger:["Debe atacar a distancia desde rango 3 o más."],does:["El objetivo recibe -1 Guardia durante ese combate.","Si Nasu acierta, el objetivo conserva -1 Guardia hasta el final de su próximo turno."],doesNot:["No acumulable.","Si ataca desde rango menor a 3, no aplica Marca del Abanico."],example:"Tiene valor desde distancia larga, no pegado al objetivo."},
+  tomoe_gozen:{trigger:["Debe moverse 2 o más casillas antes de atacar."],does:["El objetivo recibe -2 AGI durante ese combate.","Si el objetivo tiene RG 2 o más, Tomoe obtiene +1 AT."],doesNot:["Sin movimiento previo de 2+, no activa la presión."],example:"Ataca mejor tras desplazarse y contra unidades de rango."},
+  hannibal_barca:{trigger:["Una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal."],does:["Esa unidad pierde 1 AT y 1 MOV hasta su próximo turno."],doesNot:["No se repite si Hannibal ya usó la trampa ese turno."],example:"Mueve el tablero para encerrar y activar Cannas."},
+  subotai:{trigger:["EFFECT una vez por turno sobre una unidad aliada válida."],does:["La unidad elegida gana +2 MOV este turno."],doesNot:["No puede usarse sobre la misma unidad dos turnos seguidos."],example:"Reposiciona un aliado para ataque o escape."},
+  lu_bu:{trigger:["La primera vez por turno que derrota a una unidad enemiga."],does:["Obtiene +1 AT permanente mientras siga en campo.","Máximo +3 AT por esta habilidad."],doesNot:["No gana más de una vez en el mismo turno."],example:"Si lo dejas encadenar bajas, crece."},
+  ragnar_lodbrok:{trigger:["Una vez por turno, cuando hace daño a un líder, estructura o unidad con más Vida máxima que él."],does:["Recupera 1 Vida."],doesNot:["No cura si el objetivo no cumple la condición."],example:"Le conviene pegar hacia arriba."},
+  el_cid:{trigger:["Cuando ataca o es atacado por una unidad con mayor AT que él."],does:["Obtiene +2 DX y +2 Guardia durante ese combate."],doesNot:["Si el enemigo no tiene mayor AT, no activa Campeador."],example:"Se crece contra amenazas más fuertes."},
+  spartacus:{trigger:["Mientras está en campo, cuando tus unidades básicas atacan cartas especiales."],does:["Esas unidades básicas obtienen +1 AT durante ese combate."],doesNot:["No mejora ataques contra unidades básicas normales."],example:"Convierte piezas comunes en presión contra legendarias/especiales."},
+  sun_tzu:{trigger:["EFFECT una vez por turno sobre aliado válido."],does:["Ese aliado obtiene +1 DX y +1 Guardia hasta el final de su próximo turno."],doesNot:["No es daño ni ataque directo."],example:"Pequeño buff táctico de precisión y defensa."},
+  hector_troy:{trigger:["Aura pasiva en rango 1."],does:["Cuenta las unidades enemigas en rango 1 de Héctor.","Cada una pierde 1 AT por cada enemigo en ese rango.","También puede aportar Guardia a aliados por reglas del código si corresponde."],doesNot:["No afecta enemigos fuera de rango 1."],example:"Tres enemigos junto a Héctor: cada uno pierde 3 AT."},
+  beowulf:{trigger:["Ataca a una unidad con mayor Vida máxima que él."],does:["Obtiene +3 AT durante ese combate.","Si derrota a esa unidad, recupera 2 Vida."],doesNot:["No activa contra objetivos de igual o menor Vida máxima."],example:"Especialista en cazar monstruos grandes."},
+  miyamoto_musashi:{trigger:["Si evade un ataque cuerpo a cuerpo una vez por turno, o si recibe daño cuerpo a cuerpo y sobrevive."],does:["Si evade, contraataca inmediatamente con +2 AT por Dos Cielos.","Si recibe daño y sobrevive, contraataca normalmente.","Al acertar un contraataque tiene 20% de aplicar Sangrado."],doesNot:["No puede hacer contraataques infinitos en el mismo turno."],example:"Atacarlo cuerpo a cuerpo puede abrir su respuesta."},
+  khalid_ibn_al_walid:{trigger:["Cuando destruye una unidad enemiga con un ataque."],does:["Puede seguir atacando mientras tenga objetivos válidos.","Cada ataque adicional aplica -2 AT acumulativo hasta su próximo turno."],doesNot:["La precisión se consume normalmente; con 0 PREC tiene 0% de golpear."],example:"Cadena de ataques con penalización creciente."},
+  attila_hun:{trigger:["Mientras Atila esté en campo."],does:["Enemigos con mitad o menos de su Vida máxima reciben -3 Guardia y -3 AGI."],doesNot:["No afecta enemigos por encima de media Vida."],example:"Castiga unidades heridas y las vuelve rematables."},
+  genghis_khan:{trigger:["Cuando Gengis destruye una unidad enemiga."],does:["Todas las unidades enemigas en radio 2 alrededor de él pierden 2 Guardia y 1 MOV hasta su próximo turno."],doesNot:["No se activa si no consigue la baja."],example:"Una baja de Gengis abre una ola de presión alrededor."},
+  alexander_magnus:{trigger:["Mientras Alejandro está en campo, cuando una unidad aliada bloquea un ataque sin recibir daño."],does:["Esa unidad aliada gana +1 Vida máxima y +1 Vida actual."],doesNot:["No aplica si el bloqueo no fue limpio o la unidad recibió daño a Vida."],example:"Premia defensa perfecta."},
+  julius_caesar:{trigger:["Mientras Julio César está en campo, la primera vez por turno que una unidad enemiga ataque."],does:["Ese atacante recibe -2 AT y -1 DX durante ese combate."],doesNot:["Solo afecta el primer ataque enemigo del turno."],example:"Hace más flojo el primer golpe rival."},
+  cu_chulainn:{trigger:["Media vida o menos, y ataques cuerpo a cuerpo recibidos."],does:["A media Vida o menos obtiene +5 AT y +5 AGI.","Puede contraatacar si sobrevive a un ataque cuerpo a cuerpo.","También aplica regla global de lanza."],doesNot:["El bonus no existe mientras esté por encima de media Vida."],example:"Se vuelve más peligroso cuando está herido."},
+  gilgamesh:{trigger:["Mientras está en campo y por posición/tipo de ataque."],does:["Enemigos adyacentes reciben -3 AT y -3 AGI.","Recibe 2 menos de daño de proyectiles, arqueros o ataques mágicos a distancia."],doesNot:["La reducción no aplica a todo daño, solo a distancia/proyectil/magia según código."],example:"Acercarse a Gilgamesh debilita tu ofensiva."},
+  arjuna:{trigger:["Una vez por turno, cuando falla un ataque a distancia."],does:["Repite el intento con +6 DX.","Si acierta con esa repetición, provoca Veneno."],doesNot:["No repite ataques cuerpo a cuerpo.","No repite más de una vez por turno."],example:"Su primer fallo a distancia todavía puede volverse amenaza."},
+  achilles:{trigger:["Primera vez por turno que ataca; 2+ enemigos adyacentes; inicio de turno."],does:["Primer ataque del turno: +2 AT durante ese combate.","Si tiene 2 o más enemigos adyacentes: +6 Guardia.","Al inicio de tu turno recupera 1 Vida.","Regla de lanza: puede contraatacar una vez por turno si sobrevive."],doesNot:["+2 AT solo entra en el primer ataque del turno."],example:"Es duelista que escala cuando lo rodean."}
+};
+function getExactEffectGuideData(entity,effectText=""){
+  if(entity?.leader)return getLeaderExactEffectGuideData(entity);
+  const name=entity?.name||"Esta unidad";
+  const raw=String(effectText||getUnitEffectText(entity)||entity?.text||entity?.effectText||entity?.ability||"").trim();
+  const key=normalizeEffectGuideKey(entity);
+  const custom=CODE_TRUTH_EFFECTS_7HAI[key];
+  const globalLines=getCodeTruthGlobalRuleLines7hai(entity);
+  const truthIntro=[
+    "Este modal muestra lo que ejecuta el código, no solo el texto corto de la carta.",
+    "Regla global de combate actual: el ataque presiona/consume EVA del defensor antes de decidir si impacta. Luego impacta si PREC alcanza la EVA restante.",
+    "Si una parte del efecto exige daño real, significa daño a Vida/HP; romper solo Guardia no activa esa parte."
+  ];
+  if(custom){
+    const formula=[
+      truthBlock7hai("Reglas globales que también aplica esta unidad",globalLines),
+      truthBlock7hai("Cuándo se activa",custom.trigger),
+      truthBlock7hai("Lo que hace",custom.does),
+      truthBlock7hai("Lo que NO hace / límites",custom.doesNot),
+      raw?`Texto corto original:\n• ${raw}`:""
+    ].filter(Boolean).join("\n\n");
+    return {title:`✦ Efecto exacto: ${name}`,short:truthIntro.join(" "),formula,example:custom.example||"Usa este modal como fuente confiable de reglas.",card:entity};
+  }
+  const sections=getEntityAbilitySections(entity,raw);
+  const formula=[
+    truthBlock7hai("Reglas globales que también aplica esta unidad",globalLines),
+    raw?`Texto de la carta:\n• ${raw}`:"Sin efecto especial visible en la carta.",
+    sections.length?sections.map(sec=>`${sec.title}:\n• ${sec.body}`).join("\n\n"):"",
+    "Límite general:\n• Si el efecto dice daño real, debe bajar Vida/HP. Si solo baja Guardia, esa parte no entra.\n• Si el efecto depende de atacar cuerpo a cuerpo, no entra con ataques a distancia.\n• Si depende de moverse cierta cantidad, no entra si no cumplió ese movimiento este turno."
+  ].filter(Boolean).join("\n\n");
+  return {title:`✦ Efecto exacto: ${name}`,short:truthIntro.join(" "),formula,example:"Esta carta no tiene una ficha manual completa todavía, pero el modal ya muestra sus reglas globales y límites generales.",card:entity};
+}
