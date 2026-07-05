@@ -15407,3 +15407,98 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid .cell > .unit-card .unit-status-seals,
 .grid .cell > .unit-card .status-seal-rail,
 .grid .cell > .unit-card .unit-status-seal-extra{z-index:9 !important;}
+
+
+/* === 7HAE · rareza neon solo en el ornamental del marco === */
+@keyframes hvRarityOrnamentPulse7hae{
+  0%,100%{opacity:.92;filter:drop-shadow(0 0 2px var(--hv-ornament-core)) drop-shadow(0 0 6px var(--hv-ornament-glow1)) drop-shadow(0 0 12px var(--hv-ornament-glow2));}
+  50%{opacity:1;filter:drop-shadow(0 0 3px var(--hv-ornament-core)) drop-shadow(0 0 9px var(--hv-ornament-glow1)) drop-shadow(0 0 18px var(--hv-ornament-glow2)) drop-shadow(0 0 26px var(--hv-ornament-glow3));}
+}
+
+.grid .cell > .unit-card{
+  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
+  --hv-ornament-color:transparent;
+  --hv-ornament-core:transparent;
+  --hv-ornament-glow1:transparent;
+  --hv-ornament-glow2:transparent;
+  --hv-ornament-glow3:transparent;
+  box-shadow:0 5px 8px rgba(0,0,0,.38) !important;
+}
+
+.grid .cell > .unit-card::before,
+.grid .cell > .unit-card::after,
+.grid .cell > .unit-card .unit-frame-skin::before,
+.grid .cell > .unit-card .unit-frame-skin::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  box-shadow:none !important;
+}
+
+.grid .cell > .unit-card .unit-frame-skin{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:4 !important;
+  pointer-events:none !important;
+  background:var(--frame-image) center/100% 100% no-repeat !important;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card .unit-frame-rarity{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  background:var(--hv-ornament-color) !important;
+  -webkit-mask-image:url("assets/ui/gothic_frame_unit_neon_mask.png") !important;
+  -webkit-mask-position:center !important;
+  -webkit-mask-size:100% 100% !important;
+  -webkit-mask-repeat:no-repeat !important;
+  mask-image:url("assets/ui/gothic_frame_unit_neon_mask.png") !important;
+  mask-position:center !important;
+  mask-size:100% 100% !important;
+  mask-repeat:no-repeat !important;
+  opacity:0 !important;
+  filter:none !important;
+  animation:none !important;
+  mix-blend-mode:screen !important;
+}
+
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity{display:none !important;}
+
+.grid .cell > .unit-card.card-rarity-improved{--hv-ornament-color:rgb(109,212,255);--hv-ornament-core:rgba(222,246,255,.95);--hv-ornament-glow1:rgba(109,212,255,.95);--hv-ornament-glow2:rgba(109,212,255,.62);--hv-ornament-glow3:rgba(109,212,255,.34);}
+.grid .cell > .unit-card.card-rarity-heroic{--hv-ornament-color:rgb(84,255,158);--hv-ornament-core:rgba(232,255,240,.96);--hv-ornament-glow1:rgba(84,255,158,.96);--hv-ornament-glow2:rgba(84,255,158,.66);--hv-ornament-glow3:rgba(84,255,158,.38);}
+.grid .cell > .unit-card.card-rarity-glorious{--hv-ornament-color:rgb(255,214,95);--hv-ornament-core:rgba(255,248,220,.96);--hv-ornament-glow1:rgba(255,214,95,.96);--hv-ornament-glow2:rgba(255,214,95,.68);--hv-ornament-glow3:rgba(255,214,95,.40);}
+.grid .cell > .unit-card.card-rarity-epic{--hv-ornament-color:rgb(190,122,255);--hv-ornament-core:rgba(246,232,255,.96);--hv-ornament-glow1:rgba(190,122,255,.96);--hv-ornament-glow2:rgba(190,122,255,.68);--hv-ornament-glow3:rgba(190,122,255,.40);}
+.grid .cell > .unit-card.card-rarity-mythic{--hv-ornament-color:rgb(255,100,201);--hv-ornament-core:rgba(255,232,248,.96);--hv-ornament-glow1:rgba(255,100,201,.96);--hv-ornament-glow2:rgba(255,100,201,.68);--hv-ornament-glow3:rgba(255,100,201,.40);}
+.grid .cell > .unit-card.card-rarity-legendary{--hv-ornament-color:rgb(255,157,69);--hv-ornament-core:rgba(255,239,224,.98);--hv-ornament-glow1:rgba(255,157,69,.98);--hv-ornament-glow2:rgba(255,157,69,.70);--hv-ornament-glow3:rgba(255,157,69,.42);}
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader{--hv-ornament-color:rgb(255,244,157);--hv-ornament-core:rgba(255,252,231,.98);--hv-ornament-glow1:rgba(255,244,157,.98);--hv-ornament-glow2:rgba(255,244,157,.72);--hv-ornament-glow3:rgba(255,244,157,.44);}
+
+.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
+.grid .cell > .unit-card.leader .unit-frame-rarity{
+  opacity:1 !important;
+  animation:hvRarityOrnamentPulse7hae 2.65s ease-in-out infinite !important;
+}
+
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-portrait img{
+  filter:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+  mix-blend-mode:normal !important;
+}
+
+.grid .cell > .unit-card .unit-ornate-ui{z-index:8 !important;}
+.grid .cell > .unit-card .unit-status-bubbles,
+.grid .cell > .unit-card .unit-status-seals,
+.grid .cell > .unit-card .status-seal-rail,
+.grid .cell > .unit-card .unit-status-seal-extra{z-index:9 !important;}
