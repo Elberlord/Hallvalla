@@ -1,0 +1,11 @@
+7HAU - Corrección de rarezas en campo usando la lógica del laboratorio 7HAS.
+
+Qué se corrigió:
+- Se apagaron auras viejas de rareza en .unit-card::before/::after que generaban efecto lámpara.
+- Se recreó la base aliado/enemigo después de apagar esas auras.
+- El retrato queda limpio sin glow, sin tinte y sin drop-shadow de rareza.
+- El marco base queda normal.
+- .unit-frame-rarity usa el PNG ornamental normal.
+- .unit-frame-rarity::after usa el PNG glow horneado.
+- El glow CSS queda limitado al ornamental, con los valores elegidos por el usuario:
+  css-glow-opacity 0.75, white 0.2 / 1px, near 2px, mid 5px, far 9px, pulse 10s.

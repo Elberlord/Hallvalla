@@ -15825,3 +15825,317 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card.card-rarity-basic .unit-frame-rarity{
   display: none !important;
 }
+
+/* ==========================================================
+   7HAU · FIX REAL: capas de rareza igual al laboratorio 7HAS
+   Objetivo:
+   - Retrato limpio, sin lámpara.
+   - Marco base normal.
+   - Ornamento normal PNG visible.
+   - Ornamento glow PNG encima.
+   - Glow CSS pequeño controlado sobre el ornamento, no sobre toda la carta.
+   - Se apagan auras viejas de rareza que usaban ::before/::after.
+   ========================================================== */
+
+.grid .cell > .unit-card,
+.cell > .unit-card{
+  --card-opacity: 1;
+  --card-scale: 1;
+  --card-bg-alpha: 0.18;
+  --card-shadow-px: 10px;
+  --card-shadow-alpha: 0.45;
+
+  --portrait-opacity: 1;
+  --portrait-brightness: 1;
+  --portrait-saturation: 1;
+  --portrait-contrast: 1;
+  --portrait-blur: 0px;
+
+  --frame-opacity: 1;
+  --frame-brightness: 1;
+  --frame-saturation: 1;
+  --frame-contrast: 1;
+  --frame-shadow-px: 8px;
+  --frame-shadow-alpha: 0.55;
+
+  --ornament-opacity: 1;
+  --ornament-brightness: 1;
+  --ornament-saturation: 1;
+  --ornament-contrast: 1;
+  --ornament-blur: 0px;
+
+  --baked-opacity: 1;
+  --baked-brightness: 1;
+  --baked-saturation: 1;
+  --baked-contrast: 1;
+  --baked-blur: 0px;
+
+  --css-glow-opacity: 0.75;
+  --css-glow-white-alpha: 0.2;
+  --css-glow-white-px: 1px;
+  --css-glow-near-px: 2px;
+  --css-glow-mid-px: 5px;
+  --css-glow-far-px: 9px;
+
+  --pulse-duration: 10s;
+  --pulse-min: 0.1;
+  --pulse-max: 1.5;
+
+  --stats-opacity: 1;
+  --team-opacity: 1;
+  --team-blur: 0px;
+  --team-size: 100%;
+
+  opacity:var(--card-opacity) !important;
+  transform:scale(var(--card-scale)) !important;
+  background:rgba(0,0,0,var(--card-bg-alpha)) !important;
+  box-shadow:0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
+  overflow:visible !important;
+  isolation:isolate !important;
+}
+
+/* Apagar auras viejas que convertían cartas raras en lámparas */
+.grid .cell > .unit-card::after,
+.cell > .unit-card::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  -webkit-mask:none !important;
+  mask:none !important;
+}
+
+.grid .cell > .unit-card::before,
+.cell > .unit-card::before{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* Base aliado/enemigo recreada después de apagar las auras viejas */
+.grid .cell > .unit-card.ally::before,
+.cell > .unit-card.ally::before,
+.grid .cell > .unit-card.enemy::before,
+.cell > .unit-card.enemy::before{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  left:50% !important;
+  bottom:-10px !important;
+  width:var(--team-size) !important;
+  height:16px !important;
+  transform:translateX(-50%) !important;
+  border-radius:999px !important;
+  pointer-events:none !important;
+  z-index:0 !important;
+  opacity:var(--team-opacity) !important;
+  filter:blur(var(--team-blur)) !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card.ally::before,
+.cell > .unit-card.ally::before{
+  background:radial-gradient(ellipse at center,
+    rgba(116,242,255,.72) 0%,
+    rgba(77,198,255,.46) 36%,
+    rgba(34,112,255,.18) 60%,
+    rgba(0,0,0,0) 78%) !important;
+  box-shadow:0 0 10px rgba(96,224,255,.32),0 0 18px rgba(66,154,255,.18) !important;
+}
+
+.grid .cell > .unit-card.enemy::before,
+.cell > .unit-card.enemy::before{
+  background:radial-gradient(ellipse at center,
+    rgba(255,118,171,.74) 0%,
+    rgba(255,92,124,.48) 36%,
+    rgba(182,34,79,.20) 60%,
+    rgba(0,0,0,0) 78%) !important;
+  box-shadow:0 0 10px rgba(255,110,166,.32),0 0 18px rgba(220,54,107,.18) !important;
+}
+
+/* Retrato totalmente limpio */
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.grid .cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  opacity:var(--portrait-opacity) !important;
+  filter:
+    brightness(var(--portrait-brightness))
+    saturate(var(--portrait-saturation))
+    contrast(var(--portrait-contrast))
+    blur(var(--portrait-blur)) !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
+/* Marco base, sin glow de rareza */
+.grid .cell > .unit-card .unit-frame-skin,
+.cell > .unit-card .unit-frame-skin{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:3 !important;
+  pointer-events:none !important;
+  background:var(--frame-image) center/100% 100% no-repeat !important;
+  opacity:var(--frame-opacity) !important;
+  filter:
+    brightness(var(--frame-brightness))
+    saturate(var(--frame-saturation))
+    contrast(var(--frame-contrast))
+    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha))) !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+
+/* La capa .unit-frame-rarity es el ornamento normal PNG */
+.grid .cell > .unit-card .unit-frame-rarity,
+.cell > .unit-card .unit-frame-rarity{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  background-image:var(--hv-ornament-image) !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+  background-color:transparent !important;
+  -webkit-mask-image:none !important;
+  mask-image:none !important;
+  mix-blend-mode:normal !important;
+  opacity:var(--ornament-opacity) !important;
+  filter:
+    brightness(var(--ornament-brightness))
+    saturate(var(--ornament-saturation))
+    contrast(var(--ornament-contrast))
+    blur(var(--ornament-blur)) !important;
+  animation:none !important;
+  box-shadow:none !important;
+}
+
+/* ::before de la rareza queda apagado para que no haya doble aura */
+.grid .cell > .unit-card .unit-frame-rarity::before,
+.cell > .unit-card .unit-frame-rarity::before{
+  content:none !important;
+  display:none !important;
+}
+
+/* ::after es SOLO el PNG glow horneado, con el mismo comportamiento del laboratorio */
+.grid .cell > .unit-card .unit-frame-rarity::after,
+.cell > .unit-card .unit-frame-rarity::after{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  background-image:var(--hv-ornament-glow-image) !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+  background-color:transparent !important;
+  opacity:var(--baked-opacity) !important;
+  mix-blend-mode:normal !important;
+  filter:
+    brightness(var(--baked-brightness))
+    saturate(var(--baked-saturation))
+    contrast(var(--baked-contrast))
+    blur(var(--baked-blur))
+    drop-shadow(0 0 var(--css-glow-white-px) rgba(255,255,255,var(--css-glow-white-alpha)))
+    drop-shadow(0 0 var(--css-glow-near-px) rgba(var(--hv-rarity-rgb),var(--css-glow-opacity)))
+    drop-shadow(0 0 var(--css-glow-mid-px) rgba(var(--hv-rarity-rgb),calc(var(--css-glow-opacity) * .60)))
+    drop-shadow(0 0 var(--css-glow-far-px) rgba(var(--hv-rarity-rgb),calc(var(--css-glow-opacity) * .30))) !important;
+  animation:hvFinalFieldOrnamentPulse7HAU var(--pulse-duration) ease-in-out infinite !important;
+}
+
+@keyframes hvFinalFieldOrnamentPulse7HAU{
+  0%,100%{opacity:calc(var(--baked-opacity) * var(--pulse-min));}
+  50%{opacity:calc(var(--baked-opacity) * var(--pulse-max));}
+}
+
+/* Stats siempre visibles */
+.grid .cell > .unit-card .unit-ornate-ui,
+.cell > .unit-card .unit-ornate-ui{
+  opacity:var(--stats-opacity) !important;
+  z-index:8 !important;
+}
+.grid .cell > .unit-card .unit-status-bubbles,
+.grid .cell > .unit-card .unit-status-seals,
+.grid .cell > .unit-card .status-seal-rail,
+.grid .cell > .unit-card .unit-status-seal-extra,
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals,
+.cell > .unit-card .status-seal-rail,
+.cell > .unit-card .unit-status-seal-extra{
+  z-index:9 !important;
+}
+
+/* Rutas y colores por rareza */
+.grid .cell > .unit-card.card-rarity-basic,
+.cell > .unit-card.card-rarity-basic{
+  --hv-rarity-rgb:0,0,0;
+  --hv-ornament-image:none;
+  --hv-ornament-glow-image:none;
+}
+
+.grid .cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-improved{
+  --hv-rarity-rgb:109,212,255;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-heroic{
+  --hv-rarity-rgb:84,255,158;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-glorious{
+  --hv-rarity-rgb:255,214,95;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-epic{
+  --hv-rarity-rgb:190,122,255;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-mythic{
+  --hv-rarity-rgb:255,100,201;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-legendary{
+  --hv-rarity-rgb:255,157,69;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{
+  --hv-rarity-rgb:255,244,157;
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
+}
+
+/* Básicas sin ornamento de rareza */
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity{
+  display:none !important;
+}
