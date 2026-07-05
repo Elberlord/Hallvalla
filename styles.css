@@ -15612,3 +15612,216 @@ El CSS original se conserva para no romper visuales. El bloque final
     filter:drop-shadow(0 0 2px rgba(255,255,255,.28)) drop-shadow(0 0 7px var(--hv-ornament-glow-a)) drop-shadow(0 0 14px var(--hv-ornament-glow-b)) drop-shadow(0 0 24px var(--hv-ornament-glow-c));
   }
 }
+
+
+
+/* ==========================================================
+   7HAT · LOOK FINAL RAREZAS EN CAMPO
+   Rareza visible por ornamento + retrato limpio
+   Valores elegidos desde laboratorio por usuario
+   ========================================================== */
+
+.grid .cell > .unit-card,
+.cell > .unit-card{
+  --card-opacity: 1;
+  --card-scale: 1;
+  --card-bg-alpha: 0.18;
+  --card-shadow-px: 10px;
+  --card-shadow-alpha: 0.45;
+
+  --portrait-opacity: 1;
+  --portrait-brightness: 1;
+  --portrait-saturation: 1;
+  --portrait-contrast: 1;
+  --portrait-blur: 0px;
+
+  --frame-opacity: 1;
+  --frame-brightness: 1;
+  --frame-saturation: 1;
+  --frame-contrast: 1;
+  --frame-shadow-px: 8px;
+  --frame-shadow-alpha: 0.55;
+
+  --ornament-opacity: 1;
+  --ornament-brightness: 1;
+  --ornament-saturation: 1;
+  --ornament-contrast: 1;
+  --ornament-blur: 0px;
+
+  --baked-opacity: 1;
+  --baked-brightness: 1;
+  --baked-saturation: 1;
+  --baked-contrast: 1;
+  --baked-blur: 0px;
+
+  --css-glow-opacity: 0.75;
+  --css-glow-white-alpha: 0.2;
+  --css-glow-white-px: 1px;
+  --css-glow-near-px: 2px;
+  --css-glow-mid-px: 5px;
+  --css-glow-far-px: 9px;
+
+  --pulse-duration: 10s;
+  --pulse-min: 0.1;
+  --pulse-max: 1.5;
+
+  --stats-opacity: 1;
+  --team-opacity: 1;
+  --team-blur: 0px;
+  --team-size: 100%;
+
+  opacity: var(--card-opacity) !important;
+  transform: scale(var(--card-scale)) !important;
+  background: rgba(0,0,0,var(--card-bg-alpha)) !important;
+  box-shadow: 0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
+  overflow: visible !important;
+}
+
+/* Retrato limpio: nada de lámpara sobre la imagen */
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.grid .cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img{
+  opacity: var(--portrait-opacity) !important;
+  filter:
+    brightness(var(--portrait-brightness))
+    saturate(var(--portrait-saturation))
+    contrast(var(--portrait-contrast))
+    blur(var(--portrait-blur)) !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Marco base */
+.grid .cell > .unit-card .unit-frame-skin,
+.cell > .unit-card .unit-frame-skin{
+  opacity: var(--frame-opacity) !important;
+  filter:
+    brightness(var(--frame-brightness))
+    saturate(var(--frame-saturation))
+    contrast(var(--frame-contrast))
+    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha))) !important;
+  animation: none !important;
+}
+
+/* Ornamento normal PNG */
+.grid .cell > .unit-card .unit-frame-rarity,
+.cell > .unit-card .unit-frame-rarity{
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 5 !important;
+  pointer-events: none !important;
+  background-image: var(--hv-ornament-image) !important;
+  background-position: center !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-color: transparent !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  opacity: var(--ornament-opacity) !important;
+  filter:
+    brightness(var(--ornament-brightness))
+    saturate(var(--ornament-saturation))
+    contrast(var(--ornament-contrast))
+    blur(var(--ornament-blur)) !important;
+  mix-blend-mode: normal !important;
+  animation: none !important;
+}
+
+/* Glow horneado encima del ornamento */
+.grid .cell > .unit-card .unit-frame-rarity::after,
+.cell > .unit-card .unit-frame-rarity::after{
+  content: "";
+  display:block !important;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-image: var(--hv-ornament-glow-image);
+  opacity: var(--baked-opacity);
+  filter:
+    brightness(var(--baked-brightness))
+    saturate(var(--baked-saturation))
+    contrast(var(--baked-contrast))
+    blur(var(--baked-blur))
+    drop-shadow(0 0 var(--css-glow-white-px) rgba(255,255,255,var(--css-glow-white-alpha)))
+    drop-shadow(0 0 var(--css-glow-near-px) rgba(255,255,255,var(--css-glow-opacity)))
+    drop-shadow(0 0 var(--css-glow-mid-px) rgba(255,255,255,calc(var(--css-glow-opacity) * .55)))
+    drop-shadow(0 0 var(--css-glow-far-px) rgba(255,255,255,calc(var(--css-glow-opacity) * .28))) !important;
+  animation: hvFinalOrnamentPulse7HAT var(--pulse-duration) ease-in-out infinite !important;
+}
+
+@keyframes hvFinalOrnamentPulse7HAT{
+  0%,100%{ opacity: calc(var(--baked-opacity) * var(--pulse-min)); }
+  50%{ opacity: calc(var(--baked-opacity) * var(--pulse-max)); }
+}
+
+/* Stats visibles */
+.grid .cell > .unit-card .unit-ornate-ui,
+.cell > .unit-card .unit-ornate-ui{
+  opacity: var(--stats-opacity) !important;
+  z-index: 8 !important;
+}
+
+/* Base aliado/enemigo */
+.grid .cell > .unit-card.ally::before,
+.grid .cell > .unit-card.enemy::before,
+.cell > .unit-card.ally::before,
+.cell > .unit-card.enemy::before{
+  opacity: var(--team-opacity) !important;
+  filter: blur(var(--team-blur)) !important;
+  width: var(--team-size) !important;
+}
+
+/* Rutas de ornamento normal y glow por rareza */
+.grid .cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-improved{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_improved.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-heroic{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_heroic.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-glorious{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_glorious.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-epic{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_epic.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-mythic{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_mythic.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-legendary{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_legendary.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader{
+  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_demigod.png");
+  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
+}
+
+/* Básicas sin glow ornamental */
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity{
+  display: none !important;
+}

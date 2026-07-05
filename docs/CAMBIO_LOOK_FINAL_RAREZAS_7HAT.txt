@@ -1,0 +1,19 @@
+Hallvalla 7HAT - Look final de rarezas en campo
+
+Base: Hallvalla_FIX_DUPLICADO_GETEXACT_7HAK.zip
+Cambios:
+- Se añadieron los PNG *_glow.png del ornamento de rareza en assets/ui.
+- Se congelaron los valores visuales elegidos desde el laboratorio.
+- La imagen/retrato queda limpia.
+- La rareza se reconoce por ornamento normal + glow horneado.
+- Base aliado/enemigo queda activa.
+- Stats permanecen visibles.
+
+Assets verificados:
+- gothic_frame_unit_ornament_improved.png / _glow.png
+- gothic_frame_unit_ornament_heroic.png / _glow.png
+- gothic_frame_unit_ornament_glorious.png / _glow.png
+- gothic_frame_unit_ornament_epic.png / _glow.png
+- gothic_frame_unit_ornament_mythic.png / _glow.png
+- gothic_frame_unit_ornament_legendary.png / _glow.png
+- gothic_frame_unit_ornament_demigod.png / _glow.png
