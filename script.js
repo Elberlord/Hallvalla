@@ -2832,7 +2832,7 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
 }
 
 function combatSummary(mods){return mods?.notes?.length?` ${mods.notes.join(" ")}`:""}
-function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -7137,6 +7137,9 @@ function getTutorialCardTemplate(key){
 }
 async function startBasicTutorialBattle(){
   if(!(await ensureFirebaseAuthReady("tutorial")))return;
+  basicTutorialCoachStep=0;
+  basicTutorialProgressStep=0;
+  clearBasicTutorialTargetHighlight();
   const leaderType=getSelectedLeaderType()||"warrior";
   const leaderLevel=getLocalLeaderLevel(leaderType)||1;
   const leaderAbility=getLocalLeaderAbility(leaderType)||"";
@@ -7202,6 +7205,7 @@ function ensureBasicTutorialCoach(){
         <button id="basicTutorialCloseCoachBtn" class="basic-tutorial-mini-btn" type="button">Ocultar</button>
       </div>
       <p id="basicTutorialCoachBody"></p>
+      <div id="basicTutorialCoachHint" class="basic-tutorial-hint"></div>
       <div class="basic-tutorial-coach-buttons">
         <button id="basicTutorialPrevBtn" class="basic-tutorial-mini-btn" type="button">Anterior</button>
         <button id="basicTutorialNextBtn" class="basic-tutorial-mini-btn primary" type="button">Siguiente</button>
@@ -7209,31 +7213,152 @@ function ensureBasicTutorialCoach(){
       </div>
     </div>`;
   document.body.appendChild(coach);
+  ensureBasicTutorialFocusRing();
   on("basicTutorialCloseCoachBtn","click",()=>coach.classList.add("hidden"));
   on("basicTutorialPrevBtn","click",()=>{basicTutorialCoachStep=Math.max(0,basicTutorialCoachStep-1);renderBasicTutorialCoach(true);});
-  on("basicTutorialNextBtn","click",()=>{basicTutorialCoachStep=Math.min(BASIC_TUTORIAL_STEPS.length-1,basicTutorialCoachStep+1);renderBasicTutorialCoach(true);});
+  on("basicTutorialNextBtn","click",()=>{basicTutorialCoachStep=Math.min(BASIC_TUTORIAL_STEPS.length-1,basicTutorialCoachStep+1);basicTutorialProgressStep=Math.max(basicTutorialProgressStep,basicTutorialCoachStep);renderBasicTutorialCoach(true);});
   on("basicTutorialFinishBtn","click",()=>backToMainMenu());
   return coach;
 }
+function ensureBasicTutorialFocusRing(){
+  let ring=$("basicTutorialFocusRing");
+  if(ring)return ring;
+  ring=document.createElement("div");
+  ring.id="basicTutorialFocusRing";
+  ring.className="basic-tutorial-focus-ring hidden";
+  document.body.appendChild(ring);
+  return ring;
+}
+let basicTutorialCurrentTarget=null;
+function clearBasicTutorialTargetHighlight(){
+  if(basicTutorialCurrentTarget&&basicTutorialCurrentTarget.classList)basicTutorialCurrentTarget.classList.remove("tutorial-target-active");
+  basicTutorialCurrentTarget=null;
+  const ring=$("basicTutorialFocusRing");
+  if(ring)ring.classList.add("hidden");
+}
+function getBasicTutorialPlayerUnits(){
+  return (publicState?.units||[]).filter(u=>u&&u.owner===myPlayer&&!u.leader&&u.hp>0);
+}
+function getBasicTutorialEnemyUnit(){
+  return (publicState?.units||[]).find(u=>u&&u.owner!==myPlayer&&!u.leader&&u.hp>0)||null;
+}
+function getBasicTutorialUnitContextButton(action){
+  return document.querySelector(`#unitContextMenu .unit-context-btn[data-action="${action}"]`);
+}
+function getBasicTutorialBoardUnitEl(unit){
+  if(!unit)return null;
+  return document.querySelector(`.unit-card[data-x="${unit.x}"][data-y="${unit.y}"]`)||document.querySelector(`.leader-base[data-x="${unit.x}"][data-y="${unit.y}"]`)||null;
+}
+function getBasicTutorialTargetElement(step){
+  if(!step)return null;
+  try{
+    const el=typeof step.targetResolver==="function"?step.targetResolver():null;
+    return el&&el.nodeType===1?el:null;
+  }catch(e){return null;}
+}
+function syncBasicTutorialProgress(){
+  if(!publicState||publicState.mode!=="tutorial")return;
+  let progress=basicTutorialProgressStep;
+  while(progress<BASIC_TUTORIAL_STEPS.length-1){
+    const done=typeof BASIC_TUTORIAL_STEPS[progress]?.done==="function"?!!BASIC_TUTORIAL_STEPS[progress].done():false;
+    if(!done)break;
+    progress+=1;
+  }
+  if(progress!==basicTutorialProgressStep){
+    const previous=basicTutorialProgressStep;
+    basicTutorialProgressStep=progress;
+    if(basicTutorialCoachStep===previous)basicTutorialCoachStep=progress;
+  }
+}
+function applyBasicTutorialTarget(step){
+  clearBasicTutorialTargetHighlight();
+  const el=getBasicTutorialTargetElement(step);
+  const ring=ensureBasicTutorialFocusRing();
+  if(!el||!ring)return;
+  basicTutorialCurrentTarget=el;
+  el.classList.add("tutorial-target-active");
+  const rect=el.getBoundingClientRect();
+  const pad=8;
+  ring.style.left=`${Math.max(6,rect.left-pad)}px`;
+  ring.style.top=`${Math.max(6,rect.top-pad)}px`;
+  ring.style.width=`${Math.max(28,rect.width+(pad*2))}px`;
+  ring.style.height=`${Math.max(28,rect.height+(pad*2))}px`;
+  ring.classList.remove("hidden");
+}
 const BASIC_TUTORIAL_STEPS=[
-  {title:"1. Mano, mazo y recurso",body:"Toca MANO para abrir u ocultar tus 4 cartas. Tienes Honor/Mana 3/3 para practicar. El mazo puede estar vacío en este entrenamiento: aquí importan las acciones básicas."},
-  {title:"2. Convocar una unidad",body:"En Main Phase juega una carta de unidad desde la mano. Las casillas de invocación aparecen cerca de tu líder. Convocar pone una pieza en el tablero."},
-  {title:"3. Pasar de fase",body:"Cuando termines de jugar cartas, pulsa Siguiente fase. Pasarás a Action Phase, donde las unidades pueden moverse, defender, atacar o usar efectos."},
-  {title:"4. Movimiento",body:"Selecciona una unidad aliada y elige MOV. Las casillas verdes muestran dónde puede moverse según su MV. MOV 1 avanza una casilla."},
-  {title:"5. Defensa",body:"Elige DEF para poner una unidad en postura defensiva. La Guardia ayuda a absorber daño antes de que la Vida baje."},
-  {title:"6. Ataque y rango",body:"Elige ATTK y selecciona un enemigo en rojo. RG 1 es cuerpo a cuerpo; arqueras y magos pueden atacar a distancia si su RG alcanza al objetivo."},
-  {title:"7. Precisión y evasión",body:"PREC/EVA sale de DX + AGI. El atacante necesita superar la evasión del objetivo. Atacar y recibir ataques desgasta esa reserva durante el turno."},
-  {title:"8. Acciones rápidas",body:"Puedes ocultar la mano, abrir Log, cancelar selección y pasar de fase. Cuando quieras repetir, vuelve al menú y pulsa Practicar básico."}
+  {
+    title:"1. Abre tu mano",
+    body:"Pulsa el botón Mazo para abrir tu mano. Aquí verás tus 4 cartas iniciales y podrás empezar a jugar.",
+    hint:"Brillo dorado = el botón que debes tocar ahora.",
+    targetResolver:()=>$("handBtn"),
+    done:()=>!!handOpen
+  },
+  {
+    title:"2. Elige una unidad jugable",
+    body:"Con la mano abierta, toca una carta jugable. Primero verás su detalle y luego podrás jugarla al campo.",
+    hint:"Si no ves cartas, vuelve a tocar Mazo.",
+    targetResolver:()=>document.querySelector("#handRow .hand-card:not(.not-playable)")||$("handBtn"),
+    done:()=>!!selectedCard||!!cardInspectSelection||!(($("cardInspectModal")||{}).classList?.contains?.("hidden")??true)
+  },
+  {
+    title:"3. Convoca la unidad",
+    body:"Después de elegir la carta, toca una casilla dorada cerca de tu líder. Esa es una casilla válida para invocar.",
+    hint:"Invocar pone la unidad en el tablero y gasta su costo.",
+    targetResolver:()=>document.querySelector(".cell.summonable")||document.querySelector("#handRow .hand-card.selected")||document.querySelector("#handRow .hand-card:not(.not-playable)"),
+    done:()=>getBasicTutorialPlayerUnits().length>0
+  },
+  {
+    title:"4. Cambia a Action Phase",
+    body:"Si ya no quieres jugar más cartas o no tienes más movimientos útiles en esta fase, pulsa Siguiente fase. Así pasas a las acciones del tablero.",
+    hint:"Esto enseña al jugador que no debe quedarse atascado si ya no puede hacer nada.",
+    targetResolver:()=>$("endBtn"),
+    done:()=>String(publicState?.turnPhase||"").toLowerCase().includes("action")
+  },
+  {
+    title:"5. Abre las acciones de tu unidad",
+    body:"Toca tu unidad en el tablero. Se abrirá la estrella táctica con MOV, DEF, ATTK y DET.",
+    hint:"DET muestra detalles, MOV mueve, DEF defiende y ATTK ataca.",
+    targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialPlayerUnits()[0]),
+    done:()=>!($("unitContextMenu")?.classList.contains("hidden")??true)
+  },
+  {
+    title:"6. Muévete con MOV",
+    body:"Dentro de la estrella táctica, toca MOV y luego elige una casilla verde. Así aprenderás cómo se desplaza una unidad.",
+    hint:"Las casillas verdes muestran hasta dónde puedes moverte según tu MV.",
+    targetResolver:()=>getBasicTutorialUnitContextButton("mov")||getBasicTutorialBoardUnitEl(getBasicTutorialPlayerUnits()[0]),
+    done:()=>{const u=getBasicTutorialPlayerUnits()[0];return !!(u&&u.moved);}
+  },
+  {
+    title:"7. Usa DEF para resistir",
+    body:"Vuelve a tocar tu unidad y elige DEF. Eso la pone en postura defensiva para resistir mejor los ataques.",
+    hint:"La defensa aprovecha la Guardia para aguantar más tiempo en el campo.",
+    targetResolver:()=>getBasicTutorialUnitContextButton("def")||getBasicTutorialBoardUnitEl(getBasicTutorialPlayerUnits()[0]),
+    done:()=>{const u=getBasicTutorialPlayerUnits()[0];return !!(u&&u.defenseModeReady);}
+  },
+  {
+    title:"8. Ataque, detalles y flujo",
+    body:"Si tu unidad llega al enemigo, usa ATTK para golpear. Si quieres revisar una carta o unidad, usa DET. También puedes ocultar la mano, abrir Log o pulsar Siguiente fase cuando no queden acciones. PRECISIÓN y EVASIÓN salen de DX + AGI.",
+    hint:"Cuando quieras repetir esta práctica, vuelve al menú y pulsa Practicar básico.",
+    targetResolver:()=>getBasicTutorialUnitContextButton("attk")||getBasicTutorialUnitContextButton("det")||$("endBtn")||getBasicTutorialBoardUnitEl(getBasicTutorialEnemyUnit()),
+    done:()=>false
+  }
 ];
 let basicTutorialCoachStep=0;
+let basicTutorialProgressStep=0;
 function renderBasicTutorialCoach(forceShow=false){
-  if(!publicState||publicState.mode!=="tutorial")return;
+  if(!publicState||publicState.mode!=="tutorial"){clearBasicTutorialTargetHighlight();return;}
   const coach=ensureBasicTutorialCoach();
+  syncBasicTutorialProgress();
   const step=BASIC_TUTORIAL_STEPS[basicTutorialCoachStep]||BASIC_TUTORIAL_STEPS[0];
   setText("basicTutorialStepText",`Paso ${basicTutorialCoachStep+1}/${BASIC_TUTORIAL_STEPS.length}`);
   setText("basicTutorialCoachTitle",step.title);
   setText("basicTutorialCoachBody",step.body);
+  setText("basicTutorialCoachHint",step.hint||"");
+  const prevBtn=$("basicTutorialPrevBtn"),nextBtn=$("basicTutorialNextBtn");
+  if(prevBtn)prevBtn.disabled=basicTutorialCoachStep<=0;
+  if(nextBtn)nextBtn.disabled=basicTutorialCoachStep>=BASIC_TUTORIAL_STEPS.length-1;
   if(forceShow||coach.classList.contains("hidden"))coach.classList.remove("hidden");
+  requestAnimationFrame(()=>applyBasicTutorialTarget(step));
 }
 
 function ensureStatsTutorialModal(){
