@@ -3451,7 +3451,12 @@ function openStatGuideModal(label=""){
     modal.addEventListener("click",ev=>{if(ev.target===modal)close();});
   }
   $("statGuideTitle").textContent=data.title;
-  $("statGuideShort").textContent=data.short;
+  const statGuideShortEl=$("statGuideShort");
+  if(statGuideShortEl){
+    const shortText=String(data.short||"").trim();
+    statGuideShortEl.textContent=shortText;
+    statGuideShortEl.hidden=!shortText;
+  }
   $("statGuideFormula").textContent=data.formula;
   $("statGuideExample").textContent=data.example;
   // Modal genérico: no depende de una carta específica.
@@ -9891,11 +9896,6 @@ function getExactEffectGuideData(entity,effectText=""){
   const key=normalizeEffectGuideKey(entity);
   const custom=CODE_TRUTH_EFFECTS_7HAI[key];
   const globalLines=getCodeTruthGlobalRuleLines7hai(entity);
-  const truthIntro=[
-    "Este modal muestra lo que ejecuta el código, no solo el texto corto de la carta.",
-    "Regla global de combate actual: el ataque presiona/consume EVA del defensor antes de decidir si impacta. Luego impacta si PREC alcanza la EVA restante.",
-    "Si una parte del efecto exige daño real, significa daño a Vida/HP; romper solo Guardia no activa esa parte."
-  ];
   if(custom){
     const formula=[
       truthBlock7hai("Reglas globales que también aplica esta unidad",globalLines),
@@ -9904,7 +9904,7 @@ function getExactEffectGuideData(entity,effectText=""){
       truthBlock7hai("Lo que NO hace / límites",custom.doesNot),
       raw?`Texto corto original:\n• ${raw}`:""
     ].filter(Boolean).join("\n\n");
-    return {title:`✦ Efecto exacto: ${name}`,short:truthIntro.join(" "),formula,example:custom.example||"Usa este modal como fuente confiable de reglas.",card:entity};
+    return {title:`✦ Efecto exacto: ${name}`,short:"",formula,example:custom.example||"Usa este modal como fuente confiable de reglas.",card:entity};
   }
   const sections=getEntityAbilitySections(entity,raw);
   const formula=[
@@ -9913,7 +9913,7 @@ function getExactEffectGuideData(entity,effectText=""){
     sections.length?sections.map(sec=>`${sec.title}:\n• ${sec.body}`).join("\n\n"):"",
     "Límite general:\n• Si el efecto dice daño real, debe bajar Vida/HP. Si solo baja Guardia, esa parte no entra.\n• Si el efecto depende de atacar cuerpo a cuerpo, no entra con ataques a distancia.\n• Si depende de moverse cierta cantidad, no entra si no cumplió ese movimiento este turno."
   ].filter(Boolean).join("\n\n");
-  return {title:`✦ Efecto exacto: ${name}`,short:truthIntro.join(" "),formula,example:"Esta carta no tiene una ficha manual completa todavía, pero el modal ya muestra sus reglas globales y límites generales.",card:entity};
+  return {title:`✦ Efecto exacto: ${name}`,short:"",formula,example:"Esta carta no tiene una ficha manual completa todavía, pero el modal ya muestra sus reglas globales y límites generales.",card:entity};
 }
 
 
