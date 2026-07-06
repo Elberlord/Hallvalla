@@ -9925,13 +9925,13 @@ function getExactEffectGuideData(entity,effectText=""){
 
 
 
-/* 7HBE: bloque de control/debug eliminado: /* === 7HAV · panel de controles en tablero real === */ */
+/* 7HBE: bloque de control/debug eliminado: 7HAV panel de controles en tablero real */
 
 
-/* 7HBE: bloque de control/debug eliminado: /* 7HAX: controles extra para brillos que venían de estados del tablero y reglas heredadas */ */
+/* 7HBE: bloque de control/debug eliminado: 7HAX controles extra */
 
 
-/* 7HBE: bloque de control/debug eliminado: /* === 7HBA · controles maestros reales de tablero/carta === */ */
+/* 7HBE: bloque de control/debug eliminado: 7HBA controles maestros */
 
 /* ==========================================================
    7HBD · Limpieza de controles visuales/debug
