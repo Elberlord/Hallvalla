@@ -1,5 +1,5 @@
 Hallvalla 7HAJ - Auditoría DET de reglas reales
-x
+xyz
 Objetivo:
 - Revisar la actualización grande de DET y detectar unidades que todavía caían en explicación genérica.
 - Completar el modal "Ver efecto" con lo que el sistema ejecuta realmente.
