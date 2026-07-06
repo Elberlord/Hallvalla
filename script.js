@@ -10205,3 +10205,140 @@ function getExactEffectGuideData(entity,effectText=""){
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{document.body.classList.add("hv-master-glow-debug");setTimeout(build,350);});else{document.body.classList.add("hv-master-glow-debug");setTimeout(build,350);} 
   const t=setInterval(()=>{if(build())clearInterval(t);},400);
 })();
+
+
+/* ==========================================================
+   7HBB runtime panic button: apaga brillos desde JS también.
+   ========================================================== */
+(function(){
+  const KILL_ID = "hv-kill-all-glows-runtime-7hbb";
+  function injectKillGlowCss(){
+    let style = document.getElementById(KILL_ID);
+    if(!style){
+      style = document.createElement("style");
+      style.id = KILL_ID;
+      document.head.appendChild(style);
+    }
+    style.textContent = `
+      .cell,.cell *,.cell::before,.cell::after,.cell *::before,.cell *::after,
+      .unit-card,.unit-card *,.unit-card::before,.unit-card::after,.unit-card *::before,.unit-card *::after{
+        box-shadow:none !important;
+        filter:none !important;
+        text-shadow:none !important;
+        animation:none !important;
+      }
+      .unit-card::before,.unit-card::after,
+      .unit-frame-rarity,.unit-frame-rarity::before,.unit-frame-rarity::after,
+      .cell::before,.cell::after{
+        content:none !important;
+        display:none !important;
+        opacity:0 !important;
+        background:none !important;
+        border:none !important;
+        outline:none !important;
+      }
+      .unit-portrait,.unit-portrait img,.unit-portrait-stack,
+      .unit-card-bg-layer,.unit-card-character-layer,.unit-frame-skin{
+        opacity:1 !important;
+        filter:none !important;
+        box-shadow:none !important;
+        mix-blend-mode:normal !important;
+      }
+    `;
+  }
+  function addPanicButton(){
+    if(document.getElementById("hvGlowPanic7HBB")) return;
+    const btn = document.createElement("button");
+    btn.id = "hvGlowPanic7HBB";
+    btn.type = "button";
+    btn.textContent = "CERO BRILLO";
+    btn.addEventListener("click", injectKillGlowCss);
+    document.body.appendChild(btn);
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", addPanicButton);
+  }else{
+    addPanicButton();
+  }
+  window.hvKillAllCardGlows7HBB = injectKillGlowCss;
+})();
+
+
+/* ==========================================================
+   7HBD · Limpieza de controles visuales/debug
+   - Quita panel Rareza CTRL del juego visible
+   - Limpia forzar carta / primera mano de pruebas
+   - Mantiene mano aleatoria normal y recompensas normales
+   ========================================================== */
+(function(){
+  const DEBUG_KEYS = [
+    "hvForcedFirstHandCard",
+    "hvForceFirstHandCard",
+    "hallvalla_forced_first_hand_card",
+    "hallvallaForcedFirstHandCard",
+    "rarityControlForcedCard",
+    "hv_rarity_forced_card",
+    "hvRarityForcedCard",
+    "forcedOpeningCard",
+    "forcedFirstCard"
+  ];
+
+  function clearForcedCardFlags(){
+    try{
+      DEBUG_KEYS.forEach((key)=>{
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+    }catch(_){}
+    try{
+      if(window.__hvForcedFirstHandCard) window.__hvForcedFirstHandCard = null;
+      if(window.hvForcedFirstHandCard) window.hvForcedFirstHandCard = null;
+      if(window.HV_FORCE_FIRST_HAND_CARD) window.HV_FORCE_FIRST_HAND_CARD = null;
+      if(window.HV_RARITY_FORCE_CARD) window.HV_RARITY_FORCE_CARD = null;
+    }catch(_){}
+  }
+
+  function removeDebugPanels(){
+    const selectors = [
+      "#hvRarityControlPanel",
+      "#hvRarityCtrlPanel",
+      "#hvRarityCtrl",
+      "#hvRarityControl",
+      "#hvGlowPanic7HBB",
+      ".hv-rarity-control-panel",
+      ".rarity-control-panel",
+      ".rarity-ctrl-panel"
+    ];
+    document.querySelectorAll(selectors.join(",")).forEach((el)=>el.remove());
+
+    // Remove floating buttons by visible text, without touching real game buttons.
+    document.querySelectorAll("button, .button, [role='button']").forEach((el)=>{
+      const t = (el.textContent || "").trim().toLowerCase();
+      if(
+        t.includes("rareza ctrl") ||
+        t.includes("cero brillo") ||
+        t.includes("matar brillos") ||
+        t.includes("cero absoluto") ||
+        t.includes("forzar carta") ||
+        t.includes("reset master") ||
+        t.includes("retrato limpio real") ||
+        t.includes("ocultar mover/atacar")
+      ){
+        el.remove();
+      }
+    });
+  }
+
+  function install(){
+    clearForcedCardFlags();
+    removeDebugPanels();
+    const obs = new MutationObserver(removeDebugPanels);
+    obs.observe(document.documentElement, { childList:true, subtree:true });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", install);
+  }else{
+    install();
+  }
+})();

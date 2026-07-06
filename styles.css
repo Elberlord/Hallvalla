@@ -16581,3 +16581,628 @@ body.hv-master-zero-glow .grid .cell::after{
   text-shadow:none !important;
   animation:none !important;
 }
+
+
+/* ==========================================================
+   7HBB RESET TOTAL DE BRILLOS DE CARTAS / CAMPO
+   Punto cero real: sin rareza glow, sin halos de mover/atacar,
+   sin sombras de estados, sin pseudo-elementos luminosos.
+   ========================================================== */
+
+.grid .cell,
+.cell,
+.grid .cell.valid,
+.grid .cell.attackable,
+.grid .cell.summonable,
+.grid .cell.selected,
+.grid .cell.move-target,
+.grid .cell.attack-target,
+.grid .cell.valid-move,
+.grid .cell.valid-attack,
+.grid .cell.can-move,
+.grid .cell.can-attack,
+.grid .cell.can-summon,
+.cell.valid,
+.cell.attackable,
+.cell.summonable,
+.cell.selected,
+.cell.move-target,
+.cell.attack-target,
+.cell.valid-move,
+.cell.valid-attack,
+.cell.can-move,
+.cell.can-attack,
+.cell.can-summon{
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  text-shadow:none !important;
+  outline:none !important;
+}
+
+.grid .cell::before,
+.grid .cell::after,
+.cell::before,
+.cell::after,
+.grid .cell.valid::before,
+.grid .cell.valid::after,
+.grid .cell.attackable::before,
+.grid .cell.attackable::after,
+.grid .cell.summonable::before,
+.grid .cell.summonable::after,
+.grid .cell.selected::before,
+.grid .cell.selected::after,
+.cell.valid::before,
+.cell.valid::after,
+.cell.attackable::before,
+.cell.attackable::after,
+.cell.summonable::before,
+.cell.summonable::after,
+.cell.selected::before,
+.cell.selected::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  background:none !important;
+  border:none !important;
+  outline:none !important;
+}
+
+.grid .cell > .unit-card,
+.cell > .unit-card,
+.unit-card,
+.unit-card.p1,
+.unit-card.p2,
+.unit-card.leader,
+.unit-card.selected,
+.unit-card.active,
+.unit-card.attackable,
+.unit-card.valid,
+.unit-card.summonable,
+.unit-card.card-rarity-basic,
+.unit-card.card-rarity-improved,
+.unit-card.card-rarity-heroic,
+.unit-card.card-rarity-glorious,
+.unit-card.card-rarity-epic,
+.unit-card.card-rarity-mythic,
+.unit-card.card-rarity-legendary,
+.unit-card.card-rarity-demigod{
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  text-shadow:none !important;
+  outline:none !important;
+  background:rgba(0,0,0,.18) !important;
+  overflow:hidden !important;
+}
+
+.grid .cell > .unit-card::before,
+.grid .cell > .unit-card::after,
+.cell > .unit-card::before,
+.cell > .unit-card::after,
+.unit-card::before,
+.unit-card::after,
+.unit-card.p1::before,
+.unit-card.p1::after,
+.unit-card.p2::before,
+.unit-card.p2::after,
+.unit-card.leader::before,
+.unit-card.leader::after,
+.unit-card.selected::before,
+.unit-card.selected::after,
+.unit-card.active::before,
+.unit-card.active::after,
+.unit-card.attackable::before,
+.unit-card.attackable::after,
+.unit-card.valid::before,
+.unit-card.valid::after,
+.unit-card.summonable::before,
+.unit-card.summonable::after,
+.unit-card.card-rarity-improved::before,
+.unit-card.card-rarity-improved::after,
+.unit-card.card-rarity-heroic::before,
+.unit-card.card-rarity-heroic::after,
+.unit-card.card-rarity-glorious::before,
+.unit-card.card-rarity-glorious::after,
+.unit-card.card-rarity-epic::before,
+.unit-card.card-rarity-epic::after,
+.unit-card.card-rarity-mythic::before,
+.unit-card.card-rarity-mythic::after,
+.unit-card.card-rarity-legendary::before,
+.unit-card.card-rarity-legendary::after,
+.unit-card.card-rarity-demigod::before,
+.unit-card.card-rarity-demigod::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  background:none !important;
+  border:none !important;
+  outline:none !important;
+}
+
+/* Retrato, frame, ornamento, stats: todos sin filtros ni sombras. */
+.grid .cell > .unit-card *,
+.cell > .unit-card *,
+.unit-card *,
+.grid .cell > .unit-card *::before,
+.grid .cell > .unit-card *::after,
+.cell > .unit-card *::before,
+.cell > .unit-card *::after,
+.unit-card *::before,
+.unit-card *::after{
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  text-shadow:none !important;
+}
+
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.grid .cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img,
+.unit-card .unit-portrait,
+.unit-card .unit-portrait-stack,
+.unit-card .unit-card-bg-layer,
+.unit-card .unit-card-character-layer,
+.unit-card .unit-portrait img{
+  opacity:1 !important;
+  filter:none !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card .unit-frame-skin,
+.grid .cell > .unit-card .unit-frame-skin::before,
+.grid .cell > .unit-card .unit-frame-skin::after,
+.cell > .unit-card .unit-frame-skin,
+.cell > .unit-card .unit-frame-skin::before,
+.cell > .unit-card .unit-frame-skin::after,
+.unit-card .unit-frame-skin,
+.unit-card .unit-frame-skin::before,
+.unit-card .unit-frame-skin::after{
+  opacity:1 !important;
+  filter:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+  background-color:transparent !important;
+}
+
+.grid .cell > .unit-card .unit-frame-rarity,
+.grid .cell > .unit-card .unit-frame-rarity::before,
+.grid .cell > .unit-card .unit-frame-rarity::after,
+.cell > .unit-card .unit-frame-rarity,
+.cell > .unit-card .unit-frame-rarity::before,
+.cell > .unit-card .unit-frame-rarity::after,
+.unit-card .unit-frame-rarity,
+.unit-card .unit-frame-rarity::before,
+.unit-card .unit-frame-rarity::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  filter:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+  background:none !important;
+  mix-blend-mode:normal !important;
+}
+
+/* Apagar clases conocidas de glows/targets si existen. */
+[class*="glow"],
+[class*="Glow"],
+[class*="neon"],
+[class*="Neon"],
+[class*="aura"],
+[class*="Aura"],
+[class*="target"],
+[class*="Target"],
+[class*="valid"],
+[class*="attackable"],
+[class*="summonable"],
+[class*="selected"]{
+  box-shadow:none !important;
+  text-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* La regla anterior es amplia; estas líneas devuelven estructura/visibilidad básica
+   a elementos que deben existir pero sin brillo. */
+.grid .cell,
+.cell{display:flex;}
+.unit-card,
+.unit-card *{visibility:visible;}
+.unit-card .unit-frame-rarity,
+.unit-card .unit-frame-rarity::before,
+.unit-card .unit-frame-rarity::after{visibility:hidden !important;}
+
+/* Botón/panel de control sin depender del panel viejo. */
+#hvGlowPanic7HBB{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  z-index:999999;
+  padding:10px 14px;
+  border:1px solid rgba(255,215,128,.75);
+  border-radius:14px;
+  background:rgba(10,5,0,.92);
+  color:#ffe7a0;
+  font:700 14px Georgia,serif;
+  box-shadow:none !important;
+  cursor:pointer;
+}
+#hvGlowPanic7HBB:hover{background:rgba(35,18,0,.96);}
+
+
+/* ==========================================================
+   7HBC · LOOK RAREZAS CON VALORES DEL USUARIO
+   Base: reset total 7HBB + reconstrucción mínima.
+   Objetivo:
+   - sin brillo CSS externo
+   - sin marco base
+   - retrato limpio
+   - rareza visible por ornamento + glow PNG horneado
+   - base equipo con blur 10px
+   ========================================================== */
+
+.grid .cell > .unit-card,
+.cell > .unit-card,
+.unit-card{
+  --card-opacity: 1;
+  --card-scale: 1;
+  --card-bg-alpha: 0;
+  --card-shadow-px: 0px;
+  --card-shadow-alpha: 0;
+
+  --portrait-opacity: 1;
+  --portrait-brightness: 1;
+  --portrait-saturation: 1;
+  --portrait-contrast: 1;
+  --portrait-blur: 0px;
+
+  --frame-opacity: 0;
+  --frame-brightness: 0;
+  --frame-saturation: 0;
+  --frame-contrast: 0;
+  --frame-shadow-px: 0px;
+  --frame-shadow-alpha: 0;
+
+  --ornament-opacity: 1;
+  --ornament-brightness: 1;
+  --ornament-saturation: 1;
+  --ornament-contrast: 1;
+  --ornament-blur: 0px;
+
+  --baked-opacity: 0.55;
+  --baked-brightness: 2;
+  --baked-saturation: 2;
+  --baked-contrast: 2;
+  --baked-blur: 0px;
+
+  --css-glow-opacity: 0;
+  --css-glow-white-alpha: 0;
+  --css-glow-white-px: 0px;
+  --css-glow-near-px: 0px;
+  --css-glow-mid-px: 0px;
+  --css-glow-far-px: 0px;
+
+  --pulse-duration: 30s;
+  --pulse-min: 0.1;
+  --pulse-max: 2;
+
+  --stats-opacity: 1;
+  --team-opacity: 1;
+  --team-blur: 10px;
+  --team-size: 100%;
+
+  opacity:var(--card-opacity) !important;
+  transform:scale(var(--card-scale)) !important;
+  background:rgba(0,0,0,var(--card-bg-alpha)) !important;
+  box-shadow:0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
+  filter:none !important;
+  animation:none !important;
+  overflow:visible !important;
+}
+
+/* Retrato absolutamente limpio. */
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.grid .cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img,
+.unit-card .unit-portrait,
+.unit-card .unit-portrait-stack,
+.unit-card .unit-card-bg-layer,
+.unit-card .unit-card-character-layer,
+.unit-card .unit-portrait img{
+  display:block !important;
+  visibility:visible !important;
+  opacity:var(--portrait-opacity) !important;
+  filter:
+    brightness(var(--portrait-brightness))
+    saturate(var(--portrait-saturation))
+    contrast(var(--portrait-contrast))
+    blur(var(--portrait-blur)) !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
+/* Marco base apagado según valores del usuario. */
+.grid .cell > .unit-card .unit-frame-skin,
+.cell > .unit-card .unit-frame-skin,
+.unit-card .unit-frame-skin{
+  display:block !important;
+  visibility:hidden !important;
+  opacity:var(--frame-opacity) !important;
+  filter:
+    brightness(var(--frame-brightness))
+    saturate(var(--frame-saturation))
+    contrast(var(--frame-contrast))
+    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha))) !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+.unit-frame-skin::before,
+.unit-frame-skin::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Rutas por rareza: normal + glow PNG horneado. */
+.grid .cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-improved,
+.unit-card.card-rarity-improved{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-heroic,
+.unit-card.card-rarity-heroic{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-glorious,
+.unit-card.card-rarity-glorious{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-epic,
+.unit-card.card-rarity-epic{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-mythic,
+.unit-card.card-rarity-mythic{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-legendary,
+.unit-card.card-rarity-legendary{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader,
+.unit-card.card-rarity-demigod,
+.unit-card.leader{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
+}
+
+/* Ornamento normal visible. */
+.grid .cell > .unit-card .unit-frame-rarity,
+.cell > .unit-card .unit-frame-rarity,
+.unit-card .unit-frame-rarity{
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  opacity:var(--ornament-opacity) !important;
+  background-image:var(--hv-ornament-image) !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+  filter:
+    brightness(var(--ornament-brightness))
+    saturate(var(--ornament-saturation))
+    contrast(var(--ornament-contrast))
+    blur(var(--ornament-blur)) !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
+/* Glow PNG horneado. Sin drop-shadow CSS, sin halo CSS. */
+.grid .cell > .unit-card .unit-frame-rarity::after,
+.cell > .unit-card .unit-frame-rarity::after,
+.unit-card .unit-frame-rarity::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  background-image:var(--hv-ornament-glow-image) !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+  opacity:var(--baked-opacity) !important;
+  filter:
+    brightness(var(--baked-brightness))
+    saturate(var(--baked-saturation))
+    contrast(var(--baked-contrast))
+    blur(var(--baked-blur)) !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:hvRarityBakedPulse7HBC var(--pulse-duration) ease-in-out infinite !important;
+}
+
+/* Nada de ::before del ornamento. */
+.grid .cell > .unit-card .unit-frame-rarity::before,
+.cell > .unit-card .unit-frame-rarity::before,
+.unit-card .unit-frame-rarity::before{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+}
+
+/* Básicas sin ornamento de rareza. */
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.unit-card.card-rarity-basic .unit-frame-rarity{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+
+/* Pulso ultra lento, solo opacidad del glow PNG horneado. */
+@keyframes hvRarityBakedPulse7HBC{
+  0%,100%{opacity:calc(var(--baked-opacity) * var(--pulse-min));}
+  50%{opacity:calc(var(--baked-opacity) * var(--pulse-max));}
+}
+
+/* Stats normales por encima. */
+.grid .cell > .unit-card .unit-ornate-ui,
+.cell > .unit-card .unit-ornate-ui,
+.unit-card .unit-ornate-ui,
+.grid .cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-bubbles,
+.unit-card .unit-status-bubbles{
+  display:block !important;
+  visibility:visible !important;
+  opacity:var(--stats-opacity) !important;
+  z-index:8 !important;
+  filter:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+
+/* Base aliado/enemigo reconstruida sin usar el brillo viejo de la carta. */
+.grid .cell > .unit-card.p1::before,
+.grid .cell > .unit-card.ally::before,
+.cell > .unit-card.p1::before,
+.cell > .unit-card.ally::before,
+.unit-card.p1::before,
+.unit-card.ally::before{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:-8% !important;
+  height:20% !important;
+  width:var(--team-size) !important;
+  margin:auto !important;
+  opacity:var(--team-opacity) !important;
+  background:radial-gradient(ellipse at center, rgba(0,230,255,.88) 0%, rgba(0,230,255,.38) 42%, rgba(0,230,255,0) 72%) !important;
+  filter:blur(var(--team-blur)) !important;
+  z-index:1 !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+.grid .cell > .unit-card.p2::before,
+.grid .cell > .unit-card.enemy::before,
+.cell > .unit-card.p2::before,
+.cell > .unit-card.enemy::before,
+.unit-card.p2::before,
+.unit-card.enemy::before{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:-8% !important;
+  height:20% !important;
+  width:var(--team-size) !important;
+  margin:auto !important;
+  opacity:var(--team-opacity) !important;
+  background:radial-gradient(ellipse at center, rgba(255,70,160,.88) 0%, rgba(255,70,160,.38) 42%, rgba(255,70,160,0) 72%) !important;
+  filter:blur(var(--team-blur)) !important;
+  z-index:1 !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+
+/* Apagar cualquier halo CSS externo que antes volvía como fantasma. */
+.grid .cell > .unit-card::after,
+.cell > .unit-card::after,
+.unit-card::after,
+.grid .cell::before,
+.grid .cell::after,
+.cell::before,
+.cell::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* Estados de mover/atacar: sin glow de carta. Mantienen clase, no iluminan la unidad. */
+.grid .cell.valid,
+.grid .cell.attackable,
+.grid .cell.summonable,
+.grid .cell.selected,
+.cell.valid,
+.cell.attackable,
+.cell.summonable,
+.cell.selected{
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+#hvGlowPanic7HBB{display:none!important;}
+
+
+/* ==========================================================
+   7HBD · Quitar controles/debug del campo
+   ========================================================== */
+#hvRarityControlPanel,
+#hvRarityCtrlPanel,
+#hvRarityCtrl,
+#hvRarityControl,
+#hvGlowPanic7HBB,
+.hv-rarity-control-panel,
+.rarity-control-panel,
+.rarity-ctrl-panel{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}

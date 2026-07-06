@@ -1,0 +1,15 @@
+7HBC - Valores del usuario aplicados sobre punto cero visual
+
+Valores aplicados:
+- carta sin fondo y sin sombra
+- retrato limpio
+- marco base oculto
+- ornamento normal visible
+- glow PNG horneado visible a 0.55, brillo/saturacion/contraste 2
+- glow CSS externo en 0
+- pulso 30s
+- stats visibles
+- base equipo visible con blur 10px
+
+Objetivo:
+reconstruir el look desde el reset total sin volver a activar halos viejos de CSS.

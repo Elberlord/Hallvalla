@@ -1,0 +1,8 @@
+7HBD - Versión limpia sin controles de prueba
+
+Cambios:
+- Se ocultan/eliminan los controles visuales Rareza CTRL / CERO BRILLO / Matar brillos.
+- Se limpian banderas de prueba para forzar carta en primera mano.
+- Se deja la mano del jugador e IA aleatoria como antes.
+- No se tocaron reglas de combate, historia, efectos de unidades, recompensas ni progreso.
+- Se mantienen los valores visuales finales de rareza del usuario aplicados en 7HBC.
