@@ -17209,61 +17209,221 @@ body.hv-master-zero-glow .grid .cell::after{
 
 
 /* ==========================================================
-   7HBE · Corregir marcador aliado/enemigo volando
-   Quita la base pseudo-elemento reconstruida en 7HBC.
-   El marcador no debe salir disparado a un lado de la unidad.
+   7HBE · FIX base aliado/enemigo flotando
+   Apaga el pseudo-elemento de base que quedó desalineado.
+   No toca stats ni reglas de juego.
    ========================================================== */
-
-.grid .cell > .unit-card,
-.cell > .unit-card,
-.unit-card{
-  overflow:hidden !important;
-}
-
-/* Apagar base reconstruida que estaba usando ::before y se iba fuera de la carta. */
 .grid .cell > .unit-card.p1::before,
-.grid .cell > .unit-card.ally::before,
 .grid .cell > .unit-card.p2::before,
+.grid .cell > .unit-card.ally::before,
 .grid .cell > .unit-card.enemy::before,
 .cell > .unit-card.p1::before,
-.cell > .unit-card.ally::before,
 .cell > .unit-card.p2::before,
+.cell > .unit-card.ally::before,
 .cell > .unit-card.enemy::before,
 .unit-card.p1::before,
-.unit-card.ally::before,
 .unit-card.p2::before,
+.unit-card.ally::before,
 .unit-card.enemy::before{
   content:none !important;
   display:none !important;
+  visibility:hidden !important;
   opacity:0 !important;
   background:none !important;
-  filter:none !important;
   box-shadow:none !important;
+  filter:none !important;
   animation:none !important;
 }
 
-/* Sin paneles ni botones de laboratorio. */
+/* Mantener la carta anclada donde corresponde. */
+.grid .cell > .unit-card,
+.cell > .unit-card,
+.unit-card{
+  position:relative !important;
+}
+
+/* Ocultar cualquier resto de panel/debug anterior por si quedó en HTML runtime. */
 #hvRarityRealToggle,
 #hvRarityRealPanel,
-#hvRarityControlPanel,
-#hvRarityCtrlPanel,
-#hvRarityCtrl,
-#hvRarityControl,
+#hvExtraGlowBox7HAX,
+#hvMasterGlowBox7HBA,
 #hvGlowPanic7HBB,
-.hv-rarity-control-panel,
-.rarity-control-panel,
-.rarity-ctrl-panel{
+#hvKillGlows7HAX,
+#hvMasterZeroGlow7HBA,
+#hvMasterNoMarkers7HBA,
+#hvMasterCleanPortrait7HBA,
+#hvMasterReset7HBA{
   display:none !important;
   visibility:hidden !important;
   opacity:0 !important;
   pointer-events:none !important;
 }
 
-/* Mantener retrato y ornamento dentro de la carta. */
-.unit-card .unit-portrait,
-.unit-card .unit-portrait-stack,
-.unit-card .unit-card-bg-layer,
-.unit-card .unit-card-character-layer,
-.unit-card .unit-frame-rarity{
-  overflow:hidden !important;
+
+/* ==========================================================
+   7HBF · devolver circulito de convocación sin devolver brillo de carta
+   Solo afecta celdas vacías/zonas válidas de invocación.
+   No toca rareza, retrato, ornamento, mano, IA ni reglas.
+   ========================================================== */
+
+.grid .cell.summonable::after,
+.grid .cell.valid-summon::after,
+.grid .cell.can-summon::after,
+.grid .cell.summon-target::after,
+.cell.summonable::after,
+.cell.valid-summon::after,
+.cell.can-summon::after,
+.cell.summon-target::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  width:68% !important;
+  height:68% !important;
+  transform:translate(-50%,-50%) !important;
+  border-radius:50% !important;
+  pointer-events:none !important;
+  opacity:.85 !important;
+  z-index:6 !important;
+  background:
+    radial-gradient(circle at center,
+      rgba(255,230,120,.10) 0%,
+      rgba(255,230,120,.08) 42%,
+      rgba(255,230,120,0) 68%) !important;
+  border:1px solid rgba(255,220,95,.72) !important;
+  box-shadow:
+    inset 0 0 10px rgba(255,220,95,.22),
+    0 0 8px rgba(255,220,95,.25) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* El circulito de convocación solo debe salir en la celda, no pegado a la carta. */
+.grid .cell.summonable > .unit-card::after,
+.grid .cell.valid-summon > .unit-card::after,
+.grid .cell.can-summon > .unit-card::after,
+.grid .cell.summon-target > .unit-card::after,
+.cell.summonable > .unit-card::after,
+.cell.valid-summon > .unit-card::after,
+.cell.can-summon > .unit-card::after,
+.cell.summon-target > .unit-card::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+}
+
+
+/* ==========================================================
+   7HBG · restaurar bordes de celdas al seleccionar unidad
+   Verde = mover. Rojo = atacar.
+   Esto es marcador de celda, no brillo de carta.
+   ========================================================== */
+
+.grid .cell.valid::after,
+.grid .cell.move-range-preview::after,
+.grid .cell.valid-move::after,
+.grid .cell.can-move::after,
+.cell.valid::after,
+.cell.move-range-preview::after,
+.cell.valid-move::after,
+.cell.can-move::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:3px !important;
+  border-radius:4px !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  z-index:7 !important;
+  background:rgba(112,224,138,.10) !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(112,224,138,.82),
+    0 0 7px rgba(112,224,138,.18) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+.grid .cell.attackable::after,
+.grid .cell.attack-range-preview::after,
+.grid .cell.valid-attack::after,
+.grid .cell.can-attack::after,
+.grid .cell.enemy-threat-preview::after,
+.cell.attackable::after,
+.cell.attack-range-preview::after,
+.cell.valid-attack::after,
+.cell.can-attack::after,
+.cell.enemy-threat-preview::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:3px !important;
+  border-radius:4px !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  z-index:7 !important;
+  background:rgba(239,71,111,.10) !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(239,71,111,.88),
+    0 0 8px rgba(239,71,111,.20) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* La selección de unidad solo marca la celda, no vuelve a iluminar la carta. */
+.grid .cell.selected::after,
+.cell.selected::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:2px !important;
+  border-radius:5px !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  z-index:7 !important;
+  background:transparent !important;
+  box-shadow:inset 0 0 0 2px rgba(255,220,95,.74) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* Carta básica: normal, sin ornamento ni glow de rareza. */
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.grid .cell > .unit-card.rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.rarity-basic .unit-frame-rarity,
+.unit-card.card-rarity-basic .unit-frame-rarity,
+.unit-card.rarity-basic .unit-frame-rarity{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* El marcador de celda no debe meterse dentro de la carta. */
+.grid .cell.valid > .unit-card::after,
+.grid .cell.attackable > .unit-card::after,
+.grid .cell.selected > .unit-card::after,
+.grid .cell.can-move > .unit-card::after,
+.grid .cell.can-attack > .unit-card::after,
+.cell.valid > .unit-card::after,
+.cell.attackable > .unit-card::after,
+.cell.selected > .unit-card::after,
+.cell.can-move > .unit-card::after,
+.cell.can-attack > .unit-card::after{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
 }

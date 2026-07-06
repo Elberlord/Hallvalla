@@ -1,0 +1,19 @@
+7HBE - Fix real de mano aleatoria y base flotante
+
+Correcciones reales:
+- Se desactivó la función applyRarityDebugFirstHandCard.
+- hvRarityDebugEnabled ahora devuelve false.
+- makeDeck vuelve a devolver el mazo barajado normal.
+- La aventura ya no pasa el mazo por applyRarityDebugFirstHandCard.
+- Se eliminan banderas viejas de localStorage/sessionStorage:
+  hv_rarity_debug_force_hand, hv_rarity_debug_card_key y controles de rareza.
+- Se quitaron los bloques de panel Rareza CTRL / 7HAX / 7HBA del script.
+- Se apagó el pseudo-elemento ::before de base aliado/enemigo que quedó flotando lejos de la unidad.
+
+No tocado:
+- historia
+- reglas de combate
+- efectos de unidades
+- IA
+- recompensas
+- progreso

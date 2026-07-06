@@ -1,3 +1,33 @@
+
+
+/* ==========================================================
+   7HBE · limpieza real de banderas viejas de prueba
+   ========================================================== */
+(function(){
+  const KEYS=[
+    "hv_rarity_debug_force_hand",
+    "hv_rarity_debug_card_key",
+    "hv_rarity_real_controls",
+    "hv_extra_glow_controls_7hax",
+    "hv_master_glow_controls_7hba",
+    "hvForcedFirstHandCard",
+    "hvForceFirstHandCard",
+    "hallvalla_forced_first_hand_card",
+    "hallvallaForcedFirstHandCard",
+    "rarityControlForcedCard",
+    "hv_rarity_forced_card",
+    "hvRarityForcedCard",
+    "forcedOpeningCard",
+    "forcedFirstCard"
+  ];
+  try{
+    KEYS.forEach(k=>{
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    });
+  }catch(_){}
+})();
+
 /*
 ================================================================================
 HALLVALLA ORGANIZED V2
@@ -2139,7 +2169,10 @@ function getDefaultDeckTemplates(){
 function getStarterAdventureDeckTemplates(selectedSpecial=""){
   const base=getDefaultDeckTemplates().slice(0,Math.max(0,DECK_RULES.deckSize-1));
   const special=ADVENTURE_SPECIALS[selectedSpecial]?{...ADVENTURE_SPECIALS[selectedSpecial]}:null;
-  return special?[...base,special].slice(0,DECK_RULES.deckSize):getDefaultDeckTemplates();
+  const starter=special?[...base,special]:getDefaultDeckTemplates();
+  return starter
+    .filter(card=>isStarterBasicCard(card)||(special&&card.key===special.key))
+    .slice(0,DECK_RULES.deckSize);
 }
 function getPlayableSavedDeckTemplates(){
   if(!canAccessDecks())return [];
@@ -2148,25 +2181,12 @@ function getPlayableSavedDeckTemplates(){
 }
 
 
-/* === 7HAV · debug mano inicial: carta elegida para probar rarezas === */
-function hvRarityDebugFindTemplateByKey(key){
-  const target=String(key||"").trim();
-  if(!target)return null;
-  const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],LEGENDARY_TRAP_CARDS||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS||[]];
-  for(const pool of pools){
-    const found=(pool||[]).find(c=>c&&String(c.key)===target);
-    if(found)return {...found};
-  }
-  return null;
-}
-function hvRarityDebugEnabled(){
-  return false;
-}
-function hvRarityDebugSelectedKey(){
-  return "";
-}
+/* === 7HBE · debug mano inicial DESACTIVADO === */
+function hvRarityDebugFindTemplateByKey(key){ return null; }
+function hvRarityDebugEnabled(){ return false; }
+function hvRarityDebugSelectedKey(){ return ""; }
 function applyRarityDebugFirstHandCard(deck=[],owner=1,leaderType=getSelectedLeaderType()||"warrior"){
-  return deck;
+  return Array.isArray(deck) ? deck : [];
 }
 
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
@@ -2908,8 +2928,16 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
+  /*
+   * 7HBG:
+   * En la prueba inicial del guardián el jugador NO usa mazo guardado.
+   * Regla de inicio: básicas + la carta elegida por el jugador.
+   * Esto evita que cartas legendarias guardadas/desbloqueadas, como Miyamoto Musashi,
+   * entren en el deck inicial por accidente.
+   */
   const starterLocked=!canAccessDecks();
-  const playerBase=starterLocked
+  const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
+  const playerBase=mustUseStarterAdventureDeck
     ? shuffle(getStarterAdventureDeckTemplates(specialKey).map(card=>makeCard(card,1,leaderType)))
     : makeDeck(1,leaderType);
   const playerDraw=drawCards(playerBase,[],4);
@@ -8648,8 +8676,9 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   }
   const baseTemplates=getDefaultDeckTemplates();
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
-  // 7HBE: mano inicial del guardián vuelve a ser aleatoria.
-  if(false && battle?.id==="guardian_mage"){
+  // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
+  // Forzamos una unidad básica barata en la mano inicial y dejamos el resto aleatorio.
+  if(battle?.id==="guardian_mage"){
     const forcedUnit=baseTemplates.find(c=>c.key==="spearman")||baseTemplates.find(c=>c.type==="unit");
     let pool=forcedUnit?removeOneTemplateByKey(baseTemplates,forcedUnit.key):baseTemplates;
     const draw=drawCards(shuffle(pool).map(c=>makeCard(c,2,enemyLeaderType)),[],forcedUnit?3:4);
@@ -9895,361 +9924,14 @@ function getExactEffectGuideData(entity,effectText=""){
 }
 
 
-/* === 7HAV · panel de controles en tablero real === */
-(function(){
-  const DEFAULTS={
-    cardOpacity:1,cardScale:1,cardBgAlpha:.18,cardShadowPx:10,cardShadowAlpha:.45,
-    portraitOpacity:1,portraitBrightness:1,portraitSaturation:1,portraitContrast:1,portraitBlur:0,
-    frameOpacity:1,frameBrightness:1,frameSaturation:1,frameContrast:1,frameShadowPx:8,frameShadowAlpha:.55,
-    ornamentOpacity:1,ornamentBrightness:1,ornamentSaturation:1,ornamentContrast:1,ornamentBlur:0,
-    bakedOpacity:1,bakedBrightness:1,bakedSaturation:1,bakedContrast:1,bakedBlur:0,
-    cssGlowOpacity:.75,cssGlowWhiteAlpha:.20,cssGlowWhitePx:1,cssGlowNearPx:2,cssGlowMidPx:5,cssGlowFarPx:9,
-    pulseDuration:10,pulseMin:.10,pulseMax:1.5,
-    statsOpacity:1,teamOpacity:1,teamBlur:0,teamSize:100
-  };
-  const CONTROL_GROUPS=[
-    ["Carta",[["cardOpacity","Opacidad carta",0,1,.01],["cardScale","Tamaño carta",.5,1.6,.01],["cardBgAlpha","Fondo interior",0,1,.01],["cardShadowPx","Sombra carta px",0,30,.5],["cardShadowAlpha","Sombra carta alpha",0,1,.01]]],
-    ["Retrato",[["portraitOpacity","Opacidad retrato",0,1,.01],["portraitBrightness","Brillo retrato",0,2,.01],["portraitSaturation","Saturación retrato",0,2,.01],["portraitContrast","Contraste retrato",0,2,.01],["portraitBlur","Blur retrato",0,10,.1]]],
-    ["Marco base",[["frameOpacity","Opacidad marco",0,1,.01],["frameBrightness","Brillo marco",0,2,.01],["frameSaturation","Saturación marco",0,2,.01],["frameContrast","Contraste marco",0,2,.01],["frameShadowPx","Sombra marco px",0,30,.5],["frameShadowAlpha","Sombra marco alpha",0,1,.01]]],
-    ["Ornamento normal",[["ornamentOpacity","Opacidad ornamento",0,1,.01],["ornamentBrightness","Brillo ornamento",0,2,.01],["ornamentSaturation","Saturación ornamento",0,2,.01],["ornamentContrast","Contraste ornamento",0,2,.01],["ornamentBlur","Blur ornamento",0,10,.1]]],
-    ["PNG glow",[["bakedOpacity","Opacidad glow PNG",0,1,.01],["bakedBrightness","Brillo glow PNG",0,2,.01],["bakedSaturation","Saturación glow PNG",0,2,.01],["bakedContrast","Contraste glow PNG",0,2,.01],["bakedBlur","Blur glow PNG",0,10,.1]]],
-    ["Glow CSS",[["cssGlowOpacity","Opacidad glow CSS",0,1,.01],["cssGlowWhiteAlpha","Núcleo blanco alpha",0,1,.01],["cssGlowWhitePx","Núcleo blanco px",0,12,.1],["cssGlowNearPx","Halo cercano px",0,20,.1],["cssGlowMidPx","Halo medio px",0,35,.1],["cssGlowFarPx","Halo externo px",0,60,.1]]],
-    ["Pulso",[["pulseDuration","Duración pulso",1,30,.25],["pulseMin","Opacidad mínima pulso",0,1,.01],["pulseMax","Opacidad máxima pulso",0,2,.01]]],
-    ["Stats y base",[["statsOpacity","Opacidad stats",0,1,.01],["teamOpacity","Opacidad base equipo",0,1,.01],["teamBlur","Blur base equipo",0,10,.1],["teamSize","Tamaño base equipo",0,180,1]]]
-  ];
-  const cssName={cardOpacity:"--card-opacity",cardScale:"--card-scale",cardBgAlpha:"--card-bg-alpha",cardShadowPx:"--card-shadow-px",cardShadowAlpha:"--card-shadow-alpha",portraitOpacity:"--portrait-opacity",portraitBrightness:"--portrait-brightness",portraitSaturation:"--portrait-saturation",portraitContrast:"--portrait-contrast",portraitBlur:"--portrait-blur",frameOpacity:"--frame-opacity",frameBrightness:"--frame-brightness",frameSaturation:"--frame-saturation",frameContrast:"--frame-contrast",frameShadowPx:"--frame-shadow-px",frameShadowAlpha:"--frame-shadow-alpha",ornamentOpacity:"--ornament-opacity",ornamentBrightness:"--ornament-brightness",ornamentSaturation:"--ornament-saturation",ornamentContrast:"--ornament-contrast",ornamentBlur:"--ornament-blur",bakedOpacity:"--baked-opacity",bakedBrightness:"--baked-brightness",bakedSaturation:"--baked-saturation",bakedContrast:"--baked-contrast",bakedBlur:"--baked-blur",cssGlowOpacity:"--css-glow-opacity",cssGlowWhiteAlpha:"--css-glow-white-alpha",cssGlowWhitePx:"--css-glow-white-px",cssGlowNearPx:"--css-glow-near-px",cssGlowMidPx:"--css-glow-mid-px",cssGlowFarPx:"--css-glow-far-px",pulseDuration:"--pulse-duration",pulseMin:"--pulse-min",pulseMax:"--pulse-max",statsOpacity:"--stats-opacity",teamOpacity:"--team-opacity",teamBlur:"--team-blur",teamSize:"--team-size"};
-  const units={cardShadowPx:"px",portraitBlur:"px",frameShadowPx:"px",ornamentBlur:"px",bakedBlur:"px",cssGlowWhitePx:"px",cssGlowNearPx:"px",cssGlowMidPx:"px",cssGlowFarPx:"px",pulseDuration:"s",teamBlur:"px",teamSize:"%"};
-  function load(){try{return {...DEFAULTS,...JSON.parse(localStorage.getItem("hv_rarity_real_controls")||"{}")} }catch(_){return {...DEFAULTS}}}
-  let values=load();
-  function cssBlock(){
-    const lines=Object.keys(cssName).map(k=>`${cssName[k]}:${values[k]}${units[k]||""};`).join("\n    ");
-    return `.grid .cell > .unit-card,.cell > .unit-card{\n    ${lines}\n  }`;
-  }
-  function apply(){
-    let st=document.getElementById("hvRealRarityControlStyle");
-    if(!st){st=document.createElement("style");st.id="hvRealRarityControlStyle";document.head.appendChild(st);}
-    st.textContent=cssBlock();
-    try{localStorage.setItem("hv_rarity_real_controls",JSON.stringify(values));}catch(_){ }
-    const out=document.getElementById("hvRarityCssOut");
-    if(out)out.textContent=Object.keys(cssName).map(k=>`${cssName[k]}: ${values[k]}${units[k]||""};`).join("\n");
-  }
-  function cardOptions(){
-    return [
-      ["miyamoto_musashi","Miyamoto Musashi - Legendaria"],
-      ["ulysses","Ulises - Mítica"],
-      ["richard_lionheart","Richard - Gloriosa"],
-      ["mulan","Hua Mulan - Heroic"],
-      ["berserker","Berserker - Improved"],
-      ["cu_chulainn","Cú Chulainn - Semidiós"],
-      ["alexander_magnus","Alejandro - Legendaria"],
-      ["achilles","Aquiles - Semidiós"]
-    ];
-  }
-  function build(){
-    if(document.getElementById("hvRarityRealPanel"))return;
-    const btn=document.createElement("button");btn.id="hvRarityRealToggle";btn.textContent="Rareza CTRL";document.body.appendChild(btn);
-    const panel=document.createElement("aside");panel.id="hvRarityRealPanel";panel.innerHTML=`<div class="hv-rr-head"><b>Controles reales de rareza</b><button id="hvRrClose">×</button></div><div class="hv-rr-note">Estos sliders actúan sobre el tablero real. La carta elegida queda forzada en la primera mano si el selector está activo.</div><div class="hv-rr-force"><label><input id="hvForceHand" type="checkbox"> Forzar carta en primera mano</label><select id="hvForceCard"></select><button id="hvApplyForce">Guardar</button></div><div id="hvRrControls"></div><div class="hv-rr-actions"><button id="hvRrPortraitClean">Retrato limpio</button><button id="hvRrOnlyOrnament">Solo ornamento</button><button id="hvRrReset">Reset</button></div><pre id="hvRarityCssOut"></pre>`;document.body.appendChild(panel);
-    document.getElementById("hvForceCard").innerHTML=cardOptions().map(([k,n])=>`<option value="${k}">${n}</option>`).join("");
-    try{document.getElementById("hvForceHand").checked=localStorage.getItem("hv_rarity_debug_force_hand")!=="0";document.getElementById("hvForceCard").value=localStorage.getItem("hv_rarity_debug_card_key")||"miyamoto_musashi";}catch(_){ }
-    const wrap=document.getElementById("hvRrControls");
-    CONTROL_GROUPS.forEach(([title,items])=>{const box=document.createElement("section");box.className="hv-rr-box";box.innerHTML=`<h4>${title}</h4>`+items.map(([k,l,min,max,step])=>`<label><span>${l}</span><input data-k="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${values[k]}"><b id="hvv_${k}">${values[k]}${units[k]||""}</b></label>`).join("");wrap.appendChild(box);});
-    panel.addEventListener("input",e=>{const k=e.target?.dataset?.k;if(!k)return;values[k]=Number(e.target.value);const b=document.getElementById("hvv_"+k);if(b)b.textContent=`${values[k]}${units[k]||""}`;apply();});
-    btn.onclick=()=>panel.classList.toggle("open");document.getElementById("hvRrClose").onclick=()=>panel.classList.remove("open");
-    document.getElementById("hvRrReset").onclick=()=>{values={...DEFAULTS};document.querySelectorAll('#hvRrControls input[data-k]').forEach(i=>{i.value=values[i.dataset.k];i.dispatchEvent(new Event('input',{bubbles:true}));});apply();};
-    document.getElementById("hvRrPortraitClean").onclick=()=>{Object.assign(values,{portraitOpacity:1,portraitBrightness:1,portraitSaturation:1,portraitContrast:1,portraitBlur:0});document.querySelectorAll('#hvRrControls input[data-k]').forEach(i=>{i.value=values[i.dataset.k];const b=document.getElementById("hvv_"+i.dataset.k);if(b)b.textContent=`${values[i.dataset.k]}${units[i.dataset.k]||""}`;});apply();};
-    document.getElementById("hvRrOnlyOrnament").onclick=()=>{Object.assign(values,{cardOpacity:1,portraitOpacity:1,frameOpacity:1,ornamentOpacity:1,bakedOpacity:1,cssGlowOpacity:.75,cssGlowWhiteAlpha:.2,cssGlowWhitePx:1,cssGlowNearPx:2,cssGlowMidPx:5,cssGlowFarPx:9});document.querySelectorAll('#hvRrControls input[data-k]').forEach(i=>{i.value=values[i.dataset.k];i.dispatchEvent(new Event('input',{bubbles:true}));});apply();};
-    document.getElementById("hvApplyForce").onclick=()=>{try{localStorage.setItem("hv_rarity_debug_force_hand",document.getElementById("hvForceHand").checked?"1":"0");localStorage.setItem("hv_rarity_debug_card_key",document.getElementById("hvForceCard").value);}catch(_){ } alert("Guardado. Inicia una batalla nueva para ver esa carta en la primera mano.");};
-    apply();
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build);else build();
-})();
+
+/* 7HBE: bloque de control/debug eliminado: /* === 7HAV · panel de controles en tablero real === */ */
 
 
-/* 7HAX: controles extra para brillos que venían de estados del tablero y reglas heredadas */
-(function(){
-  const EXTRA_DEFAULTS={
-    legacyUnitRarityGlowAlpha:0,
-    legacyUnitRarityGlowPx:0,
-    stateFrameGlowAlpha:0,
-    stateFrameGlowPx:0,
-    stateOutlineAlpha:0,
-    stateOutlinePx:0,
-    stateCardShadowAlpha:0,
-    stateCardShadowPx:0,
-    moveMarkerOpacity:1,
-    moveMarkerGlowPx:9,
-    attackMarkerOpacity:1,
-    attackMarkerGlowPx:9,
-    summonMarkerOpacity:1,
-    summonMarkerGlowPx:10,
-    teamGlowAlpha:.32,
-    teamGlowPx:10,
-    leaderGlowAlpha:0,
-    leaderGlowPx:0
-  };
-  const EXTRA_GROUPS=[
-    ["Brillos heredados de carta",[
-      ["legacyUnitRarityGlowAlpha","Glow rareza carta alpha",0,1,.01],
-      ["legacyUnitRarityGlowPx","Glow rareza carta px",0,40,.5],
-      ["leaderGlowAlpha","Glow líder alpha",0,1,.01],
-      ["leaderGlowPx","Glow líder px",0,40,.5]
-    ]],
-    ["Estados sobre unidad",[
-      ["stateFrameGlowAlpha","Glow marco por estado alpha",0,1,.01],
-      ["stateFrameGlowPx","Glow marco por estado px",0,35,.5],
-      ["stateOutlineAlpha","Outline estado alpha",0,1,.01],
-      ["stateOutlinePx","Outline estado px",0,5,.1],
-      ["stateCardShadowAlpha","Sombra estado carta alpha",0,1,.01],
-      ["stateCardShadowPx","Sombra estado carta px",0,35,.5]
-    ]],
-    ["Marcadores de celda",[
-      ["moveMarkerOpacity","Opacidad círculo mover",0,1,.01],
-      ["moveMarkerGlowPx","Glow círculo mover px",0,30,.5],
-      ["attackMarkerOpacity","Opacidad círculo ataque",0,1,.01],
-      ["attackMarkerGlowPx","Glow círculo ataque px",0,30,.5],
-      ["summonMarkerOpacity","Opacidad círculo invocar",0,1,.01],
-      ["summonMarkerGlowPx","Glow círculo invocar px",0,30,.5]
-    ]],
-    ["Base aliado/enemigo extra",[
-      ["teamGlowAlpha","Glow base equipo alpha",0,1,.01],
-      ["teamGlowPx","Glow base equipo px",0,35,.5]
-    ]]
-  ];
-  const EXTRA_CSS={
-    legacyUnitRarityGlowAlpha:"--legacy-unit-rarity-glow-alpha",
-    legacyUnitRarityGlowPx:"--legacy-unit-rarity-glow-px",
-    stateFrameGlowAlpha:"--state-frame-glow-alpha",
-    stateFrameGlowPx:"--state-frame-glow-px",
-    stateOutlineAlpha:"--state-outline-alpha",
-    stateOutlinePx:"--state-outline-px",
-    stateCardShadowAlpha:"--state-card-shadow-alpha",
-    stateCardShadowPx:"--state-card-shadow-px",
-    moveMarkerOpacity:"--move-marker-opacity",
-    moveMarkerGlowPx:"--move-marker-glow-px",
-    attackMarkerOpacity:"--attack-marker-opacity",
-    attackMarkerGlowPx:"--attack-marker-glow-px",
-    summonMarkerOpacity:"--summon-marker-opacity",
-    summonMarkerGlowPx:"--summon-marker-glow-px",
-    teamGlowAlpha:"--team-glow-alpha",
-    teamGlowPx:"--team-glow-px",
-    leaderGlowAlpha:"--leader-glow-alpha",
-    leaderGlowPx:"--leader-glow-px"
-  };
-  const EXTRA_UNITS={
-    legacyUnitRarityGlowPx:"px",
-    stateFrameGlowPx:"px",
-    stateOutlinePx:"px",
-    stateCardShadowPx:"px",
-    moveMarkerGlowPx:"px",
-    attackMarkerGlowPx:"px",
-    summonMarkerGlowPx:"px",
-    teamGlowPx:"px",
-    leaderGlowPx:"px"
-  };
-  let extraValues;
-  function load(){
-    try{return {...EXTRA_DEFAULTS,...JSON.parse(localStorage.getItem("hv_rarity_extra_glow_controls")||"{}")};}
-    catch(_){return {...EXTRA_DEFAULTS};}
-  }
-  function applyExtra(){
-    if(!extraValues)extraValues=load();
-    let st=document.getElementById("hvExtraGlowControlStyle7HAX");
-    if(!st){st=document.createElement("style");st.id="hvExtraGlowControlStyle7HAX";document.head.appendChild(st);}
-    const lines=Object.keys(EXTRA_CSS).map(k=>`${EXTRA_CSS[k]}:${extraValues[k]}${EXTRA_UNITS[k]||""};`).join("\n    ");
-    st.textContent=`.grid .cell > .unit-card,.cell > .unit-card{\n    ${lines}\n  }`;
-    try{localStorage.setItem("hv_rarity_extra_glow_controls",JSON.stringify(extraValues));}catch(_){}
-    const out=document.getElementById("hvRarityCssOut");
-    if(out){
-      const base=out.textContent.split("\n/* 7HAX extra */")[0];
-      out.textContent=base+"\n/* 7HAX extra */\n"+Object.keys(EXTRA_CSS).map(k=>`${EXTRA_CSS[k]}: ${extraValues[k]}${EXTRA_UNITS[k]||""};`).join("\n");
-    }
-  }
-  function addControls(){
-    const wrap=document.getElementById("hvRrControls");
-    if(!wrap || document.getElementById("hvExtraGlowBox7HAX"))return false;
-    extraValues=load();
-    const holder=document.createElement("div");
-    holder.id="hvExtraGlowBox7HAX";
-    EXTRA_GROUPS.forEach(([title,items])=>{
-      const box=document.createElement("section");
-      box.className="hv-rr-box";
-      box.innerHTML=`<h4>${title}</h4>`+items.map(([k,l,min,max,step])=>`<label><span>${l}</span><input data-extra-k="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${extraValues[k]}"><b id="hvx_${k}">${extraValues[k]}${EXTRA_UNITS[k]||""}</b></label>`).join("");
-      holder.appendChild(box);
-    });
-    wrap.appendChild(holder);
-    wrap.addEventListener("input",e=>{
-      const k=e.target?.dataset?.extraK;
-      if(!k)return;
-      extraValues[k]=Number(e.target.value);
-      const b=document.getElementById("hvx_"+k);
-      if(b)b.textContent=`${extraValues[k]}${EXTRA_UNITS[k]||""}`;
-      applyExtra();
-    });
-    const actions=document.querySelector("#hvRarityRealPanel .hv-rr-actions");
-    if(actions && !document.getElementById("hvKillGlows7HAX")){
-      const kill=document.createElement("button");
-      kill.id="hvKillGlows7HAX";
-      kill.textContent="Matar brillos";
-      kill.onclick=()=>{
-        document.body.classList.toggle("hv-no-card-glows");
-        Object.assign(extraValues,{
-          legacyUnitRarityGlowAlpha:0,legacyUnitRarityGlowPx:0,
-          stateFrameGlowAlpha:0,stateFrameGlowPx:0,
-          stateOutlineAlpha:0,stateOutlinePx:0,
-          stateCardShadowAlpha:0,stateCardShadowPx:0,
-          teamGlowAlpha:0,teamGlowPx:0,
-          leaderGlowAlpha:0,leaderGlowPx:0
-        });
-        document.querySelectorAll('#hvExtraGlowBox7HAX input[data-extra-k]').forEach(i=>{
-          i.value=extraValues[i.dataset.extraK];
-          const b=document.getElementById("hvx_"+i.dataset.extraK);
-          if(b)b.textContent=`${extraValues[i.dataset.extraK]}${EXTRA_UNITS[i.dataset.extraK]||""}`;
-        });
-        applyExtra();
-      };
-      actions.appendChild(kill);
-    }
-    applyExtra();
-    return true;
-  }
-  const timer=setInterval(()=>{ if(addControls())clearInterval(timer); },250);
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(addControls,300));else setTimeout(addControls,300);
-})();
+/* 7HBE: bloque de control/debug eliminado: /* 7HAX: controles extra para brillos que venían de estados del tablero y reglas heredadas */ */
 
 
-/* === 7HBA · controles maestros reales de tablero/carta === */
-(function(){
-  const DEFAULTS={
-    masterCardOpacity:1,masterCardFilterOpacity:1,masterCardBoxAlpha:.45,masterCardBoxPx:10,masterCardBeforeOpacity:1,masterCardAfterOpacity:0,masterCardBeforeBlur:0,masterCardAfterBlur:0,
-    masterPortraitOpacity:1,masterPortraitBrightness:1,masterPortraitSaturation:1,masterPortraitContrast:1,masterPortraitBlur:0,masterPortraitDropAlpha:0,masterPortraitDropPx:0,
-    masterFrameOpacity:1,masterFrameShadowAlpha:.55,masterFrameShadowPx:8,masterFrameBrightness:1,masterFrameSaturation:1,masterFrameContrast:1,masterFrameExtraGlowAlpha:0,masterFrameExtraGlowPx:0,masterFrameBeforeOpacity:0,masterFrameAfterOpacity:0,
-    masterOrnamentOpacity:1,masterOrnamentBrightness:1,masterOrnamentSaturation:1,masterOrnamentContrast:1,masterOrnamentBlur:0,masterOrnamentCssAlpha:.75,masterOrnamentWhiteAlpha:.20,masterOrnamentWhitePx:1,masterOrnamentNearPx:2,masterOrnamentMidPx:5,masterOrnamentFarPx:9,masterOrnamentAfterOpacity:1,masterOrnamentBeforeOpacity:1,masterOrnamentPulseDuration:10,masterOrnamentPulseMin:.10,masterOrnamentPulseMax:1.5,
-    masterCellAfterOpacity:1,masterCellAfterBgAlpha:1,masterCellAfterInsetAlpha:1,masterCellAfterGlowAlpha:1,masterCellAfterGlowPx:10,masterCellBeforeOpacity:1,masterCellBeforeGlowAlpha:1,masterCellBeforeGlowPx:10,masterCellHoverAlpha:1,
-    masterValidOpacity:1,masterValidBgAlpha:.12,masterValidOutlineAlpha:.78,masterValidGlowAlpha:.20,masterValidGlowPx:8,
-    masterAttackOpacity:1,masterAttackBgAlpha:.14,masterAttackOutlineAlpha:.88,masterAttackGlowAlpha:.30,masterAttackGlowPx:11,
-    masterSummonOpacity:1,masterSummonBgAlpha:.13,masterSummonOutlineAlpha:.82,masterSummonGlowAlpha:.24,masterSummonGlowPx:10,
-    masterSelectedCellAlpha:.32,masterSelectedCellPx:12,masterUnitStateOutlineAlpha:0,masterUnitStateOutlinePx:0,masterUnitStateShadowAlpha:0,masterUnitStateShadowPx:0,
-    masterTeamOpacity:1,masterTeamBlur:0,masterTeamGlowAlpha:.32,masterTeamGlowPx:10,masterTeamSize:100,masterStatsOpacity:1,masterStatusOpacity:1
-  };
-  const GROUPS=[
-    ["Master carta",[["masterCardOpacity","Opacidad carta",0,1,.01],["masterCardFilterOpacity","Filtro opacidad carta",0,1,.01],["masterCardBoxAlpha","Sombra caja alpha",0,1,.01],["masterCardBoxPx","Sombra caja px",0,40,.5],["masterCardBeforeOpacity","::before carta/base",0,1,.01],["masterCardAfterOpacity","::after carta",0,1,.01],["masterCardBeforeBlur","Blur ::before",0,20,.1],["masterCardAfterBlur","Blur ::after",0,20,.1]]],
-    ["Master retrato",[["masterPortraitOpacity","Opacidad retrato",0,1,.01],["masterPortraitBrightness","Brillo retrato",0,2,.01],["masterPortraitSaturation","Saturación retrato",0,2,.01],["masterPortraitContrast","Contraste retrato",0,2,.01],["masterPortraitBlur","Blur retrato",0,15,.1],["masterPortraitDropAlpha","Glow retrato alpha",0,1,.01],["masterPortraitDropPx","Glow retrato px",0,40,.5]]],
-    ["Master marco",[["masterFrameOpacity","Opacidad marco",0,1,.01],["masterFrameShadowAlpha","Sombra marco alpha",0,1,.01],["masterFrameShadowPx","Sombra marco px",0,40,.5],["masterFrameBrightness","Brillo marco",0,2,.01],["masterFrameSaturation","Saturación marco",0,2,.01],["masterFrameContrast","Contraste marco",0,2,.01],["masterFrameExtraGlowAlpha","Glow extra marco alpha",0,1,.01],["masterFrameExtraGlowPx","Glow extra marco px",0,60,.5],["masterFrameBeforeOpacity","Frame ::before",0,1,.01],["masterFrameAfterOpacity","Frame ::after",0,1,.01]]],
-    ["Master ornamento",[["masterOrnamentOpacity","Opacidad ornamento",0,1,.01],["masterOrnamentBrightness","Brillo ornamento",0,2,.01],["masterOrnamentSaturation","Saturación ornamento",0,2,.01],["masterOrnamentContrast","Contraste ornamento",0,2,.01],["masterOrnamentBlur","Blur ornamento",0,10,.1],["masterOrnamentBeforeOpacity","Ornamento ::before",0,1,.01],["masterOrnamentAfterOpacity","Ornamento glow ::after",0,1,.01]]],
-    ["Master glow ornamento",[["masterOrnamentCssAlpha","Alpha glow CSS",0,1,.01],["masterOrnamentWhiteAlpha","Núcleo blanco alpha",0,1,.01],["masterOrnamentWhitePx","Núcleo blanco px",0,20,.1],["masterOrnamentNearPx","Halo cercano px",0,35,.1],["masterOrnamentMidPx","Halo medio px",0,60,.1],["masterOrnamentFarPx","Halo externo px",0,90,.1],["masterOrnamentPulseDuration","Duración pulso",1,40,.25],["masterOrnamentPulseMin","Pulso mínimo",0,1,.01],["masterOrnamentPulseMax","Pulso máximo",0,2,.01]]],
-    ["Master celdas global",[["masterCellAfterOpacity","Opacidad cell::after",0,1,.01],["masterCellAfterBgAlpha","Alpha fondo marcadores",0,1,.01],["masterCellAfterInsetAlpha","Alpha borde interno",0,1,.01],["masterCellAfterGlowAlpha","Alpha glow marcador",0,1,.01],["masterCellAfterGlowPx","Glow marcador global px",0,50,.5],["masterCellBeforeOpacity","Opacidad cell::before",0,1,.01],["masterCellBeforeGlowAlpha","Glow cell::before alpha",0,1,.01],["masterCellBeforeGlowPx","Glow cell::before px",0,50,.5],["masterCellHoverAlpha","Hover celda alpha",0,1,.01]]],
-    ["Mover / atacar / invocar",[["masterValidOpacity","Opacidad mover",0,1,.01],["masterValidBgAlpha","Fondo mover",0,1,.01],["masterValidOutlineAlpha","Borde mover",0,1,.01],["masterValidGlowAlpha","Glow mover",0,1,.01],["masterValidGlowPx","Glow mover px",0,50,.5],["masterAttackOpacity","Opacidad ataque",0,1,.01],["masterAttackBgAlpha","Fondo ataque",0,1,.01],["masterAttackOutlineAlpha","Borde ataque",0,1,.01],["masterAttackGlowAlpha","Glow ataque",0,1,.01],["masterAttackGlowPx","Glow ataque px",0,50,.5],["masterSummonOpacity","Opacidad invocar",0,1,.01],["masterSummonBgAlpha","Fondo invocar",0,1,.01],["masterSummonOutlineAlpha","Borde invocar",0,1,.01],["masterSummonGlowAlpha","Glow invocar",0,1,.01],["masterSummonGlowPx","Glow invocar px",0,50,.5]]],
-    ["Seleccionada / estados",[["masterSelectedCellAlpha","Glow celda seleccionada",0,1,.01],["masterSelectedCellPx","Glow seleccionada px",0,60,.5],["masterUnitStateOutlineAlpha","Outline unidad alpha",0,1,.01],["masterUnitStateOutlinePx","Outline unidad px",0,8,.1],["masterUnitStateShadowAlpha","Sombra estado unidad alpha",0,1,.01],["masterUnitStateShadowPx","Sombra estado unidad px",0,60,.5]]],
-    ["Base / stats",[["masterTeamOpacity","Opacidad base equipo",0,1,.01],["masterTeamBlur","Blur base equipo",0,20,.1],["masterTeamGlowAlpha","Glow base alpha",0,1,.01],["masterTeamGlowPx","Glow base px",0,60,.5],["masterTeamSize","Tamaño base %",0,220,1],["masterStatsOpacity","Opacidad stats",0,1,.01],["masterStatusOpacity","Opacidad status",0,1,.01]]]
-  ];
-  const css={
-    masterCardOpacity:"--master-card-opacity",masterCardFilterOpacity:"--master-card-filter-opacity",masterCardBoxAlpha:"--master-card-box-alpha",masterCardBoxPx:"--master-card-box-px",masterCardBeforeOpacity:"--master-card-before-opacity",masterCardAfterOpacity:"--master-card-after-opacity",masterCardBeforeBlur:"--master-card-before-blur",masterCardAfterBlur:"--master-card-after-blur",
-    masterPortraitOpacity:"--master-portrait-opacity",masterPortraitBrightness:"--master-portrait-brightness",masterPortraitSaturation:"--master-portrait-saturation",masterPortraitContrast:"--master-portrait-contrast",masterPortraitBlur:"--master-portrait-blur",masterPortraitDropAlpha:"--master-portrait-drop-alpha",masterPortraitDropPx:"--master-portrait-drop-px",
-    masterFrameOpacity:"--master-frame-opacity",masterFrameShadowAlpha:"--master-frame-shadow-alpha",masterFrameShadowPx:"--master-frame-shadow-px",masterFrameBrightness:"--master-frame-brightness",masterFrameSaturation:"--master-frame-saturation",masterFrameContrast:"--master-frame-contrast",masterFrameExtraGlowAlpha:"--master-frame-extra-glow-alpha",masterFrameExtraGlowPx:"--master-frame-extra-glow-px",masterFrameBeforeOpacity:"--master-frame-before-opacity",masterFrameAfterOpacity:"--master-frame-after-opacity",
-    masterOrnamentOpacity:"--master-ornament-opacity",masterOrnamentBrightness:"--master-ornament-brightness",masterOrnamentSaturation:"--master-ornament-saturation",masterOrnamentContrast:"--master-ornament-contrast",masterOrnamentBlur:"--master-ornament-blur",masterOrnamentCssAlpha:"--master-ornament-css-alpha",masterOrnamentWhiteAlpha:"--master-ornament-white-alpha",masterOrnamentWhitePx:"--master-ornament-white-px",masterOrnamentNearPx:"--master-ornament-near-px",masterOrnamentMidPx:"--master-ornament-mid-px",masterOrnamentFarPx:"--master-ornament-far-px",masterOrnamentAfterOpacity:"--master-ornament-after-opacity",masterOrnamentBeforeOpacity:"--master-ornament-before-opacity",masterOrnamentPulseDuration:"--master-ornament-pulse-duration",masterOrnamentPulseMin:"--master-ornament-pulse-min",masterOrnamentPulseMax:"--master-ornament-pulse-max",
-    masterCellAfterOpacity:"--master-cell-after-opacity",masterCellAfterBgAlpha:"--master-cell-after-bg-alpha",masterCellAfterInsetAlpha:"--master-cell-after-inset-alpha",masterCellAfterGlowAlpha:"--master-cell-after-glow-alpha",masterCellAfterGlowPx:"--master-cell-after-glow-px",masterCellBeforeOpacity:"--master-cell-before-opacity",masterCellBeforeGlowAlpha:"--master-cell-before-glow-alpha",masterCellBeforeGlowPx:"--master-cell-before-glow-px",masterCellHoverAlpha:"--master-cell-hover-alpha",
-    masterValidOpacity:"--master-valid-opacity",masterValidBgAlpha:"--master-valid-bg-alpha",masterValidOutlineAlpha:"--master-valid-outline-alpha",masterValidGlowAlpha:"--master-valid-glow-alpha",masterValidGlowPx:"--master-valid-glow-px",masterAttackOpacity:"--master-attack-opacity",masterAttackBgAlpha:"--master-attack-bg-alpha",masterAttackOutlineAlpha:"--master-attack-outline-alpha",masterAttackGlowAlpha:"--master-attack-glow-alpha",masterAttackGlowPx:"--master-attack-glow-px",masterSummonOpacity:"--master-summon-opacity",masterSummonBgAlpha:"--master-summon-bg-alpha",masterSummonOutlineAlpha:"--master-summon-outline-alpha",masterSummonGlowAlpha:"--master-summon-glow-alpha",masterSummonGlowPx:"--master-summon-glow-px",
-    masterSelectedCellAlpha:"--master-selected-cell-alpha",masterSelectedCellPx:"--master-selected-cell-px",masterUnitStateOutlineAlpha:"--master-unit-state-outline-alpha",masterUnitStateOutlinePx:"--master-unit-state-outline-px",masterUnitStateShadowAlpha:"--master-unit-state-shadow-alpha",masterUnitStateShadowPx:"--master-unit-state-shadow-px",masterTeamOpacity:"--master-team-opacity",masterTeamBlur:"--master-team-blur",masterTeamGlowAlpha:"--master-team-glow-alpha",masterTeamGlowPx:"--master-team-glow-px",masterTeamSize:"--master-team-size",masterStatsOpacity:"--master-stats-opacity",masterStatusOpacity:"--master-status-opacity"
-  };
-  const units={masterCardBoxPx:"px",masterCardBeforeBlur:"px",masterCardAfterBlur:"px",masterPortraitBlur:"px",masterPortraitDropPx:"px",masterFrameShadowPx:"px",masterFrameExtraGlowPx:"px",masterOrnamentBlur:"px",masterOrnamentWhitePx:"px",masterOrnamentNearPx:"px",masterOrnamentMidPx:"px",masterOrnamentFarPx:"px",masterOrnamentPulseDuration:"s",masterCellAfterGlowPx:"px",masterCellBeforeGlowPx:"px",masterValidGlowPx:"px",masterAttackGlowPx:"px",masterSummonGlowPx:"px",masterSelectedCellPx:"px",masterUnitStateOutlinePx:"px",masterUnitStateShadowPx:"px",masterTeamBlur:"px",masterTeamGlowPx:"px",masterTeamSize:"%"};
-  let vals;
-  function load(){try{return {...DEFAULTS,...JSON.parse(localStorage.getItem("hv_master_glow_controls_7hba")||"{}")};}catch(_){return {...DEFAULTS};}}
-  function styleText(){return `body.hv-master-glow-debug{\n  ${Object.keys(css).map(k=>`${css[k]}:${vals[k]}${units[k]||""};`).join("\n  ")}\n}`;}
-  function apply(){
-    if(!vals)vals=load();
-    document.body?.classList.add("hv-master-glow-debug");
-    let st=document.getElementById("hvMasterGlowControlStyle7HBA");
-    if(!st){st=document.createElement("style");st.id="hvMasterGlowControlStyle7HBA";document.head.appendChild(st);}
-    st.textContent=styleText();
-    try{localStorage.setItem("hv_master_glow_controls_7hba",JSON.stringify(vals));}catch(_){ }
-    const out=document.getElementById("hvRarityCssOut");
-    if(out){
-      const base=out.textContent.split("\n/* 7HBA master */")[0];
-      out.textContent=base+"\n/* 7HBA master */\n"+Object.keys(css).map(k=>`${css[k]}: ${vals[k]}${units[k]||""};`).join("\n");
-    }
-  }
-  function syncInputs(){document.querySelectorAll('#hvMasterGlowBox7HBA input[data-master-k]').forEach(i=>{i.value=vals[i.dataset.masterK];const b=document.getElementById('hvm_'+i.dataset.masterK);if(b)b.textContent=`${vals[i.dataset.masterK]}${units[i.dataset.masterK]||""}`;});}
-  function setMany(obj){Object.assign(vals,obj);syncInputs();apply();}
-  function build(){
-    const wrap=document.getElementById("hvRrControls");
-    if(!wrap || document.getElementById("hvMasterGlowBox7HBA"))return false;
-    vals=load();
-    const holder=document.createElement("div");holder.id="hvMasterGlowBox7HBA";
-    holder.innerHTML='<section class="hv-rr-box"><h4>⚙ Control maestro 7HBA</h4><div style="font-size:12px;color:#d6c097;line-height:1.35">Este bloque pisa sombras, filtros, ::before/::after, marcadores de mover/atacar/invocar y estados del tablero. Si algo brilla, debería caer aquí.</div></section>';
-    GROUPS.forEach(([title,items])=>{const box=document.createElement("section");box.className="hv-rr-box";box.innerHTML=`<h4>${title}</h4>`+items.map(([k,l,min,max,step])=>`<label><span>${l}</span><input data-master-k="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${vals[k]}"><b id="hvm_${k}">${vals[k]}${units[k]||""}</b></label>`).join("");holder.appendChild(box);});
-    wrap.prepend(holder);
-    wrap.addEventListener("input",e=>{const k=e.target?.dataset?.masterK;if(!k)return;vals[k]=Number(e.target.value);const b=document.getElementById("hvm_"+k);if(b)b.textContent=`${vals[k]}${units[k]||""}`;apply();});
-    const actions=document.querySelector("#hvRarityRealPanel .hv-rr-actions");
-    if(actions){
-      const mk=(id,label,fn)=>{if(document.getElementById(id))return;const b=document.createElement("button");b.id=id;b.textContent=label;b.onclick=fn;actions.prepend(b);};
-      mk("hvMasterZeroGlow7HBA","Cero absoluto",()=>{document.body.classList.toggle("hv-master-zero-glow");setMany({masterCardBoxAlpha:0,masterCardBeforeOpacity:0,masterCardAfterOpacity:0,masterPortraitDropAlpha:0,masterFrameShadowAlpha:0,masterFrameExtraGlowAlpha:0,masterFrameBeforeOpacity:0,masterFrameAfterOpacity:0,masterOrnamentCssAlpha:0,masterOrnamentWhiteAlpha:0,masterOrnamentWhitePx:0,masterOrnamentNearPx:0,masterOrnamentMidPx:0,masterOrnamentFarPx:0,masterCellAfterGlowAlpha:0,masterCellAfterGlowPx:0,masterCellBeforeGlowAlpha:0,masterCellBeforeGlowPx:0,masterValidGlowAlpha:0,masterAttackGlowAlpha:0,masterSummonGlowAlpha:0,masterSelectedCellAlpha:0,masterUnitStateShadowAlpha:0,masterTeamGlowAlpha:0});});
-      mk("hvMasterNoMarkers7HBA","Ocultar mover/atacar",()=>setMany({masterCellAfterOpacity:0,masterValidOpacity:0,masterAttackOpacity:0,masterSummonOpacity:0}));
-      mk("hvMasterCleanPortrait7HBA","Retrato limpio real",()=>setMany({masterPortraitOpacity:1,masterPortraitBrightness:1,masterPortraitSaturation:1,masterPortraitContrast:1,masterPortraitBlur:0,masterPortraitDropAlpha:0,masterPortraitDropPx:0}));
-      mk("hvMasterReset7HBA","Reset master",()=>{vals={...DEFAULTS};document.body.classList.remove("hv-master-zero-glow");syncInputs();apply();});
-    }
-    apply();return true;
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{document.body.classList.add("hv-master-glow-debug");setTimeout(build,350);});else{document.body.classList.add("hv-master-glow-debug");setTimeout(build,350);} 
-  const t=setInterval(()=>{if(build())clearInterval(t);},400);
-})();
-
-
-/* ==========================================================
-   7HBB runtime panic button: apaga brillos desde JS también.
-   ========================================================== */
-(function(){
-  const KILL_ID = "hv-kill-all-glows-runtime-7hbb";
-  function injectKillGlowCss(){
-    let style = document.getElementById(KILL_ID);
-    if(!style){
-      style = document.createElement("style");
-      style.id = KILL_ID;
-      document.head.appendChild(style);
-    }
-    style.textContent = `
-      .cell,.cell *,.cell::before,.cell::after,.cell *::before,.cell *::after,
-      .unit-card,.unit-card *,.unit-card::before,.unit-card::after,.unit-card *::before,.unit-card *::after{
-        box-shadow:none !important;
-        filter:none !important;
-        text-shadow:none !important;
-        animation:none !important;
-      }
-      .unit-card::before,.unit-card::after,
-      .unit-frame-rarity,.unit-frame-rarity::before,.unit-frame-rarity::after,
-      .cell::before,.cell::after{
-        content:none !important;
-        display:none !important;
-        opacity:0 !important;
-        background:none !important;
-        border:none !important;
-        outline:none !important;
-      }
-      .unit-portrait,.unit-portrait img,.unit-portrait-stack,
-      .unit-card-bg-layer,.unit-card-character-layer,.unit-frame-skin{
-        opacity:1 !important;
-        filter:none !important;
-        box-shadow:none !important;
-        mix-blend-mode:normal !important;
-      }
-    `;
-  }
-  function addPanicButton(){
-    if(document.getElementById("hvGlowPanic7HBB")) return;
-    const btn = document.createElement("button");
-    btn.id = "hvGlowPanic7HBB";
-    btn.type = "button";
-    btn.textContent = "CERO BRILLO";
-    btn.addEventListener("click", injectKillGlowCss);
-    document.body.appendChild(btn);
-  }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", addPanicButton);
-  }else{
-    addPanicButton();
-  }
-  window.hvKillAllCardGlows7HBB = injectKillGlowCss;
-})();
-
+/* 7HBE: bloque de control/debug eliminado: /* === 7HBA · controles maestros reales de tablero/carta === */ */
 
 /* ==========================================================
    7HBD · Limpieza de controles visuales/debug
@@ -10328,50 +10010,4 @@ function getExactEffectGuideData(entity,effectText=""){
   }else{
     install();
   }
-})();
-
-
-/* ==========================================================
-   7HBE · Corrección real: sin carta forzada y sin controles.
-   ========================================================== */
-(function(){
-  function hv7hbeClearDebugStorage(){
-    try{
-      [
-        "hv_rarity_debug_force_hand",
-        "hv_rarity_debug_card_key",
-        "hvForcedFirstHandCard",
-        "hvForceFirstHandCard",
-        "hallvalla_forced_first_hand_card",
-        "hallvallaForcedFirstHandCard",
-        "rarityControlForcedCard",
-        "hv_rarity_forced_card",
-        "hvRarityForcedCard",
-        "forcedOpeningCard",
-        "forcedFirstCard"
-      ].forEach(k=>{
-        localStorage.removeItem(k);
-        sessionStorage.removeItem(k);
-      });
-    }catch(_){}
-  }
-  hv7hbeClearDebugStorage();
-
-  try{
-    window.hvRarityDebugEnabled = function(){ return false; };
-    window.hvRarityDebugSelectedKey = function(){ return ""; };
-    window.applyRarityDebugFirstHandCard = function(deck){ return deck; };
-  }catch(_){}
-
-  function removeDebugControls(){
-    document.querySelectorAll("#hvRarityRealToggle,#hvRarityRealPanel,#hvGlowPanic7HBB,#hvRarityControlPanel,#hvRarityCtrlPanel,#hvRarityCtrl,#hvRarityControl,.hv-rarity-control-panel,.rarity-control-panel,.rarity-ctrl-panel").forEach(el=>el.remove());
-    document.querySelectorAll("button,[role='button']").forEach(el=>{
-      const t=(el.textContent||"").trim().toLowerCase();
-      if(t.includes("rareza ctrl")||t.includes("cero brillo")||t.includes("matar brillos")||t.includes("forzar carta")||t.includes("cero absoluto")){
-        el.remove();
-      }
-    });
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",removeDebugControls);else removeDebugControls();
-  new MutationObserver(removeDebugControls).observe(document.documentElement,{childList:true,subtree:true});
 })();

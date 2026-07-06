@@ -1,0 +1,8 @@
+7HBF - Devolver circulito de convocación
+
+Corrección:
+- Se restaura el indicador circular de celdas de convocación.
+- El indicador se aplica solo a clases de celda:
+  summonable, valid-summon, can-summon, summon-target.
+- No se devuelve brillo de carta.
+- No se toca rareza, retrato, ornamento, mano aleatoria, IA, historia, recompensas ni reglas de juego.
