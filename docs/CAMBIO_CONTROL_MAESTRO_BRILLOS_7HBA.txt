@@ -1,0 +1,1 @@
+7HBA: versión normal para GitHub con control maestro real de brillos. Añade controles sobre carta, pseudo-elementos, retrato, marco, ornamento, cell::before/after, marcadores de mover/atacar/invocar, selección, base equipo y botón Cero absoluto.

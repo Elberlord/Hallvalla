@@ -1,0 +1,9 @@
+7HAW - Modo localhost para probar rarezas en tablero real
+
+- Incluye INICIAR_LOCALHOST.bat.
+- En localhost, la aventura inicia sin Firebase.
+- El botón ya no se queda en "Conectando..." para prueba local.
+- Mantiene Rareza CTRL dentro del tablero real.
+- Mantiene selector para forzar carta en primera mano.
+- Por defecto se puede usar Miyamoto Musashi en primera mano.
+- No modifica progreso online ni depende de GitHub para probar.

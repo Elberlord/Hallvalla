@@ -16158,3 +16158,426 @@ El CSS original se conserva para no romper visuales. El bloque final
 #hvRarityRealPanel .hv-rr-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 #hvRarityCssOut{max-height:240px;overflow:auto;white-space:pre-wrap;background:#020201;border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;color:#fff3c9;font:11px/1.35 Consolas,monospace}
 @media(max-width:720px){#hvRarityRealPanel{left:8px;right:8px;top:8px;bottom:8px;width:auto}#hvRarityRealPanel label{grid-template-columns:1fr}#hvRarityRealToggle{right:10px;bottom:10px}}
+
+
+/* ==========================================================
+   7HAX · CONTROL TOTAL DE BRILLOS REALES EN TABLERO
+   Cubre los brillos que antes no respondían:
+   - estados .valid/.attackable/.summonable/.selected con :has(.unit-card)
+   - glow heredado del frame-skin en estados de targeting
+   - sombras por rareza heredadas sobre .unit-card
+   - glow de base aliado/enemigo
+   - marcadores circulares de celda
+   ========================================================== */
+
+.grid .cell > .unit-card,
+.cell > .unit-card{
+  --legacy-unit-rarity-glow-alpha:0;
+  --legacy-unit-rarity-glow-px:0px;
+  --state-frame-glow-alpha:0;
+  --state-frame-glow-px:0px;
+  --state-outline-alpha:0;
+  --state-outline-px:0px;
+  --state-card-shadow-alpha:0;
+  --state-card-shadow-px:0px;
+  --move-marker-opacity:1;
+  --move-marker-glow-px:9px;
+  --attack-marker-opacity:1;
+  --attack-marker-glow-px:9px;
+  --summon-marker-opacity:1;
+  --summon-marker-glow-px:10px;
+  --team-glow-alpha:.32;
+  --team-glow-px:10px;
+  --leader-glow-alpha:0;
+  --leader-glow-px:0px;
+}
+
+/* Mata/centraliza cualquier box-shadow heredado por rareza en la carta completa */
+.grid .cell > .unit-card.card-rarity-basic,
+.grid .cell > .unit-card.card-rarity-improved,
+.grid .cell > .unit-card.card-rarity-heroic,
+.grid .cell > .unit-card.card-rarity-glorious,
+.grid .cell > .unit-card.card-rarity-epic,
+.grid .cell > .unit-card.card-rarity-mythic,
+.grid .cell > .unit-card.card-rarity-legendary,
+.grid .cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.card-rarity-basic,
+.cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-demigod{
+  animation:none !important;
+  box-shadow:
+    0 0 var(--legacy-unit-rarity-glow-px) rgba(var(--hv-rarity-rgb),var(--legacy-unit-rarity-glow-alpha)),
+    0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
+}
+
+/* Líderes: control separado por si el brillo viene del leader class */
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.leader{
+  animation:none !important;
+  box-shadow:
+    0 0 var(--leader-glow-px) rgba(255,244,157,var(--leader-glow-alpha)),
+    0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
+}
+
+/* Estados que antes reinyectaban glow al marco con más especificidad */
+.grid .cell.valid:has(.unit-card) .unit-frame-skin,
+.grid .cell.attackable:has(.unit-card) .unit-frame-skin,
+.grid .cell.summonable:has(.unit-card) .unit-frame-skin,
+.grid .cell.selected:has(.unit-card) .unit-frame-skin,
+.grid .cell.move-range-preview:has(.unit-card) .unit-frame-skin,
+.grid .cell.attack-range-preview:has(.unit-card) .unit-frame-skin,
+.grid .cell.enemy-threat-preview:has(.unit-card) .unit-frame-skin,
+.grid .cell.enemy-acted-threat-preview:has(.unit-card) .unit-frame-skin{
+  filter:
+    brightness(var(--frame-brightness))
+    saturate(var(--frame-saturation))
+    contrast(var(--frame-contrast))
+    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha)))
+    drop-shadow(0 0 var(--state-frame-glow-px) rgba(var(--hv-rarity-rgb),var(--state-frame-glow-alpha))) !important;
+  animation:none !important;
+}
+
+/* Estados que antes podían poner outline/sombra a la carta */
+.grid .cell.valid:has(.unit-card) .unit-card,
+.grid .cell.attackable:has(.unit-card) .unit-card,
+.grid .cell.summonable:has(.unit-card) .unit-card,
+.grid .cell.selected:has(.unit-card) .unit-card,
+.grid .cell.move-range-preview:has(.unit-card) .unit-card,
+.grid .cell.attack-range-preview:has(.unit-card) .unit-card,
+.grid .cell.enemy-threat-preview:has(.unit-card) .unit-card,
+.grid .cell.enemy-acted-threat-preview:has(.unit-card) .unit-card{
+  outline:var(--state-outline-px) solid rgba(255,255,255,var(--state-outline-alpha)) !important;
+  outline-offset:1px !important;
+  box-shadow:
+    0 0 var(--state-card-shadow-px) rgba(var(--hv-rarity-rgb),var(--state-card-shadow-alpha)),
+    0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
+}
+
+/* Marcadores de celda controlables */
+.grid .cell.valid::after,
+.grid .cell.move-range-preview::after{
+  opacity:var(--move-marker-opacity) !important;
+  box-shadow:
+    0 0 var(--move-marker-glow-px) rgba(118,255,166,.55),
+    0 0 calc(var(--move-marker-glow-px) * 2) rgba(118,255,166,.18),
+    inset 0 0 6px rgba(118,255,166,.22) !important;
+}
+
+.grid .cell.attackable::after,
+.grid .cell.attack-range-preview::after,
+.grid .cell.enemy-threat-preview::after{
+  opacity:var(--attack-marker-opacity) !important;
+  box-shadow:
+    0 0 var(--attack-marker-glow-px) rgba(255,86,132,.58),
+    0 0 calc(var(--attack-marker-glow-px) * 2) rgba(255,86,132,.20),
+    inset 0 0 6px rgba(255,86,132,.24) !important;
+}
+
+.grid .cell.summonable::after{
+  opacity:var(--summon-marker-opacity) !important;
+  box-shadow:
+    0 0 var(--summon-marker-glow-px) rgba(255,202,95,.52),
+    0 0 calc(var(--summon-marker-glow-px) * 2) rgba(255,202,95,.18),
+    inset 0 0 6px rgba(255,224,138,.24) !important;
+}
+
+/* Base aliado/enemigo también queda bajo control */
+.grid .cell > .unit-card.ally::before,
+.cell > .unit-card.ally::before{
+  box-shadow:
+    0 0 var(--team-glow-px) rgba(96,224,255,var(--team-glow-alpha)),
+    0 0 calc(var(--team-glow-px) * 1.8) rgba(66,154,255,calc(var(--team-glow-alpha) * .55)) !important;
+}
+.grid .cell > .unit-card.enemy::before,
+.cell > .unit-card.enemy::before{
+  box-shadow:
+    0 0 var(--team-glow-px) rgba(255,110,166,var(--team-glow-alpha)),
+    0 0 calc(var(--team-glow-px) * 1.8) rgba(220,54,107,calc(var(--team-glow-alpha) * .55)) !important;
+}
+
+/* Kill switch visual por clase: se activa desde el panel con el botón Matar brillos */
+body.hv-no-card-glows .grid .cell > .unit-card,
+body.hv-no-card-glows .cell > .unit-card,
+body.hv-no-card-glows .grid .cell > .unit-card *,
+body.hv-no-card-glows .cell > .unit-card *{
+  animation:none !important;
+}
+body.hv-no-card-glows .grid .cell > .unit-card,
+body.hv-no-card-glows .cell > .unit-card{
+  box-shadow:none !important;
+}
+body.hv-no-card-glows .grid .cell > .unit-card .unit-frame-skin,
+body.hv-no-card-glows .cell > .unit-card .unit-frame-skin,
+body.hv-no-card-glows .grid .cell > .unit-card .unit-frame-rarity,
+body.hv-no-card-glows .cell > .unit-card .unit-frame-rarity,
+body.hv-no-card-glows .grid .cell > .unit-card .unit-frame-rarity::after,
+body.hv-no-card-glows .cell > .unit-card .unit-frame-rarity::after{
+  filter:none !important;
+  box-shadow:none !important;
+}
+
+
+/* ==========================================================
+   7HBA · CONTROL MAESTRO REAL DE TODAS LAS AURAS DE TABLERO
+   Este bloque NO intenta adivinar cuál brillo molesta: expone todas las capas.
+   Se activa siempre con body.hv-master-glow-debug.
+   ========================================================== */
+body.hv-master-glow-debug{
+  --master-card-opacity:1;
+  --master-card-filter-opacity:1;
+  --master-card-box-alpha:.45;
+  --master-card-box-px:10px;
+  --master-card-before-opacity:1;
+  --master-card-after-opacity:0;
+  --master-card-before-blur:0px;
+  --master-card-after-blur:0px;
+
+  --master-portrait-opacity:1;
+  --master-portrait-brightness:1;
+  --master-portrait-saturation:1;
+  --master-portrait-contrast:1;
+  --master-portrait-blur:0px;
+  --master-portrait-drop-alpha:0;
+  --master-portrait-drop-px:0px;
+
+  --master-frame-opacity:1;
+  --master-frame-shadow-alpha:.55;
+  --master-frame-shadow-px:8px;
+  --master-frame-brightness:1;
+  --master-frame-saturation:1;
+  --master-frame-contrast:1;
+  --master-frame-extra-glow-alpha:0;
+  --master-frame-extra-glow-px:0px;
+  --master-frame-before-opacity:0;
+  --master-frame-after-opacity:0;
+
+  --master-ornament-opacity:1;
+  --master-ornament-brightness:1;
+  --master-ornament-saturation:1;
+  --master-ornament-contrast:1;
+  --master-ornament-blur:0px;
+  --master-ornament-css-alpha:.75;
+  --master-ornament-white-alpha:.20;
+  --master-ornament-white-px:1px;
+  --master-ornament-near-px:2px;
+  --master-ornament-mid-px:5px;
+  --master-ornament-far-px:9px;
+  --master-ornament-after-opacity:1;
+  --master-ornament-before-opacity:1;
+  --master-ornament-pulse-duration:10s;
+  --master-ornament-pulse-min:.10;
+  --master-ornament-pulse-max:1.5;
+
+  --master-cell-after-opacity:1;
+  --master-cell-after-bg-alpha:1;
+  --master-cell-after-inset-alpha:1;
+  --master-cell-after-glow-alpha:1;
+  --master-cell-after-glow-px:10px;
+  --master-cell-before-opacity:1;
+  --master-cell-before-glow-alpha:1;
+  --master-cell-before-glow-px:10px;
+  --master-cell-hover-alpha:1;
+
+  --master-valid-opacity:1;
+  --master-valid-bg-alpha:.12;
+  --master-valid-outline-alpha:.78;
+  --master-valid-glow-alpha:.20;
+  --master-valid-glow-px:8px;
+  --master-attack-opacity:1;
+  --master-attack-bg-alpha:.14;
+  --master-attack-outline-alpha:.88;
+  --master-attack-glow-alpha:.30;
+  --master-attack-glow-px:11px;
+  --master-summon-opacity:1;
+  --master-summon-bg-alpha:.13;
+  --master-summon-outline-alpha:.82;
+  --master-summon-glow-alpha:.24;
+  --master-summon-glow-px:10px;
+
+  --master-selected-cell-alpha:.32;
+  --master-selected-cell-px:12px;
+  --master-unit-state-outline-alpha:0;
+  --master-unit-state-outline-px:0px;
+  --master-unit-state-shadow-alpha:0;
+  --master-unit-state-shadow-px:0px;
+
+  --master-team-opacity:1;
+  --master-team-blur:0px;
+  --master-team-glow-alpha:.32;
+  --master-team-glow-px:10px;
+  --master-team-size:100%;
+  --master-stats-opacity:1;
+  --master-status-opacity:1;
+}
+
+body.hv-master-glow-debug .grid .cell > .unit-card,
+body.hv-master-glow-debug .cell > .unit-card{
+  opacity:var(--master-card-opacity) !important;
+  background:rgba(0,0,0,var(--card-bg-alpha,.18)) !important;
+  filter:opacity(var(--master-card-filter-opacity)) !important;
+  box-shadow:0 0 var(--master-card-box-px) rgba(0,0,0,var(--master-card-box-alpha)) !important;
+  outline:var(--master-unit-state-outline-px) solid rgba(255,255,255,var(--master-unit-state-outline-alpha)) !important;
+  overflow:visible !important;
+}
+
+body.hv-master-glow-debug .grid .cell > .unit-card::before,
+body.hv-master-glow-debug .cell > .unit-card::before{
+  opacity:var(--master-card-before-opacity) !important;
+  filter:blur(var(--master-card-before-blur)) !important;
+}
+body.hv-master-glow-debug .grid .cell > .unit-card::after,
+body.hv-master-glow-debug .cell > .unit-card::after{
+  opacity:var(--master-card-after-opacity) !important;
+  filter:blur(var(--master-card-after-blur)) !important;
+  box-shadow:none !important;
+}
+
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-portrait,
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-portrait-stack,
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-card-bg-layer,
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-card-character-layer,
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-portrait img,
+body.hv-master-glow-debug .cell > .unit-card .unit-portrait,
+body.hv-master-glow-debug .cell > .unit-card .unit-portrait-stack,
+body.hv-master-glow-debug .cell > .unit-card .unit-card-bg-layer,
+body.hv-master-glow-debug .cell > .unit-card .unit-card-character-layer,
+body.hv-master-glow-debug .cell > .unit-card .unit-portrait img{
+  opacity:var(--master-portrait-opacity) !important;
+  mix-blend-mode:normal !important;
+  box-shadow:none !important;
+  filter:
+    brightness(var(--master-portrait-brightness))
+    saturate(var(--master-portrait-saturation))
+    contrast(var(--master-portrait-contrast))
+    blur(var(--master-portrait-blur))
+    drop-shadow(0 0 var(--master-portrait-drop-px) rgba(255,255,255,var(--master-portrait-drop-alpha))) !important;
+}
+
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-skin,
+body.hv-master-glow-debug .cell > .unit-card .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.valid:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.attackable:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.summonable:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.selected:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.move-range-preview:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.attack-range-preview:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.enemy-threat-preview:has(.unit-card) .unit-frame-skin,
+body.hv-master-glow-debug .grid .cell.enemy-acted-threat-preview:has(.unit-card) .unit-frame-skin{
+  opacity:var(--master-frame-opacity) !important;
+  animation:none !important;
+  box-shadow:none !important;
+  filter:
+    brightness(var(--master-frame-brightness))
+    saturate(var(--master-frame-saturation))
+    contrast(var(--master-frame-contrast))
+    drop-shadow(0 0 var(--master-frame-shadow-px) rgba(0,0,0,var(--master-frame-shadow-alpha)))
+    drop-shadow(0 0 var(--master-frame-extra-glow-px) rgba(var(--hv-rarity-rgb,255,255,255),var(--master-frame-extra-glow-alpha))) !important;
+}
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-skin::before,
+body.hv-master-glow-debug .cell > .unit-card .unit-frame-skin::before{opacity:var(--master-frame-before-opacity) !important;filter:none !important;box-shadow:none !important;}
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-skin::after,
+body.hv-master-glow-debug .cell > .unit-card .unit-frame-skin::after{opacity:var(--master-frame-after-opacity) !important;filter:none !important;box-shadow:none !important;}
+
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-rarity,
+body.hv-master-glow-debug .cell > .unit-card .unit-frame-rarity{
+  opacity:var(--master-ornament-opacity) !important;
+  animation:none !important;
+  mix-blend-mode:normal !important;
+  filter:
+    brightness(var(--master-ornament-brightness))
+    saturate(var(--master-ornament-saturation))
+    contrast(var(--master-ornament-contrast))
+    blur(var(--master-ornament-blur)) !important;
+}
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-rarity::before,
+body.hv-master-glow-debug .cell > .unit-card .unit-frame-rarity::before{
+  opacity:var(--master-ornament-before-opacity) !important;
+  filter:none !important;
+  box-shadow:none !important;
+}
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-rarity::after,
+body.hv-master-glow-debug .cell > .unit-card .unit-frame-rarity::after{
+  opacity:var(--master-ornament-after-opacity) !important;
+  animation:hvMasterOrnPulse7HBA var(--master-ornament-pulse-duration) ease-in-out infinite !important;
+  filter:
+    brightness(var(--baked-brightness,1))
+    saturate(var(--baked-saturation,1))
+    contrast(var(--baked-contrast,1))
+    blur(var(--baked-blur,0px))
+    drop-shadow(0 0 var(--master-ornament-white-px) rgba(255,255,255,var(--master-ornament-white-alpha)))
+    drop-shadow(0 0 var(--master-ornament-near-px) rgba(var(--hv-rarity-rgb,255,255,255),var(--master-ornament-css-alpha)))
+    drop-shadow(0 0 var(--master-ornament-mid-px) rgba(var(--hv-rarity-rgb,255,255,255),calc(var(--master-ornament-css-alpha) * .55)))
+    drop-shadow(0 0 var(--master-ornament-far-px) rgba(var(--hv-rarity-rgb,255,255,255),calc(var(--master-ornament-css-alpha) * .28))) !important;
+}
+@keyframes hvMasterOrnPulse7HBA{
+  0%,100%{opacity:calc(var(--master-ornament-after-opacity) * var(--master-ornament-pulse-min));}
+  50%{opacity:calc(var(--master-ornament-after-opacity) * var(--master-ornament-pulse-max));}
+}
+
+body.hv-master-glow-debug .grid .cell::before{opacity:var(--master-cell-before-opacity) !important;filter:drop-shadow(0 0 var(--master-cell-before-glow-px) rgba(255,255,255,var(--master-cell-before-glow-alpha))) !important;}
+body.hv-master-glow-debug .grid .cell::after{opacity:var(--master-cell-after-opacity) !important;}
+body.hv-master-glow-debug .grid .cell.valid::after,
+body.hv-master-glow-debug .grid .cell.move-range-preview::after{
+  background:rgba(112,224,138,calc(var(--master-valid-bg-alpha) * var(--master-cell-after-bg-alpha))) !important;
+  opacity:var(--master-valid-opacity) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(112,224,138,calc(var(--master-valid-outline-alpha) * var(--master-cell-after-inset-alpha))),
+    0 0 var(--master-valid-glow-px) rgba(112,224,138,calc(var(--master-valid-glow-alpha) * var(--master-cell-after-glow-alpha))) !important;
+}
+body.hv-master-glow-debug .grid .cell.attackable::after,
+body.hv-master-glow-debug .grid .cell.attack-range-preview::after,
+body.hv-master-glow-debug .grid .cell.enemy-threat-preview::after,
+body.hv-master-glow-debug .grid .cell.enemy-acted-threat-preview::after{
+  background:rgba(239,71,111,calc(var(--master-attack-bg-alpha) * var(--master-cell-after-bg-alpha))) !important;
+  opacity:var(--master-attack-opacity) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(239,71,111,calc(var(--master-attack-outline-alpha) * var(--master-cell-after-inset-alpha))),
+    0 0 var(--master-attack-glow-px) rgba(239,71,111,calc(var(--master-attack-glow-alpha) * var(--master-cell-after-glow-alpha))) !important;
+}
+body.hv-master-glow-debug .grid .cell.summonable::after{
+  background:rgba(255,209,102,calc(var(--master-summon-bg-alpha) * var(--master-cell-after-bg-alpha))) !important;
+  opacity:var(--master-summon-opacity) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,209,102,calc(var(--master-summon-outline-alpha) * var(--master-cell-after-inset-alpha))),
+    0 0 var(--master-summon-glow-px) rgba(255,209,102,calc(var(--master-summon-glow-alpha) * var(--master-cell-after-glow-alpha))) !important;
+}
+body.hv-master-glow-debug .grid .cell.selected::after{
+  opacity:var(--master-cell-after-opacity) !important;
+  box-shadow:0 0 var(--master-selected-cell-px) rgba(255,255,255,var(--master-selected-cell-alpha)) !important;
+}
+body.hv-master-glow-debug .grid .cell:hover{background:rgba(255,220,140,calc(.05 * var(--master-cell-hover-alpha))) !important;}
+
+body.hv-master-glow-debug .grid .cell > .unit-card.ally::before,
+body.hv-master-glow-debug .cell > .unit-card.ally::before,
+body.hv-master-glow-debug .grid .cell > .unit-card.enemy::before,
+body.hv-master-glow-debug .cell > .unit-card.enemy::before{
+  opacity:var(--master-team-opacity) !important;
+  width:var(--master-team-size) !important;
+  filter:blur(var(--master-team-blur)) !important;
+  box-shadow:0 0 var(--master-team-glow-px) rgba(255,255,255,var(--master-team-glow-alpha)) !important;
+}
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-ornate-ui,
+body.hv-master-glow-debug .cell > .unit-card .unit-ornate-ui{opacity:var(--master-stats-opacity) !important;}
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-status-bubbles,
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-status-seals,
+body.hv-master-glow-debug .grid .cell > .unit-card .status-seal-rail,
+body.hv-master-glow-debug .grid .cell > .unit-card .unit-status-seal-extra{opacity:var(--master-status-opacity) !important;}
+
+body.hv-master-zero-glow .grid .cell > .unit-card,
+body.hv-master-zero-glow .grid .cell > .unit-card *,
+body.hv-master-zero-glow .grid .cell > .unit-card::before,
+body.hv-master-zero-glow .grid .cell > .unit-card::after,
+body.hv-master-zero-glow .grid .cell > .unit-card *::before,
+body.hv-master-zero-glow .grid .cell > .unit-card *::after,
+body.hv-master-zero-glow .grid .cell::before,
+body.hv-master-zero-glow .grid .cell::after{
+  box-shadow:none !important;
+  filter:none !important;
+  text-shadow:none !important;
+  animation:none !important;
+}

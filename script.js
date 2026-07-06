@@ -41,7 +41,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_ORGANIZED_3FILES_FULL_CARDS_DEF_CLEAN_2026_06_23";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HAW";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -283,6 +283,11 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
 let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",nearDeathSoundPlayedKeys=new Set();
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
+const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
+function hallvallaIsLocalTestGame(){return HALLVALLA_LOCALHOST_TEST_MODE&&String(gameId||"").startsWith("LOCAL");}
+function hallvallaSetDeep(obj,path,value){const parts=String(path||"").split("/").filter(Boolean);let cur=obj;for(let i=0;i<parts.length-1;i++){const k=parts[i];if(!cur[k]||typeof cur[k]!=="object")cur[k]={};cur=cur[k];}if(parts.length)cur[parts[parts.length-1]]=value;}
+function hallvallaApplyLocalPatch(target,patch){const base={...(target||{})};Object.entries(patch||{}).forEach(([k,v])=>{if(k.includes("/"))hallvallaSetDeep(base,k,v);else base[k]=v;});return base;}
+
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
@@ -294,6 +299,11 @@ function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 let authReady=false,authReadyWaiters=[];
 function isFirebaseAuthReady(){
+  if(HALLVALLA_LOCALHOST_TEST_MODE){
+    if(!uid)uid="LOCALHOST_TEST_USER";
+    authReady=true;
+    return true;
+  }
   if(auth.currentUser&&!uid)uid=auth.currentUser.uid;
   return !!(auth.currentUser&&uid&&authReady);
 }
@@ -321,6 +331,13 @@ function waitForFirebaseAuthReady(timeoutMs=8000){
   });
 }
 async function ensureFirebaseAuthReady(surface="online"){
+  if(HALLVALLA_LOCALHOST_TEST_MODE){
+    if(!uid)uid="LOCALHOST_TEST_USER";
+    authReady=true;
+    updateAuthActionButtons();
+    setText("lobbyStatus","Modo local listo. Firebase no se usa para esta prueba.");
+    return true;
+  }
   if(isFirebaseAuthReady())return true;
   updateAuthActionButtons();
   setText("lobbyStatus","Conectando con Firebase...");
@@ -2869,7 +2886,7 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
 }
 
 function combatSummary(mods){return mods?.notes?.length?` ${mods.notes.join(" ")}`:""}
-function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){if(hallvallaIsLocalTestGame()){publicState=hallvallaApplyLocalPatch(publicState,patch);render();maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,patch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -2917,8 +2934,16 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   const playerProfileName=getLocalProfileName();const pub={code,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`]};
+  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true};
+  if(HALLVALLA_LOCALHOST_TEST_MODE){
+    pub.code=`LOCAL${code4()}`;
+    pub.localhostVisualTest=true;
+    pub.log=["Modo local: prueba visual en tablero real sin Firebase.",...(pub.log||[])].slice(0,18);
+    enterLocalGame(pub,privatePayload,1);
+    return;
+  }
   await set(ref(db,`games/${code}/public`),pub);
-  await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});
+  await set(ref(db,`games/${code}/private/player1`),privatePayload);
   // Modo aventura: la IA no tiene UID real. Su estado privado se guarda en public.adventureAiState.
   // No escribir en /private/player-IA para evitar permission_denied con reglas de Firebase.
   $("adventurePanel").classList.add("hidden");
@@ -2937,6 +2962,35 @@ function handleBattleListenerError(label,e){
 function safeBattleTick(label,fn){
   try{fn();}
   catch(e){handleBattleListenerError(label,e);}
+}
+function enterLocalGame(pub,priv,player=1){
+  gameId=pub?.code||`LOCAL${code4()}`;
+  myPlayer=player;
+  publicState=pub;
+  privateState=priv;
+  shownBattleResultKey="";
+  aiTurnLock=false;
+  lastAiTurnKey="";
+  lastBattleFxKey="";
+  lastDemigodSummonKey="";
+  lastFirebaseListenerErrorKey="";
+  nearDeathSoundPlayedKeys=new Set();
+  clearBattleFxLayer();
+  hideDemigodSummonPresentation();
+  if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
+  const resultPanel=$("adventureResultPanel");
+  if(resultPanel)resultPanel.classList.add("hidden");
+  $("onlineLobby")?.classList.add("hidden");
+  $("mainMenu")?.classList.add("hidden");
+  $("adventurePanel")?.classList.add("hidden");
+  $("gameShell")?.classList.remove("hidden");
+  stopMusic(true);
+  if(unsubPub){try{unsubPub();}catch(_){ }unsubPub=null}
+  if(unsubPriv){try{unsubPriv();}catch(_){ }unsubPriv=null}
+  render();
+  setHint("Modo local de prueba: tablero real sin Firebase. Ajusta Rareza CTRL aquí mismo.");
+  maybeStartTurn();
+  aiWatchdogTimer=setInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800);
 }
 function enterGame(code,player){
   gameId=code;
@@ -9713,20 +9767,26 @@ if(joinInputEl){
 -------------------------------------------------------------------------------
 */
 updateAuthActionButtons();
-onAuthStateChanged(auth,async u=>{
-  if(u){
-    uid=u.uid;
-    setText("lobbyStatus","Cargando perfil...");
-    await loadLeaderProfile(false);
-    resolveFirebaseAuthReady();
-    setText("lobbyStatus","Listo para jugar.");
-  }else{
-    authReady=false;
-    updateAuthActionButtons();
-    setText("lobbyStatus","Conectando con Firebase...");
-  }
-});
-signInAnonymously(auth).catch(e=>{authReady=false;updateAuthActionButtons();setText("lobbyStatus",e.message);});
+if(HALLVALLA_LOCALHOST_TEST_MODE){
+  uid="LOCALHOST_TEST_USER";
+  authReady=true;
+  loadLeaderProfile(false).finally(()=>{resolveFirebaseAuthReady();setText("lobbyStatus","Modo local listo. Firebase no se usa para la prueba visual.");});
+}else{
+  onAuthStateChanged(auth,async u=>{
+    if(u){
+      uid=u.uid;
+      setText("lobbyStatus","Cargando perfil...");
+      await loadLeaderProfile(false);
+      resolveFirebaseAuthReady();
+      setText("lobbyStatus","Listo para jugar.");
+    }else{
+      authReady=false;
+      updateAuthActionButtons();
+      setText("lobbyStatus","Conectando con Firebase...");
+    }
+  });
+  signInAnonymously(auth).catch(e=>{authReady=false;updateAuthActionButtons();setText("lobbyStatus",e.message);});
+}
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
 maybeShowBasicTutorialGate();
@@ -9915,4 +9975,233 @@ function getExactEffectGuideData(entity,effectText=""){
     apply();
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build);else build();
+})();
+
+
+/* 7HAX: controles extra para brillos que venían de estados del tablero y reglas heredadas */
+(function(){
+  const EXTRA_DEFAULTS={
+    legacyUnitRarityGlowAlpha:0,
+    legacyUnitRarityGlowPx:0,
+    stateFrameGlowAlpha:0,
+    stateFrameGlowPx:0,
+    stateOutlineAlpha:0,
+    stateOutlinePx:0,
+    stateCardShadowAlpha:0,
+    stateCardShadowPx:0,
+    moveMarkerOpacity:1,
+    moveMarkerGlowPx:9,
+    attackMarkerOpacity:1,
+    attackMarkerGlowPx:9,
+    summonMarkerOpacity:1,
+    summonMarkerGlowPx:10,
+    teamGlowAlpha:.32,
+    teamGlowPx:10,
+    leaderGlowAlpha:0,
+    leaderGlowPx:0
+  };
+  const EXTRA_GROUPS=[
+    ["Brillos heredados de carta",[
+      ["legacyUnitRarityGlowAlpha","Glow rareza carta alpha",0,1,.01],
+      ["legacyUnitRarityGlowPx","Glow rareza carta px",0,40,.5],
+      ["leaderGlowAlpha","Glow líder alpha",0,1,.01],
+      ["leaderGlowPx","Glow líder px",0,40,.5]
+    ]],
+    ["Estados sobre unidad",[
+      ["stateFrameGlowAlpha","Glow marco por estado alpha",0,1,.01],
+      ["stateFrameGlowPx","Glow marco por estado px",0,35,.5],
+      ["stateOutlineAlpha","Outline estado alpha",0,1,.01],
+      ["stateOutlinePx","Outline estado px",0,5,.1],
+      ["stateCardShadowAlpha","Sombra estado carta alpha",0,1,.01],
+      ["stateCardShadowPx","Sombra estado carta px",0,35,.5]
+    ]],
+    ["Marcadores de celda",[
+      ["moveMarkerOpacity","Opacidad círculo mover",0,1,.01],
+      ["moveMarkerGlowPx","Glow círculo mover px",0,30,.5],
+      ["attackMarkerOpacity","Opacidad círculo ataque",0,1,.01],
+      ["attackMarkerGlowPx","Glow círculo ataque px",0,30,.5],
+      ["summonMarkerOpacity","Opacidad círculo invocar",0,1,.01],
+      ["summonMarkerGlowPx","Glow círculo invocar px",0,30,.5]
+    ]],
+    ["Base aliado/enemigo extra",[
+      ["teamGlowAlpha","Glow base equipo alpha",0,1,.01],
+      ["teamGlowPx","Glow base equipo px",0,35,.5]
+    ]]
+  ];
+  const EXTRA_CSS={
+    legacyUnitRarityGlowAlpha:"--legacy-unit-rarity-glow-alpha",
+    legacyUnitRarityGlowPx:"--legacy-unit-rarity-glow-px",
+    stateFrameGlowAlpha:"--state-frame-glow-alpha",
+    stateFrameGlowPx:"--state-frame-glow-px",
+    stateOutlineAlpha:"--state-outline-alpha",
+    stateOutlinePx:"--state-outline-px",
+    stateCardShadowAlpha:"--state-card-shadow-alpha",
+    stateCardShadowPx:"--state-card-shadow-px",
+    moveMarkerOpacity:"--move-marker-opacity",
+    moveMarkerGlowPx:"--move-marker-glow-px",
+    attackMarkerOpacity:"--attack-marker-opacity",
+    attackMarkerGlowPx:"--attack-marker-glow-px",
+    summonMarkerOpacity:"--summon-marker-opacity",
+    summonMarkerGlowPx:"--summon-marker-glow-px",
+    teamGlowAlpha:"--team-glow-alpha",
+    teamGlowPx:"--team-glow-px",
+    leaderGlowAlpha:"--leader-glow-alpha",
+    leaderGlowPx:"--leader-glow-px"
+  };
+  const EXTRA_UNITS={
+    legacyUnitRarityGlowPx:"px",
+    stateFrameGlowPx:"px",
+    stateOutlinePx:"px",
+    stateCardShadowPx:"px",
+    moveMarkerGlowPx:"px",
+    attackMarkerGlowPx:"px",
+    summonMarkerGlowPx:"px",
+    teamGlowPx:"px",
+    leaderGlowPx:"px"
+  };
+  let extraValues;
+  function load(){
+    try{return {...EXTRA_DEFAULTS,...JSON.parse(localStorage.getItem("hv_rarity_extra_glow_controls")||"{}")};}
+    catch(_){return {...EXTRA_DEFAULTS};}
+  }
+  function applyExtra(){
+    if(!extraValues)extraValues=load();
+    let st=document.getElementById("hvExtraGlowControlStyle7HAX");
+    if(!st){st=document.createElement("style");st.id="hvExtraGlowControlStyle7HAX";document.head.appendChild(st);}
+    const lines=Object.keys(EXTRA_CSS).map(k=>`${EXTRA_CSS[k]}:${extraValues[k]}${EXTRA_UNITS[k]||""};`).join("\n    ");
+    st.textContent=`.grid .cell > .unit-card,.cell > .unit-card{\n    ${lines}\n  }`;
+    try{localStorage.setItem("hv_rarity_extra_glow_controls",JSON.stringify(extraValues));}catch(_){}
+    const out=document.getElementById("hvRarityCssOut");
+    if(out){
+      const base=out.textContent.split("\n/* 7HAX extra */")[0];
+      out.textContent=base+"\n/* 7HAX extra */\n"+Object.keys(EXTRA_CSS).map(k=>`${EXTRA_CSS[k]}: ${extraValues[k]}${EXTRA_UNITS[k]||""};`).join("\n");
+    }
+  }
+  function addControls(){
+    const wrap=document.getElementById("hvRrControls");
+    if(!wrap || document.getElementById("hvExtraGlowBox7HAX"))return false;
+    extraValues=load();
+    const holder=document.createElement("div");
+    holder.id="hvExtraGlowBox7HAX";
+    EXTRA_GROUPS.forEach(([title,items])=>{
+      const box=document.createElement("section");
+      box.className="hv-rr-box";
+      box.innerHTML=`<h4>${title}</h4>`+items.map(([k,l,min,max,step])=>`<label><span>${l}</span><input data-extra-k="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${extraValues[k]}"><b id="hvx_${k}">${extraValues[k]}${EXTRA_UNITS[k]||""}</b></label>`).join("");
+      holder.appendChild(box);
+    });
+    wrap.appendChild(holder);
+    wrap.addEventListener("input",e=>{
+      const k=e.target?.dataset?.extraK;
+      if(!k)return;
+      extraValues[k]=Number(e.target.value);
+      const b=document.getElementById("hvx_"+k);
+      if(b)b.textContent=`${extraValues[k]}${EXTRA_UNITS[k]||""}`;
+      applyExtra();
+    });
+    const actions=document.querySelector("#hvRarityRealPanel .hv-rr-actions");
+    if(actions && !document.getElementById("hvKillGlows7HAX")){
+      const kill=document.createElement("button");
+      kill.id="hvKillGlows7HAX";
+      kill.textContent="Matar brillos";
+      kill.onclick=()=>{
+        document.body.classList.toggle("hv-no-card-glows");
+        Object.assign(extraValues,{
+          legacyUnitRarityGlowAlpha:0,legacyUnitRarityGlowPx:0,
+          stateFrameGlowAlpha:0,stateFrameGlowPx:0,
+          stateOutlineAlpha:0,stateOutlinePx:0,
+          stateCardShadowAlpha:0,stateCardShadowPx:0,
+          teamGlowAlpha:0,teamGlowPx:0,
+          leaderGlowAlpha:0,leaderGlowPx:0
+        });
+        document.querySelectorAll('#hvExtraGlowBox7HAX input[data-extra-k]').forEach(i=>{
+          i.value=extraValues[i.dataset.extraK];
+          const b=document.getElementById("hvx_"+i.dataset.extraK);
+          if(b)b.textContent=`${extraValues[i.dataset.extraK]}${EXTRA_UNITS[i.dataset.extraK]||""}`;
+        });
+        applyExtra();
+      };
+      actions.appendChild(kill);
+    }
+    applyExtra();
+    return true;
+  }
+  const timer=setInterval(()=>{ if(addControls())clearInterval(timer); },250);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(addControls,300));else setTimeout(addControls,300);
+})();
+
+
+/* === 7HBA · controles maestros reales de tablero/carta === */
+(function(){
+  const DEFAULTS={
+    masterCardOpacity:1,masterCardFilterOpacity:1,masterCardBoxAlpha:.45,masterCardBoxPx:10,masterCardBeforeOpacity:1,masterCardAfterOpacity:0,masterCardBeforeBlur:0,masterCardAfterBlur:0,
+    masterPortraitOpacity:1,masterPortraitBrightness:1,masterPortraitSaturation:1,masterPortraitContrast:1,masterPortraitBlur:0,masterPortraitDropAlpha:0,masterPortraitDropPx:0,
+    masterFrameOpacity:1,masterFrameShadowAlpha:.55,masterFrameShadowPx:8,masterFrameBrightness:1,masterFrameSaturation:1,masterFrameContrast:1,masterFrameExtraGlowAlpha:0,masterFrameExtraGlowPx:0,masterFrameBeforeOpacity:0,masterFrameAfterOpacity:0,
+    masterOrnamentOpacity:1,masterOrnamentBrightness:1,masterOrnamentSaturation:1,masterOrnamentContrast:1,masterOrnamentBlur:0,masterOrnamentCssAlpha:.75,masterOrnamentWhiteAlpha:.20,masterOrnamentWhitePx:1,masterOrnamentNearPx:2,masterOrnamentMidPx:5,masterOrnamentFarPx:9,masterOrnamentAfterOpacity:1,masterOrnamentBeforeOpacity:1,masterOrnamentPulseDuration:10,masterOrnamentPulseMin:.10,masterOrnamentPulseMax:1.5,
+    masterCellAfterOpacity:1,masterCellAfterBgAlpha:1,masterCellAfterInsetAlpha:1,masterCellAfterGlowAlpha:1,masterCellAfterGlowPx:10,masterCellBeforeOpacity:1,masterCellBeforeGlowAlpha:1,masterCellBeforeGlowPx:10,masterCellHoverAlpha:1,
+    masterValidOpacity:1,masterValidBgAlpha:.12,masterValidOutlineAlpha:.78,masterValidGlowAlpha:.20,masterValidGlowPx:8,
+    masterAttackOpacity:1,masterAttackBgAlpha:.14,masterAttackOutlineAlpha:.88,masterAttackGlowAlpha:.30,masterAttackGlowPx:11,
+    masterSummonOpacity:1,masterSummonBgAlpha:.13,masterSummonOutlineAlpha:.82,masterSummonGlowAlpha:.24,masterSummonGlowPx:10,
+    masterSelectedCellAlpha:.32,masterSelectedCellPx:12,masterUnitStateOutlineAlpha:0,masterUnitStateOutlinePx:0,masterUnitStateShadowAlpha:0,masterUnitStateShadowPx:0,
+    masterTeamOpacity:1,masterTeamBlur:0,masterTeamGlowAlpha:.32,masterTeamGlowPx:10,masterTeamSize:100,masterStatsOpacity:1,masterStatusOpacity:1
+  };
+  const GROUPS=[
+    ["Master carta",[["masterCardOpacity","Opacidad carta",0,1,.01],["masterCardFilterOpacity","Filtro opacidad carta",0,1,.01],["masterCardBoxAlpha","Sombra caja alpha",0,1,.01],["masterCardBoxPx","Sombra caja px",0,40,.5],["masterCardBeforeOpacity","::before carta/base",0,1,.01],["masterCardAfterOpacity","::after carta",0,1,.01],["masterCardBeforeBlur","Blur ::before",0,20,.1],["masterCardAfterBlur","Blur ::after",0,20,.1]]],
+    ["Master retrato",[["masterPortraitOpacity","Opacidad retrato",0,1,.01],["masterPortraitBrightness","Brillo retrato",0,2,.01],["masterPortraitSaturation","Saturación retrato",0,2,.01],["masterPortraitContrast","Contraste retrato",0,2,.01],["masterPortraitBlur","Blur retrato",0,15,.1],["masterPortraitDropAlpha","Glow retrato alpha",0,1,.01],["masterPortraitDropPx","Glow retrato px",0,40,.5]]],
+    ["Master marco",[["masterFrameOpacity","Opacidad marco",0,1,.01],["masterFrameShadowAlpha","Sombra marco alpha",0,1,.01],["masterFrameShadowPx","Sombra marco px",0,40,.5],["masterFrameBrightness","Brillo marco",0,2,.01],["masterFrameSaturation","Saturación marco",0,2,.01],["masterFrameContrast","Contraste marco",0,2,.01],["masterFrameExtraGlowAlpha","Glow extra marco alpha",0,1,.01],["masterFrameExtraGlowPx","Glow extra marco px",0,60,.5],["masterFrameBeforeOpacity","Frame ::before",0,1,.01],["masterFrameAfterOpacity","Frame ::after",0,1,.01]]],
+    ["Master ornamento",[["masterOrnamentOpacity","Opacidad ornamento",0,1,.01],["masterOrnamentBrightness","Brillo ornamento",0,2,.01],["masterOrnamentSaturation","Saturación ornamento",0,2,.01],["masterOrnamentContrast","Contraste ornamento",0,2,.01],["masterOrnamentBlur","Blur ornamento",0,10,.1],["masterOrnamentBeforeOpacity","Ornamento ::before",0,1,.01],["masterOrnamentAfterOpacity","Ornamento glow ::after",0,1,.01]]],
+    ["Master glow ornamento",[["masterOrnamentCssAlpha","Alpha glow CSS",0,1,.01],["masterOrnamentWhiteAlpha","Núcleo blanco alpha",0,1,.01],["masterOrnamentWhitePx","Núcleo blanco px",0,20,.1],["masterOrnamentNearPx","Halo cercano px",0,35,.1],["masterOrnamentMidPx","Halo medio px",0,60,.1],["masterOrnamentFarPx","Halo externo px",0,90,.1],["masterOrnamentPulseDuration","Duración pulso",1,40,.25],["masterOrnamentPulseMin","Pulso mínimo",0,1,.01],["masterOrnamentPulseMax","Pulso máximo",0,2,.01]]],
+    ["Master celdas global",[["masterCellAfterOpacity","Opacidad cell::after",0,1,.01],["masterCellAfterBgAlpha","Alpha fondo marcadores",0,1,.01],["masterCellAfterInsetAlpha","Alpha borde interno",0,1,.01],["masterCellAfterGlowAlpha","Alpha glow marcador",0,1,.01],["masterCellAfterGlowPx","Glow marcador global px",0,50,.5],["masterCellBeforeOpacity","Opacidad cell::before",0,1,.01],["masterCellBeforeGlowAlpha","Glow cell::before alpha",0,1,.01],["masterCellBeforeGlowPx","Glow cell::before px",0,50,.5],["masterCellHoverAlpha","Hover celda alpha",0,1,.01]]],
+    ["Mover / atacar / invocar",[["masterValidOpacity","Opacidad mover",0,1,.01],["masterValidBgAlpha","Fondo mover",0,1,.01],["masterValidOutlineAlpha","Borde mover",0,1,.01],["masterValidGlowAlpha","Glow mover",0,1,.01],["masterValidGlowPx","Glow mover px",0,50,.5],["masterAttackOpacity","Opacidad ataque",0,1,.01],["masterAttackBgAlpha","Fondo ataque",0,1,.01],["masterAttackOutlineAlpha","Borde ataque",0,1,.01],["masterAttackGlowAlpha","Glow ataque",0,1,.01],["masterAttackGlowPx","Glow ataque px",0,50,.5],["masterSummonOpacity","Opacidad invocar",0,1,.01],["masterSummonBgAlpha","Fondo invocar",0,1,.01],["masterSummonOutlineAlpha","Borde invocar",0,1,.01],["masterSummonGlowAlpha","Glow invocar",0,1,.01],["masterSummonGlowPx","Glow invocar px",0,50,.5]]],
+    ["Seleccionada / estados",[["masterSelectedCellAlpha","Glow celda seleccionada",0,1,.01],["masterSelectedCellPx","Glow seleccionada px",0,60,.5],["masterUnitStateOutlineAlpha","Outline unidad alpha",0,1,.01],["masterUnitStateOutlinePx","Outline unidad px",0,8,.1],["masterUnitStateShadowAlpha","Sombra estado unidad alpha",0,1,.01],["masterUnitStateShadowPx","Sombra estado unidad px",0,60,.5]]],
+    ["Base / stats",[["masterTeamOpacity","Opacidad base equipo",0,1,.01],["masterTeamBlur","Blur base equipo",0,20,.1],["masterTeamGlowAlpha","Glow base alpha",0,1,.01],["masterTeamGlowPx","Glow base px",0,60,.5],["masterTeamSize","Tamaño base %",0,220,1],["masterStatsOpacity","Opacidad stats",0,1,.01],["masterStatusOpacity","Opacidad status",0,1,.01]]]
+  ];
+  const css={
+    masterCardOpacity:"--master-card-opacity",masterCardFilterOpacity:"--master-card-filter-opacity",masterCardBoxAlpha:"--master-card-box-alpha",masterCardBoxPx:"--master-card-box-px",masterCardBeforeOpacity:"--master-card-before-opacity",masterCardAfterOpacity:"--master-card-after-opacity",masterCardBeforeBlur:"--master-card-before-blur",masterCardAfterBlur:"--master-card-after-blur",
+    masterPortraitOpacity:"--master-portrait-opacity",masterPortraitBrightness:"--master-portrait-brightness",masterPortraitSaturation:"--master-portrait-saturation",masterPortraitContrast:"--master-portrait-contrast",masterPortraitBlur:"--master-portrait-blur",masterPortraitDropAlpha:"--master-portrait-drop-alpha",masterPortraitDropPx:"--master-portrait-drop-px",
+    masterFrameOpacity:"--master-frame-opacity",masterFrameShadowAlpha:"--master-frame-shadow-alpha",masterFrameShadowPx:"--master-frame-shadow-px",masterFrameBrightness:"--master-frame-brightness",masterFrameSaturation:"--master-frame-saturation",masterFrameContrast:"--master-frame-contrast",masterFrameExtraGlowAlpha:"--master-frame-extra-glow-alpha",masterFrameExtraGlowPx:"--master-frame-extra-glow-px",masterFrameBeforeOpacity:"--master-frame-before-opacity",masterFrameAfterOpacity:"--master-frame-after-opacity",
+    masterOrnamentOpacity:"--master-ornament-opacity",masterOrnamentBrightness:"--master-ornament-brightness",masterOrnamentSaturation:"--master-ornament-saturation",masterOrnamentContrast:"--master-ornament-contrast",masterOrnamentBlur:"--master-ornament-blur",masterOrnamentCssAlpha:"--master-ornament-css-alpha",masterOrnamentWhiteAlpha:"--master-ornament-white-alpha",masterOrnamentWhitePx:"--master-ornament-white-px",masterOrnamentNearPx:"--master-ornament-near-px",masterOrnamentMidPx:"--master-ornament-mid-px",masterOrnamentFarPx:"--master-ornament-far-px",masterOrnamentAfterOpacity:"--master-ornament-after-opacity",masterOrnamentBeforeOpacity:"--master-ornament-before-opacity",masterOrnamentPulseDuration:"--master-ornament-pulse-duration",masterOrnamentPulseMin:"--master-ornament-pulse-min",masterOrnamentPulseMax:"--master-ornament-pulse-max",
+    masterCellAfterOpacity:"--master-cell-after-opacity",masterCellAfterBgAlpha:"--master-cell-after-bg-alpha",masterCellAfterInsetAlpha:"--master-cell-after-inset-alpha",masterCellAfterGlowAlpha:"--master-cell-after-glow-alpha",masterCellAfterGlowPx:"--master-cell-after-glow-px",masterCellBeforeOpacity:"--master-cell-before-opacity",masterCellBeforeGlowAlpha:"--master-cell-before-glow-alpha",masterCellBeforeGlowPx:"--master-cell-before-glow-px",masterCellHoverAlpha:"--master-cell-hover-alpha",
+    masterValidOpacity:"--master-valid-opacity",masterValidBgAlpha:"--master-valid-bg-alpha",masterValidOutlineAlpha:"--master-valid-outline-alpha",masterValidGlowAlpha:"--master-valid-glow-alpha",masterValidGlowPx:"--master-valid-glow-px",masterAttackOpacity:"--master-attack-opacity",masterAttackBgAlpha:"--master-attack-bg-alpha",masterAttackOutlineAlpha:"--master-attack-outline-alpha",masterAttackGlowAlpha:"--master-attack-glow-alpha",masterAttackGlowPx:"--master-attack-glow-px",masterSummonOpacity:"--master-summon-opacity",masterSummonBgAlpha:"--master-summon-bg-alpha",masterSummonOutlineAlpha:"--master-summon-outline-alpha",masterSummonGlowAlpha:"--master-summon-glow-alpha",masterSummonGlowPx:"--master-summon-glow-px",
+    masterSelectedCellAlpha:"--master-selected-cell-alpha",masterSelectedCellPx:"--master-selected-cell-px",masterUnitStateOutlineAlpha:"--master-unit-state-outline-alpha",masterUnitStateOutlinePx:"--master-unit-state-outline-px",masterUnitStateShadowAlpha:"--master-unit-state-shadow-alpha",masterUnitStateShadowPx:"--master-unit-state-shadow-px",masterTeamOpacity:"--master-team-opacity",masterTeamBlur:"--master-team-blur",masterTeamGlowAlpha:"--master-team-glow-alpha",masterTeamGlowPx:"--master-team-glow-px",masterTeamSize:"--master-team-size",masterStatsOpacity:"--master-stats-opacity",masterStatusOpacity:"--master-status-opacity"
+  };
+  const units={masterCardBoxPx:"px",masterCardBeforeBlur:"px",masterCardAfterBlur:"px",masterPortraitBlur:"px",masterPortraitDropPx:"px",masterFrameShadowPx:"px",masterFrameExtraGlowPx:"px",masterOrnamentBlur:"px",masterOrnamentWhitePx:"px",masterOrnamentNearPx:"px",masterOrnamentMidPx:"px",masterOrnamentFarPx:"px",masterOrnamentPulseDuration:"s",masterCellAfterGlowPx:"px",masterCellBeforeGlowPx:"px",masterValidGlowPx:"px",masterAttackGlowPx:"px",masterSummonGlowPx:"px",masterSelectedCellPx:"px",masterUnitStateOutlinePx:"px",masterUnitStateShadowPx:"px",masterTeamBlur:"px",masterTeamGlowPx:"px",masterTeamSize:"%"};
+  let vals;
+  function load(){try{return {...DEFAULTS,...JSON.parse(localStorage.getItem("hv_master_glow_controls_7hba")||"{}")};}catch(_){return {...DEFAULTS};}}
+  function styleText(){return `body.hv-master-glow-debug{\n  ${Object.keys(css).map(k=>`${css[k]}:${vals[k]}${units[k]||""};`).join("\n  ")}\n}`;}
+  function apply(){
+    if(!vals)vals=load();
+    document.body?.classList.add("hv-master-glow-debug");
+    let st=document.getElementById("hvMasterGlowControlStyle7HBA");
+    if(!st){st=document.createElement("style");st.id="hvMasterGlowControlStyle7HBA";document.head.appendChild(st);}
+    st.textContent=styleText();
+    try{localStorage.setItem("hv_master_glow_controls_7hba",JSON.stringify(vals));}catch(_){ }
+    const out=document.getElementById("hvRarityCssOut");
+    if(out){
+      const base=out.textContent.split("\n/* 7HBA master */")[0];
+      out.textContent=base+"\n/* 7HBA master */\n"+Object.keys(css).map(k=>`${css[k]}: ${vals[k]}${units[k]||""};`).join("\n");
+    }
+  }
+  function syncInputs(){document.querySelectorAll('#hvMasterGlowBox7HBA input[data-master-k]').forEach(i=>{i.value=vals[i.dataset.masterK];const b=document.getElementById('hvm_'+i.dataset.masterK);if(b)b.textContent=`${vals[i.dataset.masterK]}${units[i.dataset.masterK]||""}`;});}
+  function setMany(obj){Object.assign(vals,obj);syncInputs();apply();}
+  function build(){
+    const wrap=document.getElementById("hvRrControls");
+    if(!wrap || document.getElementById("hvMasterGlowBox7HBA"))return false;
+    vals=load();
+    const holder=document.createElement("div");holder.id="hvMasterGlowBox7HBA";
+    holder.innerHTML='<section class="hv-rr-box"><h4>⚙ Control maestro 7HBA</h4><div style="font-size:12px;color:#d6c097;line-height:1.35">Este bloque pisa sombras, filtros, ::before/::after, marcadores de mover/atacar/invocar y estados del tablero. Si algo brilla, debería caer aquí.</div></section>';
+    GROUPS.forEach(([title,items])=>{const box=document.createElement("section");box.className="hv-rr-box";box.innerHTML=`<h4>${title}</h4>`+items.map(([k,l,min,max,step])=>`<label><span>${l}</span><input data-master-k="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${vals[k]}"><b id="hvm_${k}">${vals[k]}${units[k]||""}</b></label>`).join("");holder.appendChild(box);});
+    wrap.prepend(holder);
+    wrap.addEventListener("input",e=>{const k=e.target?.dataset?.masterK;if(!k)return;vals[k]=Number(e.target.value);const b=document.getElementById("hvm_"+k);if(b)b.textContent=`${vals[k]}${units[k]||""}`;apply();});
+    const actions=document.querySelector("#hvRarityRealPanel .hv-rr-actions");
+    if(actions){
+      const mk=(id,label,fn)=>{if(document.getElementById(id))return;const b=document.createElement("button");b.id=id;b.textContent=label;b.onclick=fn;actions.prepend(b);};
+      mk("hvMasterZeroGlow7HBA","Cero absoluto",()=>{document.body.classList.toggle("hv-master-zero-glow");setMany({masterCardBoxAlpha:0,masterCardBeforeOpacity:0,masterCardAfterOpacity:0,masterPortraitDropAlpha:0,masterFrameShadowAlpha:0,masterFrameExtraGlowAlpha:0,masterFrameBeforeOpacity:0,masterFrameAfterOpacity:0,masterOrnamentCssAlpha:0,masterOrnamentWhiteAlpha:0,masterOrnamentWhitePx:0,masterOrnamentNearPx:0,masterOrnamentMidPx:0,masterOrnamentFarPx:0,masterCellAfterGlowAlpha:0,masterCellAfterGlowPx:0,masterCellBeforeGlowAlpha:0,masterCellBeforeGlowPx:0,masterValidGlowAlpha:0,masterAttackGlowAlpha:0,masterSummonGlowAlpha:0,masterSelectedCellAlpha:0,masterUnitStateShadowAlpha:0,masterTeamGlowAlpha:0});});
+      mk("hvMasterNoMarkers7HBA","Ocultar mover/atacar",()=>setMany({masterCellAfterOpacity:0,masterValidOpacity:0,masterAttackOpacity:0,masterSummonOpacity:0}));
+      mk("hvMasterCleanPortrait7HBA","Retrato limpio real",()=>setMany({masterPortraitOpacity:1,masterPortraitBrightness:1,masterPortraitSaturation:1,masterPortraitContrast:1,masterPortraitBlur:0,masterPortraitDropAlpha:0,masterPortraitDropPx:0}));
+      mk("hvMasterReset7HBA","Reset master",()=>{vals={...DEFAULTS};document.body.classList.remove("hv-master-zero-glow");syncInputs();apply();});
+    }
+    apply();return true;
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{document.body.classList.add("hv-master-glow-debug");setTimeout(build,350);});else{document.body.classList.add("hv-master-glow-debug");setTimeout(build,350);} 
+  const t=setInterval(()=>{if(build())clearInterval(t);},400);
 })();
