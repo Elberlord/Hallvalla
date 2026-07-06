@@ -7162,13 +7162,8 @@ function renderHud(){
   });
   const banner=$("phaseBanner");
   if(banner)banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);
-  renderHudCollapseState();
   maybePlayNearDeathSound();
 }
-let expandedHudPlayer=0;
-function toggleHudPanel(player){expandedHudPlayer=expandedHudPlayer===player?0:player;renderHudCollapseState()}
-function renderHudCollapseState(){[1,2].forEach(player=>{const hud=$(player===1?"hudP1":"hudP2");const toggle=$(player===1?"hudToggleP1":"hudToggleP2");if(!hud||!toggle)return;const expanded=expandedHudPlayer===player;hud.classList.toggle("collapsed",!expanded);hud.classList.toggle("expanded",expanded);toggle.setAttribute("aria-expanded",String(expanded));toggle.title=expanded?`Ocultar datos de J${player}`:`Mostrar datos de J${player}`;});}
-function setupHudToggles(){const a=$("hudToggleP1"),b=$("hudToggleP2");if(a&&!a.dataset.bound){a.dataset.bound="1";a.addEventListener("click",ev=>{ev.stopPropagation();toggleHudPanel(1)});}if(b&&!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",ev=>{ev.stopPropagation();toggleHudPanel(2)});}if(!document.body.dataset.hudCollapseBound){document.body.dataset.hudCollapseBound="1";document.addEventListener("click",ev=>{if(ev.target.closest(".hud"))return;if(expandedHudPlayer){expandedHudPlayer=0;renderHudCollapseState();}});}}
 
 
 function getUnitStatusEntries(u){
@@ -9765,8 +9760,6 @@ document.addEventListener("keydown",async(e)=>{
 /* PATCH 8H - HUD Acciones fijo: controles retirados; ver styles.css. */
 
 // Inicialización segura: se ejecuta al final para evitar usar constantes antes de que existan.
-setupHudToggles();
-renderHudCollapseState();
 renderHomeProgress();
 renderSelectedLeaderBadge();
 renderNotificationBadge();
