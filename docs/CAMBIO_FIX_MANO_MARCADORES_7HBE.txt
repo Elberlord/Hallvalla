@@ -1,0 +1,19 @@
+7HBE - Corrección de mano forzada y marcador flotante
+
+Correcciones reales:
+- applyRarityDebugFirstHandCard ahora devuelve el deck sin modificar.
+- hvRarityDebugEnabled ahora siempre devuelve false.
+- makeDeck ya no pasa por el inyector de carta de rareza.
+- startAdventure ya no pasa el deck por el inyector de carta de rareza.
+- Se eliminan banderas antiguas de localStorage/sessionStorage para carta forzada.
+- La mano inicial del guardián vuelve a ser aleatoria, sin spearman forzado.
+- Se ocultan/remueven controles Rareza CTRL / CERO BRILLO / Forzar carta.
+- Se apaga el pseudo-elemento unit-card::before que estaba dejando el marcador aliado/enemigo flotando al lado.
+
+No tocado:
+- historia
+- reglas de combate
+- efectos de unidades
+- recompensas
+- progreso
+- cartas disponibles

@@ -2160,25 +2160,13 @@ function hvRarityDebugFindTemplateByKey(key){
   return null;
 }
 function hvRarityDebugEnabled(){
-  try{return localStorage.getItem("hv_rarity_debug_force_hand")!=="0";}catch(_){return true;}
+  return false;
 }
 function hvRarityDebugSelectedKey(){
-  try{return localStorage.getItem("hv_rarity_debug_card_key")||"miyamoto_musashi";}catch(_){return "miyamoto_musashi";}
+  return "";
 }
 function applyRarityDebugFirstHandCard(deck=[],owner=1,leaderType=getSelectedLeaderType()||"warrior"){
-  if(!hvRarityDebugEnabled())return deck;
-  const key=hvRarityDebugSelectedKey();
-  const arr=[...(deck||[])];
-  const idx=arr.findIndex(c=>c&&c.key===key);
-  if(idx>=0){
-    const [card]=arr.splice(idx,1);
-    return [card,...arr];
-  }
-  const tpl=hvRarityDebugFindTemplateByKey(key);
-  if(!tpl)return arr;
-  const made=makeCard(tpl,owner,leaderType);
-  const without=arr.filter(c=>c&&c.key!==key);
-  return [made,...without].slice(0,Math.max(arr.length,DECK_RULES?.deckSize||30));
+  return deck;
 }
 
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
@@ -2186,7 +2174,7 @@ function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}
   const savedTemplates=useSaved?getPlayableSavedDeckTemplates():[];
   const starterTemplates=getDefaultDeckTemplates();
   const templates=savedTemplates.length?savedTemplates:starterTemplates;
-  return applyRarityDebugFirstHandCard(shuffle(templates.map(card=>makeCard(card,owner,leaderType))),owner,leaderType);
+  return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
 
 function getStarterDeckAudit(){
@@ -2921,9 +2909,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
   const starterLocked=!canAccessDecks();
-  const playerBase=applyRarityDebugFirstHandCard(starterLocked
+  const playerBase=starterLocked
     ? shuffle(getStarterAdventureDeckTemplates(specialKey).map(card=>makeCard(card,1,leaderType)))
-    : makeDeck(1,leaderType),1,leaderType);
+    : makeDeck(1,leaderType);
   const playerDraw=drawCards(playerBase,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
@@ -8660,9 +8648,8 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   }
   const baseTemplates=getDefaultDeckTemplates();
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
-  // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
-  // Forzamos una unidad básica barata en la mano inicial y dejamos el resto aleatorio.
-  if(battle?.id==="guardian_mage"){
+  // 7HBE: mano inicial del guardián vuelve a ser aleatoria.
+  if(false && battle?.id==="guardian_mage"){
     const forcedUnit=baseTemplates.find(c=>c.key==="spearman")||baseTemplates.find(c=>c.type==="unit");
     let pool=forcedUnit?removeOneTemplateByKey(baseTemplates,forcedUnit.key):baseTemplates;
     const draw=drawCards(shuffle(pool).map(c=>makeCard(c,2,enemyLeaderType)),[],forcedUnit?3:4);
@@ -10341,4 +10328,50 @@ function getExactEffectGuideData(entity,effectText=""){
   }else{
     install();
   }
+})();
+
+
+/* ==========================================================
+   7HBE · Corrección real: sin carta forzada y sin controles.
+   ========================================================== */
+(function(){
+  function hv7hbeClearDebugStorage(){
+    try{
+      [
+        "hv_rarity_debug_force_hand",
+        "hv_rarity_debug_card_key",
+        "hvForcedFirstHandCard",
+        "hvForceFirstHandCard",
+        "hallvalla_forced_first_hand_card",
+        "hallvallaForcedFirstHandCard",
+        "rarityControlForcedCard",
+        "hv_rarity_forced_card",
+        "hvRarityForcedCard",
+        "forcedOpeningCard",
+        "forcedFirstCard"
+      ].forEach(k=>{
+        localStorage.removeItem(k);
+        sessionStorage.removeItem(k);
+      });
+    }catch(_){}
+  }
+  hv7hbeClearDebugStorage();
+
+  try{
+    window.hvRarityDebugEnabled = function(){ return false; };
+    window.hvRarityDebugSelectedKey = function(){ return ""; };
+    window.applyRarityDebugFirstHandCard = function(deck){ return deck; };
+  }catch(_){}
+
+  function removeDebugControls(){
+    document.querySelectorAll("#hvRarityRealToggle,#hvRarityRealPanel,#hvGlowPanic7HBB,#hvRarityControlPanel,#hvRarityCtrlPanel,#hvRarityCtrl,#hvRarityControl,.hv-rarity-control-panel,.rarity-control-panel,.rarity-ctrl-panel").forEach(el=>el.remove());
+    document.querySelectorAll("button,[role='button']").forEach(el=>{
+      const t=(el.textContent||"").trim().toLowerCase();
+      if(t.includes("rareza ctrl")||t.includes("cero brillo")||t.includes("matar brillos")||t.includes("forzar carta")||t.includes("cero absoluto")){
+        el.remove();
+      }
+    });
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",removeDebugControls);else removeDebugControls();
+  new MutationObserver(removeDebugControls).observe(document.documentElement,{childList:true,subtree:true});
 })();

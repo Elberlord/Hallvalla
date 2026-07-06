@@ -17206,3 +17206,64 @@ body.hv-master-zero-glow .grid .cell::after{
   opacity:0 !important;
   pointer-events:none !important;
 }
+
+
+/* ==========================================================
+   7HBE · Corregir marcador aliado/enemigo volando
+   Quita la base pseudo-elemento reconstruida en 7HBC.
+   El marcador no debe salir disparado a un lado de la unidad.
+   ========================================================== */
+
+.grid .cell > .unit-card,
+.cell > .unit-card,
+.unit-card{
+  overflow:hidden !important;
+}
+
+/* Apagar base reconstruida que estaba usando ::before y se iba fuera de la carta. */
+.grid .cell > .unit-card.p1::before,
+.grid .cell > .unit-card.ally::before,
+.grid .cell > .unit-card.p2::before,
+.grid .cell > .unit-card.enemy::before,
+.cell > .unit-card.p1::before,
+.cell > .unit-card.ally::before,
+.cell > .unit-card.p2::before,
+.cell > .unit-card.enemy::before,
+.unit-card.p1::before,
+.unit-card.ally::before,
+.unit-card.p2::before,
+.unit-card.enemy::before{
+  content:none !important;
+  display:none !important;
+  opacity:0 !important;
+  background:none !important;
+  filter:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+
+/* Sin paneles ni botones de laboratorio. */
+#hvRarityRealToggle,
+#hvRarityRealPanel,
+#hvRarityControlPanel,
+#hvRarityCtrlPanel,
+#hvRarityCtrl,
+#hvRarityControl,
+#hvGlowPanic7HBB,
+.hv-rarity-control-panel,
+.rarity-control-panel,
+.rarity-ctrl-panel{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+/* Mantener retrato y ornamento dentro de la carta. */
+.unit-card .unit-portrait,
+.unit-card .unit-portrait-stack,
+.unit-card .unit-card-bg-layer,
+.unit-card .unit-card-character-layer,
+.unit-card .unit-frame-rarity{
+  overflow:hidden !important;
+}
