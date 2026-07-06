@@ -1,0 +1,11 @@
+Hallvalla 7HBI - Restaurar carta, marco y ornamentos
+
+Cambio aplicado:
+- Solo se modificó styles.css.
+- Se agregó un bloque final 7HBI para restaurar el marco base de las unidades del tablero.
+- Se restauraron los ornamentos de rareza y su glow PNG horneado para rarezas mejorada/heroica/gloriosa/épica/mítica/legendaria/semidiós.
+- Las cartas básicas conservan marco base, pero sin ornamento de rareza.
+- No se tocaron reglas, mano, mazo, IA, fases, movimiento, ataque, selección ni lógica de partida.
+
+Motivo:
+- El reset visual anterior dejó el frame base oculto y después otras reglas finales mantenían las capas ornamentales apagadas.

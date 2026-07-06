@@ -17427,3 +17427,265 @@ body.hv-master-zero-glow .grid .cell::after{
   display:none !important;
   opacity:0 !important;
 }
+
+/* ==========================================================
+   7HBI · RESTORE CARTA + MARCO + ORNAMENTOS
+   Motivo:
+   El reset 7HBB/7HBC dejó el frame base oculto y, por cascada,
+   podía volver a apagar las capas ornamentales. Este bloque va al
+   final para recuperar SOLO la estructura visual de la carta.
+   No toca reglas, mano, mazo, IA, fases, movimiento ni ataque.
+   ========================================================== */
+
+.grid .cell > .unit-card,
+.cell > .unit-card,
+.unit-card{
+  --frame-opacity:1;
+  --frame-brightness:1;
+  --frame-saturation:1;
+  --frame-contrast:1;
+  --frame-shadow-px:0px;
+  --frame-shadow-alpha:0;
+  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
+  overflow:visible !important;
+  background:transparent !important;
+}
+
+.grid .cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-mythic,
+.unit-card.card-rarity-mythic{
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.png");
+}
+
+.grid .cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-legendary,
+.unit-card.card-rarity-legendary{
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.png");
+}
+
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader,
+.unit-card.card-rarity-demigod,
+.unit-card.leader{
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_demigod.png");
+}
+
+.grid .cell > .unit-card .unit-frame-skin,
+.cell > .unit-card .unit-frame-skin,
+.unit-card .unit-frame-skin{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:4 !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  background:var(--frame-image) center/100% 100% no-repeat !important;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card .unit-frame-skin::before,
+.grid .cell > .unit-card .unit-frame-skin::after,
+.cell > .unit-card .unit-frame-skin::before,
+.cell > .unit-card .unit-frame-skin::after,
+.unit-card .unit-frame-skin::before,
+.unit-card .unit-frame-skin::after{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card.card-rarity-improved,
+.cell > .unit-card.card-rarity-improved,
+.unit-card.card-rarity-improved{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-heroic,
+.cell > .unit-card.card-rarity-heroic,
+.unit-card.card-rarity-heroic{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-glorious,
+.cell > .unit-card.card-rarity-glorious,
+.unit-card.card-rarity-glorious{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-epic,
+.cell > .unit-card.card-rarity-epic,
+.unit-card.card-rarity-epic{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-mythic,
+.cell > .unit-card.card-rarity-mythic,
+.unit-card.card-rarity-mythic{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-legendary,
+.cell > .unit-card.card-rarity-legendary,
+.unit-card.card-rarity-legendary{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
+}
+.grid .cell > .unit-card.card-rarity-demigod,
+.grid .cell > .unit-card.leader,
+.cell > .unit-card.card-rarity-demigod,
+.cell > .unit-card.leader,
+.unit-card.card-rarity-demigod,
+.unit-card.leader{
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
+}
+
+.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
+.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
+.grid .cell > .unit-card.leader .unit-frame-rarity,
+.cell > .unit-card.card-rarity-improved .unit-frame-rarity,
+.cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
+.cell > .unit-card.card-rarity-epic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
+.cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
+.cell > .unit-card.leader .unit-frame-rarity,
+.unit-card.card-rarity-improved .unit-frame-rarity,
+.unit-card.card-rarity-heroic .unit-frame-rarity,
+.unit-card.card-rarity-glorious .unit-frame-rarity,
+.unit-card.card-rarity-epic .unit-frame-rarity,
+.unit-card.card-rarity-mythic .unit-frame-rarity,
+.unit-card.card-rarity-legendary .unit-frame-rarity,
+.unit-card.card-rarity-demigod .unit-frame-rarity,
+.unit-card.leader .unit-frame-rarity{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  background:var(--hv-ornament-image) center/100% 100% no-repeat !important;
+  filter:none !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity::after,
+.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity::after,
+.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity::after,
+.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity::after,
+.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity::after,
+.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity::after,
+.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity::after,
+.grid .cell > .unit-card.leader .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-improved .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-heroic .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-glorious .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-epic .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-mythic .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-legendary .unit-frame-rarity::after,
+.cell > .unit-card.card-rarity-demigod .unit-frame-rarity::after,
+.cell > .unit-card.leader .unit-frame-rarity::after,
+.unit-card.card-rarity-improved .unit-frame-rarity::after,
+.unit-card.card-rarity-heroic .unit-frame-rarity::after,
+.unit-card.card-rarity-glorious .unit-frame-rarity::after,
+.unit-card.card-rarity-epic .unit-frame-rarity::after,
+.unit-card.card-rarity-mythic .unit-frame-rarity::after,
+.unit-card.card-rarity-legendary .unit-frame-rarity::after,
+.unit-card.card-rarity-demigod .unit-frame-rarity::after,
+.unit-card.leader .unit-frame-rarity::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  opacity:.55 !important;
+  background:var(--hv-ornament-glow-image) center/100% 100% no-repeat !important;
+  filter:brightness(2) saturate(2) contrast(2) !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:hvRarityBakedPulse7HBC 30s ease-in-out infinite !important;
+}
+
+.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity::before,
+.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity::before,
+.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity::before,
+.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity::before,
+.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity::before,
+.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity::before,
+.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity::before,
+.grid .cell > .unit-card.leader .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-improved .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-heroic .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-glorious .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-epic .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-mythic .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-legendary .unit-frame-rarity::before,
+.cell > .unit-card.card-rarity-demigod .unit-frame-rarity::before,
+.cell > .unit-card.leader .unit-frame-rarity::before,
+.unit-card.card-rarity-improved .unit-frame-rarity::before,
+.unit-card.card-rarity-heroic .unit-frame-rarity::before,
+.unit-card.card-rarity-glorious .unit-frame-rarity::before,
+.unit-card.card-rarity-epic .unit-frame-rarity::before,
+.unit-card.card-rarity-mythic .unit-frame-rarity::before,
+.unit-card.card-rarity-legendary .unit-frame-rarity::before,
+.unit-card.card-rarity-demigod .unit-frame-rarity::before,
+.unit-card.leader .unit-frame-rarity::before{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.grid .cell > .unit-card.rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.rarity-basic .unit-frame-rarity,
+.unit-card.card-rarity-basic .unit-frame-rarity,
+.unit-card.rarity-basic .unit-frame-rarity{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  background:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+.grid .cell > .unit-card .unit-ornate-ui,
+.cell > .unit-card .unit-ornate-ui,
+.unit-card .unit-ornate-ui,
+.grid .cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-bubbles,
+.unit-card .unit-status-bubbles{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:8 !important;
+}
