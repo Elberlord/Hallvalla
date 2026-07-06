@@ -1,4 +1,4 @@
-Hallvalla 7HAJ - Auditoría DET de reglas reales
+Hallvalla  - Auditoría DET de reglas reales
 
 Objetivo:
 - Revisar la actualización grande de DET y detectar unidades que todavía caían en explicación genérica.
