@@ -122,24 +122,24 @@ const CARD_PORTRAITS={
   wallace:"assets/cards/basic/wallace.webp",
   berserker:"assets/cards/basic/berserker_north.webp",
   mulan:"assets/cards/basic/mulan.webp",
-  simo:"assets/cards/basic/archer.webp",
+  simo:"assets/cards/special/simo_hayha.webp",
   sunTzu:"assets/cards/basic/mage.webp",
   ulysses:"assets/cards/basic/rogue.webp",
   achilles:"assets/cards/special/achilles.webp",
-  saladin:"assets/cards/basic/cavalry_light.webp",
-  shaka:"assets/cards/basic/heavy_infantry_paladin.webp",
+  saladin:"assets/cards/special/saladin.webp",
+  shaka:"assets/cards/special/shaka_zulu.webp",
   yiSunSin:"assets/cards/basic/heavy_infantry_paladin.webp",
-  boudica:"assets/cards/basic/berserker_north.webp",
+  boudica:"assets/cards/special/boudica.webp",
   joan:"assets/cards/basic/paladin.webp",
   leonidas:"assets/cards/special/leonidas.webp",
-  nasu:"assets/cards/basic/archer.webp",
-  tomoe:"assets/cards/basic/cavalry_light.webp",
+  nasu:"assets/cards/special/nasu_no_yoichi.webp",
+  tomoe:"assets/cards/special/tomoe_gozen.webp",
   hannibal:"assets/cards/basic/rogue.webp",
-  subotai:"assets/cards/basic/cavalry_light.webp",
-  luBu:"assets/cards/basic/berserker_north.webp",
-  ragnar:"assets/cards/basic/berserker_north.webp",
+  subotai:"assets/cards/special/subotai.webp",
+  luBu:"assets/cards/special/lu_bu.webp",
+  ragnar:"assets/cards/special/ragnar_lodbrok.webp",
   cid:"assets/cards/basic/paladin.webp",
-  spartacus:"assets/cards/basic/berserker_north.webp",
+  spartacus:"assets/cards/special/spartacus.webp",
   hector:"assets/cards/special/hector_troy.webp",
   beowulf:"assets/cards/special/beowulf.webp",
   musashi:"assets/cards/special/miyamoto_musashi.webp",
@@ -940,7 +940,7 @@ const BEAST_CARD_TEMPLATES=[
 ];
 const BEAST_TRAP_CARD_TEMPLATES=[
   {key:"iron_jaw_trap",name:"Cepo de Hierro",type:"trap",icon:"🪤",portrait:CARD_PORTRAITS.ironJawTrap,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"iron_jaw",text:"Coloca un cepo en una celda libre. La primera unidad enemiga que entre recibe 1 daño directo y pierde 1 MOV en su próximo turno."},
-  {key:"covered_pit",name:"Foso Cubierto",type:"trap",icon:"🕳️",portrait:CARD_PORTRAITS.coveredPit,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"covered_pit",text:"Coloca un foso en una celda libre. La primera unidad enemiga básica o especial que entre caminando queda eliminada del juego. No afecta líderes ni unidades aéreas."},
+  {key:"covered_pit",name:"Foso Cubierto",type:"trap",icon:"🕳️",portrait:CARD_PORTRAITS.coveredPit,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"covered_pit",text:"Coloca un foso en una celda libre. La primera unidad enemiga terrestre que entre caminando queda eliminada del juego. No afecta unidades aéreas."},
   {key:"hunting_net",name:"Red de Caza",type:"trap",icon:"🕸️",portrait:CARD_PORTRAITS.huntingNet,rarity:"Básica",cost:1,trap:"beast_target",beastTrap:"hunting_net",text:"Elige una unidad enemiga en rango 3 del líder: pierde -2 AGI hasta el final del turno."},
   {key:"blood_bait",name:"Carnada Sangrienta",type:"trap",icon:"🥩",portrait:CARD_PORTRAITS.bloodBait,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"blood_bait",text:"Coloca carnada en una celda. La primera Bestia aliada que ataque a un enemigo adyacente a la carnada gana +1 AT durante ese ataque."},
   {key:"tracking_smoke",name:"Humo de Rastreo",type:"trap",icon:"💨",portrait:CARD_PORTRAITS.trackingSmoke,rarity:"Básica",cost:1,trap:"reveal_stealth",radius:2,text:"Revela unidades enemigas con Sigilo en un área de radio 2."},
@@ -2008,18 +2008,18 @@ function hydrateCardVisualData(card){
 }
 
 const LEGENDARY_TRAP_CARDS=[
-  {key:"false_alliance_legendary",name:"Falsa Alianza",type:"trap",icon:"🤝",cost:5,trap:"legendary_mark",legendaryTrap:"false_alliance",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Al jugarla, elige una unidad enemiga que no sea líder. Cuando la unidad marcada declare movimiento hacia una de tus unidades: Básica: cancela el movimiento, no puede atacar este turno y recibe -2 Guardia hasta el próximo turno. Especial/Legendaria: cancela el movimiento y cambia de bando de forma permanente."},
+  {key:"false_alliance_legendary",name:"Falsa Alianza",type:"trap",icon:"🤝",cost:5,trap:"legendary_mark",legendaryTrap:"false_alliance",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Al jugarla, elige una unidad enemiga que no sea líder. Cuando la unidad marcada declare movimiento hacia una de tus unidades, cancela el movimiento y cambia de bando de forma permanente. Afecta unidades básicas, especiales y legendarias."},
   {key:"primordial_serpent_poison",name:"Veneno de la Serpiente Primordial",type:"trap",icon:"🐍",cost:6,trap:"legendary_mark",legendaryTrap:"primordial_poison",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder. Al inicio del próximo turno de esa unidad aplica Veneno de la Serpiente Primordial: empieza en 2 y se multiplica por 3 turnos: 2, 4, 8. Si la unidad ya tenía Veneno, muere por regla general."},
   {key:"traitors_bed",name:"La Cama del Traidor",type:"trap",icon:"🕯️",cost:7,trap:"legendary_mark",legendaryTrap:"traitors_bed",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder y no haya atacado este turno. Al inicio del próximo turno enemigo: Básica: queda Dormida; no puede moverse, atacar ni contraatacar. Especial: Dormida y Vulnerable; el próximo daño ignora Guardia. Legendaria: Dormida y Expuesta; el próximo daño se duplica e ignora Guardia."},
   {key:"broken_blood_oath",name:"Juramento de Sangre Roto",type:"trap",icon:"🩸",cost:6,trap:"legendary_mark",legendaryTrap:"broken_oath",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada active un efecto o reciba un buff: Básica: cancela el efecto/buff y recibe -1 Ataque/-1 Guardia este turno. Especial: cancela, pierde buffs activos y recibe -2 Ataque/-2 Guardia hasta el próximo turno. Legendaria: cancela, pierde buffs, queda Silenciada hasta su próximo turno y recibe -3 Guardia."},
   {key:"true_name_exile",name:"Exilio del Nombre Verdadero",type:"trap",icon:"🕳️",cost:7,trap:"legendary_mark",legendaryTrap:"true_name_exile",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada derrote una de tus unidades: Básica: sale del campo hasta el final de su próximo turno y vuelve con 1 Vida menos. Especial: Exilio 1 turno; vuelve junto a su líder con la mitad de su Vida máxima. Legendaria: Exilio 2 turnos; no puede atacar, bloquear, activar efectos ni recibir buffs; vuelve con mitad de Vida y sin buffs."},
   {key:"ash_banquet",name:"Banquete de Ceniza",type:"trap",icon:"🍷",cost:6,trap:"legendary_mark",legendaryTrap:"ash_banquet",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga con Vida completa. Al inicio del próximo turno enemigo: Básica: pierde 3 Vida directa. Especial: pierde 40% de su Vida actual, ignora Guardia y no puede curarse este turno. Legendaria: pierde 50% de su Vida actual, ignora Guardia, no puede curarse ni recibir reducción de daño este turno."},
   {key:"thousand_banners_ambush",name:"Emboscada de los Mil Estandartes",type:"trap",icon:"🏴",cost:5,trap:"legendary_mark",legendaryTrap:"thousand_banners",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando termine su movimiento a 2 casillas o menos de tu líder: Básica: recibe 3 daño directo y es empujada 1 casilla si hay espacio. Especial: recibe 5 daño directo, es empujada 2 casillas y no puede atacar este turno. Legendaria: recibe 5 daño directo, es empujada 2 casillas y queda Aturdida; no puede atacar ni contraatacar."},
-  {key:"shadow_cut",name:"Corte de Sombras",type:"trap",icon:"🌑",cost:6,trap:"legendary_mark",legendaryTrap:"shadow_cut",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga herida. Cuando la unidad marcada reciba daño, si pierde más de la mitad de su Vida máxima por ese daño, muere. No usa puntuación fija porque depende de la Vida máxima de cada unidad."},
+  {key:"shadow_cut",name:"Corte de Sombras",type:"trap",icon:"🌑",cost:6,trap:"legendary_mark",legendaryTrap:"shadow_cut",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga herida. Cuando la unidad marcada reciba daño, si después de ese daño queda con menos de la mitad de su Vida máxima, muere. Si queda exactamente en la mitad, no muere."},
   {key:"false_crown",name:"La Corona Falsa",type:"trap",icon:"👑",cost:5,trap:"legendary_mark",legendaryTrap:"false_crown",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a atacar: Básica: cancela el ataque y recibe -2 Destreza este turno. Especial: cancela el ataque y, si tiene una unidad de su propio bando en rango, debe atacarla. Legendaria: cancela el ataque y, si tiene aliado propio en rango, debe atacarlo con +2 Ataque; si no, queda Aturdida y pierde -3 Destreza hasta el próximo turno."},
   {key:"fallen_kings_seal",name:"Sello de los Reyes Caídos",type:"trap",icon:"🜏",cost:7,trap:"legendary_mark",legendaryTrap:"fallen_kings_seal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a recibir curación, buff o reducción de daño, cancela esa ayuda y la unidad recibe -5 Guardia, -5 Destreza, -5 Agilidad, -5 Movimiento, -5 HP, -5 Rango y -5 en todos sus valores aplicables."},
-  {key:"camp_betrayal",name:"Traición del Campamento",type:"trap",icon:"⛺",cost:6,trap:"legendary_mark",legendaryTrap:"camp_betrayal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Al inicio de la Battle Phase enemiga, si tiene unidades aliadas adyacentes, esas unidades la traicionan y atacan a su líder enemigo."},
-  {key:"night_without_guard",name:"La Noche Sin Guardia",type:"trap",icon:"🌘",cost:7,trap:"legendary_mark",legendaryTrap:"night_without_guard",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando se abre, aturde a todas las unidades en el campo por 1 turno. Pagan todos en ese momento."}
+  {key:"camp_betrayal",name:"Traición del Campamento",type:"trap",icon:"⛺",cost:6,trap:"legendary_mark",legendaryTrap:"camp_betrayal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Al inicio de la Battle Phase enemiga, si tiene unidades aliadas adyacentes, esas unidades la traicionan y atacan a la unidad marcada."},
+  {key:"night_without_guard",name:"La Noche Sin Guardia",type:"trap",icon:"🌘",cost:7,trap:"legendary_mark",legendaryTrap:"night_without_guard",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando se abre, aturde a todas las unidades enemigas por 1 turno."}
 ];
 
 const IMPROVED_MAGIC_TRAP_PACK=[
@@ -2401,7 +2401,7 @@ function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunned
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
 function effectiveDex(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
-function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u))}
+function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0))}
 function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?0:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxTurnGuard(u){
@@ -2745,8 +2745,8 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
     }
     if(trap.trapKey==="night_without_guard"){
       triggered=true;
-      out=out.map(u=>({...u,noMoveTurnKey:currentOrNextTurnKeyForOwner(u.owner),noAttackTurnKey:currentOrNextTurnKeyForOwner(u.owner),noDefTurnKey:currentOrNextTurnKeyForOwner(u.owner),noCounterTurnKey:currentOrNextTurnKeyForOwner(u.owner)}));
-      logs.push(`${trap.cardName} se revela: todas las unidades en el campo quedan Aturdidas por 1 turno.`);
+      out=out.map(u=>u.owner!==trap.owner&&!u.leader?{...u,noMoveTurnKey:currentOrNextTurnKeyForOwner(u.owner),noAttackTurnKey:currentOrNextTurnKeyForOwner(u.owner),noDefTurnKey:currentOrNextTurnKeyForOwner(u.owner),noCounterTurnKey:currentOrNextTurnKeyForOwner(u.owner)}:u);
+      logs.push(`${trap.cardName} se revela: todas las unidades enemigas quedan Aturdidas por 1 turno.`);
     }
     if(triggered){
       if(trap.trapKey!=="night_without_guard")out=out.map(u=>u.id===target.id?n:u);
@@ -2768,13 +2768,8 @@ function resolveMovementLegendaryTraps(unit,dest,units){
     const movesTowardOwner=ownerUnits.some(a=>dist(dest,a)<dist(moving,a));
     if(trap.trapKey==="false_alliance"&&movesTowardOwner){
       cancel=true;
-      if(tier==="basic"){
-        out=out.map(u=>u.id===moving.id?{...u,noAttackTurnKey:publicState.turnKey,tempGuardBuff:(u.tempGuardBuff||0)-2}:u);
-        logs.push(`${trap.cardName} se revela: ${moving.name} pierde su avance y no podrá atacar este turno.`);
-      }else{
-        out=out.map(u=>u.id===moving.id?{...u,owner,convertedByTrap:true,originalOwner:moving.owner,moved:true}:u);
-        logs.push(`${trap.cardName} se revela: ${moving.name} cambia de bando permanentemente.`);
-      }
+      out=out.map(u=>u.id===moving.id?{...u,owner,convertedByTrap:true,originalOwner:moving.owner,moved:true}:u);
+      logs.push(`${trap.cardName} se revela: ${moving.name} cambia de bando permanentemente.`);
       traps=removeTrapById(traps,trap.id);
     }
     if(trap.trapKey==="thousand_banners"&&ownerLeader&&dist(dest,ownerLeader)<=2){
@@ -2840,29 +2835,30 @@ function resolveBuffHealLegendaryTraps(target,kind,units){
       n.tempMovDebuffSource=trap.cardName;
       n.tempAtkDebuff=(n.tempAtkDebuff||0)+5;
       n.tempRangeDebuff=(n.tempRangeDebuff||0)+5;
-      n=applyDirectHpDamage(n,5);
-      logs.push(`${trap.cardName} cancela ${kind} y aplica -5 Guardia, -5 DX, -5 AGI, -5 MOV, -5 HP, -5 RG y -5 AT a ${target.name}.`);
+      n.tempHpDebuff=(n.tempHpDebuff||0)+5;
+      n.hp=Math.min(n.hp||0,effectiveMaxHp(n));
+      logs.push(`${trap.cardName} cancela ${kind} y aplica -5 Guardia, -5 DX, -5 AGI, -5 MOV, -5 HP máximo, -5 RG y -5 AT a ${target.name}.`);
     }
     out=out.map(u=>u.id===target.id?n:u);
+    out=out.filter(u=>u.hp>0);
     traps=removeTrapById(traps,trap.id);
   }
   return {units:out,traps,logs,cancel};
 }
 function applyDamageTrapModifiers(defender,damage,units,mods={}){
-  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],nextDamage=damage,forceKill=false,ignoreGuard=false;
+  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
   for(const trap of [...traps]){
     if(trap.targetId!==defender.id)continue;
     const tier=getUnitTrapTier(defender);
     if(trap.trapKey==="shadow_cut"){
-      const projectedHpLoss=Math.max(0,nextDamage-Math.max(0,effectiveGuard(defender)+(Number(mods.defenderGuard)||0)));
-      if(projectedHpLoss>Math.floor(effectiveMaxHp(defender)/2))forceKill=true;
-      logs.push(`${trap.cardName} se revela: si ${defender.name} pierde más de la mitad de su Vida máxima por este daño, muere.`);
+      shadowCut=true;
+      logs.push(`${trap.cardName} se revela: si ${defender.name} queda con menos de la mitad de su Vida máxima después de este daño, muere.`);
       traps=removeTrapById(traps,trap.id);
     }
     if((defender.doubleNextDamageTurnKey&&defender.doubleNextDamageTurnKey===publicState.turnKey)){nextDamage*=2;logs.push(`${defender.name} recibe daño duplicado por Expuesta.`);}
     if((defender.ignoreGuardNextDamageTurnKey&&defender.ignoreGuardNextDamageTurnKey===publicState.turnKey)){ignoreGuard=true;logs.push(`${defender.name} no puede usar Guardia contra este daño.`);}
   }
-  return {damage:nextDamage,traps,logs,forceKill,ignoreGuard};
+  return {damage:nextDamage,traps,logs,forceKill,shadowCut,ignoreGuard};
 }
 function resolveAfterKillLegendaryTraps(attacker,defender,units){
   let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[];
@@ -2890,11 +2886,9 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
     const tier=getUnitTrapTier(target);
     const sources=tier==="basic"?adjacentOwn.slice(0,1):adjacentOwn;
     const dmgEach=tier==="legendary"?3:2;
-    const betrayedLeader=out.find(u=>u.owner===target.owner&&u.leader);
-    if(!betrayedLeader)continue;
-    let n=resolveBlessedArmorTransition(betrayedLeader,{...betrayedLeader,hp:(betrayedLeader.hp||0)-(sources.length*dmgEach),damagedThisTurn:true});
-    out=out.map(u=>u.id===betrayedLeader.id?n:u).filter(u=>u.hp>0);
-    logs.push(`${trap.cardName} se revela: ${sources.length} unidades cercanas traicionan a ${target.name} y atacan al líder enemigo, causando ${sources.length*dmgEach} daño directo.`);
+    let n=resolveBlessedArmorTransition(target,{...target,hp:(target.hp||0)-(sources.length*dmgEach),damagedThisTurn:true});
+    out=out.map(u=>u.id===target.id?n:u).filter(u=>u.hp>0);
+    logs.push(`${trap.cardName} se revela: ${sources.length} unidades cercanas traicionan a ${target.name} y le causan ${sources.length*dmgEach} daño directo.`);
     traps=removeTrapById(traps,trap.id);
   }
   return {units:out,traps,logs};
@@ -4327,7 +4321,7 @@ function resolveBeastCellTraps(moving,units,traps){
     n=applyDirectHpDamage(n,1);n.tempMovDebuff=Math.max(Number(n.tempMovDebuff||0),1);n.tempMovDebuffSource=trap.cardName;n.noMoveTurnKey=nextTurnKeyForOwner(n.owner);
     logs.push(`${trap.cardName} se activa: ${moving.name} recibe 1 daño directo y pierde 1 MOV.`);
   }else if(trap.trapKey==="covered_pit"){
-    const affectsPitTarget=!n.leader&&!n.aerial&&(isBasicUnit(n)||n.special);
+    const affectsPitTarget=!n.leader&&!n.aerial;
     if(!affectsPitTarget)return{units:out,traps:nextTraps,logs};
     n={...n,hp:0,removedByCoveredPit:true};
     logs.push(`${trap.cardName} se activa: ${moving.name} cae en el foso y queda eliminada del juego.`);
@@ -4698,6 +4692,12 @@ async function attackUnit(a,d){
     return u;
   });
   if(hit.hit&&hpLoss>0)units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});
+  if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
+    const shadowTarget=units.find(u=>u.id===d.id);
+    if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){
+      units=units.map(u=>u.id===d.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
+    }
+  }
   if(dmgTrap.forceKill)units=units.map(u=>u.id===d.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
   let defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,d.id,a.id):{units,triggered:false,killerFell:false,saved:false};
@@ -5424,6 +5424,12 @@ async function adventureEnemyTurn(){
       return u;
     });
     if(hit.hit&&hpLoss>0)units=applyAttackSideEffects(attacker,target,units,{hpLoss,allowGuardian:false});
+    if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
+      const shadowTarget=units.find(u=>u.id===target.id);
+      if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){
+        units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
+      }
+    }
     if(dmgTrap.forceKill)units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
     let defenderFell=!!units.find(u=>u.id===target.id&&u.hp<=0);
     const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,target.id,attacker.id):{units,triggered:false,killerFell:false,saved:false};
