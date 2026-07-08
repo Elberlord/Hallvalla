@@ -1,0 +1,58 @@
+Hallvalla - Música base original para duelo 7HCP
+============================================================
+
+ZIP base: Hallvalla_event_splashes_duo_7HCO.zip
+ZIP generado: Hallvalla_duel_music_7HCP.zip
+
+Archivo agregado:
+- assets/music/duel_hallvalla_war_chant.ogg
+
+Base creada:
+- Loop original de duelo para Hallvalla.
+- Duración aproximada: 54.86 segundos.
+- Compás base: 6/8.
+- Pulso de referencia: dotted quarter = 70.
+- Estilo: percusión marcial, golpes tipo stomp/bombo, drones oscuros, stabs de metales sintéticos y pads tipo coro sin letra.
+- No copia melodía, armonía ni arreglo reconocible del tema de Skyrim.
+
+Cambios en script.js:
+- Se reactivó playMusic(name).
+- Se reactivó syncBattleMusic().
+- El duelo reproduce:
+  assets/music/duel_hallvalla_war_chant.ogg
+- La música se detiene al salir del duelo o al terminar batalla.
+- Default nuevo:
+  music: true
+  musicVolume: 0.32
+- Se siguen respetando settings guardados en localStorage si existen.
+
+No se tocó:
+- Reglas.
+- Daño.
+- IA.
+- Sonidos SFX.
+- Splashes.
+- FX visuales.
+- Aros.
+- Rarezas.
+- Cartas, mapas o mazos.
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+- OGG generado: 708,210 bytes
+
+Checks:
+{
+  "node_check": true,
+  "music_file_exists": true,
+  "music_file_size_bytes": 708210,
+  "preview_file_exists": true,
+  "audioPath(\"music\",name)": true,
+  "audio.loop=true": true,
+  "playMusic(\"duel_hallvalla_war_chant\")": true,
+  "music:true": true,
+  "musicVolume:.32": true,
+  "css_braces": true
+}

@@ -871,7 +871,7 @@ function maybePlayBattleFx(prevPub,nextPub){
 const GAME_SETTINGS_KEY="hallvalla_game_settings";
 let gameSettings=loadGameSettings();
 let currentMusic=null,currentMusicName="",audioUnlocked=false;
-function loadGameSettings(){try{return{sound:true,music:false,sfx:true,musicVolume:0,sfxVolume:.58,...(JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{}),music:false,musicVolume:0};}catch(e){return{sound:true,music:false,sfx:true,musicVolume:0,sfxVolume:.58};}}
+function loadGameSettings(){try{return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.58,...(JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{})};}catch(e){return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.58};}}
 function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stringify(gameSettings));}catch(e){}}
 
 
@@ -959,22 +959,37 @@ function tryPlaySound(name,volume=1){
   try{const audio=new Audio(audioPath("sfx",name));audio.volume=Math.max(0,Math.min(1,(gameSettings.sfxVolume??.52)*volume));audio.play().catch(()=>{});}catch(e){}
 }
 function maybePlayNearDeathSound(){
-  // Sin cantos de fondo: solo SFX cortos durante acciones del duelo.
   return;
 }
 function playMusic(name){
-  // Música/fondos desactivados para esta versión: el duelo solo usa efectos de sonido.
-  stopMusic(true);
+  if(!gameSettings.sound||!gameSettings.music||!name){stopMusic(false);return;}
+  if(currentMusic&&currentMusicName===name){
+    try{currentMusic.volume=Math.max(0,Math.min(1,gameSettings.musicVolume??.32));}catch(e){}
+    return;
+  }
+  stopMusic(false);
+  try{
+    const audio=new Audio(audioPath("music",name));
+    audio.loop=true;
+    audio.volume=Math.max(0,Math.min(1,gameSettings.musicVolume??.32));
+    audio.play().catch(()=>{});
+    currentMusic=audio;
+    currentMusicName=name;
+  }catch(e){}
 }
 function stopMusic(clearName=true){
   if(currentMusic){try{currentMusic.pause();currentMusic.currentTime=0;}catch(e){}currentMusic=null;}
   if(clearName)currentMusicName="";
 }
 function refreshAudioState(){
-  if(!gameSettings.sound&&currentMusic)stopMusic(true);
+  if(!gameSettings.sound||!gameSettings.music)stopMusic(true);
+  else syncBattleMusic();
 }
 function syncBattleMusic(){
-  stopMusic(true);
+  const shell=$("gameShell");
+  const inBattle=shell&&!shell.classList.contains("hidden")&&publicState&&!isBattleEnded();
+  if(inBattle)playMusic("duel_hallvalla_war_chant");
+  else stopMusic(true);
 }
 function getSummonSoundForUnit(unit){
   const cls=getFxRarityClass(unit);
