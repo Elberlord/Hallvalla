@@ -14928,2274 +14928,32 @@ El CSS original se conserva para no romper visuales. El bloque final
 .guide-effect-btn img{filter:drop-shadow(0 0 8px rgba(255,209,102,.20));}
 
 
-/* =====================================================================
-   7HAA — FIX DEFINITIVO DE GLOW DE RAREZA EN CARTAS DEL TABLERO
+
+/* ==========================================================
+   7HCL · CAMPO VISUAL CONSOLIDADO
+   Sustituye parches acumulados 7HAA-7HBI y 7HCB.
    Objetivo:
-   - Que SOLO brille el marco real de la carta
-   - Que NUNCA brille el retrato / imagen interna
-   - Que el color del neón siga la rareza real
-   - Que los estados attackable/valid NO repinten la carta en rojo/cian
-   ===================================================================== */
-
-@keyframes hvFrameRarityPulse7haa{
-  0%,100%{ opacity:.90; }
-  50%{ opacity:1; }
-}
-
-/* 1) Apagar por completo las capas viejas que estaban bañando toda la carta */
-.cell > .unit-card::before,
-.cell > .unit-card::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  animation:none !important;
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  filter:none !important;
-  -webkit-mask:none !important;
-  mask:none !important;
-}
-
-/* 2) El contenedor del tablero no debe emitir glow ni teñir el interior */
-.cell > .unit-card,
-.cell > .unit-card.card-rarity-basic,
-.cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.leader{
-  background:transparent !important;
-  box-shadow:0 6px 12px rgba(0,0,0,.42) !important;
-  overflow:visible !important;
-  isolation:isolate !important;
-}
-
-/* 3) Blindaje: retrato e imagen interna sin glow ni filtro luminoso */
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card .unit-portrait img,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer img,
-.cell > .unit-card .unit-card-character-layer img{
-  filter:none !important;
-  box-shadow:none !important;
-  mix-blend-mode:normal !important;
-}
-
-/* 4) Variables de color finales del glow por rareza.
-      Básica = sin brillo.
-      Improved = celeste suave.
-      Heroic = verde esmeralda.
-      Glorious = verde/dorado suave.
-      Epic = plateado.
-      Mythic = azul.
-      Legendary = púrpura.
-      Demigod = dorado.
-*/
-.cell > .unit-card{
-  --hv-frame-glow-1: transparent;
-  --hv-frame-glow-2: transparent;
-  --hv-frame-glow-3: transparent;
-}
-.cell > .unit-card.card-rarity-basic{
-  --hv-frame-glow-1: transparent;
-  --hv-frame-glow-2: transparent;
-  --hv-frame-glow-3: transparent;
-}
-.cell > .unit-card.card-rarity-improved{
-  --hv-frame-glow-1: rgba(120,225,255,.92);
-  --hv-frame-glow-2: rgba(120,225,255,.58);
-  --hv-frame-glow-3: rgba(120,225,255,.32);
-}
-.cell > .unit-card.card-rarity-heroic{
-  --hv-frame-glow-1: rgba(94,255,170,.95);
-  --hv-frame-glow-2: rgba(94,255,170,.60);
-  --hv-frame-glow-3: rgba(94,255,170,.34);
-}
-.cell > .unit-card.card-rarity-glorious{
-  --hv-frame-glow-1: rgba(131,255,164,.95);
-  --hv-frame-glow-2: rgba(131,255,164,.60);
-  --hv-frame-glow-3: rgba(131,255,164,.34);
-}
-.cell > .unit-card.card-rarity-epic{
-  --hv-frame-glow-1: rgba(236,242,255,.98);
-  --hv-frame-glow-2: rgba(199,212,235,.64);
-  --hv-frame-glow-3: rgba(199,212,235,.36);
-}
-.cell > .unit-card.card-rarity-mythic{
-  --hv-frame-glow-1: rgba(110,212,255,.96);
-  --hv-frame-glow-2: rgba(110,212,255,.62);
-  --hv-frame-glow-3: rgba(110,212,255,.36);
-}
-.cell > .unit-card.card-rarity-legendary{
-  --hv-frame-glow-1: rgba(205,122,255,.96);
-  --hv-frame-glow-2: rgba(205,122,255,.62);
-  --hv-frame-glow-3: rgba(205,122,255,.36);
-}
-.cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.leader:not(.card-rarity-basic):not(.card-rarity-improved):not(.card-rarity-heroic):not(.card-rarity-glorious):not(.card-rarity-epic):not(.card-rarity-mythic):not(.card-rarity-legendary):not(.card-rarity-demigod){
-  --hv-frame-glow-1: rgba(255,238,148,.98);
-  --hv-frame-glow-2: rgba(255,238,148,.66);
-  --hv-frame-glow-3: rgba(255,238,148,.38);
-}
-
-/* 5) Glow SOLO sobre la imagen del marco, nunca sobre la carta completa */
-.cell > .unit-card .unit-frame-skin{
-  z-index:4 !important;
-  background:var(--frame-image) center/100% 100% no-repeat !important;
-  filter:
-    drop-shadow(0 4px 9px rgba(0,0,0,.56))
-    drop-shadow(0 0 4px var(--hv-frame-glow-1))
-    drop-shadow(0 0 9px var(--hv-frame-glow-2))
-    drop-shadow(0 0 15px var(--hv-frame-glow-3))
-    var(--frame-filter) !important;
-  animation:hvFrameRarityPulse7haa 2.4s ease-in-out infinite !important;
-}
-
-/* Básicas: sin pulso visible */
-.cell > .unit-card.card-rarity-basic .unit-frame-skin{
-  filter:drop-shadow(0 4px 9px rgba(0,0,0,.56)) var(--frame-filter) !important;
-  animation:none !important;
-}
-
-/* 6) Los estados de targeting NO deben cambiar el color de rareza del marco.
-      El tablero ya resalta las celdas; no repintamos la carta. */
-.grid .cell.attackable:has(.unit-card) .unit-frame-skin,
-.grid .cell.valid:has(.unit-card) .unit-frame-skin,
-.grid .cell.selected:has(.unit-card) .unit-frame-skin{
-  filter:
-    drop-shadow(0 4px 9px rgba(0,0,0,.56))
-    drop-shadow(0 0 4px var(--hv-frame-glow-1))
-    drop-shadow(0 0 9px var(--hv-frame-glow-2))
-    drop-shadow(0 0 15px var(--hv-frame-glow-3))
-    var(--frame-filter) !important;
-}
-
-/* 7) HUD de stats y sellos por encima del marco sin ser tapados */
-.cell > .unit-card .unit-ornate-ui{ z-index:8 !important; }
-.cell > .unit-card .unit-status-bubbles,
-.cell > .unit-card .unit-status-seals,
-.cell > .unit-card .status-seal-rail,
-.cell > .unit-card .unit-status-seal-extra{ z-index:10 !important; }
-
-
-/* =====================================================================
-   7HAB — Base táctica de equipo debajo de unidades y líderes
-   Objetivo:
-   - identificar aliado/enemigo sin pintar encima del arte
-   - conservar rareza en el marco
-   - usar una peana luminosa debajo de cada ficha
-   ===================================================================== */
-@keyframes hvTeamBasePulse7hab{
-  0%,100%{ transform:translateX(-50%) scale(1); opacity:.88; }
-  50%{ transform:translateX(-50%) scale(1.04); opacity:1; }
-}
-
-/* Unidades normales */
-.grid .cell > .unit-card.ally::before,
-.grid .cell > .unit-card.enemy::before{
-  content:"" !important;
-  display:block !important;
-  position:absolute !important;
-  left:50% !important;
-  bottom:-10px !important;
-  width:72% !important;
-  height:16px !important;
-  transform:translateX(-50%) !important;
-  border-radius:999px !important;
-  pointer-events:none !important;
-  z-index:0 !important;
-  opacity:.96 !important;
-  animation:hvTeamBasePulse7hab 2.4s ease-in-out infinite !important;
-}
-.grid .cell > .unit-card.ally::before{
-  background:radial-gradient(ellipse at center,
-    rgba(116,242,255,.62) 0%,
-    rgba(77,198,255,.46) 28%,
-    rgba(34,112,255,.24) 56%,
-    rgba(0,0,0,0) 76%) !important;
-  box-shadow:0 0 10px rgba(96,224,255,.44),0 0 18px rgba(66,154,255,.24) !important;
-}
-.grid .cell > .unit-card.enemy::before{
-  background:radial-gradient(ellipse at center,
-    rgba(255,118,171,.66) 0%,
-    rgba(255,92,124,.50) 28%,
-    rgba(182,34,79,.26) 56%,
-    rgba(0,0,0,0) 76%) !important;
-  box-shadow:0 0 10px rgba(255,110,166,.44),0 0 18px rgba(220,54,107,.24) !important;
-}
-
-/* Líderes */
-.leader-base.ally .leader-base-token::before,
-.leader-base.enemy .leader-base-token::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:10%;
-  width:88%;
-  height:16%;
-  transform:translateX(-50%);
-  border-radius:999px;
-  pointer-events:none;
-  z-index:0;
-  opacity:.96;
-  animation:hvTeamBasePulse7hab 2.4s ease-in-out infinite;
-}
-.leader-base.ally .leader-base-token::before{
-  background:radial-gradient(ellipse at center,
-    rgba(116,242,255,.62) 0%,
-    rgba(77,198,255,.46) 28%,
-    rgba(34,112,255,.24) 56%,
-    rgba(0,0,0,0) 76%);
-  box-shadow:0 0 12px rgba(96,224,255,.44),0 0 20px rgba(66,154,255,.24);
-}
-.leader-base.enemy .leader-base-token::before{
-  background:radial-gradient(ellipse at center,
-    rgba(255,118,171,.66) 0%,
-    rgba(255,92,124,.50) 28%,
-    rgba(182,34,79,.26) 56%,
-    rgba(0,0,0,0) 76%);
-  box-shadow:0 0 12px rgba(255,110,166,.44),0 0 20px rgba(220,54,107,.24);
-}
-
-/* Mantener el contenido principal por encima de la base */
-.grid .cell > .unit-card .unit-frame-skin,
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-status-bubbles,
-.grid .cell > .unit-card .unit-ornate-ui,
-.grid .cell > .unit-card .unit-status-seals,
-.grid .cell > .unit-card .status-seal-rail,
-.grid .cell > .unit-card .unit-status-seal-extra{
-  position:relative;
-}
-
-/* Tamaños móviles */
-@media (max-width:980px){
-  .grid .cell > .unit-card.ally::before,
-  .grid .cell > .unit-card.enemy::before{
-    bottom:-8px !important;
-    height:13px !important;
-    width:74% !important;
-  }
-  .leader-base.ally .leader-base-token::before,
-  .leader-base.enemy .leader-base-token::before{
-    width:86%;
-    height:14%;
-    bottom:11%;
-  }
-}
-
-
-/* =====================================================================
-   7HAC — FIX VISIBILIDAD STATS EN CARTAS DEL CAMPO
-   Causa: el parche de base táctica dejó capas internas como position:relative,
-   y eso podía sacar los orbes/stats de su sistema absoluto.
-   Solución: restaurar jerarquía absoluta:
-   base debajo -> retrato -> marco -> HUD/stats/sellos.
-   ===================================================================== */
-.cell > .unit-card{
-  position:relative !important;
-  overflow:visible !important;
-}
-
-.cell > .unit-card .unit-frame-skin{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:4 !important;
-  pointer-events:none !important;
-}
-
-.cell > .unit-card .unit-portrait{
-  position:absolute !important;
-  left:15.8% !important;
-  right:15.8% !important;
-  top:14.2% !important;
-  bottom:26.8% !important;
-  z-index:2 !important;
-  pointer-events:none !important;
-}
-
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait img{
-  position:relative !important;
-  z-index:2 !important;
-}
-
-.cell > .unit-card .unit-ornate-ui{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:9 !important;
-  pointer-events:none !important;
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-
-.cell > .unit-card .unit-stat-orb{
-  position:absolute !important;
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  z-index:11 !important;
-  pointer-events:none !important;
-}
-
-.cell > .unit-card .stat-orb-cost,
-.cell > .unit-card .stat-orb-hp{
-  top:7.2% !important;
-  width:18.8% !important;
-  height:12.8% !important;
-}
-.cell > .unit-card .stat-orb-cost{left:7.6% !important;}
-.cell > .unit-card .stat-orb-hp{right:7.6% !important;}
-.cell > .unit-card .stat-orb-atk,
-.cell > .unit-card .stat-orb-aux{
-  bottom:6.2% !important;
-  height:14.5% !important;
-}
-.cell > .unit-card .stat-orb-atk{left:8.2% !important;width:22% !important;}
-.cell > .unit-card .stat-orb-aux{right:7.2% !important;width:26.5% !important;}
-
-.cell > .unit-card .unit-status-bubbles,
-.cell > .unit-card .unit-status-seals,
-.cell > .unit-card .status-seal-rail,
-.cell > .unit-card .unit-status-seal-extra{
-  position:absolute !important;
-  z-index:12 !important;
-  display:flex !important;
-  visibility:visible !important;
-}
-
-/* La base táctica siempre queda detrás de todo */
-.grid .cell > .unit-card.ally::before,
-.grid .cell > .unit-card.enemy::before{
-  z-index:0 !important;
-}
-
-@media(max-width:980px){
-  .cell > .unit-card .unit-portrait{
-    left:15.5% !important;
-    right:15.5% !important;
-    top:13.8% !important;
-    bottom:26.4% !important;
-  }
-  .cell > .unit-card .stat-orb-cost,
-  .cell > .unit-card .stat-orb-hp{
-    top:7.5% !important;
-    width:19.2% !important;
-    height:13% !important;
-  }
-  .cell > .unit-card .stat-orb-atk,
-  .cell > .unit-card .stat-orb-aux{
-    bottom:6.6% !important;
-    height:14.6% !important;
-  }
-  .cell > .unit-card .stat-orb-atk{width:22.8% !important;}
-  .cell > .unit-card .stat-orb-aux{width:28.5% !important;}
-}
-
-/* === 7HAD: fix definitivo - glow SOLO en marco, nunca en retrato === */
-/* Causa del "bombillo": la capa ::after con máscara del marco seguía bañando el interior en algunos navegadores.
-   Se elimina esa capa en tablero y el brillo vuelve a vivir únicamente en el PNG del marco. */
-
-.grid .cell > .unit-card::after,
-.grid .cell > .unit-card.card-rarity-basic::after,
-.grid .cell > .unit-card.card-rarity-improved::after,
-.grid .cell > .unit-card.card-rarity-heroic::after,
-.grid .cell > .unit-card.card-rarity-glorious::after,
-.grid .cell > .unit-card.card-rarity-epic::after,
-.grid .cell > .unit-card.card-rarity-mythic::after,
-.grid .cell > .unit-card.card-rarity-legendary::after,
-.grid .cell > .unit-card.card-rarity-demigod::after,
-.grid .cell > .unit-card.leader::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  background:none !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  -webkit-mask:none !important;
-  mask:none !important;
-}
-
-/* Interior completamente limpio */
-.grid .cell > .unit-card,
-.grid .cell > .unit-card.card-rarity-basic,
-.grid .cell > .unit-card.card-rarity-improved,
-.grid .cell > .unit-card.card-rarity-heroic,
-.grid .cell > .unit-card.card-rarity-glorious,
-.grid .cell > .unit-card.card-rarity-epic,
-.grid .cell > .unit-card.card-rarity-mythic,
-.grid .cell > .unit-card.card-rarity-legendary,
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader{
-  background:rgba(0,0,0,.18) !important;
-  box-shadow:0 7px 13px rgba(0,0,0,.44) !important;
-}
-
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-card-bg-layer,
-.grid .cell > .unit-card .unit-card-character-layer,
-.grid .cell > .unit-card .unit-portrait img{
-  filter:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-  mix-blend-mode:normal !important;
-}
-.grid .cell > .unit-card .unit-portrait{background:#050505 !important;}
-
-/* El brillo se aplica SOLO al marco real */
-@keyframes hvRarityFramePulse7had{0%,100%{opacity:.94}50%{opacity:1}}
-
-.grid .cell > .unit-card .unit-frame-skin{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:4 !important;
-  pointer-events:none !important;
-  box-shadow:none !important;
-  background:var(--frame-image) center/100% 100% no-repeat !important;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
-  animation:none !important;
-}
-
-/* Básicas: sin glow */
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-skin{
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
-  animation:none !important;
-}
-
-/* Colores definitivos por rareza, alineados al color visible del marco */
-.grid .cell > .unit-card.card-rarity-improved{--hv7had-g1:rgba(116,211,255,.96);--hv7had-g2:rgba(116,211,255,.72);--hv7had-g3:rgba(116,211,255,.46);} /* azul */
-.grid .cell > .unit-card.card-rarity-heroic{--hv7had-g1:rgba(82,255,166,.98);--hv7had-g2:rgba(82,255,166,.74);--hv7had-g3:rgba(82,255,166,.48);} /* verde */
-.grid .cell > .unit-card.card-rarity-glorious{--hv7had-g1:rgba(255,214,95,.98);--hv7had-g2:rgba(255,214,95,.74);--hv7had-g3:rgba(255,214,95,.48);} /* dorado */
-.grid .cell > .unit-card.card-rarity-epic{--hv7had-g1:rgba(190,122,255,.98);--hv7had-g2:rgba(190,122,255,.74);--hv7had-g3:rgba(190,122,255,.48);} /* violeta */
-.grid .cell > .unit-card.card-rarity-mythic{--hv7had-g1:rgba(255,100,201,.98);--hv7had-g2:rgba(255,100,201,.74);--hv7had-g3:rgba(255,100,201,.48);} /* rosa */
-.grid .cell > .unit-card.card-rarity-legendary{--hv7had-g1:rgba(255,157,69,.99);--hv7had-g2:rgba(255,157,69,.76);--hv7had-g3:rgba(255,157,69,.50);} /* naranja */
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader{--hv7had-g1:rgba(255,244,157,.99);--hv7had-g2:rgba(255,244,157,.78);--hv7had-g3:rgba(255,244,157,.52);} /* crema / líder */
-
-.grid .cell > .unit-card.card-rarity-improved .unit-frame-skin,
-.grid .cell > .unit-card.card-rarity-heroic .unit-frame-skin,
-.grid .cell > .unit-card.card-rarity-glorious .unit-frame-skin,
-.grid .cell > .unit-card.card-rarity-epic .unit-frame-skin,
-.grid .cell > .unit-card.card-rarity-mythic .unit-frame-skin,
-.grid .cell > .unit-card.card-rarity-legendary .unit-frame-skin,
-.grid .cell > .unit-card.card-rarity-demigod .unit-frame-skin,
-.grid .cell > .unit-card.leader .unit-frame-skin{
-  filter:
-    drop-shadow(0 4px 10px rgba(0,0,0,.56))
-    drop-shadow(0 0 4px var(--hv7had-g1))
-    drop-shadow(0 0 10px var(--hv7had-g2))
-    drop-shadow(0 0 18px var(--hv7had-g3)) !important;
-  animation:hvRarityFramePulse7had 2.6s ease-in-out infinite !important;
-}
-
-/* Stats y sellos siempre arriba */
-.grid .cell > .unit-card .unit-ornate-ui{z-index:8 !important;}
-.grid .cell > .unit-card .unit-status-bubbles,
-.grid .cell > .unit-card .unit-status-seals,
-.grid .cell > .unit-card .status-seal-rail,
-.grid .cell > .unit-card .unit-status-seal-extra{z-index:9 !important;}
-
-
-/* === 7HAE · rareza neon solo en el ornamental del marco === */
-@keyframes hvRarityOrnamentPulse7hae{
-  0%,100%{opacity:.92;filter:drop-shadow(0 0 2px var(--hv-ornament-core)) drop-shadow(0 0 6px var(--hv-ornament-glow1)) drop-shadow(0 0 12px var(--hv-ornament-glow2));}
-  50%{opacity:1;filter:drop-shadow(0 0 3px var(--hv-ornament-core)) drop-shadow(0 0 9px var(--hv-ornament-glow1)) drop-shadow(0 0 18px var(--hv-ornament-glow2)) drop-shadow(0 0 26px var(--hv-ornament-glow3));}
-}
-
-.grid .cell > .unit-card{
-  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
-  --hv-ornament-color:transparent;
-  --hv-ornament-core:transparent;
-  --hv-ornament-glow1:transparent;
-  --hv-ornament-glow2:transparent;
-  --hv-ornament-glow3:transparent;
-  box-shadow:0 5px 8px rgba(0,0,0,.38) !important;
-}
-
-.grid .cell > .unit-card::before,
-.grid .cell > .unit-card::after,
-.grid .cell > .unit-card .unit-frame-skin::before,
-.grid .cell > .unit-card .unit-frame-skin::after{
-  content:none !important;
-  display:none !important;
-  background:none !important;
-  box-shadow:none !important;
-}
-
-.grid .cell > .unit-card .unit-frame-skin{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:4 !important;
-  pointer-events:none !important;
-  background:var(--frame-image) center/100% 100% no-repeat !important;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.56)) !important;
-  animation:none !important;
-}
-
-.grid .cell > .unit-card .unit-frame-rarity{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:5 !important;
-  pointer-events:none !important;
-  background:var(--hv-ornament-color) !important;
-  -webkit-mask-image:url("assets/ui/gothic_frame_unit_neon_mask.png") !important;
-  -webkit-mask-position:center !important;
-  -webkit-mask-size:100% 100% !important;
-  -webkit-mask-repeat:no-repeat !important;
-  mask-image:url("assets/ui/gothic_frame_unit_neon_mask.png") !important;
-  mask-position:center !important;
-  mask-size:100% 100% !important;
-  mask-repeat:no-repeat !important;
-  opacity:0 !important;
-  filter:none !important;
-  animation:none !important;
-  mix-blend-mode:screen !important;
-}
-
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity{display:none !important;}
-
-.grid .cell > .unit-card.card-rarity-improved{--hv-ornament-color:rgb(109,212,255);--hv-ornament-core:rgba(222,246,255,.95);--hv-ornament-glow1:rgba(109,212,255,.95);--hv-ornament-glow2:rgba(109,212,255,.62);--hv-ornament-glow3:rgba(109,212,255,.34);}
-.grid .cell > .unit-card.card-rarity-heroic{--hv-ornament-color:rgb(84,255,158);--hv-ornament-core:rgba(232,255,240,.96);--hv-ornament-glow1:rgba(84,255,158,.96);--hv-ornament-glow2:rgba(84,255,158,.66);--hv-ornament-glow3:rgba(84,255,158,.38);}
-.grid .cell > .unit-card.card-rarity-glorious{--hv-ornament-color:rgb(255,214,95);--hv-ornament-core:rgba(255,248,220,.96);--hv-ornament-glow1:rgba(255,214,95,.96);--hv-ornament-glow2:rgba(255,214,95,.68);--hv-ornament-glow3:rgba(255,214,95,.40);}
-.grid .cell > .unit-card.card-rarity-epic{--hv-ornament-color:rgb(190,122,255);--hv-ornament-core:rgba(246,232,255,.96);--hv-ornament-glow1:rgba(190,122,255,.96);--hv-ornament-glow2:rgba(190,122,255,.68);--hv-ornament-glow3:rgba(190,122,255,.40);}
-.grid .cell > .unit-card.card-rarity-mythic{--hv-ornament-color:rgb(255,100,201);--hv-ornament-core:rgba(255,232,248,.96);--hv-ornament-glow1:rgba(255,100,201,.96);--hv-ornament-glow2:rgba(255,100,201,.68);--hv-ornament-glow3:rgba(255,100,201,.40);}
-.grid .cell > .unit-card.card-rarity-legendary{--hv-ornament-color:rgb(255,157,69);--hv-ornament-core:rgba(255,239,224,.98);--hv-ornament-glow1:rgba(255,157,69,.98);--hv-ornament-glow2:rgba(255,157,69,.70);--hv-ornament-glow3:rgba(255,157,69,.42);}
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader{--hv-ornament-color:rgb(255,244,157);--hv-ornament-core:rgba(255,252,231,.98);--hv-ornament-glow1:rgba(255,244,157,.98);--hv-ornament-glow2:rgba(255,244,157,.72);--hv-ornament-glow3:rgba(255,244,157,.44);}
-
-.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
-.grid .cell > .unit-card.leader .unit-frame-rarity{
-  opacity:1 !important;
-  animation:hvRarityOrnamentPulse7hae 2.65s ease-in-out infinite !important;
-}
-
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-portrait img{
-  filter:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-  mix-blend-mode:normal !important;
-}
-
-.grid .cell > .unit-card .unit-ornate-ui{z-index:8 !important;}
-.grid .cell > .unit-card .unit-status-bubbles,
-.grid .cell > .unit-card .unit-status-seals,
-.grid .cell > .unit-card .status-seal-rail,
-.grid .cell > .unit-card .unit-status-seal-extra{z-index:9 !important;}
-
-/* ===== 7HAF: brillo neon SOLO en el ornamental de rareza ===== */
-.grid .cell > .unit-card,
-.cell > .unit-card{
-  box-shadow:0 5px 8px rgba(0,0,0,.38) !important;
-}
-
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-card-bg-layer,
-.grid .cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer{
-  filter:none !important;
-  box-shadow:none !important;
-  mix-blend-mode:normal !important;
-  opacity:1 !important;
-}
-
-.grid .cell > .unit-card .unit-frame-rarity,
-.cell > .unit-card .unit-frame-rarity{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:5 !important;
-  pointer-events:none !important;
-  background-color:transparent !important;
-  background-position:center !important;
-  background-size:100% 100% !important;
-  background-repeat:no-repeat !important;
-  -webkit-mask-image:none !important;
-  mask-image:none !important;
-  mix-blend-mode:normal !important;
-  opacity:0 !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-basic .unit-frame-rarity{
-  display:none !important;
-}
-
-.grid .cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-improved{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");--hv-ornament-glow-a:rgba(109,212,255,.92);--hv-ornament-glow-b:rgba(109,212,255,.55);--hv-ornament-glow-c:rgba(109,212,255,.28);}
-.grid .cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-heroic{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");--hv-ornament-glow-a:rgba(84,255,158,.96);--hv-ornament-glow-b:rgba(84,255,158,.60);--hv-ornament-glow-c:rgba(84,255,158,.30);}
-.grid .cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-glorious{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");--hv-ornament-glow-a:rgba(255,214,95,.94);--hv-ornament-glow-b:rgba(255,214,95,.58);--hv-ornament-glow-c:rgba(255,214,95,.30);}
-.grid .cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-epic{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");--hv-ornament-glow-a:rgba(190,122,255,.94);--hv-ornament-glow-b:rgba(190,122,255,.58);--hv-ornament-glow-c:rgba(190,122,255,.30);}
-.grid .cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-mythic{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");--hv-ornament-glow-a:rgba(255,100,201,.95);--hv-ornament-glow-b:rgba(255,100,201,.60);--hv-ornament-glow-c:rgba(255,100,201,.32);}
-.grid .cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-legendary{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");--hv-ornament-glow-a:rgba(255,157,69,.96);--hv-ornament-glow-b:rgba(255,157,69,.60);--hv-ornament-glow-c:rgba(255,157,69,.32);}
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader,
-.cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.leader{--hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");--hv-ornament-glow-a:rgba(255,244,157,.98);--hv-ornament-glow-b:rgba(255,244,157,.66);--hv-ornament-glow-c:rgba(255,244,157,.34);}
-
-.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
-.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
-.grid .cell > .unit-card.leader .unit-frame-rarity,
-.cell > .unit-card.card-rarity-improved .unit-frame-rarity,
-.cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
-.cell > .unit-card.card-rarity-epic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-mythic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-legendary .unit-frame-rarity,
-.cell > .unit-card.card-rarity-demigod .unit-frame-rarity,
-.cell > .unit-card.leader .unit-frame-rarity{
-  display:block !important;
-  opacity:1 !important;
-  background-image:var(--hv-ornament-image) !important;
-  filter:
-    drop-shadow(0 0 2px rgba(255,255,255,.35))
-    drop-shadow(0 0 8px var(--hv-ornament-glow-a))
-    drop-shadow(0 0 16px var(--hv-ornament-glow-b))
-    drop-shadow(0 0 28px var(--hv-ornament-glow-c)) !important;
-  animation:hvOrnamentalNeonPulse7hag 6s cubic-bezier(.35,0,.2,1) infinite !important;
-}
-
-@keyframes hvOrnamentalNeonPulse7hag{
-  0%{
-    opacity:.90;
-    filter:drop-shadow(0 0 2px rgba(255,255,255,.28)) drop-shadow(0 0 7px var(--hv-ornament-glow-a)) drop-shadow(0 0 14px var(--hv-ornament-glow-b)) drop-shadow(0 0 24px var(--hv-ornament-glow-c));
-  }
-  22%{
-    opacity:.94;
-    filter:drop-shadow(0 0 2.4px rgba(255,255,255,.34)) drop-shadow(0 0 9px var(--hv-ornament-glow-a)) drop-shadow(0 0 18px var(--hv-ornament-glow-b)) drop-shadow(0 0 30px var(--hv-ornament-glow-c));
-  }
-  50%{
-    opacity:1;
-    filter:drop-shadow(0 0 3.1px rgba(255,255,255,.44)) drop-shadow(0 0 12px var(--hv-ornament-glow-a)) drop-shadow(0 0 24px var(--hv-ornament-glow-b)) drop-shadow(0 0 38px var(--hv-ornament-glow-c));
-  }
-  74%{
-    opacity:.96;
-    filter:drop-shadow(0 0 2.7px rgba(255,255,255,.38)) drop-shadow(0 0 10px var(--hv-ornament-glow-a)) drop-shadow(0 0 20px var(--hv-ornament-glow-b)) drop-shadow(0 0 32px var(--hv-ornament-glow-c));
-  }
-  100%{
-    opacity:.90;
-    filter:drop-shadow(0 0 2px rgba(255,255,255,.28)) drop-shadow(0 0 7px var(--hv-ornament-glow-a)) drop-shadow(0 0 14px var(--hv-ornament-glow-b)) drop-shadow(0 0 24px var(--hv-ornament-glow-c));
-  }
-}
-
-
-
-/* ==========================================================
-   7HAT · LOOK FINAL RAREZAS EN CAMPO
-   Rareza visible por ornamento + retrato limpio
-   Valores elegidos desde laboratorio por usuario
+   - una sola fuente para rarezas de tablero
+   - aros de convocación pequeños
+   - FX de invocación visible
+   - marcadores de mover/atacar/selección claros
+   - sin paneles debug ni resets globales peleándose entre sí
    ========================================================== */
 
-.grid .cell > .unit-card,
-.cell > .unit-card{
-  --card-opacity: 1;
-  --card-scale: 1;
-  --card-bg-alpha: 0.18;
-  --card-shadow-px: 10px;
-  --card-shadow-alpha: 0.45;
-
-  --portrait-opacity: 1;
-  --portrait-brightness: 1;
-  --portrait-saturation: 1;
-  --portrait-contrast: 1;
-  --portrait-blur: 0px;
-
-  --frame-opacity: 1;
-  --frame-brightness: 1;
-  --frame-saturation: 1;
-  --frame-contrast: 1;
-  --frame-shadow-px: 8px;
-  --frame-shadow-alpha: 0.55;
-
-  --ornament-opacity: 1;
-  --ornament-brightness: 1;
-  --ornament-saturation: 1;
-  --ornament-contrast: 1;
-  --ornament-blur: 0px;
-
-  --baked-opacity: 1;
-  --baked-brightness: 1;
-  --baked-saturation: 1;
-  --baked-contrast: 1;
-  --baked-blur: 0px;
-
-  --css-glow-opacity: 0.75;
-  --css-glow-white-alpha: 0.2;
-  --css-glow-white-px: 1px;
-  --css-glow-near-px: 2px;
-  --css-glow-mid-px: 5px;
-  --css-glow-far-px: 9px;
-
-  --pulse-duration: 10s;
-  --pulse-min: 0.1;
-  --pulse-max: 1.5;
-
-  --stats-opacity: 1;
-  --team-opacity: 1;
-  --team-blur: 0px;
-  --team-size: 100%;
-
-  opacity: var(--card-opacity) !important;
-  transform: scale(var(--card-scale)) !important;
-  background: rgba(0,0,0,var(--card-bg-alpha)) !important;
-  box-shadow: 0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
-  overflow: visible !important;
-}
-
-/* Retrato limpio: nada de lámpara sobre la imagen */
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-card-bg-layer,
-.grid .cell > .unit-card .unit-card-character-layer,
-.grid .cell > .unit-card .unit-portrait img,
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait img{
-  opacity: var(--portrait-opacity) !important;
-  filter:
-    brightness(var(--portrait-brightness))
-    saturate(var(--portrait-saturation))
-    contrast(var(--portrait-contrast))
-    blur(var(--portrait-blur)) !important;
-  box-shadow: none !important;
-  mix-blend-mode: normal !important;
-}
-
-/* Marco base */
-.grid .cell > .unit-card .unit-frame-skin,
-.cell > .unit-card .unit-frame-skin{
-  opacity: var(--frame-opacity) !important;
-  filter:
-    brightness(var(--frame-brightness))
-    saturate(var(--frame-saturation))
-    contrast(var(--frame-contrast))
-    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha))) !important;
-  animation: none !important;
-}
-
-/* Ornamento normal PNG */
-.grid .cell > .unit-card .unit-frame-rarity,
-.cell > .unit-card .unit-frame-rarity{
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 5 !important;
-  pointer-events: none !important;
-  background-image: var(--hv-ornament-image) !important;
-  background-position: center !important;
-  background-size: 100% 100% !important;
-  background-repeat: no-repeat !important;
-  background-color: transparent !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  opacity: var(--ornament-opacity) !important;
-  filter:
-    brightness(var(--ornament-brightness))
-    saturate(var(--ornament-saturation))
-    contrast(var(--ornament-contrast))
-    blur(var(--ornament-blur)) !important;
-  mix-blend-mode: normal !important;
-  animation: none !important;
-}
-
-/* Glow horneado encima del ornamento */
-.grid .cell > .unit-card .unit-frame-rarity::after,
-.cell > .unit-card .unit-frame-rarity::after{
-  content: "";
-  display:block !important;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-position: center;
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-image: var(--hv-ornament-glow-image);
-  opacity: var(--baked-opacity);
-  filter:
-    brightness(var(--baked-brightness))
-    saturate(var(--baked-saturation))
-    contrast(var(--baked-contrast))
-    blur(var(--baked-blur))
-    drop-shadow(0 0 var(--css-glow-white-px) rgba(255,255,255,var(--css-glow-white-alpha)))
-    drop-shadow(0 0 var(--css-glow-near-px) rgba(255,255,255,var(--css-glow-opacity)))
-    drop-shadow(0 0 var(--css-glow-mid-px) rgba(255,255,255,calc(var(--css-glow-opacity) * .55)))
-    drop-shadow(0 0 var(--css-glow-far-px) rgba(255,255,255,calc(var(--css-glow-opacity) * .28))) !important;
-  animation: hvFinalOrnamentPulse7HAT var(--pulse-duration) ease-in-out infinite !important;
-}
-
-@keyframes hvFinalOrnamentPulse7HAT{
-  0%,100%{ opacity: calc(var(--baked-opacity) * var(--pulse-min)); }
-  50%{ opacity: calc(var(--baked-opacity) * var(--pulse-max)); }
-}
-
-/* Stats visibles */
-.grid .cell > .unit-card .unit-ornate-ui,
-.cell > .unit-card .unit-ornate-ui{
-  opacity: var(--stats-opacity) !important;
-  z-index: 8 !important;
-}
-
-/* Base aliado/enemigo */
-.grid .cell > .unit-card.ally::before,
-.grid .cell > .unit-card.enemy::before,
-.cell > .unit-card.ally::before,
-.cell > .unit-card.enemy::before{
-  opacity: var(--team-opacity) !important;
-  filter: blur(var(--team-blur)) !important;
-  width: var(--team-size) !important;
-}
-
-/* Rutas de ornamento normal y glow por rareza */
-.grid .cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-improved{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_improved.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-heroic{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_heroic.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-glorious{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_glorious.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-epic{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_epic.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-mythic{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_mythic.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-legendary{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_legendary.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader,
-.cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.leader{
-  --hv-ornament-image: url("assets/ui/gothic_frame_unit_ornament_demigod.png");
-  --hv-ornament-glow-image: url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
-}
-
-/* Básicas sin glow ornamental */
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-basic .unit-frame-rarity{
-  display: none !important;
-}
-
-/* ==========================================================
-   7HAU · FIX REAL: capas de rareza igual al laboratorio 7HAS
-   Objetivo:
-   - Retrato limpio, sin lámpara.
-   - Marco base normal.
-   - Ornamento normal PNG visible.
-   - Ornamento glow PNG encima.
-   - Glow CSS pequeño controlado sobre el ornamento, no sobre toda la carta.
-   - Se apagan auras viejas de rareza que usaban ::before/::after.
-   ========================================================== */
-
-.grid .cell > .unit-card,
-.cell > .unit-card{
-  --card-opacity: 1;
-  --card-scale: 1;
-  --card-bg-alpha: 0.18;
-  --card-shadow-px: 10px;
-  --card-shadow-alpha: 0.45;
-
-  --portrait-opacity: 1;
-  --portrait-brightness: 1;
-  --portrait-saturation: 1;
-  --portrait-contrast: 1;
-  --portrait-blur: 0px;
-
-  --frame-opacity: 1;
-  --frame-brightness: 1;
-  --frame-saturation: 1;
-  --frame-contrast: 1;
-  --frame-shadow-px: 8px;
-  --frame-shadow-alpha: 0.55;
-
-  --ornament-opacity: 1;
-  --ornament-brightness: 1;
-  --ornament-saturation: 1;
-  --ornament-contrast: 1;
-  --ornament-blur: 0px;
-
-  --baked-opacity: 1;
-  --baked-brightness: 1;
-  --baked-saturation: 1;
-  --baked-contrast: 1;
-  --baked-blur: 0px;
-
-  --css-glow-opacity: 0.75;
-  --css-glow-white-alpha: 0.2;
-  --css-glow-white-px: 1px;
-  --css-glow-near-px: 2px;
-  --css-glow-mid-px: 5px;
-  --css-glow-far-px: 9px;
-
-  --pulse-duration: 10s;
-  --pulse-min: 0.1;
-  --pulse-max: 1.5;
-
-  --stats-opacity: 1;
-  --team-opacity: 1;
-  --team-blur: 0px;
-  --team-size: 100%;
-
-  opacity:var(--card-opacity) !important;
-  transform:scale(var(--card-scale)) !important;
-  background:rgba(0,0,0,var(--card-bg-alpha)) !important;
-  box-shadow:0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
-  overflow:visible !important;
-  isolation:isolate !important;
-}
-
-/* Apagar auras viejas que convertían cartas raras en lámparas */
-.grid .cell > .unit-card::after,
-.cell > .unit-card::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  background:none !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  -webkit-mask:none !important;
-  mask:none !important;
-}
-
-.grid .cell > .unit-card::before,
-.cell > .unit-card::before{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  background:none !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-/* Base aliado/enemigo recreada después de apagar las auras viejas */
-.grid .cell > .unit-card.ally::before,
-.cell > .unit-card.ally::before,
-.grid .cell > .unit-card.enemy::before,
-.cell > .unit-card.enemy::before{
-  content:"" !important;
-  display:block !important;
-  position:absolute !important;
-  left:50% !important;
-  bottom:-10px !important;
-  width:var(--team-size) !important;
-  height:16px !important;
-  transform:translateX(-50%) !important;
-  border-radius:999px !important;
-  pointer-events:none !important;
-  z-index:0 !important;
-  opacity:var(--team-opacity) !important;
-  filter:blur(var(--team-blur)) !important;
-  animation:none !important;
-}
-
-.grid .cell > .unit-card.ally::before,
-.cell > .unit-card.ally::before{
-  background:radial-gradient(ellipse at center,
-    rgba(116,242,255,.72) 0%,
-    rgba(77,198,255,.46) 36%,
-    rgba(34,112,255,.18) 60%,
-    rgba(0,0,0,0) 78%) !important;
-  box-shadow:0 0 10px rgba(96,224,255,.32),0 0 18px rgba(66,154,255,.18) !important;
-}
-
-.grid .cell > .unit-card.enemy::before,
-.cell > .unit-card.enemy::before{
-  background:radial-gradient(ellipse at center,
-    rgba(255,118,171,.74) 0%,
-    rgba(255,92,124,.48) 36%,
-    rgba(182,34,79,.20) 60%,
-    rgba(0,0,0,0) 78%) !important;
-  box-shadow:0 0 10px rgba(255,110,166,.32),0 0 18px rgba(220,54,107,.18) !important;
-}
-
-/* Retrato totalmente limpio */
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-card-bg-layer,
-.grid .cell > .unit-card .unit-card-character-layer,
-.grid .cell > .unit-card .unit-portrait img,
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait img{
-  opacity:var(--portrait-opacity) !important;
-  filter:
-    brightness(var(--portrait-brightness))
-    saturate(var(--portrait-saturation))
-    contrast(var(--portrait-contrast))
-    blur(var(--portrait-blur)) !important;
-  box-shadow:none !important;
-  mix-blend-mode:normal !important;
-  animation:none !important;
-}
-
-/* Marco base, sin glow de rareza */
-.grid .cell > .unit-card .unit-frame-skin,
-.cell > .unit-card .unit-frame-skin{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:3 !important;
-  pointer-events:none !important;
-  background:var(--frame-image) center/100% 100% no-repeat !important;
-  opacity:var(--frame-opacity) !important;
-  filter:
-    brightness(var(--frame-brightness))
-    saturate(var(--frame-saturation))
-    contrast(var(--frame-contrast))
-    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha))) !important;
-  box-shadow:none !important;
-  animation:none !important;
-}
-
-/* La capa .unit-frame-rarity es el ornamento normal PNG */
-.grid .cell > .unit-card .unit-frame-rarity,
-.cell > .unit-card .unit-frame-rarity{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:5 !important;
-  pointer-events:none !important;
-  background-image:var(--hv-ornament-image) !important;
-  background-position:center !important;
-  background-size:100% 100% !important;
-  background-repeat:no-repeat !important;
-  background-color:transparent !important;
-  -webkit-mask-image:none !important;
-  mask-image:none !important;
-  mix-blend-mode:normal !important;
-  opacity:var(--ornament-opacity) !important;
-  filter:
-    brightness(var(--ornament-brightness))
-    saturate(var(--ornament-saturation))
-    contrast(var(--ornament-contrast))
-    blur(var(--ornament-blur)) !important;
-  animation:none !important;
-  box-shadow:none !important;
-}
-
-/* ::before de la rareza queda apagado para que no haya doble aura */
-.grid .cell > .unit-card .unit-frame-rarity::before,
-.cell > .unit-card .unit-frame-rarity::before{
-  content:none !important;
-  display:none !important;
-}
-
-/* ::after es SOLO el PNG glow horneado, con el mismo comportamiento del laboratorio */
-.grid .cell > .unit-card .unit-frame-rarity::after,
-.cell > .unit-card .unit-frame-rarity::after{
-  content:"" !important;
-  display:block !important;
-  position:absolute !important;
-  inset:0 !important;
-  pointer-events:none !important;
-  background-image:var(--hv-ornament-glow-image) !important;
-  background-position:center !important;
-  background-size:100% 100% !important;
-  background-repeat:no-repeat !important;
-  background-color:transparent !important;
-  opacity:var(--baked-opacity) !important;
-  mix-blend-mode:normal !important;
-  filter:
-    brightness(var(--baked-brightness))
-    saturate(var(--baked-saturation))
-    contrast(var(--baked-contrast))
-    blur(var(--baked-blur))
-    drop-shadow(0 0 var(--css-glow-white-px) rgba(255,255,255,var(--css-glow-white-alpha)))
-    drop-shadow(0 0 var(--css-glow-near-px) rgba(var(--hv-rarity-rgb),var(--css-glow-opacity)))
-    drop-shadow(0 0 var(--css-glow-mid-px) rgba(var(--hv-rarity-rgb),calc(var(--css-glow-opacity) * .60)))
-    drop-shadow(0 0 var(--css-glow-far-px) rgba(var(--hv-rarity-rgb),calc(var(--css-glow-opacity) * .30))) !important;
-  animation:hvFinalFieldOrnamentPulse7HAU var(--pulse-duration) ease-in-out infinite !important;
-}
-
-@keyframes hvFinalFieldOrnamentPulse7HAU{
-  0%,100%{opacity:calc(var(--baked-opacity) * var(--pulse-min));}
-  50%{opacity:calc(var(--baked-opacity) * var(--pulse-max));}
-}
-
-/* Stats siempre visibles */
-.grid .cell > .unit-card .unit-ornate-ui,
-.cell > .unit-card .unit-ornate-ui{
-  opacity:var(--stats-opacity) !important;
-  z-index:8 !important;
-}
-.grid .cell > .unit-card .unit-status-bubbles,
-.grid .cell > .unit-card .unit-status-seals,
-.grid .cell > .unit-card .status-seal-rail,
-.grid .cell > .unit-card .unit-status-seal-extra,
-.cell > .unit-card .unit-status-bubbles,
-.cell > .unit-card .unit-status-seals,
-.cell > .unit-card .status-seal-rail,
-.cell > .unit-card .unit-status-seal-extra{
-  z-index:9 !important;
-}
-
-/* Rutas y colores por rareza */
-.grid .cell > .unit-card.card-rarity-basic,
-.cell > .unit-card.card-rarity-basic{
-  --hv-rarity-rgb:0,0,0;
-  --hv-ornament-image:none;
-  --hv-ornament-glow-image:none;
-}
-
-.grid .cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-improved{
-  --hv-rarity-rgb:109,212,255;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-heroic{
-  --hv-rarity-rgb:84,255,158;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-glorious{
-  --hv-rarity-rgb:255,214,95;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-epic{
-  --hv-rarity-rgb:190,122,255;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-mythic{
-  --hv-rarity-rgb:255,100,201;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-legendary{
-  --hv-rarity-rgb:255,157,69;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader,
-.cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.leader{
-  --hv-rarity-rgb:255,244,157;
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
-}
-
-/* Básicas sin ornamento de rareza */
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-basic .unit-frame-rarity{
-  display:none !important;
-}
-
-/* === 7HAV · panel real de control de rarezas en tablero === */
-#hvRarityRealToggle{position:fixed;right:14px;bottom:14px;z-index:99999;border:1px solid rgba(255,215,120,.55);border-radius:12px;background:rgba(20,13,5,.92);color:#ffe7a6;font:900 12px Georgia,serif;padding:9px 12px;box-shadow:0 0 18px rgba(0,0,0,.55),inset 0 0 12px rgba(255,205,100,.08);cursor:pointer}
-#hvRarityRealPanel{position:fixed;right:12px;top:12px;bottom:12px;width:min(430px,calc(100vw - 24px));z-index:99998;display:none;overflow:auto;border:1px solid rgba(255,211,112,.38);border-radius:16px;background:rgba(8,6,4,.96);color:#ffe7a6;box-shadow:0 16px 60px rgba(0,0,0,.72);padding:12px;font-family:Georgia,serif}
-#hvRarityRealPanel.open{display:block}
-#hvRarityRealPanel .hv-rr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;color:#ffdf8d;font-size:18px}
-#hvRarityRealPanel button{border:1px solid rgba(255,211,112,.35);border-radius:10px;background:#1b1308;color:#ffe7a6;font-weight:900;padding:7px 9px;cursor:pointer}
-#hvRarityRealPanel button:hover{background:#2a1c0b}
-#hvRarityRealPanel .hv-rr-note{font-size:12px;line-height:1.35;color:#d6c097;margin-bottom:10px;border-left:3px solid rgba(89,224,255,.7);padding:8px 10px;background:rgba(89,224,255,.07);border-radius:8px}
-#hvRarityRealPanel .hv-rr-force{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px;border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;background:rgba(0,0,0,.25)}
-#hvRarityRealPanel .hv-rr-force select{background:#0d0904;color:#ffe7a6;border:1px solid rgba(255,211,112,.30);border-radius:9px;padding:8px}
-#hvRarityRealPanel .hv-rr-box{border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;margin:10px 0;background:rgba(0,0,0,.28)}
-#hvRarityRealPanel .hv-rr-box h4{margin:0 0 8px;color:#ffdf8d;font-size:14px}
-#hvRarityRealPanel label{display:grid;grid-template-columns:130px 1fr 58px;align-items:center;gap:8px;margin:7px 0;font-size:12px;color:#f5d792}
-#hvRarityRealPanel input[type="range"]{width:100%}
-#hvRarityRealPanel label b{font-family:Consolas,monospace;text-align:right;color:#fff3c9;font-size:11px}
-#hvRarityRealPanel .hv-rr-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-#hvRarityCssOut{max-height:240px;overflow:auto;white-space:pre-wrap;background:#020201;border:1px solid rgba(255,211,112,.18);border-radius:12px;padding:10px;color:#fff3c9;font:11px/1.35 Consolas,monospace}
-@media(max-width:720px){#hvRarityRealPanel{left:8px;right:8px;top:8px;bottom:8px;width:auto}#hvRarityRealPanel label{grid-template-columns:1fr}#hvRarityRealToggle{right:10px;bottom:10px}}
-
-
-/* ==========================================================
-   7HAX · CONTROL TOTAL DE BRILLOS REALES EN TABLERO
-   Cubre los brillos que antes no respondían:
-   - estados .valid/.attackable/.summonable/.selected con :has(.unit-card)
-   - glow heredado del frame-skin en estados de targeting
-   - sombras por rareza heredadas sobre .unit-card
-   - glow de base aliado/enemigo
-   - marcadores circulares de celda
-   ========================================================== */
-
-.grid .cell > .unit-card,
-.cell > .unit-card{
-  --legacy-unit-rarity-glow-alpha:0;
-  --legacy-unit-rarity-glow-px:0px;
-  --state-frame-glow-alpha:0;
-  --state-frame-glow-px:0px;
-  --state-outline-alpha:0;
-  --state-outline-px:0px;
-  --state-card-shadow-alpha:0;
-  --state-card-shadow-px:0px;
-  --move-marker-opacity:1;
-  --move-marker-glow-px:9px;
-  --attack-marker-opacity:1;
-  --attack-marker-glow-px:9px;
-  --summon-marker-opacity:1;
-  --summon-marker-glow-px:10px;
-  --team-glow-alpha:.32;
-  --team-glow-px:10px;
-  --leader-glow-alpha:0;
-  --leader-glow-px:0px;
-}
-
-/* Mata/centraliza cualquier box-shadow heredado por rareza en la carta completa */
-.grid .cell > .unit-card.card-rarity-basic,
-.grid .cell > .unit-card.card-rarity-improved,
-.grid .cell > .unit-card.card-rarity-heroic,
-.grid .cell > .unit-card.card-rarity-glorious,
-.grid .cell > .unit-card.card-rarity-epic,
-.grid .cell > .unit-card.card-rarity-mythic,
-.grid .cell > .unit-card.card-rarity-legendary,
-.grid .cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.card-rarity-basic,
-.cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-demigod{
-  animation:none !important;
-  box-shadow:
-    0 0 var(--legacy-unit-rarity-glow-px) rgba(var(--hv-rarity-rgb),var(--legacy-unit-rarity-glow-alpha)),
-    0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
-}
-
-/* Líderes: control separado por si el brillo viene del leader class */
-.grid .cell > .unit-card.leader,
-.cell > .unit-card.leader{
-  animation:none !important;
-  box-shadow:
-    0 0 var(--leader-glow-px) rgba(255,244,157,var(--leader-glow-alpha)),
-    0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
-}
-
-/* Estados que antes reinyectaban glow al marco con más especificidad */
-.grid .cell.valid:has(.unit-card) .unit-frame-skin,
-.grid .cell.attackable:has(.unit-card) .unit-frame-skin,
-.grid .cell.summonable:has(.unit-card) .unit-frame-skin,
-.grid .cell.selected:has(.unit-card) .unit-frame-skin,
-.grid .cell.move-range-preview:has(.unit-card) .unit-frame-skin,
-.grid .cell.attack-range-preview:has(.unit-card) .unit-frame-skin,
-.grid .cell.enemy-threat-preview:has(.unit-card) .unit-frame-skin,
-.grid .cell.enemy-acted-threat-preview:has(.unit-card) .unit-frame-skin{
-  filter:
-    brightness(var(--frame-brightness))
-    saturate(var(--frame-saturation))
-    contrast(var(--frame-contrast))
-    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha)))
-    drop-shadow(0 0 var(--state-frame-glow-px) rgba(var(--hv-rarity-rgb),var(--state-frame-glow-alpha))) !important;
-  animation:none !important;
-}
-
-/* Estados que antes podían poner outline/sombra a la carta */
-.grid .cell.valid:has(.unit-card) .unit-card,
-.grid .cell.attackable:has(.unit-card) .unit-card,
-.grid .cell.summonable:has(.unit-card) .unit-card,
-.grid .cell.selected:has(.unit-card) .unit-card,
-.grid .cell.move-range-preview:has(.unit-card) .unit-card,
-.grid .cell.attack-range-preview:has(.unit-card) .unit-card,
-.grid .cell.enemy-threat-preview:has(.unit-card) .unit-card,
-.grid .cell.enemy-acted-threat-preview:has(.unit-card) .unit-card{
-  outline:var(--state-outline-px) solid rgba(255,255,255,var(--state-outline-alpha)) !important;
-  outline-offset:1px !important;
-  box-shadow:
-    0 0 var(--state-card-shadow-px) rgba(var(--hv-rarity-rgb),var(--state-card-shadow-alpha)),
-    0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
-}
-
-/* Marcadores de celda controlables */
-.grid .cell.valid::after,
-.grid .cell.move-range-preview::after{
-  opacity:var(--move-marker-opacity) !important;
-  box-shadow:
-    0 0 var(--move-marker-glow-px) rgba(118,255,166,.55),
-    0 0 calc(var(--move-marker-glow-px) * 2) rgba(118,255,166,.18),
-    inset 0 0 6px rgba(118,255,166,.22) !important;
-}
-
-.grid .cell.attackable::after,
-.grid .cell.attack-range-preview::after,
-.grid .cell.enemy-threat-preview::after{
-  opacity:var(--attack-marker-opacity) !important;
-  box-shadow:
-    0 0 var(--attack-marker-glow-px) rgba(255,86,132,.58),
-    0 0 calc(var(--attack-marker-glow-px) * 2) rgba(255,86,132,.20),
-    inset 0 0 6px rgba(255,86,132,.24) !important;
-}
-
-.grid .cell.summonable::after{
-  opacity:var(--summon-marker-opacity) !important;
-  box-shadow:
-    0 0 var(--summon-marker-glow-px) rgba(255,202,95,.52),
-    0 0 calc(var(--summon-marker-glow-px) * 2) rgba(255,202,95,.18),
-    inset 0 0 6px rgba(255,224,138,.24) !important;
-}
-
-/* Base aliado/enemigo también queda bajo control */
-.grid .cell > .unit-card.ally::before,
-.cell > .unit-card.ally::before{
-  box-shadow:
-    0 0 var(--team-glow-px) rgba(96,224,255,var(--team-glow-alpha)),
-    0 0 calc(var(--team-glow-px) * 1.8) rgba(66,154,255,calc(var(--team-glow-alpha) * .55)) !important;
-}
-.grid .cell > .unit-card.enemy::before,
-.cell > .unit-card.enemy::before{
-  box-shadow:
-    0 0 var(--team-glow-px) rgba(255,110,166,var(--team-glow-alpha)),
-    0 0 calc(var(--team-glow-px) * 1.8) rgba(220,54,107,calc(var(--team-glow-alpha) * .55)) !important;
-}
-
-/* Kill switch visual por clase: se activa desde el panel con el botón Matar brillos */
-body.hv-no-card-glows .grid .cell > .unit-card,
-body.hv-no-card-glows .cell > .unit-card,
-body.hv-no-card-glows .grid .cell > .unit-card *,
-body.hv-no-card-glows .cell > .unit-card *{
-  animation:none !important;
-}
-body.hv-no-card-glows .grid .cell > .unit-card,
-body.hv-no-card-glows .cell > .unit-card{
-  box-shadow:none !important;
-}
-body.hv-no-card-glows .grid .cell > .unit-card .unit-frame-skin,
-body.hv-no-card-glows .cell > .unit-card .unit-frame-skin,
-body.hv-no-card-glows .grid .cell > .unit-card .unit-frame-rarity,
-body.hv-no-card-glows .cell > .unit-card .unit-frame-rarity,
-body.hv-no-card-glows .grid .cell > .unit-card .unit-frame-rarity::after,
-body.hv-no-card-glows .cell > .unit-card .unit-frame-rarity::after{
-  filter:none !important;
-  box-shadow:none !important;
-}
-
-
-/* ==========================================================
-   7HBA · CONTROL MAESTRO REAL DE TODAS LAS AURAS DE TABLERO
-   Este bloque NO intenta adivinar cuál brillo molesta: expone todas las capas.
-   Se activa siempre con body.hv-master-glow-debug.
-   ========================================================== */
-body.hv-master-glow-debug{
-  --master-card-opacity:1;
-  --master-card-filter-opacity:1;
-  --master-card-box-alpha:.45;
-  --master-card-box-px:10px;
-  --master-card-before-opacity:1;
-  --master-card-after-opacity:0;
-  --master-card-before-blur:0px;
-  --master-card-after-blur:0px;
-
-  --master-portrait-opacity:1;
-  --master-portrait-brightness:1;
-  --master-portrait-saturation:1;
-  --master-portrait-contrast:1;
-  --master-portrait-blur:0px;
-  --master-portrait-drop-alpha:0;
-  --master-portrait-drop-px:0px;
-
-  --master-frame-opacity:1;
-  --master-frame-shadow-alpha:.55;
-  --master-frame-shadow-px:8px;
-  --master-frame-brightness:1;
-  --master-frame-saturation:1;
-  --master-frame-contrast:1;
-  --master-frame-extra-glow-alpha:0;
-  --master-frame-extra-glow-px:0px;
-  --master-frame-before-opacity:0;
-  --master-frame-after-opacity:0;
-
-  --master-ornament-opacity:1;
-  --master-ornament-brightness:1;
-  --master-ornament-saturation:1;
-  --master-ornament-contrast:1;
-  --master-ornament-blur:0px;
-  --master-ornament-css-alpha:.75;
-  --master-ornament-white-alpha:.20;
-  --master-ornament-white-px:1px;
-  --master-ornament-near-px:2px;
-  --master-ornament-mid-px:5px;
-  --master-ornament-far-px:9px;
-  --master-ornament-after-opacity:1;
-  --master-ornament-before-opacity:1;
-  --master-ornament-pulse-duration:10s;
-  --master-ornament-pulse-min:.10;
-  --master-ornament-pulse-max:1.5;
-
-  --master-cell-after-opacity:1;
-  --master-cell-after-bg-alpha:1;
-  --master-cell-after-inset-alpha:1;
-  --master-cell-after-glow-alpha:1;
-  --master-cell-after-glow-px:10px;
-  --master-cell-before-opacity:1;
-  --master-cell-before-glow-alpha:1;
-  --master-cell-before-glow-px:10px;
-  --master-cell-hover-alpha:1;
-
-  --master-valid-opacity:1;
-  --master-valid-bg-alpha:.12;
-  --master-valid-outline-alpha:.78;
-  --master-valid-glow-alpha:.20;
-  --master-valid-glow-px:8px;
-  --master-attack-opacity:1;
-  --master-attack-bg-alpha:.14;
-  --master-attack-outline-alpha:.88;
-  --master-attack-glow-alpha:.30;
-  --master-attack-glow-px:11px;
-  --master-summon-opacity:1;
-  --master-summon-bg-alpha:.13;
-  --master-summon-outline-alpha:.82;
-  --master-summon-glow-alpha:.24;
-  --master-summon-glow-px:10px;
-
-  --master-selected-cell-alpha:.32;
-  --master-selected-cell-px:12px;
-  --master-unit-state-outline-alpha:0;
-  --master-unit-state-outline-px:0px;
-  --master-unit-state-shadow-alpha:0;
-  --master-unit-state-shadow-px:0px;
-
-  --master-team-opacity:1;
-  --master-team-blur:0px;
-  --master-team-glow-alpha:.32;
-  --master-team-glow-px:10px;
-  --master-team-size:100%;
-  --master-stats-opacity:1;
-  --master-status-opacity:1;
-}
-
-body.hv-master-glow-debug .grid .cell > .unit-card,
-body.hv-master-glow-debug .cell > .unit-card{
-  opacity:var(--master-card-opacity) !important;
-  background:rgba(0,0,0,var(--card-bg-alpha,.18)) !important;
-  filter:opacity(var(--master-card-filter-opacity)) !important;
-  box-shadow:0 0 var(--master-card-box-px) rgba(0,0,0,var(--master-card-box-alpha)) !important;
-  outline:var(--master-unit-state-outline-px) solid rgba(255,255,255,var(--master-unit-state-outline-alpha)) !important;
-  overflow:visible !important;
-}
-
-body.hv-master-glow-debug .grid .cell > .unit-card::before,
-body.hv-master-glow-debug .cell > .unit-card::before{
-  opacity:var(--master-card-before-opacity) !important;
-  filter:blur(var(--master-card-before-blur)) !important;
-}
-body.hv-master-glow-debug .grid .cell > .unit-card::after,
-body.hv-master-glow-debug .cell > .unit-card::after{
-  opacity:var(--master-card-after-opacity) !important;
-  filter:blur(var(--master-card-after-blur)) !important;
-  box-shadow:none !important;
-}
-
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-portrait,
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-portrait-stack,
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-card-bg-layer,
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-card-character-layer,
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-portrait img,
-body.hv-master-glow-debug .cell > .unit-card .unit-portrait,
-body.hv-master-glow-debug .cell > .unit-card .unit-portrait-stack,
-body.hv-master-glow-debug .cell > .unit-card .unit-card-bg-layer,
-body.hv-master-glow-debug .cell > .unit-card .unit-card-character-layer,
-body.hv-master-glow-debug .cell > .unit-card .unit-portrait img{
-  opacity:var(--master-portrait-opacity) !important;
-  mix-blend-mode:normal !important;
-  box-shadow:none !important;
-  filter:
-    brightness(var(--master-portrait-brightness))
-    saturate(var(--master-portrait-saturation))
-    contrast(var(--master-portrait-contrast))
-    blur(var(--master-portrait-blur))
-    drop-shadow(0 0 var(--master-portrait-drop-px) rgba(255,255,255,var(--master-portrait-drop-alpha))) !important;
-}
-
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-skin,
-body.hv-master-glow-debug .cell > .unit-card .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.valid:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.attackable:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.summonable:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.selected:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.move-range-preview:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.attack-range-preview:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.enemy-threat-preview:has(.unit-card) .unit-frame-skin,
-body.hv-master-glow-debug .grid .cell.enemy-acted-threat-preview:has(.unit-card) .unit-frame-skin{
-  opacity:var(--master-frame-opacity) !important;
-  animation:none !important;
-  box-shadow:none !important;
-  filter:
-    brightness(var(--master-frame-brightness))
-    saturate(var(--master-frame-saturation))
-    contrast(var(--master-frame-contrast))
-    drop-shadow(0 0 var(--master-frame-shadow-px) rgba(0,0,0,var(--master-frame-shadow-alpha)))
-    drop-shadow(0 0 var(--master-frame-extra-glow-px) rgba(var(--hv-rarity-rgb,255,255,255),var(--master-frame-extra-glow-alpha))) !important;
-}
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-skin::before,
-body.hv-master-glow-debug .cell > .unit-card .unit-frame-skin::before{opacity:var(--master-frame-before-opacity) !important;filter:none !important;box-shadow:none !important;}
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-skin::after,
-body.hv-master-glow-debug .cell > .unit-card .unit-frame-skin::after{opacity:var(--master-frame-after-opacity) !important;filter:none !important;box-shadow:none !important;}
-
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-rarity,
-body.hv-master-glow-debug .cell > .unit-card .unit-frame-rarity{
-  opacity:var(--master-ornament-opacity) !important;
-  animation:none !important;
-  mix-blend-mode:normal !important;
-  filter:
-    brightness(var(--master-ornament-brightness))
-    saturate(var(--master-ornament-saturation))
-    contrast(var(--master-ornament-contrast))
-    blur(var(--master-ornament-blur)) !important;
-}
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-rarity::before,
-body.hv-master-glow-debug .cell > .unit-card .unit-frame-rarity::before{
-  opacity:var(--master-ornament-before-opacity) !important;
-  filter:none !important;
-  box-shadow:none !important;
-}
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-frame-rarity::after,
-body.hv-master-glow-debug .cell > .unit-card .unit-frame-rarity::after{
-  opacity:var(--master-ornament-after-opacity) !important;
-  animation:hvMasterOrnPulse7HBA var(--master-ornament-pulse-duration) ease-in-out infinite !important;
-  filter:
-    brightness(var(--baked-brightness,1))
-    saturate(var(--baked-saturation,1))
-    contrast(var(--baked-contrast,1))
-    blur(var(--baked-blur,0px))
-    drop-shadow(0 0 var(--master-ornament-white-px) rgba(255,255,255,var(--master-ornament-white-alpha)))
-    drop-shadow(0 0 var(--master-ornament-near-px) rgba(var(--hv-rarity-rgb,255,255,255),var(--master-ornament-css-alpha)))
-    drop-shadow(0 0 var(--master-ornament-mid-px) rgba(var(--hv-rarity-rgb,255,255,255),calc(var(--master-ornament-css-alpha) * .55)))
-    drop-shadow(0 0 var(--master-ornament-far-px) rgba(var(--hv-rarity-rgb,255,255,255),calc(var(--master-ornament-css-alpha) * .28))) !important;
-}
-@keyframes hvMasterOrnPulse7HBA{
-  0%,100%{opacity:calc(var(--master-ornament-after-opacity) * var(--master-ornament-pulse-min));}
-  50%{opacity:calc(var(--master-ornament-after-opacity) * var(--master-ornament-pulse-max));}
-}
-
-body.hv-master-glow-debug .grid .cell::before{opacity:var(--master-cell-before-opacity) !important;filter:drop-shadow(0 0 var(--master-cell-before-glow-px) rgba(255,255,255,var(--master-cell-before-glow-alpha))) !important;}
-body.hv-master-glow-debug .grid .cell::after{opacity:var(--master-cell-after-opacity) !important;}
-body.hv-master-glow-debug .grid .cell.valid::after,
-body.hv-master-glow-debug .grid .cell.move-range-preview::after{
-  background:rgba(112,224,138,calc(var(--master-valid-bg-alpha) * var(--master-cell-after-bg-alpha))) !important;
-  opacity:var(--master-valid-opacity) !important;
-  box-shadow:
-    inset 0 0 0 2px rgba(112,224,138,calc(var(--master-valid-outline-alpha) * var(--master-cell-after-inset-alpha))),
-    0 0 var(--master-valid-glow-px) rgba(112,224,138,calc(var(--master-valid-glow-alpha) * var(--master-cell-after-glow-alpha))) !important;
-}
-body.hv-master-glow-debug .grid .cell.attackable::after,
-body.hv-master-glow-debug .grid .cell.attack-range-preview::after,
-body.hv-master-glow-debug .grid .cell.enemy-threat-preview::after,
-body.hv-master-glow-debug .grid .cell.enemy-acted-threat-preview::after{
-  background:rgba(239,71,111,calc(var(--master-attack-bg-alpha) * var(--master-cell-after-bg-alpha))) !important;
-  opacity:var(--master-attack-opacity) !important;
-  box-shadow:
-    inset 0 0 0 2px rgba(239,71,111,calc(var(--master-attack-outline-alpha) * var(--master-cell-after-inset-alpha))),
-    0 0 var(--master-attack-glow-px) rgba(239,71,111,calc(var(--master-attack-glow-alpha) * var(--master-cell-after-glow-alpha))) !important;
-}
-body.hv-master-glow-debug .grid .cell.summonable::after{
-  background:rgba(255,209,102,calc(var(--master-summon-bg-alpha) * var(--master-cell-after-bg-alpha))) !important;
-  opacity:var(--master-summon-opacity) !important;
-  box-shadow:
-    inset 0 0 0 2px rgba(255,209,102,calc(var(--master-summon-outline-alpha) * var(--master-cell-after-inset-alpha))),
-    0 0 var(--master-summon-glow-px) rgba(255,209,102,calc(var(--master-summon-glow-alpha) * var(--master-cell-after-glow-alpha))) !important;
-}
-body.hv-master-glow-debug .grid .cell.selected::after{
-  opacity:var(--master-cell-after-opacity) !important;
-  box-shadow:0 0 var(--master-selected-cell-px) rgba(255,255,255,var(--master-selected-cell-alpha)) !important;
-}
-body.hv-master-glow-debug .grid .cell:hover{background:rgba(255,220,140,calc(.05 * var(--master-cell-hover-alpha))) !important;}
-
-body.hv-master-glow-debug .grid .cell > .unit-card.ally::before,
-body.hv-master-glow-debug .cell > .unit-card.ally::before,
-body.hv-master-glow-debug .grid .cell > .unit-card.enemy::before,
-body.hv-master-glow-debug .cell > .unit-card.enemy::before{
-  opacity:var(--master-team-opacity) !important;
-  width:var(--master-team-size) !important;
-  filter:blur(var(--master-team-blur)) !important;
-  box-shadow:0 0 var(--master-team-glow-px) rgba(255,255,255,var(--master-team-glow-alpha)) !important;
-}
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-ornate-ui,
-body.hv-master-glow-debug .cell > .unit-card .unit-ornate-ui{opacity:var(--master-stats-opacity) !important;}
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-status-bubbles,
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-status-seals,
-body.hv-master-glow-debug .grid .cell > .unit-card .status-seal-rail,
-body.hv-master-glow-debug .grid .cell > .unit-card .unit-status-seal-extra{opacity:var(--master-status-opacity) !important;}
-
-body.hv-master-zero-glow .grid .cell > .unit-card,
-body.hv-master-zero-glow .grid .cell > .unit-card *,
-body.hv-master-zero-glow .grid .cell > .unit-card::before,
-body.hv-master-zero-glow .grid .cell > .unit-card::after,
-body.hv-master-zero-glow .grid .cell > .unit-card *::before,
-body.hv-master-zero-glow .grid .cell > .unit-card *::after,
-body.hv-master-zero-glow .grid .cell::before,
-body.hv-master-zero-glow .grid .cell::after{
-  box-shadow:none !important;
-  filter:none !important;
-  text-shadow:none !important;
-  animation:none !important;
-}
-
-
-/* ==========================================================
-   7HBB RESET TOTAL DE BRILLOS DE CARTAS / CAMPO
-   Punto cero real: sin rareza glow, sin halos de mover/atacar,
-   sin sombras de estados, sin pseudo-elementos luminosos.
-   ========================================================== */
-
-.grid .cell,
-.cell,
-.grid .cell.valid,
-.grid .cell.attackable,
-.grid .cell.summonable,
-.grid .cell.selected,
-.grid .cell.move-target,
-.grid .cell.attack-target,
-.grid .cell.valid-move,
-.grid .cell.valid-attack,
-.grid .cell.can-move,
-.grid .cell.can-attack,
-.grid .cell.can-summon,
-.cell.valid,
-.cell.attackable,
-.cell.summonable,
-.cell.selected,
-.cell.move-target,
-.cell.attack-target,
-.cell.valid-move,
-.cell.valid-attack,
-.cell.can-move,
-.cell.can-attack,
-.cell.can-summon{
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  text-shadow:none !important;
-  outline:none !important;
-}
-
-.grid .cell::before,
-.grid .cell::after,
-.cell::before,
-.cell::after,
-.grid .cell.valid::before,
-.grid .cell.valid::after,
-.grid .cell.attackable::before,
-.grid .cell.attackable::after,
-.grid .cell.summonable::before,
-.grid .cell.summonable::after,
-.grid .cell.selected::before,
-.grid .cell.selected::after,
-.cell.valid::before,
-.cell.valid::after,
-.cell.attackable::before,
-.cell.attackable::after,
-.cell.summonable::before,
-.cell.summonable::after,
-.cell.selected::before,
-.cell.selected::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  background:none !important;
-  border:none !important;
-  outline:none !important;
-}
-
-.grid .cell > .unit-card,
-.cell > .unit-card,
-.unit-card,
-.unit-card.p1,
-.unit-card.p2,
-.unit-card.leader,
-.unit-card.selected,
-.unit-card.active,
-.unit-card.attackable,
-.unit-card.valid,
-.unit-card.summonable,
-.unit-card.card-rarity-basic,
-.unit-card.card-rarity-improved,
-.unit-card.card-rarity-heroic,
-.unit-card.card-rarity-glorious,
-.unit-card.card-rarity-epic,
-.unit-card.card-rarity-mythic,
-.unit-card.card-rarity-legendary,
-.unit-card.card-rarity-demigod{
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  text-shadow:none !important;
-  outline:none !important;
-  background:rgba(0,0,0,.18) !important;
-  overflow:hidden !important;
-}
-
-.grid .cell > .unit-card::before,
-.grid .cell > .unit-card::after,
-.cell > .unit-card::before,
-.cell > .unit-card::after,
-.unit-card::before,
-.unit-card::after,
-.unit-card.p1::before,
-.unit-card.p1::after,
-.unit-card.p2::before,
-.unit-card.p2::after,
-.unit-card.leader::before,
-.unit-card.leader::after,
-.unit-card.selected::before,
-.unit-card.selected::after,
-.unit-card.active::before,
-.unit-card.active::after,
-.unit-card.attackable::before,
-.unit-card.attackable::after,
-.unit-card.valid::before,
-.unit-card.valid::after,
-.unit-card.summonable::before,
-.unit-card.summonable::after,
-.unit-card.card-rarity-improved::before,
-.unit-card.card-rarity-improved::after,
-.unit-card.card-rarity-heroic::before,
-.unit-card.card-rarity-heroic::after,
-.unit-card.card-rarity-glorious::before,
-.unit-card.card-rarity-glorious::after,
-.unit-card.card-rarity-epic::before,
-.unit-card.card-rarity-epic::after,
-.unit-card.card-rarity-mythic::before,
-.unit-card.card-rarity-mythic::after,
-.unit-card.card-rarity-legendary::before,
-.unit-card.card-rarity-legendary::after,
-.unit-card.card-rarity-demigod::before,
-.unit-card.card-rarity-demigod::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  background:none !important;
-  border:none !important;
-  outline:none !important;
-}
-
-/* Retrato, frame, ornamento, stats: todos sin filtros ni sombras. */
-.grid .cell > .unit-card *,
-.cell > .unit-card *,
-.unit-card *,
-.grid .cell > .unit-card *::before,
-.grid .cell > .unit-card *::after,
-.cell > .unit-card *::before,
-.cell > .unit-card *::after,
-.unit-card *::before,
-.unit-card *::after{
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-  text-shadow:none !important;
-}
-
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-card-bg-layer,
-.grid .cell > .unit-card .unit-card-character-layer,
-.grid .cell > .unit-card .unit-portrait img,
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait img,
-.unit-card .unit-portrait,
-.unit-card .unit-portrait-stack,
-.unit-card .unit-card-bg-layer,
-.unit-card .unit-card-character-layer,
-.unit-card .unit-portrait img{
-  opacity:1 !important;
-  filter:none !important;
-  box-shadow:none !important;
-  mix-blend-mode:normal !important;
-  animation:none !important;
-}
-
-.grid .cell > .unit-card .unit-frame-skin,
-.grid .cell > .unit-card .unit-frame-skin::before,
-.grid .cell > .unit-card .unit-frame-skin::after,
-.cell > .unit-card .unit-frame-skin,
-.cell > .unit-card .unit-frame-skin::before,
-.cell > .unit-card .unit-frame-skin::after,
-.unit-card .unit-frame-skin,
-.unit-card .unit-frame-skin::before,
-.unit-card .unit-frame-skin::after{
-  opacity:1 !important;
-  filter:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-  background-color:transparent !important;
-}
-
-.grid .cell > .unit-card .unit-frame-rarity,
-.grid .cell > .unit-card .unit-frame-rarity::before,
-.grid .cell > .unit-card .unit-frame-rarity::after,
-.cell > .unit-card .unit-frame-rarity,
-.cell > .unit-card .unit-frame-rarity::before,
-.cell > .unit-card .unit-frame-rarity::after,
-.unit-card .unit-frame-rarity,
-.unit-card .unit-frame-rarity::before,
-.unit-card .unit-frame-rarity::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  filter:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-  background:none !important;
-  mix-blend-mode:normal !important;
-}
-
-/* Apagar clases conocidas de glows/targets si existen. */
-[class*="glow"],
-[class*="Glow"],
-[class*="neon"],
-[class*="Neon"],
-[class*="aura"],
-[class*="Aura"],
-[class*="target"],
-[class*="Target"],
-[class*="valid"],
-[class*="attackable"],
-[class*="summonable"],
-[class*="selected"]{
-  box-shadow:none !important;
-  text-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-/* La regla anterior es amplia; estas líneas devuelven estructura/visibilidad básica
-   a elementos que deben existir pero sin brillo. */
-.grid .cell,
-.cell{display:flex;}
-.unit-card,
-.unit-card *{visibility:visible;}
-.unit-card .unit-frame-rarity,
-.unit-card .unit-frame-rarity::before,
-.unit-card .unit-frame-rarity::after{visibility:hidden !important;}
-
-/* Botón/panel de control sin depender del panel viejo. */
-#hvGlowPanic7HBB{
-  position:fixed;
-  right:14px;
-  bottom:14px;
-  z-index:999999;
-  padding:10px 14px;
-  border:1px solid rgba(255,215,128,.75);
-  border-radius:14px;
-  background:rgba(10,5,0,.92);
-  color:#ffe7a0;
-  font:700 14px Georgia,serif;
-  box-shadow:none !important;
-  cursor:pointer;
-}
-#hvGlowPanic7HBB:hover{background:rgba(35,18,0,.96);}
-
-
-/* ==========================================================
-   7HBC · LOOK RAREZAS CON VALORES DEL USUARIO
-   Base: reset total 7HBB + reconstrucción mínima.
-   Objetivo:
-   - sin brillo CSS externo
-   - sin marco base
-   - retrato limpio
-   - rareza visible por ornamento + glow PNG horneado
-   - base equipo con blur 10px
-   ========================================================== */
-
-.grid .cell > .unit-card,
-.cell > .unit-card,
-.unit-card{
-  --card-opacity: 1;
-  --card-scale: 1;
-  --card-bg-alpha: 0;
-  --card-shadow-px: 0px;
-  --card-shadow-alpha: 0;
-
-  --portrait-opacity: 1;
-  --portrait-brightness: 1;
-  --portrait-saturation: 1;
-  --portrait-contrast: 1;
-  --portrait-blur: 0px;
-
-  --frame-opacity: 0;
-  --frame-brightness: 0;
-  --frame-saturation: 0;
-  --frame-contrast: 0;
-  --frame-shadow-px: 0px;
-  --frame-shadow-alpha: 0;
-
-  --ornament-opacity: 1;
-  --ornament-brightness: 1;
-  --ornament-saturation: 1;
-  --ornament-contrast: 1;
-  --ornament-blur: 0px;
-
-  --baked-opacity: 0.55;
-  --baked-brightness: 2;
-  --baked-saturation: 2;
-  --baked-contrast: 2;
-  --baked-blur: 0px;
-
-  --css-glow-opacity: 0;
-  --css-glow-white-alpha: 0;
-  --css-glow-white-px: 0px;
-  --css-glow-near-px: 0px;
-  --css-glow-mid-px: 0px;
-  --css-glow-far-px: 0px;
-
-  --pulse-duration: 30s;
-  --pulse-min: 0.1;
-  --pulse-max: 2;
-
-  --stats-opacity: 1;
-  --team-opacity: 1;
-  --team-blur: 10px;
-  --team-size: 100%;
-
-  opacity:var(--card-opacity) !important;
-  transform:scale(var(--card-scale)) !important;
-  background:rgba(0,0,0,var(--card-bg-alpha)) !important;
-  box-shadow:0 0 var(--card-shadow-px) rgba(0,0,0,var(--card-shadow-alpha)) !important;
-  filter:none !important;
-  animation:none !important;
-  overflow:visible !important;
-}
-
-/* Retrato absolutamente limpio. */
-.grid .cell > .unit-card .unit-portrait,
-.grid .cell > .unit-card .unit-portrait-stack,
-.grid .cell > .unit-card .unit-card-bg-layer,
-.grid .cell > .unit-card .unit-card-character-layer,
-.grid .cell > .unit-card .unit-portrait img,
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card .unit-portrait-stack,
-.cell > .unit-card .unit-card-bg-layer,
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait img,
-.unit-card .unit-portrait,
-.unit-card .unit-portrait-stack,
-.unit-card .unit-card-bg-layer,
-.unit-card .unit-card-character-layer,
-.unit-card .unit-portrait img{
-  display:block !important;
-  visibility:visible !important;
-  opacity:var(--portrait-opacity) !important;
-  filter:
-    brightness(var(--portrait-brightness))
-    saturate(var(--portrait-saturation))
-    contrast(var(--portrait-contrast))
-    blur(var(--portrait-blur)) !important;
-  box-shadow:none !important;
-  text-shadow:none !important;
-  mix-blend-mode:normal !important;
-  animation:none !important;
-}
-
-/* Marco base apagado según valores del usuario. */
-.grid .cell > .unit-card .unit-frame-skin,
-.cell > .unit-card .unit-frame-skin,
-.unit-card .unit-frame-skin{
-  display:block !important;
-  visibility:hidden !important;
-  opacity:var(--frame-opacity) !important;
-  filter:
-    brightness(var(--frame-brightness))
-    saturate(var(--frame-saturation))
-    contrast(var(--frame-contrast))
-    drop-shadow(0 0 var(--frame-shadow-px) rgba(0,0,0,var(--frame-shadow-alpha))) !important;
-  box-shadow:none !important;
-  animation:none !important;
-}
-.unit-frame-skin::before,
-.unit-frame-skin::after{
-  content:none !important;
-  display:none !important;
-}
-
-/* Rutas por rareza: normal + glow PNG horneado. */
-.grid .cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-improved,
-.unit-card.card-rarity-improved{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-heroic,
-.unit-card.card-rarity-heroic{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-glorious,
-.unit-card.card-rarity-glorious{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-epic,
-.unit-card.card-rarity-epic{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-mythic,
-.unit-card.card-rarity-mythic{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-legendary,
-.unit-card.card-rarity-legendary{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
-}
-.grid .cell > .unit-card.card-rarity-demigod,
-.grid .cell > .unit-card.leader,
-.cell > .unit-card.card-rarity-demigod,
-.cell > .unit-card.leader,
-.unit-card.card-rarity-demigod,
-.unit-card.leader{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
-}
-
-/* Ornamento normal visible. */
-.grid .cell > .unit-card .unit-frame-rarity,
-.cell > .unit-card .unit-frame-rarity,
-.unit-card .unit-frame-rarity{
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  inset:0 !important;
-  z-index:5 !important;
-  pointer-events:none !important;
-  opacity:var(--ornament-opacity) !important;
-  background-image:var(--hv-ornament-image) !important;
-  background-position:center !important;
-  background-size:100% 100% !important;
-  background-repeat:no-repeat !important;
-  filter:
-    brightness(var(--ornament-brightness))
-    saturate(var(--ornament-saturation))
-    contrast(var(--ornament-contrast))
-    blur(var(--ornament-blur)) !important;
-  box-shadow:none !important;
-  text-shadow:none !important;
-  mix-blend-mode:normal !important;
-  animation:none !important;
-}
-
-/* Glow PNG horneado. Sin drop-shadow CSS, sin halo CSS. */
-.grid .cell > .unit-card .unit-frame-rarity::after,
-.cell > .unit-card .unit-frame-rarity::after,
-.unit-card .unit-frame-rarity::after{
-  content:"" !important;
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  inset:0 !important;
-  pointer-events:none !important;
-  background-image:var(--hv-ornament-glow-image) !important;
-  background-position:center !important;
-  background-size:100% 100% !important;
-  background-repeat:no-repeat !important;
-  opacity:var(--baked-opacity) !important;
-  filter:
-    brightness(var(--baked-brightness))
-    saturate(var(--baked-saturation))
-    contrast(var(--baked-contrast))
-    blur(var(--baked-blur)) !important;
-  box-shadow:none !important;
-  text-shadow:none !important;
-  mix-blend-mode:normal !important;
-  animation:hvRarityBakedPulse7HBC var(--pulse-duration) ease-in-out infinite !important;
-}
-
-/* Nada de ::before del ornamento. */
-.grid .cell > .unit-card .unit-frame-rarity::before,
-.cell > .unit-card .unit-frame-rarity::before,
-.unit-card .unit-frame-rarity::before{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-}
-
-/* Básicas sin ornamento de rareza. */
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.unit-card.card-rarity-basic .unit-frame-rarity{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-}
-
-/* Pulso ultra lento, solo opacidad del glow PNG horneado. */
-@keyframes hvRarityBakedPulse7HBC{
-  0%,100%{opacity:calc(var(--baked-opacity) * var(--pulse-min));}
-  50%{opacity:calc(var(--baked-opacity) * var(--pulse-max));}
-}
-
-/* Stats normales por encima. */
-.grid .cell > .unit-card .unit-ornate-ui,
-.cell > .unit-card .unit-ornate-ui,
-.unit-card .unit-ornate-ui,
-.grid .cell > .unit-card .unit-status-bubbles,
-.cell > .unit-card .unit-status-bubbles,
-.unit-card .unit-status-bubbles{
-  display:block !important;
-  visibility:visible !important;
-  opacity:var(--stats-opacity) !important;
-  z-index:8 !important;
-  filter:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-}
-
-/* Base aliado/enemigo reconstruida sin usar el brillo viejo de la carta. */
-.grid .cell > .unit-card.p1::before,
-.grid .cell > .unit-card.ally::before,
-.cell > .unit-card.p1::before,
-.cell > .unit-card.ally::before,
-.unit-card.p1::before,
-.unit-card.ally::before{
-  content:"" !important;
-  display:block !important;
-  position:absolute !important;
-  left:0 !important;
-  right:0 !important;
-  bottom:-8% !important;
-  height:20% !important;
-  width:var(--team-size) !important;
-  margin:auto !important;
-  opacity:var(--team-opacity) !important;
-  background:radial-gradient(ellipse at center, rgba(0,230,255,.88) 0%, rgba(0,230,255,.38) 42%, rgba(0,230,255,0) 72%) !important;
-  filter:blur(var(--team-blur)) !important;
-  z-index:1 !important;
-  border:none !important;
-  outline:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-}
-.grid .cell > .unit-card.p2::before,
-.grid .cell > .unit-card.enemy::before,
-.cell > .unit-card.p2::before,
-.cell > .unit-card.enemy::before,
-.unit-card.p2::before,
-.unit-card.enemy::before{
-  content:"" !important;
-  display:block !important;
-  position:absolute !important;
-  left:0 !important;
-  right:0 !important;
-  bottom:-8% !important;
-  height:20% !important;
-  width:var(--team-size) !important;
-  margin:auto !important;
-  opacity:var(--team-opacity) !important;
-  background:radial-gradient(ellipse at center, rgba(255,70,160,.88) 0%, rgba(255,70,160,.38) 42%, rgba(255,70,160,0) 72%) !important;
-  filter:blur(var(--team-blur)) !important;
-  z-index:1 !important;
-  border:none !important;
-  outline:none !important;
-  box-shadow:none !important;
-  animation:none !important;
-}
-
-/* Apagar cualquier halo CSS externo que antes volvía como fantasma. */
-.grid .cell > .unit-card::after,
-.cell > .unit-card::after,
-.unit-card::after,
-.grid .cell::before,
-.grid .cell::after,
-.cell::before,
-.cell::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-  background:none !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-/* Estados de mover/atacar: sin glow de carta. Mantienen clase, no iluminan la unidad. */
-.grid .cell.valid,
-.grid .cell.attackable,
-.grid .cell.summonable,
-.grid .cell.selected,
-.cell.valid,
-.cell.attackable,
-.cell.summonable,
-.cell.selected{
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-#hvGlowPanic7HBB{display:none!important;}
-
-
-/* ==========================================================
-   7HBD · Quitar controles/debug del campo
-   ========================================================== */
 #hvRarityControlPanel,
 #hvRarityCtrlPanel,
 #hvRarityCtrl,
 #hvRarityControl,
+#hvRarityRealToggle,
+#hvRarityRealPanel,
+#hvExtraGlowBox7HAX,
+#hvMasterGlowBox7HBA,
 #hvGlowPanic7HBB,
+#hvKillGlows7HAX,
+#hvMasterZeroGlow7HBA,
+#hvMasterNoMarkers7HBA,
+#hvMasterCleanPortrait7HBA,
+#hvMasterReset7HBA,
 .hv-rarity-control-panel,
 .rarity-control-panel,
 .rarity-ctrl-panel{
@@ -17205,12 +14963,48 @@ body.hv-master-zero-glow .grid .cell::after{
   pointer-events:none !important;
 }
 
+/* Carta de campo: base limpia, sin baño de brillo sobre el retrato. */
+.grid .cell > .unit-card,
+.cell > .unit-card,
+.unit-card{
+  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
+  --hv-ornament-image:none;
+  --hv-ornament-glow-image:none;
+  position:relative !important;
+  overflow:visible !important;
+  isolation:isolate !important;
+  background:transparent !important;
+  box-shadow:0 5px 8px rgba(0,0,0,.38) !important;
+  transform:none !important;
+}
 
-/* ==========================================================
-   7HBE · FIX base aliado/enemigo flotando
-   Apaga el pseudo-elemento de base que quedó desalineado.
-   No toca stats ni reglas de juego.
-   ========================================================== */
+/* Apaga pseudo-elementos viejos que bañaban toda la carta o metían aros dentro de la unidad. */
+.grid .cell > .unit-card::after,
+.cell > .unit-card::after,
+.unit-card::after,
+.grid .cell.summonable > .unit-card::after,
+.grid .cell.valid-summon > .unit-card::after,
+.grid .cell.can-summon > .unit-card::after,
+.grid .cell.summon-target > .unit-card::after,
+.cell.summonable > .unit-card::after,
+.cell.valid-summon > .unit-card::after,
+.cell.can-summon > .unit-card::after,
+.cell.summon-target > .unit-card::after{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  background:none !important;
+  border:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+  -webkit-mask:none !important;
+  mask:none !important;
+}
+
+/* La base de equipo flotante queda apagada en unidades de tablero.
+   Fue la que se desalineaba y parecía un brillo extraño debajo de la ficha. */
 .grid .cell > .unit-card.p1::before,
 .grid .cell > .unit-card.p2::before,
 .grid .cell > .unit-card.ally::before,
@@ -17233,234 +15027,53 @@ body.hv-master-zero-glow .grid .cell::after{
   animation:none !important;
 }
 
-/* Mantener la carta anclada donde corresponde. */
-.grid .cell > .unit-card,
-.cell > .unit-card,
-.unit-card{
-  position:relative !important;
-}
-
-/* Ocultar cualquier resto de panel/debug anterior por si quedó en HTML runtime. */
-#hvRarityRealToggle,
-#hvRarityRealPanel,
-#hvExtraGlowBox7HAX,
-#hvMasterGlowBox7HBA,
-#hvGlowPanic7HBB,
-#hvKillGlows7HAX,
-#hvMasterZeroGlow7HBA,
-#hvMasterNoMarkers7HBA,
-#hvMasterCleanPortrait7HBA,
-#hvMasterReset7HBA{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-
-
-/* ==========================================================
-   7HBF · devolver circulito de convocación sin devolver brillo de carta
-   Solo afecta celdas vacías/zonas válidas de invocación.
-   No toca rareza, retrato, ornamento, mano, IA ni reglas.
-   ========================================================== */
-
-.grid .cell.summonable::after,
-.grid .cell.valid-summon::after,
-.grid .cell.can-summon::after,
-.grid .cell.summon-target::after,
-.cell.summonable::after,
-.cell.valid-summon::after,
-.cell.can-summon::after,
-.cell.summon-target::after{
-  content:"" !important;
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  width:68% !important;
-  height:68% !important;
-  transform:translate(-50%,-50%) !important;
-  border-radius:50% !important;
-  pointer-events:none !important;
-  opacity:.85 !important;
-  z-index:6 !important;
-  background:
-    radial-gradient(circle at center,
-      rgba(255,230,120,.10) 0%,
-      rgba(255,230,120,.08) 42%,
-      rgba(255,230,120,0) 68%) !important;
-  border:1px solid rgba(255,220,95,.72) !important;
-  box-shadow:
-    inset 0 0 10px rgba(255,220,95,.22),
-    0 0 8px rgba(255,220,95,.25) !important;
+/* Retrato y capas internas limpias: nada de lámpara encima de la unidad. */
+.grid .cell > .unit-card .unit-portrait,
+.grid .cell > .unit-card .unit-portrait-stack,
+.grid .cell > .unit-card .unit-card-bg-layer,
+.grid .cell > .unit-card .unit-card-character-layer,
+.grid .cell > .unit-card .unit-portrait img,
+.cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait-stack,
+.cell > .unit-card .unit-card-bg-layer,
+.cell > .unit-card .unit-card-character-layer,
+.cell > .unit-card .unit-portrait img,
+.unit-card .unit-portrait,
+.unit-card .unit-portrait-stack,
+.unit-card .unit-card-bg-layer,
+.unit-card .unit-card-character-layer,
+.unit-card .unit-portrait img{
   filter:none !important;
-  animation:none !important;
-}
-
-/* El circulito de convocación solo debe salir en la celda, no pegado a la carta. */
-.grid .cell.summonable > .unit-card::after,
-.grid .cell.valid-summon > .unit-card::after,
-.grid .cell.can-summon > .unit-card::after,
-.grid .cell.summon-target > .unit-card::after,
-.cell.summonable > .unit-card::after,
-.cell.valid-summon > .unit-card::after,
-.cell.can-summon > .unit-card::after,
-.cell.summon-target > .unit-card::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
-}
-
-
-/* ==========================================================
-   7HBG · restaurar bordes de celdas al seleccionar unidad
-   Verde = mover. Rojo = atacar.
-   Esto es marcador de celda, no brillo de carta.
-   ========================================================== */
-
-.grid .cell.valid::after,
-.grid .cell.move-range-preview::after,
-.grid .cell.valid-move::after,
-.grid .cell.can-move::after,
-.cell.valid::after,
-.cell.move-range-preview::after,
-.cell.valid-move::after,
-.cell.can-move::after{
-  content:"" !important;
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  inset:3px !important;
-  border-radius:4px !important;
-  pointer-events:none !important;
-  opacity:1 !important;
-  z-index:7 !important;
-  background:rgba(112,224,138,.10) !important;
-  border:none !important;
-  outline:none !important;
-  box-shadow:
-    inset 0 0 0 2px rgba(112,224,138,.82),
-    0 0 7px rgba(112,224,138,.18) !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-.grid .cell.attackable::after,
-.grid .cell.attack-range-preview::after,
-.grid .cell.valid-attack::after,
-.grid .cell.can-attack::after,
-.grid .cell.enemy-threat-preview::after,
-.cell.attackable::after,
-.cell.attack-range-preview::after,
-.cell.valid-attack::after,
-.cell.can-attack::after,
-.cell.enemy-threat-preview::after{
-  content:"" !important;
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  inset:3px !important;
-  border-radius:4px !important;
-  pointer-events:none !important;
-  opacity:1 !important;
-  z-index:7 !important;
-  background:rgba(239,71,111,.10) !important;
-  border:none !important;
-  outline:none !important;
-  box-shadow:
-    inset 0 0 0 2px rgba(239,71,111,.88),
-    0 0 8px rgba(239,71,111,.20) !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-/* La selección de unidad solo marca la celda, no vuelve a iluminar la carta. */
-.grid .cell.selected::after,
-.cell.selected::after{
-  content:"" !important;
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  inset:2px !important;
-  border-radius:5px !important;
-  pointer-events:none !important;
-  opacity:1 !important;
-  z-index:7 !important;
-  background:transparent !important;
-  box-shadow:inset 0 0 0 2px rgba(255,220,95,.74) !important;
-  filter:none !important;
-  animation:none !important;
-}
-
-/* Carta básica: normal, sin ornamento ni glow de rareza. */
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.grid .cell > .unit-card.rarity-basic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.cell > .unit-card.rarity-basic .unit-frame-rarity,
-.unit-card.card-rarity-basic .unit-frame-rarity,
-.unit-card.rarity-basic .unit-frame-rarity{
-  content:none !important;
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  background:none !important;
   box-shadow:none !important;
-  filter:none !important;
+  mix-blend-mode:normal !important;
   animation:none !important;
+  opacity:1 !important;
 }
 
-/* El marcador de celda no debe meterse dentro de la carta. */
-.grid .cell.valid > .unit-card::after,
-.grid .cell.attackable > .unit-card::after,
-.grid .cell.selected > .unit-card::after,
-.grid .cell.can-move > .unit-card::after,
-.grid .cell.can-attack > .unit-card::after,
-.cell.valid > .unit-card::after,
-.cell.attackable > .unit-card::after,
-.cell.selected > .unit-card::after,
-.cell.can-move > .unit-card::after,
-.cell.can-attack > .unit-card::after{
-  content:none !important;
-  display:none !important;
-  opacity:0 !important;
+.grid .cell > .unit-card .unit-portrait,
+.cell > .unit-card .unit-portrait,
+.unit-card .unit-portrait{
+  position:absolute !important;
+  left:15.8% !important;
+  right:15.8% !important;
+  top:14.2% !important;
+  bottom:26.8% !important;
+  z-index:2 !important;
+  pointer-events:none !important;
+  background:#050505 !important;
 }
 
-/* ==========================================================
-   7HBI · RESTORE CARTA + MARCO + ORNAMENTOS
-   Motivo:
-   El reset 7HBB/7HBC dejó el frame base oculto y, por cascada,
-   podía volver a apagar las capas ornamentales. Este bloque va al
-   final para recuperar SOLO la estructura visual de la carta.
-   No toca reglas, mano, mazo, IA, fases, movimiento ni ataque.
-   ========================================================== */
-
-.grid .cell > .unit-card,
-.cell > .unit-card,
-.unit-card{
-  --frame-opacity:1;
-  --frame-brightness:1;
-  --frame-saturation:1;
-  --frame-contrast:1;
-  --frame-shadow-px:0px;
-  --frame-shadow-alpha:0;
-  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
-  overflow:visible !important;
-  background:transparent !important;
-}
-
+/* Marco base. */
 .grid .cell > .unit-card.card-rarity-mythic,
 .cell > .unit-card.card-rarity-mythic,
 .unit-card.card-rarity-mythic{
   --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.png");
 }
-
 .grid .cell > .unit-card.card-rarity-legendary,
 .cell > .unit-card.card-rarity-legendary,
 .unit-card.card-rarity-legendary{
   --frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.png");
 }
-
 .grid .cell > .unit-card.card-rarity-demigod,
 .grid .cell > .unit-card.leader,
 .cell > .unit-card.card-rarity-demigod,
@@ -17505,6 +15118,7 @@ body.hv-master-zero-glow .grid .cell::after{
   animation:none !important;
 }
 
+/* Rutas de ornamento por rareza. */
 .grid .cell > .unit-card.card-rarity-improved,
 .cell > .unit-card.card-rarity-improved,
 .unit-card.card-rarity-improved{
@@ -17551,6 +15165,26 @@ body.hv-master-zero-glow .grid .cell::after{
   --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
 }
 
+/* Ornamento de rareza: visible solo cuando la rareza lo requiere. */
+.grid .cell > .unit-card .unit-frame-rarity,
+.cell > .unit-card .unit-frame-rarity,
+.unit-card .unit-frame-rarity{
+  content:"" !important;
+  display:none !important;
+  visibility:hidden !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  opacity:0 !important;
+  background:none center/100% 100% no-repeat !important;
+  filter:none !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  mix-blend-mode:normal !important;
+  animation:none !important;
+}
+
 .grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity,
 .grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity,
 .grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity,
@@ -17575,22 +15209,41 @@ body.hv-master-zero-glow .grid .cell::after{
 .unit-card.card-rarity-legendary .unit-frame-rarity,
 .unit-card.card-rarity-demigod .unit-frame-rarity,
 .unit-card.leader .unit-frame-rarity{
-  content:"" !important;
   display:block !important;
   visibility:visible !important;
-  position:absolute !important;
-  inset:0 !important;
-  z-index:5 !important;
-  pointer-events:none !important;
   opacity:1 !important;
-  background:var(--hv-ornament-image) center/100% 100% no-repeat !important;
-  filter:none !important;
+  background-image:var(--hv-ornament-image) !important;
+  background-position:center !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+}
+
+.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.grid .cell > .unit-card.rarity-basic .unit-frame-rarity,
+.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
+.cell > .unit-card.rarity-basic .unit-frame-rarity,
+.unit-card.card-rarity-basic .unit-frame-rarity,
+.unit-card.rarity-basic .unit-frame-rarity{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  background:none !important;
   box-shadow:none !important;
-  text-shadow:none !important;
-  mix-blend-mode:normal !important;
+  filter:none !important;
   animation:none !important;
 }
 
+.grid .cell > .unit-card .unit-frame-rarity::before,
+.cell > .unit-card .unit-frame-rarity::before,
+.unit-card .unit-frame-rarity::before{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+
+/* Glow horneado de ornamento: brillo controlado, no bombillo sobre la unidad. */
 .grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity::after,
 .grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity::after,
 .grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity::after,
@@ -17627,66 +15280,342 @@ body.hv-master-zero-glow .grid .cell::after{
   box-shadow:none !important;
   text-shadow:none !important;
   mix-blend-mode:normal !important;
-  animation:hvRarityBakedPulse7HBC 30s ease-in-out infinite !important;
+  animation:hvRarityGlowPulse7HCL 30s ease-in-out infinite !important;
 }
 
-.grid .cell > .unit-card.card-rarity-improved .unit-frame-rarity::before,
-.grid .cell > .unit-card.card-rarity-heroic .unit-frame-rarity::before,
-.grid .cell > .unit-card.card-rarity-glorious .unit-frame-rarity::before,
-.grid .cell > .unit-card.card-rarity-epic .unit-frame-rarity::before,
-.grid .cell > .unit-card.card-rarity-mythic .unit-frame-rarity::before,
-.grid .cell > .unit-card.card-rarity-legendary .unit-frame-rarity::before,
-.grid .cell > .unit-card.card-rarity-demigod .unit-frame-rarity::before,
-.grid .cell > .unit-card.leader .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-improved .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-heroic .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-glorious .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-epic .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-mythic .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-legendary .unit-frame-rarity::before,
-.cell > .unit-card.card-rarity-demigod .unit-frame-rarity::before,
-.cell > .unit-card.leader .unit-frame-rarity::before,
-.unit-card.card-rarity-improved .unit-frame-rarity::before,
-.unit-card.card-rarity-heroic .unit-frame-rarity::before,
-.unit-card.card-rarity-glorious .unit-frame-rarity::before,
-.unit-card.card-rarity-epic .unit-frame-rarity::before,
-.unit-card.card-rarity-mythic .unit-frame-rarity::before,
-.unit-card.card-rarity-legendary .unit-frame-rarity::before,
-.unit-card.card-rarity-demigod .unit-frame-rarity::before,
-.unit-card.leader .unit-frame-rarity::before{
-  content:none !important;
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
+@keyframes hvRarityGlowPulse7HCL{
+  0%,100%{opacity:.30}
+  45%{opacity:.55}
+  55%{opacity:.62}
 }
 
-.grid .cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.grid .cell > .unit-card.rarity-basic .unit-frame-rarity,
-.cell > .unit-card.card-rarity-basic .unit-frame-rarity,
-.cell > .unit-card.rarity-basic .unit-frame-rarity,
-.unit-card.card-rarity-basic .unit-frame-rarity,
-.unit-card.rarity-basic .unit-frame-rarity{
-  content:none !important;
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  background:none !important;
-  box-shadow:none !important;
-  filter:none !important;
-  animation:none !important;
-}
-
+/* HUD, stats y sellos por encima del marco. */
 .grid .cell > .unit-card .unit-ornate-ui,
 .cell > .unit-card .unit-ornate-ui,
-.unit-card .unit-ornate-ui,
-.grid .cell > .unit-card .unit-status-bubbles,
-.cell > .unit-card .unit-status-bubbles,
-.unit-card .unit-status-bubbles{
+.unit-card .unit-ornate-ui{
+  position:absolute !important;
+  inset:0 !important;
   display:block !important;
   visibility:visible !important;
   opacity:1 !important;
   z-index:8 !important;
+  pointer-events:none !important;
 }
+
+.grid .cell > .unit-card .unit-stat-orb,
+.cell > .unit-card .unit-stat-orb,
+.unit-card .unit-stat-orb{
+  position:absolute !important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:11 !important;
+  pointer-events:none !important;
+}
+.grid .cell > .unit-card .stat-orb-cost,
+.grid .cell > .unit-card .stat-orb-hp,
+.cell > .unit-card .stat-orb-cost,
+.cell > .unit-card .stat-orb-hp,
+.unit-card .stat-orb-cost,
+.unit-card .stat-orb-hp{
+  top:7.2% !important;
+  width:18.8% !important;
+  height:12.8% !important;
+}
+.grid .cell > .unit-card .stat-orb-cost,
+.cell > .unit-card .stat-orb-cost,
+.unit-card .stat-orb-cost{left:7.6% !important;}
+.grid .cell > .unit-card .stat-orb-hp,
+.cell > .unit-card .stat-orb-hp,
+.unit-card .stat-orb-hp{right:7.6% !important;}
+.grid .cell > .unit-card .stat-orb-atk,
+.grid .cell > .unit-card .stat-orb-aux,
+.cell > .unit-card .stat-orb-atk,
+.cell > .unit-card .stat-orb-aux,
+.unit-card .stat-orb-atk,
+.unit-card .stat-orb-aux{
+  bottom:6.2% !important;
+  height:14.5% !important;
+}
+.grid .cell > .unit-card .stat-orb-atk,
+.cell > .unit-card .stat-orb-atk,
+.unit-card .stat-orb-atk{
+  left:8.2% !important;
+  width:22% !important;
+}
+.grid .cell > .unit-card .stat-orb-aux,
+.cell > .unit-card .stat-orb-aux,
+.unit-card .stat-orb-aux{
+  right:7.2% !important;
+  width:26.5% !important;
+}
+
+.grid .cell > .unit-card .unit-status-bubbles,
+.grid .cell > .unit-card .unit-status-seals,
+.grid .cell > .unit-card .status-seal-rail,
+.grid .cell > .unit-card .unit-status-seal-extra,
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals,
+.cell > .unit-card .status-seal-rail,
+.cell > .unit-card .unit-status-seal-extra,
+.unit-card .unit-status-bubbles,
+.unit-card .unit-status-seals,
+.unit-card .status-seal-rail,
+.unit-card .unit-status-seal-extra{
+  position:absolute !important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:12 !important;
+}
+
+/* Base visual de líderes, conservada porque no pertenece al brillo roto de las unidades. */
+@keyframes hvLeaderBasePulse7HCL{
+  0%,100%{transform:translateX(-50%) scale(1);opacity:.88}
+  50%{transform:translateX(-50%) scale(1.04);opacity:1}
+}
+.leader-base.ally .leader-base-token::before,
+.leader-base.enemy .leader-base-token::before{
+  content:"" !important;
+  position:absolute !important;
+  left:50% !important;
+  bottom:10% !important;
+  width:88% !important;
+  height:16% !important;
+  transform:translateX(-50%) !important;
+  border-radius:999px !important;
+  pointer-events:none !important;
+  z-index:0 !important;
+  opacity:.96 !important;
+  animation:hvLeaderBasePulse7HCL 2.4s ease-in-out infinite !important;
+}
+.leader-base.ally .leader-base-token::before{
+  background:radial-gradient(ellipse at center,rgba(116,242,255,.62) 0%,rgba(77,198,255,.46) 28%,rgba(34,112,255,.24) 56%,rgba(0,0,0,0) 76%) !important;
+  box-shadow:0 0 12px rgba(96,224,255,.44),0 0 20px rgba(66,154,255,.24) !important;
+}
+.leader-base.enemy .leader-base-token::before{
+  background:radial-gradient(ellipse at center,rgba(255,118,171,.66) 0%,rgba(255,92,124,.50) 28%,rgba(182,34,79,.26) 56%,rgba(0,0,0,0) 76%) !important;
+  box-shadow:0 0 12px rgba(255,110,166,.44),0 0 20px rgba(220,54,107,.24) !important;
+}
+
+/* Marcadores de celda: mover, atacar y selección. */
+.grid .cell.valid::after,
+.grid .cell.move-range-preview::after,
+.grid .cell.valid-move::after,
+.grid .cell.can-move::after,
+.cell.valid::after,
+.cell.move-range-preview::after,
+.cell.valid-move::after,
+.cell.can-move::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:3px !important;
+  border-radius:4px !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  z-index:7 !important;
+  background:rgba(112,224,138,.10) !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:inset 0 0 0 2px rgba(112,224,138,.82),0 0 7px rgba(112,224,138,.18) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+.grid .cell.attackable::after,
+.grid .cell.attack-range-preview::after,
+.grid .cell.valid-attack::after,
+.grid .cell.can-attack::after,
+.grid .cell.enemy-threat-preview::after,
+.cell.attackable::after,
+.cell.attack-range-preview::after,
+.cell.valid-attack::after,
+.cell.can-attack::after,
+.cell.enemy-threat-preview::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:3px !important;
+  border-radius:4px !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  z-index:7 !important;
+  background:rgba(239,71,111,.10) !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:inset 0 0 0 2px rgba(239,71,111,.88),0 0 8px rgba(239,71,111,.20) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+.grid .cell.selected::after,
+.cell.selected::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  inset:2px !important;
+  border-radius:5px !important;
+  pointer-events:none !important;
+  opacity:1 !important;
+  z-index:7 !important;
+  background:transparent !important;
+  box-shadow:inset 0 0 0 2px rgba(255,220,95,.74) !important;
+  filter:none !important;
+  animation:none !important;
+}
+
+/* Aro de invocación pequeño: marcador de celda, no pseudo-elemento de carta. */
+.grid .cell.summonable::after,
+.grid .cell.valid-summon::after,
+.grid .cell.can-summon::after,
+.grid .cell.summon-target::after,
+.cell.summonable::after,
+.cell.valid-summon::after,
+.cell.can-summon::after,
+.cell.summon-target::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  inset:auto !important;
+  width:22px !important;
+  height:22px !important;
+  transform:translate(-50%,-50%) scale(.96) !important;
+  border-radius:999px !important;
+  pointer-events:none !important;
+  opacity:.92 !important;
+  z-index:8 !important;
+  border:1px solid rgba(255,221,112,.92) !important;
+  outline:none !important;
+  background:
+    radial-gradient(circle,rgba(255,239,165,.54) 0 18%,rgba(255,199,83,.22) 21% 46%,rgba(255,199,83,0) 48%),
+    conic-gradient(from 45deg,rgba(255,221,112,0),rgba(255,221,112,.58),rgba(255,221,112,0),rgba(255,221,112,.52),rgba(255,221,112,0)) !important;
+  box-shadow:0 0 9px rgba(255,211,94,.48),0 0 17px rgba(255,211,94,.16),inset 0 0 6px rgba(255,233,151,.28) !important;
+  filter:none !important;
+  animation:hvSummonMarkerPulse7HCL 1.32s ease-in-out infinite !important;
+}
+
+@keyframes hvSummonMarkerPulse7HCL{
+  0%,100%{
+    opacity:.70;
+    transform:translate(-50%,-50%) scale(.90) !important;
+    box-shadow:0 0 6px rgba(255,211,94,.28),0 0 12px rgba(255,211,94,.10),inset 0 0 5px rgba(255,233,151,.18) !important;
+  }
+  50%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.08) !important;
+    box-shadow:0 0 11px rgba(255,211,94,.74),0 0 22px rgba(255,211,94,.24),inset 0 0 7px rgba(255,233,151,.34) !important;
+  }
+}
+
+/* FX de batalla: asegurar que la invocación vuelva a verse aunque no afecte rarezas. */
+#battleFxLayer,
+.battle-fx-layer{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:32 !important;
+  pointer-events:none !important;
+  overflow:visible !important;
+}
+
+.battle-fx-summon{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:88px !important;
+  height:88px !important;
+  position:absolute !important;
+  transform:translate(-50%,-50%) !important;
+  pointer-events:none !important;
+}
+.battle-fx-ring,
+.battle-fx-core,
+.battle-fx-rays,
+.battle-fx-aura,
+.battle-fx-sigil{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  pointer-events:none !important;
+}
+.battle-fx-ring{animation:summonRingExpand .95s ease-out forwards !important}
+.battle-fx-ring-2{animation:summonRingExpand .78s ease-out .08s forwards !important}
+.battle-fx-core{animation:summonCorePulse .88s ease-out forwards !important}
+.battle-fx-rays{animation:summonRaysSpin .95s ease-out forwards !important}
+.battle-fx-aura{animation:summonAuraPulse 1.12s ease-out forwards !important}
+.battle-fx-sigil{animation:sigilSpin 1.2s ease-out forwards !important}
+
+@media(max-width:980px){
+  .grid .cell > .unit-card .unit-portrait,
+  .cell > .unit-card .unit-portrait,
+  .unit-card .unit-portrait{
+    left:15.5% !important;
+    right:15.5% !important;
+    top:13.8% !important;
+    bottom:26.4% !important;
+  }
+  .grid .cell > .unit-card .stat-orb-cost,
+  .grid .cell > .unit-card .stat-orb-hp,
+  .cell > .unit-card .stat-orb-cost,
+  .cell > .unit-card .stat-orb-hp,
+  .unit-card .stat-orb-cost,
+  .unit-card .stat-orb-hp{
+    top:7.5% !important;
+    width:19.2% !important;
+    height:13% !important;
+  }
+  .grid .cell > .unit-card .stat-orb-atk,
+  .grid .cell > .unit-card .stat-orb-aux,
+  .cell > .unit-card .stat-orb-atk,
+  .cell > .unit-card .stat-orb-aux,
+  .unit-card .stat-orb-atk,
+  .unit-card .stat-orb-aux{
+    bottom:6.6% !important;
+    height:14.6% !important;
+  }
+  .grid .cell > .unit-card .stat-orb-atk,
+  .cell > .unit-card .stat-orb-atk,
+  .unit-card .stat-orb-atk{width:22.8% !important;}
+  .grid .cell > .unit-card .stat-orb-aux,
+  .cell > .unit-card .stat-orb-aux,
+  .unit-card .stat-orb-aux{width:28.5% !important;}
+
+  .leader-base.ally .leader-base-token::before,
+  .leader-base.enemy .leader-base-token::before{
+    width:86% !important;
+    height:14% !important;
+    bottom:11% !important;
+  }
+
+  .grid .cell.summonable::after,
+  .grid .cell.valid-summon::after,
+  .grid .cell.can-summon::after,
+  .grid .cell.summon-target::after,
+  .cell.summonable::after,
+  .cell.valid-summon::after,
+  .cell.can-summon::after,
+  .cell.summon-target::after{
+    width:17px !important;
+    height:17px !important;
+  }
+  .battle-fx-summon{
+    width:68px !important;
+    height:68px !important;
+  }
+}
+
 
 /* PATCH 7HCA - Conoceme unit passport modal */
 .unit-lore-modal{
@@ -17795,139 +15724,4 @@ body.hv-master-zero-glow .grid .cell::after{
   .unit-lore-body{grid-template-columns:1fr;gap:12px}
   .unit-lore-portrait{width:86px;height:112px}
   .unit-lore-copy{text-align:center}
-}
-
-/* ==========================================================
-   7HCB · FIX aros de convocación pequeños + FX de invocación
-   Motivo:
-   7HBF devolvió el marcador usando 68% de la celda, por eso el aro
-   crecía demasiado. Este bloque final vuelve al portal pequeño y
-   reactiva las capas del FX de invocación que podían quedar apagadas
-   por los reset globales de brillo.
-   No toca reglas, stats, mazo, mano, IA, fases ni balance.
-   ========================================================== */
-
-.grid .cell.summonable::after,
-.grid .cell.valid-summon::after,
-.grid .cell.can-summon::after,
-.grid .cell.summon-target::after,
-.cell.summonable::after,
-.cell.valid-summon::after,
-.cell.can-summon::after,
-.cell.summon-target::after{
-  content:"" !important;
-  display:block !important;
-  visibility:visible !important;
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  right:auto !important;
-  bottom:auto !important;
-  inset:auto !important;
-  width:22px !important;
-  height:22px !important;
-  transform:translate(-50%,-50%) scale(.96) !important;
-  border-radius:999px !important;
-  pointer-events:none !important;
-  opacity:.92 !important;
-  z-index:8 !important;
-  border:1px solid rgba(255,221,112,.92) !important;
-  outline:none !important;
-  background:
-    radial-gradient(circle,rgba(255,239,165,.54) 0 18%,rgba(255,199,83,.22) 21% 46%,rgba(255,199,83,0) 48%),
-    conic-gradient(from 45deg,rgba(255,221,112,0),rgba(255,221,112,.58),rgba(255,221,112,0),rgba(255,221,112,.52),rgba(255,221,112,0)) !important;
-  box-shadow:
-    0 0 9px rgba(255,211,94,.48),
-    0 0 17px rgba(255,211,94,.16),
-    inset 0 0 6px rgba(255,233,151,.28) !important;
-  filter:none !important;
-  animation:hvSummonMarkerPulse7HCB 1.32s ease-in-out infinite !important;
-}
-
-.grid .cell.summonable > .unit-card::after,
-.grid .cell.valid-summon > .unit-card::after,
-.grid .cell.can-summon > .unit-card::after,
-.grid .cell.summon-target > .unit-card::after,
-.cell.summonable > .unit-card::after,
-.cell.valid-summon > .unit-card::after,
-.cell.can-summon > .unit-card::after,
-.cell.summon-target > .unit-card::after{
-  content:none !important;
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-}
-
-#battleFxLayer,
-.battle-fx-layer{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  z-index:32 !important;
-  pointer-events:none !important;
-  overflow:visible !important;
-}
-
-.battle-fx-summon{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  width:88px !important;
-  height:88px !important;
-  position:absolute !important;
-  transform:translate(-50%,-50%) !important;
-  pointer-events:none !important;
-}
-.battle-fx-ring,
-.battle-fx-core,
-.battle-fx-rays,
-.battle-fx-aura,
-.battle-fx-sigil{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1;
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  pointer-events:none !important;
-}
-.battle-fx-ring{animation:summonRingExpand .95s ease-out forwards !important}
-.battle-fx-ring-2{animation:summonRingExpand .78s ease-out .08s forwards !important}
-.battle-fx-core{animation:summonCorePulse .88s ease-out forwards !important}
-.battle-fx-rays{animation:summonRaysSpin .95s ease-out forwards !important}
-.battle-fx-aura{animation:summonAuraPulse 1.12s ease-out forwards !important}
-.battle-fx-sigil{animation:sigilSpin 1.2s ease-out forwards !important}
-
-@keyframes hvSummonMarkerPulse7HCB{
-  0%,100%{
-    opacity:.70;
-    transform:translate(-50%,-50%) scale(.90) !important;
-    box-shadow:
-      0 0 6px rgba(255,211,94,.28),
-      0 0 12px rgba(255,211,94,.10),
-      inset 0 0 5px rgba(255,233,151,.18) !important;
-  }
-  50%{
-    opacity:1;
-    transform:translate(-50%,-50%) scale(1.08) !important;
-    box-shadow:
-      0 0 11px rgba(255,211,94,.74),
-      0 0 22px rgba(255,211,94,.24),
-      inset 0 0 7px rgba(255,233,151,.34) !important;
-  }
-}
-
-@media(max-width:980px){
-  .grid .cell.summonable::after,
-  .grid .cell.valid-summon::after,
-  .grid .cell.can-summon::after,
-  .grid .cell.summon-target::after,
-  .cell.summonable::after,
-  .cell.valid-summon::after,
-  .cell.can-summon::after,
-  .cell.summon-target::after{
-    width:17px !important;
-    height:17px !important;
-  }
-  .battle-fx-summon{width:68px !important;height:68px !important}
 }

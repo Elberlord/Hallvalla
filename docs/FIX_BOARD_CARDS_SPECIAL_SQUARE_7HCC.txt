@@ -1,0 +1,28 @@
+FIX 7HCC · Board cards special square
+Cambio aplicado:
+- Se convirtieron las imágenes no cuadradas de assets/board_cards/special a 1024x1024.
+- Método: canvas negro 1024x1024 + arte centrado sin recortar, para respetar armas, cuerpo y composición.
+- No se tocó script.js, styles.css, reglas, balance, fases, IA, mazo ni rarezas.
+- Objetivo: que las unidades especiales encajen mejor en las celdas cuadradas del tablero y dejen de depender de retratos verticales.
+
+Archivos convertidos:
+- assets/board_cards/special/boudica.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/el_cid.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/hannibal_barca.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/joan_of_arc.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/lu_bu.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/miyamoto_musashi.webp: 377x662 → 1024x1024
+- assets/board_cards/special/nasu_no_yoichi.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/ragnar_lodbrok.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/saladin.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/shaka_zulu.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/shaka_zulu_v2.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/simo_hayha.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/spartacus.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/subotai.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/subotai_v2.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/sun_tzu.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/tomoe_gozen.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/tomoe_gozen_v2.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/ulysses.webp: 768x1024 → 1024x1024
+- assets/board_cards/special/yi_sun_sin.webp: 768x1024 → 1024x1024
