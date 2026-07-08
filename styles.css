@@ -15951,3 +15951,57 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
+
+/* ==========================================================
+   7HCR · Control separado de Música y Efectos
+   ========================================================== */
+#battleMenuPanel .battle-audio-controls{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+  padding:10px !important;
+  border:1px solid rgba(255,209,102,.20) !important;
+  border-radius:14px !important;
+  background:rgba(0,0,0,.24) !important;
+}
+#battleMenuPanel .battle-audio-row{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:7px !important;
+}
+#battleMenuPanel .battle-audio-head{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+#battleMenuPanel .battle-audio-toggle{
+  appearance:none !important;
+  border:1px solid rgba(255,209,102,.28) !important;
+  border-radius:999px !important;
+  background:rgba(49,55,68,.82) !important;
+  color:#fff7dc !important;
+  font-family:Georgia,serif !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+  padding:7px 12px !important;
+  cursor:pointer !important;
+}
+#battleMenuPanel .battle-audio-value{
+  min-width:48px !important;
+  text-align:right !important;
+  color:#ffd166 !important;
+  font-family:Georgia,serif !important;
+  font-weight:900 !important;
+  font-size:13px !important;
+}
+#battleMenuPanel .battle-audio-slider{
+  width:100% !important;
+  accent-color:#ffd166 !important;
+  cursor:pointer !important;
+}
+#battleMenuPanel .battle-audio-slider:disabled{
+  opacity:.42 !important;
+  cursor:not-allowed !important;
+}
+

@@ -1,0 +1,58 @@
+Hallvalla - Control separado de Música y Efectos 7HCR
+============================================================
+
+ZIP base: Hallvalla_duel_music_fix_7HCQ.zip
+ZIP generado: Hallvalla_audio_controls_7HCR.zip
+
+Cambio aplicado:
+- El menú de configuración del duelo ahora tiene controles separados:
+  · Audio general ON/OFF
+  · Música ON/OFF
+  · Volumen de Música 0-100
+  · Efectos ON/OFF
+  · Volumen de Efectos 0-100
+
+Comportamiento:
+- El jugador puede bajar la música sin bajar los efectos.
+- El jugador puede dejar efectos activos y apagar solo música.
+- El jugador puede apagar solo efectos y dejar música.
+- El botón Audio general sigue funcionando como master.
+- Los sliders guardan valores en localStorage.
+- El volumen de música se aplica en vivo al track actual.
+- El volumen de efectos se aplica a todos los tryPlaySound() nuevos.
+
+No se tocó:
+- Reglas.
+- Daño.
+- IA.
+- Assets.
+- Música generada.
+- SFX individuales.
+- Splashes.
+- FX visuales.
+- Cartas, mapas o mazos.
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+- música de duelo existe: True
+
+Checks:
+{
+  "node_check": true,
+  "id=\"battleToggleMusicBtn\"": true,
+  "id=\"battleMusicVolume\"": true,
+  "id=\"battleToggleSfxBtn\"": true,
+  "id=\"battleSfxVolume\"": true,
+  "function toggleBattleMusic()": true,
+  "function toggleBattleSfx()": true,
+  "function setBattleMusicVolume(value)": true,
+  "function setBattleSfxVolume(value)": true,
+  "on(\"battleMusicVolume\",\"input\"": true,
+  "on(\"battleSfxVolume\",\"input\"": true,
+  "clampAudioVolume": true,
+  "7HCR · Control separado de Música y Efectos": true,
+  "css_braces": true,
+  "music_file_exists": true
+}

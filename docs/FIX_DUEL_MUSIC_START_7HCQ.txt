@@ -1,0 +1,55 @@
+Hallvalla - Fix música de duelo que no arrancaba 7HCQ
+============================================================
+
+ZIP base: Hallvalla_duel_music_7HCP.zip
+ZIP generado: Hallvalla_duel_music_fix_7HCQ.zip
+
+Diagnóstico:
+- El audio sí estaba agregado en assets/music/duel_hallvalla_war_chant.ogg.
+- El encadenado tenía dos riesgos:
+  1. En versiones anteriores, localStorage podía conservar music:false y musicVolume:0.
+     Entonces el usuario podía tener SFX activos, pero música apagada por un valor viejo.
+  2. El navegador puede bloquear audio de fondo antes del primer click/tecla.
+     En 7HCP el track quedaba marcado como currentMusic aunque play() hubiera fallado,
+     así que después no reintentaba sonar.
+  3. syncBattleMusic() dependía de que #gameShell ya estuviera visible antes de render().
+     En algunos flujos se llamaba antes de renderizar el duelo.
+
+Correcciones:
+- loadGameSettings() migra el estado viejo music:false + musicVolume:0 a music:true + 0.32.
+- unlockAudio() reintenta syncBattleMusic() después del primer gesto del usuario.
+- playMusic() reintenta reproducir si el audio está pausado y ya hubo interacción.
+- syncBattleMusic() ahora depende de publicState + gameId + batalla no terminada, no de la visibilidad previa del DOM.
+- En updatePublic/onValue se llama syncBattleMusic() después de render().
+
+No se tocó:
+- Reglas.
+- Daño.
+- IA.
+- SFX.
+- Splashes.
+- FX visuales.
+- Assets visuales.
+- Cartas, mapas o mazos.
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+- música existe: True
+- tamaño OGG: 708,210 bytes
+
+Checks:
+{
+  "node_check": true,
+  "migración de versiones anteriores": true,
+  "function unlockAudio(){audioUnlocked=true;syncBattleMusic();}": true,
+  "if(currentMusic.paused&&audioUnlocked)currentMusic.play().catch(()=>{});": true,
+  "const inBattle=!!(publicState&&gameId&&!isBattleEnded());": true,
+  "render();syncBattleMusic();maybePlayBattleFx": true,
+  "render();\n    syncBattleMusic();": true,
+  "playMusic(\"duel_hallvalla_war_chant\")": true,
+  "music_file_exists": true,
+  "music_file_size": 708210,
+  "css_braces": true
+}

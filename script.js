@@ -871,7 +871,20 @@ function maybePlayBattleFx(prevPub,nextPub){
 const GAME_SETTINGS_KEY="hallvalla_game_settings";
 let gameSettings=loadGameSettings();
 let currentMusic=null,currentMusicName="",audioUnlocked=false;
-function loadGameSettings(){try{return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.58,...(JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{})};}catch(e){return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.58};}}
+function loadGameSettings(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{};
+    const settings={sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.58,...saved};
+    // 7HCQ: migración de versiones anteriores donde la música estaba forzada a false/0.
+    // Si el usuario solo tenía el estado viejo, activamos la música de duelo por defecto.
+    if(saved&&saved.music===false&&Number(saved.musicVolume||0)<=0){
+      settings.music=true;
+      settings.musicVolume=.32;
+    }
+    if(!Number.isFinite(Number(settings.musicVolume))||Number(settings.musicVolume)<=0)settings.musicVolume=.32;
+    return settings;
+  }catch(e){return{sound:true,music:true,sfx:true,musicVolume:.32,sfxVolume:.58};}
+}
 function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stringify(gameSettings));}catch(e){}}
 
 
@@ -947,34 +960,48 @@ async function deleteCurrentFirebaseBattleSafe(){
     return false;
   }
 }
-function unlockAudio(){audioUnlocked=true;}
+function unlockAudio(){audioUnlocked=true;syncBattleMusic();}
 if(typeof window!=="undefined"){
   window.addEventListener("pointerdown",unlockAudio,{once:true});
   window.addEventListener("keydown",unlockAudio,{once:true});
   document.addEventListener("click",ev=>{if(ev.target&&ev.target.closest&&ev.target.closest("button"))tryPlaySound("button_click",.35);},true);
 }
 function audioPath(kind,name){return `assets/${kind}/${name}.ogg`;}
+function clampAudioVolume(value,fallback=.5){
+  const n=Number(value);
+  if(!Number.isFinite(n))return fallback;
+  return Math.max(0,Math.min(1,n));
+}
+function getVolumePercent(value,fallback=.5){
+  return Math.round(clampAudioVolume(value,fallback)*100);
+}
 function tryPlaySound(name,volume=1){
   if(!gameSettings.sound||!gameSettings.sfx||!name)return;
-  try{const audio=new Audio(audioPath("sfx",name));audio.volume=Math.max(0,Math.min(1,(gameSettings.sfxVolume??.52)*volume));audio.play().catch(()=>{});}catch(e){}
+  try{const audio=new Audio(audioPath("sfx",name));audio.volume=clampAudioVolume((gameSettings.sfxVolume??.52)*volume,.52);audio.play().catch(()=>{});}catch(e){}
 }
 function maybePlayNearDeathSound(){
   return;
 }
 function playMusic(name){
   if(!gameSettings.sound||!gameSettings.music||!name){stopMusic(false);return;}
+  const vol=clampAudioVolume(gameSettings.musicVolume??.32,.32);
   if(currentMusic&&currentMusicName===name){
-    try{currentMusic.volume=Math.max(0,Math.min(1,gameSettings.musicVolume??.32));}catch(e){}
+    try{
+      currentMusic.volume=vol;
+      if(currentMusic.paused&&audioUnlocked)currentMusic.play().catch(()=>{});
+    }catch(e){}
     return;
   }
   stopMusic(false);
   try{
     const audio=new Audio(audioPath("music",name));
     audio.loop=true;
-    audio.volume=Math.max(0,Math.min(1,gameSettings.musicVolume??.32));
-    audio.play().catch(()=>{});
+    audio.preload="auto";
+    audio.volume=vol;
+    const playAttempt=audio.play();
     currentMusic=audio;
     currentMusicName=name;
+    if(playAttempt&&playAttempt.catch)playAttempt.catch(()=>{});
   }catch(e){}
 }
 function stopMusic(clearName=true){
@@ -986,8 +1013,7 @@ function refreshAudioState(){
   else syncBattleMusic();
 }
 function syncBattleMusic(){
-  const shell=$("gameShell");
-  const inBattle=shell&&!shell.classList.contains("hidden")&&publicState&&!isBattleEnded();
+  const inBattle=!!(publicState&&gameId&&!isBattleEnded());
   if(inBattle)playMusic("duel_hallvalla_war_chant");
   else stopMusic(true);
 }
@@ -3101,7 +3127,7 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
 }
 
 function combatSummary(mods){return mods?.notes?.length?` ${mods.notes.join(" ")}`:""}
-function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){if(hallvallaIsLocalTestGame()){const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=hallvallaApplyLocalPatch(publicState,patch);syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,patch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){if(hallvallaIsLocalTestGame()){const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=hallvallaApplyLocalPatch(publicState,patch);render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,patch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -3245,8 +3271,8 @@ function enterGame(code,player){
     }
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=val;
-    syncBattleMusic();
     render();
+    syncBattleMusic();
     maybePlayBattleFx(prevPublic,publicState);
     maybeShowBattleResult();
     maybeStartTurn();
@@ -7307,7 +7333,7 @@ function handleUnitContextAction(action){
 09_RENDER_CORE
 -------------------------------------------------------------------------------
 */
-function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio: activado":"Audio: apagado";}
+function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
 
 function getVisibleHonorState(){
   if(!publicState)return{honor:0,maxHonor:0,hidden:true};
@@ -8280,6 +8306,24 @@ function closeBattleMenu(){const panel=$("battleMenuPanel");if(panel)panel.class
 function toggleBattleActions(){actionsCollapsed=!actionsCollapsed;renderBattleChrome();}
 function toggleBattleLog(){logCollapsed=!logCollapsed;render();}
 function toggleBattleSound(){gameSettings.sound=!gameSettings.sound;saveGameSettings();if(!gameSettings.sound)stopMusic(false);else refreshAudioState();renderBattleChrome();}
+function toggleBattleMusic(){gameSettings.music=!gameSettings.music;if(gameSettings.music&&clampAudioVolume(gameSettings.musicVolume,.32)<=0)gameSettings.musicVolume=.32;saveGameSettings();refreshAudioState();renderBattleChrome();}
+function toggleBattleSfx(){gameSettings.sfx=!gameSettings.sfx;if(gameSettings.sfx&&clampAudioVolume(gameSettings.sfxVolume,.58)<=0)gameSettings.sfxVolume=.58;saveGameSettings();renderBattleChrome();if(gameSettings.sound&&gameSettings.sfx)tryPlaySound("button_click",.25);}
+function setBattleMusicVolume(value){
+  const vol=clampAudioVolume(Number(value)/100,.32);
+  gameSettings.musicVolume=vol;
+  if(vol>0)gameSettings.music=true;
+  saveGameSettings();
+  if(currentMusic){try{currentMusic.volume=vol;}catch(e){}}
+  if(gameSettings.sound&&gameSettings.music)syncBattleMusic();
+  renderBattleChrome();
+}
+function setBattleSfxVolume(value){
+  const vol=clampAudioVolume(Number(value)/100,.58);
+  gameSettings.sfxVolume=vol;
+  if(vol>0)gameSettings.sfx=true;
+  saveGameSettings();
+  renderBattleChrome();
+}
 async function resetCurrentDuelFromMenu(){
   closeBattleMenu();
   if(!gameId||!publicState){return;}
@@ -8294,7 +8338,7 @@ async function leaveCurrentGameFromMenu(){
   if(!gameId){leaveCurrentGame();return;}
   if(await hvConfirm("¿Salir del duelo y volver al menú principal?","Salir del duelo","Salir","Cancelar"))leaveCurrentGame();
 }
-on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!canOpenHandForViewNow()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("toggleLogBtn","click",toggleBattleLog);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("battleDeleteCloudBattleBtn","click",deleteCurrentFirebaseBattleSafe);on("inspectClose","click",()=>$("inspector").classList.remove("show"));on("cardInspectCancel","click",hideCardInspectModal);on("cardInspectX","click",hideCardInspectModal);on("cardInspectPlay","click",playInspectedCard);
+on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!canOpenHandForViewNow()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("toggleLogBtn","click",toggleBattleLog);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleToggleMusicBtn","click",toggleBattleMusic);on("battleToggleSfxBtn","click",toggleBattleSfx);on("battleMusicVolume","input",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","input",e=>setBattleSfxVolume(e.target.value));on("battleMusicVolume","change",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","change",e=>{setBattleSfxVolume(e.target.value);if(gameSettings.sound&&gameSettings.sfx)tryPlaySound("button_click",.28);});on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("battleDeleteCloudBattleBtn","click",deleteCurrentFirebaseBattleSafe);on("inspectClose","click",()=>$("inspector").classList.remove("show"));on("cardInspectCancel","click",hideCardInspectModal);on("cardInspectX","click",hideCardInspectModal);on("cardInspectPlay","click",playInspectedCard);
 const inspectorEl=$("inspector");
 if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspectorEl)inspectorEl.classList.remove("show")});const cardInspectEl=$("cardInspectModal");if(cardInspectEl)cardInspectEl.addEventListener("click",ev=>{if(ev.target===cardInspectEl)hideCardInspectModal()});const packShopEl=$("packShopPanel");if(packShopEl)packShopEl.addEventListener("click",ev=>{if(ev.target===packShopEl)closePackShop()});const unitContextEl=$("unitContextMenu");if(unitContextEl)unitContextEl.addEventListener("click",ev=>ev.stopPropagation());const battlefieldEl=document.querySelector(".battlefield");if(battlefieldEl)battlefieldEl.addEventListener("click",ev=>{if(unitContextSelection&&!ev.target.closest(".unit-card")&&!ev.target.closest(".unit-context-menu")){unitContextSelection=null;hideUnitContextMenu();}});
 
