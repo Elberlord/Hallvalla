@@ -17796,3 +17796,138 @@ body.hv-master-zero-glow .grid .cell::after{
   .unit-lore-portrait{width:86px;height:112px}
   .unit-lore-copy{text-align:center}
 }
+
+/* ==========================================================
+   7HCB · FIX aros de convocación pequeños + FX de invocación
+   Motivo:
+   7HBF devolvió el marcador usando 68% de la celda, por eso el aro
+   crecía demasiado. Este bloque final vuelve al portal pequeño y
+   reactiva las capas del FX de invocación que podían quedar apagadas
+   por los reset globales de brillo.
+   No toca reglas, stats, mazo, mano, IA, fases ni balance.
+   ========================================================== */
+
+.grid .cell.summonable::after,
+.grid .cell.valid-summon::after,
+.grid .cell.can-summon::after,
+.grid .cell.summon-target::after,
+.cell.summonable::after,
+.cell.valid-summon::after,
+.cell.can-summon::after,
+.cell.summon-target::after{
+  content:"" !important;
+  display:block !important;
+  visibility:visible !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  inset:auto !important;
+  width:22px !important;
+  height:22px !important;
+  transform:translate(-50%,-50%) scale(.96) !important;
+  border-radius:999px !important;
+  pointer-events:none !important;
+  opacity:.92 !important;
+  z-index:8 !important;
+  border:1px solid rgba(255,221,112,.92) !important;
+  outline:none !important;
+  background:
+    radial-gradient(circle,rgba(255,239,165,.54) 0 18%,rgba(255,199,83,.22) 21% 46%,rgba(255,199,83,0) 48%),
+    conic-gradient(from 45deg,rgba(255,221,112,0),rgba(255,221,112,.58),rgba(255,221,112,0),rgba(255,221,112,.52),rgba(255,221,112,0)) !important;
+  box-shadow:
+    0 0 9px rgba(255,211,94,.48),
+    0 0 17px rgba(255,211,94,.16),
+    inset 0 0 6px rgba(255,233,151,.28) !important;
+  filter:none !important;
+  animation:hvSummonMarkerPulse7HCB 1.32s ease-in-out infinite !important;
+}
+
+.grid .cell.summonable > .unit-card::after,
+.grid .cell.valid-summon > .unit-card::after,
+.grid .cell.can-summon > .unit-card::after,
+.grid .cell.summon-target > .unit-card::after,
+.cell.summonable > .unit-card::after,
+.cell.valid-summon > .unit-card::after,
+.cell.can-summon > .unit-card::after,
+.cell.summon-target > .unit-card::after{
+  content:none !important;
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+
+#battleFxLayer,
+.battle-fx-layer{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:32 !important;
+  pointer-events:none !important;
+  overflow:visible !important;
+}
+
+.battle-fx-summon{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:88px !important;
+  height:88px !important;
+  position:absolute !important;
+  transform:translate(-50%,-50%) !important;
+  pointer-events:none !important;
+}
+.battle-fx-ring,
+.battle-fx-core,
+.battle-fx-rays,
+.battle-fx-aura,
+.battle-fx-sigil{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  pointer-events:none !important;
+}
+.battle-fx-ring{animation:summonRingExpand .95s ease-out forwards !important}
+.battle-fx-ring-2{animation:summonRingExpand .78s ease-out .08s forwards !important}
+.battle-fx-core{animation:summonCorePulse .88s ease-out forwards !important}
+.battle-fx-rays{animation:summonRaysSpin .95s ease-out forwards !important}
+.battle-fx-aura{animation:summonAuraPulse 1.12s ease-out forwards !important}
+.battle-fx-sigil{animation:sigilSpin 1.2s ease-out forwards !important}
+
+@keyframes hvSummonMarkerPulse7HCB{
+  0%,100%{
+    opacity:.70;
+    transform:translate(-50%,-50%) scale(.90) !important;
+    box-shadow:
+      0 0 6px rgba(255,211,94,.28),
+      0 0 12px rgba(255,211,94,.10),
+      inset 0 0 5px rgba(255,233,151,.18) !important;
+  }
+  50%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.08) !important;
+    box-shadow:
+      0 0 11px rgba(255,211,94,.74),
+      0 0 22px rgba(255,211,94,.24),
+      inset 0 0 7px rgba(255,233,151,.34) !important;
+  }
+}
+
+@media(max-width:980px){
+  .grid .cell.summonable::after,
+  .grid .cell.valid-summon::after,
+  .grid .cell.can-summon::after,
+  .grid .cell.summon-target::after,
+  .cell.summonable::after,
+  .cell.valid-summon::after,
+  .cell.can-summon::after,
+  .cell.summon-target::after{
+    width:17px !important;
+    height:17px !important;
+  }
+  .battle-fx-summon{width:68px !important;height:68px !important}
+}
