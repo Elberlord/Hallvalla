@@ -305,7 +305,7 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
 04_RUNTIME_STATE_PHASES
 -------------------------------------------------------------------------------
 */
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",nearDeathSoundPlayedKeys=new Set();
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,nearDeathSoundPlayedKeys=new Set();
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -441,6 +441,130 @@ function showDemigodSummonPresentation(unit){
   if(demigodSummonTimer){clearTimeout(demigodSummonTimer);}
   demigodSummonTimer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.classList.add("hidden"),420);},1700);
 }
+function clearEventSplashOverlay(resetQueue=true){
+  const box=$("eventSplashOverlay");
+  if(eventSplashTimer){clearTimeout(eventSplashTimer);eventSplashTimer=null;}
+  if(box){
+    box.className="event-splash-overlay";
+    box.innerHTML="";
+    box.setAttribute("aria-hidden","true");
+  }
+  eventSplashActive=false;
+  if(resetQueue)eventSplashQueue=[];
+}
+function getEventSplashConfig(type){
+  const key=String(type||"").toLowerCase();
+  const map={
+    dodge:{
+      className:"is-dodge",
+      image:"assets/ui/event_splashes/event_dodge.webp",
+      kicker:"EVENTO DE COMBATE",
+      title:"ESQUIVA",
+      subtitle:"El objetivo evitó el golpe."
+    },
+    guard:{
+      className:"is-guard",
+      image:"assets/ui/event_splashes/event_guard.webp",
+      kicker:"EVENTO DE COMBATE",
+      title:"GUARDIA",
+      subtitle:"El ataque chocó contra la defensa."
+    },
+    bleed:{
+      className:"is-bleed",
+      image:"assets/ui/event_splashes/event_bleed.webp",
+      kicker:"EVENTO DE COMBATE",
+      title:"SANGRADO",
+      subtitle:"La herida queda marcada."
+    },
+    stealth:{
+      className:"is-stealth",
+      image:"assets/ui/event_splashes/event_stealth.webp",
+      kicker:"EVENTO DE COMBATE",
+      title:"EMBOSCADA",
+      subtitle:"Ataque lanzado desde sigilo."
+    },
+    burn:{
+      className:"is-burn",
+      image:"assets/ui/event_splashes/event_burn.webp",
+      kicker:"EVENTO DE COMBATE",
+      title:"QUEMADURA",
+      subtitle:"El fuego queda prendido sobre el objetivo."
+    }
+  };
+  return map[key]||null;
+}
+function buildEventSplashShell(item){
+  const cfg=getEventSplashConfig(item?.type);
+  if(!cfg)return "";
+  return `<div class="event-splash-shell ${cfg.className}"><div class="event-splash-card"><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
+}
+function showNextEventSplash(){
+  if(eventSplashActive||!eventSplashQueue.length)return;
+  const box=$("eventSplashOverlay");
+  if(!box){eventSplashQueue=[];return;}
+  const rawGroup=eventSplashQueue.shift();
+  const group=(Array.isArray(rawGroup)?rawGroup:[rawGroup]).filter(item=>item&&getEventSplashConfig(item.type));
+  if(!group.length){showNextEventSplash();return;}
+  const visible=group.slice(0,2);
+  const overflow=group.slice(2);
+  if(overflow.length)eventSplashQueue.unshift(overflow);
+  eventSplashActive=true;
+  const classNames=[...new Set(visible.map(item=>getEventSplashConfig(item.type)?.className).filter(Boolean))].join(" ");
+  box.className=`event-splash-overlay ${classNames} ${visible.length>1?"is-duo":"is-single"}`;
+  box.setAttribute("aria-hidden","false");
+  box.innerHTML=`<div class="event-splash-stack ${visible.length>1?"is-duo":"is-single"}">${visible.map(buildEventSplashShell).join("")}</div>`;
+  void box.offsetWidth;
+  requestAnimationFrame(()=>box.classList.add("show"));
+  if(eventSplashTimer){clearTimeout(eventSplashTimer);}
+  eventSplashTimer=setTimeout(()=>{
+    box.classList.remove("show");
+    box.classList.add("leaving");
+    setTimeout(()=>{
+      clearEventSplashOverlay(false);
+      showNextEventSplash();
+    },760);
+  },3000);
+}
+function queueEventSplash(payload){
+  if(!payload||!payload.type)return;
+  const key=payload.key||`${payload.type}:${Date.now()}`;
+  if(key===lastEventSplashKey)return;
+  lastEventSplashKey=key;
+  eventSplashQueue.push([{...payload,key}]);
+  showNextEventSplash();
+}
+function queueEventSplashGroup(payloads){
+  const list=(Array.isArray(payloads)?payloads:[payloads]).filter(item=>item&&item.type&&getEventSplashConfig(item.type));
+  if(!list.length)return;
+  const groupKey=list.map(item=>item.key||item.type).join("|");
+  if(groupKey===lastEventSplashKey)return;
+  lastEventSplashKey=groupKey;
+  for(let i=0;i<list.length;i+=2){
+    eventSplashQueue.push(list.slice(i,i+2));
+  }
+  showNextEventSplash();
+}
+function getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx){
+  const items=[];
+  if(explicitAttackFx&&explicitAttackFx.stealthAttack){
+    items.push({type:"stealth",key:`${gameId||"game"}:event-splash:stealth:${explicitAttackFx.eventId||""}`});
+  }
+  if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"){
+    items.push({type:"dodge",key:`${gameId||"game"}:event-splash:dodge:${explicitDodgeFx.eventId||""}`});
+  }
+  if(explicitDefenseFx&&explicitDefenseFx.type==="guard_block"){
+    items.push({type:"guard",key:`${gameId||"game"}:event-splash:guard:${explicitDefenseFx.eventId||""}`});
+  }
+  if(explicitStatusFx){
+    const statusType=String(explicitStatusFx.type||"");
+    if(statusType.startsWith("bleed")&&!statusType.endsWith("tick")){
+      items.push({type:"bleed",key:`${gameId||"game"}:event-splash:bleed:${explicitStatusFx.eventId||""}`});
+    }else if(statusType==="burn_apply"){
+      items.push({type:"burn",key:`${gameId||"game"}:event-splash:burn:${explicitStatusFx.eventId||""}`});
+    }
+  }
+  return items;
+}
 function getGridCellCenter(x,y){
   const grid=$("grid"), battlefield=document.querySelector(".battlefield");
   if(!grid||!battlefield)return null;
@@ -449,7 +573,7 @@ function getGridCellCenter(x,y){
   const cellW=g.width/COLS, cellH=g.height/ROWS;
   return {x:(g.left-b.left)+(x+.5)*cellW,y:(g.top-b.top)+(y+.5)*cellH};
 }
-function makeBattleFxEvent(type,attacker,target){
+function makeBattleFxEvent(type,attacker,target,meta={}){
   if(!attacker||!target)return null;
   const attackType=type||"attack";
   const attackStyle=attackType==="attack"?(isRangedAttack(attacker,target)?"ranged":"melee"):"generic";
@@ -466,7 +590,8 @@ function makeBattleFxEvent(type,attacker,target){
     from:{x:Number(attacker.x||0),y:Number(attacker.y||0)},
     to:{x:Number(target.x||0),y:Number(target.y||0)},
     rarityClass:getFxRarityClass(attacker),
-    attackSound:getAttackSoundForUnit(attacker)
+    attackSound:getAttackSoundForUnit(attacker),
+    stealthAttack:!!meta.stealthAttack
   };
 }
 function makeDefenseFxEvent(type,defender){
@@ -728,6 +853,10 @@ function maybePlayBattleFx(prevPub,nextPub){
   if(explicitFloatFx){
     const floatDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?420:340):(explicitStatusFx?190:90);
     setTimeout(()=>playFloatFxEvent(explicitFloatFx),floatDelay);
+  }
+  const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);
+  if(eventSplashPayloads.length){
+    setTimeout(()=>queueEventSplashGroup(eventSplashPayloads),0);
   }
   destroyed.forEach((unit,i)=>setTimeout(()=>playDestroyFx(unit),280+(i*130)));
 }
@@ -2514,9 +2643,10 @@ function spendActionStatsByAttack(attacker,defender,units,mods={},hitResult=null
   if(!currentDefender||currentDefender.leader||attackAvailable<=0){
     return {units,spent:0,remaining:Math.max(0,getBaseEvasionScore(currentAttacker)-getEvasionPressure(currentAttacker))};
   }
-  const defenseNeeded=Math.max(0,getDefenseEvasionScore(currentDefender,mods));
-  const missed=hitResult&&hitResult.hit===false;
-  const spentRaw=missed?attackAvailable:Math.min(attackAvailable,defenseNeeded);
+  // 7HCM: atacar consume toda la Precisión disponible del atacante, impacte o no.
+  // Antes, si el defensor gastaba su Evasión antes de rollHit(), defenseNeeded quedaba en 0
+  // y un ataque que sí impactaba podía dejar intacta la Precisión del atacante.
+  const spentRaw=attackAvailable;
   const spent=shadowMistSpendAmount(currentAttacker,spentRaw,units);
   if(spent<=0)return {units,spent:0,remaining:Math.max(0,getBaseEvasionScore(currentAttacker)-getEvasionPressure(currentAttacker))};
   let remaining=null;
@@ -2956,7 +3086,7 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
 }
 
 function combatSummary(mods){return mods?.notes?.length?` ${mods.notes.join(" ")}`:""}
-function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){if(hallvallaIsLocalTestGame()){const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=hallvallaApplyLocalPatch(publicState,patch);syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,patch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";clearBattleFxLayer();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState)return;const logs=[t,...(publicState.log||[])].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}async function updatePublic(patch){if(hallvallaIsLocalTestGame()){const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;publicState=hallvallaApplyLocalPatch(publicState,patch);syncBattleMusic();render();maybePlayBattleFx(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),patch)}async function updatePrivate(patch){if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,patch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function getBattleOutcome(units=publicState?.units||[]){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog=""){if(!gameId||!publicState)return false;const outcome=getBattleOutcome(units);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);if(publicState.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${publicState.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${publicState.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else{baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(publicState.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(publicState.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,publicState.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(publicState.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -4969,7 +5099,7 @@ async function attackUnit(a,d){
   const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
-  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
+  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
     ? makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow)
@@ -5670,7 +5800,7 @@ async function adventureEnemyTurn(){
     const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
-    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow);
+    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth});
     const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
       ? makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow)

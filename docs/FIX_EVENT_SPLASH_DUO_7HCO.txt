@@ -1,0 +1,50 @@
+Hallvalla - Splash visual simultáneo máximo 2 7HCO
+============================================================
+
+ZIP base: Hallvalla_event_splashes_7HCN.zip
+ZIP generado: Hallvalla_event_splashes_duo_7HCO.zip
+
+Cambio aplicado:
+- Los splashes que vienen del mismo ataque/evento ahora pueden mostrarse juntos.
+- Máximo simultáneo: 2.
+- Si llegan 3 o más eventos, se muestran los primeros 2 juntos y el resto queda en cola.
+
+Ejemplos:
+- Ataque desde Sigilo + Sangrado:
+  · salen Emboscada y Sangrado al mismo tiempo.
+- Golpe bloqueado + estado:
+  · salen Guardia y el estado al mismo tiempo.
+- Quemadura + otro evento:
+  · máximo dos visibles; lo demás se encola.
+
+Cómo se ajustó:
+- Se agregó queueEventSplashGroup().
+- showNextEventSplash() ahora acepta grupos.
+- El HTML interno del overlay usa .event-splash-stack.
+- CSS nuevo para modo .is-duo, con dos cards más pequeñas lado a lado.
+
+No se tocó:
+- Reglas.
+- Daño.
+- IA.
+- Sonidos.
+- Assets.
+- Rarezas.
+- Aros.
+- FX de invocación.
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+
+Checks:
+{
+  "node_check": true,
+  "css_braces": true,
+  "queueEventSplashGroup": true,
+  "visible=group.slice(0,2)": true,
+  "event-splash-stack": true,
+  "is-duo": true,
+  "eventSplashQueue.push(list.slice(i,i+2))": true
+}
