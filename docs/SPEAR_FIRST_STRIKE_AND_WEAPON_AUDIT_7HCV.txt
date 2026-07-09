@@ -1,0 +1,135 @@
+Hallvalla - Lanzas Atacar Primero + auditoría de arma/arte 7HCV
+====================================================================
+
+ZIP base: Hallvalla_combat_corrections_7HCU.zip
+ZIP generado: Hallvalla_spear_firststrike_weapon_audit_7HCV.zip
+
+CAMBIO PRINCIPAL
+----------------
+Las unidades de Lanza ya no usan el contraataque general.
+Ahora usan ATACAR PRIMERO una vez por turno cuando son atacadas dentro de su alcance de reacción.
+
+Regla aplicada:
+- Si una unidad enemiga ataca a una Lanza y no es Ataque en Picada del halcón:
+  1) la Lanza golpea primero
+  2) PREC / EVA se resuelve normalmente
+  3) daño vs Guardia / HP se resuelve normalmente
+  4) si el atacante sobrevive, entonces resuelve su ataque original con lo que le quedó
+
+Se mantiene:
+- +5 DX de Lanza contra Caballería
+- Anticaballería: Caballería con AGI 0 y Guardia 0 durante ese combate cuerpo a cuerpo
+
+No aplica:
+- Ataque en Picada del halcón ignora Atacar Primero
+
+CAMBIOS TÉCNICOS
+----------------
+1) Se agregó:
+   - canLanceFirstStrike(attacker,defender,mods)
+   - resolveLanceFirstStrike(attacker,defender,units)
+
+2) Flujo jugador:
+   - el bloque viejo de first strike para semidioses fue sustituido por la regla general de Lanza
+
+3) Flujo IA:
+   - el bloque viejo de first strike para semidioses fue sustituido por la regla general de Lanza
+
+4) Contraataques posteriores:
+   - las lanzas ya no entran al bloque de contraataque posterior
+   - Miyamoto Musashi y Arcane Adept siguen con sus reacciones especiales
+
+AUDITORÍA DE ARMAS / ARTE
+-------------------------
+Pregunta histórica:
+- William Wallace es mucho más asociado a espada claymore / espada larga que a hacha como arma icónica.
+- Por eso se mantuvo su clase real como Espada / infantería.
+
+Corrección visual aplicada:
+- Se reemplazó el arte de carta de William Wallace por una versión basada en espada.
+
+Resultado de auditoría:
+Revisión visual/código de clases tácticas:
+- Se auditó el mapa WEAPON_CLASS_BY_KEY y el uso del icono por clase.
+- La discrepancia confirmada y corregida fue William Wallace.
+- No se aplicaron cambios automáticos a otras cartas sin una discrepancia confirmada.
+- Si luego quieres, podemos hacer una auditoría visual 1 por 1 de todos los retratos especiales.
+
+Discrepancias confirmadas:
+- William Wallace: arte original mostraba hacha mientras su clase real es Espada / infantería. Se reemplazó por retrato con espada.
+
+Mapa táctico actual detectado en código:
+- achilles: spear
+- african_buffalo: beast
+- african_lion: beast
+- alexander_magnus: spear
+- arcane_adept: mage
+- archer: bow
+- arjuna: bow
+- attila_hun: cavalry
+- bengal_tiger: beast
+- beowulf: sword
+- berserker: sword
+- black_raven: beast
+- boudica: sword
+- cavalry: cavalry
+- constrictor_snake: beast
+- cu_chulainn: spear
+- el_cid: sword
+- genghis_khan: sword
+- gilgamesh: sword
+- guardian: sword
+- hannibal_barca: cavalry
+- hector_troy: spear
+- honey_badger: beast
+- inland_taipan: beast
+- joan_of_arc: sword
+- julius_caesar: sword
+- khalid_ibn_al_walid: sword
+- leonidas: spear
+- lu_bu: spear
+- miyamoto_musashi: sword
+- mulan: sword
+- nasu_no_yoichi: bow
+- peregrine_falcon: beast
+- porcupine: beast
+- ragnar_lodbrok: sword
+- richard_lionheart: sword
+- saladin: cavalry
+- saladin_archer_cavalry: cavalry
+- scout: sword
+- shaka_zulu: spear
+- simo_hayha: bow
+- spartacus: sword
+- spearman: spear
+- subotai: cavalry
+- sun_tzu: sword
+- tomoe_gozen: cavalry
+- ulysses: sword
+- wallace: sword
+- white_rhino: beast
+- wild_boar: beast
+- yi_sun_sin: sword
+
+ARCHIVOS EXTRA
+--------------
+- Regla resumida de lanzas:
+  Hallvalla_regla_lanzas_atacar_primero_7HCV.txt
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "has_canLanceFirstStrike": true,
+  "has_resolveLanceFirstStrike": true,
+  "player_uses_general_lance_firststrike": true,
+  "ai_uses_general_lance_firststrike": true,
+  "lance_removed_from_special_counter_player": true,
+  "lance_removed_from_special_counter_ai": true,
+  "wallace_portrait_exists": true,
+  "wallace_actor_exists": true,
+  "build_7HCV": true
+}

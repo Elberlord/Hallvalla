@@ -1,0 +1,72 @@
+Hallvalla - Correcciones de combate y clase visual 7HCU
+============================================================
+
+ZIP base: Hallvalla_attack_target_fullframe_7HCT.zip
+ZIP generado: Hallvalla_combat_corrections_7HCU.zip
+
+Correcciones aplicadas:
+
+1) Icono de arma/clase táctica
+- El panel de detalle ya no usa siempre el icono genérico tactical.png.
+- Ahora usa icono según clase:
+  · weapon_sword.png
+  · weapon_spear.png
+  · weapon_cavalry.png
+  · weapon_bow.png
+  · weapon_beast.png
+  · weapon_mage.png
+- William Wallace debe mostrarse como Espada, no como un icono que parezca hacha.
+
+2) Gasto de Precisión/Evasión del atacante
+- Se corrigió el gasto excesivo introducido en 7HCM.
+- Ahora, si el ataque acierta, el atacante gasta solo la Precisión necesaria para superar la EVA original del defensor.
+- Si el ataque falla, gasta toda la Precisión disponible usada en el intento.
+- La defensa/evasión original se captura antes de que spendEvasionByAttack() consuma la evasión del defensor.
+- Así se evita tanto:
+  · bug viejo: gastar 0 porque la EVA del defensor ya quedó en 0
+  · bug nuevo: gastar toda la precisión aunque solo necesitara una parte
+
+3) Lanza / Anticaballería
+- No se cambió la regla del 7HCS.
+- Sigue aplicando solo cuando una unidad de lanza combate cuerpo a cuerpo contra Caballería.
+- No debe quitar AGI/GD a unidades que no sean Caballería.
+
+Sobre el caso de William vs Lancero solar:
+- William Wallace es Espada, por eso tiene ventaja contra Lanza y gana +5 DX durante ese combate.
+- El Lancero solar tiene Guardia base 6.
+- Si además tenía defensa preparada, podía tener +2 Guardia adicional.
+- Por eso un ataque de AT 6 puede consumir Guardia y no bajar Vida; eso no necesariamente es bug.
+
+No se tocó:
+- Daño base.
+- IA estratégica.
+- Música.
+- SFX.
+- Splashes.
+- CSS del highlight de ATK.
+- Assets de cartas/mapas.
+- Mazos.
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+
+Checks:
+{
+  "node_check": true,
+  "spend_fn_uses_defenseSpendNeeded": true,
+  "spend_fn_no_longer_spends_all_on_hit": true,
+  "manual_attack_passes_defenseSpendNeeded": true,
+  "ai_attack_passes_defenseSpendNeeded": true,
+  "weapon_class_icon_fn": true,
+  "render_tactical_uses_weapon_icon": true,
+  "build_7HCU": true,
+  "icon_weapon_sword.png": true,
+  "icon_weapon_spear.png": true,
+  "icon_weapon_cavalry.png": true,
+  "icon_weapon_bow.png": true,
+  "icon_weapon_beast.png": true,
+  "icon_weapon_mage.png": true,
+  "css_braces": true
+}

@@ -1,0 +1,52 @@
+Hallvalla - Fix splash de evasión vs guardia 7HDB
+============================================================
+
+ZIP base: Hallvalla_general_math_guard_fix_7HDA.zip
+ZIP generado: Hallvalla_evasion_splash_fix_7HDB.zip
+
+Problema:
+- Cuando una unidad evadía, a veces aparecía el splash visual de GUARDIA en vez de ESQUIVA.
+- Los assets estaban bien:
+  · event_dodge.webp = escena de esquiva
+  · event_guard.webp = escena de escudo/guardia
+- El problema estaba en la prioridad de eventos: si por latencia o evento viejo llegaban dodgeFxEvent y defenseFxEvent juntos, el sistema podía mostrar GUARDIA junto a/por encima de la evasión.
+
+Cambio aplicado:
+1) Prioridad de resultado:
+- Si existe dodgeFxEvent explícito, se descarta defenseFxEvent para ese render.
+- Un ataque evadido no puede mostrar GUARDIA.
+
+2) Splash central:
+- getEventSplashPayloads() ahora da prioridad a ESQUIVA.
+- GUARDIA solo se agrega si NO hay dodge.
+
+3) Eventos de combate:
+- Los eventos nuevos llevan marca:
+  · combatResult: "dodge"
+  · combatResult: "guard"
+- Esto ayuda a depurar y evitar mezclas futuras.
+
+No se tocó:
+- Fórmula de PREC/EVA
+- Daño
+- Guardia
+- IA
+- Atacar Primero de Lanza
+- Armas
+- Assets
+- Música/SFX
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "payload_has_dodge_priority": true,
+  "battlefx_nulls_guard_when_dodge": true,
+  "player_events_have_combat_result": true,
+  "build_7HDB": true,
+  "dodge_asset_exists": true,
+  "guard_asset_exists": true
+}

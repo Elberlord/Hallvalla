@@ -16129,3 +16129,68 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
+
+/* ==========================================================
+   7HCW · DET: fila Arma clickeable para ventaja/desventaja
+   ========================================================== */
+.det-click-row.guide-weapon-btn{
+  width:100% !important;
+  appearance:none !important;
+  border:0 !important;
+  font:inherit !important;
+  color:inherit !important;
+  text-align:left !important;
+  cursor:pointer !important;
+}
+.det-click-row.guide-weapon-btn:hover,
+.det-click-row.guide-weapon-btn:focus-visible{
+  outline:none !important;
+  box-shadow:inset 0 0 0 1px rgba(255,209,102,.48),0 0 14px rgba(255,209,102,.16) !important;
+  background:rgba(255,209,102,.07) !important;
+}
+.det-click-row.guide-weapon-btn .det-inline-icon-btn{
+  pointer-events:none !important;
+}
+
+
+/* ==========================================================
+   7HDC · Tablero: AT en turno propio / GD en turno rival
+   ========================================================== */
+.unit-card .stat-orb-atk.stat-orb-primary.attack{
+  color:#ffe1d0 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,244,208,.18),
+    inset 0 -1px 0 rgba(0,0,0,.58),
+    0 0 7px rgba(255,116,64,.16) !important;
+}
+.unit-card .stat-orb-atk.stat-orb-primary.guard{
+  color:#e6f4ff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(225,244,255,.22),
+    inset 0 -1px 0 rgba(0,0,0,.62),
+    0 0 8px rgba(101,206,255,.18) !important;
+}
+.unit-card .stat-orb-atk.stat-orb-primary::after{
+  content:attr(data-board-stat);
+  position:absolute;
+  right:1px;
+  bottom:0;
+  font-size:4.8px;
+  line-height:1;
+  letter-spacing:-.04em;
+  opacity:.78;
+  color:currentColor;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);
+  pointer-events:none;
+}
+.unit-card .stat-orb-atk.stat-orb-primary b{
+  transform:translateY(-.5px);
+}
+@media(max-width:980px){
+  .unit-card .stat-orb-atk.stat-orb-primary::after{
+    font-size:4.2px;
+    right:0;
+    bottom:-.5px;
+  }
+}
+

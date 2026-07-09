@@ -1,0 +1,58 @@
+Hallvalla - Ocultar EFFECT en unidades pasivas 7HCZ
+============================================================
+
+ZIP base: Hallvalla_historical_weapon_final_7HCY.zip
+ZIP generado: Hallvalla_hide_passive_effect_7HCZ.zip
+
+Cambio aplicado:
+- El botón de acción EFFECT ya no aparece en unidades cuyo efecto es pasivo o automático.
+- Ejemplo principal: Lancero solar.
+- La regla se basa en getUnitEffectMode():
+  · passive -> no se muestra EFFECT
+  · self / target -> sí se muestra EFFECT
+
+También se ajustó:
+- Beastmaster con prepare_hunt queda como passive, porque Veneno de la Manada es pasivo.
+- En el modal DET / inspección de carta, el botón "Ver efecto" se oculta para unidades pasivas.
+- Las reglas pasivas siguen visibles en la sección EFECTOS del DET; solo se quita el botón redundante.
+- Los hints del menú ya no dicen EFFECT si esa unidad no tiene activación manual.
+
+Unidades que conservan EFFECT:
+- african_lion
+- black_raven
+- richard_lionheart
+- saladin
+- sun_tzu
+- subotai
+- líderes con habilidad manual compatible:
+  · cavalry_call
+  · arrow_rain
+  · arcane_bolt
+
+No se tocó:
+- lógica de combate
+- daño
+- IA
+- fórmula PREC/EVA
+- Atacar Primero de Lanza
+- armas históricas
+- assets
+- música/SFX
+- splashes
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "unitHasContextEffect_uses_mode": true,
+  "beastmaster_prepare_hunt_passive": true,
+  "det_helper_present": true,
+  "card_inspect_uses_helper": true,
+  "unit_det_uses_helper": true,
+  "hint_dynamic_effect": true,
+  "truth_text_hidden": true,
+  "build_7HCZ": true
+}
