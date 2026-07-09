@@ -1,0 +1,57 @@
+Hallvalla - Modal de sonido más pequeño 7HDE
+================================================
+
+ZIP base: Hallvalla_wallace_board_sword_7HDD.zip
+ZIP generado: Hallvalla_sound_modal_resize_7HDE.zip
+
+Cambio aplicado:
+- Se compactó el modal "Configuración del duelo" para que en PC y móvil se vea completo con más facilidad.
+- El panel ahora sube un poco, reduce ancho útil y sobre todo compacta:
+  · título
+  · subtítulo
+  · botones
+  · controles de audio
+  · paddings y márgenes
+- La tarjeta del modal ahora tiene límite de altura y scroll interno, para que nunca se corte aunque la pantalla sea baja.
+
+Ajustes principales:
+- Panel:
+  · top: 50px en PC
+  · top: 40px en móvil
+- Tarjeta:
+  · ancho máx. ~352px en PC
+  · ancho máx. ~322px en móvil
+  · max-height con overflow:auto
+- Botones:
+  · más bajos
+  · tipografía más pequeña
+- Sliders:
+  · más compactos
+  · filas con menos separación
+
+No se tocó:
+- lógica de audio
+- toggles
+- sliders
+- música/SFX
+- Firebase
+- combate
+- IA
+- cartas
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+
+Checks:
+{
+  "node_check": true,
+  "patch_added": true,
+  "panel_top_compacted": true,
+  "card_has_max_height": true,
+  "mobile_max_height": true,
+  "buttons_compacted": true,
+  "css_braces_ok": true,
+  "build_7HDE": true
+}

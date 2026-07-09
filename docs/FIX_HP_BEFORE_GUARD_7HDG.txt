@@ -1,0 +1,73 @@
+Hallvalla - Fix general de Vida bajando antes de agotar Guardia 7HDG
+=====================================================================
+
+ZIP base: Hallvalla_evasion_split_splash_7HDF.zip
+ZIP generado: Hallvalla_guard_hp_invariant_7HDG.zip
+
+Problema encontrado:
+- El bug estaba en applyGuardDamage().
+- Los modificadores negativos de Guardia, por ejemplo:
+  · Berserker: -3 Guardia por Ruptura brutal
+  · Simo/Nasu: ignora/reduce Guardia a distancia
+  · Anticaballería: Guardia 0
+  se estaban usando como reducción invisible del escudo efectivo.
+- Eso permitía que un ataque normal bajara Vida mientras todavía quedaba guardia base almacenada en la unidad.
+
+Ejemplo del bug:
+- Defensor con 7 GD.
+- Atacante con AT 8 y mod -3 GD.
+- Antes:
+  · el sistema calculaba Guardia efectiva 4
+  · hacía 4 a Guardia y 4 a Vida
+  · pero dejaba 3 Guardia base visible
+  Resultado feo: "perdió Vida pero todavía tiene Guardia".
+
+Regla corregida:
+- Los modificadores negativos de Guardia ya no perforan de forma invisible.
+- Primero consumen Guardia real/temporal.
+- Luego el daño normal golpea lo que queda.
+- Si el ataque normal logra bajar Vida, la Guardia almacenada queda en 0.
+
+Ejemplo corregido:
+- Defensor con 7 GD.
+- Atacante con AT 8 y mod -3 GD.
+- Ahora:
+  · el -3 consume 3 GD primero
+  · quedan 4 GD
+  · el AT 8 consume 4 GD
+  · sobran 4 a Vida
+  · la Guardia queda 0
+  Resultado correcto: la Vida solo baja después de agotar la Guardia.
+
+Qué conserva:
+- Ataques normales no bajan Vida mientras quede Guardia almacenada.
+- Ataques que realmente ignoran Guardia, como asesino/desierto o efectos marcados como ignoreGuard, siguen funcionando por su rama especial.
+- Magia/daño directo y efectos que ignoran Guardia siguen pudiendo bajar Vida directamente si están codificados así.
+
+No se tocó:
+- fórmula PREC/EVA
+- IA estratégica
+- armas
+- splashes
+- audio
+- assets
+- Atacar Primero de Lanza
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "apply_guard_has_pre_reduction": true,
+  "negative_mod_comment": true,
+  "hp_invariant_present": true,
+  "version_7HDG": true,
+  "normal_atk_less_than_guard_no_hp": true,
+  "normal_atk_over_guard_hp_only_after_zero": true,
+  "negative_guard_mod_consumes_guard_first": true,
+  "negative_guard_mod_no_hp_if_guard_remains": true,
+  "temp_guard_consumed_before_hp": true,
+  "anticavalry_guard_zero_then_hp": true
+}

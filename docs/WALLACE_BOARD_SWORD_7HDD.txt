@@ -1,0 +1,39 @@
+Hallvalla - Miniatura de campo de William Wallace con espada 7HDD
+==================================================================
+
+ZIP base: Hallvalla_dynamic_at_guard_7HDC.zip
+ZIP generado: Hallvalla_wallace_board_sword_7HDD.zip
+
+Cambio aplicado:
+- La miniatura usada en el campo para William Wallace seguía apuntando visualmente a una versión antigua con hacha.
+- Se reemplazó:
+  assets/board_cards/basic/wallace.webp
+- La nueva miniatura se generó a partir de la carta correcta:
+  assets/cards/basic/wallace.webp
+  donde William Wallace ya aparece con espada.
+
+Resultado:
+- En el tablero/campo, la miniatura de William Wallace ahora concuerda con:
+  · su clase táctica de espada
+  · su arte principal corregido
+  · su identidad histórica dentro del proyecto
+
+No se tocó:
+- script.js
+- fórmula de combate
+- DET
+- otras cartas
+- IA
+- splashes
+- armas de otras unidades
+
+Verificación:
+- script.js node --check: OK
+
+Checks:
+{
+  "node_check": true,
+  "full_card_exists": true,
+  "board_card_exists": true,
+  "board_card_updated_size": true
+}

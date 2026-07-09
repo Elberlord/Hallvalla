@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDC";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDH";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -489,6 +489,34 @@ function getEventSplashConfig(type){
       kicker:"EVENTO DE COMBATE",
       title:"QUEMADURA",
       subtitle:"El fuego queda prendido sobre el objetivo."
+    },
+    poison:{
+      className:"is-poison",
+      image:"assets/ui/event_splashes/event_poison.webp",
+      kicker:"ESTADO ALTERADO",
+      title:"VENENO",
+      subtitle:"La toxina empieza a avanzar."
+    },
+    fear:{
+      className:"is-fear",
+      image:"assets/ui/event_splashes/event_fear.webp",
+      kicker:"ESTADO ALTERADO",
+      title:"MIEDO",
+      subtitle:"La voluntad del objetivo tiembla."
+    },
+    stun:{
+      className:"is-stun",
+      image:"assets/ui/event_splashes/event_stun.webp",
+      kicker:"ESTADO ALTERADO",
+      title:"ATURDIDO",
+      subtitle:"El objetivo queda desorientado."
+    },
+    debuff:{
+      className:"is-debuff",
+      image:"assets/ui/event_splashes/event_debuff.webp",
+      kicker:"ESTADO ALTERADO",
+      title:"DEBILITADO",
+      subtitle:"Sus atributos quedan reducidos."
     }
   };
   return map[key]||null;
@@ -544,6 +572,17 @@ function queueEventSplashGroup(payloads){
   }
   showNextEventSplash();
 }
+function normalizeStatusSplashType(statusType){
+  const s=String(statusType||"").toLowerCase();
+  if(!s)return "";
+  if(s.startsWith("bleed")&&!s.endsWith("tick"))return "bleed";
+  if(s==="burn"||s==="burn_apply"||s.startsWith("burn_"))return "burn";
+  if(s==="poison"||s==="poison_apply"||s.startsWith("poison_"))return "poison";
+  if(s==="fear"||s.includes("fear")||s.includes("miedo"))return "fear";
+  if(s==="stun"||s.includes("stun")||s.includes("aturd"))return "stun";
+  if(s==="debuff"||s.includes("debuff")||s.includes("slow")||s.includes("weaken"))return "debuff";
+  return "";
+}
 function getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx){
   const items=[];
   const hasDodge=!!(explicitDodgeFx&&explicitDodgeFx.type==="dodge");
@@ -555,15 +594,13 @@ function getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodge
   }
   // 7HDB: un ataque evadido no puede mostrar Guardia. Si por latencia/stale event llegan
   // dodgeFxEvent y defenseFxEvent juntos, gana ESQUIVA y se descarta GUARDIA.
-  if(!hasDodge&&explicitDefenseFx&&explicitDefenseFx.type==="guard_block"){
+  if((!hasDodge||explicitDefenseFx?.combatResult==="evasion_exhausted_block")&&explicitDefenseFx&&explicitDefenseFx.type==="guard_block"){
     items.push({type:"guard",key:`${gameId||"game"}:event-splash:guard:${explicitDefenseFx.eventId||""}`});
   }
   if(explicitStatusFx){
-    const statusType=String(explicitStatusFx.type||"");
-    if(statusType.startsWith("bleed")&&!statusType.endsWith("tick")){
-      items.push({type:"bleed",key:`${gameId||"game"}:event-splash:bleed:${explicitStatusFx.eventId||""}`});
-    }else if(statusType==="burn_apply"){
-      items.push({type:"burn",key:`${gameId||"game"}:event-splash:burn:${explicitStatusFx.eventId||""}`});
+    const splashType=normalizeStatusSplashType(explicitStatusFx.type);
+    if(splashType){
+      items.push({type:splashType,key:`${gameId||"game"}:event-splash:${splashType}:${explicitStatusFx.eventId||""}`});
     }
   }
   return items;
@@ -619,6 +656,29 @@ function makeDodgeFxEvent(unit){
     unitName:unit.name||"",
     at:{x:Number(unit.x||0),y:Number(unit.y||0)},
     rarityClass:getFxRarityClass(unit)
+  };
+}
+function isEvasionExhaustedBlock(evasionPressure){
+  const spent=Number(evasionPressure?.spent||0);
+  const remaining=Number(evasionPressure?.remaining||0);
+  return spent>0&&remaining<=0;
+}
+function makeMissDefenseFxEventByEvasion(defender,evasionPressure){
+  if(!defender||!isEvasionExhaustedBlock(evasionPressure))return null;
+  return {
+    ...makeDefenseFxEvent("guard_block",defender),
+    combatResult:"evasion_exhausted_block",
+    evasionSpent:Number(evasionPressure?.spent||0),
+    evasionRemaining:Number(evasionPressure?.remaining||0)
+  };
+}
+function makeCleanDodgeFxEvent(defender,evasionPressure){
+  if(!defender||isEvasionExhaustedBlock(evasionPressure))return null;
+  return {
+    ...makeDodgeFxEvent(defender),
+    combatResult:"dodge",
+    evasionSpent:Number(evasionPressure?.spent||0),
+    evasionRemaining:Number(evasionPressure?.remaining||0)
   };
 }
 function makeStatusFxEvent(type,unit,amount=0){
@@ -800,8 +860,9 @@ function maybePlayBattleFx(prevPub,nextPub){
   const explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
   const explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
   const explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
-  // 7HDB: si hay evasión explícita, no reproducir defensa aunque haya quedado un evento de guardia viejo.
-  if(explicitDodgeFx&&explicitDodgeFx.type==="dodge")explicitDefenseFx=null;
+  // 7HDB/7HDF: si hay evasión limpia explícita, no reproducir defensa vieja.
+  // Si la defensa viene marcada como evasion_exhausted_block, sí se permite porque es bloqueo de último recurso.
+  if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"&&explicitDefenseFx?.combatResult!=="evasion_exhausted_block")explicitDefenseFx=null;
   if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx)
     ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}`
@@ -1973,7 +2034,7 @@ function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
     if(Math.random()>=PORCUPINE_FEAR_CHANCE)return u;
     feared.push(u.name||"Unidad");
     const n=applyFearToUnit(u,defenderBefore.name||"Puercoespín");
-    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("debuff",n,3);
+    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("fear",n,3);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("debuff",n,3,{iconText:"😨"});
     return n;
   });
@@ -2002,7 +2063,7 @@ function applyAfricanLionFearAura(units,sourceLabel="León Africano"){
     const n=applyFearToUnitOnce(u,lion.name||sourceLabel);
     if(n===u)return u;
     if(Number(n.tempAtkDebuff||0)>beforeAtkDebuff)feared.push(u.name||"Unidad");
-    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("debuff",n,3);
+    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("fear",n,3);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("debuff",n,3,{iconText:"😨"});
     return n;
   });
@@ -2943,42 +3004,65 @@ function applyGuardDamage(defender,damage,guardMod=0,minHpDamage=0){
   const incoming=Math.max(0,Number(damage)||0);
   const rawGuardMod=Number(guardMod)||0;
   const bonusGuard=Math.max(0,rawGuardMod);
-  const negativeGuardMod=Math.min(0,rawGuardMod);
+  const preGuardReduction=Math.max(0,-rawGuardMod);
   const currentBaseGuard=Math.max(0,Number(defender?.guard||0));
   const currentTempGuard=Number(defender?.tempGuardBuff||0);
-  const positiveTempGuard=Math.max(0,currentTempGuard);
   const negativeTempGuard=Math.min(0,currentTempGuard);
   const auraGuard=Math.max(0,hectorGuardAura(defender)+achillesConcentrationGuard(defender)+attilaEnemyAura(defender).guard);
-  const effectiveCurrentGuard=Math.max(0,currentBaseGuard+positiveTempGuard+negativeTempGuard+auraGuard+bonusGuard+negativeGuardMod);
-  let guardDamage=Math.min(effectiveCurrentGuard,incoming);
-  let remaining=incoming-guardDamage;
+
+  let nextBaseGuard=currentBaseGuard;
+  let nextTempGuard=currentTempGuard;
+  const spendStoredGuard=(amount)=>{
+    let left=Math.max(0,Number(amount)||0);
+    if(left<=0)return 0;
+    const tempAvailable=Math.max(0,nextTempGuard);
+    const spendTemp=Math.min(tempAvailable,left);
+    if(spendTemp>0)nextTempGuard=Math.max(0,nextTempGuard-spendTemp);
+    left-=spendTemp;
+    const spendBase=Math.min(nextBaseGuard,left);
+    if(spendBase>0)nextBaseGuard=Math.max(0,nextBaseGuard-spendBase);
+    left-=spendBase;
+    return spendTemp+spendBase;
+  };
+
+  // 7HDG: los modificadores negativos de Guardia ya no son "perforación invisible".
+  // Primero consumen Guardia real/temporal. Solo después el daño normal puede tocar Vida.
+  const preGuardLoss=spendStoredGuard(preGuardReduction);
+
+  const positiveTempAfterPre=Math.max(0,nextTempGuard);
+  const effectiveCurrentGuard=Math.max(0,nextBaseGuard+positiveTempAfterPre+negativeTempGuard+auraGuard+bonusGuard);
+  let attackGuardDamage=Math.min(effectiveCurrentGuard,incoming);
+  let remaining=incoming-attackGuardDamage;
   if(minHpDamage>0&&incoming>0&&remaining<minHpDamage){
     remaining=minHpDamage;
-    guardDamage=Math.min(effectiveCurrentGuard,Math.max(0,incoming-remaining));
+    attackGuardDamage=Math.min(effectiveCurrentGuard,Math.max(0,incoming-remaining));
   }
 
-  // El daño a Guardia se consume en orden:
-  // 1) Guardia temporal del ataque (DEF +2, etc.)
-  // 2) Guardia temporal almacenada (+Shield Wall, Muro de acero)
-  // 3) Guardia propia actual de la unidad
-  // Las auras no se escriben en guard para no duplicarlas/restaurarlas cada golpe.
-  let toSpend=guardDamage;
+  let toSpend=attackGuardDamage;
   const spendBonus=Math.min(bonusGuard,toSpend);
   toSpend-=spendBonus;
-  const spendTemp=Math.min(positiveTempGuard,toSpend);
-  toSpend-=spendTemp;
-  const spendBase=Math.min(currentBaseGuard,toSpend);
-  toSpend-=spendBase;
 
-  const nextTempGuard=currentTempGuard>0?Math.max(0,currentTempGuard-spendTemp):currentTempGuard;
-  const nextBaseGuard=Math.max(0,currentBaseGuard-spendBase);
+  // Las auras cuentan como Guardia efectiva de combate, pero no se escriben en guard.
+  // Se consumen visualmente para este impacto antes de tocar la Guardia almacenada.
+  const spendAura=Math.min(auraGuard,toSpend);
+  toSpend-=spendAura;
+
+  const storedGuardLossFromAttack=spendStoredGuard(toSpend);
+  const totalGuardLoss=preGuardLoss+spendBonus+spendAura+storedGuardLossFromAttack;
+
+  // Invariante de tablero: si un ataque normal logra bajar Vida, la Guardia almacenada
+  // no puede quedar positiva. Así nunca se ve "perdió Vida pero todavía tiene Guardia base".
+  if(remaining>0){
+    if(nextTempGuard>0)nextTempGuard=0;
+    if(nextBaseGuard>0)nextBaseGuard=0;
+  }
 
   return resolveBlessedArmorTransition(defender,{
     ...defender,
     tempGuardBuff:nextTempGuard,
     guard:nextBaseGuard,
     hp:(defender.hp||0)-remaining,
-    lastGuardLoss:guardDamage,
+    lastGuardLoss:totalGuardLoss,
     lastHpLoss:remaining
   });
 }
@@ -5097,6 +5181,7 @@ async function attackUnit(a,d){
     bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado${d.leader?" y reinicia su duración a 2 turnos":""}.`:` ${d.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
   }
   let arcaneAdeptStatusEvent=null;
+  let poisonStatusEvent=null;
   if(hit.hit&&hpLoss>0&&a.key==="arcane_adept"&&units.some(u=>u.id===d.id)){
     const beforeArcane=units.find(u=>u.id===d.id)||d;
     let arcaneLabel="";
@@ -5124,6 +5209,7 @@ async function attackUnit(a,d){
         if(u.poisonTurns&&u.poisonSourceId===a.id&&!u.leader)return {...u,hp:0};
         return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:a.id,poisonSourceName:a.name};
       });
+      poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===d.id)||d,1);
       bleedText+=` ${d.name} queda envenenado: 1/2/4 durante 3 turnos.`;
     }
   }
@@ -5136,6 +5222,7 @@ async function attackUnit(a,d){
         if(u.id!==d.id)return u;
         return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:a.id,poisonSourceName:a.name};
       });
+      poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===d.id)||d,1);
       bleedText+=` ${d.name} queda envenenado por Flecha del Dharma: 1/2/4 durante 3 turnos.`;
     }
   }
@@ -5146,6 +5233,7 @@ async function attackUnit(a,d){
       bleedText+=` ${targetBeforeVenom.name} ignora el Veneno de la Manada.`;
     }else{
       units=units.map(u=>u.id===d.id?applyBeastmasterVenomToTarget(u,a,5):u);
+      poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===d.id)||targetBeforeVenom,1);
       bleedText+=` Veneno de la Manada: ${targetBeforeVenom.name} queda envenenado durante 5 turnos.`;
     }
   }
@@ -5290,11 +5378,11 @@ async function attackUnit(a,d){
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
     ? {...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),combatResult:"guard"}
-    : null;
+    : (!hit.hit&&defenderStillAlive?makeMissDefenseFxEventByEvasion(defenderUnitNow,evasionPressure):null);
   const dodgeFxEvent=!hit.hit&&defenderStillAlive
-    ? {...makeDodgeFxEvent(defenderUnitNow),combatResult:"dodge"}
+    ? makeCleanDodgeFxEvent(defenderUnitNow,evasionPressure)
     : null;
-  const statusFxEvent=arcaneAdeptStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
+  const statusFxEvent=arcaneAdeptStatusEvent||poisonStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
     ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
     : null));
   const floatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
@@ -5806,6 +5894,7 @@ async function adventureEnemyTurn(){
       bleedText=alreadyBleeding?` ${target.name} mantiene Sangrado${target.leader?" y reinicia su duración a 2 turnos":""}.`:` ${target.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
     }
     let arcaneAdeptStatusEvent=null;
+    let poisonStatusEvent=null;
     if(hit.hit&&hpLoss>0&&attacker.key==="arcane_adept"&&units.some(u=>u.id===target.id)){
       const beforeArcane=units.find(u=>u.id===target.id)||target;
       let arcaneLabel="";
@@ -5832,6 +5921,7 @@ async function adventureEnemyTurn(){
           if(u.poisonTurns&&u.poisonSourceId===attacker.id&&!u.leader)return {...u,hp:0};
           return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:attacker.id,poisonSourceName:attacker.name};
         });
+        poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===target.id)||target,1);
         bleedText+=` ${target.name} queda envenenado: 1/2/4 durante 3 turnos.`;
       }
     }
@@ -5844,6 +5934,7 @@ async function adventureEnemyTurn(){
           if(u.id!==target.id)return u;
           return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:attacker.id,poisonSourceName:attacker.name};
         });
+        poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===target.id)||target,1);
         bleedText+=` ${target.name} queda envenenado por Flecha del Dharma: 1/2/4 durante 3 turnos.`;
       }
     }
@@ -5854,6 +5945,7 @@ async function adventureEnemyTurn(){
         bleedText+=` ${targetBeforeVenom.name} ignora el Veneno de la Manada.`;
       }else{
         units=units.map(u=>u.id===target.id?applyBeastmasterVenomToTarget(u,attacker,5):u);
+        poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===target.id)||targetBeforeVenom,1);
         bleedText+=` Veneno de la Manada: ${targetBeforeVenom.name} queda envenenado durante 5 turnos.`;
       }
     }
@@ -5966,11 +6058,11 @@ async function adventureEnemyTurn(){
     const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
       ? {...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),combatResult:"guard"}
-      : null;
+      : (!hit.hit&&defenderStillAlive?makeMissDefenseFxEventByEvasion(defenderUnitNow,evasionPressure):null);
     pendingAiDodgeFxEvent=!hit.hit&&defenderStillAlive
-      ? {...makeDodgeFxEvent(defenderUnitNow),combatResult:"dodge"}
+      ? makeCleanDodgeFxEvent(defenderUnitNow,evasionPressure)
       : null;
-    pendingAiStatusFxEvent=arcaneAdeptStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("debuff", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
+    pendingAiStatusFxEvent=arcaneAdeptStatusEvent||poisonStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
       : null));
     pendingAiFloatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive

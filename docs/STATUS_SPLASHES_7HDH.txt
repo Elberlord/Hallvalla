@@ -1,0 +1,88 @@
+Hallvalla - Splashes de estados alterados 7HDH
+================================================
+
+ZIP base: Hallvalla_guard_hp_invariant_7HDG.zip
+ZIP generado: Hallvalla_status_splash_fix_7HDH.zip
+
+Respuesta:
+- Antes NO todos los estados tenían splash central.
+- Sí existían splash/animación para:
+  · Esquiva
+  · Guardia
+  · Sangrado
+  · Emboscada / Sigilo
+  · Quemadura
+- Pero el sistema solo convertía statusFxEvent a splash para:
+  · bleed
+  · burn_apply
+
+Por eso el Adepto Arcano podía aplicar Veneno o Quemadura y no mostrar nada:
+- Veneno salía como "poison", pero no estaba mapeado.
+- Quemadura del Adepto salía como "burn", pero el payload solo aceptaba "burn_apply".
+
+Cambio aplicado:
+1) Se agregó normalizeStatusSplashType().
+Ahora mapea:
+- bleed_apply / bleed_refresh -> Sangrado
+- burn / burn_apply -> Quemadura
+- poison / poison_apply -> Veneno
+- fear / miedo -> Miedo
+- stun / aturdido -> Aturdido
+- debuff -> Debilitado
+
+2) Se agregaron nuevos assets abstractos de splash:
+- assets/ui/event_splashes/event_poison.webp
+- assets/ui/event_splashes/event_fear.webp
+- assets/ui/event_splashes/event_stun.webp
+- assets/ui/event_splashes/event_debuff.webp
+
+3) Fuentes corregidas:
+- Adepto Arcano:
+  · Sangrado -> splash Sangrado
+  · Veneno -> splash Veneno
+  · Quemadura -> splash Quemadura
+  · -MOV / -AGI -> splash Debilitado
+- Taipán interior -> splash Veneno
+- Flecha del Dharma de Arjuna -> splash Veneno
+- Veneno de la Manada -> splash Veneno
+- Puercoespín / León Africano -> splash Miedo
+- Rinoceronte blanco -> splash Aturdido
+- Gengis Kan y debuffs genéricos -> splash Debilitado
+
+No se tocó:
+- fórmula de combate
+- daño
+- Guardia
+- PREC/EVA
+- IA estratégica
+- armas
+- Atacar Primero de Lanza
+- audio
+
+Verificación:
+- script.js node --check: OK
+
+- CSS balance de llaves: OK
+
+Checks:
+{
+  "node_check": true,
+  "normalizer_present": true,
+  "poison_config": true,
+  "fear_config": true,
+  "stun_config": true,
+  "debuff_config": true,
+  "payload_uses_normalizer": true,
+  "poison_status_event_player": true,
+  "poison_status_event_ai": true,
+  "status_event_includes_poison_player": true,
+  "status_event_includes_poison_ai": true,
+  "fear_events": true,
+  "stun_events": true,
+  "css_braces": true,
+  "build_7HDH": true,
+  "asset_event_poison.webp": true,
+  "asset_event_fear.webp": true,
+  "asset_event_stun.webp": true,
+  "asset_event_debuff.webp": true
+}
