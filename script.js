@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDH";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDI";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -2546,13 +2546,22 @@ function makeUnit(card,x,y){card=applyDesertAssassinRule({...card});const baseGu
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
+const RESOURCE_MAX_CAP=10;
+function capResourceMax(value){return Math.min(RESOURCE_MAX_CAP,Math.max(0,Number(value||0)));}
+function capResourceAmount(value,maxValue){return Math.min(capResourceMax(maxValue),Math.max(0,Number(value||0)));}
+function getResourceRecharge(prevMax,rawGain){
+  const previousMax=capResourceMax(prevMax);
+  const maxHonor=capResourceMax(previousMax+Math.max(0,Number(rawGain||0)));
+  return {honor:maxHonor,maxHonor,gain:Math.max(0,maxHonor-previousMax),capped:maxHonor>=RESOURCE_MAX_CAP};
+}
 function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const label=ownerUsesMana(owner)?"Mana":"Honor";return caps?label.toUpperCase():label}
-function getResourcePairText(owner,honor,maxHonor,opts={}){return `${getResourceLabel(owner,opts)} ${Number(honor||0)}/${Number(maxHonor||0)}`}
+function getResourcePairText(owner,honor,maxHonor,opts={}){const cappedMax=capResourceMax(maxHonor);return `${getResourceLabel(owner,opts)} ${capResourceAmount(honor,cappedMax)}/${cappedMax}`}
 function getOwnerResourceState(owner){
   const pubStats=publicState?.playerStats?.[owner]||{};
   const privOwner=(owner===myPlayer&&privateState)?privateState:null;
-  const honor=Number((privOwner?privOwner.honor:pubStats.honor)||0);
-  const maxHonor=Number((privOwner?privOwner.maxHonor:pubStats.maxHonor)||0);
+  const rawMax=Number((privOwner?privOwner.maxHonor:pubStats.maxHonor)||0);
+  const maxHonor=capResourceMax(rawMax);
+  const honor=capResourceAmount(Number((privOwner?privOwner.honor:pubStats.honor)||0),maxHonor);
   return {honor,maxHonor,label:getResourceLabel(owner,{caps:true}),softLabel:getResourceLabel(owner)};
 }
 function resourceDetailHtml(owner,{compact=false,includeReason=true}={}){
@@ -2565,7 +2574,7 @@ function resourceDetailHtml(owner,{compact=false,includeReason=true}={}){
     : `Este líder usa HONOR como recurso de cartas.`;
   const main=`${st.label} ${st.honor}/${st.maxHonor}`;
   if(compact)return `<div class="detail-helper-note"><b>Recurso:</b> ${escapeHtml(main)}. ${includeReason?escapeHtml(reason):""}</div>`;
-  return `<div class="stat-help-box"><div class="stat-help-title">Recurso del turno</div><div class="stat-help-line"><b>${escapeHtml(st.label)}</b>: ${escapeHtml(`${st.honor}/${st.maxHonor}`)} restante.</div><div class="stat-help-line"><b>Regla</b>: ${escapeHtml(reason)} Se recarga al iniciar el turno del dueño y baja cuando juegas cartas.</div></div>`;
+  return `<div class="stat-help-box"><div class="stat-help-title">Recurso del turno</div><div class="stat-help-line"><b>${escapeHtml(st.label)}</b>: ${escapeHtml(`${st.honor}/${st.maxHonor}`)} restante.</div><div class="stat-help-line"><b>Regla</b>: ${escapeHtml(reason)} Se recarga al iniciar el turno del dueño, baja cuando juegas cartas y no puede superar 10.</div></div>`;
 }
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
 function hasWarriorLeaderUnitShield(defender,attacker,units=publicState?.units||[]){
@@ -3570,9 +3579,11 @@ async function maybeStartTurn(){
   try{
     const firstTurnNoDraw=privateState.skipFirstTurnDraw===true;
     const drawn=firstTurnNoDraw?{deck:[...(privateState.deck||[])],hand:[...(privateState.hand||[])]}:drawCards(privateState.deck||[],privateState.hand||[],2);
-    const honorGain=(publicState.turn||1)>3?2:1;
-    const maxHonor=(privateState.maxHonor||0)+honorGain;
-    const honor=maxHonor;
+    const rawHonorGain=(publicState.turn||1)>3?2:1;
+    const recharge=getResourceRecharge(privateState.maxHonor||0,rawHonorGain);
+    const honorGain=recharge.gain;
+    const maxHonor=recharge.maxHonor;
+    const honor=recharge.honor;
     await updatePrivate({deck:drawn.deck,hand:drawn.hand,honor,maxHonor,lastTurnStarted:publicState.turnKey,skipFirstTurnDraw:false});
     let units=restoreTurnGuardForOwner(publicState.units||[],myPlayer).map(u=>u.owner===myPlayer?clearTurnTempStatsForOwnerUnit(u,publicState.turnKey):u);units=units.map(u=>u.owner===myPlayer&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
     const heroicEdgeStart=applyHeroicEdgeStartHealing(units,myPlayer);
@@ -3587,7 +3598,8 @@ async function maybeStartTurn(){
     if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
     if(firstTurnNoDraw)tryPlaySound("mana_charge",.42);else{tryPlaySound("draw_card",.50);setTimeout(()=>tryPlaySound("mana_charge",.42),120);}
     const resourceLabel=getResourceLabel(myPlayer);
-    const logText=firstTurnNoDraw?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}, recarga a ${honor}. Mano inicial: ${drawn.hand.length} cartas. Pasa a Main Phase.`:`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}, recarga a ${honor} y roba 2 cartas. Pasa a Main Phase.`;
+    const honorCapText=maxHonor>=RESOURCE_MAX_CAP?" (tope 10)":""; 
+    const logText=firstTurnNoDraw?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano inicial: ${drawn.hand.length} cartas. Pasa a Main Phase.`:`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba 2 cartas. Pasa a Main Phase.`;
     await updatePublic({
       units,
       legendaryTraps:startTrap.traps||getActiveLegendaryTraps(),
@@ -3690,7 +3702,7 @@ function getCardPlayState(card){
   if(isBattleEnded())return{canPlay:false,reason:"La batalla ya terminó."};
   if(!isMyTurn())return{canPlay:false,reason:"No es tu turno."};
   if(!isHandPlayPhase())return{canPlay:false,reason:`Solo puedes jugar cartas desde la mano en Main Phase o Last Phase. Fase actual: ${turnPhaseLabel()}.`};
-  const honor=privateState?.honor||0;
+  const honor=capResourceAmount(privateState?.honor||0,privateState?.maxHonor||0);
   if(honor<effectiveCardCost(card,myPlayer))return{canPlay:false,reason:`Necesitas ${effectiveCardCost(card,myPlayer)} ${getResourceLabel(myPlayer)}. Tienes ${honor}.`};
   if(card.type==="unit"&&summonZones(myPlayer).length===0)return{canPlay:false,reason:"No hay casillas libres junto a tu líder."};
   if(card.spell==="damage"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer))return{canPlay:false,reason:"No hay objetivos rivales para este hechizo."};
@@ -4787,9 +4799,9 @@ async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La bata
       });await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,slowAmount,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} activa ${card.name}: ${target.name} pierde ${slowAmount} MOV${agiSlow>0?` y ${agiSlow} AGI`:""} hasta su próximo turno. DET mostrará el origen del debuff.`)}else if(card.trap==="legendary_mark"){if(!canMarkWithLegendaryTrap(card,target))return setHint("Ese objetivo no cumple las condiciones de esta Trampa Legendaria.");tryPlaySound("trap_trigger",.74);const trap=makeTrapMark(card,target,myPlayer);await updatePublic({legendaryTraps:[...getActiveLegendaryTraps(),trap]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} sobre ${target.name} (${getUnitTrapTierLabel(target)}). La trampa esperará su condición.`);setHint(`${target.name} quedó marcado por ${card.name}.`)}clearSelection()}
 async function removeCardAndPay(card){
   const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
-  const honor=(privateState.honor||0)-(card.cost||0);
-  const maxHonor=privateState.maxHonor||0;
-  await updatePrivate({hand,honor});
+  const maxHonor=capResourceMax(privateState.maxHonor||0);
+  const honor=Math.max(0,capResourceAmount(privateState.honor||0,maxHonor)-(card.cost||0));
+  await updatePrivate({hand,honor,maxHonor});
   await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
   pulseTurnHonorHud();
   scheduleAutoAdvanceIfHandEmptyAfterPlay(hand,honor);
@@ -5468,6 +5480,9 @@ async function adventureEnemyTurn(){
   const publishAiStep=async(extra={})=>{
     const p1Leader=units.find(u=>u.owner===1&&u.leader);
     const p2Leader=units.find(u=>u.owner===2&&u.leader);
+    const cappedMaxHonor=capResourceMax(maxHonor);
+    honor=capResourceAmount(honor,cappedMaxHonor);
+    maxHonor=cappedMaxHonor;
     const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:"__AI_IN_PROGRESS__",skipFirstTurnDraw:false};
     const battleFxEvent=pendingAiBattleFxEvent||null;
     const defenseFxEvent=pendingAiDefenseFxEvent||null;
@@ -5486,7 +5501,7 @@ async function adventureEnemyTurn(){
       adventureAiState:nextAiState,
       currentPlayer:2,
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0},
-      [`playerStats/2`]:{hp:p2Leader?.hp||20,honor,maxHonor,deck:deck.length,hand:hand.length},
+      [`playerStats/2`]:{hp:p2Leader?.hp||20,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),deck:deck.length,hand:hand.length},
       log:[...logs,...(pub.log||[])].slice(0,18),
       aiActionText:logs[logs.length-1]||`${pub.adventureEnemyName||"Rival"} está pensando su jugada...`,
       aiStepAt:Date.now(),
@@ -5504,9 +5519,11 @@ async function adventureEnemyTurn(){
   const drawn=firstTurnNoDraw?{deck:[...(ai.deck||[])],hand:[...(ai.hand||[])]}:drawCards(ai.deck||[],ai.hand||[],aiDrawCount);
   let deck=drawn.deck, hand=drawn.hand;
   const achillesExtremeHonorBonus=isAchillesExtremeBattleId(pub.adventureBattleId)?1:0;
-  const honorGain=((pub.turn||1)>3?2:1)+achillesExtremeHonorBonus;
-  const maxHonor=(ai.maxHonor||0)+honorGain;
-  let honor=maxHonor;
+  const rawHonorGain=((pub.turn||1)>3?2:1)+achillesExtremeHonorBonus;
+  const recharge=getResourceRecharge(ai.maxHonor||0,rawHonorGain);
+  const honorGain=recharge.gain;
+  const maxHonor=recharge.maxHonor;
+  let honor=recharge.honor;
   let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?clearTurnTempStatsForOwnerUnit(u,pub.turnKey):u);units=units.map(u=>u.owner===2&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
   const heroicEdgeStart=applyHeroicEdgeStartHealing(units,2);
   units=heroicEdgeStart.units;
@@ -6834,7 +6851,7 @@ async function adventureEnemyTurn(){
     if(burnEnd.floatFxEvent)pendingAiFloatFxEvent=burnEnd.floatFxEvent;
   }
   const outcome=getBattleOutcome(units);
-  const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
+  const nextAiState={deck,hand,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
   if(outcome.ended){
     const finalLogs=[...logs,outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`,...(pub.log||[])].slice(0,18);
     recordLocalLeaderBattleOutcome(outcome,pub.mode||"adventure");
@@ -7548,9 +7565,11 @@ function getVisibleHonorState(){
   const privateHonor=owner===myPlayer&&privateState?Number(privateState.honor||0):null;
   const privateMax=owner===myPlayer&&privateState?Number(privateState.maxHonor||0):null;
   const st=publicState.playerStats?.[owner]||{};
-  const honor=privateHonor!==null?privateHonor:Number(st.honor||0);
-  const maxHonor=privateMax!==null?privateMax:Number(st.maxHonor||0);
-  return{owner,honor:Math.max(0,honor),maxHonor:Math.max(0,maxHonor),label:getResourceLabel(owner,{caps:true}),hidden:isBattleEnded()||!gameId};
+  const rawMax=privateMax!==null?privateMax:Number(st.maxHonor||0);
+  const maxHonor=capResourceMax(rawMax);
+  const rawHonor=privateHonor!==null?privateHonor:Number(st.honor||0);
+  const honor=capResourceAmount(rawHonor,maxHonor);
+  return{owner,honor,maxHonor,label:getResourceLabel(owner,{caps:true}),hidden:isBattleEnded()||!gameId};
 }
 function renderTurnHonorHud(){
   const hud=$("turnHonorHud"),value=$("turnHonorHudValue"),labelEl=hud?hud.querySelector(".turn-honor-label"):null;
@@ -7573,7 +7592,7 @@ function maybeShowHonorRecharge(){
   lastHonorRechargeKey=ev.key;
   const modal=$("honorRechargeModal");
   if(!modal)return;
-  const gain=Number(ev.gain||0),honor=Number(ev.honor||0),maxHonor=Number(ev.maxHonor||0);
+  const maxHonor=capResourceMax(ev.maxHonor||0),honor=capResourceAmount(ev.honor||0,maxHonor),gain=Math.max(0,Math.min(Number(ev.gain||0),RESOURCE_MAX_CAP));
   const resourceLabel=ev.resourceLabel||getResourceLabel(ev.owner,{caps:true});
   modal.innerHTML=`<span class="honor-recharge-main">+${gain} ${resourceLabel}</span><span class="honor-recharge-sub">${resourceLabel} ${honor}/${maxHonor}</span>`;
   modal.classList.remove("show");
@@ -7595,7 +7614,7 @@ function renderHud(){
     const deckEl=$("p"+p+"Deck");
     const handEl=$("p"+p+"Hand");
     if(lifeEl)lifeEl.textContent=leader?Math.max(0,leader.hp):st.hp||0;
-    if(honorEl)honorEl.textContent=`${st.honor||0}/${st.maxHonor||0}`;
+    if(honorEl){const maxHonor=capResourceMax(st.maxHonor||0);honorEl.textContent=`${capResourceAmount(st.honor||0,maxHonor)}/${maxHonor}`;}
     if(deckEl)deckEl.textContent=st.deck||0;
     if(handEl)handEl.textContent=st.hand||0;
 

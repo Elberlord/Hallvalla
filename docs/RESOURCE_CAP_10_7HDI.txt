@@ -1,0 +1,62 @@
+Hallvalla - Tope de Honor/Mana 10 7HDI
+=========================================
+
+ZIP base: Hallvalla_status_splash_fix_7HDH.zip
+ZIP generado: Hallvalla_resource_cap_10_7HDI.zip
+
+Cambio aplicado:
+- Se añadió un tope global de recurso:
+  RESOURCE_MAX_CAP = 10
+
+Regla nueva:
+- Honor y Mana comparten el mismo sistema interno.
+- El máximo de Honor/Mana ya no puede superar 10.
+- Al iniciar turno:
+  · el máximo sube según la regla normal
+  · pero se recorta a 10
+  · el recurso actual se recarga hasta ese máximo recortado
+
+Ejemplos:
+- Si tienes 8 y ganas +2 -> quedas 10/10.
+- Si tienes 9 y ganas +2 -> quedas 10/10, ganancia real +1.
+- Si ya tienes 10/10 -> sigues 10/10, ganancia real +0.
+- Si una partida vieja tenía 20/25 -> el HUD y la recarga lo corrigen visual/lógicamente a 10/10.
+
+Aplicado en:
+- turno del jugador
+- turno de IA
+- HUD principal
+- HUD lateral de Honor/Mana
+- modal de recarga
+- pago de cartas
+- detalles de recurso
+
+No se tocó:
+- costos de cartas
+- cantidad de cartas robadas
+- lógica de combate
+- IA estratégica
+- splashes
+- audio
+- assets
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "cap_constant": true,
+  "resource_recharge_helper": true,
+  "player_turn_uses_cap": true,
+  "ai_turn_uses_cap": true,
+  "pay_clamps_max": true,
+  "hud_clamps": true,
+  "render_hud_clamps": true,
+  "help_mentions_10": true,
+  "build_7HDI": true,
+  "math_9_plus_2_caps_to_10_gain_1": true,
+  "math_10_plus_2_stays_10_gain_0": true,
+  "math_old_25_clamps_to_10": true
+}
