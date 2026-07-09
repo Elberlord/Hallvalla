@@ -1,9 +1,0 @@
-FIX 7GZN - GLOW SOLO EN MARCO
-
-Cambio visual:
-- Se elimina el glow interior del retrato de la carta/unidad.
-- Se elimina el fondo/brillo interno del contenedor de retrato.
-- El brillo de rareza se genera únicamente en un borde/pseudo-elemento del marco.
-- Las básicas no brillan.
-
-No se tocaron reglas, stats, cartas ni Firebase.

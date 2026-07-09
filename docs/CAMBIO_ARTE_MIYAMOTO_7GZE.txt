@@ -1,3 +1,0 @@
-Se agregó el arte de Miyamoto Musashi a assets/cards/special/miyamoto_musashi.webp y assets/board_cards/special/miyamoto_musashi.webp.
-Se actualizó CARD_PORTRAITS.musashi para usar ese archivo.
-No se modificaron efectos ni estadísticas.

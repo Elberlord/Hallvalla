@@ -1,9 +1,0 @@
-CAMBIO 7GZQ - BRILLO NEÓN SOLO EN EL MARCO DE RAREZA
-
-Se corrigió el efecto visual de rareza en las unidades del tablero:
-- Se eliminó el brillo cuadrado del contenedor (::before / ::after).
-- Se eliminó el glow del interior visual de la carta.
-- Se dejó el brillo únicamente sobre el PNG del marco (.unit-frame-skin).
-- El color del brillo ahora sale de la rareza de la unidad.
-- Las básicas no brillan.
-- Heroic = verde, Improved = azul, Epic = morado, Glorious = dorado, Mythic = rosa, Legendary = naranja, Demigod = dorado claro.

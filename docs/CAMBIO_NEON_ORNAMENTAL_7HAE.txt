@@ -1,8 +1,0 @@
-Hallvalla 7HAE
-
-Cambio aplicado:
-- El marco base de la carta en campo se mantiene normal.
-- Se agregó una capa separada (.unit-frame-rarity) que usa gothic_frame_unit_neon_mask.png.
-- El brillo neon ahora se aplica SOLO al ornamental de rareza, no al retrato ni a toda la carta.
-- Las cartas básicas no brillan.
-- Se mantienen los stats por encima del marco.
