@@ -1,0 +1,60 @@
+HallValla - Desempate por agotamiento 7HDK
+==========================================
+
+ZIP base: Hallvalla_docs_clean_rules_7HDJ.zip
+ZIP generado: Hallvalla_stalemate_life_tiebreak_7HDK.zip
+
+Cambio aplicado:
+- Se agregó una condición de final de partida por agotamiento.
+- Si ambos jugadores quedan:
+  · sin unidades no-líder en el tablero
+  · sin cartas jugables
+  entonces la partida termina automáticamente.
+
+Regla de ganador:
+- Gana quien tenga más Vida actual en su líder.
+- Si ambos líderes tienen la misma Vida, se declara empate.
+
+Cómo funciona:
+- Al inicio del turno, después de robar/recargar y resolver estados, el sistema revisa si el jugador activo puede jugar algo.
+- Si no tiene unidades y no tiene cartas jugables, queda marcado como agotado.
+- Cuando ambos jugadores están marcados como agotados y no hay unidades no-líder en el tablero, se aplica el desempate por Vida.
+- En PVP, esto permite detectar manos que tienen cartas pero no pueden jugarse, sin mirar la mano privada del rival.
+- En aventura, también aplica contra la IA.
+
+No se tocó:
+- Daño.
+- Guardia.
+- PREC/EVA.
+- Costos de cartas.
+- IA estratégica.
+- Armas.
+- Splashes.
+- Audio.
+- Assets.
+
+Documentación:
+- Se actualizó la documentación limpia de reglas/mecánicas.
+- Se agregó docs/DESEMPATE_AGOTAMIENTO_7HDK.txt.
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "helpers_present": true,
+  "getBattleOutcome_stalemate": true,
+  "finalize_accepts_state_override": true,
+  "player_start_marks_stalemate": true,
+  "ai_start_marks_stalemate": true,
+  "ai_publish_preserves_flag": true,
+  "docs_patch_present": true,
+  "build_7HDK": true,
+  "math_hp_p1_wins": true,
+  "math_hp_p2_wins": true,
+  "math_equal_hp_draw": true,
+  "math_units_prevent_stalemate": true,
+  "math_one_flag_not_enough": true
+}

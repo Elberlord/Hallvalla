@@ -1,0 +1,28 @@
+HallValla - Fix alias de música 7HDM
+====================================
+
+Problema:
+- La canción del duelo sí existía:
+  assets/music/duel_hallvalla_war_chant.ogg
+- El error 404 venía de otra ruta:
+  assets/music/home_theme_loop.ogg
+  o una ruta vieja/cacheada:
+  assets/music/music_theme_loop.ogg
+- El juego intentaba reproducir música de menú con un nombre que no tenía archivo físico.
+
+Fix:
+- Se agregaron alias lógicos:
+  home_theme_loop -> duel_hallvalla_war_chant
+  music_theme_loop -> duel_hallvalla_war_chant
+- También se copiaron archivos físicos de respaldo:
+  assets/music/home_theme_loop.ogg
+  assets/music/music_theme_loop.ogg
+- Así el duelo conserva la canción que ya gustaba y el navegador deja de tirar 404 por nombres viejos.
+
+No se tocó:
+- IA
+- combate
+- cartas
+- recursos
+- splashes
+- CSS/HTML

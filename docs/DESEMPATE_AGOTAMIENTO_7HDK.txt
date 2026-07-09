@@ -1,0 +1,13 @@
+HallValla - Desempate por agotamiento 7HDK
+==========================================
+
+Regla agregada:
+- Si ambos jugadores quedan sin unidades no-líder y sin cartas jugables, la partida termina.
+- Gana quien tenga más Vida actual en su líder.
+- Si ambos líderes tienen la misma Vida, se declara empate.
+
+Detalles:
+- El sistema revisa al inicio del turno, después de robar/recargar y resolver estados.
+- Si el jugador activo sigue sin unidades y sin cartas jugables, queda marcado como agotado.
+- Cuando ambos jugadores están marcados y no hay unidades no-líder en el tablero, se aplica el desempate.
+- Esto funciona tanto para aventura/IA como para PVP.

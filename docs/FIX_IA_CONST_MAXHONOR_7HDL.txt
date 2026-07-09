@@ -1,0 +1,14 @@
+HallValla - Fix IA maxHonor const 7HDL
+=====================================
+
+Problema:
+- La IA de aventura entraba en adventureEnemyTurn().
+- Dentro de publishAiStep() el código intentaba reasignar maxHonor.
+- Pero maxHonor había quedado declarado como const.
+- Eso lanzaba: TypeError: Assignment to constant variable.
+- Al romperse publishAiStep(), la IA no llegaba a jugar cartas y parecía pasar turno sin hacer nada.
+
+Fix:
+- En adventureEnemyTurn(), maxHonor pasó de const a let.
+- No se tocó la lógica de decisión de la IA.
+- No se tocó combate, cartas, costos, tablero ni recursos.

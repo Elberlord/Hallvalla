@@ -1,0 +1,51 @@
+HallValla - Fix IA detenida por const maxHonor 7HDL
+===================================================
+
+ZIP base: Hallvalla_stalemate_life_tiebreak_7HDK.zip
+ZIP generado: Hallvalla_ai_const_fix_7HDL.zip
+
+Problema confirmado:
+- El error de consola sí era el culpable:
+  TypeError: Assignment to constant variable.
+- Pasaba dentro de adventureEnemyTurn(), en publishAiStep().
+- El parche anterior dejó maxHonor declarado como const, pero publishAiStep() lo reasignaba para capear Honor/Mana a 10.
+- Al explotar ahí, la IA no publicaba bien su jugada y parecía solo pasar turnos sin poner cartas.
+
+Cambio aplicado:
+- En adventureEnemyTurn():
+  const maxHonor = recharge.maxHonor
+  pasó a:
+  let maxHonor = recharge.maxHonor
+
+Por qué:
+- publishAiStep() necesita actualizar maxHonor después de aplicar el cap de 10.
+- Con let ya puede hacerlo sin romper la IA.
+
+No se tocó:
+- lógica estratégica de IA
+- cartas
+- costos
+- combate
+- Guardia
+- PREC/EVA
+- splashes
+- audio
+- assets
+- HTML/CSS
+
+Nota:
+- El 404 del archivo de música aparece separado en consola. Eso solo indica que falta/cambió un archivo ogg, pero no debería detener la IA.
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "ai_maxHonor_is_let": true,
+  "ai_maxHonor_const_removed_for_recharge_block": true,
+  "publish_still_caps_resource": true,
+  "build_7HDL": true,
+  "fix_doc_present": true
+}

@@ -1,0 +1,57 @@
+HallValla - Fix canción / 404 música 7HDM
+=========================================
+
+ZIP base: Hallvalla_ai_const_fix_7HDL.zip
+ZIP generado: Hallvalla_music_alias_fix_7HDM.zip
+
+Qué pasó:
+- La canción del duelo NO se perdió.
+- El archivo bueno sigue existiendo:
+  assets/music/duel_hallvalla_war_chant.ogg
+
+Por qué aparecía el 404:
+- El código también intentaba reproducir una música de menú llamada:
+  assets/music/home_theme_loop.ogg
+- Y en algunos casos/cache puede aparecer como:
+  assets/music/music_theme_loop.ogg
+- Esos nombres no tenían archivo físico, por eso Chrome mostraba 404.
+- Ese error no era la IA. La IA se arregló en 7HDL.
+
+Qué hice:
+- Dejé la canción del duelo igual.
+- Agregué alias lógicos:
+  home_theme_loop -> duel_hallvalla_war_chant
+  music_theme_loop -> duel_hallvalla_war_chant
+- Agregué también archivos físicos de respaldo:
+  assets/music/home_theme_loop.ogg
+  assets/music/music_theme_loop.ogg
+- Así, aunque el navegador/cache pida el nombre viejo, encuentra la canción.
+
+No se tocó:
+- IA
+- combate
+- cartas
+- recursos
+- splashes
+- CSS
+- HTML
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "duel_track_exists": true,
+  "home_alias_file_exists": true,
+  "legacy_alias_file_exists": true,
+  "music_aliases_in_code": true,
+  "home_alias_in_code": true,
+  "legacy_alias_in_code": true,
+  "audioPath_uses_alias": true,
+  "build_7HDM": true,
+  "duel_track_size": 708210,
+  "home_alias_same_size": true,
+  "legacy_alias_same_size": true
+}

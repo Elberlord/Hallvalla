@@ -1,0 +1,109 @@
+HallValla - Limpieza de documentos 7HDK
+=======================================
+
+Base usada: Hallvalla_resource_cap_10_7HDI.zip
+Build anterior: v8_LOCAL_RARITY_REAL_BOARD_7HDI
+Build nuevo: v8_LOCAL_RARITY_REAL_BOARD_7HDK
+
+Acción realizada:
+- Se eliminó por completo el contenido viejo de la carpeta docs.
+- Se quitaron documentos antiguos de parches, auditorías, reportes temporales, contact sheets e históricos.
+- Se crearon documentos nuevos únicamente con el estado actual del juego.
+
+Documentos eliminados: 82
+- docs/ACTIVE_ASSETS.md
+- docs/ADD_ATTACK_TARGET_FULLFRAME_7HCT.txt
+- docs/ADD_AUDIO_CONTROLS_7HCR.txt
+- docs/ADD_DUEL_MUSIC_7HCP.txt
+- docs/ADD_EVENT_SPLASHES_7HCN.txt
+- docs/AUDITORIA_DET_REGLAS_REALES_7HAJ.txt
+- docs/AUDITORIA_VENTAJAS_TACTICAS.txt
+- docs/CAMBIOS_BALANCE_7GZD.txt
+- docs/CAMBIOS_BALANCE_RANGOS_MOV_7GZF.txt
+- docs/CAMBIO_ADEPTO_ARCANO_7GZH.txt
+- docs/CAMBIO_ARQUERA_SUPRESION_HP_7GZX.txt
+- docs/CAMBIO_ARTE_MIYAMOTO_7GZE.txt
+- docs/CAMBIO_CAUDILLO_HACHA_7GZG.txt
+- docs/CAMBIO_CONTROLES_TODOS_BRILLOS_7HAX.txt
+- docs/CAMBIO_CONTROL_MAESTRO_BRILLOS_7HBA.txt
+- docs/CAMBIO_DECK_LIMIT_30_7GZM.txt
+- docs/CAMBIO_DET_LIDERES_EXACTOS_7GZZ.txt
+- docs/CAMBIO_DET_REGLAS_COMBATE_7HAH.txt
+- docs/CAMBIO_FIX_MANO_MARCADORES_7HBE.txt
+- docs/CAMBIO_GLOW_MARCO_7GZS.txt
+- docs/CAMBIO_LOCALHOST_TABLERO_REAL_7HAW.txt
+- docs/CAMBIO_LOOK_FINAL_RAREZAS_7HAT.txt
+- docs/CAMBIO_MAESTRIA_UNIDAD_X_7GZU.txt
+- docs/CAMBIO_NEON_MARCO_SEPARADO_7GZT.txt
+- docs/CAMBIO_NEON_ORNAMENTAL_7HAE.txt
+- docs/CAMBIO_NEON_SOLO_MARCO_7GZR.txt
+- docs/CAMBIO_PULSO_6S_7HAG.txt
+- docs/CAMBIO_RAREZAS_CAPAS_LAB_7HAU.txt
+- docs/CAMBIO_RAREZA_NEON_7GZQ.txt
+- docs/CAMBIO_RAREZA_VALORES_USUARIO_7HBC.txt
+- docs/CAMBIO_RESET_TOTAL_BRILLOS_7HBB.txt
+- docs/CAMBIO_SIN_CONTROLES_ALEATORIO_7HBD.txt
+- docs/CAMBIO_TUTORIAL_BASICO_7GZP.txt
+- docs/CURRENT_SYSTEM_OVERVIEW.md
+- docs/DET_WEAPON_ADVANTAGE_CLICK_7HCW.txt
+- docs/DYNAMIC_BOARD_AT_GD_7HDC.txt
+- docs/FIX_ADVENTURE_AI_PRIVATE_7GZI.txt
+- docs/FIX_ATTACK_WEAPON_SFX_7HCK.txt
+- docs/FIX_BOARD_CARDS_SPECIAL_SQUARE_7HCC.json
+- docs/FIX_BOARD_CARDS_SPECIAL_SQUARE_7HCC.txt
+- docs/FIX_CIRCULO_CONVOCACION_7HBF.txt
+- docs/FIX_COMBAT_PRECISION_WEAPON_ICON_7HCU.txt
+- docs/FIX_CSS_VISUAL_CLEANUP_7HCL.txt
+- docs/FIX_DET_TARGETING_7GZJ.txt
+- docs/FIX_DODGE_SPLASH_PRIORITY_7HDB.txt
+- docs/FIX_DUEL_MUSIC_START_7HCQ.txt
+- docs/FIX_EVENT_SPLASH_DUO_7HCO.txt
+- docs/FIX_FRAME_ONLY_GLOW_7GZN.txt
+- docs/FIX_HP_BEFORE_GUARD_7HDG.txt
+- docs/FIX_INICIO_CELDAS_7HBG.txt
+- docs/FIX_LANCER_ANTICAVALRY_ATTACK_DEFENSE_7HCS.txt
+- docs/FIX_LANCE_RANGE_RULE_7GZK.txt
+- docs/FIX_MANO_ALEATORIA_BASE_7HBE.txt
+- docs/FIX_MAP_STATUS_ICONS_7HCI.txt
+- docs/FIX_PACK_RARITY_SFX_7HCH.txt
+- docs/FIX_PRECISION_SPEND_ATTACK_7HCM.txt
+- docs/FIX_PREC_EVA_GUARD_GENERAL_7HDA.txt
+- docs/FIX_RARITY_FRAME_GLOW_7GZL.txt
+- docs/FIX_RESTORE_CARTA_ORNAMENTOS_7HBI.txt
+- docs/FIX_STARTER_30_ADEPTO_7GZO.txt
+- docs/FIX_SYNTAX_7HBH.txt
+- docs/HIDE_PASSIVE_EFFECT_BUTTON_7HCZ.txt
+- docs/HISTORICAL_WEAPON_FINAL_7HCY.txt
+- docs/HISTORICAL_WEAPON_SYNC_7HCX.txt
+- docs/Hallvalla_regla_lanzas_atacar_primero_7HCV.txt
+- docs/LEADERS_3D_FIXED_BASES.md
+- docs/MAINTENANCE_NOTES.md
+- docs/PATCH_65_DOCS_REBUILD.md
+- docs/PATCH_70_LEADER_CSS_TOOLS.md
+- docs/PROJECT_STRUCTURE.md
+- docs/README.md
+- docs/README_GITHUB_LITE.md
+- docs/README_LOCAL_CLEAN_CORE.md
+- docs/RECENT_PATCHES_SUMMARY.md
+- docs/RESOURCE_CAP_10_7HDI.txt
+- docs/SOUND_MODAL_COMPACT_7HDE.txt
+- docs/SPEAR_FIRST_STRIKE_AND_WEAPON_AUDIT_7HCV.txt
+- docs/SPLIT_DODGE_GUARD_BY_EVASION_7HDF.txt
+- docs/STATUS_MODALS.md
+- docs/STATUS_SPLASHES_7HDH.txt
+- docs/WALLACE_BOARD_SWORD_7HDD.txt
+- docs/hallvalla_weapon_sync_7HCY_contact_sheet.jpg
+
+Documentos actuales creados:
+- docs/README_ACTUAL_7HDK.md
+- docs/REGLAS_ACTUALES_7HDK.md
+- docs/CARTAS_UNIDADES_ACTUALES_7HDK.md
+- docs/LIDERES_ACTUALES_7HDK.md
+- docs/MECANICAS_ACTUALES_7HDK.md
+- docs/LIMPIEZA_DOCUMENTOS_7HDK.txt
+
+Chequeo anti-basura:
+- La carpeta docs fue reconstruida desde cero.
+- No quedan .txt/.md antiguos dentro de docs.
+- No queda la imagen vieja de auditoría/contact sheet dentro de docs.
+- No se eliminaron assets del juego, código, HTML ni CSS.
