@@ -40,7 +40,7 @@ Total detectado: 10
 - Asesina del desierto
   key: scout · tipo: unit · costo: 1
   Stats: HP 2 · AT 1 · GD 0 · DX 4 · AGI 3 · MOV 1 · RG 1
-  Texto: Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia.
+  Texto: Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia.
 
 - Maldición de arena
   key: bolt · tipo: spell · costo: 1

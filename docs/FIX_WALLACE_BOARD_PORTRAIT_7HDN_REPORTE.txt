@@ -1,0 +1,46 @@
+HallValla - William retrato tipo pasaporte en campo 7HDO
+=========================================================
+
+ZIP base: Hallvalla_music_alias_fix_7HDM.zip
+ZIP generado: Hallvalla_wallace_passport_field_7HDO.zip
+
+Qué se cambió:
+- Se reemplazó la miniatura de campo de William:
+  assets/board_cards/basic/wallace.webp
+
+Ajuste visual:
+- Antes: el recorte mostraba demasiado cuerpo y el rostro no dominaba la miniatura.
+- Ahora: el recorte está enfocado en rostro, hombros y torso superior.
+- Resultado buscado: apariencia tipo retrato/pasaporte dentro del campo.
+
+No se tocó:
+- lógica
+- stats
+- arma
+- combate
+- IA
+- audio
+- CSS/HTML
+
+Verificación:
+- script.js node --check: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "full_art_exists": true,
+  "board_art_exists": true,
+  "board_art_size": [
+    1024,
+    1024
+  ],
+  "build_7HDO": true,
+  "doc_note_present": true,
+  "crop_box": [
+    410,
+    40,
+    1640,
+    1270
+  ]
+}

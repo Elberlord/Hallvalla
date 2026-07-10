@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDM";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDP";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1128,7 +1128,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. El ataque sigue las reglas normales de combate. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y queda con 1 Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -1624,7 +1624,7 @@ Object.assign(UNIT_LORE_DATA,{
   archer:{short:"Arquera de desierto, precisión seca y disparo para frenar el avance enemigo.",legend:"La Arquera del desierto representa vigilancia, distancia y control de movimiento. En HallValla no solo hace daño: si logra atravesar la Vida, reduce el avance del objetivo y corta ritmo."},
   arcane_adept:{short:"Aprendiz de magia de combate, frágil pero peligroso cuando logra tocar la Vida enemiga.",legend:"El Adepto Arcano representa a quienes todavía no dominan todo el poder mágico, pero ya pueden alterar el estado de una batalla. En HallValla convierte el daño directo en estados negativos y responde mejor bajo un líder Hechicero."},
   guardian:{short:"Defensor de piedra, escudo pesado y presencia hecha para detener golpes.",legend:"El Guardián de piedra no está diseñado para correr, sino para resistir. En HallValla es una muralla viva: baja la Agilidad del rival con su golpe y castiga a enemigos cuya Guardia ya está debilitada."},
-  scout:{short:"Asesina del desierto, sigilo, corte preciso y Sangrado como sentencia lenta.",legend:"La Asesina del desierto representa combate quirúrgico: poca Vida, poco ruido y daño real. En HallValla ignora Guardia y convierte una herida pequeña en presión constante por Sangrado."},
+  scout:{short:"Asesina del desierto, sigilo, corte preciso y Sangrado como sentencia lenta.",legend:"La Asesina del desierto representa combate quirúrgico: poca Vida, poco ruido y presión constante. En HallValla debe atravesar Guardia como cualquier atacante normal; si logra daño real a HP, convierte la herida en Sangrado."},
   mulan:{short:"Guerrera de infiltración, valentía disfrazada de precisión y golpe desde la espalda.",legend:"Hua Lan está inspirada en la leyenda china de Mulan, la guerrera que ocupa un lugar imposible por deber, astucia y coraje. En HallValla premia posicionarse detrás de la línea enemiga y rematar con movimiento táctico."},
   wallace:{short:"Rebelde escocés de última resistencia, difícil de apagar en el golpe final.",legend:"William Wallace quedó como símbolo de rebelión y libertad frente a una fuerza superior. En HallValla su identidad es aguantar el instante fatal: la primera vez que debería caer, permanece con 1 Vida."},
   honey_badger:{short:"Bestia pequeña, terca y resistente, molesta de apartar del camino.",legend:"El Tejón Mielero representa resistencia salvaje y temperamento feroz. En HallValla reduce daño, ignora Veneno y obliga al enemigo a pensarlo dos veces antes de ignorarlo."},
@@ -1894,13 +1894,13 @@ function applyDesertAssassinRule(card){
   card.baseGuard=0;
   card.noSwordGuardBonus=true;
   delete card.swordGuardBonusApplied;
-  card.text="Asesinato preciso: sus ataques ignoran Guardia/defensa. Sangrado: cuando logra hacer daño a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El sangrado ignora Guardia.";
+  card.text="Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia.";
   card.effectText=card.text;
   return card;
 }
 function hasBleeding(u){return !!u&&Number(u.bleedDamage||0)>0;}
 function isDesertAssassinUnit(u){return !!u&&u.key==="scout";}
-function shouldIgnoreGuardForAttack(attacker,units=publicState?.units||[]){return isDesertAssassinUnit(attacker)||hasShadowMistAssassin(attacker,units);}
+function shouldIgnoreGuardForAttack(attacker,units=publicState?.units||[]){return hasShadowMistAssassin(attacker,units);}
 function applyBleedToUnit(target,sourceName=""){
   if(!target)return target;
   const bleed={
@@ -4213,14 +4213,7 @@ Resultado base:
 
 Condición adicional:
 • Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno.`,example:"Sirve para encerrar objetivos que ya perdieron buena parte de su Guardia."},
-    scout:{short:"Asesina. Ignora Guardia y aplica Sangrado cuando logra daño real.",formula:`Asesinato preciso:
-• Sus ataques ignoran Guardia/defensa. El daño puede ir directo a Vida.
-
-Sangrado:
-• Si logra hacer daño a HP, el objetivo queda con Sangrado.
-• Sangrado causa 1 daño al inicio del turno del objetivo.
-• El Sangrado permanece hasta que la unidad sea curada o destruida.
-• El daño de Sangrado ignora Guardia.`,example:"Si por alguna razón no hace daño a HP, no aplica Sangrado."},
+    scout:{short:"Asesina. Aplica Sangrado cuando logra daño real a HP.",formula:`Asesinato preciso: • Sus ataques siguen la Guardia normal. • No ignora Guardia por sí sola. • Solo ignora Guardia si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre activa.  Sangrado: • Si logra hacer daño a HP, el objetivo queda con Sangrado. • Sangrado causa 1 daño al inicio del turno del objetivo. • El Sangrado permanece hasta que la unidad sea curada o destruida. • El daño de Sangrado ignora Guardia.`,example:"Si solo baja Guardia y no hace daño a HP, no aplica Sangrado."},
     mulan:{short:"Unidad de ejecución. Premia el posicionamiento detrás de la línea enemiga y puede encadenar una acción limitada tras destruir.",formula:`Ataque por la espalda:
 • Si Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 AT durante ese combate.
 • El ataque sigue las reglas normales de combate.
@@ -5925,7 +5918,7 @@ async function adventureEnemyTurn(){
       if(u.id===attacker.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(attacker,target)?true:u.arjunaRerollUsedTurn};
       if(u.id===target.id){
         if(!hit.hit)return u;
-        const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker);
+        const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker,units);
         let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
         const warriorShield=applyWarriorLeaderUnitShield(target,attacker,damaged,units);
         damaged=warriorShield.unit;
@@ -9264,6 +9257,8 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
 let activePackOpening=null;
 let activePackCards=[];
 let currentDeckDraft=[];
+let deckBuilderDragPayload=null;
+let deckBuilderDragStartedAt=0;
 
 function normalizeBasicCards(){
   BASIC_MAGIC_TRAP_PACK.forEach(c=>{if(!c.rarity)c.rarity="Básica";});
@@ -9375,16 +9370,187 @@ function openDeckBuilder(){
   renderDeckBuilder();
 }
 function closeDeckBuilder(){$("deckBuilderPanel").classList.add("hidden")}
+function getDeckBuilderCollectionCard(cardKey){
+  return getCollectionCardsExpanded().find(c=>c.key===cardKey)||currentDeckDraft.find(c=>c.key===cardKey)||null;
+}
 function addCardToDeck(cardKey){
   const card=getCollectionCardsExpanded().find(c=>c.key===cardKey);
-  if(!card)return;
+  if(!card)return false;
   const used=countInDraft(card.key);
   const maxAllowed=Math.min(card.qty||1,maxCopiesForCard(card));
-  if(used>=maxAllowed||currentDeckDraft.length>=DECK_RULES.deckSize)return;
+  if(used>=maxAllowed||currentDeckDraft.length>=DECK_RULES.deckSize)return false;
   currentDeckDraft.push({...card,qty:1});
   renderDeckBuilder();
+  return true;
 }
 function removeCardFromDeck(cardKey){const idx=currentDeckDraft.findIndex(c=>c.key===cardKey);if(idx>=0)currentDeckDraft.splice(idx,1);renderDeckBuilder();}
+function removeCardFromDeckIndex(index){
+  const idx=Number(index);
+  if(!Number.isFinite(idx)||idx<0||idx>=currentDeckDraft.length)return false;
+  currentDeckDraft.splice(idx,1);
+  renderDeckBuilder();
+  return true;
+}
+function getDeckBuilderMiniImageHtml(card){
+  const name=escapeHtml(card?.name||"Carta");
+  if(card?.portrait)return `<img src="${escapeHtml(card.portrait)}" alt="${name}" draggable="false">`;
+  return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
+}
+function getDeckBuilderTypeGlyph(card){
+  if(card?.type==="unit")return "U";
+  if(card?.type==="spell")return "S";
+  if(card?.type==="trap")return "T";
+  return "C";
+}
+function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1}={}){
+  const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"}`;
+  const name=escapeHtml(card?.name||"Carta");
+  const dragAttrs=disabled&&mode==="collection"?'draggable="false"':'draggable="true"';
+  const data=mode==="deck"
+    ? `data-draft-index="${index}" data-deck-card-key="${escapeHtml(card.key||"")}"`
+    : `data-deck-card-key="${escapeHtml(card.key||"")}"`;
+  const badge=mode==="deck"?`${index+1}`:`${used}/${maxAllowed}`;
+  const actionBtn=mode==="deck"
+    ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
+    : `<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Agregar ${name}">+</button>`;
+  return `<div class="${cls}" ${data} data-deck-origin="${mode}" ${dragAttrs} title="${name}">
+    <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
+    <span class="deck-mini-type">${getDeckBuilderTypeGlyph(card)}</span>
+    <span class="deck-mini-badge">${escapeHtml(String(badge))}</span>
+    <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
+    <span class="deck-mini-name">${name}</span>
+    ${actionBtn}
+  </div>`;
+}
+function makeDeckBuilderUnitPreview(card){
+  const owner=myPlayer||1;
+  const c=applyDesertAssassinRule(hydrateCardVisualData({...card,owner}));
+  const baseGuard=(Number(c.guard||0))+getSwordGuardBonus(c);
+  let unit={id:`deck_preview_${c.key||uid8()}`,owner,leader:false,type:"unit",name:c.name,key:c.key,icon:c.icon,portrait:c.portrait||"",rarity:c.rarity||"Básica",special:!!c.special,text:c.text||c.effectText||c.ability||"",effectText:c.effectText||c.text||c.ability||"",ability:c.ability||"",x:-1,y:-1,nexoX:-1,nexoY:-1,hp:c.hp,maxHp:c.hp,atk:c.atk,baseGuard,guard:baseGuard,dex:(c.dex||0)+getAxeDexBonus(c),agi:c.agi||0,mov:c.mov,range:(c.range||1)+getArcherRangeBonus(c),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:c.leaderType||"",weaponClass:getWeaponClassForCard(c),cost:Number(c.cost||0),beast:!!c.beast,aerial:!!c.aerial,stealth:!!c.stealth,revealed:false};
+  unit=annotateUnitWithMastery(unit);
+  unit.guard=maxTurnGuard(unit);
+  return unit;
+}
+function showDeckBuilderCardDetail(card){
+  if(!card)return;
+  tryPlaySound("card_select",.38);
+  if(card.type==="unit"){
+    const u=makeDeckBuilderUnitPreview(card);
+    const inspector=$("inspector");
+    if(!inspector){showCardInspectModal(card);return;}
+    inspector.className=`inspector ${getCardVisualClass(u)}`;
+    $("inspectTitle").textContent=u.name;
+    $("inspectSub").innerHTML=renderDetIdentityHtml(u,"Carta de mazo");
+    $("inspectArt").innerHTML=getUnitPortraitHtml(u);
+    const stats=[["Costo",card.cost??0],["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
+    const inspectStatsEl=$("inspectStats");
+    inspectStatsEl.innerHTML=renderDetStatButtons(stats,"inspect-stat");
+    bindStatGuideClicks(inspectStatsEl);
+    const fx=getUnitEffectText(u);
+    const activeEntries=getUnitStatusEntries(u);
+    const inspectTextEl=$("inspectText");
+    inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(u,fx),showWeapon:true,showFormula:true,showLore:true,effectLabel:"Ver efecto",entity:u})}`;
+    inspector._hvInspectedEntity=u;
+    inspector._hvActiveStatuses=activeEntries;
+    inspector._hvEffectText=fx;
+    inspector._hvEffectTitle=`✦ Efecto de ${u.name}`;
+    bindInspectorDetModalDelegation(inspector);
+    bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
+    bindStatusGuideDelegation(inspectTextEl,u,()=>activeEntries);
+    applyRarityClassToElement(inspector,u);
+    inspector.classList.add("show");
+    return;
+  }
+  showCardInspectModal(card);
+  const modal=$("cardInspectModal");
+  if(modal)modal.classList.add("deck-builder-preview");
+  const sub=$("cardInspectSub");
+  if(sub)sub.innerHTML=renderDetIdentityHtml(card,"Carta de mazo");
+  const reason=$("cardInspectReason");
+  if(reason)reason.textContent="Vista de detalle desde la Forja de mazos.";
+}
+function getDeckBuilderDragPayload(ev){
+  if(deckBuilderDragPayload)return deckBuilderDragPayload;
+  try{return JSON.parse(ev?.dataTransfer?.getData("application/json")||ev?.dataTransfer?.getData("text/plain")||"null");}
+  catch(e){return null;}
+}
+function setDeckBuilderDropActive(el,active){
+  if(!el)return;
+  el.classList.toggle("deck-drop-active",!!active);
+}
+function bindDeckBuilderDragAndClick(collectionGrid,deckList){
+  if(!collectionGrid||!deckList)return;
+  const clearDrop=()=>{setDeckBuilderDropActive(collectionGrid,false);setDeckBuilderDropActive(deckList,false);};
+  collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
+    el.addEventListener("click",ev=>{
+      if(ev.target.closest(".deck-mini-plus"))return;
+      if(Date.now()-deckBuilderDragStartedAt<450)return;
+      const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
+      showDeckBuilderCardDetail(card);
+    });
+    el.addEventListener("dragstart",ev=>{
+      if(el.classList.contains("disabled")){ev.preventDefault();return;}
+      deckBuilderDragStartedAt=Date.now();
+      deckBuilderDragPayload={action:"add",key:el.dataset.deckCardKey};
+      ev.dataTransfer.effectAllowed="copy";
+      ev.dataTransfer.setData("application/json",JSON.stringify(deckBuilderDragPayload));
+      ev.dataTransfer.setData("text/plain",JSON.stringify(deckBuilderDragPayload));
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
+  });
+  deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
+    el.addEventListener("click",ev=>{
+      if(ev.target.closest(".deck-mini-remove"))return;
+      if(Date.now()-deckBuilderDragStartedAt<450)return;
+      const idx=Number(el.dataset.draftIndex);
+      showDeckBuilderCardDetail(currentDeckDraft[idx]);
+    });
+    el.addEventListener("dragstart",ev=>{
+      deckBuilderDragStartedAt=Date.now();
+      deckBuilderDragPayload={action:"remove",index:Number(el.dataset.draftIndex),key:el.dataset.deckCardKey};
+      ev.dataTransfer.effectAllowed="move";
+      ev.dataTransfer.setData("application/json",JSON.stringify(deckBuilderDragPayload));
+      ev.dataTransfer.setData("text/plain",JSON.stringify(deckBuilderDragPayload));
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
+  });
+  collectionGrid.querySelectorAll("[data-add-card]").forEach(btn=>btn.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    addCardToDeck(btn.dataset.addCard);
+  }));
+  deckList.querySelectorAll("[data-remove-index]").forEach(btn=>btn.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    removeCardFromDeckIndex(btn.dataset.removeIndex);
+  }));
+  deckList.addEventListener("dragover",ev=>{
+    const payload=getDeckBuilderDragPayload(ev);
+    if(payload?.action==="add"){ev.preventDefault();ev.dataTransfer.dropEffect="copy";setDeckBuilderDropActive(deckList,true);}
+  });
+  deckList.addEventListener("dragleave",ev=>{if(!deckList.contains(ev.relatedTarget))setDeckBuilderDropActive(deckList,false);});
+  deckList.addEventListener("drop",ev=>{
+    const payload=getDeckBuilderDragPayload(ev);
+    if(payload?.action==="add"){
+      ev.preventDefault();
+      addCardToDeck(payload.key);
+      clearDrop();
+    }
+  });
+  collectionGrid.addEventListener("dragover",ev=>{
+    const payload=getDeckBuilderDragPayload(ev);
+    if(payload?.action==="remove"){ev.preventDefault();ev.dataTransfer.dropEffect="move";setDeckBuilderDropActive(collectionGrid,true);}
+  });
+  collectionGrid.addEventListener("dragleave",ev=>{if(!collectionGrid.contains(ev.relatedTarget))setDeckBuilderDropActive(collectionGrid,false);});
+  collectionGrid.addEventListener("drop",ev=>{
+    const payload=getDeckBuilderDragPayload(ev);
+    if(payload?.action==="remove"){
+      ev.preventDefault();
+      removeCardFromDeckIndex(payload.index);
+      clearDrop();
+    }
+  });
+}
 function renderDeckBuilder(){
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
   if(!collectionGrid||!deckList)return;
@@ -9403,37 +9569,35 @@ function renderDeckBuilder(){
       (rarityFilter==="legendary"&&(rarity==="legendaria"||rarity==="legendary"))||
       (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
     return (!search||hay.includes(search))&&typeOk&&rarityOk;
-  });
+  }).sort((a,b)=>(a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||"")));
+  collectionGrid.classList.add("hv-mini-gallery");
+  deckList.classList.add("hv-mini-deck");
   collectionGrid.innerHTML=cards.map(card=>{
     const used=countInDraft(card.key);
     const maxAllowed=Math.min(card.qty||1,maxCopiesForCard(card));
     const disabled=used>=maxAllowed||currentDeckDraft.length>=DECK_RULES.deckSize;
-    return `<div class="deck-card ${disabled?"disabled":""} ${getCardVisualClass(card)}">
-      <div class="deck-card-top">${getCardVisualHtml(card,"deck-card-icon")}<span>${used}/${maxAllowed}</span></div>
-      <b>${escapeHtml(card.name||"Carta")}</b>
-      <small>${escapeHtml(card.rarity||card.rareza||"Básica")} · ${escapeHtml(card.type||"card")} · Costo ${card.cost??"-"}</small>
-      <small>${escapeHtml(card.text||"")}</small>
-      <button type="button" data-add-card="${escapeHtml(card.key)}" ${disabled?"disabled":""}>Agregar</button>
-    </div>`;
-  }).join("")||`<div class="notification-item"><b>No hay cartas</b><small>Abre paquetes para llenar tu colección.</small></div>`;
-  collectionGrid.querySelectorAll("[data-add-card]").forEach(btn=>btn.addEventListener("click",()=>addCardToDeck(btn.dataset.addCard)));
-  const grouped={};
-  currentDeckDraft.forEach(card=>{if(!grouped[card.key])grouped[card.key]={...card,count:0};grouped[card.key].count++;});
-  const deckItems=Object.values(grouped).sort((a,b)=>(a.cost||0)-(b.cost||0)||String(a.name).localeCompare(String(b.name)));
-  deckList.innerHTML=deckItems.map(card=>`<div class="deck-list-item">
-    <b>${escapeHtml(card.name)} ×${card.count}</b>
-    <small>${escapeHtml(card.rarity||card.rareza||"Básica")} · ${escapeHtml(card.type||"card")} · Máx ${maxCopiesForCard(card)}</small>
-    <button type="button" data-remove-card="${escapeHtml(card.key)}">Quitar 1</button>
-  </div>`).join("")||`<div class="notification-item"><b>Mazo vacío</b><small>Agrega cartas desde tu colección.</small></div>`;
-  deckList.querySelectorAll("[data-remove-card]").forEach(btn=>btn.addEventListener("click",()=>removeCardFromDeck(btn.dataset.removeCard)));
+    return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed});
+  }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Abre paquetes para llenar tu colección.</small></div>`;
+  const deckCardsHtml=currentDeckDraft.map((card,index)=>deckBuilderMiniCardHtml(card,{mode:"deck",index})).join("");
+  const emptySlots=Math.max(0,DECK_RULES.deckSize-currentDeckDraft.length);
+  const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot"><span>${currentDeckDraft.length+i+1}</span></div>`).join("");
+  deckList.innerHTML=`<div class="deck-drop-hint">Arrastra cartas aquí para meterlas al mazo. Arrastra cartas del mazo hacia la izquierda para sacarlas.</div>${deckCardsHtml}${emptyHtml}`;
+  bindDeckBuilderDragAndClick(collectionGrid,deckList);
   const validation=validateDeckList(currentDeckDraft);
   if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${DECK_RULES.deckSize}`;
   if($("deckValidText"))$("deckValidText").textContent=validation.valid?"Mazo válido":(currentDeckDraft.length<DECK_RULES.deckSize?"Mazo incompleto":validation.errors[0]||"Mazo inválido");
+  const saveBtn=$("saveDeckBtn");
+  if(saveBtn){
+    saveBtn.textContent=validation.valid?"Guardar y salir":"Completa 30 cartas";
+    saveBtn.disabled=!validation.valid;
+    saveBtn.title=validation.valid?"Guardar mazo y cerrar Forja":"No puedes guardar hasta tener un mazo válido de 30 cartas.";
+  }
 }
 function saveCurrentDeck(){
   const validation=validateDeckList(currentDeckDraft);
   if(!validation.valid){hvAlert(`No se puede guardar todavía: ${validation.errors.join(" ")}`,"Mazo inválido");return;}
   saveDeck(currentDeckDraft);
+  closeDeckBuilder();
   hvAlert("Mazo guardado.","Mazo guardado");
 }
 
@@ -10413,7 +10577,7 @@ const CODE_TRUTH_EFFECTS_7HAI={
   archer:{trigger:["Debe atacar a distancia.","Debe causar al menos 1 daño real a Vida/HP."],does:["Aplica -1 MOV al objetivo hasta el final de su próximo turno.","El debuff no se acumula: conserva el mayor valor vigente."],doesNot:["Si falla, no reduce MOV.","Si solo rompe Guardia y no baja Vida, no reduce MOV."],example:"AT 3 contra Guardia 3: baja Guardia, pero no hiere Vida, así que no aplica supresión."},
   arcane_adept:{trigger:["Ruptura Arcana se activa cuando causa al menos 1 daño directo a Vida de una unidad enemiga."],does:["Aplica un estado negativo aleatorio: Sangrado, Veneno leve, Quemadura leve, -1 MOV o -2 AGI.","Puede contraatacar ataques de rango por Respuesta Mística.","Si está junto al líder Hechicero aliado, recibe bonus por Vínculo Arcano según tier del líder."],doesNot:["Si la Guardia absorbe todo, no aplica estado.","No aplica estados a líderes con la misma regla de unidad normal."],example:"El Adepto necesita herir HP. Romper solo Guardia no basta."},
   guardian:{trigger:["Golpe de escudo se evalúa al declarar ataque cuerpo a cuerpo."],does:["El objetivo recibe -3 AGI durante ese combate.","Si el objetivo tiene Guardia actual 2 o menos, además recibe -1 AT y -1 MOV hasta el final de su próximo turno."],doesNot:["El -1 AT/-1 MOV no entra si el objetivo tiene Guardia 3 o más al momento de evaluar el efecto.","No afecta movimiento si el ataque no es cuerpo a cuerpo."],example:"Primero desgasta Guardia; cuando el objetivo ya está bajo, el Guardián puede encerrarlo."},
-  scout:{trigger:["Sus ataques tienen Asesinato preciso.","Sangrado se activa solo si hace daño real a HP."],does:["Ignora Guardia/defensa al dañar.","Si hace daño a HP, aplica Sangrado: 1 daño al inicio del turno del objetivo.","Sangrado ignora Guardia y dura hasta curación o destrucción."],doesNot:["Si no causa daño a HP, no aplica Sangrado."],example:"La Asesina no necesita romper Guardia, pero sí necesita impactar y causar HP."},
+  scout:{trigger:["Sus ataques tienen Asesinato preciso.","Sangrado se activa solo si hace daño real a HP."],does:["Ataca contra Guardia normal, salvo que su dueño tenga Maestro de Sombras Nv.5 con Niebla de sangre.","Si hace daño a HP, aplica Sangrado: 1 daño al inicio del turno del objetivo.","Sangrado ignora Guardia y dura hasta curación o destrucción."],doesNot:["No ignora Guardia por sí sola.","Si no causa daño a HP, no aplica Sangrado."],example:"La Asesina debe romper o atravesar Guardia de forma normal; con Niebla de sangre Nv.5 sí se vuelve perforante."},
   mulan:{trigger:["Ataque por la espalda: ataca desde una celda más cercana al líder rival que la celda del objetivo."],does:["Obtiene +6 AT durante ese combate.","Si destruye una unidad con ataque normal, puede moverse 1 casilla extra.","Después debe elegir ATK o DEF para gastar su acción restante; luego queda sin más acciones."],doesNot:["No gana +6 AT si no cumple la condición de posición.","El ataque sigue usando las reglas normales de combate."],example:"Es ejecución por posicionamiento, no golpe gratis."},
   wallace:{trigger:["La primera vez que recibiría daño fatal."],does:["Sobrevive y queda con 1 Vida.","Marca Último Aliento como usado."],doesNot:["No se repite: el siguiente daño fatal sí puede destruirlo."],example:"Wallace aguanta una muerte, no todas."},
   honey_badger:{trigger:["Armadura Natural aplica cada vez que recibe daño.","Mordida Fastidiosa requiere daño real a HP."],does:["Reduce el daño recibido en 1.","No puede recibir Veneno ni daño de Veneno.","Enemigos adyacentes tienen -1 DX si atacan a otro objetivo que no sea el Tejón.","Si hace daño real, aplica -1 MOV al objetivo en su próximo turno."],doesNot:["Si no hiere HP, Mordida Fastidiosa no baja MOV."],example:"Es tanque y ancla de molestia: obliga al rival a decidir si lo ignora o lo golpea."},

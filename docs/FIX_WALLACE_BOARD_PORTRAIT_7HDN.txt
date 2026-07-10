@@ -1,0 +1,23 @@
+HallValla - Ajuste retrato William en campo 7HDO
+==================================================
+
+Cambio aplicado:
+- Se reemplazó assets/board_cards/basic/wallace.webp
+- El nuevo recorte usa estilo "tamaño pasaporte":
+  rostro + hombros + torso superior mucho más visibles.
+
+Motivo:
+- En el campo William se veía demasiado recortado hacia el cuerpo
+  y el rostro no destacaba bien.
+- El usuario pidió que se vea como retrato de pasaporte mientras
+  está en el campo.
+
+No se tocó:
+- stats
+- arma
+- lógica
+- combate
+- IA
+- audio
+- cartas
+- CSS/HTML

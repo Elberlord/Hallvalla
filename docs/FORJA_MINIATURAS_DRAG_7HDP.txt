@@ -1,0 +1,26 @@
+HallValla - Forja de mazos con miniaturas y drag/drop 7HDP
+==============================================================
+
+Cambio aplicado:
+- La Forja de mazos ya no muestra tarjetas grandes con texto largo.
+- Ahora muestra cartas pequeñas en cuadrícula, estilo galería/mazo.
+- La colección disponible se ve como miniaturas.
+- El mazo actual se ve como una cuadrícula de 30 espacios.
+- Las cartas pueden arrastrarse:
+  · colección -> mazo para agregar
+  · mazo -> colección para quitar
+- También se dejaron botones pequeños + y × para móvil o precisión.
+- Click sobre cualquier mini carta abre detalle.
+- Las unidades abren el modal DET usado en campo.
+- Hechizos/trampas abren el inspector de carta, sin botón de jugar.
+- Guardar ahora dice Guardar y salir.
+- El botón queda desactivado si el mazo no está completo/válido.
+
+No se tocó:
+- reglas de mazo
+- costos
+- cartas
+- combate
+- IA
+- audio
+- assets
