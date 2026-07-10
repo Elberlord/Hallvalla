@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDT";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDU";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9541,17 +9541,28 @@ function disenchantAllSurplusCards(){
   hvAlert(`Convertiste ${destroyed} copia${destroyed===1?"":"s"} sobrante${destroyed===1?"":"s"} en material de rareza.`,"Material obtenido");
   return true;
 }
+function getTotalSurplusCopies(){
+  return getCollectionCardsExpanded().reduce((sum,c)=>sum+getCardSurplusCopies(c),0);
+}
+function updateBulkDustButton(){
+  const surplus=getTotalSurplusCopies();
+  const btn=$("dustAllSurplusCornerBtn");
+  if(!btn)return;
+  btn.disabled=surplus<=0;
+  btn.textContent=surplus>0?`Convertir sobrantes (${surplus})`:"Sin sobrantes";
+  btn.title=surplus>0
+    ? `Convierte ${surplus} copia${surplus===1?"":"s"} sobrante${surplus===1?"":"s"} en material de su rareza.`
+    : "No tienes copias sobrantes para convertir.";
+}
 function renderCraftMaterialPanel(){
   const panel=$("craftMaterialPanel");
   if(!panel)return;
   const materials=getCraftMaterials();
-  const surplus=getCollectionCardsExpanded().reduce((sum,c)=>sum+getCardSurplusCopies(c),0);
   const rows=CRAFT_RARITY_KEYS.map(k=>`<span class="craft-mat-pill ${k}"><b>${getCraftRarityLabel(k)}</b><em>${materials[k]||0}</em></span>`).join("");
   panel.innerHTML=`<div class="craft-mat-title"><b>Materiales</b><small>Crear: ${CRAFT_MATERIAL_COST}</small></div>
     <div class="craft-mat-grid">${rows}</div>
-    <button id="dustAllSurplusBtn" class="craft-dust-all" type="button" ${surplus>0?"":"disabled"}>Convertir sobrantes ${surplus>0?`(${surplus})`:""}</button>`;
-  const btn=$("dustAllSurplusBtn");
-  if(btn)btn.addEventListener("click",disenchantAllSurplusCards);
+    <small class="craft-mat-note">Usa el botón de la esquina superior para convertir todos los sobrantes de una vez.</small>`;
+  updateBulkDustButton();
 }
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
 function sanitizeDeckDraftToCollection(deck=[]){
@@ -10670,6 +10681,7 @@ on("deckSearchInput","input",renderDeckBuilder);
 on("deckTypeFilter","change",renderDeckBuilder);
 on("deckRarityFilter","change",renderDeckBuilder);
 on("saveDeckBtn","click",saveCurrentDeck);
+on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);
 on("closeProfilePanelBtn","click",closeProfilePanel);
