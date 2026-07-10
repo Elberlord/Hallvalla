@@ -1,0 +1,32 @@
+HallValla - Unidades Ninjutsu 7HDX
+===================================
+
+Se agregaron tres unidades básicas:
+
+1. Geisha Encubierta
+- Costo 2, HP 2, AT 1, GD 0, DX 6, AGI 4, MOV 1, RG 1.
+- Entra con Sigilo.
+- No puede atacar líderes.
+- Corte de Abanico: si ataca desde Sigilo y causa daño a HP a una unidad, la destruye.
+
+2. Hattori Shinobi
+- Costo 3, HP 3, AT 1, GD 1, DX 6, AGI 5, MOV 1, RG 2.
+- Entra con Sigilo.
+- Si ataca a distancia mantiene Sigilo.
+- Si ataca cuerpo a cuerpo pierde Sigilo.
+
+3. Saboteador de Iga
+- Costo 2, HP 3, AT 1, GD 1, DX 4, AGI 4, MOV 2, RG 1.
+- Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de unidades en rango 1 hasta el final del turno actual.
+- Sabotaje: mientras esté en campo, las unidades enemigas cuestan +1 al invocarse. No se acumula.
+
+Assets agregados:
+- assets/cards/basic/geisha_encubierta.webp
+- assets/board_cards/basic/geisha_encubierta.webp
+- assets/cards/basic/hattori_shinobi.webp
+- assets/board_cards/basic/hattori_shinobi.webp
+- assets/cards/basic/saboteador_iga.webp
+- assets/board_cards/basic/saboteador_iga.webp
+
+Base usada:
+- Hallvalla_samurai_basic_units_7HDW.zip

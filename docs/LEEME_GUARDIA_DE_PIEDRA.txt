@@ -1,0 +1,21 @@
+Guardia de piedra - assets WEBP
+================================
+
+Estos archivos reemplazan la imagen de Guardia de piedra sin tocar código.
+
+IMPORTANTE:
+En el código actual, Guardia de piedra usa CARD_PORTRAITS.paladin.
+Por eso el archivo debe llamarse paladin.webp.
+
+Coloca estos archivos exactamente así:
+
+assets/cards/basic/paladin.webp
+assets/board_cards/basic/paladin.webp
+
+cards/basic/paladin.webp:
+- imagen de carta / colección / detalle
+
+board_cards/basic/paladin.webp:
+- miniatura tipo pasaporte para carta en campo
+
+No cambia stats, efectos, costos ni reglas.

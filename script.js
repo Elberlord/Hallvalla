@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDU";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDX";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -118,6 +118,12 @@ const CARD_PORTRAITS={
   rogue:"assets/cards/basic/rogue.webp",
   paladin:"assets/cards/basic/paladin.webp",
   heavyInfantry:"assets/cards/basic/heavy_infantry_paladin.webp",
+  samuraiKatana:"assets/cards/basic/samurai_katana.webp",
+  samuraiYabusame:"assets/cards/basic/samurai_yabusame.webp",
+  samuraiNaginata:"assets/cards/basic/samurai_naginata.webp",
+  geishaEncubierta:"assets/cards/basic/geisha_encubierta.webp",
+  hattoriShinobi:"assets/cards/basic/hattori_shinobi.webp",
+  saboteadorIga:"assets/cards/basic/saboteador_iga.webp",
   darkMage:"assets/cards/basic/dark_mage.webp",
   wallace:"assets/cards/basic/wallace.webp",
   berserker:"assets/cards/basic/berserker_north.webp",
@@ -1128,7 +1134,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida. Regla de lanza: cuando una unidad enemiga la ataca dentro de su alcance, ataca primero una vez por turno. No funciona contra Ataque en Picada del halcón."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas. No se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. El ataque sigue las reglas normales de combate. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y queda con 1 Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -1242,10 +1248,13 @@ const BEASTMASTER_EVENT_BATTLE={
   aiStyle:"Cacería máxima: trampas, presión y bestias agresivas",
   desc:"Evento anual. Derrota al Señor de las Bestias para recibir un Paquete de Bestias. La recompensa especial solo se reclama una vez por año."
 };
+const BEAST_CRAFT_UNLOCK_KEY="hallvalla_beast_crafting_unlocked";
 function getBeastEventYear(){return new Date().getFullYear();}
 function getBeastEventClaimKey(){return `hallvalla_beast_event_claimed_${getBeastEventYear()}`;}
 function hasClaimedBeastEventThisYear(){return localStorage.getItem(getBeastEventClaimKey())==="1";}
-function markBeastEventClaimedThisYear(){localStorage.setItem(getBeastEventClaimKey(),"1");}
+function hasUnlockedBeastCrafting(){return localStorage.getItem(BEAST_CRAFT_UNLOCK_KEY)==="1"||hasClaimedBeastEventThisYear();}
+function markBeastCraftingUnlocked(){localStorage.setItem(BEAST_CRAFT_UNLOCK_KEY,"1");}
+function markBeastEventClaimedThisYear(){localStorage.setItem(getBeastEventClaimKey(),"1");markBeastCraftingUnlocked();}
 function getRandomBeastEventCard(){
   const total=BEAST_EVENT_REWARD_KEYS.reduce((sum,it)=>sum+(it.w||1),0);
   let roll=Math.random()*total;
@@ -1299,7 +1308,7 @@ function applyBloodBaitAttackBonus(attacker,defender,units){
 }
 
 const DECK_RULES={basicMaxCopies:3,nonBasicMaxCopies:1,deckSize:30};
-const CRAFT_MATERIAL_COST=50;
+const CRAFT_MATERIAL_COSTS={basic:800,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800};
 const CRAFT_MATERIAL_GAIN=50;
 const CRAFT_RARITY_KEYS=["basic","epic","glorious","mythic","legendary","demigod"];
 function cardRarity(card){
@@ -1317,6 +1326,8 @@ function getCraftRarityKey(cardOrRarity){
 function getCraftRarityLabel(key){
   return {basic:"Básica",epic:"Épica",glorious:"Gloriosa",mythic:"Mítica",legendary:"Legendaria",demigod:"Semidiós"}[key]||"Básica";
 }
+function getCraftCostByRarityKey(key){return CRAFT_MATERIAL_COSTS[key]||CRAFT_MATERIAL_COSTS.basic;}
+function getCraftCostForCard(card){return getCraftCostByRarityKey(getCraftRarityKey(card));}
 function getEmptyCraftMaterials(){return CRAFT_RARITY_KEYS.reduce((acc,k)=>(acc[k]=0,acc),{});}
 function normalizeCraftMaterials(materials={}){
   const out=getEmptyCraftMaterials();
@@ -1389,7 +1400,8 @@ const LANCE_UNIT_KEYS=new Set([
   "cu_chulainn",
   "lu_bu",
   "alexander_magnus",
-  "achilles"
+  "achilles",
+  "samurai_naginata"
 ]);
 function isLanceUnitCardLike(card){
   if(!card||card.type!=="unit")return false;
@@ -1441,6 +1453,12 @@ const WEAPON_CLASS_BY_KEY={
   archer:"bow",
   arcane_adept:"mage",
   guardian:"sword",
+  samurai_katana:"sword",
+  samurai_yabusame:"cavalry",
+  samurai_naginata:"spear",
+  geisha_encubierta:"sword",
+  hattori_shinobi:"sword",
+  saboteador_iga:"sword",
   scout:"sword",
   mulan:"sword",
   wallace:"sword",
@@ -2208,7 +2226,11 @@ const SWORD_UNIT_KEYS=new Set([
   "miyamoto_musashi",
   "khalid_ibn_al_walid",
   "gilgamesh",
-  "julius_caesar"
+  "julius_caesar",
+  "samurai_katana",
+  "geisha_encubierta",
+  "hattori_shinobi",
+  "saboteador_iga"
 ]);
 function isSwordUnitCardLike(card){
   if(!card||card.type!=="unit")return false;
@@ -2279,7 +2301,8 @@ const ARCHER_UNIT_KEYS=new Set([
   "nasu_no_yoichi",
   "arjuna",
   "saladin_archer_cavalry",
-  "attila_hun"
+  "attila_hun",
+  "samurai_yabusame"
 ]);
 function isArcherWeaponUnitCardLike(card){
   if(!card||card.type!=="unit")return false;
@@ -2354,6 +2377,12 @@ const CARD_VISUALS_BY_KEY={
   berserker:{portrait:CARD_PORTRAITS.berserker,icon:"🪓"},
   archer:{portrait:CARD_PORTRAITS.archer,icon:"🏹"},
   guardian:{portrait:CARD_PORTRAITS.paladin,icon:"🗿"},
+  samurai_katana:{portrait:CARD_PORTRAITS.samuraiKatana,icon:"⚔️"},
+  samurai_yabusame:{portrait:CARD_PORTRAITS.samuraiYabusame,icon:"🏹"},
+  samurai_naginata:{portrait:CARD_PORTRAITS.samuraiNaginata,icon:"🗡️"},
+  geisha_encubierta:{portrait:CARD_PORTRAITS.geishaEncubierta,icon:"🪭"},
+  hattori_shinobi:{portrait:CARD_PORTRAITS.hattoriShinobi,icon:"🥷"},
+  saboteador_iga:{portrait:CARD_PORTRAITS.saboteadorIga,icon:"💣"},
   scout:{portrait:CARD_PORTRAITS.rogue,icon:"🐍"},
   ...Object.fromEntries(LEGENDARY_ALLY_CARDS.map(c=>[c.key,{portrait:c.portrait,icon:c.icon}])),
   saladin_archer_cavalry:{portrait:CARD_PORTRAITS.cavalry,icon:"🏹"}
@@ -2707,7 +2736,7 @@ function getDisplayHp(u){return Math.max(0,Math.min(Number(u?.hp||0),Number(effe
 
 function getMageLeaderTypeForPlayer(player){return getLeaderTypeForOwner(player)}
 function getMageLeaderBuff(player){const tier=getLeaderBuffTierForOwner(player);return LEADER_BUFF_TABLE.mage[tier]||LEADER_BUFF_TABLE.mage[1]}
-function effectiveCardCost(card,player=card?.owner){const mageBuff=getMageLeaderBuff(player);return getMageLeaderTypeForPlayer(player)==="mage"&&card?.type==="spell"?Math.max(0,(card?.cost||0)-(mageBuff.costReduction||0)):(card?.cost||0)}
+function effectiveCardCost(card,player=card?.owner){const mageBuff=getMageLeaderBuff(player);let cost=getMageLeaderTypeForPlayer(player)==="mage"&&card?.type==="spell"?Math.max(0,(card?.cost||0)-(mageBuff.costReduction||0)):(card?.cost||0);if(card?.type==="unit"&&hasEnemySaboteadorIga(player,publicState?.units||[]))cost+=1;return cost}
 function effectiveCardValue(card,field){const mageBuff=getMageLeaderBuff(card?.owner);const abilityBonus=0;return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&typeof card?.[field]==="number"?card[field]+(mageBuff.effectBonus||0)+abilityBonus:(card?.[field]||0)+abilityBonus}
 function unitsInPlay(units=publicState?.units||[]){return units||[]}
 function ownerHasUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).some(u=>u.owner===owner&&u.key===key&&u.hp>0)}
@@ -2894,6 +2923,8 @@ function getCombatMods(attacker,defender){
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
   if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
   if(melee&&attacker.key==="berserker"){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
+  if(melee&&attacker.key==="samurai_katana"){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Dos Manos.`);}
+  if(defender.key==="samurai_katana"){const shirahadoriCount=countEnemyUnitsInCardRange(defender,publicState?.units||[]);if(shirahadoriCount>0){mods.defenderDex+=(shirahadoriCount*2);mods.notes.push(`${defender.name} +${shirahadoriCount*2} DX por Shirahadori (${shirahadoriCount} rival${shirahadoriCount===1?"":"es"} en su rango).`);}}
   if(melee&&attacker.key==="guardian"){if(defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.notes.push(`${defender.name} -1 AT y -1 MOV por Aplastamiento.`)}}
   if(melee&&isLanceUnitCardLike(attacker)&&isAntiCavalryTargetUnit(defender)){
     if(defenderUsesEvasion)mods.defenderAgi-=999;
@@ -2905,6 +2936,87 @@ function getCombatMods(attacker,defender){
   }
   return mods;
 }
+function countEnemyUnitsInCardRange(unit,units=publicState?.units||[]){
+  if(!unit)return 0;
+  const range=Math.max(1,Number(unit.range||1));
+  return (units||[]).filter(u=>u&&u.id!==unit.id&&u.owner!==unit.owner&&dist(unit,u)<=range).length;
+}
+function retreatUnitOneStepTowardLeader(units,unitId){
+  const list=[...(units||[])];
+  const unit=list.find(u=>u.id===unitId);
+  if(!unit)return{units:list,moved:false};
+  const leader=list.find(u=>u.owner===unit.owner&&u.leader);
+  if(!leader)return{units:list,moved:false};
+  const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+  const current=dist(unit,leader);
+  const free=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS&&!list.some(u=>u.id!==unit.id&&u.x===x&&u.y===y);
+  const candidates=dirs.map(([dx,dy])=>({x:(unit.x||0)+dx,y:(unit.y||0)+dy,dx,dy})).filter(c=>free(c.x,c.y)).map(c=>({...c,d:dist(c,leader)})).filter(c=>c.d<current);
+  if(!candidates.length)return{units:list,moved:false};
+  candidates.sort((a,b)=>(a.d-b.d)||((Math.abs(a.dx)+Math.abs(a.dy))-(Math.abs(b.dx)+Math.abs(b.dy)))||a.y-b.y||a.x-b.x);
+  const best=candidates[0];
+  return{units:list.map(u=>u.id===unit.id?{...u,x:best.x,y:best.y}:u),moved:true,to:{x:best.x,y:best.y},leader};
+}
+function applyYabusameRetreatIfPossible(units,unitId){
+  const unit=(units||[]).find(u=>u.id===unitId);
+  if(!unit||unit.key!=="samurai_yabusame"||(unit.hp||0)<=0)return{units:units||[],moved:false,text:""};
+  const result=retreatUnitOneStepTowardLeader(units,unitId);
+  return{...result,text:result.moved?` Estrategia de repliegue: ${unit.name} retrocede 1 casilla hacia su líder.`:""};
+}
+function applyNaginataDaimyoPunishment(units,fallenUnit,killerId,isMelee){
+  const list=[...(units||[])];
+  if(!isMelee||!fallenUnit||fallenUnit.key!=="samurai_naginata")return{units:list,triggered:false,text:""};
+  const killer=list.find(u=>u.id===killerId);
+  if(!killer||killer.leader||!isBasicUnit(killer))return{units:list,triggered:false,text:""};
+  const next=list.map(u=>u.id===killer.id?{...u,hp:1}:u);
+  return{units:next,triggered:true,text:` Proteger al Daimyo: ${killer.name} destruyó a ${fallenUnit.name} cuerpo a cuerpo y queda con 1 Vida.`};
+}
+
+
+function isNinjutsuUnit(u){
+  return !!u&&["geisha_encubierta","hattori_shinobi","saboteador_iga"].includes(String(u.key||""));
+}
+function isAttackFromStealth(unit){
+  return !!unit&&(!!unit.stealth||!!unit.wasStealthedBeforeAttack);
+}
+function shouldKeepStealthAfterAttack(attacker,defender){
+  if(!attacker||!isAttackFromStealth(attacker))return false;
+  if(attacker.key==="hattori_shinobi"&&defender&&dist(attacker,defender)>1)return true;
+  return false;
+}
+function clearStealthAfterAttackIfNeeded(units,attackerId,keep=false){
+  if(keep)return units||[];
+  return (units||[]).map(u=>u.id===attackerId?{...u,stealth:false,revealed:true}:u);
+}
+function canUnitAttackTarget(attacker,target){
+  if(!attacker||!target)return true;
+  if(attacker.key==="geisha_encubierta"&&target.leader)return false;
+  return true;
+}
+function applyGeishaFanKill(units,attacker,defender,hpLoss){
+  const list=[...(units||[])];
+  if(!attacker||!defender)return{units:list,triggered:false,text:""};
+  if(attacker.key!=="geisha_encubierta"||defender.leader||!isAttackFromStealth(attacker)||Number(hpLoss||0)<=0)return{units:list,triggered:false,text:""};
+  const next=list.map(u=>u.id===defender.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
+  return{units:next,triggered:true,text:` Corte de Abanico: ${attacker.name} atacó desde Sigilo, dañó HP y destruye a ${defender.name}.`};
+}
+function hasEnemySaboteadorIga(owner,units=publicState?.units||[]){
+  return (units||[]).some(u=>u&&u.owner!==owner&&u.key==="saboteador_iga"&&(u.hp||0)>0);
+}
+function getSummonCostWithSabotage(card,owner,units=publicState?.units||[]){
+  const base=Number(card?.cost||0);
+  if(card&&card.type==="unit"&&hasEnemySaboteadorIga(owner,units))return base+1;
+  return base;
+}
+function applySaboteadorEscapeForzado(units,defenderId){
+  const defender=(units||[]).find(u=>u.id===defenderId);
+  if(!defender||defender.key!=="saboteador_iga"||(defender.hp||0)<=0)return{units:units||[],triggered:false,text:""};
+  const affected=(units||[]).filter(u=>u.id!==defender.id&&!u.leader&&dist(defender,u)<=1);
+  if(!affected.length)return{units:units||[],triggered:false,text:""};
+  const ids=new Set(affected.map(u=>u.id));
+  const next=(units||[]).map(u=>ids.has(u.id)?{...u,tempDexDebuff:Math.max(Number(u.tempDexDebuff||0),Number(u.dex||0)+Number(u.tempDexBuff||0)+Number(u.leaderDexBonusApplied||0)+99),saboteadorDexZeroTurnKey:publicState?.turnKey||""}:u);
+  return{units:next,triggered:true,text:` Escape Forzado: ${defender.name} sobrevive y reduce a 0 la DX de ${affected.length} unidad${affected.length===1?"":"es"} en rango 1 hasta el final del turno actual.`};
+}
+
 function consumeDefensiveStanceForAttack(defender,units,mods={}){
   if(!defender?.defenseModeReady)return{defender,units,mods,consumed:false};
   const nextMods={...mods,defenderGuard:(mods.defenderGuard||0)+2,defenseStancePenalty:Math.max(10,Number(mods.defenseStancePenalty||0)),notes:[...(mods.notes||[]),`${defender.name} activa Guardia defensiva: +2 GD y -10% precisión al primer ataque.`]};
@@ -4875,7 +4987,7 @@ async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La bata
 async function removeCardAndPay(card){
   const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
   const maxHonor=capResourceMax(privateState.maxHonor||0);
-  const honor=Math.max(0,capResourceAmount(privateState.honor||0,maxHonor)-(card.cost||0));
+  const honor=Math.max(0,capResourceAmount(privateState.honor||0,maxHonor)-effectiveCardCost(card,myPlayer));
   await updatePrivate({hand,honor,maxHonor});
   await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
   pulseTurnHonorHud();
@@ -5130,6 +5242,7 @@ async function attackUnit(a,d){
   a=getLiveUnitRef(a,liveUnits);
   d=getLiveUnitRef(d,liveUnits);
   if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");
+  if(!canUnitAttackTarget(a,d))return setHint("Geisha Encubierta no puede atacar líderes.");
   if(!isMyTurn()||!isActionPhase()||a.owner!==myPlayer)return setHint(unitActionPhaseHint("ATTK"));
   const mulanChoiceAttack=isMulanExecutionChoiceReady(a);
   const khalidChainAttack=isKhalidChainAttackReady(a);
@@ -5207,6 +5320,8 @@ async function attackUnit(a,d){
     rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
   }
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false;
+  const attackerWasStealthedBeforeAttack=isAttackFromStealth(a);
+  const keepStealthAfterAttack=shouldKeepStealthAfterAttack(a,d);
   units=applyAttackSideEffects(a,d,units);
   const ulyssesAttackTactic=applyUlyssesAttackTactic(units,a);
   units=ulyssesAttackTactic.units;
@@ -5231,7 +5346,8 @@ async function attackUnit(a,d){
     }
     return u;
   });
-  if(hit.hit&&hpLoss>0)units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});
+  let geishaFanKillResult={units,triggered:false,text:""};
+  if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss);units=geishaFanKillResult.units;}
   if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
     const shadowTarget=units.find(u=>u.id===d.id);
     if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){
@@ -5247,7 +5363,11 @@ async function attackUnit(a,d){
   units=units.filter(u=>u.hp>0);
   const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
   units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
+  const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,melee):{units,triggered:false,text:""};
+  units=naginataDaimyoResult.units;
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods);
+  const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,d.id):{units,triggered:false,text:""};
+  units=saboteadorEscapeResult.units;
   const warCryTriggered=shouldTriggerWarCry(a,d,guardLoss,hit.hit);
   if(warCryTriggered)units=applyAxeWarCry(units,a.owner,a.id);
   const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
@@ -5458,7 +5578,13 @@ async function attackUnit(a,d){
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`:"";
   const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
   const masteryKillText=unitMasteryRankUpText(masteryKillResult);
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
+  const yabusameRetreatResult=units.some(u=>u.id===d.id)?applyYabusameRetreatIfPossible(units,d.id):{units,moved:false,text:""};
+  units=yabusameRetreatResult.units;
+  const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
+  units=clearStealthAfterAttackIfNeeded(units,a.id,keepStealthAfterAttack);
+  const stealthText=attackerWasStealthedBeforeAttack?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:`${a.name} pierde Sigilo después del ataque.`):"";
+  const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}`;
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
@@ -5872,6 +5998,7 @@ async function adventureEnemyTurn(){
     if(!attacker|| (attacker.acted&&!isKhalidChainAttackReady(attacker)))return false;
     let target=bestAttackTarget(attacker);
     if(!target)return false;
+    if(!canUnitAttackTarget(attacker,target))return false;
     if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===pub.turnKey)return false;
     const aiAttackBefore=[...units];
 
@@ -5930,6 +6057,8 @@ async function adventureEnemyTurn(){
     }
 
     let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false;
+    const attackerWasStealthedBeforeAttack=isAttackFromStealth(attacker);
+    const keepStealthAfterAttack=shouldKeepStealthAfterAttack(attacker,target);
     units=applyAttackSideEffects(attacker,target,units);
     const ulyssesAttackTactic=applyUlyssesAttackTactic(units,attacker);
     units=ulyssesAttackTactic.units;
@@ -5954,7 +6083,8 @@ async function adventureEnemyTurn(){
       }
       return u;
     });
-    if(hit.hit&&hpLoss>0)units=applyAttackSideEffects(attacker,target,units,{hpLoss,allowGuardian:false});
+    let geishaFanKillResult={units,triggered:false,text:""};
+    if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(attacker,target,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,attacker,target,hpLoss);units=geishaFanKillResult.units;}
     if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
       const shadowTarget=units.find(u=>u.id===target.id);
       if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){
@@ -5970,7 +6100,11 @@ async function adventureEnemyTurn(){
     units=units.filter(u=>u.hp>0);
     const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(attacker,target):null;
     units=applyUnitMasteryRankUpToUnits(units,attacker,masteryKillResult);
+    const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,target,attacker.id,melee):{units,triggered:false,text:""};
+    units=naginataDaimyoResult.units;
     units=applyAfterDamageBonuses(units,attacker,target,hpLoss,defenderFell,mods);
+    const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,target.id):{units,triggered:false,text:""};
+    units=saboteadorEscapeResult.units;
     const warCryTriggered=withAiPublicState(()=>shouldTriggerWarCry(attacker,target,guardLoss,hit.hit));
     if(warCryTriggered)units=applyAxeWarCry(units,attacker.owner,attacker.id);
     const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
@@ -6184,7 +6318,10 @@ async function adventureEnemyTurn(){
     const genghisDebuffText=genghisDebuffResult.log||"";
     const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
     const masteryKillText=unitMasteryRankUpText(masteryKillResult);
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}${masteryKillText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}`;
+    const yabusameRetreatResult=units.some(u=>u.id===target.id)?applyYabusameRetreatIfPossible(units,target.id):{units,moved:false,text:""};
+    units=yabusameRetreatResult.units;
+    const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}${masteryKillText}${samuraiExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -9079,7 +9216,7 @@ function formatRewardLine(reward){
   const parts=[];
   if(reward.xp)parts.push(`+${reward.xp} EXP`);
   if(reward.gold)parts.push(`+${reward.gold} Oro`);
-  if(reward.cards?.length)parts.push(`Paquete básico: ${reward.cards.length} cartas de magia/trampa`);
+  if(reward.cards?.length)parts.push(`Paquete básico: ${reward.cards.length} cartas`);
   return parts.join(" · ") || "Sin recompensa.";
 }
 
@@ -9092,8 +9229,8 @@ function getRewardCardsForBattle(battle,selectedSpecial=""){
   if(battle.rewardCard==="starter_complement")return[getStarterComplementCard(selectedSpecial||getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan")];
   const special=getLegendaryCardByKey(battle.rewardCard);
   if(special)return[{...special}];
-  if(battle.rewardCard==="improved_magic_trap_pack")return IMPROVED_MAGIC_TRAP_PACK.map(c=>({...c}));
-  if(battle.cardPack)return (battle.packType==="improved_magic_trap"?IMPROVED_MAGIC_TRAP_PACK:BASIC_MAGIC_TRAP_PACK).map(c=>({...c}));
+  if(battle.rewardCard==="improved_magic_trap_pack")return getPackCards({type:"improved_magic_trap"});
+  if(battle.cardPack)return getPackCards({type:battle.packType||"basic_magic_trap"});
   return[];
 }
 function getBattleRewardLabel(battle){
@@ -9103,7 +9240,7 @@ function getBattleRewardLabel(battle){
   if(battle.gold)parts.push(`${battle.gold} Oro`);
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
-  else if(battle.cardPack)parts.push(battle.packType==="beast_pack"?"Paquete de Bestias x1":(battle.packType==="improved_magic_trap"?"Paquete reforzado de 5 magia/trampa":"Paquete básico de 5 magia/trampa"));
+  else if(battle.cardPack)parts.push(battle.packType==="beast_pack"?"Paquete de Bestias x1":(battle.packType==="improved_magic_trap"?"Paquete reforzado de 3 magia/trampa":"Paquete básico de 3 magia/trampa"));
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   return parts.join(" · ");
 }
@@ -9313,13 +9450,47 @@ function addPendingPack(pack){
 function removePendingPack(packId){
   savePendingPacks(getPendingPacks().filter(p=>p.id!==packId));
 }
+const BASIC_PACK_MILESTONE_KEY="hallvalla_basic_pack_open_counter";
+function getBasicPackOpenCounter(){return Math.max(0,Number(localStorage.getItem(BASIC_PACK_MILESTONE_KEY)||0));}
+function setBasicPackOpenCounter(value){localStorage.setItem(BASIC_PACK_MILESTONE_KEY,String(Math.max(0,Number(value||0))));}
+function randomPackCards(pool,count=3){
+  const source=(pool||[]).filter(Boolean).map(c=>({...c}));
+  if(!source.length)return [];
+  if(source.length>=count)return shuffle(source).slice(0,count);
+  const out=[];
+  for(let i=0;i<count;i++)out.push({...source[Math.floor(Math.random()*source.length)]});
+  return out;
+}
+function getRandomBeastEventCards(count=3){
+  const out=[];
+  for(let i=0;i<count;i++){const card=getRandomBeastEventCard();if(card)out.push(card);}
+  return out;
+}
+function getEpicGuaranteedPackCards(){
+  const epicPool=IMPROVED_MAGIC_TRAP_PACK.filter(c=>getCraftRarityKey(c)==="epic");
+  const guaranteed=randomPackCards(epicPool.length?epicPool:IMPROVED_MAGIC_TRAP_PACK,1);
+  const fillers=randomPackCards(BASIC_MAGIC_TRAP_PACK,2);
+  return [...guaranteed,...fillers].slice(0,3);
+}
 function getPackCards(pack){
   if(!pack)return[];
   const special=getLegendaryCardByKey(pack.rewardCard)||CARD_TEMPLATES.find(c=>c.key===pack.rewardCard);
   if(special)return[{...special}];
-  if(pack.type==="improved_magic_trap")return IMPROVED_MAGIC_TRAP_PACK.map(c=>({...c}));
-  if(pack.type==="beast_pack"){const beast=getRandomBeastEventCard();return beast?[beast]:[];}
-  return BASIC_MAGIC_TRAP_PACK.map(c=>({...c}));
+  if(pack.type==="basic_epic_guaranteed")return getEpicGuaranteedPackCards();
+  if(pack.type==="improved_magic_trap")return randomPackCards(IMPROVED_MAGIC_TRAP_PACK,3);
+  if(pack.type==="beast_pack")return getRandomBeastEventCards(3);
+  return randomPackCards(BASIC_MAGIC_TRAP_PACK,3);
+}
+function recordBasicPackOpeningAndMaybeBonus(pack){
+  if(!pack||pack.type!=="basic_magic_trap")return false;
+  const next=getBasicPackOpenCounter()+1;
+  if(next>=20){
+    setBasicPackOpenCounter(0);
+    addPendingPack({name:"Pack gratis: Épica garantizada",type:"basic_epic_guaranteed",source:"basic_pack_milestone",free:true});
+    return true;
+  }
+  setBasicPackOpenCounter(next);
+  return false;
 }
 function getPendingPackCount(){return getPendingPacks().length;}
 function openPackOpening(){
@@ -9373,13 +9544,15 @@ function revealActivePack(){
 }
 function confirmActivePackCards(){
   if(!activePackOpening||!activePackCards.length)return;
+  const openedPack={...activePackOpening};
   addCardsToCollection(activePackCards);
-  removePendingPack(activePackOpening.id);
+  removePendingPack(openedPack.id);
+  const bonusAdded=recordBasicPackOpeningAndMaybeBonus(openedPack);
   activePackOpening=null;
   activePackCards=[];
   if($("confirmPackCardsBtn"))$("confirmPackCardsBtn").classList.add("hidden");
   const remaining=getPendingPackCount();
-  if($("packOpeningStatus"))$("packOpeningStatus").textContent=remaining?`Cartas agregadas. Quedan ${remaining} paquetes.`:"Cartas agregadas a colección.";
+  if($("packOpeningStatus"))$("packOpeningStatus").textContent=bonusAdded?`Cartas agregadas. Bono de 20 packs: recibiste un pack gratis con épica garantizada. Quedan ${remaining} paquetes.`:(remaining?`Cartas agregadas. Quedan ${remaining} paquetes.`:"Cartas agregadas a colección.");
   if($("openNextPackBtn"))$("openNextPackBtn").classList.toggle("hidden",remaining<=0);
   renderHomeProgress();
 }
@@ -9470,8 +9643,14 @@ function getCraftMaterials(){
 function getMaterialAmountForCard(card){
   return getCraftMaterials()[getCraftRarityKey(card)]||0;
 }
+function getCraftLockReason(card){
+  if(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting())return "Gana el evento del Señor de las Bestias al menos una vez para crear cartas de bestias.";
+  return "";
+}
 function canCraftCardCopy(card){
-  return !!card&&Number(card.qty||0)<maxCopiesForCard(card)&&getMaterialAmountForCard(card)>=CRAFT_MATERIAL_COST;
+  if(!card||Number(card.qty||0)>=maxCopiesForCard(card))return false;
+  if(getCraftLockReason(card))return false;
+  return getMaterialAmountForCard(card)>=getCraftCostForCard(card);
 }
 function disenchantCardSurplus(cardKey){
   const collection=getPlayerCollection();
@@ -9498,8 +9677,11 @@ function craftCardCopy(cardKey){
   collection.cards=Array.isArray(collection.cards)?collection.cards:[];
   collection.materials=normalizeCraftMaterials(collection.materials||{});
   const rarityKey=getCraftRarityKey(template);
-  if((collection.materials[rarityKey]||0)<CRAFT_MATERIAL_COST){
-    hvAlert(`Necesitas ${CRAFT_MATERIAL_COST} material ${getCraftRarityLabel(rarityKey)} para crear esta carta.`,`Material insuficiente`);
+  const lockReason=getCraftLockReason(template);
+  if(lockReason){hvAlert(lockReason,"Creación bloqueada");return false;}
+  const craftCost=getCraftCostForCard(template);
+  if((collection.materials[rarityKey]||0)<craftCost){
+    hvAlert(`Necesitas ${craftCost} material ${getCraftRarityLabel(rarityKey)} para crear esta carta.`,`Material insuficiente`);
     return false;
   }
   const existing=collection.cards.find(c=>c.key===template.key);
@@ -9508,7 +9690,7 @@ function craftCardCopy(cardKey){
     hvAlert("Ya tienes el máximo útil de esta carta para mazo.","Carta completa");
     return false;
   }
-  collection.materials[rarityKey]-=CRAFT_MATERIAL_COST;
+  collection.materials[rarityKey]-=craftCost;
   if(existing)existing.qty=currentQty+1;
   else collection.cards.push({...hydrateCardVisualData(template),qty:1});
   savePlayerCollection(collection);
@@ -9559,7 +9741,7 @@ function renderCraftMaterialPanel(){
   if(!panel)return;
   const materials=getCraftMaterials();
   const rows=CRAFT_RARITY_KEYS.map(k=>`<span class="craft-mat-pill ${k}"><b>${getCraftRarityLabel(k)}</b><em>${materials[k]||0}</em></span>`).join("");
-  panel.innerHTML=`<div class="craft-mat-title"><b>Materiales</b><small>Crear: ${CRAFT_MATERIAL_COST}</small></div>
+  panel.innerHTML=`<div class="craft-mat-title"><b>Materiales</b><small>Crear: 800-2800</small></div>
     <div class="craft-mat-grid">${rows}</div>
     <small class="craft-mat-note">Usa el botón de la esquina superior para convertir todos los sobrantes de una vez.</small>`;
   updateBulkDustButton();
@@ -9640,7 +9822,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ? `<button class="deck-mini-dust" type="button" data-dust-card="${escapeHtml(card.key||"")}" title="Convertir copia sobrante en +${CRAFT_MATERIAL_GAIN} material ${getCraftRarityLabel(getCraftRarityKey(card))}">⛏</button>`
     : "";
   const craftBtn=mode==="collection"&&Number(card.qty||0)<maxCopiesForCard(card)
-    ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="Crear por ${CRAFT_MATERIAL_COST} material ${getCraftRarityLabel(getCraftRarityKey(card))}. Tienes ${material}.">✚</button>`
+    ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="${getCraftLockReason(card)||`Crear por ${getCraftCostForCard(card)} material ${getCraftRarityLabel(getCraftRarityKey(card))}. Tienes ${material}.`}">✚</button>`
     : "";
   return `<div class="${cls}" ${data} data-deck-origin="${mode}" ${dragAttrs} title="${name}">
     <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
@@ -10246,6 +10428,7 @@ function completeAdventureBattleOnce(pub){
   if(!pub||pub.mode!=="adventure"||pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
   if(battle.beastEvent){
+    markBeastCraftingUnlocked();
     const already=hasClaimedBeastEventThisYear();
     let xpResult={levelUps:0};
     if(!already){

@@ -1,0 +1,34 @@
+HallValla - Unidades Ninjutsu 7HDX
+==================================
+
+ZIP base: Hallvalla_samurai_basic_units_7HDW.zip
+ZIP generado: Hallvalla_ninjutsu_units_7HDX.zip
+
+Agregado:
+- Geisha Encubierta
+- Hattori Shinobi
+- Saboteador de Iga
+
+Carpetas de assets:
+- assets/cards/basic/
+- assets/board_cards/basic/
+
+Efectos implementados:
+- Geisha Encubierta entra con Sigilo, no puede atacar líderes y destruye unidades si ataca desde Sigilo y daña HP.
+- Hattori Shinobi entra con Sigilo; si ataca a distancia mantiene Sigilo, si ataca cuerpo a cuerpo lo pierde.
+- Saboteador de Iga aplica Escape Forzado si sobrevive a un ataque y reduce DX a 0 en rango 1 hasta el final del turno actual.
+- Saboteador de Iga aplica Sabotaje: unidades enemigas cuestan +1 mientras esté en campo. No se acumula.
+
+Verificación:
+- script.js node --check: OK
+
+Checks:
+{
+  "node_check": true,
+  "ai_geisha_guard": true,
+  "player_geisha_guard": true,
+  "geisha": true,
+  "hattori": true,
+  "saboteador": true,
+  "effective_sabotage": true
+}

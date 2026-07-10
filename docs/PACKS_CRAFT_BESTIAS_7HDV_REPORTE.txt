@@ -1,0 +1,79 @@
+HallValla - Bestias, packs de 3, bono 20 packs y costos de creación 7HDV
+============================================================================
+
+ZIP base: Hallvalla_bulk_dust_corner_7HDU.zip
+ZIP generado: Hallvalla_beast_pack_craft_7HDV.zip
+
+Cambios aplicados:
+
+1) Bestias en Forja:
+- Las cartas de bestias aparecen en la Forja.
+- Antes de ganar el evento del Señor de las Bestias al menos una vez, no se pueden crear.
+- Al ganar el evento una vez, queda desbloqueada la creación de bestias.
+- Esto no afecta a la IA ni al Beastmaster enemigo.
+
+2) Packs de 3 cartas:
+- Pack básico: 3 cartas.
+- Pack reforzado de magia/trampa: 3 cartas.
+- Pack de bestias: 3 cartas.
+- Pack gratis con épica garantizada: 3 cartas.
+
+3) Bono por abrir 20 Packs básicos:
+- Cada Pack básico confirmado suma 1 al contador.
+- Al llegar a 20, se agrega automáticamente un pack gratis.
+- Ese pack gratis tiene mínimo 1 Épica.
+- El contador vuelve a 0 después del bono.
+
+4) Costos nuevos de creación:
+- Básica: 800 material.
+- Épica: 1200 material.
+- Gloriosa: 1600 material.
+- Mítica: 2000 material.
+- Legendaria: 2400 material.
+- Semidiós: 2800 material.
+
+5) Material por destruir sobrantes:
+- Se mantiene en +50 material por copia sobrante.
+
+También incluido:
+- Conservé dentro de este ZIP los assets nuevos de Guardia de piedra en:
+  · assets/cards/basic/paladin.webp
+  · assets/board_cards/basic/paladin.webp
+
+No se tocó:
+- combate
+- IA estratégica
+- reglas de mazo
+- daño
+- Guardia
+- PREC/EVA
+- audio
+
+Verificación:
+- script.js node --check: OK
+- CSS balance de llaves: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "craft_costs_object": true,
+  "craft_cost_function": true,
+  "beast_unlock_key": true,
+  "has_unlocked_beast_crafting": true,
+  "beast_craft_lock": true,
+  "beast_event_marks_unlock": true,
+  "random_pack_cards": true,
+  "basic_pack_3": true,
+  "improved_pack_3": true,
+  "beast_pack_3": true,
+  "epic_guaranteed_pack": true,
+  "basic_pack_counter": true,
+  "confirm_records_bonus": true,
+  "reward_label_3": true,
+  "guardian_asset_card_applied": true,
+  "guardian_asset_board_applied": true,
+  "css_braces_ok": true,
+  "build_7HDV": true,
+  "doc_present": true
+}
