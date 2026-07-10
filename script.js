@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDP";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDQ";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9011,10 +9011,12 @@ function addCardsToCollection(cards){
 }
 function ensureStarterDeckCollection(){
   if(!canAccessDecks())return;
-  const collection=getPlayerCollection();
+  let collection=getPlayerCollection();
+  const cleaned=cleanAutoGrantedBeastLeakFromCollection(collection);
+  collection=cleaned.collection;
   collection.cards=Array.isArray(collection.cards)?collection.cards:[];
-  const starter=[...CARD_TEMPLATES.filter(c=>c.type==="unit"),...BASIC_MAGIC_TRAP_PACK];
-  let changed=false;
+  const starter=getStarterCollectionTemplates();
+  let changed=!!cleaned.changed;
   starter.forEach(card=>{
     const max=maxCopiesForCard(card);
     const existing=collection.cards.find(c=>c.key===card.key);
@@ -9040,7 +9042,7 @@ function grantAdventureRewards(battle){
   if(xpReward>0)addPlayerXp(xpReward);
   else renderPlayerProfile(profile);
 
-  const packCards = battle.cardPack ? BASIC_MAGIC_TRAP_PACK : [];
+  const packCards = battle.cardPack ? getRewardCardsForBattle(battle) : [];
   if(packCards.length)addCardsToCollection(packCards);
 
   localStorage.setItem(claimedKey,"true");
@@ -9359,12 +9361,63 @@ function closePackOpening(){const panel=$("packOpeningPanel");if(panel)panel.cla
 
 function getSavedDeck(){try{const deck=JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");return Array.isArray(deck)?deck.map(hydrateCardVisualData):[]}catch(e){return[]}}
 function saveDeck(deck){localStorage.setItem("hallvalla_current_deck",JSON.stringify((deck||[]).map(hydrateCardVisualData)))}
-function getCollectionCardsExpanded(){const collection=getPlayerCollection();return (collection.cards||[]).map(c=>({...c,qty:c.qty||1}))}
+function isBeastCollectionCard(card){
+  if(!card)return false;
+  const key=String(card.key||"");
+  return !!(card.beast||BEAST_CARD_TEMPLATES.some(c=>c.key===key)||BEAST_TRAP_CARD_TEMPLATES.some(c=>c.key===key));
+}
+function getStarterCollectionTemplates(){
+  const byKey=new Map();
+  STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).forEach(card=>{
+    if(card.beast||card.special)return;
+    byKey.set(card.key,{...card});
+  });
+  BASIC_MAGIC_TRAP_PACK.forEach(card=>{
+    if(card.beast||card.special)return;
+    byKey.set(card.key,{...card});
+  });
+  return [...byKey.values()];
+}
+function cleanAutoGrantedBeastLeakFromCollection(collection){
+  const cards=Array.isArray(collection?.cards)?collection.cards:[];
+  const beastUnitKeys=BEAST_CARD_TEMPLATES.map(c=>c.key);
+  const maxedBeasts=beastUnitKeys.filter(key=>{
+    const card=cards.find(c=>c.key===key);
+    const template=BEAST_CARD_TEMPLATES.find(c=>c.key===key);
+    return card&&template&&Number(card.qty||0)>=maxCopiesForCard(template);
+  });
+  const leaked=maxedBeasts.length>=Math.min(8,beastUnitKeys.length);
+  if(!leaked)return {collection:{...collection,cards},changed:false,removed:0};
+  const nextCards=cards.filter(card=>!isBeastCollectionCard(card));
+  return {collection:{...collection,cards:nextCards},changed:nextCards.length!==cards.length,removed:cards.length-nextCards.length};
+}
+function getSanitizedPlayerCollection(){
+  const collection=getPlayerCollection();
+  const cleaned=cleanAutoGrantedBeastLeakFromCollection(collection);
+  if(cleaned.changed)savePlayerCollection(cleaned.collection);
+  return cleaned.collection;
+}
+function getCollectionCardsExpanded(){const collection=getSanitizedPlayerCollection();return (collection.cards||[]).map(c=>({...hydrateCardVisualData(c),qty:c.qty||1}))}
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
+function sanitizeDeckDraftToCollection(deck=[]){
+  const collection=getCollectionCardsExpanded();
+  const allowed=new Map(collection.map(card=>[card.key,Math.min(Number(card.qty||1),maxCopiesForCard(card))]));
+  const used={};
+  const out=[];
+  (deck||[]).forEach(card=>{
+    const key=card?.key;
+    if(!key||!allowed.has(key))return;
+    used[key]=(used[key]||0)+1;
+    if(used[key]>allowed.get(key))return;
+    const template=collection.find(c=>c.key===key)||card;
+    out.push({...hydrateCardVisualData(template),id:card.id||uid8(),qty:1});
+  });
+  return out;
+}
 function openDeckBuilder(){
   if(!canAccessDecks()){hvAlert(`Mazos bloqueados: completa el mapa 1.1 para editar mazos. Paquetes pendientes: ${getPendingPackCount()}. Cartas guardadas: ${getCollectionCardTotal()}.`,"Mazos bloqueados");return;}
   ensureStarterDeckCollection();
-  const saved=getSavedDeck();
+  const saved=sanitizeDeckDraftToCollection(getSavedDeck());
   currentDeckDraft=validateDeckList(saved).valid?saved:getDefaultDeckTemplates().map(c=>({...c,qty:1}));
   $("deckBuilderPanel").classList.remove("hidden");
   renderDeckBuilder();
@@ -9594,8 +9647,9 @@ function renderDeckBuilder(){
   }
 }
 function saveCurrentDeck(){
+  currentDeckDraft=sanitizeDeckDraftToCollection(currentDeckDraft);
   const validation=validateDeckList(currentDeckDraft);
-  if(!validation.valid){hvAlert(`No se puede guardar todavía: ${validation.errors.join(" ")}`,"Mazo inválido");return;}
+  if(!validation.valid){hvAlert(`No se puede guardar todavía: ${validation.errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return;}
   saveDeck(currentDeckDraft);
   closeDeckBuilder();
   hvAlert("Mazo guardado.","Mazo guardado");
