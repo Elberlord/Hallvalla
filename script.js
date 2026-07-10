@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDQ";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDS";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9366,6 +9366,11 @@ function isBeastCollectionCard(card){
   const key=String(card.key||"");
   return !!(card.beast||BEAST_CARD_TEMPLATES.some(c=>c.key===key)||BEAST_TRAP_CARD_TEMPLATES.some(c=>c.key===key));
 }
+function getUnlockedAdventureSpecialCollectionTemplates(){
+  const progress=typeof getAdventureProgress==="function"?getAdventureProgress():{};
+  const keys=[progress?.selectedSpecial].filter(key=>key&&ADVENTURE_SPECIALS[key]);
+  return [...new Set(keys)].map(key=>({...ADVENTURE_SPECIALS[key],qty:1,unlockedByAdventure:true}));
+}
 function getStarterCollectionTemplates(){
   const byKey=new Map();
   STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).forEach(card=>{
@@ -9374,6 +9379,9 @@ function getStarterCollectionTemplates(){
   });
   BASIC_MAGIC_TRAP_PACK.forEach(card=>{
     if(card.beast||card.special)return;
+    byKey.set(card.key,{...card});
+  });
+  getUnlockedAdventureSpecialCollectionTemplates().forEach(card=>{
     byKey.set(card.key,{...card});
   });
   return [...byKey.values()];
@@ -9400,8 +9408,9 @@ function getSanitizedPlayerCollection(){
 function getCollectionCardsExpanded(){const collection=getSanitizedPlayerCollection();return (collection.cards||[]).map(c=>({...hydrateCardVisualData(c),qty:c.qty||1}))}
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
 function sanitizeDeckDraftToCollection(deck=[]){
-  const collection=getCollectionCardsExpanded();
-  const allowed=new Map(collection.map(card=>[card.key,Math.min(Number(card.qty||1),maxCopiesForCard(card))]));
+  const collection=[...getCollectionCardsExpanded(),...getUnlockedAdventureSpecialCollectionTemplates()];
+  const uniqueCollection=[...new Map(collection.map(card=>[card.key,card])).values()];
+  const allowed=new Map(uniqueCollection.map(card=>[card.key,Math.min(Number(card.qty||1),maxCopiesForCard(card))]));
   const used={};
   const out=[];
   (deck||[]).forEach(card=>{
@@ -9409,7 +9418,7 @@ function sanitizeDeckDraftToCollection(deck=[]){
     if(!key||!allowed.has(key))return;
     used[key]=(used[key]||0)+1;
     if(used[key]>allowed.get(key))return;
-    const template=collection.find(c=>c.key===key)||card;
+    const template=uniqueCollection.find(c=>c.key===key)||card;
     out.push({...hydrateCardVisualData(template),id:card.id||uid8(),qty:1});
   });
   return out;
@@ -9424,7 +9433,7 @@ function openDeckBuilder(){
 }
 function closeDeckBuilder(){$("deckBuilderPanel").classList.add("hidden")}
 function getDeckBuilderCollectionCard(cardKey){
-  return getCollectionCardsExpanded().find(c=>c.key===cardKey)||currentDeckDraft.find(c=>c.key===cardKey)||null;
+  return getCollectionCardsExpanded().find(c=>c.key===cardKey)||getUnlockedAdventureSpecialCollectionTemplates().find(c=>c.key===cardKey)||currentDeckDraft.find(c=>c.key===cardKey)||null;
 }
 function addCardToDeck(cardKey){
   const card=getCollectionCardsExpanded().find(c=>c.key===cardKey);
