@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEA";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEC";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1117,7 +1117,7 @@ function getUnitWeaponKind(unit){
   // pero su arma de ataque básica es espada, no lanza.
   if(name.includes("caballer")||key.includes("cavalry"))return "sword";
   if(key.includes("spearman")||name.includes("lancero")||name.includes("lanza")||text.includes("lanza"))return "spear";
-  if(name.includes("berserker")||icon.includes("🪓"))return "axe";
+  if(key.includes("ulfhednar")||name.includes("ulfhednar")||name.includes("berserker")||icon.includes("🪓"))return "axe";
   return "sword";
 }
 function getAttackSoundForUnit(unit){
@@ -2272,7 +2272,9 @@ function getSwordGuardBonus(card){return isSwordUnitCardLike(card)&&!card.swordG
 // v7FQ - Regla global de hachas.
 // Todas las unidades que usan hacha reciben +2 Destreza base.
 const AXE_UNIT_KEYS=new Set([
-  "berserker"
+  "berserker",
+  "berserker_de_oso",
+  "ulfhednar"
 ]);
 function isAxeUnitCardLike(card){
   if(!card||card.type!=="unit")return false;
@@ -6077,7 +6079,7 @@ async function adventureEnemyTurn(){
     return score;
   };
 
-  const attackWith=(attacker)=>{
+  const attackWith=async(attacker)=>{
     if(!attacker|| (attacker.acted&&!isKhalidChainAttackReady(attacker)))return false;
     let target=bestAttackTarget(attacker);
     if(!target)return false;
@@ -7097,14 +7099,14 @@ async function adventureEnemyTurn(){
   }
   for(const u of aiUnits()){
     let didSomething=false;
-    if(attackWith(u)){
+    if(await attackWith(u)){
       didSomething=true;
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
       let chainGuard=0;
       while(chainGuard++<8){
         const liveKhalid=units.find(it=>it.id===u.id&&isKhalidChainAttackReady(it));
-        if(!liveKhalid||!attackWith(liveKhalid))break;
+        if(!liveKhalid||!(await attackWith(liveKhalid)))break;
         await publishAiStep({turnPhase:"actions"});
         await sleep(AI_ACTION_DELAY_MS);
         if(getBattleOutcome(units).ended)break;
@@ -7114,13 +7116,13 @@ async function adventureEnemyTurn(){
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
       const movedUnit=units.find(it=>it.id===u.id)||u;
-      if(attackWith(movedUnit)){
+      if(await attackWith(movedUnit)){
         await publishAiStep({turnPhase:"actions"});
         await sleep(AI_ACTION_DELAY_MS);
         let chainGuard=0;
         while(chainGuard++<8){
           const liveKhalid=units.find(it=>it.id===movedUnit.id&&isKhalidChainAttackReady(it));
-          if(!liveKhalid||!attackWith(liveKhalid))break;
+          if(!liveKhalid||!(await attackWith(liveKhalid)))break;
           await publishAiStep({turnPhase:"actions"});
           await sleep(AI_ACTION_DELAY_MS);
           if(getBattleOutcome(units).ended)break;
@@ -7139,7 +7141,7 @@ async function adventureEnemyTurn(){
   // El líder rival queda anclado en Base: puede atacar y usar DEF, pero no moverse.
   const el=enemyLeaderNow();
   if(el&&!getBattleOutcome(units).ended){
-    if(attackWith(el)){
+    if(await attackWith(el)){
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
     }else if(tryAiDefenseStance(el)){
