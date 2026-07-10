@@ -1,0 +1,46 @@
+HallValla patch 7HDZ
+====================
+Base utilizada:
+- Hallvalla_ninjutsu_units_7HDX.zip
+
+Cambios aplicados:
+1. Nuevas unidades básicas agregadas a script.js:
+   - Berserker de Oso (key: berserker_de_oso)
+   - Ulfhednar (key: ulfhednar)
+   - Skipar del Drakkar (key: skipar_del_drakkar)
+
+2. Nuevos assets agregados:
+   - assets/cards/basic/berserker_de_oso.webp
+   - assets/cards/basic/ulfhednar.webp
+   - assets/cards/basic/skipar_del_drakkar.webp
+   - assets/board_cards/basic/berserker_de_oso.webp
+   - assets/board_cards/basic/ulfhednar.webp
+   - assets/board_cards/basic/skipar_del_drakkar.webp
+
+3. Lógica implementada:
+   - Berserker de Oso:
+     * Si hace daño a HP, destruye la Guardia base del objetivo.
+     * La unidad afectada queda sin regenerar Guardia base.
+   - Ulfhednar:
+     * 50% de probabilidad de Golpe Crítico.
+     * El crítico duplica el daño.
+     * También se contempla en contraataques.
+   - Skipar del Drakkar:
+     * +1 MOV el mismo turno en que es invocado.
+     * Al destruir una unidad enemiga, fuerza descarte de hasta 2 cartas.
+     * En aventura/local conocido, el descarte se resuelve automáticamente desde la mano conocida.
+
+4. Integración visual y reglas:
+   - Retratos conectados a CARD_PORTRAITS.
+   - Integración a CARD_VISUALS_BY_KEY.
+   - Clases de arma añadidas a WEAPON_CLASS_BY_KEY.
+   - Skipar cuenta como unidad de espada para la regla global de +3 Guardia base.
+
+5. Ajuste extra:
+   - publishAiStep ahora conserva/actualiza mejor el conteo de mano del jugador en aventura.
+
+Verificación:
+- node --check script.js => OK
+
+Versión interna:
+- HALLVALLA_BUILD_VERSION = v8_LOCAL_RARITY_REAL_BOARD_7HDZ

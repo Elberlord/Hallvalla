@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDX";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEA";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -124,6 +124,9 @@ const CARD_PORTRAITS={
   geishaEncubierta:"assets/cards/basic/geisha_encubierta.webp",
   hattoriShinobi:"assets/cards/basic/hattori_shinobi.webp",
   saboteadorIga:"assets/cards/basic/saboteador_iga.webp",
+  berserkerDeOso:"assets/cards/basic/berserker_de_oso.webp",
+  ulfhednar:"assets/cards/basic/ulfhednar.webp",
+  skiparDelDrakkar:"assets/cards/basic/skipar_del_drakkar.webp",
   darkMage:"assets/cards/basic/dark_mage.webp",
   wallace:"assets/cards/basic/wallace.webp",
   berserker:"assets/cards/basic/berserker_north.webp",
@@ -1134,7 +1137,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida. Regla de lanza: cuando una unidad enemiga la ataca dentro de su alcance, ataca primero una vez por turno. No funciona contra Ataque en Picada del halcón."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas. No se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"berserker_de_oso",name:"Berserker de Oso",type:"unit",icon:"🐻",portrait:CARD_PORTRAITS.berserkerDeOso,cost:3,hp:5,atk:5,guard:1,dex:3,agi:2,mov:1,range:1,rarity:"Básica",text:"Furia del Oso: al atacar, si traspasa Guardia y causa daño a HP, destruye la Guardia base de la unidad atacada. Esa Guardia no se regenera mientras la unidad siga en campo. Temerario: inmune a Miedo. Regla de hacha: recibe +2 Destreza base."},{key:"ulfhednar",name:"Ulfhednar",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ulfhednar,cost:2,hp:3,atk:3,guard:1,dex:5,agi:4,mov:1,range:2,rarity:"Básica",text:"Cacería de Sangre: cuando declara un ataque, tiene 50% de probabilidad de hacer Golpe Crítico. Si activa Golpe Crítico, hace 200% de daño durante ese ataque. Usa hachas arrojadizas, por eso tiene Rango 2. Regla de hacha: recibe +2 Destreza base."},{key:"skipar_del_drakkar",name:"Skipar del Drakkar",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.skiparDelDrakkar,cost:2,hp:4,atk:3,guard:2,dex:4,agi:3,mov:1,range:1,rarity:"Básica",text:"Desembarco Rápido: si fue invocado este turno, puede moverse 1 casilla extra este turno. Saqueo de Guerra: cuando destruye una unidad enemiga, el líder rival descarta hasta 2 cartas de su mano. Si solo tiene 1, descarta 1. Regla de espada: recibe +3 Guardia base."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida. Regla de lanza: cuando una unidad enemiga la ataca dentro de su alcance, ataca primero una vez por turno. No funciona contra Ataque en Picada del halcón."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas. No se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. El ataque sigue las reglas normales de combate. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y queda con 1 Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -1459,6 +1462,9 @@ const WEAPON_CLASS_BY_KEY={
   geisha_encubierta:"sword",
   hattori_shinobi:"sword",
   saboteador_iga:"sword",
+  berserker_de_oso:"axe",
+  ulfhednar:"axe",
+  skipar_del_drakkar:"sword",
   scout:"sword",
   mulan:"sword",
   wallace:"sword",
@@ -1992,6 +1998,7 @@ function reduceDamageForHoneyBadger(unit,amount){
 const PORCUPINE_FEAR_CHANCE=0.25;
 function applyFearToUnit(unit,sourceName="Puercoespín"){
   if(!unit)return unit;
+  if(unit.key==="berserker_de_oso")return {...unit,fearSourceName:"",fearTurnKey:""};
   return {
     ...unit,
     tempAtkDebuff:Math.max(Number(unit.tempAtkDebuff||0),3),
@@ -2000,6 +2007,7 @@ function applyFearToUnit(unit,sourceName="Puercoespín"){
   };
 }
 function clearTurnTempStatsForOwnerUnit(u,turnKey){
+  if(u&&u.key==="berserker_de_oso")u={...u,fearSourceName:"",fearTurnKey:"",tempAtkDebuff:u.fearTurnKey?0:u.tempAtkDebuff};
   const fearStillActive=!!(u&&u.fearTurnKey&&u.fearTurnKey===turnKey);
   const genghisMovStillActive=!!(u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===turnKey);
   const hannibalAtkStillActive=!!(u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===turnKey);
@@ -2228,6 +2236,7 @@ const SWORD_UNIT_KEYS=new Set([
   "gilgamesh",
   "julius_caesar",
   "samurai_katana",
+  "skipar_del_drakkar",
   "geisha_encubierta",
   "hattori_shinobi",
   "saboteador_iga"
@@ -2383,6 +2392,9 @@ const CARD_VISUALS_BY_KEY={
   geisha_encubierta:{portrait:CARD_PORTRAITS.geishaEncubierta,icon:"🪭"},
   hattori_shinobi:{portrait:CARD_PORTRAITS.hattoriShinobi,icon:"🥷"},
   saboteador_iga:{portrait:CARD_PORTRAITS.saboteadorIga,icon:"💣"},
+  berserker_de_oso:{portrait:CARD_PORTRAITS.berserkerDeOso,icon:"🐻"},
+  ulfhednar:{portrait:CARD_PORTRAITS.ulfhednar,icon:"🐺"},
+  skipar_del_drakkar:{portrait:CARD_PORTRAITS.skiparDelDrakkar,icon:"⚓"},
   scout:{portrait:CARD_PORTRAITS.rogue,icon:"🐍"},
   ...Object.fromEntries(LEGENDARY_ALLY_CARDS.map(c=>[c.key,{portrait:c.portrait,icon:c.icon}])),
   saladin_archer_cavalry:{portrait:CARD_PORTRAITS.cavalry,icon:"🏹"}
@@ -2799,10 +2811,12 @@ function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunned
 function effectiveDex(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0))}
-function effectiveMov(u){const bonus=getLeaderBonus(u);return u?.leader?0:Math.max(0,(u?.mov||0)+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
+function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedTurnKey&&u.summonedTurnKey===state.turnKey);}
+function effectiveMov(u){const bonus=getLeaderBonus(u);const summonBonus=isSkiparSummonMoveActive(u)?1:0;return u?.leader?0:Math.max(0,(u?.mov||0)+summonBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxTurnGuard(u){
   if(!u)return 0;
+  if(u.berserkerOsoGuardShattered)return 0;
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
@@ -2969,6 +2983,66 @@ function applyNaginataDaimyoPunishment(units,fallenUnit,killerId,isMelee){
   if(!killer||killer.leader||!isBasicUnit(killer))return{units:list,triggered:false,text:""};
   const next=list.map(u=>u.id===killer.id?{...u,hp:1}:u);
   return{units:next,triggered:true,text:` Proteger al Daimyo: ${killer.name} destruyó a ${fallenUnit.name} cuerpo a cuerpo y queda con 1 Vida.`};
+}
+function applyBerserkerOsoGuardShatter(units,attacker,defender,hpLoss){
+  const list=[...(units||[])];
+  if(!attacker||!defender||attacker.key!=="berserker_de_oso"||Number(hpLoss||0)<=0)return{units:list,triggered:false,text:""};
+  let triggered=false;
+  const next=list.map(u=>{
+    if(u.id!==defender.id)return u;
+    triggered=true;
+    return {...u,guard:0,baseGuard:0,tempGuardBuff:Math.min(0,Number(u.tempGuardBuff||0)),berserkerOsoGuardShattered:true};
+  });
+  return{units:next,triggered,text:triggered?` Furia de Oso: ${defender.name} pierde toda su Guardia base y ya no la regenerará.`:""};
+}
+function rollUlfhednarCritical(attacker,hit){
+  if(!attacker||attacker.key!=="ulfhednar"||!hit?.hit)return{triggered:false,multiplier:1,text:""};
+  const triggered=Math.random()<0.5;
+  return triggered?{triggered:true,multiplier:2,text:` Golpe Crítico: ${attacker.name} duplica su daño.`}:{triggered:false,multiplier:1,text:""};
+}
+const SKIPAR_DISCARD_TYPE_PRIORITY={spell:0,trap:0,unit:1};
+function getSkiparDiscardScore(card){
+  const rarity=String(card?.rarity||"Básica").toLowerCase();
+  const rarityScore=rarity.includes("mít")||rarity.includes("mit")?4:rarity.includes("glor")?3:rarity.includes("hero")?2:rarity.includes("extra")||rarity.includes("especial")?1:0;
+  const typeScore=SKIPAR_DISCARD_TYPE_PRIORITY[String(card?.type||"unit").toLowerCase()]??1;
+  return (Number(card?.cost||0)*10)+(rarityScore*5)+(typeScore*2);
+}
+function chooseSkiparDiscardCards(hand,count=2){
+  const list=[...(hand||[])];
+  if(!list.length||count<=0)return{discarded:[],remaining:list};
+  const indexed=list.map((card,index)=>({card,index,score:getSkiparDiscardScore(card)})).sort((a,b)=>(a.score-b.score)||(a.index-b.index));
+  const chosen=indexed.slice(0,Math.min(count,indexed.length));
+  const chosenSet=new Set(chosen.map(it=>it.index));
+  return{discarded:chosen.map(it=>it.card),remaining:list.filter((_,index)=>!chosenSet.has(index))};
+}
+async function resolveSkiparWarLoot(attacker,targetOwner){
+  if(!attacker||attacker.key!=="skipar_del_drakkar"||!targetOwner)return{triggered:false,text:""};
+  const buildText=(discarded)=>{
+    if(!discarded.length)return ` Saqueo del Drakkar: el rival no tenía cartas para descartar.`;
+    const names=discarded.map(c=>c?.name||"Carta").join(", ");
+    return ` Saqueo del Drakkar: el rival descarta ${discarded.length} carta${discarded.length===1?"":"s"} (${names}).`;
+  };
+  if(publicState?.mode==="adventure"){
+    if(Number(targetOwner)===1){
+      const choice=chooseSkiparDiscardCards(privateState?.hand||[],2);
+      if(choice.discarded.length){await updatePrivate({hand:choice.remaining});}
+      return{triggered:choice.discarded.length>0,text:buildText(choice.discarded)};
+    }
+    if(Number(targetOwner)===2){
+      const aiState={...(publicState?.adventureAiState||{})};
+      const choice=chooseSkiparDiscardCards(aiState.hand||[],2);
+      if(choice.discarded.length){
+        await updatePublic({adventureAiState:{...aiState,hand:choice.remaining},[`playerStats/2/hand`]:choice.remaining.length});
+      }
+      return{triggered:choice.discarded.length>0,text:buildText(choice.discarded)};
+    }
+  }
+  if(Number(targetOwner)===Number(myPlayer)){
+    const choice=chooseSkiparDiscardCards(privateState?.hand||[],2);
+    if(choice.discarded.length){await updatePrivate({hand:choice.remaining});}
+    return{triggered:choice.discarded.length>0,text:buildText(choice.discarded)};
+  }
+  return{triggered:false,text:""};
 }
 
 
@@ -5329,7 +5403,9 @@ async function attackUnit(a,d){
   units=actionSpend.units;
   const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),units,mods);
   units=dmgTrap.traps?units:units;
-  const battleAtk=dmgTrap.damage;
+  const ulfhednarCritResult=rollUlfhednarCritical(a,hit);
+  const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
+  let berserkerOsoText="",skiparWarLootText="";
   units=units.map(u=>{
     if(u.id===a.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
     if(u.id===d.id){
@@ -5365,7 +5441,12 @@ async function attackUnit(a,d){
   units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
   const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,melee):{units,triggered:false,text:""};
   units=naginataDaimyoResult.units;
+  const berserkerOsoResult=hit.hit&&hpLoss>0?applyBerserkerOsoGuardShatter(units,a,d,hpLoss):{units,triggered:false,text:""};
+  units=berserkerOsoResult.units;
+  berserkerOsoText=berserkerOsoResult.text||"";
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods);
+  const skiparWarLootResult=defenderFell?await resolveSkiparWarLoot(a,d.owner):{triggered:false,text:""};
+  skiparWarLootText=skiparWarLootResult.text||"";
   const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,d.id):{units,triggered:false,text:""};
   units=saboteadorEscapeResult.units;
   const warCryTriggered=shouldTriggerWarCry(a,d,guardLoss,hit.hit);
@@ -5510,7 +5591,8 @@ async function attackUnit(a,d){
     defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     if(cHit.hit){
       let cGuard=0,cHp=0,cWarriorShieldBlocked=false;
-      const cAtk=getBattleDamage(defenderAfter,cMods);
+      const ulfhednarCounterCrit=rollUlfhednarCritical(defenderAfter,cHit);
+      const cAtk=Math.max(0,Math.round(getBattleDamage(defenderAfter,cMods)*(ulfhednarCounterCrit.multiplier||1)));
       units=units.map(u=>{
         if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
         if(u.id===attackerAfter.id){
@@ -5557,7 +5639,7 @@ async function attackUnit(a,d){
       }
       const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
+      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
       units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -5584,7 +5666,8 @@ async function attackUnit(a,d){
   units=clearStealthAfterAttackIfNeeded(units,a.id,keepStealthAfterAttack);
   const stealthText=attackerWasStealthedBeforeAttack?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:`${a.name} pierde Sigilo después del ataque.`):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}`;
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
+  const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
@@ -5702,7 +5785,7 @@ async function adventureEnemyTurn(){
       floatFxEvent,
       adventureAiState:nextAiState,
       currentPlayer:2,
-      [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0},
+      [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0,hand:Array.isArray(privateState?.hand)?privateState.hand.length:(pub.playerStats?.[1]?.hand||0)},
       [`playerStats/2`]:{hp:p2Leader?.hp||20,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),deck:deck.length,hand:hand.length},
       log:[...logs,...(pub.log||[])].slice(0,18),
       aiActionText:logs[logs.length-1]||`${pub.adventureEnemyName||"Rival"} está pensando su jugada...`,
@@ -6066,7 +6149,9 @@ async function adventureEnemyTurn(){
     units=actionSpend.units;
     const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),units,mods));
     legendaryTraps=dmgTrap.traps;
-    const battleAtk=dmgTrap.damage;
+    const ulfhednarCritResult=rollUlfhednarCritical(attacker,hit);
+    const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
+    let berserkerOsoText="",skiparWarLootText="";
     units=units.map(u=>{
       if(u.id===attacker.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(attacker,target)?true:u.arjunaRerollUsedTurn};
       if(u.id===target.id){
@@ -6102,7 +6187,12 @@ async function adventureEnemyTurn(){
     units=applyUnitMasteryRankUpToUnits(units,attacker,masteryKillResult);
     const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,target,attacker.id,melee):{units,triggered:false,text:""};
     units=naginataDaimyoResult.units;
+    const berserkerOsoResult=hit.hit&&hpLoss>0?applyBerserkerOsoGuardShatter(units,attacker,target,hpLoss):{units,triggered:false,text:""};
+    units=berserkerOsoResult.units;
+    berserkerOsoText=berserkerOsoResult.text||"";
     units=applyAfterDamageBonuses(units,attacker,target,hpLoss,defenderFell,mods);
+    const skiparWarLootResult=defenderFell?await resolveSkiparWarLoot(attacker,target.owner):{triggered:false,text:""};
+    skiparWarLootText=skiparWarLootResult.text||"";
     const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,target.id):{units,triggered:false,text:""};
     units=saboteadorEscapeResult.units;
     const warCryTriggered=withAiPublicState(()=>shouldTriggerWarCry(attacker,target,guardLoss,hit.hit));
@@ -6245,7 +6335,8 @@ async function adventureEnemyTurn(){
       units=cSpend.units;
       defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
       if(cHit.hit){
-        const cAtk=getBattleDamage(defenderAfter,cMods);
+        const ulfhednarCounterCrit=rollUlfhednarCritical(defenderAfter,cHit);
+        const cAtk=Math.max(0,Math.round(getBattleDamage(defenderAfter,cMods)*(ulfhednarCounterCrit.multiplier||1)));
         let cGuard=0,cHp=0,cWarriorShieldBlocked=false;
         units=units.map(u=>{
           if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
@@ -6277,7 +6368,7 @@ async function adventureEnemyTurn(){
         }
         const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
         const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
+        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
       }else{
         units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
         counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -6321,7 +6412,8 @@ async function adventureEnemyTurn(){
     const yabusameRetreatResult=units.some(u=>u.id===target.id)?applyYabusameRetreatIfPossible(units,target.id):{units,moved:false,text:""};
     units=yabusameRetreatResult.units;
     const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}${masteryKillText}${samuraiExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}`;
+    const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}${masteryKillText}${samuraiExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
