@@ -1,0 +1,73 @@
+HallValla - Forja de materiales y creación de cartas 7HDT
+==========================================================
+
+ZIP base: Hallvalla_wallace_collection_fix_7HDS.zip
+ZIP generado: Hallvalla_card_crafting_7HDT.zip
+
+Sí, comprendí la mecánica y ya la dejé aplicada.
+
+Sistema nuevo:
+- Cada rareza tiene su propio material.
+- Crear una carta cuesta 50 material de esa misma rareza.
+- Convertir una copia sobrante da 50 material de esa misma rareza.
+
+Qué se puede convertir:
+- Básicas:
+  · máximo útil en mazo: 3
+  · si tienes 4, 5 o más copias, las sobrantes se pueden convertir
+  · ejemplo: 5 Fireball -> puedes convertir 2
+
+- No Básicas:
+  · máximo útil en mazo: 1
+  · si tienes 2 o más copias iguales, las sobrantes se pueden convertir
+  · ejemplo: 2 Legendarias iguales -> puedes convertir 1
+
+Qué se puede crear:
+- Cartas de la misma rareza usando material de esa rareza.
+- Si no tienes una carta, aparece en la Forja como "crear".
+- Si es Básica, puedes crear copias hasta tener 3.
+- Si no es Básica, puedes crear hasta tener 1.
+
+UI nueva:
+- Panel de Materiales en la Forja.
+- Botón ⛏ sobre cartas con sobrantes: convierte 1 copia.
+- Botón ✚ sobre cartas que puedes crear: crea 1 copia.
+- Botón "Convertir sobrantes": convierte todas las copias sobrantes disponibles.
+
+No se tocó:
+- combate
+- IA
+- daño
+- Guardia
+- PREC/EVA
+- audio
+- assets
+- reglas de mazo 30 cartas
+
+Verificación:
+- script.js node --check: OK
+- CSS balance de llaves: OK
+
+
+Checks:
+{
+  "node_check": true,
+  "css_braces_ok": true,
+  "html_material_panel": true,
+  "craft_constants": true,
+  "collection_materials": true,
+  "craft_pool": true,
+  "forge_card_pool": true,
+  "disenchant_function": true,
+  "craft_function": true,
+  "dust_all_function": true,
+  "material_panel_function": true,
+  "render_uses_forge_pool": true,
+  "buttons_bound": true,
+  "build_7HDT": true,
+  "fix_doc_present": true,
+  "basic_surplus_5_minus_3_is_2": true,
+  "legendary_surplus_2_minus_1_is_1": true,
+  "one_surplus_gives_50": true,
+  "craft_cost_50": true
+}

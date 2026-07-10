@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDS";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HDT";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1299,12 +1299,36 @@ function applyBloodBaitAttackBonus(attacker,defender,units){
 }
 
 const DECK_RULES={basicMaxCopies:3,nonBasicMaxCopies:1,deckSize:30};
+const CRAFT_MATERIAL_COST=50;
+const CRAFT_MATERIAL_GAIN=50;
+const CRAFT_RARITY_KEYS=["basic","epic","glorious","mythic","legendary","demigod"];
 function cardRarity(card){
   return String(card?.rarity||card?.rareza||"Básica").toLowerCase();
+}
+function getCraftRarityKey(cardOrRarity){
+  const rarity=typeof cardOrRarity==="string"?cardOrRarity.toLowerCase():cardRarity(cardOrRarity);
+  if(rarity.includes("semid")||rarity.includes("demigod"))return "demigod";
+  if(rarity.includes("legend"))return "legendary";
+  if(rarity.includes("mít")||rarity.includes("mitic")||rarity.includes("mythic"))return "mythic";
+  if(rarity.includes("glor"))return "glorious";
+  if(rarity.includes("épic")||rarity.includes("epic"))return "epic";
+  return "basic";
+}
+function getCraftRarityLabel(key){
+  return {basic:"Básica",epic:"Épica",glorious:"Gloriosa",mythic:"Mítica",legendary:"Legendaria",demigod:"Semidiós"}[key]||"Básica";
+}
+function getEmptyCraftMaterials(){return CRAFT_RARITY_KEYS.reduce((acc,k)=>(acc[k]=0,acc),{});}
+function normalizeCraftMaterials(materials={}){
+  const out=getEmptyCraftMaterials();
+  CRAFT_RARITY_KEYS.forEach(k=>out[k]=Math.max(0,Number(materials?.[k]||0)));
+  return out;
 }
 function maxCopiesForCard(card){
   const rarity=cardRarity(card);
   return rarity==="básica"||rarity==="basica"||rarity==="basic"?DECK_RULES.basicMaxCopies:DECK_RULES.nonBasicMaxCopies;
+}
+function getCardSurplusCopies(card){
+  return Math.max(0,Number(card?.qty||0)-maxCopiesForCard(card));
 }
 function validateDeckList(cards=[]){
   const counts={};
@@ -8983,15 +9007,17 @@ function getPlayerCollection(){
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_collection") || "null");
     if(saved&&typeof saved === "object"){
       saved.cards=Array.isArray(saved.cards)?saved.cards.map(hydrateCardVisualData):[];
+      saved.materials=normalizeCraftMaterials(saved.materials||{});
       return saved;
     }
-    return {cards:[]};
+    return {cards:[],materials:getEmptyCraftMaterials()};
   }catch(e){
-    return {cards:[]};
+    return {cards:[],materials:getEmptyCraftMaterials()};
   }
 }
 function savePlayerCollection(collection){
-  localStorage.setItem("hallvalla_player_collection", JSON.stringify(collection));
+  const safe={...(collection||{}),cards:Array.isArray(collection?.cards)?collection.cards:[],materials:normalizeCraftMaterials(collection?.materials||{})};
+  localStorage.setItem("hallvalla_player_collection", JSON.stringify(safe));
 }
 function addCardsToCollection(cards){
   const collection = getPlayerCollection();
@@ -9406,6 +9432,127 @@ function getSanitizedPlayerCollection(){
   return cleaned.collection;
 }
 function getCollectionCardsExpanded(){const collection=getSanitizedPlayerCollection();return (collection.cards||[]).map(c=>({...hydrateCardVisualData(c),qty:c.qty||1}))}
+function getCraftableCardPool(){
+  const pools=[
+    CARD_TEMPLATES||[],
+    BASIC_MAGIC_TRAP_PACK||[],
+    IMPROVED_MAGIC_TRAP_PACK||[],
+    LEGENDARY_TRAP_CARDS||[],
+    LEGENDARY_ALLY_CARDS.filter(Boolean)||[],
+    Object.values(ADVENTURE_SPECIALS||{}),
+    BEAST_CARD_TEMPLATES||[],
+    BEAST_TRAP_CARD_TEMPLATES||[]
+  ];
+  const byKey=new Map();
+  pools.flat().filter(Boolean).forEach(card=>{
+    if(!card.key)return;
+    const hydrated=hydrateCardVisualData(card);
+    byKey.set(hydrated.key,{...hydrated});
+  });
+  return [...byKey.values()];
+}
+function getDeckBuilderCardPoolForForge(){
+  const owned=getCollectionCardsExpanded();
+  const byKey=new Map(owned.map(card=>[card.key,{...card,owned:true,craftableMissing:false}]));
+  getCraftableCardPool().forEach(card=>{
+    const existing=byKey.get(card.key);
+    if(existing){
+      byKey.set(card.key,{...hydrateCardVisualData(card),...existing});
+    }else{
+      byKey.set(card.key,{...hydrateCardVisualData(card),qty:0,owned:false,craftableMissing:true});
+    }
+  });
+  return [...byKey.values()];
+}
+function getCraftMaterials(){
+  return normalizeCraftMaterials(getPlayerCollection().materials||{});
+}
+function getMaterialAmountForCard(card){
+  return getCraftMaterials()[getCraftRarityKey(card)]||0;
+}
+function canCraftCardCopy(card){
+  return !!card&&Number(card.qty||0)<maxCopiesForCard(card)&&getMaterialAmountForCard(card)>=CRAFT_MATERIAL_COST;
+}
+function disenchantCardSurplus(cardKey){
+  const collection=getPlayerCollection();
+  const card=collection.cards.find(c=>c.key===cardKey);
+  if(!card)return false;
+  const hydrated=hydrateCardVisualData(card);
+  const surplus=Math.max(0,Number(card.qty||0)-maxCopiesForCard(hydrated));
+  if(surplus<=0){hvAlert("Solo puedes convertir copias sobrantes. Las copias que todavía puedes usar en mazo no se destruyen.","Sin sobrantes");return false;}
+  card.qty=Math.max(0,Number(card.qty||0)-1);
+  if(card.qty<=0)collection.cards=collection.cards.filter(c=>c.key!==cardKey);
+  const rarityKey=getCraftRarityKey(hydrated);
+  collection.materials=normalizeCraftMaterials(collection.materials||{});
+  collection.materials[rarityKey]=(collection.materials[rarityKey]||0)+CRAFT_MATERIAL_GAIN;
+  savePlayerCollection(collection);
+  renderNotificationBadge();
+  renderHomeProgress();
+  renderDeckBuilder();
+  return true;
+}
+function craftCardCopy(cardKey){
+  const template=getCraftableCardPool().find(c=>c.key===cardKey);
+  if(!template)return false;
+  const collection=getPlayerCollection();
+  collection.cards=Array.isArray(collection.cards)?collection.cards:[];
+  collection.materials=normalizeCraftMaterials(collection.materials||{});
+  const rarityKey=getCraftRarityKey(template);
+  if((collection.materials[rarityKey]||0)<CRAFT_MATERIAL_COST){
+    hvAlert(`Necesitas ${CRAFT_MATERIAL_COST} material ${getCraftRarityLabel(rarityKey)} para crear esta carta.`,`Material insuficiente`);
+    return false;
+  }
+  const existing=collection.cards.find(c=>c.key===template.key);
+  const currentQty=Number(existing?.qty||0);
+  if(currentQty>=maxCopiesForCard(template)){
+    hvAlert("Ya tienes el máximo útil de esta carta para mazo.","Carta completa");
+    return false;
+  }
+  collection.materials[rarityKey]-=CRAFT_MATERIAL_COST;
+  if(existing)existing.qty=currentQty+1;
+  else collection.cards.push({...hydrateCardVisualData(template),qty:1});
+  savePlayerCollection(collection);
+  renderNotificationBadge();
+  renderHomeProgress();
+  renderDeckBuilder();
+  return true;
+}
+function disenchantAllSurplusCards(){
+  const collection=getPlayerCollection();
+  collection.cards=Array.isArray(collection.cards)?collection.cards:[];
+  collection.materials=normalizeCraftMaterials(collection.materials||{});
+  let destroyed=0;
+  collection.cards.forEach(card=>{
+    const hydrated=hydrateCardVisualData(card);
+    const surplus=Math.max(0,Number(card.qty||0)-maxCopiesForCard(hydrated));
+    if(surplus>0){
+      const rarityKey=getCraftRarityKey(hydrated);
+      card.qty=Number(card.qty||0)-surplus;
+      collection.materials[rarityKey]=(collection.materials[rarityKey]||0)+(surplus*CRAFT_MATERIAL_GAIN);
+      destroyed+=surplus;
+    }
+  });
+  collection.cards=collection.cards.filter(c=>Number(c.qty||0)>0);
+  if(destroyed<=0){hvAlert("No tienes copias sobrantes para convertir ahora mismo.","Sin sobrantes");return false;}
+  savePlayerCollection(collection);
+  renderNotificationBadge();
+  renderHomeProgress();
+  renderDeckBuilder();
+  hvAlert(`Convertiste ${destroyed} copia${destroyed===1?"":"s"} sobrante${destroyed===1?"":"s"} en material de rareza.`,"Material obtenido");
+  return true;
+}
+function renderCraftMaterialPanel(){
+  const panel=$("craftMaterialPanel");
+  if(!panel)return;
+  const materials=getCraftMaterials();
+  const surplus=getCollectionCardsExpanded().reduce((sum,c)=>sum+getCardSurplusCopies(c),0);
+  const rows=CRAFT_RARITY_KEYS.map(k=>`<span class="craft-mat-pill ${k}"><b>${getCraftRarityLabel(k)}</b><em>${materials[k]||0}</em></span>`).join("");
+  panel.innerHTML=`<div class="craft-mat-title"><b>Materiales</b><small>Crear: ${CRAFT_MATERIAL_COST}</small></div>
+    <div class="craft-mat-grid">${rows}</div>
+    <button id="dustAllSurplusBtn" class="craft-dust-all" type="button" ${surplus>0?"":"disabled"}>Convertir sobrantes ${surplus>0?`(${surplus})`:""}</button>`;
+  const btn=$("dustAllSurplusBtn");
+  if(btn)btn.addEventListener("click",disenchantAllSurplusCards);
+}
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
 function sanitizeDeckDraftToCollection(deck=[]){
   const collection=[...getCollectionCardsExpanded(),...getUnlockedAdventureSpecialCollectionTemplates()];
@@ -9465,16 +9612,25 @@ function getDeckBuilderTypeGlyph(card){
   return "C";
 }
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1}={}){
-  const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"}`;
+  const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""}`;
   const name=escapeHtml(card?.name||"Carta");
   const dragAttrs=disabled&&mode==="collection"?'draggable="false"':'draggable="true"';
   const data=mode==="deck"
     ? `data-draft-index="${index}" data-deck-card-key="${escapeHtml(card.key||"")}"`
     : `data-deck-card-key="${escapeHtml(card.key||"")}"`;
   const badge=mode==="deck"?`${index+1}`:`${used}/${maxAllowed}`;
+  const surplus=getCardSurplusCopies(card);
+  const canCraft=mode==="collection"&&canCraftCardCopy(card);
+  const material=getMaterialAmountForCard(card);
   const actionBtn=mode==="deck"
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
     : `<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Agregar ${name}">+</button>`;
+  const dustBtn=mode==="collection"&&surplus>0
+    ? `<button class="deck-mini-dust" type="button" data-dust-card="${escapeHtml(card.key||"")}" title="Convertir copia sobrante en +${CRAFT_MATERIAL_GAIN} material ${getCraftRarityLabel(getCraftRarityKey(card))}">⛏</button>`
+    : "";
+  const craftBtn=mode==="collection"&&Number(card.qty||0)<maxCopiesForCard(card)
+    ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="Crear por ${CRAFT_MATERIAL_COST} material ${getCraftRarityLabel(getCraftRarityKey(card))}. Tienes ${material}.">✚</button>`
+    : "";
   return `<div class="${cls}" ${data} data-deck-origin="${mode}" ${dragAttrs} title="${name}">
     <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
     <span class="deck-mini-type">${getDeckBuilderTypeGlyph(card)}</span>
@@ -9482,6 +9638,8 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
     <span class="deck-mini-name">${name}</span>
     ${actionBtn}
+    ${dustBtn}
+    ${craftBtn}
   </div>`;
 }
 function makeDeckBuilderUnitPreview(card){
@@ -9545,7 +9703,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   const clearDrop=()=>{setDeckBuilderDropActive(collectionGrid,false);setDeckBuilderDropActive(deckList,false);};
   collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
     el.addEventListener("click",ev=>{
-      if(ev.target.closest(".deck-mini-plus"))return;
+      if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<450)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
       showDeckBuilderCardDetail(card);
@@ -9563,7 +9721,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   });
   deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
     el.addEventListener("click",ev=>{
-      if(ev.target.closest(".deck-mini-remove"))return;
+      if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<450)return;
       const idx=Number(el.dataset.draftIndex);
       showDeckBuilderCardDetail(currentDeckDraft[idx]);
@@ -9581,6 +9739,14 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   collectionGrid.querySelectorAll("[data-add-card]").forEach(btn=>btn.addEventListener("click",ev=>{
     ev.stopPropagation();
     addCardToDeck(btn.dataset.addCard);
+  }));
+  collectionGrid.querySelectorAll("[data-dust-card]").forEach(btn=>btn.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    disenchantCardSurplus(btn.dataset.dustCard);
+  }));
+  collectionGrid.querySelectorAll("[data-craft-card]").forEach(btn=>btn.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    craftCardCopy(btn.dataset.craftCard);
   }));
   deckList.querySelectorAll("[data-remove-index]").forEach(btn=>btn.addEventListener("click",ev=>{
     ev.stopPropagation();
@@ -9619,7 +9785,7 @@ function renderDeckBuilder(){
   const search=($("deckSearchInput")?.value||"").toLowerCase().trim();
   const typeFilter=$("deckTypeFilter")?.value||"all";
   const rarityFilter=$("deckRarityFilter")?.value||"all";
-  const cards=getCollectionCardsExpanded().filter(card=>{
+  const cards=getDeckBuilderCardPoolForForge().filter(card=>{
     const hay=`${card.name||""} ${card.text||""}`.toLowerCase();
     const typeOk=typeFilter==="all"||card.type===typeFilter;
     const rarity=cardRarity(card);
@@ -9645,6 +9811,7 @@ function renderDeckBuilder(){
   const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot"><span>${currentDeckDraft.length+i+1}</span></div>`).join("");
   deckList.innerHTML=`<div class="deck-drop-hint">Arrastra cartas aquí para meterlas al mazo. Arrastra cartas del mazo hacia la izquierda para sacarlas.</div>${deckCardsHtml}${emptyHtml}`;
   bindDeckBuilderDragAndClick(collectionGrid,deckList);
+  renderCraftMaterialPanel();
   const validation=validateDeckList(currentDeckDraft);
   if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${DECK_RULES.deckSize}`;
   if($("deckValidText"))$("deckValidText").textContent=validation.valid?"Mazo válido":(currentDeckDraft.length<DECK_RULES.deckSize?"Mazo incompleto":validation.errors[0]||"Mazo inválido");
