@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEC";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEF";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1137,7 +1137,7 @@ function getAttackSoundForUnit(unit){
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"berserker_de_oso",name:"Berserker de Oso",type:"unit",icon:"🐻",portrait:CARD_PORTRAITS.berserkerDeOso,cost:3,hp:5,atk:5,guard:1,dex:3,agi:2,mov:1,range:1,rarity:"Básica",text:"Furia del Oso: al atacar, si traspasa Guardia y causa daño a HP, destruye la Guardia base de la unidad atacada. Esa Guardia no se regenera mientras la unidad siga en campo. Temerario: inmune a Miedo. Regla de hacha: recibe +2 Destreza base."},{key:"ulfhednar",name:"Ulfhednar",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ulfhednar,cost:2,hp:3,atk:3,guard:1,dex:5,agi:4,mov:1,range:2,rarity:"Básica",text:"Cacería de Sangre: cuando declara un ataque, tiene 50% de probabilidad de hacer Golpe Crítico. Si activa Golpe Crítico, hace 200% de daño durante ese ataque. Usa hachas arrojadizas, por eso tiene Rango 2. Regla de hacha: recibe +2 Destreza base."},{key:"skipar_del_drakkar",name:"Skipar del Drakkar",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.skiparDelDrakkar,cost:2,hp:4,atk:3,guard:2,dex:4,agi:3,mov:1,range:1,rarity:"Básica",text:"Desembarco Rápido: si fue invocado este turno, puede moverse 1 casilla extra este turno. Saqueo de Guerra: cuando destruye una unidad enemiga, el líder rival descarta hasta 2 cartas de su mano. Si solo tiene 1, descarta 1. Regla de espada: recibe +3 Guardia base."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida. Regla de lanza: cuando una unidad enemiga la ataca dentro de su alcance, ataca primero una vez por turno. No funciona contra Ataque en Picada del halcón."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas. No se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."},{key:"healing_light",name:"Luz de sanación",type:"spell",icon:"✨",cost:2,spell:"heal",heal:3,text:"Cura 3 HP a una unidad aliada sin superar su vida máxima."}];
+const CARD_TEMPLATES=[{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Regla de hacha: recibe +2 Destreza base. Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"berserker_de_oso",name:"Berserker de Oso",type:"unit",icon:"🐻",portrait:CARD_PORTRAITS.berserkerDeOso,cost:3,hp:5,atk:5,guard:1,dex:3,agi:2,mov:1,range:1,rarity:"Básica",text:"Furia del Oso: al atacar, si traspasa Guardia y causa daño a HP, destruye la Guardia base de la unidad atacada. Esa Guardia no se regenera mientras la unidad siga en campo. Temerario: inmune a Miedo. Regla de hacha: recibe +2 Destreza base."},{key:"ulfhednar",name:"Ulfhednar",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ulfhednar,cost:2,hp:3,atk:3,guard:1,dex:5,agi:4,mov:1,range:2,rarity:"Básica",text:"Cacería de Sangre: cuando declara un ataque, tiene 50% de probabilidad de hacer Golpe Crítico. Si activa Golpe Crítico, hace 200% de daño durante ese ataque. Usa hachas arrojadizas, por eso tiene Rango 2. Regla de hacha: recibe +2 Destreza base."},{key:"skipar_del_drakkar",name:"Skipar del Drakkar",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.skiparDelDrakkar,cost:2,hp:4,atk:3,guard:2,dex:4,agi:3,mov:1,range:1,rarity:"Básica",text:"Desembarco Rápido: si fue invocado este turno, puede moverse 1 casilla extra este turno. Saqueo de Guerra: cuando destruye una unidad enemiga, el líder rival descarta hasta 2 cartas de su mano. Si solo tiene 1, descarta 1. Regla de espada: recibe +3 Guardia base."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,text:"Formación de picas: sigue la regla general de las lanzas y ataca primero una vez por turno cuando un enemigo la ataca dentro de su alcance. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida. Regla de lanza: cuando una unidad enemiga la ataca dentro de su alcance, ataca primero una vez por turno. No funciona contra Ataque en Picada del halcón."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas. No se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:4,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌫️",cost:1,spell:"damage",damage:2,text:"Hace 2 de daño a una unidad o líder rival."},{key:"blessing",name:"Bendición del faraón",type:"spell",icon:"☀️",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca a una unidad enemiga desde una celda más cercana al líder rival que la celda del objetivo, obtiene +6 Ataque durante ese combate. El ataque sigue las reglas normales de combate. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y queda con 1 Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -1202,18 +1202,26 @@ const BEAST_TRAP_CARD_TEMPLATES=[
 CARD_TEMPLATES.push(...BEAST_CARD_TEMPLATES,...BEAST_TRAP_CARD_TEMPLATES);
 
 const STARTER_BASIC_DECK_KEYS=[
-  "archer","archer","archer",
-  "cavalry","cavalry","cavalry",
-  "spearman","spearman","spearman",
-  "guardian","guardian","guardian",
-  "scout","scout","scout",
-  "berserker","berserker","berserker",
-  "arcane_adept","arcane_adept","arcane_adept",
-  "fireball","fireball","fireball",
-  "heal","heal","heal",
+  "scout","scout",
+  "archer","archer",
+  "arcane_adept","arcane_adept",
+  "spearman","spearman",
+  "cavalry","cavalry",
+  "berserker","berserker",
+  "guardian","guardian",
+  "berserker_de_oso",
+  "ulfhednar",
+  "skipar_del_drakkar",
+  "samurai_katana",
+  "saboteador_iga",
+  "bolt",
+  "blessing",
+  "fireball","fireball",
+  "heal","heal",
   "shield_wall",
+  "inspiration",
   "smoke_bomb",
-  "inspiration"
+  "warning_rune"
 ];
 function isStarterBasicCard(card){
   const rarity=String(card?.rarity||card?.rareza||"Básica").toLowerCase();
@@ -2558,15 +2566,32 @@ function requireLeaderSelection(force=false){
 function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=isInitialLeaderAllowed(type)?LEADER_DATA[type]:null;const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
 function applyLeaderToCard(card,leaderType){return {...card}}
 function makeCard(t,owner,leaderType){return {...t,id:uid8(),owner,leaderType}}
-function getDefaultDeckTemplates(){
-  const deck=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
+function getStarterBasicDeckTemplates(){
+  return STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).slice(0,Math.max(0,DECK_RULES.deckSize-1));
+}
+function getStarterChosenSpecialCard(selectedSpecial=""){
+  const key=selectedSpecial||getAdventureProgress?.().selectedSpecial||pendingAdventureSpecial||"mulan";
+  return ADVENTURE_SPECIALS[key]?{...ADVENTURE_SPECIALS[key]}:null;
+}
+function getDefaultDeckTemplates(selectedSpecial=""){
+  const base=getStarterBasicDeckTemplates();
+  const special=getStarterChosenSpecialCard(selectedSpecial);
+  const deck=special?[...base,special]:base;
+  return deck.slice(0,DECK_RULES.deckSize);
+}
+function getAiBasicDeckTemplates(){
+  const base=getStarterBasicDeckTemplates();
+  const deck=[...base];
+  let i=0;
+  while(deck.length<DECK_RULES.deckSize&&base.length){
+    deck.push({...base[i%base.length]});
+    i++;
+  }
   return deck.slice(0,DECK_RULES.deckSize);
 }
 function getStarterAdventureDeckTemplates(selectedSpecial=""){
-  const base=getDefaultDeckTemplates().slice(0,Math.max(0,DECK_RULES.deckSize-1));
-  const special=ADVENTURE_SPECIALS[selectedSpecial]?{...ADVENTURE_SPECIALS[selectedSpecial]}:null;
-  const starter=special?[...base,special]:getDefaultDeckTemplates();
-  return starter
+  const special=getStarterChosenSpecialCard(selectedSpecial);
+  return getDefaultDeckTemplates(selectedSpecial)
     .filter(card=>isStarterBasicCard(card)||(special&&card.key===special.key))
     .slice(0,DECK_RULES.deckSize);
 }
@@ -2595,9 +2620,10 @@ function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}
 
 function getStarterDeckAudit(){
   const deck=getDefaultDeckTemplates();
+  const specialKeys=new Set(Object.keys(ADVENTURE_SPECIALS||{}));
   return {
     size:deck.length,
-    invalid:deck.filter(c=>!isStarterBasicCard(c)).map(c=>`${c.name||c.key} (${c.rarity||"sin rareza"})`)
+    invalid:deck.filter(c=>!isStarterBasicCard(c)&&!specialKeys.has(c.key)).map(c=>`${c.name||c.key} (${c.rarity||"sin rareza"})`)
   };
 }
 
@@ -9172,7 +9198,7 @@ const BASIC_MAGIC_TRAP_PACK = [
   },
   {
     key:"heal",
-    name:"Heal",
+    name:"Luz de sanación",
     type:"spell",
     icon:"✨",
     portrait:"assets/cards/basic/heal.webp",
@@ -9334,7 +9360,7 @@ function getBattleRewardLabel(battle){
   if(battle.gold)parts.push(`${battle.gold} Oro`);
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
-  else if(battle.cardPack)parts.push(battle.packType==="beast_pack"?"Paquete de Bestias x1":(battle.packType==="improved_magic_trap"?"Paquete reforzado de 3 magia/trampa":"Paquete básico de 3 magia/trampa"));
+  else if(battle.cardPack)parts.push(battle.packType==="beast_pack"?"Paquete de Bestias x1":(battle.packType==="improved_magic_trap"?"Paquete reforzado de 3 magia/trampa":"Paquete básico de 3 cartas básicas aleatorias"));
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   return parts.join(" · ");
 }
@@ -9412,13 +9438,13 @@ function openPackShop(){
   }else{
     const canBuy=(profile.gold||0)>=BASIC_PACK_GOLD_COST;
     content.innerHTML=`<div class="pack-shop-item">
-      <div class="pack-shop-pack-art"><div class="pack-rune">✦</div><strong>Pack básico</strong><span>5 cartas básicas</span></div>
+      <div class="pack-shop-pack-art"><div class="pack-rune">✦</div><strong>Pack básico</strong><span>3 cartas básicas</span></div>
       <div class="pack-shop-copy">
         <h3>Pack básico</h3>
-        <p>Contiene 5 cartas básicas de magia y trampa. Se compra con el oro ganado en aventura.</p>
+        <p>Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.</p>
         <ul>
           <li>Costo: <b>${BASIC_PACK_GOLD_COST} oro</b></li>
-          <li>Contenido: <b>5 cartas básicas</b></li>
+          <li>Contenido: <b>3 cartas básicas aleatorias</b></li>
           <li>Se abre como paquete pendiente.</li>
         </ul>
       </div>
@@ -9482,7 +9508,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     const draw=drawCards(shuffle(beastDeck.map(c=>makeCard(c,2,enemyLeaderType))),[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
-  const baseTemplates=getDefaultDeckTemplates();
+  const baseTemplates=getAiBasicDeckTemplates();
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
   // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
   // Forzamos una unidad básica barata en la mano inicial y dejamos el resto aleatorio.
@@ -9560,10 +9586,21 @@ function getRandomBeastEventCards(count=3){
   for(let i=0;i<count;i++){const card=getRandomBeastEventCard();if(card)out.push(card);}
   return out;
 }
+function isBasicNonBeastPackCard(card){
+  const rarity=String(card?.rarity||card?.rareza||"Básica").toLowerCase();
+  return !!card&&card.key&&card.type&&(rarity==="básica"||rarity==="basica"||rarity==="basic")&&!card.special&&!isBeastCollectionCard(card);
+}
+function getBasicNonBeastPackPool(){
+  const byKey=new Map();
+  [...(CARD_TEMPLATES||[]),...(BASIC_MAGIC_TRAP_PACK||[])].filter(isBasicNonBeastPackCard).forEach(card=>{
+    byKey.set(card.key,{...hydrateCardVisualData(card)});
+  });
+  return [...byKey.values()];
+}
 function getEpicGuaranteedPackCards(){
   const epicPool=IMPROVED_MAGIC_TRAP_PACK.filter(c=>getCraftRarityKey(c)==="epic");
   const guaranteed=randomPackCards(epicPool.length?epicPool:IMPROVED_MAGIC_TRAP_PACK,1);
-  const fillers=randomPackCards(BASIC_MAGIC_TRAP_PACK,2);
+  const fillers=randomPackCards(getBasicNonBeastPackPool(),2);
   return [...guaranteed,...fillers].slice(0,3);
 }
 function getPackCards(pack){
@@ -9573,7 +9610,7 @@ function getPackCards(pack){
   if(pack.type==="basic_epic_guaranteed")return getEpicGuaranteedPackCards();
   if(pack.type==="improved_magic_trap")return randomPackCards(IMPROVED_MAGIC_TRAP_PACK,3);
   if(pack.type==="beast_pack")return getRandomBeastEventCards(3);
-  return randomPackCards(BASIC_MAGIC_TRAP_PACK,3);
+  return randomPackCards(getBasicNonBeastPackPool(),3);
 }
 function recordBasicPackOpeningAndMaybeBonus(pack){
   if(!pack||pack.type!=="basic_magic_trap")return false;
@@ -9832,12 +9869,29 @@ function updateBulkDustButton(){
 }
 function renderCraftMaterialPanel(){
   const panel=$("craftMaterialPanel");
-  if(!panel)return;
+  const summary=$("craftMaterialSummary");
   const materials=getCraftMaterials();
-  const rows=CRAFT_RARITY_KEYS.map(k=>`<span class="craft-mat-pill ${k}"><b>${getCraftRarityLabel(k)}</b><em>${materials[k]||0}</em></span>`).join("");
-  panel.innerHTML=`<div class="craft-mat-title"><b>Materiales</b><small>Crear: 800-2800</small></div>
-    <div class="craft-mat-grid">${rows}</div>
-    <small class="craft-mat-note">Usa el botón de la esquina superior para convertir todos los sobrantes de una vez.</small>`;
+  const total=CRAFT_RARITY_KEYS.reduce((sum,k)=>sum+Number(materials[k]||0),0);
+  const rows=CRAFT_RARITY_KEYS.map(k=>{
+    const amount=Number(materials[k]||0);
+    const cost=getCraftCostByRarityKey(k);
+    const can=amount>=cost;
+    return `<span class="craft-mat-pill ${k} ${can?"can-create":"cant-create"}"><b>${getCraftRarityLabel(k)}</b><em>${amount}</em><small>crear ${cost}</small></span>`;
+  }).join("");
+  const summaryRows=CRAFT_RARITY_KEYS.map(k=>{
+    const amount=Number(materials[k]||0);
+    const cost=getCraftCostByRarityKey(k);
+    const can=amount>=cost;
+    return `<span class="craft-summary-pill ${k} ${can?"can-create":"cant-create"}" title="${getCraftRarityLabel(k)}: tienes ${amount}. Crear cuesta ${cost}."><b>${getCraftRarityLabel(k)}</b><em>${amount}</em><small>/${cost}</small></span>`;
+  }).join("");
+  if(panel){
+    panel.innerHTML=`<div class="craft-mat-title"><b>Materiales para crear cartas</b><small>Total ${total}</small></div>
+      <div class="craft-mat-grid">${rows}</div>
+      <small class="craft-mat-note">Estos son tus materiales actuales por rareza. Convierte sobrantes para subirlos; cada carta se crea con material de su misma rareza.</small>`;
+  }
+  if(summary){
+    summary.innerHTML=`<div class="craft-summary-title">Materiales de creación <strong>${total}</strong></div><div class="craft-summary-grid">${summaryRows}</div>`;
+  }
   updateBulkDustButton();
 }
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
@@ -9915,8 +9969,15 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const dustBtn=mode==="collection"&&surplus>0
     ? `<button class="deck-mini-dust" type="button" data-dust-card="${escapeHtml(card.key||"")}" title="Convertir copia sobrante en +${CRAFT_MATERIAL_GAIN} material ${getCraftRarityLabel(getCraftRarityKey(card))}">⛏</button>`
     : "";
+  const craftCost=getCraftCostForCard(card);
+  const craftRarityLabel=getCraftRarityLabel(getCraftRarityKey(card));
+  const craftLock=getCraftLockReason(card);
+  const showMaterialLine=mode==="collection"&&(card?.craftableMissing||Number(card.qty||0)<maxCopiesForCard(card));
+  const materialLine=showMaterialLine
+    ? `<span class="deck-mini-material ${material>=craftCost&&!craftLock?"can-create":"cant-create"}" title="${craftLock||`Material ${craftRarityLabel}: tienes ${material} de ${craftCost}.`}">${craftRarityLabel}: ${material}/${craftCost}</span>`
+    : "";
   const craftBtn=mode==="collection"&&Number(card.qty||0)<maxCopiesForCard(card)
-    ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="${getCraftLockReason(card)||`Crear por ${getCraftCostForCard(card)} material ${getCraftRarityLabel(getCraftRarityKey(card))}. Tienes ${material}.`}">✚</button>`
+    ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="${craftLock||`Crear por ${craftCost} material ${craftRarityLabel}. Tienes ${material}.`}">✚</button>`
     : "";
   return `<div class="${cls}" ${data} data-deck-origin="${mode}" ${dragAttrs} title="${name}">
     <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
@@ -9924,6 +9985,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <span class="deck-mini-badge">${escapeHtml(String(badge))}</span>
     <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
     <span class="deck-mini-name">${name}</span>
+    ${materialLine}
     ${actionBtn}
     ${dustBtn}
     ${craftBtn}

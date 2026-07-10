@@ -1,0 +1,71 @@
+HallValla - Fix visual de materiales de creación 7HED
+=====================================================
+
+Base usada:
+- Hallvalla_deep_audit_clean_7HEC.zip
+
+Problema:
+- En la Forja no quedaba claro ni visible cuánto material tenía el jugador para crear cartas.
+- El panel existía, pero estaba escondido en el lateral y las mini-cartas solo mostraban el dato en el tooltip del botón de crear.
+
+Cambios aplicados:
+1. Se agregó un wallet visible de materiales en la cabecera de la Forja:
+   - id="craftMaterialSummary"
+   - Muestra Básica, Épica, Gloriosa, Mítica, Legendaria y Semidiós.
+   - Cada rareza muestra: material actual / costo de creación.
+
+2. Se reforzó el panel lateral:
+   - Ahora se titula "Materiales para crear cartas".
+   - Muestra total de materiales.
+   - Cada rareza muestra cuánto tienes y cuánto cuesta crear.
+
+3. Se agregaron etiquetas visibles en las mini-cartas:
+   - Ejemplo: "Básica: 250/800"
+   - Ya no depende solo del tooltip.
+   - Si tienes material suficiente, se marca visualmente.
+
+4. Se actualizó cache-buster:
+   - script.js?v=craft-materials-7hed
+   - styles.css?v=craft-materials-7hed
+
+No se tocó:
+- Combate
+- IA
+- cartas vikingas
+- cartas samurái
+- cartas ninja
+- sistema de packs
+- sistema de colección
+- costos de creación
+- conversión de sobrantes
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "css_braces": [
+    3760,
+    3760
+  ],
+  "version_7HED": true,
+  "html_cache_7HED": true,
+  "header_summary_html": true,
+  "render_summary_code": true,
+  "side_panel_title": true,
+  "mini_card_material_line": true,
+  "css_summary": true,
+  "css_mini_material": true
+}
+
+Assets faltantes detectados en código/HTML/CSS:
+- 0
+
+Archivos de assets:
+- 308
+
+Versión interna:
+- v8_LOCAL_RARITY_REAL_BOARD_7HED
+
+Nota de auditoría: los nombres attack_arrow.ogg y attack_sword.ogg aparecen solo dentro de reportes anteriores como archivos removidos, no como referencias vivas del juego.

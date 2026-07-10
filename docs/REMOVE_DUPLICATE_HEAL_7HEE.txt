@@ -1,0 +1,51 @@
+HallValla - Eliminación de cura duplicada 7HEE
+==============================================
+
+Base usada:
+- Hallvalla_craft_materials_visible_7HED.zip
+
+Problema:
+- Existían dos cartas con la misma función:
+  1. healing_light / Luz de sanación
+  2. heal / Heal
+- Ambas curaban 3 HP, costaban 2 y usaban spell:"heal".
+
+Cambio aplicado:
+- Se eliminó la carta vieja duplicada:
+  - key: healing_light
+- Se conservó la carta real del sistema de packs/forja:
+  - key: heal
+  - asset: assets/cards/basic/heal.webp
+- La carta conservada fue renombrada visualmente:
+  - de "Heal"
+  - a "Luz de sanación"
+
+Resultado:
+- Ahora solo existe una cura básica.
+- El starter y los packs pueden seguir usando key:"heal" sin romper nada.
+- En la UI el jugador verá "Luz de sanación", no "Heal".
+
+No se tocó:
+- Costos de creación
+- Forja de materiales
+- Combate
+- IA
+- Cartas vikingas
+- Cartas ninja
+- Cartas samurái
+- Packs, salvo eliminar el duplicado viejo del pool normal
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "version_7HEE": true,
+  "html_cache_7HEE": true,
+  "healing_light_removed": true,
+  "heal_key_kept": true,
+  "luz_de_sanacion_single_name": true,
+  "heal_english_removed": true,
+  "heal_asset_exists": true
+}

@@ -16687,3 +16687,125 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
+
+
+/* 7HED · Wallet visible de materiales de creación */
+.craft-material-summary{
+  width:100%;
+  min-width:220px;
+  max-width:420px;
+  border:1px solid rgba(255,209,102,.22);
+  border-radius:14px;
+  padding:8px;
+  background:linear-gradient(180deg,rgba(20,14,8,.92),rgba(0,0,0,.62));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 0 18px rgba(255,209,102,.08);
+}
+.craft-summary-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:6px;
+  color:#ffe8ae;
+  font-size:10.5px;
+  font-weight:900;
+  letter-spacing:.02em;
+}
+.craft-summary-title strong{
+  color:#fff;
+  font-size:12px;
+}
+.craft-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+}
+.craft-summary-pill{
+  border:1px solid rgba(255,209,102,.20);
+  border-radius:10px;
+  padding:4px 5px;
+  background:rgba(0,0,0,.34);
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+  gap:2px;
+  color:#f6ddb0;
+  font-size:8.8px;
+  line-height:1;
+  min-width:0;
+}
+.craft-summary-pill b{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.craft-summary-pill em{
+  font-style:normal;
+  font-weight:1000;
+  color:#fff5c8;
+}
+.craft-summary-pill small{
+  color:#b9a47e;
+  font-size:8px;
+}
+.craft-summary-pill.can-create,
+.craft-mat-pill.can-create{
+  border-color:rgba(156,255,142,.42);
+  box-shadow:0 0 12px rgba(156,255,142,.10);
+}
+.craft-summary-pill.can-create em,
+.craft-mat-pill.can-create em{
+  color:#baffac;
+}
+.craft-mat-pill{
+  align-items:center;
+  min-height:28px;
+}
+.craft-mat-pill small{
+  color:#bba47a;
+  font-size:8px;
+  margin-left:4px;
+}
+.deck-mini-material{
+  position:absolute;
+  left:7px;
+  right:42px;
+  bottom:6px;
+  z-index:3;
+  min-height:16px;
+  border-radius:999px;
+  padding:2px 6px;
+  background:rgba(0,0,0,.68);
+  border:1px solid rgba(255,209,102,.20);
+  color:#ead29d;
+  font-size:8.2px;
+  font-weight:900;
+  line-height:1.2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.deck-mini-material.can-create{
+  color:#baffac;
+  border-color:rgba(156,255,142,.42);
+  box-shadow:0 0 10px rgba(156,255,142,.10);
+}
+.deck-mini-material.cant-create{
+  color:#e6c995;
+}
+.deck-mini-card.craft-missing .deck-mini-name{
+  bottom:25px;
+}
+.deck-mini-card.craft-missing .deck-mini-material{
+  right:7px;
+}
+@media (max-width:900px){
+  .craft-material-summary{
+    max-width:none;
+    min-width:0;
+  }
+  .craft-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
