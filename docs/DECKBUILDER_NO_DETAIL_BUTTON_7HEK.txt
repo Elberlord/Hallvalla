@@ -1,0 +1,61 @@
+HallValla - Forja sin botón Ver detalles 7HEK
+=============================================
+
+Base usada:
+- Hallvalla_deckbuilder_pagination_actions_7HEJ.zip
+
+Cambio solicitado:
+- Quitar el botón visible "Ver detalles".
+- Dejar que el detalle se abra al tocar/clickear cualquier parte de la carta.
+- Mantener fuera de ese comportamiento los botones +, crear, convertir y quitar.
+
+Cambios aplicados:
+1. Se eliminó el botón visible:
+   - .deck-mini-detail
+   - texto "Ver detalles" dentro de la mini-carta
+
+2. Ahora la carta completa funciona como zona de detalle:
+   - click/tap sobre la carta disponible abre detalle
+   - click/tap sobre carta del mazo abre detalle
+
+3. Se mantienen botones separados:
+   - + agrega carta
+   - × quita carta
+   - crear sigue creando
+   - convertir sigue convirtiendo
+   - esos botones no abren detalle
+
+4. Se conservó lo anterior:
+   - paginación de 14 cartas
+   - flechas Anterior/Siguiente
+   - HUD de acciones a la derecha en móvil horizontal
+
+No se tocó:
+- combate
+- IA
+- starter
+- packs
+- costos de materiales
+- lógica de crear/agregar/quitar cartas
+- líderes
+- stats de cartas
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "version_7HEK": true,
+  "cache_bust_js": true,
+  "cache_bust_css": true,
+  "missing_assets_count": 0,
+  "no_visible_detail_button_in_mini_html": true,
+  "whole_collection_card_opens_detail": true,
+  "whole_deck_card_opens_detail": true,
+  "plus_create_dust_ignored": true,
+  "remove_ignored_in_deck": true,
+  "detail_button_css_hidden": true,
+  "pager_still_present": true,
+  "action_hud_right_still_present": true
+}

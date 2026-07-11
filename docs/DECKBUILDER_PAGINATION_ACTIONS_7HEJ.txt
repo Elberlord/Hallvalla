@@ -1,0 +1,69 @@
+HallValla - Forja paginada + acciones móviles 7HEJ
+===================================================
+
+Base usada:
+- Hallvalla_mobile_leader_size_7HEI.zip
+
+Problemas reportados:
+1. En la Forja era difícil tocar "Ver" para abrir detalles.
+2. No se podía navegar cómodamente por todas las cartas si no se sabía el nombre.
+3. En móvil horizontal, el HUD de Acciones quedaba demasiado centrado en lugar de ir a la derecha como en PC.
+
+Cambios aplicados:
+1. Forja paginada:
+   - Cartas disponibles ahora muestra máximo 14 cartas por página.
+   - Se agregó paginador debajo:
+     * ‹ Anterior
+     * Página X/Y
+     * Siguiente ›
+   - El contador muestra el rango actual: ejemplo 1-14 de 36.
+   - Al cambiar búsqueda, tipo o rareza, la página vuelve a 1 automáticamente.
+
+2. Click/tap más fácil:
+   - Se eliminó el mini "Ver" difícil de tocar.
+   - Cada carta ahora tiene botón grande "Ver detalles".
+   - También se puede tocar la carta para abrir el detalle.
+   - Se desactivó el draggable nativo en mini-cartas para que el clic no se convierta en arrastre accidental.
+   - Los botones +, ×, crear y convertir siguen funcionando.
+
+3. Mejor lectura:
+   - Con solo navegar páginas puedes ver cartas aunque no sepas su nombre.
+   - Se mantiene el detalle estratégico agregado en 7HEH.
+
+4. HUD de Acciones móvil horizontal:
+   - El panel .side se reubica a la derecha en móvil horizontal.
+   - Queda centrado verticalmente en el lado derecho, más parecido a PC.
+   - La mano se mueve para no quedar debajo del panel de acciones.
+   - El panel no debe quedar en el centro del tablero.
+
+No se tocó:
+- combate
+- IA
+- starter
+- packs
+- costos de materiales
+- lógica de crear/agregar/quitar cartas
+- líderes
+- stats de cartas
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "version_7HEJ": true,
+  "cache_bust_js": true,
+  "cache_bust_css": true,
+  "missing_assets_count": 0,
+  "pager_html": true,
+  "page_size_14": true,
+  "page_slice": true,
+  "pager_buttons": true,
+  "filter_resets_page": true,
+  "detail_button": true,
+  "old_tiny_ver_removed": true,
+  "drag_disabled": true,
+  "action_hud_right_mobile": true,
+  "hand_drawer_avoids_actions": true
+}

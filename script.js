@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEH";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEK";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9542,6 +9542,8 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
 let activePackOpening=null;
 let activePackCards=[];
 let currentDeckDraft=[];
+let deckBuilderCollectionPage=0;
+const DECK_BUILDER_COLLECTION_PAGE_SIZE=14;
 let deckBuilderDragPayload=null;
 let deckBuilderDragStartedAt=0;
 
@@ -9916,6 +9918,7 @@ function openDeckBuilder(){
   ensureStarterDeckCollection();
   const saved=sanitizeDeckDraftToCollection(getSavedDeck());
   currentDeckDraft=validateDeckList(saved).valid?saved:getDefaultDeckTemplates().map(c=>({...c,qty:1}));
+  deckBuilderCollectionPage=0;
   $("deckBuilderPanel").classList.remove("hidden");
   renderDeckBuilder();
 }
@@ -9955,7 +9958,7 @@ function getDeckBuilderTypeGlyph(card){
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1}={}){
   const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""}`;
   const name=escapeHtml(card?.name||"Carta");
-  const dragAttrs=disabled&&mode==="collection"?'draggable="false"':'draggable="true"';
+  const dragAttrs='draggable="false"';
   const data=mode==="deck"
     ? `data-draft-index="${index}" data-deck-card-key="${escapeHtml(card.key||"")}"`
     : `data-deck-card-key="${escapeHtml(card.key||"")}"`;
@@ -9986,7 +9989,6 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <span class="deck-mini-badge">${escapeHtml(String(badge))}</span>
     <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
     <span class="deck-mini-name">${name}</span>
-    <span class="deck-mini-view" aria-hidden="true">Ver</span>
     ${materialLine}
     ${actionBtn}
     ${dustBtn}
@@ -10068,7 +10070,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
     const openDetail=ev=>{
       if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
-      if(Date.now()-deckBuilderDragStartedAt<450)return;
+      if(Date.now()-deckBuilderDragStartedAt<160)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
       showDeckBuilderCardDetail(card);
     };
@@ -10087,7 +10089,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
     const openDetail=ev=>{
       if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust"))return;
-      if(Date.now()-deckBuilderDragStartedAt<450)return;
+      if(Date.now()-deckBuilderDragStartedAt<160)return;
       const idx=Number(el.dataset.draftIndex);
       showDeckBuilderCardDetail(currentDeckDraft[idx]);
     };
@@ -10164,18 +10166,31 @@ function renderDeckBuilder(){
       (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
     return (!search||hay.includes(search))&&typeOk&&rarityOk;
   }).sort((a,b)=>(a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||"")));
-  collectionGrid.classList.add("hv-mini-gallery");
+  const pageSize=DECK_BUILDER_COLLECTION_PAGE_SIZE;
+  const totalPages=Math.max(1,Math.ceil(cards.length/pageSize));
+  deckBuilderCollectionPage=Math.max(0,Math.min(deckBuilderCollectionPage,totalPages-1));
+  const pageStart=deckBuilderCollectionPage*pageSize;
+  const pageCards=cards.slice(pageStart,pageStart+pageSize);
+  collectionGrid.classList.add("hv-mini-gallery","is-paged");
   deckList.classList.add("hv-mini-deck");
-  collectionGrid.innerHTML=cards.map(card=>{
+  collectionGrid.innerHTML=pageCards.map(card=>{
     const used=countInDraft(card.key);
     const maxAllowed=Math.min(card.qty||1,maxCopiesForCard(card));
     const disabled=used>=maxAllowed||currentDeckDraft.length>=DECK_RULES.deckSize;
     return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed});
-  }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Abre paquetes para llenar tu colección.</small></div>`;
+  }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Cambia el filtro o abre paquetes para llenar tu colección.</small></div>`;
+  const pager=$("deckCollectionPager"),pageInfo=$("deckCollectionPageInfo"),pageTitle=$("deckCollectionPageText"),prev=$("deckCollectionPrevBtn"),next=$("deckCollectionNextBtn");
+  if(pager)pager.classList.toggle("hidden",cards.length<=pageSize);
+  const from=cards.length?pageStart+1:0;
+  const to=Math.min(cards.length,pageStart+pageCards.length);
+  if(pageInfo)pageInfo.textContent=`Página ${deckBuilderCollectionPage+1}/${totalPages} · ${from}-${to} de ${cards.length}`;
+  if(pageTitle)pageTitle.textContent=cards.length?`(${from}-${to} de ${cards.length})`:"(0)";
+  if(prev){prev.disabled=deckBuilderCollectionPage<=0;prev.onclick=()=>{deckBuilderCollectionPage=Math.max(0,deckBuilderCollectionPage-1);renderDeckBuilder();};}
+  if(next){next.disabled=deckBuilderCollectionPage>=totalPages-1;next.onclick=()=>{deckBuilderCollectionPage=Math.min(totalPages-1,deckBuilderCollectionPage+1);renderDeckBuilder();};}
   const deckCardsHtml=currentDeckDraft.map((card,index)=>deckBuilderMiniCardHtml(card,{mode:"deck",index})).join("");
   const emptySlots=Math.max(0,DECK_RULES.deckSize-currentDeckDraft.length);
   const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot"><span>${currentDeckDraft.length+i+1}</span></div>`).join("");
-  deckList.innerHTML=`<div class="deck-drop-hint">Arrastra cartas aquí para meterlas al mazo. Arrastra cartas del mazo hacia la izquierda para sacarlas.</div>${deckCardsHtml}${emptyHtml}`;
+  deckList.innerHTML=`<div class="deck-drop-hint">Toca una carta para ver detalles. Usa + para meterla al mazo y × para quitarla.</div>${deckCardsHtml}${emptyHtml}`;
   bindDeckBuilderDragAndClick(collectionGrid,deckList);
   renderCraftMaterialPanel();
   const validation=validateDeckList(currentDeckDraft);
@@ -11033,9 +11048,10 @@ on("closePackShopBtn2","click",closePackShop);
 on("openPacksFromNotificationsBtn","click",()=>{closeNotifications();openPackOpening();});
 on("openDeckBuilderFromNotificationsBtn","click",()=>{closeNotifications();openDeckBuilder();});
 on("closeDeckBuilderBtn","click",closeDeckBuilder);
-on("deckSearchInput","input",renderDeckBuilder);
-on("deckTypeFilter","change",renderDeckBuilder);
-on("deckRarityFilter","change",renderDeckBuilder);
+function resetDeckBuilderCollectionPageAndRender(){deckBuilderCollectionPage=0;renderDeckBuilder();}
+on("deckSearchInput","input",resetDeckBuilderCollectionPageAndRender);
+on("deckTypeFilter","change",resetDeckBuilderCollectionPageAndRender);
+on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 

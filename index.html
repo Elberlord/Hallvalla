@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Organized - 3 files clean</title>
-<link rel="stylesheet" href="styles.css?v=deckbuilder-details-7heh"/>
+<link rel="stylesheet" href="styles.css?v=deckbuilder-card-click-7hek"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -494,8 +494,13 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <button id="saveDeckBtn" class="btn primary full" type="button">Guardar y salir</button>
       </aside>
       <section class="deckbuilder-collection">
-        <h3>Cartas disponibles</h3>
+        <h3>Cartas disponibles <small id="deckCollectionPageText" class="deck-page-title"></small></h3>
         <div id="deckCollectionGrid" class="deck-card-grid"></div>
+        <div id="deckCollectionPager" class="deck-collection-pager" aria-label="Paginación de cartas">
+          <button id="deckCollectionPrevBtn" class="deck-page-btn" type="button">‹ Anterior</button>
+          <span id="deckCollectionPageInfo" class="deck-page-info">Página 1/1</span>
+          <button id="deckCollectionNextBtn" class="deck-page-btn" type="button">Siguiente ›</button>
+        </div>
       </section>
       <section class="deckbuilder-current">
         <h3>Mazo actual</h3>
@@ -612,6 +617,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="script.js?v=deckbuilder-details-7heh"></script>
+<script type="module" src="script.js?v=deckbuilder-card-click-7hek"></script>
 </body>
 </html>
