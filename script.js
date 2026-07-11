@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEL";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEM";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9924,7 +9924,16 @@ function openDeckBuilder(){
 }
 function closeDeckBuilder(){$("deckBuilderPanel").classList.add("hidden")}
 function getDeckBuilderCollectionCard(cardKey){
-  return getCollectionCardsExpanded().find(c=>c.key===cardKey)||getUnlockedAdventureSpecialCollectionTemplates().find(c=>c.key===cardKey)||currentDeckDraft.find(c=>c.key===cardKey)||null;
+  const key=String(cardKey||"");
+  if(!key)return null;
+  const owned=getCollectionCardsExpanded().find(c=>c.key===key);
+  if(owned)return owned;
+  const special=getUnlockedAdventureSpecialCollectionTemplates().find(c=>c.key===key);
+  if(special)return special;
+  const inDeck=currentDeckDraft.find(c=>c.key===key);
+  if(inDeck)return inDeck;
+  const forgeCard=getDeckBuilderCardPoolForForge().find(c=>c.key===key);
+  return forgeCard?{...forgeCard}:null;
 }
 function addCardToDeck(cardKey){
   const card=getCollectionCardsExpanded().find(c=>c.key===cardKey);
@@ -9966,9 +9975,12 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const surplus=getCardSurplusCopies(card);
   const canCraft=mode==="collection"&&canCraftCardCopy(card);
   const material=getMaterialAmountForCard(card);
+  const addLockReason=mode==="collection"
+    ? (Number(card?.qty||0)<=0?"No tienes copias de esta carta. Puedes ver sus detalles y crearla si tienes materiales.":(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting()?"Las cartas de bestias se ven aquí, pero solo se pueden usar después de completar su evento.":""))
+    : "";
   const actionBtn=mode==="deck"
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
-    : `<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Agregar ${name}">+</button>`;
+    : `<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Agregar ${name}" title="${escapeHtml(addLockReason||"Agregar al mazo")}">+</button>`;
   const dustBtn=mode==="collection"&&surplus>0
     ? `<button class="deck-mini-dust" type="button" data-dust-card="${escapeHtml(card.key||"")}" title="Convertir copia sobrante en +${CRAFT_MATERIAL_GAIN} material ${getCraftRarityLabel(getCraftRarityKey(card))}">⛏</button>`
     : "";
@@ -10072,7 +10084,8 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
       if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<160)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
-      showDeckBuilderCardDetail(card);
+      if(card)showDeckBuilderCardDetail(card);
+      else setHint(`No se pudo abrir el detalle de ${el.dataset.deckCardKey||"esta carta"}.`);
     };
     el.addEventListener("click",openDetail);
     el.addEventListener("dragstart",ev=>{
@@ -10175,8 +10188,11 @@ function renderDeckBuilder(){
   deckList.classList.add("hv-mini-deck");
   collectionGrid.innerHTML=pageCards.map(card=>{
     const used=countInDraft(card.key);
-    const maxAllowed=Math.min(card.qty||1,maxCopiesForCard(card));
-    const disabled=used>=maxAllowed||currentDeckDraft.length>=DECK_RULES.deckSize;
+    const ownedQty=Number(card.qty||0);
+    const maxAllowed=maxCopiesForCard(card);
+    const addLimit=Math.min(ownedQty,maxAllowed);
+    const cannotAddBeast=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting();
+    const disabled=ownedQty<=0||cannotAddBeast||used>=addLimit||currentDeckDraft.length>=DECK_RULES.deckSize;
     return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed});
   }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Cambia el filtro o abre paquetes para llenar tu colección.</small></div>`;
   const pager=$("deckCollectionPager"),pageInfo=$("deckCollectionPageInfo"),pageTitle=$("deckCollectionPageText"),prev=$("deckCollectionPrevBtn"),next=$("deckCollectionNextBtn");

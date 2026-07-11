@@ -1,0 +1,68 @@
+HallValla - Detalle para todas las cartas de la Forja 7HEM
+===========================================================
+
+Base usada:
+- Hallvalla_deckbuilder_compact_7HEL.zip
+
+Problema reportado:
+- Las cartas bloqueadas o sin copia, como Geisha Encubierta, Hattori Shinobi y otras, mostraban la pastilla de rareza/material pero no abrían detalle al tocarlas.
+- El jugador debe poder ver detalles de absolutamente todas las cartas.
+- Lo único que debe bloquearse es crear sin material, agregar cartas que no se poseen, o usar/agregar bestias antes de completar su evento.
+
+Causa:
+- El click buscaba la carta solo en la colección actual o en el mazo.
+- Las cartas que estaban en la Forja como "faltantes/crafteables" existían en el pool visual, pero no en la colección del jugador.
+- Por eso el detalle recibía null y no se abría.
+
+Cambios aplicados:
+1. getDeckBuilderCollectionCard ahora puede encontrar:
+   - cartas de la colección
+   - cartas especiales desbloqueadas
+   - cartas ya dentro del mazo
+   - cualquier carta visible del pool completo de Forja
+
+2. Las cartas sin copia siguen visibles y ahora abren detalle.
+   - Ejemplos: Geisha Encubierta, Hattori Shinobi, Saboteador, bestias, etc.
+
+3. Agregar al mazo quedó bloqueado correctamente:
+   - si tienes 0 copias
+   - si la carta es de bestias y aún no desbloqueaste el evento
+   - si ya alcanzaste el máximo permitido
+   - si el mazo ya está lleno
+
+4. Crear carta sigue bloqueado si:
+   - no tienes materiales suficientes
+   - la carta de bestias no está desbloqueada por evento
+
+5. CSS reforzado:
+   - cartas disabled/craft-missing siguen siendo clickeables para detalle
+   - botones + y crear deshabilitados no abren detalle ni agregan nada
+
+No se tocó:
+- combate
+- IA
+- starter
+- packs
+- costos de materiales
+- lógica real de crear/agregar/quitar cartas
+- líderes
+- stats de cartas
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "version_7HEM": true,
+  "cache_bust_js": true,
+  "cache_bust_css": true,
+  "missing_assets_count": 0,
+  "lookup_uses_forge_pool": true,
+  "unowned_add_disabled": true,
+  "beast_add_locked": true,
+  "details_open_when_card_exists": true,
+  "disabled_cards_clickable_css": true,
+  "whole_card_click_still_present": true,
+  "pagination_kept": true
+}

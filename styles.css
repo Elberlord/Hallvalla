@@ -17629,3 +17629,35 @@ body.mobile-landscape-locked{overflow:hidden!important}
     grid-template-columns:repeat(7,minmax(52px,1fr)) !important;
   }
 }
+
+
+/* ==========================================================
+   7HEM · Forja: todas las cartas abren detalle aunque estén bloqueadas
+   ========================================================== */
+#deckBuilderPanel .deck-mini-card.disabled,
+#deckBuilderPanel .deck-mini-card.craft-missing{
+  cursor:pointer !important;
+  pointer-events:auto !important;
+}
+#deckBuilderPanel .deck-mini-card.disabled .deck-mini-art,
+#deckBuilderPanel .deck-mini-card.disabled .deck-mini-name,
+#deckBuilderPanel .deck-mini-card.disabled .deck-mini-material,
+#deckBuilderPanel .deck-mini-card.craft-missing .deck-mini-art,
+#deckBuilderPanel .deck-mini-card.craft-missing .deck-mini-name,
+#deckBuilderPanel .deck-mini-card.craft-missing .deck-mini-material{
+  pointer-events:none !important;
+}
+#deckBuilderPanel .deck-mini-plus:disabled,
+#deckBuilderPanel .deck-mini-craft:disabled{
+  pointer-events:auto !important;
+  cursor:not-allowed !important;
+}
+#deckBuilderPanel .deck-mini-card.disabled:hover,
+#deckBuilderPanel .deck-mini-card.craft-missing:hover{
+  filter:grayscale(.25) brightness(1.08) !important;
+  opacity:.74 !important;
+}
+#deckBuilderPanel .deck-drop-hint::after{
+  content:" Las cartas bloqueadas también se pueden tocar para ver detalles.";
+  color:#ffe3a6;
+}
