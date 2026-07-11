@@ -1,0 +1,71 @@
+HallValla - Forja compacta y paginador visible 7HEL
+====================================================
+
+Base usada:
+- Hallvalla_deckbuilder_no_detail_button_7HEK.zip
+
+Problema reportado:
+- El HUD superior de materiales de creación tenía letras demasiado grandes.
+- El panel ocupaba mucha altura y empujaba filtros/cartas hacia abajo.
+- El paginador Anterior/Siguiente no quedaba visible/cómodo.
+- Había espacio vacío arriba que podía aprovecharse mejor.
+
+Cambios aplicados:
+1. HUD superior de materiales compactado:
+   - letras más pequeñas
+   - pildoras más bajas
+   - seis rarezas en una fila en escritorio
+   - botón "Sin sobrantes" más pequeño
+   - menos padding y menos alto total
+
+2. Header de Forja compactado:
+   - título un poco más pequeño
+   - descripción más baja
+   - margen inferior reducido
+   - layout convertido a flex para aprovechar mejor el alto
+
+3. Filtros y cartas subidos:
+   - deckbuilder-layout ahora ocupa el espacio libre automáticamente
+   - filtros, cartas disponibles y mazo actual empiezan más arriba
+   - se redujo padding interno de paneles
+
+4. Paginador más visible:
+   - Anterior/Siguiente compactos
+   - barra de paginación con menos margen
+   - grid de cartas ajustado a 7 columnas x 2 filas = 14 cartas
+
+5. Se conservó:
+   - click en cualquier parte de la carta para ver detalles
+   - excepción de + / crear / convertir / ×
+   - paginación de 14 cartas
+   - HUD de acciones a la derecha en móvil horizontal
+
+No se tocó:
+- combate
+- IA
+- starter
+- packs
+- costos de materiales
+- crear/agregar/quitar cartas
+- líderes
+- stats de cartas
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "version_7HEL": true,
+  "cache_bust_js": true,
+  "cache_bust_css": true,
+  "missing_assets_count": 0,
+  "compact_patch_css": true,
+  "summary_grid_six_cols": true,
+  "layout_raised_flex": true,
+  "pager_compact": true,
+  "collection_grid_7x2": true,
+  "material_hud_fonts_reduced": true,
+  "previous_pagination_kept": true,
+  "whole_card_click_kept": true
+}

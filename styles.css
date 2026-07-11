@@ -17397,3 +17397,235 @@ body.mobile-landscape-locked{overflow:hidden!important}
   content:" Toca cualquier parte de una carta para ver detalles.";
   color:#ffe3a6;
 }
+
+
+/* ==========================================================
+   7HEL · Forja compacta: materiales pequeños + paginador visible
+   ========================================================== */
+#deckBuilderPanel.overlay-panel{
+  padding:10px !important;
+  align-items:center !important;
+}
+#deckBuilderPanel .deckbuilder-card{
+  width:min(1280px,98vw) !important;
+  height:min(94vh,900px) !important;
+  padding:12px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+}
+#deckBuilderPanel .deckbuilder-head{
+  flex:0 0 auto !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(300px,455px) !important;
+  align-items:start !important;
+  gap:12px !important;
+  margin-bottom:8px !important;
+}
+#deckBuilderPanel .adventure-progress{
+  font-size:12px !important;
+  letter-spacing:.08em !important;
+  margin-bottom:2px !important;
+}
+#deckBuilderPanel .adventure-story-title{
+  font-size:clamp(31px,3.15vw,42px) !important;
+  line-height:.95 !important;
+  margin:0 0 8px !important;
+}
+#deckBuilderPanel .deckbuilder-sub{
+  font-size:14px !important;
+  line-height:1.22 !important;
+  margin:0 !important;
+}
+#deckBuilderPanel .deckbuilder-status{
+  min-width:0 !important;
+  padding:8px 10px !important;
+  border-radius:15px !important;
+}
+#deckBuilderPanel .deckbuilder-status > b{
+  font-size:21px !important;
+  line-height:1 !important;
+}
+#deckBuilderPanel .deckbuilder-status > span{
+  font-size:10px !important;
+  line-height:1.05 !important;
+  margin-bottom:5px !important;
+}
+#deckBuilderPanel .craft-material-summary{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  padding:6px !important;
+  border-radius:11px !important;
+}
+#deckBuilderPanel .craft-summary-title{
+  margin-bottom:4px !important;
+  font-size:9px !important;
+  line-height:1 !important;
+}
+#deckBuilderPanel .craft-summary-title strong{
+  font-size:10px !important;
+}
+#deckBuilderPanel .craft-summary-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  gap:4px !important;
+}
+#deckBuilderPanel .craft-summary-pill{
+  min-height:32px !important;
+  padding:3px 4px !important;
+  border-radius:8px !important;
+  grid-template-columns:1fr !important;
+  grid-template-rows:auto auto auto !important;
+  text-align:center !important;
+  gap:1px !important;
+  font-size:8px !important;
+}
+#deckBuilderPanel .craft-summary-pill b{
+  font-size:8px !important;
+  line-height:1 !important;
+}
+#deckBuilderPanel .craft-summary-pill em{
+  font-size:10px !important;
+  line-height:1 !important;
+}
+#deckBuilderPanel .craft-summary-pill small{
+  font-size:7px !important;
+  line-height:1 !important;
+}
+#deckBuilderPanel #dustAllSurplusCornerBtn.craft-corner-dust{
+  min-height:24px !important;
+  height:24px !important;
+  padding:2px 12px !important;
+  margin-top:5px !important;
+  font-size:9px !important;
+  border-radius:999px !important;
+}
+#deckBuilderPanel .deckbuilder-layout{
+  flex:1 1 auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  grid-template-columns:185px minmax(0,1fr) 430px !important;
+  gap:10px !important;
+}
+#deckBuilderPanel .deckbuilder-filters,
+#deckBuilderPanel .deckbuilder-collection,
+#deckBuilderPanel .deckbuilder-current{
+  padding:10px !important;
+  border-radius:17px !important;
+  min-height:0 !important;
+}
+#deckBuilderPanel .deckbuilder-filters{
+  overflow:auto !important;
+}
+#deckBuilderPanel .deck-search,
+#deckBuilderPanel .deck-select{
+  padding:8px 10px !important;
+  margin-bottom:8px !important;
+  min-height:38px !important;
+  font-size:13px !important;
+}
+#deckBuilderPanel .craft-material-panel{
+  padding:8px !important;
+  border-radius:13px !important;
+}
+#deckBuilderPanel .craft-mat-title{
+  font-size:10px !important;
+  margin-bottom:6px !important;
+}
+#deckBuilderPanel .craft-mat-title small{
+  font-size:8px !important;
+}
+#deckBuilderPanel .craft-mat-grid{
+  gap:4px !important;
+}
+#deckBuilderPanel .craft-mat-pill{
+  min-height:24px !important;
+  padding:3px 5px !important;
+  font-size:8px !important;
+  border-radius:8px !important;
+}
+#deckBuilderPanel .craft-mat-pill em{
+  font-size:9px !important;
+}
+#deckBuilderPanel .craft-mat-pill small{
+  font-size:7px !important;
+}
+#deckBuilderPanel #saveDeckBtn{
+  min-height:34px !important;
+  padding:7px 10px !important;
+  font-size:12px !important;
+  margin-top:8px !important;
+}
+#deckBuilderPanel .deckbuilder-collection h3,
+#deckBuilderPanel .deckbuilder-current h3{
+  margin:0 0 8px !important;
+  font-size:17px !important;
+  line-height:1.1 !important;
+}
+#deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged{
+  grid-template-columns:repeat(7,minmax(60px,1fr)) !important;
+  grid-auto-rows:minmax(96px,1fr) !important;
+  gap:7px !important;
+  min-height:0 !important;
+  flex:1 1 auto !important;
+}
+#deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged .deck-mini-card{
+  height:96px !important;
+}
+#deckBuilderPanel .deck-collection-pager{
+  flex:0 0 auto !important;
+  margin-top:7px !important;
+  padding-top:7px !important;
+  gap:8px !important;
+}
+#deckBuilderPanel .deck-page-btn{
+  min-height:30px !important;
+  padding:5px 11px !important;
+  font-size:11px !important;
+}
+#deckBuilderPanel .deck-page-info{
+  min-width:165px !important;
+  font-size:11px !important;
+}
+#deckBuilderPanel .current-deck-list.hv-mini-deck{
+  grid-template-columns:repeat(6,minmax(50px,1fr)) !important;
+  gap:6px !important;
+  min-height:0 !important;
+}
+#deckBuilderPanel .current-deck-list.hv-mini-deck .deck-mini-card{
+  height:84px !important;
+}
+#deckBuilderPanel .deck-drop-hint{
+  padding:7px 9px !important;
+  font-size:10px !important;
+  line-height:1.2 !important;
+}
+@media(max-width:1100px){
+  #deckBuilderPanel .deckbuilder-head{
+    grid-template-columns:minmax(0,1fr) minmax(260px,390px) !important;
+  }
+  #deckBuilderPanel .deckbuilder-layout{
+    grid-template-columns:170px minmax(0,1fr) 360px !important;
+  }
+  #deckBuilderPanel .craft-summary-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:980px){
+  #deckBuilderPanel .deckbuilder-card{
+    overflow:auto !important;
+    height:94vh !important;
+  }
+  #deckBuilderPanel .deckbuilder-head{
+    grid-template-columns:1fr !important;
+  }
+  #deckBuilderPanel .craft-summary-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+  #deckBuilderPanel .deckbuilder-layout{
+    grid-template-columns:1fr !important;
+  }
+  #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged{
+    grid-template-columns:repeat(7,minmax(52px,1fr)) !important;
+  }
+}
