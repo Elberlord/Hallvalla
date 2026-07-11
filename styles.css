@@ -16809,3 +16809,210 @@ El CSS original se conserva para no romper visuales. El bloque final
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+
+/* ==========================================================
+   7HEG · Móvil horizontal + home/battle cleanup
+   ========================================================== */
+.mobile-rotate-overlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,rgba(3,3,4,.94),rgba(16,10,6,.96));backdrop-filter:blur(8px)}
+.mobile-rotate-overlay.visible{display:flex!important}
+.mobile-rotate-card{width:min(420px,92vw);padding:22px 18px 18px;border-radius:24px;border:1px solid rgba(255,209,102,.30);background:linear-gradient(180deg,rgba(37,24,15,.98),rgba(7,6,5,.98));box-shadow:0 24px 70px rgba(0,0,0,.58);text-align:center;color:#f5e5bf}
+.mobile-rotate-icon{font-size:42px;line-height:1;margin-bottom:8px;color:#ffd166;text-shadow:0 0 18px rgba(255,209,102,.25)}
+.mobile-rotate-card h2{margin:0 0 8px;font-family:Georgia,serif;color:#fff1c4;font-size:28px}
+.mobile-rotate-card p{margin:0 0 14px;line-height:1.45;color:#ead7ae}
+.mobile-rotate-card small{display:block;margin-top:10px;color:#cdb387;line-height:1.3}
+body.mobile-landscape-locked{overflow:hidden!important}
+
+@media (max-width:900px){
+  .asset-promo.daily-panel,
+  .asset-promo.welcome-panel{display:none!important}
+}
+
+@media (max-width:900px) and (orientation:portrait){
+  #mainMenu,
+  #gameShell,
+  #onlineLobby,
+  #adventurePanel,
+  #collectionPanel,
+  #packShopPanel{filter:blur(2px)!important;pointer-events:none!important;user-select:none!important}
+}
+
+@media (max-width:900px) and (orientation:landscape){
+  html,body{height:100%;overflow:hidden!important;background:#000}
+  #mainMenu.asset-home{overflow:hidden!important}
+  #mainMenu .asset-topbar{top:6px!important;left:8px!important;right:8px!important;height:64px!important;max-height:64px!important}
+  #mainMenu .asset-profile{width:min(210px,30vw)!important;min-height:58px!important;height:58px!important;padding:6px 8px!important}
+  #mainMenu .asset-profile-img{width:46px!important;height:46px!important}
+  #mainMenu .asset-profile-name{font-size:18px!important;line-height:1!important}
+  #mainMenu .asset-profile-sub span{font-size:10px!important}
+  #mainMenu .asset-xp{margin-top:4px!important;height:10px!important}
+  #mainMenu .asset-xp span{font-size:8px!important}
+  #mainMenu .asset-resource-row{gap:6px!important}
+  #mainMenu .asset-resource{height:40px!important;min-height:40px!important;padding:4px 8px!important;min-width:58px!important}
+  #mainMenu .asset-resource img{max-height:24px!important}
+  #mainMenu .asset-resource b{font-size:14px!important}
+  #mainMenu .asset-small-icon{width:40px!important;height:40px!important}
+  #mainMenu .asset-small-icon img{max-height:24px!important}
+
+  #mainMenu .asset-main{top:78px!important;bottom:80px!important;left:8px!important;right:8px!important;gap:10px!important;grid-template-columns:minmax(170px,1fr) minmax(130px,160px) minmax(170px,1fr)!important}
+  #mainMenu .asset-column{gap:8px!important;justify-content:center!important}
+  #mainMenu .image-button img{height:clamp(54px,11vh,72px)!important;border-radius:10px!important}
+  #mainMenu .asset-center{transform:translateY(0)!important;justify-content:center!important}
+  #mainMenu .asset-logo{position:relative!important;top:auto!important;margin-bottom:8px!important}
+  #mainMenu .asset-logo-mark{font-size:clamp(28px,4.4vw,42px)!important}
+  #mainMenu .asset-logo-sub{font-size:clamp(8px,1.5vw,11px)!important;letter-spacing:1.4px!important}
+  #mainMenu .play-image-button{width:min(138px,18vw)!important;margin-top:0!important}
+  #mainMenu .play-image-button img{width:100%!important;max-height:130px!important}
+  #mainMenu .asset-bottom{bottom:6px!important;padding:4px 6px!important;gap:6px!important;max-width:330px!important;border-radius:14px!important}
+  #mainMenu .bottom-asset-tab{min-width:96px!important;width:96px!important;height:52px!important;padding:4px 5px!important;border-radius:12px!important}
+  #mainMenu .bottom-asset-tab img{width:24px!important;height:24px!important}
+  #mainMenu .bottom-asset-tab span{font-size:8px!important;line-height:1.05!important;text-align:center!important}
+
+  #gameShell.game-shell{padding:0!important}
+  #gameShell .battlefield{background-position:center center!important;background-size:auto 100%!important}
+  #hudP1.player-status-hud,#hudP2.player-status-hud{width:150px!important}
+  #gameShell .battlefield #turnHonorHud.turn-honor-hud{top:72px!important;left:8px!important;min-width:98px!important;padding:6px 10px!important}
+  #phaseBanner.phase-banner{top:72px!important;font-size:10px!important;padding:5px 8px!important;min-width:110px!important}
+  .battle-tools{top:70px!important;right:6px!important;gap:5px!important}
+  .battle-tool-btn{min-height:24px!important;padding:4px 8px!important;font-size:9px!important}
+  .grid-wrap{top:94px!important;height:calc(100svh - 188px)!important;width:min(calc((100svh - 188px) * .48), 390px)!important;max-width:50vw!important;min-width:280px!important}
+  .side{bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;left:auto!important;right:6px!important;width:auto!important}
+  .side .actions-visual-panel{width:min(190px,26vw)!important;max-width:min(190px,26vw)!important}
+  #log.log{left:6px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;width:min(160px,22vw)!important;max-height:76px!important;padding:6px!important;font-size:8px!important}
+  #handDrawer.hand-drawer{left:6px!important;right:202px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;max-height:132px!important;padding:6px 6px 8px!important;border-radius:14px!important}
+  #handDrawer .hand-top{font-size:10px!important;margin-bottom:4px!important}
+  #handDrawer .hand-row{gap:6px!important}
+  #handDrawer .hand-card{flex:0 0 92px!important;min-height:118px!important;padding:6px!important}
+  #handDrawer .hand-name{font-size:9px!important}
+  #handDrawer .hand-stats,#handDrawer .hand-text{font-size:7px!important}
+  .basic-tutorial-coach{top:94px!important;left:6px!important;right:6px!important}
+  .basic-tutorial-coach-card{max-height:24svh!important}
+}
+
+
+/* ==========================================================
+   7HEH · Forja: detalle de cartas al click/tap
+   ========================================================== */
+.deck-mini-card{
+  cursor:pointer;
+}
+.deck-mini-card:hover{
+  filter:brightness(1.08);
+}
+.deck-mini-card:focus-visible{
+  outline:2px solid rgba(255,209,102,.72);
+  outline-offset:2px;
+}
+.deck-mini-view{
+  position:absolute;
+  left:6px;
+  top:22px;
+  z-index:4;
+  padding:2px 5px;
+  border-radius:999px;
+  border:1px solid rgba(255,209,102,.30);
+  background:rgba(0,0,0,.62);
+  color:#ffe8a8;
+  font-size:7.5px;
+  font-weight:1000;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  pointer-events:none;
+  opacity:.78;
+  box-shadow:0 0 10px rgba(0,0,0,.25);
+}
+.deck-mini-card:hover .deck-mini-view{
+  opacity:1;
+  border-color:rgba(255,209,102,.58);
+  box-shadow:0 0 12px rgba(255,209,102,.12);
+}
+.card-inspect-modal.deck-builder-detail-modal{
+  z-index:390;
+}
+.card-inspect-modal.deck-builder-detail-modal .card-inspect-card{
+  width:min(760px,94vw);
+}
+.card-inspect-modal.deck-builder-detail-modal .card-inspect-visual{
+  min-height:190px;
+}
+.deck-builder-detail-box{
+  margin-top:12px;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid rgba(255,209,102,.24);
+  background:linear-gradient(180deg,rgba(255,209,102,.08),rgba(0,0,0,.24));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+}
+.deck-detail-title{
+  margin-bottom:8px;
+  color:#ffe8a8;
+  font-weight:1000;
+  font-family:Georgia,serif;
+  letter-spacing:.02em;
+}
+.deck-detail-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+}
+.deck-detail-grid span{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-height:42px;
+  padding:7px 8px;
+  border-radius:12px;
+  background:rgba(0,0,0,.28);
+  border:1px solid rgba(255,209,102,.16);
+}
+.deck-detail-grid b{
+  color:#cdb98e;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.deck-detail-grid em{
+  color:#fff2c6;
+  font-style:normal;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.1;
+}
+.deck-detail-grid .can-create em{
+  color:#baffac;
+}
+.deck-detail-grid .cant-create em{
+  color:#ffd28a;
+}
+.deck-builder-detail-box small{
+  display:block;
+  margin-top:9px;
+  color:#cdb98e;
+  font-size:11px;
+  line-height:1.35;
+}
+.card-inspect-modal.deck-builder-preview .card-inspect-reason{
+  display:block !important;
+  opacity:.72;
+  text-align:center;
+}
+@media(max-width:900px){
+  .card-inspect-modal.deck-builder-detail-modal{
+    padding:8px;
+  }
+  .card-inspect-modal.deck-builder-detail-modal .card-inspect-card{
+    width:calc(100vw - 16px);
+    max-height:92svh;
+    padding:12px;
+  }
+  .card-inspect-modal.deck-builder-detail-modal .card-inspect-visual{
+    min-height:130px;
+  }
+  .deck-detail-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .deck-mini-view{
+    font-size:7px;
+    top:20px;
+  }
+}

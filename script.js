@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEF";
+const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEH";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9979,12 +9979,14 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const craftBtn=mode==="collection"&&Number(card.qty||0)<maxCopiesForCard(card)
     ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="${craftLock||`Crear por ${craftCost} material ${craftRarityLabel}. Tienes ${material}.`}">✚</button>`
     : "";
-  return `<div class="${cls}" ${data} data-deck-origin="${mode}" ${dragAttrs} title="${name}">
+  const detailTitle=`${name} · clic/tap para ver detalles`;
+  return `<div class="${cls}" ${data} data-deck-origin="${mode}" ${dragAttrs} title="${escapeHtml(detailTitle)}" aria-label="${escapeHtml(detailTitle)}">
     <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
     <span class="deck-mini-type">${getDeckBuilderTypeGlyph(card)}</span>
     <span class="deck-mini-badge">${escapeHtml(String(badge))}</span>
     <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
     <span class="deck-mini-name">${name}</span>
+    <span class="deck-mini-view" aria-hidden="true">Ver</span>
     ${materialLine}
     ${actionBtn}
     ${dustBtn}
@@ -10000,43 +10002,56 @@ function makeDeckBuilderUnitPreview(card){
   unit.guard=maxTurnGuard(unit);
   return unit;
 }
+function deckBuilderCardInvestmentHtml(card){
+  if(!card)return "";
+  const collectionCard=getCollectionCardsExpanded().find(c=>c.key===card.key)||null;
+  const owned=Number(collectionCard?.qty||card?.qty||0);
+  const max=maxCopiesForCard(card);
+  const inDeck=currentDeckDraft.filter(c=>c.key===card.key).length;
+  const rarityKey=getCraftRarityKey(card);
+  const rarityLabel=getCraftRarityLabel(rarityKey);
+  const material=getMaterialAmountForCard(card);
+  const craftCost=getCraftCostForCard(card);
+  const canCraft=canCraftCardCopy(card);
+  const lockReason=getCraftLockReason(card);
+  const typeLabel=card.type==="unit"?"Unidad":(card.type==="spell"?"Magia":(card.type==="trap"?"Trampa":"Carta"));
+  const weaponLabel=card.type==="unit"?getWeaponClassLabel(card):"";
+  const rangeText=card.type==="unit"?`<span><b>Alcance</b><em>${getCardDisplayRange(card)}</em></span>`:"";
+  const copiesText=`${owned}/${max}`;
+  const craftText=owned>=max
+    ? "Copias completas"
+    : (canCraft?`Puedes crear copia (${material}/${craftCost})`:(lockReason||`Material ${rarityLabel}: ${material}/${craftCost}`));
+  return `<div class="deck-builder-detail-box">
+    <div class="deck-detail-title">Lectura estratégica</div>
+    <div class="deck-detail-grid">
+      <span><b>Tipo</b><em>${escapeHtml(typeLabel)}</em></span>
+      <span><b>Rareza</b><em>${escapeHtml(rarityLabel)}</em></span>
+      <span><b>Copias</b><em>${escapeHtml(copiesText)}</em></span>
+      <span><b>En mazo</b><em>${inDeck}</em></span>
+      ${weaponLabel?`<span><b>Clase</b><em>${escapeHtml(weaponLabel)}</em></span>`:""}
+      ${rangeText}
+      <span class="${canCraft?"can-create":"cant-create"}"><b>Creación</b><em>${escapeHtml(craftText)}</em></span>
+    </div>
+    <small>Consejo: revisa Costo, AT, HP, Guardia, DX, AGI, Movimiento, Rango y la clase táctica antes de invertir materiales.</small>
+  </div>`;
+}
 function showDeckBuilderCardDetail(card){
   if(!card)return;
   tryPlaySound("card_select",.38);
-  if(card.type==="unit"){
-    const u=makeDeckBuilderUnitPreview(card);
-    const inspector=$("inspector");
-    if(!inspector){showCardInspectModal(card);return;}
-    inspector.className=`inspector ${getCardVisualClass(u)}`;
-    $("inspectTitle").textContent=u.name;
-    $("inspectSub").innerHTML=renderDetIdentityHtml(u,"Carta de mazo");
-    $("inspectArt").innerHTML=getUnitPortraitHtml(u);
-    const stats=[["Costo",card.cost??0],["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
-    const inspectStatsEl=$("inspectStats");
-    inspectStatsEl.innerHTML=renderDetStatButtons(stats,"inspect-stat");
-    bindStatGuideClicks(inspectStatsEl);
-    const fx=getUnitEffectText(u);
-    const activeEntries=getUnitStatusEntries(u);
-    const inspectTextEl=$("inspectText");
-    inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetTacticalHtml(u)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(u,fx),showWeapon:true,showFormula:true,showLore:true,effectLabel:"Ver efecto",entity:u})}`;
-    inspector._hvInspectedEntity=u;
-    inspector._hvActiveStatuses=activeEntries;
-    inspector._hvEffectText=fx;
-    inspector._hvEffectTitle=`✦ Efecto de ${u.name}`;
-    bindInspectorDetModalDelegation(inspector);
-    bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
-    bindStatusGuideDelegation(inspectTextEl,u,()=>activeEntries);
-    applyRarityClassToElement(inspector,u);
-    inspector.classList.add("show");
-    return;
-  }
-  showCardInspectModal(card);
+  const hydrated=hydrateCardVisualData({...card});
+  showCardInspectModal(hydrated);
   const modal=$("cardInspectModal");
-  if(modal)modal.classList.add("deck-builder-preview");
+  if(modal)modal.classList.add("deck-builder-preview","deck-builder-detail-modal");
   const sub=$("cardInspectSub");
-  if(sub)sub.innerHTML=renderDetIdentityHtml(card,"Carta de mazo");
+  if(sub)sub.innerHTML=renderDetIdentityHtml(hydrated,"Carta de la Forja");
+  const textEl=$("cardInspectText");
+  if(textEl)textEl.innerHTML+=deckBuilderCardInvestmentHtml(hydrated);
   const reason=$("cardInspectReason");
   if(reason)reason.textContent="Vista de detalle desde la Forja de mazos.";
+  const cancel=$("cardInspectCancel");
+  if(cancel)cancel.textContent="Cerrar";
+  const play=$("cardInspectPlay");
+  if(play){play.disabled=true;play.textContent="Solo vista";}
 }
 function getDeckBuilderDragPayload(ev){
   if(deckBuilderDragPayload)return deckBuilderDragPayload;
@@ -10051,12 +10066,13 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   if(!collectionGrid||!deckList)return;
   const clearDrop=()=>{setDeckBuilderDropActive(collectionGrid,false);setDeckBuilderDropActive(deckList,false);};
   collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
-    el.addEventListener("click",ev=>{
+    const openDetail=ev=>{
       if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<450)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
       showDeckBuilderCardDetail(card);
-    });
+    };
+    el.addEventListener("click",openDetail);
     el.addEventListener("dragstart",ev=>{
       if(el.classList.contains("disabled")){ev.preventDefault();return;}
       deckBuilderDragStartedAt=Date.now();
@@ -10069,12 +10085,13 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
     el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
   });
   deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
-    el.addEventListener("click",ev=>{
+    const openDetail=ev=>{
       if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<450)return;
       const idx=Number(el.dataset.draftIndex);
       showDeckBuilderCardDetail(currentDeckDraft[idx]);
-    });
+    };
+    el.addEventListener("click",openDetail);
     el.addEventListener("dragstart",ev=>{
       deckBuilderDragStartedAt=Date.now();
       deckBuilderDragPayload={action:"remove",index:Number(el.dataset.draftIndex),key:el.dataset.deckCardKey};
@@ -11323,3 +11340,57 @@ function getExactEffectGuideData(entity,effectText=""){
     install();
   }
 })();
+
+
+/* ==========================================================
+   7HEG · Mobile landscape guard
+   ========================================================== */
+function isMobileLandscapeTarget(){
+  try{
+    const mq=window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+    const coarse=window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    return !!(mq && (coarse || (navigator.maxTouchPoints||0)>0));
+  }catch(_){return false;}
+}
+function shouldShowMobileRotateOverlay(){
+  if(!isMobileLandscapeTarget())return false;
+  try{return window.matchMedia('(orientation: portrait)').matches;}catch(_){return window.innerHeight>window.innerWidth;}
+}
+async function requestLandscapeOrientation(){
+  try{
+    if(document.documentElement && document.documentElement.requestFullscreen && !document.fullscreenElement){
+      await document.documentElement.requestFullscreen().catch(()=>{});
+    }
+  }catch(_){ }
+  try{
+    if(screen.orientation && typeof screen.orientation.lock==='function'){
+      await screen.orientation.lock('landscape').catch(()=>{});
+    }
+  }catch(_){ }
+}
+function updateMobileRotateOverlay(){
+  const overlay=$("mobileRotateOverlay");
+  if(!overlay)return;
+  const show=shouldShowMobileRotateOverlay();
+  overlay.classList.toggle('hidden',!show);
+  overlay.classList.toggle('visible',show);
+  overlay.setAttribute('aria-hidden',show?'false':'true');
+  document.body.classList.toggle('mobile-landscape-locked',show);
+}
+function initMobileLandscapeGuard(){
+  const btn=$("mobileRotateTryBtn");
+  if(btn&&!btn.dataset.bound){
+    btn.dataset.bound='1';
+    btn.addEventListener('click',()=>requestLandscapeOrientation());
+  }
+  updateMobileRotateOverlay();
+  window.addEventListener('resize',updateMobileRotateOverlay,{passive:true});
+  window.addEventListener('orientationchange',()=>{setTimeout(updateMobileRotateOverlay,120);},{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateMobileRotateOverlay();});
+  document.addEventListener('click',ev=>{
+    if(!isMobileLandscapeTarget())return;
+    const trigger=ev.target && ev.target.closest ? ev.target.closest('button,.image-button,.bottom-asset-tab') : null;
+    if(trigger)requestLandscapeOrientation();
+  },true);
+}
+initMobileLandscapeGuard();

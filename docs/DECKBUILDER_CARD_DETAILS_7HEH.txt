@@ -1,0 +1,73 @@
+HallValla - Detalle de cartas en Forja 7HEH
+===========================================
+
+Base usada:
+- Hallvalla_mobile_landscape_7HEG.zip
+
+Problema:
+- En la Forja de mazos, las cartas se veían como miniaturas.
+- No quedaba claro que se podían revisar en detalle para decidir en cuál invertir materiales o cuál meter al mazo.
+
+Cambios aplicados:
+1. Click/tap sobre cualquier carta de la Forja:
+   - cartas disponibles
+   - cartas ya puestas en el mazo
+   ahora abre un modal de detalle.
+
+2. El detalle usa el modal grande de carta:
+   - imagen/arte
+   - identidad
+   - costo
+   - AT / HP / Guardia / DX / AGI / Movimiento / Rango si es unidad
+   - daño, buff, guardia, cura o ralentización si es magia/trampa
+   - texto completo de efecto
+   - clase táctica / arma
+   - botones de guía de efecto, arma, fórmula y lore cuando aplica
+
+3. Se agregó una sección nueva llamada "Lectura estratégica":
+   - tipo
+   - rareza
+   - copias actuales
+   - copias dentro del mazo
+   - clase táctica si es unidad
+   - alcance si es unidad
+   - material disponible / costo de creación
+
+4. Se agregó una etiqueta visual "Ver" en cada mini-carta.
+   - Sirve como pista para que el jugador sepa que puede tocar la carta.
+   - No bloquea los botones de agregar, quitar, crear o convertir.
+
+5. Ajuste móvil:
+   - modal más ancho en PC
+   - modal adaptado en móvil
+   - z-index reforzado para que aparezca encima de la Forja
+
+No se tocó:
+- combate
+- IA
+- starter
+- packs
+- materiales/costos
+- crear cartas
+- agregar/quitar cartas del mazo
+- bestias/evento de bestias
+
+Verificación:
+{
+  "node_check_js": true,
+  "node_check_mjs": true,
+  "node_output": "",
+  "css_brace_ok": true,
+  "version_7HEH": true,
+  "cache_bust_js": true,
+  "cache_bust_css": true,
+  "missing_assets_count": 0,
+  "detail_function": true,
+  "unified_modal": true,
+  "mini_view_badge": true,
+  "click_opens_detail_collection": true,
+  "click_opens_detail_deck": true,
+  "play_hidden_in_preview": true,
+  "detail_box_css": true,
+  "mobile_modal_css": true
+}
