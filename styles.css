@@ -17661,3 +17661,545 @@ body.mobile-landscape-locked{overflow:hidden!important}
   content:" Las cartas bloqueadas también se pueden tocar para ver detalles.";
   color:#ffe3a6;
 }
+
+
+/* ==========================================================
+   7HEN · Reparación móvil horizontal para viewports anchos
+   ----------------------------------------------------------
+   Alcance:
+   - Solo se activa cuando JavaScript detecta pantalla táctil/coarse
+     con lado corto de 980 px o menos y orientación horizontal.
+   - Corrige el modo híbrido que mezclaba CSS de PC con reglas táctiles.
+   - No modifica el diseño de PC ni la lógica del combate.
+   ========================================================== */
+html.hv-mobile-landscape,
+html.hv-mobile-landscape body{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  overflow:hidden!important;
+  background:#000!important;
+}
+
+/* ---------- HOME móvil horizontal ---------- */
+body.hv-mobile-landscape #mainMenu.asset-home{
+  width:100vw!important;
+  height:100vh!important;
+  height:100svh!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-promo.daily-panel,
+body.hv-mobile-landscape #mainMenu .asset-promo.welcome-panel{
+  display:none!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-topbar{
+  top:clamp(5px,1.1svh,10px)!important;
+  left:clamp(6px,1vw,16px)!important;
+  right:clamp(6px,1vw,16px)!important;
+  height:clamp(50px,11svh,82px)!important;
+  max-height:none!important;
+  gap:clamp(6px,1vw,16px)!important;
+  align-items:center!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-profile{
+  width:clamp(220px,31vw,390px)!important;
+  min-height:clamp(46px,9.5svh,70px)!important;
+  height:clamp(46px,9.5svh,70px)!important;
+  padding:clamp(4px,.8svh,7px) clamp(7px,.8vw,12px)!important;
+  gap:clamp(6px,.8vw,10px)!important;
+  border-radius:clamp(10px,1.2vw,16px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-profile-img{
+  width:clamp(38px,7.6svh,58px)!important;
+  height:clamp(38px,7.6svh,58px)!important;
+  border-radius:clamp(8px,.8vw,12px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-profile-name{
+  font-size:clamp(15px,2vw,26px)!important;
+  line-height:1!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-profile-sub{
+  margin-top:clamp(1px,.4svh,4px)!important;
+  gap:clamp(4px,.7vw,9px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-profile-sub span{
+  font-size:clamp(8px,.9vw,12px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-xp{
+  height:clamp(7px,1.4svh,11px)!important;
+  margin-top:clamp(2px,.5svh,5px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-xp span{
+  font-size:clamp(6px,.7vw,9px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-resource-row{
+  gap:clamp(3px,.55vw,8px)!important;
+  flex-wrap:nowrap!important;
+  min-width:0!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-resource{
+  width:clamp(58px,7.2vw,104px)!important;
+  min-width:clamp(58px,7.2vw,104px)!important;
+  height:clamp(32px,6.2svh,46px)!important;
+  min-height:clamp(32px,6.2svh,46px)!important;
+  padding:3px clamp(4px,.65vw,9px)!important;
+  border-radius:clamp(8px,.8vw,12px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-resource img{
+  width:clamp(21px,4.7svh,34px)!important;
+  height:clamp(21px,4.7svh,34px)!important;
+  max-height:none!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-resource b{
+  font-size:clamp(11px,1.2vw,17px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-small-icon{
+  width:clamp(32px,6.2svh,46px)!important;
+  height:clamp(32px,6.2svh,46px)!important;
+  min-width:clamp(32px,6.2svh,46px)!important;
+  border-radius:clamp(8px,.8vw,12px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-small-icon img{
+  width:clamp(21px,4.5svh,33px)!important;
+  height:clamp(21px,4.5svh,33px)!important;
+  max-height:none!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-main{
+  top:clamp(58px,13svh,94px)!important;
+  bottom:clamp(52px,11svh,80px)!important;
+  left:clamp(6px,1vw,16px)!important;
+  right:clamp(6px,1vw,16px)!important;
+  grid-template-columns:minmax(0,31vw) minmax(118px,1fr) minmax(0,31vw)!important;
+  gap:clamp(6px,1.2vw,18px)!important;
+  align-items:stretch!important;
+  min-height:0!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-column{
+  display:grid!important;
+  grid-template-rows:repeat(4,minmax(0,1fr))!important;
+  gap:clamp(4px,1svh,9px)!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+body.hv-mobile-landscape #mainMenu .image-button{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+body.hv-mobile-landscape #mainMenu .image-button img{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  object-fit:fill!important;
+  border-radius:clamp(7px,.8vw,12px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-center{
+  height:100%!important;
+  min-height:0!important;
+  transform:none!important;
+  justify-content:center!important;
+  overflow:visible!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-logo{
+  position:relative!important;
+  top:auto!important;
+  margin:0 0 clamp(4px,1svh,10px)!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-logo-mark{
+  font-size:clamp(27px,4.7vw,64px)!important;
+  line-height:.92!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-logo-sub{
+  margin-top:0!important;
+  font-size:clamp(7px,1.1vw,14px)!important;
+  letter-spacing:clamp(1px,.2vw,2.5px)!important;
+}
+body.hv-mobile-landscape #mainMenu .play-image-button{
+  width:clamp(108px,16vw,228px)!important;
+  max-width:42vw!important;
+  margin:0!important;
+}
+body.hv-mobile-landscape #mainMenu .play-image-button img{
+  width:100%!important;
+  height:auto!important;
+  max-height:clamp(96px,29svh,210px)!important;
+  object-fit:contain!important;
+}
+body.hv-mobile-landscape #mainMenu .asset-bottom{
+  left:50%!important;
+  right:auto!important;
+  bottom:clamp(4px,.8svh,8px)!important;
+  transform:translateX(-50%)!important;
+  gap:clamp(4px,.7vw,10px)!important;
+  padding:clamp(3px,.6svh,6px) clamp(4px,.6vw,8px)!important;
+  max-width:96vw!important;
+  border-radius:clamp(9px,1vw,15px)!important;
+}
+body.hv-mobile-landscape #mainMenu .bottom-asset-tab{
+  width:clamp(78px,9vw,130px)!important;
+  min-width:clamp(78px,9vw,130px)!important;
+  height:clamp(42px,8svh,60px)!important;
+  padding:3px 5px!important;
+  border-radius:clamp(8px,.8vw,12px)!important;
+}
+body.hv-mobile-landscape #mainMenu .bottom-asset-tab img{
+  width:clamp(22px,4.4svh,32px)!important;
+  height:clamp(22px,4.4svh,32px)!important;
+}
+body.hv-mobile-landscape #mainMenu .bottom-asset-tab span{
+  font-size:clamp(7px,.75vw,10px)!important;
+  line-height:1!important;
+  text-align:center!important;
+}
+
+/* ---------- Campo de batalla móvil horizontal ---------- */
+html.hv-mobile-landscape{
+  --hud-new-p1-left:clamp(6px,.8vw,12px);
+  --hud-new-p1-top:clamp(5px,.8svh,10px);
+  --hud-new-p2-right:clamp(6px,.8vw,12px);
+  --hud-new-p2-top:clamp(5px,.8svh,10px);
+  --hud-new-x-nudge:0px;
+  --hud-new-scale:1;
+  --hud-new-width:clamp(150px,17vw,230px);
+  --hud-new-name-font:clamp(10px,1.05vw,14px);
+  --hud-new-stat-font:clamp(11px,1vw,14px);
+  --hud-new-mini-height:clamp(25px,4.5svh,34px);
+  --hud-new-gap:clamp(3px,.55vw,7px);
+
+  --leader-size-min:32px;
+  --leader-size-vh:5.8svh;
+  --leader-size-max:44px;
+  --leader-box-min:42px;
+  --leader-box-vh:7.2svh;
+  --leader-box-max:58px;
+  --leader-enemy-top:1.2%;
+  --leader-player-bottom:.8%;
+  --leader-x-offset:-10px;
+  --leader-portrait-scale:.68;
+  --leader-stats-y:-7px;
+}
+body.hv-mobile-landscape #gameShell.game-shell{
+  width:100vw!important;
+  height:100vh!important;
+  height:100svh!important;
+  min-height:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield{
+  width:100vw!important;
+  height:100vh!important;
+  height:100svh!important;
+  min-height:0!important;
+  border-radius:0!important;
+  border-left:0!important;
+  border-right:0!important;
+  overflow:hidden!important;
+  background-position:center center!important;
+  background-size:auto 100%!important;
+}
+body.hv-mobile-landscape #hudP1.player-status-hud,
+body.hv-mobile-landscape #hudP2.player-status-hud{
+  width:var(--hud-new-width)!important;
+  min-width:0!important;
+  max-width:none!important;
+  filter:drop-shadow(0 7px 13px rgba(0,0,0,.48))!important;
+}
+body.hv-mobile-landscape #hudP1.player-status-hud{
+  left:var(--hud-new-p1-left)!important;
+  right:auto!important;
+  top:var(--hud-new-p1-top)!important;
+  transform:none!important;
+}
+body.hv-mobile-landscape #hudP2.player-status-hud{
+  right:var(--hud-new-p2-right)!important;
+  left:auto!important;
+  top:var(--hud-new-p2-top)!important;
+  transform:none!important;
+}
+body.hv-mobile-landscape .player-status-card{
+  padding:clamp(5px,1svh,8px) clamp(6px,.7vw,9px)!important;
+  border-radius:clamp(10px,.9vw,14px)!important;
+}
+body.hv-mobile-landscape .player-status-head{
+  gap:clamp(4px,.5vw,7px)!important;
+  margin-bottom:clamp(4px,.7svh,7px)!important;
+}
+body.hv-mobile-landscape .player-status-name{
+  font-size:var(--hud-new-name-font)!important;
+}
+body.hv-mobile-landscape .player-status-turn{
+  min-width:clamp(38px,4.3vw,54px)!important;
+  height:clamp(17px,3svh,22px)!important;
+  padding:0 clamp(5px,.5vw,8px)!important;
+  font-size:clamp(7px,.7vw,10px)!important;
+}
+body.hv-mobile-landscape .player-status-row{
+  gap:var(--hud-new-gap)!important;
+}
+body.hv-mobile-landscape .player-status-mini{
+  min-height:var(--hud-new-mini-height)!important;
+  border-radius:clamp(8px,.7vw,11px)!important;
+  gap:clamp(2px,.5svh,4px)!important;
+}
+body.hv-mobile-landscape .player-status-mini span{
+  font-size:clamp(7px,.65vw,9px)!important;
+}
+body.hv-mobile-landscape .player-status-mini strong{
+  font-size:var(--hud-new-stat-font)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield #turnHonorHud.turn-honor-hud{
+  left:clamp(7px,.9vw,14px)!important;
+  right:auto!important;
+  top:clamp(66px,12svh,90px)!important;
+  transform:none!important;
+  min-width:clamp(92px,9vw,126px)!important;
+  padding:clamp(5px,.8svh,8px) clamp(8px,.8vw,12px)!important;
+  gap:clamp(7px,.7vw,12px)!important;
+  border-radius:clamp(12px,1vw,16px)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield #turnHonorHud .turn-honor-label{
+  font-size:clamp(10px,.9vw,14px)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield #turnHonorHud strong{
+  font-size:clamp(11px,1vw,15px)!important;
+}
+body.hv-mobile-landscape .battle-tools{
+  position:absolute!important;
+  left:clamp(6px,.9vw,14px)!important;
+  right:auto!important;
+  top:50%!important;
+  bottom:auto!important;
+  transform:translateY(-50%)!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  flex-wrap:nowrap!important;
+  gap:clamp(5px,.8svh,8px)!important;
+  max-width:none!important;
+  padding:0!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  z-index:76!important;
+}
+body.hv-mobile-landscape .battle-tool-btn{
+  width:auto!important;
+  min-width:clamp(72px,8.7vw,112px)!important;
+  min-height:clamp(28px,4.8svh,36px)!important;
+  height:auto!important;
+  padding:clamp(4px,.7svh,7px) clamp(8px,.75vw,12px)!important;
+  font-size:clamp(9px,.8vw,12px)!important;
+  white-space:nowrap!important;
+}
+body.hv-mobile-landscape #battleMenuBtn{
+  width:clamp(34px,5.5svh,44px)!important;
+  min-width:clamp(34px,5.5svh,44px)!important;
+  height:clamp(34px,5.5svh,44px)!important;
+  min-height:clamp(34px,5.5svh,44px)!important;
+  padding:0!important;
+}
+body.hv-mobile-landscape .grid-wrap{
+  --arenaH:100svh!important;
+  --imgW:calc(var(--arenaH) * 1.7779)!important;
+  position:absolute!important;
+  left:50%!important;
+  top:calc(var(--arenaH) * .073)!important;
+  width:calc(var(--imgW) * .405)!important;
+  height:calc(var(--arenaH) * .845)!important;
+  min-width:0!important;
+  max-width:none!important;
+  transform:translateX(-50%)!important;
+  z-index:10!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield .side,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed){
+  position:absolute!important;
+  left:auto!important;
+  right:max(6px,env(safe-area-inset-right,0px))!important;
+  top:50%!important;
+  bottom:auto!important;
+  width:clamp(150px,18vw,240px)!important;
+  max-width:28vw!important;
+  transform:translateY(-50%)!important;
+  transform-origin:center right!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+  z-index:84!important;
+  pointer-events:none!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  transform:none!important;
+  pointer-events:auto!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+  left:51%!important;
+  top:44%!important;
+  width:69%!important;
+  gap:clamp(5px,.7vw,9px)!important;
+  transform:translate(-50%,-50%)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield .side .action-img-btn{
+  min-width:0!important;
+  min-height:clamp(28px,5svh,40px)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
+  font-size:clamp(8px,.7vw,10px)!important;
+  max-width:clamp(54px,6vw,78px)!important;
+}
+body.hv-mobile-landscape #handDrawer.hand-drawer.open{
+  left:max(6px,env(safe-area-inset-left,0px))!important;
+  right:calc(clamp(150px,18vw,240px) + clamp(12px,1.5vw,26px))!important;
+  bottom:max(6px,env(safe-area-inset-bottom,0px))!important;
+  width:auto!important;
+  max-width:none!important;
+  max-height:clamp(108px,23svh,164px)!important;
+  padding:clamp(5px,.8svh,8px)!important;
+  border-radius:clamp(12px,1vw,16px)!important;
+  transform:none!important;
+  z-index:86!important;
+}
+body.hv-mobile-landscape #handDrawer .hand-top{
+  margin-bottom:clamp(3px,.6svh,6px)!important;
+  font-size:clamp(9px,.8vw,11px)!important;
+}
+body.hv-mobile-landscape #handDrawer .hand-row{
+  gap:clamp(5px,.6vw,8px)!important;
+  padding-bottom:2px!important;
+}
+body.hv-mobile-landscape #handDrawer .hand-card{
+  flex:0 0 clamp(78px,8vw,108px)!important;
+  min-height:clamp(94px,18svh,128px)!important;
+  padding:clamp(5px,.6vw,7px)!important;
+  border-radius:clamp(9px,.8vw,12px)!important;
+}
+body.hv-mobile-landscape #handDrawer .hand-name{
+  font-size:clamp(8px,.7vw,10px)!important;
+}
+body.hv-mobile-landscape #handDrawer .hand-stats,
+body.hv-mobile-landscape #handDrawer .hand-text{
+  font-size:clamp(6px,.55vw,8px)!important;
+}
+body.hv-mobile-landscape #log.log{
+  left:max(6px,env(safe-area-inset-left,0px))!important;
+  right:auto!important;
+  bottom:max(6px,env(safe-area-inset-bottom,0px))!important;
+  width:clamp(130px,15vw,210px)!important;
+  max-height:clamp(62px,15svh,96px)!important;
+  padding:clamp(5px,.7svh,8px)!important;
+  font-size:clamp(7px,.65vw,9px)!important;
+  z-index:82!important;
+}
+body.hv-mobile-landscape #battleMenuPanel.battle-menu-panel{
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:translate(-50%,-50%)!important;
+  width:min(430px,88vw)!important;
+  max-width:min(430px,88vw)!important;
+  max-height:88svh!important;
+  overflow:auto!important;
+  z-index:220!important;
+}
+
+/* Líderes: tamaño de una celda visual en móvil horizontal. */
+body.hv-mobile-landscape .leader-bases-layer{
+  z-index:36!important;
+  pointer-events:none!important;
+}
+body.hv-mobile-landscape .leader-base{
+  width:clamp(var(--leader-size-min),var(--leader-size-vh),var(--leader-size-max))!important;
+  min-height:clamp(var(--leader-box-min),var(--leader-box-vh),var(--leader-box-max))!important;
+  transform:translateX(calc(-50% + var(--leader-x-offset)))!important;
+  filter:drop-shadow(0 7px 8px rgba(0,0,0,.58))!important;
+  gap:0!important;
+}
+body.hv-mobile-landscape .leader-base.leader-base-north{
+  top:var(--leader-enemy-top)!important;
+  width:clamp(30px,5.4svh,40px)!important;
+  min-height:clamp(38px,6.8svh,52px)!important;
+}
+body.hv-mobile-landscape .leader-base.leader-base-south{
+  bottom:var(--leader-player-bottom)!important;
+  width:clamp(32px,5.9svh,44px)!important;
+  min-height:clamp(40px,7.3svh,56px)!important;
+}
+body.hv-mobile-landscape .leader-base-cavalry{
+  width:clamp(34px,6.2svh,46px)!important;
+}
+body.hv-mobile-landscape .leader-base.leader-base-north.leader-base-cavalry{
+  width:clamp(31px,5.7svh,42px)!important;
+}
+body.hv-mobile-landscape .leader-base-token{
+  width:100%!important;
+  aspect-ratio:.76/1!important;
+}
+body.hv-mobile-landscape .leader-base-portrait{
+  width:calc(92% * var(--leader-portrait-scale))!important;
+  height:calc(84% * var(--leader-portrait-scale))!important;
+  bottom:20%!important;
+}
+body.hv-mobile-landscape .leader-base.leader-base-north .leader-base-portrait{
+  width:58%!important;
+  height:58%!important;
+  bottom:24%!important;
+}
+body.hv-mobile-landscape .leader-base.leader-base-south .leader-base-portrait{
+  width:64%!important;
+  height:64%!important;
+  bottom:21%!important;
+}
+body.hv-mobile-landscape .leader-base-portrait .unit-depth-stack,
+body.hv-mobile-landscape .leader-base-portrait img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+}
+body.hv-mobile-landscape .leader-base-aura{
+  width:56%!important;
+  height:36%!important;
+  bottom:18%!important;
+  filter:blur(1px)!important;
+  opacity:.7!important;
+}
+body.hv-mobile-landscape .leader-base-pedestal{
+  width:32%!important;
+  height:5%!important;
+  bottom:10%!important;
+  border-width:1px!important;
+}
+body.hv-mobile-landscape .leader-base-stats{
+  gap:2px!important;
+  transform:translateY(var(--leader-stats-y))!important;
+  z-index:7!important;
+}
+body.hv-mobile-landscape .leader-base-stats b{
+  min-width:16px!important;
+  height:15px!important;
+  padding:0 2px!important;
+  font-size:6px!important;
+  gap:0!important;
+  border-radius:999px!important;
+}
+body.hv-mobile-landscape .leader-stat-icon{
+  display:none!important;
+}
+body.hv-mobile-landscape .leader-stat-value{
+  font-size:6.5px!important;
+  line-height:1!important;
+}
+body.hv-mobile-landscape .leader-base-hitbox{
+  width:150%!important;
+  height:132%!important;
+  border-radius:18px!important;
+}

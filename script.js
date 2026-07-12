@@ -2713,8 +2713,9 @@ function isArcherUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
   const name=String(u.name||"").toLowerCase();
-  return key==="archer"
-  || name.includes("arquera");
+  return ARCHER_UNIT_KEYS.has(key)
+  || name.includes("arquera")
+  || name.includes("arquero");
 }
 function isLightCavalryUnit(u){
   if(!u||u.leader)return false;
@@ -2740,11 +2741,19 @@ function isAntiCavalryTargetUnit(u){
 }
 
 
+const ASSASSIN_UNIT_KEYS=new Set([
+  "scout",
+  "geisha_encubierta",
+  "hattori_shinobi",
+  "saboteador_iga"
+]);
 function isAssassinUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
   const name=String(u.name||"").toLowerCase();
-  return key==="scout"||name.includes("asesina")||name.includes("asesino");
+  return ASSASSIN_UNIT_KEYS.has(key)
+  || name.includes("asesina")
+  || name.includes("asesino");
 }
 function getLeaderBonus(u){
   if(!u||u.leader||!hasActiveLeader(u.owner))return {atk:0,hp:0,guard:0,dex:0,agi:0,mov:0,range:0};
@@ -3721,7 +3730,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const playerHand=playerDraw.hand;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle);
-  const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||rollLeaderLevel5Ability()):"";
+  const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
@@ -11379,9 +11388,14 @@ function getExactEffectGuideData(entity,effectText=""){
    ========================================================== */
 function isMobileLandscapeTarget(){
   try{
-    const mq=window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
-    const coarse=window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-    return !!(mq && (coarse || (navigator.maxTouchPoints||0)>0));
+    const shortSide=Math.min(
+      Number(window.innerWidth||0),
+      Number(window.innerHeight||0)
+    );
+    const compactViewport=shortSide>0&&shortSide<=980;
+    const coarse=window.matchMedia&&window.matchMedia('(pointer: coarse)').matches;
+    const touch=(navigator.maxTouchPoints||0)>0;
+    return !!(compactViewport&&(coarse||touch));
   }catch(_){return false;}
 }
 function shouldShowMobileRotateOverlay(){
@@ -11403,11 +11417,19 @@ async function requestLandscapeOrientation(){
 function updateMobileRotateOverlay(){
   const overlay=$("mobileRotateOverlay");
   if(!overlay)return;
-  const show=shouldShowMobileRotateOverlay();
-  overlay.classList.toggle('hidden',!show);
-  overlay.classList.toggle('visible',show);
-  overlay.setAttribute('aria-hidden',show?'false':'true');
-  document.body.classList.toggle('mobile-landscape-locked',show);
+  const target=isMobileLandscapeTarget();
+  const portrait=target&&shouldShowMobileRotateOverlay();
+  const landscape=target&&!portrait;
+  document.documentElement.classList.toggle('hv-mobile-target',target);
+  document.documentElement.classList.toggle('hv-mobile-landscape',landscape);
+  document.documentElement.classList.toggle('hv-mobile-portrait',portrait);
+  document.body.classList.toggle('hv-mobile-target',target);
+  document.body.classList.toggle('hv-mobile-landscape',landscape);
+  document.body.classList.toggle('hv-mobile-portrait',portrait);
+  overlay.classList.toggle('hidden',!portrait);
+  overlay.classList.toggle('visible',portrait);
+  overlay.setAttribute('aria-hidden',portrait?'false':'true');
+  document.body.classList.toggle('mobile-landscape-locked',portrait);
 }
 function initMobileLandscapeGuard(){
   const btn=$("mobileRotateTryBtn");
