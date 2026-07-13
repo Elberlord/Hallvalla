@@ -18203,3 +18203,238 @@ body.hv-mobile-landscape .leader-base-hitbox{
   height:132%!important;
   border-radius:18px!important;
 }
+
+/* ============================================================
+   7HEQ · LAYOUT DEDICADO PARA COMBATE MÓVIL HORIZONTAL
+   - Se activa únicamente mediante la clase calculada por JS.
+   - No modifica la presentación de escritorio.
+   ============================================================ */
+html.hv-mobile-landscape,
+html.hv-mobile-landscape body{
+  width:100dvw!important;
+  height:100dvh!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+html.hv-mobile-landscape #gameShell,
+html.hv-mobile-landscape #gameShell .battlefield{
+  position:fixed!important;
+  inset:0!important;
+  width:100dvw!important;
+  height:100dvh!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+/* HUD superiores más compactos y separados del campo. */
+html.hv-mobile-landscape #gameShell .player-status-hud{
+  top:6px!important;
+  width:min(32vw,270px)!important;
+  height:72px!important;
+  min-width:0!important;
+  transform:none!important;
+  z-index:82!important;
+}
+html.hv-mobile-landscape #gameShell #hudP1{left:8px!important;right:auto!important;}
+html.hv-mobile-landscape #gameShell #hudP2{right:8px!important;left:auto!important;}
+html.hv-mobile-landscape #gameShell .player-status-hud .hud-name,
+html.hv-mobile-landscape #gameShell .player-status-hud .player-name{
+  font-size:clamp(13px,2.1vw,19px)!important;
+  line-height:1!important;
+}
+html.hv-mobile-landscape #gameShell .player-status-hud .hud-mini{
+  min-height:22px!important;
+  padding:1px 3px!important;
+}
+html.hv-mobile-landscape #gameShell .player-status-hud .hud-mini .label{
+  font-size:6px!important;
+}
+html.hv-mobile-landscape #gameShell .player-status-hud .hud-mini strong{
+  font-size:10px!important;
+}
+
+/* Campo central: usa la altura disponible sin invadir el HUD. */
+html.hv-mobile-landscape #gameShell .grid-wrap{
+  --mobile-arena-height:calc(100dvh - 18px);
+  top:8px!important;
+  left:50%!important;
+  width:min(52vw, calc(var(--mobile-arena-height) * .71))!important;
+  height:calc(var(--mobile-arena-height) * .88)!important;
+  transform:translateX(-50%)!important;
+  z-index:5!important;
+}
+
+/* Líderes fijos: aproximadamente 70 % del tamaño móvil anterior. */
+html.hv-mobile-landscape #gameShell .leader-bases-layer{
+  --arenaH:100dvh!important;
+}
+html.hv-mobile-landscape #gameShell .leader-base{
+  --leader-size-min:28px;
+  --leader-size-vh:4.1dvh;
+  --leader-size-max:40px;
+  --leader-box-min:40px;
+  --leader-box-vh:6.1dvh;
+  --leader-box-max:58px;
+  --leader-portrait-scale:.72;
+  --leader-pedestal-scale:.62;
+  --leader-stats-y:-1px;
+  width:clamp(var(--leader-size-min),var(--leader-size-vh),var(--leader-size-max))!important;
+  min-height:clamp(var(--leader-box-min),var(--leader-box-vh),var(--leader-box-max))!important;
+  filter:drop-shadow(0 7px 8px rgba(0,0,0,.58))!important;
+}
+html.hv-mobile-landscape #gameShell .leader-base-cavalry{
+  width:clamp(31px,4.6dvh,45px)!important;
+}
+html.hv-mobile-landscape #gameShell .leader-base-north{top:5.2%!important;}
+html.hv-mobile-landscape #gameShell .leader-base-south{bottom:3.4%!important;}
+html.hv-mobile-landscape #gameShell .leader-base-stats{
+  gap:2px!important;
+  transform:translateY(var(--leader-stats-y))!important;
+}
+html.hv-mobile-landscape #gameShell .leader-base-stats b{
+  min-width:18px!important;
+  height:16px!important;
+  padding:0 3px!important;
+  font-size:6px!important;
+  gap:2px!important;
+}
+html.hv-mobile-landscape #gameShell .leader-stat-icon{font-size:7px!important;}
+
+/* Honor reducido para no ocupar el lateral completo. */
+html.hv-mobile-landscape #gameShell #turnHonorHud.turn-honor-hud{
+  left:10px!important;
+  top:86px!important;
+  min-width:92px!important;
+  padding:5px 9px!important;
+  font-size:10px!important;
+  border-radius:16px!important;
+}
+html.hv-mobile-landscape #gameShell #turnHonorHud .turn-honor-label{
+  font-size:10px!important;
+}
+
+/* Controles inferiores compactos y horizontales. */
+html.hv-mobile-landscape #gameShell .battlefield .battle-tools{
+  left:10px!important;
+  bottom:10px!important;
+  top:auto!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  gap:6px!important;
+  max-width:none!important;
+  z-index:152!important;
+}
+html.hv-mobile-landscape #gameShell .battlefield .battle-tools #battleMenuBtn{
+  width:38px!important;
+  min-width:38px!important;
+  height:38px!important;
+  min-height:38px!important;
+}
+html.hv-mobile-landscape #gameShell .battlefield .battle-tools #toggleLogBtn,
+html.hv-mobile-landscape #gameShell .battlefield .battle-tools #toggleActionsBtn{
+  min-width:86px!important;
+  width:auto!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:0 9px!important;
+  font-size:11px!important;
+}
+
+/* Panel de acciones móvil: flotante a la derecha, sin tapar el centro. */
+html.hv-mobile-landscape #gameShell .battlefield .side{
+  position:fixed!important;
+  left:auto!important;
+  right:8px!important;
+  top:auto!important;
+  bottom:8px!important;
+  width:min(230px,28vw)!important;
+  z-index:148!important;
+  display:block!important;
+}
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+  width:66%!important;
+  gap:5px!important;
+}
+html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
+  font-size:9px!important;
+  line-height:1!important;
+}
+
+/* Registro como ventana baja, no como columna permanente. */
+html.hv-mobile-landscape #gameShell #log.log{
+  position:fixed!important;
+  left:108px!important;
+  right:244px!important;
+  bottom:8px!important;
+  width:auto!important;
+  max-height:74px!important;
+  z-index:146!important;
+  font-size:9px!important;
+  padding:6px 8px!important;
+}
+
+/* Mano más baja y cartas compactas. */
+html.hv-mobile-landscape #gameShell .hand-drawer.open{
+  position:fixed!important;
+  left:9vw!important;
+  right:9vw!important;
+  bottom:6px!important;
+  width:auto!important;
+  max-width:none!important;
+  max-height:36dvh!important;
+  padding:6px 8px!important;
+  transform:none!important;
+  z-index:210!important;
+  overflow:hidden!important;
+}
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-top{
+  margin-bottom:4px!important;
+  font-size:10px!important;
+}
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-row{
+  gap:5px!important;
+  padding-bottom:2px!important;
+}
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
+  flex:0 0 clamp(72px,10vw,96px)!important;
+  min-height:92px!important;
+  padding:5px!important;
+  border-radius:9px!important;
+}
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-icon{font-size:16px!important;}
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-name{font-size:8px!important;}
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-stats,
+html.hv-mobile-landscape #gameShell .hand-drawer .hand-text{font-size:7px!important;}
+
+/* Solo un panel grande a la vez: al abrir la mano, acciones/log quedan detrás. */
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open #log{
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+/* Móviles extremadamente bajos. */
+@media (max-height:380px){
+  html.hv-mobile-landscape #gameShell .player-status-hud{height:62px!important;}
+  html.hv-mobile-landscape #gameShell #turnHonorHud.turn-honor-hud{top:73px!important;}
+  html.hv-mobile-landscape #gameShell .leader-base{
+    --leader-size-min:25px;
+    --leader-size-vh:3.8dvh;
+    --leader-size-max:35px;
+    --leader-box-min:36px;
+    --leader-box-vh:5.5dvh;
+    --leader-box-max:50px;
+  }
+  html.hv-mobile-landscape #gameShell .leader-base-north{top:5.8%!important;}
+  html.hv-mobile-landscape #gameShell .leader-base-south{bottom:4%!important;}
+  html.hv-mobile-landscape #gameShell .hand-drawer.open{max-height:34dvh!important;}
+}
