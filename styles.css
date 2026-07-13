@@ -18489,3 +18489,33 @@ body.hv-mobile-landscape #mobileToggleActionsBtn.mobile-honor-actions-btn[aria-e
     font-size:9px!important;
   }
 }
+
+/* ============================================================
+   7HES — ACCIONES SIEMPRE ACCESIBLES CON LA MANO ABIERTA
+   SOLO MÓVIL HORIZONTAL. PC permanece intacto.
+   El panel se mantiene en la zona oscura derecha del campo.
+   ============================================================ */
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
+  visibility:visible!important;
+  pointer-events:auto!important;
+  display:flex!important;
+  position:absolute!important;
+  left:auto!important;
+  right:max(6px,env(safe-area-inset-right,0px))!important;
+  top:50%!important;
+  bottom:auto!important;
+  transform:translateY(-50%)!important;
+  z-index:90!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  display:block!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  opacity:1!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side.actions-collapsed,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side.actions-collapsed{
+  pointer-events:none!important;
+}
