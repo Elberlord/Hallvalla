@@ -18575,3 +18575,70 @@ html.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed{
     width:min(210px,27vw)!important;
   }
 }
+
+/* ============================================================
+   7HEU — HUD DE ACCIONES COMPACTO BAJO EL HUD DEL JUGADOR 2
+   SOLO MÓVIL HORIZONTAL. PC permanece intacto.
+   ============================================================ */
+body.hv-mobile-landscape #gameShell .battlefield .side,
+html.hv-mobile-landscape #gameShell .battlefield .side,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
+  right:max(10px,env(safe-area-inset-right,0px))!important;
+  top:clamp(66px,12.5dvh,90px)!important;
+  width:min(190px,23vw)!important;
+  height:132px!important;
+  overflow:hidden!important;
+  z-index:240!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  width:100%!important;
+  height:132px!important;
+  min-height:132px!important;
+  aspect-ratio:auto!important;
+  overflow:hidden!important;
+  background-size:100% auto!important;
+  background-position:center top!important;
+  background-repeat:no-repeat!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+  top:53%!important;
+  width:63%!important;
+  gap:4px!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side .action-img-btn,
+html.hv-mobile-landscape #gameShell .battlefield .side .action-img-btn{
+  gap:2px!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label,
+html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
+  font-size:8px!important;
+  line-height:.92!important;
+}
+
+@media (max-height:390px){
+  body.hv-mobile-landscape #gameShell .battlefield .side,
+  html.hv-mobile-landscape #gameShell .battlefield .side,
+  body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
+  html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
+    top:62px!important;
+    width:min(176px,22vw)!important;
+    height:122px!important;
+  }
+
+  body.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+  html.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+  body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+  html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+    height:122px!important;
+    min-height:122px!important;
+  }
+}
