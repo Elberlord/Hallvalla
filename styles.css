@@ -18438,3 +18438,54 @@ html.hv-mobile-landscape #gameShell .battlefield.hand-open #log{
   html.hv-mobile-landscape #gameShell .leader-base-south{bottom:4%!important;}
   html.hv-mobile-landscape #gameShell .hand-drawer.open{max-height:34dvh!important;}
 }
+
+
+/* ============================================================
+   7HER — BOTÓN ACCIONES JUNTO A HONOR (SOLO MÓVIL HORIZONTAL)
+   PC permanece intacto.
+   ============================================================ */
+.mobile-honor-actions-btn{display:none;}
+
+body.hv-mobile-landscape #toggleActionsBtn{
+  display:none!important;
+}
+
+body.hv-mobile-landscape #mobileToggleActionsBtn.mobile-honor-actions-btn{
+  display:flex!important;
+  position:absolute!important;
+  left:clamp(108px,11vw,154px)!important;
+  top:clamp(66px,12svh,90px)!important;
+  z-index:78!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:clamp(74px,8vw,104px)!important;
+  height:clamp(30px,5svh,38px)!important;
+  padding:0 clamp(8px,.8vw,12px)!important;
+  border:1px solid rgba(204,164,83,.58)!important;
+  border-radius:clamp(11px,1vw,15px)!important;
+  background:linear-gradient(180deg,rgba(30,23,15,.98),rgba(10,9,7,.98))!important;
+  color:#f3dfaa!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.42),inset 0 0 12px rgba(198,153,67,.08)!important;
+  font-family:inherit!important;
+  font-size:clamp(9px,.82vw,12px)!important;
+  font-weight:800!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  cursor:pointer!important;
+}
+
+body.hv-mobile-landscape #mobileToggleActionsBtn.mobile-honor-actions-btn:active,
+body.hv-mobile-landscape #mobileToggleActionsBtn.mobile-honor-actions-btn[aria-expanded="true"]{
+  border-color:rgba(235,195,104,.92)!important;
+  box-shadow:0 0 0 1px rgba(235,195,104,.16),0 5px 14px rgba(0,0,0,.42),inset 0 0 14px rgba(198,153,67,.13)!important;
+}
+
+@media (max-height:390px){
+  body.hv-mobile-landscape #mobileToggleActionsBtn.mobile-honor-actions-btn{
+    left:112px!important;
+    top:72px!important;
+    min-width:72px!important;
+    height:30px!important;
+    font-size:9px!important;
+  }
+}
