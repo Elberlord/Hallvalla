@@ -18519,3 +18519,59 @@ body.hv-mobile-landscape #gameShell .battlefield.hand-open .side.actions-collaps
 html.hv-mobile-landscape #gameShell .battlefield.hand-open .side.actions-collapsed{
   pointer-events:none!important;
 }
+
+/* ============================================================
+   7HET — HUD DE ACCIONES DEBAJO DEL HUD DEL JUGADOR 2
+   SOLO MÓVIL HORIZONTAL. PC permanece intacto.
+   ============================================================ */
+body.hv-mobile-landscape #gameShell .battlefield .side,
+html.hv-mobile-landscape #gameShell .battlefield .side,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
+  position:fixed!important;
+  left:auto!important;
+  right:max(8px,env(safe-area-inset-right,0px))!important;
+  top:clamp(72px,15dvh,112px)!important;
+  bottom:auto!important;
+  width:min(230px,28vw)!important;
+  transform:none!important;
+  z-index:225!important;
+  display:block!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+  width:100%!important;
+  gap:5px!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed,
+html.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed{
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+@media (max-height:390px){
+  body.hv-mobile-landscape #gameShell .battlefield .side,
+  html.hv-mobile-landscape #gameShell .battlefield .side,
+  body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
+  html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
+    top:68px!important;
+    width:min(210px,27vw)!important;
+  }
+}
