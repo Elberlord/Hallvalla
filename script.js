@@ -1862,10 +1862,21 @@ function renderDetIdentityHtml(entity,ownerLabel=""){
 }
 function renderDetTacticalHtml(entity){
   if(!entity||entity.spell||entity.trap)return "";
+  const isSpearman=normalizeEffectGuideKey(entity)==="spearman";
   const clsLabel=getWeaponClassLabel(entity);
   const wins=getWeaponAdvantageTargets(entity);
   const loses=getWeaponDisadvantageSources(entity);
   const icon=getWeaponClassIcon(entity);
+  if(isSpearman){
+    return `<div class="det-info-card det-tactical-card det-tactical-icon-only">
+      <div class="det-section-title">Clase táctica</div>
+      <div class="det-tactical-single-wrap">
+        <button class="det-tactical-seal guide-weapon-btn" type="button" aria-label="Abrir clase táctica de Lanza" title="Lanza">
+          <span class="det-tactical-seal-art"><img src="assets/ui/det_icons/weapon_spear.png" alt="Lanza"></span>
+        </button>
+      </div>
+    </div>`;
+  }
   return `<div class="det-info-card det-tactical-card">
     <div class="det-section-title">Clase táctica</div>
     <button class="det-info-row det-info-row-weapon det-click-row guide-weapon-btn" type="button" aria-label="Ver ventaja y desventaja de arma">
@@ -1878,15 +1889,44 @@ function renderDetTacticalHtml(entity){
     <div class="det-mini-note">Click en Arma para ver la ventaja, desventaja y clase táctica exacta de esta unidad. Si ataca a una clase sobre la que tiene ventaja, gana +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza durante ese combate.</div>
   </div>`;
 }
+function getDetAbilityVisual(entity,section,index=0){
+  const key=normalizeEffectGuideKey(entity);
+  const title=String(section?.title||"").toLowerCase();
+  if(key==="spearman"){
+    if(title.includes("formación de picas")||title.includes("formacion de picas")){
+      return {icon:"assets/ui/effects/pike_formation.svg",label:"Formación de picas",kind:"trigger"};
+    }
+    if(title.includes("anticaballería")||title.includes("anticaballeria")){
+      return {icon:"assets/ui/effects/anti_cavalry.svg",label:"Anticaballería",kind:"debuff"};
+    }
+  }
+  const kind=classifyDetAbility(section);
+  const meta=getDetAbilityMeta(kind);
+  return {icon:meta.icon,label:section?.title||meta.label,kind};
+}
+function getDetAbilitySectionsForInspector(entity,effectText=""){
+  if(normalizeEffectGuideKey(entity)==="spearman"){
+    return [
+      {title:"FORMACIÓN DE PICAS",body:"Una vez por turno, cuando un enemigo le ataca cuerpo a cuerpo dentro de su alcance, el Lancero Solar ataca primero. Esta habilidad sustituye y reúne la antigua regla general de lanza para esta unidad."},
+      {title:"ANTICABALLERÍA",body:"Cuando combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."}
+    ];
+  }
+  return getEntityAbilitySections(entity,effectText);
+}
 function renderDetAbilitiesHtml(entity,effectText=""){
-  const sections=getEntityAbilitySections(entity,effectText);
-  return `<div class="det-section-block">
+  const sections=getDetAbilitySectionsForInspector(entity,effectText);
+  const iconOnly=normalizeEffectGuideKey(entity)==="spearman";
+  return `<div class="det-section-block ${iconOnly?"det-effects-icon-only":""}">
     <div class="det-section-title">Efectos</div>
-    <div class="det-ability-list">${sections.length?sections.map(sec=>{
-      const kind=classifyDetAbility(sec);
+    <div class="det-ability-list">${sections.length?sections.map((sec,index)=>{
+      const visual=getDetAbilityVisual(entity,sec,index);
+      const kind=visual.kind||classifyDetAbility(sec);
       const meta=getDetAbilityMeta(kind);
+      if(iconOnly){
+        return `<button class="det-effect-seal guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="Abrir ${escapeHtml(visual.label)}" title="${escapeHtml(visual.label)}"><span class="det-effect-seal-art"><img src="${escapeHtml(visual.icon)}" alt=""></span><span class="det-effect-seal-name">${escapeHtml(visual.label)}</span></button>`;
+      }
       return `<div class="det-ability-card" data-ability-block="${escapeHtml(sec.title)}">
-        <div class="det-ability-top"><button class="det-ability-icon-btn guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="${escapeHtml(meta.label)}"><img class="det-ability-img kind-${escapeHtml(kind)}" src="${escapeHtml(meta.icon)}" alt="${escapeHtml(meta.label)}"></button><span class="det-ability-kind">${escapeHtml(meta.label)}</span></div>
+        <div class="det-ability-top"><button class="det-ability-icon-btn guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="${escapeHtml(meta.label)}"><img class="det-ability-img kind-${escapeHtml(kind)}" src="${escapeHtml(visual.icon)}" alt="${escapeHtml(meta.label)}"></button><span class="det-ability-kind">${escapeHtml(meta.label)}</span></div>
         <div class="det-ability-name">${escapeHtml(sec.title)}</div>
         <div class="det-ability-text">${escapeHtml(sec.body)}</div>
       </div>`;
@@ -4203,7 +4243,45 @@ function weaponSummaryHtml(entity){
   const data=weaponGuideData(entity);
   return `<div class="weapon-summary"><b>Arma:</b> ${escapeHtml(data.title)}<br><span>${escapeHtml(data.short)}</span></div>`;
 }
+function openSpearmanTacticalGuide(){
+  let modal=$("spearmanTacticalModal");
+  if(!modal){
+    modal=document.createElement("div");
+    modal.id="spearmanTacticalModal";
+    modal.className="spearman-tactical-modal hidden";
+    modal.innerHTML=`<div class="spearman-tactical-card" role="dialog" aria-modal="true" aria-labelledby="spearmanTacticalTitle">
+      <div class="spearman-tactical-head">
+        <div class="spearman-tactical-title-wrap">
+          <img src="assets/ui/det_icons/weapon_spear.png" alt="" class="spearman-tactical-main-icon">
+          <div><div class="spearman-tactical-kicker">CLASE TÁCTICA</div><h2 id="spearmanTacticalTitle">LANZA</h2></div>
+        </div>
+        <button id="spearmanTacticalClose" class="spearman-tactical-x" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="spearman-tactical-matchups">
+        <div class="spearman-matchup-row disadvantage">
+          <span class="spearman-matchup-icon"><img src="assets/ui/det_icons/weapon_sword.png" alt="Espada"></span>
+          <div><b>DESVENTAJA CONTRA</b><strong>Espada / infantería</strong><p>La Espada tiene ventaja táctica sobre la Lanza y recibe +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza al atacarla durante ese combate.</p></div>
+        </div>
+        <div class="spearman-matchup-row advantage">
+          <span class="spearman-matchup-icon"><img src="assets/ui/det_icons/weapon_cavalry.png" alt="Caballería"></span>
+          <div><b>VENTAJA CONTRA</b><strong>Caballería</strong><p>La Lanza tiene ventaja táctica contra Caballería y recibe +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza al atacarla durante ese combate.</p></div>
+        </div>
+      </div>
+      <button id="spearmanTacticalOk" class="spearman-tactical-ok" type="button">ENTENDIDO</button>
+    </div>`;
+    document.body.appendChild(modal);
+    const close=()=>modal.classList.add("hidden");
+    $("spearmanTacticalClose").onclick=close;
+    $("spearmanTacticalOk").onclick=close;
+    modal.addEventListener("click",ev=>{if(ev.target===modal)close();});
+  }
+  modal.classList.remove("hidden");
+}
 function openWeaponGuide(entity){
+  if(normalizeEffectGuideKey(entity)==="spearman"){
+    openSpearmanTacticalGuide();
+    return;
+  }
   const data=weaponGuideData(entity);
   openStatGuideModal({...data,title:`⚜ ${data.title}`});
 }
@@ -4423,16 +4501,12 @@ Ruptura brutal:
 Resolución de ataque:
 • El efecto no garantiza daño por sí mismo.
 • El ataque debe resolverse como cualquier ataque normal.`,example:"Berserker con DX aumentado por hacha puede abrir unidades resistentes. Contra Lancero solar, también recibe la penalización de Formación de picas si lo ataca cuerpo a cuerpo."},
-    spearman:{short:"Unidad defensiva. Sigue la regla global de lanzas y es especialmente fuerte contra Caballería.",formula:`Formación de picas:
-• Contra unidades que NO son Caballería no agrega penalización propia.
-• En esos casos solo conserva la respuesta normal de la regla global de lanzas si sobrevive.
+    spearman:{short:"Unidad defensiva de picas, especializada en responder antes del impacto y detener cargas de Caballería.",formula:`FORMACIÓN DE PICAS:
+• Una vez por turno, cuando un enemigo le ataca cuerpo a cuerpo dentro de su alcance, el Lancero Solar ataca primero.
+• Formación de picas reúne la antigua regla general de lanza de esta unidad; ya no se muestra como un efecto separado.
 
-Contraataque de lanza:
-• Si recibe un ataque dentro de su rango y sobrevive, contraataca una vez por turno.
-• Si el contraataque acierta, causa mínimo 1 daño.
-
-Anticaballería:
-• Si una Caballería lo ataca cuerpo a cuerpo, esa Caballería queda con Guardia 0 y AGI 0 durante ese combate.`,example:"Contra no Caballería, el Lancero no aplica castigo propio: solo puede responder por regla de lanza si sobrevive."},
+ANTICABALLERÍA:
+• Cuando combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate.`,example:"Un atacante de Caballería que entra cuerpo a cuerpo queda sin Guardia ni AGI durante ese combate, mientras el Lancero puede resolver Formación de picas una vez por turno."},
     archer:{short:"Unidad de rango. Su debuff solo entra si el disparo realmente hiere la Vida enemiga.",formula:`Condición:
 • Debe atacar a distancia.
 • El ataque debe causar al menos 1 daño a Vida/HP.

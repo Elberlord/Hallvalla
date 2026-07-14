@@ -18764,3 +18764,167 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
     height:35px!important;
   }
 }
+
+
+/* === 7HEW · Inspector estructurado: efectos del Lancero Solar === */
+#inspector .det-effects-icon-only .det-ability-list{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:20px!important;
+  min-height:150px!important;
+  height:auto!important;
+  padding:18px!important;
+  overflow:visible!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(222,170,62,.10),transparent 58%),
+    linear-gradient(180deg,rgba(23,18,12,.92),rgba(7,7,7,.96))!important;
+}
+#inspector .det-effect-seal{
+  appearance:none;
+  width:132px;
+  min-height:126px;
+  padding:12px 10px 10px;
+  border-radius:18px;
+  border:1px solid rgba(238,190,91,.34);
+  background:linear-gradient(180deg,rgba(56,39,17,.92),rgba(13,10,8,.98));
+  box-shadow:inset 0 0 0 1px rgba(255,239,185,.05),0 12px 24px rgba(0,0,0,.34);
+  color:#f2ca69;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+#inspector .det-effect-seal:hover,
+#inspector .det-effect-seal:focus-visible{
+  transform:translateY(-3px);
+  border-color:rgba(255,220,126,.72);
+  box-shadow:inset 0 0 0 1px rgba(255,239,185,.10),0 16px 30px rgba(0,0,0,.42),0 0 22px rgba(221,164,55,.14);
+  outline:none;
+}
+#inspector .det-effect-seal-art{
+  width:76px;
+  height:76px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(circle at 35% 25%,rgba(255,230,143,.18),rgba(62,40,11,.76) 55%,rgba(5,5,5,.96));
+  border:1px solid rgba(238,190,91,.48);
+  box-shadow:inset 0 0 16px rgba(255,218,118,.10),0 8px 18px rgba(0,0,0,.35);
+}
+#inspector .det-effect-seal-art img{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.78))}
+#inspector .det-effect-seal-name{
+  font-family:Georgia,serif;
+  font-size:12px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:.045em;
+  text-align:center;
+  text-transform:uppercase;
+  color:#f4d477;
+}
+.stat-guide-card{
+  border-color:rgba(238,190,91,.48)!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(222,170,62,.12),transparent 42%),
+    linear-gradient(180deg,rgba(31,23,14,.99),rgba(7,7,7,.99))!important;
+}
+.stat-guide-head{padding-bottom:12px;border-bottom:1px solid rgba(238,190,91,.20)}
+.stat-guide-box{border-radius:14px!important;background:linear-gradient(180deg,rgba(42,31,18,.72),rgba(11,10,9,.86))!important;border-color:rgba(238,190,91,.22)!important}
+@media(max-width:980px){
+  #inspector .det-effects-icon-only .det-ability-list{gap:12px!important;padding:12px!important;min-height:126px!important}
+  #inspector .det-effect-seal{width:112px;min-height:110px;padding:9px 8px}
+  #inspector .det-effect-seal-art{width:62px;height:62px}
+  #inspector .det-effect-seal-art img{width:47px;height:47px}
+  #inspector .det-effect-seal-name{font-size:10px}
+}
+
+
+/* === 7HEX · Clase táctica limpia del Lancero Solar === */
+#inspector .det-tactical-icon-only{
+  background:#050505!important;
+  border-color:rgba(226,177,68,.42)!important;
+}
+#inspector .det-tactical-icon-only .det-section-title{
+  background:#090909!important;
+  color:#f2c95e!important;
+  border-bottom:1px solid rgba(226,177,68,.32)!important;
+}
+#inspector .det-tactical-single-wrap{
+  min-height:150px;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#050505;
+}
+#inspector .det-tactical-seal{
+  appearance:none;
+  width:118px;
+  height:118px;
+  border-radius:50%;
+  border:1px solid rgba(239,196,83,.56);
+  background:radial-gradient(circle at 35% 25%,rgba(255,220,118,.14),#0a0a0a 60%,#020202);
+  box-shadow:inset 0 0 18px rgba(255,207,91,.08),0 12px 30px rgba(0,0,0,.65),0 0 18px rgba(219,163,47,.10);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+#inspector .det-tactical-seal:hover,
+#inspector .det-tactical-seal:focus-visible{
+  transform:translateY(-3px) scale(1.02);
+  border-color:#f5cf6b;
+  box-shadow:inset 0 0 22px rgba(255,207,91,.12),0 16px 34px rgba(0,0,0,.72),0 0 24px rgba(219,163,47,.18);
+  outline:none;
+}
+#inspector .det-tactical-seal-art img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 5px 7px rgba(0,0,0,.85))}
+.spearman-tactical-modal{
+  position:fixed;
+  inset:0;
+  z-index:320;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(0,0,0,.88);
+  backdrop-filter:blur(5px);
+}
+.spearman-tactical-modal.hidden{display:none!important}
+.spearman-tactical-card{
+  width:min(620px,94vw);
+  max-height:92dvh;
+  overflow:auto;
+  padding:20px;
+  border-radius:20px;
+  color:#f0ca65;
+  background:#050505;
+  border:1px solid rgba(239,196,83,.58);
+  box-shadow:0 30px 90px rgba(0,0,0,.92),0 0 0 1px rgba(255,220,126,.10),inset 0 0 24px rgba(255,202,74,.035);
+}
+.spearman-tactical-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid rgba(239,196,83,.28)}
+.spearman-tactical-title-wrap{display:flex;align-items:center;gap:13px}
+.spearman-tactical-main-icon{width:56px;height:56px;object-fit:contain}
+.spearman-tactical-kicker{font-size:11px;font-weight:900;letter-spacing:.16em;color:#bd9440}
+.spearman-tactical-head h2{margin:2px 0 0;font-family:Georgia,serif;font-size:30px;color:#f5d47c;letter-spacing:.05em}
+.spearman-tactical-x{width:38px;height:38px;border-radius:10px;border:1px solid rgba(239,196,83,.42);background:#0a0a0a;color:#f5d47c;font-size:27px;line-height:1;cursor:pointer}
+.spearman-tactical-matchups{display:grid;gap:12px;margin-top:16px}
+.spearman-matchup-row{display:grid;grid-template-columns:76px 1fr;gap:15px;align-items:center;padding:15px;border-radius:14px;background:#080808;border:1px solid rgba(239,196,83,.26)}
+.spearman-matchup-icon{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#020202;border:1px solid rgba(239,196,83,.38)}
+.spearman-matchup-icon img{width:48px;height:48px;object-fit:contain}
+.spearman-matchup-row b{display:block;font-size:11px;letter-spacing:.12em;color:#b98e34;margin-bottom:3px}
+.spearman-matchup-row strong{display:block;font-family:Georgia,serif;font-size:20px;color:#f5d47c}
+.spearman-matchup-row p{margin:6px 0 0;color:#d8bf80;font-size:13px;line-height:1.45}
+.spearman-tactical-ok{display:block;width:100%;margin-top:16px;padding:12px 16px;border-radius:12px;border:1px solid rgba(239,196,83,.52);background:#0a0a0a;color:#f5d47c;font-family:Georgia,serif;font-weight:900;letter-spacing:.08em;cursor:pointer}
+.spearman-tactical-ok:hover,.spearman-tactical-ok:focus-visible{background:#111;border-color:#f5d47c;outline:none}
+@media(max-width:680px){
+  #inspector .det-tactical-single-wrap{min-height:118px;padding:12px}
+  #inspector .det-tactical-seal{width:92px;height:92px}
+  #inspector .det-tactical-seal-art img{width:60px;height:60px}
+  .spearman-tactical-card{padding:15px;border-radius:16px}
+  .spearman-matchup-row{grid-template-columns:58px 1fr;padding:12px;gap:11px}
+  .spearman-matchup-icon{width:52px;height:52px}
+  .spearman-matchup-icon img{width:38px;height:38px}
+  .spearman-tactical-head h2{font-size:24px}
+}
