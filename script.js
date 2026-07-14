@@ -9100,8 +9100,14 @@ function savePlayerProfile(profile){
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
 }
 
-const UNIT_MASTERY_KILLS_PER_RANK=100;
 const UNIT_MASTERY_MAX_RANK=10;
+function getUnitMasteryKillsForRank(rank){
+  const safeRank=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(rank)||1)));
+  if(safeRank<=1)return 0;
+  // Progresión acumulada: Nv.2=20, Nv.3=50, Nv.4=90, Nv.5=140...
+  // Cada nuevo nivel exige 10 bajas más que el anterior: +20, +30, +40, +50...
+  return 5*safeRank*(safeRank+1)-10;
+}
 function romanUnitRank(n){
   const v=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(n)||1)));
   return ["","I","II","III","IV","V","VI","VII","VIII","IX","X"][v]||"I";
@@ -9125,7 +9131,15 @@ function getUnitMasteryRecord(entity,profile=getPlayerProfile()){
   const book=normalizeUnitMasteryBook(profile.unitMastery||{});
   return book[key]||{name:normalizeUnitMasteryName(entity?.name||key),kills:0};
 }
-function getUnitMasteryRankFromKills(kills){return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,1+Math.floor(Math.max(0,Number(kills)||0)/UNIT_MASTERY_KILLS_PER_RANK)));}
+function getUnitMasteryRankFromKills(kills){
+  const safeKills=Math.max(0,Math.floor(Number(kills)||0));
+  let rank=1;
+  for(let candidate=2;candidate<=UNIT_MASTERY_MAX_RANK;candidate++){
+    if(safeKills<getUnitMasteryKillsForRank(candidate))break;
+    rank=candidate;
+  }
+  return rank;
+}
 function getUnitMasteryRank(entity){
   if(!entity||entity.leader)return 1;
   if(Number(entity.masteryRank)>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(entity.masteryRank)||1));
@@ -9137,7 +9151,7 @@ function getUnitMasteryProgressText(entity){
   const rec=getUnitMasteryRecord(entity);
   const rank=getUnitMasteryRankFromKills(rec.kills);
   if(rank>=UNIT_MASTERY_MAX_RANK)return `${rec.kills} bajas · Rango máximo`;
-  const next=rank*UNIT_MASTERY_KILLS_PER_RANK;
+  const next=getUnitMasteryKillsForRank(rank+1);
   return `${rec.kills}/${next} bajas`;
 }
 function registerLocalUnitMasteryKill(killer,victim){
