@@ -19039,3 +19039,187 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   justify-content:center;
 }
 .detail-guide-chip.detail-guide-chip-icon-only > span{display:none!important;}
+
+
+/* ==========================================================
+   7HFE · Event splashes compactos a la izquierda
+   - Misma duración y deriva visual que la recarga de Honor (2.55 s)
+   - No oscurecen ni cubren el campo
+   - Se apilan verticalmente en el lateral izquierdo
+   - La cola se limpia al cambiar de turno desde script.js
+   ========================================================== */
+.event-splash-overlay{
+  inset:auto !important;
+  left:18px !important;
+  top:170px !important;
+  width:min(286px,24vw) !important;
+  height:auto !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:47 !important;
+  overflow:visible !important;
+  isolation:auto !important;
+}
+.event-splash-overlay::before{display:none !important;content:none !important;}
+.event-splash-stack,
+.event-splash-stack.is-single,
+.event-splash-stack.is-duo{
+  width:100% !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  gap:8px !important;
+}
+.event-splash-shell,
+.event-splash-stack.is-duo .event-splash-shell{
+  width:100% !important;
+  max-width:none !important;
+  transform:translateY(-18px) scale(.92) !important;
+  opacity:0 !important;
+  filter:none !important;
+  animation:none !important;
+  transition:none !important;
+}
+.event-splash-overlay.show .event-splash-shell{
+  animation:eventSplashHonorDrift 2.55s ease forwards !important;
+}
+.event-splash-overlay.leaving .event-splash-shell{
+  opacity:0 !important;
+}
+.event-splash-card,
+.event-splash-stack.is-duo .event-splash-card{
+  display:grid !important;
+  grid-template-columns:64px minmax(0,1fr) !important;
+  min-height:64px !important;
+  border-radius:14px !important;
+  border:1px solid color-mix(in srgb,var(--event-accent) 58%,rgba(240,219,160,.40)) !important;
+  background:linear-gradient(180deg,rgba(8,7,5,.97),rgba(0,0,0,.92)) !important;
+  box-shadow:0 0 20px color-mix(in srgb,var(--event-accent) 18%,transparent),inset 0 0 14px rgba(255,210,90,.05),0 10px 24px rgba(0,0,0,.38) !important;
+  overflow:hidden !important;
+}
+.event-splash-art-wrap{
+  aspect-ratio:auto !important;
+  width:64px !important;
+  height:64px !important;
+  border-right:1px solid rgba(255,224,154,.14) !important;
+}
+.event-splash-art-wrap::after{
+  background:linear-gradient(90deg,transparent 42%,rgba(0,0,0,.30) 100%) !important;
+}
+.event-splash-art{object-fit:cover !important;}
+.event-splash-copy,
+.event-splash-stack.is-duo .event-splash-copy{
+  position:static !important;
+  padding:8px 10px 8px !important;
+  display:flex !important;
+  min-width:0 !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+}
+.event-splash-kicker,
+.event-splash-stack.is-duo .event-splash-kicker{
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 0 3px !important;
+  padding:2px 7px !important;
+  font-size:7px !important;
+  letter-spacing:.13em !important;
+  line-height:1.15 !important;
+}
+.event-splash-kicker::before{width:5px !important;height:5px !important;}
+.event-splash-title,
+.event-splash-stack.is-duo .event-splash-title{
+  font-size:15px !important;
+  line-height:1 !important;
+  letter-spacing:.035em !important;
+}
+.event-splash-sub,
+.event-splash-stack.is-duo .event-splash-sub{
+  display:block !important;
+  margin-top:4px !important;
+  font-size:9px !important;
+  line-height:1.2 !important;
+  white-space:normal !important;
+}
+@keyframes eventSplashHonorDrift{
+  0%{opacity:0;transform:translateY(-18px) scale(.92);filter:blur(2px)}
+  16%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+  68%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-44px) scale(.88);filter:blur(1px)}
+}
+@media(max-width:980px){
+  .event-splash-overlay{
+    left:10px !important;
+    top:112px !important;
+    width:min(210px,31vw) !important;
+  }
+  .event-splash-card,
+  .event-splash-stack.is-duo .event-splash-card{
+    grid-template-columns:48px minmax(0,1fr) !important;
+    min-height:48px !important;
+    border-radius:11px !important;
+  }
+  .event-splash-art-wrap{width:48px !important;height:48px !important;}
+  .event-splash-copy,
+  .event-splash-stack.is-duo .event-splash-copy{padding:5px 7px !important;}
+  .event-splash-kicker,
+  .event-splash-stack.is-duo .event-splash-kicker{display:none !important;}
+  .event-splash-title,
+  .event-splash-stack.is-duo .event-splash-title{font-size:11px !important;}
+  .event-splash-sub,
+  .event-splash-stack.is-duo .event-splash-sub{font-size:7.5px !important;margin-top:2px !important;}
+}
+@media(prefers-reduced-motion:reduce){
+  .event-splash-overlay.show .event-splash-shell{animation-duration:.18s !important;}
+}
+
+/* === 7HFF DET cleanup: weapon only in footer, statuses use full right column === */
+#inspector.show #inspectText,
+#inspector:not(.hidden) #inspectText,
+#cardInspectModal:not(.hidden) #cardInspectText{
+  grid-template-columns:minmax(0,1fr) 408px!important;
+  grid-template-rows:minmax(0,1fr) 56px!important;
+  grid-template-areas:
+    "effects states"
+    "buttons buttons"!important;
+}
+
+#inspector.show #inspectText > .det-tactical-card,
+#inspector:not(.hidden) #inspectText > .det-tactical-card,
+#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
+  display:none!important;
+}
+
+#inspector.show #inspectText > .det-status-section,
+#inspector:not(.hidden) #inspectText > .det-status-section,
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
+  grid-area:states!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  align-self:stretch!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+
+#inspector.show #inspectText > .det-status-section .det-status-list,
+#inspector:not(.hidden) #inspectText > .det-status-section .det-status-list,
+#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section .det-status-list{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:auto!important;
+}
+
+#inspector .detail-guide-chip,
+#cardInspectModal .detail-guide-chip{
+  min-width:0!important;
+}
+
+#inspector .detail-guide-chip > span,
+#cardInspectModal .detail-guide-chip > span{
+  white-space:nowrap!important;
+}
