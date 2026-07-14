@@ -1,0 +1,28 @@
+HALLVALLA 7HFB — LIMPIEZA DE ICONOS Y AUDITORÍA TÉCNICA
+
+TRABAJO REALIZADO
+- Se eliminó assets/ui/effect_icons/icon_manifest.json porque era un archivo auxiliar de fabricación y el juego no lo carga.
+- Se conservaron únicamente los 91 PNG de effect_icons que están referenciados por el sistema DET actual.
+- No se eliminaron los iconos de estados existentes, porque el juego los reutiliza para Sangrado, Veneno, Quemadura, Guardia, Silencio, Parálisis y otros estados.
+- Se conservaron los siete iconos de arma nuevos de det_icons.
+- Se actualizó la versión de caché de CSS y JavaScript a 7HFB.
+
+VERIFICACIONES
+- script.js supera node --check sin errores de sintaxis.
+- index.html no contiene IDs HTML duplicados.
+- Las 91 rutas de effect_icons usadas por script.js existen físicamente.
+- No quedan PNG huérfanos dentro de assets/ui/effect_icons.
+- Las referencias locales estáticas de los archivos principales fueron revisadas. La cadena assets/leaders/leader_ es una ruta dinámica, no un archivo faltante.
+- El sistema DET conserva el modal de explicación por clic, efectos en iconos y clase táctica mediante icono.
+- Se conservaron las correcciones móviles, el mapa 2, buffs y progresión de maestría existentes en esta base.
+
+NO MODIFICADO
+- Lógica de combate.
+- Firebase.
+- Estadísticas o balance.
+- IA.
+- Diseño de PC y móvil.
+- Datos de cartas, líderes o mapas.
+
+NOTA ARTÍSTICA
+Los iconos actuales de effect_icons siguen siendo la primera biblioteca funcional. Esta limpieza no afirma que todos tengan ya el acabado artístico final de HallValla; solamente elimina archivos auxiliares o no usados y deja una base técnica consistente para sustituir cada PNG sin cambiar el código.

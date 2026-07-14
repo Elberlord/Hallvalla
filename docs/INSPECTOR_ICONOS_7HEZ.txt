@@ -1,0 +1,11 @@
+HALLVALLA 7HEZ — INSPECTOR POR ICONOS
+
+Cambios:
+- Efectos de todas las cartas se muestran como iconos compactos sin texto permanente.
+- Cada icono abre un modal con el nombre y la explicación completa del efecto.
+- Clase táctica/arma muestra únicamente el icono del arma.
+- Al pulsar el arma se abre el modal existente de ventaja, desventaja y regla táctica.
+- Se reutilizan los iconos de estados ya aprobados para sangrado, veneno, quemadura, parálisis, silencio, maldición, control, guardia, vida, buff y debuff.
+- Efectos no clasificados usan iconos Pasiva, Trigger o Genérico según su lógica.
+- Se reemplazaron los siete iconos de arma/clase por versiones estilo HallValla extraídas de la lámina aprobada.
+- No se modificó combate, balance, Firebase, estadísticas ni comportamiento de las cartas.

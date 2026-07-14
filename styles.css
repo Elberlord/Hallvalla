@@ -18928,3 +18928,114 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   .spearman-matchup-icon img{width:38px;height:38px}
   .spearman-tactical-head h2{font-size:24px}
 }
+
+/* === 7HEZ · Inspector por iconos: efectos y arma sin texto === */
+#inspector .det-effects-icon-only .det-ability-list,
+#cardInspectModal .det-effects-icon-only .det-ability-list{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-content:flex-start!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  min-height:74px!important;
+  height:auto!important;
+  padding:12px!important;
+  overflow:auto!important;
+  background:#050505!important;
+}
+#inspector .det-effect-seal,
+#cardInspectModal .det-effect-seal{
+  appearance:none!important;
+  width:58px!important;
+  height:58px!important;
+  min-height:58px!important;
+  padding:0!important;
+  border-radius:12px!important;
+  border:1px solid rgba(232,186,76,.44)!important;
+  background:linear-gradient(180deg,#111,#040404)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,232,155,.05),0 5px 12px rgba(0,0,0,.45)!important;
+  display:grid!important;
+  place-items:center!important;
+  cursor:pointer!important;
+  overflow:hidden!important;
+}
+#inspector .det-effect-seal:hover,
+#inspector .det-effect-seal:focus-visible,
+#cardInspectModal .det-effect-seal:hover,
+#cardInspectModal .det-effect-seal:focus-visible{
+  transform:translateY(-2px)!important;
+  border-color:#f1ca68!important;
+  box-shadow:inset 0 0 0 1px rgba(255,232,155,.10),0 8px 18px rgba(0,0,0,.55),0 0 14px rgba(228,173,52,.18)!important;
+  outline:none!important;
+}
+#inspector .det-effect-seal-art,
+#cardInspectModal .det-effect-seal-art{
+  width:46px!important;
+  height:46px!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  background:#070707!important;
+  border:1px solid rgba(232,186,76,.34)!important;
+  box-shadow:inset 0 0 10px rgba(255,218,118,.05)!important;
+}
+#inspector .det-effect-seal-art img,
+#cardInspectModal .det-effect-seal-art img{
+  width:36px!important;
+  height:36px!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.85))!important;
+}
+#inspector .det-effect-seal-name,
+#cardInspectModal .det-effect-seal-name{display:none!important}
+
+#inspector .det-tactical-icon-only,
+#cardInspectModal .det-tactical-icon-only{
+  background:#050505!important;
+  border-color:rgba(226,177,68,.42)!important;
+}
+#inspector .det-tactical-single-wrap,
+#cardInspectModal .det-tactical-single-wrap{
+  min-height:74px!important;
+  padding:12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  background:#050505!important;
+}
+#inspector .det-tactical-seal,
+#cardInspectModal .det-tactical-seal{
+  width:58px!important;
+  height:58px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(239,196,83,.48)!important;
+  background:linear-gradient(180deg,#111,#040404)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,232,155,.05),0 5px 12px rgba(0,0,0,.45)!important;
+}
+#inspector .det-tactical-seal-art,
+#cardInspectModal .det-tactical-seal-art{display:grid!important;place-items:center!important}
+#inspector .det-tactical-seal-art img,
+#cardInspectModal .det-tactical-seal-art img{
+  width:40px!important;
+  height:40px!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.85))!important;
+}
+@media(max-width:680px){
+  #inspector .det-effects-icon-only .det-ability-list,
+  #cardInspectModal .det-effects-icon-only .det-ability-list{gap:8px!important;padding:9px!important;min-height:64px!important}
+  #inspector .det-effect-seal,#cardInspectModal .det-effect-seal,
+  #inspector .det-tactical-seal,#cardInspectModal .det-tactical-seal{width:52px!important;height:52px!important;min-height:52px!important}
+  #inspector .det-effect-seal-art,#cardInspectModal .det-effect-seal-art{width:42px!important;height:42px!important}
+  #inspector .det-effect-seal-art img,#cardInspectModal .det-effect-seal-art img{width:33px!important;height:33px!important}
+  #inspector .det-tactical-seal-art img,#cardInspectModal .det-tactical-seal-art img{width:36px!important;height:36px!important}
+}
+/* 7HFA — El control de arma del DET es únicamente el icono. */
+.detail-guide-chip.detail-guide-chip-icon-only{
+  min-width:0;
+  width:auto;
+  align-items:center;
+  justify-content:center;
+}
+.detail-guide-chip.detail-guide-chip-icon-only > span{display:none!important;}

@@ -1862,35 +1862,45 @@ function renderDetIdentityHtml(entity,ownerLabel=""){
 }
 function renderDetTacticalHtml(entity){
   if(!entity||entity.spell||entity.trap)return "";
-  const isSpearman=normalizeEffectGuideKey(entity)==="spearman";
-  const clsLabel=getWeaponClassLabel(entity);
-  const wins=getWeaponAdvantageTargets(entity);
-  const loses=getWeaponDisadvantageSources(entity);
   const icon=getWeaponClassIcon(entity);
-  if(isSpearman){
-    return `<div class="det-info-card det-tactical-card det-tactical-icon-only">
-      <div class="det-section-title">Clase táctica</div>
-      <div class="det-tactical-single-wrap">
-        <button class="det-tactical-seal guide-weapon-btn" type="button" aria-label="Abrir clase táctica de Lanza" title="Lanza">
-          <span class="det-tactical-seal-art"><img src="assets/ui/det_icons/weapon_spear.png" alt="Lanza"></span>
-        </button>
-      </div>
-    </div>`;
-  }
-  return `<div class="det-info-card det-tactical-card">
+  const label=getWeaponClassLabel(entity);
+  return `<div class="det-info-card det-tactical-card det-tactical-icon-only">
     <div class="det-section-title">Clase táctica</div>
-    <button class="det-info-row det-info-row-weapon det-click-row guide-weapon-btn" type="button" aria-label="Ver ventaja y desventaja de arma">
-      <span class="det-inline-with-icon"><span class="det-inline-icon-btn" aria-hidden="true"><img class="det-inline-icon-img" src="${icon}" alt=""></span><span>Arma</span></span>
-      <strong>${escapeHtml(getEntityWeaponText(entity))}</strong>
-    </button>
-    <div class="det-info-row"><span>Clase</span><strong>${escapeHtml(clsLabel)}</strong></div>
-    <div class="det-info-row"><span>Ventaja contra</span><strong>${escapeHtml(wins.length?wins.join(", "):"ninguna")}</strong></div>
-    <div class="det-info-row"><span>Desventaja contra</span><strong>${escapeHtml(loses.length?loses.join(", "):"ninguna")}</strong></div>
-    <div class="det-mini-note">Click en Arma para ver la ventaja, desventaja y clase táctica exacta de esta unidad. Si ataca a una clase sobre la que tiene ventaja, gana +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza durante ese combate.</div>
+    <div class="det-tactical-single-wrap">
+      <button class="det-tactical-seal guide-weapon-btn" type="button" aria-label="Abrir clase táctica de ${escapeHtml(label)}" title="${escapeHtml(label)}">
+        <span class="det-tactical-seal-art"><img src="${escapeHtml(icon)}" alt="${escapeHtml(label)}"></span>
+      </button>
+    </div>
   </div>`;
+}
+const DET_EFFECT_ICON_BY_TITLE={"aereo":"assets/ui/effect_icons/aereo.png","agarre":"assets/ui/effect_icons/agarre.png","anticaballeria":"assets/ui/effect_icons/anticaballeria.png","armadura_bendita":"assets/ui/status_icons/status_guard.png","armadura_natural":"assets/ui/status_icons/status_guard.png","arte_de_la_guerra":"assets/ui/effect_icons/arte_de_la_guerra.png","asesinato_preciso":"assets/ui/effect_icons/asesinato_preciso.png","ataque_en_picada":"assets/ui/effect_icons/ataque_en_picada.png","ataque_por_la_espalda":"assets/ui/effect_icons/ataque_por_la_espalda.png","aturdido_hasta_su_proximo_turno":"assets/ui/status_icons/status_paralysis.png","azote_de_imperios":"assets/ui/effect_icons/azote_de_imperios.png","bestia_irritante":"assets/ui/effect_icons/bestia_irritante.png","bestia_torpe":"assets/ui/effect_icons/bestia_torpe.png","blanco_de_invierno":"assets/ui/effect_icons/blanco_de_invierno.png","bloqueo_naval":"assets/ui/status_icons/status_lock.png","bomba_de_humo":"assets/ui/effect_icons/bomba_de_humo.png","caceria_de_sangre":"assets/ui/status_icons/status_bleed.png","campeador":"assets/ui/effect_icons/campeador.png","carga_brusca":"assets/ui/effect_icons/carga_brusca.png","carga_desestabilizadora":"assets/ui/effect_icons/carga_desestabilizadora.png","colera_del_pelida":"assets/ui/effect_icons/colera_del_pelida.png","concentracion_del_pelida":"assets/ui/effect_icons/concentracion_del_pelida.png","constriccion":"assets/ui/effect_icons/constriccion.png","contraataque_del_sabueso":"assets/ui/effect_icons/contraataque_del_sabueso.png","corazon_indomable":"assets/ui/effect_icons/corazon_indomable.png","corte_de_abanico":"assets/ui/effect_icons/corte_de_abanico.png","cuernos_del_bufalo":"assets/ui/effect_icons/cuernos_del_bufalo.png","danza_del_engano":"assets/ui/effect_icons/danza_del_engano.png","descarga_arcana":"assets/ui/effect_icons/descarga_arcana.png","desembarco_rapido":"assets/ui/effect_icons/desembarco_rapido.png","desgarro_salvaje":"assets/ui/effect_icons/desgarro_salvaje.png","disciplina_de_las_legiones":"assets/ui/effect_icons/disciplina_de_las_legiones.png","disparo_de_supresion":"assets/ui/effect_icons/disparo_de_supresion.png","dos_cielos":"assets/ui/effect_icons/dos_cielos.png","dos_manos":"assets/ui/effect_icons/dos_manos.png","embestida_devastadora":"assets/ui/effect_icons/embestida_devastadora.png","empuje_salvaje":"assets/ui/effect_icons/empuje_salvaje.png","escape_forzado":"assets/ui/effect_icons/escape_forzado.png","espada_invicta":"assets/ui/effect_icons/espada_invicta.png","espinas_defensivas":"assets/ui/effect_icons/espinas_defensivas.png","estratega_de_itaca":"assets/ui/effect_icons/estratega_de_itaca.png","estrategia_de_repliegue":"assets/ui/effect_icons/estrategia_de_repliegue.png","filo_de_mando":"assets/ui/effect_icons/filo_de_mando.png","flecha_del_dharma":"assets/ui/effect_icons/flecha_del_dharma.png","formacion_de_picas":"assets/ui/effect_icons/formacion_de_picas.png","furia_de_la_alabarda":"assets/ui/effect_icons/furia_de_la_alabarda.png","furia_del_oso":"assets/ui/effect_icons/furia_del_oso.png","furia_del_sabueso":"assets/ui/effect_icons/furia_del_sabueso.png","golpe_de_escudo":"assets/ui/status_icons/status_guard.png","golpe_silencioso":"assets/ui/status_icons/status_silence.png","graznido_inquietante":"assets/ui/effect_icons/graznido_inquietante.png","horda_de_la_estepa":"assets/ui/effect_icons/horda_de_la_estepa.png","inmune_al_veneno":"assets/ui/status_icons/status_poison.png","instinto_de_cornada":"assets/ui/effect_icons/instinto_de_cornada.png","ira_de_iceni":"assets/ui/effect_icons/ira_de_iceni.png","jinete_de_la_luna_cortante":"assets/ui/effect_icons/jinete_de_la_luna_cortante.png","liderazgo_de_manada":"assets/ui/effect_icons/liderazgo_de_manada.png","llama_de_orleans":"assets/ui/effect_icons/llama_de_orleans.png","llamado_de_la_carga":"assets/ui/effect_icons/llamado_de_la_carga.png","lluvia_de_flechas":"assets/ui/effect_icons/lluvia_de_flechas.png","marca_del_abanico":"assets/ui/effect_icons/marca_del_abanico.png","marcha_de_mil_horizontes":"assets/ui/effect_icons/marcha_de_mil_horizontes.png","matador_de_monstruos":"assets/ui/effect_icons/matador_de_monstruos.png","media_luna_del_desierto":"assets/ui/effect_icons/media_luna_del_desierto.png","miedo":"assets/ui/status_icons/status_control.png","mordida_fastidiosa":"assets/ui/effect_icons/mordida_fastidiosa.png","mordida_letal":"assets/ui/effect_icons/mordida_letal.png","muralla_de_troya":"assets/ui/effect_icons/muralla_de_troya.png","muro_de_macedonia":"assets/ui/effect_icons/muro_de_macedonia.png","niebla_de_sangre":"assets/ui/status_icons/status_bleed.png","ojo_del_cazador":"assets/ui/effect_icons/ojo_del_cazador.png","paso_de_sombra":"assets/ui/effect_icons/paso_de_sombra.png","peso_del_rey_de_uruk":"assets/ui/effect_icons/peso_del_rey_de_uruk.png","presencia_alfa":"assets/ui/effect_icons/presencia_alfa.png","proteger_al_daimyo":"assets/ui/effect_icons/proteger_al_daimyo.png","quemadura":"assets/ui/status_icons/status_burn.png","respuesta_mistica":"assets/ui/effect_icons/respuesta_mistica.png","romper_cadenas":"assets/ui/effect_icons/romper_cadenas.png","rugido_del_rey":"assets/ui/effect_icons/rugido_del_rey.png","ruptura_arcana":"assets/ui/effect_icons/ruptura_arcana.png","ruptura_brutal":"assets/ui/effect_icons/ruptura_brutal.png","sabotaje":"assets/ui/effect_icons/sabotaje.png","salto_de_emboscada":"assets/ui/effect_icons/salto_de_emboscada.png","sangrado":"assets/ui/status_icons/status_bleed.png","sangre_del_pelida":"assets/ui/status_icons/status_bleed.png","saqueo_de_guerra":"assets/ui/effect_icons/saqueo_de_guerra.png","saqueo_del_norte":"assets/ui/effect_icons/saqueo_del_norte.png","shirahadori":"assets/ui/effect_icons/shirahadori.png","sigilo_de_depredador":"assets/ui/effect_icons/sigilo_de_depredador.png","temerario":"assets/ui/effect_icons/temerario.png","trampa_de_cannas":"assets/ui/effect_icons/trampa_de_cannas.png","ultima_formacion":"assets/ui/effect_icons/ultima_formacion.png","ultima_resistencia":"assets/ui/effect_icons/ultima_resistencia.png","ultimo_aliento":"assets/ui/effect_icons/ultimo_aliento.png","veneno_de_la_manada":"assets/ui/status_icons/status_poison.png","veneno_de_la_serpiente_primordial":"assets/ui/status_icons/status_poison.png","victoria_sangrienta":"assets/ui/status_icons/status_bleed.png","vinculo_arcano":"assets/ui/effect_icons/vinculo_arcano.png"};
+function normalizeDetEffectTitle(value=""){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");}
+function getDetEffectIconFromText(section={}){
+  const text=`${section.title||""} ${section.body||""}`.toLowerCase();
+  const base="assets/ui/status_icons/";
+  if(/sangr|bleed/.test(text))return `${base}status_bleed.png`;
+  if(/veneno|poison|tóxic|toxic/.test(text))return `${base}status_poison.png`;
+  if(/quem|ardiente|fuego|burn/.test(text))return `${base}status_burn.png`;
+  if(/par[aá]li|aturd|stun|inmovil|shock/.test(text))return `${base}status_paralysis.png`;
+  if(/silencio|silence/.test(text))return `${base}status_silence.png`;
+  if(/maldici|curse|corrup/.test(text))return `${base}status_curse.png`;
+  if(/bloque|cerrad|encaden|lock/.test(text))return `${base}status_lock.png`;
+  if(/control|miedo|fear|provoca|atrae/.test(text))return `${base}status_control.png`;
+  if(/cura|recupera|sanaci|vida|hp/.test(text))return `${base}status_hp.png`;
+  if(/guardia|defensa|armadura|escudo|protege/.test(text))return `${base}status_guard.png`;
+  if(/pierde|reduce|debuff|penaliza|debilita/.test(text))return `${base}status_debuff.png`;
+  if(/gana|aumenta|mejora|buff|inspir/.test(text))return `${base}status_buff.png`;
+  const kind=classifyDetAbility(section);
+  if(kind==="buff")return `${base}status_buff.png`;
+  if(kind==="debuff")return `${base}status_debuff.png`;
+  if(kind==="passive"||kind==="aura")return "assets/ui/det_icons/passive.png";
+  if(kind==="trigger")return "assets/ui/det_icons/trigger.png";
+  return `${base}status_generic.png`;
 }
 function getDetAbilityVisual(entity,section,index=0){
   const key=normalizeEffectGuideKey(entity);
+  const exactKey=normalizeDetEffectTitle(section?.title||"");
+  const exactIcon=DET_EFFECT_ICON_BY_TITLE[exactKey];
   const title=String(section?.title||"").toLowerCase();
   if(key==="spearman"){
     if(title.includes("formación de picas")||title.includes("formacion de picas")){
@@ -1902,7 +1912,8 @@ function getDetAbilityVisual(entity,section,index=0){
   }
   const kind=classifyDetAbility(section);
   const meta=getDetAbilityMeta(kind);
-  return {icon:meta.icon,label:section?.title||meta.label,kind};
+  if(exactIcon)return {icon:exactIcon,label:section?.title||meta.label,kind};
+  return {icon:getDetEffectIconFromText(section)||meta.icon,label:section?.title||meta.label,kind};
 }
 function getDetAbilitySectionsForInspector(entity,effectText=""){
   if(normalizeEffectGuideKey(entity)==="spearman"){
@@ -1911,25 +1922,21 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
       {title:"ANTICABALLERÍA",body:"Cuando combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."}
     ];
   }
-  return getEntityAbilitySections(entity,effectText);
+  const obsoleteDetHeadings=new Set([
+    "basica","especial","legendaria",
+    "al_inicio_del_proximo_turno_enemigo","cuando_vaya_a_atacar",
+    "regla_de_arco","regla_de_espada","regla_de_hacha","regla_de_lanza"
+  ]);
+  return getEntityAbilitySections(entity,effectText).filter(section=>!obsoleteDetHeadings.has(normalizeDetEffectTitle(section?.title||"")));
 }
 function renderDetAbilitiesHtml(entity,effectText=""){
   const sections=getDetAbilitySectionsForInspector(entity,effectText);
-  const iconOnly=normalizeEffectGuideKey(entity)==="spearman";
-  return `<div class="det-section-block ${iconOnly?"det-effects-icon-only":""}">
+  return `<div class="det-section-block det-effects-icon-only">
     <div class="det-section-title">Efectos</div>
     <div class="det-ability-list">${sections.length?sections.map((sec,index)=>{
       const visual=getDetAbilityVisual(entity,sec,index);
       const kind=visual.kind||classifyDetAbility(sec);
-      const meta=getDetAbilityMeta(kind);
-      if(iconOnly){
-        return `<button class="det-effect-seal guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="Abrir ${escapeHtml(visual.label)}" title="${escapeHtml(visual.label)}"><span class="det-effect-seal-art"><img src="${escapeHtml(visual.icon)}" alt=""></span><span class="det-effect-seal-name">${escapeHtml(visual.label)}</span></button>`;
-      }
-      return `<div class="det-ability-card" data-ability-block="${escapeHtml(sec.title)}">
-        <div class="det-ability-top"><button class="det-ability-icon-btn guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="${escapeHtml(meta.label)}"><img class="det-ability-img kind-${escapeHtml(kind)}" src="${escapeHtml(visual.icon)}" alt="${escapeHtml(meta.label)}"></button><span class="det-ability-kind">${escapeHtml(meta.label)}</span></div>
-        <div class="det-ability-name">${escapeHtml(sec.title)}</div>
-        <div class="det-ability-text">${escapeHtml(sec.body)}</div>
-      </div>`;
+      return `<button class="det-effect-seal guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="Abrir ${escapeHtml(visual.label)}" title="${escapeHtml(visual.label)}"><span class="det-effect-seal-art"><img src="${escapeHtml(visual.icon)}" alt=""></span></button>`;
     }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }
@@ -4883,7 +4890,7 @@ function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=t
   if(showEffect)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-effect-btn" type="button" aria-label="${escapeHtml(effectLabel)}"><img class="det-btn-img" src="assets/ui/det_icons/trigger.png" alt="${escapeHtml(effectLabel)}"></button><span>${escapeHtml(effectLabel)}</span></div>`);
   if(showWeapon){
     const weaponIcon=entity?getWeaponClassIcon(entity):"assets/ui/det_icons/tactical.png";
-    chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-weapon-btn" type="button" aria-label="Arma / ventaja y desventaja"><img class="det-btn-img" src="${weaponIcon}" alt="Arma"></button><span>Arma</span></div>`);
+    chips.push(`<div class="detail-guide-chip detail-guide-chip-icon-only"><button class="detail-token-btn guide-weapon-btn" type="button" aria-label="Arma / ventaja y desventaja" title="Arma / ventaja y desventaja"><img class="det-btn-img" src="${weaponIcon}" alt=""></button></div>`);
   }
   if(showFormula)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-formula-btn" type="button" aria-label="PREC / EVA"><img class="det-btn-img" src="assets/ui/det_icons/dexterity.png" alt="PREC / EVA"></button><span>PREC / EVA</span></div>`);
   if(showLore)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-lore-btn" type="button" aria-label="Conóceme"><img class="det-btn-img" src="assets/ui/det_icons/lore.png" alt="Conóceme"></button><span>Conóceme</span></div>`);

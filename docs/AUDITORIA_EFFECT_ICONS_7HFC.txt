@@ -1,0 +1,10 @@
+HALLVALLA 7HFC — LIMPIEZA EFFECT_ICONS
+
+- Carpeta effect_icons reducida a iconos realmente utilizados.
+- Eliminados encabezados/metadatos que no son efectos: Básica, Especial, Legendaria, Al inicio del próximo turno enemigo, Cuando vaya a atacar y reglas generales de arma.
+- Regla de lanza permanece fusionada visualmente con Formación de picas para Lancero Solar.
+- 82 iconos de efectos regenerados con marco oscuro, metal dorado y símbolos compatibles con la identidad visual de HallValla.
+- Los estados consolidados siguen reutilizando status_icons aprobados (sangrado, veneno, quemadura, silencio, parálisis, guardia, etc.).
+- No se modificó la lógica de combate, estadísticas, Firebase, IA, mapas ni progresión.
+- script.js validado con node --check.
+- No hay rutas de effect_icons faltantes ni archivos PNG huérfanos.
