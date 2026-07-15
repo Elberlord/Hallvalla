@@ -19680,3 +19680,57 @@ html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-co
   content:none!important;
   display:none!important;
 }
+
+
+/* ==========================================================
+   7HFI · Eliminación total de la imagen base del HUD de acciones
+   - Quita la lámina Base_Combat_panel.webp del contenedor
+   - El HUD conserva solo los tres botones y sus etiquetas
+   ========================================================== */
+.side .actions-visual-panel,
+#gameShell .battlefield .side .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  background:none !important;
+  background-image:none !important;
+  border:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+  outline:none !important;
+}
+.side .actions-visual-panel::before,
+.side .actions-visual-panel::after,
+#gameShell .battlefield .side .actions-visual-panel::before,
+#gameShell .battlefield .side .actions-visual-panel::after,
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel::before,
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel::after,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel::before,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel::after,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::before,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::after,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::before,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  background-image:none !important;
+  box-shadow:none !important;
+}
+.side .actions-visual-panel{
+  aspect-ratio:auto !important;
+  height:auto !important;
+  min-height:0 !important;
+}
+.side .actions-visual-buttons,
+#gameShell .battlefield .side .actions-visual-buttons,
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+  position:relative !important;
+  left:auto !important;
+  top:auto !important;
+  transform:none !important;
+  width:100% !important;
+  max-width:none !important;
+}
