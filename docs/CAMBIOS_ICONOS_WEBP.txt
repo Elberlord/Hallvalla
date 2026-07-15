@@ -1,0 +1,26 @@
+HALLVALLA — OPTIMIZACIÓN DE ÍCONOS WEBP
+
+Alcance aplicado:
+- assets/ui/det_icons
+- assets/ui/effect_icons
+- assets/ui/status_icons
+
+Cambios:
+- Se convirtieron 114 íconos finales de PNG a WebP.
+- Los íconos de efecto de 1254x1254 se redujeron a 256x256, tamaño más que suficiente para su visualización en los modales.
+- Los íconos DET y de estados conservaron sus dimensiones originales y su transparencia.
+- Se actualizaron todas las rutas utilizadas por script.js.
+- Se mantuvo el nombre funcional sigilo_de_depredador y se utilizó el arte completo que estaba bajo la variante sigilo_del_depredador.
+- Se eliminó la variante de nombre no utilizada para evitar el typo duplicado.
+
+Elementos que NO se tocaron:
+- assets/cards
+- assets/board_cards
+- Las imágenes duplicadas necesarias para representar una carta en la mano y en el campo.
+
+Validaciones:
+- JavaScript comprobado con node --check.
+- Ninguna ruta PNG restante dentro de las tres carpetas de íconos.
+- Todas las rutas WebP apuntan a archivos existentes.
+- Todos los WebP se pueden decodificar correctamente.
+- Las imágenes de bestias en mano y campo conservan los mismos hashes del ZIP original.

@@ -1591,16 +1591,16 @@ function getWeaponClassLabel(card){
 function getWeaponClassIcon(card){
   const cls=String(getWeaponClassForCard(card)||"").toLowerCase();
   const map={
-    sword:"assets/ui/det_icons/weapon_sword.png",
-    spear:"assets/ui/det_icons/weapon_spear.png",
-    cavalry:"assets/ui/det_icons/weapon_cavalry.png",
-    bow:"assets/ui/det_icons/weapon_bow.png",
-    axe:"assets/ui/det_icons/weapon_axe.png",
-    beast:"assets/ui/det_icons/weapon_beast.png",
-    mage:"assets/ui/det_icons/weapon_mage.png",
-    neutral:"assets/ui/det_icons/tactical.png"
+    sword:"assets/ui/det_icons/weapon_sword.webp",
+    spear:"assets/ui/det_icons/weapon_spear.webp",
+    cavalry:"assets/ui/det_icons/weapon_cavalry.webp",
+    bow:"assets/ui/det_icons/weapon_bow.webp",
+    axe:"assets/ui/det_icons/weapon_axe.webp",
+    beast:"assets/ui/det_icons/weapon_beast.webp",
+    mage:"assets/ui/det_icons/weapon_mage.webp",
+    neutral:"assets/ui/det_icons/tactical.webp"
   };
-  return map[cls]||"assets/ui/det_icons/tactical.png";
+  return map[cls]||"assets/ui/det_icons/tactical.webp";
 }
 function getWeaponAdvantage(attacker,defender){
   const atkClass=getWeaponClassForCard(attacker);
@@ -1803,17 +1803,17 @@ function getEntityAbilitySections(entity,effectText=""){
 function getDetStatMeta(label=""){
   const key=normalizeStatKey(label);
   const iconBase="assets/ui/det_icons/";
-  if(key==="costo")return {icon:`${iconBase}tactical.png`,short:"Costo",title:"Costo"};
-  if(key==="at"||key==="ataque")return {icon:`${iconBase}attack.png`,short:"AT",title:"Ataque"};
-  if(key==="hp"||key==="vida")return {icon:`${iconBase}hp.png`,short:"HP",title:"Vida"};
-  if(key==="gd"||key==="guardia")return {icon:`${iconBase}guard.png`,short:"GD",title:"Guardia"};
-  if(key==="dx"||key==="destreza")return {icon:`${iconBase}dexterity.png`,short:"DX",title:"Destreza"};
-  if(key==="agi"||key==="agilidad")return {icon:`${iconBase}agility.png`,short:"AGI",title:"Agilidad"};
-  if(key==="mv"||key==="mov"||key==="movimiento")return {icon:`${iconBase}movement.png`,short:"MV",title:"Movimiento"};
-  if(key==="rg"||key==="rango")return {icon:`${iconBase}range.png`,short:"RG",title:"Rango"};
-  if(key==="daño")return {icon:`${iconBase}attack.png`,short:"DMG",title:"Daño"};
-  if(key==="heal"||key==="curación"||key==="curacion")return {icon:`${iconBase}hp.png`,short:"Heal",title:"Curación"};
-  return {icon:`${iconBase}tactical.png`,short:String(label||"STAT"),title:String(label||"Stat")};
+  if(key==="costo")return {icon:`${iconBase}tactical.webp`,short:"Costo",title:"Costo"};
+  if(key==="at"||key==="ataque")return {icon:`${iconBase}attack.webp`,short:"AT",title:"Ataque"};
+  if(key==="hp"||key==="vida")return {icon:`${iconBase}hp.webp`,short:"HP",title:"Vida"};
+  if(key==="gd"||key==="guardia")return {icon:`${iconBase}guard.webp`,short:"GD",title:"Guardia"};
+  if(key==="dx"||key==="destreza")return {icon:`${iconBase}dexterity.webp`,short:"DX",title:"Destreza"};
+  if(key==="agi"||key==="agilidad")return {icon:`${iconBase}agility.webp`,short:"AGI",title:"Agilidad"};
+  if(key==="mv"||key==="mov"||key==="movimiento")return {icon:`${iconBase}movement.webp`,short:"MV",title:"Movimiento"};
+  if(key==="rg"||key==="rango")return {icon:`${iconBase}range.webp`,short:"RG",title:"Rango"};
+  if(key==="daño")return {icon:`${iconBase}attack.webp`,short:"DMG",title:"Daño"};
+  if(key==="heal"||key==="curación"||key==="curacion")return {icon:`${iconBase}hp.webp`,short:"Heal",title:"Curación"};
+  return {icon:`${iconBase}tactical.webp`,short:String(label||"STAT"),title:String(label||"Stat")};
 }
 function renderDetStatButtons(stats,clsName){
   return stats.map(([l,v])=>{
@@ -1839,12 +1839,12 @@ function classifyDetAbility(section){
 function getDetAbilityMeta(kind="effect"){
   const iconBase="assets/ui/det_icons/";
   const map={
-    passive:{icon:`${iconBase}passive.png`,glyph:"◉",label:"Pasivo"},
-    trigger:{icon:`${iconBase}trigger.png`,glyph:"✦",label:"Trigger"},
-    aura:{icon:`${iconBase}passive.png`,glyph:"◌",label:"Aura"},
-    buff:{icon:`${iconBase}passive.png`,glyph:"▲",label:"Buff"},
-    debuff:{icon:`${iconBase}trigger.png`,glyph:"▼",label:"Debuff"},
-    effect:{icon:`${iconBase}trigger.png`,glyph:"◆",label:"Efecto"}
+    passive:{icon:`${iconBase}passive.webp`,glyph:"◉",label:"Pasivo"},
+    trigger:{icon:`${iconBase}trigger.webp`,glyph:"✦",label:"Trigger"},
+    aura:{icon:`${iconBase}passive.webp`,glyph:"◌",label:"Aura"},
+    buff:{icon:`${iconBase}passive.webp`,glyph:"▲",label:"Buff"},
+    debuff:{icon:`${iconBase}trigger.webp`,glyph:"▼",label:"Debuff"},
+    effect:{icon:`${iconBase}trigger.webp`,glyph:"◆",label:"Efecto"}
   };
   return map[kind]||map.effect;
 }
@@ -1875,44 +1875,38 @@ function renderDetTacticalHtml(entity){
     </div>
   </div>`;
 }
-const DET_EFFECT_ICON_BY_TITLE={"aereo":"assets/ui/effect_icons/aereo.png","agarre":"assets/ui/effect_icons/agarre.png","anticaballeria":"assets/ui/effect_icons/anticaballeria.png","armadura_bendita":"assets/ui/status_icons/status_guard.png","armadura_natural":"assets/ui/status_icons/status_guard.png","arte_de_la_guerra":"assets/ui/effect_icons/arte_de_la_guerra.png","asesinato_preciso":"assets/ui/effect_icons/asesinato_preciso.png","ataque_en_picada":"assets/ui/effect_icons/ataque_en_picada.png","ataque_por_la_espalda":"assets/ui/effect_icons/ataque_por_la_espalda.png","aturdido_hasta_su_proximo_turno":"assets/ui/status_icons/status_paralysis.png","azote_de_imperios":"assets/ui/effect_icons/azote_de_imperios.png","bestia_irritante":"assets/ui/effect_icons/bestia_irritante.png","bestia_torpe":"assets/ui/effect_icons/bestia_torpe.png","blanco_de_invierno":"assets/ui/effect_icons/blanco_de_invierno.png","bloqueo_naval":"assets/ui/status_icons/status_lock.png","bomba_de_humo":"assets/ui/effect_icons/bomba_de_humo.png","caceria_de_sangre":"assets/ui/status_icons/status_bleed.png","campeador":"assets/ui/effect_icons/campeador.png","carga_brusca":"assets/ui/effect_icons/carga_brusca.png","carga_desestabilizadora":"assets/ui/effect_icons/carga_desestabilizadora.png","colera_del_pelida":"assets/ui/effect_icons/colera_del_pelida.png","concentracion_del_pelida":"assets/ui/effect_icons/concentracion_del_pelida.png","constriccion":"assets/ui/effect_icons/constriccion.png","contraataque_del_sabueso":"assets/ui/effect_icons/contraataque_del_sabueso.png","corazon_indomable":"assets/ui/effect_icons/corazon_indomable.png","corte_de_abanico":"assets/ui/effect_icons/corte_de_abanico.png","cuernos_del_bufalo":"assets/ui/effect_icons/cuernos_del_bufalo.png","danza_del_engano":"assets/ui/effect_icons/danza_del_engano.png","descarga_arcana":"assets/ui/effect_icons/descarga_arcana.png","desembarco_rapido":"assets/ui/effect_icons/desembarco_rapido.png","desgarro_salvaje":"assets/ui/effect_icons/desgarro_salvaje.png","disciplina_de_las_legiones":"assets/ui/effect_icons/disciplina_de_las_legiones.png","disparo_de_supresion":"assets/ui/effect_icons/disparo_de_supresion.png","dos_cielos":"assets/ui/effect_icons/dos_cielos.png","dos_manos":"assets/ui/effect_icons/dos_manos.png","embestida_devastadora":"assets/ui/effect_icons/embestida_devastadora.png","empuje_salvaje":"assets/ui/effect_icons/empuje_salvaje.png","escape_forzado":"assets/ui/effect_icons/escape_forzado.png","espada_invicta":"assets/ui/effect_icons/espada_invicta.png","espinas_defensivas":"assets/ui/effect_icons/espinas_defensivas.png","estratega_de_itaca":"assets/ui/effect_icons/estratega_de_itaca.png","estrategia_de_repliegue":"assets/ui/effect_icons/estrategia_de_repliegue.png","filo_de_mando":"assets/ui/effect_icons/filo_de_mando.png","flecha_del_dharma":"assets/ui/effect_icons/flecha_del_dharma.png","formacion_de_picas":"assets/ui/effect_icons/formacion_de_picas.png","furia_de_la_alabarda":"assets/ui/effect_icons/furia_de_la_alabarda.png","furia_del_oso":"assets/ui/effect_icons/furia_del_oso.png","furia_del_sabueso":"assets/ui/effect_icons/furia_del_sabueso.png","golpe_de_escudo":"assets/ui/status_icons/status_guard.png","golpe_silencioso":"assets/ui/status_icons/status_silence.png","graznido_inquietante":"assets/ui/effect_icons/graznido_inquietante.png","horda_de_la_estepa":"assets/ui/effect_icons/horda_de_la_estepa.png","inmune_al_veneno":"assets/ui/status_icons/status_poison.png","instinto_de_cornada":"assets/ui/effect_icons/instinto_de_cornada.png","ira_de_iceni":"assets/ui/effect_icons/ira_de_iceni.png","jinete_de_la_luna_cortante":"assets/ui/effect_icons/jinete_de_la_luna_cortante.png","liderazgo_de_manada":"assets/ui/effect_icons/liderazgo_de_manada.png","llama_de_orleans":"assets/ui/effect_icons/llama_de_orleans.png","llamado_de_la_carga":"assets/ui/effect_icons/llamado_de_la_carga.png","lluvia_de_flechas":"assets/ui/effect_icons/lluvia_de_flechas.png","marca_del_abanico":"assets/ui/effect_icons/marca_del_abanico.png","marcha_de_mil_horizontes":"assets/ui/effect_icons/marcha_de_mil_horizontes.png","matador_de_monstruos":"assets/ui/effect_icons/matador_de_monstruos.png","media_luna_del_desierto":"assets/ui/effect_icons/media_luna_del_desierto.png","miedo":"assets/ui/status_icons/status_control.png","mordida_fastidiosa":"assets/ui/effect_icons/mordida_fastidiosa.png","mordida_letal":"assets/ui/effect_icons/mordida_letal.png","muralla_de_troya":"assets/ui/effect_icons/muralla_de_troya.png","muro_de_macedonia":"assets/ui/effect_icons/muro_de_macedonia.png","niebla_de_sangre":"assets/ui/status_icons/status_bleed.png","ojo_del_cazador":"assets/ui/effect_icons/ojo_del_cazador.png","paso_de_sombra":"assets/ui/effect_icons/paso_de_sombra.png","peso_del_rey_de_uruk":"assets/ui/effect_icons/peso_del_rey_de_uruk.png","presencia_alfa":"assets/ui/effect_icons/presencia_alfa.png","proteger_al_daimyo":"assets/ui/effect_icons/proteger_al_daimyo.png","quemadura":"assets/ui/status_icons/status_burn.png","respuesta_mistica":"assets/ui/det_icons/trigger.png","romper_cadenas":"assets/ui/effect_icons/romper_cadenas.png","rugido_del_rey":"assets/ui/effect_icons/rugido_del_rey.png","ruptura_arcana":"assets/ui/status_icons/status_debuff.png","ruptura_brutal":"assets/ui/effect_icons/ruptura_brutal.png","sabotaje":"assets/ui/effect_icons/sabotaje.png","salto_de_emboscada":"assets/ui/effect_icons/salto_de_emboscada.png","sangrado":"assets/ui/status_icons/status_bleed.png","sangre_del_pelida":"assets/ui/status_icons/status_bleed.png","saqueo_de_guerra":"assets/ui/effect_icons/saqueo_de_guerra.png","saqueo_del_norte":"assets/ui/effect_icons/saqueo_del_norte.png","shirahadori":"assets/ui/effect_icons/shirahadori.png","sigilo_de_depredador":"assets/ui/effect_icons/sigilo_de_depredador.png","temerario":"assets/ui/effect_icons/temerario.png","trampa_de_cannas":"assets/ui/effect_icons/trampa_de_cannas.png","ultima_formacion":"assets/ui/effect_icons/ultima_formacion.png","ultima_resistencia":"assets/ui/effect_icons/ultima_resistencia.png","ultimo_aliento":"assets/ui/effect_icons/ultimo_aliento.png","veneno_de_la_manada":"assets/ui/status_icons/status_poison.png","veneno_de_la_serpiente_primordial":"assets/ui/status_icons/status_poison.png","victoria_sangrienta":"assets/ui/status_icons/status_bleed.png","vinculo_arcano":"assets/ui/det_icons/weapon_mage.png"};
+const DET_EFFECT_ICON_BY_TITLE={"aereo":"assets/ui/effect_icons/aereo.webp","agarre":"assets/ui/effect_icons/agarre.webp","anticaballeria":"assets/ui/effect_icons/anticaballeria.webp","armadura_bendita":"assets/ui/status_icons/status_guard.webp","armadura_natural":"assets/ui/status_icons/status_guard.webp","arte_de_la_guerra":"assets/ui/effect_icons/arte_de_la_guerra.webp","asesinato_preciso":"assets/ui/effect_icons/asesinato_preciso.webp","ataque_en_picada":"assets/ui/effect_icons/ataque_en_picada.webp","ataque_por_la_espalda":"assets/ui/effect_icons/ataque_por_la_espalda.webp","aturdido_hasta_su_proximo_turno":"assets/ui/status_icons/status_paralysis.webp","azote_de_imperios":"assets/ui/effect_icons/azote_de_imperios.webp","bestia_irritante":"assets/ui/effect_icons/bestia_irritante.webp","bestia_torpe":"assets/ui/effect_icons/bestia_torpe.webp","blanco_de_invierno":"assets/ui/effect_icons/blanco_de_invierno.webp","bloqueo_naval":"assets/ui/status_icons/status_lock.webp","bomba_de_humo":"assets/ui/effect_icons/bomba_de_humo.webp","caceria_de_sangre":"assets/ui/status_icons/status_bleed.webp","campeador":"assets/ui/effect_icons/campeador.webp","carga_brusca":"assets/ui/effect_icons/carga_brusca.webp","carga_desestabilizadora":"assets/ui/effect_icons/carga_desestabilizadora.webp","colera_del_pelida":"assets/ui/effect_icons/colera_del_pelida.webp","concentracion_del_pelida":"assets/ui/effect_icons/concentracion_del_pelida.webp","constriccion":"assets/ui/effect_icons/constriccion.webp","contraataque_del_sabueso":"assets/ui/effect_icons/contraataque_del_sabueso.webp","corazon_indomable":"assets/ui/effect_icons/corazon_indomable.webp","corte_de_abanico":"assets/ui/effect_icons/corte_de_abanico.webp","cuernos_del_bufalo":"assets/ui/effect_icons/cuernos_del_bufalo.webp","danza_del_engano":"assets/ui/effect_icons/danza_del_engano.webp","descarga_arcana":"assets/ui/effect_icons/descarga_arcana.webp","desembarco_rapido":"assets/ui/effect_icons/desembarco_rapido.webp","desgarro_salvaje":"assets/ui/effect_icons/desgarro_salvaje.webp","disciplina_de_las_legiones":"assets/ui/effect_icons/disciplina_de_las_legiones.webp","disparo_de_supresion":"assets/ui/effect_icons/disparo_de_supresion.webp","dos_cielos":"assets/ui/effect_icons/dos_cielos.webp","dos_manos":"assets/ui/effect_icons/dos_manos.webp","embestida_devastadora":"assets/ui/effect_icons/embestida_devastadora.webp","empuje_salvaje":"assets/ui/effect_icons/empuje_salvaje.webp","escape_forzado":"assets/ui/effect_icons/escape_forzado.webp","espada_invicta":"assets/ui/effect_icons/espada_invicta.webp","espinas_defensivas":"assets/ui/effect_icons/espinas_defensivas.webp","estratega_de_itaca":"assets/ui/effect_icons/estratega_de_itaca.webp","estrategia_de_repliegue":"assets/ui/effect_icons/estrategia_de_repliegue.webp","filo_de_mando":"assets/ui/effect_icons/filo_de_mando.webp","flecha_del_dharma":"assets/ui/effect_icons/flecha_del_dharma.webp","formacion_de_picas":"assets/ui/effect_icons/formacion_de_picas.webp","furia_de_la_alabarda":"assets/ui/effect_icons/furia_de_la_alabarda.webp","furia_del_oso":"assets/ui/effect_icons/furia_del_oso.webp","furia_del_sabueso":"assets/ui/effect_icons/furia_del_sabueso.webp","golpe_de_escudo":"assets/ui/status_icons/status_guard.webp","golpe_silencioso":"assets/ui/status_icons/status_silence.webp","graznido_inquietante":"assets/ui/effect_icons/graznido_inquietante.webp","horda_de_la_estepa":"assets/ui/effect_icons/horda_de_la_estepa.webp","inmune_al_veneno":"assets/ui/status_icons/status_poison.webp","instinto_de_cornada":"assets/ui/effect_icons/instinto_de_cornada.webp","ira_de_iceni":"assets/ui/effect_icons/ira_de_iceni.webp","jinete_de_la_luna_cortante":"assets/ui/effect_icons/jinete_de_la_luna_cortante.webp","liderazgo_de_manada":"assets/ui/effect_icons/liderazgo_de_manada.webp","llama_de_orleans":"assets/ui/effect_icons/llama_de_orleans.webp","llamado_de_la_carga":"assets/ui/effect_icons/llamado_de_la_carga.webp","lluvia_de_flechas":"assets/ui/effect_icons/lluvia_de_flechas.webp","marca_del_abanico":"assets/ui/effect_icons/marca_del_abanico.webp","marcha_de_mil_horizontes":"assets/ui/effect_icons/marcha_de_mil_horizontes.webp","matador_de_monstruos":"assets/ui/effect_icons/matador_de_monstruos.webp","media_luna_del_desierto":"assets/ui/effect_icons/media_luna_del_desierto.webp","miedo":"assets/ui/status_icons/status_control.webp","mordida_fastidiosa":"assets/ui/effect_icons/mordida_fastidiosa.webp","mordida_letal":"assets/ui/effect_icons/mordida_letal.webp","muralla_de_troya":"assets/ui/effect_icons/muralla_de_troya.webp","muro_de_macedonia":"assets/ui/effect_icons/muro_de_macedonia.webp","niebla_de_sangre":"assets/ui/status_icons/status_bleed.webp","ojo_del_cazador":"assets/ui/effect_icons/ojo_del_cazador.webp","paso_de_sombra":"assets/ui/effect_icons/paso_de_sombra.webp","peso_del_rey_de_uruk":"assets/ui/effect_icons/peso_del_rey_de_uruk.webp","presencia_alfa":"assets/ui/effect_icons/presencia_alfa.webp","proteger_al_daimyo":"assets/ui/effect_icons/proteger_al_daimyo.webp","quemadura":"assets/ui/status_icons/status_burn.webp","respuesta_mistica":"assets/ui/det_icons/trigger.webp","romper_cadenas":"assets/ui/effect_icons/romper_cadenas.webp","rugido_del_rey":"assets/ui/effect_icons/rugido_del_rey.webp","ruptura_arcana":"assets/ui/status_icons/status_debuff.webp","ruptura_brutal":"assets/ui/effect_icons/ruptura_brutal.webp","sabotaje":"assets/ui/effect_icons/sabotaje.webp","salto_de_emboscada":"assets/ui/effect_icons/salto_de_emboscada.webp","sangrado":"assets/ui/status_icons/status_bleed.webp","sangre_del_pelida":"assets/ui/status_icons/status_bleed.webp","saqueo_de_guerra":"assets/ui/effect_icons/saqueo_de_guerra.webp","saqueo_del_norte":"assets/ui/effect_icons/saqueo_del_norte.webp","shirahadori":"assets/ui/effect_icons/shirahadori.webp","sigilo_de_depredador":"assets/ui/effect_icons/sigilo_de_depredador.webp","temerario":"assets/ui/effect_icons/temerario.webp","trampa_de_cannas":"assets/ui/effect_icons/trampa_de_cannas.webp","ultima_formacion":"assets/ui/effect_icons/ultima_formacion.webp","ultima_resistencia":"assets/ui/effect_icons/ultima_resistencia.webp","ultimo_aliento":"assets/ui/effect_icons/ultimo_aliento.webp","veneno_de_la_manada":"assets/ui/status_icons/status_poison.webp","veneno_de_la_serpiente_primordial":"assets/ui/status_icons/status_poison.webp","victoria_sangrienta":"assets/ui/status_icons/status_bleed.webp","vinculo_arcano":"assets/ui/det_icons/weapon_mage.webp"};
 function normalizeDetEffectTitle(value=""){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");}
 function getDetEffectIconFromText(section={}){
   const text=`${section.title||""} ${section.body||""}`.toLowerCase();
   const base="assets/ui/status_icons/";
-  if(/sangr|bleed/.test(text))return `${base}status_bleed.png`;
-  if(/veneno|poison|tóxic|toxic/.test(text))return `${base}status_poison.png`;
-  if(/quem|ardiente|fuego|burn/.test(text))return `${base}status_burn.png`;
-  if(/par[aá]li|aturd|stun|inmovil|shock/.test(text))return `${base}status_paralysis.png`;
-  if(/silencio|silence/.test(text))return `${base}status_silence.png`;
-  if(/maldici|curse|corrup/.test(text))return `${base}status_curse.png`;
-  if(/bloque|cerrad|encaden|lock/.test(text))return `${base}status_lock.png`;
-  if(/control|miedo|fear|provoca|atrae/.test(text))return `${base}status_control.png`;
-  if(/cura|recupera|sanaci|vida|hp/.test(text))return `${base}status_hp.png`;
-  if(/guardia|defensa|armadura|escudo|protege/.test(text))return `${base}status_guard.png`;
-  if(/pierde|reduce|debuff|penaliza|debilita/.test(text))return `${base}status_debuff.png`;
-  if(/gana|aumenta|mejora|buff|inspir/.test(text))return `${base}status_buff.png`;
+  if(/sangr|bleed/.test(text))return `${base}status_bleed.webp`;
+  if(/veneno|poison|tóxic|toxic/.test(text))return `${base}status_poison.webp`;
+  if(/quem|ardiente|fuego|burn/.test(text))return `${base}status_burn.webp`;
+  if(/par[aá]li|aturd|stun|inmovil|shock/.test(text))return `${base}status_paralysis.webp`;
+  if(/silencio|silence/.test(text))return `${base}status_silence.webp`;
+  if(/maldici|curse|corrup/.test(text))return `${base}status_curse.webp`;
+  if(/bloque|cerrad|encaden|lock/.test(text))return `${base}status_lock.webp`;
+  if(/control|miedo|fear|provoca|atrae/.test(text))return `${base}status_control.webp`;
+  if(/cura|recupera|sanaci|vida|hp/.test(text))return `${base}status_hp.webp`;
+  if(/guardia|defensa|armadura|escudo|protege/.test(text))return `${base}status_guard.webp`;
+  if(/pierde|reduce|debuff|penaliza|debilita/.test(text))return `${base}status_debuff.webp`;
+  if(/gana|aumenta|mejora|buff|inspir/.test(text))return `${base}status_buff.webp`;
   const kind=classifyDetAbility(section);
-  if(kind==="buff")return `${base}status_buff.png`;
-  if(kind==="debuff")return `${base}status_debuff.png`;
-  if(kind==="passive"||kind==="aura")return "assets/ui/det_icons/passive.png";
-  if(kind==="trigger")return "assets/ui/det_icons/trigger.png";
-  return `${base}status_generic.png`;
+  if(kind==="buff")return `${base}status_buff.webp`;
+  if(kind==="debuff")return `${base}status_debuff.webp`;
+  if(kind==="passive"||kind==="aura")return "assets/ui/det_icons/passive.webp";
+  if(kind==="trigger")return "assets/ui/det_icons/trigger.webp";
+  return `${base}status_generic.webp`;
 }
+const DET_EFFECT_KIND_BY_TITLE={
+  formacion_de_picas:"trigger",
+  anticaballeria:"debuff"
+};
 function getDetAbilityVisual(entity,section,index=0){
-  const key=normalizeEffectGuideKey(entity);
   const exactKey=normalizeDetEffectTitle(section?.title||"");
   const exactIcon=DET_EFFECT_ICON_BY_TITLE[exactKey];
-  const title=String(section?.title||"").toLowerCase();
-  if(key==="spearman"){
-    if(title.includes("formación de picas")||title.includes("formacion de picas")){
-      return {icon:"assets/ui/effects/pike_formation.svg",label:"Formación de picas",kind:"trigger"};
-    }
-    if(title.includes("anticaballería")||title.includes("anticaballeria")){
-      return {icon:"assets/ui/effects/anti_cavalry.svg",label:"Anticaballería",kind:"debuff"};
-    }
-  }
-  const kind=classifyDetAbility(section);
+  const kind=DET_EFFECT_KIND_BY_TITLE[exactKey]||classifyDetAbility(section);
   const meta=getDetAbilityMeta(kind);
   if(exactIcon)return {icon:exactIcon,label:section?.title||meta.label,kind};
   return {icon:getDetEffectIconFromText(section)||meta.icon,label:section?.title||meta.label,kind};
@@ -4261,18 +4255,18 @@ function openSpearmanTacticalGuide(){
     modal.innerHTML=`<div class="spearman-tactical-card" role="dialog" aria-modal="true" aria-labelledby="spearmanTacticalTitle">
       <div class="spearman-tactical-head">
         <div class="spearman-tactical-title-wrap">
-          <img src="assets/ui/det_icons/weapon_spear.png" alt="" class="spearman-tactical-main-icon">
+          <img src="assets/ui/det_icons/weapon_spear.webp" alt="" class="spearman-tactical-main-icon">
           <div><div class="spearman-tactical-kicker">CLASE TÁCTICA</div><h2 id="spearmanTacticalTitle">LANZA</h2></div>
         </div>
         <button id="spearmanTacticalClose" class="spearman-tactical-x" type="button" aria-label="Cerrar">×</button>
       </div>
       <div class="spearman-tactical-matchups">
         <div class="spearman-matchup-row disadvantage">
-          <span class="spearman-matchup-icon"><img src="assets/ui/det_icons/weapon_sword.png" alt="Espada"></span>
+          <span class="spearman-matchup-icon"><img src="assets/ui/det_icons/weapon_sword.webp" alt="Espada"></span>
           <div><b>DESVENTAJA CONTRA</b><strong>Espada / infantería</strong><p>La Espada tiene ventaja táctica sobre la Lanza y recibe +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza al atacarla durante ese combate.</p></div>
         </div>
         <div class="spearman-matchup-row advantage">
-          <span class="spearman-matchup-icon"><img src="assets/ui/det_icons/weapon_cavalry.png" alt="Caballería"></span>
+          <span class="spearman-matchup-icon"><img src="assets/ui/det_icons/weapon_cavalry.webp" alt="Caballería"></span>
           <div><b>VENTAJA CONTRA</b><strong>Caballería</strong><p>La Lanza tiene ventaja táctica contra Caballería y recibe +${WEAPON_ADVANTAGE_DEX_BONUS} Destreza al atacarla durante ese combate.</p></div>
         </div>
       </div>
@@ -4897,13 +4891,13 @@ function shouldShowEffectGuideButton(entity,effectText=""){
 
 function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=true,showLore=false,effectLabel="Ver efecto",entity=null}={}){
   const chips=[];
-  if(showEffect)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-effect-btn" type="button" aria-label="${escapeHtml(effectLabel)}"><img class="det-btn-img" src="assets/ui/det_icons/trigger.png" alt="${escapeHtml(effectLabel)}"></button><span>${escapeHtml(effectLabel)}</span></div>`);
+  if(showEffect)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-effect-btn" type="button" aria-label="${escapeHtml(effectLabel)}"><img class="det-btn-img" src="assets/ui/det_icons/trigger.webp" alt="${escapeHtml(effectLabel)}"></button><span>${escapeHtml(effectLabel)}</span></div>`);
   if(showWeapon){
-    const weaponIcon=entity?getWeaponClassIcon(entity):"assets/ui/det_icons/tactical.png";
+    const weaponIcon=entity?getWeaponClassIcon(entity):"assets/ui/det_icons/tactical.webp";
     chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-weapon-btn" type="button" aria-label="Arma / ventaja y desventaja" title="Arma / ventaja y desventaja"><img class="det-btn-img" src="${weaponIcon}" alt=""></button><span>Arma / ventaja y desventaja</span></div>`);
   }
-  if(showFormula)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-formula-btn" type="button" aria-label="PREC / EVA"><img class="det-btn-img" src="assets/ui/det_icons/dexterity.png" alt="PREC / EVA"></button><span>PREC / EVA</span></div>`);
-  if(showLore)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-lore-btn" type="button" aria-label="Conóceme"><img class="det-btn-img" src="assets/ui/det_icons/lore.png" alt="Conóceme"></button><span>Conóceme</span></div>`);
+  if(showFormula)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-formula-btn" type="button" aria-label="PREC / EVA"><img class="det-btn-img" src="assets/ui/det_icons/dexterity.webp" alt="PREC / EVA"></button><span>PREC / EVA</span></div>`);
+  if(showLore)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-lore-btn" type="button" aria-label="Conóceme"><img class="det-btn-img" src="assets/ui/det_icons/lore.webp" alt="Conóceme"></button><span>Conóceme</span></div>`);
   return chips.length?`<div class="detail-guide-row">${chips.join("")}</div>`:"";
 }
 function detailStatusButtonsHtml(entries=[]){
@@ -5142,20 +5136,20 @@ function canHealOrCleanseUnit(u,owner=null){
   return (u.hp||0)<effectiveMaxHp(u)||hasCurableStatus(u);
 }
 const STATUS_ICON_ASSET_PATHS={
-  buff:"assets/ui/status_icons/status_buff.png",
-  debuff:"assets/ui/status_icons/status_debuff.png",
-  bleed:"assets/ui/status_icons/status_bleed.png",
-  poison:"assets/ui/status_icons/status_poison.png",
-  burn:"assets/ui/status_icons/status_burn.png",
-  paralysis:"assets/ui/status_icons/status_paralysis.png",
-  silence:"assets/ui/status_icons/status_silence.png",
-  curse:"assets/ui/status_icons/status_curse.png",
-  lock:"assets/ui/status_icons/status_lock.png",
-  defense:"assets/ui/status_icons/status_defense.png",
-  guard:"assets/ui/status_icons/status_guard.png",
-  hp:"assets/ui/status_icons/status_hp.png",
-  control:"assets/ui/status_icons/status_control.png",
-  generic:"assets/ui/status_icons/status_generic.png"
+  buff:"assets/ui/status_icons/status_buff.webp",
+  debuff:"assets/ui/status_icons/status_debuff.webp",
+  bleed:"assets/ui/status_icons/status_bleed.webp",
+  poison:"assets/ui/status_icons/status_poison.webp",
+  burn:"assets/ui/status_icons/status_burn.webp",
+  paralysis:"assets/ui/status_icons/status_paralysis.webp",
+  silence:"assets/ui/status_icons/status_silence.webp",
+  curse:"assets/ui/status_icons/status_curse.webp",
+  lock:"assets/ui/status_icons/status_lock.webp",
+  defense:"assets/ui/status_icons/status_defense.webp",
+  guard:"assets/ui/status_icons/status_guard.webp",
+  hp:"assets/ui/status_icons/status_hp.webp",
+  control:"assets/ui/status_icons/status_control.webp",
+  generic:"assets/ui/status_icons/status_generic.webp"
 };
 function getStatusAssetKey(entry={}){
   const icon=String(entry?.icon||"").toLowerCase();
