@@ -1,0 +1,20 @@
+HALLVALLA — AJUSTE DE FORMACIÓN DE PICAS / REGLA DE LANZA
+
+Cambio aplicado:
+- Atacar Primero de las unidades de lanza solo se activa contra una unidad enemiga con RG 1 que declara el ataque desde una casilla adyacente.
+- Las arqueras y cualquier otra unidad con RG 2 o más no activan Formación de picas, incluso si están adyacentes al lancero.
+- Ataque en Picada del halcón continúa ignorando la reacción.
+- La misma condición se aplica en los ataques del jugador y en los ataques controlados por la IA.
+
+Textos actualizados:
+- Lancero Solar.
+- Samurai de Naginata.
+- Unidades de lanza y semidioses lanceros.
+- Explicaciones DET, guía de arma y reglas reales del sistema.
+
+Pruebas realizadas:
+- Arquera RG 2 a distancia: no activa Atacar Primero.
+- Arquera RG 2 adyacente: no activa Atacar Primero.
+- Unidad cuerpo a cuerpo RG 1 adyacente: sí puede activarlo una vez por turno.
+- Unidad RG 1 no adyacente: no lo activa.
+- Ataque en Picada: no lo activa.

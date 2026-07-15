@@ -1,0 +1,34 @@
+UNIFICACIÓN GLOBAL DE LA CLASE LANZA
+
+Todas las unidades registradas con clase táctica Lanza reciben ahora las mismas dos habilidades innatas:
+
+1. ATACAR PRIMERO
+- Una vez por turno.
+- Solo cuando una unidad enemiga de cuerpo a cuerpo con RG 1 ataca desde una casilla adyacente.
+- No se activa contra unidades con RG 2 o más.
+- No se activa contra Ataque en Picada del Halcón Peregrino.
+- Si el golpe previo destruye al atacante, su ataque se cancela.
+
+2. ANTICABALLERÍA
+- Se aplica en combate cuerpo a cuerpo.
+- Funciona tanto al atacar como al defender.
+- La Caballería rival queda con Guardia 0 y AGI 0 durante ese combate.
+
+Unidades verificadas:
+- Lancero Solar
+- Samurai de Naginata
+- Shaka Zulu
+- Boudica
+- Leónidas
+- Lü Bu
+- Héctor de Troya
+- Alejandro Magno
+- Cú Chulainn
+- Aquiles
+
+Correcciones adicionales:
+- Boudica fue incorporada al registro global de Lanza.
+- Anticaballería defensiva dejó de estar limitada al Lancero Solar.
+- El DET muestra Atacar Primero y Anticaballería con los iconos WebP nuevos en todas las unidades de Lanza.
+- El modal de clase táctica Lanza se abre para cualquier unidad de Lanza.
+- La detección ya no revisa fragmentos del texto de habilidades, evitando clasificar por error “Ataque en Picada” como pica/lanza.

@@ -1,0 +1,10 @@
+HALLVALLA — AJUSTE DE EVENT SPLASHES
+
+- Los splashes ya no ocupan la pantalla completa ni oscurecen el campo.
+- Un splash individual aparece centrado con un máximo aproximado de 410 px de ancho.
+- La entrada tiene una ampliación breve y controlada para que el evento sea visible.
+- Tras permanecer legible, el splash se reduce y se desplaza hacia la esquina superior derecha hasta ocultarse.
+- Cuando aparecen dos splashes simultáneos, uno se retira hacia la izquierda y el otro hacia la derecha.
+- En pantallas pequeñas el tamaño se limita a un máximo aproximado de 320 px.
+- Se conservan las imágenes, textos, tipos de evento, sonidos, cola y lógica que activa cada splash.
+- Solo se ajustaron styles.css y los tiempos visuales del cierre en script.js.
