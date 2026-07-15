@@ -1,0 +1,50 @@
+FIX LANZAS RG 1 + ATACAR PRIMERO
+================================
+
+BASE REVISADA
+- Hallvalla_fix_click_lider_DEF.zip
+
+PROBLEMA ENCONTRADO
+1. La regla global de Arco detectaba palabras dentro del texto de habilidades.
+2. El texto del Lancero Solar decía "arqueras" para explicar cuándo no activaba Formación de picas.
+3. Esa sola palabra hacía que el detector lo confundiera con una unidad de Arco y le sumara +1 RG.
+4. Aquiles todavía tenía range:2 escrito directamente en su definición original.
+
+CORRECCIONES
+- Toda unidad registrada como clase Lanza tiene RG 1 fijo.
+- Las Lanzas no pueden recibir la regla global de Arco.
+- El rango mostrado en cartas, DET, unidades invocadas y vista previa del deck builder se normaliza a 1.
+- Las unidades antiguas guardadas con RG 2 también combaten con RG 1 mediante el cálculo de rango efectivo.
+- Aquiles fue corregido de range:2 a range:1 en su definición.
+
+ATACAR PRIMERO
+- Se activa la primera vez por turno que la unidad de Lanza recibe un ataque válido.
+- El atacante debe ser una unidad de cuerpo a cuerpo con RG 1.
+- Debe atacar desde una casilla adyacente.
+- No se activa contra Arqueras ni unidades de RG 2 o superior.
+- No se activa contra Ataque en Picada del Halcón Peregrino.
+- Si la Lanza derrota al atacante con Atacar Primero, el ataque enemigo se cancela.
+- Se usa una marca específica lanceFirstStrikeUsedTurn para controlar esta habilidad.
+
+UNIDADES DE LANZA VERIFICADAS
+- Lancero Solar
+- Samurai de Naginata
+- Shaka Zulu
+- Boudica
+- Leónidas
+- Lü Bu
+- Héctor de Troya
+- Alejandro Magno
+- Cú Chulainn
+- Aquiles
+
+ARCHIVO MODIFICADO
+- script.js
+
+ARCHIVOS NO MODIFICADOS
+- index.html
+- styles.css
+- imágenes
+- iconos
+- cartas
+- sonidos

@@ -19540,3 +19540,42 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 .inspector #inspectText.inspect-text{
   background-color:rgba(0,0,0,.24) !important;
 }
+
+/* ============================================================
+   7HGH · Clic completo sobre líder con iconos de estado flotantes
+   - Los sellos DEF/estados continúan visibles sobre el líder.
+   - No capturan pointer/click: el evento atraviesa el icono y llega
+     al hitbox del líder o a la celda lógica situada detrás.
+   - La hitbox se amplía al tamaño aproximado de la celda, sin
+     extenderse lo suficiente para ocupar celdas vecinas.
+   ============================================================ */
+.leader-base > .leader-status-bubbles,
+.leader-base > .leader-status-bubbles *,
+.leader-base > .leader-status-bubbles .leader-status-seal,
+.leader-base > .leader-status-bubbles .unit-status-seal{
+  pointer-events:none !important;
+  cursor:inherit !important;
+}
+
+.leader-base-hitbox{
+  width:162% !important;
+  height:116% !important;
+  top:49% !important;
+  z-index:11 !important;
+  pointer-events:auto !important;
+}
+
+/* Las capas visibles siguen sin interceptar el clic. */
+.leader-base-token,
+.leader-base-token *,
+.leader-base-stats,
+.leader-base-stats *{
+  pointer-events:none !important;
+}
+
+@media(max-width:980px){
+  .leader-base-hitbox{
+    width:166% !important;
+    height:120% !important;
+  }
+}

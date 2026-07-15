@@ -1,0 +1,26 @@
+FIX 7HGH — CLIC COMPLETO EN LA CELDA DEL LÍDER
+================================================
+
+PROBLEMA
+--------
+Los iconos flotantes de estados del líder, especialmente DEF, estaban
+renderizados como botones interactivos sobre el líder. Esos botones
+capturaban pointerdown/click y detenían la propagación, por lo que el
+clic no llegaba al líder y no se abría su menú/diálogo de detalles.
+
+También la hitbox invisible del líder era más pequeña que una parte de
+la celda visual ocupada por el personaje.
+
+CORRECCIÓN
+----------
+- El icono DEF y los demás estados del líder permanecen visibles.
+- Los iconos flotantes ya no capturan eventos del puntero.
+- El clic atraviesa el icono y llega al líder o a su celda lógica.
+- La hitbox invisible del líder se amplió moderadamente para abarcar
+  mejor el área visual de su celda.
+- Retrato, pedestal, stats e iconos siguen sin bloquear el clic.
+
+ALCANCE
+-------
+Solo se modificó styles.css. No se cambió lógica de combate, IA,
+movimiento, selección, efectos, estados ni cartas.
