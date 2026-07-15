@@ -1,0 +1,65 @@
+AUDITORÍA GLOBAL DE RANGOS Y CLASES DE ARMA
+===========================================
+
+PROBLEMAS ENCONTRADOS
+---------------------
+1. Skipar del Drakkar aparecía con RG 2 aunque su ficha base era RG 1.
+   Causa: el detector de arqueros inspeccionaba el texto completo y encontraba
+   la secuencia "arco" dentro de "Desembarco Rápido".
+
+2. Juana de Arco podía recibir RG +1 por contener "Arco" en su nombre.
+   Juana está registrada como Espada, no como arquera.
+
+3. Saladino podía recibir RG +1 porque su habilidad menciona a la
+   "Caballería Arquera de Saladino". Saladino está registrado como Caballería
+   cuerpo a cuerpo y su RG correcto es 1.
+
+4. Unidades antiguas guardadas con RG corrupto podían conservar RG 2 aunque el
+   detector ya se hubiera corregido.
+
+CORRECCIÓN GENERAL
+------------------
+- La Regla de arco ya no inspecciona los textos de habilidades.
+- Solo reconoce arqueros por registro explícito, icono de arco, key o nombre
+  inequívoco de arquero/tirador.
+- Espada, Lanza, Caballería, Hacha, Bestia y Neutral quedan en RG 1, salvo que
+  estén registradas explícitamente como unidad de ataque a distancia.
+- La normalización se aplica a carta en mano, DET, deck builder, invocación,
+  campo, alcance visual, validación de ataques y decisiones de la IA.
+- También corrige unidades antiguas ya guardadas con valores erróneos.
+
+UNIDADES CORREGIDAS A RG 1
+--------------------------
+- Skipar del Drakkar
+- Juana de Arco
+- Saladino
+- Todas las unidades de Lanza
+- Cualquier otra unidad cuerpo a cuerpo que conserve RG 2/3 sin una excepción
+  explícita de arma a distancia.
+
+EXCEPCIONES DE RANGO MAYOR A 1 CONFIRMADAS
+------------------------------------------
+RG 2:
+- Adepto Arcano: magia a distancia.
+- Ulfhednar: hachas arrojadizas.
+- Hattori Shinobi: ataque silencioso a distancia.
+- Subotai / Subutai: caballería de hostigamiento registrada con RG 2.
+- Atila el Huno: caballería arquera registrada.
+
+RG 3:
+- Arquera del Desierto.
+- Simo Häyhä.
+- Nasu no Yoichi.
+- Arjuna.
+- Samurai Yabusame: caballería arquera.
+- Caballería Arquera de Saladino.
+
+No existe ninguna Caballería común con RG 3. Las únicas caballerías con RG 3
+son unidades explícitamente arqueras.
+
+ARCHIVOS MODIFICADOS
+--------------------
+- script.js
+- docs/AUDITORIA_GLOBAL_RANGOS_ARMAS_FIX.txt
+
+No se modificaron imágenes, cartas gráficas, iconos, sonidos, HTML ni CSS.

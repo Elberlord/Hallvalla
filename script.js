@@ -2395,29 +2395,42 @@ const ARCHER_UNIT_KEYS=new Set([
   "attila_hun",
   "samurai_yabusame"
 ]);
+// Unidades que no pertenecen a la clase Arco pero sí tienen un ataque a distancia
+// escrito directamente en su diseño. Cualquier otra Espada, Caballería, Hacha o
+// Bestia queda limitada a RG 1, aunque un estado antiguo conserve un rango corrupto.
+const EXPLICIT_NON_BOW_RANGED_UNIT_KEYS=new Set([
+  "ulfhednar",          // hachas arrojadizas
+  "hattori_shinobi",   // ataque silencioso a distancia
+  "subotai"             // caballería de hostigamiento RG 2
+]);
+const MELEE_RANGE_ONE_CLASSES=new Set(["sword","cavalry","axe","beast","neutral"]);
 function isArcherWeaponUnitCardLike(card){
   if(!card||card.type!=="unit")return false;
-  // Una unidad registrada como Lanza nunca puede recibir la regla global de Arco.
-  // Antes se inspeccionaba el texto y la palabra "arqueras" dentro de la regla
-  // de lanza convertía accidentalmente al Lancero Solar en RG 2.
   if(isLanceUnitCardLike(card))return false;
   const key=String(card.key||"").toLowerCase();
   const name=String(card.name||"").toLowerCase();
-  const txt=String(card.text||card.effectText||card.ability||"").toLowerCase();
+  const icon=String(card.icon||"");
+  // La detección de Arco ya no inspecciona el texto de habilidades. Esa lógica
+  // confundía "Desembarco" con "arco", "Juana de Arco" con una arquera y a
+  // Saladino con su Caballería Arquera invocada.
   return ARCHER_UNIT_KEYS.has(key)
+    || icon.includes("🏹")
+    || key.includes("archer")
+    || key.includes("bow")
+    || key.includes("arrow")
     || name.includes("arquera")
     || name.includes("arquero")
-    || name.includes("arquera")
-    || name.includes("arquero")
-    || name.includes("arquera")
-    || name.includes("arquero")
-    || name.includes("archer")
-    || name.includes("arco")
-    || txt.includes("arquera")
-    || txt.includes("arquero")
-    || txt.includes("archer")
-    || txt.includes("arco")
-    || txt.includes("flecha");
+    || name.includes("tiradora")
+    || name.includes("tirador");
+}
+function hasExplicitRangedWeapon(card){
+  if(!card||card.type!=="unit")return false;
+  const key=String(card.key||"").toLowerCase();
+  const cls=String(getWeaponClassForCard(card)||"").toLowerCase();
+  return !!card.rangedWeapon
+    || cls==="mage"
+    || isArcherWeaponUnitCardLike(card)
+    || EXPLICIT_NON_BOW_RANGED_UNIT_KEYS.has(key);
 }
 function applyArcherRangeRule(card){
   if(!isArcherWeaponUnitCardLike(card))return card;
@@ -2434,7 +2447,9 @@ function applyArcherRangeRule(card){
 function getArcherRangeBonus(card){return isArcherWeaponUnitCardLike(card)&&!card.archerRangeBonusApplied?1:0;}
 function getCardDisplayRange(card){
   if(isLanceUnitCardLike(card))return 1;
-  return (card?.range||0)+getArcherRangeBonus(card);
+  const cls=String(getWeaponClassForCard(card)||"").toLowerCase();
+  if(card?.type==="unit"&&MELEE_RANGE_ONE_CLASSES.has(cls)&&!hasExplicitRangedWeapon(card))return 1;
+  return Math.max(1,Number(card?.range||1)+getArcherRangeBonus(card));
 }
 
 // v7HCV - Compatibilidad heredada para textos antiguos de semidiós con lanza.
@@ -4023,14 +4038,16 @@ function getLiveUnitRef(unitOrId,units=publicState?.units||[]){
   return (id?(units||[]).find(u=>u.id===id):null)||((unitOrId&&typeof unitOrId==="object")?unitOrId:null);
 }
 function getUnitAttackRange(u){
-  // RG fijo de la clase Lanza: siempre ataca únicamente a una casilla adyacente.
-  // Esto también corrige unidades guardadas con RG 2 por versiones anteriores.
+  // Las clases cuerpo a cuerpo no pueden heredar RG 2/3 por coincidencias de texto
+  // ni por unidades antiguas guardadas con datos corruptos.
   if(isLanceUnitCardLike(u))return 1;
+  const cls=String(getWeaponClassForCard(u)||"").toLowerCase();
+  if(!u?.leader&&MELEE_RANGE_ONE_CLASSES.has(cls)&&!hasExplicitRangedWeapon(u))return 1;
   const baseRange=Number(u?.range||1)||1;
   const bonus=getLeaderBonus(u);
   const arcaneLink=getArcaneAdeptLinkBonus(u);
   let range=baseRange+Number(bonus.range||0)+Number(arcaneLink.range||0)-Number(u?.tempRangeDebuff||0);
-  if(!u?.leader&&getWeaponClassForCard(u)==="bow")range=Math.min(4,range);
+  if(!u?.leader&&cls==="bow")range=Math.min(4,range);
   return Math.max(1,range);
 }
 function isMulanExecutionMoveReady(u){return !!(u&&u.key==="mulan"&&u.mulanExecutionMoveReady);}
@@ -4052,13 +4069,13 @@ function getAttackableTargets(u,units=publicState?.units||[]){
   const live=getLiveUnitRef(u,units);
   if(!canUnitDeclareAttack(live))return[];
   const rg=getUnitAttackRange(live)+(live.key==="bengal_tiger"&&isStealthedUnit(live)?2:0);
-  return (units||[]).filter(t=>t&&t.id!==live.id&&t.owner!==live.owner&&(t.hp===undefined||t.hp>0)&&dist(live,t)<=rg&&canTargetStealth(live,t)&&(!(t.aerial)||((live.range||1)>3||live.antiaerial)));
+  return (units||[]).filter(t=>t&&t.id!==live.id&&t.owner!==live.owner&&(t.hp===undefined||t.hp>0)&&dist(live,t)<=rg&&canTargetStealth(live,t)&&(!(t.aerial)||(getUnitAttackRange(live)>3||live.antiaerial)));
 }
 function moveZones(u){const live=getLiveUnitRef(u);if(!live||!isUnitMoveWindow(live))return[];const mulanExecMove=isMulanExecutionMoveReady(live);if(!mulanExecMove&&(live.moved||live.acted))return[];if(!mulanExecMove&&live.noMoveTurnKey&&live.noMoveTurnKey===publicState?.turnKey)return[];const res=[];const maxMove=mulanExecMove?1:effectiveMov(live);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===live.x&&y===live.y)continue;if(getUnitAt(x,y))continue;if(dist(live,{x,y})<=maxMove)res.push(`${x},${y}`)}return res}
 function attackZones(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`)}
 function attackRangeCells(u){
   if(!u)return[];
-  const rg=Math.max(1,u.range||1);
+  const rg=getUnitAttackRange(u);
   const res=[];
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
     if(x===u.x&&y===u.y)continue;
@@ -5500,7 +5517,7 @@ async function attackUnit(a,d){
   const distance=dist(a,d);
   if(distance>rg)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
   if(isStealthedUnit(d))return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
-  if(d.aerial&&!((a.range||1)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
+  if(d.aerial&&!(getUnitAttackRange(a)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
   let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
   if(preTrap.cancel){
     const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
@@ -6049,7 +6066,7 @@ async function adventureEnemyTurn(){
     const key=(cardOrUnit?.key||"").toLowerCase();
     const name=(cardOrUnit?.name||"").toLowerCase();
     const text=(cardOrUnit?.text||"").toLowerCase();
-    const range=Math.max(1,Number(cardOrUnit?.range||1));
+    const range=cardOrUnit?.id?getUnitAttackRange(cardOrUnit):getCardDisplayRange(cardOrUnit);
     const hp=Math.max(0,Number(cardOrUnit?.hp||0));
     const guard=Math.max(0,Number(cardOrUnit?.guard||0));
     const mov=Math.max(0,Number(cardOrUnit?.mov||0));
@@ -6165,7 +6182,7 @@ async function adventureEnemyTurn(){
     if(!u)return 0;
     const tier=getUnitTrapTier(u);
     let value=(u.leader?180:0)+(u.special?65:0)+(tier==="demigod"?120:tier==="legendary"?85:tier==="special"?45:0);
-    value+=(effectiveAtk(u)||0)*8+(effectiveMaxHp(u)||0)*4+(u.range||1)*6+(effectiveMov(u)||0)*4+(effectiveDex(u)||0)*3+(effectiveAgi(u)||0)*3;
+    value+=(effectiveAtk(u)||0)*8+(effectiveMaxHp(u)||0)*4+getUnitAttackRange(u)*6+(effectiveMov(u)||0)*4+(effectiveDex(u)||0)*3+(effectiveAgi(u)||0)*3;
     if(u.key==="achilles"||u.key==="gilgamesh"||u.key==="arjuna")value+=70;
     if(u.key==="wallace"||u.key==="joan_of_arc"||u.key==="leonidas")value+=35;
     return value;
@@ -7119,7 +7136,7 @@ async function adventureEnemyTurn(){
         if(aiIsBacklineRole(role)&&!tactic.frontline.length)score-=role==="ranged"?260:125;
         if(aiIsBacklineRole(role)&&frontlineInHand&&!tactic.frontline.length)score-=95;
         if(aiIsBacklineRole(role)&&choice.cell&&playerThreatAtCell(choice.cell,choice.card)>=35)score-=role==="ranged"?220:130;
-        if(role==="ranged"&&Number(choice.card.range||1)>=3)score+=Math.max(0,Number(choice.card.range||1)-2)*70;
+        if(role==="ranged"&&getCardDisplayRange(choice.card)>=3)score+=Math.max(0,getCardDisplayRange(choice.card)-2)*70;
         if(role==="cavalry"&&!tactic.frontline.length)score-=70;
         if(role==="assassin"&&berserkerPressure)score+=520;
         if(role==="assassin"&&berserkerPressure&&choice.cell&&d(choice.cell,berserkerPressure.unit)<=Math.max(1,(choice.card.range||1)+(choice.card.mov||0)))score+=180;
