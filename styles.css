@@ -19655,3 +19655,28 @@ html.hv-mobile-landscape #gameShell #rivalHonorHud .turn-honor-label{
     top:73px!important;
   }
 }
+
+/* ============================================================
+   7HFF — HUD DE ACCIONES TRANSPARENTE
+   - Solo quedan visibles los tres botones y sus etiquetas
+   - Sin fondo, marco, borde, sombra ni título exterior
+   ============================================================ */
+body.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+}
+
+body.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel::before,
+html.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel::before,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::before,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::before{
+  content:none!important;
+  display:none!important;
+}

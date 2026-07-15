@@ -1,0 +1,14 @@
+HUD DE ACCIONES TRANSPARENTE
+============================
+
+Cambio aplicado sobre la versión con HUD de Honor rival.
+
+- Se eliminó el fondo oscuro del HUD de acciones en móvil horizontal.
+- Se eliminó el borde dorado exterior.
+- Se eliminó la sombra del panel.
+- Se eliminó el título exterior "Acciones".
+- Se mantienen únicamente los tres botones: Mazo, Cancelar y Siguiente fase.
+- No se modificó la lógica de los botones ni el HUD de Honor rival.
+
+Archivo modificado:
+- styles.css
