@@ -1,0 +1,40 @@
+LIMPIEZA DE CÓDIGO E IMÁGENES — VERSIÓN ACTUAL
+
+Se auditó index.html, script.js y styles.css, incluyendo:
+- referencias directas a assets;
+- rutas construidas dinámicamente;
+- conversión automática assets/cards -> assets/board_cards;
+- iconos DET construidos desde assets/ui/det_icons;
+- mapas de iconos de efectos y estados.
+
+IMÁGENES ELIMINADAS
+1. assets/ui/Base_Combat_panel.webp
+   Motivo: el HUD de acciones ya no usa panel decorativo.
+
+2. assets/ui/ChatGPT Image Jul 13, 2026, 08_09_42 PM.png
+   Motivo: archivo suelto sin ninguna referencia en HTML, CSS o JavaScript.
+
+3. assets/ui/effect_icons/respuesta_mistica.webp
+   Motivo: Respuesta Mística utiliza assets/ui/det_icons/trigger.webp.
+
+4. assets/ui/effect_icons/ruptura_arcana.webp
+   Motivo: Ruptura Arcana utiliza assets/ui/status_icons/status_debuff.webp.
+
+5. assets/ui/effect_icons/vinculo_arcano.webp
+   Motivo: Vínculo Arcano utiliza assets/ui/det_icons/weapon_mage.webp.
+
+LIMPIEZA DE CSS
+- Se eliminó la referencia muerta a Base_Combat_panel.webp.
+- Se unificaron los dos parches repetidos del HUD transparente en una sola regla final.
+- El HUD de acciones conserva solamente los tres botones y sus etiquetas.
+
+ARCHIVOS CONSERVADOS INTENCIONALMENTE
+- Todo assets/cards y assets/board_cards. Las imágenes de mano y campo son necesarias.
+- Todos los sonidos. Sus rutas se construyen dinámicamente con audioPath().
+- Los iconos DET agility/attack/guard/hp/movement/range. Sus rutas se construyen dinámicamente.
+- Todos los archivos de historia, líderes, home, modal, estados y splashes que siguen referenciados.
+
+VALIDACIONES
+- Todas las cartas tienen su imagen equivalente en board_cards.
+- No quedan referencias de ejecución a las cinco imágenes eliminadas.
+- JavaScript validado sin errores de sintaxis.
