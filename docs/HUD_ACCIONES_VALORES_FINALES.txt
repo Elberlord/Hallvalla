@@ -1,0 +1,14 @@
+HUD DE ACCIONES — VALORES FINALES
+================================
+Tamaño: 86%
+X: -40px
+Y: 53px
+Separación: 7px
+Texto: 11px
+
+Cambio de etiqueta:
+- El botón cuya imagen dice MANO ahora también muestra MANO en su texto, title y alt.
+
+Adaptación móvil:
+- En teléfonos horizontales de hasta 900x520 CSS px, el grupo conserva la misma composición, pero reduce proporcionalmente escala y desplazamiento para evitar cortes.
+- El editor del HUD permanece disponible para ajustes futuros.

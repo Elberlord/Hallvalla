@@ -11604,8 +11604,8 @@ on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();}
 /* ---------------------------------------------------------------------------
    7HHUDTUNER · Control exclusivo para tamaño y posición del HUD de acciones
    --------------------------------------------------------------------------- */
-const ACTIONS_HUD_TUNER_KEY="hallvalla_actions_hud_tuner_v1";
-const ACTIONS_HUD_TUNER_DEFAULTS=Object.freeze({scale:65,x:0,y:0,gap:7,label:8});
+const ACTIONS_HUD_TUNER_KEY="hallvalla_actions_hud_tuner_v2";
+const ACTIONS_HUD_TUNER_DEFAULTS=Object.freeze({scale:86,x:-40,y:53,gap:7,label:11});
 let actionsHudTunerState=loadActionsHudTunerState();
 let actionsHudDragState=null;
 function clampActionsHudValue(value,min,max,fallback){

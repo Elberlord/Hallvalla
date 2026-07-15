@@ -19707,11 +19707,11 @@ html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
    7HHUDTUNER · Control exclusivo del HUD de acciones
    ============================================================ */
 :root{
-  --actions-tuner-scale:.65;
-  --actions-tuner-x:0px;
-  --actions-tuner-y:0px;
+  --actions-tuner-scale:.86;
+  --actions-tuner-x:-40px;
+  --actions-tuner-y:53px;
   --actions-tuner-gap:7px;
-  --actions-tuner-label:8px;
+  --actions-tuner-label:11px;
 }
 #gameShell .battlefield .side .actions-visual-panel,
 body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
@@ -19810,4 +19810,34 @@ body.actions-hud-tuning #gameShell .battlefield .side .action-img-btn{
   .actions-hud-tuner-control span{margin-bottom:2px;font-size:8px}
   .actions-hud-tuner-actions{margin-top:5px}
   .actions-hud-tuner-status{margin-top:3px}
+}
+
+
+/* ==========================================================
+   7HHUDFINAL · Valores aprobados del HUD de acciones
+   Escritorio: 86%, X -40px, Y 53px, gap 7px, texto 11px.
+   En teléfonos horizontales muy pequeños se adapta de forma
+   proporcional para impedir cortes sin cambiar la composición.
+   ========================================================== */
+#gameShell .battlefield .side .action-btn-label{
+  white-space:nowrap!important;
+}
+@media (max-width:900px) and (max-height:520px){
+  #gameShell .battlefield .side .actions-visual-panel,
+  body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+  html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+  body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+  html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+    transform:translate3d(calc(var(--actions-tuner-x) * .65),calc(var(--actions-tuner-y) * .70),0) scale(calc(var(--actions-tuner-scale) * .82))!important;
+  }
+  #gameShell .battlefield .side .actions-visual-buttons,
+  body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
+  html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+    gap:calc(var(--actions-tuner-gap) * .72)!important;
+  }
+  #gameShell .battlefield .side .action-btn-label,
+  body.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label,
+  html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
+    font-size:max(8px,calc(var(--actions-tuner-label) - 1px))!important;
+  }
 }
