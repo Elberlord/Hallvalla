@@ -19579,3 +19579,79 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
     height:120% !important;
   }
 }
+
+
+/* ============================================================
+   HUD DE HONOR DEL RIVAL · espejo derecho del HUD local
+   - Muestra el recurso público real del oponente/IA.
+   - No captura clics ni modifica el sistema de pagos.
+   ============================================================ */
+#gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+  position:absolute!important;
+  left:auto!important;
+  right:var(--honor-hud-left,25px)!important;
+  top:var(--honor-hud-top,97px)!important;
+  bottom:auto!important;
+  transform:scale(var(--honor-hud-scale,.87))!important;
+  transform-origin:top right!important;
+  z-index:76!important;
+  min-width:var(--honor-hud-min-width,104px)!important;
+  justify-content:center!important;
+  gap:var(--honor-hud-gap,18px)!important;
+  padding:var(--honor-hud-pad-y,8px) var(--honor-hud-pad-x,12px)!important;
+  background:rgba(0,0,0,.88)!important;
+  border-color:rgba(255,213,96,.70)!important;
+  pointer-events:none!important;
+}
+#gameShell .battlefield #rivalHonorHud .turn-honor-label{
+  font-size:var(--honor-hud-label-font,15px)!important;
+}
+#gameShell .battlefield #rivalHonorHud strong{
+  font-size:var(--honor-hud-number-font,16px)!important;
+}
+@media(max-width:980px){
+  #gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+    left:auto!important;
+    right:8px!important;
+    top:72px!important;
+    transform:none!important;
+    min-width:98px!important;
+    padding:6px 10px!important;
+    gap:8px!important;
+    border-radius:14px!important;
+  }
+}
+body.hv-mobile-landscape #gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+  left:auto!important;
+  right:clamp(7px,.9vw,14px)!important;
+  top:clamp(66px,12svh,90px)!important;
+  transform:none!important;
+  min-width:clamp(92px,9vw,126px)!important;
+  padding:clamp(5px,.8svh,8px) clamp(8px,.8vw,12px)!important;
+  gap:clamp(7px,.7vw,12px)!important;
+  border-radius:clamp(12px,1vw,16px)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield #rivalHonorHud .turn-honor-label{
+  font-size:clamp(10px,.9vw,14px)!important;
+}
+body.hv-mobile-landscape #gameShell .battlefield #rivalHonorHud strong{
+  font-size:clamp(11px,1vw,15px)!important;
+}
+html.hv-mobile-landscape #gameShell #rivalHonorHud.turn-honor-hud{
+  left:auto!important;
+  right:10px!important;
+  top:86px!important;
+  min-width:92px!important;
+  padding:5px 9px!important;
+  font-size:10px!important;
+  border-radius:16px!important;
+  transform:none!important;
+}
+html.hv-mobile-landscape #gameShell #rivalHonorHud .turn-honor-label{
+  font-size:10px!important;
+}
+@media (max-height:380px){
+  html.hv-mobile-landscape #gameShell #rivalHonorHud.turn-honor-hud{
+    top:73px!important;
+  }
+}

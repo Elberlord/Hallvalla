@@ -8382,19 +8382,29 @@ function handleUnitContextAction(action){
 09_RENDER_CORE
 -------------------------------------------------------------------------------
 */
-function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
+function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderRivalHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
 
-function getVisibleHonorState(){
-  if(!publicState)return{honor:0,maxHonor:0,hidden:true};
-  const owner=myPlayer||publicState.currentPlayer||1;
-  const privateHonor=owner===myPlayer&&privateState?Number(privateState.honor||0):null;
-  const privateMax=owner===myPlayer&&privateState?Number(privateState.maxHonor||0):null;
+function getHonorStateForOwner(owner,{preferPrivate=false}={}){
+  if(!publicState||!owner)return{owner:0,honor:0,maxHonor:0,label:"HONOR",hidden:true};
   const st=publicState.playerStats?.[owner]||{};
+  const canUsePrivate=preferPrivate&&owner===myPlayer&&privateState;
+  const privateHonor=canUsePrivate?Number(privateState.honor||0):null;
+  const privateMax=canUsePrivate?Number(privateState.maxHonor||0):null;
   const rawMax=privateMax!==null?privateMax:Number(st.maxHonor||0);
   const maxHonor=capResourceMax(rawMax);
   const rawHonor=privateHonor!==null?privateHonor:Number(st.honor||0);
   const honor=capResourceAmount(rawHonor,maxHonor);
-  return{owner,honor,maxHonor,label:getResourceLabel(owner,{caps:true}),hidden:isBattleEnded()||!gameId};
+  return{owner,honor,maxHonor,label:getResourceLabel(owner,{caps:true}),hidden:isBattleEnded()||!gameId||!publicState.playerStats?.[owner]};
+}
+function getVisibleHonorState(){
+  const owner=myPlayer||publicState?.currentPlayer||1;
+  return getHonorStateForOwner(owner,{preferPrivate:true});
+}
+function getRivalHonorState(){
+  if(!publicState)return{owner:0,honor:0,maxHonor:0,label:"HONOR",hidden:true};
+  const localOwner=myPlayer||publicState.currentPlayer||1;
+  const rivalOwner=localOwner===1?2:1;
+  return getHonorStateForOwner(rivalOwner,{preferPrivate:false});
 }
 function renderTurnHonorHud(){
   const hud=$("turnHonorHud"),value=$("turnHonorHudValue"),labelEl=hud?hud.querySelector(".turn-honor-label"):null;
@@ -8403,6 +8413,18 @@ function renderTurnHonorHud(){
   hud.classList.toggle("hidden",!!st.hidden);
   if(labelEl)labelEl.textContent=st.label||"HONOR";
   value.textContent=`${st.honor}/${st.maxHonor}`;
+  hud.title=`${getHudPlayerDisplayName(st.owner)} · ${st.label||"HONOR"} ${st.honor}/${st.maxHonor}`;
+}
+function renderRivalHonorHud(){
+  const hud=$("rivalHonorHud"),value=$("rivalHonorHudValue"),labelEl=hud?hud.querySelector(".turn-honor-label"):null;
+  if(!hud||!value)return;
+  const st=getRivalHonorState();
+  hud.classList.toggle("hidden",!!st.hidden);
+  if(labelEl)labelEl.textContent=st.label||"HONOR";
+  value.textContent=`${st.honor}/${st.maxHonor}`;
+  const rivalName=getHudPlayerDisplayName(st.owner)||"Rival";
+  hud.setAttribute("aria-label",`${st.label||"Honor"} de ${rivalName}: ${st.honor} de ${st.maxHonor}`);
+  hud.title=`${rivalName} · ${st.label||"HONOR"} ${st.honor}/${st.maxHonor}`;
 }
 function pulseTurnHonorHud(){
   const hud=$("turnHonorHud");
