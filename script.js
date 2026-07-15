@@ -467,6 +467,7 @@ function getEventSplashConfig(type){
     dodge:{
       className:"is-dodge",
       image:"assets/ui/event_splashes/event_dodge.webp",
+      icon:"assets/ui/status_icons/status_generic.webp",
       kicker:"EVENTO DE COMBATE",
       title:"ESQUIVA",
       subtitle:"El objetivo evitó el golpe."
@@ -474,6 +475,7 @@ function getEventSplashConfig(type){
     guard:{
       className:"is-guard",
       image:"assets/ui/event_splashes/event_guard.webp",
+      icon:"assets/ui/status_icons/status_defense.webp",
       kicker:"EVENTO DE COMBATE",
       title:"GUARDIA",
       subtitle:"El ataque chocó contra la defensa."
@@ -481,6 +483,7 @@ function getEventSplashConfig(type){
     bleed:{
       className:"is-bleed",
       image:"assets/ui/event_splashes/event_bleed.webp",
+      icon:"assets/ui/status_icons/status_bleed.webp",
       kicker:"EVENTO DE COMBATE",
       title:"SANGRADO",
       subtitle:"La herida queda marcada."
@@ -488,6 +491,7 @@ function getEventSplashConfig(type){
     stealth:{
       className:"is-stealth",
       image:"assets/ui/event_splashes/event_stealth.webp",
+      icon:"assets/ui/effect_icons/sigilo_de_depredador.webp",
       kicker:"EVENTO DE COMBATE",
       title:"EMBOSCADA",
       subtitle:"Ataque lanzado desde sigilo."
@@ -495,6 +499,7 @@ function getEventSplashConfig(type){
     burn:{
       className:"is-burn",
       image:"assets/ui/event_splashes/event_burn.webp",
+      icon:"assets/ui/status_icons/status_burn.webp",
       kicker:"EVENTO DE COMBATE",
       title:"QUEMADURA",
       subtitle:"El fuego queda prendido sobre el objetivo."
@@ -502,6 +507,7 @@ function getEventSplashConfig(type){
     poison:{
       className:"is-poison",
       image:"assets/ui/event_splashes/event_poison.webp",
+      icon:"assets/ui/status_icons/status_poison.webp",
       kicker:"ESTADO ALTERADO",
       title:"VENENO",
       subtitle:"La toxina empieza a avanzar."
@@ -509,6 +515,7 @@ function getEventSplashConfig(type){
     fear:{
       className:"is-fear",
       image:"assets/ui/event_splashes/event_fear.webp",
+      icon:"assets/ui/status_icons/status_control.webp",
       kicker:"ESTADO ALTERADO",
       title:"MIEDO",
       subtitle:"La voluntad del objetivo tiembla."
@@ -516,6 +523,7 @@ function getEventSplashConfig(type){
     stun:{
       className:"is-stun",
       image:"assets/ui/event_splashes/event_stun.webp",
+      icon:"assets/ui/status_icons/status_paralysis.webp",
       kicker:"ESTADO ALTERADO",
       title:"ATURDIDO",
       subtitle:"El objetivo queda desorientado."
@@ -523,6 +531,7 @@ function getEventSplashConfig(type){
     debuff:{
       className:"is-debuff",
       image:"assets/ui/event_splashes/event_debuff.webp",
+      icon:"assets/ui/status_icons/status_debuff.webp",
       kicker:"ESTADO ALTERADO",
       title:"DEBILITADO",
       subtitle:"Sus atributos quedan reducidos."
@@ -533,7 +542,7 @@ function getEventSplashConfig(type){
 function buildEventSplashShell(item){
   const cfg=getEventSplashConfig(item?.type);
   if(!cfg)return "";
-  return `<div class="event-splash-shell ${cfg.className}"><div class="event-splash-card"><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
+  return `<div class="event-splash-shell ${cfg.className}"><div class="event-splash-shadow-layer" aria-hidden="true"></div><div class="event-splash-card"><div class="event-splash-depth-glow" aria-hidden="true"></div><div class="event-splash-panel-sheen" aria-hidden="true"></div><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-icon-anchor"><span class="event-splash-icon-badge"><span class="event-splash-icon-badge-core" aria-hidden="true"></span><img class="event-splash-icon" src="${cfg.icon||cfg.image}" alt="" aria-hidden="true"></span></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
 }
 function showNextEventSplash(){
   if(eventSplashActive||!eventSplashQueue.length)return;

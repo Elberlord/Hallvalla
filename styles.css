@@ -19389,3 +19389,154 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 #cardInspectModal .detail-guide-chip > span{
   white-space:nowrap!important;
 }
+
+
+/* ==========================================================
+   7HFG · Splashes en capas + icono elevado + modal DET translúcido
+   - El splash usa capas visuales para sentirse separado del fondo
+   - El icono también va montado en una placa propia con relieve
+   - El overlay del DET deja ver el tablero detrás mediante negro translúcido
+   ========================================================== */
+.event-splash-shell,
+.event-splash-stack.is-duo .event-splash-shell{
+  filter:none !important;
+}
+.event-splash-shadow-layer{
+  position:absolute !important;
+  inset:auto 18px -8px 18px !important;
+  height:34px !important;
+  border-radius:999px !important;
+  background:radial-gradient(circle at center,rgba(0,0,0,.50) 0%,rgba(0,0,0,.18) 48%,rgba(0,0,0,0) 78%) !important;
+  transform:translateY(8px) scale(.92) !important;
+  filter:blur(10px) !important;
+  pointer-events:none !important;
+  z-index:0 !important;
+}
+.event-splash-card,
+.event-splash-stack.is-duo .event-splash-card{
+  transform-style:preserve-3d !important;
+  box-shadow:0 16px 28px rgba(0,0,0,.48),0 0 20px color-mix(in srgb,var(--event-accent) 14%,transparent),inset 0 0 12px rgba(255,210,90,.05),inset 0 1px 0 rgba(255,233,182,.10) !important;
+}
+.event-splash-depth-glow{
+  position:absolute !important;
+  inset:14px 14px auto 14px !important;
+  height:58% !important;
+  border-radius:16px !important;
+  background:radial-gradient(circle at 50% 14%,color-mix(in srgb,var(--event-accent) 30%,rgba(255,214,138,.14)) 0%,rgba(255,210,120,.08) 22%,rgba(0,0,0,0) 70%) !important;
+  filter:blur(16px) !important;
+  opacity:.92 !important;
+  pointer-events:none !important;
+  z-index:0 !important;
+}
+.event-splash-panel-sheen{
+  position:absolute !important;
+  inset:0 !important;
+  border-radius:inherit !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 18%,rgba(255,214,120,.04) 52%,rgba(0,0,0,0) 100%) !important;
+  pointer-events:none !important;
+  z-index:1 !important;
+  mix-blend-mode:screen !important;
+}
+.event-splash-art-wrap{
+  z-index:1 !important;
+}
+.event-splash-icon-anchor{
+  position:absolute !important;
+  left:50% !important;
+  bottom:58px !important;
+  transform:translateX(-50%) translateZ(22px) !important;
+  z-index:3 !important;
+  pointer-events:none !important;
+}
+.event-splash-icon-badge{
+  --event-icon-size:64px;
+  position:relative !important;
+  width:var(--event-icon-size) !important;
+  height:var(--event-icon-size) !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  border:1px solid color-mix(in srgb,var(--event-accent) 58%,rgba(255,225,163,.70)) !important;
+  background:radial-gradient(circle at 32% 28%,rgba(255,244,213,.16),rgba(33,25,18,.97) 54%,rgba(10,9,8,.98) 100%) !important;
+  box-shadow:0 14px 24px rgba(0,0,0,.42),0 0 20px color-mix(in srgb,var(--event-accent) 28%,transparent),inset 0 1px 0 rgba(255,240,194,.20),inset 0 -10px 16px rgba(0,0,0,.32) !important;
+  overflow:hidden !important;
+}
+.event-splash-icon-badge::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:5px !important;
+  border-radius:50% !important;
+  border:1px solid rgba(255,227,155,.18) !important;
+  box-shadow:inset 0 0 12px rgba(255,214,120,.08) !important;
+}
+.event-splash-icon-badge-core{
+  position:absolute !important;
+  inset:10px !important;
+  border-radius:50% !important;
+  background:radial-gradient(circle at center,color-mix(in srgb,var(--event-accent) 26%,rgba(255,236,178,.12)) 0%,rgba(255,224,140,.03) 45%,rgba(0,0,0,0) 74%) !important;
+  filter:blur(4px) !important;
+  opacity:.95 !important;
+}
+.event-splash-icon{
+  position:relative !important;
+  z-index:2 !important;
+  width:68% !important;
+  height:68% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 2px 0 rgba(255,245,219,.18)) drop-shadow(0 6px 10px rgba(0,0,0,.38)) !important;
+  transform:translateY(-1px) !important;
+}
+.event-splash-copy,
+.event-splash-stack.is-duo .event-splash-copy{
+  z-index:2 !important;
+  padding-top:18px !important;
+}
+.event-splash-stack.is-duo .event-splash-icon-anchor{
+  bottom:50px !important;
+}
+.event-splash-stack.is-duo .event-splash-icon-badge{
+  --event-icon-size:54px;
+}
+.event-splash-overlay.show .event-splash-shell{
+  animation:eventSplashCardReveal .42s cubic-bezier(.18,.88,.24,1.12) forwards !important;
+}
+.event-splash-overlay.show .event-splash-icon-badge{
+  animation:eventSplashIconLift .42s cubic-bezier(.2,.86,.25,1.18) forwards !important;
+}
+.event-splash-overlay.leaving .event-splash-icon-badge{
+  animation:eventSplashIconExit .62s cubic-bezier(.45,.05,.78,.38) forwards !important;
+}
+@keyframes eventSplashIconLift{
+  0%{opacity:0;transform:translateY(10px) scale(.72);}
+  64%{opacity:1;transform:translateY(-3px) scale(1.06);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes eventSplashIconExit{
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-9px) scale(.52);}
+}
+@media(max-width:980px){
+  .event-splash-icon-anchor{bottom:50px !important;}
+  .event-splash-icon-badge{--event-icon-size:56px;}
+  .event-splash-stack.is-duo .event-splash-icon-anchor{bottom:42px !important;}
+  .event-splash-stack.is-duo .event-splash-icon-badge{--event-icon-size:46px;}
+}
+#inspector,
+.inspector{
+  background:rgba(0,0,0,.54) !important;
+  backdrop-filter:blur(1.8px) saturate(108%) !important;
+  -webkit-backdrop-filter:blur(1.8px) saturate(108%) !important;
+}
+#inspector .inspect-card,
+.inspector .inspect-card{
+  background:linear-gradient(180deg,rgba(22,17,12,.84),rgba(7,7,6,.82)) !important;
+  box-shadow:0 28px 84px rgba(0,0,0,.56),0 0 24px rgba(255,214,120,.10) !important;
+}
+#inspector #inspectStats.inspect-grid,
+#inspector #inspectArt.inspect-art,
+#inspector #inspectText.inspect-text,
+.inspector #inspectStats.inspect-grid,
+.inspector #inspectArt.inspect-art,
+.inspector #inspectText.inspect-text{
+  background-color:rgba(0,0,0,.24) !important;
+}
