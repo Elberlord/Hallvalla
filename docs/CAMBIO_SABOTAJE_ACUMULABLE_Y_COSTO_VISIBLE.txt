@@ -1,0 +1,46 @@
+CAMBIO — SABOTAJE ACUMULABLE Y COSTO REAL VISIBLE
+==================================================
+
+1. SABOTAJE AHORA SE ACUMULA
+- Cada Saboteador de Iga vivo agrega +1 al costo de invocación de las unidades enemigas.
+- 1 Saboteador: +1.
+- 2 Saboteadores: +2.
+- 3 Saboteadores: +3.
+- El efecto se calcula por separado para cada jugador según los Saboteadores enemigos vivos.
+- Si un Saboteador muere, su +1 deja de aplicarse inmediatamente.
+- Solo afecta unidades invocadas desde la mano; no afecta magias ni trampas.
+
+2. COSTO REAL VISIBLE EN LA MANO
+- La mano muestra el costo efectivo, no únicamente el costo impreso.
+- Ejemplo: "Costo 4 (2+2)" significa costo base 2 más 2 por dos Saboteadores enemigos.
+
+3. COSTO REAL VISIBLE EN EL DET DE LA CARTA
+- El stat Costo muestra el valor efectivo y su composición.
+- El mensaje inferior explica el costo completo y cuántos Saboteadores lo modifican.
+
+4. REGISTRO DE INVOCACIONES
+- Las invocaciones del jugador registran cuánto recurso pagaron.
+- Las invocaciones de la IA también registran cuánto pagaron.
+- Cuando existe Sabotaje, el log muestra base, aumento total y cantidad de Saboteadores.
+
+5. PAGO REAL
+- Tanto el jugador como la IA descuentan exactamente el costo acumulado.
+- El costo se calcula antes de agregar la nueva unidad al campo para evitar cambios accidentales durante la resolución.
+
+6. TEXTO DE LA CARTA
+- Se eliminó "No se acumula".
+- La descripción ahora indica que el aumento se acumula por cada Saboteador de Iga aliado vivo.
+- Las partidas ya iniciadas también normalizan visualmente el texto antiguo al abrir la carta o el DET.
+
+VALIDACIONES
+============
+- 0 Saboteadores: unidad de costo 2 paga 2.
+- 1 Saboteador: unidad de costo 2 paga 3.
+- 2 Saboteadores: unidad de costo 2 paga 4.
+- 3 Saboteadores: unidad de costo 2 paga 5.
+- script.js pasó la validación de sintaxis de Node.
+- Los 391 archivos de assets permanecen sin cambios.
+
+ARCHIVO MODIFICADO
+==================
+- script.js
