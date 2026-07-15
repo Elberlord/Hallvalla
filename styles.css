@@ -19100,7 +19100,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
-  opacity:0 !important;
+  opacity:0;
   visibility:hidden !important;
   pointer-events:none !important;
   z-index:47 !important;
@@ -19138,10 +19138,10 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   position:relative !important;
   width:min(27vw,286px) !important;
   max-width:286px !important;
-  opacity:0 !important;
-  transform:translate3d(0,12px,0) scale(.82) !important;
+  opacity:0;
+  transform:translate3d(0,12px,0) scale(.82);
   transform-origin:center center !important;
-  filter:drop-shadow(0 9px 20px rgba(0,0,0,.48)) !important;
+  filter:drop-shadow(0 9px 20px rgba(0,0,0,.48));
   animation:none !important;
   transition:none !important;
   will-change:transform,opacity,filter !important;
@@ -19399,7 +19399,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
    ========================================================== */
 .event-splash-shell,
 .event-splash-stack.is-duo .event-splash-shell{
-  filter:none !important;
+  filter:drop-shadow(0 9px 20px rgba(0,0,0,.48));
 }
 .event-splash-shadow-layer{
   position:absolute !important;

@@ -597,8 +597,8 @@ function normalizeStatusSplashType(statusType){
   if(s==="burn"||s==="burn_apply"||s.startsWith("burn_"))return "burn";
   if(s==="poison"||s==="poison_apply"||s.startsWith("poison_"))return "poison";
   if(s==="fear"||s.includes("fear")||s.includes("miedo"))return "fear";
-  if(s==="stun"||s.includes("stun")||s.includes("aturd"))return "stun";
-  if(s==="debuff"||s.includes("debuff")||s.includes("slow")||s.includes("weaken"))return "debuff";
+  if(s==="stun"||s.includes("stun")||s.includes("aturd")||s.includes("paralysis")||s.includes("paralisis")||s.includes("shock"))return "stun";
+  if(s==="debuff"||s.includes("debuff")||s.includes("slow")||s.includes("weaken")||s.includes("silence")||s.includes("curse"))return "debuff";
   return "";
 }
 function getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx){
@@ -610,9 +610,16 @@ function getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodge
   if(hasDodge){
     items.push({type:"dodge",key:`${gameId||"game"}:event-splash:dodge:${explicitDodgeFx.eventId||""}`});
   }
-  // 7HDB: un ataque evadido no puede mostrar Guardia. Si por latencia/stale event llegan
-  // dodgeFxEvent y defenseFxEvent juntos, gana ESQUIVA y se descarta GUARDIA.
-  if((!hasDodge||explicitDefenseFx?.combatResult==="evasion_exhausted_block")&&explicitDefenseFx&&explicitDefenseFx.type==="guard_block"){
+  // El splash GUARDIA representa un bloqueo completo: el golpe consumió Guardia,
+  // pero no atravesó hacia HP. Una esquiva siempre tiene prioridad y un guard_break
+  // conserva su FX físico, pero no genera splash GUARDIA.
+  const isFullGuardBlock=!!(
+    explicitDefenseFx&&
+    explicitDefenseFx.type==="guard_block"&&
+    explicitDefenseFx.combatResult!=="guard_broken_through"&&
+    Number(explicitDefenseFx.hpLoss||0)<=0
+  );
+  if(!hasDodge&&isFullGuardBlock){
     items.push({type:"guard",key:`${gameId||"game"}:event-splash:guard:${explicitDefenseFx.eventId||""}`});
   }
   if(explicitStatusFx){
@@ -674,29 +681,6 @@ function makeDodgeFxEvent(unit){
     unitName:unit.name||"",
     at:{x:Number(unit.x||0),y:Number(unit.y||0)},
     rarityClass:getFxRarityClass(unit)
-  };
-}
-function isEvasionExhaustedBlock(evasionPressure){
-  const spent=Number(evasionPressure?.spent||0);
-  const remaining=Number(evasionPressure?.remaining||0);
-  return spent>0&&remaining<=0;
-}
-function makeMissDefenseFxEventByEvasion(defender,evasionPressure){
-  if(!defender||!isEvasionExhaustedBlock(evasionPressure))return null;
-  return {
-    ...makeDefenseFxEvent("guard_block",defender),
-    combatResult:"evasion_exhausted_block",
-    evasionSpent:Number(evasionPressure?.spent||0),
-    evasionRemaining:Number(evasionPressure?.remaining||0)
-  };
-}
-function makeCleanDodgeFxEvent(defender,evasionPressure){
-  if(!defender||isEvasionExhaustedBlock(evasionPressure))return null;
-  return {
-    ...makeDodgeFxEvent(defender),
-    combatResult:"dodge",
-    evasionSpent:Number(evasionPressure?.spent||0),
-    evasionRemaining:Number(evasionPressure?.remaining||0)
   };
 }
 function makeStatusFxEvent(type,unit,amount=0){
@@ -880,9 +864,8 @@ function maybePlayBattleFx(prevPub,nextPub){
   const explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
   const explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
   const explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
-  // 7HDB/7HDF: si hay evasión limpia explícita, no reproducir defensa vieja.
-  // Si la defensa viene marcada como evasion_exhausted_block, sí se permite porque es bloqueo de último recurso.
-  if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"&&explicitDefenseFx?.combatResult!=="evasion_exhausted_block")explicitDefenseFx=null;
+  // Si el resultado fue una esquiva, no se procesa ningún evento de Guardia viejo o concurrente.
+  if(explicitDodgeFx&&explicitDodgeFx.type==="dodge")explicitDefenseFx=null;
   if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx)
     ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}`
@@ -5915,10 +5898,20 @@ async function attackUnit(a,d){
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
-    ? {...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),combatResult:"guard"}
-    : (!hit.hit&&defenderStillAlive?makeMissDefenseFxEventByEvasion(defenderUnitNow,evasionPressure):null);
+    ? {
+        ...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),
+        combatResult:hpLoss>0?"guard_broken_through":"guard_blocked",
+        guardLoss:Number(guardLoss||0),
+        hpLoss:Number(hpLoss||0)
+      }
+    : null;
   const dodgeFxEvent=!hit.hit&&defenderStillAlive
-    ? makeCleanDodgeFxEvent(defenderUnitNow,evasionPressure)
+    ? {
+        ...makeDodgeFxEvent(defenderUnitNow),
+        combatResult:"dodge",
+        evasionSpent:Number(evasionPressure?.spent||0),
+        evasionRemaining:Number(evasionPressure?.remaining||0)
+      }
     : null;
   const statusFxEvent=arcaneAdeptStatusEvent||poisonStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
     ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
@@ -6789,10 +6782,20 @@ async function adventureEnemyTurn(){
     pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth});
     const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
-      ? {...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),combatResult:"guard"}
-      : (!hit.hit&&defenderStillAlive?makeMissDefenseFxEventByEvasion(defenderUnitNow,evasionPressure):null);
+      ? {
+          ...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),
+          combatResult:hpLoss>0?"guard_broken_through":"guard_blocked",
+          guardLoss:Number(guardLoss||0),
+          hpLoss:Number(hpLoss||0)
+        }
+      : null;
     pendingAiDodgeFxEvent=!hit.hit&&defenderStillAlive
-      ? makeCleanDodgeFxEvent(defenderUnitNow,evasionPressure)
+      ? {
+          ...makeDodgeFxEvent(defenderUnitNow),
+          combatResult:"dodge",
+          evasionSpent:Number(evasionPressure?.spent||0),
+          evasionRemaining:Number(evasionPressure?.remaining||0)
+        }
       : null;
     pendingAiStatusFxEvent=arcaneAdeptStatusEvent||poisonStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
