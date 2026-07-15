@@ -5599,7 +5599,7 @@ async function attackUnit(a,d){
   units=units.filter(u=>u.hp>0);
   const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
   units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
-  const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,melee):{units,triggered:false,text:""};
+  const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,dist(a,d)<=1):{units,triggered:false,text:""};
   units=naginataDaimyoResult.units;
   const berserkerOsoResult=hit.hit&&hpLoss>0?applyBerserkerOsoGuardShatter(units,a,d,hpLoss):{units,triggered:false,text:""};
   units=berserkerOsoResult.units;
@@ -6010,9 +6010,23 @@ async function adventureEnemyTurn(){
   const at=(x,y)=>units.find(u=>u.x===x&&u.y===y);
   const leader=(owner)=>units.find(u=>u.owner===owner&&u.leader);
   const removeCard=(card)=>{hand=hand.filter(c=>c.id!==card.id)};
-  const killDead=()=>{units=units.filter(u=>u.hp>0)};
-  const living=(owner)=>units.filter(u=>u.owner===owner);
-  const canHit=(a,t)=>!!a&&!!t&&(!a.acted||isKhalidChainAttackReady(a))&&!(a.noAttackTurnKey&&a.noAttackTurnKey===pub.turnKey)&&d(a,t)<=((a.range||1)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0))&&canTargetStealth(a,t)&&(!(t.aerial)||((a.range||1)>3||a.antiaerial));
+  const killDead=()=>{units=units.filter(u=>(u.hp===undefined||u.hp>0))};
+  const living=(owner)=>units.filter(u=>u.owner===owner&&(u.hp===undefined||u.hp>0));
+  const aiAttackRange=(unit)=>{
+    if(!unit)return 1;
+    const base=withAiPublicState(()=>getUnitAttackRange(unit));
+    return Math.max(1,base+(unit.key==="bengal_tiger"&&isStealthedUnit(unit)?2:0));
+  };
+  const aiCanEverTarget=(attacker,target)=>!!attacker&&!!target
+    && attacker.owner!==target.owner
+    && canUnitAttackTarget(attacker,target)
+    && canTargetStealth(attacker,target)
+    && (!(target.aerial)||(aiAttackRange(attacker)>3||attacker.antiaerial));
+  const canHit=(a,t)=>!!a&&!!t
+    && (!a.acted||isKhalidChainAttackReady(a)||isMulanExecutionChoiceReady(a))
+    && !(a.noAttackTurnKey&&a.noAttackTurnKey===pub.turnKey)
+    && aiCanEverTarget(a,t)
+    && d(a,t)<=aiAttackRange(a);
   const playerLeaderNow=()=>leader(1);
   const enemyLeaderNow=()=>leader(2);
   const inBounds=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS;
@@ -6021,22 +6035,41 @@ async function adventureEnemyTurn(){
     const key=(cardOrUnit?.key||"").toLowerCase();
     const name=(cardOrUnit?.name||"").toLowerCase();
     const text=(cardOrUnit?.text||"").toLowerCase();
-    const range=Number(cardOrUnit?.range||1);
-    if(key==="guardian"||name.includes("guardián")||name.includes("guardian"))return "tank";
-    if(key==="spearman"||name.includes("lancero")||name.includes("lanza")||text.includes("lanza"))return "spear";
-    if(key==="scout"||name.includes("asesina")||name.includes("asesino"))return "assassin";
-    if(key==="archer"||name.includes("arquera")||name.includes("arquero")||range>=3)return "ranged";
+    const range=Math.max(1,Number(cardOrUnit?.range||1));
+    const hp=Math.max(0,Number(cardOrUnit?.hp||0));
+    const guard=Math.max(0,Number(cardOrUnit?.guard||0));
+    const mov=Math.max(0,Number(cardOrUnit?.mov||0));
+    const weapon=getWeaponClassForCard(cardOrUnit);
+    if(cardOrUnit?.leader)return "leader";
     if(key==="bolt"||cardOrUnit?.spell==="damage")return "directDamage";
-    return "other";
+    if(weapon==="spear"||key==="spearman"||name.includes("lancero")||name.includes("lanza")||text.includes("regla de lanza"))return "spear";
+    if(key==="scout"||cardOrUnit?.ninjutsu||name.includes("asesina")||name.includes("asesino")||name.includes("shinobi")||name.includes("saboteador"))return "assassin";
+    if(weapon==="cavalry")return "cavalry";
+    if(key==="ulysses")return "melee";
+    if(weapon==="neutral")return "support";
+    if(cardOrUnit?.aerial||((hp+guard)<=3&&mov>=3))return "skirmisher";
+    if(key==="guardian"||name.includes("guardián")||name.includes("guardian")||guard>=5||(hp+guard*1.25)>=12)return "tank";
+    if(weapon==="bow"||weapon==="mage"||key==="archer"||name.includes("arquera")||name.includes("arquero")||range>=3)return "ranged";
+    if(range>=2)return "skirmisher";
+    return "melee";
   };
+  const aiIsFrontlineRole=(role)=>role==="tank"||role==="spear"||role==="melee";
+  const aiIsBacklineRole=(role)=>role==="ranged"||role==="skirmisher"||role==="support";
   const aiBasicTacticState=()=>{
     const aiUnits=living(2).filter(u=>!u.leader);
     const playerUnits=living(1).filter(u=>!u.leader);
+    const roles=new Map(aiUnits.map(u=>[u.id,aiBasicTacticRole(u)]));
     return {
-      tanks:aiUnits.filter(u=>aiBasicTacticRole(u)==="tank"),
-      spears:aiUnits.filter(u=>aiBasicTacticRole(u)==="spear"),
-      ranged:aiUnits.filter(u=>aiBasicTacticRole(u)==="ranged"),
-      assassins:aiUnits.filter(u=>aiBasicTacticRole(u)==="assassin"),
+      tanks:aiUnits.filter(u=>roles.get(u.id)==="tank"),
+      spears:aiUnits.filter(u=>roles.get(u.id)==="spear"),
+      melee:aiUnits.filter(u=>roles.get(u.id)==="melee"),
+      cavalry:aiUnits.filter(u=>roles.get(u.id)==="cavalry"),
+      ranged:aiUnits.filter(u=>roles.get(u.id)==="ranged"),
+      skirmishers:aiUnits.filter(u=>roles.get(u.id)==="skirmisher"),
+      supports:aiUnits.filter(u=>roles.get(u.id)==="support"),
+      assassins:aiUnits.filter(u=>roles.get(u.id)==="assassin"),
+      frontline:aiUnits.filter(u=>aiIsFrontlineRole(roles.get(u.id))),
+      backline:aiUnits.filter(u=>aiIsBacklineRole(roles.get(u.id))),
       enemyBerserkers:playerUnits.filter(u=>u.key==="berserker"||(u.name||"").toLowerCase().includes("berserker"))
     };
   };
@@ -6054,13 +6087,17 @@ async function adventureEnemyTurn(){
     return cavalryThreats
       .map(u=>{
         const distanceToLeader=el?d(u,el):4;
-        const reach=(effectiveMov(u)||0)+(u.range||1);
+        const reach=(effectiveMov(u)||0)+aiAttackRange(u);
         return {unit:u,score:340-Math.max(0,distanceToLeader)*34+reach*18+(effectiveAtk(u)||0)*12+(u.hp||0)*6};
       })
       .sort((a,b)=>b.score-a.score)[0]||null;
   };
 
-  const aiRangedAllies=()=>living(2).filter(u=>!u.leader&&aiBasicTacticRole(u)==="ranged");
+  const aiRangedAllies=()=>living(2).filter(u=>{
+    if(u.leader)return false;
+    const role=aiBasicTacticRole(u);
+    return role==="ranged"||(role==="skirmisher"&&((u.hp||0)+(effectiveGuard(u)||0))<=8);
+  });
   const aiRangedProtectionNeed=()=>{
     const ranged=aiRangedAllies();
     if(!ranged.length)return null;
@@ -6069,7 +6106,7 @@ async function adventureEnemyTurn(){
       let score=0;
       const closeThreats=[];
       for(const e of threats){
-        const reach=(effectiveMov(e)||0)+(e.range||1);
+        const reach=(effectiveMov(e)||0)+aiAttackRange(e);
         const distance=d(e,r);
         if(distance<=reach+1){
           const danger=(effectiveAtk(e)||1)*18+Math.max(0,reach+1-distance)*32+aiUnitValue(e)*0.08;
@@ -6101,9 +6138,9 @@ async function adventureEnemyTurn(){
         if(distToThreat<=Math.max(2,protector?.range||2))score+=230;
         else if(distToThreat<=Math.max(2,protector?.range||2)+(effectiveMov(protector)||protector?.mov||1))score+=95;
       }
-      if(role==="tank"||role==="spear"){
-        if(distToThreat<=1)score+=120;
-        if(distToRanged<=2&&distToThreat<d(enemy,ranged))score+=85;
+      if(role==="tank"||role==="spear"||role==="melee"){
+        if(distToThreat<=1)score+=role==="melee"?85:120;
+        if(distToRanged<=2&&distToThreat<d(enemy,ranged))score+=role==="melee"?55:85;
       }
       if(role==="assassin"&&enemy.key==="berserker"&&distToThreat<=Math.max(1,(protector?.range||1)+(protector?.mov||0)))score+=110;
     }
@@ -6119,10 +6156,100 @@ async function adventureEnemyTurn(){
     if(u.key==="wallace"||u.key==="joan_of_arc"||u.key==="leonidas")value+=35;
     return value;
   };
+  const aiWeaponMatchupScore=(attacker,target,estimatedDamage=0)=>{
+    if(!attacker||!target||attacker.leader||target.leader)return 0;
+    const advantage=getWeaponAdvantage(attacker,target);
+    const disadvantage=getWeaponAdvantage(target,attacker);
+    let score=0;
+    if(advantage)score+=230;
+    if(disadvantage)score-=115;
+    if(estimatedDamage>=(target.hp||0))score+=advantage?95:55;
+    return score;
+  };
+  const aiAlliedFireSupportCount=(target,attacker=null)=>living(2).filter(a=>{
+    if(a.leader||a.id===attacker?.id||a.acted||a.hp<=0)return false;
+    return aiCanEverTarget(a,target)&&d(a,target)<=aiAttackRange(a);
+  }).length;
+  const aiScreeningFrontliners=(cell,unitLike=null)=>{
+    const pl=playerLeaderNow();
+    if(!pl)return [];
+    const unitId=unitLike?.id||null;
+    const cellProgress=d(cell,pl);
+    return living(2).filter(a=>{
+      if(a.leader||a.id===unitId)return false;
+      const role=aiBasicTacticRole(a);
+      if(!aiIsFrontlineRole(role))return false;
+      return d(a,cell)<=2&&d(a,pl)<=cellProgress;
+    });
+  };
+  const aiLocalForceBalance=(cell,unitLike=null)=>{
+    const unitId=unitLike?.id||null;
+    const allies=living(2).filter(a=>a.id!==unitId&&d(a,cell)<=2);
+    const threateningEnemies=living(1).filter(e=>{
+      const reach=Math.max(1,(effectiveMov(e)||0)+aiAttackRange(e));
+      return d(e,cell)<=reach;
+    });
+    const closeEnemies=living(1).filter(e=>d(e,cell)<=2);
+    const allyPower=allies.reduce((sum,a)=>sum+aiUnitValue(a)*0.16+(aiIsFrontlineRole(aiBasicTacticRole(a))?24:8),0);
+    const enemyPower=threateningEnemies.reduce((sum,e)=>sum+aiUnitValue(e)*0.15+(effectiveAtk(e)||0)*4,0);
+    const screens=aiScreeningFrontliners(cell,unitLike);
+    return {allies,threateningEnemies,closeEnemies,allyPower,enemyPower,screens};
+  };
+  const aiFormationCellScore=(cell,unitLike)=>{
+    if(!cell||!unitLike)return 0;
+    const role=aiBasicTacticRole(unitLike);
+    const pl=playerLeaderNow();
+    const el=enemyLeaderNow();
+    const balance=aiLocalForceBalance(cell,unitLike);
+    let score=0;
+    const enemyCount=balance.threateningEnemies.length;
+    const allyCount=balance.allies.length;
+    const outnumberedBy=Math.max(0,enemyCount-(allyCount+1));
+    const nearestEnemyDistance=living(1).reduce((best,e)=>Math.min(best,d(e,cell)),99);
+    if(aiIsBacklineRole(role)){
+      score+=balance.screens.length*145;
+      if(balance.screens.length===0)score-=150;
+      if(outnumberedBy>0)score-=outnumberedBy*180;
+      if(enemyCount>=4&&balance.screens.length===0)score-=420;
+      if(nearestEnemyDistance<=1)score-=290;
+      else if(nearestEnemyDistance===2)score-=115;
+      if(balance.enemyPower>balance.allyPower+85)score-=170;
+      if(pl){
+        const frontline=aiBasicTacticState().frontline;
+        if(frontline.length){
+          const nearestFrontProgress=Math.min(...frontline.map(f=>d(f,pl)));
+          if(d(cell,pl)<nearestFrontProgress)score-=260;
+          else score+=70;
+        }else if(el&&d(cell,el)>2){
+          score+=55;
+        }
+      }
+      if(el&&d(cell,el)<=3)score+=45;
+    }else if(aiIsFrontlineRole(role)){
+      if(outnumberedBy>0)score-=outnumberedBy*70;
+      if(allyCount===0&&enemyCount>=2)score-=115;
+      score+=Math.min(3,allyCount)*35;
+      const backline=aiBasicTacticState().backline;
+      for(const rear of backline){
+        const distToRear=d(cell,rear);
+        if(pl&&d(cell,pl)<d(rear,pl)&&distToRear<=3)score+=role==="spear"?120:95;
+        if(pl&&d(cell,pl)>d(rear,pl)&&distToRear<=2)score-=130;
+      }
+      if(role==="spear")score+=balance.screens.length?35:0;
+    }else{
+      if(outnumberedBy>1)score-=outnumberedBy*95;
+      if(allyCount===0&&enemyCount>=3)score-=180;
+      if(role==="cavalry"||role==="assassin"){
+        if(allyCount>=1)score+=45;
+        if(nearestEnemyDistance<=1&&enemyCount>=3)score-=120;
+      }
+    }
+    return score;
+  };
   const estimateCombat=(attacker,target)=>{
     if(!attacker||!target)return{chance:0,damage:0,expected:0,mods:{}};
     const mods=withAiPublicState(()=>getCombatMods(attacker,target));
-    let chance=withAiPublicState(()=>getHitChance(attacker,target,mods));
+    let chance=mods.falconDive?100:withAiPublicState(()=>getHitChance(attacker,target,mods));
     let damage=withAiPublicState(()=>getBattleDamage(attacker,mods));
     if(attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn)chance=Math.min(98,100-((100-chance)*(100-chance)/100));
     if(shouldIgnoreGuardForAttack(attacker))damage=Math.max(0,damage);
@@ -6142,7 +6269,11 @@ async function adventureEnemyTurn(){
     const valueBonus=aiUnitValue(target)*0.55;
     const proximityBonus=attacker?Math.max(0,10-d(attacker,target))*3:0;
     const hitReliability=attacker?(combat.chance-50)*1.2:0;
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expected*32;
+    const weaponMatch=attacker?aiWeaponMatchupScore(attacker,target,realDamage):0;
+    const fireSupport=attacker?aiAlliedFireSupportCount(target,attacker)*62:0;
+    const targetSupport=living(target.owner).filter(a=>a.id!==target.id&&d(a,target)<=2).length;
+    const exposedTargetBonus=attacker&&!target.leader&&targetSupport===0?70:0;
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expected*32+weaponMatch+fireSupport+exposedTargetBonus;
   };
 
   const bestTargetForDamage=(card)=>{
@@ -6157,7 +6288,7 @@ async function adventureEnemyTurn(){
       const leaderNeed=aiLeaderProtectionNeed();
       const rangedNeed=aiRangedProtectionNeed();
       if(role==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
-      if((attacker?.range||1)>=3&&t.leader)score+=130;
+      if(aiAttackRange(attacker)>=3&&t.leader)score+=130;
       if(role==="spear"&&(t.key==="cavalry"||getWeaponClassForCard(t)==="cavalry"))score+=260;
       if(leaderNeed){
         const threat=leaderNeed.threats.find(th=>th.unit.id===t.id);
@@ -6176,7 +6307,7 @@ async function adventureEnemyTurn(){
   const playerThreatAtCell=(cell,unitLike=null)=>{
     let threat=0;
     for(const e of living(1)){
-      const reach=(effectiveMov(e)||0)+(e.range||1);
+      const reach=(effectiveMov(e)||0)+aiAttackRange(e);
       const distance=d(e,cell);
       if(distance<=reach){
         const likelyDamage=Math.max(1,effectiveAtk(e)||0);
@@ -6191,13 +6322,13 @@ async function adventureEnemyTurn(){
   const leaderDangerScore=()=>{
     const el=enemyLeaderNow();
     if(!el)return 0;
-    return living(1).reduce((sum,e)=>sum+(d(e,el)<=((e.range||1)+(effectiveMov(e)||0))?effectiveAtk(e)*12+aiUnitValue(e)*0.08:0),0);
+    return living(1).reduce((sum,e)=>sum+(d(e,el)<=(aiAttackRange(e)+(effectiveMov(e)||0))?effectiveAtk(e)*12+aiUnitValue(e)*0.08:0),0);
   };
   const aiLeaderProtectionNeed=()=>{
     const el=enemyLeaderNow();
     if(!el)return null;
     const threats=living(1).filter(u=>u.hp>0&&!u.leader).map(e=>{
-      const reach=(effectiveMov(e)||0)+(e.range||1);
+      const reach=(effectiveMov(e)||0)+aiAttackRange(e);
       const distance=d(e,el);
       const canPressure=distance<=reach+1;
       const isInvader=distance<=3;
@@ -6238,7 +6369,7 @@ async function adventureEnemyTurn(){
   };
 
   const attackWith=async(attacker)=>{
-    if(!attacker|| (attacker.acted&&!isKhalidChainAttackReady(attacker)))return false;
+    if(!attacker||(attacker.acted&&!isKhalidChainAttackReady(attacker)&&!isMulanExecutionChoiceReady(attacker)))return false;
     let target=bestAttackTarget(attacker);
     if(!target)return false;
     if(!canUnitAttackTarget(attacker,target))return false;
@@ -6257,6 +6388,16 @@ async function adventureEnemyTurn(){
     const tigerFromStealthBefore=attacker.key==="bengal_tiger"&&isStealthedUnit(attacker);
     if(tigerFromStealthBefore){
       units=units.map(u=>u.id===attacker.id?revealUnit(u,"declarar ataque desde Sigilo"):u);
+      attacker=units.find(u=>u.id===attacker.id)||attacker;
+    }
+    if(d(attacker,target)<=1&&target.key==="african_buffalo"){
+      units=units.map(u=>u.id===attacker.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
+      if(!units.some(u=>u.id===attacker.id)){
+        const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
+        units=bloodVictoryResult.units;
+        logs.push([...(preTrap.logs||[]),`Rival: ${target.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${attacker.name} cae. El ataque se cancela.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
+        return true;
+      }
       attacker=units.find(u=>u.id===attacker.id)||attacker;
     }
 
@@ -6285,10 +6426,12 @@ async function adventureEnemyTurn(){
     const actionSpendDefenseNeeded=withAiPublicState(()=>getDefenseEvasionScore(target,mods));
     const actionSpendAttackAvailable=withAiPublicState(()=>getAttackPrecisionScore(attacker,mods));
     let evasionPressure=withAiPublicState(()=>({units,spent:0,remaining:target?.leader?null:actionSpendDefenseNeeded}));
-    evasionPressure=withAiPublicState(()=>spendEvasionByAttack(attacker,target,units,mods));
-    units=evasionPressure.units;
-    target=units.find(u=>u.id===target.id)||target;
-    let hit=rollHit(attacker,target,mods);
+    if(!mods.falconDive){
+      evasionPressure=withAiPublicState(()=>spendEvasionByAttack(attacker,target,units,mods));
+      units=evasionPressure.units;
+      target=units.find(u=>u.id===target.id)||target;
+    }
+    let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(attacker,target,mods);
     hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:actionSpendAttackAvailable,defenderEvasionSpent:evasionPressure.spent};
     let rerollText="",arjunaDharmaPoison=false;
     if(!hit.hit&&attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn){
@@ -6345,7 +6488,7 @@ async function adventureEnemyTurn(){
     units=units.filter(u=>u.hp>0);
     const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(attacker,target):null;
     units=applyUnitMasteryRankUpToUnits(units,attacker,masteryKillResult);
-    const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,target,attacker.id,melee):{units,triggered:false,text:""};
+    const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,target,attacker.id,d(attacker,target)<=1):{units,triggered:false,text:""};
     units=naginataDaimyoResult.units;
     const berserkerOsoResult=hit.hit&&hpLoss>0?applyBerserkerOsoGuardShatter(units,attacker,target,hpLoss):{units,triggered:false,text:""};
     units=berserkerOsoResult.units;
@@ -6469,12 +6612,17 @@ async function adventureEnemyTurn(){
     const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${attacker.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
     const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${target.name} no pierde Vida por ataques de unidades.`:"";
 
+    const mulanChoiceAttack=isMulanExecutionChoiceReady(attacker);
+    const mulanExecutionTriggered=hit.hit&&defenderFell&&attacker.key==="mulan"&&!mulanChoiceAttack&&!target.leader&&units.some(u=>u.id===attacker.id);
     const khalidChainTriggered=hit.hit&&defenderFell&&attacker.key==="khalid_ibn_al_walid"&&!target.leader&&units.some(u=>u.id===attacker.id);
     const exileTrap=defenderFell?withAiPublicState(()=>resolveAfterKillLegendaryTraps(attacker,target,units)):{units,traps:legendaryTraps,logs:[]};
     units=exileTrap.units;
     legendaryTraps=exileTrap.traps||legendaryTraps;
     const genghisDebuffResult=withAiPublicState(()=>applyGenghisKhanKillDebuff(units,attacker,target,defenderFell));
     units=genghisDebuffResult.units;
+    if(mulanExecutionTriggered&&units.some(u=>u.id===attacker.id)){
+      units=units.map(u=>u.id===attacker.id?{...u,mulanExecutionMoveReady:true,mulanExecutionChoiceReady:false}:u);
+    }
     if(khalidChainTriggered&&units.some(u=>u.id===attacker.id)){
       units=units.map(u=>u.id===attacker.id?{...u,acted:false,khalidChainReady:true,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
     }
@@ -6526,9 +6674,27 @@ async function adventureEnemyTurn(){
           pendingAiStatusFxEvent=makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply",bleedTargetAfter,1);
           miyamotoBleedText=` ${bleedTargetAfter.name} ${alreadyBleeding?"mantiene Sangrado":"queda con Sangrado"} por Dos Cielos.`;
         }
+        let counterVenomText="";
+        if(cHp>0&&ownerHasBeastmasterVenom(defenderAfter.owner,units)&&units.some(u=>u.id===attackerAfter.id)){
+          const venomTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
+          if(isPoisonImmuneUnit(venomTargetBefore)){
+            units=units.map(u=>u.id===attackerAfter.id?clearPoisonStatus(u):u);
+            counterVenomText=` ${venomTargetBefore.name} ignora el Veneno de la Manada.`;
+          }else{
+            units=units.map(u=>u.id===attackerAfter.id?applyBeastmasterVenomToTarget(u,defenderAfter,5):u);
+            counterVenomText=` Veneno de la Manada: ${venomTargetBefore.name} queda envenenado durante 5 turnos.`;
+          }
+        }
+        let counterBleedText="";
+        if(cHp>0&&defenderAfter.key==="scout"&&units.some(u=>u.id===attackerAfter.id)){
+          const bleedTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
+          const already=hasBleeding(bleedTargetBefore);
+          units=units.map(u=>u.id===attackerAfter.id?applyBleedToUnit(u,defenderAfter.name):u);
+          counterBleedText=` ${bleedTargetBefore.name} ${already?"mantiene Sangrado":"queda con Sangrado"} por contraataque.`;
+        }
         const miyamotoBonusText=isMiyamotoCounter&&miyamotoEvaded?", +2 AT por Dos Cielos":"";
         const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
+        counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
       }else{
         units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
         counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -6567,13 +6733,17 @@ async function adventureEnemyTurn(){
     const ulyssesTacticText=ulyssesAttackTactic.log||"";
     const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
     const genghisDebuffText=genghisDebuffResult.log||"";
+    const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${attacker.name} destruyó una unidad enemiga; hará su movimiento extra y elegirá ATK o DEF.`:"";
     const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
     const masteryKillText=unitMasteryRankUpText(masteryKillResult);
     const yabusameRetreatResult=units.some(u=>u.id===target.id)?applyYabusameRetreatIfPossible(units,target.id):{units,moved:false,text:""};
     units=yabusameRetreatResult.units;
     const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
+    units=clearStealthAfterAttackIfNeeded(units,attacker.id,keepStealthAfterAttack);
+    const stealthText=attackerWasStealthedBeforeAttack?(keepStealthAfterAttack?` Golpe Silencioso: ${attacker.name} atacó a distancia y mantiene Sigilo.`:` ${attacker.name} pierde Sigilo después del ataque.`):"";
+    const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}`;
     const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${khalidChainText}${masteryKillText}${samuraiExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -6602,6 +6772,7 @@ async function adventureEnemyTurn(){
     score+=(cardAtk||0)*7+(cardHp||0)*4+(card.guard||0)*3+(card.mov||0)*2;
     score+=allySupportAtCell(cell)*0.7;
     score-=playerThreatAtCell(cell,card)*0.65;
+    score+=aiFormationCellScore(cell,card);
     if(el&&leaderDangerScore()>80&&d(cell,el)<=2)score+=70;
     if(card.key==="archer"||cardRange>1)score+=aiLevel>=3?45:20;
     if(card.key==="scout")score+=living(1).some(e=>!e.leader&&d(cell,e)<=cardRange)?55:10;
@@ -6631,14 +6802,24 @@ async function adventureEnemyTurn(){
         if(el&&d(cell,el)<=2)score+=120;
       }
     }
-    if(role==="ranged"){
-      score+=(tactic.tanks.length||tactic.spears.length)?185:15;
-      if(!tactic.tanks.length&&!tactic.spears.length)score-=90;
-      if(playerThreatAtCell(cell,card)>=35)score-=170;
-      if(allySupportAtCell(cell)<=10)score-=55;
+    if(role==="ranged"||role==="skirmisher"){
+      const hasScreen=tactic.frontline.length>0;
+      score+=hasScreen?(role==="ranged"?225:135):-35;
+      if(!hasScreen)score-=role==="ranged"?210:95;
+      if(playerThreatAtCell(cell,card)>=35)score-=role==="ranged"?230:135;
+      if(allySupportAtCell(cell)<=10)score-=role==="ranged"?90:45;
       if(pl&&d(cell,pl)<=cardRange)score+=170;
-      if(el&&d(cell,el)>=1&&d(cell,el)<=2)score+=65;
+      if(el&&d(cell,el)>=1&&d(cell,el)<=2)score+=85;
       score+=Math.max(0,cardRange-2)*45;
+    }
+    if(role==="melee"){
+      if(tactic.frontline.length<2)score+=135;
+      if(tactic.backline.length)score+=95+aiProtectRangedCellScore(cell,card);
+    }
+    if(role==="cavalry"){
+      score+=tactic.frontline.length?75:15;
+      if(pl&&d(cell,pl)<=Math.max(2,cardRange+(card.mov||0)))score+=90;
+      if(aiLocalForceBalance(cell,card).threateningEnemies.length>=4)score-=140;
     }
     if(role==="assassin"){
       if(berserkerPressure){
@@ -6908,17 +7089,24 @@ async function adventureEnemyTurn(){
         if(choice.cell&&playerLeaderNow()&&d(choice.cell,playerLeaderNow())<=(choice.card.range||1))score+=140;
         score+=(choice.card.special?45:0)+(choice.card.rarity?12:0);
         const cavalryPressure=aiEnemyCavalryPressure();
+        const frontlineInHand=hand.some(c=>c.id!==choice.card.id&&c.type==="unit"&&effectiveCardCost(c,2)<=honor&&aiIsFrontlineRole(aiBasicTacticRole(c)));
+        const backlineInHand=hand.some(c=>c.id!==choice.card.id&&c.type==="unit"&&effectiveCardCost(c,2)<=honor&&aiIsBacklineRole(aiBasicTacticRole(c)));
         if(role==="tank"&&!tactic.tanks.length)score+=360;
-        if(rangedNeed&&(role==="tank"||role==="spear")){
-          score+=role==="tank"?260:210;
+        if(aiIsFrontlineRole(role)&&!tactic.frontline.length)score+=420;
+        if(aiIsFrontlineRole(role)&&tactic.backline.length)score+=180;
+        if(aiIsFrontlineRole(role)&&backlineInHand&&!tactic.frontline.length)score+=120;
+        if(rangedNeed&&(role==="tank"||role==="spear"||role==="melee")){
+          score+=role==="tank"?280:role==="spear"?240:150;
           if(choice.cell)score+=aiProtectRangedCellScore(choice.cell,choice.card);
         }
-        if(role==="spear"&&tactic.tanks.length&&tactic.spears.length<2)score+=240;
+        if(role==="spear"&&tactic.spears.length<2)score+=240;
         if(role==="spear"&&cavalryPressure)score+=520;
-        if(role==="ranged"&&(tactic.tanks.length||tactic.spears.length))score+=255;
-        if(role==="ranged"&&!tactic.tanks.length&&!tactic.spears.length)score-=85;
-        if(role==="ranged"&&choice.cell&&playerThreatAtCell(choice.cell,choice.card)>=35)score-=150;
+        if(aiIsBacklineRole(role)&&tactic.frontline.length)score+=role==="ranged"?285:175;
+        if(aiIsBacklineRole(role)&&!tactic.frontline.length)score-=role==="ranged"?260:125;
+        if(aiIsBacklineRole(role)&&frontlineInHand&&!tactic.frontline.length)score-=95;
+        if(aiIsBacklineRole(role)&&choice.cell&&playerThreatAtCell(choice.cell,choice.card)>=35)score-=role==="ranged"?220:130;
         if(role==="ranged"&&Number(choice.card.range||1)>=3)score+=Math.max(0,Number(choice.card.range||1)-2)*70;
+        if(role==="cavalry"&&!tactic.frontline.length)score-=70;
         if(role==="assassin"&&berserkerPressure)score+=520;
         if(role==="assassin"&&berserkerPressure&&choice.cell&&d(choice.cell,berserkerPressure.unit)<=Math.max(1,(choice.card.range||1)+(choice.card.mov||0)))score+=180;
       }
@@ -6978,41 +7166,50 @@ async function adventureEnemyTurn(){
   };
 
   const bestMoveFor=(u)=>{
-    if(!u||u.leader||u.moved||u.acted)return null;
-    if(u.noMoveTurnKey&&u.noMoveTurnKey===pub.turnKey)return null;
+    const mulanExecMove=isMulanExecutionMoveReady(u);
+    if(!u||u.leader||(!mulanExecMove&&(u.moved||u.acted)))return null;
+    if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===pub.turnKey)return null;
     const start={x:u.x,y:u.y};
     const pl=playerLeaderNow(), el=enemyLeaderNow();
+    const maxMove=mulanExecMove?1:effectiveMov(u);
+    const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t));
+    const primaryTarget=strategicTargets.map(t=>({target:t,score:scoreTarget(t,0,u)+(t.leader?90:0)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
+    const currentGap=primaryTarget?Math.max(0,d(u,primaryTarget)-aiAttackRange(u)):999;
     const options=[];
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
       if(x===u.x&&y===u.y)continue;
       if(at(x,y))continue;
-      if(d(u,{x,y})<=effectiveMov(u)){
+      if(d(u,{x,y})<=maxMove){
         const pos={x,y};
         let score=0;
         const ghost={...u,x:pos.x,y:pos.y};
         const role=aiBasicTacticRole(u);
-        const targets=living(1).filter(t=>d(pos,t)<=u.range);
-        if(targets.length){
-          score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
-        }
+        const ghostRange=aiAttackRange(ghost);
+        const targets=living(1).filter(t=>aiCanEverTarget(ghost,t)&&d(pos,t)<=ghostRange);
+        if(targets.length)score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
         if(pl)score+=Math.max(0,12-d(pos,pl))*6;
         if(el&&u.key==="guardian")score+=Math.max(0,8-d(pos,el))*7;
         if(el&&leaderDangerScore()>80&&d(pos,el)<=2)score+=75;
         if(pl&&d(pos,pl)<d(start,pl))score+=25;
-        if((u.range||1)>1&&pl&&d(pos,pl)<=u.range)score+=55;
-        if(role==="ranged"){
-          if(playerThreatAtCell(pos,u)>=30)score-=160;
-          if(allySupportAtCell(pos)<=12)score-=60;
-          if(targets.length&&!living(1).some(e=>d(e,pos)<=1))score+=80;
+        if(ghostRange>1&&pl&&d(pos,pl)<=ghostRange)score+=55;
+        const formationScore=aiFormationCellScore(pos,ghost);
+        score+=formationScore;
+        if(role==="ranged"||role==="skirmisher"){
+          const localBalance=aiLocalForceBalance(pos,ghost);
+          if(playerThreatAtCell(pos,u)>=30)score-=role==="ranged"?210:130;
+          if(allySupportAtCell(pos)<=12)score-=role==="ranged"?85:45;
+          if(targets.length&&!living(1).some(e=>d(e,pos)<=1))score+=95;
+          if(localBalance.threateningEnemies.length>=4&&localBalance.screens.length===0)score-=360;
+          if(localBalance.threateningEnemies.length>=3&&localBalance.allies.length===0)score-=240;
         }
-        if(role==="tank"||role==="spear")score+=aiProtectRangedCellScore(pos,u);
+        if(role==="tank"||role==="spear"||role==="melee")score+=aiProtectRangedCellScore(pos,u);
         score+=aiProtectLeaderCellScore(pos,u);
-        if((u.range||1)>1&&targets.length&&living(1).some(e=>d(e,pos)<=1))score-=45;
+        if(ghostRange>1&&targets.length&&living(1).some(e=>d(e,pos)<=1))score-=45;
         if(role==="spear"){
           const cavalryThreat=aiEnemyCavalryPressure();
           if(cavalryThreat){
             const cav=cavalryThreat.unit;
-            const controlRange=Math.max(2,u.range||1);
+            const controlRange=Math.max(2,ghostRange);
             if(d(pos,cav)<=controlRange)score+=220;
             else if(d(pos,cav)<=controlRange+(effectiveMov(u)||1))score+=95;
             if(el&&d(pos,el)<=2)score+=85;
@@ -7020,24 +7217,58 @@ async function adventureEnemyTurn(){
         }
         score+=allySupportAtCell(pos)*0.45;
         score-=playerThreatAtCell(pos,u)*0.7;
-        options.push({x,y,score});
+        const nextGap=primaryTarget?Math.max(0,d(pos,primaryTarget)-ghostRange):999;
+        const progress=primaryTarget?currentGap-nextGap:0;
+        if(progress>0)score+=progress*72;
+        if(nextGap===0&&currentGap>0)score+=180;
+        options.push({x,y,score,progress,nextGap,canAttack:targets.length>0,formationScore});
       }
     }
-    const best=options.sort((a,b)=>b.score-a.score)[0];
-    return best&&best.score>0?best:null;
+    const ranked=options.sort((a,b)=>b.score-a.score);
+    const best=ranked[0]||null;
+    const role=aiBasicTacticRole(u);
+    const currentFormation=aiFormationCellScore(start,u);
+    if(best&&best.score>0)return best;
+    if(aiIsBacklineRole(role)&&best&&best.formationScore>currentFormation+55)return best;
+    // La vanguardia puede aceptar riesgo para cerrar distancia; la retaguardia no avanza sola hacia una masa enemiga.
+    const safeAdvance=options.filter(o=>{
+      if(!(o.progress>0||o.canAttack))return false;
+      if(!aiIsBacklineRole(role))return true;
+      return o.canAttack||o.formationScore>-120;
+    }).sort((a,b)=>Number(b.canAttack)-Number(a.canAttack)||b.progress-a.progress||b.score-a.score)[0]||null;
+    return safeAdvance;
+  };
+  const aiShouldRepositionBeforeAttack=(u)=>{
+    if(!u||u.acted||!aiIsBacklineRole(aiBasicTacticRole(u)))return false;
+    const target=bestAttackTarget(u);
+    if(!target)return false;
+    const combat=estimateCombat(u,target);
+    if(target.leader&&combat.damage>=(target.hp||0)&&combat.chance>=60)return false;
+    if(!target.leader&&combat.damage>=(target.hp||0)&&combat.chance>=75)return false;
+    const currentBalance=aiLocalForceBalance(u,u);
+    if(currentBalance.screens.length>0)return false;
+    if(currentBalance.threateningEnemies.length<3&&currentBalance.closeEnemies.length<2)return false;
+    const best=bestMoveFor(u);
+    if(!best)return false;
+    const currentFormation=aiFormationCellScore(u,u);
+    return best.formationScore>currentFormation+70;
   };
 
   const moveUnitSmart=(u)=>{
+    const mulanExecMove=isMulanExecutionMoveReady(u);
     const best=bestMoveFor(u);
     if(!best)return false;
     const movedNow=d(u,best);
     const straightMoveNow=isStraightLineDelta(best.x-u.x,best.y-u.y)?movedNow:0;
     const trapMove=withAiPublicState(()=>resolveMovementLegendaryTraps(u,{x:best.x,y:best.y},units));
     units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x:best.x,y:best.y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow}:it);
+    if(mulanExecMove&&!trapMove.cancel){
+      units=units.map(it=>it.id===u.id?{...it,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:it);
+    }
     legendaryTraps=trapMove.traps;
     let beastTrapResult={units,traps:beastTraps,logs:[]};
-    if(!trapMove.cancel){
-      beastTrapResult=withAiPublicState(()=>resolveBeastCellTraps(units.find(it=>it.id===u.id)||u,units,beastTraps));
+    if(!trapMove.cancel&&units.some(it=>it.id===u.id&&it.hp>0)){
+      beastTrapResult=withAiPublicState(()=>resolveBeastCellTraps(units.find(it=>it.id===u.id),units,beastTraps));
       units=beastTrapResult.units;
       beastTraps=beastTrapResult.traps;
     }
@@ -7074,12 +7305,40 @@ async function adventureEnemyTurn(){
     const el=enemyLeaderNow();
     const protectingLeader=!!(el&&d(u,el)<=2&&leaderDangerScore()>=55);
     const rangedNeed=aiRangedProtectionNeed();
-    const protectingRanged=!!(rangedNeed&&(aiBasicTacticRole(u)==="tank"||aiBasicTacticRole(u)==="spear")&&d(u,rangedNeed.unit)<=2&&rangedNeed.score>=55);
+    const role=aiBasicTacticRole(u);
+    const protectingRanged=!!(rangedNeed&&(role==="tank"||role==="spear"||role==="melee")&&d(u,rangedNeed.unit)<=2&&rangedNeed.score>=55);
     const lowHp=(u.hp||0)<=Math.max(2,Math.ceil((effectiveMaxHp(u)||u.hp||1)*0.45));
     const valuable=aiUnitValue(u)>=95;
-    if(threatHere<18&&!protectingLeader&&!protectingRanged&&!lowHp&&!valuable)return false;
-    units=units.map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true}:it);
+    const holdingBackline=aiIsBacklineRole(role)&&aiFormationCellScore(u,u)<-80;
+    if(threatHere<18&&!protectingLeader&&!protectingRanged&&!lowHp&&!valuable&&!holdingBackline)return false;
+    units=units.map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false,khalidChainReady:false}:it);
     logs.push(`Rival: ${u.name} entra en Guardia defensiva: +2 GD y -10% precisión al primer ataque. Dura hasta recibir ese ataque o hasta su próximo turno.`);
+    return true;
+  };
+
+  const resolveAiMulanExecution=async(unitId)=>{
+    let mulan=units.find(u=>u.id===unitId&&isMulanExecutionMoveReady(u));
+    if(!mulan)return false;
+    if(moveUnitSmart(mulan)){
+      await publishAiStep({turnPhase:"actions"});
+      await sleep(AI_ACTION_DELAY_MS);
+    }else{
+      units=units.map(u=>u.id===unitId?{...u,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:u);
+    }
+    mulan=units.find(u=>u.id===unitId&&u.hp>0);
+    if(!mulan)return true;
+    if(await attackWith(mulan)){
+      await publishAiStep({turnPhase:"actions"});
+      await sleep(AI_ACTION_DELAY_MS);
+      return true;
+    }
+    if(tryAiDefenseStance(mulan)){
+      await publishAiStep({turnPhase:"actions"});
+      await sleep(AI_ACTION_DELAY_MS);
+      return true;
+    }
+    units=units.map(u=>u.id===unitId?{...u,acted:true,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false}:u);
+    logs.push(`Rival: ${mulan.name} completa Ejecución táctica sin un segundo objetivo válido.`);
     return true;
   };
 
@@ -7209,15 +7468,21 @@ async function adventureEnemyTurn(){
   await sleep(AI_PHASE_DELAY_MS);
 
   // Unidades inteligentes: primero usan EFFECT si de verdad aporta valor táctico.
+  const aiActionRolePriority={spear:0,tank:1,melee:2,cavalry:3,assassin:4,support:5,skirmisher:6,ranged:7,leader:8};
   const aiUnits=()=>living(2).filter(u=>!u.leader).sort((a,b)=>{
     const aHas=bestAttackTarget(a)?1:0,bHas=bestAttackTarget(b)?1:0;
-    return bHas-aHas||effectiveAtk(b)-effectiveAtk(a);
+    if(aHas!==bHas)return bHas-aHas;
+    if(aHas&&bHas)return effectiveAtk(b)-effectiveAtk(a)||aiUnitValue(b)-aiUnitValue(a);
+    const aRole=aiBasicTacticRole(a),bRole=aiBasicTacticRole(b);
+    return (aiActionRolePriority[aRole]??9)-(aiActionRolePriority[bRole]??9)||aiUnitValue(b)-aiUnitValue(a);
   });
   const tryAiLegendEffect=(u)=>{
     if(!u||u.acted)return false;
     const mode=getUnitEffectMode(u);
     if(mode==="passive")return false;
     if(mode==="self"){
+      if(u.key==="black_raven"&&!living(1).some(e=>isStealthedUnit(e)&&d(u,e)<=2))return false;
+      if(u.key==="african_lion"&&!living(1).some(e=>isStealthedUnit(e)&&d(u,e)<=3))return false;
       const result=applyUnitEffectState(u,null,units);
       if(!result.success)return false;
       units=result.units;
@@ -7258,10 +7523,12 @@ async function adventureEnemyTurn(){
   }
   for(const u of aiUnits()){
     let didSomething=false;
-    if(await attackWith(u)){
+    const repositionFirst=aiShouldRepositionBeforeAttack(u);
+    if(!repositionFirst&&await attackWith(u)){
       didSomething=true;
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
+      await resolveAiMulanExecution(u.id);
       let chainGuard=0;
       while(chainGuard++<8){
         const liveKhalid=units.find(it=>it.id===u.id&&isKhalidChainAttackReady(it));
@@ -7274,10 +7541,11 @@ async function adventureEnemyTurn(){
       didSomething=true;
       await publishAiStep({turnPhase:"actions"});
       await sleep(AI_ACTION_DELAY_MS);
-      const movedUnit=units.find(it=>it.id===u.id)||u;
-      if(await attackWith(movedUnit)){
+      const movedUnit=units.find(it=>it.id===u.id&&it.hp>0);
+      if(movedUnit&&await attackWith(movedUnit)){
         await publishAiStep({turnPhase:"actions"});
         await sleep(AI_ACTION_DELAY_MS);
+        await resolveAiMulanExecution(movedUnit.id);
         let chainGuard=0;
         while(chainGuard++<8){
           const liveKhalid=units.find(it=>it.id===movedUnit.id&&isKhalidChainAttackReady(it));
@@ -7286,7 +7554,7 @@ async function adventureEnemyTurn(){
           await sleep(AI_ACTION_DELAY_MS);
           if(getBattleOutcome(units).ended)break;
         }
-      }else if(tryAiDefenseStance(movedUnit)){
+      }else if(movedUnit&&tryAiDefenseStance(movedUnit)){
         await publishAiStep({turnPhase:"actions"});
         await sleep(AI_ACTION_DELAY_MS);
       }
@@ -7310,7 +7578,7 @@ async function adventureEnemyTurn(){
   }
 
   if(cardsPlayed===0&&!living(2).some(u=>u.moved||u.acted)){
-    logs.push("Rival conserva recursos: no encontró una jugada útil este turno.");
+    logs.push("Rival termina sin acción válida: no dispone de ataque, movimiento legal, efecto útil ni carta jugable con sus recursos actuales.");
     await publishAiStep({turnPhase:"actions"});
     await sleep(AI_PHASE_DELAY_MS);
   }

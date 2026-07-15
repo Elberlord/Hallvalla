@@ -1,0 +1,130 @@
+HALLVALLA — REVISIÓN DE IA, DUELO, RANGOS Y CARTAS NUEVAS
+Fuente revisada: Hallvalla(10).zip
+
+DIAGNÓSTICO PRINCIPAL
+=====================
+
+1. FALLO LETAL QUE CORTABA EL ATAQUE
+Había dos llamadas a applyNaginataDaimyoPunishment que utilizaban una variable inexistente llamada "melee".
+
+El fallo se ejecutaba cuando un ataque destruía a una unidad. En el turno de la IA, la excepción ocurría antes de publicar el resultado final del ataque. Por eso la IA podía parecer inmóvil, dejar de atacar o devolver el turno sin mostrar correctamente la acción.
+
+Se corrigió tanto en el motor de ataque del jugador como en el de la IA utilizando la distancia real del combate:
+- jugador: dist(a,d)<=1
+- IA: d(attacker,target)<=1
+
+2. LA IA USABA EL RANGO IMPRESO, NO EL RANGO EFECTIVO
+La selección de objetivos y el movimiento usaban unit.range directamente.
+Eso ignoraba bonos de líder, Vínculo Arcano, penalizaciones temporales y otros cambios de rango.
+
+Ahora la IA calcula el alcance mediante getUnitAttackRange(), igual que el sistema de juego, y agrega el alcance especial del Tigre de Bengala desde Sigilo.
+
+3. OBJETIVOS ILEGALES
+La IA podía seleccionar al líder como objetivo de Geisha Encubierta. Después la validación rechazaba el ataque y la IA no intentaba otro objetivo.
+
+Ahora la legalidad del objetivo forma parte de la búsqueda inicial:
+- Geisha no elige líderes.
+- Sigilo se respeta.
+- Unidades aéreas solo se eligen con RG efectivo mayor a 3 o Antiaéreo.
+- Unidades derrotadas no entran en listas tácticas.
+
+4. PASIVIDAD AL MOVERSE
+El movimiento solo se aceptaba si la puntuación final era mayor que cero. Una penalización de peligro podía hacer que todas las casillas quedaran negativas, y la unidad prefería no avanzar aunque estuviera fuera de alcance.
+
+Ahora existe una segunda decisión de avance:
+- si no hay una posición de puntuación positiva,
+- pero existe una casilla legal que acerca la unidad a un objetivo válido,
+- la IA avanza en lugar de desperdiciar la Action Phase.
+
+5. EFFECT DESPERDICIADO
+Cuervo Negro y León Africano activaban su EFFECT de revelación incluso cuando no existía ninguna unidad enemiga con Sigilo dentro de su radio. Eso consumía su acción e impedía que atacaran.
+
+Ahora solo usan:
+- Ojo del Cazador si hay Sigilo enemigo en radio 2.
+- Rugido del Rey si hay Sigilo enemigo en radio 3.
+
+CARTAS NUEVAS Y PARIDAD DE REGLAS
+=================================
+
+Búfalo Africano
+- La IA ahora respeta Instinto de Cornada antes de completar un ataque cuerpo a cuerpo contra el Búfalo.
+- Si la cornada derrota al atacante, el ataque se cancela.
+
+Halcón Peregrino
+- Ataque en Picada ahora es golpe seguro también cuando lo controla la IA.
+- No consume la evasión del objetivo antes de resolver el golpe seguro.
+- Mantiene el retroceso/daño por impacto contra Guardia.
+
+Mulan
+- La IA activa Ejecución táctica al destruir una unidad no líder.
+- Puede realizar el movimiento extra de 1 casilla.
+- Después intenta un segundo ATK válido; si no existe, elige DEF.
+- La cadena no puede repetirse indefinidamente.
+
+Geisha Encubierta
+- No intenta atacar líderes.
+- Corte de Abanico sigue destruyendo la unidad dañada desde Sigilo.
+- El registro de la acción incluye el efecto de Ninjutsu.
+
+Hattori Shinobi
+- Mantiene Sigilo después de atacar a distancia.
+- Pierde Sigilo después de atacar cuerpo a cuerpo.
+
+Saboteador de Iga
+- Escape Forzado sigue aplicándose cuando sobrevive a un ataque de la IA.
+- El texto del resultado se incorpora al registro de combate.
+
+Berserker de Oso, Ulfhednar y Skipar del Drakkar
+- Sus reglas automáticas ya estaban conectadas al motor compartido.
+- Se conservaron Furia del Oso, crítico del Ulfhednar y Saqueo de Guerra.
+
+Contraataques
+- Se igualó la resolución de Veneno de la Manada y Sangrado de la Asesina cuando ocurren mediante contraataque en el turno de la IA.
+
+SISTEMA GENERAL DE CARTAS
+=========================
+
+La IA actual reconoce todas las categorías de cartas existentes en este código:
+
+Hechizos:
+- damage
+- buff
+- heal
+- shield
+
+Trampas:
+- slow
+- guard
+- legendary_mark
+- reveal_stealth
+- beast_target
+- beast_cell
+
+Las habilidades pasivas y las habilidades que ocurren automáticamente durante ataque, defensa, movimiento, invocación, daño o muerte se resuelven mediante el motor compartido. No es necesario programar una estrategia individual para cada una.
+
+Las habilidades EFFECT que requieren una decisión manual sí necesitan una regla de objetivo. Actualmente están conectadas:
+- habilidades de líder compatibles,
+- Richard Corazón de León,
+- Saladino,
+- Sun Tzu,
+- Subotai,
+- Cuervo Negro,
+- León Africano.
+
+Para futuras cartas, el sistema general entiende automáticamente estadísticas, coste, tipo, alcance y efectos estándar. Solo será necesario agregar una regla específica cuando una nueva carta tenga un EFFECT manual completamente nuevo que no encaje en los modos existentes.
+
+OTRAS CORRECCIONES DE SEGURIDAD
+===============================
+
+- Una unidad eliminada por una trampa durante el movimiento ya no puede atacar usando una referencia vieja (ataque fantasma).
+- Mulan limpia correctamente sus estados especiales al elegir DEF.
+- La IA informa que no tiene acción válida solo cuando realmente no existe ataque, movimiento, efecto o carta jugable.
+
+VALIDACIONES
+============
+
+- script.js pasó node --check sin errores de sintaxis.
+- La comprobación estática ya no encuentra la variable inexistente "melee".
+- Se verificaron todos los valores spell y trap presentes en la base de cartas contra los manejadores de la IA.
+- Los 444 archivos distintos de script.js permanecen byte por byte iguales al ZIP recibido.
+- Ningún archivo dentro de assets fue modificado, convertido, eliminado o renombrado.
