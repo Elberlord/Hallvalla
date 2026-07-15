@@ -11600,6 +11600,150 @@ on("saveProfileNameBtn","click",saveProfileNameChange);
 on("closeProfilePanelBtn","click",closeProfilePanel);
 on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();});
 
+
+/* ---------------------------------------------------------------------------
+   7HHUDTUNER · Control exclusivo para tamaño y posición del HUD de acciones
+   --------------------------------------------------------------------------- */
+const ACTIONS_HUD_TUNER_KEY="hallvalla_actions_hud_tuner_v1";
+const ACTIONS_HUD_TUNER_DEFAULTS=Object.freeze({scale:65,x:0,y:0,gap:7,label:8});
+let actionsHudTunerState=loadActionsHudTunerState();
+let actionsHudDragState=null;
+function clampActionsHudValue(value,min,max,fallback){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+}
+function loadActionsHudTunerState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(ACTIONS_HUD_TUNER_KEY)||"{}")||{};
+    return{
+      scale:clampActionsHudValue(saved.scale,35,110,ACTIONS_HUD_TUNER_DEFAULTS.scale),
+      x:clampActionsHudValue(saved.x,-320,320,ACTIONS_HUD_TUNER_DEFAULTS.x),
+      y:clampActionsHudValue(saved.y,-260,360,ACTIONS_HUD_TUNER_DEFAULTS.y),
+      gap:clampActionsHudValue(saved.gap,0,30,ACTIONS_HUD_TUNER_DEFAULTS.gap),
+      label:clampActionsHudValue(saved.label,6,16,ACTIONS_HUD_TUNER_DEFAULTS.label)
+    };
+  }catch(e){return{...ACTIONS_HUD_TUNER_DEFAULTS};}
+}
+function saveActionsHudTunerState(){
+  try{localStorage.setItem(ACTIONS_HUD_TUNER_KEY,JSON.stringify(actionsHudTunerState));}catch(e){}
+}
+function applyActionsHudTunerState(save=false){
+  const root=document.documentElement;
+  root.style.setProperty("--actions-tuner-scale",String(actionsHudTunerState.scale/100));
+  root.style.setProperty("--actions-tuner-x",`${actionsHudTunerState.x}px`);
+  root.style.setProperty("--actions-tuner-y",`${actionsHudTunerState.y}px`);
+  root.style.setProperty("--actions-tuner-gap",`${actionsHudTunerState.gap}px`);
+  root.style.setProperty("--actions-tuner-label",`${actionsHudTunerState.label}px`);
+  syncActionsHudTunerControls();
+  if(save)saveActionsHudTunerState();
+}
+function syncActionsHudTunerControls(){
+  const map=[
+    ["actionsHudScaleInput","actionsHudScaleValue",actionsHudTunerState.scale,"%"],
+    ["actionsHudXInput","actionsHudXValue",actionsHudTunerState.x," px"],
+    ["actionsHudYInput","actionsHudYValue",actionsHudTunerState.y," px"],
+    ["actionsHudGapInput","actionsHudGapValue",actionsHudTunerState.gap," px"],
+    ["actionsHudLabelInput","actionsHudLabelValue",actionsHudTunerState.label," px"]
+  ];
+  map.forEach(([inputId,outputId,value,suffix])=>{
+    const input=$(inputId),output=$(outputId);
+    if(input&&String(input.value)!==String(value))input.value=String(value);
+    if(output)output.textContent=`${value}${suffix}`;
+  });
+}
+function setActionsHudTunerStatus(message=""){
+  const status=$("actionsHudTunerStatus");
+  if(status)status.textContent=message;
+}
+function openActionsHudTuner(){
+  $("settingsPanel")?.classList.add("hidden");
+  const tuner=$("actionsHudTuner");
+  if(!tuner)return;
+  tuner.classList.remove("hidden");
+  document.body.classList.add("actions-hud-tuning");
+  syncActionsHudTunerControls();
+  setActionsHudTunerStatus("Puedes arrastrar directamente el grupo de botones.");
+}
+function closeActionsHudTuner(){
+  $("actionsHudTuner")?.classList.add("hidden");
+  document.body.classList.remove("actions-hud-tuning");
+  actionsHudDragState=null;
+  saveActionsHudTunerState();
+}
+function updateActionsHudTunerFromInput(key,value){
+  const limits={scale:[35,110],x:[-320,320],y:[-260,360],gap:[0,30],label:[6,16]};
+  const [min,max]=limits[key];
+  actionsHudTunerState[key]=clampActionsHudValue(value,min,max,ACTIONS_HUD_TUNER_DEFAULTS[key]);
+  applyActionsHudTunerState(true);
+  setActionsHudTunerStatus("Configuración guardada en este navegador.");
+}
+async function copyActionsHudTunerValues(){
+  const text=`HUD acciones — Tamaño ${actionsHudTunerState.scale}%; X ${actionsHudTunerState.x}px; Y ${actionsHudTunerState.y}px; Separación ${actionsHudTunerState.gap}px; Texto ${actionsHudTunerState.label}px`;
+  try{
+    await navigator.clipboard.writeText(text);
+    setActionsHudTunerStatus(`Copiado: ${text}`);
+  }catch(e){
+    const area=document.createElement("textarea");
+    area.value=text;area.style.position="fixed";area.style.opacity="0";
+    document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();
+    setActionsHudTunerStatus(`Copiado: ${text}`);
+  }
+}
+function resetActionsHudTuner(){
+  actionsHudTunerState={...ACTIONS_HUD_TUNER_DEFAULTS};
+  applyActionsHudTunerState(true);
+  setActionsHudTunerStatus("Valores restablecidos.");
+}
+function initActionsHudTuner(){
+  applyActionsHudTunerState(false);
+  const bindings={
+    actionsHudScaleInput:"scale",
+    actionsHudXInput:"x",
+    actionsHudYInput:"y",
+    actionsHudGapInput:"gap",
+    actionsHudLabelInput:"label"
+  };
+  Object.entries(bindings).forEach(([id,key])=>{
+    $(id)?.addEventListener("input",e=>updateActionsHudTunerFromInput(key,e.target.value));
+  });
+  $("openActionsHudTunerBtn")?.addEventListener("click",openActionsHudTuner);
+  $("openActionsHudTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openActionsHudTuner();});
+  $("closeActionsHudTunerBtn")?.addEventListener("click",closeActionsHudTuner);
+  $("saveActionsHudTunerBtn")?.addEventListener("click",closeActionsHudTuner);
+  $("resetActionsHudTunerBtn")?.addEventListener("click",resetActionsHudTuner);
+  $("copyActionsHudValuesBtn")?.addEventListener("click",copyActionsHudTunerValues);
+  const panel=document.querySelector("#gameShell .battlefield .side .actions-visual-panel");
+  if(panel){
+    panel.addEventListener("pointerdown",e=>{
+      if(!document.body.classList.contains("actions-hud-tuning"))return;
+      e.preventDefault();
+      actionsHudDragState={pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,baseX:actionsHudTunerState.x,baseY:actionsHudTunerState.y};
+      try{panel.setPointerCapture(e.pointerId);}catch(err){}
+      setActionsHudTunerStatus("Moviendo HUD…");
+    });
+    panel.addEventListener("pointermove",e=>{
+      if(!actionsHudDragState||actionsHudDragState.pointerId!==e.pointerId)return;
+      const dx=e.clientX-actionsHudDragState.startX;
+      const dy=e.clientY-actionsHudDragState.startY;
+      actionsHudTunerState.x=clampActionsHudValue(Math.round(actionsHudDragState.baseX+dx),-320,320,0);
+      actionsHudTunerState.y=clampActionsHudValue(Math.round(actionsHudDragState.baseY+dy),-260,360,0);
+      applyActionsHudTunerState(false);
+    });
+    const finishDrag=e=>{
+      if(!actionsHudDragState||actionsHudDragState.pointerId!==e.pointerId)return;
+      actionsHudDragState=null;
+      saveActionsHudTunerState();
+      setActionsHudTunerStatus("Posición guardada.");
+    };
+    panel.addEventListener("pointerup",finishDrag);
+    panel.addEventListener("pointercancel",finishDrag);
+  }
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape"&&!$("actionsHudTuner")?.classList.contains("hidden"))closeActionsHudTuner();
+  });
+}
+initActionsHudTuner();
+
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);

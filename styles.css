@@ -19701,3 +19701,113 @@ html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
   width:100%!important;
   max-width:none!important;
 }
+
+
+/* ============================================================
+   7HHUDTUNER · Control exclusivo del HUD de acciones
+   ============================================================ */
+:root{
+  --actions-tuner-scale:.65;
+  --actions-tuner-x:0px;
+  --actions-tuner-y:0px;
+  --actions-tuner-gap:7px;
+  --actions-tuner-label:8px;
+}
+#gameShell .battlefield .side .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-panel,
+body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
+html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+  transform:translate3d(var(--actions-tuner-x),var(--actions-tuner-y),0) scale(var(--actions-tuner-scale))!important;
+  transform-origin:top right!important;
+  will-change:transform!important;
+}
+#gameShell .battlefield .side .actions-visual-buttons,
+body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
+html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
+  gap:var(--actions-tuner-gap)!important;
+}
+#gameShell .battlefield .side .action-btn-label,
+body.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label,
+html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
+  font-size:var(--actions-tuner-label)!important;
+}
+body.actions-hud-tuning #gameShell .battlefield .side .actions-visual-panel{
+  cursor:move!important;
+  outline:2px dashed rgba(85,226,255,.92)!important;
+  outline-offset:7px!important;
+  filter:drop-shadow(0 0 10px rgba(85,226,255,.32))!important;
+  touch-action:none!important;
+  user-select:none!important;
+  pointer-events:auto!important;
+}
+body.actions-hud-tuning #gameShell .battlefield .side .action-img-btn{
+  pointer-events:none!important;
+}
+.actions-hud-tuner{
+  position:fixed;
+  left:50%;
+  bottom:max(10px,env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);
+  z-index:1200;
+  width:min(760px,calc(100vw - 20px));
+  padding:12px;
+  border:1px solid rgba(255,209,102,.62);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(20,15,10,.97),rgba(6,6,5,.98));
+  box-shadow:0 18px 50px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,235,178,.06);
+  color:#fff1c4;
+}
+.actions-hud-tuner.hidden{display:none!important}
+.actions-hud-tuner-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.actions-hud-tuner-head b{display:block;font-size:15px}
+.actions-hud-tuner-head small{display:block;margin-top:3px;color:#c9b990;font-size:10px}
+.actions-hud-tuner-x{
+  width:32px;height:32px;flex:0 0 auto;border-radius:9px;
+  border:1px solid rgba(255,209,102,.42);background:rgba(255,255,255,.06);
+  color:#fff1c4;font-size:22px;line-height:1;cursor:pointer;
+}
+.actions-hud-tuner-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(110px,1fr));
+  gap:8px;
+}
+.actions-hud-tuner-control{
+  display:block;
+  padding:8px;
+  border:1px solid rgba(255,209,102,.18);
+  border-radius:10px;
+  background:rgba(255,255,255,.035);
+}
+.actions-hud-tuner-control span{
+  display:flex;justify-content:space-between;gap:8px;
+  margin-bottom:6px;font-size:10px;font-weight:800;color:#f1d695;
+}
+.actions-hud-tuner-control output{color:#7cecff;font-variant-numeric:tabular-nums}
+.actions-hud-tuner-control input{width:100%;accent-color:#e2b14d;cursor:pointer}
+.actions-hud-tuner-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:9px}
+.actions-hud-tuner-actions .btn{min-width:110px;padding:8px 12px}
+.actions-hud-tuner-status{min-height:14px;margin:6px 2px 0;color:#9feaff;font-size:10px;text-align:right}
+@media(max-width:720px){
+  .actions-hud-tuner{padding:9px;width:calc(100vw - 12px)}
+  .actions-hud-tuner-grid{grid-template-columns:repeat(3,minmax(92px,1fr));gap:5px}
+  .actions-hud-tuner-control{padding:6px}
+  .actions-hud-tuner-actions{justify-content:stretch}
+  .actions-hud-tuner-actions .btn{min-width:0;flex:1;padding:7px 8px;font-size:10px}
+  .actions-hud-tuner-head small{font-size:9px}
+}
+@media(max-height:430px){
+  .actions-hud-tuner{bottom:4px;padding:7px}
+  .actions-hud-tuner-head{margin-bottom:5px}
+  .actions-hud-tuner-grid{grid-template-columns:repeat(5,minmax(88px,1fr));gap:4px}
+  .actions-hud-tuner-control{padding:5px}
+  .actions-hud-tuner-control span{margin-bottom:2px;font-size:8px}
+  .actions-hud-tuner-actions{margin-top:5px}
+  .actions-hud-tuner-status{margin-top:3px}
+}
