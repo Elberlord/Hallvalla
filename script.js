@@ -8854,6 +8854,18 @@ function getGuardBadgeHtml(u,scope="unit"){
     </span>
   </span>`;
 }
+function getAttackBadgeHtml(u,scope="unit"){
+  if(!u)return "";
+  const atk=Math.max(0,Number(effectiveAtk(u)||0));
+  const title=escapeHtml(`Ataque actual: ${atk}`);
+  const frameHref='assets/ui/attack_sword_emblem.png?v=1';
+  return `<span class="attack-emblem-badge attack-emblem-badge-${escapeHtml(scope)}" title="${title}" aria-label="${title}">
+    <span class="attack-emblem-shell" aria-hidden="true">
+      <img class="attack-emblem-img" src="${frameHref}" alt="" draggable="false"/>
+      <span class="attack-emblem-medallion"><b>${escapeHtml(String(atk))}</b></span>
+    </span>
+  </span>`;
+}
 function getUnitBottomFrameHtml(u){
   if(!u)return "";
   const aux=getUnitAuxStatData(u);
@@ -8862,7 +8874,9 @@ function getUnitBottomFrameHtml(u){
   const topLeftTitle=getUnitTopLeftTitle(u);
   const primaryHtml=primary.kind==="guard"
     ? `<span class="unit-stat-orb stat-orb-atk stat-orb-primary guard stat-badge-guard-wrap" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}">${getGuardBadgeHtml(u,"unit-primary")}</span>`
-    : `<span class="unit-stat-orb stat-orb-atk stat-orb-primary ${escapeHtml(primary.kind)}" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}"><b>${escapeHtml(primary.text)}</b></span>`;
+    : primary.kind==="attack"
+      ? `<span class="unit-stat-orb stat-orb-atk stat-orb-primary attack stat-badge-atk-wrap" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}">${getAttackBadgeHtml(u,"unit-primary")}</span>`
+      : `<span class="unit-stat-orb stat-orb-atk stat-orb-primary ${escapeHtml(primary.kind)}" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}"><b>${escapeHtml(primary.text)}</b></span>`;
   const auxHtml=aux.kind==="guard"
     ? `<span class="unit-stat-orb stat-orb-aux guard stat-badge-guard-wrap" title="${escapeHtml(aux.title)}">${getGuardBadgeHtml(u,"unit-aux")}</span>`
     : `<span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>`;
@@ -9030,7 +9044,7 @@ function renderLeaderBases(){
       La lógica de DEF sigue viva: displayEffectiveGuard(u) mantiene el +2 GD y
       renderDetail() sigue mostrando el estado al abrir DET.
     */
-    return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
+    return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
   }).join("");
 }
 
