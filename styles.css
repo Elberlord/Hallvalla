@@ -19841,3 +19841,133 @@ body.actions-hud-tuning #gameShell .battlefield .side .action-img-btn{
     font-size:max(8px,calc(var(--actions-tuner-label) - 1px))!important;
   }
 }
+
+/* ========================================================================== 
+   HALLVALLA HP HEART BADGES (SVG dinámico)
+   Vida de unidades y líderes con corazón rellenable + número dorado.
+   ========================================================================== */
+.unit-hp-heart-anchor{
+  position:absolute !important;
+  top:5.9% !important;
+  right:4.8% !important;
+  width:22.6% !important;
+  height:17.6% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:12 !important;
+  pointer-events:none !important;
+}
+.hp-heart-badge{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.48)) drop-shadow(0 0 7px rgba(255,74,95,.14));
+}
+.hp-heart-badge-unit{
+  width:100%;
+  height:100%;
+}
+.hp-heart-badge-leader{
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+}
+.hp-heart-svg{
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
+}
+.hp-heart-shadow{
+  fill:rgba(0,0,0,.48);
+  transform:translate(1.3px,1.9px);
+  transform-origin:center;
+}
+.hp-heart-shell{
+  filter:drop-shadow(0 0 4px rgba(255,195,108,.12));
+}
+.hp-heart-fill{
+  transition:y .22s ease,height .22s ease,filter .22s ease,opacity .22s ease;
+}
+.hp-heart-badge.high .hp-heart-fill{
+  filter:saturate(1.03) brightness(1.02);
+}
+.hp-heart-badge.mid .hp-heart-fill{
+  filter:hue-rotate(-14deg) saturate(1.02) brightness(1.02);
+}
+.hp-heart-badge.low .hp-heart-fill{
+  filter:saturate(.92) brightness(.92);
+}
+.hp-heart-value{
+  position:absolute;
+  left:50%;
+  top:57%;
+  transform:translate(-50%,-50%);
+  font-family:Georgia,"Times New Roman",serif;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-.04em;
+  color:#f7d98d;
+  text-shadow:
+    0 1px 0 rgba(40,17,0,.92),
+    0 0 2px rgba(0,0,0,.96),
+    0 0 8px rgba(255,210,108,.1);
+  z-index:2;
+  white-space:nowrap;
+}
+.hp-heart-badge-unit .hp-heart-value{
+  font-size:7.2px;
+}
+.hp-heart-badge-leader .hp-heart-value{
+  font-size:9.2px;
+}
+.leader-heart-slot{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  height:28px;
+  flex:0 0 auto;
+}
+.leader-base-stats{
+  gap:5px !important;
+}
+.leader-base-stats .leader-heart-slot + b{
+  margin-left:1px;
+}
+@media(max-width:980px){
+  .unit-hp-heart-anchor{
+    top:6.2% !important;
+    right:4.7% !important;
+    width:23.4% !important;
+    height:18.2% !important;
+  }
+  .hp-heart-badge-unit .hp-heart-value{font-size:6.2px;}
+  .hp-heart-badge-leader{width:24px;height:24px;flex-basis:24px;}
+  .hp-heart-badge-leader .hp-heart-value{font-size:8px;}
+  .leader-heart-slot{min-width:25px;height:24px;}
+}
+body.hv-mobile-landscape .unit-hp-heart-anchor,
+html.hv-mobile-landscape #gameShell .unit-hp-heart-anchor{
+  top:6.4% !important;
+  right:4.9% !important;
+  width:22.4% !important;
+  height:17.4% !important;
+}
+body.hv-mobile-landscape .hp-heart-badge-unit .hp-heart-value,
+html.hv-mobile-landscape #gameShell .hp-heart-badge-unit .hp-heart-value{
+  font-size:6px !important;
+}
+body.hv-mobile-landscape .hp-heart-badge-leader,
+html.hv-mobile-landscape #gameShell .hp-heart-badge-leader{
+  width:22px !important;
+  height:22px !important;
+  flex-basis:22px !important;
+}
+body.hv-mobile-landscape .hp-heart-badge-leader .hp-heart-value,
+html.hv-mobile-landscape #gameShell .hp-heart-badge-leader .hp-heart-value{
+  font-size:7.3px !important;
+}

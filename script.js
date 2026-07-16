@@ -2101,6 +2101,8 @@ function clearTurnTempStatsForOwnerUnit(u,turnKey){
     lionFearAppliedTurnKey:"",
     tempDexBuff:0,
     tempDexDebuff:0,
+    saboteadorDexZeroTurnKey:"",
+    saboteadorDexZeroSource:"",
     tempAgiBuff:0,
     tempAgiDebuff:0,
     counterUsedTurn:false,
@@ -2962,7 +2964,7 @@ function getArcaneAdeptLinkBonus(u,units=publicState?.units||[]){
 function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
-function effectiveDex(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);let v=(u?.dex||0)+(u?.tempDexBuff||0)-(u?.tempDexDebuff||0)+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);if(forcedZero)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroTurnKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedTurnKey&&u.summonedTurnKey===state.turnKey);}
@@ -3252,8 +3254,15 @@ function applySaboteadorEscapeForzado(units,defenderId){
   const affected=(units||[]).filter(u=>u.id!==defender.id&&!u.leader&&dist(defender,u)<=1);
   if(!affected.length)return{units:units||[],triggered:false,text:""};
   const ids=new Set(affected.map(u=>u.id));
-  const next=(units||[]).map(u=>ids.has(u.id)?{...u,tempDexDebuff:Math.max(Number(u.tempDexDebuff||0),Number(u.dex||0)+Number(u.tempDexBuff||0)+Number(u.leaderDexBonusApplied||0)+99),saboteadorDexZeroTurnKey:publicState?.turnKey||""}:u);
-  return{units:next,triggered:true,text:` Escape Forzado: ${defender.name} sobrevive y reduce a 0 la DX de ${affected.length} unidad${affected.length===1?"":"es"} en rango 1 hasta el final del turno actual.`};
+  const turnKey=publicState?.turnKey||"";
+  const next=(units||[]).map(u=>{
+    if(!ids.has(u.id))return u;
+    const n={...u,saboteadorDexZeroTurnKey:turnKey,saboteadorDexZeroSource:defender.name};
+    // Migración de partidas antiguas: elimina únicamente el falso debuff técnico de +99.
+    if(Number(n.tempDexDebuff||0)>=90)n.tempDexDebuff=0;
+    return n;
+  });
+  return{units:next,triggered:true,text:` Escape Forzado: ${defender.name} sobrevive y fuerza la DX a 0 de ${affected.length} unidad${affected.length===1?"":"es"} en rango 1 hasta el final del turno actual.`};
 }
 
 function consumeDefensiveStanceForAttack(defender,units,mods={}){
@@ -8539,7 +8548,10 @@ function getUnitStatusEntries(u){
   if(getHannibalAtkDebuff(u)>0)add(`-${getHannibalAtkDebuff(u)} AT`,`Trampa de Cannas`,`Ataque reducido por Hannibal Barca hasta su próximo turno.${u.hannibalAtkDebuffSource?` Origen: ${u.hannibalAtkDebuffSource}.`:""}`,"debuff atk-debuff","debuff");
   if(getKhalidAttackPenalty(u)>0)add(`-${getKhalidAttackPenalty(u)} AT`,`Espada Invicta`,`Penalización acumulada de Khalid por ataques encadenados. Se restaura al inicio de su próximo turno.`,"debuff atk-debuff","debuff");
   if(n(u.tempDexBuff)>0)add(`+${n(u.tempDexBuff)} DX`,`Destreza aumentada`,n(u.coverFireBuffs)>0?`Destreza aumentada por Fuego de cobertura (${n(u.coverFireBuffs)} acumulación${n(u.coverFireBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Destreza aumentada por efecto temporal.`,"buff dex-buff","buff");
-  if(n(u.tempDexDebuff)>0)add(`-${n(u.tempDexDebuff)} DX`,`Destreza reducida`,`Destreza reducida por presión, trampa o efecto temporal.`,"debuff dex-debuff","debuff");
+  const igaDexForced=!!(u.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);
+  const legacyIgaDexHack=!!(u.saboteadorDexZeroTurnKey&&n(u.tempDexDebuff)>=90);
+  if(igaDexForced)add(`DX 0`,`Escape Forzado`,`La Destreza de esta unidad está forzada a 0 hasta el final del turno actual.${u.saboteadorDexZeroSource?` Origen: ${u.saboteadorDexZeroSource}.`:""}`,"debuff dex-debuff","debuff");
+  if(n(u.tempDexDebuff)>0&&!legacyIgaDexHack)add(`-${n(u.tempDexDebuff)} DX`,`Destreza reducida`,`Destreza reducida por presión, trampa o efecto temporal.`,"debuff dex-debuff","debuff");
   if(n(u.tempAgiBuff)>0)add(`+${n(u.tempAgiBuff)} AGI`,`Agilidad aumentada`,`Agilidad aumentada por efecto temporal.`,"buff agi-buff","buff");
   if(n(u.tempAgiDebuff)>0)add(`-${n(u.tempAgiDebuff)} AGI`,`Agilidad reducida`,`Agilidad reducida por efecto temporal.`,"debuff agi-debuff","debuff");
   if(blackRavenAgiAura(u)<0)add(`-2 AGI`,`Graznido Inquietante`,`Aura pasiva del Cuervo Negro: esta unidad enemiga está en rango 2 y pierde -2 AGI mientras permanezca en el aura.`,"debuff agi-debuff","debuff");
@@ -8782,19 +8794,62 @@ function getUnitPrimaryBoardStatData(u){
   const guard=displayEffectiveGuard(u);
   return {text:String(guard),kind:"guard",label:"GD",title:`GD actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}. Turno rival; este espacio muestra cuánto resiste antes de perder Vida.`};
 }
-function getUnitBottomFrameHtml(u){
+function makeSafeBadgeIdPart(value){
+  return String(value==null?"":value).replace(/[^a-zA-Z0-9_-]/g,"_")||"hp";
+}
+function getHpHeartBadgeHtml(u,scope="unit"){
   if(!u)return "";
   const hp=Math.max(0,Number(getDisplayHp(u)||0));
   const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
   const pct=clamp(Math.round((hp/max)*100),0,100);
-  const hpTier=pct<=35?"low":pct<=65?"mid":"high";
+  const tier=pct<=35?"low":pct<=65?"mid":"high";
+  const uid=`${scope}_${makeSafeBadgeIdPart(u.id||u.key||u.name||"hp")}`;
+  const clipId=`hpHeartClip_${uid}`;
+  const fillId=`hpHeartFill_${uid}`;
+  const shineId=`hpHeartShine_${uid}`;
+  const metalId=`hpHeartMetal_${uid}`;
+  const heartPath="M50 92 C45 88 41 84 34 78 C19 65 8 52 8 34 C8 18 20 8 34 8 C43 8 48 14 50 19 C52 14 57 8 66 8 C80 8 92 18 92 34 C92 52 81 65 66 78 C59 84 55 88 50 92 Z";
+  const title=escapeHtml(`Vida actual: ${hp}/${max}`);
+  return `<span class="hp-heart-badge hp-heart-badge-${escapeHtml(scope)} ${tier}" title="${title}" aria-label="${title}">
+    <svg class="hp-heart-svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <defs>
+        <clipPath id="${clipId}"><path d="${heartPath}"/></clipPath>
+        <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffb0b9"/>
+          <stop offset="28%" stop-color="#ff445f"/>
+          <stop offset="74%" stop-color="#b80d24"/>
+          <stop offset="100%" stop-color="#5a040f"/>
+        </linearGradient>
+        <linearGradient id="${shineId}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.95)"/>
+          <stop offset="55%" stop-color="rgba(255,255,255,.08)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </linearGradient>
+        <linearGradient id="${metalId}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fff0c4"/>
+          <stop offset="28%" stop-color="#eac36e"/>
+          <stop offset="62%" stop-color="#a86b1d"/>
+          <stop offset="100%" stop-color="#f5d688"/>
+        </linearGradient>
+      </defs>
+      <path class="hp-heart-shadow" d="${heartPath}"/>
+      <path class="hp-heart-shell" d="${heartPath}" fill="#16090b" stroke="url(#${metalId})" stroke-width="4.8" stroke-linejoin="round"/>
+      <rect class="hp-heart-fill" x="8" y="${100-pct}" width="84" height="${pct}" fill="url(#${fillId})" clip-path="url(#${clipId})"/>
+      <path class="hp-heart-gloss" d="M27 28 C31 17 42 12 50 19 C44 20 37 24 34 31 C32 36 31 43 34 48 C25 46 22 38 27 28 Z" fill="rgba(255,255,255,.23)"/>
+      <path class="hp-heart-innerline" d="${heartPath}" fill="none" stroke="rgba(255,245,225,.36)" stroke-width="1.25"/>
+    </svg>
+    <span class="hp-heart-value">${escapeHtml(String(hp))}</span>
+  </span>`;
+}
+function getUnitBottomFrameHtml(u){
+  if(!u)return "";
   const aux=getUnitAuxStatData(u);
   const primary=getUnitPrimaryBoardStatData(u);
   const topLeftText=getUnitTopLeftText(u);
   const topLeftTitle=getUnitTopLeftTitle(u);
   return `<div class="unit-ornate-ui">
     <span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>
-    <span class="unit-stat-orb stat-orb-hp ${hpTier}" title="Salud actual: ${hp}/${max}"><span class="unit-orb-liquid" style="height:${pct}%"></span><b>${hp}</b></span>
+    <span class="unit-hp-heart-anchor">${getHpHeartBadgeHtml(u,"unit")}</span>
     <span class="unit-stat-orb stat-orb-atk stat-orb-primary ${escapeHtml(primary.kind)}" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}"><b>${escapeHtml(primary.text)}</b></span>
     <span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>
   </div>`;
@@ -8956,7 +9011,7 @@ function renderLeaderBases(){
       La lógica de DEF sigue viva: displayEffectiveGuard(u) mantiene el +2 GD y
       renderDetail() sigue mostrando el estado al abrir DET.
     */
-    return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><b class="hp" title="Vida"><span class="leader-stat-icon">❤</span><span class="leader-stat-value">${getDisplayHp(u)}</span></b><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></div>`;
+    return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk" title="Ataque"><span class="leader-stat-icon">⚔</span><span class="leader-stat-value">${effectiveAtk(u)}</span></b><b class="gd" title="Guardia"><span class="leader-stat-icon">🛡</span><span class="leader-stat-value">${displayEffectiveGuard(u)}</span></b></span></div>`;
   }).join("");
 }
 
