@@ -8806,39 +8806,46 @@ function getHpHeartBadgeHtml(u,scope="unit"){
   const uid=`${scope}_${makeSafeBadgeIdPart(u.id||u.key||u.name||"hp")}`;
   const clipId=`hpHeartClip_${uid}`;
   const fillId=`hpHeartFill_${uid}`;
-  const shineId=`hpHeartShine_${uid}`;
   const metalId=`hpHeartMetal_${uid}`;
-  const heartPath="M50 92 C45 88 41 84 34 78 C19 65 8 52 8 34 C8 18 20 8 34 8 C43 8 48 14 50 19 C52 14 57 8 66 8 C80 8 92 18 92 34 C92 52 81 65 66 78 C59 84 55 88 50 92 Z";
+  const medId=`hpHeartMed_${uid}`;
+  const waveId=`hpHeartWave_${uid}`;
+  const heartPath="M50 92 C43 87 35 81 25 71 C14 60 8 49 8 35 C8 20 19 8 34 8 C43 8 48 13 50 18 C52 13 57 8 66 8 C81 8 92 20 92 35 C92 49 86 60 75 71 C65 81 57 87 50 92 Z";
   const title=escapeHtml(`Vida actual: ${hp}/${max}`);
+  const waveY=100-pct;
   return `<span class="hp-heart-badge hp-heart-badge-${escapeHtml(scope)} ${tier}" title="${title}" aria-label="${title}">
     <svg class="hp-heart-svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
       <defs>
         <clipPath id="${clipId}"><path d="${heartPath}"/></clipPath>
         <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffb0b9"/>
-          <stop offset="28%" stop-color="#ff445f"/>
-          <stop offset="74%" stop-color="#b80d24"/>
-          <stop offset="100%" stop-color="#5a040f"/>
-        </linearGradient>
-        <linearGradient id="${shineId}" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,.95)"/>
-          <stop offset="55%" stop-color="rgba(255,255,255,.08)"/>
-          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          <stop offset="0%" stop-color="#ff8b91"/>
+          <stop offset="18%" stop-color="#ff3030"/>
+          <stop offset="62%" stop-color="#d10a0a"/>
+          <stop offset="100%" stop-color="#5f0505"/>
         </linearGradient>
         <linearGradient id="${metalId}" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#fff0c4"/>
-          <stop offset="28%" stop-color="#eac36e"/>
-          <stop offset="62%" stop-color="#a86b1d"/>
-          <stop offset="100%" stop-color="#f5d688"/>
+          <stop offset="0%" stop-color="#fff6cf"/>
+          <stop offset="16%" stop-color="#f8d77a"/>
+          <stop offset="48%" stop-color="#d09428"/>
+          <stop offset="82%" stop-color="#8b5315"/>
+          <stop offset="100%" stop-color="#ffdf8a"/>
+        </linearGradient>
+        <linearGradient id="${medId}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2b1710"/>
+          <stop offset="100%" stop-color="#0f0807"/>
         </linearGradient>
       </defs>
       <path class="hp-heart-shadow" d="${heartPath}"/>
-      <path class="hp-heart-shell" d="${heartPath}" fill="#16090b" stroke="url(#${metalId})" stroke-width="4.8" stroke-linejoin="round"/>
-      <rect class="hp-heart-fill" x="8" y="${100-pct}" width="84" height="${pct}" fill="url(#${fillId})" clip-path="url(#${clipId})"/>
-      <path class="hp-heart-gloss" d="M27 28 C31 17 42 12 50 19 C44 20 37 24 34 31 C32 36 31 43 34 48 C25 46 22 38 27 28 Z" fill="rgba(255,255,255,.23)"/>
-      <path class="hp-heart-innerline" d="${heartPath}" fill="none" stroke="rgba(255,245,225,.36)" stroke-width="1.25"/>
+      <path d="M50 1 L58 10 L50 19 L42 10 Z" fill="url(#${metalId})" stroke="#3f2208" stroke-width="1.3"/>
+      <path d="M50 81 L57 90 L50 99 L43 90 Z" fill="url(#${metalId})" stroke="#3f2208" stroke-width="1.2"/>
+      <path d="${heartPath}" fill="#120708" stroke="url(#${metalId})" stroke-width="5.3" stroke-linejoin="round"/>
+      <path d="${heartPath}" fill="none" stroke="rgba(255,244,200,.35)" stroke-width="1.45" stroke-linejoin="round"/>
+      <rect class="hp-heart-fill" x="8" y="${waveY}" width="84" height="${pct}" fill="url(#${fillId})" clip-path="url(#${clipId})"/>
+      <path class="hp-heart-wave" d="M11 ${waveY+1.5} C20 ${waveY-1.5}, 29 ${waveY+3}, 39 ${waveY+1.4} S57 ${waveY-1.2}, 68 ${waveY+0.9} S84 ${waveY+1.8}, 89 ${waveY+0.9}" fill="none" stroke="rgba(255,235,235,.95)" stroke-width="2.1" stroke-linecap="round" clip-path="url(#${clipId})"/>
+      <path class="hp-heart-gloss" d="M24 28 C29 17 43 12 50 18 C41 20 34 24 30 31 C27 36 27 44 31 49 C21 46 18 37 24 28 Z" fill="rgba(255,255,255,.26)"/>
+      <circle cx="74" cy="73" r="17" fill="url(#${medId})" stroke="url(#${metalId})" stroke-width="3.6"/>
+      <circle cx="74" cy="73" r="13.8" fill="none" stroke="rgba(255,239,196,.22)" stroke-width="1"/>
+      <text x="74" y="78" text-anchor="middle" class="hp-heart-number">${escapeHtml(String(hp))}</text>
     </svg>
-    <span class="hp-heart-value">${escapeHtml(String(hp))}</span>
   </span>`;
 }
 function getUnitBottomFrameHtml(u){
