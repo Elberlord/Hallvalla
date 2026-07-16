@@ -8809,7 +8809,7 @@ function getHpHeartBadgeHtml(u,scope="unit"){
   const waveY=(84 - (pct*0.66)).toFixed(2);
   const fillY=(86 - (pct*0.68)).toFixed(2);
   const fillH=(pct*0.68).toFixed(2);
-  const frameHref='assets/ui/hp_heart_frame_cutout.png?v=1';
+  const frameHref='assets/ui/hp_heart_frame_overlay.webp?v=2';
   const title=escapeHtml(`Vida actual: ${hp}/${max}`);
   const heartInner="M50 87 C45 83 39 78 31 70 C20 59 15 48 15 37 C15 25 23 15 35 15 C42 15 47 19 50 24 C53 19 58 15 65 15 C77 15 85 25 85 37 C85 48 80 59 69 70 C61 78 55 83 50 87 Z";
   return `<span class="hp-heart-badge hp-heart-badge-${escapeHtml(scope)} ${tier}" title="${title}" aria-label="${title}">
@@ -8827,10 +8827,10 @@ function getHpHeartBadgeHtml(u,scope="unit"){
       <path d="${heartInner}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1.2"/>
       <rect class="hp-heart-fill" x="14" y="${fillY}" width="72" height="${fillH}" fill="url(#${fillId})" clip-path="url(#${clipId})"/>
       <path class="hp-heart-wave" d="M17 ${waveY} C25 ${Number(waveY)-1.6}, 31 ${Number(waveY)+2.6}, 40 ${Number(waveY)+0.8} S56 ${Number(waveY)-1.3}, 66 ${Number(waveY)+0.9} S79 ${Number(waveY)+1.5}, 84 ${Number(waveY)+0.7}" fill="none" stroke="rgba(255,238,238,.95)" stroke-width="1.8" stroke-linecap="round" clip-path="url(#${clipId})"/>
-      <circle class="hp-heart-medallion-core" cx="76.2" cy="72.8" r="12.2" fill="#1b0f0b"/>
-      <circle class="hp-heart-medallion-ring" cx="76.2" cy="72.8" r="11.3" fill="none" stroke="rgba(236,194,90,.34)" stroke-width="1.2"/>
+      <circle class="hp-heart-medallion-core" cx="70.6" cy="68.2" r="12.2" fill="#1b0f0b"/>
+      <circle class="hp-heart-medallion-ring" cx="70.6" cy="68.2" r="11.3" fill="none" stroke="rgba(236,194,90,.34)" stroke-width="1.2"/>
       <image class="hp-heart-frame-img" href="${frameHref}" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>
-      <text x="76.2" y="77.6" text-anchor="middle" class="hp-heart-number">${escapeHtml(String(hp))}</text>
+      <text x="70.6" y="73.2" text-anchor="middle" class="hp-heart-number">${escapeHtml(String(hp))}</text>
     </svg>
   </span>`;
 }
