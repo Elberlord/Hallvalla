@@ -8916,6 +8916,24 @@ function getUnitBottomFrameHtml(u){
   </div>`;
 }
 
+function isBoardUnitFullyExhausted(u){
+  if(!u||u.leader||u.owner!==myPlayer)return false;
+  if(!isMyTurn()||!isActionPhase())return false;
+  const blockedMove=!!(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey);
+  const canMove=isMulanExecutionMoveReady(u)||(!u.acted&&!u.moved&&!blockedMove);
+  const canAttack=canUnitDeclareAttack(u);
+  const blockedDef=!!(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey);
+  const canDef=isUnitActionWindow(u)&&!u.acted&&!u.defenseModeReady&&!blockedDef&&!isMulanExecutionMoveReady(u);
+  const canEffect=isUnitActionWindow(u)&&unitHasContextEffect(u)&&!u.acted&&!isMulanExecutionMoveReady(u)&&!isMulanExecutionChoiceReady(u);
+  return !(canMove||canAttack||canDef||canEffect);
+}
+function getBoardTeamMarkerHtml(u){
+  if(!u)return "";
+  const relation=u.owner===myPlayer?"ally":"enemy";
+  const label=relation==="ally"?"Unidad aliada":"Unidad rival";
+  return `<span class="unit-team-marker ${relation}" title="${label}" aria-label="${label}"></span>`;
+}
+
 function renderBoard(){
   const grid=$("grid");
   if(!grid.dataset.boardTargetDelegateBound){
@@ -8943,8 +8961,9 @@ function renderBoard(){
     const u=getUnitAt(x,y);
     if(u&&!u.leader){
       const c=document.createElement("div");
-      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}`;
+      const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
+      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
@@ -11485,16 +11504,179 @@ function renderAdventureMap(){
       const optional=!isBattleRequiredForChapter(b);
       const label=completed?"Completada":unlocked?(optional?"Extra opcional":"Iniciar combate"):"Bloqueada";
       const bossClass=b.id===boss?.id?" boss":optional?" optional":"";
-      return `<button class="map-node ${state}${bossClass}" type="button" data-battle-id="${b.id}" style="left:${point.x}%;top:${point.y}%;" ${unlocked?"":"disabled"} title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
+      const nodeCode=getAdventureBattleCode(activeChapter,b);
+      return `<button class="map-node ${state}${bossClass}" type="button" data-battle-id="${b.id}" data-node-code="${escapeHtml(nodeCode)}" style="left:${point.x}%;top:${point.y}%;" ${unlocked?"":"disabled"} title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
         <span class="map-node-ring"></span>
-        <span class="map-node-number">${getAdventureBattleCode(activeChapter,b)}</span>
+        <span class="map-node-number">${nodeCode}</span>
       </button>`;
     }).join("")}
   </div>`;
+  refreshAdventureMapNodeTunerTargets();
+  applyAdventureMapNodeTunerState(false);
   nodes.querySelectorAll(".map-node:not(.locked)").forEach(btn=>{
     btn.addEventListener("click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,btn.dataset.battleId));
   });
 }
+
+/* ---------------------------------------------------------------------------
+   MAP NODE TUNER · Ajuste visual en vivo de las burbujas del mapa
+   --------------------------------------------------------------------------- */
+const ADVENTURE_MAP_NODE_TUNER_KEY="hallvalla_adventure_map_node_tuner_v1";
+const ADVENTURE_MAP_NODE_DEFAULTS=Object.freeze({size:100,x:0,y:0,opacity:100,ringSize:100,ringStroke:3,textSize:24,textX:0,textY:0});
+const ADVENTURE_MAP_NODE_CONTROLS=[
+  {key:"size",input:"mapNodeSizeInput",output:"mapNodeSizeValue",min:40,max:220,suffix:"%"},
+  {key:"x",input:"mapNodeXInput",output:"mapNodeXValue",min:-220,max:220,suffix:" px"},
+  {key:"y",input:"mapNodeYInput",output:"mapNodeYValue",min:-220,max:220,suffix:" px"},
+  {key:"opacity",input:"mapNodeOpacityInput",output:"mapNodeOpacityValue",min:20,max:100,suffix:"%"},
+  {key:"ringSize",input:"mapNodeRingSizeInput",output:"mapNodeRingSizeValue",min:40,max:220,suffix:"%"},
+  {key:"ringStroke",input:"mapNodeRingStrokeInput",output:"mapNodeRingStrokeValue",min:0,max:10,suffix:" px"},
+  {key:"textSize",input:"mapNodeTextSizeInput",output:"mapNodeTextSizeValue",min:8,max:48,suffix:" px"},
+  {key:"textX",input:"mapNodeTextXInput",output:"mapNodeTextXValue",min:-60,max:60,suffix:" px"},
+  {key:"textY",input:"mapNodeTextYInput",output:"mapNodeTextYValue",min:-60,max:60,suffix:" px"}
+];
+let adventureMapNodeTunerState=loadAdventureMapNodeTunerState();
+function cloneAdventureMapNodeDefaults(){return {...ADVENTURE_MAP_NODE_DEFAULTS};}
+function clampAdventureMapNodeValue(def,value,fallback){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(def.min,Math.min(def.max,n)):fallback;
+}
+function normalizeAdventureMapNodeValues(raw={}){
+  const next=cloneAdventureMapNodeDefaults();
+  ADVENTURE_MAP_NODE_CONTROLS.forEach(def=>{next[def.key]=clampAdventureMapNodeValue(def,raw?.[def.key],next[def.key]);});
+  return next;
+}
+function loadAdventureMapNodeTunerState(){
+  const state={all:cloneAdventureMapNodeDefaults(),nodes:{}};
+  try{
+    const saved=JSON.parse(localStorage.getItem(ADVENTURE_MAP_NODE_TUNER_KEY)||"{}")||{};
+    state.all=normalizeAdventureMapNodeValues(saved.all||{});
+    Object.entries(saved.nodes||{}).forEach(([code,vals])=>{state.nodes[code]=normalizeAdventureMapNodeValues(vals);});
+  }catch(e){}
+  return state;
+}
+function saveAdventureMapNodeTunerState(){
+  try{localStorage.setItem(ADVENTURE_MAP_NODE_TUNER_KEY,JSON.stringify(adventureMapNodeTunerState));}catch(e){}
+}
+function getAdventureMapNodeCodes(){
+  return [...document.querySelectorAll("#adventureMapNodes .map-node[data-node-code]")].map(el=>el.dataset.nodeCode).filter(Boolean);
+}
+function ensureAdventureMapNodeState(){
+  getAdventureMapNodeCodes().forEach(code=>{
+    if(!adventureMapNodeTunerState.nodes[code])adventureMapNodeTunerState.nodes[code]={...adventureMapNodeTunerState.all};
+  });
+}
+function refreshAdventureMapNodeTunerTargets(){
+  const select=$("mapNodeTunerTargetSelect");
+  if(!select)return;
+  const selected=select.value||"all";
+  ensureAdventureMapNodeState();
+  const codes=getAdventureMapNodeCodes();
+  select.innerHTML=`<option value="all">Todas las burbujas</option>${codes.map(code=>`<option value="${escapeHtml(code)}">Burbuja ${escapeHtml(code)}</option>`).join("")}`;
+  select.value=codes.includes(selected)||selected==="all"?selected:"all";
+  syncAdventureMapNodeTunerControls();
+}
+function getAdventureMapNodeTarget(){return $("mapNodeTunerTargetSelect")?.value||"all";}
+function getAdventureMapNodeTargetValues(){
+  const target=getAdventureMapNodeTarget();
+  return target==="all"?adventureMapNodeTunerState.all:(adventureMapNodeTunerState.nodes[target]||{...adventureMapNodeTunerState.all});
+}
+function applyAdventureMapNodeTunerState(save=false){
+  ensureAdventureMapNodeState();
+  document.querySelectorAll("#adventureMapNodes .map-node[data-node-code]").forEach(node=>{
+    const code=node.dataset.nodeCode;
+    const vals=adventureMapNodeTunerState.nodes[code]||adventureMapNodeTunerState.all;
+    node.style.setProperty("--hv-map-node-scale",String(vals.size/100));
+    node.style.setProperty("--hv-map-node-x",`${vals.x}px`);
+    node.style.setProperty("--hv-map-node-y",`${vals.y}px`);
+    const stateOpacity=node.classList.contains("locked")?.72:1;
+    node.style.setProperty("--hv-map-node-opacity",String((vals.opacity/100)*stateOpacity));
+    node.style.setProperty("--hv-map-ring-scale",String(vals.ringSize/100));
+    node.style.setProperty("--hv-map-ring-stroke",`${vals.ringStroke}px`);
+    node.style.setProperty("--hv-map-text-size",`${vals.textSize}px`);
+    node.style.setProperty("--hv-map-text-x",`${vals.textX}px`);
+    node.style.setProperty("--hv-map-text-y",`${vals.textY}px`);
+  });
+  syncAdventureMapNodeTunerControls();
+  if(save)saveAdventureMapNodeTunerState();
+}
+function syncAdventureMapNodeTunerControls(){
+  const vals=getAdventureMapNodeTargetValues();
+  ADVENTURE_MAP_NODE_CONTROLS.forEach(def=>{
+    const input=$(def.input),out=$(def.output),value=vals[def.key];
+    if(input&&String(input.value)!==String(value))input.value=String(value);
+    if(out)out.textContent=`${Number(value)}${def.suffix}`;
+  });
+}
+function setAdventureMapNodeTunerStatus(message=""){
+  const status=$("mapNodeTunerStatus"); if(status)status.textContent=message;
+}
+function updateAdventureMapNodeTunerFromInput(key,value){
+  const def=ADVENTURE_MAP_NODE_CONTROLS.find(d=>d.key===key); if(!def)return;
+  const target=getAdventureMapNodeTarget();
+  const fallback=ADVENTURE_MAP_NODE_DEFAULTS[key];
+  const next=clampAdventureMapNodeValue(def,value,fallback);
+  if(target==="all"){
+    adventureMapNodeTunerState.all[key]=next;
+    getAdventureMapNodeCodes().forEach(code=>{
+      if(!adventureMapNodeTunerState.nodes[code])adventureMapNodeTunerState.nodes[code]={...adventureMapNodeTunerState.all};
+      adventureMapNodeTunerState.nodes[code][key]=next;
+    });
+  }else{
+    if(!adventureMapNodeTunerState.nodes[target])adventureMapNodeTunerState.nodes[target]={...adventureMapNodeTunerState.all};
+    adventureMapNodeTunerState.nodes[target][key]=next;
+  }
+  applyAdventureMapNodeTunerState(true);
+  setAdventureMapNodeTunerStatus(target==="all"?"Todas las burbujas actualizadas.":`Burbuja ${target} actualizada.`);
+}
+function openAdventureMapNodeTuner(){
+  refreshAdventureMapNodeTunerTargets();
+  applyAdventureMapNodeTunerState(false);
+  $("adventureMapNodeTuner")?.classList.remove("hidden");
+  setAdventureMapNodeTunerStatus("Los cambios se guardan automáticamente en este navegador.");
+}
+function closeAdventureMapNodeTuner(){
+  $("adventureMapNodeTuner")?.classList.add("hidden");
+  saveAdventureMapNodeTunerState();
+}
+function resetCurrentAdventureMapNode(){
+  const target=getAdventureMapNodeTarget();
+  if(target==="all"){
+    adventureMapNodeTunerState.all=cloneAdventureMapNodeDefaults();
+    getAdventureMapNodeCodes().forEach(code=>{adventureMapNodeTunerState.nodes[code]=cloneAdventureMapNodeDefaults();});
+  }else{
+    adventureMapNodeTunerState.nodes[target]={...adventureMapNodeTunerState.all};
+  }
+  applyAdventureMapNodeTunerState(true);
+  setAdventureMapNodeTunerStatus(target==="all"?"Todas las burbujas restablecidas.":`Burbuja ${target} restablecida.`);
+}
+function resetAllAdventureMapNodes(){
+  adventureMapNodeTunerState={all:cloneAdventureMapNodeDefaults(),nodes:{}};
+  ensureAdventureMapNodeState();
+  applyAdventureMapNodeTunerState(true);
+  setAdventureMapNodeTunerStatus("Todos los valores fueron restablecidos.");
+}
+async function copyAdventureMapNodeValues(){
+  ensureAdventureMapNodeState();
+  const codes=getAdventureMapNodeCodes();
+  const text=codes.map(code=>{
+    const v=adventureMapNodeTunerState.nodes[code]||adventureMapNodeTunerState.all;
+    return `${code} — Tamaño ${v.size}%; X ${v.x}px; Y ${v.y}px; Opacidad ${v.opacity}%; Aro ${v.ringSize}%; Línea ${v.ringStroke}px; Texto ${v.textSize}px; Texto X ${v.textX}px; Texto Y ${v.textY}px`;
+  }).join(" || ");
+  try{await navigator.clipboard.writeText(text);}catch(e){const a=document.createElement("textarea");a.value=text;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();}
+  setAdventureMapNodeTunerStatus("Valores copiados al portapapeles.");
+}
+function initAdventureMapNodeTuner(){
+  $("openAdventureMapNodeTunerBtn")?.addEventListener("click",openAdventureMapNodeTuner);
+  $("closeAdventureMapNodeTunerBtn")?.addEventListener("click",closeAdventureMapNodeTuner);
+  $("saveMapNodeTunerBtn")?.addEventListener("click",closeAdventureMapNodeTuner);
+  $("resetCurrentMapNodeBtn")?.addEventListener("click",resetCurrentAdventureMapNode);
+  $("resetAllMapNodesBtn")?.addEventListener("click",resetAllAdventureMapNodes);
+  $("copyMapNodeValuesBtn")?.addEventListener("click",copyAdventureMapNodeValues);
+  $("mapNodeTunerTargetSelect")?.addEventListener("change",()=>{syncAdventureMapNodeTunerControls();setAdventureMapNodeTunerStatus(getAdventureMapNodeTarget()==="all"?"Editando todas las burbujas.":`Editando burbuja ${getAdventureMapNodeTarget()}.`);});
+  ADVENTURE_MAP_NODE_CONTROLS.forEach(def=>$(def.input)?.addEventListener("input",ev=>updateAdventureMapNodeTunerFromInput(def.key,ev.target.value)));
+  document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&!$("adventureMapNodeTuner")?.classList.contains("hidden"))closeAdventureMapNodeTuner();});
+}
+initAdventureMapNodeTuner();
 
 const ADVENTURE_STORY_SCENES=[
   {title:"El llamado de HallValla",mark:"",cls:"scene-call",image:"assets/story/hallvalla_call.webp",text:"En los confines de HallValla, donde las viejas guerras dejaron cicatrices sobre la tierra, el Honor vuelve a llamar.\n\nNo todos nacen para mandar ejércitos, pero quienes escuchan ese llamado deben cruzar el campo y demostrar que su voluntad pesa más que el miedo.\n\nHoy comienza tu camino."},
@@ -11523,6 +11705,7 @@ function scrollAdventureToTop(){
 }
 function showAdventureStage(stage){
   ["adventureStoryStage","adventureChoiceStage","adventureWoundedStage","adventureGuardianStage","adventureMapIntroStage","adventureMapStage"].forEach(id=>$(id).classList.toggle("hidden",id!==stage));
+  if(stage!=="adventureMapStage")closeAdventureMapNodeTuner();
   requestAnimationFrame(scrollAdventureToTop);
 }
 function applyAdventureSceneVisual(visualId, markId, cls, mark, image){
