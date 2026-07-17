@@ -10288,7 +10288,7 @@ function bindLayeredShopActions(){
     if(action==="clans"){showComingSoon("Clanes");return;}
     if(action==="settings"){closePackShop();$("settingsPanel")?.classList.remove("hidden");return;}
     if(action==="probabilities"){
-      await hvAlert("Pack básico: 3 cartas básicas.
+      await hvAlert(`Pack básico: 3 cartas básicas.
 
 Pack raro: 1 rara + 2 básicas.
 
@@ -10296,7 +10296,7 @@ Pack épico: 1 épica + 2 raras.
 
 Pack mítico: 1 mítica + 2 épicas.
 
-Pack legendario: 1 legendaria + 2 míticas.","Contenido garantizado");
+Pack legendario: 1 legendaria + 2 míticas.`,"Contenido garantizado");
       return;
     }
     if(action==="buy-pack"){
