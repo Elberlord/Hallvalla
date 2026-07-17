@@ -11912,12 +11912,12 @@ const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v2";
 const FIELD_STAT_BADGES_TUNER_GROUPS=[
   {id:"hpUnit",label:"HP unidad",title:"VIDA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
   {id:"hpLeader",label:"HP líder",title:"VIDA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"atkUnit",label:"ATK unidad",title:"ATAQUE · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
-  {id:"atkLeader",label:"ATK líder",title:"ATAQUE · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
-  {id:"guardUnit",label:"Guardia unidad",title:"GUARDIA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
-  {id:"guardLeader",label:"Guardia líder",title:"GUARDIA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
-  {id:"precision",label:"Precisión",title:"PRECISIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
-  {id:"evasion",label:"Evasión",title:"EVASIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"}
+  {id:"atkUnit",label:"ATK unidad",title:"ATAQUE · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"atkLeader",label:"ATK líder",title:"ATAQUE · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"guardUnit",label:"Guardia unidad",title:"GUARDIA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"guardLeader",label:"Guardia líder",title:"GUARDIA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"precision",label:"Precisión",title:"PRECISIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"evasion",label:"Evasión",title:"EVASIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"}
 ];
 const FIELD_STAT_BADGES_TUNER_DEFAULTS=Object.freeze(FIELD_STAT_BADGES_TUNER_GROUPS.reduce((acc,g)=>{
   acc[`${g.id}Scale`]=100;

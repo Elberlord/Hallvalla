@@ -20427,3 +20427,79 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
     width:auto !important;
   }
 }
+
+
+/* 7HSTATVIS V3 · Hacer ATK/GD/PREC/EVA comportarse visualmente como VIDA */
+.unit-card .stat-orb-atk,
+.unit-card .stat-orb-primary.guard,
+.unit-card .stat-orb-aux,
+.cell > .unit-card .stat-orb-atk,
+.cell > .unit-card .stat-orb-primary.guard,
+.cell > .unit-card .stat-orb-aux,
+.grid .cell > .unit-card .stat-orb-atk,
+.grid .cell > .unit-card .stat-orb-primary.guard,
+.grid .cell > .unit-card .stat-orb-aux{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+.unit-card .stat-orb-atk,
+.unit-card .stat-orb-primary.guard,
+.cell > .unit-card .stat-orb-atk,
+.cell > .unit-card .stat-orb-primary.guard,
+.grid .cell > .unit-card .stat-orb-atk,
+.grid .cell > .unit-card .stat-orb-primary.guard{
+  width:25% !important;
+  height:17% !important;
+  bottom:4.2% !important;
+}
+.unit-card .stat-orb-atk,
+.cell > .unit-card .stat-orb-atk,
+.grid .cell > .unit-card .stat-orb-atk{left:6.8% !important;}
+.unit-card .stat-orb-primary.guard,
+.cell > .unit-card .stat-orb-primary.guard,
+.grid .cell > .unit-card .stat-orb-primary.guard{left:6.8% !important;}
+.unit-card .stat-orb-aux,
+.cell > .unit-card .stat-orb-aux,
+.grid .cell > .unit-card .stat-orb-aux{
+  width:25% !important;
+  height:17% !important;
+  right:6.8% !important;
+  bottom:4.2% !important;
+}
+/* wrappers transparent and fully visible */
+.unit-card .stat-badge-atk-wrap,
+.unit-card .stat-badge-guard-wrap,
+.unit-card .stat-badge-precision-wrap,
+.unit-card .stat-badge-eva-wrap,
+.leader-base-stats .leader-atk-badge-wrap,
+.leader-base-stats .leader-guard-badge-wrap{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+.leader-base-stats,
+.leader-base-stats b,
+.unit-card .unit-stat-orb{
+  overflow:visible !important;
+}
+/* make the image badges the main visible layer, similar to the HP heart overlay */
+.unit-card .stat-badge-atk-wrap .attack-emblem-badge,
+.unit-card .stat-badge-guard-wrap .guard-emblem-badge,
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-precision,
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-eva{
+  z-index:18 !important;
+}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-badge,
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-badge{
+  z-index:18 !important;
+}
+/* cleaner default sizing so the tuner feels like HP tuning */
+.unit-card .stat-badge-atk-wrap .attack-emblem-badge{transform:translate(var(--field-atk-unit-x),var(--field-atk-unit-y)) scale(calc(var(--field-atk-unit-scale) * 1.22)) !important;}
+.unit-card .stat-badge-guard-wrap .guard-emblem-badge{transform:translate(var(--field-guard-unit-x),var(--field-guard-unit-y)) scale(calc(var(--field-guard-unit-scale) * 1.22)) !important;}
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-precision{transform:translate(var(--field-precision-x),var(--field-precision-y)) scale(calc(var(--field-precision-scale) * 1.22)) !important;}
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-eva{transform:translate(var(--field-evasion-x),var(--field-evasion-y)) scale(calc(var(--field-evasion-scale) * 1.22)) !important;}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-badge{transform:translate(var(--field-atk-leader-x),var(--field-atk-leader-y)) scale(calc(var(--field-atk-leader-scale) * 1.16)) !important;}
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-badge{transform:translate(var(--field-guard-leader-x),var(--field-guard-leader-y)) scale(calc(var(--field-guard-leader-scale) * 1.16)) !important;}
