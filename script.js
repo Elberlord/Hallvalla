@@ -9611,7 +9611,8 @@ if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspecto
 
 const RENAME_COST_GEMS = 100;
 const BASIC_PACK_GOLD_COST = 100;
-const PACK_SHOP_PREVIEW_MODE = true;
+const PACK_SHOP_PREVIEW_MODE = false;
+const PACK_SHOP_ALWAYS_UNLOCKED = true;
 const PACK_SHOP_ITEMS = [
   {
     key:"basic",
@@ -9621,7 +9622,9 @@ const PACK_SHOP_ITEMS = [
     costGold:100,
     description:"Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.",
     contents:["3 cartas básicas aleatorias"],
-    pendingType:"basic_magic_trap"
+    pendingType:"basic_magic_trap",
+    targetRarity:"basic",
+    lowerRarity:"basic"
   },
   {
     key:"rare",
@@ -9629,9 +9632,11 @@ const PACK_SHOP_ITEMS = [
     category:"RAREZA RARA",
     image:"assets/home/pack_raro.webp",
     costGold:400,
-    description:"Incluye 1 carta rara y 2 cartas de la rareza inferior.",
-    contents:["1 carta rara garantizada","2 cartas básicas"],
-    pendingType:"rare_preview"
+    description:"Incluye 1 carta de la primera rareza superior y 2 cartas básicas.",
+    contents:["1 carta superior garantizada","2 cartas básicas"],
+    pendingType:"shop_rare",
+    targetRarity:"epic",
+    lowerRarity:"basic"
   },
   {
     key:"epic",
@@ -9639,29 +9644,35 @@ const PACK_SHOP_ITEMS = [
     category:"RAREZA ÉPICA",
     image:"assets/home/pack_epico.webp",
     costGold:900,
-    description:"Incluye 1 carta épica y 2 cartas de la rareza inferior.",
-    contents:["1 carta épica garantizada","2 cartas raras"],
-    pendingType:"epic_preview"
-  },
-  {
-    key:"legendary",
-    name:"Pack legendario",
-    category:"RAREZA LEGENDARIA",
-    image:"assets/home/pack_legendario.webp",
-    costGold:1400,
-    description:"Incluye 1 carta legendaria y 2 cartas de la rareza inferior.",
-    contents:["1 carta legendaria garantizada","2 cartas épicas"],
-    pendingType:"legendary_preview"
+    description:"Incluye 1 carta de rareza épica de tienda y 2 cartas de la rareza inferior.",
+    contents:["1 carta superior garantizada","2 cartas de la rareza inferior"],
+    pendingType:"shop_epic",
+    targetRarity:"glorious",
+    lowerRarity:"epic"
   },
   {
     key:"mythic",
     name:"Pack mítico",
     category:"RAREZA MÍTICA",
     image:"assets/home/pack_mitico.webp",
-    costGold:2000,
+    costGold:1400,
     description:"Incluye 1 carta mítica y 2 cartas de la rareza inferior.",
-    contents:["1 carta mítica garantizada","2 cartas legendarias"],
-    pendingType:"mythic_preview"
+    contents:["1 carta mítica garantizada","2 cartas de la rareza inferior"],
+    pendingType:"shop_mythic",
+    targetRarity:"mythic",
+    lowerRarity:"glorious"
+  },
+  {
+    key:"legendary",
+    name:"Pack legendario",
+    category:"RAREZA LEGENDARIA",
+    image:"assets/home/pack_legendario.webp",
+    costGold:2000,
+    description:"Incluye 1 carta legendaria y 2 cartas de la rareza inferior.",
+    contents:["1 carta legendaria garantizada","2 cartas míticas"],
+    pendingType:"shop_legendary",
+    targetRarity:"legendary",
+    lowerRarity:"mythic"
   }
 ];
 const defaultPlayerProfile = {
@@ -10174,7 +10185,7 @@ function canAccessDecks(){
   return isAdventureChapterComplete();
 }
 function canAccessPackShop(){
-  return isChapterComplete(ADVENTURE_CHAPTER_2_1);
+  return true;
 }
 function openCollectionOrLocked(){
   const total=getCollectionCardTotal();
@@ -10189,18 +10200,17 @@ function openPackShop(){
   if(!panel||!content)return showComingSoon("Tienda");
   const profile=getPlayerProfile();
   const progressionUnlocked=canAccessPackShop();
-  const previewMode=PACK_SHOP_PREVIEW_MODE;
   if(goldText)goldText.textContent=`${profile.gold||0} oro`;
-  if(unlockText)unlockText.textContent=previewMode?"Vista previa":(progressionUnlocked?"Desbloqueada":"Bloqueada");
-  if(!previewMode&&!progressionUnlocked){
-    content.innerHTML=`<div class="pack-shop-locked"><b>Tienda bloqueada</b><p>Completa el mapa 2.1 Ecos del estandarte roto para desbloquear la compra de paquetes con oro.</p><span>Después aparecerán los packs por rareza y consumibles.</span></div>`;
+  if(unlockText)unlockText.textContent=progressionUnlocked?"Compras activas":"Bloqueada";
+  if(!progressionUnlocked){
+    content.innerHTML=`<div class="pack-shop-locked"><b>Tienda bloqueada</b><p>Completa el mapa 2.1 Ecos del estandarte roto para desbloquear la compra de paquetes con oro.</p><span>Al desbloquearla, los cinco packs se comprarán únicamente con el oro del juego.</span></div>`;
   }else{
-    const previewBanner=`<div class="pack-shop-preview-banner">
-      <b>${previewMode?"Vista previa de la tienda":"Tienda de packs"}</b>
-      <span>${previewMode?"La interfaz está activa para revisión. Las compras todavía están deshabilitadas.":"Compra paquetes usando oro ganado en aventura."}</span>
+    const banner=`<div class="pack-shop-preview-banner">
+      <b>Tienda de packs activa</b>
+      <span>Estas compras usan exclusivamente el oro del juego. No interviene dinero real.</span>
     </div>`;
     const itemsHtml=PACK_SHOP_ITEMS.map(pack=>{
-      const canBuy=!previewMode&&progressionUnlocked&&(profile.gold||0)>=pack.costGold;
+      const canBuy=(profile.gold||0)>=pack.costGold;
       const contents=(pack.contents||[]).map(line=>`<li>${line}</li>`).join("");
       return `<div class="pack-shop-item">
         <div class="pack-shop-pack-art"><img src="${pack.image}" alt="${pack.name}"></div>
@@ -10209,19 +10219,17 @@ function openPackShop(){
           <h3>${pack.name}</h3>
           <p>${pack.description}</p>
           <ul>
-            <li>Costo previsto: <b>${pack.costGold} oro</b></li>
+            <li>Costo: <b>${pack.costGold} oro</b></li>
             <li>Contenido:</li>
             ${contents}
-            <li>Se abrirá como paquete pendiente.</li>
+            <li>Se agrega como paquete pendiente para abrir.</li>
           </ul>
         </div>
-        <button class="btn primary pack-shop-preview-button" type="button" data-pack-buy="${pack.key}" disabled>${previewMode?"Compra próximamente":(canBuy?"Comprar pack":"Oro insuficiente")}</button>
+        <button class="btn primary pack-shop-preview-button" type="button" data-pack-buy="${pack.key}" ${canBuy?"":"disabled"}>${canBuy?`Comprar · ${pack.costGold} oro`:"Oro insuficiente"}</button>
       </div>`;
     }).join("");
-    content.innerHTML=previewBanner+itemsHtml;
-    if(!previewMode){
-      content.querySelectorAll('[data-pack-buy]').forEach(btn=>btn.addEventListener('click',()=>buyPackWithGold(btn.getAttribute('data-pack-buy'))));
-    }
+    content.innerHTML=banner+itemsHtml;
+    content.querySelectorAll('[data-pack-buy]').forEach(btn=>btn.addEventListener('click',()=>buyPackWithGold(btn.getAttribute('data-pack-buy'))));
   }
   panel.classList.remove("hidden");
 }
@@ -10230,19 +10238,29 @@ function closePackShop(){
   if(panel)panel.classList.add("hidden");
 }
 async function buyPackWithGold(packKey){
-  const pack=(PACK_SHOP_ITEMS||[]).find(p=>p.key===packKey)||PACK_SHOP_ITEMS[0];
+  const pack=(PACK_SHOP_ITEMS||[]).find(p=>p.key===packKey)||null;
   if(!pack)return;
-  if(PACK_SHOP_PREVIEW_MODE){await hvAlert("La tienda está en modo de vista previa. Las compras todavía no están conectadas.","Vista previa");return;}
-  if(!canAccessPackShop()){await hvAlert("La compra de packs se desbloquea al completar el mapa 2.1.","Tienda bloqueada");return;}
+  
   const profile=getPlayerProfile();
-  if((profile.gold||0)<pack.costGold){await hvAlert(`Necesitas ${pack.costGold} oro para comprar ${pack.name}. Tienes ${profile.gold||0}.`,"Oro insuficiente");return;}
+  if((profile.gold||0)<pack.costGold){await hvAlert(`Necesitas ${pack.costGold} oro para comprar ${pack.name}. Tienes ${profile.gold||0}.`,"Oro insuficiente");openPackShop();return;}
+  const confirmed=await hvConfirm(`¿Comprar ${pack.name} por ${pack.costGold} oro del juego?`,`Confirmar compra`,`Comprar`,`Cancelar`);
+  if(!confirmed)return;
   profile.gold=(profile.gold||0)-pack.costGold;
   savePlayerProfile(profile);
-  addPendingPack({name:pack.name,type:pack.pendingType||pack.key,source:"shop",costGold:pack.costGold});
+  addPendingPack({
+    name:pack.name,
+    type:pack.pendingType||pack.key,
+    shopTier:pack.key,
+    targetRarity:pack.targetRarity,
+    lowerRarity:pack.lowerRarity,
+    image:pack.image,
+    source:"shop",
+    costGold:pack.costGold
+  });
   renderPlayerProfile(profile);
   renderHomeProgress();
   closePackShop();
-  if(await hvConfirm(`Compraste ${pack.name}. ¿Abrirlo ahora?`,"Compra realizada","Abrir pack","Después"))openPackOpening();
+  if(await hvConfirm(`Compraste ${pack.name}. ¿Abrirlo ahora?`,`Compra realizada`,`Abrir pack`,`Después`))openPackOpening();
 }
 function getLegendaryCardByKey(key){
   return LEGENDARY_ALLY_CARDS.find(c=>c.key===key)||null;
@@ -10378,10 +10396,44 @@ function getEpicGuaranteedPackCards(){
   const fillers=randomPackCards(getBasicNonBeastPackPool(),2);
   return [...guaranteed,...fillers].slice(0,3);
 }
+function getAllShopPackCards(){
+  const pools=[
+    ...(CARD_TEMPLATES||[]),
+    ...(BASIC_MAGIC_TRAP_PACK||[]),
+    ...(IMPROVED_MAGIC_TRAP_PACK||[]),
+    ...(typeof LEGENDARY_TRAP_CARDS!=="undefined"&&Array.isArray(LEGENDARY_TRAP_CARDS)?LEGENDARY_TRAP_CARDS:[]),
+    ...(typeof SPECIAL_HUMAN_CARD_DATA!=="undefined"&&Array.isArray(SPECIAL_HUMAN_CARD_DATA)?SPECIAL_HUMAN_CARD_DATA:[]),
+    ...(typeof LEGENDARY_ALLY_CARDS!=="undefined"&&Array.isArray(LEGENDARY_ALLY_CARDS)?LEGENDARY_ALLY_CARDS:[]),
+    ...(typeof ADVENTURE_SPECIALS!=="undefined"?Object.values(ADVENTURE_SPECIALS||{}):[])
+  ];
+  const byKey=new Map();
+  pools.filter(Boolean).forEach(card=>{
+    const key=card.key||card.name;
+    if(!key)return;
+    if(!byKey.has(key))byKey.set(key,{...hydrateCardVisualData(card)});
+  });
+  return [...byKey.values()];
+}
+function getShopRarityPool(rarityKey){
+  const exact=getAllShopPackCards().filter(card=>getCraftRarityKey(card)===rarityKey);
+  return exact;
+}
+function getShopTierPackCards(pack){
+  const target=pack?.targetRarity||"basic";
+  const lower=pack?.lowerRarity||"basic";
+  if(pack?.shopTier==="basic"||pack?.type==="basic_magic_trap")return randomPackCards(getShopRarityPool("basic"),3);
+  const targetPool=getShopRarityPool(target);
+  const lowerPool=getShopRarityPool(lower);
+  const guaranteed=randomPackCards(targetPool,1);
+  const fillers=randomPackCards(lowerPool,2);
+  const fallback=getAllShopPackCards();
+  return [...guaranteed,...fillers,...randomPackCards(fallback,3)].slice(0,3);
+}
 function getPackCards(pack){
   if(!pack)return[];
   const special=getLegendaryCardByKey(pack.rewardCard)||CARD_TEMPLATES.find(c=>c.key===pack.rewardCard);
   if(special)return[{...special}];
+  if(pack.shopTier||String(pack.type||"").startsWith("shop_"))return getShopTierPackCards(pack);
   if(pack.type==="basic_epic_guaranteed")return getEpicGuaranteedPackCards();
   if(pack.type==="improved_magic_trap")return randomPackCards(IMPROVED_MAGIC_TRAP_PACK,3);
   if(pack.type==="beast_pack")return getRandomBeastEventCards(3);
@@ -10414,6 +10466,12 @@ function openPackOpening(){
   if(next)next.classList.add("hidden");
   if($("packOpeningTitle"))$("packOpeningTitle").textContent=activePackOpening.name||"Paquete básico";
   if($("packOpeningStatus"))$("packOpeningStatus").textContent="Pendiente de apertura";
+  const packImage=obj.querySelector(".pack-object-image");
+  if(packImage){
+    const fallbackItem=(PACK_SHOP_ITEMS||[]).find(item=>item.key===activePackOpening.shopTier||item.pendingType===activePackOpening.type);
+    packImage.src=activePackOpening.image||fallbackItem?.image||"assets/home/cartas_basicas.webp";
+    packImage.alt=activePackOpening.name||"Paquete de cartas";
+  }
   panel.classList.remove("hidden");
 }
 
@@ -11063,7 +11121,7 @@ function renderHomeProgress(){
   if(progressText)progressText.textContent=summary.progress.guardianDefeated?`Progreso: ${summary.completed}/${summary.total} batallas completadas. Siguiente desbloqueada: ${Math.min(summary.chapter.unlockedBattle||1,summary.total)}/${summary.total}.`:`Prueba previa pendiente: derrota al Hechicero guardián para desbloquear el mapa ${ADVENTURE_CHAPTER_1_1.number}.`;
   if(deckStatus)deckStatus.textContent=canAccessDecks()?"Mazos desbloqueados":"Mazos bloqueados";
   const pendingPacks=getPendingPackCount();
-  if(collectionStatus)collectionStatus.textContent=canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs bloqueada hasta completar 2.1."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Completa 1.1 para editar mazos.`;
+  if(collectionStatus)collectionStatus.textContent=canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs disponible desde el inicio."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Completa 1.1 para editar mazos.`;
   renderNotificationBadge();
 }
 function renderNotificationBadge(){
