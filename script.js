@@ -8870,7 +8870,7 @@ function getFieldStatBadgeHtml(kind,value,titleText=""){
   const safeKind=kind==="precision"?"precision":"eva";
   const numeric=Math.max(0,Number(value||0));
   const title=escapeHtml(titleText||`${safeKind==="precision"?"Precisión":"Evasión"} actual: ${numeric}`);
-  const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.png?v=1':'assets/ui/evasion_rogue_emblem.png?v=1';
+  const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.png?v=2':'assets/ui/evasion_rogue_emblem.png?v=2';
   return `<span class="field-stat-emblem-badge field-stat-emblem-${safeKind}" title="${title}" aria-label="${title}">
     <span class="field-stat-emblem-shell" aria-hidden="true">
       <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false"/>

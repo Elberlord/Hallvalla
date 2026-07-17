@@ -646,6 +646,62 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <p id="actionsHudTunerStatus" class="actions-hud-tuner-status" aria-live="polite"></p>
 </div>
 
+<div id="fieldStatBadgesTuner" class="field-stat-badges-tuner hidden" aria-label="Control de PREC y EVA en campo">
+  <div class="field-stat-badges-tuner-head">
+    <div>
+      <b>Ajustar PREC / EVA en campo</b>
+      <small>Solo afecta los emblemas de precisión y evasión de las unidades en el tablero. Se guarda automáticamente.</small>
+    </div>
+    <button id="closeFieldStatBadgesTunerBtn" class="field-stat-badges-tuner-x" type="button" aria-label="Cerrar ajuste">×</button>
+  </div>
+  <div class="field-stat-badges-tuner-grid">
+    <section class="field-stat-badges-tuner-group">
+      <h4>PRECISIÓN</h4>
+      <label class="field-stat-badges-tuner-control">
+        <span>Tamaño <output id="fieldPrecisionScaleValue">100%</output></span>
+        <input id="fieldPrecisionScaleInput" type="range" min="60" max="180" step="1" value="100">
+      </label>
+      <label class="field-stat-badges-tuner-control">
+        <span>Horizontal <output id="fieldPrecisionXValue">0 px</output></span>
+        <input id="fieldPrecisionXInput" type="range" min="-40" max="40" step="1" value="0">
+      </label>
+      <label class="field-stat-badges-tuner-control">
+        <span>Vertical <output id="fieldPrecisionYValue">0 px</output></span>
+        <input id="fieldPrecisionYInput" type="range" min="-40" max="40" step="1" value="0">
+      </label>
+      <label class="field-stat-badges-tuner-control">
+        <span>Círculo numérico <output id="fieldPrecisionBubbleValue">100%</output></span>
+        <input id="fieldPrecisionBubbleInput" type="range" min="60" max="180" step="1" value="100">
+      </label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>EVASIÓN</h4>
+      <label class="field-stat-badges-tuner-control">
+        <span>Tamaño <output id="fieldEvasionScaleValue">100%</output></span>
+        <input id="fieldEvasionScaleInput" type="range" min="60" max="180" step="1" value="100">
+      </label>
+      <label class="field-stat-badges-tuner-control">
+        <span>Horizontal <output id="fieldEvasionXValue">0 px</output></span>
+        <input id="fieldEvasionXInput" type="range" min="-40" max="40" step="1" value="0">
+      </label>
+      <label class="field-stat-badges-tuner-control">
+        <span>Vertical <output id="fieldEvasionYValue">0 px</output></span>
+        <input id="fieldEvasionYInput" type="range" min="-40" max="40" step="1" value="0">
+      </label>
+      <label class="field-stat-badges-tuner-control">
+        <span>Círculo numérico <output id="fieldEvasionBubbleValue">100%</output></span>
+        <input id="fieldEvasionBubbleInput" type="range" min="60" max="180" step="1" value="100">
+      </label>
+    </section>
+  </div>
+  <div class="field-stat-badges-tuner-actions">
+    <button id="resetFieldStatBadgesTunerBtn" class="btn ghost" type="button">Restablecer</button>
+    <button id="copyFieldStatBadgesValuesBtn" class="btn ghost" type="button">Copiar valores</button>
+    <button id="saveFieldStatBadgesTunerBtn" class="btn primary" type="button">Listo</button>
+  </div>
+  <p id="fieldStatBadgesTunerStatus" class="field-stat-badges-tuner-status" aria-live="polite"></p>
+</div>
+
 <div id="mobileRotateOverlay" class="mobile-rotate-overlay hidden" aria-hidden="true">
   <div class="mobile-rotate-card">
     <div class="mobile-rotate-icon">↻</div>
