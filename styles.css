@@ -20599,3 +20599,66 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
     font-size:8.4px !important;
   }
 }
+
+
+/* ==========================================================
+   7HFIELDSTAT MASTER V1 · Control total de iconos, aros y números
+   ========================================================== */
+:root{
+  --sb-hp-unit-icon-scale:1; --sb-hp-unit-icon-x:0px; --sb-hp-unit-icon-y:0px; --sb-hp-unit-ring-scale:1; --sb-hp-unit-ring-x:0px; --sb-hp-unit-ring-y:0px; --sb-hp-unit-ring-stroke:1.2px; --sb-hp-unit-num-size:17px; --sb-hp-unit-num-weight:900; --sb-hp-unit-num-scale-x:1; --sb-hp-unit-num-scale-y:1; --sb-hp-unit-num-x:0px; --sb-hp-unit-num-y:0px;
+  --sb-hp-leader-icon-scale:1; --sb-hp-leader-icon-x:0px; --sb-hp-leader-icon-y:0px; --sb-hp-leader-ring-scale:1; --sb-hp-leader-ring-x:0px; --sb-hp-leader-ring-y:0px; --sb-hp-leader-ring-stroke:1.2px; --sb-hp-leader-num-size:17px; --sb-hp-leader-num-weight:900; --sb-hp-leader-num-scale-x:1; --sb-hp-leader-num-scale-y:1; --sb-hp-leader-num-x:0px; --sb-hp-leader-num-y:0px;
+  --sb-atk-unit-icon-scale:1; --sb-atk-unit-icon-x:0px; --sb-atk-unit-icon-y:0px; --sb-atk-unit-ring-scale:1; --sb-atk-unit-ring-x:0px; --sb-atk-unit-ring-y:0px; --sb-atk-unit-ring-stroke:1.1px; --sb-atk-unit-num-size:9.6px; --sb-atk-unit-num-weight:900; --sb-atk-unit-num-scale-x:1; --sb-atk-unit-num-scale-y:1; --sb-atk-unit-num-x:0px; --sb-atk-unit-num-y:0px;
+  --sb-atk-leader-icon-scale:1; --sb-atk-leader-icon-x:0px; --sb-atk-leader-icon-y:0px; --sb-atk-leader-ring-scale:1; --sb-atk-leader-ring-x:0px; --sb-atk-leader-ring-y:0px; --sb-atk-leader-ring-stroke:1.1px; --sb-atk-leader-num-size:9.6px; --sb-atk-leader-num-weight:900; --sb-atk-leader-num-scale-x:1; --sb-atk-leader-num-scale-y:1; --sb-atk-leader-num-x:0px; --sb-atk-leader-num-y:0px;
+  --sb-guard-unit-icon-scale:1; --sb-guard-unit-icon-x:0px; --sb-guard-unit-icon-y:0px; --sb-guard-unit-ring-scale:1; --sb-guard-unit-ring-x:0px; --sb-guard-unit-ring-y:0px; --sb-guard-unit-ring-stroke:1.1px; --sb-guard-unit-num-size:9.6px; --sb-guard-unit-num-weight:900; --sb-guard-unit-num-scale-x:1; --sb-guard-unit-num-scale-y:1; --sb-guard-unit-num-x:0px; --sb-guard-unit-num-y:0px;
+  --sb-guard-leader-icon-scale:1; --sb-guard-leader-icon-x:0px; --sb-guard-leader-icon-y:0px; --sb-guard-leader-ring-scale:1; --sb-guard-leader-ring-x:0px; --sb-guard-leader-ring-y:0px; --sb-guard-leader-ring-stroke:1.1px; --sb-guard-leader-num-size:9.6px; --sb-guard-leader-num-weight:900; --sb-guard-leader-num-scale-x:1; --sb-guard-leader-num-scale-y:1; --sb-guard-leader-num-x:0px; --sb-guard-leader-num-y:0px;
+  --sb-precision-icon-scale:1; --sb-precision-icon-x:0px; --sb-precision-icon-y:0px; --sb-precision-ring-scale:1; --sb-precision-ring-x:0px; --sb-precision-ring-y:0px; --sb-precision-ring-stroke:1.1px; --sb-precision-num-size:9.6px; --sb-precision-num-weight:900; --sb-precision-num-scale-x:1; --sb-precision-num-scale-y:1; --sb-precision-num-x:0px; --sb-precision-num-y:0px;
+  --sb-evasion-icon-scale:1; --sb-evasion-icon-x:0px; --sb-evasion-icon-y:0px; --sb-evasion-ring-scale:1; --sb-evasion-ring-x:0px; --sb-evasion-ring-y:0px; --sb-evasion-ring-stroke:1.1px; --sb-evasion-num-size:9.6px; --sb-evasion-num-weight:900; --sb-evasion-num-scale-x:1; --sb-evasion-num-scale-y:1; --sb-evasion-num-x:0px; --sb-evasion-num-y:0px;
+}
+/* Panel side dock */
+.field-stat-badges-tuner{left:12px !important; right:auto !important; top:88px !important; bottom:12px !important; transform:none !important; width:min(365px,calc(100vw - 16px)) !important; max-height:none !important; display:flex; flex-direction:column;}
+.field-stat-badges-master-body{display:flex;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0;}
+.field-stat-badges-tuner-grid.single-col{grid-template-columns:1fr !important;overflow:auto !important;flex:1 1 auto;padding-right:6px;}
+.field-stat-select{width:100%;background:rgba(17,12,9,.9);border:1px solid rgba(215,177,85,.35);color:#f6ecd0;border-radius:10px;padding:10px 12px;font:600 13px/1.2 system-ui,sans-serif;}
+.field-stat-badges-target{margin-bottom:2px;}
+.field-stat-badges-tuner-actions{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(9,8,6,0),rgba(9,8,6,.92) 26%,rgba(9,8,6,.98));padding-top:10px;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;}
+.field-stat-badges-tuner-actions .btn{flex:1 1 44%;}
+.field-stat-badges-tuner-status{text-align:left;}
+@media(max-width:720px){.field-stat-badges-tuner{left:8px !important;right:8px !important;top:70px !important;bottom:8px !important;width:auto !important;}}
+/* HP badge editor */
+.unit-card .unit-hp-heart-anchor{transform:translate(var(--sb-hp-unit-icon-x),var(--sb-hp-unit-icon-y)) scale(var(--sb-hp-unit-icon-scale)) !important; transform-origin:center center !important;}
+.leader-heart-slot .hp-heart-badge-leader{transform:translate(var(--sb-hp-leader-icon-x),var(--sb-hp-leader-icon-y)) scale(var(--sb-hp-leader-icon-scale)) !important; transform-origin:center center !important;}
+.unit-card .hp-heart-badge-unit .hp-heart-medallion-core,
+.unit-card .hp-heart-badge-unit .hp-heart-medallion-ring{transform:translate(var(--sb-hp-unit-ring-x),var(--sb-hp-unit-ring-y)) scale(var(--sb-hp-unit-ring-scale)); transform-box:fill-box; transform-origin:center center;}
+.leader-heart-slot .hp-heart-badge-leader .hp-heart-medallion-core,
+.leader-heart-slot .hp-heart-badge-leader .hp-heart-medallion-ring{transform:translate(var(--sb-hp-leader-ring-x),var(--sb-hp-leader-ring-y)) scale(var(--sb-hp-leader-ring-scale)); transform-box:fill-box; transform-origin:center center;}
+.unit-card .hp-heart-badge-unit .hp-heart-medallion-ring{stroke-width:var(--sb-hp-unit-ring-stroke) !important;}
+.leader-heart-slot .hp-heart-badge-leader .hp-heart-medallion-ring{stroke-width:var(--sb-hp-leader-ring-stroke) !important;}
+.unit-card .hp-heart-badge-unit .hp-heart-number{font-size:var(--sb-hp-unit-num-size) !important;font-weight:var(--sb-hp-unit-num-weight) !important;transform:translate(var(--sb-hp-unit-num-x),var(--sb-hp-unit-num-y)) scaleX(var(--sb-hp-unit-num-scale-x)) scaleY(var(--sb-hp-unit-num-scale-y)) !important;transform-box:fill-box;transform-origin:center center;}
+.leader-heart-slot .hp-heart-badge-leader .hp-heart-number{font-size:var(--sb-hp-leader-num-size) !important;font-weight:var(--sb-hp-leader-num-weight) !important;transform:translate(var(--sb-hp-leader-num-x),var(--sb-hp-leader-num-y)) scaleX(var(--sb-hp-leader-num-scale-x)) scaleY(var(--sb-hp-leader-num-scale-y)) !important;transform-box:fill-box;transform-origin:center center;}
+/* Shared helper for badge numbers */
+.unit-card .attack-emblem-medallion b,
+.unit-card .guard-emblem-medallion b,
+.unit-card .field-stat-emblem-medallion b,
+.leader-base-stats .attack-emblem-medallion b,
+.leader-base-stats .guard-emblem-medallion b{display:inline-block;line-height:1;transform-origin:center center;}
+/* ATK */
+.unit-card .stat-badge-atk-wrap .attack-emblem-img{transform:translate(var(--sb-atk-unit-icon-x),var(--sb-atk-unit-icon-y)) scale(var(--sb-atk-unit-icon-scale)) !important; transform-origin:center center !important;}
+.unit-card .stat-badge-atk-wrap .attack-emblem-medallion{transform:translate(var(--sb-atk-unit-ring-x),var(--sb-atk-unit-ring-y)) scale(var(--sb-atk-unit-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-atk-unit-ring-stroke) !important; aspect-ratio:1/1;}
+.unit-card .stat-badge-atk-wrap .attack-emblem-medallion b{font-size:var(--sb-atk-unit-num-size) !important; font-weight:var(--sb-atk-unit-num-weight) !important; transform:translate(var(--sb-atk-unit-num-x),var(--sb-atk-unit-num-y)) scaleX(var(--sb-atk-unit-num-scale-x)) scaleY(var(--sb-atk-unit-num-scale-y)) !important;}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-img{transform:translate(var(--sb-atk-leader-icon-x),var(--sb-atk-leader-icon-y)) scale(var(--sb-atk-leader-icon-scale)) !important; transform-origin:center center !important;}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-medallion{transform:translate(var(--sb-atk-leader-ring-x),var(--sb-atk-leader-ring-y)) scale(var(--sb-atk-leader-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-atk-leader-ring-stroke) !important; aspect-ratio:1/1;}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-medallion b{font-size:var(--sb-atk-leader-num-size) !important; font-weight:var(--sb-atk-leader-num-weight) !important; transform:translate(var(--sb-atk-leader-num-x),var(--sb-atk-leader-num-y)) scaleX(var(--sb-atk-leader-num-scale-x)) scaleY(var(--sb-atk-leader-num-scale-y)) !important;}
+/* GUARD */
+.unit-card .stat-badge-guard-wrap .guard-emblem-img{transform:translate(var(--sb-guard-unit-icon-x),var(--sb-guard-unit-icon-y)) scale(var(--sb-guard-unit-icon-scale)) !important; transform-origin:center center !important;}
+.unit-card .stat-badge-guard-wrap .guard-emblem-medallion{transform:translate(var(--sb-guard-unit-ring-x),var(--sb-guard-unit-ring-y)) scale(var(--sb-guard-unit-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-guard-unit-ring-stroke) !important; aspect-ratio:1/1;}
+.unit-card .stat-badge-guard-wrap .guard-emblem-medallion b{font-size:var(--sb-guard-unit-num-size) !important; font-weight:var(--sb-guard-unit-num-weight) !important; transform:translate(var(--sb-guard-unit-num-x),var(--sb-guard-unit-num-y)) scaleX(var(--sb-guard-unit-num-scale-x)) scaleY(var(--sb-guard-unit-num-scale-y)) !important;}
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-img{transform:translate(var(--sb-guard-leader-icon-x),var(--sb-guard-leader-icon-y)) scale(var(--sb-guard-leader-icon-scale)) !important; transform-origin:center center !important;}
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-medallion{transform:translate(var(--sb-guard-leader-ring-x),var(--sb-guard-leader-ring-y)) scale(var(--sb-guard-leader-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-guard-leader-ring-stroke) !important; aspect-ratio:1/1;}
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-medallion b{font-size:var(--sb-guard-leader-num-size) !important; font-weight:var(--sb-guard-leader-num-weight) !important; transform:translate(var(--sb-guard-leader-num-x),var(--sb-guard-leader-num-y)) scaleX(var(--sb-guard-leader-num-scale-x)) scaleY(var(--sb-guard-leader-num-scale-y)) !important;}
+/* PREC / EVA */
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-img{transform:translate(var(--sb-precision-icon-x),var(--sb-precision-icon-y)) scale(var(--sb-precision-icon-scale)) !important; transform-origin:center center !important;}
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion{transform:translate(var(--sb-precision-ring-x),var(--sb-precision-ring-y)) scale(var(--sb-precision-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-precision-ring-stroke) !important; aspect-ratio:1/1;}
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion b{font-size:var(--sb-precision-num-size) !important; font-weight:var(--sb-precision-num-weight) !important; transform:translate(var(--sb-precision-num-x),var(--sb-precision-num-y)) scaleX(var(--sb-precision-num-scale-x)) scaleY(var(--sb-precision-num-scale-y)) !important;}
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-img{transform:translate(var(--sb-evasion-icon-x),var(--sb-evasion-icon-y)) scale(var(--sb-evasion-icon-scale)) !important; transform-origin:center center !important;}
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{transform:translate(var(--sb-evasion-ring-x),var(--sb-evasion-ring-y)) scale(var(--sb-evasion-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-evasion-ring-stroke) !important; aspect-ratio:1/1;}
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion b{font-size:var(--sb-evasion-num-size) !important; font-weight:var(--sb-evasion-num-weight) !important; transform:translate(var(--sb-evasion-num-x),var(--sb-evasion-num-y)) scaleX(var(--sb-evasion-num-scale-x)) scaleY(var(--sb-evasion-num-scale-y)) !important;}

@@ -11906,125 +11906,144 @@ function initActionsHudTuner(){
 initActionsHudTuner();
 
 /* ---------------------------------------------------------------------------
-   7HFIELDSTAT · Control visual de todos los stat badges del campo
+   7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v3";
-const FIELD_STAT_BADGES_TUNER_GROUPS=[
-  {id:"hpUnit",label:"HP unidad",title:"VIDA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"hpLeader",label:"HP líder",title:"VIDA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"atkUnit",label:"ATK unidad",title:"ATAQUE · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"atkLeader",label:"ATK líder",title:"ATAQUE · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"guardUnit",label:"Guardia unidad",title:"GUARDIA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"guardLeader",label:"Guardia líder",title:"GUARDIA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"precision",label:"Precisión",title:"PRECISIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
-  {id:"evasion",label:"Evasión",title:"EVASIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"}
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v1";
+const FIELD_STAT_BADGE_TARGETS={
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.2,numSize:17,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.2,numSize:17,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}}
+};
+const FIELD_STAT_CONTROL_DEFS=[
+  {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:220,step:1},
+  {key:"iconX",input:"fieldBadgeIconXInput",output:"fieldBadgeIconXValue",suffix:" px",prop:"icon-x",unit:"px",min:-80,max:80,step:1},
+  {key:"iconY",input:"fieldBadgeIconYInput",output:"fieldBadgeIconYValue",suffix:" px",prop:"icon-y",unit:"px",min:-80,max:80,step:1},
+  {key:"ringScale",input:"fieldBadgeRingScaleInput",output:"fieldBadgeRingScaleValue",suffix:"%",prop:"ring-scale",factor:100,min:40,max:220,step:1},
+  {key:"ringX",input:"fieldBadgeRingXInput",output:"fieldBadgeRingXValue",suffix:" px",prop:"ring-x",unit:"px",min:-40,max:40,step:.2},
+  {key:"ringY",input:"fieldBadgeRingYInput",output:"fieldBadgeRingYValue",suffix:" px",prop:"ring-y",unit:"px",min:-40,max:40,step:.2},
+  {key:"ringStroke",input:"fieldBadgeRingStrokeInput",output:"fieldBadgeRingStrokeValue",suffix:" px",prop:"ring-stroke",unit:"px",min:.2,max:4,step:.1},
+  {key:"numSize",input:"fieldBadgeNumSizeInput",output:"fieldBadgeNumSizeValue",suffix:" px",prop:"num-size",unit:"px",min:6,max:32,step:.2},
+  {key:"numWeight",input:"fieldBadgeNumWeightInput",output:"fieldBadgeNumWeightValue",suffix:"",prop:"num-weight",min:100,max:900,step:100},
+  {key:"numScaleX",input:"fieldBadgeNumScaleXInput",output:"fieldBadgeNumScaleXValue",suffix:"%",prop:"num-scale-x",factor:100,min:40,max:180,step:1},
+  {key:"numScaleY",input:"fieldBadgeNumScaleYInput",output:"fieldBadgeNumScaleYValue",suffix:"%",prop:"num-scale-y",factor:100,min:40,max:180,step:1},
+  {key:"numX",input:"fieldBadgeNumXInput",output:"fieldBadgeNumXValue",suffix:" px",prop:"num-x",unit:"px",min:-20,max:20,step:.2},
+  {key:"numY",input:"fieldBadgeNumYInput",output:"fieldBadgeNumYValue",suffix:" px",prop:"num-y",unit:"px",min:-20,max:20,step:.2}
 ];
-const FIELD_STAT_BADGES_TUNER_DEFAULTS=Object.freeze(FIELD_STAT_BADGES_TUNER_GROUPS.reduce((acc,g)=>{
-  acc[`${g.id}Scale`]=100;
-  acc[`${g.id}X`]=0;
-  acc[`${g.id}Y`]=0;
-  acc[`${g.id}Bubble`]=100;
-  return acc;
-},{}));
 let fieldStatBadgesTunerState=loadFieldStatBadgesTunerState();
-function clampFieldStatBadgeValue(value,min,max,fallback){
+function cloneFieldStatDefaults(){
+  const state={};
+  Object.entries(FIELD_STAT_BADGE_TARGETS).forEach(([id,cfg])=>{state[id]={...cfg.defaults};});
+  return state;
+}
+function clampFieldStatMasterValue(def,value,fallback){
   const n=Number(value);
-  return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+  if(!Number.isFinite(n)) return fallback;
+  return Math.max(def.min,Math.min(def.max,n));
 }
 function loadFieldStatBadgesTunerState(){
+  const defaults=cloneFieldStatDefaults();
   try{
     const saved=JSON.parse(localStorage.getItem(FIELD_STAT_BADGES_TUNER_KEY)||"{}")||{};
-    const next={...FIELD_STAT_BADGES_TUNER_DEFAULTS};
-    FIELD_STAT_BADGES_TUNER_GROUPS.forEach(g=>{
-      next[`${g.id}Scale`]=clampFieldStatBadgeValue(saved[`${g.id}Scale`],g.size[0],g.size[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}Scale`]);
-      next[`${g.id}X`]=clampFieldStatBadgeValue(saved[`${g.id}X`],g.pos[0],g.pos[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}X`]);
-      next[`${g.id}Y`]=clampFieldStatBadgeValue(saved[`${g.id}Y`],g.pos[0],g.pos[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}Y`]);
-      next[`${g.id}Bubble`]=clampFieldStatBadgeValue(saved[`${g.id}Bubble`],g.bubble[0],g.bubble[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}Bubble`]);
+    Object.entries(defaults).forEach(([target,vals])=>{
+      const source=saved[target]||{};
+      FIELD_STAT_CONTROL_DEFS.forEach(def=>{
+        vals[def.key]=clampFieldStatMasterValue(def,source[def.key],vals[def.key]);
+      });
     });
-    return next;
-  }catch(e){return {...FIELD_STAT_BADGES_TUNER_DEFAULTS};}
+  }catch(e){}
+  return defaults;
 }
 function saveFieldStatBadgesTunerState(){
   try{localStorage.setItem(FIELD_STAT_BADGES_TUNER_KEY,JSON.stringify(fieldStatBadgesTunerState));}catch(e){}
 }
+function setRootVar(name,value){document.documentElement.style.setProperty(name,String(value));}
 function applyFieldStatBadgesTunerState(save=false){
-  const root=document.documentElement;
-  FIELD_STAT_BADGES_TUNER_GROUPS.forEach(g=>{
-    const cssBase=`--field-${g.id.replace(/[A-Z]/g,m=>`-${m.toLowerCase()}`)}`;
-    root.style.setProperty(`${cssBase}-scale`,String(fieldStatBadgesTunerState[`${g.id}Scale`]/100));
-    root.style.setProperty(`${cssBase}-x`,`${fieldStatBadgesTunerState[`${g.id}X`]}px`);
-    root.style.setProperty(`${cssBase}-y`,`${fieldStatBadgesTunerState[`${g.id}Y`]}px`);
-    root.style.setProperty(`${cssBase}-bubble`,String(fieldStatBadgesTunerState[`${g.id}Bubble`]/100));
+  Object.entries(FIELD_STAT_BADGE_TARGETS).forEach(([target,cfg])=>{
+    const vals=fieldStatBadgesTunerState[target]||cfg.defaults;
+    const base=`--sb-${cfg.css}`;
+    setRootVar(`${base}-icon-scale`,(vals.iconScale/100));
+    setRootVar(`${base}-icon-x`,`${vals.iconX}px`);
+    setRootVar(`${base}-icon-y`,`${vals.iconY}px`);
+    setRootVar(`${base}-ring-scale`,(vals.ringScale/100));
+    setRootVar(`${base}-ring-x`,`${vals.ringX}px`);
+    setRootVar(`${base}-ring-y`,`${vals.ringY}px`);
+    setRootVar(`${base}-ring-stroke`,`${vals.ringStroke}px`);
+    setRootVar(`${base}-num-size`,`${vals.numSize}px`);
+    setRootVar(`${base}-num-weight`,vals.numWeight);
+    setRootVar(`${base}-num-scale-x`,(vals.numScaleX/100));
+    setRootVar(`${base}-num-scale-y`,(vals.numScaleY/100));
+    setRootVar(`${base}-num-x`,`${vals.numX}px`);
+    setRootVar(`${base}-num-y`,`${vals.numY}px`);
   });
   syncFieldStatBadgesTunerControls();
   if(save)saveFieldStatBadgesTunerState();
 }
+function getCurrentFieldBadgeTarget(){
+  return $("fieldBadgeTargetSelect")?.value||"atkUnit";
+}
+function setFieldStatBadgesTunerStatus(msg=""){
+  const el=$("fieldStatBadgesTunerStatus"); if(el) el.textContent=msg;
+}
 function syncFieldStatBadgesTunerControls(){
-  const defs=[
-    ...FIELD_STAT_BADGES_TUNER_GROUPS.flatMap(g=>([
-      [`field${g.id[0].toUpperCase()+g.id.slice(1)}ScaleInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}ScaleValue`,fieldStatBadgesTunerState[`${g.id}Scale`],"%"],
-      [`field${g.id[0].toUpperCase()+g.id.slice(1)}XInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}XValue`,fieldStatBadgesTunerState[`${g.id}X`]," px"],
-      [`field${g.id[0].toUpperCase()+g.id.slice(1)}YInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}YValue`,fieldStatBadgesTunerState[`${g.id}Y`]," px"],
-      [`field${g.id[0].toUpperCase()+g.id.slice(1)}BubbleInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}BubbleValue`,fieldStatBadgesTunerState[`${g.id}Bubble`],"%"]
-    ]))
-  ];
-  defs.forEach(([inputId,outputId,value,suffix])=>{
-    const input=$(inputId),output=$(outputId);
-    if(input&&String(input.value)!==String(value))input.value=String(value);
-    if(output)output.textContent=`${value}${suffix}`;
+  const target=getCurrentFieldBadgeTarget();
+  const vals=fieldStatBadgesTunerState[target]||FIELD_STAT_BADGE_TARGETS[target]?.defaults;
+  FIELD_STAT_CONTROL_DEFS.forEach(def=>{
+    const input=$(def.input), output=$(def.output), value=vals[def.key];
+    if(input && String(input.value)!==String(value)) input.value=String(value);
+    if(output) output.textContent=`${Number(value)}${def.suffix}`;
   });
 }
-function setFieldStatBadgesTunerStatus(message=""){
-  const status=$("fieldStatBadgesTunerStatus");
-  if(status)status.textContent=message;
+function updateFieldStatBadgesTunerFromInput(key,value){
+  const target=getCurrentFieldBadgeTarget();
+  const def=FIELD_STAT_CONTROL_DEFS.find(d=>d.key===key); if(!def) return;
+  const cfg=FIELD_STAT_BADGE_TARGETS[target]; if(!cfg) return;
+  fieldStatBadgesTunerState[target][key]=clampFieldStatMasterValue(def,value,cfg.defaults[key]);
+  applyFieldStatBadgesTunerState(true);
+  setFieldStatBadgesTunerStatus(`Guardado: ${cfg.label}.`);
 }
 function openFieldStatBadgesTuner(){
   $("settingsPanel")?.classList.add("hidden");
-  const tuner=$("fieldStatBadgesTuner");
-  if(!tuner)return;
+  const tuner=$("fieldStatBadgesTuner"); if(!tuner) return;
   tuner.classList.remove("hidden");
   syncFieldStatBadgesTunerControls();
-  setFieldStatBadgesTunerStatus("Ajusta todos los stat badges del campo. Se guarda automáticamente en este navegador.");
+  setFieldStatBadgesTunerStatus("Ajusta icono, aro y número por separado. Todo se aplica en vivo.");
 }
 function closeFieldStatBadgesTuner(){
   $("fieldStatBadgesTuner")?.classList.add("hidden");
   saveFieldStatBadgesTunerState();
 }
-function getFieldStatBadgeLimits(key){
-  const group=FIELD_STAT_BADGES_TUNER_GROUPS.find(g=> key.startsWith(g.id));
-  if(!group)return [60,180];
-  if(key.endsWith("Scale"))return group.size;
-  if(key.endsWith("Bubble"))return group.bubble;
-  return group.pos;
-}
-function updateFieldStatBadgesTunerFromInput(key,value){
-  const [min,max]=getFieldStatBadgeLimits(key);
-  fieldStatBadgesTunerState[key]=clampFieldStatBadgeValue(value,min,max,FIELD_STAT_BADGES_TUNER_DEFAULTS[key]);
-  applyFieldStatBadgesTunerState(true);
-  setFieldStatBadgesTunerStatus("Configuración guardada.");
-}
 async function copyFieldStatBadgesTunerValues(){
-  const text=FIELD_STAT_BADGES_TUNER_GROUPS.map(g=>{
-    const id=g.id;
-    return `${g.label} — Tamaño ${fieldStatBadgesTunerState[`${id}Scale`]}%; X ${fieldStatBadgesTunerState[`${id}X`]}px; Y ${fieldStatBadgesTunerState[`${id}Y`]}px; ${g.bubbleLabel} ${fieldStatBadgesTunerState[`${id}Bubble`]}%`;
-  }).join(" | ");
-  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
-  setFieldStatBadgesTunerStatus(`Copiado: ${text}`);
+  const text=Object.entries(fieldStatBadgesTunerState).map(([target,vals])=>{
+    const label=FIELD_STAT_BADGE_TARGETS[target].label;
+    return `${label} — Icono: ${vals.iconScale}% X ${vals.iconX}px Y ${vals.iconY}px | Aro: ${vals.ringScale}% X ${vals.ringX}px Y ${vals.ringY}px Línea ${vals.ringStroke}px | Número: ${vals.numSize}px Peso ${vals.numWeight} Ancho ${vals.numScaleX}% Alto ${vals.numScaleY}% X ${vals.numX}px Y ${vals.numY}px`;
+  }).join(" || ");
+  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea"); area.value=text; area.style.position="fixed"; area.style.opacity="0"; document.body.appendChild(area); area.select(); document.execCommand("copy"); area.remove();}
+  setFieldStatBadgesTunerStatus("Valores copiados al portapapeles.");
+}
+function resetCurrentFieldBadge(){
+  const target=getCurrentFieldBadgeTarget();
+  fieldStatBadgesTunerState[target]={...FIELD_STAT_BADGE_TARGETS[target].defaults};
+  applyFieldStatBadgesTunerState(true);
+  setFieldStatBadgesTunerStatus(`Restablecido: ${FIELD_STAT_BADGE_TARGETS[target].label}.`);
 }
 function resetFieldStatBadgesTuner(){
-  fieldStatBadgesTunerState={...FIELD_STAT_BADGES_TUNER_DEFAULTS};
+  fieldStatBadgesTunerState=cloneFieldStatDefaults();
   applyFieldStatBadgesTunerState(true);
-  setFieldStatBadgesTunerStatus("Valores restablecidos.");
+  setFieldStatBadgesTunerStatus("Todos los valores fueron restablecidos.");
 }
 function initFieldStatBadgesTuner(){
   applyFieldStatBadgesTunerState(false);
-  FIELD_STAT_BADGES_TUNER_GROUPS.forEach(g=>{
-    const cap=g.id[0].toUpperCase()+g.id.slice(1);
-    [[`field${cap}ScaleInput`,`${g.id}Scale`],[`field${cap}XInput`,`${g.id}X`],[`field${cap}YInput`,`${g.id}Y`],[`field${cap}BubbleInput`,`${g.id}Bubble`]].forEach(([id,key])=>$(id)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(key,ev.target.value)));
-  });
+  $("fieldBadgeTargetSelect")?.addEventListener("change",()=>{syncFieldStatBadgesTunerControls(); setFieldStatBadgesTunerStatus(`Editando: ${FIELD_STAT_BADGE_TARGETS[getCurrentFieldBadgeTarget()].label}.`);});
+  FIELD_STAT_CONTROL_DEFS.forEach(def=>$(def.input)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(def.key,ev.target.value)));
   $("openFieldStatBadgesTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openFieldStatBadgesTuner();});
   $("closeFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
   $("saveFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
+  $("resetCurrentFieldBadgeBtn")?.addEventListener("click",resetCurrentFieldBadge);
   $("resetFieldStatBadgesTunerBtn")?.addEventListener("click",resetFieldStatBadgesTuner);
   $("copyFieldStatBadgesValuesBtn")?.addEventListener("click",copyFieldStatBadgesTunerValues);
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldStatBadgesTuner")?.classList.contains("hidden"))closeFieldStatBadgesTuner();});
