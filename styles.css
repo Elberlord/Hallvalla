@@ -20662,3 +20662,30 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 .unit-card .stat-badge-eva-wrap .field-stat-emblem-img{transform:translate(var(--sb-evasion-icon-x),var(--sb-evasion-icon-y)) scale(var(--sb-evasion-icon-scale)) !important; transform-origin:center center !important;}
 .unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{transform:translate(var(--sb-evasion-ring-x),var(--sb-evasion-ring-y)) scale(var(--sb-evasion-ring-scale)) !important; transform-origin:center center !important; border-width:var(--sb-evasion-ring-stroke) !important; aspect-ratio:1/1;}
 .unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion b{font-size:var(--sb-evasion-num-size) !important; font-weight:var(--sb-evasion-num-weight) !important; transform:translate(var(--sb-evasion-num-x),var(--sb-evasion-num-y)) scaleX(var(--sb-evasion-num-scale-x)) scaleY(var(--sb-evasion-num-scale-y)) !important;}
+
+
+/* 7HFREE-NUM V1 · Unidades: quitar cajón/círculo de ATK/GUARD/PREC/EVA y dejar solo el número */
+.unit-card .stat-badge-atk-wrap .attack-emblem-medallion,
+.unit-card .stat-badge-guard-wrap .guard-emblem-medallion,
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion,
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{
+  width:auto !important;
+  height:auto !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  aspect-ratio:auto !important;
+  overflow:visible !important;
+}
+.unit-card .stat-badge-atk-wrap .attack-emblem-medallion b,
+.unit-card .stat-badge-guard-wrap .guard-emblem-medallion b,
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion b,
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion b{
+  display:inline-block !important;
+  padding:0 !important;
+  letter-spacing:-0.02em !important;
+}
