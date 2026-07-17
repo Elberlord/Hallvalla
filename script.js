@@ -11906,10 +11906,26 @@ function initActionsHudTuner(){
 initActionsHudTuner();
 
 /* ---------------------------------------------------------------------------
-   7HFIELDSTAT · Control visual PREC / EVA en campo
+   7HFIELDSTAT · Control visual de todos los stat badges del campo
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v1";
-const FIELD_STAT_BADGES_TUNER_DEFAULTS=Object.freeze({precisionScale:100,precisionX:0,precisionY:0,precisionBubble:100,evasionScale:100,evasionX:0,evasionY:0,evasionBubble:100});
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v2";
+const FIELD_STAT_BADGES_TUNER_GROUPS=[
+  {id:"hpUnit",label:"HP unidad",title:"VIDA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"hpLeader",label:"HP líder",title:"VIDA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
+  {id:"atkUnit",label:"ATK unidad",title:"ATAQUE · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
+  {id:"atkLeader",label:"ATK líder",title:"ATAQUE · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
+  {id:"guardUnit",label:"Guardia unidad",title:"GUARDIA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
+  {id:"guardLeader",label:"Guardia líder",title:"GUARDIA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
+  {id:"precision",label:"Precisión",title:"PRECISIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"},
+  {id:"evasion",label:"Evasión",title:"EVASIÓN · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Círculo"}
+];
+const FIELD_STAT_BADGES_TUNER_DEFAULTS=Object.freeze(FIELD_STAT_BADGES_TUNER_GROUPS.reduce((acc,g)=>{
+  acc[`${g.id}Scale`]=100;
+  acc[`${g.id}X`]=0;
+  acc[`${g.id}Y`]=0;
+  acc[`${g.id}Bubble`]=100;
+  return acc;
+},{}));
 let fieldStatBadgesTunerState=loadFieldStatBadgesTunerState();
 function clampFieldStatBadgeValue(value,min,max,fallback){
   const n=Number(value);
@@ -11918,46 +11934,41 @@ function clampFieldStatBadgeValue(value,min,max,fallback){
 function loadFieldStatBadgesTunerState(){
   try{
     const saved=JSON.parse(localStorage.getItem(FIELD_STAT_BADGES_TUNER_KEY)||"{}")||{};
-    return{
-      precisionScale:clampFieldStatBadgeValue(saved.precisionScale,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionScale),
-      precisionX:clampFieldStatBadgeValue(saved.precisionX,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionX),
-      precisionY:clampFieldStatBadgeValue(saved.precisionY,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionY),
-      precisionBubble:clampFieldStatBadgeValue(saved.precisionBubble,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionBubble),
-      evasionScale:clampFieldStatBadgeValue(saved.evasionScale,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionScale),
-      evasionX:clampFieldStatBadgeValue(saved.evasionX,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionX),
-      evasionY:clampFieldStatBadgeValue(saved.evasionY,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionY),
-      evasionBubble:clampFieldStatBadgeValue(saved.evasionBubble,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionBubble)
-    };
-  }catch(e){return{...FIELD_STAT_BADGES_TUNER_DEFAULTS};}
+    const next={...FIELD_STAT_BADGES_TUNER_DEFAULTS};
+    FIELD_STAT_BADGES_TUNER_GROUPS.forEach(g=>{
+      next[`${g.id}Scale`]=clampFieldStatBadgeValue(saved[`${g.id}Scale`],g.size[0],g.size[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}Scale`]);
+      next[`${g.id}X`]=clampFieldStatBadgeValue(saved[`${g.id}X`],g.pos[0],g.pos[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}X`]);
+      next[`${g.id}Y`]=clampFieldStatBadgeValue(saved[`${g.id}Y`],g.pos[0],g.pos[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}Y`]);
+      next[`${g.id}Bubble`]=clampFieldStatBadgeValue(saved[`${g.id}Bubble`],g.bubble[0],g.bubble[1],FIELD_STAT_BADGES_TUNER_DEFAULTS[`${g.id}Bubble`]);
+    });
+    return next;
+  }catch(e){return {...FIELD_STAT_BADGES_TUNER_DEFAULTS};}
 }
 function saveFieldStatBadgesTunerState(){
   try{localStorage.setItem(FIELD_STAT_BADGES_TUNER_KEY,JSON.stringify(fieldStatBadgesTunerState));}catch(e){}
 }
 function applyFieldStatBadgesTunerState(save=false){
   const root=document.documentElement;
-  root.style.setProperty("--field-precision-scale",String(fieldStatBadgesTunerState.precisionScale/100));
-  root.style.setProperty("--field-precision-x",`${fieldStatBadgesTunerState.precisionX}px`);
-  root.style.setProperty("--field-precision-y",`${fieldStatBadgesTunerState.precisionY}px`);
-  root.style.setProperty("--field-precision-bubble",String(fieldStatBadgesTunerState.precisionBubble/100));
-  root.style.setProperty("--field-evasion-scale",String(fieldStatBadgesTunerState.evasionScale/100));
-  root.style.setProperty("--field-evasion-x",`${fieldStatBadgesTunerState.evasionX}px`);
-  root.style.setProperty("--field-evasion-y",`${fieldStatBadgesTunerState.evasionY}px`);
-  root.style.setProperty("--field-evasion-bubble",String(fieldStatBadgesTunerState.evasionBubble/100));
+  FIELD_STAT_BADGES_TUNER_GROUPS.forEach(g=>{
+    const cssBase=`--field-${g.id.replace(/[A-Z]/g,m=>`-${m.toLowerCase()}`)}`;
+    root.style.setProperty(`${cssBase}-scale`,String(fieldStatBadgesTunerState[`${g.id}Scale`]/100));
+    root.style.setProperty(`${cssBase}-x`,`${fieldStatBadgesTunerState[`${g.id}X`]}px`);
+    root.style.setProperty(`${cssBase}-y`,`${fieldStatBadgesTunerState[`${g.id}Y`]}px`);
+    root.style.setProperty(`${cssBase}-bubble`,String(fieldStatBadgesTunerState[`${g.id}Bubble`]/100));
+  });
   syncFieldStatBadgesTunerControls();
   if(save)saveFieldStatBadgesTunerState();
 }
 function syncFieldStatBadgesTunerControls(){
-  const map=[
-    ["fieldPrecisionScaleInput","fieldPrecisionScaleValue",fieldStatBadgesTunerState.precisionScale,"%"],
-    ["fieldPrecisionXInput","fieldPrecisionXValue",fieldStatBadgesTunerState.precisionX," px"],
-    ["fieldPrecisionYInput","fieldPrecisionYValue",fieldStatBadgesTunerState.precisionY," px"],
-    ["fieldPrecisionBubbleInput","fieldPrecisionBubbleValue",fieldStatBadgesTunerState.precisionBubble,"%"],
-    ["fieldEvasionScaleInput","fieldEvasionScaleValue",fieldStatBadgesTunerState.evasionScale,"%"],
-    ["fieldEvasionXInput","fieldEvasionXValue",fieldStatBadgesTunerState.evasionX," px"],
-    ["fieldEvasionYInput","fieldEvasionYValue",fieldStatBadgesTunerState.evasionY," px"],
-    ["fieldEvasionBubbleInput","fieldEvasionBubbleValue",fieldStatBadgesTunerState.evasionBubble,"%"]
+  const defs=[
+    ...FIELD_STAT_BADGES_TUNER_GROUPS.flatMap(g=>([
+      [`field${g.id[0].toUpperCase()+g.id.slice(1)}ScaleInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}ScaleValue`,fieldStatBadgesTunerState[`${g.id}Scale`],"%"],
+      [`field${g.id[0].toUpperCase()+g.id.slice(1)}XInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}XValue`,fieldStatBadgesTunerState[`${g.id}X`]," px"],
+      [`field${g.id[0].toUpperCase()+g.id.slice(1)}YInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}YValue`,fieldStatBadgesTunerState[`${g.id}Y`]," px"],
+      [`field${g.id[0].toUpperCase()+g.id.slice(1)}BubbleInput`,`field${g.id[0].toUpperCase()+g.id.slice(1)}BubbleValue`,fieldStatBadgesTunerState[`${g.id}Bubble`],"%"]
+    ]))
   ];
-  map.forEach(([inputId,outputId,value,suffix])=>{
+  defs.forEach(([inputId,outputId,value,suffix])=>{
     const input=$(inputId),output=$(outputId);
     if(input&&String(input.value)!==String(value))input.value=String(value);
     if(output)output.textContent=`${value}${suffix}`;
@@ -11973,22 +11984,30 @@ function openFieldStatBadgesTuner(){
   if(!tuner)return;
   tuner.classList.remove("hidden");
   syncFieldStatBadgesTunerControls();
-  setFieldStatBadgesTunerStatus("Ajusta PREC y EVA. Se guarda automáticamente en este navegador.");
+  setFieldStatBadgesTunerStatus("Ajusta todos los stat badges del campo. Se guarda automáticamente en este navegador.");
 }
 function closeFieldStatBadgesTuner(){
   $("fieldStatBadgesTuner")?.classList.add("hidden");
   saveFieldStatBadgesTunerState();
 }
+function getFieldStatBadgeLimits(key){
+  const group=FIELD_STAT_BADGES_TUNER_GROUPS.find(g=> key.startsWith(g.id));
+  if(!group)return [60,180];
+  if(key.endsWith("Scale"))return group.size;
+  if(key.endsWith("Bubble"))return group.bubble;
+  return group.pos;
+}
 function updateFieldStatBadgesTunerFromInput(key,value){
-  const limits={precisionScale:[60,180],precisionX:[-40,40],precisionY:[-40,40],precisionBubble:[60,180],evasionScale:[60,180],evasionX:[-40,40],evasionY:[-40,40],evasionBubble:[60,180]};
-  const [min,max]=limits[key];
+  const [min,max]=getFieldStatBadgeLimits(key);
   fieldStatBadgesTunerState[key]=clampFieldStatBadgeValue(value,min,max,FIELD_STAT_BADGES_TUNER_DEFAULTS[key]);
   applyFieldStatBadgesTunerState(true);
   setFieldStatBadgesTunerStatus("Configuración guardada.");
 }
 async function copyFieldStatBadgesTunerValues(){
-  const s=fieldStatBadgesTunerState;
-  const text=`PREC — Tamaño ${s.precisionScale}%; X ${s.precisionX}px; Y ${s.precisionY}px; Círculo ${s.precisionBubble}% | EVA — Tamaño ${s.evasionScale}%; X ${s.evasionX}px; Y ${s.evasionY}px; Círculo ${s.evasionBubble}%`;
+  const text=FIELD_STAT_BADGES_TUNER_GROUPS.map(g=>{
+    const id=g.id;
+    return `${g.label} — Tamaño ${fieldStatBadgesTunerState[`${id}Scale`]}%; X ${fieldStatBadgesTunerState[`${id}X`]}px; Y ${fieldStatBadgesTunerState[`${id}Y`]}px; ${g.bubbleLabel} ${fieldStatBadgesTunerState[`${id}Bubble`]}%`;
+  }).join(" | ");
   try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
   setFieldStatBadgesTunerStatus(`Copiado: ${text}`);
 }
@@ -11999,18 +12018,19 @@ function resetFieldStatBadgesTuner(){
 }
 function initFieldStatBadgesTuner(){
   applyFieldStatBadgesTunerState(false);
-  const bindings=[
-    ["fieldPrecisionScaleInput","precisionScale"],["fieldPrecisionXInput","precisionX"],["fieldPrecisionYInput","precisionY"],["fieldPrecisionBubbleInput","precisionBubble"],
-    ["fieldEvasionScaleInput","evasionScale"],["fieldEvasionXInput","evasionX"],["fieldEvasionYInput","evasionY"],["fieldEvasionBubbleInput","evasionBubble"]
-  ];
-  bindings.forEach(([id,key])=>$(id)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(key,ev.target.value)));
+  FIELD_STAT_BADGES_TUNER_GROUPS.forEach(g=>{
+    const cap=g.id[0].toUpperCase()+g.id.slice(1);
+    [[`field${cap}ScaleInput`,`${g.id}Scale`],[`field${cap}XInput`,`${g.id}X`],[`field${cap}YInput`,`${g.id}Y`],[`field${cap}BubbleInput`,`${g.id}Bubble`]].forEach(([id,key])=>$(id)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(key,ev.target.value)));
+  });
   $("openFieldStatBadgesTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openFieldStatBadgesTuner();});
   $("closeFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
   $("saveFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
   $("resetFieldStatBadgesTunerBtn")?.addEventListener("click",resetFieldStatBadgesTuner);
   $("copyFieldStatBadgesValuesBtn")?.addEventListener("click",copyFieldStatBadgesTunerValues);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldStatBadgesTuner")?.classList.contains("hidden"))closeFieldStatBadgesTuner();});
 }
 initFieldStatBadgesTuner();
+
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));

@@ -605,7 +605,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
 </div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></div><button id="mobileToggleActionsBtn" class="mobile-honor-actions-btn" type="button" aria-label="Mostrar u ocultar acciones" aria-expanded="true">Acciones ▾</button><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mano"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mano"><span class="action-btn-label">Mano</span></button><button id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><!-- DETAIL HUD REMOVED: panel lateral Detalle eliminado del campo de batalla. --></div><!-- ACTIONS HUD CSS TOOL REMOVED: posición final pegada en styles.css. --><div id="log" class="log"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="inspector" class="inspector"><div class="inspect-card"><h2 id="inspectTitle" class="inspect-title"></h2><div id="inspectSub" class="inspect-sub"></div><div id="inspectArt" class="inspect-art"></div><div id="inspectStats" class="inspect-grid"></div><div id="inspectText" class="inspect-text"></div><button id="inspectClose" class="btn full">Cerrar</button></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card"><div class="card-inspect-head"><div><h2 id="cardInspectTitle" class="card-inspect-title"></h2><div id="cardInspectSub" class="card-inspect-sub"></div></div><button id="cardInspectX" class="card-inspect-x" type="button" aria-label="Cerrar carta">×</button></div><div id="cardInspectVisual" class="card-inspect-visual"></div><div id="cardInspectStats" class="card-inspect-grid"></div><div id="cardInspectText" class="card-inspect-text"></div><p id="cardInspectReason" class="card-inspect-reason"></p><div class="card-inspect-actions"><button id="cardInspectCancel" class="btn full" type="button">Cancelar</button><button id="cardInspectPlay" class="btn primary full" type="button">Jugar</button></div></div></div>
-<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openActionsHudTunerBattleBtn" class="btn full" type="button">Ajustar HUD de acciones</button><button id="openFieldStatBadgesTunerBattleBtn" class="btn full" type="button">Ajustar PREC / EVA en campo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
+<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openActionsHudTunerBattleBtn" class="btn full" type="button">Ajustar HUD de acciones</button><button id="openFieldStatBadgesTunerBattleBtn" class="btn full" type="button">Ajustar stat badges del campo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 
 
 <div id="actionsHudTuner" class="actions-hud-tuner hidden" aria-label="Control del HUD de acciones">
@@ -646,52 +646,70 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <p id="actionsHudTunerStatus" class="actions-hud-tuner-status" aria-live="polite"></p>
 </div>
 
-<div id="fieldStatBadgesTuner" class="field-stat-badges-tuner hidden" aria-label="Control de PREC y EVA en campo">
+<div id="fieldStatBadgesTuner" class="field-stat-badges-tuner hidden" aria-label="Control de stat badges del campo">
   <div class="field-stat-badges-tuner-head">
     <div>
-      <b>Ajustar PREC / EVA en campo</b>
-      <small>Solo afecta los emblemas de precisión y evasión de las unidades en el tablero. Se guarda automáticamente.</small>
+      <b>Ajustar stat badges del campo</b>
+      <small>Controla tamaño, posición y círculo/número de Vida, Ataque, Guardia, Precisión y Evasión. Se guarda automáticamente en este navegador.</small>
     </div>
     <button id="closeFieldStatBadgesTunerBtn" class="field-stat-badges-tuner-x" type="button" aria-label="Cerrar ajuste">×</button>
   </div>
   <div class="field-stat-badges-tuner-grid">
     <section class="field-stat-badges-tuner-group">
-      <h4>PRECISIÓN</h4>
-      <label class="field-stat-badges-tuner-control">
-        <span>Tamaño <output id="fieldPrecisionScaleValue">100%</output></span>
-        <input id="fieldPrecisionScaleInput" type="range" min="60" max="180" step="1" value="100">
-      </label>
-      <label class="field-stat-badges-tuner-control">
-        <span>Horizontal <output id="fieldPrecisionXValue">0 px</output></span>
-        <input id="fieldPrecisionXInput" type="range" min="-40" max="40" step="1" value="0">
-      </label>
-      <label class="field-stat-badges-tuner-control">
-        <span>Vertical <output id="fieldPrecisionYValue">0 px</output></span>
-        <input id="fieldPrecisionYInput" type="range" min="-40" max="40" step="1" value="0">
-      </label>
-      <label class="field-stat-badges-tuner-control">
-        <span>Círculo numérico <output id="fieldPrecisionBubbleValue">100%</output></span>
-        <input id="fieldPrecisionBubbleInput" type="range" min="60" max="180" step="1" value="100">
-      </label>
+      <h4>VIDA · UNIDADES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldHpUnitScaleValue">100%</output></span><input id="fieldHpUnitScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldHpUnitXValue">0 px</output></span><input id="fieldHpUnitXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldHpUnitYValue">0 px</output></span><input id="fieldHpUnitYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Número <output id="fieldHpUnitBubbleValue">100%</output></span><input id="fieldHpUnitBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
     </section>
     <section class="field-stat-badges-tuner-group">
-      <h4>EVASIÓN</h4>
-      <label class="field-stat-badges-tuner-control">
-        <span>Tamaño <output id="fieldEvasionScaleValue">100%</output></span>
-        <input id="fieldEvasionScaleInput" type="range" min="60" max="180" step="1" value="100">
-      </label>
-      <label class="field-stat-badges-tuner-control">
-        <span>Horizontal <output id="fieldEvasionXValue">0 px</output></span>
-        <input id="fieldEvasionXInput" type="range" min="-40" max="40" step="1" value="0">
-      </label>
-      <label class="field-stat-badges-tuner-control">
-        <span>Vertical <output id="fieldEvasionYValue">0 px</output></span>
-        <input id="fieldEvasionYInput" type="range" min="-40" max="40" step="1" value="0">
-      </label>
-      <label class="field-stat-badges-tuner-control">
-        <span>Círculo numérico <output id="fieldEvasionBubbleValue">100%</output></span>
-        <input id="fieldEvasionBubbleInput" type="range" min="60" max="180" step="1" value="100">
-      </label>
+      <h4>VIDA · LÍDERES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldHpLeaderScaleValue">100%</output></span><input id="fieldHpLeaderScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldHpLeaderXValue">0 px</output></span><input id="fieldHpLeaderXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldHpLeaderYValue">0 px</output></span><input id="fieldHpLeaderYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Número <output id="fieldHpLeaderBubbleValue">100%</output></span><input id="fieldHpLeaderBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>ATAQUE · UNIDADES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldAtkUnitScaleValue">100%</output></span><input id="fieldAtkUnitScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldAtkUnitXValue">0 px</output></span><input id="fieldAtkUnitXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldAtkUnitYValue">0 px</output></span><input id="fieldAtkUnitYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Círculo <output id="fieldAtkUnitBubbleValue">100%</output></span><input id="fieldAtkUnitBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>ATAQUE · LÍDERES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldAtkLeaderScaleValue">100%</output></span><input id="fieldAtkLeaderScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldAtkLeaderXValue">0 px</output></span><input id="fieldAtkLeaderXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldAtkLeaderYValue">0 px</output></span><input id="fieldAtkLeaderYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Círculo <output id="fieldAtkLeaderBubbleValue">100%</output></span><input id="fieldAtkLeaderBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>GUARDIA · UNIDADES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldGuardUnitScaleValue">100%</output></span><input id="fieldGuardUnitScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldGuardUnitXValue">0 px</output></span><input id="fieldGuardUnitXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldGuardUnitYValue">0 px</output></span><input id="fieldGuardUnitYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Círculo <output id="fieldGuardUnitBubbleValue">100%</output></span><input id="fieldGuardUnitBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>GUARDIA · LÍDERES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldGuardLeaderScaleValue">100%</output></span><input id="fieldGuardLeaderScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldGuardLeaderXValue">0 px</output></span><input id="fieldGuardLeaderXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldGuardLeaderYValue">0 px</output></span><input id="fieldGuardLeaderYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Círculo <output id="fieldGuardLeaderBubbleValue">100%</output></span><input id="fieldGuardLeaderBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>PRECISIÓN · UNIDADES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldPrecisionScaleValue">100%</output></span><input id="fieldPrecisionScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldPrecisionXValue">0 px</output></span><input id="fieldPrecisionXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldPrecisionYValue">0 px</output></span><input id="fieldPrecisionYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Círculo <output id="fieldPrecisionBubbleValue">100%</output></span><input id="fieldPrecisionBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
+    </section>
+    <section class="field-stat-badges-tuner-group">
+      <h4>EVASIÓN · UNIDADES</h4>
+      <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldEvasionScaleValue">100%</output></span><input id="fieldEvasionScaleInput" type="range" min="60" max="220" step="1" value="100"></label>
+      <label class="field-stat-badges-tuner-control"><span>Horizontal <output id="fieldEvasionXValue">0 px</output></span><input id="fieldEvasionXInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Vertical <output id="fieldEvasionYValue">0 px</output></span><input id="fieldEvasionYInput" type="range" min="-60" max="60" step="1" value="0"></label>
+      <label class="field-stat-badges-tuner-control"><span>Círculo <output id="fieldEvasionBubbleValue">100%</output></span><input id="fieldEvasionBubbleInput" type="range" min="60" max="180" step="1" value="100"></label>
     </section>
   </div>
   <div class="field-stat-badges-tuner-actions">

@@ -20305,3 +20305,125 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   .field-stat-badges-tuner-actions .btn{min-width:0;flex:1;padding:7px 8px;font-size:10px}
   .field-stat-badges-tuner-head small{font-size:9px}
 }
+
+
+/* ==========================================================
+   7HFIELDSTAT V2 · Control para TODOS los stat badges del campo
+   ========================================================== */
+:root{
+  --field-hp-unit-scale:1; --field-hp-unit-x:0px; --field-hp-unit-y:0px; --field-hp-unit-bubble:1;
+  --field-hp-leader-scale:1; --field-hp-leader-x:0px; --field-hp-leader-y:0px; --field-hp-leader-bubble:1;
+  --field-atk-unit-scale:1; --field-atk-unit-x:0px; --field-atk-unit-y:0px; --field-atk-unit-bubble:1;
+  --field-atk-leader-scale:1; --field-atk-leader-x:0px; --field-atk-leader-y:0px; --field-atk-leader-bubble:1;
+  --field-guard-unit-scale:1; --field-guard-unit-x:0px; --field-guard-unit-y:0px; --field-guard-unit-bubble:1;
+  --field-guard-leader-scale:1; --field-guard-leader-x:0px; --field-guard-leader-y:0px; --field-guard-leader-bubble:1;
+}
+.unit-card .unit-hp-heart-anchor{
+  transform:translate(var(--field-hp-unit-x),var(--field-hp-unit-y)) scale(var(--field-hp-unit-scale)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .hp-heart-number{
+  transform:scale(var(--field-hp-unit-bubble)) !important;
+  transform-box:fill-box;
+  transform-origin:center center;
+}
+.leader-heart-slot .hp-heart-badge-leader{
+  transform:translate(var(--field-hp-leader-x),var(--field-hp-leader-y)) scale(var(--field-hp-leader-scale)) !important;
+  transform-origin:center center !important;
+}
+.leader-heart-slot .hp-heart-number{
+  transform:scale(var(--field-hp-leader-bubble)) !important;
+  transform-box:fill-box;
+  transform-origin:center center;
+}
+.unit-card .stat-badge-atk-wrap .attack-emblem-badge{
+  transform:translate(var(--field-atk-unit-x),var(--field-atk-unit-y)) scale(var(--field-atk-unit-scale)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-atk-wrap .attack-emblem-medallion{
+  transform:scale(var(--field-atk-unit-bubble)) !important;
+  transform-origin:center center !important;
+}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-badge{
+  transform:translate(var(--field-atk-leader-x),var(--field-atk-leader-y)) scale(var(--field-atk-leader-scale)) !important;
+  transform-origin:center center !important;
+}
+.leader-base-stats .leader-atk-badge-wrap .attack-emblem-medallion{
+  transform:scale(var(--field-atk-leader-bubble)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-guard-wrap .guard-emblem-badge{
+  transform:translate(var(--field-guard-unit-x),var(--field-guard-unit-y)) scale(var(--field-guard-unit-scale)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-guard-wrap .guard-emblem-medallion{
+  transform:scale(var(--field-guard-unit-bubble)) !important;
+  transform-origin:center center !important;
+}
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-badge{
+  transform:translate(var(--field-guard-leader-x),var(--field-guard-leader-y)) scale(var(--field-guard-leader-scale)) !important;
+  transform-origin:center center !important;
+}
+.leader-base-stats .leader-guard-badge-wrap .guard-emblem-medallion{
+  transform:scale(var(--field-guard-leader-bubble)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-precision{
+  transform:translate(var(--field-precision-x),var(--field-precision-y)) scale(var(--field-precision-scale)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-eva{
+  transform:translate(var(--field-evasion-x),var(--field-evasion-y)) scale(var(--field-evasion-scale)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion{
+  transform:scale(var(--field-precision-bubble)) !important;
+  transform-origin:center center !important;
+}
+.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{
+  transform:scale(var(--field-evasion-bubble)) !important;
+  transform-origin:center center !important;
+}
+.field-stat-badges-tuner-grid{grid-template-columns:repeat(3,minmax(210px,1fr)) !important;max-height:min(68vh,860px);overflow:auto;padding-right:4px}
+.field-stat-badges-tuner{width:min(1120px,calc(100vw - 20px)) !important;}
+@media(max-width:980px){.field-stat-badges-tuner-grid{grid-template-columns:repeat(2,minmax(220px,1fr)) !important;}}
+@media(max-width:720px){.field-stat-badges-tuner-grid{grid-template-columns:1fr !important;}}
+
+/* 7HFIELDSTAT side-docked panel so the board stays visible */
+.field-stat-badges-tuner{
+  left:auto !important;
+  right:12px !important;
+  top:88px !important;
+  bottom:12px !important;
+  transform:none !important;
+  width:min(360px,calc(100vw - 16px)) !important;
+  max-height:none !important;
+  display:flex;
+  flex-direction:column;
+}
+.field-stat-badges-tuner-grid{
+  grid-template-columns:1fr !important;
+  max-height:none !important;
+  overflow:auto !important;
+  flex:1 1 auto;
+  padding-right:6px;
+}
+.field-stat-badges-tuner-actions{
+  position:sticky;
+  bottom:0;
+  background:linear-gradient(180deg,rgba(9,8,6,0),rgba(9,8,6,.94) 24%,rgba(9,8,6,.98));
+  padding-top:10px;
+  margin-top:8px;
+}
+.field-stat-badges-tuner-status{
+  text-align:left;
+}
+@media (max-width: 720px){
+  .field-stat-badges-tuner{
+    left:8px !important;
+    right:8px !important;
+    top:70px !important;
+    bottom:8px !important;
+    width:auto !important;
+  }
+}
