@@ -8866,6 +8866,30 @@ function getAttackBadgeHtml(u,scope="unit"){
     </span>
   </span>`;
 }
+function getFieldStatBadgeHtml(kind,value,titleText=""){
+  const safeKind=kind==="precision"?"precision":"eva";
+  const numeric=Math.max(0,Number(value||0));
+  const title=escapeHtml(titleText||`${safeKind==="precision"?"Precisión":"Evasión"} actual: ${numeric}`);
+  const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.png?v=1':'assets/ui/evasion_rogue_emblem.png?v=1';
+  return `<span class="field-stat-emblem-badge field-stat-emblem-${safeKind}" title="${title}" aria-label="${title}">
+    <span class="field-stat-emblem-shell" aria-hidden="true">
+      <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false"/>
+      <span class="field-stat-emblem-medallion"><b>${escapeHtml(String(numeric))}</b></span>
+    </span>
+  </span>`;
+}
+function getPrecisionBadgeHtml(u,scope="unit"){
+  if(!u)return "";
+  const precisionScore=Math.max(0,Number(getAttackPrecisionScore(u,{})||0));
+  const title=`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`;
+  return getFieldStatBadgeHtml("precision",precisionScore,title);
+}
+function getEvasionBadgeHtml(u,scope="unit"){
+  if(!u)return "";
+  const evasionScore=Math.max(0,Number(getAvailableEvasionScore(u,{})||0));
+  const title=`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`;
+  return getFieldStatBadgeHtml("eva",evasionScore,title);
+}
 function getUnitBottomFrameHtml(u){
   if(!u)return "";
   const aux=getUnitAuxStatData(u);
@@ -8879,7 +8903,11 @@ function getUnitBottomFrameHtml(u){
       : `<span class="unit-stat-orb stat-orb-atk stat-orb-primary ${escapeHtml(primary.kind)}" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}"><b>${escapeHtml(primary.text)}</b></span>`;
   const auxHtml=aux.kind==="guard"
     ? `<span class="unit-stat-orb stat-orb-aux guard stat-badge-guard-wrap" title="${escapeHtml(aux.title)}">${getGuardBadgeHtml(u,"unit-aux")}</span>`
-    : `<span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>`;
+    : aux.kind==="precision"
+      ? `<span class="unit-stat-orb stat-orb-aux precision stat-badge-precision-wrap" title="${escapeHtml(aux.title)}">${getPrecisionBadgeHtml(u,"unit-aux")}</span>`
+      : aux.kind==="eva"
+        ? `<span class="unit-stat-orb stat-orb-aux eva stat-badge-eva-wrap" title="${escapeHtml(aux.title)}">${getEvasionBadgeHtml(u,"unit-aux")}</span>`
+        : `<span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>`;
   return `<div class="unit-ornate-ui">
     <span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>
     <span class="unit-hp-heart-anchor">${getHpHeartBadgeHtml(u,"unit")}</span>
@@ -11876,6 +11904,113 @@ function initActionsHudTuner(){
   });
 }
 initActionsHudTuner();
+
+/* ---------------------------------------------------------------------------
+   7HFIELDSTAT · Control visual PREC / EVA en campo
+   --------------------------------------------------------------------------- */
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v1";
+const FIELD_STAT_BADGES_TUNER_DEFAULTS=Object.freeze({precisionScale:100,precisionX:0,precisionY:0,precisionBubble:100,evasionScale:100,evasionX:0,evasionY:0,evasionBubble:100});
+let fieldStatBadgesTunerState=loadFieldStatBadgesTunerState();
+function clampFieldStatBadgeValue(value,min,max,fallback){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+}
+function loadFieldStatBadgesTunerState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(FIELD_STAT_BADGES_TUNER_KEY)||"{}")||{};
+    return{
+      precisionScale:clampFieldStatBadgeValue(saved.precisionScale,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionScale),
+      precisionX:clampFieldStatBadgeValue(saved.precisionX,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionX),
+      precisionY:clampFieldStatBadgeValue(saved.precisionY,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionY),
+      precisionBubble:clampFieldStatBadgeValue(saved.precisionBubble,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.precisionBubble),
+      evasionScale:clampFieldStatBadgeValue(saved.evasionScale,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionScale),
+      evasionX:clampFieldStatBadgeValue(saved.evasionX,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionX),
+      evasionY:clampFieldStatBadgeValue(saved.evasionY,-40,40,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionY),
+      evasionBubble:clampFieldStatBadgeValue(saved.evasionBubble,60,180,FIELD_STAT_BADGES_TUNER_DEFAULTS.evasionBubble)
+    };
+  }catch(e){return{...FIELD_STAT_BADGES_TUNER_DEFAULTS};}
+}
+function saveFieldStatBadgesTunerState(){
+  try{localStorage.setItem(FIELD_STAT_BADGES_TUNER_KEY,JSON.stringify(fieldStatBadgesTunerState));}catch(e){}
+}
+function applyFieldStatBadgesTunerState(save=false){
+  const root=document.documentElement;
+  root.style.setProperty("--field-precision-scale",String(fieldStatBadgesTunerState.precisionScale/100));
+  root.style.setProperty("--field-precision-x",`${fieldStatBadgesTunerState.precisionX}px`);
+  root.style.setProperty("--field-precision-y",`${fieldStatBadgesTunerState.precisionY}px`);
+  root.style.setProperty("--field-precision-bubble",String(fieldStatBadgesTunerState.precisionBubble/100));
+  root.style.setProperty("--field-evasion-scale",String(fieldStatBadgesTunerState.evasionScale/100));
+  root.style.setProperty("--field-evasion-x",`${fieldStatBadgesTunerState.evasionX}px`);
+  root.style.setProperty("--field-evasion-y",`${fieldStatBadgesTunerState.evasionY}px`);
+  root.style.setProperty("--field-evasion-bubble",String(fieldStatBadgesTunerState.evasionBubble/100));
+  syncFieldStatBadgesTunerControls();
+  if(save)saveFieldStatBadgesTunerState();
+}
+function syncFieldStatBadgesTunerControls(){
+  const map=[
+    ["fieldPrecisionScaleInput","fieldPrecisionScaleValue",fieldStatBadgesTunerState.precisionScale,"%"],
+    ["fieldPrecisionXInput","fieldPrecisionXValue",fieldStatBadgesTunerState.precisionX," px"],
+    ["fieldPrecisionYInput","fieldPrecisionYValue",fieldStatBadgesTunerState.precisionY," px"],
+    ["fieldPrecisionBubbleInput","fieldPrecisionBubbleValue",fieldStatBadgesTunerState.precisionBubble,"%"],
+    ["fieldEvasionScaleInput","fieldEvasionScaleValue",fieldStatBadgesTunerState.evasionScale,"%"],
+    ["fieldEvasionXInput","fieldEvasionXValue",fieldStatBadgesTunerState.evasionX," px"],
+    ["fieldEvasionYInput","fieldEvasionYValue",fieldStatBadgesTunerState.evasionY," px"],
+    ["fieldEvasionBubbleInput","fieldEvasionBubbleValue",fieldStatBadgesTunerState.evasionBubble,"%"]
+  ];
+  map.forEach(([inputId,outputId,value,suffix])=>{
+    const input=$(inputId),output=$(outputId);
+    if(input&&String(input.value)!==String(value))input.value=String(value);
+    if(output)output.textContent=`${value}${suffix}`;
+  });
+}
+function setFieldStatBadgesTunerStatus(message=""){
+  const status=$("fieldStatBadgesTunerStatus");
+  if(status)status.textContent=message;
+}
+function openFieldStatBadgesTuner(){
+  $("settingsPanel")?.classList.add("hidden");
+  const tuner=$("fieldStatBadgesTuner");
+  if(!tuner)return;
+  tuner.classList.remove("hidden");
+  syncFieldStatBadgesTunerControls();
+  setFieldStatBadgesTunerStatus("Ajusta PREC y EVA. Se guarda automáticamente en este navegador.");
+}
+function closeFieldStatBadgesTuner(){
+  $("fieldStatBadgesTuner")?.classList.add("hidden");
+  saveFieldStatBadgesTunerState();
+}
+function updateFieldStatBadgesTunerFromInput(key,value){
+  const limits={precisionScale:[60,180],precisionX:[-40,40],precisionY:[-40,40],precisionBubble:[60,180],evasionScale:[60,180],evasionX:[-40,40],evasionY:[-40,40],evasionBubble:[60,180]};
+  const [min,max]=limits[key];
+  fieldStatBadgesTunerState[key]=clampFieldStatBadgeValue(value,min,max,FIELD_STAT_BADGES_TUNER_DEFAULTS[key]);
+  applyFieldStatBadgesTunerState(true);
+  setFieldStatBadgesTunerStatus("Configuración guardada.");
+}
+async function copyFieldStatBadgesTunerValues(){
+  const s=fieldStatBadgesTunerState;
+  const text=`PREC — Tamaño ${s.precisionScale}%; X ${s.precisionX}px; Y ${s.precisionY}px; Círculo ${s.precisionBubble}% | EVA — Tamaño ${s.evasionScale}%; X ${s.evasionX}px; Y ${s.evasionY}px; Círculo ${s.evasionBubble}%`;
+  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
+  setFieldStatBadgesTunerStatus(`Copiado: ${text}`);
+}
+function resetFieldStatBadgesTuner(){
+  fieldStatBadgesTunerState={...FIELD_STAT_BADGES_TUNER_DEFAULTS};
+  applyFieldStatBadgesTunerState(true);
+  setFieldStatBadgesTunerStatus("Valores restablecidos.");
+}
+function initFieldStatBadgesTuner(){
+  applyFieldStatBadgesTunerState(false);
+  const bindings=[
+    ["fieldPrecisionScaleInput","precisionScale"],["fieldPrecisionXInput","precisionX"],["fieldPrecisionYInput","precisionY"],["fieldPrecisionBubbleInput","precisionBubble"],
+    ["fieldEvasionScaleInput","evasionScale"],["fieldEvasionXInput","evasionX"],["fieldEvasionYInput","evasionY"],["fieldEvasionBubbleInput","evasionBubble"]
+  ];
+  bindings.forEach(([id,key])=>$(id)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(key,ev.target.value)));
+  $("openFieldStatBadgesTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openFieldStatBadgesTuner();});
+  $("closeFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
+  $("saveFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
+  $("resetFieldStatBadgesTunerBtn")?.addEventListener("click",resetFieldStatBadgesTuner);
+  $("copyFieldStatBadgesValuesBtn")?.addEventListener("click",copyFieldStatBadgesTunerValues);
+}
+initFieldStatBadgesTuner();
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
