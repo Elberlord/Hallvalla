@@ -11908,7 +11908,7 @@ initActionsHudTuner();
 /* ---------------------------------------------------------------------------
    7HFIELDSTAT · Control visual de todos los stat badges del campo
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v2";
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_tuner_v3";
 const FIELD_STAT_BADGES_TUNER_GROUPS=[
   {id:"hpUnit",label:"HP unidad",title:"VIDA · UNIDADES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
   {id:"hpLeader",label:"HP líder",title:"VIDA · LÍDERES", size:[60,220], pos:[-60,60], bubble:[60,180], bubbleLabel:"Número"},
