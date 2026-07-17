@@ -11521,8 +11521,8 @@ function renderAdventureMap(){
 /* ---------------------------------------------------------------------------
    MAP NODE TUNER · Ajuste visual en vivo de las burbujas del mapa
    --------------------------------------------------------------------------- */
-const ADVENTURE_MAP_NODE_TUNER_KEY="hallvalla_adventure_map_node_tuner_v1";
-const ADVENTURE_MAP_NODE_DEFAULTS=Object.freeze({size:100,x:0,y:0,opacity:100,ringSize:100,ringStroke:3,textSize:24,textX:0,textY:0});
+const ADVENTURE_MAP_NODE_TUNER_KEY="hallvalla_adventure_map_node_tuner_v2_final";
+const ADVENTURE_MAP_NODE_DEFAULTS=Object.freeze({size:48,x:0,y:0,opacity:100,ringSize:100,ringStroke:3,textSize:24,textX:0,textY:-12.2});
 const ADVENTURE_MAP_NODE_CONTROLS=[
   {key:"size",input:"mapNodeSizeInput",output:"mapNodeSizeValue",min:40,max:220,suffix:"%"},
   {key:"x",input:"mapNodeXInput",output:"mapNodeXValue",min:-220,max:220,suffix:" px"},
