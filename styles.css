@@ -20599,3 +20599,75 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
     font-size:8.4px !important;
   }
 }
+
+
+/* ==========================================================
+   7HRINGTUNER · componente único, circular y editor avanzado
+   ========================================================== */
+:root{
+  --stat-ring-atk-unit-scale:1;--stat-ring-atk-unit-x:0px;--stat-ring-atk-unit-y:0px;--stat-ring-atk-unit-border:1.1px;--stat-ring-atk-unit-number-scale:1;--stat-ring-atk-unit-number-weight:900;--stat-ring-atk-unit-number-x:0px;--stat-ring-atk-unit-number-y:0px;
+  --stat-ring-atk-leader-scale:1;--stat-ring-atk-leader-x:0px;--stat-ring-atk-leader-y:0px;--stat-ring-atk-leader-border:1.1px;--stat-ring-atk-leader-number-scale:1;--stat-ring-atk-leader-number-weight:900;--stat-ring-atk-leader-number-x:0px;--stat-ring-atk-leader-number-y:0px;
+  --stat-ring-guard-unit-scale:1;--stat-ring-guard-unit-x:0px;--stat-ring-guard-unit-y:0px;--stat-ring-guard-unit-border:1.1px;--stat-ring-guard-unit-number-scale:1;--stat-ring-guard-unit-number-weight:900;--stat-ring-guard-unit-number-x:0px;--stat-ring-guard-unit-number-y:0px;
+  --stat-ring-guard-leader-scale:1;--stat-ring-guard-leader-x:0px;--stat-ring-guard-leader-y:0px;--stat-ring-guard-leader-border:1.1px;--stat-ring-guard-leader-number-scale:1;--stat-ring-guard-leader-number-weight:900;--stat-ring-guard-leader-number-x:0px;--stat-ring-guard-leader-number-y:0px;
+  --stat-ring-precision-scale:1;--stat-ring-precision-x:0px;--stat-ring-precision-y:0px;--stat-ring-precision-border:1.1px;--stat-ring-precision-number-scale:1;--stat-ring-precision-number-weight:900;--stat-ring-precision-number-x:0px;--stat-ring-precision-number-y:0px;
+  --stat-ring-evasion-scale:1;--stat-ring-evasion-x:0px;--stat-ring-evasion-y:0px;--stat-ring-evasion-border:1.1px;--stat-ring-evasion-number-scale:1;--stat-ring-evasion-number-weight:900;--stat-ring-evasion-number-x:0px;--stat-ring-evasion-number-y:0px;
+}
+.stat-number-medallion{
+  width:45% !important;
+  height:auto !important;
+  aspect-ratio:1 / 1 !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  right:-4% !important;
+  bottom:-3% !important;
+  box-sizing:border-box !important;
+  background:radial-gradient(circle at 35% 35%,rgba(83,58,33,.98) 0%,rgba(34,20,10,.98) 65%,rgba(18,9,4,.98) 100%) !important;
+  box-shadow:0 0 0 1px rgba(103,66,16,.56) inset,0 1px 4px rgba(0,0,0,.35) !important;
+  overflow:visible !important;
+  z-index:30 !important;
+  pointer-events:none !important;
+}
+.stat-number-medallion-value{
+  display:block !important;
+  color:#f4ce6f !important;
+  font-family:Georgia,serif !important;
+  line-height:1 !important;
+  text-shadow:0 1px 1px rgba(0,0,0,.9),0 0 4px rgba(116,70,16,.35) !important;
+  transform-origin:center center !important;
+  pointer-events:none !important;
+}
+.stat-number-medallion-atk-unit{border-width:var(--stat-ring-atk-unit-border)!important;transform:translate(var(--stat-ring-atk-unit-x),var(--stat-ring-atk-unit-y)) scale(calc(var(--field-atk-unit-bubble) * var(--stat-ring-atk-unit-scale)))!important;}
+.stat-number-medallion-atk-unit .stat-number-medallion-value{font-weight:var(--stat-ring-atk-unit-number-weight)!important;transform:translate(var(--stat-ring-atk-unit-number-x),var(--stat-ring-atk-unit-number-y)) scale(var(--stat-ring-atk-unit-number-scale))!important;}
+.stat-number-medallion-atk-leader{border-width:var(--stat-ring-atk-leader-border)!important;transform:translate(var(--stat-ring-atk-leader-x),var(--stat-ring-atk-leader-y)) scale(calc(var(--field-atk-leader-bubble) * var(--stat-ring-atk-leader-scale)))!important;}
+.stat-number-medallion-atk-leader .stat-number-medallion-value{font-weight:var(--stat-ring-atk-leader-number-weight)!important;transform:translate(var(--stat-ring-atk-leader-number-x),var(--stat-ring-atk-leader-number-y)) scale(var(--stat-ring-atk-leader-number-scale))!important;}
+.stat-number-medallion-guard-unit{border-width:var(--stat-ring-guard-unit-border)!important;transform:translate(var(--stat-ring-guard-unit-x),var(--stat-ring-guard-unit-y)) scale(calc(var(--field-guard-unit-bubble) * var(--stat-ring-guard-unit-scale)))!important;}
+.stat-number-medallion-guard-unit .stat-number-medallion-value{font-weight:var(--stat-ring-guard-unit-number-weight)!important;transform:translate(var(--stat-ring-guard-unit-number-x),var(--stat-ring-guard-unit-number-y)) scale(var(--stat-ring-guard-unit-number-scale))!important;}
+.stat-number-medallion-guard-leader{border-width:var(--stat-ring-guard-leader-border)!important;transform:translate(var(--stat-ring-guard-leader-x),var(--stat-ring-guard-leader-y)) scale(calc(var(--field-guard-leader-bubble) * var(--stat-ring-guard-leader-scale)))!important;}
+.stat-number-medallion-guard-leader .stat-number-medallion-value{font-weight:var(--stat-ring-guard-leader-number-weight)!important;transform:translate(var(--stat-ring-guard-leader-number-x),var(--stat-ring-guard-leader-number-y)) scale(var(--stat-ring-guard-leader-number-scale))!important;}
+.stat-number-medallion-precision{border-width:var(--stat-ring-precision-border)!important;transform:translate(var(--stat-ring-precision-x),var(--stat-ring-precision-y)) scale(calc(var(--field-precision-bubble) * var(--stat-ring-precision-scale)))!important;}
+.stat-number-medallion-precision .stat-number-medallion-value{font-weight:var(--stat-ring-precision-number-weight)!important;transform:translate(var(--stat-ring-precision-number-x),var(--stat-ring-precision-number-y)) scale(var(--stat-ring-precision-number-scale))!important;}
+.stat-number-medallion-evasion{border-width:var(--stat-ring-evasion-border)!important;transform:translate(var(--stat-ring-evasion-x),var(--stat-ring-evasion-y)) scale(calc(var(--field-evasion-bubble) * var(--stat-ring-evasion-scale)))!important;}
+.stat-number-medallion-evasion .stat-number-medallion-value{font-weight:var(--stat-ring-evasion-number-weight)!important;transform:translate(var(--stat-ring-evasion-number-x),var(--stat-ring-evasion-number-y)) scale(var(--stat-ring-evasion-number-scale))!important;}
+.stat-ring-tuner{
+  position:fixed;left:12px;top:88px;bottom:12px;z-index:1250;
+  width:min(360px,calc(100vw - 16px));padding:12px;border:1px solid rgba(255,209,102,.62);border-radius:16px;
+  background:linear-gradient(180deg,rgba(20,15,10,.97),rgba(6,6,5,.98));box-shadow:0 18px 50px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,235,178,.06);color:#fff1c4;
+  display:flex;flex-direction:column;
+}
+.stat-ring-tuner.hidden{display:none!important}
+.stat-ring-tuner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:9px}
+.stat-ring-tuner-head b{display:block;font-size:15px}.stat-ring-tuner-head small{display:block;margin-top:3px;color:#c9b990;font-size:10px}
+.stat-ring-tuner-x{width:32px;height:32px;flex:0 0 auto;border-radius:9px;border:1px solid rgba(255,209,102,.42);background:rgba(255,255,255,.06);color:#fff1c4;font-size:22px;line-height:1;cursor:pointer}
+.stat-ring-tuner-select-label{display:block;font-size:10px;font-weight:800;color:#f1d695;margin-bottom:9px}
+.stat-ring-tuner-select{display:block;width:100%;margin-top:5px;padding:9px;border-radius:10px;border:1px solid rgba(255,209,102,.25);background:#12100d;color:#fff1c4;font-weight:800}
+.stat-ring-tuner-scroll{overflow:auto;flex:1 1 auto;padding-right:5px}
+.stat-ring-tuner-group{padding:8px;border:1px solid rgba(255,209,102,.18);border-radius:12px;background:rgba(255,255,255,.035);margin-bottom:8px}
+.stat-ring-tuner-group h4{margin:0 0 8px;color:#f1d695;font-size:12px}
+.stat-ring-tuner-control{display:block;padding:8px;border:1px solid rgba(255,209,102,.12);border-radius:10px;background:rgba(255,255,255,.02);margin-bottom:7px}
+.stat-ring-tuner-control:last-child{margin-bottom:0}.stat-ring-tuner-control span{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:10px;font-weight:800;color:#f1d695}
+.stat-ring-tuner-control output{color:#7cecff;font-variant-numeric:tabular-nums}.stat-ring-tuner-control input{width:100%;accent-color:#e2b14d;cursor:pointer}
+.stat-ring-tuner-actions{display:flex;gap:8px;margin-top:8px}.stat-ring-tuner-actions .btn{min-width:0;flex:1;padding:8px 7px;font-size:10px}
+.stat-ring-tuner-status{min-height:14px;margin:6px 2px 0;color:#9feaff;font-size:10px;text-align:left}
+@media(max-width:720px){.stat-ring-tuner{left:8px;right:8px;top:70px;bottom:8px;width:auto}.stat-ring-tuner-actions{flex-wrap:wrap}.stat-ring-tuner-actions .btn{flex:1 1 30%}}

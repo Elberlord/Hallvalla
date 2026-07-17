@@ -8835,6 +8835,13 @@ function getHpHeartBadgeHtml(u,scope="unit"){
   </span>`;
 }
 
+function getStatNumberMedallionGroup(kind,scope="unit"){
+  const isLeader=String(scope).includes("leader");
+  if(kind==="attack")return isLeader?"atk-leader":"atk-unit";
+  if(kind==="guard")return isLeader?"guard-leader":"guard-unit";
+  if(kind==="precision")return "precision";
+  return "evasion";
+}
 function getGuardBadgeHtml(u,scope="unit"){
   if(!u)return "";
   const guard=Math.max(0,Number(displayEffectiveGuard(u)||0));
@@ -8850,7 +8857,7 @@ function getGuardBadgeHtml(u,scope="unit"){
       <span class="guard-emblem-crack crack-4"></span>
       <span class="guard-emblem-shard shard-1"></span>
       <span class="guard-emblem-shard shard-2"></span>
-      <span class="guard-emblem-medallion"><b>${escapeHtml(String(guard))}</b></span>
+      <span class="guard-emblem-medallion stat-number-medallion stat-number-medallion-${getStatNumberMedallionGroup("guard",scope)}"><b class="stat-number-medallion-value">${escapeHtml(String(guard))}</b></span>
     </span>
   </span>`;
 }
@@ -8862,7 +8869,7 @@ function getAttackBadgeHtml(u,scope="unit"){
   return `<span class="attack-emblem-badge attack-emblem-badge-${escapeHtml(scope)}" title="${title}" aria-label="${title}">
     <span class="attack-emblem-shell" aria-hidden="true">
       <img class="attack-emblem-img" src="${frameHref}" alt="" draggable="false"/>
-      <span class="attack-emblem-medallion"><b>${escapeHtml(String(atk))}</b></span>
+      <span class="attack-emblem-medallion stat-number-medallion stat-number-medallion-${getStatNumberMedallionGroup("attack",scope)}"><b class="stat-number-medallion-value">${escapeHtml(String(atk))}</b></span>
     </span>
   </span>`;
 }
@@ -8874,7 +8881,7 @@ function getFieldStatBadgeHtml(kind,value,titleText=""){
   return `<span class="field-stat-emblem-badge field-stat-emblem-${safeKind}" title="${title}" aria-label="${title}">
     <span class="field-stat-emblem-shell" aria-hidden="true">
       <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false"/>
-      <span class="field-stat-emblem-medallion"><b>${escapeHtml(String(numeric))}</b></span>
+      <span class="field-stat-emblem-medallion stat-number-medallion stat-number-medallion-${getStatNumberMedallionGroup(safeKind)}"><b class="stat-number-medallion-value">${escapeHtml(String(numeric))}</b></span>
     </span>
   </span>`;
 }
@@ -12030,6 +12037,135 @@ function initFieldStatBadgesTuner(){
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldStatBadgesTuner")?.classList.contains("hidden"))closeFieldStatBadgesTuner();});
 }
 initFieldStatBadgesTuner();
+
+/* ---------------------------------------------------------------------------
+   7HRINGTUNER · Editor avanzado de aros y números
+   --------------------------------------------------------------------------- */
+const STAT_RING_TUNER_KEY="hallvalla_stat_ring_tuner_v1";
+const STAT_RING_TUNER_GROUPS=[
+  {id:"atk-unit",label:"Ataque · unidades"},
+  {id:"atk-leader",label:"Ataque · líderes"},
+  {id:"guard-unit",label:"Guardia · unidades"},
+  {id:"guard-leader",label:"Guardia · líderes"},
+  {id:"precision",label:"Precisión · unidades"},
+  {id:"evasion",label:"Evasión · unidades"}
+];
+const STAT_RING_TUNER_DEFAULTS=Object.freeze(STAT_RING_TUNER_GROUPS.reduce((acc,g)=>{
+  acc[g.id]={ringScale:100,ringX:0,ringY:0,border:1.1,numberScale:100,numberWeight:900,numberX:0,numberY:0};
+  return acc;
+},{}));
+let statRingTunerState=loadStatRingTunerState();
+let statRingTunerActiveGroup="atk-unit";
+function cloneStatRingDefaults(){return JSON.parse(JSON.stringify(STAT_RING_TUNER_DEFAULTS));}
+function clampRingValue(value,min,max,fallback){const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;}
+function loadStatRingTunerState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(STAT_RING_TUNER_KEY)||"{}")||{};
+    const next=cloneStatRingDefaults();
+    STAT_RING_TUNER_GROUPS.forEach(g=>{
+      const src=saved[g.id]||{};
+      next[g.id]={
+        ringScale:clampRingValue(src.ringScale,40,260,100),
+        ringX:clampRingValue(src.ringX,-50,50,0),
+        ringY:clampRingValue(src.ringY,-50,50,0),
+        border:clampRingValue(src.border,0,6,1.1),
+        numberScale:clampRingValue(src.numberScale,40,260,100),
+        numberWeight:clampRingValue(src.numberWeight,100,1000,900),
+        numberX:clampRingValue(src.numberX,-30,30,0),
+        numberY:clampRingValue(src.numberY,-30,30,0)
+      };
+    });
+    return next;
+  }catch(e){return cloneStatRingDefaults();}
+}
+function saveStatRingTunerState(){try{localStorage.setItem(STAT_RING_TUNER_KEY,JSON.stringify(statRingTunerState));}catch(e){}}
+function applyStatRingTunerState(save=false){
+  const root=document.documentElement;
+  STAT_RING_TUNER_GROUPS.forEach(g=>{
+    const st=statRingTunerState[g.id];
+    const p=`--stat-ring-${g.id}`;
+    root.style.setProperty(`${p}-scale`,String(st.ringScale/100));
+    root.style.setProperty(`${p}-x`,`${st.ringX}px`);
+    root.style.setProperty(`${p}-y`,`${st.ringY}px`);
+    root.style.setProperty(`${p}-border`,`${st.border}px`);
+    root.style.setProperty(`${p}-number-scale`,String(st.numberScale/100));
+    root.style.setProperty(`${p}-number-weight`,String(st.numberWeight));
+    root.style.setProperty(`${p}-number-x`,`${st.numberX}px`);
+    root.style.setProperty(`${p}-number-y`,`${st.numberY}px`);
+  });
+  syncStatRingTunerControls();
+  if(save)saveStatRingTunerState();
+}
+function syncStatRingTunerControls(){
+  const st=statRingTunerState[statRingTunerActiveGroup]||STAT_RING_TUNER_DEFAULTS[statRingTunerActiveGroup];
+  const map=[
+    ["statRingScaleInput","statRingScaleValue",st.ringScale,"%"],
+    ["statRingXInput","statRingXValue",st.ringX," px"],
+    ["statRingYInput","statRingYValue",st.ringY," px"],
+    ["statRingBorderInput","statRingBorderValue",st.border," px"],
+    ["statNumberScaleInput","statNumberScaleValue",st.numberScale,"%"],
+    ["statNumberWeightInput","statNumberWeightValue",st.numberWeight,""],
+    ["statNumberXInput","statNumberXValue",st.numberX," px"],
+    ["statNumberYInput","statNumberYValue",st.numberY," px"]
+  ];
+  map.forEach(([inputId,outputId,value,suffix])=>{
+    const input=$(inputId),output=$(outputId);
+    if(input&&String(input.value)!==String(value))input.value=String(value);
+    if(output)output.textContent=`${value}${suffix}`;
+  });
+  const select=$("statRingGroupSelect");
+  if(select&&select.value!==statRingTunerActiveGroup)select.value=statRingTunerActiveGroup;
+}
+function setStatRingTunerStatus(message=""){const el=$("statRingTunerStatus");if(el)el.textContent=message;}
+function openStatRingTuner(){
+  $("settingsPanel")?.classList.add("hidden");
+  $("fieldStatBadgesTuner")?.classList.add("hidden");
+  const panel=$("statRingTuner");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  syncStatRingTunerControls();
+  setStatRingTunerStatus("El aro usa ahora un componente cuadrado real: no se deforma en el campo.");
+}
+function closeStatRingTuner(){
+  $("statRingTuner")?.classList.add("hidden");
+  saveStatRingTunerState();
+}
+function updateStatRingTuner(key,value){
+  const st=statRingTunerState[statRingTunerActiveGroup];
+  const limits={ringScale:[40,260],ringX:[-50,50],ringY:[-50,50],border:[0,6],numberScale:[40,260],numberWeight:[100,1000],numberX:[-30,30],numberY:[-30,30]};
+  const [min,max]=limits[key];
+  st[key]=clampRingValue(value,min,max,STAT_RING_TUNER_DEFAULTS[statRingTunerActiveGroup][key]);
+  applyStatRingTunerState(true);
+  setStatRingTunerStatus("Configuración guardada.");
+}
+function resetCurrentStatRingGroup(){
+  statRingTunerState[statRingTunerActiveGroup]={...STAT_RING_TUNER_DEFAULTS[statRingTunerActiveGroup]};
+  applyStatRingTunerState(true);
+  setStatRingTunerStatus("Grupo restablecido.");
+}
+async function copyStatRingValues(){
+  const st=statRingTunerState[statRingTunerActiveGroup];
+  const label=STAT_RING_TUNER_GROUPS.find(g=>g.id===statRingTunerActiveGroup)?.label||statRingTunerActiveGroup;
+  const text=`${label} — Aro ${st.ringScale}%; X ${st.ringX}px; Y ${st.ringY}px; borde ${st.border}px; número ${st.numberScale}%; grosor ${st.numberWeight}; número X ${st.numberX}px; número Y ${st.numberY}px`;
+  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
+  setStatRingTunerStatus(`Copiado: ${text}`);
+}
+function initStatRingTuner(){
+  applyStatRingTunerState(false);
+  $("statRingGroupSelect")?.addEventListener("change",e=>{statRingTunerActiveGroup=e.target.value;syncStatRingTunerControls();setStatRingTunerStatus("Grupo seleccionado.");});
+  const bindings=[
+    ["statRingScaleInput","ringScale"],["statRingXInput","ringX"],["statRingYInput","ringY"],["statRingBorderInput","border"],
+    ["statNumberScaleInput","numberScale"],["statNumberWeightInput","numberWeight"],["statNumberXInput","numberX"],["statNumberYInput","numberY"]
+  ];
+  bindings.forEach(([id,key])=>$(id)?.addEventListener("input",e=>updateStatRingTuner(key,e.target.value)));
+  $("openStatRingTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openStatRingTuner();});
+  $("closeStatRingTunerBtn")?.addEventListener("click",closeStatRingTuner);
+  $("saveStatRingTunerBtn")?.addEventListener("click",closeStatRingTuner);
+  $("resetStatRingTunerBtn")?.addEventListener("click",resetCurrentStatRingGroup);
+  $("copyStatRingValuesBtn")?.addEventListener("click",copyStatRingValues);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("statRingTuner")?.classList.contains("hidden"))closeStatRingTuner();});
+}
+initStatRingTuner();
 
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
