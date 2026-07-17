@@ -1,0 +1,15 @@
+HALLVALLA — TIENDA: SALDO DE COMPRA Y LIMPIEZA DEL HUD
+
+- Eliminada visualmente la franja superior de saldos/recursos dentro de la tienda.
+- Eliminado visualmente el bloque inferior izquierdo de chat, amigos, clanes y ajustes.
+- Eliminados sus hotspots invisibles correspondientes.
+- Al intentar comprar un sobre con oro suficiente se muestra:
+  * oro disponible,
+  * costo del sobre,
+  * oro restante después de la compra.
+- Cuando no alcanza el oro se muestra:
+  * oro disponible,
+  * costo del sobre,
+  * cantidad exacta de oro faltante.
+- Después de comprar se confirma el oro gastado y el saldo restante antes de ofrecer abrir el sobre.
+- La tienda continúa siempre desbloqueada y usa únicamente el oro interno del juego.

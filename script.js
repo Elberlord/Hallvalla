@@ -10224,10 +10224,6 @@ function buildLayeredPackShop(profile){
     shopLayer("daily_offer",1265,615,339,278,"hv-shop-daily-layer")
   ].join("");
   const liveValues=[
-    shopLiveValue(format(profile.gold),970,27,78,42,"hv-shop-gold-value"),
-    shopLiveValue(format(profile.gems),1136,27,78,42,"hv-shop-gems-value"),
-    shopLiveValue(format(profile.fragments),1300,27,78,42,"hv-shop-fragments-value"),
-    shopLiveValue(format(collectionTotal),1452,27,84,42,"hv-shop-cards-value"),
     shopLiveValue(format(profile.level||1),1514,74,43,38,"hv-shop-level-value"),
     shopLiveValue(String(profile.name||"Jugador"),1513,118,133,28,"hv-shop-name-value")
   ].join("");
@@ -10236,9 +10232,6 @@ function buildLayeredPackShop(profile){
     shopHotspot("Abrir colección","collection",425,10,165,78),
     shopHotspot("Abrir misiones","missions",591,10,161,78),
     shopHotspot("Tienda","shop",752,10,137,78),
-    shopHotspot("Conseguir oro","gold-plus",1040,20,45,58),
-    shopHotspot("Conseguir gemas","gems-plus",1204,20,45,58),
-    shopHotspot("Conseguir fragmentos","fragments-plus",1361,20,45,58),
     shopHotspot("Abrir perfil","profile",1485,5,181,151),
     shopHotspot("Ver sobres","packs",17,187,236,62),
     shopHotspot("Comprar oro","gold",17,249,236,59),
@@ -10249,10 +10242,6 @@ function buildLayeredPackShop(profile){
     shopHotspot("Ver ofertas diarias","daily",17,546,236,58),
     shopHotspot("Ver pase VIP","vip",17,605,236,58),
     shopHotspot("Canjear código","redeem",17,707,228,83),
-    shopHotspot("Abrir chat","chat",20,830,48,52),
-    shopHotspot("Abrir amigos","friends",68,830,48,52),
-    shopHotspot("Abrir clanes","clans",116,830,48,52),
-    shopHotspot("Abrir ajustes","settings",164,830,48,52),
     shopHotspot("Ver probabilidades","probabilities",1298,118,178,39),
     shopHotspot("Comprar Pack básico por 100 oro","buy-pack",315,535,191,50,'data-pack-key="basic"'),
     shopHotspot("Comprar Pack raro por 400 oro","buy-pack",574,535,191,50,'data-pack-key="rare"'),
@@ -10320,12 +10309,37 @@ function closePackShop(){
 async function buyPackWithGold(packKey){
   const pack=(PACK_SHOP_ITEMS||[]).find(p=>p.key===packKey)||null;
   if(!pack)return;
-  
+
   const profile=getPlayerProfile();
-  if((profile.gold||0)<pack.costGold){await hvAlert(`Necesitas ${pack.costGold} oro para comprar ${pack.name}. Tienes ${profile.gold||0}.`,"Oro insuficiente");openPackShop();return;}
-  const confirmed=await hvConfirm(`¿Comprar ${pack.name} por ${pack.costGold} oro del juego?`,`Confirmar compra`,`Comprar`,`Cancelar`);
+  const currentGold=Math.max(0,Number(profile.gold||0));
+  const packCost=Math.max(0,Number(pack.costGold||0));
+  const remainingGold=currentGold-packCost;
+  const formatGold=value=>Math.max(0,Number(value||0)).toLocaleString("es-CR");
+
+  if(remainingGold<0){
+    const missingGold=Math.abs(remainingGold);
+    await hvAlert(
+      `Oro disponible: ${formatGold(currentGold)}
+Costo del sobre: ${formatGold(packCost)}
+Te faltan: ${formatGold(missingGold)} de oro.`,
+      "Oro insuficiente"
+    );
+    return;
+  }
+
+  const confirmed=await hvConfirm(
+    `Oro disponible: ${formatGold(currentGold)}
+Costo del sobre: ${formatGold(packCost)}
+Oro después de comprar: ${formatGold(remainingGold)}
+
+¿Comprar ${pack.name}?`,
+    "Confirmar compra",
+    "Comprar",
+    "Cancelar"
+  );
   if(!confirmed)return;
-  profile.gold=(profile.gold||0)-pack.costGold;
+
+  profile.gold=remainingGold;
   savePlayerProfile(profile);
   addPendingPack({
     name:pack.name,
@@ -10335,12 +10349,22 @@ async function buyPackWithGold(packKey){
     lowerRarity:pack.lowerRarity,
     image:pack.image,
     source:"shop",
-    costGold:pack.costGold
+    costGold:packCost
   });
   renderPlayerProfile(profile);
   renderHomeProgress();
   closePackShop();
-  if(await hvConfirm(`Compraste ${pack.name}. ¿Abrirlo ahora?`,`Compra realizada`,`Abrir pack`,`Después`))openPackOpening();
+
+  if(await hvConfirm(
+    `Compraste ${pack.name}.
+Oro gastado: ${formatGold(packCost)}
+Oro restante: ${formatGold(remainingGold)}
+
+¿Abrir el sobre ahora?`,
+    "Compra realizada",
+    "Abrir pack",
+    "Después"
+  ))openPackOpening();
 }
 function getLegendaryCardByKey(key){
   return LEGENDARY_ALLY_CARDS.find(c=>c.key===key)||null;
