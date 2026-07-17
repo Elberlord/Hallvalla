@@ -9611,6 +9611,7 @@ if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspecto
 
 const RENAME_COST_GEMS = 100;
 const BASIC_PACK_GOLD_COST = 100;
+const PACK_SHOP_PREVIEW_MODE = true;
 const defaultPlayerProfile = {
   name: "Nuevo jugador",
   level: 1,
@@ -10135,28 +10136,34 @@ function openPackShop(){
   const panel=$("packShopPanel"),content=$("packShopContent"),goldText=$("packShopGoldText"),unlockText=$("packShopUnlockText");
   if(!panel||!content)return showComingSoon("Tienda");
   const profile=getPlayerProfile();
-  const unlocked=canAccessPackShop();
+  const progressionUnlocked=canAccessPackShop();
+  const previewMode=PACK_SHOP_PREVIEW_MODE;
   if(goldText)goldText.textContent=`${profile.gold||0} oro`;
-  if(unlockText)unlockText.textContent=unlocked?"Desbloqueada":"Bloqueada";
-  if(!unlocked){
+  if(unlockText)unlockText.textContent=previewMode?"Vista previa":(progressionUnlocked?"Desbloqueada":"Bloqueada");
+  if(!previewMode&&!progressionUnlocked){
     content.innerHTML=`<div class="pack-shop-locked"><b>Tienda bloqueada</b><p>Completa el mapa 2.1 Ecos del estandarte roto para desbloquear la compra de paquetes con oro.</p><span>Después aparecerá el Pack básico.</span></div>`;
   }else{
-    const canBuy=(profile.gold||0)>=BASIC_PACK_GOLD_COST;
-    content.innerHTML=`<div class="pack-shop-item">
+    const canBuy=!previewMode&&progressionUnlocked&&(profile.gold||0)>=BASIC_PACK_GOLD_COST;
+    content.innerHTML=`<div class="pack-shop-preview-banner">
+      <b>Vista previa de la tienda</b>
+      <span>La interfaz está activa para revisión. Las compras todavía están deshabilitadas.</span>
+    </div>
+    <div class="pack-shop-item">
       <div class="pack-shop-pack-art"><img src="assets/home/cartas_basicas.webp" alt="Cartas básicas"></div>
       <div class="pack-shop-copy">
+        <span class="pack-shop-category">CARTAS BÁSICAS</span>
         <h3>Pack básico</h3>
         <p>Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.</p>
         <ul>
-          <li>Costo: <b>${BASIC_PACK_GOLD_COST} oro</b></li>
+          <li>Costo previsto: <b>${BASIC_PACK_GOLD_COST} oro</b></li>
           <li>Contenido: <b>3 cartas básicas aleatorias</b></li>
-          <li>Se abre como paquete pendiente.</li>
+          <li>Se abrirá como paquete pendiente.</li>
         </ul>
       </div>
-      <button id="buyBasicPackBtn" class="btn primary" type="button" ${canBuy?"":"disabled"}>${canBuy?"Comprar pack":"Oro insuficiente"}</button>
+      <button id="buyBasicPackBtn" class="btn primary pack-shop-preview-button" type="button" disabled>${previewMode?"Compra próximamente":(canBuy?"Comprar pack":"Oro insuficiente")}</button>
     </div>`;
     const buyBtn=$("buyBasicPackBtn");
-    if(buyBtn)buyBtn.addEventListener("click",buyBasicPackWithGold);
+    if(buyBtn&&!previewMode)buyBtn.addEventListener("click",buyBasicPackWithGold);
   }
   panel.classList.remove("hidden");
 }
@@ -10165,6 +10172,7 @@ function closePackShop(){
   if(panel)panel.classList.add("hidden");
 }
 async function buyBasicPackWithGold(){
+  if(PACK_SHOP_PREVIEW_MODE){await hvAlert("La tienda está en modo de vista previa. Las compras todavía no están conectadas.","Vista previa");return;}
   if(!canAccessPackShop()){await hvAlert("La compra de packs se desbloquea al completar el mapa 2.1.","Tienda bloqueada");return;}
   const profile=getPlayerProfile();
   if((profile.gold||0)<BASIC_PACK_GOLD_COST){await hvAlert(`Necesitas ${BASIC_PACK_GOLD_COST} oro para comprar el Pack básico. Tienes ${profile.gold||0}.`,"Oro insuficiente");return;}

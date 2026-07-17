@@ -20861,3 +20861,12 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
   .map-node-tuner{left:8px;top:8px;bottom:8px;width:min(330px,calc(100vw - 16px));padding:10px;}
   .map-node-tuner-head b{font-size:15px;}
 }
+
+
+/* 7HPACKPREVIEW · Tienda visible sin compra conectada */
+.pack-shop-preview-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-radius:16px;background:linear-gradient(90deg,rgba(255,209,102,.16),rgba(255,209,102,.05));border:1px solid rgba(255,209,102,.32);color:#e8d2a8}
+.pack-shop-preview-banner b{color:#fff1c4;font-family:Georgia,serif;font-size:17px;white-space:nowrap}
+.pack-shop-preview-banner span{font-size:12px;line-height:1.35;text-align:right}
+.pack-shop-category{display:inline-block;margin-bottom:5px;color:#ffd166!important;font-size:10px!important;font-weight:900;letter-spacing:1.4px!important}
+.pack-shop-preview-button[disabled]{opacity:1!important;cursor:not-allowed;color:#d9c39b!important;border-color:rgba(255,209,102,.26)!important;background:linear-gradient(180deg,rgba(96,69,33,.68),rgba(41,29,17,.82))!important;box-shadow:none!important}
+@media(max-width:760px){.pack-shop-preview-banner{align-items:flex-start;flex-direction:column}.pack-shop-preview-banner span{text-align:left}}
