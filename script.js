@@ -10143,7 +10143,7 @@ function openPackShop(){
   }else{
     const canBuy=(profile.gold||0)>=BASIC_PACK_GOLD_COST;
     content.innerHTML=`<div class="pack-shop-item">
-      <div class="pack-shop-pack-art"><div class="pack-rune">✦</div><strong>Pack básico</strong><span>3 cartas básicas</span></div>
+      <div class="pack-shop-pack-art"><img src="assets/home/cartas_basicas.webp" alt="Cartas básicas"></div>
       <div class="pack-shop-copy">
         <h3>Pack básico</h3>
         <p>Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.</p>

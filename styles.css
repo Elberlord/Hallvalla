@@ -889,8 +889,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 .pack-opening-scene{position:relative;min-height:520px;overflow:hidden;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.58)),url("assets/home/bg_home.webp") center/cover no-repeat;display:grid;place-items:center}
 .pack-opening-scene::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,209,102,.22),transparent 25%),linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.16),rgba(0,0,0,.68));pointer-events:none}
 .pack-opening-glow{position:absolute;width:280px;height:280px;border-radius:999px;background:radial-gradient(circle,rgba(255,209,102,.34),rgba(255,209,102,.12) 45%,transparent 70%);filter:blur(8px);animation:packGlow 2s ease-in-out infinite;z-index:1}
-.pack-object{position:relative;z-index:3;width:min(260px,62vw);aspect-ratio:1/.72;border-radius:24px;border:1px solid rgba(255,209,102,.58);background:linear-gradient(145deg,rgba(105,66,24,.96),rgba(25,15,8,.98));box-shadow:0 22px 60px rgba(0,0,0,.66),inset 0 0 32px rgba(255,209,102,.18);display:grid;place-items:center;cursor:pointer;transition:transform .25s ease,filter .25s ease}
+.pack-object{position:relative;z-index:3;width:min(420px,80vw);display:grid;place-items:center;cursor:pointer;transition:transform .25s ease,filter .25s ease;background:none;border:none;box-shadow:none}
 .pack-object:hover{transform:translateY(-6px) scale(1.02);filter:brightness(1.08)}
+.pack-object-image{display:block;width:100%;height:auto;filter:drop-shadow(0 20px 42px rgba(0,0,0,.58)) drop-shadow(0 0 24px rgba(255,209,102,.18));pointer-events:none;user-select:none}
 .pack-object.opening{animation:packOpen .9s ease both}
 .pack-rune{font-size:56px;color:#ffd166;text-shadow:0 0 28px rgba(255,209,102,.85)}
 .pack-title{font-family:Georgia,serif;color:#fff1c4;font-weight:900;font-size:24px;text-align:center}
@@ -1988,8 +1989,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 .pack-shop-locked p{margin:0 0 8px;line-height:1.35}
 .pack-shop-locked span{color:#ffd166;font-weight:800}
 .pack-shop-item{display:grid;grid-template-columns:170px 1fr auto;gap:16px;align-items:center;padding:16px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.18));border:1px solid rgba(255,209,102,.22);box-shadow:0 16px 34px rgba(0,0,0,.28)}
-.pack-shop-pack-art{min-height:150px;border-radius:20px;border:1px solid rgba(255,209,102,.44);background:linear-gradient(145deg,rgba(105,66,24,.96),rgba(25,15,8,.98));display:grid;place-items:center;text-align:center;box-shadow:inset 0 0 28px rgba(255,209,102,.12),0 12px 26px rgba(0,0,0,.34)}
-.pack-shop-pack-art strong{color:#fff1c4;font-family:Georgia,serif;font-size:20px}.pack-shop-pack-art span{color:#e8d2a8;font-size:12px;text-transform:uppercase;letter-spacing:.8px}.pack-shop-copy h3{margin:0 0 6px;color:#fff1c4;font-family:Georgia,serif;font-size:24px}.pack-shop-copy p{margin:0;color:#e8d2a8;line-height:1.35}.pack-shop-copy ul{margin:10px 0 0;padding-left:18px;color:#d8c29a}.pack-shop-copy li{margin:4px 0}.pack-shop-actions{justify-content:flex-end;margin-top:12px}
+.pack-shop-pack-art{min-height:150px;border-radius:20px;border:1px solid rgba(255,209,102,.28);background:linear-gradient(145deg,rgba(24,18,12,.92),rgba(10,8,6,.98));display:grid;place-items:center;text-align:center;box-shadow:inset 0 0 28px rgba(255,209,102,.10),0 12px 26px rgba(0,0,0,.34);padding:10px}
+.pack-shop-pack-art img{display:block;max-width:100%;height:auto;border-radius:14px;box-shadow:0 14px 30px rgba(0,0,0,.34)}.pack-shop-pack-art strong{color:#fff1c4;font-family:Georgia,serif;font-size:20px}.pack-shop-pack-art span{color:#e8d2a8;font-size:12px;text-transform:uppercase;letter-spacing:.8px}.pack-shop-copy h3{margin:0 0 6px;color:#fff1c4;font-family:Georgia,serif;font-size:24px}.pack-shop-copy p{margin:0;color:#e8d2a8;line-height:1.35}.pack-shop-copy ul{margin:10px 0 0;padding-left:18px;color:#d8c29a}.pack-shop-copy li{margin:4px 0}.pack-shop-actions{justify-content:flex-end;margin-top:12px}
 @media(max-width:760px){.pack-shop-item{grid-template-columns:1fr}.pack-shop-pack-art{min-height:120px}.pack-shop-item .btn{width:100%}}
 
 
