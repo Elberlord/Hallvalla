@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Organized - Mobile Landscape 7HEN</title>
-<link rel="stylesheet" href="styles.css?v=7SHOPALWAYS1"/>
+<link rel="stylesheet" href="styles.css?v=7SHOPLAYER1"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -478,23 +478,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
 
 
 <div id="packShopPanel" class="overlay-panel hidden">
-  <div class="modal-card pack-shop-card">
-    <button id="closePackShopBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
-    <div class="deckbuilder-head">
-      <div>
-        <div class="adventure-progress">Tienda de packs</div>
-        <h2 class="adventure-story-title">Mercado de cartas</h2>
-        <p class="deckbuilder-sub">Compra paquetes usando el oro ganado en aventura. La tienda de packs se desbloquea al completar el mapa 2.1.</p>
-      </div>
-      <div class="deckbuilder-status">
-        <b id="packShopGoldText">0 oro</b>
-        <span id="packShopUnlockText">Bloqueado</span>
-      </div>
-    </div>
-    <div id="packShopContent" class="pack-shop-content"></div>
-    <div class="adventure-actions pack-shop-actions">
-      <button id="closePackShopBtn2" class="btn ghost" type="button">Cerrar</button>
-    </div>
+  <div class="modal-card pack-shop-card hv-shop-modal" role="dialog" aria-modal="true" aria-label="Tienda HallValla">
+    <button id="closePackShopBtn" class="adventure-result-close hv-shop-close" type="button" aria-label="Cerrar tienda">×</button>
+    <div id="packShopContent" class="pack-shop-content hv-shop-content"></div>
+    <button id="closePackShopBtn2" class="hv-shop-hidden-close" type="button" aria-label="Cerrar tienda"></button>
   </div>
 </div>
 
@@ -797,6 +784,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="script.js?v=7SHOPALWAYS1"></script>
+<script type="module" src="script.js?v=7SHOPLAYER1"></script>
 </body>
 </html>

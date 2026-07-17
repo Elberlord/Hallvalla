@@ -10195,42 +10195,122 @@ function openCollectionOrLocked(){
   }
   openDeckBuilder();
 }
+const SHOP_ARTBOARD_WIDTH=1672;
+const SHOP_ARTBOARD_HEIGHT=941;
+function shopPercent(value,total){return `${(Number(value||0)/total*100).toFixed(5)}%`;}
+function shopLayer(name,x,y,w,h,extraClass=""){
+  return `<img class="hv-shop-layer ${extraClass}" src="assets/shop/layers/${name}.webp" alt="" aria-hidden="true" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}">`;
+}
+function shopHotspot(label,action,x,y,w,h,extra=""){
+  return `<button class="hv-shop-hotspot" type="button" aria-label="${label}" data-shop-action="${action}" ${extra} style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}"><span>${label}</span></button>`;
+}
+function shopLiveValue(value,x,y,w,h,extraClass=""){
+  return `<div class="hv-shop-live-value ${extraClass}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}">${value}</div>`;
+}
+function buildLayeredPackShop(profile){
+  const collectionTotal=typeof getCollectionCardTotal==="function"?getCollectionCardTotal():0;
+  const format=value=>Math.max(0,Number(value||0)).toLocaleString("es-CR");
+  const layers=[
+    `<img class="hv-shop-background" src="assets/shop/layers/shop_background.webp" alt="Tienda digital de HallValla">`,
+    shopLayer("topbar",257,0,1415,104,"hv-shop-topbar-layer"),
+    shopLayer("sidebar",0,0,258,941,"hv-shop-sidebar-layer"),
+    shopLayer("header",257,104,1415,80,"hv-shop-header-layer"),
+    shopLayer("pack_basic",288,184,244,417,"hv-shop-pack-layer hv-shop-pack-basic"),
+    shopLayer("pack_rare",545,184,245,417,"hv-shop-pack-layer hv-shop-pack-rare"),
+    shopLayer("pack_epic",803,184,247,417,"hv-shop-pack-layer hv-shop-pack-epic"),
+    shopLayer("pack_mythic",1062,184,248,417,"hv-shop-pack-layer hv-shop-pack-mythic"),
+    shopLayer("pack_legendary",1320,184,254,417,"hv-shop-pack-layer hv-shop-pack-legendary"),
+    shopLayer("featured_bundle",278,615,979,278,"hv-shop-bundle-layer"),
+    shopLayer("daily_offer",1265,615,339,278,"hv-shop-daily-layer")
+  ].join("");
+  const liveValues=[
+    shopLiveValue(format(profile.gold),970,27,78,42,"hv-shop-gold-value"),
+    shopLiveValue(format(profile.gems),1136,27,78,42,"hv-shop-gems-value"),
+    shopLiveValue(format(profile.fragments),1300,27,78,42,"hv-shop-fragments-value"),
+    shopLiveValue(format(collectionTotal),1452,27,84,42,"hv-shop-cards-value"),
+    shopLiveValue(format(profile.level||1),1514,74,43,38,"hv-shop-level-value"),
+    shopLiveValue(String(profile.name||"Jugador"),1513,118,133,28,"hv-shop-name-value")
+  ].join("");
+  const hotspots=[
+    shopHotspot("Volver a jugar","close",286,10,139,78),
+    shopHotspot("Abrir colección","collection",425,10,165,78),
+    shopHotspot("Abrir misiones","missions",591,10,161,78),
+    shopHotspot("Tienda","shop",752,10,137,78),
+    shopHotspot("Conseguir oro","gold-plus",1040,20,45,58),
+    shopHotspot("Conseguir gemas","gems-plus",1204,20,45,58),
+    shopHotspot("Conseguir fragmentos","fragments-plus",1361,20,45,58),
+    shopHotspot("Abrir perfil","profile",1485,5,181,151),
+    shopHotspot("Ver sobres","packs",17,187,236,62),
+    shopHotspot("Comprar oro","gold",17,249,236,59),
+    shopHotspot("Comprar gemas","gems",17,309,236,59),
+    shopHotspot("Ver lotes","bundles",17,369,236,58),
+    shopHotspot("Ver cosméticos","cosmetics",17,428,236,58),
+    shopHotspot("Ver consumibles","consumables",17,487,236,58),
+    shopHotspot("Ver ofertas diarias","daily",17,546,236,58),
+    shopHotspot("Ver pase VIP","vip",17,605,236,58),
+    shopHotspot("Canjear código","redeem",17,707,228,83),
+    shopHotspot("Abrir chat","chat",20,830,48,52),
+    shopHotspot("Abrir amigos","friends",68,830,48,52),
+    shopHotspot("Abrir clanes","clans",116,830,48,52),
+    shopHotspot("Abrir ajustes","settings",164,830,48,52),
+    shopHotspot("Ver probabilidades","probabilities",1298,118,178,39),
+    shopHotspot("Comprar Pack básico por 100 oro","buy-pack",315,535,191,50,'data-pack-key="basic"'),
+    shopHotspot("Comprar Pack raro por 400 oro","buy-pack",574,535,191,50,'data-pack-key="rare"'),
+    shopHotspot("Comprar Pack épico por 900 oro","buy-pack",832,535,192,50,'data-pack-key="epic"'),
+    shopHotspot("Comprar Pack mítico por 1400 oro","buy-pack",1091,535,192,50,'data-pack-key="mythic"'),
+    shopHotspot("Comprar Pack legendario por 2000 oro","buy-pack",1350,535,194,50,'data-pack-key="legendary"'),
+    shopHotspot("Comprar lote destacado","featured-buy",1037,730,192,54),
+    shopHotspot("Comprar oferta diaria","daily-buy",1296,812,275,53)
+  ].join("");
+  return `<div class="hv-shop-stage-shell"><div id="hvShopStage" class="hv-shop-stage">${layers}${liveValues}${hotspots}</div></div>`;
+}
+function bindLayeredShopActions(){
+  const stage=$("hvShopStage");
+  if(!stage)return;
+  stage.querySelectorAll("[data-shop-action]").forEach(button=>button.addEventListener("click",async()=>{
+    const action=button.dataset.shopAction;
+    if(action==="close"){closePackShop();return;}
+    if(action==="collection"){closePackShop();openCollectionOrLocked();return;}
+    if(action==="missions"){showComingSoon("Misiones");return;}
+    if(action==="shop"||action==="packs")return;
+    if(action==="profile"){closePackShop();openProfilePanel();return;}
+    if(action==="gold-plus"||action==="gold"){showComingSoon("Conseguir oro");return;}
+    if(action==="gems-plus"||action==="gems"){showComingSoon("Comprar gemas");return;}
+    if(action==="fragments-plus"){showComingSoon("Conseguir fragmentos");return;}
+    if(action==="bundles"||action==="featured-buy"){showComingSoon("Lotes");return;}
+    if(action==="cosmetics"){showComingSoon("Cosméticos");return;}
+    if(action==="consumables"){showComingSoon("Consumibles");return;}
+    if(action==="daily"||action==="daily-buy"){showComingSoon("Ofertas diarias");return;}
+    if(action==="vip"){showComingSoon("Pase VIP");return;}
+    if(action==="redeem"){showComingSoon("Canjear código");return;}
+    if(action==="chat"){showComingSoon("Chat");return;}
+    if(action==="friends"){showComingSoon("Amigos");return;}
+    if(action==="clans"){showComingSoon("Clanes");return;}
+    if(action==="settings"){closePackShop();$("settingsPanel")?.classList.remove("hidden");return;}
+    if(action==="probabilities"){
+      await hvAlert("Pack básico: 3 cartas básicas.
+
+Pack raro: 1 rara + 2 básicas.
+
+Pack épico: 1 épica + 2 raras.
+
+Pack mítico: 1 mítica + 2 épicas.
+
+Pack legendario: 1 legendaria + 2 míticas.","Contenido garantizado");
+      return;
+    }
+    if(action==="buy-pack"){
+      const key=button.dataset.packKey;
+      if(key)await buyPackWithGold(key);
+    }
+  }));
+}
 function openPackShop(){
-  const panel=$("packShopPanel"),content=$("packShopContent"),goldText=$("packShopGoldText"),unlockText=$("packShopUnlockText");
+  const panel=$("packShopPanel"),content=$("packShopContent");
   if(!panel||!content)return showComingSoon("Tienda");
   const profile=getPlayerProfile();
-  const progressionUnlocked=canAccessPackShop();
-  if(goldText)goldText.textContent=`${profile.gold||0} oro`;
-  if(unlockText)unlockText.textContent=progressionUnlocked?"Compras activas":"Bloqueada";
-  if(!progressionUnlocked){
-    content.innerHTML=`<div class="pack-shop-locked"><b>Tienda bloqueada</b><p>Completa el mapa 2.1 Ecos del estandarte roto para desbloquear la compra de paquetes con oro.</p><span>Al desbloquearla, los cinco packs se comprarán únicamente con el oro del juego.</span></div>`;
-  }else{
-    const banner=`<div class="pack-shop-preview-banner">
-      <b>Tienda de packs activa</b>
-      <span>Estas compras usan exclusivamente el oro del juego. No interviene dinero real.</span>
-    </div>`;
-    const itemsHtml=PACK_SHOP_ITEMS.map(pack=>{
-      const canBuy=(profile.gold||0)>=pack.costGold;
-      const contents=(pack.contents||[]).map(line=>`<li>${line}</li>`).join("");
-      return `<div class="pack-shop-item">
-        <div class="pack-shop-pack-art"><img src="${pack.image}" alt="${pack.name}"></div>
-        <div class="pack-shop-copy">
-          <span class="pack-shop-category">${pack.category}</span>
-          <h3>${pack.name}</h3>
-          <p>${pack.description}</p>
-          <ul>
-            <li>Costo: <b>${pack.costGold} oro</b></li>
-            <li>Contenido:</li>
-            ${contents}
-            <li>Se agrega como paquete pendiente para abrir.</li>
-          </ul>
-        </div>
-        <button class="btn primary pack-shop-preview-button" type="button" data-pack-buy="${pack.key}" ${canBuy?"":"disabled"}>${canBuy?`Comprar · ${pack.costGold} oro`:"Oro insuficiente"}</button>
-      </div>`;
-    }).join("");
-    content.innerHTML=banner+itemsHtml;
-    content.querySelectorAll('[data-pack-buy]').forEach(btn=>btn.addEventListener('click',()=>buyPackWithGold(btn.getAttribute('data-pack-buy'))));
-  }
+  content.innerHTML=buildLayeredPackShop(profile);
+  bindLayeredShopActions();
   panel.classList.remove("hidden");
 }
 function closePackShop(){
@@ -12838,3 +12918,9 @@ function initMobileLandscapeGuard(){
   },true);
 }
 initMobileLandscapeGuard();
+
+document.addEventListener("keydown",event=>{
+  if(event.key!=="Escape")return;
+  const panel=$("packShopPanel");
+  if(panel&&!panel.classList.contains("hidden"))closePackShop();
+});

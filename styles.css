@@ -20870,3 +20870,195 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
 .pack-shop-category{display:inline-block;margin-bottom:5px;color:#ffd166!important;font-size:10px!important;font-weight:900;letter-spacing:1.4px!important}
 .pack-shop-preview-button[disabled]{opacity:1!important;cursor:not-allowed;color:#d9c39b!important;border-color:rgba(255,209,102,.26)!important;background:linear-gradient(180deg,rgba(96,69,33,.68),rgba(41,29,17,.82))!important;box-shadow:none!important}
 @media(max-width:760px){.pack-shop-preview-banner{align-items:flex-start;flex-direction:column}.pack-shop-preview-banner span{text-align:left}}
+
+/* ===== TIENDA HALLVALLA POR CAPAS — arte 1672x941 + hotspots funcionales ===== */
+#packShopPanel.overlay-panel{
+  padding:0;
+  background:rgba(0,0,0,.88);
+  overflow:hidden;
+}
+#packShopPanel .hv-shop-modal{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  max-width:none;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:#030302;
+  box-shadow:none;
+  overflow:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#packShopPanel .hv-shop-content{
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#8f651e #080705;
+}
+.hv-shop-stage-shell{
+  position:relative;
+  flex:0 0 auto;
+  width:min(1672px,100vw,calc(100vh * 1.776833));
+  aspect-ratio:1672 / 941;
+  background:#050403;
+  box-shadow:0 0 80px rgba(0,0,0,.92),0 0 0 1px rgba(209,153,44,.28);
+  overflow:hidden;
+}
+.hv-shop-stage{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  isolation:isolate;
+  background:#050403;
+  user-select:none;
+}
+.hv-shop-background,
+.hv-shop-layer{
+  position:absolute;
+  display:block;
+  object-fit:fill;
+  pointer-events:none;
+  -webkit-user-drag:none;
+}
+.hv-shop-background{
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+}
+.hv-shop-layer{z-index:2}
+.hv-shop-pack-layer{z-index:3;transition:filter .18s ease,transform .18s ease;transform-origin:center}
+.hv-shop-bundle-layer,.hv-shop-daily-layer{z-index:3}
+.hv-shop-live-value{
+  position:absolute;
+  z-index:7;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:.08em .16em;
+  box-sizing:border-box;
+  color:#e8c772;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(8px,1.02vw,17px);
+  font-weight:700;
+  line-height:1;
+  text-shadow:0 1px 2px #000,0 0 7px rgba(255,193,67,.28);
+  background:linear-gradient(90deg,rgba(6,5,4,.97),rgba(15,12,8,.97) 50%,rgba(6,5,4,.97));
+  box-shadow:inset 0 0 0 1px rgba(180,125,31,.12);
+  pointer-events:none;
+}
+.hv-shop-level-value{
+  border-radius:50%;
+  color:#f0ce72;
+  background:radial-gradient(circle,rgba(35,25,11,.98),rgba(7,6,4,.98));
+  font-size:clamp(8px,.93vw,15px);
+}
+.hv-shop-name-value{
+  color:#d4b66c;
+  font-size:clamp(6px,.72vw,12px);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  border-radius:3px;
+}
+.hv-shop-hotspot{
+  position:absolute;
+  z-index:12;
+  appearance:none;
+  -webkit-appearance:none;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:3px;
+  color:transparent;
+  background:transparent;
+  box-shadow:none;
+  opacity:1;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.hv-shop-hotspot span{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+.hv-shop-hotspot:focus-visible{
+  outline:2px solid #ffd66f;
+  outline-offset:-2px;
+  box-shadow:0 0 14px rgba(255,195,63,.78),inset 0 0 18px rgba(255,191,48,.18);
+}
+.hv-shop-hotspot[data-shop-action="buy-pack"]:active,
+.hv-shop-hotspot[data-shop-action="featured-buy"]:active,
+.hv-shop-hotspot[data-shop-action="daily-buy"]:active{
+  background:rgba(255,196,62,.09);
+  box-shadow:inset 0 0 18px rgba(255,201,71,.42);
+}
+.hv-shop-close{
+  position:fixed!important;
+  z-index:500!important;
+  top:10px!important;
+  right:12px!important;
+  width:38px!important;
+  height:38px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(225,170,63,.68)!important;
+  color:#f3d17a!important;
+  background:radial-gradient(circle at 50% 35%,#3a2911,#100c07 68%)!important;
+  box-shadow:0 6px 20px rgba(0,0,0,.55),inset 0 0 0 2px rgba(255,214,115,.08)!important;
+  font-family:Georgia,serif!important;
+  font-size:26px!important;
+  line-height:1!important;
+}
+.hv-shop-close:hover{filter:brightness(1.18)}
+.hv-shop-hidden-close{
+  position:fixed;
+  left:-9999px;
+  width:1px;
+  height:1px;
+  opacity:0;
+}
+@media(max-width:900px){
+  #packShopPanel .hv-shop-modal{align-items:flex-start;justify-content:flex-start}
+  #packShopPanel .hv-shop-content{align-items:flex-start;justify-content:flex-start}
+  .hv-shop-stage-shell{
+    width:980px;
+    min-width:980px;
+    height:auto;
+    margin:0;
+  }
+  .hv-shop-close{position:fixed!important}
+}
+/* Mantiene la composición idéntica: el cierre también es una zona invisible. */
+.hv-shop-close{
+  top:0!important;
+  right:0!important;
+  width:48px!important;
+  height:48px!important;
+  border:0!important;
+  color:transparent!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  opacity:0!important;
+}
+.hv-shop-close:focus-visible{
+  opacity:1!important;
+  color:#f3d17a!important;
+  background:rgba(13,10,6,.92)!important;
+  outline:2px solid #ffd66f!important;
+}
