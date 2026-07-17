@@ -9612,6 +9612,58 @@ if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspecto
 const RENAME_COST_GEMS = 100;
 const BASIC_PACK_GOLD_COST = 100;
 const PACK_SHOP_PREVIEW_MODE = true;
+const PACK_SHOP_ITEMS = [
+  {
+    key:"basic",
+    name:"Pack básico",
+    category:"CARTAS BÁSICAS",
+    image:"assets/home/cartas_basicas.webp",
+    costGold:100,
+    description:"Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.",
+    contents:["3 cartas básicas aleatorias"],
+    pendingType:"basic_magic_trap"
+  },
+  {
+    key:"rare",
+    name:"Pack raro",
+    category:"RAREZA RARA",
+    image:"assets/home/pack_raro.webp",
+    costGold:400,
+    description:"Incluye 1 carta rara y 2 cartas de la rareza inferior.",
+    contents:["1 carta rara garantizada","2 cartas básicas"],
+    pendingType:"rare_preview"
+  },
+  {
+    key:"epic",
+    name:"Pack épico",
+    category:"RAREZA ÉPICA",
+    image:"assets/home/pack_epico.webp",
+    costGold:900,
+    description:"Incluye 1 carta épica y 2 cartas de la rareza inferior.",
+    contents:["1 carta épica garantizada","2 cartas raras"],
+    pendingType:"epic_preview"
+  },
+  {
+    key:"legendary",
+    name:"Pack legendario",
+    category:"RAREZA LEGENDARIA",
+    image:"assets/home/pack_legendario.webp",
+    costGold:1400,
+    description:"Incluye 1 carta legendaria y 2 cartas de la rareza inferior.",
+    contents:["1 carta legendaria garantizada","2 cartas épicas"],
+    pendingType:"legendary_preview"
+  },
+  {
+    key:"mythic",
+    name:"Pack mítico",
+    category:"RAREZA MÍTICA",
+    image:"assets/home/pack_mitico.webp",
+    costGold:2000,
+    description:"Incluye 1 carta mítica y 2 cartas de la rareza inferior.",
+    contents:["1 carta mítica garantizada","2 cartas legendarias"],
+    pendingType:"mythic_preview"
+  }
+];
 const defaultPlayerProfile = {
   name: "Nuevo jugador",
   level: 1,
@@ -10141,29 +10193,35 @@ function openPackShop(){
   if(goldText)goldText.textContent=`${profile.gold||0} oro`;
   if(unlockText)unlockText.textContent=previewMode?"Vista previa":(progressionUnlocked?"Desbloqueada":"Bloqueada");
   if(!previewMode&&!progressionUnlocked){
-    content.innerHTML=`<div class="pack-shop-locked"><b>Tienda bloqueada</b><p>Completa el mapa 2.1 Ecos del estandarte roto para desbloquear la compra de paquetes con oro.</p><span>Después aparecerá el Pack básico.</span></div>`;
+    content.innerHTML=`<div class="pack-shop-locked"><b>Tienda bloqueada</b><p>Completa el mapa 2.1 Ecos del estandarte roto para desbloquear la compra de paquetes con oro.</p><span>Después aparecerán los packs por rareza y consumibles.</span></div>`;
   }else{
-    const canBuy=!previewMode&&progressionUnlocked&&(profile.gold||0)>=BASIC_PACK_GOLD_COST;
-    content.innerHTML=`<div class="pack-shop-preview-banner">
-      <b>Vista previa de la tienda</b>
-      <span>La interfaz está activa para revisión. Las compras todavía están deshabilitadas.</span>
-    </div>
-    <div class="pack-shop-item">
-      <div class="pack-shop-pack-art"><img src="assets/home/cartas_basicas.webp" alt="Cartas básicas"></div>
-      <div class="pack-shop-copy">
-        <span class="pack-shop-category">CARTAS BÁSICAS</span>
-        <h3>Pack básico</h3>
-        <p>Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.</p>
-        <ul>
-          <li>Costo previsto: <b>${BASIC_PACK_GOLD_COST} oro</b></li>
-          <li>Contenido: <b>3 cartas básicas aleatorias</b></li>
-          <li>Se abrirá como paquete pendiente.</li>
-        </ul>
-      </div>
-      <button id="buyBasicPackBtn" class="btn primary pack-shop-preview-button" type="button" disabled>${previewMode?"Compra próximamente":(canBuy?"Comprar pack":"Oro insuficiente")}</button>
+    const previewBanner=`<div class="pack-shop-preview-banner">
+      <b>${previewMode?"Vista previa de la tienda":"Tienda de packs"}</b>
+      <span>${previewMode?"La interfaz está activa para revisión. Las compras todavía están deshabilitadas.":"Compra paquetes usando oro ganado en aventura."}</span>
     </div>`;
-    const buyBtn=$("buyBasicPackBtn");
-    if(buyBtn&&!previewMode)buyBtn.addEventListener("click",buyBasicPackWithGold);
+    const itemsHtml=PACK_SHOP_ITEMS.map(pack=>{
+      const canBuy=!previewMode&&progressionUnlocked&&(profile.gold||0)>=pack.costGold;
+      const contents=(pack.contents||[]).map(line=>`<li>${line}</li>`).join("");
+      return `<div class="pack-shop-item">
+        <div class="pack-shop-pack-art"><img src="${pack.image}" alt="${pack.name}"></div>
+        <div class="pack-shop-copy">
+          <span class="pack-shop-category">${pack.category}</span>
+          <h3>${pack.name}</h3>
+          <p>${pack.description}</p>
+          <ul>
+            <li>Costo previsto: <b>${pack.costGold} oro</b></li>
+            <li>Contenido:</li>
+            ${contents}
+            <li>Se abrirá como paquete pendiente.</li>
+          </ul>
+        </div>
+        <button class="btn primary pack-shop-preview-button" type="button" data-pack-buy="${pack.key}" disabled>${previewMode?"Compra próximamente":(canBuy?"Comprar pack":"Oro insuficiente")}</button>
+      </div>`;
+    }).join("");
+    content.innerHTML=previewBanner+itemsHtml;
+    if(!previewMode){
+      content.querySelectorAll('[data-pack-buy]').forEach(btn=>btn.addEventListener('click',()=>buyPackWithGold(btn.getAttribute('data-pack-buy'))));
+    }
   }
   panel.classList.remove("hidden");
 }
@@ -10171,18 +10229,20 @@ function closePackShop(){
   const panel=$("packShopPanel");
   if(panel)panel.classList.add("hidden");
 }
-async function buyBasicPackWithGold(){
+async function buyPackWithGold(packKey){
+  const pack=(PACK_SHOP_ITEMS||[]).find(p=>p.key===packKey)||PACK_SHOP_ITEMS[0];
+  if(!pack)return;
   if(PACK_SHOP_PREVIEW_MODE){await hvAlert("La tienda está en modo de vista previa. Las compras todavía no están conectadas.","Vista previa");return;}
   if(!canAccessPackShop()){await hvAlert("La compra de packs se desbloquea al completar el mapa 2.1.","Tienda bloqueada");return;}
   const profile=getPlayerProfile();
-  if((profile.gold||0)<BASIC_PACK_GOLD_COST){await hvAlert(`Necesitas ${BASIC_PACK_GOLD_COST} oro para comprar el Pack básico. Tienes ${profile.gold||0}.`,"Oro insuficiente");return;}
-  profile.gold=(profile.gold||0)-BASIC_PACK_GOLD_COST;
+  if((profile.gold||0)<pack.costGold){await hvAlert(`Necesitas ${pack.costGold} oro para comprar ${pack.name}. Tienes ${profile.gold||0}.`,"Oro insuficiente");return;}
+  profile.gold=(profile.gold||0)-pack.costGold;
   savePlayerProfile(profile);
-  addPendingPack({name:"Pack básico",type:"basic_magic_trap",source:"shop",costGold:BASIC_PACK_GOLD_COST});
+  addPendingPack({name:pack.name,type:pack.pendingType||pack.key,source:"shop",costGold:pack.costGold});
   renderPlayerProfile(profile);
   renderHomeProgress();
   closePackShop();
-  if(await hvConfirm("Compraste un Pack básico. ¿Abrirlo ahora?","Compra realizada","Abrir pack","Después"))openPackOpening();
+  if(await hvConfirm(`Compraste ${pack.name}. ¿Abrirlo ahora?`,"Compra realizada","Abrir pack","Después"))openPackOpening();
 }
 function getLegendaryCardByKey(key){
   return LEGENDARY_ALLY_CARDS.find(c=>c.key===key)||null;
