@@ -20605,14 +20605,14 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
    7HFIELDSTAT MASTER V1 · Control total de iconos, aros y números
    ========================================================== */
 :root{
-  --sb-hp-unit-icon-scale:1; --sb-hp-unit-icon-x:0px; --sb-hp-unit-icon-y:0px; --sb-hp-unit-ring-scale:1; --sb-hp-unit-ring-x:0px; --sb-hp-unit-ring-y:0px; --sb-hp-unit-ring-stroke:1.2px; --sb-hp-unit-num-size:17px; --sb-hp-unit-num-weight:900; --sb-hp-unit-num-scale-x:1; --sb-hp-unit-num-scale-y:1; --sb-hp-unit-num-x:0px; --sb-hp-unit-num-y:0px;
-  --sb-hp-leader-icon-scale:1; --sb-hp-leader-icon-x:0px; --sb-hp-leader-icon-y:0px; --sb-hp-leader-ring-scale:1; --sb-hp-leader-ring-x:0px; --sb-hp-leader-ring-y:0px; --sb-hp-leader-ring-stroke:1.2px; --sb-hp-leader-num-size:17px; --sb-hp-leader-num-weight:900; --sb-hp-leader-num-scale-x:1; --sb-hp-leader-num-scale-y:1; --sb-hp-leader-num-x:0px; --sb-hp-leader-num-y:0px;
-  --sb-atk-unit-icon-scale:1; --sb-atk-unit-icon-x:0px; --sb-atk-unit-icon-y:0px; --sb-atk-unit-ring-scale:1; --sb-atk-unit-ring-x:0px; --sb-atk-unit-ring-y:0px; --sb-atk-unit-ring-stroke:1.1px; --sb-atk-unit-num-size:9.6px; --sb-atk-unit-num-weight:900; --sb-atk-unit-num-scale-x:1; --sb-atk-unit-num-scale-y:1; --sb-atk-unit-num-x:0px; --sb-atk-unit-num-y:0px;
-  --sb-atk-leader-icon-scale:1; --sb-atk-leader-icon-x:0px; --sb-atk-leader-icon-y:0px; --sb-atk-leader-ring-scale:1; --sb-atk-leader-ring-x:0px; --sb-atk-leader-ring-y:0px; --sb-atk-leader-ring-stroke:1.1px; --sb-atk-leader-num-size:9.6px; --sb-atk-leader-num-weight:900; --sb-atk-leader-num-scale-x:1; --sb-atk-leader-num-scale-y:1; --sb-atk-leader-num-x:0px; --sb-atk-leader-num-y:0px;
-  --sb-guard-unit-icon-scale:1; --sb-guard-unit-icon-x:0px; --sb-guard-unit-icon-y:0px; --sb-guard-unit-ring-scale:1; --sb-guard-unit-ring-x:0px; --sb-guard-unit-ring-y:0px; --sb-guard-unit-ring-stroke:1.1px; --sb-guard-unit-num-size:9.6px; --sb-guard-unit-num-weight:900; --sb-guard-unit-num-scale-x:1; --sb-guard-unit-num-scale-y:1; --sb-guard-unit-num-x:0px; --sb-guard-unit-num-y:0px;
-  --sb-guard-leader-icon-scale:1; --sb-guard-leader-icon-x:0px; --sb-guard-leader-icon-y:0px; --sb-guard-leader-ring-scale:1; --sb-guard-leader-ring-x:0px; --sb-guard-leader-ring-y:0px; --sb-guard-leader-ring-stroke:1.1px; --sb-guard-leader-num-size:9.6px; --sb-guard-leader-num-weight:900; --sb-guard-leader-num-scale-x:1; --sb-guard-leader-num-scale-y:1; --sb-guard-leader-num-x:0px; --sb-guard-leader-num-y:0px;
-  --sb-precision-icon-scale:1; --sb-precision-icon-x:0px; --sb-precision-icon-y:0px; --sb-precision-ring-scale:1; --sb-precision-ring-x:0px; --sb-precision-ring-y:0px; --sb-precision-ring-stroke:1.1px; --sb-precision-num-size:9.6px; --sb-precision-num-weight:900; --sb-precision-num-scale-x:1; --sb-precision-num-scale-y:1; --sb-precision-num-x:0px; --sb-precision-num-y:0px;
-  --sb-evasion-icon-scale:1; --sb-evasion-icon-x:0px; --sb-evasion-icon-y:0px; --sb-evasion-ring-scale:1; --sb-evasion-ring-x:0px; --sb-evasion-ring-y:0px; --sb-evasion-ring-stroke:1.1px; --sb-evasion-num-size:9.6px; --sb-evasion-num-weight:900; --sb-evasion-num-scale-x:1; --sb-evasion-num-scale-y:1; --sb-evasion-num-x:0px; --sb-evasion-num-y:0px;
+  --sb-hp-unit-icon-scale:1.5; --sb-hp-unit-icon-x:-25px; --sb-hp-unit-icon-y:-14px; --sb-hp-unit-ring-scale:2.2; --sb-hp-unit-ring-x:0px; --sb-hp-unit-ring-y:0px; --sb-hp-unit-ring-stroke:2.6px; --sb-hp-unit-num-size:32px; --sb-hp-unit-num-weight:100; --sb-hp-unit-num-scale-x:.84; --sb-hp-unit-num-scale-y:1.1; --sb-hp-unit-num-x:1.4px; --sb-hp-unit-num-y:-3.4px;
+  --sb-hp-leader-icon-scale:1.25; --sb-hp-leader-icon-x:-4px; --sb-hp-leader-icon-y:-32px; --sb-hp-leader-ring-scale:1.77; --sb-hp-leader-ring-x:0px; --sb-hp-leader-ring-y:0px; --sb-hp-leader-ring-stroke:.9px; --sb-hp-leader-num-size:28px; --sb-hp-leader-num-weight:100; --sb-hp-leader-num-scale-x:1; --sb-hp-leader-num-scale-y:1; --sb-hp-leader-num-x:0px; --sb-hp-leader-num-y:-2px;
+  --sb-atk-unit-icon-scale:1.75; --sb-atk-unit-icon-x:-3px; --sb-atk-unit-icon-y:-6px; --sb-atk-unit-ring-scale:1.68; --sb-atk-unit-ring-x:-1px; --sb-atk-unit-ring-y:-3px; --sb-atk-unit-ring-stroke:.2px; --sb-atk-unit-num-size:18.2px; --sb-atk-unit-num-weight:100; --sb-atk-unit-num-scale-x:.5; --sb-atk-unit-num-scale-y:.47; --sb-atk-unit-num-x:4.6px; --sb-atk-unit-num-y:1.8px;
+  --sb-atk-leader-icon-scale:1.25; --sb-atk-leader-icon-x:-2px; --sb-atk-leader-icon-y:-26px; --sb-atk-leader-ring-scale:.76; --sb-atk-leader-ring-x:4px; --sb-atk-leader-ring-y:-27px; --sb-atk-leader-ring-stroke:.3px; --sb-atk-leader-num-size:13.8px; --sb-atk-leader-num-weight:200; --sb-atk-leader-num-scale-x:1; --sb-atk-leader-num-scale-y:1; --sb-atk-leader-num-x:0px; --sb-atk-leader-num-y:0px;
+  --sb-guard-unit-icon-scale:2.2; --sb-guard-unit-icon-x:-2px; --sb-guard-unit-icon-y:-2px; --sb-guard-unit-ring-scale:2.03; --sb-guard-unit-ring-x:0px; --sb-guard-unit-ring-y:0px; --sb-guard-unit-ring-stroke:.2px; --sb-guard-unit-num-size:6px; --sb-guard-unit-num-weight:100; --sb-guard-unit-num-scale-x:.95; --sb-guard-unit-num-scale-y:.77; --sb-guard-unit-num-x:-.2px; --sb-guard-unit-num-y:-.6px;
+  --sb-guard-leader-icon-scale:1.4; --sb-guard-leader-icon-x:2px; --sb-guard-leader-icon-y:-25px; --sb-guard-leader-ring-scale:.82; --sb-guard-leader-ring-x:2px; --sb-guard-leader-ring-y:-10px; --sb-guard-leader-ring-stroke:.2px; --sb-guard-leader-num-size:16.4px; --sb-guard-leader-num-weight:100; --sb-guard-leader-num-scale-x:.99; --sb-guard-leader-num-scale-y:1.02; --sb-guard-leader-num-x:10.2px; --sb-guard-leader-num-y:-20px;
+  --sb-precision-icon-scale:2.2; --sb-precision-icon-x:-6px; --sb-precision-icon-y:-5px; --sb-precision-ring-scale:2.2; --sb-precision-ring-x:2px; --sb-precision-ring-y:-3px; --sb-precision-ring-stroke:.2px; --sb-precision-num-size:7.2px; --sb-precision-num-weight:100; --sb-precision-num-scale-x:.86; --sb-precision-num-scale-y:.63; --sb-precision-num-x:-.4px; --sb-precision-num-y:-1.8px;
+  --sb-evasion-icon-scale:2.2; --sb-evasion-icon-x:-3px; --sb-evasion-icon-y:-2px; --sb-evasion-ring-scale:2.01; --sb-evasion-ring-x:2px; --sb-evasion-ring-y:0px; --sb-evasion-ring-stroke:.2px; --sb-evasion-num-size:6px; --sb-evasion-num-weight:100; --sb-evasion-num-scale-x:1; --sb-evasion-num-scale-y:1; --sb-evasion-num-x:.4px; --sb-evasion-num-y:-1px;
 }
 /* Panel side dock */
 .field-stat-badges-tuner{left:12px !important; right:auto !important; top:88px !important; bottom:12px !important; transform:none !important; width:min(365px,calc(100vw - 16px)) !important; max-height:none !important; display:flex; flex-direction:column;}
@@ -20695,13 +20695,13 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
    7HSIZECTRL V2 · Líderes individuales + cartas en mano
    ========================================================== */
 :root{
-  --battle-player-leader-scale:1;
+  --battle-player-leader-scale:.74;
   --battle-player-leader-x:0px;
   --battle-player-leader-y:0px;
-  --battle-enemy-leader-scale:1;
-  --battle-enemy-leader-x:0px;
-  --battle-enemy-leader-y:0px;
-  --battle-hand-card-scale:1;
+  --battle-enemy-leader-scale:.74;
+  --battle-enemy-leader-x:-5px;
+  --battle-enemy-leader-y:-30px;
+  --battle-hand-card-scale:.67;
 }
 .leader-base.leader-base-south,
 body.hv-mobile-landscape .leader-base.leader-base-south,
