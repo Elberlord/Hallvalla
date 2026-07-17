@@ -11908,16 +11908,16 @@ initActionsHudTuner();
 /* ---------------------------------------------------------------------------
    7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v1";
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v2";
 const FIELD_STAT_BADGE_TARGETS={
-  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.2,numSize:17,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.2,numSize:17,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:100,iconX:0,iconY:0,ringScale:100,ringX:0,ringY:0,ringStroke:1.1,numSize:9.6,numWeight:900,numScaleX:100,numScaleY:100,numX:0,numY:0}}
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:220,iconX:-25,iconY:-14,ringScale:160,ringX:0,ringY:0,ringStroke:2.6,numSize:18,numWeight:100,numScaleX:100,numScaleY:100,numX:1.4,numY:-3.4}},
+  hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:125,iconX:-4,iconY:-32,ringScale:177,ringX:0,ringY:0,ringStroke:0.9,numSize:28,numWeight:100,numScaleX:100,numScaleY:100,numX:0,numY:-2}},
+  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:220,iconX:-3,iconY:-5,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:12.8,numWeight:100,numScaleX:72,numScaleY:47,numX:3.6,numY:0}},
+  atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:125,iconX:-2,iconY:-26,ringScale:76,ringX:4,ringY:-27,ringStroke:0.3,numSize:13.8,numWeight:200,numScaleX:100,numScaleY:100,numX:0,numY:0}},
+  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:220,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-0.2,numY:-0.6}},
+  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:140,iconX:2,iconY:-25,ringScale:82,ringX:2,ringY:-10,ringStroke:0.2,numSize:16.4,numWeight:100,numScaleX:99,numScaleY:102,numX:10.2,numY:-20}},
+  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:220,iconX:-3,iconY:-5,ringScale:220,ringX:2,ringY:-3,ringStroke:0.2,numSize:7.2,numWeight:100,numScaleX:86,numScaleY:63,numX:-0.4,numY:-1.8}},
+  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:220,iconX:-3,iconY:-2,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:0.4,numY:-1}}
 };
 const FIELD_STAT_CONTROL_DEFS=[
   {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:220,step:1},
@@ -12007,6 +12007,7 @@ function updateFieldStatBadgesTunerFromInput(key,value){
   setFieldStatBadgesTunerStatus(`Guardado: ${cfg.label}.`);
 }
 function openFieldStatBadgesTuner(){
+  $("battleVisualSizeTuner")?.classList.add("hidden");
   $("settingsPanel")?.classList.add("hidden");
   const tuner=$("fieldStatBadgesTuner"); if(!tuner) return;
   tuner.classList.remove("hidden");
@@ -12049,6 +12050,119 @@ function initFieldStatBadgesTuner(){
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldStatBadgesTuner")?.classList.contains("hidden"))closeFieldStatBadgesTuner();});
 }
 initFieldStatBadgesTuner();
+
+/* ---------------------------------------------------------------------------
+   7HSIZECTRL V2 · Tamaño/posición individual de líderes + tamaño de mano
+   --------------------------------------------------------------------------- */
+const BATTLE_VISUAL_SIZE_TUNER_KEY="hallvalla_battle_visual_size_v2";
+const BATTLE_VISUAL_SIZE_DEFAULTS=Object.freeze({
+  playerLeaderScale:100,
+  playerLeaderX:0,
+  playerLeaderY:0,
+  enemyLeaderScale:100,
+  enemyLeaderX:0,
+  enemyLeaderY:0,
+  handCardScale:100
+});
+let battleVisualSizeState=loadBattleVisualSizeState();
+function clampBattleVisualSize(value,min,max,fallback){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+}
+function loadBattleVisualSizeState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(BATTLE_VISUAL_SIZE_TUNER_KEY)||"{}")||{};
+    return {
+      playerLeaderScale:clampBattleVisualSize(saved.playerLeaderScale,45,180,100),
+      playerLeaderX:clampBattleVisualSize(saved.playerLeaderX,-120,120,0),
+      playerLeaderY:clampBattleVisualSize(saved.playerLeaderY,-120,120,0),
+      enemyLeaderScale:clampBattleVisualSize(saved.enemyLeaderScale,45,180,100),
+      enemyLeaderX:clampBattleVisualSize(saved.enemyLeaderX,-120,120,0),
+      enemyLeaderY:clampBattleVisualSize(saved.enemyLeaderY,-120,120,0),
+      handCardScale:clampBattleVisualSize(saved.handCardScale,35,120,100)
+    };
+  }catch(e){return {...BATTLE_VISUAL_SIZE_DEFAULTS};}
+}
+function saveBattleVisualSizeState(){
+  try{localStorage.setItem(BATTLE_VISUAL_SIZE_TUNER_KEY,JSON.stringify(battleVisualSizeState));}catch(e){}
+}
+function applyBattleVisualSizeState(save=false){
+  const root=document.documentElement;
+  root.style.setProperty("--battle-player-leader-scale",String(battleVisualSizeState.playerLeaderScale/100));
+  root.style.setProperty("--battle-player-leader-x",`${battleVisualSizeState.playerLeaderX}px`);
+  root.style.setProperty("--battle-player-leader-y",`${battleVisualSizeState.playerLeaderY}px`);
+  root.style.setProperty("--battle-enemy-leader-scale",String(battleVisualSizeState.enemyLeaderScale/100));
+  root.style.setProperty("--battle-enemy-leader-x",`${battleVisualSizeState.enemyLeaderX}px`);
+  root.style.setProperty("--battle-enemy-leader-y",`${battleVisualSizeState.enemyLeaderY}px`);
+  root.style.setProperty("--battle-hand-card-scale",String(battleVisualSizeState.handCardScale/100));
+  syncBattleVisualSizeControls();
+  if(save)saveBattleVisualSizeState();
+}
+function syncBattleVisualSizeControls(){
+  const defs=[
+    ["playerLeaderScaleInput","playerLeaderScaleValue",battleVisualSizeState.playerLeaderScale,"%"],
+    ["playerLeaderXInput","playerLeaderXValue",battleVisualSizeState.playerLeaderX," px"],
+    ["playerLeaderYInput","playerLeaderYValue",battleVisualSizeState.playerLeaderY," px"],
+    ["enemyLeaderScaleInput","enemyLeaderScaleValue",battleVisualSizeState.enemyLeaderScale,"%"],
+    ["enemyLeaderXInput","enemyLeaderXValue",battleVisualSizeState.enemyLeaderX," px"],
+    ["enemyLeaderYInput","enemyLeaderYValue",battleVisualSizeState.enemyLeaderY," px"],
+    ["battleHandCardScaleInput","battleHandCardScaleValue",battleVisualSizeState.handCardScale,"%"]
+  ];
+  defs.forEach(([inputId,outputId,value,suffix])=>{
+    const input=$(inputId),output=$(outputId);
+    if(input&&String(input.value)!==String(value))input.value=String(value);
+    if(output)output.textContent=`${value}${suffix}`;
+  });
+}
+function setBattleVisualSizeStatus(message=""){
+  const status=$("battleVisualSizeTunerStatus");
+  if(status)status.textContent=message;
+}
+function openBattleVisualSizeTuner(){
+  closeBattleMenu();
+  $("fieldStatBadgesTuner")?.classList.add("hidden");
+  const panel=$("battleVisualSizeTuner");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  syncBattleVisualSizeControls();
+  setBattleVisualSizeStatus("Ajusta líderes y cartas mientras observas el campo.");
+}
+function closeBattleVisualSizeTuner(){
+  $("battleVisualSizeTuner")?.classList.add("hidden");
+  saveBattleVisualSizeState();
+}
+function resetBattleVisualSizeTuner(){
+  battleVisualSizeState={...BATTLE_VISUAL_SIZE_DEFAULTS};
+  applyBattleVisualSizeState(true);
+  setBattleVisualSizeStatus("Tamaños y posiciones restablecidos.");
+}
+async function copyBattleVisualSizeValues(){
+  const text=`Tu líder — Tamaño ${battleVisualSizeState.playerLeaderScale}%; X ${battleVisualSizeState.playerLeaderX}px; Y ${battleVisualSizeState.playerLeaderY}px || Líder rival — Tamaño ${battleVisualSizeState.enemyLeaderScale}%; X ${battleVisualSizeState.enemyLeaderX}px; Y ${battleVisualSizeState.enemyLeaderY}px || Cartas en mano — Tamaño ${battleVisualSizeState.handCardScale}%`;
+  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
+  setBattleVisualSizeStatus("Valores copiados.");
+}
+function updateBattleVisualSizeValue(key,value,min,max,fallback,message){
+  battleVisualSizeState[key]=clampBattleVisualSize(value,min,max,fallback);
+  applyBattleVisualSizeState(true);
+  setBattleVisualSizeStatus(message);
+}
+function initBattleVisualSizeTuner(){
+  applyBattleVisualSizeState(false);
+  $("openBattleVisualSizeTunerBtn")?.addEventListener("click",openBattleVisualSizeTuner);
+  $("closeBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
+  $("saveBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
+  $("resetBattleVisualSizeTunerBtn")?.addEventListener("click",resetBattleVisualSizeTuner);
+  $("copyBattleVisualSizeValuesBtn")?.addEventListener("click",copyBattleVisualSizeValues);
+  $("playerLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderScale",ev.target.value,45,180,100,"Tamaño de tu líder guardado."));
+  $("playerLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderX",ev.target.value,-120,120,0,"Posición horizontal de tu líder guardada."));
+  $("playerLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderY",ev.target.value,-120,120,0,"Posición vertical de tu líder guardada."));
+  $("enemyLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderScale",ev.target.value,45,180,100,"Tamaño del líder rival guardado."));
+  $("enemyLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderX",ev.target.value,-120,120,0,"Posición horizontal del líder rival guardada."));
+  $("enemyLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderY",ev.target.value,-120,120,0,"Posición vertical del líder rival guardada."));
+  $("battleHandCardScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("handCardScale",ev.target.value,35,120,100,"Tamaño de las cartas en mano guardado."));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("battleVisualSizeTuner")?.classList.contains("hidden"))closeBattleVisualSizeTuner();});
+}
+initBattleVisualSizeTuner();
 
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
