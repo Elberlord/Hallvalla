@@ -1,0 +1,29 @@
+HALLVALLA · AUDITORÍA Y CORRECCIÓN DE SONIDOS DE ARMAS
+Versión: 7WEAPONSFX1
+
+PROBLEMAS DETECTADOS
+1. Todos los ataques físicos reproducían el mismo archivo attack_impact.ogg al conectar el golpe. Ese impacto común podía dominar auditivamente al sonido inicial del arma.
+2. Había dos sistemas distintos para clasificar armas. El clasificador de sonido no aprovechaba correctamente weaponClass ni todos los leaderType ya calculados por el sistema táctico.
+3. Algunas armas no se reconocían de forma consistente: líder de hacha, Naginata, Yabusame y unidades nuevas con nombres equivalentes.
+4. Las espadas de rareza alta podían terminar usando attack_heroic, ocultando su identidad de espada.
+5. Los archivos anteriores tenían diferencias pequeñas y el navegador podía conservarlos en caché.
+
+CORRECCIONES
+- Cada ataque ahora transporta weaponKind, attackSound e impactSound dentro del evento visual.
+- Se separaron los sonidos de salida y de impacto:
+  Espada: attack_slash.ogg + impact_sword.ogg
+  Hacha: attack_axe.ogg + impact_axe.ogg
+  Arco/flecha: attack_ranged.ogg + impact_arrow.ogg
+  Lanza: attack_spear.ogg + impact_spear.ogg
+  Magia: attack_fire_magic.ogg + impact_magic.ogg
+- Se eliminó el impacto genérico compartido durante los ataques normales.
+- La rareza ya no reemplaza el sonido principal del arma.
+- El detector ahora usa weaponKind explícito, weaponClass, leaderType, key, nombre, texto e icono.
+- Yabusame se escucha como arco aunque tácticamente sea Caballería.
+- Naginata se escucha como lanza.
+- El líder Caudillo del Hacha se escucha como hacha.
+- Se agregó versión de caché SFX 7WEAPONSFX1.
+
+VERIFICACIONES
+- node --check script.js: correcto.
+- Pruebas de mapeo: Katana, Berserker, Arquera, Lancero, Naginata, Yabusame, líder de hacha, líder arquero y Wallace épico: correctas.

@@ -642,6 +642,7 @@ function makeBattleFxEvent(type,attacker,target,meta={}){
   if(!attacker||!target)return null;
   const attackType=type||"attack";
   const attackStyle=attackType==="attack"?(isRangedAttack(attacker,target)?"ranged":"melee"):"generic";
+  const weaponKind=getUnitWeaponKind(attacker);
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     type:attackType,
@@ -655,7 +656,9 @@ function makeBattleFxEvent(type,attacker,target,meta={}){
     from:{x:Number(attacker.x||0),y:Number(attacker.y||0)},
     to:{x:Number(target.x||0),y:Number(target.y||0)},
     rarityClass:getFxRarityClass(attacker),
+    weaponKind,
     attackSound:getAttackSoundForUnit(attacker),
+    impactSound:getImpactSoundForWeapon(weaponKind),
     stealthAttack:!!meta.stealthAttack
   };
 }
@@ -751,8 +754,13 @@ function playBattleFx(attacker,target){
 }
 function playBattleFxEvent(fx,attackerRef=null){
   if(!fx||!fx.from||!fx.to)return;
-  const soundUnit=attackerRef||{owner:fx.attackerOwner||0,rarity:"",special:["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(fx.rarityClass||""),key:""};
-  tryPlaySound(fx.attackSound||(fx.attackStyle==="ranged"?"attack_ranged":getAttackSoundForUnit(soundUnit)),.82);
+  const soundUnit=attackerRef||{owner:fx.attackerOwner||0,rarity:"",special:false,key:"",name:fx.attackerName||"",weaponKind:fx.weaponKind||""};
+  const weaponKind=fx.weaponKind||getWeaponKindFromSoundName(fx.attackSound)||getUnitWeaponKind(soundUnit);
+  const attackSound=fx.attackSound||getAttackSoundForUnit(soundUnit);
+  const impactSound=fx.impactSound||getImpactSoundForWeapon(weaponKind);
+  const attackVolume={arrow:.92,spear:.86,axe:.92,sword:.84,fire_magic:.86}[weaponKind]||.82;
+  const impactVolume={arrow:.58,spear:.68,axe:.78,sword:.66,fire_magic:.68}[weaponKind]||.62;
+  tryPlaySound(attackSound,attackVolume);
   const from=getGridCellCenter(fx.from.x,fx.from.y);
   const to=getGridCellCenter(fx.to.x,fx.to.y);
   if(!from||!to)return;
@@ -764,13 +772,13 @@ function playBattleFxEvent(fx,attackerRef=null){
   const impactExtra=["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-impact-halo"></div>':'';
   if(fx.attackStyle==="ranged"){
     const travelMs=Math.max(170,Math.min(380,Math.round(len*2.2)));
-    setTimeout(()=>tryPlaySound("attack_impact",.65),Math.max(80,travelMs-55));
+    setTimeout(()=>tryPlaySound(impactSound,impactVolume),Math.max(80,travelMs-55));
     const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-projectile-trail"></div>':'';
     spawnBattleFxNode(`battle-fx-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`,"--fx-flight":`${travelMs}ms`},travelMs+220,`<div class="battle-fx-projectile-shaft"></div><div class="battle-fx-projectile-head"></div><div class="battle-fx-projectile-fletch"></div>${projectileExtra}`);
     setTimeout(()=>spawnBattleFxNode(`battle-fx-impact ranged ${sideClass} ${rarityClass}`,to.x,to.y,{},940,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`),Math.max(40,travelMs-12));
     return;
   }
-  setTimeout(()=>tryPlaySound("attack_impact",.65),180);
+  setTimeout(()=>tryPlaySound(impactSound,impactVolume),180);
   const slashExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-slash-trail"></div>':'';
   spawnBattleFxNode(`battle-fx-slash ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`},640,`<div class="battle-fx-slash-core"></div>${slashExtra}`);
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
@@ -1040,7 +1048,12 @@ const MUSIC_TRACK_ALIASES={
   music_theme_loop:"duel_hallvalla_war_chant"
 };
 function resolveMusicTrackName(name){return MUSIC_TRACK_ALIASES[name]||name;}
-function audioPath(kind,name){return `assets/${kind}/${kind==="music"?resolveMusicTrackName(name):name}.ogg`;}
+const SFX_ASSET_VERSION="7WEAPONSFX1";
+function audioPath(kind,name){
+  const resolved=kind==="music"?resolveMusicTrackName(name):name;
+  const cache=kind==="sfx"?`?v=${SFX_ASSET_VERSION}`:"";
+  return `assets/${kind}/${resolved}.ogg${cache}`;
+}
 function clampAudioVolume(value,fallback=.5){
   const n=Number(value);
   if(!Number.isFinite(n))return fallback;
@@ -1099,30 +1112,55 @@ function getSummonSoundForUnit(unit){
   return "summon_basic";
 }
 function getUnitWeaponKind(unit){
-  const key=String(unit?.key||"").toLowerCase();
-  const name=String(unit?.name||"").toLowerCase();
-  const text=String(unit?.text||"").toLowerCase();
-  const icon=String(unit?.icon||"");
-  const range=Number(unit?.range||1);
-  const isMage=key.includes("mage")||key.includes("adept")||key.includes("arcane")||name.includes("mago")||name.includes("maga")||name.includes("arcano")||name.includes("arcana")||name.includes("hechic")||text.includes("arcana")||text.includes("arcano")||text.includes("fuego")||text.includes("llama")||text.includes("hechic")||icon.includes("🜁")||icon.includes("🔥");
+  if(!unit)return "sword";
+  const explicit=String(unit.weaponKind||unit.attackWeapon||"").toLowerCase();
+  if(["sword","axe","arrow","spear","fire_magic"].includes(explicit))return explicit;
+
+  const key=String(unit.key||"").toLowerCase();
+  const name=String(unit.name||"").toLowerCase();
+  const text=String(unit.text||unit.effectText||unit.ability||"").toLowerCase();
+  const icon=String(unit.icon||"");
+  const leaderType=String(unit.leaderType||"").toLowerCase();
+  const tactical=String(unit.weaponClass||getWeaponClassForCard(unit)||"").toLowerCase();
+
+  const isMage=leaderType==="mage"||tactical==="mage"||key.includes("mage")||key.includes("adept")||key.includes("arcane")||name.includes("mago")||name.includes("maga")||name.includes("arcano")||name.includes("arcana")||name.includes("hechic")||text.includes("arcana")||text.includes("arcano")||text.includes("fuego")||text.includes("llama")||text.includes("hechic")||icon.includes("🜁")||icon.includes("🔥");
   if(isMage)return "fire_magic";
-  if(key.includes("archer")||name.includes("arquera")||name.includes("arquero")||name.includes("simo")||icon.includes("🏹")||range>=3)return "arrow";
-  // La caballería ligera pertenece a la clase táctica Caballería,
-  // pero su arma de ataque básica es espada, no lanza.
-  if(name.includes("caballer")||key.includes("cavalry"))return "sword";
-  if(key.includes("spearman")||name.includes("lancero")||name.includes("lanza")||text.includes("lanza"))return "spear";
-  if(key.includes("ulfhednar")||name.includes("ulfhednar")||name.includes("berserker")||icon.includes("🪓"))return "axe";
+
+  // El arma visual tiene prioridad sobre la clase táctica. Por ejemplo,
+  // Yabusame es Caballería tácticamente, pero dispara un arco.
+  if(leaderType==="archer"||tactical==="bow"||key.includes("archer")||key.includes("yabusame")||key.includes("bow")||key.includes("arrow")||name.includes("arquera")||name.includes("arquero")||name.includes("arco")||name.includes("flecha")||name.includes("tirador")||name.includes("simo")||icon.includes("🏹"))return "arrow";
+  if(leaderType==="axe"||tactical==="axe"||key.includes("axe")||key.includes("hacha")||key.includes("ulfhednar")||key.includes("berserker")||name.includes("hacha")||name.includes("ulfhednar")||name.includes("berserker")||text.includes("hacha")||icon.includes("🪓"))return "axe";
+  if(tactical==="spear"||key.includes("spearman")||key.includes("spear")||key.includes("lance")||key.includes("lanza")||key.includes("naginata")||name.includes("lancero")||name.includes("lanza")||name.includes("pica")||name.includes("naginata")||text.includes("lanza")||text.includes("pica"))return "spear";
+
+  // La caballería ligera y demás clases de Caballería usan espada salvo que
+  // su arte/nombre haya sido detectado arriba como arco, lanza o hacha.
   return "sword";
 }
+function getWeaponKindFromSoundName(soundName){
+  const name=String(soundName||"").toLowerCase();
+  if(name.includes("ranged")||name.includes("arrow")||name.includes("bow"))return "arrow";
+  if(name.includes("spear")||name.includes("lance"))return "spear";
+  if(name.includes("axe")||name.includes("hacha"))return "axe";
+  if(name.includes("fire")||name.includes("magic")||name.includes("spell"))return "fire_magic";
+  if(name.includes("slash")||name.includes("sword"))return "sword";
+  return "";
+}
+function getImpactSoundForWeapon(weaponKind){
+  const map={
+    sword:"impact_sword",
+    axe:"impact_axe",
+    arrow:"impact_arrow",
+    spear:"impact_spear",
+    fire_magic:"impact_magic"
+  };
+  return map[String(weaponKind||"").toLowerCase()]||"attack_impact";
+}
 function getAttackSoundForUnit(unit){
-  const cls=getFxRarityClass(unit);
-  if(cls==="fx-demigod")return "attack_demigod";
   const weapon=getUnitWeaponKind(unit);
   if(weapon==="fire_magic")return "attack_fire_magic";
   if(weapon==="arrow")return "attack_ranged";
   if(weapon==="spear")return "attack_spear";
   if(weapon==="axe")return "attack_axe";
-  if(cls==="fx-heroic"||cls==="fx-glorious"||cls==="fx-epic"||cls==="fx-mythic")return "attack_heroic";
   return "attack_slash";
 }
 
