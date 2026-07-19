@@ -1,0 +1,21 @@
+HALLVALLA — MAZO FIJO DEL GUERRERO DE LA VANGUARDIA ROTA (2.1, BATALLA 1)
+
+Total: 30 cartas
+
+1 Hua Lan
+1 William Wallace
+1 Richard Corazón de León
+1 Maldición de arena reforzada
+3 Fireball
+3 Luz de sanación
+3 Samurai de Katana
+2 Saboteador de Iga
+2 Berserker del norte
+3 Lancero solar
+3 Arquera del desierto
+3 Guardián de piedra
+3 Ulfhednar
+1 Geisha Encubierta
+
+La mano inicial se roba aleatoriamente desde este mazo exacto.
+Ya no se añaden automáticamente las 12 trampas legendarias ni cartas de relleno aleatorias.

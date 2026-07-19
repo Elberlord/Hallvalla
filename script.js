@@ -2551,11 +2551,11 @@ const LEGENDARY_TRAP_CARDS=[
 ];
 
 const IMPROVED_MAGIC_TRAP_PACK=[
-  {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",cost:2,spell:"damage",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
-  {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
-  {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
-  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante este turno."},
-  {key:"warning_rune_plus",name:"Runa de contraataque",type:"trap",icon:"◇",cost:2,trap:"guard",guard:3,rarity:"Épica",text:"Colócala sobre una unidad aliada. La primera vez que esa unidad sea atacada, obtiene +3 GUARDIA durante ese combate y la runa se consume."},
+  {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/sand_storm.webp",cost:2,spell:"damage",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
+  {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",portrait:"assets/cards/basic/athena_blessing.webp",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
+  {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",portrait:"assets/cards/basic/shield_wall.webp",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
+  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",portrait:"assets/cards/beasts/iron_jaw_trap.webp",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante este turno."},
+  {key:"warning_rune_plus",name:"Runa de contraataque",type:"trap",icon:"◇",portrait:"assets/cards/basic/warning_rune.webp",cost:2,trap:"guard",guard:3,rarity:"Épica",text:"Colócala sobre una unidad aliada. La primera vez que esa unidad sea atacada, obtiene +3 GUARDIA durante ese combate y la runa se consume."},
   ...LEGENDARY_TRAP_CARDS
 ];
 
@@ -2569,8 +2569,8 @@ const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"El inicio de la
 {id:"battle5",num:5,title:"La prueba de Richard",legacyTitle:"El usurpador",enemyName:"Richard Corazón de León",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_5_el_usurpador.webp",enemyIntro:"La última defensa se rompe entre humo y acero. En el interior del salón, frente al trono, espera Richard Corazón de León.\n\nNo viene como usurpador. Viene a medir tu temple. Asegura que el reino necesita guerreros capaces de sostener la corona cuando el mundo se parte. Si sobrevives a su prueba, te aceptará como aliado.",xp:20,gold:25,cardPack:false,rewardCard:"richard_lionheart",enemyLegendaryCards:["mulan","wallace","richard_lionheart"],aiLevel:5,aiDrawBonus:0,aiHonorBonus:2,aiStyle:"Despiadada y orientada a victoria",desc:"Supera la prueba final de Richard Corazón de León para completar el mapa 1.1 y ganar su carta."}
 ]};
 const ADVENTURE_CHAPTER_2_1={id:"chapter2_1",number:"2.1",title:"Ecos del estandarte roto",desc:"Tras la prueba de Richard, la rebelión deja de pelear como una banda dispersa. Un nuevo consejo de estrategas roba tácticas del reino y usa leyendas invocadas contra ti: Corazón de León, Mulan y Wallace aparecen ahora en manos enemigas junto a magias y trampas reforzadas.",introTitle:"2.1 Ecos del estandarte roto",introText:"El golpe fue detenido, pero no destruido. Entre cartas quemadas y juramentos rotos, los rebeldes aprendieron a copiar la fuerza de las leyendas. Ahora cada comandante enemigo carga cartas básicas, magias reforzadas, trampas más crueles y tres nombres capaces de cambiar una batalla: Richard, Mulan y Wallace.",requiresChapter:"chapter1_1",packType:"improved_magic_trap",battles:[
-{id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu líder antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El enemigo usa cartas básicas, tres aliados legendarios y magias/trampas reforzadas."},
-{id:"chapter2_1_battle2",num:2,title:"La arquera del paso silencioso",enemyName:"Arquera del Paso Silencioso",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La ruta de mensajeros aparece limpia, demasiado limpia. Desde las colinas, una arquera rebelde dirige disparos calculados y usa trampas reforzadas para cortar movimiento. Si dejas una unidad herida, la convertirá en una puerta abierta hacia tu líder.",xp:28,gold:32,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:7,aiDrawBonus:1,aiHonorBonus:3,aiStyle:"Control a distancia",desc:"Segundo combate del mapa 2.1. La IA prioriza daño, rango y remates con apoyo legendario."},
+{id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu líder antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",rewardPackType:"shop_basic",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],enemyFixedDeck:[["mulan",1],["wallace",1],["richard_lionheart",1],["sand_curse_plus",1],["fireball",3],["heal",3],["samurai_katana",3],["saboteador_iga",2],["berserker",2],["spearman",3],["archer",3],["guardian",3],["ulfhednar",3],["geisha_encubierta",1]],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El Guerrero de la Vanguardia Rota usa un mazo fijo de 30 cartas con frente pesado, curación, daño directo, lanceros, guardianes y tres aliados legendarios."},
+{id:"chapter2_1_battle2",num:2,title:"La arquera del paso silencioso",enemyName:"Arquera del Paso Silencioso",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La ruta de mensajeros aparece limpia, demasiado limpia. Desde las colinas, una arquera rebelde dirige disparos calculados y usa trampas reforzadas para cortar movimiento. Si dejas una unidad herida, la convertirá en una puerta abierta hacia tu líder.",xp:28,gold:32,cardPack:true,packType:"improved_magic_trap",rewardPackType:"shop_basic",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:7,aiDrawBonus:1,aiHonorBonus:3,aiStyle:"Control a distancia",desc:"Segundo combate del mapa 2.1. La IA prioriza daño, rango y remates con apoyo legendario."},
 {id:"chapter2_1_battle3",num:3,title:"El blanco de invierno",enemyName:"Simo Häyhä",enemyLeaderType:"archer",image:"assets/story/adventure_2_1/2_1_3_el_blanco_de_invierno.webp",enemyIntro:"La nieve no cae en esta cámara, pero el silencio corta igual. Simo Häyhä espera al fondo del eco quebrado, protegido por trampas reforzadas y leyendas copiadas. Si dejas una unidad herida, su precisión la convertirá en sentencia. Al vencerlo, su carta se unirá a tu colección.",xp:35,gold:40,cardPack:false,packType:"improved_magic_trap",rewardCard:"simo_hayha",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha"],aiLevel:8,aiDrawBonus:2,aiHonorBonus:3,aiStyle:"Francotirador de precisión",desc:"Jefe del mapa 2.1. Simo usa rango, precisión, Richard, Mulan, Wallace y magias/trampas mejoradas."}
 ]};
 const ADVENTURE_CHAPTER_3_1={id:"chapter3_1",number:"3.1",title:"El Tratado de la Guerra",desc:"Tras vencer a Simo, la rebelión cambia de rostro: menos fuerza bruta, más planificación. Los enemigos ahora preparan trampas, gastan Honor con mayor precisión y buscan ganar ventaja antes de atacar. Al final del capítulo espera Sun Tzu, una leyenda débil en cuerpo, pero peligrosa por estrategia.",introTitle:"3.1 El Tratado de la Guerra",introText:"El invierno del mapa 2 dejó una lección clara: los rebeldes ya no quieren solamente derrotarte, quieren estudiarte. En los campamentos capturados aparecen tablillas, mapas de rutas, formaciones falsas y notas de batalla escritas como si alguien estuviera enseñando a la rebelión a pensar. Ese alguien es Sun Tzu.",requiresChapter:"chapter2_1",packType:"improved_magic_trap",battles:[
@@ -9680,7 +9680,7 @@ const PACK_SHOP_ITEMS = [
     costGold:100,
     description:"Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.",
     contents:["3 cartas básicas aleatorias"],
-    pendingType:"basic_magic_trap",
+    pendingType:"shop_basic",
     targetRarity:"basic",
     lowerRarity:"basic"
   },
@@ -9802,6 +9802,22 @@ function renderDetLeaderRecordHtml(entity){
     <div class="det-record-row"><span>Contra IA</span><strong>${record.ai.wins}V / ${record.ai.losses}D</strong></div>
     <div class="det-record-row"><span>Contra jugador</span><strong>${record.pvp.wins}V / ${record.pvp.losses}D</strong></div>
   </div>`;
+}
+function getShopPackDefinition(packKey="basic"){
+  return (PACK_SHOP_ITEMS||[]).find(pack=>pack.key===packKey)||null;
+}
+function buildPendingShopPack(packKey="basic",extra={}){
+  const pack=getShopPackDefinition(packKey);
+  if(!pack)return {...extra};
+  return {
+    name:pack.name,
+    type:pack.pendingType||`shop_${pack.key}`,
+    shopTier:pack.key,
+    targetRarity:pack.targetRarity||"basic",
+    lowerRarity:pack.lowerRarity||"basic",
+    image:pack.image,
+    ...extra
+  };
 }
 function getPlayerProfile(){
   try{
@@ -10171,13 +10187,16 @@ function formatRewardLine(reward){
 function getStarterComplementCard(selectedSpecial=""){
   return selectedSpecial==="wallace"?{...MULAN_CARD}:{...WALLACE_CARD};
 }
+function getBattleRewardPackType(battle){
+  return battle?.rewardPackType||battle?.packType||"shop_basic";
+}
 function getRewardCardsForBattle(battle,selectedSpecial=""){
   if(!battle)return[];
   if(battle.rewardCard==="starter_complement")return[getStarterComplementCard(selectedSpecial||getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan")];
   const special=getLegendaryCardByKey(battle.rewardCard);
   if(special)return[{...special}];
   if(battle.rewardCard==="improved_magic_trap_pack")return getPackCards({type:"improved_magic_trap"});
-  if(battle.cardPack)return getPackCards({type:battle.packType||"basic_magic_trap"});
+  if(battle.cardPack)return getPackCards({type:getBattleRewardPackType(battle)});
   return[];
 }
 function getBattleRewardLabel(battle){
@@ -10187,7 +10206,10 @@ function getBattleRewardLabel(battle){
   if(battle.gold)parts.push(`${battle.gold} Oro`);
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
-  else if(battle.cardPack)parts.push(battle.packType==="beast_pack"?"Paquete de Bestias x1":(battle.packType==="improved_magic_trap"?"Paquete reforzado de 3 magia/trampa":"Paquete básico de 3 cartas básicas aleatorias"));
+  else if(battle.cardPack){
+    const rewardPackType=getBattleRewardPackType(battle);
+    parts.push(rewardPackType==="beast_pack"?"Paquete de Bestias x1":(rewardPackType==="improved_magic_trap"?"Paquete reforzado de 3 cartas":"Pack básico normal x1 · 3 cartas básicas aleatorias"));
+  }
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   return parts.join(" · ");
 }
@@ -10399,16 +10421,10 @@ Oro después de comprar: ${formatGold(remainingGold)}
 
   profile.gold=remainingGold;
   savePlayerProfile(profile);
-  addPendingPack({
-    name:pack.name,
-    type:pack.pendingType||pack.key,
-    shopTier:pack.key,
-    targetRarity:pack.targetRarity,
-    lowerRarity:pack.lowerRarity,
-    image:pack.image,
+  addPendingPack(buildPendingShopPack(pack.key,{
     source:"shop",
     costGold:packCost
-  });
+  }));
   renderPlayerProfile(profile);
   renderHomeProgress();
   closePackShop();
@@ -10455,10 +10471,48 @@ function removeOneTemplateByKey(templates,key){
   if(idx>=0)next.splice(idx,1);
   return next;
 }
+function getAdventureDeckCardTemplateByKey(key){
+  const pools=[
+    CARD_TEMPLATES||[],
+    BASIC_MAGIC_TRAP_PACK||[],
+    IMPROVED_MAGIC_TRAP_PACK||[],
+    LEGENDARY_TRAP_CARDS||[],
+    Object.values(ADVENTURE_SPECIALS||{}),
+    LEGENDARY_ALLY_CARDS.filter(Boolean)||[]
+  ];
+  for(const pool of pools){
+    const found=(pool||[]).find(card=>card&&(card.key||card.name)===key);
+    if(found)return found;
+  }
+  return null;
+}
+function expandEnemyFixedDeck(deckList=[]){
+  const templates=[];
+  (deckList||[]).forEach(entry=>{
+    const key=Array.isArray(entry)?entry[0]:entry?.key;
+    const amount=Math.max(0,Number(Array.isArray(entry)?entry[1]:entry?.count)||0);
+    const template=getAdventureDeckCardTemplateByKey(key);
+    if(!template){
+      console.warn(`[HallValla] Carta no encontrada en mazo fijo de IA: ${key}`);
+      return;
+    }
+    for(let i=0;i<amount;i++)templates.push(template);
+  });
+  return templates;
+}
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
   if(battle?.beastEvent||enemyLeaderType==="beastmaster"){
     const beastDeck=getBeastmasterDeckTemplates();
     const draw=drawCards(shuffle(beastDeck.map(c=>makeCard(c,2,enemyLeaderType))),[],4);
+    return{deck:draw.deck,hand:draw.hand};
+  }
+  if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
+    const fixedTemplates=expandEnemyFixedDeck(battle.enemyFixedDeck);
+    if(fixedTemplates.length!==DECK_RULES.deckSize){
+      console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} tiene ${fixedTemplates.length}/${DECK_RULES.deckSize} cartas.`);
+    }
+    const fixedDeck=shuffle(fixedTemplates.slice(0,DECK_RULES.deckSize).map(card=>makeCard(card,2,enemyLeaderType)));
+    const draw=drawCards(fixedDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
   const baseTemplates=getAiBasicDeckTemplates();
@@ -10508,8 +10562,25 @@ normalizeBasicCards();
 
 function getPendingPacks(){
   try{
-    const packs=JSON.parse(localStorage.getItem("hallvalla_pending_packs")||"[]");
-    return Array.isArray(packs)?packs:[];
+    const parsed=JSON.parse(localStorage.getItem("hallvalla_pending_packs")||"[]");
+    const packs=Array.isArray(parsed)?parsed:[];
+    let migrated=false;
+    const normalized=packs.map(pack=>{
+      if(pack?.chapterId==="chapter2_1"&&(pack?.type==="improved_magic_trap"||pack?.type==="basic_magic_trap"||pack?.type==="shop_basic")){
+        const normalizedBasic=buildPendingShopPack("basic",{
+          ...pack,
+          source:pack.source||"adventure",
+          costGold:0,
+          migratedFromImprovedReward:pack?.type==="improved_magic_trap"||pack?.migratedFromImprovedReward===true
+        });
+        const changed=pack.type!==normalizedBasic.type||pack.shopTier!=="basic"||pack.name!==normalizedBasic.name||pack.image!==normalizedBasic.image;
+        if(changed)migrated=true;
+        return normalizedBasic;
+      }
+      return pack;
+    });
+    if(migrated)localStorage.setItem("hallvalla_pending_packs",JSON.stringify(normalized));
+    return normalized;
   }catch(e){return[];}
 }
 function savePendingPacks(packs){
@@ -10583,7 +10654,7 @@ function getShopRarityPool(rarityKey){
 function getShopTierPackCards(pack){
   const target=pack?.targetRarity||"basic";
   const lower=pack?.lowerRarity||"basic";
-  if(pack?.shopTier==="basic"||pack?.type==="basic_magic_trap")return randomPackCards(getShopRarityPool("basic"),3);
+  if(pack?.shopTier==="basic"||pack?.type==="shop_basic"||pack?.type==="basic_magic_trap")return randomPackCards(getShopRarityPool("basic"),3);
   const targetPool=getShopRarityPool(target);
   const lowerPool=getShopRarityPool(lower);
   const guaranteed=randomPackCards(targetPool,1);
@@ -10602,7 +10673,7 @@ function getPackCards(pack){
   return randomPackCards(getBasicNonBeastPackPool(),3);
 }
 function recordBasicPackOpeningAndMaybeBonus(pack){
-  if(!pack||pack.type!=="basic_magic_trap")return false;
+  if(!pack||!(pack.type==="shop_basic"||pack.type==="basic_magic_trap"||pack.shopTier==="basic"))return false;
   const next=getBasicPackOpenCounter()+1;
   if(next>=20){
     setBasicPackOpenCounter(0);
@@ -11705,7 +11776,18 @@ function completeAdventureBattleOnce(pub){
     rewardCards=getRewardCardsForBattle(battle);
     if(rewardCards.length)addCardsToCollection(rewardCards);
   }else if(battle.cardPack){
-    addPendingPack({name:battle.packType==="improved_magic_trap"?"Paquete reforzado de magia/trampa":"Paquete básico de magia/trampa",type:battle.packType||"basic_magic_trap",battleId:battle.id,chapterId:chapterForBattle.id});
+    const rewardPackType=getBattleRewardPackType(battle);
+    if(rewardPackType==="shop_basic"||rewardPackType==="basic_magic_trap"){
+      addPendingPack(buildPendingShopPack("basic",{
+        source:"adventure",
+        costGold:0,
+        battleId:battle.id,
+        chapterId:chapterForBattle.id
+      }));
+    }else{
+      const rewardPackName=rewardPackType==="beast_pack"?"Paquete de Bestias":(rewardPackType==="improved_magic_trap"?"Paquete reforzado de cartas":"Paquete de cartas");
+      addPendingPack({name:rewardPackName,type:rewardPackType,battleId:battle.id,chapterId:chapterForBattle.id,source:"adventure",costGold:0});
+    }
     rewardCards=getRewardCardsForBattle(battle);
   }
   renderHomeProgress();
