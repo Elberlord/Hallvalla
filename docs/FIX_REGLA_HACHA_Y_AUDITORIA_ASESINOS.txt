@@ -1,0 +1,28 @@
+HALLVALLA — CORRECCIÓN DE HACHA Y AUDITORÍA DEL MAESTRO DE SOMBRAS
+
+CORRECCIÓN DE HACHA
+- Se eliminó la antigua bonificación global incorrecta de +2 DX base.
+- La única ventaja global de Hacha es +5 DX durante el combate al atacar una unidad de Espada.
+- Se corrigieron los textos de Berserker del norte, Berserker de Oso y Ulfhednar.
+- También se eliminó la inyección automática de +2 DX en cualquier otra unidad de Hacha, como Ragnar Lodbrok.
+- Ruptura brutal del Berserker permanece sin cambios: -3 Guardia al objetivo durante ese combate.
+
+UNIDADES CONSIDERADAS ASESINOS POR EL CÓDIGO ACTUAL
+1. Asesina del desierto (scout)
+2. Geisha Encubierta (geisha_encubierta)
+3. Hattori Shinobi (hattori_shinobi)
+4. Saboteador de Iga (saboteador_iga)
+
+DETECCIÓN ADICIONAL
+- Cualquier futura unidad cuyo nombre contenga “asesina” o “asesino” también será clasificada automáticamente.
+
+BUFF DEL MAESTRO DE SOMBRAS EN NIVEL 5
+- El nivel 5 usa tier de buff 2: +3 AGI y +1 DX para cada asesino aliado.
+- Niebla de sangre: los asesinos aliados ignoran Guardia al atacar.
+- Niebla de sangre: gastan la mitad de PREC/EVA, redondeada hacia arriba.
+- En nivel 5 no reciben AT adicional; el +1 AT solo aparece en tier 4 (nivel 9).
+
+UNIDADES QUE NO CUENTAN ACTUALMENTE COMO ASESINOS
+- Hua Lan / Mulan no está incluida.
+- Tigre de Bengala no está incluido; cuenta como Bestia.
+- Otras unidades con Sigilo no cuentan salvo que su key esté en la lista o su nombre diga asesina/asesino.
