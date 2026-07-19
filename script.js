@@ -5224,7 +5224,9 @@ function showCardInspectModal(card){
   const modal=$("cardInspectModal");
   if(!modal)return selectCard(card);
   modal.className=`card-inspect-modal ${getCardVisualClass(card)}`;
-  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay");
+  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel");
+  if(cancel){cancel.textContent="Cancelar";cancel.classList.remove("hidden");}
+  if(play)play.classList.remove("hidden");
   if(title)title.textContent=card.name;
   if(sub)sub.innerHTML=renderDetIdentityHtml(card,"Carta en mano");
   if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
@@ -5245,6 +5247,21 @@ function showCardInspectModal(card){
   }
   if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
   modal.classList.remove("hidden");
+}
+function showPackRevealCardDetail(card){
+  if(!card)return;
+  const hydrated=hydrateCardVisualData({...card});
+  showCardInspectModal(hydrated);
+  const modal=$("cardInspectModal");
+  if(modal)modal.classList.add("pack-reveal-detail-modal");
+  const sub=$("cardInspectSub");
+  if(sub)sub.innerHTML=renderDetIdentityHtml(hydrated,"Carta revelada en el sobre");
+  const reason=$("cardInspectReason");
+  if(reason)reason.textContent="Vista DET de la carta revelada. Cierra este panel para volver al sobre.";
+  const cancel=$("cardInspectCancel");
+  if(cancel){cancel.textContent="Cerrar";cancel.classList.remove("hidden");}
+  const play=$("cardInspectPlay");
+  if(play){play.disabled=true;play.textContent="Solo vista";play.classList.add("hidden");}
 }
 function hideCardInspectModal(){const modal=$("cardInspectModal");if(modal)modal.classList.add("hidden")}
 function playInspectedCard(){
@@ -5452,6 +5469,9 @@ function applyFalconDiveRecoil(attacker,defender,units,mods={},hit=null){
 function applyLegendaryFatalSaves(units,fallenIds=[]){
   return (units||[]).map(u=>{
     if(!fallenIds.includes(u.id))return u;
+    // Las salvaciones fatales solo deben activarse cuando la unidad realmente cayó.
+    // Antes, cualquier ataque contra Wallace —incluso uno fallado— lo forzaba a 1 HP.
+    if(Number(u.hp||0)>0)return u;
     if(u.key==="wallace"&&!u.wallaceLastBreathUsed)return {...u,hp:1,wallaceLastBreathUsed:true,guard:Math.max(0,u.guard||0)};
     if(hasBlessedArmorAbility(u)&&!u.blessedArmorUsed)return {...u,hp:1,blessedArmorUsed:true,blessedArmorActiveTurnKey:publicState?.turnKey||"",blessedArmorTriggeredTurnKey:publicState?.turnKey||""};
     return u;
@@ -10638,11 +10658,16 @@ function revealActivePack(){
   playPackRevealRaritySound(activePackCards);
   setTimeout(()=>{
     if(!grid)return;
-    grid.innerHTML=activePackCards.map((card,i)=>`<div class="revealed-card ${getCardVisualClass(card)}" style="animation-delay:${i*.09}s">
-      ${getCardVisualHtml(card,"card-icon")}
-      <div><b>${escapeHtml(card.name||"Carta")}</b><span>${escapeHtml(card.rarity||card.rareza||"Básica")} · ${escapeHtml(card.type||"card")} · Costo ${card.cost??"-"}</span></div>
-      <span>${escapeHtml(card.text||"")}</span>
-    </div>`).join("");
+    grid.innerHTML=activePackCards.map((card,i)=>`<button class="revealed-card pack-reveal-card-button ${getCardVisualClass(card)}" type="button" data-pack-card-index="${i}" style="animation-delay:${i*.09}s" aria-label="Abrir DET de ${escapeHtml(card.name||"Carta")}" title="Abrir DET: ${escapeHtml(card.name||"Carta")}">
+      ${getCardVisualHtml(card,"pack-reveal-icon")}
+    </button>`).join("");
+    grid.querySelectorAll("[data-pack-card-index]").forEach(button=>{
+      button.addEventListener("click",()=>{
+        const index=Number(button.dataset.packCardIndex);
+        const card=activePackCards[index];
+        if(card)showPackRevealCardDetail(card);
+      });
+    });
     grid.classList.remove("hidden");
     if(confirm)confirm.classList.remove("hidden");
     if($("packOpeningStatus"))$("packOpeningStatus").textContent=`${activePackCards.length} cartas reveladas`;
@@ -11009,7 +11034,10 @@ function deckBuilderCardInvestmentHtml(card){
     ? "Copias completas"
     : (canCraft?`Puedes crear copia (${material}/${craftCost})`:(lockReason||`Material ${rarityLabel}: ${material}/${craftCost}`));
   return `<div class="deck-builder-detail-box">
-    <div class="deck-detail-title">Lectura estratégica</div>
+    <div class="deck-detail-head">
+      <div class="deck-detail-title">Lectura estratégica</div>
+      <button class="deck-detail-help-pill" type="button" aria-label="Abrir consejo de construcción" title="Consejo de construcción">?</button>
+    </div>
     <div class="deck-detail-grid">
       <span><b>Tipo</b><em>${escapeHtml(typeLabel)}</em></span>
       <span><b>Rareza</b><em>${escapeHtml(rarityLabel)}</em></span>
@@ -11019,7 +11047,6 @@ function deckBuilderCardInvestmentHtml(card){
       ${rangeText}
       <span class="${canCraft?"can-create":"cant-create"}"><b>Creación</b><em>${escapeHtml(craftText)}</em></span>
     </div>
-    <small>Consejo: revisa Costo, AT, HP, Guardia, DX, AGI, Movimiento, Rango y la clase táctica antes de invertir materiales.</small>
   </div>`;
 }
 function showDeckBuilderCardDetail(card){
@@ -11032,9 +11059,24 @@ function showDeckBuilderCardDetail(card){
   const sub=$("cardInspectSub");
   if(sub)sub.innerHTML=renderDetIdentityHtml(hydrated,"Carta de la Forja");
   const textEl=$("cardInspectText");
-  if(textEl)textEl.innerHTML+=deckBuilderCardInvestmentHtml(hydrated);
+  if(textEl){
+    // No usar innerHTML +=: recreaba todos los botones DET y destruía sus listeners.
+    // insertAdjacentHTML conserva los iconos de efectos, estados y ayudas ya enlazados.
+    textEl.insertAdjacentHTML("beforeend",deckBuilderCardInvestmentHtml(hydrated));
+    const helpPill=textEl.querySelector(".deck-detail-help-pill");
+    if(helpPill)helpPill.addEventListener("click",ev=>{
+      ev.stopPropagation();
+      openStatGuideModal({
+        title:"Consejo de construcción",
+        short:"Editor de mazos",
+        formula:"Antes de invertir materiales, revisa el costo de la carta, sus estadísticas, alcance, clase de arma, efectos y el número de copias que ya tienes o llevas en el mazo.",
+        example:"Toca los iconos de Efectos, PREC/EVA, arma o Conóceme para abrir su explicación completa.",
+        hideCombatButton:true
+      });
+    });
+  }
   const reason=$("cardInspectReason");
-  if(reason)reason.textContent="Vista de detalle desde la Forja de mazos.";
+  if(reason)reason.textContent="";
   const cancel=$("cardInspectCancel");
   if(cancel)cancel.textContent="Cerrar";
   const play=$("cardInspectPlay");

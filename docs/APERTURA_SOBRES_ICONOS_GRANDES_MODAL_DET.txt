@@ -1,0 +1,15 @@
+APERTURA DE SOBRES — ICONOS GRANDES + MODAL DET
+
+Cambios:
+- Las cartas reveladas ya no muestran nombre, rareza, costo ni texto dentro de la pantalla de apertura.
+- Cada carta se presenta únicamente mediante su arte/icono en formato grande.
+- Cada arte revelado funciona como botón accesible.
+- Al pulsar el arte se abre el modal DET existente con estadísticas, efecto, identidad, arma, reglas y demás información disponible.
+- En esta vista DET se oculta el botón Jugar porque la carta todavía se está revisando desde el sobre.
+- Al cerrar DET se vuelve a la apertura sin perder las cartas reveladas.
+- Se mantienen los colores y resplandores por rareza.
+- Se añadió distribución adaptable para pantallas pequeñas.
+
+Validación:
+- script.js comprobado con node --check.
+- Caché actualizada a 7PACKDET1.

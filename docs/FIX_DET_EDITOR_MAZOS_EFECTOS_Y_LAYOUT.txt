@@ -1,0 +1,22 @@
+HallValla · FIX DET editor de mazos
+
+Problema encontrado:
+- No era un fallo del navegador.
+- showDeckBuilderCardDetail() usaba textEl.innerHTML += para añadir "Lectura estratégica".
+- Esa operación reconstruía todo el contenido del DET y destruía los listeners de los botones de Efectos, arma, PREC/EVA, estados y Conóceme.
+- Además, un override antiguo reducía el modal del editor a 760 px, aunque la plantilla interna conservaba una columna izquierda de 360 px, provocando recortes, barras y superposición.
+
+Correcciones:
+- Se sustituyó innerHTML += por insertAdjacentHTML(), conservando los listeners existentes.
+- Los iconos de Efectos vuelven a abrir su modal de información.
+- Reorganización específica del DET dentro del editor de mazos.
+- Efectos y Estados activos tienen áreas separadas con scroll interno solo cuando hace falta.
+- Lectura estratégica se compactó y sus textos se hicieron más pequeños.
+- Se eliminó el consejo escrito que ocupaba espacio.
+- Se añadió una pastilla circular "?" que abre un modal con el consejo.
+- Se ocultaron el texto de razón y el botón "Solo vista" en esta vista.
+- Se mantuvo un único botón Cerrar.
+- Se añadió versión de caché 7DETDECKFIX1.
+
+Verificación:
+- node --check script.js: correcto.
