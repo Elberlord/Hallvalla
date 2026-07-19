@@ -71,13 +71,42 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_LOCAL_RARITY_REAL_BOARD_7HEM";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_7BOARDCTRL1";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
-const ROWS=6,COLS=5,$=id=>document.getElementById(id);
+const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v1";
+const FIELD_BOARD_DEFAULTS=Object.freeze({rows:6,cols:5,cardScale:100});
+const FIELD_BOARD_LIMITS=Object.freeze({rows:[4,12],cols:[3,10],cardScale:[45,150]});
+function clampFieldBoardNumber(value,min,max,fallback){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(min,Math.min(max,Math.round(n))):fallback;
+}
+function readFieldBoardPreferences(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(FIELD_BOARD_TUNER_KEY)||"{}")||{};
+    return{
+      rows:clampFieldBoardNumber(saved.rows,...FIELD_BOARD_LIMITS.rows,FIELD_BOARD_DEFAULTS.rows),
+      cols:clampFieldBoardNumber(saved.cols,...FIELD_BOARD_LIMITS.cols,FIELD_BOARD_DEFAULTS.cols),
+      cardScale:clampFieldBoardNumber(saved.cardScale,...FIELD_BOARD_LIMITS.cardScale,FIELD_BOARD_DEFAULTS.cardScale)
+    };
+  }catch(_){return{...FIELD_BOARD_DEFAULTS};}
+}
+const FIELD_BOARD_INITIAL=readFieldBoardPreferences();
+let ROWS=FIELD_BOARD_INITIAL.rows,COLS=FIELD_BOARD_INITIAL.cols;
+const $=id=>document.getElementById(id);
+function syncBoardDimensionsFromState(state){
+  const nextRows=clampFieldBoardNumber(state?.boardRows,...FIELD_BOARD_LIMITS.rows,FIELD_BOARD_DEFAULTS.rows);
+  const nextCols=clampFieldBoardNumber(state?.boardCols,...FIELD_BOARD_LIMITS.cols,FIELD_BOARD_DEFAULTS.cols);
+  ROWS=nextRows;
+  COLS=nextCols;
+  const root=document.documentElement;
+  root.style.setProperty("--hv-board-rows",String(ROWS));
+  root.style.setProperty("--hv-board-cols",String(COLS));
+  if(typeof syncFieldBoardTunerControls==="function")syncFieldBoardTunerControls();
+}
 function on(id,event,handler){
   const el=$(id);
   if(!el){console.warn(`[HallValla] Elemento no encontrado: #${id}`);return null;}
@@ -3919,8 +3948,8 @@ if(win&&publicState.adventureIsGuardian){
   return;
 }
 if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
-async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
-async function joinGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
+async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
+async function joinGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";syncBoardDimensionsFromState(pub);const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
 
 async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(!(await ensureFirebaseAuthReady("adventure")))return;
@@ -3955,7 +3984,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
-  const playerProfileName=getLocalProfileName();const pub={code,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`]};
+  const playerProfileName=getLocalProfileName();const pub={code,boardRows:ROWS,boardCols:COLS,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`]};
   const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true};
   if(HALLVALLA_LOCALHOST_TEST_MODE){
     pub.code=`LOCAL${code4()}`;
@@ -3989,6 +4018,7 @@ function enterLocalGame(pub,priv,player=1){
   gameId=pub?.code||`LOCAL${code4()}`;
   myPlayer=player;
   publicState=pub;
+  syncBoardDimensionsFromState(publicState);
   privateState=priv;
   shownBattleResultKey="";
   aiTurnLock=false;
@@ -4044,6 +4074,7 @@ function enterGame(code,player){
     }
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=val;
+    syncBoardDimensionsFromState(publicState);
     render();
     syncBattleMusic();
     maybePlayBattleFx(prevPublic,publicState);
@@ -8556,7 +8587,7 @@ function handleUnitContextAction(action){
 09_RENDER_CORE
 -------------------------------------------------------------------------------
 */
-function render(){if(!publicState)return;if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderRivalHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
+function render(){if(!publicState)return;syncBoardDimensionsFromState(publicState);if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderRivalHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
 
 function getHonorStateForOwner(owner,{preferPrivate=false}={}){
   if(!publicState||!owner)return{owner:0,honor:0,maxHonor:0,label:"HONOR",hidden:true};
@@ -9072,6 +9103,11 @@ function renderBoard(){
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
     const cell=document.createElement("div");
     cell.className="cell";
+    const coordinate=document.createElement("span");
+    coordinate.className="board-cell-coordinate";
+    coordinate.textContent=`${String.fromCharCode(65+x)}${y+1}`;
+    coordinate.setAttribute("aria-hidden","true");
+    cell.appendChild(coordinate);
     const key=`${x},${y}`;
     const tacticalClasses=getTacticalPreviewClasses(x,y);
     if(tacticalClasses.length)cell.classList.add(...tacticalClasses);
@@ -9423,6 +9459,8 @@ async function startBasicTutorialBattle(){
   enemyTarget.moved=true;
   const pub={
     code,
+    boardRows:ROWS,
+    boardCols:COLS,
     mode:"tutorial",
     tutorialBasic:true,
     createdAt:Date.now(),
@@ -12802,6 +12840,159 @@ function initBattleVisualSizeTuner(){
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("battleVisualSizeTuner")?.classList.contains("hidden"))closeBattleVisualSizeTuner();});
 }
 initBattleVisualSizeTuner();
+
+/* ---------------------------------------------------------------------------
+   7BOARDCTRL1 · Escala completa de cartas del campo + editor de filas/columnas
+   --------------------------------------------------------------------------- */
+let fieldBoardTunerState={cardScale:FIELD_BOARD_INITIAL.cardScale};
+function saveFieldBoardTunerPreferences(){
+  try{localStorage.setItem(FIELD_BOARD_TUNER_KEY,JSON.stringify({rows:ROWS,cols:COLS,cardScale:fieldBoardTunerState.cardScale}));}catch(_){ }
+}
+function applyFieldBoardCardScale(save=false){
+  document.documentElement.style.setProperty("--hv-field-card-scale",String(fieldBoardTunerState.cardScale/100));
+  syncFieldBoardTunerControls();
+  if(save)saveFieldBoardTunerPreferences();
+}
+function syncFieldBoardTunerControls(){
+  const scaleInput=$("fieldCardScaleInput"),scaleOutput=$("fieldCardScaleValue");
+  if(scaleInput&&String(scaleInput.value)!==String(fieldBoardTunerState.cardScale))scaleInput.value=String(fieldBoardTunerState.cardScale);
+  if(scaleOutput)scaleOutput.textContent=`${fieldBoardTunerState.cardScale}%`;
+  const rowsOutput=$("fieldBoardRowsValue"),colsOutput=$("fieldBoardColsValue"),summary=$("fieldBoardDimensionsSummary");
+  if(rowsOutput)rowsOutput.textContent=String(ROWS);
+  if(colsOutput)colsOutput.textContent=String(COLS);
+  if(summary)summary.textContent=`${COLS} columnas × ${ROWS} filas = ${COLS*ROWS} celdas`;
+  const editable=canEditFieldBoardLayout();
+  document.querySelectorAll("[data-field-board-step],#resetFieldBoardGridBtn").forEach(btn=>{btn.disabled=!editable;});
+  const permission=$("fieldBoardPermissionNote");
+  if(permission)permission.textContent=editable?"Los cambios de filas y columnas se aplican al duelo actual y se guardan como base para los próximos.":"En duelos online, solo el Jugador 1 puede cambiar la estructura del campo.";
+}
+function setFieldBoardTunerStatus(message=""){
+  const status=$("fieldBoardTunerStatus");
+  if(status)status.textContent=message;
+}
+function canEditFieldBoardLayout(){
+  if(!publicState)return false;
+  return hallvallaIsLocalTestGame()||publicState.mode==="adventure"||publicState.mode==="tutorial"||myPlayer===1;
+}
+function openFieldBoardTuner(){
+  closeBattleMenu();
+  $("fieldStatBadgesTuner")?.classList.add("hidden");
+  $("battleVisualSizeTuner")?.classList.add("hidden");
+  const panel=$("fieldBoardTuner");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  document.body.classList.add("field-board-tuning");
+  syncFieldBoardTunerControls();
+  setFieldBoardTunerStatus("Las cartas se escalan completas: retrato, marco, stats y estados/buffs.");
+  renderBoard();
+}
+function closeFieldBoardTuner(){
+  $("fieldBoardTuner")?.classList.add("hidden");
+  document.body.classList.remove("field-board-tuning");
+  saveFieldBoardTunerPreferences();
+  if(publicState)renderBoard();
+}
+function nearestFreeLeaderX(preferred,y,units,cols){
+  const occupied=new Set((units||[]).filter(u=>!u.leader&&u.y===y).map(u=>u.x));
+  const start=Math.max(0,Math.min(cols-1,Number(preferred)||0));
+  if(!occupied.has(start))return start;
+  for(let distance=1;distance<cols;distance++){
+    const left=start-distance,right=start+distance;
+    if(left>=0&&!occupied.has(left))return left;
+    if(right<cols&&!occupied.has(right))return right;
+  }
+  return start;
+}
+async function changeFieldBoardDimensions(rowDelta=0,colDelta=0,{reset=false}={}){
+  if(!canEditFieldBoardLayout()){
+    await hvAlert("En duelos online, solo el Jugador 1 puede modificar filas y columnas.","Campo protegido");
+    return;
+  }
+  if(publicState?.currentPlayer&&publicState.currentPlayer!==myPlayer&&!isBattleEnded()){
+    await hvAlert("Espera a tu turno para modificar la estructura del campo y evitar que la IA o el rival actúen durante el ajuste.","Espera tu turno");
+    return;
+  }
+  const targetRows=reset?FIELD_BOARD_DEFAULTS.rows:clampFieldBoardNumber(ROWS+rowDelta,...FIELD_BOARD_LIMITS.rows,ROWS);
+  const targetCols=reset?FIELD_BOARD_DEFAULTS.cols:clampFieldBoardNumber(COLS+colDelta,...FIELD_BOARD_LIMITS.cols,COLS);
+  if(targetRows===ROWS&&targetCols===COLS){
+    setFieldBoardTunerStatus(`Límite alcanzado: ${COLS} × ${ROWS}.`);
+    return;
+  }
+  const currentUnits=(publicState?.units||[]).map(u=>({...u}));
+  if(targetRows<ROWS){
+    const blocked=currentUnits.find(u=>!u.leader&&Number(u.y)>=targetRows-1);
+    if(blocked){
+      await hvAlert(`No se puede quitar esa fila porque ${blocked.name||"una unidad"} ocupa una celda que desaparecería. Muévela primero.`,"Fila ocupada");
+      return;
+    }
+  }
+  if(targetCols<COLS){
+    const blocked=currentUnits.find(u=>!u.leader&&Number(u.x)>=targetCols);
+    if(blocked){
+      await hvAlert(`No se puede quitar esa columna porque ${blocked.name||"una unidad"} ocupa una celda que desaparecería. Muévela primero.`,"Columna ocupada");
+      return;
+    }
+  }
+  currentUnits.forEach(u=>{
+    if(!u.leader)return;
+    u.y=u.owner===1?targetRows-1:0;
+    u.x=nearestFreeLeaderX(Math.min(Number(u.x)||0,targetCols-1),u.y,currentUnits,targetCols);
+  });
+  const previousRows=ROWS,previousCols=COLS;
+  ROWS=targetRows;
+  COLS=targetCols;
+  document.documentElement.style.setProperty("--hv-board-rows",String(ROWS));
+  document.documentElement.style.setProperty("--hv-board-cols",String(COLS));
+  try{
+    await updatePublic({boardRows:ROWS,boardCols:COLS,units:currentUnits});
+    saveFieldBoardTunerPreferences();
+    syncFieldBoardTunerControls();
+    setFieldBoardTunerStatus(`Campo actualizado: ${COLS} columnas × ${ROWS} filas (${COLS*ROWS} celdas).`);
+  }catch(error){
+    ROWS=previousRows;
+    COLS=previousCols;
+    document.documentElement.style.setProperty("--hv-board-rows",String(ROWS));
+    document.documentElement.style.setProperty("--hv-board-cols",String(COLS));
+    syncFieldBoardTunerControls();
+    console.error("[HallValla] No se pudo guardar la cuadrícula:",error);
+    await hvAlert("No se pudo guardar el cambio de cuadrícula. Se restauró el tamaño anterior.","Error de guardado");
+  }
+}
+function resetFieldCardScale(){
+  fieldBoardTunerState.cardScale=FIELD_BOARD_DEFAULTS.cardScale;
+  applyFieldBoardCardScale(true);
+  setFieldBoardTunerStatus("Tamaño de cartas del campo restablecido a 100%.");
+}
+async function copyFieldBoardValues(){
+  const text=`Cartas del campo ${fieldBoardTunerState.cardScale}% · Campo ${COLS} columnas × ${ROWS} filas (${COLS*ROWS} celdas)`;
+  try{await navigator.clipboard.writeText(text);}catch(_){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
+  setFieldBoardTunerStatus(`Copiado: ${text}`);
+}
+function initFieldBoardTuner(){
+  applyFieldBoardCardScale(false);
+  document.documentElement.style.setProperty("--hv-board-rows",String(ROWS));
+  document.documentElement.style.setProperty("--hv-board-cols",String(COLS));
+  $("openFieldBoardTunerBattleBtn")?.addEventListener("click",openFieldBoardTuner);
+  $("closeFieldBoardTunerBtn")?.addEventListener("click",closeFieldBoardTuner);
+  $("saveFieldBoardTunerBtn")?.addEventListener("click",closeFieldBoardTuner);
+  $("fieldCardScaleInput")?.addEventListener("input",ev=>{
+    fieldBoardTunerState.cardScale=clampFieldBoardNumber(ev.target.value,...FIELD_BOARD_LIMITS.cardScale,FIELD_BOARD_DEFAULTS.cardScale);
+    applyFieldBoardCardScale(true);
+    setFieldBoardTunerStatus("Tamaño completo de las cartas guardado.");
+  });
+  $("resetFieldCardScaleBtn")?.addEventListener("click",resetFieldCardScale);
+  $("resetFieldBoardGridBtn")?.addEventListener("click",()=>changeFieldBoardDimensions(0,0,{reset:true}));
+  $("copyFieldBoardValuesBtn")?.addEventListener("click",copyFieldBoardValues);
+  document.querySelectorAll("[data-field-board-step]").forEach(btn=>btn.addEventListener("click",()=>{
+    const action=btn.dataset.fieldBoardStep;
+    if(action==="row-add")changeFieldBoardDimensions(1,0);
+    if(action==="row-remove")changeFieldBoardDimensions(-1,0);
+    if(action==="col-add")changeFieldBoardDimensions(0,1);
+    if(action==="col-remove")changeFieldBoardDimensions(0,-1);
+  }));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldBoardTuner")?.classList.contains("hidden"))closeFieldBoardTuner();});
+}
+initFieldBoardTuner();
 
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
