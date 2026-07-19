@@ -586,10 +586,21 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <button id="resetLocalProgressBtn" class="btn ghost full" type="button">Nueva partida local segura</button>
       <button id="showStatsTutorialBtn" class="btn ghost full" type="button">Ver mini tutorial de stats</button>
       <button id="startBasicTutorialFromSettingsBtn" class="btn ghost full" type="button">Practicar batalla básica</button>
+      <button id="openTutorialQuickGuideBtn" class="btn ghost full" type="button">Guía rápida del tutorial</button>
       <button id="openActionsHudTunerBtn" class="btn ghost full" type="button">Ajustar HUD de acciones</button>
       <p id="settingsResetStatus" class="settings-reset-status"></p>
     </div>
     <button id="closeSettingsBtn" class="btn primary full">Guardar y volver</button>
+  </div>
+</div>
+
+
+<div id="missionsPanel" class="overlay-panel hidden">
+  <div class="modal-card tutorial-missions-card">
+    <div class="tutorial-missions-head"><div><span class="tutorial-missions-kicker">ENTRENAMIENTO</span><h2>Misiones de tutorial</h2></div><button id="closeMissionsX" class="tutorial-close-x" type="button">×</button></div>
+    <p class="tutorial-missions-intro">Aprende por partes. Cada misión conserva tu progreso y entrega oro del juego.</p>
+    <div id="tutorialMissionList" class="tutorial-mission-list"></div>
+    <button id="closeMissionsBtn" class="btn primary full" type="button">Volver al inicio</button>
   </div>
 </div>
 
