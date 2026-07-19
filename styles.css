@@ -4461,7 +4461,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* v7GP: tablero 5x6 para cartas ornate grandes y menos forzadas */
-.grid{grid-template-rows:repeat(6,1fr) !important;}
+.grid{grid-template-columns:repeat(var(--hv-board-cols,5),1fr) !important;grid-template-rows:repeat(var(--hv-board-rows,6),1fr) !important;grid-auto-rows:0 !important;}
 .cell > .unit-card,
 .cell > .unit-card.leader,
 .cell > .unit-card.unit-key-spearman{
