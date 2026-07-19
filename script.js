@@ -71,14 +71,14 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_7BOARDCTRL1";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL3";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
-const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v1";
-const FIELD_BOARD_DEFAULTS=Object.freeze({rows:6,cols:5,cardScale:100});
+const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v2_final_110_5x8";
+const FIELD_BOARD_DEFAULTS=Object.freeze({rows:8,cols:5,cardScale:110});
 const FIELD_BOARD_LIMITS=Object.freeze({rows:[4,12],cols:[3,10],cardScale:[45,150]});
 function clampFieldBoardNumber(value,min,max,fallback){
   const n=Number(value);
@@ -12585,16 +12585,16 @@ initActionsHudTuner();
 /* ---------------------------------------------------------------------------
    7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v3";
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v4_final";
 const FIELD_STAT_BADGE_TARGETS={
-  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:150,iconX:-25,iconY:-14,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:84,numScaleY:110,numX:1.4,numY:-3.4}},
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:181,iconX:-25,iconY:-3,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:1.4,numY:-3.4}},
   hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:125,iconX:-4,iconY:-32,ringScale:177,ringX:0,ringY:0,ringStroke:0.9,numSize:28,numWeight:100,numScaleX:100,numScaleY:100,numX:0,numY:-2}},
-  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:175,iconX:-3,iconY:-6,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:18.2,numWeight:100,numScaleX:50,numScaleY:47,numX:4.6,numY:1.8}},
+  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:220,iconX:-3,iconY:-3,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-4.6,numY:1.4}},
   atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:125,iconX:-2,iconY:-26,ringScale:76,ringX:4,ringY:-27,ringStroke:0.3,numSize:13.8,numWeight:200,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:220,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-0.2,numY:-0.6}},
+  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:220,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-5,numY:-1.6}},
   guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:140,iconX:2,iconY:-25,ringScale:82,ringX:2,ringY:-10,ringStroke:0.2,numSize:16.4,numWeight:100,numScaleX:99,numScaleY:102,numX:10.2,numY:-20}},
-  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:220,iconX:-6,iconY:-5,ringScale:220,ringX:2,ringY:-3,ringStroke:0.2,numSize:7.2,numWeight:100,numScaleX:86,numScaleY:63,numX:-0.4,numY:-1.8}},
-  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:220,iconX:-3,iconY:-2,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:0.4,numY:-1}}
+  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:220,iconX:4,iconY:-2,ringScale:220,ringX:2,ringY:-3,ringStroke:0.2,numSize:8.4,numWeight:100,numScaleX:86,numScaleY:63,numX:-2,numY:-0.2}},
+  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:220,iconX:4,iconY:-1,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:-2.2,numY:-2}}
 };
 const FIELD_STAT_CONTROL_DEFS=[
   {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:220,step:1},

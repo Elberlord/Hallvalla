@@ -1,0 +1,45 @@
+HALLVALLA — VALORES FINALES DEL CAMPO Y BADGES
+
+Campo:
+- Cartas del campo: 110%
+- 5 columnas × 8 filas = 40 celdas
+
+Vida · unidades:
+- Icono 181%, X -25px, Y -3px
+- Aro 220%, X 0px, Y 0px, línea 2.6px
+- Número 32px, peso 100, ancho 117%, alto 110%, X 1.4px, Y -3.4px
+
+Vida · líderes:
+- Icono 125%, X -4px, Y -32px
+- Aro 177%, X 0px, Y 0px, línea 0.9px
+- Número 28px, peso 100, ancho 100%, alto 100%, X 0px, Y -2px
+
+Ataque · unidades:
+- Icono 220%, X -3px, Y -3px
+- Aro 168%, X -1px, Y -3px, línea 0.2px
+- Número 15.8px, peso 100, ancho 46%, alto 44%, X -4.6px, Y 1.4px
+
+Ataque · líderes:
+- Icono 125%, X -2px, Y -26px
+- Aro 76%, X 4px, Y -27px, línea 0.3px
+- Número 13.8px, peso 200, ancho 100%, alto 100%, X 0px, Y 0px
+
+Guardia · unidades:
+- Icono 220%, X -2px, Y -2px
+- Aro 203%, X 0px, Y 0px, línea 0.2px
+- Número 6px, peso 100, ancho 95%, alto 77%, X -5px, Y -1.6px
+
+Guardia · líderes:
+- Icono 140%, X 2px, Y -25px
+- Aro 82%, X 2px, Y -10px, línea 0.2px
+- Número 16.4px, peso 100, ancho 99%, alto 102%, X 10.2px, Y -20px
+
+Precisión · unidades:
+- Icono 220%, X 4px, Y -2px
+- Aro 220%, X 2px, Y -3px, línea 0.2px
+- Número 8.4px, peso 100, ancho 86%, alto 63%, X -2px, Y -0.2px
+
+Evasión · unidades:
+- Icono 220%, X 4px, Y -1px
+- Aro 201%, X 2px, Y 0px, línea 0.2px
+- Número 6px, peso 100, ancho 100%, alto 100%, X -2.2px, Y -2px
