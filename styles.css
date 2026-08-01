@@ -1,3 +1,4 @@
+/* HALLVALLA 7BOARDCTRL5 · FASE 1: limpieza de reglas CSS idénticas; sin consolidación visual. */
 /*
 ================================================================================
 HALLVALLA STYLES ORGANIZED V2
@@ -383,20 +384,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 .pass-lanes span{color:#d7c3a2;font-size:13px}
 .hidden{display:none!important}
 
-.hand-action-btn{
-  font-size:11px;
-  color:#ffe2a3;
-  letter-spacing:.5px;
-}
-.hand-top{
-  color:#fff1c4;
-  font-size:12px;
-}
-.hand-top b::after{
-  content:" abierto";
-  color:#d7c3a2;
-  font-weight:400;
-}
+
+
+
 
 @media(max-width:980px){
   .asset-topbar{left:6px;right:6px;top:6px;gap:6px}
@@ -1146,7 +1136,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   padding:18px;
   background:rgba(0,0,0,.62);
 }
-.card-inspect-modal.hidden{display:none!important}
+
 .card-inspect-card{
   width:min(520px,94vw);
   max-height:92svh;
@@ -4915,7 +4905,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   .unit-context-core{width:96px;height:96px;}
   .unit-context-btn{width:64px;min-width:64px !important;height:34px;min-height:34px !important;font-size:10px !important;}
   .unit-context-name{font-size:11px !important;}
-  .unit-context-sub{font-size:7px !important;}
+  
   .unit-context-btn.slot-left-top{left:4px;top:42px;}
   .unit-context-btn.slot-right-top{right:4px;top:42px;}
   .unit-context-btn.slot-left-bottom{left:4px;bottom:42px;}
@@ -6441,9 +6431,9 @@ El CSS original se conserva para no romper visuales. El bloque final
     rgba(0,0,0,.72)!important;
   backdrop-filter:blur(7px) saturate(1.05)!important;
 }
-.card-inspect-modal.hidden{display:none!important}
-.inspector:not(.show){display:none!important}
-.inspector.show{display:flex!important}
+
+
+
 
 .card-inspect-card,
 .inspect-card{
@@ -6867,10 +6857,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     position:static!important;
     grid-template-columns:1fr 1fr!important;
   }
-  .card-inspect-actions{
-    position:static!important;
-    width:auto!important;
-  }
+  
 }
 
 
@@ -7080,8 +7067,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   .card-inspect-visual,.inspect-art{height:250px!important;min-height:250px!important}
   .card-inspect-grid,.inspect-grid{margin:262px 0 0 0!important}
-  .card-inspect-text,.inspect-text{margin:118px 0 0 0!important;height:auto!important;overflow:visible!important}
-  .det-ability-list{grid-template-columns:1fr!important}
+  
+  
   .detail-guide-row{
     position:static!important;
     left:auto!important;
@@ -7259,9 +7246,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-ability-card:only-child{
   min-height:138px!important;
 }
-.det-ability-text{
-  -webkit-line-clamp:5!important;
-}
+
 .det-tactical-card{
   grid-area:tactical!important;
   min-height:0!important;
@@ -7274,9 +7259,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-status-section.det-status-empty{
   min-height:0!important;
 }
-.det-quote-block{
-  display:none!important;
-}
+
 .detail-guide-row{
   grid-area:buttons!important;
   position:static!important;
@@ -7468,13 +7451,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   letter-spacing:.03em!important;
   white-space:nowrap!important;
 }
-.detail-token-btn{
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
-  min-height:36px!important;
-  flex:0 0 36px!important;
-}
+
 
 /* When there is no Conóceme for leaders, PREC/EVA still stays inside the button tray. */
 .inspect-text .detail-guide-row:only-child,
@@ -7483,13 +7460,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Prevent old absolute footer rule from earlier patches from winning. */
-.inspect-card .detail-guide-row,
-.card-inspect-card .detail-guide-row{
-  position:relative!important;
-  left:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-}
+
 
 /* Slightly reduce empty effect-box waste without breaking cards with long effects. */
 .det-ability-card:only-child{
@@ -7920,23 +7891,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Portrait is only portrait. */
-#inspector #inspectArt.inspect-art{
-  grid-area:art!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  margin:0!important;
-  align-self:stretch!important;
-  justify-self:stretch!important;
-  overflow:hidden!important;
-  border-radius:18px!important;
-}
-#inspector #inspectArt.inspect-art img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  display:block!important;
-}
+
+
 
 /* Stats are only below portrait. No margin hack, no overlap. */
 #inspector #inspectStats.inspect-grid{
@@ -7962,10 +7918,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   align-items:center!important;
   gap:8px!important;
 }
-#inspector #inspectStats .det-stat-img{
-  width:32px!important;
-  height:32px!important;
-}
+
 
 /* Right side content: effects, tactical, states, buttons. */
 #inspector #inspectText.inspect-text{
@@ -8005,9 +7958,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   align-self:stretch!important;
   margin:0!important;
 }
-#inspector #inspectText > .det-quote-block{
-  display:none!important;
-}
+
 #inspector #inspectText > .detail-guide-row{
   grid-area:buttons!important;
 }
@@ -8023,16 +7974,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   align-content:start!important;
   padding:8px!important;
 }
-#inspector .det-ability-card{
-  min-height:auto!important;
-  padding:9px 10px!important;
-}
+
 #inspector .det-ability-card:only-child{
   min-height:126px!important;
 }
-#inspector .det-ability-text{
-  -webkit-line-clamp:5!important;
-}
+
 
 /* Tactical note compact. */
 #inspector .det-mini-note{
@@ -8061,17 +8007,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   background:linear-gradient(180deg,rgba(22,18,12,.82),rgba(8,8,7,.92))!important;
   box-sizing:border-box!important;
 }
-#inspector .detail-guide-chip{
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-}
-#inspector .detail-guide-chip span{
-  color:#ead29a!important;
-  font-size:12px!important;
-  font-weight:900!important;
-  white-space:nowrap!important;
-}
+
+
 #inspector .detail-token-btn{
   width:36px!important;
   height:36px!important;
@@ -8080,19 +8017,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Close button top right. */
-#inspector #inspectClose{
-  position:absolute!important;
-  top:16px!important;
-  right:16px!important;
-  left:auto!important;
-  bottom:auto!important;
-  width:46px!important;
-  height:46px!important;
-  min-width:46px!important;
-  min-height:46px!important;
-  border-radius:14px!important;
-  z-index:30!important;
-}
+
 
 /* 4) Keep card inspect modal from inheriting broken unit-only grid. */
 #cardInspectModal .card-inspect-card{
@@ -8113,11 +8038,7 @@ El CSS original se conserva para no romper visuales. El bloque final
       "stats"
       "text"!important;
   }
-  #inspector #inspectText.inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
+  
 }
 
 
@@ -8294,9 +8215,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   overflow:hidden!important;
 }
 
-#inspector #inspectText > .det-quote-block{
-  display:none!important;
-}
+
 
 /* Effects compact */
 #inspector .det-ability-list{
@@ -8325,10 +8244,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Tactical compact, no scroll monster */
-#inspector .det-info-row{
-  padding:6px 10px!important;
-  min-height:28px!important;
-}
+
 
 #inspector .det-mini-note{
   font-size:9.8px!important;
@@ -8419,13 +8335,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     overflow:visible!important;
     padding-bottom:0!important;
   }
-  #inspector #inspectText > .detail-guide-row{
-    position:relative!important;
-    left:auto!important;
-    right:auto!important;
-    bottom:auto!important;
-    height:auto!important;
-  }
+  
 }
 
 
@@ -8593,12 +8503,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Direct child placement */
-#inspector #inspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
+
 
 #inspector #inspectText > .det-tactical-card{
   grid-area:tactical!important;
@@ -8618,9 +8523,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   overflow:hidden!important;
 }
 
-#inspector #inspectText > .det-quote-block{
-  display:none!important;
-}
+
 
 /* Effects: internal scroll only */
 #inspector .det-ability-list{
@@ -8640,9 +8543,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   padding:8px 9px!important;
 }
 
-#inspector .det-ability-card:only-child{
-  min-height:104px!important;
-}
+
 
 #inspector .det-ability-name{
   font-size:11.5px!important;
@@ -8679,20 +8580,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* States / record compact */
-#inspector .det-leader-record{
-  margin:6px 7px!important;
-  padding:6px 8px!important;
-}
 
-#inspector .det-record-title{
-  font-size:9.5px!important;
-  margin-bottom:4px!important;
-}
 
-#inspector .det-record-row{
-  font-size:10px!important;
-  line-height:1.25!important;
-}
+
+
+
 
 #inspector .det-empty-line{
   padding:6px 8px!important;
@@ -8700,17 +8592,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Buttons inside footer tray */
-#inspector .detail-token-btn{
-  width:32px!important;
-  height:32px!important;
-  min-width:32px!important;
-  min-height:32px!important;
-}
 
-#inspector .det-btn-img{
-  width:29px!important;
-  height:29px!important;
-}
+
+
 
 #inspector .detail-guide-chip{
   display:flex!important;
@@ -8749,27 +8633,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Responsive fallback */
 @media(max-width:920px){
-  #inspector .inspect-card{
-    height:min(92vh,820px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
-    grid-template-rows:auto auto 220px auto auto!important;
-    grid-template-areas:
-      "title"
-      "sub"
-      "visual"
-      "stats"
-      "body"!important;
-  }
-  #inspector #inspectStats.inspect-grid{
-    grid-area:stats!important;
-    margin:0!important;
-  }
-  #inspector #inspectText.inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
+  
+  
+  
   #inspector #inspectText > .detail-guide-row{
     position:relative!important;
     left:auto!important;
@@ -9490,13 +9356,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* CARD-IN-HAND MODAL: force real layout even if older CSS wins */
-#cardInspectModal:not(.hidden){
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  padding:8px!important;
-  overflow:hidden!important;
-}
+
 #cardInspectModal:not(.hidden) .card-inspect-card{
   width:min(1110px,96vw)!important;
   height:min(558px,82vh)!important;
@@ -9575,10 +9435,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   height:31px!important;
   min-width:31px!important;
 }
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-img{
-  width:28px!important;
-  height:28px!important;
-}
+
 #cardInspectModal:not(.hidden) #cardInspectStats strong{
   font-size:15px!important;
 }
@@ -9709,11 +9566,7 @@ El CSS original se conserva para no romper visuales. El bloque final
       "actions"
       "text"!important;
   }
-  #cardInspectModal:not(.hidden) #cardInspectText{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
+  
 }
 
 
@@ -11188,8 +11041,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   height:72px!important;
   bottom:18px!important;
 }
-#mainMenu .asset-promo.daily-panel{ left:22px!important; }
-#mainMenu .asset-promo.welcome-panel{ right:22px!important; }
+
+
 
 #mainMenu .asset-bottom{
   bottom:12px!important;
@@ -12871,12 +12724,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:rgba(255,213,96,.70)!important;
   pointer-events:none!important;
 }
-#gameShell .battlefield #turnHonorHud .turn-honor-label{
-  font-size:var(--honor-hud-label-font)!important;
-}
-#gameShell .battlefield #turnHonorHud strong{
-  font-size:var(--honor-hud-number-font)!important;
-}
+
+
 #gameShell .battlefield #honorRechargeModal.honor-recharge-modal{
   left:var(--honor-pop-left)!important;
   top:var(--honor-pop-top)!important;
@@ -13082,9 +12931,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* 6) Apaga la copia desplazada que hacía parecer que el muñeco estaba fuera del marco. */
-.cell > .unit-card .unit-depth-shadow{
-  display:none !important;
-}
+
 
 .cell > .unit-card .unit-depth-front{
   z-index:2 !important;
@@ -13440,7 +13287,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     max-width:92%!important;
     padding:14px 16px!important;
   }
-  #adventureMapNodes{min-height:320px!important;}
+  
   #adventureMapStage .adventure-story-footer{font-size:12px!important;}
 }
 
@@ -13760,9 +13607,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   filter:saturate(1.08) contrast(1.04) drop-shadow(0 7px 7px rgba(0,0,0,.42)) !important;
 }
 
-.cell > .unit-card .unit-depth-shadow{
-  display:none !important;
-}
+
 
 @media(max-width:980px){
   .cell > .unit-card .unit-portrait,
@@ -14114,7 +13959,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   width:min(560px,calc(100vw - 24px));
   pointer-events:none;
 }
-.basic-tutorial-coach.hidden{display:none!important}
+
 .basic-tutorial-coach-card{
   border:1px solid rgba(255,209,102,.44);
   border-radius:20px;
@@ -14183,7 +14028,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   animation:basicTutorialPulse 1.18s ease-in-out infinite;
   pointer-events:none;
 }
-.basic-tutorial-focus-ring.hidden{display:none!important}
+
 .tutorial-target-active{
   position:relative;
   z-index:88!important;
@@ -14352,10 +14197,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card .unit-card-bg-layer{
   filter:brightness(.42) saturate(.85) blur(1.2px) !important;
 }
-.cell > .unit-card .unit-card-character-layer,
-.cell > .unit-card .unit-portrait img{
-  filter:none !important;
-}
+
 
 /* Variables de color según rareza: SOLO las usa el marco */
 .cell > .unit-card{
@@ -19159,9 +19001,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   --event-mid-x:min(18vw,240px);
   --event-exit-x:min(39vw,560px);
 }
-.event-splash-overlay.show .event-splash-shell{
-  animation:eventSplashCardReveal .42s cubic-bezier(.18,.88,.24,1.12) forwards !important;
-}
+
 .event-splash-overlay.leaving .event-splash-shell{
   animation:eventSplashCardToSide .68s cubic-bezier(.45,.05,.78,.38) forwards !important;
 }
@@ -19708,7 +19548,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
    7HHUDTUNER · Control exclusivo del HUD de acciones
    ============================================================ */
 :root{
-  --actions-tuner-scale:.86;
+  --actions-tuner-scale:.78;
   --actions-tuner-x:-40px;
   --actions-tuner-y:53px;
   --actions-tuner-gap:7px;
@@ -19816,7 +19656,7 @@ body.actions-hud-tuning #gameShell .battlefield .side .action-img-btn{
 
 /* ==========================================================
    7HHUDFINAL · Valores aprobados del HUD de acciones
-   Escritorio: 86%, X -40px, Y 53px, gap 7px, texto 11px.
+   Escritorio: 78%, X -40px, Y 53px, gap 7px, texto 11px.
    En teléfonos horizontales muy pequeños se adapta de forma
    proporcional para impedir cortes sin cambiar la composición.
    ========================================================== */
@@ -20248,22 +20088,10 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   border:none !important;
   box-shadow:none !important;
 }
-.unit-card .stat-badge-precision-wrap .field-stat-emblem-precision{
-  transform:translate(var(--field-precision-x),var(--field-precision-y)) scale(var(--field-precision-scale)) !important;
-  transform-origin:center center !important;
-}
-.unit-card .stat-badge-eva-wrap .field-stat-emblem-eva{
-  transform:translate(var(--field-evasion-x),var(--field-evasion-y)) scale(var(--field-evasion-scale)) !important;
-  transform-origin:center center !important;
-}
-.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion{
-  transform:scale(var(--field-precision-bubble)) !important;
-  transform-origin:center center !important;
-}
-.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{
-  transform:scale(var(--field-evasion-bubble)) !important;
-  transform-origin:center center !important;
-}
+
+
+
+
 @media(max-width:980px){
   .field-stat-emblem-medallion b{font-size:8.6px !important;}
 }
@@ -20416,9 +20244,7 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   padding-top:10px;
   margin-top:8px;
 }
-.field-stat-badges-tuner-status{
-  text-align:left;
-}
+
 @media (max-width: 720px){
   .field-stat-badges-tuner{
     left:8px !important;
@@ -20606,14 +20432,14 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
    7HFIELDSTAT MASTER V1 · Control total de iconos, aros y números
    ========================================================== */
 :root{
-  --sb-hp-unit-icon-scale:1.5; --sb-hp-unit-icon-x:-25px; --sb-hp-unit-icon-y:-14px; --sb-hp-unit-ring-scale:2.2; --sb-hp-unit-ring-x:0px; --sb-hp-unit-ring-y:0px; --sb-hp-unit-ring-stroke:2.6px; --sb-hp-unit-num-size:32px; --sb-hp-unit-num-weight:100; --sb-hp-unit-num-scale-x:.84; --sb-hp-unit-num-scale-y:1.1; --sb-hp-unit-num-x:1.4px; --sb-hp-unit-num-y:-3.4px;
+  --sb-hp-unit-icon-scale:1.81; --sb-hp-unit-icon-x:-25px; --sb-hp-unit-icon-y:-2px; --sb-hp-unit-ring-scale:2.2; --sb-hp-unit-ring-x:0px; --sb-hp-unit-ring-y:0px; --sb-hp-unit-ring-stroke:2.6px; --sb-hp-unit-num-size:32px; --sb-hp-unit-num-weight:100; --sb-hp-unit-num-scale-x:1.17; --sb-hp-unit-num-scale-y:1.1; --sb-hp-unit-num-x:-.2px; --sb-hp-unit-num-y:5.2px;
   --sb-hp-leader-icon-scale:1.25; --sb-hp-leader-icon-x:-4px; --sb-hp-leader-icon-y:-32px; --sb-hp-leader-ring-scale:1.77; --sb-hp-leader-ring-x:0px; --sb-hp-leader-ring-y:0px; --sb-hp-leader-ring-stroke:.9px; --sb-hp-leader-num-size:28px; --sb-hp-leader-num-weight:100; --sb-hp-leader-num-scale-x:1; --sb-hp-leader-num-scale-y:1; --sb-hp-leader-num-x:0px; --sb-hp-leader-num-y:-2px;
-  --sb-atk-unit-icon-scale:1.75; --sb-atk-unit-icon-x:-3px; --sb-atk-unit-icon-y:-6px; --sb-atk-unit-ring-scale:1.68; --sb-atk-unit-ring-x:-1px; --sb-atk-unit-ring-y:-3px; --sb-atk-unit-ring-stroke:.2px; --sb-atk-unit-num-size:18.2px; --sb-atk-unit-num-weight:100; --sb-atk-unit-num-scale-x:.5; --sb-atk-unit-num-scale-y:.47; --sb-atk-unit-num-x:4.6px; --sb-atk-unit-num-y:1.8px;
+  --sb-atk-unit-icon-scale:2.2; --sb-atk-unit-icon-x:-3px; --sb-atk-unit-icon-y:-4px; --sb-atk-unit-ring-scale:1.68; --sb-atk-unit-ring-x:-1px; --sb-atk-unit-ring-y:-3px; --sb-atk-unit-ring-stroke:.2px; --sb-atk-unit-num-size:15.8px; --sb-atk-unit-num-weight:100; --sb-atk-unit-num-scale-x:.46; --sb-atk-unit-num-scale-y:.44; --sb-atk-unit-num-x:-5px; --sb-atk-unit-num-y:2px;
   --sb-atk-leader-icon-scale:1.25; --sb-atk-leader-icon-x:-2px; --sb-atk-leader-icon-y:-26px; --sb-atk-leader-ring-scale:.76; --sb-atk-leader-ring-x:4px; --sb-atk-leader-ring-y:-27px; --sb-atk-leader-ring-stroke:.3px; --sb-atk-leader-num-size:13.8px; --sb-atk-leader-num-weight:200; --sb-atk-leader-num-scale-x:1; --sb-atk-leader-num-scale-y:1; --sb-atk-leader-num-x:0px; --sb-atk-leader-num-y:0px;
-  --sb-guard-unit-icon-scale:2.2; --sb-guard-unit-icon-x:-2px; --sb-guard-unit-icon-y:-2px; --sb-guard-unit-ring-scale:2.03; --sb-guard-unit-ring-x:0px; --sb-guard-unit-ring-y:0px; --sb-guard-unit-ring-stroke:.2px; --sb-guard-unit-num-size:6px; --sb-guard-unit-num-weight:100; --sb-guard-unit-num-scale-x:.95; --sb-guard-unit-num-scale-y:.77; --sb-guard-unit-num-x:-.2px; --sb-guard-unit-num-y:-.6px;
+  --sb-guard-unit-icon-scale:2.2; --sb-guard-unit-icon-x:-2px; --sb-guard-unit-icon-y:-2px; --sb-guard-unit-ring-scale:2.03; --sb-guard-unit-ring-x:0px; --sb-guard-unit-ring-y:0px; --sb-guard-unit-ring-stroke:.2px; --sb-guard-unit-num-size:6px; --sb-guard-unit-num-weight:100; --sb-guard-unit-num-scale-x:.95; --sb-guard-unit-num-scale-y:.77; --sb-guard-unit-num-x:-5.4px; --sb-guard-unit-num-y:-2.8px;
   --sb-guard-leader-icon-scale:1.4; --sb-guard-leader-icon-x:2px; --sb-guard-leader-icon-y:-25px; --sb-guard-leader-ring-scale:.82; --sb-guard-leader-ring-x:2px; --sb-guard-leader-ring-y:-10px; --sb-guard-leader-ring-stroke:.2px; --sb-guard-leader-num-size:16.4px; --sb-guard-leader-num-weight:100; --sb-guard-leader-num-scale-x:.99; --sb-guard-leader-num-scale-y:1.02; --sb-guard-leader-num-x:10.2px; --sb-guard-leader-num-y:-20px;
-  --sb-precision-icon-scale:2.2; --sb-precision-icon-x:-6px; --sb-precision-icon-y:-5px; --sb-precision-ring-scale:2.2; --sb-precision-ring-x:2px; --sb-precision-ring-y:-3px; --sb-precision-ring-stroke:.2px; --sb-precision-num-size:7.2px; --sb-precision-num-weight:100; --sb-precision-num-scale-x:.86; --sb-precision-num-scale-y:.63; --sb-precision-num-x:-.4px; --sb-precision-num-y:-1.8px;
-  --sb-evasion-icon-scale:2.2; --sb-evasion-icon-x:-3px; --sb-evasion-icon-y:-2px; --sb-evasion-ring-scale:2.01; --sb-evasion-ring-x:2px; --sb-evasion-ring-y:0px; --sb-evasion-ring-stroke:.2px; --sb-evasion-num-size:6px; --sb-evasion-num-weight:100; --sb-evasion-num-scale-x:1; --sb-evasion-num-scale-y:1; --sb-evasion-num-x:.4px; --sb-evasion-num-y:-1px;
+  --sb-precision-icon-scale:2.2; --sb-precision-icon-x:4px; --sb-precision-icon-y:-2px; --sb-precision-ring-scale:2.2; --sb-precision-ring-x:2px; --sb-precision-ring-y:-3px; --sb-precision-ring-stroke:.2px; --sb-precision-num-size:7.8px; --sb-precision-num-weight:100; --sb-precision-num-scale-x:.86; --sb-precision-num-scale-y:.63; --sb-precision-num-x:-2.8px; --sb-precision-num-y:-.2px;
+  --sb-evasion-icon-scale:2.2; --sb-evasion-icon-x:4px; --sb-evasion-icon-y:-1px; --sb-evasion-ring-scale:2.01; --sb-evasion-ring-x:2px; --sb-evasion-ring-y:0px; --sb-evasion-ring-stroke:.2px; --sb-evasion-num-size:6px; --sb-evasion-num-weight:100; --sb-evasion-num-scale-x:1; --sb-evasion-num-scale-y:1; --sb-evasion-num-x:-3.6px; --sb-evasion-num-y:-2px;
 }
 /* Panel side dock */
 .field-stat-badges-tuner{left:12px !important; right:auto !important; top:88px !important; bottom:12px !important; transform:none !important; width:min(365px,calc(100vw - 16px)) !important; max-height:none !important; display:flex; flex-direction:column;}
@@ -20697,12 +20523,12 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
    ========================================================== */
 :root{
   --battle-player-leader-scale:.74;
-  --battle-player-leader-x:0px;
-  --battle-player-leader-y:0px;
+  --battle-player-leader-x:-4px;
+  --battle-player-leader-y:43px;
   --battle-enemy-leader-scale:.74;
   --battle-enemy-leader-x:-5px;
   --battle-enemy-leader-y:-30px;
-  --battle-hand-card-scale:.67;
+  --battle-hand-card-scale:.56;
 }
 .leader-base.leader-base-south,
 body.hv-mobile-landscape .leader-base.leader-base-south,

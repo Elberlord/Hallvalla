@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL3";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL5";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -12346,8 +12346,8 @@ on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();}
 /* ---------------------------------------------------------------------------
    7HHUDTUNER · Control exclusivo para tamaño y posición del HUD de acciones
    --------------------------------------------------------------------------- */
-const ACTIONS_HUD_TUNER_KEY="hallvalla_actions_hud_tuner_v2";
-const ACTIONS_HUD_TUNER_DEFAULTS=Object.freeze({scale:86,x:-40,y:53,gap:7,label:11});
+const ACTIONS_HUD_TUNER_KEY="hallvalla_actions_hud_tuner_v3_final_values";
+const ACTIONS_HUD_TUNER_DEFAULTS=Object.freeze({scale:78,x:-40,y:53,gap:7,label:11});
 let actionsHudTunerState=loadActionsHudTunerState();
 let actionsHudDragState=null;
 function clampActionsHudValue(value,min,max,fallback){
@@ -12489,16 +12489,16 @@ initActionsHudTuner();
 /* ---------------------------------------------------------------------------
    7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v4_final";
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v5_final_values";
 const FIELD_STAT_BADGE_TARGETS={
-  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:181,iconX:-25,iconY:-3,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:1.4,numY:-3.4}},
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:181,iconX:-25,iconY:-2,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:-0.2,numY:5.2}},
   hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:125,iconX:-4,iconY:-32,ringScale:177,ringX:0,ringY:0,ringStroke:0.9,numSize:28,numWeight:100,numScaleX:100,numScaleY:100,numX:0,numY:-2}},
-  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:220,iconX:-3,iconY:-3,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-4.6,numY:1.4}},
+  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:220,iconX:-3,iconY:-4,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-5,numY:2}},
   atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:125,iconX:-2,iconY:-26,ringScale:76,ringX:4,ringY:-27,ringStroke:0.3,numSize:13.8,numWeight:200,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:220,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-5,numY:-1.6}},
+  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:220,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-5.4,numY:-2.8}},
   guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:140,iconX:2,iconY:-25,ringScale:82,ringX:2,ringY:-10,ringStroke:0.2,numSize:16.4,numWeight:100,numScaleX:99,numScaleY:102,numX:10.2,numY:-20}},
-  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:220,iconX:4,iconY:-2,ringScale:220,ringX:2,ringY:-3,ringStroke:0.2,numSize:8.4,numWeight:100,numScaleX:86,numScaleY:63,numX:-2,numY:-0.2}},
-  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:220,iconX:4,iconY:-1,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:-2.2,numY:-2}}
+  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:220,iconX:4,iconY:-2,ringScale:220,ringX:2,ringY:-3,ringStroke:0.2,numSize:7.8,numWeight:100,numScaleX:86,numScaleY:63,numX:-2.8,numY:-0.2}},
+  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:220,iconX:4,iconY:-1,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:-3.6,numY:-2}}
 };
 const FIELD_STAT_CONTROL_DEFS=[
   {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:220,step:1},
@@ -12635,15 +12635,15 @@ initFieldStatBadgesTuner();
 /* ---------------------------------------------------------------------------
    7HSIZECTRL V2 · Tamaño/posición individual de líderes + tamaño de mano
    --------------------------------------------------------------------------- */
-const BATTLE_VISUAL_SIZE_TUNER_KEY="hallvalla_battle_visual_size_v3_final";
+const BATTLE_VISUAL_SIZE_TUNER_KEY="hallvalla_battle_visual_size_v4_final_values";
 const BATTLE_VISUAL_SIZE_DEFAULTS=Object.freeze({
   playerLeaderScale:74,
-  playerLeaderX:0,
-  playerLeaderY:0,
+  playerLeaderX:-4,
+  playerLeaderY:43,
   enemyLeaderScale:74,
   enemyLeaderX:-5,
   enemyLeaderY:-30,
-  handCardScale:67
+  handCardScale:56
 });
 let battleVisualSizeState=loadBattleVisualSizeState();
 function clampBattleVisualSize(value,min,max,fallback){
@@ -12654,13 +12654,13 @@ function loadBattleVisualSizeState(){
   try{
     const saved=JSON.parse(localStorage.getItem(BATTLE_VISUAL_SIZE_TUNER_KEY)||"{}")||{};
     return {
-      playerLeaderScale:clampBattleVisualSize(saved.playerLeaderScale,45,180,74),
-      playerLeaderX:clampBattleVisualSize(saved.playerLeaderX,-120,120,0),
-      playerLeaderY:clampBattleVisualSize(saved.playerLeaderY,-120,120,0),
-      enemyLeaderScale:clampBattleVisualSize(saved.enemyLeaderScale,45,180,74),
-      enemyLeaderX:clampBattleVisualSize(saved.enemyLeaderX,-120,120,-5),
-      enemyLeaderY:clampBattleVisualSize(saved.enemyLeaderY,-120,120,-30),
-      handCardScale:clampBattleVisualSize(saved.handCardScale,35,120,67)
+      playerLeaderScale:clampBattleVisualSize(saved.playerLeaderScale,45,180,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderScale),
+      playerLeaderX:clampBattleVisualSize(saved.playerLeaderX,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderX),
+      playerLeaderY:clampBattleVisualSize(saved.playerLeaderY,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderY),
+      enemyLeaderScale:clampBattleVisualSize(saved.enemyLeaderScale,45,180,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderScale),
+      enemyLeaderX:clampBattleVisualSize(saved.enemyLeaderX,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderX),
+      enemyLeaderY:clampBattleVisualSize(saved.enemyLeaderY,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderY),
+      handCardScale:clampBattleVisualSize(saved.handCardScale,35,120,BATTLE_VISUAL_SIZE_DEFAULTS.handCardScale)
     };
   }catch(e){return {...BATTLE_VISUAL_SIZE_DEFAULTS};}
 }
@@ -12734,13 +12734,13 @@ function initBattleVisualSizeTuner(){
   $("saveBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
   $("resetBattleVisualSizeTunerBtn")?.addEventListener("click",resetBattleVisualSizeTuner);
   $("copyBattleVisualSizeValuesBtn")?.addEventListener("click",copyBattleVisualSizeValues);
-  $("playerLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderScale",ev.target.value,45,180,74,"Tamaño de tu líder guardado."));
-  $("playerLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderX",ev.target.value,-120,120,0,"Posición horizontal de tu líder guardada."));
-  $("playerLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderY",ev.target.value,-120,120,0,"Posición vertical de tu líder guardada."));
-  $("enemyLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderScale",ev.target.value,45,180,74,"Tamaño del líder rival guardado."));
-  $("enemyLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderX",ev.target.value,-120,120,-5,"Posición horizontal del líder rival guardada."));
-  $("enemyLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderY",ev.target.value,-120,120,-30,"Posición vertical del líder rival guardada."));
-  $("battleHandCardScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("handCardScale",ev.target.value,35,120,67,"Tamaño de las cartas en mano guardado."));
+  $("playerLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderScale",ev.target.value,45,180,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderScale,"Tamaño de tu líder guardado."));
+  $("playerLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderX",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderX,"Posición horizontal de tu líder guardada."));
+  $("playerLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderY",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderY,"Posición vertical de tu líder guardada."));
+  $("enemyLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderScale",ev.target.value,45,180,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderScale,"Tamaño del líder rival guardado."));
+  $("enemyLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderX",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderX,"Posición horizontal del líder rival guardada."));
+  $("enemyLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderY",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderY,"Posición vertical del líder rival guardada."));
+  $("battleHandCardScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("handCardScale",ev.target.value,35,120,BATTLE_VISUAL_SIZE_DEFAULTS.handCardScale,"Tamaño de las cartas en mano guardado."));
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("battleVisualSizeTuner")?.classList.contains("hidden"))closeBattleVisualSizeTuner();});
 }
 initBattleVisualSizeTuner();

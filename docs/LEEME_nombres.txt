@@ -1,9 +1,0 @@
-Archivos incluidos:
-- foso_cubierto.webp
-- red_de_caza.webp
-- cepo_de_hierro.webp
-- jaula_de_cuerda.webp
-- estacas_de_bambu.webp
-- carnada_ambar.webp
-
-Si quieres, luego puedo renombrarlos al formato exacto que use tu script.

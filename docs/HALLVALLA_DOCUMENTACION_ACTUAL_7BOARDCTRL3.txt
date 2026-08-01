@@ -1,0 +1,1090 @@
+HALLVALLA — DOCUMENTACIÓN ACTUAL CONSOLIDADA
+=============================================
+
+Fecha de consolidación: 1 de agosto de 2026
+Versión oficial corta: 7BOARDCTRL3
+Compilación activa: v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL3
+Nombre de la actualización: Controles para todo
+Archivo base revisado: Hallvalla.zip
+
+
+0. PROPÓSITO DE ESTE DOCUMENTO
+==============================
+
+Este archivo reemplaza la documentación fragmentada de la carpeta docs.
+Contiene únicamente el estado vigente que pudo comprobarse en el código actual
+(index.html, styles.css y script.js) y en las notas de cambios posteriores a
+7HDK.
+
+Orden de autoridad cuando exista una diferencia:
+
+1. Lógica ejecutable de script.js.
+2. Estructura activa de index.html.
+3. Reglas finales de styles.css.
+4. Este documento consolidado.
+5. Documentos históricos de parches.
+
+Los documentos históricos no deben utilizarse como reglas actuales porque
+pueden describir estados intermedios que fueron corregidos después.
+
+
+1. IDENTIFICACIÓN Y ESTADO TÉCNICO
+==================================
+
+Nombre del proyecto: HallValla
+Tipo de proyecto: aplicación web estática con HTML, CSS y JavaScript modular.
+Publicación prevista: GitHub Pages o servidor web equivalente.
+Backend online: Firebase Authentication y Firebase Realtime Database.
+
+Archivos principales:
+
+- index.html
+- styles.css
+- script.js
+- firebase-config.js
+- assets/
+- docs/
+
+Estado observado en el paquete revisado:
+
+- 516 archivos totales.
+- 434 archivos dentro de assets.
+- 77 documentos antiguos dentro de docs antes de esta consolidación.
+- script.js supera node --check sin errores de sintaxis.
+- La compilación declarada por script.js es 7BOARDCTRL3.
+- Los cache-busters de styles.css y script.js usan 7BOARDCTRL3.
+
+Identificador oficial que debe utilizarse en adelante:
+
+HallValla — Controles para todo — 7BOARDCTRL3
+v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL3
+
+Nota de sincronización:
+El Hallvalla.zip revisado todavía mostraba “Mobile Landscape 7HEN” en el título
+HTML, aunque el CSS, el JavaScript y la constante de compilación ya eran
+7BOARDCTRL3. El título debe quedar sincronizado con 7BOARDCTRL3 usando el
+index.html corregido.
+
+
+2. MODOS Y FLUJO GENERAL DEL JUEGO
+==================================
+
+HallValla incluye actualmente:
+
+- Duelo online entre dos jugadores mediante código de sala.
+- Aventura contra IA.
+- Tutoriales y misiones de introducción.
+- Selección y progresión de líderes.
+- Colección de cartas.
+- Forja y editor de mazos.
+- Apertura de sobres.
+- Tienda con oro interno.
+- Perfil local y progresión almacenada.
+
+Flujo de combate por fases:
+
+1. Draw Phase:
+   - roba cartas cuando corresponde;
+   - recarga Honor o Mana;
+   - procesa efectos de inicio de turno.
+
+2. Main Phase:
+   - permite jugar cartas desde la mano.
+
+3. Action Phase:
+   - permite mover, defender, atacar o usar EFFECT con las unidades válidas.
+
+4. Last Phase:
+   - permite jugar cartas restantes cuando todavía sean jugables.
+
+5. End Phase:
+   - procesa cierre de turno y entrega el turno al rival.
+
+La mano se abre manualmente únicamente cuando la fase y el turno permiten
+utilizarla. Las unidades invocadas pueden actuar el mismo turno según la regla
+actual de invocación de esta compilación.
+
+
+3. RECURSO DE CARTAS: HONOR Y MANA
+==================================
+
+- El recurso interno se administra como honor.
+- Con el líder Hechicero se muestra como Mana.
+- Con los demás líderes se muestra como Honor.
+- El máximo absoluto es 10.
+- El valor actual tampoco puede superar el máximo disponible.
+- Al inicio del turno se incrementa y recarga según la progresión del turno,
+  respetando el límite 10.
+- Las partidas antiguas con valores mayores se normalizan al límite vigente.
+- El recurso disminuye al jugar cartas.
+- Los costes efectivos pueden modificarse por habilidades de líder o por
+  Sabotaje.
+
+
+4. MAZOS, COPIAS Y MANO INICIAL
+===============================
+
+Reglas vigentes del mazo:
+
+- Tamaño obligatorio: 30 cartas.
+- Carta Básica: máximo 3 copias.
+- Carta no Básica: máximo 1 copia.
+- El editor no permite guardar y salir con un mazo incompleto o inválido.
+- El mazo puede construirse mediante miniaturas, botones y arrastre.
+- Las cartas de la colección y las cartas puestas en el mazo abren su detalle
+  al pulsar cualquier parte de la miniatura, excepto los botones de acción.
+- La Forja usa paginación de 14 cartas por página.
+- Los filtros reinician la página a la primera.
+
+Starter actual:
+
+- El starter base contiene 29 cartas.
+- La carta especial elegida en aventura se agrega como carta número 30.
+- El orden se baraja al comenzar el duelo.
+- La IA usa su propia plantilla y no hereda accidentalmente la carta especial
+  elegida por el jugador.
+- La cura básica válida utiliza la key “heal” y se muestra como “Luz de
+  sanación”. La antigua carta duplicada “healing_light” fue eliminada.
+
+La mano inicial estándar se roba desde el mazo generado. El código actual crea
+salas con una mano inicial de cuatro cartas.
+
+
+5. COLECCIÓN, FORJA Y MATERIALES
+================================
+
+Rarezas administradas por la Forja:
+
+- Básica.
+- Épica.
+- Gloriosa.
+- Mítica.
+- Legendaria.
+- Semidiós.
+
+Conversión de sobrantes:
+
+- Una Básica es sobrante por encima de 3 copias.
+- Una no Básica es sobrante por encima de 1 copia.
+- Cada copia sobrante convertida entrega 50 materiales de su propia rareza.
+- Existe conversión individual.
+- Existe un único botón global “Convertir sobrantes (X)”.
+- El botón global se desactiva cuando no hay sobrantes.
+
+Costes actuales de creación:
+
+- Básica: 800 materiales.
+- Épica: 1200 materiales.
+- Gloriosa: 1600 materiales.
+- Mítica: 2000 materiales.
+- Legendaria: 2400 materiales.
+- Semidiós: 2800 materiales.
+
+Reglas de creación:
+
+- Los materiales no se mezclan entre rarezas.
+- Una carta no poseída puede aparecer en la Forja para ser creada.
+- No puede agregarse al mazo hasta existir en la colección.
+- Una Básica puede crearse hasta alcanzar 3 copias.
+- Una no Básica puede crearse hasta alcanzar 1 copia.
+- Las cartas de bestias se muestran en la Forja, pero su creación permanece
+  bloqueada hasta ganar al menos una vez el evento del Señor de las Bestias.
+- El desbloqueo de creación de bestias es permanente en el perfil local.
+- El bloqueo de creación del jugador no impide que la IA o el Beastmaster
+  enemigo utilicen bestias.
+- La carta especial de aventura elegida, como William Wallace o Mulan, forma
+  parte de la colección permitida y no debe ser eliminada por el sanitizador
+  del mazo.
+
+Interfaz vigente de la Forja:
+
+- Materiales visibles por rareza en el encabezado.
+- Diseño compacto.
+- Cuadrícula paginada.
+- Mazo visual de 30 espacios.
+- Botón + para agregar.
+- Botón × para quitar.
+- Botón de creación cuando corresponde.
+- Botón de conversión cuando corresponde.
+- La carta completa abre DET; los botones internos no abren DET.
+- Las cartas con cero copias siguen siendo consultables en detalle.
+
+
+6. SOBRES Y TIENDA
+==================
+
+Sobres:
+
+- Los sobres vigentes revelan 3 cartas.
+- El Pack básico contiene 3 cartas básicas aleatorias entre unidades,
+  magias y trampas normales.
+- El Pack básico no incluye bestias del evento.
+- El Pack reforzado de magia/trampa contiene 3 cartas.
+- El Pack de bestias contiene 3 cartas.
+- El pack gratuito de épica garantizada contiene 3 cartas y garantiza al
+  menos una Épica.
+- Cada Pack básico confirmado aumenta un contador.
+- Al confirmar 20 Packs básicos se entrega un pack gratuito con mínimo una
+  Épica y el contador vuelve a cero.
+
+Presentación de apertura:
+
+- Las cartas reveladas se muestran mediante su arte grande.
+- No se repiten nombre, rareza, coste y texto encima del arte.
+- Pulsar el arte abre el modal DET completo.
+- El botón Jugar se oculta durante la revisión del sobre.
+- Cerrar DET devuelve a la apertura sin perder las cartas reveladas.
+- Se conservan colores y resplandores de rareza.
+
+Tienda:
+
+- Permanece desbloqueada.
+- Utiliza únicamente el oro interno del juego.
+- Se construye por capas visuales con hotspots transparentes accesibles.
+- Escape cierra la tienda.
+- Jugar cierra la tienda.
+- Colección abre la colección/Forja.
+- Perfil abre el perfil.
+- Ajustes abre los ajustes.
+
+Precios vigentes:
+
+- Pack básico: 100 oro.
+- Pack raro: 400 oro.
+- Pack épico: 900 oro.
+- Pack mítico: 1400 oro.
+- Pack legendario: 2000 oro.
+
+Confirmación de compra:
+
+- Con oro suficiente muestra saldo disponible, coste y saldo restante.
+- Sin oro suficiente muestra saldo, coste y cantidad exacta faltante.
+- Después de comprar confirma oro gastado y saldo restante antes de ofrecer
+  abrir el sobre.
+
+
+7. TABLERO Y CUADRÍCULA
+=======================
+
+Valores predeterminados actuales:
+
+- 8 filas.
+- 5 columnas.
+- 40 celdas.
+- Escala completa de cartas del campo: 110%.
+
+Límites del editor:
+
+- Filas: de 4 a 12.
+- Columnas: de 3 a 10.
+- Escala de cartas del campo: de 45% a 150%.
+
+Reglas del editor de tablero:
+
+- Se abre desde la configuración del duelo.
+- Permite aumentar o reducir filas y columnas.
+- Muestra total de celdas en vivo.
+- Durante la edición muestra líneas y coordenadas.
+- La preferencia local se guarda en localStorage.
+- Cada duelo guarda boardRows y boardCols en su estado público.
+- En online ambos jugadores reciben la misma cuadrícula.
+- En online solo J1 puede cambiar las dimensiones.
+- En aventura, tutorial y prueba local puede editarlas J1.
+- No permite eliminar una fila o columna ocupada por una unidad.
+- Los líderes se recolocan en extremos válidos cuando cambia la cuadrícula.
+- Movimiento, invocación, alcance, IA, trampas y posicionamiento usan las
+  dimensiones vigentes.
+- Si una actualización remota falla, debe restaurarse el tamaño anterior.
+
+Cada unidad ocupa una celda. Los líderes se colocan en extremos opuestos del
+campo. Las reglas de movimiento y alcance utilizan la cuadrícula actual.
+
+
+8. CONTROLES VISUALES: “CONTROLES PARA TODO”
+============================================
+
+La compilación 7BOARDCTRL3 consolida editores visuales persistentes.
+
+8.1. HUD de Acciones
+--------------------
+
+Controles:
+
+- Tamaño del grupo.
+- Posición horizontal.
+- Posición vertical.
+- Separación entre botones.
+- Tamaño de etiquetas.
+- Arrastre directo mientras el editor está abierto.
+- Copiar valores.
+- Restaurar valores.
+
+Valores predeterminados actuales:
+
+- Tamaño: 86%.
+- X: -40 px.
+- Y: 53 px.
+- Separación: 7 px.
+- Texto: 11 px.
+
+8.2. Cartas del campo y cuadrícula
+---------------------------------
+
+- Escala completa de la carta, incluyendo retrato, marco, stats, buffs y
+  debuffs.
+- Filas y columnas dinámicas.
+- Persistencia local y sincronización por duelo.
+- Copiar valores.
+- Restaurar valores.
+
+8.3. Stats y badges del campo
+-----------------------------
+
+Objetivos editables:
+
+- Vida de unidades.
+- Vida de líderes.
+- Ataque de unidades.
+- Ataque de líderes.
+- Guardia de unidades.
+- Guardia de líderes.
+- Precisión de unidades.
+- Evasión de unidades.
+
+Parámetros editables por objetivo:
+
+- Escala del icono.
+- Posición X/Y del icono.
+- Escala del aro.
+- Posición X/Y del aro.
+- Grosor del aro.
+- Tamaño del número.
+- Peso del número.
+- Escala horizontal y vertical del número.
+- Posición X/Y del número.
+- Copiar valores.
+- Restaurar objetivo o restaurar todo.
+
+8.4. Líderes y cartas de la mano
+--------------------------------
+
+Controles persistentes:
+
+- Tamaño del líder del jugador.
+- Posición X/Y del líder del jugador.
+- Tamaño del líder rival.
+- Posición X/Y del líder rival.
+- Tamaño de las cartas de la mano.
+- Copiar valores.
+- Restaurar valores.
+
+Valores predeterminados actuales:
+
+- Líder del jugador: 74%, X 0, Y 0.
+- Líder rival: 74%, X -5, Y -30.
+- Cartas de la mano: 67%.
+
+Todos estos ajustes se almacenan en localStorage del navegador. Son ajustes de
+presentación; no cambian estadísticas ni balance.
+
+
+9. COMBATE, GUARDIA Y VIDA
+==========================
+
+Regla general:
+
+- El daño normal consume primero Guardia temporal.
+- Después consume Guardia base almacenada.
+- Solo el excedente permitido llega a Vida.
+- El daño directo o los efectos marcados para ignorar Guardia pueden afectar
+  Vida sin seguir el orden normal.
+- Si una unidad pierde Vida por un ataque normal, su Guardia almacenada queda
+  en cero cuando la regla correspondiente lo exige.
+- Las auras de Guardia participan en el cálculo sin convertirse en Guardia
+  permanente escrita.
+- La Guardia temporal se limpia según su duración.
+- La Guardia base se restaura al inicio del turno del dueño según el máximo
+  calculado de la unidad.
+
+Los líderes no utilizan Destreza ni Agilidad en el mismo sentido que las
+unidades: sus ataques y los ataques contra ellos impactan, y la Guardia reduce
+el daño.
+
+Protección del Guerrero:
+
+- Mientras el líder Guerrero tenga al menos una unidad aliada viva, los
+  ataques de unidades no reducen la Vida del líder.
+
+
+10. PRECISIÓN Y EVASIÓN
+=======================
+
+- PREC/EVA se calcula con Destreza y Agilidad más modificadores válidos.
+- Al acertar, el atacante gasta únicamente la cantidad necesaria del sistema
+  de precisión/evasión.
+- Al fallar, se consume la reserva disponible del intento según la regla
+  vigente.
+- La evasión gastada puede mostrarse como estado activo.
+- Una unidad con Destreza forzada a cero por Escape Forzado permanece así
+  hasta terminar el turno actual.
+
+Prioridad visual vigente:
+
+- Si el ataque falla sin tocar Guardia: solo ESQUIVA.
+- GUARDIA aparece cuando la Guardia absorbe completamente el golpe.
+- Si el golpe atraviesa Guardia y también causa daño a HP, no debe mostrarse
+  el splash GUARDIA como si hubiese bloqueado todo el ataque.
+- Los efectos físicos de ruptura pueden seguir reproduciéndose.
+- La misma prioridad se aplica al jugador y a la IA.
+
+
+11. CLASES DE ARMA Y VENTAJA TÁCTICA
+====================================
+
+Clases:
+
+- Espada / infantería.
+- Lanza.
+- Caballería.
+- Arco / distancia.
+- Hacha / dos manos.
+- Magia / arcano.
+- Bestia / arma natural.
+- Estratega / neutral.
+
+Rueda vigente:
+
+- Espada vence a Lanza.
+- Lanza vence a Caballería.
+- Caballería vence a Arco.
+- Arco vence a Hacha.
+- Arco vence a Bestia.
+- Hacha vence a Espada.
+- Bestia vence a Caballería.
+- Magia y Neutral no tienen ventaja base dentro de esta rueda.
+
+La ventaja de clase concede +5 Destreza únicamente durante ese combate.
+
+Regla actual de Hacha:
+
+- No existe un bono global permanente de +2 DX para todas las Hachas.
+- La ventaja global de Hacha es el +5 DX temporal al combatir contra Espada.
+- Las habilidades particulares, como Ruptura brutal, continúan separadas.
+
+Regla actual de Espada:
+
+- Las unidades clasificadas explícitamente como Espada reciben la bonificación
+  de Guardia definida por el sistema de esa clase cuando corresponda.
+
+
+12. LANZAS Y ANTICABALLERÍA
+===========================
+
+- Las unidades de Lanza tienen rango base 1, salvo una excepción explícita.
+- Atacar Primero se activa una vez por turno cuando una unidad enemiga de
+  cuerpo a cuerpo con RG 1 ataca desde una celda adyacente.
+- No se activa frente a atacantes de rango 2 o superior.
+- Si el contraataque de Atacar Primero derrota al atacante, el ataque original
+  se cancela.
+- Ataque en Picada del Halcón ignora Atacar Primero.
+- En combate cuerpo a cuerpo contra Caballería, atacando o defendiendo, la
+  Caballería queda con Guardia 0 y AGI 0 durante ese combate.
+- La ventaja de clase Lanza contra Caballería añade +5 DX durante ese combate.
+
+Samurai de Naginata:
+
+- Su texto propio vigente es Proteger al Daimyo.
+- Una unidad Básica que lo destruya cuerpo a cuerpo queda con 1 Vida.
+- Las reglas generales de Lanza no se repiten en su texto particular; se
+  consultan mediante la clase de arma y DET.
+
+
+13. RANGOS VIGENTES
+===================
+
+La Regla de arco no inspecciona textos completos de habilidades para decidir
+si una unidad es arquera. Utiliza registros explícitos, key, nombre, icono y
+clasificación inequívoca.
+
+Cuerpo a cuerpo corregido a RG 1:
+
+- Skipar del Drakkar.
+- Juana de Arco.
+- Saladino.
+- Unidades de Lanza.
+- Cualquier unidad cuerpo a cuerpo sin excepción explícita de distancia.
+
+Excepciones confirmadas de RG 2:
+
+- Adepto Arcano.
+- Ulfhednar.
+- Hattori Shinobi.
+- Subotai / Subutai.
+- Atila el Huno.
+
+Excepciones confirmadas de RG 3:
+
+- Arquera del Desierto cuando recibe la Regla de arco aplicable sobre su base.
+- Simo Häyhä.
+- Nasu no Yoichi.
+- Arjuna.
+- Samurai Yabusame cuando se aplica su Regla de arco.
+- Caballería Arquera de Saladino.
+
+No existe una Caballería común de RG 3. Una Caballería solo alcanza ese rango
+cuando está registrada explícitamente como arquera.
+
+La IA, DET, la mano, la invocación, el campo, el alcance visual y la validación
+de ataques deben usar el rango efectivo normalizado.
+
+
+14. ESTADOS Y EFECTOS
+=====================
+
+Estados y modificadores vigentes incluyen:
+
+- Sangrado.
+- Veneno.
+- Quemadura.
+- Miedo.
+- Aturdimiento.
+- Parálisis.
+- Silencio.
+- Maldición/debilitado.
+- Sigilo.
+- Aéreo.
+- Reducciones de MOV, AGI, AT y DX.
+- Bonificaciones temporales de AT, Guardia, MOV, DX y AGI.
+- Guardia defensiva.
+- Evasión gastada.
+
+Normalización de splashes:
+
+- Sangrado: SANGRADO.
+- Quemadura: QUEMADURA.
+- Veneno: VENENO.
+- Miedo: MIEDO.
+- Aturdimiento, parálisis y shock: ATURDIDO.
+- Debuff, silencio y maldición sin imagen propia: DEBILITADO.
+- Ataque desde Sigilo: EMBOSCADA.
+
+Los splashes deben poder animar opacity, transform y filter; esas propiedades
+no deben quedar bloqueadas por reglas !important que vuelvan invisible la
+animación.
+
+
+15. SIGILO Y REVELACIÓN
+=======================
+
+- Una unidad con Sigilo no puede ser seleccionada como objetivo directo hasta
+  ser revelada, salvo una regla que indique lo contrario.
+- El rival ve una silueta o indicador “?” en la celda ocupada; la posición no
+  desaparece completamente.
+- Estacas de Bambú, Cuervo Negro y León Africano pueden revelar Sigilo dentro
+  de sus radios correspondientes.
+- Cuervo Negro y León Africano solo deben gastar EFFECT de revelación si
+  existe una unidad enemiga con Sigilo dentro del radio válido.
+
+Simo Häyhä — Muerte Blanca:
+
+- Cuando derrota directamente una unidad enemiga con un ataque, obtiene
+  Sigilo.
+- Al declarar su siguiente ataque pierde Sigilo, acierte o falle.
+- Si ese ataque derrota otra unidad, recupera Sigilo.
+- No se activa por daño diferido.
+- No se activa al derrotar líderes.
+- Funciona tanto con el jugador como con la IA.
+
+
+16. NINJUTSU Y ASESINOS
+=======================
+
+Unidades actuales clasificadas como asesinos:
+
+- Asesina del Desierto.
+- Geisha Encubierta.
+- Hattori Shinobi.
+- Saboteador de Iga.
+- Futuras unidades cuyo nombre contenga “asesina” o “asesino” pueden ser
+  clasificadas automáticamente por el detector actual.
+
+No cuentan actualmente como asesinos:
+
+- Hua Lan / Mulan.
+- Tigre de Bengala.
+- Una unidad con Sigilo que no esté registrada ni tenga nombre de asesino.
+
+Asesina del Desierto:
+
+- No ignora Guardia de base.
+- Sus ataques normales consumen Guardia.
+- Si hace daño real a HP, aplica Sangrado.
+- El daño de Sangrado ignora Guardia como estado.
+- Solo ignora Guardia al atacar cuando su dueño tiene Maestro de Sombras Nv.5
+  con Niebla de sangre.
+
+Geisha Encubierta:
+
+- Entra con Sigilo.
+- No puede atacar líderes.
+- Si ataca desde Sigilo, causa daño a HP y el objetivo es una unidad, destruye
+  inmediatamente la unidad atacada.
+
+Hattori Shinobi:
+
+- Entra con Sigilo.
+- Mantiene Sigilo después de atacar a distancia.
+- Pierde Sigilo después de atacar cuerpo a cuerpo.
+
+Saboteador de Iga:
+
+- Escape Forzado: si es atacado y sobrevive, todas las unidades enemigas en
+  rango 1 quedan con DX 0 hasta terminar el turno actual.
+- Sabotaje: cada Saboteador de Iga aliado vivo aumenta en +1 el coste de
+  invocación de las unidades enemigas.
+- El aumento de Sabotaje se acumula.
+- El coste real debe mostrarse antes de pagar la carta.
+
+Maestro de Sombras Nv.5:
+
+- Usa tier de buff 2: +3 AGI y +1 DX para asesinos aliados.
+- Niebla de sangre permite ignorar Guardia al atacar.
+- El gasto de PREC/EVA se reduce a la mitad, redondeado hacia arriba.
+- En nivel 5 no entrega AT adicional; el +1 AT pertenece al tier 4, nivel 9.
+
+
+17. UNIDADES Y REGLAS DESTACADAS VIGENTES
+=========================================
+
+Berserker del Norte:
+
+- Ruptura brutal aplica -3 Guardia al objetivo durante ese combate al declarar
+  un ataque cuerpo a cuerpo.
+
+Berserker de Oso:
+
+- Si atraviesa Guardia y causa daño a HP, destruye la Guardia base del
+  objetivo mientras permanezca en campo.
+- Es inmune a Miedo.
+
+Ulfhednar:
+
+- Usa Hacha como clase y sonido.
+- Tiene rango 2 por hachas arrojadizas.
+- Al declarar ataque tiene 50% de probabilidad de Golpe Crítico.
+- El crítico realiza 200% de daño durante ese ataque.
+
+Skipar del Drakkar:
+
+- Es Espada de rango 1.
+- Si fue invocado ese turno puede mover una celda adicional.
+- Al destruir una unidad enemiga hace que el líder rival descarte hasta dos
+  cartas.
+
+Adepto Arcano:
+
+- Usa Magia y rango 2.
+- Puede aplicar un estado negativo aleatorio al causar daño real a HP.
+- Puede contraatacar ataques de rango.
+- Recibe Vínculo Arcano junto al líder Hechicero según el tier del líder.
+
+Halcón Peregrino:
+
+- Ataque en Picada es golpe seguro.
+- No gasta la evasión del objetivo antes de resolver el golpe seguro.
+- Conserva su impacto/retroceso contra Guardia.
+- Ignora Atacar Primero de Lanza.
+
+Búfalo Africano:
+
+- La IA respeta Instinto de Cornada antes de completar un ataque cuerpo a
+  cuerpo contra él.
+- Si la cornada derrota al atacante, se cancela el ataque original.
+
+Mulan / Hua Lan:
+
+- Al destruir una unidad no líder puede activar Ejecución táctica.
+- Puede mover una celda adicional y buscar un segundo ataque válido.
+- Si no existe segundo ataque válido, elige DEF.
+- La cadena no se repite indefinidamente.
+- Hua Lan no está clasificada como asesino.
+
+William Wallace:
+
+- Último Aliento solo se procesa cuando realmente queda en 0 Vida o menos.
+- Un ataque fallado no debe dejarlo en 1 Vida ni consumir la habilidad.
+- Frente a daño fatal real, la primera salvación correspondiente continúa
+  funcionando.
+
+Samurai de Katana:
+
+- Dos Manos concede +6 AT durante el combate al declarar ataque.
+- Shirahadori concede +2 DX por cada rival dentro de su rango cuando es
+  seleccionado como objetivo de un ataque.
+
+Samurai Yabusame:
+
+- Se clasifica tácticamente como Caballería y auditivamente como Arco.
+- Puede retroceder hacia su líder después de sobrevivir a un ataque si existe
+  una celda válida.
+
+Esta sección enumera reglas especialmente auditadas. Las estadísticas exactas
+y el catálogo completo se mantienen en las plantillas ejecutables de
+script.js para evitar volver a duplicar valores que puedan quedar obsoletos.
+
+
+18. LÍDERES Y PROGRESIÓN
+========================
+
+Líderes actuales: 7.
+Nivel máximo actual: 9.
+
+- Guerrero.
+- Arquero.
+- Hechicero.
+- Caudillo del Hacha.
+- Señor de la Carga.
+- Maestro de Sombras.
+- Señor de las Bestias.
+
+Bases de combate:
+
+- Guerrero: AT 3, Guardia base 4, RG 1.
+- Arquero: AT 3, Guardia base 2, RG 2.
+- Hechicero: AT 3, Guardia base 1, RG 2.
+- Caudillo del Hacha: AT 4, Guardia base 3, RG 1.
+- Señor de la Carga: AT 3, Guardia base 3, RG 1.
+- Maestro de Sombras: AT 2, Guardia base 1, RG 1.
+- Señor de las Bestias: AT 2, Guardia base 2, RG 1.
+
+Vida y tier de bonificación por nivel:
+
+- Nivel 1: 20 HP, tier 1.
+- Nivel 2: 22 HP, tier 1.
+- Nivel 3: 24 HP, tier 1.
+- Nivel 4: 26 HP, tier 2.
+- Nivel 5: 28 HP, tier 2.
+- Nivel 6: 30 HP, tier 2.
+- Nivel 7: 32 HP, tier 3.
+- Nivel 8: 34 HP, tier 3.
+- Nivel 9: 36 HP, tier 4.
+
+El ataque del líder se toma de la base propia de su clase y no de la columna
+“atk” histórica de LEADER_LEVEL_TABLE. La Guardia de la mayoría de líderes
+aumenta cada tres niveles según su base. El Señor de las Bestias mantiene
+Guardia 2 mediante su regla específica.
+
+Habilidades predeterminadas desde nivel 5:
+
+- Guerrero — Armadura bendita:
+  la primera vez que recibiría daño letal queda en 1 Vida y no pierde Vida
+  durante el resto de ese turno.
+
+- Arquero — Lluvia de flechas:
+  EFFECT una vez por turno; 1 daño directo a todas las unidades enemigas.
+
+- Hechicero — Descarga arcana:
+  EFFECT una vez por turno; 2 de daño directo al líder enemigo.
+
+- Caudillo del Hacha — Victoria sangrienta:
+  cuando muere una unidad aliada, las demás unidades aliadas vivas ganan
+  +3 AT permanente.
+
+- Señor de la Carga — Llamado de la carga:
+  EFFECT para convocar hasta tres Caballerías Ligeras en celdas adyacentes
+  libres.
+
+- Maestro de Sombras — Niebla de sangre:
+  los asesinos aliados ignoran Guardia al atacar y gastan la mitad de
+  PREC/EVA, redondeada hacia arriba.
+
+- Señor de las Bestias — Veneno de la Manada:
+  las unidades aliadas causan Veneno al hacer daño real a HP; dura dos turnos
+  adicionales y su daño se duplica en cada tick mientras permanezca.
+
+“Filo de mando” existe dentro del conjunto de habilidades y cura 1 HP a las
+unidades aliadas al inicio de cada turno propio, sin superar su Vida máxima,
+pero no es la habilidad predeterminada de los siete líderes actuales.
+
+
+19. IA Y AVENTURA
+=================
+
+La IA de aventura administra:
+
+- Mazo.
+- Mano.
+- Honor/Mana.
+- Robos.
+- Invocaciones.
+- Movimiento.
+- Ataques.
+- Defensa.
+- EFFECT manual compatible.
+- Trampas.
+- Estados.
+- Fin de turno.
+
+Mejoras vigentes de la IA:
+
+- Usa alcance efectivo mediante getUnitAttackRange en lugar del rango impreso.
+- Respeta bonos, penalizaciones, Vínculo Arcano y excepciones.
+- No selecciona objetivos ilegales.
+- Geisha Encubierta no selecciona líderes.
+- Respeta Sigilo.
+- Solo selecciona unidades aéreas cuando posee alcance/Antiaéreo válido.
+- No considera unidades derrotadas.
+- Si no existe una celda de puntuación positiva, puede avanzar por una celda
+  legal que la acerque a un objetivo en vez de desperdiciar la fase.
+- No gasta EFFECT de revelación sin una unidad con Sigilo dentro del radio.
+- Evita ataques fantasma de unidades eliminadas por trampas durante el
+  movimiento.
+- Resuelve habilidades automáticas compartidas del motor de ataque, defensa,
+  invocación, movimiento, daño y muerte.
+
+EFFECT manual con reglas de IA conectadas incluye, entre otros:
+
+- Habilidades compatibles de líder.
+- Richard Corazón de León.
+- Saladino.
+- Sun Tzu.
+- Subotai.
+- Cuervo Negro.
+- León Africano.
+
+Las futuras habilidades manuales que no encajen en los modos existentes
+requieren una regla específica de selección de objetivo para la IA.
+
+Aventura:
+
+- Incluye mapas, capítulos, batallas, recompensas, oro, experiencia y packs.
+- La IA funciona como J2 dentro del estado público de aventura.
+- Existen batallas con mazos fijos y cartas legendarias específicas.
+- El primer combate de 2.1 utiliza un mazo fijo de 30 cartas para el Guerrero
+  de la Vanguardia Rota.
+- La creación de bestias se desbloquea al ganar el evento correspondiente.
+
+
+20. DESEMPATE POR AGOTAMIENTO
+=============================
+
+La partida termina por agotamiento cuando ambos jugadores cumplen:
+
+- no tienen unidades no líder en el tablero;
+- no tienen cartas jugables.
+
+Resultado:
+
+- Gana el jugador cuyo líder tenga más Vida actual.
+- Si ambos líderes tienen la misma Vida, el resultado es empate.
+
+La revisión se realiza al inicio del turno, después de robo, recarga y estados.
+Cada jugador puede quedar marcado como agotado. Cuando ambos están marcados y
+no quedan unidades no líder, se calcula el resultado. Aplica en online y en
+aventura contra IA.
+
+
+21. DET, ICONOS Y PRESENTACIÓN DE CARTAS
+=======================================
+
+DET muestra, cuando corresponde:
+
+- Arte e identidad.
+- Coste.
+- HP.
+- AT.
+- Guardia.
+- DX.
+- AGI.
+- Movimiento.
+- Rango.
+- Efecto completo.
+- Clase táctica/arma.
+- Reglas y explicaciones.
+- Lectura estratégica en Forja.
+
+La fila de arma puede abrir la guía de ventajas y desventajas.
+Los efectos pasivos no muestran innecesariamente el botón EFFECT; su regla
+permanece visible en DET.
+
+Bibliotecas visuales:
+
+- effect_icons contiene únicamente iconos referenciados por el sistema actual.
+- status_icons se reutiliza para estados consolidados.
+- det_icons contiene iconos de stats, triggers y armas.
+- Los assets de carta completa y board_cards se conservan porque ambos formatos
+  son necesarios.
+
+No debe tratarse una ruta dinámica como un archivo faltante solo porque no
+exista literalmente como cadena completa en el disco.
+
+
+22. AUDIO
+=========
+
+Controles:
+
+- Sonido general ON/OFF.
+- Música ON/OFF.
+- Volumen de música.
+- Efectos ON/OFF.
+- Volumen de efectos.
+
+Música:
+
+- La pista de duelo vigente es duel_hallvalla_war_chant.ogg.
+- home_theme_loop y music_theme_loop usan alias/respaldo para evitar errores
+  por nombres antiguos o caché.
+
+Sonidos de armas:
+
+- Espada: salida e impacto propios.
+- Hacha: salida e impacto propios.
+- Arco/flecha: salida e impacto propios.
+- Lanza: salida e impacto propios.
+- Magia: salida e impacto propios.
+- La rareza no reemplaza la identidad sonora principal del arma.
+- Yabusame se escucha como Arco.
+- Naginata se escucha como Lanza.
+- Caudillo del Hacha se escucha como Hacha.
+- Ulfhednar y Berserker de Oso están registrados explícitamente como Hacha.
+
+
+23. DISEÑO MÓVIL
+================
+
+La detección móvil usa el lado corto del viewport junto con entrada táctil o
+pointer coarse para evitar mezclar accidentalmente reglas de PC y móvil.
+
+Clases utilizadas:
+
+- hv-mobile-target.
+- hv-mobile-landscape.
+- hv-mobile-portrait.
+
+Móvil horizontal:
+
+- Home compactado dentro del alto disponible.
+- Banners inferiores promocionales ocultos para liberar espacio funcional.
+- HUD superiores compactos.
+- Honor/Mana reposicionado.
+- Ajustes, Log y Acciones compactados.
+- HUD de Acciones colocado a la derecha y fuera del centro del tablero.
+- Spellbook limitado al espacio disponible.
+- Mano más baja y cartas reducidas.
+- Al abrir la mano se ocultan visualmente Acciones y Log para evitar
+  superposición.
+- Líderes reducidos proporcionalmente.
+- Existe variante adicional para menos de 380 px de alto útil.
+
+El diseño de escritorio no debe cambiar por las reglas exclusivas de móvil.
+
+
+24. CONDICIONES TÉCNICAS Y ASUNTOS PENDIENTES
+=============================================
+
+24.1. Ruta privada del jugador 2 online
+---------------------------------------
+
+joinGame() escribe actualmente el estado privado de J2 en:
+
+games/{codigo}/private/player-IA
+
+Ese nombre también se utiliza conceptualmente para la IA de aventura y puede
+confundir las reglas de seguridad o la lectura privada de J2. Debe verificarse
+con una prueba online real y con las reglas de Firebase. Hasta comprobarlo, no
+debe documentarse el modo online como totalmente validado.
+
+24.2. Configuración de Firebase
+-------------------------------
+
+- firebase-config.js contiene valores de marcador de posición.
+- La configuración realmente utilizada está declarada dentro de script.js.
+- No debe suponerse que editar firebase-config.js cambia la conexión actual.
+- Una refactorización futura debería centralizar la configuración en un solo
+  lugar, sin duplicarla.
+
+24.3. CSS acumulado
+-------------------
+
+styles.css contiene muchas capas de ajustes y selectores redefinidos. En una
+modificación visual debe revisarse la última declaración efectiva y no solo la
+primera aparición del selector. Limpiar CSS requiere pruebas visuales para no
+eliminar parches que todavía son necesarios.
+
+24.4. Alcance de las validaciones
+---------------------------------
+
+La consolidación confirma:
+
+- lectura estática de HTML, CSS, JavaScript y docs;
+- versión activa;
+- existencia estructural de archivos;
+- node --check de script.js.
+
+No confirma por sí sola:
+
+- pruebas completas en navegador;
+- compatibilidad de todos los tamaños de pantalla;
+- permisos reales de Firebase;
+- funcionamiento de una partida online entre dos cuentas;
+- ausencia total de errores en todos los caminos de combate.
+
+
+25. LIMPIEZA DE LA CARPETA DOCS
+==============================
+
+Después de guardar este documento dentro de Hallvalla/docs, puede eliminarse
+todo el contenido documental anterior de esa carpeta.
+
+Archivo único recomendado:
+
+Hallvalla/docs/HALLVALLA_DOCUMENTACION_ACTUAL_7BOARDCTRL3.txt
+
+Puede eliminarse de docs:
+
+- todos los archivos *_REPORTE.txt;
+- todos los FIX_*.txt;
+- todos los CAMBIO_*.txt y CAMBIOS_*.txt;
+- todos los AUDITORIA_*.txt;
+- todos los documentos de versiones 7HDK, 7HDL, 7HDM, 7HDN, 7HDO, 7HDP,
+  7HDQ, 7HDS, 7HDT, 7HDU, 7HDV, 7HDX, 7HE*, 7HF*, 7HG* y demás versiones
+  anteriores;
+- README_ACTUAL_7HDK.md;
+- REGLAS_ACTUALES_7HDK.md;
+- MECANICAS_ACTUALES_7HDK.md;
+- CARTAS_UNIDADES_ACTUALES_7HDK.md;
+- LIDERES_ACTUALES_7HDK.md;
+- LIMPIEZA_DOCUMENTOS_7HDK.txt;
+- LEEME_nombres.txt;
+- cualquier otro informe de implementación que ya esté resumido aquí.
+
+Procedimiento seguro:
+
+1. Haz una copia del ZIP original como respaldo histórico.
+2. Vacía Hallvalla/docs.
+3. Coloca únicamente este archivo dentro de Hallvalla/docs.
+4. No elimines index.html, styles.css, script.js, firebase-config.js ni assets.
+5. No elimines archivos de assets basándote únicamente en documentos viejos.
+6. Vuelve a comprimir el proyecto.
+
+Si se desea conservar historia, guárdese el ZIP original fuera del proyecto de
+producción. No es necesario mantener 77 informes dentro de la versión activa.
+
+
+26. REGLA PARA ACTUALIZACIONES FUTURAS
+======================================
+
+A partir de esta compilación:
+
+- No crear un documento nuevo por cada ajuste pequeño.
+- Actualizar este mismo archivo.
+- Cambiar fecha, versión y compilación al principio.
+- Corregir directamente la sección afectada.
+- Mantener una sección breve de asuntos pendientes.
+- No conservar una afirmación que haya sido reemplazada por el código.
+- Para estadísticas individuales de cartas, usar script.js como fuente
+  principal y documentar aquí solo reglas auditadas o globales.
+
+FIN DEL DOCUMENTO
+=================
