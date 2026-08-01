@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8G";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8H";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -361,8 +361,10 @@ function hallvallaApplyLocalPatch(target,patch){const base={...(target||{})};Obj
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 const TURN_PHASES=["draw","main","actions","last","end"];
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
-const TURN_TIME_LIMIT_MS=90*1000;
-const DUEL_TIME_LIMIT_MS=10*60*1000;
+const TURN_TIME_LIMIT_MS=180*1000;
+const DUEL_TIME_LIMIT_MS=15*60*1000;
+const CLOCK_RULESET_VERSION=2;
+const CLOCK_RULESET_MIGRATION_BONUS_MS=5*60*1000;
 const TURN_TIMER_TICK_MS=200;
 function isTurnTimerEnabled(state=publicState){
   if(!state||state.phase==="ended"||state.battleEnded||state.mode==="tutorial")return false;
@@ -413,7 +415,7 @@ function renderTurnTimerHud(){
   const enabled=isTurnTimerEnabled();
   [turnHud,p1Hud,p2Hud].forEach(el=>el.classList.toggle("hidden",!enabled));
   if(!enabled){
-    turnValue.textContent="01:30";p1Value.textContent="10:00";p2Value.textContent="10:00";
+    turnValue.textContent="03:00";p1Value.textContent="15:00";p2Value.textContent="15:00";
     turnHud.classList.remove("warning","danger","mine","enemy");
     [p1Hud,p2Hud].forEach(el=>el.classList.remove("active","warning","danger","mine","enemy"));
     return;
@@ -446,8 +448,19 @@ async function ensureTurnTimerAnchor(){
   if(!key)return;
   const patch={};
   if(!(Number(publicState?.turnStartedAt||0)>0))patch.turnStartedAt=getTurnStartTimestampValue();
-  if(!(Number.isFinite(Number(publicState?.playerClockMs?.[1]))&&Number(publicState.playerClockMs[1])>=0))patch["playerClockMs/1"]=DUEL_TIME_LIMIT_MS;
-  if(!(Number.isFinite(Number(publicState?.playerClockMs?.[2]))&&Number(publicState.playerClockMs[2])>=0))patch["playerClockMs/2"]=DUEL_TIME_LIMIT_MS;
+  const rulesetVersion=Number(publicState?.clockRulesetVersion||0);
+  if(rulesetVersion<CLOCK_RULESET_VERSION){
+    [1,2].forEach(owner=>{
+      const raw=Number(publicState?.playerClockMs?.[owner]);
+      patch[`playerClockMs/${owner}`]=Number.isFinite(raw)&&raw>=0
+        ?Math.min(DUEL_TIME_LIMIT_MS,raw+CLOCK_RULESET_MIGRATION_BONUS_MS)
+        :DUEL_TIME_LIMIT_MS;
+    });
+    patch.clockRulesetVersion=CLOCK_RULESET_VERSION;
+  }else{
+    if(!(Number.isFinite(Number(publicState?.playerClockMs?.[1]))&&Number(publicState.playerClockMs[1])>=0))patch["playerClockMs/1"]=DUEL_TIME_LIMIT_MS;
+    if(!(Number.isFinite(Number(publicState?.playerClockMs?.[2]))&&Number(publicState.playerClockMs[2])>=0))patch["playerClockMs/2"]=DUEL_TIME_LIMIT_MS;
+  }
   if(!Object.keys(patch).length)return;
   turnTimerAnchorLock=true;
   try{
@@ -477,7 +490,7 @@ function buildDuelClockExpiredState(state,now=Date.now()){
     currentPlayer:0,
     lastExpiredDuelClockKey:String(state.turnKey||""),
     aiActionText:"",
-    log:[`${loserName} agotó sus 10 minutos. Pierde el duelo por tiempo; gana J${winner}.`,...(state.log||[])].slice(0,18)
+    log:[`${loserName} agotó sus 15 minutos. Pierde el duelo por tiempo; gana J${winner}.`,...(state.log||[])].slice(0,18)
   };
 }
 function buildTimedOutTurnState(state,now=Date.now()){
@@ -504,7 +517,7 @@ function buildTimedOutTurnState(state,now=Date.now()){
     statusFxEvent:burnEnd.statusFxEvent||null,
     floatFxEvent:burnEnd.floatFxEvent||null,
     aiActionText:"",
-    log:[`${ownerName} agotó los 90 segundos de su turno. Conserva ${formatTurnTimer(committedClock)} en su reloj general.${burnEnd.logs.length?` ${burnEnd.logs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
+    log:[`${ownerName} agotó los 180 segundos de su turno. Conserva ${formatTurnTimer(committedClock)} en su reloj general.${burnEnd.logs.length?` ${burnEnd.logs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
   };
 }
 function closeTurnInteractionSurfaces(){
@@ -4197,7 +4210,7 @@ if(win&&publicState.adventureIsGuardian){
   return;
 }
 if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
-async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
+async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
 async function joinGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";syncBoardDimensionsFromState(pub);const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
 
 async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
@@ -4233,7 +4246,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
-  const playerProfileName=getLocalProfileName();const pub={code,boardRows:ROWS,boardCols:COLS,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:serverTimestamp(),playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`]};
+  const playerProfileName=getLocalProfileName();const pub={code,boardRows:ROWS,boardCols:COLS,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:serverTimestamp(),clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`]};
   const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true};
   if(HALLVALLA_LOCALHOST_TEST_MODE){
     pub.code=`LOCAL${code4()}`;
@@ -9922,6 +9935,7 @@ async function startBasicTutorialBattle(){
     turnPhase:"main",
     turnKey:"1-1",
     turnStartedAt:serverTimestamp(),
+    clockRulesetVersion:CLOCK_RULESET_VERSION,
     playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
     playerSlots:{player1Uid:uid,player2Uid:"TUTORIAL_DUMMY"},
     playerNames:{1:getLocalProfileName(),2:"Instructor de práctica"},
