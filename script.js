@@ -71,13 +71,14 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8E";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8F";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
 const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v2_final_110_5x8";
+const BATTLE_CLOCK_TUNER_KEY="hallvalla_battle_clock_tuner_v1";
 const FIELD_BOARD_DEFAULTS=Object.freeze({rows:8,cols:5,cardScale:110});
 const FIELD_BOARD_LIMITS=Object.freeze({rows:[4,12],cols:[3,10],cardScale:[45,150]});
 function clampFieldBoardNumber(value,min,max,fallback){
@@ -407,14 +408,14 @@ function formatTurnTimer(ms){
   return `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
 }
 function renderTurnTimerHud(){
-  const hud=$("turnTimerHud"),turnValue=$("turnTimerValue"),p1Value=$("playerClock1Value"),p2Value=$("playerClock2Value");
-  if(!hud||!turnValue||!p1Value||!p2Value)return;
+  const turnHud=$("turnTimerHud"),p1Hud=$("playerClock1"),p2Hud=$("playerClock2"),turnValue=$("turnTimerValue"),p1Value=$("playerClock1Value"),p2Value=$("playerClock2Value");
+  if(!turnHud||!p1Hud||!p2Hud||!turnValue||!p1Value||!p2Value)return;
   const enabled=isTurnTimerEnabled();
-  hud.classList.toggle("hidden",!enabled);
+  [turnHud,p1Hud,p2Hud].forEach(el=>el.classList.toggle("hidden",!enabled));
   if(!enabled){
     turnValue.textContent="01:30";p1Value.textContent="10:00";p2Value.textContent="10:00";
-    hud.classList.remove("warning","danger","mine","enemy");
-    hud.querySelectorAll(".duel-clock").forEach(el=>el.classList.remove("active","warning","danger","mine","enemy"));
+    turnHud.classList.remove("warning","danger","mine","enemy");
+    [p1Hud,p2Hud].forEach(el=>el.classList.remove("active","warning","danger","mine","enemy"));
     return;
   }
   const owner=Number(publicState?.currentPlayer||0);
@@ -424,19 +425,20 @@ function renderTurnTimerHud(){
   turnValue.textContent=formatTurnTimer(turnRemaining);
   p1Value.textContent=formatTurnTimer(p1Remaining);
   p2Value.textContent=formatTurnTimer(p2Remaining);
-  hud.classList.toggle("warning",turnRemaining!==null&&turnRemaining<=30000&&turnRemaining>10000);
-  hud.classList.toggle("danger",turnRemaining!==null&&turnRemaining<=10000);
-  hud.classList.toggle("mine",isMyTurn());
-  hud.classList.toggle("enemy",!isMyTurn());
-  [[1,p1Remaining],[2,p2Remaining]].forEach(([player,remaining])=>{
-    const el=$(player===1?"playerClock1":"playerClock2");if(!el)return;
+  turnHud.classList.toggle("warning",turnRemaining!==null&&turnRemaining<=30000&&turnRemaining>10000);
+  turnHud.classList.toggle("danger",turnRemaining!==null&&turnRemaining<=10000);
+  turnHud.classList.toggle("mine",isMyTurn());
+  turnHud.classList.toggle("enemy",!isMyTurn());
+  [[1,p1Remaining,p1Hud],[2,p2Remaining,p2Hud]].forEach(([player,remaining,el])=>{
     el.classList.toggle("active",owner===player);
     el.classList.toggle("mine",Number(myPlayer||0)===player);
     el.classList.toggle("enemy",Number(myPlayer||0)!==player);
     el.classList.toggle("warning",remaining<=120000&&remaining>30000);
     el.classList.toggle("danger",remaining<=30000);
   });
-  hud.setAttribute("aria-label",`Turno ${formatTurnTimer(turnRemaining)}. J1 ${formatTurnTimer(p1Remaining)}. J2 ${formatTurnTimer(p2Remaining)}.`);
+  turnHud.setAttribute("aria-label",`Tiempo de turno ${formatTurnTimer(turnRemaining)}.`);
+  p1Hud.setAttribute("aria-label",`Reloj del jugador 1 ${formatTurnTimer(p1Remaining)}.`);
+  p2Hud.setAttribute("aria-label",`Reloj del jugador 2 ${formatTurnTimer(p2Remaining)}.`);
 }
 async function ensureTurnTimerAnchor(){
   if(turnTimerAnchorLock||!gameId||!isTurnTimerEnabled())return;
@@ -13345,6 +13347,176 @@ function initFieldBoardTuner(){
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldBoardTuner")?.classList.contains("hidden"))closeFieldBoardTuner();});
 }
 initFieldBoardTuner();
+
+const BATTLE_CLOCK_TUNER_DEFAULTS={
+  turn:{x:0,y:0,scale:100},
+  p1:{x:0,y:0,scale:100},
+  p2:{x:0,y:0,scale:100}
+};
+const BATTLE_CLOCK_TUNER_LIMITS={x:[-520,520],y:[-320,420],scale:[55,160]};
+let battleClockTunerState=loadBattleClockTunerState();
+let battleClockDragState=null;
+function cloneBattleClockDefaults(){return JSON.parse(JSON.stringify(BATTLE_CLOCK_TUNER_DEFAULTS));}
+function clampBattleClockValue(v,min,max,fallback){
+  const n=Number(v);
+  if(!Number.isFinite(n))return fallback;
+  return Math.max(min,Math.min(max,Math.round(n)));
+}
+function loadBattleClockTunerState(){
+  try{
+    const raw=localStorage.getItem(BATTLE_CLOCK_TUNER_KEY);
+    if(!raw)return cloneBattleClockDefaults();
+    const parsed=JSON.parse(raw)||{};
+    const state=cloneBattleClockDefaults();
+    ["turn","p1","p2"].forEach(target=>{
+      const source=parsed[target]||{};
+      state[target]={
+        x:clampBattleClockValue(source.x,...BATTLE_CLOCK_TUNER_LIMITS.x,BATTLE_CLOCK_TUNER_DEFAULTS[target].x),
+        y:clampBattleClockValue(source.y,...BATTLE_CLOCK_TUNER_LIMITS.y,BATTLE_CLOCK_TUNER_DEFAULTS[target].y),
+        scale:clampBattleClockValue(source.scale,...BATTLE_CLOCK_TUNER_LIMITS.scale,BATTLE_CLOCK_TUNER_DEFAULTS[target].scale)
+      };
+    });
+    return state;
+  }catch(_){return cloneBattleClockDefaults();}
+}
+function saveBattleClockTunerState(){
+  try{localStorage.setItem(BATTLE_CLOCK_TUNER_KEY,JSON.stringify(battleClockTunerState));}catch(_){ }
+}
+function getCurrentBattleClockTarget(){return $("battleClockTargetSelect")?.value||"turn";}
+function getBattleClockTargetState(target=getCurrentBattleClockTarget()){
+  if(!battleClockTunerState[target])battleClockTunerState[target]={...BATTLE_CLOCK_TUNER_DEFAULTS[target]};
+  return battleClockTunerState[target];
+}
+function applyBattleClockTunerState(save=false){
+  const root=document.documentElement;
+  root.style.setProperty("--hv-turn-clock-offset-x",`${battleClockTunerState.turn.x}px`);
+  root.style.setProperty("--hv-turn-clock-offset-y",`${battleClockTunerState.turn.y}px`);
+  root.style.setProperty("--hv-turn-clock-scale",String(battleClockTunerState.turn.scale/100));
+  root.style.setProperty("--hv-p1-clock-offset-x",`${battleClockTunerState.p1.x}px`);
+  root.style.setProperty("--hv-p1-clock-offset-y",`${battleClockTunerState.p1.y}px`);
+  root.style.setProperty("--hv-p1-clock-scale",String(battleClockTunerState.p1.scale/100));
+  root.style.setProperty("--hv-p2-clock-offset-x",`${battleClockTunerState.p2.x}px`);
+  root.style.setProperty("--hv-p2-clock-offset-y",`${battleClockTunerState.p2.y}px`);
+  root.style.setProperty("--hv-p2-clock-scale",String(battleClockTunerState.p2.scale/100));
+  syncBattleClockTunerControls();
+  if(save)saveBattleClockTunerState();
+}
+function syncBattleClockTunerControls(){
+  const target=getCurrentBattleClockTarget();
+  const cfg=getBattleClockTargetState(target);
+  const map=[
+    ["battleClockXInput","battleClockXValue",cfg.x," px"],
+    ["battleClockYInput","battleClockYValue",cfg.y," px"],
+    ["battleClockScaleInput","battleClockScaleValue",cfg.scale,"%"]
+  ];
+  map.forEach(([inputId,valueId,val,suffix])=>{
+    const input=$(inputId),out=$(valueId);
+    if(input&&String(input.value)!==String(val))input.value=String(val);
+    if(out)out.textContent=`${val}${suffix}`;
+  });
+}
+function setBattleClockTunerStatus(msg=""){
+  const el=$("battleClockTunerStatus");
+  if(el)el.textContent=msg;
+}
+function openBattleClockTuner(){
+  $("actionsHudTuner")?.classList.add("hidden");
+  $("fieldStatBadgesTuner")?.classList.add("hidden");
+  $("battleVisualSizeTuner")?.classList.add("hidden");
+  $("fieldBoardTuner")?.classList.add("hidden");
+  const panel=$("battleClockTuner");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  document.body.classList.add("battle-clock-tuner-open");
+  syncBattleClockTunerControls();
+  setBattleClockTunerStatus("Arrastra cualquiera de los 3 relojes o usa los sliders.");
+}
+function closeBattleClockTuner(){
+  $("battleClockTuner")?.classList.add("hidden");
+  document.body.classList.remove("battle-clock-tuner-open","battle-clock-dragging");
+  battleClockDragState=null;
+  saveBattleClockTunerState();
+}
+function updateBattleClockTunerFromInput(key,value){
+  const target=getCurrentBattleClockTarget();
+  const limits=BATTLE_CLOCK_TUNER_LIMITS[key];
+  if(!limits)return;
+  getBattleClockTargetState(target)[key]=clampBattleClockValue(value,limits[0],limits[1],BATTLE_CLOCK_TUNER_DEFAULTS[target][key]);
+  applyBattleClockTunerState(true);
+  setBattleClockTunerStatus("Configuración guardada en este navegador.");
+}
+function resetBattleClockTarget(target=getCurrentBattleClockTarget()){
+  battleClockTunerState[target]={...BATTLE_CLOCK_TUNER_DEFAULTS[target]};
+}
+function resetBattleClockCurrent(){
+  const target=getCurrentBattleClockTarget();
+  resetBattleClockTarget(target);
+  applyBattleClockTunerState(true);
+  setBattleClockTunerStatus(`Restablecido: ${target==="turn"?"Turno":target==="p1"?"Jugador 1":"Jugador 2"}.`);
+}
+function resetBattleClockAll(){
+  battleClockTunerState=cloneBattleClockDefaults();
+  applyBattleClockTunerState(true);
+  setBattleClockTunerStatus("Todos los relojes volvieron a sus valores base.");
+}
+async function copyBattleClockValues(){
+  const fmt=(t,label)=>`${label}: x ${battleClockTunerState[t].x}px, y ${battleClockTunerState[t].y}px, scale ${battleClockTunerState[t].scale}%`;
+  const text=[fmt("turn","Turno"),fmt("p1","J1"),fmt("p2","J2")].join(" · ");
+  try{await navigator.clipboard.writeText(text);}catch(_){ }
+  setBattleClockTunerStatus(`Copiado: ${text}`);
+}
+function getBattleClockTargetFromElement(el){
+  return el?.dataset?.clockTarget||(el?.id==="playerClock1"?"p1":el?.id==="playerClock2"?"p2":"turn");
+}
+function startBattleClockDrag(el,clientX,clientY,pointerId){
+  const target=getBattleClockTargetFromElement(el);
+  const cfg=getBattleClockTargetState(target);
+  battleClockDragState={el,target,pointerId,startX:clientX,startY:clientY,baseX:cfg.x,baseY:cfg.y};
+  document.body.classList.add("battle-clock-dragging");
+  try{el.setPointerCapture(pointerId);}catch(_){ }
+  const select=$("battleClockTargetSelect");
+  if(select&&select.value!==target)select.value=target;
+  syncBattleClockTunerControls();
+  setBattleClockTunerStatus(`Moviendo ${target==="turn"?"Turno":target==="p1"?"Jugador 1":"Jugador 2"}…`);
+}
+function moveBattleClockDrag(clientX,clientY){
+  if(!battleClockDragState)return;
+  const target=battleClockDragState.target;
+  const cfg=getBattleClockTargetState(target);
+  cfg.x=clampBattleClockValue(battleClockDragState.baseX+(clientX-battleClockDragState.startX),...BATTLE_CLOCK_TUNER_LIMITS.x,BATTLE_CLOCK_TUNER_DEFAULTS[target].x);
+  cfg.y=clampBattleClockValue(battleClockDragState.baseY+(clientY-battleClockDragState.startY),...BATTLE_CLOCK_TUNER_LIMITS.y,BATTLE_CLOCK_TUNER_DEFAULTS[target].y);
+  applyBattleClockTunerState(false);
+}
+function finishBattleClockDrag(){
+  if(!battleClockDragState)return;
+  battleClockDragState=null;
+  document.body.classList.remove("battle-clock-dragging");
+  saveBattleClockTunerState();
+  setBattleClockTunerStatus("Posición guardada.");
+}
+function initBattleClockTuner(){
+  applyBattleClockTunerState(false);
+  $("battleClockTargetSelect")?.addEventListener("change",()=>{syncBattleClockTunerControls(); setBattleClockTunerStatus("Editando el reloj seleccionado.");});
+  [["battleClockXInput","x"],["battleClockYInput","y"],["battleClockScaleInput","scale"]].forEach(([id,key])=>$(id)?.addEventListener("input",ev=>updateBattleClockTunerFromInput(key,ev.target.value)));
+  $("openBattleClockTunerBtn")?.addEventListener("click",()=>{closeBattleMenu();openBattleClockTuner();});
+  $("closeBattleClockTunerBtn")?.addEventListener("click",closeBattleClockTuner);
+  $("saveBattleClockTunerBtn")?.addEventListener("click",closeBattleClockTuner);
+  $("resetBattleClockCurrentBtn")?.addEventListener("click",resetBattleClockCurrent);
+  $("resetBattleClockAllBtn")?.addEventListener("click",resetBattleClockAll);
+  $("copyBattleClockValuesBtn")?.addEventListener("click",copyBattleClockValues);
+  [$("turnTimerHud"),$("playerClock1"),$("playerClock2")].filter(Boolean).forEach(el=>{
+    el.addEventListener("pointerdown",e=>{
+      if($("battleClockTuner")?.classList.contains("hidden"))return;
+      e.preventDefault();
+      startBattleClockDrag(el,e.clientX,e.clientY,e.pointerId);
+    });
+  });
+  document.addEventListener("pointermove",e=>{if(battleClockDragState)moveBattleClockDrag(e.clientX,e.clientY);});
+  document.addEventListener("pointerup",finishBattleClockDrag);
+  document.addEventListener("pointercancel",finishBattleClockDrag);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("battleClockTuner")?.classList.contains("hidden"))closeBattleClockTuner();});
+}
+initBattleClockTuner();
 
 
 on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
