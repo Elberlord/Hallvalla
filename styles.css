@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL6 · FASE 2: consolidación conservadora del inspector DET.
+/* HALLVALLA 7BOARDCTRL6B · HOTFIX WALLACE + FASE 2: consolidación conservadora del inspector DET.
    Se eliminaron declaraciones DET anuladas; las reglas ganadoras conservan su posición original. */
 /*
 ================================================================================
@@ -20564,3 +20564,18 @@ body.field-board-tuning .board-cell-coordinate{display:block;}
 .basic-tutorial-coach-top{display:flex;justify-content:space-between;gap:10px}.basic-tutorial-coach-tools{display:flex;gap:6px}.basic-tutorial-step,.tutorial-missions-kicker{color:#ffd166;font-size:10px;font-weight:900;letter-spacing:1.3px}.basic-tutorial-coach h3{margin:2px 0 0;color:#fff1c4;font-family:Georgia,serif;font-size:19px}.basic-tutorial-coach p{margin:8px 0;color:#ead8b6;font-size:13px;line-height:1.35}.basic-tutorial-hint{color:#cdb98f;font-size:11px}.basic-tutorial-mini-btn{border:1px solid rgba(255,209,102,.28);background:rgba(0,0,0,.38);color:#fff1c4;border-radius:10px;padding:7px 10px;font-weight:800}.basic-tutorial-mini-btn:disabled{opacity:.45}.basic-tutorial-objective{margin-top:10px;padding:9px 11px;border-radius:12px;background:rgba(255,209,102,.09);border:1px solid rgba(255,209,102,.22)}.basic-tutorial-objective span{display:block;color:#ffd166;font-size:9px;font-weight:900;letter-spacing:1px}.basic-tutorial-objective b{display:block;color:#fff;font-size:12px;margin-top:3px}.basic-tutorial-progress-track{height:5px;margin:10px 0;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}.basic-tutorial-progress-track i{display:block;height:100%;background:linear-gradient(90deg,#9d6f19,#ffd166);border-radius:99px}.basic-tutorial-coach-buttons{display:flex;justify-content:space-between;gap:8px}.tutorial-target-active{filter:drop-shadow(0 0 8px #ffd166)!important}.basic-tutorial-focus-ring{position:fixed;z-index:240;border:3px solid #ffd166;border-radius:16px;pointer-events:none;box-shadow:0 0 0 4px rgba(255,209,102,.18),0 0 26px rgba(255,209,102,.9);animation:tutorialPulse 1.1s infinite alternate}.basic-tutorial-focus-ring.hidden{display:none!important}@keyframes tutorialPulse{to{box-shadow:0 0 0 8px rgba(255,209,102,.05),0 0 36px rgba(255,209,102,1)}}
 .tutorial-missions-card{width:min(820px,95vw)}.tutorial-missions-head{display:flex;justify-content:space-between;align-items:flex-start}.tutorial-close-x{width:38px;height:38px;border-radius:50%;background:#160f08;border:1px solid #c18d2a;color:#ffd166;font-size:24px}.tutorial-missions-intro{color:#d9c49b}.tutorial-mission-list{display:grid;gap:10px;margin:15px 0}.tutorial-mission-card{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;padding:13px;border-radius:16px;background:linear-gradient(180deg,rgba(83,55,24,.34),rgba(8,7,6,.62));border:1px solid rgba(255,209,102,.24)}.tutorial-mission-card.complete{border-color:rgba(102,214,134,.48)}.tutorial-mission-card.locked{opacity:.62}.tutorial-mission-status{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#211509;border:1px solid #d2a13e;color:#ffd166;font-weight:900}.tutorial-mission-card h3{margin:0;color:#fff1c4}.tutorial-mission-card p{margin:4px 0;color:#d7c29d;font-size:12px}.tutorial-mission-card span{color:#ffd166;font-size:11px;font-weight:800}
 @media(max-width:650px){.basic-tutorial-coach{left:8px;bottom:8px;width:calc(100vw - 16px)}.tutorial-mission-card{grid-template-columns:44px 1fr}.tutorial-mission-card .btn{grid-column:1/-1;width:100%}}
+
+
+/* ============================================================
+   7BOARDCTRL6B — WILLIAM WALLACE: RETRATO DE CAMPO EXPLÍCITO
+   Mantiene visible rostro, hombros y torso; no modifica la carta de mano.
+   ============================================================ */
+.cell > .unit-card.unit-key-wallace .unit-card-character-layer{
+  object-fit:contain !important;
+  object-position:center center !important;
+  transform:translate(-50%,-50%) scale(1.02) !important;
+}
+.cell > .unit-card.unit-key-wallace .unit-card-bg-layer{
+  object-position:center 18% !important;
+  transform:scale(1.06) !important;
+}

@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL6";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL6B";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -206,6 +206,12 @@ const CARD_PORTRAITS={
   bloodBait:"assets/cards/beasts/carnada_ambar.webp",
   trackingSmoke:"assets/cards/beasts/estacas_de_bambu.webp",
   ropeCage:"assets/cards/beasts/jaula_de_cuerda.webp"
+};
+
+/* Retratos exclusivos del tablero.
+   No dependen de la carpeta ni del arte usado por las cartas de mano. */
+const BOARD_PORTRAITS={
+  wallace:"assets/board_cards/special/wallace.webp"
 };
 
 /*
@@ -8146,11 +8152,24 @@ async function cellClick(x,y){
   unitContextSelection=null;
   hideUnitContextMenu();
 }
-function getBoardPortraitPath(portrait){
+function getLegacyBoardPortraitPath(portrait){
   const raw=String(portrait||"");
   if(!raw)return raw;
   if(raw.includes("assets/cards/"))return raw.replace("assets/cards/","assets/board_cards/");
   return raw;
+}
+
+function getBoardPortraitPath(portrait,unitKey=""){
+  const key=String(unitKey||"").trim().toLowerCase();
+  return BOARD_PORTRAITS[key]||getLegacyBoardPortraitPath(portrait);
+}
+
+function getBoardPortraitFallbackPath(portrait,unitKey=""){
+  const primary=getBoardPortraitPath(portrait,unitKey);
+  const legacy=getLegacyBoardPortraitPath(portrait);
+  /* Para retratos explícitos, el primer respaldo sigue siendo otro arte de tablero,
+     nunca la carta de mano. El resto conserva el comportamiento anterior. */
+  return primary!==legacy?legacy:String(portrait||"");
 }
 
 function getUnitPortraitHtml(u,depthLayer=false){
@@ -8159,8 +8178,9 @@ function getUnitPortraitHtml(u,depthLayer=false){
   if(portrait){
     const alt=escapeHtml(u.name||"Unidad");
     if(depthLayer){
-      const boardPortrait=getBoardPortraitPath(portrait);
-      const safeOriginal=String(portrait).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+      const boardPortrait=getBoardPortraitPath(portrait,u?.key);
+      const boardFallback=getBoardPortraitFallbackPath(portrait,u?.key);
+      const safeOriginal=String(boardFallback).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
       return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
     }
     return `<img src="${portrait}" alt="${alt}">`;
@@ -8173,8 +8193,9 @@ function getBoardUnitPortraitHtml(u){
   const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
   if(portrait){
     const alt=escapeHtml(u.name||"Unidad");
-    const boardPortrait=getBoardPortraitPath(portrait);
-    const safeOriginal=String(portrait).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+    const boardPortrait=getBoardPortraitPath(portrait,u?.key);
+    const boardFallback=getBoardPortraitFallbackPath(portrait,u?.key);
+    const safeOriginal=String(boardFallback).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
     return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${boardPortrait}" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='${safeOriginal}'"><img class="unit-card-character-layer" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
   }
   return `<span>${u?.icon||"✦"}</span>`;
