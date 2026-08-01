@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8C · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8E · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20317,7 +20317,7 @@ body.field-board-tuning .board-cell-coordinate{display:block;}
 
 
 /* ============================================================
-   7BOARDCTRL8C · HITBOX DE LA CELDA LÓGICA DEL LÍDER
+   7BOARDCTRL8E · HITBOX DE LA CELDA LÓGICA DEL LÍDER
    Unifica la celda real y la representación flotante del líder.
    ============================================================ */
 .leader-cell-proxy{
@@ -20336,3 +20336,62 @@ body.field-board-tuning .board-cell-coordinate{display:block;}
 body.hv-dragging-board .leader-cell-proxy{
   pointer-events:none;
 }
+
+
+/* =====================================================================
+   7BOARDCTRL8E · RELOJ HÍBRIDO
+   10 minutos acumulados por jugador + máximo de 90 segundos por turno.
+   Ningún reloj se pausa por fases, paneles, modales o animaciones.
+   ===================================================================== */
+.turn-timer-hud{
+  position:absolute;
+  z-index:43;
+  top:59px;
+  left:50%;
+  transform:translateX(-50%);
+  width:224px;
+  padding:5px 9px 6px;
+  border-radius:14px;
+  display:grid;
+  grid-template-rows:auto auto;
+  gap:4px;
+  color:#fff0bf;
+  background:linear-gradient(180deg,rgba(28,18,11,.96),rgba(8,6,5,.91));
+  border:1px solid rgba(255,205,91,.48);
+  box-shadow:0 5px 14px rgba(0,0,0,.48),inset 0 0 10px rgba(255,202,82,.06);
+  font-family:Georgia,serif;
+  pointer-events:none;
+  user-select:none;
+}
+.turn-timer-hud.hidden{display:none!important}
+.turn-timer-turn-row{display:flex;align-items:center;justify-content:center;gap:8px;min-height:15px}
+.turn-timer-label{font-size:8px;font-weight:900;letter-spacing:1px;opacity:.78}
+.turn-timer-hud strong{line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.6px;text-shadow:0 1px 4px #000}
+.turn-timer-turn-row strong{font-size:14px}
+.duel-clock-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.duel-clock{display:flex;align-items:center;justify-content:center;gap:6px;min-height:20px;padding:3px 7px;border-radius:999px;color:#e9ddc8;background:rgba(0,0,0,.28);border:1px solid rgba(255,226,165,.18);transition:border-color .16s ease,box-shadow .16s ease,color .16s ease,background .16s ease}
+.duel-clock-label{font-size:7px;font-weight:900;letter-spacing:.8px;opacity:.74}
+.duel-clock strong{font-size:12px}
+.duel-clock.mine{color:#d9f7ff}
+.duel-clock.enemy{color:#ffe0ef}
+.duel-clock.active{background:rgba(255,211,102,.09);border-color:rgba(255,215,111,.58);box-shadow:inset 0 0 8px rgba(255,208,91,.08)}
+.duel-clock.active.mine{border-color:rgba(104,222,255,.72);box-shadow:0 0 9px rgba(72,196,255,.18),inset 0 0 7px rgba(72,196,255,.08)}
+.duel-clock.active.enemy{border-color:rgba(255,116,184,.68);box-shadow:0 0 9px rgba(255,82,161,.15),inset 0 0 7px rgba(255,82,161,.06)}
+.duel-clock.warning{color:#ffe18a;border-color:rgba(255,193,58,.74)}
+.duel-clock.danger{color:#ff9b9b;border-color:rgba(255,78,78,.92);animation:hvDuelClockDangerPulse .72s ease-in-out infinite}
+.turn-timer-hud.mine{border-color:rgba(104,222,255,.62);box-shadow:0 5px 14px rgba(0,0,0,.48),0 0 10px rgba(72,196,255,.15)}
+.turn-timer-hud.enemy{border-color:rgba(255,116,184,.58);box-shadow:0 5px 14px rgba(0,0,0,.48),0 0 10px rgba(255,82,161,.12)}
+.turn-timer-hud.warning .turn-timer-turn-row{color:#ffe18a}
+.turn-timer-hud.danger .turn-timer-turn-row{color:#ff9b9b;animation:hvTurnTimerDangerPulse .72s ease-in-out infinite}
+@keyframes hvTurnTimerDangerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes hvDuelClockDangerPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.32)}}
+@media(max-width:980px){
+  .turn-timer-hud{top:96px;width:192px;padding:4px 7px 5px;gap:3px}
+  .turn-timer-label{font-size:7px}
+  .turn-timer-turn-row strong{font-size:12px}
+  .duel-clock{min-height:18px;padding:2px 5px;gap:4px}
+  .duel-clock-label{font-size:6px}
+  .duel-clock strong{font-size:10px}
+}
+body.hv-mobile-landscape .turn-timer-hud{top:96px!important;width:184px!important;padding:4px 6px!important}
+
