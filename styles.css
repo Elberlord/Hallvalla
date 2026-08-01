@@ -1,6 +1,6 @@
-/* HALLVALLA 7BOARDCTRL7 · FASE 3: consolidación conservadora de cartas y estadísticas del campo.
-   Se eliminaron declaraciones anuladas de marcos, retratos, estados y emblemas;
-   las reglas ganadoras conservan su posición original. Incluye el hotfix de William Wallace. */
+/* HALLVALLA 7BOARDCTRL8 · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+   Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
+   DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
 ================================================================================
 HALLVALLA STYLES ORGANIZED V2
@@ -575,7 +575,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .phase-banner{position:absolute;z-index:22;top:14px;left:50%;transform:translateX(-50%);min-width:210px;padding:8px 14px;border-radius:999px;text-align:center;font-weight:900;font-family:Georgia,serif;letter-spacing:.5px;color:#fff1c4;background:linear-gradient(180deg,rgba(34,22,14,.88),rgba(12,8,6,.74));border:1px solid rgba(255,209,102,.3)}
 .grid-wrap{--arenaH:calc(100vh - 12px);--imgW:calc(var(--arenaH)*1.7779);position:absolute;width:calc(var(--imgW)*0.405);height:calc(var(--arenaH)*0.845);left:50%;top:calc(var(--arenaH)*0.073);transform:translateX(-50%);z-index:5}.grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(var(--hv-board-cols,5),1fr);grid-template-rows:repeat(var(--hv-board-rows,6),1fr);gap:0;background:transparent}.cell{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;overflow:hidden}.cell:hover{background:rgba(255,220,140,.05);border-color:rgba(255,232,170,.10)}.cell.valid,.cell.attackable,.cell.summonable,.cell.move-range-preview,.cell.attack-range-preview,.cell.mixed-range-preview,.cell.acted-range-preview,.cell.enemy-threat-preview,.cell.enemy-acted-threat-preview{background:transparent;box-shadow:none}.cell.valid::after,.cell.attackable::after,.cell.summonable::after,.cell.move-range-preview::after,.cell.attack-range-preview::after,.cell.mixed-range-preview::after,.cell.acted-range-preview::after,.cell.enemy-threat-preview::after,.cell.enemy-acted-threat-preview::after{content:"";position:absolute;inset:3px;border-radius:4px;pointer-events:none}.cell.valid::after,.cell.move-range-preview::after{background:rgba(112,224,138,.12);box-shadow:inset 0 0 0 2px rgba(112,224,138,.78),0 0 8px rgba(112,224,138,.20)}.cell.attackable::after,.cell.attack-range-preview::after,.cell.enemy-threat-preview::after{background:rgba(239,71,111,.14);box-shadow:inset 0 0 0 2px rgba(239,71,111,.88),0 0 11px rgba(239,71,111,.30)}.cell.summonable::after{background:rgba(255,209,102,.13);box-shadow:inset 0 0 0 2px rgba(255,209,102,.82),0 0 10px rgba(255,209,102,.24)}.cell.mixed-range-preview::after{background:rgba(183,91,255,.14);box-shadow:inset 0 0 0 2px rgba(183,91,255,.84),0 0 10px rgba(183,91,255,.26)}.cell.acted-range-preview::after,.cell.enemy-acted-threat-preview::after{background:rgba(73,169,255,.13);box-shadow:inset 0 0 0 2px rgba(73,169,255,.84),0 0 10px rgba(73,169,255,.26)}
 .unit-card{position:relative;z-index:2;background:rgba(0,0,0,.18);border:2px solid rgba(244,228,196,.92);box-shadow:0 7px 13px rgba(0,0,0,.44);transform:none;user-select:none;display:grid;place-items:center;padding:1px;}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.30),0 6px 10px rgba(0,0,0,.42);background:rgba(0,0,0,.12)}.unit-card.unit-key-spearman{width:clamp(48px,88%,84px);height:clamp(48px,88%,84px);border-width:2px;box-shadow:0 9px 16px rgba(0,0,0,.48)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;background:transparent;}.unit-portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.38))}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
-.side{position:absolute;z-index:18;right:10px;top:102px;width:320px}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}.actions-visual-panel{position:relative;width:100%;height:auto;min-height:0;aspect-ratio:auto;background:none;filter:none}.actions-visual-buttons{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:62%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center}.action-img-btn{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;display:block;width:100%;aspect-ratio:1/1;transition:transform .14s ease,filter .14s ease}.action-img-btn img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}.action-img-btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.06)}.action-img-btn:active{transform:translateY(0) scale(.99)}.action-img-btn:focus-visible{outline:2px solid #ffe39a;outline-offset:4px;border-radius:12px}.action-img-btn.selected img{filter:drop-shadow(0 0 10px rgba(255,212,102,.55)) drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.side{position:absolute;}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}.actions-visual-panel{position:relative;width:100%;height:auto;min-height:0;aspect-ratio:auto;background:none;filter:none}.actions-visual-buttons{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:62%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center}.action-img-btn{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;display:block;width:100%;aspect-ratio:1/1;transition:transform .14s ease,filter .14s ease}.action-img-btn img{height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}.action-img-btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.06)}.action-img-btn:active{transform:translateY(0) scale(.99)}.action-img-btn:focus-visible{outline:2px solid #ffe39a;outline-offset:4px;border-radius:12px}.action-img-btn.selected img{filter:drop-shadow(0 0 10px rgba(255,212,102,.55)) drop-shadow(0 4px 10px rgba(0,0,0,.35))}
 .hand-drawer{position:absolute;z-index:35;left:50%;transform:translateX(-50%);right:auto;bottom:10px;width:clamp(560px,58vw,860px);max-width:calc(100vw - 340px);padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.97),rgba(10,8,6,.94));border:1px solid rgba(255,209,102,.38);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 24px rgba(255,209,102,.10);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 126px;min-height:132px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.97),rgba(20,13,9,.96));border:1px solid rgba(255,209,102,.34);cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.32)}.hand-card.selected{outline:2px solid var(--gold)}.hand-card.not-playable{opacity:.46;filter:grayscale(.55);border-color:rgba(215,195,162,.18);box-shadow:none}.hand-card.not-playable:hover{opacity:.62}.hand-icon{font-size:22px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
 .inspector{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412);}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
 
@@ -594,7 +594,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   font-weight:400;
 }
 
-@media(max-width:980px){.hud{width:calc(50% - 10px);min-width:0}.hud.collapsed{width:calc(36% - 8px)}.top-left{left:6px;top:6px}.top-right{right:6px;top:6px}.hud-header{left:7.6%;right:7.6%;top:12.5%;grid-template-columns:1fr .82fr;gap:5px}.hud-name{padding-left:8px;font-size:clamp(10px,1.7vw,14px)}.hud-badge span{font-size:clamp(6px,.9vw,8px)}.hud-grid{left:8%;right:8%;bottom:14%;gap:2px}.hud-mini{min-height:28px;padding:1px}.hud-mini .label{font-size:clamp(5px,.9vw,7px)}.hud-mini strong{font-size:clamp(8px,1.2vw,10px)}.phase-banner{top:64px;font-size:12px;min-width:160px;padding:6px 9px}.side{top:auto;left:6px;right:6px;bottom:6px;width:auto;display:grid;grid-template-columns:1fr;gap:6px}.actions-visual-panel{max-width:420px;margin:0 auto}.actions-visual-buttons{top:43%;width:64%;gap:8px}.panel:nth-child(2){display:none}.log{left:6px;right:6px;bottom:154px;width:auto;max-height:58px}.hand-drawer{left:6px;right:6px;bottom:70px;max-height:178px}.grid-wrap{top:calc(100vh * .083);height:calc(100vh * .825);width:min(98vw, calc(100vh * .71))}.unit-card{width:clamp(34px,84%,62px);height:clamp(34px,84%,62px)}.unit-card.leader{width:clamp(34px,84%,62px);height:clamp(34px,84%,62px)}.unit-card.unit-key-spearman{width:clamp(38px,88%,68px);height:clamp(38px,88%,68px)}.unit-portrait{font-size:11px}.unit-card.leader .unit-portrait{font-size:11px}}
+@media(max-width:980px){.hud{width:calc(50% - 10px);min-width:0}.hud.collapsed{width:calc(36% - 8px)}.top-left{left:6px;top:6px}.top-right{right:6px;top:6px}.hud-header{left:7.6%;right:7.6%;top:12.5%;grid-template-columns:1fr .82fr;gap:5px}.hud-name{padding-left:8px;font-size:clamp(10px,1.7vw,14px)}.hud-badge span{font-size:clamp(6px,.9vw,8px)}.hud-grid{left:8%;right:8%;bottom:14%;gap:2px}.hud-mini{min-height:28px;padding:1px}.hud-mini .label{font-size:clamp(5px,.9vw,7px)}.hud-mini strong{font-size:clamp(8px,1.2vw,10px)}.phase-banner{top:64px;font-size:12px;min-width:160px;padding:6px 9px}.side{left:6px;bottom:6px;display:grid;grid-template-columns:1fr;gap:6px;}.actions-visual-panel{max-width:420px;margin:0 auto}.actions-visual-buttons{top:43%;width:64%;}.panel:nth-child(2){display:none}.log{left:6px;right:6px;bottom:154px;width:auto;max-height:58px}.hand-drawer{left:6px;right:6px;bottom:70px;max-height:178px}.grid-wrap{width:min(98vw, calc(100vh * .71));}.unit-card{width:clamp(34px,84%,62px);height:clamp(34px,84%,62px)}.unit-card.leader{width:clamp(34px,84%,62px);height:clamp(34px,84%,62px)}.unit-card.unit-key-spearman{width:clamp(38px,88%,68px);height:clamp(38px,88%,68px)}.unit-portrait{font-size:11px}.unit-card.leader .unit-portrait{font-size:11px}}
 
 
 
@@ -811,7 +811,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .adventure-map-hero{position:relative;min-height:300px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,209,102,.26);background:linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.70)),url('assets/story/hallvalla_call.webp') center/cover no-repeat;box-shadow:inset 0 0 80px rgba(0,0,0,.48),0 18px 38px rgba(0,0,0,.35)}
 .adventure-map-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 58%,rgba(255,209,102,.18),transparent 25%),radial-gradient(circle at 72% 34%,rgba(111,144,255,.16),transparent 28%),linear-gradient(90deg,rgba(0,0,0,.78),rgba(0,0,0,.20) 56%,rgba(0,0,0,.62));pointer-events:none}
 .adventure-map-nodes{display:grid;gap:14px}
-.adventure-map-visual{position:relative;min-height:560px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,209,102,.28);background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.50)),var(--map-bg-image) center/cover no-repeat;box-shadow:inset 0 0 120px rgba(0,0,0,.52),0 18px 40px rgba(0,0,0,.35)}
+.adventure-map-visual{position:relative;}
 .adventure-map-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 22%,rgba(255,255,255,.12),transparent 25%),radial-gradient(circle at 18% 76%,var(--map-accent),transparent 28%),radial-gradient(circle at 78% 26%,rgba(90,190,255,.16),transparent 24%),linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.55));pointer-events:none}
 .adventure-map-topbar{position:absolute;left:16px;right:16px;top:16px;display:flex;flex-wrap:wrap;gap:8px;z-index:2}
 .adventure-map-chip{padding:8px 12px;border-radius:999px;background:rgba(20,14,10,.74);border:1px solid rgba(255,209,102,.26);color:#fff1c4;font-weight:800;font-size:12px;backdrop-filter:blur(4px);box-shadow:0 4px 16px rgba(0,0,0,.24)}
@@ -819,17 +819,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 .adventure-map-path path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .map-path-shadow{stroke:rgba(0,0,0,.38);stroke-width:3.9;filter:blur(1px)}
 .map-path-main{stroke:rgba(136,255,154,.70);stroke-width:2.25;filter:drop-shadow(0 0 8px rgba(136,255,154,.46))}
-.map-node{position:absolute;transform:translate(-50%,-50%);width:112px;min-height:112px;padding:0;border-radius:50%;border:0;background:transparent;color:#fff;text-align:center;cursor:pointer;z-index:3;transition:transform .18s ease,filter .18s ease,opacity .18s ease}
-.map-node:hover{transform:translate(-50%,-52%) scale(1.04);filter:brightness(1.08)}
+.map-node{position:absolute;padding:0;border-radius:50%;border:0;background:transparent;color:#fff;text-align:center;cursor:pointer;transition:transform .18s ease,filter .18s ease,opacity .18s ease;}
+
 .map-node:disabled{cursor:not-allowed}
-.map-node.locked{filter:grayscale(.72) brightness(.70);opacity:.78}
+
 .map-node.unlocked .map-node-ring,.map-node.completed .map-node-ring,.map-node.locked .map-node-ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,209,102,.58);background:radial-gradient(circle at 35% 30%,rgba(255,250,233,.34),rgba(255,209,102,.10) 34%,rgba(24,17,13,.94) 69%);box-shadow:0 10px 20px rgba(0,0,0,.40),inset 0 0 20px rgba(0,0,0,.45)}
 .map-node.unlocked .map-node-ring{box-shadow:0 0 0 4px rgba(255,209,102,.12),0 10px 20px rgba(0,0,0,.40),0 0 22px rgba(255,209,102,.26),inset 0 0 20px rgba(0,0,0,.45)}
-.map-node.completed .map-node-ring{border-color:rgba(131,255,171,.82);background:radial-gradient(circle at 35% 30%,rgba(225,255,235,.34),rgba(100,235,145,.16) 34%,rgba(15,23,16,.96) 69%);box-shadow:0 0 0 4px rgba(131,255,171,.12),0 10px 20px rgba(0,0,0,.42),0 0 26px rgba(131,255,171,.22),inset 0 0 20px rgba(0,0,0,.50)}
+.map-node.completed .map-node-ring{background:radial-gradient(circle at 35% 30%,rgba(225,255,235,.34),rgba(100,235,145,.16) 34%,rgba(15,23,16,.96) 69%);}
 .map-node.locked .map-node-ring{border-color:rgba(198,191,179,.36);background:radial-gradient(circle at 35% 30%,rgba(190,190,190,.20),rgba(80,80,80,.10) 34%,rgba(23,23,23,.96) 69%)}
-.map-node.boss .map-node-ring{border-color:rgba(255,126,97,.90);box-shadow:0 0 0 4px rgba(255,126,97,.12),0 10px 24px rgba(0,0,0,.42),0 0 28px rgba(255,126,97,.32),inset 0 0 22px rgba(0,0,0,.48)}
+.map-node.boss .map-node-ring{box-shadow:0 0 0 4px rgba(255,126,97,.12),0 10px 24px rgba(0,0,0,.42),0 0 28px rgba(255,126,97,.32),inset 0 0 22px rgba(0,0,0,.48);}
 .map-node-number,.map-node-title,.map-node-status,.map-node-stars{position:relative;z-index:1;display:block;text-shadow:0 2px 4px rgba(0,0,0,.72)}
-.map-node-number{padding-top:18px;font-size:19px;font-weight:900;color:#fff1c4;letter-spacing:.5px}
+.map-node-number{font-weight:900;}
 .map-node-title{max-width:88px;margin:6px auto 0;font-size:11px;line-height:1.14;color:#fff7e7;font-weight:800}
 .map-node-status{margin-top:4px;font-size:10px;text-transform:uppercase;letter-spacing:.55px;color:#f5d59d}
 .map-node-stars{margin-top:4px;font-size:13px;letter-spacing:1.5px;color:#ffd166}
@@ -853,7 +853,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .legend-dot.locked{background:#67625a}
 .legend-dot.boss{background:#ff7e61}
 
-@media (max-width:900px){.adventure-map-hero{min-height:240px}.adventure-map-visual{min-height:640px}.adventure-map-topbar{left:10px;right:10px;top:10px}.adventure-map-chip{font-size:10px;padding:6px 9px}.map-node{width:94px;min-height:94px}.map-node-number{padding-top:14px;font-size:16px}.map-node-title{max-width:76px;font-size:9px}.map-node-status{font-size:8px}.map-node-stars{font-size:11px}.map-node-caption{min-width:94px;max-width:132px;transform:translate(-50%,52px);padding:6px 8px}.map-node-caption strong{font-size:11px}.map-node-caption small{font-size:9px}.adventure-map-track{left:10px;right:10px;bottom:10px;padding:8px;gap:5px}.track-stop{font-size:9px;min-height:28px}.adventure-map-legend{font-size:11px;gap:8px;justify-content:flex-start}}
+@media (max-width:900px){.adventure-map-hero{min-height:240px}.adventure-map-topbar{left:10px;right:10px;top:10px}.adventure-map-chip{font-size:10px;padding:6px 9px}.map-node-title{max-width:76px;font-size:9px}.map-node-status{font-size:8px}.map-node-stars{font-size:11px}.map-node-caption{min-width:94px;max-width:132px;transform:translate(-50%,52px);padding:6px 8px}.map-node-caption strong{font-size:11px}.map-node-caption small{font-size:9px}.adventure-map-track{left:10px;right:10px;bottom:10px;padding:8px;gap:5px}.track-stop{font-size:9px;min-height:28px}.adventure-map-legend{font-size:11px;gap:8px;justify-content:flex-start}}
 
 .adventure-result-actions{display:flex;gap:10px;flex-wrap:wrap}
 .adventure-result-actions .btn{flex:1;min-width:150px}
@@ -994,11 +994,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 @media(max-width:980px){
   .game-shell{padding:0;background:#070503;}
   .battlefield{min-height:100svh;border-radius:0;border-width:1px;}
-  .grid-wrap{top:calc(100svh * .092);height:calc(100svh * .79);width:min(98vw, calc(100svh * .70));}
+  .grid-wrap{width:min(98vw, calc(100svh * .70));}
   .unit-card,.unit-card.leader{width:clamp(42px,84%,72px);height:clamp(42px,84%,72px);border-radius:12px;border-width:2px;}.unit-card.unit-key-spearman{width:clamp(46px,88%,78px);height:clamp(46px,88%,78px);}
   .unit-portrait,.unit-card.leader .unit-portrait{font-size:18px;}
   .phase-banner{top:58px;z-index:42;}
-  .side{left:8px;right:8px;bottom:8px;z-index:44;pointer-events:none;}
+  .side{left:8px;bottom:8px;z-index:44;pointer-events:none;}
   .actions-visual-panel{width:min(310px,86vw);pointer-events:auto;}
   .actions-visual-buttons{width:62%;gap:8px;}
   .log{left:8px;right:8px;bottom:246px;max-height:46px;font-size:9px;z-index:40;}
@@ -1037,29 +1037,18 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* === v0.7AQ: Mobile battle controls, collapsible actions and in-duel menu === */
-.battle-tools{
-  position:absolute;
-  z-index:60;
-  top:58px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:8px;
-  align-items:center;
-  justify-content:center;
-  pointer-events:auto;
-}
+
 .battle-tool-btn{
-  border:1px solid rgba(255,209,102,.34);
-  border-radius:999px;
-  padding:7px 12px;
-  min-height:34px;
-  background:linear-gradient(180deg,rgba(34,22,14,.94),rgba(10,8,6,.88));
+  
+  
+  
+  
+  
   color:#fff1c4;
   font-family:Georgia,serif;
   font-weight:900;
   letter-spacing:.2px;
-  box-shadow:0 8px 22px rgba(0,0,0,.42);
+  
   cursor:pointer;
 }
 .battle-tool-btn:active{transform:translateY(1px)}
@@ -1093,18 +1082,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .battle-menu-note{margin:0 0 12px;color:#d7c3a2;font-size:13px}
 @media(max-width:980px){
-  .battle-tools{
-    top:104px;
-    right:8px;
-    left:auto;
-    transform:none;
-    justify-content:flex-end;
-  }
-  .battle-tool-btn{
-    min-height:32px;
-    padding:6px 10px;
-    font-size:11px;
-  }
+  
+  
   .side:not(.actions-collapsed){
     bottom:8px;
     z-index:55;
@@ -1211,9 +1190,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   min-width:64px;
 }
 @media(max-width:980px){
-  .battle-tools{
-    gap:6px;
-  }
+  
   #toggleLogBtn{
     min-width:54px;
   }
@@ -1221,18 +1198,18 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* === v0.7AW: Phase announcement modal/banner === */
 .phase-announce{
-  position:absolute;
-  z-index:80;
-  left:50%;
-  top:42%;
-  width:min(560px,86vw);
+  
+  
+  
+  
+  
   padding:18px 26px;
-  border-radius:0 28px 28px 0;
+  
   border:1px solid rgba(255,255,255,.18);
   box-shadow:0 26px 70px rgba(0,0,0,.55), inset 0 0 34px rgba(255,255,255,.06);
   pointer-events:none;
   opacity:0;
-  transform:translate(-150%,-50%);
+  
   transition:opacity .18s ease, transform .46s cubic-bezier(.2,.9,.2,1);
   backdrop-filter:blur(10px);
   overflow:hidden;
@@ -1246,7 +1223,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .phase-announce.show{
   opacity:1;
-  transform:translate(-50%,-50%);
+  
 }
 .phase-announce-player{
   background:linear-gradient(90deg,rgba(17,93,165,.74),rgba(18,31,60,.48));
@@ -1279,7 +1256,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   color:rgba(255,255,255,.78);
 }
 @media(max-width:980px){
-  .phase-announce{top:39%;width:min(430px,84vw);padding:14px 18px;border-radius:0 22px 22px 0;z-index:92;}
+  .phase-announce{z-index:92;}
   .phase-announce-kicker{font-size:10px;letter-spacing:2px;}
   .phase-announce-sub{font-size:10px;margin-top:6px;}
 }
@@ -1987,18 +1964,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* PATCH 7CF - HallValla campaign map option B: fondo WEBP + nodos reales por código */
-.adventure-map-visual{
-  min-height:620px;
-  border-radius:20px;
-  border:1px solid rgba(218,170,87,.45);
-  background:
-    radial-gradient(circle at 50% 40%,rgba(255,206,109,.08),transparent 28%),
-    linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.36)),
-    var(--map-bg-image) center/cover no-repeat !important;
-  box-shadow:
-    inset 0 0 110px rgba(0,0,0,.62),
-    0 18px 42px rgba(0,0,0,.42);
-}
+
 .adventure-map-visual::before{
   background:
     linear-gradient(90deg,rgba(0,0,0,.22),transparent 18%,transparent 82%,rgba(0,0,0,.24)),
@@ -2023,10 +1989,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   from{stroke-dashoffset:0}
   to{stroke-dashoffset:-20}
 }
-.map-node{
-  width:86px;
-  min-height:86px;
-}
+
 .map-node.unlocked .map-node-ring,
 .map-node.completed .map-node-ring,
 .map-node.locked .map-node-ring{
@@ -2050,20 +2013,15 @@ El CSS original se conserva para no romper visuales. El bloque final
     0 0 28px rgba(255,197,75,.42);
 }
 .map-node.completed .map-node-ring{
-  border-color:rgba(236,195,94,.94);
+  
   background:
     radial-gradient(circle at 34% 28%,rgba(255,255,255,.22),transparent 24%),
     radial-gradient(circle at 50% 50%,rgba(18,48,70,.96) 0%,rgba(7,20,29,.98) 62%,rgba(5,4,4,.98) 100%);
 }
-.map-node.locked{
-  filter:grayscale(.8) brightness(.62);
-  opacity:.72;
-}
+
 .map-node.boss .map-node-ring{
-  border-color:rgba(255,110,71,.98);
-  background:
-    radial-gradient(circle at 34% 28%,rgba(255,214,195,.20),transparent 24%),
-    radial-gradient(circle at 50% 50%,rgba(92,14,18,.98) 0%,rgba(34,6,9,.99) 64%,rgba(5,4,4,.99) 100%);
+  
+  
   box-shadow:
     0 0 0 5px rgba(16,7,7,.90),
     0 0 0 7px rgba(245,87,54,.50),
@@ -2072,12 +2030,12 @@ El CSS original se conserva para no romper visuales. El bloque final
     0 0 34px rgba(245,61,38,.50);
 }
 .map-node-number{
-  padding-top:25px;
-  font-size:25px;
-  color:#fff3d8;
-  font-family:Georgia,serif;
+  
+  
+  
+  
   letter-spacing:.5px;
-  text-shadow:0 2px 4px rgba(0,0,0,.85),0 0 12px rgba(255,207,116,.32);
+  
 }
 .map-node-title,
 .map-node-status,
@@ -2087,14 +2045,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 .adventure-map-legend{
   display:none !important;
 }
-.map-node:hover{
-  transform:translate(-50%,-50%) scale(1.08);
-  filter:brightness(1.15);
-}
+
 @media (max-width:900px){
-  .adventure-map-visual{min-height:620px;background-position:center}
-  .map-node{width:72px;min-height:72px}
-  .map-node-number{padding-top:20px;font-size:20px}
+  
+  
+  
 }
 
 
@@ -2817,9 +2772,9 @@ El CSS original se conserva para no romper visuales. El bloque final
     radial-gradient(circle at 34% 28%,rgba(255,214,195,.20),transparent 24%),
     radial-gradient(circle at 50% 50%,rgba(92,14,18,.98) 0%,rgba(34,6,9,.99) 64%,rgba(5,4,4,.99) 100%) !important;
 }
-.map-node-number{padding-top:24px !important;font-size:24px !important;color:#fff3d8 !important;font-family:Georgia,serif !important;text-shadow:0 2px 4px rgba(0,0,0,.85),0 0 12px rgba(255,207,116,.32) !important;}
-.map-node.locked{filter:grayscale(.85) brightness(.62) !important;opacity:.72 !important;}
-.map-node:hover{transform:translate(-50%,-50%) scale(1.08) !important;filter:brightness(1.12) !important;}
+.map-node-number{padding-top:24px !important;color:#fff3d8 !important;font-family:Georgia,serif !important;text-shadow:0 2px 4px rgba(0,0,0,.85),0 0 12px rgba(255,207,116,.32) !important;}
+.map-node.locked{filter:grayscale(.85) brightness(.62) !important;}
+.map-node:hover{filter:brightness(1.12) !important;}
 @media (max-width:900px){
   .adventure-map-visual{min-height:520px !important;background-position:center !important;}
   .map-node{width:72px !important;min-height:72px !important;}
@@ -2970,34 +2925,31 @@ El CSS original se conserva para no romper visuales. El bloque final
 @media(max-width:980px), (pointer:coarse){
   .battlefield.hand-open .side:not(.actions-collapsed){
     position:fixed!important;
-    left:8px!important;
-    right:8px!important;
-    bottom:calc(6px + env(safe-area-inset-bottom, 0px))!important;
-    top:auto!important;
-    width:auto!important;
-    z-index:190!important;
-    pointer-events:auto!important;
+    
+    
+    
+    
+    
+    
+    
   }
   .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
-    width:min(300px,82vw)!important;
-    max-width:300px!important;
+    
+    
     margin-left:auto!important;
     margin-right:auto!important;
-    pointer-events:auto!important;
+    
   }
   .battlefield.hand-open .hand-drawer.open{
     position:fixed!important;
     left:8px!important;
     right:8px!important;
-    bottom:calc(128px + env(safe-area-inset-bottom, 0px))!important;
-    max-height:min(36svh,220px)!important;
-    z-index:170!important;
+    
+    
+    
     overflow:hidden!important;
   }
-  .battlefield.hand-open .log{
-    bottom:calc(128px + min(36svh,220px) + 8px)!important;
-    max-height:48px!important;
-  }
+  
 }
 @media(max-height:720px) and (max-width:980px), (max-height:720px) and (pointer:coarse){
   .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
@@ -4441,7 +4393,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid{grid-template-columns:repeat(var(--hv-board-cols,5),1fr) !important;grid-template-rows:repeat(var(--hv-board-rows,6),1fr) !important;grid-auto-rows:0 !important;}
 
 @media(max-width:980px){
-  .grid-wrap{height:calc(100svh * .735);}
+  
   
 }
 @media(max-width:560px){
@@ -5648,18 +5600,18 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* === PATCH 7HN - Move HONOR/MANA HUD above left gear button === */
 .turn-honor-hud{
-  left:26px;
+  
   top:318px;
-  transform:none;
+  
   z-index:42;
   min-width:96px;
   justify-content:center;
 }
 
 .honor-recharge-modal{
-  left:18px;
+  
   top:252px;
-  transform:translateY(-12px) scale(.96);
+  
   min-width:210px;
   max-width:260px;
 }
@@ -7582,27 +7534,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* 2) Real honor HUD: move it to a clean readable position above the lowered buttons. */
-#gameShell .battlefield #turnHonorHud.turn-honor-hud{
-  position:absolute!important;
-  left:26px!important;
-  top:214px!important;
-  right:auto!important;
-  bottom:auto!important;
-  transform:none!important;
-  z-index:76!important;
-  min-width:132px!important;
-  justify-content:center!important;
-  padding:8px 14px!important;
-  background:rgba(0,0,0,.88)!important;
-  border-color:rgba(255,213,96,.70)!important;
-  pointer-events:none!important;
-}
-#gameShell .battlefield #honorRechargeModal.honor-recharge-modal{
-  left:22px!important;
-  top:164px!important;
-  transform:translateY(-12px) scale(.96)!important;
-  z-index:78!important;
-}
+
+
 
 /* 3) Real inspector layout: stop overlaying stats on portrait. */
 
@@ -11597,18 +11530,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   pointer-events:none;
   filter:drop-shadow(0 10px 18px rgba(0,0,0,.50));
 }
-#hudP1.player-status-hud{
-  left:var(--hud-new-p1-left)!important;
-  top:var(--hud-new-p1-top)!important;
-  transform:translateX(var(--hud-new-x-nudge)) scale(var(--hud-new-scale));
-  transform-origin:top left;
-}
-#hudP2.player-status-hud{
-  right:var(--hud-new-p2-right)!important;
-  top:var(--hud-new-p2-top)!important;
-  transform:translateX(calc(var(--hud-new-x-nudge) * -1)) scale(var(--hud-new-scale));
-  transform-origin:top right;
-}
+
+
 .player-status-card{
   position:relative;
   width:100%;
@@ -11896,17 +11819,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* Prioridad final del HUD de honor, ahora controlado por variables. */
 #gameShell .battlefield #turnHonorHud.turn-honor-hud{
   position:absolute!important;
-  left:var(--honor-hud-left)!important;
-  top:var(--honor-hud-top)!important;
-  right:auto!important;
-  bottom:auto!important;
-  transform:scale(var(--honor-hud-scale))!important;
-  transform-origin:top left!important;
+  
+  
+  
+  
+  
+  
   z-index:76!important;
-  min-width:var(--honor-hud-min-width)!important;
+  
   justify-content:center!important;
-  gap:var(--honor-hud-gap)!important;
-  padding:var(--honor-hud-pad-y) var(--honor-hud-pad-x)!important;
+  
+  
   background:rgba(0,0,0,.88)!important;
   border-color:rgba(255,213,96,.70)!important;
   pointer-events:none!important;
@@ -11914,9 +11837,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 #gameShell .battlefield #honorRechargeModal.honor-recharge-modal{
-  left:var(--honor-pop-left)!important;
-  top:var(--honor-pop-top)!important;
-  transform:translateY(-12px) scale(var(--honor-pop-scale))!important;
+  
+  
+  
   z-index:78!important;
 }
 
@@ -12415,11 +12338,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   gap:10px!important;
   overflow:hidden!important;
 }
-#adventureMapStage .adventure-map-hero{
-  flex:0 0 clamp(150px,25vh,210px)!important;
-  min-height:clamp(150px,25vh,210px)!important;
-  border-radius:18px!important;
-}
+
 #adventureMapStage .adventure-scene-copy.narrow{
   max-width:min(560px,58vw)!important;
   padding:18px 22px!important;
@@ -12458,10 +12377,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     width:96vw!important;
   }
   #adventureMapStage.adventure-stage:not(.hidden){padding:10px!important;gap:8px!important;}
-  #adventureMapStage .adventure-map-hero{
-    flex-basis:150px!important;
-    min-height:150px!important;
-  }
+  
   #adventureMapStage .adventure-scene-copy.narrow{
     max-width:92%!important;
     padding:14px 16px!important;
@@ -15884,10 +15800,10 @@ body.mobile-landscape-locked{overflow:hidden!important}
   .battle-tools{top:70px!important;right:6px!important;gap:5px!important}
   .battle-tool-btn{min-height:24px!important;padding:4px 8px!important;font-size:9px!important}
   .grid-wrap{top:94px!important;height:calc(100svh - 188px)!important;width:min(calc((100svh - 188px) * .48), 390px)!important;max-width:50vw!important;min-width:280px!important}
-  .side{bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;left:auto!important;right:6px!important;width:auto!important}
-  .side .actions-visual-panel{width:min(190px,26vw)!important;max-width:min(190px,26vw)!important}
+  
+  
   #log.log{left:6px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;width:min(160px,22vw)!important;max-height:76px!important;padding:6px!important;font-size:8px!important}
-  #handDrawer.hand-drawer{left:6px!important;right:202px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;max-height:132px!important;padding:6px 6px 8px!important;border-radius:14px!important}
+  #handDrawer.hand-drawer{left:6px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;max-height:132px!important;padding:6px 6px 8px!important;border-radius:14px!important;}
   #handDrawer .hand-top{font-size:10px!important;margin-bottom:4px!important}
   #handDrawer .hand-row{gap:6px!important}
   #handDrawer .hand-card{flex:0 0 92px!important;min-height:118px!important;padding:6px!important}
@@ -17532,12 +17448,12 @@ body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
 html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
   position:fixed!important;
   left:auto!important;
-  right:max(8px,env(safe-area-inset-right,0px))!important;
-  top:clamp(72px,15dvh,112px)!important;
+  
+  
   bottom:auto!important;
-  width:min(230px,28vw)!important;
+  
   transform:none!important;
-  z-index:225!important;
+  
   display:block!important;
   visibility:visible!important;
   pointer-events:auto!important;
@@ -17551,16 +17467,12 @@ html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-co
   visibility:visible!important;
   opacity:1!important;
   pointer-events:auto!important;
-  width:100%!important;
+  
   max-width:none!important;
   margin:0!important;
 }
 
-body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
-html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
-  width:100%!important;
-  gap:5px!important;
-}
+
 
 body.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed,
 html.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed{
@@ -17569,70 +17481,42 @@ html.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed{
 }
 
 @media (max-height:390px){
-  body.hv-mobile-landscape #gameShell .battlefield .side,
-  html.hv-mobile-landscape #gameShell .battlefield .side,
-  body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
-  html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
-    top:68px!important;
-    width:min(210px,27vw)!important;
-  }
+  
 }
 
 /* ============================================================
    7HEU — HUD DE ACCIONES COMPACTO BAJO EL HUD DEL JUGADOR 2
    SOLO MÓVIL HORIZONTAL. PC permanece intacto.
    ============================================================ */
-body.hv-mobile-landscape #gameShell .battlefield .side,
-html.hv-mobile-landscape #gameShell .battlefield .side,
-body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
-html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
-  right:max(10px,env(safe-area-inset-right,0px))!important;
-  top:clamp(66px,12.5dvh,90px)!important;
-  width:min(190px,23vw)!important;
-  height:132px!important;
-  overflow:hidden!important;
-  z-index:240!important;
-}
+
 
 body.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
 html.hv-mobile-landscape #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
 body.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel,
 html.hv-mobile-landscape #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
-  width:100%!important;
-  height:132px!important;
-  min-height:132px!important;
-  aspect-ratio:auto!important;
-  overflow:hidden!important;
+  
+  
+  
+  
+  
   background-size:100% auto!important;
   background-position:center top!important;
   background-repeat:no-repeat!important;
 }
 
-body.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons,
-html.hv-mobile-landscape #gameShell .battlefield .side .actions-visual-buttons{
-  top:53%!important;
-  width:63%!important;
-  gap:4px!important;
-}
 
-body.hv-mobile-landscape #gameShell .battlefield .side .action-img-btn,
-html.hv-mobile-landscape #gameShell .battlefield .side .action-img-btn{
-  gap:2px!important;
-}
 
-body.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label,
-html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
-  font-size:8px!important;
-  line-height:.92!important;
-}
+
+
+
 
 @media (max-height:390px){
   body.hv-mobile-landscape #gameShell .battlefield .side,
   html.hv-mobile-landscape #gameShell .battlefield .side,
   body.hv-mobile-landscape #gameShell .battlefield.hand-open .side,
   html.hv-mobile-landscape #gameShell .battlefield.hand-open .side{
-    top:62px!important;
-    width:min(176px,22vw)!important;
+    
+    
     height:122px!important;
   }
 
