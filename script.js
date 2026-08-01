@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8H";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8J";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -366,11 +366,18 @@ const DUEL_TIME_LIMIT_MS=15*60*1000;
 const CLOCK_RULESET_VERSION=2;
 const CLOCK_RULESET_MIGRATION_BONUS_MS=5*60*1000;
 const TURN_TIMER_TICK_MS=200;
+// PvP: 3:00 por turno + 15:00 por jugador. PvE: solo 3:00 por turno; sin relojes acumulados.
 function isTurnTimerEnabled(state=publicState){
   if(!state||state.phase==="ended"||state.battleEnded||state.mode==="tutorial")return false;
   if(![1,2].includes(Number(state.currentPlayer||0)))return false;
   if(state.mode!=="adventure"&&!hallvallaIsLocalTestGame()&&!state.playerSlots?.player2Uid)return false;
   return true;
+}
+function isPveClockMode(state=publicState){return state?.mode==="adventure";}
+function isTurnLimitEnabled(state=publicState){return isTurnTimerEnabled(state);}
+function isDuelClockEnabledForOwner(owner,state=publicState){
+  if(!isTurnTimerEnabled(state)||isPveClockMode(state))return false;
+  return [1,2].includes(Number(owner));
 }
 function getTurnStartTimestampValue(){return hallvallaIsLocalTestGame()?Date.now():serverTimestamp();}
 function getStoredDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||0)){
@@ -386,20 +393,21 @@ function getClockChargeForCurrentTurnMs(state=publicState,now=Date.now()){
   return Math.min(TURN_TIME_LIMIT_MS,getCurrentTurnElapsedMs(state,now));
 }
 function getTurnTimerRemainingMs(state=publicState,now=Date.now()){
-  if(!isTurnTimerEnabled(state))return null;
+  if(!isTurnLimitEnabled(state))return null;
   return Math.max(0,TURN_TIME_LIMIT_MS-getCurrentTurnElapsedMs(state,now));
 }
 function getDuelClockRemainingMs(owner,state=publicState,now=Date.now()){
   const base=getStoredDuelClockMs(state,owner);
-  if(!isTurnTimerEnabled(state)||Number(state?.currentPlayer||0)!==Number(owner))return base;
+  if(!isDuelClockEnabledForOwner(owner,state)||Number(state?.currentPlayer||0)!==Number(owner))return base;
   return Math.max(0,base-getClockChargeForCurrentTurnMs(state,now));
 }
 function getCommittedDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||0),now=Date.now()){
   const base=getStoredDuelClockMs(state,owner);
-  if(Number(state?.currentPlayer||0)!==Number(owner))return base;
+  if(!isDuelClockEnabledForOwner(owner,state)||Number(state?.currentPlayer||0)!==Number(owner))return base;
   return Math.max(0,base-getClockChargeForCurrentTurnMs(state,now));
 }
 function getDuelClockHandoffPatch(state=publicState,now=Date.now()){
+  if(isPveClockMode(state))return {};
   const owner=Number(state?.currentPlayer||0);
   if(![1,2].includes(owner))return {};
   return {[`playerClockMs/${owner}`]:getCommittedDuelClockMs(state,owner,now)};
@@ -413,7 +421,10 @@ function renderTurnTimerHud(){
   const turnHud=$("turnTimerHud"),p1Hud=$("playerClock1"),p2Hud=$("playerClock2"),turnValue=$("turnTimerValue"),p1Value=$("playerClock1Value"),p2Value=$("playerClock2Value");
   if(!turnHud||!p1Hud||!p2Hud||!turnValue||!p1Value||!p2Value)return;
   const enabled=isTurnTimerEnabled();
-  [turnHud,p1Hud,p2Hud].forEach(el=>el.classList.toggle("hidden",!enabled));
+  const pve=isPveClockMode();
+  turnHud.classList.toggle("hidden",!enabled);
+  p1Hud.classList.toggle("hidden",!enabled||pve);
+  p2Hud.classList.toggle("hidden",!enabled||pve);
   if(!enabled){
     turnValue.textContent="03:00";p1Value.textContent="15:00";p2Value.textContent="15:00";
     turnHud.classList.remove("warning","danger","mine","enemy");
@@ -432,15 +443,18 @@ function renderTurnTimerHud(){
   turnHud.classList.toggle("mine",isMyTurn());
   turnHud.classList.toggle("enemy",!isMyTurn());
   [[1,p1Remaining,p1Hud],[2,p2Remaining,p2Hud]].forEach(([player,remaining,el])=>{
-    el.classList.toggle("active",owner===player);
-    el.classList.toggle("mine",Number(myPlayer||0)===player);
-    el.classList.toggle("enemy",Number(myPlayer||0)!==player);
-    el.classList.toggle("warning",remaining<=120000&&remaining>30000);
-    el.classList.toggle("danger",remaining<=30000);
+    const clockEnabled=!pve&&isDuelClockEnabledForOwner(player);
+    el.classList.toggle("active",clockEnabled&&owner===player);
+    el.classList.toggle("mine",clockEnabled&&Number(myPlayer||0)===player);
+    el.classList.toggle("enemy",clockEnabled&&Number(myPlayer||0)!==player);
+    el.classList.toggle("warning",clockEnabled&&remaining<=120000&&remaining>30000);
+    el.classList.toggle("danger",clockEnabled&&remaining<=30000);
   });
   turnHud.setAttribute("aria-label",`Tiempo de turno ${formatTurnTimer(turnRemaining)}.`);
-  p1Hud.setAttribute("aria-label",`Reloj del jugador 1 ${formatTurnTimer(p1Remaining)}.`);
-  p2Hud.setAttribute("aria-label",`Reloj del jugador 2 ${formatTurnTimer(p2Remaining)}.`);
+  if(!pve){
+    p1Hud.setAttribute("aria-label",`Reloj del jugador 1 ${formatTurnTimer(p1Remaining)}.`);
+    p2Hud.setAttribute("aria-label",`Reloj del jugador 2 ${formatTurnTimer(p2Remaining)}.`);
+  }
 }
 async function ensureTurnTimerAnchor(){
   if(turnTimerAnchorLock||!gameId||!isTurnTimerEnabled())return;
@@ -448,18 +462,20 @@ async function ensureTurnTimerAnchor(){
   if(!key)return;
   const patch={};
   if(!(Number(publicState?.turnStartedAt||0)>0))patch.turnStartedAt=getTurnStartTimestampValue();
-  const rulesetVersion=Number(publicState?.clockRulesetVersion||0);
-  if(rulesetVersion<CLOCK_RULESET_VERSION){
-    [1,2].forEach(owner=>{
-      const raw=Number(publicState?.playerClockMs?.[owner]);
-      patch[`playerClockMs/${owner}`]=Number.isFinite(raw)&&raw>=0
-        ?Math.min(DUEL_TIME_LIMIT_MS,raw+CLOCK_RULESET_MIGRATION_BONUS_MS)
-        :DUEL_TIME_LIMIT_MS;
-    });
-    patch.clockRulesetVersion=CLOCK_RULESET_VERSION;
-  }else{
-    if(!(Number.isFinite(Number(publicState?.playerClockMs?.[1]))&&Number(publicState.playerClockMs[1])>=0))patch["playerClockMs/1"]=DUEL_TIME_LIMIT_MS;
-    if(!(Number.isFinite(Number(publicState?.playerClockMs?.[2]))&&Number(publicState.playerClockMs[2])>=0))patch["playerClockMs/2"]=DUEL_TIME_LIMIT_MS;
+  if(!isPveClockMode(publicState)){
+    const rulesetVersion=Number(publicState?.clockRulesetVersion||0);
+    if(rulesetVersion<CLOCK_RULESET_VERSION){
+      [1,2].forEach(owner=>{
+        const raw=Number(publicState?.playerClockMs?.[owner]);
+        patch[`playerClockMs/${owner}`]=Number.isFinite(raw)&&raw>=0
+          ?Math.min(DUEL_TIME_LIMIT_MS,raw+CLOCK_RULESET_MIGRATION_BONUS_MS)
+          :DUEL_TIME_LIMIT_MS;
+      });
+      patch.clockRulesetVersion=CLOCK_RULESET_VERSION;
+    }else{
+      if(!(Number.isFinite(Number(publicState?.playerClockMs?.[1]))&&Number(publicState.playerClockMs[1])>=0))patch["playerClockMs/1"]=DUEL_TIME_LIMIT_MS;
+      if(!(Number.isFinite(Number(publicState?.playerClockMs?.[2]))&&Number(publicState.playerClockMs[2])>=0))patch["playerClockMs/2"]=DUEL_TIME_LIMIT_MS;
+    }
   }
   if(!Object.keys(patch).length)return;
   turnTimerAnchorLock=true;
@@ -496,18 +512,18 @@ function buildDuelClockExpiredState(state,now=Date.now()){
 function buildTimedOutTurnState(state,now=Date.now()){
   const owner=Number(state?.currentPlayer||0);
   if(![1,2].includes(owner))return state;
-  const committedClock=getCommittedDuelClockMs(state,owner,now);
-  if(committedClock<=0)return buildDuelClockExpiredState(state,now);
+  const pve=isPveClockMode(state);
+  const committedClock=pve?null:getCommittedDuelClockMs(state,owner,now);
+  if(!pve&&committedClock<=0)return buildDuelClockExpiredState(state,now);
   const burnEnd=applyBurnAtTurnEnd(state.units||[]);
   const next=owner===1?2:1;
   const nextTurn=next===1?(Number(state.turn||1)+1):Number(state.turn||1);
   const ownerName=cleanPlayerName(state.playerNames?.[owner]||"")||`J${owner}`;
-  return {
+  const nextState={
     ...state,
     units:restoreTurnGuardForOwner(burnEnd.units,next),
     beastTraps:state.beastTraps||[],
     legendaryTraps:state.legendaryTraps||[],
-    playerClockMs:{...(state.playerClockMs||{}),[owner]:committedClock,[next]:getStoredDuelClockMs(state,next)},
     currentPlayer:next,
     turn:nextTurn,
     turnPhase:"draw",
@@ -517,8 +533,10 @@ function buildTimedOutTurnState(state,now=Date.now()){
     statusFxEvent:burnEnd.statusFxEvent||null,
     floatFxEvent:burnEnd.floatFxEvent||null,
     aiActionText:"",
-    log:[`${ownerName} agotó los 180 segundos de su turno. Conserva ${formatTurnTimer(committedClock)} en su reloj general.${burnEnd.logs.length?` ${burnEnd.logs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
+    log:[`${ownerName} agotó los 180 segundos de su turno.${pve?"":` Conserva ${formatTurnTimer(committedClock)} en su reloj general.`}${burnEnd.logs.length?` ${burnEnd.logs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
   };
+  if(!pve)nextState.playerClockMs={...(state.playerClockMs||{}),[owner]:committedClock,[next]:getStoredDuelClockMs(state,next)};
+  return nextState;
 }
 function closeTurnInteractionSurfaces(){
   handOpen=false;handManualCloseKey="";clearSelection();unitContextSelection=null;hideUnitContextMenu();
@@ -528,7 +546,7 @@ function closeTurnInteractionSurfaces(){
 async function expireDuelByClock(){
   if(duelClockExpiryLock||!gameId||!isTurnTimerEnabled())return;
   const owner=Number(publicState?.currentPlayer||0);
-  if(getDuelClockRemainingMs(owner)>0)return;
+  if(!isDuelClockEnabledForOwner(owner)||getDuelClockRemainingMs(owner)>0)return;
   const key=String(publicState?.turnKey||"");
   if(!key||duelClockExpiredKey===key)return;
   duelClockExpiryLock=true;duelClockExpiredKey=key;turnTimerExpiredKey=key;
@@ -547,14 +565,14 @@ async function expireDuelByClock(){
       if(!current||current.phase==="ended"||current.battleEnded||current.mode==="tutorial")return;
       if(String(current.turnKey||"")!==key)return;
       const currentOwner=Number(current.currentPlayer||0);
-      if(getDuelClockRemainingMs(currentOwner,current,Date.now())>0)return;
+      if(!isDuelClockEnabledForOwner(currentOwner,current)||getDuelClockRemainingMs(currentOwner,current,Date.now())>0)return;
       return buildDuelClockExpiredState(current,Date.now());
     },{applyLocally:false});
   }catch(e){console.warn("[HallValla] No se pudo cerrar el duelo por tiempo:",e);duelClockExpiredKey="";turnTimerExpiredKey="";}
   finally{turnTimerSystemUpdate=false;duelClockExpiryLock=false;}
 }
 async function expireTurnByClock(){
-  if(turnTimerExpiryLock||!gameId||!isTurnTimerEnabled()||getTurnTimerRemainingMs()>0)return;
+  if(turnTimerExpiryLock||!gameId||!isTurnLimitEnabled()||getTurnTimerRemainingMs()>0)return;
   const key=String(publicState?.turnKey||"");
   if(!key||turnTimerExpiredKey===key)return;
   turnTimerExpiryLock=true;
@@ -575,7 +593,8 @@ async function expireTurnByClock(){
       if(String(current.turnKey||"")!==key)return;
       const startedAt=Number(current.turnStartedAt||0);
       if(!startedAt||Date.now()-startedAt<TURN_TIME_LIMIT_MS-250)return;
-      if(getDuelClockRemainingMs(Number(current.currentPlayer||0),current,Date.now())<=0)return buildDuelClockExpiredState(current,Date.now());
+      const currentOwner=Number(current.currentPlayer||0);
+      if(isDuelClockEnabledForOwner(currentOwner,current)&&getDuelClockRemainingMs(currentOwner,current,Date.now())<=0)return buildDuelClockExpiredState(current,Date.now());
       return buildTimedOutTurnState(current,Date.now());
     },{applyLocally:false});
   }catch(e){console.warn("[HallValla] No se pudo cerrar el turno por tiempo:",e);turnTimerExpiredKey="";}
@@ -592,8 +611,8 @@ function tickTurnTimer(){
   const startedAt=Number(publicState.turnStartedAt||0);
   if(!Number.isFinite(startedAt)||startedAt<=0){void ensureTurnTimerAnchor();return;}
   const owner=Number(publicState.currentPlayer||0);
-  if(getDuelClockRemainingMs(owner)<=0){void expireDuelByClock();return;}
-  if(getTurnTimerRemainingMs()<=0)void expireTurnByClock();
+  if(isDuelClockEnabledForOwner(owner)&&getDuelClockRemainingMs(owner)<=0){void expireDuelByClock();return;}
+  if(isTurnLimitEnabled()&&getTurnTimerRemainingMs()<=0)void expireTurnByClock();
 }
 function startTurnTimerLoop(){
   if(turnTimerInterval)return;
@@ -611,7 +630,9 @@ function isTurnWriteBlockedByExpiredClock(){
   if(key&&(turnTimerExpiredKey===key||duelClockExpiredKey===key))return true;
   if(!isTurnTimerEnabled())return false;
   const owner=Number(publicState?.currentPlayer||0);
-  return getDuelClockRemainingMs(owner)<=0||getTurnTimerRemainingMs()<=0;
+  const duelExpired=isDuelClockEnabledForOwner(owner)&&getDuelClockRemainingMs(owner)<=0;
+  const turnExpired=isTurnLimitEnabled()&&getTurnTimerRemainingMs()<=0;
+  return duelExpired||turnExpired;
 }
 const AI_THINK_DELAY_MS=1400;
 const AI_ACTION_DELAY_MS=2200;
