@@ -71,14 +71,14 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8F";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8G";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
 const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v2_final_110_5x8";
-const BATTLE_CLOCK_TUNER_KEY="hallvalla_battle_clock_tuner_v1";
+const BATTLE_CLOCK_TUNER_KEY="hallvalla_battle_clock_tuner_v2_final_positions";
 const FIELD_BOARD_DEFAULTS=Object.freeze({rows:8,cols:5,cardScale:110});
 const FIELD_BOARD_LIMITS=Object.freeze({rows:[4,12],cols:[3,10],cardScale:[45,150]});
 function clampFieldBoardNumber(value,min,max,fallback){
@@ -13349,9 +13349,9 @@ function initFieldBoardTuner(){
 initFieldBoardTuner();
 
 const BATTLE_CLOCK_TUNER_DEFAULTS={
-  turn:{x:0,y:0,scale:100},
-  p1:{x:0,y:0,scale:100},
-  p2:{x:0,y:0,scale:100}
+  turn:{x:-516,y:371,scale:100},
+  p1:{x:148,y:11,scale:100},
+  p2:{x:-159,y:9,scale:100}
 };
 const BATTLE_CLOCK_TUNER_LIMITS={x:[-520,520],y:[-320,420],scale:[55,160]};
 let battleClockTunerState=loadBattleClockTunerState();

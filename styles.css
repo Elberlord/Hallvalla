@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8F · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8G · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20317,7 +20317,7 @@ body.field-board-tuning .board-cell-coordinate{display:block;}
 
 
 /* ============================================================
-   7BOARDCTRL8F · HITBOX DE LA CELDA LÓGICA DEL LÍDER
+   7BOARDCTRL8G · HITBOX DE LA CELDA LÓGICA DEL LÍDER
    Unifica la celda real y la representación flotante del líder.
    ============================================================ */
 .leader-cell-proxy{
@@ -20338,8 +20338,21 @@ body.hv-dragging-board .leader-cell-proxy{
 }
 
 
+/* Posiciones finales exportadas desde el ajustador de relojes. */
+:root{
+  --hv-turn-clock-offset-x:-516px;
+  --hv-turn-clock-offset-y:371px;
+  --hv-turn-clock-scale:1;
+  --hv-p1-clock-offset-x:148px;
+  --hv-p1-clock-offset-y:11px;
+  --hv-p1-clock-scale:1;
+  --hv-p2-clock-offset-x:-159px;
+  --hv-p2-clock-offset-y:9px;
+  --hv-p2-clock-scale:1;
+}
+
 /* =====================================================================
-   7BOARDCTRL8F · RELOJ HÍBRIDO SEPARADO
+   7BOARDCTRL8G · RELOJ HÍBRIDO SEPARADO
    10 minutos acumulados por jugador + máximo de 90 segundos por turno.
    Tres HUD distintos: Turno, J1 y J2.
    ===================================================================== */
