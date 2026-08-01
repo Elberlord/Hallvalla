@@ -1,4 +1,5 @@
-/* HALLVALLA 7BOARDCTRL5 · FASE 1: limpieza de reglas CSS idénticas; sin consolidación visual. */
+/* HALLVALLA 7BOARDCTRL6 · FASE 2: consolidación conservadora del inspector DET.
+   Se eliminaron declaraciones DET anuladas; las reglas ganadoras conservan su posición original. */
 /*
 ================================================================================
 HALLVALLA STYLES ORGANIZED V2
@@ -575,7 +576,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .unit-card{position:relative;z-index:2;width:clamp(44px,84%,78px);height:clamp(44px,84%,78px);border-radius:12px;background:rgba(0,0,0,.18);border:2px solid rgba(244,228,196,.92);box-shadow:0 7px 13px rgba(0,0,0,.44);overflow:hidden;transform:none;user-select:none;display:grid;place-items:center;padding:1px}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.30),0 6px 10px rgba(0,0,0,.42);background:rgba(0,0,0,.12)}.unit-card.unit-key-spearman{width:clamp(48px,88%,84px);height:clamp(48px,88%,84px);border-width:2px;box-shadow:0 9px 16px rgba(0,0,0,.48)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;font-size:13px;background:transparent}.unit-portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.38))}.unit-card.unit-key-spearman .unit-portrait img{object-position:center 22%}.unit-card.leader .unit-portrait{font-size:13px}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
 .side{position:absolute;z-index:18;right:10px;top:102px;width:320px}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}.actions-visual-panel{position:relative;width:100%;height:auto;min-height:0;aspect-ratio:auto;background:none;filter:none}.actions-visual-buttons{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:62%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center}.action-img-btn{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;display:block;width:100%;aspect-ratio:1/1;transition:transform .14s ease,filter .14s ease}.action-img-btn img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}.action-img-btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.06)}.action-img-btn:active{transform:translateY(0) scale(.99)}.action-img-btn:focus-visible{outline:2px solid #ffe39a;outline-offset:4px;border-radius:12px}.action-img-btn.selected img{filter:drop-shadow(0 0 10px rgba(255,212,102,.55)) drop-shadow(0 4px 10px rgba(0,0,0,.35))}
 .hand-drawer{position:absolute;z-index:35;left:50%;transform:translateX(-50%);right:auto;bottom:10px;width:clamp(560px,58vw,860px);max-width:calc(100vw - 340px);padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.97),rgba(10,8,6,.94));border:1px solid rgba(255,209,102,.38);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 24px rgba(255,209,102,.10);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 126px;min-height:132px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.97),rgba(20,13,9,.96));border:1px solid rgba(255,209,102,.34);cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.32)}.hand-card.selected{outline:2px solid var(--gold)}.hand-card.not-playable{opacity:.46;filter:grayscale(.55);border-color:rgba(215,195,162,.18);box-shadow:none}.hand-card.not-playable:hover{opacity:.62}.hand-icon{font-size:22px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
-.inspector{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspector.show{display:flex}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412);overflow:hidden}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
+.inspector{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412);}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
 
 .hand-action-btn{
   font-size:11px;
@@ -1147,7 +1148,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(255,209,102,.38);
   box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 26px rgba(255,209,102,.10);
 }
-.card-inspect-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.card-inspect-head{align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
 .card-inspect-title{margin:0;font-family:Georgia,serif;color:#fff1c4;font-size:25px;line-height:1.05}
 .card-inspect-sub{margin-top:4px;color:#d7c3a2;font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
 .card-inspect-x{
@@ -1179,15 +1180,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
 .card-inspect-text{margin:10px 0;color:#efe0bd;line-height:1.35;font-size:13px}
 .card-inspect-reason{min-height:18px;margin:8px 0 12px;color:#ffd28a;font-size:12px;line-height:1.3}
-.card-inspect-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
 #cardInspectPlay:disabled{opacity:.42;filter:grayscale(.3);cursor:not-allowed}
 .card-inspect-modal.card-rarity-basic .card-inspect-card{border-color:rgba(224,194,138,.38);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 22px rgba(255,209,102,.08)}
 .card-inspect-modal.card-rarity-improved .card-inspect-card{border-color:rgba(143,211,255,.52);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 26px rgba(143,211,255,.14)}
 .card-inspect-modal.card-rarity-heroic .card-inspect-card{border-color:rgba(121,244,201,.58);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 28px rgba(121,244,201,.14)}
 .card-inspect-modal.card-rarity-glorious .card-inspect-card{border-color:rgba(255,224,138,.72);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 30px rgba(255,199,92,.18)}
 .card-inspect-modal.card-rarity-epic .card-inspect-card{border-color:rgba(189,148,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 30px rgba(189,148,255,.16)}
-.card-inspect-modal.card-rarity-mythic .card-inspect-card{border-color:rgba(255,123,217,.72);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 32px rgba(255,123,217,.18)}
-.card-inspect-modal.card-rarity-demigod .card-inspect-card{border-color:rgba(255,247,167,.84);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 34px rgba(255,247,167,.20)}
+
+
 .card-inspect-modal.card-type-spell .card-inspect-visual{background:radial-gradient(circle at 50% 30%,rgba(143,211,255,.28),rgba(37,63,128,.82) 48%,rgba(8,10,20,.94))}
 .card-inspect-modal.card-type-trap .card-inspect-visual{background:radial-gradient(circle at 50% 30%,rgba(255,190,99,.28),rgba(128,51,28,.82) 48%,rgba(18,8,7,.94))}
 @media(max-width:980px){
@@ -5177,9 +5178,9 @@ El CSS original se conserva para no romper visuales. El bloque final
   background:linear-gradient(180deg,rgba(255,209,102,.12),rgba(0,0,0,.28));
 }
 .detail-guide-row{
-  display:flex;
+  
   flex-wrap:wrap;
-  gap:8px;
+  
   margin-top:10px;
 }
 .detail-token-btn,
@@ -5198,7 +5199,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .detail-token-btn:hover,
 .detail-status-chip:hover{
   filter:brightness(1.08);
-  transform:translateY(-1px);
+  
   box-shadow:0 0 0 1px rgba(255,214,120,.2),0 0 16px rgba(255,196,64,.24),inset 0 1px 0 rgba(255,241,196,.12);
 }
 .detail-guide-block{margin-top:10px;}
@@ -5213,13 +5214,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   flex-wrap:wrap;
   gap:8px;
 }
-.detail-status-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  padding:7px 11px;
-}
-.detail-status-chip span{display:inline-block;color:#ffd978;font-size:12px;}
+
+.detail-status-chip span{display:inline-block;}
 .detail-status-chip .status-icon{flex:0 0 auto;}
 .stat-guide-head h2{color:#ffd978;text-shadow:0 0 10px rgba(255,214,120,.28);}
 .stat-guide-short,.stat-guide-box span{color:#f3dfba;}
@@ -5304,11 +5300,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   animation:hvGoldSweep .85s ease;
 }
 .detail-token-btn::after{
-  content:"✦";
+  
   margin-left:8px;
   color:#fff1c4;
   text-shadow:0 0 10px rgba(255,216,112,.48);
-  font-size:11px;
+  
 }
 .detail-guide-caption{
   text-shadow:0 0 8px rgba(255,214,120,.18);
@@ -6169,13 +6165,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(234,191,92,.16);
   color:#e3cca2;
 }
-.card-inspect-actions{
-  grid-area:bottom;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  align-self:end;
-}
+
 #inspectClose{
   position:absolute;
   top:16px;
@@ -6183,18 +6173,18 @@ El CSS original se conserva para no romper visuales. El bloque final
   width:52px;
   height:52px;
   min-width:52px;
-  padding:0;
+  
   border-radius:14px;
-  font-size:0;
+  
   background:linear-gradient(180deg,#8c250d,#531108);
   border:1px solid rgba(255,156,122,.48);
   box-shadow:0 8px 16px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.08);
 }
 #inspectClose::before{
-  content:"×";
-  font-size:28px;
+  
+  
   color:#ffd9b4;
-  line-height:1;
+  
 }
 .card-inspect-x{
   top:16px;
@@ -6208,54 +6198,48 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-inspect-stat,
 .inspect-stat{
   position:relative;
-  min-height:68px;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
+  
+  
+  
+  
+  
   gap:3px;
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid rgba(234,191,92,.14);
-  background:linear-gradient(180deg,rgba(28,23,16,.92),rgba(11,10,9,.92));
+  
+  
+  
+  
   text-align:left;
 }
-.card-inspect-stat span,
-.inspect-stat span{
-  color:#d8b96f;
-  font-size:12px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
+
 .card-inspect-stat strong,
 .inspect-stat strong{
   margin-top:0!important;
-  color:#fff4cc;
-  font-size:24px!important;
+  
+  
   line-height:1;
 }
 .det-identity-block{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  
   margin-top:6px;
 }
 .det-head-chip-row{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
+  
 }
 .det-head-chip{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:34px;
-  padding:6px 12px;
-  border-radius:12px;
-  border:1px solid rgba(236,190,95,.22);
-  background:linear-gradient(180deg,rgba(26,20,12,.84),rgba(8,8,8,.84));
-  color:#ead7a9;
-  font-size:12px;
+  
+  
+  
+  
+  
+  
+  
   font-weight:800;
   letter-spacing:.04em;
 }
@@ -6263,105 +6247,66 @@ El CSS original se conserva para no romper visuales. El bloque final
   color:#fff4c4;
   box-shadow:0 0 16px rgba(255,220,127,.08), inset 0 0 10px rgba(255,255,255,.03);
 }
-.det-summary-copy{
-  padding:14px 16px;
-  border-radius:16px;
-  border:1px solid rgba(236,190,95,.18);
-  background:linear-gradient(180deg,rgba(24,20,13,.84),rgba(10,10,10,.84));
-  color:#dcc8a0;
-  line-height:1.55;
-  font-size:15px;
-}
+
 .det-info-card,
 .det-section-block,
 .det-quote-block,
 .detail-guide-block{
-  border:1px solid rgba(236,190,95,.18);
-  border-radius:18px;
-  background:linear-gradient(180deg,rgba(23,19,12,.92),rgba(9,9,9,.92));
-  box-shadow:inset 0 0 20px rgba(255,255,255,.02),0 12px 24px rgba(0,0,0,.18);
+  
+  
+  
+  
   overflow:hidden;
 }
 .det-section-title,
 .detail-guide-caption{
-  padding:14px 16px;
-  border-bottom:1px solid rgba(236,190,95,.12);
+  
+  
   background:linear-gradient(180deg,rgba(63,44,15,.24),rgba(16,15,13,.08));
-  color:#f0cd77;
-  font-size:13px;
+  
+  
   font-weight:900;
-  letter-spacing:.08em;
+  
   text-transform:uppercase;
 }
-.det-info-row{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  padding:10px 16px;
-  border-bottom:1px solid rgba(236,190,95,.08);
-  font-size:14px;
-}
+
 .det-info-row:last-of-type{border-bottom:none}
-.det-info-row span{color:#c7b188}
-.det-info-row strong{color:#fff0c7;text-align:right}
-.det-mini-note{
-  padding:12px 16px 15px;
-  color:#d8c6a2;
-  font-size:13px;
-  line-height:1.45;
-}
+
+
+
 .det-ability-list{
-  display:flex;
+  
   flex-direction:column;
 }
 .det-ability-card{
-  padding:14px 16px;
+  
   border-top:1px solid rgba(236,190,95,.08);
 }
 .det-ability-card:first-child{border-top:none}
 .det-ability-name{
-  color:#f2cf72;
-  font-size:15px;
+  
+  
   font-weight:900;
   letter-spacing:.03em;
-  margin-bottom:6px;
+  
   text-transform:uppercase;
 }
-.det-ability-text{
-  color:#e7d7b2;
-  font-size:14px;
-  line-height:1.55;
-}
+
 .det-empty-line{
-  padding:14px 16px 16px;
-  color:#bfaf8d;
-  font-size:14px;
+  
+  
+  
   line-height:1.45;
 }
-.det-quote-block{
-  padding:20px 18px;
-}
-.det-quote{
-  color:#e8bb63;
-  text-align:center;
-  font-size:18px;
-  line-height:1.6;
-  font-style:italic;
-  font-family:Georgia,serif;
-}
+
+
 .detail-guide-row{
   margin-top:2px;
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:10px;
+  
+  
+  
 }
-.detail-token-btn{
-  min-height:48px;
-  border-radius:14px;
-  font-size:13px;
-  font-weight:800;
-  letter-spacing:.03em;
-}
+
 .weapon-advantage-summary,
 .unit-lore-summary{
   display:none!important;
@@ -6370,10 +6315,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   padding:12px;
   gap:10px;
 }
-.detail-status-chip{
-  min-height:44px;
-  border-radius:12px;
-}
+
 .detail-helper-note{display:none}
 .card-rarity-legendary .det-chip-rarity,
 .inspector.card-rarity-legendary .det-chip-rarity{color:#f3c3ff;border-color:rgba(208,112,255,.44);box-shadow:0 0 20px rgba(208,112,255,.16)}
@@ -6438,20 +6380,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-inspect-card,
 .inspect-card{
   box-sizing:border-box!important;
-  width:min(1160px,96vw)!important;
-  height:min(780px,92svh)!important;
-  max-height:min(780px,92svh)!important;
-  overflow:hidden!important;
-  padding:18px!important;
+  
+  
+  
+  
+  
   border-radius:24px!important;
   display:grid!important;
-  grid-template-columns:330px minmax(0,1fr)!important;
-  grid-template-rows:auto 1fr auto!important;
-  grid-template-areas:
-    "left right"
-    "left right"
-    "footer footer"!important;
-  gap:18px!important;
+  
+  
+  
+  
   background:
     linear-gradient(90deg,rgba(0,0,0,.22),transparent 36%,rgba(0,0,0,.18)),
     radial-gradient(circle at 74% 8%,rgba(255,211,111,.08),transparent 34%),
@@ -6477,14 +6416,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* left column: card art + stats */
 .card-inspect-visual,
 .inspect-art{
-  grid-area:left!important;
-  align-self:start!important;
-  width:100%!important;
-  height:430px!important;
-  min-height:430px!important;
-  margin:0!important;
+  
+  
+  
+  
+  
+  
   overflow:hidden!important;
-  border-radius:18px!important;
+  
   border:1px solid rgba(238,190,91,.52)!important;
   background:
     linear-gradient(180deg,rgba(255,218,121,.08),rgba(0,0,0,.20)),
@@ -6514,22 +6453,22 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .card-inspect-grid,
 .inspect-grid{
-  grid-area:left!important;
-  align-self:end!important;
-  width:100%!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:8px!important;
-  margin:448px 0 0 0!important;
+  
+  
+  
+  
+  
+  
+  
   z-index:3!important;
-  max-height:236px!important;
-  overflow:hidden!important;
+  
+  
 }
 .card-inspect-stat,
 .inspect-stat{
-  min-height:44px!important;
-  height:44px!important;
-  padding:7px 10px!important;
+  
+  
+  
   border-radius:10px!important;
   display:flex!important;
   flex-direction:row!important;
@@ -6550,7 +6489,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .card-inspect-stat strong,
 .inspect-stat strong{
-  font-size:18px!important;
+  
   color:#fff2bf!important;
   font-weight:900!important;
   text-shadow:0 1px 2px #000!important;
@@ -6566,19 +6505,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 .inspect-text{
   position:relative!important;
 }
-.card-inspect-head{
-  grid-area:right!important;
-  margin:0!important;
-  padding:0 70px 0 0!important;
-  display:block!important;
-}
+
 .card-inspect-title,
 .inspect-title{
   margin:0!important;
   padding:0!important;
   font-family:Georgia,serif!important;
-  font-size:45px!important;
-  line-height:1!important;
+  
+  
   text-transform:uppercase!important;
   letter-spacing:.035em!important;
   color:#f7dc91!important;
@@ -6586,47 +6520,42 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .card-inspect-sub,
 .inspect-sub{
-  margin:10px 0 12px!important;
+  
   color:#dcc79f!important;
 }
-.det-identity-block{
-  margin:0!important;
-  gap:10px!important;
-}
-.det-head-chip-row{
-  gap:8px!important;
-}
+
+
 .det-head-chip{
-  min-height:30px!important;
-  padding:5px 13px!important;
-  border-radius:8px!important;
-  background:linear-gradient(180deg,rgba(51,35,13,.90),rgba(12,11,9,.92))!important;
-  border:1px solid rgba(238,190,91,.32)!important;
+  
+  
+  
+  
+  
   color:#f2d58b!important;
-  font-size:12px!important;
+  
 }
 .det-summary-copy{
   margin-top:2px!important;
-  padding:12px 14px!important;
+  
   border-radius:12px!important;
-  font-size:15px!important;
-  line-height:1.42!important;
+  
+  
   background:linear-gradient(180deg,rgba(18,17,14,.78),rgba(8,8,7,.90))!important;
   border:1px solid rgba(238,190,91,.18)!important;
   color:#decaa5!important;
 }
 .card-inspect-text,
 .inspect-text{
-  grid-area:right!important;
+  
   align-self:stretch!important;
-  margin:178px 0 0 0!important;
-  height:calc(100% - 178px)!important;
-  min-height:0!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  grid-template-rows:auto auto minmax(74px,auto) auto!important;
-  gap:10px!important;
-  overflow:hidden!important;
+  
+  
+  
+  
+  
+  
+  
+  
 }
 .det-info-card,
 .det-section-block,
@@ -6640,8 +6569,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .det-section-title,
 .detail-guide-caption{
-  padding:9px 12px!important;
-  font-size:13px!important;
+  
+  
   line-height:1!important;
   color:#efc96d!important;
   letter-spacing:.07em!important;
@@ -6654,38 +6583,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-tactical-card .det-section-title{
   text-align:left!important;
 }
-.det-info-row{
-  padding:7px 12px!important;
-  font-size:12px!important;
-  line-height:1.15!important;
-}
-.det-mini-note{
-  padding:8px 12px 10px!important;
-  font-size:11px!important;
-  line-height:1.25!important;
-  color:#decda9!important;
-}
+
+
 .det-section-block:nth-of-type(2){
   order:1!important;
 }
-.det-ability-list{
-  max-height:258px!important;
-  overflow:auto!important;
-}
-.det-ability-card{
-  padding:10px 12px!important;
-}
-.det-ability-name{
-  font-size:14px!important;
-  line-height:1.1!important;
-  margin-bottom:5px!important;
-  color:#f2ca69!important;
-}
-.det-ability-text{
-  font-size:13px!important;
-  line-height:1.35!important;
-  color:#e8d9b9!important;
-}
+
+
+
+
 .detail-guide-block,
 .det-section-block:has(.detail-guide-block){
   order:2!important;
@@ -6697,68 +6603,59 @@ El CSS original se conserva para no romper visuales. El bloque final
   gap:8px!important;
 }
 .detail-status-chip{
-  min-height:50px!important;
-  padding:7px!important;
-  border-radius:10px!important;
-  font-size:10px!important;
+  
+  
+  
+  
   line-height:1.1!important;
 }
-.det-empty-line{
-  padding:12px!important;
-  font-size:13px!important;
-}
+
 .det-quote-block{
   order:4!important;
-  padding:13px!important;
+  
 }
-.det-quote{
-  font-size:17px!important;
-  line-height:1.35!important;
-  color:#e3b95f!important;
-}
+
 
 /* footer buttons */
 .detail-guide-row{
-  grid-area:footer!important;
-  position:absolute!important;
-  left:360px!important;
-  right:18px!important;
-  bottom:18px!important;
-  display:grid!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  gap:12px!important;
-  margin:0!important;
+  
+  
+  
+  
+  
+  
+  
+  
+  
   z-index:7!important;
 }
 .detail-token-btn{
-  min-height:48px!important;
-  border-radius:12px!important;
-  border:1px solid rgba(238,190,91,.46)!important;
-  background:linear-gradient(180deg,rgba(49,35,14,.94),rgba(10,9,8,.96))!important;
+  
+  
+  
+  
   color:#ffe7aa!important;
-  font-size:12px!important;
+  
   font-weight:900!important;
   letter-spacing:.04em!important;
-  box-shadow:0 9px 16px rgba(0,0,0,.25),inset 0 0 13px rgba(255,220,120,.04)!important;
+  
 }
 .detail-token-btn:hover{
   transform:translateY(-1px)!important;
   box-shadow:0 12px 20px rgba(0,0,0,.30),0 0 18px rgba(238,190,91,.14)!important;
 }
 .card-inspect-actions{
-  grid-area:footer!important;
-  position:absolute!important;
-  left:18px!important;
-  bottom:18px!important;
-  width:330px!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
+  
+  
+  
+  
+  
+  
+  
+  
   z-index:8!important;
 }
-.card-inspect-reason{
-  display:none!important;
-}
+
 .card-inspect-actions .btn,
 #inspectClose{
   min-height:48px!important;
@@ -6779,7 +6676,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:0 10px 18px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.08)!important;
 }
 #inspectClose{
-  font-size:0!important;
+  
   padding:0!important;
 }
 #inspectClose::before{
@@ -6830,66 +6727,47 @@ El CSS original se conserva para no romper visuales. El bloque final
 @media(max-width:980px){
   .card-inspect-card,.inspect-card{
     width:min(96vw,760px)!important;
-    height:min(88svh,900px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
+    
+    
+    
     grid-template-rows:auto!important;
     grid-template-areas:"right" "left" "footer"!important;
   }
   .card-inspect-head{grid-area:right!important}
   .card-inspect-text,.inspect-text{
     grid-area:right!important;
-    margin:150px 0 0 0!important;
-    height:auto!important;
-    overflow:visible!important;
+    
+    
+    
     display:flex!important;
   }
   .card-inspect-visual,.inspect-art{
     grid-area:left!important;
-    height:360px!important;
-    min-height:360px!important;
+    
+    
   }
   .card-inspect-grid,.inspect-grid{
     grid-area:left!important;
-    margin:378px 0 0 0!important;
+    
   }
-  .detail-guide-row{
-    position:static!important;
-    grid-template-columns:1fr 1fr!important;
-  }
+  
   
 }
 
 
 /* === DET compact iconic model v23 === */
-.card-inspect-card,
-.inspect-card{
-  height:min(700px,88svh)!important;
-  max-height:min(700px,88svh)!important;
-  overflow:hidden!important;
-  grid-template-columns:290px minmax(0,1fr)!important;
-  gap:14px!important;
-  padding:16px!important;
-}
-.card-inspect-title,
-.inspect-title{
-  font-size:38px!important;
-}
+
+
 .card-inspect-sub,
 .inspect-sub{
   margin:8px 0 10px!important;
 }
-.card-inspect-visual,
-.inspect-art{
-  height:300px!important;
-  min-height:300px!important;
-  border-radius:16px!important;
-}
+
 .card-inspect-grid,
 .inspect-grid{
   margin:312px 0 0 0!important;
-  gap:7px!important;
-  max-height:190px!important;
+  
+  
 }
 .card-inspect-stat,
 .inspect-stat{
@@ -6919,12 +6797,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   line-height:1;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
 }
-.det-stat-key{
-  color:#e4c57a!important;
-  font-size:10px!important;
-  letter-spacing:.06em!important;
-  font-weight:900!important;
-}
+
 .card-inspect-stat strong,
 .inspect-stat strong{
   margin-left:auto!important;
@@ -6935,44 +6808,17 @@ El CSS original se conserva para no romper visuales. El bloque final
   font-size:13px!important;
   line-height:1.35!important;
 }
-.card-inspect-text,
-.inspect-text{
-  margin:144px 0 0 0!important;
-  height:calc(100% - 144px)!important;
-  gap:8px!important;
-}
+
 .det-section-title,
 .detail-guide-caption{
   padding:8px 10px!important;
   font-size:12px!important;
 }
-.det-info-row{
-  padding:6px 10px!important;
-}
-.det-mini-note{
-  padding:7px 10px 8px!important;
-}
-.det-ability-list{
-  max-height:none!important;
-  overflow:visible!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
-  padding:8px!important;
-}
-.det-ability-card{
-  text-align:left!important;
-  padding:9px 10px!important;
-  border:1px solid rgba(238,190,91,.18)!important;
-  border-radius:12px!important;
-  background:linear-gradient(180deg,rgba(31,24,15,.92),rgba(10,10,9,.94))!important;
-}
-.det-ability-top{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  margin-bottom:6px;
-}
+
+
+
+
+
 .det-ability-icon{
   width:22px;
   height:22px;
@@ -6992,46 +6838,24 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-ability-icon.kind-aura{box-shadow:0 0 12px rgba(120,214,255,.12)}
 .det-ability-icon.kind-buff{box-shadow:0 0 12px rgba(120,255,158,.12)}
 .det-ability-icon.kind-debuff{box-shadow:0 0 12px rgba(255,120,120,.12)}
-.det-ability-kind{
-  color:#cbb58c;
-  font-size:10px;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  font-weight:900;
-}
-.det-ability-name{
-  font-size:12px!important;
-  margin-bottom:4px!important;
-}
-.det-ability-text{
-  font-size:11px!important;
-  line-height:1.25!important;
-}
+
+
+
 .detail-chip-row{
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
   gap:6px!important;
   padding:8px!important;
 }
 .detail-status-chip{
-  min-height:42px!important;
-  padding:5px!important;
+  
+  
   font-size:9px!important;
 }
-.det-quote-block{
-  padding:9px 10px!important;
-}
-.det-quote{
-  font-size:14px!important;
-  line-height:1.25!important;
-}
-.detail-guide-row{
-  left:322px!important;
-  right:16px!important;
-  bottom:16px!important;
-  gap:8px!important;
-}
+
+
+
 .detail-token-btn{
-  min-height:42px!important;
+  
   font-size:11px!important;
   display:flex!important;
   align-items:center!important;
@@ -7047,11 +6871,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   font-size:13px;
   line-height:1;
 }
-.card-inspect-actions{
-  left:16px!important;
-  bottom:16px!important;
-  width:290px!important;
-}
+
 #inspectClose,
 .card-inspect-x{
   top:12px!important;
@@ -7060,58 +6880,51 @@ El CSS original se conserva para no romper visuales. El bloque final
   height:44px!important;
 }
 @media(max-width:980px){
-  .card-inspect-card,.inspect-card{
-    height:min(92svh,820px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
-  }
-  .card-inspect-visual,.inspect-art{height:250px!important;min-height:250px!important}
-  .card-inspect-grid,.inspect-grid{margin:262px 0 0 0!important}
+  
+  
+  
   
   
   .detail-guide-row{
-    position:static!important;
+    
     left:auto!important;
     right:auto!important;
     bottom:auto!important;
-    grid-template-columns:1fr 1fr!important;
+    
   }
-  .card-inspect-actions{
-    position:static!important;
-    width:auto!important;
-  }
+  
 }
 
 
 /* === DET real icon integration v24 === */
-.card-inspect-card,.inspect-card{height:min(690px,87svh)!important;max-height:min(690px,87svh)!important;grid-template-columns:280px minmax(0,1fr)!important;gap:14px!important;padding:15px!important;overflow:hidden!important}
-.card-inspect-visual,.inspect-art{height:280px!important;min-height:280px!important}
-.card-inspect-grid,.inspect-grid{margin:292px 0 0 0!important;max-height:188px!important;gap:7px!important}
-.card-inspect-text,.inspect-text{margin:138px 0 0 0!important;height:calc(100% - 138px)!important;gap:8px!important}
-.card-inspect-actions{left:15px!important;bottom:15px!important;width:280px!important}
-.detail-guide-row{left:310px!important;right:15px!important;bottom:15px!important;gap:12px!important;grid-template-columns:repeat(2,minmax(0,180px))!important;justify-content:end!important}
+
+
+
+
+
+.detail-guide-row{grid-template-columns:repeat(2,minmax(0,180px))!important;}
 .det-stat-row{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important}
-.det-stat-icon-btn,.det-ability-icon-btn,.detail-token-btn,.det-inline-icon-btn,.det-status-icon-btn{appearance:none;border:0;background:none;cursor:pointer;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center}
+
 .det-stat-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
-.det-stat-icon-btn:hover,.det-ability-icon-btn:hover,.detail-token-btn:hover,.det-inline-icon-btn:hover,.det-status-icon-btn:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(0,0,0,.26),0 0 16px rgba(238,190,91,.10)}
+
 .det-stat-img,.det-btn-img,.det-inline-icon-img{width:24px;height:24px;display:block;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
-.det-stat-key{min-width:34px;color:#e5c475!important;font-size:10px!important;font-weight:900!important;letter-spacing:.06em!important}
-.card-inspect-stat strong,.inspect-stat strong{margin-left:auto!important;font-size:16px!important}
-.det-ability-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;padding:8px!important;overflow:visible!important}
-.det-ability-card{padding:9px 10px!important;border:1px solid rgba(238,190,91,.18)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(31,24,15,.92),rgba(10,10,9,.94))!important;text-align:left!important}
-.det-ability-top{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:6px!important}
+
+
+
+.det-ability-card{text-align:left!important;}
+
 .det-ability-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
 .det-ability-img{width:24px;height:24px;display:block;object-fit:contain}
-.det-ability-kind{color:#cbb58c;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:900}
-.det-ability-name{font-size:12px!important;margin-bottom:4px!important;color:#f2ca69!important}
-.det-ability-text{font-size:11px!important;line-height:1.25!important;color:#e8d9b9!important}
-.det-inline-with-icon{display:flex;align-items:center;gap:8px}
+
+.det-ability-name{margin-bottom:4px!important;}
+
+
 .det-inline-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
-.detail-guide-chip{display:flex;align-items:center;gap:8px;justify-content:flex-start}
-.detail-guide-chip span{color:#ead29a;font-size:12px;font-weight:800;letter-spacing:.03em}
-.detail-token-btn{width:36px!important;height:36px!important;min-width:36px!important;border-radius:10px!important;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98))!important;border:1px solid rgba(238,190,91,.34)!important;box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)!important;min-height:36px!important}
+
+
+.detail-token-btn{border-radius:10px!important;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98))!important;border:1px solid rgba(238,190,91,.34)!important;box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)!important;}
 .detail-token-btn::before,.detail-token-btn::after{display:none!important}
-.detail-status-chip{min-height:48px!important;display:flex!important;align-items:center!important;gap:8px!important;padding:6px 8px!important}
+
 .det-status-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
 .det-status-icon-btn .status-chip,.det-status-icon-btn .status-inline-icon,.det-status-icon-btn .detail-status-icon{margin:0 auto}
 .det-status-icon-btn + span{font-size:10px!important;color:#e4d0a3!important;font-weight:700!important;line-height:1.1!important}
@@ -7135,9 +6948,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .card-inspect-modal.hidden{display:none!important}.inspector:not(.show){display:none!important}.inspector.show{display:flex!important}
 .card-inspect-card,.inspect-card{
-  position:relative!important;box-sizing:border-box!important;width:min(1120px,96vw)!important;height:min(660px,88vh)!important;max-height:min(660px,88vh)!important;overflow:hidden!important;
-  padding:16px!important;border-radius:24px!important;display:grid!important;grid-template-columns:310px 1fr!important;grid-template-rows:74px 1fr 58px!important;
-  grid-template-areas:"left head" "left body" "actions buttons"!important;gap:12px 16px!important;background:linear-gradient(180deg,#17130d 0%,#070706 100%)!important;
+  position:relative!important;box-sizing:border-box!important;width:min(1120px,96vw)!important;overflow:hidden!important;
+  padding:16px!important;border-radius:24px!important;display:grid!important;
+  gap:12px 16px!important;background:linear-gradient(180deg,#17130d 0%,#070706 100%)!important;
   border:1px solid rgba(238,190,91,.48)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),inset 0 0 0 1px rgba(255,238,180,.05)!important;
 }
 .card-inspect-card::before,.inspect-card::before{content:""!important;position:absolute!important;inset:8px!important;border-radius:18px!important;border:1px solid rgba(238,190,91,.12)!important;pointer-events:none!important}
@@ -7146,22 +6959,22 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(255,176,135,.52)!important;background:linear-gradient(180deg,#982a10,#531008)!important;color:#ffe3bf!important;font-size:28px!important;
   box-shadow:0 10px 18px rgba(0,0,0,.30),inset 0 0 0 1px rgba(255,255,255,.08)!important;
 }
-#inspectClose{font-size:0!important}#inspectClose::before{content:"×";font-size:28px;line-height:1;color:#ffe3bf}
-.card-inspect-head{grid-area:head!important;position:relative!important;display:block!important;margin:0!important;padding:0 62px 0 0!important}
+#inspectClose{font-size:0!important}#inspectClose::before{color:#ffe3bf;}
+.card-inspect-head{position:relative!important;display:block!important;margin:0!important;padding:0 62px 0 0!important;}
 .card-inspect-title,.inspect-title{
-  grid-area:head!important;margin:0!important;padding:0 62px 0 0!important;align-self:start!important;font-family:Georgia,serif!important;font-size:34px!important;line-height:.95!important;
+  grid-area:head!important;margin:0!important;padding:0 62px 0 0!important;align-self:start!important;font-family:Georgia,serif!important;line-height:.95!important;
   text-transform:uppercase!important;letter-spacing:.035em!important;color:#f6da8f!important;text-shadow:0 2px 0 #251600,0 0 14px rgba(255,210,100,.12)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
 }
 .card-inspect-sub,.inspect-sub{margin:8px 0 0!important;color:#d8c5a0!important}.det-identity-block{margin:0!important;gap:6px!important}.det-head-chip-row{gap:7px!important}
-.det-head-chip{min-height:26px!important;padding:4px 10px!important;border-radius:8px!important;font-size:11px!important;background:linear-gradient(180deg,rgba(45,32,12,.92),rgba(10,9,8,.94))!important;border:1px solid rgba(238,190,91,.30)!important}
+.det-head-chip{min-height:26px!important;padding:4px 10px!important;border-radius:8px!important;background:linear-gradient(180deg,rgba(45,32,12,.92),rgba(10,9,8,.94))!important;border:1px solid rgba(238,190,91,.30)!important;}
 .det-summary-copy{display:none!important}
 .card-inspect-visual,.inspect-art{
-  grid-area:left!important;align-self:start!important;width:100%!important;height:286px!important;min-height:286px!important;margin:0!important;border-radius:18px!important;overflow:hidden!important;
+  grid-area:left!important;align-self:start!important;width:100%!important;margin:0!important;border-radius:18px!important;overflow:hidden!important;
   background:radial-gradient(circle at 50% 20%,rgba(255,230,170,.16),rgba(35,25,14,.62) 48%,rgba(4,4,4,.94))!important;border:1px solid rgba(238,190,91,.38)!important;box-shadow:0 0 20px rgba(238,190,91,.10),inset 0 0 26px rgba(255,255,255,.03)!important;
 }
 .card-inspect-portrait,.card-inspect-portrait.card-portrait,.card-inspect-portrait.card-portrait img,.inspect-art img{width:100%!important;height:100%!important;object-fit:cover!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;display:block!important}
 .card-inspect-grid,.inspect-grid{
-  grid-area:left!important;align-self:end!important;width:100%!important;height:288px!important;max-height:288px!important;margin:304px 0 0!important;display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:7px!important;overflow:hidden!important;
+  grid-area:left!important;align-self:end!important;width:100%!important;display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:7px!important;overflow:hidden!important;
 }
 .card-inspect-stat,.inspect-stat,.det-stat-row{
   box-sizing:border-box!important;min-height:38px!important;height:38px!important;padding:4px 8px!important;border-radius:12px!important;display:flex!important;align-items:center!important;gap:7px!important;
@@ -7173,35 +6986,35 @@ El CSS original se conserva para no romper visuales. El bloque final
   background:radial-gradient(circle at 50% 38%,rgba(255,222,130,.09),rgba(13,10,7,.56) 62%,rgba(0,0,0,.12))!important;box-shadow:inset 0 0 0 1px rgba(238,190,91,.15),0 4px 9px rgba(0,0,0,.22)!important;
 }
 .det-stat-icon-btn:hover,.det-ability-icon-btn:hover,.detail-token-btn:hover,.det-inline-icon-btn:hover,.det-status-icon-btn:hover{transform:translateY(-1px)!important;box-shadow:inset 0 0 0 1px rgba(238,190,91,.30),0 8px 16px rgba(0,0,0,.30),0 0 16px rgba(238,190,91,.14)!important}
-.det-stat-img,.det-ability-img,.det-btn-img,.det-inline-icon-img{width:32px!important;height:32px!important;object-fit:contain!important;display:block!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.70)) drop-shadow(0 0 4px rgba(255,214,112,.13))!important}
+.det-stat-img,.det-ability-img,.det-btn-img,.det-inline-icon-img{object-fit:contain!important;display:block!important;}
 .card-inspect-text,.inspect-text{
-  grid-area:body!important;margin:0!important;height:auto!important;min-height:0!important;overflow:hidden!important;display:grid!important;grid-template-columns:1.12fr .88fr!important;grid-template-rows:1fr auto auto!important;
-  grid-template-areas:"effects tactical" "effects states" "quote states"!important;gap:10px!important;align-self:stretch!important;
+  margin:0!important;height:auto!important;
+  align-self:stretch!important;
 }
 .det-section-block,.det-info-card,.detail-guide-block,.det-quote-block{min-width:0!important;border-radius:14px!important;border:1px solid rgba(238,190,91,.22)!important;background:linear-gradient(180deg,rgba(22,18,12,.92),rgba(8,8,7,.95))!important;box-shadow:inset 0 0 16px rgba(255,255,255,.018),0 7px 16px rgba(0,0,0,.16)!important;overflow:hidden!important}
-.card-inspect-text > .det-section-block:nth-child(1),.inspect-text > .det-section-block:nth-child(1){grid-area:effects!important}.det-tactical-card{grid-area:tactical!important}.det-status-section{grid-area:states!important}.det-quote-block{grid-area:quote!important}
-.det-section-title,.detail-guide-caption{padding:8px 10px!important;font-size:12px!important;line-height:1!important;text-align:center!important;color:#efc96d!important;letter-spacing:.07em!important;text-transform:uppercase!important;border-bottom:1px solid rgba(238,190,91,.13)!important}
-.det-ability-list{padding:8px!important;display:grid!important;grid-template-columns:1fr!important;gap:8px!important;height:calc(100% - 30px)!important;overflow:hidden!important}
-.det-ability-card{box-sizing:border-box!important;min-height:88px!important;padding:8px 9px!important;border:1px solid rgba(238,190,91,.15)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(31,24,15,.88),rgba(10,10,9,.92))!important}
+.card-inspect-text > .det-section-block:nth-child(1),.inspect-text > .det-section-block:nth-child(1){grid-area:effects!important}.det-quote-block{grid-area:quote!important}
+.det-section-title,.detail-guide-caption{font-size:12px!important;line-height:1!important;text-align:center!important;color:#efc96d!important;letter-spacing:.07em!important;text-transform:uppercase!important;border-bottom:1px solid rgba(238,190,91,.13)!important;}
+.det-ability-list{padding:8px!important;display:grid!important;gap:8px!important;}
+.det-ability-card{box-sizing:border-box!important;border:1px solid rgba(238,190,91,.15)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(31,24,15,.88),rgba(10,10,9,.92))!important;}
 .det-ability-top{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:5px!important}.det-ability-kind{color:#cbb58c!important;font-size:10px!important;letter-spacing:.06em!important;text-transform:uppercase!important;font-weight:900!important}
-.det-ability-name{font-size:12px!important;line-height:1.1!important;color:#f2ca69!important;margin:0 0 4px!important}.det-ability-text{font-size:11px!important;line-height:1.25!important;color:#e8d9b9!important;display:-webkit-box!important;-webkit-line-clamp:3!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.det-ability-name{font-size:12px!important;line-height:1.1!important;color:#f2ca69!important;margin:0 0 4px!important}.det-ability-text{font-size:11px!important;line-height:1.25!important;color:#e8d9b9!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;overflow:hidden!important;}
 .det-info-row{padding:6px 10px!important;font-size:12px!important;line-height:1.15!important;display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;border-bottom:1px solid rgba(238,190,91,.08)!important}
-.det-info-row span{color:#c7b188!important}.det-info-row strong{color:#fff0c7!important;text-align:right!important}.det-inline-with-icon{display:flex!important;align-items:center!important;gap:8px!important}.det-mini-note{padding:7px 10px 9px!important;font-size:10.5px!important;line-height:1.25!important;color:#decda9!important}
-.det-status-section.det-status-empty{min-height:74px!important}.det-empty-line{padding:10px!important;font-size:12px!important;color:#cdbb96!important}
+.det-info-row span{color:#c7b188!important}.det-info-row strong{color:#fff0c7!important;text-align:right!important}.det-inline-with-icon{display:flex!important;align-items:center!important;gap:8px!important}.det-mini-note{padding:7px 10px 9px!important;color:#decda9!important;}
+.det-empty-line{padding:10px!important;font-size:12px!important;color:#cdbb96!important}
 .detail-chip-row{padding:8px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.detail-status-chip{min-height:42px!important;display:flex!important;align-items:center!important;gap:8px!important;padding:5px 7px!important;border-radius:11px!important;border:1px solid rgba(238,190,91,.16)!important;background:rgba(0,0,0,.18)!important}
 .detail-status-chip span{color:#e5d2a7!important;font-size:10px!important;font-weight:700!important;line-height:1.1!important}.det-status-icon-btn .status-icon{transform:scale(.92)!important}
 .det-quote-block{padding:10px!important}.det-quote{color:#e2b75f!important;text-align:center!important;font-family:Georgia,serif!important;font-style:italic!important;font-size:14px!important;line-height:1.22!important}
-.detail-guide-row{grid-area:buttons!important;position:static!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:12px!important;margin:0!important}.detail-guide-chip{display:flex!important;align-items:center!important;gap:8px!important}.detail-guide-chip span{color:#ead29a!important;font-size:12px!important;font-weight:800!important}
-.card-inspect-actions{grid-area:actions!important;position:static!important;width:100%!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;align-self:center!important}.card-inspect-reason{display:none!important}.card-inspect-actions .btn,#inspectClose{min-height:42px!important;border-radius:12px!important}
+
+.card-inspect-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}.card-inspect-reason{display:none!important}.card-inspect-actions .btn,#inspectClose{min-height:42px!important;border-radius:12px!important}
 .card-rarity-mythic .card-inspect-card,.inspector.card-rarity-mythic .inspect-card{border-color:rgba(92,194,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(92,194,255,.15)!important}
 .card-rarity-legendary .card-inspect-card,.inspector.card-rarity-legendary .inspect-card{border-color:rgba(208,112,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(208,112,255,.16)!important}
 .card-rarity-demigod .card-inspect-card,.inspector.card-rarity-demigod .inspect-card{border-color:rgba(255,236,141,.68)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 34px rgba(255,236,141,.16)!important}
 @media(max-width:900px){
-  .card-inspect-card,.inspect-card{width:min(96vw,760px)!important;height:min(92vh,820px)!important;max-height:min(92vh,820px)!important;overflow:auto!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;grid-template-areas:"head" "left" "body" "buttons" "actions"!important}
-  .card-inspect-text,.inspect-text{display:flex!important;flex-direction:column!important;overflow:visible!important}
+  .card-inspect-card,.inspect-card{width:min(96vw,760px)!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;}
+  
   .card-inspect-visual,.inspect-art{height:230px!important;min-height:230px!important}
   .card-inspect-grid,.inspect-grid{position:relative!important;margin:244px 0 0!important;height:auto!important;max-height:none!important}
-  .detail-guide-row{justify-content:flex-start!important;flex-wrap:wrap!important}
+  
 }
 
 
@@ -7229,61 +7042,36 @@ El CSS original se conserva para no romper visuales. El bloque final
   overflow:hidden!important;
   min-height:0!important;
 }
-.card-inspect-text > .det-section-block:first-child,
-.inspect-text > .det-section-block:first-child{
-  grid-area:effects!important;
-  min-height:0!important;
-}
+
 .det-ability-list{
-  height:auto!important;
-  max-height:none!important;
+  
+  
   grid-template-columns:1fr!important;
-  align-content:start!important;
-}
-.det-ability-card{
-  min-height:118px!important;
-}
-.det-ability-card:only-child{
-  min-height:138px!important;
+  
 }
 
+
+
 .det-tactical-card{
-  grid-area:tactical!important;
+  
   min-height:0!important;
 }
 .det-status-section{
-  grid-area:states!important;
-  align-self:stretch!important;
+  
+  
   min-height:0!important;
 }
 .det-status-section.det-status-empty{
   min-height:0!important;
 }
 
-.detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  gap:14px!important;
-  padding:6px 0 0!important;
-  margin:0!important;
-  align-self:end!important;
-}
+
 .card-inspect-actions{
   grid-area:actions!important;
   align-self:end!important;
 }
-.detail-guide-chip{
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  min-width:150px!important;
-}
-.detail-guide-chip span{
-  white-space:nowrap!important;
-}
+
+
 .det-stat-icon-btn,
 .det-ability-icon-btn,
 .detail-token-btn,
@@ -7301,10 +7089,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-info-row{
   grid-template-columns:auto 1fr!important;
 }
-.det-mini-note{
-  font-size:10px!important;
-  line-height:1.22!important;
-}
+
 .det-section-title,.detail-guide-caption{
   padding:7px 10px!important;
 }
@@ -7411,45 +7196,45 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* DET: keep footer guide buttons inside the modal, not floating at the far bottom-right. */
 .card-inspect-text,
 .inspect-text{
-  grid-template-rows:minmax(170px,auto) minmax(126px,auto) 64px!important;
+  
   padding-bottom:0!important;
 }
 .detail-guide-row{
-  grid-area:buttons!important;
-  position:relative!important;
-  left:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-  align-self:end!important;
-  justify-self:stretch!important;
-  width:100%!important;
-  min-height:54px!important;
+  
+  
+  
+  
+  
+  
+  
+  
+  
   box-sizing:border-box!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:12px!important;
-  padding:8px 10px!important;
-  margin:0!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  border-radius:14px!important;
-  background:linear-gradient(180deg,rgba(22,18,12,.82),rgba(8,8,7,.92))!important;
+  
+  
+  
+  
+  
+  
+  
+  
+  
   box-shadow:inset 0 0 14px rgba(255,255,255,.015)!important;
 }
 .detail-guide-chip{
-  display:flex!important;
-  align-items:center!important;
+  
+  
   justify-content:flex-start!important;
-  gap:8px!important;
-  min-width:auto!important;
+  
+  
   margin:0!important;
 }
 .detail-guide-chip span{
-  color:#ead29a!important;
-  font-size:12px!important;
-  font-weight:900!important;
+  
+  
+  
   letter-spacing:.03em!important;
-  white-space:nowrap!important;
+  
 }
 
 
@@ -7463,12 +7248,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Slightly reduce empty effect-box waste without breaking cards with long effects. */
-.det-ability-card:only-child{
-  min-height:106px!important;
-}
-.det-ability-list{
-  align-content:start!important;
-}
+
+
 
 /* Responsive protection */
 @media(max-width:980px){
@@ -7854,190 +7635,55 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* 3) Real inspector layout: stop overlaying stats on portrait. */
-#inspector .inspect-card{
-  width:min(1120px,96vw)!important;
-  height:min(620px,84vh)!important;
-  max-height:min(620px,84vh)!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:360px minmax(0,1fr)!important;
-  grid-template-rows:54px 38px 268px minmax(0,1fr)!important;
-  grid-template-areas:
-    "art title"
-    "art sub"
-    "art text"
-    "stats text"!important;
-  gap:10px 16px!important;
-  padding:16px!important;
-  box-sizing:border-box!important;
-}
+
 
 /* Header */
-#inspector #inspectTitle.inspect-title{
-  grid-area:title!important;
-  margin:0!important;
-  padding:0 62px 0 0!important;
-  align-self:end!important;
-  font-size:34px!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#inspector #inspectSub.inspect-sub{
-  grid-area:sub!important;
-  margin:0!important;
-  align-self:start!important;
-}
+
+
 
 /* Portrait is only portrait. */
 
 
 
 /* Stats are only below portrait. No margin hack, no overlap. */
-#inspector #inspectStats.inspect-grid{
-  grid-area:stats!important;
-  width:100%!important;
-  height:100%!important;
-  max-height:none!important;
-  margin:0!important;
-  align-self:stretch!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:42px!important;
-  gap:8px!important;
-  overflow:hidden!important;
-}
-#inspector #inspectStats .inspect-stat,
-#inspector #inspectStats .det-stat-row{
-  min-height:42px!important;
-  height:42px!important;
-  padding:4px 9px!important;
-  border-radius:12px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-}
+
+
 
 
 /* Right side content: effects, tactical, states, buttons. */
-#inspector #inspectText.inspect-text{
-  grid-area:text!important;
-  margin:0!important;
-  padding:0!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.06fr) minmax(290px,.94fr)!important;
-  grid-template-rows:minmax(0,1fr) minmax(116px,auto) 58px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:10px!important;
-}
+
 
 /* Direct children by their real order/classes. */
-#inspector #inspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  min-height:0!important;
-  height:100%!important;
-}
-#inspector #inspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  min-height:0!important;
-  height:auto!important;
-  align-self:start!important;
-}
-#inspector #inspectText > .det-status-section{
-  grid-area:states!important;
-  min-height:0!important;
-  height:auto!important;
-  align-self:stretch!important;
-  margin:0!important;
-}
 
-#inspector #inspectText > .detail-guide-row{
-  grid-area:buttons!important;
-}
+
+
+
+
 
 /* Effects should not become an empty cave. */
-#inspector .det-ability-list{
-  height:auto!important;
-  max-height:calc(100% - 30px)!important;
-  overflow:auto!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  gap:8px!important;
-  align-content:start!important;
-  padding:8px!important;
-}
 
-#inspector .det-ability-card:only-child{
-  min-height:126px!important;
-}
+
+
 
 
 /* Tactical note compact. */
-#inspector .det-mini-note{
-  font-size:10px!important;
-  line-height:1.18!important;
-  max-height:58px!important;
-  overflow:auto!important;
-}
+
 
 /* Buttons tray inside, visible, not stuck at lower-right. */
-#inspector #inspectText > .detail-guide-row{
-  position:relative!important;
-  left:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-  width:100%!important;
-  min-height:54px!important;
-  margin:0!important;
-  padding:8px 10px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:14px!important;
-  border-radius:14px!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  background:linear-gradient(180deg,rgba(22,18,12,.82),rgba(8,8,7,.92))!important;
-  box-sizing:border-box!important;
-}
 
 
-#inspector .detail-token-btn{
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
-  min-height:36px!important;
-}
+
+
 
 /* Close button top right. */
 
 
 /* 4) Keep card inspect modal from inheriting broken unit-only grid. */
-#cardInspectModal .card-inspect-card{
-  overflow:hidden!important;
-}
+
 
 /* Responsive fallback. */
 @media(max-width:920px){
-  #inspector .inspect-card{
-    height:min(92vh,820px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
-    grid-template-rows:auto auto 240px auto auto!important;
-    grid-template-areas:
-      "title"
-      "sub"
-      "art"
-      "stats"
-      "text"!important;
-  }
+  
   
 }
 
@@ -8045,143 +7691,32 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === v32 DET leader/unit clean layout === */
 /* This block targets the real in-battle DET modal only: #inspector */
 
-#inspector.inspector{
-  padding:14px!important;
-}
 
-#inspector .inspect-card{
-  width:min(1120px,96vw)!important;
-  height:min(640px,86vh)!important;
-  max-height:min(640px,86vh)!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-  padding:16px!important;
-  display:grid!important;
-  grid-template-columns:390px minmax(0,1fr)!important;
-  grid-template-rows:58px 34px 310px 118px 52px!important;
-  grid-template-areas:
-    "art title"
-    "art sub"
-    "art text"
-    "stats text"
-    "stats buttons"!important;
-  gap:10px 16px!important;
-}
+
+
 
 /* Title area */
-#inspector #inspectTitle.inspect-title{
-  grid-area:title!important;
-  margin:0!important;
-  padding:0 58px 0 0!important;
-  align-self:end!important;
-  font-size:34px!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
 
-#inspector #inspectSub.inspect-sub{
-  grid-area:sub!important;
-  margin:0!important;
-  align-self:start!important;
-  display:flex!important;
-  gap:7px!important;
-  flex-wrap:wrap!important;
-}
+
+
 
 /* Portrait: large but not greedy */
-#inspector #inspectArt.inspect-art{
-  grid-area:art!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  margin:0!important;
-  align-self:stretch!important;
-  justify-self:stretch!important;
-  overflow:hidden!important;
-  border-radius:18px!important;
-}
 
-#inspector #inspectArt.inspect-art img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  display:block!important;
-}
+
+
 
 /* Stats: always below portrait, all visible */
-#inspector #inspectStats.inspect-grid{
-  grid-area:stats!important;
-  width:100%!important;
-  height:100%!important;
-  max-height:none!important;
-  margin:0!important;
-  padding:0!important;
-  align-self:stretch!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:42px!important;
-  gap:8px!important;
-  overflow:hidden!important;
-}
 
-#inspector #inspectStats .inspect-stat,
-#inspector #inspectStats .det-stat-row{
-  min-height:42px!important;
-  height:42px!important;
-  padding:4px 9px!important;
-  border-radius:12px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  box-sizing:border-box!important;
-}
 
-#inspector #inspectStats .det-stat-img{
-  width:32px!important;
-  height:32px!important;
-}
+
+
+
 
 /* Body area: no overlay. Effects left, tactical right top, states right bottom, buttons separate. */
-#inspector #inspectText.inspect-text{
-  grid-area:text!important;
-  margin:0!important;
-  padding:0!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr)!important;
-  grid-template-rows:minmax(0,1fr) 128px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"!important;
-  gap:10px!important;
-}
+
 
 /* Footer buttons are moved out visually by placing the element itself at bottom via absolute-safe grid override. */
-#inspector #inspectText > .detail-guide-row{
-  position:absolute!important;
-  left:422px!important;
-  right:16px!important;
-  bottom:16px!important;
-  width:auto!important;
-  height:52px!important;
-  min-height:52px!important;
-  margin:0!important;
-  padding:7px 10px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:14px!important;
-  border-radius:14px!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  background:linear-gradient(180deg,rgba(22,18,12,.88),rgba(8,8,7,.94))!important;
-  box-sizing:border-box!important;
-  z-index:5!important;
-}
+
 
 /* Make sure content area leaves room for absolute footer. */
 #inspector #inspectText{
@@ -8190,149 +7725,62 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Real child placement */
-#inspector #inspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  min-height:0!important;
-  height:100%!important;
-  overflow:hidden!important;
-}
 
-#inspector #inspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  min-height:0!important;
-  height:100%!important;
-  align-self:stretch!important;
-  overflow:hidden!important;
-}
 
-#inspector #inspectText > .det-status-section{
-  grid-area:states!important;
-  min-height:0!important;
-  height:100%!important;
-  max-height:none!important;
-  align-self:stretch!important;
-  margin:0!important;
-  overflow:hidden!important;
-}
+
+
+
 
 
 
 /* Effects compact */
-#inspector .det-ability-list{
-  height:calc(100% - 30px)!important;
-  max-height:none!important;
-  overflow:auto!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  gap:8px!important;
-  align-content:start!important;
-  padding:8px!important;
-  box-sizing:border-box!important;
-}
 
-#inspector .det-ability-card{
-  min-height:auto!important;
-  padding:9px 10px!important;
-}
 
-#inspector .det-ability-card:only-child{
-  min-height:120px!important;
-}
 
-#inspector .det-ability-text{
-  -webkit-line-clamp:5!important;
-}
+
+
+
+
 
 /* Tactical compact, no scroll monster */
 
 
-#inspector .det-mini-note{
-  font-size:9.8px!important;
-  line-height:1.16!important;
-  max-height:48px!important;
-  overflow:hidden!important;
-  padding:6px 10px!important;
-}
+
 
 /* States / leader record visible and not behind tactical */
-#inspector .det-status-section .det-section-title{
-  padding:7px 10px!important;
-}
 
-#inspector .det-leader-record{
-  margin:7px 8px!important;
-  padding:7px 9px!important;
-}
 
-#inspector .det-record-title{
-  font-size:10px!important;
-  margin-bottom:5px!important;
-}
 
-#inspector .det-record-row{
-  font-size:10.5px!important;
-}
 
-#inspector .det-empty-line{
-  padding:7px 9px!important;
-  font-size:11px!important;
-}
+
+
+
+
+
 
 /* Button tray */
-#inspector .detail-guide-chip{
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-}
 
-#inspector .detail-guide-chip span{
-  color:#ead29a!important;
-  font-size:12px!important;
-  font-weight:900!important;
-  white-space:nowrap!important;
-}
+
+
 
 #inspector .detail-token-btn{
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
-  min-height:36px!important;
+  
+  
+  
+  
   flex:0 0 36px!important;
 }
 
 /* Close */
-#inspector #inspectClose{
-  position:absolute!important;
-  top:16px!important;
-  right:16px!important;
-  left:auto!important;
-  bottom:auto!important;
-  width:46px!important;
-  height:46px!important;
-  min-width:46px!important;
-  min-height:46px!important;
-  border-radius:14px!important;
-  z-index:30!important;
-}
+
 
 /* Responsive fallback */
 @media(max-width:920px){
-  #inspector .inspect-card{
-    height:min(92vh,820px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
-    grid-template-rows:auto auto 250px auto auto!important;
-    grid-template-areas:
-      "title"
-      "sub"
-      "art"
-      "stats"
-      "text"!important;
-  }
+  
   #inspector #inspectText.inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
+    
+    
+    
     padding-bottom:0!important;
   }
   
@@ -8349,21 +7797,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Main modal: shorter, stable, no page-level scroll needed */
 #inspector .inspect-card{
-  width:min(1100px,96vw)!important;
-  height:min(560px,82vh)!important;
-  max-height:min(560px,82vh)!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
+  
+  
+  
+  
+  
   padding:14px!important;
-  display:grid!important;
-  grid-template-columns:300px minmax(0,1fr)!important;
-  grid-template-rows:52px 32px minmax(0,1fr) 54px!important;
-  grid-template-areas:
-    "visual title"
-    "visual sub"
-    "visual body"
-    "stats buttons"!important;
-  gap:10px 14px!important;
+  
+  
+  
+  
+  
 }
 
 /* Title and chips */
@@ -8390,13 +7834,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Portrait: compact, contained, never pushes stats */
 #inspector #inspectArt.inspect-art{
-  grid-area:visual!important;
+  
   width:100%!important;
-  height:220px!important;
-  min-height:220px!important;
-  max-height:220px!important;
+  
+  
+  
   margin:0!important;
-  align-self:start!important;
+  
   justify-self:stretch!important;
   overflow:hidden!important;
   border-radius:16px!important;
@@ -8412,18 +7856,18 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Stats: directly under portrait using same left column */
 #inspector #inspectStats.inspect-grid{
-  grid-area:visual!important;
-  align-self:end!important;
+  
+  
   width:100%!important;
-  height:auto!important;
-  max-height:none!important;
-  margin:232px 0 0 0!important;
+  
+  
+  
   padding:0!important;
   display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:37px!important;
-  gap:7px!important;
-  overflow:hidden!important;
+  
+  
+  
+  
   z-index:2!important;
 }
 
@@ -8463,77 +7907,41 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Right body: all content lives here, compact and balanced */
 #inspector #inspectText.inspect-text{
-  grid-area:body!important;
+  
   width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.08fr) minmax(285px,.92fr)!important;
-  grid-template-rows:minmax(0,1fr) 128px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"!important;
-  gap:9px!important;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 }
 
 /* Make buttons row independent and always visible */
-#inspector #inspectText > .detail-guide-row{
-  grid-area:unset!important;
-  position:absolute!important;
-  left:328px!important;
-  right:14px!important;
-  bottom:14px!important;
-  height:44px!important;
-  min-height:44px!important;
-  width:auto!important;
-  margin:0!important;
-  padding:5px 9px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:12px!important;
-  border-radius:13px!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  background:linear-gradient(180deg,rgba(22,18,12,.88),rgba(8,8,7,.94))!important;
-  box-sizing:border-box!important;
-  z-index:12!important;
-}
+
 
 /* Direct child placement */
 
 
-#inspector #inspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  height:100%!important;
-  min-height:0!important;
-  align-self:stretch!important;
-  overflow:hidden!important;
-}
 
-#inspector #inspectText > .det-status-section{
-  grid-area:states!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:none!important;
-  margin:0!important;
-  align-self:stretch!important;
-  overflow:hidden!important;
-}
+
+
 
 
 
 /* Effects: internal scroll only */
 #inspector .det-ability-list{
-  height:calc(100% - 29px)!important;
+  
   max-height:none!important;
-  overflow:auto!important;
+  
   display:grid!important;
   grid-template-columns:1fr!important;
   gap:7px!important;
-  align-content:start!important;
+  
   padding:7px!important;
   box-sizing:border-box!important;
 }
@@ -8562,14 +7970,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 #inspector .det-info-row{
-  padding:5px 9px!important;
-  min-height:26px!important;
+  
+  
   font-size:11px!important;
 }
 
-#inspector .det-info-row strong{
-  font-size:10.8px!important;
-}
+
 
 #inspector .det-mini-note{
   font-size:9px!important;
@@ -8586,10 +7992,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 
-#inspector .det-empty-line{
-  padding:6px 8px!important;
-  font-size:10.5px!important;
-}
+
 
 /* Buttons inside footer tray */
 
@@ -8603,9 +8006,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 #inspector .detail-guide-chip span{
-  font-size:11.5px!important;
-  font-weight:900!important;
-  white-space:nowrap!important;
+  
+  
+  
   color:#ead29a!important;
 }
 
@@ -9277,36 +8680,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Modal shell glow by rarity */
-#inspector.card-rarity-basic .inspect-card,
-#cardInspectModal.card-rarity-basic .card-inspect-card{
-  border-color:rgba(40,40,44,.72)!important;
-  box-shadow:0 28px 80px rgba(0,0,0,.80),0 0 24px rgba(35,35,38,.30)!important;
-}
-#inspector.card-rarity-epic .inspect-card,
-#cardInspectModal.card-rarity-epic .card-inspect-card{
-  border-color:rgba(216,221,230,.72)!important;
-  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 28px rgba(216,221,230,.22)!important;
-}
-#inspector.card-rarity-glorious .inspect-card,
-#cardInspectModal.card-rarity-glorious .card-inspect-card{
-  border-color:rgba(68,255,138,.72)!important;
-  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 30px rgba(68,255,138,.20)!important;
-}
-#inspector.card-rarity-mythic .inspect-card,
-#cardInspectModal.card-rarity-mythic .card-inspect-card{
-  border-color:rgba(85,199,255,.74)!important;
-  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 32px rgba(85,199,255,.22)!important;
-}
-#inspector.card-rarity-legendary .inspect-card,
-#cardInspectModal.card-rarity-legendary .card-inspect-card{
-  border-color:rgba(216,106,255,.76)!important;
-  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 34px rgba(216,106,255,.24)!important;
-}
-#inspector.card-rarity-demigod .inspect-card,
-#cardInspectModal.card-rarity-demigod .card-inspect-card{
-  border-color:rgba(255,230,109,.80)!important;
-  box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 36px rgba(255,230,109,.25)!important;
-}
+
+
+
+
+
+
 
 
 /* === v37 DET real fix: rarity classes, hand modal, active states === */
@@ -9357,135 +8736,26 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* CARD-IN-HAND MODAL: force real layout even if older CSS wins */
 
-#cardInspectModal:not(.hidden) .card-inspect-card{
-  width:min(1110px,96vw)!important;
-  height:min(558px,82vh)!important;
-  max-height:min(558px,82vh)!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:300px minmax(0,1fr)!important;
-  grid-template-rows:auto 220px minmax(0,1fr) 52px!important;
-  grid-template-areas:
-    "visual head"
-    "visual text"
-    "stats text"
-    "actions text"!important;
-  gap:10px 14px!important;
-  padding:14px 18px 12px 14px!important;
-  box-sizing:border-box!important;
-}
+
 
 /* Some versions use direct children without class names. These IDs are decisive. */
-#cardInspectModal:not(.hidden) #cardInspectVisual{
-  grid-area:visual!important;
-  width:100%!important;
-  height:220px!important;
-  min-height:220px!important;
-  max-height:220px!important;
-  overflow:hidden!important;
-  margin:0!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats{
-  grid-area:stats!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  grid-auto-rows:37px!important;
-  align-content:start!important;
-  gap:7px!important;
-  height:100%!important;
-  max-height:none!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  margin:0!important;
-  padding:0!important;
-}
-#cardInspectModal:not(.hidden) .card-inspect-actions,
-#cardInspectModal:not(.hidden) #cardInspectActions{
-  grid-area:actions!important;
-  position:static!important;
-  inset:auto!important;
-  width:100%!important;
-  height:52px!important;
-  min-height:52px!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
-  margin:0!important;
-  padding:0!important;
-  align-self:end!important;
-}
-#cardInspectModal:not(.hidden) .card-inspect-actions .btn,
-#cardInspectModal:not(.hidden) #cardInspectActions .btn{
-  height:50px!important;
-  min-height:50px!important;
-  margin:0!important;
-}
+
+
+
+
 
 /* If stats are too many, show without being covered. */
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-row,
-#cardInspectModal:not(.hidden) #cardInspectStats .card-inspect-stat{
-  height:37px!important;
-  min-height:37px!important;
-  padding:3px 8px!important;
-  box-sizing:border-box!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-icon-btn{
-  width:31px!important;
-  height:31px!important;
-  min-width:31px!important;
-}
 
-#cardInspectModal:not(.hidden) #cardInspectStats strong{
-  font-size:15px!important;
-}
+
+
+
 
 /* Right side of hand modal */
-#cardInspectModal:not(.hidden) #cardInspectText{
-  grid-area:text!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 408px!important;
-  grid-template-rows:minmax(0,1fr) 136px 56px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:9px!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  padding:0!important;
-  margin:0!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  grid-area:states!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:none!important;
-  overflow:hidden!important;
-  margin:0!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  inset:auto!important;
-  height:56px!important;
-  min-height:56px!important;
-  margin:0!important;
-  padding:8px 10px!important;
-}
+
+
+
+
+
 #cardInspectModal:not(.hidden) #cardInspectText > .det-quote-block{
   display:none!important;
 }
@@ -9555,8 +8825,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 @media(max-width:920px){
   #cardInspectModal:not(.hidden) .card-inspect-card{
-    height:min(92vh,820px)!important;
-    overflow:auto!important;
+    
+    
     grid-template-columns:1fr!important;
     grid-template-rows:auto 220px auto 56px auto!important;
     grid-template-areas:
@@ -9573,25 +8843,22 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === v38 Status unblock: leader DEF/statuses visible, no blocked status row === */
 
 /* Give the right lower area enough room and keep it above the footer. */
-#inspector.show #inspectText,
-#inspector:not(.hidden) #inspectText{
-  grid-template-rows:minmax(0,1fr) 154px 56px!important;
-}
+
 
 /* Status section is one clean container, not an overflowing stack. */
 #inspector.show #inspectText > .det-status-section,
 #inspector:not(.hidden) #inspectText > .det-status-section{
-  grid-area:states!important;
-  height:154px!important;
-  min-height:154px!important;
-  max-height:154px!important;
-  overflow:hidden!important;
-  margin:0!important;
-  padding:0!important;
+  
+  
+  
+  
+  
+  
+  
   align-self:stretch!important;
-  position:relative!important;
-  z-index:4!important;
-  display:flex!important;
+  
+  
+  
   flex-direction:column!important;
 }
 
@@ -9599,15 +8866,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 #inspector.show #inspectText > .det-status-section > .det-section-title,
 #inspector:not(.hidden) #inspectText > .det-status-section > .det-section-title{
   flex:0 0 30px!important;
-  height:30px!important;
-  min-height:30px!important;
-  max-height:30px!important;
-  margin:0!important;
-  padding:7px 10px!important;
+  
+  
+  
+  
+  
   line-height:14px!important;
-  box-sizing:border-box!important;
-  position:static!important;
-  z-index:1!important;
+  
+  
+  
 }
 
 /* Leader history stays inside the same status box and leaves space for buffs. */
@@ -9663,17 +8930,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Footer must stay below states and never cover them. */
-#inspector.show #inspectText > .detail-guide-row,
-#inspector:not(.hidden) #inspectText > .detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  z-index:2!important;
-  height:56px!important;
-  min-height:56px!important;
-  align-self:stretch!important;
-  margin:0!important;
-  overflow:hidden!important;
-}
+
 
 /* Effects and tactical stay contained so they don't steal status/footer space. */
 #inspector.show #inspectText > .det-section-block:first-child,
@@ -9685,17 +8942,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Hand modal gets same status safety, without changing combat logic. */
-#cardInspectModal:not(.hidden) #cardInspectText{
-  grid-template-rows:minmax(0,1fr) 136px 56px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  display:flex!important;
-  flex-direction:column!important;
-  overflow:hidden!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section > .det-section-title{
-  flex:0 0 30px!important;
-}
+
+
+
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section .det-status-list{
   flex:1 1 auto!important;
   overflow:auto!important;
@@ -9709,7 +8958,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 #inspector.show #inspectText,
 #inspector:not(.hidden) #inspectText{
   grid-template-columns:minmax(0,1fr) 408px!important;
-  grid-template-rows:minmax(0,1fr) 174px 56px!important;
+  
   grid-template-areas:
     "effects tactical"
     "effects states"
@@ -9732,9 +8981,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 #inspector.show #inspectText > .det-status-section,
 #inspector:not(.hidden) #inspectText > .det-status-section{
   grid-area:states!important;
-  height:174px!important;
-  min-height:174px!important;
-  max-height:174px!important;
+  
+  
+  
   overflow:hidden!important;
   display:grid!important;
   grid-template-rows:30px auto minmax(34px,1fr)!important;
@@ -9887,36 +9136,23 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Hand modal status block follows same structure but smaller. */
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  display:grid!important;
+  
   grid-template-rows:30px auto minmax(28px,1fr)!important;
   gap:5px!important;
-  overflow:hidden!important;
+  
 }
 #cardInspectModal:not(.hidden) #cardInspectText .det-leader-history-wrap{
   max-height:58px!important;
   overflow:hidden!important;
   padding:0 8px!important;
 }
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
-  overflow:auto!important;
-  padding:0 8px 8px!important;
-}
+
 
 
 /* === v41 Compact active status rows: icon + short label only === */
 
 /* Status list compact: no long paragraphs inside DET. */
-#inspector.show #inspectText .det-status-list,
-#inspector:not(.hidden) #inspectText .det-status-list,
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
-  display:flex!important;
-  flex-direction:row!important;
-  flex-wrap:wrap!important;
-  align-content:flex-start!important;
-  gap:7px!important;
-  overflow:auto!important;
-  padding:5px 8px 8px!important;
-}
+
 
 /* Each active state is a compact clickable pill. */
 #inspector.show #inspectText .det-status-row.det-status-icon-row,
@@ -10002,10 +9238,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 #inspector.show #inspectText > .det-status-section,
 #inspector:not(.hidden) #inspectText > .det-status-section,
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  display:flex!important;
-  flex-direction:column!important;
+  
+  
   gap:8px!important;
-  overflow:hidden!important;
+  
 }
 #inspector.show #inspectText .det-leader-history-wrap,
 #inspector:not(.hidden) #inspectText .det-leader-history-wrap,
@@ -14767,7 +14003,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* PATCH 7GZY - permite leer reglas exactas con saltos de línea en DET */
 .stat-guide-box span{white-space:pre-line;}
-.detail-guide-row{align-items:start;}
+
 .guide-effect-btn img{filter:drop-shadow(0 0 8px rgba(255,209,102,.20));}
 
 
@@ -16813,15 +16049,9 @@ body.mobile-landscape-locked{overflow:hidden!important}
   border-color:rgba(255,209,102,.58);
   box-shadow:0 0 12px rgba(255,209,102,.12);
 }
-.card-inspect-modal.deck-builder-detail-modal{
-  z-index:390;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-card{
-  width:min(760px,94vw);
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-visual{
-  min-height:190px;
-}
+
+
+
 .deck-builder-detail-box{
   margin-top:12px;
   padding:12px;
