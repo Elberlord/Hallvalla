@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8A";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8B";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -349,7 +349,7 @@ function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
 04_RUNTIME_STATE_PHASES
 -------------------------------------------------------------------------------
 */
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,nearDeathSoundPlayedKeys=new Set();
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false;
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -3938,7 +3938,7 @@ function getStalemateOutcomeText(outcome){
   if(outcome.reason==="stalemate_draw")return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Empate por Vida igual (${outcome.p1Hp}/${outcome.p2Hp}).`;
   return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Gana J${outcome.winner} por tener más Vida (${outcome.p1Hp}/${outcome.p2Hp}).`;
 }
-function getBattleOutcome(units=publicState?.units||[],state=publicState){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};const stalemate=getStalemateLifeOutcome(units,state);if(stalemate)return stalemate;return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog="",stateOverride=null){if(!gameId||!publicState)return false;const state=stateOverride||publicState;const outcome=getBattleOutcome(units,state);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);const stalemateText=getStalemateOutcomeText(outcome);if(stalemateText)baseLogs.push(stalemateText);if(state.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else if(!stalemateText){baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});return true}function resetBattleState(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function getBattleOutcome(units=publicState?.units||[],state=publicState){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};const stalemate=getStalemateLifeOutcome(units,state);if(stalemate)return stalemate;return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog="",stateOverride=null){if(!gameId||!publicState)return false;const state=stateOverride||publicState;const outcome=getBattleOutcome(units,state);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);const stalemateText=getStalemateOutcomeText(outcome);if(stalemateText)baseLogs.push(stalemateText);if(state.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else if(!stalemateText){baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");await updatePublic({units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});return true}function resetBattleState(){resetNoPlayableAutoAdvanceState();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -4036,6 +4036,7 @@ function enterLocalGame(pub,priv,player=1){
   lastDemigodSummonKey="";
   lastFirebaseListenerErrorKey="";
   nearDeathSoundPlayedKeys=new Set();
+  resetNoPlayableAutoAdvanceState();
   clearBattleFxLayer();
   hideDemigodSummonPresentation();
   if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
@@ -4063,6 +4064,7 @@ function enterGame(code,player){
   lastDemigodSummonKey="";
   lastFirebaseListenerErrorKey="";
   nearDeathSoundPlayedKeys=new Set();
+  resetNoPlayableAutoAdvanceState();
   clearBattleFxLayer();
   hideDemigodSummonPresentation();
   if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
@@ -4325,49 +4327,83 @@ function canPlayCardWithSnapshot(card,honor,phase,units,player){
 function handHasPlayableWithSnapshot(hand,honor,phase,units,player){
   return (hand||[]).some(c=>canPlayCardWithSnapshot(c,honor,phase,units,player));
 }
+function resetNoPlayableAutoAdvanceState(){
+  if(noPlayableAutoAdvanceTimer){clearTimeout(noPlayableAutoAdvanceTimer);noPlayableAutoAdvanceTimer=null;}
+  noPlayableAutoAdvanceKey="";
+  noPlayableAutoAdvanceLock=false;
+}
+function getNoPlayableAutoAdvanceKey(){
+  const phase=getTurnPhase();
+  const handSignature=(privateState?.hand||[]).map(c=>c.id||c.key||c.name||"card").join("|");
+  return `${gameId||"no-game"}:${publicState?.turnKey||"no-turn"}:${myPlayer||0}:${phase}:${privateState?.honor||0}:${handSignature}`;
+}
+function scheduleAutoAdvanceIfNoPlayableHand(delayMs=520){
+  if(!gameId||!publicState||!privateState||isBattleEnded())return;
+  if(publicState.mode==="tutorial")return;
+  if(!isMyTurn()||!isHandPlayPhase())return;
+  if(privateState.lastTurnStarted!==publicState.turnKey)return;
+  const inspectModal=$("cardInspectModal");
+  const inspectOpen=!!(inspectModal&&!inspectModal.classList.contains("hidden"));
+  if(selectedCard||inspectOpen)return;
+  if(hasPlayableCardsInHand())return;
+
+  const phaseAtSchedule=getTurnPhase();
+  const key=getNoPlayableAutoAdvanceKey();
+  if(noPlayableAutoAdvanceLock||noPlayableAutoAdvanceKey===key)return;
+  if(noPlayableAutoAdvanceTimer){clearTimeout(noPlayableAutoAdvanceTimer);noPlayableAutoAdvanceTimer=null;}
+  noPlayableAutoAdvanceKey=key;
+
+  noPlayableAutoAdvanceTimer=setTimeout(async()=>{
+    noPlayableAutoAdvanceTimer=null;
+    let advanced=false;
+    try{
+      if(!gameId||!publicState||!privateState||isBattleEnded())return;
+      if(publicState.mode==="tutorial")return;
+      if(!isMyTurn()||getTurnPhase()!==phaseAtSchedule)return;
+      if(privateState.lastTurnStarted!==publicState.turnKey)return;
+      const inspectModal=$("cardInspectModal");
+      const inspectOpen=!!(inspectModal&&!inspectModal.classList.contains("hidden"));
+      if(selectedCard||inspectOpen||hasPlayableCardsInHand())return;
+
+      noPlayableAutoAdvanceLock=true;
+      handOpen=false;
+      handManualCloseKey="";
+      clearSelection();
+
+      if(phaseAtSchedule==="main"){
+        const readyUnits=normalizeFreshSummonsForActionPhase(publicState.units||[],myPlayer,publicState.turnKey||"");
+        await updatePublic({
+          units:readyUnits,
+          turnPhase:"actions",
+          log:[`J${myPlayer} no tiene cartas jugables en Main Phase: avanza automáticamente a Action Phase.`,...(publicState.log||[])].slice(0,18)
+        });
+        setHint("No tienes cartas jugables. Action Phase iniciada automáticamente.");
+        advanced=true;
+        return;
+      }
+
+      if(phaseAtSchedule==="last"){
+        await updatePublic({
+          turnPhase:"end",
+          log:[`J${myPlayer} no tiene cartas jugables en Last Phase: pasa automáticamente a End Phase.`,...(publicState.log||[])].slice(0,18)
+        });
+        await finishTurn();
+        advanced=true;
+      }
+    }catch(e){
+      console.warn("[HallValla] Auto avance por ausencia de cartas jugables falló:",e);
+      setHint("No se pudo avanzar automáticamente. Usa el botón de fase para continuar.");
+    }finally{
+      noPlayableAutoAdvanceLock=false;
+      if(!advanced&&noPlayableAutoAdvanceKey===key)noPlayableAutoAdvanceKey="";
+    }
+  },Math.max(120,Number(delayMs)||520));
+}
 function scheduleAutoAdvanceIfHandEmptyAfterPlay(handSnapshot,honorSnapshot){
   if(!gameId||!publicState||!privateState||!isMyTurn()||!isHandPlayPhase())return;
   const phaseAtPlay=getTurnPhase();
   if(handHasPlayableWithSnapshot(handSnapshot,honorSnapshot,phaseAtPlay,publicState.units||[],myPlayer))return;
-  const localGameId=gameId;
-  const localPlayer=myPlayer;
-  const localTurnKey=publicState.turnKey||"";
-  setTimeout(async()=>{
-    try{
-      if(gameId!==localGameId||myPlayer!==localPlayer)return;
-      const [pubSnap,privSnap]=await Promise.all([
-        get(ref(db,`games/${localGameId}/public`)),
-        get(ref(db,`games/${localGameId}/private/player${localPlayer}`))
-      ]);
-      if(!pubSnap.exists()||!privSnap.exists())return;
-      const pub=pubSnap.val();
-      const priv=privSnap.val();
-      if(pub.phase==="ended"||pub.battleEnded||pub.currentPlayer!==localPlayer)return;
-      if(localTurnKey&&pub.turnKey!==localTurnKey)return;
-      const phase=pub.turnPhase||pub.phase||"main";
-      if(!(phase==="main"||phase==="last"))return;
-      if(handHasPlayableWithSnapshot(priv.hand||[],priv.honor||0,phase,pub.units||[],localPlayer))return;
-      if(phase==="main"){
-        const readyUnits=normalizeFreshSummonsForActionPhase(pub.units||[],localPlayer,pub.turnKey||localTurnKey);
-        await update(ref(db,`games/${localGameId}/public`),{
-          units:readyUnits,
-          turnPhase:"actions",
-          log:[`J${localPlayer} no tiene cartas jugables en mano: avanza automáticamente a Action Phase. Invocaciones recién invocadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(pub.log||[])].slice(0,18)
-        });
-      }else if(phase==="last"){
-        const next=localPlayer===1?2:1;
-        const nextTurn=next===1?(pub.turn||1)+1:(pub.turn||1);
-        await update(ref(db,`games/${localGameId}/public`),{
-          currentPlayer:next,
-          turn:nextTurn,
-          turnPhase:"draw",
-          turnKey:`${nextTurn}-${next}`,
-          log:[`J${localPlayer} no tiene cartas jugables en Last Phase: termina turno. Ahora juega J${next}.`,...(pub.log||[])].slice(0,18)
-        });
-        if(pub.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
-      }
-    }catch(e){console.warn("[HallValla] Auto avance por mano vacía falló:",e);}
-  },220);
+  scheduleAutoAdvanceIfNoPlayableHand(260);
 }
 function getHandAvailabilityKey(){
   const ids=(privateState?.hand||[]).map(c=>c.id).join("|");
@@ -8611,7 +8647,7 @@ function handleUnitContextAction(action){
 09_RENDER_CORE
 -------------------------------------------------------------------------------
 */
-function render(){if(!publicState)return;syncBoardDimensionsFromState(publicState);if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();renderHud();renderTurnHonorHud();renderRivalHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
+function render(){if(!publicState)return;syncBoardDimensionsFromState(publicState);if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};syncHandAutoClose();scheduleAutoAdvanceIfNoPlayableHand();renderHud();renderTurnHonorHud();renderRivalHonorHud();renderBoard();renderUnitContextMenu();renderHand();renderLog();renderDetail();renderBattleChrome();if(publicState.mode==="tutorial")renderBasicTutorialCoach();if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);const hb=$("handBtn");if(hb)hb.classList.toggle("selected",handOpen);maybeShowPhaseAnnouncement();maybeShowHonorRecharge();maybeShowBattleResult()}function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const logBtn=$("toggleLogBtn");if(logBtn){logBtn.textContent=logCollapsed?"Log ▴":"Log ▾";logBtn.setAttribute("aria-expanded",String(!logCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
 
 function getHonorStateForOwner(owner,{preferPrivate=false}={}){
   if(!publicState||!owner)return{owner:0,honor:0,maxHonor:0,label:"HONOR",hidden:true};
