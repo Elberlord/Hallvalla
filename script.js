@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8";
+const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8A";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9211,6 +9211,12 @@ function ensureLeaderBasesLayer(){
   if(!layer.dataset.boundLeaderBaseClicks){
     layer.dataset.boundLeaderBaseClicks="1";
     layer.addEventListener("pointerdown",ev=>{
+      const proxy=ev.target&&ev.target.closest?ev.target.closest(".leader-cell-proxy"):null;
+      if(proxy){
+        flashBoardSelectedCell(Number(proxy.dataset.x),Number(proxy.dataset.y));
+        ev.stopPropagation();
+        return;
+      }
       const base=ev.target&&ev.target.closest?ev.target.closest(".leader-base"):null;
       const u=base?getUnit(base.dataset.leaderId):null;
       if(u&&startUnitBoardDrag(ev,u,base)){ev.preventDefault();ev.stopPropagation();return;}
@@ -9228,25 +9234,41 @@ function ensureLeaderBasesLayer(){
         if(entry&&u)openStatusGuideModal(entry,u);
         return;
       }
-      const btn=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox"):null;
-      const base=btn&&btn.classList.contains("leader-base")?btn:btn?btn.closest(".leader-base"):null;
-      if(!base)return;
-      const u=getUnit(base.dataset.leaderId);
-      const x=Number(base.dataset.x),y=Number(base.dataset.y);
+      const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.leader-cell-proxy"):null;
+      const base=hit&&hit.classList.contains("leader-base")?hit:hit?hit.closest(".leader-base"):null;
+      const source=base||hit;
+      if(!source)return;
+      const u=getUnit(source.dataset.leaderId);
+      const x=Number(source.dataset.x),y=Number(source.dataset.y);
       if(handleDirectBoardTargetEvent(ev,x,y))return;
       ev.preventDefault();
       ev.stopPropagation();
+      flashBoardSelectedCell(x,y);
       if(u)openUnitContextMenu(u,x,y);
     },true);
     layer.addEventListener("contextmenu",ev=>{
-      const btn=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox"):null;
-      const base=btn&&btn.classList.contains("leader-base")?btn:btn?btn.closest(".leader-base"):null;
-      if(!base)return;
+      const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.leader-cell-proxy"):null;
+      const base=hit&&hit.classList.contains("leader-base")?hit:hit?hit.closest(".leader-base"):null;
+      const source=base||hit;
+      if(!source)return;
       ev.preventDefault();
       ev.stopPropagation();
-      const u=getUnit(base.dataset.leaderId);
-      if(u)openUnitContextMenu(u,Number(base.dataset.x),Number(base.dataset.y));
+      const u=getUnit(source.dataset.leaderId);
+      if(u)openUnitContextMenu(u,Number(source.dataset.x),Number(source.dataset.y));
     },true);
+    if(!layer.dataset.boundLeaderCellProxyResize){
+      layer.dataset.boundLeaderCellProxyResize="1";
+      let proxyResizeFrame=0;
+      const refreshLeaderCellProxies=()=>{
+        if(proxyResizeFrame)cancelAnimationFrame(proxyResizeFrame);
+        proxyResizeFrame=requestAnimationFrame(()=>{
+          proxyResizeFrame=0;
+          syncLeaderCellProxies();
+        });
+      };
+      window.addEventListener("resize",refreshLeaderCellProxies,{passive:true});
+      window.addEventListener("orientationchange",refreshLeaderCellProxies,{passive:true});
+    }
   }
   return layer;
 }
@@ -9256,6 +9278,32 @@ function ensureLeaderBasesLayer(){
 10_UNIT_LEADER_RENDER
 -------------------------------------------------------------------------------
 */
+function syncLeaderCellProxies(){
+  const layer=document.getElementById("leaderBasesLayer");
+  const battlefield=document.querySelector(".battlefield");
+  const grid=$("grid");
+  if(!layer||!battlefield||!grid||!publicState)return;
+  layer.querySelectorAll(".leader-cell-proxy").forEach(el=>el.remove());
+  const battlefieldRect=battlefield.getBoundingClientRect();
+  (publicState.units||[]).filter(u=>u&&u.leader&&u.hp>0).forEach(u=>{
+    const cell=grid.querySelector(`.cell[data-x="${u.x}"][data-y="${u.y}"]`);
+    if(!cell)return;
+    const rect=cell.getBoundingClientRect();
+    if(rect.width<=0||rect.height<=0)return;
+    const proxy=document.createElement("span");
+    proxy.className="leader-cell-proxy";
+    proxy.dataset.leaderId=u.id;
+    proxy.dataset.x=String(u.x);
+    proxy.dataset.y=String(u.y);
+    proxy.setAttribute("aria-hidden","true");
+    proxy.style.left=`${rect.left-battlefieldRect.left}px`;
+    proxy.style.top=`${rect.top-battlefieldRect.top}px`;
+    proxy.style.width=`${rect.width}px`;
+    proxy.style.height=`${rect.height}px`;
+    layer.appendChild(proxy);
+  });
+}
+
 function renderLeaderBases(){
   const layer=ensureLeaderBasesLayer();
   if(!layer||!publicState)return;
@@ -9275,6 +9323,8 @@ function renderLeaderBases(){
     */
     return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
   }).join("");
+  syncLeaderCellProxies();
+  requestAnimationFrame(syncLeaderCellProxies);
 }
 
 function getCardVisualClass(card){
