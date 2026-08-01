@@ -1,5 +1,6 @@
-/* HALLVALLA 7BOARDCTRL6B · HOTFIX WALLACE + FASE 2: consolidación conservadora del inspector DET.
-   Se eliminaron declaraciones DET anuladas; las reglas ganadoras conservan su posición original. */
+/* HALLVALLA 7BOARDCTRL7 · FASE 3: consolidación conservadora de cartas y estadísticas del campo.
+   Se eliminaron declaraciones anuladas de marcos, retratos, estados y emblemas;
+   las reglas ganadoras conservan su posición original. Incluye el hotfix de William Wallace. */
 /*
 ================================================================================
 HALLVALLA STYLES ORGANIZED V2
@@ -573,7 +574,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .hud{position:absolute;z-index:20;width:clamp(170px,14vw,210px);min-width:170px}.top-left{left:10px;top:10px}.top-right{right:10px;top:10px}.hud-shell{position:relative;width:100%;aspect-ratio:1451/725;background:url("assets/ui/HUD_Base_Panel.webp") center/contain no-repeat;filter:drop-shadow(0 10px 18px rgba(0,0,0,.30));transition:filter .16s ease}.hud-header{position:absolute;left:7.8%;right:7.8%;top:12.5%;display:grid;grid-template-columns:1fr .82fr;gap:6px;align-items:center}.hud-name{display:flex;align-items:center;justify-content:flex-start;height:100%;padding-left:10px;font-weight:900;font-family:Georgia,serif;font-size:clamp(12px,.98vw,16px);color:#fff1ca;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud-toggle{appearance:none;border:0;background:transparent;cursor:pointer}.hud-toggle:focus-visible{outline:2px solid #ffe39a;outline-offset:2px;border-radius:10px}.hud-badge{position:relative;aspect-ratio:2172/724;background:url("assets/ui/HUD_Status_Pill.webp") center/contain no-repeat;display:grid;place-items:center;padding:0 8px}.hud-badge span{display:block;font-size:clamp(7px,.64vw,9px);line-height:1;font-weight:900;font-family:Georgia,serif;color:#ffe1a1;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud-grid{position:absolute;left:8.2%;right:8.2%;bottom:14%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;opacity:1;transform:translateY(0);transition:opacity .14s ease,transform .14s ease}.hud-mini{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:34px;padding:2px;border-radius:8px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);text-align:center}.hud-mini .label{display:block;color:#d5c3a2;font-size:clamp(6px,.52vw,7px);line-height:1}.hud-mini strong{display:block;color:#fff;font-size:clamp(9px,.78vw,11px);line-height:1.05;margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.55)}.hud.collapsed{width:clamp(132px,11vw,160px)}.hud.collapsed .hud-grid{opacity:0;transform:translateY(-8px);pointer-events:none}.hud.collapsed .hud-shell{filter:drop-shadow(0 8px 14px rgba(0,0,0,.26))}.hud.collapsed .hud-mini{visibility:hidden}.hud.expanded{width:clamp(220px,18vw,270px)}
 .phase-banner{position:absolute;z-index:22;top:14px;left:50%;transform:translateX(-50%);min-width:210px;padding:8px 14px;border-radius:999px;text-align:center;font-weight:900;font-family:Georgia,serif;letter-spacing:.5px;color:#fff1c4;background:linear-gradient(180deg,rgba(34,22,14,.88),rgba(12,8,6,.74));border:1px solid rgba(255,209,102,.3)}
 .grid-wrap{--arenaH:calc(100vh - 12px);--imgW:calc(var(--arenaH)*1.7779);position:absolute;width:calc(var(--imgW)*0.405);height:calc(var(--arenaH)*0.845);left:50%;top:calc(var(--arenaH)*0.073);transform:translateX(-50%);z-index:5}.grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(var(--hv-board-cols,5),1fr);grid-template-rows:repeat(var(--hv-board-rows,6),1fr);gap:0;background:transparent}.cell{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;overflow:hidden}.cell:hover{background:rgba(255,220,140,.05);border-color:rgba(255,232,170,.10)}.cell.valid,.cell.attackable,.cell.summonable,.cell.move-range-preview,.cell.attack-range-preview,.cell.mixed-range-preview,.cell.acted-range-preview,.cell.enemy-threat-preview,.cell.enemy-acted-threat-preview{background:transparent;box-shadow:none}.cell.valid::after,.cell.attackable::after,.cell.summonable::after,.cell.move-range-preview::after,.cell.attack-range-preview::after,.cell.mixed-range-preview::after,.cell.acted-range-preview::after,.cell.enemy-threat-preview::after,.cell.enemy-acted-threat-preview::after{content:"";position:absolute;inset:3px;border-radius:4px;pointer-events:none}.cell.valid::after,.cell.move-range-preview::after{background:rgba(112,224,138,.12);box-shadow:inset 0 0 0 2px rgba(112,224,138,.78),0 0 8px rgba(112,224,138,.20)}.cell.attackable::after,.cell.attack-range-preview::after,.cell.enemy-threat-preview::after{background:rgba(239,71,111,.14);box-shadow:inset 0 0 0 2px rgba(239,71,111,.88),0 0 11px rgba(239,71,111,.30)}.cell.summonable::after{background:rgba(255,209,102,.13);box-shadow:inset 0 0 0 2px rgba(255,209,102,.82),0 0 10px rgba(255,209,102,.24)}.cell.mixed-range-preview::after{background:rgba(183,91,255,.14);box-shadow:inset 0 0 0 2px rgba(183,91,255,.84),0 0 10px rgba(183,91,255,.26)}.cell.acted-range-preview::after,.cell.enemy-acted-threat-preview::after{background:rgba(73,169,255,.13);box-shadow:inset 0 0 0 2px rgba(73,169,255,.84),0 0 10px rgba(73,169,255,.26)}
-.unit-card{position:relative;z-index:2;width:clamp(44px,84%,78px);height:clamp(44px,84%,78px);border-radius:12px;background:rgba(0,0,0,.18);border:2px solid rgba(244,228,196,.92);box-shadow:0 7px 13px rgba(0,0,0,.44);overflow:hidden;transform:none;user-select:none;display:grid;place-items:center;padding:1px}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.30),0 6px 10px rgba(0,0,0,.42);background:rgba(0,0,0,.12)}.unit-card.unit-key-spearman{width:clamp(48px,88%,84px);height:clamp(48px,88%,84px);border-width:2px;box-shadow:0 9px 16px rgba(0,0,0,.48)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;font-size:13px;background:transparent}.unit-portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.38))}.unit-card.unit-key-spearman .unit-portrait img{object-position:center 22%}.unit-card.leader .unit-portrait{font-size:13px}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
+.unit-card{position:relative;z-index:2;background:rgba(0,0,0,.18);border:2px solid rgba(244,228,196,.92);box-shadow:0 7px 13px rgba(0,0,0,.44);transform:none;user-select:none;display:grid;place-items:center;padding:1px;}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.30),0 6px 10px rgba(0,0,0,.42);background:rgba(0,0,0,.12)}.unit-card.unit-key-spearman{width:clamp(48px,88%,84px);height:clamp(48px,88%,84px);border-width:2px;box-shadow:0 9px 16px rgba(0,0,0,.48)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;background:transparent;}.unit-portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.38))}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
 .side{position:absolute;z-index:18;right:10px;top:102px;width:320px}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}.actions-visual-panel{position:relative;width:100%;height:auto;min-height:0;aspect-ratio:auto;background:none;filter:none}.actions-visual-buttons{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:62%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center}.action-img-btn{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;display:block;width:100%;aspect-ratio:1/1;transition:transform .14s ease,filter .14s ease}.action-img-btn img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}.action-img-btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.06)}.action-img-btn:active{transform:translateY(0) scale(.99)}.action-img-btn:focus-visible{outline:2px solid #ffe39a;outline-offset:4px;border-radius:12px}.action-img-btn.selected img{filter:drop-shadow(0 0 10px rgba(255,212,102,.55)) drop-shadow(0 4px 10px rgba(0,0,0,.35))}
 .hand-drawer{position:absolute;z-index:35;left:50%;transform:translateX(-50%);right:auto;bottom:10px;width:clamp(560px,58vw,860px);max-width:calc(100vw - 340px);padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.97),rgba(10,8,6,.94));border:1px solid rgba(255,209,102,.38);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 24px rgba(255,209,102,.10);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 126px;min-height:132px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.97),rgba(20,13,9,.96));border:1px solid rgba(255,209,102,.34);cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.32)}.hand-card.selected{outline:2px solid var(--gold)}.hand-card.not-playable{opacity:.46;filter:grayscale(.55);border-color:rgba(215,195,162,.18);box-shadow:none}.hand-card.not-playable:hover{opacity:.62}.hand-icon{font-size:22px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
 .inspector{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412);}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
@@ -985,7 +986,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .unit-card.card-rarity-heroic{box-shadow:0 0 0 1px rgba(121,244,201,.44),0 0 12px rgba(121,244,201,.18),0 5px 8px rgba(0,0,0,.38)}
 .unit-card.card-rarity-glorious{box-shadow:0 0 0 1px rgba(255,224,138,.56),0 0 12px rgba(255,199,92,.20),0 5px 8px rgba(0,0,0,.38)}
 .unit-card.card-rarity-epic{box-shadow:0 0 0 1px rgba(189,148,255,.44),0 0 12px rgba(189,148,255,.18),0 5px 8px rgba(0,0,0,.38)}
-.unit-card.card-rarity-mythic{box-shadow:0 0 0 1px rgba(255,123,217,.50),0 0 12px rgba(255,123,217,.18),0 5px 8px rgba(0,0,0,.38)}
+
 .unit-card.card-rarity-demigod{box-shadow:0 0 0 1px rgba(255,247,167,.62),0 0 14px rgba(255,247,167,.24),0 5px 8px rgba(0,0,0,.38)}
 
 
@@ -1020,7 +1021,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* 7AP: zoom/inspect robusto para unidades en aventura y online */
 .unit-card{cursor:zoom-in;touch-action:manipulation;}
-.unit-card::after{content:"";position:absolute;inset:-8px;border-radius:14px;}
+.unit-card::after{inset:-8px;border-radius:14px;}
 .inspect-art{overflow:hidden;border:1px solid rgba(255,209,102,.24);}
 .inspect-art img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));}
 .inspect-art span{font-size:78px;line-height:1;filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));}
@@ -3566,14 +3567,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card,
 .cell > .unit-card.leader,
 .cell > .unit-card.unit-key-spearman{
-  width:calc(100% - 2px) !important;
-  height:calc(100% - 2px) !important;
-  max-width:none !important;
-  max-height:none !important;
+  
+  
+  
+  
   min-width:0 !important;
   min-height:0 !important;
   box-sizing:border-box !important;
-  border-radius:7px !important;
+  
 }
 .cell > .unit-card .unit-portrait,
 .cell > .unit-card.leader .unit-portrait{
@@ -3583,7 +3584,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card .unit-portrait img{
   width:100% !important;
   height:100% !important;
-  object-fit:cover !important;
+  
 }
 @media (max-width:980px){
   .cell > .unit-card,
@@ -3599,7 +3600,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .unit-status-bubbles{
   position:absolute;
   left:50%;
-  top:-10px;
+  
   transform:translateX(-50%);
   display:flex;
   gap:3px;
@@ -3641,7 +3642,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:0 0 0 1px rgba(0,0,0,.35),0 5px 10px rgba(0,0,0,.42),0 0 10px rgba(255,104,124,.25);
 }
 @media(max-width:980px){
-  .unit-status-bubbles{top:-8px;gap:2px;max-width:72px}
+  .unit-status-bubbles{gap:2px;max-width:72px;}
   .unit-status-bubble{font-size:7px;padding:2px 4px;min-width:24px}
 }
 
@@ -3681,7 +3682,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* v7FX: iconos persistentes para estados en tablero */
 .unit-status-bubbles{
-  top:-7px;
+  
   gap:4px;
   max-width:96px;
 }
@@ -3863,7 +3864,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:inset 0 0 0 3px rgba(64,15,88,.92);
 }
 @media(max-width:980px){
-  .unit-status-bubbles{top:-6px;gap:3px;max-width:82px}
+  .unit-status-bubbles{gap:3px;max-width:82px;}
   .unit-status-bubble{width:18px;height:18px;min-width:18px}
   .status-icon{transform:scale(.86)}
 }
@@ -3871,12 +3872,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* v7GD: marco visible para vida + precisión juntos dentro del retrato */
 .cell > .unit-card{
   position:relative !important;
-  overflow:visible !important;
+  
 }
-.cell > .unit-card .unit-portrait{
-  overflow:hidden !important;
-  border-radius:6px !important;
-}
+
 .unit-bottom-frame{
   position:absolute;
   left:2px;
@@ -4277,8 +4275,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:none !important;
   background:transparent !important;
   box-shadow:none !important;
-  border-radius:0 !important;
-  overflow:visible !important;
+  
+  
   padding:0 !important;
 }
 .unit-card{
@@ -4293,7 +4291,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   z-index:4;
   pointer-events:none;
   background:var(--frame-image) center/100% 100% no-repeat;
-  filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 8px var(--frame-glow)) var(--frame-filter);
+  
 }
 .unit-card .unit-portrait{
   position:absolute !important;
@@ -4301,18 +4299,18 @@ El CSS original se conserva para no romper visuales. El bloque final
   right:15.8% !important;
   top:14.2% !important;
   bottom:26.8% !important;
-  z-index:2;
+  
   border-radius:14px 14px 22px 22px / 10px 10px 18px 18px !important;
   overflow:hidden !important;
-  background:radial-gradient(circle at 50% 18%,rgba(88,71,53,.20),rgba(8,8,8,.76));
-  box-shadow:inset 0 0 0 1px rgba(255,226,174,.08);
+  
+  
 }
 .unit-card .unit-portrait img{
   width:100% !important;
   height:100% !important;
   object-fit:cover !important;
   object-position:center 24% !important;
-  filter:saturate(1.04) contrast(1.02) !important;
+  
 }
 .unit-card.leader .unit-portrait img{object-position:center 18% !important;}
 .unit-card.unit-key-spearman .unit-portrait img{object-position:center 20% !important;}
@@ -4372,7 +4370,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .stat-orb-hp.mid .unit-orb-liquid{background:linear-gradient(180deg,rgba(255,226,176,.95),rgba(235,136,43,.98) 44%,rgba(144,63,7,.98));box-shadow:0 0 8px rgba(255,174,55,.26);}
 .stat-orb-hp.low .unit-orb-liquid{background:linear-gradient(180deg,rgba(255,195,204,.95),rgba(224,46,78,.98) 44%,rgba(103,4,17,.98));box-shadow:0 0 10px rgba(255,61,90,.34);}
-.unit-status-bubbles{z-index:8;top:-6px;}
+.unit-status-bubbles{z-index:8;}
 .unit-card.card-rarity-basic{--frame-glow:rgba(255,205,125,.12);--frame-filter:saturate(1) brightness(1);}
 .unit-card.card-rarity-improved{--frame-glow:rgba(128,210,255,.24);--frame-filter:hue-rotate(10deg) saturate(1.08) brightness(1.02);}
 .unit-card.card-rarity-heroic{--frame-glow:rgba(115,255,187,.24);--frame-filter:hue-rotate(38deg) saturate(1.1) brightness(1.03);}
@@ -4401,17 +4399,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card,
 .cell > .unit-card.leader,
 .cell > .unit-card.unit-key-spearman{
-  aspect-ratio:2 / 3 !important;
-  width:auto !important;
-  height:min(118%, 104px) !important;
-  max-width:76% !important;
-  max-height:122% !important;
-  margin:auto !important;
+  
+  
+  
+  
+  
+  
   transform:translateZ(0) !important;
 }
-.cell > .unit-card .unit-frame-skin{
-  background-size:100% 100% !important;
-}
+
 .cell > .unit-card .unit-portrait{
   left:13.8% !important;
   right:13.8% !important;
@@ -4427,12 +4423,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   top:-11px !important;
 }
 @media(max-width:980px){
-  .cell > .unit-card,
-  .cell > .unit-card.leader,
-  .cell > .unit-card.unit-key-spearman{
-    height:min(122%, 86px) !important;
-    max-width:78% !important;
-  }
+  
   .cell > .unit-card .unit-portrait{
     left:14.2% !important;
     right:14.2% !important;
@@ -4442,40 +4433,19 @@ El CSS original se conserva para no romper visuales. El bloque final
   .unit-status-bubbles{top:-9px !important;}
 }
 @media(max-width:560px){
-  .cell > .unit-card,
-  .cell > .unit-card.leader,
-  .cell > .unit-card.unit-key-spearman{
-    height:min(126%, 74px) !important;
-    max-width:80% !important;
-  }
+  
 }
 
 
 /* v7GP: tablero 5x6 para cartas ornate grandes y menos forzadas */
 .grid{grid-template-columns:repeat(var(--hv-board-cols,5),1fr) !important;grid-template-rows:repeat(var(--hv-board-rows,6),1fr) !important;grid-auto-rows:0 !important;}
-.cell > .unit-card,
-.cell > .unit-card.leader,
-.cell > .unit-card.unit-key-spearman{
-  height:min(124%, 128px) !important;
-  max-width:86% !important;
-  max-height:126% !important;
-}
+
 @media(max-width:980px){
   .grid-wrap{height:calc(100svh * .735);}
-  .cell > .unit-card,
-  .cell > .unit-card.leader,
-  .cell > .unit-card.unit-key-spearman{
-    height:min(126%, 106px) !important;
-    max-width:86% !important;
-  }
+  
 }
 @media(max-width:560px){
-  .cell > .unit-card,
-  .cell > .unit-card.leader,
-  .cell > .unit-card.unit-key-spearman{
-    height:min(128%, 94px) !important;
-    max-width:88% !important;
-  }
+  
 }
 
 /* v7GR: sellos mágicos integrados al marco de la carta */
@@ -10743,16 +10713,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* PATCH 7GQ - doble capa visual para unidades y líderes del tablero
    Capa trasera: sombra recortada del mismo retrato, desplazada hacia abajo.
    Capa frontal: retrato limpio, levantado visualmente dentro del marco. */
-.cell > .unit-card .unit-portrait{
-  overflow:visible !important;
-  background:radial-gradient(circle at 50% 18%,rgba(88,71,53,.20),rgba(8,8,8,.76));
-}
+
 .cell > .unit-card .unit-depth-stack{
-  position:absolute;
-  inset:0;
+  
+  
   z-index:2;
-  pointer-events:none;
-  transform:translateZ(0);
+  
+  
 }
 .cell > .unit-card .unit-depth-stack img{
   position:absolute;
@@ -10771,11 +10738,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   opacity:.58;
   filter:brightness(0) blur(2.2px) drop-shadow(0 12px 10px rgba(0,0,0,.86)) !important;
 }
-.cell > .unit-card .unit-depth-front{
-  z-index:2;
-  transform:translateY(-3%) scale(1.035);
-  filter:saturate(1.08) contrast(1.04) drop-shadow(0 7px 7px rgba(0,0,0,.48)) !important;
-}
+
 .cell > .unit-card.leader .unit-depth-stack img{
   object-position:center 15% !important;
 }
@@ -10793,9 +10756,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     opacity:.52;
     filter:brightness(0) blur(1.8px) drop-shadow(0 9px 8px rgba(0,0,0,.82)) !important;
   }
-  .cell > .unit-card .unit-depth-front{
-    transform:translateY(-2%) scale(1.025);
-  }
+  
 }
 
 /* === Patch 60: DET enemy modal click shield ===
@@ -10994,21 +10955,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 .leader-base:hover .leader-base-token{transform:translateY(-2px)}
 .leader-base:active .leader-base-token{transform:translateY(1px) scale(.98)}
 
-.leader-base .unit-status-bubbles.unit-status-seals{
-  inset:2% -18% 18% -18%;
-  z-index:4;
-}
+
  .leader-base .status-seal-rail{
   top:24%;
   gap:5px;
 }
 .leader-base .status-seal-rail.left{left:2%;transform:translateX(-10%)}
 .leader-base .status-seal-rail.right{right:2%;transform:translateX(10%)}
- .leader-base .unit-status-seal{
-  width:20px;
-  height:20px;
-  min-width:20px;
-}
+ 
 .leader-base .unit-status-seal .status-icon{width:11px;height:11px}
 .leader-base .unit-status-seal .status-icon-bleed{width:10px;height:12px}
 .leader-base .unit-status-seal .status-icon-burn,
@@ -11016,7 +10970,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .leader-base .unit-status-seal .status-icon-buff{border-left-width:6px;border-right-width:6px;border-bottom-width:11px}
 .leader-base .unit-status-seal .status-icon-debuff{border-left-width:6px;border-right-width:6px;border-top-width:11px}
 .leader-base .unit-status-seal-stack{min-width:11px;height:11px;font-size:7px;right:-4px;bottom:-4px}
-.leader-base .unit-status-seal-extra{bottom:7%;height:15px;font-size:7px;z-index:5}
+.leader-base .unit-status-seal-extra{z-index:5;}
 
 @media(max-width:980px){
   .leader-bases-layer{--arenaH:100svh}
@@ -11029,7 +10983,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   .leader-stat-icon{font-size:9px}
   .leader-base .unit-status-bubbles.unit-status-seals{inset:2% -16% 18% -16%}
   .leader-base .status-seal-rail{top:24%;gap:3px}
-  .leader-base .unit-status-seal{width:18px;height:18px;min-width:18px}
+  
   .leader-base .unit-status-seal .status-icon{transform:scale(.92)}
   .leader-base .unit-status-seal-stack{font-size:6px;min-width:9px;height:9px;right:-3px;bottom:-3px}
   .leader-base .unit-status-seal-extra{height:14px;font-size:6px;bottom:6%}
@@ -11077,10 +11031,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .leader-base .unit-status-bubbles{
   z-index:8!important;
 }
-.leader-base .unit-status-seal{
-  position:relative;
-  z-index:9!important;
-}
+
 .leader-base.attackable .leader-base-hitbox,
 .leader-base.valid .leader-base-hitbox,
 .leader-base.summonable .leader-base-hitbox{
@@ -12097,21 +12048,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card,
 .cell > .unit-card.leader,
 .cell > .unit-card.unit-key-spearman{
-  aspect-ratio:2 / 3 !important;
+  
   position:relative !important;
-  overflow:visible !important;
+  
 }
 
 /* 2) El marco visual cubre toda la carta. */
-.cell > .unit-card .unit-frame-skin{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-  background-size:100% 100% !important;
-  z-index:4 !important;
-  pointer-events:none !important;
-}
+
 
 /* 3) El área del retrato ahora tiene el mismo tamaño del marco, no una ventana pequeña. */
 .cell > .unit-card .unit-portrait,
@@ -12160,8 +12103,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   min-height:100% !important;
   max-width:none !important;
   max-height:none !important;
-  object-fit:var(--board-unit-art-fit) !important;
-  object-position:var(--board-unit-art-position) !important;
+  
+  
   transform:none !important;
   display:block !important;
 }
@@ -12171,7 +12114,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 .cell > .unit-card .unit-depth-front{
   z-index:2 !important;
-  filter:saturate(1.05) contrast(1.03) drop-shadow(0 4px 5px rgba(0,0,0,.38)) !important;
+  
 }
 
 /* 7) Los datos de la carta quedan por encima del arte. */
@@ -12700,25 +12643,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 .cell > .unit-card .unit-frame-skin{
-  inset:0 !important;
+  
   width:100% !important;
   height:100% !important;
   background-position:center center !important;
   background-size:100% 100% !important;
 }
 
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card.leader .unit-portrait,
-.cell > .unit-card.unit-key-spearman .unit-portrait,
-.cell > .unit-card .unit-depth-stack{
-  left:14.5% !important;
-  right:14.5% !important;
-  top:13.5% !important;
-  bottom:24.5% !important;
-  width:auto !important;
-  height:auto !important;
-  border-radius:13px 13px 18px 18px / 10px 10px 15px 15px !important;
-}
+
 
 .cell > .unit-card .unit-depth-stack img,
 .cell > .unit-card .unit-depth-front,
@@ -12778,10 +12710,10 @@ El CSS original se conserva para no romper visuales. El bloque final
   .cell > .unit-card.leader .unit-portrait,
   .cell > .unit-card.unit-key-spearman .unit-portrait,
   .cell > .unit-card .unit-depth-stack{
-    left:14.8% !important;
-    right:14.8% !important;
-    top:14.2% !important;
-    bottom:25.2% !important;
+    
+    
+    
+    
     border-radius:12px 12px 17px 17px / 9px 9px 14px 14px !important;
   }
   .cell > .unit-card .unit-stat-orb{font-size:6px !important;}
@@ -12819,16 +12751,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    - Hacer el retrato más grande y mejor centrado.
    - Evitar que el personaje quede chiquito o corrido a un costado.
    ============================================================ */
-.cell > .unit-card .unit-portrait,
-.cell > .unit-card.leader .unit-portrait,
-.cell > .unit-card.unit-key-spearman .unit-portrait,
-.cell > .unit-card .unit-depth-stack{
-  left:10.8% !important;
-  right:10.8% !important;
-  top:10.6% !important;
-  bottom:21.2% !important;
-  border-radius:12px 12px 17px 17px / 9px 9px 14px 14px !important;
-}
+
 
 .cell > .unit-card .unit-depth-front,
 .cell > .unit-card .unit-depth-stack img,
@@ -12846,15 +12769,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 @media(max-width:980px){
-  .cell > .unit-card .unit-portrait,
-  .cell > .unit-card.leader .unit-portrait,
-  .cell > .unit-card.unit-key-spearman .unit-portrait,
-  .cell > .unit-card .unit-depth-stack{
-    left:11.3% !important;
-    right:11.3% !important;
-    top:11.2% !important;
-    bottom:21.8% !important;
-  }
+  
   .cell > .unit-card .unit-depth-front{
     transform:translateX(0%) translateY(-3.5%) scale(1.22) !important;
   }
@@ -12930,7 +12845,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    Capa 2: personaje centrado encima. */
 .cell > .unit-card .unit-portrait{
   overflow:hidden !important;
-  background:#050505 !important;
+  
 }
 
 .cell > .unit-card .unit-portrait-stack{
@@ -12950,7 +12865,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   object-fit:cover !important;
   object-position:center center !important;
   transform:scale(1.08) !important;
-  filter:brightness(.42) saturate(.85) blur(1.2px) !important;
+  
   opacity:.95 !important;
   z-index:1 !important;
   user-select:none !important;
@@ -12988,7 +12903,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   50%{transform:scale(1.024);filter:brightness(1.14);opacity:1}
 }
 .unit-card{overflow:visible!important;background:rgba(0,0,0,.12)}
-.unit-card .unit-portrait{position:relative;z-index:2;width:100%;height:100%;border-radius:10px;overflow:hidden}
+.unit-card .unit-portrait{z-index:2;width:100%;height:100%;}
 .unit-card::before{
   content:"";
   position:absolute;
@@ -13316,18 +13231,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Dejar limpio el interior: sin glow, sin borde brillante */
-.cell > .unit-card,
-.cell > .unit-card.card-rarity-basic,
-.cell > .unit-card.card-rarity-improved,
-.cell > .unit-card.card-rarity-heroic,
-.cell > .unit-card.card-rarity-glorious,
-.cell > .unit-card.card-rarity-epic,
-.cell > .unit-card.card-rarity-mythic,
-.cell > .unit-card.card-rarity-legendary,
-.cell > .unit-card.card-rarity-demigod{
-  background:transparent !important;
-  box-shadow:none !important;
-}
+
 .cell > .unit-card .unit-portrait,
 .cell > .unit-card .unit-portrait-stack{
   box-shadow:none !important;
@@ -13350,24 +13254,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card.card-rarity-demigod{--rarity-neon:rgba(255,247,167,.98);--rarity-neon-soft:rgba(255,247,167,.52);--rarity-neon-strong:rgba(255,247,167,1);}
 
 /* El brillo vive solo en el PNG del marco */
-.cell > .unit-card .unit-frame-skin{
-  z-index:5 !important;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.58)) !important;
-  animation:none !important;
-}
-.cell > .unit-card.card-rarity-basic .unit-frame-skin{
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.58)) !important;
-  animation:none !important;
-}
-.cell > .unit-card.card-rarity-improved .unit-frame-skin,
-.cell > .unit-card.card-rarity-heroic .unit-frame-skin,
-.cell > .unit-card.card-rarity-glorious .unit-frame-skin,
-.cell > .unit-card.card-rarity-epic .unit-frame-skin,
-.cell > .unit-card.card-rarity-mythic .unit-frame-skin,
-.cell > .unit-card.card-rarity-legendary .unit-frame-skin,
-.cell > .unit-card.card-rarity-demigod .unit-frame-skin{
-  animation:rarityFrameNeonPulse 2.9s ease-in-out infinite !important;
-}
+
+
+
 
 
 /* === 7GZR: SOLO el marco de rareza brilla en neón === */
@@ -13484,14 +13373,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* El único brillo vive en el PNG del marco de rareza */
 .cell > .unit-card .unit-frame-skin{
-  z-index:6 !important;
-  pointer-events:none !important;
-  box-shadow:none !important;
+  
+  
+  
   animation:none !important;
 }
-.cell > .unit-card.card-rarity-basic .unit-frame-skin{
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.58)) !important;
-}
+
 .cell > .unit-card.card-rarity-improved .unit-frame-skin,
 .cell > .unit-card.card-rarity-heroic .unit-frame-skin,
 .cell > .unit-card.card-rarity-glorious .unit-frame-skin,
@@ -13534,14 +13421,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card .unit-frame-skin{
   position:absolute !important;
   inset:0 !important;
-  z-index:4 !important; /* debajo de stats/burbujas, encima del retrato */
+   /* debajo de stats/burbujas, encima del retrato */
   pointer-events:none !important;
   box-shadow:none !important;
   mix-blend-mode:normal !important;
 }
-.cell > .unit-card .unit-ornate-ui{
-  z-index:9 !important;
-}
+
 .cell > .unit-card .unit-status-bubbles,
 .cell > .unit-card .unit-status-seals,
 .cell > .unit-card .status-seal-rail,
@@ -19071,11 +18956,8 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   border:none !important;
   box-shadow:none !important;
 }
-.unit-card .stat-badge-atk-wrap .attack-emblem-badge{
-  transform:scale(1.08) translateY(.2px) !important;
-  transform-origin:center center !important;
-}
-.unit-card .stat-badge-atk-wrap .attack-emblem-medallion b{font-size:9.2px !important;}
+
+
 .leader-base-stats .leader-atk-badge-wrap{
   position:relative !important;
   min-width:31px !important;
@@ -19088,16 +18970,14 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   display:block !important;
   flex:0 0 31px !important;
 }
-.leader-base-stats .leader-atk-badge-wrap .attack-emblem-badge{
-  transform:scale(1.06) !important;
-}
+
 .leader-base-stats .leader-atk-badge-wrap .attack-emblem-medallion{
   width:45% !important;
   height:45% !important;
   right:-4% !important;
   bottom:-3% !important;
 }
-.leader-base-stats .leader-atk-badge-wrap .attack-emblem-medallion b{font-size:9.6px !important;}
+
 @media(max-width:980px){
   .unit-card .stat-badge-atk-wrap .attack-emblem-badge{transform:scale(1.07) !important;}
   .unit-card .stat-badge-atk-wrap .attack-emblem-medallion b{font-size:8.6px !important;}
@@ -19198,11 +19078,8 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   border:none !important;
   box-shadow:none !important;
 }
-.unit-card .stat-badge-guard-wrap .guard-emblem-badge{
-  transform:scale(1.08) translateY(.2px) !important;
-  transform-origin:center center !important;
-}
-.unit-card .stat-badge-guard-wrap .guard-emblem-medallion b{font-size:9.2px !important;}
+
+
 .leader-base-stats .leader-guard-badge-wrap{
   position:relative !important;
   min-width:31px !important;
@@ -19215,16 +19092,14 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   display:block !important;
   flex:0 0 31px !important;
 }
-.leader-base-stats .leader-guard-badge-wrap .guard-emblem-badge{
-  transform:scale(1.06) !important;
-}
+
 .leader-base-stats .leader-guard-badge-wrap .guard-emblem-medallion{
   width:45% !important;
   height:45% !important;
   right:-4% !important;
   bottom:-3% !important;
 }
-.leader-base-stats .leader-guard-badge-wrap .guard-emblem-medallion b{font-size:9.6px !important;}
+
 @media(max-width:980px){
   .unit-card .stat-badge-guard-wrap .guard-emblem-badge{transform:scale(1.07) !important;}
   .unit-card .stat-badge-guard-wrap .guard-emblem-medallion b{font-size:8.6px !important;}
@@ -19377,72 +19252,48 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   --field-guard-unit-scale:1; --field-guard-unit-x:0px; --field-guard-unit-y:0px; --field-guard-unit-bubble:1;
   --field-guard-leader-scale:1; --field-guard-leader-x:0px; --field-guard-leader-y:0px; --field-guard-leader-bubble:1;
 }
-.unit-card .unit-hp-heart-anchor{
-  transform:translate(var(--field-hp-unit-x),var(--field-hp-unit-y)) scale(var(--field-hp-unit-scale)) !important;
-  transform-origin:center center !important;
-}
+
 .unit-card .hp-heart-number{
   transform:scale(var(--field-hp-unit-bubble)) !important;
   transform-box:fill-box;
   transform-origin:center center;
 }
-.leader-heart-slot .hp-heart-badge-leader{
-  transform:translate(var(--field-hp-leader-x),var(--field-hp-leader-y)) scale(var(--field-hp-leader-scale)) !important;
-  transform-origin:center center !important;
-}
+
 .leader-heart-slot .hp-heart-number{
   transform:scale(var(--field-hp-leader-bubble)) !important;
   transform-box:fill-box;
   transform-origin:center center;
 }
 .unit-card .stat-badge-atk-wrap .attack-emblem-badge{
-  transform:translate(var(--field-atk-unit-x),var(--field-atk-unit-y)) scale(var(--field-atk-unit-scale)) !important;
+  
   transform-origin:center center !important;
 }
-.unit-card .stat-badge-atk-wrap .attack-emblem-medallion{
-  transform:scale(var(--field-atk-unit-bubble)) !important;
-  transform-origin:center center !important;
-}
+
 .leader-base-stats .leader-atk-badge-wrap .attack-emblem-badge{
-  transform:translate(var(--field-atk-leader-x),var(--field-atk-leader-y)) scale(var(--field-atk-leader-scale)) !important;
+  
   transform-origin:center center !important;
 }
-.leader-base-stats .leader-atk-badge-wrap .attack-emblem-medallion{
-  transform:scale(var(--field-atk-leader-bubble)) !important;
-  transform-origin:center center !important;
-}
+
 .unit-card .stat-badge-guard-wrap .guard-emblem-badge{
-  transform:translate(var(--field-guard-unit-x),var(--field-guard-unit-y)) scale(var(--field-guard-unit-scale)) !important;
+  
   transform-origin:center center !important;
 }
-.unit-card .stat-badge-guard-wrap .guard-emblem-medallion{
-  transform:scale(var(--field-guard-unit-bubble)) !important;
-  transform-origin:center center !important;
-}
+
 .leader-base-stats .leader-guard-badge-wrap .guard-emblem-badge{
-  transform:translate(var(--field-guard-leader-x),var(--field-guard-leader-y)) scale(var(--field-guard-leader-scale)) !important;
+  
   transform-origin:center center !important;
 }
-.leader-base-stats .leader-guard-badge-wrap .guard-emblem-medallion{
-  transform:scale(var(--field-guard-leader-bubble)) !important;
-  transform-origin:center center !important;
-}
+
 .unit-card .stat-badge-precision-wrap .field-stat-emblem-precision{
-  transform:translate(var(--field-precision-x),var(--field-precision-y)) scale(var(--field-precision-scale)) !important;
+  
   transform-origin:center center !important;
 }
 .unit-card .stat-badge-eva-wrap .field-stat-emblem-eva{
-  transform:translate(var(--field-evasion-x),var(--field-evasion-y)) scale(var(--field-evasion-scale)) !important;
+  
   transform-origin:center center !important;
 }
-.unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion{
-  transform:scale(var(--field-precision-bubble)) !important;
-  transform-origin:center center !important;
-}
-.unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{
-  transform:scale(var(--field-evasion-bubble)) !important;
-  transform-origin:center center !important;
-}
+
+
 .field-stat-badges-tuner-grid{grid-template-columns:repeat(3,minmax(210px,1fr)) !important;max-height:min(68vh,860px);overflow:auto;padding-right:4px}
 .field-stat-badges-tuner{width:min(1120px,calc(100vw - 20px)) !important;}
 @media(max-width:980px){.field-stat-badges-tuner-grid{grid-template-columns:repeat(2,minmax(220px,1fr)) !important;}}
@@ -19554,10 +19405,10 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   z-index:18 !important;
 }
 /* cleaner default sizing so the tuner feels like HP tuning */
-.unit-card .stat-badge-atk-wrap .attack-emblem-badge{transform:translate(var(--field-atk-unit-x),var(--field-atk-unit-y)) scale(calc(var(--field-atk-unit-scale) * 1.22)) !important;}
+
 .unit-card .stat-badge-guard-wrap .guard-emblem-badge{transform:translate(var(--field-guard-unit-x),var(--field-guard-unit-y)) scale(calc(var(--field-guard-unit-scale) * 1.22)) !important;}
-.unit-card .stat-badge-precision-wrap .field-stat-emblem-precision{transform:translate(var(--field-precision-x),var(--field-precision-y)) scale(calc(var(--field-precision-scale) * 1.22)) !important;}
-.unit-card .stat-badge-eva-wrap .field-stat-emblem-eva{transform:translate(var(--field-evasion-x),var(--field-evasion-y)) scale(calc(var(--field-evasion-scale) * 1.22)) !important;}
+
+
 .leader-base-stats .leader-atk-badge-wrap .attack-emblem-badge{transform:translate(var(--field-atk-leader-x),var(--field-atk-leader-y)) scale(calc(var(--field-atk-leader-scale) * 1.16)) !important;}
 .leader-base-stats .leader-guard-badge-wrap .guard-emblem-badge{transform:translate(var(--field-guard-leader-x),var(--field-guard-leader-y)) scale(calc(var(--field-guard-leader-scale) * 1.16)) !important;}
 
@@ -19573,19 +19424,19 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 .unit-card .stat-badge-guard-wrap .guard-emblem-medallion,
 .unit-card .stat-badge-precision-wrap .field-stat-emblem-medallion,
 .unit-card .stat-badge-eva-wrap .field-stat-emblem-medallion{
-  width:45% !important;
-  height:45% !important;
+  
+  
   right:-4% !important;
   bottom:-3% !important;
   z-index:25 !important;
-  border-radius:999px !important;
+  
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
-  background:radial-gradient(circle at 35% 35%,rgba(83,58,33,.98) 0%,rgba(34,20,10,.98) 65%,rgba(18,9,4,.98) 100%) !important;
-  border:1.1px solid rgba(237,196,92,.88) !important;
-  box-shadow:0 0 0 1px rgba(103,66,16,.56) inset,0 1px 4px rgba(0,0,0,.35) !important;
-  overflow:visible !important;
+  
+  
+  
+  
 }
 .unit-card .stat-badge-atk-wrap .attack-emblem-medallion b,
 .unit-card .stat-badge-guard-wrap .guard-emblem-medallion b,
