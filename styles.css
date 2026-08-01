@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8B · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8C · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20317,7 +20317,7 @@ body.field-board-tuning .board-cell-coordinate{display:block;}
 
 
 /* ============================================================
-   7BOARDCTRL8B · HITBOX DE LA CELDA LÓGICA DEL LÍDER
+   7BOARDCTRL8C · HITBOX DE LA CELDA LÓGICA DEL LÍDER
    Unifica la celda real y la representación flotante del líder.
    ============================================================ */
 .leader-cell-proxy{
