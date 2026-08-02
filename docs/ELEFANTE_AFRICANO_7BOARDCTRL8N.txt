@@ -1,0 +1,20 @@
+HALLVALLA 7BOARDCTRL8N — ELEFANTE AFRICANO
+
+Integrado en:
+- Base de cartas Bestias.
+- Paquete de Bestias del evento.
+- Mazo del Señor de las Bestias.
+- Catálogo DET y detalles ampliados.
+- IA y combate local.
+- Assets de carta y tablero.
+
+Datos:
+Legendaria · Costo 5 · HP 20 · AT 16 · GD 8 · DX 3 · AGI 2 · MOV 1 · RG 1.
+
+Arremetida Colosal:
+- Movimiento frontal exacto de 1 celda hacia el mismo objetivo y ataque inmediato.
+- +6 AT (AT 22), -4 AGI al objetivo principal.
+- Empuje principal hasta 2 celdas.
+- Laterales: AT 10, -4 AGI, sin contraataque y empuje 1.
+- Pisoteo 8 directo si el objetivo central no puede retroceder.
+- Avance sobre la celda liberada y -2 GD hasta el próximo turno.

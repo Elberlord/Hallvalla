@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_FIELD_CARD_GRID_EDITOR_FINAL_VALUES_7BOARDCTRL8K";
+const HALLVALLA_BUILD_VERSION="v8_AFRICAN_ELEPHANT_7BOARDCTRL8N";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -182,6 +182,7 @@ const CARD_PORTRAITS={
   hector:"assets/cards/special/hector_troy.webp",
   beowulf:"assets/cards/special/beowulf.webp",
   musashi:"assets/cards/special/miyamoto_musashi.webp",
+  hattoriHanzo:"assets/cards/special/hattori_hanzo.webp",
   khalid:"assets/cards/special/khalid_ibn_al_walid.webp",
   attila:"assets/cards/special/attila.webp",
   genghis:"assets/cards/special/genghis_khan.webp",
@@ -201,6 +202,7 @@ const CARD_PORTRAITS={
   africanLion:"assets/cards/beasts/african_lion.webp",
   bengalTiger:"assets/cards/beasts/bengal_tiger.webp",
   whiteRhino:"assets/cards/beasts/white_rhino.webp",
+  africanElephant:"assets/cards/beasts/african_elephant.webp",
   ironJawTrap:"assets/cards/beasts/cepo_de_hierro.webp",
   coveredPit:"assets/cards/beasts/foso_cubierto.webp",
   huntingNet:"assets/cards/beasts/red_de_caza.webp",
@@ -212,7 +214,9 @@ const CARD_PORTRAITS={
 /* Retratos exclusivos del tablero.
    No dependen de la carpeta ni del arte usado por las cartas de mano. */
 const BOARD_PORTRAITS={
-  wallace:"assets/board_cards/special/wallace.webp"
+  wallace:"assets/board_cards/special/wallace.webp",
+  hattori_hanzo:"assets/board_cards/special/hattori_hanzo.webp",
+  african_elephant:"assets/board_cards/beasts/african_elephant.webp"
 };
 
 /*
@@ -1533,7 +1537,8 @@ const BEAST_CARD_TEMPLATES=[
   {key:"inland_taipan",name:"Taipán del Interior",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.inlandTaipan,rarity:"Gloriosa",cost:3,hp:1,atk:1,guard:0,dex:4,agi:5,mov:3,range:1,beast:true,text:"Mordida Letal: si hace daño real, aplica Veneno 1/2/4 durante 3 turnos. Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere. El líder sí se envenena, pero no muere automáticamente por doble mordida de la misma unidad."},
   {key:"african_lion",name:"León Africano",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.africanLion,rarity:"Mítica",cost:4,hp:8,atk:5,guard:2,dex:3,agi:4,mov:3,range:1,beast:true,text:"Rugido del Rey: EFFECT revela unidades enemigas con Sigilo en radio 3. Presencia Alfa: las unidades enemigas en rango 1 alrededor del León reciben Miedo (-3 AT hasta su próximo turno). Liderazgo de Manada: unidades aliadas en rango 2 alrededor del León obtienen +2 AT."},
   {key:"bengal_tiger",name:"Tigre de Bengala",type:"unit",icon:"🐅",portrait:CARD_PORTRAITS.bengalTiger,rarity:"Mítica",cost:4,hp:7,atk:6,guard:1,dex:4,agi:5,mov:3,range:1,beast:true,stealth:true,text:"Sigilo de Depredador: no puede ser objetivo directo mientras esté oculto. Salto de Emboscada: desde Sigilo puede atacar con +2 alcance de movimiento. Desgarro Salvaje: 50% de Sangrado al hacer daño real; 100% si atacó desde Sigilo."},
-  {key:"white_rhino",name:"Rinoceronte Blanco",type:"unit",icon:"🦏",portrait:CARD_PORTRAITS.whiteRhino,rarity:"Legendaria",cost:5,hp:12,atk:14,guard:10,dex:1,agi:1,mov:2,range:1,beast:true,text:"Embestida Devastadora: si se mueve 2 casillas en línea recta antes de atacar, usa AT 22. Después de atacar con Embestida, impacte o no, el Rinoceronte Blanco queda Aturdido hasta su próximo turno: no puede moverse, defenderse ni atacar; su Guardia no cambia y su Destreza/Agilidad se reducen a la mitad. Bestia Torpe: no se beneficia de bonos de DX ni AGI."}
+  {key:"white_rhino",name:"Rinoceronte Blanco",type:"unit",icon:"🦏",portrait:CARD_PORTRAITS.whiteRhino,rarity:"Legendaria",cost:5,hp:12,atk:14,guard:10,dex:1,agi:1,mov:2,range:1,beast:true,text:"Embestida Devastadora: si se mueve 2 casillas en línea recta antes de atacar, usa AT 22. Después de atacar con Embestida, impacte o no, el Rinoceronte Blanco queda Aturdido hasta su próximo turno: no puede moverse, defenderse ni atacar; su Guardia no cambia y su Destreza/Agilidad se reducen a la mitad. Bestia Torpe: no se beneficia de bonos de DX ni AGI."},
+  {key:"african_elephant",name:"Elefante Africano",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.africanElephant,rarity:"Legendaria",cost:5,hp:20,atk:16,guard:8,dex:3,agi:2,mov:1,range:1,beast:true,text:"Arremetida Colosal: cuando se mueve exactamente 1 celda en línea recta hacia el frente, directamente hacia una unidad enemiga, y la ataca inmediatamente, obtiene +6 AT (AT 22) y el objetivo pierde 4 AGI durante ese combate. Si impacta, empuja al objetivo principal hasta 2 celdas. Los enemigos situados a ambos lados del objetivo reciben un impacto de AT 10, pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda. Si el objetivo principal no puede retroceder, recibe 8 de daño directo de Pisoteo. Después de cargar, el Elefante pierde 2 GD hasta el inicio de su próximo turno."}
 ];
 const BEAST_TRAP_CARD_TEMPLATES=[
   {key:"iron_jaw_trap",name:"Cepo de Hierro",type:"trap",icon:"🪤",portrait:CARD_PORTRAITS.ironJawTrap,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"iron_jaw",text:"Coloca un cepo en una celda libre. La primera unidad enemiga que entre recibe 1 daño directo y pierde 1 MOV en su próximo turno."},
@@ -1576,11 +1581,11 @@ function getStarterBasicCardByKey(key){
   return pool.find(c=>c&&c.key===key&&isStarterBasicCard(c))||null;
 }
 
-const BEASTMASTER_DECK_KEYS=["honey_badger","honey_badger","porcupine","porcupine","wild_boar","wild_boar","black_raven","black_raven","constrictor_snake","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","iron_jaw_trap","iron_jaw_trap","covered_pit","covered_pit","hunting_net","hunting_net","blood_bait","tracking_smoke","rope_cage"];
+const BEASTMASTER_DECK_KEYS=["honey_badger","honey_badger","porcupine","porcupine","wild_boar","wild_boar","black_raven","black_raven","constrictor_snake","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","african_elephant","iron_jaw_trap","iron_jaw_trap","covered_pit","covered_pit","hunting_net","hunting_net","blood_bait","tracking_smoke","rope_cage"];
 function getBeastmasterDeckTemplates(){const pool=[...CARD_TEMPLATES];return BEASTMASTER_DECK_KEYS.map(k=>pool.find(c=>c.key===k)).filter(Boolean).slice(0,DECK_RULES.deckSize);}
 const BEAST_EVENT_REWARD_KEYS=[
   {key:"honey_badger",w:14},{key:"porcupine",w:12},{key:"wild_boar",w:12},{key:"black_raven",w:10},{key:"constrictor_snake",w:10},
-  {key:"african_buffalo",w:9},{key:"peregrine_falcon",w:8},{key:"inland_taipan",w:8},{key:"african_lion",w:6},{key:"bengal_tiger",w:6},{key:"white_rhino",w:5}
+  {key:"african_buffalo",w:9},{key:"peregrine_falcon",w:8},{key:"inland_taipan",w:8},{key:"african_lion",w:6},{key:"bengal_tiger",w:6},{key:"white_rhino",w:5},{key:"african_elephant",w:4}
 ];
 const BEASTMASTER_EVENT_BATTLE={
   id:"beastmaster_annual_hunt",
@@ -1618,7 +1623,7 @@ function getRandomBeastEventCard(){
   return card?{...card}:null;
 }
 
-function isBeastUnit(u){return !!u&&!u.leader&&(u.beast===true||["honey_badger","porcupine","wild_boar","black_raven","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino"].includes(String(u.key||"")));}
+function isBeastUnit(u){return !!u&&!u.leader&&(u.beast===true||["honey_badger","porcupine","wild_boar","black_raven","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","african_elephant"].includes(String(u.key||"")));}
 function isStealthedUnit(u){return !!u&&!u.leader&&(u.stealth===true||u.hidden===true)&&!u.revealed;}
 function canTargetStealth(source,target){return !isStealthedUnit(target)||source?.trap==="reveal_stealth"||source?.revealStealth;}
 function revealUnit(u,reason="revelada"){return isStealthedUnit(u)?{...u,revealed:true,stealth:false,text:`${u.text||""} Revelada por ${reason}.`.trim()}:u;}
@@ -1733,6 +1738,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:4,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Muralla de Troya: aura pasiva. Cuenta cuántas unidades enemigas están en rango 1 de Héctor. Cada una de esas unidades pierde 1 AT por cada enemigo en ese mismo rango. Ejemplo: si hay 3 enemigos en rango 1 de Héctor, cada uno pierde 3 AT."},
   {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:4,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
   {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:4,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,rarity:"Legendaria",special:true,text:"Shirahadori: cuando un rival declara un ataque contra Musashi, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate. Honesakiki: cuando está a punto de morir, ataca a todas las unidades enemigas en rango 1 con 200% de Ataque."},
+  {key:"hattori_hanzo",name:"Hattori Hanzō",type:"unit",icon:"👹",portrait:CARD_PORTRAITS.hattoriHanzo,cost:4,hp:5,atk:5,guard:4,dex:9,agi:6,mov:1,range:1,rarity:"Legendaria",special:true,stealth:true,ninjutsu:true,text:"Contrato del Shogun: al ingresar obtiene Sigilo. La primera unidad enemiga que ataque desde Sigilo se convierte automáticamente en el objetivo del contrato: Hanzō obtiene +3 Destreza y +2 Ataque; el objetivo recibe -3 Guardia durante ese combate y no puede contraatacar. Si lo destruye, conserva Sigilo; si sobrevive, Hanzō queda revelado. No se activa contra líderes y termina después del intento."},
   {key:"khalid_ibn_al_walid",name:"Khalid ibn al-Walid",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.khalid,cost:4,hp:6,atk:6,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Espada Invicta: cuando Khalid destruye una unidad enemiga con un ataque, puede seguir atacando mientras tenga objetivos válidos. Cada ataque adicional aplica -2 AT acumulativo hasta el próximo turno de Khalid. Cada nuevo ataque sigue las reglas normales de combate."},
   {key:"attila_hun",name:"Atila el Huno",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.attila,cost:4,hp:6,atk:6,guard:4,dex:7,agi:6,mov:3,range:1,rarity:"Legendaria",special:true,text:"Azote de Imperios: mientras Atila esté en campo, los enemigos con la mitad o menos de su Vida máxima reciben -3 Guardia y -3 Agilidad."},
   {key:"genghis_khan",name:"Gengis Kan",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.genghis,cost:4,hp:7,atk:5,guard:5,dex:7,agi:5,mov:2,range:1,rarity:"Legendaria",special:true,text:"Horda de la Estepa: cuando Gengis Kan destruye una unidad enemiga, todas las unidades enemigas en radio 2 alrededor de él pierden 2 Guardia y 1 MOV hasta su próximo turno."},
@@ -1757,6 +1763,7 @@ const LANCE_UNIT_KEYS=new Set([
   "lu_bu",
   "alexander_magnus",
   "achilles",
+  "hattori_hanzo",
   "samurai_naginata"
 ]);
 function isLanceUnitCardLike(card){
@@ -1791,7 +1798,7 @@ function applyLanceWeaponRule(card){
   // Samurai de Naginata y Aquiles muestran únicamente sus habilidades propias en la carta.
   // Las reglas universales de Lanza siguen activas en combate y se explican
   // desde el icono de arma / reglas globales del modal DET.
-  if(key==="samurai_naginata"||key==="achilles"){
+  if(key==="samurai_naginata"||key==="achilles"||key==="hattori_hanzo"){
     const cleanNaginataText=value=>String(value||"")
       .replace(/\s*Regla de lanza(?:\s*[—:-][^.]*)?:?\s*la primera vez por turno que una unidad enemiga de cuerpo a cuerpo con RG 1 la ataca desde una casilla adyacente, ataca antes que ella\.\s*No funciona contra unidades con RG 2 o más ni contra Ataque en Picada del halcón\.?/gi,"")
       .replace(/\s*Anticaballería:\s*cuando combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate\.?/gi,"")
@@ -1841,6 +1848,7 @@ const WEAPON_CLASS_BY_KEY={
   samurai_naginata:"spear",
   geisha_encubierta:"sword",
   hattori_shinobi:"sword",
+  hattori_hanzo:"spear",
   saboteador_iga:"sword",
   berserker_de_oso:"axe",
   ulfhednar:"axe",
@@ -1859,6 +1867,7 @@ const WEAPON_CLASS_BY_KEY={
   african_lion:"beast",
   bengal_tiger:"beast",
   white_rhino:"beast",
+  african_elephant:"beast",
   richard_lionheart:"sword",
   saladin:"cavalry",
   shaka_zulu:"spear",
@@ -2023,7 +2032,9 @@ const UNIT_LORE_DATA={
   khalid_ibn_al_walid:{short:"Comandante árabe del desierto, conocido como espada invicta.",legend:"Khalid ibn al-Walid fue uno de los comandantes más célebres del primer Islam. Su apodo, la Espada de Allah, resume una vida de campañas y maniobras decisivas. En HallValla encadena ataques cuando derriba enemigos, pero cada nuevo golpe exige más esfuerzo."},
   leonidas:{short:"Rey espartano de la última línea, escudo levantado cuando todos retroceden.",legend:"Leónidas quedó unido a la imagen de la resistencia en un paso estrecho. Su leyenda no habla de retirada, sino de posición, sacrificio y muro humano. En HallValla protege a las unidades básicas y puede arrastrar a su asesino con él."},
   miyamoto_musashi:{short:"Espadachín japonés de técnica pura, duelo y paciencia letal.",legend:"Miyamoto Musashi es recordado como maestro del duelo y autor de una filosofía de combate basada en ritmo, distancia y decisión. En HallValla castiga el cuerpo a cuerpo con contraataques precisos."},
+  hattori_hanzo:{short:"Samurái de Iga convertido por Occidente en la imagen definitiva del shinobi legendario.",legend:"Hattori Hanzō Masanari fue un guerrero y servidor de Tokugawa ligado a la tradición de Iga. La cultura popular amplificó esa conexión hasta volverlo el ninja más reconocible de Japón. En HallValla une ambas identidades: entra oculto y convierte automáticamente a la primera unidad que ataque en el objetivo de una emboscada perfecta con su yari."},
   white_rhino:{short:"Bestia enorme, carga frontal y fuerza que no entiende de sutileza.",legend:"El Rinoceronte Blanco no necesita leyenda humana: su mito está en la masa, el cuerno y la embestida. En HallValla es una pieza de impacto, capaz de romper una línea si entra en línea recta."},
+  african_elephant:{short:"La mayor masa terrestre del mazo Bestias: resistencia extrema, colmillos y una carga capaz de deshacer formaciones.",legend:"El Elefante Africano está construido desde su realidad física: varias toneladas de masa, dos colmillos de marfil, inteligencia corporal y resistencia para combatir incluso contra otros elefantes. En HallValla no es solo un tanque; es una montaña en movimiento que avanza de frente, empuja la línea enemiga y castiga a quienes no tienen espacio para retroceder."},
   el_cid:{short:"Campeador castellano, honor de acero y temple contra rivales más fuertes.",legend:"El Cid Campeador vive entre historia y cantar épico. Su figura representa resistencia, nombre ganado y batalla cuesta arriba. En HallValla mejora cuando enfrenta a enemigos con mayor Ataque."},
   spartacus:{short:"Gladiador rebelde, símbolo de ruptura contra cadenas y élites.",legend:"Espartaco fue convertido por la historia en emblema de rebelión. Su leyenda es la de quien pelea desde abajo contra fuerzas superiores. En HallValla inspira a las unidades básicas a golpear mejor contra cartas especiales."},
   hannibal_barca:{short:"Estratega cartaginés, experto en encerrar al enemigo donde ya no puede respirar.",legend:"Hannibal Barca es uno de los grandes cerebros militares de la antigüedad. Su nombre evoca trampas, marchas imposibles y batallas ganadas antes del choque. En HallValla castiga al enemigo cuando queda mal posicionado junto a tus tropas."},
@@ -2442,6 +2453,10 @@ function clearTurnTempStatsForOwnerUnit(u,turnKey){
     moved:false,
     movedSpaces:0,
     lastMoveStraightDistance:0,
+    lastMoveDistance:0,
+    lastMoveDx:0,
+    lastMoveDy:0,
+    lastMoveTurnKey:"",
     acted:false,
     buffAtk:0,
     tempMovDebuff:0,
@@ -3092,7 +3107,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"")}
-function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -3343,6 +3358,14 @@ function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcan
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedTurnKey&&u.summonedTurnKey===state.turnKey);}
 function effectiveMov(u){const bonus=getLeaderBonus(u);const summonBonus=isSkiparSummonMoveActive(u)?1:0;return u?.leader?0:Math.max(0,(u?.mov||0)+(u?.permMov||0)+summonBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
+function isAfricanElephantChargeReady(u,target){
+  if(!u||!target||u.key!=="african_elephant")return false;
+  if(Number(u.lastMoveDistance||0)!==1||u.lastMoveTurnKey!==publicState?.turnKey)return false;
+  if(dist(u,target)!==1)return false;
+  const dx=Math.sign((target.x||0)-(u.x||0));
+  const dy=Math.sign((target.y||0)-(u.y||0));
+  return (dx!==0||dy!==0)&&dx===Number(u.lastMoveDx||0)&&dy===Number(u.lastMoveDy||0);
+}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxTurnGuard(u){
   if(!u)return 0;
@@ -3451,6 +3474,14 @@ function getCombatMods(attacker,defender){
   const defenderUsesEvasion=!defender.leader;
   const attackerUsesEvasion=!attacker.leader;
 
+  if(isHanzoContractAttack(attacker,defender)){
+    mods.attackerDex+=3;
+    mods.attackerAtk+=2;
+    mods.defenderGuard-=3;
+    mods.hanzoContract=true;
+    mods.noCounter=true;
+    mods.notes.push(`${attacker.name} activa Contrato del Shogun: +3 DX, +2 AT, ${defender.name} -3 Guardia y sin contraataque.`);
+  }
   const khalidPenalty=getKhalidAttackPenalty(attacker);
   if(khalidPenalty>0)mods.notes.push(`${attacker.name} -${khalidPenalty} AT por Espada Invicta.`);
   if(isMulanBackstabAttack(attacker,defender)){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Ataque por la espalda.`);}
@@ -3470,6 +3501,7 @@ function getCombatMods(attacker,defender){
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
   if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
   if(melee&&isWhiteRhinoChargeReady(attacker)){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
+  if(melee&&isAfricanElephantChargeReady(attacker,defender)){mods.attackerAtk+=6;mods.defenderAgi-=4;mods.elephantCharge=true;mods.notes.push(`${attacker.name} usa Arremetida Colosal: +6 AT (AT 22) y ${defender.name} -4 AGI para evadir.`);}
   if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
   if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
@@ -3586,7 +3618,16 @@ async function resolveSkiparWarLoot(attacker,targetOwner){
 
 
 function isNinjutsuUnit(u){
-  return !!u&&["geisha_encubierta","hattori_shinobi","saboteador_iga"].includes(String(u.key||""));
+  return !!u&&["geisha_encubierta","hattori_shinobi","hattori_hanzo","saboteador_iga"].includes(String(u.key||""));
+}
+function isHanzoContractAttack(attacker,defender){
+  return !!(attacker&&defender&&attacker.key==="hattori_hanzo"&&!attacker.hanzoContractConsumed&&!defender.leader&&defender.owner!==attacker.owner&&isAttackFromStealth(attacker));
+}
+function resolveHanzoContractAfterAttack(units,attacker,defender,triggered,defenderFell){
+  if(!triggered||!attacker)return{units:units||[],triggered:false,succeeded:false,text:""};
+  const succeeded=!!defenderFell;
+  const out=(units||[]).map(u=>u.id===attacker.id?{...u,hanzoContractPending:false,hanzoContractConsumed:true,hanzoContractTargetId:"",hanzoContractTargetName:"",stealth:succeeded,revealed:!succeeded,hidden:false}:u);
+  return {units:out,triggered:true,succeeded,text:succeeded?` Contrato del Shogun cumplido: ${attacker.name} elimina a ${defender?.name||"su primer objetivo"} y conserva Sigilo.`:` Contrato del Shogun fallido: ${defender?.name||"el primer objetivo"} sobrevive y ${attacker.name} queda revelado.`};
 }
 function isAttackFromStealth(unit){
   return !!unit&&(!!unit.stealth||!!unit.wasStealthedBeforeAttack);
@@ -3594,6 +3635,7 @@ function isAttackFromStealth(unit){
 function shouldKeepStealthAfterAttack(attacker,defender){
   if(!attacker||!isAttackFromStealth(attacker))return false;
   if(attacker.key==="hattori_shinobi"&&defender&&dist(attacker,defender)>1)return true;
+  if(isHanzoContractAttack(attacker,defender))return true;
   return false;
 }
 function clearStealthAfterAttackIfNeeded(units,attackerId,keep=false){
@@ -3869,6 +3911,102 @@ function pushUnitBackIfPossible(units,target,source,steps=1){
   if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return units;
   if((units||[]).some(u=>u.id!==target.id&&u.x===nx&&u.y===ny))return units;
   return (units||[]).map(u=>u.id===target.id?{...u,x:nx,y:ny}:u);
+}
+
+function pushUnitStepwise(units,targetId,dx,dy,maxSteps=1){
+  let out=[...(units||[])],moved=0;
+  for(let step=0;step<Math.max(0,Number(maxSteps||0));step++){
+    const target=out.find(u=>u.id===targetId);
+    if(!target)break;
+    const nx=Number(target.x||0)+dx,ny=Number(target.y||0)+dy;
+    if(nx<0||nx>=COLS||ny<0||ny>=ROWS)break;
+    if(out.some(u=>u.id!==targetId&&u.x===nx&&u.y===ny))break;
+    out=out.map(u=>u.id===targetId?{...u,x:nx,y:ny}:u);
+    moved++;
+  }
+  return {units:out,moved};
+}
+function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
+  if(!mods.elephantCharge||!attacker||!defender)return {units:units||[],triggered:false,text:"",logs:[],sideTargetIds:[]};
+  let out=[...(units||[])];
+  const dx=Math.sign((defender.x||0)-(attacker.x||0));
+  const dy=Math.sign((defender.y||0)-(attacker.y||0));
+  const origin={x:defender.x,y:defender.y};
+  const logs=[];
+  const sideTargetIds=[];
+  const fatalIds=[];
+
+  // La carga deja al Elefante temporalmente más expuesto.
+  out=out.map(u=>u.id===attacker.id?{...u,guard:Math.max(0,Number(u.guard||0)-2)}:u);
+
+  if(hit?.hit){
+    const centralBefore=out.find(u=>u.id===defender.id);
+    if(centralBefore){
+      const pushed=pushUnitStepwise(out,defender.id,dx,dy,2);
+      out=pushed.units;
+      if(pushed.moved>0){
+        logs.push(`${defender.name} es empujado ${pushed.moved} celda${pushed.moved===1?"":"s"}.`);
+      }else{
+        const stompDamage=reduceDamageForHoneyBadger(centralBefore,8);
+        out=out.map(u=>u.id===defender.id?applyDirectHpDamage(u,stompDamage):u);
+        fatalIds.push(defender.id);
+        logs.push(`${defender.name} no puede retroceder y recibe ${stompDamage} de daño directo por Pisoteo.`);
+      }
+    }
+
+    // Impacto lateral: las celdas perpendiculares a la dirección de la carga.
+    const sideVectors=[{x:-dy,y:dx},{x:dy,y:-dx}];
+    for(const vec of sideVectors){
+      const sx=origin.x+vec.x,sy=origin.y+vec.y;
+      const side=out.find(u=>u.owner!==attacker.owner&&u.x===sx&&u.y===sy&&u.hp>0);
+      if(!side)continue;
+      sideTargetIds.push(side.id);
+      const sideMods={defenderAgi:-4};
+      const sideHit=rollHit(attacker,side,sideMods);
+      if(!sideHit.hit){
+        logs.push(`${side.name} evade el impacto lateral (${sideHit.roll}/${sideHit.chance}).`);
+        continue;
+      }
+      const sideDamage=reduceDamageForHoneyBadger(side,10);
+      let sideGuardLoss=0,sideHpLoss=0,warriorBlocked=false;
+      out=out.map(u=>{
+        if(u.id!==side.id)return u;
+        let damaged=applyGuardDamage(u,sideDamage,0,0);
+        const shield=applyWarriorLeaderUnitShield(side,attacker,damaged,out);
+        damaged=shield.unit;warriorBlocked=shield.blocked;
+        sideGuardLoss=Number(damaged.lastGuardLoss||0);sideHpLoss=Number(damaged.lastHpLoss||0);
+        damaged.damagedThisTurn=(sideHpLoss>0)||!!damaged.damagedThisTurn;
+        delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
+        return damaged;
+      });
+      if(sideHpLoss>0&&ownerHasBeastmasterVenom(attacker.owner,out)&&out.some(u=>u.id===side.id)){
+        out=out.map(u=>u.id===side.id?(isPoisonImmuneUnit(u)?clearPoisonStatus(u):applyBeastmasterVenomToTarget(u,attacker,5)):u);
+      }
+      fatalIds.push(side.id);
+      const pushedSide=pushUnitStepwise(out,side.id,dx,dy,1);
+      out=pushedSide.units;
+      logs.push(`${side.name} recibe el impacto lateral de AT 10${sideGuardLoss>0?`, pierde ${sideGuardLoss} GD`:""}${sideHpLoss>0?` y ${sideHpLoss} Vida`:""}${warriorBlocked?"; Muralla del Warrior evita el daño a Vida":""}${pushedSide.moved?" y es empujado 1 celda":""}.`);
+    }
+
+    if(fatalIds.length){
+      for(const fatalId of [...new Set(fatalIds)]){
+        const leonidas=applyLeonidasLastStand(out,fatalId,attacker.id);
+        out=leonidas.units;
+        if(leonidas.triggered)logs.push(`Última Resistencia: Leónidas devuelve 3 Vida a ${attacker.name}${leonidas.saved?", lo derrota y queda con 1 Vida":""}.`);
+      }
+      out=applyLegendaryFatalSaves(out,[...new Set(fatalIds)]).filter(u=>u.hp>0);
+    }
+
+    // El Elefante ocupa la celda original del objetivo si quedó libre, manteniendo el avance frontal.
+    const originFree=!out.some(u=>u.id!==attacker.id&&u.x===origin.x&&u.y===origin.y);
+    if(originFree&&out.some(u=>u.id===attacker.id)){
+      out=out.map(u=>u.id===attacker.id?{...u,x:origin.x,y:origin.y}:u);
+      logs.push(`${attacker.name} avanza sobre la celda liberada.`);
+    }
+  }
+
+  logs.push(`${attacker.name} pierde 2 GD hasta el inicio de su próximo turno.`);
+  return {units:out,triggered:true,text:` Arremetida Colosal: ${logs.join(" ")}`,logs,sideTargetIds};
 }
 
 function applyAttackSideEffects(attacker,defender,units,options={}){
@@ -4463,7 +4601,7 @@ function isFreshSummonedThisTurn(u){return !!(u&&u.summonedTurnKey&&publicState?
 function normalizeFreshSummonsForActionPhase(units,player,turnKey){
   return (units||[]).map(u=>{
     if(!u||u.leader||u.owner!==player||!turnKey||u.summonedTurnKey!==turnKey)return u;
-    return {...u,hallvallaReadyOnSummon:true,acted:false,moved:false,movedSpaces:0,lastMoveStraightDistance:0};
+    return {...u,hallvallaReadyOnSummon:true,acted:false,moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:""};
   });
 }
 function isUnitActionWindow(u){return !!(u&&isMyTurn()&&u.owner===myPlayer&&isActionPhase())}
@@ -5253,6 +5391,25 @@ Desgarro:
 
 Después de embestir:
 • Impacte o no, queda expuesto según la penalización indicada por su carta/código.`,example:"Es un golpe de martillo: muy fuerte, pero necesita línea recta y buen momento."},
+    african_elephant:{short:"Bestia colosal. Su carga frontal golpea el centro, barre los laterales, empuja y puede pisotear a quien no tenga retirada.",formula:`Arremetida Colosal — activación exacta:
+• Debe moverse exactamente 1 celda en línea recta hacia el frente.
+• La celda de movimiento debe acercarlo directamente al mismo enemigo que atacará.
+• Debe atacar inmediatamente después, sin moverse lateralmente, retroceder, cambiar de objetivo ni realizar otra acción.
+
+Objetivo principal:
+• Gana +6 AT durante ese ataque: AT total 22.
+• El objetivo pierde 4 AGI para evadir durante ese combate.
+• Si impacta, es empujado hasta 2 celdas.
+• Si no puede retroceder, recibe 8 de daño directo de Pisoteo.
+
+Frente lateral:
+• Los enemigos situados inmediatamente a ambos lados del objetivo central reciben un impacto independiente de AT 10.
+• También pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda si hay espacio.
+
+Después de cargar:
+• El Elefante avanza sobre la celda liberada cuando queda libre.
+• Pierde 2 GD hasta el inicio de su próximo turno.
+• No queda Aturdido.`,example:"No basta con haberse movido: debe avanzar exactamente de frente hacia el mismo objetivo y atacarlo inmediatamente."},
     richard_lionheart:{short:"Leyenda de soporte. Fortalece la Vida de un aliado adyacente mientras permanezca en campo.",formula:`Condición:
 • Una vez por turno, Richard puede elegir un aliado adyacente.
 
@@ -5850,7 +6007,7 @@ function getStatusEntryIconHtml(entry){
   const label=escapeHtml(entry?.name||entry?.label||"Estado");
   return `<span class="status-icon status-icon-asset status-icon-${escapeHtml(key)}" role="img" aria-label="${label}"><span class="status-icon-bg" aria-hidden="true"></span><img class="status-icon-img" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async"></span>`;
 }
-async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");const summonCostInfo=getCardCostBreakdown(card,myPlayer,units);const paidCostText=getPaidSummonCostText(card,myPlayer,units);let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card,summonCostInfo.effective);await pushLog([`J${myPlayer} invoca ${card.name} y ${paidCostText}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -4 DX y -4 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada por ${summonCostInfo.effective} ${getResourceLabel(myPlayer)}.${summonCostInfo.sabotageStacks>0?` Sabotaje añadió +${summonCostInfo.sabotageStacks}.`:""} Puede actuar este mismo turno.`)}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound(card.key==="fireball"?"attack_fire_magic":"spell_damage",card.key==="fireball"?.86:.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const appliesBurn=card.key==="fireball"&&!target.leader;const appliesSandSlow=card.key==="bolt"&&!target.leader;const sandSlowAmount=Math.max(0,Number(card.slowPermanent||0));const beforeSpellDamage=[...units];units=units.map(u=>{if(u.id!==target.id)return u;let next=resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:(spellDamage>0)||!!u.damagedThisTurn});if(appliesBurn&&next.hp>0)next=applyBurnToUnit(next,card.name,card.burnTurns||2,card.burnDamage||1);if(appliesSandSlow&&next.hp>0)next={...next,mov:Math.max(0,Number(next.mov||0)-sandSlowAmount)};return next;}).filter(u=>u.hp>0);const bloodVictoryResult=applyBloodVictoryForDeaths(beforeSpellDamage,units);units=bloodVictoryResult.units;const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage),statusFxEvent:appliesBurn?makeStatusFxEvent("burn_apply", units.find(u=>u.id===target.id)||target,1):(card.key==="fireball"&&target.leader?makeStatusFxEvent("fire_impact", units.find(u=>u.id===target.id)||target,0):(appliesSandSlow?makeStatusFxEvent("debuff", units.find(u=>u.id===target.id)||target, sandSlowAmount):null))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,tempGuardBuff:(u.tempGuardBuff||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA durante 2 turnos (tu turno actual y el próximo turno rival).`)}else if(card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("trap_trigger",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,warningRuneGuard:effectiveCardValue(card,"guard"),warningRuneCardName:card.name}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"◆",labelText:"RUNA"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} coloca ${card.name} sobre ${target.name}. La próxima vez que sea atacada obtendrá +${effectiveCardValue(card,"guard")} GUARDIA durante ese combate.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint(cardCleanseEnabled(card)?"Elige una unidad aliada herida o con estado curable.":"Elige una unidad aliada herida.");if(!canReceiveHealFromCard(card,target,myPlayer))return setHint(cardCleanseEnabled(card)?"Esa unidad no está herida ni tiene estados curables.":"Esa unidad no está herida.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const canCleanse=cardCleanseEnabled(card);const hadCurableStatus=canCleanse&&hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?(canCleanse?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):{...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);const slowAmount=effectiveCardValue(card,"slow");const agiSlow=Number(card.agiSlow||0);units=units.map(u=>{
+async function playCardOn(x,y,target){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isHandPlayPhase())return setHint("Solo puedes colocar o resolver cartas de mano en Main Phase o Last Phase.");const card=selectedCard;if(!card)return;if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);let units=[...(publicState.units||[])];if(card.type==="unit"){if(!summonZones(myPlayer).includes(`${x},${y}`))return setHint("Casilla inválida para invocación.");const summonCostInfo=getCardCostBreakdown(card,myPlayer,units);const paidCostText=getPaidSummonCostText(card,myPlayer,units);let newUnit=makeUnit(card,x,y);if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};}units.push(newUnit);const lionFearSummon=applyAfricanLionFearAura(units);units=lionFearSummon.units;await updatePublic({units,statusFxEvent:lionFearSummon.statusFxEvent||null,floatFxEvent:lionFearSummon.floatFxEvent||null});await removeCardAndPay(card,summonCostInfo.effective);await pushLog([`J${myPlayer} invoca ${card.name} y ${paidCostText}. Puede moverse, defender o atacar este mismo turno.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -4 DX y -4 Guardia hasta su próximo turno.":""}`,...lionFearSummon.logs].join(" "));setHint(`${card.name} fue invocada por ${summonCostInfo.effective} ${getResourceLabel(myPlayer)}.${summonCostInfo.sabotageStacks>0?` Sabotaje añadió +${summonCostInfo.sabotageStacks}.`:""} Puede actuar este mismo turno.`);if(newUnit.key==="hattori_hanzo")setHint("Hattori Hanzō ingresa con Sigilo. Contrato del Shogun se activará automáticamente contra la primera unidad enemiga que ataque desde Sigilo.");}else if(card.spell==="damage"){if(!target||target.owner===myPlayer||!canDirectlyTarget(card,target))return setHint("Elige un objetivo rival visible. Las unidades con Sigilo no pueden ser objetivo directo.");tryPlaySound(card.key==="fireball"?"attack_fire_magic":"spell_damage",card.key==="fireball"?.86:.72);const spellDamage=reduceDamageForHoneyBadger(target,effectiveCardValue(card,"damage"));const appliesBurn=card.key==="fireball"&&!target.leader;const appliesSandSlow=card.key==="bolt"&&!target.leader;const sandSlowAmount=Math.max(0,Number(card.slowPermanent||0));const beforeSpellDamage=[...units];units=units.map(u=>{if(u.id!==target.id)return u;let next=resolveBlessedArmorTransition(u,{...u,hp:u.hp-spellDamage,damagedThisTurn:(spellDamage>0)||!!u.damagedThisTurn});if(appliesBurn&&next.hp>0)next=applyBurnToUnit(next,card.name,card.burnTurns||2,card.burnDamage||1);if(appliesSandSlow&&next.hp>0)next={...next,mov:Math.max(0,Number(next.mov||0)-sandSlowAmount)};return next;}).filter(u=>u.hp>0);const bloodVictoryResult=applyBloodVictoryForDeaths(beforeSpellDamage,units);units=bloodVictoryResult.units;const actionLog=`J${myPlayer} usa ${card.name}: ${target.name} recibe ${spellDamage} daño${target.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;await updatePublic({units,floatFxEvent:makeFloatFxEvent("damage", units.find(u=>u.id===target.id)||target,spellDamage),statusFxEvent:appliesBurn?makeStatusFxEvent("burn_apply", units.find(u=>u.id===target.id)||target,1):(card.key==="fireball"&&target.leader?makeStatusFxEvent("fire_impact", units.find(u=>u.id===target.id)||target,0):(appliesSandSlow?makeStatusFxEvent("debuff", units.find(u=>u.id===target.id)||target, sandSlowAmount):null))});await removeCardAndPay(card);if(!(await finalizeBattle(units,actionLog)))await pushLog(actionLog)}else if(card.spell==="buff"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,buffAtk:(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"buff"),{iconText:"▲"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"buff")} AT este turno.`)}else if(card.spell==="shield"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("spell_cast",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,tempGuardBuff:(u.tempGuardBuff||0)+effectiveCardValue(card,"guard")}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"🛡"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} gana +${effectiveCardValue(card,"guard")} GUARDIA durante 2 turnos (tu turno actual y el próximo turno rival).`)}else if(card.trap==="guard"){if(!target||target.owner!==myPlayer)return setHint("Elige una unidad aliada.");tryPlaySound("trap_trigger",.66);const bhTrap=resolveBuffHealLegendaryTraps(target,"Guardia/buff",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?{...u,warningRuneGuard:effectiveCardValue(card,"guard"),warningRuneCardName:card.name}:u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("guard_buff", units.find(u=>u.id===target.id)||target,effectiveCardValue(card,"guard"),{iconText:"◆",labelText:"RUNA"})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} coloca ${card.name} sobre ${target.name}. La próxima vez que sea atacada obtendrá +${effectiveCardValue(card,"guard")} GUARDIA durante ese combate.`)}else if(card.spell==="heal"){if(!target||target.owner!==myPlayer)return setHint(cardCleanseEnabled(card)?"Elige una unidad aliada herida o con estado curable.":"Elige una unidad aliada herida.");if(!canReceiveHealFromCard(card,target,myPlayer))return setHint(cardCleanseEnabled(card)?"Esa unidad no está herida ni tiene estados curables.":"Esa unidad no está herida.");tryPlaySound("spell_cast",.66);if(target.noHealTurnKey===publicState.turnKey||target.noHealWhilePoisoned)return setHint(`${target.name} no puede curarse ahora.`);const healAmount=effectiveCardValue(card,"heal");const canCleanse=cardCleanseEnabled(card);const hadCurableStatus=canCleanse&&hasCurableStatus(target);const actualHeal=Math.max(0,Math.min(effectiveMaxHp(target),(target.hp||0)+healAmount)-(target.hp||0));const bhTrap=resolveBuffHealLegendaryTraps(target,"curación",units);units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===target.id?(canCleanse?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):{...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);await updatePublic({units,legendaryTraps:bhTrap.traps,floatFxEvent:bhTrap.floatFxEvent||(bhTrap.cancel?null:makeFloatFxEvent("heal", units.find(u=>u.id===target.id)||target,actualHeal,{iconText:"✚",labelText:hadCurableStatus&&actualHeal<=0?"LIMPIA":""})),statusFxEvent:bhTrap.statusFxEvent||null});await removeCardAndPay(card);await pushLog(bhTrap.cancel?bhTrap.logs.join(" "):`J${myPlayer} usa ${card.name}: ${target.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${hadCurableStatus?" y limpia Sangrado/Veneno normal":""}.`)}else if(card.trap==="beast_cell"){if(target)return setHint("Elige una celda libre para la trampa.");if(getCellBeastTrapAt(x,y))return setHint("Ya hay una trampa de cacería en esa celda.");tryPlaySound("trap_trigger",.68);await updatePublic({beastTraps:[...getBeastTraps(),makeBeastTrap(card,myPlayer,x,y)]});await removeCardAndPay(card);await pushLog(`J${myPlayer} coloca ${card.name} en una celda de cacería.`)}else if(card.trap==="beast_target"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival válida.");const leader=getLeader(myPlayer)||{x:0,y:0};if(dist(leader,target)>3)return setHint("Objetivo fuera de rango 3 del líder.");tryPlaySound("trap_trigger",.70);units=units.map(u=>u.id===target.id?{...u,tempAgiDebuff:(u.tempAgiDebuff||0)+2}:u);await updatePublic({units,floatFxEvent:makeFloatFxEvent("debuff", units.find(u=>u.id===target.id)||target,2,{iconText:"▼"})});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: ${target.name} pierde -2 AGI hasta el final del turno.`)}else if(card.trap==="reveal_stealth"){tryPlaySound("trap_trigger",.70);const rev=revealStealthInRadius(units,myPlayer,{x,y},card.radius||2,card.name);await updatePublic({units:rev.units});await removeCardAndPay(card);await pushLog(`J${myPlayer} usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo en el área.`)}else if(card.trap==="slow"){if(!target||target.owner===myPlayer||target.leader||!canTargetStealth(card,target))return setHint("Elige una invocación rival.");tryPlaySound("trap_trigger",.70);const slowAmount=effectiveCardValue(card,"slow");const agiSlow=Number(card.agiSlow||0);units=units.map(u=>{
         if(u.id!==target.id)return u;
         const current=Number(u.tempMovDebuff||0);
         const next={...u,tempMovDebuff:Math.max(current,slowAmount),tempMovDebuffSource:slowAmount>=current?card.name:(u.tempMovDebuffSource||card.name)};
@@ -5905,7 +6062,7 @@ async function moveUnit(u,x,y){
   const movedNow=dist(u,{x,y});
   const straightMoveNow=isStraightLineDelta(x-u.x,y-u.y)?movedNow:0;
   let trapMove=resolveMovementLegendaryTraps(u,{x,y},publicState.units||[]);
-  let units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x,y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow}:it);
+  let units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x,y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow,lastMoveDistance:movedNow,lastMoveDx:Math.sign(x-u.x),lastMoveDy:Math.sign(y-u.y),lastMoveTurnKey:publicState?.turnKey||""}:it);
   if(mulanExecMove){
     units=units.map(it=>it.id===u.id?{...it,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:it);
   }
@@ -6275,6 +6432,14 @@ async function attackUnit(a,d){
   skiparWarLootText=skiparWarLootResult.text||"";
   const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,d.id):{units,triggered:false,text:""};
   units=saboteadorEscapeResult.units;
+  const elephantPrimaryAliveBeforeCharge=units.some(u=>u.id===d.id&&u.hp>0);
+  const elephantChargeResult=resolveAfricanElephantCharge(units,a,d,hit,mods);
+  units=elephantChargeResult.units;
+  const elephantChargeText=elephantChargeResult.text||"";
+  const elephantChargeKilledPrimary=elephantPrimaryAliveBeforeCharge&&!units.some(u=>u.id===d.id&&u.hp>0);
+  if(elephantChargeKilledPrimary)defenderFell=true;
+  const elephantMasteryKillResult=elephantChargeKilledPrimary?registerLocalUnitMasteryKill(a,d):null;
+  units=applyUnitMasteryRankUpToUnits(units,a,elephantMasteryKillResult);
   const warCryTriggered=shouldTriggerWarCry(a,d,guardLoss,hit.hit);
   if(warCryTriggered)units=applyAxeWarCry(units,a.owner,a.id);
   const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
@@ -6399,10 +6564,12 @@ async function attackUnit(a,d){
   if(khalidChainTriggered&&units.some(u=>u.id===a.id)){
     units=units.map(u=>u.id===a.id?{...u,acted:false,khalidChainReady:true,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
   }
+  const hanzoContractResult=resolveHanzoContractAfterAttack(units,a,d,!!mods.hanzoContract,defenderFell);
+  units=hanzoContractResult.units;
   let attackerAfter=units.find(u=>u.id===a.id),defenderAfter=units.find(u=>u.id===d.id);
   let miyamotoCounterBleedEvent=null;
   const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&isRangedAttack(attackerAfter,defenderAfter);
-  const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&arcaneAdeptRangedCounter;
+  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!defenderAfter.counterUsedTurn&&arcaneAdeptRangedCounter;
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=getCounterDefenseRemainder(a,d,mods);
     const isMiyamotoCounter=false;
@@ -6481,17 +6648,17 @@ async function attackUnit(a,d){
   const genghisDebuffText=genghisDebuffResult.log||"";
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`:"";
   const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
-  const masteryKillText=unitMasteryRankUpText(masteryKillResult);
+  const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
   const yabusameRetreatResult=units.some(u=>u.id===d.id)?applyYabusameRetreatIfPossible(units,d.id):{units,moved:false,text:""};
   units=yabusameRetreatResult.units;
   const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
   units=clearStealthAfterAttackIfNeeded(units,a.id,keepStealthAfterAttack);
   const simoStealthResult=grantSimoStealthAfterKill(units,a,d,hit.hit&&defenderFell);
   units=simoStealthResult.units;
-  const stealthText=attackerWasStealthedBeforeAttack?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`):"";
-  const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${simoStealthResult.text||""}`;
+  const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`):"";
+  const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
@@ -7181,6 +7348,14 @@ async function adventureEnemyTurn(){
     skiparWarLootText=skiparWarLootResult.text||"";
     const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,target.id):{units,triggered:false,text:""};
     units=saboteadorEscapeResult.units;
+    const elephantPrimaryAliveBeforeCharge=units.some(u=>u.id===target.id&&u.hp>0);
+    const elephantChargeResult=resolveAfricanElephantCharge(units,attacker,target,hit,mods);
+    units=elephantChargeResult.units;
+    const elephantChargeText=elephantChargeResult.text||"";
+    const elephantChargeKilledPrimary=elephantPrimaryAliveBeforeCharge&&!units.some(u=>u.id===target.id&&u.hp>0);
+    if(elephantChargeKilledPrimary)defenderFell=true;
+    const elephantMasteryKillResult=elephantChargeKilledPrimary?registerLocalUnitMasteryKill(attacker,target):null;
+    units=applyUnitMasteryRankUpToUnits(units,attacker,elephantMasteryKillResult);
     const warCryTriggered=withAiPublicState(()=>shouldTriggerWarCry(attacker,target,guardLoss,hit.hit));
     if(warCryTriggered)units=applyAxeWarCry(units,attacker.owner,attacker.id);
     const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
@@ -7309,10 +7484,12 @@ async function adventureEnemyTurn(){
     if(khalidChainTriggered&&units.some(u=>u.id===attacker.id)){
       units=units.map(u=>u.id===attacker.id?{...u,acted:false,khalidChainReady:true,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
     }
+    const hanzoContractResult=resolveHanzoContractAfterAttack(units,attacker,target,!!mods.hanzoContract,defenderFell);
+    units=hanzoContractResult.units;
 
     let attackerAfter=units.find(u=>u.id===attacker.id),defenderAfter=units.find(u=>u.id===target.id);
     const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&isRangedAttack(attackerAfter,defenderAfter);
-    const canSpecialCounter=defenderAfter&&attackerAfter&&!defenderAfter.counterUsedTurn&&arcaneAdeptRangedCounter;
+    const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!defenderAfter.counterUsedTurn&&arcaneAdeptRangedCounter;
     if(defenderAfter&&attackerAfter&&canSpecialCounter){
       const counterDefenseRemainder=withAiPublicState(()=>getCounterDefenseRemainder(attacker,target,mods));
       const isMiyamotoCounter=false;
@@ -7424,17 +7601,17 @@ async function adventureEnemyTurn(){
     const genghisDebuffText=genghisDebuffResult.log||"";
     const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${attacker.name} destruyó una unidad enemiga; hará su movimiento extra y elegirá ATK o DEF.`:"";
     const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
-    const masteryKillText=unitMasteryRankUpText(masteryKillResult);
+    const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
     const yabusameRetreatResult=units.some(u=>u.id===target.id)?applyYabusameRetreatIfPossible(units,target.id):{units,moved:false,text:""};
     units=yabusameRetreatResult.units;
     const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
     units=clearStealthAfterAttackIfNeeded(units,attacker.id,keepStealthAfterAttack);
     const simoStealthResult=grantSimoStealthAfterKill(units,attacker,target,hit.hit&&defenderFell);
     units=simoStealthResult.units;
-    const stealthText=attackerWasStealthedBeforeAttack?(keepStealthAfterAttack?` Golpe Silencioso: ${attacker.name} atacó a distancia y mantiene Sigilo.`:` ${attacker.name} pierde Sigilo al declarar el ataque.`):"";
-    const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${simoStealthResult.text||""}`;
+    const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${attacker.name} atacó a distancia y mantiene Sigilo.`:` ${attacker.name} pierde Sigilo al declarar el ataque.`):"";
+    const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
     const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${ninjutsuExtraText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -7952,7 +8129,7 @@ async function adventureEnemyTurn(){
     const movedNow=d(u,best);
     const straightMoveNow=isStraightLineDelta(best.x-u.x,best.y-u.y)?movedNow:0;
     const trapMove=withAiPublicState(()=>resolveMovementLegendaryTraps(u,{x:best.x,y:best.y},units));
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x:best.x,y:best.y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow}:it);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x:best.x,y:best.y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow,lastMoveDistance:movedNow,lastMoveDx:Math.sign(best.x-u.x),lastMoveDy:Math.sign(best.y-u.y),lastMoveTurnKey:publicState?.turnKey||""}:it);
     if(mulanExecMove&&!trapMove.cancel){
       units=units.map(it=>it.id===u.id?{...it,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:it);
     }
@@ -8064,6 +8241,7 @@ async function adventureEnemyTurn(){
     const paidCostText=getPaidSummonCostText(choice.card,2,units);
     let newUnit=makeUnit(choice.card,choice.cell.x,choice.cell.y);
     if(ownerHasUnit(1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};}
+    const hanzoContractLog=newUnit.key==="hattori_hanzo"?" Contrato del Shogun queda preparado para la primera unidad enemiga que ataque desde Sigilo.":"";
     units.push(newUnit);
     const lionFearSummon=withAiPublicState(()=>applyAfricanLionFearAura(units));
     units=lionFearSummon.units;
@@ -8071,7 +8249,7 @@ async function adventureEnemyTurn(){
     if(lionFearSummon.floatFxEvent)pendingAiFloatFxEvent=lionFearSummon.floatFxEvent;
     honor-=summonCostInfo.effective;
     removeCard(choice.card);
-    logs.push([`Rival invoca ${choice.card.name} en ${choice.cell.x+1},${choice.cell.y+1} y ${paidCostText}.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -4 DX y -4 Guardia.":""}`,...lionFearSummon.logs].join(" "));
+    logs.push([`Rival invoca ${choice.card.name} en ${choice.cell.x+1},${choice.cell.y+1} y ${paidCostText}.${newUnit.yiSunDebuffed?" Bloqueo Naval: entra con -4 DX y -4 Guardia.":""}${hanzoContractLog}`,...lionFearSummon.logs].join(" "));
     return true;
   };
 
@@ -9123,6 +9301,7 @@ function getUnitStatusEntries(u){
   const entries=[];
   const add=(label,name,desc,kind="neutral",icon="generic")=>entries.push({label,name,desc,kind,icon});
   const n=v=>Number(v||0);
+  if(u.key==="hattori_hanzo"&&!u.hanzoContractConsumed)add(`Contrato`,`Contrato preparado`,`La primera unidad enemiga que Hattori Hanzō ataque desde Sigilo recibirá automáticamente el Contrato del Shogun: +3 DX y +2 AT para Hanzō, -3 Guardia para el objetivo y sin contraataque. No se activa contra líderes.` ,"buff dex-buff","control");
   if(n(u.tempMovDebuff)>0)add(`-${n(u.tempMovDebuff)} MOV`,`Movimiento reducido`,`Movimiento reducido hasta el inicio de su próximo turno.${u.tempMovDebuffSource?` Origen: ${u.tempMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
   if(getGenghisMovDebuff(u)>0)add(`-${getGenghisMovDebuff(u)} MOV`,`Horda de la Estepa`,`Movimiento reducido por Gengis Kan hasta su próximo turno.${u.genghisMovDebuffSource?` Origen: ${u.genghisMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
   if(getHannibalMovDebuff(u)>0)add(`-${getHannibalMovDebuff(u)} MOV`,`Trampa de Cannas`,`Movimiento reducido por Hannibal Barca hasta su próximo turno.${u.hannibalMovDebuffSource?` Origen: ${u.hannibalMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
@@ -13711,6 +13890,7 @@ const CODE_TRUTH_EFFECTS_7HAI={
   african_lion:{trigger:["EFFECT: Rugido del Rey.","Auras pasivas mientras está vivo."],does:["EFFECT revela Sigilo enemigo en radio 3.","Enemigos en rango 1 reciben Miedo: -3 AT hasta su próximo turno.","Aliados en rango 2 reciben +2 AT."],doesNot:["El Rugido no daña.","Las auras dependen de rango y de que el León siga vivo."],example:"El León transforma el centro del tablero en territorio peligroso."},
   bengal_tiger:{trigger:["Inicia con Sigilo.","Desde Sigilo puede atacar con +2 alcance de movimiento.","Desgarro requiere daño real a HP."],does:["Mientras está oculto no puede ser objetivo directo.","Al atacar desde Sigilo reduce -3 AGI del defensor durante ese combate.","Si hay una Bestia aliada adyacente al defensor, el defensor recibe -2 AGI adicional.","Al hacer daño real aplica Sangrado: 50%, o 100% si atacó desde Sigilo."],doesNot:["Si se revela, pierde parte de la protección y del bonus de emboscada."],example:"Es asesino de entrada: sigilo, salto, presión de AGI y posible Sangrado."},
   white_rhino:{trigger:["Debe moverse 2 casillas en línea recta antes de atacar."],does:["Usa Embestida Devastadora: AT 22.","Después de atacar con Embestida, impacte o falle, queda Aturdido hasta su próximo turno.","Aturdido: no puede moverse, defenderse ni atacar; su Guardia no cambia y su DX/AGI se reducen a la mitad."],doesNot:["Bestia Torpe: no se beneficia de bonos de DX ni AGI."],example:"Es un martillo de una línea recta, pero queda expuesto después."},
+  african_elephant:{trigger:["Debe moverse exactamente 1 celda en línea recta hacia el frente, directamente hacia el mismo enemigo que atacará.","Debe atacar inmediatamente después del movimiento."],does:["Obtiene +6 AT durante ese ataque: AT 22.","El objetivo principal pierde 4 AGI para evadir y, si es impactado, es empujado hasta 2 celdas.","Los enemigos situados a ambos lados del objetivo central reciben AT 10, pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda.","Si el objetivo principal no puede retroceder, recibe 8 daño directo de Pisoteo.","El Elefante avanza a la celda liberada y pierde 2 GD hasta su próximo turno."],doesNot:["No se activa por movimiento lateral o hacia atrás.","No se activa si comienza adyacente y ataca sin moverse.","No se activa si ataca a un enemigo distinto o realiza otra acción entre movimiento y ataque.","No queda Aturdido después de cargar."],example:"Elefante → celda vacía → enemigo. Avanza a la celda vacía y ataca inmediatamente al enemigo frontal."},
   richard_lionheart:{concise:true,trigger:[],does:["Una vez por turno, elige un aliado adyacente. Gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo. Puede elegir nuevamente a la misma unidad en turnos posteriores."],doesNot:[],example:""},
   saladin:{trigger:["EFFECT una vez por turno.","Debe haber una casilla libre adyacente y no controlar ya una Caballería Arquera de Saladino."],does:["Invoca una Caballería Arquera de Saladino en una casilla adyacente válida."],doesNot:["No puede invocar si ya controlas ese token o no hay espacio."],example:"Presiona con token, no con daño directo inmediato."},
   saladin_archer_cavalry:{trigger:["Unidad token convocada por Saladino."],does:["Cuenta como Caballería y arquera para reglas de clase/rango.","Recibe la regla global de arco: +1 RG base si aplica desde el sistema."],doesNot:["No tiene EFFECT propio fuera de ser token de presión."],example:"Su valor está en movilidad, rango y ocupación del tablero."},
@@ -13730,6 +13910,7 @@ const CODE_TRUTH_EFFECTS_7HAI={
   el_cid:{concise:true,trigger:[],does:["Cuando es atacado por una unidad con más AT, gana +4 DX y +4 Guardia durante ese combate."],doesNot:[],example:""},
   spartacus:{concise:true,trigger:[],does:["Mientras esté en campo, tus unidades básicas ganan +5 AT cuando atacan cartas especiales."],doesNot:[],example:""},
   sun_tzu:{concise:true,trigger:[],does:["Una vez por turno, elige un aliado. Gana +4 DX y +4 Guardia hasta el final de su próximo turno."],doesNot:[],example:""},
+  hattori_hanzo:{trigger:["Ingresa con Sigilo.","Se activa automáticamente contra la primera unidad enemiga que ataque desde Sigilo."],does:["Durante ese combate gana +3 DX y +2 AT.","El objetivo recibe -3 Guardia y no puede contraatacar.","Si destruye al objetivo, conserva Sigilo; si el objetivo sobrevive, Hanzō queda revelado."],doesNot:["No requiere elegir ni marcar un objetivo previamente.","No se activa contra líderes ni cuando Hanzō ya fue revelado.","El contrato termina después del intento, incluso si el ataque falla."],example:"Hanzō decide cuándo revelar su emboscada: el primer enemigo no líder al que ataque desde Sigilo recibe el contrato automáticamente."},
   hector_troy:{trigger:["Aura pasiva en rango 1."],does:["Cuenta las unidades enemigas en rango 1 de Héctor.","Cada una pierde 1 AT por cada enemigo en ese rango.","También puede aportar Guardia a aliados por reglas del código si corresponde."],doesNot:["No afecta enemigos fuera de rango 1."],example:"Tres enemigos junto a Héctor: cada uno pierde 3 AT."},
   beowulf:{trigger:["Ataca a una unidad con mayor Vida máxima que él."],does:["Obtiene +3 AT durante ese combate.","Si derrota a esa unidad, recupera 2 Vida."],doesNot:["No activa contra objetivos de igual o menor Vida máxima."],example:"Especialista en cazar monstruos grandes."},
   miyamoto_musashi:{concise:true,trigger:[],does:["Shirahadori: cuando es objetivo de un ataque, gana +2 DX por cada rival dentro de su rango durante ese combate. Honesakiki: al estar a punto de morir, ataca a todas las unidades enemigas en rango 1 con 200% de AT."],doesNot:[],example:""},
