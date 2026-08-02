@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Organized - Controles para todo 7BOARDCTRL8N</title>
+<title>HallValla v8 Organized - Controles para todo 7BOARDCTRL8O</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8N">
-<meta name="hallvalla-build" content="v8_AFRICAN_ELEPHANT_7BOARDCTRL8N">
+<meta name="hallvalla-version" content="7BOARDCTRL8O">
+<meta name="hallvalla-build" content="v8_PRINCIPAL_UNIT_7BOARDCTRL8O">
 <meta name="hallvalla-build-name" content="Hattori Hanzō · Primer objetivo atacado">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8N"/>
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8O"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -496,7 +496,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <div>
         <div class="adventure-progress">Colección / Mazo</div>
         <h2 class="adventure-story-title">Forja de mazos</h2>
-        <p class="deckbuilder-sub">Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 30 cartas.</p>
+        <p class="deckbuilder-sub">Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 30 cartas. Marca ★ en una unidad del mazo para convertirla en tu Personaje Principal.</p>
       </div>
       <div class="deckbuilder-status">
         <b id="deckCountText">0/30</b>
@@ -537,6 +537,15 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       </section>
       <section class="deckbuilder-current">
         <h3>Mazo actual</h3>
+        <div id="deckPrincipalSelector" class="deck-principal-selector">
+          <div id="deckPrincipalArt" class="deck-principal-art" aria-hidden="true"><span>★</span></div>
+          <div class="deck-principal-copy">
+            <span>PERSONAJE PRINCIPAL</span>
+            <strong id="deckPrincipalName">Sin seleccionar</strong>
+            <small id="deckPrincipalNote">Marca la estrella de cualquier unidad incluida en el mazo.</small>
+          </div>
+          <button id="clearDeckPrincipalBtn" class="deck-principal-clear hidden" type="button">Quitar</button>
+        </div>
         <div id="currentDeckList" class="current-deck-list"></div>
       </section>
     </div>
@@ -885,6 +894,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="script.js?v=7BOARDCTRL8N"></script>
+<script type="module" src="script.js?v=7BOARDCTRL8O"></script>
 </body>
 </html>

@@ -1,0 +1,54 @@
+HALLVALLA 7BOARDCTRL8O — SISTEMA DE PERSONAJE PRINCIPAL
+========================================================
+
+1. DESBLOQUEO DEL JUGADOR
+- El jugador desbloquea la selección de Personaje Principal al completar el mapa 1.1.
+- Antes de ese momento no puede abrir la Forja de mazos ni seleccionar un principal.
+- La selección se guarda junto con el mazo actual mediante la clave local hallvalla_principal_unit_v1.
+
+2. SELECCIÓN DEL JUGADOR
+- En la Forja de mazos, cada carta de Unidad incluida en el mazo muestra un botón de estrella (★).
+- Solo se puede seleccionar una Unidad que realmente forme parte del mazo actual.
+- No se permite seleccionar Magias ni Trampas.
+- El coste, la rareza y el tipo de unidad no limitan la selección.
+- Al retirar del mazo la última copia de la unidad elegida, la selección se elimina automáticamente.
+
+3. INICIO DEL DUELO
+- Una copia de la unidad elegida se retira del mazo antes de barajar y robar.
+- La mano inicial continúa teniendo 4 cartas.
+- El Personaje Principal aparece gratuitamente en la casilla central de la fila situada delante del líder.
+- No consume Honor ni Mana y no cuenta como una invocación pagada del turno.
+- Después de comenzar puede moverse, defender, atacar y usar sus efectos como cualquier unidad normal.
+- Las propiedades de ingreso existentes se respetan: Sigilo, Ninjutsu, Bloqueo Naval de Yi Sun-sin y Miedo del León Africano.
+
+4. PERSONAJE PRINCIPAL DE LA IA
+La IA empieza a utilizar esta mecánica desde el jefe final del mapa 1. La elección prioriza la utilidad para el mazo por encima de la suma bruta de estadísticas.
+
+- Mapa 1, jefe final: Richard Corazón de León.
+- Mapa 2, batallas 1 y 2: Richard Corazón de León.
+- Mapa 2, batalla 3: Simo Häyhä.
+- Mapa 3, batallas 1 a 3: Simo Häyhä.
+- Mapa 4, batallas 1 a 4: Simo Häyhä.
+- Mapa 4, batalla opcional contra Aquiles: Aquiles.
+- Mapa 5, batallas 1 a 4: Simo Häyhä.
+- Mapa 5, jefe: Atila el Huno.
+- Mapa 6, batallas 1 a 3: Atila el Huno.
+- Mapa 6, batallas 4, 5 y 6: Leónidas.
+- Evento Señor de las Bestias: Elefante Africano.
+
+Si una unidad asignada no existe realmente en el mazo generado, la IA usa una valoración de utilidad como respaldo para elegir la mejor Unidad disponible.
+
+5. INTERFAZ Y PRESENTACIÓN
+- La carta principal queda marcada con una estrella dorada en la Forja.
+- La unidad desplegada tiene un distintivo dorado sobre la carta del campo.
+- La introducción del combate informa qué Personaje Principal utilizará la IA.
+- El registro del duelo informa los dos principales convocados al inicio.
+
+6. HATTORI HANZŌ
+- El nombre breve de la carta se mantiene como Hattori Hanzō.
+- CONÓCEME y DETALLES muestran el nombre histórico completo: Hattori Hanzō Masanari.
+- El texto diferencia al segundo Hanzō, samurái de Tokugawa vinculado con Iga, de la imagen posterior del asesino ninja perfecto.
+
+7. ALCANCE
+- Esta implementación se aplica a Aventura/PvE.
+- El PvP y su futura arquitectura Firebase no fueron modificados.

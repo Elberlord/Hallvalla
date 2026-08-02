@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8N · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8O · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20468,3 +20468,59 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 
 /* 7BOARDCTRL8K · RELOJ SEGÚN MODO
    PvP: Turno + J1 + J2. PvE/Aventura: únicamente el reloj de turno. */
+
+
+/* --------------------------------------------------------------------------
+   7BOARDCTRL8O · Personaje Principal
+   -------------------------------------------------------------------------- */
+.deck-principal-selector{
+  display:grid;
+  grid-template-columns:64px minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  margin:0 0 12px;
+  padding:10px;
+  border:1px solid rgba(226,189,92,.58);
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(76,53,15,.86),rgba(16,20,31,.96));
+  box-shadow:inset 0 0 22px rgba(255,195,59,.08),0 8px 18px rgba(0,0,0,.22);
+}
+.deck-principal-art{
+  width:60px;height:60px;border-radius:10px;overflow:hidden;
+  display:grid;place-items:center;
+  border:2px solid rgba(255,211,94,.8);
+  background:rgba(0,0,0,.45);color:#ffd66f;font-size:28px;
+}
+.deck-principal-art img{width:100%;height:100%;object-fit:cover;display:block;}
+.deck-principal-copy{min-width:0;display:flex;flex-direction:column;gap:2px;}
+.deck-principal-copy>span{font-size:10px;letter-spacing:.16em;color:#e9c96f;font-weight:900;}
+.deck-principal-copy strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff2bf;font-size:15px;}
+.deck-principal-copy small{color:#c8cbd3;line-height:1.25;font-size:11px;}
+.deck-principal-clear{
+  border:1px solid rgba(255,214,111,.45);border-radius:8px;padding:7px 9px;
+  background:rgba(21,18,15,.76);color:#f2d68b;font-weight:800;cursor:pointer;
+}
+.deck-principal-clear:disabled{opacity:.45;cursor:default;}
+.deck-mini-principal{
+  position:absolute;left:3px;bottom:21px;top:auto;z-index:8;width:20px;height:20px;
+  display:grid;place-items:center;border-radius:50%;
+  border:1px solid rgba(255,226,139,.66);background:rgba(15,18,27,.88);
+  color:#b9bdc8;font-size:12px;line-height:1;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.45);
+}
+.deck-mini-principal:hover,.deck-mini-principal.selected{color:#ffe174;background:rgba(89,60,8,.96);border-color:#ffe174;transform:scale(1.06);}
+.deck-mini-card.is-principal{outline:2px solid #f6ce62;outline-offset:1px;box-shadow:0 0 18px rgba(246,206,98,.45);}
+.unit-card.principal-unit{box-shadow:0 0 0 2px rgba(255,217,92,.78),0 0 18px rgba(255,188,42,.52),var(--unit-card-shadow,0 6px 14px rgba(0,0,0,.45));}
+.unit-principal-badge{
+  position:absolute;z-index:30;top:-7px;left:50%;transform:translateX(-50%);
+  min-width:22px;height:22px;padding:0 4px;border-radius:999px;
+  display:grid;place-items:center;
+  background:linear-gradient(#ffe487,#a56c08);border:1px solid #fff0ae;
+  color:#281700;font-size:13px;font-weight:1000;line-height:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.58),0 0 10px rgba(255,211,81,.5);
+}
+@media(max-width:760px){
+  .deck-principal-selector{grid-template-columns:52px minmax(0,1fr);}
+  .deck-principal-art{width:50px;height:50px;}
+  .deck-principal-clear{grid-column:1/-1;width:100%;}
+}

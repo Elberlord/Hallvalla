@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_AFRICAN_ELEPHANT_7BOARDCTRL8N";
+const HALLVALLA_BUILD_VERSION="v8_PRINCIPAL_UNIT_7BOARDCTRL8O";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1287,6 +1287,7 @@ function saveGameSettings(){try{localStorage.setItem(GAME_SETTINGS_KEY,JSON.stri
 const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_player_collection",
   "hallvalla_current_deck",
+  "hallvalla_principal_unit_v1",
   "hallvalla_pending_packs",
   "hallvalla_adventure_progress"
 ];
@@ -2032,7 +2033,7 @@ const UNIT_LORE_DATA={
   khalid_ibn_al_walid:{short:"Comandante árabe del desierto, conocido como espada invicta.",legend:"Khalid ibn al-Walid fue uno de los comandantes más célebres del primer Islam. Su apodo, la Espada de Allah, resume una vida de campañas y maniobras decisivas. En HallValla encadena ataques cuando derriba enemigos, pero cada nuevo golpe exige más esfuerzo."},
   leonidas:{short:"Rey espartano de la última línea, escudo levantado cuando todos retroceden.",legend:"Leónidas quedó unido a la imagen de la resistencia en un paso estrecho. Su leyenda no habla de retirada, sino de posición, sacrificio y muro humano. En HallValla protege a las unidades básicas y puede arrastrar a su asesino con él."},
   miyamoto_musashi:{short:"Espadachín japonés de técnica pura, duelo y paciencia letal.",legend:"Miyamoto Musashi es recordado como maestro del duelo y autor de una filosofía de combate basada en ritmo, distancia y decisión. En HallValla castiga el cuerpo a cuerpo con contraataques precisos."},
-  hattori_hanzo:{short:"Samurái de Iga convertido por Occidente en la imagen definitiva del shinobi legendario.",legend:"Hattori Hanzō Masanari fue un guerrero y servidor de Tokugawa ligado a la tradición de Iga. La cultura popular amplificó esa conexión hasta volverlo el ninja más reconocible de Japón. En HallValla une ambas identidades: entra oculto y convierte automáticamente a la primera unidad que ataque en el objetivo de una emboscada perfecta con su yari."},
+  hattori_hanzo:{short:"Hattori Hanzō Masanari, segundo portador del nombre Hanzō: samurái de Tokugawa ligado a la tradición shinobi de Iga.",legend:"Hattori Hanzō Masanari fue el segundo portador del nombre hereditario Hanzō y sirvió a Tokugawa Ieyasu como samurái y comandante. Su familia procedía de Iga y probablemente conoció métodos shinobi, pero la imagen del asesino ninja perfecto fue construida y amplificada por relatos posteriores, cine y videojuegos. El primer Hanzō, Hattori Yasunaga, es el miembro de la familia más claramente asociado con la actividad shinobi histórica. HallValla conserva la leyenda jugable, pero revela al hombre real detrás del mito."},
   white_rhino:{short:"Bestia enorme, carga frontal y fuerza que no entiende de sutileza.",legend:"El Rinoceronte Blanco no necesita leyenda humana: su mito está en la masa, el cuerno y la embestida. En HallValla es una pieza de impacto, capaz de romper una línea si entra en línea recta."},
   african_elephant:{short:"La mayor masa terrestre del mazo Bestias: resistencia extrema, colmillos y una carga capaz de deshacer formaciones.",legend:"El Elefante Africano está construido desde su realidad física: varias toneladas de masa, dos colmillos de marfil, inteligencia corporal y resistencia para combatir incluso contra otros elefantes. En HallValla no es solo un tanque; es una montaña en movimiento que avanza de frente, empuja la línea enemiga y castiga a quienes no tienen espacio para retroceder."},
   el_cid:{short:"Campeador castellano, honor de acero y temple contra rivales más fuertes.",legend:"El Cid Campeador vive entre historia y cantar épico. Su figura representa resistencia, nombre ganado y batalla cuesta arriba. En HallValla mejora cuando enfrenta a enemigos con mayor Ataque."},
@@ -2086,6 +2087,10 @@ function getUnitLoreData(entity){
     legend:effect?`${name} no tiene una leyenda extendida escrita todavía. En juego se define por este efecto: ${effect}`:`${name} todavía no tiene una leyenda extendida escrita. Su identidad se puede completar cuando revisemos su arte y rol.`
   };
 }
+function getEntityFullDisplayName(entity){
+  if(entity?.key==="hattori_hanzo")return "Hattori Hanzō Masanari";
+  return entity?.name||"Unidad";
+}
 function loreSummaryHtml(entity){
   if(!entity||entity.spell||entity.trap)return "";
   const lore=getUnitLoreData(entity);
@@ -2122,7 +2127,7 @@ function openUnitLoreModal(entity){
   if(portraitEl){
     portraitEl.innerHTML=portrait?`<img src="${escapeHtml(portrait)}" alt="${escapeHtml(entity.name||"Unidad")}">`:`<span>${escapeHtml(entity.icon||"✦")}</span>`;
   }
-  $("unitLoreName").textContent=entity.name||"Unidad";
+  $("unitLoreName").textContent=getEntityFullDisplayName(entity);
   $("unitLoreShort").textContent=lore.short||"Unidad de HallValla.";
   $("unitLoreLegend").textContent=lore.legend||"Esta unidad todavía no tiene una leyenda extendida escrita.";
   applyRarityClassToElement(modal,entity);
@@ -2946,12 +2951,70 @@ const ADVENTURE_CHAPTER_5_1={id:"chapter5_1",number:"5.1",mapBackground:"assets/
 
 const ADVENTURE_CHAPTER_6_1={id:"chapter6_1",number:"6.1",mapBackground:"assets/story/adventure_6_1/6_1_5_la_corona_de_ceniza.webp",title:"La Corona de Ceniza",desc:"Después de vencer a Atila el Huno, el enemigo cambia de estilo. Ya no viene una horda aplastando la puerta: ahora viene una guerra más sucia, con emboscadas, traiciones, presión táctica y comandantes que castigan cada mala posición.",introTitle:"6.1 La Corona de Ceniza",introText:"Después de vencer a Atila el Huno, el enemigo cambia de estilo. Ya no viene una horda aplastando la puerta. Ahora viene una guerra más sucia: emboscadas, traiciones, presión táctica y comandantes que atacan desde dentro del reino.\n\nLa victoria contra la horda dejó caminos quemados, fortalezas cansadas y generales demasiado seguros de haber sobrevivido a lo peor. Ese exceso de confianza abre la siguiente herida.\n\nLos estandartes enemigos ya no marchan al frente. Aparecen detrás de los muros, entre mensajeros falsos, guardias comprados y rutas que parecían seguras. Cada mala posición se convierte en una trampa. Cada avance sin cuidado, en una sentencia.\n\nHannibal Barca no llega como un monstruo de fuerza bruta. Llega como una mente de guerra. Si Atila fue el martillo, Hannibal es la mano que mueve el tablero antes de que te des cuenta.",requiresChapter:"chapter5_1",packType:"improved_magic_trap",battles:[
 {id:"chapter6_1_battle1",num:1,title:"Guardia Traidor",enemyName:"Guardia Traidor",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"La primera señal no viene del campo enemigo, sino desde dentro de tus propias líneas. Un guardia abre una puerta secundaria, apaga las antorchas correctas y convierte una defensa segura en una emboscada.\n\nEsta batalla enseña el nuevo tono del capítulo: nadie ataca de frente si puede clavarte una daga desde el costado.",xp:115,gold:125,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","attila_hun"],aiLevel:22,aiDrawBonus:2,aiHonorBonus:6,aiStyle:"Traición y castigo posicional",desc:"Primera batalla del mapa 6.1. El enemigo usa presión táctica y castiga avances descuidados."},
-{id:"chapter6_1_battle2",num:2,title:"Arquera de los Muros Rotos",enemyName:"Arquera de los Muros Rotos",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"Los muros no cayeron por fuerza. Cayeron porque alguien indicó dónde disparar. Desde las ruinas, una arquera dirige fuego cruzado y obliga a tus unidades a elegir entre cubrirse o avanzar.\n\nEl enemigo no quiere solamente hacer daño: quiere colocarte exactamente donde Hannibal habría querido.",xp:120,gold:130,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","nasu_no_yoichi","tomoe_gozen"],aiLevel:23,aiDrawBonus:2,aiHonorBonus:6,aiStyle:"Rango y rutas forzadas",desc:"Segunda batalla del mapa 6.1. Control desde distancia, presión de arqueros y castigo por mala posición."},
-{id:"chapter6_1_battle3",num:3,title:"Hechicero de Ceniza",enemyName:"Hechicero de Ceniza",enemyLeaderType:"mage",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"En el centro de una plaza quemada, un hechicero levanta ceniza como si leyera mapas en el humo. Cada chispa marca una ruta falsa. Cada sombra oculta una trampa.\n\nNo pelea para vencerte rápido. Pelea para cansarte, dividirte y dejar el campo listo para el golpe táctico que viene después.",xp:125,gold:135,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","joan_of_arc","spartacus"],aiLevel:24,aiDrawBonus:2,aiHonorBonus:7,aiStyle:"Control de ceniza",desc:"Tercera batalla del mapa 6.1. Magias reforzadas, trampas y desgaste táctico."},
+{id:"chapter6_1_battle2",num:2,title:"Arquera de los Muros Rotos",enemyName:"Arquera de los Muros Rotos",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"Los muros no cayeron por fuerza. Cayeron porque alguien indicó dónde disparar. Desde las ruinas, una arquera dirige fuego cruzado y obliga a tus unidades a elegir entre cubrirse o avanzar.\n\nEl enemigo no quiere solamente hacer daño: quiere colocarte exactamente donde Hannibal habría querido.",xp:120,gold:130,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","attila_hun","nasu_no_yoichi","tomoe_gozen"],aiLevel:23,aiDrawBonus:2,aiHonorBonus:6,aiStyle:"Rango y rutas forzadas",desc:"Segunda batalla del mapa 6.1. Control desde distancia, presión de arqueros y castigo por mala posición."},
+{id:"chapter6_1_battle3",num:3,title:"Hechicero de Ceniza",enemyName:"Hechicero de Ceniza",enemyLeaderType:"mage",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"En el centro de una plaza quemada, un hechicero levanta ceniza como si leyera mapas en el humo. Cada chispa marca una ruta falsa. Cada sombra oculta una trampa.\n\nNo pelea para vencerte rápido. Pelea para cansarte, dividirte y dejar el campo listo para el golpe táctico que viene después.",xp:125,gold:135,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","attila_hun","joan_of_arc","spartacus"],aiLevel:24,aiDrawBonus:2,aiHonorBonus:7,aiStyle:"Control de ceniza",desc:"Tercera batalla del mapa 6.1. Magias reforzadas, trampas y desgaste táctico."},
 {id:"chapter6_1_battle4",num:4,title:"General Cartaginés",enemyName:"General Cartaginés",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"Antes de Hannibal, aparece su sombra militar: un general cartaginés que no desperdicia unidades. Mueve poco, amenaza mucho y espera que tú cometas el primer error.\n\nLa batalla se siente como una mesa de ajedrez con cuchillos. Avanzar sin leer el campo puede costarte la partida.",xp:130,gold:145,cardPack:true,packType:"improved_magic_trap",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","hannibal_barca","subotai","leonidas"],aiLevel:25,aiDrawBonus:2,aiHonorBonus:7,aiStyle:"Prejefe táctico",desc:"Cuarta batalla del mapa 6.1. Prejefe con emboscadas, defensa calculada y leyendas tácticas."},
 {id:"chapter6_1_battle5",num:5,title:"La Corona de Ceniza",enemyName:"Hannibal Barca",enemyLeaderType:"mage",image:"assets/story/adventure_6_1/6_1_5_la_corona_de_ceniza.webp",enemyIntro:"Hannibal Barca no espera en un trono ni bajo una bandera enorme. Espera en el punto exacto donde tus tropas creen que ya ganaron.\n\nNo es un jefe de fuerza bruta. Es un jefe que juega como ajedrez con cuchillos: emboscadas, control de posición, castigo por avanzar mal y presión inteligente.\n\nSi quieres ganar, no basta con atacar más fuerte. Tienes que demostrar que puedes leer el tablero antes de que él lo cierre sobre ti.",xp:145,gold:160,cardPack:false,packType:"improved_magic_trap",rewardCard:"hannibal_barca",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha","sun_tzu","ulysses","attila_hun","hannibal_barca","subotai","leonidas","spartacus"],aiLevel:27,aiDrawBonus:3,aiHonorBonus:8,aiStyle:"Emboscada magistral",desc:"Jefe del mapa 6.1. Hannibal castiga cada mala posición y convierte el campo en una trampa táctica."},
 {id:"chapter6_1_battle6",num:6,secret:true,optional:true,title:"La Última Formación",enemyName:"Leónidas",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"Cuando Hannibal cae, una ruta secundaria se abre hacia un paso estrecho entre ruinas. Allí no espera una emboscada. Espera un muro humano.\n\nLeónidas es el contraste perfecto: donde Hannibal es estrategia y trampa, Leónidas es resistencia, formación y última línea. Si lo derrotas, su carta se une a tu colección.",xp:135,gold:150,cardPack:false,packType:"improved_magic_trap",rewardCard:"leonidas",enemyLegendaryCards:["richard_lionheart","wallace","joan_of_arc","leonidas","hector_troy","julius_caesar"],aiLevel:26,aiDrawBonus:2,aiHonorBonus:7,aiStyle:"Muro humano",desc:"Batalla extra del mapa 6.1. Leónidas resiste, protege aliados y prueba si puedes romper una defensa cerrada."}
 ]};
+/* ---------------------------------------------------------------------------
+   7BOARDCTRL8O · Personaje Principal de la IA
+   La utilidad para el mazo tiene prioridad sobre la suma bruta de estadísticas.
+   --------------------------------------------------------------------------- */
+const AI_PRINCIPAL_BY_BATTLE_ID=Object.freeze({
+  battle5:"richard_lionheart",
+  chapter2_1_battle1:"richard_lionheart",
+  chapter2_1_battle2:"richard_lionheart",
+  chapter2_1_battle3:"simo_hayha",
+  chapter3_1_battle1:"simo_hayha",
+  chapter3_1_battle2:"simo_hayha",
+  chapter3_1_battle3:"simo_hayha",
+  chapter4_1_battle1:"simo_hayha",
+  chapter4_1_battle2:"simo_hayha",
+  chapter4_1_battle3:"simo_hayha",
+  chapter4_1_battle4:"simo_hayha",
+  chapter4_1_battle5:"achilles",
+  chapter5_1_battle1:"simo_hayha",
+  chapter5_1_battle2:"simo_hayha",
+  chapter5_1_battle3:"simo_hayha",
+  chapter5_1_battle4:"simo_hayha",
+  chapter5_1_battle5:"attila_hun",
+  chapter6_1_battle1:"attila_hun",
+  chapter6_1_battle2:"attila_hun",
+  chapter6_1_battle3:"attila_hun",
+  chapter6_1_battle4:"leonidas",
+  chapter6_1_battle5:"leonidas",
+  chapter6_1_battle6:"leonidas"
+});
+function battleAllowsAiPrincipal(battle){
+  if(!battle||battle.isGuardian)return false;
+  if(battle.beastEvent)return true;
+  if(battle.id==="battle5")return true;
+  const chapter=getAdventureChapterForBattle(battle);
+  const number=parseFloat(String(chapter?.number||"0").replace(",","."));
+  return Number.isFinite(number)&&number>=2;
+}
+function getAiPrincipalKeyForBattle(battle){
+  if(!battleAllowsAiPrincipal(battle))return "";
+  if(battle?.beastEvent)return "african_elephant";
+  return AI_PRINCIPAL_BY_BATTLE_ID[battle.id]||"";
+}
+function getPrincipalUtilityScore(card){
+  if(!card||card.type!=="unit")return -Infinity;
+  const utility={
+    richard_lionheart:500,leonidas:480,african_elephant:470,achilles:465,
+    attila_hun:455,simo_hayha:450,hannibal_barca:440,sun_tzu:430,
+    african_lion:420,yi_sun_sin:415,shaka_zulu:410,ulysses:405
+  }[card.key]||0;
+  return utility+Number(card.hp||0)*5+Number(card.guard||0)*4+Number(card.atk||0)*3+Number(card.dex||0)+Number(card.agi||0)+Number(card.range||0)*5+Number(card.mov||0)*2+(card.stealth?18:0);
+}
+function chooseFallbackAiPrincipalKey(initial){
+  const cards=[...(initial?.hand||[]),...(initial?.deck||[])].filter(card=>card?.type==="unit");
+  const unique=[...new Map(cards.map(card=>[card.key||card.name,card])).values()];
+  unique.sort((a,b)=>getPrincipalUtilityScore(b)-getPrincipalUtilityScore(a));
+  return unique[0]?.key||"";
+}
+
 const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_CHAPTER_3_1,ADVENTURE_CHAPTER_4_1,ADVENTURE_CHAPTER_5_1,ADVENTURE_CHAPTER_6_1];
 const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,ch]));
 function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
@@ -4368,9 +4431,67 @@ if(win&&publicState.adventureIsGuardian){
   panel.classList.remove("hidden");
   return;
 }
-if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
+if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa. La Forja de mazos y la selección de Personaje Principal quedan desbloqueadas.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
 async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
 async function joinGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";syncBoardDimensionsFromState(pub);const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
+
+function extractPrincipalCardFromDeck(cards=[],principalKey=""){
+  const deck=[...(cards||[])];
+  const key=String(principalKey||"");
+  const index=key?deck.findIndex(card=>card?.key===key&&card.type==="unit"):-1;
+  const principalCard=index>=0?deck.splice(index,1)[0]:null;
+  return{deck,principalCard,principalKey:principalCard?.key||""};
+}
+function extractPrincipalFromInitialState(initial={},principalKey=""){
+  let deck=[...(initial.deck||[])],hand=[...(initial.hand||[])],principalCard=null;
+  const key=String(principalKey||"");
+  let index=key?hand.findIndex(card=>card?.key===key&&card.type==="unit"):-1;
+  if(index>=0){
+    principalCard=hand.splice(index,1)[0];
+    if(deck.length)hand.push(deck.shift());
+  }else{
+    index=key?deck.findIndex(card=>card?.key===key&&card.type==="unit"):-1;
+    if(index>=0)principalCard=deck.splice(index,1)[0];
+  }
+  return{deck,hand,principalCard,principalKey:principalCard?.key||""};
+}
+function prepareAiPrincipalInitialState(battle,initial){
+  if(!battleAllowsAiPrincipal(battle))return{...initial,principalCard:null,principalKey:""};
+  const requested=getAiPrincipalKeyForBattle(battle);
+  const all=[...(initial?.hand||[]),...(initial?.deck||[])];
+  const requestedExists=all.some(card=>card?.key===requested&&card.type==="unit");
+  const key=requestedExists?requested:chooseFallbackAiPrincipalKey(initial);
+  return extractPrincipalFromInitialState(initial,key);
+}
+function getPrincipalStartCell(owner,units=[]){
+  const y=owner===1?Math.max(0,ROWS-2):Math.min(ROWS-1,1);
+  const center=Math.floor(COLS/2);
+  const xs=[center,center-1,center+1,0,COLS-1].filter((x,index,arr)=>x>=0&&x<COLS&&arr.indexOf(x)===index);
+  const occupied=new Set((units||[]).map(u=>`${u.x},${u.y}`));
+  const x=xs.find(value=>!occupied.has(`${value},${y}`));
+  return Number.isFinite(x)?{x,y}:null;
+}
+function makeStartingPrincipalUnit(card,owner,leaderType,units=[]){
+  if(!card||card.type!=="unit")return null;
+  const cell=getPrincipalStartCell(owner,units);
+  if(!cell)return null;
+  const unit=makeUnit({...card,owner,leaderType},cell.x,cell.y);
+  return{...unit,principal:true,principalStart:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+}
+function applyStartingPrincipalEntryEffects(units=[]){
+  let out=[...(units||[])],logs=[];
+  out=out.map(unit=>{
+    if(!unit?.principal||unit.leader)return unit;
+    const enemyYi=out.some(other=>other&&!other.leader&&other.owner!==unit.owner&&other.key==="yi_sun_sin"&&other.hp>0);
+    if(!enemyYi)return unit;
+    logs.push(`Bloqueo Naval: ${unit.name} comienza con -4 DX y -4 Guardia hasta su próximo turno.`);
+    return{...unit,tempDexDebuff:(unit.tempDexDebuff||0)+4,tempGuardBuff:(unit.tempGuardBuff||0)-4,yiSunDebuffed:true};
+  });
+  const lion=applyAfricanLionFearAura(out);
+  out=lion.units;
+  logs.push(...(lion.logs||[]));
+  return{units:out,logs,statusFxEvent:lion.statusFxEvent||null,floatFxEvent:lion.floatFxEvent||null};
+}
 
 async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(!(await ensureFirebaseAuthReady("adventure")))return;
@@ -4384,29 +4505,58 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
-  /*
-   * 7HBG:
-   * En la prueba inicial del guardián el jugador NO usa mazo guardado.
-   * Regla de inicio: básicas + la carta elegida por el jugador.
-   * Esto evita que cartas legendarias guardadas/desbloqueadas, como Miyamoto Musashi,
-   * entren en el deck inicial por accidente.
-   */
   const starterLocked=!canAccessDecks();
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
-  const playerBase=mustUseStarterAdventureDeck
+  const rawPlayerBase=mustUseStarterAdventureDeck
     ? shuffle(getStarterAdventureDeckTemplates(specialKey).map(card=>makeCard(card,1,leaderType)))
     : makeDeck(1,leaderType);
-  const playerDraw=drawCards(playerBase,[],4);
+  const requestedPlayerPrincipal=mustUseStarterAdventureDeck?"":sanitizePrincipalKeyForDeck(getSavedPrincipalKey(),rawPlayerBase);
+  const playerPrincipalPrep=extractPrincipalCardFromDeck(rawPlayerBase,requestedPlayerPrincipal);
+  const playerDraw=drawCards(playerPrincipalPrep.deck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle);
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
-  const enemyInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
+  const enemyRawInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
+  const enemyInitial=prepareAiPrincipalInitialState(battle,enemyRawInitial);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
-  const playerProfileName=getLocalProfileName();const pub={code,boardRows:ROWS,boardCols:COLS,mode:"adventure",adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",adventureSpecial:specialKey,adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true},createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:serverTimestamp(),clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)],log:[`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`]};
-  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true};
+  let startingUnits=[
+    makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
+    makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)
+  ];
+  const playerPrincipalUnit=makeStartingPrincipalUnit(playerPrincipalPrep.principalCard,1,leaderType,startingUnits);
+  if(playerPrincipalUnit)startingUnits.push(playerPrincipalUnit);
+  const enemyPrincipalUnit=makeStartingPrincipalUnit(enemyInitial.principalCard,2,enemyLeaderType,startingUnits);
+  if(enemyPrincipalUnit)startingUnits.push(enemyPrincipalUnit);
+  const entryEffects=applyStartingPrincipalEntryEffects(startingUnits);
+  startingUnits=entryEffects.units;
+  const principalLogs=[];
+  if(playerPrincipalUnit)principalLogs.push(`Tu Personaje Principal es ${playerPrincipalUnit.name}: comienza convocado sin pagar Honor.`);
+  if(enemyPrincipalUnit)principalLogs.push(`Personaje Principal enemigo: ${enemyPrincipalUnit.name}, ya convocado al iniciar.`);
+  principalLogs.push(...entryEffects.logs);
+  const playerProfileName=getLocalProfileName();
+  const pub={
+    code,boardRows:ROWS,boardCols:COLS,mode:"adventure",
+    adventureChapter:battle.isGuardian?"guardian_gate":chapterForBattle.id,
+    adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,
+    adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,
+    adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",
+    adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",
+    adventureSpecial:specialKey,
+    adventurePrincipalKeys:{1:playerPrincipalPrep.principalKey||"",2:enemyInitial.principalKey||""},
+    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalKey:enemyInitial.principalKey||""},
+    createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:serverTimestamp(),
+    clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
+    playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
+    playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
+    playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
+    playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},
+    units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
+    log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
+  };
+  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalKey:playerPrincipalPrep.principalKey||""};
   if(HALLVALLA_LOCALHOST_TEST_MODE){
     pub.code=`LOCAL${code4()}`;
     pub.localhostVisualTest=true;
@@ -4416,8 +4566,6 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   }
   await set(ref(db,`games/${code}/public`),pub);
   await set(ref(db,`games/${code}/private/player1`),privatePayload);
-  // Modo aventura: la IA no tiene UID real. Su estado privado se guarda en public.adventureAiState.
-  // No escribir en /private/player-IA para evitar permission_denied con reglas de Firebase.
   $("adventurePanel").classList.add("hidden");
   enterGame(code,1);
 }
@@ -5867,7 +6015,7 @@ function showCardInspectModal(card){
   const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel");
   if(cancel){cancel.textContent="Cancelar";cancel.classList.remove("hidden");}
   if(play)play.classList.remove("hidden");
-  if(title)title.textContent=card.name;
+  if(title)title.textContent=getEntityFullDisplayName(card);
   if(sub)sub.innerHTML=renderDetIdentityHtml(card,"Carta en mano");
   if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
   const inspectStats=cardInspectStats(card);
@@ -8794,7 +8942,7 @@ function showUnit(u){
   if(!u)return;
   const inspector=$("inspector");
   if(inspector)inspector.className=`inspector ${getCardVisualClass(u)}`;
-  $("inspectTitle").textContent=u.name;
+  $("inspectTitle").textContent=getEntityFullDisplayName(u);
   $("inspectSub").innerHTML=renderDetIdentityHtml(u,u.owner===myPlayer?"Tu unidad":"Unidad rival");
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
   const stats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
@@ -9734,8 +9882,8 @@ function renderBoard(){
     if(u&&!u.leader){
       const c=document.createElement("div");
       const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
-      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}`;
+      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
@@ -9747,7 +9895,7 @@ function renderBoard(){
           if(entry)openStatusGuideModal(entry,u);
         });
       });
-      c.title=isStealthedUnit(u)&&u.owner!==myPlayer?"Presencia Oculta · Sigilo":`${u.name} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
+      c.title=isStealthedUnit(u)&&u.owner!==myPlayer?`Presencia Oculta · Sigilo${u.principal?" · Personaje Principal":""}`:`${u.name}${u.principal?" · Personaje Principal":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
       c.addEventListener("pointerdown",ev=>{
@@ -11219,6 +11367,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
 let activePackOpening=null;
 let activePackCards=[];
 let currentDeckDraft=[];
+let currentPrincipalKey="";
 let deckBuilderCollectionPage=0;
 const DECK_BUILDER_COLLECTION_PAGE_SIZE=14;
 let deckBuilderDragPayload=null;
@@ -11430,8 +11579,20 @@ function confirmActivePackCards(){
 }
 function closePackOpening(){const panel=$("packOpeningPanel");if(panel)panel.classList.add("hidden");}
 
+const HALLVALLA_PRINCIPAL_UNIT_KEY="hallvalla_principal_unit_v1";
 function getSavedDeck(){try{const deck=JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");return Array.isArray(deck)?deck.map(hydrateCardVisualData):[]}catch(e){return[]}}
 function saveDeck(deck){localStorage.setItem("hallvalla_current_deck",JSON.stringify((deck||[]).map(hydrateCardVisualData)))}
+function getSavedPrincipalKey(){try{return String(localStorage.getItem(HALLVALLA_PRINCIPAL_UNIT_KEY)||"").trim()}catch(e){return ""}}
+function savePrincipalKey(key){try{const safe=String(key||"").trim();if(safe)localStorage.setItem(HALLVALLA_PRINCIPAL_UNIT_KEY,safe);else localStorage.removeItem(HALLVALLA_PRINCIPAL_UNIT_KEY)}catch(e){}}
+function sanitizePrincipalKeyForDeck(key,deck=[]){
+  const safe=String(key||"").trim();
+  if(!safe)return "";
+  return (deck||[]).some(card=>card?.key===safe&&card.type==="unit")?safe:"";
+}
+function getSavedPrincipalCardForDeck(deck=[]){
+  const key=sanitizePrincipalKeyForDeck(getSavedPrincipalKey(),deck);
+  return key?(deck||[]).find(card=>card?.key===key&&card.type==="unit")||null:null;
+}
 function isBeastCollectionCard(card){
   if(!card)return false;
   const key=String(card.key||"");
@@ -11657,6 +11818,7 @@ function openDeckBuilder(){
   ensureStarterDeckCollection();
   const saved=sanitizeDeckDraftToCollection(getSavedDeck());
   currentDeckDraft=validateDeckList(saved).valid?saved:getDefaultDeckTemplates().map(c=>({...c,qty:1}));
+  currentPrincipalKey=sanitizePrincipalKeyForDeck(getSavedPrincipalKey(),currentDeckDraft);
   deckBuilderCollectionPage=0;
   $("deckBuilderPanel").classList.remove("hidden");
   renderDeckBuilder();
@@ -11684,11 +11846,21 @@ function addCardToDeck(cardKey){
   renderDeckBuilder();
   return true;
 }
-function removeCardFromDeck(cardKey){const idx=currentDeckDraft.findIndex(c=>c.key===cardKey);if(idx>=0)currentDeckDraft.splice(idx,1);renderDeckBuilder();}
+function syncCurrentPrincipalWithDraft(){currentPrincipalKey=sanitizePrincipalKeyForDeck(currentPrincipalKey,currentDeckDraft);}
+function setCurrentDeckPrincipal(cardKey){
+  const card=currentDeckDraft.find(c=>c?.key===cardKey&&c.type==="unit");
+  if(!card){setHint("El Personaje Principal debe ser una unidad incluida en el mazo.");return false;}
+  currentPrincipalKey=card.key;
+  renderDeckBuilder();
+  return true;
+}
+function clearCurrentDeckPrincipal(){currentPrincipalKey="";renderDeckBuilder();}
+function removeCardFromDeck(cardKey){const idx=currentDeckDraft.findIndex(c=>c.key===cardKey);if(idx>=0)currentDeckDraft.splice(idx,1);syncCurrentPrincipalWithDraft();renderDeckBuilder()}
 function removeCardFromDeckIndex(index){
   const idx=Number(index);
   if(!Number.isFinite(idx)||idx<0||idx>=currentDeckDraft.length)return false;
   currentDeckDraft.splice(idx,1);
+  syncCurrentPrincipalWithDraft();
   renderDeckBuilder();
   return true;
 }
@@ -11704,7 +11876,8 @@ function getDeckBuilderTypeGlyph(card){
   return "C";
 }
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1}={}){
-  const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""}`;
+  const isPrincipal=mode==="deck"&&card?.type==="unit"&&currentPrincipalKey===card.key;
+  const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""} ${isPrincipal?"is-principal":""}`;
   const name=escapeHtml(card?.name||"Carta");
   const dragAttrs='draggable="false"';
   const data=mode==="deck"
@@ -11720,6 +11893,9 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const actionBtn=mode==="deck"
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
     : `<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Agregar ${name}" title="${escapeHtml(addLockReason||"Agregar al mazo")}">+</button>`;
+  const principalBtn=mode==="deck"&&card?.type==="unit"
+    ? `<button class="deck-mini-principal ${isPrincipal?"selected":""}" type="button" data-set-principal="${escapeHtml(card.key||"")}" aria-label="${isPrincipal?"Personaje Principal seleccionado":"Establecer como Personaje Principal"}" title="${isPrincipal?"Personaje Principal seleccionado":"Establecer como Personaje Principal"}">★</button>`
+    : "";
   const dustBtn=mode==="collection"&&surplus>0
     ? `<button class="deck-mini-dust" type="button" data-dust-card="${escapeHtml(card.key||"")}" title="Convertir copia sobrante en +${CRAFT_MATERIAL_GAIN} material ${getCraftRarityLabel(getCraftRarityKey(card))}">⛏</button>`
     : "";
@@ -11742,6 +11918,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <span class="deck-mini-name">${name}</span>
     ${materialLine}
     ${actionBtn}
+    ${principalBtn}
     ${dustBtn}
     ${craftBtn}
   </div>`;
@@ -11857,7 +12034,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   });
   deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
     const openDetail=ev=>{
-      if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust"))return;
+      if(ev.target.closest(".deck-mini-remove,.deck-mini-principal,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<160)return;
       const idx=Number(el.dataset.draftIndex);
       showDeckBuilderCardDetail(currentDeckDraft[idx]);
@@ -11889,6 +12066,10 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
     ev.stopPropagation();
     removeCardFromDeckIndex(btn.dataset.removeIndex);
   }));
+  deckList.querySelectorAll("[data-set-principal]").forEach(btn=>btn.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    setCurrentDeckPrincipal(btn.dataset.setPrincipal);
+  }));
   deckList.addEventListener("dragover",ev=>{
     const payload=getDeckBuilderDragPayload(ev);
     if(payload?.action==="add"){ev.preventDefault();ev.dataTransfer.dropEffect="copy";setDeckBuilderDropActive(deckList,true);}
@@ -11915,6 +12096,15 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
       clearDrop();
     }
   });
+}
+function renderDeckPrincipalSelector(){
+  syncCurrentPrincipalWithDraft();
+  const card=currentDeckDraft.find(c=>c?.key===currentPrincipalKey&&c.type==="unit")||null;
+  const art=$("deckPrincipalArt"),name=$("deckPrincipalName"),note=$("deckPrincipalNote"),clear=$("clearDeckPrincipalBtn");
+  if(art)art.innerHTML=card?getDeckBuilderMiniImageHtml(card):"<span>★</span>";
+  if(name)name.textContent=card?card.name:"Sin seleccionar";
+  if(note)note.textContent=card?"Una copia saldrá del mazo y comenzará convocada gratuitamente en tu campo.":"Marca la estrella de cualquier unidad incluida en el mazo.";
+  if(clear){clear.disabled=!card;clear.classList.toggle("hidden",!card);}
 }
 function renderDeckBuilder(){
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
@@ -11964,6 +12154,7 @@ function renderDeckBuilder(){
   const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot"><span>${currentDeckDraft.length+i+1}</span></div>`).join("");
   deckList.innerHTML=`<div class="deck-drop-hint">Toca una carta para ver detalles. Usa + para meterla al mazo y × para quitarla.</div>${deckCardsHtml}${emptyHtml}`;
   bindDeckBuilderDragAndClick(collectionGrid,deckList);
+  renderDeckPrincipalSelector();
   renderCraftMaterialPanel();
   const validation=validateDeckList(currentDeckDraft);
   if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${DECK_RULES.deckSize}`;
@@ -11979,9 +12170,11 @@ function saveCurrentDeck(){
   currentDeckDraft=sanitizeDeckDraftToCollection(currentDeckDraft);
   const validation=validateDeckList(currentDeckDraft);
   if(!validation.valid){hvAlert(`No se puede guardar todavía: ${validation.errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return;}
+  currentPrincipalKey=sanitizePrincipalKeyForDeck(currentPrincipalKey,currentDeckDraft);
   saveDeck(currentDeckDraft);
+  savePrincipalKey(currentPrincipalKey);
   closeDeckBuilder();
-  hvAlert("Mazo guardado.","Mazo guardado");
+  hvAlert(currentPrincipalKey?`Mazo guardado. ${currentDeckDraft.find(c=>c.key===currentPrincipalKey)?.name||"La unidad elegida"} será tu Personaje Principal.`:"Mazo guardado sin Personaje Principal.","Mazo guardado");
 }
 
 function getNotificationState(){
@@ -12044,7 +12237,7 @@ function renderHomeProgress(){
   const progressTitle=$("homeProgressTitle"),progressText=$("homeProgressText"),deckStatus=$("homeDeckStatus"),collectionStatus=$("homeCollectionStatus");
   if(progressTitle)progressTitle.textContent=`${summary.activeChapter.number} ${summary.activeChapter.title}`;
   if(progressText)progressText.textContent=summary.progress.guardianDefeated?`Progreso: ${summary.completed}/${summary.total} batallas completadas. Siguiente desbloqueada: ${Math.min(summary.chapter.unlockedBattle||1,summary.total)}/${summary.total}.`:`Prueba previa pendiente: derrota al Hechicero guardián para desbloquear el mapa ${ADVENTURE_CHAPTER_1_1.number}.`;
-  if(deckStatus)deckStatus.textContent=canAccessDecks()?"Mazos desbloqueados":"Mazos bloqueados";
+  if(deckStatus)deckStatus.textContent=canAccessDecks()?"Mazos y Personaje Principal desbloqueados":"Mazos bloqueados";
   const pendingPacks=getPendingPackCount();
   if(collectionStatus)collectionStatus.textContent=canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs disponible desde el inicio."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Completa 1.1 para editar mazos.`;
   renderNotificationBadge();
@@ -12870,11 +13063,14 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   const introChapter=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   $("adventureGuardianTitle").textContent=battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`;
   const introConflict=introChapter.id===ADVENTURE_CHAPTER_2_1.id?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas.":"Los rebeldes intentan usurpar el trono y crear un golpe de estado.";
+  const principalKey=getAiPrincipalKeyForBattle(battle);
+  const principalCard=principalKey?getAdventureDeckCardTemplateByKey(principalKey):null;
+  const principalLine=principalCard?`\nPersonaje Principal enemigo: ${principalCard.name}. Comenzará ya convocado.`:"";
   $("adventureGuardianText").textContent=`${battle.enemyIntro||battle.desc}
 
 ${introConflict} Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.
 
-IA enemiga: táctica máxima desde el primer duelo · ${battle.aiStyle||"Sin restricciones"}
+IA enemiga: táctica máxima desde el primer duelo · ${battle.aiStyle||"Sin restricciones"}${principalLine}
 Recompensa al ganar: ${getBattleRewardLabel(battle)}.`;
 }
 function openOnlineLobby(){
@@ -13000,6 +13196,7 @@ on("deckSearchInput","input",resetDeckBuilderCollectionPageAndRender);
 on("deckTypeFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
+on("clearDeckPrincipalBtn","click",clearCurrentDeckPrincipal);
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);
