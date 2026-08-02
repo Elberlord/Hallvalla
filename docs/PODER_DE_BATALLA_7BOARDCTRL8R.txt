@@ -1,0 +1,104 @@
+HALLVALLA 7BOARDCTRL8R
+PODER DE BATALLA · REGISTRO INICIAL DE UNIDADES
+
+OBJETIVO
+Valorar cada unidad entre 0 y 100 según su impacto real en batalla, no solamente por la suma de estadísticas.
+
+FACTORES CONSIDERADOS
+- Combate directo: daño, precisión, rango y capacidad de eliminar unidades.
+- Supervivencia: Vida, Guardia, Agilidad, curación y defensas especiales.
+- Utilidad de campo: valor que produce mientras permanece convocada.
+- Presión y control: debilitamientos, Sigilo, veneno, empuje, bloqueo y restricciones.
+- Apoyo y sinergia: mejoras, protección, invocaciones y beneficios para aliados.
+- Consistencia: facilidad y frecuencia con que activa su efecto.
+- Potencial decisivo: capacidad de cambiar o cerrar la partida.
+
+ESCALA
+90–100  Dominante
+80–89   Élite
+70–79   Oro
+55–69   Plata
+40–54   Bronce
+0–39    Iniciación
+
+REGLAS DE CONSTRUCCIÓN REVISADAS
+- El mazo contiene 30 cartas.
+- Las cartas Básicas permiten un máximo de 3 copias.
+- Todas las cartas no Básicas permiten un máximo de 1 copia.
+- La repetición de Básicas no cambia el PB individual, pero sí influirá después en el Poder total del mazo.
+
+LISTA COMPLETA
+ 98 · Dominante  · Semidiós    · Aquiles [achilles]
+ 95 · Dominante  · Semidiós    · Arjuna [arjuna]
+ 94 · Dominante  · Semidiós    · Cú Chulainn [cu_chulainn]
+ 94 · Dominante  · Legendaria  · Miyamoto Musashi [miyamoto_musashi]
+ 93 · Dominante  · Semidiós    · Gilgamesh [gilgamesh]
+ 92 · Dominante  · Legendaria  · Khalid ibn al-Walid [khalid_ibn_al_walid]
+ 92 · Dominante  · Mítica      · Merlín [merlin]
+ 91 · Dominante  · Legendaria  · Elefante Africano [african_elephant]
+ 90 · Dominante  · Gloriosa    · Yi Sun-sin [yi_sun_sin]
+ 89 · Élite      · Mítica      · Juana de Arco [joan_of_arc]
+ 89 · Élite      · Legendaria  · Julio César [julius_caesar]
+ 89 · Élite      · Legendaria  · Rinoceronte Blanco [white_rhino]
+ 89 · Élite      · Mítica      · Tomoe Gozen [tomoe_gozen]
+ 88 · Élite      · Legendaria  · Alejandro Magno [alexander_magnus]
+ 88 · Élite      · Mítica      · León Africano [african_lion]
+ 88 · Élite      · Mítica      · Lü Bu [lu_bu]
+ 88 · Élite      · Gloriosa    · Richard Corazón de León [richard_lionheart]
+ 88 · Élite      · Mítica      · Sun Tzu [sun_tzu]
+ 87 · Élite      · Legendaria  · Héctor de Troya [hector_troy]
+ 87 · Élite      · Mítica      · Leónidas [leonidas]
+ 87 · Élite      · Gloriosa    · Saladino [saladin]
+ 86 · Élite      · Mítica      · Espartaco [spartacus]
+ 86 · Élite      · Legendaria  · Gengis Kan [genghis_khan]
+ 86 · Élite      · Mítica      · Nasu no Yoichi [nasu_no_yoichi]
+ 86 · Élite      · Mítica      · Tigre de Bengala [bengal_tiger]
+ 85 · Élite      · Legendaria  · Beowulf [beowulf]
+ 85 · Élite      · Mítica      · Hannibal Barca [hannibal_barca]
+ 85 · Élite      · Gloriosa    · Simo Häyhä [simo_hayha]
+ 84 · Élite      · Gloriosa    · Shaka Zulu [shaka_zulu]
+ 84 · Élite      · Mítica      · Ulises / Odiseo [ulysses]
+ 83 · Élite      · Legendaria  · Hattori Hanzō [hattori_hanzo]
+ 82 · Élite      · Legendaria  · Atila el Huno [attila_hun]
+ 82 · Élite      · Gloriosa    · Boudica [boudica]
+ 82 · Élite      · Mítica      · Subotai / Subutai [subotai]
+ 81 · Élite      · Mítica      · El Cid Campeador [el_cid]
+ 79 · Oro        · Épica       · Hua Lan [mulan]
+ 79 · Oro        · Mítica      · Ragnar Lodbrok [ragnar_lodbrok]
+ 78 · Oro        · Básica      · Saboteador de Iga [saboteador_iga]
+ 76 · Oro        · Gloriosa    · Taipán del Interior [inland_taipan]
+ 76 · Oro        · Épica       · William Wallace [wallace]
+ 75 · Oro        · Básica      · Geisha Encubierta [geisha_encubierta]
+ 73 · Oro        · Gloriosa    · Halcón Peregrino [peregrine_falcon]
+ 73 · Oro        · Básica      · Samurai de Katana [samurai_katana]
+ 71 · Oro        · Básica      · Guardián de piedra [guardian]
+ 69 · Plata      · Básica      · Cuervo Negro [black_raven]
+ 69 · Plata      · Básica      · Samurai de Naginata [samurai_naginata]
+ 69 · Plata      · Básica      · Skipar del Drakkar [skipar_del_drakkar]
+ 68 · Plata      · Épica       · Búfalo Africano [african_buffalo]
+ 68 · Plata      · Básica      · Lancero solar [spearman]
+ 67 · Plata      · Básica      · Samurai Yabusame [samurai_yabusame]
+ 66 · Plata      · Básica      · Berserker de Oso [berserker_de_oso]
+ 66 · Plata      · Básica      · Hattori Shinobi [hattori_shinobi]
+ 64 · Plata      · Básica      · Adepto Arcano [arcane_adept]
+ 64 · Plata      · Básica      · Berserker del norte [berserker]
+ 64 · Plata      · Básica      · Tejón Mielero [honey_badger]
+ 63 · Plata      · Básica      · Caballería Arquera de Saladino [saladin_archer_cavalry] · Token de Saladino; no aparece como carta independiente en la Forja
+ 62 · Plata      · Básica      · Serpiente Constrictora [constrictor_snake]
+ 62 · Plata      · Básica      · Ulfhednar [ulfhednar]
+ 59 · Plata      · Básica      · Jabalí Salvaje [wild_boar]
+ 58 · Plata      · Básica      · Caballería ligera [cavalry]
+ 58 · Plata      · Básica      · Puercoespín [porcupine]
+ 52 · Bronce     · Básica      · Asesina del desierto [scout]
+ 51 · Bronce     · Básica      · Arquera del desierto [archer]
+
+CAMBIOS DE INTERFAZ
+- DET muestra PB en una insignia de esquina para cartas y unidades del campo.
+- La Forja permite filtrar por los seis rangos de PB.
+- La Forja permite ordenar PB de mayor a menor o de menor a mayor.
+- Las miniaturas de unidades muestran su PB; magias y trampas quedan sin PB por ahora.
+
+NO IMPLEMENTADO TODAVÍA
+- El PB aún no modifica la probabilidad de sobres.
+- El Poder total del mazo y el emparejamiento PvP todavía no se calculan con esta escala.
+- Salomón y Ericto recibirán su PB cuando se creen y se añadan al catálogo.

@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_MERLIN_VISION_TIEMPOS_7BOARDCTRL8Q";
+const HALLVALLA_BUILD_VERSION="v8_PODER_BATALLA_7BOARDCTRL8R";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1828,6 +1828,125 @@ const SPECIAL_HUMAN_CARD_DATA=[
 ];
 const LEGENDARY_ALLY_CARDS=SPECIAL_HUMAN_CARD_DATA.map(c=>({...c}));
 
+
+/* =====================================================================
+   7BOARDCTRL8R · PODER DE BATALLA
+   Valoración integral 0–100 de las unidades actuales. No es una suma
+   simple de estadísticas: considera combate directo, supervivencia,
+   utilidad mientras permanece en campo, presión sobre el rival, apoyo,
+   consistencia y capacidad para decidir una partida. Las magias, trampas
+   y líderes todavía no usan esta escala.
+   ===================================================================== */
+const UNIT_BATTLE_POWER=Object.freeze({
+  cavalry:58,
+  berserker:64,
+  berserker_de_oso:66,
+  ulfhednar:62,
+  skipar_del_drakkar:69,
+  spearman:68,
+  archer:51,
+  arcane_adept:64,
+  guardian:71,
+  samurai_katana:73,
+  samurai_yabusame:67,
+  samurai_naginata:69,
+  geisha_encubierta:75,
+  hattori_shinobi:66,
+  saboteador_iga:78,
+  scout:52,
+  mulan:79,
+  wallace:76,
+  honey_badger:64,
+  porcupine:58,
+  wild_boar:59,
+  black_raven:69,
+  constrictor_snake:62,
+  african_buffalo:68,
+  peregrine_falcon:73,
+  inland_taipan:76,
+  african_lion:88,
+  bengal_tiger:86,
+  white_rhino:89,
+  african_elephant:91,
+  richard_lionheart:88,
+  saladin:87,
+  shaka_zulu:84,
+  yi_sun_sin:90,
+  simo_hayha:85,
+  boudica:82,
+  ulysses:84,
+  joan_of_arc:89,
+  leonidas:87,
+  nasu_no_yoichi:86,
+  tomoe_gozen:89,
+  hannibal_barca:85,
+  subotai:82,
+  lu_bu:88,
+  ragnar_lodbrok:79,
+  el_cid:81,
+  spartacus:86,
+  sun_tzu:88,
+  merlin:92,
+  hector_troy:87,
+  beowulf:85,
+  miyamoto_musashi:94,
+  hattori_hanzo:83,
+  khalid_ibn_al_walid:92,
+  attila_hun:82,
+  genghis_khan:86,
+  alexander_magnus:88,
+  julius_caesar:89,
+  cu_chulainn:94,
+  gilgamesh:93,
+  arjuna:95,
+  achilles:98,
+  saladin_archer_cavalry:63
+});
+const BATTLE_POWER_TIERS=Object.freeze([
+  {key:"dominant",min:90,max:100,label:"Dominante"},
+  {key:"elite",min:80,max:89,label:"Élite"},
+  {key:"gold",min:70,max:79,label:"Oro"},
+  {key:"silver",min:55,max:69,label:"Plata"},
+  {key:"bronze",min:40,max:54,label:"Bronce"},
+  {key:"initiation",min:0,max:39,label:"Iniciación"}
+]);
+function getUnitBattlePower(entity){
+  if(!entity||entity.leader||entity.type!=="unit")return null;
+  const own=Number(entity.battlePower);
+  if(Number.isFinite(own))return Math.max(0,Math.min(100,Math.round(own)));
+  const mapped=Number(UNIT_BATTLE_POWER[String(entity.key||"")]);
+  return Number.isFinite(mapped)?Math.max(0,Math.min(100,Math.round(mapped))):null;
+}
+function getBattlePowerTier(power){
+  const value=Number(power);
+  if(!Number.isFinite(value))return null;
+  return BATTLE_POWER_TIERS.find(t=>value>=t.min&&value<=t.max)||BATTLE_POWER_TIERS[BATTLE_POWER_TIERS.length-1];
+}
+function getBattlePowerFilterBounds(filter){
+  const tier=BATTLE_POWER_TIERS.find(t=>t.key===filter);
+  return tier?{min:tier.min,max:tier.max}:null;
+}
+function renderBattlePowerBadgeHtml(entity){
+  const power=getUnitBattlePower(entity);
+  if(!Number.isFinite(power))return "";
+  const tier=getBattlePowerTier(power);
+  return `<span class="det-battle-power-label">PODER DE BATALLA</span><strong>${power}</strong><small>${escapeHtml(tier?.label||"")}</small>`;
+}
+function updateDetBattlePowerBadge(element,entity){
+  if(!element)return;
+  const power=getUnitBattlePower(entity);
+  if(!Number.isFinite(power)){
+    element.innerHTML="";
+    element.className="det-battle-power-badge hidden";
+    return;
+  }
+  const tier=getBattlePowerTier(power);
+  element.className=`det-battle-power-badge battle-power-${tier?.key||"initiation"}`;
+  element.innerHTML=renderBattlePowerBadgeHtml(entity);
+  element.title=`Poder de batalla ${power}/100 · ${tier?.label||"Sin categoría"}`;
+  element.setAttribute("aria-label",element.title);
+}
+
 // v7EM - Regla global de lanzas.
 // Todas las unidades que usan lanza/alabarda/pica tienen RG 1 fijo y atacan primero la primera vez por turno que reciben un ataque cuerpo a cuerpo adyacente de una unidad con RG 1.
 const LANCE_UNIT_KEYS=new Set([
@@ -2963,6 +3082,7 @@ function hydrateCardVisualData(card){
   if(!card||typeof card!=="object")return card;
   const visual=CARD_VISUALS_BY_KEY[card.key]||null;
   const merged=visual?{...card,...visual}:{...card};
+  if(merged.type==="unit")merged.battlePower=getUnitBattlePower(merged);
   return applyAxeDexRule(applyDesertAssassinRule(merged));
 }
 
@@ -3173,7 +3293,7 @@ function requireLeaderSelection(force=false){
 }
 function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=isInitialLeaderAllowed(type)?LEADER_DATA[type]:null;const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
 function applyLeaderToCard(card,leaderType){return {...card}}
-function makeCard(t,owner,leaderType){return {...t,id:uid8(),owner,leaderType}}
+function makeCard(t,owner,leaderType){const card={...t,id:uid8(),owner,leaderType};if(card.type==="unit")card.battlePower=getUnitBattlePower(card);return card}
 function getStarterBasicDeckTemplates(){
   return STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).slice(0,Math.max(0,DECK_RULES.deckSize-1));
 }
@@ -3248,7 +3368,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"")}
-function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -6121,10 +6241,11 @@ function showCardInspectModal(card){
   const modal=$("cardInspectModal");
   if(!modal)return selectCard(card);
   modal.className=`card-inspect-modal ${getCardVisualClass(card)}`;
-  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel");
+  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel"),battlePowerBadge=$("cardInspectBattlePowerBadge");
   if(cancel){cancel.textContent="Cancelar";cancel.classList.remove("hidden");}
   if(play)play.classList.remove("hidden");
   if(title)title.textContent=getEntityFullDisplayName(card);
+  updateDetBattlePowerBadge(battlePowerBadge,card);
   if(sub)sub.innerHTML=renderDetIdentityHtml(card,"Carta en mano");
   if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
   const inspectStats=cardInspectStats(card);
@@ -9061,6 +9182,7 @@ function showUnit(u){
   const inspector=$("inspector");
   if(inspector)inspector.className=`inspector ${getCardVisualClass(u)}`;
   $("inspectTitle").textContent=getEntityFullDisplayName(u);
+  updateDetBattlePowerBadge($("inspectBattlePowerBadge"),u);
   $("inspectSub").innerHTML=renderDetIdentityHtml(u,u.owner===myPlayer?"Tu unidad":"Unidad rival");
   $("inspectArt").innerHTML=getUnitPortraitHtml(u);
   const stats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
@@ -12002,6 +12124,8 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ? `data-draft-index="${index}" data-deck-card-key="${escapeHtml(card.key||"")}"`
     : `data-deck-card-key="${escapeHtml(card.key||"")}"`;
   const badge=mode==="deck"?`${index+1}`:`${used}/${maxAllowed}`;
+  const battlePower=getUnitBattlePower(card);
+  const powerBadge=Number.isFinite(battlePower)?`<span class="deck-mini-power battle-power-${getBattlePowerTier(battlePower)?.key||"initiation"}" title="Poder de batalla ${battlePower}/100">PB ${battlePower}</span>`:"";
   const surplus=getCardSurplusCopies(card);
   const canCraft=mode==="collection"&&canCraftCardCopy(card);
   const material=getMaterialAmountForCard(card);
@@ -12033,6 +12157,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <span class="deck-mini-type">${getDeckBuilderTypeGlyph(card)}</span>
     <span class="deck-mini-badge">${escapeHtml(String(badge))}</span>
     <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
+    ${powerBadge}
     <span class="deck-mini-name">${name}</span>
     ${materialLine}
     ${actionBtn}
@@ -12045,7 +12170,7 @@ function makeDeckBuilderUnitPreview(card){
   const owner=myPlayer||1;
   const c=applyLanceWeaponRule(applyDesertAssassinRule(hydrateCardVisualData({...card,owner})));
   const baseGuard=(Number(c.guard||0))+getSwordGuardBonus(c);
-  let unit={id:`deck_preview_${c.key||uid8()}`,owner,leader:false,type:"unit",name:c.name,key:c.key,icon:c.icon,portrait:c.portrait||"",rarity:c.rarity||"Básica",special:!!c.special,text:c.text||c.effectText||c.ability||"",effectText:c.effectText||c.text||c.ability||"",ability:c.ability||"",x:-1,y:-1,nexoX:-1,nexoY:-1,hp:c.hp,maxHp:c.hp,atk:c.atk,baseGuard,guard:baseGuard,dex:(c.dex||0)+getAxeDexBonus(c),agi:c.agi||0,mov:c.mov,range:getCardDisplayRange(c),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:c.leaderType||"",weaponClass:getWeaponClassForCard(c),cost:Number(c.cost||0),beast:!!c.beast,aerial:!!c.aerial,stealth:!!c.stealth,revealed:false};
+  let unit={id:`deck_preview_${c.key||uid8()}`,owner,leader:false,type:"unit",name:c.name,key:c.key,icon:c.icon,portrait:c.portrait||"",rarity:c.rarity||"Básica",special:!!c.special,text:c.text||c.effectText||c.ability||"",effectText:c.effectText||c.text||c.ability||"",ability:c.ability||"",x:-1,y:-1,nexoX:-1,nexoY:-1,hp:c.hp,maxHp:c.hp,atk:c.atk,baseGuard,guard:baseGuard,dex:(c.dex||0)+getAxeDexBonus(c),agi:c.agi||0,mov:c.mov,range:getCardDisplayRange(c),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:c.leaderType||"",weaponClass:getWeaponClassForCard(c),battlePower:getUnitBattlePower(c),cost:Number(c.cost||0),beast:!!c.beast,aerial:!!c.aerial,stealth:!!c.stealth,revealed:false};
   unit=annotateUnitWithMastery(unit);
   unit.guard=maxTurnGuard(unit);
   return unit;
@@ -12230,8 +12355,12 @@ function renderDeckBuilder(){
   const search=($("deckSearchInput")?.value||"").toLowerCase().trim();
   const typeFilter=$("deckTypeFilter")?.value||"all";
   const rarityFilter=$("deckRarityFilter")?.value||"all";
+  const powerFilter=$("deckBattlePowerFilter")?.value||"all";
+  const powerSort=$("deckBattlePowerSort")?.value||"default";
   const cards=getDeckBuilderCardPoolForForge().filter(card=>{
-    const hay=`${card.name||""} ${card.text||""}`.toLowerCase();
+    const battlePower=getUnitBattlePower(card);
+    const battleTier=getBattlePowerTier(battlePower);
+    const hay=`${card.name||""} ${card.text||""} ${Number.isFinite(battlePower)?`pb ${battlePower} poder de batalla ${battleTier?.label||""}`:"sin poder de batalla"}`.toLowerCase();
     const typeOk=typeFilter==="all"||card.type===typeFilter;
     const rarity=cardRarity(card);
     const rarityOk=rarityFilter==="all"||
@@ -12241,8 +12370,15 @@ function renderDeckBuilder(){
       (rarityFilter==="mythic"&&(rarity==="mítica"||rarity==="mitica"))||
       (rarityFilter==="legendary"&&(rarity==="legendaria"||rarity==="legendary"))||
       (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
-    return (!search||hay.includes(search))&&typeOk&&rarityOk;
-  }).sort((a,b)=>(a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||"")));
+    const bounds=getBattlePowerFilterBounds(powerFilter);
+    const powerOk=powerFilter==="all"||(powerFilter==="unrated"&&!Number.isFinite(battlePower))||(bounds&&Number.isFinite(battlePower)&&battlePower>=bounds.min&&battlePower<=bounds.max);
+    return (!search||hay.includes(search))&&typeOk&&rarityOk&&powerOk;
+  }).sort((a,b)=>{
+    const pa=getUnitBattlePower(a),pb=getUnitBattlePower(b);
+    if(powerSort==="power_desc")return (Number.isFinite(pb)?pb:-1)-(Number.isFinite(pa)?pa:-1)||String(a.name||"").localeCompare(String(b.name||""));
+    if(powerSort==="power_asc")return (Number.isFinite(pa)?pa:101)-(Number.isFinite(pb)?pb:101)||String(a.name||"").localeCompare(String(b.name||""));
+    return (a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||""));
+  });
   const pageSize=DECK_BUILDER_COLLECTION_PAGE_SIZE;
   const totalPages=Math.max(1,Math.ceil(cards.length/pageSize));
   deckBuilderCollectionPage=Math.max(0,Math.min(deckBuilderCollectionPage,totalPages-1));
@@ -13313,6 +13449,8 @@ function resetDeckBuilderCollectionPageAndRender(){deckBuilderCollectionPage=0;r
 on("deckSearchInput","input",resetDeckBuilderCollectionPageAndRender);
 on("deckTypeFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
+on("deckBattlePowerFilter","change",resetDeckBuilderCollectionPageAndRender);
+on("deckBattlePowerSort","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
 on("clearDeckPrincipalBtn","click",clearCurrentDeckPrincipal);
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);

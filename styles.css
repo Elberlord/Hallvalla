@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8Q · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8R · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20568,3 +20568,111 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
    No requiere estilos exclusivos: usa carta Mítica, retrato de tablero
    y animaciones estándar de robo existentes.
    ============================================================ */
+
+
+/* =====================================================================
+   7BOARDCTRL8R · PODER DE BATALLA EN DET Y FORJA
+   ===================================================================== */
+.inspect-card,
+.card-inspect-card{
+  position:relative!important;
+}
+.det-battle-power-badge{
+  position:absolute;
+  top:12px;
+  right:12px;
+  z-index:24;
+  width:82px;
+  min-height:74px;
+  padding:7px 7px 6px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  align-items:center;
+  justify-items:center;
+  border-radius:15px;
+  border:1px solid rgba(255,235,164,.62);
+  background:linear-gradient(180deg,rgba(24,18,10,.96),rgba(6,5,4,.94));
+  box-shadow:0 9px 24px rgba(0,0,0,.55),inset 0 0 15px rgba(255,226,135,.11);
+  color:#fff3c9;
+  text-align:center;
+  pointer-events:none;
+}
+.det-battle-power-badge.hidden{display:none!important;}
+.det-battle-power-label{
+  font-size:7.5px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:.08em;
+  color:#ead9ae;
+}
+.det-battle-power-badge strong{
+  font-family:Georgia,serif;
+  font-size:30px;
+  line-height:.96;
+  color:#fff9dc;
+  text-shadow:0 2px 8px rgba(0,0,0,.9);
+}
+.det-battle-power-badge small{
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.det-battle-power-badge.battle-power-initiation{border-color:rgba(170,170,170,.62);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 12px rgba(170,170,170,.12)}
+.det-battle-power-badge.battle-power-bronze{border-color:rgba(190,126,74,.78);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 14px rgba(190,126,74,.20)}
+.det-battle-power-badge.battle-power-silver{border-color:rgba(192,210,224,.82);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 15px rgba(182,207,227,.22)}
+.det-battle-power-badge.battle-power-gold{border-color:rgba(245,204,93,.88);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 18px rgba(245,204,93,.28)}
+.det-battle-power-badge.battle-power-elite{border-color:rgba(126,203,255,.90);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 20px rgba(91,181,255,.32)}
+.det-battle-power-badge.battle-power-dominant{border-color:rgba(255,113,220,.92);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 23px rgba(255,94,213,.38)}
+
+/* El modal de carta ya tiene la X en la esquina superior derecha. El PB
+   queda debajo para no cubrir el botón de cierre. */
+#cardInspectModal .det-battle-power-badge{top:58px;right:13px;}
+#cardInspectModal.deck-builder-detail-modal .det-battle-power-badge{top:12px;left:236px;right:auto;}
+#inspector .inspect-title{padding-right:98px!important;}
+#cardInspectModal .card-inspect-head{padding-right:96px!important;}
+
+.deck-mini-power{
+  position:absolute;
+  z-index:4;
+  left:3px;
+  bottom:21px;
+  min-width:31px;
+  height:15px;
+  padding:0 4px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  border:1px solid rgba(255,230,150,.48);
+  background:rgba(0,0,0,.82);
+  color:#fff4c8;
+  font-size:7.4px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.01em;
+  text-shadow:0 1px 2px #000;
+  pointer-events:none;
+}
+.deck-mini-power.battle-power-gold{border-color:rgba(245,204,93,.82)}
+.deck-mini-power.battle-power-elite{border-color:rgba(126,203,255,.86)}
+.deck-mini-power.battle-power-dominant{border-color:rgba(255,113,220,.90);box-shadow:0 0 8px rgba(255,94,213,.28)}
+
+#deckBuilderPanel #deckBattlePowerFilter,
+#deckBuilderPanel #deckBattlePowerSort{
+  border-color:rgba(126,203,255,.34)!important;
+}
+
+@media(max-width:720px){
+  .det-battle-power-badge{
+    top:9px;
+    right:9px;
+    width:70px;
+    min-height:64px;
+    padding:6px;
+  }
+  .det-battle-power-badge strong{font-size:25px;}
+  #cardInspectModal .det-battle-power-badge{top:53px;right:9px;}
+  #inspector .inspect-title{padding-right:84px!important;}
+  #cardInspectModal .card-inspect-head{padding-right:82px!important;}
+}
