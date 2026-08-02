@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8O · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8P · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20523,4 +20523,41 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   .deck-principal-selector{grid-template-columns:52px minmax(0,1fr);}
   .deck-principal-art{width:50px;height:50px;}
   .deck-principal-clear{grid-column:1/-1;width:100%;}
+}
+
+
+/* =====================================================================
+   7BOARDCTRL8P · BONIFICACIÓN DE RELOJ POR ELIMINACIÓN EN PVP
+   Cada unidad enemiga destruida entrega +5 s al reloj acumulativo.
+   ===================================================================== */
+.duel-clock-hud{overflow:visible}
+.clock-kill-bonus{
+  position:absolute;
+  left:50%;
+  top:-20px;
+  transform:translateX(-50%);
+  padding:2px 7px 3px;
+  border-radius:10px;
+  color:#bfffd0;
+  background:rgba(10,38,20,.94);
+  border:1px solid rgba(108,255,148,.72);
+  box-shadow:0 0 12px rgba(70,255,125,.28),0 4px 12px rgba(0,0,0,.45);
+  font:900 11px/1 Georgia,serif;
+  letter-spacing:.4px;
+  white-space:nowrap;
+  pointer-events:none;
+  animation:hvClockKillBonusFloat 1.4s ease-out forwards;
+}
+.duel-clock-hud.clock-kill-pulse{
+  animation:hvClockKillPulse .58s ease-out 1;
+}
+@keyframes hvClockKillBonusFloat{
+  0%{opacity:0;transform:translate(-50%,8px) scale(.72)}
+  20%{opacity:1;transform:translate(-50%,0) scale(1.08)}
+  72%{opacity:1;transform:translate(-50%,-7px) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-15px) scale(.92)}
+}
+@keyframes hvClockKillPulse{
+  0%,100%{filter:brightness(1)}
+  45%{filter:brightness(1.55) drop-shadow(0 0 8px rgba(80,255,135,.75))}
 }
