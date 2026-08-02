@@ -1,4 +1,4 @@
-/* HALLVALLA 7BOARDCTRL8P · FASE 4: consolidación conservadora de mapa, HUD y responsive.
+/* HALLVALLA 7BOARDCTRL8Q · FASE 4: consolidación conservadora de mapa, HUD y responsive.
    Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
    DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
 /*
@@ -20561,3 +20561,10 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   0%,100%{filter:brightness(1)}
   45%{filter:brightness(1.55) drop-shadow(0 0 8px rgba(80,255,135,.75))}
 }
+
+
+/* ============================================================
+   7BOARDCTRL8Q · MERLÍN / VISIÓN DE LOS TIEMPOS
+   No requiere estilos exclusivos: usa carta Mítica, retrato de tablero
+   y animaciones estándar de robo existentes.
+   ============================================================ */

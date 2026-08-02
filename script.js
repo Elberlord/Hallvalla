@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_PVP_KILL_CLOCK_7BOARDCTRL8P";
+const HALLVALLA_BUILD_VERSION="v8_MERLIN_VISION_TIEMPOS_7BOARDCTRL8Q";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -183,6 +183,7 @@ const CARD_PORTRAITS={
   beowulf:"assets/cards/special/beowulf.webp",
   musashi:"assets/cards/special/miyamoto_musashi.webp",
   hattoriHanzo:"assets/cards/special/hattori_hanzo.webp",
+  merlin:"assets/cards/special/merlin.webp",
   khalid:"assets/cards/special/khalid_ibn_al_walid.webp",
   attila:"assets/cards/special/attila.webp",
   genghis:"assets/cards/special/genghis_khan.webp",
@@ -216,6 +217,7 @@ const CARD_PORTRAITS={
 const BOARD_PORTRAITS={
   wallace:"assets/board_cards/special/wallace.webp",
   hattori_hanzo:"assets/board_cards/special/hattori_hanzo.webp",
+  merlin:"assets/board_cards/special/merlin.webp",
   african_elephant:"assets/board_cards/beasts/african_elephant.webp"
 };
 
@@ -1809,6 +1811,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"el_cid",name:"El Cid Campeador",type:"unit",icon:"⚜️",portrait:CARD_PORTRAITS.cid,cost:3,hp:6,atk:5,guard:5,dex:7,agi:4,mov:2,range:1,rarity:"Mítica",special:true,text:"Campeador: cuando El Cid es atacado por una unidad con mayor Ataque que él, obtiene +4 Guardia y +4 Destreza durante ese combate."},
   {key:"spartacus",name:"Espartaco",type:"unit",icon:"⛓️",portrait:CARD_PORTRAITS.spartacus,cost:3,hp:6,atk:6,guard:4,dex:7,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Romper Cadenas: mientras Espartaco esté en campo, tus unidades básicas obtienen +5 Ataque cuando atacan cartas especiales."},
   {key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:3,hp:4,atk:2,guard:3,dex:5,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, elige un aliado. Ese aliado obtiene +4 Destreza y +4 Guardia hasta el final de su próximo turno."},
+  {key:"merlin",name:"Merlín",type:"unit",icon:"🔮",portrait:CARD_PORTRAITS.merlin,cost:5,hp:3,atk:4,guard:2,dex:9,agi:5,mov:1,range:3,rarity:"Mítica",special:true,caster:true,hechicero:true,profeta:true,sabio:true,text:"Visión de los Tiempos: mientras Merlín permanezca en el campo, al iniciar la Draw Phase de su controlador roba 1 carta adicional de la parte superior del mazo. Este efecto no se acumula aunque controles varias copias de Merlín."},
   {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:4,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Muralla de Troya: aura pasiva. Cuenta cuántas unidades enemigas están en rango 1 de Héctor. Cada una de esas unidades pierde 1 AT por cada enemigo en ese mismo rango. Ejemplo: si hay 3 enemigos en rango 1 de Héctor, cada uno pierde 3 AT."},
   {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:4,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
   {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:4,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,rarity:"Legendaria",special:true,text:"Shirahadori: cuando un rival declara un ataque contra Musashi, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate. Honesakiki: cuando está a punto de morir, ataca a todas las unidades enemigas en rango 1 con 200% de Ataque."},
@@ -1960,6 +1963,7 @@ const WEAPON_CLASS_BY_KEY={
   el_cid:"sword",
   spartacus:"sword",
   sun_tzu:"neutral",
+  merlin:"mage",
   hector_troy:"spear",
   beowulf:"sword",
   miyamoto_musashi:"sword",
@@ -2119,6 +2123,7 @@ const UNIT_LORE_DATA={
   ragnar_lodbrok:{short:"Vikingo de saqueo, presión y supervivencia por conquista.",legend:"Ragnar Lodbrok vive entre saga y leyenda nórdica. En HallValla se alimenta del choque contra objetivos importantes y recupera recursos de combate cuando logra hacer daño."},
   subotai:{short:"General mongol de horizontes largos, marcha y terror a distancia.",legend:"Subotai fue uno de los grandes estrategas de la expansión mongola. En HallValla representa movilidad, presión y control del ritmo enemigo."},
   sun_tzu:{short:"Estratega de la guerra antes de que la espada salga de la vaina.",legend:"Sun Tzu es símbolo de estrategia, ventaja y victoria sin desperdicio. En HallValla fortalece la Destreza aliada y vuelve la formación más resistente al miedo."},
+  merlin:{short:"Profeta y hechicero de la tradición artúrica, capaz de convertir conocimiento del porvenir en ventaja para su ejército.",legend:"Merlín es el gran consejero mágico de las leyendas artúricas. Sus relatos lo vinculan con profecías, secretos antiguos y la preparación del ascenso del rey Arturo. HallValla representa ese dominio del tiempo mediante Visión de los Tiempos: mientras permanezca en el campo, permite acceder antes a una carta futura del mazo. No es un guerrero resistente; su fuerza está en la distancia, la anticipación y el valor acumulativo de cada Draw Phase."},
   bengal_tiger:{short:"Depredador oculto, salto repentino y daño que deja huella.",legend:"El Tigre de Bengala es una sombra de jungla: no avisa, aparece. En HallValla usa Sigilo, emboscada y Sangrado para convertir una mala posición enemiga en sentencia."},
   tomoe_gozen:{short:"Guerrera samurái, velocidad cortante y precisión montada.",legend:"Tomoe Gozen es una figura legendaria de la guerra japonesa. En HallValla premia el movimiento previo y castiga a unidades de rango con ataques técnicos."},
   boudica:{short:"Reina guerrera de Iceni, ira tribal contra el invasor.",legend:"Boudica representa rebelión, pérdida y furia convertida en mando. En HallValla gana fuerza cuando un aliado cae, especialmente si era una unidad especial."},
@@ -3075,7 +3080,7 @@ function getAiPrincipalKeyForBattle(battle){
 function getPrincipalUtilityScore(card){
   if(!card||card.type!=="unit")return -Infinity;
   const utility={
-    richard_lionheart:500,leonidas:480,african_elephant:470,achilles:465,
+    richard_lionheart:500,merlin:492,leonidas:480,african_elephant:470,achilles:465,
     attila_hun:455,simo_hayha:450,hannibal_barca:440,sun_tzu:430,
     african_lion:420,yi_sun_sin:415,shaka_zulu:410,ulysses:405
   }[card.key]||0;
@@ -3430,6 +3435,7 @@ function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units|
 function effectiveCardValue(card,field){const mageBuff=getMageLeaderBuff(card?.owner);const abilityBonus=0;return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&typeof card?.[field]==="number"?card[field]+(mageBuff.effectBonus||0)+abilityBonus:(card?.[field]||0)+abilityBonus}
 function unitsInPlay(units=publicState?.units||[]){return units||[]}
 function ownerHasUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).some(u=>u.owner===owner&&u.key===key&&u.hp>0)}
+function getMerlinDrawBonus(owner,units=publicState?.units||[]){return ownerHasUnit(owner,"merlin",units)?1:0}
 function firstOwnerUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).find(u=>u.owner===owner&&u.key===key&&u.hp>0)||null}
 function adjacentUnits(u,units=publicState?.units||[]){return unitsInPlay(units).filter(t=>t.id!==u?.id&&dist(u,t)<=1)}
 function adjacentAllies(u,units=publicState?.units||[]){return adjacentUnits(u,units).filter(t=>t.owner===u.owner)}
@@ -4796,7 +4802,13 @@ async function maybeStartTurn(){
   turnStartLock=true;
   try{
     const firstTurnNoDraw=privateState.skipFirstTurnDraw===true;
-    const drawn=firstTurnNoDraw?{deck:[...(privateState.deck||[])],hand:[...(privateState.hand||[])]}:drawCards(privateState.deck||[],privateState.hand||[],2);
+    const baseDrawCount=firstTurnNoDraw?0:2;
+    const merlinDrawBonus=getMerlinDrawBonus(myPlayer,publicState.units||[]);
+    const handBeforeDraw=(privateState.hand||[]).length;
+    const deckBeforeDraw=(privateState.deck||[]).length;
+    const drawn=drawCards(privateState.deck||[],privateState.hand||[],baseDrawCount+merlinDrawBonus);
+    const actualDrawCount=Math.max(0,drawn.hand.length-handBeforeDraw);
+    const actualMerlinDraw=Math.min(merlinDrawBonus,Math.max(0,deckBeforeDraw-baseDrawCount));
     const rawHonorGain=(publicState.turn||1)>3?2:1;
     const recharge=getResourceRecharge(privateState.maxHonor||0,rawHonorGain);
     const honorGain=recharge.gain;
@@ -4812,17 +4824,21 @@ async function maybeStartTurn(){
     units=bleedStart.units;
     const lionFearStart=applyAfricanLionFearAura(units);
     units=lionFearStart.units;
-    const startLogs=[...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(lionFearStart.logs||[])];
+    const merlinDrawLogs=actualMerlinDraw>0?[`Visión de los Tiempos: Merlín permite a J${myPlayer} robar 1 carta adicional de su mazo.`]:[];
+    const startLogs=[...merlinDrawLogs,...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(lionFearStart.logs||[])];
     if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
     const playerStatsUpdate={hp:units.find(u=>u.owner===myPlayer&&u.leader)?.hp||0,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length};
     const stalemateState=buildNoPlayStalemateState(publicState,units,myPlayer,drawn.hand,honor,"main",playerStatsUpdate);
     const stalemateOutcome=getBattleOutcome(units,stalemateState);
     if(stalemateOutcome.ended&&String(stalemateOutcome.reason||"").startsWith("stalemate")&&await finalizeBattle(units,"",stalemateState))return;
-    if(firstTurnNoDraw)tryPlaySound("mana_charge",.42);else{tryPlaySound("draw_card",.50);setTimeout(()=>tryPlaySound("mana_charge",.42),120);}
+    if(actualDrawCount>0){tryPlaySound("draw_card",.50);setTimeout(()=>tryPlaySound("mana_charge",.42),120);}else tryPlaySound("mana_charge",.42);
     const resourceLabel=getResourceLabel(myPlayer);
     const honorCapText=maxHonor>=RESOURCE_MAX_CAP?" (tope 10)":""; 
     const noPlayText=stalemateState.stalemateNoPlay?.[myPlayer]?.noPlayable?" Sin unidades ni cartas jugables: queda marcado para desempate por Vida si el rival también se agota.":"";
-    const logText=firstTurnNoDraw?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano inicial: ${drawn.hand.length} cartas. Pasa a Main Phase.${noPlayText}`:`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba 2 cartas. Pasa a Main Phase.${noPlayText}`;
+    const merlinDrawText=actualMerlinDraw>0?" Visión de los Tiempos añade 1 carta adicional.":(merlinDrawBonus>0?" Visión de los Tiempos se activa, pero el mazo no tiene una carta adicional disponible.":"");
+    const logText=firstTurnNoDraw
+      ?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano antes del efecto: ${handBeforeDraw} cartas.${merlinDrawText} Mano actual: ${drawn.hand.length}. Pasa a Main Phase.${noPlayText}`
+      :`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba ${actualDrawCount} carta${actualDrawCount===1?"":"s"}.${merlinDrawText} Pasa a Main Phase.${noPlayText}`;
     await updatePublic({
       units,
       _clockKillCreditMode:"opposite-owner",
@@ -7047,8 +7063,13 @@ async function adventureEnemyTurn(){
   };
   const firstTurnNoDraw=ai.skipFirstTurnDraw===true;
   const finalMapBossDrawBonus=isFinalMapBossBattleId(pub.adventureBattleId)?1:0;
-  const aiDrawCount=2+finalMapBossDrawBonus;
-  const drawn=firstTurnNoDraw?{deck:[...(ai.deck||[])],hand:[...(ai.hand||[])]}:drawCards(ai.deck||[],ai.hand||[],aiDrawCount);
+  const aiBaseDrawCount=firstTurnNoDraw?0:2+finalMapBossDrawBonus;
+  const aiMerlinDrawBonus=getMerlinDrawBonus(2,pub.units||[]);
+  const aiHandBeforeDraw=(ai.hand||[]).length;
+  const aiDeckBeforeDraw=(ai.deck||[]).length;
+  const drawn=drawCards(ai.deck||[],ai.hand||[],aiBaseDrawCount+aiMerlinDrawBonus);
+  const aiActualDrawCount=Math.max(0,drawn.hand.length-aiHandBeforeDraw);
+  const aiActualMerlinDraw=Math.min(aiMerlinDrawBonus,Math.max(0,aiDeckBeforeDraw-aiBaseDrawCount));
   let deck=drawn.deck, hand=drawn.hand;
   const achillesExtremeHonorBonus=isAchillesExtremeBattleId(pub.adventureBattleId)?1:0;
   const rawHonorGain=((pub.turn||1)>3?2:1)+achillesExtremeHonorBonus;
@@ -8549,7 +8570,11 @@ async function adventureEnemyTurn(){
   };
 
   const aiResourceLabel=getResourceLabel(2);
-  logs.push(firstTurnNoDraw?`${pub.adventureEnemyName||"Rival"} Draw Phase: IA táctica máxima. ${aiResourceLabel} ${honor}/${maxHonor}. Mano inicial: ${hand.length} cartas.`:`${pub.adventureEnemyName||"Rival"} Draw Phase: roba ${aiDrawCount} cartas. IA táctica máxima. ${aiResourceLabel} ${honor}/${maxHonor}.`);
+  if(aiActualMerlinDraw>0)logs.push(`Visión de los Tiempos: Merlín permite al rival robar 1 carta adicional de su mazo.`);
+  const aiMerlinText=aiActualMerlinDraw>0?" Visión de los Tiempos añadió +1 carta.":(aiMerlinDrawBonus>0?" Visión de los Tiempos no encontró una carta adicional disponible.":"");
+  logs.push(firstTurnNoDraw
+    ?`${pub.adventureEnemyName||"Rival"} Draw Phase: IA táctica máxima. ${aiResourceLabel} ${honor}/${maxHonor}. Mano antes del efecto: ${aiHandBeforeDraw}; mano actual: ${hand.length}.${aiMerlinText}`
+    :`${pub.adventureEnemyName||"Rival"} Draw Phase: roba ${aiActualDrawCount} carta${aiActualDrawCount===1?"":"s"}. IA táctica máxima. ${aiResourceLabel} ${honor}/${maxHonor}.${aiMerlinText}`);
   await publishAiStep({turnPhase:"draw"});
   await sleep(AI_PHASE_DELAY_MS);
 
@@ -8559,7 +8584,7 @@ async function adventureEnemyTurn(){
 
   // Plan táctico: la IA ya no juega por una fila rígida de categorías.
   // Ahora compara TODAS las cartas jugables de la mano, puntúa cada opción y ejecuta la mejor.
-  // Mantiene robo 2 / honor normal: la dificultad sube por decisión, no por recursos inflados.
+  // Mantiene el robo base normal; Merlín puede añadir +1 por Visión de los Tiempos. La dificultad sube por decisión, no por recursos inflados.
   let cardsPlayed=0;
   let aiMainSafety=0;
   while(aiMainSafety++<40){
@@ -14181,6 +14206,7 @@ const CODE_TRUTH_EFFECTS_7HAI={
   bengal_tiger:{trigger:["Inicia con Sigilo.","Desde Sigilo puede atacar con +2 alcance de movimiento.","Desgarro requiere daño real a HP."],does:["Mientras está oculto no puede ser objetivo directo.","Al atacar desde Sigilo reduce -3 AGI del defensor durante ese combate.","Si hay una Bestia aliada adyacente al defensor, el defensor recibe -2 AGI adicional.","Al hacer daño real aplica Sangrado: 50%, o 100% si atacó desde Sigilo."],doesNot:["Si se revela, pierde parte de la protección y del bonus de emboscada."],example:"Es asesino de entrada: sigilo, salto, presión de AGI y posible Sangrado."},
   white_rhino:{trigger:["Debe moverse 2 casillas en línea recta antes de atacar."],does:["Usa Embestida Devastadora: AT 22.","Después de atacar con Embestida, impacte o falle, queda Aturdido hasta su próximo turno.","Aturdido: no puede moverse, defenderse ni atacar; su Guardia no cambia y su DX/AGI se reducen a la mitad."],doesNot:["Bestia Torpe: no se beneficia de bonos de DX ni AGI."],example:"Es un martillo de una línea recta, pero queda expuesto después."},
   african_elephant:{trigger:["Debe moverse exactamente 1 celda en línea recta hacia el frente, directamente hacia el mismo enemigo que atacará.","Debe atacar inmediatamente después del movimiento."],does:["Obtiene +6 AT durante ese ataque: AT 22.","El objetivo principal pierde 4 AGI para evadir y, si es impactado, es empujado hasta 2 celdas.","Los enemigos situados a ambos lados del objetivo central reciben AT 10, pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda.","Si el objetivo principal no puede retroceder, recibe 8 daño directo de Pisoteo.","El Elefante avanza a la celda liberada y pierde 2 GD hasta su próximo turno."],doesNot:["No se activa por movimiento lateral o hacia atrás.","No se activa si comienza adyacente y ataca sin moverse.","No se activa si ataca a un enemigo distinto o realiza otra acción entre movimiento y ataque.","No queda Aturdido después de cargar."],example:"Elefante → celda vacía → enemigo. Avanza a la celda vacía y ataca inmediatamente al enemigo frontal."},
+  merlin:{trigger:["Merlín debe permanecer vivo y dentro del campo al iniciar la Draw Phase de su controlador.","La comprobación se realiza una vez por Draw Phase."],does:["Roba 1 carta adicional de la parte superior del mazo.","En la primera Draw Phase también puede añadir esa carta aunque el robo inicial normal esté omitido.","El efecto funciona para jugador e IA y actualiza el tamaño de mano y mazo correctamente."],doesNot:["No permite buscar ni seleccionar una carta concreta.","No se acumula aunque controles varias copias de Merlín.","No se activa desde la mano, el mazo o el cementerio.","Si el mazo está vacío, no crea una carta.","Magia / Arcano no tiene ventaja ni desventaja en el sistema de armas."],example:"Con Merlín en campo, una Draw Phase que normalmente roba 2 cartas roba 3. Si es Personaje Principal, puede añadir 1 carta durante la primera Draw Phase."},
   richard_lionheart:{concise:true,trigger:[],does:["Una vez por turno, elige un aliado adyacente. Gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo. Puede elegir nuevamente a la misma unidad en turnos posteriores."],doesNot:[],example:""},
   saladin:{trigger:["EFFECT una vez por turno.","Debe haber una casilla libre adyacente y no controlar ya una Caballería Arquera de Saladino."],does:["Invoca una Caballería Arquera de Saladino en una casilla adyacente válida."],doesNot:["No puede invocar si ya controlas ese token o no hay espacio."],example:"Presiona con token, no con daño directo inmediato."},
   saladin_archer_cavalry:{trigger:["Unidad token convocada por Saladino."],does:["Cuenta como Caballería y arquera para reglas de clase/rango.","Recibe la regla global de arco: +1 RG base si aplica desde el sistema."],doesNot:["No tiene EFFECT propio fuera de ser token de presión."],example:"Su valor está en movilidad, rango y ocupación del tablero."},
