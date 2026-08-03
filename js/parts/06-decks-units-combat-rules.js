@@ -423,7 +423,17 @@ function isLightCavalryUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
   const name=String(u.name||"").toLowerCase();
-  return key==="cavalry"||key==="saladin_archer_cavalry"||name.includes("caballería ligera")||name.includes("caballeria ligera");
+  const groups=Array.isArray(u.leaderBuffGroups)?u.leaderBuffGroups:[];
+  return key==="cavalry"
+    || key==="saladin_archer_cavalry"
+    || key==="numidian_javelin_rider"
+    || key==="scythian_horse_archer"
+    || key==="hungarian_hussar"
+    || key==="mongol_explorer"
+    || key==="cossack_rider"
+    || groups.includes("cavalry")
+    || name.includes("caballería ligera")
+    || name.includes("caballeria ligera");
 }
 
 function isAntiCavalryTargetUnit(u){
@@ -783,6 +793,10 @@ function getCombatMods(attacker,defender){
   if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
   if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
+  if(isRangedAttack(attacker,defender)&&attacker.key==="numidian_javelin_rider"&&Number(attacker.movedSpaces||0)>=1){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Jabalinas de hostigamiento.`);}
+  if(isRangedAttack(attacker,defender)&&attacker.key==="mongol_explorer"&&Number(attacker.movedSpaces||0)>=2){mods.attackerDex+=1;mods.notes.push(`${attacker.name} +1 DX por Tiro en carrera.`);}
+  if(melee&&attacker.key==="hungarian_hussar"&&Number(attacker.movedSpaces||0)>=2){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
+  if(melee&&attacker.key==="cossack_rider"&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Persecución cosaca.`);}
   if(melee&&attacker.key==="berserker"){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
   if(melee&&attacker.key==="samurai_katana"){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Dos Manos.`);}
   if(defender.key==="samurai_katana"||defender.key==="miyamoto_musashi"){const shirahadoriCount=countEnemyUnitsInCardRange(defender,publicState?.units||[]);if(shirahadoriCount>0){mods.defenderDex+=(shirahadoriCount*2);mods.notes.push(`${defender.name} +${shirahadoriCount*2} DX por Shirahadori (${shirahadoriCount} rival${shirahadoriCount===1?"":"es"} en su rango).`);}}
@@ -824,6 +838,24 @@ function applyYabusameRetreatIfPossible(units,unitId){
   if(!unit||unit.key!=="samurai_yabusame"||(unit.hp||0)<=0)return{units:units||[],moved:false,text:""};
   const result=retreatUnitOneStepTowardLeader(units,unitId);
   return{...result,text:result.moved?` Estrategia de repliegue: ${unit.name} retrocede 1 casilla hacia su líder.`:""};
+}
+function applyScythianRetreatIfPossible(units,unitId){
+  const unit=(units||[]).find(u=>u.id===unitId);
+  if(!unit||unit.key!=="scythian_horse_archer"||(unit.hp||0)<=0)return{units:units||[],moved:false,text:""};
+  if(Number(unit.movedSpaces||0)<2)return{units:units||[],moved:false,text:""};
+  const result=retreatUnitOneStepTowardLeader(units,unitId);
+  return{...result,text:result.moved?` Disparo parto: ${unit.name} retrocede 1 casilla hacia su líder.`:""};
+}
+function applyCossackAdvanceIfPossible(units,unitId,targetX,targetY){
+  const unit=(units||[]).find(u=>u.id===unitId);
+  if(!unit||unit.key!=="cossack_rider"||(unit.hp||0)<=0)return{units:units||[],moved:false,text:""};
+  if(!Number.isFinite(targetX)||!Number.isFinite(targetY))return{units:units||[],moved:false,text:""};
+  const occupied=(units||[]).some(u=>u.id!==unitId&&u.x===targetX&&u.y===targetY&&u.hp>0);
+  if(occupied)return{units:units||[],moved:false,text:""};
+  const distance=Math.abs((unit.x||0)-targetX)+Math.abs((unit.y||0)-targetY);
+  if(distance!==1)return{units:units||[],moved:false,text:""};
+  const out=(units||[]).map(u=>u.id===unitId?{...u,x:targetX,y:targetY}:u);
+  return{units:out,moved:true,text:` Persecución cosaca: ${unit.name} avanza a la casilla que ocupaba su objetivo.`};
 }
 function applyNaginataDaimyoPunishment(units,fallenUnit,killerId,isMelee){
   const list=[...(units||[])];

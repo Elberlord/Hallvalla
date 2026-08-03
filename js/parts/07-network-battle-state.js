@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8V · Estado de red, creación de partidas y Firebase */
+/* HallValla 7BOARDCTRL8Z · Estado de red, creación de partidas y Firebase */
 async function updatePublic(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
   const sourcePatch=patch||{};
@@ -12,8 +12,9 @@ async function updatePublic(patch){
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
     const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
     const erictoLife=resolveErictoLifecycle(beforeUnits,solomonLife.units);
-    cleanPatch.units=erictoLife.units;
-    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[])];
+    const mongolAura=applyMongolExplorerAura(erictoLife.units);
+    cleanPatch.units=mongolAura.units;
+    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
     if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
     cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);
   }else{

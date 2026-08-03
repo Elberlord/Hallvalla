@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8X · Rutas de assets y sistema de líderes */
+/* HallValla 7BOARDCTRL8Z · Rutas de assets y sistema de líderes */
 
 
 /*
@@ -18,6 +18,11 @@ const CARD_PORTRAITS={
   greekHoplite:"assets/cards/basic/greek_hoplite.webp",
   romanLegionary:"assets/cards/basic/roman_legionary.webp",
   armoredManAtArms:"assets/cards/basic/armored_man_at_arms.webp",
+  numidianJavelinRider:"assets/cards/basic/numidian_javelin_rider.webp",
+  scythianHorseArcher:"assets/cards/basic/scythian_horse_archer.webp",
+  hungarianHussar:"assets/cards/basic/hungarian_hussar.webp",
+  mongolExplorer:"assets/cards/basic/mongol_explorer.webp",
+  cossackRider:"assets/cards/basic/cossack_rider.webp",
   mage:"assets/cards/basic/mage.webp",
   arcaneAdept:"assets/cards/basic/mage.webp",
   rogue:"assets/cards/basic/rogue.webp",
@@ -106,7 +111,12 @@ const BOARD_PORTRAITS={
   roman_auxiliary_sagittarius:"assets/board_cards/basic/roman_auxiliary_sagittarius.webp",
   greek_hoplite:"assets/board_cards/basic/greek_hoplite.webp",
   roman_legionary:"assets/board_cards/basic/roman_legionary.webp",
-  armored_man_at_arms:"assets/board_cards/basic/armored_man_at_arms.webp"
+  armored_man_at_arms:"assets/board_cards/basic/armored_man_at_arms.webp",
+  numidian_javelin_rider:"assets/board_cards/basic/numidian_javelin_rider.webp",
+  scythian_horse_archer:"assets/board_cards/basic/scythian_horse_archer.webp",
+  hungarian_hussar:"assets/board_cards/basic/hungarian_hussar.webp",
+  mongol_explorer:"assets/board_cards/basic/mongol_explorer.webp",
+  cossack_rider:"assets/board_cards/basic/cossack_rider.webp"
 };
 
 /*
