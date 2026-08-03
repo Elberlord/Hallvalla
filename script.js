@@ -7097,7 +7097,7 @@ async function attackUnit(a,d){
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
   const coverFireTriggered=shouldTriggerCoverFire(a,hpLoss,hit.hit);
   if(coverFireTriggered)units=applyCoverFire(units,a.owner,a.id);
-  const solomonIfritResult=applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss);
+  const solomonIfritResult=applySolomonIfritAfterHit(units,a,d,hit,hpLoss);
     units=solomonIfritResult.units;
     let bleedText=solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:"";
   let alreadyBleeding=false;
