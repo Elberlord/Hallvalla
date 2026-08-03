@@ -184,6 +184,7 @@ const CARD_PORTRAITS={
   musashi:"assets/cards/special/miyamoto_musashi.webp",
   hattoriHanzo:"assets/cards/special/hattori_hanzo.webp",
   merlin:"assets/cards/special/merlin.webp",
+  kingSolomon:"assets/cards/special/king_solomon.webp",
   khalid:"assets/cards/special/khalid_ibn_al_walid.webp",
   attila:"assets/cards/special/attila.webp",
   genghis:"assets/cards/special/genghis_khan.webp",
@@ -218,6 +219,10 @@ const BOARD_PORTRAITS={
   wallace:"assets/board_cards/special/wallace.webp",
   hattori_hanzo:"assets/board_cards/special/hattori_hanzo.webp",
   merlin:"assets/board_cards/special/merlin.webp",
+  king_solomon:"assets/board_cards/special/king_solomon.webp",
+  solomon_jinn:"assets/board_cards/special/solomon_jinn.webp",
+  solomon_ifrit:"assets/board_cards/special/solomon_ifrit.webp",
+  solomon_demon:"assets/board_cards/special/solomon_demon.webp",
   african_elephant:"assets/board_cards/beasts/african_elephant.webp"
 };
 
@@ -388,7 +393,7 @@ function getRawDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||
 }
 function getDestroyedNonLeaderUnits(beforeUnits=[],afterUnits=[]){
   const afterAlive=new Set((afterUnits||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>u.id));
-  return (beforeUnits||[]).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&!afterAlive.has(u.id));
+  return (beforeUnits||[]).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&!afterAlive.has(u.id)&&!(u.solomonSummon&&!(afterUnits||[]).some(s=>s.id===u.solomonSourceId&&s.hp>0)));
 }
 function applyPvpKillClockBonusToPatch(patch,beforeUnits,afterUnits,state=publicState,creditOwner=null,creditMode=""){
   const clean={...(patch||{})};
@@ -1812,6 +1817,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"spartacus",name:"Espartaco",type:"unit",icon:"⛓️",portrait:CARD_PORTRAITS.spartacus,cost:3,hp:6,atk:6,guard:4,dex:7,agi:5,mov:2,range:1,rarity:"Mítica",special:true,text:"Romper Cadenas: mientras Espartaco esté en campo, tus unidades básicas obtienen +5 Ataque cuando atacan cartas especiales."},
   {key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:3,hp:4,atk:2,guard:3,dex:5,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, elige un aliado. Ese aliado obtiene +4 Destreza y +4 Guardia hasta el final de su próximo turno."},
   {key:"merlin",name:"Merlín",type:"unit",icon:"🔮",portrait:CARD_PORTRAITS.merlin,cost:5,hp:3,atk:4,guard:2,dex:9,agi:5,mov:1,range:3,rarity:"Mítica",special:true,caster:true,hechicero:true,profeta:true,sabio:true,text:"Visión de los Tiempos: mientras Merlín permanezca en el campo, al iniciar la Draw Phase de su controlador roba 1 carta adicional de la parte superior del mazo. Este efecto no se acumula aunque controles varias copias de Merlín."},
+  {key:"king_solomon",name:"Rey Salomón",type:"unit",icon:"💍",portrait:CARD_PORTRAITS.kingSolomon,cost:7,hp:4,atk:3,guard:3,dex:8,agi:3,mov:1,range:3,rarity:"Mítica",special:true,caster:true,rey:true,invocador:true,sabio:true,text:"Sello de Salomón: al ser convocado, decide el orden de sus tres Grandes Entidades e invoca la primera gratuitamente en una celda libre adyacente. Solo puede controlar una a la vez. Cuando una entidad es destruida, invoca la siguiente que aún no haya utilizado. Cada entidad aparece una sola vez por duelo. Si Salomón abandona el campo, su entidad activa desaparece y se cancelan las restantes."},
   {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:4,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Muralla de Troya: aura pasiva. Cuenta cuántas unidades enemigas están en rango 1 de Héctor. Cada una de esas unidades pierde 1 AT por cada enemigo en ese mismo rango. Ejemplo: si hay 3 enemigos en rango 1 de Héctor, cada uno pierde 3 AT."},
   {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:4,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
   {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:4,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,rarity:"Legendaria",special:true,text:"Shirahadori: cuando un rival declara un ataque contra Musashi, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate. Honesakiki: cuando está a punto de morir, ataca a todas las unidades enemigas en rango 1 con 200% de Ataque."},
@@ -1828,6 +1834,92 @@ const SPECIAL_HUMAN_CARD_DATA=[
 ];
 const LEGENDARY_ALLY_CARDS=SPECIAL_HUMAN_CARD_DATA.map(c=>({...c}));
 
+
+
+/* =====================================================================
+   7BOARDCTRL8S · REY SALOMÓN Y GRANDES ENTIDADES
+   ===================================================================== */
+const SOLOMON_ENTITY_ORDER=["solomon_jinn","solomon_ifrit","solomon_demon"];
+const SOLOMON_SUMMON_TEMPLATES=Object.freeze({
+  solomon_jinn:{key:"solomon_jinn",name:"Gran Jinn de la Fortaleza",type:"unit",icon:"🔷",portrait:"assets/board_cards/special/solomon_jinn.webp",rarity:"Mítica",special:true,cost:0,hp:14,atk:9,guard:10,dex:7,agi:4,mov:2,range:1,battlePower:97,solomonSummon:true,text:"Reino Inamovible: Salomón y los aliados adyacentes al Jinn obtienen +3 Guardia. Las unidades protegidas por esta aura no pueden ser empujadas ni desplazadas por efectos enemigos."},
+  solomon_ifrit:{key:"solomon_ifrit",name:"Gran Ifrit del Castigo",type:"unit",icon:"🔥",portrait:"assets/board_cards/special/solomon_ifrit.webp",rarity:"Mítica",special:true,cost:0,hp:12,atk:14,guard:7,dex:9,agi:7,mov:2,range:2,battlePower:99,solomonSummon:true,text:"Fuego del Mandato: ignora 4 Guardia. Al causar daño real aplica Quemadura 2 y causa 4 daño directo a enemigos adyacentes al objetivo. Si destruye una unidad, recupera 2 Vida. Inmune a Quemadura."},
+  solomon_demon:{key:"solomon_demon",name:"Demonio de los Nombres Encadenados",type:"unit",icon:"⛓️",portrait:"assets/board_cards/special/solomon_demon.webp",rarity:"Mítica",special:true,cost:0,hp:10,atk:8,guard:6,dex:10,agi:7,mov:2,range:3,battlePower:98,solomonSummon:true,text:"Nombre Verdadero: al manifestarse sella automáticamente a la unidad enemiga de mayor Poder de batalla; esa unidad pierde 3 Destreza y 2 Agilidad mientras el Demonio permanezca manifestado."}
+});
+function getSolomonEntityTemplate(key){return SOLOMON_SUMMON_TEMPLATES[String(key||"")]||null;}
+function getSolomonAdjacentFreeCell(solomon,units=[]){
+  if(!solomon)return null;
+  const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+  return dirs.map(([dx,dy])=>({x:solomon.x+dx,y:solomon.y+dy})).filter(c=>c.x>=0&&c.x<COLS&&c.y>=0&&c.y<ROWS&&!units.some(u=>u.x===c.x&&u.y===c.y)).sort((a,b)=>dist(a,getLeader(solomon.owner)||solomon)-dist(b,getLeader(solomon.owner)||solomon))[0]||null;
+}
+function getAiSolomonOrder(units,owner){
+  const enemies=(units||[]).filter(u=>u.owner!==owner&&u.hp>0&&!u.leader);
+  const hasPriority=enemies.some(u=>getUnitBattlePower(u)>=88||["merlin","richard_lionheart","leonidas","yi_sun_sin"].includes(u.key));
+  return hasPriority?["solomon_demon","solomon_jinn","solomon_ifrit"]:["solomon_ifrit","solomon_jinn","solomon_demon"];
+}
+function chooseSolomonOrder(owner,units=[]){
+  if(owner!==myPlayer)return Promise.resolve(getAiSolomonOrder(units,owner));
+  return new Promise(resolve=>{
+    const overlay=document.createElement("div");
+    overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px";
+    const panel=document.createElement("div");
+    panel.style.cssText="width:min(760px,96vw);background:#090806;border:2px solid #b98a31;border-radius:18px;padding:22px;color:#f6e6b2;box-shadow:0 0 45px #000;text-align:center";
+    panel.innerHTML='<h2 style="margin:0 0 8px">Sello de Salomón</h2><p style="margin:0 0 18px">Elige el orden de manifestación. Cuando una entidad caiga, aparecerá la siguiente.</p><div class="solomon-order-buttons" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px"></div><div class="solomon-order-picked" style="margin-top:16px;min-height:24px"></div>';
+    overlay.appendChild(panel);document.body.appendChild(overlay);
+    const picked=[];const labels={solomon_jinn:"Gran Jinn",solomon_ifrit:"Gran Ifrit",solomon_demon:"Demonio Encadenado"};
+    const box=panel.querySelector('.solomon-order-buttons'),status=panel.querySelector('.solomon-order-picked');
+    SOLOMON_ENTITY_ORDER.forEach(key=>{const b=document.createElement('button');b.type='button';b.textContent=labels[key];b.style.cssText="padding:14px 8px;border:1px solid #b98a31;border-radius:10px;background:#17120a;color:#f6e6b2;font-weight:800;cursor:pointer";b.onclick=()=>{if(picked.includes(key))return;picked.push(key);b.disabled=true;b.style.opacity='.38';status.textContent='Orden: '+picked.map(k=>labels[k]).join(' → ');if(picked.length===3){setTimeout(()=>{overlay.remove();resolve(picked);},250);}};box.appendChild(b);});
+  });
+}
+function clearSolomonDemonSeal(units,sourceId){
+  return (units||[]).map(u=>u.solomonSealSourceId===sourceId?(()=>{const n={...u,tempDexDebuff:Math.max(0,Number(u.tempDexDebuff||0)-3),tempAgiDebuff:Math.max(0,Number(u.tempAgiDebuff||0)-2)};delete n.solomonSealSourceId;return n;})():u);
+}
+function applySolomonDemonSeal(units,summon){
+  const targets=(units||[]).filter(u=>u.owner!==summon.owner&&u.hp>0&&!u.leader).sort((a,b)=>(getUnitBattlePower(b)||0)-(getUnitBattlePower(a)||0));
+  const target=targets[0];if(!target)return units;
+  return units.map(u=>u.id===target.id?{...u,tempDexDebuff:Number(u.tempDexDebuff||0)+3,tempAgiDebuff:Number(u.tempAgiDebuff||0)+2,solomonSealSourceId:summon.id}:u);
+}
+function spawnSolomonEntity(units,solomon,key){
+  const t=getSolomonEntityTemplate(key),cell=getSolomonAdjacentFreeCell(solomon,units);if(!t||!cell)return {units,spawned:null};
+  let summon=makeUnit(makeCard(t,solomon.owner),cell.x,cell.y);
+  summon={...summon,solomonSummon:true,solomonSourceId:solomon.id,hallvallaReadyOnSummon:false,summonedTurnKey:publicState?.turnKey||"",acted:true};
+  let out=[...units,summon].map(u=>u.id===solomon.id?{...u,solomonCurrentEntity:key,solomonPending:false}:u);
+  if(key==="solomon_demon")out=applySolomonDemonSeal(out,summon);
+  return {units:out,spawned:summon};
+}
+async function resolveSolomonLifecycle(beforeUnits=[],afterUnits=[]){
+  let units=[...(afterUnits||[])],logs=[];
+  const beforeSummons=(beforeUnits||[]).filter(u=>u.solomonSummon);
+  for(const old of beforeSummons){if(!units.some(u=>u.id===old.id))units=clearSolomonDemonSeal(units,old.id);}
+  for(const owner of [1,2]){
+    const livingSolomons=units.filter(u=>u.owner===owner&&u.key==="king_solomon"&&u.hp>0);
+    if(!livingSolomons.length){
+      const dismissed=units.filter(u=>u.owner===owner&&u.solomonSummon);
+      dismissed.forEach(u=>{units=clearSolomonDemonSeal(units,u.id);logs.push(`${u.name} desaparece al romperse el Sello de Salomón.`);});
+      units=units.filter(u=>!(u.owner===owner&&u.solomonSummon));continue;
+    }
+    for(let solomon of livingSolomons){
+      let order=Array.isArray(solomon.solomonOrder)?solomon.solomonOrder.filter(k=>SOLOMON_ENTITY_ORDER.includes(k)):[];
+      if(order.length!==3){order=await chooseSolomonOrder(owner,units);units=units.map(u=>u.id===solomon.id?{...u,solomonOrder:order,solomonUsedEntities:[],solomonCurrentEntity:""}:u);solomon=units.find(u=>u.id===solomon.id)||solomon;}
+      const active=units.find(u=>u.solomonSummon&&u.solomonSourceId===solomon.id&&u.hp>0);
+      if(active)continue;
+      const used=Array.isArray(solomon.solomonUsedEntities)?solomon.solomonUsedEntities:[];
+      const nextKey=order.find(k=>!used.includes(k));if(!nextKey)continue;
+      const spawn=spawnSolomonEntity(units,solomon,nextKey);
+      if(spawn.spawned){units=spawn.units.map(u=>u.id===solomon.id?{...u,solomonUsedEntities:[...used,nextKey],solomonCurrentEntity:nextKey}:u);logs.push(`${solomon.name} manifiesta a ${spawn.spawned.name}.`);}else units=units.map(u=>u.id===solomon.id?{...u,solomonPending:true}:u);
+    }
+  }
+  return {units,logs};
+}
+function solomonJinnGuardAura(u,units=publicState?.units||[]){return (units||[]).some(j=>j.key==="solomon_jinn"&&j.owner===u?.owner&&j.hp>0&&dist(j,u)<=1)?3:0;}
+function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
+  if(attacker?.key!=="solomon_ifrit"||!hit?.hit||hpLoss<=0)return {units,logs:[]};
+  let out=[...(units||[])],logs=[];
+  if(out.some(u=>u.id===target.id))out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
+  const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&dist(u,target)<=1).map(u=>u.id);
+  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true}:u).filter(u=>u.hp>0);logs.push(`Fuego del Mandato causa 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
+  if(!out.some(u=>u.id===target.id))out=out.map(u=>u.id===attacker.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
+  return {units:out,logs};
+}
 
 /* =====================================================================
    7BOARDCTRL8R · PODER DE BATALLA
@@ -1887,6 +1979,10 @@ const UNIT_BATTLE_POWER=Object.freeze({
   spartacus:86,
   sun_tzu:88,
   merlin:92,
+  king_solomon:100,
+  solomon_jinn:97,
+  solomon_ifrit:99,
+  solomon_demon:98,
   hector_troy:87,
   beowulf:85,
   miyamoto_musashi:94,
@@ -2242,6 +2338,7 @@ const UNIT_LORE_DATA={
   ragnar_lodbrok:{short:"Vikingo de saqueo, presión y supervivencia por conquista.",legend:"Ragnar Lodbrok vive entre saga y leyenda nórdica. En HallValla se alimenta del choque contra objetivos importantes y recupera recursos de combate cuando logra hacer daño."},
   subotai:{short:"General mongol de horizontes largos, marcha y terror a distancia.",legend:"Subotai fue uno de los grandes estrategas de la expansión mongola. En HallValla representa movilidad, presión y control del ritmo enemigo."},
   sun_tzu:{short:"Estratega de la guerra antes de que la espada salga de la vaina.",legend:"Sun Tzu es símbolo de estrategia, ventaja y victoria sin desperdicio. En HallValla fortalece la Destreza aliada y vuelve la formación más resistente al miedo."},
+  king_solomon:{short:"Rey sabio e invocador supremo, capaz de someter sucesivamente tres entidades sobrenaturales mediante su sello.",legend:"En HallValla, Salomón combina la tradición del rey sabio con las leyendas salomónicas posteriores sobre el dominio de espíritus. Su fuerza no está en el combate físico, sino en conservar el sello que mantiene sometidas a tres Grandes Entidades. Mientras viva, el rival debe decidir entre enfrentar amenazas sobrenaturales o abrirse paso hasta el verdadero centro del poder."},
   merlin:{short:"Profeta y hechicero de la tradición artúrica, capaz de convertir conocimiento del porvenir en ventaja para su ejército.",legend:"Merlín es el gran consejero mágico de las leyendas artúricas. Sus relatos lo vinculan con profecías, secretos antiguos y la preparación del ascenso del rey Arturo. HallValla representa ese dominio del tiempo mediante Visión de los Tiempos: mientras permanezca en el campo, permite acceder antes a una carta futura del mazo. No es un guerrero resistente; su fuerza está en la distancia, la anticipación y el valor acumulativo de cada Draw Phase."},
   bengal_tiger:{short:"Depredador oculto, salto repentino y daño que deja huella.",legend:"El Tigre de Bengala es una sombra de jungla: no avisa, aparece. En HallValla usa Sigilo, emboscada y Sangrado para convertir una mala posición enemiga en sentencia."},
   tomoe_gozen:{short:"Guerrera samurái, velocidad cortante y precisión montada.",legend:"Tomoe Gozen es una figura legendaria de la guerra japonesa. En HallValla premia el movimiento previo y castiga a unidades de rango con ataques técnicos."},
@@ -3200,7 +3297,7 @@ function getAiPrincipalKeyForBattle(battle){
 function getPrincipalUtilityScore(card){
   if(!card||card.type!=="unit")return -Infinity;
   const utility={
-    richard_lionheart:500,merlin:492,leonidas:480,african_elephant:470,achilles:465,
+    king_solomon:520,richard_lionheart:500,merlin:492,leonidas:480,african_elephant:470,achilles:465,
     attila_hun:455,simo_hayha:450,hannibal_barca:440,sun_tzu:430,
     african_lion:420,yi_sun_sin:415,shaka_zulu:410,ulysses:405
   }[card.key]||0;
@@ -3635,7 +3732,7 @@ function maxTurnGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard)}
+function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function restoreTurnGuardForOwner(units,owner){
   return (units||[]).map(u=>u.owner===owner?{...u,guard:maxTurnGuard(u),evasionSpent:0,defenseModeReady:false,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false}:u);
@@ -3750,6 +3847,7 @@ function getCombatMods(attacker,defender){
   if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=4;mods.notes.push(`${defender.name} -4 AGI por estar rodeado.`);}}
   if(attacker.key==="nasu_no_yoichi"&&isRangedAttack(attacker,defender)&&dist(attacker,defender)>=3){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Marca del Abanico.`);}
   if(attacker.key==="tomoe_gozen"&&(attacker.movedSpaces||0)>=2){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
+  if(attacker.key==="solomon_ifrit"){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Fuego del Mandato.`);}
   if(attacker.key==="beowulf"&&effectiveMaxHp(defender)>effectiveMaxHp(attacker)){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT contra enemigos de mayor Vida.`);}
   if(attacker.key==="achilles"&&!attacker.achillesFuryUsedTurn){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Cólera del Pélida.`);}
   if(defender.key==="el_cid"&&effectiveAtk(attacker)>effectiveAtk(defender)){mods.defenderDex+=4;mods.defenderGuard+=4;mods.notes.push(`${defender.name} +4 DX/+4 GD por Campeador.`);}
@@ -4572,7 +4670,7 @@ function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicS
   const creditMode=sourcePatch._clockKillCreditMode||"";
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
   let cleanPatch={...sourcePatch};
-  if(Array.isArray(cleanPatch.units))cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);
+  if(Array.isArray(cleanPatch.units)){const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);cleanPatch.units=solomonLife.units;if(solomonLife.logs.length)cleanPatch.log=[...solomonLife.logs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);}
   else{delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;}
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
@@ -6828,7 +6926,9 @@ async function attackUnit(a,d){
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
   const coverFireTriggered=shouldTriggerCoverFire(a,hpLoss,hit.hit);
   if(coverFireTriggered)units=applyCoverFire(units,a.owner,a.id);
-  let bleedText="";
+  const solomonIfritResult=applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss);
+    units=solomonIfritResult.units;
+    let bleedText=solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:"";
   let alreadyBleeding=false;
   if(hit.hit&&hpLoss>0&&a.key==="scout"&&units.some(u=>u.id===d.id)){
     const targetAfterBleed=units.find(u=>u.id===d.id);
@@ -7751,7 +7851,9 @@ async function adventureEnemyTurn(){
     const coverFireTriggered=withAiPublicState(()=>shouldTriggerCoverFire(attacker,hpLoss,hit.hit));
     if(coverFireTriggered)units=applyCoverFire(units,attacker.owner,attacker.id);
 
-    let bleedText="";
+    const solomonIfritResult=applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss);
+    units=solomonIfritResult.units;
+    let bleedText=solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:"";
     let alreadyBleeding=false;
     if(hit.hit&&hpLoss>0&&attacker.key==="scout"&&units.some(u=>u.id===target.id)){
       const targetAfterBleed=units.find(u=>u.id===target.id);
@@ -14344,6 +14446,10 @@ const CODE_TRUTH_EFFECTS_7HAI={
   bengal_tiger:{trigger:["Inicia con Sigilo.","Desde Sigilo puede atacar con +2 alcance de movimiento.","Desgarro requiere daño real a HP."],does:["Mientras está oculto no puede ser objetivo directo.","Al atacar desde Sigilo reduce -3 AGI del defensor durante ese combate.","Si hay una Bestia aliada adyacente al defensor, el defensor recibe -2 AGI adicional.","Al hacer daño real aplica Sangrado: 50%, o 100% si atacó desde Sigilo."],doesNot:["Si se revela, pierde parte de la protección y del bonus de emboscada."],example:"Es asesino de entrada: sigilo, salto, presión de AGI y posible Sangrado."},
   white_rhino:{trigger:["Debe moverse 2 casillas en línea recta antes de atacar."],does:["Usa Embestida Devastadora: AT 22.","Después de atacar con Embestida, impacte o falle, queda Aturdido hasta su próximo turno.","Aturdido: no puede moverse, defenderse ni atacar; su Guardia no cambia y su DX/AGI se reducen a la mitad."],doesNot:["Bestia Torpe: no se beneficia de bonos de DX ni AGI."],example:"Es un martillo de una línea recta, pero queda expuesto después."},
   african_elephant:{trigger:["Debe moverse exactamente 1 celda en línea recta hacia el frente, directamente hacia el mismo enemigo que atacará.","Debe atacar inmediatamente después del movimiento."],does:["Obtiene +6 AT durante ese ataque: AT 22.","El objetivo principal pierde 4 AGI para evadir y, si es impactado, es empujado hasta 2 celdas.","Los enemigos situados a ambos lados del objetivo central reciben AT 10, pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda.","Si el objetivo principal no puede retroceder, recibe 8 daño directo de Pisoteo.","El Elefante avanza a la celda liberada y pierde 2 GD hasta su próximo turno."],doesNot:["No se activa por movimiento lateral o hacia atrás.","No se activa si comienza adyacente y ataca sin moverse.","No se activa si ataca a un enemigo distinto o realiza otra acción entre movimiento y ataque.","No queda Aturdido después de cargar."],example:"Elefante → celda vacía → enemigo. Avanza a la celda vacía y ataca inmediatamente al enemigo frontal."},
+  king_solomon:{trigger:["Al ser convocado, su controlador define el orden de las tres Grandes Entidades.","Debe existir una celda libre adyacente para manifestar la entidad siguiente."],does:["Invoca gratuitamente la primera entidad elegida.","Cuando la entidad activa es destruida, manifiesta automáticamente la siguiente del orden establecido.","Cada entidad solo puede aparecer una vez por duelo y solo una permanece activa a la vez.","Si no hay espacio, la invocación queda pendiente hasta que exista una celda adyacente libre.","El Gran Jinn concede +3 GD a Salomón y aliados adyacentes.","El Gran Ifrit ignora 4 GD, aplica Quemadura, inflige daño lateral y se cura al destruir.","El Demonio Encadenado debilita automáticamente al enemigo de mayor PB."],doesNot:["Las entidades no forman parte del mazo ni consumen recursos.","No pueden ser Personaje Principal.","Si Salomón abandona el campo, la entidad activa desaparece, no cuenta como destrucción y no concede +5 segundos en PvP.","Las entidades restantes se pierden cuando muere Salomón."],example:"Puedes abrir con el Demonio para sellar una prioridad, continuar con el Jinn para proteger a Salomón y cerrar con el Ifrit."},
+  solomon_jinn:{trigger:["Se manifiesta mediante el Sello de Salomón."],does:["Concede +3 GD a Salomón y aliados adyacentes."],doesNot:["No puede existir sin un Salomón vivo vinculado."],example:"Forma una fortaleza alrededor del invocador."},
+  solomon_ifrit:{trigger:["Se manifiesta mediante el Sello de Salomón."],does:["Ignora 4 Guardia, aplica Quemadura 2, causa 4 daño directo lateral y recupera 2 Vida al destruir."],doesNot:["No puede existir sin un Salomón vivo vinculado."],example:"Es la manifestación ofensiva para cerrar la batalla."},
+  solomon_demon:{trigger:["Se manifiesta mediante el Sello de Salomón."],does:["Debilita con -3 DX y -2 AGI al enemigo de mayor Poder de batalla mientras permanezca activo."],doesNot:["No puede existir sin un Salomón vivo vinculado."],example:"Neutraliza primero la mayor prioridad rival."},
   merlin:{trigger:["Merlín debe permanecer vivo y dentro del campo al iniciar la Draw Phase de su controlador.","La comprobación se realiza una vez por Draw Phase."],does:["Roba 1 carta adicional de la parte superior del mazo.","En la primera Draw Phase también puede añadir esa carta aunque el robo inicial normal esté omitido.","El efecto funciona para jugador e IA y actualiza el tamaño de mano y mazo correctamente."],doesNot:["No permite buscar ni seleccionar una carta concreta.","No se acumula aunque controles varias copias de Merlín.","No se activa desde la mano, el mazo o el cementerio.","Si el mazo está vacío, no crea una carta.","Magia / Arcano no tiene ventaja ni desventaja en el sistema de armas."],example:"Con Merlín en campo, una Draw Phase que normalmente roba 2 cartas roba 3. Si es Personaje Principal, puede añadir 1 carta durante la primera Draw Phase."},
   richard_lionheart:{concise:true,trigger:[],does:["Una vez por turno, elige un aliado adyacente. Gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo. Puede elegir nuevamente a la misma unidad en turnos posteriores."],doesNot:[],example:""},
   saladin:{trigger:["EFFECT una vez por turno.","Debe haber una casilla libre adyacente y no controlar ya una Caballería Arquera de Saladino."],does:["Invoca una Caballería Arquera de Saladino en una casilla adyacente válida."],doesNot:["No puede invocar si ya controlas ese token o no hay espacio."],example:"Presiona con token, no con daño directo inmediato."},
