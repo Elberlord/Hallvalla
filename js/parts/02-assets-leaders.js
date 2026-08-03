@@ -1,0 +1,227 @@
+"use strict";
+/* HallValla 7BOARDCTRL8U · Rutas de assets y sistema de líderes */
+
+
+/*
+-------------------------------------------------------------------------------
+02_ASSET_DATABASE
+-------------------------------------------------------------------------------
+*/
+const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior_3d.png",archer:"assets/leaders/leader_archer_3d.png",mage:"assets/leaders/leader_mage_3d.png",axe:"assets/leaders/leader_axe_3d.png",cavalry:"assets/leaders/leader_cavalry_3d.png",assassin:"assets/leaders/leader_assassin_3d.png",beastmaster:"assets/leaders/leader_beastmaster_3d.png"};
+const CARD_PORTRAITS={
+  richard:"assets/cards/basic/richard_lionheart.webp",
+  cavalry:"assets/cards/basic/cavalry_light.webp",
+  archer:"assets/cards/basic/archer.webp",
+  mage:"assets/cards/basic/mage.webp",
+  arcaneAdept:"assets/cards/basic/mage.webp",
+  rogue:"assets/cards/basic/rogue.webp",
+  paladin:"assets/cards/basic/paladin.webp",
+  heavyInfantry:"assets/cards/basic/heavy_infantry_paladin.webp",
+  samuraiKatana:"assets/cards/basic/samurai_katana.webp",
+  samuraiYabusame:"assets/cards/basic/samurai_yabusame.webp",
+  samuraiNaginata:"assets/cards/basic/samurai_naginata.webp",
+  geishaEncubierta:"assets/cards/basic/geisha_encubierta.webp",
+  hattoriShinobi:"assets/cards/basic/hattori_shinobi.webp",
+  saboteadorIga:"assets/cards/basic/saboteador_iga.webp",
+  berserkerDeOso:"assets/cards/basic/berserker_de_oso.webp",
+  ulfhednar:"assets/cards/basic/ulfhednar.webp",
+  skiparDelDrakkar:"assets/cards/basic/skipar_del_drakkar.webp",
+  darkMage:"assets/cards/basic/dark_mage.webp",
+  wallace:"assets/cards/basic/wallace.webp",
+  berserker:"assets/cards/basic/berserker_north.webp",
+  mulan:"assets/cards/basic/mulan.webp",
+  simo:"assets/cards/special/simo_hayha.webp",
+  sunTzu:"assets/cards/special/sun_tzu.webp",
+  ulysses:"assets/cards/special/ulysses.webp",
+  achilles:"assets/cards/special/achilles.webp",
+  saladin:"assets/cards/special/saladin.webp",
+  shaka:"assets/cards/special/shaka_zulu_v2.webp",
+  yiSunSin:"assets/cards/special/yi_sun_sin.webp",
+  boudica:"assets/cards/special/boudica.webp",
+  joan:"assets/cards/special/joan_of_arc.webp",
+  leonidas:"assets/cards/special/leonidas.webp",
+  nasu:"assets/cards/special/nasu_no_yoichi.webp",
+  tomoe:"assets/cards/special/tomoe_gozen_v2.webp",
+  hannibal:"assets/cards/special/hannibal_barca.webp",
+  subotai:"assets/cards/special/subotai_v2.webp",
+  luBu:"assets/cards/special/lu_bu.webp",
+  ragnar:"assets/cards/special/ragnar_lodbrok.webp",
+  cid:"assets/cards/special/el_cid.webp",
+  spartacus:"assets/cards/special/spartacus.webp",
+  hector:"assets/cards/special/hector_troy.webp",
+  beowulf:"assets/cards/special/beowulf.webp",
+  musashi:"assets/cards/special/miyamoto_musashi.webp",
+  hattoriHanzo:"assets/cards/special/hattori_hanzo.webp",
+  merlin:"assets/cards/special/merlin.webp",
+  kingSolomon:"assets/cards/special/king_solomon.webp",
+  ericto:"assets/cards/special/ericto.webp",
+  khalid:"assets/cards/special/khalid_ibn_al_walid.webp",
+  attila:"assets/cards/special/attila.webp",
+  genghis:"assets/cards/special/genghis_khan.webp",
+  alexander:"assets/cards/special/alexander.webp",
+  caesar:"assets/cards/special/julius_caesar.webp",
+  cuChulainn:"assets/cards/special/cu_chulainn.webp",
+  gilgamesh:"assets/cards/special/gilgamesh.webp",
+  arjuna:"assets/cards/special/arjuna.webp",
+  honeyBadger:"assets/cards/beasts/honey_badger.webp",
+  porcupine:"assets/cards/beasts/porcupine.webp",
+  wildBoar:"assets/cards/beasts/wild_boar.webp",
+  blackRaven:"assets/cards/beasts/black_raven.webp",
+  constrictor:"assets/cards/beasts/constrictor_snake.webp",
+  buffalo:"assets/cards/beasts/african_buffalo.webp",
+  peregrineFalcon:"assets/cards/beasts/peregrine_falcon.webp",
+  inlandTaipan:"assets/cards/beasts/inland_taipan.webp",
+  africanLion:"assets/cards/beasts/african_lion.webp",
+  bengalTiger:"assets/cards/beasts/bengal_tiger.webp",
+  whiteRhino:"assets/cards/beasts/white_rhino.webp",
+  africanElephant:"assets/cards/beasts/african_elephant.webp",
+  ironJawTrap:"assets/cards/beasts/cepo_de_hierro.webp",
+  coveredPit:"assets/cards/beasts/foso_cubierto.webp",
+  huntingNet:"assets/cards/beasts/red_de_caza.webp",
+  bloodBait:"assets/cards/beasts/carnada_ambar.webp",
+  trackingSmoke:"assets/cards/beasts/estacas_de_bambu.webp",
+  ropeCage:"assets/cards/beasts/jaula_de_cuerda.webp"
+};
+
+/* Retratos exclusivos del tablero.
+   No dependen de la carpeta ni del arte usado por las cartas de mano. */
+const BOARD_PORTRAITS={
+  wallace:"assets/board_cards/special/wallace.webp",
+  hattori_hanzo:"assets/board_cards/special/hattori_hanzo.webp",
+  merlin:"assets/board_cards/special/merlin.webp",
+  king_solomon:"assets/board_cards/special/king_solomon.webp",
+  ericto:"assets/board_cards/special/ericto.webp",
+  solomon_jinn:"assets/board_cards/special/solomon_jinn.webp",
+  solomon_ifrit:"assets/board_cards/special/solomon_ifrit.webp",
+  solomon_demon:"assets/board_cards/special/solomon_demon.webp",
+  african_elephant:"assets/board_cards/beasts/african_elephant.webp"
+};
+
+/*
+-------------------------------------------------------------------------------
+03_LEADER_SYSTEM
+-------------------------------------------------------------------------------
+*/
+const LEADER_DATA={
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo: AT 3, GD 4, RG 1. Infantería pesada + VIDA/GUARDIA. Mientras tenga una unidad aliada viva, ataques de unidades no bajan su Vida."},
+  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras."},
+  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Mejora magias."},
+  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: los berserkers rompen Guardia y activan Grito de Guerra para subir AT aliado."},
+  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder móvil: potencia Caballería Ligera con MOV/AGI y puede llamar refuerzos al nivel 5."},
+  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con AGI/DX; en Nv.5 vuelve sus ataques más limpios y su desgaste táctico más eficiente."},
+  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias crecen por tier hasta llegar a +4 AT y +2 AGI."}
+};
+const LEADER_LEVEL_MAX=9;
+const LEADER_LEVEL_TABLE={
+  1:{hp:20,atk:2,buffTier:1},
+  2:{hp:22,atk:2,buffTier:1},
+  3:{hp:24,atk:3,buffTier:1},
+  4:{hp:26,atk:3,buffTier:2},
+  5:{hp:28,atk:4,buffTier:2},
+  6:{hp:30,atk:4,buffTier:2},
+  7:{hp:32,atk:5,buffTier:3},
+  8:{hp:34,atk:5,buffTier:3},
+  9:{hp:36,atk:6,buffTier:4}
+};
+const LEADER_BASE_ATK={warrior:3,archer:3,mage:3,axe:4,cavalry:3,assassin:2,beastmaster:2};
+const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
+const LEADER_BASE_RANGE={warrior:1,archer:2,mage:2,axe:1,cavalry:1,assassin:1,beastmaster:1};
+function getLeaderAttack(type,level=1){return LEADER_BASE_ATK[type]??3}
+function getLeaderGuard(type,level=1){if(type==="beastmaster")return 2;return Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3))}
+function getLeaderRange(type,level=1){return LEADER_BASE_RANGE[type]??1}
+const LEADER_BUFF_TABLE={
+  warrior:{1:{hp:3,guard:3},2:{hp:4,guard:4},3:{hp:5,guard:5},4:{hp:6,guard:6}},
+  archer:{1:{atk:1,dex:2,agi:1,range:1},2:{atk:1,dex:3,agi:1,range:2},3:{atk:2,dex:5,agi:2,range:2},4:{atk:3,dex:6,agi:3,range:2}},
+  mage:{1:{costReduction:2,effectBonus:3},2:{costReduction:2,effectBonus:4},3:{costReduction:3,effectBonus:5},4:{costReduction:3,effectBonus:6}},
+  axe:{1:{atk:4,dex:2},2:{atk:8,dex:4},3:{atk:12,dex:6},4:{atk:16,dex:8}},
+  cavalry:{1:{mov:1,agi:1},2:{mov:1,agi:2},3:{mov:2,agi:2},4:{mov:2,agi:3,atk:1}},
+  assassin:{1:{agi:2,dex:1},2:{agi:3,dex:1},3:{agi:4,dex:2},4:{agi:5,dex:2,atk:1}},
+  beastmaster:{1:{atk:1,agi:1},2:{atk:2,agi:1},3:{atk:3,agi:2},4:{atk:4,agi:2}}
+};
+const LEADER_LEVEL5_ABILITY_POOL=[
+  {key:"heroic_edge",name:"Filo de mando",short:"+1 HP por turno a unidades aliadas",desc:"Al inicio de cada turno propio, las unidades aliadas recuperan 1 HP sin superar su Vida máxima."},
+  {key:"blessed_armor",name:"Armadura bendita",short:"1ra muerte: queda en 1 e inmune al daño ese turno",desc:"Con el Guerrero, la primera vez que fuera a recibir daño letal, su vida queda en 1, obtiene Armadura bendita y hasta terminar ese turno no pierde Vida bajo ninguna circunstancia."},
+  {key:"arrow_rain",name:"Lluvia de flechas",short:"EFFECT: 1 daño directo a todas las unidades enemigas",desc:"Con el Arquero, una vez por turno puede lanzar Lluvia de flechas para infligir 1 daño directo a todas las unidades enemigas, ignorando Guardia y stats."},
+  {key:"arcane_bolt",name:"Descarga arcana",short:"EFFECT: 2 daño directo al líder enemigo",desc:"Con el Hechicero, una vez por turno puede usar EFFECT para infligir 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."},
+  {key:"blood_victory",name:"Victoria sangrienta",short:"aliado cae: demás unidades +3 AT",desc:"Con el Caudillo del Hacha, cada vez que una unidad aliada muere, las demás unidades aliadas vivas en el campo ganan +3 Ataque permanente."},
+  {key:"cavalry_call",name:"Llamado de la carga",short:"EFFECT: convoca hasta 3 Caballerías Ligeras",desc:"Con el Señor de la Carga, el líder puede usar EFFECT para convocar hasta tres Caballerías Ligeras aliadas en casillas libres adyacentes."},
+  {key:"blood_mist",name:"Niebla de sangre",short:"Asesinos ignoran Guardia y gastan solo la mitad de PREC/EVA",desc:"Con el Maestro de Sombras, los asesinos aliados ignoran Guardia al atacar. Además, gastan solo la mitad de PREC/EVA cuando el sistema les cobre ese desgaste, redondeado hacia arriba."},
+  {key:"prepare_hunt",name:"Veneno de la Manada",short:"Aliados causan Veneno; dura +2 turnos",desc:"Con el Señor de las Bestias, todas las unidades aliadas causan Veneno cuando hacen daño real a HP. Ese Veneno dura 2 turnos más que su duración normal y se duplica cada tick mientras dure."}
+];
+const LEADER_LEVEL5_ABILITY_MAP=Object.fromEntries(LEADER_LEVEL5_ABILITY_POOL.map(a=>[a.key,a]));
+function normalizeLeaderAbilityKey(key){return key||""}
+const LEADER_LEVEL5_DEFAULTS={
+  warrior:"blessed_armor",
+  archer:"arrow_rain",
+  mage:"arcane_bolt",
+  axe:"blood_victory",
+  cavalry:"cavalry_call",
+  assassin:"blood_mist",
+  beastmaster:"prepare_hunt"
+};
+function normalizeLeaderLevel(level){return clamp(Math.floor(Number(level)||1),1,LEADER_LEVEL_MAX)}
+function getLeaderLevelStats(level){return LEADER_LEVEL_TABLE[normalizeLeaderLevel(level)]||LEADER_LEVEL_TABLE[1]}
+function getLeaderBuffTierFromLevel(level){return getLeaderLevelStats(level).buffTier||1}
+function getLeaderDefaultLevel5Ability(type){return LEADER_LEVEL5_DEFAULTS[type]||""}
+function normalizeLeaderLevel5Abilities(abilities={},leaderLevels={}){
+  const out={...(abilities||{})};
+  for(const type of Object.keys(LEADER_DATA)){
+    if(normalizeLeaderLevel(leaderLevels[type]||1)>=5){
+      out[type]=getLeaderDefaultLevel5Ability(type);
+    }else{
+      delete out[type];
+    }
+  }
+  return out;
+}
+function getLeaderAbilityData(key){return LEADER_LEVEL5_ABILITY_MAP[normalizeLeaderAbilityKey(key)]||null}
+function getLeaderAbilityText(key){const a=getLeaderAbilityData(key);return a?`${a.name}: ${a.short}`:"Sin habilidad Nv.5"}
+function getLeaderBattleStats(type,level,abilityKey=""){
+  const base={...getLeaderLevelStats(level)};
+  base.atk=getLeaderAttack(type,level);
+  return base;
+}
+function normalizeLeaderLevels(levels={},profileLevel=1){
+  const fallback=normalizeLeaderLevel(profileLevel);
+  return {
+    warrior:normalizeLeaderLevel(levels.warrior||fallback),
+    archer:normalizeLeaderLevel(levels.archer||fallback),
+    mage:normalizeLeaderLevel(levels.mage||fallback),
+    axe:normalizeLeaderLevel(levels.axe||fallback),
+    cavalry:normalizeLeaderLevel(levels.cavalry||fallback),
+    assassin:normalizeLeaderLevel(levels.assassin||fallback),
+    beastmaster:normalizeLeaderLevel(levels.beastmaster||fallback)
+  };
+}
+function getProfileLeaderLevel(type,profile=getPlayerProfile()){
+  const levels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level||1);
+  return normalizeLeaderLevel(levels[type]||1);
+}
+function getLocalLeaderLevel(type=getSelectedLeaderType()||"warrior"){return getProfileLeaderLevel(type)}
+function getProfileLeaderAbility(type,profile=getPlayerProfile()){
+  const levels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level||1);
+  const abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},levels);
+  return normalizeLeaderLevel(levels[type]||1)>=5?(abilities[type]||""):"";
+}
+function getLocalLeaderAbility(type=getSelectedLeaderType()||"warrior"){return getProfileLeaderAbility(type)}
+function getLeaderLevelForOwner(owner,units=publicState?.units||[]){
+  const leader=(units||[]).find(u=>u.owner===owner&&u.leader);
+  return normalizeLeaderLevel(leader?.leaderLevel||1);
+}
+function getLeaderBuffTierForOwner(owner,units=publicState?.units||[]){return getLeaderBuffTierFromLevel(getLeaderLevelForOwner(owner,units))}
+function getLeaderProgressText(type,level,abilityKey=""){
+  const stats=getLeaderBattleStats(type,level,abilityKey);
+  const tier=stats.buffTier;
+  const abilityLine=normalizeLeaderLevel(level)>=5?` · Hab. Nv.5: ${getLeaderAbilityText(abilityKey)}`:"";
+  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.hp} VIDA/+${b.guard} GUARDIA · Muralla: si queda una unidad aliada viva, ataques de unidades no bajan Vida al líder${abilityLine}`;}
+  if(type==="archer"){const b=LEADER_BUFF_TABLE.archer[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: arqueras +${b.atk} AT/+${b.dex} DX/+${b.agi} AGI${abilityLine}`;}
+  if(type==="axe"){const b=LEADER_BUFF_TABLE.axe[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: hachas +${b.atk} AT/+${b.dex} DX · Grito de Guerra: al romper toda la Guardia enemiga, aliados +1 AT hasta fin de turno${abilityLine}`;}
+  if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería ligera +${b.mov||0} MOV/+${b.agi||0} AGI${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
+  if(type==="assassin"){const b=LEADER_BUFF_TABLE.assassin[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: asesinos +${b.agi||0} AGI/+${b.dex||0} DX${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
+  if(type==="beastmaster"){const b=LEADER_BUFF_TABLE.beastmaster[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: bestias +${b.atk||0} AT/+${b.agi||0} AGI${abilityLine}`;}
+  const b=LEADER_BUFF_TABLE.mage[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: magias -${b.costReduction} costo/+${b.effectBonus} efecto${abilityLine}`;
+}
+function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
+  const leader=(units||[]).find(u=>u.owner===owner&&u.leader);
+  return normalizeLeaderLevel(leader?.leaderLevel||1)>=5?(leader?.leaderAbility||""):"";
+}
