@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Catálogo, Salomón, Ericto, PB, lore y estados */
+/* HallValla 7BOARDCTRL8V · Catálogo, Salomón, Ericto, PB, lore y estados */
 
 
 /*
@@ -322,8 +322,8 @@ function applySolomonDemonSeal(units,summon){
 }
 function spawnSolomonEntity(units,solomon,key){
   const t=getSolomonEntityTemplate(key),cell=getSolomonAdjacentFreeCell(solomon,units);if(!t||!cell)return {units,spawned:null};
-  let summon=makeUnit(makeCard(t,solomon.owner),cell.x,cell.y);
-  summon={...summon,solomonSummon:true,solomonSourceId:solomon.id,hallvallaReadyOnSummon:false,summonedTurnKey:publicState?.turnKey||"",acted:true};
+  let summon=makeUnit({...makeCard(t,solomon.owner),summonOrigin:"field_effect",fieldGeneratedSummon:true},cell.x,cell.y);
+  summon={...summon,solomonSummon:true,solomonSourceId:solomon.id,summonOrigin:"field_effect",fieldGeneratedSummon:true,hallvallaReadyOnSummon:false,summonedTurnKey:publicState?.turnKey||"",acted:true};
   let out=[...units,summon].map(u=>u.id===solomon.id?{...u,solomonCurrentEntity:key,solomonPending:false}:u);
   if(key==="solomon_demon")out=applySolomonDemonSeal(out,summon);
   return {units:out,spawned:summon};
@@ -460,6 +460,7 @@ function makeErictoReanimatedUnit(ericto,record,cell){
     moved:true,acted:true,defenseModeReady:false,damagedThisTurn:false,
     summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"actions",
     hallvallaReadyOnSummon:false,
+    summonOrigin:"reanimation",fieldGeneratedSummon:true,
     reanimated:true,reanimatedByErictoId:ericto.id,reanimatedFromGraveId:record.graveId,reanimatedOriginalUnitId:record.originalUnitId,
     text:record?.snapshot?.text||record?.snapshot?.effectText||record?.snapshot?.ability||""
   };
@@ -1192,6 +1193,13 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
   ]);
   const nativeSections=getEntityAbilitySections(entity,effectText)
     .filter(section=>!obsoleteDetHeadings.has(normalizeDetEffectTitle(section?.title||"")));
+  const isMage=typeof isMageUnitCardLike==="function"&&isMageUnitCardLike(entity);
+  const alreadyShowsArcaneLink=nativeSections.some(section=>normalizeDetEffectTitle(section?.title||"")==="vinculo_arcano");
+  if(isMage&&!alreadyShowsArcaneLink){
+    const origin=typeof getUnitSummonOrigin==="function"?getUnitSummonOrigin(entity):"hand";
+    const originNote=origin!=="hand"?" Esta copia no lo recibe porque no fue jugada desde la mano.":"";
+    nativeSections.push({title:"VÍNCULO ARCANO",body:`Si esta unidad mágica fue jugada desde la mano y permanece adyacente al líder Hechicero aliado, recibe el beneficio de Vínculo Arcano correspondiente al tier del líder. Las entidades, tokens, reanimados y demás unidades generadas directamente en el campo quedan excluidas.${originNote}`});
+  }
   if(!isLanceUnitCardLike(entity))return nativeSections;
   const unitName=String(entity?.name||"esta unidad");
   const lanceInnateSections=[

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Movimiento, ataque, turnos e IA */
+/* HallValla 7BOARDCTRL8V · Movimiento, ataque, turnos e IA */
 
 async function removeCardAndPay(card,paidCost=null){
   const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
@@ -2247,7 +2247,7 @@ async function adventureEnemyTurn(){
     if(!choice?.card||!choice?.cell)return false;
     const summonCostInfo=getCardCostBreakdown(choice.card,2,units);
     const paidCostText=getPaidSummonCostText(choice.card,2,units);
-    let newUnit=makeUnit(choice.card,choice.cell.x,choice.cell.y);
+    let newUnit=makeUnit({...choice.card,summonOrigin:"hand",fieldGeneratedSummon:false},choice.cell.x,choice.cell.y);
     if(ownerHasUnit(1,"yi_sun_sin",units)){newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};}
     const hanzoContractLog=newUnit.key==="hattori_hanzo"?" Contrato del Shogun queda preparado para la primera unidad enemiga que ataque desde Sigilo.":"";
     units.push(newUnit);

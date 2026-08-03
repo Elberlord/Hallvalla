@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Interacción de tablero y efectos de unidad */
+/* HallValla 7BOARDCTRL8V · Interacción de tablero y efectos de unidad */
 
 
 function getBoardCellFromPoint(clientX,clientY){
@@ -428,7 +428,7 @@ function getAdjacentFreeCells(unit,units=publicState?.units||[]){
 }
 function makeLightCavalryToken(owner,x,y){
   const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
-  return makeUnit(makeCard(template,owner),x,y);
+  return makeUnit({...makeCard(template,owner),summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},x,y);
 }
 function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(!caster)return[];
@@ -599,7 +599,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     });
     log=`${liveCaster.name} activa Corazón Indomable: ${target.name} gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo.`;
   }else if(liveCaster.key==="saladin"){
-    const token=makeUnit(makeCard(SALADIN_TOKEN_CARD,owner),target.x,target.y);
+    const token=makeUnit({...makeCard(SALADIN_TOKEN_CARD,owner),summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},target.x,target.y);
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true}:it).concat(token);
     log=`${liveCaster.name} activa Media Luna del Desierto e invoca una Caballería Arquera en ${target.x+1},${target.y+1}.`;
   }else if(liveCaster.key==="sun_tzu"){

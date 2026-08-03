@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Estado de red, creación de partidas y Firebase */
+/* HallValla 7BOARDCTRL8V · Estado de red, creación de partidas y Firebase */
 async function updatePublic(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
   const sourcePatch=patch||{};
@@ -135,8 +135,8 @@ function makeStartingPrincipalUnit(card,owner,leaderType,units=[]){
   if(!card||card.type!=="unit")return null;
   const cell=getPrincipalStartCell(owner,units);
   if(!cell)return null;
-  const unit=makeUnit({...card,owner,leaderType},cell.x,cell.y);
-  return{...unit,principal:true,principalStart:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+  const unit=makeUnit({...card,owner,leaderType,summonOrigin:"principal",fieldGeneratedSummon:true},cell.x,cell.y);
+  return{...unit,principal:true,principalStart:true,summonOrigin:"principal",fieldGeneratedSummon:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
 }
 function applyStartingPrincipalEntryEffects(units=[]){
   let out=[...(units||[])],logs=[];
