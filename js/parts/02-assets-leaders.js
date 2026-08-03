@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Rutas de assets y sistema de líderes */
+/* HallValla 7BOARDCTRL8X · Rutas de assets y sistema de líderes */
 
 
 /*
@@ -12,6 +12,12 @@ const CARD_PORTRAITS={
   richard:"assets/cards/basic/richard_lionheart.webp",
   cavalry:"assets/cards/basic/cavalry_light.webp",
   archer:"assets/cards/basic/archer.webp",
+  egyptianLineArcher:"assets/cards/basic/egyptian_line_archer.webp",
+  newKingdomArcher:"assets/cards/basic/new_kingdom_archer.webp",
+  romanAuxiliarySagittarius:"assets/cards/basic/roman_auxiliary_sagittarius.webp",
+  greekHoplite:"assets/cards/basic/greek_hoplite.webp",
+  romanLegionary:"assets/cards/basic/roman_legionary.webp",
+  armoredManAtArms:"assets/cards/basic/armored_man_at_arms.webp",
   mage:"assets/cards/basic/mage.webp",
   arcaneAdept:"assets/cards/basic/mage.webp",
   rogue:"assets/cards/basic/rogue.webp",
@@ -94,7 +100,13 @@ const BOARD_PORTRAITS={
   solomon_jinn:"assets/board_cards/special/solomon_jinn.webp",
   solomon_ifrit:"assets/board_cards/special/solomon_ifrit.webp",
   solomon_demon:"assets/board_cards/special/solomon_demon.webp",
-  african_elephant:"assets/board_cards/beasts/african_elephant.webp"
+  african_elephant:"assets/board_cards/beasts/african_elephant.webp",
+  egyptian_line_archer:"assets/board_cards/basic/egyptian_line_archer.webp",
+  new_kingdom_archer:"assets/board_cards/basic/new_kingdom_archer.webp",
+  roman_auxiliary_sagittarius:"assets/board_cards/basic/roman_auxiliary_sagittarius.webp",
+  greek_hoplite:"assets/board_cards/basic/greek_hoplite.webp",
+  roman_legionary:"assets/board_cards/basic/roman_legionary.webp",
+  armored_man_at_arms:"assets/board_cards/basic/armored_man_at_arms.webp"
 };
 
 /*

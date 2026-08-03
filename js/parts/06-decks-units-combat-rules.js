@@ -322,7 +322,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"")}
-function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),caster:!!card.caster,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -373,16 +373,20 @@ function applyWarriorLeaderUnitShield(defenderBefore,attacker,damaged,units=publ
   if(hpLoss<=0)return{unit:damaged,blocked:false};
   return{unit:{...damaged,hp:hpBefore,lastHpLoss:0,warriorUnitShieldBlocked:true},blocked:true};
 }
+const HEAVY_INFANTRY_KEYS=new Set([
+  "guardian","paladin","knight","spearman",
+  "greek_hoplite","roman_legionary","armored_man_at_arms",
+  "samurai_katana","samurai_naginata","wallace","leonidas",
+  "achilles","hector_troy","richard_lionheart","joan_of_arc",
+  "el_cid","beowulf","lu_bu"
+]);
 function isHeavyInfantryUnit(u){
   if(!u||u.leader)return false;
   const key=String(u.key||"").toLowerCase();
   const name=String(u.name||"").toLowerCase();
-  return [
-    "guardian",
-    "paladin",
-    "knight",
-    "spearman"
-  ].includes(key)
+  const groups=Array.isArray(u.leaderBuffGroups)?u.leaderBuffGroups.map(x=>String(x||"").toLowerCase()):[];
+  return groups.includes("warrior")
+  || HEAVY_INFANTRY_KEYS.has(key)
   || name.includes("infantería pesada")
   || name.includes("infanteria pesada")
   || name.includes("guardián")
@@ -390,6 +394,22 @@ function isHeavyInfantryUnit(u){
   || name.includes("paladín")
   || name.includes("paladin")
   || name.includes("lancero solar");
+}
+function countAdjacentUnitsByKey(unit,key,units=publicState?.units||[]){
+  if(!unit)return 0;
+  return (units||[]).filter(other=>other&&other.id!==unit.id&&other.owner===unit.owner&&other.hp>0&&String(other.key||"").toLowerCase()===String(key||"").toLowerCase()&&dist(unit,other)<=1).length;
+}
+function enemyHasAdjacentAllyOfAttacker(attacker,defender,units=publicState?.units||[]){
+  if(!attacker||!defender)return false;
+  return (units||[]).some(other=>other&&other.id!==attacker.id&&other.owner===attacker.owner&&other.hp>0&&dist(defender,other)<=1);
+}
+function enemyHasAdjacentHeavyInfantryOfAttacker(attacker,defender,units=publicState?.units||[]){
+  if(!attacker||!defender)return false;
+  return (units||[]).some(other=>other&&other.id!==attacker.id&&other.owner===attacker.owner&&other.hp>0&&isHeavyInfantryUnit(other)&&dist(defender,other)<=1);
+}
+function hoplitePhalanxGuard(unit,units=publicState?.units||[]){
+  if(!unit||unit.key!=="greek_hoplite")return 0;
+  return (units||[]).some(other=>other&&other.id!==unit.id&&other.owner===unit.owner&&other.hp>0&&isHeavyInfantryUnit(other)&&dist(unit,other)<=1)?2:0;
 }
 function isArcherUnit(u){
   if(!u||u.leader)return false;
@@ -613,7 +633,7 @@ function maxTurnGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u))}
+function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function restoreTurnGuardForOwner(units,owner){
   return (units||[]).map(u=>u.owner===owner?{...u,guard:maxTurnGuard(u),evasionSpent:0,defenseModeReady:false,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false}:u);
@@ -713,6 +733,23 @@ function getCombatMods(attacker,defender){
   const melee=dist(attacker,defender)<=1;
   const defenderUsesEvasion=!defender.leader;
   const attackerUsesEvasion=!attacker.leader;
+  const combatUnits=publicState?.units||[];
+  if(isRangedAttack(attacker,defender)&&attacker.key==="egyptian_line_archer"){
+    const bonus=Math.min(2,countAdjacentUnitsByKey(attacker,"egyptian_line_archer",combatUnits));
+    if(bonus>0){mods.attackerDex+=bonus;mods.notes.push(`${attacker.name} +${bonus} DX por Descarga coordinada.`);}
+  }
+  if(isRangedAttack(attacker,defender)&&attacker.key==="new_kingdom_archer"&&!attacker.moved&&Number(attacker.movedSpaces||0)===0){
+    mods.defenderGuard-=2;mods.notes.push(`${defender.name} -2 Guardia por Tiro preparado.`);
+  }
+  if(isRangedAttack(attacker,defender)&&attacker.key==="roman_auxiliary_sagittarius"&&enemyHasAdjacentAllyOfAttacker(attacker,defender,combatUnits)){
+    mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Cobertura auxiliar.`);
+  }
+  if(melee&&attacker.key==="roman_legionary"&&enemyHasAdjacentHeavyInfantryOfAttacker(attacker,defender,combatUnits)){
+    mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Disciplina de cohorte.`);
+  }
+  if(defender.key==="greek_hoplite"&&hoplitePhalanxGuard(defender,combatUnits)>0){
+    mods.notes.push(`${defender.name} +2 Guardia por Falange cerrada.`);
+  }
 
   if(isHanzoContractAttack(attacker,defender)){
     mods.attackerDex+=3;
@@ -1085,7 +1122,7 @@ function applyGuardDamage(defender,damage,guardMod=0,minHpDamage=0){
   const currentBaseGuard=Math.max(0,Number(defender?.guard||0));
   const currentTempGuard=Number(defender?.tempGuardBuff||0);
   const negativeTempGuard=Math.min(0,currentTempGuard);
-  const auraGuard=Math.max(0,hectorGuardAura(defender)+achillesConcentrationGuard(defender)+attilaEnemyAura(defender).guard);
+  const auraGuard=Math.max(0,hectorGuardAura(defender)+achillesConcentrationGuard(defender)+attilaEnemyAura(defender).guard+solomonJinnGuardAura(defender)+hoplitePhalanxGuard(defender));
 
   let nextBaseGuard=currentBaseGuard;
   let nextTempGuard=currentTempGuard;
