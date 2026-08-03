@@ -1,0 +1,97 @@
+HALLVALLA 7BOARDCTRL8T — ERICTO, NIGROMANTE DE TESALIA
+=======================================================
+
+UNIDAD
+------
+Nombre visible: Ericto
+Nombre alternativo en CONÓCEME: Erichtho
+Tipo: Unidad
+Cualidades: Humana · Caster · Hechicera · Nigromante
+Rareza: Mítica
+Costo: 6
+Poder de batalla: 98
+
+Estadísticas base:
+- Vida: 3
+- Ataque: 3
+- Guardia: 2
+- Destreza: 9
+- Agilidad: 4
+- Movimiento: 1
+- Rango: 3
+- Clase de ataque: Magia / Arcano
+
+EFECTO DET — NECROMANCIA DE FARSALIA
+-------------------------------------
+Una vez por turno, durante la Action Phase, Ericto puede usar EFFECT para elegir
+una unidad destruida de cualquiera de los dos jugadores y una celda libre
+adyacente. La unidad regresa bajo el control de Ericto con la mitad de su Vida
+máxima, redondeada hacia arriba.
+
+Reglas implementadas:
+- Conserva nombre, identidad, estadísticas, cualidades, ataque y habilidades.
+- Recupera su Guardia base completa al reanimarse.
+- No repite efectos de entrada o invocación.
+- Entra con MOV y acción consumidos; puede actuar desde el próximo turno.
+- Cada cadáver solo puede utilizarse una vez durante el duelo.
+- No se pueden reanimar líderes, otros reanimados ni Grandes Entidades de Salomón.
+- Ericto puede reanimar una vez por turno, siempre que no haya alcanzado su límite.
+- La reanimación consume la acción de Ericto.
+
+Límite por rango de maestría:
+- Rango I: 1 reanimado simultáneo.
+- Rangos II–III: 2 reanimados simultáneos.
+- Rangos IV–X: 3 reanimados simultáneos.
+
+PRECIO VITAL
+------------
+Al final de cada turno de su controlador, Ericto pierde 1 Vida inevitable por
+cada reanimado que permanezca en el campo. El daño ignora Guardia y puede destruirla.
+Si Ericto muere o abandona el campo, todos sus reanimados regresan inmediatamente
+al cementerio. Esa desaparición no cuenta como destrucción, no activa efectos de
+muerte y no concede el bono de +5 segundos del reloj PvP.
+
+ATRIBUCIÓN DE ELIMINACIONES
+---------------------------
+Las unidades destruidas por un reanimado se registran como eliminaciones de la
+Ericto que lo controla. El reanimado conserva sus propios efectos de golpe final,
+pero la progresión de maestría de la eliminación se acredita a Ericto. En PvP,
+la eliminación concede normalmente +5 segundos al reloj del controlador.
+
+IA
+--
+La IA puede utilizar Necromancia de Farsalia. Selecciona prioritariamente el
+cadáver disponible con mayor Poder de batalla y elige una celda adyacente que lo
+acerque al líder enemigo.
+
+CONÓCEME
+--------
+Ericto, también conocida como Erichtho, es una temida hechicera de Tesalia que
+aparece en el libro VI de La Farsalia, poema épico escrito por el romano Lucano
+en el siglo I. Antes de la batalla de Farsalia, Sexto Pompeyo desea conocer el
+futuro de la guerra civil y la busca entre tumbas abandonadas. Ericto selecciona
+el cadáver reciente de un soldado y, mediante conjuros y amenazas dirigidas a
+las fuerzas del inframundo, obliga a su alma a regresar temporalmente al cuerpo
+para hablar y revelar una profecía. No devuelve verdaderamente al soldado a la
+vida: fuerza al alma a ocupar de nuevo su cadáver, conservando memoria e identidad.
+Esa escena inspira su habilidad en HallValla. Aunque el poema se desarrolla
+alrededor de personajes históricos, Ericto pertenece al componente sobrenatural
+y literario de la obra; no existe evidencia de que haya sido una nigromante
+histórica real.
+
+ARCHIVOS DEL PARCHE
+-------------------
+Hallvalla/index.html
+Hallvalla/script.js
+Hallvalla/assets/cards/special/ericto.webp
+Hallvalla/assets/board_cards/special/ericto.webp
+Hallvalla/docs/ERICTO_7BOARDCTRL8T.txt
+
+VALIDACIONES REALIZADAS
+-----------------------
+- Sintaxis de script.js comprobada con node --check.
+- Arte vertical WebP verificado: 1024 × 1536.
+- Board card WebP verificada: 1254 × 1254.
+- Rutas de imágenes verificadas contra CARD_PORTRAITS y BOARD_PORTRAITS.
+- Versión y parámetros de caché actualizados a 7BOARDCTRL8T.
+- Integridad del ZIP comprobada después de empaquetar.

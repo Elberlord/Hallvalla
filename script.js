@@ -71,7 +71,7 @@ bloques con dependencias delicadas. Eso evita romper inicializadores const/let.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_PODER_BATALLA_7BOARDCTRL8R";
+const HALLVALLA_BUILD_VERSION="v8_ERICTO_7BOARDCTRL8T";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -185,6 +185,7 @@ const CARD_PORTRAITS={
   hattoriHanzo:"assets/cards/special/hattori_hanzo.webp",
   merlin:"assets/cards/special/merlin.webp",
   kingSolomon:"assets/cards/special/king_solomon.webp",
+  ericto:"assets/cards/special/ericto.webp",
   khalid:"assets/cards/special/khalid_ibn_al_walid.webp",
   attila:"assets/cards/special/attila.webp",
   genghis:"assets/cards/special/genghis_khan.webp",
@@ -220,6 +221,7 @@ const BOARD_PORTRAITS={
   hattori_hanzo:"assets/board_cards/special/hattori_hanzo.webp",
   merlin:"assets/board_cards/special/merlin.webp",
   king_solomon:"assets/board_cards/special/king_solomon.webp",
+  ericto:"assets/board_cards/special/ericto.webp",
   solomon_jinn:"assets/board_cards/special/solomon_jinn.webp",
   solomon_ifrit:"assets/board_cards/special/solomon_ifrit.webp",
   solomon_demon:"assets/board_cards/special/solomon_demon.webp",
@@ -393,14 +395,18 @@ function getRawDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||
 }
 function getDestroyedNonLeaderUnits(beforeUnits=[],afterUnits=[]){
   const afterAlive=new Set((afterUnits||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>u.id));
-  return (beforeUnits||[]).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&!afterAlive.has(u.id)&&!(u.solomonSummon&&!(afterUnits||[]).some(s=>s.id===u.solomonSourceId&&s.hp>0)));
+  return (beforeUnits||[]).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&!afterAlive.has(u.id)
+    &&!(u.solomonSummon&&!(afterUnits||[]).some(s=>s.id===u.solomonSourceId&&s.hp>0))
+    &&!(u.reanimated&&!(afterUnits||[]).some(s=>s.id===u.reanimatedByErictoId&&s.hp>0)));
 }
 function applyPvpKillClockBonusToPatch(patch,beforeUnits,afterUnits,state=publicState,creditOwner=null,creditMode=""){
   const clean={...(patch||{})};
+  const ignoreIds=new Set(Array.isArray(clean._clockKillIgnoreIds)?clean._clockKillIgnoreIds:[]);
   delete clean._clockKillCreditOwner;
   delete clean._clockKillCreditMode;
+  delete clean._clockKillIgnoreIds;
   if(!isTimedPvpKillClockEnabled(state)||!Array.isArray(afterUnits))return clean;
-  const destroyed=getDestroyedNonLeaderUnits(beforeUnits,afterUnits);
+  const destroyed=getDestroyedNonLeaderUnits(beforeUnits,afterUnits).filter(u=>!ignoreIds.has(u.id));
   if(!destroyed.length)return clean;
   const rewards={1:0,2:0};
   const fixedOwner=Number(creditOwner||0);
@@ -600,12 +606,17 @@ function buildTimedOutTurnState(state,now=Date.now()){
   const committedClock=pve?null:getCommittedDuelClockMs(state,owner,now);
   if(!pve&&committedClock<=0)return buildDuelClockExpiredState(state,now);
   const burnEnd=applyBurnAtTurnEnd(state.units||[]);
+  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(burnEnd.units,owner);
+  const erictoLife=resolveErictoLifecycle(burnEnd.units,erictoUpkeep.units);
+  const erictoGraveyard=captureErictoGraveyard(state.erictoGraveyard||[],state.units||[],erictoLife.units);
+  const endLogs=[...(burnEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
   const next=owner===1?2:1;
   const nextTurn=next===1?(Number(state.turn||1)+1):Number(state.turn||1);
   const ownerName=cleanPlayerName(state.playerNames?.[owner]||"")||`J${owner}`;
   const nextState={
     ...state,
-    units:restoreTurnGuardForOwner(burnEnd.units,next),
+    units:restoreTurnGuardForOwner(erictoLife.units,next),
+    erictoGraveyard,
     beastTraps:state.beastTraps||[],
     legendaryTraps:state.legendaryTraps||[],
     currentPlayer:next,
@@ -617,7 +628,7 @@ function buildTimedOutTurnState(state,now=Date.now()){
     statusFxEvent:burnEnd.statusFxEvent||null,
     floatFxEvent:burnEnd.floatFxEvent||null,
     aiActionText:"",
-    log:[`${ownerName} agotó los 180 segundos de su turno.${pve?"":` Conserva ${formatTurnTimer(committedClock)} en su reloj general.`}${burnEnd.logs.length?` ${burnEnd.logs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
+    log:[`${ownerName} agotó los 180 segundos de su turno.${pve?"":` Conserva ${formatTurnTimer(committedClock)} en su reloj general.`}${endLogs.length?` ${endLogs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
   };
   if(!pve)nextState.playerClockMs={...(state.playerClockMs||{}),[owner]:committedClock,[next]:getStoredDuelClockMs(state,next)};
   return nextState;
@@ -1818,6 +1829,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"sun_tzu",name:"Sun Tzu",type:"unit",icon:"📜",portrait:CARD_PORTRAITS.sunTzu,cost:3,hp:4,atk:2,guard:3,dex:5,agi:4,mov:1,range:1,rarity:"Mítica",special:true,text:"Arte de la Guerra: una vez por turno, elige un aliado. Ese aliado obtiene +4 Destreza y +4 Guardia hasta el final de su próximo turno."},
   {key:"merlin",name:"Merlín",type:"unit",icon:"🔮",portrait:CARD_PORTRAITS.merlin,cost:5,hp:3,atk:4,guard:2,dex:9,agi:5,mov:1,range:3,rarity:"Mítica",special:true,caster:true,hechicero:true,profeta:true,sabio:true,text:"Visión de los Tiempos: mientras Merlín permanezca en el campo, al iniciar la Draw Phase de su controlador roba 1 carta adicional de la parte superior del mazo. Este efecto no se acumula aunque controles varias copias de Merlín."},
   {key:"king_solomon",name:"Rey Salomón",type:"unit",icon:"💍",portrait:CARD_PORTRAITS.kingSolomon,cost:7,hp:4,atk:3,guard:3,dex:8,agi:3,mov:1,range:3,rarity:"Mítica",special:true,caster:true,rey:true,invocador:true,sabio:true,text:"Sello de Salomón: al ser convocado, decide el orden de sus tres Grandes Entidades e invoca la primera gratuitamente en una celda libre adyacente. Solo puede controlar una a la vez. Cuando una entidad es destruida, invoca la siguiente que aún no haya utilizado. Cada entidad aparece una sola vez por duelo. Si Salomón abandona el campo, su entidad activa desaparece y se cancelan las restantes."},
+  {key:"ericto",name:"Ericto",type:"unit",icon:"☠️",portrait:CARD_PORTRAITS.ericto,cost:6,hp:3,atk:3,guard:2,dex:9,agi:4,mov:1,range:3,rarity:"Mítica",special:true,caster:true,hechicera:true,nigromante:true,text:"Necromancia de Farsalia: una vez por turno, reanima junto a Ericto una unidad destruida de cualquier jugador con la mitad de su Vida máxima. Conserva sus estadísticas, cualidades y habilidades, pero no activa efectos de entrada. Ericto puede controlar 1/2/3 reanimados según su rango de maestría. Al final de cada turno, pierde 1 de Vida inevitable por cada reanimado que conserve. Las unidades destruidas por sus reanimados cuentan como eliminaciones de Ericto. Cuando Ericto abandona el campo, todos regresan al cementerio."},
   {key:"hector_troy",name:"Héctor de Troya",type:"unit",icon:"🏛️",portrait:CARD_PORTRAITS.hector,cost:4,hp:7,atk:5,guard:6,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Muralla de Troya: aura pasiva. Cuenta cuántas unidades enemigas están en rango 1 de Héctor. Cada una de esas unidades pierde 1 AT por cada enemigo en ese mismo rango. Ejemplo: si hay 3 enemigos en rango 1 de Héctor, cada uno pierde 3 AT."},
   {key:"beowulf",name:"Beowulf",type:"unit",icon:"🐲",portrait:CARD_PORTRAITS.beowulf,cost:4,hp:8,atk:7,guard:5,dex:5,agi:3,mov:1,range:1,rarity:"Legendaria",special:true,text:"Matador de Monstruos: cuando Beowulf ataca a una unidad con mayor Vida máxima que él, obtiene +3 Ataque durante ese combate. Si derrota a esa unidad, recupera 2 Vida."},
   {key:"miyamoto_musashi",name:"Miyamoto Musashi",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.musashi,cost:4,hp:6,atk:6,guard:5,dex:9,agi:6,mov:2,range:1,rarity:"Legendaria",special:true,text:"Shirahadori: cuando un rival declara un ataque contra Musashi, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate. Honesakiki: cuando está a punto de morir, ataca a todas las unidades enemigas en rango 1 con 200% de Ataque."},
@@ -1891,7 +1903,7 @@ async function resolveSolomonLifecycle(beforeUnits=[],afterUnits=[]){
   const beforeSummons=(beforeUnits||[]).filter(u=>u.solomonSummon);
   for(const old of beforeSummons){if(!units.some(u=>u.id===old.id))units=clearSolomonDemonSeal(units,old.id);}
   for(const owner of [1,2]){
-    const livingSolomons=units.filter(u=>u.owner===owner&&u.key==="king_solomon"&&u.hp>0);
+    const livingSolomons=units.filter(u=>u.owner===owner&&u.key==="king_solomon"&&u.hp>0&&!u.reanimated);
     if(!livingSolomons.length){
       const dismissed=units.filter(u=>u.owner===owner&&u.solomonSummon);
       dismissed.forEach(u=>{units=clearSolomonDemonSeal(units,u.id);logs.push(`${u.name} desaparece al romperse el Sello de Salomón.`);});
@@ -1919,6 +1931,151 @@ function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
   if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true}:u).filter(u=>u.hp>0);logs.push(`Fuego del Mandato causa 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
   if(!out.some(u=>u.id===target.id))out=out.map(u=>u.id===attacker.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
   return {units:out,logs};
+}
+
+
+/* =====================================================================
+   7BOARDCTRL8T · ERICTO Y NECROMANCIA DE FARSALIA
+   ===================================================================== */
+function normalizeErictoGraveyard(graveyard=[]){
+  const seen=new Set();
+  return (Array.isArray(graveyard)?graveyard:[]).filter(rec=>{
+    const id=String(rec?.graveId||rec?.originalUnitId||"");
+    if(!id||seen.has(id))return false;
+    seen.add(id);return !!rec?.snapshot;
+  }).map(rec=>({...rec,graveId:String(rec.graveId||rec.originalUnitId),used:!!rec.used})).slice(-80);
+}
+function makeErictoCorpseRecord(unit){
+  if(!unit||unit.leader||unit.reanimated||unit.solomonSummon)return null;
+  let snapshot=null;
+  try{snapshot=JSON.parse(JSON.stringify(unit));}catch(e){snapshot={...unit};}
+  return {
+    graveId:`${unit.id||uid8()}-${publicState?.turnKey||Date.now()}`,
+    originalUnitId:String(unit.id||""),
+    name:unit.name||"Unidad caída",
+    key:unit.key||"",
+    originalOwner:Number(unit.owner||0),
+    battlePower:getUnitBattlePower(unit),
+    destroyedTurnKey:publicState?.turnKey||"",
+    destroyedAt:Date.now(),
+    used:false,
+    snapshot
+  };
+}
+function captureErictoGraveyard(existing=[],beforeUnits=[],afterUnits=[]){
+  const out=normalizeErictoGraveyard(existing);
+  const known=new Set(out.map(r=>String(r.originalUnitId||"")));
+  const aliveAfter=new Set((afterUnits||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>u.id));
+  for(const unit of (beforeUnits||[])){
+    if(!unit||unit.leader||Number(unit.hp||0)<=0||aliveAfter.has(unit.id)||unit.reanimated||unit.solomonSummon)continue;
+    if(known.has(String(unit.id||"")))continue;
+    const rec=makeErictoCorpseRecord(unit);
+    if(rec){out.push(rec);known.add(String(unit.id||""));}
+  }
+  return normalizeErictoGraveyard(out);
+}
+function getErictoMaxReanimated(ericto){
+  const rank=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(ericto?.masteryRank||getUnitMasteryRank(ericto))||1));
+  if(rank>=4)return 3;
+  if(rank>=2)return 2;
+  return 1;
+}
+function getErictoLinkedReanimated(ericto,units=publicState?.units||[]){
+  if(!ericto)return[];
+  return (units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===ericto.id&&Number(u.hp||0)>0);
+}
+function getErictoEligibleCorpses(ericto,graveyard=publicState?.erictoGraveyard||[]){
+  return normalizeErictoGraveyard(graveyard).filter(rec=>!rec.used&&rec.snapshot&&!rec.snapshot.leader&&!rec.snapshot.reanimated&&!rec.snapshot.solomonSummon);
+}
+function resolveErictoLifecycle(beforeUnits=[],afterUnits=[]){
+  let units=[...(afterUnits||[])],logs=[];
+  for(let guard=0;guard<8;guard++){
+    const liveIds=new Set(units.filter(u=>u&&u.key==="ericto"&&Number(u.hp||0)>0).map(u=>u.id));
+    const dismissed=units.filter(u=>u?.reanimated&&!liveIds.has(u.reanimatedByErictoId));
+    if(!dismissed.length)break;
+    const dismissedIds=new Set(dismissed.map(u=>u.id));
+    dismissed.forEach(u=>logs.push(`${u.name} regresa al cementerio al romperse la necromancia de Ericto.`));
+    units=units.filter(u=>!dismissedIds.has(u.id));
+  }
+  units=units.filter(u=>Number(u.hp||0)>0);
+  return {units,logs};
+}
+function applyErictoUpkeepAtTurnEnd(units,owner){
+  let out=[...(units||[])],logs=[],noClockKillIds=[];
+  const erictos=out.filter(u=>u.owner===owner&&u.key==="ericto"&&Number(u.hp||0)>0);
+  for(const ericto of erictos){
+    const count=getErictoLinkedReanimated(ericto,out).length;
+    if(count<=0)continue;
+    out=out.map(u=>u.id===ericto.id?{...u,hp:Number(u.hp||0)-count,damagedThisTurn:true,erictoUpkeepPaidTurnKey:publicState?.turnKey||""}:u);
+    const after=out.find(u=>u.id===ericto.id);
+    logs.push(`Necromancia de Farsalia: ${ericto.name} pierde ${count} Vida inevitable por mantener ${count} reanimado${count===1?"":"s"}.`);
+    if(!after||Number(after.hp||0)<=0)noClockKillIds.push(ericto.id);
+  }
+  return {units:out,logs,noClockKillIds};
+}
+function resetErictoReanimatedTransientState(snapshot){
+  const n={...(snapshot||{})};
+  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisTurn","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveTurnKey","summonedTurnKey","summonedTurn","summonedPhase","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonSource","stunnedUntilTurnKey","noDefTurnKey","noHealTurnKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId"].forEach(k=>delete n[k]);
+  return n;
+}
+function makeErictoReanimatedUnit(ericto,record,cell){
+  const clean=resetErictoReanimatedTransientState(record?.snapshot||{});
+  const maxHp=Math.max(1,Number(record?.snapshot?.maxHp||record?.snapshot?.hp||1));
+  const baseGuard=Math.max(0,Number(record?.snapshot?.baseGuard??record?.snapshot?.guard??0));
+  return {
+    ...clean,
+    id:uid8(),owner:ericto.owner,originalOwner:Number(record?.originalOwner||record?.snapshot?.owner||0),
+    x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,
+    hp:Math.max(1,Math.ceil(maxHp/2)),maxHp,baseGuard,guard:baseGuard,
+    moved:true,acted:true,defenseModeReady:false,damagedThisTurn:false,
+    summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"actions",
+    hallvallaReadyOnSummon:false,
+    reanimated:true,reanimatedByErictoId:ericto.id,reanimatedFromGraveId:record.graveId,reanimatedOriginalUnitId:record.originalUnitId,
+    text:record?.snapshot?.text||record?.snapshot?.effectText||record?.snapshot?.ability||""
+  };
+}
+function getBestErictoReanimationChoice(ericto,units=publicState?.units||[],graveyard=publicState?.erictoGraveyard||[]){
+  const cells=getAdjacentFreeCells(ericto,units);
+  const corpses=getErictoEligibleCorpses(ericto,graveyard);
+  if(!cells.length||!corpses.length)return null;
+  const enemyLeader=(units||[]).find(u=>u.owner!==ericto.owner&&u.leader&&u.hp>0);
+  const record=[...corpses].sort((a,b)=>(Number(b.battlePower)||getUnitBattlePower(b.snapshot)||0)-(Number(a.battlePower)||getUnitBattlePower(a.snapshot)||0))[0];
+  const cell=[...cells].sort((a,b)=>enemyLeader?dist(a,enemyLeader)-dist(b,enemyLeader):0)[0];
+  return {graveId:record.graveId,x:cell.x,y:cell.y};
+}
+function chooseErictoReanimationChoice(ericto,units=publicState?.units||[],graveyard=publicState?.erictoGraveyard||[]){
+  const cells=getAdjacentFreeCells(ericto,units);
+  const corpses=getErictoEligibleCorpses(ericto,graveyard);
+  if(!cells.length||!corpses.length)return Promise.resolve(null);
+  return new Promise(resolve=>{
+    const overlay=document.createElement("div");
+    overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
+    const panel=document.createElement("div");
+    panel.style.cssText="width:min(820px,96vw);max-height:88vh;overflow:auto;background:#0b0710;border:2px solid #7d45a8;border-radius:18px;padding:20px;color:#f0e6f7;box-shadow:0 0 48px #000";
+    panel.innerHTML=`<h2 style="margin:0 0 6px">Necromancia de Farsalia</h2><p style="margin:0 0 16px;color:#c9b8d7">Elige un cadáver y la celda adyacente donde regresará. No podrá actuar hasta tu próximo turno.</p><div class="ericto-corpse-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3 style="margin:18px 0 8px">Celda de reanimación</h3><div class="ericto-cell-list" style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button type="button" data-cancel style="padding:10px 16px;border-radius:9px;border:1px solid #777;background:#18151b;color:#eee">Cancelar</button><button type="button" data-confirm disabled style="padding:10px 16px;border-radius:9px;border:1px solid #b88be0;background:#4b2268;color:#fff;font-weight:800">Reanimar</button></div>`;
+    overlay.appendChild(panel);document.body.appendChild(overlay);
+    let chosenCorpse=null,chosenCell=null;
+    const confirm=panel.querySelector('[data-confirm]');
+    const sync=()=>{confirm.disabled=!(chosenCorpse&&chosenCell);};
+    corpses.forEach(rec=>{
+      const b=document.createElement("button");b.type="button";
+      const bp=Number(rec.battlePower)||getUnitBattlePower(rec.snapshot)||0;
+      b.innerHTML=`<b>${escapeHtml(rec.name||"Unidad caída")}</b><br><small>J${Number(rec.originalOwner||0)} · PB ${bp||"—"} · Vida ${Math.ceil(Number(rec.snapshot?.maxHp||rec.snapshot?.hp||1)/2)}/${Number(rec.snapshot?.maxHp||rec.snapshot?.hp||1)}</small>`;
+      b.style.cssText="padding:12px;text-align:left;border-radius:10px;border:1px solid #6d4b7e;background:#17101d;color:#f4eafa;cursor:pointer";
+      b.onclick=()=>{panel.querySelectorAll('.ericto-corpse-list button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #b77be2';chosenCorpse=rec;sync();};
+      panel.querySelector('.ericto-corpse-list').appendChild(b);
+    });
+    cells.forEach(cell=>{
+      const b=document.createElement("button");b.type="button";b.textContent=`${cell.x+1}, ${cell.y+1}`;
+      b.style.cssText="padding:9px 12px;border-radius:9px;border:1px solid #6d4b7e;background:#17101d;color:#f4eafa;cursor:pointer";
+      b.onclick=()=>{panel.querySelectorAll('.ericto-cell-list button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #b77be2';chosenCell=cell;sync();};
+      panel.querySelector('.ericto-cell-list').appendChild(b);
+    });
+    const finish=value=>{overlay.remove();resolve(value);};
+    panel.querySelector('[data-cancel]').onclick=()=>finish(null);
+    confirm.onclick=()=>finish({graveId:chosenCorpse.graveId,x:chosenCell.x,y:chosenCell.y});
+    overlay.onclick=e=>{if(e.target===overlay)finish(null);};
+  });
 }
 
 /* =====================================================================
@@ -1980,6 +2137,7 @@ const UNIT_BATTLE_POWER=Object.freeze({
   sun_tzu:88,
   merlin:92,
   king_solomon:100,
+  ericto:98,
   solomon_jinn:97,
   solomon_ifrit:99,
   solomon_demon:98,
@@ -2179,6 +2337,8 @@ const WEAPON_CLASS_BY_KEY={
   spartacus:"sword",
   sun_tzu:"neutral",
   merlin:"mage",
+  king_solomon:"mage",
+  ericto:"mage",
   hector_troy:"spear",
   beowulf:"sword",
   miyamoto_musashi:"sword",
@@ -2339,6 +2499,7 @@ const UNIT_LORE_DATA={
   subotai:{short:"General mongol de horizontes largos, marcha y terror a distancia.",legend:"Subotai fue uno de los grandes estrategas de la expansión mongola. En HallValla representa movilidad, presión y control del ritmo enemigo."},
   sun_tzu:{short:"Estratega de la guerra antes de que la espada salga de la vaina.",legend:"Sun Tzu es símbolo de estrategia, ventaja y victoria sin desperdicio. En HallValla fortalece la Destreza aliada y vuelve la formación más resistente al miedo."},
   king_solomon:{short:"Rey sabio e invocador supremo, capaz de someter sucesivamente tres entidades sobrenaturales mediante su sello.",legend:"En HallValla, Salomón combina la tradición del rey sabio con las leyendas salomónicas posteriores sobre el dominio de espíritus. Su fuerza no está en el combate físico, sino en conservar el sello que mantiene sometidas a tres Grandes Entidades. Mientras viva, el rival debe decidir entre enfrentar amenazas sobrenaturales o abrirse paso hasta el verdadero centro del poder."},
+  ericto:{short:"Nigromante tesalia de la Farsalia de Lucano, capaz de obligar temporalmente a los muertos a regresar conservando memoria e identidad.",legend:"Ericto, también conocida como Erichtho, es una temida hechicera de Tesalia que aparece en el libro VI de La Farsalia, poema épico escrito por el romano Lucano en el siglo I. Antes de la batalla de Farsalia, Sexto Pompeyo desea conocer el futuro de la guerra civil y la busca entre tumbas abandonadas. Ericto selecciona el cadáver reciente de un soldado y, mediante conjuros y amenazas dirigidas a las fuerzas del inframundo, obliga a su alma a regresar temporalmente al cuerpo para hablar y revelar una profecía. No devuelve verdaderamente al soldado a la vida: fuerza al alma a ocupar de nuevo su cadáver, conservando memoria e identidad. Esa escena inspira su habilidad en HallValla. Aunque el poema se desarrolla alrededor de personajes históricos, Ericto pertenece al componente sobrenatural y literario de la obra; no existe evidencia de que haya sido una nigromante histórica real."},
   merlin:{short:"Profeta y hechicero de la tradición artúrica, capaz de convertir conocimiento del porvenir en ventaja para su ejército.",legend:"Merlín es el gran consejero mágico de las leyendas artúricas. Sus relatos lo vinculan con profecías, secretos antiguos y la preparación del ascenso del rey Arturo. HallValla representa ese dominio del tiempo mediante Visión de los Tiempos: mientras permanezca en el campo, permite acceder antes a una carta futura del mazo. No es un guerrero resistente; su fuerza está en la distancia, la anticipación y el valor acumulativo de cada Draw Phase."},
   bengal_tiger:{short:"Depredador oculto, salto repentino y daño que deja huella.",legend:"El Tigre de Bengala es una sombra de jungla: no avisa, aparece. En HallValla usa Sigilo, emboscada y Sangrado para convertir una mala posición enemiga en sentencia."},
   tomoe_gozen:{short:"Guerrera samurái, velocidad cortante y precisión montada.",legend:"Tomoe Gozen es una figura legendaria de la guerra japonesa. En HallValla premia el movimiento previo y castiga a unidades de rango con ataques técnicos."},
@@ -3297,7 +3458,7 @@ function getAiPrincipalKeyForBattle(battle){
 function getPrincipalUtilityScore(card){
   if(!card||card.type!=="unit")return -Infinity;
   const utility={
-    king_solomon:520,richard_lionheart:500,merlin:492,leonidas:480,african_elephant:470,achilles:465,
+    king_solomon:520,ericto:510,richard_lionheart:500,merlin:492,leonidas:480,african_elephant:470,achilles:465,
     attila_hun:455,simo_hayha:450,hannibal_barca:440,sun_tzu:430,
     african_lion:420,yi_sun_sin:415,shaka_zulu:410,ulysses:405
   }[card.key]||0;
@@ -4670,8 +4831,18 @@ function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicS
   const creditMode=sourcePatch._clockKillCreditMode||"";
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
   let cleanPatch={...sourcePatch};
-  if(Array.isArray(cleanPatch.units)){const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);cleanPatch.units=solomonLife.units;if(solomonLife.logs.length)cleanPatch.log=[...solomonLife.logs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);}
-  else{delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;}
+  if(Array.isArray(cleanPatch.units)){
+    const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
+    cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
+    const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
+    const erictoLife=resolveErictoLifecycle(beforeUnits,solomonLife.units);
+    cleanPatch.units=erictoLife.units;
+    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[])];
+    if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
+    cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);
+  }else{
+    delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
+  }
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
@@ -4745,7 +4916,7 @@ if(win&&publicState.adventureIsGuardian){
   return;
 }
 if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa. La Forja de mazos y la selección de Personaje Principal quedan desbloqueadas.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
-async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
+async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},erictoGraveyard:[],units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
 async function joinGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";syncBoardDimensionsFromState(pub);const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
 
 function extractPrincipalCardFromDeck(cards=[],principalKey=""){
@@ -4866,7 +5037,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
     playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},
-    units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
+    erictoGraveyard:[],units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
   const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalKey:playerPrincipalPrep.principalKey||""};
@@ -7179,11 +7350,15 @@ async function finishTurn(){
   if(isTurnTimerEnabled()&&getTurnTimerRemainingMs()<=0){await expireTurnByClock();return;}
   const burnEnd=applyBurnAtTurnEnd(publicState.units||[]);
   if(burnEnd.logs.length&&await finalizeBattle(burnEnd.units,burnEnd.logs.join(" ")))return;
+  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(burnEnd.units,myPlayer);
+  const erictoLife=resolveErictoLifecycle(burnEnd.units,erictoUpkeep.units);
+  const endLogs=[...(burnEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
+  if((erictoUpkeep.logs.length||erictoLife.logs.length)&&await finalizeBattle(erictoLife.units,endLogs.join(" ")))return;
   const tutorialMode=publicState?.mode==="tutorial";const next=tutorialMode?1:(myPlayer===1?2:1),turn=tutorialMode?(publicState.turn||1)+1:(next===1?(publicState.turn||1)+1:(publicState.turn||1));
-  let refreshedUnits=restoreTurnGuardForOwner(burnEnd.units,next);
+  let refreshedUnits=restoreTurnGuardForOwner(erictoLife.units,next);
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:burnEnd.statusFxEvent||null,floatFxEvent:burnEnd.floatFxEvent||null,log:[tutorialMode?`Tutorial: termina el turno de práctica. ${burnEnd.logs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${burnEnd.logs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:burnEnd.statusFxEvent||null,floatFxEvent:burnEnd.floatFxEvent||null,log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
 }
@@ -7243,9 +7418,16 @@ async function adventureEnemyTurn(){
   }
 
   const logs=[];
+  let erictoGraveyard=normalizeErictoGraveyard(pub.erictoGraveyard||[]);
+  let lastPublishedUnits=[...(pub.units||[])];
   const aiLevel=ADVENTURE_AI_BEST_SKILL_LEVEL;
   const publishAiStep=async(extra={})=>{
     if((turnTimerExpiredKey===pub.turnKey||duelClockExpiredKey===pub.turnKey)||publicState?.turnKey!==pub.turnKey||publicState?.currentPlayer!==2)return false;
+    erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
+    const erictoLife=resolveErictoLifecycle(lastPublishedUnits,units);
+    units=erictoLife.units;
+    if(erictoLife.logs.length)logs.push(...erictoLife.logs);
+    lastPublishedUnits=[...units];
     const p1Leader=units.find(u=>u.owner===1&&u.leader);
     const p2Leader=units.find(u=>u.owner===2&&u.leader);
     const cappedMaxHonor=capResourceMax(maxHonor);
@@ -7261,6 +7443,7 @@ async function adventureEnemyTurn(){
       units,
       legendaryTraps,
       beastTraps,
+      erictoGraveyard,
       stalemateNoPlay:pub.stalemateNoPlay||{},
       battleFxEvent,
       defenseFxEvent,
@@ -7310,7 +7493,7 @@ async function adventureEnemyTurn(){
   let pendingAiFloatFxEvent=null;
   const withAiPublicState=(fn)=>{
     const prev=publicState;
-    publicState={...pub,units,legendaryTraps,beastTraps,currentPlayer:2,turnKey:pub.turnKey,turn:pub.turn,phase:pub.phase};
+    publicState={...pub,units,legendaryTraps,beastTraps,erictoGraveyard,currentPlayer:2,turnKey:pub.turnKey,turn:pub.turn,phase:pub.phase};
     try{return fn();}
     finally{publicState=prev;}
   };
@@ -8826,7 +9009,8 @@ async function adventureEnemyTurn(){
   if(battleTrap.logs.length)logs.push(...battleTrap.logs);
   if(getBattleOutcome(units).ended){
     const outcome=getBattleOutcome(units);
-    await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,beastTraps,[`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
+    erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
+    await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,beastTraps,erictoGraveyard,[`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
     return;
   }
   logs.push(`${pub.adventureEnemyName||"Rival"} pasa a Action Phase: mueve y ataca con sus unidades.`);
@@ -8852,6 +9036,7 @@ async function adventureEnemyTurn(){
       const result=applyUnitEffectState(u,null,units);
       if(!result.success)return false;
       units=result.units;
+      if(result.erictoGraveyard)erictoGraveyard=normalizeErictoGraveyard(result.erictoGraveyard);
       if(result.beastTraps)beastTraps=result.beastTraps;
       logs.push(`Rival: ${result.log}`);
       return true;
@@ -8870,6 +9055,7 @@ async function adventureEnemyTurn(){
     const result=applyUnitEffectState(u,target,units);
     if(!result.success)return false;
     units=result.units;
+    if(result.erictoGraveyard)erictoGraveyard=normalizeErictoGraveyard(result.erictoGraveyard);
     if(result.beastTraps)beastTraps=result.beastTraps;
     logs.push(`Rival: ${result.log}`);
     return true;
@@ -8957,6 +9143,14 @@ async function adventureEnemyTurn(){
     if(burnEnd.statusFxEvent)pendingAiStatusFxEvent=burnEnd.statusFxEvent;
     if(burnEnd.floatFxEvent)pendingAiFloatFxEvent=burnEnd.floatFxEvent;
   }
+  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(units,2);
+  units=erictoUpkeep.units;
+  if(erictoUpkeep.logs.length)logs.push(...erictoUpkeep.logs);
+  const erictoLife=resolveErictoLifecycle(lastPublishedUnits,units);
+  units=erictoLife.units;
+  if(erictoLife.logs.length)logs.push(...erictoLife.logs);
+  erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
+  lastPublishedUnits=[...units];
   const outcome=getBattleOutcome(units);
   const nextAiState={deck,hand,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
   if(outcome.ended){
@@ -8966,6 +9160,7 @@ async function adventureEnemyTurn(){
       units,
       legendaryTraps,
       beastTraps,
+      erictoGraveyard,
       phase:"ended",
       battleEnded:true,
       [`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),
@@ -8987,6 +9182,7 @@ async function adventureEnemyTurn(){
     units:restoreTurnGuardForOwner(units,1),
     legendaryTraps,
     beastTraps,
+    erictoGraveyard,
     stalemateNoPlay:pub.stalemateNoPlay||{},
     currentPlayer:1,
     turnPhase:"draw",
@@ -9413,7 +9609,7 @@ function getUnitEffectMode(u){
   if(u.leader&&u.leaderType==="archer"&&getLeaderAbilityForOwner(u.owner)==="arrow_rain")return "self";
   if(u.leader&&u.leaderType==="mage"&&getLeaderAbilityForOwner(u.owner)==="arcane_bolt")return "self";
   if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "passive";
-  if(["african_lion","black_raven"].includes(u.key))return "self";
+  if(["african_lion","black_raven","ericto"].includes(u.key))return "self";
   if(["richard_lionheart","saladin","sun_tzu","subotai"].includes(u.key))return "target";
   return "passive";
 }
@@ -9450,6 +9646,12 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
   }
   if(caster.key==="african_lion"){return [caster];}
   if(caster.key==="black_raven"){return [caster];}
+  if(caster.key==="ericto"){
+    if(caster.erictoUsedTurnKey===publicState?.turnKey)return[];
+    if(getErictoLinkedReanimated(caster,units).length>=getErictoMaxReanimated(caster))return[];
+    if(!getAdjacentFreeCells(caster,units).length)return[];
+    return getErictoEligibleCorpses(caster,publicState?.erictoGraveyard||[]).length?[caster]:[];
+  }
   if(caster.key==="richard_lionheart"){
     return adjacentAllies(caster,units).filter(a=>a.id!==caster.id);
   }
@@ -9565,6 +9767,24 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     const rev=revealStealthInRadius(out,owner,liveCaster,3,"Rugido del Rey");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Rugido del Rey y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
   }else if(liveCaster.key==="black_raven"){
     const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
+  }else if(liveCaster.key==="ericto"){
+    if(liveCaster.erictoUsedTurnKey===publicState?.turnKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia este turno."};
+    const current=getErictoLinkedReanimated(liveCaster,out).length;
+    const maximum=getErictoMaxReanimated(liveCaster);
+    if(current>=maximum)return{success:false,reason:`Ericto ya controla el máximo de ${maximum} reanimado${maximum===1?"":"s"} para su rango.`};
+    const graveyard=normalizeErictoGraveyard(publicState?.erictoGraveyard||[]);
+    const cells=getAdjacentFreeCells(liveCaster,out);
+    if(!cells.length)return{success:false,reason:"No hay una celda libre adyacente a Ericto."};
+    const selection=choice||getBestErictoReanimationChoice(liveCaster,out,graveyard);
+    if(!selection)return{success:false,reason:"No hay cadáveres disponibles para reanimar."};
+    const record=getErictoEligibleCorpses(liveCaster,graveyard).find(r=>r.graveId===selection.graveId);
+    const cell=cells.find(c=>c.x===Number(selection.x)&&c.y===Number(selection.y));
+    if(!record||!cell)return{success:false,reason:"El cadáver o la celda elegida ya no están disponibles."};
+    const revived=makeErictoReanimatedUnit(liveCaster,record,cell);
+    const nextGraveyard=graveyard.map(r=>r.graveId===record.graveId?{...r,used:true,usedByErictoId:liveCaster.id,usedTurnKey:publicState?.turnKey||""}:r);
+    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedTurnKey:publicState?.turnKey||""}:it).concat(revived);
+    log=`${liveCaster.name} usa Necromancia de Farsalia: ${record.name} regresa con ${revived.hp}/${revived.maxHp} Vida bajo su control.`;
+    return{success:true,units:out,log,erictoGraveyard:nextGraveyard};
   }else if(liveCaster.key==="richard_lionheart"){
     out=out.map(it=>{
       if(it.id===target.id){
@@ -9595,6 +9815,17 @@ async function activateUnitEffect(u,choice=null){
   const mode=getUnitEffectMode(u);
   if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante combate/turno.");
   let units=[...(publicState.units||[])];
+  if(u.key==="ericto"&&!choice){
+    const opts=getEffectTargetOptions(u,units);
+    if(!opts.length){
+      const max=getErictoMaxReanimated(u),current=getErictoLinkedReanimated(u,units).length;
+      if(current>=max)return setHint(`Ericto ya controla el máximo de ${max} reanimado${max===1?"":"s"} para su rango.`);
+      if(!getAdjacentFreeCells(u,units).length)return setHint("Ericto necesita una celda libre adyacente para reanimar.");
+      return setHint("No hay cadáveres disponibles: cada unidad solo puede reanimarse una vez por duelo.");
+    }
+    choice=await chooseErictoReanimationChoice(u,units,publicState?.erictoGraveyard||[]);
+    if(!choice)return setHint("Necromancia cancelada.");
+  }
   if(mode==="target"&&!choice){
     const opts=getEffectTargetOptions(u,units);
     if(!opts.length)return setHint(u.key==="saladin"?"Saladino necesita una casilla adyacente libre y no controlar otra Caballería Arquera.":"No hay objetivo válido para este EFFECT.");
@@ -9609,7 +9840,7 @@ async function activateUnitEffect(u,choice=null){
   const result=applyUnitEffectState(u,choice,units);
   if(!result.success)return setHint(result.reason||"No se pudo activar el efecto.");
   if(await finalizeBattle(result.units,result.log)){clearSelection();return;}
-  await updatePublic({units:result.units,beastTraps:result.beastTraps||publicState.beastTraps||[]});
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[]});
   await pushLog(result.log);
   clearSelection();
 }
@@ -9791,6 +10022,10 @@ function getUnitStatusEntries(u){
   const entries=[];
   const add=(label,name,desc,kind="neutral",icon="generic")=>entries.push({label,name,desc,kind,icon});
   const n=v=>Number(v||0);
+  if(u.reanimated){
+    const source=(publicState?.units||[]).find(x=>x.id===u.reanimatedByErictoId&&x.key==="ericto"&&Number(x.hp||0)>0);
+    add(`Reanimado`,`Reanimado por Ericto`,`Esta unidad regresó mediante Necromancia de Farsalia${source?` de ${source.name}`:""}. Conserva su identidad, estadísticas y habilidades, pero desaparecerá si su Ericto abandona el campo.`,"buff dex-buff","control");
+  }
   if(u.key==="hattori_hanzo"&&!u.hanzoContractConsumed)add(`Contrato`,`Contrato preparado`,`La primera unidad enemiga que Hattori Hanzō ataque desde Sigilo recibirá automáticamente el Contrato del Shogun: +3 DX y +2 AT para Hanzō, -3 Guardia para el objetivo y sin contraataque. No se activa contra líderes.` ,"buff dex-buff","control");
   if(n(u.tempMovDebuff)>0)add(`-${n(u.tempMovDebuff)} MOV`,`Movimiento reducido`,`Movimiento reducido hasta el inicio de su próximo turno.${u.tempMovDebuffSource?` Origen: ${u.tempMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
   if(getGenghisMovDebuff(u)>0)add(`-${getGenghisMovDebuff(u)} MOV`,`Horda de la Estepa`,`Movimiento reducido por Gengis Kan hasta su próximo turno.${u.genghisMovDebuffSource?` Origen: ${u.genghisMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
@@ -10633,6 +10868,7 @@ async function startBasicTutorialBattle(){
     playerLeaderLevels:{1:leaderLevel,2:1},
     playerLeaderAbilities:{1:leaderAbility,2:""},
     playerStats:{1:{hp:leaderStats.hp,honor:10,maxHonor:10,deck:deck.length,hand:hand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:0,hand:0}},
+    erictoGraveyard:[],
     units:[
       makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
       makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,1,""),
@@ -11061,20 +11297,25 @@ function getUnitMasteryProgressText(entity){
 function registerLocalUnitMasteryKill(killer,victim){
   try{
     if(!killer||!victim||killer.leader||victim.leader)return null;
-    if(!myPlayer||Number(killer.owner)!==Number(myPlayer))return null;
-    if(Number(killer.owner)===Number(victim.owner))return null;
-    const key=getUnitMasteryKey(killer);
+    let creditedKiller=killer;
+    if(killer.reanimated&&killer.reanimatedByErictoId){
+      const source=(publicState?.units||[]).find(u=>u.id===killer.reanimatedByErictoId&&u.key==="ericto"&&u.hp>0);
+      if(source)creditedKiller=source;
+    }
+    if(!myPlayer||Number(creditedKiller.owner)!==Number(myPlayer))return null;
+    if(Number(creditedKiller.owner)===Number(victim.owner))return null;
+    const key=getUnitMasteryKey(creditedKiller);
     if(!key)return null;
     const profile=getPlayerProfile();
     const book=normalizeUnitMasteryBook(profile.unitMastery||{});
-    const before=book[key]||{name:normalizeUnitMasteryName(killer.name||key),kills:0};
+    const before=book[key]||{name:normalizeUnitMasteryName(creditedKiller.name||key),kills:0};
     const beforeKills=Math.max(0,Number(before.kills||0));
     const beforeRank=getUnitMasteryRankFromKills(beforeKills);
     const afterKills=beforeKills+1;
     const afterRank=getUnitMasteryRankFromKills(afterKills);
-    book[key]={name:normalizeUnitMasteryName(killer.name||before.name||key),kills:afterKills};
+    book[key]={name:normalizeUnitMasteryName(creditedKiller.name||before.name||key),kills:afterKills};
     savePlayerProfile({...profile,unitMastery:book});
-    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,hpGain:getUnitMasteryHpBonusByRank(afterRank)-getUnitMasteryHpBonusByRank(beforeRank)};
+    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,hpGain:getUnitMasteryHpBonusByRank(afterRank)-getUnitMasteryHpBonusByRank(beforeRank),creditedFromReanimated:creditedKiller.id!==killer.id};
   }catch(e){console.warn("[HallValla] No se pudo registrar maestría de unidad:",e);return null;}
 }
 function applyUnitMasteryRankUpToUnits(units,killer,result){
@@ -14447,6 +14688,7 @@ const CODE_TRUTH_EFFECTS_7HAI={
   white_rhino:{trigger:["Debe moverse 2 casillas en línea recta antes de atacar."],does:["Usa Embestida Devastadora: AT 22.","Después de atacar con Embestida, impacte o falle, queda Aturdido hasta su próximo turno.","Aturdido: no puede moverse, defenderse ni atacar; su Guardia no cambia y su DX/AGI se reducen a la mitad."],doesNot:["Bestia Torpe: no se beneficia de bonos de DX ni AGI."],example:"Es un martillo de una línea recta, pero queda expuesto después."},
   african_elephant:{trigger:["Debe moverse exactamente 1 celda en línea recta hacia el frente, directamente hacia el mismo enemigo que atacará.","Debe atacar inmediatamente después del movimiento."],does:["Obtiene +6 AT durante ese ataque: AT 22.","El objetivo principal pierde 4 AGI para evadir y, si es impactado, es empujado hasta 2 celdas.","Los enemigos situados a ambos lados del objetivo central reciben AT 10, pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda.","Si el objetivo principal no puede retroceder, recibe 8 daño directo de Pisoteo.","El Elefante avanza a la celda liberada y pierde 2 GD hasta su próximo turno."],doesNot:["No se activa por movimiento lateral o hacia atrás.","No se activa si comienza adyacente y ataca sin moverse.","No se activa si ataca a un enemigo distinto o realiza otra acción entre movimiento y ataque.","No queda Aturdido después de cargar."],example:"Elefante → celda vacía → enemigo. Avanza a la celda vacía y ataca inmediatamente al enemigo frontal."},
   king_solomon:{trigger:["Al ser convocado, su controlador define el orden de las tres Grandes Entidades.","Debe existir una celda libre adyacente para manifestar la entidad siguiente."],does:["Invoca gratuitamente la primera entidad elegida.","Cuando la entidad activa es destruida, manifiesta automáticamente la siguiente del orden establecido.","Cada entidad solo puede aparecer una vez por duelo y solo una permanece activa a la vez.","Si no hay espacio, la invocación queda pendiente hasta que exista una celda adyacente libre.","El Gran Jinn concede +3 GD a Salomón y aliados adyacentes.","El Gran Ifrit ignora 4 GD, aplica Quemadura, inflige daño lateral y se cura al destruir.","El Demonio Encadenado debilita automáticamente al enemigo de mayor PB."],doesNot:["Las entidades no forman parte del mazo ni consumen recursos.","No pueden ser Personaje Principal.","Si Salomón abandona el campo, la entidad activa desaparece, no cuenta como destrucción y no concede +5 segundos en PvP.","Las entidades restantes se pierden cuando muere Salomón."],example:"Puedes abrir con el Demonio para sellar una prioridad, continuar con el Jinn para proteger a Salomón y cerrar con el Ifrit."},
+  ericto:{trigger:["EFFECT una vez por turno durante la Action Phase.","Debe existir al menos un cadáver no utilizado y una celda libre adyacente.","El límite depende de su rango de maestría: I permite 1; II-III permiten 2; IV-X permiten 3."],does:["Reanima una unidad destruida de cualquier jugador bajo el control de Ericto con la mitad de su Vida máxima, redondeada hacia arriba.","La unidad conserva identidad, estadísticas, cualidades, habilidades y estados persistentes, pero no repite efectos de entrada.","Al final del turno de su controlador, Ericto pierde 1 Vida inevitable por cada reanimado que conserve.","Las bajas causadas por los reanimados se registran como eliminaciones de Ericto y conceden normalmente el bono de reloj PvP al controlador."],doesNot:["Cada cadáver solo puede ser reanimado una vez por duelo.","Los líderes y las Grandes Entidades de Salomón no pueden reanimarse.","Si Ericto abandona el campo, sus reanimados desaparecen sin contar como destruidos ni conceder +5 segundos.","Reanimar consume la acción de Ericto de ese turno."],example:"Una Ericto de rango IV puede mantener hasta 3 reanimados, pero pierde 3 Vida al final de cada turno mientras los tres continúen en campo."},
   solomon_jinn:{trigger:["Se manifiesta mediante el Sello de Salomón."],does:["Concede +3 GD a Salomón y aliados adyacentes."],doesNot:["No puede existir sin un Salomón vivo vinculado."],example:"Forma una fortaleza alrededor del invocador."},
   solomon_ifrit:{trigger:["Se manifiesta mediante el Sello de Salomón."],does:["Ignora 4 Guardia, aplica Quemadura 2, causa 4 daño directo lateral y recupera 2 Vida al destruir."],doesNot:["No puede existir sin un Salomón vivo vinculado."],example:"Es la manifestación ofensiva para cerrar la batalla."},
   solomon_demon:{trigger:["Se manifiesta mediante el Sello de Salomón."],does:["Debilita con -3 DX y -2 AGI al enemigo de mayor Poder de batalla mientras permanezca activo."],doesNot:["No puede existir sin un Salomón vivo vinculado."],example:"Neutraliza primero la mayor prioridad rival."},
