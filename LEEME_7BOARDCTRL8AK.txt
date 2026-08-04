@@ -1,0 +1,14 @@
+HallValla 7BOARDCTRL8AK · Crianza dracónica completa
+
+Copia la carpeta Hallvalla de este parche encima de tu carpeta Hallvalla actual y permite reemplazar los archivos coincidentes.
+
+Incluye:
+- Huevo opcional como Personaje Principal, 50 VIDA.
+- Conteo persistente solo mientras el huevo/dragón está vivo en el campo.
+- Eclosión aleatoria a 1000 eliminaciones.
+- Bebé a joven en 5000 eliminaciones acumuladas.
+- Joven a adulto en 10000 eliminaciones acumuladas.
+- Tres rutas internas: Relámpago, Fuego e Hielo.
+- Un solo huevo o dragón por mazo.
+- Artes WebP de mano y campo para todas las etapas.
+- Vuelo y tercer ataque elemental de área con daño atenuado.
