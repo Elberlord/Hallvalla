@@ -91,7 +91,6 @@ on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerSort","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
-on("clearDeckPrincipalBtn","click",clearCurrentDeckPrincipal);
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);
@@ -851,7 +850,7 @@ on("mineBtn","click",()=>showComingSoon("Mina"));
 on("collectionBtn","click",openCollectionOrLocked);
 on("forgeBtn","click",()=>showComingSoon("Forja"));
 on("storeBtn","click",openPackShop);
-on("eventsBtn","click",openBeastmasterEvent);
+on("eventsBtn","click",openHallvallaEvents);
 on("clansBtn","click",()=>showComingSoon("Clanes"));
 on("rankingBtn","click",()=>showComingSoon("Ranking"));
 on("profileBtn","click",openProfilePanel);

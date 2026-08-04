@@ -1,0 +1,76 @@
+HALLVALLA 7BOARDCTRL8AE
+EL CONTRATO DE LAS BESTIAS — JEFES DRAGÓN
+
+1. ACCESO
+- El botón Eventos abre ahora un centro de eventos.
+- Conserva La Cacería del Rey Salvaje.
+- Añade tres contratos: Relámpago, Fuego y Hielo.
+- Los contratos se desbloquean al alcanzar Tier 3 del líder.
+- Antes de entrar se abre la Forja de mazos.
+- El contrato exige un mazo válido con 3 Personajes Principales y 20 cartas para robar.
+
+2. REGLAS COMUNES DE LOS JEFES
+- Son líderes únicos sin mazo, mano ni Personajes Principales.
+- Permanecen inmóviles durante todo el duelo: MOV efectivo 0.
+- Mantienen su MOV natural como dato de la futura versión coleccionable.
+- Tienen Vuelo e ignoran trampas terrestres por la regla aérea existente.
+- Unidades terrestres solo pueden atacarlos con RG mayor a 3 o Antiaéreo.
+- Las unidades con Vuelo también pueden atacar objetivos aéreos.
+- No atacan hasta que una unidad rival entra en RG 5.
+- Si no tienen objetivo válido, esperan y conservan su carga.
+- Ciclo: ataque directo, ataque directo, ataque elemental 3x3.
+- Después del segundo ataque directo aparece el estado Ataque elemental preparado.
+
+3. ESTADÍSTICAS ADULTAS
+Dragón del Relámpago:
+- VIDA 40, GD 16, AT 20, PREC 14, EVA 12, MOV natural 4, RG 5.
+
+Dragón de Fuego:
+- VIDA 48, GD 20, AT 24, PREC 12, EVA 10, MOV natural 3, RG 5.
+
+Dragón de Hielo:
+- VIDA 56, GD 24, AT 18, PREC 10, EVA 8, MOV natural 2, RG 5.
+
+4. DAÑO ELEMENTAL
+Relámpago — Tormenta dirigida:
+- Área direccional 3x3 desde la casilla de impacto hacia atrás.
+- Fila de impacto: 5 / 20 / 5.
+- Segunda fila: 5 / 5 / 5.
+- Tercera fila: 4 / 4 / 4.
+- Objetivo principal: Electrocución 2.
+- Secundarios: Electrocución 1.
+- Electrocución: -2 AGI y sin contraataque.
+- Un segundo impacto eléctrico consume Electrocución y causa Parálisis 1.
+
+Fuego — Erupción ígnea:
+- Área centrada 3x3.
+- Centro 24, laterales 6, esquinas 4.
+- Centro: Quemadura 2.
+- Secundarios: Quemadura 1.
+
+Hielo — Estallido glacial:
+- Área centrada 3x3.
+- Centro 18, laterales 4, esquinas 3.
+- Centro: Escarcha 2.
+- Secundarios: Escarcha 1.
+- Escarcha: -2 MOV y -2 AGI.
+- Un segundo impacto de hielo consume Escarcha y causa Congelación 1.
+
+5. PRECISIÓN Y EVASIÓN
+- Los líderes normales conservan su regla de impacto automático.
+- Los dragones usan sus valores reales de PREC y EVA.
+- El sistema mantiene la comparación determinista existente de HallValla.
+
+6. RECOMPENSAS
+Relámpago: 180 EXP, 120 Oro y 1 Huevo de Dragón.
+Fuego: 240 EXP, 160 Oro y 1 Huevo de Dragón.
+Hielo: 320 EXP, 220 Oro y 1 Huevo de Dragón.
+- Cada recompensa especial se reclama una sola vez por contrato.
+- Los contratos pueden repetirse después por desafío.
+- Los huevos quedan guardados localmente con origen, contador de bajas y estado de eclosión.
+
+7. AÚN NO FIJADO EN ESTA VERSIÓN
+- La carta jugable del huevo como Principal.
+- El conteo en batalla de las 1000 eliminaciones mientras el huevo está equipado.
+- La eclosión aleatoria y las tablas exactas Bebé/Juvenil/Adulto de Fuego e Hielo.
+- Esos puntos no se inventaron porque sus estadísticas finales de crecimiento todavía no fueron definidas individualmente.

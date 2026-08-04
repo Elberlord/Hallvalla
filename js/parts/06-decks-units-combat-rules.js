@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8V · Mazos, unidades, reglas de combate y trampas */
+/* HallValla 7BOARDCTRL8AI · Mazos, unidades, reglas de combate y trampas */
 
 
 const ALL_SPECIAL_CARD_KEYS=LEGENDARY_ALLY_CARDS.map(c=>c.key);
@@ -17,6 +17,7 @@ const CARD_VISUALS_BY_KEY={
   berserker:{portrait:CARD_PORTRAITS.berserker,icon:"🪓"},
   archer:{portrait:CARD_PORTRAITS.archer,icon:"🏹"},
   guardian:{portrait:CARD_PORTRAITS.paladin,icon:"🗿"},
+  morgana:{portrait:CARD_PORTRAITS.morgana,icon:"✠"},
   samurai_katana:{portrait:CARD_PORTRAITS.samuraiKatana,icon:"⚔️"},
   samurai_yabusame:{portrait:CARD_PORTRAITS.samuraiYabusame,icon:"🏹"},
   samurai_naginata:{portrait:CARD_PORTRAITS.samuraiNaginata,icon:"🗡️"},
@@ -56,6 +57,7 @@ const LEGENDARY_TRAP_CARDS=[
 ];
 
 const IMPROVED_MAGIC_TRAP_PACK=[
+  MORGANA_CARD,
   {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/sand_storm.webp",cost:2,spell:"damage",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
   {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",portrait:"assets/cards/basic/athena_blessing.webp",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
   {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",portrait:"assets/cards/basic/shield_wall.webp",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
@@ -74,7 +76,7 @@ const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"El inicio de la
 {id:"battle5",num:5,title:"La prueba de Richard",legacyTitle:"El usurpador",enemyName:"Richard Corazón de León",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_5_el_usurpador.webp",enemyIntro:"La última defensa se rompe entre humo y acero. En el interior del salón, frente al trono, espera Richard Corazón de León.\n\nNo viene como usurpador. Viene a medir tu temple. Asegura que el reino necesita guerreros capaces de sostener la corona cuando el mundo se parte. Si sobrevives a su prueba, te aceptará como aliado.",xp:20,gold:25,cardPack:false,rewardCard:"richard_lionheart",enemyLegendaryCards:["mulan","wallace","richard_lionheart"],aiLevel:5,aiDrawBonus:0,aiHonorBonus:2,aiStyle:"Despiadada y orientada a victoria",desc:"Supera la prueba final de Richard Corazón de León para completar el mapa 1.1 y ganar su carta."}
 ]};
 const ADVENTURE_CHAPTER_2_1={id:"chapter2_1",number:"2.1",title:"Ecos del estandarte roto",desc:"Tras la prueba de Richard, la rebelión deja de pelear como una banda dispersa. Un nuevo consejo de estrategas roba tácticas del reino y usa leyendas invocadas contra ti: Corazón de León, Mulan y Wallace aparecen ahora en manos enemigas junto a magias y trampas reforzadas.",introTitle:"2.1 Ecos del estandarte roto",introText:"El golpe fue detenido, pero no destruido. Entre cartas quemadas y juramentos rotos, los rebeldes aprendieron a copiar la fuerza de las leyendas. Ahora cada comandante enemigo carga cartas básicas, magias reforzadas, trampas más crueles y tres nombres capaces de cambiar una batalla: Richard, Mulan y Wallace.",requiresChapter:"chapter1_1",packType:"improved_magic_trap",battles:[
-{id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu líder antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",rewardPackType:"shop_basic",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],enemyFixedDeck:[["mulan",1],["wallace",1],["richard_lionheart",1],["sand_curse_plus",1],["fireball",3],["heal",3],["samurai_katana",3],["saboteador_iga",2],["berserker",2],["spearman",3],["archer",3],["guardian",3],["ulfhednar",3],["geisha_encubierta",1]],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El Guerrero de la Vanguardia Rota usa un mazo fijo de 30 cartas con frente pesado, curación, daño directo, lanceros, guardianes y tres aliados legendarios."},
+{id:"chapter2_1_battle1",num:1,title:"El guerrero de las tres sombras",enemyName:"Guerrero de la Vanguardia Rota",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"En el viejo puente recuperado, una nueva fuerza bloquea el paso. El guerrero que dirige la vanguardia ya no depende solo de soldados comunes: lleva cartas copiadas de Richard, Mulan y Wallace. Su plan es simple y brutal: aguantar el centro, invocar una leyenda y aplastar tu líder antes de que puedas preparar defensa.",xp:24,gold:28,cardPack:true,packType:"improved_magic_trap",rewardPackType:"shop_basic",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],enemyFixedDeck:[["mulan",1],["wallace",1],["richard_lionheart",1],["sand_curse_plus",1],["fireball",3],["heal",3],["samurai_katana",3],["saboteador_iga",2],["berserker",2],["spearman",3],["archer",3],["guardian",3],["ulfhednar",3],["geisha_encubierta",1]],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Primer combate del mapa 2.1. El Guerrero de la Vanguardia Rota usa un mazo fijo adaptado al tier de su líder, con frente pesado, curación, daño directo, lanceros, guardianes y tres aliados legendarios."},
 {id:"chapter2_1_battle2",num:2,title:"La arquera del paso silencioso",enemyName:"Arquera del Paso Silencioso",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La ruta de mensajeros aparece limpia, demasiado limpia. Desde las colinas, una arquera rebelde dirige disparos calculados y usa trampas reforzadas para cortar movimiento. Si dejas una unidad herida, la convertirá en una puerta abierta hacia tu líder.",xp:28,gold:32,cardPack:true,packType:"improved_magic_trap",rewardPackType:"shop_basic",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],aiLevel:7,aiDrawBonus:1,aiHonorBonus:3,aiStyle:"Control a distancia",desc:"Segundo combate del mapa 2.1. La IA prioriza daño, rango y remates con apoyo legendario."},
 {id:"chapter2_1_battle3",num:3,title:"El blanco de invierno",enemyName:"Simo Häyhä",enemyLeaderType:"archer",image:"assets/story/adventure_2_1/2_1_3_el_blanco_de_invierno.webp",enemyIntro:"La nieve no cae en esta cámara, pero el silencio corta igual. Simo Häyhä espera al fondo del eco quebrado, protegido por trampas reforzadas y leyendas copiadas. Si dejas una unidad herida, su precisión la convertirá en sentencia. Al vencerlo, su carta se unirá a tu colección.",xp:35,gold:40,cardPack:false,packType:"improved_magic_trap",rewardCard:"simo_hayha",enemyLegendaryCards:["richard_lionheart","mulan","wallace","simo_hayha"],aiLevel:8,aiDrawBonus:2,aiHonorBonus:3,aiStyle:"Francotirador de precisión",desc:"Jefe del mapa 2.1. Simo usa rango, precisión, Richard, Mulan, Wallace y magias/trampas mejoradas."}
 ]};
@@ -160,11 +162,30 @@ function getPrincipalUtilityScore(card){
   }[card.key]||0;
   return utility+Number(card.hp||0)*5+Number(card.guard||0)*4+Number(card.atk||0)*3+Number(card.dex||0)+Number(card.agi||0)+Number(card.range||0)*5+Number(card.mov||0)*2+(card.stealth?18:0);
 }
-function chooseFallbackAiPrincipalKey(initial){
+function chooseFallbackAiPrincipalKeys(initial,excludedKeys=[],limit=DECK_RULES.maxPrincipalSlots){
+  const excluded=new Set((excludedKeys||[]).filter(Boolean));
   const cards=[...(initial?.hand||[]),...(initial?.deck||[])].filter(card=>card?.type==="unit");
   const unique=[...new Map(cards.map(card=>[card.key||card.name,card])).values()];
   unique.sort((a,b)=>getPrincipalUtilityScore(b)-getPrincipalUtilityScore(a));
-  return unique[0]?.key||"";
+  return unique.map(card=>card.key||card.name).filter(key=>key&&!excluded.has(key)).slice(0,Math.max(0,limit));
+}
+function chooseFallbackAiPrincipalKey(initial){return chooseFallbackAiPrincipalKeys(initial,[],1)[0]||"";}
+function getAiPrincipalSlotsForBattle(battle){
+  if(!battleAllowsAiPrincipal(battle))return 0;
+  const level=typeof getAdventureEnemyLeaderLevel==="function"?getAdventureEnemyLeaderLevel(battle):1;
+  return getPrincipalSlotsForLeaderLevel(level);
+}
+function getAiPrincipalKeysForBattle(battle,initial){
+  const principalSlots=getAiPrincipalSlotsForBattle(battle);
+  if(principalSlots<=0)return[];
+  const available=new Set([...(initial?.hand||[]),...(initial?.deck||[])].filter(card=>card?.type==="unit").map(card=>card.key||card.name));
+  if(battle?.beastEvent&&typeof getBeastmasterPrincipalKeysForSlots==="function"){
+    return getBeastmasterPrincipalKeysForSlots(principalSlots).filter(key=>available.has(key)).slice(0,principalSlots);
+  }
+  const preferred=getAiPrincipalKeyForBattle(battle);
+  const out=preferred&&available.has(preferred)?[preferred]:[];
+  const extras=chooseFallbackAiPrincipalKeys(initial,out,principalSlots-out.length);
+  return [...out,...extras].slice(0,principalSlots);
 }
 
 const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_CHAPTER_3_1,ADVENTURE_CHAPTER_4_1,ADVENTURE_CHAPTER_5_1,ADVENTURE_CHAPTER_6_1];
@@ -236,6 +257,7 @@ async function setSelectedLeaderType(type){
   if(nextAction==="adventure")runFirstTimeTutorialBefore(openAdventureStory);
   if(nextAction==="online")runFirstTimeTutorialBefore(openOnlineLobby);
   if(nextAction==="beast_event")runFirstTimeTutorialBefore(openBeastmasterEvent);
+  if(nextAction==="hallvalla_events")runFirstTimeTutorialBefore(openHallvallaEvents);
 }
 function requireLeaderSelection(force=false){
   if((force||leaderProfileLoaded)&&!getSelectedLeaderType()){
@@ -248,39 +270,43 @@ function requireLeaderSelection(force=false){
 function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=isInitialLeaderAllowed(type)?LEADER_DATA[type]:null;const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
 function applyLeaderToCard(card,leaderType){return {...card}}
 function makeCard(t,owner,leaderType){const card={...t,id:uid8(),owner,leaderType};if(card.type==="unit")card.battlePower=getUnitBattlePower(card);return card}
-function getStarterBasicDeckTemplates(){
-  return STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).slice(0,Math.max(0,DECK_RULES.deckSize-1));
+function getStarterBasicDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
+  const target=getDeckSizeForPrincipalSlots(principalSlots);
+  return STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).slice(0,Math.max(0,target-1));
 }
 function getStarterChosenSpecialCard(selectedSpecial=""){
   const key=selectedSpecial||getAdventureProgress?.().selectedSpecial||pendingAdventureSpecial||"mulan";
   return ADVENTURE_SPECIALS[key]?{...ADVENTURE_SPECIALS[key]}:null;
 }
-function getDefaultDeckTemplates(selectedSpecial=""){
-  const base=getStarterBasicDeckTemplates();
+function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
+  const target=getDeckSizeForPrincipalSlots(principalSlots);
+  const base=getStarterBasicDeckTemplates(principalSlots);
   const special=getStarterChosenSpecialCard(selectedSpecial);
   const deck=special?[...base,special]:base;
-  return deck.slice(0,DECK_RULES.deckSize);
+  return deck.slice(0,target);
 }
-function getAiBasicDeckTemplates(){
-  const base=getStarterBasicDeckTemplates();
+function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
+  const target=getDeckSizeForPrincipalSlots(principalSlots);
+  const base=getStarterBasicDeckTemplates(principalSlots);
   const deck=[...base];
   let i=0;
-  while(deck.length<DECK_RULES.deckSize&&base.length){
+  while(deck.length<target&&base.length){
     deck.push({...base[i%base.length]});
     i++;
   }
-  return deck.slice(0,DECK_RULES.deckSize);
+  return deck.slice(0,target);
 }
-function getStarterAdventureDeckTemplates(selectedSpecial=""){
+function getStarterAdventureDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
   const special=getStarterChosenSpecialCard(selectedSpecial);
-  return getDefaultDeckTemplates(selectedSpecial)
+  const target=getDeckSizeForPrincipalSlots(principalSlots);
+  return getDefaultDeckTemplates(selectedSpecial,principalSlots)
     .filter(card=>isStarterBasicCard(card)||(special&&card.key===special.key))
-    .slice(0,DECK_RULES.deckSize);
+    .slice(0,target);
 }
-function getPlayableSavedDeckTemplates(){
+function getPlayableSavedDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
   if(!canAccessDecks())return [];
   const saved=(typeof getSavedDeck==="function"?getSavedDeck():[]).map(hydrateCardVisualData);
-  return validateDeckList(saved).valid?saved:[];
+  return validateDeckList(saved,principalSlots).valid?saved:[];
 }
 
 
@@ -294,8 +320,9 @@ function applyRarityDebugFirstHandCard(deck=[],owner=1,leaderType=getSelectedLea
 
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
   const useSaved=!options.ai;
-  const savedTemplates=useSaved?getPlayableSavedDeckTemplates():[];
-  const starterTemplates=getDefaultDeckTemplates();
+  const principalSlots=options.principalSlots||getPrincipalSlotsForLeaderType(leaderType);
+  const savedTemplates=useSaved?getPlayableSavedDeckTemplates(principalSlots):[];
+  const starterTemplates=getDefaultDeckTemplates("",principalSlots);
   const templates=savedTemplates.length?savedTemplates:starterTemplates;
   return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
@@ -322,7 +349,7 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){return normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"")}
-function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyLanceWeaponRule(applyDesertAssassinRule({...card}));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:(card.dex||0)+getAxeDexBonus(card),agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false};unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}

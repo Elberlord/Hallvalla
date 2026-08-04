@@ -9,7 +9,14 @@ function getAdventureChapterForBattle(battle){
   return ADVENTURE_CHAPTERS.find(ch=>ch.battles.some(b=>b.id===battle.id))||ADVENTURE_CHAPTER_1_1;
 }
 
-function getAdventureEnemyLeaderLevel(battle){
+function getAdventureEnemyLeaderLevel(battle,playerLevelOverride=null){
+  if(battle?.beastEvent||battle?.matchPlayerLevel){
+    const selectedType=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
+    const currentPlayerLevel=playerLevelOverride!==null&&playerLevelOverride!==undefined
+      ? playerLevelOverride
+      : (selectedType&&typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(selectedType):1);
+    return normalizeLeaderLevel(currentPlayerLevel||1);
+  }
   const explicitLevel=normalizeLeaderLevel(battle?.enemyLeaderLevel||1);
   const chapter=getAdventureChapterForBattle(battle);
   const chapterNumber=parseFloat(String(chapter?.number||"").replace(",","."));
@@ -583,9 +590,11 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   const introChapter=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   $("adventureGuardianTitle").textContent=battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`;
   const introConflict=introChapter.id===ADVENTURE_CHAPTER_2_1.id?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas.":"Los rebeldes intentan usurpar el trono y crear un golpe de estado.";
-  const principalKey=getAiPrincipalKeyForBattle(battle);
-  const principalCard=principalKey?getAdventureDeckCardTemplateByKey(principalKey):null;
-  const principalLine=principalCard?`\nPersonaje Principal enemigo: ${principalCard.name}. Comenzará ya convocado.`:"";
+  const previewInitial=makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage");
+  const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
+  const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);
+  const principalLine=principalCards.length?`
+Personajes Principales enemigos: ${principalCards.map(card=>card.name).join(", ")}. Comenzarán ya convocados.`:"";
   $("adventureGuardianText").textContent=`${battle.enemyIntro||battle.desc}
 
 ${introConflict} Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.

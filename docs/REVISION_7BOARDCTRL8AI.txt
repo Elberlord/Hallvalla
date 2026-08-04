@@ -1,0 +1,17 @@
+HALLVALLA 7BOARDCTRL8AI · REVISIÓN DE INTEGRACIÓN
+
+Correcciones realizadas sobre 7BOARDCTRL8AH:
+- El botón Eventos ahora abre el selector consolidado de HallValla.
+- Ese selector incluye el evento del Señor de las Bestias y los tres Contratos de las Bestias.
+- Tras elegir líder por primera vez, la acción pendiente hallvalla_events continúa correctamente.
+- Se mantienen Morgana, su Cuenta regresiva mortal y sus artes en assets/cards/special y assets/board_cards/special.
+- Se mantienen los tres módulos de jefes dragón, sus artes transparentes y sus board cards.
+
+Validaciones realizadas:
+- Sintaxis individual y concatenada de los 17 módulos.
+- Ejecución de carga de los 17 módulos en entorno DOM simulado.
+- Integridad de ZIP.
+- 433 imágenes verificadas: 0 dañadas.
+- 336 rutas locales literales revisadas: 0 recursos reales faltantes.
+- 373 IDs HTML únicos: 0 duplicados.
+- No existen referencias ejecutables ni assets de dark_mage.

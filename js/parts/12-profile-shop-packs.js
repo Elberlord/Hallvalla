@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Eventos de batalla, perfil, tienda y sobres */
+/* HallValla 7BOARDCTRL8AD · Eventos de batalla, perfil, tienda y sobres */
 
 on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!canOpenHandForViewNow()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("mobileToggleActionsBtn","click",toggleBattleActions);on("toggleLogBtn","click",toggleBattleLog);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleToggleMusicBtn","click",toggleBattleMusic);on("battleToggleSfxBtn","click",toggleBattleSfx);on("battleMusicVolume","input",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","input",e=>setBattleSfxVolume(e.target.value));on("battleMusicVolume","change",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","change",e=>{setBattleSfxVolume(e.target.value);if(gameSettings.sound&&gameSettings.sfx)tryPlaySound("button_click",.28);});on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("battleDeleteCloudBattleBtn","click",deleteCurrentFirebaseBattleSafe);on("inspectClose","click",()=>$("inspector").classList.remove("show"));on("cardInspectCancel","click",hideCardInspectModal);on("cardInspectX","click",hideCardInspectModal);on("cardInspectPlay","click",playInspectedCard);
 const inspectorEl=$("inspector");
@@ -167,6 +167,7 @@ function getPlayerProfile(){
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
+    profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
     if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities)savePlayerProfile(profile);
     return profile;
   }catch(e){
@@ -175,11 +176,82 @@ function getPlayerProfile(){
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
+    profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
     return profile;
   }
 }
 function savePlayerProfile(profile){
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
+}
+
+/* Progresión alternativa para unidades de apoyo.
+   La Acólita sanadora no progresa por bajas ni recibe Vida por rango. */
+function isUnitServiceProgression(entity){return String(entity?.key||"")==="acolyte_healer";}
+function normalizeUnitServiceBook(book={}){
+  const out={};
+  try{
+    Object.entries(book||{}).forEach(([key,rec])=>{
+      const name=normalizeUnitMasteryName(rec?.name||key);
+      const safeKey=normalizeUnitMasteryName(key).toLowerCase()||name.toLowerCase();
+      if(!safeKey)return;
+      out[safeKey]={name:name||safeKey,points:Math.max(0,Math.floor(Number(rec?.points||0)))};
+    });
+  }catch(e){}
+  return out;
+}
+function getUnitServiceRecord(entity,profile=getPlayerProfile()){
+  const key=getUnitMasteryKey(entity);
+  const book=normalizeUnitServiceBook(profile?.unitService||{});
+  return book[key]||{name:normalizeUnitMasteryName(entity?.name||key),points:0};
+}
+function getUnitServicePoints(entity,profile=null){
+  if(!isUnitServiceProgression(entity))return 0;
+  const embedded=Math.max(0,Math.floor(Number(entity?.servicePoints||0)));
+  if(entity?.owner&&myPlayer&&Number(entity.owner)!==Number(myPlayer))return embedded;
+  const rec=getUnitServiceRecord(entity,profile||getPlayerProfile());
+  return Math.max(embedded,Math.max(0,Math.floor(Number(rec.points||0))));
+}
+function getAcolyteServiceTier(entity){
+  const points=getUnitServicePoints(entity);
+  return points>=100?3:points>=50?2:1;
+}
+function getAcolyteServiceProgressText(entity){
+  const points=getUnitServicePoints(entity);
+  if(points>=100)return `${points} puntos · Purificación y Resurrección desbloqueadas`;
+  if(points>=50)return `${points}/100 puntos · Purificación desbloqueada`;
+  return `${points}/50 puntos · próxima: Purificación`;
+}
+function registerLocalUnitServicePoint(unit,amount=1){
+  try{
+    if(!isUnitServiceProgression(unit)||!myPlayer||Number(unit.owner)!==Number(myPlayer))return null;
+    const gain=Math.max(0,Math.floor(Number(amount||0)));
+    if(gain<=0)return null;
+    const key=getUnitMasteryKey(unit);
+    const profile=getPlayerProfile();
+    const book=normalizeUnitServiceBook(profile.unitService||{});
+    const before=book[key]||{name:normalizeUnitMasteryName(unit.name||key),points:0};
+    const beforePoints=Math.max(0,Math.floor(Number(before.points||0)));
+    const afterPoints=beforePoints+gain;
+    book[key]={name:normalizeUnitMasteryName(unit.name||before.name||key),points:afterPoints};
+    savePlayerProfile({...profile,unitService:book});
+    return {key,name:book[key].name,beforePoints,afterPoints,gain,unlockedPurification:beforePoints<50&&afterPoints>=50,unlockedResurrection:beforePoints<100&&afterPoints>=100};
+  }catch(e){console.warn("[HallValla] No se pudo registrar puntos de servicio:",e);return null;}
+}
+function applyUnitServicePointsToUnits(units,unit,result){
+  if(!Array.isArray(units)||!unit||!result)return units;
+  const key=result.key||getUnitMasteryKey(unit);
+  return units.map(u=>!u||u.leader||Number(u.owner)!==Number(unit.owner)||getUnitMasteryKey(u)!==key?u:{...u,servicePoints:result.afterPoints});
+}
+function unitServiceUnlockText(result){
+  if(!result)return "";
+  const parts=[];
+  if(result.unlockedPurification)parts.push("Purificación queda desbloqueada");
+  if(result.unlockedResurrection)parts.push("Resurrección queda desbloqueada");
+  return parts.length?` Progreso de servicio: ${parts.join(" y ")}.`:"";
+}
+function annotateUnitWithServiceProgress(unit){
+  if(!isUnitServiceProgression(unit))return unit;
+  return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryHpBonus:0};
 }
 
 const UNIT_MASTERY_MAX_RANK=10;
@@ -223,13 +295,14 @@ function getUnitMasteryRankFromKills(kills){
   return rank;
 }
 function getUnitMasteryRank(entity){
-  if(!entity||entity.leader)return 1;
+  if(!entity||entity.leader||isUnitServiceProgression(entity))return 1;
   if(Number(entity.masteryRank)>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(entity.masteryRank)||1));
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
 function getUnitMasteryHpBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
-function getUnitMasteryHpBonus(entity){return getUnitMasteryHpBonusByRank(getUnitMasteryRank(entity));}
+function getUnitMasteryHpBonus(entity){return isUnitServiceProgression(entity)?0:getUnitMasteryHpBonusByRank(getUnitMasteryRank(entity));}
 function getUnitMasteryProgressText(entity){
+  if(isUnitServiceProgression(entity))return getAcolyteServiceProgressText(entity);
   const rec=getUnitMasteryRecord(entity);
   const rank=getUnitMasteryRankFromKills(rec.kills);
   if(rank>=UNIT_MASTERY_MAX_RANK)return `${rec.kills} bajas · Rango máximo`;
@@ -238,7 +311,7 @@ function getUnitMasteryProgressText(entity){
 }
 function registerLocalUnitMasteryKill(killer,victim){
   try{
-    if(!killer||!victim||killer.leader||victim.leader)return null;
+    if(!killer||!victim||killer.leader||victim.leader||isUnitServiceProgression(killer))return null;
     let creditedKiller=killer;
     if(killer.reanimated&&killer.reanimatedByErictoId){
       const source=(publicState?.units||[]).find(u=>u.id===killer.reanimatedByErictoId&&u.key==="ericto"&&u.hp>0);
@@ -260,6 +333,32 @@ function registerLocalUnitMasteryKill(killer,victim){
     return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,hpGain:getUnitMasteryHpBonusByRank(afterRank)-getUnitMasteryHpBonusByRank(beforeRank),creditedFromReanimated:creditedKiller.id!==killer.id};
   }catch(e){console.warn("[HallValla] No se pudo registrar maestría de unidad:",e);return null;}
 }
+const VEIL_CURSE_KILL_EVENT_STORAGE_KEY="hallvalla_veil_curse_kill_event_v1";
+let lastVeilCurseKillEventId="";
+try{lastVeilCurseKillEventId=localStorage.getItem(VEIL_CURSE_KILL_EVENT_STORAGE_KEY)||"";}catch(e){}
+function maybeProcessVeilCurseKillEvent(prevState,nextState){
+  const event=nextState?.veilCurseKillEvent;
+  if(!event?.id||event.id===lastVeilCurseKillEventId)return;
+  lastVeilCurseKillEventId=event.id;
+  try{localStorage.setItem(VEIL_CURSE_KILL_EVENT_STORAGE_KEY,event.id);}catch(e){}
+  if(!prevState)return;
+  const kills=Array.isArray(event.kills)?event.kills:[];
+  let upgradedUnits=[...(nextState?.units||[])];
+  let changed=false;
+  kills.forEach(entry=>{
+    const killer=entry?.killer,victim=entry?.victim;
+    if(!killer||!victim||Number(killer.owner)!==Number(myPlayer))return;
+    const result=registerLocalUnitMasteryKill(killer,victim);
+    if(result?.rankedUp){
+      const nextUnits=applyUnitMasteryRankUpToUnits(upgradedUnits,killer,result);
+      changed=changed||nextUnits.some((unit,index)=>Number(unit.maxHp||0)!==Number(upgradedUnits[index]?.maxHp||0));
+      upgradedUnits=nextUnits;
+      setHint(`Cuenta regresiva mortal: la baja de ${victim.name} cuenta para ${killer.name}.${unitMasteryRankUpText(result)}`);
+    }
+  });
+  if(changed&&Array.isArray(publicState?.units))void updatePublic({units:upgradedUnits});
+}
+
 function applyUnitMasteryRankUpToUnits(units,killer,result){
   if(!result||!result.rankedUp||!killer||!Array.isArray(units))return units;
   const hpGain=Math.max(0,Number(result.hpGain||0));
@@ -277,6 +376,7 @@ function unitMasteryRankUpText(result){
 }
 function annotateUnitWithMastery(unit){
   if(!unit||unit.leader)return unit;
+  if(isUnitServiceProgression(unit))return annotateUnitWithServiceProgress(unit);
   const rank=getUnitMasteryRank(unit);
   const bonus=getUnitMasteryHpBonusByRank(rank);
   return {...unit,masteryRank:rank,masteryHpBonus:bonus};
@@ -786,15 +886,16 @@ Oro restante: ${formatGold(remainingGold)}
 function getLegendaryCardByKey(key){
   return LEGENDARY_ALLY_CARDS.find(c=>c.key===key)||null;
 }
-function buildDeckTemplatesWithLimits(preferred=[],filler=[]){
+function buildDeckTemplatesWithLimits(preferred=[],filler=[],targetDeckSize=getCurrentDeckSize()){
   const deck=[];
   const counts={};
+  const target=Math.max(DECK_RULES.drawDeckSize,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
   const tryAdd=card=>{
     if(!card)return false;
     const key=card.key||card.name;
     const max=maxCopiesForCard(card);
     if((counts[key]||0)>=max)return false;
-    if(deck.length>=DECK_RULES.deckSize)return false;
+    if(deck.length>=target)return false;
     counts[key]=(counts[key]||0)+1;
     deck.push(card);
     return true;
@@ -802,11 +903,11 @@ function buildDeckTemplatesWithLimits(preferred=[],filler=[]){
   preferred.forEach(tryAdd);
   let guard=0;
   const source=[...(filler||[])];
-  while(deck.length<DECK_RULES.deckSize&&source.length&&guard<500){
+  while(deck.length<target&&source.length&&guard<500){
     tryAdd(source[guard%source.length]);
     guard++;
   }
-  return deck.slice(0,DECK_RULES.deckSize);
+  return deck.slice(0,target);
 }
 function removeOneTemplateByKey(templates,key){
   const next=[...(templates||[])];
@@ -844,21 +945,27 @@ function expandEnemyFixedDeck(deckList=[]){
   return templates;
 }
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
+  const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
+  const targetDeckSize=DECK_RULES.drawDeckSize+principalSlots;
   if(battle?.beastEvent||enemyLeaderType==="beastmaster"){
-    const beastDeck=getBeastmasterDeckTemplates();
-    const draw=drawCards(shuffle(beastDeck.map(c=>makeCard(c,2,enemyLeaderType))),[],4);
+    const beastDeck=getBeastmasterDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).slice(0,targetDeckSize);
+    const maxedCards=beastDeck.map(template=>{
+      const card=makeCard(template,2,enemyLeaderType);
+      return card.type==="unit"?{...card,masteryRank:UNIT_MASTERY_MAX_RANK,eventMaxLevel:true}:card;
+    });
+    const draw=drawCards(shuffle(maxedCards),[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
   if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
     const fixedTemplates=expandEnemyFixedDeck(battle.enemyFixedDeck);
-    if(fixedTemplates.length!==DECK_RULES.deckSize){
-      console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} tiene ${fixedTemplates.length}/${DECK_RULES.deckSize} cartas.`);
+    if(fixedTemplates.length!==targetDeckSize){
+      console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} tiene ${fixedTemplates.length}/${targetDeckSize} cartas para este tier; se ajustará al tamaño requerido.`);
     }
-    const fixedDeck=shuffle(fixedTemplates.slice(0,DECK_RULES.deckSize).map(card=>makeCard(card,2,enemyLeaderType)));
+    const fixedDeck=shuffle(fixedTemplates.slice(0,targetDeckSize).map(card=>makeCard(card,2,enemyLeaderType)));
     const draw=drawCards(fixedDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
-  const baseTemplates=getAiBasicDeckTemplates();
+  const baseTemplates=getAiBasicDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).slice(0,targetDeckSize);
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
   // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
   // Forzamos una unidad básica barata en la mano inicial y dejamos el resto aleatorio.
@@ -873,7 +980,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   (battle?.enemyLegendaryCards||[]).forEach(key=>{const card=getLegendaryCardByKey(key);if(card)legendaryTemplates.push(card);});
   const uniqueLegendary=[...new Map(legendaryTemplates.map(c=>[c.key,c])).values()];
   const preferred=[...uniqueLegendary,...improvedTemplates];
-  const fullTemplates=buildDeckTemplatesWithLimits(preferred,shuffle([...baseTemplates]));
+  const fullTemplates=buildDeckTemplatesWithLimits(preferred,shuffle([...baseTemplates]),targetDeckSize);
   const forceLegendaryInHand=battle?.enemyLegendaryMode!=="deck"&&uniqueLegendary.length>0;
   if(forceLegendaryInHand){
     const forced=uniqueLegendary.slice(0,Math.min(4,uniqueLegendary.length));
@@ -892,7 +999,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
 let activePackOpening=null;
 let activePackCards=[];
 let currentDeckDraft=[];
-let currentPrincipalKey="";
+let currentPrincipalKeys=[];
 let deckBuilderCollectionPage=0;
 const DECK_BUILDER_COLLECTION_PAGE_SIZE=14;
 let deckBuilderDragPayload=null;

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8Z · Estado de red, creación de partidas y Firebase */
+/* HallValla 7BOARDCTRL8AI · Estado de red, creación de partidas y Firebase */
 async function updatePublic(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
   const sourcePatch=patch||{};
@@ -23,7 +23,7 @@ async function updatePublic(patch){
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
-    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeShowClockKillBonus(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return true;
+    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowClockKillBonus(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return true;
   }
   await update(ref(db,`games/${gameId}/public`),cleanPatch);
   return true;
@@ -74,7 +74,7 @@ function getStalemateOutcomeText(outcome){
   if(outcome.reason==="stalemate_draw")return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Empate por Vida igual (${outcome.p1Hp}/${outcome.p2Hp}).`;
   return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Gana J${outcome.winner} por tener más Vida (${outcome.p1Hp}/${outcome.p2Hp}).`;
 }
-function getBattleOutcome(units=publicState?.units||[],state=publicState){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};const stalemate=getStalemateLifeOutcome(units,state);if(stalemate)return stalemate;return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog="",stateOverride=null){if(!gameId||!publicState)return false;const state=stateOverride||publicState;const outcome=getBattleOutcome(units,state);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);const stalemateText=getStalemateOutcomeText(outcome);if(stalemateText)baseLogs.push(stalemateText);if(state.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else if(!stalemateText){baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});return true}function resetBattleState(){resetNoPlayableAutoAdvanceState();resetFieldAutoAdvanceState();stopTurnTimerLoop();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";lastClockKillBonusEventId="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
+function getBattleOutcome(units=publicState?.units||[],state=publicState){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};const stalemate=getStalemateLifeOutcome(units,state);if(stalemate)return stalemate;return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog="",stateOverride=null){if(!gameId||!publicState)return false;const state=stateOverride||publicState;const outcome=getBattleOutcome(units,state);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);const stalemateText=getStalemateOutcomeText(outcome);if(stalemateText)baseLogs.push(stalemateText);if(state.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else if(!stalemateText){baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});return true}function resetBattleState(){resetNoPlayableAutoAdvanceState();resetFieldAutoAdvanceState();stopTurnTimerLoop();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";lastClockKillBonusEventId="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
 const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
 if(win&&publicState.adventureIsGuardian){
   const scene={art,info:getGuardianResultSceneInfo(specialKey)};
@@ -93,51 +93,128 @@ if(win&&publicState.adventureIsGuardian){
   return;
 }
 if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa. La Forja de mazos y la selección de Personaje Principal quedan desbloqueadas.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
-async function createGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=code4(),initial=drawCards(makeDeck(1,leaderType),[],4),deck=initial.deck,hand=initial.hand;const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},erictoGraveyard:[],units:[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")],log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas. Esperando Jugador 2.`]};await set(ref(db,`games/${code}/public`),pub);await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,1)}
-async function joinGame(){if(!(await ensureFirebaseAuthReady("online")))return;const leaderType=getSelectedLeaderType();if(!leaderType){requireLeaderSelection(true);return}const leaderLevel=getLocalLeaderLevel(leaderType);const leaderAbility=getLocalLeaderAbility(leaderType);const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);const profileName=getLocalProfileName();const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";syncBoardDimensionsFromState(pub);const initial=drawCards(makeDeck(2,leaderType),[],4),deck=initial.deck,hand=initial.hand;let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),"units":units,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel}. Mano inicial: 4 cartas.`,...(pub.log||[])]});await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true});enterGame(code,2)}
+async function createGame(){
+  if(!(await ensureFirebaseAuthReady("online")))return;
+  const leaderType=getSelectedLeaderType();
+  if(!leaderType){requireLeaderSelection(true);return}
+  const leaderLevel=getLocalLeaderLevel(leaderType),leaderAbility=getLocalLeaderAbility(leaderType),leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);
+  const principalSlots=getPrincipalSlotsForLeaderLevel(leaderLevel);
+  const requiredDeckSize=getDeckSizeForPrincipalSlots(principalSlots);
+  const rawDeck=makeDeck(1,leaderType,{principalSlots});
+  const deckValidation=validateDeckList(rawDeck,principalSlots);
+  if(!deckValidation.valid){await hvAlert(deckValidation.errors.join(" "),"Mazo inválido");openDeckBuilder();return;}
+  const principalKeys=sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),rawDeck,principalSlots);
+  const principalValidation=validatePrincipalSelection(principalKeys,rawDeck,principalSlots);
+  if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
+  const prep=extractPrincipalCardsFromDeck(rawDeck,principalKeys,principalSlots);
+  if(prep.principalCards.length!==principalSlots||prep.deck.length!==DECK_RULES.drawDeckSize){await hvAlert(`El líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${requiredDeckSize} cartas totales: ${principalSlots} principal${principalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");openDeckBuilder();return;}
+  const profileName=getLocalProfileName(),code=code4();
+  const initial=drawCards(shuffle(prep.deck),[],4),deck=initial.deck,hand=initial.hand;
+  let units=[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")];
+  const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
+  const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
+  const names=principalUnits.map(u=>u.name).join(", ");
+  const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`]};
+  await set(ref(db,`games/${code}/public`),pub);
+  await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+  enterGame(code,1);
+}
+async function joinGame(){
+  if(!(await ensureFirebaseAuthReady("online")))return;
+  const leaderType=getSelectedLeaderType();
+  if(!leaderType){requireLeaderSelection(true);return}
+  const leaderLevel=getLocalLeaderLevel(leaderType),leaderAbility=getLocalLeaderAbility(leaderType),leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility),profileName=getLocalProfileName();
+  const principalSlots=getPrincipalSlotsForLeaderLevel(leaderLevel);
+  const requiredDeckSize=getDeckSizeForPrincipalSlots(principalSlots);
+  const rawDeck=makeDeck(2,leaderType,{principalSlots});
+  const deckValidation=validateDeckList(rawDeck,principalSlots);
+  if(!deckValidation.valid){await hvAlert(deckValidation.errors.join(" "),"Mazo inválido");openDeckBuilder();return;}
+  const principalKeys=sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),rawDeck,principalSlots);
+  const principalValidation=validatePrincipalSelection(principalKeys,rawDeck,principalSlots);
+  if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
+  const prep=extractPrincipalCardsFromDeck(rawDeck,principalKeys,principalSlots);
+  if(prep.principalCards.length!==principalSlots||prep.deck.length!==DECK_RULES.drawDeckSize){await hvAlert(`El líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${requiredDeckSize} cartas totales: ${principalSlots} principal${principalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");openDeckBuilder();return;}
+  const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";
+  const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";
+  const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";
+  syncBoardDimensionsFromState(pub);
+  const initial=drawCards(shuffle(prep.deck),[],4),deck=initial.deck,hand=initial.hand;
+  let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);
+  const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
+  const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
+  const names=principalUnits.map(u=>u.name).join(", ");
+  await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize}; mano inicial: 4.`,...(entryEffects.logs||[]),...(pub.log||[])]});
+  await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+  enterGame(code,2);
+}
 
-function extractPrincipalCardFromDeck(cards=[],principalKey=""){
+function extractPrincipalCardsFromDeck(cards=[],principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){
   const deck=[...(cards||[])];
-  const key=String(principalKey||"");
-  const index=key?deck.findIndex(card=>card?.key===key&&card.type==="unit"):-1;
-  const principalCard=index>=0?deck.splice(index,1)[0]:null;
-  return{deck,principalCard,principalKey:principalCard?.key||""};
+  const requested=[];
+  (Array.isArray(principalKeys)?principalKeys:[principalKeys]).forEach(key=>{const safe=String(key||"");if(safe&&!requested.includes(safe))requested.push(safe);});
+  const principalCards=[];
+  requested.slice(0,principalSlots).forEach(key=>{
+    const index=deck.findIndex(card=>card?.key===key&&card.type==="unit");
+    if(index>=0)principalCards.push(deck.splice(index,1)[0]);
+  });
+  return{deck,principalCards,principalKeys:principalCards.map(card=>card.key)};
+}
+function extractPrincipalCardFromDeck(cards=[],principalKey=""){
+  const result=extractPrincipalCardsFromDeck(cards,principalKey?[principalKey]:[]);
+  return{deck:result.deck,principalCard:result.principalCards[0]||null,principalKey:result.principalKeys[0]||""};
+}
+function extractPrincipalsFromInitialState(initial={},principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){
+  let deck=[...(initial.deck||[])],hand=[...(initial.hand||[])];
+  const requested=[];
+  (Array.isArray(principalKeys)?principalKeys:[principalKeys]).forEach(key=>{const safe=String(key||"");if(safe&&!requested.includes(safe))requested.push(safe);});
+  const principalCards=[];
+  requested.slice(0,principalSlots).forEach(key=>{
+    let index=hand.findIndex(card=>card?.key===key&&card.type==="unit");
+    if(index>=0){
+      principalCards.push(hand.splice(index,1)[0]);
+      if(deck.length)hand.push(deck.shift());
+      return;
+    }
+    index=deck.findIndex(card=>card?.key===key&&card.type==="unit");
+    if(index>=0)principalCards.push(deck.splice(index,1)[0]);
+  });
+  return{deck,hand,principalCards,principalKeys:principalCards.map(card=>card.key)};
 }
 function extractPrincipalFromInitialState(initial={},principalKey=""){
-  let deck=[...(initial.deck||[])],hand=[...(initial.hand||[])],principalCard=null;
-  const key=String(principalKey||"");
-  let index=key?hand.findIndex(card=>card?.key===key&&card.type==="unit"):-1;
-  if(index>=0){
-    principalCard=hand.splice(index,1)[0];
-    if(deck.length)hand.push(deck.shift());
-  }else{
-    index=key?deck.findIndex(card=>card?.key===key&&card.type==="unit"):-1;
-    if(index>=0)principalCard=deck.splice(index,1)[0];
-  }
-  return{deck,hand,principalCard,principalKey:principalCard?.key||""};
+  const result=extractPrincipalsFromInitialState(initial,principalKey?[principalKey]:[]);
+  return{deck:result.deck,hand:result.hand,principalCard:result.principalCards[0]||null,principalKey:result.principalKeys[0]||""};
 }
 function prepareAiPrincipalInitialState(battle,initial){
-  if(!battleAllowsAiPrincipal(battle))return{...initial,principalCard:null,principalKey:""};
-  const requested=getAiPrincipalKeyForBattle(battle);
-  const all=[...(initial?.hand||[]),...(initial?.deck||[])];
-  const requestedExists=all.some(card=>card?.key===requested&&card.type==="unit");
-  const key=requestedExists?requested:chooseFallbackAiPrincipalKey(initial);
-  return extractPrincipalFromInitialState(initial,key);
+  const principalSlots=getAiPrincipalSlotsForBattle(battle);
+  if(principalSlots<=0)return{...initial,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};
+  const keys=getAiPrincipalKeysForBattle(battle,initial);
+  const result=extractPrincipalsFromInitialState(initial,keys,principalSlots);
+  return{...result,principalSlots,principalCard:result.principalCards[0]||null,principalKey:result.principalKeys[0]||""};
 }
-function getPrincipalStartCell(owner,units=[]){
+function getPrincipalStartCell(owner,units=[],slotIndex=0){
   const y=owner===1?Math.max(0,ROWS-2):Math.min(ROWS-1,1);
   const center=Math.floor(COLS/2);
-  const xs=[center,center-1,center+1,0,COLS-1].filter((x,index,arr)=>x>=0&&x<COLS&&arr.indexOf(x)===index);
+  const preferred=[center,center-1,center+1];
+  const first=preferred[Math.max(0,Math.min(DECK_RULES.maxPrincipalSlots-1,Number(slotIndex)||0))];
+  const xs=[first,...preferred,0,COLS-1].filter((x,index,arr)=>x>=0&&x<COLS&&arr.indexOf(x)===index);
   const occupied=new Set((units||[]).map(u=>`${u.x},${u.y}`));
   const x=xs.find(value=>!occupied.has(`${value},${y}`));
   return Number.isFinite(x)?{x,y}:null;
 }
-function makeStartingPrincipalUnit(card,owner,leaderType,units=[]){
+function makeStartingPrincipalUnit(card,owner,leaderType,units=[],slotIndex=0){
   if(!card||card.type!=="unit")return null;
-  const cell=getPrincipalStartCell(owner,units);
+  const cell=getPrincipalStartCell(owner,units,slotIndex);
   if(!cell)return null;
   const unit=makeUnit({...card,owner,leaderType,summonOrigin:"principal",fieldGeneratedSummon:true},cell.x,cell.y);
-  return{...unit,principal:true,principalStart:true,summonOrigin:"principal",fieldGeneratedSummon:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+  return{...unit,principal:true,principalStart:true,principalSlot:slotIndex+1,summonOrigin:"principal",fieldGeneratedSummon:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+}
+function makeStartingPrincipalUnits(cards=[],owner,leaderType,units=[],principalSlots=(cards||[]).length){
+  const out=[];
+  (cards||[]).slice(0,principalSlots).forEach((card,index)=>{
+    const unit=makeStartingPrincipalUnit(card,owner,leaderType,[...(units||[]),...out],index);
+    if(unit)out.push(unit);
+  });
+  return out;
 }
 function applyStartingPrincipalEntryEffects(units=[]){
   let out=[...(units||[])],logs=[];
@@ -166,18 +243,37 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
+  const playerPrincipalSlots=getPrincipalSlotsForLeaderLevel(leaderLevel);
+  const playerRequiredDeckSize=getDeckSizeForPrincipalSlots(playerPrincipalSlots);
   const starterLocked=!canAccessDecks();
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
   const rawPlayerBase=mustUseStarterAdventureDeck
-    ? shuffle(getStarterAdventureDeckTemplates(specialKey).map(card=>makeCard(card,1,leaderType)))
-    : makeDeck(1,leaderType);
-  const requestedPlayerPrincipal=mustUseStarterAdventureDeck?"":sanitizePrincipalKeyForDeck(getSavedPrincipalKey(),rawPlayerBase);
-  const playerPrincipalPrep=extractPrincipalCardFromDeck(rawPlayerBase,requestedPlayerPrincipal);
+    ? shuffle(getStarterAdventureDeckTemplates(specialKey,playerPrincipalSlots).map(card=>makeCard(card,1,leaderType)))
+    : makeDeck(1,leaderType,{principalSlots:playerPrincipalSlots});
+  const playerDeckValidation=validateDeckList(rawPlayerBase,playerPrincipalSlots);
+  if(!playerDeckValidation.valid){
+    await hvAlert(playerDeckValidation.errors.join(" "),"Mazo inválido");
+    if(!mustUseStarterAdventureDeck)openDeckBuilder();
+    return;
+  }
+  const requestedPlayerPrincipals=mustUseStarterAdventureDeck
+    ? chooseFallbackAiPrincipalKeys({deck:rawPlayerBase,hand:[]},[],playerPrincipalSlots)
+    : sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),rawPlayerBase,playerPrincipalSlots);
+  if(!mustUseStarterAdventureDeck){
+    const principalValidation=validatePrincipalSelection(requestedPlayerPrincipals,rawPlayerBase,playerPrincipalSlots);
+    if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
+  }
+  const playerPrincipalPrep=extractPrincipalCardsFromDeck(rawPlayerBase,requestedPlayerPrincipals,playerPrincipalSlots);
+  if(playerPrincipalPrep.principalCards.length!==playerPrincipalSlots||playerPrincipalPrep.deck.length!==DECK_RULES.drawDeckSize){
+    await hvAlert(`Tu líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${playerRequiredDeckSize} cartas totales: ${playerPrincipalSlots} principal${playerPrincipalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");
+    if(!mustUseStarterAdventureDeck)openDeckBuilder();
+    return;
+  }
   const playerDraw=drawCards(playerPrincipalPrep.deck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
-  const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle);
+  const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle,leaderLevel);
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyRawInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
@@ -187,15 +283,16 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
     makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)
   ];
-  const playerPrincipalUnit=makeStartingPrincipalUnit(playerPrincipalPrep.principalCard,1,leaderType,startingUnits);
-  if(playerPrincipalUnit)startingUnits.push(playerPrincipalUnit);
-  const enemyPrincipalUnit=makeStartingPrincipalUnit(enemyInitial.principalCard,2,enemyLeaderType,startingUnits);
-  if(enemyPrincipalUnit)startingUnits.push(enemyPrincipalUnit);
+  const playerPrincipalUnits=makeStartingPrincipalUnits(playerPrincipalPrep.principalCards,1,leaderType,startingUnits,playerPrincipalSlots);
+  startingUnits.push(...playerPrincipalUnits);
+  const enemyPrincipalUnits=makeStartingPrincipalUnits(enemyInitial.principalCards||[],2,enemyLeaderType,startingUnits,enemyInitial.principalSlots||0);
+  startingUnits.push(...enemyPrincipalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(startingUnits);
   startingUnits=entryEffects.units;
   const principalLogs=[];
-  if(playerPrincipalUnit)principalLogs.push(`Tu Personaje Principal es ${playerPrincipalUnit.name}: comienza convocado sin pagar Honor.`);
-  if(enemyPrincipalUnit)principalLogs.push(`Personaje Principal enemigo: ${enemyPrincipalUnit.name}, ya convocado al iniciar.`);
+  if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
+  if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
+  if(battle.beastEvent)principalLogs.push(`El Beastmaster iguala tu nivel ${leaderLevel}; todas sus unidades y principales entran con Maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)}.`);
   principalLogs.push(...entryEffects.logs);
   const playerProfileName=getLocalProfileName();
   const pub={
@@ -205,9 +302,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,
     adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",
     adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",
+    adventureEnemyUnitMasteryRank:battle.beastEvent?UNIT_MASTERY_MAX_RANK:0,
     adventureSpecial:specialKey,
-    adventurePrincipalKeys:{1:playerPrincipalPrep.principalKey||"",2:enemyInitial.principalKey||""},
-    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalKey:enemyInitial.principalKey||""},
+    principalSlots:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
+    adventurePrincipalKeys:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
+    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:enemyInitial.principalSlots||0,principalKeys:enemyInitial.principalKeys||[],principalKey:enemyInitial.principalKey||""},
     createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:serverTimestamp(),
     clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
@@ -217,7 +316,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     erictoGraveyard:[],units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
-  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalKey:playerPrincipalPrep.principalKey||""};
+  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:playerPrincipalSlots,principalKeys:playerPrincipalPrep.principalKeys||[],principalKey:playerPrincipalPrep.principalKeys?.[0]||""};
   if(HALLVALLA_LOCALHOST_TEST_MODE){
     pub.code=`LOCAL${code4()}`;
     pub.localhostVisualTest=true;
@@ -316,6 +415,7 @@ function enterGame(code,player){
     render();
     syncBattleMusic();
     maybePlayBattleFx(prevPublic,publicState);
+    maybeProcessVeilCurseKillEvent(prevPublic,publicState);
     maybeShowClockKillBonus(prevPublic,publicState);
     maybeShowBattleResult();
     maybeStartTurn();

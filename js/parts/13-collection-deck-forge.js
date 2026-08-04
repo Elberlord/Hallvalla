@@ -203,18 +203,58 @@ function confirmActivePackCards(){
 function closePackOpening(){const panel=$("packOpeningPanel");if(panel)panel.classList.add("hidden");}
 
 const HALLVALLA_PRINCIPAL_UNIT_KEY="hallvalla_principal_unit_v1";
+const HALLVALLA_PRINCIPAL_UNITS_KEY="hallvalla_principal_units_v2";
 function getSavedDeck(){try{const deck=JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");return Array.isArray(deck)?deck.map(hydrateCardVisualData):[]}catch(e){return[]}}
 function saveDeck(deck){localStorage.setItem("hallvalla_current_deck",JSON.stringify((deck||[]).map(hydrateCardVisualData)))}
-function getSavedPrincipalKey(){try{return String(localStorage.getItem(HALLVALLA_PRINCIPAL_UNIT_KEY)||"").trim()}catch(e){return ""}}
-function savePrincipalKey(key){try{const safe=String(key||"").trim();if(safe)localStorage.setItem(HALLVALLA_PRINCIPAL_UNIT_KEY,safe);else localStorage.removeItem(HALLVALLA_PRINCIPAL_UNIT_KEY)}catch(e){}}
-function sanitizePrincipalKeyForDeck(key,deck=[]){
-  const safe=String(key||"").trim();
-  if(!safe)return "";
-  return (deck||[]).some(card=>card?.key===safe&&card.type==="unit")?safe:"";
+function normalizePrincipalKeys(keys=[],limit=DECK_RULES.maxPrincipalSlots){
+  const input=Array.isArray(keys)?keys:[keys];
+  const max=Math.max(0,Math.min(DECK_RULES.maxPrincipalSlots,Number(limit)||DECK_RULES.maxPrincipalSlots));
+  const out=[];
+  input.forEach(key=>{
+    const safe=String(key||"").trim();
+    if(safe&&!out.includes(safe)&&out.length<max)out.push(safe);
+  });
+  return out;
 }
-function getSavedPrincipalCardForDeck(deck=[]){
-  const key=sanitizePrincipalKeyForDeck(getSavedPrincipalKey(),deck);
-  return key?(deck||[]).find(card=>card?.key===key&&card.type==="unit")||null:null;
+function getSavedPrincipalKeys(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(HALLVALLA_PRINCIPAL_UNITS_KEY)||"null");
+    if(Array.isArray(parsed))return normalizePrincipalKeys(parsed);
+  }catch(e){}
+  try{
+    const legacy=String(localStorage.getItem(HALLVALLA_PRINCIPAL_UNIT_KEY)||"").trim();
+    return legacy?[legacy]:[];
+  }catch(e){return[]}
+}
+function savePrincipalKeys(keys=[]){
+  try{
+    const safe=normalizePrincipalKeys(keys,DECK_RULES.maxPrincipalSlots);
+    if(safe.length)localStorage.setItem(HALLVALLA_PRINCIPAL_UNITS_KEY,JSON.stringify(safe));
+    else localStorage.removeItem(HALLVALLA_PRINCIPAL_UNITS_KEY);
+    if(safe[0])localStorage.setItem(HALLVALLA_PRINCIPAL_UNIT_KEY,safe[0]);
+    else localStorage.removeItem(HALLVALLA_PRINCIPAL_UNIT_KEY);
+  }catch(e){}
+}
+function getSavedPrincipalKey(){return getSavedPrincipalKeys()[0]||"";}
+function savePrincipalKey(key){savePrincipalKeys(key?[key]:[]);}
+function sanitizePrincipalKeysForDeck(keys,deck=[],principalSlots=getCurrentPrincipalSlots()){
+  const validUnits=new Set((deck||[]).filter(card=>card?.type==="unit"&&card?.key).map(card=>card.key));
+  return normalizePrincipalKeys(keys,principalSlots).filter(key=>validUnits.has(key)).slice(0,principalSlots);
+}
+function sanitizePrincipalKeyForDeck(key,deck=[]){return sanitizePrincipalKeysForDeck([key],deck)[0]||"";}
+function getSavedPrincipalCardsForDeck(deck=[]){
+  const keys=sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),deck);
+  return keys.map(key=>(deck||[]).find(card=>card?.key===key&&card.type==="unit")).filter(Boolean);
+}
+function getSavedPrincipalCardForDeck(deck=[]){return getSavedPrincipalCardsForDeck(deck)[0]||null;}
+function validatePrincipalSelection(keys=[],deck=[],principalSlots=getCurrentPrincipalSlots()){
+  const required=Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
+  const raw=(Array.isArray(keys)?keys:[keys]).map(key=>String(key||"").trim()).filter(Boolean).slice(0,required);
+  const safe=sanitizePrincipalKeysForDeck(keys,deck,required);
+  const errors=[];
+  if(new Set(raw).size!==raw.length)errors.push("Los Personajes Principales no pueden ser la misma carta.");
+  if(safe.length!==required)errors.push(`El tier actual del líder exige exactamente ${required} Personaje${required===1?"":"s"} Principal${required===1?"":"es"} distinto${required===1?"":"s"}.`);
+  return{valid:errors.length===0,errors,keys:safe,principalSlots:required};
 }
 function isBeastCollectionCard(card){
   if(!card)return false;
@@ -439,9 +479,10 @@ function sanitizeDeckDraftToCollection(deck=[]){
 function openDeckBuilder(){
   if(!canAccessDecks()){hvAlert(`Mazos bloqueados: completa el mapa 1.1 para editar mazos. Paquetes pendientes: ${getPendingPackCount()}. Cartas guardadas: ${getCollectionCardTotal()}.`,"Mazos bloqueados");return;}
   ensureStarterDeckCollection();
+  const principalSlots=getCurrentPrincipalSlots();
   const saved=sanitizeDeckDraftToCollection(getSavedDeck());
-  currentDeckDraft=validateDeckList(saved).valid?saved:getDefaultDeckTemplates().map(c=>({...c,qty:1}));
-  currentPrincipalKey=sanitizePrincipalKeyForDeck(getSavedPrincipalKey(),currentDeckDraft);
+  currentDeckDraft=saved.length?saved:getDefaultDeckTemplates("",principalSlots).map(c=>({...c,qty:1}));
+  currentPrincipalKeys=sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),currentDeckDraft,principalSlots);
   deckBuilderCollectionPage=0;
   $("deckBuilderPanel").classList.remove("hidden");
   renderDeckBuilder();
@@ -464,20 +505,38 @@ function addCardToDeck(cardKey){
   if(!card)return false;
   const used=countInDraft(card.key);
   const maxAllowed=Math.min(card.qty||1,maxCopiesForCard(card));
-  if(used>=maxAllowed||currentDeckDraft.length>=DECK_RULES.deckSize)return false;
+  if(used>=maxAllowed||currentDeckDraft.length>=getCurrentDeckSize())return false;
   currentDeckDraft.push({...card,qty:1});
   renderDeckBuilder();
   return true;
 }
-function syncCurrentPrincipalWithDraft(){currentPrincipalKey=sanitizePrincipalKeyForDeck(currentPrincipalKey,currentDeckDraft);}
+function syncCurrentPrincipalWithDraft(){currentPrincipalKeys=sanitizePrincipalKeysForDeck(currentPrincipalKeys,currentDeckDraft,getCurrentPrincipalSlots());}
 function setCurrentDeckPrincipal(cardKey){
+  const principalSlots=getCurrentPrincipalSlots();
   const card=currentDeckDraft.find(c=>c?.key===cardKey&&c.type==="unit");
   if(!card){setHint("El Personaje Principal debe ser una unidad incluida en el mazo.");return false;}
-  currentPrincipalKey=card.key;
+  const existing=currentPrincipalKeys.indexOf(card.key);
+  if(existing>=0){
+    currentPrincipalKeys.splice(existing,1);
+    renderDeckBuilder();
+    return true;
+  }
+  if(currentPrincipalKeys.length>=principalSlots){
+    setHint(`El tier actual permite ${principalSlots} Personaje${principalSlots===1?"":"s"} Principal${principalSlots===1?"":"es"}. Quita uno antes de elegir otro.`);
+    return false;
+  }
+  currentPrincipalKeys.push(card.key);
   renderDeckBuilder();
   return true;
 }
-function clearCurrentDeckPrincipal(){currentPrincipalKey="";renderDeckBuilder();}
+function clearCurrentDeckPrincipal(slotIndex=null){
+  if(slotIndex===null||slotIndex===undefined)currentPrincipalKeys=[];
+  else{
+    const idx=Number(slotIndex);
+    if(Number.isFinite(idx)&&idx>=0&&idx<currentPrincipalKeys.length)currentPrincipalKeys.splice(idx,1);
+  }
+  renderDeckBuilder();
+}
 function removeCardFromDeck(cardKey){const idx=currentDeckDraft.findIndex(c=>c.key===cardKey);if(idx>=0)currentDeckDraft.splice(idx,1);syncCurrentPrincipalWithDraft();renderDeckBuilder()}
 function removeCardFromDeckIndex(index){
   const idx=Number(index);
@@ -499,7 +558,8 @@ function getDeckBuilderTypeGlyph(card){
   return "C";
 }
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1}={}){
-  const isPrincipal=mode==="deck"&&card?.type==="unit"&&currentPrincipalKey===card.key;
+  const principalSlot=mode==="deck"&&card?.type==="unit"?currentPrincipalKeys.indexOf(card.key):-1;
+  const isPrincipal=principalSlot>=0;
   const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""} ${isPrincipal?"is-principal":""}`;
   const name=escapeHtml(card?.name||"Carta");
   const dragAttrs='draggable="false"';
@@ -519,7 +579,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
     : `<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Agregar ${name}" title="${escapeHtml(addLockReason||"Agregar al mazo")}">+</button>`;
   const principalBtn=mode==="deck"&&card?.type==="unit"
-    ? `<button class="deck-mini-principal ${isPrincipal?"selected":""}" type="button" data-set-principal="${escapeHtml(card.key||"")}" aria-label="${isPrincipal?"Personaje Principal seleccionado":"Establecer como Personaje Principal"}" title="${isPrincipal?"Personaje Principal seleccionado":"Establecer como Personaje Principal"}">★</button>`
+    ? `<button class="deck-mini-principal ${isPrincipal?"selected":""}" type="button" data-set-principal="${escapeHtml(card.key||"")}" aria-label="${isPrincipal?`Personaje Principal ${principalSlot+1}; toca para quitarlo`:"Agregar como Personaje Principal"}" title="${isPrincipal?`Personaje Principal ${principalSlot+1}; toca para quitarlo`:"Agregar como Personaje Principal"}">${isPrincipal?`★${principalSlot+1}`:"★"}</button>`
     : "";
   const dustBtn=mode==="collection"&&surplus>0
     ? `<button class="deck-mini-dust" type="button" data-dust-card="${escapeHtml(card.key||"")}" title="Convertir copia sobrante en +${CRAFT_MATERIAL_GAIN} material ${getCraftRarityLabel(getCraftRarityKey(card))}">⛏</button>`
@@ -725,12 +785,25 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
 }
 function renderDeckPrincipalSelector(){
   syncCurrentPrincipalWithDraft();
-  const card=currentDeckDraft.find(c=>c?.key===currentPrincipalKey&&c.type==="unit")||null;
-  const art=$("deckPrincipalArt"),name=$("deckPrincipalName"),note=$("deckPrincipalNote"),clear=$("clearDeckPrincipalBtn");
-  if(art)art.innerHTML=card?getDeckBuilderMiniImageHtml(card):"<span>★</span>";
-  if(name)name.textContent=card?card.name:"Sin seleccionar";
-  if(note)note.textContent=card?"Una copia saldrá del mazo y comenzará convocada gratuitamente en tu campo.":"Marca la estrella de cualquier unidad incluida en el mazo.";
-  if(clear){clear.disabled=!card;clear.classList.toggle("hidden",!card);}
+  const slots=$("deckPrincipalSlots");
+  if(!slots)return;
+  const principalSlots=getCurrentPrincipalSlots();
+  const leaderType=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
+  const leaderLevel=typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType||"warrior"):1;
+  const cards=currentPrincipalKeys.slice(0,principalSlots).map(key=>currentDeckDraft.find(c=>c?.key===key&&c.type==="unit")||null);
+  slots.innerHTML=`<div class="deck-principal-tier-note">${escapeHtml(getPrincipalTierSummary(leaderLevel))} · El mazo de robo siempre conserva ${DECK_RULES.drawDeckSize} cartas.</div>`+Array.from({length:principalSlots}).map((_,index)=>{
+    const card=cards[index]||null;
+    return `<div class="deck-principal-selector ${card?"filled":"empty"}" data-principal-slot="${index}">
+      <div class="deck-principal-art" aria-hidden="true">${card?getDeckBuilderMiniImageHtml(card):`<span>★${index+1}</span>`}</div>
+      <div class="deck-principal-copy">
+        <span>PERSONAJE PRINCIPAL ${index+1}</span>
+        <strong>${escapeHtml(card?.name||"Sin seleccionar")}</strong>
+        <small>${card?"Esta copia saldrá del mazo y comenzará convocada gratuitamente.":"Marca la estrella de una unidad distinta incluida en el mazo."}</small>
+      </div>
+      <button class="deck-principal-clear ${card?"":"hidden"}" type="button" data-clear-principal-slot="${index}" ${card?"":"disabled"}>Quitar</button>
+    </div>`;
+  }).join("");
+  slots.querySelectorAll("[data-clear-principal-slot]").forEach(btn=>btn.addEventListener("click",()=>clearCurrentDeckPrincipal(Number(btn.dataset.clearPrincipalSlot))));
 }
 function renderDeckBuilder(){
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
@@ -775,7 +848,7 @@ function renderDeckBuilder(){
     const maxAllowed=maxCopiesForCard(card);
     const addLimit=Math.min(ownedQty,maxAllowed);
     const cannotAddBeast=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting();
-    const disabled=ownedQty<=0||cannotAddBeast||used>=addLimit||currentDeckDraft.length>=DECK_RULES.deckSize;
+    const disabled=ownedQty<=0||cannotAddBeast||used>=addLimit||currentDeckDraft.length>=getCurrentDeckSize();
     return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed});
   }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Cambia el filtro o abre paquetes para llenar tu colección.</small></div>`;
   const pager=$("deckCollectionPager"),pageInfo=$("deckCollectionPageInfo"),pageTitle=$("deckCollectionPageText"),prev=$("deckCollectionPrevBtn"),next=$("deckCollectionNextBtn");
@@ -787,31 +860,40 @@ function renderDeckBuilder(){
   if(prev){prev.disabled=deckBuilderCollectionPage<=0;prev.onclick=()=>{deckBuilderCollectionPage=Math.max(0,deckBuilderCollectionPage-1);renderDeckBuilder();};}
   if(next){next.disabled=deckBuilderCollectionPage>=totalPages-1;next.onclick=()=>{deckBuilderCollectionPage=Math.min(totalPages-1,deckBuilderCollectionPage+1);renderDeckBuilder();};}
   const deckCardsHtml=currentDeckDraft.map((card,index)=>deckBuilderMiniCardHtml(card,{mode:"deck",index})).join("");
-  const emptySlots=Math.max(0,DECK_RULES.deckSize-currentDeckDraft.length);
+  const requiredDeckSize=getCurrentDeckSize();
+  const principalSlots=getCurrentPrincipalSlots();
+  const emptySlots=Math.max(0,requiredDeckSize-currentDeckDraft.length);
   const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot"><span>${currentDeckDraft.length+i+1}</span></div>`).join("");
   deckList.innerHTML=`<div class="deck-drop-hint">Toca una carta para ver detalles. Usa + para meterla al mazo y × para quitarla.</div>${deckCardsHtml}${emptyHtml}`;
   bindDeckBuilderDragAndClick(collectionGrid,deckList);
   renderDeckPrincipalSelector();
   renderCraftMaterialPanel();
-  const validation=validateDeckList(currentDeckDraft);
-  if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${DECK_RULES.deckSize}`;
-  if($("deckValidText"))$("deckValidText").textContent=validation.valid?"Mazo válido":(currentDeckDraft.length<DECK_RULES.deckSize?"Mazo incompleto":validation.errors[0]||"Mazo inválido");
+  const deckValidation=validateDeckList(currentDeckDraft,principalSlots);
+  const principalValidation=validatePrincipalSelection(currentPrincipalKeys,currentDeckDraft,principalSlots);
+  const validation={valid:deckValidation.valid&&principalValidation.valid,errors:[...deckValidation.errors,...principalValidation.errors]};
+  if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${requiredDeckSize} · Principales ${principalValidation.keys.length}/${principalSlots} · Robo ${DECK_RULES.drawDeckSize}`;
+  if($("deckValidText"))$("deckValidText").textContent=validation.valid?`Mazo válido: ${principalSlots} principal${principalSlots===1?"":"es"} + ${DECK_RULES.drawDeckSize} de robo`:(currentDeckDraft.length<requiredDeckSize?"Mazo incompleto":validation.errors[0]||"Mazo inválido");
   const saveBtn=$("saveDeckBtn");
   if(saveBtn){
-    saveBtn.textContent=validation.valid?"Guardar y salir":"Completa 30 cartas";
+    saveBtn.textContent=validation.valid?"Guardar y salir":`Completa ${requiredDeckSize} cartas y ${principalSlots} principal${principalSlots===1?"":"es"}`;
     saveBtn.disabled=!validation.valid;
-    saveBtn.title=validation.valid?"Guardar mazo y cerrar Forja":"No puedes guardar hasta tener un mazo válido de 30 cartas.";
+    saveBtn.title=validation.valid?"Guardar mazo y cerrar Forja":`El tier actual exige exactamente ${requiredDeckSize} cartas: ${principalSlots} Personaje${principalSlots===1?"":"s"} Principal${principalSlots===1?"":"es"} distinto${principalSlots===1?"":"s"} y ${DECK_RULES.drawDeckSize} cartas de robo.`;
   }
 }
 function saveCurrentDeck(){
+  const principalSlots=getCurrentPrincipalSlots();
+  const requiredDeckSize=getDeckSizeForPrincipalSlots(principalSlots);
   currentDeckDraft=sanitizeDeckDraftToCollection(currentDeckDraft);
-  const validation=validateDeckList(currentDeckDraft);
-  if(!validation.valid){hvAlert(`No se puede guardar todavía: ${validation.errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return;}
-  currentPrincipalKey=sanitizePrincipalKeyForDeck(currentPrincipalKey,currentDeckDraft);
+  const deckValidation=validateDeckList(currentDeckDraft,principalSlots);
+  currentPrincipalKeys=sanitizePrincipalKeysForDeck(currentPrincipalKeys,currentDeckDraft,principalSlots);
+  const principalValidation=validatePrincipalSelection(currentPrincipalKeys,currentDeckDraft,principalSlots);
+  const errors=[...deckValidation.errors,...principalValidation.errors];
+  if(errors.length){hvAlert(`No se puede guardar todavía: ${errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return;}
   saveDeck(currentDeckDraft);
-  savePrincipalKey(currentPrincipalKey);
+  savePrincipalKeys(currentPrincipalKeys);
   closeDeckBuilder();
-  hvAlert(currentPrincipalKey?`Mazo guardado. ${currentDeckDraft.find(c=>c.key===currentPrincipalKey)?.name||"La unidad elegida"} será tu Personaje Principal.`:"Mazo guardado sin Personaje Principal.","Mazo guardado");
+  const names=currentPrincipalKeys.map(key=>currentDeckDraft.find(c=>c.key===key)?.name).filter(Boolean);
+  hvAlert(`Mazo guardado con ${requiredDeckSize} cartas. Principales permitidos por el tier: ${names.join(", ")}. Las otras ${DECK_RULES.drawDeckSize} cartas formarán el mazo de robo.`,"Mazo guardado");
 }
 
 function getNotificationState(){

@@ -22,7 +22,7 @@ ESCALA
 0–39    Iniciación
 
 REGLAS DE CONSTRUCCIÓN REVISADAS
-- El mazo contiene 30 cartas.
+- El mazo contiene siempre 20 cartas de robo y añade 1, 2 o 3 Personajes Principales según el tier del líder (21, 22 o 23 cartas totales).
 - Las cartas Básicas permiten un máximo de 3 copias.
 - Todas las cartas no Básicas permiten un máximo de 1 copia.
 - La repetición de Básicas no cambia el PB individual, pero sí influirá después en el Poder total del mazo.

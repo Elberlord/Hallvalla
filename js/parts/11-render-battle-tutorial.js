@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Render de batalla, HUD y tutorial */
+/* HallValla 7BOARDCTRL8AD · Render de batalla, HUD y tutorial */
 
 
 
@@ -107,11 +107,16 @@ function renderHud(){
 function getUnitStatusEntries(u){
   if(!u)return [];
   const entries=[];
-  const add=(label,name,desc,kind="neutral",icon="generic")=>entries.push({label,name,desc,kind,icon});
+  const add=(label,name,desc,kind="neutral",icon="generic",extra={})=>entries.push({label,name,desc,kind,icon,...extra});
   const n=v=>Number(v||0);
   if(u.reanimated){
     const source=(publicState?.units||[]).find(x=>x.id===u.reanimatedByErictoId&&x.key==="ericto"&&Number(x.hp||0)>0);
     add(`Reanimado`,`Reanimado por Ericto`,`Esta unidad regresó mediante Necromancia de Farsalia${source?` de ${source.name}`:""}. Conserva su identidad, estadísticas y habilidades, pero desaparecerá si su Ericto abandona el campo.`,"buff dex-buff","control");
+  }
+  if(u.resurrectedByHealer)add(`Resucitado`,`Resurrección curativa`,`Esta unidad regresó mediante la Acólita sanadora con la mitad de su Vida, sin debuffs y tratada como una invocación desde la mano. Puede actuar el turno en que regresa, pero este mismo cadáver no puede volver a resucitarse.`,"buff hp-buff","hp");
+  if(u.key==="acolyte_healer"){
+    const points=getUnitServicePoints(u),tier=getAcolyteServiceTier(u);
+    add(`${points} servicio`,`Puntos de servicio`,`Progreso permanente de apoyo. Nivel de servicio ${tier}: ${points<50?"Transferencia vital disponible; Purificación se desbloquea en 50.":points<100?"Purificación desbloqueada; Resurrección se desbloquea en 100.":"Purificación y Resurrección desbloqueadas."}` ,"buff hp-buff","hp");
   }
   if(u.key==="hattori_hanzo"&&!u.hanzoContractConsumed)add(`Contrato`,`Contrato preparado`,`La primera unidad enemiga que Hattori Hanzō ataque desde Sigilo recibirá automáticamente el Contrato del Shogun: +3 DX y +2 AT para Hanzō, -3 Guardia para el objetivo y sin contraataque. No se activa contra líderes.` ,"buff dex-buff","control");
   if(n(u.tempMovDebuff)>0)add(`-${n(u.tempMovDebuff)} MOV`,`Movimiento reducido`,`Movimiento reducido hasta el inicio de su próximo turno.${u.tempMovDebuffSource?` Origen: ${u.tempMovDebuffSource}.`:""}`,"debuff mov-debuff","debuff");
@@ -145,7 +150,7 @@ function getUnitStatusEntries(u){
   if(u.defenseModeReady)add(`DEF +2 GD`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Se consume con ese ataque o al inicio de su próximo turno, lo que ocurra primero.`,"buff guard-buff","defense");
   const evasionSpent=getEvasionPressure(u);
   if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Destreza/Agilidad gastadas por atacar o por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
-  if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}${u.leader&&u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
+  if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}${u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
   if(hasActiveBlessedArmor(u))add(`1ra muerte negada`,`Armadura bendita`,`La primera muerte del líder fue negada. Su vida quedó en 1 y no puede perder Vida durante el resto de este turno.`,"buff guard-buff","buff");
   if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Lluvia 1/turno`,`Lluvia de flechas`,`Habilidad Nv.5 activa: una vez por turno puede infligir 1 daño directo a todas las unidades enemigas, ignorando Guardia y stats.`,"buff dex-buff","buff");
   if(u.leader&&u.leaderType==="mage"&&u.leaderAbility==="arcane_bolt")add(`Descarga arcana`,`Descarga arcana`,`Habilidad Nv.5 activa: una vez por turno puede infligir 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`,"buff dex-buff","buff");
@@ -164,6 +169,7 @@ function getUnitStatusEntries(u){
   if(u.noHealWhilePoisoned)add(`No cura`,`Curación bloqueada`,`No puede curarse mientras dure el veneno.`,"debuff poison","poison");
   if(u.richardBuffSource)add(`+2 Vida`,`Vida aumentada`,`Vida máxima y actual aumentada mientras Richard siga en campo.`,"buff hp-buff","hp");
   if(u.convertedByTrap)add(`Control`,`Control alterado`,`Unidad convertida temporalmente por trampa legendaria.`,"debuff curse","control");
+  if(hasVeilCurse(u)){const count=Math.max(1,Number(u.veilCurseTurnsRemaining||1));add(`Cuenta ${count}`,`Cuenta regresiva mortal`,`Al final de cada turno propio baja 1. Cuando llegue a 0, esta unidad caerá derrotada. Puede eliminarse con Purificación. Fuente: ${u.veilCurseSourceName||"Morgana"}.`,"debuff curse","curse",{hiddenOnBoard:true});}
   return entries;
 }
 
@@ -193,7 +199,7 @@ function renderUnitStatusSeal(entry,idx=0){
 }
 function getUnitStatusBubblesHtml(u){
   if(!u)return "";
-  const entries=getUnitStatusEntries(u);
+  const entries=getUnitStatusEntries(u).filter(entry=>!entry.hiddenOnBoard);
   if(!entries.length)return "";
   const helpful=[];
   const harmful=[];
@@ -335,6 +341,7 @@ function getUnitTopLeftText(u){
     const st=publicState?.playerStats?.[u.owner]||{};
     return `${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
+  if(isUnitServiceProgression(u))return String(getUnitServicePoints(u));
   return romanUnitRank(getUnitMasteryRank(u));
 }
 function getUnitTopLeftTitle(u){
@@ -343,6 +350,7 @@ function getUnitTopLeftTitle(u){
     const st=publicState?.playerStats?.[u.owner]||{};
     return `${getResourceLabel(u.owner)} disponible: ${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
+  if(isUnitServiceProgression(u))return `Puntos de servicio de ${u.name}: ${getUnitServicePoints(u)}. Purificación se desbloquea en 50 y Resurrección en 100. Esta progresión no usa bajas ni concede Vida máxima.`;
   const rank=getUnitMasteryRank(u);
   const bonus=getUnitMasteryHpBonusByRank(rank);
   return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} Vida máxima. Máximo: Rango X.`;
@@ -506,6 +514,14 @@ function isBoardUnitFullyExhausted(u){
   const canEffect=isUnitActionWindow(u)&&unitHasContextEffect(u)&&!u.acted&&!isMulanExecutionMoveReady(u)&&!isMulanExecutionChoiceReady(u);
   return !(canMove||canAttack||canDef||canEffect);
 }
+function getVeilCurseCountdownHtml(u){
+  if(!hasVeilCurse(u))return "";
+  const count=Math.max(1,Number(u.veilCurseTurnsRemaining||1));
+  const critical=count===1?" critical":"";
+  const title=escapeHtml(`Cuenta regresiva mortal: ${count}. Al llegar a 0, ${u.name||"la unidad"} caerá derrotada. Purificación puede eliminarla.`);
+  return `<span class="veil-curse-countdown${critical}" title="${title}" aria-label="${title}"><span class="veil-curse-countdown-aura" aria-hidden="true"></span><span class="veil-curse-countdown-number">${count}</span></span>`;
+}
+
 function getBoardTeamMarkerHtml(u){
   if(!u)return "";
   const relation=u.owner===myPlayer?"ally":"enemy";
@@ -547,7 +563,7 @@ function renderBoard(){
       const c=document.createElement("div");
       const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);

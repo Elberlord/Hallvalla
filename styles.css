@@ -5390,9 +5390,9 @@ El CSS original se conserva para no romper visuales. El bloque final
   filter:saturate(1.08) contrast(1.05);
 }
 
-.card-portrait img[src*="assets/leaders/leader_"][src*="_3d.png"],
-.leader-card img[src*="assets/leaders/leader_"][src*="_3d.png"],
-.leader-portrait img[src*="assets/leaders/leader_"][src*="_3d.png"]{
+.card-portrait img[src*="assets/leaders/leader_"][src*="_3d.webp"],
+.leader-card img[src*="assets/leaders/leader_"][src*="_3d.webp"],
+.leader-portrait img[src*="assets/leaders/leader_"][src*="_3d.webp"]{
   object-fit:contain;
   object-position:center bottom;
   filter:saturate(1.08) contrast(1.08);
@@ -20473,6 +20473,15 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 /* --------------------------------------------------------------------------
    7BOARDCTRL8O · Personaje Principal
    -------------------------------------------------------------------------- */
+
+.deck-principal-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:0 0 12px;}
+.deck-principal-tier-note{grid-column:1/-1;padding:8px 10px;border:1px solid rgba(233,201,111,.28);border-radius:9px;background:rgba(12,17,28,.78);color:#e8dfbf;font-size:11px;line-height:1.35;}
+.deck-principal-slots .deck-principal-selector{grid-template-columns:48px minmax(0,1fr);gap:8px;margin:0;padding:8px;align-items:center;}
+.deck-principal-slots .deck-principal-art{width:44px;height:44px;font-size:18px;}
+.deck-principal-slots .deck-principal-clear{grid-column:1/-1;width:100%;padding:5px 8px;}
+.deck-principal-slots .deck-principal-selector.empty{border-color:rgba(170,170,170,.28);background:linear-gradient(135deg,rgba(48,48,48,.55),rgba(16,20,31,.96));}
+.deck-principal-slots .deck-principal-copy strong{font-size:12px;}
+.deck-principal-slots .deck-principal-copy small{font-size:9px;}
 .deck-principal-selector{
   display:grid;
   grid-template-columns:64px minmax(0,1fr) auto;
@@ -20502,7 +20511,7 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 }
 .deck-principal-clear:disabled{opacity:.45;cursor:default;}
 .deck-mini-principal{
-  position:absolute;left:3px;bottom:21px;top:auto;z-index:8;width:20px;height:20px;
+  position:absolute;left:3px;bottom:21px;top:auto;z-index:8;width:24px;height:20px;
   display:grid;place-items:center;border-radius:50%;
   border:1px solid rgba(255,226,139,.66);background:rgba(15,18,27,.88);
   color:#b9bdc8;font-size:12px;line-height:1;cursor:pointer;
@@ -20676,3 +20685,47 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   #inspector .inspect-title{padding-right:84px!important;}
   #cardInspectModal .card-inspect-head{padding-right:82px!important;}
 }
+
+@media(max-width:1100px){.deck-principal-slots{grid-template-columns:1fr;}}
+
+
+/* HallValla 7BOARDCTRL8AG · Cuenta regresiva mortal de Morgana */
+.unit-card .veil-curse-countdown{
+  position:absolute;
+  top:2%;
+  left:50%;
+  width:34%;
+  aspect-ratio:1;
+  transform:translateX(-50%);
+  display:grid;
+  place-items:center;
+  z-index:48;
+  pointer-events:none;
+  border-radius:50%;
+  color:#fff;
+  font-family:Georgia,"Times New Roman",serif;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 2px 2px #000,0 0 8px #d77cff,0 0 15px #7d1fbd;
+  background:radial-gradient(circle at 48% 42%,rgba(91,19,116,.97) 0 35%,rgba(20,5,27,.97) 60%,rgba(0,0,0,.98) 100%);
+  border:2px solid rgba(224,154,255,.95);
+  box-shadow:0 0 0 2px rgba(31,4,43,.92),0 0 13px 4px rgba(143,38,196,.84),inset 0 0 10px rgba(246,202,255,.5);
+}
+.unit-card .veil-curse-countdown-number{position:relative;z-index:2;font-size:clamp(17px,2.3vw,31px);}
+.unit-card .veil-curse-countdown-aura{
+  position:absolute;
+  inset:-24%;
+  border-radius:50%;
+  background:conic-gradient(from 0deg,transparent,rgba(196,83,255,.65),transparent 30%,rgba(119,24,168,.5),transparent 62%,rgba(232,171,255,.72),transparent);
+  filter:blur(2px);
+  animation:veilCurseAuraSpin 4.2s linear infinite;
+}
+.unit-card .veil-curse-countdown.critical{
+  border-color:#ffb8ff;
+  box-shadow:0 0 0 2px rgba(50,0,50,.95),0 0 18px 7px rgba(224,48,255,.95),inset 0 0 12px rgba(255,230,255,.78);
+  animation:veilCurseCriticalPulse .82s ease-in-out infinite;
+}
+@keyframes veilCurseAuraSpin{to{transform:rotate(360deg)}}
+@keyframes veilCurseCriticalPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.16)}}
+@media(max-width:720px){.unit-card .veil-curse-countdown{top:3%;width:38%;border-width:1px}.unit-card .veil-curse-countdown-number{font-size:clamp(14px,4.4vw,24px)}}
+@media(prefers-reduced-motion:reduce){.unit-card .veil-curse-countdown,.unit-card .veil-curse-countdown-aura{animation:none!important}}

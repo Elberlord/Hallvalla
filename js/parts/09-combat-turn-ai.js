@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8V · Movimiento, ataque, turnos e IA */
+/* HallValla 7BOARDCTRL8AI · Movimiento, ataque, turnos e IA */
 
 async function removeCardAndPay(card,paidCost=null){
   const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
@@ -26,12 +26,21 @@ function resolveBeastCellTraps(moving,units,traps){
     if(!affectsPitTarget)return{units:out,traps:nextTraps,logs};
     n={...n,hp:0,removedByCoveredPit:true};
     logs.push(`${trap.cardName} se activa: ${moving.name} cae en el foso y queda eliminada del juego.`);
+  }else if(trap.trapKey==="bamboo_stakes"){
+    if(n.aerial)return{units:out,traps:nextTraps,logs};
+    n=applyDirectHpDamage(n,4);
+    if(n.hp>0){
+      n=applyBleedToUnit(n,trap.cardName);
+      n.bleedTurnsRemaining=2;
+      n.bleedDamage=1;
+    }
+    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 4 daño directo${n.hp>0?" y Sangrado 1 durante 2 turnos":" y cae"}.`);
   }else if(trap.trapKey==="rope_cage"){
-    n.noAttackTurnKey=nextTurnKeyForOwner(n.owner);
-    logs.push(`${trap.cardName} se activa: ${moving.name} no puede atacar en su próximo turno.`);
+    n=applyDirectHpDamage(n,3);
+    if(n.hp>0)n.noAttackTurnKey=nextTurnKeyForOwner(n.owner);
+    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 3 daño directo${n.hp>0?" y no puede atacar en su próximo turno":" y cae"}.`);
   }else if(trap.trapKey==="blood_bait"){
-    n.bloodBaitReadyTurnKey=publicState?.turnKey;n.bloodBaitOwner=trap.owner;
-    logs.push(`${trap.cardName} atrae la cacería alrededor de ${moving.name}.`);
+    return{units:out,traps:nextTraps,logs};
   }
   out=out.map(u=>u.id===moving.id?n:u).filter(u=>u.hp>0);
   nextTraps=removeBeastTrapById(nextTraps,trap.id);
@@ -324,8 +333,9 @@ async function attackUnit(a,d){
   d=warningRune.defender;
   let mods=getCombatMods(a,d);
   if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
-  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,units);
-  if(bloodBaitBonus.mods?.attackerAtk)mods={...mods,attackerAtk:(mods.attackerAtk||0)+bloodBaitBonus.mods.attackerAtk};
+  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,units,publicState.beastTraps||[]);
+  if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
+  const beastTrapsAfterBloodBait=bloodBaitBonus.trapId?removeBeastTrapById(publicState.beastTraps||[],bloodBaitBonus.trapId):(publicState.beastTraps||[]);
   const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
   units=defensePrep.units;
   mods=defensePrep.mods;
@@ -339,7 +349,7 @@ async function attackUnit(a,d){
     firstStrikeText=firstStrike.text||"";
     if(firstStrike.attackerFell){
       const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`;
-      await updatePublic({units,_clockKillCreditMode:"opposite-owner",legendaryTraps:preTrap.traps});
+      await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:preTrap.traps});
       if(!(await finalizeBattle(units,fsLog)))await pushLog([...preTrap.logs,fsLog].filter(Boolean).join(" "));
       clearSelection();
       return;
@@ -623,6 +633,8 @@ async function attackUnit(a,d){
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
     }
   }
+  const veilCurseResult=applyVeilCurseAfterHpDamage(units,a,d,hpLoss);
+  units=veilCurseResult.units;
   const assassinIgnoreText=shouldIgnoreGuardForAttack(a,units)&&hit.hit?" Ignora Guardia/defensa.":"";
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
@@ -652,7 +664,7 @@ async function attackUnit(a,d){
   const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+  const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
@@ -673,7 +685,7 @@ async function attackUnit(a,d){
         evasionRemaining:Number(evasionPressure?.remaining||0)
       }
     : null;
-  const statusFxEvent=arcaneAdeptStatusEvent||poisonStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
+  const statusFxEvent=veilCurseResult.statusFxEvent||arcaneAdeptStatusEvent||poisonStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
     ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
     : null));
   const floatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
@@ -683,7 +695,7 @@ async function attackUnit(a,d){
     : (!hit.hit&&defenderStillAlive
         ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
         : null));
-  await updatePublic({units,_clockKillCreditMode:"opposite-owner",legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent});
+  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent});
   const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" ");
   if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
   clearSelection();
@@ -695,15 +707,17 @@ async function finishTurn(){
   if(isTurnTimerEnabled()&&getTurnTimerRemainingMs()<=0){await expireTurnByClock();return;}
   const burnEnd=applyBurnAtTurnEnd(publicState.units||[]);
   if(burnEnd.logs.length&&await finalizeBattle(burnEnd.units,burnEnd.logs.join(" ")))return;
-  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(burnEnd.units,myPlayer);
-  const erictoLife=resolveErictoLifecycle(burnEnd.units,erictoUpkeep.units);
-  const endLogs=[...(burnEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
+  const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,myPlayer,publicState?.turnKey||"");
+  if(veilEnd.logs.length&&await finalizeBattle(veilEnd.units,[...(burnEnd.logs||[]),...(veilEnd.logs||[])].join(" ")))return;
+  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,myPlayer);
+  const erictoLife=resolveErictoLifecycle(veilEnd.units,erictoUpkeep.units);
+  const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
   if((erictoUpkeep.logs.length||erictoLife.logs.length)&&await finalizeBattle(erictoLife.units,endLogs.join(" ")))return;
   const tutorialMode=publicState?.mode==="tutorial";const next=tutorialMode?1:(myPlayer===1?2:1),turn=tutorialMode?(publicState.turn||1)+1:(next===1?(publicState.turn||1)+1:(publicState.turn||1));
   let refreshedUnits=restoreTurnGuardForOwner(erictoLife.units,next);
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:burnEnd.statusFxEvent||null,floatFxEvent:burnEnd.floatFxEvent||null,log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
 }
@@ -898,6 +912,7 @@ async function adventureEnemyTurn(){
     const mov=Math.max(0,Number(cardOrUnit?.mov||0));
     const weapon=getWeaponClassForCard(cardOrUnit);
     if(cardOrUnit?.leader)return "leader";
+    if(key==="acolyte_healer"||cardOrUnit?.healer)return "support";
     if(key==="bolt"||cardOrUnit?.spell==="damage")return "directDamage";
     if(weapon==="spear"||key==="spearman"||name.includes("lancero")||name.includes("lanza")||text.includes("regla de lanza"))return "spear";
     if(key==="scout"||cardOrUnit?.ninjutsu||name.includes("asesina")||name.includes("asesino")||name.includes("shinobi")||name.includes("saboteador"))return "assassin";
@@ -1263,8 +1278,9 @@ async function adventureEnemyTurn(){
     target=warningRune.defender;
     let mods=withAiPublicState(()=>getCombatMods(attacker,target));
     if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
-    const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,units);
-    if(bloodBaitBonus.mods?.attackerAtk)mods={...mods,attackerAtk:(mods.attackerAtk||0)+bloodBaitBonus.mods.attackerAtk};
+    const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,units,beastTraps);
+    if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
+    if(bloodBaitBonus.trapId)beastTraps=removeBeastTrapById(beastTraps,bloodBaitBonus.trapId);
     let firstStrikeText="";
     if(canLanceFirstStrike(attacker,target,mods)){
       const firstStrike=resolveLanceFirstStrike(attacker,target,units);
@@ -1570,6 +1586,8 @@ async function adventureEnemyTurn(){
       }
     }
 
+    const veilCurseResult=applyVeilCurseAfterHpDamage(units,attacker,target,hpLoss);
+    units=veilCurseResult.units;
     const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
@@ -1591,7 +1609,7 @@ async function adventureEnemyTurn(){
           evasionRemaining:Number(evasionPressure?.remaining||0)
         }
       : null;
-    pendingAiStatusFxEvent=arcaneAdeptStatusEvent||poisonStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
+    pendingAiStatusFxEvent=veilCurseResult.statusFxEvent||arcaneAdeptStatusEvent||poisonStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
       : null));
     pendingAiFloatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
@@ -1629,7 +1647,7 @@ async function adventureEnemyTurn(){
     const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${attacker.name} atacó a distancia y mantiene Sigilo.`:` ${attacker.name} pierde Sigilo al declarar el ataque.`):"";
     const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
     const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -1856,9 +1874,10 @@ async function adventureEnemyTurn(){
         const nearEnemy=living(1).filter(u=>!u.leader&&d(u,cell)<=Math.max(1,effectiveMov(u)||1)+1);
         score+=nearEnemy.length*35;
         if(card.beastTrap==="covered_pit")score+=nearEnemy.some(u=>(effectiveMov(u)||0)>=3)?45:20;
-        if(card.beastTrap==="rope_cage")score+=nearEnemy.some(u=>(effectiveAtk(u)||0)>=4)?45:20;
+        if(card.beastTrap==="rope_cage")score+=nearEnemy.some(u=>(effectiveAtk(u)||0)>=4)?65:30;
+        if(card.beastTrap==="bamboo_stakes")score+=nearEnemy.some(u=>!u.aerial&&(u.hp||0)<=5)?70:35;
         if(card.beastTrap==="iron_jaw")score+=nearEnemy.some(u=>(u.hp||0)<=2)?45:15;
-        if(card.beastTrap==="blood_bait")score+=living(2).some(b=>isBeastUnit(b)&&d(b,cell)<=3)?55:10;
+        if(card.beastTrap==="blood_bait")score+=living(2).some(b=>isBeastUnit(b)&&d(b,cell)<=3)?75:15;
         score-=living(2).some(a=>d(a,cell)<=1)?20:0;
         if(score>25)options.push({card,cell,score});
       }
@@ -2380,6 +2399,21 @@ async function adventureEnemyTurn(){
     if(!u||u.acted)return false;
     const mode=getUnitEffectMode(u);
     if(mode==="passive")return false;
+    if(u.key==="acolyte_healer"){
+      const choice=withAiPublicState(()=>chooseSmartAcolyteChoice(u,units,erictoGraveyard,honor));
+      if(!choice||honor<Number(choice.cost||0))return false;
+      const result=withAiPublicState(()=>applyAcolyteHealerEffectState(u,choice,units));
+      if(!result.success)return false;
+      honor=Math.max(0,honor-Number(result.honorCost||choice.cost||0));
+      const beforePoints=Math.max(0,Number(u.servicePoints||0));
+      const serviceResult={key:getUnitMasteryKey(u),name:u.name,beforePoints,afterPoints:beforePoints+Number(result.serviceGain||1),gain:Number(result.serviceGain||1),unlockedPurification:beforePoints<50&&beforePoints+Number(result.serviceGain||1)>=50,unlockedResurrection:beforePoints<100&&beforePoints+Number(result.serviceGain||1)>=100};
+      units=applyUnitServicePointsToUnits(result.units,u,serviceResult);
+      if(result.erictoGraveyard)erictoGraveyard=normalizeErictoGraveyard(result.erictoGraveyard);
+      pendingAiStatusFxEvent=result.statusFxEvent||pendingAiStatusFxEvent;
+      pendingAiFloatFxEvent=result.floatFxEvent||pendingAiFloatFxEvent;
+      logs.push(`Rival: ${result.log} Puntos de servicio: ${serviceResult.afterPoints}.${unitServiceUnlockText(serviceResult)}`);
+      return true;
+    }
     if(mode==="self"){
       if(u.key==="black_raven"&&!living(1).some(e=>isStealthedUnit(e)&&d(u,e)<=2))return false;
       if(u.key==="african_lion"&&!living(1).some(e=>isStealthedUnit(e)&&d(u,e)<=3))return false;
@@ -2493,6 +2527,13 @@ async function adventureEnemyTurn(){
     if(burnEnd.statusFxEvent)pendingAiStatusFxEvent=burnEnd.statusFxEvent;
     if(burnEnd.floatFxEvent)pendingAiFloatFxEvent=burnEnd.floatFxEvent;
   }
+  const veilEnd=resolveVeilCurseAtTurnEnd(units,2,pub.turnKey||"");
+  units=veilEnd.units;
+  if(veilEnd.logs.length){
+    logs.push(...veilEnd.logs);
+    if(veilEnd.statusFxEvent)pendingAiStatusFxEvent=veilEnd.statusFxEvent;
+    if(veilEnd.floatFxEvent)pendingAiFloatFxEvent=veilEnd.floatFxEvent;
+  }
   const erictoUpkeep=applyErictoUpkeepAtTurnEnd(units,2);
   units=erictoUpkeep.units;
   if(erictoUpkeep.logs.length)logs.push(...erictoUpkeep.logs);
@@ -2511,6 +2552,7 @@ async function adventureEnemyTurn(){
       legendaryTraps,
       beastTraps,
       erictoGraveyard,
+      ...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),
       phase:"ended",
       battleEnded:true,
       [`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),
@@ -2533,6 +2575,7 @@ async function adventureEnemyTurn(){
     legendaryTraps,
     beastTraps,
     erictoGraveyard,
+    ...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),
     stalemateNoPlay:pub.stalemateNoPlay||{},
     currentPlayer:1,
     turnPhase:"draw",

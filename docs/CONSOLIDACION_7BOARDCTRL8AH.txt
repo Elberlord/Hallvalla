@@ -1,0 +1,20 @@
+HALLVALLA 7BOARDCTRL8AH · CONSOLIDACIÓN MORGANA + CONTRATOS DRAGÓN
+
+Cambios consolidados:
+- Morgana registrada correctamente mediante MORGANA_CARD.
+- Morgana incluida en el paquete mejorado de magia y trampas.
+- Eliminadas las referencias de código a DARK_MAGE_CARD, darkMage y dark_mage.
+- Conservadas las rutas nuevas:
+  assets/cards/special/morgana.webp
+  assets/board_cards/special/morgana.webp
+- Restaurado js/parts/17-dragon-contracts.js.
+- Restaurada su carga entre 14-adventure-engine-ui.js y 15-settings-tuners-events.js.
+- Conservados los tres contratos de jefe: Relámpago, Fuego y Hielo.
+- Conservadas las recompensas de experiencia, oro y huevo registradas por el módulo de contratos.
+- Actualizadas las etiquetas de versión y caché a 7BOARDCTRL8AH.
+
+No forma parte de esta consolidación:
+- Incubación jugable del huevo.
+- Evolución bebé, juvenil y adulta de los dragones coleccionables.
+- Artes bebé/juvenil y límite funcional de un dragón por mazo.
+- Regla general de Pisotón para criaturas colosales.

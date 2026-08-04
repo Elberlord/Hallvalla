@@ -1,0 +1,20 @@
+HALLVALLA 7BOARDCTRL8AE — VALIDACIÓN ESTÁTICA
+
+RESULTADOS
+- Sintaxis comprobada con node --check en bootstrap-loader.js y todos los archivos js/parts/*.js: APROBADA.
+- Referencias literales a recursos en HTML, CSS y JavaScript: 425 revisadas, 0 archivos faltantes.
+- Referencias antiguas de líderes a .png en el código activo: 0.
+- Líderes WebP revisados: 11.
+- Canal alfa de los 11 líderes WebP: conservado, con transparencia real (extremos 0–255).
+- Artes de tablero de los tres dragones: presentes.
+- Módulo 17-dragon-contracts.js: cargado por bootstrap-loader.js en build 7BOARDCTRL8AE.
+
+CAMBIOS PRINCIPALES VERIFICADOS
+- Aquiles usa assets/leaders/leader_achilles.webp.
+- Los líderes Guerrero, Arquero, Hechicero, Caudillo, Caballería, Asesino y Beastmaster usan WebP.
+- Dragones Relámpago, Fuego y Hielo cuentan con arte de líder transparente y arte de tablero.
+- El botón Eventos abre el selector conjunto de eventos.
+- Los contratos dragón utilizan jefe inmóvil, rango de activación 5 y ciclo de dos ataques directos seguido de ataque elemental.
+
+LÍMITE DE ESTA VALIDACIÓN
+Esta validación confirma estructura, sintaxis, rutas y transparencia de imágenes. No sustituye una partida completa conectada a Firebase en un navegador real.

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8Z · Rutas de assets y sistema de líderes */
+/* HallValla 7BOARDCTRL8AI · Rutas de assets y sistema de líderes */
 
 
 /*
@@ -7,7 +7,7 @@
 02_ASSET_DATABASE
 -------------------------------------------------------------------------------
 */
-const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior_3d.png",archer:"assets/leaders/leader_archer_3d.png",mage:"assets/leaders/leader_mage_3d.png",axe:"assets/leaders/leader_axe_3d.png",cavalry:"assets/leaders/leader_cavalry_3d.png",assassin:"assets/leaders/leader_assassin_3d.png",beastmaster:"assets/leaders/leader_beastmaster_3d.png"};
+const LEADER_PORTRAITS={warrior:"assets/leaders/leader_warrior_3d.webp",archer:"assets/leaders/leader_archer_3d.webp",mage:"assets/leaders/leader_mage_3d.webp",axe:"assets/leaders/leader_axe_3d.webp",cavalry:"assets/leaders/leader_cavalry_3d.webp",assassin:"assets/leaders/leader_assassin_3d.webp",beastmaster:"assets/leaders/leader_beastmaster_3d.webp"};
 const CARD_PORTRAITS={
   richard:"assets/cards/basic/richard_lionheart.webp",
   cavalry:"assets/cards/basic/cavalry_light.webp",
@@ -25,6 +25,7 @@ const CARD_PORTRAITS={
   cossackRider:"assets/cards/basic/cossack_rider.webp",
   mage:"assets/cards/basic/mage.webp",
   arcaneAdept:"assets/cards/basic/mage.webp",
+  acolyteHealer:"assets/cards/basic/acolyte_healer.webp",
   rogue:"assets/cards/basic/rogue.webp",
   paladin:"assets/cards/basic/paladin.webp",
   heavyInfantry:"assets/cards/basic/heavy_infantry_paladin.webp",
@@ -37,7 +38,7 @@ const CARD_PORTRAITS={
   berserkerDeOso:"assets/cards/basic/berserker_de_oso.webp",
   ulfhednar:"assets/cards/basic/ulfhednar.webp",
   skiparDelDrakkar:"assets/cards/basic/skipar_del_drakkar.webp",
-  darkMage:"assets/cards/basic/dark_mage.webp",
+  morgana:"assets/cards/special/morgana.webp",
   wallace:"assets/cards/basic/wallace.webp",
   berserker:"assets/cards/basic/berserker_north.webp",
   mulan:"assets/cards/basic/mulan.webp",
@@ -116,7 +117,9 @@ const BOARD_PORTRAITS={
   scythian_horse_archer:"assets/board_cards/basic/scythian_horse_archer.webp",
   hungarian_hussar:"assets/board_cards/basic/hungarian_hussar.webp",
   mongol_explorer:"assets/board_cards/basic/mongol_explorer.webp",
-  cossack_rider:"assets/board_cards/basic/cossack_rider.webp"
+  cossack_rider:"assets/board_cards/basic/cossack_rider.webp",
+  acolyte_healer:"assets/board_cards/basic/acolyte_healer.webp",
+  morgana:"assets/board_cards/special/morgana.webp"
 };
 
 /*

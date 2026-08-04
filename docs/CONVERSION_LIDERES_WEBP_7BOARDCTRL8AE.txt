@@ -1,0 +1,24 @@
+HALLVALLA 7BOARDCTRL8AE — CONVERSIÓN DE LÍDERES A WEBP
+
+Se convirtieron a WebP todos los PNG de assets/leaders:
+- leader_warrior_3d.webp
+- leader_archer_3d.webp
+- leader_mage_3d.webp
+- leader_axe_3d.webp
+- leader_cavalry_3d.webp
+- leader_assassin_3d.webp
+- leader_beastmaster_3d.webp
+- leader_achilles.webp
+
+Comprobaciones realizadas:
+- Todos conservan canal alfa real.
+- El mínimo y máximo del alfa permanecen 0/255 después de convertir.
+- No se añadió fondo.
+- Se actualizaron index.html, js/parts/02-assets-leaders.js y styles.css.
+- Se eliminaron las copias PNG reemplazadas.
+- Ahorro aproximado de los ocho archivos: 3.95 MB.
+
+Los líderes dragón ya estaban en WebP transparente y se conservaron:
+- lightning_dragon_leader.webp
+- fire_dragon_leader.webp
+- ice_dragon_leader.webp

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8V · Interacción de tablero y efectos de unidad */
+/* HallValla 7BOARDCTRL8AC · Interacción de tablero y efectos de unidad */
 
 
 function getBoardCellFromPoint(clientX,clientY){
@@ -69,6 +69,7 @@ function beginBoardDragVisual(ev){
     selectedCard=null;
     selectedUnitId=u.id;
     selectedUnitActionMode=null;
+    selectedUnitEffectChoice=null;
     unitContextSelection=null;
     hideUnitContextMenu();
     dragMoveHighlights=getDragUnitMoveKeys(u);
@@ -83,6 +84,7 @@ function beginBoardDragVisual(ev){
     selectedCard=card;
     selectedUnitId=null;
     selectedUnitActionMode=null;
+    selectedUnitEffectChoice=null;
     unitContextSelection=null;
     hideUnitContextMenu();
     closeHandForBoardFocus();
@@ -213,6 +215,10 @@ async function cellClick(x,y){
       return setHint("MOV: elige una casilla verde vacía.");
     }
     if(selectedUnitActionMode==="effect"){
+      if(s.key==="acolyte_healer"){
+        if(!u)return setHint("EFFECT: elige una unidad marcada dentro del rango 3.");
+        return activateUnitEffect(s,{technique:selectedUnitEffectChoice,targetId:u.id});
+      }
       if(s.key==="saladin"||s.leaderType==="beastmaster"){
         if(u)return setHint("EFFECT: elige una casilla libre válida.");
         return activateUnitEffect(s,{x,y,cellTarget:true});
@@ -347,6 +353,7 @@ function openUnitContextMenu(u,x,y){
   selectedCard=null;
   selectedUnitId=u.id;
   selectedUnitActionMode=null;
+  selectedUnitEffectChoice=null;
   highlights=[];
   highlightType="move";
   hideCardInspectModal();
@@ -407,12 +414,216 @@ function renderUnitContextMenu(){
   }));
 }
 
+
+const ACOLYTE_HEALER_EFFECT_COSTS=Object.freeze({transfer:2,purify:3,resurrect:4});
+function getAcolyteEffectRange(caster){return Math.max(1,Number(caster?.effectRange||3));}
+function getAcolyteTransferTargets(caster,units=publicState?.units||[]){
+  if(!caster)return[];
+  const rg=getAcolyteEffectRange(caster);
+  return (units||[]).filter(target=>{
+    if(!target||target.leader||Number(target.hp||0)<=0||dist(caster,target)>rg)return false;
+    if(target.owner===caster.owner){
+      if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return false;
+      return Number(target.hp||0)<Number(effectiveMaxHp(target)||target.maxHp||target.hp||0);
+    }
+    return !isStealthedUnit(target);
+  });
+}
+function getAcolytePurifiableStatuses(unit){
+  if(!unit)return[];
+  const out=[];
+  const add=(key,label,active)=>{if(active)out.push({key,label});};
+  add("bleed","Sangrado",hasBleeding(unit));
+  add("poison","Veneno",Number(unit.poisonTurns||0)>0||Number(unit.poisonDamage||0)>0||!!unit.noHealWhilePoisoned);
+  add("burn","Quemadura",Number(unit.burnTurns||0)>0||Number(unit.burnDamage||0)>0);
+  add("veil_curse","Cuenta regresiva mortal",hasVeilCurse(unit));
+  add("fear","Miedo",!!unit.fearTurnKey||!!unit.fearSourceName);
+  add("atk","Reducción de Ataque",Number(unit.tempAtkDebuff||0)>0||Number(unit.hannibalAtkDebuff||0)>0);
+  add("guard","Reducción de Guardia",Number(unit.tempGuardBuff||0)<0||Number(unit.tempGuardDebuff||0)>0);
+  add("dex","Reducción de Destreza",Number(unit.tempDexDebuff||0)>0||!!unit.saboteadorDexZeroTurnKey);
+  add("agi","Reducción de Agilidad",Number(unit.tempAgiDebuff||0)>0);
+  add("mov","Reducción de Movimiento",Number(unit.tempMovDebuff||0)>0||Number(unit.genghisMovDebuff||0)>0||Number(unit.hannibalMovDebuff||0)>0);
+  add("stun","Aturdimiento",!!unit.rhinoStunnedTurnKey||!!unit.stunnedUntilTurnKey);
+  add("lock","Bloqueo de acciones",!!unit.noMoveTurnKey||!!unit.noAttackTurnKey||!!unit.noDefTurnKey||!!unit.noCounterTurnKey);
+  add("silence","Silencio",!!unit.silencedTurnKey);
+  add("curse","Maldición",!!unit.noHealTurnKey||!!unit.noReductionTurnKey||!!unit.ignoreGuardNextDamageTurnKey||!!unit.doubleNextDamageTurnKey);
+  add("naval","Bloqueo Naval",!!unit.yiSunDebuffed);
+  return out;
+}
+function purifyAcolyteStatus(unit,statusKey){
+  const n={...(unit||{})};
+  const del=(...keys)=>keys.forEach(key=>delete n[key]);
+  if(statusKey==="bleed")del("bleedDamage","bleedSourceName","bleedTurnsRemaining","bleedTurns","bleedSource");
+  else if(statusKey==="poison")del("poisonDamage","poisonTurns","poisonStage","poisonSourceId","poisonSourceName","poisonSource","noHealWhilePoisoned");
+  else if(statusKey==="burn")del("burnTurns","burnDamage","burnSourceName","burnSource");
+  else if(statusKey==="veil_curse")return clearVeilCurseStatus(n);
+  else if(statusKey==="fear"){
+    n.tempAtkDebuff=Math.max(0,Number(n.tempAtkDebuff||0)-3);del("fearTurnKey","fearSourceName","lionFearAppliedTurnKey");
+  }else if(statusKey==="atk"){
+    n.tempAtkDebuff=0;del("hannibalAtkDebuff","hannibalAtkDebuffTurnKey","hannibalAtkDebuffSource");
+  }else if(statusKey==="guard"){
+    if(Number(n.tempGuardBuff||0)<0)n.tempGuardBuff=0;n.tempGuardDebuff=0;
+  }else if(statusKey==="dex"){
+    n.tempDexDebuff=0;del("saboteadorDexZeroTurnKey","saboteadorDexZeroSource");
+  }else if(statusKey==="agi")n.tempAgiDebuff=0;
+  else if(statusKey==="mov"){
+    n.tempMovDebuff=0;del("tempMovDebuffSource","genghisMovDebuff","genghisMovDebuffTurnKey","genghisMovDebuffSource","hannibalMovDebuff","hannibalMovDebuffTurnKey","hannibalMovDebuffSource");
+  }else if(statusKey==="stun")del("rhinoStunnedTurnKey","stunnedUntilTurnKey");
+  else if(statusKey==="lock")del("noMoveTurnKey","noAttackTurnKey","noDefTurnKey","noCounterTurnKey");
+  else if(statusKey==="silence")del("silencedTurnKey");
+  else if(statusKey==="curse")del("noHealTurnKey","noReductionTurnKey","ignoreGuardNextDamageTurnKey","doubleNextDamageTurnKey");
+  else if(statusKey==="naval"){
+    n.tempDexDebuff=Math.max(0,Number(n.tempDexDebuff||0)-4);
+    if(Number(n.tempGuardBuff||0)<0)n.tempGuardBuff=Math.min(0,Number(n.tempGuardBuff||0)+4);
+    del("yiSunDebuffed");
+  }
+  return n;
+}
+function getAcolytePurifyTargets(caster,units=publicState?.units||[]){
+  if(!caster)return[];
+  const rg=getAcolyteEffectRange(caster);
+  return (units||[]).filter(target=>target&&!target.leader&&target.owner===caster.owner&&Number(target.hp||0)>0&&dist(caster,target)<=rg&&getAcolytePurifiableStatuses(target).length>0);
+}
+function getAcolyteEligibleCorpses(caster,graveyard=publicState?.erictoGraveyard||[]){
+  if(!caster)return[];
+  return normalizeErictoGraveyard(graveyard).filter(rec=>{
+    const snap=rec?.snapshot||{};
+    return !rec.used&&Number(rec.originalOwner||snap.owner||0)===Number(caster.owner)&&!snap.leader&&!snap.token&&!snap.tokenSummon&&!snap.fieldGeneratedSummon&&!snap.solomonSummon&&!snap.reanimated&&!snap.resurrectedByHealer&&!snap.principal&&!snap.principalStart;
+  });
+}
+function getAcolyteResurrectionCells(caster,units=publicState?.units||[]){return getAdjacentFreeCells(caster,units);}
+function getAcolyteTemplateForCorpse(record){
+  const key=String(record?.snapshot?.key||record?.key||"");
+  const pools=[CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],LEGENDARY_TRAP_CARDS||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS||[],BEAST_CARD_TEMPLATES||[]];
+  for(const pool of pools){const found=(pool||[]).find(c=>c?.key===key&&c?.type==="unit");if(found)return found;}
+  return null;
+}
+function makeAcolyteResurrectedUnit(caster,record,cell){
+  const template=getAcolyteTemplateForCorpse(record);
+  let revived;
+  if(template){
+    revived=makeUnit({...makeCard(template,caster.owner),summonOrigin:"hand",fieldGeneratedSummon:false,tokenSummon:false},cell.x,cell.y);
+  }else{
+    const clean=resetErictoReanimatedTransientState(record?.snapshot||{});
+    revived={...clean,id:uid8(),owner:caster.owner,x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,summonOrigin:"hand",fieldGeneratedSummon:false,tokenSummon:false,reanimated:false};
+  }
+  const maxHp=Math.max(1,Number(revived.maxHp||record?.snapshot?.maxHp||record?.snapshot?.hp||1));
+  const baseGuard=Math.max(0,Number(revived.baseGuard??revived.guard??0));
+  return {...revived,id:uid8(),owner:caster.owner,originalOwner:Number(record?.originalOwner||caster.owner),x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,hp:Math.max(1,Math.ceil(maxHp/2)),maxHp,baseGuard,guard:baseGuard,moved:false,movedSpaces:0,acted:false,defenseModeReady:false,damagedThisTurn:false,summonOrigin:"hand",fieldGeneratedSummon:false,tokenSummon:false,reanimated:false,resurrectedByHealer:true,resurrectedFromGraveId:record.graveId,resurrectedOriginalUnitId:record.originalUnitId,hallvallaReadyOnSummon:true,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"actions"};
+}
+function chooseAcolyteTechnique(caster,units=publicState?.units||[],honor=0,graveyard=publicState?.erictoGraveyard||[]){
+  const points=getUnitServicePoints(caster);
+  const options=[
+    {key:"transfer",title:"Transferencia vital",cost:2,desc:"Cura 1 a un aliado herido o causa 1 daño directo a un enemigo visible en rango 3.",unlocked:true,available:getAcolyteTransferTargets(caster,units).length>0},
+    {key:"purify",title:"Purificación",cost:3,desc:"Elimina un estado negativo o maldición removible de un aliado en rango 3.",unlocked:points>=50,available:getAcolytePurifyTargets(caster,units).length>0},
+    {key:"resurrect",title:"Resurrección",cost:4,desc:"Devuelve un aliado destruido con la mitad de su Vida en una casilla adyacente.",unlocked:points>=100,available:getAcolyteEligibleCorpses(caster,graveyard).length>0&&getAcolyteResurrectionCells(caster,units).length>0}
+  ];
+  return new Promise(resolve=>{
+    const overlay=document.createElement("div");overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
+    const panel=document.createElement("div");panel.style.cssText="width:min(720px,96vw);background:#0b100d;border:2px solid #789d6d;border-radius:18px;padding:20px;color:#eef7eb;box-shadow:0 0 48px #000";
+    panel.innerHTML=`<h2 style="margin:0 0 6px">Artes curativas · ${escapeHtml(caster.name)}</h2><p style="margin:0 0 16px;color:#c9dcc3">Puntos de servicio: <b>${points}</b> · ${getResourceLabel(caster.owner)} disponible: <b>${honor}</b>. Elige una capacidad; usarla consumirá la acción de la Acólita.</p><div data-options style="display:grid;gap:10px"></div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button type="button" data-cancel style="padding:10px 16px;border-radius:9px;border:1px solid #777;background:#181b19;color:#eee">Cancelar</button></div>`;
+    overlay.appendChild(panel);document.body.appendChild(overlay);
+    const finish=value=>{overlay.remove();resolve(value);};
+    options.forEach(opt=>{
+      const disabled=!opt.unlocked||!opt.available||honor<opt.cost;
+      const reason=!opt.unlocked?`Bloqueada: requiere ${opt.key==="purify"?50:100} puntos.`:!opt.available?"No hay objetivo válido.":honor<opt.cost?`Faltan ${opt.cost-honor} de ${getResourceLabel(caster.owner)}.`:"Disponible.";
+      const b=document.createElement("button");b.type="button";b.disabled=disabled;
+      b.innerHTML=`<b>${escapeHtml(opt.title)} · ${opt.cost} ${escapeHtml(getResourceLabel(caster.owner))}</b><br><small>${escapeHtml(opt.desc)}</small><br><small style="opacity:.78">${escapeHtml(reason)}</small>`;
+      b.style.cssText=`padding:13px;text-align:left;border-radius:11px;border:1px solid ${disabled?"#4b504c":"#7fae71"};background:${disabled?"#171a18":"#162317"};color:${disabled?"#777":"#f2fff0"};cursor:${disabled?"not-allowed":"pointer"}`;
+      if(!disabled)b.onclick=()=>finish(opt.key);
+      panel.querySelector('[data-options]').appendChild(b);
+    });
+    panel.querySelector('[data-cancel]').onclick=()=>finish(null);overlay.onclick=e=>{if(e.target===overlay)finish(null);};
+  });
+}
+function chooseAcolytePurificationStatus(target){
+  const statuses=getAcolytePurifiableStatuses(target);if(!statuses.length)return Promise.resolve(null);
+  return new Promise(resolve=>{
+    const overlay=document.createElement("div");overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
+    const panel=document.createElement("div");panel.style.cssText="width:min(560px,94vw);background:#0b100d;border:2px solid #789d6d;border-radius:18px;padding:20px;color:#eef7eb";
+    panel.innerHTML=`<h2 style="margin:0 0 6px">Purificar a ${escapeHtml(target.name)}</h2><p style="margin:0 0 14px;color:#c9dcc3">Elige exactamente un estado que será eliminado.</p><div data-list style="display:grid;gap:8px"></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button data-cancel type="button">Cancelar</button></div>`;
+    overlay.appendChild(panel);document.body.appendChild(overlay);const finish=v=>{overlay.remove();resolve(v);};
+    statuses.forEach(st=>{const b=document.createElement("button");b.type="button";b.textContent=st.label;b.style.cssText="padding:11px;border-radius:9px;border:1px solid #789d6d;background:#162317;color:#fff;text-align:left";b.onclick=()=>finish(st.key);panel.querySelector('[data-list]').appendChild(b);});
+    panel.querySelector('[data-cancel]').onclick=()=>finish(null);overlay.onclick=e=>{if(e.target===overlay)finish(null);};
+  });
+}
+function chooseAcolyteResurrectionChoice(caster,units=publicState?.units||[],graveyard=publicState?.erictoGraveyard||[]){
+  const corpses=getAcolyteEligibleCorpses(caster,graveyard),cells=getAcolyteResurrectionCells(caster,units);if(!corpses.length||!cells.length)return Promise.resolve(null);
+  return new Promise(resolve=>{
+    const overlay=document.createElement("div");overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
+    const panel=document.createElement("div");panel.style.cssText="width:min(820px,96vw);max-height:88vh;overflow:auto;background:#0b100d;border:2px solid #789d6d;border-radius:18px;padding:20px;color:#eef7eb";
+    panel.innerHTML=`<h2 style="margin:0 0 6px">Resurrección</h2><p style="margin:0 0 16px;color:#c9dcc3">Elige un aliado destruido y una casilla libre adyacente. Volverá con la mitad de su Vida, sin debuffs y podrá actuar este turno.</p><div data-corpses style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3>Casilla de retorno</h3><div data-cells style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button data-cancel type="button">Cancelar</button><button data-confirm type="button" disabled>Resucitar</button></div>`;
+    overlay.appendChild(panel);document.body.appendChild(overlay);let corpse=null,cell=null;const confirm=panel.querySelector('[data-confirm]');const sync=()=>confirm.disabled=!(corpse&&cell);const finish=v=>{overlay.remove();resolve(v);};
+    corpses.forEach(rec=>{const b=document.createElement("button");b.type="button";const max=Math.max(1,Number(rec.snapshot?.maxHp||rec.snapshot?.hp||1));b.innerHTML=`<b>${escapeHtml(rec.name||"Unidad caída")}</b><br><small>Vida de retorno: ${Math.ceil(max/2)}/${max} · PB ${Number(rec.battlePower)||"—"}</small>`;b.style.cssText="padding:12px;text-align:left;border-radius:10px;border:1px solid #617a5a;background:#142016;color:#f3fff1";b.onclick=()=>{panel.querySelectorAll('[data-corpses] button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #8fc681';corpse=rec;sync();};panel.querySelector('[data-corpses]').appendChild(b);});
+    cells.forEach(c=>{const b=document.createElement("button");b.type="button";b.textContent=`${c.x+1}, ${c.y+1}`;b.onclick=()=>{panel.querySelectorAll('[data-cells] button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #8fc681';cell=c;sync();};panel.querySelector('[data-cells]').appendChild(b);});
+    panel.querySelector('[data-cancel]').onclick=()=>finish(null);confirm.onclick=()=>finish({technique:"resurrect",graveId:corpse.graveId,x:cell.x,y:cell.y});overlay.onclick=e=>{if(e.target===overlay)finish(null);};
+  });
+}
+function applyAcolyteHealerEffectState(caster,choice,units=publicState?.units||[]){
+  const live=(units||[]).find(u=>u.id===caster?.id)||caster;if(!live)return{success:false,reason:"No hay Acólita sanadora activa."};
+  const technique=String(choice?.technique||"");const points=getUnitServicePoints(live);let out=[...(units||[])],log="",statusFxEvent=null,floatFxEvent=null;
+  if(technique==="transfer"){
+    const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Objetivo fuera de rango o inválido."};
+    if(target.owner===live.owner){
+      if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return{success:false,reason:`${target.name} no puede curarse ahora.`};
+      const max=Math.max(1,Number(effectiveMaxHp(target)||target.maxHp||target.hp||1));if(Number(target.hp||0)>=max)return{success:false,reason:"La unidad aliada ya tiene la Vida completa."};
+      out=out.map(u=>u.id===target.id?{...u,hp:Math.min(max,Number(u.hp||0)+1)}:u.id===live.id?{...u,acted:true}:u);statusFxEvent=makeStatusFxEvent("heal",out.find(u=>u.id===target.id)||target,1);floatFxEvent=makeFloatFxEvent("heal",out.find(u=>u.id===target.id)||target,1,{iconText:"✚"});log=`${live.name} usa Transferencia vital: ${target.name} recupera 1 Vida.`;
+    }else{
+      if(isStealthedUnit(target))return{success:false,reason:"No puede seleccionar una unidad enemiga con Sigilo."};
+      const before=[...out];out=out.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-1,damagedThisTurn:true}):u.id===live.id?{...u,acted:true}:u);out=applyLegendaryFatalSaves(out,[target.id]).filter(u=>Number(u.hp||0)>0);const blood=applyBloodVictoryForDeaths(before,out);out=blood.units;const survivor=out.find(u=>u.id===target.id);statusFxEvent=survivor?makeStatusFxEvent("damage",survivor,1):null;floatFxEvent=makeFloatFxEvent("damage",survivor||target,1,{iconText:"✦"});log=`${live.name} usa Transferencia vital: ${target.name} pierde 1 Vida directamente.${blood.logs.length?` ${blood.logs.join(" ")}`:""}`;
+    }
+    return{success:true,units:out,log,honorCost:2,serviceGain:1,statusFxEvent,floatFxEvent,clockKillCreditOwner:live.owner};
+  }
+  if(technique==="purify"){
+    if(points<50)return{success:false,reason:"Purificación requiere 50 puntos de servicio."};const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||target.owner!==live.owner||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Aliado inválido o fuera de rango."};const statuses=getAcolytePurifiableStatuses(target);const chosen=statuses.find(st=>st.key===choice?.statusKey);if(!chosen)return{success:false,reason:"El estado elegido ya no está presente."};out=out.map(u=>u.id===target.id?purifyAcolyteStatus(u,chosen.key):u.id===live.id?{...u,acted:true}:u);statusFxEvent=makeStatusFxEvent("cleanse",out.find(u=>u.id===target.id)||target,0);floatFxEvent=makeFloatFxEvent("heal",out.find(u=>u.id===target.id)||target,0,{iconText:"◇",labelText:"PURIFICA"});log=`${live.name} usa Purificación: elimina ${chosen.label} de ${target.name}.`;return{success:true,units:out,log,honorCost:3,serviceGain:1,statusFxEvent,floatFxEvent};
+  }
+  if(technique==="resurrect"){
+    if(points<100)return{success:false,reason:"Resurrección requiere 100 puntos de servicio."};const grave=normalizeErictoGraveyard(publicState?.erictoGraveyard||[]);const rec=getAcolyteEligibleCorpses(live,grave).find(r=>r.graveId===choice?.graveId);const cell=getAcolyteResurrectionCells(live,out).find(c=>c.x===Number(choice?.x)&&c.y===Number(choice?.y));if(!rec||!cell)return{success:false,reason:"El cadáver o la casilla ya no están disponibles."};let revived=makeAcolyteResurrectedUnit(live,rec,cell);if(ownerHasUnit(live.owner===1?2:1,"yi_sun_sin",out))revived={...revived,tempDexDebuff:Number(revived.tempDexDebuff||0)+4,tempGuardBuff:Number(revived.tempGuardBuff||0)-4,yiSunDebuffed:true};out=out.map(u=>u.id===live.id?{...u,acted:true}:u).concat(revived);const lion=applyAfricanLionFearAura(out);out=lion.units;const nextGrave=grave.map(r=>r.graveId===rec.graveId?{...r,used:true,usedByAcolyteId:live.id,usedTurnKey:publicState?.turnKey||""}:r);log=`${live.name} usa Resurrección: ${rec.name} vuelve con ${revived.hp}/${revived.maxHp} Vida, sin debuffs y como invocada desde la mano. Puede actuar este turno.${lion.logs.length?` ${lion.logs.join(" ")}`:""}`;return{success:true,units:out,log,honorCost:4,serviceGain:1,erictoGraveyard:nextGrave,statusFxEvent:lion.statusFxEvent||makeStatusFxEvent("heal",revived,revived.hp),floatFxEvent:lion.floatFxEvent||makeFloatFxEvent("heal",revived,revived.hp,{iconText:"✚",labelText:"REGRESA"})};
+  }
+  return{success:false,reason:"Capacidad curativa inválida."};
+}
+function chooseSmartAcolyteChoice(caster,units=publicState?.units||[],graveyard=publicState?.erictoGraveyard||[],honor=0){
+  const points=getUnitServicePoints(caster);
+  if(points>=100&&honor>=4){
+    const corpses=getAcolyteEligibleCorpses(caster,graveyard);
+    const cells=getAcolyteResurrectionCells(caster,units);
+    if(corpses.length&&cells.length){
+      const rec=[...corpses].sort((a,b)=>(Number(b.battlePower)||0)-(Number(a.battlePower)||0))[0];
+      const enemyLeader=(units||[]).find(u=>u.owner!==caster.owner&&u.leader&&u.hp>0);
+      const cell=[...cells].sort((a,b)=>enemyLeader?dist(a,enemyLeader)-dist(b,enemyLeader):0)[0];
+      return {technique:"resurrect",graveId:rec.graveId,x:cell.x,y:cell.y,cost:4,score:170+(Number(rec.battlePower)||0)};
+    }
+  }
+  const wounded=getAcolyteTransferTargets(caster,units).filter(t=>t.owner===caster.owner);
+  if(honor>=2&&wounded.length){
+    const target=[...wounded].sort((a,b)=>(effectiveMaxHp(b)-b.hp)-(effectiveMaxHp(a)-a.hp)||getUnitBattlePower(b)-getUnitBattlePower(a))[0];
+    return {technique:"transfer",targetId:target.id,cost:2,score:100+(effectiveMaxHp(target)-target.hp)*25};
+  }
+  if(points>=50&&honor>=3){
+    const targets=getAcolytePurifyTargets(caster,units);
+    if(targets.length){
+      const target=[...targets].sort((a,b)=>getAcolytePurifiableStatuses(b).length-getAcolytePurifiableStatuses(a).length||getUnitBattlePower(b)-getUnitBattlePower(a))[0];
+      const status=getAcolytePurifiableStatuses(target)[0];
+      return {technique:"purify",targetId:target.id,statusKey:status.key,cost:3,score:110+getAcolytePurifiableStatuses(target).length*15};
+    }
+  }
+  const enemies=getAcolyteTransferTargets(caster,units).filter(t=>t.owner!==caster.owner);
+  if(honor>=2&&enemies.length){
+    const target=[...enemies].sort((a,b)=>Number(a.hp||0)-Number(b.hp||0)||getUnitBattlePower(b)-getUnitBattlePower(a))[0];
+    return {technique:"transfer",targetId:target.id,cost:2,score:Number(target.hp||0)<=1?145:55};
+  }
+  return null;
+}
+async function spendUnitEffectHonor(cost){
+  const amount=Math.max(0,Number(cost||0));const maxHonor=capResourceMax(privateState?.maxHonor||0);const current=capResourceAmount(privateState?.honor||0,maxHonor);if(current<amount)return false;const honor=current-amount;await updatePrivate({honor,maxHonor});await updatePublic({[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}});pulseTurnHonorHud();return true;
+}
 function getUnitEffectMode(u){
   if(!u)return "passive";
   if(u.leader&&u.leaderType==="cavalry"&&getLeaderAbilityForOwner(u.owner)==="cavalry_call")return "self";
   if(u.leader&&u.leaderType==="archer"&&getLeaderAbilityForOwner(u.owner)==="arrow_rain")return "self";
   if(u.leader&&u.leaderType==="mage"&&getLeaderAbilityForOwner(u.owner)==="arcane_bolt")return "self";
   if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "passive";
+  if(u.key==="acolyte_healer")return "choice";
   if(["african_lion","black_raven","ericto"].includes(u.key))return "self";
   if(["richard_lionheart","saladin","sun_tzu","subotai"].includes(u.key))return "target";
   return "passive";
@@ -619,6 +830,48 @@ async function activateUnitEffect(u,choice=null){
   const mode=getUnitEffectMode(u);
   if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante combate/turno.");
   let units=[...(publicState.units||[])];
+  if(u.key==="acolyte_healer"){
+    if(!choice){
+      const honor=Math.max(0,Number(privateState?.honor||0));
+      const technique=await chooseAcolyteTechnique(u,units,honor,publicState?.erictoGraveyard||[]);
+      if(!technique)return setHint("EFFECT de la Acólita cancelado.");
+      if(technique==="resurrect"){
+        choice=await chooseAcolyteResurrectionChoice(u,units,publicState?.erictoGraveyard||[]);
+        if(!choice)return setHint("Resurrección cancelada.");
+      }else{
+        const opts=technique==="purify"?getAcolytePurifyTargets(u,units):getAcolyteTransferTargets(u,units);
+        if(!opts.length)return setHint("No hay objetivos válidos para esa capacidad.");
+        selectedUnitEffectChoice=technique;
+        selectedUnitId=u.id;
+        selectedUnitActionMode="effect";
+        highlights=opts.map(t=>`${t.x},${t.y}`);
+        highlightType=technique==="transfer"?"move":"move";
+        setHint(technique==="purify"?"Purificación: elige un aliado marcado; después escogerás qué estado eliminar.":"Transferencia vital: elige un aliado herido para curar 1 o un enemigo visible para causar 1 daño directo.");
+        render();
+        return;
+      }
+    }
+    if(choice?.technique==="purify"&&!choice.statusKey){
+      const target=units.find(it=>it.id===choice.targetId);
+      if(!target)return setHint("El objetivo ya no está disponible.");
+      const statusKey=await chooseAcolytePurificationStatus(target);
+      if(!statusKey)return setHint("Purificación cancelada.");
+      choice={...choice,statusKey};
+    }
+    const previewCost=ACOLYTE_HEALER_EFFECT_COSTS[String(choice?.technique||"")]||0;
+    if(Number(privateState?.honor||0)<previewCost)return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente para esa capacidad.`);
+    let result=applyAcolyteHealerEffectState(u,choice,units);
+    if(!result.success)return setHint(result.reason||"No se pudo usar la capacidad curativa.");
+    if(!(await spendUnitEffectHonor(result.honorCost)))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);
+    const beforePoints=getUnitServicePoints(u);
+    const serviceResult=registerLocalUnitServicePoint(u,result.serviceGain||1)||{key:getUnitMasteryKey(u),name:u.name,beforePoints,afterPoints:beforePoints+(result.serviceGain||1),gain:result.serviceGain||1,unlockedPurification:beforePoints<50&&beforePoints+(result.serviceGain||1)>=50,unlockedResurrection:beforePoints<100&&beforePoints+(result.serviceGain||1)>=100};
+    result.units=applyUnitServicePointsToUnits(result.units,u,serviceResult);
+    result.log+=` Puntos de servicio: ${serviceResult.afterPoints}.${unitServiceUnlockText(serviceResult)}`;
+    await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,_clockKillCreditOwner:result.clockKillCreditOwner||myPlayer});
+    await pushLog(result.log);
+    clearSelection();
+    return;
+  }
   if(u.key==="ericto"&&!choice){
     const opts=getEffectTargetOptions(u,units);
     if(!opts.length){

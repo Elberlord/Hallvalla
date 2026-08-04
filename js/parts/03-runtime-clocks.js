@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8U · Estado de batalla, fases y relojes */
+/* HallValla 7BOARDCTRL8AC · Estado de batalla, fases y relojes */
 
 
 
@@ -8,7 +8,7 @@
 04_RUNTIME_STATE_PHASES
 -------------------------------------------------------------------------------
 */
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="",lastClockKillBonusEventId="";
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,logCollapsed=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="",lastClockKillBonusEventId="";
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -251,10 +251,11 @@ function buildTimedOutTurnState(state,now=Date.now()){
   const committedClock=pve?null:getCommittedDuelClockMs(state,owner,now);
   if(!pve&&committedClock<=0)return buildDuelClockExpiredState(state,now);
   const burnEnd=applyBurnAtTurnEnd(state.units||[]);
-  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(burnEnd.units,owner);
-  const erictoLife=resolveErictoLifecycle(burnEnd.units,erictoUpkeep.units);
+  const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,owner,state.turnKey||"");
+  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,owner);
+  const erictoLife=resolveErictoLifecycle(veilEnd.units,erictoUpkeep.units);
   const erictoGraveyard=captureErictoGraveyard(state.erictoGraveyard||[],state.units||[],erictoLife.units);
-  const endLogs=[...(burnEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
+  const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
   const next=owner===1?2:1;
   const nextTurn=next===1?(Number(state.turn||1)+1):Number(state.turn||1);
   const ownerName=cleanPlayerName(state.playerNames?.[owner]||"")||`J${owner}`;
@@ -270,8 +271,9 @@ function buildTimedOutTurnState(state,now=Date.now()){
     turnKey:`${nextTurn}-${next}`,
     turnStartedAt:now,
     lastExpiredTurnKey:String(state.turnKey||""),
-    statusFxEvent:burnEnd.statusFxEvent||null,
-    floatFxEvent:burnEnd.floatFxEvent||null,
+    statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,
+    floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,
+    ...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),
     aiActionText:"",
     log:[`${ownerName} agotó los 180 segundos de su turno.${pve?"":` Conserva ${formatTurnTimer(committedClock)} en su reloj general.`}${endLogs.length?` ${endLogs.join(" ")}`:""} Ahora juega J${next}.`,...(state.log||[])].slice(0,18)
   };

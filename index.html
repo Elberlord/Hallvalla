@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Modular 7BOARDCTRL8Z</title>
+<title>HallValla v8 Modular 7BOARDCTRL8AI</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8Z">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8Z">
+<meta name="hallvalla-version" content="7BOARDCTRL8AI">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8AI">
 <meta name="hallvalla-build-name" content="PvP · +5 segundos por eliminación">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8Z"/>
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8AI"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -151,7 +151,7 @@
     <p class="leader-select-sub">El líder define tu estilo de juego. Los detalles explican niveles, tiers y habilidad de nivel 5.</p>
     <div class="leader-choice-grid leader-choice-grid-v54">
       <article class="leader-choice" data-leader-card="warrior">
-        <img src="assets/leaders/leader_warrior_3d.png" alt="Guerrero">
+        <img src="assets/leaders/leader_warrior_3d.webp" alt="Guerrero">
         <h3>Guerrero</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="warrior">Detalles</button>
@@ -160,7 +160,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="archer">
-        <img src="assets/leaders/leader_archer_3d.png" alt="Arquero">
+        <img src="assets/leaders/leader_archer_3d.webp" alt="Arquero">
         <h3>Arquero</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="archer">Detalles</button>
@@ -169,7 +169,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="mage">
-        <img src="assets/leaders/leader_mage_3d.png" alt="Hechicero">
+        <img src="assets/leaders/leader_mage_3d.webp" alt="Hechicero">
         <h3>Hechicero</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="mage">Detalles</button>
@@ -178,7 +178,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="axe">
-        <img src="assets/leaders/leader_axe_3d.png" alt="Caudillo del Hacha">
+        <img src="assets/leaders/leader_axe_3d.webp" alt="Caudillo del Hacha">
         <h3>Caudillo del Hacha</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="axe">Detalles</button>
@@ -187,7 +187,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="cavalry">
-        <img src="assets/leaders/leader_cavalry_3d.png" alt="Señor de la Carga">
+        <img src="assets/leaders/leader_cavalry_3d.webp" alt="Señor de la Carga">
         <h3>Señor de la Carga</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="cavalry">Detalles</button>
@@ -196,7 +196,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="assassin">
-        <img src="assets/leaders/leader_assassin_3d.png" alt="Maestro de Sombras">
+        <img src="assets/leaders/leader_assassin_3d.webp" alt="Maestro de Sombras">
         <h3>Maestro de Sombras</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="assassin">Detalles</button>
@@ -496,10 +496,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <div>
         <div class="adventure-progress">Colección / Mazo</div>
         <h2 class="adventure-story-title">Forja de mazos</h2>
-        <p class="deckbuilder-sub">Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 30 cartas. Marca ★ en una unidad del mazo para convertirla en tu Personaje Principal.</p>
+        <p class="deckbuilder-sub">Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 20 cartas para robar más los Personajes Principales permitidos por el tier del líder: 1 en tier 1, 2 en tier 2 y 3 en tier 3 o superior.</p>
       </div>
       <div class="deckbuilder-status">
-        <b id="deckCountText">0/30</b>
+        <b id="deckCountText">0/23 · Principales 0/3</b>
         <span id="deckValidText">Mazo incompleto</span>
         <div id="craftMaterialSummary" class="craft-material-summary" aria-live="polite"></div>
         <button id="dustAllSurplusCornerBtn" class="craft-corner-dust" type="button" disabled>Convertir sobrantes</button>
@@ -552,14 +552,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       </section>
       <section class="deckbuilder-current">
         <h3>Mazo actual</h3>
-        <div id="deckPrincipalSelector" class="deck-principal-selector">
-          <div id="deckPrincipalArt" class="deck-principal-art" aria-hidden="true"><span>★</span></div>
-          <div class="deck-principal-copy">
-            <span>PERSONAJE PRINCIPAL</span>
-            <strong id="deckPrincipalName">Sin seleccionar</strong>
-            <small id="deckPrincipalNote">Marca la estrella de cualquier unidad incluida en el mazo.</small>
-          </div>
-          <button id="clearDeckPrincipalBtn" class="deck-principal-clear hidden" type="button">Quitar</button>
+        <div id="deckPrincipalSlots" class="deck-principal-slots" aria-label="Tres Personajes Principales">
+          <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★1</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 1</span><strong>Sin seleccionar</strong><small>Marca la estrella de una unidad del mazo.</small></div></div>
+          <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★2</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 2</span><strong>Sin seleccionar</strong><small>Debe ser una unidad diferente.</small></div></div>
+          <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★3</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 3</span><strong>Sin seleccionar</strong><small>Debe ser una unidad diferente.</small></div></div>
         </div>
         <div id="currentDeckList" class="current-deck-list"></div>
       </section>
@@ -599,7 +595,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     </div>
     <div class="deck-rule-box">
       <b>Regla de mazo</b>
-      <p>Cartas básicas: máximo 3 copias por mazo. Todas las demás rarezas: máximo 1 copia por mazo. Tamaño válido: 30 cartas.</p>
+      <p>Cartas básicas: máximo 3 copias por mazo. Todas las demás rarezas: máximo 1 copia por mazo. Tamaño válido: 20 cartas de robo más 1, 2 o 3 Personajes Principales distintos según el tier del líder.</p>
     </div>
     <button id="closeNotificationsBtn" class="btn primary full" type="button">Cerrar</button>
   </div>
@@ -909,6 +905,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8Z"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8AI"></script>
 </body>
 </html>

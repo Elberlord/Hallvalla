@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8V · Acciones, selección, inspector y guías tácticas */
+/* HallValla 7BOARDCTRL8AC · Acciones, selección, inspector y guías tácticas */
 
 function summonZones(player){const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}
 function isFreshSummonedThisTurn(u){return !!(u&&u.summonedTurnKey&&publicState?.turnKey&&u.summonedTurnKey===publicState.turnKey&&u.owner===publicState.currentPlayer)}
@@ -90,7 +90,7 @@ function getTacticalPreviewClasses(x,y){
   if(attackSet.has(key))return["attack-range-preview"];
   return[];
 }
-function clearSelection(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();hideCardInspectModal();highlights=[];highlightType="move";dragMoveHighlights=[];dragAttackHighlights=[];dragSummonHighlights=[];render()}
+function clearSelection(){selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();hideCardInspectModal();highlights=[];highlightType="move";dragMoveHighlights=[];dragAttackHighlights=[];dragSummonHighlights=[];render()}
 function getCardPlayState(card){
   if(!card)return{canPlay:false,reason:"Carta no disponible."};
   if(isBattleEnded())return{canPlay:false,reason:"La batalla ya terminó."};
@@ -704,6 +704,26 @@ Respuesta Mística:
 
 Vínculo Arcano:
 • Si está junto al líder Hechicero aliado, recibe bonus según el tier del líder.`,example:"Si el ataque solo rompe Guardia y no baja Vida, Ruptura Arcana no aplica estado negativo."},
+    acolyte_healer:{short:"Unidad mágica de apoyo que convierte Honor en curación, limpieza o resurrección y progresa mediante puntos de servicio.",formula:`TRANSFERENCIA VITAL · 0 puntos
+• Coste: 2 Honor.
+• Rango de efecto: 3.
+• Aliado herido: recupera 1 Vida.
+• Enemigo visible: pierde 1 Vida directamente.
+• No afecta líderes.
+
+PURIFICACIÓN · 50 puntos
+• Coste: 3 Honor.
+• Elimina exactamente un estado negativo o maldición removible de un aliado en rango 3.
+
+RESURRECCIÓN · 100 puntos
+• Coste: 4 Honor.
+• Devuelve un aliado destruido en una casilla libre adyacente.
+• Vuelve con media Vida máxima, redondeada hacia arriba, sin debuffs y como jugada desde la mano.
+• Puede actuar ese mismo turno.
+
+PROGRESO
+• Cada uso exitoso concede 1 punto de servicio permanente.
+• No progresa mediante bajas ni recibe Vida máxima por esta progresión.`,example:"A 50 puntos desbloquea Purificación; a 100 desbloquea Resurrección."},
     guardian:{short:"Tanque de control. Reduce la AGI del enemigo y puede afectar movimiento si el objetivo está débil de Guardia.",formula:`Condición principal:
 • Debe declarar ataque cuerpo a cuerpo.
 
@@ -1319,7 +1339,7 @@ function playInspectedCard(){
   tryPlaySound("card_play",.70);
   selectCard(card);
 }
-function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu líder para invocar.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&canDirectlyTarget(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA durante 2 turnos (tu turno actual y el próximo turno rival).`)}else if(card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para colocar ${card.name}. La próxima vez que sea atacada obtendrá +${effectiveCardValue(card,"guard")} GUARDIA durante ese combate.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>canReceiveHealFromCard(card,u,myPlayer)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(cardCleanseEnabled(card)?`Elige una unidad aliada herida o con estado curable para curar ${effectiveCardValue(card,"heal")} HP y limpiar Sangrado/Veneno normal.`:`Elige una unidad aliada herida para curar ${effectiveCardValue(card,"heal")} HP.`)}else if(card.trap==="beast_cell"){highlights=[];for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++){if(!getUnitAt(xx,yy)&&!getCellBeastTrapAt(xx,yy))highlights.push(`${xx},${yy}`);}highlightType="summon";setHint(`Elige una celda libre para colocar ${card.name}.`)}else if(card.trap==="beast_target"){const leader=getLeader(myPlayer)||{x:0,y:0};highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&dist(leader,u)<=3&&canTargetStealth(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una unidad enemiga en rango 3 para ${card.name}.`)}else if(card.trap==="reveal_stealth"){highlights=[];for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++)highlights.push(`${xx},${yy}`);highlightType="attack";setHint(`Elige el centro del área para revelar Sigilo.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canTargetStealth(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}else if(card.trap==="legendary_mark"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canTargetStealth(card,u)&&canMarkWithLegendaryTrap(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige la unidad enemiga que quedará marcada por ${card.name}.`)}render()}
+function selectCard(card){if(isBattleEnded())return setHint("La batalla ya terminó.");if(!isMyTurn())return setHint("No es tu turno.");if(!isHandPlayPhase())return setHint("Solo puedes jugar cartas desde la mano en Main Phase o Last Phase.");if((privateState.honor||0)<effectiveCardCost(card,myPlayer))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;unitContextSelection=null;hideUnitContextMenu();closeHandForBoardFocus();if(card.type==="unit"){highlights=summonZones(myPlayer);highlightType="summon";setHint("Elige una casilla junto a tu líder para invocar.")}else if(card.spell==="damage"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&canDirectlyTarget(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint("Elige un objetivo rival para el hechizo.")}else if(card.spell==="buff"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"buff")} AT.`)}else if(card.spell==="shield"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para recibir +${effectiveCardValue(card,"guard")} GUARDIA durante 2 turnos (tu turno actual y el próximo turno rival).`)}else if(card.trap==="guard"){highlights=(publicState.units||[]).filter(u=>u.owner===myPlayer).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(`Elige una unidad aliada para colocar ${card.name}. La próxima vez que sea atacada obtendrá +${effectiveCardValue(card,"guard")} GUARDIA durante ese combate.`)}else if(card.spell==="heal"){highlights=(publicState.units||[]).filter(u=>canReceiveHealFromCard(card,u,myPlayer)).map(u=>`${u.x},${u.y}`);highlightType="move";setHint(cardCleanseEnabled(card)?`Elige una unidad aliada herida o con estado curable para curar ${effectiveCardValue(card,"heal")} HP y limpiar Sangrado/Veneno normal.`:`Elige una unidad aliada herida para curar ${effectiveCardValue(card,"heal")} HP.`)}else if(card.trap==="beast_cell"){highlights=[];for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++){if(!getUnitAt(xx,yy)&&!getCellBeastTrapAt(xx,yy))highlights.push(`${xx},${yy}`);}highlightType="summon";setHint(`Elige una celda libre para colocar ${card.name}.`)}else if(card.trap==="beast_target"){const leader=getLeader(myPlayer)||{x:0,y:0};highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&dist(leader,u)<=3&&canTargetStealth(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una unidad enemiga en rango 3 para ${card.name}.`)}else if(card.trap==="reveal_stealth"){highlights=[];for(let yy=0;yy<ROWS;yy++)for(let xx=0;xx<COLS;xx++)highlights.push(`${xx},${yy}`);highlightType="attack";setHint(`Elige el centro del área para revelar Sigilo.`)}else if(card.trap==="slow"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canTargetStealth(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige una invocación rival para reducir MOV en ${effectiveCardValue(card,"slow")}.`)}else if(card.trap==="legendary_mark"){highlights=(publicState.units||[]).filter(u=>u.owner!==myPlayer&&!u.leader&&canTargetStealth(card,u)&&canMarkWithLegendaryTrap(card,u)).map(u=>`${u.x},${u.y}`);highlightType="attack";setHint(`Elige la unidad enemiga que quedará marcada por ${card.name}.`)}render()}
 function selectUnit(u){
   if(!u)return;
   return openUnitContextMenu(u,u.x,u.y);
