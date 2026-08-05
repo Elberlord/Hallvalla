@@ -30,13 +30,13 @@ const PARTS = [
   "08-actions-inspector.js",
   "09-combat-turn-ai.js",
   "10-board-interactions.js",
-  "19-basic-field-figures.js",
   "11-render-battle-tutorial.js",
   "12-profile-shop-packs.js",
   "13-collection-deck-forge.js",
   "14-adventure-engine-ui.js",
   "17-dragon-contracts.js",
   "18-dragon-egg.js",
+  "19-field-figures-3d.js",
   "15-settings-tuners-events.js",
   "16-exact-guides-mobile.js"
 ];

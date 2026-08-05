@@ -20730,223 +20730,106 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 @media(max-width:720px){.unit-card .veil-curse-countdown{top:3%;width:38%;border-width:1px}.unit-card .veil-curse-countdown-number{font-size:clamp(14px,4.4vw,24px)}}
 @media(prefers-reduced-motion:reduce){.unit-card .veil-curse-countdown,.unit-card .veil-curse-countdown-aura{animation:none!important}}
 
-/* =====================================================================
-   7BOARDCTRL8AL · FIGURAS EMERGENTES 3D PARA UNIDADES BÁSICAS
-   La carta de mano y el creador de mazos no cambian. Este bloque solo
-   afecta las unidades ya convocadas dentro de la cuadrícula del duelo.
-   ===================================================================== */
-:root{
-  --basic-field-figure-glow-alpha:.130;
-  --basic-field-figure-glow-thickness:.7px;
-  --basic-field-figure-glow-rgb:214,225,234;
-}
-
-/* La silueta puede salir de su celda. La imagen no captura el puntero;
-   el contenedor sí, para que pulsar la parte sobresaliente abra la unidad. */
-.grid .cell{
-  overflow:visible !important;
-}
-
-.cell > .unit-card.has-field-figure{
-  isolation:isolate;
-  overflow:visible !important;
-  --field-figure-width:142%;
-  --field-figure-height:178%;
-  --field-figure-bottom:7%;
-  --field-figure-x:0%;
-  --field-figure-y:0%;
-  --field-figure-scale:1;
-}
-
-/* La segunda copia recortada del retrato ya no es necesaria cuando existe
-   una figura transparente dedicada. La board card queda como base. */
-.cell > .unit-card.has-field-figure .unit-card-character-layer{
-  display:none !important;
-}
-.cell > .unit-card.has-field-figure .unit-card-bg-layer{
-  transform:scale(1.06) !important;
-  filter:brightness(.72) saturate(.82) contrast(1.06) !important;
-}
-
-.cell > .unit-card.has-field-figure .unit-field-figure-shell{
-  position:absolute !important;
-  left:50% !important;
-  bottom:var(--field-figure-bottom) !important;
-  width:var(--field-figure-width) !important;
-  height:var(--field-figure-height) !important;
-  transform:translate(calc(-50% + var(--field-figure-x)),var(--field-figure-y)) scale(var(--field-figure-scale)) !important;
-  transform-origin:center bottom !important;
-  z-index:6 !important;
-  overflow:visible !important;
-  pointer-events:auto !important;
-  transition:transform .18s ease,opacity .18s ease !important;
-}
-
-.cell > .unit-card.has-field-figure .unit-field-figure{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  object-fit:contain !important;
-  object-position:center bottom !important;
-  pointer-events:none !important;
-  user-select:none !important;
-  -webkit-user-drag:none !important;
-  transform:translateZ(0) !important;
-  filter:
-    drop-shadow(var(--basic-field-figure-glow-thickness) 0 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(calc(0px - var(--basic-field-figure-glow-thickness)) 0 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 var(--basic-field-figure-glow-thickness) 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 calc(0px - var(--basic-field-figure-glow-thickness)) 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 9px 8px rgba(0,0,0,.56)) !important;
-  transition:filter .18s ease,transform .18s ease !important;
-}
-
-/* La selección levanta la figura apenas; el brillo sigue siendo una línea. */
-.grid .cell.board-selected > .unit-card.has-field-figure .unit-field-figure-shell,
-.grid .cell.board-hover > .unit-card.has-field-figure .unit-field-figure-shell,
-.grid .cell:hover > .unit-card.has-field-figure .unit-field-figure-shell{
-  transform:translate(calc(-50% + var(--field-figure-x)),calc(var(--field-figure-y) - 3%)) scale(var(--field-figure-scale)) scale(1.025) !important;
-}
-.grid .cell.board-selected > .unit-card.has-field-figure .unit-field-figure,
-.grid .cell.board-hover > .unit-card.has-field-figure .unit-field-figure{
-  filter:
-    drop-shadow(var(--basic-field-figure-glow-thickness) 0 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(calc(0px - var(--basic-field-figure-glow-thickness)) 0 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 var(--basic-field-figure-glow-thickness) 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 calc(0px - var(--basic-field-figure-glow-thickness)) 0 rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 0 3px rgba(var(--basic-field-figure-glow-rgb),var(--basic-field-figure-glow-alpha)))
-    drop-shadow(0 11px 9px rgba(0,0,0,.62)) !important;
-}
-
-/* Monturas: menos altura y un poco más de ancho para no tapar media arena. */
-.cell > .unit-card.unit-key-cavalry,
-.cell > .unit-card.unit-key-cavalry_light,
-.cell > .unit-card.unit-key-cossack_rider,
-.cell > .unit-card.unit-key-hungarian_hussar,
-.cell > .unit-card.unit-key-numidian_javelin_rider,
-.cell > .unit-card.unit-key-samurai_yabusame,
-.cell > .unit-card.unit-key-scythian_horse_archer{
-  --field-figure-width:166%;
-  --field-figure-height:158%;
-  --field-figure-bottom:5%;
-}
-
-/* Siluetas anchas o con pieles. */
-.cell > .unit-card.unit-key-berserker_de_oso,
-.cell > .unit-card.unit-key-berserker,
-.cell > .unit-card.unit-key-berserker_north,
-.cell > .unit-card.unit-key-ulfhednar{
-  --field-figure-width:152%;
-  --field-figure-height:174%;
-  --field-figure-bottom:6%;
-}
-
-/* Armas verticales largas: conservar punta y pies dentro de la composición. */
-.cell > .unit-card.unit-key-spearman,
-.cell > .unit-card.unit-key-heavy_infantry_paladin,
-.cell > .unit-card.unit-key-greek_hoplite,
-.cell > .unit-card.unit-key-samurai_naginata,
-.cell > .unit-card.unit-key-armored_man_at_arms{
-  --field-figure-width:138%;
-  --field-figure-height:184%;
-  --field-figure-bottom:5%;
-}
-
-/* El HUD, los estados y el punto de equipo permanecen por encima. */
-.cell > .unit-card.has-field-figure .unit-frame-skin{z-index:4 !important;}
-.cell > .unit-card.has-field-figure .unit-field-figure-shell{z-index:6 !important;}
-.cell > .unit-card.has-field-figure .unit-ornate-ui{z-index:8 !important;}
-.cell > .unit-card.has-field-figure .unit-frame-rarity{z-index:9 !important;}
-.cell > .unit-card.has-field-figure .unit-status-bubbles,
-.cell > .unit-card.has-field-figure .unit-status-seals,
-.cell > .unit-card.has-field-figure .status-seal-rail,
-.cell > .unit-card.has-field-figure .unit-principal-badge,
-.cell > .unit-card.has-field-figure .unit-team-marker{z-index:12 !important;}
-
-/* Control incluido en Configuración del duelo. */
-.basic-field-figure-glow-controls{
-  display:grid;
-  gap:8px;
-  padding:10px;
-  margin:8px 0 4px;
-  border:1px solid rgba(214,225,234,.22);
-  border-radius:12px;
-  background:linear-gradient(180deg,rgba(214,225,234,.065),rgba(0,0,0,.16));
-}
-.basic-field-figure-glow-title{
-  display:flex;
-  align-items:baseline;
-  justify-content:space-between;
-  gap:10px;
-  color:#f4e5bc;
-  font-size:11px;
-}
-.basic-field-figure-glow-title span{color:#aebcc8;font-size:9px;}
-.basic-field-figure-glow-controls label{
+/* ========================================================================== 
+   7BOARDCTRL8AL · FIGURAS 3D BÁSICAS + EDITOR DE CONTROL TOTAL
+   ========================================================================== */
+.cell{overflow:visible!important;}
+.cell > .unit-card{overflow:visible!important;}
+.cell > .unit-card .field-figure-layer,
+.field-figure-preview-card .field-figure-layer{
+  position:absolute!important;
+  inset:0!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+  z-index:var(--ff-layer,5)!important;
   display:block;
-  padding:7px 8px;
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:9px;
-  background:rgba(0,0,0,.18);
 }
-.basic-field-figure-glow-controls label > span{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:5px;
-  color:#d9e2e9;
-  font-size:10px;
-  font-weight:800;
+.cell > .unit-card .field-figure-img,
+.field-figure-preview-card .field-figure-img{
+  position:absolute!important;
+  left:calc(50% + var(--ff-x,0%))!important;
+  bottom:var(--ff-y,-5%)!important;
+  height:var(--ff-size,184%)!important;
+  width:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  transform-origin:var(--ff-origin-x,50%) var(--ff-origin-y,92%)!important;
+  transform:translateX(-50%) scaleX(var(--ff-scale-x,1)) rotate(var(--ff-rotation,0deg))!important;
+  opacity:var(--ff-opacity,1)!important;
+  filter:
+    brightness(var(--ff-brightness,1))
+    contrast(var(--ff-contrast,1))
+    saturate(var(--ff-saturation,1))
+    drop-shadow(var(--ff-glow-thickness,.7px) 0 0 rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(var(--ff-glow-thickness-neg,-.7px) 0 0 rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(0 var(--ff-glow-thickness,.7px) 0 rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(0 var(--ff-glow-thickness-neg,-.7px) 0 rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(var(--ff-shadow-x,0px) var(--ff-shadow-y,8px) var(--ff-shadow-blur,8px) rgb(0 0 0 / var(--ff-shadow-opacity,.48)))!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
 }
-.basic-field-figure-glow-controls output{color:#7cecff;font-variant-numeric:tabular-nums;}
-.basic-field-figure-glow-controls input{width:100%;accent-color:#d6e1ea;cursor:pointer;}
-.battle-figure-glow-reset{
-  min-height:30px;
-  border:1px solid rgba(214,225,234,.25);
-  border-radius:9px;
-  background:rgba(214,225,234,.07);
-  color:#e9f1f6;
-  font-size:10px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-@media(max-width:980px){
-  .cell > .unit-card.has-field-figure{
-    --field-figure-width:138%;
-    --field-figure-height:170%;
-  }
-  .cell > .unit-card.unit-key-cavalry,
-.cell > .unit-card.unit-key-cavalry_light,
-  .cell > .unit-card.unit-key-cossack_rider,
-  .cell > .unit-card.unit-key-hungarian_hussar,
-  .cell > .unit-card.unit-key-numidian_javelin_rider,
-  .cell > .unit-card.unit-key-samurai_yabusame,
-  .cell > .unit-card.unit-key-scythian_horse_archer{
-    --field-figure-width:158%;
-    --field-figure-height:150%;
-  }
+.cell > .unit-card .unit-ornate-ui,
+.cell > .unit-card .unit-status-bubbles,
+.cell > .unit-card .unit-status-seals,
+.cell > .unit-card .unit-team-marker,
+.cell > .unit-card .unit-principal-badge,
+.cell > .unit-card .veil-curse-countdown{z-index:10!important;}
+body.field-figure-editing .cell > .unit-card[data-unit-key]{cursor:grab!important;}
+body.field-figure-editing .cell > .unit-card[data-unit-key]:active{cursor:grabbing!important;}
+body.field-figure-editing .unit-card.figure-editor-selected{
+  outline:2px dashed rgba(255,209,102,.98)!important;
+  outline-offset:5px!important;
+  box-shadow:0 0 0 4px rgba(255,209,102,.16),0 0 22px rgba(255,209,102,.46)!important;
 }
 
-@media(max-width:560px){
-  .cell > .unit-card.has-field-figure{
-    --field-figure-width:132%;
-    --field-figure-height:160%;
-    --field-figure-bottom:6%;
-  }
-  .cell > .unit-card.unit-key-cavalry,
-.cell > .unit-card.unit-key-cavalry_light,
-  .cell > .unit-card.unit-key-cossack_rider,
-  .cell > .unit-card.unit-key-hungarian_hussar,
-  .cell > .unit-card.unit-key-numidian_javelin_rider,
-  .cell > .unit-card.unit-key-samurai_yabusame,
-  .cell > .unit-card.unit-key-scythian_horse_archer{
-    --field-figure-width:150%;
-    --field-figure-height:142%;
-  }
+.field-figure-editor{
+  position:fixed;
+  z-index:510;
+  top:12px;
+  right:12px;
+  width:min(430px,calc(100vw - 24px));
+  max-height:calc(100vh - 24px);
+  overflow:auto;
+  padding:14px;
+  border:1px solid rgba(255,209,102,.44);
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(38,24,13,.985),rgba(8,7,6,.985));
+  box-shadow:0 28px 86px rgba(0,0,0,.78),inset 0 1px 0 rgba(255,244,205,.08);
+  color:#f5dfb5;
+  scrollbar-width:thin;
 }
-
-@media(prefers-reduced-motion:reduce){
-  .unit-field-figure-shell,
-  .unit-field-figure{transition:none !important;}
+.field-figure-editor.hidden{display:none!important;}
+.field-figure-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.field-figure-editor-head b{display:block;color:#fff1c4;font-family:Georgia,serif;font-size:18px;}
+.field-figure-editor-head small{display:block;margin-top:3px;color:#cdbb9a;font-size:10px;line-height:1.35;}
+.field-figure-editor-x{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,209,102,.3);background:rgba(255,255,255,.06);color:#fff1c4;font-size:20px;cursor:pointer;flex:0 0 auto;}
+.field-figure-unit-select{display:grid;gap:5px;margin:8px 0;color:#f1d9a9;font-size:11px;font-weight:800;}
+.field-figure-unit-select select{width:100%;border:1px solid rgba(255,209,102,.25);border-radius:10px;padding:8px 10px;background:#17110c;color:#fff1c4;font-weight:800;}
+.field-figure-preview{height:210px;display:grid;place-items:center;margin:10px 0 12px;border:1px solid rgba(255,209,102,.18);border-radius:16px;background:radial-gradient(circle at 50% 38%,rgba(114,78,34,.26),rgba(0,0,0,.52));overflow:hidden;}
+.field-figure-preview-card{position:relative!important;width:108px!important;height:150px!important;overflow:visible!important;border-radius:14px;background:#050505!important;box-shadow:0 14px 32px rgba(0,0,0,.58)!important;}
+.field-figure-preview-portrait{position:absolute;inset:9% 10% 20%;overflow:hidden;border-radius:10px;background:#050505;z-index:2;}
+.field-figure-preview-portrait img{width:100%;height:100%;object-fit:cover;filter:brightness(.48) saturate(.82);}
+.field-figure-preview-frame{position:absolute;inset:0;z-index:4;pointer-events:none;background:url("assets/ui/gothic_frame_unit_ui.png") center/100% 100% no-repeat;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));}
+.field-figure-quick-row{display:flex;gap:16px;flex-wrap:wrap;margin:7px 0 9px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);font-size:11px;font-weight:800;}
+.field-figure-quick-row label{display:flex;align-items:center;gap:6px;}
+.field-figure-editor details{margin:8px 0;border:1px solid rgba(255,209,102,.14);border-radius:13px;background:rgba(0,0,0,.18);overflow:hidden;}
+.field-figure-editor summary{padding:9px 11px;color:#ffe5ad;font-weight:900;font-size:12px;cursor:pointer;user-select:none;}
+.field-figure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 10px 10px;}
+.field-figure-control{display:grid;gap:4px;padding:7px;border-radius:10px;background:rgba(255,255,255,.035);}
+.field-figure-control span{display:flex;justify-content:space-between;gap:8px;color:#e7d3aa;font-size:10px;font-weight:800;}
+.field-figure-control output{color:#ffd166;white-space:nowrap;}
+.field-figure-control input[type=range]{width:100%;accent-color:#ffd166;}
+.field-figure-color-note{margin:0 10px 10px;color:#bca98a;font-size:10px;line-height:1.35;}
+.field-figure-editor-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px;}
+.field-figure-editor-actions .btn{min-height:38px;padding:8px;font-size:10px;}
+.field-figure-editor-actions .btn.primary{grid-column:1/-1;}
+.field-figure-editor-status{min-height:16px;margin:8px 2px 0;color:#ffd98b;font-size:10px;line-height:1.35;}
+@media(max-width:680px){
+  .field-figure-editor{top:6px;right:6px;width:calc(100vw - 12px);max-height:calc(100vh - 12px);padding:11px;border-radius:16px;}
+  .field-figure-preview{height:170px;}
+  .field-figure-preview-card{width:88px!important;height:122px!important;}
+  .field-figure-grid{grid-template-columns:1fr 1fr;gap:6px;padding:0 7px 8px;}
+  .field-figure-control{padding:6px;}
 }
