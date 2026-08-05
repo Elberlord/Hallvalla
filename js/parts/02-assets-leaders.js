@@ -144,44 +144,138 @@ function isBasicRarityLabel(value){
   const rarity=String(value==null?"":value).trim().toLowerCase();
   return !rarity||rarity==="basic"||rarity==="básica"||rarity==="basica";
 }
+
+/*
+  Contrato unificado de assets
+  ----------------------------
+  Una unidad necesita una sola identidad visual. La identidad se toma, en orden:
+  1) assetKey, si se declaró de forma explícita;
+  2) el nombre de archivo de portrait/cardPortrait/cardImage, para conservar unidades antiguas;
+  3) key;
+  4) name normalizado.
+
+  Con esa identidad se derivan automáticamente las tres capas:
+    assets/cards/<bucket>/<assetKey>.webp
+    assets/board_cards/<bucket>/<assetKey>.webp
+    assets/field_figures/<bucket>/<assetKey>.webp
+
+  Los buckets alternativos se prueban automáticamente para mantener compatibilidad
+  con assets antiguos ubicados en carpetas distintas (por ejemplo Wallace/Mulan).
+*/
+const HV_ASSET_BUCKETS=Object.freeze(["basic","special","beasts"]);
+const HV_ASSET_LAYER_PROPS=Object.freeze({
+  cards:{path:["portrait","cardPortrait","cardImage"],bucket:["cardAssetBucket","cardsAssetBucket"]},
+  board_cards:{path:["boardPortrait","boardImage"],bucket:["boardAssetBucket","boardCardsAssetBucket"]},
+  field_figures:{path:["fieldFigure","fieldFigurePortrait","fieldFigureImage"],bucket:["fieldFigureAssetBucket","fieldAssetBucket"]}
+});
+function hvUniqueAssetValues(values){
+  const seen=new Set();
+  return (Array.isArray(values)?values:[]).map(v=>String(v||"").trim()).filter(v=>v&&!seen.has(v)&&(seen.add(v),true));
+}
+function getAssetBucketFromPath(value){
+  const path=String(value||"").replace(/\\/g,"/");
+  const match=path.match(/assets\/(?:cards|board_cards|field_figures)\/(basic|special|beasts)\//i);
+  return match?match[1].toLowerCase():"";
+}
+function getExplicitAssetPath(entity,layer){
+  const source=entity&&typeof entity==="object"?entity:{};
+  const props=HV_ASSET_LAYER_PROPS[layer]?.path||[];
+  for(const prop of props){
+    const value=String(source[prop]||"").trim();
+    if(value)return value;
+  }
+  return "";
+}
+function getAssetIdentityKey(entityOrKey){
+  const source=entityOrKey&&typeof entityOrKey==="object"?entityOrKey:{key:entityOrKey};
+  const explicitKey=normalizeAssetKeyName(source.assetKey||source.visualKey||"");
+  if(explicitKey)return explicitKey;
+  const portraitKey=normalizeAssetKeyName(source.portrait||source.cardPortrait||source.cardImage||"");
+  if(portraitKey)return portraitKey;
+  return normalizeAssetKeyName(source.key||source.name||"");
+}
 function getCardAssetBucket(entity){
   const source=entity&&typeof entity==="object"?entity:{key:entity};
   const explicit=String(source.assetBucket||source.assetFolder||source.assetCategory||"").trim().toLowerCase();
-  if(explicit==="basic"||explicit==="special"||explicit==="beasts")return explicit;
+  if(HV_ASSET_BUCKETS.includes(explicit))return explicit;
+  const portraitBucket=getAssetBucketFromPath(source.portrait||source.cardPortrait||source.cardImage||"");
+  if(portraitBucket)return portraitBucket;
   const type=String(source.type||"").trim().toLowerCase();
   if(source.beast||type==="beast"||type==="bestia")return "beasts";
   if(type==="spell"||type==="trap")return "basic";
   if(source.special||!isBasicRarityLabel(source.rarity||source.rareza||""))return "special";
   return "basic";
 }
-function buildAutoAssetPath(layer,entityOrKey){
+function getAssetBucketCandidates(entity,layer="cards"){
+  const source=entity&&typeof entity==="object"?entity:{key:entity};
+  const layerProps=HV_ASSET_LAYER_PROPS[layer]?.bucket||[];
+  const explicitLayerBucket=layerProps.map(prop=>String(source[prop]||"").trim().toLowerCase()).find(v=>HV_ASSET_BUCKETS.includes(v))||"";
+  const commonBucket=String(source.assetBucket||source.assetFolder||source.assetCategory||"").trim().toLowerCase();
+  const layerPathBucket=getAssetBucketFromPath(getExplicitAssetPath(source,layer));
+  const cardPathBucket=getAssetBucketFromPath(source.portrait||source.cardPortrait||source.cardImage||"");
+  const inferred=getCardAssetBucket(source);
+  return hvUniqueAssetValues([
+    explicitLayerBucket,
+    HV_ASSET_BUCKETS.includes(commonBucket)?commonBucket:"",
+    layerPathBucket,
+    cardPathBucket,
+    inferred,
+    ...HV_ASSET_BUCKETS
+  ]);
+}
+function buildAutoAssetCandidates(layer,entityOrKey){
   const source=entityOrKey&&typeof entityOrKey==="object"?entityOrKey:{key:entityOrKey};
-  const key=normalizeAssetKeyName(source.assetKey||source.key||source.name||"");
-  if(!key)return "";
-  const folder=getCardAssetBucket(source);
-  return `assets/${layer}/${folder}/${key}.webp`;
+  const key=getAssetIdentityKey(source);
+  if(!key)return [];
+  return getAssetBucketCandidates(source,layer).map(folder=>`assets/${layer}/${folder}/${key}.webp`);
+}
+function buildAutoAssetPath(layer,entityOrKey){
+  return buildAutoAssetCandidates(layer,entityOrKey)[0]||"";
+}
+function getResolvedCardPortraitCandidates(entity){
+  if(!entity)return [];
+  return hvUniqueAssetValues([
+    getExplicitAssetPath(entity,"cards"),
+    ...buildAutoAssetCandidates("cards",entity)
+  ]);
+}
+function getResolvedBoardPortraitCandidates(entity){
+  if(!entity)return [];
+  if(entity.leader&&entity.leaderType&&typeof LEADER_DATA!=="undefined"&&LEADER_DATA[entity.leaderType])return hvUniqueAssetValues([LEADER_DATA[entity.leaderType].portrait]);
+  const key=normalizeAssetKeyName(entity.key||entity.name||"");
+  const explicitLegacy=key&&typeof BOARD_PORTRAITS!=="undefined"?BOARD_PORTRAITS[key]:"";
+  const cardPath=getExplicitAssetPath(entity,"cards");
+  const transformedCard=cardPath.includes("assets/cards/")?cardPath.replace("assets/cards/","assets/board_cards/"):"";
+  return hvUniqueAssetValues([
+    getExplicitAssetPath(entity,"board_cards"),
+    explicitLegacy,
+    ...buildAutoAssetCandidates("board_cards",entity),
+    transformedCard
+  ]);
+}
+function getResolvedFieldFigureCandidates(entity){
+  if(!entity||entity.leader)return [];
+  return hvUniqueAssetValues([
+    getExplicitAssetPath(entity,"field_figures"),
+    ...buildAutoAssetCandidates("field_figures",entity)
+  ]);
 }
 function getResolvedCardPortraitSource(entity){
-  if(!entity)return "";
-  const explicit=String(entity.portrait||entity.cardPortrait||entity.cardImage||"").trim();
-  return explicit||buildAutoAssetPath("cards",entity);
+  return getResolvedCardPortraitCandidates(entity)[0]||"";
 }
 function getResolvedBoardPortraitSource(entity){
-  if(!entity)return "";
-  if(entity.leader&&entity.leaderType&&typeof LEADER_DATA!=="undefined"&&LEADER_DATA[entity.leaderType])return String(LEADER_DATA[entity.leaderType].portrait||"");
-  const explicit=String(entity.boardPortrait||"").trim();
-  if(explicit)return explicit;
-  const key=normalizeAssetKeyName(entity.assetKey||entity.key||entity.name||"");
-  if(key&&typeof BOARD_PORTRAITS!=="undefined"&&BOARD_PORTRAITS[key])return BOARD_PORTRAITS[key];
-  const portrait=String(entity.portrait||entity.cardPortrait||"").trim();
-  if(portrait.includes("assets/board_cards/"))return portrait;
-  if(portrait.includes("assets/cards/"))return portrait.replace("assets/cards/","assets/board_cards/");
-  return buildAutoAssetPath("board_cards",entity);
+  return getResolvedBoardPortraitCandidates(entity)[0]||"";
 }
 function getResolvedFieldFigureSource(entity){
-  if(!entity||entity.leader)return "";
-  const explicit=String(entity.fieldFigure||entity.fieldFigurePortrait||"").trim();
-  return explicit||buildAutoAssetPath("field_figures",entity);
+  return getResolvedFieldFigureCandidates(entity)[0]||"";
+}
+function getResolvedUnitAssetSet(entity){
+  return {
+    assetKey:getAssetIdentityKey(entity),
+    card:getResolvedCardPortraitCandidates(entity),
+    board:getResolvedBoardPortraitCandidates(entity),
+    fieldFigure:getResolvedFieldFigureCandidates(entity)
+  };
 }
 function getAssetWarningImageSrc(){
   return HV_WARNING_IMAGE_URI;
@@ -191,12 +285,25 @@ function buildAssetFallbackAttr(fallbacks,label=""){
   const payload=encodeURIComponent(JSON.stringify(queue));
   return `data-hv-fallbacks="${payload}" data-hv-fallback-index="0" data-hv-missing-label="${hvEscapeAttr(label)}" onerror="hvHandleImageFallback(this)"`;
 }
+function buildOptionalAssetFallbackAttr(fallbacks,label="",removeSelector=""){
+  const queue=hvUniqueAssetValues(Array.isArray(fallbacks)?fallbacks:[]);
+  const payload=encodeURIComponent(JSON.stringify(queue));
+  return `data-hv-fallbacks="${payload}" data-hv-fallback-index="0" data-hv-missing-label="${hvEscapeAttr(label)}" data-hv-remove-on-failure="1" data-hv-remove-selector="${hvEscapeAttr(removeSelector)}" onerror="hvHandleImageFallback(this)"`;
+}
 function hvHandleImageFallback(img){
   if(!img)return false;
   let list=[];
   try{list=JSON.parse(decodeURIComponent(img.dataset.hvFallbacks||"%5B%5D"));}catch(_err){list=[];}
   const index=Math.max(0,Number(img.dataset.hvFallbackIndex||0));
-  if(index>=list.length){img.onerror=null;return false;}
+  if(index>=list.length){
+    img.onerror=null;
+    if(img.dataset.hvRemoveOnFailure==="1"){
+      const selector=String(img.dataset.hvRemoveSelector||"").trim();
+      const target=selector?img.closest(selector):img;
+      if(target)target.remove();
+    }
+    return false;
+  }
   const next=String(list[index]||"").trim();
   img.dataset.hvFallbackIndex=String(index+1);
   if(!next)return hvHandleImageFallback(img);
@@ -209,6 +316,8 @@ function hvHandleImageFallback(img){
   img.src=next;
   return true;
 }
+
+Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolvedCardPortraitCandidates,getResolvedBoardPortraitCandidates,getResolvedFieldFigureCandidates});
 
 /*
 -------------------------------------------------------------------------------

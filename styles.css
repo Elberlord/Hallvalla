@@ -20729,3 +20729,94 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 @keyframes veilCurseCriticalPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.16)}}
 @media(max-width:720px){.unit-card .veil-curse-countdown{top:3%;width:38%;border-width:1px}.unit-card .veil-curse-countdown-number{font-size:clamp(14px,4.4vw,24px)}}
 @media(prefers-reduced-motion:reduce){.unit-card .veil-curse-countdown,.unit-card .veil-curse-countdown-aura{animation:none!important}}
+
+/* === 7BOARDCTRL8AO · Figuras 3D automáticas y editor unificado === */
+.cell > .unit-card .field-figure-layer,
+.field-figure-preview-card .field-figure-layer{
+  position:absolute;
+  left:calc(50% + var(--ff-x,0%));
+  bottom:calc(8% + var(--ff-y,-5%));
+  width:var(--ff-size,184%);
+  height:var(--ff-size,184%);
+  z-index:var(--ff-layer,5);
+  pointer-events:none;
+  opacity:var(--ff-opacity,1);
+  transform:translateX(-50%) rotate(var(--ff-rotation,0deg));
+  transform-origin:var(--ff-origin-x,50%) var(--ff-origin-y,92%);
+  overflow:visible;
+  user-select:none;
+}
+.cell > .unit-card .field-figure-img,
+.field-figure-preview-card .field-figure-img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  transform:scaleX(var(--ff-scale-x,1));
+  transform-origin:var(--ff-origin-x,50%) var(--ff-origin-y,92%);
+  filter:
+    brightness(var(--ff-brightness,1))
+    contrast(var(--ff-contrast,1))
+    saturate(var(--ff-saturation,1))
+    drop-shadow(var(--ff-shadow-x,0px) var(--ff-shadow-y,8px) var(--ff-shadow-blur,8px) rgb(0 0 0 / var(--ff-shadow-opacity,.48)))
+    drop-shadow(var(--ff-glow-thickness,0.7px) 0 var(--ff-glow-thickness,0.7px) rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(var(--ff-glow-thickness-neg,-0.7px) 0 var(--ff-glow-thickness,0.7px) rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(0 var(--ff-glow-thickness,0.7px) var(--ff-glow-thickness,0.7px) rgb(220 228 238 / var(--ff-glow-opacity,.18)))
+    drop-shadow(0 var(--ff-glow-thickness-neg,-0.7px) var(--ff-glow-thickness,0.7px) rgb(220 228 238 / var(--ff-glow-opacity,.18)));
+  -webkit-user-drag:none;
+  user-select:none;
+}
+body.field-figure-editing .grid .cell > .unit-card[data-unit-key]{cursor:move;}
+body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
+  outline:2px solid rgba(255,220,125,.95);
+  outline-offset:4px;
+  filter:drop-shadow(0 0 9px rgba(255,196,65,.72));
+}
+
+.field-figure-editor{
+  position:fixed;
+  z-index:460;
+  left:18px;
+  top:50%;
+  transform:translateY(-50%);
+  width:min(430px,calc(100vw - 36px));
+  max-height:94vh;
+  overflow:auto;
+  padding:14px;
+  border:1px solid rgba(255,209,102,.58);
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(28,19,10,.99),rgba(5,5,5,.99));
+  box-shadow:0 28px 88px rgba(0,0,0,.78),0 0 30px rgba(255,186,45,.16),inset 0 1px 0 rgba(255,240,190,.12);
+  color:#f8e8be;
+}
+.field-figure-editor.hidden{display:none!important;}
+.field-figure-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.field-figure-editor-head b{display:block;color:#ffe08e;font:900 18px/1.1 Georgia,serif;}
+.field-figure-editor-head small{display:block;margin-top:5px;color:#cbb992;font-size:11px;line-height:1.35;}
+.field-figure-editor-x{width:34px;height:34px;flex:0 0 34px;border:1px solid rgba(255,218,137,.38);border-radius:10px;background:rgba(0,0,0,.3);color:#ffe5a6;font-size:22px;cursor:pointer;}
+.field-figure-unit-select{display:grid;gap:5px;margin:10px 0;color:#dccca7;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+.field-figure-unit-select select{width:100%;min-height:38px;border:1px solid rgba(255,214,124,.32);border-radius:10px;background:#15100b;color:#f8e8be;padding:7px 9px;}
+.field-figure-preview{display:grid;place-items:center;min-height:220px;margin:10px 0 12px;border:1px solid rgba(255,214,124,.18);border-radius:14px;background:radial-gradient(circle at 50% 45%,rgba(255,202,91,.10),rgba(0,0,0,.42));overflow:hidden;}
+.field-figure-preview-card{position:relative!important;width:116px!important;height:154px!important;overflow:visible!important;border-radius:12px;isolation:isolate;}
+.field-figure-preview-portrait{position:absolute;inset:0;overflow:hidden;border-radius:12px;background:#050505;z-index:2;}
+.field-figure-preview-portrait img{width:100%;height:100%;object-fit:cover;}
+.field-figure-preview-frame{position:absolute;inset:0;z-index:4;pointer-events:none;border:2px solid rgba(224,229,238,.68);border-radius:12px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.72),0 6px 16px rgba(0,0,0,.55);}
+.field-figure-quick-row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;}
+.field-figure-quick-row label{display:flex;align-items:center;gap:7px;flex:1;min-width:150px;padding:8px 9px;border:1px solid rgba(255,214,124,.18);border-radius:10px;background:rgba(255,255,255,.025);font-size:12px;}
+.field-figure-editor details{margin:9px 0;border:1px solid rgba(255,214,124,.16);border-radius:12px;background:rgba(255,255,255,.022);overflow:hidden;}
+.field-figure-editor summary{cursor:pointer;padding:9px 10px;color:#f1d795;font-size:12px;font-weight:900;}
+.field-figure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:0 10px 10px;}
+.field-figure-control{display:grid;gap:5px;min-width:0;}
+.field-figure-control > span{display:flex;justify-content:space-between;gap:8px;color:#cab995;font-size:10px;font-weight:800;}
+.field-figure-control output{color:#ffe092;}
+.field-figure-control input[type="range"]{width:100%;}
+.field-figure-color-note{margin:0;padding:0 10px 10px;color:#a99a7d;font-size:10px;line-height:1.35;}
+.field-figure-editor-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;}
+.field-figure-editor-actions .btn:last-of-type{grid-column:1/-1;}
+.field-figure-editor-status{min-height:18px;margin:9px 2px 0;color:#d8c59a;font-size:10px;line-height:1.35;}
+@media(max-width:700px){
+  .field-figure-editor{left:8px;width:min(400px,calc(100vw - 16px));max-height:96vh;padding:11px;}
+  .field-figure-grid{grid-template-columns:1fr;}
+  .field-figure-preview{min-height:185px;}
+}

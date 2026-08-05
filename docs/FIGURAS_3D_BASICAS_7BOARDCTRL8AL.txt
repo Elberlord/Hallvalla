@@ -1,3 +1,8 @@
+AVISO 7BOARDCTRL8AO
+Este documento describe la implementación histórica 8AL. La implementación activa
+es ASSETS_AUTOMATICOS_7BOARDCTRL8AO.txt y usa un registro automático, no una
+lista manual de 28 unidades.
+
 HallValla 7BOARDCTRL8AL · Figuras emergentes para unidades básicas
 
 ALCANCE

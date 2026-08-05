@@ -254,42 +254,62 @@ function getBoardPortraitFallbackPath(portrait,unitKey="",entity=null){
 
 function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
-  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:getResolvedCardPortraitSource(u);
-  if(portrait){
-    const alt=escapeHtml(u.name||"Unidad");
-    if(depthLayer){
-      if(u?.leader){
-        const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);
-        return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${portrait}" alt="${alt}" ${fallbackAttr}></div>`;
-      }
-      const fieldFigure=getResolvedFieldFigureSource(u);
-      const boardPortrait=getResolvedBoardPortraitSource(u);
-      const cardPortrait=getResolvedCardPortraitSource(u);
-      const start=fieldFigure||boardPortrait||cardPortrait||getAssetWarningImageSrc();
-      const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · figura 3D`);
-      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${start}" alt="${alt}" ${fallbackAttr}></div>`;
-    }
-    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · carta`);
-    return `<img src="${portrait}" alt="${alt}" ${fallbackAttr}>`;
+  const alt=escapeHtml(u?.name||"Unidad");
+  if(u?.leader){
+    const portrait=(u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"";
+    if(!portrait)return `<span>${u?.icon||"✦"}</span>`;
+    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);
+    return depthLayer?`<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${portrait}" alt="${alt}" ${fallbackAttr}></div>`:`<img src="${portrait}" alt="${alt}" ${fallbackAttr}>`;
   }
-  return `<span>${u?.icon||"✦"}</span>`;
+
+  const cardCandidates=getResolvedCardPortraitCandidates(u);
+  if(!cardCandidates.length)return `<span>${u?.icon||"✦"}</span>`;
+
+  if(depthLayer){
+    const candidates=hvUniqueAssetValues([
+      ...getResolvedFieldFigureCandidates(u),
+      ...getResolvedBoardPortraitCandidates(u),
+      ...cardCandidates,
+      getAssetWarningImageSrc()
+    ]);
+    const start=candidates.shift()||getAssetWarningImageSrc();
+    const fallbackAttr=buildAssetFallbackAttr(candidates,`${u?.name||"Unidad"} · figura 3D`);
+    return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${start}" alt="${alt}" ${fallbackAttr}></div>`;
+  }
+
+  const start=cardCandidates[0];
+  const fallbackAttr=buildAssetFallbackAttr([...cardCandidates.slice(1),getAssetWarningImageSrc()],`${u?.name||"Unidad"} · carta`);
+  return `<img src="${start}" alt="${alt}" ${fallbackAttr}>`;
 }
 
 function getBoardUnitPortraitHtml(u){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
-  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:getResolvedCardPortraitSource(u);
-  if(portrait){
+  if(u?.leader){
+    const portrait=(u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"";
+    if(!portrait)return `<span>${u?.icon||"✦"}</span>`;
     const alt=escapeHtml(u.name||"Unidad");
-    const boardPortrait=getResolvedBoardPortraitSource(u)||getBoardPortraitPath(portrait,u?.key,u);
-    const cardPortrait=getResolvedCardPortraitSource(u)||getBoardPortraitFallbackPath(portrait,u?.key,u);
-    const fieldFigure=getResolvedFieldFigureSource(u);
-    const bgStart=boardPortrait||cardPortrait||getAssetWarningImageSrc();
-    const fgStart=fieldFigure||boardPortrait||cardPortrait||getAssetWarningImageSrc();
-    const bgFallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · board card`);
-    const fgFallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · figura 3D`);
-    return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${bgStart}" alt="" aria-hidden="true" ${bgFallbackAttr}><img class="unit-card-character-layer" src="${fgStart}" alt="${alt}" ${fgFallbackAttr}></div>`;
+    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);
+    return `<img src="${portrait}" alt="${alt}" ${fallbackAttr}>`;
   }
-  return `<span>${u?.icon||"✦"}</span>`;
+
+  const alt=escapeHtml(u?.name||"Unidad");
+  const boardCandidates=getResolvedBoardPortraitCandidates(u);
+  const cardCandidates=getResolvedCardPortraitCandidates(u);
+  const backgroundCandidates=hvUniqueAssetValues([...boardCandidates,...cardCandidates,getAssetWarningImageSrc()]);
+  if(!backgroundCandidates.length)return `<span>${u?.icon||"✦"}</span>`;
+
+  const separateFieldFigure=typeof getFieldFigureHtml==="function";
+  const foregroundCandidates=hvUniqueAssetValues([
+    ...(separateFieldFigure?[]:getResolvedFieldFigureCandidates(u)),
+    ...boardCandidates,
+    ...cardCandidates,
+    getAssetWarningImageSrc()
+  ]);
+  const bgStart=backgroundCandidates.shift()||getAssetWarningImageSrc();
+  const fgStart=foregroundCandidates.shift()||bgStart;
+  const bgFallbackAttr=buildAssetFallbackAttr(backgroundCandidates,`${u?.name||"Unidad"} · board card`);
+  const fgFallbackAttr=buildAssetFallbackAttr(foregroundCandidates,`${u?.name||"Unidad"} · personaje`);
+  return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${bgStart}" alt="" aria-hidden="true" ${bgFallbackAttr}><img class="unit-card-character-layer" src="${fgStart}" alt="${alt}" ${fgFallbackAttr}></div>`;
 }
 
 function showUnit(u){
@@ -645,8 +665,10 @@ function getAdjacentFreeCells(unit,units=publicState?.units||[]){
   return spots;
 }
 function makeLightCavalryToken(owner,x,y){
-  const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
-  return makeUnit({...makeCard(template,owner),summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},x,y);
+  const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",assetKey:"cavalry_light",assetBucket:"basic",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
+  const card=makeCard({...template,assetKey:"cavalry_light",assetBucket:"basic"},owner);
+  const token=makeUnit({...card,summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},x,y);
+  return {...token,assetKey:"cavalry_light",assetBucket:"basic",boardPortrait:"assets/board_cards/basic/cavalry_light.webp",fieldFigure:"assets/field_figures/basic/cavalry_light.webp",tokenSummon:true};
 }
 function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(!caster)return[];

@@ -1,39 +1,48 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AL · Figuras 3D básicas con editor individual completo */
+/* HallValla 7BOARDCTRL8AO · Figuras 3D automáticas con editor individual completo */
 
 const HV_FIELD_FIGURE_STORAGE_KEY="hallvalla_field_figures_total_control_v1";
 const HV_FIELD_FIGURE_BASIC_COLOR="220 228 238";
 
-const HV_FIELD_FIGURES=Object.freeze({
-  spearman:{name:"Lancero solar",file:"heavy_infantry_paladin.webp",size:188},
-  archer:{name:"Arquera del desierto",file:"archer.webp",size:184},
-  arcane_adept:{name:"Adepto Arcano",file:"mage.webp",size:184},
-  berserker:{name:"Berserker del norte",file:"berserker_north.webp",size:176},
-  cavalry:{name:"Caballería ligera",file:"cavalry_light.webp",size:154},
-  greek_hoplite:{name:"Hoplita griego",file:"greek_hoplite.webp",size:184},
-  roman_legionary:{name:"Legionario romano",file:"roman_legionary.webp",size:184},
-  mongol_explorer:{name:"Explorador mongol",file:"mongol_explorer.webp",size:178},
-  samurai_katana:{name:"Samurai de Katana",file:"samurai_katana.webp",size:184},
-  acolyte_healer:{name:"Acólita sanadora",file:"acolyte_healer.webp",size:184},
-  armored_man_at_arms:{name:"Hombre de armas acorazado",file:"armored_man_at_arms.webp",size:184},
-  berserker_de_oso:{name:"Berserker de Oso",file:"berserker_de_oso.webp",size:170},
-  cossack_rider:{name:"Jinete cosaco",file:"cossack_rider.webp",size:154},
-  egyptian_line_archer:{name:"Arquero egipcio de línea",file:"egyptian_line_archer.webp",size:184},
-  geisha_encubierta:{name:"Geisha Encubierta",file:"geisha_encubierta.webp",size:184},
-  hattori_shinobi:{name:"Hattori Shinobi",file:"hattori_shinobi.webp",size:184},
-  hungarian_hussar:{name:"Húsar húngaro",file:"hungarian_hussar.webp",size:154},
-  new_kingdom_archer:{name:"Arquero del Imperio Nuevo",file:"new_kingdom_archer.webp",size:184},
-  numidian_javelin_rider:{name:"Jinete númida",file:"numidian_javelin_rider.webp",size:154},
-  guardian:{name:"Guardián de piedra",file:"paladin.webp",size:180},
-  scout:{name:"Asesina del desierto",file:"rogue.webp",size:182},
-  roman_auxiliary_sagittarius:{name:"Arquero auxiliar romano",file:"roman_auxiliary_sagittarius.webp",size:184},
-  saboteador_iga:{name:"Saboteador de Iga",file:"saboteador_iga.webp",size:184},
-  samurai_naginata:{name:"Samurai de Naginata",file:"samurai_naginata.webp",size:184},
-  samurai_yabusame:{name:"Samurai Yabusame",file:"samurai_yabusame.webp",size:154},
-  scythian_horse_archer:{name:"Arquero a caballo escita",file:"scythian_horse_archer.webp",size:154},
-  skipar_del_drakkar:{name:"Skipar del Drakkar",file:"skipar_del_drakkar.webp",size:182},
-  ulfhednar:{name:"Ulfhednar",file:"ulfhednar.webp",size:174}
-});
+function hvGuessFieldFigureSize(unit){
+  const key=normalizeAssetKeyName(unit?.key||"");
+  const mov=Number(unit?.mov||0);
+  if(/dragon|cavalry|rider|hussar|yabusame|horse/.test(key)||mov>=3)return 154;
+  if(unit?.beast||String(unit?.type||"").toLowerCase()==="beast")return 170;
+  if(/berserker|ulfhednar/.test(key))return 174;
+  return 184;
+}
+function hvBuildFieldFigureRegistry(){
+  const registry={};
+  const pools=[];
+  if(typeof CARD_TEMPLATES!=="undefined")pools.push(CARD_TEMPLATES);
+  if(typeof SPECIAL_HUMAN_CARD_DATA!=="undefined")pools.push(SPECIAL_HUMAN_CARD_DATA);
+  if(typeof LEGENDARY_ALLY_CARDS!=="undefined")pools.push(LEGENDARY_ALLY_CARDS);
+  if(typeof ADVENTURE_SPECIALS!=="undefined")pools.push(Object.values(ADVENTURE_SPECIALS||{}));
+  if(typeof SALADIN_TOKEN_CARD!=="undefined")pools.push([SALADIN_TOKEN_CARD]);
+  if(typeof DRAGON_COMPANION_CARDS!=="undefined")pools.push(DRAGON_COMPANION_CARDS);
+  pools.flat().forEach(unit=>{
+    if(!unit||String(unit.type||"").toLowerCase()!=="unit"||unit.leader)return;
+    const key=normalizeAssetKeyName(unit.key||unit.name||"");
+    if(!key)return;
+    registry[key]={name:String(unit.name||key),size:hvGuessFieldFigureSize(unit),entity:unit};
+  });
+  return registry;
+}
+const HV_FIELD_FIGURES=hvBuildFieldFigureRegistry();
+function hvEnsureFieldFigureRegistryEntry(unit){
+  const key=normalizeAssetKeyName(unit?.key||unit?.name||"");
+  if(!key)return "";
+  if(!HV_FIELD_FIGURES[key]){
+    HV_FIELD_FIGURES[key]={name:String(unit?.name||key),size:hvGuessFieldFigureSize(unit),entity:unit};
+    if(typeof hvFieldFigureState!=="undefined"&&hvFieldFigureState?.units&&!hvFieldFigureState.units[key])hvFieldFigureState.units[key]=hvNormalizeFieldFigureConfig(key,{});
+    const select=document.getElementById("fieldFigureUnitSelect");
+    if(select&&!select.querySelector(`option[value="${CSS.escape(key)}"]`)){
+      const option=document.createElement("option");option.value=key;option.textContent=HV_FIELD_FIGURES[key].name;select.appendChild(option);
+    }
+  }
+  return key;
+}
 
 const HV_FIELD_FIGURE_DEFAULT=Object.freeze({
   enabled:true,
@@ -66,7 +75,7 @@ const HV_FIELD_FIGURE_LIMITS=Object.freeze({
 
 const HV_FIELD_FIGURE_LAYER_Z=Object.freeze({behind:3,front:5,top:14});
 let hvFieldFigureState=hvLoadFieldFigureState();
-let hvFieldFigureSelectedKey=Object.keys(HV_FIELD_FIGURES)[0];
+let hvFieldFigureSelectedKey=Object.keys(HV_FIELD_FIGURES)[0]||"";
 let hvFieldFigureDrag=null;
 
 function hvClampFigureNumber(key,value,fallback){
@@ -101,14 +110,23 @@ function getFieldFigureConfig(unitKey){
   if(!hvFieldFigureState.units[key])hvFieldFigureState.units[key]=hvNormalizeFieldFigureConfig(key,{});
   return hvFieldFigureState.units[key];
 }
-function hvFieldFigureAssetPath(key){
+function hvFieldFigureAssetCandidates(key,entity=null){
   const entry=HV_FIELD_FIGURES[key];
-  return entry?`assets/field_figures/basic/${entry.file}`:"";
+  const source=entity||entry?.entity||{key};
+  return typeof getResolvedFieldFigureCandidates==="function"?getResolvedFieldFigureCandidates(source):[];
 }
-function hvFieldFigureBoardPath(key){
+function hvFieldFigureBoardCandidates(key,entity=null){
   const entry=HV_FIELD_FIGURES[key];
-  return entry?`assets/board_cards/basic/${entry.file}`:"";
+  const source=entity||entry?.entity||{key};
+  return typeof getResolvedBoardPortraitCandidates==="function"?getResolvedBoardPortraitCandidates(source):[];
 }
+function hvFieldFigureAssetPath(key,entity=null){
+  return hvFieldFigureAssetCandidates(key,entity)[0]||"";
+}
+function hvFieldFigureBoardPath(key,entity=null){
+  return hvFieldFigureBoardCandidates(key,entity)[0]||"";
+}
+
 function hvFieldFigureStyleText(key){
   const c=getFieldFigureConfig(key);
   if(!c)return "";
@@ -140,13 +158,17 @@ function hvFieldFigureStyleText(key){
   ].join(";");
 }
 function getFieldFigureHtml(u){
-  const key=String(u?.key||"").trim().toLowerCase();
-  if(!HV_FIELD_FIGURES[key])return "";
+  const key=hvEnsureFieldFigureRegistryEntry(u);
+  if(!key)return "";
   if(typeof isStealthedUnit==="function"&&typeof myPlayer!=="undefined"&&isStealthedUnit(u)&&u.owner!==myPlayer)return "";
-  const src=hvFieldFigureAssetPath(key);
+  const candidates=hvFieldFigureAssetCandidates(key,u);
+  if(!candidates.length)return "";
+  const src=candidates[0];
+  const fallbackAttr=buildOptionalAssetFallbackAttr(candidates.slice(1),`${u?.name||"Unidad"} · figura 3D`,".field-figure-layer");
   const label=(HV_FIELD_FIGURES[key]?.name||u?.name||"Unidad").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-  return `<div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true"><img class="field-figure-img" src="${src}" alt="" title="${label}" draggable="false"></div>`;
+  return `<div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true"><img class="field-figure-img" src="${src}" alt="" title="${label}" draggable="false" ${fallbackAttr}></div>`;
 }
+
 function hvApplyFieldFigureConfigToElement(el,key){
   const c=getFieldFigureConfig(key);
   if(!el||!c)return;
@@ -216,8 +238,8 @@ function hvCreateFieldFigureEditor(){
   panel.className="field-figure-editor hidden";
   panel.setAttribute("aria-label","Editor completo de figuras 3D");
   panel.innerHTML=`
-    <div class="field-figure-editor-head"><div><b>Figuras 3D · control total</b><small>Selecciona una unidad aquí o tócala directamente en el campo. Arrastra la figura para moverla; rueda del ratón para cambiar su tamaño.</small></div><button id="closeFieldFigureEditorBtn" class="field-figure-editor-x" type="button" aria-label="Cerrar">×</button></div>
-    <label class="field-figure-unit-select"><span>Unidad básica</span><select id="fieldFigureUnitSelect"></select></label>
+    <div class="field-figure-editor-head"><div><b>Figuras 3D · control automático</b><small>Selecciona una unidad aquí o tócala directamente en el campo. Arrastra la figura para moverla; rueda del ratón para cambiar su tamaño.</small></div><button id="closeFieldFigureEditorBtn" class="field-figure-editor-x" type="button" aria-label="Cerrar">×</button></div>
+    <label class="field-figure-unit-select"><span>Unidad</span><select id="fieldFigureUnitSelect"></select></label>
     <div id="fieldFigurePreview" class="field-figure-preview"></div>
     <div class="field-figure-quick-row"><label><input id="fieldFigureEnabledInput" type="checkbox"> Mostrar figura</label><label><input id="fieldFigureFlipInput" type="checkbox"> Voltear horizontal</label></div>
     <label class="field-figure-unit-select"><span>Capa visual</span><select id="fieldFigureLayerInput"><option value="behind">Detrás del marco</option><option value="front">Sobre el marco, debajo de datos</option><option value="top">Encima de todo</option></select></label>
@@ -243,18 +265,24 @@ function hvCreateFieldFigureEditor(){
       ${hvCreateRangeControl("fieldFigureShadowYInput","Sombra Y",-60,60,1,8," px")}
       ${hvCreateRangeControl("fieldFigureShadowBlurInput","Difuminado",0,80,1,8," px")}
       ${hvCreateRangeControl("fieldFigureShadowOpacityInput","Opacidad sombra",0,100,1,48,"%")}
-    </div><p class="field-figure-color-note">Todas las básicas conservan la misma línea plateada; aquí controlas su intensidad y grosor.</p></details>
+    </div><p class="field-figure-color-note">La figura usa una línea plateada configurable; aquí controlas su intensidad y grosor.</p></details>
     <div class="field-figure-editor-actions"><button id="resetCurrentFieldFigureBtn" class="btn ghost" type="button">Restablecer esta</button><button id="applyCurrentFieldFigureToAllBtn" class="btn ghost" type="button">Aplicar a todas</button><button id="copyFieldFigureValuesBtn" class="btn ghost" type="button">Copiar valores</button><button id="importFieldFigureValuesBtn" class="btn ghost" type="button">Pegar valores</button><button id="resetAllFieldFiguresBtn" class="btn ghost" type="button">Restablecer todas</button><button id="saveFieldFigureEditorBtn" class="btn primary" type="button">Guardar y cerrar</button></div>
     <p id="fieldFigureEditorStatus" class="field-figure-editor-status" aria-live="polite"></p>`;
   document.body.appendChild(panel);
   const select=document.getElementById("fieldFigureUnitSelect");
-  Object.entries(HV_FIELD_FIGURES).forEach(([key,entry])=>{const option=document.createElement("option");option.value=key;option.textContent=entry.name;select.appendChild(option);});
+  Object.entries(HV_FIELD_FIGURES).sort((a,b)=>a[1].name.localeCompare(b[1].name,"es")).forEach(([key,entry])=>{const option=document.createElement("option");option.value=key;option.textContent=entry.name;select.appendChild(option);});
 }
 function hvRenderFieldFigurePreview(){
   const root=document.getElementById("fieldFigurePreview");
   if(!root||!HV_FIELD_FIGURES[hvFieldFigureSelectedKey])return;
   const key=hvFieldFigureSelectedKey;
-  root.innerHTML=`<div class="field-figure-preview-card unit-card card-rarity-basic" data-unit-key="${key}"><div class="field-figure-preview-portrait"><img src="${hvFieldFigureBoardPath(key)}" alt=""></div><div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true"><img class="field-figure-img" src="${hvFieldFigureAssetPath(key)}" alt="" draggable="false"></div><div class="field-figure-preview-frame"></div></div>`;
+  const boardCandidates=hvFieldFigureBoardCandidates(key);
+  const figureCandidates=hvFieldFigureAssetCandidates(key);
+  const boardStart=boardCandidates[0]||getAssetWarningImageSrc();
+  const boardFallback=buildAssetFallbackAttr([...boardCandidates.slice(1),getAssetWarningImageSrc()],`${HV_FIELD_FIGURES[key].name} · tablero`);
+  const figureStart=figureCandidates[0]||"";
+  const figureFallback=buildOptionalAssetFallbackAttr(figureCandidates.slice(1),`${HV_FIELD_FIGURES[key].name} · figura 3D`,".field-figure-layer");
+  root.innerHTML=`<div class="field-figure-preview-card unit-card card-rarity-basic" data-unit-key="${key}"><div class="field-figure-preview-portrait"><img src="${boardStart}" alt="" ${boardFallback}></div>${figureStart?`<div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true"><img class="field-figure-img" src="${figureStart}" alt="" draggable="false" ${figureFallback}></div>`:""}<div class="field-figure-preview-frame"></div></div>`;
 }
 const HV_FIELD_FIGURE_CONTROLS=Object.freeze({
   size:["fieldFigureSizeInput","%"],width:["fieldFigureWidthInput","%"],x:["fieldFigureXInput","%"],y:["fieldFigureYInput","%"],rotation:["fieldFigureRotationInput","°"],originX:["fieldFigureOriginXInput","%"],originY:["fieldFigureOriginYInput","%"],opacity:["fieldFigureOpacityInput","%"],brightness:["fieldFigureBrightnessInput","%"],contrast:["fieldFigureContrastInput","%"],saturation:["fieldFigureSaturationInput","%"],glowIntensity:["fieldFigureGlowIntensityInput","%"],glowThickness:["fieldFigureGlowThicknessInput"," px"],shadowX:["fieldFigureShadowXInput"," px"],shadowY:["fieldFigureShadowYInput"," px"],shadowBlur:["fieldFigureShadowBlurInput"," px"],shadowOpacity:["fieldFigureShadowOpacityInput","%"]
@@ -289,10 +317,10 @@ function hvResetCurrentFieldFigure(){
 function hvApplyCurrentFieldFigureToAll(){
   const source={...getFieldFigureConfig(hvFieldFigureSelectedKey)};
   Object.keys(HV_FIELD_FIGURES).forEach(key=>{hvFieldFigureState.units[key]=hvNormalizeFieldFigureConfig(key,source);});
-  hvSaveFieldFigureState();applyFieldFigureSettingsToRenderedUnits();hvSyncFieldFigureControls();hvFieldFigureStatus("Los mismos valores se aplicaron a las 28 figuras.");
+  hvSaveFieldFigureState();applyFieldFigureSettingsToRenderedUnits();hvSyncFieldFigureControls();hvFieldFigureStatus("Los mismos valores se aplicaron a todas las unidades registradas.");
 }
 function hvResetAllFieldFigures(){
-  if(!confirm("¿Restablecer las 28 figuras 3D a sus valores iniciales?"))return;
+  if(!confirm("¿Restablecer todas las figuras 3D a sus valores iniciales?"))return;
   Object.keys(HV_FIELD_FIGURES).forEach(key=>{hvFieldFigureState.units[key]=hvNormalizeFieldFigureConfig(key,{});});
   hvSaveFieldFigureState();applyFieldFigureSettingsToRenderedUnits();hvSyncFieldFigureControls();hvFieldFigureStatus("Todas las figuras fueron restablecidas.");
 }

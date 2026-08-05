@@ -1,0 +1,93 @@
+HALLVALLA 7BOARDCTRL8AO — SISTEMA AUTOMÁTICO DE 3 IMÁGENES POR UNIDAD
+
+OBJETIVO
+Registrar la unidad una sola vez y permitir que HallValla derive automáticamente:
+1. La imagen de la carta.
+2. La imagen base del tablero.
+3. La figura 3D transparente del campo.
+
+CONTRATO RECOMENDADO
+Usa el mismo nombre de archivo en las tres carpetas:
+
+assets/cards/<bucket>/<assetKey>.webp
+assets/board_cards/<bucket>/<assetKey>.webp
+assets/field_figures/<bucket>/<assetKey>.webp
+
+Buckets válidos:
+- basic
+- special
+- beasts
+
+EJEMPLO NUEVO
+
+{
+  key:"samurai_rojo",
+  assetKey:"samurai_rojo",
+  assetBucket:"special",
+  name:"Samurai Rojo",
+  type:"unit",
+  rarity:"Épica",
+  cost:4,
+  hp:6,
+  atk:7,
+  guard:3,
+  dex:6,
+  agi:4,
+  mov:1,
+  range:1,
+  text:"..."
+}
+
+Archivos:
+assets/cards/special/samurai_rojo.webp
+assets/board_cards/special/samurai_rojo.webp
+assets/field_figures/special/samurai_rojo.webp
+
+No es necesario declarar portrait, boardPortrait ni fieldFigure.
+
+CASO MÁS SIMPLE
+Si key y nombre de archivo son iguales, assetKey también se puede omitir:
+
+{
+  key:"samurai_rojo",
+  assetBucket:"special",
+  ...
+}
+
+COMPATIBILIDAD CON UNIDADES ANTIGUAS
+Si una unidad ya tiene portrait, el sistema usa automáticamente el nombre de ese
+archivo como identidad visual. Esto resuelve casos antiguos como:
+- arcane_adept -> mage.webp
+- spearman -> heavy_infantry_paladin.webp
+- cavalry -> cavalry_light.webp
+- guardian -> paladin.webp
+- scout -> rogue.webp
+- berserker -> berserker_north.webp
+
+El sistema también prueba automáticamente basic, special y beasts como rutas de
+respaldo. Por eso puede encontrar figuras antiguas ubicadas en otra carpeta, como
+Mulan, Wallace y Richard, sin crear relaciones manuales individuales.
+
+EDITOR DE FIGURAS
+El módulo js/parts/19-field-figures-3d.js ahora se carga desde bootstrap-loader.js.
+El editor registra automáticamente todas las unidades conocidas y no contiene una
+lista manual de 28 figuras. Las unidades sin archivo 3D no muestran una imagen rota:
+la capa se elimina después de agotar las rutas posibles.
+
+ARCHIVOS PRINCIPALES MODIFICADOS
+- js/parts/02-assets-leaders.js
+- js/parts/05-cards-specials-lore.js
+- js/parts/10-board-interactions.js
+- js/parts/19-field-figures-3d.js
+- js/bootstrap-loader.js
+- styles.css
+- index.html
+
+VALIDACIÓN
+- 19 módulos cargados en el arnés de prueba.
+- Sin errores JavaScript del sistema en el arnés.
+- 88 unidades detectadas automáticamente.
+- 88/88 con carta encontrada.
+- 88/88 con imagen de tablero encontrada.
+- 32/88 con figura 3D encontrada actualmente.
+- Las otras 56 quedan listas para activarse con solo agregar el WebP correspondiente.
