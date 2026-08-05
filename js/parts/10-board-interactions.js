@@ -243,44 +243,51 @@ function getLegacyBoardPortraitPath(portrait){
   return raw;
 }
 
-function getBoardPortraitPath(portrait,unitKey=""){
-  const key=String(unitKey||"").trim().toLowerCase();
-  return BOARD_PORTRAITS[key]||getLegacyBoardPortraitPath(portrait);
+function getBoardPortraitPath(portrait,unitKey="",entity=null){
+  return getResolvedBoardPortraitSource(entity||{portrait,key:unitKey});
 }
 
-function getBoardPortraitFallbackPath(portrait,unitKey=""){
-  const primary=getBoardPortraitPath(portrait,unitKey);
-  const legacy=getLegacyBoardPortraitPath(portrait);
-  /* Para retratos explícitos, el primer respaldo sigue siendo otro arte de tablero,
-     nunca la carta de mano. El resto conserva el comportamiento anterior. */
-  return primary!==legacy?legacy:String(portrait||"");
+function getBoardPortraitFallbackPath(portrait,unitKey="",entity=null){
+  const source=entity||{portrait,key:unitKey};
+  return getResolvedCardPortraitSource(source)||getAssetWarningImageSrc();
 }
 
 function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
-  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
+  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:getResolvedCardPortraitSource(u);
   if(portrait){
     const alt=escapeHtml(u.name||"Unidad");
     if(depthLayer){
-      const boardPortrait=getBoardPortraitPath(portrait,u?.key);
-      const boardFallback=getBoardPortraitFallbackPath(portrait,u?.key);
-      const safeOriginal=String(boardFallback).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
+      if(u?.leader){
+        const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);
+        return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${portrait}" alt="${alt}" ${fallbackAttr}></div>`;
+      }
+      const fieldFigure=getResolvedFieldFigureSource(u);
+      const boardPortrait=getResolvedBoardPortraitSource(u);
+      const cardPortrait=getResolvedCardPortraitSource(u);
+      const start=fieldFigure||boardPortrait||cardPortrait||getAssetWarningImageSrc();
+      const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · figura 3D`);
+      return `<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${start}" alt="${alt}" ${fallbackAttr}></div>`;
     }
-    return `<img src="${portrait}" alt="${alt}">`;
+    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · carta`);
+    return `<img src="${portrait}" alt="${alt}" ${fallbackAttr}>`;
   }
   return `<span>${u?.icon||"✦"}</span>`;
 }
 
 function getBoardUnitPortraitHtml(u){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
-  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:u?.portrait;
+  const portrait=(u?.leader&&u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:getResolvedCardPortraitSource(u);
   if(portrait){
     const alt=escapeHtml(u.name||"Unidad");
-    const boardPortrait=getBoardPortraitPath(portrait,u?.key);
-    const boardFallback=getBoardPortraitFallbackPath(portrait,u?.key);
-    const safeOriginal=String(boardFallback).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-    return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${boardPortrait}" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='${safeOriginal}'"><img class="unit-card-character-layer" src="${boardPortrait}" alt="${alt}" onerror="this.onerror=null;this.src='${safeOriginal}'"></div>`;
+    const boardPortrait=getResolvedBoardPortraitSource(u)||getBoardPortraitPath(portrait,u?.key,u);
+    const cardPortrait=getResolvedCardPortraitSource(u)||getBoardPortraitFallbackPath(portrait,u?.key,u);
+    const fieldFigure=getResolvedFieldFigureSource(u);
+    const bgStart=boardPortrait||cardPortrait||getAssetWarningImageSrc();
+    const fgStart=fieldFigure||boardPortrait||cardPortrait||getAssetWarningImageSrc();
+    const bgFallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · board card`);
+    const fgFallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · figura 3D`);
+    return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${bgStart}" alt="" aria-hidden="true" ${bgFallbackAttr}><img class="unit-card-character-layer" src="${fgStart}" alt="${alt}" ${fgFallbackAttr}></div>`;
   }
   return `<span>${u?.icon||"✦"}</span>`;
 }

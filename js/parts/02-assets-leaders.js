@@ -122,6 +122,94 @@ const BOARD_PORTRAITS={
   morgana:"assets/board_cards/special/morgana.webp"
 };
 
+const HV_WARNING_IMAGE_URI="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' rx='28' fill='%23110f0c'/%3E%3Cpath d='M128 32 L230 214 H26 Z' fill='%23f3b300' stroke='%23ffe082' stroke-width='10' stroke-linejoin='round'/%3E%3Crect x='118' y='88' width='20' height='72' rx='10' fill='%23311f00'/%3E%3Ccircle cx='128' cy='184' r='12' fill='%23311f00'/%3E%3Ctext x='128' y='238' font-family='Arial,sans-serif' font-size='22' text-anchor='middle' fill='%23f7e7b3'%3EFALTA ASSET%3C/text%3E%3C/svg%3E";
+
+function hvEscapeAttr(value){
+  return String(value==null?"":value).replace(/[&<>"']/g,m=>{
+    if(m==="&")return "&amp;";
+    if(m==="<")return "&lt;";
+    if(m===">")return "&gt;";
+    if(m==='"')return "&quot;";
+    return "&#039;";
+  });
+}
+function normalizeAssetKeyName(value){
+  let raw=String(value==null?"":value).trim();
+  if(!raw)return "";
+  raw=raw.split('\\').join('/');
+  raw=(raw.split("/").pop()||raw).replace(/\.[a-z0-9]+$/i,"");
+  return raw.toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_-]/g,"_").replace(/_+/g,"_").replace(/^_+|_+$/g,"");
+}
+function isBasicRarityLabel(value){
+  const rarity=String(value==null?"":value).trim().toLowerCase();
+  return !rarity||rarity==="basic"||rarity==="básica"||rarity==="basica";
+}
+function getCardAssetBucket(entity){
+  const source=entity&&typeof entity==="object"?entity:{key:entity};
+  const explicit=String(source.assetBucket||source.assetFolder||source.assetCategory||"").trim().toLowerCase();
+  if(explicit==="basic"||explicit==="special"||explicit==="beasts")return explicit;
+  const type=String(source.type||"").trim().toLowerCase();
+  if(source.beast||type==="beast"||type==="bestia")return "beasts";
+  if(type==="spell"||type==="trap")return "basic";
+  if(source.special||!isBasicRarityLabel(source.rarity||source.rareza||""))return "special";
+  return "basic";
+}
+function buildAutoAssetPath(layer,entityOrKey){
+  const source=entityOrKey&&typeof entityOrKey==="object"?entityOrKey:{key:entityOrKey};
+  const key=normalizeAssetKeyName(source.assetKey||source.key||source.name||"");
+  if(!key)return "";
+  const folder=getCardAssetBucket(source);
+  return `assets/${layer}/${folder}/${key}.webp`;
+}
+function getResolvedCardPortraitSource(entity){
+  if(!entity)return "";
+  const explicit=String(entity.portrait||entity.cardPortrait||entity.cardImage||"").trim();
+  return explicit||buildAutoAssetPath("cards",entity);
+}
+function getResolvedBoardPortraitSource(entity){
+  if(!entity)return "";
+  if(entity.leader&&entity.leaderType&&typeof LEADER_DATA!=="undefined"&&LEADER_DATA[entity.leaderType])return String(LEADER_DATA[entity.leaderType].portrait||"");
+  const explicit=String(entity.boardPortrait||"").trim();
+  if(explicit)return explicit;
+  const key=normalizeAssetKeyName(entity.assetKey||entity.key||entity.name||"");
+  if(key&&typeof BOARD_PORTRAITS!=="undefined"&&BOARD_PORTRAITS[key])return BOARD_PORTRAITS[key];
+  const portrait=String(entity.portrait||entity.cardPortrait||"").trim();
+  if(portrait.includes("assets/board_cards/"))return portrait;
+  if(portrait.includes("assets/cards/"))return portrait.replace("assets/cards/","assets/board_cards/");
+  return buildAutoAssetPath("board_cards",entity);
+}
+function getResolvedFieldFigureSource(entity){
+  if(!entity||entity.leader)return "";
+  const explicit=String(entity.fieldFigure||entity.fieldFigurePortrait||"").trim();
+  return explicit||buildAutoAssetPath("field_figures",entity);
+}
+function getAssetWarningImageSrc(){
+  return HV_WARNING_IMAGE_URI;
+}
+function buildAssetFallbackAttr(fallbacks,label=""){
+  const queue=(Array.isArray(fallbacks)?fallbacks:[]).map(v=>String(v||"").trim()).filter(Boolean);
+  const payload=encodeURIComponent(JSON.stringify(queue));
+  return `data-hv-fallbacks="${payload}" data-hv-fallback-index="0" data-hv-missing-label="${hvEscapeAttr(label)}" onerror="hvHandleImageFallback(this)"`;
+}
+function hvHandleImageFallback(img){
+  if(!img)return false;
+  let list=[];
+  try{list=JSON.parse(decodeURIComponent(img.dataset.hvFallbacks||"%5B%5D"));}catch(_err){list=[];}
+  const index=Math.max(0,Number(img.dataset.hvFallbackIndex||0));
+  if(index>=list.length){img.onerror=null;return false;}
+  const next=String(list[index]||"").trim();
+  img.dataset.hvFallbackIndex=String(index+1);
+  if(!next)return hvHandleImageFallback(img);
+  if(next===getAssetWarningImageSrc()){
+    img.classList.add("hv-missing-asset");
+    const label=img.dataset.hvMissingLabel||img.getAttribute("alt")||"asset";
+    img.title=`Falta asset: ${label}`;
+    img.setAttribute("aria-label",img.title);
+  }
+  img.src=next;
+  return true;
+}
+
 /*
 -------------------------------------------------------------------------------
 03_LEADER_SYSTEM

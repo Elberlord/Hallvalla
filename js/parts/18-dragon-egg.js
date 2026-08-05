@@ -26,14 +26,14 @@ const DRAGON_COMPANION_STATS=Object.freeze({
 });
 
 const DRAGON_COMPANION_ASSETS=Object.freeze({
-  egg:Object.freeze({hand:"assets/cards/special/dragon_egg.webp",board:"assets/board_cards/special/dragon_egg.webp"}),
-  baby:Object.freeze({hand:"assets/cards/special/baby_dragon.webp",board:"assets/board_cards/special/baby_dragon.webp"}),
-  young_lightning:Object.freeze({hand:"assets/cards/special/young_lightning_dragon.webp",board:"assets/board_cards/special/young_lightning_dragon.webp"}),
-  young_fire:Object.freeze({hand:"assets/cards/special/young_fire_dragon.webp",board:"assets/board_cards/special/young_fire_dragon.webp"}),
-  young_ice:Object.freeze({hand:"assets/cards/special/young_ice_dragon.webp",board:"assets/board_cards/special/young_ice_dragon.webp"}),
-  adult_lightning:Object.freeze({hand:"assets/cards/special/adult_lightning_dragon.webp",board:"assets/board_cards/special/lightning_dragon_board.webp"}),
-  adult_fire:Object.freeze({hand:"assets/cards/special/adult_fire_dragon.webp",board:"assets/board_cards/special/fire_dragon_board.webp"}),
-  adult_ice:Object.freeze({hand:"assets/cards/special/adult_ice_dragon.webp",board:"assets/board_cards/special/ice_dragon_board.webp"})
+  egg:Object.freeze({hand:"assets/cards/beasts/dragon_egg.webp",board:"assets/board_cards/beasts/dragon_egg.webp"}),
+  baby:Object.freeze({hand:"assets/cards/beasts/baby_dragon.webp",board:"assets/board_cards/beasts/baby_dragon.webp"}),
+  young_lightning:Object.freeze({hand:"assets/cards/beasts/young_lightning_dragon.webp",board:"assets/board_cards/beasts/young_lightning_dragon.webp"}),
+  young_fire:Object.freeze({hand:"assets/cards/beasts/young_fire_dragon.webp",board:"assets/board_cards/beasts/young_fire_dragon.webp"}),
+  young_ice:Object.freeze({hand:"assets/cards/beasts/young_ice_dragon.webp",board:"assets/board_cards/beasts/young_ice_dragon.webp"}),
+  adult_lightning:Object.freeze({hand:"assets/cards/beasts/adult_lightning_dragon.webp",board:"assets/board_cards/beasts/adult_lightning_dragon.webp"}),
+  adult_fire:Object.freeze({hand:"assets/cards/beasts/adult_fire_dragon.webp",board:"assets/board_cards/beasts/adult_fire_dragon.webp"}),
+  adult_ice:Object.freeze({hand:"assets/cards/beasts/adult_ice_dragon.webp",board:"assets/board_cards/beasts/adult_ice_dragon.webp"})
 });
 
 function dragonElementLabel(element){return{lightning:"Relámpago",fire:"Fuego",ice:"Hielo"}[element]||"Desconocido";}
@@ -91,7 +91,7 @@ saveDragonEggs=function(records){return saveDragonCompanions(records);};
 function makeDragonCompanionCard(stage,element){
   if(stage==="egg")return{
     key:"dragon_egg",name:"Huevo de Dragón",type:"unit",icon:"🥚",portrait:DRAGON_COMPANION_ASSETS.egg.hand,
-    rarity:"Especial",special:true,personalCharacter:true,dragonCompanion:true,dragonEgg:true,dragonStage:"egg",dragonElement:"mystery",
+    rarity:"Especial",special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonEgg:true,dragonStage:"egg",dragonElement:"mystery",
     cost:0,hp:50,atk:0,guard:0,dex:0,agi:0,mov:0,range:0,immobile:true,cannotAttack:true,cannotDefend:true,
     text:"Personaje Personal opcional. No reemplaza al líder. Mientras permanezca vivo en el campo, todas las eliminaciones aliadas cuentan para su incubación. Si es destruido, no pierdes el duelo; conserva el progreso y deja de contar durante ese combate. Eclosiona al terminar un duelo después de alcanzar 1000 eliminaciones."
   };
@@ -105,7 +105,7 @@ function makeDragonCompanionCard(stage,element){
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,
-    rarity,special:true,personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
+    rarity,special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
     cost:0,...stats,aerial:true,flight:true,
     text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. ${growthText}`
   };

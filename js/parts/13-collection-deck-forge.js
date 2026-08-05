@@ -548,7 +548,11 @@ function removeCardFromDeckIndex(index){
 }
 function getDeckBuilderMiniImageHtml(card){
   const name=escapeHtml(card?.name||"Carta");
-  if(card?.portrait)return `<img src="${escapeHtml(card.portrait)}" alt="${name}" draggable="false">`;
+  const portrait=getResolvedCardPortraitSource(card);
+  if(portrait){
+    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${card?.name||"Carta"} · miniatura`);
+    return `<img src="${escapeHtml(portrait)}" alt="${name}" draggable="false" ${fallbackAttr}>`;
+  }
   return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
 }
 function getDeckBuilderTypeGlyph(card){

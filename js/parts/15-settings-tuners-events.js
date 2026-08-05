@@ -244,9 +244,9 @@ initActionsHudTuner();
 /* ---------------------------------------------------------------------------
    7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v5_final_values";
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v6_hp_unit_205_y38";
 const FIELD_STAT_BADGE_TARGETS={
-  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:181,iconX:-25,iconY:-2,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:-0.2,numY:5.2}},
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:205,iconX:-25,iconY:38,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:-0.2,numY:5.2}},
   hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:125,iconX:-4,iconY:-32,ringScale:177,ringX:0,ringY:0,ringStroke:0.9,numSize:28,numWeight:100,numScaleX:100,numScaleY:100,numX:0,numY:-2}},
   atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:220,iconX:-3,iconY:-4,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-5,numY:2}},
   atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:125,iconX:-2,iconY:-26,ringScale:76,ringX:4,ringY:-27,ringStroke:0.3,numSize:13.8,numWeight:200,numScaleX:100,numScaleY:100,numX:0,numY:0}},

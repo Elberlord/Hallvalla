@@ -1278,7 +1278,12 @@ function closeHandForBoardFocus(){
   if(hb)hb.classList.remove("selected");
 }
 function getCardVisualHtml(card,variant="hand-icon") {
-  if(card?.portrait)return `<div class="${variant} card-portrait"><img src="${card.portrait}" alt="${escapeHtml(card.name||"Carta")}"></div>`;
+  const portrait=getResolvedCardPortraitSource(card);
+  if(portrait){
+    const alt=escapeHtml(card?.name||"Carta");
+    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${card?.name||"Carta"} · carta`);
+    return `<div class="${variant} card-portrait"><img src="${portrait}" alt="${alt}" ${fallbackAttr}></div>`;
+  }
   return `<div class="${variant}"><span>${card?.icon||"✦"}</span></div>`;
 }
 function showCardInspectModal(card){
