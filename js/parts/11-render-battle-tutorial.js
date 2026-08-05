@@ -562,8 +562,9 @@ function renderBoard(){
     if(u&&!u.leader){
       const c=document.createElement("div");
       const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
-      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
+      const fieldFigureHtml=getBoardUnitFieldFigureHtml(u);
+      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${fieldFigureHtml?"has-field-figure":""} ${u.leader?"":getCardVisualClass(u)}`;
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);

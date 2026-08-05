@@ -1,0 +1,11 @@
+HallValla 7BOARDCTRL8AL · Figuras 3D básicas
+
+Esta versión parte de 7BOARDCTRL8AK e integra las 28 figuras transparentes de unidades básicas.
+
+- Mano, colección y creador de mazos: cartas normales sin cambios.
+- Campo: board card como base y figura transparente sobresaliendo.
+- Configuración del duelo: controles de intensidad y grosor del contorno plateado básico.
+- Los valores del brillo quedan guardados en el navegador.
+
+Documento técnico:
+docs/FIGURAS_3D_BASICAS_7BOARDCTRL8AL.txt

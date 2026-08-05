@@ -2,7 +2,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const BUILD = "7BOARDCTRL8AK";
+const BUILD = "7BOARDCTRL8AL";
 Object.assign(globalThis, {
   initializeApp,
   getDatabase,
@@ -30,6 +30,7 @@ const PARTS = [
   "08-actions-inspector.js",
   "09-combat-turn-ai.js",
   "10-board-interactions.js",
+  "19-basic-field-figures.js",
   "11-render-battle-tutorial.js",
   "12-profile-shop-packs.js",
   "13-collection-deck-forge.js",
