@@ -243,9 +243,13 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
-  const playerPrincipalSlots=getPrincipalSlotsForLeaderLevel(leaderLevel);
+  // El Personaje Principal del jugador se desbloquea solo al completar TODO el mapa 1.1
+  // (la victoria contra Richard Corazón de León en battle5). Antes de eso, el mazo
+  // inicial tiene 20 cartas de robo y ninguna unidad comienza desplegada gratuitamente.
+  const playerPrincipalUnlocked=canAccessDecks();
+  const playerPrincipalSlots=playerPrincipalUnlocked?getPrincipalSlotsForLeaderLevel(leaderLevel):0;
   const playerRequiredDeckSize=getDeckSizeForPrincipalSlots(playerPrincipalSlots);
-  const starterLocked=!canAccessDecks();
+  const starterLocked=!playerPrincipalUnlocked;
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
   const rawPlayerBase=mustUseStarterAdventureDeck
     ? shuffle(getStarterAdventureDeckTemplates(specialKey,playerPrincipalSlots).map(card=>makeCard(card,1,leaderType)))
@@ -256,9 +260,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
     return;
   }
-  const requestedPlayerPrincipals=mustUseStarterAdventureDeck
-    ? chooseFallbackAiPrincipalKeys({deck:rawPlayerBase,hand:[]},[],playerPrincipalSlots)
-    : sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),rawPlayerBase,playerPrincipalSlots);
+  const requestedPlayerPrincipals=playerPrincipalSlots<=0
+    ? []
+    : (mustUseStarterAdventureDeck
+      ? chooseFallbackAiPrincipalKeys({deck:rawPlayerBase,hand:[]},[],playerPrincipalSlots)
+      : sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),rawPlayerBase,playerPrincipalSlots));
   if(!mustUseStarterAdventureDeck){
     const principalValidation=validatePrincipalSelection(requestedPlayerPrincipals,rawPlayerBase,playerPrincipalSlots);
     if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}

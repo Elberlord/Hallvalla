@@ -237,7 +237,9 @@ function getPrincipalSlotsForLeaderType(type=""){
 }
 function getCurrentPrincipalSlots(){return getPrincipalSlotsForLeaderType();}
 function getDeckSizeForPrincipalSlots(slots=DECK_RULES.minPrincipalSlots){
-  const safe=Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(slots)||DECK_RULES.minPrincipalSlots));
+  const safe=slots===0
+    ? 0
+    : Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(slots)||DECK_RULES.minPrincipalSlots));
   return DECK_RULES.drawDeckSize+safe;
 }
 function getCurrentDeckSize(){return getDeckSizeForPrincipalSlots(getCurrentPrincipalSlots());}
@@ -282,7 +284,9 @@ function getCardSurplusCopies(card){
 function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
   const counts={};
   const errors=[];
-  const requiredSlots=Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
+  const requiredSlots=principalSlots===0
+    ? 0
+    : Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
   const requiredSize=getDeckSizeForPrincipalSlots(requiredSlots);
   cards.forEach(card=>{
     const key=card.key||card.name;
