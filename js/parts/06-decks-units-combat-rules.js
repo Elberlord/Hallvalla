@@ -196,7 +196,8 @@ const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.
 function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 
 function isInitialLeaderAllowed(type){
-  return !!LEADER_DATA[type]&&type!=="beastmaster";
+  const promoActive=typeof isTestPromoActive==="function"&&isTestPromoActive();
+  return !!LEADER_DATA[type]&&(type!=="beastmaster"||promoActive);
 }
 
 function getSelectedLeaderType(){
@@ -1040,9 +1041,15 @@ function consumeDefensiveStanceForAttack(defender,units,mods={}){
   const nextUnits=(units||[]).map(u=>u.id===defender.id?{...u,defenseModeReady:false}:u);
   return {defender:nextUnits.find(u=>u.id===defender.id)||{...defender,defenseModeReady:false},units:nextUnits,mods:nextMods,consumed:true};
 }
+function applyCombatPrecisionPercentPenalty(score,mods={}){
+  const raw=Math.max(0,Number(score)||0);
+  const penaltyPct=Math.max(0,Math.min(100,Number(mods?.defenseStancePenalty||0)));
+  return penaltyPct>0?Math.max(0,Math.floor(raw*((100-penaltyPct)/100))):raw;
+}
 function getAttackPrecisionScore(attacker,mods={}){
   if(!attacker||attacker.leader)return 0;
-  return Math.max(0,effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)-getEvasionPressure(attacker));
+  const raw=effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)-getEvasionPressure(attacker);
+  return applyCombatPrecisionPercentPenalty(raw,mods);
 }
 function getDefenseEvasionScore(defender,mods={}){
   if(typeof mods.defenderDefenseOverride==="number")return Math.max(0,mods.defenderDefenseOverride);
@@ -1089,6 +1096,7 @@ function canLanceFirstStrike(attacker,defender,mods={}){
   if(mods&&mods.falconDive)return false;
   if(!isLanceUnitCardLike(defender))return false;
   if(defender.lanceFirstStrikeUsedTurn)return false;
+  if(defender.noCounterTurnKey&&defender.noCounterTurnKey===publicState?.turnKey)return false;
 
   // Formación de picas / regla de lanza solo responde a combatientes puramente
   // cuerpo a cuerpo: RG 1 y ataque declarado desde una casilla adyacente.
@@ -1534,8 +1542,8 @@ function resolveMovementLegendaryTraps(unit,dest,units){
   }
   return {units:out,traps,logs,cancel,statusFxEvent,floatFxEvent};
 }
-function resolvePreAttackLegendaryTraps(attacker,defender,units){
-  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],cancel=false,redirect=null,bonusAtk=0;
+function resolvePreAttackLegendaryTraps(attacker,defender,units,trapList=null){
+  let out=[...(units||[])],traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],cancel=false,redirect=null,bonusAtk=0;
   for(const trap of [...traps]){
     if(trap.targetId!==attacker.id)continue;
     const tier=getUnitTrapTier(attacker);
@@ -1593,8 +1601,8 @@ function resolveBuffHealLegendaryTraps(target,kind,units){
   }
   return {units:out,traps,logs,cancel};
 }
-function applyDamageTrapModifiers(defender,damage,units,mods={}){
-  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
+function applyDamageTrapModifiers(defender,damage,units,mods={},trapList=null){
+  let out=[...(units||[])],traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
   for(const trap of [...traps]){
     if(trap.targetId!==defender.id)continue;
     const tier=getUnitTrapTier(defender);
@@ -1608,18 +1616,20 @@ function applyDamageTrapModifiers(defender,damage,units,mods={}){
   }
   return {damage:nextDamage,traps,logs,forceKill,shadowCut,ignoreGuard};
 }
-function resolveAfterKillLegendaryTraps(attacker,defender,units){
-  let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[];
+function resolveAfterKillLegendaryTraps(attacker,defender,units,trapList=null){
+  let out=[...(units||[])],traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[];
+  const liveAttacker=out.find(u=>u.id===attacker?.id&&Number(u.hp||0)>0);
+  if(!liveAttacker)return {units:out,traps,logs};
   for(const trap of [...traps]){
-    if(trap.targetId!==attacker.id||trap.trapKey!=="true_name_exile"||defender.owner!==trap.owner)continue;
-    const tier=getUnitTrapTier(attacker);
-    const ownerLeader=out.find(u=>u.owner===attacker.owner&&u.leader);
-    let n={...attacker};
+    if(trap.targetId!==liveAttacker.id||trap.trapKey!=="true_name_exile"||defender.owner!==trap.owner)continue;
+    const tier=getUnitTrapTier(liveAttacker);
+    const ownerLeader=out.find(u=>u.owner===liveAttacker.owner&&u.leader);
+    let n={...liveAttacker};
     if(tier==="basic"){n.exiledUntilTurn=(publicState.turn||1)+1;n.hp=Math.max(1,(n.hp||1)-1);}
     else{n.exiledUntilTurn=(publicState.turn||1)+(tier==="legendary"?2:1);n.hp=Math.max(1,Math.ceil(effectiveMaxHp(n)/2));n.buffAtk=0;n.tempAtkBuff=0;n.tempGuardBuff=0;}
     n.x=ownerLeader?ownerLeader.x:n.x;n.y=ownerLeader?Math.min(ROWS-1,ownerLeader.y+1):n.y;n.noAttackTurnKey=publicState.turnKey;
-    out=out.map(u=>u.id===attacker.id?n:u);
-    logs.push(`${trap.cardName} se revela: ${attacker.name} es retirado al Exilio y volverá debilitado.`);
+    out=out.map(u=>u.id===liveAttacker.id?n:u);
+    logs.push(`${trap.cardName} se revela: ${liveAttacker.name} es retirado al Exilio y volverá debilitado.`);
     traps=removeTrapById(traps,trap.id);
   }
   return {units:out,traps,logs};

@@ -94,6 +94,9 @@ on("saveDeckBtn","click",saveCurrentDeck);
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);
+on("activateProfilePromoBtn","click",activateTestPromoCode);
+on("deactivateProfilePromoBtn","click",deactivateTestPromoMode);
+on("profilePromoInput","keydown",event=>{if(event.key==="Enter"){event.preventDefault();activateTestPromoCode();}});
 on("closeProfilePanelBtn","click",closeProfilePanel);
 on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();});
 

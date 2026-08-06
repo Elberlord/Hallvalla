@@ -1,0 +1,19 @@
+HALLVALLA 7BOARDCTRL8BC
+CÓDIGO PROMOCIONAL TEMPORAL DE PRUEBAS
+
+IMPLEMENTACIÓN
+- Área de código promocional integrada en Perfil del jugador.
+- Validación mediante hash SHA-256; la clave no aparece escrita en texto plano en el proyecto.
+- Activación local para el navegador/perfil actual.
+- Colección virtual completa: todas las cartas registradas quedan disponibles con la cantidad máxima permitida por mazo.
+- Acceso directo al editor de mazos sin exigir completar Aventura 1.1.
+- Perfil y todos los líderes en nivel 9.
+- Habilidades de nivel 5 activas según cada líder.
+- Maestría de unidades en rango X.
+- Acólita sanadora con 100 puntos de servicio.
+- Señor de las Bestias disponible durante el modo promocional.
+- Botón para desactivar la prueba y restaurar la progresión previa.
+- La colección real no se llena ni se sobrescribe; el desbloqueo de cartas es virtual mientras el modo esté activo.
+
+SEGURIDAD
+Este es un mecanismo temporal del cliente para pruebas en navegador. Aunque la clave se almacena como hash, cualquier desbloqueo implementado solo en JavaScript puede ser alterado desde las herramientas de desarrollo. Para producción deberá validarse en un servidor o mediante una Cloud Function con permisos controlados.

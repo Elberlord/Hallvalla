@@ -55,15 +55,19 @@ async function moveUnit(u,x,y){
   const mulanExecMove=isMulanExecutionMoveReady(u);
   if(!moveZones(u).includes(`${x},${y}`))return setHint("Movimiento inválido.");
   if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse este turno.`);
+  const moveStartUnits=[...(publicState.units||[])];
   const movedNow=dist(u,{x,y});
   const straightMoveNow=isStraightLineDelta(x-u.x,y-u.y)?movedNow:0;
-  let trapMove=resolveMovementLegendaryTraps(u,{x,y},publicState.units||[]);
+  let trapMove=resolveMovementLegendaryTraps(u,{x,y},moveStartUnits);
   let units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x,y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow,lastMoveDistance:movedNow,lastMoveDx:Math.sign(x-u.x),lastMoveDy:Math.sign(y-u.y),lastMoveTurnKey:publicState?.turnKey||""}:it);
-  if(mulanExecMove){
+  if(mulanExecMove&&!trapMove.cancel&&units.some(it=>it.id===u.id&&it.hp>0)){
     units=units.map(it=>it.id===u.id?{...it,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:it);
   }
-  let beastTrapResult=resolveBeastCellTraps(units.find(it=>it.id===u.id)||u,units,publicState.beastTraps||[]);
-  units=beastTrapResult.units;
+  let beastTrapResult={units,traps:[...(publicState.beastTraps||[])],logs:[]};
+  if(!trapMove.cancel&&units.some(it=>it.id===u.id&&it.hp>0)){
+    beastTrapResult=resolveBeastCellTraps(units.find(it=>it.id===u.id),units,publicState.beastTraps||[]);
+    units=beastTrapResult.units;
+  }
   const lionFearMove=applyAfricanLionFearAura(units);
   units=lionFearMove.units;
   const moved=units.find(it=>it.id===u.id);
@@ -79,9 +83,12 @@ async function moveUnit(u,x,y){
       }
     }
   }
+  const movementBloodVictory=applyBloodVictoryForDeaths(moveStartUnits,units);
+  units=movementBloodVictory.units;
   await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapResult.traps,legendaryTraps:trapMove.traps,statusFxEvent:lionFearMove.statusFxEvent||null,floatFxEvent:lionFearMove.floatFxEvent||null});
-  const mulanExtraText=mulanExecMove?` ${u.name} completa el movimiento de ejecución y ahora debe elegir ATK o DEF para gastar su acción restante.`:"";
-  await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}${mulanExtraText}`,...lionFearMove.logs].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}${mulanExtraText}`,...trapMove.logs,...beastTrapResult.logs,...lionFearMove.logs].join(" "));
+  const mulanExtraText=mulanExecMove&&!trapMove.cancel&&units.some(it=>it.id===u.id)?` ${u.name} completa el movimiento de ejecución y ahora debe elegir ATK o DEF para gastar su acción restante.`:"";
+  const bloodVictoryText=movementBloodVictory.logs.length?` ${movementBloodVictory.logs.join(" ")}`:"";
+  await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}${mulanExtraText}${bloodVictoryText}`,...lionFearMove.logs].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}${mulanExtraText}${bloodVictoryText}`,...trapMove.logs,...beastTrapResult.logs,...lionFearMove.logs].join(" "));
   clearSelection();
 }
 function getBattleDamage(attacker,mods={}){return Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0))}
@@ -227,6 +234,24 @@ function applyBloodVictoryForDeaths(beforeUnits,afterUnits){
   }
   return{units:out,logs,triggered:logs.length>0};
 }
+function resolveTaipanPoisonAfterHit(units,attacker,target,hit,hpLoss){
+  let out=[...(units||[])];
+  if(!attacker||attacker.key!=="inland_taipan"||!target||!hit?.hit||Number(hpLoss||0)<=0)return{units:out,text:"",statusFxEvent:null,lethal:false};
+  const current=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);
+  if(!current)return{units:out,text:"",statusFxEvent:null,lethal:false};
+  if(isPoisonImmuneUnit(current)){
+    out=out.map(u=>u.id===current.id?clearPoisonStatus(u):u);
+    return{units:out,text:` ${current.name} ignora el Veneno.`,statusFxEvent:null,lethal:false};
+  }
+  const alreadyPoisoned=Number(current.poisonTurns||0)>0||Number(current.poisonDamage||0)>0;
+  if(alreadyPoisoned&&!current.leader){
+    out=out.map(u=>u.id===current.id?resolveBlessedArmorTransition(u,{...u,hp:0,damagedThisTurn:true}):u);
+    return{units:out,text:` Mordida Letal: ${current.name} ya estaba envenenada y cae al recibir Veneno otra vez.`,statusFxEvent:makeStatusFxEvent("poison_apply",current,4),lethal:true};
+  }
+  out=out.map(u=>u.id===current.id?{...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:attacker.id,poisonSourceName:attacker.name}:u);
+  const poisoned=out.find(u=>u.id===current.id)||current;
+  return{units:out,text:` ${current.name} queda envenenado: 1/2/4 durante 3 turnos.`,statusFxEvent:makeStatusFxEvent("poison_apply",poisoned,1),lethal:false};
+}
 function hasBloodMist(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="assassin"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_mist"}
 function hasShadowMistAssassin(unit,units=publicState?.units||[]){
   return !!(unit&&!unit.leader&&isAssassinUnit(unit)&&hasBloodMist(unit.owner,units));
@@ -321,7 +346,9 @@ async function attackUnit(a,d){
   if(dist(a,d)<=1&&d.key==="african_buffalo"){
     units=units.map(u=>u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
     if(!units.some(u=>u.id===a.id)){
-      const log=`${d.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${a.name} cae. El ataque se cancela.`;
+      const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
+      units=bloodVictoryResult.units;
+      const log=`${d.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${a.name} cae. El ataque se cancela.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
       await updatePublic({units,_clockKillCreditMode:"opposite-owner",legendaryTraps:preTrap.traps});
       if(!(await finalizeBattle(units,log)))await pushLog(log);
       clearSelection();return;
@@ -348,7 +375,9 @@ async function attackUnit(a,d){
     d=units.find(u=>u.id===d.id)||d;
     firstStrikeText=firstStrike.text||"";
     if(firstStrike.attackerFell){
-      const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.`;
+      const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
+      units=bloodVictoryResult.units;
+      const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
       await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:preTrap.traps});
       if(!(await finalizeBattle(units,fsLog)))await pushLog([...preTrap.logs,fsLog].filter(Boolean).join(" "));
       clearSelection();
@@ -374,6 +403,8 @@ async function attackUnit(a,d){
     rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
   }
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
+  const declaredMelee=dist(a,d)<=1;
+  const declaredRanged=isRangedAttack(a,d);
   const attackerWasStealthedBeforeAttack=isAttackFromStealth(a);
   const keepStealthAfterAttack=shouldKeepStealthAfterAttack(a,d);
   units=applyAttackSideEffects(a,d,units);
@@ -381,8 +412,7 @@ async function attackUnit(a,d){
   units=ulyssesAttackTactic.units;
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
   units=actionSpend.units;
-  const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),units,mods);
-  units=dmgTrap.traps?units:units;
+  const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),units,mods,preTrap.traps);
   const ulfhednarCritResult=rollUlfhednarCritical(a,hit);
   const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
   let berserkerOsoText="",skiparWarLootText="";
@@ -391,7 +421,7 @@ async function attackUnit(a,d){
       const nextAttacker={...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
       if(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)&&a.key!=="dragon_egg"){
         nextAttacker.dragonCharge=Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1;
-      }else if(typeof nextAttacker.dragonCharge==="undefined"){
+      }else{
         delete nextAttacker.dragonCharge;
       }
       return nextAttacker;
@@ -424,12 +454,19 @@ async function attackUnit(a,d){
     :{units,text:"",statusFxEvent:null,floatFxEvent:null};
   units=dragonCompanionResult.units||units;
   dragonCompanionText=dragonCompanionResult.text||"";
+  const solomonIfritResult=applySolomonIfritAfterHit(units,a,d,hit,hpLoss);
+  units=solomonIfritResult.units;
+  const taipanResult=resolveTaipanPoisonAfterHit(units,a,d,hit,hpLoss);
+  units=taipanResult.units;
   let defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,d.id,a.id):{units,triggered:false,killerFell:false,saved:false};
   units=leonidasLastStand.units;
   units=applyLegendaryFatalSaves(units,[d.id]);
   defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   units=units.filter(u=>u.hp>0);
+  if(defenderFell&&a.key==="solomon_ifrit"&&hit.hit&&hpLoss>0){
+    units=units.map(u=>u.id===a.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
+  }
   const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
   units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
   const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,dist(a,d)<=1):{units,triggered:false,text:""};
@@ -454,15 +491,15 @@ async function attackUnit(a,d){
   if(warCryTriggered)units=applyAxeWarCry(units,a.owner,a.id);
   const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
   units=bloodVictoryResult.units;
-  const bloodVictoryTriggered=bloodVictoryResult.triggered;
+  let bloodVictoryTriggered=bloodVictoryResult.triggered;
+  const bloodVictoryLogs=[...(bloodVictoryResult.logs||[])];
+  let bloodVictoryCheckpoint=[...units];
   const bloodMistTriggered=false;
   const steelWallTriggered=shouldTriggerSteelWall(d,guardLoss,hit.hit);
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
   const coverFireTriggered=shouldTriggerCoverFire(a,hpLoss,hit.hit);
   if(coverFireTriggered)units=applyCoverFire(units,a.owner,a.id);
-  const solomonIfritResult=applySolomonIfritAfterHit(units,a,d,hit,hpLoss);
-    units=solomonIfritResult.units;
-    let bleedText=solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:"";
+  let bleedText=`${solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:""}${taipanResult.text||""}`;
   let alreadyBleeding=false;
   if(hit.hit&&hpLoss>0&&a.key==="scout"&&units.some(u=>u.id===d.id)){
     const targetAfterBleed=units.find(u=>u.id===d.id);
@@ -472,7 +509,7 @@ async function attackUnit(a,d){
     bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado${d.leader?" y reinicia su duración a 2 turnos":""}.`:` ${d.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
   }
   let arcaneAdeptStatusEvent=null;
-  let poisonStatusEvent=null;
+  let poisonStatusEvent=taipanResult.statusFxEvent||null;
   if(hit.hit&&hpLoss>0&&a.key==="arcane_adept"&&units.some(u=>u.id===d.id)){
     const beforeArcane=units.find(u=>u.id===d.id)||d;
     let arcaneLabel="";
@@ -489,20 +526,6 @@ async function attackUnit(a,d){
   if(hit.hit&&hpLoss>0&&a.key==="bengal_tiger"&&units.some(u=>u.id===d.id)){
     const tigerFromStealth=tigerFromStealthBefore;
     if(tigerFromStealth||Math.random()<0.5){units=units.map(u=>u.id===d.id?applyBleedToUnit(u,a.name):u);bleedText+=` ${d.name} queda con Sangrado por Desgarro Salvaje.`;}
-  }
-  if(hit.hit&&hpLoss>0&&a.key==="inland_taipan"&&units.some(u=>u.id===d.id)){
-    if(isPoisonImmuneUnit(d)){
-      units=units.map(u=>u.id===d.id?clearPoisonStatus(u):u);
-      bleedText+=` ${d.name} ignora el Veneno.`;
-    }else{
-      units=units.map(u=>{
-        if(u.id!==d.id)return u;
-        if(u.poisonTurns&&u.poisonSourceId===a.id&&!u.leader)return {...u,hp:0};
-        return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:a.id,poisonSourceName:a.name};
-      });
-      poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===d.id)||d,1);
-      bleedText+=` ${d.name} queda envenenado: 1/2/4 durante 3 turnos.`;
-    }
   }
   if(arjunaDharmaPoison&&hit.hit&&hpLoss>0&&units.some(u=>u.id===d.id)){
     if(isPoisonImmuneUnit(d)){
@@ -561,12 +584,16 @@ async function attackUnit(a,d){
   const porcupineText=porcupineResult.logs.length?` ${porcupineResult.logs.join(" ")}`:"";
   const lionFearCombat=applyAfricanLionFearAura(units);
   units=lionFearCombat.units;
+  const recoilBloodVictory=applyBloodVictoryForDeaths(bloodVictoryCheckpoint,units);
+  units=recoilBloodVictory.units;
+  if(recoilBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...recoilBloodVictory.logs);}
+  bloodVictoryCheckpoint=[...units];
   const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
   const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
   const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${d.name} no pierde Vida por ataques de unidades.`:"";
   const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanChoiceAttack&&!d.leader;
   const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&units.some(u=>u.id===a.id);
-  const exileTrap=defenderFell?resolveAfterKillLegendaryTraps(a,d,units):{units,traps:dmgTrap.traps,logs:[]};
+  const exileTrap=defenderFell?resolveAfterKillLegendaryTraps(a,d,units,dmgTrap.traps):{units,traps:dmgTrap.traps,logs:[]};
   units=exileTrap.units;
   const genghisDebuffResult=applyGenghisKhanKillDebuff(units,a,d,defenderFell);
   units=genghisDebuffResult.units;
@@ -580,12 +607,16 @@ async function attackUnit(a,d){
   units=hanzoContractResult.units;
   let attackerAfter=units.find(u=>u.id===a.id),defenderAfter=units.find(u=>u.id===d.id);
   let miyamotoCounterBleedEvent=null;
-  const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&isRangedAttack(attackerAfter,defenderAfter);
-  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!defenderAfter.counterUsedTurn&&arcaneAdeptRangedCounter;
+  const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&declaredRanged;
+  const miyamotoMeleeCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&declaredMelee&&(!hit.hit||hpLoss>0);
+  const counterLocked=!!(defenderAfter?.noCounterTurnKey&&defenderAfter.noCounterTurnKey===publicState?.turnKey);
+  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&!defenderAfter.counterUsedTurn&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=getCounterDefenseRemainder(a,d,mods);
-    const isMiyamotoCounter=false;
-    const cMods=prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder);
+    const isMiyamotoCounter=!!miyamotoMeleeCounter;
+    const cMods=isMiyamotoCounter
+      ?prepareMiyamotoCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
+      :prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder);
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
     const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
     units=cSpend.units;
@@ -612,7 +643,7 @@ async function attackUnit(a,d){
       const counterMasteryResult=!units.some(u=>u.id===attackerAfter.id)?registerLocalUnitMasteryKill(defenderAfter,attackerAfter):null;
       units=applyUnitMasteryRankUpToUnits(units,defenderAfter,counterMasteryResult);
       let miyamotoBleedText="";
-      if(isMiyamotoCounter&&units.some(u=>u.id===attackerAfter.id)&&Math.random()<0.2){
+      if(isMiyamotoCounter&&cHp>0&&units.some(u=>u.id===attackerAfter.id)&&Math.random()<0.2){
         const bleedTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
         const alreadyBleeding=hasBleeding(bleedTargetBefore);
         units=units.map(u=>u.id===attackerAfter.id?applyBleedToUnit(u,defenderAfter.name):u);
@@ -638,7 +669,7 @@ async function attackUnit(a,d){
         units=units.map(u=>u.id===attackerAfter.id?applyBleedToUnit(u,defenderAfter.name):u);
         counterBleedText=` ${bleedTargetBefore.name} ${already?"mantiene Sangrado":"queda con Sangrado"} por contraataque.`;
       }
-      const miyamotoBonusText="";
+      const miyamotoBonusText=isMiyamotoCounter&&!hit.hit?" con +2 AT por Dos Cielos":"";
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
       counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
@@ -648,11 +679,15 @@ async function attackUnit(a,d){
   }
   const veilCurseResult=applyVeilCurseAfterHpDamage(units,a,d,hpLoss);
   units=veilCurseResult.units;
+  const counterBloodVictory=applyBloodVictoryForDeaths(bloodVictoryCheckpoint,units);
+  units=counterBloodVictory.units;
+  if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
+  bloodVictoryCheckpoint=[...units];
   const assassinIgnoreText=shouldIgnoreGuardForAttack(a,units)&&hit.hit?" Ignora Guardia/defensa.":"";
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
-  const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryResult.logs.join(" ")}`:"";
+  const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryLogs.join(" ")}`:"";
   const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
   const bloodMistText=hasShadowMistAssassin(a,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
@@ -718,7 +753,11 @@ async function finishTurn(){
   if(!isMyTurn())return setHint("No es tu turno.");
   if(isTurnTimerEnabled()&&getDuelClockRemainingMs(Number(publicState?.currentPlayer||0))<=0){await expireDuelByClock();return;}
   if(isTurnTimerEnabled()&&getTurnTimerRemainingMs()<=0){await expireTurnByClock();return;}
-  const burnEnd=applyBurnAtTurnEnd(publicState.units||[]);
+  const endTurnBeforeBurn=[...(publicState.units||[])];
+  const burnEnd=applyBurnAtTurnEnd(endTurnBeforeBurn);
+  const burnBloodVictory=applyBloodVictoryForDeaths(endTurnBeforeBurn,burnEnd.units);
+  burnEnd.units=burnBloodVictory.units;
+  if(burnBloodVictory.logs.length)burnEnd.logs.push(...burnBloodVictory.logs);
   if(burnEnd.logs.length&&await finalizeBattle(burnEnd.units,burnEnd.logs.join(" ")))return;
   const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,myPlayer,publicState?.turnKey||"");
   if(veilEnd.logs.length&&await finalizeBattle(veilEnd.units,[...(burnEnd.logs||[]),...(veilEnd.logs||[])].join(" ")))return;
@@ -825,7 +864,7 @@ async function adventureEnemyTurn(){
       adventureAiState:nextAiState,
       currentPlayer:2,
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0,hand:Array.isArray(privateState?.hand)?privateState.hand.length:(pub.playerStats?.[1]?.hand||0)},
-      [`playerStats/2`]:{hp:p2Leader?.hp||20,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),deck:deck.length,hand:hand.length},
+      [`playerStats/2`]:{hp:p2Leader?.hp??20,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),deck:deck.length,hand:hand.length},
       log:[...logs,...(pub.log||[])].slice(0,18),
       aiActionText:logs[logs.length-1]||`${pub.adventureEnemyName||"Rival"} está pensando su jugada...`,
       aiStepAt:Date.now(),
@@ -870,6 +909,7 @@ async function adventureEnemyTurn(){
     finally{publicState=prev;}
   };
   if(heroicEdgeStart.logs.length)logs.push(...heroicEdgeStart.logs);
+  const startTurnBeforeEffects=[...units];
   const startTrap=withAiPublicState(()=>resolveStartTurnLegendaryTraps(units,2,pub.turnKey));
   units=startTrap.units;
   legendaryTraps=startTrap.traps||legendaryTraps;
@@ -877,6 +917,9 @@ async function adventureEnemyTurn(){
   const bleedStart=applyBleedingToOwnerAtTurnStart(units,2);
   units=bleedStart.units;
   if(bleedStart.logs.length){logs.push(...bleedStart.logs);}
+  const startBloodVictory=applyBloodVictoryForDeaths(startTurnBeforeEffects,units);
+  units=startBloodVictory.units;
+  if(startBloodVictory.logs.length)logs.push(...startBloodVictory.logs);
   const lionFearStart=withAiPublicState(()=>applyAfricanLionFearAura(units));
   units=lionFearStart.units;
   if(lionFearStart.logs.length){logs.push(...lionFearStart.logs);}
@@ -1035,7 +1078,8 @@ async function adventureEnemyTurn(){
   const aiUnitValue=(u)=>{
     if(!u)return 0;
     const tier=getUnitTrapTier(u);
-    let value=(u.leader?180:0)+(u.special?65:0)+(tier==="demigod"?120:tier==="legendary"?85:tier==="special"?45:0);
+    const rarityKey=typeof getCraftRarityKey==="function"?getCraftRarityKey(u):"";
+    let value=(u.leader?180:0)+(u.special?65:0)+(rarityKey==="demigod"?120:tier==="legendary"?85:tier==="special"?45:0);
     value+=(effectiveAtk(u)||0)*8+(effectiveMaxHp(u)||0)*4+getUnitAttackRange(u)*6+(effectiveMov(u)||0)*4+(effectiveDex(u)||0)*3+(effectiveAgi(u)||0)*3;
     if(u.key==="achilles"||u.key==="gilgamesh"||u.key==="arjuna")value+=70;
     if(u.key==="wallace"||u.key==="joan_of_arc"||u.key==="leonidas")value+=35;
@@ -1261,7 +1305,7 @@ async function adventureEnemyTurn(){
     if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===pub.turnKey)return false;
     const aiAttackBefore=[...units];
 
-    let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,target,units));
+    let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,target,units,legendaryTraps));
     legendaryTraps=preTrap.traps;
     if(preTrap.cancel){
       const cancelSpend=spendActionStatsByAttack(attacker,target,preTrap.units,getCombatMods(attacker,target),{hit:false});
@@ -1294,6 +1338,10 @@ async function adventureEnemyTurn(){
     const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,units,beastTraps);
     if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
     if(bloodBaitBonus.trapId)beastTraps=removeBeastTrapById(beastTraps,bloodBaitBonus.trapId);
+    const defensePrep=consumeDefensiveStanceForAttack(target,units,mods);
+    units=defensePrep.units;
+    mods=defensePrep.mods;
+    target=defensePrep.defender;
     let firstStrikeText="";
     if(canLanceFirstStrike(attacker,target,mods)){
       const firstStrike=resolveLanceFirstStrike(attacker,target,units);
@@ -1308,11 +1356,6 @@ async function adventureEnemyTurn(){
         return true;
       }
     }
-
-    const defensePrep=consumeDefensiveStanceForAttack(target,units,mods);
-    units=defensePrep.units;
-    mods=defensePrep.mods;
-    target=defensePrep.defender;
     const actionSpendDefenseNeeded=withAiPublicState(()=>getDefenseEvasionScore(target,mods));
     const actionSpendAttackAvailable=withAiPublicState(()=>getAttackPrecisionScore(attacker,mods));
     let evasionPressure=withAiPublicState(()=>({units,spent:0,remaining:target?.leader?null:actionSpendDefenseNeeded}));
@@ -1332,7 +1375,9 @@ async function adventureEnemyTurn(){
       rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
     }
 
-    let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false;
+    let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
+    const declaredMelee=d(attacker,target)<=1;
+    const declaredRanged=isRangedAttack(attacker,target);
     const attackerWasStealthedBeforeAttack=isAttackFromStealth(attacker);
     const keepStealthAfterAttack=shouldKeepStealthAfterAttack(attacker,target);
     units=applyAttackSideEffects(attacker,target,units);
@@ -1340,13 +1385,21 @@ async function adventureEnemyTurn(){
     units=ulyssesAttackTactic.units;
     const actionSpend=spendActionStatsByAttack(attacker,target,units,mods,hit);
     units=actionSpend.units;
-    const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),units,mods));
+    const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),units,mods,preTrap.traps));
     legendaryTraps=dmgTrap.traps;
     const ulfhednarCritResult=rollUlfhednarCritical(attacker,hit);
     const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
     let berserkerOsoText="",skiparWarLootText="";
     units=units.map(u=>{
-      if(u.id===attacker.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(attacker,target)?true:u.arjunaRerollUsedTurn};
+      if(u.id===attacker.id){
+        const nextAttacker={...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(attacker,target)?true:!!u.arjunaRerollUsedTurn};
+        if(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(attacker.key)&&attacker.key!=="dragon_egg"){
+          nextAttacker.dragonCharge=Number(attacker.dragonCharge||0)>=2?0:Number(attacker.dragonCharge||0)+1;
+        }else{
+          delete nextAttacker.dragonCharge;
+        }
+        return nextAttacker;
+      }
       if(u.id===target.id){
         if(!hit.hit)return u;
         const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker,units);
@@ -1370,12 +1423,24 @@ async function adventureEnemyTurn(){
       }
     }
     if(dmgTrap.forceKill)units=units.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
+    const dragonCompanionResult=typeof applyDragonCompanionAttackEffects==="function"
+      ?applyDragonCompanionAttackEffects(units,attacker,target,{hit:!!hit.hit,hpLoss,guardLoss,state:{...pub,units,legendaryTraps,beastTraps}})
+      :{units,text:"",statusFxEvent:null,floatFxEvent:null};
+    units=dragonCompanionResult.units||units;
+    dragonCompanionText=dragonCompanionResult.text||"";
+    const solomonIfritResult=applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss);
+    units=solomonIfritResult.units;
+    const taipanResult=resolveTaipanPoisonAfterHit(units,attacker,target,hit,hpLoss);
+    units=taipanResult.units;
     let defenderFell=!!units.find(u=>u.id===target.id&&u.hp<=0);
     const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,target.id,attacker.id):{units,triggered:false,killerFell:false,saved:false};
     units=leonidasLastStand.units;
     units=applyLegendaryFatalSaves(units,[target.id]);
     defenderFell=!!units.find(u=>u.id===target.id&&u.hp<=0);
     units=units.filter(u=>u.hp>0);
+    if(defenderFell&&attacker.key==="solomon_ifrit"&&hit.hit&&hpLoss>0){
+      units=units.map(u=>u.id===attacker.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
+    }
     const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(attacker,target):null;
     units=applyUnitMasteryRankUpToUnits(units,attacker,masteryKillResult);
     const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,target,attacker.id,d(attacker,target)<=1):{units,triggered:false,text:""};
@@ -1400,7 +1465,9 @@ async function adventureEnemyTurn(){
     if(warCryTriggered)units=applyAxeWarCry(units,attacker.owner,attacker.id);
     const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
     units=bloodVictoryResult.units;
-    const bloodVictoryTriggered=bloodVictoryResult.triggered;
+    let bloodVictoryTriggered=bloodVictoryResult.triggered;
+    const bloodVictoryLogs=[...(bloodVictoryResult.logs||[])];
+    let bloodVictoryCheckpoint=[...units];
     const bloodMistTriggered=defenderFell&&withAiPublicState(()=>hasBloodMist(attacker.owner,units))&&isAssassinUnit(attacker);
     if(bloodMistTriggered)units=applyBloodMist(units,attacker.owner,attacker.name);
     const steelWallTriggered=withAiPublicState(()=>shouldTriggerSteelWall(target,guardLoss,hit.hit));
@@ -1408,9 +1475,7 @@ async function adventureEnemyTurn(){
     const coverFireTriggered=withAiPublicState(()=>shouldTriggerCoverFire(attacker,hpLoss,hit.hit));
     if(coverFireTriggered)units=applyCoverFire(units,attacker.owner,attacker.id);
 
-    const solomonIfritResult=applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss);
-    units=solomonIfritResult.units;
-    let bleedText=solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:"";
+    let bleedText=`${solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:""}${taipanResult.text||""}`;
     let alreadyBleeding=false;
     if(hit.hit&&hpLoss>0&&attacker.key==="scout"&&units.some(u=>u.id===target.id)){
       const targetAfterBleed=units.find(u=>u.id===target.id);
@@ -1420,7 +1485,7 @@ async function adventureEnemyTurn(){
       bleedText=alreadyBleeding?` ${target.name} mantiene Sangrado${target.leader?" y reinicia su duración a 2 turnos":""}.`:` ${target.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
     }
     let arcaneAdeptStatusEvent=null;
-    let poisonStatusEvent=null;
+    let poisonStatusEvent=taipanResult.statusFxEvent||null;
     if(hit.hit&&hpLoss>0&&attacker.key==="arcane_adept"&&units.some(u=>u.id===target.id)){
       const beforeArcane=units.find(u=>u.id===target.id)||target;
       let arcaneLabel="";
@@ -1436,20 +1501,6 @@ async function adventureEnemyTurn(){
     }
     if(hit.hit&&hpLoss>0&&attacker.key==="bengal_tiger"&&units.some(u=>u.id===target.id)){
       if(tigerFromStealthBefore||Math.random()<0.5){units=units.map(u=>u.id===target.id?applyBleedToUnit(u,attacker.name):u);bleedText+=` ${target.name} queda con Sangrado por Desgarro Salvaje.`;}
-    }
-    if(hit.hit&&hpLoss>0&&attacker.key==="inland_taipan"&&units.some(u=>u.id===target.id)){
-      if(isPoisonImmuneUnit(target)){
-        units=units.map(u=>u.id===target.id?clearPoisonStatus(u):u);
-        bleedText+=` ${target.name} ignora el Veneno.`;
-      }else{
-        units=units.map(u=>{
-          if(u.id!==target.id)return u;
-          if(u.poisonTurns&&u.poisonSourceId===attacker.id&&!u.leader)return {...u,hp:0};
-          return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:attacker.id,poisonSourceName:attacker.name};
-        });
-        poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===target.id)||target,1);
-        bleedText+=` ${target.name} queda envenenado: 1/2/4 durante 3 turnos.`;
-      }
     }
     if(arjunaDharmaPoison&&hit.hit&&hpLoss>0&&units.some(u=>u.id===target.id)){
       if(isPoisonImmuneUnit(target)){
@@ -1508,6 +1559,10 @@ async function adventureEnemyTurn(){
     const porcupineText=porcupineResult.logs.length?` ${porcupineResult.logs.join(" ")}`:"";
     const lionFearCombat=withAiPublicState(()=>applyAfricanLionFearAura(units));
     units=lionFearCombat.units;
+    const recoilBloodVictory=applyBloodVictoryForDeaths(bloodVictoryCheckpoint,units);
+    units=recoilBloodVictory.units;
+    if(recoilBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...recoilBloodVictory.logs);}
+    bloodVictoryCheckpoint=[...units];
     const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
     const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${attacker.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
     const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${target.name} no pierde Vida por ataques de unidades.`:"";
@@ -1515,7 +1570,7 @@ async function adventureEnemyTurn(){
     const mulanChoiceAttack=isMulanExecutionChoiceReady(attacker);
     const mulanExecutionTriggered=hit.hit&&defenderFell&&attacker.key==="mulan"&&!mulanChoiceAttack&&!target.leader&&units.some(u=>u.id===attacker.id);
     const khalidChainTriggered=hit.hit&&defenderFell&&attacker.key==="khalid_ibn_al_walid"&&!target.leader&&units.some(u=>u.id===attacker.id);
-    const exileTrap=defenderFell?withAiPublicState(()=>resolveAfterKillLegendaryTraps(attacker,target,units)):{units,traps:legendaryTraps,logs:[]};
+    const exileTrap=defenderFell?withAiPublicState(()=>resolveAfterKillLegendaryTraps(attacker,target,units,dmgTrap.traps)):{units,traps:dmgTrap.traps,logs:[]};
     units=exileTrap.units;
     legendaryTraps=exileTrap.traps||legendaryTraps;
     const genghisDebuffResult=withAiPublicState(()=>applyGenghisKhanKillDebuff(units,attacker,target,defenderFell));
@@ -1530,12 +1585,17 @@ async function adventureEnemyTurn(){
     units=hanzoContractResult.units;
 
     let attackerAfter=units.find(u=>u.id===attacker.id),defenderAfter=units.find(u=>u.id===target.id);
-    const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&isRangedAttack(attackerAfter,defenderAfter);
-    const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!defenderAfter.counterUsedTurn&&arcaneAdeptRangedCounter;
+    let miyamotoCounterBleedEvent=null;
+    const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&declaredRanged;
+    const miyamotoMeleeCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&declaredMelee&&(!hit.hit||hpLoss>0);
+    const counterLocked=!!(defenderAfter?.noCounterTurnKey&&defenderAfter.noCounterTurnKey===pub.turnKey);
+    const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&!defenderAfter.counterUsedTurn&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
     if(defenderAfter&&attackerAfter&&canSpecialCounter){
       const counterDefenseRemainder=withAiPublicState(()=>getCounterDefenseRemainder(attacker,target,mods));
-      const isMiyamotoCounter=false;
-      let cMods=withAiPublicState(()=>prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder));
+      const isMiyamotoCounter=!!miyamotoMeleeCounter;
+      let cMods=withAiPublicState(()=>isMiyamotoCounter
+        ?prepareMiyamotoCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
+        :prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder));
       const cHit=rollHit(defenderAfter,attackerAfter,cMods);
       const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
       units=cSpend.units;
@@ -1547,9 +1607,7 @@ async function adventureEnemyTurn(){
         units=units.map(u=>{
           if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
           if(u.id===attackerAfter.id){
-            let damaged=isMiyamotoCounter
-              ? applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0)
-              : resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-cAtk,lastGuardLoss:0,lastHpLoss:cAtk});
+            let damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
             const warriorShield=applyWarriorLeaderUnitShield(attackerAfter,defenderAfter,damaged,units);
             damaged=warriorShield.unit;
             cGuard=damaged.lastGuardLoss||0;cHp=damaged.lastHpLoss||0;
@@ -1564,12 +1622,12 @@ async function adventureEnemyTurn(){
         const counterMasteryResult=!units.some(u=>u.id===attackerAfter.id)?registerLocalUnitMasteryKill(defenderAfter,attackerAfter):null;
         units=applyUnitMasteryRankUpToUnits(units,defenderAfter,counterMasteryResult);
         let miyamotoBleedText="";
-        if(isMiyamotoCounter&&units.some(u=>u.id===attackerAfter.id)&&Math.random()<0.2){
+        if(isMiyamotoCounter&&cHp>0&&units.some(u=>u.id===attackerAfter.id)&&Math.random()<0.2){
           const bleedTargetBefore=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
           const alreadyBleeding=hasBleeding(bleedTargetBefore);
           units=units.map(u=>u.id===attackerAfter.id?applyBleedToUnit(u,defenderAfter.name):u);
           const bleedTargetAfter=units.find(u=>u.id===attackerAfter.id)||bleedTargetBefore;
-          pendingAiStatusFxEvent=makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply",bleedTargetAfter,1);
+          miyamotoCounterBleedEvent=makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply",bleedTargetAfter,1);
           miyamotoBleedText=` ${bleedTargetAfter.name} ${alreadyBleeding?"mantiene Sangrado":"queda con Sangrado"} por Dos Cielos.`;
         }
         let counterVenomText="";
@@ -1590,7 +1648,7 @@ async function adventureEnemyTurn(){
           units=units.map(u=>u.id===attackerAfter.id?applyBleedToUnit(u,defenderAfter.name):u);
           counterBleedText=` ${bleedTargetBefore.name} ${already?"mantiene Sangrado":"queda con Sangrado"} por contraataque.`;
         }
-        const miyamotoBonusText="";
+        const miyamotoBonusText=isMiyamotoCounter&&!hit.hit?" con +2 AT por Dos Cielos":"";
         const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
         counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
       }else{
@@ -1601,6 +1659,10 @@ async function adventureEnemyTurn(){
 
     const veilCurseResult=applyVeilCurseAfterHpDamage(units,attacker,target,hpLoss);
     units=veilCurseResult.units;
+    const counterBloodVictory=applyBloodVictoryForDeaths(bloodVictoryCheckpoint,units);
+    units=counterBloodVictory.units;
+    if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
+    bloodVictoryCheckpoint=[...units];
     const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
@@ -1622,10 +1684,10 @@ async function adventureEnemyTurn(){
           evasionRemaining:Number(evasionPressure?.remaining||0)
         }
       : null;
-    pendingAiStatusFxEvent=veilCurseResult.statusFxEvent||arcaneAdeptStatusEvent||poisonStatusEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
+    pendingAiStatusFxEvent=dragonCompanionResult.statusFxEvent||veilCurseResult.statusFxEvent||arcaneAdeptStatusEvent||poisonStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===attacker.id)||attacker, 1):(hit.hit&&hpLoss>0&&(attacker.key==="scout"||attacker.key==="bengal_tiger")&&defenderStillAlive
       ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
       : null));
-    pendingAiFloatFxEvent=lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
+    pendingAiFloatFxEvent=dragonCompanionResult.floatFxEvent||lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
       ? (hpLoss>0
           ? makeFloatFxEvent("damage", defenderUnitNow, hpLoss)
           : (guardLoss>0 ? makeFloatFxEvent("debuff", defenderUnitNow, guardLoss,{iconText:"🛡"}) : null))
@@ -1635,7 +1697,7 @@ async function adventureEnemyTurn(){
     const pressureText=evasionPressureText(target.name,evasionPressure.spent,evasionPressure.remaining);
     const actionSpendText=actionStatSpendText(attacker.name,actionSpend.spent,actionSpend.remaining);
     const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
-    const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryResult.logs.join(" ")}`:"";
+    const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryLogs.join(" ")}`:"";
     const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
     const bloodMistText=hasShadowMistAssassin(attacker,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
     const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
@@ -1660,7 +1722,7 @@ async function adventureEnemyTurn(){
     const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${attacker.name} atacó a distancia y mantiene Sigilo.`:` ${attacker.name} pierde Sigilo al declarar el ataque.`):"";
     const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
     const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+    const actionLog=hit.hit?`Rival: ${attacker.name} ataca a ${target.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`Rival: ${attacker.name} ataca a ${target.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
     return true;
@@ -1920,7 +1982,9 @@ async function adventureEnemyTurn(){
     if(!card||!target)return-9999;
     const tier=getUnitTrapTier(target);
     let score=scoreTarget(target,0)+((target.special||tier!=="basic")?60:10)+(target.atk||0)*5+(target.mov||0)*3+(target.range||1)*4;
-    if(tier==="legendary")score+=80;
+    const rarityKey=typeof getCraftRarityKey==="function"?getCraftRarityKey(target):"";
+    if(rarityKey==="demigod")score+=110;
+    else if(tier==="legendary")score+=80;
     if(tier==="special")score+=45;
     if(card.legendaryTrap==="false_crown")score+=(target.atk||0)*12+(target.acted?-60:30);
     if(card.legendaryTrap==="primordial_poison")score+=(effectiveMaxHp(target)||0)*10;
@@ -2173,13 +2237,14 @@ async function adventureEnemyTurn(){
   };
 
   const moveUnitSmart=(u)=>{
+    const moveStartUnits=[...units];
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const best=bestMoveFor(u);
     if(!best)return false;
     const movedNow=d(u,best);
     const straightMoveNow=isStraightLineDelta(best.x-u.x,best.y-u.y)?movedNow:0;
     const trapMove=withAiPublicState(()=>resolveMovementLegendaryTraps(u,{x:best.x,y:best.y},units));
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x:best.x,y:best.y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow,lastMoveDistance:movedNow,lastMoveDx:Math.sign(best.x-u.x),lastMoveDy:Math.sign(best.y-u.y),lastMoveTurnKey:publicState?.turnKey||""}:it);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x:best.x,y:best.y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow,lastMoveDistance:movedNow,lastMoveDx:Math.sign(best.x-u.x),lastMoveDy:Math.sign(best.y-u.y),lastMoveTurnKey:pub.turnKey||""}:it);
     if(mulanExecMove&&!trapMove.cancel){
       units=units.map(it=>it.id===u.id?{...it,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:it);
     }
@@ -2192,6 +2257,9 @@ async function adventureEnemyTurn(){
     }
     const lionFearMove=withAiPublicState(()=>applyAfricanLionFearAura(units));
     units=lionFearMove.units;
+    const movementBloodVictory=applyBloodVictoryForDeaths(moveStartUnits,units);
+    units=movementBloodVictory.units;
+    if(movementBloodVictory.logs.length)logs.push(...movementBloodVictory.logs);
     if(lionFearMove.statusFxEvent)pendingAiStatusFxEvent=lionFearMove.statusFxEvent;
     if(lionFearMove.floatFxEvent)pendingAiFloatFxEvent=lionFearMove.floatFxEvent;
     const moved=units.find(it=>it.id===u.id);
@@ -2263,6 +2331,7 @@ async function adventureEnemyTurn(){
   const playDamageSpell=(choice)=>{
     if(!choice?.card||!choice?.target)return false;
     const originalTarget=choice.target;
+    const beforeSpellDamage=[...units];
     const dmg=reduceDamageForHoneyBadger(originalTarget,effectiveCardValue(choice.card,"damage"));
     const appliesBurn=choice.card.key==="fireball"&&!originalTarget.leader;
     const appliesSandSlow=choice.card.key==="bolt"&&!originalTarget.leader;
@@ -2270,21 +2339,25 @@ async function adventureEnemyTurn(){
     const spellFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
     const spellMagicKind=choice.card.key==="fireball"?"fire":(choice.card.key==="bolt"||String(choice.card.key||"").includes("sand_curse")?"sand":"arcane");
     pendingAiBattleFxEvent=spellFxCaster?makeMagicFxEvent(spellFxCaster,originalTarget,spellMagicKind,{type:"spell",spellKey:choice.card.key,effectAction:"damage",impactScale:choice.card.key==="fireball"?1.12:1,hit:true}):pendingAiBattleFxEvent;
-    let damagedTarget=null;
-    units=units.map(u=>{
-      if(u.id!==originalTarget.id)return u;
-      damagedTarget=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:(dmg>0)||!!u.damagedThisTurn});
-      if(appliesBurn&&damagedTarget.hp>0)damagedTarget=applyBurnToUnit(damagedTarget,choice.card.name,choice.card.burnTurns||2,choice.card.burnDamage||1);
-      if(appliesSandSlow&&damagedTarget.hp>0)damagedTarget={...damagedTarget,mov:Math.max(0,Number(damagedTarget.mov||0)-sandSlowAmount)};
-      return damagedTarget;
-    });
-    if(appliesBurn&&damagedTarget&&damagedTarget.hp>0)pendingAiStatusFxEvent=makeStatusFxEvent("burn_apply",damagedTarget,1);
+    units=units.map(u=>u.id===originalTarget.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:(dmg>0)||!!u.damagedThisTurn}):u);
+    units=applyLegendaryFatalSaves(units,[originalTarget.id]);
+    let damagedTarget=units.find(u=>u.id===originalTarget.id)||null;
+    const fatalSaveTriggered=!!damagedTarget&&Number(damagedTarget.hp||0)>0&&Number(originalTarget.hp||0)-dmg<=0;
+    if(damagedTarget&&damagedTarget.hp>0){
+      if(appliesBurn)units=units.map(u=>u.id===damagedTarget.id?applyBurnToUnit(u,choice.card.name,choice.card.burnTurns||2,choice.card.burnDamage||1):u);
+      if(appliesSandSlow)units=units.map(u=>u.id===damagedTarget.id?{...u,mov:Math.max(0,Number(u.mov||0)-sandSlowAmount)}:u);
+    }
+    units=units.filter(u=>u.hp>0);
+    const bloodVictory=applyBloodVictoryForDeaths(beforeSpellDamage,units);
+    units=bloodVictory.units;
+    damagedTarget=units.find(u=>u.id===originalTarget.id)||null;
+    if(appliesBurn&&damagedTarget)pendingAiStatusFxEvent=makeStatusFxEvent("burn_apply",damagedTarget,1);
     else if(choice.card.key==="fireball"&&originalTarget.leader)pendingAiStatusFxEvent=makeStatusFxEvent("fire_impact",damagedTarget||originalTarget,0);
-    else if(appliesSandSlow&&damagedTarget&&damagedTarget.hp>0)pendingAiStatusFxEvent=makeStatusFxEvent("debuff",damagedTarget,sandSlowAmount);
+    else if(appliesSandSlow&&damagedTarget)pendingAiStatusFxEvent=makeStatusFxEvent("debuff",damagedTarget,sandSlowAmount);
+    pendingAiFloatFxEvent=makeFloatFxEvent("damage",damagedTarget||originalTarget,dmg);
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${dmg} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${appliesBurn?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow?` y pierde -${sandSlowAmount} MOV permanente`:""}.`);
-    killDead();
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${dmg} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
     return true;
   };
 
@@ -2313,7 +2386,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(bhTrap.cancel?bhTrap.logs.join(" "):`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${choice.card.buff||0} AT este turno.`);
+    logs.push(bhTrap.cancel?bhTrap.logs.join(" "):`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${effectiveCardValue(choice.card,"buff")} AT este turno.`);
     return true;
   };
 
@@ -2325,7 +2398,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(bhTrap.cancel?bhTrap.logs.join(" "):(choice.card.trap==="guard"?`Rival coloca ${choice.card.name} sobre ${choice.ally.name}. La próxima vez que sea atacada obtendrá +${choice.card.guard||0} GUARDIA durante ese combate.`:`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${choice.card.guard||0} GUARDIA durante 2 turnos (turno actual y próximo turno rival).`));
+    logs.push(bhTrap.cancel?bhTrap.logs.join(" "):(choice.card.trap==="guard"?`Rival coloca ${choice.card.name} sobre ${choice.ally.name}. La próxima vez que sea atacada obtendrá +${effectiveCardValue(choice.card,"guard")} GUARDIA durante ese combate.`:`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${effectiveCardValue(choice.card,"guard")} GUARDIA durante 2 turnos (turno actual y próximo turno rival).`));
     return true;
   };
 
@@ -2333,6 +2406,7 @@ async function adventureEnemyTurn(){
     if(!choice?.card||!choice?.ally)return false;
     if(choice.ally.noHealTurnKey===pub.turnKey||choice.ally.noHealWhilePoisoned)return false;
     const healAmount=effectiveCardValue(choice.card,"heal");
+    const actualHeal=Math.max(0,Math.min(effectiveMaxHp(choice.ally),Number(choice.ally.hp||0)+healAmount)-Number(choice.ally.hp||0));
     const canCleanse=cardCleanseEnabled(choice.card);
     const bhTrap=withAiPublicState(()=>resolveBuffHealLegendaryTraps(choice.ally,"curación",units));
     const healFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
@@ -2341,7 +2415,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(bhTrap.cancel?bhTrap.logs.join(" "):`Rival usa ${choice.card.name}: ${choice.ally.name} cura ${healAmount} HP${canCleanse&&hasCurableStatus(choice.ally)?" y limpia estados curables":""}.`);
+    logs.push(bhTrap.cancel?bhTrap.logs.join(" "):`Rival usa ${choice.card.name}: ${choice.ally.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${canCleanse&&hasCurableStatus(choice.ally)?" y limpia estados curables":""}.`);
     return true;
   };
 
@@ -2371,7 +2445,7 @@ async function adventureEnemyTurn(){
   await publishAiStep({turnPhase:"draw"});
   await sleep(AI_PHASE_DELAY_MS);
 
-  logs.push(`${pub.adventureEnemyName||"Rival"} entra en Main Phase: prepara cartas y invocacións.`);
+  logs.push(`${pub.adventureEnemyName||"Rival"} entra en Main Phase: prepara cartas e invocaciones.`);
   await publishAiStep({turnPhase:"main"});
   await sleep(AI_THINK_DELAY_MS);
 
@@ -2541,8 +2615,12 @@ async function adventureEnemyTurn(){
   }
 
   if((turnTimerExpiredKey===pub.turnKey||duelClockExpiredKey===pub.turnKey)||publicState?.turnKey!==pub.turnKey||publicState?.currentPlayer!==2)return;
+  const endTurnBeforeBurn=[...units];
   const burnEnd=applyBurnAtTurnEnd(units);
   units=burnEnd.units;
+  const burnBloodVictory=applyBloodVictoryForDeaths(endTurnBeforeBurn,units);
+  units=burnBloodVictory.units;
+  if(burnBloodVictory.logs.length)burnEnd.logs.push(...burnBloodVictory.logs);
   if(burnEnd.logs.length){
     logs.push(...burnEnd.logs);
     if(burnEnd.statusFxEvent)pendingAiStatusFxEvent=burnEnd.statusFxEvent;
@@ -2606,7 +2684,7 @@ async function adventureEnemyTurn(){
     turnStartedAt:serverTimestamp(),
     [`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),
     [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0},
-    [`playerStats/2`]:{hp:outcome.p2Leader?.hp||20,honor,maxHonor,deck:deck.length,hand:hand.length},
+    [`playerStats/2`]:{hp:outcome.p2Leader?.hp??20,honor,maxHonor,deck:deck.length,hand:hand.length},
     log:finalLogs,
     aiActionText:""
   });

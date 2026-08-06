@@ -1,9 +1,11 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AZ · Estado de red, creación de partidas y Firebase */
+/* HallValla 7BOARDCTRL8BC · Estado de red, creación de partidas y Firebase */
 function hallvallaSanitizeFirebaseValue(value){
+  const shared=globalThis.__HALLVALLA_SANITIZE_FIREBASE_VALUE__;
+  if(typeof shared==="function")return shared(value);
   if(typeof value==="undefined")return undefined;
   if(value===null)return null;
-  if(Array.isArray(value))return value.map(item=>{
+  if(Array.isArray(value))return Array.from(value,item=>{
     const clean=hallvallaSanitizeFirebaseValue(item);
     return typeof clean==="undefined"?null:clean;
   });
@@ -508,14 +510,17 @@ async function maybeStartTurn(){
     let units=restoreTurnGuardForOwner(publicState.units||[],myPlayer).map(u=>u.owner===myPlayer?clearTurnTempStatsForOwnerUnit(u,publicState.turnKey):u);units=units.map(u=>u.owner===myPlayer&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
     const heroicEdgeStart=applyHeroicEdgeStartHealing(units,myPlayer);
     units=heroicEdgeStart.units;
+    const startTurnBeforeEffects=[...units];
     const startTrap=resolveStartTurnLegendaryTraps(units,myPlayer,publicState.turnKey);
     units=startTrap.units;
     const bleedStart=applyBleedingToOwnerAtTurnStart(units,myPlayer);
     units=bleedStart.units;
+    const startBloodVictory=applyBloodVictoryForDeaths(startTurnBeforeEffects,units);
+    units=startBloodVictory.units;
     const lionFearStart=applyAfricanLionFearAura(units);
     units=lionFearStart.units;
     const merlinDrawLogs=actualMerlinDraw>0?[`Visión de los Tiempos: Merlín permite a J${myPlayer} robar 1 carta adicional de su mazo.`]:[];
-    const startLogs=[...merlinDrawLogs,...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(lionFearStart.logs||[])];
+    const startLogs=[...merlinDrawLogs,...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(startBloodVictory.logs||[]),...(lionFearStart.logs||[])];
     if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
     const playerStatsUpdate={hp:units.find(u=>u.owner===myPlayer&&u.leader)?.hp||0,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length};
     const stalemateState=buildNoPlayStalemateState(publicState,units,myPlayer,drawn.hand,honor,"main",playerStatsUpdate);

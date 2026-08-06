@@ -300,7 +300,25 @@ function getSanitizedPlayerCollection(){
   if(cleaned.changed)savePlayerCollection(cleaned.collection);
   return cleaned.collection;
 }
-function getCollectionCardsExpanded(){const collection=getSanitizedPlayerCollection();return (collection.cards||[]).map(c=>({...hydrateCardVisualData(c),qty:c.qty||1}))}
+let testPromoCollectionCache=null;
+function getTestPromoCollectionCards(){
+  if(!isTestPromoActive())return[];
+  if(!testPromoCollectionCache){
+    const byKey=new Map();
+    getCraftableCardPool().forEach(card=>{
+      if(!card?.key)return;
+      const hydrated=hydrateCardVisualData(card);
+      byKey.set(hydrated.key,{...hydrated,qty:maxCopiesForCard(hydrated),promoUnlocked:true});
+    });
+    testPromoCollectionCache=[...byKey.values()];
+  }
+  return testPromoCollectionCache.map(card=>({...card}));
+}
+function getCollectionCardsExpanded(){
+  if(isTestPromoActive())return getTestPromoCollectionCards();
+  const collection=getSanitizedPlayerCollection();
+  return (collection.cards||[]).map(c=>({...hydrateCardVisualData(c),qty:c.qty||1}));
+}
 function getCraftableCardPool(){
   const pools=[
     CARD_TEMPLATES||[],
@@ -912,12 +930,11 @@ function saveNotificationState(state){
   localStorage.setItem("hallvalla_notifications",JSON.stringify(state));
 }
 function getCollectionCardTotal(){
-  const collection=getPlayerCollection();
-  return (collection.cards||[]).reduce((sum,c)=>sum+(c.qty||0),0);
+  const cards=isTestPromoActive()?getCollectionCardsExpanded():(getPlayerCollection().cards||[]);
+  return cards.reduce((sum,c)=>sum+Number(c.qty||0),0);
 }
 function getCollectionUniqueTotal(){
-  const collection=getPlayerCollection();
-  return (collection.cards||[]).length;
+  return isTestPromoActive()?getCollectionCardsExpanded().length:(getPlayerCollection().cards||[]).length;
 }
 function getHomeProgressSummary(){
   const progress=getAdventureProgress();
@@ -960,9 +977,9 @@ function renderHomeProgress(){
   const progressTitle=$("homeProgressTitle"),progressText=$("homeProgressText"),deckStatus=$("homeDeckStatus"),collectionStatus=$("homeCollectionStatus");
   if(progressTitle)progressTitle.textContent=`${summary.activeChapter.number} ${summary.activeChapter.title}`;
   if(progressText)progressText.textContent=summary.progress.guardianDefeated?`Progreso: ${summary.completed}/${summary.total} batallas completadas. Siguiente desbloqueada: ${Math.min(summary.chapter.unlockedBattle||1,summary.total)}/${summary.total}.`:`Prueba previa pendiente: derrota al Hechicero guardián para desbloquear el mapa ${ADVENTURE_CHAPTER_1_1.number}.`;
-  if(deckStatus)deckStatus.textContent=canAccessDecks()?"Mazos y Personaje Principal desbloqueados":"Mazos bloqueados";
+  if(deckStatus)deckStatus.textContent=isTestPromoActive()?"Modo de pruebas: todo desbloqueado":(canAccessDecks()?"Mazos y Personaje Principal desbloqueados":"Mazos bloqueados");
   const pendingPacks=getPendingPackCount();
-  if(collectionStatus)collectionStatus.textContent=canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs disponible desde el inicio."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Completa 1.1 para editar mazos.`;
+  if(collectionStatus)collectionStatus.textContent=isTestPromoActive()?`Acceso promocional activo: ${uniqueTotal} cartas únicas disponibles con todas sus copias permitidas. Líderes y maestrías al máximo.`:(canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs disponible desde el inicio."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Completa 1.1 para editar mazos.`);
   renderNotificationBadge();
 }
 function renderNotificationBadge(){

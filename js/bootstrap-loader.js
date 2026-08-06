@@ -1,30 +1,98 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getDatabase,
+  ref,
+  set as firebaseSet,
+  update as firebaseUpdate,
+  get,
+  onValue,
+  remove,
+  runTransaction as firebaseRunTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8BC";
 
-const BUILD = "7BOARDCTRL8AZ";
+const BUILD = "7BOARDCTRL8BC";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
 }
 globalThis.__HALLVALLA_BUILD__ = BUILD;
 globalThis.__HALLVALLA_BUILD_VERSION__ = `v8_MODULAR_${BUILD}`;
+globalThis.__HALLVALLA_FIREBASE_CONFIG__ = hallvallaFirebaseConfig;
+
+function sanitizeFirebaseValue(value, seen = new WeakSet()) {
+  if (typeof value === "undefined") return undefined;
+  if (value === null || typeof value !== "object") return value;
+  if (seen.has(value)) throw new TypeError("Firebase no admite estructuras circulares.");
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) {
+      return Array.from(value, item => {
+        const clean = sanitizeFirebaseValue(item, seen);
+        return typeof clean === "undefined" ? null : clean;
+      });
+    }
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return value;
+    const clean = {};
+    for (const [key, item] of Object.entries(value)) {
+      const safe = sanitizeFirebaseValue(item, seen);
+      if (typeof safe !== "undefined") clean[key] = safe;
+    }
+    return clean;
+  } finally {
+    seen.delete(value);
+  }
+}
+
+function requireFirebaseValue(value, operation) {
+  const clean = sanitizeFirebaseValue(value);
+  if (typeof clean === "undefined") {
+    throw new TypeError(`${operation} recibió undefined como valor principal.`);
+  }
+  return clean;
+}
+
+function safeSet(reference, value) {
+  return firebaseSet(reference, requireFirebaseValue(value, "set"));
+}
+
+function safeUpdate(reference, patch) {
+  const clean = requireFirebaseValue(patch, "update");
+  if (!clean || typeof clean !== "object" || Array.isArray(clean)) {
+    throw new TypeError("update requiere un objeto de propiedades.");
+  }
+  return firebaseUpdate(reference, clean);
+}
+
+function safeRunTransaction(reference, updater, options) {
+  if (typeof updater !== "function") throw new TypeError("runTransaction requiere una función actualizadora.");
+  return firebaseRunTransaction(reference, current => {
+    const next = updater(current);
+    return typeof next === "undefined" ? undefined : sanitizeFirebaseValue(next);
+  }, options);
+}
+
+globalThis.__HALLVALLA_SANITIZE_FIREBASE_VALUE__ = sanitizeFirebaseValue;
 Object.assign(globalThis, {
   initializeApp,
   getDatabase,
   ref,
-  set,
-  update,
+  set: safeSet,
+  update: safeUpdate,
   get,
   onValue,
   remove,
-  runTransaction,
+  runTransaction: safeRunTransaction,
   serverTimestamp,
   getAuth,
   signInAnonymously,
   onAuthStateChanged
 });
 
+// 19-basic-field-figures.js es un módulo legado sustituido por 19-field-figures-3d.js.
 const PARTS = [
   "01-boot-config.js",
   "02-assets-leaders.js",

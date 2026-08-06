@@ -418,10 +418,10 @@ function solomonJinnGuardAura(u,units=publicState?.units||[]){return (units||[])
 function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
   if(attacker?.key!=="solomon_ifrit"||!hit?.hit||hpLoss<=0)return {units,logs:[]};
   let out=[...(units||[])],logs=[];
-  if(out.some(u=>u.id===target.id))out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
-  const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&dist(u,target)<=1).map(u=>u.id);
-  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true}:u).filter(u=>u.hp>0);logs.push(`Fuego del Mandato causa 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
-  if(!out.some(u=>u.id===target.id))out=out.map(u=>u.id===attacker.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
+  const targetState=out.find(u=>u.id===target.id);
+  if(targetState&&Number(targetState.hp||0)>0)out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
+  const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&u.hp>0&&dist(u,target)<=1).map(u=>u.id);
+  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true}):u);logs.push(`Fuego del Mandato causa 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
   return {units:out,logs};
 }
 

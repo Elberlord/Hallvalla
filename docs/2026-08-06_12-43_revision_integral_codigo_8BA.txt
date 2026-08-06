@@ -1,0 +1,74 @@
+HALLVALLA 7BOARDCTRL8BA — REVISIÓN INTEGRAL DE CÓDIGO
+Fecha: 2026-08-06
+
+ALCANCE
+- 23 archivos JavaScript, incluidos 19 módulos activos y archivos heredados.
+- HTML, CSS, configuración Firebase, JSON y rutas de recursos.
+- Combate del jugador, VFX de ataque, estados de unidades y lógica de IA.
+- Escrituras set/update/runTransaction hacia Firebase.
+- Coherencia de versión y orden de carga modular.
+
+FALLOS REALES CORREGIDOS
+1. ESCRITURAS FIREBASE SIN PROTECCIÓN GLOBAL
+   Varias funciones escribían directamente con set/update/runTransaction y podían enviar undefined.
+   Ahora las tres operaciones pasan por una limpieza común antes de escribir.
+
+2. DRAGONCHARGE EN UNIDADES NORMALES
+   Una unidad no dragón podía conservar una propiedad dragonCharge vieja si ya tenía un valor numérico.
+   Ahora la propiedad se elimina siempre de atacantes que no sean dragones compatibles.
+
+3. VIDA 0 CONVERTIDA EN 20
+   Dos actualizaciones de estadísticas de la IA usaban hp || 20. Cuando el líder tenía 0 Vida,
+   el valor podía volver a 20. Se sustituyó por hp ?? 20.
+
+4. RAMA IMPOSIBLE DE RAREZA SEMIDIÓS
+   La IA comparaba el resultado de getUnitTrapTier con "demigod", pero esa función solo devuelve
+   basic, special o legendary. Ahora la IA consulta la rareza real para valorar Semidioses,
+   sin alterar las reglas funcionales de trampas.
+
+5. CONFIGURACIÓN FIREBASE DUPLICADA
+   firebase-config.js era un archivo de ejemplo y 01-boot-config.js contenía otra configuración.
+   Ahora existe una única fuente real en firebase-config.js y el cargador la comparte con el juego.
+
+6. DIFERENCIA ENTRE PRUEBA LOCAL Y FIREBASE
+   Los parches locales no eliminaban propiedades al recibir null como sí hace Firebase Update.
+   Ahora null elimina propiedades tanto en rutas profundas como en propiedades de primer nivel.
+
+7. BOTONES SIN TIPO EXPLÍCITO
+   Se normalizaron todos los botones del HTML con type="button" para impedir envíos accidentales.
+
+8. MÓDULOS HEREDADOS POCO CLAROS
+   script.js y 19-basic-field-figures.js quedan marcados expresamente como heredados y no activos.
+
+9. TEXTO BÁSICO
+   Se corrigió "invocacións" por "invocaciones".
+
+VALIDACIONES SUPERADAS
+- 23/23 JavaScript pasan node --check.
+- 19/19 módulos activos cargan en orden en el entorno de prueba.
+- 0 identificadores globales sin resolver en el análisis checkJs.
+- 0 declaraciones duplicadas, 0 funciones duplicadas y 0 usos detectados antes de declaración.
+- 373 IDs HTML, sin duplicados.
+- 139 botones HTML, todos con tipo explícito.
+- 41 imágenes HTML, todas con texto alt.
+- 8105 reglas CSS analizadas, 0 errores de nivel superior.
+- 407 referencias estáticas de recursos, 0 archivos ausentes.
+- 582 WebP decodificados, 0 dañados; 232 conservan canal alfa.
+- 0 PNG dentro del proyecto.
+- 59 plantillas de cartas: 0 claves duplicadas y 0 registros esenciales inválidos.
+- 10 líderes: 0 estadísticas esenciales inválidas.
+- Mazo inicial: 21 cartas y 0 entradas inválidas.
+- Ataque sintético de arquera: daño, gasto de acción, supresión y VFX de flecha completados.
+- Prueba con dragonCharge viejo en arquera: la propiedad se elimina correctamente.
+- Limpieza Firebase: undefined anidado eliminado y undefined en arreglos convertido a null.
+- Parches locales: null elimina propiedades igual que Firebase.
+
+OBSERVACIÓN TÉCNICA
+El análisis checkJs todavía produce advertencias de tipado DOM propias de un proyecto JavaScript sin anotaciones
+JSDoc estrictas. No encontró nombres inexistentes ni errores de declaración. Estas advertencias no son excepciones
+de ejecución, pero quedan como deuda de tipado si el proyecto se migra a TypeScript.
+
+LÍMITE DE LA REVISIÓN
+Las pruebas estáticas y sintéticas no sustituyen una partida completa táctil en Android. Los problemas puramente
+visuales, de temporización, rendimiento del dispositivo o combinación extraordinaria de cartas solo pueden
+confirmarse durante ejecución real.

@@ -1,0 +1,118 @@
+HALLVALLA 7BOARDCTRL8BB
+REVISIÓN PROFUNDA DE LÓGICA, RELACIONES Y RUTAS DE COMBATE
+Fecha: 2026-08-06 14:52 (UTC-06:00)
+
+NOTA DE TRANSPARENCIA
+La revisión anterior, presentada como integral, fue insuficiente: comprobó estructura y el error reportado, pero no siguió de manera bastante profunda las rutas completas de combate, movimiento, estados y turnos. Esta revisión sí añadió pruebas dinámicas y encontró fallos independientes del error de la arquera.
+
+ALCANCE REAL
+- Ataques del jugador y rutas equivalentes de la IA.
+- Movimiento, cancelación de movimiento y trampas.
+- Daño directo de hechizos y ataques de jefe.
+- Salvaciones fatales y eliminación definitiva.
+- Contraataques, Primera Estocada, Postura Defensiva y bloqueo de contraataque.
+- Estados: Veneno, Quemadura, Sangrado y Maldición del Velo.
+- Victoria Sangrienta y muertes producidas fuera del golpe principal.
+- Inicio y final de turno del jugador, IA normal y jefe dragón.
+- Sincronización del estado de combate con Firebase.
+- Carga modular, versión interna, HTML, CSS y recursos estáticos.
+
+ERRORES NUEVOS ENCONTRADOS Y CORREGIDOS
+1. Trampa legendaria entre etapas del ataque
+   Una trampa podía reaparecer entre la etapa previa, el daño y la etapa posterior. Ahora la misma lista de trampas se transmite durante todo el ataque.
+
+2. Exilio por Nombre Verdadero sin atacante vivo
+   La trampa podía consumirse y registrar el efecto aunque el atacante hubiera muerto antes. Ahora exige que el atacante siga presente y vivo.
+
+3. Contraataque de Miyamoto Musashi incompleto
+   La mecánica no resolvía correctamente el contraataque, el bono por evasión ni el Sangrado. Ahora contraataca una vez por turno cuando corresponde; el +2 AT solo se concede después de evadir y el Sangrado solo después de infligir daño real a Vida.
+
+4. Contraataque del Adepto Arcano de la IA ignoraba Guardia
+   El daño atravesaba la Guardia del atacante. Ahora usa la misma canalización de Guardia y Vida que el resto de contraataques.
+
+5. Compañeros dragón controlados por IA incompletos
+   Faltaban carga, estados y lógica de área del tercer ataque. Se agregó la ruta equivalente a la del jugador.
+
+6. Postura Defensiva y Primera Estocada divergentes entre jugador e IA
+   El orden de resolución no era equivalente. Se unificó para evitar resultados diferentes según quién controlara la unidad.
+
+7. Penalización de precisión de Postura Defensiva sin uso
+   La interfaz anunciaba -10 %, pero la variable no afectaba el cálculo. Ahora se aplica al puntaje de precisión.
+
+8. Bloqueo de contraataque incompleto
+   noCounterTurnKey impedía algunos contraataques, pero no Primera Estocada ni contraataques especiales. Ahora bloquea todas las variantes correspondientes.
+
+9. Clasificación melee/rango demasiado tarde
+   La clasificación podía calcularse después de que una unidad cambiara de posición, provocando una resolución incorrecta. Ahora se fija al comenzar el ataque.
+
+10. Movimiento cancelado activaba trampas en una casilla incorrecta
+    Una unidad cuyo movimiento era cancelado podía activar la trampa de bestia como si hubiera llegado. Ahora la trampa solo se resuelve si el movimiento se completa y la unidad sobrevive.
+
+11. Mulan avanzaba de etapa aunque el movimiento de ejecución fallara
+    La elección se habilitaba incluso con movimiento cancelado. Ahora solo avanza tras un movimiento real y con Mulan viva.
+
+12. Muertes por movimiento o trampas omitían Victoria Sangrienta
+    Se añadió la comprobación de muertes a las rutas de movimiento del jugador y de la IA.
+
+13. Hechizos de daño directo ignoraban salvaciones fatales
+    Efectos como Último Aliento de William Wallace podían ser saltados por hechizos. Ahora los hechizos del jugador y de la IA pasan por la misma canalización de salvación fatal antes de eliminar unidades.
+
+14. Doble Veneno de Taipán se resolvía tarde e incompleto
+    Solo funcionaba en algunas fuentes y podía dejar una unidad con 0 HP todavía presente. Ahora cualquier segundo Veneno de Taipán elimina correctamente a una unidad no líder ya envenenada y entra en la canalización normal de muerte. Los líderes mantienen la excepción.
+
+15. Victoria Sangrienta omitía muertes secundarias
+    Se añadieron puntos de control después de daño de Ifrit de Salomón, retroceso del Halcón, púas del Puercoespín, contraataques y otras muertes fuera del golpe principal.
+
+16. Muertes por estados al inicio y final de turno omitían Victoria Sangrienta
+    Se corrigieron Sangrado, Quemadura y trampas de inicio de turno para jugador, IA normal y jefe dragón.
+
+17. Ataques directos y de área del jefe dragón ignoraban salvaciones y Victoria Sangrienta
+    Ahora usan ambas canalizaciones antes de filtrar unidades derrotadas.
+
+18. Curación de Ifrit podía concederse aunque la víctima se salvara
+    La curación ahora se aplica solo después de confirmar la muerte final del defensor.
+
+19. Registros de soporte de la IA eran inexactos
+    Mejoras, Guardia y curación registraban valores nominales en lugar de valores efectivos. Los mensajes ahora muestran lo realmente aplicado o recuperado.
+
+20. Evento visual de Sangrado de Miyamoto podía ser sobrescrito
+    Se preserva el evento de estado correcto en la ruta de la IA.
+
+21. Clave de movimiento de la IA podía usar un turno incorrecto
+    lastMoveTurnKey ahora usa explícitamente el turnKey público del turno que se está ejecutando.
+
+22. Daño de hechizo de IA publicaba estados sobre objetivos ya eliminados
+    Los eventos de estado y números flotantes ahora se emiten únicamente cuando el objetivo sobrevive y el estado realmente queda aplicado.
+
+VALIDACIONES DINÁMICAS
+- 6 pruebas dirigidas de combate y trampas: 6 aprobadas.
+- 5 pruebas profundas de movimiento, estados, salvación fatal y Victoria Sangrienta: 5 aprobadas.
+- Matriz de ataque: 87 cartas de unidad probadas como atacante y defensor, 174 casos aprobados.
+- Total de comprobaciones dinámicas ejecutadas: 185.
+- Errores de página durante las pruebas: 0.
+- Estados inválidos o valores NaN detectados en la matriz: 0.
+
+VALIDACIONES ESTÁTICAS
+- 19 módulos activos encontrados y cargados en el orden esperado.
+- 23 archivos JavaScript comprobados con node --check: 0 errores de sintaxis.
+- 373 IDs HTML: 0 duplicados.
+- 139 botones HTML: todos tienen type="button".
+- 417 referencias estáticas examinadas: 0 rutas literales ausentes. Las seis coincidencias no resolubles estáticamente son plantillas dinámicas y se revisaron aparte como tales.
+- 582 archivos WebP decodificados: 0 dañados; 232 contienen transparencia.
+- 0 archivos PNG y 0 referencias a PNG.
+- 1,243 declaraciones de función revisadas: 0 duplicados entre módulos activos.
+- 3,615 reglas CSS de nivel superior: 0 errores estructurales del analizador.
+
+VERSIÓN Y CARGA
+- Build único: 7BOARDCTRL8BB.
+- HTML, cargador, configuración de arranque y parámetros de caché coinciden.
+- Mensaje esperado:
+  [HallValla] 7BOARDCTRL8BB: 19 módulos cargados correctamente.
+
+LÍMITES DE ESTA REVISIÓN
+Esta revisión encuentra y corrige problemas concretos, pero no demuestra matemáticamente que no exista ningún error restante. Aún requieren prueba de integración real:
+- Firebase con dos clientes concurrentes y latencia real.
+- Android WebView, gestos táctiles, orientación y administración de memoria.
+- Partidas largas con muchas combinaciones de cartas, trampas y estados.
+- Reconexión durante una actualización o durante el turno de la IA.
+- Sincronización audiovisual exacta de todos los VFX en dispositivos de distintas potencias.

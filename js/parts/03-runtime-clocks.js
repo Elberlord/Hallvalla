@@ -13,8 +13,8 @@ let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHigh
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
 function hallvallaIsLocalTestGame(){return HALLVALLA_LOCALHOST_TEST_MODE&&String(gameId||"").startsWith("LOCAL");}
-function hallvallaSetDeep(obj,path,value){const parts=String(path||"").split("/").filter(Boolean);let cur=obj;for(let i=0;i<parts.length-1;i++){const k=parts[i];if(!cur[k]||typeof cur[k]!=="object")cur[k]={};cur=cur[k];}if(parts.length)cur[parts[parts.length-1]]=value;}
-function hallvallaApplyLocalPatch(target,patch){const base={...(target||{})};Object.entries(patch||{}).forEach(([k,v])=>{if(k.includes("/"))hallvallaSetDeep(base,k,v);else base[k]=v;});return base;}
+function hallvallaSetDeep(obj,path,value){const parts=String(path||"").split("/").filter(Boolean);let cur=obj;for(let i=0;i<parts.length-1;i++){const k=parts[i];if(!cur[k]||typeof cur[k]!=="object")cur[k]={};cur=cur[k];}if(!parts.length)return;const last=parts[parts.length-1];if(value===null)delete cur[last];else cur[last]=value;}
+function hallvallaApplyLocalPatch(target,patch){const base={...(target||{})};Object.entries(patch||{}).forEach(([k,v])=>{if(k.includes("/"))hallvallaSetDeep(base,k,v);else if(v===null)delete base[k];else base[k]=v;});return base;}
 
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 const TURN_PHASES=["draw","main","actions","last","end"];
@@ -250,7 +250,11 @@ function buildTimedOutTurnState(state,now=Date.now()){
   const pve=isPveClockMode(state);
   const committedClock=pve?null:getCommittedDuelClockMs(state,owner,now);
   if(!pve&&committedClock<=0)return buildDuelClockExpiredState(state,now);
-  const burnEnd=applyBurnAtTurnEnd(state.units||[]);
+  const endTurnBeforeBurn=[...(state.units||[])];
+  const burnEnd=applyBurnAtTurnEnd(endTurnBeforeBurn);
+  const burnBloodVictory=applyBloodVictoryForDeaths(endTurnBeforeBurn,burnEnd.units);
+  burnEnd.units=burnBloodVictory.units;
+  if(burnBloodVictory.logs.length)burnEnd.logs.push(...burnBloodVictory.logs);
   const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,owner,state.turnKey||"");
   const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,owner);
   const erictoLife=resolveErictoLifecycle(veilEnd.units,erictoUpkeep.units);

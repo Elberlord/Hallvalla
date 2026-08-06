@@ -1,13 +1,12 @@
-// firebase-config.js
-// Pega aquí la configuración que Firebase te da al crear una app web.
-// Este archivo queda separado para que no tengas que buscar dentro del index.html.
+// HallValla · Configuración única de Firebase.
+// Este archivo es consumido por js/bootstrap-loader.js.
 
-export const firebaseConfig = {
-  apiKey: "PEGAR_AQUI",
-  authDomain: "PEGAR_AQUI",
-  databaseURL: "PEGAR_AQUI",
-  projectId: "PEGAR_AQUI",
-  storageBucket: "PEGAR_AQUI",
-  messagingSenderId: "PEGAR_AQUI",
-  appId: "PEGAR_AQUI"
-};
+export const firebaseConfig = Object.freeze({
+  apiKey: "AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",
+  authDomain: "hallvalla-online.firebaseapp.com",
+  databaseURL: "https://hallvalla-online-default-rtdb.firebaseio.com",
+  projectId: "hallvalla-online",
+  storageBucket: "hallvalla-online.firebasestorage.app",
+  messagingSenderId: "496903032464",
+  appId: "1:496903032464:web:d1e63bfead7109fc905215"
+});

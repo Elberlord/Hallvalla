@@ -1,4 +1,5 @@
 "use strict";
+/* MÓDULO LEGADO NO ACTIVO: sustituido por 19-field-figures-3d.js y excluido del cargador. */
 /* HallValla 7BOARDCTRL8AL · Figuras emergentes de unidades básicas */
 
 const BASIC_FIELD_FIGURE_PORTRAITS=Object.freeze({

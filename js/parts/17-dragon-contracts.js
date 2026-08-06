@@ -192,7 +192,10 @@ getCombatMods=function(attacker,defender){
 
 const dragonOriginalGetAttackPrecisionScore=getAttackPrecisionScore;
 getAttackPrecisionScore=function(attacker,mods={}){
-  if(attacker?.dragonBoss||attacker?.usesCombatPrecision)return Math.max(0,Number(attacker.dragonPrecision??attacker.dex??0)+(Number(mods.attackerDex)||0));
+  if(attacker?.dragonBoss||attacker?.usesCombatPrecision){
+    const raw=Number(attacker.dragonPrecision??attacker.dex??0)+(Number(mods.attackerDex)||0);
+    return applyCombatPrecisionPercentPenalty(raw,mods);
+  }
   return dragonOriginalGetAttackPrecisionScore(attacker,mods);
 };
 const dragonOriginalGetDefenseEvasionScore=getDefenseEvasionScore;
@@ -382,13 +385,16 @@ async function dragonContractEnemyTurn(){
   const beastTraps=[...(pub.beastTraps||[])];
   const previousPublicState=publicState;
   publicState={...pub,units,legendaryTraps,beastTraps,currentPlayer:2};
+  const startTurnBeforeEffects=[...units];
   const startTrap=resolveStartTurnLegendaryTraps(units,2,pub.turnKey);
   units=startTrap.units;legendaryTraps=startTrap.traps||legendaryTraps;
   const bleedStart=applyBleedingToOwnerAtTurnStart(units,2);
   units=bleedStart.units;
+  const startBloodVictory=applyBloodVictoryForDeaths(startTurnBeforeEffects,units);
+  units=startBloodVictory.units;
   publicState=previousPublicState;
   let dragon=units.find(u=>u.owner===2&&u.leader);
-  const startEffectLogs=[...(startTrap.logs||[]),...(bleedStart.logs||[])];
+  const startEffectLogs=[...(startTrap.logs||[]),...(bleedStart.logs||[]),...(startBloodVictory.logs||[])];
   if(!dragon){
     const outcome=getBattleOutcome(units,{...pub,units});
     await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,beastTraps,phase:"ended",battleEnded:true,winner:outcome.winner||1,loser:outcome.loser||2,endedAt:Date.now(),currentPlayer:0,adventureAiState:{...ai,lastTurnStarted:pub.turnKey,dragonStartedAt:0},log:[...startEffectLogs,`${def.enemyName} cae antes de atacar.`,...(pub.log||[])].slice(0,18),aiActionText:""});
@@ -413,12 +419,17 @@ async function dragonContractEnemyTurn(){
       nextCycle=areaMode?0:currentCycle+1;
     }else if(!areaMode){
       let affected=null;
+      const beforeDragonHit=[...units];
       units=units.map(u=>{
         if(u.id!==target.id)return u;
         let next=dragonApplyDamageToUnit(u,def.atk);
         if(next.hp>0)next=dragonApplyElementStatus(next,def,2,pub);
         affected=next;return next;
-      }).filter(u=>u.hp>0);
+      });
+      units=applyLegendaryFatalSaves(units,[target.id]).filter(u=>u.hp>0);
+      const dragonBloodVictory=applyBloodVictoryForDeaths(beforeDragonHit,units);
+      units=dragonBloodVictory.units;
+      if(dragonBloodVictory.logs.length)logs.push(...dragonBloodVictory.logs);
       nextCycle=currentCycle+1;
       battleFxEvent=makeBattleFxEvent("attack",dragon,target,{attackStyle:"ranged",rarityClass:"fx-demigod",hit:true});
       if(affected){statusFxEvent=makeStatusFxEvent(dragonElementFxType(def),affected,def.element==="fire"?1:0);floatFxEvent=makeFloatFxEvent("damage",affected,def.atk);}
@@ -427,6 +438,7 @@ async function dragonContractEnemyTurn(){
       const cells=def.element==="lightning"?dragonCellsLightning3x3(dragon,target):dragonCellsCentered3x3(target);
       const unique=new Map(cells.filter(dragonInBounds).map(cell=>[`${cell.x},${cell.y}`,cell]));
       const hitIds=[];
+      const beforeDragonArea=[...units];
       let firstAffected=null;
       for(const [coord,cell] of unique){
         const victim=units.find(u=>u.owner===1&&u.hp>0&&u.x===cell.x&&u.y===cell.y);
@@ -439,9 +451,13 @@ async function dragonContractEnemyTurn(){
           if(next.hp>0)next=dragonApplyElementStatus(next,def,isMain?2:1,pub);
           if(!firstAffected)firstAffected=next;
           return next;
-        }).filter(u=>u.hp>0);
+        });
         hitIds.push(victim.id);
       }
+      units=applyLegendaryFatalSaves(units,hitIds).filter(u=>u.hp>0);
+      const dragonAreaBloodVictory=applyBloodVictoryForDeaths(beforeDragonArea,units);
+      units=dragonAreaBloodVictory.units;
+      if(dragonAreaBloodVictory.logs.length)logs.push(...dragonAreaBloodVictory.logs);
       nextCycle=0;
       battleFxEvent=makeBattleFxEvent("attack",dragon,target,{attackStyle:"ranged",rarityClass:"fx-demigod",hit:true});
       if(firstAffected)statusFxEvent=makeStatusFxEvent(dragonElementFxType(def),firstAffected,def.element==="fire"?1:0);
@@ -451,8 +467,12 @@ async function dragonContractEnemyTurn(){
 
   units=units.map(u=>u.owner===2&&u.leader?{...u,dragonCharge:nextCycle,dragonAwake}:u);
   if(nextCycle===2&&target)logs.push(`${def.enemyName} queda con su ataque elemental preparado para la próxima activación.`);
+  const endTurnBeforeBurn=[...units];
   const burnEnd=applyBurnAtTurnEnd(units);
   units=burnEnd.units;
+  const burnBloodVictory=applyBloodVictoryForDeaths(endTurnBeforeBurn,units);
+  units=burnBloodVictory.units;
+  if(burnBloodVictory.logs.length)burnEnd.logs.push(...burnBloodVictory.logs);
   if(burnEnd.logs?.length)logs.push(...burnEnd.logs);
   if(!statusFxEvent&&burnEnd.statusFxEvent)statusFxEvent=burnEnd.statusFxEvent;
   if(!floatFxEvent&&burnEnd.floatFxEvent)floatFxEvent=burnEnd.floatFxEvent;

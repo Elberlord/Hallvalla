@@ -82,7 +82,8 @@ const defaultPlayerProfile = {
   nameChangeCount: 0,
   leaderLevels: {warrior:1, archer:1, mage:1},
   leaderLevel5Abilities: {},
-  leaderRecords: {}
+  leaderRecords: {},
+  testPromo: null
 };
 function emptyLeaderRecord(){return {ai:{wins:0,losses:0},pvp:{wins:0,losses:0}}}
 function normalizeLeaderRecords(records={}){
@@ -182,6 +183,150 @@ function getPlayerProfile(){
 }
 function savePlayerProfile(profile){
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
+}
+
+/* ============================================================
+   MODO PROMOCIONAL DE PRUEBAS
+   - La clave no se guarda en texto plano: solo se compara su hash.
+   - La activación es local a este navegador/perfil.
+   - Desbloquea virtualmente todas las cartas sin contaminar la colección real.
+   - Sube temporalmente perfil, líderes, maestrías y servicio al máximo.
+   ============================================================ */
+const TEST_PROMO_ID="full_test_access_v1";
+const TEST_PROMO_SHA256="4b3d61fc545d29251cbab15f854a5380a64cf4ba3fd2d027e8166c2fd1ac3338";
+const TEST_PROMO_FNV1A="40d430e4";
+function clonePromoPlain(value){
+  try{return JSON.parse(JSON.stringify(value));}catch(e){return value;}
+}
+function isTestPromoActive(profile=null){
+  const source=profile&&typeof profile==="object"?profile:getPlayerProfile();
+  return !!(source?.testPromo?.active&&source.testPromo.id===TEST_PROMO_ID);
+}
+function fnv1aPromoHash(value){
+  let hash=0x811c9dc5;
+  const text=String(value||"");
+  for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,0x01000193)>>>0;}
+  return hash.toString(16).padStart(8,"0");
+}
+async function sha256PromoHash(value){
+  const text=String(value||"");
+  if(globalThis.crypto?.subtle&&globalThis.TextEncoder){
+    const bytes=new TextEncoder().encode(text);
+    const digest=await crypto.subtle.digest("SHA-256",bytes);
+    return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,"0")).join("");
+  }
+  return "";
+}
+async function isValidTestPromoCode(value){
+  const code=String(value||"").trim();
+  if(!code)return false;
+  const strongHash=await sha256PromoHash(code);
+  if(strongHash)return strongHash===TEST_PROMO_SHA256;
+  return fnv1aPromoHash(code)===TEST_PROMO_FNV1A;
+}
+function getTestPromoMaxLeaderLevels(){
+  return Object.fromEntries(Object.keys(LEADER_DATA||{}).map(type=>[type,LEADER_LEVEL_MAX]));
+}
+function buildTestPromoProgressBooks(profile){
+  const mastery=normalizeUnitMasteryBook(profile?.unitMastery||{});
+  const service=normalizeUnitServiceBook(profile?.unitService||{});
+  const unitCards=typeof getCraftableCardPool==="function"?getCraftableCardPool().filter(card=>card?.type==="unit"&&!card.leader):[];
+  const maxKills=getUnitMasteryKillsForRank(UNIT_MASTERY_MAX_RANK);
+  unitCards.forEach(card=>{
+    const key=normalizeUnitMasteryName(card.name||card.key||"").toLowerCase();
+    if(!key)return;
+    if(isUnitServiceProgression(card)){
+      service[key]={name:normalizeUnitMasteryName(card.name||key),points:Math.max(100,Number(service[key]?.points||0))};
+    }else{
+      mastery[key]={name:normalizeUnitMasteryName(card.name||key),kills:Math.max(maxKills,Number(mastery[key]?.kills||0))};
+    }
+  });
+  return {unitMastery:mastery,unitService:service};
+}
+function getTestPromoStatusText(profile=getPlayerProfile()){
+  return isTestPromoActive(profile)
+    ? `Activo: todas las cartas · perfil y líderes Nv. ${LEADER_LEVEL_MAX} · maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)} · servicio máximo.`
+    : "Inactivo. Introduce el código temporal para habilitar el entorno completo de pruebas.";
+}
+function renderTestPromoProfileUi(profile=getPlayerProfile()){
+  const active=isTestPromoActive(profile);
+  const status=$("profilePromoStatus"),activate=$("activateProfilePromoBtn"),deactivate=$("deactivateProfilePromoBtn"),input=$("profilePromoInput");
+  if(status){status.textContent=getTestPromoStatusText(profile);status.className=`profile-promo-status ${active?"active":""}`.trim();}
+  if(activate){activate.classList.toggle("hidden",active);activate.disabled=false;}
+  if(deactivate){deactivate.classList.toggle("hidden",!active);deactivate.disabled=false;}
+  if(input){input.disabled=active;if(active)input.value="";}
+}
+function capturePrePromoProgress(profile){
+  return clonePromoPlain({
+    level:profile.level||1,xp:profile.xp||0,xpToNext:profile.xpToNext||xpNeededForLevel?.(profile.level||1)||25,
+    leaderLevels:profile.leaderLevels||{},leaderLevel5Abilities:profile.leaderLevel5Abilities||{},
+    unitMastery:profile.unitMastery||{},unitService:profile.unitService||{}
+  });
+}
+async function activateTestPromoCode(){
+  const input=$("profilePromoInput"),button=$("activateProfilePromoBtn");
+  const code=String(input?.value||"").trim();
+  if(!code){setProfileMessage("Escribe el código promocional de pruebas.","error");return false;}
+  if(button)button.disabled=true;
+  try{
+    if(!(await isValidTestPromoCode(code))){setProfileMessage("El código promocional no es válido.","error");return false;}
+    const profile=getPlayerProfile();
+    if(isTestPromoActive(profile)){setProfileMessage("El modo promocional de pruebas ya está activo.","success");renderTestPromoProfileUi(profile);return true;}
+    const originalProgress=capturePrePromoProgress(profile);
+    const leaderLevels=getTestPromoMaxLeaderLevels();
+    const progressBooks=buildTestPromoProgressBooks(profile);
+    const next={
+      ...profile,
+      level:LEADER_LEVEL_MAX,
+      xp:0,
+      xpToNext:typeof xpNeededForLevel==="function"?xpNeededForLevel(LEADER_LEVEL_MAX):550,
+      leaderLevels,
+      leaderLevel5Abilities:normalizeLeaderLevel5Abilities({},leaderLevels),
+      ...progressBooks,
+      testPromo:{active:true,id:TEST_PROMO_ID,activatedAt:Date.now(),originalProgress}
+    };
+    savePlayerProfile(next);
+    renderPlayerProfile(next);
+    renderTestPromoProfileUi(next);
+    renderHomeProgress?.();
+    renderNotificationBadge?.();
+    if(typeof renderDeckBuilder==="function"&&!$("deckBuilderPanel")?.classList.contains("hidden"))renderDeckBuilder();
+    setProfileMessage("Modo de pruebas activado: colección completa y progresión máxima disponibles.","success");
+    return true;
+  }catch(error){
+    console.error("[HallValla] No se pudo activar el código promocional:",error);
+    setProfileMessage("No se pudo activar el modo de pruebas. Revisa la consola.","error");
+    return false;
+  }finally{if(button)button.disabled=false;}
+}
+async function deactivateTestPromoMode(){
+  const button=$("deactivateProfilePromoBtn");
+  if(button)button.disabled=true;
+  try{
+    const profile=getPlayerProfile();
+    if(!isTestPromoActive(profile)){renderTestPromoProfileUi(profile);return true;}
+    const original=clonePromoPlain(profile.testPromo?.originalProgress||{});
+    const next={...profile,...original,testPromo:null};
+    savePlayerProfile(next);
+    if(getSelectedLeaderType?.()==="beastmaster"){
+      selectedLeaderType="warrior";
+      localStorage.setItem("hallvalla_selected_leader","warrior");
+      renderSelectedLeaderBadge?.();
+      if(uid){try{await update(ref(db,`users/${uid}/profile`),{leaderType:"warrior",updatedAt:Date.now()});}catch(error){console.warn("[HallValla] No se pudo restaurar el líder remoto al salir del modo de pruebas:",error);}}
+    }
+    const savedDeck=typeof getSavedDeck==="function"?getSavedDeck():[];
+    if(typeof saveDeck==="function"&&typeof sanitizeDeckDraftToCollection==="function")saveDeck(sanitizeDeckDraftToCollection(savedDeck));
+    renderPlayerProfile(next);
+    renderTestPromoProfileUi(next);
+    renderHomeProgress?.();
+    renderNotificationBadge?.();
+    setProfileMessage("Modo de pruebas desactivado. Se restauró tu progresión anterior.","success");
+    return true;
+  }catch(error){
+    console.error("[HallValla] No se pudo desactivar el modo promocional:",error);
+    setProfileMessage("No se pudo desactivar el modo de pruebas.","error");
+    return false;
+  }finally{if(button)button.disabled=false;}
 }
 
 /* Progresión alternativa para unidades de apoyo.
@@ -297,6 +442,7 @@ function getUnitMasteryRankFromKills(kills){
 function getUnitMasteryRank(entity){
   if(!entity||entity.leader||isUnitServiceProgression(entity))return 1;
   if(Number(entity.masteryRank)>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(entity.masteryRank)||1));
+  if(entity.owner&&myPlayer&&Number(entity.owner)!==Number(myPlayer))return 1;
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
 function getUnitMasteryHpBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
@@ -418,6 +564,7 @@ function openProfilePanel(){
   if(rule)rule.textContent=cost===0?"Este cambio de nombre es gratis.":`Cambiar el nombre cuesta ${RENAME_COST_GEMS} gemas.`;
   if(gems)gems.textContent=profile.gems||0;
   if(msg){msg.textContent="";msg.className="profile-message";}
+  renderTestPromoProfileUi(profile);
   panel.classList.remove("hidden");
   setTimeout(()=>{if(input){input.focus();input.select();}},40);
 }
@@ -705,7 +852,7 @@ function isAdventureChapterComplete(){
   return ADVENTURE_CHAPTER_1_1.battles.every(b=>chapter.completedBattles?.[b.id]);
 }
 function canAccessDecks(){
-  return isAdventureChapterComplete();
+  return isTestPromoActive()||isAdventureChapterComplete();
 }
 function canAccessPackShop(){
   return true;
