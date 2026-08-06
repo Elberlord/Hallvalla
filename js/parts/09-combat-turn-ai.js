@@ -659,7 +659,7 @@ async function attackUnit(a,d){
   units=yabusameRetreatResult.units;
   const scythianRetreatResult=units.some(u=>u.id===a.id)&&isRangedAttack(a,d)&&hit.hit?applyScythianRetreatIfPossible(units,a.id):{units,moved:false,text:""};
   units=scythianRetreatResult.units;
-  const cossackAdvanceResult=units.some(u=>u.id===a.id)&&melee&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,a.id,d.x,d.y):{units,moved:false,text:""};
+  const cossackAdvanceResult=units.some(u=>u.id===a.id)&&dist(a,d)<=1&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,a.id,d.x,d.y):{units,moved:false,text:""};
   units=cossackAdvanceResult.units;
   const cavalryExtraText=`${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
   const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
@@ -1642,7 +1642,7 @@ async function adventureEnemyTurn(){
     units=yabusameRetreatResult.units;
     const scythianRetreatResult=units.some(u=>u.id===attacker.id)&&isRangedAttack(attacker,target)&&hit.hit?applyScythianRetreatIfPossible(units,attacker.id):{units,moved:false,text:""};
     units=scythianRetreatResult.units;
-    const cossackAdvanceResult=units.some(u=>u.id===attacker.id)&&melee&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,attacker.id,target.x,target.y):{units,moved:false,text:""};
+    const cossackAdvanceResult=units.some(u=>u.id===attacker.id)&&d(attacker,target)<=1&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,attacker.id,target.x,target.y):{units,moved:false,text:""};
     units=cossackAdvanceResult.units;
     const cavalryExtraText=`${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
     const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;

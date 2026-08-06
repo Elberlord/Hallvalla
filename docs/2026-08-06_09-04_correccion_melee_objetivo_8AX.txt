@@ -1,0 +1,11 @@
+Hallvalla 7BOARDCTRL8AX — corrección de selección/resolución de objetivo
+Fecha: 2026-08-06
+
+Problema corregido:
+- ReferenceError: melee is not defined en js/parts/09-combat-turn-ai.js.
+- El error detenía el ataque después de designar el objetivo.
+
+Corrección:
+- La ruta del jugador ahora comprueba combate adyacente mediante dist(a,d) <= 1.
+- La ruta de ataque de la IA ahora comprueba combate adyacente mediante d(attacker,target) <= 1.
+- No se modificaron daño, precisión, evasión ni la selección de VFX.
