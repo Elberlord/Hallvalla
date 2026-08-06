@@ -588,24 +588,24 @@ function chooseAcolyteResurrectionChoice(caster,units=publicState?.units||[],gra
 }
 function applyAcolyteHealerEffectState(caster,choice,units=publicState?.units||[]){
   const live=(units||[]).find(u=>u.id===caster?.id)||caster;if(!live)return{success:false,reason:"No hay Acólita sanadora activa."};
-  const technique=String(choice?.technique||"");const points=getUnitServicePoints(live);let out=[...(units||[])],log="",statusFxEvent=null,floatFxEvent=null;
+  const technique=String(choice?.technique||"");const points=getUnitServicePoints(live);let out=[...(units||[])],log="",statusFxEvent=null,floatFxEvent=null,battleFxEvent=null;
   if(technique==="transfer"){
     const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Objetivo fuera de rango o inválido."};
     if(target.owner===live.owner){
       if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return{success:false,reason:`${target.name} no puede curarse ahora.`};
       const max=Math.max(1,Number(effectiveMaxHp(target)||target.maxHp||target.hp||1));if(Number(target.hp||0)>=max)return{success:false,reason:"La unidad aliada ya tiene la Vida completa."};
-      out=out.map(u=>u.id===target.id?{...u,hp:Math.min(max,Number(u.hp||0)+1)}:u.id===live.id?{...u,acted:true}:u);statusFxEvent=makeStatusFxEvent("heal",out.find(u=>u.id===target.id)||target,1);floatFxEvent=makeFloatFxEvent("heal",out.find(u=>u.id===target.id)||target,1,{iconText:"✚"});log=`${live.name} usa Transferencia vital: ${target.name} recupera 1 Vida.`;
+      out=out.map(u=>u.id===target.id?{...u,hp:Math.min(max,Number(u.hp||0)+1)}:u.id===live.id?{...u,acted:true}:u);const healedTarget=out.find(u=>u.id===target.id)||target;battleFxEvent=makeMagicFxEvent(live,healedTarget,"heal",{type:"heal",spellKey:"acolyte_transfer_heal",effectAction:"heal",hit:true});statusFxEvent=makeStatusFxEvent("heal",healedTarget,1);floatFxEvent=makeFloatFxEvent("heal",healedTarget,1,{iconText:"✚"});log=`${live.name} usa Transferencia vital: ${target.name} recupera 1 Vida.`;
     }else{
       if(isStealthedUnit(target))return{success:false,reason:"No puede seleccionar una unidad enemiga con Sigilo."};
-      const before=[...out];out=out.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-1,damagedThisTurn:true}):u.id===live.id?{...u,acted:true}:u);out=applyLegendaryFatalSaves(out,[target.id]).filter(u=>Number(u.hp||0)>0);const blood=applyBloodVictoryForDeaths(before,out);out=blood.units;const survivor=out.find(u=>u.id===target.id);statusFxEvent=survivor?makeStatusFxEvent("damage",survivor,1):null;floatFxEvent=makeFloatFxEvent("damage",survivor||target,1,{iconText:"✦"});log=`${live.name} usa Transferencia vital: ${target.name} pierde 1 Vida directamente.${blood.logs.length?` ${blood.logs.join(" ")}`:""}`;
+      const before=[...out];out=out.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-1,damagedThisTurn:true}):u.id===live.id?{...u,acted:true}:u);out=applyLegendaryFatalSaves(out,[target.id]).filter(u=>Number(u.hp||0)>0);const blood=applyBloodVictoryForDeaths(before,out);out=blood.units;const survivor=out.find(u=>u.id===target.id);battleFxEvent=makeMagicFxEvent(live,survivor||target,"arcane",{type:"spell",spellKey:"acolyte_transfer_damage",effectAction:"drain",hit:true});statusFxEvent=survivor?makeStatusFxEvent("damage",survivor,1):null;floatFxEvent=makeFloatFxEvent("damage",survivor||target,1,{iconText:"✦"});log=`${live.name} usa Transferencia vital: ${target.name} pierde 1 Vida directamente.${blood.logs.length?` ${blood.logs.join(" ")}`:""}`;
     }
-    return{success:true,units:out,log,honorCost:2,serviceGain:1,statusFxEvent,floatFxEvent,clockKillCreditOwner:live.owner};
+    return{success:true,units:out,log,honorCost:2,serviceGain:1,battleFxEvent,statusFxEvent,floatFxEvent,clockKillCreditOwner:live.owner};
   }
   if(technique==="purify"){
-    if(points<50)return{success:false,reason:"Purificación requiere 50 puntos de servicio."};const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||target.owner!==live.owner||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Aliado inválido o fuera de rango."};const statuses=getAcolytePurifiableStatuses(target);const chosen=statuses.find(st=>st.key===choice?.statusKey);if(!chosen)return{success:false,reason:"El estado elegido ya no está presente."};out=out.map(u=>u.id===target.id?purifyAcolyteStatus(u,chosen.key):u.id===live.id?{...u,acted:true}:u);statusFxEvent=makeStatusFxEvent("cleanse",out.find(u=>u.id===target.id)||target,0);floatFxEvent=makeFloatFxEvent("heal",out.find(u=>u.id===target.id)||target,0,{iconText:"◇",labelText:"PURIFICA"});log=`${live.name} usa Purificación: elimina ${chosen.label} de ${target.name}.`;return{success:true,units:out,log,honorCost:3,serviceGain:1,statusFxEvent,floatFxEvent};
+    if(points<50)return{success:false,reason:"Purificación requiere 50 puntos de servicio."};const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||target.owner!==live.owner||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Aliado inválido o fuera de rango."};const statuses=getAcolytePurifiableStatuses(target);const chosen=statuses.find(st=>st.key===choice?.statusKey);if(!chosen)return{success:false,reason:"El estado elegido ya no está presente."};out=out.map(u=>u.id===target.id?purifyAcolyteStatus(u,chosen.key):u.id===live.id?{...u,acted:true}:u);const purifiedTarget=out.find(u=>u.id===target.id)||target;battleFxEvent=makeMagicFxEvent(live,purifiedTarget,"heal",{type:"heal",spellKey:"acolyte_purify",effectAction:"cleanse",hit:true});statusFxEvent=makeStatusFxEvent("cleanse",purifiedTarget,0);floatFxEvent=makeFloatFxEvent("heal",purifiedTarget,0,{iconText:"◇",labelText:"PURIFICA"});log=`${live.name} usa Purificación: elimina ${chosen.label} de ${target.name}.`;return{success:true,units:out,log,honorCost:3,serviceGain:1,battleFxEvent,statusFxEvent,floatFxEvent};
   }
   if(technique==="resurrect"){
-    if(points<100)return{success:false,reason:"Resurrección requiere 100 puntos de servicio."};const grave=normalizeErictoGraveyard(publicState?.erictoGraveyard||[]);const rec=getAcolyteEligibleCorpses(live,grave).find(r=>r.graveId===choice?.graveId);const cell=getAcolyteResurrectionCells(live,out).find(c=>c.x===Number(choice?.x)&&c.y===Number(choice?.y));if(!rec||!cell)return{success:false,reason:"El cadáver o la casilla ya no están disponibles."};let revived=makeAcolyteResurrectedUnit(live,rec,cell);if(ownerHasUnit(live.owner===1?2:1,"yi_sun_sin",out))revived={...revived,tempDexDebuff:Number(revived.tempDexDebuff||0)+4,tempGuardBuff:Number(revived.tempGuardBuff||0)-4,yiSunDebuffed:true};out=out.map(u=>u.id===live.id?{...u,acted:true}:u).concat(revived);const lion=applyAfricanLionFearAura(out);out=lion.units;const nextGrave=grave.map(r=>r.graveId===rec.graveId?{...r,used:true,usedByAcolyteId:live.id,usedTurnKey:publicState?.turnKey||""}:r);log=`${live.name} usa Resurrección: ${rec.name} vuelve con ${revived.hp}/${revived.maxHp} Vida, sin debuffs y como invocada desde la mano. Puede actuar este turno.${lion.logs.length?` ${lion.logs.join(" ")}`:""}`;return{success:true,units:out,log,honorCost:4,serviceGain:1,erictoGraveyard:nextGrave,statusFxEvent:lion.statusFxEvent||makeStatusFxEvent("heal",revived,revived.hp),floatFxEvent:lion.floatFxEvent||makeFloatFxEvent("heal",revived,revived.hp,{iconText:"✚",labelText:"REGRESA"})};
+    if(points<100)return{success:false,reason:"Resurrección requiere 100 puntos de servicio."};const grave=normalizeErictoGraveyard(publicState?.erictoGraveyard||[]);const rec=getAcolyteEligibleCorpses(live,grave).find(r=>r.graveId===choice?.graveId);const cell=getAcolyteResurrectionCells(live,out).find(c=>c.x===Number(choice?.x)&&c.y===Number(choice?.y));if(!rec||!cell)return{success:false,reason:"El cadáver o la casilla ya no están disponibles."};let revived=makeAcolyteResurrectedUnit(live,rec,cell);if(ownerHasUnit(live.owner===1?2:1,"yi_sun_sin",out))revived={...revived,tempDexDebuff:Number(revived.tempDexDebuff||0)+4,tempGuardBuff:Number(revived.tempGuardBuff||0)-4,yiSunDebuffed:true};out=out.map(u=>u.id===live.id?{...u,acted:true}:u).concat(revived);const lion=applyAfricanLionFearAura(out);out=lion.units;const nextGrave=grave.map(r=>r.graveId===rec.graveId?{...r,used:true,usedByAcolyteId:live.id,usedTurnKey:publicState?.turnKey||""}:r);log=`${live.name} usa Resurrección: ${rec.name} vuelve con ${revived.hp}/${revived.maxHp} Vida, sin debuffs y como invocada desde la mano. Puede actuar este turno.${lion.logs.length?` ${lion.logs.join(" ")}`:""}`;battleFxEvent=makeMagicFxEvent(live,revived,"heal",{type:"heal",spellKey:"acolyte_resurrect",effectAction:"resurrect",impactScale:1.25,hit:true});return{success:true,units:out,log,honorCost:4,serviceGain:1,erictoGraveyard:nextGrave,battleFxEvent,statusFxEvent:lion.statusFxEvent||makeStatusFxEvent("heal",revived,revived.hp),floatFxEvent:lion.floatFxEvent||makeFloatFxEvent("heal",revived,revived.hp,{iconText:"✚",labelText:"REGRESA"})};
   }
   return{success:false,reason:"Capacidad curativa inválida."};
 }
@@ -770,7 +770,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     if(!valid)return{success:false,reason:"Objetivo inválido para este EFFECT."};
     target=valid;
   }
-  let out=[...(units||[])],log="";
+  let out=[...(units||[])],log="",battleFxEvent=null;
   if(liveCaster.leader&&liveCaster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"){
     if(liveCaster.arcaneBoltUsedTurn)return{success:false,reason:"Descarga arcana ya fue usada este turno."};
     const enemyLeader=out.find(it=>it.owner!==owner&&it.leader&&it.hp>0);
@@ -782,6 +782,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     });
     out=applyLegendaryFatalSaves(out,[enemyLeader.id]);
     out=out.filter(it=>it.hp>0);
+    battleFxEvent=makeMagicFxEvent(liveCaster,out.find(it=>it.id===enemyLeader.id)||enemyLeader,"arcane",{type:"spell",spellKey:"arcane_bolt",effectAction:"damage",impactScale:1.15,hit:true});
     log=`${liveCaster.name} lanza Descarga arcana: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats.`;
   }else if(liveCaster.leader&&liveCaster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
     if(liveCaster.arrowRainUsedTurn)return{success:false,reason:"Lluvia de flechas ya fue usada este turno."};
@@ -851,7 +852,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else{
     return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante combate/turno."};
   }
-  return{success:true,units:out,log};
+  return{success:true,units:out,log,battleFxEvent};
 }
 async function activateUnitEffect(u,choice=null){
   if(!u||u.owner!==myPlayer||!isUnitActionWindow(u))return setHint(unitActionPhaseHint("EFFECT"));
@@ -896,7 +897,7 @@ async function activateUnitEffect(u,choice=null){
     const serviceResult=registerLocalUnitServicePoint(u,result.serviceGain||1)||{key:getUnitMasteryKey(u),name:u.name,beforePoints,afterPoints:beforePoints+(result.serviceGain||1),gain:result.serviceGain||1,unlockedPurification:beforePoints<50&&beforePoints+(result.serviceGain||1)>=50,unlockedResurrection:beforePoints<100&&beforePoints+(result.serviceGain||1)>=100};
     result.units=applyUnitServicePointsToUnits(result.units,u,serviceResult);
     result.log+=` Puntos de servicio: ${serviceResult.afterPoints}.${unitServiceUnlockText(serviceResult)}`;
-    await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,_clockKillCreditOwner:result.clockKillCreditOwner||myPlayer});
+    await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,_clockKillCreditOwner:result.clockKillCreditOwner||myPlayer});
     await pushLog(result.log);
     clearSelection();
     return;
@@ -925,8 +926,9 @@ async function activateUnitEffect(u,choice=null){
   }
   const result=applyUnitEffectState(u,choice,units);
   if(!result.success)return setHint(result.reason||"No se pudo activar el efecto.");
+  if(getBattleOutcome(result.units).ended&&result.battleFxEvent)await updatePublic({battleFxEvent:result.battleFxEvent});
   if(await finalizeBattle(result.units,result.log)){clearSelection();return;}
-  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[]});
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[],battleFxEvent:result.battleFxEvent||null});
   await pushLog(result.log);
   clearSelection();
 }

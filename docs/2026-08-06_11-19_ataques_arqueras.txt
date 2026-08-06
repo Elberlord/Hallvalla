@@ -1,0 +1,18 @@
+HALLVALLA — Integración visual de arqueras y ataques con arco
+
+Se añadió un sistema visual específico para ataques ranged con weaponKind=arrow:
+- la flecha sale desde la unidad atacante;
+- viaja hacia la unidad objetivo con rotación automática;
+- al impactar se muestra un golpe breve;
+- la flecha queda clavada por un momento;
+- luego se desvanece lentamente.
+
+Assets añadidos:
+assets/effects/arrows/arrow_projectile_01.webp
+assets/effects/arrows/arrow_projectile_02.webp
+assets/effects/arrows/arrow_impact_01.webp
+assets/effects/arrows/arrow_stuck_01.webp
+
+Archivos modificados:
+styles.css
+js/parts/04-fx-audio-profile.js

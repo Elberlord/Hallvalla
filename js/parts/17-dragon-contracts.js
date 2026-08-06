@@ -360,7 +360,7 @@ function dragonAreaDamageAt(def,cell,isMain=false){
   if(def.element==="fire")return Math.abs(cell.dx)+Math.abs(cell.dy)===2?4:6;
   return Math.abs(cell.dx)+Math.abs(cell.dy)===2?3:4;
 }
-function dragonElementFxType(def){return def.element==="fire"?"burn_apply":def.element==="ice"?"debuff":"shock_apply";}
+function dragonElementFxType(def){return def.element==="fire"?"burn_apply":def.element==="ice"?"freeze_apply":"shock_apply";}
 async function dragonContractEnemyTurn(){
   if(!gameId)return;
   const pubSnap=await get(ref(db,`games/${gameId}/public`));
@@ -420,7 +420,7 @@ async function dragonContractEnemyTurn(){
         affected=next;return next;
       }).filter(u=>u.hp>0);
       nextCycle=currentCycle+1;
-      battleFxEvent=makeBattleFxEvent("attack",dragon,target,{attackStyle:"ranged",rarityClass:"fx-demigod"});
+      battleFxEvent=makeBattleFxEvent("attack",dragon,target,{attackStyle:"ranged",rarityClass:"fx-demigod",hit:true});
       if(affected){statusFxEvent=makeStatusFxEvent(dragonElementFxType(def),affected,def.element==="fire"?1:0);floatFxEvent=makeFloatFxEvent("damage",affected,def.atk);}
       logs.push(`${def.enemyName} usa ${def.directName}: ${target.name} recibe un impacto de ${def.atk} AT${def.element==="fire"?" y Quemadura 2":def.element==="ice"?" y Escarcha 2":" y Electrocución 2"}.`);
     }else{
@@ -443,7 +443,7 @@ async function dragonContractEnemyTurn(){
         hitIds.push(victim.id);
       }
       nextCycle=0;
-      battleFxEvent=makeBattleFxEvent("attack",dragon,target,{attackStyle:"ranged",rarityClass:"fx-demigod"});
+      battleFxEvent=makeBattleFxEvent("attack",dragon,target,{attackStyle:"ranged",rarityClass:"fx-demigod",hit:true});
       if(firstAffected)statusFxEvent=makeStatusFxEvent(dragonElementFxType(def),firstAffected,def.element==="fire"?1:0);
       logs.push(`${def.enemyName} libera ${def.areaName}: impacto principal de ${def.atk} AT y daño elemental 3×3 sobre ${hitIds.length} objetivo${hitIds.length===1?"":"s"}.`);
     }

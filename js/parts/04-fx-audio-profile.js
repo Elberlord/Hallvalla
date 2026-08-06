@@ -221,7 +221,7 @@ function getGridCellCenter(x,y){
 function makeBattleFxEvent(type,attacker,target,meta={}){
   if(!attacker||!target)return null;
   const attackType=type||"attack";
-  const attackStyle=attackType==="attack"?(isRangedAttack(attacker,target)?"ranged":"melee"):"generic";
+  const attackStyle=meta.attackStyle||(attackType==="attack"?(isRangedAttack(attacker,target)?"ranged":"melee"):"generic");
   const weaponKind=getUnitWeaponKind(attacker);
   return {
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
@@ -230,17 +230,36 @@ function makeBattleFxEvent(type,attacker,target,meta={}){
     attackerId:attacker.id||"",
     attackerOwner:attacker.owner||0,
     attackerName:attacker.name||"",
+    attackerKey:String(attacker.key||""),
+    attackerAssetKey:String(attacker.assetKey||attacker.visualKey||""),
+    dragonElement:String(attacker.dragonElement||""),
+    dragonStage:String(attacker.dragonStage||(attacker.dragonBoss?"adult":"")),
+    dragonCharge:Number(attacker.dragonCharge||0),
+    hit:meta.hit!==false,
     targetId:target.id||"",
     targetOwner:target.owner||0,
     targetName:target.name||"",
     from:{x:Number(attacker.x||0),y:Number(attacker.y||0)},
     to:{x:Number(target.x||0),y:Number(target.y||0)},
-    rarityClass:getFxRarityClass(attacker),
+    rarityClass:meta.rarityClass||getFxRarityClass(attacker),
     weaponKind,
     attackSound:getAttackSoundForUnit(attacker),
     impactSound:getImpactSoundForWeapon(weaponKind),
-    stealthAttack:!!meta.stealthAttack
+    stealthAttack:!!meta.stealthAttack,
+    magicKind:String(meta.magicKind||""),
+    spellKey:String(meta.spellKey||""),
+    effectAction:String(meta.effectAction||""),
+    skipLaunchSound:!!meta.skipLaunchSound,
+    impactScale:Math.max(.5,Number(meta.impactScale||1)),
+    attackerText:String(attacker.text||attacker.effectText||attacker.ability||"")
   };
+}
+function makeMagicFxEvent(caster,target,magicKind="arcane",meta={}){
+  if(!caster||!target)return null;
+  const kind=String(magicKind||"arcane").toLowerCase();
+  const fx=makeBattleFxEvent(meta.type||"spell",caster,target,{...meta,attackStyle:"ranged",magicKind:kind});
+  if(!fx)return null;
+  return {...fx,weaponKind:"fire_magic",attackSound:meta.attackSound||(kind==="fire"?"attack_fire_magic":kind==="heal"?"spell_cast":"spell_damage"),impactSound:meta.impactSound||(kind==="heal"?"spell_cast":"impact_magic")};
 }
 function makeDefenseFxEvent(type,defender){
   if(!defender)return null;
@@ -332,8 +351,242 @@ function playBattleFx(attacker,target){
   if(!attacker||!target)return;
   playBattleFxEvent(makeBattleFxEvent("attack",attacker,target),attacker);
 }
+
+function isIceDragonBattleFx(fx){
+  const key=String(fx?.attackerKey||"").toLowerCase();
+  return fx?.attackStyle==="ranged"&&String(fx?.dragonElement||"").toLowerCase()==="ice"&&key.includes("dragon")&&key!=="dragon_egg";
+}
+function getIceDragonProjectileAsset(fx){
+  const stage=String(fx?.dragonStage||"").toLowerCase();
+  const number=stage==="adult"?3:stage==="young"?2:1;
+  return `assets/effects/ice/projectiles/ice_projectile_${String(number).padStart(2,"0")}.webp`;
+}
+function getIceDragonFxScale(fx){
+  const stage=String(fx?.dragonStage||"").toLowerCase();
+  return stage==="adult"?1.18:stage==="young"?1.02:.86;
+}
+function getIceDragonTravelMs(fx){
+  if(!fx?.from||!fx?.to)return 780;
+  const from=getGridCellCenter(fx.from.x,fx.from.y);
+  const to=getGridCellCenter(fx.to.x,fx.to.y);
+  if(!from||!to)return 780;
+  const dx=to.x-from.x,dy=to.y-from.y;
+  return Math.max(620,Math.min(1150,Math.round(Math.sqrt(dx*dx+dy*dy)*4.1)));
+}
+function playIceDragonExplosion(point,fx){
+  if(!point)return;
+  const scale=getIceDragonFxScale(fx);
+  const field=spawnBattleFxNode(
+    `battle-fx-ice-field ${fx?.attackerOwner===1?"player":"enemy"}`,
+    point.x,point.y,
+    {"--ice-field-scale":String(scale),"--ice-field-start-scale":String(scale*.70),"--ice-field-end-scale":String(scale*1.08)},
+    2850,
+    '<img class="battle-fx-ice-field-img" src="assets/effects/ice/field/ice_field_wall_01.webp" alt="" draggable="false">'
+  );
+  const node=spawnBattleFxNode(
+    `battle-fx-ice-explosion ${fx?.attackerOwner===1?"player":"enemy"}`,
+    point.x,point.y,
+    {"--ice-impact-scale":String(scale),"--ice-impact-start-scale":String(scale*.55),"--ice-impact-end-scale":String(scale*1.18)},
+    900,
+    '<img class="battle-fx-ice-explosion-img" src="assets/effects/ice/explosion/ice_explosion_frame_01.webp" alt="" draggable="false">'
+  );
+  const image=node?.querySelector?.(".battle-fx-ice-explosion-img");
+  if(image){
+    let frame=1;
+    const timer=setInterval(()=>{
+      frame+=1;
+      if(frame>8){clearInterval(timer);return;}
+      image.src=`assets/effects/ice/explosion/ice_explosion_frame_${String(frame).padStart(2,"0")}.webp`;
+    },70);
+    setTimeout(()=>clearInterval(timer),650);
+  }
+  return field;
+}
+function playIceDragonBattleFxEvent(fx,attackerRef=null){
+  if(!isIceDragonBattleFx(fx))return false;
+  const from=getGridCellCenter(fx.from.x,fx.from.y);
+  const to=getGridCellCenter(fx.to.x,fx.to.y);
+  if(!from||!to)return true;
+  const dx=to.x-from.x,dy=to.y-from.y;
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  const travelMs=getIceDragonTravelMs(fx);
+  const scale=getIceDragonFxScale(fx);
+  const soundUnit=attackerRef||{owner:fx.attackerOwner||0,key:fx.attackerKey||"",name:fx.attackerName||""};
+  tryPlaySound(fx.attackSound||getAttackSoundForUnit(soundUnit)||"attack_fire_magic",.78);
+  spawnBattleFxNode(
+    `battle-fx-ice-projectile ${fx.attackerOwner===1?"player":"enemy"}`,
+    from.x,from.y,
+    {
+      "--ice-dx":`${dx}px`,
+      "--ice-dy":`${dy}px`,
+      "--ice-angle":`${angle}deg`,
+      "--ice-flight":`${travelMs}ms`,
+      "--ice-projectile-scale":String(scale)
+    },
+    travelMs+180,
+    `<img class="battle-fx-ice-projectile-img" src="${getIceDragonProjectileAsset(fx)}" alt="" draggable="false">`
+  );
+  setTimeout(()=>{
+    if(fx.hit===false)return;
+    tryPlaySound(fx.impactSound||"spell_damage",.68);
+    playIceDragonExplosion(to,fx);
+  },Math.max(100,travelMs-12));
+  return true;
+}
+
+function getMagicFxKind(fx,attackerRef=null){
+  const explicit=String(fx?.magicKind||"").toLowerCase();
+  if(explicit)return explicit;
+  const spell=String(fx?.spellKey||"").toLowerCase();
+  const action=String(fx?.effectAction||"").toLowerCase();
+  const key=String(fx?.attackerKey||attackerRef?.key||"").toLowerCase();
+  const name=String(fx?.attackerName||attackerRef?.name||"").toLowerCase();
+  const text=String(fx?.attackerText||attackerRef?.text||"").toLowerCase();
+  if(fx?.type==="heal"||action.includes("heal")||action.includes("cleanse")||action.includes("resurrect")||spell==="heal")return "heal";
+  if(String(fx?.dragonElement||"").toLowerCase()==="lightning"||explicit.includes("lightning")||explicit.includes("shock")||explicit.includes("thunder")||spell.includes("lightning")||spell.includes("thunder")||spell.includes("shock")||key.includes("lightning")||key.includes("thunder")||name.includes("rayo")||name.includes("trueno")||name.includes("eléctr")||name.includes("electr")||text.includes("rayo")||text.includes("trueno")||text.includes("eléctr")||text.includes("electr"))return "lightning";
+  if(spell.includes("sand")||spell==="bolt"||name.includes("arena")||text.includes("arena"))return "sand";
+  if(spell==="fireball"||key.includes("fire")||key.includes("ifrit")||name.includes("fuego")||name.includes("llama")||text.includes("fuego")||text.includes("llama"))return "fire";
+  return "arcane";
+}
+function isMagicBattleFx(fx,attackerRef=null){
+  const detectedKind=getMagicFxKind(fx,attackerRef);
+  return !!(fx?.magicKind||fx?.type==="spell"||fx?.type==="heal"||fx?.weaponKind==="fire_magic"||getUnitWeaponKind(attackerRef||{})==="fire_magic"||detectedKind==="lightning");
+}
+function getMagicFxTravelMs(fx){
+  if(!fx?.from||!fx?.to)return 690;
+  const from=getGridCellCenter(fx.from.x,fx.from.y),to=getGridCellCenter(fx.to.x,fx.to.y);
+  if(!from||!to)return 690;
+  const distance=Math.hypot(to.x-from.x,to.y-from.y);
+  const kind=getMagicFxKind(fx);
+  const base=kind==="heal"?560:kind==="sand"?610:kind==="lightning"?500:520;
+  return Math.max(base,Math.min(980,Math.round(base+distance*1.55)));
+}
+function getMagicFxAssets(kind,fx={}){
+  if(kind==="fire")return {cast:"assets/effects/fire_basic/burn_aura_01.webp",projectile:String(fx.spellKey||"")==="fireball"?"assets/effects/fire_basic/fireball_basic_01.webp":"assets/effects/fire_basic/fire_projectile_01.webp",impact:"assets/effects/fire_basic/fire_impact_01.webp"};
+  if(kind==="lightning")return {cast:"assets/effects/lightning/lightning_cast_01.webp",projectile:"assets/effects/lightning/lightning_projectile_01.webp",impact:"assets/effects/lightning/lightning_impact_01.webp"};
+  if(kind==="sand")return {cast:"assets/effects/sand/sand_cast_01.webp",projectile:"assets/effects/sand/sand_projectile_01.webp",impact:"assets/effects/sand/sand_impact_01.webp"};
+  if(kind==="heal")return {cast:"assets/effects/heal/heal_aura_01.webp",projectile:"assets/effects/heal/heal_cross_01.webp",impact:"assets/effects/heal/heal_burst_01.webp"};
+  const alternate=String(fx.spellKey||"").includes("transfer_damage")||String(fx.effectAction||"").includes("drain");
+  return {cast:"assets/effects/arcane/arcane_cast_aura_01.webp",projectile:alternate?"assets/effects/arcane/arcane_projectile_02.webp":"assets/effects/arcane/arcane_projectile_01.webp",impact:"assets/effects/arcane/arcane_impact_01.webp"};
+}
+function playMagicBattleFxEvent(fx,attackerRef=null){
+  if(!isMagicBattleFx(fx,attackerRef))return false;
+  const from=getGridCellCenter(fx.from.x,fx.from.y),to=getGridCellCenter(fx.to.x,fx.to.y);
+  if(!from||!to)return true;
+  const kind=getMagicFxKind(fx,attackerRef),assets=getMagicFxAssets(kind,fx);
+  const dx=to.x-from.x,dy=to.y-from.y,angle=Math.atan2(dy,dx)*180/Math.PI;
+  const travelMs=getMagicFxTravelMs(fx),sideClass=fx.attackerOwner===1?"player":"enemy";
+  const scale=Math.max(.65,Number(fx.impactScale||1));
+  if(!fx.skipLaunchSound){
+    const launchSound=kind==="fire"?"attack_fire_magic":kind==="heal"?"spell_cast":kind==="lightning"?"spell_damage":"spell_damage";
+    tryPlaySound(fx.attackSound||launchSound,kind==="heal"?.66:.80);
+  }
+  spawnBattleFxNode(`battle-fx-magic-cast kind-${kind} ${sideClass}`,from.x,from.y,{"--magic-scale":String(scale)},760,`<img src="${assets.cast}" alt="" draggable="false">`);
+  spawnBattleFxNode(`battle-fx-magic-projectile kind-${kind} ${sideClass}`,from.x,from.y,{"--magic-dx":`${dx}px`,"--magic-dy":`${dy}px`,"--magic-angle":`${angle}deg`,"--magic-flight":`${travelMs}ms`,"--magic-scale":String(scale)},travelMs+220,`<img src="${assets.projectile}" alt="" draggable="false">`);
+  setTimeout(()=>{
+    if(fx.hit===false)return;
+    tryPlaySound(fx.impactSound||(kind==="heal"?"spell_cast":kind==="lightning"?"shock_tick":"impact_magic"),kind==="heal"?.58:.68);
+    const impact=spawnBattleFxNode(`battle-fx-magic-impact kind-${kind} ${sideClass}`,to.x,to.y,{"--magic-scale":String(scale)},980,`<img src="${assets.impact}" alt="" draggable="false">`);
+    if(kind==="heal"){
+      const cross=String(fx.effectAction||"")==="resurrect"?"assets/effects/heal/heal_cross_02.webp":"assets/effects/heal/heal_cross_01.webp";
+      spawnBattleFxNode(`battle-fx-heal-symbol ${sideClass}`,to.x,to.y,{"--magic-scale":String(scale)},1150,`<img src="${cross}" alt="" draggable="false">`);
+    }
+    return impact;
+  },Math.max(100,travelMs-10));
+  return true;
+}
+function getSpearProjectileAsset(fx){
+  const key=String(fx?.attackerKey||"").toLowerCase();
+  const name=String(fx?.attackerName||"").toLowerCase();
+  if(key.includes("naginata")||name.includes("naginata")||key.includes("pica")||name.includes("pica"))return "assets/effects/spear/spear_projectile_02.webp";
+  return "assets/effects/spear/spear_projectile_01.webp";
+}
+function getSpearFxTravelMsByDistance(distance){
+  return Math.max(290,Math.min(560,Math.round(220 + distance*1.75)));
+}
+function playSpearBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume){
+  const travelMs=getSpearFxTravelMsByDistance(len);
+  const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-spear-trail"></div>':'';
+  spawnBattleFxNode(`battle-fx-spear-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--spear-dx":`${to.x-from.x}px`,"--spear-dy":`${to.y-from.y}px`,"--spear-angle":`${angle}deg`,"--spear-flight":`${travelMs}ms`},travelMs+240,`<img src="${getSpearProjectileAsset(fx)}" alt="" draggable="false">${projectileExtra}`);
+  setTimeout(()=>{
+    if(fx.hit===false)return;
+    tryPlaySound(impactSound,impactVolume);
+    spawnBattleFxNode(`battle-fx-spear-impact ${sideClass} ${rarityClass}`,to.x,to.y,{"--spear-angle":`${angle}deg`},980,'<img src="assets/effects/spear/spear_impact_01.webp" alt="" draggable="false">');
+  },Math.max(100,travelMs-8));
+  return true;
+}
+function isCavalryBattleFx(fx){
+  const key=String(fx?.attackerKey||"").toLowerCase();
+  const assetKey=String(fx?.attackerAssetKey||"").toLowerCase();
+  const name=String(fx?.attackerName||"").toLowerCase();
+  return key.includes("cavalry")||key.includes("rider")||key.includes("hussar")||key.includes("horse")||key.includes("mongol")||key.includes("cossack")||key.includes("numidian")||key.includes("yabusame")||assetKey.includes("cavalry")||name.includes("caballer")||name.includes("jinete")||name.includes("húsar")||name.includes("husar");
+}
+function getPhysicalMeleeSlashAsset(fx,weaponKind){
+  const kind=String(weaponKind||"").toLowerCase();
+  if(kind==="spear")return "assets/effects/melee/melee_slash_01.webp";
+  if(kind==="axe")return "assets/effects/axe/axe_slash_01.webp";
+  return "assets/effects/melee/melee_slash_02.webp";
+}
+function getPhysicalImpactAsset(fx,weaponKind){
+  const kind=String(weaponKind||"").toLowerCase();
+  if(isCavalryBattleFx(fx))return "assets/effects/melee/melee_impact_01.webp";
+  if(kind==="axe")return "assets/effects/axe/axe_impact_01.webp";
+  return "assets/effects/melee/melee_impact_01.webp";
+}
+function playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume,weaponKind){
+  const dashMs=Math.max(170,Math.min(300,Math.round(125 + len*0.42)));
+  const slashX=from.x + (to.x-from.x)*0.58;
+  const slashY=from.y + (to.y-from.y)*0.58;
+  const kind=String(weaponKind||"").toLowerCase();
+  const cavalry=isCavalryBattleFx(fx);
+  const slashClass=kind==="spear"?"battle-fx-melee-thrust":"battle-fx-melee-slash-img";
+  const slashTtl=680;
+  if(cavalry){
+    spawnBattleFxNode(`battle-fx-charge-lines ${sideClass} ${rarityClass}`,from.x,from.y,{"--charge-angle":`${angle}deg`,"--charge-dx":`${(to.x-from.x)*0.58}px`,"--charge-dy":`${(to.y-from.y)*0.58}px`},720,'<img src="assets/effects/charge/charge_speed_lines_01.webp" alt="" draggable="false">');
+    setTimeout(()=>spawnBattleFxNode(`battle-fx-charge-dust ${sideClass} ${rarityClass}`,to.x,to.y,{"--charge-angle":`${angle}deg`},920,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">'),150);
+  }
+  spawnBattleFxNode(`${slashClass} ${sideClass} ${rarityClass}`,slashX,slashY,{"--melee-angle":`${angle}deg`,"--melee-dx":`${(to.x-from.x)*0.18}px`,"--melee-dy":`${(to.y-from.y)*0.18}px`},slashTtl,`<img src="${getPhysicalMeleeSlashAsset(fx,weaponKind)}" alt="" draggable="false">`);
+  setTimeout(()=>{ if(fx.hit!==false) tryPlaySound(impactSound,impactVolume); },120);
+  setTimeout(()=>{
+    if(fx.hit===false)return;
+    spawnBattleFxNode(`battle-fx-melee-impact-img ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<img src="${getPhysicalImpactAsset(fx,weaponKind)}" alt="" draggable="false">`);
+  },Math.min(150, dashMs));
+  return true;
+}
+
+function getArrowProjectileAsset(fx){
+  const key=String(fx?.attackerKey||"").toLowerCase();
+  const name=String(fx?.attackerName||"").toLowerCase();
+  if(key.includes("scyth")||key.includes("horse")||name.includes("caballo")||name.includes("montado"))return "assets/effects/arrows/arrow_projectile_02.webp";
+  return "assets/effects/arrows/arrow_projectile_01.webp";
+}
+function getArrowFxTravelMsByDistance(distance){
+  return Math.max(300,Math.min(620,Math.round(240 + distance*1.85)));
+}
+function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume){
+  const travelMs=getArrowFxTravelMsByDistance(len);
+  const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-arrow-trail"></div>':'';
+  spawnBattleFxNode(`battle-fx-arrow-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--arrow-dx":`${to.x-from.x}px`,"--arrow-dy":`${to.y-from.y}px`,"--arrow-angle":`${angle}deg`,"--arrow-flight":`${travelMs}ms`},travelMs+240,`<img src="${getArrowProjectileAsset(fx)}" alt="" draggable="false">${projectileExtra}`);
+  setTimeout(()=>{
+    if(fx.hit===false)return;
+    tryPlaySound(impactSound,impactVolume);
+    spawnBattleFxNode(`battle-fx-arrow-impact ${sideClass} ${rarityClass}`,to.x,to.y,{},920,'<img src="assets/effects/arrows/arrow_impact_01.webp" alt="" draggable="false">');
+    spawnBattleFxNode(`battle-fx-arrow-stuck ${sideClass} ${rarityClass}`,to.x,to.y,{"--arrow-angle":`${angle}deg`},1780,'<img src="assets/effects/arrows/arrow_stuck_01.webp" alt="" draggable="false">');
+  },Math.max(100,travelMs-8));
+  return true;
+}
+
+function getBattleFxImpactDelay(fx){
+  if(!fx)return 120;
+  if(isIceDragonBattleFx(fx))return getIceDragonTravelMs(fx)+55;
+  if(isMagicBattleFx(fx))return getMagicFxTravelMs(fx)+45;
+  return fx.attackStyle==="ranged"?360:300;
+}
+
 function playBattleFxEvent(fx,attackerRef=null){
   if(!fx||!fx.from||!fx.to)return;
+  if(playIceDragonBattleFxEvent(fx,attackerRef))return;
+  if(playMagicBattleFxEvent(fx,attackerRef))return;
   const soundUnit=attackerRef||{owner:fx.attackerOwner||0,rarity:"",special:false,key:"",name:fx.attackerName||"",weaponKind:fx.weaponKind||""};
   const weaponKind=fx.weaponKind||getWeaponKindFromSoundName(fx.attackSound)||getUnitWeaponKind(soundUnit);
   const attackSound=fx.attackSound||getAttackSoundForUnit(soundUnit);
@@ -351,11 +604,23 @@ function playBattleFxEvent(fx,attackerRef=null){
   const rarityClass=fx.rarityClass||"fx-basic";
   const impactExtra=["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-impact-halo"></div>':'';
   if(fx.attackStyle==="ranged"){
+    if(weaponKind==="arrow"){
+      playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume);
+      return;
+    }
+    if(weaponKind==="spear"){
+      playSpearBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume);
+      return;
+    }
     const travelMs=Math.max(170,Math.min(380,Math.round(len*2.2)));
     setTimeout(()=>tryPlaySound(impactSound,impactVolume),Math.max(80,travelMs-55));
     const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-projectile-trail"></div>':'';
     spawnBattleFxNode(`battle-fx-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`,"--fx-flight":`${travelMs}ms`},travelMs+220,`<div class="battle-fx-projectile-shaft"></div><div class="battle-fx-projectile-head"></div><div class="battle-fx-projectile-fletch"></div>${projectileExtra}`);
     setTimeout(()=>spawnBattleFxNode(`battle-fx-impact ranged ${sideClass} ${rarityClass}`,to.x,to.y,{},940,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`),Math.max(40,travelMs-12));
+    return;
+  }
+  if(["sword","axe","spear"].includes(String(weaponKind||"").toLowerCase())){
+    playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume,weaponKind);
     return;
   }
   setTimeout(()=>tryPlaySound(impactSound,impactVolume),180);
@@ -415,7 +680,8 @@ function playStatusFxEvent(fx){
   const paralysis=type.startsWith("paralysis")||type.startsWith("shock")||type.startsWith("stun");
   const silence=type.startsWith("silence");
   const curse=type.startsWith("curse");
-  const typeClass=bleed?"bleed":poison?"poison":burn?"burn":paralysis?"paralysis":silence?"silence":curse?"curse":"generic";
+  const freeze=type.startsWith("freeze")||type.startsWith("frost");
+  const typeClass=bleed?"bleed":poison?"poison":burn?"burn":paralysis?"paralysis":silence?"silence":curse?"curse":freeze?"freeze":"generic";
   const variantClass=type.endsWith("tick")?"tick":"apply";
   const statusSound=bleed?(variantClass==="tick"?"bleed_pain":"bleed_apply"):poison?"poison_tick":burn?"burn_tick":paralysis?"shock_tick":"status_tick";
   const hitVol=bleed?.48:poison?.34:burn?.38:paralysis?.38:.30;
@@ -427,6 +693,7 @@ function playStatusFxEvent(fx){
   else if(paralysis)badge='<div class="battle-fx-status-bolt"></div>';
   else if(silence)badge='<div class="battle-fx-status-mute"><span class="mute-bar"></span></div>';
   else if(curse)badge='<div class="battle-fx-status-rune">✠</div>';
+  else if(freeze)badge='<img class="battle-fx-status-freeze" src="assets/effects/status/frozen/frozen_aura_01.webp" alt="">';
   else badge='<div class="battle-fx-status-rune">✦</div>';
   const amountText=fx.amount>0?`<div class="battle-fx-status-amount">-${fx.amount}</div>`:"";
   spawnBattleFxNode(`battle-fx-status ${typeClass} ${variantClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},950,`<div class="battle-fx-status-ring"></div><div class="battle-fx-status-glow"></div>${badge}${amountText}`);
@@ -479,7 +746,7 @@ function maybePlayBattleFx(prevPub,nextPub){
       setTimeout(()=>showDemigodSummonPresentation(demigodAdded),140);
     }
   }
-  if(explicitAttackFx&&explicitAttackFx.type==="attack"){
+  if(explicitAttackFx&&["attack","spell","heal","magic"].includes(explicitAttackFx.type)){
     setTimeout(()=>playBattleFxEvent(explicitAttackFx),140);
   }else if(!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&(damaged.length||destroyed.length)){
     // Fallback visual only for old/non-explicit damage updates.
@@ -496,19 +763,19 @@ function maybePlayBattleFx(prevPub,nextPub){
     });
   }
   if(explicitDefenseFx&&(explicitDefenseFx.type==="guard_block"||explicitDefenseFx.type==="guard_break")){
-    const defenseDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?360:300):120;
+    const defenseDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx):120;
     setTimeout(()=>playDefenseFxEvent(explicitDefenseFx),defenseDelay);
   }
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"){
-    const dodgeDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?360:300):120;
+    const dodgeDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx):120;
     setTimeout(()=>playDodgeFxEvent(explicitDodgeFx),dodgeDelay);
   }
   if(explicitStatusFx){
-    const statusDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?430:360):(explicitDefenseFx||explicitDodgeFx?280:120);
+    const statusDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx)+100:(explicitDefenseFx||explicitDodgeFx?280:120);
     setTimeout(()=>playStatusFxEvent(explicitStatusFx),statusDelay);
   }
   if(explicitFloatFx){
-    const floatDelay=explicitAttackFx?(explicitAttackFx.attackStyle==="ranged"?420:340):(explicitStatusFx?190:90);
+    const floatDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx)+80:(explicitStatusFx?190:90);
     setTimeout(()=>playFloatFxEvent(explicitFloatFx),floatDelay);
   }
   const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);

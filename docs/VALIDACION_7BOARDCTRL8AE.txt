@@ -3,7 +3,7 @@ HALLVALLA 7BOARDCTRL8AE — VALIDACIÓN ESTÁTICA
 RESULTADOS
 - Sintaxis comprobada con node --check en bootstrap-loader.js y todos los archivos js/parts/*.js: APROBADA.
 - Referencias literales a recursos en HTML, CSS y JavaScript: 425 revisadas, 0 archivos faltantes.
-- Referencias antiguas de líderes a .png en el código activo: 0.
+- Referencias antiguas de líderes a .webp en el código activo: 0.
 - Líderes WebP revisados: 11.
 - Canal alfa de los 11 líderes WebP: conservado, con transparencia real (extremos 0–255).
 - Artes de tablero de los tres dragones: presentes.

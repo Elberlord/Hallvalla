@@ -1,0 +1,28 @@
+HALLVALLA — Integración visual de lanceros y golpes físicos
+
+Se añadió soporte visual acumulativo para:
+- ataques ranged con weaponKind=spear (jabalinas, lanzas arrojadas o equivalentes);
+- ataques físicos melee con sword, axe o spear.
+
+Lanceros / spear ranged:
+- el proyectil sale desde la unidad atacante;
+- viaja hasta la unidad objetivo;
+- al impactar muestra golpe visual;
+- la lanza queda clavada brevemente y luego se desvanece.
+
+Golpes físicos melee:
+- aparece un slash o thrust visible desde el atacante hacia el objetivo;
+- el impacto se muestra sobre la unidad objetivo;
+- no altera la lógica interna de daño, estados ni evasión.
+
+Assets añadidos:
+assets/effects/spear/spear_projectile_01.webp
+assets/effects/spear/spear_projectile_02.webp
+assets/effects/spear/spear_stuck_01.webp
+assets/effects/melee/melee_slash_01.webp
+assets/effects/melee/melee_slash_02.webp
+assets/effects/melee/melee_impact_01.webp
+
+Archivos modificados:
+styles.css
+js/parts/04-fx-audio-profile.js

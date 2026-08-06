@@ -1,0 +1,117 @@
+HALLVALLA 7BOARDCTRL8AP — AUDITORÍA DE FIELD FIGURES
+
+Identidades de unidad revisadas: 91
+Rutas visuales únicas utilizadas: 88
+Archivos WebP presentes en assets/field_figures: 88
+Errores de relación o archivos faltantes: 0
+Archivos corruptos: 0
+
+Resultado: TODAS LAS UNIDADES REVISADAS RESUELVEN UNA FIGURA EXISTENTE Y LEGIBLE.
+
+Desglose de identidades por carpeta resuelta:
+- basic: 29
+- beasts: 22
+- special: 40
+
+Notas de reutilización intencional:
+- Los tres dragones bebé usan baby_dragon.webp.
+- Adepto Arcano usa mage.webp.
+- Guardián de piedra usa paladin.webp.
+- Lancero solar usa heavy_infantry_paladin.webp.
+- Asesina del desierto usa rogue.webp.
+- Caballería Arquera de Saladino y Caballería ligera usan cavalry_light.webp.
+- Mulan, Richard y Wallace resuelven su figura desde special mediante el sistema de candidatos alternativos.
+- Shaka Zulu, Subotai y Tomoe Gozen usan los nombres visuales _v2 definidos por sus retratos.
+
+Detalle de relaciones:
+- achilles -> assets/field_figures/special/achilles.webp
+- acolyte_healer -> assets/field_figures/basic/acolyte_healer.webp
+- adult_fire_dragon -> assets/field_figures/beasts/adult_fire_dragon.webp
+- adult_ice_dragon -> assets/field_figures/beasts/adult_ice_dragon.webp
+- adult_lightning_dragon -> assets/field_figures/beasts/adult_lightning_dragon.webp
+- african_buffalo -> assets/field_figures/beasts/african_buffalo.webp
+- african_elephant -> assets/field_figures/beasts/african_elephant.webp
+- african_lion -> assets/field_figures/beasts/african_lion.webp
+- alexander_magnus -> assets/field_figures/special/alexander.webp
+- arcane_adept -> assets/field_figures/basic/mage.webp
+- archer -> assets/field_figures/basic/archer.webp
+- arjuna -> assets/field_figures/special/arjuna.webp
+- armored_man_at_arms -> assets/field_figures/basic/armored_man_at_arms.webp
+- attila_hun -> assets/field_figures/special/attila.webp
+- baby_fire_dragon -> assets/field_figures/beasts/baby_dragon.webp
+- baby_ice_dragon -> assets/field_figures/beasts/baby_dragon.webp
+- baby_lightning_dragon -> assets/field_figures/beasts/baby_dragon.webp
+- bengal_tiger -> assets/field_figures/beasts/bengal_tiger.webp
+- beowulf -> assets/field_figures/special/beowulf.webp
+- berserker -> assets/field_figures/basic/berserker_north.webp
+- berserker_de_oso -> assets/field_figures/basic/berserker_de_oso.webp
+- black_raven -> assets/field_figures/beasts/black_raven.webp
+- boudica -> assets/field_figures/special/boudica.webp
+- cavalry -> assets/field_figures/basic/cavalry_light.webp
+- constrictor_snake -> assets/field_figures/beasts/constrictor_snake.webp
+- cossack_rider -> assets/field_figures/basic/cossack_rider.webp
+- cu_chulainn -> assets/field_figures/special/cu_chulainn.webp
+- dragon_egg -> assets/field_figures/beasts/dragon_egg.webp
+- egyptian_line_archer -> assets/field_figures/basic/egyptian_line_archer.webp
+- el_cid -> assets/field_figures/special/el_cid.webp
+- ericto -> assets/field_figures/special/ericto.webp
+- geisha_encubierta -> assets/field_figures/basic/geisha_encubierta.webp
+- genghis_khan -> assets/field_figures/special/genghis_khan.webp
+- gilgamesh -> assets/field_figures/special/gilgamesh.webp
+- greek_hoplite -> assets/field_figures/basic/greek_hoplite.webp
+- guardian -> assets/field_figures/basic/paladin.webp
+- hannibal_barca -> assets/field_figures/special/hannibal_barca.webp
+- hattori_hanzo -> assets/field_figures/special/hattori_hanzo.webp
+- hattori_shinobi -> assets/field_figures/basic/hattori_shinobi.webp
+- hector_troy -> assets/field_figures/special/hector_troy.webp
+- honey_badger -> assets/field_figures/beasts/honey_badger.webp
+- hungarian_hussar -> assets/field_figures/basic/hungarian_hussar.webp
+- inland_taipan -> assets/field_figures/beasts/inland_taipan.webp
+- joan_of_arc -> assets/field_figures/special/joan_of_arc.webp
+- julius_caesar -> assets/field_figures/special/julius_caesar.webp
+- khalid_ibn_al_walid -> assets/field_figures/special/khalid_ibn_al_walid.webp
+- king_solomon -> assets/field_figures/special/king_solomon.webp
+- leonidas -> assets/field_figures/special/leonidas.webp
+- lu_bu -> assets/field_figures/special/lu_bu.webp
+- merlin -> assets/field_figures/special/merlin.webp
+- miyamoto_musashi -> assets/field_figures/special/miyamoto_musashi.webp
+- mongol_explorer -> assets/field_figures/basic/mongol_explorer.webp
+- morgana -> assets/field_figures/special/morgana.webp
+- mulan -> assets/field_figures/special/mulan.webp
+- nasu_no_yoichi -> assets/field_figures/special/nasu_no_yoichi.webp
+- new_kingdom_archer -> assets/field_figures/basic/new_kingdom_archer.webp
+- numidian_javelin_rider -> assets/field_figures/basic/numidian_javelin_rider.webp
+- peregrine_falcon -> assets/field_figures/beasts/peregrine_falcon.webp
+- porcupine -> assets/field_figures/beasts/porcupine.webp
+- ragnar_lodbrok -> assets/field_figures/special/ragnar_lodbrok.webp
+- richard_lionheart -> assets/field_figures/special/richard_lionheart.webp
+- roman_auxiliary_sagittarius -> assets/field_figures/basic/roman_auxiliary_sagittarius.webp
+- roman_legionary -> assets/field_figures/basic/roman_legionary.webp
+- saboteador_iga -> assets/field_figures/basic/saboteador_iga.webp
+- saladin -> assets/field_figures/special/saladin.webp
+- saladin_archer_cavalry -> assets/field_figures/basic/cavalry_light.webp
+- samurai_katana -> assets/field_figures/basic/samurai_katana.webp
+- samurai_naginata -> assets/field_figures/basic/samurai_naginata.webp
+- samurai_yabusame -> assets/field_figures/basic/samurai_yabusame.webp
+- scout -> assets/field_figures/basic/rogue.webp
+- scythian_horse_archer -> assets/field_figures/basic/scythian_horse_archer.webp
+- shaka_zulu -> assets/field_figures/special/shaka_zulu_v2.webp
+- simo_hayha -> assets/field_figures/special/simo_hayha.webp
+- skipar_del_drakkar -> assets/field_figures/basic/skipar_del_drakkar.webp
+- solomon_demon -> assets/field_figures/special/solomon_demon.webp
+- solomon_ifrit -> assets/field_figures/special/solomon_ifrit.webp
+- solomon_jinn -> assets/field_figures/special/solomon_jinn.webp
+- spartacus -> assets/field_figures/special/spartacus.webp
+- spearman -> assets/field_figures/basic/heavy_infantry_paladin.webp
+- subotai -> assets/field_figures/special/subotai_v2.webp
+- sun_tzu -> assets/field_figures/special/sun_tzu.webp
+- tomoe_gozen -> assets/field_figures/special/tomoe_gozen_v2.webp
+- ulfhednar -> assets/field_figures/basic/ulfhednar.webp
+- ulysses -> assets/field_figures/special/ulysses.webp
+- wallace -> assets/field_figures/special/wallace.webp
+- white_rhino -> assets/field_figures/beasts/white_rhino.webp
+- wild_boar -> assets/field_figures/beasts/wild_boar.webp
+- yi_sun_sin -> assets/field_figures/special/yi_sun_sin.webp
+- young_fire_dragon -> assets/field_figures/beasts/young_fire_dragon.webp
+- young_ice_dragon -> assets/field_figures/beasts/young_ice_dragon.webp
+- young_lightning_dragon -> assets/field_figures/beasts/young_lightning_dragon.webp

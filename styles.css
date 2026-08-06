@@ -4235,7 +4235,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   --frame-glow:rgba(255,200,118,.18);
   --frame-shadow:rgba(0,0,0,.55);
   --frame-filter:none;
-  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
+  --frame-image:url("assets/ui/gothic_frame_unit_ui.webp");
 }
 .unit-card .unit-frame-skin{
   position:absolute;
@@ -5802,7 +5802,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .unit-card.card-rarity-glorious{--frame-glow:rgba(255,220,92,.54);--frame-filter:hue-rotate(-8deg) saturate(1.20) brightness(1.10);}
 .unit-card.card-rarity-epic{--frame-glow:rgba(190,143,255,.56);--frame-filter:hue-rotate(86deg) saturate(1.18) brightness(1.06);}
 .unit-card.card-rarity-mythic{--frame-glow:rgba(255,112,222,.60);--frame-filter:hue-rotate(132deg) saturate(1.22) brightness(1.07);}
-.unit-card.card-rarity-demigod{--frame-glow:rgba(255,246,134,.92);--frame-filter:saturate(1.26) brightness(1.16);--frame-image:url("assets/ui/gothic_frame_unit_ui_demigod.png");}
+.unit-card.card-rarity-demigod{--frame-glow:rgba(255,246,134,.92);--frame-filter:saturate(1.26) brightness(1.16);--frame-image:url("assets/ui/gothic_frame_unit_ui_demigod.webp");}
 
 .unit-card.card-rarity-basic .unit-frame-skin,
 .unit-card.card-rarity-improved .unit-frame-skin,
@@ -5877,7 +5877,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-rarity-legendary .hand-tag{color:#ffe9ff;border-color:rgba(208,112,255,.52)}
 .card-rarity-legendary .hand-icon.card-portrait,.card-rarity-legendary .deck-card-icon.card-portrait,.card-rarity-legendary .card-icon.card-portrait,.card-rarity-legendary .card-inspect-portrait{border-color:rgba(208,112,255,.82);box-shadow:inset 0 0 0 1px rgba(255,236,255,.16),0 0 0 1px rgba(99,35,123,.68),0 0 26px rgba(208,112,255,.34)}
 .card-inspect-modal.card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.84);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 36px rgba(208,112,255,.24)}
-.unit-card.card-rarity-legendary{box-shadow:0 0 0 1px rgba(208,112,255,.60),0 0 16px rgba(208,112,255,.24),0 5px 8px rgba(0,0,0,.38);--frame-glow:rgba(213,114,255,.88);--frame-filter:saturate(1.22) brightness(1.11);--frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.png");}
+.unit-card.card-rarity-legendary{box-shadow:0 0 0 1px rgba(208,112,255,.60),0 0 16px rgba(208,112,255,.24),0 5px 8px rgba(0,0,0,.38);--frame-glow:rgba(213,114,255,.88);--frame-filter:saturate(1.22) brightness(1.11);--frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.webp");}
 .unit-card.card-rarity-legendary .unit-frame-skin{filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 10px rgba(255,240,255,.90)) drop-shadow(0 0 24px rgba(224,136,255,.84)) drop-shadow(0 0 42px rgba(175,68,255,.48)) drop-shadow(0 0 60px rgba(147,32,236,.24)) var(--frame-filter) !important;animation:unitLegendaryFramePulse 2.6s ease-in-out infinite;}
 .unit-card.card-rarity-legendary .unit-portrait{filter:saturate(1.08) contrast(1.04) brightness(1.02);}
 .unit-card.card-rarity-legendary::before{content:"";position:absolute;inset:-3px;border-radius:18px;pointer-events:none;background:radial-gradient(circle at 50% 18%,rgba(248,216,255,.16),transparent 36%),radial-gradient(circle at 50% 82%,rgba(184,84,255,.14),transparent 44%);box-shadow:0 0 18px rgba(208,112,255,.22),0 0 38px rgba(172,60,255,.16);animation:unitLegendaryFramePulse 2.6s ease-in-out infinite;}
@@ -5909,7 +5909,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:0 0 0 1px rgba(92,194,255,.60),0 0 16px rgba(92,194,255,.26),0 5px 8px rgba(0,0,0,.38)!important;
   --frame-glow:rgba(92,194,255,.88);
   --frame-filter:saturate(1.24) brightness(1.12);
-  --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.png");
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.webp");
 }
 .unit-card.card-rarity-mythic .unit-frame-skin{
   filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 10px rgba(232,251,255,.90)) drop-shadow(0 0 24px rgba(92,194,255,.86)) drop-shadow(0 0 42px rgba(34,120,255,.50)) drop-shadow(0 0 60px rgba(22,80,220,.26)) var(--frame-filter)!important;
@@ -13443,8 +13443,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   pointer-events:none;
   opacity:0;
   background:var(--hv-rarity-neon, transparent);
-  -webkit-mask:url("assets/ui/gothic_frame_unit_neon_mask.png") center/100% 100% no-repeat;
-  mask:url("assets/ui/gothic_frame_unit_neon_mask.png") center/100% 100% no-repeat;
+  -webkit-mask:url("assets/ui/gothic_frame_unit_neon_mask.webp") center/100% 100% no-repeat;
+  mask:url("assets/ui/gothic_frame_unit_neon_mask.webp") center/100% 100% no-repeat;
   filter:
     blur(.45px)
     drop-shadow(0 0 4px var(--hv-rarity-neon-core, transparent))
@@ -13847,7 +13847,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid .cell > .unit-card,
 .cell > .unit-card,
 .unit-card{
-  --frame-image:url("assets/ui/gothic_frame_unit_ui.png");
+  --frame-image:url("assets/ui/gothic_frame_unit_ui.webp");
   --hv-ornament-image:none;
   --hv-ornament-glow-image:none;
   position:relative !important;
@@ -13947,12 +13947,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid .cell > .unit-card.card-rarity-mythic,
 .cell > .unit-card.card-rarity-mythic,
 .unit-card.card-rarity-mythic{
-  --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.png");
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_mythic.webp");
 }
 .grid .cell > .unit-card.card-rarity-legendary,
 .cell > .unit-card.card-rarity-legendary,
 .unit-card.card-rarity-legendary{
-  --frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.png");
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.webp");
 }
 .grid .cell > .unit-card.card-rarity-demigod,
 .grid .cell > .unit-card.leader,
@@ -13960,7 +13960,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card.leader,
 .unit-card.card-rarity-demigod,
 .unit-card.leader{
-  --frame-image:url("assets/ui/gothic_frame_unit_ui_demigod.png");
+  --frame-image:url("assets/ui/gothic_frame_unit_ui_demigod.webp");
 }
 
 .grid .cell > .unit-card .unit-frame-skin,
@@ -14002,38 +14002,38 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid .cell > .unit-card.card-rarity-improved,
 .cell > .unit-card.card-rarity-improved,
 .unit-card.card-rarity-improved{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_improved.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_improved_glow.webp");
 }
 .grid .cell > .unit-card.card-rarity-heroic,
 .cell > .unit-card.card-rarity-heroic,
 .unit-card.card-rarity-heroic{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_heroic.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_heroic_glow.webp");
 }
 .grid .cell > .unit-card.card-rarity-glorious,
 .cell > .unit-card.card-rarity-glorious,
 .unit-card.card-rarity-glorious{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_glorious.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_glorious_glow.webp");
 }
 .grid .cell > .unit-card.card-rarity-epic,
 .cell > .unit-card.card-rarity-epic,
 .unit-card.card-rarity-epic{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_epic.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_epic_glow.webp");
 }
 .grid .cell > .unit-card.card-rarity-mythic,
 .cell > .unit-card.card-rarity-mythic,
 .unit-card.card-rarity-mythic{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_mythic.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_mythic_glow.webp");
 }
 .grid .cell > .unit-card.card-rarity-legendary,
 .cell > .unit-card.card-rarity-legendary,
 .unit-card.card-rarity-legendary{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_legendary.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_legendary_glow.webp");
 }
 .grid .cell > .unit-card.card-rarity-demigod,
 .grid .cell > .unit-card.leader,
@@ -14041,8 +14041,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card.leader,
 .unit-card.card-rarity-demigod,
 .unit-card.leader{
-  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.png");
-  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.png");
+  --hv-ornament-image:url("assets/ui/gothic_frame_unit_ornament_demigod.webp");
+  --hv-ornament-glow-image:url("assets/ui/gothic_frame_unit_ornament_demigod_glow.webp");
 }
 
 /* Ornamento de rareza: visible solo cuando la rareza lo requiere. */
@@ -20820,3 +20820,229 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   .field-figure-grid{grid-template-columns:1fr;}
   .field-figure-preview{min-height:185px;}
 }
+
+
+/* === 7BOARDCTRL8AP · Dragón de hielo y estados elementales persistentes === */
+.battle-fx-ice-projectile{
+  position:absolute;
+  width:clamp(72px,8.8vw,124px);
+  height:clamp(40px,5vw,70px);
+  pointer-events:none;
+  transform-origin:center center;
+  animation:hvIceProjectileTravel var(--ice-flight,780ms) cubic-bezier(.20,.70,.24,1) forwards;
+  z-index:36;
+}
+.battle-fx-ice-projectile-img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 0 5px rgba(192,249,255,.98)) drop-shadow(0 0 13px rgba(55,186,255,.82));
+  transform:scale(var(--ice-projectile-scale,1));
+  transform-origin:center;
+}
+@keyframes hvIceProjectileTravel{
+  0%{opacity:0;transform:translate(-50%,-50%) translate(0,0) rotate(var(--ice-angle,0deg)) scale(.46)}
+  10%{opacity:1}
+  72%{opacity:1}
+  100%{opacity:.96;transform:translate(-50%,-50%) translate(var(--ice-dx,0px),var(--ice-dy,0px)) rotate(var(--ice-angle,0deg)) scale(1)}
+}
+.battle-fx-ice-explosion{
+  position:absolute;
+  width:clamp(88px,10vw,142px);
+  height:clamp(88px,10vw,142px);
+  transform:translate(-50%,-50%) scale(var(--ice-impact-scale,1));
+  pointer-events:none;
+  z-index:38;
+  animation:hvIceImpactPulse .72s ease-out forwards;
+}
+.battle-fx-ice-explosion-img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 0 7px rgba(215,252,255,.96)) drop-shadow(0 0 18px rgba(70,190,255,.78));
+}
+@keyframes hvIceImpactPulse{
+  0%{opacity:0;filter:brightness(1.7);transform:translate(-50%,-50%) scale(var(--ice-impact-start-scale,.55))}
+  18%{opacity:1}
+  78%{opacity:1}
+  100%{opacity:0;filter:brightness(1);transform:translate(-50%,-50%) scale(var(--ice-impact-end-scale,1.18))}
+}
+.battle-fx-ice-field{
+  position:absolute;
+  width:clamp(92px,12vw,172px);
+  height:clamp(56px,7.2vw,104px);
+  transform:translate(-50%,-34%) scale(var(--ice-field-scale,1));
+  transform-origin:center bottom;
+  pointer-events:none;
+  z-index:34;
+  animation:hvIceFieldFade 2.78s ease-in-out forwards;
+}
+.battle-fx-ice-field-img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  filter:drop-shadow(0 0 6px rgba(210,251,255,.84)) drop-shadow(0 0 16px rgba(53,172,255,.54));
+}
+@keyframes hvIceFieldFade{
+  0%{opacity:0;transform:translate(-50%,-27%) scale(var(--ice-field-start-scale,.70))}
+  10%{opacity:.74}
+  58%{opacity:.66;transform:translate(-50%,-34%) scale(var(--ice-field-scale,1))}
+  100%{opacity:0;transform:translate(-50%,-43%) scale(var(--ice-field-end-scale,1.08));filter:blur(1.5px)}
+}
+.unit-persistent-element-fx{
+  position:absolute;
+  left:50%;
+  bottom:8%;
+  width:142%;
+  height:150%;
+  transform:translateX(-50%);
+  transform-origin:center bottom;
+  z-index:13;
+  pointer-events:none;
+  overflow:visible;
+  user-select:none;
+  mix-blend-mode:screen;
+}
+.unit-persistent-element-fx img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  -webkit-user-drag:none;
+  user-select:none;
+}
+.unit-persistent-element-fx.frozen{
+  opacity:.56;
+  animation:hvFrozenAuraPulse 2.35s ease-in-out infinite;
+}
+.unit-persistent-element-fx.frozen.frost{opacity:.38;filter:saturate(.92)}
+.unit-persistent-element-fx.frozen.hard-frozen{opacity:.72;filter:brightness(1.12) saturate(1.08)}
+.unit-persistent-element-fx.curse{
+  width:136%;
+  height:146%;
+  opacity:.62;
+  animation:hvCurseAuraPulse 2.05s ease-in-out infinite;
+}
+@keyframes hvFrozenAuraPulse{
+  0%,100%{transform:translateX(-50%) translateY(1%) scale(.97);filter:brightness(.95)}
+  50%{transform:translateX(-50%) translateY(-2%) scale(1.035);filter:brightness(1.18)}
+}
+@keyframes hvCurseAuraPulse{
+  0%,100%{transform:translateX(-50%) translateY(1%) scale(.96) rotate(-1deg);filter:brightness(.90)}
+  50%{transform:translateX(-50%) translateY(-3%) scale(1.04) rotate(1deg);filter:brightness(1.18)}
+}
+.battle-fx-status.freeze .battle-fx-status-ring{border-color:rgba(146,235,255,.92);box-shadow:0 0 20px rgba(74,185,255,.38)}
+.battle-fx-status.freeze .battle-fx-status-glow{background:radial-gradient(circle,rgba(245,255,255,.18) 0 18%,rgba(111,218,255,.35) 44%,rgba(31,94,188,.10) 68%,transparent 78%)}
+.battle-fx-status-freeze{position:absolute;left:50%;top:50%;width:54px;height:64px;object-fit:contain;transform:translate(-50%,-52%);filter:drop-shadow(0 0 8px rgba(132,231,255,.62));animation:statusIconPop .92s ease-out forwards}
+@media(max-width:720px){
+  .battle-fx-ice-projectile{width:76px;height:44px}
+  .battle-fx-ice-explosion{width:92px;height:92px}
+  .battle-fx-ice-field{width:104px;height:62px}
+  .unit-persistent-element-fx{width:132%;height:140%}
+}
+@media(prefers-reduced-motion:reduce){
+  .battle-fx-ice-projectile{animation-duration:.22s!important}
+  .battle-fx-ice-explosion{animation-duration:.24s!important}
+  .battle-fx-ice-field{animation-duration:.6s!important}
+  .unit-persistent-element-fx{animation:none!important}
+}
+
+
+/* 8AQ · ATAQUES VISUALES DE HECHICERÍA */
+@keyframes hvMagicCastPulse{0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(-10deg)}25%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(calc(var(--magic-scale,1)*1.08)) rotate(18deg)}}
+@keyframes hvMagicProjectileTravel{0%{opacity:0;transform:translate(-50%,-50%) scale(calc(var(--magic-scale,1)*.32))}8%{opacity:1}82%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--magic-dx)),calc(-50% + var(--magic-dy))) scale(var(--magic-scale,1))}}
+@keyframes hvMagicImpactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(calc(var(--magic-scale,1)*.28))}22%{opacity:1}70%{opacity:.94}100%{opacity:0;transform:translate(-50%,-50%) scale(calc(var(--magic-scale,1)*1.28))}}
+@keyframes hvHealSymbolRise{0%{opacity:0;transform:translate(-50%,-36%) scale(calc(var(--magic-scale,1)*.45))}25%{opacity:1}72%{opacity:.92}100%{opacity:0;transform:translate(-50%,-118%) scale(calc(var(--magic-scale,1)*1.08))}}
+.battle-fx-magic-cast,.battle-fx-magic-projectile,.battle-fx-magic-impact,.battle-fx-heal-symbol{position:absolute;pointer-events:none;z-index:38;transform:translate(-50%,-50%);transform-origin:center}
+.battle-fx-magic-cast{width:72px;height:72px;animation:hvMagicCastPulse .72s ease-out forwards;filter:drop-shadow(0 0 10px rgba(180,135,255,.55))}
+.battle-fx-magic-cast img{width:100%;height:100%;object-fit:contain}
+.battle-fx-magic-projectile{width:74px;height:48px;animation:hvMagicProjectileTravel var(--magic-flight,.68s) cubic-bezier(.18,.7,.2,1) forwards;filter:drop-shadow(0 0 9px rgba(165,120,255,.78))}
+.battle-fx-magic-projectile img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--magic-angle));transform-origin:center}
+.battle-fx-magic-impact{width:104px;height:104px;animation:hvMagicImpactBurst .88s ease-out forwards;filter:drop-shadow(0 0 14px rgba(180,135,255,.72))}
+.battle-fx-magic-impact img{width:100%;height:100%;object-fit:contain}
+.battle-fx-heal-symbol{width:56px;height:56px;animation:hvHealSymbolRise 1.05s ease-out forwards;filter:drop-shadow(0 0 9px rgba(255,232,145,.85))}
+.battle-fx-heal-symbol img{width:100%;height:100%;object-fit:contain}
+.battle-fx-magic-projectile.kind-fire{width:82px;height:58px;filter:drop-shadow(0 0 12px rgba(255,105,20,.92))}
+.battle-fx-magic-cast.kind-fire,.battle-fx-magic-impact.kind-fire{filter:drop-shadow(0 0 15px rgba(255,110,24,.85))}
+.battle-fx-magic-projectile.kind-sand{width:88px;height:56px;filter:drop-shadow(0 0 9px rgba(210,155,70,.82))}
+.battle-fx-magic-cast.kind-sand,.battle-fx-magic-impact.kind-sand{filter:drop-shadow(0 0 13px rgba(210,155,70,.72))}
+.battle-fx-magic-projectile.kind-heal{width:48px;height:48px;filter:drop-shadow(0 0 12px rgba(255,232,145,.94))}
+.battle-fx-magic-projectile.kind-heal img{transform:rotate(0deg)}
+.battle-fx-magic-cast.kind-heal,.battle-fx-magic-impact.kind-heal{filter:drop-shadow(0 0 15px rgba(255,232,145,.88))}
+@media (prefers-reduced-motion:reduce){.battle-fx-magic-cast,.battle-fx-magic-impact,.battle-fx-heal-symbol{animation-duration:.22s!important}.battle-fx-magic-projectile{animation-duration:.28s!important}}
+
+
+/* 8AR · ATAQUES VISUALES DE FLECHA */
+@keyframes hvArrowProjectileTravel{0%{opacity:0;transform:translate(-50%,-50%) scale(.42)}10%{opacity:1}82%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--arrow-dx)),calc(-50% + var(--arrow-dy))) scale(1)}}
+@keyframes hvArrowImpactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.25)}25%{opacity:1}72%{opacity:.92}100%{opacity:0;transform:translate(-50%,-50%) scale(1.16)}}
+@keyframes hvArrowStickFade{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--arrow-angle,0deg)) scale(.86)}12%{opacity:1}68%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--arrow-angle,0deg)) scale(1.02)}}
+.battle-fx-arrow-projectile,.battle-fx-arrow-impact,.battle-fx-arrow-stuck{position:absolute;pointer-events:none;z-index:38;transform:translate(-50%,-50%);transform-origin:center}
+.battle-fx-arrow-projectile{width:92px;height:46px;animation:hvArrowProjectileTravel var(--arrow-flight,.46s) linear forwards;filter:drop-shadow(0 0 10px rgba(221,181,126,.58))}
+.battle-fx-arrow-projectile img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--arrow-angle));transform-origin:center}
+.battle-fx-arrow-projectile.player{filter:drop-shadow(0 0 8px rgba(126,214,255,.34))}
+.battle-fx-arrow-projectile.enemy{filter:drop-shadow(0 0 8px rgba(255,140,186,.30))}
+.battle-fx-arrow-trail{position:absolute;left:0;top:50%;width:92px;height:8px;border-radius:999px;filter:blur(2px);background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,243,218,.22) 26%,rgba(255,214,128,.28) 58%,rgba(255,255,255,0) 100%);transform:translateY(-50%) rotate(var(--arrow-angle));animation:projectileTrailFlow calc(var(--arrow-flight,.46s) + .08s) ease-out forwards}
+.battle-fx-arrow-projectile.player .battle-fx-arrow-trail{background:linear-gradient(90deg,rgba(255,255,255,0),rgba(234,248,255,.20) 26%,rgba(126,214,255,.26) 58%,rgba(255,255,255,0) 100%)}
+.battle-fx-arrow-projectile.enemy .battle-fx-arrow-trail{background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,241,248,.18) 26%,rgba(255,140,186,.24) 58%,rgba(255,255,255,0) 100%)}
+.battle-fx-arrow-impact{width:108px;height:100px;animation:hvArrowImpactBurst .88s ease-out forwards;filter:drop-shadow(0 0 12px rgba(230,198,148,.46))}
+.battle-fx-arrow-impact img{width:100%;height:100%;object-fit:contain}
+.battle-fx-arrow-stuck{width:108px;height:86px;animation:hvArrowStickFade 1.62s ease-out forwards;filter:drop-shadow(0 0 5px rgba(0,0,0,.22))}
+.battle-fx-arrow-stuck img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--arrow-angle));transform-origin:center}
+@media (prefers-reduced-motion:reduce){.battle-fx-arrow-projectile{animation-duration:.28s!important}.battle-fx-arrow-impact{animation-duration:.22s!important}.battle-fx-arrow-stuck{animation-duration:.44s!important}}
+
+
+/* 8AS · LANCEROS Y GOLPES FÍSICOS */
+@keyframes hvSpearProjectileTravel{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}10%{opacity:1}82%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--spear-dx)),calc(-50% + var(--spear-dy))) scale(1)}}
+@keyframes hvSpearImpactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.32)}25%{opacity:1}72%{opacity:.94}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+@keyframes hvSpearStickFade{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--spear-angle,0deg)) scale(.84)}12%{opacity:1}68%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--spear-angle,0deg)) scale(1.02)}}
+@keyframes hvMeleeSlashImg{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--melee-angle,0deg)) scale(.72)}14%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--melee-dx,0px)),calc(-50% + var(--melee-dy,0px))) rotate(var(--melee-angle,0deg)) scale(1.06)}}
+@keyframes hvMeleeImpactImg{0%{opacity:0;transform:translate(-50%,-50%) scale(.28)}24%{opacity:1}70%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(1.16)}}
+.battle-fx-spear-projectile,.battle-fx-spear-impact,.battle-fx-spear-stuck,.battle-fx-melee-slash-img,.battle-fx-melee-thrust,.battle-fx-melee-impact-img{position:absolute;pointer-events:none;z-index:38;transform:translate(-50%,-50%);transform-origin:center}
+.battle-fx-spear-projectile{width:128px;height:54px;animation:hvSpearProjectileTravel var(--spear-flight,.46s) linear forwards;filter:drop-shadow(0 0 12px rgba(236,181,78,.58))}
+.battle-fx-spear-projectile img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--spear-angle));transform-origin:center}
+.battle-fx-spear-projectile.player{filter:drop-shadow(0 0 8px rgba(126,214,255,.28))}
+.battle-fx-spear-projectile.enemy{filter:drop-shadow(0 0 8px rgba(255,140,186,.26))}
+.battle-fx-spear-trail{position:absolute;left:0;top:50%;width:118px;height:8px;border-radius:999px;filter:blur(2px);background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,249,237,.20) 28%,rgba(255,220,160,.24) 60%,rgba(255,255,255,0) 100%);transform:translateY(-50%) rotate(var(--spear-angle));animation:projectileTrailFlow calc(var(--spear-flight,.46s) + .08s) ease-out forwards}
+.battle-fx-spear-impact,.battle-fx-melee-impact-img{width:124px;height:112px;animation:hvSpearImpactBurst .88s ease-out forwards;filter:drop-shadow(0 0 13px rgba(238,205,130,.34))}
+.battle-fx-spear-impact img,.battle-fx-melee-impact-img img{width:100%;height:100%;object-fit:contain}
+.battle-fx-spear-stuck{width:102px;height:74px;animation:hvSpearStickFade 1.58s ease-out forwards;filter:drop-shadow(0 0 5px rgba(0,0,0,.18))}
+.battle-fx-spear-stuck img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--spear-angle));transform-origin:center}
+.battle-fx-melee-slash-img,.battle-fx-melee-thrust{width:132px;height:68px;animation:hvMeleeSlashImg .56s ease-out forwards;filter:drop-shadow(0 0 10px rgba(240,244,255,.24))}
+.battle-fx-melee-thrust{width:152px;height:72px}
+.battle-fx-melee-slash-img img,.battle-fx-melee-thrust img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--melee-angle));transform-origin:center}
+@media (prefers-reduced-motion:reduce){.battle-fx-spear-projectile{animation-duration:.26s!important}.battle-fx-spear-impact,.battle-fx-melee-impact-img{animation-duration:.22s!important}.battle-fx-spear-stuck{animation-duration:.42s!important}.battle-fx-melee-slash-img,.battle-fx-melee-thrust{animation-duration:.22s!important}}
+
+
+/* 8AT · HACHAS / CABALLERÍA / RAYOS */
+@keyframes hvChargeLinesRush{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--charge-angle,0deg)) scale(.55)}12%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--charge-dx,0px)),calc(-50% + var(--charge-dy,0px))) rotate(var(--charge-angle,0deg)) scale(1.04)}}
+@keyframes hvChargeDustPuff{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}20%{opacity:1}72%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(1.12)}}
+.battle-fx-charge-lines,.battle-fx-charge-dust{position:absolute;pointer-events:none;z-index:37;transform:translate(-50%,-50%);transform-origin:center}
+.battle-fx-charge-lines{width:190px;height:106px;animation:hvChargeLinesRush .66s ease-out forwards;filter:drop-shadow(0 0 12px rgba(235,190,96,.24))}
+.battle-fx-charge-lines img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--charge-angle));transform-origin:center}
+.battle-fx-charge-dust{width:202px;height:112px;animation:hvChargeDustPuff .88s ease-out forwards;filter:drop-shadow(0 0 14px rgba(235,175,68,.26))}
+.battle-fx-charge-dust img{width:100%;height:100%;object-fit:contain;transform:rotate(var(--charge-angle));transform-origin:center}
+.battle-fx-magic-cast.kind-lightning,.battle-fx-magic-projectile.kind-lightning,.battle-fx-magic-impact.kind-lightning{filter:drop-shadow(0 0 15px rgba(120,215,255,.42))}
+.battle-fx-magic-projectile.kind-lightning{width:122px;height:60px}.battle-fx-magic-cast.kind-lightning{width:104px;height:76px}.battle-fx-magic-impact.kind-lightning{width:136px;height:92px}.battle-fx-magic-projectile.kind-lightning img{transform:rotate(var(--magic-angle)) scale(calc(var(--magic-scale,1) * 1.02));}
+.battle-fx-magic-impact.kind-lightning{filter:drop-shadow(0 0 12px rgba(160,230,255,.34))}
+@media (prefers-reduced-motion:reduce){.battle-fx-charge-lines{animation-duration:.22s!important}.battle-fx-charge-dust{animation-duration:.22s!important}}
+
+
+/* 8AU · INTENSIDAD POR RAREZA PARA VFX DE ARMAS */
+.battle-fx-arrow-projectile.fx-glorious img,.battle-fx-arrow-impact.fx-glorious img,.battle-fx-arrow-stuck.fx-glorious img,.battle-fx-melee-slash-img.fx-glorious img,.battle-fx-melee-impact-img.fx-glorious img,.battle-fx-charge-lines.fx-glorious img,.battle-fx-charge-dust.fx-glorious img{filter:brightness(1.05) saturate(1.06)}
+.battle-fx-arrow-projectile.fx-epic img,.battle-fx-arrow-impact.fx-epic img,.battle-fx-arrow-stuck.fx-epic img,.battle-fx-melee-slash-img.fx-epic img,.battle-fx-melee-impact-img.fx-epic img,.battle-fx-charge-lines.fx-epic img,.battle-fx-charge-dust.fx-epic img{filter:brightness(1.08) saturate(1.10) drop-shadow(0 0 6px rgba(189,148,255,.20))}
+.battle-fx-arrow-projectile.fx-mythic img,.battle-fx-arrow-impact.fx-mythic img,.battle-fx-arrow-stuck.fx-mythic img,.battle-fx-melee-slash-img.fx-mythic img,.battle-fx-melee-impact-img.fx-mythic img,.battle-fx-charge-lines.fx-mythic img,.battle-fx-charge-dust.fx-mythic img{filter:brightness(1.11) saturate(1.14) drop-shadow(0 0 8px rgba(255,123,217,.22))}
+.battle-fx-arrow-projectile.fx-demigod img,.battle-fx-arrow-impact.fx-demigod img,.battle-fx-arrow-stuck.fx-demigod img,.battle-fx-melee-slash-img.fx-demigod img,.battle-fx-melee-impact-img.fx-demigod img,.battle-fx-charge-lines.fx-demigod img,.battle-fx-charge-dust.fx-demigod img{filter:brightness(1.15) saturate(1.18) drop-shadow(0 0 10px rgba(255,247,167,.25))}
+.battle-fx-arrow-projectile.fx-demigod,.battle-fx-arrow-impact.fx-demigod,.battle-fx-melee-slash-img.fx-demigod,.battle-fx-melee-impact-img.fx-demigod{filter:drop-shadow(0 0 14px rgba(255,247,167,.34))}
+
+
+/* 8AV · LANZAS CABALLERÍA RAYOS APROBADOS */
+.battle-fx-spear-impact img{transform:rotate(var(--spear-angle));transform-origin:center}
+.battle-fx-spear-projectile.fx-glorious img,.battle-fx-spear-impact.fx-glorious img,.battle-fx-melee-thrust.fx-glorious img{filter:brightness(1.05) saturate(1.06)}
+.battle-fx-spear-projectile.fx-epic img,.battle-fx-spear-impact.fx-epic img,.battle-fx-melee-thrust.fx-epic img{filter:brightness(1.08) saturate(1.10) drop-shadow(0 0 6px rgba(189,148,255,.20))}
+.battle-fx-spear-projectile.fx-mythic img,.battle-fx-spear-impact.fx-mythic img,.battle-fx-melee-thrust.fx-mythic img{filter:brightness(1.11) saturate(1.14) drop-shadow(0 0 8px rgba(255,123,217,.22))}
+.battle-fx-spear-projectile.fx-demigod img,.battle-fx-spear-impact.fx-demigod img,.battle-fx-melee-thrust.fx-demigod img{filter:brightness(1.15) saturate(1.18) drop-shadow(0 0 10px rgba(255,247,167,.25))}

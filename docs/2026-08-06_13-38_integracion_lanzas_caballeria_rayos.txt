@@ -1,0 +1,19 @@
+HALLVALLA — Integración aprobada de lanzas, caballería y rayos
+
+Lanzas:
+- estocada cuerpo a cuerpo con arte nuevo;
+- jabalina/lanza arrojada en vuelo;
+- impacto dedicado;
+- se eliminó visualmente la lanza clavada posterior al impacto.
+
+Caballería:
+- carga base desde la posición atacante;
+- carga intensa al llegar al objetivo;
+- el efecto se orienta según la dirección del combate.
+
+Rayos:
+- casteo, proyectil e impacto nuevos;
+- compatibles con dragones de rayo y ataques/magias detectados como lightning, shock, thunder, rayo, trueno o eléctricos.
+
+La rareza no decide qué arte se usa. Solo ajusta brillo, saturación y resplandor.
+No se modificaron daño, evasión, guardia, estados ni selección de objetivos.

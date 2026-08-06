@@ -1,0 +1,31 @@
+HALLVALLA — Integración visual de hachas, caballería y rayos
+
+Se añadió soporte visual acumulativo para:
+- hachas con slash e impacto más pesados;
+- ataques melee de caballería con líneas de carga, polvo e impacto de embestida;
+- ataques y magias de rayos / electricidad con casteo, proyectil e impacto.
+
+Hachas:
+- weaponKind=axe usa ahora un slash dedicado y un impacto más contundente.
+
+Caballería / carga:
+- las unidades detectadas como caballería en ataques melee muestran líneas de carrera;
+- al llegar aparece polvo e impacto de carga, además del golpe físico.
+
+Rayos / electricidad:
+- se detectan por magicKind, dragonElement=lightning o textos/nombres con lightning, thunder, shock, rayo, trueno o electr-;
+- usan assets dedicados para cast, projectile e impact.
+
+Assets añadidos:
+assets/effects/axe/axe_slash_01.webp
+assets/effects/axe/axe_impact_01.webp
+assets/effects/charge/charge_speed_lines_01.webp
+assets/effects/charge/charge_dust_01.webp
+assets/effects/charge/charge_impact_01.webp
+assets/effects/lightning/lightning_cast_01.webp
+assets/effects/lightning/lightning_projectile_01.webp
+assets/effects/lightning/lightning_impact_01.webp
+
+Archivos modificados:
+styles.css
+js/parts/04-fx-audio-profile.js

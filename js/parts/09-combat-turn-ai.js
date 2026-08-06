@@ -672,7 +672,7 @@ async function attackUnit(a,d){
   const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
-  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth});
+  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth,hit:!!hit.hit});
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
     ? {
@@ -1596,7 +1596,7 @@ async function adventureEnemyTurn(){
     const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
-    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth});
+    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth,hit:!!hit.hit});
     const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
       ? {
@@ -2259,6 +2259,9 @@ async function adventureEnemyTurn(){
     const appliesBurn=choice.card.key==="fireball"&&!originalTarget.leader;
     const appliesSandSlow=choice.card.key==="bolt"&&!originalTarget.leader;
     const sandSlowAmount=Math.max(0,Number(choice.card.slowPermanent||0));
+    const spellFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
+    const spellMagicKind=choice.card.key==="fireball"?"fire":(choice.card.key==="bolt"||String(choice.card.key||"").includes("sand_curse")?"sand":"arcane");
+    pendingAiBattleFxEvent=spellFxCaster?makeMagicFxEvent(spellFxCaster,originalTarget,spellMagicKind,{type:"spell",spellKey:choice.card.key,effectAction:"damage",impactScale:choice.card.key==="fireball"?1.12:1,hit:true}):pendingAiBattleFxEvent;
     let damagedTarget=null;
     units=units.map(u=>{
       if(u.id!==originalTarget.id)return u;
@@ -2324,6 +2327,8 @@ async function adventureEnemyTurn(){
     const healAmount=effectiveCardValue(choice.card,"heal");
     const canCleanse=cardCleanseEnabled(choice.card);
     const bhTrap=withAiPublicState(()=>resolveBuffHealLegendaryTraps(choice.ally,"curación",units));
+    const healFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
+    if(!bhTrap.cancel&&healFxCaster)pendingAiBattleFxEvent=makeMagicFxEvent(healFxCaster,choice.ally,"heal",{type:"heal",spellKey:choice.card.key,effectAction:canCleanse?"cleanse":"heal",hit:true});
     units=bhTrap.cancel?bhTrap.units:units.map(u=>u.id===choice.ally.id?(canCleanse?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):{...u,hp:Math.min(effectiveMaxHp(u),(u.hp||0)+healAmount)}):u);
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
@@ -2414,6 +2419,7 @@ async function adventureEnemyTurn(){
       const serviceResult={key:getUnitMasteryKey(u),name:u.name,beforePoints,afterPoints:beforePoints+Number(result.serviceGain||1),gain:Number(result.serviceGain||1),unlockedPurification:beforePoints<50&&beforePoints+Number(result.serviceGain||1)>=50,unlockedResurrection:beforePoints<100&&beforePoints+Number(result.serviceGain||1)>=100};
       units=applyUnitServicePointsToUnits(result.units,u,serviceResult);
       if(result.erictoGraveyard)erictoGraveyard=normalizeErictoGraveyard(result.erictoGraveyard);
+      pendingAiBattleFxEvent=result.battleFxEvent||pendingAiBattleFxEvent;
       pendingAiStatusFxEvent=result.statusFxEvent||pendingAiStatusFxEvent;
       pendingAiFloatFxEvent=result.floatFxEvent||pendingAiFloatFxEvent;
       logs.push(`Rival: ${result.log} Puntos de servicio: ${serviceResult.afterPoints}.${unitServiceUnlockText(serviceResult)}`);
@@ -2427,6 +2433,7 @@ async function adventureEnemyTurn(){
       units=result.units;
       if(result.erictoGraveyard)erictoGraveyard=normalizeErictoGraveyard(result.erictoGraveyard);
       if(result.beastTraps)beastTraps=result.beastTraps;
+      pendingAiBattleFxEvent=result.battleFxEvent||pendingAiBattleFxEvent;
       logs.push(`Rival: ${result.log}`);
       return true;
     }
@@ -2446,6 +2453,7 @@ async function adventureEnemyTurn(){
     units=result.units;
     if(result.erictoGraveyard)erictoGraveyard=normalizeErictoGraveyard(result.erictoGraveyard);
     if(result.beastTraps)beastTraps=result.beastTraps;
+    pendingAiBattleFxEvent=result.battleFxEvent||pendingAiBattleFxEvent;
     logs.push(`Rival: ${result.log}`);
     return true;
   };

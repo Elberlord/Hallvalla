@@ -427,7 +427,7 @@ function getGuardBadgeHtml(u,scope="unit"){
   const guard=Math.max(0,Number(displayEffectiveGuard(u)||0));
   const broken=guard<=0;
   const title=escapeHtml(`Guardia actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}`);
-  const frameHref='assets/ui/guard_shield_emblem.png?v=1';
+  const frameHref='assets/ui/guard_shield_emblem.webp?v=1';
   return `<span class="guard-emblem-badge guard-emblem-badge-${escapeHtml(scope)} ${broken?"is-broken":"is-intact"}" title="${title}" aria-label="${title}">
     <span class="guard-emblem-shell" aria-hidden="true">
       <img class="guard-emblem-img" src="${frameHref}" alt="" draggable="false"/>
@@ -445,7 +445,7 @@ function getAttackBadgeHtml(u,scope="unit"){
   if(!u)return "";
   const atk=Math.max(0,Number(effectiveAtk(u)||0));
   const title=escapeHtml(`Ataque actual: ${atk}`);
-  const frameHref='assets/ui/attack_sword_emblem.png?v=1';
+  const frameHref='assets/ui/attack_sword_emblem.webp?v=1';
   return `<span class="attack-emblem-badge attack-emblem-badge-${escapeHtml(scope)}" title="${title}" aria-label="${title}">
     <span class="attack-emblem-shell" aria-hidden="true">
       <img class="attack-emblem-img" src="${frameHref}" alt="" draggable="false"/>
@@ -457,7 +457,7 @@ function getFieldStatBadgeHtml(kind,value,titleText=""){
   const safeKind=kind==="precision"?"precision":"eva";
   const numeric=Math.max(0,Number(value||0));
   const title=escapeHtml(titleText||`${safeKind==="precision"?"Precisión":"Evasión"} actual: ${numeric}`);
-  const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.png?v=2':'assets/ui/evasion_rogue_emblem.png?v=2';
+  const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.webp?v=2':'assets/ui/evasion_rogue_emblem.webp?v=2';
   return `<span class="field-stat-emblem-badge field-stat-emblem-${safeKind}" title="${title}" aria-label="${title}">
     <span class="field-stat-emblem-shell" aria-hidden="true">
       <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false"/>
@@ -522,6 +522,19 @@ function getVeilCurseCountdownHtml(u){
   return `<span class="veil-curse-countdown${critical}" title="${title}" aria-label="${title}"><span class="veil-curse-countdown-aura" aria-hidden="true"></span><span class="veil-curse-countdown-number">${count}</span></span>`;
 }
 
+
+function getPersistentUnitElementFxHtml(u){
+  if(!u||u.leader)return "";
+  const frostTurns=Math.max(0,Number(u.dragonFrostTurns||0));
+  const hardFrozen=!!u.frozenSource&&u.noAttackTurnKey===publicState?.turnKey;
+  const frozen=hardFrozen||frostTurns>0;
+  const cursed=typeof hasVeilCurse==="function"?hasVeilCurse(u):Number(u.veilCurseTurnsRemaining||0)>0;
+  const html=[];
+  if(frozen)html.push(`<span class="unit-persistent-element-fx frozen${hardFrozen?" hard-frozen":" frost"}" aria-hidden="true"><img src="assets/effects/status/frozen/frozen_aura_01.webp" alt="" draggable="false"></span>`);
+  if(cursed)html.push('<span class="unit-persistent-element-fx curse" aria-hidden="true"><img src="assets/effects/status/curse/curse_aura_01.webp" alt="" draggable="false"></span>');
+  return html.join("");
+}
+
 function getBoardTeamMarkerHtml(u){
   if(!u)return "";
   const relation=u.owner===myPlayer?"ally":"enemy";
@@ -565,7 +578,8 @@ function renderBoard(){
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.dataset.unitKey=String(u.key||"").trim().toLowerCase();
       const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
+      const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
+      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
       const unitStatusEntries=getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
