@@ -2,7 +2,13 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import {getDatabase,ref,set,update,get,onValue,remove,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const BUILD = "7BOARDCTRL8AP";
+const BUILD = "7BOARDCTRL8AZ";
+const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
+if (DECLARED_BUILD !== BUILD) {
+  throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
+}
+globalThis.__HALLVALLA_BUILD__ = BUILD;
+globalThis.__HALLVALLA_BUILD_VERSION__ = `v8_MODULAR_${BUILD}`;
 Object.assign(globalThis, {
   initializeApp,
   getDatabase,
@@ -56,7 +62,6 @@ function loadClassicScript(file) {
 try {
   for (const file of PARTS) await loadClassicScript(file);
   globalThis.__HALLVALLA_MODULAR_READY__ = true;
-  globalThis.__HALLVALLA_BUILD__ = BUILD;
   console.info(`[HallValla] ${BUILD}: ${PARTS.length} módulos cargados correctamente.`);
 } catch (error) {
   globalThis.__HALLVALLA_MODULAR_READY__ = false;

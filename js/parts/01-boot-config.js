@@ -73,7 +73,7 @@ const, let, funciones e inicializadores.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION="v8_MODULAR_7BOARDCTRL8X";
+const HALLVALLA_BUILD_VERSION=`v8_MODULAR_${globalThis.__HALLVALLA_BUILD__||"7BOARDCTRL8AZ"}`;
 const firebaseConfig={apiKey:"AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ",authDomain:"hallvalla-online.firebaseapp.com",projectId:"hallvalla-online",storageBucket:"hallvalla-online.firebasestorage.app",messagingSenderId:"496903032464",appId:"1:496903032464:web:d1e63bfead7109fc905215",databaseURL:"https://hallvalla-online-default-rtdb.firebaseio.com"};
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
 const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v3_final_100_5x9";

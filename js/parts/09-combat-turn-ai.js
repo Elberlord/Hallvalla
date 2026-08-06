@@ -387,7 +387,15 @@ async function attackUnit(a,d){
   const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
   let berserkerOsoText="",skiparWarLootText="";
   units=units.map(u=>{
-    if(u.id===a.id)return{...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn,dragonCharge:(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)&&a.key!=="dragon_egg")?(Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1):u.dragonCharge};
+    if(u.id===a.id){
+      const nextAttacker={...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
+      if(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)&&a.key!=="dragon_egg"){
+        nextAttacker.dragonCharge=Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1;
+      }else if(typeof nextAttacker.dragonCharge==="undefined"){
+        delete nextAttacker.dragonCharge;
+      }
+      return nextAttacker;
+    }
     if(u.id===d.id){
       if(!hit.hit)return u;
       const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,units);

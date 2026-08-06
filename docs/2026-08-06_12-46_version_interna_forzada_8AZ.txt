@@ -1,0 +1,9 @@
+Hallvalla 7BOARDCTRL8AZ — versión interna forzada
+
+Correcciones:
+1. La versión se define en js/bootstrap-loader.js antes de cargar cualquier módulo.
+2. 01-boot-config.js deriva HALLVALLA_BUILD_VERSION de esa versión única.
+3. index.html, CSS, loader y módulos usan 7BOARDCTRL8AZ.
+4. El arranque valida que la versión declarada en index.html coincida con el loader.
+5. Si alguien mezcla archivos de builds diferentes, el juego muestra un error de versión inconsistente en vez de aparentar una compilación antigua.
+6. Se conserva la corrección de dragonCharge/undefined y todos los assets WebP acumulados.

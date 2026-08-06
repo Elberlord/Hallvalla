@@ -1,0 +1,13 @@
+Hallvalla 7BOARDCTRL8AY — corrección de ataque de arquera y Firebase
+
+Problema observado:
+- Al resolver el ataque del jugador, las unidades no dragón recibían explícitamente dragonCharge: undefined.
+- Firebase Realtime Database rechaza cualquier update que contenga valores undefined.
+- La IA podía atacar porque usaba una ruta diferente.
+
+Correcciones:
+1. La propiedad dragonCharge solo se actualiza para compañeros dragón válidos.
+2. Si una unidad normal contiene dragonCharge sin valor, la propiedad se elimina antes del guardado.
+3. updatePublic y updatePrivate limpian recursivamente valores undefined antes de escribir en Firebase.
+4. Los arrays conservan su posición y convierten elementos undefined en null; los objetos omiten propiedades undefined.
+5. El build se actualizó a 7BOARDCTRL8AY para invalidar la caché de GitHub Pages.

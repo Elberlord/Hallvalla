@@ -1,5 +1,22 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AI · Estado de red, creación de partidas y Firebase */
+/* HallValla 7BOARDCTRL8AZ · Estado de red, creación de partidas y Firebase */
+function hallvallaSanitizeFirebaseValue(value){
+  if(typeof value==="undefined")return undefined;
+  if(value===null)return null;
+  if(Array.isArray(value))return value.map(item=>{
+    const clean=hallvallaSanitizeFirebaseValue(item);
+    return typeof clean==="undefined"?null:clean;
+  });
+  if(typeof value==="object"){
+    const clean={};
+    Object.entries(value).forEach(([key,item])=>{
+      const safe=hallvallaSanitizeFirebaseValue(item);
+      if(typeof safe!=="undefined")clean[key]=safe;
+    });
+    return clean;
+  }
+  return value;
+}
 async function updatePublic(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
   const sourcePatch=patch||{};
@@ -20,6 +37,7 @@ async function updatePublic(patch){
   }else{
     delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
   }
+  cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
@@ -27,7 +45,7 @@ async function updatePublic(patch){
   }
   await update(ref(db,`games/${gameId}/public`),cleanPatch);
   return true;
-}async function updatePrivate(patch){if(isTurnWriteBlockedByExpiredClock())return false;if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,patch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),patch)}async function updateUnits(units){await updatePublic({units})}function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
+}async function updatePrivate(patch){if(isTurnWriteBlockedByExpiredClock())return false;const cleanPatch=hallvallaSanitizeFirebaseValue(patch||{})||{};if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,cleanPatch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),cleanPatch)}async function updateUnits(units){await updatePublic({units})}function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
   return (units||[]).some(u=>u&&u.owner===owner&&!u.leader&&Number(u.hp||0)>0);
 }
 function canOwnerPlayAnyCardSnapshot(owner,hand=[],honor=0,phase="main",units=publicState?.units||[]){
