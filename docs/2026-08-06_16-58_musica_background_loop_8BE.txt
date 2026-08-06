@@ -1,0 +1,12 @@
+Hallvalla 7BOARDCTRL8BF — Música de fondo en loop corto
+
+Base acumulativa: 7BOARDCTRL8BD.
+Ruta conservada: assets/music/duel_hallvalla_war_chant.ogg
+Fuente seleccionada: tramo del minuto 01:00 al 11:00 del MP3 proporcionado.
+Construcción del loop: se eliminaron 8 segundos del inicio como punto de entrada y se creó
+un crossfade de 8 segundos entre el final del tramo y el inicio, de modo que el reinicio
+del elemento Audio sea continuo.
+Duración final aproximada: 9 min 44 s.
+Formato: Ogg Opus, estéreo, 48 kHz, 96 kbps VBR.
+Peso: 6834875 bytes (6.83 MB).
+La lógica existente conserva audio.loop=true; no se alteró el sistema de reproducción.

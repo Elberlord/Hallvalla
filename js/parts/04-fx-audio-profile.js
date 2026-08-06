@@ -900,10 +900,14 @@ const MUSIC_TRACK_ALIASES={
 };
 function resolveMusicTrackName(name){return MUSIC_TRACK_ALIASES[name]||name;}
 const SFX_ASSET_VERSION="7WEAPONSFX1";
+const MUSIC_TRACK_EXTENSIONS={
+  duel_hallvalla_war_chant:"mp3"
+};
 function audioPath(kind,name){
   const resolved=kind==="music"?resolveMusicTrackName(name):name;
+  const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[resolved]||"ogg"):"ogg";
   const cache=kind==="sfx"?`?v=${SFX_ASSET_VERSION}`:"";
-  return `assets/${kind}/${resolved}.ogg${cache}`;
+  return `assets/${kind}/${resolved}.${extension}${cache}`;
 }
 function clampAudioVolume(value,fallback=.5){
   const n=Number(value);

@@ -1,0 +1,19 @@
+Hallvalla 7BOARDCTRL8BG — parche de música de fondo con crossfade
+
+Aplicar sobre la versión 7BOARDCTRL8BF.
+
+Archivo que reemplaza:
+assets/music/duel_hallvalla_war_chant.mp3
+
+Características:
+- Fragmento final: aproximadamente 9 min 44 s.
+- Crossfade: 8 segundos entre el final y el principio.
+- Formato: MP3.
+- Codificador: LAME VBR calidad máxima (q=0).
+- Frecuencia: 44.1 kHz.
+- Canales: estéreo.
+- Bitrate promedio aproximado: 226 kbps.
+- El sistema existente conserva audio.loop=true.
+
+Nota:
+El crossfade requiere recodificar el fragmento. Se usó la calidad máxima de LAME para reducir al mínimo la pérdida adicional.

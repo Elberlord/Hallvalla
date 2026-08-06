@@ -1,0 +1,10 @@
+Hallvalla 7BOARDCTRL8BF — Reemplazo de música de fondo
+
+Base acumulativa: 7BOARDCTRL8BC.
+Archivo sustituido: assets/music/duel_hallvalla_war_chant.ogg
+Fuente: MP3 proporcionado por el usuario.
+Duración original: 7693.244 s (aprox. 2 h 08 min 13 s).
+Formato final: Ogg Opus, estéreo, 48 kHz, 96 kbps VBR.
+Peso final: 90199752 bytes (90.20 MB).
+La ruta y el nombre se conservaron, por lo que la lógica existente de reproducción no fue modificada.
+Los alias home_theme_loop y music_theme_loop continúan resolviendo a duel_hallvalla_war_chant.

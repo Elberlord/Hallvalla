@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8BC · Estado de red, creación de partidas y Firebase */
+/* HallValla 7BOARDCTRL8BF · Estado de red, creación de partidas y Firebase */
 function hallvallaSanitizeFirebaseValue(value){
   const shared=globalThis.__HALLVALLA_SANITIZE_FIREBASE_VALUE__;
   if(typeof shared==="function")return shared(value);
