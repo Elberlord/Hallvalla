@@ -19,6 +19,166 @@ function hallvallaSanitizeFirebaseValue(value){
   }
   return value;
 }
+
+const BATTLE_RESULT_SPLASH_DURATION_MS=4300;
+function isHiddenUnitCard(card){
+  return !!card&&(card.hiddenUnitTag==="unit"||card.type==="unit");
+}
+function countHiddenUnitCards(cards=[]){
+  return (cards||[]).reduce((count,card)=>count+(isHiddenUnitCard(card)?1:0),0);
+}
+function countHiddenUnitReserveFromState(state={}){
+  return countHiddenUnitCards([...(state?.deck||[]),...(state?.hand||[])]);
+}
+function getOwnerHasHiddenUnits(owner,state=publicState){
+  const safeOwner=Number(owner||0);
+  if(!safeOwner||!state)return null;
+  if(state.mode==="adventure"){
+    if(safeOwner===2){
+      const ai=state.adventureAiState||{};
+      return countHiddenUnitCards([...(ai.deck||[]),...(ai.hand||[])])>0;
+    }
+    if(safeOwner===Number(myPlayer)&&privateState){
+      return countHiddenUnitReserveFromState(privateState)>0;
+    }
+  }
+  if(safeOwner===Number(myPlayer)&&privateState){
+    return countHiddenUnitReserveFromState(privateState)>0;
+  }
+  const raw=state.playerStats?.[safeOwner]?.hasHiddenUnits;
+  if(raw===null||typeof raw==="undefined")return null;
+  return raw===true;
+}
+function isOwnerOutOfUnits(owner,units=publicState?.units||[],state=publicState){
+  if(hasLivingNonLeaderUnitsForOwner(owner,units))return false;
+  const hasHiddenUnits=getOwnerHasHiddenUnits(owner,state);
+  return hasHiddenUnits===false;
+}
+function getUnitExhaustionOutcome(units=publicState?.units||[],state=publicState){
+  if(!state||state.mode==="tutorial")return null;
+  const p1Out=isOwnerOutOfUnits(1,units,state);
+  const p2Out=isOwnerOutOfUnits(2,units,state);
+  if(!p1Out&&!p2Out)return null;
+  const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader)||null;
+  const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader)||null;
+  if(p1Out&&p2Out)return{ended:true,winner:0,loser:0,p1Leader,p2Leader,reason:"unit_exhaustion_draw"};
+  if(p1Out)return{ended:true,winner:2,loser:1,p1Leader,p2Leader,reason:"unit_exhaustion"};
+  return{ended:true,winner:1,loser:2,p1Leader,p2Leader,reason:"unit_exhaustion"};
+}
+function getUnitExhaustionOutcomeText(outcome){
+  if(!outcome||!String(outcome.reason||"").startsWith("unit_exhaustion"))return "";
+  if(outcome.reason==="unit_exhaustion_draw")return "Ambos jugadores se quedaron sin unidades en el mazo, la mano y el campo. La partida termina en empate.";
+  return `J${outcome.loser} se quedó sin unidades en el mazo, la mano y el campo. Gana J${outcome.winner}.`;
+}
+let unitExhaustionFinalizeLock=false;
+async function maybeFinalizeUnitExhaustionFromPublicState(){
+  if(unitExhaustionFinalizeLock||!gameId||!publicState||isBattleEnded()||publicState.mode==="tutorial")return false;
+  if(publicState.mode!=="adventure"&&Number(publicState.currentPlayer||0)!==Number(myPlayer||0))return false;
+  const outcome=getUnitExhaustionOutcome(publicState.units||[],publicState);
+  if(!outcome?.ended)return false;
+  unitExhaustionFinalizeLock=true;
+  try{
+    return await finalizeBattle(publicState.units||[],"",publicState);
+  }finally{
+    unitExhaustionFinalizeLock=false;
+  }
+}
+function normalizeHiddenUnitStatsPatch(patch){
+  const out={...(patch||{})};
+  for(const owner of [1,2]){
+    const key=`playerStats/${owner}`;
+    if(!out[key]||typeof out[key]!=="object"||Array.isArray(out[key]))continue;
+    let hasHiddenUnits=out[key].hasHiddenUnits;
+    if(hasHiddenUnits===null||typeof hasHiddenUnits==="undefined"){
+      if(owner===Number(myPlayer)&&privateState)hasHiddenUnits=countHiddenUnitReserveFromState(privateState)>0;
+      else hasHiddenUnits=publicState?.playerStats?.[owner]?.hasHiddenUnits;
+    }
+    if(hasHiddenUnits!==null&&typeof hasHiddenUnits!=="undefined"){
+      out[key]={...out[key],hasHiddenUnits:hasHiddenUnits===true};
+    }
+  }
+  if(out.adventureAiState&&typeof out.adventureAiState==="object"&&publicState?.mode==="adventure"){
+    const nextAi={...(publicState?.adventureAiState||{}),...out.adventureAiState};
+    out["playerStats/2/hasHiddenUnits"]=countHiddenUnitCards([...(nextAi.deck||[]),...(nextAi.hand||[])])>0;
+  }
+  return out;
+}
+function getBattleOutcomeSplashElement(){
+  let overlay=document.getElementById("battleOutcomeSplash");
+  if(overlay)return overlay;
+  overlay=document.createElement("div");
+  overlay.id="battleOutcomeSplash";
+  overlay.className="battle-outcome-splash";
+  overlay.setAttribute("aria-live","assertive");
+  overlay.setAttribute("aria-atomic","true");
+  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">Ir a Home</button></div>';
+  const actions=overlay.querySelector(".battle-outcome-actions");
+  if(actions){
+    actions.addEventListener("click",ev=>{
+      const btn=ev.target.closest("[data-battle-outcome-action]");
+      if(!btn)return;
+      const action=btn.dataset.battleOutcomeAction||"";
+      btn.disabled=true;
+      if(action==="map")showAdventureMapFromResult();
+      else if(action==="retry")retryCurrentAdventureBattle();
+      else if(action==="home")backToMainMenu();
+    });
+  }
+  document.body.appendChild(overlay);
+  return overlay;
+}
+function hideBattleOutcomeSplash(immediate=false){
+  clearTimeout(showBattleOutcomeSplash._timer);
+  const overlay=document.getElementById("battleOutcomeSplash");
+  if(!overlay)return;
+  overlay.classList.remove("show","victory","defeat","draw","awaiting-action");
+  const actions=overlay.querySelector(".battle-outcome-actions");
+  if(actions){
+    actions.setAttribute("aria-hidden","true");
+    actions.querySelectorAll("button").forEach(btn=>{btn.hidden=false;btn.disabled=false;});
+  }
+  if(immediate)overlay.remove();
+}
+function showBattleOutcomeSplash(result,{adventure=false}={}){
+  const overlay=getBattleOutcomeSplashElement();
+  const img=overlay.querySelector(".battle-outcome-splash-art");
+  const drawText=overlay.querySelector(".battle-outcome-draw-text");
+  const actions=overlay.querySelector(".battle-outcome-actions");
+  overlay.classList.remove("show","victory","defeat","draw","awaiting-action");
+  clearTimeout(showBattleOutcomeSplash._timer);
+  if(actions){
+    actions.setAttribute("aria-hidden","true");
+    actions.querySelectorAll("button").forEach(btn=>{btn.hidden=false;btn.disabled=false;});
+  }
+  void overlay.offsetWidth;
+  if(result==="draw"){
+    overlay.classList.add("draw");
+    if(img){img.removeAttribute("src");img.alt="";}
+    if(drawText)drawText.setAttribute("aria-hidden","false");
+    overlay.setAttribute("aria-label","Empate");
+  }else{
+    const victory=result==="victory";
+    overlay.classList.add(victory?"victory":"defeat");
+    if(img){
+      img.src=victory?"assets/ui/battle_results/victory_blue.png":"assets/ui/battle_results/defeat_red.png";
+      img.alt=victory?"Has ganado la partida":"Has sido derrotado";
+    }
+    if(drawText)drawText.setAttribute("aria-hidden","true");
+    overlay.setAttribute("aria-label",victory?"Has ganado la partida":"Has sido derrotado");
+  }
+  if(adventure&&actions){
+    const mapBtn=actions.querySelector('[data-battle-outcome-action="map"]');
+    const retryBtn=actions.querySelector('[data-battle-outcome-action="retry"]');
+    if(mapBtn)mapBtn.hidden=result!=="victory";
+    if(retryBtn)retryBtn.hidden=result==="victory";
+    actions.setAttribute("aria-hidden","false");
+    overlay.classList.add("awaiting-action");
+  }
+  overlay.classList.add("show");
+  if(!adventure){
+    showBattleOutcomeSplash._timer=setTimeout(()=>hideBattleOutcomeSplash(false),BATTLE_RESULT_SPLASH_DURATION_MS+120);
+  }
+}
 async function updatePublic(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
   const sourcePatch=patch||{};
@@ -39,15 +199,34 @@ async function updatePublic(patch){
   }else{
     delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
   }
+  cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
   cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
-    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowClockKillBonus(prevPublic,publicState);maybeShowBattleResult();maybeStartTurn();maybeTriggerAdventureAI();return true;
+    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowClockKillBonus(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();return true;
   }
   await update(ref(db,`games/${gameId}/public`),cleanPatch);
   return true;
-}async function updatePrivate(patch){if(isTurnWriteBlockedByExpiredClock())return false;const cleanPatch=hallvallaSanitizeFirebaseValue(patch||{})||{};if(hallvallaIsLocalTestGame()){privateState=hallvallaApplyLocalPatch(privateState,cleanPatch);render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/private/player${myPlayer}`),cleanPatch)}async function updateUnits(units){await updatePublic({units})}function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
+}
+async function updatePrivate(patch){
+  if(isTurnWriteBlockedByExpiredClock())return false;
+  const cleanPatch=hallvallaSanitizeFirebaseValue(patch||{})||{};
+  const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPatch);
+  const hiddenUnits=countHiddenUnitReserveFromState(nextPrivate);
+  privateState=nextPrivate;
+  const summaryPatch={[`playerStats/${myPlayer}/hasHiddenUnits`]:hiddenUnits>0};
+  const projectedPublic=publicState?hallvallaApplyLocalPatch(publicState,summaryPatch):publicState;
+  if(projectedPublic)publicState=projectedPublic;
+  if(hallvallaIsLocalTestGame()){
+    render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();
+    return true;
+  }
+  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),cleanPatch);
+  await update(ref(db,`games/${gameId}/public`),summaryPatch);
+  return true;
+}
+async function updateUnits(units){await updatePublic({units})}function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
   return (units||[]).some(u=>u&&u.owner===owner&&!u.leader&&Number(u.hp||0)>0);
 }
 function canOwnerPlayAnyCardSnapshot(owner,hand=[],honor=0,phase="main",units=publicState?.units||[]){
@@ -94,25 +273,53 @@ function getStalemateOutcomeText(outcome){
   if(outcome.reason==="stalemate_draw")return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Empate por Vida igual (${outcome.p1Hp}/${outcome.p2Hp}).`;
   return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Gana J${outcome.winner} por tener más Vida (${outcome.p1Hp}/${outcome.p2Hp}).`;
 }
-function getBattleOutcome(units=publicState?.units||[],state=publicState){const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};const stalemate=getStalemateLifeOutcome(units,state);if(stalemate)return stalemate;return{ended:false,p1Leader,p2Leader}}async function finalizeBattle(units,actionLog="",stateOverride=null){if(!gameId||!publicState)return false;const state=stateOverride||publicState;const outcome=getBattleOutcome(units,state);if(!outcome.ended)return false;clearSelection();const baseLogs=[];if(actionLog)baseLogs.push(actionLog);const stalemateText=getStalemateOutcomeText(outcome);if(stalemateText)baseLogs.push(stalemateText);if(state.mode==="adventure"){baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);}else if(!stalemateText){baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");}const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});return true}function resetBattleState(){resetNoPlayableAutoAdvanceState();resetFieldAutoAdvanceState();stopTurnTimerLoop();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";lastClockKillBonusEventId="";clearBattleFxLayer();clearEventSplashOverlay();hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){const panel=$("adventureResultPanel");if(!panel)return;if(!publicState||publicState.mode!=="adventure"||publicState.phase!=="ended"||!publicState.endedAt){panel.classList.add("hidden");return}const resultKey=`${gameId}:${publicState.endedAt}`;if(shownBattleResultKey===resultKey)return;shownBattleResultKey=resultKey;const win=publicState.winner===1;tryPlaySound(win?"victory":"defeat",.95);stopMusic(false);
-const award=completeAdventureBattleOnce(publicState);const specialKey=publicState.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||"mulan";const art=ADVENTURE_RESULT_ART[specialKey]||ADVENTURE_RESULT_ART.mulan;const hero=$("adventureResultHero"),enemy=$("adventureResultEnemy"),kicker=$("adventureResultKicker"),title=$("adventureResultTitle"),text=$("adventureResultText"),note=$("adventureResultNote"),caption=$("adventureResultCaption"),card=$("adventureResultCard"),mapBtn=$("adventureResultMapBtn"),nextBtn=$("adventureResultNextBtn");resetAdventureResultVisual();if(card)card.classList.toggle("defeat",!win);
-if(win&&publicState.adventureIsGuardian){
-  const scene={art,info:getGuardianResultSceneInfo(specialKey)};
-  if(card)card.classList.add("guardian-narrative-only");
-  if(hero)hero.removeAttribute("src");
-  if(enemy)enemy.removeAttribute("src");
-  if(kicker)kicker.textContent="Prueba del guardián completada";
-  if(title)title.textContent=`${scene.art.name} mantiene el frente`;
-  const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`;
-  if(text)text.textContent=`El Hechicero guardián cae y su energía oscura se apaga sobre las piedras del campo. ${scene.art.name} no celebra todavía: se acerca a ${scene.info.allyName}, lo ayuda a levantarse y ambos miran hacia la ruta que acaba de abrirse. El mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title} queda desbloqueado.${xpLine}`;
-  if(note)note.textContent=`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. Ahora puedes entrar al mapa y jugar sus batallas en orden, manteniendo el sistema de desbloqueo progresivo.`;
-  if(caption)caption.textContent="";
-  if(mapBtn)mapBtn.classList.remove("hidden");
-  if(nextBtn){nextBtn.classList.remove("hidden");nextBtn.textContent="Ir a la primera batalla";}
-  panel.classList.remove("hidden");
-  return;
+function getBattleOutcome(units=publicState?.units||[],state=publicState){
+  const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);
+  const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);
+  if(!p1Leader&&!p2Leader)return{ended:true,winner:0,loser:0,p1Leader:null,p2Leader:null};
+  if(!p1Leader)return{ended:true,winner:2,loser:1,p1Leader:null,p2Leader};
+  if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};
+  const exhausted=getUnitExhaustionOutcome(units,state);
+  if(exhausted)return exhausted;
+  const stalemate=getStalemateLifeOutcome(units,state);
+  if(stalemate)return stalemate;
+  return{ended:false,p1Leader,p2Leader};
 }
-if(hero){hero.src=win?art.heroImage:art.cardImage;hero.alt=art.name}if(enemy){const enemyType=publicState.playerLeaders?.[2]||"mage";enemy.src=publicState.adventureEnemyLeaderPortrait||LEADER_PORTRAITS[enemyType]||LEADER_PORTRAITS.mage;enemy.alt=publicState.adventureEnemyName||"Líder enemigo"}if(kicker)kicker.textContent=win?(publicState.adventureIsGuardian?"Prueba del guardián completada":`${publicState.adventureChapterTitle||ADVENTURE_CHAPTER_1_1.number} · Batalla ${publicState.adventureBattleNum||1} completada`):"Misión fallida";if(title)title.textContent=win?(publicState.adventureIsGuardian?"El mapa 1.1 se ha desbloqueado":`${publicState.adventureChapterTitle||"Aventura"}: victoria`):"El guardián resistió";const pendingPackName=award.battle?.packType==="improved_magic_trap"?"Paquete reforzado pendiente de apertura":"Paquete básico pendiente de apertura";const rewardCardsText=award.cards?.length?` · Carta: ${award.cards.map(c=>c.name).join(", ")}`:(award.packPending?` · ${pendingPackName}`:"");const xpLine=win?(award.awarded?` Ganaste +${award.xp} EXP, +${award.gold||0} Oro${rewardCardsText}${award.levelUps?` y subiste ${award.levelUps} nivel${award.levelUps>1?"es":""}`:""}.`:` Esta batalla ya estaba completada, no entrega recompensas extra.`):"";if(text)text.textContent=win?(publicState.adventureIsGuardian?`Derrotaste al Hechicero guardián. Ahora puedes entrar al mapa ${ADVENTURE_CHAPTER_1_1.number} ${ADVENTURE_CHAPTER_1_1.title}.${xpLine}`:`Completaste la misión ${publicState.adventureBattleTitle||""}, buen trabajo.${xpLine}`):"El enemigo te derrotó. Puedes volver a intentarlo cuando quieras.";if(note)note.textContent=win?(publicState.adventureIsGuardian?`La puerta de campaña se abre. ${award.cards?.map(c=>c.name).join(", ")||"La carta no elegida"} se une a tu colección como recompensa. El siguiente paso será la primera batalla del mapa ${ADVENTURE_CHAPTER_1_1.number}.`:(award.battle?.rewardCard==="richard_lionheart"?`${art.name} supera la prueba. Richard Corazón de León reconoce tu valor y se une a tus fuerzas como carta de recompensa. La Forja de mazos y la selección de Personaje Principal quedan desbloqueadas.`:award.battle?.rewardCard==="simo_hayha"?`El silencio del invierno se rompe. Simo Häyhä se une a tu colección como carta de recompensa del mapa 2.1.`:award.battle?.rewardCard==="sun_tzu"?`La batalla termina antes de que el enemigo pueda escribir otro plan. Sun Tzu se une a tu colección como carta de recompensa del mapa 3.1.`:award.battle?.rewardCard==="ulysses"?`Ulises cae en su propio laberinto. Su carta se une a tu colección, el capítulo 4 queda completado para avanzar y Aquiles queda abierto como batalla extra opcional.`:award.battle?.rewardCard==="achilles"?`Contra todo pronóstico, Aquiles cae. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 4.`:award.battle?.rewardCard==="attila_hun"?`Atila cae y la horda pierde su impulso. Su carta se une a tu colección como recompensa del mapa 5.1.`:award.battle?.rewardCard==="hannibal_barca"?`Hannibal cae y la Corona de Ceniza pierde su arquitecto. Su carta se une a tu colección como recompensa del mapa 6.1.`:award.battle?.rewardCard==="leonidas"?`Leónidas sostiene la última formación hasta el final. Su carta se une a tu colección como recompensa de la batalla extra del capítulo 6.`:`${art.name} atraviesa al líder enemigo. Los rebeldes retroceden, pero el golpe de estado todavía no ha terminado.`)):"Reúne Honor, reorganiza tu estrategia y vuelve a desafiar a los rebeldes.";if(caption)caption.textContent=win?"Golpe final":"Retirada";if(mapBtn)mapBtn.classList.remove("hidden");if(nextBtn){const nextId=getNextAdventureBattleId();nextBtn.classList.toggle("hidden",!win||!nextId);nextBtn.textContent=nextId?"Siguiente batalla":"Mapa completado";}panel.classList.remove("hidden")}
+async function finalizeBattle(units,actionLog="",stateOverride=null){
+  if(!gameId||!publicState||isBattleEnded())return false;
+  const state=stateOverride||publicState;
+  const outcome=getBattleOutcome(units,state);
+  if(!outcome.ended)return false;
+  clearSelection();
+  const baseLogs=[];
+  if(actionLog)baseLogs.push(actionLog);
+  const unitExhaustionText=getUnitExhaustionOutcomeText(outcome);
+  const stalemateText=getStalemateOutcomeText(outcome);
+  if(unitExhaustionText)baseLogs.push(unitExhaustionText);
+  if(stalemateText)baseLogs.push(stalemateText);
+  if(state.mode==="adventure"){
+    baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);
+  }else if(!stalemateText&&!unitExhaustionText){
+    baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");
+  }
+  const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};
+  const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
+  recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");
+  await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});
+  return true;
+}function resetBattleState(){unitExhaustionFinalizeLock=false;resetNoPlayableAutoAdvanceState();resetFieldAutoAdvanceState();stopTurnTimerLoop();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";lastClockKillBonusEventId="";clearBattleFxLayer();clearEventSplashOverlay();hideBattleOutcomeSplash(true);hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");stopMusic(true);renderHomeProgress()}function maybeShowBattleResult(){
+  if(!publicState||publicState.phase!=="ended"||!publicState.endedAt)return;
+  const resultKey=`${gameId}:${publicState.endedAt}`;
+  if(shownBattleResultKey===resultKey)return;
+  shownBattleResultKey=resultKey;
+  const draw=Number(publicState.winner||0)===0;
+  const win=!draw&&Number(publicState.winner||0)===Number(myPlayer||0);
+  tryPlaySound(draw?"defeat":(win?"victory":"defeat"),.95);
+  stopMusic(false);
+  const adventure=publicState.mode==="adventure";
+  showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
+  if(adventure)completeAdventureBattleOnce(publicState);
+}
 async function createGame(){
   if(!(await ensureFirebaseAuthReady("online")))return;
   const leaderType=getSelectedLeaderType();
@@ -134,7 +341,7 @@ async function createGame(){
   const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
   const names=principalUnits.map(u=>u.name).join(", ");
-  const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`]};
+  const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`]};
   await set(ref(db,`games/${code}/public`),pub);
   await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
   enterGame(code,1);
@@ -163,7 +370,7 @@ async function joinGame(){
   const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
   const names=principalUnits.map(u=>u.name).join(", ");
-  await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize}; mano inicial: 4.`,...(entryEffects.logs||[]),...(pub.log||[])]});
+  await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize}; mano inicial: 4.`,...(entryEffects.logs||[]),...(pub.log||[])]});
   await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
   enterGame(code,2);
 }
@@ -338,7 +545,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
-    playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length}},
+    playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length,hasHiddenUnits:countHiddenUnitCards([...playerDeck,...playerHand])>0},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length,hasHiddenUnits:countHiddenUnitCards([...(enemyInitial.deck||[]),...(enemyInitial.hand||[])])>0}},
     erictoGraveyard:[],units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
@@ -444,6 +651,7 @@ function enterGame(code,player){
     maybeProcessVeilCurseKillEvent(prevPublic,publicState);
     maybeShowClockKillBonus(prevPublic,publicState);
     maybeShowBattleResult();
+    void maybeFinalizeUnitExhaustionFromPublicState();
     maybeStartTurn();
     maybeTriggerAdventureAI();
   }),e=>handleBattleListenerError("public:onValue",e));

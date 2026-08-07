@@ -21176,3 +21176,204 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   .hv-det-layout-tuner-panel{width:min(300px,calc(100vw - 14px))!important;max-height:70vh!important;}
   .det-mastery-progress{min-width:168px!important;}
 }
+
+
+/* ==========================================================
+   8BH · Colección visible desde el inicio / Forja bloqueada
+   ========================================================== */
+#deckBuilderPanel.collection-browser-mode .deckbuilder-layout{
+  grid-template-columns:210px minmax(0,1fr) !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-current,
+#deckBuilderPanel.collection-browser-mode #craftMaterialPanel,
+#deckBuilderPanel.collection-browser-mode #saveDeckBtn,
+#deckBuilderPanel.collection-browser-mode #craftMaterialSummary,
+#deckBuilderPanel.collection-browser-mode #dustAllSurplusCornerBtn{
+  display:none !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection{
+  min-width:0 !important;
+}
+#deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
+  grid-template-columns:repeat(8,minmax(60px,1fr)) !important;
+}
+#deckBuilderPanel .deck-mini-lock{
+  position:absolute;
+  z-index:10;
+  top:22px;
+  right:4px;
+  width:20px;
+  height:20px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  border:1px solid rgba(255,225,148,.62);
+  background:rgba(9,7,6,.82);
+  box-shadow:0 2px 9px rgba(0,0,0,.58);
+  font-size:11px;
+  line-height:1;
+  pointer-events:none;
+}
+#deckBuilderPanel.collection-browser-mode .deck-mini-card.collection-locked{
+  opacity:.78 !important;
+  filter:grayscale(.28) brightness(.88) !important;
+  border-style:solid !important;
+  border-color:rgba(196,188,169,.42) !important;
+}
+#deckBuilderPanel.collection-browser-mode .deck-mini-card.collection-locked .deck-mini-art img{
+  filter:grayscale(.22) brightness(.82);
+}
+#deckBuilderPanel.collection-browser-mode .deck-mini-card.collection-locked:hover{
+  opacity:.92 !important;
+  filter:grayscale(.12) brightness(1.02) !important;
+  border-color:rgba(255,209,102,.58) !important;
+}
+#deckBuilderPanel.collection-browser-mode .deck-mini-card.read-only{
+  cursor:pointer !important;
+  touch-action:manipulation !important;
+}
+#deckBuilderPanel.collection-browser-mode .deck-mini-plus,
+#deckBuilderPanel.collection-browser-mode .deck-mini-craft,
+#deckBuilderPanel.collection-browser-mode .deck-mini-dust,
+#deckBuilderPanel.collection-browser-mode .deck-mini-material{
+  display:none !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-status{
+  align-self:center !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-status > b{
+  color:#ffe7a8 !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-status > span{
+  color:#d7c49d !important;
+}
+#deckBuilderPanel.collection-browser-mode .collection-readonly-detail .deck-detail-grid{
+  margin-top:4px;
+}
+@media(max-width:980px){
+  #deckBuilderPanel.collection-browser-mode .deckbuilder-layout{
+    grid-template-columns:1fr !important;
+  }
+  #deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
+    grid-template-columns:repeat(7,minmax(52px,1fr)) !important;
+  }
+}
+
+
+/* ==========================================================
+   7BOARDCTRL8BG · RESULTADO DE BATALLA SIN MODAL
+   Arte tipográfico + botones flotantes de navegación.
+   ========================================================== */
+.battle-outcome-splash{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+}
+.battle-outcome-splash.show{
+  visibility:visible;
+  opacity:1;
+}
+.battle-outcome-splash-art{
+  display:block;
+  width:min(1180px,88vw);
+  max-height:34vh;
+  object-fit:contain;
+  opacity:0;
+  transform:scale(.94);
+}
+.battle-outcome-splash.show .battle-outcome-splash-art{
+  animation:hvBattleOutcomeArt 4.3s cubic-bezier(.2,.72,.18,1) forwards;
+}
+.battle-outcome-splash.victory .battle-outcome-splash-art{
+  filter:drop-shadow(0 0 16px rgba(40,139,255,.62)) drop-shadow(0 0 42px rgba(26,102,255,.34));
+}
+.battle-outcome-splash.defeat .battle-outcome-splash-art{
+  filter:drop-shadow(0 0 16px rgba(255,42,36,.62)) drop-shadow(0 0 42px rgba(188,18,18,.34));
+}
+.battle-outcome-draw-text{
+  display:none;
+  color:#e6e9f1;
+  font:700 clamp(42px,7vw,106px)/1 Georgia,"Times New Roman",serif;
+  letter-spacing:.08em;
+  text-shadow:0 0 18px rgba(255,255,255,.28),0 0 42px rgba(150,165,195,.22);
+  opacity:0;
+}
+.battle-outcome-splash.draw .battle-outcome-splash-art{display:none}
+.battle-outcome-splash.draw .battle-outcome-draw-text{display:block}
+.battle-outcome-splash.show.draw .battle-outcome-draw-text{
+  animation:hvBattleOutcomeArt 4.3s cubic-bezier(.2,.72,.18,1) forwards;
+}
+.battle-outcome-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  min-height:48px;
+  opacity:0;
+  transform:translateY(12px);
+  pointer-events:none;
+}
+.battle-outcome-splash.awaiting-action .battle-outcome-actions{
+  pointer-events:auto;
+  animation:hvBattleOutcomeActionsIn .4s ease .35s forwards;
+}
+.battle-outcome-action{
+  min-width:164px;
+  min-height:44px;
+  padding:11px 20px;
+  border-radius:999px;
+  border:1px solid rgba(176,202,255,.36);
+  background:rgba(8,13,24,.72);
+  box-shadow:0 8px 26px rgba(0,0,0,.34),inset 0 0 18px rgba(255,255,255,.035);
+  color:#eef5ff;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:700;
+  line-height:1.1;
+  letter-spacing:.02em;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.battle-outcome-action:hover:not(:disabled){
+  transform:translateY(-2px);
+  border-color:rgba(209,226,255,.72);
+  box-shadow:0 10px 30px rgba(0,0,0,.42),0 0 18px rgba(91,154,255,.18);
+}
+.battle-outcome-action:disabled{opacity:.55;cursor:default}
+.battle-outcome-action.primary{
+  background:linear-gradient(180deg,rgba(32,91,170,.82),rgba(14,45,92,.88));
+  border-color:rgba(119,178,255,.62);
+}
+.battle-outcome-splash.defeat .battle-outcome-action.primary{
+  background:linear-gradient(180deg,rgba(146,34,37,.82),rgba(79,17,22,.90));
+  border-color:rgba(255,105,105,.58);
+}
+.battle-outcome-action.ghost{background:rgba(5,8,14,.68)}
+.battle-outcome-action[hidden]{display:none!important}
+@keyframes hvBattleOutcomeArt{
+  0%{opacity:0;transform:scale(.94)}
+  13%{opacity:1;transform:scale(1.015)}
+  28%{opacity:1;transform:scale(1)}
+  78%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.025)}
+}
+@keyframes hvBattleOutcomeActionsIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(max-width:720px){
+  .battle-outcome-splash{gap:10px;padding:18px}
+  .battle-outcome-splash-art{width:94vw;max-height:27vh}
+  .battle-outcome-actions{width:min(92vw,440px);gap:9px}
+  .battle-outcome-action{min-width:0;flex:1 1 180px}
+}

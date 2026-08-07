@@ -894,20 +894,14 @@ if(typeof window!=="undefined"){
   window.addEventListener("keydown",unlockAudio,{once:true});
   document.addEventListener("click",ev=>{if(ev.target&&ev.target.closest&&ev.target.closest("button"))tryPlaySound("button_click",.35);},true);
 }
-const MUSIC_TRACK_ALIASES={
-  home_theme_loop:"duel_hallvalla_war_chant",
-  music_theme_loop:"duel_hallvalla_war_chant"
-};
-function resolveMusicTrackName(name){return MUSIC_TRACK_ALIASES[name]||name;}
 const SFX_ASSET_VERSION="7WEAPONSFX1";
 const MUSIC_TRACK_EXTENSIONS={
   duel_hallvalla_war_chant:"mp3"
 };
 function audioPath(kind,name){
-  const resolved=kind==="music"?resolveMusicTrackName(name):name;
-  const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[resolved]||"ogg"):"ogg";
+  const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[name]||"ogg"):"ogg";
   const cache=kind==="sfx"?`?v=${SFX_ASSET_VERSION}`:"";
-  return `assets/${kind}/${resolved}.${extension}${cache}`;
+  return `assets/${kind}/${name}.${extension}${cache}`;
 }
 function clampAudioVolume(value,fallback=.5){
   const n=Number(value);

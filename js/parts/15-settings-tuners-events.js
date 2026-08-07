@@ -50,26 +50,6 @@ async function startPendingAdventureBattle(){
   }
 }
 on("startAdventureBattleBtn","click",startPendingAdventureBattle);
-on("adventureResultHomeBtn","click",backToMainMenu);
-
-const resultMapBtn=$("adventureResultMapBtn");
-if(resultMapBtn)resultMapBtn.addEventListener("click",showAdventureMapFromResult);
-const resultRetryBtn=$("adventureResultRetryBtn");
-if(resultRetryBtn)resultRetryBtn.addEventListener("click",retryCurrentAdventureBattle);
-
-on("adventureResultNextBtn","click",()=>{
-  const panel=$("adventureResultPanel");
-  if(panel)panel.classList.add("hidden");
-  const nextId=getNextAdventureBattleId();
-  if(nextId){
-    const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
-    leaveCurrentGame();
-    $("mainMenu").classList.add("hidden");
-    showAdventureGuardianIntro(special,nextId);
-    $("adventurePanel").classList.remove("hidden");
-  }
-});
-on("adventureResultCloseBtn","click",()=>$("adventureResultPanel").classList.add("hidden"));
 document.querySelectorAll("[data-adventure-special]").forEach(btn=>btn.addEventListener("click",()=>showAdventureWoundedIntro(btn.dataset.adventureSpecial)));
 on("notificationsBtn","click",openNotifications);
 on("closeNotificationsBtn","click",closeNotifications);
@@ -930,7 +910,7 @@ if(HALLVALLA_LOCALHOST_TEST_MODE){
   signInAnonymously(auth).catch(e=>{authReady=false;updateAuthActionButtons();setText("lobbyStatus",e.message);});
 }
 
-try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
+try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("duel_hallvalla_war_chant");}catch(e){}
 maybeShowBasicTutorialGate();
 
 /* ============================================================

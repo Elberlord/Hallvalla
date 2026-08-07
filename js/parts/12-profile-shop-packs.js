@@ -858,11 +858,8 @@ function canAccessPackShop(){
   return true;
 }
 function openCollectionOrLocked(){
-  const total=getCollectionCardTotal();
-  if(!canAccessDecks()){
-    hvAlert(`Mazos bloqueados: completa el mapa 1.1 El inicio de la travesía para poder editar tus mazos. Cartas guardadas: ${total}. Paquetes pendientes: ${getPendingPackCount()}.`,"Mazos bloqueados");
-    return;
-  }
+  // La colección se puede explorar desde el inicio. La edición del mazo
+  // sigue dependiendo de canAccessDecks() y se controla dentro del panel.
   openDeckBuilder();
 }
 const SHOP_ARTBOARD_WIDTH=1672;
