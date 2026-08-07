@@ -21377,3 +21377,30 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   .battle-outcome-actions{width:min(92vw,440px);gap:9px}
   .battle-outcome-action{min-width:0;flex:1 1 180px}
 }
+
+
+/* 7BOARDCTRL8EQUIP · Cartas de Equipo */
+.card-type-equipment{
+  --equipment-accent:rgba(176,210,220,.92);
+  box-shadow:inset 0 0 0 1px rgba(190,225,235,.34),0 0 16px rgba(120,185,205,.12);
+}
+.card-type-equipment .hand-card-footer,
+.card-type-equipment .deck-mini-name{
+  text-shadow:0 1px 8px rgba(140,210,230,.28);
+}
+.deck-mini-card.card-type-equipment::after{
+  content:"EQUIPO";
+  position:absolute;
+  left:6px;
+  top:6px;
+  z-index:5;
+  padding:2px 5px;
+  border:1px solid rgba(190,225,235,.56);
+  border-radius:999px;
+  background:rgba(5,16,21,.78);
+  color:#dff7ff;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.08em;
+  pointer-events:none;
+}

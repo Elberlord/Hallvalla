@@ -467,7 +467,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);
   const specialTemplate=ADVENTURE_SPECIALS[specialKey];
   if(!specialTemplate)return;
-  const battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
+  let battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
+  let beastmasterEntry=null;
+  let beastmasterEntryCharged=false;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
   // El Personaje Principal del jugador se desbloquea solo al completar TODO el mapa 1.1
@@ -502,6 +504,34 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
     return;
   }
+  if(battle.beastEvent&&!HALLVALLA_LOCALHOST_TEST_MODE){
+    const entryCost=Math.max(0,Number(battle.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)||0);
+    const profile=getPlayerProfile();
+    if((profile.gold||0)<entryCost){
+      await hvAlert(`Necesitas ${entryCost} de oro para desafiar al Señor de las Bestias. Tienes ${profile.gold||0}.`,`Oro insuficiente`);
+      return;
+    }
+    try{
+      beastmasterEntry=await reserveBeastmasterGlobalDuel();
+    }catch(error){
+      console.error("[HallValla] No se pudo reservar el duelo global del Beastmaster:",error);
+      await hvAlert("No se pudo registrar este intento en el contador global del Señor de las Bestias. No se descontó oro. Inténtalo otra vez.","Evento no disponible");
+      return;
+    }
+    profile.gold=Math.max(0,(profile.gold||0)-entryCost);
+    savePlayerProfile(profile);
+    renderPlayerProfile(profile);
+    beastmasterEntryCharged=entryCost>0;
+    battle={
+      ...battle,
+      beastmasterGlobalDuelNumber:beastmasterEntry.duelNumber,
+      beastmasterGlobalBlock:beastmasterEntry.blockNumber,
+      beastmasterGlobalBlockPosition:beastmasterEntry.blockPosition,
+      beastmasterYoungDragon:!!beastmasterEntry.youngDragon,
+      beastmasterYoungDragonElement:beastmasterEntry.youngDragon?getBeastmasterYoungDragonElement(beastmasterEntry.duelNumber):"",
+      beastmasterEntryGoldCost:entryCost
+    };
+  }
   const playerDraw=drawCards(playerPrincipalPrep.deck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
@@ -525,7 +555,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const principalLogs=[];
   if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
   if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
-  if(battle.beastEvent)principalLogs.push(`El Beastmaster iguala tu nivel ${leaderLevel}; todas sus unidades y principales entran con Maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)}.`);
+  if(battle.beastEvent){
+    principalLogs.push(`El Beastmaster iguala tu nivel ${leaderLevel}; todas sus unidades y principales entran con Maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)}.`);
+    if(battle.beastmasterGlobalDuelNumber)principalLogs.push(`Duelo global del Beastmaster #${battle.beastmasterGlobalDuelNumber}. Entrada pagada: ${battle.beastmasterEntryGoldCost||BEASTMASTER_DUEL_GOLD_COST} de oro.`);
+    if(battle.beastmasterYoungDragon)principalLogs.push(`Hito global cada ${BEASTMASTER_YOUNG_DRAGON_INTERVAL} duelos: el Beastmaster incorporó un Dragón Joven de ${dragonElementLabel?.(battle.beastmasterYoungDragonElement)||battle.beastmasterYoungDragonElement} a su mazo.`);
+  }
   principalLogs.push(...entryEffects.logs);
   const playerProfileName=getLocalProfileName();
   const pub={
@@ -536,6 +570,12 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",
     adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",
     adventureEnemyUnitMasteryRank:battle.beastEvent?UNIT_MASTERY_MAX_RANK:0,
+    beastmasterGlobalDuelNumber:battle.beastmasterGlobalDuelNumber||0,
+    beastmasterGlobalBlock:battle.beastmasterGlobalBlock||0,
+    beastmasterGlobalBlockPosition:battle.beastmasterGlobalBlockPosition||0,
+    beastmasterYoungDragon:!!battle.beastmasterYoungDragon,
+    beastmasterYoungDragonElement:battle.beastmasterYoungDragonElement||"",
+    beastmasterEntryGoldCost:battle.beastmasterEntryGoldCost||0,
     adventureSpecial:specialKey,
     principalSlots:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
     adventurePrincipalKeys:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
@@ -557,8 +597,21 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     enterLocalGame(pub,privatePayload,1);
     return;
   }
-  await set(ref(db,`games/${code}/public`),pub);
-  await set(ref(db,`games/${code}/private/player1`),privatePayload);
+  try{
+    await set(ref(db,`games/${code}/public`),pub);
+    await set(ref(db,`games/${code}/private/player1`),privatePayload);
+  }catch(error){
+    try{await remove(ref(db,`games/${code}`));}catch(_){}
+    if(battle.beastEvent&&beastmasterEntryCharged){
+      const refundProfile=getPlayerProfile();
+      refundProfile.gold=(refundProfile.gold||0)+Math.max(0,Number(battle.beastmasterEntryGoldCost||BEASTMASTER_DUEL_GOLD_COST)||0);
+      savePlayerProfile(refundProfile);
+      renderPlayerProfile(refundProfile);
+    }
+    console.error("[HallValla] No se pudo crear la batalla de aventura:",error);
+    await hvAlert(battle.beastEvent?"No se pudo crear el duelo del Señor de las Bestias. Se devolvieron los 100 de oro.":"No se pudo crear la batalla de aventura. Inténtalo de nuevo.","Error al crear batalla");
+    return;
+  }
   $("adventurePanel").classList.add("hidden");
   enterGame(code,1);
 }

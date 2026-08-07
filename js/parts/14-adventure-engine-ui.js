@@ -104,25 +104,61 @@ function setAdventureSpecialInProgress(specialKey){
   saveAdventureProgress(progress);
   return progress;
 }
+const BEASTMASTER_REWARDED_BATTLES_KEY="hallvalla_beastmaster_rewarded_battles_v2";
+function getBeastmasterRewardedBattles(){
+  try{return JSON.parse(localStorage.getItem(BEASTMASTER_REWARDED_BATTLES_KEY)||"{}")||{};}catch(e){return{};}
+}
+function getBeastmasterRewardBattleKey(pub){return `${String(pub?.code||gameId||"beast")}:${Number(pub?.endedAt||0)}`;}
+function hasBeastmasterBattleRewarded(pub){return !!getBeastmasterRewardedBattles()[getBeastmasterRewardBattleKey(pub)];}
+function markBeastmasterBattleRewarded(pub){
+  try{
+    const records=getBeastmasterRewardedBattles();
+    records[getBeastmasterRewardBattleKey(pub)]=Date.now();
+    const trimmed=Object.fromEntries(Object.entries(records).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,250));
+    localStorage.setItem(BEASTMASTER_REWARDED_BATTLES_KEY,JSON.stringify(trimmed));
+  }catch(e){}
+}
+async function maybeGrantBeastmasterRareEgg(pub){
+  if(!pub||Number(pub.winner||0)!==1||!pub.beastmasterGlobalDuelNumber)return false;
+  try{
+    const claim=await claimBeastmasterPendingEggForCurrentUser(pub.beastmasterGlobalDuelNumber);
+    if(!claim?.awarded)return false;
+    const egg=typeof grantBeastmasterRareDragonEgg==="function"?grantBeastmasterRareDragonEgg(pub):null;
+    if(!egg){
+      console.error("[HallValla] Firebase adjudicó un Huevo excepcional, pero no se pudo crear el registro local.");
+      return false;
+    }
+    const profile=getPlayerProfile();
+    profile.beastmasterRareEggClaimed=true;
+    profile.beastmasterRareEggClaimedAt=Date.now();
+    savePlayerProfile(profile);
+    renderPlayerProfile(profile);
+    renderHomeProgress();
+    setHint("¡Premio excepcional! Has obtenido un Huevo de Dragón del sorteo global del Señor de las Bestias.");
+    return true;
+  }catch(error){
+    console.error("[HallValla] No se pudo resolver el Huevo excepcional del Beastmaster:",error);
+    return false;
+  }
+}
+
 function completeAdventureBattleOnce(pub){
   if(!pub||pub.mode!=="adventure"||pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
   if(battle.beastEvent){
+    if(hasBeastmasterBattleRewarded(pub))return{awarded:false,xp:0,gems:0,gold:0,levelUps:0,cards:[],battle,progress:getAdventureProgress(),beastEvent:true};
     markBeastCraftingUnlocked();
-    const already=hasClaimedBeastEventThisYear();
-    let xpResult={levelUps:0};
-    if(!already){
-      xpResult=addPlayerXp(battle.xp||0);
-      const profile=getPlayerProfile();
-      profile.gold=(profile.gold||0)+(battle.gold||0);
-      savePlayerProfile(profile);
-      const beastReward=getRandomBeastEventCard();
-      addPendingPack({name:"Paquete de Bestias",type:"beast_pack",source:"beast_event",eventYear:getBeastEventYear(),rewardCard:beastReward?.key||"honey_badger"});
-      markBeastEventClaimedThisYear();
-      renderPlayerProfile(profile);
-    }
+    const xpResult=addPlayerXp(battle.xp||0);
+    const profile=getPlayerProfile();
+    profile.gems=(profile.gems||0)+(battle.gems||10);
+    savePlayerProfile(profile);
+    const beastReward=getRandomBeastEventCard();
+    if(beastReward&&!isDragonCardForBeastReward(beastReward))addCardsToCollection([beastReward]);
+    markBeastmasterBattleRewarded(pub);
+    renderPlayerProfile(profile);
     renderHomeProgress();
-    return{awarded:!already,xp:battle.xp||0,gold:already?0:(battle.gold||0),levelUps:xpResult.levelUps||0,cards:[],battle,progress:getAdventureProgress(),packPending:!already,beastEvent:true};
+    void maybeGrantBeastmasterRareEgg(pub);
+    return{awarded:true,xp:battle.xp||0,gems:battle.gems||10,gold:0,levelUps:xpResult.levelUps||0,cards:beastReward?[beastReward]:[],battle,progress:getAdventureProgress(),packPending:false,beastEvent:true};
   }
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   const progress=getAdventureProgress();
@@ -628,11 +664,19 @@ async function openBeastmasterEvent(){
     requireLeaderSelection(true);
     return;
   }
-  const claimed=hasClaimedBeastEventThisYear();
-  const msg=claimed
-    ? "Ya reclamaste el Paquete de Bestias de este año. Puedes repetir la cacería por desafío, pero no dará otra recompensa especial hasta el próximo año."
-    : "Evento activo: derrota al Señor de las Bestias para ganar 1 Paquete de Bestias. El paquete puede dar una bestia Básica molesta o una bestia superior.";
-  const go=await hvConfirm(`${msg}\n\nIA: dificultad máxima. Mazo: trampas y bestias.`,"La Cacería del Rey Salvaje","Entrar al evento","Ahora no");
+  const profile=getPlayerProfile();
+  const cost=BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST;
+  if((profile.gold||0)<cost){
+    await hvAlert(`Entrar a la cacería cuesta ${cost} de oro. Tienes ${profile.gold||0}.`,"Oro insuficiente");
+    return;
+  }
+  const msg=`Entrada: ${cost} de oro por intento.
+Victoria: ${BEASTMASTER_EVENT_BATTLE.xp} EXP + ${BEASTMASTER_EVENT_BATTLE.gems} Gemas + 1 carta Bestia aleatoria (los Dragones están excluidos del premio normal).
+
+Cada ${BEASTMASTER_YOUNG_DRAGON_INTERVAL} duelos globales el Beastmaster incorpora un Dragón Joven a su mazo. Existe además 1 Huevo de Dragón excepcional por cada bloque de ${BEASTMASTER_EGG_BLOCK_SIZE} duelos globales; cada jugador solo puede ganarlo una vez por esta vía.
+
+IA: dificultad máxima. Mazo: trampas y bestias.`;
+  const go=await hvConfirm(msg,"La Cacería del Rey Salvaje",`Entrar · ${cost} Oro`,"Ahora no");
   if(!go)return;
   const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
   await startAdventure(special,BEASTMASTER_EVENT_BATTLE.id);

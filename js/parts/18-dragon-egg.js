@@ -66,6 +66,8 @@ function normalizeDragonCompanionRecord(record,index=0){
     id:String(source.id||`dragon_companion_${index}_${Date.now()}`),
     sourceBattleId:String(source.sourceBattleId||""),
     sourceElement:DRAGON_COMPANION_ELEMENTS.includes(source.sourceElement)?source.sourceElement:"mystery",
+    sourceType:String(source.sourceType||""),
+    sourceGlobalDuel:Math.max(0,Math.floor(Number(source.sourceGlobalDuel||0))),
     stage,
     element,
     kills,
@@ -173,6 +175,22 @@ grantDragonEgg=function(battle){
   syncDragonCollectionFromRecords(records);
   return record;
 };
+
+function grantBeastmasterRareDragonEgg(source={}){
+  const records=getDragonCompanions();
+  const record=normalizeDragonCompanionRecord({
+    id:`dragon_egg_beastmaster_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    sourceBattleId:String(source?.adventureBattleId||source?.id||"beastmaster_annual_hunt"),
+    sourceElement:"mystery",
+    sourceType:"beastmaster_global_5000",
+    sourceGlobalDuel:Math.max(0,Number(source?.beastmasterGlobalDuelNumber)||0),
+    stage:"egg",element:"mystery",kills:0,obtainedAt:Date.now()
+  });
+  records.push(record);
+  saveDragonCompanions(records);
+  syncDragonCollectionFromRecords(records);
+  return record;
+}
 
 function countDragonCardsInDeck(deck=[]){return(deck||[]).filter(card=>isDragonCompanionKey(card?.key)).length;}
 const dragonOriginalMaxCopiesForCard=maxCopiesForCard;

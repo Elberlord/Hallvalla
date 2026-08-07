@@ -33,7 +33,7 @@ REGLAS IMPLEMENTADAS
 - Los contadores públicos de mano y mazo se actualizan después del robo.
 
 ASSETS
-- assets/cards/special/merlin.webp
+- assets/cards/special/units/merlin.webp
   Arte vertical de la carta.
 - assets/board_cards/special/merlin.webp
   Retrato cuadrado utilizado en el campo.

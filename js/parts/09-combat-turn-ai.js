@@ -91,7 +91,37 @@ async function moveUnit(u,x,y){
   await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}${mulanExtraText}${bloodVictoryText}`,...lionFearMove.logs].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}${mulanExtraText}${bloodVictoryText}`,...trapMove.logs,...beastTrapResult.logs,...lionFearMove.logs].join(" "));
   clearSelection();
 }
-function getBattleDamage(attacker,mods={}){return Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0))}
+function getBattleDamage(attacker,mods={}){const base=Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0));return Math.max(0,Math.round(base*getEquipmentDamageMultiplier(attacker)))}
+function getEquipmentRetreatCell(unit,target,units=publicState?.units||[]){
+  if(!unit||!target)return null;
+  const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&u.hp>0).map(u=>`${u.x},${u.y}`));
+  const candidates=[];
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(dx===0&&dy===0)continue;
+    const x=unit.x+dx,y=unit.y+dy;if(x<0||y<0||x>=COLS||y>=ROWS||occupied.has(`${x},${y}`))continue;
+    const gap=dist({x,y},target);if(gap<=dist(unit,target))continue;
+    const leader=(units||[]).find(u=>u&&u.owner===unit.owner&&u.leader&&u.hp>0);
+    const leaderGap=leader?dist({x,y},leader):0;
+    candidates.push({x,y,gap,leaderGap});
+  }
+  candidates.sort((a,b)=>b.gap-a.gap||a.leaderGap-b.leaderGap);
+  return candidates[0]||null;
+}
+function applyPostCombatEquipmentRetreat(units,attackerBefore,defenderBefore){
+  let out=[...(units||[])];
+  let live=out.find(u=>u.id===attackerBefore?.id);
+  if(!live||live.hp<=0||!defenderBefore)return{units:out,moved:false,text:""};
+  const turnKey=publicState?.turnKey||"";
+  const ranged=dist(attackerBefore,defenderBefore)>=2;
+  let eligible=false,markKey="",label="";
+  if(ranged&&hasUnitEquipment(live,"retreat_strap")&&live.retreatStrapUsedTurnKey!==turnKey){eligible=true;markKey="retreatStrapUsedTurnKey";label="Correa de Retirada";}
+  if(!eligible&&hasUnitEquipment(live,"withdrawal_stirrups")&&Number(attackerBefore.movedSpaces||0)>=2&&live.withdrawalStirrupsUsedTurnKey!==turnKey){eligible=true;markKey="withdrawalStirrupsUsedTurnKey";label="Estribos de Repliegue";}
+  if(!eligible)return{units:out,moved:false,text:""};
+  const cell=getEquipmentRetreatCell(live,defenderBefore,out);
+  if(!cell)return{units:out,moved:false,text:""};
+  out=out.map(u=>u.id===live.id?{...u,x:cell.x,y:cell.y,[markKey]:turnKey}:u);
+  return{units:out,moved:true,text:` ${label}: ${live.name} se repliega 1 casilla.`};
+}
 function getFalconDiveRecoilDamage(attacker,defender,mods={},hit=null){
   if(!attacker||!defender||attacker.key!=="peregrine_falcon"||!mods?.falconDive||!hit?.hit)return 0;
   return Math.max(0,effectiveGuard(defender)+(Number(mods.defenderGuard)||0));
@@ -147,7 +177,8 @@ function applyLeonidasLastStand(units,leonidasId,attackerId){
   let killerFell=false;
   out=out.map(u=>{
     if(u.id!==killer.id)return u;
-    const damaged={...u,hp:Number(u.hp||0)-3,damagedThisTurn:true};
+    const protectedDamage=applyDirectHpDamageWithEquipment(u,3);
+    const damaged=protectedDamage.unit;
     killerFell=damaged.hp<=0;
     return damaged;
   });
@@ -367,6 +398,8 @@ async function attackUnit(a,d){
   units=defensePrep.units;
   mods=defensePrep.mods;
   d=defensePrep.defender;
+  const equipmentDefense=consumeEquipmentPrecisionDefenseForAttack(d,a,units,mods);
+  units=equipmentDefense.units;mods=equipmentDefense.mods;d=equipmentDefense.defender;
   let firstStrikeText="";
   if(canLanceFirstStrike(a,d,mods)){
     const firstStrike=resolveLanceFirstStrike(a,d,units);
@@ -429,7 +462,7 @@ async function attackUnit(a,d){
     if(u.id===d.id){
       if(!hit.hit)return u;
       const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,units);
-      let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
+      let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
       const warriorShield=applyWarriorLeaderUnitShield(d,a,damaged,units);
       damaged=warriorShield.unit;
       warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
@@ -698,13 +731,15 @@ async function attackUnit(a,d){
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`:"";
   const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
   const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
+  const equipmentRetreatResult=units.some(u=>u.id===a.id)?applyPostCombatEquipmentRetreat(units,a,d):{units,moved:false,text:""};
+  units=equipmentRetreatResult.units;
   const yabusameRetreatResult=units.some(u=>u.id===d.id)?applyYabusameRetreatIfPossible(units,d.id):{units,moved:false,text:""};
   units=yabusameRetreatResult.units;
   const scythianRetreatResult=units.some(u=>u.id===a.id)&&isRangedAttack(a,d)&&hit.hit?applyScythianRetreatIfPossible(units,a.id):{units,moved:false,text:""};
   units=scythianRetreatResult.units;
   const cossackAdvanceResult=units.some(u=>u.id===a.id)&&dist(a,d)<=1&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,a.id,d.x,d.y):{units,moved:false,text:""};
   units=cossackAdvanceResult.units;
-  const cavalryExtraText=`${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
+  const cavalryExtraText=`${equipmentRetreatResult.text||""}${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
   const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
   units=clearStealthAfterAttackIfNeeded(units,a.id,keepStealthAfterAttack);
   const simoStealthResult=grantSimoStealthAfterKill(units,a,d,hit.hit&&defenderFell);
@@ -1342,6 +1377,8 @@ async function adventureEnemyTurn(){
     units=defensePrep.units;
     mods=defensePrep.mods;
     target=defensePrep.defender;
+    const equipmentDefense=consumeEquipmentPrecisionDefenseForAttack(target,attacker,units,mods);
+    units=equipmentDefense.units;mods=equipmentDefense.mods;target=equipmentDefense.defender;
     let firstStrikeText="";
     if(canLanceFirstStrike(attacker,target,mods)){
       const firstStrike=resolveLanceFirstStrike(attacker,target,units);
@@ -1403,7 +1440,7 @@ async function adventureEnemyTurn(){
       if(u.id===target.id){
         if(!hit.hit)return u;
         const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker,units);
-        let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-battleAtk,lastGuardLoss:0,lastHpLoss:battleAtk}):applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
+        let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
         const warriorShield=applyWarriorLeaderUnitShield(target,attacker,damaged,units);
         damaged=warriorShield.unit;
         warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
@@ -1708,13 +1745,15 @@ async function adventureEnemyTurn(){
     const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${attacker.name} destruyó una unidad enemiga; hará su movimiento extra y elegirá ATK o DEF.`:"";
     const khalidChainText=khalidChainTriggered?` Espada Invicta: ${attacker.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===attacker.id)||attacker)} AT hasta su próximo turno.`:"";
     const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
+    const equipmentRetreatResult=units.some(u=>u.id===attacker.id)?applyPostCombatEquipmentRetreat(units,attacker,target):{units,moved:false,text:""};
+    units=equipmentRetreatResult.units;
     const yabusameRetreatResult=units.some(u=>u.id===target.id)?applyYabusameRetreatIfPossible(units,target.id):{units,moved:false,text:""};
     units=yabusameRetreatResult.units;
     const scythianRetreatResult=units.some(u=>u.id===attacker.id)&&isRangedAttack(attacker,target)&&hit.hit?applyScythianRetreatIfPossible(units,attacker.id):{units,moved:false,text:""};
     units=scythianRetreatResult.units;
     const cossackAdvanceResult=units.some(u=>u.id===attacker.id)&&d(attacker,target)<=1&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,attacker.id,target.x,target.y):{units,moved:false,text:""};
     units=cossackAdvanceResult.units;
-    const cavalryExtraText=`${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
+    const cavalryExtraText=`${equipmentRetreatResult.text||""}${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
     const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
     units=clearStealthAfterAttackIfNeeded(units,attacker.id,keepStealthAfterAttack);
     const simoStealthResult=grantSimoStealthAfterKill(units,attacker,target,hit.hit&&defenderFell);
@@ -2339,10 +2378,11 @@ async function adventureEnemyTurn(){
     const spellFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
     const spellMagicKind=choice.card.key==="fireball"?"fire":(choice.card.key==="bolt"||String(choice.card.key||"").includes("sand_curse")?"sand":"arcane");
     pendingAiBattleFxEvent=spellFxCaster?makeMagicFxEvent(spellFxCaster,originalTarget,spellMagicKind,{type:"spell",spellKey:choice.card.key,effectAction:"damage",impactScale:choice.card.key==="fireball"?1.12:1,hit:true}):pendingAiBattleFxEvent;
-    units=units.map(u=>u.id===originalTarget.id?resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:(dmg>0)||!!u.damagedThisTurn}):u);
+    let actualSpellDamage=dmg;
+    units=units.map(u=>{if(u.id!==originalTarget.id)return u;const protectedDamage=applyDirectHpDamageWithEquipment(u,dmg);actualSpellDamage=protectedDamage.damage;return protectedDamage.unit;});
     units=applyLegendaryFatalSaves(units,[originalTarget.id]);
     let damagedTarget=units.find(u=>u.id===originalTarget.id)||null;
-    const fatalSaveTriggered=!!damagedTarget&&Number(damagedTarget.hp||0)>0&&Number(originalTarget.hp||0)-dmg<=0;
+    const fatalSaveTriggered=!!damagedTarget&&Number(damagedTarget.hp||0)>0&&Number(originalTarget.hp||0)-actualSpellDamage<=0;
     if(damagedTarget&&damagedTarget.hp>0){
       if(appliesBurn)units=units.map(u=>u.id===damagedTarget.id?applyBurnToUnit(u,choice.card.name,choice.card.burnTurns||2,choice.card.burnDamage||1):u);
       if(appliesSandSlow)units=units.map(u=>u.id===damagedTarget.id?{...u,mov:Math.max(0,Number(u.mov||0)-sandSlowAmount)}:u);
@@ -2354,10 +2394,10 @@ async function adventureEnemyTurn(){
     if(appliesBurn&&damagedTarget)pendingAiStatusFxEvent=makeStatusFxEvent("burn_apply",damagedTarget,1);
     else if(choice.card.key==="fireball"&&originalTarget.leader)pendingAiStatusFxEvent=makeStatusFxEvent("fire_impact",damagedTarget||originalTarget,0);
     else if(appliesSandSlow&&damagedTarget)pendingAiStatusFxEvent=makeStatusFxEvent("debuff",damagedTarget,sandSlowAmount);
-    pendingAiFloatFxEvent=makeFloatFxEvent("damage",damagedTarget||originalTarget,dmg);
+    pendingAiFloatFxEvent=makeFloatFxEvent("damage",damagedTarget||originalTarget,actualSpellDamage);
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
-    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${dmg} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${actualSpellDamage} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
     return true;
   };
 

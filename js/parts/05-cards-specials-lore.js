@@ -7,7 +7,7 @@
 07_CARD_DATABASE
 -------------------------------------------------------------------------------
 */
-const CARD_TEMPLATES=[{key:"cavalry",assetKey:"cavalry_light",assetBucket:"basic",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"berserker_de_oso",name:"Berserker de Oso",type:"unit",icon:"🐻",portrait:CARD_PORTRAITS.berserkerDeOso,cost:3,hp:5,atk:5,guard:1,dex:3,agi:2,mov:1,range:1,rarity:"Básica",text:"Furia del Oso: al atacar, si traspasa Guardia y causa daño a HP, destruye la Guardia base de la unidad atacada. Esa Guardia no se regenera mientras la unidad siga en campo. Temerario: inmune a Miedo."},{key:"ulfhednar",name:"Ulfhednar",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ulfhednar,cost:2,hp:3,atk:3,guard:1,dex:5,agi:4,mov:1,range:2,rarity:"Básica",text:"Cacería de Sangre: cuando declara un ataque, tiene 50% de probabilidad de hacer Golpe Crítico. Si activa Golpe Crítico, hace 200% de daño durante ese ataque. Usa hachas arrojadizas, por eso tiene Rango 2."},{key:"skipar_del_drakkar",name:"Skipar del Drakkar",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.skiparDelDrakkar,cost:2,hp:4,atk:3,guard:2,dex:4,agi:3,mov:1,range:1,rarity:"Básica",text:"Desembarco Rápido: si fue invocado este turno, puede moverse 1 casilla extra este turno. Saqueo de Guerra: cuando destruye una unidad enemiga, el líder rival descarta hasta 2 cartas de su mano. Si solo tiene 1, descarta 1. Regla de espada: recibe +3 Guardia base."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,leaderBuffGroups:["warrior"],text:"Formación de picas: aplica la Regla de lanza y, la primera vez por turno que una unidad enemiga de cuerpo a cuerpo con RG 1 lo ataca desde una casilla adyacente, ataca antes que ella. No se activa contra arqueras ni otras unidades con RG 2 o más. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"egyptian_line_archer",name:"Arquero egipcio de línea",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.egyptianLineArcher,cost:1,hp:2,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Descarga coordinada: cuando ataca a distancia, obtiene +1 DX por cada Arquero egipcio de línea aliado adyacente, hasta +2 DX."},{key:"new_kingdom_archer",name:"Arquero del Imperio Nuevo",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.newKingdomArcher,cost:2,hp:3,atk:4,guard:1,dex:5,agi:3,mov:1,range:2,rarity:"Básica",text:"Tiro preparado: si no se movió este turno y ataca a distancia, el objetivo combate con -2 Guardia durante ese ataque."},{key:"roman_auxiliary_sagittarius",name:"Arquero auxiliar romano",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.romanAuxiliarySagittarius,cost:2,hp:3,atk:3,guard:2,dex:5,agi:2,mov:1,range:2,rarity:"Básica",text:"Cobertura auxiliar: cuando ataca a una unidad enemiga adyacente a otro aliado tuyo, obtiene +2 DX durante ese ataque."},{key:"greek_hoplite",name:"Hoplita griego",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.greekHoplite,cost:2,hp:4,atk:3,guard:5,dex:3,agi:1,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Falange cerrada: mientras permanezca adyacente a otra Infantería pesada aliada, obtiene +2 Guardia."},{key:"roman_legionary",name:"Legionario romano",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.romanLegionary,cost:2,hp:4,atk:4,guard:1,dex:4,agi:2,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Disciplina de cohorte: cuando ataca a un enemigo adyacente a otra Infantería pesada aliada, obtiene +2 Destreza durante ese combate."},{key:"armored_man_at_arms",name:"Hombre de armas acorazado",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.armoredManAtArms,cost:3,hp:5,atk:5,guard:2,dex:3,agi:1,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Armadura completa: la primera vez durante cada turno que recibiría daño en su Vida, reduce ese daño en 1."},{key:"numidian_javelin_rider",name:"Jinete númida",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.numidianJavelinRider,cost:2,hp:3,atk:3,guard:1,dex:5,agi:6,mov:3,range:2,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Jabalinas de hostigamiento: si se movió al menos 1 casilla este turno y ataca a distancia, obtiene +2 Destreza durante ese ataque."},{key:"scythian_horse_archer",name:"Arquero a caballo escita",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.scythianHorseArcher,cost:3,hp:3,atk:3,guard:1,dex:6,agi:6,mov:3,range:2,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Disparo parto: si se movió 2 o más casillas este turno y ataca a distancia, después del combate retrocede 1 casilla hacia su líder. Regla de arco: recibe +1 Rango base."},{key:"hungarian_hussar",name:"Húsar húngaro",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.hungarianHussar,cost:3,hp:4,atk:5,guard:2,dex:6,agi:5,mov:3,range:1,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Carga de sable: si se movió 2 o más casillas este turno y declara un ataque cuerpo a cuerpo, obtiene +2 Ataque y +2 Destreza durante ese combate."},{key:"mongol_explorer",name:"Explorador mongol",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.mongolExplorer,cost:3,hp:3,atk:3,guard:1,dex:5,agi:5,mov:3,range:2,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Ojos de la estepa: mientras permanezca en el campo, revela automáticamente a las unidades enemigas con Sigilo que entren a 2 casillas de él. Tiro en carrera: si se movió 2 o más casillas este turno y ataca a distancia, obtiene +1 Destreza durante ese ataque."},{key:"cossack_rider",name:"Jinete cosaco",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cossackRider,cost:3,hp:3,atk:4,guard:1,dex:5,agi:4,mov:3,range:1,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Persecución cosaca: cuando ataca a una unidad enemiga herida, obtiene +2 Destreza durante ese combate. Si la destruye en combate cuerpo a cuerpo, avanza gratis a la casilla que ocupaba el objetivo."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"acolyte_healer",name:"Acólita sanadora",type:"unit",icon:"✚",portrait:CARD_PORTRAITS.acolyteHealer,cost:2,hp:3,atk:1,guard:0,dex:4,agi:2,mov:1,range:1,effectRange:3,rarity:"Básica",caster:true,healer:true,text:"Transferencia vital: una vez por turno, paga 2 de Honor y elige una unidad no líder en rango 3. Si es aliada y está herida, recupera 1 Vida; si es enemiga visible, pierde 1 Vida directamente. Puntos de servicio: cada uso exitoso de Transferencia vital, Purificación o Resurrección concede 1 punto permanente. Purificación: al alcanzar 50 puntos de servicio, puede pagar 3 de Honor para eliminar un estado negativo o maldición removible de una unidad aliada en rango 3. Resurrección: al alcanzar 100 puntos de servicio, puede pagar 4 de Honor para devolver una unidad aliada destruida en una casilla libre adyacente, con la mitad de su Vida máxima, sin debuffs y como si hubiera sido jugada desde la mano. No puede resucitar líderes, tokens, entidades ni unidades generadas directamente en el campo."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,leaderBuffGroups:["warrior"],text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades enemigas en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:6,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/sand_storm.webp",cost:1,spell:"damage",damage:2,slowPermanent:1,text:"Hace 2 de daño a una unidad o líder rival. Si el objetivo es una unidad, recibe -1 MOV permanente."},{key:"blessing",name:"Bendición de Atenea",type:"spell",icon:"☀️",portrait:"assets/cards/basic/athena_blessing.webp",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
+const CARD_TEMPLATES=[{key:"cavalry",assetKey:"cavalry_light",assetBucket:"basic",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora: si se movió 3+ espacios este turno y declara ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate."},{key:"berserker",name:"Berserker del norte",type:"unit",icon:"🪓",portrait:CARD_PORTRAITS.berserker,cost:4,hp:8,atk:8,guard:1,dex:3,agi:2,mov:1,range:1,text:"Ruptura brutal: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 GUARDIA durante ese combate."},{key:"berserker_de_oso",name:"Berserker de Oso",type:"unit",icon:"🐻",portrait:CARD_PORTRAITS.berserkerDeOso,cost:3,hp:5,atk:5,guard:1,dex:3,agi:2,mov:1,range:1,rarity:"Básica",text:"Furia del Oso: al atacar, si traspasa Guardia y causa daño a HP, destruye la Guardia base de la unidad atacada. Esa Guardia no se regenera mientras la unidad siga en campo. Temerario: inmune a Miedo."},{key:"ulfhednar",name:"Ulfhednar",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ulfhednar,cost:2,hp:3,atk:3,guard:1,dex:5,agi:4,mov:1,range:2,rarity:"Básica",text:"Cacería de Sangre: cuando declara un ataque, tiene 50% de probabilidad de hacer Golpe Crítico. Si activa Golpe Crítico, hace 200% de daño durante ese ataque. Usa hachas arrojadizas, por eso tiene Rango 2."},{key:"skipar_del_drakkar",name:"Skipar del Drakkar",type:"unit",icon:"⚓",portrait:CARD_PORTRAITS.skiparDelDrakkar,cost:2,hp:4,atk:3,guard:2,dex:4,agi:3,mov:1,range:1,rarity:"Básica",text:"Desembarco Rápido: si fue invocado este turno, puede moverse 1 casilla extra este turno. Saqueo de Guerra: cuando destruye una unidad enemiga, el líder rival descarta hasta 2 cartas de su mano. Si solo tiene 1, descarta 1. Regla de espada: recibe +3 Guardia base."},{key:"spearman",name:"Lancero solar",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.heavyInfantry,cost:1,hp:3,atk:2,guard:6,dex:3,agi:1,mov:1,range:1,leaderBuffGroups:["warrior"],text:"Formación de picas: aplica la Regla de lanza y, la primera vez por turno que una unidad enemiga de cuerpo a cuerpo con RG 1 lo ataca desde una casilla adyacente, ataca antes que ella. No se activa contra arqueras ni otras unidades con RG 2 o más. Anticaballería: cuando combate cuerpo a cuerpo contra cualquier unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate."},{key:"archer",name:"Arquera del desierto",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.archer,cost:1,hp:2,atk:3,guard:1,dex:3,agi:3,mov:1,range:2,text:"Disparo de supresión: si causa al menos 1 daño a la Vida con un ataque a distancia, el objetivo recibe -1 MOV hasta el final de su próximo turno. No acumulable."},{key:"egyptian_line_archer",name:"Arquero egipcio de línea",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.egyptianLineArcher,cost:1,hp:2,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Descarga coordinada: cuando ataca a distancia, obtiene +1 DX por cada Arquero egipcio de línea aliado adyacente, hasta +2 DX."},{key:"new_kingdom_archer",name:"Arquero del Imperio Nuevo",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.newKingdomArcher,cost:2,hp:3,atk:4,guard:1,dex:5,agi:3,mov:1,range:2,rarity:"Básica",text:"Tiro preparado: si no se movió este turno y ataca a distancia, el objetivo combate con -2 Guardia durante ese ataque."},{key:"roman_auxiliary_sagittarius",name:"Arquero auxiliar romano",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.romanAuxiliarySagittarius,cost:2,hp:3,atk:3,guard:2,dex:5,agi:2,mov:1,range:2,rarity:"Básica",text:"Cobertura auxiliar: cuando ataca a una unidad enemiga adyacente a otro aliado tuyo, obtiene +2 DX durante ese ataque."},{key:"greek_hoplite",name:"Hoplita griego",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.greekHoplite,cost:2,hp:4,atk:3,guard:5,dex:3,agi:1,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Falange cerrada: mientras permanezca adyacente a otra Infantería pesada aliada, obtiene +2 Guardia."},{key:"roman_legionary",name:"Legionario romano",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.romanLegionary,cost:2,hp:4,atk:4,guard:1,dex:4,agi:2,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Disciplina de cohorte: cuando ataca a un enemigo adyacente a otra Infantería pesada aliada, obtiene +2 Destreza durante ese combate."},{key:"armored_man_at_arms",name:"Hombre de armas acorazado",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.armoredManAtArms,cost:3,hp:5,atk:5,guard:2,dex:3,agi:1,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Armadura completa: la primera vez durante cada turno que recibiría daño en su Vida, reduce ese daño en 1."},{key:"numidian_javelin_rider",name:"Jinete númida",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.numidianJavelinRider,cost:2,hp:3,atk:3,guard:1,dex:5,agi:6,mov:3,range:2,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Jabalinas de hostigamiento: si se movió al menos 1 casilla este turno y ataca a distancia, obtiene +2 Destreza durante ese ataque."},{key:"scythian_horse_archer",name:"Arquero a caballo escita",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.scythianHorseArcher,cost:3,hp:3,atk:3,guard:1,dex:6,agi:6,mov:3,range:2,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Disparo parto: si se movió 2 o más casillas este turno y ataca a distancia, después del combate retrocede 1 casilla hacia su líder. Regla de arco: recibe +1 Rango base."},{key:"hungarian_hussar",name:"Húsar húngaro",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.hungarianHussar,cost:3,hp:4,atk:5,guard:2,dex:6,agi:5,mov:3,range:1,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Carga de sable: si se movió 2 o más casillas este turno y declara un ataque cuerpo a cuerpo, obtiene +2 Ataque y +2 Destreza durante ese combate."},{key:"mongol_explorer",name:"Explorador mongol",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.mongolExplorer,cost:3,hp:3,atk:3,guard:1,dex:5,agi:5,mov:3,range:2,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Ojos de la estepa: mientras permanezca en el campo, revela automáticamente a las unidades enemigas con Sigilo que entren a 2 casillas de él. Tiro en carrera: si se movió 2 o más casillas este turno y ataca a distancia, obtiene +1 Destreza durante ese ataque."},{key:"cossack_rider",name:"Jinete cosaco",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cossackRider,cost:3,hp:3,atk:4,guard:1,dex:5,agi:4,mov:3,range:1,rarity:"Básica",leaderBuffGroups:["cavalry"],text:"Persecución cosaca: cuando ataca a una unidad enemiga herida, obtiene +2 Destreza durante ese combate. Si la destruye en combate cuerpo a cuerpo, avanza gratis a la casilla que ocupaba el objetivo."},{key:"arcane_adept",name:"Adepto Arcano",type:"unit",icon:"🜁",portrait:CARD_PORTRAITS.arcaneAdept,cost:2,hp:3,atk:2,guard:0,dex:4,agi:2,mov:1,range:2,rarity:"Básica",text:"Ruptura Arcana: cuando causa al menos 1 daño directo a la Vida de una unidad enemiga, aplica un estado negativo aleatorio. Respuesta Mística: puede contraatacar ataques de rango. Vínculo Arcano: si está junto al líder Hechicero aliado, recibe bonus según el tier del líder."},{key:"acolyte_healer",name:"Acólita sanadora",type:"unit",icon:"✚",portrait:CARD_PORTRAITS.acolyteHealer,cost:2,hp:3,atk:1,guard:0,dex:4,agi:2,mov:1,range:1,effectRange:3,rarity:"Básica",caster:true,healer:true,text:"Transferencia vital: una vez por turno, paga 2 de Honor y elige una unidad no líder en rango 3. Si es aliada y está herida, recupera 1 Vida; si es enemiga visible, pierde 1 Vida directamente. Puntos de servicio: cada uso exitoso de Transferencia vital, Purificación o Resurrección concede 1 punto permanente. Purificación: al alcanzar 50 puntos de servicio, puede pagar 3 de Honor para eliminar un estado negativo o maldición removible de una unidad aliada en rango 3. Resurrección: al alcanzar 100 puntos de servicio, puede pagar 4 de Honor para devolver una unidad aliada destruida en una casilla libre adyacente, con la mitad de su Vida máxima, sin debuffs y como si hubiera sido jugada desde la mano. No puede resucitar líderes, tokens, entidades ni unidades generadas directamente en el campo."},{key:"guardian",name:"Guardián de piedra",type:"unit",icon:"🗿",portrait:CARD_PORTRAITS.paladin,cost:3,hp:9,atk:2,guard:7,dex:5,agi:1,mov:1,range:1,leaderBuffGroups:["warrior"],text:"Golpe de escudo: al declarar ataque cuerpo a cuerpo, el objetivo recibe -3 AGI durante ese combate. Si el objetivo tiene Guardia 2 o menos, también recibe -1 AT y -1 MOV hasta el final de su próximo turno."},{key:"samurai_katana",name:"Samurai de Katana",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.samuraiKatana,cost:2,hp:3,atk:3,guard:3,dex:5,agi:3,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Dos Manos: cuando declara ataque obtiene +6 AT durante ese combate. Shirahadori: cuando un rival declara un ataque seleccionándolo como objetivo, obtiene +2 Destreza por cada rival dentro de su rango durante ese combate."},{key:"samurai_yabusame",name:"Samurai Yabusame",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.samuraiYabusame,cost:3,hp:3,atk:2,guard:2,dex:6,agi:3,mov:3,range:2,rarity:"Básica",text:"Estrategia de repliegue: cada vez que sobrevive a un ataque, retrocede 1 casilla hacia el líder aliado siempre que exista un espacio válido. Regla de arco: recibe +1 Rango base."},{key:"samurai_naginata",name:"Samurai de Naginata",type:"unit",icon:"🗡️",portrait:CARD_PORTRAITS.samuraiNaginata,cost:2,hp:3,atk:5,guard:2,dex:4,agi:2,mov:1,range:1,rarity:"Básica",leaderBuffGroups:["warrior"],text:"Proteger al Daimyo: cualquier unidad básica que destruya a esta unidad cuerpo a cuerpo queda con 1 Vida."},{key:"geisha_encubierta",name:"Geisha Encubierta",type:"unit",icon:"🪭",portrait:CARD_PORTRAITS.geishaEncubierta,cost:2,hp:2,atk:1,guard:0,dex:6,agi:4,mov:1,range:1,rarity:"Básica",stealth:true,ninjutsu:true,noLeaderAttack:true,text:"Danza del Engaño: al ingresar al campo obtiene Sigilo. Corte de Abanico: no puede atacar líderes. Si ataca desde Sigilo y causa daño a HP a una unidad, destruye inmediatamente la unidad atacada."},{key:"hattori_shinobi",name:"Hattori Shinobi",type:"unit",icon:"🥷",portrait:CARD_PORTRAITS.hattoriShinobi,cost:3,hp:3,atk:1,guard:1,dex:6,agi:5,mov:1,range:2,rarity:"Básica",stealth:true,ninjutsu:true,text:"Paso de Sombra: ingresa a la batalla con Sigilo. Golpe Silencioso: si ataca a distancia mantiene Sigilo; si ataca cuerpo a cuerpo pierde Sigilo después del ataque."},{key:"saboteador_iga",name:"Saboteador de Iga",type:"unit",icon:"💣",portrait:CARD_PORTRAITS.saboteadorIga,cost:2,hp:3,atk:1,guard:1,dex:4,agi:4,mov:2,range:1,rarity:"Básica",ninjutsu:true,text:"Escape Forzado: si es atacado y sobrevive, reduce a 0 la DX de todas las unidades enemigas en rango 1 hasta el final del turno actual. Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula."},{key:"scout",name:"Asesina del desierto",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.rogue,cost:1,hp:2,atk:1,guard:0,dex:6,agi:3,mov:1,range:1, text:"Asesinato preciso: sus ataques siguen la Guardia normal. Sangrado: cuando logra hacer daño real a HP, el objetivo queda con Sangrado y pierde 1 Vida al inicio de su turno. El Sangrado permanece hasta que la unidad sea curada o destruida. El daño de Sangrado ignora Guardia. Si su dueño tiene Maestro de Sombras Nv.5 con Niebla de sangre, entonces sus ataques sí ignoran Guardia."},{key:"bolt",name:"Maldición de arena",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:1,spell:"damage",damage:2,slowPermanent:1,text:"Hace 2 de daño a una unidad o líder rival. Si el objetivo es una unidad, recibe -1 MOV permanente."},{key:"blessing",name:"Bendición de Atenea",type:"spell",icon:"☀️",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:1,spell:"buff",buff:1,text:"+1 ataque a una unidad aliada este turno."}];
 const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"🐉",portrait:CARD_PORTRAITS.mulan,cost:1,hp:4,atk:4,guard:3,dex:4,agi:7,mov:2,range:1,rarity:"Épica",special:true,text:"Ataque por la espalda: cuando Hua Lan ataca desde una de las tres casillas inmediatamente detrás de una unidad enemiga —recta o diagonal, hacia el lado del líder rival— obtiene +6 Ataque durante ese combate. Atacar desde un costado no activa este efecto. El ataque sigue las reglas normales de combate. Si destruye una unidad enemiga durante su ataque normal, puede moverse 1 casilla extra después del combate. Luego debe elegir ATK o DEF; esa elección consume su acción restante y Hua Lan queda sin más acciones este turno."},wallace:{key:"wallace",name:"William Wallace",type:"unit",icon:"🏴",portrait:CARD_PORTRAITS.wallace,cost:2,hp:6,atk:6,guard:5,dex:6,agi:3,mov:1,range:1,rarity:"Épica",special:true,leaderBuffGroups:["warrior"],text:"Último Aliento: la primera vez que William Wallace recibe daño fatal, sobrevive y queda con 1 Vida."}};
 const ADVENTURE_RESULT_ART={
   mulan:{name:"Hua Lan",heroImage:"assets/story/scene_mulan_actor.webp",cardImage:"assets/story/mulan_choice.webp",allyImage:"assets/story/scene_wallace_actor.webp",allyName:"William Wallace",guardianScene:"assets/story/wallace_wounded.webp"},
@@ -50,6 +50,54 @@ function applyGuardianVictoryVisual(specialKey){
 
 const MORGANA_CARD={key:"morgana",name:"Morgana",type:"unit",icon:"✠",portrait:CARD_PORTRAITS.morgana,cost:4,hp:4,atk:2,guard:0,dex:6,agi:3,mov:1,range:3,rarity:"Épica",caster:true,hechicera:true,text:"Condena de Morgana: cuando un ataque de esta unidad atraviesa Guardia y causa al menos 1 daño a la Vida de una unidad enemiga no líder, coloca un contador 3. Al final de cada turno propio de la víctima, el contador baja 1; al llegar a 0, la unidad cae derrotada. La cuenta persiste aunque Morgana abandone el campo, no se acumula ni se reinicia y puede eliminarse con Purificación. No afecta líderes, jefes, estructuras, huevos ni objetivos de misión."};
 CARD_TEMPLATES.push(MORGANA_CARD);
+
+
+/*
+-------------------------------------------------------------------------------
+07_EQUIPMENT_DATABASE · Equipo exclusivo por especialización de Líder
+-------------------------------------------------------------------------------
+Cada pieza es Básica, cuesta 2 y solo puede entrar en un mazo cuyo Líder
+coincida con equipmentLeader. En batalla solo puede equiparse a una unidad
+compatible con esa misma especialización.
+*/
+const EQUIPMENT_CARD_TEMPLATES=[
+  {key:"executioner_mantle",name:"Manto del Ejecutor",type:"equipment",icon:"🧥",portrait:"assets/cards/basic/equipment/manto_del_ejecutor.webp",rarity:"Básica",cost:2,equipmentLeader:"assassin",equipmentGroup:"Asesinos",equipmentEffect:"executioner_mantle",text:"La primera vez por turno que un enemigo ataque a la unidad equipada, ese enemigo pierde 5 PREC antes de resolver el ataque."},
+  {key:"rupture_bracers",name:"Guardabrazos de Ruptura",type:"equipment",icon:"🦾",portrait:"assets/cards/basic/equipment/guardabrazos_de_ruptura.webp",rarity:"Básica",cost:2,equipmentLeader:"assassin",equipmentGroup:"Asesinos",equipmentEffect:"rupture_bracers",text:"Cuando la unidad equipada ataca desde Sigilo, el objetivo tiene -5 Guardia durante ese combate."},
+
+  {key:"tanned_hide_harness",name:"Arnés de Piel Curtida",type:"equipment",icon:"🥋",portrait:"assets/cards/basic/equipment/arnes_de_piel_curtida.webp",rarity:"Básica",cost:2,equipmentLeader:"axe",equipmentGroup:"Hachas/Berserkers",equipmentEffect:"tanned_hide_harness",text:"La primera vez por turno que la unidad equipada vaya a recibir daño a su Vida, reduce ese daño en 5."},
+  {key:"counterweighted_grip",name:"Mango Contrapesado",type:"equipment",icon:"🪓",portrait:"assets/cards/basic/equipment/mango_contrapesado.webp",rarity:"Básica",cost:2,equipmentLeader:"axe",equipmentGroup:"Hachas/Berserkers",equipmentEffect:"counterweighted_grip",text:"Cuando la unidad equipada ataque a un enemigo que todavía tenga Guardia, obtiene +5 AT durante ese combate."},
+
+  {key:"marching_greaves",name:"Grebas de Marcha",type:"equipment",icon:"🥾",portrait:"assets/cards/basic/equipment/grebas_de_marcha.webp",rarity:"Básica",cost:2,equipmentLeader:"warrior",equipmentGroup:"Infantería pesada",equipmentEffect:"marching_greaves",text:"Si la unidad equipada no ha usado MOV, puede obtener +2 MOV durante su movimiento. Una vez por turno."},
+  {key:"war_visor",name:"Visera de Guerra",type:"equipment",icon:"🪖",portrait:"assets/cards/basic/equipment/visera_de_guerra.webp",rarity:"Básica",cost:2,equipmentLeader:"warrior",equipmentGroup:"Infantería pesada",equipmentEffect:"war_visor",text:"Los ataques realizados desde RG 2 o superior contra la unidad equipada tienen -5 PREC."},
+
+  {key:"skirmisher_cloak",name:"Capa de Escaramuza",type:"equipment",icon:"🧣",portrait:"assets/cards/basic/equipment/capa_de_escaramuza.webp",rarity:"Básica",cost:2,equipmentLeader:"archer",equipmentGroup:"Arqueros",equipmentEffect:"skirmisher_cloak",text:"El primer ataque cuerpo a cuerpo dirigido contra la unidad equipada cada turno tiene -5 PREC."},
+  {key:"retreat_strap",name:"Correa de Retirada",type:"equipment",icon:"🪢",portrait:"assets/cards/basic/equipment/correa_de_retirada.webp",rarity:"Básica",cost:2,equipmentLeader:"archer",equipmentGroup:"Arqueros",equipmentEffect:"retreat_strap",text:"Después de realizar un ataque a distancia, puede desplazarse 1 casilla alejándose del objetivo, una vez por turno, si existe una casilla válida."},
+
+  {key:"withdrawal_stirrups",name:"Estribos de Repliegue",type:"equipment",icon:"🧲",portrait:"assets/cards/basic/equipment/estribos_de_repliegue.webp",rarity:"Básica",cost:2,equipmentLeader:"cavalry",equipmentGroup:"Caballería ligera",equipmentEffect:"withdrawal_stirrups",text:"Si se desplazó al menos 2 casillas antes de atacar, después del combate puede moverse 1 casilla adicional."},
+  {key:"light_barding",name:"Barda Ligera",type:"equipment",icon:"🐴",portrait:"assets/cards/basic/equipment/barda_ligera.webp",rarity:"Básica",cost:2,equipmentLeader:"cavalry",equipmentGroup:"Caballería ligera",equipmentEffect:"light_barding",text:"El primer ataque a distancia recibido cada turno tiene -5 PREC."},
+
+  {key:"stabilizing_focus",name:"Foco Estabilizador",type:"equipment",icon:"🔮",portrait:"assets/cards/basic/equipment/foco_estabilizador.webp",rarity:"Básica",cost:2,equipmentLeader:"mage",equipmentGroup:"Unidades arcanas/Caster",equipmentEffect:"stabilizing_focus",text:"La unidad equipada obtiene +1 RG."},
+  {key:"channeling_amulet",name:"Amuleto de Canalización",type:"equipment",icon:"📿",portrait:"assets/cards/basic/equipment/amuleto_de_canalizacion.webp",rarity:"Básica",cost:2,equipmentLeader:"mage",equipmentGroup:"Unidades arcanas/Caster",equipmentEffect:"channeling_amulet",text:"La unidad equipada duplica su daño o sanación."},
+
+  {key:"instinct_collar",name:"Collar del Instinto",type:"equipment",icon:"📿",portrait:"assets/cards/basic/equipment/collar_del_instinto.webp",rarity:"Básica",cost:2,equipmentLeader:"beastmaster",equipmentGroup:"Bestias",equipmentEffect:"instinct_collar",text:"La primera vez por turno que un enemigo intente aplicar un estado negativo a la bestia equipada, la duración del estado se reduce en 1, mínimo 1."},
+  {key:"hunting_harness",name:"Arnés de Cacería",type:"equipment",icon:"🦴",portrait:"assets/cards/basic/equipment/arnes_de_caceria.webp",rarity:"Básica",cost:2,equipmentLeader:"beastmaster",equipmentGroup:"Bestias",equipmentEffect:"hunting_harness",text:"Cuando la bestia equipada ataca a una unidad que ya está herida, obtiene +5 DX durante ese combate."}
+];
+const EQUIPMENT_CARD_BY_KEY=Object.fromEntries(EQUIPMENT_CARD_TEMPLATES.map(card=>[card.key,card]));
+function isEquipmentCard(card){return !!card&&String(card.type||"").toLowerCase()==="equipment";}
+function getEquipmentTemplateByKey(key){return EQUIPMENT_CARD_BY_KEY[String(key||"")]||null;}
+function getUnitEquipmentKeys(unit){return Array.isArray(unit?.equipmentKeys)?unit.equipmentKeys.filter(Boolean):[];}
+function hasUnitEquipment(unit,key){return getUnitEquipmentKeys(unit).includes(String(key||""));}
+function getUnitEquipmentTemplates(unit){return getUnitEquipmentKeys(unit).map(getEquipmentTemplateByKey).filter(Boolean);}
+function isEquipmentCardAllowedForLeader(card,leaderType){return !isEquipmentCard(card)||String(card.equipmentLeader||"")===String(leaderType||"");}
+function getEquipmentLeaderLabel(card){const data=typeof LEADER_DATA!=="undefined"?LEADER_DATA?.[card?.equipmentLeader]:null;return data?.name||card?.equipmentGroup||"Líder compatible";}
+function applyInstinctCollarDuration(unit,turns){
+  const duration=Math.max(1,Number(turns||1));
+  if(!hasUnitEquipment(unit,"instinct_collar"))return{unit,turns:duration,reduced:false};
+  const turnKey=typeof publicState!=="undefined"?(publicState?.turnKey||""):"";
+  if(turnKey&&unit?.instinctCollarUsedTurnKey===turnKey)return{unit,turns:duration,reduced:false};
+  const nextTurns=Math.max(1,duration-1);
+  return{unit:{...unit,instinctCollarUsedTurnKey:turnKey||`local_${Date.now()}`},turns:nextTurns,reduced:nextTurns<duration};
+}
 
 const BEAST_CARD_TEMPLATES=[
   {key:"honey_badger",name:"Tejón Mielero",type:"unit",icon:"🦡",portrait:CARD_PORTRAITS.honeyBadger,rarity:"Básica",cost:2,hp:5,atk:2,guard:4,dex:2,agi:3,mov:2,range:1,beast:true,text:"Armadura Natural: cada vez que recibe daño, reduce ese daño en 1. Inmune al Veneno: no puede recibir Veneno ni daño causado por Veneno. Bestia Irritante: enemigos adyacentes tienen -1 DX si atacan a otra unidad que no sea el Tejón. Mordida Fastidiosa: si hace daño real, el objetivo pierde -1 MOV en su próximo turno."},
@@ -143,6 +191,10 @@ const BEAST_EVENT_REWARD_KEYS=[
   {key:"honey_badger",w:14},{key:"porcupine",w:12},{key:"wild_boar",w:12},{key:"black_raven",w:10},{key:"constrictor_snake",w:10},
   {key:"african_buffalo",w:9},{key:"peregrine_falcon",w:8},{key:"inland_taipan",w:8},{key:"african_lion",w:6},{key:"bengal_tiger",w:6},{key:"white_rhino",w:5},{key:"african_elephant",w:4}
 ];
+const BEASTMASTER_DUEL_GOLD_COST=100;
+const BEASTMASTER_YOUNG_DRAGON_INTERVAL=100;
+const BEASTMASTER_EGG_BLOCK_SIZE=5000;
+const BEASTMASTER_GLOBAL_STATE_PATH="events/beastmaster/global_v1";
 const BEASTMASTER_EVENT_BATTLE={
   id:"beastmaster_annual_hunt",
   num:1,
@@ -154,16 +206,18 @@ const BEASTMASTER_EVENT_BATTLE={
   matchPlayerLevel:true,
   enemyLeaderAbility:"prepare_hunt",
   image:"assets/ui/beastmaster/ui_board_beastmaster.webp",
-  enemyIntro:"Durante una semana al año, el bosque antiguo abre sus puertas. El Señor de las Bestias iguala el nivel de tu líder, pero todas sus unidades combaten con maestría máxima. Derrótalo para reclamar un Paquete de Bestias.",
+  enemyIntro:"El Señor de las Bestias iguala el nivel de tu líder y todas sus unidades combaten con maestría máxima. Cada intento cuesta 100 de oro. Cada victoria entrega 60 EXP, 10 gemas y una Bestia aleatoria que nunca puede ser un Dragón.",
   xp:60,
-  gold:60,
-  cardPack:true,
-  packType:"beast_pack",
+  gold:0,
+  gems:10,
+  entryGoldCost:BEASTMASTER_DUEL_GOLD_COST,
+  rewardBeastCard:true,
+  cardPack:false,
   aiLevel:10,
   aiDrawBonus:0,
   aiHonorBonus:0,
   aiStyle:"Cacería máxima: trampas, presión y bestias agresivas",
-  desc:"Evento anual escalable. El Beastmaster comparte el nivel del jugador, despliega Elefante, Rinoceronte y León según su tier, y todas sus unidades entran con maestría máxima. La recompensa especial solo se reclama una vez por año."
+  desc:"Evento global escalable. Cada 100 duelos globales el Beastmaster incorpora un Dragón Joven a su mazo. En cada bloque de 5000 duelos se activa, en una posición aleatoria, un único Huevo de Dragón excepcional para la siguiente victoria elegible. Cada cuenta solo puede obtener ese huevo excepcional una vez."
 };
 const BEAST_CRAFT_UNLOCK_KEY="hallvalla_beast_crafting_unlocked";
 function getBeastEventYear(){return new Date().getFullYear();}
@@ -172,12 +226,115 @@ function hasClaimedBeastEventThisYear(){return localStorage.getItem(getBeastEven
 function hasUnlockedBeastCrafting(){return localStorage.getItem(BEAST_CRAFT_UNLOCK_KEY)==="1"||hasClaimedBeastEventThisYear();}
 function markBeastCraftingUnlocked(){localStorage.setItem(BEAST_CRAFT_UNLOCK_KEY,"1");}
 function markBeastEventClaimedThisYear(){localStorage.setItem(getBeastEventClaimKey(),"1");markBeastCraftingUnlocked();}
+function isDragonCardForBeastReward(card){
+  if(!card)return false;
+  if(card.dragonCompanion||card.dragonEgg||card.dragonBoss)return true;
+  if(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(card.key))return true;
+  return false;
+}
 function getRandomBeastEventCard(){
-  const total=BEAST_EVENT_REWARD_KEYS.reduce((sum,it)=>sum+(it.w||1),0);
+  const pool=BEAST_EVENT_REWARD_KEYS.filter(item=>{
+    const card=CARD_TEMPLATES.find(c=>c.key===item.key);
+    return !!card&&!isDragonCardForBeastReward(card);
+  });
+  if(!pool.length)return null;
+  const total=pool.reduce((sum,it)=>sum+(it.w||1),0);
   let roll=Math.random()*total;
-  const item=BEAST_EVENT_REWARD_KEYS.find(it=>((roll-=(it.w||1))<=0))||BEAST_EVENT_REWARD_KEYS[0];
+  const item=pool.find(it=>((roll-=(it.w||1))<=0))||pool[0];
   const card=CARD_TEMPLATES.find(c=>c.key===item.key);
   return card?{...card}:null;
+}
+function getBeastmasterBlockNumber(duelNumber){return Math.floor((Math.max(1,Number(duelNumber)||1)-1)/BEASTMASTER_EGG_BLOCK_SIZE)+1;}
+function getBeastmasterBlockPosition(duelNumber){return ((Math.max(1,Number(duelNumber)||1)-1)%BEASTMASTER_EGG_BLOCK_SIZE)+1;}
+function randomBeastmasterEggTarget(){return 1+Math.floor(Math.random()*BEASTMASTER_EGG_BLOCK_SIZE);}
+function normalizeBeastmasterGlobalState(raw){
+  const source=raw&&typeof raw==="object"?raw:{};
+  const totalDuels=Math.max(0,Number(source.totalDuels)||0);
+  const blockNumber=Math.max(1,Number(source.blockNumber)||getBeastmasterBlockNumber(Math.max(1,totalDuels)));
+  const target=Number(source.eggTargetOffset);
+  const pendingEggTriggers=Array.isArray(source.pendingEggTriggers)?source.pendingEggTriggers.map(Number).filter(n=>Number.isInteger(n)&&n>0).sort((a,b)=>a-b):[];
+  return{
+    ...source,
+    totalDuels,
+    blockNumber,
+    eggTargetOffset:Number.isInteger(target)&&target>=1&&target<=BEASTMASTER_EGG_BLOCK_SIZE?target:0,
+    pendingEggTriggers,
+    pendingEggAwards:pendingEggTriggers.length||Math.max(0,Number(source.pendingEggAwards)||0),
+    lastTriggeredBlock:Math.max(0,Number(source.lastTriggeredBlock)||0),
+    eggWinners:source.eggWinners&&typeof source.eggWinners==="object"?{...source.eggWinners}:{}
+  };
+}
+async function reserveBeastmasterGlobalDuel(){
+  if(!uid)throw new Error("No hay una sesión autenticada para registrar el duelo global del Beastmaster.");
+  const token=`duel_${uid}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  const stateRef=ref(db,BEASTMASTER_GLOBAL_STATE_PATH);
+  const tx=await runTransaction(stateRef,current=>{
+    const state=normalizeBeastmasterGlobalState(current);
+    const duelNumber=state.totalDuels+1;
+    const blockNumber=getBeastmasterBlockNumber(duelNumber);
+    const blockPosition=getBeastmasterBlockPosition(duelNumber);
+    if(state.blockNumber!==blockNumber||!state.eggTargetOffset){
+      state.blockNumber=blockNumber;
+      state.eggTargetOffset=randomBeastmasterEggTarget();
+    }
+    if(blockPosition===state.eggTargetOffset&&state.lastTriggeredBlock!==blockNumber){
+      state.pendingEggTriggers=[...(state.pendingEggTriggers||[]),duelNumber].sort((a,b)=>a-b);
+      state.pendingEggAwards=state.pendingEggTriggers.length;
+      state.lastTriggeredBlock=blockNumber;
+      state.lastTriggeredDuel=duelNumber;
+    }
+    state.totalDuels=duelNumber;
+    state.lastDuelToken=token;
+    state.lastDuelUid=uid;
+    state.lastDuelAt=Date.now();
+    return state;
+  },{applyLocally:false});
+  if(!tx?.committed)throw new Error("Firebase no confirmó el contador global del Beastmaster.");
+  const state=normalizeBeastmasterGlobalState(tx.snapshot?.val());
+  const duelNumber=state.totalDuels;
+  return{
+    duelNumber,
+    blockNumber:getBeastmasterBlockNumber(duelNumber),
+    blockPosition:getBeastmasterBlockPosition(duelNumber),
+    youngDragon:duelNumber>0&&duelNumber%BEASTMASTER_YOUNG_DRAGON_INTERVAL===0,
+    pendingEggAwards:state.pendingEggAwards
+  };
+}
+async function claimBeastmasterPendingEggForCurrentUser(duelNumber=0){
+  if(!uid)return{awarded:false,reason:"no_uid"};
+  const token=`egg_${uid}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  const stateRef=ref(db,BEASTMASTER_GLOBAL_STATE_PATH);
+  const tx=await runTransaction(stateRef,current=>{
+    const state=normalizeBeastmasterGlobalState(current);
+    if(state.eggWinners?.[uid])return state;
+    let triggers=[...(state.pendingEggTriggers||[])];
+    if(!triggers.length&&state.pendingEggAwards>0&&state.lastTriggeredDuel)triggers=[Number(state.lastTriggeredDuel)];
+    const winningDuel=Math.max(0,Number(duelNumber)||0);
+    const claimIndex=triggers.findIndex(trigger=>winningDuel>=trigger);
+    if(claimIndex<0)return state;
+    const [triggerDuel]=triggers.splice(claimIndex,1);
+    state.pendingEggTriggers=triggers;
+    state.pendingEggAwards=triggers.length;
+    state.eggWinners={...(state.eggWinners||{}),[uid]:true};
+    state.lastEggAwardUid=uid;
+    state.lastEggAwardDuel=winningDuel;
+    state.lastEggTriggerDuel=triggerDuel;
+    state.lastEggAwardAt=Date.now();
+    state.lastEggClaimToken=token;
+    return state;
+  },{applyLocally:false});
+  if(!tx?.committed)return{awarded:false,reason:"not_committed"};
+  const state=normalizeBeastmasterGlobalState(tx.snapshot?.val());
+  const awarded=state.lastEggClaimToken===token&&state.lastEggAwardUid===uid;
+  if(awarded){
+    try{await update(ref(db,`users/${uid}/rewards`),{beastmasterRareEggClaimed:true,beastmasterRareEggClaimedAt:Date.now(),beastmasterRareEggDuel:Math.max(0,Number(duelNumber)||0)});}catch(e){console.warn("[HallValla] El huevo global se confirmó, pero no se pudo duplicar la marca en users/{uid}:",e);}
+  }
+  return{awarded,reason:awarded?"awarded":(state.eggWinners?.[uid]?"already_claimed":"no_pending")};
+}
+function getBeastmasterYoungDragonElement(duelNumber){
+  const order=["lightning","fire","ice"];
+  const hundred=Math.max(1,Math.floor((Number(duelNumber)||100)/BEASTMASTER_YOUNG_DRAGON_INTERVAL));
+  return order[(hundred-1)%order.length];
 }
 
 function isBeastUnit(u){return !!u&&!u.leader&&(u.beast===true||["honey_badger","porcupine","wild_boar","black_raven","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","african_elephant"].includes(String(u.key||"")));}
@@ -194,6 +351,8 @@ function ownerHasBeastmasterVenom(owner,units=publicState?.units||[]){return (un
 function applyBeastmasterVenomToTarget(target,source,turns=5){
   if(!target||!source)return target;
   if(isPoisonImmuneUnit(target))return clearPoisonStatus(target);
+  const adjusted=applyInstinctCollarDuration(target,turns);
+  target=adjusted.unit;turns=adjusted.turns;
   const existingTurns=Math.max(0,Number(target.poisonTurns||0));
   return {...target,poisonTurns:Math.max(existingTurns,turns),poisonStage:target.poisonStage||1,poisonDamage:Math.max(1,Number(target.poisonDamage||0)||1),poisonSourceId:source.id,poisonSourceName:source.name||"Veneno de la Manada"};
 }
@@ -288,11 +447,15 @@ function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
     ? 0
     : Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
   const requiredSize=getDeckSizeForPrincipalSlots(requiredSlots);
+  const selectedLeader=(typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"");
   cards.forEach(card=>{
     const key=card.key||card.name;
     counts[key]=(counts[key]||0)+1;
     const max=maxCopiesForCard(card);
     if(counts[key]>max)errors.push(`${card.name||key}: máximo ${max} copia${max>1?"s":""}.`);
+    if(isEquipmentCard(card)&&selectedLeader&&!isEquipmentCardAllowedForLeader(card,selectedLeader)){
+      errors.push(`${card.name||key}: este Equipo es exclusivo de ${getEquipmentLeaderLabel(card)}.`);
+    }
   });
   if(cards.length!==requiredSize)errors.push(`El mazo debe tener exactamente ${requiredSize} cartas: ${requiredSlots} Personaje${requiredSlots===1?"":"s"} Principal${requiredSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`);
   return{valid:errors.length===0,errors,counts,principalSlots:requiredSlots,deckSize:requiredSize};
@@ -421,7 +584,7 @@ function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
   const targetState=out.find(u=>u.id===target.id);
   if(targetState&&Number(targetState.hp||0)>0)out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
   const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&u.hp>0&&dist(u,target)<=1).map(u=>u.id);
-  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true}):u);logs.push(`Fuego del Mandato causa 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
+  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,4).unit:resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true})):u);logs.push(`Fuego del Mandato causa hasta 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
   return {units:out,logs};
 }
 
@@ -1257,6 +1420,7 @@ function renderDetIdentityHtml(entity,ownerLabel=""){
     `<span class="det-head-chip">${escapeHtml("Tipo: "+typeLabel)}</span>`
   ];
   if(ownerLabel)chips.push(`<span class="det-head-chip">${escapeHtml(ownerLabel)}</span>`);
+  if(isEquipmentCard(entity))chips.push(`<span class="det-head-chip">${escapeHtml(`Exclusivo: ${getEquipmentLeaderLabel(entity)} · ${entity.equipmentGroup||"Grupo compatible"}`)}</span>`);
   const masteryProgress=renderDetMasteryProgressHtml(entity);
   return `<div class="det-identity-block">
     <div class="det-head-chip-row">${chips.join("")}${masteryProgress}</div>
@@ -1264,7 +1428,7 @@ function renderDetIdentityHtml(entity,ownerLabel=""){
   </div>`;
 }
 function renderDetTacticalHtml(entity){
-  if(!entity||entity.spell||entity.trap)return "";
+  if(!entity||entity.spell||entity.trap||isEquipmentCard(entity))return "";
   const icon=getWeaponClassIcon(entity);
   const label=getWeaponClassLabel(entity);
   return `<div class="det-info-card det-tactical-card det-tactical-icon-only">
@@ -1414,12 +1578,16 @@ function isDesertAssassinUnit(u){return !!u&&u.key==="scout";}
 function shouldIgnoreGuardForAttack(attacker,units=publicState?.units||[]){return hasShadowMistAssassin(attacker,units);}
 function applyBleedToUnit(target,sourceName=""){
   if(!target)return target;
+  const timedTurns=target.leader?2:2;
+  const adjusted=applyInstinctCollarDuration(target,timedTurns);
+  target=adjusted.unit;
   const bleed={
     ...target,
     bleedDamage:Math.max(1,Number(target.bleedDamage||0)||1),
     bleedSourceName:sourceName||target.bleedSourceName||"Sangrado"
   };
-  if(target.leader)bleed.bleedTurnsRemaining=2;
+  if(target.leader)bleed.bleedTurnsRemaining=adjusted.turns;
+  else if(adjusted.reduced)bleed.bleedTurnsRemaining=adjusted.turns;
   return bleed;
 }
 function getBleedTurnsText(u){
@@ -1616,7 +1784,7 @@ function applyBleedingToOwnerAtTurnStart(units,owner){
     const hasTimedBleed=Math.max(0,Number(u.bleedTurnsRemaining||0))>0;
     const remainingBefore=hasTimedBleed?Math.max(1,Number(u.bleedTurnsRemaining||1)):(u.leader?2:0);
     logs.push(`${u.name} pierde ${dmg} Vida por Sangrado${remainingBefore>0?` (${remainingBefore} turno${remainingBefore===1?"":"s"} restante${remainingBefore===1?"":"s"})`:""}.`);
-    const damaged=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true});
+    const damaged=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true}));
     if(hasTimedBleed||u.leader){
       const remaining=remainingBefore-1;
       if(remaining>0)damaged.bleedTurnsRemaining=remaining;
@@ -1637,6 +1805,8 @@ function applyBleedingToOwnerAtTurnStart(units,owner){
 function hasBurning(u){return !!u&&!u.leader&&Number(u.burnTurns||0)>0&&Number(u.burnDamage||0)>0;}
 function applyBurnToUnit(target,sourceName="Fireball",turns=2,damage=1){
   if(!target||target.leader)return target;
+  const adjusted=applyInstinctCollarDuration(target,turns);
+  target=adjusted.unit;turns=adjusted.turns;
   const next={...target};
   next.burnTurns=Math.max(Number(next.burnTurns||0),Math.max(1,Number(turns||2)));
   next.burnDamage=Math.max(Number(next.burnDamage||0),Math.max(1,Number(damage||1)));
@@ -1653,7 +1823,8 @@ function applyArcaneAdeptRandomStatus(target,source){
   }
   if(roll===1){
     if(isPoisonImmuneUnit(target))return {unit:clearPoisonStatus(target),label:"ignora el Veneno"};
-    return {unit:{...target,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:source?.id||"",poisonSourceName:source?.name||"Adepto Arcano"},label:"queda con Veneno leve"};
+    const adjusted=applyInstinctCollarDuration(target,3);
+    return {unit:{...adjusted.unit,poisonTurns:adjusted.turns,poisonStage:1,poisonDamage:1,poisonSourceId:source?.id||"",poisonSourceName:source?.name||"Adepto Arcano"},label:"queda con Veneno leve"};
   }
   if(roll===2){
     return {unit:applyBurnToUnit(target,source?.name||"Adepto Arcano",2,1),label:"queda con Quemadura leve"};
@@ -1682,7 +1853,8 @@ function applyBurnAtTurnEnd(units){
     if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("burn_tick",u,dmg);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"🔥"});
     logs.push(`${u.name} sufre ${dmg} daño directo por Quemadura (${turnsBefore} turno${turnsBefore===1?"":"s"} restante${turnsBefore===1?"":"s"}).`);
-    let next=resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,burnTurns:turnsBefore-1,damagedThisTurn:true});
+    let next=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true}));
+    next={...next,burnTurns:turnsBefore-1};
     if(next.burnTurns<=0){delete next.burnTurns;delete next.burnDamage;delete next.burnSourceName;}
     return next;
   });

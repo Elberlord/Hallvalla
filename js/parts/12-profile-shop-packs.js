@@ -605,7 +605,7 @@ function saveProfileNameChange(){
    PATCH 8J - BASIC SPELL/TRAP PORTRAITS + STARTER KEYS
    Objetivo:
    - Restaurar las cartas básicas mágicas/trampa usadas por el starter.
-   - Conectar cada carta con su asset .webp en assets/cards/basic/.
+   - Conectar cada carta con su asset .webp en assets/cards/basic/spells/ y assets/cards/basic/traps/.
    - Mantener nombres y keys legibles: fireball, heal, shield_wall,
      smoke_bomb, inspiration y warning_rune.
    Alcance:
@@ -618,7 +618,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     name:"Fireball",
     type:"spell",
     icon:"🔥",
-    portrait:"assets/cards/basic/fireball.webp",
+    portrait:"assets/cards/basic/spells/fireball.webp",
     rarity:"Básica",
     cost:1,
     spell:"damage",
@@ -632,7 +632,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     name:"Luz de sanación",
     type:"spell",
     icon:"✨",
-    portrait:"assets/cards/basic/heal.webp",
+    portrait:"assets/cards/basic/spells/heal.webp",
     rarity:"Básica",
     cost:1,
     spell:"heal",
@@ -645,7 +645,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     name:"Muro de escudos",
     type:"spell",
     icon:"🛡️",
-    portrait:"assets/cards/basic/shield_wall.webp",
+    portrait:"assets/cards/basic/spells/shield_wall.webp",
     rarity:"Básica",
     cost:2,
     spell:"shield",
@@ -658,7 +658,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     name:"Smoke Bomb",
     type:"trap",
     icon:"💨",
-    portrait:"assets/cards/basic/smoke_bomb.webp",
+    portrait:"assets/cards/basic/traps/smoke_bomb.webp",
     rarity:"Básica",
     cost:1,
     trap:"slow",
@@ -671,7 +671,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     name:"Inspiration",
     type:"spell",
     icon:"☀️",
-    portrait:"assets/cards/basic/inspiration.webp",
+    portrait:"assets/cards/basic/spells/inspiration.webp",
     rarity:"Básica",
     cost:1,
     spell:"buff",
@@ -683,7 +683,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     name:"Runa de advertencia",
     type:"trap",
     icon:"◆",
-    portrait:"assets/cards/basic/warning_rune.webp",
+    portrait:"assets/cards/basic/traps/warning_rune.webp",
     rarity:"Básica",
     cost:1,
     trap:"guard",
@@ -793,7 +793,9 @@ function getBattleRewardLabel(battle){
   if(!battle)return"";
   const parts=[];
   if(battle.xp)parts.push(`${battle.xp} EXP`);
+  if(battle.gems)parts.push(`${battle.gems} Gemas`);
   if(battle.gold)parts.push(`${battle.gold} Oro`);
+  if(battle.beastEvent&&battle.rewardBeastCard)parts.push("1 Bestia aleatoria (sin Dragones)");
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
   else if(battle.cardPack){
@@ -1062,6 +1064,7 @@ function removeOneTemplateByKey(templates,key){
 function getAdventureDeckCardTemplateByKey(key){
   const pools=[
     CARD_TEMPLATES||[],
+    EQUIPMENT_CARD_TEMPLATES||[],
     BASIC_MAGIC_TRAP_PACK||[],
     IMPROVED_MAGIC_TRAP_PACK||[],
     LEGENDARY_TRAP_CARDS||[],
@@ -1092,7 +1095,20 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
   const targetDeckSize=DECK_RULES.drawDeckSize+principalSlots;
   if(battle?.beastEvent||enemyLeaderType==="beastmaster"){
-    const beastDeck=getBeastmasterDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).slice(0,targetDeckSize);
+    let beastDeck=getBeastmasterDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).slice(0,targetDeckSize);
+    if(battle?.beastEvent&&battle?.beastmasterYoungDragon&&typeof getDragonCompanionCardTemplate==="function"){
+      const element=String(battle.beastmasterYoungDragonElement||getBeastmasterYoungDragonElement?.(battle.beastmasterGlobalDuelNumber)||"lightning");
+      const youngDragon=getDragonCompanionCardTemplate(`young_${element}_dragon`);
+      if(youngDragon){
+        const principalKeys=new Set(getBeastmasterPrincipalKeysForSlots(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)));
+        let replaceIndex=-1;
+        for(let i=beastDeck.length-1;i>=0;i--){
+          if(!principalKeys.has(beastDeck[i]?.key)){replaceIndex=i;break;}
+        }
+        if(replaceIndex<0&&beastDeck.length)replaceIndex=beastDeck.length-1;
+        if(replaceIndex>=0)beastDeck.splice(replaceIndex,1,{...youngDragon,beast:true,special:true});
+      }
+    }
     const maxedCards=beastDeck.map(template=>{
       const card=makeCard(template,2,enemyLeaderType);
       return card.type==="unit"?{...card,masteryRank:UNIT_MASTERY_MAX_RANK,eventMaxLevel:true}:card;

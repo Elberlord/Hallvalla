@@ -552,7 +552,7 @@ function openHallvallaEvents(){
   const intro=modal.querySelector(".hallvalla-events-intro");
   if(intro)intro.textContent=`Tier actual: ${getDragonContractTier()}. Los Contratos de las Bestias requieren Tier 3, tres Personajes Principales y veinte cartas de robo. Huevos guardados: ${getDragonEggs().length}.`;
   if(grid){
-    grid.innerHTML=`<button type="button" class="hallvalla-event-tile beastmaster-event" data-beastmaster-event="1"><img src="${BEASTMASTER_EVENT_BATTLE.image}" alt="Señor de las Bestias"><span class="hallvalla-event-copy"><b>${BEASTMASTER_EVENT_BATTLE.title}</b><small>Evento de bestias y trampas</small><em>${hasClaimedBeastEventThisYear()?"Recompensa anual reclamada":"Paquete de Bestias disponible"}</em></span></button>${DRAGON_CONTRACT_ELEMENT_ORDER.map(key=>dragonContractCardHtml(DRAGON_CONTRACT_DEFS[key])).join("")}`;
+    grid.innerHTML=`<button type="button" class="hallvalla-event-tile beastmaster-event" data-beastmaster-event="1"><img src="${BEASTMASTER_EVENT_BATTLE.image}" alt="Señor de las Bestias"><span class="hallvalla-event-copy"><b>${BEASTMASTER_EVENT_BATTLE.title}</b><small>100 Oro por intento · 60 EXP · 10 Gemas</small><em>1 Bestia aleatoria por victoria · Dragones excluidos</em></span></button>${DRAGON_CONTRACT_ELEMENT_ORDER.map(key=>dragonContractCardHtml(DRAGON_CONTRACT_DEFS[key])).join("")}`;
     grid.querySelector("[data-beastmaster-event]")?.addEventListener("click",()=>{modal.classList.add("hidden");openBeastmasterEvent();});
     grid.querySelectorAll("[data-dragon-contract]").forEach(btn=>btn.addEventListener("click",()=>prepareDragonContractDeck(btn.dataset.dragonContract)));
   }

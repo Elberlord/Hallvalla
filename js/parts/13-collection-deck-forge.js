@@ -60,7 +60,7 @@ function isBasicNonBeastPackCard(card){
 }
 function getBasicNonBeastPackPool(){
   const byKey=new Map();
-  [...(CARD_TEMPLATES||[]),...(BASIC_MAGIC_TRAP_PACK||[])].filter(isBasicNonBeastPackCard).forEach(card=>{
+  [...(CARD_TEMPLATES||[]),...(EQUIPMENT_CARD_TEMPLATES||[]),...(BASIC_MAGIC_TRAP_PACK||[])].filter(isBasicNonBeastPackCard).forEach(card=>{
     byKey.set(card.key,{...hydrateCardVisualData(card)});
   });
   return [...byKey.values()];
@@ -74,6 +74,7 @@ function getEpicGuaranteedPackCards(){
 function getAllShopPackCards(){
   const pools=[
     ...(CARD_TEMPLATES||[]),
+    ...(EQUIPMENT_CARD_TEMPLATES||[]),
     ...(BASIC_MAGIC_TRAP_PACK||[]),
     ...(IMPROVED_MAGIC_TRAP_PACK||[]),
     ...(typeof LEGENDARY_TRAP_CARDS!=="undefined"&&Array.isArray(LEGENDARY_TRAP_CARDS)?LEGENDARY_TRAP_CARDS:[]),
@@ -322,6 +323,7 @@ function getCollectionCardsExpanded(){
 function getCraftableCardPool(){
   const pools=[
     CARD_TEMPLATES||[],
+    EQUIPMENT_CARD_TEMPLATES||[],
     BASIC_MAGIC_TRAP_PACK||[],
     IMPROVED_MAGIC_TRAP_PACK||[],
     LEGENDARY_TRAP_CARDS||[],
@@ -542,6 +544,7 @@ function addCardToDeck(cardKey){
   if(isCollectionBrowseOnly())return false;
   const card=getCollectionCardsExpanded().find(c=>c.key===cardKey);
   if(!card)return false;
+  if(isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType())){setHint(`${card.name} es exclusivo de ${getEquipmentLeaderLabel(card)}.`);return false;}
   const used=countInDraft(card.key);
   const maxAllowed=Math.min(card.qty||1,maxCopiesForCard(card));
   if(used>=maxAllowed||currentDeckDraft.length>=getCurrentDeckSize())return false;
@@ -598,6 +601,7 @@ function getDeckBuilderTypeGlyph(card){
   if(card?.type==="unit")return "U";
   if(card?.type==="spell")return "S";
   if(card?.type==="trap")return "T";
+  if(card?.type==="equipment")return "E";
   return "C";
 }
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
@@ -616,7 +620,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const canCraft=mode==="collection"&&canCraftCardCopy(card);
   const material=getMaterialAmountForCard(card);
   const addLockReason=mode==="collection"
-    ? (Number(card?.qty||0)<=0?"No tienes copias de esta carta. Puedes ver sus detalles y crearla si tienes materiales.":(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting()?"Las cartas de bestias se ven aquí, pero solo se pueden usar después de completar su evento.":""))
+    ? (Number(card?.qty||0)<=0?"No tienes copias de esta carta. Puedes ver sus detalles y crearla si tienes materiales.":(isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType())?`Equipo exclusivo de ${getEquipmentLeaderLabel(card)}.`:(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting()?"Las cartas de bestias se ven aquí, pero solo se pueden usar después de completar su evento.":"")))
     : "";
   const actionBtn=mode==="deck"
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
@@ -677,7 +681,7 @@ function deckBuilderCardInvestmentHtml(card){
   const craftCost=getCraftCostForCard(card);
   const canCraft=canCraftCardCopy(card);
   const lockReason=getCraftLockReason(card);
-  const typeLabel=card.type==="unit"?"Unidad":(card.type==="spell"?"Magia":(card.type==="trap"?"Trampa":"Carta"));
+  const typeLabel=card.type==="unit"?"Unidad":(card.type==="spell"?"Magia":(card.type==="trap"?"Trampa":(card.type==="equipment"?"Equipo":"Carta")));
   const weaponLabel=card.type==="unit"?getWeaponClassLabel(card):"";
   const rangeText=card.type==="unit"?`<span><b>Alcance</b><em>${getCardDisplayRange(card)}</em></span>`:"";
   const copiesText=`${owned}/${max}`;
@@ -925,8 +929,9 @@ function renderDeckBuilder(){
     const addLimit=Math.min(ownedQty,maxAllowed);
     const collectionLocked=ownedQty<=0;
     const cannotAddBeast=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting();
-    const disabled=collectionLocked||cannotAddBeast||used>=addLimit||currentDeckDraft.length>=getCurrentDeckSize();
-    return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed,readOnly:browseOnly,collectionLocked,gameplayLocked:cannotAddBeast});
+    const cannotAddEquipment=isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType());
+    const disabled=collectionLocked||cannotAddBeast||cannotAddEquipment||used>=addLimit||currentDeckDraft.length>=getCurrentDeckSize();
+    return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed,readOnly:browseOnly,collectionLocked,gameplayLocked:cannotAddBeast||cannotAddEquipment});
   }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Cambia los filtros para volver a mostrar el catálogo.</small></div>`;
   const pager=$("deckCollectionPager"),pageInfo=$("deckCollectionPageInfo"),pageTitle=$("deckCollectionPageText"),prev=$("deckCollectionPrevBtn"),next=$("deckCollectionNextBtn");
   if(pager)pager.classList.toggle("hidden",cards.length<=pageSize);

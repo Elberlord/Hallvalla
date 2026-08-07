@@ -6,7 +6,7 @@ IDENTIDAD
 - Tipo: Unidad · Humana · Mujer · Catalizadora
 - Rareza: Épica
 - Costo: 4
-- Arte de carta: assets/cards/special/morgana.webp
+- Arte de carta: assets/cards/special/units/morgana.webp
 - Arte de tablero: assets/board_cards/special/morgana.webp
 
 ESTADÍSTICAS

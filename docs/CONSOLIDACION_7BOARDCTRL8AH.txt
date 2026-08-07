@@ -5,7 +5,7 @@ Cambios consolidados:
 - Morgana incluida en el paquete mejorado de magia y trampas.
 - Eliminadas las referencias de código a DARK_MAGE_CARD, darkMage y dark_mage.
 - Conservadas las rutas nuevas:
-  assets/cards/special/morgana.webp
+  assets/cards/special/units/morgana.webp
   assets/board_cards/special/morgana.webp
 - Restaurado js/parts/17-dragon-contracts.js.
 - Restaurada su carga entre 14-adventure-engine-ui.js y 15-settings-tuners-events.js.

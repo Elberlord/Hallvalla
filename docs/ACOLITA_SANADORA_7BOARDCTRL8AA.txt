@@ -61,7 +61,7 @@ La IA puede utilizar las tres técnicas y prioriza, en este orden general:
 4. Causar daño directo a un enemigo, priorizando remates.
 
 ASSETS WEBP
-- assets/cards/basic/acolyte_healer.webp — 1024 × 1536
+- assets/cards/basic/units/acolyte_healer.webp — 1024 × 1536
 - assets/board_cards/basic/acolyte_healer.webp — 1254 × 1254
 
 ARCHIVOS MODIFICADOS

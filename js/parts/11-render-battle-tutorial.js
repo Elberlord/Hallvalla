@@ -577,6 +577,9 @@ function renderBoard(){
       const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
       c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
       c.dataset.unitKey=String(u.key||"").trim().toLowerCase();
+      const invisibleToViewer=isStealthedUnit(u)&&u.owner!==myPlayer;
+      c.dataset.visibilityTag=invisibleToViewer?"invisible":"visible";
+      c.classList.toggle("unit-invisible-to-viewer",invisibleToViewer);
       const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
       const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
       c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
@@ -769,6 +772,7 @@ function getCardVisualClass(card){
   const rarity=String(card?.rarity||card?.rareza||"").toLowerCase();
   if(type==="spell"||card?.spell)parts.push("card-type-spell");
   else if(type==="trap"||card?.trap)parts.push("card-type-trap");
+  else if(type==="equipment")parts.push("card-type-equipment");
   else parts.push("card-type-unit");
 
   if(rarity.includes("legend"))parts.push("card-rarity-legendary");
@@ -797,6 +801,7 @@ function applyRarityClassToElement(el,card){
 function cardTypeLabel(card){
   if(card?.type==="unit")return card.special?"Leyenda":"Unidad";
   if(card?.type==="trap")return "Trampa";
+  if(card?.type==="equipment")return "Equipo";
   if(card?.spell==="damage")return "Daño";
   if(card?.spell==="buff")return "Impulso";
   if(card?.spell==="shield")return "Guardia";
@@ -820,7 +825,7 @@ function renderDetail(){
       ? [["Costo",getCardCostDisplayValue(selectedCard,selectedCard?.owner||myPlayer)],["AT",selectedCard.atk||0],["HP",selectedCard.hp||0],["GD",selectedCard.guard||0],["DX",selectedCard.dex||0],["AGI",selectedCard.agi||0],["MV",selectedCard.mov||0],["RG",getCardDisplayRange(selectedCard)]]
       : [["Costo",getCardCostDisplayValue(selectedCard,selectedCard?.owner||myPlayer)]];
     const effectText=normalizeSaboteadorRuleText(selectedCard,selectedCard.text||selectedCard.effectText||selectedCard.ability||"").trim();
-    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><div class="detail-helper-note">Toca un stat o un botón para ver la explicación.</div>${resourceDetailHtml(selectedCard.owner||myPlayer,{compact:true})}${detailStatGridHtml(cardStats)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(selectedCard,effectText),showWeapon:true,showFormula:true,showLore:selectedCard.type==="unit",effectLabel:'Ver efecto de la carta',entity:selectedCard})}`;
+    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><div class="detail-helper-note">Toca un stat o un botón para ver la explicación.</div>${resourceDetailHtml(selectedCard.owner||myPlayer,{compact:true})}${detailStatGridHtml(cardStats)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(selectedCard,effectText),showWeapon:selectedCard.type==="unit",showFormula:true,showLore:selectedCard.type==="unit",effectLabel:'Ver efecto de la carta',entity:selectedCard})}`;
     bindStatGuideClicks(detailEl);
     bindEntityGuideButtons(detailEl,selectedCard,{effectText,effectTitle:`Efecto de ${selectedCard.name}`});
     return;

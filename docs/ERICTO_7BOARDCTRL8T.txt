@@ -83,7 +83,7 @@ ARCHIVOS DEL PARCHE
 -------------------
 Hallvalla/index.html
 Hallvalla/script.js
-Hallvalla/assets/cards/special/ericto.webp
+Hallvalla/assets/cards/special/units/ericto.webp
 Hallvalla/assets/board_cards/special/ericto.webp
 Hallvalla/docs/ERICTO_7BOARDCTRL8T.txt
 

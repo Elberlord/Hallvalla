@@ -443,7 +443,7 @@ function renderUnitContextMenu(){
 
 
 const ACOLYTE_HEALER_EFFECT_COSTS=Object.freeze({transfer:2,purify:3,resurrect:4});
-function getAcolyteEffectRange(caster){return Math.max(1,Number(caster?.effectRange||3));}
+function getAcolyteEffectRange(caster){return Math.max(1,Number(caster?.effectRange||3)+Number(getEquipmentRangeBonus(caster)||0));}
 function getAcolyteTransferTargets(caster,units=publicState?.units||[]){
   if(!caster)return[];
   const rg=getAcolyteEffectRange(caster);
@@ -594,10 +594,11 @@ function applyAcolyteHealerEffectState(caster,choice,units=publicState?.units||[
     if(target.owner===live.owner){
       if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return{success:false,reason:`${target.name} no puede curarse ahora.`};
       const max=Math.max(1,Number(effectiveMaxHp(target)||target.maxHp||target.hp||1));if(Number(target.hp||0)>=max)return{success:false,reason:"La unidad aliada ya tiene la Vida completa."};
-      out=out.map(u=>u.id===target.id?{...u,hp:Math.min(max,Number(u.hp||0)+1)}:u.id===live.id?{...u,acted:true}:u);const healedTarget=out.find(u=>u.id===target.id)||target;battleFxEvent=makeMagicFxEvent(live,healedTarget,"heal",{type:"heal",spellKey:"acolyte_transfer_heal",effectAction:"heal",hit:true});statusFxEvent=makeStatusFxEvent("heal",healedTarget,1);floatFxEvent=makeFloatFxEvent("heal",healedTarget,1,{iconText:"✚"});log=`${live.name} usa Transferencia vital: ${target.name} recupera 1 Vida.`;
+      const transferHeal=Math.max(1,getEquipmentHealingMultiplier(live));const actualTransferHeal=Math.min(transferHeal,Math.max(0,max-Number(target.hp||0)));
+      out=out.map(u=>u.id===target.id?{...u,hp:Math.min(max,Number(u.hp||0)+transferHeal)}:u.id===live.id?{...u,acted:true}:u);const healedTarget=out.find(u=>u.id===target.id)||target;battleFxEvent=makeMagicFxEvent(live,healedTarget,"heal",{type:"heal",spellKey:"acolyte_transfer_heal",effectAction:"heal",hit:true});statusFxEvent=makeStatusFxEvent("heal",healedTarget,actualTransferHeal);floatFxEvent=makeFloatFxEvent("heal",healedTarget,actualTransferHeal,{iconText:"✚"});log=`${live.name} usa Transferencia vital: ${target.name} recupera ${actualTransferHeal} Vida.`;
     }else{
       if(isStealthedUnit(target))return{success:false,reason:"No puede seleccionar una unidad enemiga con Sigilo."};
-      const before=[...out];out=out.map(u=>u.id===target.id?resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-1,damagedThisTurn:true}):u.id===live.id?{...u,acted:true}:u);out=applyLegendaryFatalSaves(out,[target.id]).filter(u=>Number(u.hp||0)>0);const blood=applyBloodVictoryForDeaths(before,out);out=blood.units;const survivor=out.find(u=>u.id===target.id);battleFxEvent=makeMagicFxEvent(live,survivor||target,"arcane",{type:"spell",spellKey:"acolyte_transfer_damage",effectAction:"drain",hit:true});statusFxEvent=survivor?makeStatusFxEvent("damage",survivor,1):null;floatFxEvent=makeFloatFxEvent("damage",survivor||target,1,{iconText:"✦"});log=`${live.name} usa Transferencia vital: ${target.name} pierde 1 Vida directamente.${blood.logs.length?` ${blood.logs.join(" ")}`:""}`;
+      const before=[...out];const transferDamage=Math.max(1,getEquipmentDamageMultiplier(live));let actualTransferDamage=transferDamage;out=out.map(u=>{if(u.id===target.id){const protectedDamage=applyDirectHpDamageWithEquipment(u,transferDamage);actualTransferDamage=protectedDamage.damage;return protectedDamage.unit;}return u.id===live.id?{...u,acted:true}:u;});out=applyLegendaryFatalSaves(out,[target.id]).filter(u=>Number(u.hp||0)>0);const blood=applyBloodVictoryForDeaths(before,out);out=blood.units;const survivor=out.find(u=>u.id===target.id);battleFxEvent=makeMagicFxEvent(live,survivor||target,"arcane",{type:"spell",spellKey:"acolyte_transfer_damage",effectAction:"drain",hit:true});statusFxEvent=survivor?makeStatusFxEvent("damage",survivor,actualTransferDamage):null;floatFxEvent=makeFloatFxEvent("damage",survivor||target,actualTransferDamage,{iconText:"✦"});log=`${live.name} usa Transferencia vital: ${target.name} pierde ${actualTransferDamage} Vida directamente.${blood.logs.length?` ${blood.logs.join(" ")}`:""}`;
     }
     return{success:true,units:out,log,honorCost:2,serviceGain:1,battleFxEvent,statusFxEvent,floatFxEvent,clockKillCreditOwner:live.owner};
   }
@@ -791,7 +792,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     const beforeRain=[...out];
     out=out.map(it=>{
       if(it.id===liveCaster.id)return{...it,acted:true,arrowRainUsedTurn:true};
-      if(enemyIds.includes(it.id))return {...it,hp:(it.hp||0)-1,damagedThisTurn:true};
+      if(enemyIds.includes(it.id))return applyDirectHpDamageWithEquipment(it,1).unit;
       return it;
     });
     out=applyLegendaryFatalSaves(out,enemyIds);
