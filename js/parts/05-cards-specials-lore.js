@@ -1221,6 +1221,33 @@ function getDetAbilityMeta(kind="effect"){
   };
   return map[kind]||map.effect;
 }
+function renderDetMasteryProgressHtml(entity){
+  if(!entity||entity.leader||entity.type!=="unit")return "";
+  if(entity.owner!==undefined&&typeof myPlayer!=="undefined"&&Number(entity.owner)!==Number(myPlayer))return "";
+  try{
+    if(typeof isUnitServiceProgression==="function"&&isUnitServiceProgression(entity)){
+      const progress=typeof getAcolyteServiceProgressText==="function"?getAcolyteServiceProgressText(entity):"Progreso de servicio";
+      return `<span class="det-head-chip det-mastery-progress" title="${escapeHtml(progress)}"><b>PROGRESO</b><small>${escapeHtml(progress)}</small></span>`;
+    }
+    if(typeof getUnitMasteryRecord!=="function"||typeof getUnitMasteryRankFromKills!=="function"||typeof getUnitMasteryKillsForRank!=="function")return "";
+    const record=getUnitMasteryRecord(entity);
+    const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
+    const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:10;
+    const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
+    let detail=`${kills} muertes · nivel máximo`;
+    if(rank<maxRank){
+      const next=Math.max(kills,Math.floor(Number(getUnitMasteryKillsForRank(rank+1)||kills)));
+      const remaining=Math.max(0,next-kills);
+      detail=`${kills}/${next} muertes · faltan ${remaining}`;
+    }
+    return `<span class="det-head-chip det-mastery-progress" title="Nivel ${escapeHtml(rankText)} · ${escapeHtml(detail)}"><b>NIVEL ${escapeHtml(rankText)}</b><small>${escapeHtml(detail)}</small></span>`;
+  }catch(error){
+    console.warn("[HallValla] No se pudo mostrar el progreso de maestría en DET:",error);
+    return "";
+  }
+}
+
 function renderDetIdentityHtml(entity,ownerLabel=""){
   const summary=getEntitySummaryText(entity);
   const rarity=getEntityRarityLabel(entity);
@@ -1230,8 +1257,9 @@ function renderDetIdentityHtml(entity,ownerLabel=""){
     `<span class="det-head-chip">${escapeHtml("Tipo: "+typeLabel)}</span>`
   ];
   if(ownerLabel)chips.push(`<span class="det-head-chip">${escapeHtml(ownerLabel)}</span>`);
+  const masteryProgress=renderDetMasteryProgressHtml(entity);
   return `<div class="det-identity-block">
-    <div class="det-head-chip-row">${chips.join("")}</div>
+    <div class="det-head-chip-row">${chips.join("")}${masteryProgress}</div>
     ${summary?`<div class="det-summary-copy">${escapeHtml(summary)}</div>`:""}
   </div>`;
 }

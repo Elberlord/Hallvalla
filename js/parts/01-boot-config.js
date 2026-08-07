@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8BF · Arranque, Firebase y utilidades DOM */
+/* HallValla 7BOARDCTRL8BH · Arranque, Firebase y utilidades DOM */
 
 
 /* ==========================================================
@@ -73,7 +73,7 @@ const, let, funciones e inicializadores.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION=`v8_MODULAR_${globalThis.__HALLVALLA_BUILD__||"7BOARDCTRL8BF"}`;
+const HALLVALLA_BUILD_VERSION=`v8_MODULAR_${globalThis.__HALLVALLA_BUILD__||"7BOARDCTRL8BH"}`;
 const firebaseConfig=globalThis.__HALLVALLA_FIREBASE_CONFIG__;
 if(!firebaseConfig?.apiKey||!firebaseConfig?.databaseURL){
   throw new Error("Configuración Firebase ausente o incompleta.");

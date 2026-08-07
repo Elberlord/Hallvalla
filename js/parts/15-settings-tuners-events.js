@@ -932,3 +932,122 @@ if(HALLVALLA_LOCALHOST_TEST_MODE){
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme_loop");}catch(e){}
 maybeShowBasicTutorialGate();
+
+/* ============================================================
+   7BOARDCTRL8BH · Editor visual del modal DET
+   ============================================================ */
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v1";
+const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
+  panelX:0,panelY:0,panelWidth:1120,panelHeight:620,panelScale:100,
+  pbX:0,pbY:0,pbScale:100,
+  progressX:0,progressY:0,progressScale:100
+});
+function normalizeHvDetLayoutTuner(raw={}){
+  const clamp=(value,min,max,fallback)=>{
+    const n=Number(value);
+    return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+  };
+  return {
+    panelX:clamp(raw.panelX,-400,400,0),
+    panelY:clamp(raw.panelY,-300,300,0),
+    panelWidth:clamp(raw.panelWidth,760,1400,1120),
+    panelHeight:clamp(raw.panelHeight,480,820,620),
+    panelScale:clamp(raw.panelScale,65,135,100),
+    pbX:clamp(raw.pbX,-500,500,0),
+    pbY:clamp(raw.pbY,-250,500,0),
+    pbScale:clamp(raw.pbScale,55,180,100),
+    progressX:clamp(raw.progressX,-500,500,0),
+    progressY:clamp(raw.progressY,-250,500,0),
+    progressScale:clamp(raw.progressScale,55,180,100)
+  };
+}
+function getHvDetLayoutTuner(){
+  try{return normalizeHvDetLayoutTuner(JSON.parse(localStorage.getItem(HV_DET_LAYOUT_TUNER_STORAGE_KEY)||"{}"));}
+  catch(_){return {...HV_DET_LAYOUT_TUNER_DEFAULTS};}
+}
+function saveHvDetLayoutTuner(settings){
+  const clean=normalizeHvDetLayoutTuner(settings);
+  localStorage.setItem(HV_DET_LAYOUT_TUNER_STORAGE_KEY,JSON.stringify(clean));
+  return clean;
+}
+function applyHvDetLayoutTuner(settings=getHvDetLayoutTuner()){
+  const clean=normalizeHvDetLayoutTuner(settings);
+  const style=document.documentElement.style;
+  style.setProperty("--hv-det-panel-x",`${clean.panelX}px`);
+  style.setProperty("--hv-det-panel-y",`${clean.panelY}px`);
+  style.setProperty("--hv-det-panel-width",`${clean.panelWidth}px`);
+  style.setProperty("--hv-det-panel-height",`${clean.panelHeight}px`);
+  style.setProperty("--hv-det-panel-scale",String(clean.panelScale/100));
+  style.setProperty("--hv-det-pb-x",`${clean.pbX}px`);
+  style.setProperty("--hv-det-pb-y",`${clean.pbY}px`);
+  style.setProperty("--hv-det-pb-scale",String(clean.pbScale/100));
+  style.setProperty("--hv-det-progress-x",`${clean.progressX}px`);
+  style.setProperty("--hv-det-progress-y",`${clean.progressY}px`);
+  style.setProperty("--hv-det-progress-scale",String(clean.progressScale/100));
+  return clean;
+}
+function isHvDetOpen(){
+  return !!($("inspector")?.classList.contains("show")||($("cardInspectModal")&&!$("cardInspectModal").classList.contains("hidden")));
+}
+function ensureHvDetLayoutTuner(){
+  if(document.getElementById("hvDetLayoutTuner"))return;
+  const shell=document.createElement("div");
+  shell.id="hvDetLayoutTuner";
+  shell.className="hv-det-layout-tuner hidden";
+  shell.innerHTML=`<button id="hvDetLayoutTunerToggle" class="hv-det-layout-tuner-toggle" type="button">AJUSTAR DET</button>
+  <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Control visual del DET">
+    <header><div><b>CONTROL DEL DET</b><small>Mueve y escala el panel, el PB y el progreso.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
+    <div class="hv-det-tuner-grid">
+      <label>DET horizontal <output data-out="panelX"></output><input data-det-setting="panelX" type="range" min="-400" max="400" step="1"></label>
+      <label>DET vertical <output data-out="panelY"></output><input data-det-setting="panelY" type="range" min="-300" max="300" step="1"></label>
+      <label>Ancho DET <output data-out="panelWidth"></output><input data-det-setting="panelWidth" type="range" min="760" max="1400" step="5"></label>
+      <label>Alto DET <output data-out="panelHeight"></output><input data-det-setting="panelHeight" type="range" min="480" max="820" step="5"></label>
+      <label>Escala DET <output data-out="panelScale"></output><input data-det-setting="panelScale" type="range" min="65" max="135" step="1"></label>
+    </div>
+    <details open><summary>Poder de batalla</summary><div class="hv-det-tuner-grid">
+      <label>PB horizontal <output data-out="pbX"></output><input data-det-setting="pbX" type="range" min="-500" max="500" step="1"></label>
+      <label>PB vertical <output data-out="pbY"></output><input data-det-setting="pbY" type="range" min="-250" max="500" step="1"></label>
+      <label>Tamaño PB <output data-out="pbScale"></output><input data-det-setting="pbScale" type="range" min="55" max="180" step="1"></label>
+    </div></details>
+    <details open><summary>Progreso de muertes</summary><div class="hv-det-tuner-grid">
+      <label>Progreso horizontal <output data-out="progressX"></output><input data-det-setting="progressX" type="range" min="-500" max="500" step="1"></label>
+      <label>Progreso vertical <output data-out="progressY"></output><input data-det-setting="progressY" type="range" min="-250" max="500" step="1"></label>
+      <label>Tamaño progreso <output data-out="progressScale"></output><input data-det-setting="progressScale" type="range" min="55" max="180" step="1"></label>
+    </div></details>
+    <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
+  </section>`;
+  document.body.appendChild(shell);
+  const toggle=$("hvDetLayoutTunerToggle"),panel=$("hvDetLayoutTunerPanel");
+  let settings=applyHvDetLayoutTuner();
+  const valueSuffix=key=>key.includes("Scale")?"%":" px";
+  const syncControls=()=>{
+    shell.querySelectorAll("[data-det-setting]").forEach(input=>{
+      const key=input.dataset.detSetting;
+      input.value=String(settings[key]);
+      const out=shell.querySelector(`[data-out="${key}"]`);
+      if(out)out.textContent=`${settings[key]}${valueSuffix(key)}`;
+    });
+  };
+  const setPanelOpen=open=>panel.classList.toggle("hidden",!open);
+  toggle.onclick=()=>setPanelOpen(panel.classList.contains("hidden"));
+  $("hvDetLayoutTunerClose").onclick=()=>setPanelOpen(false);
+  $("hvDetLayoutTunerDone").onclick=()=>setPanelOpen(false);
+  $("hvDetLayoutTunerReset").onclick=()=>{
+    settings=saveHvDetLayoutTuner({...HV_DET_LAYOUT_TUNER_DEFAULTS});
+    applyHvDetLayoutTuner(settings);syncControls();
+  };
+  shell.querySelectorAll("[data-det-setting]").forEach(input=>input.addEventListener("input",()=>{
+    settings={...settings,[input.dataset.detSetting]:Number(input.value)};
+    settings=saveHvDetLayoutTuner(settings);
+    applyHvDetLayoutTuner(settings);syncControls();
+  }));
+  const refreshVisibility=()=>{
+    const open=isHvDetOpen();
+    shell.classList.toggle("hidden",!open);
+    if(!open)setPanelOpen(false);
+  };
+  [$("inspector"),$("cardInspectModal")].filter(Boolean).forEach(element=>new MutationObserver(refreshVisibility).observe(element,{attributes:true,attributeFilter:["class"]}));
+  syncControls();refreshVisibility();
+}
+applyHvDetLayoutTuner();
+ensureHvDetLayoutTuner();
