@@ -950,7 +950,8 @@ function refreshAudioState(){
 }
 function syncBattleMusic(){
   const inBattle=!!(publicState&&gameId&&!isBattleEnded());
-  if(inBattle)playMusic("duel_hallvalla_war_chant");
+  const homeVisible=!!($("mainMenu")&&!$("mainMenu").classList.contains("hidden"));
+  if(inBattle||homeVisible)playMusic("duel_hallvalla_war_chant");
   else stopMusic(true);
 }
 function getSummonSoundForUnit(unit){
