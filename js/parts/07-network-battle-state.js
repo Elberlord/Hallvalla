@@ -229,50 +229,6 @@ async function updatePrivate(patch){
 async function updateUnits(units){await updatePublic({units})}function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
   return (units||[]).some(u=>u&&u.owner===owner&&!u.leader&&Number(u.hp||0)>0);
 }
-function canOwnerPlayAnyCardSnapshot(owner,hand=[],honor=0,phase="main",units=publicState?.units||[]){
-  return (hand||[]).some(card=>canPlayCardWithSnapshot(card,honor,phase,units,owner));
-}
-function buildNoPlayStalemateState(state,units,owner,hand=[],honor=0,phase="main",playerStatsUpdate={}){
-  const base=state||publicState||{};
-  const flags={...(base.stalemateNoPlay||{})};
-  const noUnits=!hasLivingNonLeaderUnitsForOwner(owner,units);
-  const noPlayable=!canOwnerPlayAnyCardSnapshot(owner,hand,honor,phase,units);
-  if(noUnits&&noPlayable){
-    flags[owner]={turnKey:base.turnKey||"",at:Date.now(),noUnits:true,noPlayable:true};
-  }else{
-    delete flags[owner];
-    delete flags[String(owner)];
-  }
-  return {
-    ...base,
-    units,
-    stalemateNoPlay:flags,
-    playerStats:{
-      ...(base.playerStats||{}),
-      [owner]:{...((base.playerStats||{})[owner]||{}),...(playerStatsUpdate||{})}
-    }
-  };
-}
-function getStalemateLifeOutcome(units=publicState?.units||[],state=publicState){
-  const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);
-  const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);
-  if(!p1Leader||!p2Leader)return null;
-  if(hasLivingNonLeaderUnitsForOwner(1,units)||hasLivingNonLeaderUnitsForOwner(2,units))return null;
-  const flags=state?.stalemateNoPlay||{};
-  const p1Flag=flags[1]||flags["1"];
-  const p2Flag=flags[2]||flags["2"];
-  if(!(p1Flag?.noPlayable&&p1Flag?.noUnits&&p2Flag?.noPlayable&&p2Flag?.noUnits))return null;
-  const p1Hp=Math.max(0,Number(p1Leader.hp||0));
-  const p2Hp=Math.max(0,Number(p2Leader.hp||0));
-  if(p1Hp>p2Hp)return{ended:true,winner:1,loser:2,p1Leader,p2Leader,reason:"stalemate_life",p1Hp,p2Hp};
-  if(p2Hp>p1Hp)return{ended:true,winner:2,loser:1,p1Leader,p2Leader,reason:"stalemate_life",p1Hp,p2Hp};
-  return{ended:true,winner:0,loser:0,p1Leader,p2Leader,reason:"stalemate_draw",p1Hp,p2Hp};
-}
-function getStalemateOutcomeText(outcome){
-  if(!outcome||!String(outcome.reason||"").startsWith("stalemate"))return "";
-  if(outcome.reason==="stalemate_draw")return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Empate por Vida igual (${outcome.p1Hp}/${outcome.p2Hp}).`;
-  return `Agotamiento total: ningún jugador tiene unidades ni cartas jugables. Gana J${outcome.winner} por tener más Vida (${outcome.p1Hp}/${outcome.p2Hp}).`;
-}
 function getBattleOutcome(units=publicState?.units||[],state=publicState){
   const p1Leader=(units||[]).find(u=>u.owner===1&&u.leader);
   const p2Leader=(units||[]).find(u=>u.owner===2&&u.leader);
@@ -281,8 +237,6 @@ function getBattleOutcome(units=publicState?.units||[],state=publicState){
   if(!p2Leader)return{ended:true,winner:1,loser:2,p1Leader,p2Leader:null};
   const exhausted=getUnitExhaustionOutcome(units,state);
   if(exhausted)return exhausted;
-  const stalemate=getStalemateLifeOutcome(units,state);
-  if(stalemate)return stalemate;
   return{ended:false,p1Leader,p2Leader};
 }
 async function finalizeBattle(units,actionLog="",stateOverride=null){
@@ -294,18 +248,16 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   const baseLogs=[];
   if(actionLog)baseLogs.push(actionLog);
   const unitExhaustionText=getUnitExhaustionOutcomeText(outcome);
-  const stalemateText=getStalemateOutcomeText(outcome);
   if(unitExhaustionText)baseLogs.push(unitExhaustionText);
-  if(stalemateText)baseLogs.push(stalemateText);
   if(state.mode==="adventure"){
     baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);
-  }else if(!stalemateText&&!unitExhaustionText){
+  }else if(!unitExhaustionText){
     baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");
   }
   const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
   recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");
-  await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:state.stalemateNoPlay||null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});
+  await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});
   return true;
 }function resetBattleState(){unitExhaustionFinalizeLock=false;resetNoPlayableAutoAdvanceState();resetFieldAutoAdvanceState();stopTurnTimerLoop();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";lastClockKillBonusEventId="";clearBattleFxLayer();clearEventSplashOverlay();hideBattleOutcomeSplash(true);hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}const resultPanel=$("adventureResultPanel");if(resultPanel)resultPanel.classList.add("hidden")}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");renderHomeProgress();syncBattleMusic()}function maybeShowBattleResult(){
   if(!publicState||publicState.phase!=="ended"||!publicState.endedAt)return;
@@ -784,23 +736,18 @@ async function maybeStartTurn(){
     const startLogs=[...merlinDrawLogs,...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(startBloodVictory.logs||[]),...(lionFearStart.logs||[])];
     if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
     const playerStatsUpdate={hp:units.find(u=>u.owner===myPlayer&&u.leader)?.hp||0,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length};
-    const stalemateState=buildNoPlayStalemateState(publicState,units,myPlayer,drawn.hand,honor,"main",playerStatsUpdate);
-    const stalemateOutcome=getBattleOutcome(units,stalemateState);
-    if(stalemateOutcome.ended&&String(stalemateOutcome.reason||"").startsWith("stalemate")&&await finalizeBattle(units,"",stalemateState))return;
     if(actualDrawCount>0){tryPlaySound("draw_card",.50);setTimeout(()=>tryPlaySound("mana_charge",.42),120);}else tryPlaySound("mana_charge",.42);
     const resourceLabel=getResourceLabel(myPlayer);
     const honorCapText=maxHonor>=RESOURCE_MAX_CAP?" (tope 10)":""; 
-    const noPlayText=stalemateState.stalemateNoPlay?.[myPlayer]?.noPlayable?" Sin unidades ni cartas jugables: queda marcado para desempate por Vida si el rival también se agota.":"";
     const merlinDrawText=actualMerlinDraw>0?" Visión de los Tiempos añade 1 carta adicional.":(merlinDrawBonus>0?" Visión de los Tiempos se activa, pero el mazo no tiene una carta adicional disponible.":"");
     const logText=firstTurnNoDraw
-      ?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano antes del efecto: ${handBeforeDraw} cartas.${merlinDrawText} Mano actual: ${drawn.hand.length}. Pasa a Main Phase.${noPlayText}`
-      :`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba ${actualDrawCount} carta${actualDrawCount===1?"":"s"}.${merlinDrawText} Pasa a Main Phase.${noPlayText}`;
+      ?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano antes del efecto: ${handBeforeDraw} cartas.${merlinDrawText} Mano actual: ${drawn.hand.length}. Pasa a Main Phase.`
+      :`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba ${actualDrawCount} carta${actualDrawCount===1?"":"s"}.${merlinDrawText} Pasa a Main Phase.`;
     await updatePublic({
       units,
       _clockKillCreditMode:"opposite-owner",
       legendaryTraps:startTrap.traps||getActiveLegendaryTraps(),
       turnPhase:"main",
-      stalemateNoPlay:stalemateState.stalemateNoPlay||{},
       [`playerStats/${myPlayer}`]:playerStatsUpdate,
       statusFxEvent:lionFearStart.statusFxEvent||bleedStart.statusFxEvent||startTrap.statusFxEvent||null,
       floatFxEvent:lionFearStart.floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null,
