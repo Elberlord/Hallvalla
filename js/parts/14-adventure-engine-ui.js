@@ -659,6 +659,10 @@ function showComingSoon(name){
 }
 
 async function openBeastmasterEvent(){
+  if(typeof openBeastmasterEventModal==="function"){
+    openBeastmasterEventModal("info");
+    return;
+  }
   if(!getSelectedLeaderType()){
     pendingAfterLeaderSelection="beast_event";
     requireLeaderSelection(true);
@@ -670,14 +674,6 @@ async function openBeastmasterEvent(){
     await hvAlert(`Entrar a la cacería cuesta ${cost} de oro. Tienes ${profile.gold||0}.`,"Oro insuficiente");
     return;
   }
-  const msg=`Entrada: ${cost} de oro por intento.
-Victoria: ${BEASTMASTER_EVENT_BATTLE.xp} EXP + ${BEASTMASTER_EVENT_BATTLE.gems} Gemas + 1 carta Bestia aleatoria (los Dragones están excluidos del premio normal).
-
-Cada ${BEASTMASTER_YOUNG_DRAGON_INTERVAL} duelos globales el Beastmaster incorpora un Dragón Joven a su mazo. Existe además 1 Huevo de Dragón excepcional por cada bloque de ${BEASTMASTER_EGG_BLOCK_SIZE} duelos globales; cada jugador solo puede ganarlo una vez por esta vía.
-
-IA: dificultad máxima. Mazo: trampas y bestias.`;
-  const go=await hvConfirm(msg,"La Cacería del Rey Salvaje",`Entrar · ${cost} Oro`,"Ahora no");
-  if(!go)return;
   const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
   await startAdventure(special,BEASTMASTER_EVENT_BATTLE.id);
 }

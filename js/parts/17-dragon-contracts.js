@@ -515,65 +515,330 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
 /* -------------------------------------------------------------------------
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
+
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v1";
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({
+  titleSize:72,
+  bodySize:17,
+  sectionGap:20,
+  panelPadding:26,
+  modalWidth:1080,
+  align:"left"
+});
+function getHallvallaEventUiSettings(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(HALLVALLA_EVENT_UI_STORAGE_KEY)||"null")||{};
+    return {
+      titleSize:Math.max(46,Math.min(96,Number(raw.titleSize)||HALLVALLA_EVENT_UI_DEFAULTS.titleSize)),
+      bodySize:Math.max(13,Math.min(24,Number(raw.bodySize)||HALLVALLA_EVENT_UI_DEFAULTS.bodySize)),
+      sectionGap:Math.max(10,Math.min(36,Number(raw.sectionGap)||HALLVALLA_EVENT_UI_DEFAULTS.sectionGap)),
+      panelPadding:Math.max(16,Math.min(40,Number(raw.panelPadding)||HALLVALLA_EVENT_UI_DEFAULTS.panelPadding)),
+      modalWidth:Math.max(900,Math.min(1260,Number(raw.modalWidth)||HALLVALLA_EVENT_UI_DEFAULTS.modalWidth)),
+      align:["left","center"].includes(String(raw.align||""))?String(raw.align):HALLVALLA_EVENT_UI_DEFAULTS.align
+    };
+  }catch(e){return {...HALLVALLA_EVENT_UI_DEFAULTS};}
+}
+function saveHallvallaEventUiSettings(settings){
+  try{localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(settings));}catch(e){}
+}
+function applyHallvallaEventUiSettings(settings=getHallvallaEventUiSettings()){
+  const root=document.documentElement;
+  root.style.setProperty('--hv-event-title-size',`${settings.titleSize}px`);
+  root.style.setProperty('--hv-event-body-size',`${settings.bodySize}px`);
+  root.style.setProperty('--hv-event-section-gap',`${settings.sectionGap}px`);
+  root.style.setProperty('--hv-event-panel-padding',`${settings.panelPadding}px`);
+  root.style.setProperty('--hv-event-modal-width',`${settings.modalWidth}px`);
+  root.style.setProperty('--hv-event-text-align',settings.align||'left');
+  document.querySelectorAll('.hallvalla-events-settings').forEach(panel=>{
+    const title=panel.querySelector('[data-setting="titleSize"]'); if(title)title.value=String(settings.titleSize);
+    const body=panel.querySelector('[data-setting="bodySize"]'); if(body)body.value=String(settings.bodySize);
+    const gap=panel.querySelector('[data-setting="sectionGap"]'); if(gap)gap.value=String(settings.sectionGap);
+    const padding=panel.querySelector('[data-setting="panelPadding"]'); if(padding)padding.value=String(settings.panelPadding);
+    const width=panel.querySelector('[data-setting="modalWidth"]'); if(width)width.value=String(settings.modalWidth);
+    panel.querySelectorAll('[data-setting="align"]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.value===settings.align));
+    panel.querySelectorAll('output').forEach(out=>{
+      const target=panel.querySelector(`[data-setting="${out.dataset.for}"]`);
+      if(target)out.value=target.value;
+    });
+  });
+}
+function buildHallvallaEventSettingsHtml(){
+  return `<button type="button" class="hallvalla-events-gear" data-event-gear="1" aria-label="Ajustes del HUD">⚙</button>
+  <div class="hallvalla-events-settings hidden" data-event-settings="1">
+    <div class="hallvalla-events-settings-title">Ajustes del HUD</div>
+    <label><span>Tamaño del título</span><input type="range" min="46" max="96" step="1" value="72" data-setting="titleSize"><output data-for="titleSize">72</output></label>
+    <label><span>Tamaño del texto</span><input type="range" min="13" max="24" step="1" value="17" data-setting="bodySize"><output data-for="bodySize">17</output></label>
+    <label><span>Espaciado</span><input type="range" min="10" max="36" step="1" value="20" data-setting="sectionGap"><output data-for="sectionGap">20</output></label>
+    <label><span>Padding interior</span><input type="range" min="16" max="40" step="1" value="26" data-setting="panelPadding"><output data-for="panelPadding">26</output></label>
+    <label><span>Ancho del modal</span><input type="range" min="900" max="1260" step="10" value="1080" data-setting="modalWidth"><output data-for="modalWidth">1080</output></label>
+    <div class="hallvalla-events-align-group"><span>Alineación</span><div class="hallvalla-events-align-row"><button type="button" data-setting="align" data-value="left">Izquierda</button><button type="button" data-setting="align" data-value="center">Centro</button></div></div>
+    <button type="button" class="hallvalla-events-reset" data-event-reset="1">Restablecer</button>
+  </div>`;
+}
+function wireHallvallaEventSettings(modal){
+  const gear=modal.querySelector('[data-event-gear]');
+  const panel=modal.querySelector('[data-event-settings]');
+  if(gear&&!gear.dataset.bound){
+    gear.dataset.bound='1';
+    gear.addEventListener('click',ev=>{ev.stopPropagation();panel?.classList.toggle('hidden');});
+  }
+  if(panel&&!panel.dataset.bound){
+    panel.dataset.bound='1';
+    panel.addEventListener('click',ev=>ev.stopPropagation());
+    panel.querySelectorAll('input[type="range"]').forEach(input=>{
+      input.addEventListener('input',()=>{
+        const settings=getHallvallaEventUiSettings();
+        settings[input.dataset.setting]=Number(input.value);
+        saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
+      });
+    });
+    panel.querySelectorAll('[data-setting="align"]').forEach(btn=>btn.addEventListener('click',()=>{
+      const settings=getHallvallaEventUiSettings(); settings.align=btn.dataset.value||'left';
+      saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
+    }));
+    panel.querySelector('[data-event-reset]')?.addEventListener('click',()=>{saveHallvallaEventUiSettings({...HALLVALLA_EVENT_UI_DEFAULTS});applyHallvallaEventUiSettings();});
+  }
+}
+function closeHallvallaEventModals(){
+  document.getElementById('hallvallaEventsModal')?.classList.add('hidden');
+  document.getElementById('hallvallaDragonsModal')?.classList.add('hidden');
+}
+function formatHallvallaEventNumber(value){return Math.max(0,Number(value)||0).toLocaleString('es-ES');}
+function renderProgressBarMarkup(value,maxValue){
+  const safeMax=Math.max(1,Number(maxValue)||1);
+  const safeValue=Math.max(0,Math.min(safeMax,Number(value)||0));
+  const pct=(safeValue/safeMax)*100;
+  return `<div class="hallvalla-progress"><div class="hallvalla-progress-fill" style="width:${pct}%"></div></div>`;
+}
+function getBeastmasterProgressSnapshot(state){
+  const total=Math.max(0,Number(state?.totalDuels)||0);
+  return {
+    total,
+    dragonCurrent:total%BEASTMASTER_YOUNG_DRAGON_INTERVAL,
+    dragonMax:BEASTMASTER_YOUNG_DRAGON_INTERVAL,
+    eggCurrent:total%BEASTMASTER_EGG_BLOCK_SIZE,
+    eggMax:BEASTMASTER_EGG_BLOCK_SIZE,
+    rareEggClaimed:!!getPlayerProfile()?.beastmasterRareEggClaimed
+  };
+}
 function ensureHallvallaEventsModal(){
-  let modal=document.getElementById("hallvallaEventsModal");
+  let modal=document.getElementById('hallvallaEventsModal');
   if(modal)return modal;
-  modal=document.createElement("div");
-  modal.id="hallvallaEventsModal";
-  modal.className="hallvalla-events-modal hidden";
-  modal.innerHTML=`<div class="hallvalla-events-card" role="dialog" aria-modal="true" aria-label="Eventos de HallValla">
+  modal=document.createElement('div');
+  modal.id='hallvallaEventsModal';
+  modal.className='hallvalla-events-modal hidden';
+  modal.innerHTML=`<div class="hallvalla-events-shell hallvalla-events-shell--beast" role="dialog" aria-modal="true" aria-label="Beast Master">
     <button class="hallvalla-events-close" type="button" aria-label="Cerrar">×</button>
+    ${buildHallvallaEventSettingsHtml()}
     <div class="hallvalla-events-kicker">Misiones especiales</div>
-    <h2>Eventos de HallValla</h2>
-    <p class="hallvalla-events-intro"></p>
-    <div class="hallvalla-events-grid"></div>
+    <h2 class="hallvalla-events-title">Beast Master</h2>
+    <div class="hallvalla-events-ornament"></div>
+    <div class="hallvalla-events-tabs" role="tablist">
+      <button type="button" class="is-active" data-beast-tab="info" role="tab" aria-selected="true">Información</button>
+      <button type="button" data-beast-tab="rewards" role="tab" aria-selected="false">Recompensas</button>
+      <button type="button" data-beast-tab="global" role="tab" aria-selected="false">Eventos globales</button>
+    </div>
+    <section class="hallvalla-beast-panel is-active" data-beast-panel="info">
+      <div class="hallvalla-beast-info-grid">
+        <div class="hallvalla-beast-art-panel"><img src="assets/ui/beastmaster/ui_board_beastmaster.webp" alt="Señor de las Bestias"></div>
+        <div class="hallvalla-beast-copy-panel">
+          <div class="hallvalla-beast-mini">Costo del duelo</div>
+          <div class="hallvalla-beast-cost">${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)} Oro por intento</div>
+          <p class="hallvalla-beast-body">El Señor de las Bestias iguala el nivel de tu líder y todas sus unidades combaten con maestría máxima. Este panel sustituye el viejo modal y mantiene el estilo negro y dorado.</p>
+          <button type="button" class="hallvalla-events-primary" data-beast-fight="1">Enfrentar</button>
+        </div>
+      </div>
+      <div class="hallvalla-beast-footnote"><span>Los dragones tienen su propio HUD de evento.</span><button type="button" class="hallvalla-events-secondary" data-open-dragons="1">Ir a Dragones</button></div>
+    </section>
+    <section class="hallvalla-beast-panel" data-beast-panel="rewards">
+      <p class="hallvalla-events-subcopy">Cada vez que derrotes al Beast Master obtendrás estas recompensas.</p>
+      <div class="hallvalla-rewards-grid">
+        <article class="hallvalla-reward-card"><div class="hallvalla-reward-icon">EXP</div><strong>${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.xp||60)} EXP</strong><span>Experiencia</span></article>
+        <article class="hallvalla-reward-card hallvalla-reward-card--gem"><div class="hallvalla-reward-icon">◆</div><strong>${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.gems||10)} Gemas</strong><span>Moneda premium</span></article>
+        <article class="hallvalla-reward-card"><div class="hallvalla-reward-icon">?</div><strong>1 Bestia aleatoria</strong><span>Recompensa normal</span></article>
+        <article class="hallvalla-reward-card hallvalla-reward-card--muted"><div class="hallvalla-reward-icon">Ø</div><strong>0 Oro</strong><span>No se obtiene oro</span></article>
+      </div>
+      <div class="hallvalla-warning-strip">Importante: los Dragones están excluidos de la recompensa normal.</div>
+    </section>
+    <section class="hallvalla-beast-panel" data-beast-panel="global">
+      <div class="hallvalla-global-card" data-global-card="dragon">
+        <div class="hallvalla-global-icon">🐉</div>
+        <div class="hallvalla-global-copy">
+          <h3>Próximo Dragón Joven</h3>
+          <div class="hallvalla-global-value" data-progress-text="dragon">0 / 100</div>
+          ${renderProgressBarMarkup(0,BEASTMASTER_YOUNG_DRAGON_INTERVAL)}
+          <p>Cada ${BEASTMASTER_YOUNG_DRAGON_INTERVAL} duelos globales, el Beast Master añade 1 Dragón Joven a su mazo.</p>
+        </div>
+      </div>
+      <div class="hallvalla-global-card" data-global-card="egg">
+        <div class="hallvalla-global-icon">🥚</div>
+        <div class="hallvalla-global-copy">
+          <h3>Bloque excepcional</h3>
+          <div class="hallvalla-global-value" data-progress-text="egg">0 / ${formatHallvallaEventNumber(BEASTMASTER_EGG_BLOCK_SIZE)}</div>
+          ${renderProgressBarMarkup(0,BEASTMASTER_EGG_BLOCK_SIZE)}
+          <p>1 Huevo de Dragón en un punto aleatorio de cada bloque.</p>
+        </div>
+      </div>
+      <div class="hallvalla-global-note" data-rare-egg-note="1">Cada jugador solo puede obtener este Huevo excepcional una vez.</div>
+    </section>
   </div>`;
   document.body.appendChild(modal);
-  modal.querySelector(".hallvalla-events-close")?.addEventListener("click",()=>modal.classList.add("hidden"));
-  modal.addEventListener("click",ev=>{if(ev.target===modal)modal.classList.add("hidden");});
+  modal.querySelector('.hallvalla-events-close')?.addEventListener('click',closeHallvallaEventModals);
+  modal.addEventListener('click',ev=>{
+    if(ev.target===modal)modal.classList.add('hidden');
+    modal.querySelector('[data-event-settings]')?.classList.add('hidden');
+  });
+  modal.querySelectorAll('[data-beast-tab]').forEach(btn=>btn.addEventListener('click',()=>setActiveBeastmasterTab(btn.dataset.beastTab||'info')));
+  modal.querySelector('[data-beast-fight]')?.addEventListener('click',()=>startBeastmasterBattleFromModal());
+  modal.querySelector('[data-open-dragons]')?.addEventListener('click',()=>openDragonContractsModal());
+  wireHallvallaEventSettings(modal);
+  return modal;
+}
+function ensureHallvallaDragonsModal(){
+  let modal=document.getElementById('hallvallaDragonsModal');
+  if(modal)return modal;
+  modal=document.createElement('div');
+  modal.id='hallvallaDragonsModal';
+  modal.className='hallvalla-events-modal hidden';
+  modal.innerHTML=`<div class="hallvalla-events-shell hallvalla-events-shell--dragons" role="dialog" aria-modal="true" aria-label="Dragones elementales">
+    <button class="hallvalla-events-close" type="button" aria-label="Cerrar">×</button>
+    ${buildHallvallaEventSettingsHtml()}
+    <div class="hallvalla-events-kicker">Misiones especiales</div>
+    <h2 class="hallvalla-events-title">Dragones</h2>
+    <div class="hallvalla-events-subcopy">Enfrenta a los Dragones Elementales y demuestra tu poder.</div>
+    <div class="hallvalla-dragon-grid">${DRAGON_CONTRACT_ELEMENT_ORDER.map(key=>dragonContractCardHtml(DRAGON_CONTRACT_DEFS[key])).join('')}</div>
+    <div class="hallvalla-dragons-note">Cada Dragón solo puede ser desafiado cuando cumplas el Tier 3 y prepares un mazo válido de contrato.</div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('.hallvalla-events-close')?.addEventListener('click',closeHallvallaEventModals);
+  modal.addEventListener('click',ev=>{ if(ev.target===modal)modal.classList.add('hidden'); modal.querySelector('[data-event-settings]')?.classList.add('hidden');});
+  modal.addEventListener('click',ev=>{
+    const btn=ev.target.closest('[data-dragon-contract]');
+    if(!btn)return;
+    prepareDragonContractDeck(btn.dataset.dragonContract||'');
+  });
+  wireHallvallaEventSettings(modal);
   return modal;
 }
 function dragonContractCardHtml(def){
   const claimed=hasClaimedDragonContract(def.id);
   const locked=!areDragonContractsUnlocked();
-  const state=locked?"Requiere Tier 3":claimed?"Huevo reclamado · repetible":"Huevo disponible";
-  return `<button type="button" class="hallvalla-event-tile dragon-${def.element}${locked?" is-locked":""}" data-dragon-contract="${def.id}">
+  const state=locked?'Requiere Tier 3':claimed?'Huevo reclamado · repetible':'Huevo disponible';
+  return `<article class="hallvalla-dragon-card ${locked?'is-locked':''}">
+    <div class="hallvalla-dragon-card-head"><span>${def.enemyName}</span></div>
     <img src="${def.boardPortrait}" alt="${def.enemyName}">
-    <span class="hallvalla-event-copy"><b>${def.enemyName}</b><small>${def.hp} VIDA · ${def.guard} GD · ${def.atk} AT · RG 5</small><em>${state}</em></span>
-  </button>`;
+    <div class="hallvalla-dragon-stats"><span>VIDA <b>${def.hp}</b></span><span>GD <b>${def.guard}</b></span><span>AT <b>${def.atk}</b></span><span>RG <b>${def.range}</b></span></div>
+    <div class="hallvalla-dragon-state">${state}</div>
+    <button type="button" class="hallvalla-events-primary hallvalla-events-primary--small" data-dragon-contract="${def.id}" ${locked?'disabled':''}>Enfrentar</button>
+  </article>`;
+}
+function setActiveBeastmasterTab(tab='info'){
+  const modal=ensureHallvallaEventsModal();
+  modal.querySelectorAll('[data-beast-tab]').forEach(btn=>{
+    const active=btn.dataset.beastTab===tab;
+    btn.classList.toggle('is-active',active);btn.setAttribute('aria-selected',active?'true':'false');
+  });
+  modal.querySelectorAll('[data-beast-panel]').forEach(panel=>panel.classList.toggle('is-active',panel.dataset.beastPanel===tab));
+  if(tab==='global')refreshBeastmasterGlobalUi(modal);
+}
+async function getBeastmasterGlobalUiState(){
+  try{
+    if(typeof db==='undefined'||!db)return normalizeBeastmasterGlobalState({});
+    const snap=await get(ref(db,BEASTMASTER_GLOBAL_STATE_PATH));
+    return normalizeBeastmasterGlobalState(snap.val());
+  }catch(error){
+    console.warn('[HallValla] No se pudo leer el estado global del Beastmaster para el HUD:',error);
+    return normalizeBeastmasterGlobalState({});
+  }
+}
+async function refreshBeastmasterGlobalUi(modal=ensureHallvallaEventsModal()){
+  const state=await getBeastmasterGlobalUiState();
+  const snapshot=getBeastmasterProgressSnapshot(state);
+  const dragonText=modal.querySelector('[data-progress-text="dragon"]');
+  const eggText=modal.querySelector('[data-progress-text="egg"]');
+  if(dragonText)dragonText.textContent=`${formatHallvallaEventNumber(snapshot.dragonCurrent)} / ${formatHallvallaEventNumber(snapshot.dragonMax)}`;
+  if(eggText)eggText.textContent=`${formatHallvallaEventNumber(snapshot.eggCurrent)} / ${formatHallvallaEventNumber(snapshot.eggMax)}`;
+  const dragonFill=modal.querySelector('[data-global-card="dragon"] .hallvalla-progress-fill');
+  const eggFill=modal.querySelector('[data-global-card="egg"] .hallvalla-progress-fill');
+  if(dragonFill)dragonFill.style.width=`${(snapshot.dragonCurrent/snapshot.dragonMax)*100}%`;
+  if(eggFill)eggFill.style.width=`${(snapshot.eggCurrent/snapshot.eggMax)*100}%`;
+  const note=modal.querySelector('[data-rare-egg-note]');
+  if(note){
+    note.textContent=snapshot.rareEggClaimed
+      ? 'Ya reclamaste el Huevo excepcional del Beast Master. Los siguientes Huevos deberán conseguirse derrotando Dragones del evento.'
+      : 'Cada jugador solo puede obtener este Huevo excepcional una vez.';
+  }
+}
+function updateBeastmasterFightButton(modal=ensureHallvallaEventsModal()){
+  const btn=modal.querySelector('[data-beast-fight]');
+  if(!btn)return;
+  const cost=BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST;
+  const gold=Number(getPlayerProfile()?.gold||0);
+  btn.textContent=gold>=cost?`Enfrentar · ${formatHallvallaEventNumber(cost)} Oro`:`Faltan ${formatHallvallaEventNumber(Math.max(0,cost-gold))} de Oro`;
+  btn.disabled=gold<cost;
+}
+async function startBeastmasterBattleFromModal(){
+  if(!getSelectedLeaderType()){
+    pendingAfterLeaderSelection='beast_event';
+    requireLeaderSelection(true);
+    return;
+  }
+  const profile=getPlayerProfile();
+  const cost=BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST;
+  if((profile.gold||0)<cost){
+    await hvAlert(`Entrar a la cacería cuesta ${cost} de oro. Tienes ${profile.gold||0}.`,'Oro insuficiente');
+    updateBeastmasterFightButton();
+    return;
+  }
+  closeHallvallaEventModals();
+  const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||'mulan';
+  await startAdventure(special,BEASTMASTER_EVENT_BATTLE.id);
+}
+function openBeastmasterEventModal(initialTab='info'){
+  if(!getSelectedLeaderType()){
+    pendingAfterLeaderSelection='beast_event';
+    requireLeaderSelection(true);
+    return;
+  }
+  const modal=ensureHallvallaEventsModal();
+  ensureHallvallaDragonsModal();
+  applyHallvallaEventUiSettings();
+  updateBeastmasterFightButton(modal);
+  setActiveBeastmasterTab(initialTab);
+  modal.classList.remove('hidden');
+  document.getElementById('hallvallaDragonsModal')?.classList.add('hidden');
+}
+function openDragonContractsModal(){
+  const modal=ensureHallvallaDragonsModal();
+  applyHallvallaEventUiSettings();
+  modal.querySelector('.hallvalla-dragon-grid').innerHTML=DRAGON_CONTRACT_ELEMENT_ORDER.map(key=>dragonContractCardHtml(DRAGON_CONTRACT_DEFS[key])).join('');
+  modal.classList.remove('hidden');
+  document.getElementById('hallvallaEventsModal')?.classList.add('hidden');
 }
 function openHallvallaEvents(){
   if(!getSelectedLeaderType()){
-    pendingAfterLeaderSelection="hallvalla_events";
+    pendingAfterLeaderSelection='hallvalla_events';
     requireLeaderSelection(true);return;
   }
-  const modal=ensureHallvallaEventsModal();
-  const grid=modal.querySelector(".hallvalla-events-grid");
-  const intro=modal.querySelector(".hallvalla-events-intro");
-  if(intro)intro.textContent=`Tier actual: ${getDragonContractTier()}. Los Contratos de las Bestias requieren Tier 3, tres Personajes Principales y veinte cartas de robo. Huevos guardados: ${getDragonEggs().length}.`;
-  if(grid){
-    grid.innerHTML=`<button type="button" class="hallvalla-event-tile beastmaster-event" data-beastmaster-event="1"><img src="${BEASTMASTER_EVENT_BATTLE.image}" alt="Señor de las Bestias"><span class="hallvalla-event-copy"><b>${BEASTMASTER_EVENT_BATTLE.title}</b><small>100 Oro por intento · 60 EXP · 10 Gemas</small><em>1 Bestia aleatoria por victoria · Dragones excluidos</em></span></button>${DRAGON_CONTRACT_ELEMENT_ORDER.map(key=>dragonContractCardHtml(DRAGON_CONTRACT_DEFS[key])).join("")}`;
-    grid.querySelector("[data-beastmaster-event]")?.addEventListener("click",()=>{modal.classList.add("hidden");openBeastmasterEvent();});
-    grid.querySelectorAll("[data-dragon-contract]").forEach(btn=>btn.addEventListener("click",()=>prepareDragonContractDeck(btn.dataset.dragonContract)));
-  }
-  modal.classList.remove("hidden");
+  openBeastmasterEventModal('info');
 }
 async function prepareDragonContractDeck(battleId){
   const battle=getAdventureBattle(battleId);
   if(!battle)return;
   if(!areDragonContractsUnlocked()){
-    await hvAlert("Los Contratos de las Bestias se desbloquean en Tier 3 del líder. En ese tier entrarás con 3 Personajes Principales y 20 cartas de robo.","Contrato bloqueado");return;
+    await hvAlert('Los Contratos de las Bestias se desbloquean en Tier 3 del líder. En ese tier entrarás con 3 Personajes Principales y 20 cartas de robo.','Contrato bloqueado');return;
   }
   if(!canAccessDecks()){
-    await hvAlert("Primero debes desbloquear la Forja de mazos para preparar las 23 cartas exigidas por este contrato.","Forja requerida");return;
+    await hvAlert('Primero debes desbloquear la Forja de mazos para preparar las 23 cartas exigidas por este contrato.','Forja requerida');return;
   }
-  document.getElementById("hallvallaEventsModal")?.classList.add("hidden");
-  const go=await hvConfirm(`${battle.enemyIntro}\n\nAntes de entrar se abrirá la Forja. Guarda un mazo válido de Tier 3: 3 Personajes Principales y 20 cartas de robo.`,`Contrato: ${battle.enemyName}`,"Preparar mazo","Cancelar");
+  closeHallvallaEventModals();
+  const go=await hvConfirm(`${battle.enemyIntro}\n\nAntes de entrar se abrirá la Forja. Guarda un mazo válido de Tier 3: 3 Personajes Principales y 20 cartas de robo.`,`Contrato: ${battle.enemyName}`,'Preparar mazo','Cancelar');
   if(!go)return;
   pendingDragonContractBattleId=battle.id;
   openDeckBuilder();
-  setTimeout(()=>setHint?.("Guarda el mazo para iniciar El Contrato de las Bestias."),50);
+  setTimeout(()=>setHint?.('Guarda el mazo para iniciar El Contrato de las Bestias.'),50);
 }
+applyHallvallaEventUiSettings();
 const dragonOriginalCloseDeckBuilder=closeDeckBuilder;
 closeDeckBuilder=function(){
   const result=dragonOriginalCloseDeckBuilder();
@@ -603,28 +868,96 @@ saveCurrentDeck=async function(){
 const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
 
 /* Estilos autocontenidos del selector de eventos y escala de los líderes dragón. */
+
 (function installDragonContractStyles(){
   if(document.getElementById("dragonContractStyles"))return;
   const style=document.createElement("style");
   style.id="dragonContractStyles";
   style.textContent=`
-  .hallvalla-events-modal{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:18px;background:rgba(2,4,8,.82);backdrop-filter:blur(8px)}
+  :root{
+    --hv-event-title-size:72px;
+    --hv-event-body-size:17px;
+    --hv-event-section-gap:20px;
+    --hv-event-panel-padding:26px;
+    --hv-event-modal-width:1080px;
+    --hv-event-text-align:left;
+    --hv-event-gold:#e3bf6b;
+    --hv-event-border:rgba(219,179,80,.46);
+    --hv-event-surface:rgba(7,10,15,.96);
+    --hv-event-surface-2:rgba(11,14,20,.98);
+    --hv-event-copy:#efe3c4;
+    --hv-event-muted:#bba983;
+  }
+  .hallvalla-events-modal{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:18px;background:rgba(2,4,8,.72);backdrop-filter:blur(8px)}
   .hallvalla-events-modal.hidden{display:none}
-  .hallvalla-events-card{position:relative;width:min(980px,96vw);max-height:92vh;overflow:auto;border:1px solid rgba(230,190,92,.55);border-radius:20px;padding:22px;background:linear-gradient(160deg,rgba(19,22,31,.98),rgba(5,7,12,.98));box-shadow:0 28px 80px rgba(0,0,0,.72),inset 0 0 45px rgba(214,169,70,.06);color:#f5e7c2}
-  .hallvalla-events-card h2{margin:2px 0 8px;font-size:clamp(24px,4vw,42px)}
-  .hallvalla-events-kicker{text-transform:uppercase;letter-spacing:.18em;color:#d9af56;font-size:12px;font-weight:900}
-  .hallvalla-events-intro{color:#c9c2b3;line-height:1.45}
-  .hallvalla-events-close{position:absolute;right:14px;top:10px;border:0;background:transparent;color:#e8d8ad;font-size:34px;cursor:pointer}
-  .hallvalla-events-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
-  .hallvalla-event-tile{min-height:150px;display:grid;grid-template-columns:142px 1fr;align-items:stretch;overflow:hidden;text-align:left;border:1px solid rgba(225,190,102,.32);border-radius:15px;padding:0;background:rgba(10,12,18,.9);color:#f6e8c4;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.4);transition:.2s transform,.2s border-color}
-  .hallvalla-event-tile:hover{transform:translateY(-2px);border-color:rgba(255,211,111,.8)}
-  .hallvalla-event-tile.is-locked{filter:grayscale(.65);opacity:.68}
-  .hallvalla-event-tile img{width:142px;height:100%;min-height:150px;object-fit:cover;display:block}
-  .hallvalla-event-copy{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:15px}
-  .hallvalla-event-copy b{font-size:18px}.hallvalla-event-copy small{color:#c9c2b3}.hallvalla-event-copy em{color:#e5ba5e;font-style:normal;font-weight:800}
+  .hallvalla-events-shell{position:relative;width:min(var(--hv-event-modal-width),96vw);max-height:92vh;overflow:auto;border:1px solid var(--hv-event-border);border-radius:28px;padding:calc(var(--hv-event-panel-padding) + 10px) var(--hv-event-panel-padding) var(--hv-event-panel-padding);background:linear-gradient(180deg,var(--hv-event-surface),var(--hv-event-surface-2));box-shadow:0 36px 100px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,225,145,.05),inset 0 0 60px rgba(194,141,47,.07);color:var(--hv-event-copy);text-align:var(--hv-event-text-align)}
+  .hallvalla-events-shell--dragons{width:min(calc(var(--hv-event-modal-width) + 80px),97vw)}
+  .hallvalla-events-close,.hallvalla-events-gear{position:absolute;top:16px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(228,191,105,.52);background:rgba(10,10,12,.95);color:#efd596;display:grid;place-items:center;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.28)}
+  .hallvalla-events-close{right:18px}
+  .hallvalla-events-gear{right:68px;font-size:20px}
+  .hallvalla-events-kicker{text-align:center;text-transform:uppercase;letter-spacing:.22em;font-size:12px;font-weight:900;color:var(--hv-event-gold);margin-bottom:6px}
+  .hallvalla-events-title{margin:0;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,6vw,var(--hv-event-title-size));font-weight:900;line-height:.92;letter-spacing:.04em;color:#f6d784;text-shadow:0 2px 0 rgba(83,55,8,.45),0 0 18px rgba(245,212,124,.16)}
+  .hallvalla-events-ornament{width:min(420px,80%);height:10px;margin:14px auto 18px;border-top:1px solid rgba(227,191,107,.44);border-bottom:1px solid rgba(227,191,107,.22);position:relative}
+  .hallvalla-events-ornament:before,.hallvalla-events-ornament:after{content:"";position:absolute;top:-4px;width:8px;height:8px;border-radius:999px;background:linear-gradient(180deg,#f1d888,#a77725)}
+  .hallvalla-events-ornament:before{left:calc(50% - 20px)}.hallvalla-events-ornament:after{left:calc(50% + 12px)}
+  .hallvalla-events-tabs{display:flex;justify-content:center;gap:0;margin:0 auto 18px;max-width:800px;border-bottom:1px solid rgba(227,191,107,.22)}
+  .hallvalla-events-tabs button{flex:1;max-width:260px;padding:14px 18px;border:1px solid rgba(227,191,107,.22);border-bottom:0;background:rgba(8,10,14,.9);color:#d5bf93;font-family:Georgia,serif;font-size:clamp(18px,2.2vw,22px);letter-spacing:.03em;cursor:pointer}
+  .hallvalla-events-tabs button:first-child{border-top-left-radius:18px}
+  .hallvalla-events-tabs button:last-child{border-top-right-radius:18px}
+  .hallvalla-events-tabs button.is-active{background:linear-gradient(180deg,rgba(90,66,22,.56),rgba(21,16,10,.94));color:#ffe09b;box-shadow:inset 0 -2px 0 rgba(255,220,128,.55)}
+  .hallvalla-beast-panel{display:none;gap:var(--hv-event-section-gap)}
+  .hallvalla-beast-panel.is-active{display:grid}
+  .hallvalla-beast-info-grid{display:grid;grid-template-columns:minmax(230px,.42fr) minmax(280px,.58fr);gap:var(--hv-event-section-gap);align-items:stretch}
+  .hallvalla-beast-art-panel,.hallvalla-beast-copy-panel,.hallvalla-global-card,.hallvalla-reward-card,.hallvalla-dragons-note,.hallvalla-global-note,.hallvalla-warning-strip{border:1px solid rgba(227,191,107,.22);border-radius:22px;background:rgba(5,7,11,.76)}
+  .hallvalla-beast-art-panel{overflow:hidden;min-height:320px}
+  .hallvalla-beast-art-panel img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.9) contrast(1.04)}
+  .hallvalla-beast-copy-panel{padding:calc(var(--hv-event-panel-padding) - 2px);display:grid;gap:16px;align-content:start}
+  .hallvalla-beast-mini{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--hv-event-gold);font-weight:900}
+  .hallvalla-beast-cost{font-family:Georgia,serif;font-size:clamp(30px,4vw,42px);color:#fff2c4;line-height:1.05}
+  .hallvalla-beast-body,.hallvalla-events-subcopy,.hallvalla-global-copy p,.hallvalla-dragons-note{font-size:var(--hv-event-body-size);line-height:1.55;color:#daccae;margin:0}
+  .hallvalla-events-primary,.hallvalla-events-secondary,.hallvalla-events-reset{appearance:none;border-radius:16px;border:1px solid rgba(228,191,105,.54);font-family:Georgia,serif;font-weight:900;letter-spacing:.06em;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease}
+  .hallvalla-events-primary:hover,.hallvalla-events-secondary:hover,.hallvalla-events-reset:hover{transform:translateY(-1px);border-color:rgba(255,218,126,.9)}
+  .hallvalla-events-primary{min-height:62px;padding:14px 20px;background:linear-gradient(180deg,rgba(164,124,48,.95),rgba(86,56,16,.95));color:#fff2c4;font-size:clamp(20px,2.4vw,26px);box-shadow:inset 0 1px 0 rgba(255,245,198,.28),0 14px 28px rgba(0,0,0,.25)}
+  .hallvalla-events-primary:disabled{cursor:not-allowed;opacity:.68;transform:none}
+  .hallvalla-events-primary--small{min-height:50px;font-size:22px;border-radius:14px}
+  .hallvalla-events-secondary{padding:12px 18px;background:rgba(8,10,14,.84);color:#f2d17d;font-size:18px}
+  .hallvalla-beast-footnote{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid rgba(227,191,107,.22);border-radius:18px;padding:16px 18px;background:rgba(6,8,12,.9);color:#daccae;font-size:15px}
+  .hallvalla-rewards-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--hv-event-section-gap)}
+  .hallvalla-reward-card{padding:22px 18px;text-align:center;display:grid;gap:10px;align-content:start;justify-items:center}
+  .hallvalla-reward-card strong{font-family:Georgia,serif;font-size:clamp(24px,3vw,34px);color:#ffe09b;line-height:1.05}
+  .hallvalla-reward-card span{color:#c7b692;font-size:14px}
+  .hallvalla-reward-card--muted strong{color:#f0e2c4}.hallvalla-reward-card--gem strong{color:#b8caff}
+  .hallvalla-reward-icon{width:92px;height:92px;border-radius:22px;display:grid;place-items:center;border:1px solid rgba(228,191,105,.4);background:radial-gradient(circle at 50% 30%,rgba(255,224,156,.18),rgba(19,16,10,.86));font-family:Georgia,serif;font-size:38px;color:#ffe09b;box-shadow:inset 0 0 24px rgba(245,206,117,.08)}
+  .hallvalla-warning-strip,.hallvalla-global-note,.hallvalla-dragons-note{padding:16px 20px;text-align:center;font-family:Georgia,serif;font-size:clamp(19px,2vw,28px);color:#f2d17d}
+  .hallvalla-global-card{display:grid;grid-template-columns:110px 1fr;gap:18px;padding:22px}
+  .hallvalla-global-icon{width:92px;height:92px;border-radius:999px;display:grid;place-items:center;font-size:44px;color:#ffe09b;border:1px solid rgba(228,191,105,.38);background:radial-gradient(circle at 50% 30%,rgba(255,222,149,.12),rgba(6,7,10,.95))}
+  .hallvalla-global-copy h3{margin:0 0 6px;font-family:Georgia,serif;font-size:clamp(28px,4vw,42px);color:#f0d28a}
+  .hallvalla-global-value{font-family:Georgia,serif;font-size:clamp(26px,3vw,38px);color:#fff5d8;margin-bottom:10px}
+  .hallvalla-progress{position:relative;height:20px;border-radius:999px;border:1px solid rgba(227,191,107,.44);background:linear-gradient(180deg,rgba(8,8,10,.96),rgba(18,12,7,.92));overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+  .hallvalla-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#6e4510 0%,#bb8125 32%,#e7c06a 64%,#fff0b7 100%);box-shadow:0 0 20px rgba(248,216,124,.2),inset 0 1px 0 rgba(255,249,214,.35);transition:width .35s ease}
+  .hallvalla-dragon-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--hv-event-section-gap);margin-top:20px}
+  .hallvalla-dragon-card{display:grid;gap:12px;padding:16px;border:1px solid rgba(227,191,107,.24);border-radius:22px;background:rgba(6,8,12,.92);box-shadow:0 16px 36px rgba(0,0,0,.26)}
+  .hallvalla-dragon-card.is-locked{opacity:.76;filter:grayscale(.2)}
+  .hallvalla-dragon-card-head{font-family:Georgia,serif;font-size:clamp(24px,2.4vw,32px);color:#f2d17d;text-align:center}
+  .hallvalla-dragon-card img{display:block;width:100%;height:280px;object-fit:cover;border-radius:18px;border:1px solid rgba(227,191,107,.18)}
+  .hallvalla-dragon-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .hallvalla-dragon-stats span{padding:8px 6px;border-radius:12px;background:rgba(255,255,255,.03);text-align:center;color:#cab48c;font-size:13px}
+  .hallvalla-dragon-stats b{display:block;color:#fff1c4;font-family:Georgia,serif;font-size:22px;margin-top:3px}
+  .hallvalla-dragon-state{text-align:center;color:#d7bf8f;font-size:14px;min-height:18px}
+  .hallvalla-events-settings{position:absolute;right:68px;top:66px;width:min(320px,70vw);padding:16px;border-radius:18px;border:1px solid rgba(227,191,107,.34);background:rgba(7,10,15,.98);display:grid;gap:12px;box-shadow:0 18px 44px rgba(0,0,0,.42)}
+  .hallvalla-events-settings.hidden{display:none}
+  .hallvalla-events-settings-title{font-family:Georgia,serif;font-size:22px;color:#ffe09b;text-align:center}
+  .hallvalla-events-settings label,.hallvalla-events-align-group{display:grid;gap:6px;color:#daccae;font-size:13px}
+  .hallvalla-events-settings input[type="range"]{width:100%}
+  .hallvalla-events-settings output{color:#ffe09b;font-weight:900}
+  .hallvalla-events-align-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hallvalla-events-align-row button,.hallvalla-events-reset{padding:10px 12px;background:rgba(14,12,8,.9);color:#e8cb86;font-size:14px}
+  .hallvalla-events-align-row button.is-active{background:linear-gradient(180deg,rgba(164,124,48,.95),rgba(86,56,16,.95));color:#fff2c4}
   .leader-base-dragon_lightning,.leader-base-dragon_fire,.leader-base-dragon_ice{width:clamp(88px,11.4vh,132px);min-height:clamp(116px,16.8vh,172px)}
   .leader-base-dragon_lightning .leader-base-portrait,.leader-base-dragon_fire .leader-base-portrait,.leader-base-dragon_ice .leader-base-portrait{width:112%;height:94%;bottom:10%}
   .leader-base-dragon_lightning .leader-base-pedestal,.leader-base-dragon_fire .leader-base-pedestal,.leader-base-dragon_ice .leader-base-pedestal{opacity:.26}
-  @media(max-width:720px){.hallvalla-events-grid{grid-template-columns:1fr}.hallvalla-event-tile{grid-template-columns:112px 1fr}.hallvalla-event-tile img{width:112px}.leader-base-dragon_lightning,.leader-base-dragon_fire,.leader-base-dragon_ice{width:clamp(76px,10vh,102px)}}`;
+  @media(max-width:980px){.hallvalla-beast-info-grid,.hallvalla-rewards-grid,.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-global-card{grid-template-columns:1fr}.hallvalla-beast-footnote{flex-direction:column;align-items:stretch}.hallvalla-events-shell,.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
+  @media(max-width:720px){.hallvalla-events-tabs{display:grid;grid-template-columns:1fr}.hallvalla-events-tabs button{max-width:none}.hallvalla-events-close{right:12px}.hallvalla-events-gear{right:60px}.hallvalla-events-settings{top:62px}.hallvalla-beast-copy-panel,.hallvalla-global-card,.hallvalla-dragon-card,.hallvalla-reward-card{padding:18px}.hallvalla-dragon-card img{height:220px}}
+  `;
   document.head.appendChild(style);
 })();
