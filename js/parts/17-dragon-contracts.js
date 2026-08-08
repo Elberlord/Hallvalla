@@ -537,11 +537,15 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "beast.shell":{group:"Beast Master · General",label:"Panel completo",selector:"#hallvallaEventsModal .hallvalla-events-shell--beast"},
   "beast.close":{group:"Beast Master · General",label:"Botón cerrar",selector:"#hallvallaEventsModal .hallvalla-events-close"},
   "beast.gear":{group:"Beast Master · General",label:"Botón ajustes",selector:"#hallvallaEventsModal .hallvalla-events-gear"},
-  "beast.tabs":{group:"Beast Master · General",label:"Pestañas",selector:"#hallvallaEventsModal .hallvalla-events-tabs--beast"},
+  "beast.tabs":{group:"Beast Master · General",label:"Fila completa de pestañas",selector:"#hallvallaEventsModal .hallvalla-events-tabs--beast"},
+  "beast.tab.info":{group:"Beast Master · Pestañas",label:"Pastilla · Información",selector:"#hallvallaEventsModal [data-beast-tab=\"info\"]"},
+  "beast.tab.rewards":{group:"Beast Master · Pestañas",label:"Pastilla · Recompensas",selector:"#hallvallaEventsModal [data-beast-tab=\"rewards\"]"},
+  "beast.tab.global":{group:"Beast Master · Pestañas",label:"Pastilla · Eventos globales",selector:"#hallvallaEventsModal [data-beast-tab=\"global\"]"},
   "beast.info.art":{group:"Beast Master · Información",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--info"},
   "beast.info.cost":{group:"Beast Master · Información",label:"Costo",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cost"},
   "beast.info.description":{group:"Beast Master · Información",label:"Descripción",selector:"#hallvallaEventsModal .hallvalla-beast-pill--description"},
   "beast.info.actions":{group:"Beast Master · Información",label:"Acciones / botones",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cta"},
+  "beast.info.dragonsButton":{group:"Beast Master · Información",label:"Botón · Ir a Dragones",selector:"#hallvallaEventsModal [data-open-dragons=\"1\"]"},
   "beast.rewards.art":{group:"Beast Master · Recompensas",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--rewards"},
   "beast.rewards.1":{group:"Beast Master · Recompensas",label:"Recompensa 1 · EXP",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(1)"},
   "beast.rewards.2":{group:"Beast Master · Recompensas",label:"Recompensa 2 · Gemas",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(2)"},
@@ -1103,7 +1107,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-modal{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:18px;background:rgba(2,4,8,.72);backdrop-filter:blur(8px)}
   .hallvalla-events-modal.hidden{display:none}
   .hallvalla-events-shell{position:relative;width:min(var(--hv-event-modal-width),96vw);max-height:92vh;overflow:auto;border:1px solid var(--hv-event-border);border-radius:28px;padding:18px;background:linear-gradient(180deg,var(--hv-event-surface),var(--hv-event-surface-2));box-shadow:0 36px 100px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,225,145,.05),inset 0 0 60px rgba(194,141,47,.07);color:var(--hv-event-copy);text-align:var(--hv-event-text-align)}
-  .hallvalla-events-shell--beast{width:min(var(--hv-event-modal-width),96vw);background:rgba(2,5,10,.96);padding:10px}
+  .hallvalla-events-shell--beast{width:min(var(--hv-event-modal-width),96vw);background:transparent;border:none;box-shadow:none;padding:10px}
   .hallvalla-events-shell--dragons{width:min(calc(var(--hv-event-modal-width) + 80px),97vw);padding:24px 24px 22px}
   .hallvalla-events-close,.hallvalla-events-gear{position:absolute;top:18px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(228,191,105,.52);background:rgba(10,10,12,.95);color:#efd596;display:grid;place-items:center;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.28);z-index:12}
   .hallvalla-events-close{right:18px}
