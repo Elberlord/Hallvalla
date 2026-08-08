@@ -21525,3 +21525,191 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
     width:min(42vw,220px) !important;
   }
 }
+
+/* ==========================================================
+   HallValla · Historial compacto de Event Splash por turno
+   - Permanece visible en la esquina inferior derecha
+   - Máximo 6 eventos; el séptimo desplaza al más antiguo
+   - Se limpia automáticamente al comenzar un nuevo turno
+   ========================================================== */
+#eventSplashOverlay.event-splash-overlay.is-history{
+  position:absolute !important;
+  top:auto !important;
+  right:16px !important;
+  bottom:12px !important;
+  left:auto !important;
+  width:min(292px,24vw) !important;
+  height:auto !important;
+  max-height:calc(100% - 405px) !important;
+  padding:0 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:flex-end !important;
+  overflow:visible !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:none !important;
+  background:none !important;
+  transition:none !important;
+  z-index:44 !important;
+}
+#eventSplashOverlay.event-splash-overlay.is-history::before{
+  display:none !important;
+}
+#eventSplashOverlay.is-history .event-splash-stack,
+#eventSplashOverlay.is-history .event-splash-stack.is-history,
+#eventSplashOverlay.is-history .event-splash-stack.is-single,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo{
+  position:relative !important;
+  width:100% !important;
+  max-width:100% !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  justify-content:flex-end !important;
+  gap:5px !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+#eventSplashOverlay.is-history .event-splash-shell,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-shell{
+  position:relative !important;
+  width:100% !important;
+  max-width:none !important;
+  height:48px !important;
+  min-height:48px !important;
+  margin:0 !important;
+  padding:0 !important;
+  opacity:1 !important;
+  transform:none !important;
+  transform-origin:right center !important;
+  filter:none !important;
+  animation:none !important;
+  transition:none !important;
+  will-change:auto !important;
+}
+#eventSplashOverlay.is-history .event-splash-shell:last-child{
+  animation:eventSplashHistoryIn .20s ease-out both !important;
+}
+#eventSplashOverlay.is-history .event-splash-shadow-layer,
+#eventSplashOverlay.is-history .event-splash-depth-glow,
+#eventSplashOverlay.is-history .event-splash-panel-sheen,
+#eventSplashOverlay.is-history .event-splash-icon-anchor{
+  display:none !important;
+}
+#eventSplashOverlay.is-history .event-splash-card,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-card{
+  position:relative !important;
+  width:100% !important;
+  height:48px !important;
+  min-height:48px !important;
+  display:grid !important;
+  grid-template-columns:56px minmax(0,1fr) !important;
+  align-items:stretch !important;
+  overflow:hidden !important;
+  border-radius:8px !important;
+  border:1px solid color-mix(in srgb,var(--event-accent) 58%,rgba(222,194,126,.42)) !important;
+  background:linear-gradient(180deg,rgba(20,16,12,.95),rgba(7,7,6,.97)) !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,236,190,.035) !important;
+  transform:none !important;
+}
+#eventSplashOverlay.is-history .event-splash-art-wrap{
+  position:relative !important;
+  width:56px !important;
+  height:48px !important;
+  aspect-ratio:auto !important;
+  overflow:hidden !important;
+  border-right:1px solid color-mix(in srgb,var(--event-accent) 38%,rgba(222,194,126,.18)) !important;
+  z-index:1 !important;
+}
+#eventSplashOverlay.is-history .event-splash-art-wrap::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  background:linear-gradient(90deg,rgba(0,0,0,0) 56%,rgba(7,7,6,.30) 100%) !important;
+}
+#eventSplashOverlay.is-history .event-splash-art{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+}
+#eventSplashOverlay.is-history .event-splash-copy,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-copy{
+  position:relative !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  z-index:2 !important;
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  gap:1px !important;
+  padding:5px 8px 5px 9px !important;
+  background:none !important;
+}
+#eventSplashOverlay.is-history .event-splash-kicker,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-kicker{
+  display:none !important;
+}
+#eventSplashOverlay.is-history .event-splash-title,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-title{
+  margin:0 !important;
+  padding:0 !important;
+  font-size:11px !important;
+  line-height:1.02 !important;
+  letter-spacing:.05em !important;
+  font-weight:900 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  color:#fff0d3 !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.72) !important;
+}
+#eventSplashOverlay.is-history .event-splash-sub,
+#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-sub{
+  display:block !important;
+  margin:1px 0 0 !important;
+  padding:0 !important;
+  font-size:8px !important;
+  line-height:1.12 !important;
+  color:#d8c8aa !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+@keyframes eventSplashHistoryIn{
+  from{opacity:0;transform:translate3d(22px,0,0) scale(.97)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@media(max-width:980px){
+  #eventSplashOverlay.event-splash-overlay.is-history{
+    right:8px !important;
+    bottom:8px !important;
+    width:min(270px,34vw) !important;
+    max-height:calc(100% - 360px) !important;
+  }
+}
+@media(max-width:720px){
+  #eventSplashOverlay.event-splash-overlay.is-history{
+    right:6px !important;
+    bottom:6px !important;
+    width:min(230px,46vw) !important;
+    max-height:42vh !important;
+  }
+  #eventSplashOverlay.is-history .event-splash-shell,
+  #eventSplashOverlay.is-history .event-splash-card{
+    height:43px !important;
+    min-height:43px !important;
+  }
+  #eventSplashOverlay.is-history .event-splash-card{
+    grid-template-columns:48px minmax(0,1fr) !important;
+  }
+  #eventSplashOverlay.is-history .event-splash-art-wrap{
+    width:48px !important;
+    height:43px !important;
+  }
+  #eventSplashOverlay.is-history .event-splash-title{font-size:10px !important;}
+  #eventSplashOverlay.is-history .event-splash-sub{font-size:7px !important;}
+}

@@ -33,13 +33,19 @@ function showDemigodSummonPresentation(unit){
 function clearEventSplashOverlay(resetQueue=true){
   const box=$("eventSplashOverlay");
   if(eventSplashTimer){clearTimeout(eventSplashTimer);eventSplashTimer=null;}
-  if(box){
-    box.className="event-splash-overlay";
-    box.innerHTML="";
-    box.setAttribute("aria-hidden","true");
-  }
   eventSplashActive=false;
-  if(resetQueue)eventSplashQueue=[];
+  if(resetQueue){
+    eventSplashQueue=[];
+    lastEventSplashKey="";
+  }
+  if(!box)return;
+  if(eventSplashQueue.length){
+    renderEventSplashHistory();
+    return;
+  }
+  box.className="event-splash-overlay";
+  box.innerHTML="";
+  box.setAttribute("aria-hidden","true");
 }
 function getEventSplashConfig(type){
   const key=String(type||"").toLowerCase();
@@ -122,53 +128,49 @@ function getEventSplashConfig(type){
 function buildEventSplashShell(item){
   const cfg=getEventSplashConfig(item?.type);
   if(!cfg)return "";
-  return `<div class="event-splash-shell ${cfg.className}"><div class="event-splash-shadow-layer" aria-hidden="true"></div><div class="event-splash-card"><div class="event-splash-depth-glow" aria-hidden="true"></div><div class="event-splash-panel-sheen" aria-hidden="true"></div><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-icon-anchor"><span class="event-splash-icon-badge"><span class="event-splash-icon-badge-core" aria-hidden="true"></span><img class="event-splash-icon" src="${cfg.icon||cfg.image}" alt="" aria-hidden="true"></span></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
+  return `<div class="event-splash-shell ${cfg.className}" data-event-key="${escapeHtml(item?.key||"")}"><div class="event-splash-shadow-layer" aria-hidden="true"></div><div class="event-splash-card"><div class="event-splash-depth-glow" aria-hidden="true"></div><div class="event-splash-panel-sheen" aria-hidden="true"></div><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-icon-anchor"><span class="event-splash-icon-badge"><span class="event-splash-icon-badge-core" aria-hidden="true"></span><img class="event-splash-icon" src="${cfg.icon||cfg.image}" alt="" aria-hidden="true"></span></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
 }
-function showNextEventSplash(){
-  if(eventSplashActive||!eventSplashQueue.length)return;
+function renderEventSplashHistory(){
   const box=$("eventSplashOverlay");
   if(!box){eventSplashQueue=[];return;}
-  const rawGroup=eventSplashQueue.shift();
-  const group=(Array.isArray(rawGroup)?rawGroup:[rawGroup]).filter(item=>item&&getEventSplashConfig(item.type));
-  if(!group.length){showNextEventSplash();return;}
-  const visible=group.slice(0,2);
-  const overflow=group.slice(2);
-  if(overflow.length)eventSplashQueue.unshift(overflow);
-  eventSplashActive=true;
-  const classNames=[...new Set(visible.map(item=>getEventSplashConfig(item.type)?.className).filter(Boolean))].join(" ");
-  box.className=`event-splash-overlay ${classNames} ${visible.length>1?"is-duo":"is-single"}`;
+  const valid=eventSplashQueue.filter(item=>item&&item.type&&getEventSplashConfig(item.type)).slice(-6);
+  eventSplashQueue=valid;
+  if(!valid.length){
+    box.className="event-splash-overlay";
+    box.innerHTML="";
+    box.setAttribute("aria-hidden","true");
+    return;
+  }
+  const classNames=[...new Set(valid.map(item=>getEventSplashConfig(item.type)?.className).filter(Boolean))].join(" ");
+  box.className=`event-splash-overlay is-history show ${classNames}`;
   box.setAttribute("aria-hidden","false");
-  box.innerHTML=`<div class="event-splash-stack ${visible.length>1?"is-duo":"is-single"}">${visible.map(buildEventSplashShell).join("")}</div>`;
-  void box.offsetWidth;
-  requestAnimationFrame(()=>box.classList.add("show"));
-  if(eventSplashTimer){clearTimeout(eventSplashTimer);}
-  eventSplashTimer=setTimeout(()=>{
-    box.classList.remove("show");
-    box.classList.add("leaving");
-    setTimeout(()=>{
-      clearEventSplashOverlay(false);
-      showNextEventSplash();
-    },760);
-  },2100);
+  box.innerHTML=`<div class="event-splash-stack is-history">${valid.map(buildEventSplashShell).join("")}</div>`;
+}
+function showNextEventSplash(){
+  renderEventSplashHistory();
 }
 function queueEventSplash(payload){
-  if(!payload||!payload.type)return;
+  if(!payload||!payload.type||!getEventSplashConfig(payload.type))return;
   const key=payload.key||`${payload.type}:${Date.now()}`;
-  if(key===lastEventSplashKey)return;
+  if(eventSplashQueue.some(item=>item?.key===key))return;
   lastEventSplashKey=key;
-  eventSplashQueue.push([{...payload,key}]);
-  showNextEventSplash();
+  eventSplashQueue.push({...payload,key});
+  if(eventSplashQueue.length>6)eventSplashQueue=eventSplashQueue.slice(-6);
+  renderEventSplashHistory();
 }
 function queueEventSplashGroup(payloads){
   const list=(Array.isArray(payloads)?payloads:[payloads]).filter(item=>item&&item.type&&getEventSplashConfig(item.type));
   if(!list.length)return;
   const groupKey=list.map(item=>item.key||item.type).join("|");
-  if(groupKey===lastEventSplashKey)return;
+  if(groupKey===lastEventSplashKey&&list.every(item=>eventSplashQueue.some(old=>old?.key===(item.key||item.type))))return;
   lastEventSplashKey=groupKey;
-  for(let i=0;i<list.length;i+=2){
-    eventSplashQueue.push(list.slice(i,i+2));
+  for(const raw of list){
+    const key=raw.key||`${raw.type}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`;
+    if(eventSplashQueue.some(item=>item?.key===key))continue;
+    eventSplashQueue.push({...raw,key});
   }
-  showNextEventSplash();
+  if(eventSplashQueue.length>6)eventSplashQueue=eventSplashQueue.slice(-6);
+  renderEventSplashHistory();
 }
 function normalizeStatusSplashType(statusType){
   const s=String(statusType||"").toLowerCase();
