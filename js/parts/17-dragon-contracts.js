@@ -530,7 +530,7 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v10";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v11";
 const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
@@ -574,7 +574,7 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
   "beast.tab.info": {
     "x": 539.0244750976562,
     "y": -216.54096221923828,
-    "scale": 50,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -583,7 +583,7 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
   "beast.tab.rewards": {
     "x": 155.0966796875,
     "y": -93.62312316894531,
-    "scale": 50,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -592,7 +592,7 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
   "beast.tab.global": {
     "x": -230.7777099609375,
     "y": 31.71002197265625,
-    "scale": 50,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -608,8 +608,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.info.cost": {
-    "x": 30.43475341796875,
-    "y": -13.04345703125,
+    "x": -39.1304931640625,
+    "y": -13.91302490234375,
     "scale": 80,
     "width": 100,
     "height": 100,
@@ -626,8 +626,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.info.fightButton": {
-    "x": 0,
-    "y": 0,
+    "x": -13.91302490234375,
+    "y": 8.695648193359375,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -635,9 +635,9 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.info.dragonsButton": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": -1.7391357421875,
+    "y": -2.608734130859375,
+    "scale": 150,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -1031,7 +1031,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "dragons.lightning.cost":{group:"Dragón de Rayo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-cost"},
   "dragons.lightning.fight":{group:"Dragón de Rayo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-events-primary--dragon"}
 });
-const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.info.fightButton",hud:{}});
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.tab.info",hud:{}});
 function clampHallvallaHudNumber(value,min,max,fallback){
   const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 }

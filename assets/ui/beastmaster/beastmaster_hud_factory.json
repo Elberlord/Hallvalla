@@ -2,7 +2,7 @@
   "bodySize": 17,
   "modalWidth": 900,
   "align": "left",
-  "selectedHud": "beast.info.fightButton",
+  "selectedHud": "beast.tab.info",
   "hud": {
     "beast.shell": {
       "x": 0,
@@ -43,7 +43,7 @@
     "beast.tab.info": {
       "x": 539.0244750976562,
       "y": -216.54096221923828,
-      "scale": 50,
+      "scale": 70,
       "width": 100,
       "height": 100,
       "padding": 0,
@@ -52,7 +52,7 @@
     "beast.tab.rewards": {
       "x": 155.0966796875,
       "y": -93.62312316894531,
-      "scale": 50,
+      "scale": 70,
       "width": 100,
       "height": 100,
       "padding": 0,
@@ -61,7 +61,7 @@
     "beast.tab.global": {
       "x": -230.7777099609375,
       "y": 31.71002197265625,
-      "scale": 50,
+      "scale": 70,
       "width": 100,
       "height": 100,
       "padding": 0,
@@ -77,8 +77,8 @@
       "gap": 0
     },
     "beast.info.cost": {
-      "x": 30.43475341796875,
-      "y": -13.04345703125,
+      "x": -39.1304931640625,
+      "y": -13.91302490234375,
       "scale": 80,
       "width": 100,
       "height": 100,
@@ -95,8 +95,8 @@
       "gap": 0
     },
     "beast.info.fightButton": {
-      "x": 0,
-      "y": 0,
+      "x": -13.91302490234375,
+      "y": 8.695648193359375,
       "scale": 100,
       "width": 100,
       "height": 100,
@@ -104,9 +104,9 @@
       "gap": 0
     },
     "beast.info.dragonsButton": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": -1.7391357421875,
+      "y": -2.608734130859375,
+      "scale": 150,
       "width": 100,
       "height": 100,
       "padding": 0,
