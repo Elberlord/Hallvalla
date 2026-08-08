@@ -21404,3 +21404,26 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   letter-spacing:.08em;
   pointer-events:none;
 }
+
+
+/* HallValla · DET click reliability patch
+   Una sola ruta de click para DET y los HUD de ayuda siempre por encima del editor visual. */
+#inspector.show button,
+#cardInspectModal:not(.hidden) button{
+  pointer-events:auto!important;
+}
+#inspector.show .det-btn-img,
+#inspector.show .det-effect-seal-art,
+#inspector.show .det-tactical-seal-art,
+#inspector.show .det-stat-icon-btn img,
+#cardInspectModal:not(.hidden) .det-btn-img,
+#cardInspectModal:not(.hidden) .det-effect-seal-art,
+#cardInspectModal:not(.hidden) .det-tactical-seal-art,
+#cardInspectModal:not(.hidden) .det-stat-icon-btn img{
+  pointer-events:none!important;
+}
+.stat-guide-modal,
+.spearman-tactical-modal,
+.unit-lore-modal{
+  z-index:1200!important;
+}

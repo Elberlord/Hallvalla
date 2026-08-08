@@ -323,7 +323,6 @@ function showUnit(u){
   const stats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
   const inspectStatsEl=$("inspectStats");
   inspectStatsEl.innerHTML=renderDetStatButtons(stats,"inspect-stat");
-  bindStatGuideClicks(inspectStatsEl);
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
   const inspectTextEl=$("inspectText");
@@ -333,8 +332,6 @@ function showUnit(u){
   inspector._hvEffectText=fx;
   inspector._hvEffectTitle=`✦ Efecto de ${u.name}`;
   bindInspectorDetModalDelegation(inspector);
-  bindEntityGuideButtons(inspectTextEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
-  bindStatusGuideDelegation(inspectTextEl,u,()=>activeEntries);
   applyRarityClassToElement(inspector,u);
   inspector.classList.add("show");
 }

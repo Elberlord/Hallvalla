@@ -1155,61 +1155,104 @@ function bindStatusGuideDelegation(container,entity,getStatuses){
   },true);
 }
 
+function closeDetLayoutTunerPanelForGuide(){
+  document.getElementById("hvDetLayoutTunerPanel")?.classList.add("hidden");
+}
+function resolveDetGuideTarget(container,ev){
+  if(!container||!ev?.target?.closest)return null;
+  const target=ev.target.closest([
+    '.guide-formula-btn',
+    '.guide-lore-btn',
+    '.guide-weapon-btn',
+    '.guide-effect-btn',
+    '.guide-ability-btn',
+    '.det-effect-seal',
+    '.det-tactical-seal',
+    '.guide-status-btn',
+    '.det-status-row',
+    '.det-status-icon-btn',
+    '.det-stat-icon-btn',
+    '.stat-click',
+    '[data-stat]'
+  ].join(','));
+  return target&&container.contains(target)?target:null;
+}
+function runDetGuideAction(container,target,{entity=null,statuses=[],effectText="",effectTitle=""}={}){
+  if(!target||target.disabled)return false;
+  closeDetLayoutTunerPanelForGuide();
+  if(target.matches('[data-stat],.stat-click,.det-stat-icon-btn')){
+    openStatGuideModal(target.dataset.stat||target.dataset.statRow||target.getAttribute('aria-label')||target.textContent||'formula');
+    return true;
+  }
+  if(target.matches('.guide-formula-btn')){
+    openStatGuideModal('formula');
+    return true;
+  }
+  if(target.matches('.guide-weapon-btn,.det-tactical-seal')){
+    openWeaponGuide(entity);
+    return true;
+  }
+  if(target.matches('.guide-lore-btn')){
+    openUnitLoreModal(entity);
+    return true;
+  }
+  if(target.matches('.guide-effect-btn')){
+    openExactEntityEffectGuide(entity,effectText||getUnitEffectText(entity)||'',effectTitle||`Efecto exacto de ${entity?.name||'la carta'}`);
+    return true;
+  }
+  if(target.matches('.guide-ability-btn,.det-effect-seal')){
+    openStatGuideModal({
+      title:target.dataset.abilityTitle||target.getAttribute('aria-label')||'Efecto',
+      short:"",
+      formula:target.dataset.abilityText||'Sin explicación adicional.',
+      example:"",
+      hideCombatButton:true
+    });
+    return true;
+  }
+  if(target.matches('.guide-status-btn,.det-status-row,.det-status-icon-btn')||target.hasAttribute('data-status-index')){
+    const idx=Number(target.dataset.statusIndex);
+    if(!Number.isFinite(idx))return false;
+    const entry=statuses[idx];
+    if(!entry)return false;
+    openStatusGuideModal(entry,entity);
+    return true;
+  }
+  return false;
+}
 function bindInspectorDetModalDelegation(inspector){
   if(!inspector||inspector.dataset.detModalDelegationBound)return;
   inspector.dataset.detModalDelegationBound="1";
-  const resolveEntity=()=>inspector._hvInspectedEntity||null;
-  const resolveStatuses=()=>Array.isArray(inspector._hvActiveStatuses)?inspector._hvActiveStatuses:[];
-  const handleGuideTap=(ev)=>{
-    const target=ev.target&&ev.target.closest?ev.target.closest('.guide-formula-btn,.guide-lore-btn,.guide-weapon-btn,.guide-effect-btn,.guide-ability-btn,.guide-status-btn,.det-status-row,.stat-click,[data-stat]'):null;
-    if(!target||!inspector.contains(target))return;
-    const entity=resolveEntity();
-    if(target.closest('#inspectClose'))return;
+  inspector.addEventListener('click',ev=>{
+    const target=resolveDetGuideTarget(inspector,ev);
+    if(!target||target.closest('#inspectClose'))return;
+    const handled=runDetGuideAction(inspector,target,{
+      entity:inspector._hvInspectedEntity||null,
+      statuses:Array.isArray(inspector._hvActiveStatuses)?inspector._hvActiveStatuses:[],
+      effectText:inspector._hvEffectText||'',
+      effectTitle:inspector._hvEffectTitle||''
+    });
+    if(!handled)return;
     ev.preventDefault();
     ev.stopPropagation();
-    ev.stopImmediatePropagation&&ev.stopImmediatePropagation();
-    if(target.matches('[data-stat],.stat-click')){
-      openStatGuideModal(target.dataset.stat||target.dataset.statRow||target.textContent||'formula');
-      return;
-    }
-    if(target.matches('.guide-formula-btn')){
-      openStatGuideModal('formula');
-      return;
-    }
-    if(target.matches('.guide-weapon-btn')){
-      openWeaponGuide(entity);
-      return;
-    }
-    if(target.matches('.guide-lore-btn')){
-      openUnitLoreModal(entity);
-      return;
-    }
-    if(target.matches('.guide-effect-btn')){
-      const effectText=inspector._hvEffectText||getUnitEffectText(entity)||'';
-      openExactEntityEffectGuide(entity,effectText,inspector._hvEffectTitle||`Efecto exacto de ${entity?.name||'la carta'}`);
-      return;
-    }
-    if(target.matches('.guide-ability-btn')){
-      const kind=target.dataset.abilityKind||'effect';
-      const meta=getDetAbilityMeta(kind);
-      openStatGuideModal({
-        title:target.dataset.abilityTitle||'Efecto',
-        short:"",
-        formula:target.dataset.abilityText||'Sin explicación adicional.',
-        example:"",
-        hideCombatButton:true
-      });
-      return;
-    }
-    if(target.matches('.guide-status-btn,.det-status-row')||target.hasAttribute('data-status-index')){
-      const idx=Number(target.dataset.statusIndex||0);
-      const entry=resolveStatuses()[idx];
-      if(entry)openStatusGuideModal(entry,entity);
-      return;
-    }
-  };
-  inspector.addEventListener('click',handleGuideTap,true);
-  inspector.addEventListener('pointerup',handleGuideTap,true);
+  },false);
+}
+function bindCardInspectDetModalDelegation(modal){
+  if(!modal||modal.dataset.detModalDelegationBound)return;
+  modal.dataset.detModalDelegationBound="1";
+  modal.addEventListener('click',ev=>{
+    const target=resolveDetGuideTarget(modal,ev);
+    if(!target||target.closest('#cardInspectX,#cardInspectCancel,#cardInspectPlay'))return;
+    const handled=runDetGuideAction(modal,target,{
+      entity:modal._hvInspectedEntity||null,
+      statuses:Array.isArray(modal._hvActiveStatuses)?modal._hvActiveStatuses:[],
+      effectText:modal._hvEffectText||'',
+      effectTitle:modal._hvEffectTitle||''
+    });
+    if(!handled)return;
+    ev.preventDefault();
+    ev.stopPropagation();
+  },false);
 }
 
 function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",statuses=[]}={}){
@@ -1311,13 +1354,16 @@ function showCardInspectModal(card){
   const inspectStats=cardInspectStats(card);
   if(stats){
     stats.innerHTML=renderDetStatButtons(inspectStats,"card-inspect-stat");
-    bindStatGuideClicks(stats);
   }
   if(text){
     const effectText=normalizeSaboteadorRuleText(card,card.text||card.effectText||card.ability||"").trim();
     text.innerHTML=`${renderDetAbilitiesHtml(card,effectText)}${renderDetStatusesHtml([],card)}${renderDetQuoteHtml(card)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(card,effectText),showWeapon:card.type==='unit',showFormula:true,showLore:card.type==='unit',effectLabel:'Ver efecto de la carta',entity:card})}`;
-    bindEntityGuideButtons(text,card,{effectText,effectTitle:`Efecto de ${card.name}`});
+    modal._hvEffectText=effectText;
+    modal._hvEffectTitle=`Efecto de ${card.name}`;
   }
+  modal._hvInspectedEntity=card;
+  modal._hvActiveStatuses=[];
+  bindCardInspectDetModalDelegation(modal);
   const state=getCardPlayState(card);
   if(reason){
     const costLine=getCardCostExplanation(card,card?.owner||myPlayer,publicState?.units||[]);
