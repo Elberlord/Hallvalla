@@ -288,7 +288,8 @@ async function createGame(){
   const prep=extractPrincipalCardsFromDeck(rawDeck,principalKeys,principalSlots);
   if(prep.principalCards.length!==principalSlots||prep.deck.length!==DECK_RULES.drawDeckSize){await hvAlert(`El líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${requiredDeckSize} cartas totales: ${principalSlots} principal${principalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");openDeckBuilder();return;}
   const profileName=getLocalProfileName(),code=code4();
-  const initial=drawCards(shuffle(prep.deck),[],4),deck=initial.deck,hand=initial.hand;
+  const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,1);
+  const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
   let units=[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")];
   const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
@@ -317,7 +318,8 @@ async function joinGame(){
   const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";
   const pub=snap.val();if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";
   syncBoardDimensionsFromState(pub);
-  const initial=drawCards(shuffle(prep.deck),[],4),deck=initial.deck,hand=initial.hand;
+  const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,2);
+  const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
   let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);
   const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
@@ -424,16 +426,16 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   let beastmasterEntryCharged=false;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
-  // El Personaje Principal del jugador se desbloquea solo al completar TODO el mapa 1.1
-  // (la victoria contra Richard Corazón de León en battle5). Antes de eso, el mazo
-  // inicial tiene 20 cartas de robo y ninguna unidad comienza desplegada gratuitamente.
+  // El primer espacio de Personaje Principal y la edición de mazo se desbloquean
+  // al derrotar al Hechicero guardián. Antes de esa victoria, el mazo inicial tiene
+  // 20 cartas de robo y ninguna unidad comienza desplegada gratuitamente.
   const playerPrincipalUnlocked=canAccessDecks();
   const playerPrincipalSlots=playerPrincipalUnlocked?getPrincipalSlotsForLeaderLevel(leaderLevel):0;
   const playerRequiredDeckSize=getDeckSizeForPrincipalSlots(playerPrincipalSlots);
   const starterLocked=!playerPrincipalUnlocked;
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
   const rawPlayerBase=mustUseStarterAdventureDeck
-    ? shuffle(getStarterAdventureDeckTemplates(specialKey,playerPrincipalSlots).map(card=>makeCard(card,1,leaderType)))
+    ? shuffle(getStarterAdventureDeckTemplates(specialKey,playerPrincipalSlots,leaderType).map(card=>makeCard(card,1,leaderType)))
     : makeDeck(1,leaderType,{principalSlots:playerPrincipalSlots});
   const playerDeckValidation=validateDeckList(rawPlayerBase,playerPrincipalSlots);
   if(!playerDeckValidation.valid){
@@ -484,7 +486,8 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
       beastmasterEntryGoldCost:entryCost
     };
   }
-  const playerDraw=drawCards(playerPrincipalPrep.deck,[],4);
+  const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerPrincipalPrep.deck,leaderType,1);
+  const playerDraw=drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
@@ -492,7 +495,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const enemyRawInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
-  const enemyInitial=prepareAiPrincipalInitialState(battle,enemyRawInitial);
+  const enemyInitial=injectLeaderEquipmentIntoInitialState(prepareAiPrincipalInitialState(battle,enemyRawInitial),enemyLeaderType,2);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   let startingUnits=[
     makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),

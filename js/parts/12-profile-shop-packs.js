@@ -734,12 +734,14 @@ function ensureStarterDeckCollection(){
   const starter=getStarterCollectionTemplates();
   let changed=!!cleaned.changed;
   starter.forEach(card=>{
-    const max=maxCopiesForCard(card);
+    const max=Math.max(1,Number(card?.starterQty||maxCopiesForCard(card))||1);
     const existing=collection.cards.find(c=>c.key===card.key);
     if(existing){
       if((existing.qty||0)<max){existing.qty=max;changed=true;}
     }else{
-      collection.cards.push({...card,rarity:card.rarity||"Básica",qty:max});
+      const granted={...card,rarity:card.rarity||"Básica",qty:max};
+      delete granted.starterQty;
+      collection.cards.push(granted);
       changed=true;
     }
   });
@@ -798,11 +800,11 @@ function getBattleRewardLabel(battle){
   if(battle.beastEvent&&battle.rewardBeastCard)parts.push("1 Bestia aleatoria (sin Dragones)");
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
-  else if(battle.cardPack){
+  else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
+  if(battle.cardPack){
     const rewardPackType=getBattleRewardPackType(battle);
     parts.push(rewardPackType==="beast_pack"?"Paquete de Bestias x1":(rewardPackType==="improved_magic_trap"?"Paquete reforzado de 3 cartas":"Pack básico normal x1 · 3 cartas básicas aleatorias"));
   }
-  else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   return parts.join(" · ");
 }
 
@@ -854,7 +856,8 @@ function isAdventureChapterComplete(){
   return ADVENTURE_CHAPTER_1_1.battles.every(b=>chapter.completedBattles?.[b.id]);
 }
 function canAccessDecks(){
-  return isTestPromoActive()||isAdventureChapterComplete();
+  const progress=typeof getAdventureProgress==="function"?getAdventureProgress():null;
+  return isTestPromoActive()||!!progress?.guardianDefeated;
 }
 function canAccessPackShop(){
   return true;

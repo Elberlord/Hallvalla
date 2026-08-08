@@ -70,7 +70,7 @@ const IMPROVED_MAGIC_TRAP_PACK=[
 ];
 
 const ADVENTURE_PROGRESS_KEY="hallvalla_adventure_progress";
-const ADVENTURE_GUARDIAN_BATTLE={id:"guardian_mage",num:0,isGuardian:true,title:"El guardián hechicero",enemyName:"Hechicero guardián",enemyLeaderType:"mage",image:"assets/story/guardian_intro_bg.webp",actorImage:"assets/story/guardian_hechicero_actor.webp",enemyIntro:"Antes de tocar el mapa 1.1, una figura se interpone entre las ruinas del umbral. Es un mago guardián, cubierto por energía oscura y rodeado por símbolos antiguos.\n\nEsta no es todavía la campaña del mapa: es la prueba que decide si puedes entrar en ella. Derrota al Hechicero guardián para desbloquear el mapa 1.1 El inicio de la travesía.",xp:5,gold:10,cardPack:false,rewardCard:"starter_complement",aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial mágico",desc:"Derrota al Hechicero guardián para desbloquear el mapa 1.1."};
+const ADVENTURE_GUARDIAN_BATTLE={id:"guardian_mage",num:0,isGuardian:true,title:"El guardián hechicero",enemyName:"Hechicero guardián",enemyLeaderType:"mage",image:"assets/story/guardian_intro_bg.webp",actorImage:"assets/story/guardian_hechicero_actor.webp",enemyIntro:"Antes de tocar el mapa 1.1, una figura se interpone entre las ruinas del umbral. Es un mago guardián, cubierto por energía oscura y rodeado por símbolos antiguos.\n\nEsta no es todavía la campaña del mapa: es la prueba que decide si puedes entrar en ella. Derrótalo para desbloquear el mapa 1.1, la Forja de mazos y tu primer espacio de Personaje Principal.",xp:5,gold:10,cardPack:true,rewardPackType:"shop_basic",rewardCard:"starter_complement",aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial mágico",desc:"Derrota al Hechicero guardián para desbloquear el mapa 1.1, la edición de mazos, el primer Personaje Principal y recibir un Pack básico."};
 const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"El inicio de la travesía",desc:"Los rebeldes intentan usurpar el trono y crear un golpe de estado. La primera campaña empieza en la frontera, atraviesa rutas tomadas por la rebelión y termina con Richard Corazón de León poniendo a prueba al jugador antes de aceptar unir fuerzas.",introTitle:"1.1 El inicio de la travesía",introText:"El reino de HallValla apenas comienza a respirar después de años de disputas internas. El trono sigue en pie, pero su autoridad ya no pesa igual en las tierras lejanas.\n\nEn la frontera, los rumores llegan antes que los mensajeros: aldeas cerradas, caminos bloqueados, estandartes quemados y soldados que ya no responden al llamado real. Lo que al principio parece una revuelta menor pronto revela una amenaza mayor.\n\nUn grupo de rebeldes intenta usurpar el trono y provocar un golpe de estado. No buscan solamente conquistar fortalezas: quieren quebrar la confianza del pueblo, aislar al reino y entrar al salón del trono antes de que las fuerzas leales puedan reunirse.",battles:[
 {id:"battle1",num:1,title:"La flecha en la frontera",legacyTitle:"Rumores en la frontera",enemyName:"Arquero rebelde",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"La primera señal llega desde los puestos fronterizos. Humo en el horizonte. Torres abandonadas. Caminos que antes eran seguros ahora están cubiertos por patrullas sin emblema.\n\nUn arquero rebelde vigila los pasos de frontera. No busca honor, busca detener tu avance antes de que comprendas la escala del golpe.",xp:5,gold:10,cardPack:true,aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial agresivo",desc:"Confirma la presencia rebelde y derrota al arquero que protege las rutas del levantamiento."},
 {id:"battle2",num:2,title:"El guerrero del puente",legacyTitle:"El puente tomado",enemyName:"Guerrero rebelde",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"El camino hacia la capital pasa por un antiguo puente de piedra. Durante generaciones fue símbolo de unión entre las provincias, pero ahora ondean sobre él estandartes rebeldes.\n\nEl puente está tomado por un guerrero rebelde que convirtió el cruce en una muralla de escudos. Tendrás que romper su frente para avanzar.",xp:8,gold:12,cardPack:true,aiLevel:2,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Presión frontal",desc:"Recupera el puente tomado y obliga al guerrero rebelde a retirarse."},
@@ -282,12 +282,16 @@ function getStarterChosenSpecialCard(selectedSpecial=""){
   const key=selectedSpecial||getAdventureProgress?.().selectedSpecial||pendingAdventureSpecial||"mulan";
   return ADVENTURE_SPECIALS[key]?{...ADVENTURE_SPECIALS[key]}:null;
 }
-function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
+function getLegacyDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
   const target=getDeckSizeForPrincipalSlots(principalSlots);
   const base=getStarterBasicDeckTemplates(principalSlots);
   const special=getStarterChosenSpecialCard(selectedSpecial);
   const deck=special?[...base,special]:base;
   return deck.slice(0,target);
+}
+function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
+  const legacy=getLegacyDefaultDeckTemplates(selectedSpecial,principalSlots);
+  return injectLeaderEquipmentIntoTemplateDeck(legacy,leaderType);
 }
 function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
   const target=getDeckSizeForPrincipalSlots(principalSlots);
@@ -300,11 +304,11 @@ function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
   }
   return deck.slice(0,target);
 }
-function getStarterAdventureDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
+function getStarterAdventureDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
   const special=getStarterChosenSpecialCard(selectedSpecial);
   const target=getDeckSizeForPrincipalSlots(principalSlots);
-  return getDefaultDeckTemplates(selectedSpecial,principalSlots)
-    .filter(card=>isStarterBasicCard(card)||(special&&card.key===special.key))
+  return getDefaultDeckTemplates(selectedSpecial,principalSlots,leaderType)
+    .filter(card=>isStarterBasicCard(card)||(special&&card.key===special.key)||(isEquipmentCard(card)&&isEquipmentCardAllowedForLeader(card,leaderType)))
     .slice(0,target);
 }
 function getPlayableSavedDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
@@ -326,13 +330,79 @@ function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}
   const useSaved=!options.ai;
   const principalSlots=options.principalSlots||getPrincipalSlotsForLeaderType(leaderType);
   const savedTemplates=useSaved?getPlayableSavedDeckTemplates(principalSlots):[];
-  const starterTemplates=getDefaultDeckTemplates("",principalSlots);
+  const starterTemplates=getDefaultDeckTemplates("",principalSlots,leaderType);
   const templates=savedTemplates.length?savedTemplates:starterTemplates;
   return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
 
+/* === Equipo obligatorio por especialización de Líder =======================
+   Cada especialización base tiene dos piezas de Equipo exclusivas. En batalla
+   esas dos piezas sustituyen dos cartas del mazo de robo; nunca aumentan su
+   tamaño y nunca desplazan a un Personaje Principal ya extraído.
+============================================================================ */
+function getLeaderEquipmentTemplates(leaderType=""){
+  const type=String(leaderType||"");
+  return (EQUIPMENT_CARD_TEMPLATES||[]).filter(card=>String(card?.equipmentLeader||"")===type).slice(0,2);
+}
+function injectLeaderEquipmentIntoTemplateDeck(cards=[],leaderType=""){
+  const deck=(cards||[]).map(card=>({...card}));
+  const equipment=getLeaderEquipmentTemplates(leaderType);
+  if(equipment.length!==2)return deck;
+  const present=new Set(deck.map(card=>String(card?.key||"")));
+  for(const template of equipment){
+    if(present.has(template.key))continue;
+    const ranked=deck.map((card,index)=>({index,score:getLeaderEquipmentReplacementScore(card,deck,leaderType)}))
+      .filter(entry=>entry.score>-999000)
+      .sort((a,b)=>b.score-a.score||b.index-a.index);
+    const replace=ranked[0];
+    if(!replace)continue;
+    deck.splice(replace.index,1,{...template});
+    present.add(template.key);
+  }
+  return deck;
+}
+function getLeaderEquipmentReplacementScore(card,cards=[],leaderType=""){
+  if(!card||isEquipmentCard(card))return -999999;
+  const rarity=String(card.rarity||card.rareza||"Básica").toLowerCase();
+  const basic=rarity==="básica"||rarity==="basica"||rarity==="basic";
+  const key=String(card.key||card.name||"");
+  const copies=(cards||[]).filter(item=>String(item?.key||item?.name||"")===key).length;
+  let score=basic?520:-360;
+  if(card.special)score-=1200;
+  if(copies>1)score+=Math.min(260,(copies-1)*130);
+  if(card.type!=="unit")score+=180;
+  if(card.type==="unit"){
+    if(isUnitCompatibleWithEquipmentLeader(card,leaderType))score-=260;
+    else score+=45;
+    if(card.beast&&leaderType==="beastmaster")score-=220;
+  }
+  return score;
+}
+function injectLeaderEquipmentIntoDrawDeck(cards=[],leaderType="",owner=1,alreadyPresent=[]){
+  const deck=[...(cards||[])];
+  const equipment=getLeaderEquipmentTemplates(leaderType);
+  if(equipment.length!==2)return deck;
+  const present=new Set([...(alreadyPresent||[]),...deck].map(card=>String(card?.key||"")));
+  for(const template of equipment){
+    if(present.has(template.key))continue;
+    const ranked=deck.map((card,index)=>({index,score:getLeaderEquipmentReplacementScore(card,deck,leaderType)}))
+      .filter(entry=>entry.score>-999000)
+      .sort((a,b)=>b.score-a.score||b.index-a.index);
+    const replace=ranked[0];
+    if(!replace)continue;
+    deck.splice(replace.index,1,makeCard(template,owner,leaderType));
+    present.add(template.key);
+  }
+  return deck;
+}
+function injectLeaderEquipmentIntoInitialState(initial={},leaderType="",owner=2){
+  const hand=[...(initial?.hand||[])];
+  const deck=injectLeaderEquipmentIntoDrawDeck(initial?.deck||[],leaderType,owner,hand);
+  return {...initial,deck,hand};
+}
+
 function getStarterDeckAudit(){
-  const deck=getDefaultDeckTemplates();
+  const deck=getDefaultDeckTemplates("",getCurrentPrincipalSlots(),getSelectedLeaderType()||"warrior");
   const specialKeys=new Set(Object.keys(ADVENTURE_SPECIALS||{}));
   return {
     size:deck.length,

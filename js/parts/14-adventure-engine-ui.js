@@ -75,7 +75,7 @@ function getCurrentAdventureChapter(progress=getAdventureProgress()){
   return ADVENTURE_CHAPTERS[ADVENTURE_CHAPTERS.length-1];
 }
 function getAdventureProgress(){
-  const blank=()=>({selectedSpecial:"",guardianDefeated:false,guardianRewardClaimed:false,chapters:Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,{unlockedBattle:1,completedBattles:{}}]))});
+  const blank=()=>({selectedSpecial:"",guardianDefeated:false,guardianRewardClaimed:false,guardianPackClaimed:false,chapters:Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,{unlockedBattle:1,completedBattles:{}}]))});
   try{
     const saved=JSON.parse(localStorage.getItem(ADVENTURE_PROGRESS_KEY)||"null")||{};
     const progress=blank();
@@ -83,6 +83,7 @@ function getAdventureProgress(){
     progress.selectedSpecial=savedSpecial;
     progress.guardianDefeated=!!saved.guardianDefeated;
     progress.guardianRewardClaimed=!!saved.guardianRewardClaimed;
+    progress.guardianPackClaimed=!!saved.guardianPackClaimed;
     ADVENTURE_CHAPTERS.forEach(ch=>{
       const savedChapter=saved.chapters?.[ch.id]||{};
       progress.chapters[ch.id]={
@@ -97,6 +98,17 @@ function getAdventureProgress(){
 }
 function saveAdventureProgress(progress){
   localStorage.setItem(ADVENTURE_PROGRESS_KEY,JSON.stringify(progress));
+}
+function ensureGuardianUnlockPackReward(){
+  const progress=getAdventureProgress();
+  if(!progress.guardianDefeated||progress.guardianPackClaimed)return false;
+  progress.guardianPackClaimed=true;
+  saveAdventureProgress(progress);
+  const alreadyPending=typeof getPendingPacks==="function"&&getPendingPacks().some(pack=>pack?.battleId===ADVENTURE_GUARDIAN_BATTLE.id);
+  if(!alreadyPending&&typeof addPendingPack==="function"){
+    addPendingPack(buildPendingShopPack("basic",{source:"adventure",costGold:0,battleId:ADVENTURE_GUARDIAN_BATTLE.id,chapterId:"guardian",migratedGuardianUnlock:true}));
+  }
+  return true;
 }
 function setAdventureSpecialInProgress(specialKey){
   const progress=getAdventureProgress();
@@ -165,12 +177,22 @@ function completeAdventureBattleOnce(pub){
   if(pub.adventureSpecial)progress.selectedSpecial=pub.adventureSpecial;
   if(battle.isGuardian){
     const already=progress.guardianRewardClaimed===true;
+    const grantGuardianPack=!!battle.cardPack&&progress.guardianPackClaimed!==true;
     progress.guardianDefeated=true;
     progress.guardianRewardClaimed=true;
+    if(grantGuardianPack)progress.guardianPackClaimed=true;
     saveAdventureProgress(progress);
+    if(grantGuardianPack){
+      addPendingPack(buildPendingShopPack("basic",{
+        source:"adventure",
+        costGold:0,
+        battleId:battle.id,
+        chapterId:"guardian"
+      }));
+    }
     if(already){
       renderHomeProgress();
-      return{awarded:false,xp:battle.xp||0,gold:battle.gold||0,levelUps:0,cards:[],battle,progress,guardianUnlocked:true};
+      return{awarded:false,xp:battle.xp||0,gold:battle.gold||0,levelUps:0,cards:[],battle,progress,guardianUnlocked:true,deckEditorUnlocked:true,principalUnlocked:true,packPending:grantGuardianPack};
     }
     const xpResult=addPlayerXp(battle.xp||0);
     const profile=getPlayerProfile();
@@ -180,7 +202,7 @@ function completeAdventureBattleOnce(pub){
     savePlayerProfile(profile);
     renderPlayerProfile(profile);
     renderHomeProgress();
-    return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,guardianUnlocked:true};
+    return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,guardianUnlocked:true,deckEditorUnlocked:true,principalUnlocked:true,packPending:grantGuardianPack};
   }
   const chapter=progress.chapters[chapterForBattle.id];
   if(chapter.completedBattles[battle.id]){
@@ -235,6 +257,7 @@ function openAdventureMap(specialKey=pendingAdventureSpecial||getAdventureProgre
   pendingAdventureSpecial=ADVENTURE_SPECIALS[specialKey]?specialKey:"mulan";
   setAdventureSpecialInProgress(pendingAdventureSpecial);
   const progress=getAdventureProgress();
+  if(progress.guardianDefeated)ensureGuardianUnlockPackReward();
   $("adventurePanel").classList.remove("hidden");
   if(!progress.guardianDefeated){
     showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id);

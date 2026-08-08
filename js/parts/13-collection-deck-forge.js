@@ -267,7 +267,7 @@ function getUnlockedAdventureSpecialCollectionTemplates(){
   const keys=[progress?.selectedSpecial].filter(key=>key&&ADVENTURE_SPECIALS[key]);
   return [...new Set(keys)].map(key=>({...ADVENTURE_SPECIALS[key],qty:1,unlockedByAdventure:true}));
 }
-function getStarterCollectionTemplates(){
+function getStarterCollectionTemplates(leaderType=getSelectedLeaderType()||"warrior"){
   const byKey=new Map();
   STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).forEach(card=>{
     if(card.beast||card.special)return;
@@ -276,6 +276,9 @@ function getStarterCollectionTemplates(){
   BASIC_MAGIC_TRAP_PACK.forEach(card=>{
     if(card.beast||card.special)return;
     byKey.set(card.key,{...card});
+  });
+  getLeaderEquipmentTemplates(leaderType).forEach(card=>{
+    byKey.set(card.key,{...card,starterQty:1});
   });
   getUnlockedAdventureSpecialCollectionTemplates().forEach(card=>{
     byKey.set(card.key,{...card});
@@ -502,6 +505,26 @@ function sanitizeDeckDraftToCollection(deck=[]){
 function isCollectionBrowseOnly(){
   return !canAccessDecks();
 }
+function deckKeySignature(cards=[]){
+  return (cards||[]).map(card=>String(card?.key||card?.name||"")).filter(Boolean).sort().join("|");
+}
+function getStarterSpecialKeyFromDeck(cards=[]){
+  const specials=(cards||[]).filter(card=>card?.special&&ADVENTURE_SPECIALS?.[card.key]).map(card=>card.key);
+  return specials[0]||getAdventureProgress?.().selectedSpecial||pendingAdventureSpecial||"mulan";
+}
+function migrateVisibleStarterDeckForLeader(deck=[],leaderType=getSelectedLeaderType()||"warrior",principalSlots=getCurrentPrincipalSlots()){
+  const current=(deck||[]).map(card=>({...card}));
+  if(!current.length)return{deck:current,changed:false};
+  const specialKey=getStarterSpecialKeyFromDeck(current);
+  const sig=deckKeySignature(current);
+  const legacySig=deckKeySignature(getLegacyDefaultDeckTemplates(specialKey,principalSlots));
+  const leaderTypes=Object.keys(LEADER_DATA||{});
+  const starterVariant=leaderTypes.some(type=>deckKeySignature(getDefaultDeckTemplates(specialKey,principalSlots,type))===sig);
+  if(sig!==legacySig&&!starterVariant)return{deck:current,changed:false};
+  const target=getDefaultDeckTemplates(specialKey,principalSlots,leaderType).map(card=>({...card,id:uid8(),qty:1}));
+  if(deckKeySignature(target)===sig)return{deck:current,changed:false};
+  return{deck:target,changed:true};
+}
 function openDeckBuilder(){
   const browseOnly=isCollectionBrowseOnly();
   const panel=$("deckBuilderPanel");
@@ -509,8 +532,11 @@ function openDeckBuilder(){
   if(!browseOnly){
     ensureStarterDeckCollection();
     const principalSlots=getCurrentPrincipalSlots();
-    const saved=sanitizeDeckDraftToCollection(getSavedDeck());
-    currentDeckDraft=saved.length?saved:getDefaultDeckTemplates("",principalSlots).map(c=>({...c,qty:1}));
+    const leaderType=getSelectedLeaderType()||"warrior";
+    let saved=sanitizeDeckDraftToCollection(getSavedDeck());
+    const starterMigration=migrateVisibleStarterDeckForLeader(saved,leaderType,principalSlots);
+    if(starterMigration.changed){saved=starterMigration.deck;saveDeck(saved);}
+    currentDeckDraft=saved.length?saved:getDefaultDeckTemplates("",principalSlots,leaderType).map(c=>({...c,id:uid8(),qty:1}));
     currentPrincipalKeys=sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),currentDeckDraft,principalSlots);
   }else{
     // Antes de desbloquear la Forja no se prepara ni modifica ningún mazo.
@@ -884,7 +910,7 @@ function renderDeckBuilder(){
     if(eyebrow)eyebrow.textContent=browseOnly?"Colección de cartas":"Colección / Mazo";
     if(title)title.textContent=browseOnly?"Colección de cartas":"Forja de mazos";
     if(sub)sub.textContent=browseOnly
-      ? "Explora todas las cartas disponibles en HallValla. Las cartas con candado todavía no te pertenecen, pero puedes tocarlas para ver su arte, estadísticas, habilidades y detalles. La edición de mazos se desbloquea al completar el mapa 1.1."
+      ? "Explora todas las cartas disponibles en HallValla. Las cartas con candado todavía no te pertenecen, pero puedes tocarlas para ver su arte, estadísticas, habilidades y detalles. La edición de mazos y el primer espacio de Personaje Principal se desbloquean al derrotar al Hechicero guardián."
       : "Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 20 cartas para robar más los Personajes Principales permitidos por el tier del líder: 1 en tier 1, 2 en tier 2 y 3 en tier 3 o superior.";
   }
   const search=($("deckSearchInput")?.value||"").toLowerCase().trim();
@@ -1031,7 +1057,7 @@ function getNotificationItems(){
     items.push({type:"cards",title:"Paquetes/cartas nuevas",body:`Tienes ${newCards} carta${newCards===1?"":"s"} nueva${newCards===1?"":"s"} en tu colección. Se guardaron aunque los mazos estén bloqueados.`});
   }
   if(decksUnlocked&&!state.deckUnlockSeen){
-    items.push({type:"decks",title:"Mazos desbloqueados",body:"Completaste el mapa 1.1. Ya puedes acceder a mazos y editar tu colección."});
+    items.push({type:"decks",title:"Mazos desbloqueados",body:"Derrotaste al Hechicero guardián. Ya puedes editar mazos y seleccionar tu primer Personaje Principal."});
   }
   if(packShopUnlocked&&!state.packShopUnlockSeen){
     items.push({type:"shop",title:"Tienda de packs desbloqueada",body:"Completaste el mapa 2.1. Ya puedes comprar Pack básico usando oro."});
@@ -1048,7 +1074,7 @@ function renderHomeProgress(){
   if(progressText)progressText.textContent=summary.progress.guardianDefeated?`Progreso: ${summary.completed}/${summary.total} batallas completadas. Siguiente desbloqueada: ${Math.min(summary.chapter.unlockedBattle||1,summary.total)}/${summary.total}.`:`Prueba previa pendiente: derrota al Hechicero guardián para desbloquear el mapa ${ADVENTURE_CHAPTER_1_1.number}.`;
   if(deckStatus)deckStatus.textContent=isTestPromoActive()?"Modo de pruebas: todo desbloqueado":(canAccessDecks()?"Mazos y Personaje Principal desbloqueados":"Mazos bloqueados");
   const pendingPacks=getPendingPackCount();
-  if(collectionStatus)collectionStatus.textContent=isTestPromoActive()?`Acceso promocional activo: ${uniqueTotal} cartas únicas disponibles con todas sus copias permitidas. Líderes y maestrías al máximo.`:(canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs disponible desde el inicio."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Completa 1.1 para editar mazos.`);
+  if(collectionStatus)collectionStatus.textContent=isTestPromoActive()?`Acceso promocional activo: ${uniqueTotal} cartas únicas disponibles con todas sus copias permitidas. Líderes y maestrías al máximo.`:(canAccessDecks()?`Colección: ${collectionTotal} cartas (${uniqueTotal} únicas). Paquetes: ${pendingPacks}. ${canAccessPackShop()?"Tienda de packs disponible.":"Tienda de packs disponible desde el inicio."}`:`Colección: ${collectionTotal} cartas guardadas. Paquetes pendientes: ${pendingPacks}. Derrota al Hechicero guardián para editar mazos.`);
   renderNotificationBadge();
 }
 function renderNotificationBadge(){
@@ -1066,7 +1092,7 @@ function openNotifications(){
     list.innerHTML=items.map(item=>`<div class="notification-item"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.body)}</small></div>`).join("");
   }else{
     const collectionTotal=getCollectionCardTotal();
-    list.innerHTML=`<div class="notification-item"><b>Sin avisos nuevos</b><small>Colección actual: ${collectionTotal} cartas. ${canAccessDecks()?"Mazos disponibles.":"Mazos bloqueados hasta completar 1.1."}</small></div>`;
+    list.innerHTML=`<div class="notification-item"><b>Sin avisos nuevos</b><small>Colección actual: ${collectionTotal} cartas. ${canAccessDecks()?"Mazos disponibles.":"Mazos bloqueados hasta derrotar al Hechicero guardián."}</small></div>`;
   }
   const state=getNotificationState();
   state.lastSeenCardCount=getCollectionCardTotal();

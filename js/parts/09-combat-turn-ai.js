@@ -1865,6 +1865,49 @@ async function adventureEnemyTurn(){
     return options.sort((a,b)=>b.score-a.score)[0]||null;
   };
 
+  const equipmentUseScore=(card,ally)=>{
+    if(!card||!ally)return -9999;
+    const threat=playerThreatAtCell(ally,ally);
+    const role=aiBasicTacticRole(ally);
+    const target=bestAttackTarget(ally);
+    const maxHp=Math.max(1,effectiveMaxHp(ally)||ally.maxHp||ally.hp||1);
+    const hpRatio=Math.max(0,Math.min(1,Number(ally.hp||0)/maxHp));
+    const rangedEnemies=living(1).filter(enemy=>!enemy.leader&&aiAttackRange(enemy)>=2&&d(enemy,ally)<=aiAttackRange(enemy)+Math.max(0,effectiveMov(enemy)||0)).length;
+    const meleeEnemies=living(1).filter(enemy=>!enemy.leader&&aiAttackRange(enemy)<=1&&d(enemy,ally)<=1+Math.max(0,effectiveMov(enemy)||0)).length;
+    const woundedEnemies=living(1).filter(enemy=>!enemy.leader&&Number(enemy.hp||0)<Number(effectiveMaxHp(enemy)||enemy.maxHp||enemy.hp||0)).length;
+    let score=82+Math.min(210,aiUnitValue(ally)*.52)+Math.min(150,threat*1.15);
+    if(ally.principal)score+=55;
+    if(ally.special)score+=35;
+    if(hpRatio<.3)score-=45;
+    switch(String(card.equipmentEffect||card.key||"")){
+      case "executioner_mantle": score+=105+Math.min(120,threat*.7); break;
+      case "rupture_bracers": score+=isStealthedUnit(ally)?230:95; if(target&&effectiveGuard(target)>0)score+=110; break;
+      case "tanned_hide_harness": score+=185+Math.min(150,threat); if(hpRatio<.7)score+=70; break;
+      case "counterweighted_grip": score+=135; if(target&&effectiveGuard(target)>0)score+=155; score+=Math.max(0,effectiveAtk(ally))*8; break;
+      case "marching_greaves": score+=130+Math.max(0,4-effectiveMov(ally))*34; if(!target)score+=55; break;
+      case "war_visor": score+=105+rangedEnemies*55; break;
+      case "skirmisher_cloak": score+=115+meleeEnemies*60; if(role==="ranged")score+=55; break;
+      case "retreat_strap": score+=145+(aiAttackRange(ally)>1?110:0)+(target?45:0); break;
+      case "withdrawal_stirrups": score+=135+Math.max(0,effectiveMov(ally))*20; if(role==="cavalry")score+=70; break;
+      case "light_barding": score+=110+rangedEnemies*55; break;
+      case "stabilizing_focus": score+=185+aiAttackRange(ally)*28; if(role==="ranged"||role==="support")score+=45; break;
+      case "channeling_amulet": score+=255+(ally.caster||ally.healer||ally.hechicero||ally.hechicera||ally.nigromante?100:0); break;
+      case "instinct_collar": score+=120+Math.min(100,threat*.55); break;
+      case "hunting_harness": score+=135+woundedEnemies*32+(target&&Number(target.hp||0)<Number(effectiveMaxHp(target)||target.maxHp||target.hp||0)?100:0); break;
+    }
+    return score;
+  };
+  const chooseBestEquipment=()=>{
+    const options=[];
+    for(const card of hand.filter(c=>isEquipmentCard(c)&&effectiveCardCost(c,2)<=honor)){
+      for(const ally of living(2).filter(u=>!u.leader)){
+        if(!canEquipCardToUnit(card,ally,2,units))continue;
+        options.push({card,ally,score:equipmentUseScore(card,ally)});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+
   const chooseBestBuff=()=>{
     const options=[];
     for(const card of hand.filter(c=>c.spell==="buff"&&effectiveCardCost(c,2)<=honor)){
@@ -2070,6 +2113,7 @@ async function adventureEnemyTurn(){
     const danger=leaderDangerScore();
     if(choice.kind==="damage")return choice.target?.leader?70:85;
     if(choice.kind==="summon")return aiHasBoard?55:18;
+    if(choice.kind==="equipment")return 105;
     if(choice.kind==="buff")return choice.immediate?85:120;
     if(choice.kind==="heal")return danger>=80?45:70;
     if(choice.kind==="guard")return danger>=80?55:90;
@@ -2127,6 +2171,14 @@ async function adventureEnemyTurn(){
         if(role==="assassin"&&berserkerPressure)score+=520;
         if(role==="assassin"&&berserkerPressure&&choice.cell&&d(choice.cell,berserkerPressure.unit)<=Math.max(1,(choice.card.range||1)+(choice.card.mov||0)))score+=180;
       }
+      if(kind==="equipment"){
+        const equippedGhost=choice.ally?equipCardOnUnit(choice.card,choice.ally):null;
+        if(equippedGhost){
+          const beforeRange=aiAttackRange(choice.ally),afterRange=aiAttackRange(equippedGhost);
+          if(afterRange>beforeRange)score+=(afterRange-beforeRange)*85;
+          if(bestAttackTarget(equippedGhost))score+=75;
+        }
+      }
       if(kind==="buff"){
         const target=choice.ally?bestAttackTarget(choice.ally):null;
         choice.immediate=!!target;
@@ -2153,6 +2205,7 @@ async function adventureEnemyTurn(){
 
     pushChoice("damage",chooseBestDamageSpell());
     pushChoice("summon",chooseBestSummon());
+    pushChoice("equipment",chooseBestEquipment());
     pushChoice("buff",chooseBestBuff());
     pushChoice("heal",chooseBestHeal());
     pushChoice("guard",chooseBestGuard());
@@ -2167,10 +2220,24 @@ async function adventureEnemyTurn(){
     return best.score>=aiMainChoiceMinimumScore(best)?best:null;
   };
 
+  const playEquipment=(choice)=>{
+    if(!choice?.card||!choice?.ally)return false;
+    const live=units.find(u=>u.id===choice.ally.id&&u.owner===2&&u.hp>0);
+    if(!live||!canEquipCardToUnit(choice.card,live,2,units))return false;
+    units=units.map(u=>u.id===live.id?equipCardOnUnit(choice.card,u):u);
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    const equipped=units.find(u=>u.id===live.id)||live;
+    pendingAiFloatFxEvent=makeFloatFxEvent("buff",equipped,0,{iconText:choice.card.icon||"✦",labelText:"EQUIPO"});
+    logs.push(`Rival equipa ${choice.card.name} a ${equipped.name}.`);
+    return true;
+  };
+
   const playAiMainChoice=(choice)=>{
     if(!choice)return false;
     if(choice.kind==="damage")return playDamageSpell(choice);
     if(choice.kind==="summon")return playSummon(choice);
+    if(choice.kind==="equipment")return playEquipment(choice);
     if(choice.kind==="buff")return playBuff(choice);
     if(choice.kind==="heal")return playHeal(choice);
     if(choice.kind==="guard")return playGuard(choice);
