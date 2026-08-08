@@ -530,8 +530,8 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v6";
-const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v5";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v7";
+const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v6";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Preset recuperado de la configuración visual del usuario en las capturas del Beast Master. */
 const HALLVALLA_HUD_PRESET=Object.freeze({
@@ -597,7 +597,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "dragons.lightning.cost":{group:"Dragón de Rayo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-cost"},
   "dragons.lightning.fight":{group:"Dragón de Rayo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-events-primary--dragon"}
 });
-const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:1120,align:"left",selectedHud:"beast.tab.info",hud:{}});
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.tab.info",hud:{}});
 function clampHallvallaHudNumber(value,min,max,fallback){
   const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 }
@@ -624,11 +624,11 @@ function getHallvallaEventUiSettings(){
     });
 
     /*
-      Migración v5 -> v6:
+      Migración v6 -> v7:
       Estos siete valores son EXACTAMENTE los que el usuario dejó visibles en
-      sus capturas. En la primera carga de v6 se fuerzan una sola vez para no
+      sus capturas. En la primera carga de v7 se fuerzan una sola vez para no
       heredar posiciones anteriores incorrectas guardadas en localStorage.
-      Después de guardarse v6, cualquier ajuste nuevo del usuario se conserva.
+      Además, en v7 el ancho compacto se restaura a 900px. Después de guardarse v7, cualquier ajuste nuevo del usuario se conserva.
     */
     if(!stored){
       Object.keys(HALLVALLA_HUD_PRESET).forEach(key=>{
@@ -638,7 +638,7 @@ function getHallvallaEventUiSettings(){
 
     const settings={
       bodySize:clampHallvallaHudNumber(raw.bodySize,13,26,17),
-      modalWidth:clampHallvallaHudNumber(raw.modalWidth,900,1500,1120),
+      modalWidth:!stored?900:clampHallvallaHudNumber(raw.modalWidth,900,1500,900),
       align:["left","center"].includes(String(raw.align||""))?String(raw.align):"left",
       selectedHud:HALLVALLA_HUD_TARGETS[raw.selectedHud]?raw.selectedHud:"beast.tab.info",
       hud
@@ -1158,8 +1158,8 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-close{right:18px}
   .hallvalla-events-gear{right:68px;font-size:20px}
   .hallvalla-events-tabs--beast{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10061;pointer-events:none;overflow:visible}.hallvalla-events-tabs--persistent{isolation:isolate}
-  .hallvalla-beast-tab-btn{position:fixed;width:340px;max-width:32vw;padding:0;border:0;background:transparent;cursor:pointer;pointer-events:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));transition:filter .18s ease,opacity .18s ease;transform-origin:center center}
-  .hallvalla-beast-tab-btn img{display:block;width:100%;height:auto;pointer-events:none;user-select:none}
+  .hallvalla-beast-tab-btn{position:fixed;width:340px;max-width:32vw;padding:0!important;border:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important;outline:none;cursor:pointer;pointer-events:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));transition:filter .18s ease,opacity .18s ease;transform-origin:center center}
+  .hallvalla-beast-tab-btn img{display:block;width:100%;height:auto;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;user-select:none}
   .hallvalla-beast-tab-btn:hover{filter:drop-shadow(0 12px 28px rgba(0,0,0,.58)) brightness(1.04)}
   .hallvalla-beast-tab-btn.is-active{filter:drop-shadow(0 14px 32px rgba(0,0,0,.6)) brightness(1.08)}
   .hallvalla-beast-tab-btn--info{left:270px;top:245px}
@@ -1186,6 +1186,11 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-primary:disabled{cursor:not-allowed;opacity:.68;transform:none}
   .hallvalla-events-secondary{min-width:168px;min-height:50px;padding:10px 14px;background:rgba(8,10,14,.82);color:#f2d17d;font-size:16px}
   .hallvalla-events-secondary--inline{align-self:center}
+  .hallvalla-events-image-button{appearance:none!important;-webkit-appearance:none!important;border:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;padding:0!important;margin:0;outline:none!important;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;pointer-events:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.4));transition:transform .18s ease,filter .18s ease}
+  .hallvalla-events-image-button img{display:block;width:100%;height:auto;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;user-select:none}
+  .hallvalla-events-image-button:hover{transform:translateY(-2px);filter:drop-shadow(0 14px 22px rgba(0,0,0,.48)) brightness(1.04)}
+  .hallvalla-events-image-button--pay{width:min(360px,30vw)}
+  .hallvalla-events-image-button--dragon{width:min(240px,20vw)}
   .hallvalla-rewards-overlay{left:13.5%;right:13.5%;top:43.5%;bottom:19%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:5.5% 6.4%}
   .hallvalla-reward-card{display:grid;align-content:center;justify-items:start;padding:16px 16px 16px 36%;text-align:left;color:#f0e7d2;background:transparent;border:none;box-shadow:none;position:relative}
   .hallvalla-reward-card strong{font-family:Georgia,serif;font-size:clamp(30px,2.2vw,42px);line-height:1.04;color:#ffe2a0;text-shadow:0 2px 10px rgba(0,0,0,.55)}
