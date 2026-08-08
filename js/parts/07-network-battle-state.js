@@ -486,6 +486,18 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
       beastmasterEntryGoldCost:entryCost
     };
   }
+  if(battle.dragonContract&&!HALLVALLA_LOCALHOST_TEST_MODE){
+    const entryCost=Math.max(0,Number(battle.entryGoldCost)||0);
+    const profile=getPlayerProfile();
+    if((profile.gold||0)<entryCost){
+      await hvAlert(`Necesitas ${entryCost} de oro para desafiar a ${battle.enemyName}. Tienes ${profile.gold||0}.`,`Oro insuficiente`);
+      return;
+    }
+    profile.gold=Math.max(0,(profile.gold||0)-entryCost);
+    savePlayerProfile(profile);
+    renderPlayerProfile(profile);
+    battle={...battle,dragonContractEntryGoldCost:entryCost};
+  }
   const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerPrincipalPrep.deck,leaderType,1);
   const playerDraw=drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
