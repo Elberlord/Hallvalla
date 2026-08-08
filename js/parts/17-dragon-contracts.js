@@ -2,6 +2,9 @@
 /* HallValla 7BOARDCTRL8AI · El Contrato de las Bestias: jefes dragón */
 
 const DRAGON_CONTRACT_ELEMENT_ORDER=["lightning","fire","ice"];
+const DRAGON_CONTRACT_UNLOCK_LEVEL=7;
+const DRAGON_CONTRACT_ENTRY_GOLD_COST=1000;
+const DRAGON_CONTRACT_MIN_TIER=3;
 const DRAGON_CONTRACT_DEFS=Object.freeze({
   lightning:Object.freeze({
     id:"dragon_contract_lightning",
@@ -49,7 +52,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
 const DRAGON_CONTRACT_BY_ID=Object.freeze(Object.fromEntries(Object.values(DRAGON_CONTRACT_DEFS).map(def=>[def.id,def])));
 const DRAGON_CONTRACT_CHAPTER=Object.freeze({
   id:"dragon_contracts",
-  number:"Extra T3",
+  number:"Nivel 7+",
   title:"El Contrato de las Bestias",
   desc:"Tres pactos prohibidos contra dragones veteranos de guerra.",
   battles:Object.values(DRAGON_CONTRACT_DEFS).map((def,index)=>({
@@ -64,9 +67,6 @@ const DRAGON_CONTRACT_CHAPTER=Object.freeze({
 });
 const DRAGON_CONTRACT_BATTLES=Object.freeze(Object.fromEntries(DRAGON_CONTRACT_CHAPTER.battles.map(b=>[b.id,b])));
 const DRAGON_LEADER_TYPES=new Set(Object.values(DRAGON_CONTRACT_DEFS).map(def=>def.leaderType));
-const DRAGON_CONTRACT_MIN_TIER=3;
-const DRAGON_CONTRACT_UNLOCK_LEVEL=7;
-const DRAGON_CONTRACT_ENTRY_GOLD_COST=1000;
 const DRAGON_EGG_STORAGE_KEY="hallvalla_dragon_eggs";
 let pendingDragonContractBattleId="";
 
