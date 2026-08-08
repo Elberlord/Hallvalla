@@ -1,8 +1,7 @@
 {
-  "bodySize": 17,
-  "modalWidth": 1120,
-  "align": "left",
-  "selectedHud": "beast.info.dragonsButton",
+  "storageKey": "hallvalla_event_ui_settings_v5",
+  "migratesFrom": "hallvalla_event_ui_settings_v4",
+  "source": "Valores recuperados de las capturas del ajustador Beast Master",
   "hud": {
     "beast.close": {
       "x": 16,

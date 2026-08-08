@@ -530,9 +530,22 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v4";
-const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v3";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v5";
+const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v4";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
+/* Preset recuperado de la configuración visual del usuario en las capturas del Beast Master. */
+const HALLVALLA_HUD_PRESET=Object.freeze({
+  "beast.close":Object.freeze({x:16,y:-20,scale:70,width:100,height:100,padding:0,gap:0}),
+  "beast.gear":Object.freeze({x:21,y:-20,scale:70,width:100,height:100,padding:0,gap:0}),
+  "beast.tabs":Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0}),
+  "beast.tab.info":Object.freeze({x:604,y:-142,scale:100,width:100,height:100,padding:0,gap:0}),
+  "beast.tab.rewards":Object.freeze({x:215,y:-50,scale:100,width:100,height:100,padding:0,gap:0}),
+  "beast.tab.global":Object.freeze({x:-173,y:42,scale:100,width:100,height:100,padding:0,gap:0}),
+  "beast.info.dragonsButton":Object.freeze({x:277,y:-372,scale:107,width:100,height:100,padding:0,gap:0})
+});
+function getHallvallaHudPreset(key){
+  return normalizeHallvallaHudSetting(HALLVALLA_HUD_PRESET[key]||HALLVALLA_HUD_DEFAULT);
+}
 const HALLVALLA_HUD_TARGETS=Object.freeze({
   "beast.shell":{group:"Beast Master · General",label:"Panel completo",selector:"#hallvallaEventsModal .hallvalla-events-shell--beast"},
   "beast.close":{group:"Beast Master · General",label:"Botón cerrar",selector:"#hallvallaEventsModal .hallvalla-events-close"},
@@ -602,26 +615,22 @@ function normalizeHallvallaHudSetting(value={}){
 function getHallvallaEventUiSettings(){
   try{
     const stored=localStorage.getItem(HALLVALLA_EVENT_UI_STORAGE_KEY);
-    const raw=stored?JSON.parse(stored):{};
-    let legacy={};
-    if(!stored){try{legacy=JSON.parse(localStorage.getItem(HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY)||"null")||{};}catch(e){legacy={};}}
+    const legacyStored=!stored?localStorage.getItem(HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY):null;
+    const raw=stored?JSON.parse(stored):(legacyStored?JSON.parse(legacyStored):{});
     const hud={};
-    Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{hud[key]=normalizeHallvallaHudSetting(raw?.hud?.[key]);});
-    if(!stored&&legacy&&Object.keys(legacy).length){
-      const migrated=normalizeHallvallaHudSetting({x:legacy.beastOffsetX,y:legacy.beastOffsetY,scale:legacy.beastScale});
-      hud["beast.info.art"]={...migrated};
-      hud["beast.rewards.art"]={...migrated};
-      hud["beast.global.art"]={...migrated};
-    }
+    Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{
+      const saved=raw?.hud?.[key];
+      hud[key]=saved?normalizeHallvallaHudSetting(saved):getHallvallaHudPreset(key);
+    });
     return {
-      bodySize:clampHallvallaHudNumber(raw.bodySize??legacy.bodySize,13,26,17),
-      modalWidth:clampHallvallaHudNumber(raw.modalWidth??legacy.modalWidth,900,1500,1120),
-      align:["left","center"].includes(String(raw.align??legacy.align??""))?String(raw.align??legacy.align):"left",
+      bodySize:clampHallvallaHudNumber(raw.bodySize,13,26,17),
+      modalWidth:clampHallvallaHudNumber(raw.modalWidth,900,1500,1120),
+      align:["left","center"].includes(String(raw.align||""))?String(raw.align):"left",
       selectedHud:HALLVALLA_HUD_TARGETS[raw.selectedHud]?raw.selectedHud:"beast.tab.info",
       hud
     };
   }catch(e){
-    const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{hud[key]={...HALLVALLA_HUD_DEFAULT};});
+    const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{hud[key]=getHallvallaHudPreset(key);});
     return {...HALLVALLA_EVENT_UI_DEFAULTS,hud};
   }
 }
@@ -731,11 +740,11 @@ function wireHallvallaEventSettings(modal){
     });
     panel.querySelector('[data-hud-reset-selected]')?.addEventListener('click',()=>{
       const settings=getHallvallaEventUiSettings();
-      settings.hud[settings.selectedHud]={...HALLVALLA_HUD_DEFAULT};
+      settings.hud[settings.selectedHud]=getHallvallaHudPreset(settings.selectedHud);
       saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
     });
     panel.querySelector('[data-event-reset]')?.addEventListener('click',()=>{
-      const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>hud[key]={...HALLVALLA_HUD_DEFAULT});
+      const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>hud[key]=getHallvallaHudPreset(key));
       const fresh={...HALLVALLA_EVENT_UI_DEFAULTS,hud};
       saveHallvallaEventUiSettings(fresh);applyHallvallaEventUiSettings(fresh);
     });
