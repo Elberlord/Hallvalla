@@ -640,7 +640,7 @@ function ensureHallvallaEventsModal(){
     </div>
     <section class="hallvalla-beast-panel is-active" data-beast-panel="info">
       <div class="hallvalla-beast-info-grid">
-        <div class="hallvalla-beast-art-panel"><img src="assets/ui/beastmaster/ui_board_beastmaster.webp" alt="Señor de las Bestias"></div>
+        <div class="hallvalla-beast-art-panel"><img src="assets/ui/beastmaster/beastmaster_portrait.webp" alt="Señor de las Bestias"></div>
         <div class="hallvalla-beast-copy-panel">
           <div class="hallvalla-beast-mini">Costo del duelo</div>
           <div class="hallvalla-beast-cost">${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)} Oro por intento</div>
@@ -910,7 +910,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-beast-info-grid{display:grid;grid-template-columns:minmax(230px,.42fr) minmax(280px,.58fr);gap:var(--hv-event-section-gap);align-items:stretch}
   .hallvalla-beast-art-panel,.hallvalla-beast-copy-panel,.hallvalla-global-card,.hallvalla-reward-card,.hallvalla-dragons-note,.hallvalla-global-note,.hallvalla-warning-strip{border:1px solid rgba(227,191,107,.22);border-radius:22px;background:rgba(5,7,11,.76)}
   .hallvalla-beast-art-panel{overflow:hidden;min-height:320px}
-  .hallvalla-beast-art-panel img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.9) contrast(1.04)}
+  .hallvalla-beast-art-panel img{display:block;width:100%;height:100%;object-fit:cover;object-position:center top;filter:saturate(.92) contrast(1.06) brightness(.96)}
   .hallvalla-beast-copy-panel{padding:calc(var(--hv-event-panel-padding) - 2px);display:grid;gap:16px;align-content:start}
   .hallvalla-beast-mini{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--hv-event-gold);font-weight:900}
   .hallvalla-beast-cost{font-family:Georgia,serif;font-size:clamp(30px,4vw,42px);color:#fff2c4;line-height:1.05}
