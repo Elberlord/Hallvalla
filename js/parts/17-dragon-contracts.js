@@ -530,63 +530,174 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v2";
-const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({
-  bodySize:17,
-  modalWidth:1120,
-  beastScale:100,
-  beastOffsetX:0,
-  beastOffsetY:0,
-  align:"left"
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v3";
+const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v2";
+const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
+const HALLVALLA_HUD_TARGETS=Object.freeze({
+  "beast.shell":{group:"Beast Master · General",label:"Panel completo",selector:"#hallvallaEventsModal .hallvalla-events-shell--beast"},
+  "beast.close":{group:"Beast Master · General",label:"Botón cerrar",selector:"#hallvallaEventsModal .hallvalla-events-close"},
+  "beast.gear":{group:"Beast Master · General",label:"Botón ajustes",selector:"#hallvallaEventsModal .hallvalla-events-gear"},
+  "beast.tabs":{group:"Beast Master · General",label:"Pestañas",selector:"#hallvallaEventsModal .hallvalla-events-tabs--beast"},
+  "beast.info.art":{group:"Beast Master · Información",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--info"},
+  "beast.info.cost":{group:"Beast Master · Información",label:"Costo",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cost"},
+  "beast.info.description":{group:"Beast Master · Información",label:"Descripción",selector:"#hallvallaEventsModal .hallvalla-beast-pill--description"},
+  "beast.info.actions":{group:"Beast Master · Información",label:"Acciones / botones",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cta"},
+  "beast.rewards.art":{group:"Beast Master · Recompensas",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--rewards"},
+  "beast.rewards.1":{group:"Beast Master · Recompensas",label:"Recompensa 1 · EXP",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(1)"},
+  "beast.rewards.2":{group:"Beast Master · Recompensas",label:"Recompensa 2 · Gemas",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(2)"},
+  "beast.rewards.3":{group:"Beast Master · Recompensas",label:"Recompensa 3 · Bestia",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(3)"},
+  "beast.rewards.4":{group:"Beast Master · Recompensas",label:"Recompensa 4 · Oro",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(4)"},
+  "beast.rewards.warning":{group:"Beast Master · Recompensas",label:"Aviso inferior",selector:"#hallvallaEventsModal .hallvalla-warning-strip--overlay"},
+  "beast.global.art":{group:"Beast Master · Eventos globales",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--global"},
+  "beast.global.dragon":{group:"Beast Master · Eventos globales",label:"Dragón Joven",selector:"#hallvallaEventsModal .hallvalla-global-card--dragon"},
+  "beast.global.egg":{group:"Beast Master · Eventos globales",label:"Huevo excepcional",selector:"#hallvallaEventsModal .hallvalla-global-card--egg"},
+  "beast.global.note":{group:"Beast Master · Eventos globales",label:"Nota inferior",selector:"#hallvallaEventsModal .hallvalla-global-note--overlay"},
+  "dragons.shell":{group:"Dragones · General",label:"Panel completo",selector:"#hallvallaDragonsModal .hallvalla-events-shell--dragons"},
+  "dragons.close":{group:"Dragones · General",label:"Botón cerrar",selector:"#hallvallaDragonsModal .hallvalla-events-close"},
+  "dragons.gear":{group:"Dragones · General",label:"Botón ajustes",selector:"#hallvallaDragonsModal .hallvalla-events-gear"},
+  "dragons.overview.art":{group:"Dragones · Selección",label:"Arte / panel base",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-artboard"},
+  "dragons.overview.fire":{group:"Dragones · Selección",label:"HUD Fuego",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-card--fire"},
+  "dragons.overview.ice":{group:"Dragones · Selección",label:"HUD Hielo",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-card--ice"},
+  "dragons.overview.lightning":{group:"Dragones · Selección",label:"HUD Rayo",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-card--lightning"},
+  "dragons.overview.note":{group:"Dragones · Selección",label:"Nota inferior",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-note"},
+  "dragons.detail.back":{group:"Dragones · Individual",label:"Botón volver",selector:"#hallvallaDragonsModal .hallvalla-events-secondary--back"},
+  "dragons.fire.art":{group:"Dragón de Fuego",label:"Arte / panel base",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire"},
+  "dragons.fire.status":{group:"Dragón de Fuego",label:"Estado / desbloqueo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire .hallvalla-dragon-detail-status"},
+  "dragons.fire.info":{group:"Dragón de Fuego",label:"Información",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire .hallvalla-dragon-detail-info"},
+  "dragons.fire.rewards":{group:"Dragón de Fuego",label:"Recompensas",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire .hallvalla-dragon-detail-rewards"},
+  "dragons.fire.cost":{group:"Dragón de Fuego",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire .hallvalla-dragon-detail-cost"},
+  "dragons.fire.fight":{group:"Dragón de Fuego",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon"},
+  "dragons.ice.art":{group:"Dragón de Hielo",label:"Arte / panel base",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--ice"},
+  "dragons.ice.status":{group:"Dragón de Hielo",label:"Estado / desbloqueo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--ice .hallvalla-dragon-detail-status"},
+  "dragons.ice.info":{group:"Dragón de Hielo",label:"Información",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--ice .hallvalla-dragon-detail-info"},
+  "dragons.ice.rewards":{group:"Dragón de Hielo",label:"Recompensas",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--ice .hallvalla-dragon-detail-rewards"},
+  "dragons.ice.cost":{group:"Dragón de Hielo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--ice .hallvalla-dragon-detail-cost"},
+  "dragons.ice.fight":{group:"Dragón de Hielo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--ice .hallvalla-events-primary--dragon"},
+  "dragons.lightning.art":{group:"Dragón de Rayo",label:"Arte / panel base",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning"},
+  "dragons.lightning.status":{group:"Dragón de Rayo",label:"Estado / desbloqueo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-status"},
+  "dragons.lightning.info":{group:"Dragón de Rayo",label:"Información",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-info"},
+  "dragons.lightning.rewards":{group:"Dragón de Rayo",label:"Recompensas",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-rewards"},
+  "dragons.lightning.cost":{group:"Dragón de Rayo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-cost"},
+  "dragons.lightning.fight":{group:"Dragón de Rayo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-events-primary--dragon"}
 });
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:1120,align:"left",selectedHud:"beast.tabs",hud:{}});
+function clampHallvallaHudNumber(value,min,max,fallback){
+  const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+}
+function normalizeHallvallaHudSetting(value={}){
+  return {
+    x:clampHallvallaHudNumber(value.x,-500,500,0),
+    y:clampHallvallaHudNumber(value.y,-500,500,0),
+    scale:clampHallvallaHudNumber(value.scale,40,200,100),
+    width:clampHallvallaHudNumber(value.width,40,220,100),
+    height:clampHallvallaHudNumber(value.height,40,220,100),
+    padding:clampHallvallaHudNumber(value.padding,-40,80,0),
+    gap:clampHallvallaHudNumber(value.gap,-40,80,0)
+  };
+}
 function getHallvallaEventUiSettings(){
   try{
-    const raw=JSON.parse(localStorage.getItem(HALLVALLA_EVENT_UI_STORAGE_KEY)||"null")||{};
+    const stored=localStorage.getItem(HALLVALLA_EVENT_UI_STORAGE_KEY);
+    const raw=stored?JSON.parse(stored):{};
+    let legacy={};
+    if(!stored){try{legacy=JSON.parse(localStorage.getItem(HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY)||"null")||{};}catch(e){legacy={};}}
+    const hud={};
+    Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{hud[key]=normalizeHallvallaHudSetting(raw?.hud?.[key]);});
+    if(!stored&&legacy&&Object.keys(legacy).length){
+      const migrated=normalizeHallvallaHudSetting({x:legacy.beastOffsetX,y:legacy.beastOffsetY,scale:legacy.beastScale});
+      hud["beast.info.art"]={...migrated};
+      hud["beast.rewards.art"]={...migrated};
+      hud["beast.global.art"]={...migrated};
+    }
     return {
-      bodySize:Math.max(13,Math.min(26,Number(raw.bodySize)||HALLVALLA_EVENT_UI_DEFAULTS.bodySize)),
-      modalWidth:Math.max(980,Math.min(1380,Number(raw.modalWidth)||HALLVALLA_EVENT_UI_DEFAULTS.modalWidth)),
-      beastScale:Math.max(85,Math.min(120,Number(raw.beastScale)||HALLVALLA_EVENT_UI_DEFAULTS.beastScale)),
-      beastOffsetX:Math.max(-120,Math.min(120,Number(raw.beastOffsetX)||HALLVALLA_EVENT_UI_DEFAULTS.beastOffsetX)),
-      beastOffsetY:Math.max(-120,Math.min(120,Number(raw.beastOffsetY)||HALLVALLA_EVENT_UI_DEFAULTS.beastOffsetY)),
-      align:["left","center"].includes(String(raw.align||""))?String(raw.align):HALLVALLA_EVENT_UI_DEFAULTS.align
+      bodySize:clampHallvallaHudNumber(raw.bodySize??legacy.bodySize,13,26,17),
+      modalWidth:clampHallvallaHudNumber(raw.modalWidth??legacy.modalWidth,900,1500,1120),
+      align:["left","center"].includes(String(raw.align??legacy.align??""))?String(raw.align??legacy.align):"left",
+      selectedHud:HALLVALLA_HUD_TARGETS[raw.selectedHud]?raw.selectedHud:"beast.tabs",
+      hud
     };
-  }catch(e){return {...HALLVALLA_EVENT_UI_DEFAULTS};}
+  }catch(e){
+    const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{hud[key]={...HALLVALLA_HUD_DEFAULT};});
+    return {...HALLVALLA_EVENT_UI_DEFAULTS,hud};
+  }
 }
 function saveHallvallaEventUiSettings(settings){
   try{localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(settings));}catch(e){}
+}
+function captureHallvallaHudBase(el){
+  if(el.dataset.hvHudBaseCaptured==="1")return;
+  const cs=getComputedStyle(el);
+  const px=v=>Number.parseFloat(v)||0;
+  el.dataset.hvHudBaseCaptured="1";
+  el.dataset.hvHudPadTop=String(px(cs.paddingTop));
+  el.dataset.hvHudPadRight=String(px(cs.paddingRight));
+  el.dataset.hvHudPadBottom=String(px(cs.paddingBottom));
+  el.dataset.hvHudPadLeft=String(px(cs.paddingLeft));
+  el.dataset.hvHudGap=String(px(cs.gap));
+}
+function applyHallvallaHudSettingToElement(el,value){
+  const v=normalizeHallvallaHudSetting(value);
+  captureHallvallaHudBase(el);
+  const sx=(v.scale/100)*(v.width/100);
+  const sy=(v.scale/100)*(v.height/100);
+  el.style.translate=`${v.x}px ${v.y}px`;
+  el.style.scale=`${sx} ${sy}`;
+  const padDelta=v.padding;
+  el.style.paddingTop=`${Math.max(0,Number(el.dataset.hvHudPadTop||0)+padDelta)}px`;
+  el.style.paddingRight=`${Math.max(0,Number(el.dataset.hvHudPadRight||0)+padDelta)}px`;
+  el.style.paddingBottom=`${Math.max(0,Number(el.dataset.hvHudPadBottom||0)+padDelta)}px`;
+  el.style.paddingLeft=`${Math.max(0,Number(el.dataset.hvHudPadLeft||0)+padDelta)}px`;
+  const baseGap=Number(el.dataset.hvHudGap||0);
+  el.style.gap=`${Math.max(0,baseGap+v.gap)}px`;
+}
+function getHallvallaHudSelectOptions(){
+  const groups=new Map();
+  Object.entries(HALLVALLA_HUD_TARGETS).forEach(([key,def])=>{
+    if(!groups.has(def.group))groups.set(def.group,[]);
+    groups.get(def.group).push([key,def.label]);
+  });
+  return [...groups.entries()].map(([group,items])=>`<optgroup label="${group}">${items.map(([key,label])=>`<option value="${key}">${label}</option>`).join('')}</optgroup>`).join('');
+}
+function syncHallvallaHudControls(panel,settings=getHallvallaEventUiSettings()){
+  if(!panel)return;
+  const select=panel.querySelector('[data-hud-target]');
+  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:"beast.tabs";
+  if(select)select.value=key;
+  const v=normalizeHallvallaHudSetting(settings.hud?.[key]);
+  ["x","y","scale","width","height","padding","gap"].forEach(name=>{
+    const input=panel.querySelector(`[data-hud-setting="${name}"]`);
+    const out=panel.querySelector(`[data-hud-output="${name}"]`);
+    if(input)input.value=String(v[name]);
+    if(out)out.value=String(v[name]);
+  });
+  const summary=panel.querySelector('[data-hud-summary]');
+  if(summary)summary.textContent=`X ${v.x}px · Y ${v.y}px · Escala ${v.scale}% · Ancho ${v.width}% · Alto ${v.height}% · Padding ${v.padding}px · Sep. ${v.gap}px`;
 }
 function applyHallvallaEventUiSettings(settings=getHallvallaEventUiSettings()){
   const root=document.documentElement;
   root.style.setProperty('--hv-event-body-size',`${settings.bodySize}px`);
   root.style.setProperty('--hv-event-modal-width',`${settings.modalWidth}px`);
   root.style.setProperty('--hv-event-text-align',settings.align||'left');
-  root.style.setProperty('--hv-beast-scale',`${settings.beastScale/100}`);
-  root.style.setProperty('--hv-beast-offset-x',`${settings.beastOffsetX}px`);
-  root.style.setProperty('--hv-beast-offset-y',`${settings.beastOffsetY}px`);
-  document.querySelectorAll('.hallvalla-events-settings').forEach(panel=>{
-    const body=panel.querySelector('[data-setting="bodySize"]'); if(body)body.value=String(settings.bodySize);
-    const width=panel.querySelector('[data-setting="modalWidth"]'); if(width)width.value=String(settings.modalWidth);
-    const scale=panel.querySelector('[data-setting="beastScale"]'); if(scale)scale.value=String(settings.beastScale);
-    const x=panel.querySelector('[data-setting="beastOffsetX"]'); if(x)x.value=String(settings.beastOffsetX);
-    const y=panel.querySelector('[data-setting="beastOffsetY"]'); if(y)y.value=String(settings.beastOffsetY);
-    panel.querySelectorAll('[data-setting="align"]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.value===settings.align));
-    panel.querySelectorAll('output').forEach(out=>{
-      const target=panel.querySelector(`[data-setting="${out.dataset.for}"]`);
-      if(target)out.value=target.value;
-    });
+  Object.entries(HALLVALLA_HUD_TARGETS).forEach(([key,def])=>{
+    const value=settings.hud?.[key]||HALLVALLA_HUD_DEFAULT;
+    document.querySelectorAll(def.selector).forEach(el=>applyHallvallaHudSettingToElement(el,value));
   });
+  document.querySelectorAll('.hallvalla-events-settings').forEach(panel=>syncHallvallaHudControls(panel,settings));
 }
 function buildHallvallaEventSettingsHtml(){
   return `<button type="button" class="hallvalla-events-gear" data-event-gear="1" aria-label="Ajustes del HUD">⚙</button>
   <div class="hallvalla-events-settings hidden" data-event-settings="1">
-    <div class="hallvalla-events-settings-title">Ajustes del HUD</div>
-    <label><span>Tamaño del texto</span><input type="range" min="13" max="26" step="1" value="17" data-setting="bodySize"><output data-for="bodySize">17</output></label>
-    <label><span>Ancho del modal</span><input type="range" min="980" max="1380" step="10" value="1120" data-setting="modalWidth"><output data-for="modalWidth">1120</output></label>
-    <label><span>Escala Beast Master</span><input type="range" min="85" max="120" step="1" value="100" data-setting="beastScale"><output data-for="beastScale">100</output></label>
-    <label><span>Beast Master X</span><input type="range" min="-120" max="120" step="1" value="0" data-setting="beastOffsetX"><output data-for="beastOffsetX">0</output></label>
-    <label><span>Beast Master Y</span><input type="range" min="-120" max="120" step="1" value="0" data-setting="beastOffsetY"><output data-for="beastOffsetY">0</output></label>
-    <div class="hallvalla-events-align-group"><span>Alineación</span><div class="hallvalla-events-align-row"><button type="button" data-setting="align" data-value="left">Izquierda</button><button type="button" data-setting="align" data-value="center">Centro</button></div></div>
-    <button type="button" class="hallvalla-events-reset" data-event-reset="1">Restablecer</button>
+    <div class="hallvalla-events-settings-title">Ajuste individual de HUD</div>
+    <label class="hallvalla-events-target-label"><span>Elemento</span><select data-hud-target>${getHallvallaHudSelectOptions()}</select></label>
+    <div class="hallvalla-events-hud-summary" data-hud-summary></div>
+    <label><span>Posición X</span><input type="range" min="-500" max="500" step="1" value="0" data-hud-setting="x"><output data-hud-output="x">0</output></label>
+    <label><span>Posición Y</span><input type="range" min="-500" max="500" step="1" value="0" data-hud-setting="y"><output data-hud-output="y">0</output></label>
+    <label><span>Escala</span><input type="range" min="40" max="200" step="1" value="100" data-hud-setting="scale"><output data-hud-output="scale">100</output></label>
+    <label><span>Ancho</span><input type="range" min="40" max="220" step="1" value="100" data-hud-setting="width"><output data-hud-output="width">100</output></label>
+    <label><span>Alto</span><input type="range" min="40" max="220" step="1" value="100" data-hud-setting="height"><output data-hud-output="height">100</output></label>
+    <label><span>Padding +/-</span><input type="range" min="-40" max="80" step="1" value="0" data-hud-setting="padding"><output data-hud-output="padding">0</output></label>
+    <label><span>Separación +/-</span><input type="range" min="-40" max="80" step="1" value="0" data-hud-setting="gap"><output data-hud-output="gap">0</output></label>
+    <div class="hallvalla-events-settings-actions"><button type="button" class="hallvalla-events-reset" data-hud-reset-selected="1">Restablecer elemento</button><button type="button" class="hallvalla-events-reset" data-event-reset="1">Restablecer todo</button></div>
   </div>`;
 }
 function wireHallvallaEventSettings(modal){
@@ -594,23 +705,36 @@ function wireHallvallaEventSettings(modal){
   const panel=modal.querySelector('[data-event-settings]');
   if(gear&&!gear.dataset.bound){
     gear.dataset.bound='1';
-    gear.addEventListener('click',ev=>{ev.stopPropagation();panel?.classList.toggle('hidden');});
+    gear.addEventListener('click',ev=>{ev.stopPropagation();panel?.classList.toggle('hidden');syncHallvallaHudControls(panel);});
   }
   if(panel&&!panel.dataset.bound){
     panel.dataset.bound='1';
     panel.addEventListener('click',ev=>ev.stopPropagation());
-    panel.querySelectorAll('input[type="range"]').forEach(input=>{
+    panel.querySelector('[data-hud-target]')?.addEventListener('change',ev=>{
+      const settings=getHallvallaEventUiSettings();
+      settings.selectedHud=ev.target.value;
+      saveHallvallaEventUiSettings(settings);syncHallvallaHudControls(panel,settings);
+    });
+    panel.querySelectorAll('[data-hud-setting]').forEach(input=>{
       input.addEventListener('input',()=>{
         const settings=getHallvallaEventUiSettings();
-        settings[input.dataset.setting]=Number(input.value);
+        const key=settings.selectedHud;
+        if(!settings.hud)settings.hud={};
+        settings.hud[key]=normalizeHallvallaHudSetting(settings.hud[key]);
+        settings.hud[key][input.dataset.hudSetting]=Number(input.value);
         saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
       });
     });
-    panel.querySelectorAll('[data-setting="align"]').forEach(btn=>btn.addEventListener('click',()=>{
-      const settings=getHallvallaEventUiSettings(); settings.align=btn.dataset.value||'left';
+    panel.querySelector('[data-hud-reset-selected]')?.addEventListener('click',()=>{
+      const settings=getHallvallaEventUiSettings();
+      settings.hud[settings.selectedHud]={...HALLVALLA_HUD_DEFAULT};
       saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
-    }));
-    panel.querySelector('[data-event-reset]')?.addEventListener('click',()=>{saveHallvallaEventUiSettings({...HALLVALLA_EVENT_UI_DEFAULTS});applyHallvallaEventUiSettings();});
+    });
+    panel.querySelector('[data-event-reset]')?.addEventListener('click',()=>{
+      const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>hud[key]={...HALLVALLA_HUD_DEFAULT});
+      const fresh={...HALLVALLA_EVENT_UI_DEFAULTS,hud};
+      saveHallvallaEventUiSettings(fresh);applyHallvallaEventUiSettings(fresh);
+    });
   }
 }
 function closeHallvallaEventModals(){
@@ -1059,8 +1183,11 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-dragon-detail-rewards{left:58.6%;top:69.6%;width:30.4%;font-size:var(--hv-event-body-size);line-height:1.46}
   .hallvalla-dragon-detail-cost{left:6%;bottom:8.2%;width:20%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:clamp(17px,1.2vw,22px);text-align:center;color:#f1d88f}
   .hallvalla-dragon-detail-kicker{margin-bottom:6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#d9b76c;font-weight:900}
-  .hallvalla-events-settings{position:absolute;right:68px;top:66px;width:min(330px,72vw);padding:16px;border-radius:18px;border:1px solid rgba(227,191,107,.34);background:rgba(7,10,15,.98);display:grid;gap:12px;box-shadow:0 18px 44px rgba(0,0,0,.42);z-index:20}
+  .hallvalla-events-settings{position:absolute;right:68px;top:66px;width:min(390px,78vw);max-height:min(78vh,720px);overflow:auto;padding:16px;border-radius:18px;border:1px solid rgba(227,191,107,.34);background:rgba(7,10,15,.98);display:grid;gap:12px;box-shadow:0 18px 44px rgba(0,0,0,.42);z-index:20}
   .hallvalla-events-settings.hidden{display:none}
+  .hallvalla-events-target-label select{width:100%;min-height:36px;padding:7px 9px;border-radius:10px;border:1px solid rgba(227,191,107,.32);background:#0c0d10;color:#f0d89a;font-size:13px}
+  .hallvalla-events-hud-summary{padding:9px 10px;border-radius:10px;border:1px solid rgba(227,191,107,.18);background:rgba(255,255,255,.03);color:#ead5a0;font-size:12px;line-height:1.35}
+  .hallvalla-events-settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .hallvalla-events-settings-title{font-family:Georgia,serif;font-size:22px;color:#ffe09b;text-align:center}
   .hallvalla-events-settings label,.hallvalla-events-align-group{display:grid;gap:6px;color:#daccae;font-size:13px}
   .hallvalla-events-settings input[type="range"]{width:100%}
