@@ -558,6 +558,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "beast.info.cost":{group:"Beast Master · Información",label:"Costo",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cost"},
   "beast.info.description":{group:"Beast Master · Información",label:"Descripción",selector:"#hallvallaEventsModal .hallvalla-beast-pill--description"},
   "beast.info.actions":{group:"Beast Master · Información",label:"Acciones / botones",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cta"},
+  "beast.info.fightButton":{group:"Beast Master · Información",label:"Botón · Pagar Oro",selector:"#hallvallaEventsModal [data-beast-fight=\"1\"]"},
   "beast.info.dragonsButton":{group:"Beast Master · Información",label:"Botón · Ir a Dragones",selector:"#hallvallaEventsModal [data-open-dragons=\"1\"]"},
   "beast.rewards.art":{group:"Beast Master · Recompensas",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--rewards"},
   "beast.rewards.1":{group:"Beast Master · Recompensas",label:"Recompensa 1 · EXP",selector:"#hallvallaEventsModal .hallvalla-reward-card--overlay:nth-child(1)"},
@@ -603,11 +604,11 @@ function clampHallvallaHudNumber(value,min,max,fallback){
 }
 function normalizeHallvallaHudSetting(value={}){
   return {
-    x:clampHallvallaHudNumber(value.x,-1000,1000,0),
-    y:clampHallvallaHudNumber(value.y,-1000,1000,0),
-    scale:clampHallvallaHudNumber(value.scale,40,200,100),
-    width:clampHallvallaHudNumber(value.width,40,220,100),
-    height:clampHallvallaHudNumber(value.height,40,220,100),
+    x:clampHallvallaHudNumber(value.x,-5000,5000,0),
+    y:clampHallvallaHudNumber(value.y,-5000,5000,0),
+    scale:clampHallvallaHudNumber(value.scale,10,2000,100),
+    width:clampHallvallaHudNumber(value.width,10,2000,100),
+    height:clampHallvallaHudNumber(value.height,10,2000,100),
     padding:clampHallvallaHudNumber(value.padding,-40,80,0),
     gap:clampHallvallaHudNumber(value.gap,-40,80,0)
   };
@@ -718,72 +719,173 @@ function applyHallvallaEventUiSettings(settings=getHallvallaEventUiSettings()){
   document.querySelectorAll('.hallvalla-events-settings').forEach(panel=>syncHallvallaHudControls(panel,settings));
 }
 function buildHallvallaEventSettingsHtml(){
-  return `<button type="button" class="hallvalla-events-gear" data-event-gear="1" aria-label="Ajustes del HUD">⚙</button>
-  <div class="hallvalla-events-settings hidden" data-event-settings="1">
-    <div class="hallvalla-events-settings-title">Ajuste individual de HUD</div>
-    <label class="hallvalla-events-target-label"><span>Elemento</span><select data-hud-target>${getHallvallaHudSelectOptions()}</select></label>
-    <div class="hallvalla-events-hud-summary" data-hud-summary></div>
-    <label><span>Posición X</span><input type="range" min="-2000" max="2000" step="1" value="0" data-hud-setting="x"><output data-hud-output="x">0</output></label>
-    <label><span>Posición Y</span><input type="range" min="-2000" max="2000" step="1" value="0" data-hud-setting="y"><output data-hud-output="y">0</output></label>
-    <label><span>Escala</span><input type="range" min="40" max="500" step="1" value="100" data-hud-setting="scale"><output data-hud-output="scale">100</output></label>
-    <label><span>Ancho</span><input type="range" min="40" max="500" step="1" value="100" data-hud-setting="width"><output data-hud-output="width">100</output></label>
-    <label><span>Alto</span><input type="range" min="40" max="500" step="1" value="100" data-hud-setting="height"><output data-hud-output="height">100</output></label>
-    <label><span>Padding +/-</span><input type="range" min="-40" max="80" step="1" value="0" data-hud-setting="padding"><output data-hud-output="padding">0</output></label>
-    <label><span>Separación +/-</span><input type="range" min="-40" max="80" step="1" value="0" data-hud-setting="gap"><output data-hud-output="gap">0</output></label>
-    <div class="hallvalla-events-settings-actions"><button type="button" class="hallvalla-events-reset" data-hud-reset-selected="1">Restablecer elemento</button><button type="button" class="hallvalla-events-reset" data-event-reset="1">Restablecer todo</button><button type="button" class="hallvalla-events-copy" data-event-copy-json="1">Copiar JSON</button></div>
+  return `<button type="button" class="hallvalla-events-gear" data-event-gear="1" aria-label="Editar HUD" title="Editar HUD">⚙</button>
+  <div class="hallvalla-hud-mini-toolbar hidden" data-hud-mini-toolbar="1">
+    <button type="button" class="hallvalla-hud-mini-grip" data-hud-toolbar-grip="1" title="Arrastrar barra">⋮⋮</button>
+    <span class="hallvalla-hud-mini-label" data-hud-mini-label>HUD</span>
+    <button type="button" data-hud-scale-down title="Reducir escala">−</button>
+    <button type="button" data-hud-scale-up title="Aumentar escala">+</button>
+    <button type="button" data-event-copy-json="1" title="Copiar toda la configuración">JSON</button>
+    <button type="button" data-hud-reset-selected="1" title="Restablecer elemento">↺</button>
+    <button type="button" data-hud-edit-done="1" title="Salir de edición">✓</button>
   </div>`;
+}
+let hallvallaHudEditMode=false;
+let hallvallaHudDragState=null;
+const HALLVALLA_HUD_TOOLBAR_POS_KEY='hallvalla_event_toolbar_pos_v1';
+function getHallvallaHudToolbarPos(){
+  try{return {...{x:18,y:18},...(JSON.parse(localStorage.getItem(HALLVALLA_HUD_TOOLBAR_POS_KEY)||'{}')||{})};}catch(e){return {x:18,y:18};}
+}
+function applyHallvallaHudToolbarPos(toolbar){
+  if(!toolbar)return;
+  const p=getHallvallaHudToolbarPos();
+  toolbar.style.left=`${Number(p.x)||18}px`;
+  toolbar.style.bottom=`${Number(p.y)||18}px`;
+}
+function saveHallvallaHudToolbarPos(toolbar){
+  if(!toolbar)return;
+  try{
+    const rect=toolbar.getBoundingClientRect();
+    localStorage.setItem(HALLVALLA_HUD_TOOLBAR_POS_KEY,JSON.stringify({x:Math.round(rect.left),y:Math.round(window.innerHeight-rect.bottom)}));
+  }catch(e){}
+}
+function copyHallvallaHudJson(button){
+  const payload=JSON.stringify(getHallvallaEventUiSettings(),null,2);
+  const done=()=>{if(button){const old=button.textContent;button.textContent='✓';setTimeout(()=>button.textContent=old||'JSON',1100);}};
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>{try{window.prompt('Copia este JSON:',payload);}catch(e){}});return;}
+  try{const ta=document.createElement('textarea');ta.value=payload;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}catch(e){try{window.prompt('Copia este JSON:',payload);}catch(err){}}
+}
+function markHallvallaHudElements(){
+  Object.entries(HALLVALLA_HUD_TARGETS).forEach(([key,def])=>{
+    document.querySelectorAll(def.selector).forEach(el=>{
+      el.dataset.hvHudKey=key;
+      if(hallvallaHudEditMode)el.classList.add('hallvalla-hud-direct-editable');
+      else el.classList.remove('hallvalla-hud-direct-editable','hallvalla-hud-direct-selected');
+    });
+  });
+}
+function updateHallvallaHudMiniToolbar(modal,settings=getHallvallaEventUiSettings()){
+  const bar=modal?.querySelector('[data-hud-mini-toolbar]');
+  if(!bar)return;
+  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:'beast.tab.info';
+  const label=bar.querySelector('[data-hud-mini-label]');
+  const v=normalizeHallvallaHudSetting(settings.hud?.[key]);
+  if(label)label.textContent=`${HALLVALLA_HUD_TARGETS[key]?.label||key} · ${Math.round(v.scale)}%`;
+  document.querySelectorAll('[data-hv-hud-key]').forEach(el=>el.classList.toggle('hallvalla-hud-direct-selected',el.dataset.hvHudKey===key));
+}
+function setHallvallaHudEditMode(modal,on){
+  hallvallaHudEditMode=!!on;
+  document.documentElement.classList.toggle('hallvalla-hud-editing',hallvallaHudEditMode);
+  const bar=modal?.querySelector('[data-hud-mini-toolbar]');
+  bar?.classList.toggle('hidden',!hallvallaHudEditMode);
+  if(bar){applyHallvallaHudToolbarPos(bar);updateHallvallaHudMiniToolbar(modal);}
+  markHallvallaHudElements();
+}
+function adjustSelectedHallvallaHudScale(modal,delta){
+  const settings=getHallvallaEventUiSettings();
+  const key=settings.selectedHud;
+  if(!HALLVALLA_HUD_TARGETS[key])return;
+  settings.hud[key]=normalizeHallvallaHudSetting(settings.hud[key]);
+  settings.hud[key].scale=Math.max(10,Math.min(2000,settings.hud[key].scale+delta));
+  saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);markHallvallaHudElements();updateHallvallaHudMiniToolbar(modal,settings);
+}
+function beginHallvallaHudDrag(modal,ev,el,key){
+  const settings=getHallvallaEventUiSettings();
+  settings.selectedHud=key;
+  settings.hud[key]=normalizeHallvallaHudSetting(settings.hud[key]);
+  saveHallvallaEventUiSettings(settings);
+  updateHallvallaHudMiniToolbar(modal,settings);
+  hallvallaHudDragState={pointerId:ev.pointerId,el,key,startX:ev.clientX,startY:ev.clientY,baseX:settings.hud[key].x,baseY:settings.hud[key].y,moved:false,modal};
+  try{el.setPointerCapture(ev.pointerId);}catch(e){}
+}
+function wireHallvallaDirectHudEditing(modal){
+  if(!modal||modal.dataset.hvDirectEditBound==='1')return;
+  modal.dataset.hvDirectEditBound='1';
+  modal.addEventListener('pointerdown',ev=>{
+    if(!hallvallaHudEditMode)return;
+    const el=ev.target.closest('[data-hv-hud-key]');
+    if(!el||ev.target.closest('[data-hud-mini-toolbar]'))return;
+    const key=el.dataset.hvHudKey;
+    if(!key)return;
+    ev.preventDefault();
+    beginHallvallaHudDrag(modal,ev,el,key);
+  },true);
+  modal.addEventListener('pointermove',ev=>{
+    const st=hallvallaHudDragState;
+    if(!st||st.pointerId!==ev.pointerId)return;
+    const dx=ev.clientX-st.startX,dy=ev.clientY-st.startY;
+    if(Math.abs(dx)+Math.abs(dy)>3)st.moved=true;
+    const settings=getHallvallaEventUiSettings();
+    settings.hud[st.key]=normalizeHallvallaHudSetting(settings.hud[st.key]);
+    settings.hud[st.key].x=Math.max(-5000,Math.min(5000,st.baseX+dx));
+    settings.hud[st.key].y=Math.max(-5000,Math.min(5000,st.baseY+dy));
+    applyHallvallaHudSettingToElement(st.el,settings.hud[st.key]);
+    updateHallvallaHudMiniToolbar(modal,settings);
+  },true);
+  const finish=ev=>{
+    const st=hallvallaHudDragState;
+    if(!st||st.pointerId!==ev.pointerId)return;
+    const dx=ev.clientX-st.startX,dy=ev.clientY-st.startY;
+    const settings=getHallvallaEventUiSettings();
+    settings.selectedHud=st.key;
+    settings.hud[st.key]=normalizeHallvallaHudSetting(settings.hud[st.key]);
+    settings.hud[st.key].x=Math.max(-5000,Math.min(5000,st.baseX+dx));
+    settings.hud[st.key].y=Math.max(-5000,Math.min(5000,st.baseY+dy));
+    saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);markHallvallaHudElements();updateHallvallaHudMiniToolbar(modal,settings);
+    st.el.dataset.hvJustDragged=st.moved?'1':'0';
+    hallvallaHudDragState=null;
+  };
+  modal.addEventListener('pointerup',finish,true);modal.addEventListener('pointercancel',finish,true);
+  modal.addEventListener('wheel',ev=>{
+    if(!hallvallaHudEditMode)return;
+    const el=ev.target.closest('[data-hv-hud-key]');
+    if(!el||ev.target.closest('[data-hud-mini-toolbar]'))return;
+    ev.preventDefault();
+    const settings=getHallvallaEventUiSettings();
+    const key=el.dataset.hvHudKey;
+    settings.selectedHud=key;settings.hud[key]=normalizeHallvallaHudSetting(settings.hud[key]);
+    settings.hud[key].scale=Math.max(10,Math.min(2000,settings.hud[key].scale+(ev.deltaY<0?10:-10)));
+    saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);markHallvallaHudElements();updateHallvallaHudMiniToolbar(modal,settings);
+  },{capture:true,passive:false});
+  modal.addEventListener('click',ev=>{
+    if(!hallvallaHudEditMode)return;
+    const el=ev.target.closest('[data-hv-hud-key]');
+    if(!el||ev.target.closest('[data-hud-mini-toolbar]'))return;
+    if(!ev.target.closest('[data-beast-tab]')){ev.preventDefault();ev.stopImmediatePropagation();}
+  },true);
 }
 function wireHallvallaEventSettings(modal){
   const gear=modal.querySelector('[data-event-gear]');
-  const panel=modal.querySelector('[data-event-settings]');
+  const toolbar=modal.querySelector('[data-hud-mini-toolbar]');
   if(gear&&!gear.dataset.bound){
     gear.dataset.bound='1';
-    gear.addEventListener('click',ev=>{ev.stopPropagation();panel?.classList.toggle('hidden');syncHallvallaHudControls(panel);});
+    gear.addEventListener('click',ev=>{ev.stopPropagation();setHallvallaHudEditMode(modal,!hallvallaHudEditMode);});
   }
-  if(panel&&!panel.dataset.bound){
-    panel.dataset.bound='1';
-    panel.addEventListener('click',ev=>ev.stopPropagation());
-    panel.querySelector('[data-hud-target]')?.addEventListener('change',ev=>{
-      const settings=getHallvallaEventUiSettings();
-      settings.selectedHud=ev.target.value;
-      saveHallvallaEventUiSettings(settings);syncHallvallaHudControls(panel,settings);
-    });
-    panel.querySelectorAll('[data-hud-setting]').forEach(input=>{
-      input.addEventListener('input',()=>{
-        const settings=getHallvallaEventUiSettings();
-        const key=settings.selectedHud;
-        if(!settings.hud)settings.hud={};
-        settings.hud[key]=normalizeHallvallaHudSetting(settings.hud[key]);
-        settings.hud[key][input.dataset.hudSetting]=Number(input.value);
-        saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
-      });
-    });
-    panel.querySelector('[data-hud-reset-selected]')?.addEventListener('click',()=>{
+  if(toolbar&&!toolbar.dataset.bound){
+    toolbar.dataset.bound='1';
+    toolbar.addEventListener('click',ev=>ev.stopPropagation());
+    toolbar.querySelector('[data-hud-scale-down]')?.addEventListener('click',()=>adjustSelectedHallvallaHudScale(modal,-10));
+    toolbar.querySelector('[data-hud-scale-up]')?.addEventListener('click',()=>adjustSelectedHallvallaHudScale(modal,10));
+    toolbar.querySelector('[data-event-copy-json]')?.addEventListener('click',ev=>copyHallvallaHudJson(ev.currentTarget));
+    toolbar.querySelector('[data-hud-reset-selected]')?.addEventListener('click',()=>{
       const settings=getHallvallaEventUiSettings();
       settings.hud[settings.selectedHud]=getHallvallaHudPreset(settings.selectedHud);
-      saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);
+      saveHallvallaEventUiSettings(settings);applyHallvallaEventUiSettings(settings);markHallvallaHudElements();updateHallvallaHudMiniToolbar(modal,settings);
     });
-    panel.querySelector('[data-event-reset]')?.addEventListener('click',()=>{
-      const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>hud[key]=getHallvallaHudPreset(key));
-      const fresh={...HALLVALLA_EVENT_UI_DEFAULTS,hud};
-      saveHallvallaEventUiSettings(fresh);applyHallvallaEventUiSettings(fresh);
-    });
-    panel.querySelector('[data-event-copy-json]')?.addEventListener('click',async()=>{
-      const payload=JSON.stringify(getHallvallaEventUiSettings(),null,2);
-      const btn=panel.querySelector('[data-event-copy-json]');
-      try{
-        if(navigator.clipboard?.writeText){
-          await navigator.clipboard.writeText(payload);
-        }else{
-          const area=document.createElement('textarea');
-          area.value=payload; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
-        }
-        if(btn){const prev=btn.textContent;btn.textContent='JSON copiado';setTimeout(()=>btn.textContent=prev||'Copiar JSON',1400);}
-      }catch(e){
-        try{window.prompt('Copia este JSON:',payload);}catch(err){}
-      }
-    });
+    toolbar.querySelector('[data-hud-edit-done]')?.addEventListener('click',()=>setHallvallaHudEditMode(modal,false));
+    const grip=toolbar.querySelector('[data-hud-toolbar-grip]');
+    if(grip){
+      grip.addEventListener('pointerdown',ev=>{
+        ev.preventDefault();
+        const r=toolbar.getBoundingClientRect(),sx=ev.clientX,sy=ev.clientY,sl=r.left,sb=window.innerHeight-r.bottom;
+        const move=e=>{toolbar.style.left=`${Math.max(0,sl+e.clientX-sx)}px`;toolbar.style.bottom=`${Math.max(0,sb-(e.clientY-sy))}px`;};
+        const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);saveHallvallaHudToolbarPos(toolbar);};
+        window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+      });
+    }
   }
+  wireHallvallaDirectHudEditing(modal);
+  markHallvallaHudElements();
 }
 function closeHallvallaEventModals(){
   document.getElementById('hallvallaEventsModal')?.classList.add('hidden');
@@ -1152,7 +1254,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-modal{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:18px;background:rgba(2,4,8,.72);backdrop-filter:blur(8px);overflow:visible}
   .hallvalla-events-modal.hidden{display:none}
   .hallvalla-events-shell{position:relative;width:min(var(--hv-event-modal-width),96vw);max-height:92vh;overflow:auto;border:1px solid var(--hv-event-border);border-radius:28px;padding:18px;background:linear-gradient(180deg,var(--hv-event-surface),var(--hv-event-surface-2));box-shadow:0 36px 100px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,225,145,.05),inset 0 0 60px rgba(194,141,47,.07);color:var(--hv-event-copy);text-align:var(--hv-event-text-align)}
-  .hallvalla-events-shell--beast{width:min(var(--hv-event-modal-width),96vw);background:transparent;border:none;box-shadow:none;padding:10px;overflow:visible}
+  .hallvalla-events-shell--beast{width:96vw;max-width:1672px;max-height:none;background:transparent;border:none;box-shadow:none;padding:0;overflow:visible}
   .hallvalla-events-shell--dragons{width:min(calc(var(--hv-event-modal-width) + 80px),97vw);padding:24px 24px 22px}
   .hallvalla-events-close,.hallvalla-events-gear{position:absolute;top:18px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(228,191,105,.52);background:rgba(10,10,12,.95);color:#efd596;display:grid;place-items:center;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.28);z-index:12}
   .hallvalla-events-close{right:18px}
@@ -1167,7 +1269,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-beast-tab-btn--global{left:1040px;top:245px}
   .hallvalla-beast-panel{display:none}
   .hallvalla-beast-panel.is-active{display:block}
-  .hallvalla-beast-artboard{position:relative;width:100%;aspect-ratio:1672/941;background-size:contain;background-repeat:no-repeat;background-position:center top;transform:translate(var(--hv-beast-offset-x),var(--hv-beast-offset-y)) scale(var(--hv-beast-scale));transform-origin:center top}
+  .hallvalla-beast-artboard{position:relative;width:100%;max-width:none;aspect-ratio:1672/941;overflow:visible;background-size:contain;background-repeat:no-repeat;background-position:center top;transform:translate(var(--hv-beast-offset-x),var(--hv-beast-offset-y)) scale(var(--hv-beast-scale));transform-origin:center top}
   .hallvalla-beast-artboard--info{background-image:url('assets/ui/beastmaster/beastmaster_info_panel_ai.webp')}
   .hallvalla-beast-artboard--rewards{background-image:url('assets/ui/beastmaster/beastmaster_rewards_panel_ai.webp')}
   .hallvalla-beast-artboard--global{background-image:url('assets/ui/beastmaster/beastmaster_global_panel_ai.webp')}
@@ -1248,6 +1350,15 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-hud-summary{padding:9px 10px;border-radius:10px;border:1px solid rgba(227,191,107,.18);background:rgba(255,255,255,.03);color:#ead5a0;font-size:12px;line-height:1.35}
   .hallvalla-events-settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hallvalla-events-copy{grid-column:1 / -1}
   .hallvalla-events-settings-title{font-family:Georgia,serif;font-size:22px;color:#ffe09b;text-align:center}
+  .hallvalla-hud-mini-toolbar{position:fixed;left:18px;bottom:18px;z-index:10150;display:flex;align-items:center;gap:5px;padding:6px 7px;border:1px solid rgba(227,191,107,.48);border-radius:12px;background:rgba(5,8,12,.94);box-shadow:0 10px 28px rgba(0,0,0,.48);color:#f1d999;max-width:min(92vw,620px);font-size:12px;white-space:nowrap}
+  .hallvalla-hud-mini-toolbar.hidden{display:none}
+  .hallvalla-hud-mini-toolbar button{appearance:none;border:1px solid rgba(227,191,107,.35);border-radius:8px;background:rgba(13,17,24,.95);color:#f4d88f;min-width:30px;height:30px;padding:0 8px;cursor:pointer;font-weight:800}
+  .hallvalla-hud-mini-toolbar button:hover{border-color:rgba(255,219,127,.72);background:rgba(41,31,16,.96)}
+  .hallvalla-hud-mini-grip{cursor:move!important;padding:0 5px!important;min-width:24px!important}
+  .hallvalla-hud-mini-label{max-width:220px;overflow:hidden;text-overflow:ellipsis;padding:0 5px;color:#f7e7b8;font-weight:700}
+  .hallvalla-hud-editing [data-hv-hud-key]{touch-action:none}
+  .hallvalla-hud-editing .hallvalla-hud-direct-editable:hover{outline:1px dashed rgba(255,218,120,.72);outline-offset:3px;cursor:move}
+  .hallvalla-hud-editing .hallvalla-hud-direct-selected{outline:2px solid rgba(88,210,255,.78)!important;outline-offset:4px}
   .hallvalla-events-settings label,.hallvalla-events-align-group{display:grid;gap:6px;color:#daccae;font-size:13px}
   .hallvalla-events-settings input[type="range"]{width:100%}
   .hallvalla-events-settings output{color:#ffe09b;font-weight:900}
@@ -1258,7 +1369,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .leader-base-dragon_lightning .leader-base-portrait,.leader-base-dragon_fire .leader-base-portrait,.leader-base-dragon_ice .leader-base-portrait{width:112%;height:94%;bottom:10%}
   .leader-base-dragon_lightning .leader-base-pedestal,.leader-base-dragon_fire .leader-base-pedestal,.leader-base-dragon_ice .leader-base-pedestal{opacity:.26}
   @media(max-width:1180px){.hallvalla-beast-tab-btn{width:300px;max-width:34vw}.hallvalla-beast-tab-btn--info{left:170px;top:240px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 150px);top:240px}.hallvalla-beast-tab-btn--global{right:120px;left:auto;top:240px}.hallvalla-beast-pill--cta{flex-direction:column;align-items:stretch}.hallvalla-events-secondary--inline{min-width:0}.hallvalla-global-card--overlay{padding:14px 18px}}
-  @media(max-width:980px){.hallvalla-events-shell,.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-beast-tab-btn{width:260px;max-width:38vw}.hallvalla-beast-tab-btn--info{left:36px;top:228px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 130px);top:228px}.hallvalla-beast-tab-btn--global{right:36px;left:auto;top:228px}.hallvalla-beast-artboard{transform:none}.hallvalla-rewards-overlay{left:11%;right:11%;top:42%;bottom:17%;gap:4.5%}.hallvalla-reward-card{padding-left:32%}.hallvalla-global-note--overlay{padding:0 7.5%}.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
+  @media(max-width:980px){.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-beast-tab-btn{width:260px;max-width:38vw}.hallvalla-beast-tab-btn--info{left:36px;top:228px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 130px);top:228px}.hallvalla-beast-tab-btn--global{right:36px;left:auto;top:228px}.hallvalla-beast-artboard{transform:none}.hallvalla-rewards-overlay{left:11%;right:11%;top:42%;bottom:17%;gap:4.5%}.hallvalla-reward-card{padding-left:32%}.hallvalla-global-note--overlay{padding:0 7.5%}.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
   @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-beast-pill--cta{left:8%;right:8%;top:76%;width:auto;flex-direction:column}.hallvalla-events-image-button--pay{width:min(340px,76vw)}.hallvalla-events-image-button--dragon{width:min(280px,68vw)}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-card{padding-left:38%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-card{padding:0 5% 10%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
   `;
   document.head.appendChild(style);
