@@ -239,7 +239,7 @@ const FIELD_STAT_BADGE_TARGETS={
   evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:220,iconX:4,iconY:-1,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:-3.6,numY:-2}}
 };
 const FIELD_STAT_CONTROL_DEFS=[
-  {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:220,step:1},
+  {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:500,step:1},
   {key:"iconX",input:"fieldBadgeIconXInput",output:"fieldBadgeIconXValue",suffix:" px",prop:"icon-x",unit:"px",min:-80,max:80,step:1},
   {key:"iconY",input:"fieldBadgeIconYInput",output:"fieldBadgeIconYValue",suffix:" px",prop:"icon-y",unit:"px",min:-80,max:80,step:1},
   {key:"ringScale",input:"fieldBadgeRingScaleInput",output:"fieldBadgeRingScaleValue",suffix:"%",prop:"ring-scale",factor:100,min:40,max:220,step:1},
@@ -637,7 +637,7 @@ function initFieldBoardTuner(){
 initFieldBoardTuner();
 
 const BATTLE_CLOCK_TUNER_DEFAULTS={
-  turn:{x:-516,y:371,scale:100},
+  turn:{x:-335,y:359,scale:100},
   p1:{x:148,y:11,scale:100},
   p2:{x:-159,y:9,scale:100}
 };
