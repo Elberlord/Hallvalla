@@ -794,7 +794,7 @@ function maybePlayBattleFx(prevPub,nextPub){
 */
 const GAME_SETTINGS_KEY="hallvalla_game_settings";
 let gameSettings=loadGameSettings();
-let currentMusic=null,currentMusicName="",audioUnlocked=false;
+let currentMusic=null,currentMusicName="",audioUnlocked=false,currentMusicSecondary=null,musicLoopTimer=null,musicCrossfadeRaf=null,musicLoopGeneration=0,currentMusicBaseVolume=.32;
 function loadGameSettings(){
   try{
     const saved=JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{};
@@ -897,7 +897,7 @@ if(typeof window!=="undefined"){
 const SFX_ASSET_VERSION="7WEAPONSFX1";
 const MUSIC_TRACK_EXTENSIONS={
   duel_hallvalla_war_chant:"mp3",
-  duel_hallvalla_focus:"ogg"
+  duel_hallvalla_focus:"mp3"
 };
 function audioPath(kind,name){
   const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[name]||"ogg"):"ogg";
@@ -919,18 +919,78 @@ function tryPlaySound(name,volume=1){
 function maybePlayNearDeathSound(){
   return;
 }
+const SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS=5;
+function clearSeamlessMusicLoop(){
+  musicLoopGeneration+=1;
+  if(musicLoopTimer){clearInterval(musicLoopTimer);musicLoopTimer=null;}
+  if(musicCrossfadeRaf){cancelAnimationFrame(musicCrossfadeRaf);musicCrossfadeRaf=null;}
+  if(currentMusicSecondary){try{currentMusicSecondary.pause();currentMusicSecondary.currentTime=0;}catch(e){}currentMusicSecondary=null;}
+}
+function startSeamlessDuelMusic(name,vol){
+  const src=audioPath("music",name);
+  const generation=++musicLoopGeneration;
+  currentMusicBaseVolume=vol;
+  const audio=new Audio(src);
+  audio.loop=false;
+  audio.preload="auto";
+  audio.volume=vol;
+  currentMusic=audio;
+  currentMusicName=name;
+  const playAttempt=audio.play();
+  if(playAttempt&&playAttempt.catch)playAttempt.catch(()=>{});
+  musicLoopTimer=setInterval(()=>{
+    if(generation!==musicLoopGeneration||currentMusicName!==name||!currentMusic||currentMusicSecondary)return;
+    const active=currentMusic;
+    const duration=Number(active.duration||0);
+    if(!Number.isFinite(duration)||duration<=SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS+1)return;
+    if(duration-Number(active.currentTime||0)>SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS)return;
+    const incoming=new Audio(src);
+    incoming.loop=false;
+    incoming.preload="auto";
+    incoming.volume=0;
+    currentMusicSecondary=incoming;
+    const fadeStart=performance.now();
+    const outgoing=active;
+    const incomingPlay=incoming.play();
+    if(incomingPlay&&incomingPlay.catch)incomingPlay.catch(()=>{
+      if(generation!==musicLoopGeneration)return;
+      currentMusicSecondary=null;
+      try{outgoing.loop=true;outgoing.volume=currentMusicBaseVolume;}catch(e){}
+    });
+    const fadeStep=(now)=>{
+      if(generation!==musicLoopGeneration||currentMusicName!==name)return;
+      const progress=Math.max(0,Math.min(1,(now-fadeStart)/(SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS*1000)));
+      const base=clampAudioVolume(currentMusicBaseVolume,.32);
+      try{outgoing.volume=base*(1-progress);}catch(e){}
+      try{incoming.volume=base*progress;}catch(e){}
+      if(progress<1){musicCrossfadeRaf=requestAnimationFrame(fadeStep);return;}
+      musicCrossfadeRaf=null;
+      try{outgoing.pause();outgoing.currentTime=0;}catch(e){}
+      if(generation!==musicLoopGeneration)return;
+      currentMusic=incoming;
+      currentMusicSecondary=null;
+      try{incoming.volume=base;}catch(e){}
+    };
+    musicCrossfadeRaf=requestAnimationFrame(fadeStep);
+  },200);
+}
 function playMusic(name){
   if(!gameSettings.sound||!gameSettings.music||!name){stopMusic(false);return;}
   const vol=clampAudioVolume(gameSettings.musicVolume??.32,.32);
+  currentMusicBaseVolume=vol;
   if(currentMusic&&currentMusicName===name){
     try{
-      currentMusic.volume=vol;
+      if(!currentMusicSecondary)currentMusic.volume=vol;
       if(currentMusic.paused&&audioUnlocked)currentMusic.play().catch(()=>{});
     }catch(e){}
     return;
   }
   stopMusic(false);
   try{
+    if(name==="duel_hallvalla_focus"){
+      startSeamlessDuelMusic(name,vol);
+      return;
+    }
     const audio=new Audio(audioPath("music",name));
     audio.loop=true;
     audio.preload="auto";
@@ -942,6 +1002,7 @@ function playMusic(name){
   }catch(e){}
 }
 function stopMusic(clearName=true){
+  clearSeamlessMusicLoop();
   if(currentMusic){try{currentMusic.pause();currentMusic.currentTime=0;}catch(e){}currentMusic=null;}
   if(clearName)currentMusicName="";
 }
