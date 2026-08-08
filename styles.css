@@ -20340,8 +20340,8 @@ body.hv-dragging-board .leader-cell-proxy{
 
 /* Posiciones finales exportadas desde el ajustador de relojes. */
 :root{
-  --hv-turn-clock-offset-x:-335px;
-  --hv-turn-clock-offset-y:359px;
+  --hv-turn-clock-offset-x:-427px;
+  --hv-turn-clock-offset-y:318px;
   --hv-turn-clock-scale:1;
   --hv-p1-clock-offset-x:148px;
   --hv-p1-clock-offset-y:11px;

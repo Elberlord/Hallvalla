@@ -890,7 +890,6 @@ async function adventureEnemyTurn(){
       legendaryTraps,
       beastTraps,
       erictoGraveyard,
-      stalemateNoPlay:pub.stalemateNoPlay||{},
       battleFxEvent,
       defenseFxEvent,
       dodgeFxEvent,
@@ -961,12 +960,9 @@ async function adventureEnemyTurn(){
   pendingAiStatusFxEvent=lionFearStart.statusFxEvent||bleedStart.statusFxEvent||startTrap.statusFxEvent||null;
   pendingAiFloatFxEvent=lionFearStart.floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null;
   if((startTrap.logs.length||bleedStart.logs.length||lionFearStart.logs.length)&&await finalizeBattle(units,logs.join(" ")))return;
-  const aiStatsUpdate={hp:units.find(u=>u.owner===2&&u.leader)?.hp||0,honor,maxHonor,deck:deck.length,hand:hand.length};
-  const aiStalemateState=buildNoPlayStalemateState({...pub,playerStats:{...(pub.playerStats||{}),2:aiStatsUpdate}},units,2,hand,honor,"main",aiStatsUpdate);
-  pub.stalemateNoPlay=aiStalemateState.stalemateNoPlay||{};
-  const aiStalemateOutcome=getBattleOutcome(units,aiStalemateState);
-  if(aiStalemateOutcome.ended&&String(aiStalemateOutcome.reason||"").startsWith("stalemate")&&await finalizeBattle(units,"",aiStalemateState))return;
-  if(aiStalemateState.stalemateNoPlay?.[2]?.noPlayable)logs.push(`Rival no tiene unidades ni cartas jugables: queda marcado para desempate por Vida si J1 también se agota.`);
+  // El antiguo sistema stalemateNoPlay fue retirado del motor de batalla.
+  // La IA continúa directamente con su turno normal después de recargar Honor,
+  // robar y resolver los efectos de inicio de turno.
 
   const d=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
   const at=(x,y)=>units.find(u=>u.x===x&&u.y===y);
@@ -2715,7 +2711,6 @@ async function adventureEnemyTurn(){
     beastTraps,
     erictoGraveyard,
     ...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),
-    stalemateNoPlay:pub.stalemateNoPlay||{},
     currentPlayer:1,
     turnPhase:"draw",
     adventureAiState:nextAiState,

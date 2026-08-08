@@ -637,7 +637,7 @@ function initFieldBoardTuner(){
 initFieldBoardTuner();
 
 const BATTLE_CLOCK_TUNER_DEFAULTS={
-  turn:{x:-335,y:359,scale:100},
+  turn:{x:-427,y:318,scale:100},
   p1:{x:148,y:11,scale:100},
   p2:{x:-159,y:9,scale:100}
 };
