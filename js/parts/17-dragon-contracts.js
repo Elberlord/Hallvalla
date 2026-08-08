@@ -1187,9 +1187,9 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "dragons.close":{group:"Dragones · General",label:"Botón cerrar",selector:"#hallvallaDragonsModal .hallvalla-events-close"},
   "dragons.gear":{group:"Dragones · General",label:"Botón ajustes",selector:"#hallvallaDragonsModal .hallvalla-events-gear"},
   "dragons.overview.art":{group:"Dragones · Selección",label:"Arte / panel base",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-artboard"},
-  "dragons.overview.fire":{group:"Dragones · Selección",label:"HUD Fuego",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-card--fire"},
-  "dragons.overview.ice":{group:"Dragones · Selección",label:"HUD Hielo",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-card--ice"},
-  "dragons.overview.lightning":{group:"Dragones · Selección",label:"HUD Rayo",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-card--lightning"},
+  "dragons.overview.fire":{group:"Dragones · Selección",label:"Pill abrir · Fuego",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-open-pill--fire"},
+  "dragons.overview.ice":{group:"Dragones · Selección",label:"Pill abrir · Hielo",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-open-pill--ice"},
+  "dragons.overview.lightning":{group:"Dragones · Selección",label:"Pill abrir · Rayo",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-open-pill--lightning"},
   "dragons.overview.note":{group:"Dragones · Selección",label:"Nota inferior",selector:"#hallvallaDragonsModal .hallvalla-dragons-overview-note"},
   "dragons.detail.back":{group:"Dragones · Individual",label:"Botón volver",selector:"#hallvallaDragonsModal .hallvalla-events-secondary--back"},
   "dragons.fire.art":{group:"Dragón de Fuego",label:"Arte / panel base",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--fire"},
@@ -1605,10 +1605,10 @@ function ensureHallvallaDragonsModal(){
       <div class="hallvalla-dragons-overview-artboard">
         ${DRAGON_CONTRACT_ELEMENT_ORDER.map(key=>{
           const def=DRAGON_CONTRACT_DEFS[key];
-          return `<div class="hallvalla-dragons-overview-card hallvalla-dragons-overview-card--${key}" data-dragon-detail-open="${def.id}">
+          return `<div class="hallvalla-dragons-overview-card hallvalla-dragons-overview-card--${key}">
             <div class="hallvalla-dragons-overview-state" data-dragon-status="${def.id}"></div>
-            <button type="button" class="hallvalla-events-secondary hallvalla-events-secondary--ghost" data-dragon-detail-open="${def.id}">Ver evento</button>
-          </div>`;
+          </div>
+          <button type="button" class="hallvalla-dragons-overview-open-pill hallvalla-dragons-overview-open-pill--${key}" data-dragon-detail-open="${def.id}" aria-label="Abrir ${def.enemyName}" title="Abrir ${def.enemyName}"></button>`;
         }).join('')}
         <div class="hallvalla-dragons-overview-note">Se desbloquean al nivel ${DRAGON_CONTRACT_UNLOCK_LEVEL} del líder. Cada duelo cuesta ${formatHallvallaEventNumber(DRAGON_CONTRACT_ENTRY_GOLD_COST)} de Oro y exige 3 Personajes Principales + 20 cartas de robo.</div>
       </div>
@@ -1937,17 +1937,21 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-dragon-stats span{padding:8px 6px;border-radius:12px;background:rgba(255,255,255,.03);text-align:center;color:#cab48c;font-size:13px}
   .hallvalla-dragon-stats b{display:block;color:#fff1c4;font-family:Georgia,serif;font-size:22px;margin-top:3px}
   .hallvalla-dragon-state{text-align:center;color:#d7bf8f;font-size:14px;min-height:18px}
-.hallvalla-events-secondary--ghost{min-height:42px;padding:8px 14px;background:rgba(8,10,14,.48);backdrop-filter:blur(4px)}
   .hallvalla-events-secondary--back{position:absolute;left:18px;top:18px;z-index:12;min-height:42px;padding:8px 14px}
   .hallvalla-events-primary--dragon{position:absolute;left:41.2%;bottom:6.8%;width:23%;min-height:7.6%;padding:0 18px;border-radius:999px;display:flex;align-items:center;justify-content:center}
   .hallvalla-dragons-scene{display:none}
   .hallvalla-dragons-scene.is-active{display:block}
   .hallvalla-dragons-overview-artboard{position:relative;width:100%;aspect-ratio:1672/941;background:url('assets/ui/dragons/dragon_events_overview_ai.png') center top/contain no-repeat}
-  .hallvalla-dragons-overview-card{position:absolute;top:31.5%;width:26%;height:55%;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding:0 7.5% 11%}
+  .hallvalla-dragons-overview-card{position:absolute;top:31.5%;width:26%;height:55%;pointer-events:none}
   .hallvalla-dragons-overview-card--fire{left:4.8%}
   .hallvalla-dragons-overview-card--ice{left:37.1%}
   .hallvalla-dragons-overview-card--lightning{left:69.4%}
-  .hallvalla-dragons-overview-state{min-height:42px;display:flex;align-items:flex-end;justify-content:center;text-align:center;font-size:clamp(14px,1vw,18px);color:#e6d8b9;text-shadow:0 2px 8px rgba(0,0,0,.62)}
+  .hallvalla-dragons-overview-state{position:absolute;left:7%;right:7%;bottom:30%;min-height:42px;display:flex;align-items:flex-end;justify-content:center;text-align:center;font-size:clamp(14px,1vw,18px);color:#e6d8b9;text-shadow:0 2px 8px rgba(0,0,0,.62)}
+  .hallvalla-dragons-overview-open-pill{appearance:none;-webkit-appearance:none;position:absolute;top:83.2%;width:22.2%;height:6.2%;padding:0;margin:0;border:0!important;border-radius:999px;background:transparent!important;box-shadow:none!important;outline:none;cursor:pointer;z-index:9;color:transparent;font-size:0}
+  .hallvalla-dragons-overview-open-pill--fire{left:6.7%}
+  .hallvalla-dragons-overview-open-pill--ice{left:39%}
+  .hallvalla-dragons-overview-open-pill--lightning{left:71.3%}
+  .hallvalla-dragons-overview-open-pill:hover{background:rgba(255,218,126,.035)!important;box-shadow:inset 0 0 0 1px rgba(255,218,126,.12),0 0 18px rgba(255,206,95,.08)!important}
   .hallvalla-dragons-overview-note{position:absolute;left:9%;right:9%;bottom:6.2%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(14px,1vw,18px);color:#edd9aa;text-shadow:0 2px 8px rgba(0,0,0,.62)}
   .hallvalla-dragon-detail-artboard{display:none;position:relative;width:100%;aspect-ratio:1672/941;background-position:center top;background-size:contain;background-repeat:no-repeat}
   .hallvalla-dragon-detail-artboard.is-active{display:block}
@@ -1986,7 +1990,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .leader-base-dragon_lightning .leader-base-pedestal,.leader-base-dragon_fire .leader-base-pedestal,.leader-base-dragon_ice .leader-base-pedestal{opacity:.26}
   @media(max-width:1180px){.hallvalla-beast-tab-btn{width:300px;max-width:34vw}.hallvalla-beast-tab-btn--info{left:170px;top:240px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 150px);top:240px}.hallvalla-beast-tab-btn--global{right:120px;left:auto;top:240px}.hallvalla-events-secondary--inline{min-width:0}.hallvalla-global-card--overlay{padding:14px 18px}}
   @media(max-width:980px){.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-beast-tab-btn{width:260px;max-width:38vw}.hallvalla-beast-tab-btn--info{left:36px;top:228px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 130px);top:228px}.hallvalla-beast-tab-btn--global{right:36px;left:auto;top:228px}.hallvalla-beast-artboard{transform:none}.hallvalla-rewards-overlay{left:11%;right:11%;top:42%;bottom:17%;gap:4.5%}.hallvalla-reward-copy{left:28%;right:4%}.hallvalla-beast-reward-badge{left:5%;width:17%}.hallvalla-global-note--overlay{padding:0 7.5%}.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
-  @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-copy{left:34%;right:4%}.hallvalla-beast-reward-badge{left:7%;width:22%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto;min-height:26%}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-label{top:7%}.hallvalla-global-value{top:22%}.hallvalla-global-progress-shell{top:42%}.hallvalla-global-desc{top:58%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-card{padding:0 5% 10%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
+  @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-copy{left:34%;right:4%}.hallvalla-beast-reward-badge{left:7%;width:22%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto;min-height:26%}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-label{top:7%}.hallvalla-global-value{top:22%}.hallvalla-global-progress-shell{top:42%}.hallvalla-global-desc{top:58%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-state{bottom:28%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
   @media(max-width:720px){.hallvalla-beast-overlay--info>.hallvalla-events-image-button--pay{left:8%;top:77%;width:52%}.hallvalla-beast-overlay--info>.hallvalla-events-image-button--dragon{left:67%;top:78%;width:22%}}
   `;
   document.head.appendChild(style);
