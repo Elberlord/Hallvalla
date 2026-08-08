@@ -530,7 +530,7 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v15";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v16";
 const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
@@ -572,8 +572,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.info": {
-    "x": 539.0244750976562,
-    "y": -216.54096221923828,
+    "x": 622.5027465820312,
+    "y": -186.97576141357422,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -581,8 +581,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.rewards": {
-    "x": 155.0966796875,
-    "y": -93.62312316894531,
+    "x": 237.705322265625,
+    "y": -73.6231689453125,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -590,8 +590,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.global": {
-    "x": -230.7777099609375,
-    "y": 31.71002197265625,
+    "x": -144.6907958984375,
+    "y": 47.3621826171875,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -770,8 +770,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.art": {
-    "x": 0,
-    "y": 0,
+    "x": -1.7391357421875,
+    "y": -1.7391204833984375,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -788,17 +788,17 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.dragonLabel": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": -104.34783935546875,
+    "y": 6.95648193359375,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "beast.global.dragonValue": {
-    "x": 0,
-    "y": 0,
+    "x": 257.39129638671875,
+    "y": -28.6956787109375,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -806,9 +806,9 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.dragonBar": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": -32.1739501953125,
+    "y": -24.34783935546875,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -824,9 +824,9 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.dragonDesc": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": -45.2174072265625,
+    "y": 27.8260498046875,
+    "scale": 60,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -842,17 +842,17 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.eggLabel": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": -46.95654296875,
+    "y": 4.347808837890625,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "beast.global.eggValue": {
-    "x": 0,
-    "y": 0,
+    "x": 292.1739501953125,
+    "y": -30.434783935546875,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -860,9 +860,9 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.eggBar": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 28.6956787109375,
+    "y": -21.7391357421875,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -878,17 +878,17 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.global.eggDesc": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 13.91302490234375,
+    "y": 28.69561767578125,
+    "scale": 60,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "beast.global.note": {
-    "x": 0,
-    "y": 0,
+    "x": 102.60870361328125,
+    "y": -11.304351806640625,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1211,7 +1211,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "dragons.lightning.cost":{group:"Dragón de Rayo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-cost"},
   "dragons.lightning.fight":{group:"Dragón de Rayo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-events-primary--dragon"}
 });
-const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.rewards.art",hud:{}});
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.global.art",hud:{}});
 function clampHallvallaHudNumber(value,min,max,fallback){
   const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 }
