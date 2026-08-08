@@ -530,8 +530,8 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v3";
-const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v2";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v4";
+const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v3";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 const HALLVALLA_HUD_TARGETS=Object.freeze({
   "beast.shell":{group:"Beast Master · General",label:"Panel completo",selector:"#hallvallaEventsModal .hallvalla-events-shell--beast"},
@@ -701,7 +701,7 @@ function buildHallvallaEventSettingsHtml(){
     <label><span>Alto</span><input type="range" min="40" max="220" step="1" value="100" data-hud-setting="height"><output data-hud-output="height">100</output></label>
     <label><span>Padding +/-</span><input type="range" min="-40" max="80" step="1" value="0" data-hud-setting="padding"><output data-hud-output="padding">0</output></label>
     <label><span>Separación +/-</span><input type="range" min="-40" max="80" step="1" value="0" data-hud-setting="gap"><output data-hud-output="gap">0</output></label>
-    <div class="hallvalla-events-settings-actions"><button type="button" class="hallvalla-events-reset" data-hud-reset-selected="1">Restablecer elemento</button><button type="button" class="hallvalla-events-reset" data-event-reset="1">Restablecer todo</button></div>
+    <div class="hallvalla-events-settings-actions"><button type="button" class="hallvalla-events-reset" data-hud-reset-selected="1">Restablecer elemento</button><button type="button" class="hallvalla-events-reset" data-event-reset="1">Restablecer todo</button><button type="button" class="hallvalla-events-copy" data-event-copy-json="1">Copiar JSON</button></div>
   </div>`;
 }
 function wireHallvallaEventSettings(modal){
@@ -739,6 +739,21 @@ function wireHallvallaEventSettings(modal){
       const fresh={...HALLVALLA_EVENT_UI_DEFAULTS,hud};
       saveHallvallaEventUiSettings(fresh);applyHallvallaEventUiSettings(fresh);
     });
+    panel.querySelector('[data-event-copy-json]')?.addEventListener('click',async()=>{
+      const payload=JSON.stringify(getHallvallaEventUiSettings(),null,2);
+      const btn=panel.querySelector('[data-event-copy-json]');
+      try{
+        if(navigator.clipboard?.writeText){
+          await navigator.clipboard.writeText(payload);
+        }else{
+          const area=document.createElement('textarea');
+          area.value=payload; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+        }
+        if(btn){const prev=btn.textContent;btn.textContent='JSON copiado';setTimeout(()=>btn.textContent=prev||'Copiar JSON',1400);}
+      }catch(e){
+        try{window.prompt('Copia este JSON:',payload);}catch(err){}
+      }
+    });
   }
 }
 function closeHallvallaEventModals(){
@@ -770,9 +785,9 @@ function ensureHallvallaEventsModal(){
   modal.id='hallvallaEventsModal';
   modal.className='hallvalla-events-modal hidden';
   modal.innerHTML=`<div class="hallvalla-events-tabs hallvalla-events-tabs--beast hallvalla-events-tabs--persistent" role="tablist" aria-label="Secciones del Beast Master">
-      <button type="button" class="hallvalla-beast-tab-btn hallvalla-beast-tab-btn--info is-active" data-beast-tab="info" role="tab" aria-selected="true"><img src="assets/ui/beastmaster/beast_tab_info.png" alt="Información"></button>
-      <button type="button" class="hallvalla-beast-tab-btn hallvalla-beast-tab-btn--rewards" data-beast-tab="rewards" role="tab" aria-selected="false"><img src="assets/ui/beastmaster/beast_tab_rewards.png" alt="Recompensas"></button>
-      <button type="button" class="hallvalla-beast-tab-btn hallvalla-beast-tab-btn--global" data-beast-tab="global" role="tab" aria-selected="false"><img src="assets/ui/beastmaster/beast_tab_global.png" alt="Eventos globales"></button>
+      <button type="button" class="hallvalla-beast-tab-btn hallvalla-beast-tab-btn--info is-active" data-beast-tab="info" role="tab" aria-selected="true"><img src="assets/ui/beastmaster/beast_tab_info.webp" alt="Información"></button>
+      <button type="button" class="hallvalla-beast-tab-btn hallvalla-beast-tab-btn--rewards" data-beast-tab="rewards" role="tab" aria-selected="false"><img src="assets/ui/beastmaster/beast_tab_rewards.webp" alt="Recompensas"></button>
+      <button type="button" class="hallvalla-beast-tab-btn hallvalla-beast-tab-btn--global" data-beast-tab="global" role="tab" aria-selected="false"><img src="assets/ui/beastmaster/beast_tab_global.webp" alt="Eventos globales"></button>
     </div>
     <div class="hallvalla-events-shell hallvalla-events-shell--beast" role="dialog" aria-modal="true" aria-label="Beast Master">
     <button class="hallvalla-events-close" type="button" aria-label="Cerrar">×</button>
@@ -789,8 +804,8 @@ function ensureHallvallaEventsModal(){
             <p class="hallvalla-beast-body">El Señor de las Bestias iguala el nivel de tu líder y sus bestias combaten con maestría máxima. Cada victoria otorga experiencia, gemas y 1 Bestia aleatoria. Los Dragones no forman parte de la recompensa normal.</p>
           </div>
           <div class="hallvalla-beast-pill hallvalla-beast-pill--cta">
-            <button type="button" class="hallvalla-events-primary" data-beast-fight="1">Enfrentar</button>
-            <button type="button" class="hallvalla-events-secondary hallvalla-events-secondary--inline" data-open-dragons="1">Ir a Dragones</button>
+            <button type="button" class="hallvalla-events-image-button hallvalla-events-image-button--pay" data-beast-fight="1" aria-label="Pagar Oro para enfrentar"><img src="assets/ui/beastmaster/beast_pay_gold_button.webp" alt="Pagar Oro"></button>
+            <button type="button" class="hallvalla-events-image-button hallvalla-events-image-button--dragon" data-open-dragons="1" aria-label="Ir a Dragones"><img src="assets/ui/beastmaster/beast_dragons_button.webp" alt="Ir a Dragones"></button>
           </div>
         </div>
       </div>
@@ -1197,7 +1212,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-settings.hidden{display:none}
   .hallvalla-events-target-label select{width:100%;min-height:36px;padding:7px 9px;border-radius:10px;border:1px solid rgba(227,191,107,.32);background:#0c0d10;color:#f0d89a;font-size:13px}
   .hallvalla-events-hud-summary{padding:9px 10px;border-radius:10px;border:1px solid rgba(227,191,107,.18);background:rgba(255,255,255,.03);color:#ead5a0;font-size:12px;line-height:1.35}
-  .hallvalla-events-settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hallvalla-events-settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hallvalla-events-copy{grid-column:1 / -1}
   .hallvalla-events-settings-title{font-family:Georgia,serif;font-size:22px;color:#ffe09b;text-align:center}
   .hallvalla-events-settings label,.hallvalla-events-align-group{display:grid;gap:6px;color:#daccae;font-size:13px}
   .hallvalla-events-settings input[type="range"]{width:100%}
@@ -1210,7 +1225,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .leader-base-dragon_lightning .leader-base-pedestal,.leader-base-dragon_fire .leader-base-pedestal,.leader-base-dragon_ice .leader-base-pedestal{opacity:.26}
   @media(max-width:1180px){.hallvalla-beast-tab-btn{width:300px;max-width:34vw}.hallvalla-beast-tab-btn--info{left:170px;top:240px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 150px);top:240px}.hallvalla-beast-tab-btn--global{right:120px;left:auto;top:240px}.hallvalla-beast-pill--cta{flex-direction:column;align-items:stretch}.hallvalla-events-secondary--inline{min-width:0}.hallvalla-global-card--overlay{padding:14px 18px}}
   @media(max-width:980px){.hallvalla-events-shell,.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-beast-tab-btn{width:260px;max-width:38vw}.hallvalla-beast-tab-btn--info{left:36px;top:228px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 130px);top:228px}.hallvalla-beast-tab-btn--global{right:36px;left:auto;top:228px}.hallvalla-beast-artboard{transform:none}.hallvalla-rewards-overlay{left:11%;right:11%;top:42%;bottom:17%;gap:4.5%}.hallvalla-reward-card{padding-left:32%}.hallvalla-global-note--overlay{padding:0 7.5%}.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
-  @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-beast-pill--cta{left:8%;right:8%;top:76%;width:auto;flex-direction:column}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-card{padding-left:38%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-card{padding:0 5% 10%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
+  @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-beast-pill--cta{left:8%;right:8%;top:76%;width:auto;flex-direction:column}.hallvalla-events-image-button--pay{width:min(300px,70vw)}.hallvalla-events-image-button--dragon{width:min(210px,58vw)}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-card{padding-left:38%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-card{padding:0 5% 10%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
   `;
   document.head.appendChild(style);
 })();
