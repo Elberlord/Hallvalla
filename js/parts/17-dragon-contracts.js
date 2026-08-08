@@ -530,8 +530,8 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v5";
-const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v4";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v6";
+const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v5";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Preset recuperado de la configuración visual del usuario en las capturas del Beast Master. */
 const HALLVALLA_HUD_PRESET=Object.freeze({
@@ -622,16 +622,36 @@ function getHallvallaEventUiSettings(){
       const saved=raw?.hud?.[key];
       hud[key]=saved?normalizeHallvallaHudSetting(saved):getHallvallaHudPreset(key);
     });
-    return {
+
+    /*
+      Migración v5 -> v6:
+      Estos siete valores son EXACTAMENTE los que el usuario dejó visibles en
+      sus capturas. En la primera carga de v6 se fuerzan una sola vez para no
+      heredar posiciones anteriores incorrectas guardadas en localStorage.
+      Después de guardarse v6, cualquier ajuste nuevo del usuario se conserva.
+    */
+    if(!stored){
+      Object.keys(HALLVALLA_HUD_PRESET).forEach(key=>{
+        hud[key]=getHallvallaHudPreset(key);
+      });
+    }
+
+    const settings={
       bodySize:clampHallvallaHudNumber(raw.bodySize,13,26,17),
       modalWidth:clampHallvallaHudNumber(raw.modalWidth,900,1500,1120),
       align:["left","center"].includes(String(raw.align||""))?String(raw.align):"left",
       selectedHud:HALLVALLA_HUD_TARGETS[raw.selectedHud]?raw.selectedHud:"beast.tab.info",
       hud
     };
+    if(!stored){
+      try{localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(settings));}catch(e){}
+    }
+    return settings;
   }catch(e){
     const hud={};Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{hud[key]=getHallvallaHudPreset(key);});
-    return {...HALLVALLA_EVENT_UI_DEFAULTS,hud};
+    const settings={...HALLVALLA_EVENT_UI_DEFAULTS,hud};
+    try{localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(settings));}catch(err){}
+    return settings;
   }
 }
 function saveHallvallaEventUiSettings(settings){
