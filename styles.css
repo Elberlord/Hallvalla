@@ -20208,7 +20208,7 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
 :root{
   --hv-field-card-scale:1;
   --hv-board-cols:5;
-  --hv-board-rows:6;
+  --hv-board-rows:7;
 }
 .grid .cell{
   overflow:visible !important;
