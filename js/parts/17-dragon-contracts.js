@@ -530,18 +530,452 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v8";
-const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="hallvalla_event_ui_settings_v7";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v10";
+const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
-/* Preset recuperado de la configuración visual del usuario en las capturas del Beast Master. */
+/* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
 const HALLVALLA_HUD_PRESET=Object.freeze({
-  "beast.close":Object.freeze({x:16,y:-20,scale:70,width:100,height:100,padding:0,gap:0}),
-  "beast.gear":Object.freeze({x:21,y:-20,scale:70,width:100,height:100,padding:0,gap:0}),
-  "beast.tabs":Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0}),
-  "beast.tab.info":Object.freeze({x:604,y:-142,scale:100,width:100,height:100,padding:0,gap:0}),
-  "beast.tab.rewards":Object.freeze({x:215,y:-50,scale:100,width:100,height:100,padding:0,gap:0}),
-  "beast.tab.global":Object.freeze({x:-173,y:42,scale:100,width:100,height:100,padding:0,gap:0}),
-  "beast.info.dragonsButton":Object.freeze({x:277,y:-372,scale:107,width:100,height:100,padding:0,gap:0})
+  "beast.shell": {
+    "x": 0,
+    "y": 0,
+    "scale": 80,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.close": {
+    "x": 16,
+    "y": -20,
+    "scale": 70,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.gear": {
+    "x": 21,
+    "y": -20,
+    "scale": 70,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.tabs": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.tab.info": {
+    "x": 539.0244750976562,
+    "y": -216.54096221923828,
+    "scale": 50,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.tab.rewards": {
+    "x": 155.0966796875,
+    "y": -93.62312316894531,
+    "scale": 50,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.tab.global": {
+    "x": -230.7777099609375,
+    "y": 31.71002197265625,
+    "scale": 50,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.info.art": {
+    "x": -81,
+    "y": 0,
+    "scale": 86,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.info.cost": {
+    "x": 30.43475341796875,
+    "y": -13.04345703125,
+    "scale": 80,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.info.description": {
+    "x": 1.7391357421875,
+    "y": 6.0869140625,
+    "scale": 99,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.info.fightButton": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.info.dragonsButton": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.rewards.art": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.rewards.1": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.rewards.2": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.rewards.3": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.rewards.4": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.rewards.warning": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.global.art": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.global.dragon": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.global.egg": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "beast.global.note": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.shell": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.close": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.gear": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.overview.art": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.overview.fire": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.overview.ice": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.overview.lightning": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.overview.note": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.detail.back": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.fire.art": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.fire.status": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.fire.info": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.fire.rewards": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.fire.cost": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.fire.fight": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.ice.art": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.ice.status": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.ice.info": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.ice.rewards": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.ice.cost": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.ice.fight": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.lightning.art": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.lightning.status": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.lightning.info": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.lightning.rewards": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.lightning.cost": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
+  "dragons.lightning.fight": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  }
 });
 function getHallvallaHudPreset(key){
   return normalizeHallvallaHudSetting(HALLVALLA_HUD_PRESET[key]||HALLVALLA_HUD_DEFAULT);
@@ -557,7 +991,6 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "beast.info.art":{group:"Beast Master · Información",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--info"},
   "beast.info.cost":{group:"Beast Master · Información",label:"Costo",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cost"},
   "beast.info.description":{group:"Beast Master · Información",label:"Descripción",selector:"#hallvallaEventsModal .hallvalla-beast-pill--description"},
-  "beast.info.actions":{group:"Beast Master · Información",label:"Acciones / botones",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cta"},
   "beast.info.fightButton":{group:"Beast Master · Información",label:"Botón · Pagar Oro",selector:"#hallvallaEventsModal [data-beast-fight=\"1\"]"},
   "beast.info.dragonsButton":{group:"Beast Master · Información",label:"Botón · Ir a Dragones",selector:"#hallvallaEventsModal [data-open-dragons=\"1\"]"},
   "beast.rewards.art":{group:"Beast Master · Recompensas",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--rewards"},
@@ -598,7 +1031,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "dragons.lightning.cost":{group:"Dragón de Rayo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-cost"},
   "dragons.lightning.fight":{group:"Dragón de Rayo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-events-primary--dragon"}
 });
-const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.tab.info",hud:{}});
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.info.fightButton",hud:{}});
 function clampHallvallaHudNumber(value,min,max,fallback){
   const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 }
@@ -616,32 +1049,17 @@ function normalizeHallvallaHudSetting(value={}){
 function getHallvallaEventUiSettings(){
   try{
     const stored=localStorage.getItem(HALLVALLA_EVENT_UI_STORAGE_KEY);
-    const legacyStored=!stored?localStorage.getItem(HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY):null;
-    const raw=stored?JSON.parse(stored):(legacyStored?JSON.parse(legacyStored):{});
+    const raw=stored?JSON.parse(stored):{};
     const hud={};
     Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{
       const saved=raw?.hud?.[key];
       hud[key]=saved?normalizeHallvallaHudSetting(saved):getHallvallaHudPreset(key);
     });
-
-    /*
-      Migración v6 -> v7:
-      Estos siete valores son EXACTAMENTE los que el usuario dejó visibles en
-      sus capturas. En la primera carga de v7 se fuerzan una sola vez para no
-      heredar posiciones anteriores incorrectas guardadas en localStorage.
-      Además, en v7 el ancho compacto se restaura a 900px. Después de guardarse v7, cualquier ajuste nuevo del usuario se conserva.
-    */
-    if(!stored){
-      Object.keys(HALLVALLA_HUD_PRESET).forEach(key=>{
-        hud[key]=getHallvallaHudPreset(key);
-      });
-    }
-
     const settings={
       bodySize:clampHallvallaHudNumber(raw.bodySize,13,26,17),
       modalWidth:!stored?900:clampHallvallaHudNumber(raw.modalWidth,900,1500,900),
       align:["left","center"].includes(String(raw.align||""))?String(raw.align):"left",
-      selectedHud:HALLVALLA_HUD_TARGETS[raw.selectedHud]?raw.selectedHud:"beast.tab.info",
+      selectedHud:HALLVALLA_HUD_TARGETS[raw.selectedHud]?raw.selectedHud:HALLVALLA_EVENT_UI_DEFAULTS.selectedHud,
       hud
     };
     if(!stored){
@@ -695,7 +1113,7 @@ function getHallvallaHudSelectOptions(){
 function syncHallvallaHudControls(panel,settings=getHallvallaEventUiSettings()){
   if(!panel)return;
   const select=panel.querySelector('[data-hud-target]');
-  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:"beast.tab.info";
+  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:HALLVALLA_EVENT_UI_DEFAULTS.selectedHud;
   if(select)select.value=key;
   const v=normalizeHallvallaHudSetting(settings.hud?.[key]);
   ["x","y","scale","width","height","padding","gap"].forEach(name=>{
@@ -767,7 +1185,7 @@ function markHallvallaHudElements(){
 function updateHallvallaHudMiniToolbar(modal,settings=getHallvallaEventUiSettings()){
   const bar=modal?.querySelector('[data-hud-mini-toolbar]');
   if(!bar)return;
-  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:'beast.tab.info';
+  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:HALLVALLA_EVENT_UI_DEFAULTS.selectedHud;
   const label=bar.querySelector('[data-hud-mini-label]');
   const v=normalizeHallvallaHudSetting(settings.hud?.[key]);
   if(label)label.textContent=`${HALLVALLA_HUD_TARGETS[key]?.label||key} · ${Math.round(v.scale)}%`;
@@ -928,16 +1346,14 @@ function ensureHallvallaEventsModal(){
         <div class="hallvalla-beast-overlay hallvalla-beast-overlay--info">
           <div class="hallvalla-beast-pill hallvalla-beast-pill--cost">
             <div class="hallvalla-beast-mini">Costo del duelo</div>
-            <div class="hallvalla-beast-cost">${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)} Oro por intento</div>
+            <div class="hallvalla-beast-cost">${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)}</div>
           </div>
           <div class="hallvalla-beast-pill hallvalla-beast-pill--description">
             <div class="hallvalla-beast-mini">Descripción</div>
             <p class="hallvalla-beast-body">El Señor de las Bestias iguala el nivel de tu líder y sus bestias combaten con maestría máxima. Cada victoria otorga experiencia, gemas y 1 Bestia aleatoria. Los Dragones no forman parte de la recompensa normal.</p>
           </div>
-          <div class="hallvalla-beast-pill hallvalla-beast-pill--cta">
-            <button type="button" class="hallvalla-events-image-button hallvalla-events-image-button--pay" data-beast-fight="1" aria-label="Pagar Oro para enfrentar"><img src="assets/ui/beastmaster/beast_pay_gold_button.webp" alt="Pagar Oro"></button>
-            <button type="button" class="hallvalla-events-image-button hallvalla-events-image-button--dragon" data-open-dragons="1" aria-label="Ir a Dragones"><img src="assets/ui/beastmaster/beast_dragons_button.webp" alt="Ir a Dragones"></button>
-          </div>
+          <button type="button" class="hallvalla-events-image-button hallvalla-events-image-button--pay" data-beast-fight="1" aria-label="Pagar 100 Oro para enfrentar" title="Pagar 100 Oro para enfrentar"><img src="assets/ui/beastmaster/beast_pay_gold_button.webp" alt="Pagar 100 de Oro"></button>
+          <button type="button" class="hallvalla-events-image-button hallvalla-events-image-button--dragon" data-open-dragons="1" aria-label="Ir a Dragones" title="Ir a Dragones"><img src="assets/ui/beastmaster/beast_dragons_button.webp" alt="Ir a Dragones"></button>
         </div>
       </div>
     </section>
@@ -1130,8 +1546,13 @@ function updateBeastmasterFightButton(modal=ensureHallvallaEventsModal()){
   if(!btn)return;
   const cost=BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST;
   const gold=Number(getPlayerProfile()?.gold||0);
-  btn.textContent=gold>=cost?`Enfrentar · ${formatHallvallaEventNumber(cost)} Oro`:`Faltan ${formatHallvallaEventNumber(Math.max(0,cost-gold))} de Oro`;
-  btn.disabled=gold<cost;
+  const enough=gold>=cost;
+  btn.disabled=!enough;
+  btn.classList.toggle('is-disabled',!enough);
+  const label=enough?`Pagar ${formatHallvallaEventNumber(cost)} Oro`:`Faltan ${formatHallvallaEventNumber(Math.max(0,cost-gold))} de Oro`;
+  btn.setAttribute('title',label);
+  btn.setAttribute('aria-label',label);
+  btn.dataset.goldLabel=label;
 }
 async function startBeastmasterBattleFromModal(){
   if(!getSelectedLeaderType()){
@@ -1278,7 +1699,6 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-beast-pill{position:absolute;color:#f0e7d2;background:rgba(5,9,15,.08);border-radius:18px;padding:10px 14px}
   .hallvalla-beast-pill--cost{left:54.8%;top:27%;width:37%;text-align:left}
   .hallvalla-beast-pill--description{left:54.4%;top:39%;width:38%;min-height:28%}
-  .hallvalla-beast-pill--cta{left:54.8%;top:76%;width:37%;display:flex;gap:14px;align-items:center;justify-content:space-between;padding:10px 12px;background:transparent}
   .hallvalla-beast-mini{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#f0cf84;font-weight:900;margin-bottom:8px}
   .hallvalla-beast-cost{font-family:Georgia,serif;font-size:clamp(26px,3vw,40px);line-height:1.06;color:#fff1c8;text-shadow:0 2px 10px rgba(0,0,0,.55)}
   .hallvalla-beast-body,.hallvalla-global-copy p{font-size:var(--hv-event-body-size);line-height:1.48;color:#e8dbc0;margin:0;text-shadow:0 2px 8px rgba(0,0,0,.55)}
@@ -1291,8 +1711,9 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-events-image-button{appearance:none!important;-webkit-appearance:none!important;border:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;padding:0!important;margin:0;outline:none!important;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;pointer-events:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.4));transition:transform .18s ease,filter .18s ease}
   .hallvalla-events-image-button img{display:block;width:100%;height:auto;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;user-select:none}
   .hallvalla-events-image-button:hover{transform:translateY(-2px);filter:drop-shadow(0 14px 22px rgba(0,0,0,.48)) brightness(1.04)}
-  .hallvalla-events-image-button--pay{width:min(420px,34vw)}
-  .hallvalla-events-image-button--dragon{width:min(360px,28vw)}
+  .hallvalla-beast-overlay--info>.hallvalla-events-image-button--pay{position:absolute;left:54.2%;top:78.5%;width:26.5%;z-index:7}
+  .hallvalla-beast-overlay--info>.hallvalla-events-image-button--dragon{position:absolute;left:81.2%;top:79.5%;width:11.5%;z-index:7}
+  .hallvalla-events-image-button--pay.is-disabled{opacity:.58;filter:grayscale(.22) drop-shadow(0 8px 14px rgba(0,0,0,.32));cursor:not-allowed}
   .hallvalla-rewards-overlay{left:13.5%;right:13.5%;top:43.5%;bottom:19%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:5.5% 6.4%}
   .hallvalla-reward-card{display:grid;align-content:center;justify-items:start;padding:16px 16px 16px 36%;text-align:left;color:#f0e7d2;background:transparent;border:none;box-shadow:none;position:relative}
   .hallvalla-reward-card strong{font-family:Georgia,serif;font-size:clamp(30px,2.2vw,42px);line-height:1.04;color:#ffe2a0;text-shadow:0 2px 10px rgba(0,0,0,.55)}
@@ -1368,9 +1789,11 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .leader-base-dragon_lightning,.leader-base-dragon_fire,.leader-base-dragon_ice{width:clamp(88px,11.4vh,132px);min-height:clamp(116px,16.8vh,172px)}
   .leader-base-dragon_lightning .leader-base-portrait,.leader-base-dragon_fire .leader-base-portrait,.leader-base-dragon_ice .leader-base-portrait{width:112%;height:94%;bottom:10%}
   .leader-base-dragon_lightning .leader-base-pedestal,.leader-base-dragon_fire .leader-base-pedestal,.leader-base-dragon_ice .leader-base-pedestal{opacity:.26}
-  @media(max-width:1180px){.hallvalla-beast-tab-btn{width:300px;max-width:34vw}.hallvalla-beast-tab-btn--info{left:170px;top:240px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 150px);top:240px}.hallvalla-beast-tab-btn--global{right:120px;left:auto;top:240px}.hallvalla-beast-pill--cta{flex-direction:column;align-items:stretch}.hallvalla-events-secondary--inline{min-width:0}.hallvalla-global-card--overlay{padding:14px 18px}}
+  @media(max-width:1180px){.hallvalla-beast-tab-btn{width:300px;max-width:34vw}.hallvalla-beast-tab-btn--info{left:170px;top:240px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 150px);top:240px}.hallvalla-beast-tab-btn--global{right:120px;left:auto;top:240px}.hallvalla-events-secondary--inline{min-width:0}.hallvalla-global-card--overlay{padding:14px 18px}}
   @media(max-width:980px){.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-beast-tab-btn{width:260px;max-width:38vw}.hallvalla-beast-tab-btn--info{left:36px;top:228px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 130px);top:228px}.hallvalla-beast-tab-btn--global{right:36px;left:auto;top:228px}.hallvalla-beast-artboard{transform:none}.hallvalla-rewards-overlay{left:11%;right:11%;top:42%;bottom:17%;gap:4.5%}.hallvalla-reward-card{padding-left:32%}.hallvalla-global-note--overlay{padding:0 7.5%}.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
-  @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-beast-pill--cta{left:8%;right:8%;top:76%;width:auto;flex-direction:column}.hallvalla-events-image-button--pay{width:min(340px,76vw)}.hallvalla-events-image-button--dragon{width:min(280px,68vw)}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-card{padding-left:38%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-card{padding:0 5% 10%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
+  @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-card{padding-left:38%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragons-overview-card{padding:0 5% 10%}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}}
+  @media(max-width:720px){.hallvalla-beast-overlay--info>.hallvalla-events-image-button--pay{left:8%;top:77%;width:52%}.hallvalla-beast-overlay--info>.hallvalla-events-image-button--dragon{left:67%;top:78%;width:22%}}
   `;
   document.head.appendChild(style);
 })();
+

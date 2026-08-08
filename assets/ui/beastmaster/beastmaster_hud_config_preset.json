@@ -58,9 +58,18 @@
       "gap": 0
     },
     "beast.info.dragonsButton": {
-      "x": 277,
-      "y": -372,
-      "scale": 107,
+      "x": 0,
+      "y": 0,
+      "scale": 100,
+      "width": 100,
+      "height": 100,
+      "padding": 0,
+      "gap": 0
+    },
+    "beast.info.fightButton": {
+      "x": 0,
+      "y": 0,
+      "scale": 100,
       "width": 100,
       "height": 100,
       "padding": 0,
@@ -69,5 +78,6 @@
   },
   "modalWidth": 900,
   "bodySize": 17,
-  "align": "left"
+  "align": "left",
+  "selectedHud": "beast.info.fightButton"
 }
