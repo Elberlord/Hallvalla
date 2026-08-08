@@ -215,13 +215,13 @@ Interfaz vigente de la Forja:
 
 Sobres:
 
-- Los sobres vigentes revelan 3 cartas.
-- El Pack básico contiene 3 cartas básicas aleatorias entre unidades,
+- Los sobres vigentes revelan 2 cartas.
+- El Pack básico contiene 2 cartas básicas aleatorias entre unidades,
   magias y trampas normales.
 - El Pack básico no incluye bestias del evento.
-- El Pack reforzado de magia/trampa contiene 3 cartas.
-- El Pack de bestias contiene 3 cartas.
-- El pack gratuito de épica garantizada contiene 3 cartas y garantiza al
+- El Pack reforzado de magia/trampa contiene 2 cartas.
+- El Pack de bestias contiene 2 cartas.
+- El pack gratuito de épica garantizada contiene 2 cartas y garantiza al
   menos una Épica.
 - Cada Pack básico confirmado aumenta un contador.
 - Al confirmar 20 Packs básicos se entrega un pack gratuito con mínimo una

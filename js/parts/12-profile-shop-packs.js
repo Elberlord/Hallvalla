@@ -16,8 +16,8 @@ const PACK_SHOP_ITEMS = [
     category:"CARTAS BÁSICAS",
     image:"assets/home/cartas_basicas.webp",
     costGold:100,
-    description:"Contiene 3 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.",
-    contents:["3 cartas básicas aleatorias"],
+    description:"Contiene 2 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.",
+    contents:["2 cartas básicas aleatorias"],
     pendingType:"shop_basic",
     targetRarity:"basic",
     lowerRarity:"basic"
@@ -28,8 +28,8 @@ const PACK_SHOP_ITEMS = [
     category:"RAREZA RARA",
     image:"assets/home/pack_raro.webp",
     costGold:400,
-    description:"Incluye 1 carta de la primera rareza superior y 2 cartas básicas.",
-    contents:["1 carta superior garantizada","2 cartas básicas"],
+    description:"Incluye 1 carta del nivel Raro garantizada y 1 carta básica.",
+    contents:["1 carta Rara garantizada","1 carta básica (100%)"],
     pendingType:"shop_rare",
     targetRarity:"epic",
     lowerRarity:"basic"
@@ -40,8 +40,8 @@ const PACK_SHOP_ITEMS = [
     category:"RAREZA ÉPICA",
     image:"assets/home/pack_epico.webp",
     costGold:900,
-    description:"Incluye 1 carta de rareza épica de tienda y 2 cartas de la rareza inferior.",
-    contents:["1 carta superior garantizada","2 cartas de la rareza inferior"],
+    description:"Incluye 1 carta del nivel Épico garantizada. La segunda carta tiene 80% de ser Básica y 20% de ser del nivel Raro.",
+    contents:["1 carta Épica garantizada","2.ª: 80% Básica · 20% Rara"],
     pendingType:"shop_epic",
     targetRarity:"glorious",
     lowerRarity:"epic"
@@ -52,8 +52,8 @@ const PACK_SHOP_ITEMS = [
     category:"RAREZA MÍTICA",
     image:"assets/home/pack_mitico.webp",
     costGold:1400,
-    description:"Incluye 1 carta mítica y 2 cartas de la rareza inferior.",
-    contents:["1 carta mítica garantizada","2 cartas de la rareza inferior"],
+    description:"Incluye 1 carta Mítica garantizada. La segunda carta tiene 60% Básica, 30% Rara y 10% Épica.",
+    contents:["1 carta Mítica garantizada","2.ª: 60% Básica · 30% Rara · 10% Épica"],
     pendingType:"shop_mythic",
     targetRarity:"mythic",
     lowerRarity:"glorious"
@@ -64,8 +64,8 @@ const PACK_SHOP_ITEMS = [
     category:"RAREZA LEGENDARIA",
     image:"assets/home/pack_legendario.webp",
     costGold:2000,
-    description:"Incluye 1 carta legendaria y 2 cartas de la rareza inferior.",
-    contents:["1 carta legendaria garantizada","2 cartas míticas"],
+    description:"Incluye 1 carta Legendaria garantizada. La segunda carta tiene 40% Básica, 30% Rara, 20% Épica y 10% Mítica.",
+    contents:["1 carta Legendaria garantizada","2.ª: 40% Básica · 30% Rara · 20% Épica · 10% Mítica"],
     pendingType:"shop_legendary",
     targetRarity:"legendary",
     lowerRarity:"mythic"
@@ -803,7 +803,7 @@ function getBattleRewardLabel(battle){
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   if(battle.cardPack){
     const rewardPackType=getBattleRewardPackType(battle);
-    parts.push(rewardPackType==="beast_pack"?"Paquete de Bestias x1":(rewardPackType==="improved_magic_trap"?"Paquete reforzado de 3 cartas":"Pack básico normal x1 · 3 cartas básicas aleatorias"));
+    parts.push(rewardPackType==="beast_pack"?"Paquete de Bestias x1 · 2 cartas":(rewardPackType==="improved_magic_trap"?"Paquete reforzado de 2 cartas":"Pack básico normal x1 · 2 cartas básicas aleatorias"));
   }
   return parts.join(" · ");
 }
@@ -949,15 +949,17 @@ function bindLayeredShopActions(){
     if(action==="clans"){showComingSoon("Clanes");return;}
     if(action==="settings"){closePackShop();$("settingsPanel")?.classList.remove("hidden");return;}
     if(action==="probabilities"){
-      await hvAlert(`Pack básico: 3 cartas básicas.
+      await hvAlert(`Todos los packs contienen 2 cartas.
 
-Pack raro: 1 rara + 2 básicas.
+Pack básico: 2 Básicas.
 
-Pack épico: 1 épica + 2 raras.
+Pack raro: 1 Rara garantizada + 1 Básica.
 
-Pack mítico: 1 mítica + 2 épicas.
+Pack épico: 1 Épica garantizada. Segunda carta: 80% Básica · 20% Rara.
 
-Pack legendario: 1 legendaria + 2 míticas.`,"Contenido garantizado");
+Pack mítico: 1 Mítica garantizada. Segunda carta: 60% Básica · 30% Rara · 10% Épica.
+
+Pack legendario: 1 Legendaria garantizada. Segunda carta: 40% Básica · 30% Rara · 20% Épica · 10% Mítica.`,"Probabilidades de sobres");
       return;
     }
     if(action==="buy-pack"){

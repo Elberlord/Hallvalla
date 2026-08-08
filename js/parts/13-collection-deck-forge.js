@@ -41,7 +41,7 @@ function removePendingPack(packId){
 const BASIC_PACK_MILESTONE_KEY="hallvalla_basic_pack_open_counter";
 function getBasicPackOpenCounter(){return Math.max(0,Number(localStorage.getItem(BASIC_PACK_MILESTONE_KEY)||0));}
 function setBasicPackOpenCounter(value){localStorage.setItem(BASIC_PACK_MILESTONE_KEY,String(Math.max(0,Number(value||0))));}
-function randomPackCards(pool,count=3){
+function randomPackCards(pool,count=2){
   const source=(pool||[]).filter(Boolean).map(c=>({...c}));
   if(!source.length)return [];
   if(source.length>=count)return shuffle(source).slice(0,count);
@@ -49,7 +49,7 @@ function randomPackCards(pool,count=3){
   for(let i=0;i<count;i++)out.push({...source[Math.floor(Math.random()*source.length)]});
   return out;
 }
-function getRandomBeastEventCards(count=3){
+function getRandomBeastEventCards(count=2){
   const out=[];
   for(let i=0;i<count;i++){const card=getRandomBeastEventCard();if(card)out.push(card);}
   return out;
@@ -68,8 +68,8 @@ function getBasicNonBeastPackPool(){
 function getEpicGuaranteedPackCards(){
   const epicPool=IMPROVED_MAGIC_TRAP_PACK.filter(c=>getCraftRarityKey(c)==="epic");
   const guaranteed=randomPackCards(epicPool.length?epicPool:IMPROVED_MAGIC_TRAP_PACK,1);
-  const fillers=randomPackCards(getBasicNonBeastPackPool(),2);
-  return [...guaranteed,...fillers].slice(0,3);
+  const fillers=randomPackCards(getBasicNonBeastPackPool(),1);
+  return [...guaranteed,...fillers].slice(0,2);
 }
 function getAllShopPackCards(){
   const pools=[
@@ -94,16 +94,43 @@ function getShopRarityPool(rarityKey){
   const exact=getAllShopPackCards().filter(card=>getCraftRarityKey(card)===rarityKey);
   return exact;
 }
+const SHOP_PACK_SECOND_CARD_ODDS={
+  // Los nombres visibles de los packs siguen la progresión Básico → Raro → Épico → Mítico → Legendario.
+  // Internamente, HallValla conserva sus claves históricas de rareza: basic → epic → glorious → mythic → legendary.
+  rare:[{rarity:"basic",weight:100}],
+  epic:[{rarity:"basic",weight:80},{rarity:"epic",weight:20}],
+  mythic:[{rarity:"basic",weight:60},{rarity:"epic",weight:30},{rarity:"glorious",weight:10}],
+  legendary:[{rarity:"basic",weight:40},{rarity:"epic",weight:30},{rarity:"glorious",weight:20},{rarity:"mythic",weight:10}]
+};
+function rollShopPackSecondaryRarity(shopTier="rare"){
+  const odds=SHOP_PACK_SECOND_CARD_ODDS[shopTier]||SHOP_PACK_SECOND_CARD_ODDS.rare;
+  const total=odds.reduce((sum,item)=>sum+Math.max(0,Number(item.weight||0)),0)||100;
+  let roll=Math.random()*total;
+  for(const item of odds){
+    roll-=Math.max(0,Number(item.weight||0));
+    if(roll<0)return item.rarity;
+  }
+  return odds[odds.length-1]?.rarity||"basic";
+}
 function getShopTierPackCards(pack){
   const target=pack?.targetRarity||"basic";
-  const lower=pack?.lowerRarity||"basic";
-  if(pack?.shopTier==="basic"||pack?.type==="shop_basic"||pack?.type==="basic_magic_trap")return randomPackCards(getShopRarityPool("basic"),3);
+  const shopTier=pack?.shopTier||String(pack?.type||"").replace(/^shop_/,"")||"basic";
+  if(shopTier==="basic"||pack?.type==="shop_basic"||pack?.type==="basic_magic_trap")return randomPackCards(getShopRarityPool("basic"),2);
+
+  // Carta 1: siempre de la rareza garantizada del pack.
   const targetPool=getShopRarityPool(target);
-  const lowerPool=getShopRarityPool(lower);
   const guaranteed=randomPackCards(targetPool,1);
-  const fillers=randomPackCards(lowerPool,2);
+
+  // Carta 2: tirada porcentual entre las rarezas inferiores acordadas.
+  const secondaryRarity=rollShopPackSecondaryRarity(shopTier);
+  let secondaryPool=getShopRarityPool(secondaryRarity);
+  if(!secondaryPool.length)secondaryPool=getShopRarityPool("basic");
+  const secondary=randomPackCards(secondaryPool,1);
+
+  // Los pools de las cinco rarezas existen en el catálogo actual; estos fallbacks solo evitan un sobre incompleto
+  // si en el futuro se vacía accidentalmente alguno de ellos.
   const fallback=getAllShopPackCards();
-  return [...guaranteed,...fillers,...randomPackCards(fallback,3)].slice(0,3);
+  return [...guaranteed,...secondary,...randomPackCards(fallback,2)].slice(0,2);
 }
 function getPackCards(pack){
   if(!pack)return[];
@@ -111,9 +138,9 @@ function getPackCards(pack){
   if(special)return[{...special}];
   if(pack.shopTier||String(pack.type||"").startsWith("shop_"))return getShopTierPackCards(pack);
   if(pack.type==="basic_epic_guaranteed")return getEpicGuaranteedPackCards();
-  if(pack.type==="improved_magic_trap")return randomPackCards(IMPROVED_MAGIC_TRAP_PACK,3);
-  if(pack.type==="beast_pack")return getRandomBeastEventCards(3);
-  return randomPackCards(getBasicNonBeastPackPool(),3);
+  if(pack.type==="improved_magic_trap")return randomPackCards(IMPROVED_MAGIC_TRAP_PACK,2);
+  if(pack.type==="beast_pack")return getRandomBeastEventCards(2);
+  return randomPackCards(getBasicNonBeastPackPool(),2);
 }
 function recordBasicPackOpeningAndMaybeBonus(pack){
   if(!pack||!(pack.type==="shop_basic"||pack.type==="basic_magic_trap"||pack.shopTier==="basic"))return false;
