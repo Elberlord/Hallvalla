@@ -896,7 +896,8 @@ if(typeof window!=="undefined"){
 }
 const SFX_ASSET_VERSION="7WEAPONSFX1";
 const MUSIC_TRACK_EXTENSIONS={
-  duel_hallvalla_war_chant:"mp3"
+  duel_hallvalla_war_chant:"mp3",
+  duel_hallvalla_focus:"ogg"
 };
 function audioPath(kind,name){
   const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[name]||"ogg"):"ogg";
@@ -948,11 +949,38 @@ function refreshAudioState(){
   if(!gameSettings.sound||!gameSettings.music)stopMusic(true);
   else syncBattleMusic();
 }
+const BATTLE_DANGER_HP_RATIO=.10;
+function getBattleMusicDeckCount(state,owner){
+  const rawPublicDeck=state?.playerStats?.[owner]?.deck;
+  const publicDeck=Number(rawPublicDeck);
+  if(rawPublicDeck!==null&&rawPublicDeck!==undefined&&Number.isFinite(publicDeck))return Math.max(0,publicDeck);
+  if(state?.mode==="adventure"&&owner===2&&Array.isArray(state?.adventureAiState?.deck))return state.adventureAiState.deck.length;
+  if(owner===myPlayer&&Array.isArray(privateState?.deck))return privateState.deck.length;
+  return null;
+}
+function getBattleMusicDangerState(state=publicState){
+  if(!state||!Array.isArray(state.units))return{danger:false,reason:""};
+  for(const owner of [1,2]){
+    const leader=state.units.find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0);
+    if(leader){
+      const maxHp=Math.max(1,Number(typeof effectiveMaxHp==="function"?effectiveMaxHp(leader):(leader.maxHp||leader.hp||1))||1);
+      const hpRatio=Math.max(0,Number(leader.hp||0))/maxHp;
+      if(hpRatio<=BATTLE_DANGER_HP_RATIO)return{danger:true,reason:`leader_hp_j${owner}`};
+    }
+    const deckCount=getBattleMusicDeckCount(state,owner);
+    if(deckCount!==null&&deckCount<=0)return{danger:true,reason:`deck_empty_j${owner}`};
+  }
+  return{danger:false,reason:""};
+}
 function syncBattleMusic(){
   const inBattle=!!(publicState&&gameId&&!isBattleEnded());
   const homeVisible=!!($("mainMenu")&&!$("mainMenu").classList.contains("hidden"));
-  if(inBattle||homeVisible)playMusic("duel_hallvalla_war_chant");
-  else stopMusic(true);
+  if(inBattle){
+    const danger=getBattleMusicDangerState(publicState);
+    playMusic(danger.danger?"duel_hallvalla_war_chant":"duel_hallvalla_focus");
+  }else if(homeVisible){
+    playMusic("duel_hallvalla_war_chant");
+  }else stopMusic(true);
 }
 function getSummonSoundForUnit(unit){
   const cls=getFxRarityClass(unit);
