@@ -1771,9 +1771,10 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-dragons-overview-card--ice{left:37.1%}
   .hallvalla-dragons-overview-card--lightning{left:69.4%}
   .hallvalla-dragons-overview-state{display:none!important}
-  .hallvalla-dragons-overview-openpill{align-self:center;width:84%;min-height:44px;height:12%;border-radius:999px;border:1px solid rgba(228,191,105,.24);background:rgba(10,12,16,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);backdrop-filter:blur(1.5px);cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease}
-  .hallvalla-dragons-overview-openpill:hover{transform:translateY(-1px);border-color:rgba(255,218,126,.56);background:rgba(16,18,26,.14)}
-  .hallvalla-dragons-overview-openpill:focus-visible{outline:2px solid rgba(255,224,155,.88);outline-offset:2px;border-color:rgba(255,224,155,.7)}
+  .hallvalla-dragons-overview-openpill{align-self:center;width:84%;min-height:44px;height:12%;border-radius:999px;border:0;background:transparent;box-shadow:none;backdrop-filter:none;cursor:pointer;transition:none;outline:none}
+  .hallvalla-dragons-overview-openpill:hover{transform:none;border:0;background:transparent;box-shadow:none}
+  .hallvalla-dragons-overview-openpill:focus-visible{outline:none;border:0;background:transparent}
+  .hallvalla-hud-editing .hallvalla-dragons-overview-openpill{background:rgba(88,210,255,.04)}
   .hallvalla-dragon-detail-artboard{display:none;position:relative;width:100%;aspect-ratio:1672/941;background-position:center top;background-size:contain;background-repeat:no-repeat}
   .hallvalla-dragon-detail-artboard.is-active{display:block}
   .hallvalla-dragon-detail-artboard--fire{background-image:url('assets/ui/dragons/dragon_fire_detail_ai.png')}
