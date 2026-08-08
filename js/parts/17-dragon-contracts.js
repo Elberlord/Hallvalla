@@ -1360,10 +1360,22 @@ function ensureHallvallaEventsModal(){
     <section class="hallvalla-beast-panel hallvalla-beast-panel--rewards" data-beast-panel="rewards">
       <div class="hallvalla-beast-artboard hallvalla-beast-artboard--rewards">
         <div class="hallvalla-rewards-overlay">
-          <article class="hallvalla-reward-card hallvalla-reward-card--overlay"><div class="hallvalla-beast-reward-badge">EXP</div><strong>${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.xp||60)} EXP</strong><span>Experiencia</span></article>
-          <article class="hallvalla-reward-card hallvalla-reward-card--overlay hallvalla-reward-card--gem"><div class="hallvalla-beast-reward-badge">◆</div><strong>${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.gems||10)} Gemas</strong><span>Moneda premium</span></article>
-          <article class="hallvalla-reward-card hallvalla-reward-card--overlay"><div class="hallvalla-beast-reward-badge">?</div><strong>1 Bestia aleatoria</strong><span>Recompensa normal</span></article>
-          <article class="hallvalla-reward-card hallvalla-reward-card--overlay hallvalla-reward-card--muted"><div class="hallvalla-beast-reward-badge">Ø</div><strong>0 Oro</strong><span>No se obtiene oro</span></article>
+          <article class="hallvalla-reward-card hallvalla-reward-card--overlay">
+            <div class="hallvalla-beast-reward-badge"><img src="assets/ui/beastmaster/beast_reward_exp.webp" alt="EXP"></div>
+            <strong>${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.xp||60)} EXP</strong><span>Experiencia</span>
+          </article>
+          <article class="hallvalla-reward-card hallvalla-reward-card--overlay hallvalla-reward-card--gem">
+            <div class="hallvalla-beast-reward-badge"><img src="assets/ui/beastmaster/beast_reward_gems.webp" alt="Gemas"></div>
+            <strong>${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.gems||10)} Gemas</strong><span>Moneda premium</span>
+          </article>
+          <article class="hallvalla-reward-card hallvalla-reward-card--overlay">
+            <div class="hallvalla-beast-reward-badge"><img src="assets/ui/beastmaster/beast_reward_beasts.webp" alt="Bestias"></div>
+            <strong>1 Bestia aleatoria</strong><span>Recompensa normal</span>
+          </article>
+          <article class="hallvalla-reward-card hallvalla-reward-card--overlay hallvalla-reward-card--muted">
+            <div class="hallvalla-beast-reward-badge"><img src="assets/ui/beastmaster/beast_reward_egg.webp" alt="Huevo de dragón"></div>
+            <strong>Huevo de dragón</strong><span>Probabilidad menor</span>
+          </article>
         </div>
         <div class="hallvalla-warning-strip hallvalla-warning-strip--overlay">Importante: los Dragones están excluidos de la recompensa normal.</div>
       </div>
@@ -1720,7 +1732,8 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-reward-card span{font-size:clamp(15px,1vw,19px);color:#e1d1ae;text-shadow:0 2px 8px rgba(0,0,0,.55)}
   .hallvalla-reward-card--gem strong{color:#b8caff}
   .hallvalla-reward-card--muted strong{color:#f1e8d5}
-  .hallvalla-beast-reward-badge{position:absolute;left:10%;top:50%;transform:translateY(-50%);width:18%;aspect-ratio:1/1;display:grid;place-items:center;font-family:Georgia,serif;font-size:clamp(24px,2.2vw,38px);color:#f5d98d;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+  .hallvalla-beast-reward-badge{position:absolute;left:8.5%;top:50%;transform:translateY(-50%);width:22%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .hallvalla-beast-reward-badge img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.55))}
   .hallvalla-warning-strip--overlay{left:14.4%;right:14.4%;bottom:8%;min-height:9%;display:flex;align-items:center;justify-content:center;padding:0 56px;color:#f2d17d;text-align:center;font-family:Georgia,serif;font-size:clamp(16px,1.1vw,22px);background:transparent;border:none;text-shadow:0 2px 8px rgba(0,0,0,.6)}
   .hallvalla-global-card{background:transparent;border:none;box-shadow:none}
   .hallvalla-global-card--overlay{top:41%;width:43%;min-height:37%;padding:18px 24px 22px;color:#f0e7d2}
