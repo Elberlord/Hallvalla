@@ -1139,9 +1139,9 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-beast-panel{display:none}
   .hallvalla-beast-panel.is-active{display:block}
   .hallvalla-beast-artboard{position:relative;width:100%;aspect-ratio:1672/941;background-size:contain;background-repeat:no-repeat;background-position:center top;transform:translate(var(--hv-beast-offset-x),var(--hv-beast-offset-y)) scale(var(--hv-beast-scale));transform-origin:center top}
-  .hallvalla-beast-artboard--info{background-image:url('assets/ui/beastmaster/beastmaster_info_panel_ai.png')}
-  .hallvalla-beast-artboard--rewards{background-image:url('assets/ui/beastmaster/beastmaster_rewards_panel_ai.png')}
-  .hallvalla-beast-artboard--global{background-image:url('assets/ui/beastmaster/beastmaster_global_panel_ai.png')}
+  .hallvalla-beast-artboard--info{background-image:url('assets/ui/beastmaster/beastmaster_info_panel_ai.webp')}
+  .hallvalla-beast-artboard--rewards{background-image:url('assets/ui/beastmaster/beastmaster_rewards_panel_ai.webp')}
+  .hallvalla-beast-artboard--global{background-image:url('assets/ui/beastmaster/beastmaster_global_panel_ai.webp')}
   .hallvalla-beast-overlay,.hallvalla-rewards-overlay,.hallvalla-global-card--overlay,.hallvalla-global-note--overlay,.hallvalla-warning-strip--overlay{position:absolute}
   .hallvalla-beast-overlay--info{inset:0}
   .hallvalla-beast-pill{position:absolute;color:#f0e7d2;background:rgba(5,9,15,.08);border-radius:18px;padding:10px 14px}
