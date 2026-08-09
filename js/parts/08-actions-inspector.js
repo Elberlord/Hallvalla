@@ -1517,6 +1517,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   }
   syncCardInspectTemplateUi(modal._hvLevelProgressText);
   modal.classList.remove("hidden");
+  if(typeof ensureHvDetIconCalibrationLayer==="function")ensureHvDetIconCalibrationLayer(modal);
   if(typeof queueHvDetDirectRefresh==="function")queueHvDetDirectRefresh();
   return modal;
 }

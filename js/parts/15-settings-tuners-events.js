@@ -917,8 +917,8 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v5_unified_v32";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v5_unified_v32";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v6_clean_icons";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v6_clean_icons";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1260,panelHeight:590,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
@@ -933,24 +933,13 @@ const HV_DET_DIRECT_DEFAULT=Object.freeze({
 // Son objetos independientes: todavía NO dependen de los datos de la unidad.
 // El usuario los acomoda una sola vez con el editor visual y exporta el JSON.
 const HV_DET_ICON_CALIBRATION_ITEMS=Object.freeze([
-  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp"},
-  {key:"attack",label:"Ataque",asset:"assets/ui/det_icons/attack.webp"},
-  {key:"dexterity",label:"Destreza",asset:"assets/ui/det_icons/dexterity.webp"},
-  {key:"movement",label:"Movimiento",asset:"assets/ui/det_icons/movement.webp"},
-  {key:"agility",label:"Agilidad",asset:"assets/ui/det_icons/agility.webp"},
-  {key:"guard",label:"Guardia",asset:"assets/ui/det_icons/guard.webp"},
-  {key:"range",label:"Rango",asset:"assets/ui/det_icons/range.webp"},
-  {key:"trigger",label:"Trigger",asset:"assets/ui/det_icons/trigger.webp"},
-  {key:"passive",label:"Pasiva",asset:"assets/ui/det_icons/passive.webp"},
-  {key:"tactical",label:"Táctica",asset:"assets/ui/det_icons/tactical.webp"},
-  {key:"lore",label:"Conóceme / Lore",asset:"assets/ui/det_icons/lore.webp"},
-  {key:"weapon_sword",label:"Arma · espada",asset:"assets/ui/det_icons/weapon_sword.webp"},
-  {key:"weapon_axe",label:"Arma · hacha",asset:"assets/ui/det_icons/weapon_axe.webp"},
-  {key:"weapon_spear",label:"Arma · lanza",asset:"assets/ui/det_icons/weapon_spear.webp"},
-  {key:"weapon_bow",label:"Arma · arco",asset:"assets/ui/det_icons/weapon_bow.webp"},
-  {key:"weapon_mage",label:"Arma · magia",asset:"assets/ui/det_icons/weapon_mage.webp"},
-  {key:"weapon_cavalry",label:"Arma · caballería",asset:"assets/ui/det_icons/weapon_cavalry.webp"},
-  {key:"weapon_beast",label:"Arma · bestia",asset:"assets/ui/det_icons/weapon_beast.webp"}
+  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp",left:41.35,top:8.15},
+  {key:"dexterity",label:"PX / Destreza",asset:"assets/ui/det_icons/dexterity.webp",left:41.35,top:15.95},
+  {key:"movement",label:"MV / Movimiento",asset:"assets/ui/det_icons/movement.webp",left:41.35,top:23.85},
+  {key:"attack",label:"AT / Ataque",asset:"assets/ui/det_icons/attack.webp",left:41.35,top:31.55},
+  {key:"guard",label:"GD / Guardia",asset:"assets/ui/det_icons/guard.webp",left:41.35,top:39.35},
+  {key:"agility",label:"AG / Agilidad",asset:"assets/ui/det_icons/agility.webp",left:41.35,top:47.15},
+  {key:"range",label:"RG / Rango",asset:"assets/ui/det_icons/range.webp",left:41.35,top:54.85}
 ]);
 let hvDetDirectEditing=false;
 let hvDetDirectSelectedKey="";
@@ -1056,10 +1045,9 @@ function ensureHvDetIconCalibrationLayer(root){
     icon.dataset.detIconKey=item.key;
     icon.dataset.detIconAsset=item.asset;
     icon.title=`Icono DET · ${item.label}`;
-    const col=index%cols,row=Math.floor(index/cols);
-    icon.style.left=`${56+(col*6.25)}%`;
-    icon.style.top=`${51.5+(row*8.0)}%`;
-    icon.innerHTML=`<img src="${item.asset}" alt="" draggable="false">`;
+    icon.style.left=`${Number(item.left??56)}%`;
+    icon.style.top=`${Number(item.top??51.5)}%`;
+    icon.innerHTML=`<img src="${item.asset}" alt="" draggable="false"><span class="hv-det-cal-id">deticon.${item.key}</span>`;
     layer.appendChild(icon);
   });
   card.appendChild(layer);
@@ -1069,113 +1057,11 @@ function hvDetBuildTargets(root){
   ensureHvDetIconCalibrationLayer(root);
   if(!root)return [];
   const list=[];
-  const q=sel=>root.querySelector(sel);
-  const qa=sel=>[...root.querySelectorAll(sel)];
-  hvDetAddTarget(list,q('.card-inspect-card'),'panel','Panel completo');
-  qa('.hv-det-icon-calibration .hv-det-cal-icon').forEach(el=>{
+  [...root.querySelectorAll('.hv-det-icon-calibration .hv-det-cal-icon')].forEach(el=>{
     const key=el.dataset.detIconKey||'icon';
     const item=HV_DET_ICON_CALIBRATION_ITEMS.find(entry=>entry.key===key);
-    hvDetAddTarget(list,el,`deticon.${key}`,`ICONO DET · ${item?.label||key}`);
+    hvDetAddTarget(list,el,`deticon.${key}`,`ICONO STAT · ${item?.label||key}`);
   });
-  hvDetAddTarget(list,q('#cardInspectBattlePowerBadge'),'pb','Poder de batalla');
-  hvDetAddTarget(list,q('#detLevelPanel'),'level.panel','Nivel · panel');
-  hvDetAddTarget(list,q('#detLevelRank'),'level.rank','Nivel · título');
-  hvDetAddTarget(list,q('#detLevelProgressFrame'),'level.frame','Nivel · barra');
-  hvDetAddTarget(list,q('#detLevelProgressFill'),'level.fill','Nivel · relleno');
-  hvDetAddTarget(list,q('#detLevelProgressText'),'level.text','Nivel · progreso');
-  hvDetAddTarget(list,q('#detLevelProgressSub'),'level.sub','Nivel · faltante');
-  hvDetAddTarget(list,q('#detFavoriteToggle'),'favorite.panel','Favorita · botón');
-  hvDetAddTarget(list,q('#detFavoriteToggle .det-favorite-star'),'favorite.star','Favorita · estrella');
-  hvDetAddTarget(list,q('#detTypeValue'),'meta.type','TIPO · valor');
-  hvDetAddTarget(list,q('#detRarityValue'),'meta.rarity','RAREZA · valor');
-  hvDetAddTarget(list,q('#detStateValue'),'meta.state','ESTADO · valor');
-  hvDetAddTarget(list,q('#detWeaponValue'),'meta.weapon','ARMA · grupo');
-  hvDetAddTarget(list,q('#detWeaponValue img'),'meta.weapon.icon','ARMA · icono');
-  hvDetAddTarget(list,q('#detWeaponValue span'),'meta.weapon.value','ARMA · valor');
-  hvDetAddTarget(list,q('#detCopiesValue'),'meta.copies','COPIAS · valor');
-  hvDetAddTarget(list,q('#detPrecEvaValue'),'meta.preceva','PREC/EVA · grupo');
-  hvDetAddTarget(list,q('#detPrecEvaValue img'),'meta.preceva.icon','PREC/EVA · icono');
-  hvDetAddTarget(list,q('#detPrecEvaValue span'),'meta.preceva.value','PREC/EVA · valor');
-  hvDetAddTarget(list,q('#detLoreValue'),'meta.lore','CONÓCEME · grupo');
-  hvDetAddTarget(list,q('#detLoreValue img'),'meta.lore.icon','CONÓCEME · icono');
-  hvDetAddTarget(list,q('#detLoreValue span'),'meta.lore.value','CONÓCEME · texto');
-  hvDetAddTarget(list,q('.card-inspect-head'),'header','Cabecera');
-  hvDetAddTarget(list,q('#cardInspectTitle'),'title','Título de unidad');
-  hvDetAddTarget(list,q('#cardInspectSub'),'identity.group','Grupo de etiquetas');
-  qa('#cardInspectSub .det-head-chip').forEach((el,i)=>{
-    const key=`identity.chip.${i+1}`;
-    hvDetAddTarget(list,el,key,`Etiqueta superior ${i+1}`);
-    hvDetAddTarget(list,el.querySelector('b'),`${key}.title`,`Etiqueta ${i+1} · título`);
-    hvDetAddTarget(list,el.querySelector('small'),`${key}.small`,`Etiqueta ${i+1} · texto pequeño`);
-  });
-  hvDetAddTarget(list,q('#cardInspectX'),'close','Botón cerrar');
-  hvDetAddTarget(list,q('#cardInspectVisual'),'portrait.box','Marco del retrato');
-  hvDetAddTarget(list,q('#cardInspectVisual img'),'portrait.image','Imagen del retrato');
-  const utility=q('.det-deck-utility-row');
-  hvDetAddTarget(list,utility,'utility.group','Controles Ficha / Principal');
-  hvDetAddTarget(list,utility?.querySelector('.det-field-asset-btn'),'utility.field','Botón Ficha');
-  hvDetAddTarget(list,utility?.querySelector('.det-principal-btn'),'utility.principal','Botón Principal');
-  hvDetAddTarget(list,q('#cardInspectStats'),'stats.grid','HUD de estadísticas');
-  qa('#cardInspectStats .det-stat-row').forEach((row,i)=>{
-    const slug=hvDetSlug(row.dataset.statRow||`stat_${i+1}`);
-    const key=`stats.${slug}`;
-    hvDetAddTarget(list,row,`${key}.row`,`Stat ${row.dataset.statRow||i+1} · casilla`);
-    hvDetAddTarget(list,row.querySelector('.det-stat-icon-btn'),`${key}.icon`,`Stat ${row.dataset.statRow||i+1} · icono`);
-    hvDetAddTarget(list,row.querySelector('.det-stat-key'),`${key}.label`,`Stat ${row.dataset.statRow||i+1} · etiqueta`);
-    hvDetAddTarget(list,row.querySelector('strong'),`${key}.value`,`Stat ${row.dataset.statRow||i+1} · valor`);
-  });
-  hvDetAddTarget(list,q('#cardInspectText'),'content','HUD derecho / contenido');
-  const effects=q('#cardInspectText > .det-section-block:first-child');
-  hvDetAddTarget(list,effects,'effects.panel','Panel de efectos');
-  hvDetAddTarget(list,effects?.querySelector('.det-section-title'),'effects.title','Efectos · título');
-  qa('#cardInspectText .det-ability-card').forEach((el,i)=>{
-    const key=`effects.card.${i+1}`;
-    hvDetAddTarget(list,el,key,`Efecto ${i+1} · casilla`);
-    hvDetAddTarget(list,el.querySelector('.det-ability-name'),`${key}.name`,`Efecto ${i+1} · nombre`);
-    hvDetAddTarget(list,el.querySelector('.det-ability-text'),`${key}.text`,`Efecto ${i+1} · texto`);
-  });
-  const tactical=q('#cardInspectText > .det-tactical-card');
-  hvDetAddTarget(list,tactical,'tactical.panel','Panel táctico');
-  hvDetAddTarget(list,tactical?.querySelector('.det-section-title'),'tactical.title','Táctica · título');
-  qa('#cardInspectText .det-info-row').forEach((el,i)=>{
-    hvDetAddTarget(list,el,`tactical.row.${i+1}`,`Táctica · fila ${i+1}`);
-    hvDetAddTarget(list,el.querySelector('strong'),`tactical.row.${i+1}.text`,`Táctica · texto ${i+1}`);
-  });
-  const states=q('#cardInspectText > .det-status-section');
-  hvDetAddTarget(list,states,'states.panel','Estados activos · panel');
-  hvDetAddTarget(list,states?.querySelector('.det-section-title'),'states.title','Estados activos · título');
-  hvDetAddTarget(list,states?.querySelector('.det-status-list'),'states.list','Estados activos · lista');
-  hvDetAddTarget(list,states?.querySelector('.det-empty-line'),'states.empty','Estados activos · texto vacío');
-  qa('#cardInspectText .det-status-row').forEach((el,i)=>hvDetAddTarget(list,el,`states.row.${i+1}`,`Estado ${i+1}`));
-  const guide=q('#cardInspectText > .detail-guide-row');
-  hvDetAddTarget(list,guide,'guides.row','Pestañas de ayuda · grupo');
-  qa('#cardInspectText .detail-guide-chip').forEach((chip,i)=>{
-    const btn=chip.querySelector('button');
-    let type='item';
-    if(btn?.classList.contains('guide-weapon-btn'))type='weapon';
-    else if(btn?.classList.contains('guide-formula-btn'))type='formula';
-    else if(btn?.classList.contains('guide-lore-btn'))type='lore';
-    else if(btn?.classList.contains('guide-effect-btn'))type='effect';
-    const key=`guides.${type}.${i+1}`;
-    hvDetAddTarget(list,chip,key,`Pestaña ${btn?.getAttribute('aria-label')||i+1}`);
-    hvDetAddTarget(list,btn,`${key}.button`,`Pestaña ${i+1} · icono`);
-    hvDetAddTarget(list,chip.querySelector('span'),`${key}.label`,`Pestaña ${i+1} · texto`);
-  });
-  const collection=q('.card-inspect-card > .deck-builder-detail-box')||q('#cardInspectText .deck-builder-detail-box');
-  hvDetAddTarget(list,collection,'collection.panel','Información de colección · panel');
-  hvDetAddTarget(list,collection?.querySelector('.deck-detail-title'),'collection.title','Información de colección · título');
-  const collectionGrid=collection?.querySelector('.deck-detail-grid');
-  hvDetAddTarget(list,collectionGrid,'collection.grid','Información de colección · cuadrícula');
-  [...(collectionGrid?.children||[])].forEach((cell,i)=>{
-    const key=`collection.cell.${i+1}`;
-    hvDetAddTarget(list,cell,key,`Colección · casilla ${i+1}`);
-    hvDetAddTarget(list,cell.querySelector('b'),`${key}.label`,`Colección · casilla ${i+1} · etiqueta`);
-    hvDetAddTarget(list,cell.querySelector('em'),`${key}.value`,`Colección · casilla ${i+1} · valor`);
-  });
-  hvDetAddTarget(list,q('#cardInspectReason'),'reason','Texto inferior / motivo');
-  hvDetAddTarget(list,q('.card-inspect-actions'),'actions.group','Botones inferiores · grupo');
-  hvDetAddTarget(list,q('#cardInspectCancel'),'actions.cancel','Botón cerrar/cancelar');
-  hvDetAddTarget(list,q('#cardInspectPlay'),'actions.play','Botón jugar');
   return list;
 }
 function hvDetCaptureBase(el){
@@ -1414,10 +1300,10 @@ function copyHvDetIconJson(button){
     icons[item.key]=entry;
   });
   const payload=JSON.stringify({
-    version:1,
-    scope:'det_icons',
+    version:2,
+    scope:'det_stat_icons_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'Posiciones actuales medidas contra el panel DET. current es la referencia final; direct conserva los offsets del editor.',
+    note:'DET limpio v32: solo iconos de stats. Arrastra con mouse; rueda o Escala cambia tamaño. Los IDs visibles son deticon.*.',
     icons
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON ICONOS',1200);}};
@@ -1435,45 +1321,20 @@ function ensureHvDetLayoutTuner(){
   const shell=document.createElement('div');
   shell.id='hvDetLayoutTuner';shell.className='hv-det-layout-tuner hidden';
   shell.innerHTML=`<button id="hvDetLayoutTunerToggle" class="hv-det-layout-tuner-toggle" type="button">AJUSTAR DET</button>
-  <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Control visual del DET">
-    <header><div><b>CONTROL TOTAL DEL DET</b><small>Activa edición directa y toca cualquier casilla, texto, icono o panel. Arrastra para mover; rueda para escalar.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
+  <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Editor de iconos del DET">
+    <header><div><b>ICONOS DEL DET</b><small>Los IDs aparecen sobre cada icono en modo edición. Arrastra con el mouse para mover. Usa la rueda o TAMAÑO para aumentar/disminuir.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
     <button class="hv-det-direct-mode" data-det-direct-mode type="button">ACTIVAR EDICIÓN DIRECTA</button>
-    <label class="hv-det-target-picker-label">Elemento a editar
-      <select data-det-target-picker><option value="">Selecciona un elemento…</option></select>
+    <label class="hv-det-target-picker-label">Icono a editar
+      <select data-det-target-picker><option value="">Selecciona un icono…</option></select>
     </label>
-    <div class="hv-det-selected-label" data-det-selected-label>Haz clic en un elemento del DET</div>
-    <details open><summary>Elemento seleccionado</summary><div class="hv-det-tuner-grid hv-det-direct-grid">
+    <div class="hv-det-selected-label" data-det-selected-label>Haz clic en un icono del DET</div>
+    <div class="hv-det-tuner-grid hv-det-direct-grid hv-det-icon-only-grid">
       <label>Horizontal <output data-direct-out="x"></output><input data-det-direct-setting="x" type="range" min="-1200" max="1200" step="1"></label>
       <label>Vertical <output data-direct-out="y"></output><input data-det-direct-setting="y" type="range" min="-900" max="900" step="1"></label>
-      <label>Escala <output data-direct-out="scale"></output><input data-det-direct-setting="scale" type="range" min="10" max="400" step="1"></label>
-      <label>Ancho <output data-direct-out="width"></output><input data-det-direct-setting="width" type="range" min="10" max="400" step="1"></label>
-      <label>Alto <output data-direct-out="height"></output><input data-det-direct-setting="height" type="range" min="10" max="400" step="1"></label>
-      <label>Texto <output data-direct-out="font"></output><input data-det-direct-setting="font" type="range" min="25" max="300" step="1"></label>
-      <label>Interlineado <output data-direct-out="lineHeight"></output><input data-det-direct-setting="lineHeight" type="range" min="50" max="250" step="1"></label>
-      <label>Padding <output data-direct-out="padding"></output><input data-det-direct-setting="padding" type="range" min="-40" max="100" step="1"></label>
-      <label>Separación <output data-direct-out="gap"></output><input data-det-direct-setting="gap" type="range" min="-30" max="100" step="1"></label>
-      <label>Redondeado <output data-direct-out="radius"></output><input data-det-direct-setting="radius" type="range" min="0" max="300" step="5"></label>
-      <label>Columnas <output data-direct-out="columns"></output><input data-det-direct-setting="columns" type="range" min="0" max="10" step="1"></label>
-      <label class="hv-det-overflow-label">Overflow <select data-det-direct-setting="overflow"><option value="default">Original</option><option value="visible">Visible</option><option value="hidden">Oculto</option><option value="auto">Auto</option><option value="scroll">Scroll</option></select></label>
-    </div></details>
-    <details><summary>Panel general</summary><div class="hv-det-tuner-grid">
-      <label>DET horizontal <output data-out="panelX"></output><input data-det-setting="panelX" type="range" min="-600" max="600" step="1"></label>
-      <label>DET vertical <output data-out="panelY"></output><input data-det-setting="panelY" type="range" min="-450" max="450" step="1"></label>
-      <label>Ancho DET <output data-out="panelWidth"></output><input data-det-setting="panelWidth" type="range" min="650" max="1800" step="5"></label>
-      <label>Alto DET <output data-out="panelHeight"></output><input data-det-setting="panelHeight" type="range" min="420" max="1100" step="5"></label>
-      <label>Escala DET <output data-out="panelScale"></output><input data-det-setting="panelScale" type="range" min="45" max="180" step="1"></label>
-    </div></details>
-    <details><summary>Poder de batalla</summary><div class="hv-det-tuner-grid">
-      <label>PB horizontal <output data-out="pbX"></output><input data-det-setting="pbX" type="range" min="-900" max="900" step="1"></label>
-      <label>PB vertical <output data-out="pbY"></output><input data-det-setting="pbY" type="range" min="-600" max="700" step="1"></label>
-      <label>Tamaño PB <output data-out="pbScale"></output><input data-det-setting="pbScale" type="range" min="35" max="260" step="1"></label>
-    </div></details>
-    <details><summary>Progreso de muertes</summary><div class="hv-det-tuner-grid">
-      <label>Progreso horizontal <output data-out="progressX"></output><input data-det-setting="progressX" type="range" min="-900" max="900" step="1"></label>
-      <label>Progreso vertical <output data-out="progressY"></output><input data-det-setting="progressY" type="range" min="-600" max="700" step="1"></label>
-      <label>Tamaño progreso <output data-out="progressScale"></output><input data-det-setting="progressScale" type="range" min="35" max="260" step="1"></label>
-    </div></details>
-    <div class="hv-det-direct-actions"><button data-det-bring-origin class="btn" type="button">Traer a origen</button><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todo DET</button><button data-det-copy-icons-json class="btn primary" type="button">COPIAR JSON ICONOS</button><button data-det-copy-json class="btn" type="button">JSON TODO</button></div>
+      <label>Tamaño <output data-direct-out="scale"></output><input data-det-direct-setting="scale" type="range" min="20" max="500" step="1"></label>
+    </div>
+    <div class="hv-det-size-nudges"><button data-det-scale-down class="btn" type="button">− TAMAÑO</button><button data-det-scale-up class="btn" type="button">+ TAMAÑO</button></div>
+    <div class="hv-det-direct-actions hv-det-icon-actions"><button data-det-reset-selected class="btn" type="button">Restaurar icono</button><button data-det-reset-all class="btn" type="button">Restaurar todos</button><button data-det-copy-icons-json class="btn primary" type="button">COPIAR JSON ICONOS</button></div>
     <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar panel</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
   </section>`;
   document.body.appendChild(shell);
@@ -1496,6 +1357,8 @@ function ensureHvDetLayoutTuner(){
   shell.querySelector('[data-det-bring-origin]')?.addEventListener('click',bringHvDetSelectedToOrigin);
   shell.querySelector('[data-det-reset-selected]')?.addEventListener('click',resetHvDetSelectedDirect);
   shell.querySelector('[data-det-reset-all]')?.addEventListener('click',resetHvDetAllDirect);
+  shell.querySelector('[data-det-scale-down]')?.addEventListener('click',()=>{const v=getHvDetSelectedSetting();setHvDetSelectedSetting({scale:Math.max(20,v.scale-10)});});
+  shell.querySelector('[data-det-scale-up]')?.addEventListener('click',()=>{const v=getHvDetSelectedSetting();setHvDetSelectedSetting({scale:Math.min(500,v.scale+10)});});
   shell.querySelector('[data-det-copy-icons-json]')?.addEventListener('click',ev=>copyHvDetIconJson(ev.currentTarget));
   shell.querySelector('[data-det-copy-json]')?.addEventListener('click',ev=>copyHvDetEditorJson(ev.currentTarget));
   shell.querySelectorAll('[data-det-setting]').forEach(input=>input.addEventListener('input',()=>{
