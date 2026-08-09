@@ -392,8 +392,8 @@
       "gap": 0
     },
     "dragons.overview.art": {
-      "x": 0,
-      "y": 0,
+      "x": 4.347869873046875,
+      "y": -30.434783935546875,
       "scale": 100,
       "width": 100,
       "height": 100,
@@ -401,9 +401,9 @@
       "gap": 0
     },
     "dragons.overview.fire": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": 23.478271484375,
+      "y": 4.34783935546875,
+      "scale": 90,
       "width": 100,
       "height": 100,
       "padding": 0,
@@ -411,17 +411,17 @@
     },
     "dragons.overview.ice": {
       "x": 0,
-      "y": 0,
-      "scale": 100,
+      "y": 5.217437744140625,
+      "scale": 90,
       "width": 100,
       "height": 100,
       "padding": 0,
       "gap": 0
     },
     "dragons.overview.lightning": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": -24.34783935546875,
+      "y": 4.347900390625,
+      "scale": 90,
       "width": 100,
       "height": 100,
       "padding": 0,
