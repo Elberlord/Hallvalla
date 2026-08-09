@@ -1022,8 +1022,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "dragons.ice.art": {
-    "x": 0,
-    "y": 0,
+    "x": -6.956512451171875,
+    "y": -30.434661865234375,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1040,8 +1040,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "dragons.ice.info": {
-    "x": 0,
-    "y": 0,
+    "x": 39.13043212890625,
+    "y": -72.17391967773438,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1049,26 +1049,26 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "dragons.ice.rewards": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 47.8260498046875,
+    "y": -26.95648193359375,
+    "scale": 90,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "dragons.ice.cost": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 15.65216064453125,
+    "y": -18.2608642578125,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "dragons.ice.fight": {
-    "x": 0,
-    "y": 0,
+    "x": 11.3043212890625,
+    "y": 28.695709228515625,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1076,8 +1076,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "dragons.lightning.art": {
-    "x": 0,
-    "y": 0,
+    "x": -6.956512451171875,
+    "y": -30.434661865234375,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1094,8 +1094,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "dragons.lightning.info": {
-    "x": 0,
-    "y": 0,
+    "x": 39.13043212890625,
+    "y": -72.17391967773438,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1103,26 +1103,26 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "dragons.lightning.rewards": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 47.8260498046875,
+    "y": -26.95648193359375,
+    "scale": 90,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "dragons.lightning.cost": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 15.65216064453125,
+    "y": -18.2608642578125,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
     "gap": 0
   },
   "dragons.lightning.fight": {
-    "x": 0,
-    "y": 0,
+    "x": 11.3043212890625,
+    "y": 28.695709228515625,
     "scale": 100,
     "width": 100,
     "height": 100,
@@ -1606,17 +1606,15 @@ function ensureHallvallaDragonsModal(){
         return `<div class="hallvalla-dragon-detail-artboard hallvalla-dragon-detail-artboard--${key}" data-dragon-detail-panel="${def.id}">
           <div class="hallvalla-dragon-detail-status" data-dragon-detail-status="${def.id}"></div>
           <div class="hallvalla-dragon-detail-info">
-            ${key==='fire'?'':'<div class="hallvalla-dragon-detail-kicker">Información</div>'}
             <p>${def.desc}</p>
           </div>
           <div class="hallvalla-dragon-detail-rewards">
-            ${key==='fire'?'':'<div class="hallvalla-dragon-detail-kicker">Recompensas</div>'}
             <p>${getDragonContractRewardSummary(def)}</p>
           </div>
           <div class="hallvalla-dragon-detail-cost">${formatHallvallaEventNumber(DRAGON_CONTRACT_ENTRY_GOLD_COST)} Oro por intento</div>
           ${key==='fire'
             ? `<div class="hallvalla-dragon-fire-fight-hud"><button type="button" class="hallvalla-events-primary hallvalla-events-primary--dragon hallvalla-events-primary--dragon-transparent" data-dragon-contract="${def.id}">Enfrentar</button></div>`
-            : `<button type="button" class="hallvalla-events-primary hallvalla-events-primary--dragon" data-dragon-contract="${def.id}">Enfrentar</button>`}
+            : `<button type="button" class="hallvalla-events-primary hallvalla-events-primary--dragon hallvalla-events-primary--dragon-transparent" data-dragon-contract="${def.id}">Enfrentar</button>`}
         </div>`;
       }).join('')}
     </section>
@@ -1662,7 +1660,7 @@ function refreshDragonContractsUi(modal=ensureHallvallaDragonsModal()){
     const overviewState=modal.querySelector(`[data-dragon-status="${def.id}"]`);
     if(overviewState)overviewState.textContent=state;
     const detailState=modal.querySelector(`[data-dragon-detail-status="${def.id}"]`);
-    if(detailState)detailState.textContent=(key==='fire'?'':state);
+    if(detailState)detailState.textContent='';
     const fightBtn=modal.querySelector(`[data-dragon-contract="${def.id}"]`);
     if(fightBtn){
       const gold=Number(getPlayerProfile()?.gold||0);
@@ -1677,7 +1675,7 @@ function refreshDragonContractsUi(modal=ensureHallvallaDragonsModal()){
         fightBtn.textContent=`Enfrentar · ${formatHallvallaEventNumber(DRAGON_CONTRACT_ENTRY_GOLD_COST)} Oro`;
         fightBtn.disabled=false;
       }
-      if(key==='fire')fightBtn.textContent='';
+      if(key==='fire'||key==='ice'||key==='lightning')fightBtn.textContent='';
     }
   });
 }
@@ -1950,12 +1948,13 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-dragon-detail-kicker{margin-bottom:6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#d9b76c;font-weight:900}
   .hallvalla-dragon-fire-fight-hud{position:absolute;left:41.2%;bottom:6.8%;width:23%;min-height:7.6%;z-index:8}
   .hallvalla-dragon-fire-fight-hud .hallvalla-events-primary--dragon{position:absolute;inset:0;width:100%;height:100%;min-height:100%;padding:0 18px}
-  .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon-transparent,
-  .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon-transparent:hover,
-  .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon-transparent:focus,
-  .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon-transparent:active,
-  .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon-transparent:disabled{background:transparent!important;border-color:transparent!important;box-shadow:none!important;color:transparent!important;text-shadow:none!important;opacity:0!important;transform:none!important}
-  .hallvalla-hud-editing .hallvalla-dragon-fire-fight-hud .hallvalla-events-primary--dragon{pointer-events:none!important}
+  .hallvalla-dragon-detail-artboard .hallvalla-events-primary--dragon-transparent,
+  .hallvalla-dragon-detail-artboard .hallvalla-events-primary--dragon-transparent:hover,
+  .hallvalla-dragon-detail-artboard .hallvalla-events-primary--dragon-transparent:focus,
+  .hallvalla-dragon-detail-artboard .hallvalla-events-primary--dragon-transparent:active,
+  .hallvalla-dragon-detail-artboard .hallvalla-events-primary--dragon-transparent:disabled{background:transparent!important;border-color:transparent!important;box-shadow:none!important;color:transparent!important;text-shadow:none!important;opacity:0!important;transform:none!important}
+  .hallvalla-hud-editing .hallvalla-dragon-fire-fight-hud .hallvalla-events-primary--dragon,
+  .hallvalla-hud-editing .hallvalla-dragon-detail-artboard .hallvalla-events-primary--dragon-transparent{pointer-events:none!important}
   .hallvalla-events-settings{position:absolute;right:68px;top:66px;width:min(390px,78vw);max-height:min(78vh,720px);overflow:auto;padding:16px;border-radius:18px;border:1px solid rgba(227,191,107,.34);background:rgba(7,10,15,.98);display:grid;gap:12px;box-shadow:0 18px 44px rgba(0,0,0,.42);z-index:20}
   .hallvalla-events-settings.hidden{display:none}
   .hallvalla-events-target-label select{width:100%;min-height:36px;padding:7px 9px;border-radius:10px;border:1px solid rgba(227,191,107,.32);background:#0c0d10;color:#f0d89a;font-size:13px}
