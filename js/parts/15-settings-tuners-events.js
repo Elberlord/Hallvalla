@@ -917,8 +917,8 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v6_clean_icons";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v6_clean_icons";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v7_icons_portrait";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v7_icons_portrait";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1260,panelHeight:590,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
@@ -933,13 +933,13 @@ const HV_DET_DIRECT_DEFAULT=Object.freeze({
 // Son objetos independientes: todavía NO dependen de los datos de la unidad.
 // El usuario los acomoda una sola vez con el editor visual y exporta el JSON.
 const HV_DET_ICON_CALIBRATION_ITEMS=Object.freeze([
-  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp",left:41.35,top:8.15},
-  {key:"dexterity",label:"PX / Destreza",asset:"assets/ui/det_icons/dexterity.webp",left:41.35,top:15.95},
-  {key:"movement",label:"MV / Movimiento",asset:"assets/ui/det_icons/movement.webp",left:41.35,top:23.85},
-  {key:"attack",label:"AT / Ataque",asset:"assets/ui/det_icons/attack.webp",left:41.35,top:31.55},
-  {key:"guard",label:"GD / Guardia",asset:"assets/ui/det_icons/guard.webp",left:41.35,top:39.35},
-  {key:"agility",label:"AG / Agilidad",asset:"assets/ui/det_icons/agility.webp",left:41.35,top:47.15},
-  {key:"range",label:"RG / Rango",asset:"assets/ui/det_icons/range.webp",left:41.35,top:54.85}
+  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp",left:41.4262,top:6.6109},
+  {key:"dexterity",label:"PX / Destreza",asset:"assets/ui/det_icons/dexterity.webp",left:41.4262,top:14.2210},
+  {key:"movement",label:"MV / Movimiento",asset:"assets/ui/det_icons/movement.webp",left:41.4262,top:21.9271},
+  {key:"attack",label:"AT / Ataque",asset:"assets/ui/det_icons/attack.webp",left:41.4262,top:29.8193},
+  {key:"guard",label:"GD / Guardia",asset:"assets/ui/det_icons/guard.webp",left:41.4262,top:37.6185},
+  {key:"agility",label:"AG / Agilidad",asset:"assets/ui/det_icons/agility.webp",left:41.4262,top:45.2287},
+  {key:"range",label:"RG / Rango",asset:"assets/ui/det_icons/range.webp",left:41.3500,top:53.3129}
 ]);
 let hvDetDirectEditing=false;
 let hvDetDirectSelectedKey="";
@@ -1057,6 +1057,7 @@ function hvDetBuildTargets(root){
   ensureHvDetIconCalibrationLayer(root);
   if(!root)return [];
   const list=[];
+  hvDetAddTarget(list,root.querySelector('#detPortraitImage'),'portrait.image','IMAGEN / RETRATO');
   [...root.querySelectorAll('.hv-det-icon-calibration .hv-det-cal-icon')].forEach(el=>{
     const key=el.dataset.detIconKey||'icon';
     const item=HV_DET_ICON_CALIBRATION_ITEMS.find(entry=>entry.key===key);
@@ -1299,14 +1300,32 @@ function copyHvDetIconJson(button){
     }
     icons[item.key]=entry;
   });
+  let portrait=null;
+  const portraitEl=root?.querySelector('#detPortraitImage');
+  if(portraitEl){
+    const direct=normalizeHvDetDirectSetting(state.items['portrait.image']||HV_DET_DIRECT_DEFAULT);
+    portrait={id:'portrait.image',direct};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=portraitEl.getBoundingClientRect();
+      portrait.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+  }
   const payload=JSON.stringify({
-    version:2,
-    scope:'det_stat_icons_clean',
+    version:3,
+    scope:'det_icons_and_portrait_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: solo iconos de stats. Arrastra con mouse; rueda o Escala cambia tamaño. Los IDs visibles son deticon.*.',
-    icons
+    note:'DET limpio v32: iconos de stats + retrato. Arrastra con mouse; rueda o Tamaño cambia escala. IDs: deticon.* y portrait.image.',
+    icons,
+    portrait
   },null,2);
-  const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON ICONOS',1200);}};
+  const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}
   window.prompt('Copia el JSON de iconos DET:',payload);
 }
@@ -1321,20 +1340,20 @@ function ensureHvDetLayoutTuner(){
   const shell=document.createElement('div');
   shell.id='hvDetLayoutTuner';shell.className='hv-det-layout-tuner hidden';
   shell.innerHTML=`<button id="hvDetLayoutTunerToggle" class="hv-det-layout-tuner-toggle" type="button">AJUSTAR DET</button>
-  <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Editor de iconos del DET">
-    <header><div><b>ICONOS DEL DET</b><small>Los IDs aparecen sobre cada icono en modo edición. Arrastra con el mouse para mover. Usa la rueda o TAMAÑO para aumentar/disminuir.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
+  <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Editor de elementos del DET">
+    <header><div><b>ELEMENTOS DEL DET</b><small>Los IDs aparecen sobre cada elemento en modo edición. Arrastra con el mouse para mover. Usa la rueda o TAMAÑO para aumentar/disminuir.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
     <button class="hv-det-direct-mode" data-det-direct-mode type="button">ACTIVAR EDICIÓN DIRECTA</button>
-    <label class="hv-det-target-picker-label">Icono a editar
-      <select data-det-target-picker><option value="">Selecciona un icono…</option></select>
+    <label class="hv-det-target-picker-label">Elemento a editar
+      <select data-det-target-picker><option value="">Selecciona un elemento…</option></select>
     </label>
-    <div class="hv-det-selected-label" data-det-selected-label>Haz clic en un icono del DET</div>
+    <div class="hv-det-selected-label" data-det-selected-label>Haz clic en un elemento del DET</div>
     <div class="hv-det-tuner-grid hv-det-direct-grid hv-det-icon-only-grid">
       <label>Horizontal <output data-direct-out="x"></output><input data-det-direct-setting="x" type="range" min="-1200" max="1200" step="1"></label>
       <label>Vertical <output data-direct-out="y"></output><input data-det-direct-setting="y" type="range" min="-900" max="900" step="1"></label>
       <label>Tamaño <output data-direct-out="scale"></output><input data-det-direct-setting="scale" type="range" min="20" max="500" step="1"></label>
     </div>
     <div class="hv-det-size-nudges"><button data-det-scale-down class="btn" type="button">− TAMAÑO</button><button data-det-scale-up class="btn" type="button">+ TAMAÑO</button></div>
-    <div class="hv-det-direct-actions hv-det-icon-actions"><button data-det-reset-selected class="btn" type="button">Restaurar icono</button><button data-det-reset-all class="btn" type="button">Restaurar todos</button><button data-det-copy-icons-json class="btn primary" type="button">COPIAR JSON ICONOS</button></div>
+    <div class="hv-det-direct-actions hv-det-icon-actions"><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todos</button><button data-det-copy-icons-json class="btn primary" type="button">COPIAR JSON DET</button></div>
     <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar panel</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
   </section>`;
   document.body.appendChild(shell);

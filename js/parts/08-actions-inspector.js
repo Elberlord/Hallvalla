@@ -1489,6 +1489,25 @@ function cleanupUnifiedDetSurface(modal){
   return card;
 }
 
+function ensureUnifiedDetPortraitCalibration(modal,entity,{live=false,visualHtml=""}={}){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('#detPortraitImage')?.remove();
+  const box=document.createElement('div');
+  box.id='detPortraitImage';
+  box.className='hv-det-portrait-calibration';
+  box.setAttribute('aria-label','Retrato de la carta');
+  const content=document.createElement('div');
+  content.className='hv-det-portrait-content';
+  content.innerHTML=visualHtml||(live&&typeof getUnitPortraitHtml==='function'?getUnitPortraitHtml(entity):getCardVisualHtml(entity,'det-portrait-source'));
+  const id=document.createElement('span');
+  id.className='hv-det-cal-id hv-det-portrait-id';
+  id.textContent='portrait.image';
+  box.append(content,id);
+  card.appendChild(box);
+  return box;
+}
+
 function getUnifiedDetStats(entity,{live=false}={}){
   if(live&&entity){
     if(entity.leader)return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",0],["AGI",0],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
@@ -1502,6 +1521,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   if(!modal)return null;
   modal.className=`card-inspect-modal hidden unified-det-modal det-v32-clean-surface unified-det-${mode} ${getCardVisualClass(entity)}`;
   const card=cleanupUnifiedDetSurface(modal);
+  ensureUnifiedDetPortraitCalibration(modal,entity,{live,visualHtml});
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=[];
   modal._hvEffectText="";

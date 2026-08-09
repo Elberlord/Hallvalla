@@ -23663,7 +23663,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   background:transparent url("assets/ui/det_templates/det_base_universal_v32.png") center/100% 100% no-repeat!important;
   overflow:visible!important;
 }
-#cardInspectModal .card-inspect-card > :not(.hv-det-icon-calibration){
+#cardInspectModal .card-inspect-card > :not(.hv-det-icon-calibration):not(.hv-det-portrait-calibration){
   display:none!important;
 }
 #cardInspectModal .hv-det-icon-calibration{
@@ -23802,3 +23802,51 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 #cardInspectModal .card-inspect-card::before,
 #cardInspectModal .card-inspect-card::after{display:none!important;}
+
+
+/* === DET v32 · portrait calibration · 8BM === */
+#cardInspectModal .hv-det-portrait-calibration{
+  position:absolute!important;
+  left:4.2%!important;
+  top:5.2%!important;
+  width:28.8%!important;
+  height:51.8%!important;
+  display:block!important;
+  overflow:hidden!important;
+  z-index:35!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  transform-origin:center!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+#cardInspectModal .hv-det-portrait-content,
+#cardInspectModal .hv-det-portrait-content > *,
+#cardInspectModal .hv-det-portrait-content img{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-portrait-calibration .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-portrait-calibration{
+  pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:3px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-portrait-calibration .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-portrait-calibration.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:4px!important;
+}
