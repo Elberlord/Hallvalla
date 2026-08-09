@@ -23191,3 +23191,58 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   }
   #cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectTitle{font-size:clamp(18px,2.25vw,28px)!important;}
 }
+
+
+/* ============================================================
+   v31 · CALIBRACIÓN TEMPORAL DE ICONOS DET
+   Todos los assets de assets/ui/det_icons se montan como objetos
+   independientes y arrastrables. No están conectados todavía a
+   los datos de la unidad; esta fase sirve solo para fijar posición.
+   ============================================================ */
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-icon-calibration{
+  position:absolute!important;
+  inset:0!important;
+  z-index:12!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon{
+  position:absolute!important;
+  width:42px!important;
+  height:42px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  transform-origin:center!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.72))!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon img{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:contain!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+}
+.hv-det-direct-editing #cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon{
+  pointer-events:auto!important;
+  cursor:move!important;
+}
+.hv-det-direct-editing #cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon:hover{
+  background:rgba(255,215,115,.08)!important;
+  border-radius:8px!important;
+}
+.hv-det-direct-actions [data-det-copy-icons-json]{
+  grid-column:1/-1!important;
+  min-height:38px!important;
+  font-size:10px!important;
+  letter-spacing:.02em!important;
+}

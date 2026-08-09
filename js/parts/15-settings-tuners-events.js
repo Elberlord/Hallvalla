@@ -928,6 +928,30 @@ const HV_DET_DIRECT_DEFAULT=Object.freeze({
   x:0,y:0,scale:100,width:100,height:100,font:100,lineHeight:100,
   padding:0,gap:0,radius:100,columns:0,overflow:"default"
 });
+
+// v31 · fase de calibración de iconos DET.
+// Son objetos independientes: todavía NO dependen de los datos de la unidad.
+// El usuario los acomoda una sola vez con el editor visual y exporta el JSON.
+const HV_DET_ICON_CALIBRATION_ITEMS=Object.freeze([
+  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp"},
+  {key:"attack",label:"Ataque",asset:"assets/ui/det_icons/attack.webp"},
+  {key:"dexterity",label:"Destreza",asset:"assets/ui/det_icons/dexterity.webp"},
+  {key:"movement",label:"Movimiento",asset:"assets/ui/det_icons/movement.webp"},
+  {key:"agility",label:"Agilidad",asset:"assets/ui/det_icons/agility.webp"},
+  {key:"guard",label:"Guardia",asset:"assets/ui/det_icons/guard.webp"},
+  {key:"range",label:"Rango",asset:"assets/ui/det_icons/range.webp"},
+  {key:"trigger",label:"Trigger",asset:"assets/ui/det_icons/trigger.webp"},
+  {key:"passive",label:"Pasiva",asset:"assets/ui/det_icons/passive.webp"},
+  {key:"tactical",label:"Táctica",asset:"assets/ui/det_icons/tactical.webp"},
+  {key:"lore",label:"Conóceme / Lore",asset:"assets/ui/det_icons/lore.webp"},
+  {key:"weapon_sword",label:"Arma · espada",asset:"assets/ui/det_icons/weapon_sword.webp"},
+  {key:"weapon_axe",label:"Arma · hacha",asset:"assets/ui/det_icons/weapon_axe.webp"},
+  {key:"weapon_spear",label:"Arma · lanza",asset:"assets/ui/det_icons/weapon_spear.webp"},
+  {key:"weapon_bow",label:"Arma · arco",asset:"assets/ui/det_icons/weapon_bow.webp"},
+  {key:"weapon_mage",label:"Arma · magia",asset:"assets/ui/det_icons/weapon_mage.webp"},
+  {key:"weapon_cavalry",label:"Arma · caballería",asset:"assets/ui/det_icons/weapon_cavalry.webp"},
+  {key:"weapon_beast",label:"Arma · bestia",asset:"assets/ui/det_icons/weapon_beast.webp"}
+]);
 let hvDetDirectEditing=false;
 let hvDetDirectSelectedKey="";
 let hvDetDirectDrag=null;
@@ -1015,12 +1039,43 @@ function hvDetAddTarget(list,el,key,label){
   if(list.some(item=>item.el===el))return;
   list.push({el,key,label:label||key});
 }
+function ensureHvDetIconCalibrationLayer(root){
+  if(!root||root.id!=="cardInspectModal")return null;
+  const card=root.querySelector('.card-inspect-card');
+  if(!card)return null;
+  let layer=card.querySelector('.hv-det-icon-calibration');
+  if(layer)return layer;
+  layer=document.createElement('div');
+  layer.className='hv-det-icon-calibration';
+  layer.setAttribute('aria-label','Iconos DET para calibración');
+  const cols=6;
+  HV_DET_ICON_CALIBRATION_ITEMS.forEach((item,index)=>{
+    const icon=document.createElement('div');
+    icon.className='hv-det-cal-icon';
+    icon.dataset.detIconKey=item.key;
+    icon.dataset.detIconAsset=item.asset;
+    icon.title=`Icono DET · ${item.label}`;
+    const col=index%cols,row=Math.floor(index/cols);
+    icon.style.left=`${56+(col*6.25)}%`;
+    icon.style.top=`${51.5+(row*8.0)}%`;
+    icon.innerHTML=`<img src="${item.asset}" alt="" draggable="false">`;
+    layer.appendChild(icon);
+  });
+  card.appendChild(layer);
+  return layer;
+}
 function hvDetBuildTargets(root){
+  ensureHvDetIconCalibrationLayer(root);
   if(!root)return [];
   const list=[];
   const q=sel=>root.querySelector(sel);
   const qa=sel=>[...root.querySelectorAll(sel)];
   hvDetAddTarget(list,q('.card-inspect-card'),'panel','Panel completo');
+  qa('.hv-det-icon-calibration .hv-det-cal-icon').forEach(el=>{
+    const key=el.dataset.detIconKey||'icon';
+    const item=HV_DET_ICON_CALIBRATION_ITEMS.find(entry=>entry.key===key);
+    hvDetAddTarget(list,el,`deticon.${key}`,`ICONO DET · ${item?.label||key}`);
+  });
   hvDetAddTarget(list,q('#cardInspectBattlePowerBadge'),'pb','Poder de batalla');
   hvDetAddTarget(list,q('.card-inspect-head'),'header','Cabecera');
   hvDetAddTarget(list,q('#cardInspectTitle'),'title','Título de unidad');
@@ -1314,6 +1369,41 @@ function resetHvDetAllDirect(){
   });
   queueHvDetDirectRefresh();
 }
+function copyHvDetIconJson(button){
+  const root=getHvDetActiveEditorRoot();
+  const card=root?.querySelector('.card-inspect-card');
+  if(root)ensureHvDetIconCalibrationLayer(root);
+  const state=getHvDetDirectState();
+  const cardRect=card?.getBoundingClientRect();
+  const icons={};
+  HV_DET_ICON_CALIBRATION_ITEMS.forEach(item=>{
+    const el=root?.querySelector(`.hv-det-cal-icon[data-det-icon-key="${item.key}"]`);
+    const direct=normalizeHvDetDirectSetting(state.items[`deticon.${item.key}`]||HV_DET_DIRECT_DEFAULT);
+    const entry={asset:item.asset,direct};
+    if(el&&cardRect&&cardRect.width&&cardRect.height){
+      const r=el.getBoundingClientRect();
+      entry.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    icons[item.key]=entry;
+  });
+  const payload=JSON.stringify({
+    version:1,
+    scope:'det_icons',
+    template:'assets/ui/det_templates/det_base_universal_v31.png',
+    note:'Posiciones actuales medidas contra el panel DET. current es la referencia final; direct conserva los offsets del editor.',
+    icons
+  },null,2);
+  const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON ICONOS',1200);}};
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}
+  window.prompt('Copia el JSON de iconos DET:',payload);
+}
 function copyHvDetEditorJson(button){
   const payload=JSON.stringify({layout:getHvDetLayoutTuner(),direct:getHvDetDirectState()},null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'JSON',1000);}};
@@ -1363,7 +1453,7 @@ function ensureHvDetLayoutTuner(){
       <label>Progreso vertical <output data-out="progressY"></output><input data-det-setting="progressY" type="range" min="-600" max="700" step="1"></label>
       <label>Tamaño progreso <output data-out="progressScale"></output><input data-det-setting="progressScale" type="range" min="35" max="260" step="1"></label>
     </div></details>
-    <div class="hv-det-direct-actions"><button data-det-bring-origin class="btn" type="button">Traer a origen</button><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todo DET</button><button data-det-copy-json class="btn" type="button">JSON</button></div>
+    <div class="hv-det-direct-actions"><button data-det-bring-origin class="btn" type="button">Traer a origen</button><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todo DET</button><button data-det-copy-icons-json class="btn primary" type="button">COPIAR JSON ICONOS</button><button data-det-copy-json class="btn" type="button">JSON TODO</button></div>
     <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar panel</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
   </section>`;
   document.body.appendChild(shell);
@@ -1377,7 +1467,7 @@ function ensureHvDetLayoutTuner(){
     });
   };
   const setPanelOpen=open=>panel.classList.toggle('hidden',!open);
-  toggle.onclick=()=>{setPanelOpen(panel.classList.contains('hidden'));queueHvDetDirectRefresh();};
+  toggle.onclick=()=>{const opening=panel.classList.contains('hidden');setPanelOpen(opening);setHvDetDirectEditing(opening);queueHvDetDirectRefresh();};
   $('hvDetLayoutTunerClose').onclick=()=>{setHvDetDirectEditing(false);setPanelOpen(false);};
   $('hvDetLayoutTunerDone').onclick=()=>{setHvDetDirectEditing(false);setPanelOpen(false);};
   $('hvDetLayoutTunerReset').onclick=()=>{settings=saveHvDetLayoutTuner({...HV_DET_LAYOUT_TUNER_DEFAULTS});applyHvDetLayoutTuner(settings);syncGlobal();};
@@ -1386,6 +1476,7 @@ function ensureHvDetLayoutTuner(){
   shell.querySelector('[data-det-bring-origin]')?.addEventListener('click',bringHvDetSelectedToOrigin);
   shell.querySelector('[data-det-reset-selected]')?.addEventListener('click',resetHvDetSelectedDirect);
   shell.querySelector('[data-det-reset-all]')?.addEventListener('click',resetHvDetAllDirect);
+  shell.querySelector('[data-det-copy-icons-json]')?.addEventListener('click',ev=>copyHvDetIconJson(ev.currentTarget));
   shell.querySelector('[data-det-copy-json]')?.addEventListener('click',ev=>copyHvDetEditorJson(ev.currentTarget));
   shell.querySelectorAll('[data-det-setting]').forEach(input=>input.addEventListener('input',()=>{
     settings={...settings,[input.dataset.detSetting]:Number(input.value)};settings=saveHvDetLayoutTuner(settings);applyHvDetLayoutTuner(settings);syncGlobal();
