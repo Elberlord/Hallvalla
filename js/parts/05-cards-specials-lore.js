@@ -1411,16 +1411,27 @@ function renderDetMasteryProgressHtml(entity){
   }
 }
 
+function getDetDisplayRarity(entity){
+  const key=String(entity?.key||"");
+  const isAdultDragon=/^adult_(lightning|fire|ice)_dragon$/.test(key)||entity?.dragonStage==="adult";
+  return isAdultDragon?"Astral":getEntityRarityLabel(entity);
+}
+function getDetUniversalTags(entity,ownerLabel=""){
+  const tags=[];
+  const rarity=getDetDisplayRarity(entity);
+  if(rarity)tags.push({label:rarity,cls:"det-chip-rarity"});
+  if(entity?.type==="unit")tags.push({label:"Criatura",cls:"det-chip-kind"});
+  else tags.push({label:getEntityTypeLabel(entity),cls:"det-chip-kind"});
+  const key=String(entity?.key||"");
+  if(/^((baby|young|adult)_(lightning|fire|ice)_dragon|dragon_egg)$/.test(key)||entity?.dragonCompanion)tags.push({label:"Dragón",cls:"det-chip-dragon"});
+  if(entity?.beast)tags.push({label:"Bestia",cls:"det-chip-beast"});
+  if(isEquipmentCard(entity))tags.push({label:`Exclusivo: ${getEquipmentLeaderLabel(entity)}`,cls:"det-chip-equipment"});
+  if(ownerLabel&&entity?.type!=="unit")tags.push({label:ownerLabel,cls:"det-chip-owner"});
+  return tags;
+}
 function renderDetIdentityHtml(entity,ownerLabel=""){
   const summary=getEntitySummaryText(entity);
-  const rarity=getEntityRarityLabel(entity);
-  const typeLabel=getEntityTypeLabel(entity);
-  const chips=[
-    `<span class="det-head-chip det-chip-rarity">${escapeHtml(rarity)}</span>`,
-    `<span class="det-head-chip">${escapeHtml("Tipo: "+typeLabel)}</span>`
-  ];
-  if(ownerLabel)chips.push(`<span class="det-head-chip">${escapeHtml(ownerLabel)}</span>`);
-  if(isEquipmentCard(entity))chips.push(`<span class="det-head-chip">${escapeHtml(`Exclusivo: ${getEquipmentLeaderLabel(entity)} · ${entity.equipmentGroup||"Grupo compatible"}`)}</span>`);
+  const chips=getDetUniversalTags(entity,ownerLabel).map(tag=>`<span class="det-head-chip ${tag.cls||""}">${escapeHtml(tag.label)}</span>`);
   const masteryProgress=renderDetMasteryProgressHtml(entity);
   return `<div class="det-identity-block">
     <div class="det-head-chip-row">${chips.join("")}${masteryProgress}</div>

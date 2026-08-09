@@ -729,7 +729,7 @@ function deckBuilderCardInvestmentHtml(card){
   const max=maxCopiesForCard(card);
   const inDeck=currentDeckDraft.filter(c=>c.key===card.key).length;
   const rarityKey=getCraftRarityKey(card);
-  const rarityLabel=getCraftRarityLabel(rarityKey);
+  const rarityLabel=(typeof getDetDisplayRarity==="function"?getDetDisplayRarity(card):getCraftRarityLabel(rarityKey));
   const material=getMaterialAmountForCard(card);
   const craftCost=getCraftCostForCard(card);
   const canCraft=canCraftCardCopy(card);
@@ -772,13 +772,67 @@ function deckBuilderCardInvestmentHtml(card){
     </div>
   </div>`;
 }
+function getDeckBuilderDetBoardAsset(card){
+  if(!card)return "";
+  try{
+    return String(BOARD_PORTRAITS?.[card.key]||card.boardPortrait||card.fieldPortrait||card.portrait||"");
+  }catch(_){return String(card.boardPortrait||card.fieldPortrait||card.portrait||"");}
+}
+function isDeckBuilderDetPrincipal(card){
+  return !!card&&Array.isArray(currentPrincipalKeys)&&currentPrincipalKeys.includes(card.key);
+}
+function updateDeckBuilderDetPrincipalButton(card,modal=$("cardInspectModal")){
+  const btn=modal?.querySelector('[data-det-principal-toggle]');
+  if(!btn||!card)return;
+  const inDeck=currentDeckDraft.some(c=>c?.key===card.key);
+  const principal=isDeckBuilderDetPrincipal(card);
+  btn.classList.toggle('is-selected',principal);
+  btn.dataset.principalSelected=principal?'1':'0';
+  btn.innerHTML=`<span class="det-utility-icon">★</span><span><b>PRINCIPAL</b><small>${principal?'Elegida como principal':(inDeck?'No elegida como principal':'No está en el mazo')}</small></span>`;
+  btn.disabled=!inDeck||card.type!=="unit";
+}
+function closeDeckBuilderDetFieldPreview(modal=$("cardInspectModal")){
+  modal?.querySelector('.det-field-asset-preview')?.remove();
+}
+function openDeckBuilderDetFieldPreview(card,modal=$("cardInspectModal")){
+  if(!modal||!card)return;
+  closeDeckBuilderDetFieldPreview(modal);
+  const src=getDeckBuilderDetBoardAsset(card);
+  if(!src){setHint('Esta unidad todavía no tiene asset de campo disponible.');return;}
+  const overlay=document.createElement('div');
+  overlay.className='det-field-asset-preview';
+  overlay.innerHTML=`<div class="det-field-asset-card"><button type="button" class="det-field-asset-close" aria-label="Cerrar ficha">×</button><div class="det-field-asset-title">Ficha de campo · ${escapeHtml(card.name||'Unidad')}</div><div class="det-field-asset-stage"><img src="${escapeHtml(src)}" alt="${escapeHtml(card.name||'Unidad')}"></div><small>Asset utilizado por la unidad dentro del campo.</small></div>`;
+  modal.querySelector('.card-inspect-card')?.appendChild(overlay);
+  overlay.querySelector('.det-field-asset-close')?.addEventListener('click',()=>overlay.remove());
+  overlay.addEventListener('click',ev=>{if(ev.target===overlay)overlay.remove();});
+}
+function renderDeckBuilderDetUtilityHtml(card){
+  const principal=isDeckBuilderDetPrincipal(card);
+  const inDeck=currentDeckDraft.some(c=>c?.key===card?.key);
+  return `<div class="det-deck-utility-row">
+    <button type="button" class="det-deck-utility-btn det-field-asset-btn" data-det-field-asset="1"><span class="det-utility-icon">▣</span><span><b>FICHA</b><small>Ver asset de campo</small></span></button>
+    <button type="button" class="det-deck-utility-btn det-principal-btn ${principal?'is-selected':''}" data-det-principal-toggle="1" ${(!inDeck||card?.type!=="unit")?'disabled':''}><span class="det-utility-icon">★</span><span><b>PRINCIPAL</b><small>${principal?'Elegida como principal':(inDeck?'No elegida como principal':'No está en el mazo')}</small></span></button>
+  </div>`;
+}
 function showDeckBuilderCardDetail(card){
   if(!card)return;
   tryPlaySound("card_select",.38);
   const hydrated=hydrateCardVisualData({...card});
   showCardInspectModal(hydrated);
   const modal=$("cardInspectModal");
-  if(modal)modal.classList.add("deck-builder-preview","deck-builder-detail-modal");
+  if(modal){
+    modal.classList.add("deck-builder-preview","deck-builder-detail-modal","det-universal-template");
+    closeDeckBuilderDetFieldPreview(modal);
+    modal.querySelector('.det-deck-utility-row')?.remove();
+    const visual=modal.querySelector('#cardInspectVisual');
+    visual?.insertAdjacentHTML('afterend',renderDeckBuilderDetUtilityHtml(hydrated));
+    modal.querySelector('[data-det-field-asset]')?.addEventListener('click',()=>openDeckBuilderDetFieldPreview(hydrated,modal));
+    modal.querySelector('[data-det-principal-toggle]')?.addEventListener('click',()=>{
+      if(!currentDeckDraft.some(c=>c?.key===hydrated.key)){setHint('Agrega primero esta unidad al mazo para elegirla como Principal.');return;}
+      setCurrentDeckPrincipal(hydrated.key);
+      updateDeckBuilderDetPrincipalButton(hydrated,modal);
+    });
+  }
   const sub=$("cardInspectSub");
   if(sub)sub.innerHTML=renderDetIdentityHtml(hydrated,isCollectionBrowseOnly()?"Carta de la colección":"Carta de la Forja");
   const textEl=$("cardInspectText");
@@ -786,6 +840,8 @@ function showDeckBuilderCardDetail(card){
     // No usar innerHTML +=: recreaba todos los botones DET y destruía sus listeners.
     // insertAdjacentHTML conserva los iconos de efectos, estados y ayudas ya enlazados.
     textEl.insertAdjacentHTML("beforeend",deckBuilderCardInvestmentHtml(hydrated));
+    const effectsTitle=textEl.querySelector('.det-section-block:first-child .det-section-title');
+    if(effectsTitle)effectsTitle.textContent='RASGOS, HABILIDADES Y PALABRAS CLAVE';
     const helpPill=textEl.querySelector(".deck-detail-help-pill");
     if(helpPill)helpPill.addEventListener("click",ev=>{
       ev.stopPropagation();

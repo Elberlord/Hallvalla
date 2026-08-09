@@ -914,31 +914,58 @@ try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("due
 maybeShowBasicTutorialGate();
 
 /* ============================================================
-   7BOARDCTRL8BH · Editor visual del modal DET
+   HallValla · Editor visual avanzado del modal DET
+   Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v1";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v2_universal";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v2_universal";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1120,panelHeight:620,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
   progressX:0,progressY:0,progressScale:100
 });
+const HV_DET_DIRECT_DEFAULT=Object.freeze({
+  x:0,y:0,scale:100,width:100,height:100,font:100,lineHeight:100,
+  padding:0,gap:0,radius:100,columns:0,overflow:"default"
+});
+let hvDetDirectEditing=false;
+let hvDetDirectSelectedKey="";
+let hvDetDirectDrag=null;
+let hvDetDirectRefreshQueued=false;
+
+function hvDetClamp(value,min,max,fallback){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+}
 function normalizeHvDetLayoutTuner(raw={}){
-  const clamp=(value,min,max,fallback)=>{
-    const n=Number(value);
-    return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
-  };
   return {
-    panelX:clamp(raw.panelX,-400,400,0),
-    panelY:clamp(raw.panelY,-300,300,0),
-    panelWidth:clamp(raw.panelWidth,760,1400,1120),
-    panelHeight:clamp(raw.panelHeight,480,820,620),
-    panelScale:clamp(raw.panelScale,65,135,100),
-    pbX:clamp(raw.pbX,-500,500,0),
-    pbY:clamp(raw.pbY,-250,500,0),
-    pbScale:clamp(raw.pbScale,55,180,100),
-    progressX:clamp(raw.progressX,-500,500,0),
-    progressY:clamp(raw.progressY,-250,500,0),
-    progressScale:clamp(raw.progressScale,55,180,100)
+    panelX:hvDetClamp(raw.panelX,-600,600,0),
+    panelY:hvDetClamp(raw.panelY,-450,450,0),
+    panelWidth:hvDetClamp(raw.panelWidth,650,1800,1120),
+    panelHeight:hvDetClamp(raw.panelHeight,420,1100,620),
+    panelScale:hvDetClamp(raw.panelScale,45,180,100),
+    pbX:hvDetClamp(raw.pbX,-900,900,0),
+    pbY:hvDetClamp(raw.pbY,-600,700,0),
+    pbScale:hvDetClamp(raw.pbScale,35,260,100),
+    progressX:hvDetClamp(raw.progressX,-900,900,0),
+    progressY:hvDetClamp(raw.progressY,-600,700,0),
+    progressScale:hvDetClamp(raw.progressScale,35,260,100)
+  };
+}
+function normalizeHvDetDirectSetting(raw={}){
+  return {
+    x:hvDetClamp(raw.x,-5000,5000,0),
+    y:hvDetClamp(raw.y,-5000,5000,0),
+    scale:hvDetClamp(raw.scale,10,600,100),
+    width:hvDetClamp(raw.width,10,600,100),
+    height:hvDetClamp(raw.height,10,600,100),
+    font:hvDetClamp(raw.font,25,400,100),
+    lineHeight:hvDetClamp(raw.lineHeight,50,300,100),
+    padding:hvDetClamp(raw.padding,-80,160,0),
+    gap:hvDetClamp(raw.gap,-60,160,0),
+    radius:hvDetClamp(raw.radius,0,400,100),
+    columns:Math.round(hvDetClamp(raw.columns,0,12,0)),
+    overflow:["default","visible","hidden","auto","scroll"].includes(String(raw.overflow||""))?String(raw.overflow):"default"
   };
 }
 function getHvDetLayoutTuner(){
@@ -947,8 +974,19 @@ function getHvDetLayoutTuner(){
 }
 function saveHvDetLayoutTuner(settings){
   const clean=normalizeHvDetLayoutTuner(settings);
-  localStorage.setItem(HV_DET_LAYOUT_TUNER_STORAGE_KEY,JSON.stringify(clean));
+  try{localStorage.setItem(HV_DET_LAYOUT_TUNER_STORAGE_KEY,JSON.stringify(clean));}catch(_){ }
   return clean;
+}
+function getHvDetDirectState(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(HV_DET_DIRECT_STORAGE_KEY)||"{}");
+    const items={};
+    Object.entries(raw?.items||{}).forEach(([key,value])=>{items[key]=normalizeHvDetDirectSetting(value);});
+    return {selected:String(raw?.selected||""),items};
+  }catch(_){return {selected:"",items:{}};}
+}
+function saveHvDetDirectState(state){
+  try{localStorage.setItem(HV_DET_DIRECT_STORAGE_KEY,JSON.stringify(state));}catch(_){ }
 }
 function applyHvDetLayoutTuner(settings=getHvDetLayoutTuner()){
   const clean=normalizeHvDetLayoutTuner(settings);
@@ -967,67 +1005,357 @@ function applyHvDetLayoutTuner(settings=getHvDetLayoutTuner()){
   return clean;
 }
 function isHvDetOpen(){
-  return !!($("inspector")?.classList.contains("show")||($("cardInspectModal")&&!$("cardInspectModal").classList.contains("hidden")));
+  return !!($('inspector')?.classList.contains('show')||($('cardInspectModal')&&!$('cardInspectModal').classList.contains('hidden')));
+}
+function hvDetSlug(value=""){
+  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")||"item";
+}
+function hvDetAddTarget(list,el,key,label){
+  if(!el||!key)return;
+  if(list.some(item=>item.el===el))return;
+  list.push({el,key,label:label||key});
+}
+function hvDetBuildTargets(root){
+  if(!root)return [];
+  const list=[];
+  const q=sel=>root.querySelector(sel);
+  const qa=sel=>[...root.querySelectorAll(sel)];
+  hvDetAddTarget(list,q('.card-inspect-card'),'panel','Panel completo');
+  hvDetAddTarget(list,q('#cardInspectBattlePowerBadge'),'pb','Poder de batalla');
+  hvDetAddTarget(list,q('.card-inspect-head'),'header','Cabecera');
+  hvDetAddTarget(list,q('#cardInspectTitle'),'title','Título de unidad');
+  hvDetAddTarget(list,q('#cardInspectSub'),'identity.group','Grupo de etiquetas');
+  qa('#cardInspectSub .det-head-chip').forEach((el,i)=>{
+    const key=`identity.chip.${i+1}`;
+    hvDetAddTarget(list,el,key,`Etiqueta superior ${i+1}`);
+    hvDetAddTarget(list,el.querySelector('b'),`${key}.title`,`Etiqueta ${i+1} · título`);
+    hvDetAddTarget(list,el.querySelector('small'),`${key}.small`,`Etiqueta ${i+1} · texto pequeño`);
+  });
+  hvDetAddTarget(list,q('#cardInspectX'),'close','Botón cerrar');
+  hvDetAddTarget(list,q('#cardInspectVisual'),'portrait.box','Marco del retrato');
+  hvDetAddTarget(list,q('#cardInspectVisual img'),'portrait.image','Imagen del retrato');
+  const utility=q('.det-deck-utility-row');
+  hvDetAddTarget(list,utility,'utility.group','Controles Ficha / Principal');
+  hvDetAddTarget(list,utility?.querySelector('.det-field-asset-btn'),'utility.field','Botón Ficha');
+  hvDetAddTarget(list,utility?.querySelector('.det-principal-btn'),'utility.principal','Botón Principal');
+  hvDetAddTarget(list,q('#cardInspectStats'),'stats.grid','HUD de estadísticas');
+  qa('#cardInspectStats .det-stat-row').forEach((row,i)=>{
+    const slug=hvDetSlug(row.dataset.statRow||`stat_${i+1}`);
+    const key=`stats.${slug}`;
+    hvDetAddTarget(list,row,`${key}.row`,`Stat ${row.dataset.statRow||i+1} · casilla`);
+    hvDetAddTarget(list,row.querySelector('.det-stat-icon-btn'),`${key}.icon`,`Stat ${row.dataset.statRow||i+1} · icono`);
+    hvDetAddTarget(list,row.querySelector('.det-stat-key'),`${key}.label`,`Stat ${row.dataset.statRow||i+1} · etiqueta`);
+    hvDetAddTarget(list,row.querySelector('strong'),`${key}.value`,`Stat ${row.dataset.statRow||i+1} · valor`);
+  });
+  hvDetAddTarget(list,q('#cardInspectText'),'content','HUD derecho / contenido');
+  const effects=q('#cardInspectText > .det-section-block:first-child');
+  hvDetAddTarget(list,effects,'effects.panel','Panel de efectos');
+  hvDetAddTarget(list,effects?.querySelector('.det-section-title'),'effects.title','Efectos · título');
+  qa('#cardInspectText .det-ability-card').forEach((el,i)=>{
+    const key=`effects.card.${i+1}`;
+    hvDetAddTarget(list,el,key,`Efecto ${i+1} · casilla`);
+    hvDetAddTarget(list,el.querySelector('.det-ability-name'),`${key}.name`,`Efecto ${i+1} · nombre`);
+    hvDetAddTarget(list,el.querySelector('.det-ability-text'),`${key}.text`,`Efecto ${i+1} · texto`);
+  });
+  const tactical=q('#cardInspectText > .det-tactical-card');
+  hvDetAddTarget(list,tactical,'tactical.panel','Panel táctico');
+  hvDetAddTarget(list,tactical?.querySelector('.det-section-title'),'tactical.title','Táctica · título');
+  qa('#cardInspectText .det-info-row').forEach((el,i)=>{
+    hvDetAddTarget(list,el,`tactical.row.${i+1}`,`Táctica · fila ${i+1}`);
+    hvDetAddTarget(list,el.querySelector('strong'),`tactical.row.${i+1}.text`,`Táctica · texto ${i+1}`);
+  });
+  const states=q('#cardInspectText > .det-status-section');
+  hvDetAddTarget(list,states,'states.panel','Estados activos · panel');
+  hvDetAddTarget(list,states?.querySelector('.det-section-title'),'states.title','Estados activos · título');
+  hvDetAddTarget(list,states?.querySelector('.det-status-list'),'states.list','Estados activos · lista');
+  hvDetAddTarget(list,states?.querySelector('.det-empty-line'),'states.empty','Estados activos · texto vacío');
+  qa('#cardInspectText .det-status-row').forEach((el,i)=>hvDetAddTarget(list,el,`states.row.${i+1}`,`Estado ${i+1}`));
+  const guide=q('#cardInspectText > .detail-guide-row');
+  hvDetAddTarget(list,guide,'guides.row','Pestañas de ayuda · grupo');
+  qa('#cardInspectText .detail-guide-chip').forEach((chip,i)=>{
+    const btn=chip.querySelector('button');
+    let type='item';
+    if(btn?.classList.contains('guide-weapon-btn'))type='weapon';
+    else if(btn?.classList.contains('guide-formula-btn'))type='formula';
+    else if(btn?.classList.contains('guide-lore-btn'))type='lore';
+    else if(btn?.classList.contains('guide-effect-btn'))type='effect';
+    const key=`guides.${type}.${i+1}`;
+    hvDetAddTarget(list,chip,key,`Pestaña ${btn?.getAttribute('aria-label')||i+1}`);
+    hvDetAddTarget(list,btn,`${key}.button`,`Pestaña ${i+1} · icono`);
+    hvDetAddTarget(list,chip.querySelector('span'),`${key}.label`,`Pestaña ${i+1} · texto`);
+  });
+  const collection=q('#cardInspectText .deck-builder-detail-box');
+  hvDetAddTarget(list,collection,'collection.panel','Información de colección · panel');
+  hvDetAddTarget(list,collection?.querySelector('.deck-detail-title'),'collection.title','Información de colección · título');
+  const collectionGrid=collection?.querySelector('.deck-detail-grid');
+  hvDetAddTarget(list,collectionGrid,'collection.grid','Información de colección · cuadrícula');
+  [...(collectionGrid?.children||[])].forEach((cell,i)=>{
+    const key=`collection.cell.${i+1}`;
+    hvDetAddTarget(list,cell,key,`Colección · casilla ${i+1}`);
+    hvDetAddTarget(list,cell.querySelector('b'),`${key}.label`,`Colección · casilla ${i+1} · etiqueta`);
+    hvDetAddTarget(list,cell.querySelector('em'),`${key}.value`,`Colección · casilla ${i+1} · valor`);
+  });
+  hvDetAddTarget(list,q('#cardInspectReason'),'reason','Texto inferior / motivo');
+  hvDetAddTarget(list,q('.card-inspect-actions'),'actions.group','Botones inferiores · grupo');
+  hvDetAddTarget(list,q('#cardInspectCancel'),'actions.cancel','Botón cerrar/cancelar');
+  hvDetAddTarget(list,q('#cardInspectPlay'),'actions.play','Botón jugar');
+  return list;
+}
+function hvDetCaptureBase(el){
+  if(!el||el.dataset.hvDetBaseCaptured==='1')return;
+  const cs=getComputedStyle(el);
+  const num=v=>Number.parseFloat(v)||0;
+  el.dataset.hvDetBaseCaptured='1';
+  el.dataset.hvDetBaseWidth=String(num(cs.width));
+  el.dataset.hvDetBaseHeight=String(num(cs.height));
+  el.dataset.hvDetBaseFont=String(num(cs.fontSize));
+  el.dataset.hvDetBaseLineHeight=String(cs.lineHeight==='normal'?(num(cs.fontSize)*1.2):num(cs.lineHeight));
+  el.dataset.hvDetBasePadTop=String(num(cs.paddingTop));
+  el.dataset.hvDetBasePadRight=String(num(cs.paddingRight));
+  el.dataset.hvDetBasePadBottom=String(num(cs.paddingBottom));
+  el.dataset.hvDetBasePadLeft=String(num(cs.paddingLeft));
+  el.dataset.hvDetBaseGap=String(num(cs.gap));
+  el.dataset.hvDetBaseRadius=String(num(cs.borderRadius));
+}
+function hvDetSetImportant(el,prop,value){
+  if(value==null||value==='')el.style.removeProperty(prop);
+  else el.style.setProperty(prop,value,'important');
+}
+function applyHvDetDirectToElement(el,value){
+  if(!el)return;
+  const v=normalizeHvDetDirectSetting(value);
+  hvDetCaptureBase(el);
+  if(v.x||v.y)el.style.translate=`${v.x}px ${v.y}px`; else el.style.removeProperty('translate');
+  if(v.scale!==100)el.style.scale=String(v.scale/100); else el.style.removeProperty('scale');
+  const bw=Number(el.dataset.hvDetBaseWidth||0),bh=Number(el.dataset.hvDetBaseHeight||0);
+  if(v.width!==100&&bw>0)hvDetSetImportant(el,'width',`${Math.max(1,bw*v.width/100)}px`); else el.style.removeProperty('width');
+  if(v.height!==100&&bh>0)hvDetSetImportant(el,'height',`${Math.max(1,bh*v.height/100)}px`); else el.style.removeProperty('height');
+  const bf=Number(el.dataset.hvDetBaseFont||0),bl=Number(el.dataset.hvDetBaseLineHeight||0);
+  if(v.font!==100&&bf>0)hvDetSetImportant(el,'font-size',`${Math.max(1,bf*v.font/100)}px`); else el.style.removeProperty('font-size');
+  if(v.lineHeight!==100&&bl>0)hvDetSetImportant(el,'line-height',`${Math.max(1,bl*v.lineHeight/100)}px`); else el.style.removeProperty('line-height');
+  if(v.padding!==0){
+    hvDetSetImportant(el,'padding-top',`${Math.max(0,Number(el.dataset.hvDetBasePadTop||0)+v.padding)}px`);
+    hvDetSetImportant(el,'padding-right',`${Math.max(0,Number(el.dataset.hvDetBasePadRight||0)+v.padding)}px`);
+    hvDetSetImportant(el,'padding-bottom',`${Math.max(0,Number(el.dataset.hvDetBasePadBottom||0)+v.padding)}px`);
+    hvDetSetImportant(el,'padding-left',`${Math.max(0,Number(el.dataset.hvDetBasePadLeft||0)+v.padding)}px`);
+  }else ['padding-top','padding-right','padding-bottom','padding-left'].forEach(prop=>el.style.removeProperty(prop));
+  if(v.gap!==0)hvDetSetImportant(el,'gap',`${Math.max(0,Number(el.dataset.hvDetBaseGap||0)+v.gap)}px`); else el.style.removeProperty('gap');
+  if(v.radius!==100)hvDetSetImportant(el,'border-radius',`${Math.max(0,Number(el.dataset.hvDetBaseRadius||0)*v.radius/100)}px`); else el.style.removeProperty('border-radius');
+  if(v.columns>0)hvDetSetImportant(el,'grid-template-columns',`repeat(${v.columns},minmax(0,1fr))`); else el.style.removeProperty('grid-template-columns');
+  if(v.overflow!=='default')hvDetSetImportant(el,'overflow',v.overflow); else el.style.removeProperty('overflow');
+}
+function markAndApplyHvDetDirect(){
+  const state=getHvDetDirectState();
+  ['cardInspectModal','inspector'].forEach(id=>{
+    const root=document.getElementById(id);
+    if(!root)return;
+    hvDetBuildTargets(root).forEach(({el,key,label})=>{
+      el.dataset.hvDetEditKey=key;
+      el.dataset.hvDetEditLabel=label;
+      if(state.items[key])applyHvDetDirectToElement(el,state.items[key]);
+      el.classList.toggle('hv-det-direct-target',hvDetDirectEditing);
+      el.classList.toggle('hv-det-direct-selected',hvDetDirectEditing&&key===hvDetDirectSelectedKey);
+    });
+  });
+}
+function queueHvDetDirectRefresh(){
+  if(hvDetDirectRefreshQueued)return;
+  hvDetDirectRefreshQueued=true;
+  requestAnimationFrame(()=>{hvDetDirectRefreshQueued=false;markAndApplyHvDetDirect();syncHvDetDirectControls();});
+}
+function getHvDetSelectedElement(){
+  return document.querySelector(`[data-hv-det-edit-key="${CSS.escape(hvDetDirectSelectedKey||'')}" ]`);
+}
+function getHvDetSelectedSetting(){
+  const state=getHvDetDirectState();
+  return normalizeHvDetDirectSetting(state.items[hvDetDirectSelectedKey]||HV_DET_DIRECT_DEFAULT);
+}
+function setHvDetSelectedSetting(patch={}){
+  if(!hvDetDirectSelectedKey)return;
+  const state=getHvDetDirectState();
+  state.selected=hvDetDirectSelectedKey;
+  state.items[hvDetDirectSelectedKey]=normalizeHvDetDirectSetting({...state.items[hvDetDirectSelectedKey],...patch});
+  saveHvDetDirectState(state);
+  document.querySelectorAll(`[data-hv-det-edit-key="${CSS.escape(hvDetDirectSelectedKey)}"]`).forEach(el=>applyHvDetDirectToElement(el,state.items[hvDetDirectSelectedKey]));
+  markAndApplyHvDetDirect();
+  syncHvDetDirectControls();
+}
+function syncHvDetDirectControls(){
+  const shell=document.getElementById('hvDetLayoutTuner');
+  if(!shell)return;
+  const state=getHvDetDirectState();
+  if(!hvDetDirectSelectedKey&&state.selected)hvDetDirectSelectedKey=state.selected;
+  const el=getHvDetSelectedElement();
+  const label=shell.querySelector('[data-det-selected-label]');
+  if(label)label.textContent=el?.dataset.hvDetEditLabel||'Haz clic en un elemento del DET';
+  const v=getHvDetSelectedSetting();
+  shell.querySelectorAll('[data-det-direct-setting]').forEach(input=>{
+    const key=input.dataset.detDirectSetting;
+    input.disabled=!el;
+    if(input.tagName==='SELECT')input.value=String(v[key]); else input.value=String(v[key]);
+    const out=shell.querySelector(`[data-direct-out="${key}"]`);
+    if(out){
+      if(key==='columns')out.textContent=v.columns?String(v.columns):'auto';
+      else if(['scale','width','height','font','lineHeight','radius'].includes(key))out.textContent=`${v[key]}%`;
+      else out.textContent=`${v[key]} px`;
+    }
+  });
+  const modeBtn=shell.querySelector('[data-det-direct-mode]');
+  if(modeBtn){modeBtn.classList.toggle('active',hvDetDirectEditing);modeBtn.textContent=hvDetDirectEditing?'EDICIÓN DIRECTA: ON':'ACTIVAR EDICIÓN DIRECTA';}
+}
+function setHvDetDirectEditing(on){
+  hvDetDirectEditing=!!on;
+  document.documentElement.classList.toggle('hv-det-direct-editing',hvDetDirectEditing);
+  if(hvDetDirectEditing){
+    const state=getHvDetDirectState();
+    if(!hvDetDirectSelectedKey)hvDetDirectSelectedKey=state.selected||'';
+  }
+  markAndApplyHvDetDirect();
+  syncHvDetDirectControls();
+}
+function wireHvDetDirectEditorRoot(root){
+  if(!root||root.dataset.hvDetDirectBound==='1')return;
+  root.dataset.hvDetDirectBound='1';
+  root.addEventListener('pointerdown',ev=>{
+    if(!hvDetDirectEditing)return;
+    const el=ev.target.closest('[data-hv-det-edit-key]');
+    if(!el||!root.contains(el))return;
+    ev.preventDefault();ev.stopImmediatePropagation();
+    hvDetDirectSelectedKey=el.dataset.hvDetEditKey||'';
+    const state=getHvDetDirectState();
+    state.selected=hvDetDirectSelectedKey;saveHvDetDirectState(state);
+    const v=getHvDetSelectedSetting();
+    hvDetDirectDrag={pointerId:ev.pointerId,el,key:hvDetDirectSelectedKey,startX:ev.clientX,startY:ev.clientY,baseX:v.x,baseY:v.y};
+    try{el.setPointerCapture(ev.pointerId);}catch(_){ }
+    markAndApplyHvDetDirect();syncHvDetDirectControls();
+  },true);
+  root.addEventListener('pointermove',ev=>{
+    const st=hvDetDirectDrag;if(!st||st.pointerId!==ev.pointerId)return;
+    ev.preventDefault();
+    const x=st.baseX+(ev.clientX-st.startX),y=st.baseY+(ev.clientY-st.startY);
+    setHvDetSelectedSetting({x,y});
+  },true);
+  const finish=ev=>{if(hvDetDirectDrag&&hvDetDirectDrag.pointerId===ev.pointerId)hvDetDirectDrag=null;};
+  root.addEventListener('pointerup',finish,true);root.addEventListener('pointercancel',finish,true);
+  root.addEventListener('wheel',ev=>{
+    if(!hvDetDirectEditing)return;
+    const el=ev.target.closest('[data-hv-det-edit-key]');if(!el||!root.contains(el))return;
+    ev.preventDefault();ev.stopImmediatePropagation();
+    hvDetDirectSelectedKey=el.dataset.hvDetEditKey||'';
+    const v=getHvDetSelectedSetting();
+    setHvDetSelectedSetting({scale:v.scale+(ev.deltaY<0?5:-5)});
+  },{capture:true,passive:false});
+  root.addEventListener('click',ev=>{
+    if(hvDetDirectEditing){
+      const el=ev.target.closest('[data-hv-det-edit-key]');
+      if(el){ev.preventDefault();ev.stopImmediatePropagation();}
+      return;
+    }
+    const chip=ev.target.closest('.detail-guide-chip');
+    if(chip&&root.contains(chip)&&!ev.target.closest('button')){
+      const button=chip.querySelector('button');
+      if(button&&!button.disabled){ev.preventDefault();button.click();}
+    }
+  },true);
+}
+function resetHvDetSelectedDirect(){
+  if(!hvDetDirectSelectedKey)return;
+  const state=getHvDetDirectState();delete state.items[hvDetDirectSelectedKey];saveHvDetDirectState(state);
+  document.querySelectorAll(`[data-hv-det-edit-key="${CSS.escape(hvDetDirectSelectedKey)}"]`).forEach(el=>{
+    ['translate','scale','width','height','font-size','line-height','padding-top','padding-right','padding-bottom','padding-left','gap','border-radius','grid-template-columns','overflow'].forEach(prop=>el.style.removeProperty(prop));
+  });
+  queueHvDetDirectRefresh();
+}
+function resetHvDetAllDirect(){
+  saveHvDetDirectState({selected:"",items:{}});hvDetDirectSelectedKey='';
+  document.querySelectorAll('[data-hv-det-edit-key]').forEach(el=>{
+    ['translate','scale','width','height','font-size','line-height','padding-top','padding-right','padding-bottom','padding-left','gap','border-radius','grid-template-columns','overflow'].forEach(prop=>el.style.removeProperty(prop));
+  });
+  queueHvDetDirectRefresh();
+}
+function copyHvDetEditorJson(button){
+  const payload=JSON.stringify({layout:getHvDetLayoutTuner(),direct:getHvDetDirectState()},null,2);
+  const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'JSON',1000);}};
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia la configuración DET:',payload));return;}
+  window.prompt('Copia la configuración DET:',payload);
 }
 function ensureHvDetLayoutTuner(){
-  if(document.getElementById("hvDetLayoutTuner"))return;
-  const shell=document.createElement("div");
-  shell.id="hvDetLayoutTuner";
-  shell.className="hv-det-layout-tuner hidden";
+  if(document.getElementById('hvDetLayoutTuner'))return;
+  const shell=document.createElement('div');
+  shell.id='hvDetLayoutTuner';shell.className='hv-det-layout-tuner hidden';
   shell.innerHTML=`<button id="hvDetLayoutTunerToggle" class="hv-det-layout-tuner-toggle" type="button">AJUSTAR DET</button>
   <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Control visual del DET">
-    <header><div><b>CONTROL DEL DET</b><small>Mueve y escala el panel, el PB y el progreso.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
-    <div class="hv-det-tuner-grid">
-      <label>DET horizontal <output data-out="panelX"></output><input data-det-setting="panelX" type="range" min="-400" max="400" step="1"></label>
-      <label>DET vertical <output data-out="panelY"></output><input data-det-setting="panelY" type="range" min="-300" max="300" step="1"></label>
-      <label>Ancho DET <output data-out="panelWidth"></output><input data-det-setting="panelWidth" type="range" min="760" max="1400" step="5"></label>
-      <label>Alto DET <output data-out="panelHeight"></output><input data-det-setting="panelHeight" type="range" min="480" max="820" step="5"></label>
-      <label>Escala DET <output data-out="panelScale"></output><input data-det-setting="panelScale" type="range" min="65" max="135" step="1"></label>
-    </div>
-    <details open><summary>Poder de batalla</summary><div class="hv-det-tuner-grid">
-      <label>PB horizontal <output data-out="pbX"></output><input data-det-setting="pbX" type="range" min="-500" max="500" step="1"></label>
-      <label>PB vertical <output data-out="pbY"></output><input data-det-setting="pbY" type="range" min="-250" max="500" step="1"></label>
-      <label>Tamaño PB <output data-out="pbScale"></output><input data-det-setting="pbScale" type="range" min="55" max="180" step="1"></label>
+    <header><div><b>CONTROL TOTAL DEL DET</b><small>Activa edición directa y toca cualquier casilla, texto, icono o panel. Arrastra para mover; rueda para escalar.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
+    <button class="hv-det-direct-mode" data-det-direct-mode type="button">ACTIVAR EDICIÓN DIRECTA</button>
+    <div class="hv-det-selected-label" data-det-selected-label>Haz clic en un elemento del DET</div>
+    <details open><summary>Elemento seleccionado</summary><div class="hv-det-tuner-grid hv-det-direct-grid">
+      <label>Horizontal <output data-direct-out="x"></output><input data-det-direct-setting="x" type="range" min="-1200" max="1200" step="1"></label>
+      <label>Vertical <output data-direct-out="y"></output><input data-det-direct-setting="y" type="range" min="-900" max="900" step="1"></label>
+      <label>Escala <output data-direct-out="scale"></output><input data-det-direct-setting="scale" type="range" min="10" max="400" step="1"></label>
+      <label>Ancho <output data-direct-out="width"></output><input data-det-direct-setting="width" type="range" min="10" max="400" step="1"></label>
+      <label>Alto <output data-direct-out="height"></output><input data-det-direct-setting="height" type="range" min="10" max="400" step="1"></label>
+      <label>Texto <output data-direct-out="font"></output><input data-det-direct-setting="font" type="range" min="25" max="300" step="1"></label>
+      <label>Interlineado <output data-direct-out="lineHeight"></output><input data-det-direct-setting="lineHeight" type="range" min="50" max="250" step="1"></label>
+      <label>Padding <output data-direct-out="padding"></output><input data-det-direct-setting="padding" type="range" min="-40" max="100" step="1"></label>
+      <label>Separación <output data-direct-out="gap"></output><input data-det-direct-setting="gap" type="range" min="-30" max="100" step="1"></label>
+      <label>Redondeado <output data-direct-out="radius"></output><input data-det-direct-setting="radius" type="range" min="0" max="300" step="5"></label>
+      <label>Columnas <output data-direct-out="columns"></output><input data-det-direct-setting="columns" type="range" min="0" max="10" step="1"></label>
+      <label class="hv-det-overflow-label">Overflow <select data-det-direct-setting="overflow"><option value="default">Original</option><option value="visible">Visible</option><option value="hidden">Oculto</option><option value="auto">Auto</option><option value="scroll">Scroll</option></select></label>
     </div></details>
-    <details open><summary>Progreso de muertes</summary><div class="hv-det-tuner-grid">
-      <label>Progreso horizontal <output data-out="progressX"></output><input data-det-setting="progressX" type="range" min="-500" max="500" step="1"></label>
-      <label>Progreso vertical <output data-out="progressY"></output><input data-det-setting="progressY" type="range" min="-250" max="500" step="1"></label>
-      <label>Tamaño progreso <output data-out="progressScale"></output><input data-det-setting="progressScale" type="range" min="55" max="180" step="1"></label>
+    <details><summary>Panel general</summary><div class="hv-det-tuner-grid">
+      <label>DET horizontal <output data-out="panelX"></output><input data-det-setting="panelX" type="range" min="-600" max="600" step="1"></label>
+      <label>DET vertical <output data-out="panelY"></output><input data-det-setting="panelY" type="range" min="-450" max="450" step="1"></label>
+      <label>Ancho DET <output data-out="panelWidth"></output><input data-det-setting="panelWidth" type="range" min="650" max="1800" step="5"></label>
+      <label>Alto DET <output data-out="panelHeight"></output><input data-det-setting="panelHeight" type="range" min="420" max="1100" step="5"></label>
+      <label>Escala DET <output data-out="panelScale"></output><input data-det-setting="panelScale" type="range" min="45" max="180" step="1"></label>
     </div></details>
-    <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
+    <details><summary>Poder de batalla</summary><div class="hv-det-tuner-grid">
+      <label>PB horizontal <output data-out="pbX"></output><input data-det-setting="pbX" type="range" min="-900" max="900" step="1"></label>
+      <label>PB vertical <output data-out="pbY"></output><input data-det-setting="pbY" type="range" min="-600" max="700" step="1"></label>
+      <label>Tamaño PB <output data-out="pbScale"></output><input data-det-setting="pbScale" type="range" min="35" max="260" step="1"></label>
+    </div></details>
+    <details><summary>Progreso de muertes</summary><div class="hv-det-tuner-grid">
+      <label>Progreso horizontal <output data-out="progressX"></output><input data-det-setting="progressX" type="range" min="-900" max="900" step="1"></label>
+      <label>Progreso vertical <output data-out="progressY"></output><input data-det-setting="progressY" type="range" min="-600" max="700" step="1"></label>
+      <label>Tamaño progreso <output data-out="progressScale"></output><input data-det-setting="progressScale" type="range" min="35" max="260" step="1"></label>
+    </div></details>
+    <div class="hv-det-direct-actions"><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todo DET</button><button data-det-copy-json class="btn" type="button">JSON</button></div>
+    <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar panel</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
   </section>`;
   document.body.appendChild(shell);
-  const toggle=$("hvDetLayoutTunerToggle"),panel=$("hvDetLayoutTunerPanel");
+  const toggle=$('hvDetLayoutTunerToggle'),panel=$('hvDetLayoutTunerPanel');
   let settings=applyHvDetLayoutTuner();
-  const valueSuffix=key=>key.includes("Scale")?"%":" px";
-  const syncControls=()=>{
-    shell.querySelectorAll("[data-det-setting]").forEach(input=>{
-      const key=input.dataset.detSetting;
-      input.value=String(settings[key]);
-      const out=shell.querySelector(`[data-out="${key}"]`);
-      if(out)out.textContent=`${settings[key]}${valueSuffix(key)}`;
+  const valueSuffix=key=>key.includes('Scale')?'%':' px';
+  const syncGlobal=()=>{
+    shell.querySelectorAll('[data-det-setting]').forEach(input=>{
+      const key=input.dataset.detSetting;input.value=String(settings[key]);
+      const out=shell.querySelector(`[data-out="${key}"]`);if(out)out.textContent=`${settings[key]}${valueSuffix(key)}`;
     });
   };
-  const setPanelOpen=open=>panel.classList.toggle("hidden",!open);
-  toggle.onclick=()=>setPanelOpen(panel.classList.contains("hidden"));
-  $("hvDetLayoutTunerClose").onclick=()=>setPanelOpen(false);
-  $("hvDetLayoutTunerDone").onclick=()=>setPanelOpen(false);
-  $("hvDetLayoutTunerReset").onclick=()=>{
-    settings=saveHvDetLayoutTuner({...HV_DET_LAYOUT_TUNER_DEFAULTS});
-    applyHvDetLayoutTuner(settings);syncControls();
-  };
-  shell.querySelectorAll("[data-det-setting]").forEach(input=>input.addEventListener("input",()=>{
-    settings={...settings,[input.dataset.detSetting]:Number(input.value)};
-    settings=saveHvDetLayoutTuner(settings);
-    applyHvDetLayoutTuner(settings);syncControls();
+  const setPanelOpen=open=>panel.classList.toggle('hidden',!open);
+  toggle.onclick=()=>{setPanelOpen(panel.classList.contains('hidden'));queueHvDetDirectRefresh();};
+  $('hvDetLayoutTunerClose').onclick=()=>{setHvDetDirectEditing(false);setPanelOpen(false);};
+  $('hvDetLayoutTunerDone').onclick=()=>{setHvDetDirectEditing(false);setPanelOpen(false);};
+  $('hvDetLayoutTunerReset').onclick=()=>{settings=saveHvDetLayoutTuner({...HV_DET_LAYOUT_TUNER_DEFAULTS});applyHvDetLayoutTuner(settings);syncGlobal();};
+  shell.querySelector('[data-det-direct-mode]')?.addEventListener('click',()=>setHvDetDirectEditing(!hvDetDirectEditing));
+  shell.querySelector('[data-det-reset-selected]')?.addEventListener('click',resetHvDetSelectedDirect);
+  shell.querySelector('[data-det-reset-all]')?.addEventListener('click',resetHvDetAllDirect);
+  shell.querySelector('[data-det-copy-json]')?.addEventListener('click',ev=>copyHvDetEditorJson(ev.currentTarget));
+  shell.querySelectorAll('[data-det-setting]').forEach(input=>input.addEventListener('input',()=>{
+    settings={...settings,[input.dataset.detSetting]:Number(input.value)};settings=saveHvDetLayoutTuner(settings);applyHvDetLayoutTuner(settings);syncGlobal();
+  }));
+  shell.querySelectorAll('[data-det-direct-setting]').forEach(input=>input.addEventListener(input.tagName==='SELECT'?'change':'input',()=>{
+    const key=input.dataset.detDirectSetting;setHvDetSelectedSetting({[key]:input.tagName==='SELECT'?input.value:Number(input.value)});
   }));
   const refreshVisibility=()=>{
-    const open=isHvDetOpen();
-    shell.classList.toggle("hidden",!open);
-    if(!open)setPanelOpen(false);
+    const open=isHvDetOpen();shell.classList.toggle('hidden',!open);
+    if(!open){setHvDetDirectEditing(false);setPanelOpen(false);}else queueHvDetDirectRefresh();
   };
-  [$("inspector"),$("cardInspectModal")].filter(Boolean).forEach(element=>new MutationObserver(refreshVisibility).observe(element,{attributes:true,attributeFilter:["class"]}));
-  syncControls();refreshVisibility();
+  ['inspector','cardInspectModal'].map(id=>$(id)).filter(Boolean).forEach(element=>{
+    wireHvDetDirectEditorRoot(element);
+    new MutationObserver(()=>{refreshVisibility();queueHvDetDirectRefresh();}).observe(element,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
+  });
+  syncGlobal();syncHvDetDirectControls();refreshVisibility();
 }
 applyHvDetLayoutTuner();
 ensureHvDetLayoutTuner();
