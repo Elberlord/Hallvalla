@@ -314,26 +314,26 @@ function getBoardUnitPortraitHtml(u){
 
 function showUnit(u){
   if(!u)return;
-  const inspector=$("inspector");
-  if(inspector)inspector.className=`inspector ${getCardVisualClass(u)}`;
-  $("inspectTitle").textContent=getEntityFullDisplayName(u);
-  updateDetBattlePowerBadge($("inspectBattlePowerBadge"),u);
-  $("inspectSub").innerHTML=renderDetIdentityHtml(u,u.owner===myPlayer?"Tu unidad":"Unidad rival");
-  $("inspectArt").innerHTML=getUnitPortraitHtml(u);
-  const stats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
-  const inspectStatsEl=$("inspectStats");
-  inspectStatsEl.innerHTML=renderDetStatButtons(stats,"inspect-stat");
+  const legacyInspector=$("inspector");
+  if(legacyInspector)legacyInspector.classList.remove("show");
+  cardInspectSelection=null;
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
-  const inspectTextEl=$("inspectText");
-  inspectTextEl.innerHTML=`${renderDetAbilitiesHtml(u,fx)}${renderDetStatusesHtml(activeEntries,u)}${renderDetQuoteHtml(u)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(u,fx),showWeapon:true,showFormula:true,showLore:true,effectLabel:u.leader?'Ver líder':'Ver efecto',entity:u})}`;
-  inspector._hvInspectedEntity=u;
-  inspector._hvActiveStatuses=activeEntries;
-  inspector._hvEffectText=fx;
-  inspector._hvEffectTitle=`✦ Efecto de ${u.name}`;
-  bindInspectorDetModalDelegation(inspector);
-  applyRarityClassToElement(inspector,u);
-  inspector.classList.add("show");
+  const ownerLabel=u.owner===myPlayer?"Tu unidad · en campo":"Unidad rival · en campo";
+  const modal=openUnifiedDetEntity(u,{
+    mode:"field",
+    ownerLabel,
+    live:true,
+    statuses:activeEntries,
+    visualHtml:getUnitPortraitHtml(u),
+    reasonText:getUnifiedDetProgressText(u),
+    allowPlay:false
+  });
+  if(modal){
+    modal.classList.add("field-unit-detail-modal");
+    modal._hvEffectText=fx;
+    modal._hvEffectTitle=`✦ Efecto de ${u.name}`;
+  }
 }
 
 function unitHasContextEffect(u){

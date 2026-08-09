@@ -842,30 +842,32 @@ function showDeckBuilderCardDetail(card){
   if(!card)return;
   tryPlaySound("card_select",.38);
   const hydrated=hydrateCardVisualData({...card});
-  showCardInspectModal(hydrated);
-  const modal=$("cardInspectModal");
-  if(modal){
-    modal.classList.add("deck-builder-preview","deck-builder-detail-modal","det-universal-template","det-template-artframe");
-    closeDeckBuilderDetFieldPreview(modal);
-    modal.querySelector('.det-deck-utility-row')?.remove();
-    const visual=modal.querySelector('#cardInspectVisual');
-    visual?.insertAdjacentHTML('afterend',renderDeckBuilderDetUtilityHtml(hydrated));
-    modal.querySelector('[data-det-field-asset]')?.addEventListener('click',()=>openDeckBuilderDetFieldPreview(hydrated,modal));
-    modal.querySelector('[data-det-principal-toggle]')?.addEventListener('click',()=>{
-      if(!currentDeckDraft.some(c=>c?.key===hydrated.key)){setHint('Agrega primero esta unidad al mazo para elegirla como Principal.');return;}
-      setCurrentDeckPrincipal(hydrated.key);
-      updateDeckBuilderDetPrincipalButton(hydrated,modal);
-    });
-  }
+  cardInspectSelection=null;
+  const ownerLabel=isCollectionBrowseOnly()?"Carta de la colección":"Carta de la Forja";
+  const modal=openUnifiedDetEntity(hydrated,{
+    mode:"collection",
+    ownerLabel,
+    live:false,
+    statuses:[],
+    reasonText:getDeckBuilderDetProgressText(hydrated),
+    allowPlay:false
+  });
+  if(!modal)return;
+  modal.classList.add("deck-builder-preview","det-v32-collection");
+  closeDeckBuilderDetFieldPreview(modal);
+  modal.querySelector('.det-deck-utility-row')?.remove();
+  const visual=modal.querySelector('#cardInspectVisual');
+  visual?.insertAdjacentHTML('afterend',renderDeckBuilderDetUtilityHtml(hydrated));
+  modal.querySelector('[data-det-field-asset]')?.addEventListener('click',()=>openDeckBuilderDetFieldPreview(hydrated,modal));
+  modal.querySelector('[data-det-principal-toggle]')?.addEventListener('click',()=>{
+    if(!currentDeckDraft.some(c=>c?.key===hydrated.key)){setHint('Agrega primero esta unidad al mazo para elegirla como Principal.');return;}
+    setCurrentDeckPrincipal(hydrated.key);
+    updateDeckBuilderDetPrincipalButton(hydrated,modal);
+  });
   const sub=$("cardInspectSub");
-  if(sub){
-    sub.innerHTML=renderDetIdentityHtml(hydrated,isCollectionBrowseOnly()?"Carta de la colección":"Carta de la Forja");
-    sub.querySelector('.det-mastery-progress')?.remove();
-  }
+  if(sub)sub.querySelector('.det-mastery-progress')?.remove();
   const textEl=$("cardInspectText");
   if(textEl){
-    // No usar innerHTML +=: recreaba todos los botones DET y destruía sus listeners.
-    // insertAdjacentHTML conserva los iconos de efectos, estados y ayudas ya enlazados.
     textEl.insertAdjacentHTML("beforeend",deckBuilderCardInvestmentHtml(hydrated));
     const effectsTitle=textEl.querySelector('.det-section-block:first-child .det-section-title');
     if(effectsTitle)effectsTitle.textContent='RASGOS, HABILIDADES Y PALABRAS CLAVE';
@@ -882,18 +884,16 @@ function showDeckBuilderCardDetail(card){
     });
     const collectionBox=textEl.querySelector('.deck-builder-detail-box');
     if(collectionBox){
-      const actions=modal?.querySelector('.card-inspect-actions');
+      const actions=modal.querySelector('.card-inspect-actions');
       if(actions?.parentNode===modal.querySelector('.card-inspect-card'))actions.before(collectionBox);
     }
   }
-  const reason=$("cardInspectReason");
-  if(reason)reason.textContent=getDeckBuilderDetProgressText(hydrated);
-  const cancel=$("cardInspectCancel");
-  if(cancel)cancel.textContent="Cerrar";
-  const play=$("cardInspectPlay");
-  if(play){play.disabled=true;play.textContent="Solo vista";}
-  if(typeof syncCardInspectTemplateUi==="function")syncCardInspectTemplateUi();
+  modal._hvLevelProgressText=getDeckBuilderDetProgressText(hydrated);
+  syncUnifiedDetCoreFields(hydrated,{mode:"collection",live:false,statuses:[]});
+  syncCardInspectTemplateUi(modal._hvLevelProgressText);
+  if(typeof queueHvDetDirectRefresh==="function")queueHvDetDirectRefresh();
 }
+
 function getDeckBuilderDragPayload(ev){
   if(deckBuilderDragPayload)return deckBuilderDragPayload;
   try{return JSON.parse(ev?.dataTransfer?.getData("application/json")||ev?.dataTransfer?.getData("text/plain")||"null");}

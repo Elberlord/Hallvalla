@@ -917,8 +917,8 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v4_fit_viewport";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v4_fit_viewport";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v5_unified_v32";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v5_unified_v32";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1260,panelHeight:590,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
@@ -1029,8 +1029,9 @@ function applyHvDetLayoutTuner(settings=getHvDetLayoutTuner()){
   return clean;
 }
 function isHvDetOpen(){
-  return !!($('inspector')?.classList.contains('show')||($('cardInspectModal')&&!$('cardInspectModal').classList.contains('hidden')));
+  return !!($('cardInspectModal')&&!$('cardInspectModal').classList.contains('hidden'));
 }
+
 function hvDetSlug(value=""){
   return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")||"item";
 }
@@ -1085,6 +1086,19 @@ function hvDetBuildTargets(root){
   hvDetAddTarget(list,q('#detLevelProgressSub'),'level.sub','Nivel · faltante');
   hvDetAddTarget(list,q('#detFavoriteToggle'),'favorite.panel','Favorita · botón');
   hvDetAddTarget(list,q('#detFavoriteToggle .det-favorite-star'),'favorite.star','Favorita · estrella');
+  hvDetAddTarget(list,q('#detTypeValue'),'meta.type','TIPO · valor');
+  hvDetAddTarget(list,q('#detRarityValue'),'meta.rarity','RAREZA · valor');
+  hvDetAddTarget(list,q('#detStateValue'),'meta.state','ESTADO · valor');
+  hvDetAddTarget(list,q('#detWeaponValue'),'meta.weapon','ARMA · grupo');
+  hvDetAddTarget(list,q('#detWeaponValue img'),'meta.weapon.icon','ARMA · icono');
+  hvDetAddTarget(list,q('#detWeaponValue span'),'meta.weapon.value','ARMA · valor');
+  hvDetAddTarget(list,q('#detCopiesValue'),'meta.copies','COPIAS · valor');
+  hvDetAddTarget(list,q('#detPrecEvaValue'),'meta.preceva','PREC/EVA · grupo');
+  hvDetAddTarget(list,q('#detPrecEvaValue img'),'meta.preceva.icon','PREC/EVA · icono');
+  hvDetAddTarget(list,q('#detPrecEvaValue span'),'meta.preceva.value','PREC/EVA · valor');
+  hvDetAddTarget(list,q('#detLoreValue'),'meta.lore','CONÓCEME · grupo');
+  hvDetAddTarget(list,q('#detLoreValue img'),'meta.lore.icon','CONÓCEME · icono');
+  hvDetAddTarget(list,q('#detLoreValue span'),'meta.lore.value','CONÓCEME · texto');
   hvDetAddTarget(list,q('.card-inspect-head'),'header','Cabecera');
   hvDetAddTarget(list,q('#cardInspectTitle'),'title','Título de unidad');
   hvDetAddTarget(list,q('#cardInspectSub'),'identity.group','Grupo de etiquetas');
@@ -1209,7 +1223,7 @@ function applyHvDetDirectToElement(el,value){
 }
 function markAndApplyHvDetDirect(){
   const state=getHvDetDirectState();
-  ['cardInspectModal','inspector'].forEach(id=>{
+  ['cardInspectModal'].forEach(id=>{
     const root=document.getElementById(id);
     if(!root)return;
     hvDetBuildTargets(root).forEach(({el,key,label})=>{
@@ -1247,8 +1261,6 @@ function setHvDetSelectedSetting(patch={}){
 function getHvDetActiveEditorRoot(){
   const modal=$('cardInspectModal');
   if(modal&&!modal.classList.contains('hidden'))return modal;
-  const inspector=$('inspector');
-  if(inspector?.classList.contains('show'))return inspector;
   return null;
 }
 function syncHvDetTargetPicker(){
@@ -1496,7 +1508,7 @@ function ensureHvDetLayoutTuner(){
     const open=isHvDetOpen();shell.classList.toggle('hidden',!open);
     if(!open){setHvDetDirectEditing(false);setPanelOpen(false);}else queueHvDetDirectRefresh();
   };
-  ['inspector','cardInspectModal'].map(id=>$(id)).filter(Boolean).forEach(element=>{
+  ['cardInspectModal'].map(id=>$(id)).filter(Boolean).forEach(element=>{
     wireHvDetDirectEditorRoot(element);
     new MutationObserver(()=>{refreshVisibility();queueHvDetDirectRefresh();}).observe(element,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
   });

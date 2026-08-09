@@ -1350,12 +1350,113 @@ function parseCardInspectLevelProgress(rawText=""){
   const current=Math.max(0,Number(main[2]||0));
   const total=Math.max(0,Number(main[3]||0));
   const remainingMatch=raw.match(/faltan\s+(\d+)/i);
-  const maxed=/nivel m[aá]ximo/i.test(raw);
+  const maxed=/nivel m[aá]ximo|rango m[aá]ximo/i.test(raw);
   const remaining=maxed?0:Math.max(0,Number(remainingMatch?.[1]??Math.max(0,total-current)));
   const progress=total>0?Math.max(0,Math.min(100,(current/total)*100)):0;
   return {raw,visible:true,rank,current,total,remaining,progress,maxed};
 }
-function syncCardInspectTemplateUi(){
+function getUnifiedDetProgressText(entity){
+  try{
+    if(!entity)return "";
+    if(entity.leader){
+      const level=Math.max(1,Number(entity.leaderLevel||1));
+      return `NIVEL ${level}`;
+    }
+    if(entity.type!=="unit")return "";
+    if(entity.owner!==undefined&&typeof myPlayer!=="undefined"&&Number(entity.owner)!==Number(myPlayer)){
+      const enemyRank=Math.max(1,Number(entity.masteryRank||1));
+      const rankText=typeof romanUnitRank==="function"?romanUnitRank(enemyRank):String(enemyRank);
+      return `NIVEL ${rankText}`;
+    }
+    if(typeof getDeckBuilderDetProgressText==="function"){
+      const direct=getDeckBuilderDetProgressText(entity);
+      if(direct)return direct;
+    }
+    if(typeof getUnitMasteryRecord!=="function"||typeof getUnitMasteryRankFromKills!=="function"||typeof getUnitMasteryKillsForRank!=="function")return "NIVEL I";
+    const record=getUnitMasteryRecord(entity);
+    const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
+    const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:10;
+    const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
+    if(rank>=maxRank)return `NIVEL ${rankText} · ${kills} muertes · nivel máximo`;
+    const next=Math.max(kills,Math.floor(Number(getUnitMasteryKillsForRank(rank+1)||kills)));
+    return `NIVEL ${rankText} · ${kills}/${next} muertes · faltan ${Math.max(0,next-kills)}`;
+  }catch(error){
+    console.warn('[HallValla] No se pudo calcular el progreso del DET unificado:',error);
+    return "";
+  }
+}
+function getUnifiedDetCopiesText(entity){
+  try{
+    if(!entity?.key)return "—";
+    let owned=Number(entity.qty||0);
+    if(typeof getCollectionCardsExpanded==="function"){
+      const found=getCollectionCardsExpanded().find(card=>card?.key===entity.key);
+      if(found)owned=Number(found.qty||0);
+    }
+    if(typeof maxCopiesForCard==="function")return `${Math.max(0,owned)}/${Math.max(1,Number(maxCopiesForCard(entity)||1))}`;
+    return owned>0?String(owned):"—";
+  }catch(_){return "—";}
+}
+function getUnifiedDetStateText(entity,mode="card",statuses=[]){
+  if(mode==="field"){
+    const side=entity?.owner===myPlayer?'ALIADA':'RIVAL';
+    const active=Array.isArray(statuses)?statuses.length:0;
+    return active>0?`EN CAMPO · ${side} · ${active} EST.`:`EN CAMPO · ${side}`;
+  }
+  if(mode==="pack")return "REVELADA";
+  if(mode==="hand")return "EN MANO";
+  try{
+    if(typeof getCollectionCardsExpanded==="function"&&entity?.key){
+      const found=getCollectionCardsExpanded().find(card=>card?.key===entity.key);
+      const owned=Number(found?.qty||entity?.qty||0);
+      return owned>0?"DESBLOQUEADA":"BLOQUEADA";
+    }
+  }catch(_){ }
+  return entity?.type==="unit"?"DISPONIBLE":"CARTA";
+}
+function getUnifiedDetPrecEvaText(entity,{live=false}={}){
+  if(!entity||entity.leader)return "FIJO";
+  try{
+    if(live&&typeof getBaseEvasionScore==="function"){
+      const total=Math.max(0,Number(getBaseEvasionScore(entity)||0));
+      const spent=typeof getEvasionPressure==="function"?Math.max(0,Number(getEvasionPressure(entity)||0)):0;
+      return `${Math.max(0,total-spent)}/${total}`;
+    }
+    const dx=Number(entity.dex??entity.dx??0);
+    const agi=Number(entity.agi??0);
+    return String(Math.max(0,dx+agi));
+  }catch(_){return "—";}
+}
+function syncUnifiedDetCoreFields(entity,{mode="card",live=false,statuses=[]}={}){
+  const typeEl=$("detTypeValue"),rarityEl=$("detRarityValue"),stateEl=$("detStateValue"),copiesEl=$("detCopiesValue");
+  const weaponBtn=$("detWeaponValue"),precBtn=$("detPrecEvaValue"),loreBtn=$("detLoreValue");
+  if(typeEl)typeEl.textContent=entity?.leader?'LÍDER':(typeof getEntityTypeLabel==="function"?getEntityTypeLabel(entity):(entity?.type||'—'));
+  if(rarityEl)rarityEl.textContent=typeof getDetDisplayRarity==="function"?getDetDisplayRarity(entity):(entity?.rarity||'—');
+  if(stateEl)stateEl.textContent=getUnifiedDetStateText(entity,mode,statuses);
+  if(copiesEl)copiesEl.textContent=getUnifiedDetCopiesText(entity);
+  if(weaponBtn){
+    const img=weaponBtn.querySelector('img'),value=weaponBtn.querySelector('span');
+    const canWeapon=!!entity&&(entity.type==='unit'||entity.leader);
+    weaponBtn.disabled=!canWeapon;
+    weaponBtn.classList.toggle('is-disabled',!canWeapon);
+    if(img)img.src=canWeapon&&typeof getWeaponClassIcon==="function"?getWeaponClassIcon(entity):'assets/ui/det_icons/tactical.webp';
+    if(value)value.textContent=canWeapon&&typeof getWeaponClassLabel==="function"?getWeaponClassLabel(entity):'—';
+  }
+  if(precBtn){
+    const value=precBtn.querySelector('span');
+    precBtn.disabled=!(entity&&(entity.type==='unit'||entity.leader));
+    precBtn.classList.toggle('is-disabled',precBtn.disabled);
+    if(value)value.textContent=getUnifiedDetPrecEvaText(entity,{live});
+  }
+  if(loreBtn){
+    const canLore=!!entity&&(entity.type==='unit'||entity.leader);
+    loreBtn.disabled=!canLore;
+    loreBtn.classList.toggle('is-disabled',!canLore);
+    const value=loreBtn.querySelector('span');if(value)value.textContent=canLore?'ABRIR':'—';
+  }
+}
+function syncCardInspectTemplateUi(progressText=null){
   const modal=$("cardInspectModal");
   if(!modal)return;
   const levelPanel=$("detLevelPanel");
@@ -1364,12 +1465,13 @@ function syncCardInspectTemplateUi(){
   const textEl=$("detLevelProgressText");
   const subEl=$("detLevelProgressSub");
   const reasonEl=$("cardInspectReason");
-  const data=parseCardInspectLevelProgress(reasonEl?.textContent||"");
+  const raw=progressText??modal._hvLevelProgressText??reasonEl?.textContent??"";
+  const data=parseCardInspectLevelProgress(raw);
   if(levelPanel)levelPanel.classList.toggle('is-empty',!data.visible);
   if(rankEl)rankEl.textContent=`NIVEL ${data.rank||'I'}`;
   if(fillEl)fillEl.style.width=`${Number.isFinite(data.progress)?data.progress:0}%`;
-  if(textEl)textEl.textContent=data.visible&&data.total>0?`${data.current} / ${data.total}`:'Sin progreso';
-  if(subEl)subEl.textContent=data.visible?(data.maxed?'nivel máximo':`faltan ${data.remaining}`):'';
+  if(textEl)textEl.textContent=data.visible&&data.total>0?`${data.current} / ${data.total}`:(data.visible?'—':'Sin progreso');
+  if(subEl)subEl.textContent=data.visible?(data.maxed?'nivel máximo':(data.total>0?`faltan ${data.remaining}`:'progreso no disponible')):'';
   const favBtn=$("detFavoriteToggle");
   const favStar=favBtn?.querySelector('.det-favorite-star');
   if(favBtn&&favStar){
@@ -1377,58 +1479,63 @@ function syncCardInspectTemplateUi(){
     favStar.textContent=active?'★':'☆';
   }
 }
+function getUnifiedDetStats(entity,{live=false}={}){
+  if(live&&entity){
+    if(entity.leader)return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",0],["AGI",0],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
+    return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",effectiveDex(entity)],["AGI",effectiveAgi(entity)],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
+  }
+  return cardInspectStats(entity);
+}
+function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statuses=[],visualHtml="",reasonText="",allowPlay=false,playState=null}={}){
+  if(!entity)return null;
+  const modal=$("cardInspectModal");
+  if(!modal)return null;
+  modal.className=`card-inspect-modal hidden unified-det-modal det-v32-unified unified-det-${mode} ${getCardVisualClass(entity)}`;
+  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel"),battlePowerBadge=$("cardInspectBattlePowerBadge");
+  if(title)title.textContent=getEntityFullDisplayName(entity);
+  updateDetBattlePowerBadge(battlePowerBadge,entity);
+  if(sub)sub.innerHTML=renderDetIdentityHtml(entity,ownerLabel);
+  if(visual)visual.innerHTML=visualHtml||(live&&typeof getUnitPortraitHtml==="function"?getUnitPortraitHtml(entity):getCardVisualHtml(entity,"card-inspect-portrait"));
+  if(stats)stats.innerHTML=renderDetStatButtons(getUnifiedDetStats(entity,{live}),"card-inspect-stat");
+  const effectText=live?getUnitEffectText(entity):normalizeSaboteadorRuleText(entity,entity.text||entity.effectText||entity.ability||"").trim();
+  if(text)text.innerHTML=`${renderDetAbilitiesHtml(entity,effectText)}${renderDetStatusesHtml(statuses,entity)}${renderDetQuoteHtml(entity)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(entity,effectText),showWeapon:entity.type==='unit'||entity.leader,showFormula:entity.type==='unit'||entity.leader,showLore:entity.type==='unit'||entity.leader,effectLabel:entity.leader?'Ver líder':(live?'Ver efecto':'Ver efecto de la carta'),entity})}`;
+  modal._hvInspectedEntity=entity;
+  modal._hvActiveStatuses=Array.isArray(statuses)?statuses:[];
+  modal._hvEffectText=effectText;
+  modal._hvEffectTitle=`Efecto de ${entity.name||'la carta'}`;
+  modal._hvLevelProgressText=getUnifiedDetProgressText(entity);
+  bindCardInspectDetModalDelegation(modal);
+  syncUnifiedDetCoreFields(entity,{mode,live,statuses});
+  if(reason)reason.textContent=reasonText||modal._hvLevelProgressText||'';
+  const actions=modal.querySelector('.card-inspect-actions');
+  if(actions)actions.classList.toggle('hidden',!allowPlay);
+  if(cancel){cancel.textContent=allowPlay?'Cancelar':'Cerrar';cancel.classList.toggle('hidden',!allowPlay);}
+  if(play){
+    play.classList.toggle('hidden',!allowPlay);
+    if(allowPlay){const state=playState||getCardPlayState(entity);play.disabled=!state.canPlay;play.textContent=state.canPlay?'Jugar':'No jugable';}
+    else play.disabled=true;
+  }
+  syncCardInspectTemplateUi(modal._hvLevelProgressText);
+  modal.classList.remove("hidden");
+  if(typeof queueHvDetDirectRefresh==="function")queueHvDetDirectRefresh();
+  return modal;
+}
 function showCardInspectModal(card){
   if(!card)return;
   tryPlaySound("card_select",.45);
   closeHandForBoardFocus();
   cardInspectSelection=card;
-  const modal=$("cardInspectModal");
-  if(!modal)return selectCard(card);
-  modal.className=`card-inspect-modal ${getCardVisualClass(card)}`;
-  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel"),battlePowerBadge=$("cardInspectBattlePowerBadge");
-  if(cancel){cancel.textContent="Cancelar";cancel.classList.remove("hidden");}
-  if(play)play.classList.remove("hidden");
-  if(title)title.textContent=getEntityFullDisplayName(card);
-  updateDetBattlePowerBadge(battlePowerBadge,card);
-  if(sub)sub.innerHTML=renderDetIdentityHtml(card,"Carta en mano");
-  if(visual)visual.innerHTML=getCardVisualHtml(card,"card-inspect-portrait");
-  const inspectStats=cardInspectStats(card);
-  if(stats){
-    stats.innerHTML=renderDetStatButtons(inspectStats,"card-inspect-stat");
-  }
-  if(text){
-    const effectText=normalizeSaboteadorRuleText(card,card.text||card.effectText||card.ability||"").trim();
-    text.innerHTML=`${renderDetAbilitiesHtml(card,effectText)}${renderDetStatusesHtml([],card)}${renderDetQuoteHtml(card)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(card,effectText),showWeapon:card.type==='unit',showFormula:true,showLore:card.type==='unit',effectLabel:'Ver efecto de la carta',entity:card})}`;
-    modal._hvEffectText=effectText;
-    modal._hvEffectTitle=`Efecto de ${card.name}`;
-  }
-  modal._hvInspectedEntity=card;
-  modal._hvActiveStatuses=[];
-  bindCardInspectDetModalDelegation(modal);
   const state=getCardPlayState(card);
-  if(reason){
-    const costLine=getCardCostExplanation(card,card?.owner||myPlayer,publicState?.units||[]);
-    reason.textContent=state.canPlay?`Lista para jugar. ${costLine}`:`${state.reason} ${costLine}`;
-  }
-  if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
-  syncCardInspectTemplateUi();
-  modal.classList.remove("hidden");
+  const costLine=getCardCostExplanation(card,card?.owner||myPlayer,publicState?.units||[]);
+  const reasonText=state.canPlay?`Lista para jugar. ${costLine}`:`${state.reason} ${costLine}`;
+  if(!openUnifiedDetEntity(card,{mode:"hand",ownerLabel:"Carta en mano",live:false,statuses:[],reasonText,allowPlay:true,playState:state}))return selectCard(card);
 }
 function showPackRevealCardDetail(card){
   if(!card)return;
   const hydrated=hydrateCardVisualData({...card});
-  showCardInspectModal(hydrated);
-  const modal=$("cardInspectModal");
+  cardInspectSelection=null;
+  const modal=openUnifiedDetEntity(hydrated,{mode:"pack",ownerLabel:"Carta revelada en el sobre",live:false,statuses:[],reasonText:"Vista DET de la carta revelada. Cierra este panel para volver al sobre.",allowPlay:false});
   if(modal)modal.classList.add("pack-reveal-detail-modal");
-  const sub=$("cardInspectSub");
-  if(sub)sub.innerHTML=renderDetIdentityHtml(hydrated,"Carta revelada en el sobre");
-  const reason=$("cardInspectReason");
-  if(reason)reason.textContent="Vista DET de la carta revelada. Cierra este panel para volver al sobre.";
-  const cancel=$("cardInspectCancel");
-  if(cancel){cancel.textContent="Cerrar";cancel.classList.remove("hidden");}
-  const play=$("cardInspectPlay");
-  if(play){play.disabled=true;play.textContent="Solo vista";play.classList.add("hidden");}
-  syncCardInspectTemplateUi();
 }
 function hideCardInspectModal(){const modal=$("cardInspectModal");if(modal)modal.classList.add("hidden")}
 function playInspectedCard(){

@@ -1,0 +1,43 @@
+HallValla · DET unificado · build 7BOARDCTRL8BI
+
+OBJETIVO
+- Un único DET visual para cartas de colección/Forja/mazo, cartas de mano, cartas reveladas y unidades en el campo.
+- El modal activo único es #cardInspectModal.
+- #inspector queda como estructura legado inactiva para compatibilidad, pero ya no se abre desde showUnit().
+
+CAMBIOS PRINCIPALES
+- El fondo común es assets/ui/det_templates/det_base_universal_v32.png.
+- Las unidades del campo ahora se abren mediante openUnifiedDetEntity(... mode:"field").
+- Colección/Forja usa el mismo openUnifiedDetEntity(... mode:"collection").
+- Mano y sobres usan el mismo componente con sus modos correspondientes.
+- AJUSTAR DET trabaja sólo sobre #cardInspectModal, por lo que una posición sirve para todas las vistas.
+- Se cambió la clave de guardado del editor DET para iniciar una calibración limpia de la plantilla unificada.
+- Se eliminaron de la apertura de colección las clases visuales antiguas det-template-artframe / det-universal-template / deck-builder-detail-modal que podían reactivar el DET v31.
+
+IDS CENTRALES NUEVOS/UNIFICADOS
+- #cardInspectTitle
+- #cardInspectSub
+- #cardInspectVisual
+- #cardInspectStats
+- #cardInspectText
+- #cardInspectBattlePowerBadge
+- #detLevelPanel
+- #detLevelRank
+- #detLevelProgressFrame
+- #detLevelProgressFill
+- #detLevelProgressText
+- #detLevelProgressSub
+- #detTypeValue
+- #detRarityValue
+- #detStateValue
+- #detWeaponValue
+- #detCopiesValue
+- #detPrecEvaValue
+- #detLoreValue
+- #detFavoriteToggle
+
+VALIDACIÓN REALIZADA
+- node --check correcto en los JS modificados y bootstrap-loader.js.
+- IDs HTML nuevos comprobados sin duplicados.
+- Asset v32 comprobado en su ruta.
+- No se afirma prueba completa de navegador/partida.
