@@ -892,6 +892,7 @@ function showDeckBuilderCardDetail(card){
   if(cancel)cancel.textContent="Cerrar";
   const play=$("cardInspectPlay");
   if(play){play.disabled=true;play.textContent="Solo vista";}
+  if(typeof syncCardInspectTemplateUi==="function")syncCardInspectTemplateUi();
 }
 function getDeckBuilderDragPayload(ev){
   if(deckBuilderDragPayload)return deckBuilderDragPayload;

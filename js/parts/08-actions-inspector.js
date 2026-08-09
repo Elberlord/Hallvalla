@@ -1336,6 +1336,47 @@ function getCardVisualHtml(card,variant="hand-icon") {
   }
   return `<div class="${variant}"><span>${card?.icon||"✦"}</span></div>`;
 }
+
+function parseCardInspectLevelProgress(rawText=""){
+  const raw=String(rawText||"").trim();
+  const fallback={raw,visible:false,rank:"I",current:0,total:0,remaining:0,progress:0};
+  if(!raw)return fallback;
+  const main=raw.match(/NIVEL\s+([IVXLCDM]+|\d+)\s*[·\-–—]?\s*(\d+)\s*\/\s*(\d+)/i);
+  if(!main){
+    const levelOnly=raw.match(/NIVEL\s+([IVXLCDM]+|\d+)/i);
+    return {...fallback,visible:!!levelOnly,rank:(levelOnly?.[1]||'I').toUpperCase()};
+  }
+  const rank=String(main[1]||'I').toUpperCase();
+  const current=Math.max(0,Number(main[2]||0));
+  const total=Math.max(0,Number(main[3]||0));
+  const remainingMatch=raw.match(/faltan\s+(\d+)/i);
+  const maxed=/nivel m[aá]ximo/i.test(raw);
+  const remaining=maxed?0:Math.max(0,Number(remainingMatch?.[1]??Math.max(0,total-current)));
+  const progress=total>0?Math.max(0,Math.min(100,(current/total)*100)):0;
+  return {raw,visible:true,rank,current,total,remaining,progress,maxed};
+}
+function syncCardInspectTemplateUi(){
+  const modal=$("cardInspectModal");
+  if(!modal)return;
+  const levelPanel=$("detLevelPanel");
+  const rankEl=$("detLevelRank");
+  const fillEl=$("detLevelProgressFill");
+  const textEl=$("detLevelProgressText");
+  const subEl=$("detLevelProgressSub");
+  const reasonEl=$("cardInspectReason");
+  const data=parseCardInspectLevelProgress(reasonEl?.textContent||"");
+  if(levelPanel)levelPanel.classList.toggle('is-empty',!data.visible);
+  if(rankEl)rankEl.textContent=`NIVEL ${data.rank||'I'}`;
+  if(fillEl)fillEl.style.width=`${Number.isFinite(data.progress)?data.progress:0}%`;
+  if(textEl)textEl.textContent=data.visible&&data.total>0?`${data.current} / ${data.total}`:'Sin progreso';
+  if(subEl)subEl.textContent=data.visible?(data.maxed?'nivel máximo':`faltan ${data.remaining}`):'';
+  const favBtn=$("detFavoriteToggle");
+  const favStar=favBtn?.querySelector('.det-favorite-star');
+  if(favBtn&&favStar){
+    const active=favBtn.classList.contains('is-active');
+    favStar.textContent=active?'★':'☆';
+  }
+}
 function showCardInspectModal(card){
   if(!card)return;
   tryPlaySound("card_select",.45);
@@ -1370,6 +1411,7 @@ function showCardInspectModal(card){
     reason.textContent=state.canPlay?`Lista para jugar. ${costLine}`:`${state.reason} ${costLine}`;
   }
   if(play){play.disabled=!state.canPlay;play.textContent=state.canPlay?"Jugar":"No jugable";}
+  syncCardInspectTemplateUi();
   modal.classList.remove("hidden");
 }
 function showPackRevealCardDetail(card){
@@ -1386,6 +1428,7 @@ function showPackRevealCardDetail(card){
   if(cancel){cancel.textContent="Cerrar";cancel.classList.remove("hidden");}
   const play=$("cardInspectPlay");
   if(play){play.disabled=true;play.textContent="Solo vista";play.classList.add("hidden");}
+  syncCardInspectTemplateUi();
 }
 function hideCardInspectModal(){const modal=$("cardInspectModal");if(modal)modal.classList.add("hidden")}
 function playInspectedCard(){

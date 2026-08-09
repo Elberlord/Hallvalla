@@ -1077,6 +1077,14 @@ function hvDetBuildTargets(root){
     hvDetAddTarget(list,el,`deticon.${key}`,`ICONO DET · ${item?.label||key}`);
   });
   hvDetAddTarget(list,q('#cardInspectBattlePowerBadge'),'pb','Poder de batalla');
+  hvDetAddTarget(list,q('#detLevelPanel'),'level.panel','Nivel · panel');
+  hvDetAddTarget(list,q('#detLevelRank'),'level.rank','Nivel · título');
+  hvDetAddTarget(list,q('#detLevelProgressFrame'),'level.frame','Nivel · barra');
+  hvDetAddTarget(list,q('#detLevelProgressFill'),'level.fill','Nivel · relleno');
+  hvDetAddTarget(list,q('#detLevelProgressText'),'level.text','Nivel · progreso');
+  hvDetAddTarget(list,q('#detLevelProgressSub'),'level.sub','Nivel · faltante');
+  hvDetAddTarget(list,q('#detFavoriteToggle'),'favorite.panel','Favorita · botón');
+  hvDetAddTarget(list,q('#detFavoriteToggle .det-favorite-star'),'favorite.star','Favorita · estrella');
   hvDetAddTarget(list,q('.card-inspect-head'),'header','Cabecera');
   hvDetAddTarget(list,q('#cardInspectTitle'),'title','Título de unidad');
   hvDetAddTarget(list,q('#cardInspectSub'),'identity.group','Grupo de etiquetas');
@@ -1396,7 +1404,7 @@ function copyHvDetIconJson(button){
   const payload=JSON.stringify({
     version:1,
     scope:'det_icons',
-    template:'assets/ui/det_templates/det_base_universal_v31.png',
+    template:'assets/ui/det_templates/det_base_universal_v32.png',
     note:'Posiciones actuales medidas contra el panel DET. current es la referencia final; direct conserva los offsets del editor.',
     icons
   },null,2);
