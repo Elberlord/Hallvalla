@@ -775,7 +775,8 @@ function getCardVisualClass(card){
   else if(type==="equipment")parts.push("card-type-equipment");
   else parts.push("card-type-unit");
 
-  if(rarity.includes("legend"))parts.push("card-rarity-legendary");
+  if(rarity.includes("astral"))parts.push("card-rarity-astral","card-rarity-demigod");
+  else if(rarity.includes("legend"))parts.push("card-rarity-legendary");
   else if(rarity.includes("semid")||rarity.includes("demigod"))parts.push("card-rarity-demigod");
   else if(rarity.includes("mít")||rarity.includes("mitic")||rarity.includes("mythic"))parts.push("card-rarity-mythic");
   else if(rarity.includes("épic")||rarity.includes("epic"))parts.push("card-rarity-epic");
@@ -792,13 +793,14 @@ function getCardVisualClass(card){
 
 function applyRarityClassToElement(el,card){
   if(!el)return;
-  const classes=["card-rarity-basic","card-rarity-improved","card-rarity-heroic","card-rarity-epic","card-rarity-glorious","card-rarity-mythic","card-rarity-legendary","card-rarity-demigod"];
+  const classes=["card-rarity-basic","card-rarity-improved","card-rarity-heroic","card-rarity-epic","card-rarity-glorious","card-rarity-mythic","card-rarity-legendary","card-rarity-demigod","card-rarity-astral"];
   el.classList.remove(...classes);
   const visual=String(getCardVisualClass(card)||"");
   classes.forEach(cls=>{if(visual.includes(cls))el.classList.add(cls);});
 }
 
 function cardTypeLabel(card){
+  if(card?.dragonCompanion)return "Criatura";
   if(card?.type==="unit")return card.special?"Leyenda":"Unidad";
   if(card?.type==="trap")return "Trampa";
   if(card?.type==="equipment")return "Equipo";

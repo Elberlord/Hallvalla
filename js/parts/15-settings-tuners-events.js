@@ -917,8 +917,8 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v2_universal";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v2_universal";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v3_universal_repair";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v3_universal_repair";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1120,panelHeight:620,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
@@ -1084,7 +1084,7 @@ function hvDetBuildTargets(root){
     hvDetAddTarget(list,btn,`${key}.button`,`Pestaña ${i+1} · icono`);
     hvDetAddTarget(list,chip.querySelector('span'),`${key}.label`,`Pestaña ${i+1} · texto`);
   });
-  const collection=q('#cardInspectText .deck-builder-detail-box');
+  const collection=q('.card-inspect-card > .deck-builder-detail-box')||q('#cardInspectText .deck-builder-detail-box');
   hvDetAddTarget(list,collection,'collection.panel','Información de colección · panel');
   hvDetAddTarget(list,collection?.querySelector('.deck-detail-title'),'collection.title','Información de colección · título');
   const collectionGrid=collection?.querySelector('.deck-detail-grid');

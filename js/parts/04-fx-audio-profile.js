@@ -328,6 +328,7 @@ function spawnBattleFxNode(className,left,top,cssVars={},ttl=900,html=""){
 function getFxRarityClass(unit){
   if(!unit)return "fx-basic";
   const rarity=String(unit.rarity||unit.rareza||"").toLowerCase();
+  if(rarity.includes("astral"))return "fx-demigod";
   if(rarity.includes("semid")||rarity.includes("demigod"))return "fx-demigod";
   if(rarity.includes("mít")||rarity.includes("mitic")||rarity.includes("mythic"))return "fx-mythic";
   if(rarity.includes("épic")||rarity.includes("epic"))return "fx-epic";

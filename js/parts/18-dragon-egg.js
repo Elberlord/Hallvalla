@@ -101,14 +101,14 @@ function makeDragonCompanionCard(stage,element){
   const visualStage=stage==="baby"?"baby":`${stage}_${element}`;
   const stageName=dragonStageLabel(stage);
   const elementName=dragonElementLabel(element);
-  const rarity=stage==="baby"?"Gloriosa":stage==="young"?"Mítica":"Legendaria";
+  const rarity=stage==="baby"?"Gloriosa":stage==="young"?"Mítica":"Astral";
   const threshold=stage==="baby"?5000:stage==="young"?10000:10000;
   const growthText=stage==="adult"?"Forma adulta completa.":`Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,
     rarity,special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
-    cost:0,...stats,aerial:true,flight:true,
+    cost:stage==="adult"?10:0,...stats,aerial:true,flight:true,
     text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. ${growthText}`
   };
 }

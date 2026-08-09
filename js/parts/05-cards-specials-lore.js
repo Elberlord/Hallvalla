@@ -407,7 +407,7 @@ function getPrincipalTierSummary(level=1){
   const slots=getPrincipalSlotsForLeaderLevel(level);
   return `Tier ${tier}: ${slots} Personaje${slots===1?"":"s"} Principal${slots===1?"":"es"}${tier>DECK_RULES.maxPrincipalSlots?" (máximo)":""}`;
 }
-const CRAFT_MATERIAL_COSTS={basic:800,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800};
+const CRAFT_MATERIAL_COSTS={basic:800,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800,astral:3600};
 const CRAFT_MATERIAL_GAIN=50;
 const CRAFT_RARITY_KEYS=["basic","epic","glorious","mythic","legendary","demigod"];
 function cardRarity(card){
@@ -415,6 +415,7 @@ function cardRarity(card){
 }
 function getCraftRarityKey(cardOrRarity){
   const rarity=typeof cardOrRarity==="string"?cardOrRarity.toLowerCase():cardRarity(cardOrRarity);
+  if(rarity.includes("astral"))return "astral";
   if(rarity.includes("semid")||rarity.includes("demigod"))return "demigod";
   if(rarity.includes("legend"))return "legendary";
   if(rarity.includes("mít")||rarity.includes("mitic")||rarity.includes("mythic"))return "mythic";
@@ -423,7 +424,7 @@ function getCraftRarityKey(cardOrRarity){
   return "basic";
 }
 function getCraftRarityLabel(key){
-  return {basic:"Básica",epic:"Épica",glorious:"Gloriosa",mythic:"Mítica",legendary:"Legendaria",demigod:"Semidiós"}[key]||"Básica";
+  return {basic:"Básica",epic:"Épica",glorious:"Gloriosa",mythic:"Mítica",legendary:"Legendaria",demigod:"Semidiós",astral:"Astral"}[key]||"Básica";
 }
 function getCraftCostByRarityKey(key){return CRAFT_MATERIAL_COSTS[key]||CRAFT_MATERIAL_COSTS.basic;}
 function getCraftCostForCard(card){return getCraftCostByRarityKey(getCraftRarityKey(card));}
@@ -1514,12 +1515,12 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
 }
 function renderDetAbilitiesHtml(entity,effectText=""){
   const sections=getDetAbilitySectionsForInspector(entity,effectText);
-  return `<div class="det-section-block det-effects-icon-only">
-    <div class="det-section-title">Efectos</div>
+  return `<div class="det-section-block det-effects-detailed">
+    <div class="det-section-title">RASGOS, HABILIDADES Y PALABRAS CLAVE</div>
     <div class="det-ability-list">${sections.length?sections.map((sec,index)=>{
       const visual=getDetAbilityVisual(entity,sec,index);
       const kind=visual.kind||classifyDetAbility(sec);
-      return `<button class="det-effect-seal guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="Abrir ${escapeHtml(visual.label)}" title="${escapeHtml(visual.label)}"><span class="det-effect-seal-art"><img src="${escapeHtml(visual.icon)}" alt=""></span></button>`;
+      return `<button class="det-ability-card guide-ability-btn" type="button" data-ability-title="${escapeHtml(sec.title)}" data-ability-text="${escapeHtml(sec.body)}" data-ability-kind="${escapeHtml(kind)}" aria-label="Abrir ${escapeHtml(visual.label)}" title="${escapeHtml(visual.label)}"><span class="det-effect-seal-art det-ability-art"><img src="${escapeHtml(visual.icon)}" alt=""></span><span class="det-ability-copy"><strong class="det-ability-name">${escapeHtml(sec.title||visual.label||'Efecto')}</strong><small class="det-ability-text">${escapeHtml(sec.body||'Toca para leer el detalle de este rasgo.')}</small></span></button>`;
     }).join(""):`<div class="det-empty-line">Sin habilidad especial visible.</div>`}</div>
   </div>`;
 }

@@ -849,10 +849,15 @@ function showDeckBuilderCardDetail(card){
         title:"Consejo de construcción",
         short:"Editor de mazos",
         formula:"Antes de invertir materiales, revisa el costo de la carta, sus estadísticas, alcance, clase de arma, efectos y el número de copias que ya tienes o llevas en el mazo.",
-        example:"Toca los iconos de Efectos, PREC/EVA, arma o Conóceme para abrir su explicación completa.",
+        example:"Toca los rasgos, PREC/EVA, arma o Conóceme para abrir su explicación completa.",
         hideCombatButton:true
       });
     });
+    const collectionBox=textEl.querySelector('.deck-builder-detail-box');
+    if(collectionBox){
+      const actions=modal?.querySelector('.card-inspect-actions');
+      if(actions?.parentNode===modal.querySelector('.card-inspect-card'))actions.before(collectionBox);
+    }
   }
   const reason=$("cardInspectReason");
   if(reason)reason.textContent="";
