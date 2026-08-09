@@ -1,0 +1,7 @@
+HallValla 7BOARDCTRL8BK
+
+DET limpio: corrección visual.
+- Se ocultan explícitamente todos los paneles dinámicos heredados del DET durante la fase de calibración.
+- Permanecen visibles únicamente el template universal v32 y los iconos de stats calibrables.
+- AJUSTAR DET conserva arrastre con mouse, escala/tamaño y etiquetas deticon.*.
+- No se modifica lógica de combate, IA, PvP, PvE, aventura ni eventos.

@@ -23740,3 +23740,65 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .hv-det-size-nudges .btn{min-height:34px!important;font-size:10px!important;}
 .hv-det-icon-actions{grid-template-columns:1fr 1fr!important;}
 .hv-det-icon-actions [data-det-copy-icons-json]{grid-column:1/-1!important;}
+
+
+/* === DET v32 CLEAN ICON CALIBRATION HOTFIX · 8BK ===
+   Mata cualquier panel/overlay dinámico que sobreviva al render anterior.
+   Únicamente quedan visibles el template universal y la capa de iconos.
+   ================================================================ */
+#cardInspectModal .card-inspect-card > *,
+#cardInspectModal .card-inspect-card .card-inspect-head,
+#cardInspectModal .card-inspect-card #cardInspectBattlePowerBadge,
+#cardInspectModal .card-inspect-card #detLevelPanel,
+#cardInspectModal .card-inspect-card #cardInspectVisual,
+#cardInspectModal .card-inspect-card #cardInspectStats,
+#cardInspectModal .card-inspect-card #cardInspectText,
+#cardInspectModal .card-inspect-card #cardInspectReason,
+#cardInspectModal .card-inspect-card #detFavoriteToggle,
+#cardInspectModal .card-inspect-card .card-inspect-actions,
+#cardInspectModal .card-inspect-card .det-deck-utility-row,
+#cardInspectModal .card-inspect-card .deck-builder-detail-box,
+#cardInspectModal .card-inspect-card .det-core-value,
+#cardInspectModal .card-inspect-card .det-core-action,
+#cardInspectModal .card-inspect-card .det-battle-power-badge,
+#cardInspectModal .card-inspect-card .det-level-panel,
+#cardInspectModal .card-inspect-card .det-section-block,
+#cardInspectModal .card-inspect-card .det-status-section,
+#cardInspectModal .card-inspect-card .detail-guide-row,
+#cardInspectModal .card-inspect-card .det-quote-block,
+#cardInspectModal .card-inspect-card .deck-builder-detail-box,
+#cardInspectModal .card-inspect-card .det-deck-utility-row{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* La única excepción: capa de iconos calibrables y todo lo que contiene. */
+#cardInspectModal .card-inspect-card > .hv-det-icon-calibration,
+#cardInspectModal .card-inspect-card > .hv-det-icon-calibration *,
+#cardInspectModal .hv-det-icon-calibration,
+#cardInspectModal .hv-det-icon-calibration *{
+  visibility:visible!important;
+  opacity:1!important;
+}
+#cardInspectModal .card-inspect-card > .hv-det-icon-calibration{
+  display:block!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-cal-icon{
+  display:flex!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-cal-icon{
+  pointer-events:auto!important;
+}
+
+/* No permitir que pseudo-elementos viejos reaparezcan encima del template. */
+#cardInspectModal .card-inspect-card::before,
+#cardInspectModal .card-inspect-card::after,
+#cardInspectModal .card-inspect-card *::before,
+#cardInspectModal .card-inspect-card *::after{
+  box-shadow:none;
+}
+#cardInspectModal .card-inspect-card::before,
+#cardInspectModal .card-inspect-card::after{display:none!important;}

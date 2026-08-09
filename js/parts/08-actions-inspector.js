@@ -1479,6 +1479,16 @@ function syncCardInspectTemplateUi(progressText=null){
     favStar.textContent=active?'★':'☆';
   }
 }
+function cleanupUnifiedDetSurface(modal){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  [...card.children].forEach(child=>{
+    if(child?.classList?.contains('hv-det-icon-calibration'))return;
+    child.remove();
+  });
+  return card;
+}
+
 function getUnifiedDetStats(entity,{live=false}={}){
   if(live&&entity){
     if(entity.leader)return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",0],["AGI",0],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
@@ -1490,32 +1500,14 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   if(!entity)return null;
   const modal=$("cardInspectModal");
   if(!modal)return null;
-  modal.className=`card-inspect-modal hidden unified-det-modal det-v32-unified unified-det-${mode} ${getCardVisualClass(entity)}`;
-  const title=$("cardInspectTitle"),sub=$("cardInspectSub"),visual=$("cardInspectVisual"),stats=$("cardInspectStats"),text=$("cardInspectText"),reason=$("cardInspectReason"),play=$("cardInspectPlay"),cancel=$("cardInspectCancel"),battlePowerBadge=$("cardInspectBattlePowerBadge");
-  if(title)title.textContent=getEntityFullDisplayName(entity);
-  updateDetBattlePowerBadge(battlePowerBadge,entity);
-  if(sub)sub.innerHTML=renderDetIdentityHtml(entity,ownerLabel);
-  if(visual)visual.innerHTML=visualHtml||(live&&typeof getUnitPortraitHtml==="function"?getUnitPortraitHtml(entity):getCardVisualHtml(entity,"card-inspect-portrait"));
-  if(stats)stats.innerHTML=renderDetStatButtons(getUnifiedDetStats(entity,{live}),"card-inspect-stat");
-  const effectText=live?getUnitEffectText(entity):normalizeSaboteadorRuleText(entity,entity.text||entity.effectText||entity.ability||"").trim();
-  if(text)text.innerHTML=`${renderDetAbilitiesHtml(entity,effectText)}${renderDetStatusesHtml(statuses,entity)}${renderDetQuoteHtml(entity)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(entity,effectText),showWeapon:entity.type==='unit'||entity.leader,showFormula:entity.type==='unit'||entity.leader,showLore:entity.type==='unit'||entity.leader,effectLabel:entity.leader?'Ver líder':(live?'Ver efecto':'Ver efecto de la carta'),entity})}`;
+  modal.className=`card-inspect-modal hidden unified-det-modal det-v32-clean-surface unified-det-${mode} ${getCardVisualClass(entity)}`;
+  const card=cleanupUnifiedDetSurface(modal);
   modal._hvInspectedEntity=entity;
-  modal._hvActiveStatuses=Array.isArray(statuses)?statuses:[];
-  modal._hvEffectText=effectText;
-  modal._hvEffectTitle=`Efecto de ${entity.name||'la carta'}`;
-  modal._hvLevelProgressText=getUnifiedDetProgressText(entity);
-  bindCardInspectDetModalDelegation(modal);
-  syncUnifiedDetCoreFields(entity,{mode,live,statuses});
-  if(reason)reason.textContent=reasonText||modal._hvLevelProgressText||'';
-  const actions=modal.querySelector('.card-inspect-actions');
-  if(actions)actions.classList.toggle('hidden',!allowPlay);
-  if(cancel){cancel.textContent=allowPlay?'Cancelar':'Cerrar';cancel.classList.toggle('hidden',!allowPlay);}
-  if(play){
-    play.classList.toggle('hidden',!allowPlay);
-    if(allowPlay){const state=playState||getCardPlayState(entity);play.disabled=!state.canPlay;play.textContent=state.canPlay?'Jugar':'No jugable';}
-    else play.disabled=true;
-  }
-  syncCardInspectTemplateUi(modal._hvLevelProgressText);
+  modal._hvActiveStatuses=[];
+  modal._hvEffectText="";
+  modal._hvEffectTitle="";
+  modal._hvLevelProgressText="";
+  modal._hvDetCleanMode="icon-calibration";
   modal.classList.remove("hidden");
   if(typeof ensureHvDetIconCalibrationLayer==="function")ensureHvDetIconCalibrationLayer(modal);
   if(typeof queueHvDetDirectRefresh==="function")queueHvDetDirectRefresh();
