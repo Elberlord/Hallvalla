@@ -1180,11 +1180,52 @@ function setHvDetSelectedSetting(patch={}){
   markAndApplyHvDetDirect();
   syncHvDetDirectControls();
 }
+
+function getHvDetActiveEditorRoot(){
+  const modal=$('cardInspectModal');
+  if(modal&&!modal.classList.contains('hidden'))return modal;
+  const inspector=$('inspector');
+  if(inspector?.classList.contains('show'))return inspector;
+  return null;
+}
+function syncHvDetTargetPicker(){
+  const shell=document.getElementById('hvDetLayoutTuner');
+  const picker=shell?.querySelector('[data-det-target-picker]');
+  if(!picker)return;
+  const root=getHvDetActiveEditorRoot();
+  const targets=root?hvDetBuildTargets(root):[];
+  const current=hvDetDirectSelectedKey||getHvDetDirectState().selected||'';
+  const signature=targets.map(t=>`${t.key}:${t.label}`).join('|');
+  if(picker.dataset.signature!==signature){
+    picker.innerHTML='<option value="">Selecciona un elemento…</option>'+targets.map(({key,label})=>`<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`).join('');
+    picker.dataset.signature=signature;
+  }
+  if([...picker.options].some(o=>o.value===current))picker.value=current;
+  else picker.value='';
+}
+function selectHvDetTargetByKey(key){
+  const root=getHvDetActiveEditorRoot();
+  if(!root||!key)return;
+  const target=hvDetBuildTargets(root).find(item=>item.key===key);
+  if(!target)return;
+  hvDetDirectSelectedKey=key;
+  const state=getHvDetDirectState();
+  state.selected=key;
+  saveHvDetDirectState(state);
+  markAndApplyHvDetDirect();
+  syncHvDetDirectControls();
+}
+function bringHvDetSelectedToOrigin(){
+  if(!hvDetDirectSelectedKey)return;
+  setHvDetSelectedSetting({x:0,y:0});
+}
+
 function syncHvDetDirectControls(){
   const shell=document.getElementById('hvDetLayoutTuner');
   if(!shell)return;
   const state=getHvDetDirectState();
   if(!hvDetDirectSelectedKey&&state.selected)hvDetDirectSelectedKey=state.selected;
+  syncHvDetTargetPicker();
   const el=getHvDetSelectedElement();
   const label=shell.querySelector('[data-det-selected-label]');
   if(label)label.textContent=el?.dataset.hvDetEditLabel||'Haz clic en un elemento del DET';
@@ -1287,6 +1328,9 @@ function ensureHvDetLayoutTuner(){
   <section id="hvDetLayoutTunerPanel" class="hv-det-layout-tuner-panel hidden" aria-label="Control visual del DET">
     <header><div><b>CONTROL TOTAL DEL DET</b><small>Activa edición directa y toca cualquier casilla, texto, icono o panel. Arrastra para mover; rueda para escalar.</small></div><button id="hvDetLayoutTunerClose" type="button" aria-label="Cerrar">×</button></header>
     <button class="hv-det-direct-mode" data-det-direct-mode type="button">ACTIVAR EDICIÓN DIRECTA</button>
+    <label class="hv-det-target-picker-label">Elemento a editar
+      <select data-det-target-picker><option value="">Selecciona un elemento…</option></select>
+    </label>
     <div class="hv-det-selected-label" data-det-selected-label>Haz clic en un elemento del DET</div>
     <details open><summary>Elemento seleccionado</summary><div class="hv-det-tuner-grid hv-det-direct-grid">
       <label>Horizontal <output data-direct-out="x"></output><input data-det-direct-setting="x" type="range" min="-1200" max="1200" step="1"></label>
@@ -1319,7 +1363,7 @@ function ensureHvDetLayoutTuner(){
       <label>Progreso vertical <output data-out="progressY"></output><input data-det-setting="progressY" type="range" min="-600" max="700" step="1"></label>
       <label>Tamaño progreso <output data-out="progressScale"></output><input data-det-setting="progressScale" type="range" min="35" max="260" step="1"></label>
     </div></details>
-    <div class="hv-det-direct-actions"><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todo DET</button><button data-det-copy-json class="btn" type="button">JSON</button></div>
+    <div class="hv-det-direct-actions"><button data-det-bring-origin class="btn" type="button">Traer a origen</button><button data-det-reset-selected class="btn" type="button">Restaurar elemento</button><button data-det-reset-all class="btn" type="button">Restaurar todo DET</button><button data-det-copy-json class="btn" type="button">JSON</button></div>
     <footer><button id="hvDetLayoutTunerReset" class="btn" type="button">Restaurar panel</button><button id="hvDetLayoutTunerDone" class="btn primary" type="button">Listo</button></footer>
   </section>`;
   document.body.appendChild(shell);
@@ -1338,6 +1382,8 @@ function ensureHvDetLayoutTuner(){
   $('hvDetLayoutTunerDone').onclick=()=>{setHvDetDirectEditing(false);setPanelOpen(false);};
   $('hvDetLayoutTunerReset').onclick=()=>{settings=saveHvDetLayoutTuner({...HV_DET_LAYOUT_TUNER_DEFAULTS});applyHvDetLayoutTuner(settings);syncGlobal();};
   shell.querySelector('[data-det-direct-mode]')?.addEventListener('click',()=>setHvDetDirectEditing(!hvDetDirectEditing));
+  shell.querySelector('[data-det-target-picker]')?.addEventListener('change',ev=>selectHvDetTargetByKey(ev.currentTarget.value));
+  shell.querySelector('[data-det-bring-origin]')?.addEventListener('click',bringHvDetSelectedToOrigin);
   shell.querySelector('[data-det-reset-selected]')?.addEventListener('click',resetHvDetSelectedDirect);
   shell.querySelector('[data-det-reset-all]')?.addEventListener('click',resetHvDetAllDirect);
   shell.querySelector('[data-det-copy-json]')?.addEventListener('click',ev=>copyHvDetEditorJson(ev.currentTarget));

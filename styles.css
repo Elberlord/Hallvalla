@@ -22686,3 +22686,508 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{font-size:24px!important;}
   #cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{font-size:8px!important;padding:4px 6px!important;}
 }
+
+
+/* v30 · DET editor: selector directo para elementos fuera de pantalla */
+.hv-det-target-picker-label{
+  display:grid!important;
+  gap:5px!important;
+  margin:0 0 8px!important;
+  color:#f1d98c!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+.hv-det-target-picker-label select{
+  width:100%!important;
+  min-height:34px!important;
+  padding:5px 8px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(255,216,127,.28)!important;
+  background:#0c0d10!important;
+  color:#ffe4a0!important;
+  font-size:10px!important;
+}
+.hv-det-direct-actions{
+  grid-template-columns:1fr 1fr!important;
+}
+.hv-det-direct-actions [data-det-copy-json]{
+  grid-column:auto!important;
+}
+
+/* ============================================================
+   v31 · DET universal con plantilla ilustrada base
+   Usa la imagen vacía elegida por el usuario y monta texto/iconos encima.
+   Se aplica solo al DET de construcción de mazo.
+   ============================================================ */
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe{
+  padding:0!important;
+  background:rgba(0,0,0,.90)!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card{
+  position:relative!important;
+  width:min(96vw,161vh,1680px)!important;
+  max-width:1680px!important;
+  max-height:92vh!important;
+  aspect-ratio:1680 / 960!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  display:block!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  background:url("assets/ui/det_templates/det_base_universal_v31.png") center/100% 100% no-repeat!important;
+  box-shadow:0 26px 70px rgba(0,0,0,.62)!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-head,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  background:none!important;
+  border:0!important;
+  overflow:visible!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-head > div{
+  display:contents!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectTitle{
+  position:absolute!important;
+  left:32.7%!important;
+  top:6.2%!important;
+  width:42.8%!important;
+  height:8.2%!important;
+  margin:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-family:Georgia,serif!important;
+  font-size:clamp(24px,2.55vw,44px)!important;
+  line-height:1!important;
+  letter-spacing:.02em!important;
+  text-transform:uppercase!important;
+  color:#f1d189!important;
+  text-shadow:0 2px 8px rgba(0,0,0,.55)!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectSub{
+  position:absolute!important;
+  left:32.6%!important;
+  top:16.9%!important;
+  width:24.2%!important;
+  height:7.1%!important;
+  margin:0!important;
+  display:block!important;
+  overflow:visible!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-identity-block,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-head-chip-row{
+  width:100%!important;
+  height:100%!important;
+  display:flex!important;
+  align-items:stretch!important;
+  gap:1.1%!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-summary-copy,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-mastery-progress,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-quote-block,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .detail-guide-row,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-actions,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectPlay,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectCancel{
+  display:none!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-head-chip{
+  flex:1 1 0!important;
+  min-width:0!important;
+  min-height:100%!important;
+  height:100%!important;
+  padding:4px 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  color:#f2cf82!important;
+  box-shadow:none!important;
+  font-size:clamp(8px,.88vw,12px)!important;
+  font-weight:900!important;
+  line-height:1!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-chip-rarity{color:#efb0ff!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-chip-dragon{color:#ffbc69!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-chip-beast{color:#f0d59b!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-row{
+  position:absolute!important;
+  left:57.3%!important;
+  top:16.9%!important;
+  width:19.0%!important;
+  height:7.1%!important;
+  margin:0!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:1.2%!important;
+  z-index:3!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn{
+  min-width:0!important;
+  min-height:100%!important;
+  height:100%!important;
+  padding:3px 7px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  color:#f1d08b!important;
+  box-shadow:none!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn > span:last-child{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:1px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn b{
+  font-size:clamp(8px,.82vw,11px)!important;
+  line-height:1!important;
+  color:#f1d08b!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn small{
+  font-size:clamp(6px,.60vw,8px)!important;
+  line-height:1.05!important;
+  color:#d4c39b!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-utility-icon{
+  width:auto!important;
+  min-width:0!important;
+  height:auto!important;
+  font-size:clamp(13px,1.1vw,18px)!important;
+  color:#f1d08b!important;
+  background:none!important;
+  border:0!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectReason{
+  position:absolute!important;
+  left:77.4%!important;
+  top:16.9%!important;
+  width:18.1%!important;
+  height:7.1%!important;
+  margin:0!important;
+  padding:0 1.1%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  background:none!important;
+  color:#d8efff!important;
+  font-size:clamp(10px,.95vw,14px)!important;
+  font-weight:800!important;
+  line-height:1.15!important;
+  text-shadow:0 2px 8px rgba(0,0,0,.55)!important;
+  overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectBattlePowerBadge{
+  position:absolute!important;
+  left:83.05%!important;
+  top:4.55%!important;
+  width:6.45%!important;
+  height:5.15%!important;
+  margin:0!important;
+  translate:none!important;
+  scale:.82!important;
+  transform-origin:center!important;
+  z-index:3!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectX{
+  position:absolute!important;
+  left:90.55%!important;
+  top:4.55%!important;
+  width:3.8%!important;
+  height:5.35%!important;
+  margin:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:clamp(22px,1.8vw,30px)!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:transparent!important;
+  color:#e8c67b!important;
+  box-shadow:none!important;
+  z-index:4!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectVisual{
+  position:absolute!important;
+  left:3.55%!important;
+  top:5.7%!important;
+  width:27.2%!important;
+  height:79.0%!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+  background:transparent!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectVisual .card-inspect-portrait,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectVisual .card-inspect-portrait img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:0!important;
+  background:none!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats{
+  position:absolute!important;
+  left:32.55%!important;
+  top:28.25%!important;
+  width:20.35%!important;
+  height:48.55%!important;
+  margin:0!important;
+  padding:1.2% 1.0%!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:repeat(8,minmax(0,1fr))!important;
+  gap:.6%!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats .card-inspect-stat,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats .det-stat-row{
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  padding:0 8px!important;
+  display:grid!important;
+  grid-template-columns:32px minmax(36px,56px) minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-stat-icon-btn{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  min-height:28px!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-stat-img{width:24px!important;height:24px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-stat-key{
+  min-width:0!important;
+  font-size:clamp(9px,.85vw,12px)!important;
+  font-weight:800!important;
+  color:#d8be86!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats strong{
+  justify-self:end!important;
+  min-width:0!important;
+  font-size:clamp(18px,1.55vw,28px)!important;
+  line-height:1!important;
+  color:#f5ecd8!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText{pointer-events:none!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText > *{pointer-events:auto!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText > .det-status-section{
+  position:absolute!important;
+  left:53.65%!important;
+  top:28.25%!important;
+  width:41.4%!important;
+  height:18.15%!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText > .det-section-block:first-child{
+  position:absolute!important;
+  left:53.65%!important;
+  top:47.45%!important;
+  width:41.4%!important;
+  height:29.0%!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-section-title{
+  height:18%!important;
+  min-height:0!important;
+  padding:0 1.4%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:none!important;
+  border:0!important;
+  color:#f1d189!important;
+  font-family:Georgia,serif!important;
+  font-size:clamp(14px,1.15vw,20px)!important;
+  letter-spacing:.02em!important;
+  text-transform:uppercase!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-list,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-effects-detailed .det-ability-list{
+  height:82%!important;
+  max-height:none!important;
+  padding:0 2.2% 1.4%!important;
+  background:none!important;
+  overflow:auto!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-list{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:6px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-empty-line{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:100%!important;
+  color:#d1c09c!important;
+  font-size:clamp(10px,.9vw,13px)!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-row,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-card{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-row{
+  min-height:32px!important;
+  padding:4px 2px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-icon{width:24px!important;height:24px!important;min-width:24px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-copy strong,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-name{
+  color:#f0dfbb!important;
+  font-size:clamp(10px,.95vw,14px)!important;
+  line-height:1.05!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-copy small,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-text{
+  color:#d0bf99!important;
+  font-size:clamp(9px,.8vw,12px)!important;
+  line-height:1.18!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-effects-detailed .det-ability-list{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-auto-rows:minmax(44px,auto)!important;
+  gap:4px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-card{
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-height:44px!important;
+  padding:4px 2px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-art,
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-effect-seal-art.det-ability-art{
+  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-art img{width:24px!important;height:24px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card > .deck-builder-detail-box{
+  position:absolute!important;
+  left:32.55%!important;
+  top:78.8%!important;
+  width:62.45%!important;
+  height:14.0%!important;
+  margin:0!important;
+  padding:0 1.2%!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-head{
+  margin:0!important;
+  height:24%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-title{
+  border:0!important;
+  background:none!important;
+  color:#f1d189!important;
+  font-family:Georgia,serif!important;
+  font-size:clamp(14px,1.15vw,20px)!important;
+  line-height:1!important;
+  letter-spacing:.02em!important;
+  text-transform:uppercase!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-help-pill{display:none!important;}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid{
+  height:76%!important;
+  display:grid!important;
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  gap:0!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid span{
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  padding:6px 8px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid b{
+  color:#d9be85!important;
+  font-size:clamp(8px,.72vw,11px)!important;
+  line-height:1!important;
+  text-transform:uppercase!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid em{
+  color:#f4ebda!important;
+  font-size:clamp(10px,.92vw,14px)!important;
+  line-height:1.12!important;
+  text-align:center!important;
+  font-style:normal!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-field-asset-preview{
+  position:absolute!important;
+  inset:0!important;
+  z-index:20!important;
+}
+@media(max-width:1100px){
+  #cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card{
+    width:min(97vw,160vh)!important;
+  }
+  #cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectTitle{font-size:clamp(18px,2.25vw,28px)!important;}
+}

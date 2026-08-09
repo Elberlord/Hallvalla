@@ -814,6 +814,30 @@ function renderDeckBuilderDetUtilityHtml(card){
     <button type="button" class="det-deck-utility-btn det-principal-btn ${principal?'is-selected':''}" data-det-principal-toggle="1" ${(!inDeck||card?.type!=="unit")?'disabled':''}><span class="det-utility-icon">★</span><span><b>PRINCIPAL</b><small>${principal?'Elegida como principal':(inDeck?'No elegida como principal':'No está en el mazo')}</small></span></button>
   </div>`;
 }
+function getDeckBuilderDetProgressText(card){
+  try{
+    if(!card||card.type!=="unit")return "";
+    if(typeof isUnitServiceProgression==="function"&&isUnitServiceProgression(card)){
+      return typeof getAcolyteServiceProgressText==="function"?getAcolyteServiceProgressText(card):"Progreso de servicio";
+    }
+    if(typeof getUnitMasteryRecord!=="function"||typeof getUnitMasteryRankFromKills!=="function"||typeof getUnitMasteryKillsForRank!=="function")return "";
+    const record=getUnitMasteryRecord(card);
+    const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
+    const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:10;
+    const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
+    let detail=`${kills} muertes · nivel máximo`;
+    if(rank<maxRank){
+      const next=Math.max(kills,Math.floor(Number(getUnitMasteryKillsForRank(rank+1)||kills)));
+      const remaining=Math.max(0,next-kills);
+      detail=`${kills}/${next} muertes · faltan ${remaining}`;
+    }
+    return `NIVEL ${rankText} · ${detail}`;
+  }catch(error){
+    console.warn("[HallValla] No se pudo calcular el progreso para el DET del mazo:",error);
+    return "";
+  }
+}
 function showDeckBuilderCardDetail(card){
   if(!card)return;
   tryPlaySound("card_select",.38);
@@ -821,7 +845,7 @@ function showDeckBuilderCardDetail(card){
   showCardInspectModal(hydrated);
   const modal=$("cardInspectModal");
   if(modal){
-    modal.classList.add("deck-builder-preview","deck-builder-detail-modal","det-universal-template");
+    modal.classList.add("deck-builder-preview","deck-builder-detail-modal","det-universal-template","det-template-artframe");
     closeDeckBuilderDetFieldPreview(modal);
     modal.querySelector('.det-deck-utility-row')?.remove();
     const visual=modal.querySelector('#cardInspectVisual');
@@ -834,7 +858,10 @@ function showDeckBuilderCardDetail(card){
     });
   }
   const sub=$("cardInspectSub");
-  if(sub)sub.innerHTML=renderDetIdentityHtml(hydrated,isCollectionBrowseOnly()?"Carta de la colección":"Carta de la Forja");
+  if(sub){
+    sub.innerHTML=renderDetIdentityHtml(hydrated,isCollectionBrowseOnly()?"Carta de la colección":"Carta de la Forja");
+    sub.querySelector('.det-mastery-progress')?.remove();
+  }
   const textEl=$("cardInspectText");
   if(textEl){
     // No usar innerHTML +=: recreaba todos los botones DET y destruía sus listeners.
@@ -860,7 +887,7 @@ function showDeckBuilderCardDetail(card){
     }
   }
   const reason=$("cardInspectReason");
-  if(reason)reason.textContent="";
+  if(reason)reason.textContent=getDeckBuilderDetProgressText(hydrated);
   const cancel=$("cardInspectCancel");
   if(cancel)cancel.textContent="Cerrar";
   const play=$("cardInspectPlay");
