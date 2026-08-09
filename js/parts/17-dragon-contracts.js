@@ -530,7 +530,7 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    Flujo del botón Eventos y preparación obligatoria del mazo
    ------------------------------------------------------------------------- */
 
-const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v20";
+const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v21_fire_cleanup";
 const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="";
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
@@ -1210,7 +1210,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "dragons.lightning.cost":{group:"Dragón de Rayo",label:"Costo",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-dragon-detail-cost"},
   "dragons.lightning.fight":{group:"Dragón de Rayo",label:"Botón Enfrentar",selector:"#hallvallaDragonsModal .hallvalla-dragon-detail-artboard--lightning .hallvalla-events-primary--dragon"}
 });
-const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({bodySize:17,modalWidth:900,align:"left",selectedHud:"beast.global.art",hud:{}});
+const HALLVALLA_EVENT_UI_DEFAULTS=Object.freeze({"bodySize":17,"modalWidth":900,"align":"left","selectedHud":"dragons.fire.fight","hud":{}});
 function clampHallvallaHudNumber(value,min,max,fallback){
   const n=Number(value); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 }
@@ -1615,15 +1615,15 @@ function ensureHallvallaDragonsModal(){
         return `<div class="hallvalla-dragon-detail-artboard hallvalla-dragon-detail-artboard--${key}" data-dragon-detail-panel="${def.id}">
           <div class="hallvalla-dragon-detail-status" data-dragon-detail-status="${def.id}"></div>
           <div class="hallvalla-dragon-detail-info">
-            <div class="hallvalla-dragon-detail-kicker">Información</div>
+            ${key==='fire'?'':'<div class="hallvalla-dragon-detail-kicker">Información</div>'}
             <p>${def.desc}</p>
           </div>
           <div class="hallvalla-dragon-detail-rewards">
-            <div class="hallvalla-dragon-detail-kicker">Recompensas</div>
+            ${key==='fire'?'':'<div class="hallvalla-dragon-detail-kicker">Recompensas</div>'}
             <p>${getDragonContractRewardSummary(def)}</p>
           </div>
           <div class="hallvalla-dragon-detail-cost">${formatHallvallaEventNumber(DRAGON_CONTRACT_ENTRY_GOLD_COST)} Oro por intento</div>
-          <button type="button" class="hallvalla-events-primary hallvalla-events-primary--dragon" data-dragon-contract="${def.id}">Enfrentar</button>
+          <button type="button" class="hallvalla-events-primary hallvalla-events-primary--dragon${key==='fire'?' hallvalla-events-primary--dragon-transparent':''}" data-dragon-contract="${def.id}">Enfrentar</button>
         </div>`;
       }).join('')}
     </section>
@@ -1669,7 +1669,7 @@ function refreshDragonContractsUi(modal=ensureHallvallaDragonsModal()){
     const overviewState=modal.querySelector(`[data-dragon-status="${def.id}"]`);
     if(overviewState)overviewState.textContent=state;
     const detailState=modal.querySelector(`[data-dragon-detail-status="${def.id}"]`);
-    if(detailState)detailState.textContent=state;
+    if(detailState)detailState.textContent=(key==='fire'?'':state);
     const fightBtn=modal.querySelector(`[data-dragon-contract="${def.id}"]`);
     if(fightBtn){
       const gold=Number(getPlayerProfile()?.gold||0);
@@ -1684,6 +1684,7 @@ function refreshDragonContractsUi(modal=ensureHallvallaDragonsModal()){
         fightBtn.textContent=`Enfrentar · ${formatHallvallaEventNumber(DRAGON_CONTRACT_ENTRY_GOLD_COST)} Oro`;
         fightBtn.disabled=false;
       }
+      if(key==='fire')fightBtn.textContent='';
     }
   });
 }
@@ -1954,6 +1955,7 @@ const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
   .hallvalla-dragon-detail-rewards{left:58.6%;top:69.6%;width:30.4%;font-size:var(--hv-event-body-size);line-height:1.46}
   .hallvalla-dragon-detail-cost{left:6%;bottom:8.2%;width:20%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:clamp(17px,1.2vw,22px);text-align:center;color:#f1d88f}
   .hallvalla-dragon-detail-kicker{margin-bottom:6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#d9b76c;font-weight:900}
+  .hallvalla-dragon-detail-artboard--fire .hallvalla-events-primary--dragon-transparent{background:transparent!important;border-color:transparent!important;box-shadow:none!important;color:transparent!important;text-shadow:none!important;opacity:0!important}
   .hallvalla-events-settings{position:absolute;right:68px;top:66px;width:min(390px,78vw);max-height:min(78vh,720px);overflow:auto;padding:16px;border-radius:18px;border:1px solid rgba(227,191,107,.34);background:rgba(7,10,15,.98);display:grid;gap:12px;box-shadow:0 18px 44px rgba(0,0,0,.42);z-index:20}
   .hallvalla-events-settings.hidden{display:none}
   .hallvalla-events-target-label select{width:100%;min-height:36px;padding:7px 9px;border-radius:10px;border:1px solid rgba(227,191,107,.32);background:#0c0d10;color:#f0d89a;font-size:13px}

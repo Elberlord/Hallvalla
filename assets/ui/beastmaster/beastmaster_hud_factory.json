@@ -2,7 +2,7 @@
   "bodySize": 17,
   "modalWidth": 900,
   "align": "left",
-  "selectedHud": "beast.global.art",
+  "selectedHud": "dragons.fire.fight",
   "hud": {
     "beast.shell": {
       "x": 0,
@@ -427,15 +427,6 @@
       "padding": 0,
       "gap": 0
     },
-    "dragons.overview.note": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
-      "width": 100,
-      "height": 100,
-      "padding": 0,
-      "gap": 0
-    },
     "dragons.detail.back": {
       "x": 0,
       "y": 0,
@@ -446,8 +437,8 @@
       "gap": 0
     },
     "dragons.fire.art": {
-      "x": 0,
-      "y": 0,
+      "x": -2.60870361328125,
+      "y": -28.695663452148438,
       "scale": 100,
       "width": 100,
       "height": 100,
@@ -455,8 +446,8 @@
       "gap": 0
     },
     "dragons.fire.status": {
-      "x": 0,
-      "y": 0,
+      "x": -394.78253173828125,
+      "y": 59.13044738769531,
       "scale": 100,
       "width": 100,
       "height": 100,
@@ -464,36 +455,36 @@
       "gap": 0
     },
     "dragons.fire.info": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": 31.30419921875,
+      "y": -87.82603454589844,
+      "scale": 90,
       "width": 100,
       "height": 100,
       "padding": 0,
       "gap": 0
     },
     "dragons.fire.rewards": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": 31.30438232421875,
+      "y": -33.912994384765625,
+      "scale": 90,
       "width": 100,
       "height": 100,
       "padding": 0,
       "gap": 0
     },
     "dragons.fire.cost": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": 15.6522216796875,
+      "y": -14.78265380859375,
+      "scale": 70,
       "width": 100,
       "height": 100,
       "padding": 0,
       "gap": 0
     },
     "dragons.fire.fight": {
-      "x": 0,
-      "y": 0,
-      "scale": 100,
+      "x": -29.56524658203125,
+      "y": 29.5653076171875,
+      "scale": 70,
       "width": 100,
       "height": 100,
       "padding": 0,
