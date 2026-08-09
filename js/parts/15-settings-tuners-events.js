@@ -917,10 +917,10 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v3_universal_repair";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v3_universal_repair";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v4_fit_viewport";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v4_fit_viewport";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
-  panelX:0,panelY:0,panelWidth:1120,panelHeight:620,panelScale:100,
+  panelX:0,panelY:0,panelWidth:1260,panelHeight:590,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
   progressX:0,progressY:0,progressScale:100
 });
@@ -941,8 +941,8 @@ function normalizeHvDetLayoutTuner(raw={}){
   return {
     panelX:hvDetClamp(raw.panelX,-600,600,0),
     panelY:hvDetClamp(raw.panelY,-450,450,0),
-    panelWidth:hvDetClamp(raw.panelWidth,650,1800,1120),
-    panelHeight:hvDetClamp(raw.panelHeight,420,1100,620),
+    panelWidth:hvDetClamp(raw.panelWidth,650,1800,1260),
+    panelHeight:hvDetClamp(raw.panelHeight,420,1100,590),
     panelScale:hvDetClamp(raw.panelScale,45,180,100),
     pbX:hvDetClamp(raw.pbX,-900,900,0),
     pbY:hvDetClamp(raw.pbY,-600,700,0),

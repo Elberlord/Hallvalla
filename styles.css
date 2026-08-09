@@ -22487,3 +22487,202 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{grid-template-rows:auto auto !important;}
   #cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{grid-template-columns:repeat(2,minmax(120px,1fr)) !important;}
 }
+
+
+/* ============================================================
+   v29 · DET FIT VIEWPORT
+   Reparación exclusivamente visual del DET universal.
+   Mantiene todo el contenido dentro del viewport sin scroll global.
+   ============================================================ */
+#cardInspectModal.deck-builder-detail-modal.det-universal-template{
+  box-sizing:border-box!important;
+  padding:10px!important;
+  overflow:hidden!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
+  box-sizing:border-box!important;
+  width:min(var(--hv-det-panel-width,1260px),calc(100vw - 24px))!important;
+  height:min(var(--hv-det-panel-height,590px),calc(100vh - 24px))!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:calc(100vw - 24px)!important;
+  max-height:calc(100vh - 24px)!important;
+  overflow:hidden!important;
+  padding:16px!important;
+  gap:10px 14px!important;
+  display:grid!important;
+  grid-template-columns:minmax(280px,30%) minmax(250px,27%) minmax(360px,43%)!important;
+  grid-template-rows:76px minmax(0,1fr) 96px 46px!important;
+  grid-template-areas:
+    "portrait head head"
+    "portrait stats text"
+    "utility collection collection"
+    "actions collection collection"!important;
+  transform:translate(var(--hv-det-panel-x,0px),var(--hv-det-panel-y,0px)) scale(var(--hv-det-panel-scale,1))!important;
+  transform-origin:center center!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-head{
+  grid-area:head!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:0 104px 0 0!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{
+  margin:0!important;
+  font-size:clamp(26px,2.6vw,42px)!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-sub{margin-top:7px!important;min-width:0!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-identity-block{gap:5px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip-row{
+  display:flex!important;flex-wrap:nowrap!important;gap:6px!important;min-width:0!important;overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{
+  min-height:25px!important;padding:5px 9px!important;font-size:10px!important;line-height:1!important;white-space:nowrap!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-summary-copy{display:none!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-battle-power-badge{
+  top:8px!important;right:56px!important;left:auto!important;scale:.72!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{
+  top:8px!important;right:8px!important;width:42px!important;height:42px!important;
+}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{
+  grid-area:portrait!important;
+  min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
+  margin:0!important;overflow:hidden!important;border-radius:16px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait img,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectVisual img{
+  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid{
+  grid-area:stats!important;
+  min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
+  padding:7px!important;margin:0!important;overflow:hidden!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:repeat(8,minmax(0,1fr))!important;
+  gap:4px!important;border-radius:14px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat{
+  min-width:0!important;min-height:0!important;height:auto!important;padding:3px 8px!important;gap:7px!important;border-radius:8px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-icon-btn{
+  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-img{width:23px!important;height:23px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-key{font-size:10px!important;min-width:36px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat strong{font-size:17px!important;line-height:1!important;}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{
+  grid-area:text!important;
+  min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:minmax(76px,30%) minmax(0,70%)!important;
+  grid-template-areas:"states" "effects"!important;
+  gap:9px!important;margin:0!important;overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-status-section{
+  grid-area:states!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;margin:0!important;overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-section-block:first-child{
+  grid-area:effects!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;margin:0!important;overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-section-title{
+  min-height:30px!important;height:30px!important;padding:5px 9px!important;font-size:10px!important;line-height:1!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-list{
+  height:calc(100% - 30px)!important;max-height:none!important;padding:6px!important;overflow:auto!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-empty-line{font-size:11px!important;line-height:1.2!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-row{min-height:38px!important;padding:5px 7px!important;}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effects-detailed .det-ability-list{
+  height:calc(100% - 30px)!important;max-height:none!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-auto-rows:minmax(46px,auto)!important;
+  gap:5px!important;padding:6px!important;overflow:auto!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-card{
+  min-width:0!important;min-height:46px!important;height:auto!important;
+  display:grid!important;grid-template-columns:38px minmax(0,1fr)!important;gap:8px!important;align-items:center!important;
+  padding:5px 7px!important;border-radius:9px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-art,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effect-seal-art.det-ability-art{
+  width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-art img{width:26px!important;height:26px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-name{font-size:11px!important;line-height:1.05!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-text{
+  font-size:9px!important;line-height:1.18!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .detail-guide-row,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-quote-block{display:none!important;}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-row{
+  grid-area:utility!important;min-width:0!important;min-height:0!important;
+  display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;align-self:stretch!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn{
+  min-width:0!important;min-height:0!important;height:100%!important;padding:7px 9px!important;gap:7px!important;border-radius:10px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-utility-icon{width:28px!important;height:28px!important;min-width:28px!important;font-size:17px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn b{font-size:10px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn small{font-size:8px!important;line-height:1.05!important;}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card > .deck-builder-detail-box{
+  grid-area:collection!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
+  margin:0!important;padding:7px 9px!important;overflow:hidden!important;border-radius:14px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head{margin:0 0 5px!important;min-height:21px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head .deck-detail-title{
+  min-height:21px!important;height:21px!important;padding:0!important;font-size:10px!important;line-height:1!important;border:0!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-help-pill{width:22px!important;height:22px!important;min-width:22px!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{
+  height:calc(100% - 26px)!important;min-height:0!important;
+  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(82px,1fr))!important;grid-auto-rows:1fr!important;
+  gap:5px!important;overflow:hidden!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid span{
+  min-width:0!important;min-height:0!important;height:100%!important;padding:5px!important;gap:3px!important;border-radius:8px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid b{font-size:8px!important;line-height:1!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid em{font-size:10px!important;line-height:1.08!important;}
+
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-actions{
+  grid-area:actions!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;margin:0!important;display:block!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectCancel{
+  width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:6px 10px!important;font-size:15px!important;border-radius:10px!important;
+}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectPlay,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-reason{display:none!important;}
+
+/* El editor sigue operativo; el modal completo nunca genera barras externas. */
+#cardInspectModal.deck-builder-detail-modal.det-universal-template,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{scrollbar-width:none!important;}
+#cardInspectModal.deck-builder-detail-modal.det-universal-template::-webkit-scrollbar,
+#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card::-webkit-scrollbar{display:none!important;}
+
+@media(max-width:980px){
+  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
+    width:min(var(--hv-det-panel-width,900px),calc(100vw - 16px))!important;
+    height:min(var(--hv-det-panel-height,560px),calc(100vh - 16px))!important;
+    grid-template-columns:minmax(220px,32%) minmax(210px,29%) minmax(290px,39%)!important;
+    padding:10px!important;gap:7px 9px!important;
+    grid-template-rows:64px minmax(0,1fr) 82px 40px!important;
+  }
+  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{font-size:24px!important;}
+  #cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{font-size:8px!important;padding:4px 6px!important;}
+}
