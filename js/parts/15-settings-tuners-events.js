@@ -939,7 +939,12 @@ const HV_DET_DIRECT_BAKED_DEFAULTS=Object.freeze({
   "meta.type":Object.freeze({x:33.04345703125,y:-5.21734619140625}),
   "meta.rarity":Object.freeze({x:33.9130859375,y:-1.7391357421875}),
   "meta.state":Object.freeze({x:34.78271484375,y:0}),
-  "abilities.list":Object.freeze({x:-64.34783935546875,y:-11.304351806640625}),
+  "abilities.list":Object.freeze({x:-64.34808349609375,y:-3.47821044921875,scale:117}),
+  "ability.1":Object.freeze({x:-18.2608642578125,y:4.347900390625,scale:170}),
+  "ability.2":Object.freeze({x:-42.608642578125,y:3.47833251953125,scale:170}),
+  "ability.3":Object.freeze({x:-66.0870361328125,y:3.478271484375,scale:170}),
+  "ability.4":Object.freeze({x:151.30438232421875,y:-19.130401611328125,scale:170}),
+  "ability.5":Object.freeze({x:41.7391357421875,y:-20.000030517578125,scale:170}),
   "action.play":Object.freeze({x:71.3043212890625,y:-6.08697509765625})
 });
 

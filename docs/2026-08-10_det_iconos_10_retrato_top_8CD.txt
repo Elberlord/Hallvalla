@@ -1,0 +1,8 @@
+HallValla 7BOARDCTRL8CD
+
+Cambios exclusivos sobre 8CC:
+- Integrada la calibración final enviada por el usuario para abilities.list y ability.1..ability.5.
+- Capacidad del parser DET ampliada de 9 a 10 efectos propios.
+- Se reservan por código las posiciones 6..10 en una segunda fila, sin alterar las posiciones 1..5 calibradas por el usuario.
+- El retrato del DET conserva object-fit: cover pero usa object-position: center top para priorizar cabeza/parte superior y recortar el sobrante por abajo.
+- Sin cambios en combate, IA, Home, JUGAR, mazos ni otras mecánicas.

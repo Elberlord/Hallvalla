@@ -1343,7 +1343,7 @@ function getEntityAbilitySections(entity,effectText=""){
   while((m=rx.exec(txt))){
     sections.push({title:m[1].trim(),body:m[2].trim()});
   }
-  if(sections.length)return sections.slice(0,9);
+  if(sections.length)return sections.slice(0,10);
   return [{title:entity?.leader?"Pasiva":"Habilidad",body:txt}];
 }
 
@@ -1515,13 +1515,13 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
     const originNote=origin!=="hand"?" Esta copia no lo recibe porque no fue jugada desde la mano.":"";
     nativeSections.push({title:"VÍNCULO ARCANO",body:`Si esta unidad mágica fue jugada desde la mano y permanece adyacente al líder Hechicero aliado, recibe el beneficio de Vínculo Arcano correspondiente al tier del líder. Las entidades, tokens, reanimados y demás unidades generadas directamente en el campo quedan excluidas.${originNote}`});
   }
-  if(!isLanceUnitCardLike(entity))return nativeSections.slice(0,9);
+  if(!isLanceUnitCardLike(entity))return nativeSections.slice(0,10);
   const unitName=String(entity?.name||"esta unidad");
   const lanceInnateSections=[
     {title:"ATACAR PRIMERO",body:`Una vez por turno, cuando una unidad enemiga de cuerpo a cuerpo con RG 1 ataca a ${unitName} desde una casilla adyacente, ${unitName} ataca primero. No se activa contra unidades con RG 2 o más ni contra Ataque en Picada del halcón.`},
     {title:"ANTICABALLERÍA",body:`Cuando ${unitName} combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate.`}
   ];
-  return [...lanceInnateSections,...nativeSections].slice(0,9);
+  return [...lanceInnateSections,...nativeSections].slice(0,10);
 }
 function renderDetAbilitiesHtml(entity,effectText=""){
   const sections=getDetAbilitySectionsForInspector(entity,effectText);

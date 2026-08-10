@@ -23768,6 +23768,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   height:100%!important;
   display:block!important;
   object-fit:cover!important;
+  object-position:center top!important;
   margin:0!important;
   padding:0!important;
   border:0!important;
@@ -24376,7 +24377,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #cardInspectModal .hv-det-play-card-button:focus-visible{outline:2px solid #f5d785!important;outline-offset:3px!important;}
 
 
-/* === DET v32 · efectos propios 3x3 + JUGAR calibrable · 8CC === */
+/* === DET v32 · efectos propios hasta 10 + JUGAR calibrable · 8CD === */
 #cardInspectModal .hv-det-own-effects-list{
   position:absolute!important;
   left:66.6%!important;
@@ -24445,6 +24446,23 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   -webkit-user-drag:none!important;
 }
 #cardInspectModal .hv-det-own-ability-icon .hv-det-cal-id{display:none!important;}
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(6),
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(7),
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(8),
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(9),
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(10){
+  position:absolute!important;
+  top:75%!important;
+  width:14.2%!important;
+  height:auto!important;
+  aspect-ratio:1 / 1!important;
+  transform:translate(-50%,-50%)!important;
+}
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(6){left:10%!important;}
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(7){left:30%!important;}
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(8){left:50%!important;}
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(9){left:70%!important;}
+#cardInspectModal .hv-det-own-effects-list .hv-det-own-ability-icon:nth-of-type(10){left:90%!important;}
 .hv-det-direct-editing #cardInspectModal .hv-det-own-effects-list{
   pointer-events:auto!important;
   cursor:move!important;
