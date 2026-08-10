@@ -1070,6 +1070,13 @@ function hvDetBuildTargets(root){
   hvDetAddTarget(list,root.querySelector('#detLevelValue'),'level.value','NIVEL · VALOR');
   hvDetAddTarget(list,root.querySelector('#detLevelBar'),'level.bar','NIVEL · BARRA DE PROGRESO');
   hvDetAddTarget(list,root.querySelector('#detBattlePowerValue'),'battlepower.value','PODER DE BATALLA · VALOR');
+  hvDetAddTarget(list,root.querySelector('#detTypeValue'),'meta.type','TIPO · VALOR');
+  hvDetAddTarget(list,root.querySelector('#detRarityValue'),'meta.rarity','RAREZA · VALOR');
+  hvDetAddTarget(list,root.querySelector('#detStateValue'),'meta.state','ESTADO · VALOR');
+  hvDetAddTarget(list,root.querySelector('#detEffectsList'),'effects.list','EFECTOS ACTIVOS · ÁREA');
+  [...root.querySelectorAll('#detEffectsList .hv-det-effect-icon')].forEach((el,index)=>{
+    hvDetAddTarget(list,el,`effect.${index+1}`,`EFECTO ACTIVO ${index+1}`);
+  });
   [...root.querySelectorAll('.hv-det-stat-value')].forEach(el=>{
     const key=el.dataset.detStatValue||'stat';
     const labels={hp:'HP',dexterity:'PX / Destreza',movement:'MV / Movimiento',attack:'AT / Ataque',guard:'GD / Guardia',agility:'AG / Agilidad',range:'RG / Rango'};
@@ -1463,11 +1470,67 @@ function copyHvDetIconJson(button){
     }
     progression[name]=entry;
   });
+  const metadata={};
+  [
+    ['type','meta.type','#detTypeValue'],
+    ['rarity','meta.rarity','#detRarityValue'],
+    ['state','meta.state','#detStateValue']
+  ].forEach(([name,key,selector])=>{
+    const el=root?.querySelector(selector);
+    if(!el)return;
+    const direct=normalizeHvDetDirectSetting(state.items[key]||HV_DET_DIRECT_DEFAULT);
+    const entry={id:key,direct,value:el.querySelector('.hv-det-meta-text')?.textContent||''};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=el.getBoundingClientRect();
+      entry.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    metadata[name]=entry;
+  });
+  let activeEffects=null;
+  const effectsEl=root?.querySelector('#detEffectsList');
+  if(effectsEl){
+    const direct=normalizeHvDetDirectSetting(state.items['effects.list']||HV_DET_DIRECT_DEFAULT);
+    activeEffects={id:'effects.list',direct,items:[]};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=effectsEl.getBoundingClientRect();
+      activeEffects.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    [...effectsEl.querySelectorAll('.hv-det-effect-icon')].forEach((el,index)=>{
+      const key=`effect.${index+1}`;
+      const effect={id:key,direct:normalizeHvDetDirectSetting(state.items[key]||HV_DET_DIRECT_DEFAULT),label:el.getAttribute('aria-label')||''};
+      if(cardRect&&cardRect.width&&cardRect.height){
+        const r=el.getBoundingClientRect();
+        effect.current={
+          leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+          topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+          widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+          heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+          centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+          centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+        };
+      }
+      activeEffects.items.push(effect);
+    });
+  }
   const payload=JSON.stringify({
-    version:8,
+    version:9,
     scope:'det_icons_portrait_costbadge_name_stats_reference_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: añade NIVEL con barra dinámica y PODER DE BATALLA. IDs nuevos: level.value, level.bar y battlepower.value. Se conservan los elementos anteriores.',
+    note:'DET limpio v32: añade TIPO, RAREZA, ESTADO y EFECTOS ACTIVOS sobre la base anterior. IDs nuevos: meta.type, meta.rarity, meta.state, effects.list y effect.*.',
     icons,
     portrait,
     costBadge,
@@ -1475,7 +1538,9 @@ function copyHvDetIconJson(button){
     statValues,
     costValue,
     referenceUtilities,
-    progression
+    progression,
+    metadata,
+    activeEffects
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}

@@ -24193,3 +24193,133 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   outline:2px solid rgba(79,211,255,.98)!important;
   outline-offset:3px!important;
 }
+
+
+/* === DET v32 · meta y efectos activos · 8BW === */
+#cardInspectModal .hv-det-meta-layer{
+  position:absolute!important;
+  inset:0!important;
+  z-index:64!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+#cardInspectModal .hv-det-meta-value{
+  position:absolute!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#f5dda0!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(11px,1.15vw,22px)!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:.025em!important;
+  text-align:center!important;
+  text-transform:uppercase!important;
+  text-shadow:0 2px 4px rgba(0,0,0,.98),0 0 7px rgba(228,171,58,.18)!important;
+  transform-origin:center!important;
+  white-space:nowrap!important;
+}
+#cardInspectModal .hv-det-meta-type{left:58.45%!important;top:30.35%!important;width:14.45%!important;height:5.0%!important;}
+#cardInspectModal .hv-det-meta-rarity{left:77.15%!important;top:30.35%!important;width:15.95%!important;height:5.0%!important;}
+#cardInspectModal .hv-det-meta-state{left:58.45%!important;top:35.75%!important;width:34.65%!important;height:4.7%!important;font-size:clamp(9px,.95vw,18px)!important;}
+#cardInspectModal .hv-det-meta-text{pointer-events:none!important;}
+#cardInspectModal .hv-det-meta-value .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-meta-value{
+  pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-meta-value .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-meta-value.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:3px!important;
+}
+
+#cardInspectModal .hv-det-effects-list{
+  position:absolute!important;
+  left:4.2%!important;
+  top:70.3%!important;
+  width:28.8%!important;
+  height:20.9%!important;
+  z-index:66!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(42px,1fr)!important;
+  align-content:start!important;
+  justify-content:start!important;
+  gap:7px!important;
+  padding:7px!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  overflow:auto!important;
+  transform-origin:center!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-effects-list > .hv-det-effects-list-id{display:none!important;}
+#cardInspectModal .hv-det-effect-icon{
+  position:relative!important;
+  min-width:0!important;
+  min-height:42px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:3px!important;
+  margin:0!important;
+  border:1px solid rgba(208,155,62,.22)!important;
+  border-radius:8px!important;
+  background:radial-gradient(circle at 50% 42%,rgba(48,38,22,.35),rgba(5,7,12,.16) 68%,transparent 72%)!important;
+  box-shadow:inset 0 0 9px rgba(0,0,0,.38)!important;
+  transform-origin:center!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  user-select:none!important;
+}
+#cardInspectModal .hv-det-effect-art,
+#cardInspectModal .hv-det-effect-art > *{
+  width:100%!important;
+  height:100%!important;
+  max-width:42px!important;
+  max-height:42px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  object-fit:contain!important;
+  font-size:28px!important;
+  line-height:1!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-effect-art img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-effect-icon .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-effects-list{
+  pointer-events:auto!important;
+  overflow:visible!important;
+  outline:1px dashed rgba(255,218,116,.72)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-effects-list > .hv-det-effects-list-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-effect-icon{
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-effect-icon .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-effects-list.hv-det-direct-selected,
+.hv-det-direct-editing #cardInspectModal .hv-det-effect-icon.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:3px!important;
+}

@@ -1639,6 +1639,82 @@ function ensureUnifiedDetReferenceUtilities(modal,entity){
 }
 
 
+
+function getUnifiedDetStateText(entity,mode="card",statuses=[]){
+  if(mode==="field"){
+    const side=entity?.owner===myPlayer?'ALIADA':'RIVAL';
+    const active=Array.isArray(statuses)?statuses.length:0;
+    return active>0?`EN CAMPO · ${side} · ${active} EST.`:`EN CAMPO · ${side}`;
+  }
+  if(mode==="pack")return "REVELADA";
+  if(mode==="hand")return "EN MANO";
+  try{
+    if(typeof getCollectionCardsExpanded==="function"&&entity?.key){
+      const found=getCollectionCardsExpanded().find(card=>card?.key===entity.key);
+      const owned=Number(found?.qty||entity?.qty||0);
+      return owned>0?"DESBLOQUEADA":"BLOQUEADA";
+    }
+  }catch(_){ }
+  return entity?.type==="unit"?"DISPONIBLE":"CARTA";
+}
+
+function ensureUnifiedDetMetaFields(modal,entity,{mode="card",statuses=[]}={}){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('.hv-det-meta-layer')?.remove();
+  const layer=document.createElement('div');
+  layer.className='hv-det-meta-layer';
+  layer.setAttribute('aria-label','Tipo, rareza y estado del DET');
+
+  const typeValue=entity?.leader?'LÍDER':(typeof getEntityTypeLabel==='function'?getEntityTypeLabel(entity):(entity?.type||'—'));
+  const rarityValue=typeof getDetDisplayRarity==='function'?getDetDisplayRarity(entity):(entity?.rarity||'—');
+  const stateValue=getUnifiedDetStateText(entity,mode,statuses);
+  [
+    ['detTypeValue','hv-det-meta-value hv-det-meta-type','meta.type','TIPO',typeValue],
+    ['detRarityValue','hv-det-meta-value hv-det-meta-rarity','meta.rarity','RAREZA',rarityValue],
+    ['detStateValue','hv-det-meta-value hv-det-meta-state','meta.state','ESTADO',stateValue]
+  ].forEach(([id,className,editId,label,value])=>{
+    const el=document.createElement('div');
+    el.id=id;
+    el.className=className;
+    el.setAttribute('aria-label',`${label}: ${String(value||'—')}`);
+    el.innerHTML=`<span class="hv-det-meta-text">${escapeHtml(String(value||'—').toUpperCase())}</span><span class="hv-det-cal-id">${editId}</span>`;
+    layer.appendChild(el);
+  });
+  card.appendChild(layer);
+  return layer;
+}
+
+function ensureUnifiedDetActiveEffects(modal,entity,statuses=[]){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('#detEffectsList')?.remove();
+  const entries=Array.isArray(statuses)?statuses:[];
+  const list=document.createElement('div');
+  list.id='detEffectsList';
+  list.className='hv-det-effects-list';
+  list.setAttribute('aria-label',entries.length?`Efectos activos: ${entries.length}`:'Sin efectos activos');
+  const listId=document.createElement('span');
+  listId.className='hv-det-cal-id hv-det-effects-list-id';
+  listId.textContent='effects.list';
+  list.appendChild(listId);
+  entries.forEach((entry,index)=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className=`hv-det-effect-icon guide-status-btn ${escapeHtml(String(entry?.kind||'neutral'))}`;
+    button.dataset.statusIndex=String(index);
+    button.dataset.detEffectIndex=String(index+1);
+    const label=entry?.name||entry?.label||`Efecto ${index+1}`;
+    const desc=entry?.desc||'';
+    button.title=desc?`${label}: ${desc}`:String(label);
+    button.setAttribute('aria-label',String(label));
+    button.innerHTML=`<span class="hv-det-effect-art">${typeof getStatusEntryIconHtml==='function'?getStatusEntryIconHtml(entry):escapeHtml(String(entry?.glyph||'◆'))}</span><span class="hv-det-cal-id">effect.${index+1}</span>`;
+    list.appendChild(button);
+  });
+  card.appendChild(list);
+  return list;
+}
+
 function getUnifiedDetLevelDisplayData(entity){
   const empty={visible:false,rank:'—',progressText:'',percent:0,maxed:false,current:0,total:0,remaining:0};
   try{
@@ -1745,8 +1821,10 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   ensureUnifiedDetStatValues(modal,entity,{live});
   ensureUnifiedDetReferenceUtilities(modal,entity);
   ensureUnifiedDetLevelAndBattlePower(modal,entity);
+  ensureUnifiedDetMetaFields(modal,entity,{mode,statuses});
+  ensureUnifiedDetActiveEffects(modal,entity,statuses);
   modal._hvInspectedEntity=entity;
-  modal._hvActiveStatuses=[];
+  modal._hvActiveStatuses=Array.isArray(statuses)?statuses:[];
   modal._hvEffectText="";
   modal._hvEffectTitle="";
   modal._hvLevelProgressText="";
