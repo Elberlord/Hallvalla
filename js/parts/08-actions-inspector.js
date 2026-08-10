@@ -1638,6 +1638,101 @@ function ensureUnifiedDetReferenceUtilities(modal,entity){
   return layer;
 }
 
+
+function getUnifiedDetLevelDisplayData(entity){
+  const empty={visible:false,rank:'—',progressText:'',percent:0,maxed:false,current:0,total:0,remaining:0};
+  try{
+    if(!entity)return empty;
+    if(entity.leader||entity.type==='leader'){
+      const level=Math.max(1,Math.floor(Number(entity.leaderLevel||1)));
+      return {...empty,visible:true,rank:String(level),progressText:'',percent:0};
+    }
+    if(entity.type!=='unit')return empty;
+
+    // El rival solo expone el rango que ya trae la unidad; no inventamos progreso local.
+    if(entity.owner!==undefined&&typeof myPlayer!=='undefined'&&Number(entity.owner)!==Number(myPlayer)){
+      const enemyRank=Math.max(1,Math.floor(Number(entity.masteryRank||1)));
+      const rankText=typeof romanUnitRank==='function'?romanUnitRank(enemyRank):String(enemyRank);
+      return {...empty,visible:true,rank:rankText,progressText:'',percent:0};
+    }
+
+    // Unidades con progresión de servicio conservan su sistema propio; no alteramos su mecánica.
+    if(typeof isUnitServiceProgression==='function'&&isUnitServiceProgression(entity)){
+      const rank=Math.max(1,Math.floor(Number(entity.masteryRank||1)));
+      const rankText=typeof romanUnitRank==='function'?romanUnitRank(rank):String(rank);
+      const text=typeof getAcolyteServiceProgressText==='function'?String(getAcolyteServiceProgressText(entity)||''):'';
+      return {...empty,visible:true,rank:rankText,progressText:text,percent:0};
+    }
+
+    if(typeof getUnitMasteryRecord!=='function'||typeof getUnitMasteryRankFromKills!=='function'||typeof getUnitMasteryKillsForRank!=='function'){
+      return {...empty,visible:true,rank:'I',progressText:'0 / 20 · faltan 20',percent:0,current:0,total:20,remaining:20};
+    }
+    const record=getUnitMasteryRecord(entity);
+    const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
+    const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==='number'?UNIT_MASTERY_MAX_RANK:10;
+    const rankText=typeof romanUnitRank==='function'?romanUnitRank(rank):String(rank);
+    if(rank>=maxRank){
+      return {...empty,visible:true,rank:rankText,progressText:'NIVEL MÁXIMO',percent:100,maxed:true,current:kills,total:kills,remaining:0};
+    }
+    const currentThreshold=Math.max(0,Math.floor(Number(getUnitMasteryKillsForRank(rank)||0)));
+    const nextThreshold=Math.max(currentThreshold+1,Math.floor(Number(getUnitMasteryKillsForRank(rank+1)||currentThreshold+1)));
+    const current=Math.max(0,kills-currentThreshold);
+    const total=Math.max(1,nextThreshold-currentThreshold);
+    const remaining=Math.max(0,nextThreshold-kills);
+    const percent=Math.max(0,Math.min(100,(current/total)*100));
+    return {
+      visible:true,
+      rank:rankText,
+      progressText:`${current} / ${total} · faltan ${remaining}`,
+      percent,
+      maxed:false,
+      current,
+      total,
+      remaining
+    };
+  }catch(error){
+    console.warn('[HallValla] No se pudo resolver NIVEL para DET:',error);
+    return empty;
+  }
+}
+
+function ensureUnifiedDetLevelAndBattlePower(modal,entity){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('.hv-det-level-battle-layer')?.remove();
+  const layer=document.createElement('div');
+  layer.className='hv-det-level-battle-layer';
+  layer.setAttribute('aria-label','Nivel y poder de batalla del DET');
+
+  const level=getUnifiedDetLevelDisplayData(entity);
+  const levelValue=document.createElement('div');
+  levelValue.id='detLevelValue';
+  levelValue.className='hv-det-level-value';
+  levelValue.setAttribute('aria-label',`Nivel ${level.rank}`);
+  levelValue.innerHTML=`<span class="hv-det-level-number">${escapeHtml(String(level.rank||'—'))}</span><span class="hv-det-cal-id">level.value</span>`;
+
+  const levelBar=document.createElement('div');
+  levelBar.id='detLevelBar';
+  levelBar.className='hv-det-level-bar';
+  levelBar.setAttribute('aria-label',level.progressText||`Nivel ${level.rank}`);
+  levelBar.innerHTML=`<div class="hv-det-level-fill" style="width:${Number(level.percent||0).toFixed(2)}%"></div><span class="hv-det-level-progress-text">${escapeHtml(level.progressText||'')}</span><span class="hv-det-cal-id">level.bar</span>`;
+
+  const battle=document.createElement('div');
+  battle.id='detBattlePowerValue';
+  battle.className='hv-det-battle-power-value';
+  const power=typeof getUnitBattlePower==='function'?getUnitBattlePower(entity):null;
+  const tier=Number.isFinite(Number(power))&&typeof getBattlePowerTier==='function'?getBattlePowerTier(power):null;
+  const powerText=Number.isFinite(Number(power))?String(Math.round(Number(power))):'—';
+  const tierText=tier?.label?String(tier.label):'';
+  battle.setAttribute('aria-label',tierText?`Poder de batalla ${powerText}: ${tierText}`:`Poder de batalla ${powerText}`);
+  battle.innerHTML=`<strong class="hv-det-battle-power-number">${escapeHtml(powerText)}</strong>${tierText?`<small class="hv-det-battle-power-tier">${escapeHtml(tierText)}</small>`:''}<span class="hv-det-cal-id">battlepower.value</span>`;
+
+  layer.append(levelValue,levelBar,battle);
+  card.appendChild(layer);
+  return layer;
+}
+
 function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statuses=[],visualHtml="",reasonText="",allowPlay=false,playState=null}={}){
   if(!entity)return null;
   const modal=$("cardInspectModal");
@@ -1649,6 +1744,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   ensureUnifiedDetNameCalibration(modal,entity);
   ensureUnifiedDetStatValues(modal,entity,{live});
   ensureUnifiedDetReferenceUtilities(modal,entity);
+  ensureUnifiedDetLevelAndBattlePower(modal,entity);
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=[];
   modal._hvEffectText="";

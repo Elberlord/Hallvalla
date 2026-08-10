@@ -1067,6 +1067,9 @@ function hvDetBuildTargets(root){
   hvDetAddTarget(list,root.querySelector('#detCopiesValue'),'copies.value','COPIAS · CANTIDAD');
   hvDetAddTarget(list,root.querySelector('#detFormulaIcon'),'formula.icon','PREC/EVA · ICONO');
   hvDetAddTarget(list,root.querySelector('#detLoreIcon'),'lore.icon','CONÓCEME · ICONO');
+  hvDetAddTarget(list,root.querySelector('#detLevelValue'),'level.value','NIVEL · VALOR');
+  hvDetAddTarget(list,root.querySelector('#detLevelBar'),'level.bar','NIVEL · BARRA DE PROGRESO');
+  hvDetAddTarget(list,root.querySelector('#detBattlePowerValue'),'battlepower.value','PODER DE BATALLA · VALOR');
   [...root.querySelectorAll('.hv-det-stat-value')].forEach(el=>{
     const key=el.dataset.detStatValue||'stat';
     const labels={hp:'HP',dexterity:'PX / Destreza',movement:'MV / Movimiento',attack:'AT / Ataque',guard:'GD / Guardia',agility:'AG / Agilidad',range:'RG / Rango'};
@@ -1428,18 +1431,51 @@ function copyHvDetIconJson(button){
     }
     referenceUtilities[name]=entry;
   });
+  const progression={};
+  [
+    ['levelValue','level.value','#detLevelValue'],
+    ['levelBar','level.bar','#detLevelBar'],
+    ['battlePower','battlepower.value','#detBattlePowerValue']
+  ].forEach(([name,key,selector])=>{
+    const el=root?.querySelector(selector);
+    if(!el)return;
+    const direct=normalizeHvDetDirectSetting(state.items[key]||HV_DET_DIRECT_DEFAULT);
+    const entry={id:key,direct};
+    if(name==='levelValue')entry.value=el.querySelector('.hv-det-level-number')?.textContent||'';
+    if(name==='levelBar'){
+      entry.text=el.querySelector('.hv-det-level-progress-text')?.textContent||'';
+      entry.fillPct=Number.parseFloat(el.querySelector('.hv-det-level-fill')?.style.width||'0')||0;
+    }
+    if(name==='battlePower'){
+      entry.value=el.querySelector('.hv-det-battle-power-number')?.textContent||'';
+      entry.tier=el.querySelector('.hv-det-battle-power-tier')?.textContent||'';
+    }
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=el.getBoundingClientRect();
+      entry.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    progression[name]=entry;
+  });
   const payload=JSON.stringify({
-    version:7,
+    version:8,
     scope:'det_icons_portrait_costbadge_name_stats_reference_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: iconos + retrato + medallón + nombre + stats/costo + arma/copias/PREC-EVA/Conóceme. IDs nuevos: weapon.icon, copies.value, formula.icon y lore.icon.',
+    note:'DET limpio v32: añade NIVEL con barra dinámica y PODER DE BATALLA. IDs nuevos: level.value, level.bar y battlepower.value. Se conservan los elementos anteriores.',
     icons,
     portrait,
     costBadge,
     nameText,
     statValues,
     costValue,
-    referenceUtilities
+    referenceUtilities,
+    progression
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}
