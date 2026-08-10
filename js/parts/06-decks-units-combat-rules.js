@@ -282,6 +282,69 @@ function getStarterChosenSpecialCard(selectedSpecial=""){
   const key=selectedSpecial||getAdventureProgress?.().selectedSpecial||pendingAdventureSpecial||"mulan";
   return ADVENTURE_SPECIALS[key]?{...ADVENTURE_SPECIALS[key]}:null;
 }
+
+/* === Starter fijo por Líder · 8CJ ==========================================
+   Fuente de verdad: mazos_iniciales_lideres_hallvalla.csv (2026-08-10).
+   Cada especialización comienza con 19 cartas fijas. Antes del Guardián,
+   Hua Lan o William Wallace —la elección del jugador— ocupa la carta #20.
+   No se hacen sustituciones automáticas ni se rellena desde el starter genérico.
+============================================================================ */
+const LEADER_STARTER_FIXED_DECK_KEYS=Object.freeze({
+  warrior:Object.freeze([
+    "scout","archer","arcane_adept","spearman","spearman","cavalry","berserker",
+    "guardian","guardian","berserker_de_oso","ulfhednar","skipar_del_drakkar","heal",
+    "samurai_katana","shield_wall","fireball","saboteador_iga","marching_greaves","war_visor"
+  ]),
+  archer:Object.freeze([
+    "scout","archer","archer","egyptian_line_archer","egyptian_line_archer","spearman","cavalry",
+    "berserker","guardian","fireball","ulfhednar","roman_legionary","skipar_del_drakkar","bolt",
+    "heal","samurai_katana","saboteador_iga","skirmisher_cloak","retreat_strap"
+  ]),
+  mage:Object.freeze([
+    "scout","archer","arcane_adept","arcane_adept","spearman","cavalry","berserker","guardian",
+    "fireball","fireball","bolt","inspiration","berserker_de_oso","ulfhednar","skipar_del_drakkar",
+    "samurai_katana","saboteador_iga","stabilizing_focus","channeling_amulet"
+  ]),
+  axe:Object.freeze([
+    "scout","archer","arcane_adept","spearman","cavalry","berserker","berserker","guardian",
+    "berserker_de_oso","fireball","bolt","inspiration","ulfhednar","ulfhednar","skipar_del_drakkar",
+    "samurai_katana","saboteador_iga","tanned_hide_harness","counterweighted_grip"
+  ]),
+  cavalry:Object.freeze([
+    "scout","archer","arcane_adept","spearman","cavalry","cavalry","berserker","berserker",
+    "guardian","heal","inspiration","berserker_de_oso","shield_wall","ulfhednar","skipar_del_drakkar",
+    "samurai_katana","saboteador_iga","withdrawal_stirrups","light_barding"
+  ]),
+  assassin:Object.freeze([
+    "scout","scout","archer","arcane_adept","spearman","spearman","cavalry","berserker","guardian",
+    "berserker_de_oso","fireball","heal","inspiration","ulfhednar","skipar_del_drakkar","samurai_katana",
+    "saboteador_iga","executioner_mantle","rupture_bracers"
+  ])
+});
+function getLeaderStarterCardTemplateByKey(key){
+  const pools=[
+    (typeof CARD_TEMPLATES!=="undefined"&&Array.isArray(CARD_TEMPLATES))?CARD_TEMPLATES:[],
+    (typeof EQUIPMENT_CARD_TEMPLATES!=="undefined"&&Array.isArray(EQUIPMENT_CARD_TEMPLATES))?EQUIPMENT_CARD_TEMPLATES:[],
+    (typeof BASIC_MAGIC_TRAP_PACK!=="undefined"&&Array.isArray(BASIC_MAGIC_TRAP_PACK))?BASIC_MAGIC_TRAP_PACK:[]
+  ];
+  for(const pool of pools){
+    const found=pool.find(card=>card?.key===key);
+    if(found)return {...found};
+  }
+  return null;
+}
+function getLeaderStarterFixedDeckTemplates(leaderType=getSelectedLeaderType()||"warrior"){
+  const type=LEADER_STARTER_FIXED_DECK_KEYS[leaderType]?leaderType:"warrior";
+  const templates=LEADER_STARTER_FIXED_DECK_KEYS[type].map(getLeaderStarterCardTemplateByKey).filter(Boolean);
+  if(templates.length!==19)console.error(`[HallValla] Starter ${type}: se esperaban 19 cartas fijas y se resolvieron ${templates.length}.`);
+  return templates;
+}
+function getStarterComplementTemplate(selectedSpecial=""){
+  const selected=getStarterChosenSpecialCard(selectedSpecial);
+  if(!selected)return null;
+  const complementKey=selected.key==="wallace"?"mulan":"wallace";
+  return ADVENTURE_SPECIALS[complementKey]?{...ADVENTURE_SPECIALS[complementKey]}:null;
+}
 function getLegacyDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
   const target=getDeckSizeForPrincipalSlots(principalSlots);
   const base=getStarterBasicDeckTemplates(principalSlots);
@@ -290,8 +353,31 @@ function getLegacyDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurr
   return deck.slice(0,target);
 }
 function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
-  const legacy=getLegacyDefaultDeckTemplates(selectedSpecial,principalSlots);
-  return injectLeaderEquipmentIntoTemplateDeck(legacy,leaderType);
+  const target=getDeckSizeForPrincipalSlots(principalSlots);
+  const deck=getLeaderStarterFixedDeckTemplates(leaderType);
+  const special=getStarterChosenSpecialCard(selectedSpecial);
+  if(special)deck.push(special);
+
+  // Tras derrotar al Guardián, el mazo normal necesita 20 cartas de robo +
+  // Personaje(s) Principal(es). La carta no elegida es la primera expansión
+  // natural del starter porque se obtiene como recompensa del Guardián.
+  if(deck.length<target&&Number(principalSlots)>0){
+    const complement=getStarterComplementTemplate(selectedSpecial);
+    if(complement)deck.push(complement);
+  }
+
+  // Fallback únicamente para tiers con 2-3 Principales si no existe mazo guardado.
+  // Respeta límites de copias y nunca altera las 19 cartas fijas del starter.
+  if(deck.length<target){
+    const candidates=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
+    for(const candidate of candidates){
+      if(deck.length>=target)break;
+      const copies=deck.filter(card=>card?.key===candidate.key).length;
+      if(copies>=maxCopiesForCard(candidate))continue;
+      deck.push({...candidate});
+    }
+  }
+  return deck.slice(0,target);
 }
 function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
   const target=getDeckSizeForPrincipalSlots(principalSlots);
@@ -305,11 +391,8 @@ function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
   return deck.slice(0,target);
 }
 function getStarterAdventureDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
-  const special=getStarterChosenSpecialCard(selectedSpecial);
   const target=getDeckSizeForPrincipalSlots(principalSlots);
-  return getDefaultDeckTemplates(selectedSpecial,principalSlots,leaderType)
-    .filter(card=>isStarterBasicCard(card)||(special&&card.key===special.key)||(isEquipmentCard(card)&&isEquipmentCardAllowedForLeader(card,leaderType)))
-    .slice(0,target);
+  return getDefaultDeckTemplates(selectedSpecial,principalSlots,leaderType).slice(0,target);
 }
 function getPlayableSavedDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
   if(!canAccessDecks())return [];

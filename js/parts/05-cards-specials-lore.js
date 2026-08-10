@@ -858,6 +858,9 @@ function scoreBattlePowerAbilitySection(section){
 
   // Efectos de alto impacto. Se evalúa la mecánica, no el nombre de la carta.
   add(/cae derrotad[oa]|destruye inmediatamente|elimina inmediatamente/,28);
+  add(/sobrevive y queda con 1 vida|dano fatal.*queda con 1 vida|recibe dano fatal.*sobrevive/,12);
+  add(/a punto de morir.*ataca a todas|antes de morir.*ataca a todas/,16);
+  add(/destruya .*queda con 1 vida|asesino .*pierde \d+ vida/,8);
   add(/devuelve? una unidad .*destruid|devuelve? .* unidad .*destruid/,12);
   add(/ignora guardia/,6);
   add(/guardia 0/,5);
@@ -910,7 +913,9 @@ function scoreBattlePowerAbilitySection(section){
   add(/siempre golpea|impacta automaticamente/,4);
   add(/no puede ser objetivo directo/,5);
   add(/ataca antes que|hace \d+ dano primero/,3);
+  add(/si el atacante cae.*ataque se cancela|cancela el ataque/,5);
   add(/reduce .*dano en \d+/,3);
+  add(/no puede atacar durante su proximo turno/,6);
 
   // Los efectos caros, tardíos, probabilísticos o condicionales valen menos que uno siempre activo.
   let multiplier=1;
@@ -919,16 +924,143 @@ function scoreBattlePowerAbilitySection(section){
   else if(/al alcanzar\s+\d+|requiere\s+\d+\s+puntos/.test(text))multiplier*=.55;
   if(/paga\s+[34]\s+de honor/.test(text))multiplier*=.55;
   else if(/paga\s+\d+\s+de honor/.test(text))multiplier*=.70;
-  if(/una vez por turno/.test(text))multiplier*=.75;
+  if(/una vez por turno/.test(text))multiplier*=.82;
   if(/50% de probabilidad/.test(text))multiplier*=.65;
   if(/contador\s+\d+/.test(text)&&/al llegar a 0/.test(text))multiplier*=.75;
-  if(/\bsi\b|\bcuando\b|al declarar|al atacar|al causar/.test(text))multiplier*=.88;
+  // Un disparador recurrente ("cuando", "cada vez") no es una debilidad por sí mismo.
+  // Solo se descuenta la condición táctica que realmente puede no cumplirse.
+  if(/\bsi\b|al declarar|al atacar|al causar/.test(text))multiplier*=.93;
+  else if(/\bcuando\b/.test(text)&&!/cada vez que/.test(text))multiplier*=.97;
 
   if(/no puede atacar lider/.test(text))score-=2;
   if(/no afecta lider/.test(text))score-=1;
   return Math.max(0,score*multiplier);
 }
-function getAutomaticBattlePowerProfile(entity){
+
+/* =====================================================================
+   7BOARDCTRL8CI · PB AUTOMÁTICO ESTRUCTURAL
+   ---------------------------------------------------------------------
+   El texto sigue aportando señal táctica, pero el PB ya no depende solo
+   de palabras clave. Esta capa reconoce economía, recurrencia, escalado,
+   auras y, sobre todo, presencia de tablero generada por otras unidades.
+   No asigna PB manual a cartas concretas: describe la mecánica y usa el
+   perfil automático de las unidades generadas cuando existe plantilla.
+   ===================================================================== */
+function getBattlePowerSummonTemplate(key){
+  key=String(key||"");
+  if(typeof SOLOMON_SUMMON_TEMPLATES!=="undefined"&&SOLOMON_SUMMON_TEMPLATES?.[key])return SOLOMON_SUMMON_TEMPLATES[key];
+  if(key==="saladin_archer_cavalry"&&typeof SALADIN_TOKEN_CARD!=="undefined")return SALADIN_TOKEN_CARD;
+  return null;
+}
+function getBattlePowerGeneratedPresence(entity,options={}){
+  if(!entity||options.skipGeneratedPresence)return 0;
+  const key=String(entity.key||"");
+  const text=normalizeBattlePowerText(entity.text||entity.effectText||entity.ability||"");
+
+  // Salomón: la primera entidad es inmediata y gratuita; destruirla habilita
+  // las siguientes. Se valora la fuerza REAL de las tres plantillas con
+  // descuento por secuencia y por depender de que Salomón permanezca vivo.
+  if(key==="king_solomon"&&typeof SOLOMON_ENTITY_ORDER!=="undefined"){
+    const generated=SOLOMON_ENTITY_ORDER.map(entityKey=>getBattlePowerSummonTemplate(entityKey)).filter(Boolean).map(template=>{
+      const profile=getAutomaticBattlePowerProfile(template,{skipGeneratedPresence:true});
+      return profile?Math.max(0,profile.quality-14):0;
+    }).sort((a,b)=>b-a);
+    const weights=[.52,.34,.22];
+    const chained=generated.reduce((sum,value,index)=>sum+(value*(weights[index]||0)),0);
+    return Math.min(74,10+chained);
+  }
+
+  // Saladino mantiene una unidad gratuita de presión: si deja de controlarla,
+  // puede volver a producirla en turnos posteriores. Se calcula desde el token.
+  if(key==="saladin"){
+    const token=getBattlePowerSummonTemplate("saladin_archer_cavalry");
+    if(token){
+      const profile=getAutomaticBattlePowerProfile(token,{skipGeneratedPresence:true});
+      if(profile)return Math.min(34,7+(Math.max(0,profile.quality-12)*.48));
+    }
+  }
+
+  // Reanimación abierta: no existe una plantilla fija porque depende del
+  // cementerio. Se estima por capacidad mecánica, no por identidad de carta.
+  if(/reanima .*unidad destruida|devuelve .*unidad .*destruid/.test(text)){
+    let value=17;
+    if(/de cualquier jugador/.test(text))value+=7;
+    if(/conserva sus estadisticas.*habilidades|conserva .*cualidades.*habilidades/.test(text))value+=8;
+    if(/controlar 1\/2\/3|controlar .*reanimad/.test(text))value+=8;
+    if(/una vez por turno/.test(text))value+=5;
+    if(/mitad de su vida maxima/.test(text))value-=4;
+    if(/pierde 1 de vida .*por cada reanimad/.test(text))value-=6;
+    return Math.max(0,Math.min(50,value));
+  }
+  return 0;
+}
+function getBattlePowerStructuralFactors(entity,rulesText,options={}){
+  const text=normalizeBattlePowerText(rulesText);
+  let economyPower=0;
+  let recurrencePower=0;
+  let scalingPower=0;
+  let boardControlPower=0;
+
+  // Economía: ventaja que no exige robar/pagar otra carta o que altera
+  // directamente la economía rival.
+  if(/gratuitamente|sin consumir recursos|no consumen recursos/.test(text))economyPower+=7;
+  if(/roba 1 carta adicional|roba una carta adicional/.test(text))economyPower+=7;
+  if(/descarta hasta? \d+ cartas|descarta \d+ cartas/.test(text))economyPower+=3;
+  if(/cuestan \+\d+|cuesta \+\d+/.test(text))economyPower+=4;
+
+  // Recurrencia/tempo: un mismo texto puede producir varias acciones o
+  // repetirse durante varios turnos.
+  if(/puede seguir atacando mientras tenga objetivos validos/.test(text))recurrencePower+=15;
+  if(/cada ataque adicional/.test(text))recurrencePower+=5;
+  if(/cada vez que/.test(text))recurrencePower+=4;
+  if(/una vez por turno|primera vez por turno|primera vez durante cada turno/.test(text))recurrencePower+=3;
+  if(/al inicio de .*turno|al iniciar la draw phase/.test(text))recurrencePower+=3;
+  if(/dano fatal.*sobrevive|sobrevive y queda con 1 vida/.test(text))recurrencePower+=7;
+  if(/a punto de morir.*ataca a todas/.test(text))recurrencePower+=7;
+  if(/cuando .*destruid[ao].*invoca la siguiente|cuando una entidad es destruida.*invoca/.test(text))recurrencePower+=13;
+  if(/puede repetir este ciclo|sin limite/.test(text))recurrencePower+=6;
+
+  // Escalado: las acumulaciones permanentes y los efectos que crecen con el
+  // número de objetivos tienen más valor que un bono aislado.
+  if(/sin limite de acumulaciones/.test(text))scalingPower+=13;
+  if(/obtiene \+\d+ .*permanente|gana \+\d+ .*permanente/.test(text))scalingPower+=6;
+  if(/por cada .*aliad|por cada .*enemig|por cada .*rival/.test(text))scalingPower+=/hasta \+\d+/.test(text)?2:5;
+  if(/el aumento se acumula|acumulativo/.test(text))scalingPower+=6;
+  if(/vida maxima.*vida actual/.test(text)&&/gana|obtiene/.test(text))scalingPower+=4;
+
+  // Auras y efectos multiobjetivo/globales. Revelar Sigilo, por ejemplo, ya tiene
+  // su valor táctico propio y no debe contarse como un aura de debilitación completa.
+  const allyMassEffect=/(todas las unidades aliadas|tus unidades basicas|las unidades aliadas)/.test(text)&&/(obtienen|ganan|recuperan|reduce .*dano|vida maxima)/.test(text);
+  const enemyMassEffect=/(todas las unidades enemigas|las unidades enemigas|los enemigos)/.test(text)&&/(pierden|reciben|tienen -|cuestan \+|no pueden|miedo)/.test(text);
+  if(allyMassEffect)boardControlPower+=6;
+  if(enemyMassEffect)boardControlPower+=6;
+  if((allyMassEffect||enemyMassEffect)&&/radio \d+|rango \d+|adyacentes/.test(text))boardControlPower+=3;
+  if((allyMassEffect||enemyMassEffect)&&/mientras .*este en el campo|mientras .*permanezca en el campo|aura pasiva/.test(text))boardControlPower+=4;
+  if(/elige un aliado|elige una unidad aliada/.test(text)&&/\+\d+/.test(text))boardControlPower+=4;
+  if(/cuando un aliado .*recibir dano|cuando un aliado fuera a recibir dano/.test(text))boardControlPower+=5;
+  if(/primera vez por turno que una unidad enemiga ataque|primera vez durante cada turno que una unidad enemiga ataque/.test(text))boardControlPower+=7;
+  if(/no puede contraatacar/.test(text))boardControlPower+=4;
+  if(/a punto de morir.*ataca a todas/.test(text))boardControlPower+=7;
+
+  // Modos de ataque que reemplazan el AT base por una cifra explícita (por ejemplo
+  // cargas). La diferencia contra el AT normal es valor real aunque el texto no use +X.
+  const normalizedBaseAtk=Math.max(0,Number(entity?.atk)||0);
+  const explicitAtk=[...text.matchAll(/(?:usa|con) at \s*(\d+)/g)].map(match=>Math.max(0,Number(match[1])||0));
+  if(explicitAtk.length){
+    const peak=Math.max(...explicitAtk);
+    if(peak>normalizedBaseAtk)scalingPower+=Math.min(10,(peak-normalizedBaseAtk)*.65);
+  }
+
+  const generatedPresencePower=getBattlePowerGeneratedPresence(entity,options);
+  return{
+    generatedPresencePower,
+    economyPower:Math.min(20,economyPower),
+    recurrencePower:Math.min(28,recurrencePower),
+    scalingPower:Math.min(28,scalingPower),
+    boardControlPower:Math.min(24,boardControlPower)
+  };
+}
+function getAutomaticBattlePowerProfile(entity,options={}){
   if(!entity||entity.leader||entity.type!=="unit")return null;
   const num=(key,fallbackKey="")=>{
     const primary=entity[key];
@@ -955,16 +1087,21 @@ function getAutomaticBattlePowerProfile(entity){
   if(entity.stealth)effectPower+=2.5;
   if(entity.healer)effectPower+=2;
   if(entity.caster||entity.hechicero||entity.hechicera||entity.nigromante)effectPower+=1;
-  if(entity.aerial||entity.flight)effectPower+=8;
+  if(entity.aerial||entity.flight)effectPower+=11;
   if(entity.beast&&/veneno|sangrado|quemadura|critico|ignora guardia/.test(normalizeBattlePowerText(rulesText)))effectPower+=1;
-  effectPower=Math.min(38,Math.max(0,effectPower));
+  // El viejo techo 38 comprimía en el mismo rango una habilidad moderada y
+  // un motor de valor extraordinario. Se conserva un límite de seguridad,
+  // pero lo bastante alto para que los efectos realmente definan el PB.
+  effectPower=Math.min(90,Math.max(0,effectPower));
+  const structural=getBattlePowerStructuralFactors(entity,rulesText,options);
+  const structuralPower=structural.generatedPresencePower+structural.economyPower+structural.recurrencePower+structural.scalingPower+structural.boardControlPower;
 
   // Ejes independientes. La comparación relativa trabaja sobre estos cuatro perfiles y evita
   // declarar inferior a una unidad especializada solo porque tenga menos AT o HP.
   const offense=(4.3*Math.sqrt(atk))+(2.4*Math.sqrt(dex))+(2.2*Math.max(0,range-1));
   const survival=(3.6*Math.sqrt(hp))+(3.2*Math.sqrt(guard))+(2.0*Math.sqrt(agi));
   const mobility=(1.8*mov)+(.8*Math.max(0,range-1))+(.55*Math.sqrt(agi));
-  const utility=effectPower+(.7*Math.max(0,effectRange-1));
+  const utility=effectPower+structuralPower+(.7*Math.max(0,effectRange-1));
 
   // Limitaciones reales. El Huevo de Dragón es el caso de control: 50 HP no puede convertir
   // por sí solo a una entidad inmóvil, incapaz de atacar/defender, en una unidad poderosa.
@@ -973,7 +1110,8 @@ function getAutomaticBattlePowerProfile(entity){
   if(entity.cannotAttack)restrictionPenalty+=24;
   if(entity.cannotDefend)restrictionPenalty+=14;
   if(entity.noLeaderAttack)restrictionPenalty+=2;
-  if(entity.fieldGeneratedSummon&&cost<=0)restrictionPenalty+=1;
+  // Ser una invocación generada en campo no hace débil a la unidad en sí.
+  // El ahorro de recursos se cobra al invocador mediante generatedPresencePower.
 
   // El coste es una fricción de uso, nunca una fuente de poder. Se descuenta suavemente.
   const costPenalty=Math.max(0,cost-1)*.8;
@@ -988,7 +1126,7 @@ function getAutomaticBattlePowerProfile(entity){
 
   return{
     entity,key:String(entity.key||""),name:String(entity.name||entity.key||"Unidad"),
-    hp,atk,guard,dex,agi,mov,range,effectRange,cost,effectPower,
+    hp,atk,guard,dex,agi,mov,range,effectRange,cost,effectPower,structuralPower,...structural,
     offense,survival,mobility,utility,restrictionPenalty,costPenalty,
     quality,absoluteSeed,hardCap
   };
@@ -1000,6 +1138,7 @@ function getBattlePowerComparisonPool(extraEntity=null){
   if(Array.isArray(LEGENDARY_ALLY_CARDS))pools.push(LEGENDARY_ALLY_CARDS);
   if(typeof ADVENTURE_SPECIALS!=="undefined"&&ADVENTURE_SPECIALS)pools.push(Object.values(ADVENTURE_SPECIALS));
   if(typeof SOLOMON_SUMMON_TEMPLATES!=="undefined"&&SOLOMON_SUMMON_TEMPLATES)pools.push(Object.values(SOLOMON_SUMMON_TEMPLATES));
+  if(typeof SALADIN_TOKEN_CARD!=="undefined"&&SALADIN_TOKEN_CARD)pools.push([SALADIN_TOKEN_CARD]);
   if(typeof DRAGON_COMPANION_CARDS!=="undefined"&&Array.isArray(DRAGON_COMPANION_CARDS))pools.push(DRAGON_COMPANION_CARDS);
   const unique=new Map();
   for(const pool of pools){
@@ -1020,7 +1159,7 @@ function getBattlePowerComparisonPool(extraEntity=null){
 function getBattlePowerPoolSignature(pool){
   return (pool||[]).map(card=>[
     String(card.key||card.name||""),card.hp,card.maxHp,card.atk,card.guard,card.baseGuard,card.dex,card.agi,card.mov,card.range,card.effectRange,card.cost,
-    !!card.stealth,!!card.aerial,!!card.flight,!!card.healer,!!card.caster,!!card.immobile,!!card.cannotAttack,!!card.cannotDefend,!!card.noLeaderAttack,
+    !!card.stealth,!!card.aerial,!!card.flight,!!card.healer,!!card.caster,!!card.invocador,!!card.nigromante,!!card.immobile,!!card.cannotAttack,!!card.cannotDefend,!!card.noLeaderAttack,
     String(card.text||card.effectText||card.ability||"")
   ].join("~")).sort().join("||");
 }
@@ -1091,39 +1230,23 @@ function buildAutomaticBattlePowerComparison(extraEntity=null){
     profile.initialPower=Math.min(profile.hardCap,Math.max(0,Math.round((profile.absoluteSeed*.72)+(rankSeed*.28))));
   });
 
-  // Proyección de dominancia: se procesa de mayor a menor calidad. Una unidad inferior puede
-  // conservar su PB si ocupa un nicho distinto; si está claramente dominada, se limita para
-  // garantizar una separación mínima respecto de la superior.
+  // 8CI: se elimina la proyección de dominancia en cascada. La semilla absoluta
+  // y el percentil ya son monotónicos con quality; imponer huecos de 10–20 PB
+  // entre cada pareja dominante hacía que una sola unidad extraordinaria
+  // comprimiera artificialmente a toda la colección situada debajo.
+  //
+  // Solo se conserva monotonía sin huecos forzados: una carta de menor quality
+  // no puede superar a la inmediatamente anterior, pero tampoco hereda una
+  // penalización acumulativa por todas las cartas superiores.
   const descending=[...profiles].sort((a,b)=>b.quality-a.quality||b.initialPower-a.initialPower||a.key.localeCompare(b.key));
   const finalByKey=new Map();
-  for(let index=0;index<descending.length;index++){
-    const inferior=descending[index];
-    let finalPower=inferior.initialPower;
-
-    // Orden relativo obligatorio: una carta con menor calidad integral nunca puede terminar
-    // con más PB que otra situada por encima en la comparación global. Si la diferencia de
-    // calidad es visible, también reserva una pequeña distancia aunque no haya dominancia total.
-    if(index>0){
-      const previous=descending[index-1];
-      const previousPower=finalByKey.get(previous.key);
-      if(Number.isFinite(previousPower)){
-        const qualityStep=previous.quality-inferior.quality;
-        const rankGap=qualityStep>=20?7:qualityStep>=12?4:qualityStep>=6?2:qualityStep>=3?1:0;
-        finalPower=Math.min(finalPower,previousPower-rankGap);
-      }
-    }
-
-    for(let j=0;j<index;j++){
-      const superior=descending[j];
-      const gap=getClearBattlePowerDominanceGap(superior,inferior);
-      if(!gap)continue;
-      const superiorPower=finalByKey.get(superior.key);
-      if(!Number.isFinite(superiorPower))continue;
-      finalPower=Math.min(finalPower,superiorPower-gap);
-    }
-    finalPower=Math.max(0,Math.min(inferior.hardCap,Math.round(finalPower)));
-    inferior.finalPower=finalPower;
-    finalByKey.set(inferior.key,finalPower);
+  let previousPower=100;
+  for(const profile of descending){
+    let finalPower=Math.max(0,Math.min(profile.hardCap,Math.round(profile.initialPower)));
+    finalPower=Math.min(finalPower,previousPower);
+    profile.finalPower=finalPower;
+    finalByKey.set(profile.key,finalPower);
+    previousPower=finalPower;
   }
 
   const profileMap=new Map(profiles.map(profile=>[profile.key,profile]));

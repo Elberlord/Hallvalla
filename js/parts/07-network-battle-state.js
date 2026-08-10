@@ -422,6 +422,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const specialTemplate=ADVENTURE_SPECIALS[specialKey];
   if(!specialTemplate)return;
   let battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
+  if(battle.isGuardian&&typeof ensureInitialLeaderStarterCollection==="function"){
+    ensureInitialLeaderStarterCollection(leaderType,specialKey);
+  }
   let beastmasterEntry=null;
   let beastmasterEntryCharged=false;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
@@ -430,7 +433,8 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   // al derrotar al Hechicero guardián. Antes de esa victoria, el mazo inicial tiene
   // 20 cartas de robo y ninguna unidad comienza desplegada gratuitamente.
   const playerPrincipalUnlocked=canAccessDecks();
-  const playerPrincipalSlots=playerPrincipalUnlocked?getPrincipalSlotsForLeaderLevel(leaderLevel):0;
+  // La prueba del Hechicero nunca usa Personaje Principal, incluso si se repite después.
+  const playerPrincipalSlots=battle.isGuardian?0:(playerPrincipalUnlocked?getPrincipalSlotsForLeaderLevel(leaderLevel):0);
   const playerRequiredDeckSize=getDeckSizeForPrincipalSlots(playerPrincipalSlots);
   const starterLocked=!playerPrincipalUnlocked;
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;

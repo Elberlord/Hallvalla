@@ -725,27 +725,35 @@ function addCardsToCollection(cards){
   renderHomeProgress();
   return collection;
 }
-function ensureStarterDeckCollection(){
-  if(!canAccessDecks())return;
+function ensureCollectionContainsStarterTemplates(starter=[]){
   let collection=getPlayerCollection();
   const cleaned=cleanAutoGrantedBeastLeakFromCollection(collection);
   collection=cleaned.collection;
   collection.cards=Array.isArray(collection.cards)?collection.cards:[];
-  const starter=getStarterCollectionTemplates();
   let changed=!!cleaned.changed;
-  starter.forEach(card=>{
-    const max=Math.max(1,Number(card?.starterQty||maxCopiesForCard(card))||1);
+  (starter||[]).forEach(card=>{
+    const required=Math.max(1,Number(card?.starterQty||1)||1);
     const existing=collection.cards.find(c=>c.key===card.key);
     if(existing){
-      if((existing.qty||0)<max){existing.qty=max;changed=true;}
+      if((existing.qty||0)<required){existing.qty=required;changed=true;}
     }else{
-      const granted={...card,rarity:card.rarity||"Básica",qty:max};
+      const granted={...card,rarity:card.rarity||"Básica",qty:required};
       delete granted.starterQty;
       collection.cards.push(granted);
       changed=true;
     }
   });
   if(changed){savePlayerCollection(collection);renderNotificationBadge();renderHomeProgress();}
+  return collection;
+}
+function ensureInitialLeaderStarterCollection(leaderType=getSelectedLeaderType()||"warrior",selectedSpecial=""){
+  const progress=typeof getAdventureProgress==="function"?getAdventureProgress():{};
+  if(progress?.guardianDefeated)return getPlayerCollection();
+  return ensureCollectionContainsStarterTemplates(getStarterCollectionTemplates(leaderType,selectedSpecial));
+}
+function ensureStarterDeckCollection(){
+  if(!canAccessDecks())return;
+  return ensureCollectionContainsStarterTemplates(getStarterCollectionTemplates());
 }
 function grantAdventureRewards(battle){
   if(!battle || !battle.id)return {alreadyClaimed:true, xp:0, gold:0, cards:[]};

@@ -294,22 +294,20 @@ function getUnlockedAdventureSpecialCollectionTemplates(){
   const keys=[progress?.selectedSpecial].filter(key=>key&&ADVENTURE_SPECIALS[key]);
   return [...new Set(keys)].map(key=>({...ADVENTURE_SPECIALS[key],qty:1,unlockedByAdventure:true}));
 }
-function getStarterCollectionTemplates(leaderType=getSelectedLeaderType()||"warrior"){
+function getStarterCollectionTemplates(leaderType=getSelectedLeaderType()||"warrior",selectedSpecial=""){
   const byKey=new Map();
-  STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).forEach(card=>{
-    if(card.beast||card.special)return;
-    byKey.set(card.key,{...card});
-  });
-  BASIC_MAGIC_TRAP_PACK.forEach(card=>{
-    if(card.beast||card.special)return;
-    byKey.set(card.key,{...card});
-  });
-  getLeaderEquipmentTemplates(leaderType).forEach(card=>{
+  const addStarterCard=card=>{
+    if(!card)return;
+    const existing=byKey.get(card.key);
+    if(existing){
+      existing.starterQty=(existing.starterQty||0)+1;
+      return;
+    }
     byKey.set(card.key,{...card,starterQty:1});
-  });
-  getUnlockedAdventureSpecialCollectionTemplates().forEach(card=>{
-    byKey.set(card.key,{...card});
-  });
+  };
+  getLeaderStarterFixedDeckTemplates(leaderType).forEach(addStarterCard);
+  const special=getStarterChosenSpecialCard(selectedSpecial);
+  if(special)addStarterCard(special);
   return [...byKey.values()];
 }
 function cleanAutoGrantedBeastLeakFromCollection(collection){
