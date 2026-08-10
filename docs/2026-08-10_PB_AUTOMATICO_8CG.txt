@@ -1,0 +1,27 @@
+HallValla 7BOARDCTRL8CG — Poder de Batalla automático para expansiones
+
+OBJETIVO
+- Las unidades nuevas que no tengan battlePower explícito ni entrada histórica en UNIT_BATTLE_POWER reciben PB automáticamente.
+- Las cartas existentes conservan sus PB manuales actuales para no alterar el balance ya probado.
+- Morgana, que no tenía entrada histórica, se calcula automáticamente en PB 71 (Oro) con su definición actual.
+
+ORDEN DE RESOLUCIÓN
+1. battlePower explícito en la entidad (override).
+2. UNIT_BATTLE_POWER histórico para cartas existentes.
+3. calculateAutomaticUnitBattlePower(entity) para cartas nuevas/expansiones.
+
+FÓRMULA AUTOMÁTICA
+- Base: 20 puntos.
+- Stats con rendimientos decrecientes (raíz cuadrada) para HP, AT, GD, DX y AG.
+- MV, RG y rango de efecto aportan una cantidad controlada.
+- El coste aporta una señal pequeña de inversión, nunca sustituye stats/efectos.
+- Hasta 10 efectos se leen automáticamente desde text/effectText/ability.
+- Se reconocen mecánicas genéricas: ejecución, resurrección/reanimación, ignorar Guardia, contraataque, crítico, Sigilo, Aturdir, Quemadura, Sangrado, Veneno, daño/curación directa, descarte, coste rival, revelar Sigilo, inmunidades, empuje, permanencia, robo extra, aéreo, etc.
+- Efectos condicionales, probabilísticos, con coste de Honor, acumulación de puntos o retraso se descuentan.
+- Desventajas reales también restan valor.
+- Rareza NO suma PB.
+- Resultado final limitado a 0–100.
+
+ROBUSTEZ
+- null/undefined ya no se convierten accidentalmente en PB 0.
+- El DET muestra — si realmente no puede calcularse PB.

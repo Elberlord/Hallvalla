@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AI · Catálogo, Salomón, Ericto, PB, lore y estados */
+/* HallValla 7BOARDCTRL8CH · Catálogo, Salomón, Ericto, PB automático comparativo universal, lore y estados */
 
 
 /*
@@ -824,16 +824,8 @@ const UNIT_BATTLE_POWER=Object.freeze({
   arjuna:80,
   achilles:83,
   saladin_archer_cavalry:58,
-  dragon_egg:28,
-  baby_lightning_dragon:79,
-  baby_fire_dragon:82,
-  baby_ice_dragon:81,
-  young_lightning_dragon:90,
-  young_fire_dragon:93,
-  young_ice_dragon:92,
-  adult_lightning_dragon:98,
-  adult_fire_dragon:100,
-  adult_ice_dragon:99,
+  // Los dragones ya no tienen PB manual: sus formas usan la fórmula automática.
+  // Esto también sirve como prueba de estrés de la escala 0-100 para expansiones.
 });
 const BATTLE_POWER_TIERS=Object.freeze([
   {key:"dominant",min:90,max:100,label:"Dominante"},
@@ -843,12 +835,318 @@ const BATTLE_POWER_TIERS=Object.freeze([
   {key:"bronze",min:40,max:54,label:"Bronce"},
   {key:"initiation",min:0,max:39,label:"Iniciación"}
 ]);
+function normalizeBattlePowerText(value){
+  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+}
+function splitBattlePowerAbilitySections(value){
+  const raw=String(value||"").trim();
+  if(!raw)return [];
+  const re=/(^|[.!?]\s+)([A-ZÁÉÍÓÚÑ][^:.!?]{1,48}):/g;
+  const matches=[];
+  let match;
+  while((match=re.exec(raw))&&matches.length<10){
+    matches.push({start:match.index+match[1].length});
+  }
+  if(!matches.length)return [raw];
+  return matches.map((item,index)=>raw.slice(item.start,index+1<matches.length?matches[index+1].start:raw.length).trim()).filter(Boolean).slice(0,10);
+}
+function scoreBattlePowerAbilitySection(section){
+  const text=normalizeBattlePowerText(section);
+  if(!text)return 0;
+  let score=.75;
+  const add=(pattern,value)=>{if(pattern.test(text))score+=value;};
+
+  // Efectos de alto impacto. Se evalúa la mecánica, no el nombre de la carta.
+  add(/cae derrotad[oa]|destruye inmediatamente|elimina inmediatamente/,28);
+  add(/devuelve? una unidad .*destruid|devuelve? .* unidad .*destruid/,12);
+  add(/ignora guardia/,6);
+  add(/guardia 0/,5);
+  add(/puede contraatacar|contraataca/,4);
+  add(/golpe critico|200% de dano/,5);
+  add(/obtiene sigilo|con sigilo|mantiene sigilo/,4);
+  add(/aturd/,5);
+  add(/aplica quemadura|quemadura \d+/,3);
+  add(/aplica sangrado|queda con sangrado/,4);
+  add(/aplica veneno|veneno \d+/,4);
+  add(/ya estaba envenenad[oa].*muere|muere automaticamente/,10);
+  add(/solo unidades con rango mayor a \d+|antiaereo pueden atacarlo/,8);
+  add(/roba \d+ carta adicional|roba una carta adicional/,5);
+  add(/reanima .*unidad destruida|reanimad[oa]/,10);
+  add(/dano directo|pierde \d+ vida directamente/,4);
+  add(/recupera \d+ vida|recupera .* vida/,2.5);
+  add(/descarta (?:hasta )?\d+ cartas|descarta \d+/,4);
+  add(/cuestan \+\d+|cuesta \+\d+|coste \+\d+/,5);
+  add(/revela automaticamente.*sigilo|revela .*sigilo/,3);
+  add(/inmune a/,2);
+  add(/no puede ser empuj|no pueden ser empuj/,2.5);
+  add(/reduce ese dano/,3);
+  add(/puede moverse \d+ casilla extra|retrocede \d+ casilla|avanza gratis|empuj/,2);
+  add(/permanente/,2);
+  add(/mientras permanezca/,2);
+  add(/aplica un estado negativo|eliminar un estado negativo|maldicion removible/,3);
+
+  // Costes y debilidades reales reducen el valor del efecto.
+  if(/queda aturdid[oa]|no puede moverse, defenderse ni atacar/.test(text))score-=6;
+  if(/pierde \d+ de vida .*cada|pierde \d+ vida .*cada/.test(text))score-=4;
+  if(/no se beneficia de bonos/.test(text))score-=2;
+  if(/recibe dano igual a la guardia/.test(text))score-=4;
+  if(/no contraataca/.test(text))score-=2;
+
+  // Bonos y penalizaciones numéricas genéricas de combate.
+  const sumMatches=(regex)=>{
+    let total=0,m;
+    const copy=new RegExp(regex.source,regex.flags.includes("g")?regex.flags:regex.flags+"g");
+    while((m=copy.exec(text)))total+=Math.max(0,Number(m[1])||0);
+    return total;
+  };
+  const positive=sumMatches(/\+(\d+)\s*(?:ataque|at|destreza|dx|guardia|agi|agilidad|mov|rango|rg)/g);
+  const negative=sumMatches(/-(\d+)\s*(?:ataque|at|destreza|dx|guardia|agi|agilidad|mov|rango|rg)/g);
+  const textualDebuff=sumMatches(/(?:pierde|reduce|recibe)\s+(\d+)\s*(?:de\s+)?(?:ataque|at|destreza|dx|guardia|agi|agilidad|mov|rango|rg)/g);
+  const directDamage=sumMatches(/(?:hace|causa|pierde|recibe)\s+(\d+)\s+(?:de\s+)?dano/g);
+  score+=Math.min(6,positive*.7);
+  score+=Math.min(6,(negative+textualDebuff)*.6);
+  score+=Math.min(6,directDamage*.5);
+  add(/destruye la guardia base|guardia base .*no se regenera/,5);
+  add(/siempre golpea|impacta automaticamente/,4);
+  add(/no puede ser objetivo directo/,5);
+  add(/ataca antes que|hace \d+ dano primero/,3);
+  add(/reduce .*dano en \d+/,3);
+
+  // Los efectos caros, tardíos, probabilísticos o condicionales valen menos que uno siempre activo.
+  let multiplier=1;
+  if(/al alcanzar\s+100|100 puntos/.test(text))multiplier*=.15;
+  else if(/al alcanzar\s+50|50 puntos/.test(text))multiplier*=.30;
+  else if(/al alcanzar\s+\d+|requiere\s+\d+\s+puntos/.test(text))multiplier*=.55;
+  if(/paga\s+[34]\s+de honor/.test(text))multiplier*=.55;
+  else if(/paga\s+\d+\s+de honor/.test(text))multiplier*=.70;
+  if(/una vez por turno/.test(text))multiplier*=.75;
+  if(/50% de probabilidad/.test(text))multiplier*=.65;
+  if(/contador\s+\d+/.test(text)&&/al llegar a 0/.test(text))multiplier*=.75;
+  if(/\bsi\b|\bcuando\b|al declarar|al atacar|al causar/.test(text))multiplier*=.88;
+
+  if(/no puede atacar lider/.test(text))score-=2;
+  if(/no afecta lider/.test(text))score-=1;
+  return Math.max(0,score*multiplier);
+}
+function getAutomaticBattlePowerProfile(entity){
+  if(!entity||entity.leader||entity.type!=="unit")return null;
+  const num=(key,fallbackKey="")=>{
+    const primary=entity[key];
+    const fallback=fallbackKey?entity[fallbackKey]:undefined;
+    const value=(primary!==null&&primary!==undefined&&primary!=="")?primary:fallback;
+    return Math.max(0,Number(value)||0);
+  };
+  // En instancias de batalla se usa la Vida/Guardia máximas para que recibir daño no cambie el PB.
+  const hp=num("maxHp","hp")||num("hp");
+  const atk=num("atk");
+  const guard=num("baseGuard","guard")||num("guard");
+  const dex=num("dex");
+  const agi=num("agi");
+  const mov=num("mov");
+  const range=num("range");
+  const effectRange=num("effectRange");
+  const cost=num("cost");
+  if(![hp,atk,guard,dex,agi,mov,range,effectRange].some(value=>value>0))return null;
+
+  const rulesText=String(entity.text||entity.effectText||entity.ability||"");
+  let effectPower=splitBattlePowerAbilitySections(rulesText).reduce((total,section)=>total+scoreBattlePowerAbilitySection(section),0);
+
+  // Capacidades estructurales que no siempre aparecen con una redacción idéntica en el texto.
+  if(entity.stealth)effectPower+=2.5;
+  if(entity.healer)effectPower+=2;
+  if(entity.caster||entity.hechicero||entity.hechicera||entity.nigromante)effectPower+=1;
+  if(entity.aerial||entity.flight)effectPower+=8;
+  if(entity.beast&&/veneno|sangrado|quemadura|critico|ignora guardia/.test(normalizeBattlePowerText(rulesText)))effectPower+=1;
+  effectPower=Math.min(38,Math.max(0,effectPower));
+
+  // Ejes independientes. La comparación relativa trabaja sobre estos cuatro perfiles y evita
+  // declarar inferior a una unidad especializada solo porque tenga menos AT o HP.
+  const offense=(4.3*Math.sqrt(atk))+(2.4*Math.sqrt(dex))+(2.2*Math.max(0,range-1));
+  const survival=(3.6*Math.sqrt(hp))+(3.2*Math.sqrt(guard))+(2.0*Math.sqrt(agi));
+  const mobility=(1.8*mov)+(.8*Math.max(0,range-1))+(.55*Math.sqrt(agi));
+  const utility=effectPower+(.7*Math.max(0,effectRange-1));
+
+  // Limitaciones reales. El Huevo de Dragón es el caso de control: 50 HP no puede convertir
+  // por sí solo a una entidad inmóvil, incapaz de atacar/defender, en una unidad poderosa.
+  let restrictionPenalty=0;
+  if(entity.immobile||mov<=0)restrictionPenalty+=entity.immobile?8:2;
+  if(entity.cannotAttack)restrictionPenalty+=24;
+  if(entity.cannotDefend)restrictionPenalty+=14;
+  if(entity.noLeaderAttack)restrictionPenalty+=2;
+  if(entity.fieldGeneratedSummon&&cost<=0)restrictionPenalty+=1;
+
+  // El coste es una fricción de uso, nunca una fuente de poder. Se descuenta suavemente.
+  const costPenalty=Math.max(0,cost-1)*.8;
+  const quality=Math.max(0,12+offense+survival+mobility+(utility*.85)-restrictionPenalty-costPenalty);
+
+  // Curva asintótica: conserva espacio en la parte alta para que las unidades extraordinarias
+  // puedan separarse entre sí sin que media colección termine clavada en 100.
+  const absoluteSeed=100*(1-Math.exp(-Math.max(0,quality-8)/45));
+  let hardCap=100;
+  if(entity.cannotAttack&&entity.cannotDefend&&entity.immobile)hardCap=18;
+  else if(entity.cannotAttack&&entity.immobile)hardCap=28;
+
+  return{
+    entity,key:String(entity.key||""),name:String(entity.name||entity.key||"Unidad"),
+    hp,atk,guard,dex,agi,mov,range,effectRange,cost,effectPower,
+    offense,survival,mobility,utility,restrictionPenalty,costPenalty,
+    quality,absoluteSeed,hardCap
+  };
+}
+function getBattlePowerComparisonPool(extraEntity=null){
+  const pools=[];
+  if(Array.isArray(CARD_TEMPLATES))pools.push(CARD_TEMPLATES);
+  if(Array.isArray(SPECIAL_HUMAN_CARD_DATA))pools.push(SPECIAL_HUMAN_CARD_DATA);
+  if(Array.isArray(LEGENDARY_ALLY_CARDS))pools.push(LEGENDARY_ALLY_CARDS);
+  if(typeof ADVENTURE_SPECIALS!=="undefined"&&ADVENTURE_SPECIALS)pools.push(Object.values(ADVENTURE_SPECIALS));
+  if(typeof SOLOMON_SUMMON_TEMPLATES!=="undefined"&&SOLOMON_SUMMON_TEMPLATES)pools.push(Object.values(SOLOMON_SUMMON_TEMPLATES));
+  if(typeof DRAGON_COMPANION_CARDS!=="undefined"&&Array.isArray(DRAGON_COMPANION_CARDS))pools.push(DRAGON_COMPANION_CARDS);
+  const unique=new Map();
+  for(const pool of pools){
+    for(const card of pool||[]){
+      if(!card||card.type!=="unit"||card.leader)continue;
+      const key=String(card.key||card.name||"");
+      if(!key)continue;
+      // La última definición gana; esto permite que módulos de expansión completen/actualicen una carta.
+      unique.set(key,card);
+    }
+  }
+  if(extraEntity&&extraEntity.type==="unit"&&!extraEntity.leader){
+    const key=String(extraEntity.key||extraEntity.name||"__extra__");
+    if(!unique.has(key))unique.set(key,extraEntity);
+  }
+  return [...unique.values()];
+}
+function getBattlePowerPoolSignature(pool){
+  return (pool||[]).map(card=>[
+    String(card.key||card.name||""),card.hp,card.maxHp,card.atk,card.guard,card.baseGuard,card.dex,card.agi,card.mov,card.range,card.effectRange,card.cost,
+    !!card.stealth,!!card.aerial,!!card.flight,!!card.healer,!!card.caster,!!card.immobile,!!card.cannotAttack,!!card.cannotDefend,!!card.noLeaderAttack,
+    String(card.text||card.effectText||card.ability||"")
+  ].join("~")).sort().join("||");
+}
+function getClearBattlePowerDominanceGap(superior,inferior){
+  if(!superior||!inferior||superior.key===inferior.key)return 0;
+  const dims=[
+    [superior.offense,inferior.offense,2.5,3.5],
+    [superior.survival,inferior.survival,3.0,4.0],
+    [superior.mobility,inferior.mobility,1.2,1.8],
+    [superior.utility,inferior.utility,2.5,4.0]
+  ];
+  const notMeaningfullyWorse=dims.every(([s,i,tolerance])=>s>=i-tolerance);
+  const clearWins=dims.filter(([s,i,,win])=>s-i>=win).length;
+  const qualityMargin=superior.quality-inferior.quality;
+  const restrictionAdvantage=inferior.restrictionPenalty-superior.restrictionPenalty;
+  const superiorCombat=superior.offense+superior.survival+superior.mobility;
+  const inferiorCombat=Math.max(.01,inferior.offense+inferior.survival+inferior.mobility);
+  const combatRatio=superiorCombat/inferiorCombat;
+  const offenseRatio=superior.offense/Math.max(.01,inferior.offense);
+  const survivalRatio=superior.survival/Math.max(.01,inferior.survival);
+
+  let dominant=notMeaningfullyWorse&&clearWins>=2&&qualityMargin>=8;
+
+  // Dominancia de combate: si una unidad es muchísimo mejor para atacar, sobrevivir y ocupar
+  // el tablero, una habilidad aislada de la inferior no puede dejar sus PB prácticamente juntos.
+  if(!dominant&&qualityMargin>=10&&combatRatio>=1.30&&offenseRatio>=1.20&&survivalRatio>=1.20&&
+     superior.mobility>=inferior.mobility-1.2&&superior.utility>=inferior.utility-11)dominant=true;
+
+  // Dominancia abrumadora: diferencias de cuerpo de 1.8x o más son concluyentes incluso frente
+  // a una utilidad muy alta. Esto protege la escala de formas gigantes/dragones contra glass cannons.
+  if(!dominant&&qualityMargin>=10&&combatRatio>=1.80&&offenseRatio>=1.35&&survivalRatio>=1.35&&
+     superior.mobility>=inferior.mobility-1.5)dominant=true;
+
+  // Otra vía para perfiles más equilibrados con una ventaja total muy grande.
+  if(!dominant&&qualityMargin>=18&&
+     superior.offense>=inferior.offense*1.12&&
+     superior.survival>=inferior.survival*1.12&&
+     superior.mobility>=inferior.mobility-1&&
+     superior.utility>=inferior.utility-7)dominant=true;
+  if(!dominant)return 0;
+
+  // La distancia mínima crece con la evidencia de superioridad. El mínimo ya es 10: si la
+  // comparación declara dominancia clara, ambas unidades nunca podrán quedar "pegadas" en PB.
+  if(qualityMargin>=42||restrictionAdvantage>=28||combatRatio>=2.20)return 20;
+  if(qualityMargin>=30||restrictionAdvantage>=18||combatRatio>=1.80)return 17;
+  if(qualityMargin>=20||combatRatio>=1.55)return 14;
+  if(qualityMargin>=13||combatRatio>=1.35)return 12;
+  return 10;
+}
+let AUTOMATIC_BATTLE_POWER_COMPARISON_CACHE={signature:"",values:new Map(),profiles:new Map()};
+function buildAutomaticBattlePowerComparison(extraEntity=null){
+  const pool=getBattlePowerComparisonPool(extraEntity);
+  const signature=getBattlePowerPoolSignature(pool);
+  if(!extraEntity&&AUTOMATIC_BATTLE_POWER_COMPARISON_CACHE.signature===signature)return AUTOMATIC_BATTLE_POWER_COMPARISON_CACHE;
+
+  const profiles=pool.map(getAutomaticBattlePowerProfile).filter(Boolean);
+  const ascending=[...profiles].sort((a,b)=>a.quality-b.quality||a.key.localeCompare(b.key));
+  const percentileByKey=new Map();
+  const denom=Math.max(1,ascending.length-1);
+  ascending.forEach((profile,index)=>percentileByKey.set(profile.key,index/denom));
+
+  // Se combina la fuerza absoluta con la posición relativa de la carta en la colección.
+  // La parte relativa abre la escala y reduce empates artificiales entre perfiles muy distintos.
+  profiles.forEach(profile=>{
+    const percentile=percentileByKey.get(profile.key)||0;
+    const rankSeed=28+(72*Math.pow(percentile,.78));
+    profile.rankSeed=rankSeed;
+    profile.initialPower=Math.min(profile.hardCap,Math.max(0,Math.round((profile.absoluteSeed*.72)+(rankSeed*.28))));
+  });
+
+  // Proyección de dominancia: se procesa de mayor a menor calidad. Una unidad inferior puede
+  // conservar su PB si ocupa un nicho distinto; si está claramente dominada, se limita para
+  // garantizar una separación mínima respecto de la superior.
+  const descending=[...profiles].sort((a,b)=>b.quality-a.quality||b.initialPower-a.initialPower||a.key.localeCompare(b.key));
+  const finalByKey=new Map();
+  for(let index=0;index<descending.length;index++){
+    const inferior=descending[index];
+    let finalPower=inferior.initialPower;
+
+    // Orden relativo obligatorio: una carta con menor calidad integral nunca puede terminar
+    // con más PB que otra situada por encima en la comparación global. Si la diferencia de
+    // calidad es visible, también reserva una pequeña distancia aunque no haya dominancia total.
+    if(index>0){
+      const previous=descending[index-1];
+      const previousPower=finalByKey.get(previous.key);
+      if(Number.isFinite(previousPower)){
+        const qualityStep=previous.quality-inferior.quality;
+        const rankGap=qualityStep>=20?7:qualityStep>=12?4:qualityStep>=6?2:qualityStep>=3?1:0;
+        finalPower=Math.min(finalPower,previousPower-rankGap);
+      }
+    }
+
+    for(let j=0;j<index;j++){
+      const superior=descending[j];
+      const gap=getClearBattlePowerDominanceGap(superior,inferior);
+      if(!gap)continue;
+      const superiorPower=finalByKey.get(superior.key);
+      if(!Number.isFinite(superiorPower))continue;
+      finalPower=Math.min(finalPower,superiorPower-gap);
+    }
+    finalPower=Math.max(0,Math.min(inferior.hardCap,Math.round(finalPower)));
+    inferior.finalPower=finalPower;
+    finalByKey.set(inferior.key,finalPower);
+  }
+
+  const profileMap=new Map(profiles.map(profile=>[profile.key,profile]));
+  const result={signature,values:finalByKey,profiles:profileMap};
+  if(!extraEntity)AUTOMATIC_BATTLE_POWER_COMPARISON_CACHE=result;
+  return result;
+}
+function calculateAutomaticUnitBattlePower(entity){
+  if(!entity||entity.leader||entity.type!=="unit")return null;
+  const key=String(entity.key||entity.name||"");
+  const pool=getBattlePowerComparisonPool();
+  const known=pool.some(card=>String(card.key||card.name||"")===key);
+  const comparison=buildAutomaticBattlePowerComparison(known?null:entity);
+  const value=comparison.values.get(key);
+  if(Number.isFinite(value))return Math.max(0,Math.min(100,Math.round(value)));
+  const profile=getAutomaticBattlePowerProfile(entity);
+  return profile?Math.max(0,Math.min(profile.hardCap,Math.round(profile.absoluteSeed))):null;
+}
 function getUnitBattlePower(entity){
   if(!entity||entity.leader||entity.type!=="unit")return null;
-  const own=Number(entity.battlePower);
-  if(Number.isFinite(own))return Math.max(0,Math.min(100,Math.round(own)));
-  const mapped=Number(UNIT_BATTLE_POWER[String(entity.key||"")]);
-  return Number.isFinite(mapped)?Math.max(0,Math.min(100,Math.round(mapped))):null;
+  // 8CH: TODAS las unidades se calculan. La tabla histórica y battlePower embebido quedan
+  // únicamente como referencia de balance y ya no intervienen en el resultado.
+  return calculateAutomaticUnitBattlePower(entity);
 }
 function getBattlePowerTier(power){
   const value=Number(power);

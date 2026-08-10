@@ -1882,8 +1882,9 @@ function ensureUnifiedDetLevelAndBattlePower(modal,entity){
   battle.id='detBattlePowerValue';
   battle.className='hv-det-battle-power-value';
   const power=typeof getUnitBattlePower==='function'?getUnitBattlePower(entity):null;
-  const tier=Number.isFinite(Number(power))&&typeof getBattlePowerTier==='function'?getBattlePowerTier(power):null;
-  const powerText=Number.isFinite(Number(power))?String(Math.round(Number(power))):'—';
+  const hasPower=power!==null&&power!==undefined&&power!==''&&Number.isFinite(Number(power));
+  const tier=hasPower&&typeof getBattlePowerTier==='function'?getBattlePowerTier(power):null;
+  const powerText=hasPower?String(Math.round(Number(power))):'—';
   const tierText=tier?.label?String(tier.label):'';
   battle.setAttribute('aria-label',tierText?`Poder de batalla ${powerText}: ${tierText}`:`Poder de batalla ${powerText}`);
   battle.innerHTML=`<strong class="hv-det-battle-power-number">${escapeHtml(powerText)}</strong>${tierText?`<small class="hv-det-battle-power-tier">${escapeHtml(tierText)}</small>`:''}<span class="hv-det-cal-id">battlepower.value</span>`;

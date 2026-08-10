@@ -11,9 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CF";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CH-COMP2";
 
-const BUILD = "7BOARDCTRL8CF";
+const BUILD = "7BOARDCTRL8CH";
+const CACHE_BUILD = "7BOARDCTRL8CH-COMP2";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -118,7 +119,7 @@ const PARTS = [
 function loadClassicScript(file) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `js/parts/${file}?v=${BUILD}`;
+    script.src = `js/parts/${file}?v=${CACHE_BUILD}`;
     script.async = false;
     script.dataset.hallvallaPart = file;
     script.onload = resolve;

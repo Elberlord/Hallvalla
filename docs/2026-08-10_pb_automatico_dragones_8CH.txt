@@ -1,0 +1,32 @@
+HallValla 7BOARDCTRL8CH — PB automático comparativo universal
+
+Esta revisión mantiene el nombre/build visible 7BOARDCTRL8CH, pero sustituye la valoración manual por cálculo automático para TODAS las unidades.
+
+Reglas:
+- UNIT_BATTLE_POWER queda solo como referencia histórica y ya no interviene en el resultado.
+- entity.battlePower embebido tampoco reemplaza el cálculo automático.
+- El PB se calcula desde stats base/máximos, movilidad, alcance, efectos, capacidades estructurales y limitaciones reales.
+- Se usan cuatro ejes independientes: ofensiva, supervivencia, movilidad/alcance y utilidad.
+- Existe comparación relativa contra toda la colección.
+- Si una unidad domina claramente a otra, se exige una separación mínima de 10 a 20 PB según el margen.
+- El orden global es monotónico por calidad integral: una unidad inferior no puede subir por encima de una superior por efectos de normalización.
+- Unidades inmóviles/sin ataque/sin defensa reciben penalización fuerte; el Huevo de Dragón queda bajo por diseño.
+- La rareza no aporta PB por sí misma.
+
+Prueba interna de consistencia:
+- Violaciones de restricciones de dominancia: 0
+- Inversiones de orden por calidad: 0
+
+Valores de control obtenidos en esta revisión:
+- Dragón Adulto de Fuego: 92
+- Dragón Adulto de Relámpago: 91
+- Dragón Adulto de Hielo: 91
+- Dragón Joven de Fuego: 81
+- Dragón Joven de Relámpago: 80
+- Dragón Joven de Hielo: 79
+- Dragón Bebé de Fuego: 69
+- Dragón Bebé de Relámpago: 67
+- Dragón Bebé de Hielo: 67
+- Huevo de Dragón: 8
+
+El objetivo de esta versión es probar el sistema universal antes de congelar definitivamente sus pesos de balance.
