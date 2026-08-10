@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AK · Huevo, eclosión y crecimiento de dragones */
+/* HallValla 7BOARDCTRL8BX · Huevo, eclosión y crecimiento de dragones */
 
 const DRAGON_COMPANION_ELEMENTS=["lightning","fire","ice"];
 const DRAGON_COMPANION_STAGES=["egg","baby","young","adult"];
@@ -94,7 +94,7 @@ function makeDragonCompanionCard(stage,element){
   if(stage==="egg")return{
     key:"dragon_egg",name:"Huevo de Dragón",type:"unit",icon:"🥚",portrait:DRAGON_COMPANION_ASSETS.egg.hand,
     rarity:"Especial",special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonEgg:true,dragonStage:"egg",dragonElement:"mystery",
-    cost:0,hp:50,atk:0,guard:0,dex:0,agi:0,mov:0,range:0,immobile:true,cannotAttack:true,cannotDefend:true,
+    cost:2,hp:50,atk:0,guard:0,dex:0,agi:0,mov:0,range:0,immobile:true,cannotAttack:true,cannotDefend:true,
     text:"Personaje Personal opcional. No reemplaza al líder. Mientras permanezca vivo en el campo, todas las eliminaciones aliadas cuentan para su incubación. Si es destruido, no pierdes el duelo; conserva el progreso y deja de contar durante ese combate. Eclosiona al terminar un duelo después de alcanzar 1000 eliminaciones."
   };
   const stats=DRAGON_COMPANION_STATS[element][stage];
@@ -108,7 +108,7 @@ function makeDragonCompanionCard(stage,element){
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,
     rarity,special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
-    cost:stage==="adult"?10:0,...stats,aerial:true,flight:true,
+    cost:stage==="adult"?10:stage==="young"?7:4,...stats,aerial:true,flight:true,
     text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. ${growthText}`
   };
 }

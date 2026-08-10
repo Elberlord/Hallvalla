@@ -23684,7 +23684,8 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   border:0!important;
   background:transparent!important;
   transform-origin:center!important;
-  pointer-events:none!important;
+  pointer-events:auto!important;
+  cursor:help!important;
   user-select:none!important;
   -webkit-user-drag:none!important;
   filter:drop-shadow(0 2px 5px rgba(0,0,0,.78))!important;
@@ -23716,6 +23717,10 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   white-space:nowrap!important;
   pointer-events:none!important;
   filter:none!important;
+}
+#cardInspectModal .hv-det-cal-icon:focus-visible{
+  outline:2px solid rgba(255,218,116,.92)!important;
+  outline-offset:3px!important;
 }
 .hv-det-direct-editing #cardInspectModal .hv-det-cal-icon{
   pointer-events:auto!important;

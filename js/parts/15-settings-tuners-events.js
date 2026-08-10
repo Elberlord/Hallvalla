@@ -1041,10 +1041,15 @@ function ensureHvDetIconCalibrationLayer(root){
   const cols=6;
   HV_DET_ICON_CALIBRATION_ITEMS.forEach((item,index)=>{
     const icon=document.createElement('div');
-    icon.className='hv-det-cal-icon';
+    const statGuideKey={hp:'HP',dexterity:'DX',movement:'MV',attack:'AT',guard:'GD',agility:'AGI',range:'RG'}[item.key]||item.label;
+    icon.className='hv-det-cal-icon stat-click';
     icon.dataset.detIconKey=item.key;
     icon.dataset.detIconAsset=item.asset;
-    icon.title=`Icono DET · ${item.label}`;
+    icon.dataset.stat=statGuideKey;
+    icon.setAttribute('role','button');
+    icon.setAttribute('tabindex','0');
+    icon.setAttribute('aria-label',`${item.label}: abrir explicación`);
+    icon.title=`${item.label} · clic para ver explicación`;
     icon.style.left=`${Number(item.left??56)}%`;
     icon.style.top=`${Number(item.top??51.5)}%`;
     icon.style.width=`${Number(item.widthPct??3.8553)}%`;
