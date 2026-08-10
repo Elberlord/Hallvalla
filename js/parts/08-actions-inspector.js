@@ -1386,99 +1386,6 @@ function getUnifiedDetProgressText(entity){
     return "";
   }
 }
-function getUnifiedDetCopiesText(entity){
-  try{
-    if(!entity?.key)return "—";
-    let owned=Number(entity.qty||0);
-    if(typeof getCollectionCardsExpanded==="function"){
-      const found=getCollectionCardsExpanded().find(card=>card?.key===entity.key);
-      if(found)owned=Number(found.qty||0);
-    }
-    if(typeof maxCopiesForCard==="function")return `${Math.max(0,owned)}/${Math.max(1,Number(maxCopiesForCard(entity)||1))}`;
-    return owned>0?String(owned):"—";
-  }catch(_){return "—";}
-}
-function getUnifiedDetStateText(entity,mode="card",statuses=[]){
-  if(mode==="field"){
-    const side=entity?.owner===myPlayer?'ALIADA':'RIVAL';
-    const active=Array.isArray(statuses)?statuses.length:0;
-    return active>0?`EN CAMPO · ${side} · ${active} EST.`:`EN CAMPO · ${side}`;
-  }
-  if(mode==="pack")return "REVELADA";
-  if(mode==="hand")return "EN MANO";
-  try{
-    if(typeof getCollectionCardsExpanded==="function"&&entity?.key){
-      const found=getCollectionCardsExpanded().find(card=>card?.key===entity.key);
-      const owned=Number(found?.qty||entity?.qty||0);
-      return owned>0?"DESBLOQUEADA":"BLOQUEADA";
-    }
-  }catch(_){ }
-  return entity?.type==="unit"?"DISPONIBLE":"CARTA";
-}
-function getUnifiedDetPrecEvaText(entity,{live=false}={}){
-  if(!entity||entity.leader)return "FIJO";
-  try{
-    if(live&&typeof getBaseEvasionScore==="function"){
-      const total=Math.max(0,Number(getBaseEvasionScore(entity)||0));
-      const spent=typeof getEvasionPressure==="function"?Math.max(0,Number(getEvasionPressure(entity)||0)):0;
-      return `${Math.max(0,total-spent)}/${total}`;
-    }
-    const dx=Number(entity.dex??entity.dx??0);
-    const agi=Number(entity.agi??0);
-    return String(Math.max(0,dx+agi));
-  }catch(_){return "—";}
-}
-function syncUnifiedDetCoreFields(entity,{mode="card",live=false,statuses=[]}={}){
-  const typeEl=$("detTypeValue"),rarityEl=$("detRarityValue"),stateEl=$("detStateValue"),copiesEl=$("detCopiesValue");
-  const weaponBtn=$("detWeaponValue"),precBtn=$("detPrecEvaValue"),loreBtn=$("detLoreValue");
-  if(typeEl)typeEl.textContent=entity?.leader?'LÍDER':(typeof getEntityTypeLabel==="function"?getEntityTypeLabel(entity):(entity?.type||'—'));
-  if(rarityEl)rarityEl.textContent=typeof getDetDisplayRarity==="function"?getDetDisplayRarity(entity):(entity?.rarity||'—');
-  if(stateEl)stateEl.textContent=getUnifiedDetStateText(entity,mode,statuses);
-  if(copiesEl)copiesEl.textContent=getUnifiedDetCopiesText(entity);
-  if(weaponBtn){
-    const img=weaponBtn.querySelector('img'),value=weaponBtn.querySelector('span');
-    const canWeapon=!!entity&&(entity.type==='unit'||entity.leader);
-    weaponBtn.disabled=!canWeapon;
-    weaponBtn.classList.toggle('is-disabled',!canWeapon);
-    if(img)img.src=canWeapon&&typeof getWeaponClassIcon==="function"?getWeaponClassIcon(entity):'assets/ui/det_icons/tactical.webp';
-    if(value)value.textContent=canWeapon&&typeof getWeaponClassLabel==="function"?getWeaponClassLabel(entity):'—';
-  }
-  if(precBtn){
-    const value=precBtn.querySelector('span');
-    precBtn.disabled=!(entity&&(entity.type==='unit'||entity.leader));
-    precBtn.classList.toggle('is-disabled',precBtn.disabled);
-    if(value)value.textContent=getUnifiedDetPrecEvaText(entity,{live});
-  }
-  if(loreBtn){
-    const canLore=!!entity&&(entity.type==='unit'||entity.leader);
-    loreBtn.disabled=!canLore;
-    loreBtn.classList.toggle('is-disabled',!canLore);
-    const value=loreBtn.querySelector('span');if(value)value.textContent=canLore?'ABRIR':'—';
-  }
-}
-function syncCardInspectTemplateUi(progressText=null){
-  const modal=$("cardInspectModal");
-  if(!modal)return;
-  const levelPanel=$("detLevelPanel");
-  const rankEl=$("detLevelRank");
-  const fillEl=$("detLevelProgressFill");
-  const textEl=$("detLevelProgressText");
-  const subEl=$("detLevelProgressSub");
-  const reasonEl=$("cardInspectReason");
-  const raw=progressText??modal._hvLevelProgressText??reasonEl?.textContent??"";
-  const data=parseCardInspectLevelProgress(raw);
-  if(levelPanel)levelPanel.classList.toggle('is-empty',!data.visible);
-  if(rankEl)rankEl.textContent=`NIVEL ${data.rank||'I'}`;
-  if(fillEl)fillEl.style.width=`${Number.isFinite(data.progress)?data.progress:0}%`;
-  if(textEl)textEl.textContent=data.visible&&data.total>0?`${data.current} / ${data.total}`:(data.visible?'—':'Sin progreso');
-  if(subEl)subEl.textContent=data.visible?(data.maxed?'nivel máximo':(data.total>0?`faltan ${data.remaining}`:'progreso no disponible')):'';
-  const favBtn=$("detFavoriteToggle");
-  const favStar=favBtn?.querySelector('.det-favorite-star');
-  if(favBtn&&favStar){
-    const active=favBtn.classList.contains('is-active');
-    favStar.textContent=active?'★':'☆';
-  }
-}
 function cleanupUnifiedDetSurface(modal){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
@@ -1525,27 +1432,60 @@ function ensureUnifiedDetNameCalibration(modal,entity){
   const box=document.createElement('div');
   box.id='detCardName';
   box.className='hv-det-name-calibration';
+  box.dataset.detSurface='name';
   box.setAttribute('aria-label','Nombre de la carta');
-  const text=document.createElement('span');
+  const value=typeof getEntityFullDisplayName==='function'?getEntityFullDisplayName(entity):String(entity?.name||'Unidad');
+  const text=document.createElement('div');
   text.className='hv-det-name-text';
-  text.textContent=typeof getEntityFullDisplayName==='function'?getEntityFullDisplayName(entity):String(entity?.name||'');
+  text.textContent=value||'Unidad';
   const id=document.createElement('span');
   id.className='hv-det-cal-id hv-det-name-id';
   id.textContent='name.text';
   box.append(text,id);
+  // Base del nombre definida aquí, no depende de CSS legado ni de un overlay viejo.
+  const set=(prop,val,important=true)=>box.style.setProperty(prop,val,important?'important':'');
+  set('position','absolute');
+  set('left','58%');
+  set('top','4.7%');
+  set('width','35.5%');
+  set('height','7%');
+  set('z-index','80');
+  set('display','flex');
+  set('visibility','visible');
+  set('opacity','1');
+  set('align-items','center');
+  set('justify-content','center');
+  set('padding','0');
+  set('margin','0');
+  set('border','0');
+  set('background','transparent');
+  set('color','#f2d28a');
+  set('font-family','Georgia, "Times New Roman", serif');
+  set('font-size','clamp(18px,2.05vw,40px)');
+  set('font-weight','700');
+  set('line-height','1');
+  set('letter-spacing','.025em');
+  set('text-transform','uppercase');
+  set('text-align','center');
+  set('white-space','nowrap');
+  set('overflow','visible');
+  set('text-shadow','0 2px 3px rgba(0,0,0,.95),0 0 7px rgba(210,151,45,.20)');
+  set('transform-origin','center');
+  set('pointer-events','auto',false);
+  text.style.setProperty('display','block','important');
+  text.style.setProperty('visibility','visible','important');
+  text.style.setProperty('opacity','1','important');
+  text.style.setProperty('color','#f2d28a','important');
+  text.style.setProperty('width','100%','important');
+  text.style.setProperty('overflow','hidden','important');
+  text.style.setProperty('text-overflow','ellipsis','important');
+  text.style.setProperty('white-space','nowrap','important');
   card.appendChild(box);
   return box;
 }
 
 
 
-function getUnifiedDetStats(entity,{live=false}={}){
-  if(live&&entity){
-    if(entity.leader)return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",0],["AGI",0],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
-    return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",effectiveDex(entity)],["AGI",effectiveAgi(entity)],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
-  }
-  return cardInspectStats(entity);
-}
 function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statuses=[],visualHtml="",reasonText="",allowPlay=false,playState=null}={}){
   if(!entity)return null;
   const modal=$("cardInspectModal");

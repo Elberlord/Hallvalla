@@ -23839,7 +23839,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 
 
-/* === DET v32 · nombre calibrable · 8BQ === */
+/* === DET v32 · nombre calibrable · 8BR === */
 #cardInspectModal .hv-det-name-calibration{
   position:absolute!important;
   left:58.0%!important;
@@ -23871,6 +23871,9 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 #cardInspectModal .hv-det-name-text{
   display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  color:#f2d28a!important;
   width:100%!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;

@@ -1,0 +1,8 @@
+HallValla 7BOARDCTRL8BS
+
+Corrección del nombre del DET:
+- name.text se crea como un elemento DOM real (#detCardName).
+- Su posición/visibilidad base se define directamente al crearlo para no depender de CSS histórico.
+- El flujo de colección ya no ejecuta cardInspectVisual/cardInspectSub/cardInspectText ni los postprocesados del DET viejo.
+- Se eliminaron helpers muertos del DET viejo relacionados con esos paneles.
+- No se tocaron mecánicas de juego, IA, PvP, PvE, aventura ni eventos.
