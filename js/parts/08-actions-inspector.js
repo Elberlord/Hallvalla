@@ -1445,10 +1445,10 @@ function ensureUnifiedDetNameCalibration(modal,entity){
   // Base del nombre definida aquí, no depende de CSS legado ni de un overlay viejo.
   const set=(prop,val,important=true)=>box.style.setProperty(prop,val,important?'important':'');
   set('position','absolute');
-  set('left','58%');
-  set('top','4.7%');
-  set('width','35.5%');
-  set('height','7%');
+  set('left','59.7749%');
+  set('top','5.7118%');
+  set('width','31.9492%');
+  set('height','6.2982%');
   set('z-index','80');
   set('display','flex');
   set('visibility','visible');
@@ -1461,7 +1461,7 @@ function ensureUnifiedDetNameCalibration(modal,entity){
   set('background','transparent');
   set('color','#f2d28a');
   set('font-family','Georgia, "Times New Roman", serif');
-  set('font-size','clamp(18px,2.05vw,40px)');
+  set('font-size','clamp(16.2px,1.845vw,36px)');
   set('font-weight','700');
   set('line-height','1');
   set('letter-spacing','.025em');
@@ -1486,6 +1486,84 @@ function ensureUnifiedDetNameCalibration(modal,entity){
 
 
 
+function getUnifiedDetDisplayedStats(entity,{live=false}={}){
+  const empty={hp:'—',dexterity:'—',movement:'—',attack:'—',guard:'—',agility:'—',range:'—',cost:'—'};
+  if(!entity)return empty;
+  try{
+    const costValue=typeof getCardCostDisplayValue==='function'
+      ? getCardCostDisplayValue(entity,entity?.owner||myPlayer)
+      : (entity?.cost??'—');
+    if(live){
+      return {
+        hp:`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`,
+        dexterity:effectiveDex(entity),
+        movement:effectiveMov(entity),
+        attack:effectiveAtk(entity),
+        guard:displayEffectiveGuard(entity),
+        agility:effectiveAgi(entity),
+        range:getUnitAttackRange(entity),
+        cost:costValue
+      };
+    }
+    if(entity.type==='unit'||entity.leader){
+      return {
+        hp:entity.hp??0,
+        dexterity:typeof getCardDisplayDex==='function'?getCardDisplayDex(entity):(entity.dx??entity.dex??0),
+        movement:entity.mov??0,
+        attack:entity.atk??0,
+        guard:entity.guard??0,
+        agility:entity.agi??0,
+        range:typeof getCardDisplayRange==='function'?getCardDisplayRange(entity):(entity.range??entity.rg??1),
+        cost:costValue
+      };
+    }
+    return {...empty,cost:costValue};
+  }catch(error){
+    console.warn('[HallValla] No se pudieron resolver stats para DET:',error);
+    return empty;
+  }
+}
+
+const DET_STAT_VALUE_ITEMS=Object.freeze([
+  {key:'hp',id:'detStatValueHp',label:'HP'},
+  {key:'dexterity',id:'detStatValueDexterity',label:'PX / Destreza'},
+  {key:'movement',id:'detStatValueMovement',label:'MV / Movimiento'},
+  {key:'attack',id:'detStatValueAttack',label:'AT / Ataque'},
+  {key:'guard',id:'detStatValueGuard',label:'GD / Guardia'},
+  {key:'agility',id:'detStatValueAgility',label:'AG / Agilidad'},
+  {key:'range',id:'detStatValueRange',label:'RG / Rango'}
+]);
+
+function ensureUnifiedDetStatValues(modal,entity,{live=false}={}){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('.hv-det-stat-values-layer')?.remove();
+  const data=getUnifiedDetDisplayedStats(entity,{live});
+  const layer=document.createElement('div');
+  layer.className='hv-det-stat-values-layer';
+  layer.setAttribute('aria-label','Valores de estadísticas del DET');
+  DET_STAT_VALUE_ITEMS.forEach(item=>{
+    const box=document.createElement('div');
+    box.id=item.id;
+    box.className='hv-det-stat-value';
+    box.dataset.detStatValue=item.key;
+    box.setAttribute('aria-label',`${item.label}: ${data[item.key]}`);
+    box.innerHTML=`<span class="hv-det-stat-number">${escapeHtml(String(data[item.key]??'—'))}</span><span class="hv-det-cal-id">stat.${item.key}.value</span>`;
+    layer.appendChild(box);
+  });
+  card.appendChild(layer);
+
+  card.querySelector('#detCostValue')?.remove();
+  const cost=document.createElement('div');
+  cost.id='detCostValue';
+  cost.className='hv-det-cost-value';
+  cost.setAttribute('aria-label',`Costo: ${data.cost}`);
+  cost.innerHTML=`<span class="hv-det-cost-number">${escapeHtml(String(data.cost??'—'))}</span><span class="hv-det-cal-id">cost.value</span>`;
+  card.appendChild(cost);
+  return layer;
+}
+
+
 function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statuses=[],visualHtml="",reasonText="",allowPlay=false,playState=null}={}){
   if(!entity)return null;
   const modal=$("cardInspectModal");
@@ -1495,6 +1573,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   ensureUnifiedDetPortraitCalibration(modal,entity,{live,visualHtml});
   ensureUnifiedDetCostBadgeCalibration(modal);
   ensureUnifiedDetNameCalibration(modal,entity);
+  ensureUnifiedDetStatValues(modal,entity,{live});
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=[];
   modal._hvEffectText="";

@@ -23741,10 +23741,10 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 
 #cardInspectModal .hv-det-portrait-calibration{
   position:absolute!important;
-  left:5.2650%!important;
+  left:5.2638%!important;
   top:7.1150%!important;
   width:28.7994%!important;
-  height:51.7945%!important;
+  height:51.7915%!important;
   display:block!important;
   overflow:hidden!important;
   z-index:35!important;
@@ -23792,10 +23792,10 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 /* === DET v32 · badge de costo artístico · 8BQ === */
 #cardInspectModal .hv-det-cost-badge-calibration{
   position:absolute!important;
-  left:14.1844%!important;
-  top:50.7025%!important;
-  width:9.8795%!important;
-  height:16.9800%!important;
+  left:14.1842%!important;
+  top:50.7022%!important;
+  width:9.8788%!important;
+  height:16.9788%!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
@@ -23892,4 +23892,96 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .hv-det-direct-editing #cardInspectModal .hv-det-name-calibration.hv-det-direct-selected{
   outline:2px solid rgba(79,211,255,.98)!important;
   outline-offset:4px!important;
+}
+
+
+/* === DET v32 · valores dinámicos de stats · 8BT === */
+#cardInspectModal .hv-det-stat-values-layer{
+  position:absolute!important;
+  inset:0!important;
+  z-index:52!important;
+  display:block!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+#cardInspectModal .hv-det-stat-value{
+  position:absolute!important;
+  left:48.18%!important;
+  width:4.15%!important;
+  height:9.7167%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#f6dfa0!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(13px,1.55vw,28px)!important;
+  font-weight:800!important;
+  line-height:1!important;
+  text-align:center!important;
+  text-shadow:0 2px 3px rgba(0,0,0,.98),0 0 6px rgba(225,172,70,.18)!important;
+  transform-origin:center!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="hp"]{top:6.6109%!important;}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="dexterity"]{top:14.2210%!important;}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="movement"]{top:21.9181%!important;}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="attack"]{top:29.8103%!important;}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="guard"]{top:37.6095%!important;}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="agility"]{top:45.2287%!important;}
+#cardInspectModal .hv-det-stat-value[data-det-stat-value="range"]{top:53.3039%!important;}
+#cardInspectModal .hv-det-stat-number{
+  display:block!important;
+  width:100%!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-cost-value{
+  position:absolute!important;
+  left:16.15%!important;
+  top:55.55%!important;
+  width:5.95%!important;
+  height:7.25%!important;
+  z-index:55!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#f7df9a!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(17px,2vw,36px)!important;
+  font-weight:900!important;
+  line-height:1!important;
+  text-align:center!important;
+  text-shadow:0 2px 4px rgba(0,0,0,.98),0 0 7px rgba(228,171,58,.22)!important;
+  transform-origin:center!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+#cardInspectModal .hv-det-cost-number{pointer-events:none!important;}
+#cardInspectModal .hv-det-stat-value .hv-det-cal-id,
+#cardInspectModal .hv-det-cost-value .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-stat-value,
+.hv-det-direct-editing #cardInspectModal .hv-det-cost-value{
+  pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-stat-value .hv-det-cal-id,
+.hv-det-direct-editing #cardInspectModal .hv-det-cost-value .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-stat-value.hv-det-direct-selected,
+.hv-det-direct-editing #cardInspectModal .hv-det-cost-value.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:3px!important;
 }

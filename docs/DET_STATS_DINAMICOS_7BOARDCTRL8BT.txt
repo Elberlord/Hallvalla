@@ -1,0 +1,22 @@
+HallValla 7BOARDCTRL8BT
+
+Trabajo limitado al DET.
+
+Añadido:
+- Valores dinámicos para HP, PX/Destreza, MV, AT, GD, AG y RG.
+- Costo dinámico dentro del medallón artístico.
+- En campo usa las funciones efectivas existentes del juego (effectiveAtk, effectiveDex, effectiveAgi, effectiveMov, displayEffectiveGuard, getUnitAttackRange, getDisplayHp/effectiveMaxHp).
+- En colección/mano usa los valores de carta existentes (getCardDisplayDex, getCardDisplayRange, atk, hp, guard, agi, mov).
+- El editor AJUSTAR DET permite mover y escalar cada valor por separado.
+
+IDs de edición:
+- stat.hp.value
+- stat.dexterity.value
+- stat.movement.value
+- stat.attack.value
+- stat.guard.value
+- stat.agility.value
+- stat.range.value
+- cost.value
+
+No se tocaron IA, PvP, PvE, aventura, eventos ni reglas de combate.

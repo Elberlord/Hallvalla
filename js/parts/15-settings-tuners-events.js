@@ -917,8 +917,8 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v11_name_visible";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v11_name_visible";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v12_stats_values";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v12_stats_values";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1260,panelHeight:590,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
@@ -1062,6 +1062,12 @@ function hvDetBuildTargets(root){
   hvDetAddTarget(list,root.querySelector('#detPortraitImage'),'portrait.image','IMAGEN / RETRATO');
   hvDetAddTarget(list,root.querySelector('#detCostBadge'),'cost.badge','COSTO · MEDALLÓN');
   hvDetAddTarget(list,root.querySelector('#detCardName'),'name.text','NOMBRE');
+  hvDetAddTarget(list,root.querySelector('#detCostValue'),'cost.value','COSTO · VALOR');
+  [...root.querySelectorAll('.hv-det-stat-value')].forEach(el=>{
+    const key=el.dataset.detStatValue||'stat';
+    const labels={hp:'HP',dexterity:'PX / Destreza',movement:'MV / Movimiento',attack:'AT / Ataque',guard:'GD / Guardia',agility:'AG / Agilidad',range:'RG / Rango'};
+    hvDetAddTarget(list,el,`stat.${key}.value`,`${labels[key]||key} · VALOR`);
+  });
   [...root.querySelectorAll('.hv-det-icon-calibration .hv-det-cal-icon')].forEach(el=>{
     const key=el.dataset.detIconKey||'icon';
     const item=HV_DET_ICON_CALIBRATION_ITEMS.find(entry=>entry.key===key);
@@ -1355,15 +1361,52 @@ function copyHvDetIconJson(button){
       };
     }
   }
+  const statValues={};
+  [...(root?.querySelectorAll('.hv-det-stat-value')||[])].forEach(el=>{
+    const key=el.dataset.detStatValue||'stat';
+    const direct=normalizeHvDetDirectSetting(state.items[`stat.${key}.value`]||HV_DET_DIRECT_DEFAULT);
+    const entry={id:`stat.${key}.value`,direct,value:el.querySelector('.hv-det-stat-number')?.textContent||''};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=el.getBoundingClientRect();
+      entry.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    statValues[key]=entry;
+  });
+  let costValue=null;
+  const costValueEl=root?.querySelector('#detCostValue');
+  if(costValueEl){
+    const direct=normalizeHvDetDirectSetting(state.items['cost.value']||HV_DET_DIRECT_DEFAULT);
+    costValue={id:'cost.value',direct,value:costValueEl.querySelector('.hv-det-cost-number')?.textContent||''};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=costValueEl.getBoundingClientRect();
+      costValue.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+  }
   const payload=JSON.stringify({
-    version:5,
-    scope:'det_icons_portrait_costbadge_name_clean',
+    version:6,
+    scope:'det_icons_portrait_costbadge_name_stats_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: iconos de stats + retrato + medallón de costo + nombre. Arrastra con mouse; rueda o Tamaño cambia escala. IDs: deticon.*, portrait.image, cost.badge y name.text.',
+    note:'DET limpio v32: iconos + retrato + medallón + nombre + valores dinámicos de stats/costo. IDs: deticon.*, portrait.image, cost.badge, name.text, stat.*.value y cost.value.',
     icons,
     portrait,
     costBadge,
-    nameText
+    nameText,
+    statValues,
+    costValue
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}
