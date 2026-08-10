@@ -23850,3 +23850,25 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   outline:2px solid rgba(79,211,255,.98)!important;
   outline-offset:4px!important;
 }
+
+
+/* === DET v32 portrait visibility fix · 8BN ===
+   El hotfix 8BK ocultaba todos los hijos del DET y solo reactivaba la capa
+   de iconos. El retrato sí se creaba en JS, pero quedaba con visibility:hidden
+   y opacity:0. Esta excepción lo deja visible y editable, sin reactivar ningún
+   panel viejo.
+   ================================================================ */
+#cardInspectModal .card-inspect-card > .hv-det-portrait-calibration,
+#cardInspectModal .card-inspect-card > .hv-det-portrait-calibration *,
+#cardInspectModal .hv-det-portrait-calibration,
+#cardInspectModal .hv-det-portrait-calibration *{
+  visibility:visible!important;
+  opacity:1!important;
+}
+#cardInspectModal .card-inspect-card > .hv-det-portrait-calibration{
+  display:block!important;
+  pointer-events:none!important;
+}
+.hv-det-direct-editing #cardInspectModal .card-inspect-card > .hv-det-portrait-calibration{
+  pointer-events:auto!important;
+}

@@ -917,8 +917,8 @@ maybeShowBasicTutorialGate();
    HallValla · Editor visual avanzado del modal DET
    Ajuste global por elemento: se aplica igual a todas las unidades.
    ============================================================ */
-const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v7_icons_portrait";
-const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v7_icons_portrait";
+const HV_DET_LAYOUT_TUNER_STORAGE_KEY="hallvalla_det_layout_tuner_v8_icons_portrait";
+const HV_DET_DIRECT_STORAGE_KEY="hallvalla_det_direct_layout_v8_icons_portrait";
 const HV_DET_LAYOUT_TUNER_DEFAULTS=Object.freeze({
   panelX:0,panelY:0,panelWidth:1260,panelHeight:590,panelScale:100,
   pbX:0,pbY:0,pbScale:100,
