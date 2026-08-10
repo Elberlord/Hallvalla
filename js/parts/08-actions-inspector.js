@@ -1518,6 +1518,26 @@ function ensureUnifiedDetCostBadgeCalibration(modal){
   return box;
 }
 
+function ensureUnifiedDetNameCalibration(modal,entity){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('#detCardName')?.remove();
+  const box=document.createElement('div');
+  box.id='detCardName';
+  box.className='hv-det-name-calibration';
+  box.setAttribute('aria-label','Nombre de la carta');
+  const text=document.createElement('span');
+  text.className='hv-det-name-text';
+  text.textContent=typeof getEntityFullDisplayName==='function'?getEntityFullDisplayName(entity):String(entity?.name||'');
+  const id=document.createElement('span');
+  id.className='hv-det-cal-id hv-det-name-id';
+  id.textContent='name.text';
+  box.append(text,id);
+  card.appendChild(box);
+  return box;
+}
+
+
 
 function getUnifiedDetStats(entity,{live=false}={}){
   if(live&&entity){
@@ -1534,6 +1554,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   const card=cleanupUnifiedDetSurface(modal);
   ensureUnifiedDetPortraitCalibration(modal,entity,{live,visualHtml});
   ensureUnifiedDetCostBadgeCalibration(modal);
+  ensureUnifiedDetNameCalibration(modal,entity);
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=[];
   modal._hvEffectText="";

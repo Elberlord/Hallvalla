@@ -1,0 +1,12 @@
+HallValla 7BOARDCTRL8BQ
+
+Base: 8BP.
+
+Cambios exclusivos del DET:
+- Se fijaron como base las coordenadas finales entregadas por el usuario para iconos, retrato y medallón de costo.
+- Se añadió el nombre dinámico de la carta/unidad como elemento limpio independiente.
+- DOM ID: detCardName
+- ID de AJUSTAR DET: name.text
+- Se puede arrastrar y escalar con el mismo editor.
+- Se cambió la clave de localStorage del editor para evitar que offsets anteriores se sumen a las nuevas posiciones base.
+- No se modificó gameplay, IA, PvP, PvE, aventura ni eventos.
