@@ -1,0 +1,16 @@
+HallValla 7BOARDCTRL8BY — Limpieza segura de residuos
+
+Cambios realizados sin alterar mecánicas de partida:
+- Eliminados bindings de cardInspectCancel/cardInspectX/cardInspectPlay porque esos controles no existen actualmente en el DOM. Se conserva playInspectedCard() para reutilizarlo al implementar el nuevo botón Jugar.
+- Eliminadas referencias muertas a #adventureResultPanel; el resultado actual usa #battleOutcomeSplash.
+- Eliminado dragonOriginalEnterGame, placeholder sin ninguna lectura ni wrapper asociado.
+- Eliminadas tres rutas DET a iconos inexistentes: blanco_de_invierno.webp, contraataque_del_sabueso.webp y dos_cielos.webp. El resolver DET cae ahora a iconos existentes por tipo/texto.
+- Eliminados script.js y js/parts/19-basic-field-figures.js, ambos excluidos del runtime por bootstrap-loader.js.
+- Build/cache-buster actualizado de 7BOARDCTRL8BX a 7BOARDCTRL8BY.
+
+No se tocaron todavía:
+- los candidatos globales de una sola referencia; requieren auditoría semántica antes de borrar;
+- la consolidación masiva de CSS;
+- el sistema de wrappers de dragones;
+- el modo promocional/pruebas;
+- la implementación nueva del botón Jugar y la descripción de efectos.

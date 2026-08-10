@@ -11,9 +11,9 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8BX";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8BY";
 
-const BUILD = "7BOARDCTRL8BX";
+const BUILD = "7BOARDCTRL8BY";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -92,7 +92,7 @@ Object.assign(globalThis, {
   onAuthStateChanged
 });
 
-// 19-basic-field-figures.js es un módulo legado sustituido por 19-field-figures-3d.js.
+// El cargador incluye únicamente los módulos activos del runtime.
 const PARTS = [
   "01-boot-config.js",
   "02-assets-leaders.js",

@@ -1825,9 +1825,6 @@ saveCurrentDeck=async function(){
   await startAdventure(special,battleId);
 };
 
-/* El estado se añade al payload después de crear el duelo mediante un parche pequeño. */
-const dragonOriginalEnterGame=typeof enterGame==="function"?enterGame:null;
-
 /* Estilos autocontenidos del selector de eventos y escala de los líderes dragón. */
 
 (function installDragonContractStyles(){
