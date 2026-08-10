@@ -1130,6 +1130,15 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     if(fixedTemplates.length!==targetDeckSize){
       console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} tiene ${fixedTemplates.length}/${targetDeckSize} cartas para este tier; se ajustará al tamaño requerido.`);
     }
+    // El primer Hechicero conserva su enseñanza tutorial: 1 Lancero solar garantizado en mano,
+    // pero las 20 cartas salen exclusivamente de su nuevo mazo fijo.
+    if(battle?.id==="guardian_mage"){
+      const forcedUnit=fixedTemplates.find(card=>card?.key==="spearman")||fixedTemplates.find(card=>card?.type==="unit");
+      let pool=forcedUnit?removeOneTemplateByKey(fixedTemplates,forcedUnit.key):fixedTemplates;
+      pool=pool.slice(0,Math.max(0,targetDeckSize-(forcedUnit?1:0)));
+      const draw=drawCards(shuffle(pool.map(card=>makeCard(card,2,enemyLeaderType))),[],forcedUnit?3:4);
+      return{deck:draw.deck,hand:[...(forcedUnit?[makeCard(forcedUnit,2,enemyLeaderType)]:[]),...draw.hand]};
+    }
     const fixedDeck=shuffle(fixedTemplates.slice(0,targetDeckSize).map(card=>makeCard(card,2,enemyLeaderType)));
     const draw=drawCards(fixedDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};

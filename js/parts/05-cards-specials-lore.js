@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8CH · Catálogo, Salomón, Ericto, PB automático comparativo universal, lore y estados */
+/* HallValla 7BOARDCTRL8CK · Catálogo, Salomón, Ericto, PB automático comparativo universal, lore y estados */
 
 
 /*
