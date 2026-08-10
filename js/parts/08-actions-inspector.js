@@ -1393,6 +1393,29 @@ function cleanupUnifiedDetSurface(modal){
   return card;
 }
 
+function fitUnifiedDetPortraitFromTop(frame){
+  const img=frame?.querySelector?.('img');
+  if(!img)return;
+  const apply=()=>{
+    const fw=Math.max(0,Number(frame.clientWidth||0));
+    const fh=Math.max(0,Number(frame.clientHeight||0));
+    const iw=Math.max(0,Number(img.naturalWidth||0));
+    const ih=Math.max(0,Number(img.naturalHeight||0));
+    if(!fw||!fh||!iw||!ih)return;
+    const imageAspect=iw/ih;
+    const frameAspect=fw/fh;
+    img.classList.toggle('hv-det-portrait-fit-width',imageAspect<=frameAspect);
+    img.classList.toggle('hv-det-portrait-fit-height',imageAspect>frameAspect);
+  };
+  img.addEventListener('load',apply);
+  if(img.complete)requestAnimationFrame(apply);
+  if(typeof ResizeObserver==='function'){
+    const observer=new ResizeObserver(apply);
+    observer.observe(frame);
+    frame.__hvDetPortraitResizeObserver?.disconnect?.();
+    frame.__hvDetPortraitResizeObserver=observer;
+  }
+}
 function ensureUnifiedDetPortraitCalibration(modal,entity,{live=false,visualHtml=""}={}){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
@@ -1404,6 +1427,7 @@ function ensureUnifiedDetPortraitCalibration(modal,entity,{live=false,visualHtml
   const content=document.createElement('div');
   content.className='hv-det-portrait-content';
   content.innerHTML=visualHtml||(live&&typeof getUnitPortraitHtml==='function'?getUnitPortraitHtml(entity):getCardVisualHtml(entity,'det-portrait-source'));
+  fitUnifiedDetPortraitFromTop(content);
   const id=document.createElement('span');
   id.className='hv-det-cal-id hv-det-portrait-id';
   id.textContent='portrait.image';

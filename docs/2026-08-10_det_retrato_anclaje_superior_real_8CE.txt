@@ -1,0 +1,13 @@
+HallValla 7BOARDCTRL8CE — corrección de recorte superior del retrato DET
+
+Base: 7BOARDCTRL8CD.
+
+Problema observado:
+- object-position:center top no garantizaba visualmente que el retrato del DET conservara la parte superior de algunas ilustraciones.
+
+Corrección:
+- El DET mide la proporción real del asset del retrato y la del marco.
+- Si el arte es más alto/estrecho que el marco, llena por ancho y queda anclado al borde superior; el exceso se recorta únicamente por abajo.
+- Si el arte es más ancho que el marco, llena por alto y queda anclado arriba; el exceso se recorta lateralmente.
+- Se conserva el mismo marco, tamaño y posición calibrable portrait.image.
+- No se modificaron assets de cartas ni otras mecánicas.

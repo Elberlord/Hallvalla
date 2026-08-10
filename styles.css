@@ -21527,194 +21527,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 
 /* ==========================================================
-   HallValla · Historial compacto de Event Splash por turno
-   - Permanece visible en la esquina inferior derecha
-   - Máximo 6 eventos; el séptimo desplaza al más antiguo
-   - Se limpia automáticamente al comenzar un nuevo turno
-   ========================================================== */
-#eventSplashOverlay.event-splash-overlay.is-history{
-  position:absolute !important;
-  top:auto !important;
-  right:16px !important;
-  bottom:12px !important;
-  left:auto !important;
-  width:min(292px,24vw) !important;
-  height:auto !important;
-  max-height:calc(100% - 405px) !important;
-  padding:0 !important;
-  display:flex !important;
-  align-items:flex-end !important;
-  justify-content:flex-end !important;
-  overflow:visible !important;
-  opacity:1 !important;
-  visibility:visible !important;
-  pointer-events:none !important;
-  background:none !important;
-  transition:none !important;
-  z-index:44 !important;
-}
-#eventSplashOverlay.event-splash-overlay.is-history::before{
-  display:none !important;
-}
-#eventSplashOverlay.is-history .event-splash-stack,
-#eventSplashOverlay.is-history .event-splash-stack.is-history,
-#eventSplashOverlay.is-history .event-splash-stack.is-single,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo{
-  position:relative !important;
-  width:100% !important;
-  max-width:100% !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:stretch !important;
-  justify-content:flex-end !important;
-  gap:5px !important;
-  margin:0 !important;
-  padding:0 !important;
-}
-#eventSplashOverlay.is-history .event-splash-shell,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-shell{
-  position:relative !important;
-  width:100% !important;
-  max-width:none !important;
-  height:48px !important;
-  min-height:48px !important;
-  margin:0 !important;
-  padding:0 !important;
-  opacity:1 !important;
-  transform:none !important;
-  transform-origin:right center !important;
-  filter:none !important;
-  animation:none !important;
-  transition:none !important;
-  will-change:auto !important;
-}
-#eventSplashOverlay.is-history .event-splash-shell:last-child{
-  animation:eventSplashHistoryIn .20s ease-out both !important;
-}
-#eventSplashOverlay.is-history .event-splash-shadow-layer,
-#eventSplashOverlay.is-history .event-splash-depth-glow,
-#eventSplashOverlay.is-history .event-splash-panel-sheen,
-#eventSplashOverlay.is-history .event-splash-icon-anchor{
-  display:none !important;
-}
-#eventSplashOverlay.is-history .event-splash-card,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-card{
-  position:relative !important;
-  width:100% !important;
-  height:48px !important;
-  min-height:48px !important;
-  display:grid !important;
-  grid-template-columns:56px minmax(0,1fr) !important;
-  align-items:stretch !important;
-  overflow:hidden !important;
-  border-radius:8px !important;
-  border:1px solid color-mix(in srgb,var(--event-accent) 58%,rgba(222,194,126,.42)) !important;
-  background:linear-gradient(180deg,rgba(20,16,12,.95),rgba(7,7,6,.97)) !important;
-  box-shadow:0 4px 12px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,236,190,.035) !important;
-  transform:none !important;
-}
-#eventSplashOverlay.is-history .event-splash-art-wrap{
-  position:relative !important;
-  width:56px !important;
-  height:48px !important;
-  aspect-ratio:auto !important;
-  overflow:hidden !important;
-  border-right:1px solid color-mix(in srgb,var(--event-accent) 38%,rgba(222,194,126,.18)) !important;
-  z-index:1 !important;
-}
-#eventSplashOverlay.is-history .event-splash-art-wrap::after{
-  content:"" !important;
-  position:absolute !important;
-  inset:0 !important;
-  background:linear-gradient(90deg,rgba(0,0,0,0) 56%,rgba(7,7,6,.30) 100%) !important;
-}
-#eventSplashOverlay.is-history .event-splash-art{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  object-fit:cover !important;
-}
-#eventSplashOverlay.is-history .event-splash-copy,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-copy{
-  position:relative !important;
-  left:auto !important;
-  right:auto !important;
-  bottom:auto !important;
-  z-index:2 !important;
-  min-width:0 !important;
-  display:flex !important;
-  flex-direction:column !important;
-  justify-content:center !important;
-  gap:1px !important;
-  padding:5px 8px 5px 9px !important;
-  background:none !important;
-}
-#eventSplashOverlay.is-history .event-splash-kicker,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-kicker{
-  display:none !important;
-}
-#eventSplashOverlay.is-history .event-splash-title,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-title{
-  margin:0 !important;
-  padding:0 !important;
-  font-size:11px !important;
-  line-height:1.02 !important;
-  letter-spacing:.05em !important;
-  font-weight:900 !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-  color:#fff0d3 !important;
-  text-shadow:0 1px 3px rgba(0,0,0,.72) !important;
-}
-#eventSplashOverlay.is-history .event-splash-sub,
-#eventSplashOverlay.is-history .event-splash-stack.is-duo .event-splash-sub{
-  display:block !important;
-  margin:1px 0 0 !important;
-  padding:0 !important;
-  font-size:8px !important;
-  line-height:1.12 !important;
-  color:#d8c8aa !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-}
-@keyframes eventSplashHistoryIn{
-  from{opacity:0;transform:translate3d(22px,0,0) scale(.97)}
-  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
-}
-@media(max-width:980px){
-  #eventSplashOverlay.event-splash-overlay.is-history{
-    right:8px !important;
-    bottom:8px !important;
-    width:min(270px,34vw) !important;
-    max-height:calc(100% - 360px) !important;
-  }
-}
-@media(max-width:720px){
-  #eventSplashOverlay.event-splash-overlay.is-history{
-    right:6px !important;
-    bottom:6px !important;
-    width:min(230px,46vw) !important;
-    max-height:42vh !important;
-  }
-  #eventSplashOverlay.is-history .event-splash-shell,
-  #eventSplashOverlay.is-history .event-splash-card{
-    height:43px !important;
-    min-height:43px !important;
-  }
-  #eventSplashOverlay.is-history .event-splash-card{
-    grid-template-columns:48px minmax(0,1fr) !important;
-  }
-  #eventSplashOverlay.is-history .event-splash-art-wrap{
-    width:48px !important;
-    height:43px !important;
-  }
-  #eventSplashOverlay.is-history .event-splash-title{font-size:10px !important;}
-  #eventSplashOverlay.is-history .event-splash-sub{font-size:7px !important;}
-}
-
-/* ==========================================================
    HallValla · DET editor directo por elemento
    ========================================================== */
 .hv-det-layout-tuner-panel{
@@ -24506,4 +24318,188 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   font:700 10px/1 Georgia,serif!important;
   white-space:nowrap!important;
   pointer-events:none!important;
+}
+
+/* === 8CE · DET portrait top-anchor real crop ===
+   El retrato no depende de object-position. JS decide si debe llenar por
+   ancho o por alto según la proporción real y este bloque lo fija al borde
+   superior; cualquier sobrante vertical se pierde únicamente por abajo. */
+#cardInspectModal .hv-det-portrait-content{
+  position:relative!important;
+  overflow:hidden!important;
+}
+#cardInspectModal .hv-det-portrait-content > .card-portrait,
+#cardInspectModal .hv-det-portrait-content > .det-portrait-source{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:hidden!important;
+}
+#cardInspectModal .hv-det-portrait-content img{
+  position:absolute!important;
+  top:0!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  transform:translateX(-50%)!important;
+  object-fit:fill!important;
+  object-position:center top!important;
+}
+#cardInspectModal .hv-det-portrait-content img.hv-det-portrait-fit-width{
+  width:100%!important;
+  height:auto!important;
+}
+#cardInspectModal .hv-det-portrait-content img.hv-det-portrait-fit-height{
+  width:auto!important;
+  height:100%!important;
+}
+
+/* ============================================================
+   7BOARDCTRL8CF · HISTORIAL VISUAL DE EVENTOS DE COMBATE
+   - Reemplaza el antiguo log textual visible.
+   - Los splashes se contraen hacia la esquina inferior derecha.
+   - Máximo 5 miniaturas: el sexto elimina el más antiguo.
+   ============================================================ */
+#gameShell .battlefield #log.event-history-dock{
+  position:absolute!important;
+  left:auto!important;
+  right:22px!important;
+  top:auto!important;
+  bottom:16px!important;
+  width:108px!important;
+  max-width:108px!important;
+  max-height:none!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  z-index:82!important;
+  display:flex!important;
+  flex-direction:column-reverse!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:6px!important;
+  pointer-events:none!important;
+}
+#gameShell .battlefield #log.event-history-dock.is-empty{
+  visibility:hidden!important;
+}
+#gameShell .battlefield .event-history-item{
+  --event-accent:#d0b06c;
+  position:relative!important;
+  flex:0 0 56px!important;
+  width:108px!important;
+  height:56px!important;
+  overflow:hidden!important;
+  border:1px solid color-mix(in srgb,var(--event-accent) 52%,#6f5529)!important;
+  border-radius:8px!important;
+  background:#070706!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.58),0 0 0 1px rgba(255,230,168,.05) inset!important;
+  opacity:.96!important;
+}
+#gameShell .battlefield .event-history-item.is-dodge{--event-accent:#6ec6ff;}
+#gameShell .battlefield .event-history-item.is-guard{--event-accent:#ffd36f;}
+#gameShell .battlefield .event-history-item.is-bleed{--event-accent:#ff7b75;}
+#gameShell .battlefield .event-history-item.is-stealth{--event-accent:#a58cff;}
+#gameShell .battlefield .event-history-item.is-burn{--event-accent:#ff8a3d;}
+#gameShell .battlefield .event-history-item.is-poison{--event-accent:#82d76d;}
+#gameShell .battlefield .event-history-item.is-fear{--event-accent:#b894e8;}
+#gameShell .battlefield .event-history-item.is-stun{--event-accent:#ffe08a;}
+#gameShell .battlefield .event-history-item.is-debuff{--event-accent:#91b8ff;}
+#gameShell .battlefield .event-history-art-wrap,
+#gameShell .battlefield .event-history-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+}
+#gameShell .battlefield .event-history-art{
+  display:block!important;
+  object-fit:cover!important;
+  filter:saturate(.88) brightness(.80)!important;
+}
+#gameShell .battlefield .event-history-item::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(0,0,0,.04) 0 44%,rgba(0,0,0,.68) 78%,rgba(0,0,0,.82) 100%);
+}
+#gameShell .battlefield .event-history-icon-badge{
+  position:absolute!important;
+  right:5px!important;
+  top:5px!important;
+  z-index:2!important;
+  width:20px!important;
+  height:20px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:1px solid color-mix(in srgb,var(--event-accent) 68%,#6a512c)!important;
+  border-radius:50%!important;
+  background:rgba(5,5,5,.82)!important;
+  box-shadow:0 0 8px color-mix(in srgb,var(--event-accent) 28%,transparent)!important;
+}
+#gameShell .battlefield .event-history-icon-badge img{
+  width:14px!important;
+  height:14px!important;
+  object-fit:contain!important;
+}
+#gameShell .battlefield .event-history-title{
+  position:absolute!important;
+  z-index:2!important;
+  right:5px!important;
+  bottom:5px!important;
+  max-width:66px!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  color:#f5dfaf!important;
+  font-size:7px!important;
+  font-weight:900!important;
+  letter-spacing:.04em!important;
+  text-shadow:0 1px 4px #000!important;
+}
+/* Todos los eventos se contraen hacia el mismo muelle inferior derecho. */
+#gameShell .event-splash-shell,
+#gameShell .event-splash-stack.is-duo .event-splash-shell:first-child,
+#gameShell .event-splash-stack.is-duo .event-splash-shell:last-child{
+  --event-mid-x:min(23vw,340px)!important;
+  --event-mid-y:min(18vh,165px)!important;
+  --event-exit-x:min(43vw,660px)!important;
+  --event-exit-y:min(39vh,340px)!important;
+}
+/* La mano puede ocupar la zona inferior; el historial se oculta mientras está abierta. */
+#gameShell .battlefield.hand-open #log.event-history-dock{
+  display:none!important;
+}
+@media(max-width:980px){
+  #gameShell .battlefield #log.event-history-dock{
+    right:8px!important;
+    bottom:8px!important;
+    width:76px!important;
+    max-width:76px!important;
+    gap:4px!important;
+  }
+  #gameShell .battlefield .event-history-item{
+    width:76px!important;
+    height:40px!important;
+    flex-basis:40px!important;
+    border-radius:6px!important;
+  }
+  #gameShell .battlefield .event-history-icon-badge{
+    width:16px!important;height:16px!important;right:3px!important;top:3px!important;
+  }
+  #gameShell .battlefield .event-history-icon-badge img{width:11px!important;height:11px!important;}
+  #gameShell .battlefield .event-history-title{display:none!important;}
+}
+@media(max-width:900px) and (orientation:landscape){
+  #gameShell .battlefield #log.event-history-dock{
+    right:calc(min(230px,28vw) + 14px)!important;
+  }
 }

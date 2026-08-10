@@ -124,6 +124,18 @@ function buildEventSplashShell(item){
   if(!cfg)return "";
   return `<div class="event-splash-shell ${cfg.className}"><div class="event-splash-shadow-layer" aria-hidden="true"></div><div class="event-splash-card"><div class="event-splash-depth-glow" aria-hidden="true"></div><div class="event-splash-panel-sheen" aria-hidden="true"></div><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-icon-anchor"><span class="event-splash-icon-badge"><span class="event-splash-icon-badge-core" aria-hidden="true"></span><img class="event-splash-icon" src="${cfg.icon||cfg.image}" alt="" aria-hidden="true"></span></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
 }
+function appendEventSplashHistory(items){
+  const incoming=(Array.isArray(items)?items:[items]).filter(item=>item&&item.type&&getEventSplashConfig(item.type)).map(item=>({type:String(item.type||"").toLowerCase(),key:item.key||`${item.type}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`}));
+  if(!incoming.length)return;
+  const incomingKeys=new Set(incoming.map(item=>item.key));
+  const previous=Array.isArray(eventSplashHistory)?eventSplashHistory:[];
+  eventSplashHistory=[...incoming,...previous.filter(item=>item&&!incomingKeys.has(item.key))].slice(0,5);
+  if(typeof renderLog==="function")renderLog();
+}
+function clearEventSplashHistory(){
+  eventSplashHistory=[];
+  if(typeof renderLog==="function")renderLog();
+}
 function showNextEventSplash(){
   if(eventSplashActive||!eventSplashQueue.length)return;
   const box=$("eventSplashOverlay");
@@ -146,6 +158,7 @@ function showNextEventSplash(){
     box.classList.remove("show");
     box.classList.add("leaving");
     setTimeout(()=>{
+      appendEventSplashHistory(visible);
       clearEventSplashOverlay(false);
       showNextEventSplash();
     },760);
