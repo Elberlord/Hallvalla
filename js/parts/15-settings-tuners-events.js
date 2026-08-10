@@ -933,13 +933,13 @@ const HV_DET_DIRECT_DEFAULT=Object.freeze({
 // Son objetos independientes: todavía NO dependen de los datos de la unidad.
 // El usuario los acomoda una sola vez con el editor visual y exporta el JSON.
 const HV_DET_ICON_CALIBRATION_ITEMS=Object.freeze([
-  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp",left:41.4262,top:6.6109},
-  {key:"dexterity",label:"PX / Destreza",asset:"assets/ui/det_icons/dexterity.webp",left:41.4262,top:14.2210},
-  {key:"movement",label:"MV / Movimiento",asset:"assets/ui/det_icons/movement.webp",left:41.4262,top:21.9271},
-  {key:"attack",label:"AT / Ataque",asset:"assets/ui/det_icons/attack.webp",left:41.4262,top:29.8193},
-  {key:"guard",label:"GD / Guardia",asset:"assets/ui/det_icons/guard.webp",left:41.4262,top:37.6185},
-  {key:"agility",label:"AG / Agilidad",asset:"assets/ui/det_icons/agility.webp",left:41.4262,top:45.2287},
-  {key:"range",label:"RG / Rango",asset:"assets/ui/det_icons/range.webp",left:41.3500,top:53.3129}
+  {key:"hp",label:"HP",asset:"assets/ui/det_icons/hp.webp",left:41.4262,top:6.6109,widthPct:3.8553,heightPct:9.7167},
+  {key:"dexterity",label:"PX / Destreza",asset:"assets/ui/det_icons/dexterity.webp",left:41.4262,top:14.2210,widthPct:3.8553,heightPct:9.7167},
+  {key:"movement",label:"MV / Movimiento",asset:"assets/ui/det_icons/movement.webp",left:41.4262,top:21.9241,widthPct:3.8553,heightPct:9.7167},
+  {key:"attack",label:"AT / Ataque",asset:"assets/ui/det_icons/attack.webp",left:41.4262,top:29.8163,widthPct:3.8553,heightPct:9.7167},
+  {key:"guard",label:"GD / Guardia",asset:"assets/ui/det_icons/guard.webp",left:41.4262,top:37.6155,widthPct:3.8553,heightPct:9.7167},
+  {key:"agility",label:"AG / Agilidad",asset:"assets/ui/det_icons/agility.webp",left:41.4262,top:45.2287,widthPct:3.8553,heightPct:9.7167},
+  {key:"range",label:"RG / Rango",asset:"assets/ui/det_icons/range.webp",left:41.3500,top:53.3099,widthPct:3.8553,heightPct:9.7167}
 ]);
 let hvDetDirectEditing=false;
 let hvDetDirectSelectedKey="";
@@ -1047,6 +1047,8 @@ function ensureHvDetIconCalibrationLayer(root){
     icon.title=`Icono DET · ${item.label}`;
     icon.style.left=`${Number(item.left??56)}%`;
     icon.style.top=`${Number(item.top??51.5)}%`;
+    icon.style.width=`${Number(item.widthPct??3.8553)}%`;
+    icon.style.height=`${Number(item.heightPct??9.7167)}%`;
     icon.innerHTML=`<img src="${item.asset}" alt="" draggable="false"><span class="hv-det-cal-id">deticon.${item.key}</span>`;
     layer.appendChild(icon);
   });
@@ -1058,6 +1060,7 @@ function hvDetBuildTargets(root){
   if(!root)return [];
   const list=[];
   hvDetAddTarget(list,root.querySelector('#detPortraitImage'),'portrait.image','IMAGEN / RETRATO');
+  hvDetAddTarget(list,root.querySelector('#detCostBadge'),'cost.badge','COSTO · MEDALLÓN');
   [...root.querySelectorAll('.hv-det-icon-calibration .hv-det-cal-icon')].forEach(el=>{
     const key=el.dataset.detIconKey||'icon';
     const item=HV_DET_ICON_CALIBRATION_ITEMS.find(entry=>entry.key===key);
@@ -1301,6 +1304,7 @@ function copyHvDetIconJson(button){
     icons[item.key]=entry;
   });
   let portrait=null;
+  let costBadge=null;
   const portraitEl=root?.querySelector('#detPortraitImage');
   if(portraitEl){
     const direct=normalizeHvDetDirectSetting(state.items['portrait.image']||HV_DET_DIRECT_DEFAULT);
@@ -1317,13 +1321,30 @@ function copyHvDetIconJson(button){
       };
     }
   }
+  const costBadgeEl=root?.querySelector('#detCostBadge');
+  if(costBadgeEl){
+    const direct=normalizeHvDetDirectSetting(state.items['cost.badge']||HV_DET_DIRECT_DEFAULT);
+    costBadge={id:'cost.badge',asset:'assets/ui/det_templates/det_cost_badge_v1.png',direct};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=costBadgeEl.getBoundingClientRect();
+      costBadge.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+  }
   const payload=JSON.stringify({
-    version:3,
-    scope:'det_icons_and_portrait_clean',
+    version:4,
+    scope:'det_icons_portrait_costbadge_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: iconos de stats + retrato. Arrastra con mouse; rueda o Tamaño cambia escala. IDs: deticon.* y portrait.image.',
+    note:'DET limpio v32: iconos de stats + retrato + medallón de costo. Arrastra con mouse; rueda o Tamaño cambia escala. IDs: deticon.*, portrait.image y cost.badge.',
     icons,
-    portrait
+    portrait,
+    costBadge
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}

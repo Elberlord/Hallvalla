@@ -1482,10 +1482,7 @@ function syncCardInspectTemplateUi(progressText=null){
 function cleanupUnifiedDetSurface(modal){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
-  [...card.children].forEach(child=>{
-    if(child?.classList?.contains('hv-det-icon-calibration'))return;
-    child.remove();
-  });
+  [...card.children].forEach(child=>{child.remove();});
   return card;
 }
 
@@ -1508,6 +1505,20 @@ function ensureUnifiedDetPortraitCalibration(modal,entity,{live=false,visualHtml
   return box;
 }
 
+function ensureUnifiedDetCostBadgeCalibration(modal){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('#detCostBadge')?.remove();
+  const box=document.createElement('div');
+  box.id='detCostBadge';
+  box.className='hv-det-cost-badge-calibration';
+  box.setAttribute('aria-label','Insignia artística para costo');
+  box.innerHTML=`<img src="assets/ui/det_templates/det_cost_badge_v1.png" alt=""><span class="hv-det-cal-id">cost.badge</span>`;
+  card.appendChild(box);
+  return box;
+}
+
+
 function getUnifiedDetStats(entity,{live=false}={}){
   if(live&&entity){
     if(entity.leader)return [["HP",`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`],["AT",effectiveAtk(entity)],["GD",displayEffectiveGuard(entity)],["DX",0],["AGI",0],["MV",effectiveMov(entity)],["RG",getUnitAttackRange(entity)]];
@@ -1522,6 +1533,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   modal.className=`card-inspect-modal hidden unified-det-modal det-v32-clean-surface unified-det-${mode} ${getCardVisualClass(entity)}`;
   const card=cleanupUnifiedDetSurface(modal);
   ensureUnifiedDetPortraitCalibration(modal,entity,{live,visualHtml});
+  ensureUnifiedDetCostBadgeCalibration(modal);
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=[];
   modal._hvEffectText="";

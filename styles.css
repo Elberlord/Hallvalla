@@ -23654,17 +23654,13 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 
 
-/* === DET v32 CLEAN ICON CALIBRATION · 8BJ ===
-   Un único DET para colección/mano/campo. Durante esta fase visual solo se
-   muestran el template estático y los 7 iconos de stats calibrables.
-   La lógica/datos siguen existiendo en DOM pero quedan ocultos.
+/* === DET v32 CLEAN ICON CALIBRATION · 8BP ===
+   DET limpio real: la superficie se reconstruye desde JS. Aquí solo se
+   define el template, los iconos calibrables y los elementos nuevos.
    ================================================================ */
 #cardInspectModal .card-inspect-card{
   background:transparent url("assets/ui/det_templates/det_base_universal_v32.png") center/100% 100% no-repeat!important;
   overflow:visible!important;
-}
-#cardInspectModal .card-inspect-card > :not(.hv-det-icon-calibration):not(.hv-det-portrait-calibration){
-  display:none!important;
 }
 #cardInspectModal .hv-det-icon-calibration{
   position:absolute!important;
@@ -23676,8 +23672,8 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 #cardInspectModal .hv-det-cal-icon{
   position:absolute!important;
-  width:44px!important;
-  height:44px!important;
+  width:3.8553%!important;
+  height:9.7167%!important;
   min-width:44px!important;
   min-height:44px!important;
   display:flex!important;
@@ -23741,76 +23737,14 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .hv-det-icon-actions{grid-template-columns:1fr 1fr!important;}
 .hv-det-icon-actions [data-det-copy-icons-json]{grid-column:1/-1!important;}
 
+/* === DET v32 · portrait calibration · 8BP === */
 
-/* === DET v32 CLEAN ICON CALIBRATION HOTFIX · 8BK ===
-   Mata cualquier panel/overlay dinámico que sobreviva al render anterior.
-   Únicamente quedan visibles el template universal y la capa de iconos.
-   ================================================================ */
-#cardInspectModal .card-inspect-card > *,
-#cardInspectModal .card-inspect-card .card-inspect-head,
-#cardInspectModal .card-inspect-card #cardInspectBattlePowerBadge,
-#cardInspectModal .card-inspect-card #detLevelPanel,
-#cardInspectModal .card-inspect-card #cardInspectVisual,
-#cardInspectModal .card-inspect-card #cardInspectStats,
-#cardInspectModal .card-inspect-card #cardInspectText,
-#cardInspectModal .card-inspect-card #cardInspectReason,
-#cardInspectModal .card-inspect-card #detFavoriteToggle,
-#cardInspectModal .card-inspect-card .card-inspect-actions,
-#cardInspectModal .card-inspect-card .det-deck-utility-row,
-#cardInspectModal .card-inspect-card .deck-builder-detail-box,
-#cardInspectModal .card-inspect-card .det-core-value,
-#cardInspectModal .card-inspect-card .det-core-action,
-#cardInspectModal .card-inspect-card .det-battle-power-badge,
-#cardInspectModal .card-inspect-card .det-level-panel,
-#cardInspectModal .card-inspect-card .det-section-block,
-#cardInspectModal .card-inspect-card .det-status-section,
-#cardInspectModal .card-inspect-card .detail-guide-row,
-#cardInspectModal .card-inspect-card .det-quote-block,
-#cardInspectModal .card-inspect-card .deck-builder-detail-box,
-#cardInspectModal .card-inspect-card .det-deck-utility-row{
-  display:none!important;
-  visibility:hidden!important;
-  opacity:0!important;
-  pointer-events:none!important;
-}
-
-/* La única excepción: capa de iconos calibrables y todo lo que contiene. */
-#cardInspectModal .card-inspect-card > .hv-det-icon-calibration,
-#cardInspectModal .card-inspect-card > .hv-det-icon-calibration *,
-#cardInspectModal .hv-det-icon-calibration,
-#cardInspectModal .hv-det-icon-calibration *{
-  visibility:visible!important;
-  opacity:1!important;
-}
-#cardInspectModal .card-inspect-card > .hv-det-icon-calibration{
-  display:block!important;
-  pointer-events:none!important;
-}
-#cardInspectModal .hv-det-cal-icon{
-  display:flex!important;
-}
-.hv-det-direct-editing #cardInspectModal .hv-det-cal-icon{
-  pointer-events:auto!important;
-}
-
-/* No permitir que pseudo-elementos viejos reaparezcan encima del template. */
-#cardInspectModal .card-inspect-card::before,
-#cardInspectModal .card-inspect-card::after,
-#cardInspectModal .card-inspect-card *::before,
-#cardInspectModal .card-inspect-card *::after{
-  box-shadow:none;
-}
-#cardInspectModal .card-inspect-card::before,
-#cardInspectModal .card-inspect-card::after{display:none!important;}
-
-
-/* === DET v32 · portrait calibration · 8BM === */
 #cardInspectModal .hv-det-portrait-calibration{
   position:absolute!important;
-  left:4.2%!important;
-  top:5.2%!important;
-  width:28.8%!important;
-  height:51.8%!important;
+  left:4.7328%!important;
+  top:6.1577%!important;
+  width:28.7994%!important;
+  height:51.7975%!important;
   display:block!important;
   overflow:hidden!important;
   z-index:35!important;
@@ -23852,23 +23786,55 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 
 
-/* === DET v32 portrait visibility fix · 8BN ===
-   El hotfix 8BK ocultaba todos los hijos del DET y solo reactivaba la capa
-   de iconos. El retrato sí se creaba en JS, pero quedaba con visibility:hidden
-   y opacity:0. Esta excepción lo deja visible y editable, sin reactivar ningún
-   panel viejo.
-   ================================================================ */
-#cardInspectModal .card-inspect-card > .hv-det-portrait-calibration,
-#cardInspectModal .card-inspect-card > .hv-det-portrait-calibration *,
-#cardInspectModal .hv-det-portrait-calibration,
-#cardInspectModal .hv-det-portrait-calibration *{
-  visibility:visible!important;
-  opacity:1!important;
-}
-#cardInspectModal .card-inspect-card > .hv-det-portrait-calibration{
-  display:block!important;
+
+
+
+/* === DET v32 · badge de costo artístico · 8BP === */
+#cardInspectModal .hv-det-cost-badge-calibration{
+  position:absolute!important;
+  left:12.95%!important;
+  top:55.65%!important;
+  width:12.35%!important;
+  height:auto!important;
+  aspect-ratio:1500 / 1023!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:visible!important;
+  z-index:46!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  transform-origin:center!important;
   pointer-events:none!important;
+  user-select:none!important;
 }
-.hv-det-direct-editing #cardInspectModal .card-inspect-card > .hv-det-portrait-calibration{
+#cardInspectModal .hv-det-cost-badge-calibration img{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:contain!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.38))!important;
+}
+#cardInspectModal .hv-det-cost-badge-calibration .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-cost-badge-calibration{
   pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:3px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-cost-badge-calibration .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-cost-badge-calibration.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:4px!important;
 }
