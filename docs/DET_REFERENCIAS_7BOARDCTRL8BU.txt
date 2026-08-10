@@ -1,0 +1,12 @@
+HallValla 7BOARDCTRL8BU
+
+Cambio limitado al DET limpio.
+
+Añadido al DET:
+- weapon.icon: usa getWeaponClassIcon(entity), la misma resolución de clase de arma existente.
+- copies.value: cantidad qty de la misma key en la colección/biblioteca del jugador.
+- formula.icon: usa assets/ui/det_icons/dexterity.webp y la acción existente guide-formula-btn.
+- lore.icon: usa assets/ui/det_icons/lore.webp y la acción existente guide-lore-btn.
+
+Las acciones de arma, PREC/EVA y Conóceme reutilizan la delegación informativa ya existente del DET; no cambian mecánicas.
+No se modificaron IA, combate, PvP, PvE, aventura, eventos ni Firebase.

@@ -1063,6 +1063,10 @@ function hvDetBuildTargets(root){
   hvDetAddTarget(list,root.querySelector('#detCostBadge'),'cost.badge','COSTO · MEDALLÓN');
   hvDetAddTarget(list,root.querySelector('#detCardName'),'name.text','NOMBRE');
   hvDetAddTarget(list,root.querySelector('#detCostValue'),'cost.value','COSTO · VALOR');
+  hvDetAddTarget(list,root.querySelector('#detWeaponIcon'),'weapon.icon','ARMA · ICONO');
+  hvDetAddTarget(list,root.querySelector('#detCopiesValue'),'copies.value','COPIAS · CANTIDAD');
+  hvDetAddTarget(list,root.querySelector('#detFormulaIcon'),'formula.icon','PREC/EVA · ICONO');
+  hvDetAddTarget(list,root.querySelector('#detLoreIcon'),'lore.icon','CONÓCEME · ICONO');
   [...root.querySelectorAll('.hv-det-stat-value')].forEach(el=>{
     const key=el.dataset.detStatValue||'stat';
     const labels={hp:'HP',dexterity:'PX / Destreza',movement:'MV / Movimiento',attack:'AT / Ataque',guard:'GD / Guardia',agility:'AG / Agilidad',range:'RG / Rango'};
@@ -1396,17 +1400,46 @@ function copyHvDetIconJson(button){
       };
     }
   }
+  const referenceUtilities={};
+  [
+    ['weapon','weapon.icon','#detWeaponIcon'],
+    ['copies','copies.value','#detCopiesValue'],
+    ['formula','formula.icon','#detFormulaIcon'],
+    ['lore','lore.icon','#detLoreIcon']
+  ].forEach(([name,key,selector])=>{
+    const el=root?.querySelector(selector);
+    if(!el)return;
+    const direct=normalizeHvDetDirectSetting(state.items[key]||HV_DET_DIRECT_DEFAULT);
+    const entry={id:key,direct};
+    if(name==='weapon')entry.asset=el.querySelector('img')?.getAttribute('src')||'';
+    if(name==='formula')entry.asset=el.querySelector('img')?.getAttribute('src')||'';
+    if(name==='lore')entry.asset=el.querySelector('img')?.getAttribute('src')||'';
+    if(name==='copies')entry.value=el.querySelector('.hv-det-copies-number')?.textContent||'';
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=el.getBoundingClientRect();
+      entry.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    referenceUtilities[name]=entry;
+  });
   const payload=JSON.stringify({
-    version:6,
-    scope:'det_icons_portrait_costbadge_name_stats_clean',
+    version:7,
+    scope:'det_icons_portrait_costbadge_name_stats_reference_clean',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: iconos + retrato + medallón + nombre + valores dinámicos de stats/costo. IDs: deticon.*, portrait.image, cost.badge, name.text, stat.*.value y cost.value.',
+    note:'DET limpio v32: iconos + retrato + medallón + nombre + stats/costo + arma/copias/PREC-EVA/Conóceme. IDs nuevos: weapon.icon, copies.value, formula.icon y lore.icon.',
     icons,
     portrait,
     costBadge,
     nameText,
     statValues,
-    costValue
+    costValue,
+    referenceUtilities
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}

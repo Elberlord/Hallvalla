@@ -1564,6 +1564,80 @@ function ensureUnifiedDetStatValues(modal,entity,{live=false}={}){
 }
 
 
+
+function getUnifiedDetOwnedCopies(entity){
+  if(!entity)return 0;
+  const key=String(entity?.key||'');
+  try{
+    if(key&&typeof getCollectionCardsExpanded==='function'){
+      const owned=getCollectionCardsExpanded().find(card=>String(card?.key||'')===key);
+      if(owned)return Math.max(0,Number(owned.qty||0));
+    }
+    if(key&&typeof getPlayerCollection==='function'){
+      const collection=getPlayerCollection();
+      const owned=(collection?.cards||[]).find(card=>String(card?.key||'')===key);
+      if(owned)return Math.max(0,Number(owned.qty||0));
+    }
+  }catch(error){
+    console.warn('[HallValla] No se pudo resolver la cantidad de copias para DET:',error);
+  }
+  return Math.max(0,Number(entity?.qty||0));
+}
+
+function ensureUnifiedDetReferenceUtilities(modal,entity){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('.hv-det-reference-utilities')?.remove();
+  const layer=document.createElement('div');
+  layer.className='hv-det-reference-utilities';
+  layer.setAttribute('aria-label','Referencias de arma, copias, PREC/EVA y Conóceme');
+
+  const isUnitLike=!!entity&&(entity.type==='unit'||entity.leader||entity.type==='leader');
+  const weaponIcon=isUnitLike&&typeof getWeaponClassIcon==='function'
+    ? getWeaponClassIcon(entity)
+    : 'assets/ui/det_icons/tactical.webp';
+  const weaponLabel=isUnitLike&&typeof getWeaponClassLabel==='function'
+    ? getWeaponClassLabel(entity)
+    : 'Sin clase';
+  const copies=getUnifiedDetOwnedCopies(entity);
+
+  const weapon=document.createElement('button');
+  weapon.id='detWeaponIcon';
+  weapon.type='button';
+  weapon.className='hv-det-reference-icon hv-det-weapon-icon guide-weapon-btn';
+  weapon.disabled=!isUnitLike;
+  weapon.setAttribute('aria-label',`Arma: ${weaponLabel}`);
+  weapon.title=weaponLabel;
+  weapon.innerHTML=`<img src="${escapeHtml(weaponIcon)}" alt="${escapeHtml(weaponLabel)}" draggable="false"><span class="hv-det-cal-id">weapon.icon</span>`;
+
+  const copyBox=document.createElement('div');
+  copyBox.id='detCopiesValue';
+  copyBox.className='hv-det-copies-value';
+  copyBox.setAttribute('aria-label',`Copias en colección: ${copies}`);
+  copyBox.innerHTML=`<span class="hv-det-copies-number">${escapeHtml(String(copies))}</span><span class="hv-det-cal-id">copies.value</span>`;
+
+  const formula=document.createElement('button');
+  formula.id='detFormulaIcon';
+  formula.type='button';
+  formula.className='hv-det-reference-icon hv-det-formula-icon guide-formula-btn';
+  formula.setAttribute('aria-label','PREC / EVA');
+  formula.title='PREC / EVA';
+  formula.innerHTML='<img src="assets/ui/det_icons/dexterity.webp" alt="PREC / EVA" draggable="false"><span class="hv-det-cal-id">formula.icon</span>';
+
+  const lore=document.createElement('button');
+  lore.id='detLoreIcon';
+  lore.type='button';
+  lore.className='hv-det-reference-icon hv-det-lore-icon guide-lore-btn';
+  lore.disabled=!isUnitLike;
+  lore.setAttribute('aria-label','Conóceme');
+  lore.title='Conóceme';
+  lore.innerHTML='<img src="assets/ui/det_icons/lore.webp" alt="Conóceme" draggable="false"><span class="hv-det-cal-id">lore.icon</span>';
+
+  layer.append(weapon,copyBox,formula,lore);
+  card.appendChild(layer);
+  return layer;
+}
+
 function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statuses=[],visualHtml="",reasonText="",allowPlay=false,playState=null}={}){
   if(!entity)return null;
   const modal=$("cardInspectModal");
@@ -1574,12 +1648,14 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   ensureUnifiedDetCostBadgeCalibration(modal);
   ensureUnifiedDetNameCalibration(modal,entity);
   ensureUnifiedDetStatValues(modal,entity,{live});
+  ensureUnifiedDetReferenceUtilities(modal,entity);
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=[];
   modal._hvEffectText="";
   modal._hvEffectTitle="";
   modal._hvLevelProgressText="";
   modal._hvDetCleanMode="icon-calibration";
+  bindCardInspectDetModalDelegation(modal);
   modal.classList.remove("hidden");
   if(typeof ensureHvDetIconCalibrationLayer==="function")ensureHvDetIconCalibrationLayer(modal);
   if(typeof queueHvDetDirectRefresh==="function")queueHvDetDirectRefresh();

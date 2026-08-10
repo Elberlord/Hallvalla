@@ -23985,3 +23985,83 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   outline:2px solid rgba(79,211,255,.98)!important;
   outline-offset:3px!important;
 }
+
+
+/* === DET v32 · referencias arma/copias/PREC-EVA/lore · 8BU === */
+#cardInspectModal .hv-det-reference-utilities{
+  position:absolute!important;
+  inset:0!important;
+  z-index:58!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+#cardInspectModal .hv-det-reference-icon,
+#cardInspectModal .hv-det-copies-value{
+  position:absolute!important;
+  width:4.15%!important;
+  height:8.4%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  transform-origin:center!important;
+  user-select:none!important;
+}
+#cardInspectModal .hv-det-reference-icon{
+  pointer-events:auto!important;
+  cursor:pointer!important;
+}
+#cardInspectModal .hv-det-reference-icon:disabled{
+  pointer-events:none!important;
+  opacity:.38!important;
+}
+#cardInspectModal .hv-det-reference-icon img{
+  width:88%!important;
+  height:88%!important;
+  display:block!important;
+  object-fit:contain!important;
+  border:0!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.78))!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+}
+#cardInspectModal .hv-det-weapon-icon{left:58.45%!important;top:41.55%!important;}
+#cardInspectModal .hv-det-copies-value{left:77.15%!important;top:41.55%!important;}
+#cardInspectModal .hv-det-formula-icon{left:58.45%!important;top:51.85%!important;}
+#cardInspectModal .hv-det-lore-icon{left:77.15%!important;top:51.85%!important;}
+#cardInspectModal .hv-det-copies-value{
+  color:#f6dfa0!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(14px,1.7vw,31px)!important;
+  font-weight:900!important;
+  line-height:1!important;
+  text-align:center!important;
+  text-shadow:0 2px 4px rgba(0,0,0,.98),0 0 7px rgba(228,171,58,.20)!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-copies-number{pointer-events:none!important;}
+#cardInspectModal .hv-det-reference-icon .hv-det-cal-id,
+#cardInspectModal .hv-det-copies-value .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-reference-icon,
+.hv-det-direct-editing #cardInspectModal .hv-det-copies-value{
+  pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-reference-icon .hv-det-cal-id,
+.hv-det-direct-editing #cardInspectModal .hv-det-copies-value .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-reference-icon.hv-det-direct-selected,
+.hv-det-direct-editing #cardInspectModal .hv-det-copies-value.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:3px!important;
+}
