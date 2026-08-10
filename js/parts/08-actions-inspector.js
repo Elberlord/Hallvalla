@@ -1715,6 +1715,30 @@ function ensureUnifiedDetActiveEffects(modal,entity,statuses=[]){
   return list;
 }
 
+function ensureUnifiedDetPlayButton(modal,entity,{mode="card",allowPlay=false,playState=null}={}){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('#detPlayCardBtn')?.remove();
+  const state=playState||(typeof getCardPlayState==='function'?getCardPlayState(entity):null);
+  const canPlay=mode==='hand'&&allowPlay===true&&state?.canPlay===true;
+  const button=document.createElement('button');
+  button.id='detPlayCardBtn';
+  button.type='button';
+  button.className=`hv-det-play-card-button${canPlay?'':' is-hidden'}`;
+  button.setAttribute('aria-label','Jugar esta carta');
+  button.title=canPlay?'Jugar esta carta':String(state?.reason||'Esta acción solo está disponible para una carta jugable de tu mano.');
+  button.disabled=!canPlay;
+  button.innerHTML='<img src="assets/ui/det_icons/jugar.webp" alt="Jugar" draggable="false">';
+  button.addEventListener('click',ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    if(button.disabled)return;
+    playInspectedCard();
+  });
+  card.appendChild(button);
+  return button;
+}
+
 function getUnifiedDetLevelDisplayData(entity){
   const empty={visible:false,rank:'—',progressText:'',percent:0,maxed:false,current:0,total:0,remaining:0};
   try{
@@ -1823,6 +1847,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   ensureUnifiedDetLevelAndBattlePower(modal,entity);
   ensureUnifiedDetMetaFields(modal,entity,{mode,statuses});
   ensureUnifiedDetActiveEffects(modal,entity,statuses);
+  ensureUnifiedDetPlayButton(modal,entity,{mode,allowPlay,playState});
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=Array.isArray(statuses)?statuses:[];
   modal._hvEffectText="";

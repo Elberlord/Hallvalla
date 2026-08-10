@@ -24328,3 +24328,49 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   outline:2px solid rgba(79,211,255,.98)!important;
   outline-offset:3px!important;
 }
+
+/* === DET v32 · botón JUGAR exclusivo de carta jugable en mano · 8BZ === */
+#cardInspectModal .hv-det-play-card-button{
+  position:absolute!important;
+  left:84.0%!important;
+  top:78.5%!important;
+  width:8.2%!important;
+  aspect-ratio:1/1!important;
+  z-index:74!important;
+  display:block!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+  transform-origin:center!important;
+  transition:transform .14s ease,filter .14s ease!important;
+  overflow:visible!important;
+  user-select:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+#cardInspectModal .hv-det-play-card-button.is-hidden,
+#cardInspectModal .hv-det-play-card-button:disabled{
+  display:none!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-play-card-button img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.55))!important;
+}
+#cardInspectModal .hv-det-play-card-button:hover{transform:scale(1.045)!important;filter:brightness(1.08)!important;}
+#cardInspectModal .hv-det-play-card-button:active{transform:scale(.975)!important;}
+#cardInspectModal .hv-det-play-card-button:focus-visible{outline:2px solid #f5d785!important;outline-offset:3px!important;}
