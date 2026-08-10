@@ -1715,6 +1715,42 @@ function ensureUnifiedDetActiveEffects(modal,entity,statuses=[]){
   return list;
 }
 
+function ensureUnifiedDetOwnAbilities(modal,entity){
+  const card=modal?.querySelector?.('.card-inspect-card');
+  if(!card)return null;
+  card.querySelector('#detOwnEffectsList')?.remove();
+  const sections=typeof getDetAbilitySectionsForInspector==='function'
+    ? getDetAbilitySectionsForInspector(entity)
+    : [];
+  const list=document.createElement('div');
+  list.id='detOwnEffectsList';
+  list.className=`hv-det-own-effects-list${sections.length?'':' is-empty'} count-${Math.min(4,Math.max(0,sections.length))}`;
+  list.setAttribute('aria-label',sections.length?`Efectos propios: ${sections.length}`:'Sin efectos propios');
+  const listId=document.createElement('span');
+  listId.className='hv-det-cal-id hv-det-own-effects-list-id';
+  listId.textContent='abilities.list';
+  list.appendChild(listId);
+  sections.forEach((section,index)=>{
+    const visual=typeof getDetAbilityVisual==='function'
+      ? getDetAbilityVisual(entity,section,index)
+      : {icon:'assets/ui/status_icons/status_generic.webp',label:section?.title||`Efecto ${index+1}`,kind:'effect'};
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='hv-det-own-ability-icon guide-ability-btn';
+    button.dataset.abilityTitle=String(section?.title||visual?.label||`Efecto ${index+1}`);
+    button.dataset.abilityText=String(section?.body||'Sin explicación adicional.');
+    button.dataset.abilityKind=String(visual?.kind||'effect');
+    button.dataset.detAbilityIndex=String(index+1);
+    const label=String(section?.title||visual?.label||`Efecto ${index+1}`);
+    button.title=label;
+    button.setAttribute('aria-label',`Abrir ${label}`);
+    button.innerHTML=`<span class="hv-det-own-ability-art"><img src="${escapeHtml(String(visual?.icon||'assets/ui/status_icons/status_generic.webp'))}" alt="" draggable="false"></span><span class="hv-det-cal-id">ability.${index+1}</span>`;
+    list.appendChild(button);
+  });
+  card.appendChild(list);
+  return list;
+}
+
 function ensureUnifiedDetPlayButton(modal,entity,{mode="card",allowPlay=false,playState=null}={}){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
@@ -1847,6 +1883,7 @@ function openUnifiedDetEntity(entity,{mode="card",ownerLabel="",live=false,statu
   ensureUnifiedDetLevelAndBattlePower(modal,entity);
   ensureUnifiedDetMetaFields(modal,entity,{mode,statuses});
   ensureUnifiedDetActiveEffects(modal,entity,statuses);
+  ensureUnifiedDetOwnAbilities(modal,entity);
   ensureUnifiedDetPlayButton(modal,entity,{mode,allowPlay,playState});
   modal._hvInspectedEntity=entity;
   modal._hvActiveStatuses=Array.isArray(statuses)?statuses:[];

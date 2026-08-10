@@ -24374,3 +24374,124 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #cardInspectModal .hv-det-play-card-button:hover{transform:scale(1.045)!important;filter:brightness(1.08)!important;}
 #cardInspectModal .hv-det-play-card-button:active{transform:scale(.975)!important;}
 #cardInspectModal .hv-det-play-card-button:focus-visible{outline:2px solid #f5d785!important;outline-offset:3px!important;}
+
+
+/* === DET v32 · efectos propios + JUGAR calibrable · 8CA === */
+#cardInspectModal .hv-det-own-effects-list{
+  position:absolute!important;
+  left:66.6%!important;
+  top:70.2%!important;
+  width:18.4%!important;
+  height:17.8%!important;
+  z-index:70!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(54px,1fr)!important;
+  align-content:center!important;
+  justify-content:center!important;
+  align-items:center!important;
+  justify-items:center!important;
+  gap:10px!important;
+  padding:12px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:
+    radial-gradient(circle at 50% 48%,rgba(25,22,16,.98) 0%,rgba(5,8,11,.985) 56%,rgba(2,5,8,.96) 100%)!important;
+  box-shadow:inset 0 0 28px rgba(0,0,0,.72),0 0 12px rgba(0,0,0,.18)!important;
+  overflow:visible!important;
+  transform-origin:center!important;
+  pointer-events:none!important;
+}
+#cardInspectModal .hv-det-own-effects-list.is-empty{display:grid!important;}
+#cardInspectModal .hv-det-own-effects-list.count-0,
+#cardInspectModal .hv-det-own-effects-list.count-1{grid-template-columns:1fr!important;}
+#cardInspectModal .hv-det-own-effects-list.count-2{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+#cardInspectModal .hv-det-own-effects-list.count-3{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+#cardInspectModal .hv-det-own-effects-list.count-4{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+#cardInspectModal .hv-det-own-effects-list.count-1 .hv-det-own-ability-icon{width:74px!important;height:74px!important;}
+#cardInspectModal .hv-det-own-effects-list.count-2 .hv-det-own-ability-icon{width:62px!important;height:62px!important;}
+#cardInspectModal .hv-det-own-effects-list.count-3 .hv-det-own-ability-icon{width:52px!important;height:52px!important;}
+#cardInspectModal .hv-det-own-effects-list.count-4 .hv-det-own-ability-icon{width:48px!important;height:48px!important;}
+#cardInspectModal .hv-det-own-effects-list > .hv-det-own-effects-list-id{display:none!important;}
+#cardInspectModal .hv-det-own-ability-icon{
+  position:relative!important;
+  width:64px!important;
+  height:64px!important;
+  min-width:0!important;
+  min-height:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:4px!important;
+  margin:0!important;
+  border:1px solid rgba(221,174,73,.34)!important;
+  border-radius:12px!important;
+  background:radial-gradient(circle at 50% 42%,rgba(78,58,24,.34),rgba(4,7,10,.46) 66%,rgba(0,0,0,.10) 100%)!important;
+  box-shadow:inset 0 0 12px rgba(0,0,0,.58),0 3px 8px rgba(0,0,0,.34)!important;
+  transform-origin:center!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  user-select:none!important;
+}
+#cardInspectModal .hv-det-own-ability-icon:hover,
+#cardInspectModal .hv-det-own-ability-icon:focus-visible{
+  filter:brightness(1.14)!important;
+  border-color:rgba(244,206,117,.70)!important;
+}
+#cardInspectModal .hv-det-own-ability-art,
+#cardInspectModal .hv-det-own-ability-art img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+}
+#cardInspectModal .hv-det-own-ability-icon .hv-det-cal-id{display:none!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-own-effects-list{
+  pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.72)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-own-effects-list > .hv-det-own-effects-list-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-own-ability-icon{
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal .hv-det-own-ability-icon .hv-det-cal-id{display:block!important;}
+.hv-det-direct-editing #cardInspectModal .hv-det-own-effects-list.hv-det-direct-selected,
+.hv-det-direct-editing #cardInspectModal .hv-det-own-ability-icon.hv-det-direct-selected,
+.hv-det-direct-editing #cardInspectModal #detPlayCardBtn.hv-det-direct-selected{
+  outline:2px solid rgba(79,211,255,.98)!important;
+  outline-offset:3px!important;
+}
+.hv-det-direct-editing #cardInspectModal #detPlayCardBtn:not(.is-hidden){
+  pointer-events:auto!important;
+  cursor:move!important;
+  touch-action:none!important;
+  outline:1px dashed rgba(255,218,116,.92)!important;
+  outline-offset:2px!important;
+}
+.hv-det-direct-editing #cardInspectModal #detPlayCardBtn:not(.is-hidden)::after{
+  content:'action.play';
+  position:absolute!important;
+  left:50%!important;
+  top:-18px!important;
+  transform:translateX(-50%)!important;
+  display:block!important;
+  padding:2px 5px!important;
+  border:1px solid #cf9d37!important;
+  border-radius:5px!important;
+  background:#090805!important;
+  color:#ffe08b!important;
+  font:700 10px/1 Georgia,serif!important;
+  white-space:nowrap!important;
+  pointer-events:none!important;
+}

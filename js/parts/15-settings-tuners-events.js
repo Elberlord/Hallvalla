@@ -1082,6 +1082,12 @@ function hvDetBuildTargets(root){
   [...root.querySelectorAll('#detEffectsList .hv-det-effect-icon')].forEach((el,index)=>{
     hvDetAddTarget(list,el,`effect.${index+1}`,`EFECTO ACTIVO ${index+1}`);
   });
+  hvDetAddTarget(list,root.querySelector('#detOwnEffectsList'),'abilities.list','EFECTOS PROPIOS · ÁREA');
+  [...root.querySelectorAll('#detOwnEffectsList .hv-det-own-ability-icon')].forEach((el,index)=>{
+    const label=el.dataset.abilityTitle||el.getAttribute('aria-label')||`EFECTO PROPIO ${index+1}`;
+    hvDetAddTarget(list,el,`ability.${index+1}`,`EFECTO PROPIO ${index+1} · ${label}`);
+  });
+  hvDetAddTarget(list,root.querySelector('#detPlayCardBtn'),'action.play','BOTÓN · JUGAR');
   [...root.querySelectorAll('.hv-det-stat-value')].forEach(el=>{
     const key=el.dataset.detStatValue||'stat';
     const labels={hp:'HP',dexterity:'PX / Destreza',movement:'MV / Movimiento',attack:'AT / Ataque',guard:'GD / Guardia',agility:'AG / Agilidad',range:'RG / Rango'};
@@ -1531,11 +1537,61 @@ function copyHvDetIconJson(button){
       activeEffects.items.push(effect);
     });
   }
+  let ownEffects=null;
+  const ownEffectsEl=root?.querySelector('#detOwnEffectsList');
+  if(ownEffectsEl){
+    const direct=normalizeHvDetDirectSetting(state.items['abilities.list']||HV_DET_DIRECT_DEFAULT);
+    ownEffects={id:'abilities.list',direct,items:[]};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=ownEffectsEl.getBoundingClientRect();
+      ownEffects.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+    [...ownEffectsEl.querySelectorAll('.hv-det-own-ability-icon')].forEach((el,index)=>{
+      const key=`ability.${index+1}`;
+      const effect={id:key,direct:normalizeHvDetDirectSetting(state.items[key]||HV_DET_DIRECT_DEFAULT),label:el.dataset.abilityTitle||el.getAttribute('aria-label')||''};
+      if(cardRect&&cardRect.width&&cardRect.height){
+        const r=el.getBoundingClientRect();
+        effect.current={
+          leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+          topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+          widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+          heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+          centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+          centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+        };
+      }
+      ownEffects.items.push(effect);
+    });
+  }
+  let playButton=null;
+  const playEl=root?.querySelector('#detPlayCardBtn');
+  if(playEl){
+    const direct=normalizeHvDetDirectSetting(state.items['action.play']||HV_DET_DIRECT_DEFAULT);
+    playButton={id:'action.play',direct,visible:!playEl.classList.contains('is-hidden')&&!playEl.disabled};
+    if(cardRect&&cardRect.width&&cardRect.height){
+      const r=playEl.getBoundingClientRect();
+      playButton.current={
+        leftPct:Number((((r.left-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        topPct:Number((((r.top-cardRect.top)/cardRect.height)*100).toFixed(4)),
+        widthPct:Number(((r.width/cardRect.width)*100).toFixed(4)),
+        heightPct:Number(((r.height/cardRect.height)*100).toFixed(4)),
+        centerXPct:Number(((((r.left+r.width/2)-cardRect.left)/cardRect.width)*100).toFixed(4)),
+        centerYPct:Number(((((r.top+r.height/2)-cardRect.top)/cardRect.height)*100).toFixed(4))
+      };
+    }
+  }
   const payload=JSON.stringify({
-    version:9,
-    scope:'det_icons_portrait_costbadge_name_stats_reference_clean',
+    version:10,
+    scope:'det_icons_portrait_costbadge_name_stats_reference_effects_play',
     template:'assets/ui/det_templates/det_base_universal_v32.png',
-    note:'DET limpio v32: añade TIPO, RAREZA, ESTADO y EFECTOS ACTIVOS sobre la base anterior. IDs nuevos: meta.type, meta.rarity, meta.state, effects.list y effect.*.',
+    note:'DET limpio v32: mantiene EFECTOS ACTIVOS, añade EFECTOS PROPIOS y registra JUGAR en el editor. IDs: abilities.list, ability.* y action.play.',
     icons,
     portrait,
     costBadge,
@@ -1545,7 +1601,9 @@ function copyHvDetIconJson(button){
     referenceUtilities,
     progression,
     metadata,
-    activeEffects
+    activeEffects,
+    ownEffects,
+    playButton
   },null,2);
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON DET',1200);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de iconos DET:',payload));return;}
