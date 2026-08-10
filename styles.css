@@ -10261,8 +10261,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   padding:7px 12px!important;
 }
 #mainMenu .asset-profile-img{
-  width:64px!important;
-  height:64px!important;
+  width:min(48px,100%)!important;
+  height:min(48px,100%)!important;
 }
 #mainMenu .asset-profile-name{
   font-size:20px!important;
@@ -24376,7 +24376,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #cardInspectModal .hv-det-play-card-button:focus-visible{outline:2px solid #f5d785!important;outline-offset:3px!important;}
 
 
-/* === DET v32 · efectos propios + JUGAR calibrable · 8CA === */
+/* === DET v32 · efectos propios 3x3 + JUGAR calibrable · 8CC === */
 #cardInspectModal .hv-det-own-effects-list{
   position:absolute!important;
   left:66.6%!important;
@@ -24386,39 +24386,33 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   z-index:70!important;
   box-sizing:border-box!important;
   display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:minmax(54px,1fr)!important;
-  align-content:center!important;
-  justify-content:center!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:repeat(3,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  align-content:start!important;
+  justify-content:stretch!important;
   align-items:center!important;
   justify-items:center!important;
-  gap:10px!important;
-  padding:12px!important;
+  gap:6px!important;
+  padding:8px!important;
   margin:0!important;
   border:0!important;
   border-radius:12px!important;
   background:
     radial-gradient(circle at 50% 48%,rgba(25,22,16,.98) 0%,rgba(5,8,11,.985) 56%,rgba(2,5,8,.96) 100%)!important;
   box-shadow:inset 0 0 28px rgba(0,0,0,.72),0 0 12px rgba(0,0,0,.18)!important;
-  overflow:visible!important;
+  overflow:hidden!important;
   transform-origin:center!important;
   pointer-events:none!important;
 }
 #cardInspectModal .hv-det-own-effects-list.is-empty{display:grid!important;}
-#cardInspectModal .hv-det-own-effects-list.count-0,
-#cardInspectModal .hv-det-own-effects-list.count-1{grid-template-columns:1fr!important;}
-#cardInspectModal .hv-det-own-effects-list.count-2{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-#cardInspectModal .hv-det-own-effects-list.count-3{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
-#cardInspectModal .hv-det-own-effects-list.count-4{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-#cardInspectModal .hv-det-own-effects-list.count-1 .hv-det-own-ability-icon{width:74px!important;height:74px!important;}
-#cardInspectModal .hv-det-own-effects-list.count-2 .hv-det-own-ability-icon{width:62px!important;height:62px!important;}
-#cardInspectModal .hv-det-own-effects-list.count-3 .hv-det-own-ability-icon{width:52px!important;height:52px!important;}
-#cardInspectModal .hv-det-own-effects-list.count-4 .hv-det-own-ability-icon{width:48px!important;height:48px!important;}
+#cardInspectModal .hv-det-own-effects-list[class*="count-"]{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
 #cardInspectModal .hv-det-own-effects-list > .hv-det-own-effects-list-id{display:none!important;}
 #cardInspectModal .hv-det-own-ability-icon{
   position:relative!important;
-  width:64px!important;
-  height:64px!important;
+  width:auto!important;
+  height:min(48px,100%)!important;
+  aspect-ratio:1 / 1!important;
   min-width:0!important;
   min-height:0!important;
   display:flex!important;

@@ -1724,7 +1724,7 @@ function ensureUnifiedDetOwnAbilities(modal,entity){
     : [];
   const list=document.createElement('div');
   list.id='detOwnEffectsList';
-  list.className=`hv-det-own-effects-list${sections.length?'':' is-empty'} count-${Math.min(4,Math.max(0,sections.length))}`;
+  list.className=`hv-det-own-effects-list${sections.length?'':' is-empty'} count-${Math.min(9,Math.max(0,sections.length))}`;
   list.setAttribute('aria-label',sections.length?`Efectos propios: ${sections.length}`:'Sin efectos propios');
   const listId=document.createElement('span');
   listId.className='hv-det-cal-id hv-det-own-effects-list-id';
