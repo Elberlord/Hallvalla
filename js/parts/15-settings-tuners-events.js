@@ -928,6 +928,20 @@ const HV_DET_DIRECT_DEFAULT=Object.freeze({
   x:0,y:0,scale:100,width:100,height:100,font:100,lineHeight:100,
   padding:0,gap:0,radius:100,columns:0,overflow:"default"
 });
+// 8CB · calibración estética aprobada por el usuario mediante AJUSTAR DET.
+// Estos valores son la nueva base del editor: mover/restaurar elementos parte de aquí,
+// sin depender del localStorage del navegador donde se realizó la calibración.
+const HV_DET_DIRECT_BAKED_DEFAULTS=Object.freeze({
+  "copies.value":Object.freeze({x:-63.478271484375,y:0.869598388671875}),
+  "level.value":Object.freeze({x:45.2174072265625,y:1.7391357421875}),
+  "level.bar":Object.freeze({x:5.21728515625,y:3.478271484375}),
+  "battlepower.value":Object.freeze({x:23.478271484375,y:4.34783935546875,scale:80}),
+  "meta.type":Object.freeze({x:33.04345703125,y:-5.21734619140625}),
+  "meta.rarity":Object.freeze({x:33.9130859375,y:-1.7391357421875}),
+  "meta.state":Object.freeze({x:34.78271484375,y:0}),
+  "abilities.list":Object.freeze({x:-64.34783935546875,y:-11.304351806640625}),
+  "action.play":Object.freeze({x:71.3043212890625,y:-6.08697509765625})
+});
 
 // v31 · fase de calibración de iconos DET.
 // Son objetos independientes: todavía NO dependen de los datos de la unidad.
@@ -991,12 +1005,14 @@ function saveHvDetLayoutTuner(settings){
   return clean;
 }
 function getHvDetDirectState(){
+  const bakedItems={};
+  Object.entries(HV_DET_DIRECT_BAKED_DEFAULTS).forEach(([key,value])=>{bakedItems[key]=normalizeHvDetDirectSetting(value);});
   try{
     const raw=JSON.parse(localStorage.getItem(HV_DET_DIRECT_STORAGE_KEY)||"{}");
-    const items={};
+    const items={...bakedItems};
     Object.entries(raw?.items||{}).forEach(([key,value])=>{items[key]=normalizeHvDetDirectSetting(value);});
     return {selected:String(raw?.selected||""),items};
-  }catch(_){return {selected:"",items:{}};}
+  }catch(_){return {selected:"",items:bakedItems};}
 }
 function saveHvDetDirectState(state){
   try{localStorage.setItem(HV_DET_DIRECT_STORAGE_KEY,JSON.stringify(state));}catch(_){ }

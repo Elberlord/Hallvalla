@@ -1,0 +1,20 @@
+HallValla 7BOARDCTRL8CB
+
+Base: 7BOARDCTRL8CA.
+
+Cambio único: se integró el JSON estético exportado por el usuario como nueva base nativa de AJUSTAR DET.
+
+Elementos calibrados:
+- copies.value: x -63.478271484375 / y 0.869598388671875
+- level.value: x 45.2174072265625 / y 1.7391357421875
+- level.bar: x 5.21728515625 / y 3.478271484375
+- battlepower.value: x 23.478271484375 / y 4.34783935546875 / escala 80%
+- meta.type: x 33.04345703125 / y -5.21734619140625
+- meta.rarity: x 33.9130859375 / y -1.7391357421875
+- meta.state: x 34.78271484375 / y 0
+- abilities.list: x -64.34783935546875 / y -11.304351806640625
+- action.play: x 71.3043212890625 / y -6.08697509765625
+
+Los valores son defaults del propio editor, por lo que funcionan también sin el localStorage del navegador de calibración y RESTAURAR vuelve a esta base.
+
+No se modificó lógica de JUGAR, efectos, combate, IA, Home, navegación, cartas ni assets.
