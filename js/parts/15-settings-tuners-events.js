@@ -1010,7 +1010,7 @@ function updateDailyRewardButton(){
   const button=$("dailyBtn");if(!button)return;
   const state=getDailyRewardState(),availability=getDailyRewardAvailability(state);
   const count=getDailyRewardClaimedCount(state);
-  let status="locked",label="24 H";
+  let status="locked",label="24 HRS";
   if(count>=state.monthDays){status="complete";label="COMPLETO";}
   else if(availability.available){status="ready";label="RECLAMAR";}
   else if(availability.reason==="final_day"){status="locked";label="DÍA FINAL";}

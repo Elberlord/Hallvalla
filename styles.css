@@ -18511,12 +18511,11 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
    ============================================================ */
 #mainMenu .asset-promo.daily-panel{overflow:visible}
 #mainMenu .asset-promo.daily-panel::after{
-  content:attr(data-daily-label);position:absolute;right:6%;bottom:-7px;z-index:4;
-  min-width:78px;padding:4px 9px;border:1px solid rgba(226,184,77,.76);border-radius:999px;
-  background:rgba(10,8,4,.94);color:#f7df99;font:700 11px/1 Georgia,serif;letter-spacing:.06em;
-  text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.58);pointer-events:none
+  content:attr(data-daily-label);position:absolute;right:7%;bottom:-4px;z-index:4;
+  color:#f7df99;font:700 12px/1 Georgia,serif;letter-spacing:.08em;white-space:nowrap;
+  text-align:center;text-shadow:0 2px 5px rgba(0,0,0,.95),0 0 5px rgba(242,192,62,.22);pointer-events:none
 }
-#mainMenu .asset-promo.daily-panel[data-daily-status="ready"]::after{box-shadow:0 0 14px rgba(242,192,62,.42),0 3px 12px rgba(0,0,0,.58)}
+#mainMenu .asset-promo.daily-panel[data-daily-status="ready"]::after{color:#ffe9a6;text-shadow:0 2px 5px rgba(0,0,0,.95),0 0 8px rgba(242,192,62,.52)}
 #mainMenu .asset-promo.daily-panel[data-daily-status="complete"]::after{opacity:.68}
 .daily-reward-overlay{
   position:fixed;inset:0;z-index:26000;display:flex;align-items:center;justify-content:center;
