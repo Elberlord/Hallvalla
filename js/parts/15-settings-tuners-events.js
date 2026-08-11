@@ -2171,18 +2171,24 @@ function ensureHvForgeLayoutTuner(){
   shell.innerHTML=`<div class="forge-layout-tuner-topbar"><span id="hvForgeLayoutTunerDrag" class="forge-layout-tuner-drag">⠿ MOVER</span><button id="hvForgeLayoutTunerToggle" class="forge-layout-tuner-toggle" type="button">AJUSTAR FORJA</button></div>
   <section id="hvForgeLayoutTunerPanel" class="forge-layout-tuner-panel hidden" aria-label="Calibrador de la Forja">
     <header class="forge-layout-tuner-head"><div><b>CONTROL DE FORJA</b><small>Selecciona cada pieza por separado. Arrastra para mover; rueda del mouse o Tamaño para escalar.</small></div><button id="hvForgeLayoutTunerClose" class="forge-layout-tuner-close" type="button">×</button></header>
-    <label class="forge-layout-target-picker">Elemento<select id="hvForgeTargetPicker">${HV_FORGE_LAYOUT_TARGETS.map(target=>`<option value="${target.key}">${target.label}</option>`).join('')}</select></label>
-    <div id="hvForgeLayoutTunerSelected" class="forge-layout-tuner-selected"></div>
-    <div class="forge-layout-tuner-controls">
-      <label class="forge-layout-tuner-control"><span>Horizontal <output data-forge-out="x">0 px</output></span><input data-forge-setting="x" type="range" min="-900" max="900" step="1" value="0"></label>
-      <label class="forge-layout-tuner-control"><span>Vertical <output data-forge-out="y">0 px</output></span><input data-forge-setting="y" type="range" min="-700" max="700" step="1" value="0"></label>
-      <label class="forge-layout-tuner-control"><span>Tamaño <output data-forge-out="scale">100%</output></span><input data-forge-setting="scale" type="range" min="20" max="250" step="1" value="100"></label><div class="forge-layout-scale-nudges"><button id="hvForgeScaleDown" type="button">− TAMAÑO</button><button id="hvForgeScaleUp" type="button">+ TAMAÑO</button></div>
+    <div class="forge-layout-tuner-scroll">
+      <label class="forge-layout-target-picker">Elemento<select id="hvForgeTargetPicker">${HV_FORGE_LAYOUT_TARGETS.map(target=>`<option value="${target.key}">${target.label}</option>`).join('')}</select></label>
+      <div id="hvForgeLayoutTunerSelected" class="forge-layout-tuner-selected"></div>
+      <div class="forge-layout-tuner-controls">
+        <label class="forge-layout-tuner-control"><span>Horizontal <output data-forge-out="x">0 px</output></span><input data-forge-setting="x" type="range" min="-900" max="900" step="1" value="0"></label>
+        <label class="forge-layout-tuner-control"><span>Vertical <output data-forge-out="y">0 px</output></span><input data-forge-setting="y" type="range" min="-700" max="700" step="1" value="0"></label>
+        <label class="forge-layout-tuner-control"><span>Tamaño <output data-forge-out="scale">100%</output></span><input data-forge-setting="scale" type="range" min="20" max="250" step="1" value="100"></label>
+        <div class="forge-layout-scale-nudges"><button id="hvForgeScaleDown" type="button">− TAMAÑO</button><button id="hvForgeScaleUp" type="button">+ TAMAÑO</button></div>
+      </div>
+      <div id="hvForgeParchmentSize" class="forge-layout-parchment-size"><label class="forge-layout-tuner-control"><span>Ancho pergamino <output data-forge-out="width">100%</output></span><input data-forge-setting="width" type="range" min="55" max="145" step="1" value="100"></label><label class="forge-layout-tuner-control"><span>Alto pergamino <output data-forge-out="height">100%</output></span><input data-forge-setting="height" type="range" min="55" max="160" step="1" value="100"></label></div>
     </div>
-    <div id="hvForgeParchmentSize" class="forge-layout-parchment-size"><label class="forge-layout-tuner-control"><span>Ancho pergamino <output data-forge-out="width">100%</output></span><input data-forge-setting="width" type="range" min="55" max="145" step="1" value="100"></label><label class="forge-layout-tuner-control"><span>Alto pergamino <output data-forge-out="height">100%</output></span><input data-forge-setting="height" type="range" min="55" max="160" step="1" value="100"></label></div>
-    <div class="forge-layout-tuner-actions"><button id="hvForgeResetSelected" type="button">Restaurar elemento</button><button id="hvForgeResetAll" type="button">Restaurar todo</button><button id="hvForgeCopyJson" class="primary" type="button">Copiar JSON</button><button id="hvForgeDone" class="primary" type="button">Listo</button></div><p id="hvForgeLayoutTunerStatus" class="forge-layout-tuner-status"></p>
+    <div class="forge-layout-tuner-actions"><button id="hvForgeResetSelected" type="button">Restaurar elemento</button><button id="hvForgeResetAll" type="button">Restaurar todo</button><button id="hvForgeCopyJson" class="primary" type="button">Copiar JSON</button><button id="hvForgeDone" class="primary" type="button">Listo</button></div>
+    <p id="hvForgeLayoutTunerStatus" class="forge-layout-tuner-status"></p>
   </section>`;
   document.body.appendChild(shell);hvForgeTunerShell=shell;hvForgeTunerPanel=document.getElementById('hvForgeLayoutTunerPanel');
-  document.getElementById('hvForgeLayoutTunerToggle')?.addEventListener('click',()=>{const opening=hvForgeTunerPanel?.classList.contains('hidden');hvForgeTunerPanel?.classList.toggle('hidden');if(opening)setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget);});
+  const fitHvForgeTunerToViewport=()=>{const top=Math.max(4,shell.offsetTop||4);shell.style.maxHeight=`${Math.max(220,window.innerHeight-top-8)}px`;};
+  document.getElementById('hvForgeLayoutTunerToggle')?.addEventListener('click',()=>{const opening=hvForgeTunerPanel?.classList.contains('hidden');hvForgeTunerPanel?.classList.toggle('hidden');fitHvForgeTunerToViewport();if(opening)setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget);});
+  window.addEventListener('resize',fitHvForgeTunerToViewport);
   document.getElementById('hvForgeLayoutTunerClose')?.addEventListener('click',()=>hvForgeTunerPanel?.classList.add('hidden'));
   document.getElementById('hvForgeDone')?.addEventListener('click',()=>{hvForgeTunerPanel?.classList.add('hidden');HV_FORGE_LAYOUT_TARGETS.forEach(target=>getForgeLayoutTargetElement(target.key)?.classList.remove('forge-tunable-active'));});
   document.getElementById('hvForgeTargetPicker')?.addEventListener('change',event=>setHvForgeTunerActiveTarget(event.currentTarget.value));

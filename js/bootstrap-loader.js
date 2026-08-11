@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE2T4FIX2FIX2-FORGEFIX2";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE2T5FIX3FIX3-FORGEFIX3";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE2T4FIX2";
-const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE2T4FIX2FIX2-FORGEFIX2";
+const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE2T5FIX3";
+const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE2T5FIX3FIX3-FORGEFIX3";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
