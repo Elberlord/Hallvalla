@@ -1982,7 +1982,7 @@ ensureHvDetLayoutTuner();
 const HV_FORGE_LAYOUT_TUNER_STORAGE_KEY="hallvalla_forge_layout_tuner_v2";
 const HV_FORGE_LAYOUT_PANEL_STORAGE_KEY="hallvalla_forge_layout_tuner_panel_v2";
 const HV_FORGE_LAYOUT_TARGETS=[
-  {key:"parchment",label:"Pergamino",selector:"#deckBuilderPanel .deckbuilder-parchment-stage",parchment:true},
+  {key:"parchment",label:"Pergamino",selector:"#deckBuilderPanel .deckbuilder-parchment-stage",parchment:true,baseWidth:1120,baseHeight:640},
   {key:"search",label:"Buscador",selector:"#deckBuilderPanel #deckSearchInput"},
   {key:"type",label:"Filtro · Tipo",selector:"#deckBuilderPanel #deckTypeFilter"},
   {key:"rarity",label:"Filtro · Rareza",selector:"#deckBuilderPanel #deckRarityFilter"},
@@ -2018,14 +2018,34 @@ function loadHvForgeLayoutState(){
 function saveHvForgeLayoutState(){localStorage.setItem(HV_FORGE_LAYOUT_TUNER_STORAGE_KEY,JSON.stringify(hvForgeLayoutState));}
 function getForgeLayoutTargetConfig(key){return HV_FORGE_LAYOUT_TARGETS.find(target=>target.key===key)||null;}
 function getForgeLayoutTargetElement(key){const config=getForgeLayoutTargetConfig(key);return config?document.querySelector(config.selector):null;}
-function ensureHvForgeBaseMetrics(element){
-  if(!element)return {width:0,height:0};
-  if(!element.dataset.hvForgeBaseWidth||!element.dataset.hvForgeBaseHeight){
-    const rect=element.getBoundingClientRect();
-    element.dataset.hvForgeBaseWidth=String(Math.max(1,rect.width));
-    element.dataset.hvForgeBaseHeight=String(Math.max(1,rect.height));
-  }
-  return {width:Number(element.dataset.hvForgeBaseWidth)||element.offsetWidth||1,height:Number(element.dataset.hvForgeBaseHeight)||element.offsetHeight||1};
+function isHvForgeTargetMeasurable(element){
+  if(!element||!getHvForgePanelOpen())return false;
+  const style=getComputedStyle(element);
+  if(style.display==='none'||style.visibility==='hidden')return false;
+  const panel=document.getElementById('deckBuilderPanel');
+  return !!(panel&&!panel.classList.contains('hidden'));
+}
+function measureHvForgeNaturalParchment(element){
+  const fallbackWidth=Math.max(520,Math.min(1120,window.innerWidth*.94));
+  const fallbackHeight=Math.max(610,Math.min(840,window.innerHeight*.76));
+  if(!isHvForgeTargetMeasurable(element))return {width:fallbackWidth,height:fallbackHeight,measured:false};
+  const inline={
+    width:element.style.getPropertyValue('width'),widthPriority:element.style.getPropertyPriority('width'),
+    minHeight:element.style.getPropertyValue('min-height'),minHeightPriority:element.style.getPropertyPriority('min-height'),
+    height:element.style.getPropertyValue('height'),heightPriority:element.style.getPropertyPriority('height'),
+    maxWidth:element.style.getPropertyValue('max-width'),maxWidthPriority:element.style.getPropertyPriority('max-width'),
+    maxHeight:element.style.getPropertyValue('max-height'),maxHeightPriority:element.style.getPropertyPriority('max-height'),
+    justifySelf:element.style.getPropertyValue('justify-self'),justifySelfPriority:element.style.getPropertyPriority('justify-self'),
+    transform:element.style.getPropertyValue('transform'),transformPriority:element.style.getPropertyPriority('transform')
+  };
+  ['width','min-height','height','max-width','max-height','justify-self','transform'].forEach(prop=>element.style.removeProperty(prop));
+  const rect=element.getBoundingClientRect();
+  const width=rect.width>320?rect.width:fallbackWidth;
+  const height=rect.height>220?rect.height:fallbackHeight;
+  const restore=(prop,value,priority)=>{if(value)element.style.setProperty(prop,value,priority||'');else element.style.removeProperty(prop);};
+  restore('width',inline.width,inline.widthPriority);restore('min-height',inline.minHeight,inline.minHeightPriority);restore('height',inline.height,inline.heightPriority);
+  restore('max-width',inline.maxWidth,inline.maxWidthPriority);restore('max-height',inline.maxHeight,inline.maxHeightPriority);restore('justify-self',inline.justifySelf,inline.justifySelfPriority);restore('transform',inline.transform,inline.transformPriority);
+  return {width,height,measured:rect.width>320&&rect.height>220};
 }
 function applyHvForgeTarget(key){
   const config=getForgeLayoutTargetConfig(key),element=getForgeLayoutTargetElement(key);if(!config||!element)return;
@@ -2033,12 +2053,19 @@ function applyHvForgeTarget(key){
   element.dataset.forgeTunerLabel=config.label;
   element.style.setProperty('transform-origin','center center','important');
   if(config.parchment){
-    const base=ensureHvForgeBaseMetrics(element);
+    /* No tocar dimensiones mientras el panel está oculto: display:none no tiene un tamaño real. */
+    if(!getHvForgePanelOpen())return;
+    const base=measureHvForgeNaturalParchment(element);
     const width=Math.max(45,Math.min(150,Number(value.width)||100));
-    const height=Math.max(45,Math.min(160,Number(value.height)||100));
+    const height=Math.max(45,Math.min(170,Number(value.height)||100));
     element.style.setProperty('width',`${Math.round(base.width*width/100)}px`,'important');
-    element.style.setProperty('min-height',`${Math.round(base.height*height/100)}px`,'important');
-    element.style.setProperty('height','auto','important');
+    element.style.setProperty('min-height','0px','important');
+    element.style.setProperty('height',`${Math.round(base.height*height/100)}px`,'important');
+    element.style.setProperty('max-width','none','important');
+    element.style.setProperty('max-height','none','important');
+    element.style.setProperty('justify-self','center','important');
+    delete element.dataset.hvForgeBaseWidth;
+    delete element.dataset.hvForgeBaseHeight;
   }
   const scale=Math.max(30,Math.min(250,Number(value.scale)||100))/100;
   element.style.setProperty('transform',`translate(${Number(value.x)||0}px, ${Number(value.y)||0}px) scale(${scale})`,'important');
@@ -2085,7 +2112,7 @@ function copyHvForgeLayoutJson(button){
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de la Forja:',payload));return;}window.prompt('Copia el JSON de la Forja:',payload);
 }
 function getHvForgePanelOpen(){const panel=document.getElementById('deckBuilderPanel');return !!(panel&&!panel.classList.contains('hidden'));}
-function applyHvForgeTunerVisibility(){if(!hvForgeTunerShell)return;const open=getHvForgePanelOpen();hvForgeTunerShell.classList.toggle('hidden',!open);if(!open){HV_FORGE_LAYOUT_TARGETS.forEach(target=>getForgeLayoutTargetElement(target.key)?.classList.remove('forge-tunable-active'));}else{setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget);applyHvForgeLayoutState();}}
+function applyHvForgeTunerVisibility(){if(!hvForgeTunerShell)return;const open=getHvForgePanelOpen();hvForgeTunerShell.classList.toggle('hidden',!open);if(!open){HV_FORGE_LAYOUT_TARGETS.forEach(target=>getForgeLayoutTargetElement(target.key)?.classList.remove('forge-tunable-active'));}else{const parchment=getForgeLayoutTargetElement('parchment');if(parchment){delete parchment.dataset.hvForgeBaseWidth;delete parchment.dataset.hvForgeBaseHeight;}setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget);applyHvForgeLayoutState();}}
 function wireHvForgeTargetDragging(){
   if(window.__hvForgeTargetDraggingWiredV2)return;window.__hvForgeTargetDraggingWiredV2=true;
   document.addEventListener('pointerdown',event=>{
