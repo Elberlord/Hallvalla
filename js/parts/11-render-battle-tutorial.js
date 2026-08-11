@@ -100,7 +100,6 @@ function renderHud(){
   });
   const banner=$("phaseBanner");
   if(banner)banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);
-  maybePlayNearDeathSound();
 }
 
 
@@ -375,13 +374,13 @@ function getFieldStatBadgeHtml(kind,value,titleText=""){
     </span>
   </span>`;
 }
-function getPrecisionBadgeHtml(u,scope="unit"){
+function getPrecisionBadgeHtml(u){
   if(!u)return "";
   const precisionScore=Math.max(0,Number(getAttackPrecisionScore(u,{})||0));
   const title=`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`;
   return getFieldStatBadgeHtml("precision",precisionScore,title);
 }
-function getEvasionBadgeHtml(u,scope="unit"){
+function getEvasionBadgeHtml(u){
   if(!u)return "";
   const evasionScore=Math.max(0,Number(getAvailableEvasionScore(u,{})||0));
   const title=`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`;

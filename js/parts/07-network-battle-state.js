@@ -266,7 +266,7 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   shownBattleResultKey=resultKey;
   const draw=Number(publicState.winner||0)===0;
   const win=!draw&&Number(publicState.winner||0)===Number(myPlayer||0);
-  tryPlaySound(draw?"defeat":(win?"victory":"defeat"),.95);
+  if(!draw)tryPlaySound(win?"victory":"defeat",.95);
   stopMusic(false);
   const adventure=publicState.mode==="adventure";
   showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});

@@ -1180,7 +1180,7 @@ function applyLanceWeaponRule(card){
   if(card.effectText)card.effectText=appendInnateRules(card.effectText);
   return card;
 }
-function getCounterRange(unit){return 1;}
+function getCounterRange(){return 1;}
 
 // v7HW - Sistema de clases tácticas de arma.
 // Ventaja de arma: si la clase del atacante supera la clase del defensor, obtiene +5 Destreza durante ese combate.
@@ -2164,7 +2164,6 @@ function applyAxeDexRule(card){
   if(card.ability!==undefined)card.ability=stripLegacyAxeDexText(card.ability);
   return card;
 }
-function getAxeDexBonus(){return 0;}
 function getCardDisplayDex(card){return Number(card?.dex||0);}
 
 // v7EQ - Regla global de arcos.

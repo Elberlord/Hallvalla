@@ -1,0 +1,23 @@
+HALLVALLA 7BOARDCTRL8CMSFX1 · INTEGRACIÓN DE SONIDOS DEL USUARIO
+
+Integrados sin recomprimir los MP3 originales:
+- botones de menu -> assets/sfx/button_click.mp3
+- daño de fuego en masa -> assets/sfx/fire_area_damage.mp3 (Erupción ígnea del dragón de fuego al activar su ataque de área cargado)
+- música selección de mapa -> assets/music/map_selection.mp3
+- muerte del líder -> assets/sfx/leader_death.mp3
+- curación -> assets/sfx/heal.mp3 (impacto de curación, replicado por battleFxEvent)
+- música Home -> assets/music/home_theme.mp3
+- esquiva -> assets/sfx/dodge.mp3
+- jalar/robar carta -> assets/sfx/draw_card.mp3
+- puñalada/espada al atacar -> assets/sfx/attack_sword_stab.mp3
+- sangrado -> assets/sfx/bleed.mp3
+- veneno -> assets/sfx/poison_tick.mp3
+- ataque de hechicero -> assets/sfx/attack_mage.mp3
+- derrota -> assets/sfx/defeat.mp3
+
+Notas de integración:
+- Fireball conserva attack_fire_magic.ogg; el nuevo ataque de hechicero se aplica a ataques de unidades mágicas, no sustituye el sonido propio del hechizo Fireball.
+- La música de mapa solo se activa en adventureMapIntroStage/adventureMapStage.
+- La música de Home vuelve al cerrar Aventura y también se usa durante escenas previas del panel de Aventura.
+- El sonido de curación se dispara en el impacto del FX para sincronizarse en local/online.
+- Se retiraron OGG antiguos que quedaron totalmente sustituidos: button_click, dodge, draw_card, defeat, poison_tick, attack_slash, bleed_apply y bleed_pain.

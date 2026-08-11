@@ -899,13 +899,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 .hand-card.card-type-spell::before,.deck-card.card-type-spell::before,.revealed-card.card-type-spell::before{background:linear-gradient(180deg,#8fd3ff,#5d75ff)}
 .hand-card.card-type-trap::before,.deck-card.card-type-trap::before,.revealed-card.card-type-trap::before{background:linear-gradient(180deg,#ffbe63,#d84c2b)}
 .hand-card.card-type-unit::before,.deck-card.card-type-unit::before,.revealed-card.card-type-unit::before{background:linear-gradient(180deg,#ffe08a,#a76527)}
-.hand-icon,.deck-card-icon,.revealed-card .card-icon,.card-inspect-portrait{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:999px;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.22),rgba(255,209,102,.12) 45%,rgba(0,0,0,.18));border:1px solid rgba(255,209,102,.28);box-shadow:inset 0 0 10px rgba(255,255,255,.08),0 4px 12px rgba(0,0,0,.28);position:relative}
-.hand-icon span,.deck-card-icon span,.revealed-card .card-icon span,.card-inspect-portrait span{filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.hand-icon,
+.deck-card-icon,
+.revealed-card .card-icon{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:999px;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.22),rgba(255,209,102,.12) 45%,rgba(0,0,0,.18));border:1px solid rgba(255,209,102,.28);box-shadow:inset 0 0 10px rgba(255,255,255,.08),0 4px 12px rgba(0,0,0,.28);position:relative}
+.hand-icon span,
+.deck-card-icon span,
+.revealed-card .card-icon span{filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
 .card-portrait{overflow:hidden;padding:0;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.18),rgba(255,209,102,.12) 42%,rgba(0,0,0,.22))}
 .card-portrait img{width:100%;height:100%;display:block;object-fit:cover}
 .hand-icon.card-portrait,.deck-card-icon.card-portrait,.revealed-card .card-icon.card-portrait{width:42px;height:42px;border-radius:12px}
-.card-inspect-portrait{width:100%;height:100%;border-radius:18px;background:radial-gradient(circle at 50% 20%,rgba(255,255,255,.18),rgba(255,209,102,.12) 45%,rgba(0,0,0,.24));border:1px solid rgba(255,209,102,.34);box-shadow:inset 0 0 20px rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.28)}
-.card-inspect-portrait.card-portrait img{object-fit:cover}
 .hand-tag{display:inline-flex;margin-top:5px;padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,209,102,.18);font-size:8px;font-weight:900;color:#ffe6a9;letter-spacing:.04em;text-transform:uppercase}
 .card-type-spell .hand-tag{color:#cfe9ff;border-color:rgba(143,211,255,.25)}
 .card-type-trap .hand-tag{color:#ffd0a1;border-color:rgba(255,190,99,.28)}
@@ -915,37 +917,51 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 .card-rarity-basic.hand-card,.card-rarity-basic.deck-card,.card-rarity-basic.revealed-card{border-color:rgba(224,194,138,.34);box-shadow:0 8px 18px rgba(0,0,0,.32),0 0 0 1px rgba(255,209,102,.06)}
 .card-rarity-basic .hand-tag{color:#ffe6a9;border-color:rgba(255,209,102,.24)}
-.card-rarity-basic .hand-icon.card-portrait,.card-rarity-basic .deck-card-icon.card-portrait,.card-rarity-basic .card-icon.card-portrait,.card-rarity-basic .card-inspect-portrait{border-color:rgba(255,209,102,.30);box-shadow:inset 0 0 0 1px rgba(255,236,190,.08),0 0 0 1px rgba(115,69,24,.42),0 6px 16px rgba(0,0,0,.28)}
+.card-rarity-basic .hand-icon.card-portrait,
+.card-rarity-basic .deck-card-icon.card-portrait,
+.card-rarity-basic .card-icon.card-portrait{border-color:rgba(255,209,102,.30);box-shadow:inset 0 0 0 1px rgba(255,236,190,.08),0 0 0 1px rgba(115,69,24,.42),0 6px 16px rgba(0,0,0,.28)}
 
 .card-rarity-improved.hand-card,.card-rarity-improved.deck-card,.card-rarity-improved.revealed-card{border-color:rgba(143,211,255,.54);box-shadow:0 10px 26px rgba(28,92,146,.24),0 0 0 1px rgba(143,211,255,.14),inset 0 0 18px rgba(143,211,255,.06)}
 .card-rarity-improved.hand-card::before,.card-rarity-improved.deck-card::before,.card-rarity-improved.revealed-card::before{background:linear-gradient(180deg,#9ce9ff,#56a5ff)}
 .card-rarity-improved .hand-tag{color:#dbf3ff;border-color:rgba(143,211,255,.42)}
-.card-rarity-improved .hand-icon.card-portrait,.card-rarity-improved .deck-card-icon.card-portrait,.card-rarity-improved .card-icon.card-portrait,.card-rarity-improved .card-inspect-portrait{border-color:rgba(143,211,255,.52);box-shadow:inset 0 0 0 1px rgba(220,245,255,.10),0 0 0 1px rgba(44,87,148,.55),0 0 18px rgba(143,211,255,.22)}
+.card-rarity-improved .hand-icon.card-portrait,
+.card-rarity-improved .deck-card-icon.card-portrait,
+.card-rarity-improved .card-icon.card-portrait{border-color:rgba(143,211,255,.52);box-shadow:inset 0 0 0 1px rgba(220,245,255,.10),0 0 0 1px rgba(44,87,148,.55),0 0 18px rgba(143,211,255,.22)}
 
 .card-rarity-heroic.hand-card,.card-rarity-heroic.deck-card,.card-rarity-heroic.revealed-card{border-color:rgba(121,244,201,.58);box-shadow:0 10px 26px rgba(16,118,92,.22),0 0 0 1px rgba(121,244,201,.12),inset 0 0 16px rgba(121,244,201,.05)}
 .card-rarity-heroic.hand-card::before,.card-rarity-heroic.deck-card::before,.card-rarity-heroic.revealed-card::before{background:linear-gradient(180deg,#ddffd1,#74f1c0,#2baf87)}
 .card-rarity-heroic .hand-tag{color:#e2ffe5;border-color:rgba(121,244,201,.44)}
-.card-rarity-heroic .hand-icon.card-portrait,.card-rarity-heroic .deck-card-icon.card-portrait,.card-rarity-heroic .card-icon.card-portrait,.card-rarity-heroic .card-inspect-portrait{border-color:rgba(121,244,201,.56);box-shadow:inset 0 0 0 1px rgba(233,255,239,.12),0 0 0 1px rgba(19,115,86,.60),0 0 20px rgba(121,244,201,.24)}
+.card-rarity-heroic .hand-icon.card-portrait,
+.card-rarity-heroic .deck-card-icon.card-portrait,
+.card-rarity-heroic .card-icon.card-portrait{border-color:rgba(121,244,201,.56);box-shadow:inset 0 0 0 1px rgba(233,255,239,.12),0 0 0 1px rgba(19,115,86,.60),0 0 20px rgba(121,244,201,.24)}
 
 .card-rarity-glorious.hand-card,.card-rarity-glorious.deck-card,.card-rarity-glorious.revealed-card{border-color:rgba(255,224,138,.72);box-shadow:0 12px 28px rgba(255,172,63,.16),0 0 0 1px rgba(255,224,138,.24),inset 0 0 18px rgba(255,224,138,.06)}
 .card-rarity-glorious.hand-card::before,.card-rarity-glorious.deck-card::before,.card-rarity-glorious.revealed-card::before{background:linear-gradient(180deg,#fff4bf,#ffd466,#ff9e42)}
 .card-rarity-glorious .hand-tag{color:#fff6c8;border-color:rgba(255,224,138,.52)}
-.card-rarity-glorious .hand-icon.card-portrait,.card-rarity-glorious .deck-card-icon.card-portrait,.card-rarity-glorious .card-icon.card-portrait,.card-rarity-glorious .card-inspect-portrait{border-color:rgba(255,224,138,.72);box-shadow:inset 0 0 0 1px rgba(255,248,214,.14),0 0 0 1px rgba(166,104,21,.60),0 0 22px rgba(255,199,92,.28)}
+.card-rarity-glorious .hand-icon.card-portrait,
+.card-rarity-glorious .deck-card-icon.card-portrait,
+.card-rarity-glorious .card-icon.card-portrait{border-color:rgba(255,224,138,.72);box-shadow:inset 0 0 0 1px rgba(255,248,214,.14),0 0 0 1px rgba(166,104,21,.60),0 0 22px rgba(255,199,92,.28)}
 
 .card-rarity-epic.hand-card,.card-rarity-epic.deck-card,.card-rarity-epic.revealed-card{border-color:rgba(189,148,255,.62);box-shadow:0 12px 28px rgba(104,66,170,.24),0 0 0 1px rgba(189,148,255,.18),inset 0 0 18px rgba(189,148,255,.05)}
 .card-rarity-epic.hand-card::before,.card-rarity-epic.deck-card::before,.card-rarity-epic.revealed-card::before{background:linear-gradient(180deg,#eddcff,#c296ff,#7e5aff)}
 .card-rarity-epic .hand-tag{color:#f3e6ff;border-color:rgba(189,148,255,.46)}
-.card-rarity-epic .hand-icon.card-portrait,.card-rarity-epic .deck-card-icon.card-portrait,.card-rarity-epic .card-icon.card-portrait,.card-rarity-epic .card-inspect-portrait{border-color:rgba(189,148,255,.62);box-shadow:inset 0 0 0 1px rgba(244,231,255,.12),0 0 0 1px rgba(84,51,143,.64),0 0 22px rgba(189,148,255,.26)}
+.card-rarity-epic .hand-icon.card-portrait,
+.card-rarity-epic .deck-card-icon.card-portrait,
+.card-rarity-epic .card-icon.card-portrait{border-color:rgba(189,148,255,.62);box-shadow:inset 0 0 0 1px rgba(244,231,255,.12),0 0 0 1px rgba(84,51,143,.64),0 0 22px rgba(189,148,255,.26)}
 
 .card-rarity-mythic.hand-card,.card-rarity-mythic.deck-card,.card-rarity-mythic.revealed-card{border-color:rgba(255,123,217,.72);box-shadow:0 14px 30px rgba(157,54,128,.22),0 0 0 1px rgba(255,123,217,.18),inset 0 0 18px rgba(255,123,217,.05)}
 .card-rarity-mythic.hand-card::before,.card-rarity-mythic.deck-card::before,.card-rarity-mythic.revealed-card::before{background:linear-gradient(180deg,#ffe4fb,#ff8ed9,#ae58ff)}
 .card-rarity-mythic .hand-tag{color:#ffe5f6;border-color:rgba(255,123,217,.48)}
-.card-rarity-mythic .hand-icon.card-portrait,.card-rarity-mythic .deck-card-icon.card-portrait,.card-rarity-mythic .card-icon.card-portrait,.card-rarity-mythic .card-inspect-portrait{border-color:rgba(255,123,217,.74);box-shadow:inset 0 0 0 1px rgba(255,231,248,.14),0 0 0 1px rgba(119,48,103,.60),0 0 24px rgba(255,123,217,.28)}
+.card-rarity-mythic .hand-icon.card-portrait,
+.card-rarity-mythic .deck-card-icon.card-portrait,
+.card-rarity-mythic .card-icon.card-portrait{border-color:rgba(255,123,217,.74);box-shadow:inset 0 0 0 1px rgba(255,231,248,.14),0 0 0 1px rgba(119,48,103,.60),0 0 24px rgba(255,123,217,.28)}
 
 .card-rarity-demigod.hand-card,.card-rarity-demigod.deck-card,.card-rarity-demigod.revealed-card{border-color:rgba(255,247,167,.86);box-shadow:0 16px 34px rgba(255,219,111,.18),0 0 0 1px rgba(255,247,167,.22),inset 0 0 20px rgba(255,247,167,.08)}
 .card-rarity-demigod.hand-card::before,.card-rarity-demigod.deck-card::before,.card-rarity-demigod.revealed-card::before{background:linear-gradient(180deg,#ffffff,#fff0a1,#ff9ee4,#91a0ff)}
 .card-rarity-demigod .hand-tag{color:#fffbe0;border-color:rgba(255,247,167,.62)}
-.card-rarity-demigod .hand-icon.card-portrait,.card-rarity-demigod .deck-card-icon.card-portrait,.card-rarity-demigod .card-icon.card-portrait,.card-rarity-demigod .card-inspect-portrait{border-color:rgba(255,247,167,.82);box-shadow:inset 0 0 0 1px rgba(255,255,241,.16),0 0 0 1px rgba(156,132,46,.60),0 0 28px rgba(255,247,167,.34)}
+.card-rarity-demigod .hand-icon.card-portrait,
+.card-rarity-demigod .deck-card-icon.card-portrait,
+.card-rarity-demigod .card-icon.card-portrait{border-color:rgba(255,247,167,.82);box-shadow:inset 0 0 0 1px rgba(255,255,241,.16),0 0 0 1px rgba(156,132,46,.60),0 0 28px rgba(255,247,167,.34)}
 
 .unit-card.card-rarity-improved{box-shadow:0 0 0 1px rgba(143,211,255,.42),0 0 12px rgba(143,211,255,.18),0 5px 8px rgba(0,0,0,.38)}
 .unit-card.card-rarity-heroic{box-shadow:0 0 0 1px rgba(121,244,201,.44),0 0 12px rgba(121,244,201,.18),0 5px 8px rgba(0,0,0,.38)}
@@ -1085,38 +1101,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(255,209,102,.38);
   box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 26px rgba(255,209,102,.10);
 }
-.card-inspect-head{align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
-.card-inspect-title{margin:0;font-family:Georgia,serif;color:#fff1c4;font-size:25px;line-height:1.05}
-.card-inspect-sub{margin-top:4px;color:#d7c3a2;font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
-.card-inspect-x{
-  flex:0 0 auto;
-  width:34px;
-  height:34px;
-  border-radius:999px;
-  border:1px solid rgba(255,209,102,.30);
-  background:rgba(0,0,0,.30);
-  color:#fff1c4;
-  font-size:23px;
-  line-height:1;
-  cursor:pointer;
-}
-.card-inspect-visual{
-  min-height:150px;
-  border-radius:18px;
-  display:grid;
-  place-items:center;
-  margin:10px 0;
-  background:radial-gradient(circle at 50% 30%,rgba(255,224,138,.24),rgba(88,48,20,.84) 46%,rgba(14,10,7,.94));
-  border:1px solid rgba(255,209,102,.24);
-  font-size:76px;
-  box-shadow:inset 0 0 34px rgba(0,0,0,.42);
-}
-.card-inspect-visual span{filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
-.card-inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
-.card-inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:#d7c3a2;font-size:10px;text-align:center}
-.card-inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
-.card-inspect-text{margin:10px 0;color:#efe0bd;line-height:1.35;font-size:13px}
-.card-inspect-reason{min-height:18px;margin:8px 0 12px;color:#ffd28a;font-size:12px;line-height:1.3}
 
 #cardInspectPlay:disabled{opacity:.42;filter:grayscale(.3);cursor:not-allowed}
 .card-inspect-modal.card-rarity-basic .card-inspect-card{border-color:rgba(224,194,138,.38);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 22px rgba(255,209,102,.08)}
@@ -1124,18 +1108,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-inspect-modal.card-rarity-heroic .card-inspect-card{border-color:rgba(121,244,201,.58);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 28px rgba(121,244,201,.14)}
 .card-inspect-modal.card-rarity-glorious .card-inspect-card{border-color:rgba(255,224,138,.72);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 30px rgba(255,199,92,.18)}
 .card-inspect-modal.card-rarity-epic .card-inspect-card{border-color:rgba(189,148,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 30px rgba(189,148,255,.16)}
-
-
-.card-inspect-modal.card-type-spell .card-inspect-visual{background:radial-gradient(circle at 50% 30%,rgba(143,211,255,.28),rgba(37,63,128,.82) 48%,rgba(8,10,20,.94))}
-.card-inspect-modal.card-type-trap .card-inspect-visual{background:radial-gradient(circle at 50% 30%,rgba(255,190,99,.28),rgba(128,51,28,.82) 48%,rgba(18,8,7,.94))}
 @media(max-width:980px){
   .card-inspect-modal{padding:12px;z-index:255}
   .card-inspect-card{width:min(540px,96vw);padding:14px;border-radius:20px}
-  .card-inspect-title{font-size:22px}
-  .card-inspect-visual{min-height:min(230px,30svh);font-size:82px}
-  .card-inspect-grid{grid-template-columns:repeat(3,1fr);gap:7px}
-  .card-inspect-stat{font-size:10px;padding:7px}
-  .card-inspect-stat strong{font-size:17px}
 }
 
 
@@ -1143,14 +1118,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .log.log-collapsed{
   display:none!important;
 }
-#toggleLogBtn{
-  min-width:64px;
-}
 @media(max-width:980px){
-  
-  #toggleLogBtn{
-    min-width:54px;
-  }
 }
 
 /* === v0.7AW: Phase announcement modal/banner === */
@@ -2009,8 +1977,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .battle-controls,
 .duel-controls,
 .combat-controls,
-#battleMenu,
-#battleControls,
 #battleMenuBtn,
 #battleToggleSoundBtn,
 #battleResetBtn,
@@ -2085,7 +2051,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* PATCH 7CK - ocultar logs reciclados, sin bloquear el Log principal */
-#battleLog,
 .battle-log,
 .combat-log,
 .duel-log,
@@ -2357,7 +2322,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   display:grid!important;
   place-items:center!important;
 }
-#toggleLogBtn,
 #toggleActionsBtn{
   width:auto!important;
 }
@@ -2420,9 +2384,6 @@ El CSS original se conserva para no romper visuales. El bloque final
     min-width:34px!important;
     height:34px!important;
     min-height:34px!important;
-  }
-  #toggleLogBtn{
-    min-width:48px!important;
   }
   #toggleActionsBtn{
     min-width:82px!important;
@@ -2820,15 +2781,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* === PATCH 7EX - Stat guide modal + cleaner card details === */
-.inspect-stat.stat-click,
-.card-inspect-stat.stat-click{
+.inspect-stat.stat-click{
   appearance:none;
   border:1px solid rgba(255,209,102,.18);
   cursor:pointer;
   font-family:inherit;
 }
-.inspect-stat.stat-click:hover,
-.card-inspect-stat.stat-click:hover{
+.inspect-stat.stat-click:hover{
   border-color:rgba(255,209,102,.58);
   background:linear-gradient(180deg,rgba(255,209,102,.12),rgba(0,0,0,.20));
   filter:brightness(1.08);
@@ -2890,16 +2849,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 .weapon-summary span{
   color:#d8c49f;
 }
-.card-inspect-text .stat-help-box{
-  margin-top:10px;
-}
 
 
 /* === PATCH 7EZ - Neon gold outline for detail buttons === */
 .detail .btn,
-.card-inspect-text .btn,
-#cardInspectText .btn,
-#cardInspectReason .btn,
 .stat-guide-actions .btn,
 .stat-guide-inline-btn{
   position:relative;
@@ -2916,9 +2869,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, filter .15s ease;
 }
 .detail .btn:hover,
-.card-inspect-text .btn:hover,
-#cardInspectText .btn:hover,
-#cardInspectReason .btn:hover,
 .stat-guide-actions .btn:hover,
 .stat-guide-inline-btn:hover{
   transform:translateY(-1px);
@@ -2932,17 +2882,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   filter:brightness(1.06);
 }
 .detail .btn:active,
-.card-inspect-text .btn:active,
-#cardInspectText .btn:active,
-#cardInspectReason .btn:active,
 .stat-guide-actions .btn:active,
 .stat-guide-inline-btn:active{
   transform:translateY(0) scale(.99);
 }
 .detail .btn:focus-visible,
-.card-inspect-text .btn:focus-visible,
-#cardInspectText .btn:focus-visible,
-#cardInspectReason .btn:focus-visible,
 .stat-guide-actions .btn:focus-visible,
 .stat-guide-inline-btn:focus-visible,
 .stat-guide-x:focus-visible{
@@ -2950,10 +2894,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   outline-offset:2px;
 }
 .stat-guide-actions .btn.primary,
-.detail .btn.primary,
-.card-inspect-text .btn.primary,
-#cardInspectText .btn.primary,
-#cardInspectReason .btn.primary{
+.detail .btn.primary{
   background:linear-gradient(180deg,rgba(72,52,20,.98),rgba(19,14,9,.99));
   color:#fff6dc;
 }
@@ -4996,14 +4937,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* === PATCH 7HL - Premium neon detail guide polish === */
 .detail-stat-chip,
-.inspect-stat.stat-click,
-.card-inspect-stat.stat-click{
+.inspect-stat.stat-click{
   position:relative;
   overflow:hidden;
 }
 .detail-stat-chip::before,
-.inspect-stat.stat-click::before,
-.card-inspect-stat.stat-click::before{
+.inspect-stat.stat-click::before{
   content:"";
   position:absolute;
   inset:-1px;
@@ -5015,8 +4954,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   opacity:.72;
 }
 .detail-stat-chip::after,
-.inspect-stat.stat-click::after,
-.card-inspect-stat.stat-click::after{
+.inspect-stat.stat-click::after{
   content:"?";
   position:absolute;
   top:5px;
@@ -5037,13 +4975,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   opacity:.9;
 }
 .detail-stat-chip strong,
-.inspect-stat.stat-click strong,
-.card-inspect-stat.stat-click strong{
+.inspect-stat.stat-click strong{
   text-shadow:0 0 8px rgba(255,232,170,.20);
 }
 .detail-stat-chip:hover,
-.inspect-stat.stat-click:hover,
-.card-inspect-stat.stat-click:hover{
+.inspect-stat.stat-click:hover{
   transform:translateY(-1px);
 }
 .detail-token-btn,
@@ -5229,7 +5165,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* Beastmaster real asset patch: visual polish for new non-recycled portraits */
 .card-portrait img[src*="assets/cards/beasts/"],
 .hand-icon.card-portrait img[src*="assets/cards/beasts/"],
-.card-inspect-portrait.card-portrait img[src*="assets/cards/beasts/"],
 .demigod-summon-portrait.card-portrait img[src*="assets/cards/beasts/"]{
   object-fit:cover;
   object-position:center;
@@ -5244,8 +5179,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   filter:saturate(1.08) contrast(1.08);
 }
 
-.card-portrait:has(img[src*="assets/cards/beasts/"]),
-.card-inspect-portrait:has(img[src*="assets/cards/beasts/"]){
+.card-portrait:has(img[src*="assets/cards/beasts/"]){
   box-shadow:0 0 0 1px rgba(120,255,80,.22),0 0 18px rgba(73,210,64,.18), inset 0 0 20px rgba(0,0,0,.32);
 }
 
@@ -5334,8 +5268,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .detail-token-btn,
 .detail-status-chip,
 .detail-stat-chip,
-.inspect-stat.stat-click,
-.card-inspect-stat.stat-click{
+.inspect-stat.stat-click{
   font-family: Georgia, "Times New Roman", serif;
   letter-spacing: .55px;
   text-transform: uppercase;
@@ -5408,15 +5341,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 .detail-token-btn:focus-visible,
 .detail-status-chip:focus-visible,
 .detail-stat-chip:focus-visible,
-.inspect-stat.stat-click:focus-visible,
-.card-inspect-stat.stat-click:focus-visible{
+.inspect-stat.stat-click:focus-visible{
   outline: 2px solid rgba(255,221,139,.82);
   outline-offset: 2px;
 }
 
 .detail-stat-chip,
-.inspect-stat.stat-click,
-.card-inspect-stat.stat-click{
+.inspect-stat.stat-click{
   border-radius: 12px;
   border: 1px solid rgba(211,169,83,.46);
   background:
@@ -5429,8 +5360,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 .detail-stat-chip:hover,
-.inspect-stat.stat-click:hover,
-.card-inspect-stat.stat-click:hover{
+.inspect-stat.stat-click:hover{
   border-color: rgba(247,210,119,.80);
   box-shadow:
     0 9px 18px rgba(0,0,0,.28),
@@ -5542,12 +5472,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   pointer-events:none !important;
 }
 
-#toggleLogBtn{
-  color:#ffd978;
-  text-shadow:0 0 7px rgba(255,216,112,.34);
-  border-color:rgba(255,214,120,.58);
-}
-
 @media(max-width:980px){
   #log.log{
     left:8px;
@@ -5622,8 +5546,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 .card-rarity-demigod .hand-icon.card-portrait,
 .card-rarity-demigod .deck-card-icon.card-portrait,
-.card-rarity-demigod .card-icon.card-portrait,
-.card-rarity-demigod .card-inspect-portrait{
+.card-rarity-demigod .card-icon.card-portrait{
   border-color:var(--rarity-neon-core) !important;
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,.28),
@@ -5721,7 +5644,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-rarity-legendary.hand-card,.card-rarity-legendary.deck-card,.card-rarity-legendary.revealed-card{border-color:rgba(208,112,255,.84);box-shadow:0 14px 34px rgba(105,24,142,.28),0 0 0 1px rgba(208,112,255,.22),inset 0 0 20px rgba(229,148,255,.07)}
 .card-rarity-legendary.hand-card::before,.card-rarity-legendary.deck-card::before,.card-rarity-legendary.revealed-card::before{background:linear-gradient(180deg,#ffe8ff,#d581ff,#7b2bca)}
 .card-rarity-legendary .hand-tag{color:#ffe9ff;border-color:rgba(208,112,255,.52)}
-.card-rarity-legendary .hand-icon.card-portrait,.card-rarity-legendary .deck-card-icon.card-portrait,.card-rarity-legendary .card-icon.card-portrait,.card-rarity-legendary .card-inspect-portrait{border-color:rgba(208,112,255,.82);box-shadow:inset 0 0 0 1px rgba(255,236,255,.16),0 0 0 1px rgba(99,35,123,.68),0 0 26px rgba(208,112,255,.34)}
+.card-rarity-legendary .hand-icon.card-portrait,
+.card-rarity-legendary .deck-card-icon.card-portrait,
+.card-rarity-legendary .card-icon.card-portrait{border-color:rgba(208,112,255,.82);box-shadow:inset 0 0 0 1px rgba(255,236,255,.16),0 0 0 1px rgba(99,35,123,.68),0 0 26px rgba(208,112,255,.34)}
 .card-inspect-modal.card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.84);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 36px rgba(208,112,255,.24)}
 .unit-card.card-rarity-legendary{box-shadow:0 0 0 1px rgba(208,112,255,.60),0 0 16px rgba(208,112,255,.24),0 5px 8px rgba(0,0,0,.38);--frame-glow:rgba(213,114,255,.88);--frame-filter:saturate(1.22) brightness(1.11);--frame-image:url("assets/ui/gothic_frame_unit_ui_legendary.webp");}
 .unit-card.card-rarity-legendary .unit-frame-skin{filter:drop-shadow(0 4px 10px var(--frame-shadow)) drop-shadow(0 0 10px rgba(255,240,255,.90)) drop-shadow(0 0 24px rgba(224,136,255,.84)) drop-shadow(0 0 42px rgba(175,68,255,.48)) drop-shadow(0 0 60px rgba(147,32,236,.24)) var(--frame-filter) !important;animation:unitLegendaryFramePulse 2.6s ease-in-out infinite;}
@@ -5742,8 +5667,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-rarity-mythic .hand-tag{color:#e8fbff!important;border-color:rgba(92,194,255,.52)!important;}
 .card-rarity-mythic .hand-icon.card-portrait,
 .card-rarity-mythic .deck-card-icon.card-portrait,
-.card-rarity-mythic .card-icon.card-portrait,
-.card-rarity-mythic .card-inspect-portrait{
+.card-rarity-mythic .card-icon.card-portrait{
   border-color:rgba(92,194,255,.82)!important;
   box-shadow:inset 0 0 0 1px rgba(232,251,255,.18),0 0 0 1px rgba(24,86,150,.68),0 0 26px rgba(92,194,255,.36)!important;
 }
@@ -5874,72 +5798,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-inspect-card::before{
   border-radius:28px;
 }
-.card-inspect-title{
-  grid-area:head;
-  margin:0;
-  padding-right:84px;
-  font-family:Georgia,serif;
-  font-size:42px;
-  line-height:1;
-  color:#f7df96;
-  text-transform:uppercase;
-  letter-spacing:.03em;
-}
-.card-inspect-sub{
-  grid-area:head;
-  align-self:end;
-  margin-top:48px;
-  color:#d8c6a2;
-}
-.card-inspect-visual{
-  grid-area:visual;
-  min-height:430px;
-  height:auto;
-  border-radius:22px;
-  background:
-    linear-gradient(180deg,rgba(0,0,0,.38),rgba(0,0,0,.46)),
-    radial-gradient(circle at 50% 18%,rgba(255,235,185,.16),rgba(64,41,22,.45) 50%,rgba(7,7,8,.98));
-  border:1px solid rgba(229,183,84,.24);
-  box-shadow:inset 0 0 30px rgba(255,255,255,.03),0 18px 34px rgba(0,0,0,.32);
-}
-.card-inspect-portrait.card-portrait img{
-  object-fit:cover;
-}
-.card-inspect-grid{
-  grid-area:stats;
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  margin:0;
-}
-.card-inspect-text{
-  grid-area:text;
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  align-self:start;
-}
-.card-inspect-reason{
-  grid-area:bottom;
-  min-height:unset;
-  margin:0;
-  padding:10px 12px;
-  border-radius:14px;
-  background:linear-gradient(180deg,rgba(35,24,9,.70),rgba(12,11,8,.78));
-  border:1px solid rgba(234,191,92,.16);
-  color:#e3cca2;
-}
-.card-inspect-x{
-  top:16px;
-  right:16px;
-  width:52px;
-  height:52px;
-  border-radius:14px;
-  background:linear-gradient(180deg,#8c250d,#531108);
-  border:1px solid rgba(255,156,122,.48);
-}
-.card-inspect-stat,
 .inspect-stat{
   position:relative;
   
@@ -5955,46 +5813,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   text-align:left;
 }
 
-.card-inspect-stat strong,
 .inspect-stat strong{
   margin-top:0!important;
   
   
   line-height:1;
 }
-.det-identity-block{
-  display:flex;
-  flex-direction:column;
-  
-  margin-top:6px;
-}
-.det-head-chip-row{
-  display:flex;
-  flex-wrap:wrap;
-  
-}
-.det-head-chip{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  
-  
-  
-  
-  
-  
-  
-  font-weight:800;
-  letter-spacing:.04em;
-}
-.det-chip-rarity{
-  color:#fff4c4;
-  box-shadow:0 0 16px rgba(255,220,127,.08), inset 0 0 10px rgba(255,255,255,.03);
-}
 
-.det-info-card,
-.det-section-block,
-.det-quote-block,
 .detail-guide-block{
   
   
@@ -6002,7 +5827,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   
   overflow:hidden;
 }
-.det-section-title,
 .detail-guide-caption{
   
   
@@ -6012,35 +5836,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   font-weight:900;
   
   text-transform:uppercase;
-}
-
-.det-info-row:last-of-type{border-bottom:none}
-
-
-
-.det-ability-list{
-  
-  flex-direction:column;
-}
-.det-ability-card{
-  
-  border-top:1px solid rgba(236,190,95,.08);
-}
-.det-ability-card:first-child{border-top:none}
-.det-ability-name{
-  
-  
-  font-weight:900;
-  letter-spacing:.03em;
-  
-  text-transform:uppercase;
-}
-
-.det-empty-line{
-  
-  
-  
-  line-height:1.45;
 }
 
 
@@ -6061,9 +5856,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 .detail-helper-note{display:none}
-.card-rarity-legendary .det-chip-rarity{color:#f3c3ff;border-color:rgba(208,112,255,.44);box-shadow:0 0 20px rgba(208,112,255,.16)}
-.card-rarity-mythic .det-chip-rarity{color:#d9f4ff;border-color:rgba(92,194,255,.44);box-shadow:0 0 20px rgba(92,194,255,.16)}
-.card-rarity-demigod .det-chip-rarity{color:#fff6c6;border-color:rgba(255,236,141,.46);box-shadow:0 0 20px rgba(255,236,141,.18)}
 .card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 40px rgba(208,112,255,.16)}
 .card-rarity-mythic .card-inspect-card{border-color:rgba(92,194,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 40px rgba(92,194,255,.16)}
 .card-rarity-demigod .card-inspect-card{border-color:rgba(255,236,141,.68);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 42px rgba(255,236,141,.18)}
@@ -6080,19 +5872,10 @@ El CSS original se conserva para no romper visuales. El bloque final
     row-gap:12px;
     padding:18px 16px 18px!important;
   }
-  .card-inspect-title{font-size:30px;padding-right:64px}
-  .card-inspect-sub{margin-top:40px}
-  .card-inspect-visual{min-height:300px}
   .detail-guide-row{grid-template-columns:1fr 1fr}
 }
 @media (max-width:560px){
-  .card-inspect-title{font-size:25px}
-  .card-inspect-grid{grid-template-columns:1fr 1fr}
-  .card-inspect-visual{min-height:240px}
-  .det-summary-copy,.det-ability-text,.det-mini-note,.det-empty-line,.det-info-row{font-size:13px}
-  .det-quote{font-size:16px}
   .detail-guide-row{grid-template-columns:1fr}
-  .card-inspect-x{width:46px;height:46px}
 }
 
 
@@ -6148,52 +5931,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* left column: card art + stats */
-.card-inspect-visual{
-  
-  
-  
-  
-  
-  
-  overflow:hidden!important;
-  
-  border:1px solid rgba(238,190,91,.52)!important;
-  background:
-    linear-gradient(180deg,rgba(255,218,121,.08),rgba(0,0,0,.20)),
-    radial-gradient(circle at 50% 16%,rgba(255,229,171,.18),rgba(41,30,18,.45) 54%,rgba(5,5,5,.95))!important;
-  box-shadow:
-    0 0 0 1px rgba(255,245,202,.08),
-    0 0 30px rgba(236,190,89,.10),
-    inset 0 0 24px rgba(255,255,255,.035)!important;
-}
-.card-inspect-portrait,.card-inspect-portrait.card-portrait{
-  width:100%!important;
-  height:100%!important;
-  border:0!important;
-  border-radius:0!important;
-  box-shadow:none!important;
-  background:transparent!important;
-}
-.card-inspect-portrait.card-portrait img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  display:block!important;
-  filter:saturate(1.05) contrast(1.05)!important;
-}
-.card-inspect-grid{
-  
-  
-  
-  
-  
-  
-  
-  z-index:3!important;
-  
-  
-}
-.card-inspect-stat,
 .inspect-stat{
   
   
@@ -6208,7 +5945,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(238,190,91,.35)!important;
   box-shadow:inset 0 0 12px rgba(255,255,255,.025),0 7px 14px rgba(0,0,0,.20)!important;
 }
-.card-inspect-stat span,
 .inspect-stat span{
   font-size:10px!important;
   color:#e5be66!important;
@@ -6216,7 +5952,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   text-transform:uppercase!important;
   font-weight:900!important;
 }
-.card-inspect-stat strong,
 .inspect-stat strong{
   
   color:#fff2bf!important;
@@ -6225,61 +5960,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* right column */
-.card-inspect-head,.card-inspect-title,.card-inspect-sub,.card-inspect-text{
-  position:relative!important;
-}
-
-.card-inspect-title{
-  margin:0!important;
-  padding:0!important;
-  font-family:Georgia,serif!important;
-  
-  
-  text-transform:uppercase!important;
-  letter-spacing:.035em!important;
-  color:#f7dc91!important;
-  text-shadow:0 2px 0 #261500,0 0 18px rgba(255,209,101,.10)!important;
-}
-.card-inspect-sub{
-  
-  color:#dcc79f!important;
-}
-
-
-.det-head-chip{
-  
-  
-  
-  
-  
-  color:#f2d58b!important;
-  
-}
-.det-summary-copy{
-  margin-top:2px!important;
-  
-  border-radius:12px!important;
-  
-  
-  background:linear-gradient(180deg,rgba(18,17,14,.78),rgba(8,8,7,.90))!important;
-  border:1px solid rgba(238,190,91,.18)!important;
-  color:#decaa5!important;
-}
-.card-inspect-text{
-  
-  align-self:stretch!important;
-  
-  
-  
-  
-  
-  
-  
-  
-}
-.det-info-card,
-.det-section-block,
-.det-quote-block,
 .detail-guide-block{
   border-radius:14px!important;
   border:1px solid rgba(238,190,91,.23)!important;
@@ -6287,7 +5967,6 @@ El CSS original se conserva para no romper visuales. El bloque final
     linear-gradient(180deg,rgba(23,19,13,.92),rgba(8,8,7,.94))!important;
   box-shadow:inset 0 0 18px rgba(255,255,255,.018),0 8px 18px rgba(0,0,0,.17)!important;
 }
-.det-section-title,
 .detail-guide-caption{
   
   
@@ -6297,23 +5976,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   text-align:center!important;
   border-bottom:1px solid rgba(238,190,91,.14)!important;
 }
-.det-tactical-card{
-  order:3!important;
-}
-.det-tactical-card .det-section-title{
-  text-align:left!important;
-}
-
-
-.det-section-block:nth-of-type(2){
-  order:1!important;
-}
 
 
 
 
-.detail-guide-block,
-.det-section-block:has(.detail-guide-block){
+.detail-guide-block{
   order:2!important;
 }
 .detail-chip-row{
@@ -6328,11 +5995,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   
   
   line-height:1.1!important;
-}
-
-.det-quote-block{
-  order:4!important;
-  
 }
 
 
@@ -6364,60 +6026,19 @@ El CSS original se conserva para no romper visuales. El bloque final
   transform:translateY(-1px)!important;
   box-shadow:0 12px 20px rgba(0,0,0,.30),0 0 18px rgba(238,190,91,.14)!important;
 }
-.card-inspect-actions{
-  
-  
-  
-  
-  
-  
-  
-  
-  z-index:8!important;
-}
-
-.card-inspect-actions .btn{
-  min-height:48px!important;
-  border-radius:12px!important;
-}
-.card-inspect-x{
-  position:absolute!important;
-  top:16px!important;
-  right:16px!important;
-  z-index:10!important;
-  width:52px!important;
-  height:52px!important;
-  border-radius:14px!important;
-  background:linear-gradient(180deg,#96270e,#561006)!important;
-  border:1px solid rgba(255,176,135,.50)!important;
-  color:#ffe2bd!important;
-  box-shadow:0 10px 18px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.08)!important;
-}
 
 /* rarity glow match */
 .card-rarity-mythic .card-inspect-card{
   border-color:rgba(92,194,255,.62)!important;
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 34px rgba(92,194,255,.16),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
-.card-rarity-mythic .card-inspect-visual{
-  border-color:rgba(92,194,255,.72)!important;
-  box-shadow:0 0 26px rgba(92,194,255,.22),inset 0 0 24px rgba(255,255,255,.035)!important;
-}
 .card-rarity-legendary .card-inspect-card{
   border-color:rgba(208,112,255,.62)!important;
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 34px rgba(208,112,255,.17),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
-.card-rarity-legendary .card-inspect-visual{
-  border-color:rgba(208,112,255,.76)!important;
-  box-shadow:0 0 28px rgba(208,112,255,.23),inset 0 0 24px rgba(255,255,255,.035)!important;
-}
 .card-rarity-demigod .card-inspect-card{
   border-color:rgba(255,236,141,.70)!important;
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 36px rgba(255,236,141,.18),inset 0 0 0 1px rgba(255,255,255,.035)!important;
-}
-.card-rarity-demigod .card-inspect-visual{
-  border-color:rgba(255,236,141,.80)!important;
-  box-shadow:0 0 30px rgba(255,236,141,.24),inset 0 0 24px rgba(255,255,255,.035)!important;
 }
 
 /* prevent old technical blocks from visually fighting the premium model */
@@ -6436,109 +6057,28 @@ El CSS original se conserva para no romper visuales. El bloque final
     grid-template-rows:auto!important;
     grid-template-areas:"right" "left" "footer"!important;
   }
-  .card-inspect-head{grid-area:right!important}
-  .card-inspect-text{
-    grid-area:right!important;
-    
-    
-    
-    display:flex!important;
-  }
-  .card-inspect-visual{
-    grid-area:left!important;
-    
-    
-  }
-  .card-inspect-grid{
-    grid-area:left!important;
-    
-  }
   
   
 }
 
 
 /* === DET compact iconic model v23 === */
-
-
-.card-inspect-sub{
-  margin:8px 0 10px!important;
-}
-
-.card-inspect-grid{
-  margin:312px 0 0 0!important;
-  
-  
-}
-.card-inspect-stat,
 .inspect-stat{
   min-height:40px!important;
   height:40px!important;
   padding:6px 9px!important;
   grid-template-columns:none!important;
 }
-.det-stat-btn{
-  position:relative!important;
-  gap:8px!important;
-}
-.det-stat-icon-wrap{
-  width:26px;
-  height:26px;
-  min-width:26px;
-  border-radius:8px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(180deg,rgba(92,65,18,.88),rgba(21,15,9,.96));
-  border:1px solid rgba(238,190,91,.30);
-  box-shadow:inset 0 0 10px rgba(255,255,255,.04);
-}
-.det-stat-icon{
-  font-size:15px;
-  line-height:1;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
-}
 
-.card-inspect-stat strong,
 .inspect-stat strong{
   margin-left:auto!important;
   font-size:16px!important;
 }
-.det-summary-copy{
-  padding:10px 12px!important;
-  font-size:13px!important;
-  line-height:1.35!important;
-}
 
-.det-section-title,
 .detail-guide-caption{
   padding:8px 10px!important;
   font-size:12px!important;
 }
-
-
-
-
-
-.det-ability-icon{
-  width:22px;
-  height:22px;
-  min-width:22px;
-  border-radius:7px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:900;
-  border:1px solid rgba(238,190,91,.26);
-  color:#fff2c7;
-  background:linear-gradient(180deg,rgba(78,57,21,.90),rgba(21,15,10,.96));
-}
-.det-ability-icon.kind-passive{box-shadow:0 0 12px rgba(255,230,140,.10)}
-.det-ability-icon.kind-trigger{box-shadow:0 0 12px rgba(255,193,120,.10)}
-.det-ability-icon.kind-aura{box-shadow:0 0 12px rgba(120,214,255,.12)}
-.det-ability-icon.kind-buff{box-shadow:0 0 12px rgba(120,255,158,.12)}
-.det-ability-icon.kind-debuff{box-shadow:0 0 12px rgba(255,120,120,.12)}
 
 
 
@@ -6562,22 +6102,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   align-items:center!important;
   justify-content:center!important;
   gap:7px!important;
-}
-.det-btn-icon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:20px;
-  height:20px;
-  font-size:13px;
-  line-height:1;
-}
-
-.card-inspect-x{
-  top:12px!important;
-  right:12px!important;
-  width:44px!important;
-  height:44px!important;
 }
 @media(max-width:980px){
   
@@ -6603,23 +6127,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 .detail-guide-row{grid-template-columns:repeat(2,minmax(0,180px))!important;}
-.det-stat-row{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important}
 
 .det-stat-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
 
-.det-stat-img,.det-btn-img,.det-inline-icon-img{width:24px;height:24px;display:block;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
-
-
-
-.det-ability-card{text-align:left!important;}
-
-.det-ability-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
-.det-ability-img{width:24px;height:24px;display:block;object-fit:contain}
-
-.det-ability-name{margin-bottom:4px!important;}
-
-
-.det-inline-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
+.det-btn-img{width:24px;height:24px;display:block;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
 
 
 .detail-token-btn{border-radius:10px!important;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98))!important;border:1px solid rgba(238,190,91,.34)!important;box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)!important;}
@@ -6628,16 +6139,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-status-icon-btn{width:36px;height:36px;min-width:36px;border-radius:10px;background:linear-gradient(180deg,rgba(69,50,18,.92),rgba(14,10,7,.98));border:1px solid rgba(238,190,91,.34);box-shadow:0 6px 12px rgba(0,0,0,.2),inset 0 0 12px rgba(255,255,255,.04)}
 .det-status-icon-btn .status-chip,.det-status-icon-btn .status-inline-icon,.det-status-icon-btn .detail-status-icon{margin:0 auto}
 .det-status-icon-btn + span{font-size:10px!important;color:#e4d0a3!important;font-weight:700!important;line-height:1.1!important}
-.det-info-row-weapon strong{padding-left:12px}
 .detail-guide-block .detail-chip-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 @media(max-width:980px){
   .card-inspect-card{height:min(92svh,820px)!important;overflow:auto!important;grid-template-columns:1fr!important}
-  .card-inspect-visual{height:240px!important;min-height:240px!important}
-  .card-inspect-grid{margin:252px 0 0 0!important}
-  .card-inspect-text{margin:118px 0 0 0!important;height:auto!important;overflow:visible!important}
-  .det-ability-list{grid-template-columns:1fr!important}
   .detail-guide-row{position:static!important;grid-template-columns:1fr 1fr!important;justify-content:stretch!important}
-  .card-inspect-actions{position:static!important;width:auto!important}
 }
 
 
@@ -6654,65 +6159,29 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(238,190,91,.48)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),inset 0 0 0 1px rgba(255,238,180,.05)!important;
 }
 .card-inspect-card::before{content:""!important;position:absolute!important;inset:8px!important;border-radius:18px!important;border:1px solid rgba(238,190,91,.12)!important;pointer-events:none!important}
-.card-inspect-x{
-  position:absolute!important;top:16px!important;right:16px!important;z-index:20!important;width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important;border-radius:14px!important;padding:0!important;
-  border:1px solid rgba(255,176,135,.52)!important;background:linear-gradient(180deg,#982a10,#531008)!important;color:#ffe3bf!important;font-size:28px!important;
-  box-shadow:0 10px 18px rgba(0,0,0,.30),inset 0 0 0 1px rgba(255,255,255,.08)!important;
-}
-.card-inspect-head{position:relative!important;display:block!important;margin:0!important;padding:0 62px 0 0!important;}
-.card-inspect-title{
-  grid-area:head!important;margin:0!important;padding:0 62px 0 0!important;align-self:start!important;font-family:Georgia,serif!important;line-height:.95!important;
-  text-transform:uppercase!important;letter-spacing:.035em!important;color:#f6da8f!important;text-shadow:0 2px 0 #251600,0 0 14px rgba(255,210,100,.12)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
-}
-.card-inspect-sub{margin:8px 0 0!important;color:#d8c5a0!important}.det-identity-block{margin:0!important;gap:6px!important}.det-head-chip-row{gap:7px!important}
-.det-head-chip{min-height:26px!important;padding:4px 10px!important;border-radius:8px!important;background:linear-gradient(180deg,rgba(45,32,12,.92),rgba(10,9,8,.94))!important;border:1px solid rgba(238,190,91,.30)!important;}
-.det-summary-copy{display:none!important}
-.card-inspect-visual{
-  grid-area:left!important;align-self:start!important;width:100%!important;margin:0!important;border-radius:18px!important;overflow:hidden!important;
-  background:radial-gradient(circle at 50% 20%,rgba(255,230,170,.16),rgba(35,25,14,.62) 48%,rgba(4,4,4,.94))!important;border:1px solid rgba(238,190,91,.38)!important;box-shadow:0 0 20px rgba(238,190,91,.10),inset 0 0 26px rgba(255,255,255,.03)!important;
-}
-.card-inspect-portrait,.card-inspect-portrait.card-portrait,.card-inspect-portrait.card-portrait img{width:100%!important;height:100%!important;object-fit:cover!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;display:block!important}
-.card-inspect-grid{
-  grid-area:left!important;align-self:end!important;width:100%!important;display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:7px!important;overflow:hidden!important;
-}
-.card-inspect-stat,.inspect-stat,.det-stat-row{
+.inspect-stat{
   box-sizing:border-box!important;min-height:38px!important;height:38px!important;padding:4px 8px!important;border-radius:12px!important;display:flex!important;align-items:center!important;gap:7px!important;
   background:linear-gradient(110deg,rgba(255,225,139,.07),rgba(15,11,7,.86) 38%,rgba(6,6,5,.95))!important;border:1px solid rgba(238,190,91,.25)!important;box-shadow:inset 0 0 10px rgba(255,255,255,.02),0 4px 10px rgba(0,0,0,.18)!important;
-}
-.det-stat-key{color:#dfbf73!important;font-size:10px!important;font-weight:900!important;letter-spacing:.06em!important;min-width:30px!important}.card-inspect-stat strong,.inspect-stat strong{margin-left:auto!important;color:#fff2bf!important;font-size:16px!important;font-weight:900!important}
-.det-stat-icon-btn,.det-ability-icon-btn,.detail-token-btn,.det-inline-icon-btn,.det-status-icon-btn{
+}.inspect-stat strong{margin-left:auto!important;color:#fff2bf!important;font-size:16px!important;font-weight:900!important}
+.det-stat-icon-btn,
+.detail-token-btn,
+.det-status-icon-btn{
   appearance:none!important;border:0!important;padding:0!important;margin:0!important;cursor:pointer!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;border-radius:11px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
   background:radial-gradient(circle at 50% 38%,rgba(255,222,130,.09),rgba(13,10,7,.56) 62%,rgba(0,0,0,.12))!important;box-shadow:inset 0 0 0 1px rgba(238,190,91,.15),0 4px 9px rgba(0,0,0,.22)!important;
 }
-.det-stat-icon-btn:hover,.det-ability-icon-btn:hover,.detail-token-btn:hover,.det-inline-icon-btn:hover,.det-status-icon-btn:hover{transform:translateY(-1px)!important;box-shadow:inset 0 0 0 1px rgba(238,190,91,.30),0 8px 16px rgba(0,0,0,.30),0 0 16px rgba(238,190,91,.14)!important}
-.det-stat-img,.det-ability-img,.det-btn-img,.det-inline-icon-img{object-fit:contain!important;display:block!important;}
-.card-inspect-text{
-  margin:0!important;height:auto!important;
-  align-self:stretch!important;
-}
-.det-section-block,.det-info-card,.detail-guide-block,.det-quote-block{min-width:0!important;border-radius:14px!important;border:1px solid rgba(238,190,91,.22)!important;background:linear-gradient(180deg,rgba(22,18,12,.92),rgba(8,8,7,.95))!important;box-shadow:inset 0 0 16px rgba(255,255,255,.018),0 7px 16px rgba(0,0,0,.16)!important;overflow:hidden!important}
-.card-inspect-text > .det-section-block:nth-child(1){grid-area:effects!important}.det-quote-block{grid-area:quote!important}
-.det-section-title,.detail-guide-caption{font-size:12px!important;line-height:1!important;text-align:center!important;color:#efc96d!important;letter-spacing:.07em!important;text-transform:uppercase!important;border-bottom:1px solid rgba(238,190,91,.13)!important;}
-.det-ability-list{padding:8px!important;display:grid!important;gap:8px!important;}
-.det-ability-card{box-sizing:border-box!important;border:1px solid rgba(238,190,91,.15)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(31,24,15,.88),rgba(10,10,9,.92))!important;}
-.det-ability-top{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:5px!important}.det-ability-kind{color:#cbb58c!important;font-size:10px!important;letter-spacing:.06em!important;text-transform:uppercase!important;font-weight:900!important}
-.det-ability-name{font-size:12px!important;line-height:1.1!important;color:#f2ca69!important;margin:0 0 4px!important}.det-ability-text{font-size:11px!important;line-height:1.25!important;color:#e8d9b9!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;overflow:hidden!important;}
-.det-info-row{padding:6px 10px!important;font-size:12px!important;line-height:1.15!important;display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;border-bottom:1px solid rgba(238,190,91,.08)!important}
-.det-info-row span{color:#c7b188!important}.det-info-row strong{color:#fff0c7!important;text-align:right!important}.det-inline-with-icon{display:flex!important;align-items:center!important;gap:8px!important}.det-mini-note{padding:7px 10px 9px!important;color:#decda9!important;}
-.det-empty-line{padding:10px!important;font-size:12px!important;color:#cdbb96!important}
+.det-stat-icon-btn:hover,
+.detail-token-btn:hover,
+.det-status-icon-btn:hover{transform:translateY(-1px)!important;box-shadow:inset 0 0 0 1px rgba(238,190,91,.30),0 8px 16px rgba(0,0,0,.30),0 0 16px rgba(238,190,91,.14)!important}
+.det-btn-img{object-fit:contain!important;display:block!important;}
+.detail-guide-block{min-width:0!important;border-radius:14px!important;border:1px solid rgba(238,190,91,.22)!important;background:linear-gradient(180deg,rgba(22,18,12,.92),rgba(8,8,7,.95))!important;box-shadow:inset 0 0 16px rgba(255,255,255,.018),0 7px 16px rgba(0,0,0,.16)!important;overflow:hidden!important}
+.detail-guide-caption{font-size:12px!important;line-height:1!important;text-align:center!important;color:#efc96d!important;letter-spacing:.07em!important;text-transform:uppercase!important;border-bottom:1px solid rgba(238,190,91,.13)!important;}
 .detail-chip-row{padding:8px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.detail-status-chip{min-height:42px!important;display:flex!important;align-items:center!important;gap:8px!important;padding:5px 7px!important;border-radius:11px!important;border:1px solid rgba(238,190,91,.16)!important;background:rgba(0,0,0,.18)!important}
 .detail-status-chip span{color:#e5d2a7!important;font-size:10px!important;font-weight:700!important;line-height:1.1!important}.det-status-icon-btn .status-icon{transform:scale(.92)!important}
-.det-quote-block{padding:10px!important}.det-quote{color:#e2b75f!important;text-align:center!important;font-family:Georgia,serif!important;font-style:italic!important;font-size:14px!important;line-height:1.22!important}
-
-.card-inspect-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}.card-inspect-reason{display:none!important}.card-inspect-actions .btn{min-height:42px!important;border-radius:12px!important}
 .card-rarity-mythic .card-inspect-card{border-color:rgba(92,194,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(92,194,255,.15)!important}
 .card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(208,112,255,.16)!important}
 .card-rarity-demigod .card-inspect-card{border-color:rgba(255,236,141,.68)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 34px rgba(255,236,141,.16)!important}
 @media(max-width:900px){
   .card-inspect-card{width:min(96vw,760px)!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;}
-  
-  .card-inspect-visual{height:230px!important;min-height:230px!important}
-  .card-inspect-grid{position:relative!important;margin:244px 0 0!important;height:auto!important;max-height:none!important}
   
 }
 
@@ -6728,84 +6197,23 @@ El CSS original se conserva para no romper visuales. El bloque final
     "left body"
     "actions body"!important;
 }
-.card-inspect-text{
-  grid-area:body!important;
-  display:grid!important;
-  grid-template-columns:1fr .82fr!important;
-  grid-template-rows:minmax(170px,auto) minmax(126px,auto) 52px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:10px!important;
-  overflow:hidden!important;
-  min-height:0!important;
-}
-
-.det-ability-list{
-  
-  
-  grid-template-columns:1fr!important;
-  
-}
-
-
-
-.det-tactical-card{
-  
-  min-height:0!important;
-}
-.det-status-section{
-  
-  
-  min-height:0!important;
-}
-.det-status-section.det-status-empty{
-  min-height:0!important;
-}
-
-
-.card-inspect-actions{
-  grid-area:actions!important;
-  align-self:end!important;
-}
 
 
 .det-stat-icon-btn,
-.det-ability-icon-btn,
 .detail-token-btn,
-.det-inline-icon-btn,
 .det-status-icon-btn{
   background:radial-gradient(circle at 50% 42%,rgba(255,232,145,.05),rgba(10,8,6,.30) 64%,rgba(0,0,0,.05))!important;
   box-shadow:inset 0 0 0 1px rgba(238,190,91,.08),0 2px 7px rgba(0,0,0,.18)!important;
 }
-.det-stat-img,.det-ability-img,.det-btn-img,.det-inline-icon-img{
+.det-btn-img{
   width:34px!important;
   height:34px!important;
   opacity:1!important;
   filter:brightness(1.28) contrast(1.12) saturate(1.10) drop-shadow(0 2px 2px rgba(0,0,0,.78)) drop-shadow(0 0 5px rgba(255,216,122,.20))!important;
 }
-.det-info-row{
-  grid-template-columns:auto 1fr!important;
-}
 
-.det-section-title,.detail-guide-caption{
+.detail-guide-caption{
   padding:7px 10px!important;
-}
-.card-inspect-visual{
-  height:276px!important;
-  min-height:276px!important;
-}
-.card-inspect-grid{
-  margin:294px 0 0!important;
-  height:274px!important;
-  max-height:274px!important;
-}
-.det-head-chip{
-  font-size:10.5px!important;
-}
-.card-inspect-title{
-  font-size:32px!important;
 }
 @media(max-width:900px){
   .card-inspect-card{
@@ -6813,11 +6221,6 @@ El CSS original se conserva para no romper visuales. El bloque final
     height:min(92vh,820px)!important;
     max-height:min(92vh,820px)!important;
     overflow:auto!important;
-  }
-  .card-inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
   }
   .detail-guide-row{
     justify-content:flex-start!important;
@@ -6827,33 +6230,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Leader battle record in DET */
-.det-leader-record{
-  margin:8px;
-  padding:8px 10px;
-  border:1px solid rgba(238,190,91,.18);
-  border-radius:12px;
-  background:linear-gradient(180deg,rgba(29,22,12,.72),rgba(8,8,7,.76));
-}
-.det-record-title{
-  color:#efc96d;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.07em;
-  text-transform:uppercase;
-  margin-bottom:6px;
-}
-.det-record-row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  color:#d9c59a;
-  font-size:11px;
-  line-height:1.35;
-}
-.det-record-row strong{
-  color:#fff0c7;
-  font-weight:900;
-}
 
 
 /* === v28 UI overlap fix: battle details + DET buttons inside === */
@@ -6893,10 +6269,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* DET: keep footer guide buttons inside the modal, not floating at the far bottom-right. */
-.card-inspect-text{
-  
-  padding-bottom:0!important;
-}
 .detail-guide-row{
   
   
@@ -6937,9 +6309,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* When there is no Conóceme for leaders, PREC/EVA still stays inside the button tray. */
-.card-inspect-text .detail-guide-row:only-child{
-  justify-content:flex-start!important;
-}
 
 /* Prevent old absolute footer rule from earlier patches from winning. */
 
@@ -6976,9 +6345,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .left-floating,
 .left-tools,
 .battle-left-actions,
-#leftControls,
-#battleLeftControls,
-#settingsFloat,
 .settings-float{
   top:auto!important;
   bottom:24px!important;
@@ -7015,18 +6381,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 .player-hud,
 .player-panel,
 #p1Hud,
-#p1HudName,
-#p1HudStats,
-#p1HudResource,
-#hudPlayer1{
+#p1HudName{
   z-index:45!important;
   position:relative!important;
 }
 .resource-strip,
 .resource-hud,
-.honor-hud,
-#resourceHud,
-#honorHud{
+.honor-hud{
   z-index:46!important;
   position:relative!important;
   margin-top:-4px!important;
@@ -7048,123 +6409,30 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Header stays top, close top-right. */
-.card-inspect-head{grid-area:head!important;padding-right:62px!important}
-.card-inspect-title{
-  font-size:34px!important;
-  line-height:1!important;
-  padding-right:62px!important;
-}
-.card-inspect-sub{
-  margin-top:8px!important;
-}
 
 /* Left side becomes a neat vertical column: portrait then stats, never overlay. */
-.card-inspect-visual{
-  grid-area:left!important;
-  position:relative!important;
-  align-self:start!important;
-  height:260px!important;
-  min-height:260px!important;
-  width:100%!important;
-  margin:0!important;
-  border-radius:18px!important;
-}
-.card-inspect-grid{
-  grid-area:left!important;
-  position:relative!important;
-  align-self:start!important;
-  margin-top:278px!important;
-  width:100%!important;
-  height:auto!important;
-  max-height:none!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:8px!important;
-  overflow:visible!important;
-}
 
 /* Stats compact and below the art. */
-.card-inspect-stat,
-.inspect-stat,
-.det-stat-row{
+.inspect-stat{
   min-height:42px!important;
   height:42px!important;
   padding:4px 9px!important;
   border-radius:12px!important;
 }
-.det-stat-img,
-.det-ability-img,
-.det-btn-img,
-.det-inline-icon-img{
+.det-btn-img{
   width:32px!important;
   height:32px!important;
 }
 
 /* Right body: effects left, tactical/status right, footer buttons inside the right column. */
-.card-inspect-text{
-  grid-area:body!important;
-  margin:0!important;
-  padding:0!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.12fr) minmax(285px,.88fr)!important;
-  grid-template-rows:minmax(0,1fr) 64px!important;
-  grid-template-areas:
-    "effects sideinfo"
-    "buttons buttons"!important;
-  gap:10px!important;
-}
 
 /* Effects use only their real space and do not become a giant empty pit. */
-.card-inspect-text > .det-section-block:first-child{
-  grid-area:effects!important;
-  min-height:0!important;
-  height:100%!important;
-}
-.det-ability-list{
-  height:auto!important;
-  max-height:calc(100% - 30px)!important;
-  overflow:auto!important;
-  align-content:start!important;
-}
-.det-ability-card{
-  min-height:auto!important;
-  padding:9px 10px!important;
-}
-.det-ability-card:only-child{
-  min-height:128px!important;
-}
-.det-ability-text{
-  -webkit-line-clamp:5!important;
-}
 
 /* Right stack: tactical + states. */
-.det-tactical-card{
-  grid-area:sideinfo!important;
-  align-self:start!important;
-}
-.det-status-section{
-  grid-area:sideinfo!important;
-  align-self:end!important;
-  margin-top:10px!important;
-  max-height:190px!important;
-}
 
 /* Since tactical and status share the same grid area, position them as a nested visual stack. */
-.card-inspect-text .det-tactical-card{
-  width:100%!important;
-  max-height:260px!important;
-}
-.card-inspect-text .det-status-section{
-  width:100%!important;
-}
 
 /* Hide quote for now in leader DET to keep gameplay readable. */
-.det-quote-block{
-  display:none!important;
-}
 
 /* Footer tray for PREC/EVA and Conóceme: fully inside DET. */
 .detail-guide-row{
@@ -7208,12 +6476,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Card action buttons should not reserve footer space inside unit DET. */
-.card-inspect-actions{
-  position:absolute!important;
-  left:16px!important;
-  bottom:16px!important;
-  width:360px!important;
-}
 
 /* If there are only leader buttons, don't push them offscreen. */
 .card-inspect-card .detail-guide-row{
@@ -7224,12 +6486,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Tactical text less tall to avoid cutting. */
-.det-mini-note{
-  font-size:10px!important;
-  line-height:1.18!important;
-  max-height:64px!important;
-  overflow:auto!important;
-}
 
 /* On smaller screens allow internal scroll rather than broken overlap. */
 @media(max-width:980px){
@@ -7239,17 +6495,6 @@ El CSS original se conserva para no romper visuales. El bloque final
     grid-template-columns:1fr!important;
     grid-template-rows:auto auto auto!important;
     grid-template-areas:"head" "left" "body"!important;
-  }
-  .card-inspect-grid{
-    margin-top:276px!important;
-  }
-  .card-inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
-  .det-status-section{
-    max-height:none!important;
   }
 }
 
@@ -7274,7 +6519,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   max-width:170px!important;
 }
 #gameShell .battlefield .battle-tools #battleMenuBtn,
-#gameShell .battlefield .battle-tools #toggleLogBtn,
 #gameShell .battlefield .battle-tools #toggleActionsBtn{
   position:static!important;
   transform:none!important;
@@ -7288,7 +6532,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   padding:0!important;
   border-radius:999px!important;
 }
-#gameShell .battlefield .battle-tools #toggleLogBtn,
 #gameShell .battlefield .battle-tools #toggleActionsBtn{
   min-width:138px!important;
   min-height:40px!important;
@@ -7522,235 +6765,24 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Header */
-#cardInspectModal .card-inspect-head{
-  grid-area:head!important;
-  margin:0!important;
-  padding:0 54px 0 0!important;
-  display:block!important;
-}
-#cardInspectModal .card-inspect-title{
-  margin:0!important;
-  padding:0!important;
-  font-size:30px!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal .card-inspect-sub{
-  margin-top:7px!important;
-  display:flex!important;
-  gap:6px!important;
-  flex-wrap:wrap!important;
-}
-#cardInspectModal .card-inspect-x{
-  position:absolute!important;
-  top:14px!important;
-  right:14px!important;
-  width:44px!important;
-  height:44px!important;
-  min-width:44px!important;
-  min-height:44px!important;
-  z-index:30!important;
-}
 
 /* Portrait obeys modal */
-#cardInspectModal #cardInspectVisual.card-inspect-visual{
-  grid-area:visual!important;
-  width:100%!important;
-  height:220px!important;
-  min-height:220px!important;
-  max-height:220px!important;
-  margin:0!important;
-  align-self:start!important;
-  overflow:hidden!important;
-  border-radius:16px!important;
-}
-#cardInspectModal #cardInspectVisual .card-inspect-portrait,
-#cardInspectModal #cardInspectVisual .card-inspect-portrait.card-portrait,
-#cardInspectModal #cardInspectVisual .card-inspect-portrait.card-portrait img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center 18%!important;
-}
 
 /* Stats below portrait, not behind buttons */
-#cardInspectModal #cardInspectStats.card-inspect-grid{
-  grid-area:stats!important;
-  width:100%!important;
-  height:100%!important;
-  max-height:none!important;
-  margin:0!important;
-  padding:0!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:37px!important;
-  gap:7px!important;
-  overflow:hidden!important;
-}
-#cardInspectModal #cardInspectStats .card-inspect-stat,
-#cardInspectModal #cardInspectStats .det-stat-row{
-  min-height:37px!important;
-  height:37px!important;
-  padding:3px 8px!important;
-  border-radius:11px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:7px!important;
-  box-sizing:border-box!important;
-}
-#cardInspectModal #cardInspectStats .det-stat-icon-btn{
-  width:32px!important;
-  height:32px!important;
-  min-width:32px!important;
-  min-height:32px!important;
-}
-#cardInspectModal #cardInspectStats .det-stat-img{
-  width:29px!important;
-  height:29px!important;
-}
-#cardInspectModal #cardInspectStats .det-stat-key{
-  font-size:9.5px!important;
-  min-width:28px!important;
-}
-#cardInspectModal #cardInspectStats strong{
-  font-size:15px!important;
-}
 
 /* Cancel/Jugar are their own row below stats */
-#cardInspectModal .card-inspect-actions{
-  grid-area:actions!important;
-  position:static!important;
-  width:100%!important;
-  margin:0!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
-  align-self:stretch!important;
-}
-#cardInspectModal .card-inspect-actions .btn{
-  min-height:44px!important;
-  height:44px!important;
-  border-radius:12px!important;
-  font-size:14px!important;
-}
 
 /* Right panel layout */
-#cardInspectModal #cardInspectText.card-inspect-text{
-  grid-area:text!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.05fr) minmax(285px,.95fr)!important;
-  grid-template-rows:minmax(0,1fr) 118px 48px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:9px!important;
-  box-sizing:border-box!important;
-}
 
 /* Direct child placement */
-#cardInspectModal #cardInspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
-#cardInspectModal #cardInspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
-#cardInspectModal #cardInspectText > .det-status-section{
-  grid-area:states!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:none!important;
-  overflow:hidden!important;
-  margin:0!important;
-}
-#cardInspectModal #cardInspectText > .det-quote-block{
-  display:none!important;
-}
 
 /* Footer inside grid, not floating */
-#cardInspectModal #cardInspectText > .detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  left:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-  width:100%!important;
-  height:48px!important;
-  min-height:48px!important;
-  margin:0!important;
-  padding:6px 10px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:14px!important;
-  border-radius:13px!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  background:linear-gradient(180deg,rgba(22,18,12,.88),rgba(8,8,7,.94))!important;
-  box-sizing:border-box!important;
-}
 
 /* Effects compact */
-#cardInspectModal .det-ability-list{
-  height:calc(100% - 29px)!important;
-  max-height:none!important;
-  overflow:auto!important;
-  align-content:start!important;
-  padding:7px!important;
-  gap:7px!important;
-}
-#cardInspectModal .det-ability-card{
-  min-height:auto!important;
-  padding:8px 9px!important;
-}
-#cardInspectModal .det-ability-card:only-child{
-  min-height:104px!important;
-}
-#cardInspectModal .det-ability-name{
-  font-size:11.5px!important;
-}
-#cardInspectModal .det-ability-text{
-  font-size:10.7px!important;
-  line-height:1.22!important;
-  -webkit-line-clamp:4!important;
-}
 
 /* Tactical compact: full explanation stays in icon modal */
-#cardInspectModal .det-tactical-card .det-mini-note{
-  display:none!important;
-}
-#cardInspectModal .det-section-title{
-  padding:7px 9px!important;
-  font-size:11px!important;
-}
-#cardInspectModal .det-info-row{
-  padding:6px 10px!important;
-  min-height:28px!important;
-  font-size:11px!important;
-}
-#cardInspectModal .det-info-row strong{
-  font-size:10.8px!important;
-  line-height:1.12!important;
-}
 
 /* States compact */
-#cardInspectModal .det-empty-line{
-  padding:7px 9px!important;
-  font-size:10.5px!important;
-}
 
 /* Footer button sizes */
 #cardInspectModal .detail-token-btn{
@@ -7770,9 +6802,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Reason text should not reserve hidden weird space */
-#cardInspectModal .card-inspect-reason{
-  display:none!important;
-}
 
 /* Responsive fallback */
 @media(max-width:920px){
@@ -7787,11 +6816,6 @@ El CSS original se conserva para no romper visuales. El bloque final
       "stats"
       "actions"
       "text"!important;
-  }
-  #cardInspectModal #cardInspectText.card-inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
   }
 }
 
@@ -7828,84 +6852,60 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-rarity-basic .hand-icon.card-portrait,
 .card-rarity-basic .deck-card-icon.card-portrait,
 .card-rarity-basic .card-icon.card-portrait,
-.card-rarity-basic .card-inspect-portrait,
 .card-rarity-basic.unit-card,
 .unit-card.card-rarity-basic{
   border-color:rgba(24,24,28,.90)!important;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 0 18px var(--rarity-basic-glow)!important;
-}
-.card-rarity-basic .det-head-chip,.card-rarity-basic .card-inspect-sub{
-  color:#d7d7dc!important;
 }
 
 /* Epic / silver */
 .card-rarity-epic .hand-icon.card-portrait,
 .card-rarity-epic .deck-card-icon.card-portrait,
 .card-rarity-epic .card-icon.card-portrait,
-.card-rarity-epic .card-inspect-portrait,
 .card-rarity-epic.unit-card,
 .unit-card.card-rarity-epic{
   border-color:var(--rarity-epic-main)!important;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.20),0 0 20px var(--rarity-epic-glow)!important;
-}
-.card-rarity-epic .det-head-chip,.card-rarity-epic .card-inspect-sub{
-  color:#edf2ff!important;
 }
 
 /* Glorious / green */
 .card-rarity-glorious .hand-icon.card-portrait,
 .card-rarity-glorious .deck-card-icon.card-portrait,
 .card-rarity-glorious .card-icon.card-portrait,
-.card-rarity-glorious .card-inspect-portrait,
 .card-rarity-glorious.unit-card,
 .unit-card.card-rarity-glorious{
   border-color:var(--rarity-glorious-main)!important;
   box-shadow:inset 0 0 0 1px rgba(210,255,225,.20),0 0 22px var(--rarity-glorious-glow)!important;
-}
-.card-rarity-glorious .det-head-chip,.card-rarity-glorious .card-inspect-sub{
-  color:#8dffb8!important;
 }
 
 /* Mythic / blue */
 .card-rarity-mythic .hand-icon.card-portrait,
 .card-rarity-mythic .deck-card-icon.card-portrait,
 .card-rarity-mythic .card-icon.card-portrait,
-.card-rarity-mythic .card-inspect-portrait,
 .card-rarity-mythic.unit-card,
 .unit-card.card-rarity-mythic{
   border-color:var(--rarity-mythic-main)!important;
   box-shadow:inset 0 0 0 1px rgba(210,245,255,.18),0 0 24px var(--rarity-mythic-glow)!important;
-}
-.card-rarity-mythic .det-head-chip,.card-rarity-mythic .card-inspect-sub{
-  color:#8edcff!important;
 }
 
 /* Legendary / purple */
 .card-rarity-legendary .hand-icon.card-portrait,
 .card-rarity-legendary .deck-card-icon.card-portrait,
 .card-rarity-legendary .card-icon.card-portrait,
-.card-rarity-legendary .card-inspect-portrait,
 .card-rarity-legendary.unit-card,
 .unit-card.card-rarity-legendary{
   border-color:var(--rarity-legendary-main)!important;
   box-shadow:inset 0 0 0 1px rgba(246,221,255,.18),0 0 26px var(--rarity-legendary-glow)!important;
-}
-.card-rarity-legendary .det-head-chip,.card-rarity-legendary .card-inspect-sub{
-  color:#e58cff!important;
 }
 
 /* Demigod / gold */
 .card-rarity-demigod .hand-icon.card-portrait,
 .card-rarity-demigod .deck-card-icon.card-portrait,
 .card-rarity-demigod .card-icon.card-portrait,
-.card-rarity-demigod .card-inspect-portrait,
 .card-rarity-demigod.unit-card,
 .unit-card.card-rarity-demigod{
   border-color:var(--rarity-demigod-main)!important;
   box-shadow:inset 0 0 0 1px rgba(255,248,192,.24),0 0 28px var(--rarity-demigod-glow)!important;
-}
-.card-rarity-demigod .det-head-chip,.card-rarity-demigod .card-inspect-sub{
-  color:#ffe66d!important;
 }
 
 /* Modal shell glow by rarity */
@@ -7923,13 +6923,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 #cardInspectModal.card-rarity-basic .card-inspect-card{
   border-color:rgba(25,25,28,.90)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.82),0 0 26px rgba(25,25,28,.55)!important;
-}
-#cardInspectModal.card-rarity-basic .card-inspect-title{
-  text-shadow:0 0 16px rgba(30,30,34,.85)!important;
-}
-#cardInspectModal.card-rarity-basic .det-head-chip,#cardInspectModal.card-rarity-basic .card-inspect-pill{
-  border-color:rgba(45,45,50,.85)!important;
-  box-shadow:0 0 12px rgba(35,35,38,.45)!important;
 }
 
 #cardInspectModal.card-rarity-epic .card-inspect-card{
@@ -7971,18 +6964,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Right side of hand modal */
 
-
-
-
-
-#cardInspectModal:not(.hidden) #cardInspectText > .det-quote-block{
-  display:none!important;
-}
-
 /* Hand modal: avoid huge tactical explanation in the card view. The icon modal explains it. */
-#cardInspectModal:not(.hidden) .det-tactical-card .det-mini-note{
-  display:none!important;
-}
 
 /* ACTIVE STATUS BLOCK: never cut the actual status rows */
 
@@ -8032,14 +7014,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* Hand modal gets same status safety, without changing combat logic. */
 
 
-
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section .det-status-list{
-  flex:1 1 auto!important;
-  overflow:auto!important;
-  padding:6px 8px!important;
-}
-
-
 /* === v39 Status structure fix: one history block + one active-state list === */
 
 /* Combat DET gets stable right column: tactical above, status below, footer below all. */
@@ -8061,17 +7035,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* Hide any accidental duplicated title inside the status list only. */
 
 /* Hand modal status block follows same structure but smaller. */
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  
-  grid-template-rows:30px auto minmax(28px,1fr)!important;
-  gap:5px!important;
-  
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-leader-history-wrap{
-  max-height:58px!important;
-  overflow:hidden!important;
-  padding:0 8px!important;
-}
 
 
 
@@ -8081,129 +7044,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Each active state is a compact clickable pill. */
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row{
-  width:auto!important;
-  min-width:0!important;
-  max-width:100%!important;
-  min-height:34px!important;
-  height:34px!important;
-  padding:4px 10px 4px 6px!important;
-  display:inline-flex!important;
-  flex:0 0 auto!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:7px!important;
-  border-radius:999px!important;
-  background:linear-gradient(180deg,rgba(29,23,13,.98),rgba(8,8,7,.98))!important;
-  border:1px solid rgba(238,190,91,.34)!important;
-  box-shadow:inset 0 0 0 1px rgba(255,229,142,.05),0 0 12px rgba(230,177,70,.10)!important;
-  color:#ffe8a4!important;
-  cursor:pointer!important;
-  overflow:hidden!important;
-}
 
 /* Icon is the visual protagonist. */
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-icon{
-  width:26px!important;
-  min-width:26px!important;
-  height:26px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  border-radius:50%!important;
-  font-size:16px!important;
-  line-height:1!important;
-  background:radial-gradient(circle,rgba(255,222,118,.16),rgba(0,0,0,.25))!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  filter:drop-shadow(0 0 6px rgba(255,215,95,.28))!important;
-}
 
 /* Only label, no description. */
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy{
-  display:inline-flex!important;
-  min-width:0!important;
-  max-width:170px!important;
-  overflow:hidden!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy strong{
-  font-size:10.5px!important;
-  line-height:1!important;
-  color:#ffe8a4!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy small{
-  display:none!important;
-}
 
 /* Active status box can be shorter now. */
 
 
 /* === v42 status icons only in DET === */
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  
-  
-  gap:8px!important;
-  
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-leader-history-wrap{
-  flex:0 0 auto!important;
-  padding:0 8px!important;
-  margin:0!important;
-  overflow:hidden!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
-  flex:1 1 auto!important;
-  display:flex!important;
-  flex-direction:row!important;
-  flex-wrap:wrap!important;
-  align-content:flex-start!important;
-  align-items:flex-start!important;
-  gap:8px!important;
-  padding:0 8px 8px!important;
-  margin:0!important;
-  overflow:auto!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only{
-  width:38px!important;
-  min-width:38px!important;
-  max-width:38px!important;
-  height:38px!important;
-  min-height:38px!important;
-  max-height:38px!important;
-  padding:0!important;
-  margin:0!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  flex:0 0 38px!important;
-  border-radius:50%!important;
-  background:radial-gradient(circle at 30% 30%, rgba(255,220,120,.18), rgba(18,14,9,.98) 65%)!important;
-  border:1px solid rgba(238,190,91,.38)!important;
-  box-shadow:0 0 10px rgba(230,177,70,.12), inset 0 0 0 1px rgba(255,232,164,.05)!important;
-  overflow:hidden!important;
-  cursor:pointer!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only .det-status-icon{
-  width:auto!important;
-  min-width:0!important;
-  height:auto!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  font-size:19px!important;
-  line-height:1!important;
-  background:none!important;
-  border:none!important;
-  filter:drop-shadow(0 0 6px rgba(255,220,120,.28))!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only .det-status-copy{
-  display:none!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-empty-line{
-  padding:6px 2px!important;
-}
 
 
 /* === v43 FINAL: card-in-hand DET layout repair ===
@@ -8237,306 +7086,32 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Header right only. */
-#cardInspectModal:not(.hidden) .card-inspect-head{
-  grid-area:head!important;
-  min-height:0!important;
-  height:62px!important;
-  margin:0!important;
-  padding:0 56px 0 0!important;
-  overflow:hidden!important;
-}
-#cardInspectModal:not(.hidden) .card-inspect-title{
-  margin:0!important;
-  padding:0!important;
-  font-size:31px!important;
-  line-height:1.02!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal:not(.hidden) .card-inspect-sub{
-  margin-top:7px!important;
-  display:flex!important;
-  flex-wrap:wrap!important;
-  gap:6px!important;
-}
-#cardInspectModal:not(.hidden) .card-inspect-x{
-  position:absolute!important;
-  top:14px!important;
-  right:14px!important;
-  width:46px!important;
-  height:46px!important;
-  min-width:46px!important;
-  min-height:46px!important;
-  z-index:40!important;
-}
 
 /* Left column is real, predictable, and does not let actions overlap stats. */
 #cardInspectModal:not(.hidden) .card-inspect-card{
   --hv-hand-portrait-h:206px;
   --hv-hand-actions-h:54px;
 }
-#cardInspectModal:not(.hidden) #cardInspectVisual,
-#cardInspectModal:not(.hidden) #cardInspectStats,
-#cardInspectModal:not(.hidden) .card-inspect-actions,
-#cardInspectModal:not(.hidden) #cardInspectActions{
-  grid-column:1!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectVisual{
-  grid-area:left!important;
-  align-self:start!important;
-  width:100%!important;
-  height:var(--hv-hand-portrait-h)!important;
-  min-height:var(--hv-hand-portrait-h)!important;
-  max-height:var(--hv-hand-portrait-h)!important;
-  margin:0!important;
-  overflow:hidden!important;
-  border-radius:15px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectVisual .card-inspect-portrait,
-#cardInspectModal:not(.hidden) #cardInspectVisual .card-inspect-portrait.card-portrait,
-#cardInspectModal:not(.hidden) #cardInspectVisual .card-inspect-portrait.card-portrait img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center 20%!important;
-}
 
 /* Stats occupy the middle of left column. */
-#cardInspectModal:not(.hidden) #cardInspectStats{
-  grid-area:left!important;
-  align-self:stretch!important;
-  justify-self:stretch!important;
-  width:100%!important;
-  height:auto!important;
-  max-height:none!important;
-  min-height:0!important;
-  margin:calc(var(--hv-hand-portrait-h) + 10px) 0 calc(var(--hv-hand-actions-h) + 10px) 0!important;
-  padding:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  grid-auto-rows:38px!important;
-  align-content:start!important;
-  gap:7px!important;
-  box-sizing:border-box!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-row,
-#cardInspectModal:not(.hidden) #cardInspectStats .card-inspect-stat{
-  height:38px!important;
-  min-height:38px!important;
-  max-height:38px!important;
-  padding:3px 8px!important;
-  border-radius:12px!important;
-  box-sizing:border-box!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:7px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-icon-btn{
-  width:31px!important;
-  height:31px!important;
-  min-width:31px!important;
-  min-height:31px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-img{
-  width:28px!important;
-  height:28px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats .det-stat-key{
-  font-size:9.5px!important;
-  min-width:33px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectStats strong{
-  font-size:15.5px!important;
-}
 
 /* Actions are pinned to bottom of left column, below stats. */
-#cardInspectModal:not(.hidden) .card-inspect-actions,
-#cardInspectModal:not(.hidden) #cardInspectActions{
-  grid-area:left!important;
-  align-self:end!important;
-  width:100%!important;
-  height:var(--hv-hand-actions-h)!important;
-  min-height:var(--hv-hand-actions-h)!important;
-  max-height:var(--hv-hand-actions-h)!important;
-  margin:0!important;
-  padding:0!important;
-  position:static!important;
-  inset:auto!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
-  z-index:3!important;
-}
-#cardInspectModal:not(.hidden) .card-inspect-actions .btn,
-#cardInspectModal:not(.hidden) #cardInspectActions .btn{
-  height:52px!important;
-  min-height:52px!important;
-  margin:0!important;
-  border-radius:13px!important;
-  font-size:14px!important;
-}
 
 /* Right body: effects left, tactical/status right, footer bottom. */
-#cardInspectModal:not(.hidden) #cardInspectText{
-  grid-area:body!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 418px!important;
-  grid-template-rows:minmax(0,1fr) 132px 56px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:9px!important;
-  box-sizing:border-box!important;
-}
 
 /* Effects panel: contained, scroll only inside list. */
-#cardInspectModal:not(.hidden) #cardInspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  margin:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-section-block:first-child > .det-section-title{
-  flex:0 0 30px!important;
-  height:30px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-ability-list{
-  flex:1 1 auto!important;
-  min-height:0!important;
-  height:auto!important;
-  max-height:none!important;
-  overflow:auto!important;
-  padding:8px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  gap:8px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-ability-card{
-  min-height:auto!important;
-  padding:9px 10px!important;
-  flex:0 0 auto!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-ability-top{
-  gap:8px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-ability-name{
-  font-size:12px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-ability-text{
-  font-size:10.6px!important;
-  line-height:1.2!important;
-  -webkit-line-clamp:4!important;
-}
 
 /* Tactical card: contained and compact. */
-#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:100%!important;
-  overflow:hidden!important;
-  margin:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card > .det-section-title{
-  flex:0 0 30px!important;
-  height:30px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-info-row{
-  flex:0 0 28px!important;
-  min-height:28px!important;
-  height:28px!important;
-  padding:5px 10px!important;
-  font-size:10.8px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-info-row strong{
-  font-size:10.8px!important;
-  line-height:1.05!important;
-  max-width:245px!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-tactical-card .det-mini-note{
-  display:none!important;
-}
 
 /* Status section stays small and clean. */
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  grid-area:states!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:100%!important;
-  overflow:hidden!important;
-  margin:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section > .det-section-title{
-  flex:0 0 30px!important;
-  height:30px!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
-  flex:1 1 auto!important;
-  min-height:0!important;
-  overflow:auto!important;
-  padding:7px 9px!important;
-  display:flex!important;
-  flex-wrap:wrap!important;
-  gap:7px!important;
-}
 
 /* Footer buttons are below both columns. */
-#cardInspectModal:not(.hidden) #cardInspectText > .detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  inset:auto!important;
-  width:100%!important;
-  height:56px!important;
-  min-height:56px!important;
-  margin:0!important;
-  padding:8px 12px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:16px!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-  z-index:2!important;
-}
-#cardInspectModal:not(.hidden) #cardInspectText > .det-quote-block,
-#cardInspectModal:not(.hidden) .card-inspect-reason{
-  display:none!important;
-}
 
 /* On shorter screens, shrink portrait slightly so stats stay visible. */
 @media(max-height:740px){
   #cardInspectModal:not(.hidden) .card-inspect-card{
     --hv-hand-portrait-h:190px;
     height:min(540px,82vh)!important;
-  }
-  #cardInspectModal:not(.hidden) #cardInspectStats{
-    grid-auto-rows:36px!important;
-    gap:6px!important;
-  }
-  #cardInspectModal:not(.hidden) #cardInspectStats .det-stat-row,
-  #cardInspectModal:not(.hidden) #cardInspectStats .card-inspect-stat{
-    height:36px!important;
-    min-height:36px!important;
   }
 }
 
@@ -8548,19 +7123,6 @@ El CSS original se conserva para no romper visuales. El bloque final
     display:flex!important;
     flex-direction:column!important;
   }
-  #cardInspectModal:not(.hidden) #cardInspectVisual,
-  #cardInspectModal:not(.hidden) #cardInspectStats,
-  #cardInspectModal:not(.hidden) .card-inspect-actions,
-  #cardInspectModal:not(.hidden) #cardInspectActions,
-  #cardInspectModal:not(.hidden) #cardInspectText{
-    grid-area:auto!important;
-    margin:0!important;
-  }
-  #cardInspectModal:not(.hidden) #cardInspectText{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
 }
 
 
@@ -8570,7 +7132,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Home gets breathing room below browser/header. */
 .home-screen,
-#homeScreen,
 .home,
 .main-menu,
 .menu-screen{
@@ -8595,12 +7156,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .home-screen .unlock-note,
 .home-screen .coming-note,
 .home-screen .small-note,
-#homeScreen .home-subtitle,
-#homeScreen .home-helper,
-#homeScreen .home-hint,
-#homeScreen .unlock-note,
-#homeScreen .coming-note,
-#homeScreen .small-note,
 .main-menu .home-subtitle,
 .main-menu .home-helper,
 .main-menu .home-hint,
@@ -8612,10 +7167,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Some text is directly inside center under resources. Make it invisible if it is floating over the logo. */
 .home-screen > p,
-#homeScreen > p,
 .main-menu > p,
 .home-screen .center-note,
-#homeScreen .center-note,
 .main-menu .center-note{
   display:none!important;
 }
@@ -8623,8 +7176,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* Central title should own the middle without being covered. */
 .home-title,
 .logo-title,
-.main-title,
-#homeTitle{
+.main-title{
   position:relative!important;
   z-index:10!important;
   margin-top:18px!important;
@@ -8728,9 +7280,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .welcome-pack-banner,
 .home-event-banner,
 .event-card .banner,
-.events-card .banner,
-#eventsCard .banner,
-#eventCard .banner{
+.events-card .banner{
   position:absolute!important;
   left:22px!important;
   right:22px!important;
@@ -8799,9 +7349,8 @@ El CSS original se conserva para no romper visuales. El bloque final
     gap:16px!important;
   }
   .home-title,
-  .logo-title,
-  .main-title,
-  #homeTitle{
+.logo-title,
+.main-title{
     transform:scale(.92)!important;
     transform-origin:center!important;
   }
@@ -8825,7 +7374,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* If a decorative white paragraph is absolutely placed over the throne/title, silence it. */
 .home-screen [style*="white"],
-#homeScreen [style*="white"],
 .main-menu [style*="white"]{
   text-shadow:none!important;
 }
@@ -9598,7 +8146,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   transform:scale(1.08)!important;
   pointer-events:none!important;
 }
-.det-status-icon .status-icon-asset,
 .det-status-icon-btn .status-icon-asset{
   width:30px!important;
   height:30px!important;
@@ -9627,9 +8174,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-status-icon-btn:hover,
 .det-status-row:hover{
   filter:brightness(1.08)!important;
-}
-.det-status-row.det-status-icon-only{
-  cursor:pointer!important;
 }
 
 /* PATCH 7GQ - doble capa visual para unidades y líderes del tablero
@@ -10824,7 +9368,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   --honor-pop-top:164px;
   --honor-pop-scale:.96;
 }
-#honorCssTool,.honor-css-tool{display:none!important;}
+.honor-css-tool{display:none!important;}
 #gameShell .battlefield #turnHonorHud.turn-honor-hud{
   left:var(--honor-hud-left)!important;
   top:var(--honor-hud-top)!important;
@@ -11090,7 +9634,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   display:none!important;
 }
 
-#actionsHudCssTool,
 .actions-hud-css-tool{
   display:none!important;
 }
@@ -13986,24 +12529,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* ==========================================================
    7HCW · DET: fila Arma clickeable para ventaja/desventaja
    ========================================================== */
-.det-click-row.guide-weapon-btn{
-  width:100% !important;
-  appearance:none !important;
-  border:0 !important;
-  font:inherit !important;
-  color:inherit !important;
-  text-align:left !important;
-  cursor:pointer !important;
-}
-.det-click-row.guide-weapon-btn:hover,
-.det-click-row.guide-weapon-btn:focus-visible{
-  outline:none !important;
-  box-shadow:inset 0 0 0 1px rgba(255,209,102,.48),0 0 14px rgba(255,209,102,.16) !important;
-  background:rgba(255,209,102,.07) !important;
-}
-.det-click-row.guide-weapon-btn .det-inline-icon-btn{
-  pointer-events:none !important;
-}
 
 
 /* ==========================================================
@@ -14359,7 +12884,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   outline:2px solid rgba(0,255,223,.72) !important;
   box-shadow:0 0 20px rgba(0,255,223,.18), inset 0 0 20px rgba(0,255,223,.08) !important;
 }
-.card-inspect-modal.deck-builder-preview .card-inspect-reason,
 .card-inspect-modal.deck-builder-preview #cardInspectPlay{
   display:none !important;
 }
@@ -14683,11 +13207,10 @@ body.mobile-landscape-locked{overflow:hidden!important}
 
 @media (max-width:900px) and (orientation:portrait){
   #mainMenu,
-  #gameShell,
-  #onlineLobby,
-  #adventurePanel,
-  #collectionPanel,
-  #packShopPanel{filter:blur(2px)!important;pointer-events:none!important;user-select:none!important}
+#gameShell,
+#onlineLobby,
+#adventurePanel,
+#packShopPanel{filter:blur(2px)!important;pointer-events:none!important;user-select:none!important}
 }
 
 @media (max-width:900px) and (orientation:landscape){
@@ -14779,85 +13302,7 @@ body.mobile-landscape-locked{overflow:hidden!important}
   border-color:rgba(255,209,102,.58);
   box-shadow:0 0 12px rgba(255,209,102,.12);
 }
-
-
-
-.deck-builder-detail-box{
-  margin-top:12px;
-  padding:12px;
-  border-radius:16px;
-  border:1px solid rgba(255,209,102,.24);
-  background:linear-gradient(180deg,rgba(255,209,102,.08),rgba(0,0,0,.24));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
-}
-.deck-detail-title{
-  margin-bottom:8px;
-  color:#ffe8a8;
-  font-weight:1000;
-  font-family:Georgia,serif;
-  letter-spacing:.02em;
-}
-.deck-detail-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:7px;
-}
-.deck-detail-grid span{
-  display:flex;
-  flex-direction:column;
-  gap:3px;
-  min-height:42px;
-  padding:7px 8px;
-  border-radius:12px;
-  background:rgba(0,0,0,.28);
-  border:1px solid rgba(255,209,102,.16);
-}
-.deck-detail-grid b{
-  color:#cdb98e;
-  font-size:9px;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-}
-.deck-detail-grid em{
-  color:#fff2c6;
-  font-style:normal;
-  font-size:12px;
-  font-weight:900;
-  line-height:1.1;
-}
-.deck-detail-grid .can-create em{
-  color:#baffac;
-}
-.deck-detail-grid .cant-create em{
-  color:#ffd28a;
-}
-.deck-builder-detail-box small{
-  display:block;
-  margin-top:9px;
-  color:#cdb98e;
-  font-size:11px;
-  line-height:1.35;
-}
-.card-inspect-modal.deck-builder-preview .card-inspect-reason{
-  display:block !important;
-  opacity:.72;
-  text-align:center;
-}
 @media(max-width:900px){
-  .card-inspect-modal.deck-builder-detail-modal{
-    padding:8px;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-card{
-    width:calc(100vw - 16px);
-    max-height:92svh;
-    padding:12px;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-visual{
-    min-height:130px;
-  }
-  .deck-detail-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
   .deck-mini-view{
     font-size:7px;
     top:20px;
@@ -16181,7 +14626,6 @@ html.hv-mobile-landscape #gameShell .battlefield .battle-tools #battleMenuBtn{
   height:38px!important;
   min-height:38px!important;
 }
-html.hv-mobile-landscape #gameShell .battlefield .battle-tools #toggleLogBtn,
 html.hv-mobile-landscape #gameShell .battlefield .battle-tools #toggleActionsBtn{
   min-width:86px!important;
   width:auto!important;
@@ -16635,19 +15079,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 }
 
 /* === 7HEZ · Inspector por iconos: efectos y arma sin texto === */
-#cardInspectModal .det-effects-icon-only .det-ability-list{
-  display:flex!important;
-  flex-wrap:wrap!important;
-  align-content:flex-start!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:10px!important;
-  min-height:74px!important;
-  height:auto!important;
-  padding:12px!important;
-  overflow:auto!important;
-  background:#050505!important;
-}
 #cardInspectModal .det-effect-seal{
   appearance:none!important;
   width:58px!important;
@@ -16669,36 +15100,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   box-shadow:inset 0 0 0 1px rgba(255,232,155,.10),0 8px 18px rgba(0,0,0,.55),0 0 14px rgba(228,173,52,.18)!important;
   outline:none!important;
 }
-#cardInspectModal .det-effect-seal-art{
-  width:46px!important;
-  height:46px!important;
-  border-radius:50%!important;
-  display:grid!important;
-  place-items:center!important;
-  background:#070707!important;
-  border:1px solid rgba(232,186,76,.34)!important;
-  box-shadow:inset 0 0 10px rgba(255,218,118,.05)!important;
-}
-#cardInspectModal .det-effect-seal-art img{
-  width:36px!important;
-  height:36px!important;
-  object-fit:contain!important;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.85))!important;
-}
-#cardInspectModal .det-effect-seal-name{display:none!important}
-
-#cardInspectModal .det-tactical-icon-only{
-  background:#050505!important;
-  border-color:rgba(226,177,68,.42)!important;
-}
-#cardInspectModal .det-tactical-single-wrap{
-  min-height:74px!important;
-  padding:12px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  background:#050505!important;
-}
 #cardInspectModal .det-tactical-seal{
   width:58px!important;
   height:58px!important;
@@ -16707,19 +15108,8 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   background:linear-gradient(180deg,#111,#040404)!important;
   box-shadow:inset 0 0 0 1px rgba(255,232,155,.05),0 5px 12px rgba(0,0,0,.45)!important;
 }
-#cardInspectModal .det-tactical-seal-art{display:grid!important;place-items:center!important}
-#cardInspectModal .det-tactical-seal-art img{
-  width:40px!important;
-  height:40px!important;
-  object-fit:contain!important;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.85))!important;
-}
 @media(max-width:680px){
-  #cardInspectModal .det-effects-icon-only .det-ability-list{gap:8px!important;padding:9px!important;min-height:64px!important}
   #cardInspectModal .det-effect-seal,#cardInspectModal .det-tactical-seal{width:52px!important;height:52px!important;min-height:52px!important}
-  #cardInspectModal .det-effect-seal-art{width:42px!important;height:42px!important}
-  #cardInspectModal .det-effect-seal-art img{width:33px!important;height:33px!important}
-  #cardInspectModal .det-tactical-seal-art img{width:36px!important;height:36px!important}
 }
 /* 7HFA — El control de arma del DET es únicamente el icono. */
 .detail-guide-chip.detail-guide-chip-icon-only{
@@ -16986,35 +15376,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 }
 
 /* === 7HFF DET cleanup: weapon only in footer, statuses use full right column === */
-#cardInspectModal:not(.hidden) #cardInspectText{
-  grid-template-columns:minmax(0,1fr) 408px!important;
-  grid-template-rows:minmax(0,1fr) 56px!important;
-  grid-template-areas:
-    "effects states"
-    "buttons buttons"!important;
-}
-
-#cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
-  display:none!important;
-}
-
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
-  grid-area:states!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:none!important;
-  align-self:stretch!important;
-  overflow:hidden!important;
-  display:flex!important;
-  flex-direction:column!important;
-}
-
-#cardInspectModal:not(.hidden) #cardInspectText > .det-status-section .det-status-list{
-  flex:1 1 auto!important;
-  min-height:0!important;
-  max-height:none!important;
-  overflow:auto!important;
-}
 
 #cardInspectModal .detail-guide-chip{
   min-width:0!important;
@@ -18699,7 +17060,6 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
 .pack-reveal-card-button.card-rarity-mythic{border-color:rgba(255,108,210,.88);box-shadow:0 20px 42px rgba(0,0,0,.52),0 0 32px rgba(255,91,203,.30)}
 .pack-reveal-card-button.card-rarity-legendary{border-color:rgba(218,117,255,.90);box-shadow:0 20px 42px rgba(0,0,0,.52),0 0 34px rgba(201,85,255,.32)}
 .pack-reveal-card-button.card-rarity-demigod{border-color:rgba(255,247,157,.94);box-shadow:0 20px 42px rgba(0,0,0,.52),0 0 36px rgba(255,237,105,.36)}
-#cardInspectModal.pack-reveal-detail-modal .card-inspect-actions{grid-template-columns:1fr}
 #cardInspectModal.pack-reveal-detail-modal #cardInspectCancel{width:100%}
 @media (max-width:720px){
   .pack-reveal-grid{grid-template-columns:repeat(2,minmax(128px,1fr));gap:14px;padding:18px;width:min(560px,94vw)}
@@ -18715,263 +17075,9 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
    - Reorganiza el modal para que efectos y estados no se recorten ni se superpongan.
    - El consejo deja de ocupar espacio y pasa a una pastilla "?".
    ============================================================ */
-.card-inspect-modal.deck-builder-detail-modal{
-  z-index:390!important;
-  padding:12px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-card{
-  width:min(1120px,96vw)!important;
-  height:min(650px,88vh)!important;
-  max-height:min(650px,88vh)!important;
-  grid-template-columns:330px minmax(0,1fr)!important;
-  grid-template-rows:70px minmax(0,1fr)!important;
-  grid-template-areas:"left head" "left body"!important;
-  gap:12px 16px!important;
-  overflow:hidden!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-head{
-  grid-area:head!important;
-  min-width:0!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-title{
-  font-size:30px!important;
-  line-height:1!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-head-chip{
-  min-height:23px!important;
-  padding:3px 8px!important;
-  font-size:9.5px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-visual{
-  height:250px!important;
-  min-height:250px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-grid{
-  margin-top:266px!important;
-  height:auto!important;
-  max-height:none!important;
-  gap:6px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-stat{
-  min-height:37px!important;
-  height:37px!important;
-  padding:3px 7px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-stat-icon-btn{
-  width:32px!important;
-  height:32px!important;
-  min-width:32px!important;
-  min-height:32px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-stat-img{
-  width:28px!important;
-  height:28px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-stat-key{
-  font-size:9px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-stat strong{
-  font-size:14px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-text{
-  grid-area:body!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.12fr) minmax(240px,.88fr)!important;
-  grid-template-rows:minmax(180px,1fr) auto 54px!important;
-  grid-template-areas:
-    "effects states"
-    "investment investment"
-    "buttons buttons"!important;
-  gap:9px!important;
-  margin:0!important;
-  padding:0!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-text > .det-section-block:first-child{
-  grid-area:effects!important;
-  min-height:0!important;
-  height:100%!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-status-section{
-  grid-area:states!important;
-  align-self:stretch!important;
-  width:auto!important;
-  min-height:0!important;
-  max-height:none!important;
-  margin:0!important;
-  overflow:hidden!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-status-list{
-  max-height:100%!important;
-  overflow:auto!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-effects-icon-only .det-ability-list{
-  height:calc(100% - 29px)!important;
-  min-height:96px!important;
-  max-height:none!important;
-  overflow:auto!important;
-  display:flex!important;
-  flex-wrap:wrap!important;
-  align-content:flex-start!important;
-  align-items:flex-start!important;
-  justify-content:flex-start!important;
-  gap:10px!important;
-  padding:10px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-effect-seal{
-  width:64px!important;
-  height:64px!important;
-  min-height:64px!important;
-  flex:0 0 64px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-effect-seal-art{
-  width:50px!important;
-  height:50px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-effect-seal-art img{
-  width:39px!important;
-  height:39px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-builder-detail-box{
-  grid-area:investment!important;
-  margin:0!important;
-  padding:8px 10px!important;
-  border-radius:13px!important;
-  min-width:0!important;
-}
-.deck-detail-head{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:10px!important;
-  margin-bottom:6px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-detail-title{
-  margin:0!important;
-  font-size:13px!important;
-  line-height:1!important;
-}
-.deck-detail-help-pill{
-  appearance:none!important;
-  width:28px!important;
-  height:28px!important;
-  min-width:28px!important;
-  min-height:28px!important;
-  padding:0!important;
-  border-radius:999px!important;
-  border:1px solid rgba(238,190,91,.55)!important;
-  background:linear-gradient(180deg,rgba(83,57,18,.98),rgba(18,13,8,.98))!important;
-  color:#ffe5a1!important;
-  font-family:Georgia,serif!important;
-  font-size:17px!important;
-  font-weight:900!important;
-  line-height:1!important;
-  cursor:pointer!important;
-  box-shadow:inset 0 0 0 1px rgba(255,244,196,.06),0 5px 11px rgba(0,0,0,.28)!important;
-}
-.deck-detail-help-pill:hover,.deck-detail-help-pill:focus-visible{
-  transform:translateY(-1px)!important;
-  border-color:#f1ca68!important;
-  box-shadow:inset 0 0 0 1px rgba(255,244,196,.10),0 8px 15px rgba(0,0,0,.34),0 0 14px rgba(238,190,91,.14)!important;
-  outline:none!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-detail-grid{
-  grid-template-columns:repeat(7,minmax(0,1fr))!important;
-  gap:5px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-detail-grid span{
-  min-height:34px!important;
-  padding:5px 6px!important;
-  border-radius:9px!important;
-  gap:2px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-detail-grid b{
-  font-size:7.5px!important;
-  line-height:1!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-detail-grid em{
-  font-size:10px!important;
-  line-height:1.05!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .deck-builder-detail-box small{
-  display:none!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .detail-guide-row{
-  grid-area:buttons!important;
-  min-height:48px!important;
-  padding:6px 8px!important;
-  gap:10px!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  flex-wrap:nowrap!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .detail-guide-chip span{
-  font-size:10.5px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .detail-token-btn{
-  width:32px!important;
-  height:32px!important;
-  min-width:32px!important;
-  min-height:32px!important;
-  flex-basis:32px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .det-btn-img{
-  width:28px!important;
-  height:28px!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-actions{
-  position:absolute!important;
-  left:16px!important;
-  bottom:16px!important;
-  width:330px!important;
-  display:block!important;
-}
-.card-inspect-modal.deck-builder-detail-modal #cardInspectCancel{
-  width:100%!important;
-  max-width:none!important;
-  min-height:42px!important;
-  margin:0!important;
-}
-.card-inspect-modal.deck-builder-detail-modal .card-inspect-reason,
-.card-inspect-modal.deck-builder-detail-modal #cardInspectPlay{
-  display:none!important;
-}
 @media(max-width:980px){
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-card{
-    width:min(96vw,760px)!important;
-    height:min(92vh,860px)!important;
-    max-height:min(92vh,860px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
-    grid-template-rows:auto auto auto!important;
-    grid-template-areas:"head" "left" "body"!important;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-grid{
-    margin-top:266px!important;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .deck-detail-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-actions{
-    position:static!important;
-    width:auto!important;
-    margin-top:10px!important;
-  }
 }
 @media(max-width:560px){
-  .card-inspect-modal.deck-builder-detail-modal .deck-detail-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-  .card-inspect-modal.deck-builder-detail-modal .card-inspect-title{
-    font-size:24px!important;
-  }
 }
 
 
@@ -19356,17 +17462,9 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 .card-inspect-card{
   position:relative!important;
 }
-.det-battle-power-label{
-  font-size:7.5px;
-  line-height:1.05;
-  font-weight:950;
-  letter-spacing:.08em;
-  color:#ead9ae;
-}
 
 /* El modal de carta ya tiene la X en la esquina superior derecha. El PB
    queda debajo para no cubrir el botón de cierre. */
-#cardInspectModal .card-inspect-head{padding-right:96px!important;}
 
 .deck-mini-power{
   position:absolute;
@@ -19399,7 +17497,6 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 }
 
 @media(max-width:720px){
-  #cardInspectModal .card-inspect-head{padding-right:82px!important;}
 }
 
 @media(max-width:1100px){.deck-principal-slots{grid-template-columns:1fr;}}
@@ -19788,36 +17885,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   transform:translate(var(--hv-det-panel-x,0px),var(--hv-det-panel-y,0px)) scale(var(--hv-det-panel-scale,1))!important;
   transform-origin:center center!important;
 }
-.det-mastery-progress{
-  display:inline-flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
-  justify-content:center!important;
-  gap:2px!important;
-  min-width:196px!important;
-  min-height:34px!important;
-  padding:5px 10px!important;
-  border-color:rgba(102,197,255,.48)!important;
-  background:linear-gradient(180deg,rgba(26,50,65,.94),rgba(8,14,20,.96))!important;
-  box-shadow:inset 0 0 13px rgba(94,188,255,.09),0 0 12px rgba(42,143,214,.08)!important;
-  transform:translate(var(--hv-det-progress-x,0px),var(--hv-det-progress-y,0px)) scale(var(--hv-det-progress-scale,1))!important;
-  transform-origin:left center!important;
-  white-space:nowrap!important;
-}
-.det-mastery-progress b{
-  color:#bfe8ff!important;
-  font-size:10px!important;
-  line-height:1!important;
-  letter-spacing:.06em!important;
-}
-.det-mastery-progress small{
-  color:#f2e3bd!important;
-  font-size:10px!important;
-  line-height:1.05!important;
-  font-weight:800!important;
-  text-transform:none!important;
-  letter-spacing:0!important;
-}
 .hv-det-layout-tuner{
   position:fixed!important;
   left:12px!important;
@@ -19880,7 +17947,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 @media(max-width:720px){
   .hv-det-layout-tuner{left:7px!important;bottom:7px!important;}
   .hv-det-layout-tuner-panel{width:min(300px,calc(100vw - 14px))!important;max-height:70vh!important;}
-  .det-mastery-progress{min-width:168px!important;}
 }
 
 
@@ -19952,9 +18018,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 #deckBuilderPanel.collection-browser-mode .deckbuilder-status > span{
   color:#d7c49d !important;
-}
-#deckBuilderPanel.collection-browser-mode .collection-readonly-detail .deck-detail-grid{
-  margin-top:4px;
 }
 @media(max-width:980px){
   #deckBuilderPanel.collection-browser-mode .deckbuilder-layout{
@@ -20100,7 +18163,8 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #cardInspectModal:not(.hidden) button{
   pointer-events:auto!important;
 }
-#cardInspectModal:not(.hidden) .det-btn-img,#cardInspectModal:not(.hidden) .det-effect-seal-art,#cardInspectModal:not(.hidden) .det-tactical-seal-art,#cardInspectModal:not(.hidden) .det-stat-icon-btn img{
+#cardInspectModal:not(.hidden) .det-btn-img,
+#cardInspectModal:not(.hidden) .det-stat-icon-btn img{
   pointer-events:none!important;
 }
 .stat-guide-modal,
@@ -20314,350 +18378,14 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
    Un solo template visual; cada carta inyecta sus propios datos.
    Sin pestañas falsas. Ficha + Principal son controles reales.
    ============================================================ */
-#cardInspectModal.deck-builder-detail-modal.det-universal-template{
-  padding:10px!important;
-  background:rgba(3,3,6,.88)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-  width:min(1420px,97vw)!important;
-  height:min(790px,92vh)!important;
-  max-height:min(790px,92vh)!important;
-  padding:18px!important;
-  gap:12px 16px!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:minmax(330px, .92fr) minmax(250px,.70fr) minmax(390px,1.18fr)!important;
-  grid-template-rows:auto minmax(155px,.72fr) minmax(230px,1.10fr) auto auto!important;
-  grid-template-areas:
-    "portrait head head"
-    "portrait stats states"
-    "portrait stats effects"
-    "tools collection collection"
-    "close collection collection"!important;
-  border-radius:24px!important;
-  border:1px solid rgba(198,92,255,.72)!important;
-  background:
-    radial-gradient(circle at 15% 16%,rgba(117,45,174,.07),transparent 34%),
-    linear-gradient(155deg,rgba(18,15,12,.98),rgba(7,7,8,.99))!important;
-  box-shadow:0 26px 80px rgba(0,0,0,.62),0 0 34px rgba(170,70,255,.12)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-head{
-  grid-area:head!important;
-  position:relative!important;
-  min-width:0!important;
-  min-height:76px!important;
-  padding:2px 108px 0 0!important;
-  align-self:start!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{
-  margin:0!important;
-  font-family:Georgia,serif!important;
-  font-size:clamp(28px,2.45vw,42px)!important;
-  line-height:1.02!important;
-  color:#ffe3a0!important;
-  text-transform:uppercase!important;
-  letter-spacing:.025em!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-sub{
-  margin:10px 0 0!important;
-  min-width:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-identity-block{
-  display:grid!important;
-  gap:8px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip-row{
-  display:flex!important;
-  flex-wrap:wrap!important;
-  align-items:center!important;
-  gap:7px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{
-  min-height:28px!important;
-  padding:5px 11px!important;
-  font-size:10px!important;
-  line-height:1!important;
-  border-radius:8px!important;
-  white-space:nowrap!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-chip-rarity{
-  color:#efb8ff!important;
-  border-color:rgba(199,94,255,.54)!important;
-  background:linear-gradient(180deg,rgba(83,27,108,.74),rgba(24,12,31,.92))!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-chip-dragon{color:#ffb270!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-chip-beast{color:#f4d18b!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-summary-copy{
-  display:block!important;
-  max-width:840px!important;
-  font-size:12px!important;
-  line-height:1.35!important;
-  color:#c9b995!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{
-  top:16px!important;
-  right:16px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{
-  grid-area:portrait!important;
-  position:relative!important;
-  width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:none!important;
-  margin:0!important;
-  align-self:stretch!important;
-  overflow:hidden!important;
-  border-radius:20px!important;
-  border:1px solid rgba(238,190,91,.38)!important;
-  background:#090807!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait img,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectVisual img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center!important;
-  border-radius:inherit!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid{
-  grid-area:stats!important;
-  position:relative!important;
-  width:100%!important;
-  height:100%!important;
-  max-height:none!important;
-  margin:0!important;
-  padding:8px!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  grid-auto-rows:minmax(0,1fr)!important;
-  gap:5px!important;
-  overflow:auto!important;
-  align-self:stretch!important;
-  border:1px solid rgba(238,190,91,.22)!important;
-  border-radius:16px!important;
-  background:linear-gradient(180deg,rgba(18,15,10,.88),rgba(8,8,7,.94))!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat{
-  min-height:40px!important;
-  height:auto!important;
-  padding:5px 9px!important;
-  border-radius:10px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:9px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-icon-btn{
-  width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-img{width:28px!important;height:28px!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-key{font-size:11px!important;min-width:42px!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat strong{font-size:18px!important}
 
 /* El contenedor deja que estados, rasgos y colección sean piezas reales del grid principal. */
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{
-  display:contents!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-status-section{
-  grid-area:states!important;
-  width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;
-  margin:0!important;overflow:hidden!important;align-self:stretch!important;
-  border-radius:16px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-list{
-  height:calc(100% - 34px)!important;
-  max-height:none!important;
-  overflow:auto!important;
-  padding:9px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-section-block:first-child{
-  grid-area:effects!important;
-  width:100%!important;height:100%!important;min-height:0!important;
-  margin:0!important;overflow:hidden!important;align-self:stretch!important;
-  border-radius:16px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-section-title{
-  min-height:34px!important;
-  display:flex!important;align-items:center!important;justify-content:center!important;
-  padding:7px 12px!important;
-  font-size:12px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effects-icon-only .det-ability-list{
-  height:calc(100% - 34px)!important;
-  max-height:none!important;
-  overflow:auto!important;
-  display:flex!important;
-  flex-wrap:wrap!important;
-  align-content:flex-start!important;
-  justify-content:flex-start!important;
-  gap:12px!important;
-  padding:14px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effect-seal{
-  width:70px!important;height:70px!important;min-width:70px!important;min-height:70px!important;
-  flex:0 0 70px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effect-seal-art{width:56px!important;height:56px!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effect-seal-art img{width:44px!important;height:44px!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .detail-guide-row{
-  display:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-builder-detail-box{
-  grid-area:collection!important;
-  width:100%!important;height:100%!important;
-  min-height:112px!important;
-  margin:0!important;
-  padding:10px 12px!important;
-  align-self:stretch!important;
-  border-radius:16px!important;
-  overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head{
-  margin-bottom:8px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-title{
-  font-family:Georgia,serif!important;
-  font-size:14px!important;
-  color:#efc96d!important;
-  text-transform:uppercase!important;
-  letter-spacing:.06em!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{
-  display:grid!important;
-  grid-template-columns:repeat(auto-fit,minmax(112px,1fr))!important;
-  gap:7px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid span{
-  min-height:62px!important;
-  padding:8px!important;
-  border-radius:10px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  justify-content:center!important;
-  align-items:center!important;
-  text-align:center!important;
-  gap:5px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid b{
-  font-size:9px!important;
-  line-height:1.05!important;
-  white-space:normal!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid em{
-  font-size:12px!important;
-  line-height:1.15!important;
-  white-space:normal!important;
-  overflow-wrap:anywhere!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-row{
-  grid-area:tools!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
-  min-width:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn{
-  appearance:none!important;
-  min-width:0!important;
-  min-height:54px!important;
-  padding:8px 10px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:9px!important;
-  border-radius:12px!important;
-  border:1px solid rgba(238,190,91,.34)!important;
-  background:linear-gradient(180deg,rgba(32,25,14,.96),rgba(10,9,8,.98))!important;
-  color:#f0d391!important;
-  cursor:pointer!important;
-  text-align:left!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn:disabled{opacity:.52!important;cursor:not-allowed!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn.is-selected{
-  border-color:rgba(202,99,255,.68)!important;
-  box-shadow:inset 0 0 0 1px rgba(210,120,255,.16),0 0 16px rgba(170,75,255,.12)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-utility-icon{
-  flex:0 0 30px!important;
-  width:30px!important;height:30px!important;
-  display:grid!important;place-items:center!important;
-  border-radius:8px!important;
-  border:1px solid rgba(238,190,91,.25)!important;
-  font-size:18px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn span:last-child{
-  min-width:0!important;display:grid!important;gap:2px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn b{font-size:11px!important;letter-spacing:.05em!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn small{font-size:9px!important;color:#bba87d!important;line-height:1.12!important}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-actions{
-  grid-area:close!important;
-  position:relative!important;
-  left:auto!important;right:auto!important;bottom:auto!important;
-  width:100%!important;
-  display:block!important;
-  margin:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectCancel{
-  width:100%!important;min-height:48px!important;margin:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectPlay,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-reason{display:none!important}
 
 /* Ficha de campo: solo muestra el asset ya existente; no introduce sistema 3D. */
-#cardInspectModal .det-field-asset-preview{
-  position:absolute!important;inset:0!important;z-index:80!important;
-  display:grid!important;place-items:center!important;
-  padding:24px!important;
-  background:rgba(2,2,4,.82)!important;
-  backdrop-filter:blur(8px)!important;
-  border-radius:inherit!important;
-}
-#cardInspectModal .det-field-asset-card{
-  position:relative!important;
-  width:min(470px,82vw)!important;
-  max-height:82vh!important;
-  padding:16px!important;
-  display:grid!important;gap:12px!important;
-  border-radius:18px!important;
-  border:1px solid rgba(238,190,91,.40)!important;
-  background:linear-gradient(180deg,rgba(22,17,10,.99),rgba(6,6,7,.99))!important;
-  box-shadow:0 24px 70px rgba(0,0,0,.68)!important;
-}
-#cardInspectModal .det-field-asset-title{font-family:Georgia,serif!important;color:#f2ce77!important;font-size:18px!important;text-align:center!important}
-#cardInspectModal .det-field-asset-stage{
-  min-height:320px!important;display:grid!important;place-items:center!important;
-  border-radius:14px!important;border:1px solid rgba(238,190,91,.18)!important;background:#080807!important;overflow:hidden!important;
-}
-#cardInspectModal .det-field-asset-stage img{max-width:94%!important;max-height:440px!important;object-fit:contain!important;filter:drop-shadow(0 14px 22px rgba(0,0,0,.58))!important}
-#cardInspectModal .det-field-asset-card small{text-align:center!important;color:#bca77d!important}
-#cardInspectModal .det-field-asset-close{position:absolute!important;right:10px!important;top:10px!important;width:38px!important;height:38px!important;border-radius:10px!important;z-index:2!important}
 
 @media(max-width:1080px){
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-    height:min(900px,94vh)!important;
-    overflow:auto!important;
-    grid-template-columns:minmax(300px,.9fr) minmax(0,1.1fr)!important;
-    grid-template-rows:auto 320px auto auto auto auto!important;
-    grid-template-areas:
-      "head head"
-      "portrait states"
-      "stats effects"
-      "tools tools"
-      "collection collection"
-      "close close"!important;
-  }
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 @media(max-width:720px){
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-    display:flex!important;flex-direction:column!important;height:min(94vh,980px)!important;overflow:auto!important;
-  }
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{min-height:380px!important}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{display:contents!important}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-row{width:100%!important}
 }
 
 
@@ -20669,321 +18397,21 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .card-rarity-astral.hand-card,.card-rarity-astral.deck-card,.card-rarity-astral.revealed-card{border-color:rgba(108,213,255,.96)!important;box-shadow:0 18px 40px rgba(45,33,143,.34),0 0 0 1px rgba(144,224,255,.36),0 0 32px rgba(107,91,255,.30),inset 0 0 22px rgba(124,226,255,.09)!important;}
 .card-rarity-astral.hand-card::before,.card-rarity-astral.deck-card::before,.card-rarity-astral.revealed-card::before{background:linear-gradient(180deg,#ffffff,#9eeaff,#8c7cff,#d97aff)!important;}
 .card-rarity-astral .hand-tag{color:#e9fbff!important;border-color:rgba(114,219,255,.72)!important;}
-.card-rarity-astral .hand-icon.card-portrait,.card-rarity-astral .deck-card-icon.card-portrait,.card-rarity-astral .card-icon.card-portrait,.card-rarity-astral .card-inspect-portrait{border-color:rgba(112,219,255,.96)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(84,64,176,.78),0 0 30px rgba(104,211,255,.40),0 0 46px rgba(137,91,255,.22)!important;}
+.card-rarity-astral .hand-icon.card-portrait,
+.card-rarity-astral .deck-card-icon.card-portrait,
+.card-rarity-astral .card-icon.card-portrait{border-color:rgba(112,219,255,.96)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(84,64,176,.78),0 0 30px rgba(104,211,255,.40),0 0 46px rgba(137,91,255,.22)!important;}
 .card-inspect-modal.card-rarity-astral .card-inspect-card{border-color:rgba(112,219,255,.92)!important;box-shadow:0 30px 90px rgba(0,0,0,.74),0 0 38px rgba(99,208,255,.28),0 0 56px rgba(130,83,255,.16)!important;}
 .unit-card.card-rarity-astral{--frame-glow:rgba(105,218,255,.98);--frame-filter:hue-rotate(166deg) saturate(1.30) brightness(1.15);box-shadow:0 0 0 1px rgba(112,219,255,.82),0 0 18px rgba(112,219,255,.34),0 0 34px rgba(126,87,255,.22),0 5px 8px rgba(0,0,0,.38)!important;}
-.det-head-chip.det-chip-rarity{transition:border-color .2s ease,box-shadow .2s ease,color .2s ease;}
-.card-inspect-modal.card-rarity-astral .det-chip-rarity{color:#dffaff!important;border-color:rgba(105,218,255,.72)!important;background:linear-gradient(180deg,rgba(72,118,181,.26),rgba(65,45,136,.24))!important;box-shadow:0 0 14px rgba(105,218,255,.16)!important;}
 
 
 /* ============================================================
    v28 DET REPAIR · modal universal del constructor de mazos
    Solo corrige el DET y reinicia una distribución limpia.
    ============================================================ */
-#cardInspectModal.deck-builder-detail-modal.det-universal-template{
-  padding:18px !important;
-  background:rgba(2,3,6,.92) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-  width:min(1640px,96vw) !important;
-  min-height:min(840px,93vh) !important;
-  height:auto !important;
-  max-height:93vh !important;
-  overflow:auto !important;
-  display:grid !important;
-  grid-template-columns:minmax(340px,430px) minmax(360px,430px) minmax(430px,1fr) !important;
-  grid-template-rows:auto minmax(360px,1fr) auto auto !important;
-  grid-template-areas:
-    "portrait head head"
-    "portrait stats text"
-    "portrait utility collection"
-    "portrait actions collection" !important;
-  gap:16px 20px !important;
-  padding:28px !important;
-  border-radius:28px !important;
-  border:1px solid rgba(220,176,78,.38) !important;
-  background:
-    radial-gradient(circle at 18% 14%,rgba(80,33,114,.08),transparent 30%),
-    radial-gradient(circle at 84% 10%,rgba(210,120,45,.06),transparent 26%),
-    linear-gradient(180deg,rgba(11,11,10,.97),rgba(5,5,6,.985)) !important;
-  box-shadow:0 28px 90px rgba(0,0,0,.62),0 0 26px rgba(150,86,255,.10) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-head{
-  grid-area:head !important;
-  position:relative !important;
-  min-width:0 !important;
-  padding:0 120px 0 0 !important;
-  align-self:start !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{
-  margin:0 0 10px !important;
-  font-family:Georgia,serif !important;
-  font-size:clamp(42px,3.25vw,70px) !important;
-  line-height:.98 !important;
-  color:#f0cf82 !important;
-  text-transform:uppercase !important;
-  letter-spacing:.03em !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-sub{margin:0 !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-identity-block{display:grid !important;gap:12px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip-row{display:flex !important;flex-wrap:wrap !important;gap:10px !important;align-items:center !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{
-  min-height:34px !important;
-  padding:8px 15px !important;
-  border-radius:10px !important;
-  border:1px solid rgba(220,176,78,.32) !important;
-  background:linear-gradient(180deg,rgba(26,20,12,.96),rgba(8,8,7,.96)) !important;
-  color:#efcb77 !important;
-  font-size:13px !important;
-  font-weight:700 !important;
-  letter-spacing:.04em !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-chip-rarity{color:#f0b6ff !important;border-color:rgba(205,108,255,.42) !important;background:linear-gradient(180deg,rgba(80,27,102,.9),rgba(24,11,30,.98)) !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-summary-copy{
-  max-width:980px !important;
-  font-size:18px !important;
-  line-height:1.42 !important;
-  color:#d7c4a0 !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{top:16px !important;right:18px !important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{
-  grid-area:portrait !important;
-  position:relative !important;
-  width:100% !important;
-  min-height:700px !important;
-  height:100% !important;
-  overflow:hidden !important;
-  border-radius:22px !important;
-  border:1px solid rgba(220,176,78,.34) !important;
-  background:#0a0908 !important;
-  box-shadow:inset 0 0 0 1px rgba(245,193,88,.08),0 12px 38px rgba(0,0,0,.30) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait img,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectVisual img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:cover !important;
-  object-position:center !important;
-  border-radius:inherit !important;
-}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid{
-  grid-area:stats !important;
-  width:100% !important;
-  height:100% !important;
-  align-self:stretch !important;
-  margin:0 !important;
-  padding:18px 16px !important;
-  display:grid !important;
-  grid-template-columns:1fr !important;
-  grid-auto-rows:minmax(56px,1fr) !important;
-  gap:10px !important;
-  overflow:hidden !important;
-  border:1px solid rgba(220,176,78,.24) !important;
-  border-radius:18px !important;
-  background:linear-gradient(180deg,rgba(15,13,10,.92),rgba(8,8,8,.95)) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid::before,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-status-section::before,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-section-block:first-child::before,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card > .deck-builder-detail-box::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  border-radius:inherit;
-  box-shadow:inset 0 0 0 1px rgba(245,195,92,.06);
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat{
-  min-height:56px !important;
-  padding:10px 14px !important;
-  border-radius:12px !important;
-  display:flex !important;
-  align-items:center !important;
-  gap:12px !important;
-  border:1px solid rgba(220,176,78,.12) !important;
-  background:linear-gradient(180deg,rgba(18,17,13,.86),rgba(8,8,8,.88)) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-icon-btn{width:40px !important;height:40px !important;min-width:40px !important;min-height:40px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-img{width:31px !important;height:31px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-key{font-size:15px !important;min-width:64px !important;color:#e8c96f !important;letter-spacing:.04em !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat strong{margin-left:auto !important;font-size:24px !important;color:#f8f1d4 !important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{
-  grid-area:text !important;
-  display:grid !important;
-  grid-template-rows:minmax(160px,.8fr) minmax(280px,1.2fr) !important;
-  gap:14px !important;
-  height:100% !important;
-  margin:0 !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-status-section,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-section-block:first-child,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card > .deck-builder-detail-box{
-  position:relative !important;
-  overflow:hidden !important;
-  border:1px solid rgba(220,176,78,.22) !important;
-  border-radius:18px !important;
-  background:linear-gradient(180deg,rgba(15,13,10,.92),rgba(8,8,8,.95)) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-status-section{min-height:0 !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-section-block:first-child{min-height:0 !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-section-title,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-title{
-  min-height:46px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  padding:12px 16px !important;
-  font-family:Georgia,serif !important;
-  font-size:17px !important;
-  color:#f0cc78 !important;
-  letter-spacing:.05em !important;
-  text-transform:uppercase !important;
-  border-bottom:1px solid rgba(220,176,78,.14) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-list{
-  height:calc(100% - 46px) !important;
-  padding:12px !important;
-  overflow:auto !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-row{
-  min-height:54px !important;
-  padding:10px 12px !important;
-  border-radius:12px !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-empty-line{font-size:16px !important;color:#c6b28d !important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effects-detailed .det-ability-list{
-  height:calc(100% - 46px) !important;
-  display:grid !important;
-  grid-template-columns:1fr !important;
-  grid-auto-rows:minmax(70px,auto) !important;
-  gap:10px !important;
-  padding:12px !important;
-  overflow:auto !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-card{
-  width:100% !important;
-  min-height:76px !important;
-  display:grid !important;
-  grid-template-columns:58px minmax(0,1fr) !important;
-  align-items:center !important;
-  gap:14px !important;
-  padding:12px 14px !important;
-  text-align:left !important;
-  border:1px solid rgba(220,176,78,.14) !important;
-  border-radius:14px !important;
-  background:linear-gradient(180deg,rgba(21,19,14,.9),rgba(8,8,8,.92)) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-art,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effect-seal-art.det-ability-art{
-  width:54px !important;
-  height:54px !important;
-  display:grid !important;
-  place-items:center !important;
-  border-radius:50% !important;
-  border:1px solid rgba(220,176,78,.28) !important;
-  background:radial-gradient(circle at 50% 40%,rgba(255,223,134,.12),rgba(16,14,12,.92)) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-art img{width:40px !important;height:40px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-copy{display:grid !important;gap:4px !important;min-width:0 !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-name{font-size:16px !important;line-height:1.15 !important;color:#f0d17b !important;margin:0 !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-text{font-size:14px !important;line-height:1.35 !important;color:#dfd0af !important;display:block !important;-webkit-line-clamp:unset !important;overflow:visible !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .detail-guide-row,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-quote-block{display:none !important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card > .deck-builder-detail-box{
-  grid-area:collection !important;
-  min-height:196px !important;
-  padding:0 14px 14px !important;
-  align-self:stretch !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head{display:flex !important;align-items:center !important;justify-content:space-between !important;margin:0 0 12px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head .deck-detail-title{margin:0 auto 0 0 !important;border-bottom:none !important;padding:0 !important;min-height:auto !important;justify-content:flex-start !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-help-pill{margin-left:12px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{
-  display:grid !important;
-  grid-template-columns:repeat(6,minmax(96px,1fr)) !important;
-  gap:10px !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid span{
-  min-height:94px !important;
-  padding:10px !important;
-  border-radius:12px !important;
-  display:flex !important;
-  flex-direction:column !important;
-  justify-content:center !important;
-  align-items:center !important;
-  text-align:center !important;
-  gap:6px !important;
-  border:1px solid rgba(220,176,78,.14) !important;
-  background:linear-gradient(180deg,rgba(18,17,13,.86),rgba(8,8,8,.88)) !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid b{font-size:12px !important;line-height:1.1 !important;color:#e5c671 !important;white-space:normal !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid em{font-size:14px !important;line-height:1.22 !important;color:#f8edd1 !important;white-space:normal !important;overflow-wrap:anywhere !important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-row{
-  grid-area:utility !important;
-  display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:12px !important;
-  align-self:start !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn{
-  min-height:84px !important;
-  padding:14px 16px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
-  gap:12px !important;
-  border-radius:14px !important;
-  border:1px solid rgba(220,176,78,.26) !important;
-  background:linear-gradient(180deg,rgba(26,22,15,.96),rgba(10,9,8,.98)) !important;
-  color:#f0d391 !important;
-  text-align:left !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn b{font-size:14px !important;letter-spacing:.05em !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn small{font-size:12px !important;line-height:1.18 !important;color:#bea77d !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-utility-icon{flex:0 0 38px !important;width:38px !important;height:38px !important;font-size:24px !important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-actions{
-  grid-area:actions !important;
-  width:100% !important;
-  margin:0 !important;
-  display:block !important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectCancel{width:100% !important;min-height:62px !important;margin:0 !important;font-size:22px !important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectPlay,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-reason{display:none !important;}
 
 @media (max-width:1400px){
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-    grid-template-columns:minmax(320px,390px) minmax(320px,400px) minmax(360px,1fr) !important;
-    gap:14px 16px !important;
-    padding:22px !important;
-  }
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{font-size:clamp(34px,2.8vw,54px) !important;}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{grid-template-columns:repeat(3,minmax(110px,1fr)) !important;}
 }
 @media (max-width:1080px){
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-    grid-template-columns:1fr !important;
-    grid-template-rows:auto auto auto auto auto auto auto !important;
-    grid-template-areas:
-      "head"
-      "portrait"
-      "stats"
-      "text"
-      "collection"
-      "utility"
-      "actions" !important;
-  }
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{min-height:420px !important;}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{grid-template-rows:auto auto !important;}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{grid-template-columns:repeat(2,minmax(120px,1fr)) !important;}
 }
 
 
@@ -20992,194 +18420,10 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
    Reparación exclusivamente visual del DET universal.
    Mantiene todo el contenido dentro del viewport sin scroll global.
    ============================================================ */
-#cardInspectModal.deck-builder-detail-modal.det-universal-template{
-  box-sizing:border-box!important;
-  padding:10px!important;
-  overflow:hidden!important;
-  align-items:center!important;
-  justify-content:center!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-  box-sizing:border-box!important;
-  width:min(var(--hv-det-panel-width,1260px),calc(100vw - 24px))!important;
-  height:min(var(--hv-det-panel-height,590px),calc(100vh - 24px))!important;
-  min-width:0!important;
-  min-height:0!important;
-  max-width:calc(100vw - 24px)!important;
-  max-height:calc(100vh - 24px)!important;
-  overflow:hidden!important;
-  padding:16px!important;
-  gap:10px 14px!important;
-  display:grid!important;
-  grid-template-columns:minmax(280px,30%) minmax(250px,27%) minmax(360px,43%)!important;
-  grid-template-rows:76px minmax(0,1fr) 96px 46px!important;
-  grid-template-areas:
-    "portrait head head"
-    "portrait stats text"
-    "utility collection collection"
-    "actions collection collection"!important;
-  transform:translate(var(--hv-det-panel-x,0px),var(--hv-det-panel-y,0px)) scale(var(--hv-det-panel-scale,1))!important;
-  transform-origin:center center!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-head{
-  grid-area:head!important;
-  min-width:0!important;
-  min-height:0!important;
-  padding:0 104px 0 0!important;
-  margin:0!important;
-  overflow:visible!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{
-  margin:0!important;
-  font-size:clamp(26px,2.6vw,42px)!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-sub{margin-top:7px!important;min-width:0!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-identity-block{gap:5px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip-row{
-  display:flex!important;flex-wrap:nowrap!important;gap:6px!important;min-width:0!important;overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{
-  min-height:25px!important;padding:5px 9px!important;font-size:10px!important;line-height:1!important;white-space:nowrap!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-summary-copy{display:none!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{
-  top:8px!important;right:8px!important;width:42px!important;height:42px!important;
-}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{
-  grid-area:portrait!important;
-  min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
-  margin:0!important;overflow:hidden!important;border-radius:16px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-portrait img,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectVisual img{
-  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
-}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-grid{
-  grid-area:stats!important;
-  min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
-  padding:7px!important;margin:0!important;overflow:hidden!important;
-  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:repeat(8,minmax(0,1fr))!important;
-  gap:4px!important;border-radius:14px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat{
-  min-width:0!important;min-height:0!important;height:auto!important;padding:3px 8px!important;gap:7px!important;border-radius:8px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-icon-btn{
-  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-img{width:23px!important;height:23px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-stat-key{font-size:10px!important;min-width:36px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-stat strong{font-size:17px!important;line-height:1!important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text{
-  grid-area:text!important;
-  min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  grid-template-rows:minmax(76px,30%) minmax(0,70%)!important;
-  grid-template-areas:"states" "effects"!important;
-  gap:9px!important;margin:0!important;overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-status-section{
-  grid-area:states!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;margin:0!important;overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-text > .det-section-block:first-child{
-  grid-area:effects!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;margin:0!important;overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-section-title{
-  min-height:30px!important;height:30px!important;padding:5px 9px!important;font-size:10px!important;line-height:1!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-list{
-  height:calc(100% - 30px)!important;max-height:none!important;padding:6px!important;overflow:auto!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-empty-line{font-size:11px!important;line-height:1.2!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-status-row{min-height:38px!important;padding:5px 7px!important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effects-detailed .det-ability-list{
-  height:calc(100% - 30px)!important;max-height:none!important;
-  display:grid!important;grid-template-columns:1fr!important;grid-auto-rows:minmax(46px,auto)!important;
-  gap:5px!important;padding:6px!important;overflow:auto!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-card{
-  min-width:0!important;min-height:46px!important;height:auto!important;
-  display:grid!important;grid-template-columns:38px minmax(0,1fr)!important;gap:8px!important;align-items:center!important;
-  padding:5px 7px!important;border-radius:9px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-art,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-effect-seal-art.det-ability-art{
-  width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-art img{width:26px!important;height:26px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-name{font-size:11px!important;line-height:1.05!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-ability-text{
-  font-size:9px!important;line-height:1.18!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .detail-guide-row,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-quote-block{display:none!important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-row{
-  grid-area:utility!important;min-width:0!important;min-height:0!important;
-  display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;align-self:stretch!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn{
-  min-width:0!important;min-height:0!important;height:100%!important;padding:7px 9px!important;gap:7px!important;border-radius:10px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-utility-icon{width:28px!important;height:28px!important;min-width:28px!important;font-size:17px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn b{font-size:10px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-deck-utility-btn small{font-size:8px!important;line-height:1.05!important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card > .deck-builder-detail-box{
-  grid-area:collection!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
-  margin:0!important;padding:7px 9px!important;overflow:hidden!important;border-radius:14px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head{margin:0 0 5px!important;min-height:21px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-head .deck-detail-title{
-  min-height:21px!important;height:21px!important;padding:0!important;font-size:10px!important;line-height:1!important;border:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-help-pill{width:22px!important;height:22px!important;min-width:22px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid{
-  height:calc(100% - 26px)!important;min-height:0!important;
-  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(82px,1fr))!important;grid-auto-rows:1fr!important;
-  gap:5px!important;overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid span{
-  min-width:0!important;min-height:0!important;height:100%!important;padding:5px!important;gap:3px!important;border-radius:8px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid b{font-size:8px!important;line-height:1!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .deck-detail-grid em{font-size:10px!important;line-height:1.08!important;}
-
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-actions{
-  grid-area:actions!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;margin:0!important;display:block!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectCancel{
-  width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:6px 10px!important;font-size:15px!important;border-radius:10px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template #cardInspectPlay,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-reason{display:none!important;}
 
 /* El editor sigue operativo; el modal completo nunca genera barras externas. */
-#cardInspectModal.deck-builder-detail-modal.det-universal-template,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{scrollbar-width:none!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template::-webkit-scrollbar,
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card::-webkit-scrollbar{display:none!important;}
 
 @media(max-width:980px){
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-card{
-    width:min(var(--hv-det-panel-width,900px),calc(100vw - 16px))!important;
-    height:min(var(--hv-det-panel-height,560px),calc(100vh - 16px))!important;
-    grid-template-columns:minmax(220px,32%) minmax(210px,29%) minmax(290px,39%)!important;
-    padding:10px!important;gap:7px 9px!important;
-    grid-template-rows:64px minmax(0,1fr) 82px 40px!important;
-  }
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-title{font-size:24px!important;}
-  #cardInspectModal.deck-builder-detail-modal.det-universal-template .det-head-chip{font-size:8px!important;padding:4px 6px!important;}
 }
 
 
@@ -21215,476 +18459,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
    Usa la imagen vacía elegida por el usuario y monta texto/iconos encima.
    Se aplica solo al DET de construcción de mazo.
    ============================================================ */
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe{
-  padding:0!important;
-  background:rgba(0,0,0,.90)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card{
-  position:relative!important;
-  width:min(96vw,161vh,1680px)!important;
-  max-width:1680px!important;
-  max-height:92vh!important;
-  aspect-ratio:1680 / 960!important;
-  height:auto!important;
-  min-height:0!important;
-  padding:0!important;
-  display:block!important;
-  overflow:hidden!important;
-  border:0!important;
-  border-radius:0!important;
-  background:url("assets/ui/det_templates/det_base_universal_v31.png") center/100% 100% no-repeat!important;
-  box-shadow:0 26px 70px rgba(0,0,0,.62)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-head,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  min-width:0!important;
-  min-height:0!important;
-  padding:0!important;
-  margin:0!important;
-  background:none!important;
-  border:0!important;
-  overflow:visible!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-head > div{
-  display:contents!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectTitle{
-  position:absolute!important;
-  left:32.7%!important;
-  top:6.2%!important;
-  width:42.8%!important;
-  height:8.2%!important;
-  margin:0!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-  font-family:Georgia,serif!important;
-  font-size:clamp(24px,2.55vw,44px)!important;
-  line-height:1!important;
-  letter-spacing:.02em!important;
-  text-transform:uppercase!important;
-  color:#f1d189!important;
-  text-shadow:0 2px 8px rgba(0,0,0,.55)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectSub{
-  position:absolute!important;
-  left:32.6%!important;
-  top:16.9%!important;
-  width:24.2%!important;
-  height:7.1%!important;
-  margin:0!important;
-  display:block!important;
-  overflow:visible!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-identity-block,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-head-chip-row{
-  width:100%!important;
-  height:100%!important;
-  display:flex!important;
-  align-items:stretch!important;
-  gap:1.1%!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-summary-copy,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-mastery-progress,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-quote-block,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .detail-guide-row,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-actions,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectPlay,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectCancel{
-  display:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-head-chip{
-  flex:1 1 0!important;
-  min-width:0!important;
-  min-height:100%!important;
-  height:100%!important;
-  padding:4px 8px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  border:0!important;
-  border-radius:10px!important;
-  background:transparent!important;
-  color:#f2cf82!important;
-  box-shadow:none!important;
-  font-size:clamp(8px,.88vw,12px)!important;
-  font-weight:900!important;
-  line-height:1!important;
-  text-transform:uppercase!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-chip-rarity{color:#efb0ff!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-chip-dragon{color:#ffbc69!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-chip-beast{color:#f0d59b!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-row{
-  position:absolute!important;
-  left:57.3%!important;
-  top:16.9%!important;
-  width:19.0%!important;
-  height:7.1%!important;
-  margin:0!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:1.2%!important;
-  z-index:3!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn{
-  min-width:0!important;
-  min-height:100%!important;
-  height:100%!important;
-  padding:3px 7px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:6px!important;
-  border:0!important;
-  border-radius:10px!important;
-  background:transparent!important;
-  color:#f1d08b!important;
-  box-shadow:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn > span:last-child{
-  min-width:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
-  gap:1px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn b{
-  font-size:clamp(8px,.82vw,11px)!important;
-  line-height:1!important;
-  color:#f1d08b!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-deck-utility-btn small{
-  font-size:clamp(6px,.60vw,8px)!important;
-  line-height:1.05!important;
-  color:#d4c39b!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-utility-icon{
-  width:auto!important;
-  min-width:0!important;
-  height:auto!important;
-  font-size:clamp(13px,1.1vw,18px)!important;
-  color:#f1d08b!important;
-  background:none!important;
-  border:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectReason{
-  position:absolute!important;
-  left:77.4%!important;
-  top:16.9%!important;
-  width:18.1%!important;
-  height:7.1%!important;
-  margin:0!important;
-  padding:0 1.1%!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  background:none!important;
-  color:#d8efff!important;
-  font-size:clamp(10px,.95vw,14px)!important;
-  font-weight:800!important;
-  line-height:1.15!important;
-  text-shadow:0 2px 8px rgba(0,0,0,.55)!important;
-  overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectBattlePowerBadge{
-  position:absolute!important;
-  left:83.05%!important;
-  top:4.55%!important;
-  width:6.45%!important;
-  height:5.15%!important;
-  margin:0!important;
-  translate:none!important;
-  scale:.82!important;
-  transform-origin:center!important;
-  z-index:3!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectX{
-  position:absolute!important;
-  left:90.55%!important;
-  top:4.55%!important;
-  width:3.8%!important;
-  height:5.35%!important;
-  margin:0!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  font-size:clamp(22px,1.8vw,30px)!important;
-  border:0!important;
-  border-radius:12px!important;
-  background:transparent!important;
-  color:#e8c67b!important;
-  box-shadow:none!important;
-  z-index:4!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectVisual{
-  position:absolute!important;
-  left:3.55%!important;
-  top:5.7%!important;
-  width:27.2%!important;
-  height:79.0%!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:24px!important;
-  overflow:hidden!important;
-  background:transparent!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectVisual .card-inspect-portrait,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectVisual .card-inspect-portrait img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center!important;
-  border-radius:0!important;
-  background:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats{
-  position:absolute!important;
-  left:32.55%!important;
-  top:28.25%!important;
-  width:20.35%!important;
-  height:48.55%!important;
-  margin:0!important;
-  padding:1.2% 1.0%!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  grid-template-rows:repeat(8,minmax(0,1fr))!important;
-  gap:.6%!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats .card-inspect-stat,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats .det-stat-row{
-  min-width:0!important;
-  min-height:0!important;
-  height:100%!important;
-  padding:0 8px!important;
-  display:grid!important;
-  grid-template-columns:32px minmax(36px,56px) minmax(0,1fr)!important;
-  align-items:center!important;
-  gap:8px!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-stat-icon-btn{
-  width:28px!important;
-  height:28px!important;
-  min-width:28px!important;
-  min-height:28px!important;
-  border:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  padding:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-stat-img{width:24px!important;height:24px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-stat-key{
-  min-width:0!important;
-  font-size:clamp(9px,.85vw,12px)!important;
-  font-weight:800!important;
-  color:#d8be86!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectStats strong{
-  justify-self:end!important;
-  min-width:0!important;
-  font-size:clamp(18px,1.55vw,28px)!important;
-  line-height:1!important;
-  color:#f5ecd8!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText{pointer-events:none!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText > *{pointer-events:auto!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText > .det-status-section{
-  position:absolute!important;
-  left:53.65%!important;
-  top:28.25%!important;
-  width:41.4%!important;
-  height:18.15%!important;
-  margin:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectText > .det-section-block:first-child{
-  position:absolute!important;
-  left:53.65%!important;
-  top:47.45%!important;
-  width:41.4%!important;
-  height:29.0%!important;
-  margin:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-section-title{
-  height:18%!important;
-  min-height:0!important;
-  padding:0 1.4%!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  background:none!important;
-  border:0!important;
-  color:#f1d189!important;
-  font-family:Georgia,serif!important;
-  font-size:clamp(14px,1.15vw,20px)!important;
-  letter-spacing:.02em!important;
-  text-transform:uppercase!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-list,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-effects-detailed .det-ability-list{
-  height:82%!important;
-  max-height:none!important;
-  padding:0 2.2% 1.4%!important;
-  background:none!important;
-  overflow:auto!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-list{
-  display:flex!important;
-  flex-direction:column!important;
-  gap:6px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-empty-line{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  height:100%!important;
-  color:#d1c09c!important;
-  font-size:clamp(10px,.9vw,13px)!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-row,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-card{
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-row{
-  min-height:32px!important;
-  padding:4px 2px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-icon{width:24px!important;height:24px!important;min-width:24px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-copy strong,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-name{
-  color:#f0dfbb!important;
-  font-size:clamp(10px,.95vw,14px)!important;
-  line-height:1.05!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-status-copy small,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-text{
-  color:#d0bf99!important;
-  font-size:clamp(9px,.8vw,12px)!important;
-  line-height:1.18!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-effects-detailed .det-ability-list{
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  grid-auto-rows:minmax(44px,auto)!important;
-  gap:4px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-card{
-  display:grid!important;
-  grid-template-columns:34px minmax(0,1fr)!important;
-  align-items:center!important;
-  gap:8px!important;
-  min-height:44px!important;
-  padding:4px 2px!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-art,
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-effect-seal-art.det-ability-art{
-  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
-  border:0!important;background:transparent!important;box-shadow:none!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-ability-art img{width:24px!important;height:24px!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card > .deck-builder-detail-box{
-  position:absolute!important;
-  left:32.55%!important;
-  top:78.8%!important;
-  width:62.45%!important;
-  height:14.0%!important;
-  margin:0!important;
-  padding:0 1.2%!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  overflow:hidden!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-head{
-  margin:0!important;
-  height:24%!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-title{
-  border:0!important;
-  background:none!important;
-  color:#f1d189!important;
-  font-family:Georgia,serif!important;
-  font-size:clamp(14px,1.15vw,20px)!important;
-  line-height:1!important;
-  letter-spacing:.02em!important;
-  text-transform:uppercase!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-help-pill{display:none!important;}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid{
-  height:76%!important;
-  display:grid!important;
-  grid-template-columns:repeat(7,minmax(0,1fr))!important;
-  gap:0!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid span{
-  min-width:0!important;
-  min-height:0!important;
-  height:100%!important;
-  padding:6px 8px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:4px!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid b{
-  color:#d9be85!important;
-  font-size:clamp(8px,.72vw,11px)!important;
-  line-height:1!important;
-  text-transform:uppercase!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .deck-detail-grid em{
-  color:#f4ebda!important;
-  font-size:clamp(10px,.92vw,14px)!important;
-  line-height:1.12!important;
-  text-align:center!important;
-  font-style:normal!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .det-field-asset-preview{
-  position:absolute!important;
-  inset:0!important;
-  z-index:20!important;
-}
 @media(max-width:1100px){
-  #cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card{
-    width:min(97vw,160vh)!important;
-  }
-  #cardInspectModal.deck-builder-detail-modal.det-template-artframe #cardInspectTitle{font-size:clamp(18px,2.25vw,28px)!important;}
 }
 
 
@@ -21694,47 +18469,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
    independientes y arrastrables. No están conectados todavía a
    los datos de la unidad; esta fase sirve solo para fijar posición.
    ============================================================ */
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-icon-calibration{
-  position:absolute!important;
-  inset:0!important;
-  z-index:12!important;
-  pointer-events:none!important;
-  overflow:visible!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon{
-  position:absolute!important;
-  width:42px!important;
-  height:42px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  padding:0!important;
-  margin:0!important;
-  border:0!important;
-  background:transparent!important;
-  transform-origin:center!important;
-  pointer-events:none!important;
-  user-select:none!important;
-  -webkit-user-drag:none!important;
-  filter:drop-shadow(0 2px 5px rgba(0,0,0,.72))!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon img{
-  width:100%!important;
-  height:100%!important;
-  display:block!important;
-  object-fit:contain!important;
-  pointer-events:none!important;
-  user-select:none!important;
-  -webkit-user-drag:none!important;
-}
-.hv-det-direct-editing #cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon{
-  pointer-events:auto!important;
-  cursor:move!important;
-}
-.hv-det-direct-editing #cardInspectModal.deck-builder-detail-modal.det-template-artframe .hv-det-cal-icon:hover{
-  background:rgba(255,215,115,.08)!important;
-  border-radius:8px!important;
-}
 .hv-det-direct-actions [data-det-copy-icons-json]{
   grid-column:1/-1!important;
   min-height:38px!important;
@@ -21771,273 +18505,14 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 #cardInspectModal .card-inspect-card::before,
 #cardInspectModal .card-inspect-card::after{display:none!important;}
-#cardInspectModal .card-inspect-head,
-#cardInspectModal #cardInspectBattlePowerBadge,
-#cardInspectModal #cardInspectVisual,
-#cardInspectModal #cardInspectStats,
-#cardInspectModal #cardInspectText,
-#cardInspectModal #cardInspectReason,
-#cardInspectModal .card-inspect-actions,
-#cardInspectModal #detLevelPanel,
-#cardInspectModal #detFavoriteToggle,
-#cardInspectModal .det-deck-utility-row,
-#cardInspectModal .deck-builder-detail-box{
-  position:absolute!important;
-  box-sizing:border-box!important;
-}
-#cardInspectModal .card-inspect-head{
-  left:31.0%!important;
-  top:5.6%!important;
-  width:45.8%!important;
-  min-height:11%!important;
-  padding:0 78px 0 0!important;
-  display:block!important;
-  z-index:15!important;
-}
-#cardInspectModal .card-inspect-title{
-  margin:0!important;
-  padding:0!important;
-  font-family:Georgia,serif!important;
-  font-size:clamp(26px,2.7vw,58px)!important;
-  line-height:.92!important;
-  color:#f3d688!important;
-  text-transform:uppercase!important;
-  letter-spacing:.02em!important;
-  text-shadow:0 2px 10px rgba(0,0,0,.55)!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-#cardInspectModal .card-inspect-sub{
-  margin:1.0% 0 0!important;
-  color:#e7d4ab!important;
-  width:100%!important;
-}
-#cardInspectModal .card-inspect-sub .det-head-chip-row{
-  display:flex!important;
-  flex-wrap:wrap!important;
-  gap:6px!important;
-}
-#cardInspectModal .card-inspect-sub .det-head-chip{
-  padding:7px 10px!important;
-  border-radius:8px!important;
-  font-size:11px!important;
-  background:rgba(8,10,18,.72)!important;
-  border:1px solid rgba(218,166,77,.40)!important;
-  box-shadow:none!important;
-}
-#cardInspectModal .card-inspect-x{
-  position:absolute!important;
-  top:-2px!important;
-  right:0!important;
-  width:52px!important;
-  height:52px!important;
-  min-width:52px!important;
-  min-height:52px!important;
-  border-radius:12px!important;
-  z-index:20!important;
-}
-#cardInspectModal #cardInspectVisual{
-  left:3.5%!important;
-  top:4.3%!important;
-  width:29.8%!important;
-  height:52.7%!important;
-  overflow:hidden!important;
-  border:none!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  border-radius:0!important;
-}
-#cardInspectModal #cardInspectVisual img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-}
-#cardInspectModal #cardInspectStats{
-  left:35.3%!important;
-  top:5.2%!important;
-  width:18.8%!important;
-  height:52.0%!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  align-content:start!important;
-  gap:1.2%!important;
-  overflow:visible!important;
-  margin:0!important;
-}
-#cardInspectModal #cardInspectStats .card-inspect-stat,
-#cardInspectModal #cardInspectStats .det-stat-row{
-  min-height:12.1%!important;
-  height:auto!important;
-}
-#cardInspectModal #cardInspectBattlePowerBadge{
-  left:74.0%!important;
-  top:25.3%!important;
-  right:auto!important;
-  width:19.6%!important;
-  min-height:9.7%!important;
-  padding:7px 10px 8px!important;
-  border-radius:12px!important;
-  display:grid!important;
-  align-items:center!important;
-  justify-items:center!important;
-  pointer-events:none!important;
-  z-index:16!important;
-}
-#cardInspectModal .det-battle-power-label{font-size:10px!important;}
-#cardInspectModal #detLevelPanel{
-  left:57.1%!important;
-  top:18.2%!important;
-  width:37.4%!important;
-  min-height:11.6%!important;
-  padding:8px 10px 10px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  gap:8px!important;
-  z-index:14!important;
-}
-#cardInspectModal #detLevelRank{
-  font-family:Georgia,serif!important;
-  font-size:clamp(18px,1.6vw,32px)!important;
-  font-weight:700!important;
-  color:#f0d087!important;
-  letter-spacing:.03em!important;
-  line-height:1!important;
-  text-transform:uppercase!important;
-}
-#cardInspectModal #detLevelProgressFrame{
-  position:relative!important;
-  width:100%!important;
-  height:24px!important;
-  border-radius:999px!important;
-  overflow:hidden!important;
-  border:1px solid rgba(234,184,83,.46)!important;
-  background:linear-gradient(180deg,rgba(4,6,12,.74),rgba(1,1,4,.9))!important;
-  box-shadow:inset 0 0 10px rgba(255,255,255,.04)!important;
-}
-#cardInspectModal #detLevelProgressFill{
-  position:absolute!important;
-  inset:0 auto 0 0!important;
-  width:0!important;
-  border-radius:inherit!important;
-  background:linear-gradient(90deg,rgba(125,90,18,.92),rgba(255,225,142,.98))!important;
-  box-shadow:0 0 12px rgba(255,212,115,.25)!important;
-}
-#cardInspectModal #detLevelProgressText{
-  position:relative!important;
-  z-index:1!important;
-  height:100%!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  font-size:13px!important;
-  font-weight:900!important;
-  color:#fef2cd!important;
-  letter-spacing:.03em!important;
-  text-shadow:0 1px 4px rgba(0,0,0,.8)!important;
-}
-#cardInspectModal #detLevelProgressSub{
-  font-size:12px!important;
-  font-weight:800!important;
-  color:#e3cfa2!important;
-  text-align:right!important;
-}
-#cardInspectModal #detLevelPanel.is-empty{opacity:.45!important;}
-#cardInspectModal #cardInspectReason{
-  left:-9999px!important;
-  top:auto!important;
-  width:1px!important;
-  height:1px!important;
-  opacity:0!important;
-  pointer-events:none!important;
-}
-#cardInspectModal #cardInspectText{
-  left:56.0%!important;
-  top:60.3%!important;
-  width:39.0%!important;
-  height:31.5%!important;
-  overflow:auto!important;
-  margin:0!important;
-  padding:0!important;
-  display:block!important;
-  z-index:12!important;
-}
-#cardInspectModal #cardInspectText .det-section-block,
-#cardInspectModal #cardInspectText .det-info-card,
-#cardInspectModal #cardInspectText .detail-guide-block,
-#cardInspectModal #cardInspectText .det-quote-block,
-#cardInspectModal .deck-builder-detail-box{
-  background:rgba(5,8,15,.58)!important;
-  backdrop-filter:blur(1px)!important;
-}
-#cardInspectModal .det-deck-utility-row{
-  left:57.5%!important;
-  top:36.6%!important;
-  width:37.2%!important;
-  height:20.0%!important;
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:10px!important;
-  align-content:start!important;
-  z-index:13!important;
-}
-#cardInspectModal .det-deck-utility-btn{
-  min-height:72px!important;
-  border-radius:12px!important;
-  background:rgba(5,8,15,.58)!important;
-  border:1px solid rgba(226,172,73,.28)!important;
-}
-#cardInspectModal .deck-builder-detail-box{
-  left:3.8%!important;
-  top:60.0%!important;
-  width:29.7%!important;
-  height:28.5%!important;
-  overflow:auto!important;
-  z-index:11!important;
-}
-#cardInspectModal .card-inspect-actions{
-  left:35.7%!important;
-  bottom:3.0%!important;
-  width:18.9%!important;
-  display:flex!important;
-  flex-direction:column!important;
-  gap:10px!important;
-  z-index:18!important;
-}
-#cardInspectModal .card-inspect-actions .btn{min-height:46px!important;}
-#cardInspectModal #detFavoriteToggle{
-  left:70.5%!important;
-  top:76.8%!important;
-  width:10.5%!important;
-  height:12.2%!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  border:none!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  padding:0!important;
-  z-index:14!important;
-}
-#cardInspectModal .det-favorite-star{
-  font-size:clamp(44px,4vw,88px)!important;
-  line-height:1!important;
-  color:rgba(240,196,101,.95)!important;
-  text-shadow:0 0 16px rgba(255,214,122,.12)!important;
-}
-#cardInspectModal #detFavoriteToggle.is-active .det-favorite-star{content:"★";color:#ffe49d!important;}
 #cardInspectModal .hv-det-icon-calibration{z-index:19!important;}
 @media (max-width: 1100px){
   #cardInspectModal{padding:8px!important;}
   #cardInspectModal .card-inspect-card{width:min(98vw,1500px)!important;}
-  #cardInspectModal .card-inspect-title{font-size:clamp(18px,2.6vw,36px)!important;}
-  #cardInspectModal #cardInspectText{font-size:12px!important;}
-  #cardInspectModal .card-inspect-actions .btn{min-height:38px!important;font-size:12px!important;}
 }
 
 /* === DET v32 UNIFICADO · colección, mano y campo usan #cardInspectModal === */
 #cardInspectModal.unified-det-modal .card-inspect-card,
-#cardInspectModal.deck-builder-detail-modal.det-v32-collection .card-inspect-card,
 #cardInspectModal.field-unit-detail-modal .card-inspect-card{
   width:min(96vw,1500px)!important;
   aspect-ratio:1672/941!important;
@@ -22052,97 +18527,28 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   box-shadow:0 28px 90px rgba(0,0,0,.58)!important;
 }
 /* Blindaje: si alguna clase vieja reaparece, nunca vuelve a mostrar v31. */
-#cardInspectModal.deck-builder-detail-modal.det-template-artframe .card-inspect-card{
-  background:transparent url("assets/ui/det_templates/det_base_universal_v32.png") center/100% 100% no-repeat!important;
-}
 #cardInspectModal.unified-det-modal .card-inspect-card::before,
 #cardInspectModal.unified-det-modal .card-inspect-card::after{display:none!important;}
-#cardInspectModal.unified-det-modal .card-inspect-actions.hidden{display:none!important;}
-#cardInspectModal.unified-det-modal .card-inspect-actions:not(.hidden){display:flex!important;}
 
 /* Valores centrales que existen en TODOS los contextos del DET. */
-#cardInspectModal .det-core-value,
-#cardInspectModal .det-core-action{
-  position:absolute!important;
-  z-index:17!important;
-  box-sizing:border-box!important;
-  min-width:0!important;
-  color:#f1d99b!important;
-  font-family:Georgia,serif!important;
-  font-size:clamp(11px,1vw,17px)!important;
-  font-weight:800!important;
-  line-height:1.05!important;
-  letter-spacing:.02em!important;
-  text-align:center!important;
-  text-transform:uppercase!important;
-  text-shadow:0 1px 4px rgba(0,0,0,.8)!important;
-}
-#cardInspectModal .det-core-value{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  padding:4px 8px!important;
-  background:transparent!important;
-  border:0!important;
-}
-#cardInspectModal .det-core-action{
-  appearance:none!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:7px!important;
-  padding:4px 8px!important;
-  border:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  cursor:pointer!important;
-}
-#cardInspectModal .det-core-action img{
-  width:30px!important;
-  height:30px!important;
-  object-fit:contain!important;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))!important;
-}
-#cardInspectModal .det-core-action.is-disabled{opacity:.42!important;cursor:default!important;}
-#cardInspectModal .det-core-action:not(.is-disabled):hover{filter:brightness(1.16)!important;}
 
 /* Posiciones iniciales: son sólo punto de partida; AJUSTAR DET permite mover cada ID. */
 #cardInspectModal #detTypeValue{left:36.2%!important;top:66.7%!important;width:18.7%!important;height:6.7%!important;}
 #cardInspectModal #detRarityValue{left:36.2%!important;top:75.6%!important;width:18.7%!important;height:6.7%!important;}
 #cardInspectModal #detStateValue{left:36.2%!important;top:84.6%!important;width:18.7%!important;height:6.7%!important;}
-#cardInspectModal #detWeaponValue{left:57.4%!important;top:40.7%!important;width:17.5%!important;height:8.8%!important;}
 #cardInspectModal #detCopiesValue{left:76.1%!important;top:40.7%!important;width:17.8%!important;height:8.8%!important;}
-#cardInspectModal #detPrecEvaValue{left:57.4%!important;top:50.4%!important;width:17.5%!important;height:8.8%!important;}
-#cardInspectModal #detLoreValue{left:76.1%!important;top:50.4%!important;width:17.8%!important;height:8.8%!important;}
 
 /* El contenido dinámico sigue siendo un solo origen, pero sus subpaneles son editables por separado. */
-#cardInspectModal.unified-det-modal #cardInspectText{
-  overflow:visible!important;
-  pointer-events:none!important;
-}
-#cardInspectModal.unified-det-modal #cardInspectText > *{pointer-events:auto!important;}
 
 /* En campo no existen botones de jugar/cancelar; la X es el cierre común. */
-#cardInspectModal.unified-det-field .card-inspect-actions,
-#cardInspectModal.field-unit-detail-modal .card-inspect-actions{display:none!important;}
 
 /* La colección deja de utilizar su geometría v31 aunque conserve utilidades funcionales. */
-#cardInspectModal.det-v32-collection .det-deck-utility-row,
-#cardInspectModal.det-v32-collection .deck-builder-detail-box{
-  background:rgba(4,7,13,.30)!important;
-  border-color:rgba(218,166,77,.20)!important;
-  box-shadow:none!important;
-}
 
 /* Favorita: vacía por defecto; el estado activo puede rellenarse más adelante. */
-#cardInspectModal #detFavoriteToggle .det-favorite-star{font-family:Georgia,serif!important;}
 
 @media(max-width:980px){
   #cardInspectModal.unified-det-modal{padding:4px!important;}
   #cardInspectModal.unified-det-modal .card-inspect-card{width:99vw!important;}
-  #cardInspectModal .det-core-action img{width:22px!important;height:22px!important;}
-  #cardInspectModal .det-core-value,
-  #cardInspectModal .det-core-action{font-size:10px!important;}
 }
 
 

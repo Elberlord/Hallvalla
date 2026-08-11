@@ -531,6 +531,7 @@ function scrollAdventureToTop(){
 function showAdventureStage(stage){
   ["adventureStoryStage","adventureChoiceStage","adventureWoundedStage","adventureGuardianStage","adventureMapIntroStage","adventureMapStage"].forEach(id=>$(id).classList.toggle("hidden",id!==stage));
   if(stage!=="adventureMapStage")closeAdventureMapNodeTuner();
+  syncBattleMusic();
   requestAnimationFrame(scrollAdventureToTop);
 }
 function applyAdventureSceneVisual(visualId, markId, cls, mark, image){

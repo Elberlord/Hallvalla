@@ -246,8 +246,8 @@ function makeBattleFxEvent(type,attacker,target,meta={}){
     to:{x:Number(target.x||0),y:Number(target.y||0)},
     rarityClass:meta.rarityClass||getFxRarityClass(attacker),
     weaponKind,
-    attackSound:getAttackSoundForUnit(attacker),
-    impactSound:getImpactSoundForWeapon(weaponKind),
+    attackSound:meta.attackSound||getAttackSoundForUnit(attacker),
+    impactSound:meta.impactSound||getImpactSoundForWeapon(weaponKind),
     stealthAttack:!!meta.stealthAttack,
     magicKind:String(meta.magicKind||""),
     spellKey:String(meta.spellKey||""),
@@ -262,7 +262,7 @@ function makeMagicFxEvent(caster,target,magicKind="arcane",meta={}){
   const kind=String(magicKind||"arcane").toLowerCase();
   const fx=makeBattleFxEvent(meta.type||"spell",caster,target,{...meta,attackStyle:"ranged",magicKind:kind});
   if(!fx)return null;
-  return {...fx,weaponKind:"fire_magic",attackSound:meta.attackSound||(kind==="fire"?"attack_fire_magic":kind==="heal"?"spell_cast":"spell_damage"),impactSound:meta.impactSound||(kind==="heal"?"spell_cast":"impact_magic")};
+  return {...fx,weaponKind:"fire_magic",attackSound:meta.attackSound||(kind==="fire"?"attack_fire_magic":kind==="heal"?"spell_cast":"spell_damage"),impactSound:meta.impactSound||(kind==="heal"?"heal":"impact_magic")};
 }
 function makeDefenseFxEvent(type,defender){
   if(!defender)return null;
@@ -489,7 +489,7 @@ function playMagicBattleFxEvent(fx,attackerRef=null){
   spawnBattleFxNode(`battle-fx-magic-projectile kind-${kind} ${sideClass}`,from.x,from.y,{"--magic-dx":`${dx}px`,"--magic-dy":`${dy}px`,"--magic-angle":`${angle}deg`,"--magic-flight":`${travelMs}ms`,"--magic-scale":String(scale)},travelMs+220,`<img src="${assets.projectile}" alt="" draggable="false">`);
   setTimeout(()=>{
     if(fx.hit===false)return;
-    tryPlaySound(fx.impactSound||(kind==="heal"?"spell_cast":kind==="lightning"?"shock_tick":"impact_magic"),kind==="heal"?.58:.68);
+    tryPlaySound(fx.impactSound||(kind==="heal"?"heal":kind==="lightning"?"shock_tick":"impact_magic"),kind==="heal"?.72:.68);
     const impact=spawnBattleFxNode(`battle-fx-magic-impact kind-${kind} ${sideClass}`,to.x,to.y,{"--magic-scale":String(scale)},980,`<img src="${assets.impact}" alt="" draggable="false">`);
     if(kind==="heal"){
       const cross=String(fx.effectAction||"")==="resurrect"?"assets/effects/heal/heal_cross_02.webp":"assets/effects/heal/heal_cross_01.webp";
@@ -525,7 +525,7 @@ function isCavalryBattleFx(fx){
   const name=String(fx?.attackerName||"").toLowerCase();
   return key.includes("cavalry")||key.includes("rider")||key.includes("hussar")||key.includes("horse")||key.includes("mongol")||key.includes("cossack")||key.includes("numidian")||key.includes("yabusame")||assetKey.includes("cavalry")||name.includes("caballer")||name.includes("jinete")||name.includes("húsar")||name.includes("husar");
 }
-function getPhysicalMeleeSlashAsset(fx,weaponKind){
+function getPhysicalMeleeSlashAsset(weaponKind){
   const kind=String(weaponKind||"").toLowerCase();
   if(kind==="spear")return "assets/effects/melee/melee_slash_01.webp";
   if(kind==="axe")return "assets/effects/axe/axe_slash_01.webp";
@@ -549,7 +549,7 @@ function playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityCla
     spawnBattleFxNode(`battle-fx-charge-lines ${sideClass} ${rarityClass}`,from.x,from.y,{"--charge-angle":`${angle}deg`,"--charge-dx":`${(to.x-from.x)*0.58}px`,"--charge-dy":`${(to.y-from.y)*0.58}px`},720,'<img src="assets/effects/charge/charge_speed_lines_01.webp" alt="" draggable="false">');
     setTimeout(()=>spawnBattleFxNode(`battle-fx-charge-dust ${sideClass} ${rarityClass}`,to.x,to.y,{"--charge-angle":`${angle}deg`},920,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">'),150);
   }
-  spawnBattleFxNode(`${slashClass} ${sideClass} ${rarityClass}`,slashX,slashY,{"--melee-angle":`${angle}deg`,"--melee-dx":`${(to.x-from.x)*0.18}px`,"--melee-dy":`${(to.y-from.y)*0.18}px`},slashTtl,`<img src="${getPhysicalMeleeSlashAsset(fx,weaponKind)}" alt="" draggable="false">`);
+  spawnBattleFxNode(`${slashClass} ${sideClass} ${rarityClass}`,slashX,slashY,{"--melee-angle":`${angle}deg`,"--melee-dx":`${(to.x-from.x)*0.18}px`,"--melee-dy":`${(to.y-from.y)*0.18}px`},slashTtl,`<img src="${getPhysicalMeleeSlashAsset(weaponKind)}" alt="" draggable="false">`);
   setTimeout(()=>{ if(fx.hit!==false) tryPlaySound(impactSound,impactVolume); },120);
   setTimeout(()=>{
     if(fx.hit===false)return;
@@ -687,7 +687,7 @@ function playStatusFxEvent(fx){
   const freeze=type.startsWith("freeze")||type.startsWith("frost");
   const typeClass=bleed?"bleed":poison?"poison":burn?"burn":paralysis?"paralysis":silence?"silence":curse?"curse":freeze?"freeze":"generic";
   const variantClass=type.endsWith("tick")?"tick":"apply";
-  const statusSound=bleed?(variantClass==="tick"?"bleed_pain":"bleed_apply"):poison?"poison_tick":burn?"burn_tick":paralysis?"shock_tick":"status_tick";
+  const statusSound=bleed?"bleed":poison?"poison_tick":burn?"burn_tick":paralysis?"shock_tick":"status_tick";
   const hitVol=bleed?.48:poison?.34:burn?.38:paralysis?.38:.30;
   setTimeout(()=>tryPlaySound(statusSound,hitVol),20);
   let badge='';
@@ -706,7 +706,7 @@ function playDestroyFx(unit){
   if(!unit)return;
   const point=getGridCellCenter(unit.x,unit.y);
   if(!point)return;
-  setTimeout(()=>tryPlaySound("attack_impact",.7),40);
+  setTimeout(()=>tryPlaySound(unit.leader?"leader_death":"attack_impact",unit.leader?.92:.7),40);
   const rarityClass=getFxRarityClass(unit);
   const sideClass=unit.owner===1?"player":"enemy";
   const embers=Array.from({length:8},(_,i)=>`<span class="battle-fx-ember ember-${i+1}"></span>`).join("");
@@ -901,7 +901,7 @@ function tryStartPageMusicImmediately(){
     /* Permite que HallValla intente reproducir la música desde la carga de la página.
        Si el navegador bloquea autoplay con sonido, pointerdown/keydown conserva el fallback normal. */
     audioUnlocked=true;
-    playMusic("duel_hallvalla_war_chant");
+    playMusic("home_theme");
     if(currentMusic&&currentMusic.paused){
       const attempt=currentMusic.play();
       if(attempt&&attempt.catch)attempt.catch(()=>{});
@@ -917,13 +917,28 @@ if(typeof window!=="undefined"){
   window.addEventListener("load",tryStartPageMusicImmediately,{once:true});
   window.addEventListener("pageshow",tryStartPageMusicImmediately);
 }
-const SFX_ASSET_VERSION="7WEAPONSFX1";
+const SFX_ASSET_VERSION="7BOARDCTRL8CMSOUNDS1";
+const SFX_TRACK_EXTENSIONS={
+  button_click:"mp3",
+  fire_area_damage:"mp3",
+  leader_death:"mp3",
+  heal:"mp3",
+  dodge:"mp3",
+  draw_card:"mp3",
+  attack_sword_stab:"mp3",
+  bleed:"mp3",
+  poison_tick:"mp3",
+  attack_mage:"mp3",
+  defeat:"mp3"
+};
 const MUSIC_TRACK_EXTENSIONS={
   duel_hallvalla_war_chant:"mp3",
-  duel_hallvalla_focus:"mp3"
+  duel_hallvalla_focus:"mp3",
+  home_theme:"mp3",
+  map_selection:"mp3"
 };
 function audioPath(kind,name){
-  const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[name]||"ogg"):"ogg";
+  const extension=kind==="music"?(MUSIC_TRACK_EXTENSIONS[name]||"ogg"):(SFX_TRACK_EXTENSIONS[name]||"ogg");
   const cache=kind==="sfx"?`?v=${SFX_ASSET_VERSION}`:"";
   return `assets/${kind}/${name}.${extension}${cache}`;
 }
@@ -938,9 +953,6 @@ function getVolumePercent(value,fallback=.5){
 function tryPlaySound(name,volume=1){
   if(!gameSettings.sound||!gameSettings.sfx||!name)return;
   try{const audio=new Audio(audioPath("sfx",name));audio.volume=clampAudioVolume((gameSettings.sfxVolume??.52)*volume,.52);audio.play().catch(()=>{});}catch(e){}
-}
-function maybePlayNearDeathSound(){
-  return;
 }
 const SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS=5;
 function clearSeamlessMusicLoop(){
@@ -1059,11 +1071,17 @@ function getBattleMusicDangerState(state=publicState){
 function syncBattleMusic(){
   const inBattle=!!(publicState&&gameId&&!isBattleEnded());
   const homeVisible=!!($("mainMenu")&&!$("mainMenu").classList.contains("hidden"));
+  const adventureVisible=!!($("adventurePanel")&&!$("adventurePanel").classList.contains("hidden"));
+  const adventureMapVisible=adventureVisible&&["adventureMapIntroStage","adventureMapStage"].some(id=>{
+    const el=$(id);return !!(el&&!el.classList.contains("hidden"));
+  });
   if(inBattle){
     const danger=getBattleMusicDangerState(publicState);
     playMusic(danger.danger?"duel_hallvalla_war_chant":"duel_hallvalla_focus");
-  }else if(homeVisible){
-    playMusic("duel_hallvalla_war_chant");
+  }else if(adventureMapVisible){
+    playMusic("map_selection");
+  }else if(homeVisible||adventureVisible){
+    playMusic("home_theme");
   }else stopMusic(true);
 }
 function getSummonSoundForUnit(unit){
@@ -1119,9 +1137,9 @@ function getImpactSoundForWeapon(weaponKind){
 }
 function getAttackSoundForUnit(unit){
   const weapon=getUnitWeaponKind(unit);
-  if(weapon==="fire_magic")return "attack_fire_magic";
+  if(weapon==="fire_magic")return "attack_mage";
   if(weapon==="arrow")return "attack_ranged";
   if(weapon==="spear")return "attack_spear";
   if(weapon==="axe")return "attack_axe";
-  return "attack_slash";
+  return "attack_sword_stab";
 }

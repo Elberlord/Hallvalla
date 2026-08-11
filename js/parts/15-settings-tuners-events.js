@@ -16,14 +16,14 @@ function handleAdventureHomeClick(ev){
   runFirstTimeTutorialBefore(openAdventureStory);
 }
 on("adventureBtn","click",handleAdventureHomeClick);
-on("closeAdventureBtn","click",()=>$("adventurePanel").classList.add("hidden"));
+on("closeAdventureBtn","click",()=>{$("adventurePanel").classList.add("hidden");syncBattleMusic();});
 on("skipAdventureStoryBtn","click",showAdventureChoice);
 on("nextAdventureStoryBtn","click",nextAdventureStoryScene);
 on("backToAdventureChoiceBtn","click",()=>openAdventureMap(pendingAdventureSpecial));
 on("continueAdventureMapIntroBtn","click",showAdventureMapOnly);
 on("skipAdventureMapIntroBtn","click",showAdventureMapOnly);
 on("reopenAdventureMapStoryBtn","click",()=>{ renderAdventureMap(); showAdventureStage("adventureMapIntroStage"); });
-on("closeAdventureMapBtn","click",()=>$("adventurePanel").classList.add("hidden"));
+on("closeAdventureMapBtn","click",()=>{$("adventurePanel").classList.add("hidden");syncBattleMusic();});
 on("skipWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 on("continueWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 async function startPendingAdventureBattle(){
@@ -910,7 +910,7 @@ if(HALLVALLA_LOCALHOST_TEST_MODE){
   signInAnonymously(auth).catch(e=>{authReady=false;updateAuthActionButtons();setText("lobbyStatus",e.message);});
 }
 
-try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("duel_hallvalla_war_chant");}catch(e){}
+try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme");}catch(e){}
 maybeShowBasicTutorialGate();
 
 /* ============================================================
@@ -1057,7 +1057,7 @@ function ensureHvDetIconCalibrationLayer(root){
   layer=document.createElement('div');
   layer.className='hv-det-icon-calibration';
   layer.setAttribute('aria-label','Iconos DET para calibración');
-  HV_DET_ICON_CALIBRATION_ITEMS.forEach((item,index)=>{
+  HV_DET_ICON_CALIBRATION_ITEMS.forEach(item=>{
     const icon=document.createElement('div');
     const statGuideKey={hp:'HP',dexterity:'DX',movement:'MV',attack:'AT',guard:'GD',agility:'AGI',range:'RG'}[item.key]||item.label;
     icon.className='hv-det-cal-icon stat-click';

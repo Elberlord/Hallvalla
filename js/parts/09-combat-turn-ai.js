@@ -292,9 +292,6 @@ function shadowMistSpendAmount(unit,spent,units=publicState?.units||[]){
   if(raw<=0)return 0;
   return hasShadowMistAssassin(unit,units)?Math.ceil(raw/2):raw;
 }
-function applyBloodMist(units,owner,sourceName="Niebla de sangre"){
-  return units||[];
-}
 function hasSteelWall(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="warrior"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="steel_wall"}
 function hasCoverFire(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="archer"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="cover_fire"}
 function shouldTriggerSteelWall(defenderBefore,guardLoss,hit){
@@ -749,7 +746,8 @@ async function attackUnit(a,d){
   const actionLog=hit.hit?`${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
-  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth,hit:!!hit.hit});
+  const fireAreaImpactSound=hit.hit&&String(a.dragonElement||"").toLowerCase()==="fire"&&Number(a.dragonCharge||0)>=2?"fire_area_damage":"";
+  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
     ? {
@@ -1499,8 +1497,6 @@ async function adventureEnemyTurn(){
     let bloodVictoryTriggered=bloodVictoryResult.triggered;
     const bloodVictoryLogs=[...(bloodVictoryResult.logs||[])];
     let bloodVictoryCheckpoint=[...units];
-    const bloodMistTriggered=defenderFell&&withAiPublicState(()=>hasBloodMist(attacker.owner,units))&&isAssassinUnit(attacker);
-    if(bloodMistTriggered)units=applyBloodMist(units,attacker.owner,attacker.name);
     const steelWallTriggered=withAiPublicState(()=>shouldTriggerSteelWall(target,guardLoss,hit.hit));
     if(steelWallTriggered)units=applySteelWall(units,target.owner,target.id);
     const coverFireTriggered=withAiPublicState(()=>shouldTriggerCoverFire(attacker,hpLoss,hit.hit));
@@ -1697,7 +1693,8 @@ async function adventureEnemyTurn(){
     const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
-    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth,hit:!!hit.hit});
+    const fireAreaImpactSound=hit.hit&&String(attacker.dragonElement||"").toLowerCase()==="fire"&&Number(attacker.dragonCharge||0)>=2?"fire_area_damage":"";
+    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
     const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
       ? {
