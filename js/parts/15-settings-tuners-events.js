@@ -1992,6 +1992,7 @@ const HV_FORGE_LAYOUT_TARGETS=[
   {key:"save",label:"Guardar",selector:"#deckBuilderPanel #saveDeckBtn"},
   {key:"title",label:"Cartas disponibles",selector:"#deckBuilderPanel .deckbuilder-collection h3"},
   {key:"grid",label:"Bloque de cartas",selector:"#deckBuilderPanel #deckCollectionGrid"},
+  {key:"pager",label:"Paginador completo",selector:"#deckBuilderPanel #deckCollectionPager"},
   {key:"prev",label:"Botón Anterior",selector:"#deckBuilderPanel #deckCollectionPrevBtn"},
   {key:"page",label:"Contador de página",selector:"#deckBuilderPanel #deckCollectionPageInfo"},
   {key:"next",label:"Botón Siguiente",selector:"#deckBuilderPanel #deckCollectionNextBtn"}
@@ -2052,6 +2053,24 @@ function applyHvForgeTarget(key){
   const value=hvForgeLayoutState[key]||makeHvForgeDefault(config);
   element.dataset.forgeTunerLabel=config.label;
   element.style.setProperty('transform-origin','center center','important');
+  element.style.setProperty('position','relative','important');
+  element.style.setProperty('z-index',key===hvForgeLayoutActiveTarget?'46':'18','important');
+  if(key==='grid'){
+    element.style.setProperty('width','fit-content','important');
+    element.style.setProperty('max-width','100%','important');
+    element.style.setProperty('justify-content','center','important');
+    element.style.setProperty('margin','0 auto','important');
+  }
+  if(key==='pager'){
+    element.style.setProperty('width','fit-content','important');
+    element.style.setProperty('max-width','100%','important');
+    element.style.setProperty('margin','8px auto 0','important');
+    element.style.setProperty('display','inline-flex','important');
+    element.style.setProperty('align-items','center','important');
+  }
+  if(['prev','next','page'].includes(key)){
+    element.style.setProperty('z-index',key===hvForgeLayoutActiveTarget?'54':'28','important');
+  }
   if(config.parchment){
     /* No tocar dimensiones mientras el panel está oculto: display:none no tiene un tamaño real. */
     if(!getHvForgePanelOpen())return;
@@ -2067,7 +2086,7 @@ function applyHvForgeTarget(key){
     delete element.dataset.hvForgeBaseWidth;
     delete element.dataset.hvForgeBaseHeight;
   }
-  const scale=Math.max(30,Math.min(250,Number(value.scale)||100))/100;
+  const scale=Math.max(20,Math.min(250,Number(value.scale)||100))/100;
   element.style.setProperty('transform',`translate(${Number(value.x)||0}px, ${Number(value.y)||0}px) scale(${scale})`,'important');
 }
 function applyHvForgeLayoutState(){HV_FORGE_LAYOUT_TARGETS.forEach(target=>applyHvForgeTarget(target.key));refreshHvForgeTunerUi();}
@@ -2079,7 +2098,7 @@ function resetHvForgeLayoutAll(){
   hvForgeLayoutState=cloneHvForgeDefaults();saveHvForgeLayoutState();
   HV_FORGE_LAYOUT_TARGETS.forEach(target=>{
     const element=getForgeLayoutTargetElement(target.key);if(!element)return;
-    element.style.removeProperty('width');element.style.removeProperty('min-height');element.style.removeProperty('height');element.style.removeProperty('transform');
+    element.style.removeProperty('width');element.style.removeProperty('min-height');element.style.removeProperty('height');element.style.removeProperty('transform');element.style.removeProperty('position');element.style.removeProperty('z-index');element.style.removeProperty('margin');element.style.removeProperty('justify-content');element.style.removeProperty('display');element.style.removeProperty('align-items');
     delete element.dataset.hvForgeBaseWidth;delete element.dataset.hvForgeBaseHeight;
   });
   applyHvForgeLayoutState();setHvForgeTunerStatus('Todos los ajustes fueron restaurados.');
@@ -2091,6 +2110,7 @@ function setHvForgeTunerActiveTarget(key){
   const picker=document.getElementById('hvForgeTargetPicker');if(picker&&picker.value!==key)picker.value=key;
   const selected=document.getElementById('hvForgeLayoutTunerSelected');const current=getForgeLayoutTargetConfig(key);if(selected)selected.textContent=`Seleccionado: ${current?.label||key}. Arrástralo directamente; usa la rueda del mouse para cambiar su tamaño.`;
   document.getElementById('hvForgeParchmentSize')?.classList.toggle('hidden',!current?.parchment);
+  applyHvForgeLayoutState();
   refreshHvForgeTunerUi();
 }
 function refreshHvForgeTunerUi(){
@@ -2106,6 +2126,11 @@ function updateHvForgeActiveSetting(setting,newValue){
   const config=getForgeLayoutTargetConfig(hvForgeLayoutActiveTarget);if(!config)return;
   const value={...(hvForgeLayoutState[config.key]||makeHvForgeDefault(config))};
   value[setting]=Number(newValue);hvForgeLayoutState[config.key]=value;saveHvForgeLayoutState();applyHvForgeTarget(config.key);refreshHvForgeTunerUi();
+}
+function nudgeHvForgeActiveScale(delta){
+  const config=getForgeLayoutTargetConfig(hvForgeLayoutActiveTarget);if(!config)return;
+  const current=hvForgeLayoutState[config.key]||makeHvForgeDefault(config);
+  updateHvForgeActiveSetting('scale',Math.max(20,Math.min(250,(Number(current.scale)||100)+delta)));
 }
 function copyHvForgeLayoutJson(button){
   const payload=JSON.stringify(hvForgeLayoutState,null,2);const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON',1000);}};
@@ -2129,7 +2154,7 @@ function wireHvForgeTargetDragging(){
   document.addEventListener('wheel',event=>{
     if(!getHvForgePanelOpen()||event.target.closest('#hvForgeLayoutTuner'))return;
     const element=getForgeLayoutTargetElement(hvForgeLayoutActiveTarget);if(!element||!element.contains(event.target))return;
-    event.preventDefault();const current=hvForgeLayoutState[hvForgeLayoutActiveTarget]||{};updateHvForgeActiveSetting('scale',Math.max(30,Math.min(250,(Number(current.scale)||100)+(event.deltaY<0?5:-5))));
+    event.preventDefault();const current=hvForgeLayoutState[hvForgeLayoutActiveTarget]||{};updateHvForgeActiveSetting('scale',Math.max(20,Math.min(250,(Number(current.scale)||100)+(event.deltaY<0?5:-5))));
   },{passive:false,capture:true});
 }
 function makeHvForgeTunerDraggable(shell,handle){
@@ -2151,7 +2176,7 @@ function ensureHvForgeLayoutTuner(){
     <div class="forge-layout-tuner-controls">
       <label class="forge-layout-tuner-control"><span>Horizontal <output data-forge-out="x">0 px</output></span><input data-forge-setting="x" type="range" min="-900" max="900" step="1" value="0"></label>
       <label class="forge-layout-tuner-control"><span>Vertical <output data-forge-out="y">0 px</output></span><input data-forge-setting="y" type="range" min="-700" max="700" step="1" value="0"></label>
-      <label class="forge-layout-tuner-control"><span>Tamaño <output data-forge-out="scale">100%</output></span><input data-forge-setting="scale" type="range" min="30" max="250" step="1" value="100"></label>
+      <label class="forge-layout-tuner-control"><span>Tamaño <output data-forge-out="scale">100%</output></span><input data-forge-setting="scale" type="range" min="20" max="250" step="1" value="100"></label><div class="forge-layout-scale-nudges"><button id="hvForgeScaleDown" type="button">− TAMAÑO</button><button id="hvForgeScaleUp" type="button">+ TAMAÑO</button></div>
     </div>
     <div id="hvForgeParchmentSize" class="forge-layout-parchment-size"><label class="forge-layout-tuner-control"><span>Ancho pergamino <output data-forge-out="width">100%</output></span><input data-forge-setting="width" type="range" min="55" max="145" step="1" value="100"></label><label class="forge-layout-tuner-control"><span>Alto pergamino <output data-forge-out="height">100%</output></span><input data-forge-setting="height" type="range" min="55" max="160" step="1" value="100"></label></div>
     <div class="forge-layout-tuner-actions"><button id="hvForgeResetSelected" type="button">Restaurar elemento</button><button id="hvForgeResetAll" type="button">Restaurar todo</button><button id="hvForgeCopyJson" class="primary" type="button">Copiar JSON</button><button id="hvForgeDone" class="primary" type="button">Listo</button></div><p id="hvForgeLayoutTunerStatus" class="forge-layout-tuner-status"></p>
@@ -2162,6 +2187,8 @@ function ensureHvForgeLayoutTuner(){
   document.getElementById('hvForgeDone')?.addEventListener('click',()=>{hvForgeTunerPanel?.classList.add('hidden');HV_FORGE_LAYOUT_TARGETS.forEach(target=>getForgeLayoutTargetElement(target.key)?.classList.remove('forge-tunable-active'));});
   document.getElementById('hvForgeTargetPicker')?.addEventListener('change',event=>setHvForgeTunerActiveTarget(event.currentTarget.value));
   shell.querySelectorAll('[data-forge-setting]').forEach(input=>input.addEventListener('input',()=>updateHvForgeActiveSetting(input.dataset.forgeSetting,input.value)));
+  document.getElementById('hvForgeScaleDown')?.addEventListener('click',()=>nudgeHvForgeActiveScale(-5));
+  document.getElementById('hvForgeScaleUp')?.addEventListener('click',()=>nudgeHvForgeActiveScale(5));
   document.getElementById('hvForgeResetSelected')?.addEventListener('click',()=>resetHvForgeLayoutTarget(hvForgeLayoutActiveTarget));
   document.getElementById('hvForgeResetAll')?.addEventListener('click',resetHvForgeLayoutAll);
   document.getElementById('hvForgeCopyJson')?.addEventListener('click',event=>copyHvForgeLayoutJson(event.currentTarget));
