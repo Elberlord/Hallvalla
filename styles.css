@@ -18636,12 +18636,12 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #deckBuilderPanel .deckbuilder-parchment-stage{
   position:relative;
   min-width:0;
-  min-height:0;
+  min-height:clamp(560px,72vh,790px);
   display:grid;
   grid-template-rows:auto minmax(0,1fr);
   align-content:stretch;
-  gap:5px;
-  padding:15.5vh 7.4vw 9.4vh !important;
+  gap:8px;
+  padding:10.5vh 7.4vw 10.8vh !important;
   background:url("assets/ui/deck_forge/forge_parchment.webp") center/100% 100% no-repeat;
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.55));
   overflow:hidden;
@@ -18730,14 +18730,15 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   min-height:0 !important;
   display:flex !important;
   flex-direction:column !important;
-  padding:3px 2px 0 !important;
+  justify-content:space-between !important;
+  padding:4px 4px 0 !important;
   border:0 !important;
   border-radius:0 !important;
   background:transparent !important;
   overflow:hidden !important;
 }
 #deckBuilderPanel .deckbuilder-collection h3{
-  margin:1px 0 5px !important;
+  margin:2px 0 7px !important;
   color:#45260c !important;
   font:800 16px Georgia,"Times New Roman",serif !important;
   text-shadow:0 1px rgba(255,240,190,.7);
@@ -18747,25 +18748,25 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   flex:1 1 auto !important;
   min-height:0 !important;
   display:grid !important;
-  grid-template-columns:repeat(7,minmax(62px,1fr)) !important;
-  grid-template-rows:minmax(118px,1fr) !important;
-  grid-auto-rows:minmax(118px,1fr) !important;
+  grid-template-columns:repeat(4,minmax(96px,1fr)) !important;
+  grid-template-rows:minmax(176px,1fr) !important;
+  grid-auto-rows:minmax(176px,1fr) !important;
   align-content:center !important;
-  gap:7px !important;
+  gap:12px !important;
   overflow:visible !important;
 }
 #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged .deck-mini-card{
-  height:min(17vh,132px) !important;
-  min-height:112px !important;
-  max-height:138px !important;
-  box-shadow:0 7px 14px rgba(49,24,5,.35) !important;
+  height:min(27vh,212px) !important;
+  min-height:172px !important;
+  max-height:216px !important;
+  box-shadow:0 8px 16px rgba(49,24,5,.35) !important;
 }
 #deckBuilderPanel .deck-collection-pager{
   flex:0 0 auto !important;
-  min-height:34px !important;
-  margin:5px 0 0 !important;
-  padding:3px 0 0 !important;
-  gap:9px !important;
+  min-height:38px !important;
+  margin:8px 0 0 !important;
+  padding:4px 0 1px !important;
+  gap:11px !important;
   border:0 !important;
 }
 #deckBuilderPanel .deck-page-btn{
@@ -18822,12 +18823,16 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 #deckBuilderPanel.collection-browser-mode .deckbuilder-parchment-stage{
   width:min(1120px,94vw);
+  min-height:clamp(610px,76vh,840px);
   justify-self:center;
+  padding-top:11.2vh !important;
+  padding-bottom:12vh !important;
   padding-left:8.2vw !important;
   padding-right:8.2vw !important;
 }
 #deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
-  grid-template-columns:repeat(7,minmax(70px,1fr)) !important;
+  grid-template-columns:repeat(4,minmax(108px,1fr)) !important;
+  grid-template-rows:minmax(184px,1fr) !important;
 }
 @media(max-width:1100px){
   #deckBuilderPanel .deckbuilder-layout{
@@ -18854,8 +18859,8 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
     overflow:visible !important;
   }
   #deckBuilderPanel .deckbuilder-parchment-stage{
-    min-height:610px;
-    padding:118px 8vw 92px !important;
+    min-height:640px;
+    padding:104px 8vw 96px !important;
   }
   #deckBuilderPanel .deckbuilder-filters{
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
@@ -18865,8 +18870,9 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   #deckBuilderPanel .deckbuilder-filters #saveDeckBtn{grid-column:1/-1 !important;}
   #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged,
   #deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
-    grid-template-columns:repeat(4,minmax(58px,1fr)) !important;
-    grid-auto-rows:112px !important;
+    grid-template-columns:repeat(2,minmax(88px,1fr)) !important;
+    grid-auto-rows:156px !important;
+    gap:12px !important;
   }
   #deckBuilderPanel .deckbuilder-current{min-height:430px !important;}
 }
