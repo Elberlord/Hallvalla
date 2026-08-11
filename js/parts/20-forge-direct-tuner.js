@@ -235,27 +235,43 @@
     shell.innerHTML=`
       <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">AJUSTAR FORJA</button></div>
       <section id="hvForgeTunerBody" class="hv-forge-tuner-body hidden">
-        <div class="hv-forge-tuner-scroll">
-          <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
-          <div id="hvForgeSelectedName" class="hv-forge-selected-name">Bloque de cartas</div>
-          ${['x','y','scale','width','height'].map(field=>{
-            const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
-            const min=(field==='x'?-900:field==='y'?-700:20),max=(field==='x'?900:field==='y'?700:250),step=field==='x'||field==='y'?1:1;
-            const minus=-5,plus=5;
-            return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:${minus}">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="${step}"><button type="button" data-nudge="${field}:${plus}">+</button></div></div>`;
-          }).join('')}
+        <div class="hv-forge-tuner-scroll-wrap">
+          <div id="hvForgeTunerScroll" class="hv-forge-tuner-scroll">
+            <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
+            <div id="hvForgeSelectedName" class="hv-forge-selected-name">Bloque de cartas</div>
+            ${['x','y','scale','width','height'].map(field=>{
+              const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
+              const min=(field==='x'?-900:field==='y'?-700:20),max=(field==='x'?900:field==='y'?700:250),step=field==='x'||field==='y'?1:1;
+              const minus=-5,plus=5;
+              return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:${minus}">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="${step}"><button type="button" data-nudge="${field}:${plus}">+</button></div></div>`;
+            }).join('')}
+          </div>
+          <div class="hv-forge-custom-scroll" aria-label="Desplazar controles">
+            <button id="hvForgeScrollUp" type="button" aria-label="Subir">▲</button>
+            <input id="hvForgeScrollRange" type="range" min="0" max="100" value="0" step="1" aria-label="Posición vertical del panel">
+            <button id="hvForgeScrollDown" type="button" aria-label="Bajar">▼</button>
+          </div>
         </div>
         <div class="hv-forge-tuner-actions"><button id="hvForgeResetSelected">Restaurar</button><button id="hvForgeResetAll">Restaurar todo</button><button id="hvForgeCopyJson">Copiar JSON</button><button id="hvForgeTunerDone">Listo</button></div>
       </section>`;
     document.body.appendChild(shell);
     body=$('hvForgeTunerBody');
-    $('hvForgeTunerToggle').onclick=()=>{panelOpen=body.classList.contains('hidden');body.classList.toggle('hidden',!panelOpen);refreshSelectionClasses();syncControls();};
+    $('hvForgeTunerToggle').onclick=()=>{panelOpen=body.classList.contains('hidden');body.classList.toggle('hidden',!panelOpen);refreshSelectionClasses();syncControls();requestAnimationFrame(()=>{const box=$('hvForgeTunerScroll'),range=$('hvForgeScrollRange');if(box&&range){const max=Math.max(0,box.scrollHeight-box.clientHeight);range.value=max?String(Math.round(box.scrollTop/max*100)):'0';range.disabled=max<=0;}});};
     $('hvForgeTunerClose').onclick=()=>{panelOpen=false;body.classList.add('hidden');refreshSelectionClasses();};
     $('hvForgeTunerDone').onclick=()=>{panelOpen=false;body.classList.add('hidden');refreshSelectionClasses();};
     $('hvForgeGroupSelect').value=activeGroup;
     $('hvForgeGroupSelect').onchange=event=>{activeGroup=event.currentTarget.value;const first=Object.keys(TARGETS).find(key=>TARGETS[key].group===activeGroup);if(first)selectKey(first);};
     shell.querySelectorAll('[data-field]').forEach(input=>input.addEventListener('input',()=>setValue(input.dataset.field,input.value)));
     shell.querySelectorAll('[data-nudge]').forEach(button=>button.addEventListener('click',()=>{const [field,delta]=button.dataset.nudge.split(':');nudge(field,Number(delta));}));
+    const scrollBox=$('hvForgeTunerScroll'),scrollRange=$('hvForgeScrollRange'),scrollUp=$('hvForgeScrollUp'),scrollDown=$('hvForgeScrollDown');
+    const syncCustomScroll=()=>{if(!scrollBox||!scrollRange)return;const max=Math.max(0,scrollBox.scrollHeight-scrollBox.clientHeight);scrollRange.value=max?String(Math.round(scrollBox.scrollTop/max*100)):'0';scrollRange.disabled=max<=0;};
+    const setCustomScrollFromRange=()=>{if(!scrollBox||!scrollRange)return;const max=Math.max(0,scrollBox.scrollHeight-scrollBox.clientHeight);scrollBox.scrollTop=max*(Number(scrollRange.value)||0)/100;};
+    scrollRange?.addEventListener('input',setCustomScrollFromRange);
+    scrollBox?.addEventListener('scroll',syncCustomScroll,{passive:true});
+    scrollUp?.addEventListener('click',()=>scrollBox?.scrollBy({top:-90,behavior:'smooth'}));
+    scrollDown?.addEventListener('click',()=>scrollBox?.scrollBy({top:90,behavior:'smooth'}));
+    new ResizeObserver(syncCustomScroll).observe(scrollBox);
+    requestAnimationFrame(syncCustomScroll);
     $('hvForgeResetSelected').onclick=resetSelected;
     $('hvForgeResetAll').onclick=resetAll;
     $('hvForgeCopyJson').onclick=event=>copyJson(event.currentTarget);
