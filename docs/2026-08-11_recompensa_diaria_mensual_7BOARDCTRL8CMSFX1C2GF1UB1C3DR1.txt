@@ -1,0 +1,13 @@
+HALLVALLA 7BOARDCTRL8CMSFX1C2GF1UB1C3DR1 · RECOMPENSA DIARIA MENSUAL
+
+- Sustituye el antiguo +25 Oro ilimitado.
+- Solo permite 1 reclamación cada 24 horas desde la última reclamación.
+- Cada mes genera una cadena aleatoria fija para permitir previsualizar el siguiente premio.
+- La cadena no salta premios no reclamados.
+- Premios normales ponderados: 25/50/75/100 Oro, 2/3 Gemas, 10/20 Fragmentos, Pack básico y Pack raro.
+- El último premio del mes es Pack mítico.
+- El Pack mítico solo puede reclamarse el último día natural del mes si todos los premios anteriores fueron reclamados.
+- Al cambiar de mes se genera una nueva cadena y se reinicia el progreso mensual.
+- El botón de Home abre un modal con calendario, progreso, cooldown, premio actual y siguiente premio.
+- Los packs se agregan al sistema existente de paquetes pendientes.
+- El cooldown de 24 h se conserva al cambiar de mes; el reset mensual no permite doble cobro alrededor de medianoche.

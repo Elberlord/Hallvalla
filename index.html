@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Modular 7BOARDCTRL8CMSFX1C2GF1UB1C3</title>
+<title>HallValla v8 Modular 7BOARDCTRL8CMSFX1C2GF1UB1C3DR1</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3">
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1">
 <meta name="hallvalla-build-name" content="Limpieza estructural: código muerto, DET legado y assets huérfanos">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3-CLEAN3"/>
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1-DAILY1"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -118,9 +118,35 @@
     </section>
   </main>
 
-  <button id="dailyBtn" class="asset-promo daily-panel" type="button">
+  <button id="dailyBtn" class="asset-promo daily-panel" type="button" data-daily-status="ready" data-daily-label="RECLAMAR">
     <img src="assets/home/panel_daily.webp" alt="Recompensa diaria">
   </button>
+
+  <div id="dailyRewardPanel" class="daily-reward-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dailyRewardTitle">
+    <section class="daily-reward-shell">
+      <button id="dailyRewardCloseBtn" class="daily-reward-close" type="button" aria-label="Cerrar recompensa diaria">×</button>
+      <header class="daily-reward-header">
+        <span class="daily-reward-kicker">RECOMPENSA DIARIA</span>
+        <h2 id="dailyRewardTitle">Cadena mensual</h2>
+        <p id="dailyRewardMonthLabel"></p>
+      </header>
+      <div class="daily-reward-summary">
+        <div><span>Progreso</span><strong id="dailyRewardProgress">0/0</strong></div>
+        <div><span>Estado</span><strong id="dailyRewardTimer">Disponible</strong></div>
+        <div><span>Premio actual</span><strong id="dailyRewardCurrent">—</strong></div>
+      </div>
+      <div id="dailyRewardGrid" class="daily-reward-grid" aria-label="Cadena mensual de recompensas"></div>
+      <footer class="daily-reward-footer">
+        <div class="daily-reward-next-copy">
+          <span>Siguiente premio</span>
+          <strong id="dailyRewardNext">—</strong>
+          <small id="dailyRewardRule">La cadena solo avanza cuando reclamas el premio actual.</small>
+        </div>
+        <button id="dailyRewardClaimBtn" class="daily-reward-claim" type="button">RECLAMAR</button>
+      </footer>
+      <p id="dailyRewardStatus" class="daily-reward-status" aria-live="polite"></p>
+    </section>
+  </div>
 
   <button id="welcomeBtn" class="asset-promo welcome-panel" type="button">
     <img src="assets/home/panel_welcome.webp" alt="Paquete de bienvenida">
@@ -894,6 +920,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3-CLEAN3"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1-DAILY1"></script>
 </body>
 </html>

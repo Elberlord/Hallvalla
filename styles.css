@@ -18504,3 +18504,65 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
     right:calc(min(230px,28vw) + 14px)!important;
   }
 }
+
+
+/* ============================================================
+   Recompensa diaria · cadena mensual DR1
+   ============================================================ */
+#mainMenu .asset-promo.daily-panel{overflow:visible}
+#mainMenu .asset-promo.daily-panel::after{
+  content:attr(data-daily-label);position:absolute;right:6%;bottom:-7px;z-index:4;
+  min-width:78px;padding:4px 9px;border:1px solid rgba(226,184,77,.76);border-radius:999px;
+  background:rgba(10,8,4,.94);color:#f7df99;font:700 11px/1 Georgia,serif;letter-spacing:.06em;
+  text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.58);pointer-events:none
+}
+#mainMenu .asset-promo.daily-panel[data-daily-status="ready"]::after{box-shadow:0 0 14px rgba(242,192,62,.42),0 3px 12px rgba(0,0,0,.58)}
+#mainMenu .asset-promo.daily-panel[data-daily-status="complete"]::after{opacity:.68}
+.daily-reward-overlay{
+  position:fixed;inset:0;z-index:26000;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)
+}
+.daily-reward-overlay.hidden{display:none!important}
+.daily-reward-shell{
+  position:relative;width:min(1120px,94vw);max-height:92vh;overflow:auto;padding:30px 34px 26px;
+  border:1px solid rgba(214,169,65,.72);border-radius:20px;
+  background:radial-gradient(circle at 50% 0%,rgba(98,68,20,.28),transparent 38%),linear-gradient(180deg,#151108 0%,#090806 58%,#050505 100%);
+  box-shadow:0 24px 70px rgba(0,0,0,.75),inset 0 0 34px rgba(195,141,40,.08);color:#eee1c1
+}
+.daily-reward-shell::before{content:"";position:absolute;inset:8px;border:1px solid rgba(215,170,70,.22);border-radius:14px;pointer-events:none}
+.daily-reward-close{position:absolute;right:18px;top:14px;z-index:3;width:38px;height:38px;border:1px solid rgba(225,183,82,.5);border-radius:50%;background:#0b0906;color:#ecd89f;font-size:25px;cursor:pointer}
+.daily-reward-header{text-align:center;margin:0 42px 20px}
+.daily-reward-kicker{display:block;color:#cda64e;font:700 12px/1.2 Georgia,serif;letter-spacing:.18em;margin-bottom:7px}
+.daily-reward-header h2{margin:0;color:#f3dfaa;font:700 32px/1.1 Georgia,serif;text-transform:uppercase;text-shadow:0 2px 14px rgba(202,148,44,.22)}
+.daily-reward-header p{margin:7px 0 0;color:#bfae88;font-size:14px}
+.daily-reward-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 18px}
+.daily-reward-summary>div{padding:11px 14px;border:1px solid rgba(205,159,61,.25);border-radius:12px;background:rgba(255,255,255,.025);text-align:center}
+.daily-reward-summary span{display:block;color:#9f916f;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.daily-reward-summary strong{color:#f0d992;font:700 16px/1.2 Georgia,serif}
+.daily-reward-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;max-height:52vh;overflow:auto;padding:3px 4px 8px}
+.daily-reward-day{position:relative;min-height:118px;padding:9px 7px 8px;border:1px solid rgba(188,146,57,.28);border-radius:11px;background:linear-gradient(180deg,rgba(70,52,19,.18),rgba(10,9,7,.76));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;overflow:hidden}
+.daily-reward-day-number{position:absolute;left:7px;top:6px;color:#9f8b60;font-size:9px;font-weight:800;letter-spacing:.07em}
+.daily-reward-day img{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.55))}
+.daily-reward-day strong{color:#ddc98e;font:700 11px/1.18 Georgia,serif}
+.daily-reward-day em{position:absolute;right:6px;top:5px;padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.68);color:#cdb46b;font-size:8px;font-style:normal;font-weight:800}
+.daily-reward-day.is-locked{filter:saturate(.42);opacity:.58}
+.daily-reward-day.is-claimed{border-color:rgba(102,180,106,.48);background:linear-gradient(180deg,rgba(50,93,50,.18),rgba(8,13,8,.78));opacity:.8}
+.daily-reward-day.is-claimed em{color:#b7e9b9;border:1px solid rgba(112,205,118,.25)}
+.daily-reward-day.is-current{border-color:#d6a941;box-shadow:0 0 0 1px rgba(226,181,69,.28),0 0 20px rgba(216,164,54,.18);transform:translateY(-1px);opacity:1;filter:none}
+.daily-reward-day.is-current strong{color:#ffe7a0}
+.daily-reward-day.is-final{background:radial-gradient(circle at 50% 43%,rgba(116,54,145,.30),transparent 48%),linear-gradient(180deg,rgba(65,34,79,.34),rgba(10,7,12,.84));border-color:rgba(196,132,220,.44)}
+.daily-reward-day.is-final img{width:58px;height:58px}
+.daily-reward-footer{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid rgba(211,164,66,.22)}
+.daily-reward-next-copy span{display:block;color:#a99975;font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+.daily-reward-next-copy strong{display:block;margin:3px 0;color:#f1d995;font:700 17px/1.2 Georgia,serif}
+.daily-reward-next-copy small{display:block;max-width:680px;color:#9e9178;font-size:12px;line-height:1.4}
+.daily-reward-claim{min-width:220px;min-height:52px;padding:10px 20px;border:1px solid #c79532;border-radius:12px;background:linear-gradient(180deg,#74511b,#34230d);color:#ffe8a7;font:700 15px/1 Georgia,serif;letter-spacing:.06em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.daily-reward-claim:hover:not(:disabled){filter:brightness(1.14)}
+.daily-reward-claim:disabled{cursor:not-allowed;filter:saturate(.25);opacity:.56}
+.daily-reward-status{min-height:18px;margin:11px 0 0;text-align:center;color:#d8c58e;font-size:12px}
+@media(max-width:850px){
+  .daily-reward-overlay{padding:10px}.daily-reward-shell{padding:25px 14px 18px;width:97vw}.daily-reward-header h2{font-size:24px}
+  .daily-reward-summary{grid-template-columns:1fr}.daily-reward-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-height:48vh}.daily-reward-day{min-height:102px}
+  .daily-reward-footer{grid-template-columns:1fr}.daily-reward-claim{width:100%}
+}
+@media(max-width:520px){.daily-reward-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.daily-reward-day img{width:42px;height:42px}}
