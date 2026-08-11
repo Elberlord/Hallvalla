@@ -18981,3 +18981,30 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   pointer-events:none !important;
   z-index:0 !important;
 }
+
+
+/* FORGE1CTRL2INPUT3 · layout del usuario + hitbox compacto del bloque de cartas */
+#deckBuilderPanel.collection-browser-mode #deckCollectionGrid.deck-card-grid.hv-mini-gallery.is-paged{
+  flex:0 0 auto !important;
+  min-height:0 !important;
+  height:max-content !important;
+  grid-template-rows:auto !important;
+  grid-auto-rows:auto !important;
+  align-content:start !important;
+  align-self:center !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+}
+#deckBuilderPanel.collection-browser-mode #deckCollectionGrid .deck-mini-card{
+  pointer-events:auto !important;
+}
+/* El contenedor de colección no debe capturar clics en sus zonas vacías. */
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection{
+  pointer-events:none !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection h3,
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection .deck-mini-card,
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection .deck-collection-pager,
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection .deck-collection-pager *{
+  pointer-events:auto !important;
+}

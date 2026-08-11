@@ -2,7 +2,7 @@
 (()=>{
   'use strict';
 
-  const STORAGE_KEY='hallvalla_forge1_direct_tuner_v1';
+  const STORAGE_KEY='hallvalla_forge1_direct_tuner_v2_userlayout';
   const PANEL_KEY='hallvalla_forge1_direct_tuner_panel_v1';
   const $=id=>document.getElementById(id);
 
@@ -31,7 +31,23 @@
     save:{group:'other',label:'Guardar',selector:'#deckBuilderPanel #saveDeckBtn'}
   };
 
-  const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{x:0,y:0,scale:100,width:100,height:100}]));
+  const USER_LAYOUT={
+    parchment:{x:-23,y:21,scale:100,width:100,height:168},
+    cards:{x:-29,y:26,scale:70,width:100,height:100},
+    search:{x:42,y:54,scale:80,width:100,height:100},
+    type:{x:5,y:54,scale:80,width:100,height:100},
+    rarity:{x:-20,y:55,scale:80,width:100,height:100},
+    power:{x:-50,y:55,scale:80,width:100,height:100},
+    sort:{x:-70,y:55,scale:80,width:100,height:100},
+    pager:{x:-26,y:-61,scale:100,width:100,height:100},
+    prev:{x:0,y:0,scale:100,width:100,height:100},
+    page:{x:0,y:0,scale:100,width:100,height:100},
+    next:{x:0,y:0,scale:100,width:100,height:100},
+    title:{x:-9,y:206,scale:75,width:100,height:100},
+    materials:{x:0,y:0,scale:100,width:100,height:100},
+    save:{x:0,y:0,scale:100,width:100,height:100}
+  };
+  const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{x:0,y:0,scale:100,width:100,height:100,...(USER_LAYOUT[key]||{})}]));
   let state=loadState();
   let activeGroup='cards';
   let activeKey='cards';
@@ -220,7 +236,7 @@
     const label=$('hvForgeSelectedName');if(label)label.textContent=TARGETS[activeKey]?.label||'';
   }
 
-  function resetSelected(){state[activeKey]={x:0,y:0,scale:100,width:100,height:100};saveState();applyAll();}
+  function resetSelected(){state[activeKey]={...defaultState()[activeKey]};saveState();applyAll();}
   function resetAll(){state=defaultState();saveState();for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}applyAll();}
   function copyJson(button){
     const payload=JSON.stringify(state,null,2);
