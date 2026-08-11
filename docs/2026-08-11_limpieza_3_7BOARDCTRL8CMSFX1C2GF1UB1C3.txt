@@ -1,0 +1,74 @@
+HALLVALLA 7BOARDCTRL8CMSFX1C2GF1UB1C3 · LIMPIEZA 3
+Fecha: 2026-08-11
+Base: 7BOARDCTRL8CMSFX1C2GF1UB1 (Ultimate Blow DET)
+
+OBJETIVO
+Continuar la limpieza conservadora del runtime sin refactorizar mecánicas activas ni retirar herramientas de calibración todavía conectadas.
+
+CAMBIOS
+1. CSS muerto / aliases históricos
+- styles.css: 734,627 -> 682,309 bytes (-52,318 bytes).
+- 753 ramas de selector imposibles retiradas en dos pasadas de comprobación.
+- 372 reglas completas eliminadas.
+- 123 reglas mixtas podadas conservando sus selectores activos.
+- Familias retiradas incluyen restos del lobby antiguo, HUD anterior, deck-card anterior, aliases Home/menu anteriores, herramientas CSS antiguas y clases que ya no se generan.
+- Resultado de auditoría: 0 IDs CSS huérfanos.
+- Las únicas clases sin literal directo restantes corresponden a familias construidas dinámicamente en runtime (ash-*, ember-*, kind-*, leader-base-*, hp-heart-badge-*, field-stat-emblem-*, battle-power-*, unit-key-* y status-icon-*).
+
+2. Estandarización de imágenes a WEBP
+- El runtime queda sin PNG/JPG/GIF dentro de assets.
+- Convertidos a WEBP lossless y referencias actualizadas:
+  assets/ui/battle_results/defeat_red.webp
+  assets/ui/battle_results/victory_blue.webp
+  assets/ui/det_templates/det_base_universal_v32.webp
+  assets/ui/det_templates/det_cost_badge_v1.webp
+  assets/ui/dragons/dragon_events_overview_ai.webp
+  assets/ui/dragons/dragon_fire_detail_ai.webp
+  assets/ui/dragons/dragon_ice_detail_ai.webp
+  assets/ui/dragons/dragon_lightning_detail_ai.webp
+- Eliminado det_base_universal_v31.png: 0 consumidores.
+- Eliminados HUD_Base_Panel.webp y HUD_Status_Pill.webp: quedaron sin consumidor después de retirar el HUD antiguo.
+- Assets: 186,972,978 -> 177,891,115 bytes (-9,081,863 bytes, aprox. 8.66 MiB).
+- 581 archivos WEBP verificados: 0 errores de decodificación.
+
+3. Firmas y argumentos residuales
+- Se simplificaron únicamente firmas cuyos parámetros no tenían lectura y cuyos llamadores pudieron actualizarse de forma completa:
+  applyBloodBaitAttackBonus
+  resolveErictoLifecycle
+  getDetAbilityVisual
+  prepareCounterMods
+  prepareMiyamotoCounterMods
+  resolvePreAttackLegendaryTraps
+  applyDamageTrapModifiers
+  resolveBattlePhaseLegendaryTraps
+  runDetGuideAction
+  ensureUnifiedDetActiveEffects
+- Se limpió además una variable de destructuración no usada en getWeaponDisadvantageSources.
+- Se conservó expresamente el primer parámetro contractual de getErictoEligibleCorpses porque dragon-egg.js envuelve la función y depende de esa firma. Se renombró _ericto para dejar clara esa condición.
+- TypeScript checkJs + noUnusedLocals/noUnusedParameters: 0 TS6133 / TS6196.
+
+4. Ultimate Blow
+- No se modificó ni retiró la mecánica.
+- assets/ui/effect_icons/ultimate_blow.webp permanece activo.
+- Pruebas de sandbox:
+  Asesino reconocido: OK.
+  objetivo con 2 HP a distancia 3: OK.
+  objetivo con 3 HP: rechazado, OK.
+  Ultimate Blow aparece en DET: OK.
+
+VALIDACIÓN
+- node --check en bootstrap, Firebase y 19 módulos: OK.
+- Carga secuencial simulada del runtime: 19/19 módulos OK.
+- Referencias estáticas de assets: 416 únicas, 0 faltantes.
+- IDs HTML: 345 únicos, 0 duplicados.
+- CSS parseado con tinycss2: 0 errores.
+- IDs CSS sin consumidor: 0.
+- Funciones declaradas con una sola aparición global: 0 candidatos.
+- 581 WEBP verificados: 0 corruptos.
+
+VERSIÓN
+Build: 7BOARDCTRL8CMSFX1C2GF1UB1C3
+Cache: 7BOARDCTRL8CMSFX1C2GF1UB1C3-CLEAN3
+
+NOTA
+La carga 19/19 es una prueba de inicialización en sandbox DOM/Firebase simulado. No sustituye una prueba de duelo real en navegador/Firebase. Se evitó tocar mecánicas, Firebase, sonidos añadidos, Ultimate Blow, assets dinámicos de figuras/board_cards o herramientas de calibración actualmente conectadas.

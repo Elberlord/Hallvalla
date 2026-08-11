@@ -257,7 +257,7 @@ function buildTimedOutTurnState(state,now=Date.now()){
   if(burnBloodVictory.logs.length)burnEnd.logs.push(...burnBloodVictory.logs);
   const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,owner,state.turnKey||"");
   const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,owner);
-  const erictoLife=resolveErictoLifecycle(veilEnd.units,erictoUpkeep.units);
+  const erictoLife=resolveErictoLifecycle(erictoUpkeep.units);
   const erictoGraveyard=captureErictoGraveyard(state.erictoGraveyard||[],state.units||[],erictoLife.units);
   const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
   const next=owner===1?2:1;

@@ -1250,13 +1250,13 @@ function getCounterDefenseRemainder(originalAttacker,originalDefender,originalMo
   const defenseScore=getDefenseEvasionScore(originalDefender,originalMods);
   return Math.max(0,attackScore-defenseScore);
 }
-function prepareCounterMods(counterAttacker,counterDefender,baseMods={},defenseRemainder=null){
+function prepareCounterMods(baseMods={},defenseRemainder=null){
   const mods={...baseMods,counterIgnoresGuard:false};
   if(typeof defenseRemainder==="number")mods.defenderDefenseOverride=Math.max(0,defenseRemainder);
   return mods;
 }
-function prepareMiyamotoCounterMods(counterAttacker,counterDefender,baseMods={},defenseRemainder=null,evaded=false){
-  const mods=prepareCounterMods(counterAttacker,counterDefender,{...baseMods,notes:[...(baseMods.notes||[])]},defenseRemainder);
+function prepareMiyamotoCounterMods(counterAttacker,baseMods={},defenseRemainder=null,evaded=false){
+  const mods=prepareCounterMods({...baseMods,notes:[...(baseMods.notes||[])]},defenseRemainder);
   if(evaded){
     mods.attackerAtk=(mods.attackerAtk||0)+2;
     mods.notes.push(`${counterAttacker.name} +2 AT por Dos Cielos tras evadir.`);
@@ -1737,7 +1737,7 @@ function resolveMovementLegendaryTraps(unit,dest,units){
   }
   return {units:out,traps,logs,cancel,statusFxEvent,floatFxEvent};
 }
-function resolvePreAttackLegendaryTraps(attacker,defender,units,trapList=null){
+function resolvePreAttackLegendaryTraps(attacker,units,trapList=null){
   let out=[...(units||[])],traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],cancel=false,redirect=null,bonusAtk=0;
   for(const trap of [...traps]){
     if(trap.targetId!==attacker.id)continue;
@@ -1796,7 +1796,7 @@ function resolveBuffHealLegendaryTraps(target,kind,units){
   }
   return {units:out,traps,logs,cancel};
 }
-function applyDamageTrapModifiers(defender,damage,units,mods={},trapList=null){
+function applyDamageTrapModifiers(defender,damage,trapList=null){
   let traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
   for(const trap of [...traps]){
     if(trap.targetId!==defender.id)continue;
@@ -1828,7 +1828,7 @@ function resolveAfterKillLegendaryTraps(attacker,defender,units,trapList=null){
   }
   return {units:out,traps,logs};
 }
-function resolveBattlePhaseLegendaryTraps(units,turnOwner,turnKey){
+function resolveBattlePhaseLegendaryTraps(units,turnOwner){
   let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[];
   for(const trap of [...traps]){
     const target=out.find(u=>u.id===trap.targetId);

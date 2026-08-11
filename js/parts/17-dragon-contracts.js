@@ -1913,7 +1913,7 @@ saveCurrentDeck=async function(){
   .hallvalla-events-primary--dragon{position:absolute;left:41.2%;bottom:6.8%;width:23%;min-height:7.6%;padding:0 18px;border-radius:999px;display:flex;align-items:center;justify-content:center}
   .hallvalla-dragons-scene{display:none}
   .hallvalla-dragons-scene.is-active{display:block}
-  .hallvalla-dragons-overview-artboard{position:relative;width:100%;aspect-ratio:1672/941;background:url('assets/ui/dragons/dragon_events_overview_ai.png') center top/contain no-repeat}
+  .hallvalla-dragons-overview-artboard{position:relative;width:100%;aspect-ratio:1672/941;background:url('assets/ui/dragons/dragon_events_overview_ai.webp') center top/contain no-repeat}
   .hallvalla-dragons-overview-openpill{position:absolute;top:78.5%;width:20.5%;height:7.3%;padding:0;margin:0;border:0!important;border-radius:999px;background:transparent!important;box-shadow:none!important;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;opacity:1;z-index:8}
   .hallvalla-dragons-overview-openpill--fire{left:7.55%}
   .hallvalla-dragons-overview-openpill--ice{left:39.75%}
@@ -1921,9 +1921,9 @@ saveCurrentDeck=async function(){
   .hallvalla-dragons-overview-openpill:hover,.hallvalla-dragons-overview-openpill:focus,.hallvalla-dragons-overview-openpill:active{background:transparent!important;border-color:transparent!important;box-shadow:none!important;outline:none!important}
   .hallvalla-dragon-detail-artboard{display:none;position:relative;width:100%;aspect-ratio:1672/941;background-position:center top;background-size:contain;background-repeat:no-repeat}
   .hallvalla-dragon-detail-artboard.is-active{display:block}
-  .hallvalla-dragon-detail-artboard--fire{background-image:url('assets/ui/dragons/dragon_fire_detail_ai.png')}
-  .hallvalla-dragon-detail-artboard--ice{background-image:url('assets/ui/dragons/dragon_ice_detail_ai.png')}
-  .hallvalla-dragon-detail-artboard--lightning{background-image:url('assets/ui/dragons/dragon_lightning_detail_ai.png')}
+  .hallvalla-dragon-detail-artboard--fire{background-image:url('assets/ui/dragons/dragon_fire_detail_ai.webp')}
+  .hallvalla-dragon-detail-artboard--ice{background-image:url('assets/ui/dragons/dragon_ice_detail_ai.webp')}
+  .hallvalla-dragon-detail-artboard--lightning{background-image:url('assets/ui/dragons/dragon_lightning_detail_ai.webp')}
   .hallvalla-dragon-detail-status,.hallvalla-dragon-detail-info,.hallvalla-dragon-detail-rewards,.hallvalla-dragon-detail-cost{position:absolute;color:#efe0bc;text-shadow:0 2px 10px rgba(0,0,0,.64)}
   .hallvalla-dragon-detail-status{left:59.2%;top:33.2%;width:29%;font-family:Georgia,serif;font-size:clamp(18px,1.5vw,28px);color:#f0d89b}
   .hallvalla-dragon-detail-info{left:58.6%;top:42%;width:30.4%;min-height:21%;font-size:var(--hv-event-body-size);line-height:1.46}

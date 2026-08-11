@@ -356,7 +356,7 @@ async function attackUnit(a,d){
   if(distance>rg&&!assassinFinalBlow)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
   if(isStealthedUnit(d))return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
   if(d.aerial&&!(getUnitAttackRange(a)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
-  let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
+  let preTrap=resolvePreAttackLegendaryTraps(a,liveUnits);
   if(preTrap.cancel){
     const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
     await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true,khalidChainReady:false}:u),legendaryTraps:preTrap.traps});
@@ -389,7 +389,7 @@ async function attackUnit(a,d){
   d=warningRune.defender;
   let mods=getCombatMods(a,d);
   if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
-  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,units,publicState.beastTraps||[]);
+  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,publicState.beastTraps||[]);
   if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
   const beastTrapsAfterBloodBait=bloodBaitBonus.trapId?removeBeastTrapById(publicState.beastTraps||[],bloodBaitBonus.trapId):(publicState.beastTraps||[]);
   const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
@@ -443,7 +443,7 @@ async function attackUnit(a,d){
   units=ulyssesAttackTactic.units;
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
   units=actionSpend.units;
-  const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),units,mods,preTrap.traps);
+  const dmgTrap=applyDamageTrapModifiers(d,getBattleDamage(a,mods),preTrap.traps);
   const ulfhednarCritResult=rollUlfhednarCritical(a,hit);
   const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
   let berserkerOsoText="",skiparWarLootText="";
@@ -645,8 +645,8 @@ async function attackUnit(a,d){
     const counterDefenseRemainder=getCounterDefenseRemainder(a,d,mods);
     const isMiyamotoCounter=!!miyamotoMeleeCounter;
     const cMods=isMiyamotoCounter
-      ?prepareMiyamotoCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
-      :prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder);
+      ?prepareMiyamotoCounterMods(defenderAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
+      :prepareCounterMods(getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder);
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
     const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
     units=cSpend.units;
@@ -795,7 +795,7 @@ async function finishTurn(){
   const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,myPlayer,publicState?.turnKey||"");
   if(veilEnd.logs.length&&await finalizeBattle(veilEnd.units,[...(burnEnd.logs||[]),...(veilEnd.logs||[])].join(" ")))return;
   const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,myPlayer);
-  const erictoLife=resolveErictoLifecycle(veilEnd.units,erictoUpkeep.units);
+  const erictoLife=resolveErictoLifecycle(erictoUpkeep.units);
   const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
   if((erictoUpkeep.logs.length||erictoLife.logs.length)&&await finalizeBattle(erictoLife.units,endLogs.join(" ")))return;
   const tutorialMode=publicState?.mode==="tutorial";const next=tutorialMode?1:(myPlayer===1?2:1),turn=tutorialMode?(publicState.turn||1)+1:(next===1?(publicState.turn||1)+1:(publicState.turn||1));
@@ -868,7 +868,7 @@ async function adventureEnemyTurn(){
   const publishAiStep=async(extra={})=>{
     if((turnTimerExpiredKey===pub.turnKey||duelClockExpiredKey===pub.turnKey)||publicState?.turnKey!==pub.turnKey||publicState?.currentPlayer!==2)return false;
     erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
-    const erictoLife=resolveErictoLifecycle(lastPublishedUnits,units);
+    const erictoLife=resolveErictoLifecycle(units);
     units=erictoLife.units;
     if(erictoLife.logs.length)logs.push(...erictoLife.logs);
     lastPublishedUnits=[...units];
@@ -1334,7 +1334,7 @@ async function adventureEnemyTurn(){
     if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===pub.turnKey)return false;
     const aiAttackBefore=[...units];
 
-    let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,target,units,legendaryTraps));
+    let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,units,legendaryTraps));
     legendaryTraps=preTrap.traps;
     if(preTrap.cancel){
       const cancelSpend=spendActionStatsByAttack(attacker,target,preTrap.units,getCombatMods(attacker,target),{hit:false});
@@ -1364,7 +1364,7 @@ async function adventureEnemyTurn(){
     target=warningRune.defender;
     let mods=withAiPublicState(()=>getCombatMods(attacker,target));
     if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
-    const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,units,beastTraps);
+    const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,beastTraps);
     if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
     if(bloodBaitBonus.trapId)beastTraps=removeBeastTrapById(beastTraps,bloodBaitBonus.trapId);
     const defensePrep=consumeDefensiveStanceForAttack(target,units,mods);
@@ -1416,7 +1416,7 @@ async function adventureEnemyTurn(){
     units=ulyssesAttackTactic.units;
     const actionSpend=spendActionStatsByAttack(attacker,target,units,mods,hit);
     units=actionSpend.units;
-    const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),units,mods,preTrap.traps));
+    const dmgTrap=withAiPublicState(()=>applyDamageTrapModifiers(target,getBattleDamage(attacker,mods),preTrap.traps));
     legendaryTraps=dmgTrap.traps;
     const ulfhednarCritResult=rollUlfhednarCritical(attacker,hit);
     const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
@@ -1623,8 +1623,8 @@ async function adventureEnemyTurn(){
       const counterDefenseRemainder=withAiPublicState(()=>getCounterDefenseRemainder(attacker,target,mods));
       const isMiyamotoCounter=!!miyamotoMeleeCounter;
       let cMods=withAiPublicState(()=>isMiyamotoCounter
-        ?prepareMiyamotoCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
-        :prepareCounterMods(defenderAfter,attackerAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder));
+        ?prepareMiyamotoCounterMods(defenderAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
+        :prepareCounterMods(getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder));
       const cHit=rollHit(defenderAfter,attackerAfter,cMods);
       const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
       units=cSpend.units;
@@ -2564,7 +2564,7 @@ async function adventureEnemyTurn(){
     await sleep(AI_ACTION_DELAY_MS);
   }
 
-  const battleTrap=withAiPublicState(()=>resolveBattlePhaseLegendaryTraps(units,2,pub.turnKey));
+  const battleTrap=withAiPublicState(()=>resolveBattlePhaseLegendaryTraps(units,2));
   units=battleTrap.units;
   legendaryTraps=battleTrap.traps;
   if(battleTrap.logs.length)logs.push(...battleTrap.logs);
@@ -2736,7 +2736,7 @@ async function adventureEnemyTurn(){
   const erictoUpkeep=applyErictoUpkeepAtTurnEnd(units,2);
   units=erictoUpkeep.units;
   if(erictoUpkeep.logs.length)logs.push(...erictoUpkeep.logs);
-  const erictoLife=resolveErictoLifecycle(lastPublishedUnits,units);
+  const erictoLife=resolveErictoLifecycle(units);
   units=erictoLife.units;
   if(erictoLife.logs.length)logs.push(...erictoLife.logs);
   erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);

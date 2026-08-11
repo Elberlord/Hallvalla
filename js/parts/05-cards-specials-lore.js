@@ -341,7 +341,7 @@ function currentOrNextTurnKeyForOwner(owner,state=publicState){
 function canDirectlyTarget(source,target){return canTargetStealth(source,target);}
 
 
-function applyBloodBaitAttackBonus(attacker,defender,units,traps=publicState?.beastTraps||[]){
+function applyBloodBaitAttackBonus(attacker,defender,traps=publicState?.beastTraps||[]){
   if(!attacker||!defender||!isBeastUnit(attacker))return {mods:{},logs:[],trapId:""};
   const trap=(traps||[]).find(t=>t.trapKey==="blood_bait"&&String(t.owner)===String(attacker.owner)&&dist(t,defender)<=1);
   if(!trap)return {mods:{},logs:[],trapId:""};
@@ -604,10 +604,10 @@ function getErictoLinkedReanimated(ericto,units=publicState?.units||[]){
   if(!ericto)return[];
   return (units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===ericto.id&&Number(u.hp||0)>0);
 }
-function getErictoEligibleCorpses(ericto,graveyard=publicState?.erictoGraveyard||[]){
+function getErictoEligibleCorpses(_ericto,graveyard=publicState?.erictoGraveyard||[]){
   return normalizeErictoGraveyard(graveyard).filter(rec=>!rec.used&&rec.snapshot&&!rec.snapshot.leader&&!rec.snapshot.reanimated&&!rec.snapshot.solomonSummon);
 }
-function resolveErictoLifecycle(beforeUnits=[],afterUnits=[]){
+function resolveErictoLifecycle(afterUnits=[]){
   let units=[...(afterUnits||[])],logs=[];
   for(let guard=0;guard<8;guard++){
     const liveIds=new Set(units.filter(u=>u&&u.key==="ericto"&&Number(u.hp||0)>0).map(u=>u.id));
@@ -1386,7 +1386,7 @@ function getWeaponAdvantageTargets(entity){
 function getWeaponDisadvantageSources(entity){
   const cls=getWeaponClassForCard(entity);
   return Object.entries(WEAPON_ADVANTAGE)
-    .filter(([source,targets])=>(targets||[]).includes(cls))
+    .filter(([,targets])=>(targets||[]).includes(cls))
     .map(([source])=>WEAPON_CLASS_LABELS[source]||source);
 }
 
@@ -1615,7 +1615,7 @@ const DET_EFFECT_KIND_BY_TITLE={
   atacar_primero:"trigger",
   anticaballeria:"debuff"
 };
-function getDetAbilityVisual(entity,section,index=0){
+function getDetAbilityVisual(section){
   const exactKey=normalizeDetEffectTitle(section?.title||"");
   const exactIcon=DET_EFFECT_ICON_BY_TITLE[exactKey];
   const kind=DET_EFFECT_KIND_BY_TITLE[exactKey]||classifyDetAbility(section);

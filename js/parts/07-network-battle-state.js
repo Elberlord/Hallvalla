@@ -160,7 +160,7 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
     const victory=result==="victory";
     overlay.classList.add(victory?"victory":"defeat");
     if(img){
-      img.src=victory?"assets/ui/battle_results/victory_blue.png":"assets/ui/battle_results/defeat_red.png";
+      img.src=victory?"assets/ui/battle_results/victory_blue.webp":"assets/ui/battle_results/defeat_red.webp";
       img.alt=victory?"Has ganado la partida":"Has sido derrotado";
     }
     if(drawText)drawText.setAttribute("aria-hidden","true");
@@ -190,7 +190,7 @@ async function updatePublic(patch){
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
     const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
-    const erictoLife=resolveErictoLifecycle(beforeUnits,solomonLife.units);
+    const erictoLife=resolveErictoLifecycle(solomonLife.units);
     const mongolAura=applyMongolExplorerAura(erictoLife.units);
     cleanPatch.units=mongolAura.units;
     const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];

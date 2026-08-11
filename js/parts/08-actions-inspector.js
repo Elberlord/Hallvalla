@@ -692,7 +692,7 @@ function resolveDetGuideTarget(container,ev){
   ].join(','));
   return target&&container.contains(target)?target:null;
 }
-function runDetGuideAction(container,target,{entity=null,statuses=[],effectText="",effectTitle=""}={}){
+function runDetGuideAction(target,{entity=null,statuses=[],effectText="",effectTitle=""}={}){
   if(!target||target.disabled)return false;
   closeDetLayoutTunerPanelForGuide();
   if(target.matches('[data-stat],.stat-click,.det-stat-icon-btn')){
@@ -742,7 +742,7 @@ function bindCardInspectDetModalDelegation(modal){
   modal.addEventListener('click',ev=>{
     const target=resolveDetGuideTarget(modal,ev);
     if(!target||target.closest('#cardInspectX,#cardInspectCancel,#cardInspectPlay'))return;
-    const handled=runDetGuideAction(modal,target,{
+    const handled=runDetGuideAction(target,{
       entity:modal._hvInspectedEntity||null,
       statuses:Array.isArray(modal._hvActiveStatuses)?modal._hvActiveStatuses:[],
       effectText:modal._hvEffectText||'',
@@ -899,7 +899,7 @@ function ensureUnifiedDetCostBadgeCalibration(modal){
   box.id='detCostBadge';
   box.className='hv-det-cost-badge-calibration';
   box.setAttribute('aria-label','Insignia artística para costo');
-  box.innerHTML=`<img src="assets/ui/det_templates/det_cost_badge_v1.png" alt=""><span class="hv-det-cal-id">cost.badge</span>`;
+  box.innerHTML=`<img src="assets/ui/det_templates/det_cost_badge_v1.webp" alt=""><span class="hv-det-cal-id">cost.badge</span>`;
   card.appendChild(box);
   return box;
 }
@@ -1164,7 +1164,7 @@ function ensureUnifiedDetMetaFields(modal,entity,{mode="card",statuses=[]}={}){
   return layer;
 }
 
-function ensureUnifiedDetActiveEffects(modal,entity,statuses=[]){
+function ensureUnifiedDetActiveEffects(modal,statuses=[]){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
   card.querySelector('#detEffectsList')?.remove();
@@ -1211,7 +1211,7 @@ function ensureUnifiedDetOwnAbilities(modal,entity){
   list.appendChild(listId);
   sections.forEach((section,index)=>{
     const visual=typeof getDetAbilityVisual==='function'
-      ? getDetAbilityVisual(entity,section,index)
+      ? getDetAbilityVisual(section)
       : {icon:'assets/ui/status_icons/status_generic.webp',label:section?.title||`Efecto ${index+1}`,kind:'effect'};
     const button=document.createElement('button');
     button.type='button';
@@ -1362,7 +1362,7 @@ function openUnifiedDetEntity(entity,{mode="card",live=false,statuses=[],visualH
   ensureUnifiedDetReferenceUtilities(modal,entity);
   ensureUnifiedDetLevelAndBattlePower(modal,entity);
   ensureUnifiedDetMetaFields(modal,entity,{mode,statuses});
-  ensureUnifiedDetActiveEffects(modal,entity,statuses);
+  ensureUnifiedDetActiveEffects(modal,statuses);
   ensureUnifiedDetOwnAbilities(modal,entity);
   ensureUnifiedDetPlayButton(modal,entity,{mode,allowPlay,playState});
   modal._hvInspectedEntity=entity;
