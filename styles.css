@@ -18923,3 +18923,22 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .forge-tunable-active{outline:2px dashed rgba(255,223,128,.96)!important;outline-offset:4px;cursor:move!important;box-shadow:0 0 0 1px rgba(255,223,128,.28),0 0 25px rgba(202,140,38,.25)!important;transform-origin:center center!important;touch-action:none!important;position:relative!important;z-index:60!important}
 .forge-tunable-active::after{content:attr(data-forge-tuner-label);position:absolute;left:7px;top:7px;z-index:50;padding:3px 7px;border-radius:999px;background:rgba(21,14,7,.9);border:1px solid rgba(236,194,92,.58);color:#ffeab4;font:800 9px/1 Georgia,serif;pointer-events:none}
 @media(max-width:720px){.forge-layout-tuner{left:7px;top:68px;width:min(330px,calc(100vw - 14px))}.forge-layout-tuner-drag{flex-basis:74px;font-size:8px}.forge-layout-parchment-size{grid-template-columns:1fr}}
+
+
+/* FORGE TUNER V3.1 · compacto para calibración privada */
+#hvForgeLayoutTuner .forge-layout-tuner-panel{position:relative;margin-top:5px!important;padding-top:2px!important}
+#hvForgeLayoutTuner .forge-layout-tuner-close-compact{position:absolute!important;right:0!important;top:0!important;z-index:4!important;width:28px!important;height:28px!important}
+#hvForgeLayoutTuner .forge-layout-tuner-scroll{padding:0 36px 0 0!important;overflow:visible!important;flex:0 0 auto!important}
+#hvForgeLayoutTuner .forge-layout-target-select{width:100%!important;height:36px!important;margin:0 0 7px!important;padding:6px 9px!important;border-radius:10px!important;border:1px solid rgba(222,177,84,.34)!important;background:#171009!important;color:#ffe9b4!important;font:700 11px Georgia,serif!important;outline:none!important}
+#hvForgeLayoutTuner .forge-layout-tuner-controls{gap:6px!important}
+#hvForgeLayoutTuner .forge-layout-tuner-control{padding:6px 8px!important}
+#hvForgeLayoutTuner .forge-layout-tuner-control>span{margin-bottom:4px!important}
+#hvForgeLayoutTuner .forge-layout-dimension{padding:6px 8px;border:1px solid rgba(221,177,85,.15);border-radius:10px;background:rgba(255,255,255,.025)}
+#hvForgeLayoutTuner .forge-layout-dimension-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;color:#f2d79b;font:800 10px/1 system-ui,sans-serif}
+#hvForgeLayoutTuner .forge-layout-dimension-title output{color:#75e8ff;font-variant-numeric:tabular-nums}
+#hvForgeLayoutTuner .forge-layout-dimension-row{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;align-items:center;gap:6px}
+#hvForgeLayoutTuner .forge-layout-dimension-row input{width:100%;accent-color:#d6a541;cursor:pointer}
+#hvForgeLayoutTuner .forge-layout-dimension-row button{width:34px;height:30px;border-radius:9px;border:1px solid rgba(226,180,76,.44);background:linear-gradient(180deg,#76501a,#3c2609);color:#ffe8af;font:900 19px/1 Georgia,serif;cursor:pointer}
+#hvForgeLayoutTuner .forge-layout-dimension-row button:hover{filter:brightness(1.15)}
+#hvForgeLayoutTuner .forge-layout-tuner-actions{margin-top:7px!important;padding-top:7px!important}
+#hvForgeLayoutTuner .forge-layout-tuner-status,#hvForgeLayoutTuner .forge-layout-tuner-selected,#hvForgeLayoutTuner .forge-layout-tuner-head,#hvForgeLayoutTuner .forge-layout-target-picker{display:none!important}
