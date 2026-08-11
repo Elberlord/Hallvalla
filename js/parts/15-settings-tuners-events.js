@@ -1977,206 +1977,169 @@ ensureHvDetLayoutTuner();
 
 
 /* ==========================================================
-   FORGE TUNER · calibrador movible para la pantalla de Forja
+   FORGE TUNER V2 · posición, tamaño y control movible
    ========================================================== */
-const HV_FORGE_LAYOUT_TUNER_STORAGE_KEY="hallvalla_forge_layout_tuner_v1";
-const HV_FORGE_LAYOUT_PANEL_STORAGE_KEY="hallvalla_forge_layout_tuner_panel_v1";
+const HV_FORGE_LAYOUT_TUNER_STORAGE_KEY="hallvalla_forge_layout_tuner_v2";
+const HV_FORGE_LAYOUT_PANEL_STORAGE_KEY="hallvalla_forge_layout_tuner_panel_v2";
 const HV_FORGE_LAYOUT_TARGETS=[
-  {key:"parchment",label:"Pergamino",selector:"#deckBuilderPanel .deckbuilder-parchment-stage"},
-  {key:"filters",label:"Filtros",selector:"#deckBuilderPanel .deckbuilder-filters"},
-  {key:"title",label:"Título",selector:"#deckBuilderPanel .deckbuilder-collection h3"},
-  {key:"grid",label:"Cartas",selector:"#deckBuilderPanel #deckCollectionGrid"},
-  {key:"pager",label:"Paginador",selector:"#deckBuilderPanel #deckCollectionPager"}
+  {key:"parchment",label:"Pergamino",selector:"#deckBuilderPanel .deckbuilder-parchment-stage",parchment:true},
+  {key:"search",label:"Buscador",selector:"#deckBuilderPanel #deckSearchInput"},
+  {key:"type",label:"Filtro · Tipo",selector:"#deckBuilderPanel #deckTypeFilter"},
+  {key:"rarity",label:"Filtro · Rareza",selector:"#deckBuilderPanel #deckRarityFilter"},
+  {key:"power",label:"Filtro · Poder",selector:"#deckBuilderPanel #deckBattlePowerFilter"},
+  {key:"sort",label:"Filtro · Orden",selector:"#deckBuilderPanel #deckBattlePowerSort"},
+  {key:"materials",label:"Materiales",selector:"#deckBuilderPanel #craftMaterialPanel"},
+  {key:"save",label:"Guardar",selector:"#deckBuilderPanel #saveDeckBtn"},
+  {key:"title",label:"Cartas disponibles",selector:"#deckBuilderPanel .deckbuilder-collection h3"},
+  {key:"grid",label:"Bloque de cartas",selector:"#deckBuilderPanel #deckCollectionGrid"},
+  {key:"prev",label:"Botón Anterior",selector:"#deckBuilderPanel #deckCollectionPrevBtn"},
+  {key:"page",label:"Contador de página",selector:"#deckBuilderPanel #deckCollectionPageInfo"},
+  {key:"next",label:"Botón Siguiente",selector:"#deckBuilderPanel #deckCollectionNextBtn"}
 ];
-const HV_FORGE_LAYOUT_DEFAULTS=Object.fromEntries(HV_FORGE_LAYOUT_TARGETS.map(target=>[target.key,{x:0,y:0}]));
+const makeHvForgeDefault=target=>target.parchment?{x:0,y:0,scale:100,width:100,height:100}:{x:0,y:0,scale:100};
+const HV_FORGE_LAYOUT_DEFAULTS=Object.fromEntries(HV_FORGE_LAYOUT_TARGETS.map(target=>[target.key,makeHvForgeDefault(target)]));
 let hvForgeLayoutState=loadHvForgeLayoutState();
-let hvForgeLayoutActiveTarget="";
+let hvForgeLayoutActiveTarget="parchment";
 let hvForgeLayoutDragging=null;
 let hvForgeTunerShell=null;
 let hvForgeTunerPanel=null;
+function cloneHvForgeDefaults(){return JSON.parse(JSON.stringify(HV_FORGE_LAYOUT_DEFAULTS));}
 function loadHvForgeLayoutState(){
+  const out=cloneHvForgeDefaults();
   try{
-    const raw=JSON.parse(localStorage.getItem(HV_FORGE_LAYOUT_TUNER_STORAGE_KEY)||"null");
-    const out={...HV_FORGE_LAYOUT_DEFAULTS};
+    const raw=JSON.parse(localStorage.getItem(HV_FORGE_LAYOUT_TUNER_STORAGE_KEY)||"null")||{};
     HV_FORGE_LAYOUT_TARGETS.forEach(target=>{
-      const value=raw&&raw[target.key]||{};
-      out[target.key]={x:Number(value.x)||0,y:Number(value.y)||0};
+      const source=raw[target.key]||{};const base=out[target.key];
+      Object.keys(base).forEach(key=>{const n=Number(source[key]);if(Number.isFinite(n))base[key]=n;});
     });
-    return out;
-  }catch(_){return {...HV_FORGE_LAYOUT_DEFAULTS};}
+  }catch(_){ }
+  return out;
 }
-function saveHvForgeLayoutState(state=hvForgeLayoutState){
-  hvForgeLayoutState={...hvForgeLayoutState,...state};
-  localStorage.setItem(HV_FORGE_LAYOUT_TUNER_STORAGE_KEY,JSON.stringify(hvForgeLayoutState));
-  return hvForgeLayoutState;
+function saveHvForgeLayoutState(){localStorage.setItem(HV_FORGE_LAYOUT_TUNER_STORAGE_KEY,JSON.stringify(hvForgeLayoutState));}
+function getForgeLayoutTargetConfig(key){return HV_FORGE_LAYOUT_TARGETS.find(target=>target.key===key)||null;}
+function getForgeLayoutTargetElement(key){const config=getForgeLayoutTargetConfig(key);return config?document.querySelector(config.selector):null;}
+function ensureHvForgeBaseMetrics(element){
+  if(!element)return {width:0,height:0};
+  if(!element.dataset.hvForgeBaseWidth||!element.dataset.hvForgeBaseHeight){
+    const rect=element.getBoundingClientRect();
+    element.dataset.hvForgeBaseWidth=String(Math.max(1,rect.width));
+    element.dataset.hvForgeBaseHeight=String(Math.max(1,rect.height));
+  }
+  return {width:Number(element.dataset.hvForgeBaseWidth)||element.offsetWidth||1,height:Number(element.dataset.hvForgeBaseHeight)||element.offsetHeight||1};
 }
-function getForgeLayoutTargetElement(key){
-  const config=HV_FORGE_LAYOUT_TARGETS.find(target=>target.key===key);
-  return config?document.querySelector(config.selector):null;
+function applyHvForgeTarget(key){
+  const config=getForgeLayoutTargetConfig(key),element=getForgeLayoutTargetElement(key);if(!config||!element)return;
+  const value=hvForgeLayoutState[key]||makeHvForgeDefault(config);
+  element.dataset.forgeTunerLabel=config.label;
+  element.style.setProperty('transform-origin','center center','important');
+  if(config.parchment){
+    const base=ensureHvForgeBaseMetrics(element);
+    const width=Math.max(45,Math.min(150,Number(value.width)||100));
+    const height=Math.max(45,Math.min(160,Number(value.height)||100));
+    element.style.setProperty('width',`${Math.round(base.width*width/100)}px`,'important');
+    element.style.setProperty('min-height',`${Math.round(base.height*height/100)}px`,'important');
+    element.style.setProperty('height','auto','important');
+  }
+  const scale=Math.max(30,Math.min(250,Number(value.scale)||100))/100;
+  element.style.setProperty('transform',`translate(${Number(value.x)||0}px, ${Number(value.y)||0}px) scale(${scale})`,'important');
 }
-function applyHvForgeLayoutState(){
-  HV_FORGE_LAYOUT_TARGETS.forEach(target=>{
-    const element=getForgeLayoutTargetElement(target.key);if(!element)return;
-    const value=hvForgeLayoutState[target.key]||{x:0,y:0};
-    element.style.setProperty('--hv-forge-offset-x',`${value.x}px`);
-    element.style.setProperty('--hv-forge-offset-y',`${value.y}px`);
-    element.style.transform=`translate(${value.x}px, ${value.y}px)`;
-    element.dataset.forgeTunerLabel=target.label;
-  });
-  refreshHvForgeTunerUi();
-}
+function applyHvForgeLayoutState(){HV_FORGE_LAYOUT_TARGETS.forEach(target=>applyHvForgeTarget(target.key));refreshHvForgeTunerUi();}
 function resetHvForgeLayoutTarget(key){
-  hvForgeLayoutState={...hvForgeLayoutState,[key]:{x:0,y:0}};
-  saveHvForgeLayoutState(hvForgeLayoutState);
-  applyHvForgeLayoutState();
-  setHvForgeTunerStatus(`Restaurado: ${HV_FORGE_LAYOUT_TARGETS.find(target=>target.key===key)?.label||key}.`);
+  const config=getForgeLayoutTargetConfig(key);if(!config)return;
+  hvForgeLayoutState[key]=makeHvForgeDefault(config);saveHvForgeLayoutState();applyHvForgeTarget(key);refreshHvForgeTunerUi();setHvForgeTunerStatus(`Restaurado: ${config.label}.`);
 }
 function resetHvForgeLayoutAll(){
-  hvForgeLayoutState={...HV_FORGE_LAYOUT_DEFAULTS};
-  saveHvForgeLayoutState(hvForgeLayoutState);
-  applyHvForgeLayoutState();
-  setHvForgeTunerActiveTarget("");
-  setHvForgeTunerStatus('Todos los elementos de la Forja fueron restaurados.');
-}
-function setHvForgeTunerStatus(message=""){
-  const status=document.getElementById('hvForgeLayoutTunerStatus');
-  if(status)status.textContent=message;
-}
-function setHvForgeTunerActiveTarget(key=""){
-  hvForgeLayoutActiveTarget=key||"";
+  hvForgeLayoutState=cloneHvForgeDefaults();saveHvForgeLayoutState();
   HV_FORGE_LAYOUT_TARGETS.forEach(target=>{
-    const element=getForgeLayoutTargetElement(target.key);
-    if(element)element.classList.toggle('forge-tunable-active',target.key===hvForgeLayoutActiveTarget);
-    const button=document.querySelector(`[data-forge-target-btn="${target.key}"]`);
-    if(button)button.classList.toggle('is-active',target.key===hvForgeLayoutActiveTarget);
+    const element=getForgeLayoutTargetElement(target.key);if(!element)return;
+    element.style.removeProperty('width');element.style.removeProperty('min-height');element.style.removeProperty('height');element.style.removeProperty('transform');
+    delete element.dataset.hvForgeBaseWidth;delete element.dataset.hvForgeBaseHeight;
   });
-  const label=document.getElementById('hvForgeLayoutTunerSelected');
-  if(label){
-    const current=HV_FORGE_LAYOUT_TARGETS.find(target=>target.key===hvForgeLayoutActiveTarget);
-    label.textContent=current?`Arrastra directamente: ${current.label}`:'Selecciona “Mover” y arrastra ese bloque en la Forja';
-  }
+  applyHvForgeLayoutState();setHvForgeTunerStatus('Todos los ajustes fueron restaurados.');
+}
+function setHvForgeTunerStatus(message=""){const status=document.getElementById('hvForgeLayoutTunerStatus');if(status)status.textContent=message;}
+function setHvForgeTunerActiveTarget(key){
+  if(!getForgeLayoutTargetConfig(key))key="parchment";hvForgeLayoutActiveTarget=key;
+  HV_FORGE_LAYOUT_TARGETS.forEach(target=>{const el=getForgeLayoutTargetElement(target.key);if(el)el.classList.toggle('forge-tunable-active',target.key===key);});
+  const picker=document.getElementById('hvForgeTargetPicker');if(picker&&picker.value!==key)picker.value=key;
+  const selected=document.getElementById('hvForgeLayoutTunerSelected');const current=getForgeLayoutTargetConfig(key);if(selected)selected.textContent=`Seleccionado: ${current?.label||key}. Arrástralo directamente; usa la rueda del mouse para cambiar su tamaño.`;
+  document.getElementById('hvForgeParchmentSize')?.classList.toggle('hidden',!current?.parchment);
+  refreshHvForgeTunerUi();
 }
 function refreshHvForgeTunerUi(){
-  HV_FORGE_LAYOUT_TARGETS.forEach(target=>{
-    const output=document.querySelector(`[data-forge-target-out="${target.key}"]`);
-    const value=hvForgeLayoutState[target.key]||{x:0,y:0};
-    if(output)output.textContent=`X ${Math.round(value.x)} · Y ${Math.round(value.y)}`;
-    const button=document.querySelector(`[data-forge-target-btn="${target.key}"]`);
-    if(button)button.classList.toggle('is-active',target.key===hvForgeLayoutActiveTarget);
+  const current=getForgeLayoutTargetConfig(hvForgeLayoutActiveTarget);if(!current)return;
+  const value=hvForgeLayoutState[current.key]||makeHvForgeDefault(current);
+  ['x','y','scale','width','height'].forEach(setting=>{
+    const input=document.querySelector(`[data-forge-setting="${setting}"]`),out=document.querySelector(`[data-forge-out="${setting}"]`);
+    if(input&&setting in value)input.value=String(value[setting]);
+    if(out&&setting in value)out.textContent=setting==='scale'||setting==='width'||setting==='height'?`${Math.round(value[setting])}%`:`${Math.round(value[setting])} px`;
   });
+}
+function updateHvForgeActiveSetting(setting,newValue){
+  const config=getForgeLayoutTargetConfig(hvForgeLayoutActiveTarget);if(!config)return;
+  const value={...(hvForgeLayoutState[config.key]||makeHvForgeDefault(config))};
+  value[setting]=Number(newValue);hvForgeLayoutState[config.key]=value;saveHvForgeLayoutState();applyHvForgeTarget(config.key);refreshHvForgeTunerUi();
 }
 function copyHvForgeLayoutJson(button){
-  const payload=JSON.stringify(hvForgeLayoutState,null,2);
-  const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON',1100);}};
-  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de la Forja:',payload));return;}
-  window.prompt('Copia el JSON de la Forja:',payload);
+  const payload=JSON.stringify(hvForgeLayoutState,null,2);const done=()=>{if(button){const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old||'COPIAR JSON',1000);}};
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>window.prompt('Copia el JSON de la Forja:',payload));return;}window.prompt('Copia el JSON de la Forja:',payload);
 }
 function getHvForgePanelOpen(){const panel=document.getElementById('deckBuilderPanel');return !!(panel&&!panel.classList.contains('hidden'));}
-function applyHvForgeTunerVisibility(){
-  if(!hvForgeTunerShell)return;
-  const open=getHvForgePanelOpen();
-  hvForgeTunerShell.classList.toggle('hidden',!open);
-  if(!open){setHvForgeTunerActiveTarget("");if(hvForgeTunerPanel)hvForgeTunerPanel.classList.add('hidden');}
-}
+function applyHvForgeTunerVisibility(){if(!hvForgeTunerShell)return;const open=getHvForgePanelOpen();hvForgeTunerShell.classList.toggle('hidden',!open);if(!open){HV_FORGE_LAYOUT_TARGETS.forEach(target=>getForgeLayoutTargetElement(target.key)?.classList.remove('forge-tunable-active'));}else{setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget);applyHvForgeLayoutState();}}
 function wireHvForgeTargetDragging(){
-  if(window.__hvForgeTargetDraggingWired)return;
-  window.__hvForgeTargetDraggingWired=true;
+  if(window.__hvForgeTargetDraggingWiredV2)return;window.__hvForgeTargetDraggingWiredV2=true;
   document.addEventListener('pointerdown',event=>{
-    if(!hvForgeLayoutActiveTarget)return;
-    const element=getForgeLayoutTargetElement(hvForgeLayoutActiveTarget);
-    if(!element||!element.contains(event.target))return;
-    if(event.target.closest('#hvForgeLayoutTuner'))return;
-    event.preventDefault();
-    const start=hvForgeLayoutState[hvForgeLayoutActiveTarget]||{x:0,y:0};
-    hvForgeLayoutDragging={key:hvForgeLayoutActiveTarget,startX:event.clientX,startY:event.clientY,baseX:start.x||0,baseY:start.y||0,pointerId:event.pointerId};
-    try{event.target.setPointerCapture?.(event.pointerId);}catch(_){ }
-    document.body.classList.add('battle-clock-dragging');
-  });
+    if(!getHvForgePanelOpen()||event.target.closest('#hvForgeLayoutTuner'))return;
+    const element=getForgeLayoutTargetElement(hvForgeLayoutActiveTarget);if(!element||!element.contains(event.target))return;
+    event.preventDefault();const value=hvForgeLayoutState[hvForgeLayoutActiveTarget]||{x:0,y:0,scale:100};
+    hvForgeLayoutDragging={key:hvForgeLayoutActiveTarget,startX:event.clientX,startY:event.clientY,baseX:Number(value.x)||0,baseY:Number(value.y)||0};
+  },true);
   document.addEventListener('pointermove',event=>{
-    if(!hvForgeLayoutDragging)return;
-    const dx=event.clientX-hvForgeLayoutDragging.startX;
-    const dy=event.clientY-hvForgeLayoutDragging.startY;
-    hvForgeLayoutState={...hvForgeLayoutState,[hvForgeLayoutDragging.key]:{x:Math.round(hvForgeLayoutDragging.baseX+dx),y:Math.round(hvForgeLayoutDragging.baseY+dy)}};
-    applyHvForgeLayoutState();
+    if(!hvForgeLayoutDragging)return;const value={...hvForgeLayoutState[hvForgeLayoutDragging.key]};value.x=Math.round(hvForgeLayoutDragging.baseX+event.clientX-hvForgeLayoutDragging.startX);value.y=Math.round(hvForgeLayoutDragging.baseY+event.clientY-hvForgeLayoutDragging.startY);hvForgeLayoutState[hvForgeLayoutDragging.key]=value;applyHvForgeTarget(hvForgeLayoutDragging.key);refreshHvForgeTunerUi();
   });
-  const finish=()=>{
-    if(!hvForgeLayoutDragging)return;
-    saveHvForgeLayoutState(hvForgeLayoutState);
-    const key=hvForgeLayoutDragging.key;
-    hvForgeLayoutDragging=null;
-    document.body.classList.remove('battle-clock-dragging');
-    const label=HV_FORGE_LAYOUT_TARGETS.find(target=>target.key===key)?.label||key;
-    setHvForgeTunerStatus(`${label} movido. Los cambios quedaron guardados.`);
-  };
-  document.addEventListener('pointerup',finish);
-  document.addEventListener('pointercancel',finish);
+  const finish=()=>{if(!hvForgeLayoutDragging)return;saveHvForgeLayoutState();setHvForgeTunerStatus(`${getForgeLayoutTargetConfig(hvForgeLayoutDragging.key)?.label||'Elemento'} movido.`);hvForgeLayoutDragging=null;};
+  document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);
+  document.addEventListener('wheel',event=>{
+    if(!getHvForgePanelOpen()||event.target.closest('#hvForgeLayoutTuner'))return;
+    const element=getForgeLayoutTargetElement(hvForgeLayoutActiveTarget);if(!element||!element.contains(event.target))return;
+    event.preventDefault();const current=hvForgeLayoutState[hvForgeLayoutActiveTarget]||{};updateHvForgeActiveSetting('scale',Math.max(30,Math.min(250,(Number(current.scale)||100)+(event.deltaY<0?5:-5))));
+  },{passive:false,capture:true});
 }
 function makeHvForgeTunerDraggable(shell,handle){
   let drag=null;
-  const load=()=>{
-    try{return JSON.parse(localStorage.getItem(HV_FORGE_LAYOUT_PANEL_STORAGE_KEY)||"null")||{};}catch(_){return {};}
-  };
-  const save=state=>localStorage.setItem(HV_FORGE_LAYOUT_PANEL_STORAGE_KEY,JSON.stringify(state));
-  const apply=()=>{
-    const saved=load();
-    if(Number.isFinite(saved.left))shell.style.left=`${saved.left}px`;
-    if(Number.isFinite(saved.top))shell.style.top=`${saved.top}px`;
-  };
-  apply();
-  handle.addEventListener('pointerdown',event=>{
-    if(event.target.closest('button'))return;
-    drag={startX:event.clientX,startY:event.clientY,left:shell.offsetLeft,top:shell.offsetTop};
-    event.preventDefault();
-  });
-  document.addEventListener('pointermove',event=>{
-    if(!drag)return;
-    const left=Math.max(4,drag.left+(event.clientX-drag.startX));
-    const top=Math.max(4,drag.top+(event.clientY-drag.startY));
-    shell.style.left=`${left}px`;shell.style.top=`${top}px`;shell.style.right='auto';shell.style.bottom='auto';
-  });
-  const stop=()=>{if(!drag)return;save({left:shell.offsetLeft,top:shell.offsetTop});drag=null;};
-  document.addEventListener('pointerup',stop);
-  document.addEventListener('pointercancel',stop);
+  const load=()=>{try{return JSON.parse(localStorage.getItem(HV_FORGE_LAYOUT_PANEL_STORAGE_KEY)||"null")||{};}catch(_){return {};}};
+  const saved=load();if(Number.isFinite(saved.left))shell.style.left=`${saved.left}px`;if(Number.isFinite(saved.top))shell.style.top=`${saved.top}px`;
+  handle.addEventListener('pointerdown',event=>{drag={sx:event.clientX,sy:event.clientY,left:shell.offsetLeft,top:shell.offsetTop};event.preventDefault();handle.setPointerCapture?.(event.pointerId);});
+  handle.addEventListener('pointermove',event=>{if(!drag)return;const maxLeft=Math.max(4,innerWidth-shell.offsetWidth-4),maxTop=Math.max(4,innerHeight-40);const left=Math.min(maxLeft,Math.max(4,drag.left+event.clientX-drag.sx));const top=Math.min(maxTop,Math.max(4,drag.top+event.clientY-drag.sy));shell.style.left=`${left}px`;shell.style.top=`${top}px`;shell.style.right='auto';shell.style.bottom='auto';});
+  const stop=()=>{if(!drag)return;localStorage.setItem(HV_FORGE_LAYOUT_PANEL_STORAGE_KEY,JSON.stringify({left:shell.offsetLeft,top:shell.offsetTop}));drag=null;};handle.addEventListener('pointerup',stop);handle.addEventListener('pointercancel',stop);
 }
 function ensureHvForgeLayoutTuner(){
   if(document.getElementById('hvForgeLayoutTuner'))return;
-  const shell=document.createElement('div');
-  shell.id='hvForgeLayoutTuner';shell.className='forge-layout-tuner hidden';
-  shell.innerHTML=`<button id="hvForgeLayoutTunerToggle" class="forge-layout-tuner-toggle" type="button">AJUSTAR FORJA</button>
-    <section id="hvForgeLayoutTunerPanel" class="forge-layout-tuner-panel" aria-label="Control de posición de la Forja">
-      <header id="hvForgeLayoutTunerHead" class="forge-layout-tuner-head">
-        <div><b>CONTROL DE FORJA</b><small>Mueve este panel arrastrando el encabezado. Luego pulsa “Mover” y arrastra el elemento directamente.</small></div>
-        <button id="hvForgeLayoutTunerClose" class="forge-layout-tuner-close" type="button" aria-label="Cerrar">×</button>
-      </header>
-      <div class="forge-layout-tuner-body">
-        <div id="hvForgeLayoutTunerSelected" class="forge-layout-tuner-status">Selecciona “Mover” y arrastra ese bloque en la Forja</div>
-        ${HV_FORGE_LAYOUT_TARGETS.map(target=>`<div class="forge-layout-tuner-row"><div><strong>${target.label}</strong><span data-forge-target-out="${target.key}">X 0 · Y 0</span></div><button class="forge-layout-tuner-chip" data-forge-target-btn="${target.key}" type="button">Mover</button><button class="forge-layout-tuner-chip secondary" data-forge-reset-btn="${target.key}" type="button">Reset</button></div>`).join('')}
-      </div>
-      <div class="forge-layout-tuner-actions"><button id="hvForgeLayoutTunerResetAll" type="button">Restaurar todo</button><button id="hvForgeLayoutTunerCopyJson" type="button">Copiar JSON</button></div>
-      <p id="hvForgeLayoutTunerStatus" class="forge-layout-tuner-status" aria-live="polite"></p>
-    </section>`;
-  document.body.appendChild(shell);
-  hvForgeTunerShell=shell;
-  hvForgeTunerPanel=document.getElementById('hvForgeLayoutTunerPanel');
-  const toggle=document.getElementById('hvForgeLayoutTunerToggle');
-  const close=document.getElementById('hvForgeLayoutTunerClose');
-  toggle?.addEventListener('click',()=>hvForgeTunerPanel?.classList.toggle('hidden'));
-  close?.addEventListener('click',()=>hvForgeTunerPanel?.classList.add('hidden'));
-  shell.querySelectorAll('[data-forge-target-btn]').forEach(button=>button.addEventListener('click',()=>{
-    const key=button.dataset.forgeTargetBtn;
-    setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget===key?"":key);
-    if(hvForgeLayoutActiveTarget)hvForgeTunerPanel?.classList.remove('hidden');
-  }));
-  shell.querySelectorAll('[data-forge-reset-btn]').forEach(button=>button.addEventListener('click',()=>resetHvForgeLayoutTarget(button.dataset.forgeResetBtn)));
-  document.getElementById('hvForgeLayoutTunerResetAll')?.addEventListener('click',resetHvForgeLayoutAll);
-  document.getElementById('hvForgeLayoutTunerCopyJson')?.addEventListener('click',event=>copyHvForgeLayoutJson(event.currentTarget));
-  makeHvForgeTunerDraggable(shell,document.getElementById('hvForgeLayoutTunerHead')||toggle||shell);
-  wireHvForgeTargetDragging();
-  applyHvForgeLayoutState();
-  refreshHvForgeTunerUi();
-  applyHvForgeTunerVisibility();
-  const panel=document.getElementById('deckBuilderPanel');
-  if(panel)new MutationObserver(()=>{applyHvForgeTunerVisibility();applyHvForgeLayoutState();}).observe(panel,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
+  const shell=document.createElement('div');shell.id='hvForgeLayoutTuner';shell.className='forge-layout-tuner hidden';
+  shell.innerHTML=`<div class="forge-layout-tuner-topbar"><span id="hvForgeLayoutTunerDrag" class="forge-layout-tuner-drag">⠿ MOVER</span><button id="hvForgeLayoutTunerToggle" class="forge-layout-tuner-toggle" type="button">AJUSTAR FORJA</button></div>
+  <section id="hvForgeLayoutTunerPanel" class="forge-layout-tuner-panel hidden" aria-label="Calibrador de la Forja">
+    <header class="forge-layout-tuner-head"><div><b>CONTROL DE FORJA</b><small>Selecciona cada pieza por separado. Arrastra para mover; rueda del mouse o Tamaño para escalar.</small></div><button id="hvForgeLayoutTunerClose" class="forge-layout-tuner-close" type="button">×</button></header>
+    <label class="forge-layout-target-picker">Elemento<select id="hvForgeTargetPicker">${HV_FORGE_LAYOUT_TARGETS.map(target=>`<option value="${target.key}">${target.label}</option>`).join('')}</select></label>
+    <div id="hvForgeLayoutTunerSelected" class="forge-layout-tuner-selected"></div>
+    <div class="forge-layout-tuner-controls">
+      <label class="forge-layout-tuner-control"><span>Horizontal <output data-forge-out="x">0 px</output></span><input data-forge-setting="x" type="range" min="-900" max="900" step="1" value="0"></label>
+      <label class="forge-layout-tuner-control"><span>Vertical <output data-forge-out="y">0 px</output></span><input data-forge-setting="y" type="range" min="-700" max="700" step="1" value="0"></label>
+      <label class="forge-layout-tuner-control"><span>Tamaño <output data-forge-out="scale">100%</output></span><input data-forge-setting="scale" type="range" min="30" max="250" step="1" value="100"></label>
+    </div>
+    <div id="hvForgeParchmentSize" class="forge-layout-parchment-size"><label class="forge-layout-tuner-control"><span>Ancho pergamino <output data-forge-out="width">100%</output></span><input data-forge-setting="width" type="range" min="55" max="145" step="1" value="100"></label><label class="forge-layout-tuner-control"><span>Alto pergamino <output data-forge-out="height">100%</output></span><input data-forge-setting="height" type="range" min="55" max="160" step="1" value="100"></label></div>
+    <div class="forge-layout-tuner-actions"><button id="hvForgeResetSelected" type="button">Restaurar elemento</button><button id="hvForgeResetAll" type="button">Restaurar todo</button><button id="hvForgeCopyJson" class="primary" type="button">Copiar JSON</button><button id="hvForgeDone" class="primary" type="button">Listo</button></div><p id="hvForgeLayoutTunerStatus" class="forge-layout-tuner-status"></p>
+  </section>`;
+  document.body.appendChild(shell);hvForgeTunerShell=shell;hvForgeTunerPanel=document.getElementById('hvForgeLayoutTunerPanel');
+  document.getElementById('hvForgeLayoutTunerToggle')?.addEventListener('click',()=>{const opening=hvForgeTunerPanel?.classList.contains('hidden');hvForgeTunerPanel?.classList.toggle('hidden');if(opening)setHvForgeTunerActiveTarget(hvForgeLayoutActiveTarget);});
+  document.getElementById('hvForgeLayoutTunerClose')?.addEventListener('click',()=>hvForgeTunerPanel?.classList.add('hidden'));
+  document.getElementById('hvForgeDone')?.addEventListener('click',()=>{hvForgeTunerPanel?.classList.add('hidden');HV_FORGE_LAYOUT_TARGETS.forEach(target=>getForgeLayoutTargetElement(target.key)?.classList.remove('forge-tunable-active'));});
+  document.getElementById('hvForgeTargetPicker')?.addEventListener('change',event=>setHvForgeTunerActiveTarget(event.currentTarget.value));
+  shell.querySelectorAll('[data-forge-setting]').forEach(input=>input.addEventListener('input',()=>updateHvForgeActiveSetting(input.dataset.forgeSetting,input.value)));
+  document.getElementById('hvForgeResetSelected')?.addEventListener('click',()=>resetHvForgeLayoutTarget(hvForgeLayoutActiveTarget));
+  document.getElementById('hvForgeResetAll')?.addEventListener('click',resetHvForgeLayoutAll);
+  document.getElementById('hvForgeCopyJson')?.addEventListener('click',event=>copyHvForgeLayoutJson(event.currentTarget));
+  makeHvForgeTunerDraggable(shell,document.getElementById('hvForgeLayoutTunerDrag'));
+  wireHvForgeTargetDragging();setHvForgeTunerActiveTarget('parchment');applyHvForgeLayoutState();applyHvForgeTunerVisibility();
+  const panel=document.getElementById('deckBuilderPanel');if(panel)new MutationObserver(()=>{applyHvForgeTunerVisibility();applyHvForgeLayoutState();}).observe(panel,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
 }
-ensureHvForgeLayoutTuner();
-applyHvForgeLayoutState();
+ensureHvForgeLayoutTuner();applyHvForgeLayoutState();
