@@ -1053,15 +1053,13 @@ function renderDailyRewardModal(){
   if(grid){
     grid.innerHTML=state.rewards.map((reward,i)=>{
       const day=i+1,isClaimed=!!state.claimedAt[i],isCurrent=i===claimed&&claimed<state.monthDays,isFinal=i===state.monthDays-1;
-      const cls=["daily-reward-day",isClaimed?"is-claimed":"",isCurrent?"is-current":"",isFinal?"is-final":"",(!isClaimed&&!isCurrent)?"is-locked":""].filter(Boolean).join(" ");
-      const badge=isClaimed?"✓":(isCurrent?"ACTUAL":(isFinal?"FINAL":""));
-      return `<article class="${cls}" data-day="${day}"><span class="daily-reward-day-number">DÍA ${day}</span><img src="${getDailyRewardIcon(reward)}" alt=""><strong>${getDailyRewardLabel(reward)}</strong>${badge?`<em>${badge}</em>`:""}</article>`;
+      const canClaim=isCurrent&&availability.available&&!dailyRewardClaimLock;
+      const cls=["daily-reward-day",isClaimed?"is-claimed":"",isCurrent?"is-current":"",canClaim?"is-claimable":"",isFinal?"is-final":"",(!isClaimed&&!isCurrent)?"is-locked":""].filter(Boolean).join(" ");
+      const badge=isClaimed?"✓":(isCurrent?(canClaim?"RECLAMAR":"ACTUAL"):(isFinal?"FINAL":""));
+      const content=`<span class="daily-reward-day-number">DÍA ${day}</span><img src="${getDailyRewardIcon(reward)}" alt=""><strong>${getDailyRewardLabel(reward)}</strong>${badge?`<em>${badge}</em>`:""}`;
+      if(canClaim)return `<button type="button" class="${cls}" data-day="${day}" data-daily-claim="true" aria-label="Reclamar día ${day}: ${getDailyRewardLabel(reward)}">${content}</button>`;
+      return `<article class="${cls}" data-day="${day}">${content}</article>`;
     }).join("");
-  }
-  const claim=$("dailyRewardClaimBtn");
-  if(claim){
-    claim.disabled=!availability.available||dailyRewardClaimLock;
-    claim.textContent=claimed>=state.monthDays?"MES COMPLETADO":(availability.available?"RECLAMAR":(availability.reason==="cooldown"?`DISPONIBLE EN ${formatDailyRewardCountdown(availability.remainingMs)}`:"BLOQUEADO"));
   }
   updateDailyRewardButton();
 }
@@ -1120,7 +1118,11 @@ function closeDailyRewardModal(){
 
 on("dailyBtn","click",openDailyRewardModal);
 on("dailyRewardCloseBtn","click",closeDailyRewardModal);
-on("dailyRewardClaimBtn","click",claimDailyReward);
+const dailyRewardGridEl=$("dailyRewardGrid");
+if(dailyRewardGridEl)dailyRewardGridEl.addEventListener("click",event=>{
+  const claimTarget=event.target.closest?.('[data-daily-claim="true"]');
+  if(claimTarget)claimDailyReward();
+});
 const dailyRewardPanelEl=$("dailyRewardPanel");
 if(dailyRewardPanelEl)dailyRewardPanelEl.addEventListener("click",event=>{if(event.target===dailyRewardPanelEl)closeDailyRewardModal();});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!$("dailyRewardPanel")?.classList.contains("hidden"))closeDailyRewardModal();});
