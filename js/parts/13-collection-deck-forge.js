@@ -869,6 +869,78 @@ function renderDeckPrincipalSelector(){
   }).join("");
   slots.querySelectorAll("[data-clear-principal-slot]").forEach(btn=>btn.addEventListener("click",()=>clearCurrentDeckPrincipal(Number(btn.dataset.clearPrincipalSlot))));
 }
+function normalizeDeckSearchValue(value){
+  return String(value??"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/[_-]+/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+const DECK_SEARCH_ALIAS_GROUPS=[
+  ["hacha","axe","hachero","hachera"],
+  ["espada","sword","espadachin","espadachina"],
+  ["lanza","spear","lance","lancer","lancero","pica"],
+  ["arco","bow","archer","arquero","arquera","flecha","tirador"],
+  ["caballeria","cavalry","jinete","montado","montada"],
+  ["mago","mage","hechicero","hechicera","caster","arcano","arcana"],
+  ["bestia","beast","animal"],
+  ["asesino","asesina","assassin"],
+  ["invocacion","invocaciones","unidad","unidades","unit"],
+  ["magia","magias","hechizo","hechizos","spell"],
+  ["trampa","trampas","trap"],
+  ["equipo","equipment"],
+  ["basica","basic"],
+  ["epica","epic"],
+  ["gloriosa","glorious"],
+  ["mitica","mythic"],
+  ["legendaria","legendary"],
+  ["semidios","demigod"]
+];
+function getDeckSearchSemanticText(card,battlePower=null,battleTier=null){
+  if(!card)return "";
+  const weapon=typeof getWeaponClassForCard==="function"?String(getWeaponClassForCard(card)||""):"";
+  const weaponLabel=typeof getWeaponClassLabel==="function"?String(getWeaponClassLabel(card)||""):"";
+  const tags=[
+    card.name,card.key,card.type,card.rarity,card.text,card.effectText,card.ability,
+    card.element,card.elementType,card.subtype,card.role,card.unitClass,card.quality,
+    weapon,weaponLabel
+  ];
+  if(typeof isAssassinUnit==="function"&&isAssassinUnit(card))tags.push("asesino asesina assassin ultimate blow");
+  if(weapon==="axe")tags.push("hacha axe");
+  if(weapon==="sword")tags.push("espada sword");
+  if(weapon==="spear")tags.push("lanza spear lance lancero pica");
+  if(weapon==="bow")tags.push("arco bow archer arquero arquera flecha tirador");
+  if(weapon==="cavalry")tags.push("caballeria cavalry jinete montado");
+  if(weapon==="mage")tags.push("mago mage hechicero hechicera caster arcano");
+  if(weapon==="beast"||card.beast)tags.push("bestia beast animal");
+  if(card.caster||card.hechicero||card.hechicera)tags.push("caster hechicero hechicera mago magia");
+  if(card.healer)tags.push("sanador sanadora curacion curar healer");
+  if(card.nigromante)tags.push("nigromante necromancer");
+  if(card.stealth)tags.push("oculto sigilo stealth");
+  if(card.ninjutsu)tags.push("ninjutsu ninja shinobi");
+  if(card.type==="unit")tags.push("unidad invocacion unit");
+  if(card.type==="spell")tags.push("magia hechizo spell");
+  if(card.type==="trap")tags.push("trampa trap");
+  if(card.type==="equipment")tags.push("equipo equipment");
+  if(Number.isFinite(battlePower))tags.push(`pb ${battlePower} poder de batalla ${battleTier?.label||""}`);
+  else tags.push("sin poder de batalla");
+  if(Array.isArray(card.tags))tags.push(card.tags.join(" "));
+  if(Array.isArray(card.keywords))tags.push(card.keywords.join(" "));
+  return normalizeDeckSearchValue(tags.filter(Boolean).join(" "));
+}
+function deckSearchMatchesCard(card,rawSearch,battlePower=null,battleTier=null){
+  const query=normalizeDeckSearchValue(rawSearch);
+  if(!query)return true;
+  const hay=getDeckSearchSemanticText(card,battlePower,battleTier);
+  const tokens=query.split(" ").filter(Boolean);
+  return tokens.every(token=>{
+    if(hay.includes(token))return true;
+    const group=DECK_SEARCH_ALIAS_GROUPS.find(items=>items.includes(token));
+    return !!group&&group.some(alias=>hay.includes(alias));
+  });
+}
 function renderDeckBuilder(){
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
   if(!collectionGrid||!deckList)return;
@@ -894,7 +966,7 @@ function renderDeckBuilder(){
   const cards=allCards.filter(card=>{
     const battlePower=getUnitBattlePower(card);
     const battleTier=getBattlePowerTier(battlePower);
-    const hay=`${card.name||""} ${card.text||""} ${Number.isFinite(battlePower)?`pb ${battlePower} poder de batalla ${battleTier?.label||""}`:"sin poder de batalla"}`.toLowerCase();
+    const searchOk=deckSearchMatchesCard(card,search,battlePower,battleTier);
     const typeOk=typeFilter==="all"||card.type===typeFilter;
     const rarity=cardRarity(card);
     const rarityOk=rarityFilter==="all"||
@@ -906,7 +978,7 @@ function renderDeckBuilder(){
       (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
     const bounds=getBattlePowerFilterBounds(powerFilter);
     const powerOk=powerFilter==="all"||(powerFilter==="unrated"&&!Number.isFinite(battlePower))||(bounds&&Number.isFinite(battlePower)&&battlePower>=bounds.min&&battlePower<=bounds.max);
-    return (!search||hay.includes(search))&&typeOk&&rarityOk&&powerOk;
+    return searchOk&&typeOk&&rarityOk&&powerOk;
   }).sort((a,b)=>{
     const pa=getUnitBattlePower(a),pb=getUnitBattlePower(b);
     if(powerSort==="power_desc")return (Number.isFinite(pb)?pb:-1)-(Number.isFinite(pa)?pa:-1)||String(a.name||"").localeCompare(String(b.name||""));

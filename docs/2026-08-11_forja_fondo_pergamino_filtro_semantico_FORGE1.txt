@@ -1,0 +1,39 @@
+HallValla build 7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE1
+Fecha: 2026-08-11
+Base: 7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2 (recompensa diaria con reclamo directo sobre el premio)
+
+CAMBIOS
+- La Forja/Colección deja de sentirse como un modal central y usa un escenario HallValla a pantalla completa.
+- Nuevo fondo WEBP: assets/ui/deck_forge/forge_background.webp
+- Nuevo pergamino WEBP con bordes envejecidos/quemados: assets/ui/deck_forge/forge_parchment.webp
+- El pergamino contiene los filtros, la galería de cartas y el paginador.
+- La galería muestra 7 cartas por página para presentar una fila horizontal sobre el pergamino.
+- Anterior/Siguiente se muestran como pills al estilo HallValla.
+- El filtro de texto pasa a ser semántico y normaliza mayúsculas, tildes, guiones y underscores.
+- Busca por nombre, key/ID, texto, rareza, tipo, PB, clase de arma y etiquetas funcionales.
+- "hacha" reconoce cartas cuya clase de arma real es axe mediante getWeaponClassForCard().
+- "asesino" reconoce todas las unidades detectadas por isAssassinUnit().
+- Se añadieron equivalencias controladas: espada/sword, lanza/spear, arco/bow, caballería/cavalry, mago/mage, etc.
+- Se evitaron aliases demasiado amplios: buscar "samurai" o "shinobi" no convierte esas palabras en una clase genérica.
+
+PESO DE LOS NUEVOS ASSETS
+- forge_background.webp: 95,980 bytes
+- forge_parchment.webp: 258,010 bytes
+- Total aproximado: 353,990 bytes (~346 KiB)
+
+VALIDACIONES
+- 19 módulos JS + bootstrap-loader: sintaxis válida mediante node --check.
+- 418 referencias estáticas a assets detectadas; 0 faltantes.
+- 356 IDs HTML; 0 duplicados.
+- styles.css parseado con tinycss2; 0 errores top-level.
+- 0 PNG/JPG/JPEG/GIF dentro de assets.
+- El pergamino WEBP conserva canal alpha.
+- Prueba aislada del buscador:
+  * hacha -> reconoce unidad de arma axe.
+  * asesino -> reconoce unidad incluida en isAssassinUnit.
+  * samurai -> no contamina el resultado con todos los usuarios de espada.
+  * shinobi -> sigue encontrando la carta por nombre/ID.
+  * búsqueda por key/ID funciona incluso con underscores.
+
+NOTA DE PRUEBAS
+- No se declara una prueba visual completa de navegador: Chromium headless del entorno quedó bloqueado/colgado al intentar generar la captura local. La validación realizada es estructural, sintáctica y de referencias.
