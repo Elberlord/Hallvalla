@@ -18898,7 +18898,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #deckBuilderPanel.collection-browser-mode .deckbuilder-layout{padding-top:8px!important;}
 
 /* ==========================================================
-   FORGE TUNER V2 · calibrador movible + tamaño independiente
+   FORGE TUNER V3 · calibrador movible + ancho/altura
    ========================================================== */
 .forge-layout-tuner{position:fixed;left:16px;top:82px;z-index:3600;width:min(350px,calc(100vw - 18px));max-height:calc(100vh - 12px);padding:8px;border:1px solid rgba(222,177,84,.45);border-radius:15px;background:linear-gradient(180deg,rgba(15,11,7,.975),rgba(8,6,4,.965));box-shadow:0 18px 44px rgba(0,0,0,.52),inset 0 1px rgba(255,232,167,.08);backdrop-filter:blur(8px);color:#f2ddb0;user-select:none;display:flex;flex-direction:column;overflow:hidden}
 .forge-layout-tuner.hidden{display:none!important}
@@ -18908,7 +18908,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .forge-layout-tuner-panel.hidden{display:none!important}
 .forge-layout-tuner-panel{margin-top:8px;min-height:0;flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden;padding-right:0}
 .forge-layout-tuner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;padding:4px 2px 9px;border-bottom:1px solid rgba(221,177,85,.22);flex:0 0 auto}
-.forge-layout-tuner-head b{display:block;color:#ffe09b;font:900 15px/1.06 Georgia,serif}.forge-layout-tuner-head small{display:block;margin-top:4px;color:#cdb98f;font:600 10px/1.28 system-ui,sans-serif}
+.forge-layout-tuner-head small{display:block;margin-top:0;color:#d7c397;font:600 10px/1.32 system-ui,sans-serif}.forge-layout-tuner-headnote{padding-right:6px}
 .forge-layout-tuner-close{width:30px;height:30px;flex:0 0 30px;border-radius:9px;border:1px solid rgba(221,177,85,.44);background:rgba(36,25,13,.82);color:#ffe8b2;font-size:20px;cursor:pointer}
 .forge-layout-tuner-scroll{min-height:0;flex:1 1 auto;overflow:auto;padding-right:3px}
 .forge-layout-target-picker{display:block;margin:9px 0 7px;color:#f6d78d;font:800 11px/1.2 Georgia,serif}
@@ -18917,9 +18917,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .forge-layout-tuner-controls{display:grid;gap:7px}
 .forge-layout-tuner-control{display:block;padding:7px 8px;border:1px solid rgba(221,177,85,.15);border-radius:10px;background:rgba(255,255,255,.025)}
 .forge-layout-tuner-control>span{display:flex;justify-content:space-between;gap:10px;margin-bottom:5px;color:#f2d79b;font:800 10px/1 system-ui,sans-serif}.forge-layout-tuner-control output{color:#75e8ff;font-variant-numeric:tabular-nums}.forge-layout-tuner-control input{width:100%;accent-color:#d6a541;cursor:pointer}
-.forge-layout-parchment-size.hidden{display:none!important}.forge-layout-parchment-size{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
-.forge-layout-scale-nudges{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
-.forge-layout-scale-nudges button{min-height:31px;border-radius:999px;border:1px solid rgba(214,167,69,.34);background:linear-gradient(180deg,rgba(76,50,17,.84),rgba(37,23,7,.92));color:#ffe8af;font:800 10px/1 Georgia,serif;cursor:pointer}
 .forge-layout-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;padding:9px 0 2px;border-top:1px solid rgba(221,177,85,.18);flex:0 0 auto;background:linear-gradient(180deg,rgba(10,7,4,.94),rgba(10,7,4,.99))}
 .forge-layout-tuner-actions button{min-height:33px;border-radius:999px;border:1px solid rgba(214,167,69,.34);background:linear-gradient(180deg,rgba(90,59,19,.86),rgba(43,26,7,.92));color:#ffe8af;font:800 10px/1 Georgia,serif;cursor:pointer}.forge-layout-tuner-actions button.primary{border-color:rgba(236,196,107,.62);background:linear-gradient(180deg,#8c611d,#49300d)}
 .forge-layout-tuner-status{min-height:14px;margin:5px 2px 0;color:#8deaff;font:600 9px/1.25 system-ui,sans-serif;flex:0 0 auto}
