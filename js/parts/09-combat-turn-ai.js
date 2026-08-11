@@ -713,7 +713,7 @@ async function attackUnit(a,d){
   units=counterBloodVictory.units;
   if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
   bloodVictoryCheckpoint=[...units];
-  const assassinIgnoreText=shouldIgnoreGuardForAttack(a,d,units)&&hit.hit?(isAssassinFinalBlowEligible(a,d)?" Golpe Final: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
+  const assassinIgnoreText=shouldIgnoreGuardForAttack(a,d,units)&&hit.hit?(isAssassinFinalBlowEligible(a,d)?" Ultimate Blow: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
@@ -1692,7 +1692,7 @@ async function adventureEnemyTurn(){
     units=counterBloodVictory.units;
     if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
     bloodVictoryCheckpoint=[...units];
-    const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker,target,units)&&hit.hit?(isAssassinFinalBlowEligible(attacker,target)?" Golpe Final: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
+    const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker,target,units)&&hit.hit?(isAssassinFinalBlowEligible(attacker,target)?" Ultimate Blow: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
     const fireAreaImpactSound=hit.hit&&String(attacker.dragonElement||"").toLowerCase()==="fire"&&Number(attacker.dragonCharge||0)>=2?"fire_area_damage":"";
