@@ -1,4 +1,4 @@
-/* HallValla FORGE1CTRL1 · calibrador directo aislado de la Forja */
+/* HallValla FORGE1CTRL2FIX1 · calibrador directo aislado de la Forja */
 (()=>{
   'use strict';
 
@@ -117,8 +117,13 @@
       el.style.setProperty('min-height','0px','important');
       el.style.setProperty('max-height','none','important');
     }
-    el.style.setProperty('position','relative','important');
-    el.style.setProperty('z-index',key===activeKey&&panelOpen?'80':'20','important');
+    if(key==='parchment'){
+      el.style.setProperty('position','absolute','important');
+      el.style.setProperty('z-index','0','important');
+    }else{
+      el.style.setProperty('position','relative','important');
+      el.style.setProperty('z-index',key===activeKey&&panelOpen?'80':'20','important');
+    }
   }
 
   function applyAll(){
@@ -230,14 +235,16 @@
     shell.innerHTML=`
       <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">AJUSTAR FORJA</button></div>
       <section id="hvForgeTunerBody" class="hv-forge-tuner-body hidden">
-        <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
-        <div id="hvForgeSelectedName" class="hv-forge-selected-name">Bloque de cartas</div>
-        ${['x','y','scale','width','height'].map(field=>{
-          const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
-          const min=(field==='x'?-900:field==='y'?-700:20),max=(field==='x'?900:field==='y'?700:250),step=field==='x'||field==='y'?1:1;
-          const minus=field==='x'||field==='y'?-5:-5,plus=field==='x'||field==='y'?5:5;
-          return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:${minus}">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="${step}"><button type="button" data-nudge="${field}:${plus}">+</button></div></div>`;
-        }).join('')}
+        <div class="hv-forge-tuner-scroll">
+          <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
+          <div id="hvForgeSelectedName" class="hv-forge-selected-name">Bloque de cartas</div>
+          ${['x','y','scale','width','height'].map(field=>{
+            const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
+            const min=(field==='x'?-900:field==='y'?-700:20),max=(field==='x'?900:field==='y'?700:250),step=field==='x'||field==='y'?1:1;
+            const minus=-5,plus=5;
+            return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:${minus}">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="${step}"><button type="button" data-nudge="${field}:${plus}">+</button></div></div>`;
+          }).join('')}
+        </div>
         <div class="hv-forge-tuner-actions"><button id="hvForgeResetSelected">Restaurar</button><button id="hvForgeResetAll">Restaurar todo</button><button id="hvForgeCopyJson">Copiar JSON</button><button id="hvForgeTunerDone">Listo</button></div>
       </section>`;
     document.body.appendChild(shell);

@@ -18907,7 +18907,12 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .hv-forge-tuner-bar button{height:34px;border-radius:999px;border:1px solid rgba(223,177,78,.48);background:linear-gradient(180deg,#7f571d,#422a0a);color:#ffeab4;font:800 10px Georgia,serif;cursor:pointer}
 #hvForgeTunerMove{width:40px;flex:0 0 40px;cursor:move;font-size:17px}
 #hvForgeTunerToggle{flex:1}
-.hv-forge-tuner-body{display:grid;gap:7px;margin-top:8px;max-height:calc(100vh - 145px);overflow:auto;padding-right:2px}
+.hv-forge-tuner-body{display:flex;flex-direction:column;gap:7px;margin-top:8px;height:min(620px,calc(100vh - 135px));max-height:calc(100vh - 135px);overflow:hidden;min-height:0}
+.hv-forge-tuner-scroll{flex:1 1 auto;min-height:0;overflow-y:scroll;overflow-x:hidden;padding-right:7px;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:#c89231 #171009}
+.hv-forge-tuner-scroll::-webkit-scrollbar{width:12px}
+.hv-forge-tuner-scroll::-webkit-scrollbar-track{background:#171009;border-radius:999px}
+.hv-forge-tuner-scroll::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#d8aa49,#765019);border:2px solid #171009;border-radius:999px}
+.hv-forge-tuner-scroll::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#efc665,#916625)}
 .hv-forge-tuner-body.hidden{display:none!important}
 .hv-forge-tuner-top{display:grid;grid-template-columns:1fr 32px;gap:6px}
 .hv-forge-tuner-top select{height:34px;border-radius:10px;border:1px solid rgba(218,170,72,.35);background:#171008;color:#ffe9b4;padding:0 9px;font:700 11px Georgia,serif}
@@ -18918,10 +18923,15 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .hv-forge-control-line{display:grid;grid-template-columns:30px 1fr 30px;gap:6px;align-items:center}
 .hv-forge-control-line input{width:100%;accent-color:#d8a83f}
 .hv-forge-control-line button{height:28px;border-radius:8px;border:1px solid rgba(218,170,72,.32);background:#3a260d;color:#ffe9b1;font-size:17px;font-weight:900;cursor:pointer}
-.hv-forge-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;position:sticky;bottom:0;padding-top:6px;background:linear-gradient(180deg,transparent,#0b0805 28%)}
+.hv-forge-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:0 0 auto;padding-top:7px;border-top:1px solid rgba(218,170,72,.18);background:#0b0805}
 .hv-forge-tuner-actions button{min-height:32px;border-radius:999px;border:1px solid rgba(218,170,72,.35);background:linear-gradient(180deg,#704b17,#382309);color:#ffe9b1;font:800 10px Georgia,serif;cursor:pointer}
 .hv-forge-tuner-group-candidate{cursor:crosshair!important}
 .hv-forge-tuner-selected{outline:2px dashed rgba(255,224,127,.95)!important;outline-offset:4px!important;box-shadow:0 0 0 1px rgba(255,224,127,.25),0 0 22px rgba(196,137,35,.22)!important}
 #hvForgeParchmentLayer.hv-forge-tuner-group-candidate{pointer-events:auto!important;cursor:crosshair!important}
 #hvForgeParchmentLayer.hv-forge-tuner-selected{pointer-events:auto!important}
-@media(max-width:720px){.hv-forge-direct-tuner{left:6px;top:66px;width:300px}.hv-forge-tuner-body{max-height:calc(100vh - 128px)}}
+@media(max-width:720px){.hv-forge-direct-tuner{left:6px;top:66px;width:300px}.hv-forge-tuner-body{height:calc(100vh - 118px);max-height:calc(100vh - 118px)}}
+
+/* FORGE1CTRL2FIX1 · pergamino siempre detrás del contenido. */
+#hvForgeParchmentLayer,#hvForgeParchmentLayer.hv-forge-tuner-group-candidate,#hvForgeParchmentLayer.hv-forge-tuner-selected{z-index:0!important}
+#deckBuilderPanel .deckbuilder-parchment-stage > *:not(.hv-forge-parchment-layer){position:relative!important;z-index:10!important}
+#deckBuilderPanel .deckbuilder-parchment-stage .hv-forge-tuner-selected:not(#hvForgeParchmentLayer){z-index:80!important}
