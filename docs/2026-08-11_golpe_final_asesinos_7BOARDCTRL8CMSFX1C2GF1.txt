@@ -1,0 +1,15 @@
+HallValla 7BOARDCTRL8CMSFX1C2GF1 — Golpe Final general de Asesinos
+
+Regla implementada:
+- Aplica a cualquier unidad reconocida por isAssassinUnit().
+- Objetivo: unidad enemiga NO líder con 1 o 2 de Vida (Vida > 0 y < 3).
+- Distancia máxima para declarar Golpe Final: 3 casillas.
+- Golpe Final ignora Guardia al resolver el daño.
+- Precisión del atacante y Evasión del defensor se resuelven con el sistema normal.
+- No ignora Sigilo, restricciones de objetivo ni la regla Antiaérea.
+- El daño sigue siendo el daño normal del ataque; no se añadió muerte automática.
+- Niebla de sangre sigue ignorando Guardia para los ataques de Asesino según su regla previa.
+- IA actualizada para reconocer y utilizar el alcance especial de Golpe Final.
+- Preview/selección de tablero actualizado para mostrar como atacables los objetivos elegibles fuera del RG normal.
+
+También se actualizaron los textos visibles de Asesina del desierto, Geisha Encubierta, Hattori Shinobi y Saboteador de Iga para documentar la regla de clase.

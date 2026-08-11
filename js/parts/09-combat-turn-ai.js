@@ -352,7 +352,8 @@ async function attackUnit(a,d){
   if(a.noAttackTurnKey&&a.noAttackTurnKey===publicState.turnKey)return setHint(`${a.name} no puede atacar este turno.`);
   const rg=getUnitAttackRange(a)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0);
   const distance=dist(a,d);
-  if(distance>rg)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
+  const assassinFinalBlow=isAssassinFinalBlowEligible(a,d);
+  if(distance>rg&&!assassinFinalBlow)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
   if(isStealthedUnit(d))return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
   if(d.aerial&&!(getUnitAttackRange(a)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
   let preTrap=resolvePreAttackLegendaryTraps(a,d,liveUnits);
@@ -458,7 +459,7 @@ async function attackUnit(a,d){
     }
     if(u.id===d.id){
       if(!hit.hit)return u;
-      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,units);
+      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,d,units);
       let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
       const warriorShield=applyWarriorLeaderUnitShield(d,a,damaged,units);
       damaged=warriorShield.unit;
@@ -712,7 +713,7 @@ async function attackUnit(a,d){
   units=counterBloodVictory.units;
   if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
   bloodVictoryCheckpoint=[...units];
-  const assassinIgnoreText=shouldIgnoreGuardForAttack(a,units)&&hit.hit?" Ignora Guardia/defensa.":"";
+  const assassinIgnoreText=shouldIgnoreGuardForAttack(a,d,units)&&hit.hit?(isAssassinFinalBlowEligible(a,d)?" Golpe Final: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
@@ -976,11 +977,12 @@ async function adventureEnemyTurn(){
     && canUnitAttackTarget(attacker,target)
     && canTargetStealth(attacker,target)
     && (!(target.aerial)||(aiAttackRange(attacker)>3||attacker.antiaerial));
+  const aiAttackReachForTarget=(attacker,target)=>isAssassinFinalBlowEligible(attacker,target)?Math.max(aiAttackRange(attacker),ASSASSIN_FINAL_BLOW_RANGE):aiAttackRange(attacker);
   const canHit=(a,t)=>!!a&&!!t
     && (!a.acted||isKhalidChainAttackReady(a)||isMulanExecutionChoiceReady(a))
     && !(a.noAttackTurnKey&&a.noAttackTurnKey===pub.turnKey)
     && aiCanEverTarget(a,t)
-    && d(a,t)<=aiAttackRange(a);
+    && d(a,t)<=aiAttackReachForTarget(a,t);
   const playerLeaderNow=()=>leader(1);
   const enemyLeaderNow=()=>leader(2);
   const inBounds=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS;
@@ -1124,7 +1126,7 @@ async function adventureEnemyTurn(){
   };
   const aiAlliedFireSupportCount=(target,attacker=null)=>living(2).filter(a=>{
     if(a.leader||a.id===attacker?.id||a.acted||a.hp<=0)return false;
-    return aiCanEverTarget(a,target)&&d(a,target)<=aiAttackRange(a);
+    return aiCanEverTarget(a,target)&&d(a,target)<=aiAttackReachForTarget(a,target);
   }).length;
   const aiScreeningFrontliners=(cell,unitLike=null)=>{
     const pl=playerLeaderNow();
@@ -1208,7 +1210,7 @@ async function adventureEnemyTurn(){
     let chance=mods.falconDive?100:withAiPublicState(()=>getHitChance(attacker,target,mods));
     let damage=withAiPublicState(()=>getBattleDamage(attacker,mods));
     if(attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn)chance=Math.min(98,100-((100-chance)*(100-chance)/100));
-    if(shouldIgnoreGuardForAttack(attacker))damage=Math.max(0,damage);
+    if(shouldIgnoreGuardForAttack(attacker,target,units))damage=Math.max(0,damage);
     const expected=Math.max(0,damage)*(chance/100);
     return{chance,damage,expected,mods};
   };
@@ -1431,7 +1433,7 @@ async function adventureEnemyTurn(){
       }
       if(u.id===target.id){
         if(!hit.hit)return u;
-        const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker,units);
+        const attackIgnoresGuard=shouldIgnoreGuardForAttack(attacker,target,units);
         let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
         const warriorShield=applyWarriorLeaderUnitShield(target,attacker,damaged,units);
         damaged=warriorShield.unit;
@@ -1690,7 +1692,7 @@ async function adventureEnemyTurn(){
     units=counterBloodVictory.units;
     if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
     bloodVictoryCheckpoint=[...units];
-    const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker)&&hit.hit?" Ignora Guardia/defensa.":"";
+    const assassinIgnoreText=shouldIgnoreGuardForAttack(attacker,target,units)&&hit.hit?(isAssassinFinalBlowEligible(attacker,target)?" Golpe Final: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
     const fireAreaImpactSound=hit.hit&&String(attacker.dragonElement||"").toLowerCase()==="fire"&&Number(attacker.dragonCharge||0)>=2?"fire_area_damage":"";
@@ -2253,7 +2255,7 @@ async function adventureEnemyTurn(){
     const maxMove=mulanExecMove?1:effectiveMov(u);
     const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t));
     const primaryTarget=strategicTargets.map(t=>({target:t,score:scoreTarget(t,0,u)+(t.leader?90:0)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
-    const currentGap=primaryTarget?Math.max(0,d(u,primaryTarget)-aiAttackRange(u)):999;
+    const currentGap=primaryTarget?Math.max(0,d(u,primaryTarget)-aiAttackReachForTarget(u,primaryTarget)):999;
     const options=[];
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
       if(x===u.x&&y===u.y)continue;
@@ -2264,7 +2266,7 @@ async function adventureEnemyTurn(){
         const ghost={...u,x:pos.x,y:pos.y};
         const role=aiBasicTacticRole(u);
         const ghostRange=aiAttackRange(ghost);
-        const targets=living(1).filter(t=>aiCanEverTarget(ghost,t)&&d(pos,t)<=ghostRange);
+        const targets=living(1).filter(t=>aiCanEverTarget(ghost,t)&&d(pos,t)<=aiAttackReachForTarget(ghost,t));
         if(targets.length)score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
         if(pl)score+=Math.max(0,12-d(pos,pl))*6;
         if(el&&u.key==="guardian")score+=Math.max(0,8-d(pos,el))*7;
@@ -2296,7 +2298,7 @@ async function adventureEnemyTurn(){
         }
         score+=allySupportAtCell(pos)*0.45;
         score-=playerThreatAtCell(pos,u)*0.7;
-        const nextGap=primaryTarget?Math.max(0,d(pos,primaryTarget)-ghostRange):999;
+        const nextGap=primaryTarget?Math.max(0,d(pos,primaryTarget)-aiAttackReachForTarget(ghost,primaryTarget)):999;
         const progress=primaryTarget?currentGap-nextGap:0;
         if(progress>0)score+=progress*72;
         if(nextGap===0&&currentGap>0)score+=180;

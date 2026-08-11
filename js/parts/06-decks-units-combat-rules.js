@@ -632,6 +632,13 @@ function isAssassinUnit(u){
   || name.includes("asesina")
   || name.includes("asesino");
 }
+const ASSASSIN_FINAL_BLOW_RANGE=3;
+const ASSASSIN_FINAL_BLOW_HP_THRESHOLD=3;
+function isAssassinFinalBlowEligible(attacker,target){
+  if(!attacker||!target||target.leader||attacker.owner===target.owner)return false;
+  const hp=Number(target.hp||0);
+  return isAssassinUnit(attacker)&&hp>0&&hp<ASSASSIN_FINAL_BLOW_HP_THRESHOLD&&dist(attacker,target)<=ASSASSIN_FINAL_BLOW_RANGE;
+}
 function isUnitCompatibleWithEquipmentLeader(unit,leaderType){
   if(!unit||unit.leader||String(unit.type||"unit")!=="unit")return false;
   const type=String(leaderType||"");

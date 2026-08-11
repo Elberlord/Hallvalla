@@ -48,17 +48,28 @@ function getAttackableTargets(u,units=publicState?.units||[]){
   const live=getLiveUnitRef(u,units);
   if(!canUnitDeclareAttack(live))return[];
   const rg=getUnitAttackRange(live)+(live.key==="bengal_tiger"&&isStealthedUnit(live)?2:0);
-  return (units||[]).filter(t=>t&&t.id!==live.id&&t.owner!==live.owner&&(t.hp===undefined||t.hp>0)&&dist(live,t)<=rg&&canTargetStealth(live,t)&&canUnitAttackTarget(live,t)&&(!(t.aerial)||(getUnitAttackRange(live)>3||live.antiaerial)));
+  return (units||[]).filter(t=>{
+    if(!t||t.id===live.id||t.owner===live.owner||(t.hp!==undefined&&t.hp<=0))return false;
+    const inNormalRange=dist(live,t)<=rg;
+    const finalBlow=isAssassinFinalBlowEligible(live,t);
+    return (inNormalRange||finalBlow)&&canTargetStealth(live,t)&&canUnitAttackTarget(live,t)&&(!(t.aerial)||(getUnitAttackRange(live)>3||live.antiaerial));
+  });
 }
 function moveZones(u){const live=getLiveUnitRef(u);if(!live||!isUnitMoveWindow(live))return[];const mulanExecMove=isMulanExecutionMoveReady(live);if(!mulanExecMove&&(live.moved||live.acted))return[];if(!mulanExecMove&&live.noMoveTurnKey&&live.noMoveTurnKey===publicState?.turnKey)return[];const res=[];const maxMove=mulanExecMove?1:effectiveMov(live);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===live.x&&y===live.y)continue;if(getUnitAt(x,y))continue;if(dist(live,{x,y})<=maxMove)res.push(`${x},${y}`)}return res}
 function attackZones(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`)}
-function attackRangeCells(u){
+function attackRangeCells(u,units=publicState?.units||[]){
   if(!u)return[];
   const rg=getUnitAttackRange(u);
   const res=[];
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
     if(x===u.x&&y===u.y)continue;
     if(dist(u,{x,y})<=rg)res.push(`${x},${y}`);
+  }
+  for(const target of (units||[])){
+    if(isAssassinFinalBlowEligible(u,target)&&canTargetStealth(u,target)&&canUnitAttackTarget(u,target)&&(!(target.aerial)||(getUnitAttackRange(u)>3||u.antiaerial))){
+      const key=`${target.x},${target.y}`;
+      if(!res.includes(key))res.push(key);
+    }
   }
   return res;
 }
@@ -72,7 +83,7 @@ function getTacticalPreviewClasses(x,y){
   const u=getUnit(unitContextSelection.unitId);
   if(!u)return[];
   const key=`${x},${y}`;
-  const attackSet=new Set(attackRangeCells(u));
+  const attackSet=new Set(attackRangeCells(u,publicState?.units||[]));
 
   // Lectura de amenaza enemiga: al tocar una unidad rival, el tablero muestra
   // SIEMPRE sus casillas de ataque desde su posición actual, aunque no sea tu turno
