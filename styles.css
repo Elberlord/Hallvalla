@@ -18817,17 +18817,30 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   color:#f2d17d !important;
   text-shadow:0 2px 8px #000;
 }
+#deckBuilderPanel.collection-browser-mode .deckbuilder-head{
+  display:none !important;
+}
 #deckBuilderPanel.collection-browser-mode .deckbuilder-layout{
   grid-template-columns:minmax(0,1fr) !important;
+  padding-top:8px !important;
+  overflow:visible !important;
 }
 #deckBuilderPanel.collection-browser-mode .deckbuilder-parchment-stage{
   width:min(1120px,94vw);
   justify-self:center;
   padding-left:8.2vw !important;
   padding-right:8.2vw !important;
+  overflow:visible !important;
+}
+#deckBuilderPanel.collection-browser-mode .deckbuilder-collection{
+  overflow:visible !important;
 }
 #deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
   grid-template-columns:repeat(7,minmax(70px,1fr)) !important;
+  overflow:visible !important;
+}
+#deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged .deck-mini-card{
+  overflow:visible !important;
 }
 @media(max-width:1100px){
   #deckBuilderPanel .deckbuilder-layout{
@@ -18873,6 +18886,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 /* FORGE1 fallback para navegadores sin unidades dinámicas de viewport. */
 #deckBuilderPanel .deckbuilder-card{height:100vh !important;height:100dvh !important;}
 @media(max-width:980px){#deckBuilderPanel .deckbuilder-card{height:100vh !important;height:100dvh !important;}}
+
 
 /* ==========================================================
    FORGE1CTRL1 · calibrador directo aislado
