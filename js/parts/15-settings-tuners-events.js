@@ -1042,9 +1042,7 @@ function isHvDetOpen(){
   return !!($('cardInspectModal')&&!$('cardInspectModal').classList.contains('hidden'));
 }
 
-function hvDetSlug(value=""){
-  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")||"item";
-}
+
 function hvDetAddTarget(list,el,key,label){
   if(!el||!key)return;
   if(list.some(item=>item.el===el))return;
@@ -1059,7 +1057,6 @@ function ensureHvDetIconCalibrationLayer(root){
   layer=document.createElement('div');
   layer.className='hv-det-icon-calibration';
   layer.setAttribute('aria-label','Iconos DET para calibración');
-  const cols=6;
   HV_DET_ICON_CALIBRATION_ITEMS.forEach((item,index)=>{
     const icon=document.createElement('div');
     const statGuideKey={hp:'HP',dexterity:'DX',movement:'MV',attack:'AT',guard:'GD',agility:'AGI',range:'RG'}[item.key]||item.label;

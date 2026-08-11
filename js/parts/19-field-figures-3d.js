@@ -2,7 +2,7 @@
 /* HallValla 7BOARDCTRL8AO · Figuras 3D automáticas con editor individual completo */
 
 const HV_FIELD_FIGURE_STORAGE_KEY="hallvalla_field_figures_total_control_v1";
-const HV_FIELD_FIGURE_BASIC_COLOR="220 228 238";
+
 
 function hvGuessFieldFigureSize(unit){
   const key=normalizeAssetKeyName(unit?.key||"");
@@ -120,12 +120,8 @@ function hvFieldFigureBoardCandidates(key,entity=null){
   const source=entity||entry?.entity||{key};
   return typeof getResolvedBoardPortraitCandidates==="function"?getResolvedBoardPortraitCandidates(source):[];
 }
-function hvFieldFigureAssetPath(key,entity=null){
-  return hvFieldFigureAssetCandidates(key,entity)[0]||"";
-}
-function hvFieldFigureBoardPath(key,entity=null){
-  return hvFieldFigureBoardCandidates(key,entity)[0]||"";
-}
+
+
 
 function hvFieldFigureStyleText(key){
   const c=getFieldFigureConfig(key);

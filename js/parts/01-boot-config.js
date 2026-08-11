@@ -73,7 +73,7 @@ const, let, funciones e inicializadores.
 01_BOOT_CONFIG_IMPORTS
 -------------------------------------------------------------------------------
 */
-const HALLVALLA_BUILD_VERSION=`v8_MODULAR_${globalThis.__HALLVALLA_BUILD__||"7BOARDCTRL8BH"}`;
+
 const firebaseConfig=globalThis.__HALLVALLA_FIREBASE_CONFIG__;
 if(!firebaseConfig?.apiKey||!firebaseConfig?.databaseURL){
   throw new Error("Configuración Firebase ausente o incompleta.");
@@ -132,5 +132,4 @@ function handleDirectBoardTargetEvent(ev,x,y){
   cellClick(x,y);
   return true;
 }
-function showEl(id){const el=$(id);if(el)el.classList.remove("hidden");}
-function hideEl(id){const el=$(id);if(el)el.classList.add("hidden");}
+

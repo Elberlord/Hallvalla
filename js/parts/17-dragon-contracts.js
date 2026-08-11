@@ -4,7 +4,7 @@
 const DRAGON_CONTRACT_ELEMENT_ORDER=["lightning","fire","ice"];
 const DRAGON_CONTRACT_UNLOCK_LEVEL=7;
 const DRAGON_CONTRACT_ENTRY_GOLD_COST=1000;
-const DRAGON_CONTRACT_MIN_TIER=3;
+
 const DRAGON_CONTRACT_DEFS=Object.freeze({
   lightning:Object.freeze({
     id:"dragon_contract_lightning",
@@ -49,7 +49,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     desc:"El más resistente. Su Escarcha reduce movimiento y agilidad; una segunda aplicación provoca Congelación."
   })
 });
-const DRAGON_CONTRACT_BY_ID=Object.freeze(Object.fromEntries(Object.values(DRAGON_CONTRACT_DEFS).map(def=>[def.id,def])));
+
 const DRAGON_CONTRACT_CHAPTER=Object.freeze({
   id:"dragon_contracts",
   number:"Nivel 7+",
@@ -66,11 +66,11 @@ const DRAGON_CONTRACT_CHAPTER=Object.freeze({
   }))
 });
 const DRAGON_CONTRACT_BATTLES=Object.freeze(Object.fromEntries(DRAGON_CONTRACT_CHAPTER.battles.map(b=>[b.id,b])));
-const DRAGON_LEADER_TYPES=new Set(Object.values(DRAGON_CONTRACT_DEFS).map(def=>def.leaderType));
+
 const DRAGON_EGG_STORAGE_KEY="hallvalla_dragon_eggs";
 let pendingDragonContractBattleId="";
 
-function isDragonLeaderType(type){return DRAGON_LEADER_TYPES.has(String(type||""));}
+
 function isDragonContractBattle(battleOrId){
   const id=typeof battleOrId==="string"?battleOrId:battleOrId?.id;
   return !!DRAGON_CONTRACT_BATTLES[id];
@@ -80,11 +80,7 @@ function getDragonContractDefByBattle(battleOrId){
   const battle=DRAGON_CONTRACT_BATTLES[id];
   return battle?DRAGON_CONTRACT_DEFS[battle.dragonElement]:null;
 }
-function getDragonContractTier(){
-  const type=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
-  const level=type&&typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(type):1;
-  return Math.max(1,Number(typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(level):1)||1);
-}
+
 function getDragonContractLeaderLevel(){
   const type=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
   return Math.max(1,Number(type&&typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(type):1)||1);
@@ -454,7 +450,7 @@ async function dragonContractEnemyTurn(){
       const hitIds=[];
       const beforeDragonArea=[...units];
       let firstAffected=null;
-      for(const [coord,cell] of unique){
+      for(const cell of unique.values()){
         const victim=units.find(u=>u.owner===1&&u.hp>0&&u.x===cell.x&&u.y===cell.y);
         if(!victim||hitIds.includes(victim.id))continue;
         const isMain=victim.id===target.id;
@@ -531,7 +527,7 @@ startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
    ------------------------------------------------------------------------- */
 
 const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v21_fire_cleanup";
-const HALLVALLA_EVENT_UI_LEGACY_STORAGE_KEY="";
+
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
 const HALLVALLA_HUD_PRESET=Object.freeze({
@@ -1272,14 +1268,7 @@ function applyHallvallaHudSettingToElement(el,value){
   const baseGap=Number(el.dataset.hvHudGap||0);
   el.style.gap=`${Math.max(0,baseGap+v.gap)}px`;
 }
-function getHallvallaHudSelectOptions(){
-  const groups=new Map();
-  Object.entries(HALLVALLA_HUD_TARGETS).forEach(([key,def])=>{
-    if(!groups.has(def.group))groups.set(def.group,[]);
-    groups.get(def.group).push([key,def.label]);
-  });
-  return [...groups.entries()].map(([group,items])=>`<optgroup label="${group}">${items.map(([key,label])=>`<option value="${key}">${label}</option>`).join('')}</optgroup>`).join('');
-}
+
 function syncHallvallaHudControls(panel,settings=getHallvallaEventUiSettings()){
   if(!panel)return;
   const select=panel.querySelector('[data-hud-target]');
@@ -1633,9 +1622,7 @@ function ensureHallvallaDragonsModal(){
   wireHallvallaEventSettings(modal);
   return modal;
 }
-function dragonContractCardHtml(def){
-  return `<article class="hallvalla-dragon-card"><div class="hallvalla-dragon-card-head"><span>${def.enemyName}</span></div></article>`;
-}
+
 function setActiveDragonContractsScene(scene='overview',dragonId=''){
   const modal=ensureHallvallaDragonsModal();
   modal.querySelectorAll('[data-dragons-scene]').forEach(panel=>panel.classList.toggle('is-active',panel.dataset.dragonsScene===scene));

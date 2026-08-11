@@ -226,23 +226,7 @@ function renderLeaderStatusSeal(entry,idx=0){
   const title=escapeHtml(`${entry?.name||entry?.label||"Estado"}: ${entry?.desc||""}`.trim());
   return `<button class="leader-status-seal unit-status-seal ${kind}" type="button" data-status-index="${idx}" title="${title}" aria-label="${title}" onclick="return openLeaderStatusModalFromSeal(this,event)"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</button>`;
 }
-function openLeaderStatusModalFromSeal(el,ev){
-  try{
-    if(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      ev.stopImmediatePropagation&&ev.stopImmediatePropagation();
-    }
-    const seal=el&&el.closest?el.closest(".leader-status-seal[data-status-index]"):null;
-    const base=seal&&seal.closest?seal.closest(".leader-base"):null;
-    if(!seal||!base)return false;
-    const u=getUnit(base.dataset.leaderId);
-    const idx=Number(seal.dataset.statusIndex||0);
-    const entry=u?getUnitStatusEntries(u)[idx]:null;
-    if(entry&&u)openStatusGuideModal(entry,u);
-  }catch(err){console.warn("Leader status modal failed",err);}
-  return false;
-}
+
 function getLeaderStatusBubblesHtml(u){
   if(!u)return "";
   const entries=getUnitStatusEntries(u);
@@ -254,87 +238,13 @@ function getLeaderStatusBubblesHtml(u){
 }
 
 
-function getShortStatusSummaryLabel(entry){
-  const icon=String(entry?.icon||"generic");
-  const label=String(entry?.label||entry?.name||"Estado").trim();
-  const name=String(entry?.name||label||"Estado").trim();
-  if(icon==="bleed")return "Sangrado";
-  if(icon==="poison")return label||"Veneno";
-  if(icon==="silence")return "Silencio";
-  if(icon==="curse")return name||"Maldición";
-  if(icon==="lock")return label||"Bloqueo";
-  if(icon==="buff")return label||name||"Buff";
-  if(icon==="debuff")return label||name||"Debuff";
-  if(icon==="hp")return label||"Vida";
-  if(icon==="control")return "Control";
-  if(icon==="defense")return "DEF";
-  return label||name||"Estado";
-}
-function getShortStatusSummaryDesc(entry){
-  const desc=String(entry?.desc||"").trim();
-  if(!desc)return "";
-  return desc
-    .replace(/\s+/g," ")
-    .replace(/Movimiento reducido hasta el inicio de su próximo turno\./i,"MOV reducido.")
-    .replace(/Movimiento aumentado este turno o hasta que el efecto expire\./i,"MOV aumentado.")
-    .replace(/Ataque aumentado temporalmente por magia o efecto\./i,"AT aumentado.")
-    .replace(/Ataque aumentado por efecto temporal\./i,"AT aumentado.")
-    .replace(/Ataque reducido por efecto temporal\./i,"AT reducido.")
-    .replace(/Destreza aumentada por efecto temporal\./i,"DX aumentada.")
-    .replace(/Destreza reducida por presión, trampa o efecto temporal\./i,"DX reducida.")
-    .replace(/Agilidad aumentada por efecto temporal\./i,"AGI aumentada.")
-    .replace(/Agilidad reducida por efecto temporal\./i,"AGI reducida.")
-    .replace(/Guardia temporal adicional\./i,"GD aumentada.")
-    .replace(/Guardia reducida por trampa o efecto temporal\./i,"GD reducida.")
-    .replace(/Silenciada: no puede activar efectos este turno\./i,"No puede activar efectos.")
-    .replace(/No puede moverse este turno\./i,"No puede moverse.")
-    .replace(/No puede atacar este turno\./i,"No puede atacar.")
-    .replace(/No puede contraatacar este turno\./i,"No contraataca.")
-    .replace(/No puede recibir curación este turno\./i,"No puede curarse.")
-    .replace(/No puede usar reducciones especiales de daño este turno\./i,"Sin reducción de daño.")
-    .replace(/El próximo daño contra esta unidad ignora Guardia\./i,"Próximo daño ignora GD.")
-    .replace(/El próximo daño recibido se duplica\./i,"Próximo daño x2.")
-    .replace(/No puede curarse mientras dure el veneno\./i,"No puede curarse.");
-}
-function getUnitDetailStatusSummaryHtml(u){
-  const entries=getUnitStatusEntries(u);
-  if(!entries.length)return "";
-  const shown=entries.slice(0,5);
-  const extra=Math.max(0,entries.length-shown.length);
-  const rows=shown.map(e=>{
-    const label=escapeHtml(getShortStatusSummaryLabel(e));
-    const desc=escapeHtml(getShortStatusSummaryDesc(e));
-    return `<li class="detail-status-item ${escapeHtml(e.kind||"neutral")}"><span class="detail-status-icon">${getStatusEntryIconHtml(e)}</span><span><b>${label}</b>${desc?`<small>${desc}</small>`:""}</span></li>`;
-  }).join("");
-  return `<div class="detail-status-summary"><p><b>Estados activos:</b></p><ul>${rows}${extra>0?`<li class="detail-status-more">+${extra} más en DET</li>`:""}</ul></div>`;
-}
 
-function getAttackChanceData(target){
-  if(!target||selectedUnitActionMode!=="attk"||!selectedUnitId)return null;
-  const attacker=getUnit(selectedUnitId);
-  if(!attacker||attacker.owner===target.owner)return null;
-  if(!attackZones(attacker).includes(`${target.x},${target.y}`))return null;
-  const mods=getCombatMods(attacker,target);
-  let chance=getHitChance(attacker,target,mods);
-  const attackScore=attacker?.leader?"LÍDER":Math.max(0,Number(getAttackPrecisionScore(attacker,mods)||0));
-  const defenseScore=target?.leader?"LÍDER":Math.max(0,Number(getDefenseEvasionScore(target,mods)||0));
-  const arjunaReroll=attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn&&chance<100;
-  const directChance=chance;
-  if(arjunaReroll){
-    const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
-    chance=getHitChance(attacker,target,dharmaMods);
-  }
-  const title=arjunaReroll?`Acierto determinístico: ${chance>=100?"acierta":"falla"} con Flecha del Dharma (${directChance>=100?"acierta":"falla"} base). PREC ${attackScore} vs EVA ${defenseScore}.`:`Acierto determinístico: ${chance>=100?"acierta":"falla"}. PREC ${attackScore} vs EVA ${defenseScore}.`;
-  const tier=chance>=100?"high":"low";
-  return {chance,title,tier};
-}
 
-function getDisplayEvasionPercent(target){
-  if(!target||target.leader)return 0;
-  const preview=getAttackChanceData(target);
-  if(preview&&typeof preview.chance==="number")return clamp(100-preview.chance,5,75);
-  return clamp(30+(getAvailableEvasionScore(target,{})*5),5,75);
-}
+
+
+
+
+
 function getUnitTopLeftText(u){
   if(!u)return "";
   if(u.leader){

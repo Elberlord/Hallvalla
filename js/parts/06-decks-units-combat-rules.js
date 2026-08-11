@@ -2,14 +2,14 @@
 /* HallValla 7BOARDCTRL8AI · Mazos, unidades, reglas de combate y trampas */
 
 
-const ALL_SPECIAL_CARD_KEYS=LEGENDARY_ALLY_CARDS.map(c=>c.key);
+
 const RICHARD_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="richard_lionheart");
 const MULAN_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="mulan");
 const WALLACE_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="wallace");
-const SIMO_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="simo_hayha");
-const SUN_TZU_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="sun_tzu");
-const ULYSSES_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="ulysses");
-const ACHILLES_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="achilles");
+
+
+
+
 const SALADIN_TOKEN_CARD=applyArcherRangeRule({key:"saladin_archer_cavalry",name:"Caballería Arquera de Saladino",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.cavalry,cost:0,hp:3,atk:3,guard:2,dex:7,agi:7,mov:3,range:2,rarity:"Básica",special:true,token:true,text:"Unidad convocada por Media Luna del Desierto de Saladino."});
 const CARD_VISUALS_BY_KEY={
   spearman:{portrait:CARD_PORTRAITS.heavyInfantry,icon:"🛡️"},
@@ -172,7 +172,7 @@ function chooseFallbackAiPrincipalKeys(initial,excludedKeys=[],limit=DECK_RULES.
   unique.sort((a,b)=>getPrincipalUtilityScore(b)-getPrincipalUtilityScore(a));
   return unique.map(card=>card.key||card.name).filter(key=>key&&!excluded.has(key)).slice(0,Math.max(0,limit));
 }
-function chooseFallbackAiPrincipalKey(initial){return chooseFallbackAiPrincipalKeys(initial,[],1)[0]||"";}
+
 function getAiPrincipalSlotsForBattle(battle){
   if(!battleAllowsAiPrincipal(battle))return 0;
   const level=typeof getAdventureEnemyLeaderLevel==="function"?getAdventureEnemyLeaderLevel(battle):1;
@@ -272,7 +272,7 @@ function requireLeaderSelection(force=false){
   return false;
 }
 function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=isInitialLeaderAllowed(type)?LEADER_DATA[type]:null;const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
-function applyLeaderToCard(card,leaderType){return {...card}}
+
 function makeCard(t,owner,leaderType){const card={...t,id:uid8(),owner,leaderType};if(card.type==="unit"){card.battlePower=getUnitBattlePower(card);card.hiddenUnitTag="unit";}return card}
 function getStarterBasicDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
   const target=getDeckSizeForPrincipalSlots(principalSlots);
@@ -283,7 +283,7 @@ function getStarterChosenSpecialCard(selectedSpecial=""){
   return ADVENTURE_SPECIALS[key]?{...ADVENTURE_SPECIALS[key]}:null;
 }
 
-/* === Starter fijo por Líder · 8CJ ==========================================
+/* === Starter fijo por Líder · 8CL ==========================================
    Fuente de verdad: mazos_iniciales_lideres_hallvalla.csv (2026-08-10).
    Cada especialización comienza con 19 cartas fijas. Antes del Guardián,
    Hua Lan o William Wallace —la elección del jugador— ocupa la carta #20.
@@ -317,8 +317,8 @@ const LEADER_STARTER_FIXED_DECK_KEYS=Object.freeze({
   ]),
   assassin:Object.freeze([
     "scout","scout","archer","arcane_adept","spearman","spearman","cavalry","berserker","guardian",
-    "berserker_de_oso","fireball","heal","inspiration","ulfhednar","skipar_del_drakkar","samurai_katana",
-    "saboteador_iga","executioner_mantle","rupture_bracers"
+    "fireball","inspiration","geisha_encubierta","samurai_katana","samurai_katana","saboteador_iga",
+    "executioner_mantle","executioner_mantle","rupture_bracers","rupture_bracers"
   ])
 });
 function getLeaderStarterCardTemplateByKey(key){
@@ -402,12 +402,10 @@ function getPlayableSavedDeckTemplates(principalSlots=getCurrentPrincipalSlots()
 
 
 /* === 7HBE · debug mano inicial DESACTIVADO === */
-function hvRarityDebugFindTemplateByKey(key){ return null; }
-function hvRarityDebugEnabled(){ return false; }
-function hvRarityDebugSelectedKey(){ return ""; }
-function applyRarityDebugFirstHandCard(deck=[],owner=1,leaderType=getSelectedLeaderType()||"warrior"){
-  return Array.isArray(deck) ? deck : [];
-}
+
+
+
+
 
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
   const useSaved=!options.ai;
@@ -427,23 +425,7 @@ function getLeaderEquipmentTemplates(leaderType=""){
   const type=String(leaderType||"");
   return (EQUIPMENT_CARD_TEMPLATES||[]).filter(card=>String(card?.equipmentLeader||"")===type).slice(0,2);
 }
-function injectLeaderEquipmentIntoTemplateDeck(cards=[],leaderType=""){
-  const deck=(cards||[]).map(card=>({...card}));
-  const equipment=getLeaderEquipmentTemplates(leaderType);
-  if(equipment.length!==2)return deck;
-  const present=new Set(deck.map(card=>String(card?.key||"")));
-  for(const template of equipment){
-    if(present.has(template.key))continue;
-    const ranked=deck.map((card,index)=>({index,score:getLeaderEquipmentReplacementScore(card,deck,leaderType)}))
-      .filter(entry=>entry.score>-999000)
-      .sort((a,b)=>b.score-a.score||b.index-a.index);
-    const replace=ranked[0];
-    if(!replace)continue;
-    deck.splice(replace.index,1,{...template});
-    present.add(template.key);
-  }
-  return deck;
-}
+
 function getLeaderEquipmentReplacementScore(card,cards=[],leaderType=""){
   if(!card||isEquipmentCard(card))return -999999;
   const rarity=String(card.rarity||card.rareza||"Básica").toLowerCase();
@@ -484,14 +466,7 @@ function injectLeaderEquipmentIntoInitialState(initial={},leaderType="",owner=2)
   return {...initial,deck,hand};
 }
 
-function getStarterDeckAudit(){
-  const deck=getDefaultDeckTemplates("",getCurrentPrincipalSlots(),getSelectedLeaderType()||"warrior");
-  const specialKeys=new Set(Object.keys(ADVENTURE_SPECIALS||{}));
-  return {
-    size:deck.length,
-    invalid:deck.filter(c=>!isStarterBasicCard(c)&&!specialKeys.has(c.key)).map(c=>`${c.name||c.key} (${c.rarity||"sin rareza"})`)
-  };
-}
+
 
 function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
 function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const normalizedAbility=normalizeLeaderAbilityKey(leaderAbility);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[normalizedAbility]?normalizedAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:leaderType==="beastmaster"?"beastmaster":"leader",icon:leaderType==="beastmaster"?"🐾":(owner===1?"👑":"🔮"),portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
@@ -525,7 +500,7 @@ function getResourceRecharge(prevMax,rawGain){
   return {honor:maxHonor,maxHonor,gain:Math.max(0,maxHonor-previousMax),capped:maxHonor>=RESOURCE_MAX_CAP};
 }
 function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const label=ownerUsesMana(owner)?"Mana":"Honor";return caps?label.toUpperCase():label}
-function getResourcePairText(owner,honor,maxHonor,opts={}){const cappedMax=capResourceMax(maxHonor);return `${getResourceLabel(owner,opts)} ${capResourceAmount(honor,cappedMax)}/${cappedMax}`}
+
 function getOwnerResourceState(owner){
   const pubStats=publicState?.playerStats?.[owner]||{};
   const privOwner=(owner===myPlayer&&privateState)?privateState:null;
@@ -687,7 +662,6 @@ function getLeaderBonus(u){
   if(!u||u.leader||!hasActiveLeader(u.owner))return {atk:0,hp:0,guard:0,dex:0,agi:0,mov:0,range:0};
   const type=getLeaderTypeForOwner(u.owner);
   const tier=getLeaderBuffTierForOwner(u.owner);
-  const ability=getLeaderAbilityForOwner(u.owner);
   const bonus={atk:0,hp:0,guard:0,dex:0,agi:0,mov:0,range:0};
   if(type==="warrior"&&isHeavyInfantryUnit(u)){const b=LEADER_BUFF_TABLE.warrior[tier]||LEADER_BUFF_TABLE.warrior[1];bonus.hp+=(b.hp||0);bonus.guard+=(b.guard||0);}
   if(type==="archer"&&isArcherUnit(u)){const b=LEADER_BUFF_TABLE.archer[tier]||LEADER_BUFF_TABLE.archer[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);bonus.range+=(b.range||0);}
@@ -820,7 +794,7 @@ function isArcaneLinkEligibleUnit(u){
   return origin==="hand"&&!ARCANE_LINK_FIELD_ORIGINS.has(origin)&&!u.fieldGeneratedSummon&&!u.solomonSummon&&!u.reanimated;
 }
 // Alias conservado para no romper llamadas antiguas del inspector/combate.
-function isArcaneAdeptUnit(u){return isArcaneLinkEligibleUnit(u);}
+
 function getArcaneLinkBonus(u,units=publicState?.units||[]){
   if(!isArcaneLinkEligibleUnit(u)||u.leader)return {atk:0,dex:0,agi:0,range:0};
   const mageLeader=(units||[]).find(l=>l&&l.owner===u.owner&&l.leader&&l.leaderType==="mage"&&l.hp>0&&dist(l,u)<=1);
@@ -1147,9 +1121,7 @@ async function resolveSkiparWarLoot(attacker,targetOwner){
 }
 
 
-function isNinjutsuUnit(u){
-  return !!u&&["geisha_encubierta","hattori_shinobi","hattori_hanzo","saboteador_iga"].includes(String(u.key||""));
-}
+
 function isHanzoContractAttack(attacker,defender){
   return !!(attacker&&defender&&attacker.key==="hattori_hanzo"&&!attacker.hanzoContractConsumed&&!defender.leader&&defender.owner!==attacker.owner&&isAttackFromStealth(attacker));
 }
@@ -1193,14 +1165,8 @@ function applyGeishaFanKill(units,attacker,defender,hpLoss){
 function countEnemySaboteadoresIga(owner,units=publicState?.units||[]){
   return (units||[]).filter(u=>u&&u.owner!==owner&&u.key==="saboteador_iga"&&(u.hp||0)>0).length;
 }
-function hasEnemySaboteadorIga(owner,units=publicState?.units||[]){
-  return countEnemySaboteadoresIga(owner,units)>0;
-}
-function getSummonCostWithSabotage(card,owner,units=publicState?.units||[]){
-  const base=Number(card?.cost||0);
-  if(card&&card.type==="unit")return base+countEnemySaboteadoresIga(owner,units);
-  return base;
-}
+
+
 function normalizeSaboteadorRuleText(entity,value){
   let text=String(value||"");
   if(String(entity?.key||"")!=="saboteador_iga")return text;
@@ -1613,8 +1579,8 @@ function getUnitTrapTier(u){
 }
 function getUnitTrapTierLabel(u){const t=getUnitTrapTier(u);return t==="legendary"?"Legendaria":t==="special"?"Especial":"Básica";}
 function getActiveLegendaryTraps(state=publicState){return Array.isArray(state?.legendaryTraps)?state.legendaryTraps:[]}
-function enemyUnitsForLegendaryTrap(owner,units=publicState?.units||[]){return (units||[]).filter(u=>u.owner!==owner&&!u.leader);}
-function isMarkedByTrap(u,key,state=publicState){return !!getActiveLegendaryTraps(state).find(t=>t.targetId===u?.id&&(!key||t.trapKey===key));}
+
+
 function removeTrapById(traps,id){return (traps||[]).filter(t=>t.id!==id);}
 function makeTrapMark(card,target,owner){
   return {id:uid8(),owner,cardKey:card.key,cardName:card.name,trapKey:card.legendaryTrap,targetId:target.id,targetName:target.name,createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};
@@ -1824,10 +1790,9 @@ function resolveBuffHealLegendaryTraps(target,kind,units){
   return {units:out,traps,logs,cancel};
 }
 function applyDamageTrapModifiers(defender,damage,units,mods={},trapList=null){
-  let out=[...(units||[])],traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
+  let traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
   for(const trap of [...traps]){
     if(trap.targetId!==defender.id)continue;
-    const tier=getUnitTrapTier(defender);
     if(trap.trapKey==="shadow_cut"){
       shadowCut=true;
       logs.push(`${trap.cardName} se revela: si ${defender.name} queda con menos de la mitad de su Vida máxima después de este daño, muere.`);

@@ -263,18 +263,15 @@ function savePrincipalKeys(keys=[]){
     else localStorage.removeItem(HALLVALLA_PRINCIPAL_UNIT_KEY);
   }catch(e){}
 }
-function getSavedPrincipalKey(){return getSavedPrincipalKeys()[0]||"";}
-function savePrincipalKey(key){savePrincipalKeys(key?[key]:[]);}
+
+
 function sanitizePrincipalKeysForDeck(keys,deck=[],principalSlots=getCurrentPrincipalSlots()){
   const validUnits=new Set((deck||[]).filter(card=>card?.type==="unit"&&card?.key).map(card=>card.key));
   return normalizePrincipalKeys(keys,principalSlots).filter(key=>validUnits.has(key)).slice(0,principalSlots);
 }
-function sanitizePrincipalKeyForDeck(key,deck=[]){return sanitizePrincipalKeysForDeck([key],deck)[0]||"";}
-function getSavedPrincipalCardsForDeck(deck=[]){
-  const keys=sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),deck);
-  return keys.map(key=>(deck||[]).find(card=>card?.key===key&&card.type==="unit")).filter(Boolean);
-}
-function getSavedPrincipalCardForDeck(deck=[]){return getSavedPrincipalCardsForDeck(deck)[0]||null;}
+
+
+
 function validatePrincipalSelection(keys=[],deck=[],principalSlots=getCurrentPrincipalSlots()){
   const required=Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
   const raw=(Array.isArray(keys)?keys:[keys]).map(key=>String(key||"").trim()).filter(Boolean).slice(0,required);
@@ -630,7 +627,7 @@ function clearCurrentDeckPrincipal(slotIndex=null){
   }
   renderDeckBuilder();
 }
-function removeCardFromDeck(cardKey){const idx=currentDeckDraft.findIndex(c=>c.key===cardKey);if(idx>=0)currentDeckDraft.splice(idx,1);syncCurrentPrincipalWithDraft();renderDeckBuilder()}
+
 function removeCardFromDeckIndex(index){
   const idx=Number(index);
   if(!Number.isFinite(idx)||idx<0||idx>=currentDeckDraft.length)return false;
@@ -711,15 +708,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ${craftBtn}
   </div>`;
 }
-function makeDeckBuilderUnitPreview(card){
-  const owner=myPlayer||1;
-  const c=applyLanceWeaponRule(applyDesertAssassinRule(hydrateCardVisualData({...card,owner})));
-  const baseGuard=(Number(c.guard||0))+getSwordGuardBonus(c);
-  let unit={id:`deck_preview_${c.key||uid8()}`,owner,leader:false,type:"unit",name:c.name,key:c.key,icon:c.icon,portrait:c.portrait||"",rarity:c.rarity||"Básica",special:!!c.special,text:c.text||c.effectText||c.ability||"",effectText:c.effectText||c.text||c.ability||"",ability:c.ability||"",x:-1,y:-1,nexoX:-1,nexoY:-1,hp:c.hp,maxHp:c.hp,atk:c.atk,baseGuard,guard:baseGuard,dex:(c.dex||0)+getAxeDexBonus(c),agi:c.agi||0,mov:c.mov,range:getCardDisplayRange(c),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,leaderType:c.leaderType||"",weaponClass:getWeaponClassForCard(c),battlePower:getUnitBattlePower(c),cost:Number(c.cost||0),beast:!!c.beast,aerial:!!c.aerial,stealth:!!c.stealth,revealed:false};
-  unit=annotateUnitWithMastery(unit);
-  unit.guard=maxTurnGuard(unit);
-  return unit;
-}
+
 function getDeckBuilderDetProgressText(card){
   try{
     if(!card||card.type!=="unit")return "";

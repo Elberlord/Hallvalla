@@ -1,14 +1,13 @@
 "use strict";
 /* HallValla 7BOARDCTRL8AD · Eventos de batalla, perfil, tienda y sobres */
 
-on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!canOpenHandForViewNow()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("mobileToggleActionsBtn","click",toggleBattleActions);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleToggleMusicBtn","click",toggleBattleMusic);on("battleToggleSfxBtn","click",toggleBattleSfx);on("battleMusicVolume","input",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","input",e=>setBattleSfxVolume(e.target.value));on("battleMusicVolume","change",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","change",e=>{setBattleSfxVolume(e.target.value);if(gameSettings.sound&&gameSettings.sfx)tryPlaySound("button_click",.28);});on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("battleDeleteCloudBattleBtn","click",deleteCurrentFirebaseBattleSafe);on("inspectClose","click",()=>$("inspector").classList.remove("show"));
-const inspectorEl=$("inspector");
-if(inspectorEl)inspectorEl.addEventListener("click",ev=>{if(ev.target===inspectorEl)inspectorEl.classList.remove("show")});const cardInspectEl=$("cardInspectModal");if(cardInspectEl)cardInspectEl.addEventListener("click",ev=>{if(ev.target===cardInspectEl)hideCardInspectModal()});const packShopEl=$("packShopPanel");if(packShopEl)packShopEl.addEventListener("click",ev=>{if(ev.target===packShopEl)closePackShop()});const unitContextEl=$("unitContextMenu");if(unitContextEl)unitContextEl.addEventListener("click",ev=>ev.stopPropagation());const battlefieldEl=document.querySelector(".battlefield");if(battlefieldEl)battlefieldEl.addEventListener("click",ev=>{if(unitContextSelection&&!ev.target.closest(".unit-card")&&!ev.target.closest(".unit-context-menu")){unitContextSelection=null;hideUnitContextMenu();}});
+on("createBtn","click",createGame);on("joinBtn","click",joinGame);on("handBtn","click",()=>{if(!gameId)return;if(!canManuallyOpenHandNow()){handOpen=false;setHint(isMyTurn()?"La mano solo se abre en Main Phase o Last Phase.":"La mano se abrirá cuando sea tu turno y estés en una fase de mano.");render();return;}if(!handOpen&&!canOpenHandForViewNow()){handOpen=false;setHint("No tienes cartas jugables en la mano ahora mismo.");render();return;}handOpen=!handOpen;if(handOpen)handManualCloseKey="";else handManualCloseKey=getHandAvailabilityKey();render()});on("cancelBtn","click",clearSelection);on("endBtn","click",advanceTurnPhase);on("toggleActionsBtn","click",toggleBattleActions);on("mobileToggleActionsBtn","click",toggleBattleActions);on("battleMenuBtn","click",openBattleMenu);on("battleCloseMenuBtn","click",closeBattleMenu);on("battleToggleSoundBtn","click",toggleBattleSound);on("battleToggleMusicBtn","click",toggleBattleMusic);on("battleToggleSfxBtn","click",toggleBattleSfx);on("battleMusicVolume","input",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","input",e=>setBattleSfxVolume(e.target.value));on("battleMusicVolume","change",e=>setBattleMusicVolume(e.target.value));on("battleSfxVolume","change",e=>{setBattleSfxVolume(e.target.value);if(gameSettings.sound&&gameSettings.sfx)tryPlaySound("button_click",.28);});on("battleResetBtn","click",resetCurrentDuelFromMenu);on("battleLeaveBtn","click",leaveCurrentGameFromMenu);on("battleDeleteCloudBattleBtn","click",deleteCurrentFirebaseBattleSafe);
+const cardInspectEl=$("cardInspectModal");if(cardInspectEl)cardInspectEl.addEventListener("click",ev=>{if(ev.target===cardInspectEl)hideCardInspectModal()});const packShopEl=$("packShopPanel");if(packShopEl)packShopEl.addEventListener("click",ev=>{if(ev.target===packShopEl)closePackShop()});const unitContextEl=$("unitContextMenu");if(unitContextEl)unitContextEl.addEventListener("click",ev=>ev.stopPropagation());const battlefieldEl=document.querySelector(".battlefield");if(battlefieldEl)battlefieldEl.addEventListener("click",ev=>{if(unitContextSelection&&!ev.target.closest(".unit-card")&&!ev.target.closest(".unit-context-menu")){unitContextSelection=null;hideUnitContextMenu();}});
 
 const RENAME_COST_GEMS = 100;
-const BASIC_PACK_GOLD_COST = 100;
-const PACK_SHOP_PREVIEW_MODE = false;
-const PACK_SHOP_ALWAYS_UNLOCKED = true;
+
+
+
 const PACK_SHOP_ITEMS = [
   {
     key:"basic",
@@ -85,7 +84,7 @@ const defaultPlayerProfile = {
   leaderRecords: {},
   testPromo: null
 };
-function emptyLeaderRecord(){return {ai:{wins:0,losses:0},pvp:{wins:0,losses:0}}}
+
 function normalizeLeaderRecords(records={}){
   const out={};
   Object.keys(LEADER_DATA||{}).forEach(type=>{
@@ -111,10 +110,7 @@ function markBattleRecordKey(key){
 function hasBattleRecordKey(key){
   try{return !!getRecordedBattleKeys()[key];}catch(e){return false}
 }
-function getLeaderRecord(type,profile=getPlayerProfile()){
-  const records=normalizeLeaderRecords(profile.leaderRecords||{});
-  return records[type]||emptyLeaderRecord();
-}
+
 function recordLocalLeaderBattleOutcome(outcome,mode=publicState?.mode||"pvp"){
   try{
     if(!outcome?.ended||!myPlayer||!outcome.winner)return;
@@ -132,16 +128,7 @@ function recordLocalLeaderBattleOutcome(outcome,mode=publicState?.mode||"pvp"){
     markBattleRecordKey(battleKey);
   }catch(e){console.warn("[HallValla] No se pudo registrar historial del líder:",e);}
 }
-function renderDetLeaderRecordHtml(entity){
-  if(!entity||!entity.leader||entity.owner!==myPlayer)return "";
-  const type=entity.leaderType||getSelectedLeaderType()||"warrior";
-  const record=getLeaderRecord(type);
-  return `<div class="det-leader-record">
-    <div class="det-record-title">Historial del líder</div>
-    <div class="det-record-row"><span>Contra IA</span><strong>${record.ai.wins}V / ${record.ai.losses}D</strong></div>
-    <div class="det-record-row"><span>Contra jugador</span><strong>${record.pvp.wins}V / ${record.pvp.losses}D</strong></div>
-  </div>`;
-}
+
 function getShopPackDefinition(packKey="basic"){
   return (PACK_SHOP_ITEMS||[]).find(pack=>pack.key===packKey)||null;
 }
@@ -446,7 +433,7 @@ function getUnitMasteryRank(entity){
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
 function getUnitMasteryHpBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
-function getUnitMasteryHpBonus(entity){return isUnitServiceProgression(entity)?0:getUnitMasteryHpBonusByRank(getUnitMasteryRank(entity));}
+
 function getUnitMasteryProgressText(entity){
   if(isUnitServiceProgression(entity))return getAcolyteServiceProgressText(entity);
   const rec=getUnitMasteryRecord(entity);
@@ -755,33 +742,8 @@ function ensureStarterDeckCollection(){
   if(!canAccessDecks())return;
   return ensureCollectionContainsStarterTemplates(getStarterCollectionTemplates());
 }
-function grantAdventureRewards(battle){
-  if(!battle || !battle.id)return {alreadyClaimed:true, xp:0, gold:0, cards:[]};
-  const claimedKey = `hallvalla_reward_claimed_${battle.id}`;
-  if(localStorage.getItem(claimedKey)==="true")return {alreadyClaimed:true, xp:0, gold:0, cards:[]};
 
-  const profile = getPlayerProfile();
-  const xpReward = battle.exp || battle.xp || 0;
-  const goldReward = battle.gold || 0;
-  profile.gold = (profile.gold || 0) + goldReward;
-  savePlayerProfile(profile);
-  if(xpReward>0)addPlayerXp(xpReward);
-  else renderPlayerProfile(profile);
 
-  const packCards = battle.cardPack ? getRewardCardsForBattle(battle) : [];
-  if(packCards.length)addCardsToCollection(packCards);
-
-  localStorage.setItem(claimedKey,"true");
-  return {alreadyClaimed:false, xp:xpReward, gold:goldReward, cards:packCards};
-}
-function formatRewardLine(reward){
-  if(!reward || reward.alreadyClaimed)return "Recompensa ya reclamada.";
-  const parts=[];
-  if(reward.xp)parts.push(`+${reward.xp} EXP`);
-  if(reward.gold)parts.push(`+${reward.gold} Oro`);
-  if(reward.cards?.length)parts.push(`Paquete básico: ${reward.cards.length} cartas`);
-  return parts.join(" · ") || "Sin recompensa.";
-}
 
 
 function getStarterComplementCard(selectedSpecial=""){
@@ -816,10 +778,7 @@ function getBattleRewardLabel(battle){
   return parts.join(" · ");
 }
 
-function getCurrentAdventureBattle(){
-  if(!publicState)return null;
-  return getAdventureBattle(publicState.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_GUARDIAN_BATTLE;
-}
+
 function getNextAdventureBattle(battle){
   if(!battle)return null;
   if(battle.isGuardian)return ADVENTURE_CHAPTER_1_1.battles[0]||null;
@@ -854,11 +813,7 @@ function retryCurrentAdventureBattle(){
   startAdventure(specialKey,battleId);
 }
 
-function isAdventureChapterComplete(){
-  const progress=getAdventureProgress();
-  const chapter=progress.chapters[ADVENTURE_CHAPTER_1_1.id];
-  return ADVENTURE_CHAPTER_1_1.battles.every(b=>chapter.completedBattles?.[b.id]);
-}
+
 function canAccessDecks(){
   const progress=typeof getAdventureProgress==="function"?getAdventureProgress():null;
   return isTestPromoActive()||!!progress?.guardianDefeated;
@@ -884,7 +839,6 @@ function shopLiveValue(value,x,y,w,h,extraClass=""){
   return `<div class="hv-shop-live-value ${extraClass}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}">${value}</div>`;
 }
 function buildLayeredPackShop(profile){
-  const collectionTotal=typeof getCollectionCardTotal==="function"?getCollectionCardTotal():0;
   const format=value=>Math.max(0,Number(value||0)).toLocaleString("es-CR");
   const layers=[
     `<img class="hv-shop-background" src="assets/shop/layers/shop_background.webp" alt="Tienda digital de HallValla">`,

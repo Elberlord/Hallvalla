@@ -3,7 +3,7 @@ HallValla · DET unificado · build 7BOARDCTRL8BI
 OBJETIVO
 - Un único DET visual para cartas de colección/Forja/mazo, cartas de mano, cartas reveladas y unidades en el campo.
 - El modal activo único es #cardInspectModal.
-- #inspector queda como estructura legado inactiva para compatibilidad, pero ya no se abre desde showUnit().
+- La estructura legado #inspector fue retirada en la limpieza 2026-08-11; el único modal DET es #cardInspectModal.
 
 CAMBIOS PRINCIPALES
 - El fondo común es assets/ui/det_templates/det_base_universal_v32.png.

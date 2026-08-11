@@ -226,7 +226,7 @@ async function updatePrivate(patch){
   await update(ref(db,`games/${gameId}/public`),summaryPatch);
   return true;
 }
-async function updateUnits(units){await updatePublic({units})}function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
+function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
   return (units||[]).some(u=>u&&u.owner===owner&&!u.leader&&Number(u.hp||0)>0);
 }
 function getBattleOutcome(units=publicState?.units||[],state=publicState){
@@ -340,10 +340,7 @@ function extractPrincipalCardsFromDeck(cards=[],principalKeys=[],principalSlots=
   });
   return{deck,principalCards,principalKeys:principalCards.map(card=>card.key)};
 }
-function extractPrincipalCardFromDeck(cards=[],principalKey=""){
-  const result=extractPrincipalCardsFromDeck(cards,principalKey?[principalKey]:[]);
-  return{deck:result.deck,principalCard:result.principalCards[0]||null,principalKey:result.principalKeys[0]||""};
-}
+
 function extractPrincipalsFromInitialState(initial={},principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){
   let deck=[...(initial.deck||[])],hand=[...(initial.hand||[])];
   const requested=[];
@@ -361,10 +358,7 @@ function extractPrincipalsFromInitialState(initial={},principalKeys=[],principal
   });
   return{deck,hand,principalCards,principalKeys:principalCards.map(card=>card.key)};
 }
-function extractPrincipalFromInitialState(initial={},principalKey=""){
-  const result=extractPrincipalsFromInitialState(initial,principalKey?[principalKey]:[]);
-  return{deck:result.deck,hand:result.hand,principalCard:result.principalCards[0]||null,principalKey:result.principalKeys[0]||""};
-}
+
 function prepareAiPrincipalInitialState(battle,initial){
   const principalSlots=getAiPrincipalSlotsForBattle(battle);
   if(principalSlots<=0)return{...initial,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};

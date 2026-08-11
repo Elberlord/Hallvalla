@@ -229,9 +229,7 @@ function buildAutoAssetCandidates(layer,entityOrKey){
   if(!key)return [];
   return getAssetBucketCandidates(source,layer).map(folder=>`assets/${layer}/${folder}/${key}.webp`);
 }
-function buildAutoAssetPath(layer,entityOrKey){
-  return buildAutoAssetCandidates(layer,entityOrKey)[0]||"";
-}
+
 function getResolvedCardPortraitCandidates(entity){
   if(!entity)return [];
   return hvUniqueAssetValues([

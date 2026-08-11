@@ -23,7 +23,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 ================================================================================
 */
 
-:root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2;--p1:#66d9ff;--p2:#ff74b8;--ok:#70e08a;--bad:#ef476f}
+:root{--gold:#ffd166;--text:#fff4df;--muted:#d7c3a2}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#090604}button{font-family:inherit}
 
 .asset-home{
@@ -576,8 +576,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid-wrap{--arenaH:calc(100vh - 12px);--imgW:calc(var(--arenaH)*1.7779);position:absolute;width:calc(var(--imgW)*0.405);height:calc(var(--arenaH)*0.845);left:50%;top:calc(var(--arenaH)*0.073);transform:translateX(-50%);z-index:5}.grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(var(--hv-board-cols,5),1fr);grid-template-rows:repeat(var(--hv-board-rows,6),1fr);gap:0;background:transparent}.cell{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;overflow:hidden}.cell:hover{background:rgba(255,220,140,.05);border-color:rgba(255,232,170,.10)}.cell.valid,.cell.attackable,.cell.summonable,.cell.move-range-preview,.cell.attack-range-preview,.cell.mixed-range-preview,.cell.acted-range-preview,.cell.enemy-threat-preview,.cell.enemy-acted-threat-preview{background:transparent;box-shadow:none}.cell.valid::after,.cell.attackable::after,.cell.summonable::after,.cell.move-range-preview::after,.cell.attack-range-preview::after,.cell.mixed-range-preview::after,.cell.acted-range-preview::after,.cell.enemy-threat-preview::after,.cell.enemy-acted-threat-preview::after{content:"";position:absolute;inset:3px;border-radius:4px;pointer-events:none}.cell.valid::after,.cell.move-range-preview::after{background:rgba(112,224,138,.12);box-shadow:inset 0 0 0 2px rgba(112,224,138,.78),0 0 8px rgba(112,224,138,.20)}.cell.attackable::after,.cell.attack-range-preview::after,.cell.enemy-threat-preview::after{background:rgba(239,71,111,.14);box-shadow:inset 0 0 0 2px rgba(239,71,111,.88),0 0 11px rgba(239,71,111,.30)}.cell.summonable::after{background:rgba(255,209,102,.13);box-shadow:inset 0 0 0 2px rgba(255,209,102,.82),0 0 10px rgba(255,209,102,.24)}.cell.mixed-range-preview::after{background:rgba(183,91,255,.14);box-shadow:inset 0 0 0 2px rgba(183,91,255,.84),0 0 10px rgba(183,91,255,.26)}.cell.acted-range-preview::after,.cell.enemy-acted-threat-preview::after{background:rgba(73,169,255,.13);box-shadow:inset 0 0 0 2px rgba(73,169,255,.84),0 0 10px rgba(73,169,255,.26)}
 .unit-card{position:relative;z-index:2;background:rgba(0,0,0,.18);border:2px solid rgba(244,228,196,.92);box-shadow:0 7px 13px rgba(0,0,0,.44);transform:none;user-select:none;display:grid;place-items:center;padding:1px;}.unit-card.p1{border-color:rgba(102,217,255,.95)}.unit-card.p2{border-color:rgba(255,116,184,.95)}.unit-card.leader{border-color:#ffe66d;box-shadow:0 0 0 1px rgba(255,230,109,.30),0 6px 10px rgba(0,0,0,.42);background:rgba(0,0,0,.12)}.unit-card.unit-key-spearman{width:clamp(48px,88%,84px);height:clamp(48px,88%,84px);border-width:2px;box-shadow:0 9px 16px rgba(0,0,0,.48)}.unit-portrait{width:100%;height:100%;display:grid;place-items:center;background:transparent;}.unit-portrait img{width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.38))}.unit-name,.unit-stats,.unit-stat{display:none}.unit-stat strong{display:none}
 .side{position:absolute;}.panel{padding:8px;margin-bottom:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.9),rgba(10,8,6,.78));border:1px solid rgba(255,209,102,.22)}.side-title{font-size:12px;margin:0 0 6px;color:#fff1c4}.icon-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.icon-btn{min-height:38px;border-radius:9px;border:1px solid rgba(255,209,102,.22);background:rgba(255,255,255,.06);color:white;cursor:pointer;font-weight:900}.hint{min-height:36px;padding:7px;border-radius:10px;background:rgba(0,0,0,.26);color:#ffe6a6;font-size:11px;line-height:1.25}.detail{min-height:85px;font-size:11px;color:var(--muted)}.detail p{margin:5px 0}.log{position:absolute;z-index:18;left:10px;bottom:10px;width:285px;max-height:90px;overflow:auto;padding:8px;border-radius:14px;background:linear-gradient(180deg,rgba(24,15,9,.84),rgba(10,8,6,.76));border:1px solid rgba(255,209,102,.22);font-size:10px;color:#e7d8bc}.actions-visual-panel{position:relative;width:100%;height:auto;min-height:0;aspect-ratio:auto;background:none;filter:none}.actions-visual-buttons{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:62%;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:center}.action-img-btn{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;display:block;width:100%;aspect-ratio:1/1;transition:transform .14s ease,filter .14s ease}.action-img-btn img{height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}.action-img-btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.06)}.action-img-btn:active{transform:translateY(0) scale(.99)}.action-img-btn:focus-visible{outline:2px solid #ffe39a;outline-offset:4px;border-radius:12px}.action-img-btn.selected img{filter:drop-shadow(0 0 10px rgba(255,212,102,.55)) drop-shadow(0 4px 10px rgba(0,0,0,.35))}
-.hand-drawer{position:absolute;z-index:35;left:50%;transform:translateX(-50%);right:auto;bottom:10px;width:clamp(560px,58vw,860px);max-width:calc(100vw - 340px);padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.97),rgba(10,8,6,.94));border:1px solid rgba(255,209,102,.38);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 24px rgba(255,209,102,.10);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 126px;min-height:132px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.97),rgba(20,13,9,.96));border:1px solid rgba(255,209,102,.34);cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.32)}.hand-card.selected{outline:2px solid var(--gold)}.hand-card.not-playable{opacity:.46;filter:grayscale(.55);border-color:rgba(215,195,162,.18);box-shadow:none}.hand-card.not-playable:hover{opacity:.62}.hand-icon{font-size:22px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}
-.inspector{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}.inspect-card{width:min(520px,94vw);border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.7)}.inspect-title{font-family:Georgia,serif;font-size:25px;color:#fff1c4;margin:0}.inspect-sub{color:var(--muted);font-size:12px;margin:4px 0 10px}.inspect-art{height:180px;border-radius:18px;display:grid;place-items:center;font-size:70px;margin:10px 0;background:radial-gradient(circle,#b9863d,#3b2412);}.inspect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
+.hand-drawer{position:absolute;z-index:35;left:50%;transform:translateX(-50%);right:auto;bottom:10px;width:clamp(560px,58vw,860px);max-width:calc(100vw - 340px);padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(24,15,9,.97),rgba(10,8,6,.94));border:1px solid rgba(255,209,102,.38);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 24px rgba(255,209,102,.10);display:none}.hand-drawer.open{display:block}.hand-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}.hand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.hand-card{flex:0 0 126px;min-height:132px;padding:8px;border-radius:12px;background:linear-gradient(180deg,rgba(70,44,21,.97),rgba(20,13,9,.96));border:1px solid rgba(255,209,102,.34);cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.32)}.hand-card.selected{outline:2px solid var(--gold)}.hand-card.not-playable{opacity:.46;filter:grayscale(.55);border-color:rgba(215,195,162,.18);box-shadow:none}.hand-card.not-playable:hover{opacity:.62}.hand-icon{font-size:22px}.hand-name{font-size:11px;font-weight:900;color:#fff;margin-top:4px}.hand-stats{font-size:9px;color:#ffe0a4;margin-top:4px}.hand-text{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.2}.inspect-stat{padding:8px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);font-size:10px;text-align:center}.inspect-stat strong{display:block;color:#fff;font-size:16px;margin-top:2px}
 
 .hand-action-btn{
   font-size:11px;
@@ -777,36 +776,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* === End First-time Leader Selection === */
-
-
-.adventure-result-card{position:relative;width:min(980px,96vw);padding:0;overflow:hidden;border-radius:28px;background:linear-gradient(180deg,rgba(28,18,11,.98),rgba(7,6,5,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.76);display:grid;grid-template-columns:minmax(320px,1.15fr) minmax(280px,.85fr)}
 .adventure-result-close{position:absolute;right:14px;top:12px;z-index:5;width:38px;height:38px;border-radius:999px;border:1px solid rgba(255,209,102,.28);background:rgba(0,0,0,.44);color:#fff1c4;font-size:28px;line-height:1;cursor:pointer}
-.adventure-result-visual{position:relative;min-height:480px;overflow:hidden;background:radial-gradient(circle at 62% 38%,rgba(140,96,255,.26),transparent 22%),radial-gradient(circle at 38% 34%,rgba(255,209,102,.20),transparent 28%),linear-gradient(135deg,#130d1b,#070505)}
-.adventure-result-backdrop{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.38)),url('assets/story/guardian_intro.webp') center/cover no-repeat;filter:saturate(1.08)}
-.adventure-result-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.30),transparent 34%,transparent 62%,rgba(0,0,0,.42));pointer-events:none}
-.adventure-result-hero,.adventure-result-enemy{position:absolute;bottom:0;object-fit:contain;filter:drop-shadow(0 20px 35px rgba(0,0,0,.68))}
-.adventure-result-hero{left:4%;width:62%;height:92%;z-index:3;transform:translateX(4%) scale(1.03)}
-.adventure-result-enemy{right:3%;width:40%;height:76%;z-index:2;transform:translateX(-10%) rotate(6deg);opacity:.94}
-.adventure-result-slash{position:absolute;left:48%;top:14%;width:18px;height:72%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,234,176,.96) 20%,rgba(255,102,102,.92) 54%,rgba(255,255,255,0));box-shadow:0 0 28px rgba(255,206,117,.58),0 0 58px rgba(255,86,86,.34);transform:rotate(24deg);z-index:4;opacity:.92}
-.adventure-result-caption{position:absolute;left:22px;top:20px;z-index:4;padding:8px 12px;border-radius:999px;background:rgba(0,0,0,.42);border:1px solid rgba(255,209,102,.24);font-size:12px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:#ffd166}
-.adventure-result-copy{display:flex;flex-direction:column;justify-content:center;gap:14px;padding:34px 30px 30px}
-.adventure-result-copy .adventure-story-title{margin-bottom:4px!important}
-.adventure-result-note{margin:0;color:#f2dfb8;line-height:1.5;font-size:14px}
-.adventure-result-card.defeat .adventure-result-visual{background:radial-gradient(circle at 62% 38%,rgba(117,146,255,.18),transparent 22%),radial-gradient(circle at 38% 34%,rgba(255,112,112,.16),transparent 28%),linear-gradient(135deg,#10141f,#070505)}
-.adventure-result-card.defeat .adventure-result-backdrop{filter:grayscale(.18) saturate(.95)}
-.adventure-result-card.defeat .adventure-result-hero{left:8%;width:52%;height:86%;transform:none;opacity:.95}
-.adventure-result-card.defeat .adventure-result-enemy{right:2%;width:44%;height:82%;transform:translateX(-4%) rotate(-2deg);opacity:.98}
-.adventure-result-card.defeat .adventure-result-slash{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(135,170,255,.8) 20%,rgba(115,124,255,.9) 54%,rgba(255,255,255,0));box-shadow:0 0 28px rgba(118,164,255,.34),0 0 58px rgba(73,95,255,.28)}
-@media (max-width:900px){
-  .adventure-result-card{grid-template-columns:1fr}
-  .adventure-result-visual{min-height:340px}
-  .adventure-result-copy{padding:22px 18px 20px}
-}
-@media (max-width:600px){
-  .adventure-result-hero{width:68%;height:86%;left:1%}
-  .adventure-result-enemy{width:44%;height:68%;right:1%}
-  .adventure-result-slash{left:50%;top:16%;height:66%}
-}
 
 .adventure-map-hero{position:relative;min-height:300px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,209,102,.26);background:linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.70)),url('assets/story/hallvalla_call.webp') center/cover no-repeat;box-shadow:inset 0 0 80px rgba(0,0,0,.48),0 18px 38px rgba(0,0,0,.35)}
 .adventure-map-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 58%,rgba(255,209,102,.18),transparent 25%),radial-gradient(circle at 72% 34%,rgba(111,144,255,.16),transparent 28%),linear-gradient(90deg,rgba(0,0,0,.78),rgba(0,0,0,.20) 56%,rgba(0,0,0,.62));pointer-events:none}
@@ -815,8 +785,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .adventure-map-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 22%,rgba(255,255,255,.12),transparent 25%),radial-gradient(circle at 18% 76%,var(--map-accent),transparent 28%),radial-gradient(circle at 78% 26%,rgba(90,190,255,.16),transparent 24%),linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.55));pointer-events:none}
 .adventure-map-topbar{position:absolute;left:16px;right:16px;top:16px;display:flex;flex-wrap:wrap;gap:8px;z-index:2}
 .adventure-map-chip{padding:8px 12px;border-radius:999px;background:rgba(20,14,10,.74);border:1px solid rgba(255,209,102,.26);color:#fff1c4;font-weight:800;font-size:12px;backdrop-filter:blur(4px);box-shadow:0 4px 16px rgba(0,0,0,.24)}
-.adventure-map-path{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:visible}
-.adventure-map-path path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .map-path-shadow{stroke:rgba(0,0,0,.38);stroke-width:3.9;filter:blur(1px)}
 .map-path-main{stroke:rgba(136,255,154,.70);stroke-width:2.25;filter:drop-shadow(0 0 8px rgba(136,255,154,.46))}
 .map-node{position:absolute;padding:0;border-radius:50%;border:0;background:transparent;color:#fff;text-align:center;cursor:pointer;transition:transform .18s ease,filter .18s ease,opacity .18s ease;}
@@ -854,9 +822,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .legend-dot.boss{background:#ff7e61}
 
 @media (max-width:900px){.adventure-map-hero{min-height:240px}.adventure-map-topbar{left:10px;right:10px;top:10px}.adventure-map-chip{font-size:10px;padding:6px 9px}.map-node-title{max-width:76px;font-size:9px}.map-node-status{font-size:8px}.map-node-stars{font-size:11px}.map-node-caption{min-width:94px;max-width:132px;transform:translate(-50%,52px);padding:6px 8px}.map-node-caption strong{font-size:11px}.map-node-caption small{font-size:9px}.adventure-map-track{left:10px;right:10px;bottom:10px;padding:8px;gap:5px}.track-stop{font-size:9px;min-height:28px}.adventure-map-legend{font-size:11px;gap:8px;justify-content:flex-start}}
-
-.adventure-result-actions{display:flex;gap:10px;flex-wrap:wrap}
-.adventure-result-actions .btn{flex:1;min-width:150px}
 
 
 .notification-btn{position:relative;display:grid!important;place-items:center;color:#fff1c4;font-size:22px}
@@ -1022,15 +987,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* 7AP: zoom/inspect robusto para unidades en aventura y online */
 .unit-card{cursor:zoom-in;touch-action:manipulation;}
 .unit-card::after{inset:-8px;border-radius:14px;}
-.inspect-art{overflow:hidden;border:1px solid rgba(255,209,102,.24);}
-.inspect-art img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));}
-.inspect-art span{font-size:78px;line-height:1;filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));}
 @media(max-width:980px){
-  .inspector{padding:12px;z-index:220;}
-  .inspect-card{width:min(540px,96vw);max-height:92svh;overflow:auto;padding:14px;border-radius:20px;}
-  .inspect-title{font-size:22px;}
-  .inspect-art{height:min(260px,36svh);font-size:86px;}
-  .inspect-grid{grid-template-columns:repeat(3,1fr);gap:7px;}
   .inspect-stat{font-size:10px;padding:7px;}
   .inspect-stat strong{font-size:17px;}
   .unit-card::after{inset:-12px;}
@@ -2046,12 +2003,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   display:none !important;
 }
 
-@media (max-width:900px){
-  
-  
-  
-}
-
 
 /* PATCH 7CJ - controles de batalla arriba al centro para no tapar el campo */
 .battle-menu,
@@ -2704,46 +2655,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     var(--map-bg-image) center/cover no-repeat !important;
   box-shadow:inset 0 0 120px rgba(0,0,0,.56),0 20px 40px rgba(0,0,0,.38) !important;
 }
-.adventure-map-topbar,
-.adventure-map-track,
-.adventure-map-legend,
-.adventure-map-path,
-.map-node-title,
-.map-node-status,
-.map-node-stars,
-.map-node-caption{display:none !important;}
-.adventure-map-connectors{display:none!important;}
-.map-route-svg{
-  width:100%;
-  height:100%;
-  display:block;
-  overflow:visible;
-}
-.map-route-svg path{
-  fill:none;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-.map-route-under{
-  stroke:rgba(0,0,0,.42);
-  stroke-width:8.8;
-}
-.map-route-glow{
-  stroke:rgba(255,196,86,.24);
-  stroke-width:7.1;
-  filter:drop-shadow(0 0 10px rgba(255,196,86,.36));
-}
-.map-route-main{
-  stroke:rgba(120,86,28,.78);
-  stroke-width:5.4;
-}
-.map-route-dash{
-  stroke:rgba(244,199,91,.98);
-  stroke-width:4.2;
-  stroke-dasharray:2.7 2.05;
-  filter:drop-shadow(0 0 6px rgba(255,208,111,.32));
-}
-.map-connector{display:none!important;}
+.adventure-map-topbar,.adventure-map-track,.adventure-map-legend,.map-node-title,.map-node-status,.map-node-stars,.map-node-caption{display:none !important;}
 .map-node{width:86px !important;min-height:86px !important;z-index:3 !important;}
 .map-node .map-node-ring{
   border:3px solid rgba(230,180,92,.94) !important;
@@ -2779,57 +2691,9 @@ El CSS original se conserva para no romper visuales. El bloque final
   .adventure-map-visual{min-height:520px !important;background-position:center !important;}
   .map-node{width:72px !important;min-height:72px !important;}
   .map-node-number{padding-top:20px !important;font-size:20px !important;}
-  .map-route-under{stroke-width:7.4;}
-  .map-route-glow{stroke-width:6.0;}
-  .map-route-main{stroke-width:4.8;}
-  .map-route-dash{stroke-width:3.6;}
-}
-
-.adventure-result-card.guardian-reunion .adventure-result-backdrop{filter:saturate(1.04) !important;}
-.adventure-result-card.guardian-reunion .adventure-result-hero{
-  left:2% !important;
-  width:34% !important;
-  height:88% !important;
-  transform:none !important;
-  z-index:3 !important;
-}
-.adventure-result-card.guardian-reunion .adventure-result-enemy{
-  right:4% !important;
-  width:32% !important;
-  height:82% !important;
-  transform:translateX(-4%) !important;
-  opacity:.95 !important;
-  z-index:3 !important;
-}
-.adventure-result-card.guardian-reunion .adventure-result-slash{
-  left:50% !important;
-  width:0 !important;
-  background:none !important;
-  box-shadow:none !important;
 }
 
 /* PATCH 7EG - resultado del guardián solo narrativo, sin imagen nueva */
-.adventure-result-card.guardian-narrative-only{
-  grid-template-columns:1fr !important;
-  width:min(760px,94vw) !important;
-}
-.adventure-result-card.guardian-narrative-only .adventure-result-visual{
-  display:none !important;
-}
-.adventure-result-card.guardian-narrative-only .adventure-result-copy{
-  min-height:360px;
-  padding:38px 34px 32px !important;
-  background:
-    radial-gradient(circle at 16% 18%,rgba(255,209,102,.14),transparent 26%),
-    radial-gradient(circle at 86% 72%,rgba(111,144,255,.11),transparent 28%),
-    linear-gradient(180deg,rgba(31,20,12,.98),rgba(7,6,5,.98));
-}
-@media (max-width:700px){
-  .adventure-result-card.guardian-narrative-only .adventure-result-copy{
-    min-height:300px;
-    padding:28px 20px 24px !important;
-  }
-}
 
 /* === PATCH 7EJ - Mobile adventure modal image fit repair ===
    Objetivo: corregir recortes SOLO en móvil. En PC no cambia nada.
@@ -2871,12 +2735,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 
   /* Resultado/victoria de aventura: el fondo no debe cortar el arte principal en móvil */
-  .adventure-result-backdrop{
-    background-size:contain!important;
-    background-position:center center!important;
-    background-repeat:no-repeat!important;
-    background-color:#050404!important;
-  }
 }
 
 @media(max-width:430px){
@@ -4384,21 +4242,10 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   .unit-status-bubbles{top:-9px !important;}
 }
-@media(max-width:560px){
-  
-}
 
 
 /* v7GP: tablero 5x6 para cartas ornate grandes y menos forzadas */
 .grid{grid-template-columns:repeat(var(--hv-board-cols,5),1fr) !important;grid-template-rows:repeat(var(--hv-board-rows,6),1fr) !important;grid-auto-rows:0 !important;}
-
-@media(max-width:980px){
-  
-  
-}
-@media(max-width:560px){
-  
-}
 
 /* v7GR: sellos mágicos integrados al marco de la carta */
 .unit-status-bubbles.unit-status-seals{
@@ -5068,7 +4915,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* === PATCH 7HK - Compact detail help via neon black/gold modal === */
-.inspect-text{color:var(--muted);line-height:1.35;margin:10px 0 0;}
 .detail-helper-note{
   margin:8px 0 10px;
   color:#d7c49f;
@@ -6000,11 +5846,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* === DET premium base model === */
-.inspector,
 .card-inspect-modal{
   backdrop-filter:blur(6px);
 }
-.inspect-card,
 .card-inspect-card{
   position:relative;
   width:min(1120px,96vw)!important;
@@ -6027,11 +5871,10 @@ El CSS original se conserva para no romper visuales. El bloque final
   column-gap:24px;
   row-gap:14px;
 }
-.inspect-card::before,
 .card-inspect-card::before{
   border-radius:28px;
 }
-.inspect-title,.card-inspect-title{
+.card-inspect-title{
   grid-area:head;
   margin:0;
   padding-right:84px;
@@ -6042,13 +5885,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   text-transform:uppercase;
   letter-spacing:.03em;
 }
-.inspect-sub,.card-inspect-sub{
+.card-inspect-sub{
   grid-area:head;
   align-self:end;
   margin-top:48px;
   color:#d8c6a2;
 }
-.inspect-art,.card-inspect-visual{
+.card-inspect-visual{
   grid-area:visual;
   min-height:430px;
   height:auto;
@@ -6059,17 +5902,17 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(229,183,84,.24);
   box-shadow:inset 0 0 30px rgba(255,255,255,.03),0 18px 34px rgba(0,0,0,.32);
 }
-.inspect-art img,.card-inspect-portrait.card-portrait img{
+.card-inspect-portrait.card-portrait img{
   object-fit:cover;
 }
-.inspect-grid,.card-inspect-grid{
+.card-inspect-grid{
   grid-area:stats;
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
   margin:0;
 }
-.inspect-text,.card-inspect-text{
+.card-inspect-text{
   grid-area:text;
   margin:0;
   display:flex;
@@ -6086,27 +5929,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   background:linear-gradient(180deg,rgba(35,24,9,.70),rgba(12,11,8,.78));
   border:1px solid rgba(234,191,92,.16);
   color:#e3cca2;
-}
-
-#inspectClose{
-  position:absolute;
-  top:16px;
-  right:16px;
-  width:52px;
-  height:52px;
-  min-width:52px;
-  
-  border-radius:14px;
-  
-  background:linear-gradient(180deg,#8c250d,#531108);
-  border:1px solid rgba(255,156,122,.48);
-  box-shadow:0 8px 16px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.08);
-}
-#inspectClose::before{
-  
-  
-  color:#ffd9b4;
-  
 }
 .card-inspect-x{
   top:16px;
@@ -6239,20 +6061,13 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 .detail-helper-note{display:none}
-.card-rarity-legendary .det-chip-rarity,
-.inspector.card-rarity-legendary .det-chip-rarity{color:#f3c3ff;border-color:rgba(208,112,255,.44);box-shadow:0 0 20px rgba(208,112,255,.16)}
-.card-rarity-mythic .det-chip-rarity,
-.inspector.card-rarity-mythic .det-chip-rarity{color:#d9f4ff;border-color:rgba(92,194,255,.44);box-shadow:0 0 20px rgba(92,194,255,.16)}
-.card-rarity-demigod .det-chip-rarity,
-.inspector.card-rarity-demigod .det-chip-rarity{color:#fff6c6;border-color:rgba(255,236,141,.46);box-shadow:0 0 20px rgba(255,236,141,.18)}
-.card-rarity-legendary .inspect-card,
+.card-rarity-legendary .det-chip-rarity{color:#f3c3ff;border-color:rgba(208,112,255,.44);box-shadow:0 0 20px rgba(208,112,255,.16)}
+.card-rarity-mythic .det-chip-rarity{color:#d9f4ff;border-color:rgba(92,194,255,.44);box-shadow:0 0 20px rgba(92,194,255,.16)}
+.card-rarity-demigod .det-chip-rarity{color:#fff6c6;border-color:rgba(255,236,141,.46);box-shadow:0 0 20px rgba(255,236,141,.18)}
 .card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 40px rgba(208,112,255,.16)}
-.card-rarity-mythic .inspect-card,
 .card-rarity-mythic .card-inspect-card{border-color:rgba(92,194,255,.62);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 40px rgba(92,194,255,.16)}
-.card-rarity-demigod .inspect-card,
 .card-rarity-demigod .card-inspect-card{border-color:rgba(255,236,141,.68);box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 42px rgba(255,236,141,.18)}
 @media (max-width:900px){
-  .inspect-card,
   .card-inspect-card{
     width:min(96vw,720px)!important;
     grid-template-columns:1fr;
@@ -6265,25 +6080,24 @@ El CSS original se conserva para no romper visuales. El bloque final
     row-gap:12px;
     padding:18px 16px 18px!important;
   }
-  .inspect-title,.card-inspect-title{font-size:30px;padding-right:64px}
-  .inspect-sub,.card-inspect-sub{margin-top:40px}
-  .inspect-art,.card-inspect-visual{min-height:300px}
+  .card-inspect-title{font-size:30px;padding-right:64px}
+  .card-inspect-sub{margin-top:40px}
+  .card-inspect-visual{min-height:300px}
   .detail-guide-row{grid-template-columns:1fr 1fr}
 }
 @media (max-width:560px){
-  .inspect-title,.card-inspect-title{font-size:25px}
-  .inspect-grid,.card-inspect-grid{grid-template-columns:1fr 1fr}
-  .inspect-art,.card-inspect-visual{min-height:240px}
+  .card-inspect-title{font-size:25px}
+  .card-inspect-grid{grid-template-columns:1fr 1fr}
+  .card-inspect-visual{min-height:240px}
   .det-summary-copy,.det-ability-text,.det-mini-note,.det-empty-line,.det-info-row{font-size:13px}
   .det-quote{font-size:16px}
   .detail-guide-row{grid-template-columns:1fr}
-  #inspectClose,.card-inspect-x{width:46px;height:46px}
+  .card-inspect-x{width:46px;height:46px}
 }
 
 
 /* === DET premium visual match override v22 === */
-.card-inspect-modal,
-.inspector{
+.card-inspect-modal{
   position:fixed!important;
   inset:0!important;
   z-index:260!important;
@@ -6299,8 +6113,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 
-.card-inspect-card,
-.inspect-card{
+.card-inspect-card{
   box-sizing:border-box!important;
   
   
@@ -6323,8 +6136,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     0 0 0 1px rgba(255,244,197,.08),
     inset 0 0 0 1px rgba(255,244,197,.035)!important;
 }
-.card-inspect-card::before,
-.inspect-card::before{
+.card-inspect-card::before{
   content:""!important;
   position:absolute!important;
   inset:8px!important;
@@ -6336,8 +6148,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* left column: card art + stats */
-.card-inspect-visual,
-.inspect-art{
+.card-inspect-visual{
   
   
   
@@ -6355,9 +6166,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     0 0 30px rgba(236,190,89,.10),
     inset 0 0 24px rgba(255,255,255,.035)!important;
 }
-.card-inspect-portrait,
-.card-inspect-portrait.card-portrait,
-.inspect-art img{
+.card-inspect-portrait,.card-inspect-portrait.card-portrait{
   width:100%!important;
   height:100%!important;
   border:0!important;
@@ -6365,16 +6174,14 @@ El CSS original se conserva para no romper visuales. El bloque final
   box-shadow:none!important;
   background:transparent!important;
 }
-.card-inspect-portrait.card-portrait img,
-.inspect-art img{
+.card-inspect-portrait.card-portrait img{
   width:100%!important;
   height:100%!important;
   object-fit:cover!important;
   display:block!important;
   filter:saturate(1.05) contrast(1.05)!important;
 }
-.card-inspect-grid,
-.inspect-grid{
+.card-inspect-grid{
   
   
   
@@ -6418,18 +6225,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* right column */
-.card-inspect-head,
-.inspect-title,
-.inspect-sub,
-.card-inspect-title,
-.card-inspect-sub,
-.card-inspect-text,
-.inspect-text{
+.card-inspect-head,.card-inspect-title,.card-inspect-sub,.card-inspect-text{
   position:relative!important;
 }
 
-.card-inspect-title,
-.inspect-title{
+.card-inspect-title{
   margin:0!important;
   padding:0!important;
   font-family:Georgia,serif!important;
@@ -6440,8 +6240,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   color:#f7dc91!important;
   text-shadow:0 2px 0 #261500,0 0 18px rgba(255,209,101,.10)!important;
 }
-.card-inspect-sub,
-.inspect-sub{
+.card-inspect-sub{
   
   color:#dcc79f!important;
 }
@@ -6466,8 +6265,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(238,190,91,.18)!important;
   color:#decaa5!important;
 }
-.card-inspect-text,
-.inspect-text{
+.card-inspect-text{
   
   align-self:stretch!important;
   
@@ -6578,13 +6376,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   z-index:8!important;
 }
 
-.card-inspect-actions .btn,
-#inspectClose{
+.card-inspect-actions .btn{
   min-height:48px!important;
   border-radius:12px!important;
 }
-.card-inspect-x,
-#inspectClose{
+.card-inspect-x{
   position:absolute!important;
   top:16px!important;
   right:16px!important;
@@ -6597,44 +6393,29 @@ El CSS original se conserva para no romper visuales. El bloque final
   color:#ffe2bd!important;
   box-shadow:0 10px 18px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.08)!important;
 }
-#inspectClose{
-  
-  padding:0!important;
-}
-#inspectClose::before{
-  content:"×"!important;
-  font-size:30px!important;
-  line-height:1!important;
-}
 
 /* rarity glow match */
-.card-rarity-mythic .card-inspect-card,
-.inspector.card-rarity-mythic .inspect-card{
+.card-rarity-mythic .card-inspect-card{
   border-color:rgba(92,194,255,.62)!important;
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 34px rgba(92,194,255,.16),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
-.card-rarity-mythic .card-inspect-visual,
-.inspector.card-rarity-mythic .inspect-art{
+.card-rarity-mythic .card-inspect-visual{
   border-color:rgba(92,194,255,.72)!important;
   box-shadow:0 0 26px rgba(92,194,255,.22),inset 0 0 24px rgba(255,255,255,.035)!important;
 }
-.card-rarity-legendary .card-inspect-card,
-.inspector.card-rarity-legendary .inspect-card{
+.card-rarity-legendary .card-inspect-card{
   border-color:rgba(208,112,255,.62)!important;
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 34px rgba(208,112,255,.17),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
-.card-rarity-legendary .card-inspect-visual,
-.inspector.card-rarity-legendary .inspect-art{
+.card-rarity-legendary .card-inspect-visual{
   border-color:rgba(208,112,255,.76)!important;
   box-shadow:0 0 28px rgba(208,112,255,.23),inset 0 0 24px rgba(255,255,255,.035)!important;
 }
-.card-rarity-demigod .card-inspect-card,
-.inspector.card-rarity-demigod .inspect-card{
+.card-rarity-demigod .card-inspect-card{
   border-color:rgba(255,236,141,.70)!important;
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 36px rgba(255,236,141,.18),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
-.card-rarity-demigod .card-inspect-visual,
-.inspector.card-rarity-demigod .inspect-art{
+.card-rarity-demigod .card-inspect-visual{
   border-color:rgba(255,236,141,.80)!important;
   box-shadow:0 0 30px rgba(255,236,141,.24),inset 0 0 24px rgba(255,255,255,.035)!important;
 }
@@ -6647,7 +6428,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 @media(max-width:980px){
-  .card-inspect-card,.inspect-card{
+  .card-inspect-card{
     width:min(96vw,760px)!important;
     
     
@@ -6656,19 +6437,19 @@ El CSS original se conserva para no romper visuales. El bloque final
     grid-template-areas:"right" "left" "footer"!important;
   }
   .card-inspect-head{grid-area:right!important}
-  .card-inspect-text,.inspect-text{
+  .card-inspect-text{
     grid-area:right!important;
     
     
     
     display:flex!important;
   }
-  .card-inspect-visual,.inspect-art{
+  .card-inspect-visual{
     grid-area:left!important;
     
     
   }
-  .card-inspect-grid,.inspect-grid{
+  .card-inspect-grid{
     grid-area:left!important;
     
   }
@@ -6680,13 +6461,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === DET compact iconic model v23 === */
 
 
-.card-inspect-sub,
-.inspect-sub{
+.card-inspect-sub{
   margin:8px 0 10px!important;
 }
 
-.card-inspect-grid,
-.inspect-grid{
+.card-inspect-grid{
   margin:312px 0 0 0!important;
   
   
@@ -6794,7 +6573,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   line-height:1;
 }
 
-#inspectClose,
 .card-inspect-x{
   top:12px!important;
   right:12px!important;
@@ -6853,10 +6631,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-info-row-weapon strong{padding-left:12px}
 .detail-guide-block .detail-chip-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 @media(max-width:980px){
-  .card-inspect-card,.inspect-card{height:min(92svh,820px)!important;overflow:auto!important;grid-template-columns:1fr!important}
-  .card-inspect-visual,.inspect-art{height:240px!important;min-height:240px!important}
-  .card-inspect-grid,.inspect-grid{margin:252px 0 0 0!important}
-  .card-inspect-text,.inspect-text{margin:118px 0 0 0!important;height:auto!important;overflow:visible!important}
+  .card-inspect-card{height:min(92svh,820px)!important;overflow:auto!important;grid-template-columns:1fr!important}
+  .card-inspect-visual{height:240px!important;min-height:240px!important}
+  .card-inspect-grid{margin:252px 0 0 0!important}
+  .card-inspect-text{margin:118px 0 0 0!important;height:auto!important;overflow:visible!important}
   .det-ability-list{grid-template-columns:1fr!important}
   .detail-guide-row{position:static!important;grid-template-columns:1fr 1fr!important;justify-content:stretch!important}
   .card-inspect-actions{position:static!important;width:auto!important}
@@ -6864,38 +6642,37 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* === DET layout fixed v25: useful space, compact icon relief, no overlap === */
-.card-inspect-modal,.inspector{
+.card-inspect-modal{
   position:fixed!important;inset:0!important;z-index:280!important;display:flex!important;align-items:center!important;justify-content:center!important;
   padding:14px!important;background:radial-gradient(circle at 50% 42%,rgba(28,20,12,.42),rgba(0,0,0,.86) 66%),rgba(0,0,0,.72)!important;backdrop-filter:blur(6px)!important;
 }
-.card-inspect-modal.hidden{display:none!important}.inspector:not(.show){display:none!important}.inspector.show{display:flex!important}
-.card-inspect-card,.inspect-card{
+.card-inspect-modal.hidden{display:none!important}
+.card-inspect-card{
   position:relative!important;box-sizing:border-box!important;width:min(1120px,96vw)!important;overflow:hidden!important;
   padding:16px!important;border-radius:24px!important;display:grid!important;
   gap:12px 16px!important;background:linear-gradient(180deg,#17130d 0%,#070706 100%)!important;
   border:1px solid rgba(238,190,91,.48)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),inset 0 0 0 1px rgba(255,238,180,.05)!important;
 }
-.card-inspect-card::before,.inspect-card::before{content:""!important;position:absolute!important;inset:8px!important;border-radius:18px!important;border:1px solid rgba(238,190,91,.12)!important;pointer-events:none!important}
-.card-inspect-x,#inspectClose{
+.card-inspect-card::before{content:""!important;position:absolute!important;inset:8px!important;border-radius:18px!important;border:1px solid rgba(238,190,91,.12)!important;pointer-events:none!important}
+.card-inspect-x{
   position:absolute!important;top:16px!important;right:16px!important;z-index:20!important;width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important;border-radius:14px!important;padding:0!important;
   border:1px solid rgba(255,176,135,.52)!important;background:linear-gradient(180deg,#982a10,#531008)!important;color:#ffe3bf!important;font-size:28px!important;
   box-shadow:0 10px 18px rgba(0,0,0,.30),inset 0 0 0 1px rgba(255,255,255,.08)!important;
 }
-#inspectClose{font-size:0!important}#inspectClose::before{color:#ffe3bf;}
 .card-inspect-head{position:relative!important;display:block!important;margin:0!important;padding:0 62px 0 0!important;}
-.card-inspect-title,.inspect-title{
+.card-inspect-title{
   grid-area:head!important;margin:0!important;padding:0 62px 0 0!important;align-self:start!important;font-family:Georgia,serif!important;line-height:.95!important;
   text-transform:uppercase!important;letter-spacing:.035em!important;color:#f6da8f!important;text-shadow:0 2px 0 #251600,0 0 14px rgba(255,210,100,.12)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
 }
-.card-inspect-sub,.inspect-sub{margin:8px 0 0!important;color:#d8c5a0!important}.det-identity-block{margin:0!important;gap:6px!important}.det-head-chip-row{gap:7px!important}
+.card-inspect-sub{margin:8px 0 0!important;color:#d8c5a0!important}.det-identity-block{margin:0!important;gap:6px!important}.det-head-chip-row{gap:7px!important}
 .det-head-chip{min-height:26px!important;padding:4px 10px!important;border-radius:8px!important;background:linear-gradient(180deg,rgba(45,32,12,.92),rgba(10,9,8,.94))!important;border:1px solid rgba(238,190,91,.30)!important;}
 .det-summary-copy{display:none!important}
-.card-inspect-visual,.inspect-art{
+.card-inspect-visual{
   grid-area:left!important;align-self:start!important;width:100%!important;margin:0!important;border-radius:18px!important;overflow:hidden!important;
   background:radial-gradient(circle at 50% 20%,rgba(255,230,170,.16),rgba(35,25,14,.62) 48%,rgba(4,4,4,.94))!important;border:1px solid rgba(238,190,91,.38)!important;box-shadow:0 0 20px rgba(238,190,91,.10),inset 0 0 26px rgba(255,255,255,.03)!important;
 }
-.card-inspect-portrait,.card-inspect-portrait.card-portrait,.card-inspect-portrait.card-portrait img,.inspect-art img{width:100%!important;height:100%!important;object-fit:cover!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;display:block!important}
-.card-inspect-grid,.inspect-grid{
+.card-inspect-portrait,.card-inspect-portrait.card-portrait,.card-inspect-portrait.card-portrait img{width:100%!important;height:100%!important;object-fit:cover!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;display:block!important}
+.card-inspect-grid{
   grid-area:left!important;align-self:end!important;width:100%!important;display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:7px!important;overflow:hidden!important;
 }
 .card-inspect-stat,.inspect-stat,.det-stat-row{
@@ -6909,12 +6686,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .det-stat-icon-btn:hover,.det-ability-icon-btn:hover,.detail-token-btn:hover,.det-inline-icon-btn:hover,.det-status-icon-btn:hover{transform:translateY(-1px)!important;box-shadow:inset 0 0 0 1px rgba(238,190,91,.30),0 8px 16px rgba(0,0,0,.30),0 0 16px rgba(238,190,91,.14)!important}
 .det-stat-img,.det-ability-img,.det-btn-img,.det-inline-icon-img{object-fit:contain!important;display:block!important;}
-.card-inspect-text,.inspect-text{
+.card-inspect-text{
   margin:0!important;height:auto!important;
   align-self:stretch!important;
 }
 .det-section-block,.det-info-card,.detail-guide-block,.det-quote-block{min-width:0!important;border-radius:14px!important;border:1px solid rgba(238,190,91,.22)!important;background:linear-gradient(180deg,rgba(22,18,12,.92),rgba(8,8,7,.95))!important;box-shadow:inset 0 0 16px rgba(255,255,255,.018),0 7px 16px rgba(0,0,0,.16)!important;overflow:hidden!important}
-.card-inspect-text > .det-section-block:nth-child(1),.inspect-text > .det-section-block:nth-child(1){grid-area:effects!important}.det-quote-block{grid-area:quote!important}
+.card-inspect-text > .det-section-block:nth-child(1){grid-area:effects!important}.det-quote-block{grid-area:quote!important}
 .det-section-title,.detail-guide-caption{font-size:12px!important;line-height:1!important;text-align:center!important;color:#efc96d!important;letter-spacing:.07em!important;text-transform:uppercase!important;border-bottom:1px solid rgba(238,190,91,.13)!important;}
 .det-ability-list{padding:8px!important;display:grid!important;gap:8px!important;}
 .det-ability-card{box-sizing:border-box!important;border:1px solid rgba(238,190,91,.15)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(31,24,15,.88),rgba(10,10,9,.92))!important;}
@@ -6927,21 +6704,21 @@ El CSS original se conserva para no romper visuales. El bloque final
 .detail-status-chip span{color:#e5d2a7!important;font-size:10px!important;font-weight:700!important;line-height:1.1!important}.det-status-icon-btn .status-icon{transform:scale(.92)!important}
 .det-quote-block{padding:10px!important}.det-quote{color:#e2b75f!important;text-align:center!important;font-family:Georgia,serif!important;font-style:italic!important;font-size:14px!important;line-height:1.22!important}
 
-.card-inspect-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}.card-inspect-reason{display:none!important}.card-inspect-actions .btn,#inspectClose{min-height:42px!important;border-radius:12px!important}
-.card-rarity-mythic .card-inspect-card,.inspector.card-rarity-mythic .inspect-card{border-color:rgba(92,194,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(92,194,255,.15)!important}
-.card-rarity-legendary .card-inspect-card,.inspector.card-rarity-legendary .inspect-card{border-color:rgba(208,112,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(208,112,255,.16)!important}
-.card-rarity-demigod .card-inspect-card,.inspector.card-rarity-demigod .inspect-card{border-color:rgba(255,236,141,.68)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 34px rgba(255,236,141,.16)!important}
+.card-inspect-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}.card-inspect-reason{display:none!important}.card-inspect-actions .btn{min-height:42px!important;border-radius:12px!important}
+.card-rarity-mythic .card-inspect-card{border-color:rgba(92,194,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(92,194,255,.15)!important}
+.card-rarity-legendary .card-inspect-card{border-color:rgba(208,112,255,.62)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 32px rgba(208,112,255,.16)!important}
+.card-rarity-demigod .card-inspect-card{border-color:rgba(255,236,141,.68)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),0 0 34px rgba(255,236,141,.16)!important}
 @media(max-width:900px){
-  .card-inspect-card,.inspect-card{width:min(96vw,760px)!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;}
+  .card-inspect-card{width:min(96vw,760px)!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;}
   
-  .card-inspect-visual,.inspect-art{height:230px!important;min-height:230px!important}
-  .card-inspect-grid,.inspect-grid{position:relative!important;margin:244px 0 0!important;height:auto!important;max-height:none!important}
+  .card-inspect-visual{height:230px!important;min-height:230px!important}
+  .card-inspect-grid{position:relative!important;margin:244px 0 0!important;height:auto!important;max-height:none!important}
   
 }
 
 
 /* === DET repair v26: buttons inside, balanced body, visible icons === */
-.card-inspect-card,.inspect-card{
+.card-inspect-card{
   height:min(640px,86vh)!important;
   max-height:min(640px,86vh)!important;
   grid-template-columns:310px 1fr!important;
@@ -6951,7 +6728,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     "left body"
     "actions body"!important;
 }
-.card-inspect-text,.inspect-text{
+.card-inspect-text{
   grid-area:body!important;
   display:grid!important;
   grid-template-columns:1fr .82fr!important;
@@ -7015,11 +6792,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-section-title,.detail-guide-caption{
   padding:7px 10px!important;
 }
-.card-inspect-visual,.inspect-art{
+.card-inspect-visual{
   height:276px!important;
   min-height:276px!important;
 }
-.card-inspect-grid,.inspect-grid{
+.card-inspect-grid{
   margin:294px 0 0!important;
   height:274px!important;
   max-height:274px!important;
@@ -7027,17 +6804,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-head-chip{
   font-size:10.5px!important;
 }
-.card-inspect-title,.inspect-title{
+.card-inspect-title{
   font-size:32px!important;
 }
 @media(max-width:900px){
-  .card-inspect-card,.inspect-card{
+  .card-inspect-card{
     grid-template-areas:"head" "left" "body" "actions"!important;
     height:min(92vh,820px)!important;
     max-height:min(92vh,820px)!important;
     overflow:auto!important;
   }
-  .card-inspect-text,.inspect-text{
+  .card-inspect-text{
     display:flex!important;
     flex-direction:column!important;
     overflow:visible!important;
@@ -7116,8 +6893,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* DET: keep footer guide buttons inside the modal, not floating at the far bottom-right. */
-.card-inspect-text,
-.inspect-text{
+.card-inspect-text{
   
   padding-bottom:0!important;
 }
@@ -7161,7 +6937,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* When there is no Conóceme for leaders, PREC/EVA still stays inside the button tray. */
-.inspect-text .detail-guide-row:only-child,
 .card-inspect-text .detail-guide-row:only-child{
   justify-content:flex-start!important;
 }
@@ -7258,8 +7033,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* DET shell: remove scroll-looking bottom and rebuild the content as a real two-column card. */
-.card-inspect-card,
-.inspect-card{
+.card-inspect-card{
   width:min(1120px,96vw)!important;
   height:min(620px,84vh)!important;
   max-height:min(620px,84vh)!important;
@@ -7275,20 +7049,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Header stays top, close top-right. */
 .card-inspect-head{grid-area:head!important;padding-right:62px!important}
-.card-inspect-title,
-.inspect-title{
+.card-inspect-title{
   font-size:34px!important;
   line-height:1!important;
   padding-right:62px!important;
 }
-.card-inspect-sub,
-.inspect-sub{
+.card-inspect-sub{
   margin-top:8px!important;
 }
 
 /* Left side becomes a neat vertical column: portrait then stats, never overlay. */
-.card-inspect-visual,
-.inspect-art{
+.card-inspect-visual{
   grid-area:left!important;
   position:relative!important;
   align-self:start!important;
@@ -7298,8 +7069,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   margin:0!important;
   border-radius:18px!important;
 }
-.card-inspect-grid,
-.inspect-grid{
+.card-inspect-grid{
   grid-area:left!important;
   position:relative!important;
   align-self:start!important;
@@ -7331,8 +7101,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Right body: effects left, tactical/status right, footer buttons inside the right column. */
-.card-inspect-text,
-.inspect-text{
+.card-inspect-text{
   grid-area:body!important;
   margin:0!important;
   padding:0!important;
@@ -7349,8 +7118,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Effects use only their real space and do not become a giant empty pit. */
-.card-inspect-text > .det-section-block:first-child,
-.inspect-text > .det-section-block:first-child{
+.card-inspect-text > .det-section-block:first-child{
   grid-area:effects!important;
   min-height:0!important;
   height:100%!important;
@@ -7385,12 +7153,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Since tactical and status share the same grid area, position them as a nested visual stack. */
-.inspect-text .det-tactical-card,
 .card-inspect-text .det-tactical-card{
   width:100%!important;
   max-height:260px!important;
 }
-.inspect-text .det-status-section,
 .card-inspect-text .det-status-section{
   width:100%!important;
 }
@@ -7450,7 +7216,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* If there are only leader buttons, don't push them offscreen. */
-.inspect-card .detail-guide-row,
 .card-inspect-card .detail-guide-row{
   position:relative!important;
   left:auto!important;
@@ -7468,20 +7233,17 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* On smaller screens allow internal scroll rather than broken overlap. */
 @media(max-width:980px){
-  .card-inspect-card,
-  .inspect-card{
+  .card-inspect-card{
     height:min(90vh,820px)!important;
     overflow:auto!important;
     grid-template-columns:1fr!important;
     grid-template-rows:auto auto auto!important;
     grid-template-areas:"head" "left" "body"!important;
   }
-  .card-inspect-grid,
-  .inspect-grid{
+  .card-inspect-grid{
     margin-top:276px!important;
   }
-  .card-inspect-text,
-  .inspect-text{
+  .card-inspect-text{
     display:flex!important;
     flex-direction:column!important;
     overflow:visible!important;
@@ -7585,14 +7347,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Responsive fallback. */
-@media(max-width:920px){
-  
-  
-}
 
 
 /* === v32 DET leader/unit clean layout === */
-/* This block targets the real in-battle DET modal only: #inspector */
+/* DET modal activo: #cardInspectModal */
 
 
 
@@ -7622,10 +7380,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Make sure content area leaves room for absolute footer. */
-#inspector #inspectText{
-  padding-bottom:62px!important;
-  box-sizing:border-box!important;
-}
 
 /* Real child placement */
 
@@ -7663,166 +7417,24 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Button tray */
 
-
-
-
-#inspector .detail-token-btn{
-  
-  
-  
-  
-  flex:0 0 36px!important;
-}
-
 /* Close */
 
 
 /* Responsive fallback */
-@media(max-width:920px){
-  
-  #inspector #inspectText.inspect-text{
-    
-    
-    
-    padding-bottom:0!important;
-  }
-  
-}
 
 
 /* === v33 DET compact final: portrait obeys the modal === */
 /* Target only the real in-battle DET modal. */
 
-#inspector.inspector{
-  padding:10px!important;
-  overflow:hidden!important;
-}
-
 /* Main modal: shorter, stable, no page-level scroll needed */
-#inspector .inspect-card{
-  
-  
-  
-  
-  
-  padding:14px!important;
-  
-  
-  
-  
-  
-}
 
 /* Title and chips */
-#inspector #inspectTitle.inspect-title{
-  grid-area:title!important;
-  margin:0!important;
-  padding:0 54px 0 0!important;
-  align-self:end!important;
-  font-size:31px!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-
-#inspector #inspectSub.inspect-sub{
-  grid-area:sub!important;
-  margin:0!important;
-  align-self:start!important;
-  display:flex!important;
-  gap:6px!important;
-  flex-wrap:wrap!important;
-}
 
 /* Portrait: compact, contained, never pushes stats */
-#inspector #inspectArt.inspect-art{
-  
-  width:100%!important;
-  
-  
-  
-  margin:0!important;
-  
-  justify-self:stretch!important;
-  overflow:hidden!important;
-  border-radius:16px!important;
-}
-
-#inspector #inspectArt.inspect-art img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center 18%!important;
-  display:block!important;
-}
 
 /* Stats: directly under portrait using same left column */
-#inspector #inspectStats.inspect-grid{
-  
-  
-  width:100%!important;
-  
-  
-  
-  padding:0!important;
-  display:grid!important;
-  
-  
-  
-  
-  z-index:2!important;
-}
-
-#inspector #inspectStats .inspect-stat,
-#inspector #inspectStats .det-stat-row{
-  min-height:37px!important;
-  height:37px!important;
-  padding:3px 8px!important;
-  border-radius:11px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:7px!important;
-  box-sizing:border-box!important;
-}
-
-#inspector #inspectStats .det-stat-icon-btn{
-  width:32px!important;
-  height:32px!important;
-  min-width:32px!important;
-  min-height:32px!important;
-  border-radius:10px!important;
-}
-
-#inspector #inspectStats .det-stat-img{
-  width:29px!important;
-  height:29px!important;
-}
-
-#inspector #inspectStats .det-stat-key{
-  font-size:9.5px!important;
-  min-width:28px!important;
-}
-
-#inspector #inspectStats strong{
-  font-size:15px!important;
-}
 
 /* Right body: all content lives here, compact and balanced */
-#inspector #inspectText.inspect-text{
-  
-  width:100%!important;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-}
 
 /* Make buttons row independent and always visible */
 
@@ -7837,56 +7449,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Effects: internal scroll only */
-#inspector .det-ability-list{
-  
-  max-height:none!important;
-  
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  gap:7px!important;
-  
-  padding:7px!important;
-  box-sizing:border-box!important;
-}
-
-#inspector .det-ability-card{
-  min-height:auto!important;
-  padding:8px 9px!important;
-}
-
-
-
-#inspector .det-ability-name{
-  font-size:11.5px!important;
-}
-
-#inspector .det-ability-text{
-  font-size:10.7px!important;
-  line-height:1.22!important;
-  -webkit-line-clamp:4!important;
-}
 
 /* Tactical compact */
-#inspector .det-section-title{
-  padding:7px 9px!important;
-  font-size:11px!important;
-}
-
-#inspector .det-info-row{
-  
-  
-  font-size:11px!important;
-}
-
-
-
-#inspector .det-mini-note{
-  font-size:9px!important;
-  line-height:1.12!important;
-  max-height:38px!important;
-  overflow:hidden!important;
-  padding:5px 9px!important;
-}
 
 /* States / record compact */
 
@@ -7899,261 +7463,36 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Buttons inside footer tray */
 
-
-
-
-#inspector .detail-guide-chip{
-  display:flex!important;
-  align-items:center!important;
-  gap:7px!important;
-}
-
-#inspector .detail-guide-chip span{
-  
-  
-  
-  color:#ead29a!important;
-}
-
 /* Close button */
-#inspector #inspectClose{
-  position:absolute!important;
-  top:14px!important;
-  right:14px!important;
-  left:auto!important;
-  bottom:auto!important;
-  width:44px!important;
-  height:44px!important;
-  min-width:44px!important;
-  min-height:44px!important;
-  border-radius:14px!important;
-  z-index:30!important;
-}
 
 /* Prevent older absolute/margin hacks from reviving */
-#inspector #inspectStats.inspect-grid,
-#inspector #inspectArt.inspect-art,
-#inspector #inspectText.inspect-text{
-  position:relative!important;
-}
 
 /* Responsive fallback */
-@media(max-width:920px){
-  
-  
-  
-  #inspector #inspectText > .detail-guide-row{
-    position:relative!important;
-    left:auto!important;
-    right:auto!important;
-    bottom:auto!important;
-    height:auto!important;
-  }
-}
 
 
 /* === v34 DET footer grid fix: no absolute tray, no overlap === */
 
 /* Main inspector stays compact but gives the right panel its own footer row. */
-#inspector .inspect-card{
-  width:min(1100px,96vw)!important;
-  height:min(560px,82vh)!important;
-  max-height:min(560px,82vh)!important;
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-columns:300px minmax(0,1fr)!important;
-  grid-template-rows:52px 32px minmax(0,1fr)!important;
-  grid-template-areas:
-    "visual title"
-    "visual sub"
-    "visual body"!important;
-  gap:10px 14px!important;
-  box-sizing:border-box!important;
-}
 
 /* Keep portrait + stats in the left column. */
-#inspector #inspectArt.inspect-art{
-  grid-area:visual!important;
-  height:220px!important;
-  min-height:220px!important;
-  max-height:220px!important;
-  align-self:start!important;
-}
-#inspector #inspectStats.inspect-grid{
-  grid-area:visual!important;
-  align-self:end!important;
-  margin:232px 0 0 0!important;
-  height:auto!important;
-  max-height:none!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:37px!important;
-  gap:7px!important;
-  overflow:hidden!important;
-}
 
 /* Right content: effects + tactical/status + real footer row. */
-#inspector #inspectText.inspect-text{
-  grid-area:body!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.05fr) minmax(285px,.95fr)!important;
-  grid-template-rows:minmax(0,1fr) 118px 48px!important;
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:9px!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  padding:0!important;
-  margin:0!important;
-  box-sizing:border-box!important;
-}
 
 /* Correct child areas. */
-#inspector #inspectText > .det-section-block:first-child{
-  grid-area:effects!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
-#inspector #inspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  height:100%!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  align-self:stretch!important;
-}
-#inspector #inspectText > .det-status-section{
-  grid-area:states!important;
-  height:100%!important;
-  min-height:0!important;
-  max-height:none!important;
-  overflow:hidden!important;
-  align-self:stretch!important;
-  margin:0!important;
-}
-#inspector #inspectText > .det-quote-block{
-  display:none!important;
-}
 
 /* Footer is now a normal grid row, not absolute. */
-#inspector #inspectText > .detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  left:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-  width:100%!important;
-  height:48px!important;
-  min-height:48px!important;
-  margin:0!important;
-  padding:6px 10px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:14px!important;
-  border-radius:13px!important;
-  border:1px solid rgba(238,190,91,.20)!important;
-  background:linear-gradient(180deg,rgba(22,18,12,.88),rgba(8,8,7,.94))!important;
-  box-sizing:border-box!important;
-  z-index:1!important;
-}
 
 /* Tactical should not flood into states. Explanation is in the icon modal. */
-#inspector .det-tactical-card .det-mini-note{
-  display:none!important;
-}
-#inspector .det-info-row{
-  padding:6px 10px!important;
-  min-height:28px!important;
-}
-#inspector .det-info-row strong{
-  font-size:10.8px!important;
-  line-height:1.12!important;
-}
 
 /* States / record are compact and readable. */
-#inspector .det-status-section .det-section-title{
-  padding:7px 9px!important;
-}
-#inspector .det-leader-record{
-  margin:6px 7px!important;
-  padding:6px 8px!important;
-}
-#inspector .det-record-title{
-  font-size:9.5px!important;
-  margin-bottom:4px!important;
-}
-#inspector .det-record-row{
-  font-size:10px!important;
-  line-height:1.25!important;
-}
-#inspector .det-empty-line{
-  padding:5px 8px!important;
-  font-size:10.5px!important;
-}
 
 /* Effects compact. */
-#inspector .det-ability-list{
-  height:calc(100% - 29px)!important;
-  overflow:auto!important;
-  align-content:start!important;
-}
-#inspector .det-ability-card:only-child{
-  min-height:104px!important;
-}
 
 /* Footer buttons compact. */
-#inspector .detail-token-btn{
-  width:32px!important;
-  height:32px!important;
-  min-width:32px!important;
-  min-height:32px!important;
-}
-#inspector .det-btn-img{
-  width:29px!important;
-  height:29px!important;
-}
-#inspector .detail-guide-chip span{
-  font-size:11.5px!important;
-  font-weight:900!important;
-  white-space:nowrap!important;
-}
 
 /* Defensive: kill older absolute footer rules. */
-#inspector .inspect-card #inspectText.inspect-text > .detail-guide-row,
-#inspector.show .inspect-card #inspectText.inspect-text > .detail-guide-row{
-  position:static!important;
-  left:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-}
 
 /* Responsive fallback */
-@media(max-width:920px){
-  #inspector .inspect-card{
-    height:min(92vh,820px)!important;
-    overflow:auto!important;
-    grid-template-columns:1fr!important;
-    grid-template-rows:auto auto 220px auto auto!important;
-    grid-template-areas:
-      "title"
-      "sub"
-      "visual"
-      "stats"
-      "body"!important;
-  }
-  #inspector #inspectStats.inspect-grid{
-    grid-area:stats!important;
-    margin:0!important;
-  }
-  #inspector #inspectText.inspect-text{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:visible!important;
-  }
-}
 
 
 /* === v35 Card Inspect Modal Fix: cards in hand/deck use #cardInspectModal === */
@@ -8467,7 +7806,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 */
 
 :root{
-  --rarity-basic-main:#0a0a0b;
   --rarity-basic-glow:rgba(35,35,38,.62);
 
   --rarity-epic-main:#d8dde6;
@@ -8496,9 +7834,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:rgba(24,24,28,.90)!important;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 0 18px var(--rarity-basic-glow)!important;
 }
-.card-rarity-basic .det-head-chip,
-.card-rarity-basic .card-inspect-sub,
-.card-rarity-basic .inspect-sub{
+.card-rarity-basic .det-head-chip,.card-rarity-basic .card-inspect-sub{
   color:#d7d7dc!important;
 }
 
@@ -8512,9 +7848,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:var(--rarity-epic-main)!important;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.20),0 0 20px var(--rarity-epic-glow)!important;
 }
-.card-rarity-epic .det-head-chip,
-.card-rarity-epic .card-inspect-sub,
-.card-rarity-epic .inspect-sub{
+.card-rarity-epic .det-head-chip,.card-rarity-epic .card-inspect-sub{
   color:#edf2ff!important;
 }
 
@@ -8528,9 +7862,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:var(--rarity-glorious-main)!important;
   box-shadow:inset 0 0 0 1px rgba(210,255,225,.20),0 0 22px var(--rarity-glorious-glow)!important;
 }
-.card-rarity-glorious .det-head-chip,
-.card-rarity-glorious .card-inspect-sub,
-.card-rarity-glorious .inspect-sub{
+.card-rarity-glorious .det-head-chip,.card-rarity-glorious .card-inspect-sub{
   color:#8dffb8!important;
 }
 
@@ -8544,9 +7876,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:var(--rarity-mythic-main)!important;
   box-shadow:inset 0 0 0 1px rgba(210,245,255,.18),0 0 24px var(--rarity-mythic-glow)!important;
 }
-.card-rarity-mythic .det-head-chip,
-.card-rarity-mythic .card-inspect-sub,
-.card-rarity-mythic .inspect-sub{
+.card-rarity-mythic .det-head-chip,.card-rarity-mythic .card-inspect-sub{
   color:#8edcff!important;
 }
 
@@ -8560,9 +7890,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:var(--rarity-legendary-main)!important;
   box-shadow:inset 0 0 0 1px rgba(246,221,255,.18),0 0 26px var(--rarity-legendary-glow)!important;
 }
-.card-rarity-legendary .det-head-chip,
-.card-rarity-legendary .card-inspect-sub,
-.card-rarity-legendary .inspect-sub{
+.card-rarity-legendary .det-head-chip,.card-rarity-legendary .card-inspect-sub{
   color:#e58cff!important;
 }
 
@@ -8576,9 +7904,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-color:var(--rarity-demigod-main)!important;
   box-shadow:inset 0 0 0 1px rgba(255,248,192,.24),0 0 28px var(--rarity-demigod-glow)!important;
 }
-.card-rarity-demigod .det-head-chip,
-.card-rarity-demigod .card-inspect-sub,
-.card-rarity-demigod .inspect-sub{
+.card-rarity-demigod .det-head-chip,.card-rarity-demigod .card-inspect-sub{
   color:#ffe66d!important;
 }
 
@@ -8594,44 +7920,34 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === v37 DET real fix: rarity classes, hand modal, active states === */
 
 /* Rarity chips and modal border must respond when class is placed on modal root. */
-#inspector.card-rarity-basic .inspect-card,
 #cardInspectModal.card-rarity-basic .card-inspect-card{
   border-color:rgba(25,25,28,.90)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.82),0 0 26px rgba(25,25,28,.55)!important;
 }
-#inspector.card-rarity-basic .inspect-title,
 #cardInspectModal.card-rarity-basic .card-inspect-title{
   text-shadow:0 0 16px rgba(30,30,34,.85)!important;
 }
-#inspector.card-rarity-basic .det-head-chip,
-#cardInspectModal.card-rarity-basic .det-head-chip,
-#cardInspectModal.card-rarity-basic .card-inspect-pill,
-#inspector.card-rarity-basic .inspect-pill{
+#cardInspectModal.card-rarity-basic .det-head-chip,#cardInspectModal.card-rarity-basic .card-inspect-pill{
   border-color:rgba(45,45,50,.85)!important;
   box-shadow:0 0 12px rgba(35,35,38,.45)!important;
 }
 
-#inspector.card-rarity-epic .inspect-card,
 #cardInspectModal.card-rarity-epic .card-inspect-card{
   border-color:rgba(216,221,230,.86)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 32px rgba(216,221,230,.30)!important;
 }
-#inspector.card-rarity-glorious .inspect-card,
 #cardInspectModal.card-rarity-glorious .card-inspect-card{
   border-color:rgba(68,255,138,.86)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 34px rgba(68,255,138,.30)!important;
 }
-#inspector.card-rarity-mythic .inspect-card,
 #cardInspectModal.card-rarity-mythic .card-inspect-card{
   border-color:rgba(85,199,255,.88)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 36px rgba(85,199,255,.34)!important;
 }
-#inspector.card-rarity-legendary .inspect-card,
 #cardInspectModal.card-rarity-legendary .card-inspect-card{
   border-color:rgba(216,106,255,.90)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 38px rgba(216,106,255,.36)!important;
 }
-#inspector.card-rarity-demigod .inspect-card,
 #cardInspectModal.card-rarity-demigod .card-inspect-card{
   border-color:rgba(255,230,109,.94)!important;
   box-shadow:0 28px 80px rgba(0,0,0,.78),0 0 40px rgba(255,230,109,.38)!important;
@@ -8669,62 +7985,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* ACTIVE STATUS BLOCK: never cut the actual status rows */
-#inspector:not(.hidden) #inspectText > .det-status-section,
-#inspector.show #inspectText > .det-status-section{
-  min-height:128px!important;
-  height:100%!important;
-  max-height:none!important;
-  overflow:visible!important;
-}
-#inspector:not(.hidden) #inspectText .det-status-section .det-section-title,
-#inspector.show #inspectText .det-status-section .det-section-title{
-  min-height:29px!important;
-  height:29px!important;
-  line-height:15px!important;
-  padding:7px 10px!important;
-  box-sizing:border-box!important;
-}
-#inspector:not(.hidden) #inspectText .det-status-list,
-#inspector.show #inspectText .det-status-list{
-  min-height:48px!important;
-  max-height:84px!important;
-  overflow:auto!important;
-  padding:6px 9px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  gap:5px!important;
-}
-#inspector:not(.hidden) #inspectText .det-status-row,
-#inspector.show #inspectText .det-status-row{
-  min-height:28px!important;
-  height:auto!important;
-  padding:5px 8px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:7px!important;
-}
-#inspector:not(.hidden) #inspectText .det-empty-line,
-#inspector.show #inspectText .det-empty-line{
-  min-height:28px!important;
-  padding:7px 9px!important;
-  overflow:visible!important;
-}
 
 /* If a leader has historial + active state, stack cleanly. */
-#inspector:not(.hidden) #inspectText .det-leader-history,
-#inspector.show #inspectText .det-leader-history{
-  margin:7px 8px 5px!important;
-  padding:7px 9px!important;
-  max-height:62px!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-}
 
 /* Remove any accidental duplicate-looking title bars inside status area caused by grid compression */
-#inspector:not(.hidden) #inspectText .det-status-section > .det-section-title + .det-section-title,
-#inspector.show #inspectText .det-status-section > .det-section-title + .det-section-title{
-  display:none!important;
-}
 
 @media(max-width:920px){
   #cardInspectModal:not(.hidden) .card-inspect-card{
@@ -8749,100 +8013,21 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Status section is one clean container, not an overflowing stack. */
-#inspector.show #inspectText > .det-status-section,
-#inspector:not(.hidden) #inspectText > .det-status-section{
-  
-  
-  
-  
-  
-  
-  
-  align-self:stretch!important;
-  
-  
-  
-  flex-direction:column!important;
-}
 
 /* Title only occupies its own small header. */
-#inspector.show #inspectText > .det-status-section > .det-section-title,
-#inspector:not(.hidden) #inspectText > .det-status-section > .det-section-title{
-  flex:0 0 30px!important;
-  
-  
-  
-  
-  
-  line-height:14px!important;
-  
-  
-  
-}
 
 /* Leader history stays inside the same status box and leaves space for buffs. */
-#inspector.show #inspectText > .det-status-section .det-leader-history,
-#inspector:not(.hidden) #inspectText > .det-status-section .det-leader-history{
-  flex:0 0 auto!important;
-  margin:7px 8px 4px!important;
-  padding:6px 8px!important;
-  max-height:58px!important;
-  min-height:50px!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-  position:static!important;
-}
 
 /* Actual active statuses use remaining space and are visible/clickable. */
-#inspector.show #inspectText > .det-status-section .det-status-list,
-#inspector:not(.hidden) #inspectText > .det-status-section .det-status-list{
-  flex:1 1 auto!important;
-  min-height:42px!important;
-  max-height:none!important;
-  overflow:auto!important;
-  margin:0!important;
-  padding:4px 8px 7px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  gap:5px!important;
-  position:relative!important;
-  z-index:3!important;
-}
 
 /* Status rows must not be dimmed or hidden under the footer. */
-#inspector.show #inspectText > .det-status-section .det-status-row,
-#inspector:not(.hidden) #inspectText > .det-status-section .det-status-row{
-  min-height:28px!important;
-  height:auto!important;
-  opacity:1!important;
-  visibility:visible!important;
-  transform:none!important;
-  filter:none!important;
-  margin:0!important;
-  padding:5px 8px!important;
-  border-radius:10px!important;
-  position:relative!important;
-  z-index:5!important;
-  background:linear-gradient(180deg,rgba(26,22,15,.96),rgba(9,9,8,.98))!important;
-}
 
 /* If status renderer produced a second title, hide the duplicate only, not the status rows. */
-#inspector.show #inspectText > .det-status-section .det-section-title ~ .det-section-title,
-#inspector:not(.hidden) #inspectText > .det-status-section .det-section-title ~ .det-section-title{
-  display:none!important;
-}
 
 /* Footer must stay below states and never cover them. */
 
 
 /* Effects and tactical stay contained so they don't steal status/footer space. */
-#inspector.show #inspectText > .det-section-block:first-child,
-#inspector:not(.hidden) #inspectText > .det-section-block:first-child,
-#inspector.show #inspectText > .det-tactical-card,
-#inspector:not(.hidden) #inspectText > .det-tactical-card{
-  min-height:0!important;
-  overflow:hidden!important;
-}
 
 /* Hand modal gets same status safety, without changing combat logic. */
 
@@ -8858,184 +8043,22 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === v39 Status structure fix: one history block + one active-state list === */
 
 /* Combat DET gets stable right column: tactical above, status below, footer below all. */
-#inspector.show #inspectText,
-#inspector:not(.hidden) #inspectText{
-  grid-template-columns:minmax(0,1fr) 408px!important;
-  
-  grid-template-areas:
-    "effects tactical"
-    "effects states"
-    "buttons buttons"!important;
-  gap:9px!important;
-  overflow:hidden!important;
-}
 
 /* Tactical cannot bleed downward into states. */
-#inspector.show #inspectText > .det-tactical-card,
-#inspector:not(.hidden) #inspectText > .det-tactical-card{
-  grid-area:tactical!important;
-  height:100%!important;
-  max-height:100%!important;
-  overflow:hidden!important;
-  z-index:2!important;
-}
 
 /* Status section final structure. */
-#inspector.show #inspectText > .det-status-section,
-#inspector:not(.hidden) #inspectText > .det-status-section{
-  grid-area:states!important;
-  
-  
-  
-  overflow:hidden!important;
-  display:grid!important;
-  grid-template-rows:30px auto minmax(34px,1fr)!important;
-  gap:5px!important;
-  padding:0!important;
-  margin:0!important;
-  position:relative!important;
-  z-index:5!important;
-  box-sizing:border-box!important;
-}
 
 /* There should be only one title. */
-#inspector.show #inspectText > .det-status-section > .det-section-title,
-#inspector:not(.hidden) #inspectText > .det-status-section > .det-section-title{
-  grid-row:1!important;
-  height:30px!important;
-  min-height:30px!important;
-  max-height:30px!important;
-  margin:0!important;
-  padding:7px 10px!important;
-  box-sizing:border-box!important;
-  position:static!important;
-  z-index:1!important;
-}
 
 /* History is its own wrapper, no fake second status title. */
-#inspector.show #inspectText .det-leader-history-wrap,
-#inspector:not(.hidden) #inspectText .det-leader-history-wrap{
-  grid-row:2!important;
-  min-height:0!important;
-  max-height:62px!important;
-  overflow:hidden!important;
-  padding:0 8px!important;
-  margin:0!important;
-  box-sizing:border-box!important;
-}
-#inspector.show #inspectText .det-leader-history,
-#inspector:not(.hidden) #inspectText .det-leader-history{
-  margin:0!important;
-  padding:7px 9px!important;
-  min-height:50px!important;
-  max-height:58px!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-  position:static!important;
-  z-index:1!important;
-}
 
 /* Real active statuses, always visible. */
-#inspector.show #inspectText > .det-status-section > .det-status-list,
-#inspector:not(.hidden) #inspectText > .det-status-section > .det-status-list{
-  grid-row:3!important;
-  min-height:34px!important;
-  max-height:100%!important;
-  overflow:auto!important;
-  padding:0 8px 8px!important;
-  margin:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-  gap:5px!important;
-  position:relative!important;
-  z-index:6!important;
-  box-sizing:border-box!important;
-}
-#inspector.show #inspectText .det-status-row,
-#inspector:not(.hidden) #inspectText .det-status-row{
-  width:100%!important;
-  min-height:30px!important;
-  height:auto!important;
-  margin:0!important;
-  padding:5px 8px!important;
-  opacity:1!important;
-  visibility:visible!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  pointer-events:auto!important;
-  position:relative!important;
-  z-index:8!important;
-  background:linear-gradient(180deg,rgba(28,23,14,.96),rgba(8,8,7,.98))!important;
-  border:1px solid rgba(238,190,91,.24)!important;
-  border-radius:10px!important;
-  box-sizing:border-box!important;
-  color:#fff4bd!important;
-}
-#inspector.show #inspectText .det-status-icon,
-#inspector:not(.hidden) #inspectText .det-status-icon{
-  width:24px!important;
-  min-width:24px!important;
-  height:24px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  font-size:16px!important;
-  filter:drop-shadow(0 0 6px rgba(255,220,120,.30))!important;
-}
-#inspector.show #inspectText .det-status-copy,
-#inspector:not(.hidden) #inspectText .det-status-copy{
-  min-width:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
-  line-height:1.1!important;
-}
-#inspector.show #inspectText .det-status-copy strong,
-#inspector:not(.hidden) #inspectText .det-status-copy strong{
-  font-size:10.5px!important;
-  color:#ffe08d!important;
-}
-#inspector.show #inspectText .det-status-copy small,
-#inspector:not(.hidden) #inspectText .det-status-copy small{
-  font-size:9.4px!important;
-  color:#e8d8aa!important;
-  opacity:.92!important;
-}
 
 /* Empty line visible but small. */
-#inspector.show #inspectText .det-empty-line,
-#inspector:not(.hidden) #inspectText .det-empty-line{
-  min-height:28px!important;
-  height:auto!important;
-  margin:0!important;
-  padding:6px 8px!important;
-  opacity:1!important;
-  visibility:visible!important;
-  color:#d8c792!important;
-  font-size:10.5px!important;
-  position:relative!important;
-}
 
 /* Footer is not allowed to cover states. */
-#inspector.show #inspectText > .detail-guide-row,
-#inspector:not(.hidden) #inspectText > .detail-guide-row{
-  grid-area:buttons!important;
-  position:static!important;
-  inset:auto!important;
-  z-index:2!important;
-  height:56px!important;
-  min-height:56px!important;
-  margin:0!important;
-  align-self:stretch!important;
-  overflow:hidden!important;
-}
 
 /* Hide any accidental duplicated title inside the status list only. */
-#inspector.show #inspectText .det-status-list .det-section-title,
-#inspector:not(.hidden) #inspectText .det-status-list .det-section-title{
-  display:none!important;
-}
 
 /* Hand modal status block follows same structure but smaller. */
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
@@ -9058,8 +8081,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Each active state is a compact clickable pill. */
-#inspector.show #inspectText .det-status-row.det-status-icon-row,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row{
   width:auto!important;
   min-width:0!important;
@@ -9082,8 +8103,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Icon is the visual protagonist. */
-#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-icon,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-icon,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-icon{
   width:26px!important;
   min-width:26px!important;
@@ -9100,16 +8119,12 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Only label, no description. */
-#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-copy,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-copy,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy{
   display:inline-flex!important;
   min-width:0!important;
   max-width:170px!important;
   overflow:hidden!important;
 }
-#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-copy strong,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-copy strong,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy strong{
   font-size:10.5px!important;
   line-height:1!important;
@@ -9118,44 +8133,26 @@ El CSS original se conserva para no romper visuales. El bloque final
   overflow:hidden!important;
   text-overflow:ellipsis!important;
 }
-#inspector.show #inspectText .det-status-row.det-status-icon-row .det-status-copy small,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-row .det-status-copy small,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-row .det-status-copy small{
   display:none!important;
 }
 
 /* Active status box can be shorter now. */
-#inspector.show #inspectText,
-#inspector:not(.hidden) #inspectText{
-  grid-template-rows:minmax(0,1fr) 150px 56px!important;
-}
-#inspector.show #inspectText > .det-status-section,
-#inspector:not(.hidden) #inspectText > .det-status-section{
-  height:150px!important;
-  min-height:150px!important;
-  max-height:150px!important;
-}
 
 
 /* === v42 status icons only in DET === */
-#inspector.show #inspectText > .det-status-section,
-#inspector:not(.hidden) #inspectText > .det-status-section,
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
   
   
   gap:8px!important;
   
 }
-#inspector.show #inspectText .det-leader-history-wrap,
-#inspector:not(.hidden) #inspectText .det-leader-history-wrap,
 #cardInspectModal:not(.hidden) #cardInspectText .det-leader-history-wrap{
   flex:0 0 auto!important;
   padding:0 8px!important;
   margin:0!important;
   overflow:hidden!important;
 }
-#inspector.show #inspectText .det-status-list,
-#inspector:not(.hidden) #inspectText .det-status-list,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-list{
   flex:1 1 auto!important;
   display:flex!important;
@@ -9168,8 +8165,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   margin:0!important;
   overflow:auto!important;
 }
-#inspector.show #inspectText .det-status-row.det-status-icon-only,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-only,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only{
   width:38px!important;
   min-width:38px!important;
@@ -9190,8 +8185,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   overflow:hidden!important;
   cursor:pointer!important;
 }
-#inspector.show #inspectText .det-status-row.det-status-icon-only .det-status-icon,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-only .det-status-icon,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only .det-status-icon{
   width:auto!important;
   min-width:0!important;
@@ -9205,20 +8198,16 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:none!important;
   filter:drop-shadow(0 0 6px rgba(255,220,120,.28))!important;
 }
-#inspector.show #inspectText .det-status-row.det-status-icon-only .det-status-copy,
-#inspector:not(.hidden) #inspectText .det-status-row.det-status-icon-only .det-status-copy,
 #cardInspectModal:not(.hidden) #cardInspectText .det-status-row.det-status-icon-only .det-status-copy{
   display:none!important;
 }
-#inspector.show #inspectText .det-empty-line,
-#inspector:not(.hidden) #inspectText .det-empty-line,
 #cardInspectModal:not(.hidden) #cardInspectText .det-empty-line{
   padding:6px 2px!important;
 }
 
 
 /* === v43 FINAL: card-in-hand DET layout repair ===
-   This targets ONLY #cardInspectModal, not the in-field #inspector.
+   Este bloque apunta únicamente al DET activo #cardInspectModal.
 */
 
 #cardInspectModal:not(.hidden){
@@ -10695,38 +9684,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === Patch 60: DET enemy modal click shield ===
    Ensures every guide/status/lore/stat icon inside enemy AI DET keeps pointer events.
    This only affects interaction layers inside the DET modal. */
-#inspector.show .inspect-card,
-#inspector.show #inspectText,
-#inspector.show #inspectStats,
-#inspector.show .det-section-block,
-#inspector.show .det-tactical-card,
-#inspector.show .det-status-section,
-#inspector.show .detail-guide-row{
-  pointer-events:auto!important;
-}
-#inspector.show .det-stat-icon-btn,
-#inspector.show .det-ability-icon-btn,
-#inspector.show .detail-token-btn,
-#inspector.show .det-inline-icon-btn,
-#inspector.show .det-status-icon-btn,
-#inspector.show .guide-status-btn,
-#inspector.show .det-status-row,
-#inspector.show .stat-click{
-  pointer-events:auto!important;
-  position:relative!important;
-  z-index:12!important;
-  touch-action:manipulation!important;
-}
-#inspector.show .det-status-icon,
-#inspector.show .det-status-copy,
-#inspector.show .det-status-copy *,
-#inspector.show .detail-guide-chip span,
-#inspector.show .det-btn-img,
-#inspector.show .det-inline-icon-img,
-#inspector.show .det-ability-img,
-#inspector.show .det-stat-img{
-  pointer-events:none!important;
-}
 
 /* Patch 63: líderes con HUD limpio y estados alrededor */
 .leader-bases-layer{
@@ -12526,10 +11483,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
 }
 
-.map-route-svg,.map-route-svg path,.map-connector{display:none!important;}
-
 /* PATCH v50 - mapa solo con burbujas */
-.adventure-map-connectors,.adventure-map-path,.map-route-svg,.map-route-svg path,.map-connector{display:none!important;opacity:0!important;visibility:hidden!important;}
 
 /* ============================================================
    PATCH 8Q - BOARD UNITS SQUARE TEST (FRAME + ORBS PRESERVED)
@@ -13697,13 +12651,11 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   .basic-tutorial-focus-ring{border-radius:14px!important;}
 
-  .card-inspect-modal,
-  .inspector{
+  .card-inspect-modal{
     align-items:flex-end!important;
     padding:8px!important;
   }
-  .card-inspect-card,
-  .inspect-card{
+  .card-inspect-card{
     width:calc(100vw - 16px)!important;
     max-height:88svh!important;
     border-radius:20px!important;
@@ -13819,29 +12771,6 @@ El CSS original se conserva para no romper visuales. El bloque final
    - marcadores de mover/atacar/selección claros
    - sin paneles debug ni resets globales peleándose entre sí
    ========================================================== */
-
-#hvRarityControlPanel,
-#hvRarityCtrlPanel,
-#hvRarityCtrl,
-#hvRarityControl,
-#hvRarityRealToggle,
-#hvRarityRealPanel,
-#hvExtraGlowBox7HAX,
-#hvMasterGlowBox7HBA,
-#hvGlowPanic7HBB,
-#hvKillGlows7HAX,
-#hvMasterZeroGlow7HBA,
-#hvMasterNoMarkers7HBA,
-#hvMasterCleanPortrait7HBA,
-#hvMasterReset7HBA,
-.hv-rarity-control-panel,
-.rarity-control-panel,
-.rarity-ctrl-panel{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
 
 /* Carta de campo: base limpia, sin baño de brillo sobre el retrato. */
 .grid .cell > .unit-card,
@@ -17480,10 +16409,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side.actions-collapsed{
   pointer-events:none!important;
 }
 
-@media (max-height:390px){
-  
-}
-
 /* ============================================================
    7HEU — HUD DE ACCIONES COMPACTO BAJO EL HUD DEL JUGADOR 2
    SOLO MÓVIL HORIZONTAL. PC permanece intacto.
@@ -17653,65 +16578,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 
 
 /* === 7HEW · Inspector estructurado: efectos del Lancero Solar === */
-#inspector .det-effects-icon-only .det-ability-list{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:20px!important;
-  min-height:150px!important;
-  height:auto!important;
-  padding:18px!important;
-  overflow:visible!important;
-  background:
-    radial-gradient(circle at 50% 0%,rgba(222,170,62,.10),transparent 58%),
-    linear-gradient(180deg,rgba(23,18,12,.92),rgba(7,7,7,.96))!important;
-}
-#inspector .det-effect-seal{
-  appearance:none;
-  width:132px;
-  min-height:126px;
-  padding:12px 10px 10px;
-  border-radius:18px;
-  border:1px solid rgba(238,190,91,.34);
-  background:linear-gradient(180deg,rgba(56,39,17,.92),rgba(13,10,8,.98));
-  box-shadow:inset 0 0 0 1px rgba(255,239,185,.05),0 12px 24px rgba(0,0,0,.34);
-  color:#f2ca69;
-  cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
-}
-#inspector .det-effect-seal:hover,
-#inspector .det-effect-seal:focus-visible{
-  transform:translateY(-3px);
-  border-color:rgba(255,220,126,.72);
-  box-shadow:inset 0 0 0 1px rgba(255,239,185,.10),0 16px 30px rgba(0,0,0,.42),0 0 22px rgba(221,164,55,.14);
-  outline:none;
-}
-#inspector .det-effect-seal-art{
-  width:76px;
-  height:76px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:radial-gradient(circle at 35% 25%,rgba(255,230,143,.18),rgba(62,40,11,.76) 55%,rgba(5,5,5,.96));
-  border:1px solid rgba(238,190,91,.48);
-  box-shadow:inset 0 0 16px rgba(255,218,118,.10),0 8px 18px rgba(0,0,0,.35);
-}
-#inspector .det-effect-seal-art img{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.78))}
-#inspector .det-effect-seal-name{
-  font-family:Georgia,serif;
-  font-size:12px;
-  line-height:1.1;
-  font-weight:900;
-  letter-spacing:.045em;
-  text-align:center;
-  text-transform:uppercase;
-  color:#f4d477;
-}
 .stat-guide-card{
   border-color:rgba(238,190,91,.48)!important;
   background:
@@ -17720,53 +16586,9 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 }
 .stat-guide-head{padding-bottom:12px;border-bottom:1px solid rgba(238,190,91,.20)}
 .stat-guide-box{border-radius:14px!important;background:linear-gradient(180deg,rgba(42,31,18,.72),rgba(11,10,9,.86))!important;border-color:rgba(238,190,91,.22)!important}
-@media(max-width:980px){
-  #inspector .det-effects-icon-only .det-ability-list{gap:12px!important;padding:12px!important;min-height:126px!important}
-  #inspector .det-effect-seal{width:112px;min-height:110px;padding:9px 8px}
-  #inspector .det-effect-seal-art{width:62px;height:62px}
-  #inspector .det-effect-seal-art img{width:47px;height:47px}
-  #inspector .det-effect-seal-name{font-size:10px}
-}
 
 
 /* === 7HEX · Clase táctica limpia del Lancero Solar === */
-#inspector .det-tactical-icon-only{
-  background:#050505!important;
-  border-color:rgba(226,177,68,.42)!important;
-}
-#inspector .det-tactical-icon-only .det-section-title{
-  background:#090909!important;
-  color:#f2c95e!important;
-  border-bottom:1px solid rgba(226,177,68,.32)!important;
-}
-#inspector .det-tactical-single-wrap{
-  min-height:150px;
-  display:grid;
-  place-items:center;
-  padding:18px;
-  background:#050505;
-}
-#inspector .det-tactical-seal{
-  appearance:none;
-  width:118px;
-  height:118px;
-  border-radius:50%;
-  border:1px solid rgba(239,196,83,.56);
-  background:radial-gradient(circle at 35% 25%,rgba(255,220,118,.14),#0a0a0a 60%,#020202);
-  box-shadow:inset 0 0 18px rgba(255,207,91,.08),0 12px 30px rgba(0,0,0,.65),0 0 18px rgba(219,163,47,.10);
-  cursor:pointer;
-  display:grid;
-  place-items:center;
-  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
-}
-#inspector .det-tactical-seal:hover,
-#inspector .det-tactical-seal:focus-visible{
-  transform:translateY(-3px) scale(1.02);
-  border-color:#f5cf6b;
-  box-shadow:inset 0 0 22px rgba(255,207,91,.12),0 16px 34px rgba(0,0,0,.72),0 0 24px rgba(219,163,47,.18);
-  outline:none;
-}
-#inspector .det-tactical-seal-art img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 5px 7px rgba(0,0,0,.85))}
 .spearman-tactical-modal{
   position:fixed;
   inset:0;
@@ -17805,9 +16627,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 .spearman-tactical-ok{display:block;width:100%;margin-top:16px;padding:12px 16px;border-radius:12px;border:1px solid rgba(239,196,83,.52);background:#0a0a0a;color:#f5d47c;font-family:Georgia,serif;font-weight:900;letter-spacing:.08em;cursor:pointer}
 .spearman-tactical-ok:hover,.spearman-tactical-ok:focus-visible{background:#111;border-color:#f5d47c;outline:none}
 @media(max-width:680px){
-  #inspector .det-tactical-single-wrap{min-height:118px;padding:12px}
-  #inspector .det-tactical-seal{width:92px;height:92px}
-  #inspector .det-tactical-seal-art img{width:60px;height:60px}
   .spearman-tactical-card{padding:15px;border-radius:16px}
   .spearman-matchup-row{grid-template-columns:58px 1fr;padding:12px;gap:11px}
   .spearman-matchup-icon{width:52px;height:52px}
@@ -17816,7 +16635,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 }
 
 /* === 7HEZ · Inspector por iconos: efectos y arma sin texto === */
-#inspector .det-effects-icon-only .det-ability-list,
 #cardInspectModal .det-effects-icon-only .det-ability-list{
   display:flex!important;
   flex-wrap:wrap!important;
@@ -17830,7 +16648,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   overflow:auto!important;
   background:#050505!important;
 }
-#inspector .det-effect-seal,
 #cardInspectModal .det-effect-seal{
   appearance:none!important;
   width:58px!important;
@@ -17846,16 +16663,12 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   cursor:pointer!important;
   overflow:hidden!important;
 }
-#inspector .det-effect-seal:hover,
-#inspector .det-effect-seal:focus-visible,
-#cardInspectModal .det-effect-seal:hover,
-#cardInspectModal .det-effect-seal:focus-visible{
+#cardInspectModal .det-effect-seal:hover,#cardInspectModal .det-effect-seal:focus-visible{
   transform:translateY(-2px)!important;
   border-color:#f1ca68!important;
   box-shadow:inset 0 0 0 1px rgba(255,232,155,.10),0 8px 18px rgba(0,0,0,.55),0 0 14px rgba(228,173,52,.18)!important;
   outline:none!important;
 }
-#inspector .det-effect-seal-art,
 #cardInspectModal .det-effect-seal-art{
   width:46px!important;
   height:46px!important;
@@ -17866,22 +16679,18 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   border:1px solid rgba(232,186,76,.34)!important;
   box-shadow:inset 0 0 10px rgba(255,218,118,.05)!important;
 }
-#inspector .det-effect-seal-art img,
 #cardInspectModal .det-effect-seal-art img{
   width:36px!important;
   height:36px!important;
   object-fit:contain!important;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.85))!important;
 }
-#inspector .det-effect-seal-name,
 #cardInspectModal .det-effect-seal-name{display:none!important}
 
-#inspector .det-tactical-icon-only,
 #cardInspectModal .det-tactical-icon-only{
   background:#050505!important;
   border-color:rgba(226,177,68,.42)!important;
 }
-#inspector .det-tactical-single-wrap,
 #cardInspectModal .det-tactical-single-wrap{
   min-height:74px!important;
   padding:12px!important;
@@ -17890,7 +16699,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   justify-content:flex-start!important;
   background:#050505!important;
 }
-#inspector .det-tactical-seal,
 #cardInspectModal .det-tactical-seal{
   width:58px!important;
   height:58px!important;
@@ -17899,9 +16707,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   background:linear-gradient(180deg,#111,#040404)!important;
   box-shadow:inset 0 0 0 1px rgba(255,232,155,.05),0 5px 12px rgba(0,0,0,.45)!important;
 }
-#inspector .det-tactical-seal-art,
 #cardInspectModal .det-tactical-seal-art{display:grid!important;place-items:center!important}
-#inspector .det-tactical-seal-art img,
 #cardInspectModal .det-tactical-seal-art img{
   width:40px!important;
   height:40px!important;
@@ -17909,13 +16715,11 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.85))!important;
 }
 @media(max-width:680px){
-  #inspector .det-effects-icon-only .det-ability-list,
   #cardInspectModal .det-effects-icon-only .det-ability-list{gap:8px!important;padding:9px!important;min-height:64px!important}
-  #inspector .det-effect-seal,#cardInspectModal .det-effect-seal,
-  #inspector .det-tactical-seal,#cardInspectModal .det-tactical-seal{width:52px!important;height:52px!important;min-height:52px!important}
-  #inspector .det-effect-seal-art,#cardInspectModal .det-effect-seal-art{width:42px!important;height:42px!important}
-  #inspector .det-effect-seal-art img,#cardInspectModal .det-effect-seal-art img{width:33px!important;height:33px!important}
-  #inspector .det-tactical-seal-art img,#cardInspectModal .det-tactical-seal-art img{width:36px!important;height:36px!important}
+  #cardInspectModal .det-effect-seal,#cardInspectModal .det-tactical-seal{width:52px!important;height:52px!important;min-height:52px!important}
+  #cardInspectModal .det-effect-seal-art{width:42px!important;height:42px!important}
+  #cardInspectModal .det-effect-seal-art img{width:33px!important;height:33px!important}
+  #cardInspectModal .det-tactical-seal-art img{width:36px!important;height:36px!important}
 }
 /* 7HFA — El control de arma del DET es únicamente el icono. */
 .detail-guide-chip.detail-guide-chip-icon-only{
@@ -18182,8 +16986,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
 }
 
 /* === 7HFF DET cleanup: weapon only in footer, statuses use full right column === */
-#inspector.show #inspectText,
-#inspector:not(.hidden) #inspectText,
 #cardInspectModal:not(.hidden) #cardInspectText{
   grid-template-columns:minmax(0,1fr) 408px!important;
   grid-template-rows:minmax(0,1fr) 56px!important;
@@ -18192,14 +16994,10 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
     "buttons buttons"!important;
 }
 
-#inspector.show #inspectText > .det-tactical-card,
-#inspector:not(.hidden) #inspectText > .det-tactical-card,
 #cardInspectModal:not(.hidden) #cardInspectText > .det-tactical-card{
   display:none!important;
 }
 
-#inspector.show #inspectText > .det-status-section,
-#inspector:not(.hidden) #inspectText > .det-status-section,
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section{
   grid-area:states!important;
   height:100%!important;
@@ -18211,8 +17009,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   flex-direction:column!important;
 }
 
-#inspector.show #inspectText > .det-status-section .det-status-list,
-#inspector:not(.hidden) #inspectText > .det-status-section .det-status-list,
 #cardInspectModal:not(.hidden) #cardInspectText > .det-status-section .det-status-list{
   flex:1 1 auto!important;
   min-height:0!important;
@@ -18220,12 +17016,10 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   overflow:auto!important;
 }
 
-#inspector .detail-guide-chip,
 #cardInspectModal .detail-guide-chip{
   min-width:0!important;
 }
 
-#inspector .detail-guide-chip > span,
 #cardInspectModal .detail-guide-chip > span{
   white-space:nowrap!important;
 }
@@ -18360,25 +17154,6 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   .event-splash-icon-badge{--event-icon-size:56px;}
   .event-splash-stack.is-duo .event-splash-icon-anchor{bottom:42px !important;}
   .event-splash-stack.is-duo .event-splash-icon-badge{--event-icon-size:46px;}
-}
-#inspector,
-.inspector{
-  background:rgba(0,0,0,.54) !important;
-  backdrop-filter:blur(1.8px) saturate(108%) !important;
-  -webkit-backdrop-filter:blur(1.8px) saturate(108%) !important;
-}
-#inspector .inspect-card,
-.inspector .inspect-card{
-  background:linear-gradient(180deg,rgba(22,17,12,.84),rgba(7,7,6,.82)) !important;
-  box-shadow:0 28px 84px rgba(0,0,0,.56),0 0 24px rgba(255,214,120,.10) !important;
-}
-#inspector #inspectStats.inspect-grid,
-#inspector #inspectArt.inspect-art,
-#inspector #inspectText.inspect-text,
-.inspector #inspectStats.inspect-grid,
-.inspector #inspectArt.inspect-art,
-.inspector #inspectText.inspect-text{
-  background-color:rgba(0,0,0,.24) !important;
 }
 
 /* ============================================================
@@ -19004,11 +17779,9 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   --field-precision-scale:1;
   --field-precision-x:0px;
   --field-precision-y:0px;
-  --field-precision-bubble:1;
   --field-evasion-scale:1;
   --field-evasion-x:0px;
   --field-evasion-y:0px;
-  --field-evasion-bubble:1;
 }
 .stat-badge-precision-wrap,
 .stat-badge-eva-wrap{
@@ -19128,13 +17901,11 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 /* ==========================================================
    7HFIELDSTAT V2 · Control para TODOS los stat badges del campo
    ========================================================== */
-:root{
-  --field-hp-unit-scale:1; --field-hp-unit-x:0px; --field-hp-unit-y:0px; --field-hp-unit-bubble:1;
-  --field-hp-leader-scale:1; --field-hp-leader-x:0px; --field-hp-leader-y:0px; --field-hp-leader-bubble:1;
-  --field-atk-unit-scale:1; --field-atk-unit-x:0px; --field-atk-unit-y:0px; --field-atk-unit-bubble:1;
-  --field-atk-leader-scale:1; --field-atk-leader-x:0px; --field-atk-leader-y:0px; --field-atk-leader-bubble:1;
-  --field-guard-unit-scale:1; --field-guard-unit-x:0px; --field-guard-unit-y:0px; --field-guard-unit-bubble:1;
-  --field-guard-leader-scale:1; --field-guard-leader-x:0px; --field-guard-leader-y:0px; --field-guard-leader-bubble:1;
+:root{ --field-hp-unit-bubble:1; --field-hp-leader-bubble:1;
+  --field-atk-unit-scale:1; --field-atk-unit-x:0px; --field-atk-unit-y:0px;
+  --field-atk-leader-scale:1; --field-atk-leader-x:0px; --field-atk-leader-y:0px;
+  --field-guard-unit-scale:1; --field-guard-unit-x:0px; --field-guard-unit-y:0px;
+  --field-guard-leader-scale:1; --field-guard-leader-x:0px; --field-guard-leader-y:0px;
 }
 
 .unit-card .hp-heart-number{
@@ -20582,31 +19353,9 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 /* =====================================================================
    7BOARDCTRL8R · PODER DE BATALLA EN DET Y FORJA
    ===================================================================== */
-.inspect-card,
 .card-inspect-card{
   position:relative!important;
 }
-.det-battle-power-badge{
-  position:absolute;
-  top:12px;
-  right:12px;
-  z-index:24;
-  width:82px;
-  min-height:74px;
-  padding:7px 7px 6px;
-  display:grid;
-  grid-template-rows:auto 1fr auto;
-  align-items:center;
-  justify-items:center;
-  border-radius:15px;
-  border:1px solid rgba(255,235,164,.62);
-  background:linear-gradient(180deg,rgba(24,18,10,.96),rgba(6,5,4,.94));
-  box-shadow:0 9px 24px rgba(0,0,0,.55),inset 0 0 15px rgba(255,226,135,.11);
-  color:#fff3c9;
-  text-align:center;
-  pointer-events:none;
-}
-.det-battle-power-badge.hidden{display:none!important;}
 .det-battle-power-label{
   font-size:7.5px;
   line-height:1.05;
@@ -20614,32 +19363,9 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   letter-spacing:.08em;
   color:#ead9ae;
 }
-.det-battle-power-badge strong{
-  font-family:Georgia,serif;
-  font-size:30px;
-  line-height:.96;
-  color:#fff9dc;
-  text-shadow:0 2px 8px rgba(0,0,0,.9);
-}
-.det-battle-power-badge small{
-  font-size:8px;
-  line-height:1;
-  font-weight:900;
-  letter-spacing:.05em;
-  text-transform:uppercase;
-}
-.det-battle-power-badge.battle-power-initiation{border-color:rgba(170,170,170,.62);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 12px rgba(170,170,170,.12)}
-.det-battle-power-badge.battle-power-bronze{border-color:rgba(190,126,74,.78);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 14px rgba(190,126,74,.20)}
-.det-battle-power-badge.battle-power-silver{border-color:rgba(192,210,224,.82);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 15px rgba(182,207,227,.22)}
-.det-battle-power-badge.battle-power-gold{border-color:rgba(245,204,93,.88);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 18px rgba(245,204,93,.28)}
-.det-battle-power-badge.battle-power-elite{border-color:rgba(126,203,255,.90);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 20px rgba(91,181,255,.32)}
-.det-battle-power-badge.battle-power-dominant{border-color:rgba(255,113,220,.92);box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 23px rgba(255,94,213,.38)}
 
 /* El modal de carta ya tiene la X en la esquina superior derecha. El PB
    queda debajo para no cubrir el botón de cierre. */
-#cardInspectModal .det-battle-power-badge{top:58px;right:13px;}
-#cardInspectModal.deck-builder-detail-modal .det-battle-power-badge{top:12px;left:236px;right:auto;}
-#inspector .inspect-title{padding-right:98px!important;}
 #cardInspectModal .card-inspect-head{padding-right:96px!important;}
 
 .deck-mini-power{
@@ -20673,16 +19399,6 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 }
 
 @media(max-width:720px){
-  .det-battle-power-badge{
-    top:9px;
-    right:9px;
-    width:70px;
-    min-height:64px;
-    padding:6px;
-  }
-  .det-battle-power-badge strong{font-size:25px;}
-  #cardInspectModal .det-battle-power-badge{top:53px;right:9px;}
-  #inspector .inspect-title{padding-right:84px!important;}
   #cardInspectModal .card-inspect-head{padding-right:82px!important;}
 }
 
@@ -21065,22 +19781,12 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 /* =====================================================================
    7BOARDCTRL8BI · DET visible y editor visual persistente
    ===================================================================== */
-.card-inspect-card,
-.inspect-card{
+.card-inspect-card{
   width:min(var(--hv-det-panel-width,1120px),96vw)!important;
   height:min(var(--hv-det-panel-height,620px),92vh)!important;
   max-height:min(var(--hv-det-panel-height,620px),92vh)!important;
   transform:translate(var(--hv-det-panel-x,0px),var(--hv-det-panel-y,0px)) scale(var(--hv-det-panel-scale,1))!important;
   transform-origin:center center!important;
-}
-#inspector .det-battle-power-badge,
-#cardInspectModal .det-battle-power-badge,
-#cardInspectModal.deck-builder-detail-modal .det-battle-power-badge{
-  top:14px!important;
-  right:76px!important;
-  left:auto!important;
-  transform:translate(var(--hv-det-pb-x,0px),var(--hv-det-pb-y,0px)) scale(var(--hv-det-pb-scale,1))!important;
-  transform-origin:top right!important;
 }
 .det-mastery-progress{
   display:inline-flex!important;
@@ -21391,18 +20097,10 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 
 /* HallValla · DET click reliability patch
    Una sola ruta de click para DET y los HUD de ayuda siempre por encima del editor visual. */
-#inspector.show button,
 #cardInspectModal:not(.hidden) button{
   pointer-events:auto!important;
 }
-#inspector.show .det-btn-img,
-#inspector.show .det-effect-seal-art,
-#inspector.show .det-tactical-seal-art,
-#inspector.show .det-stat-icon-btn img,
-#cardInspectModal:not(.hidden) .det-btn-img,
-#cardInspectModal:not(.hidden) .det-effect-seal-art,
-#cardInspectModal:not(.hidden) .det-tactical-seal-art,
-#cardInspectModal:not(.hidden) .det-stat-icon-btn img{
+#cardInspectModal:not(.hidden) .det-btn-img,#cardInspectModal:not(.hidden) .det-effect-seal-art,#cardInspectModal:not(.hidden) .det-tactical-seal-art,#cardInspectModal:not(.hidden) .det-stat-icon-btn img{
   pointer-events:none!important;
 }
 .stat-guide-modal,
@@ -21588,25 +20286,21 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   padding:6px 8px!important;
   font-size:9.5px!important;
 }
-.hv-det-direct-editing #cardInspectModal:not(.hidden) [data-hv-det-edit-key],
-.hv-det-direct-editing #inspector.show [data-hv-det-edit-key]{
+.hv-det-direct-editing #cardInspectModal:not(.hidden) [data-hv-det-edit-key]{
   cursor:move!important;
   touch-action:none!important;
 }
-.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-direct-target:hover,
-.hv-det-direct-editing #inspector.show .hv-det-direct-target:hover{
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-direct-target:hover{
   outline:1px dashed rgba(255,218,116,.88)!important;
   outline-offset:2px!important;
 }
-.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-direct-selected,
-.hv-det-direct-editing #inspector.show .hv-det-direct-selected{
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-direct-selected{
   outline:2px solid rgba(74,207,255,.96)!important;
   outline-offset:3px!important;
   box-shadow:0 0 0 1px rgba(4,17,24,.82),0 0 18px rgba(74,207,255,.25)!important;
 }
 /* Fuera del editor, toda la pestaña inferior funciona como zona de clic. */
-#cardInspectModal:not(.hidden) .detail-guide-chip,
-#inspector.show .detail-guide-chip{
+#cardInspectModal:not(.hidden) .detail-guide-chip{
   cursor:pointer!important;
 }
 @media(max-width:720px){
@@ -21699,13 +20393,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   font-size:12px!important;
   line-height:1.35!important;
   color:#c9b995!important;
-}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-battle-power-badge{
-  top:16px!important;
-  right:78px!important;
-  left:auto!important;
-  translate:none!important;
-  scale:.9!important;
 }
 #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{
   top:16px!important;
@@ -22058,7 +20745,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   line-height:1.42 !important;
   color:#d7c4a0 !important;
 }
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-battle-power-badge{top:16px !important;right:86px !important;left:auto !important;translate:none !important;scale:1 !important;}
 #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{top:16px !important;right:18px !important;}
 
 #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-visual{
@@ -22360,9 +21046,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   min-height:25px!important;padding:5px 9px!important;font-size:10px!important;line-height:1!important;white-space:nowrap!important;
 }
 #cardInspectModal.deck-builder-detail-modal.det-universal-template .det-summary-copy{display:none!important;}
-#cardInspectModal.deck-builder-detail-modal.det-universal-template .det-battle-power-badge{
-  top:8px!important;right:56px!important;left:auto!important;scale:.72!important;
-}
 #cardInspectModal.deck-builder-detail-modal.det-universal-template .card-inspect-x{
   top:8px!important;right:8px!important;width:42px!important;height:42px!important;
 }
@@ -23202,8 +21885,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   z-index:16!important;
 }
 #cardInspectModal .det-battle-power-label{font-size:10px!important;}
-#cardInspectModal .det-battle-power-badge strong{font-size:clamp(20px,2vw,37px)!important;}
-#cardInspectModal .det-battle-power-badge small{font-size:9px!important;}
 #cardInspectModal #detLevelPanel{
   left:57.1%!important;
   top:18.2%!important;
@@ -23355,7 +22036,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 }
 
 /* === DET v32 UNIFICADO · colección, mano y campo usan #cardInspectModal === */
-#inspector{display:none!important;}
 #cardInspectModal.unified-det-modal .card-inspect-card,
 #cardInspectModal.deck-builder-detail-modal.det-v32-collection .card-inspect-card,
 #cardInspectModal.field-unit-detail-modal .card-inspect-card{

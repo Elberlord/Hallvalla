@@ -527,7 +527,6 @@ async function attackUnit(a,d){
   let bloodVictoryTriggered=bloodVictoryResult.triggered;
   const bloodVictoryLogs=[...(bloodVictoryResult.logs||[])];
   let bloodVictoryCheckpoint=[...units];
-  const bloodMistTriggered=false;
   const steelWallTriggered=shouldTriggerSteelWall(d,guardLoss,hit.hit);
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
   const coverFireTriggered=shouldTriggerCoverFire(a,hpLoss,hit.hit);
@@ -838,7 +837,7 @@ async function advanceTurnPhase(){
   }
   if(phase==="end")return finishTurn();
 }
-async function endTurn(){return advanceTurnPhase()}
+
 async function adventureEnemyTurn(){
   if(!gameId)return;
   const pubSnap=await get(ref(db,`games/${gameId}/public`));
@@ -923,7 +922,6 @@ async function adventureEnemyTurn(){
   const achillesExtremeHonorBonus=isAchillesExtremeBattleId(pub.adventureBattleId)?1:0;
   const rawHonorGain=((pub.turn||1)>3?2:1)+achillesExtremeHonorBonus;
   const recharge=getResourceRecharge(ai.maxHonor||0,rawHonorGain);
-  const honorGain=recharge.gain;
   let maxHonor=recharge.maxHonor;
   let honor=recharge.honor;
   let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?clearTurnTempStatsForOwnerUnit(u,pub.turnKey):u);units=units.map(u=>u.owner===2&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);

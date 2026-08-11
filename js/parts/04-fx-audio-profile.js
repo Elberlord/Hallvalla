@@ -132,10 +132,7 @@ function appendEventSplashHistory(items){
   eventSplashHistory=[...incoming,...previous.filter(item=>item&&!incomingKeys.has(item.key))].slice(0,5);
   if(typeof renderLog==="function")renderLog();
 }
-function clearEventSplashHistory(){
-  eventSplashHistory=[];
-  if(typeof renderLog==="function")renderLog();
-}
+
 function showNextEventSplash(){
   if(eventSplashActive||!eventSplashQueue.length)return;
   const box=$("eventSplashOverlay");
@@ -164,14 +161,7 @@ function showNextEventSplash(){
     },760);
   },2100);
 }
-function queueEventSplash(payload){
-  if(!payload||!payload.type)return;
-  const key=payload.key||`${payload.type}:${Date.now()}`;
-  if(key===lastEventSplashKey)return;
-  lastEventSplashKey=key;
-  eventSplashQueue.push([{...payload,key}]);
-  showNextEventSplash();
-}
+
 function queueEventSplashGroup(payloads){
   const list=(Array.isArray(payloads)?payloads:[payloads]).filter(item=>item&&item.type&&getEventSplashConfig(item.type));
   if(!list.length)return;

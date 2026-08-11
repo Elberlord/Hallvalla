@@ -17,7 +17,7 @@ function hallvallaSetDeep(obj,path,value){const parts=String(path||"").split("/"
 function hallvallaApplyLocalPatch(target,patch){const base={...(target||{})};Object.entries(patch||{}).forEach(([k,v])=>{if(k.includes("/"))hallvallaSetDeep(base,k,v);else if(v===null)delete base[k];else base[k]=v;});return base;}
 
 let lastHonorRechargeKey="",honorRechargeTimer=null;
-const TURN_PHASES=["draw","main","actions","last","end"];
+
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
 const TURN_TIME_LIMIT_MS=180*1000;
 const DUEL_TIME_LIMIT_MS=15*60*1000;
@@ -287,7 +287,6 @@ function buildTimedOutTurnState(state,now=Date.now()){
 function closeTurnInteractionSurfaces(){
   handOpen=false;handManualCloseKey="";clearSelection();unitContextSelection=null;hideUnitContextMenu();
   const inspect=$("cardInspectModal");if(inspect)inspect.classList.add("hidden");
-  const det=$("inspector");if(det)det.classList.remove("show");
 }
 async function expireDuelByClock(){
   if(duelClockExpiryLock||!gameId||!isTurnTimerEnabled())return;

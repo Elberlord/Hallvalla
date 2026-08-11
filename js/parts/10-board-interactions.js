@@ -236,21 +236,11 @@ async function cellClick(x,y){
   unitContextSelection=null;
   hideUnitContextMenu();
 }
-function getLegacyBoardPortraitPath(portrait){
-  const raw=String(portrait||"");
-  if(!raw)return raw;
-  if(raw.includes("assets/cards/"))return raw.replace("assets/cards/","assets/board_cards/");
-  return raw;
-}
 
-function getBoardPortraitPath(portrait,unitKey="",entity=null){
-  return getResolvedBoardPortraitSource(entity||{portrait,key:unitKey});
-}
 
-function getBoardPortraitFallbackPath(portrait,unitKey="",entity=null){
-  const source=entity||{portrait,key:unitKey};
-  return getResolvedCardPortraitSource(source)||getAssetWarningImageSrc();
-}
+
+
+
 
 function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
@@ -314,8 +304,6 @@ function getBoardUnitPortraitHtml(u){
 
 function showUnit(u){
   if(!u)return;
-  const legacyInspector=$("inspector");
-  if(legacyInspector)legacyInspector.classList.remove("show");
   cardInspectSelection=null;
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);

@@ -1,39 +1,49 @@
-HALLVALLA 7BOARDCTRL8U · REFACTORIZACIÓN MODULAR
+HALLVALLA · ARQUITECTURA MODULAR ACTUALIZADA
 
-Base: 7BOARDCTRL8T con Salomón, Ericto y la corrección del ataque del jugador.
+Estado revisado: 2026-08-11 · runtime 7BOARDCTRL8CM
 
 ARQUITECTURA
-- index.html carga únicamente js/bootstrap-loader.js como módulo ES.
-- bootstrap-loader.js importa Firebase una sola vez y expone sus funciones al entorno global.
-- Los 16 archivos de js/parts/ se cargan secuencialmente como scripts clásicos estrictos.
-- El orden original del código fue conservado para mantener las dependencias entre const, let y funciones.
-- script.js queda como archivo legado mínimo y ya no se ejecuta.
+- index.html carga js/bootstrap-loader.js como módulo ES.
+- bootstrap-loader.js importa Firebase una sola vez y expone las funciones requeridas al entorno global.
+- El runtime carga 19 archivos de js/parts/ secuencialmente como scripts clásicos estrictos.
+- El orden de los módulos es contractual: varios módulos consumen const, let y funciones declaradas por módulos anteriores.
+- No existe script.js activo ni se requiere para el arranque.
 
-MÓDULOS:
-- 01-boot-config.js: 5.7 KiB · Arranque, Firebase, utilidades DOM
-- 02-assets-leaders.js: 15.6 KiB · Rutas de assets y sistema de líderes
-- 03-runtime-clocks.js: 25.1 KiB · Estado de batalla, fases y relojes
-- 04-fx-audio-profile.js: 39.0 KiB · FX, audio y progreso local
-- 05-cards-specials-lore.js: 135.3 KiB · Catálogo de cartas, Salomón, Ericto, PB, lore y estados
-- 06-decks-units-combat-rules.js: 122.5 KiB · Mazos, unidades, reglas de combate y trampas
-- 07-network-battle-state.js: 36.4 KiB · Estado público/privado, creación de partidas y Firebase
-- 08-actions-inspector.js: 112.8 KiB · Acciones, selección, inspector y guías tácticas
-- 09-combat-turn-ai.js: 147.4 KiB · Movimiento, ataque, turnos e IA de aventura
-- 10-board-interactions.js: 37.0 KiB · Interacción directa con tablero y efectos de unidad
-- 11-render-battle-tutorial.js: 81.8 KiB · Render de batalla, HUD, cartas y tutorial
-- 12-profile-shop-packs.js: 40.5 KiB · Perfil, tienda, sobres y navegación de cuenta
-- 13-collection-deck-forge.js: 58.8 KiB · Colección, mazos, Forja y personaje principal
-- 14-adventure-engine-ui.js: 33.0 KiB · Motor y presentación de aventura
-- 15-settings-tuners-events.js: 51.2 KiB · Eventos UI, ajustes y paneles de calibración
-- 16-exact-guides-mobile.js: 34.9 KiB · Guías exactas, limpieza final y soporte móvil
+MÓDULOS ACTIVOS (orden de bootstrap)
+- 01-boot-config.js: arranque, Firebase y utilidades DOM.
+- 02-assets-leaders.js: resolución de assets y sistema de líderes.
+- 03-runtime-clocks.js: estado de batalla, fases y relojes.
+- 04-fx-audio-profile.js: FX, audio y progreso local.
+- 05-cards-specials-lore.js: catálogo, especiales, lore y estados.
+- 06-decks-units-combat-rules.js: mazos, unidades, reglas y trampas.
+- 07-network-battle-state.js: estado público/privado, partidas y Firebase.
+- 08-actions-inspector.js: acciones, selección, DET activo y guías.
+- 09-combat-turn-ai.js: combate, turnos e IA.
+- 10-board-interactions.js: interacción del tablero y efectos de unidad.
+- 11-render-battle-tutorial.js: render de batalla, HUD, cartas y tutorial.
+- 12-profile-shop-packs.js: perfil, tienda, sobres y navegación de cuenta.
+- 13-collection-deck-forge.js: colección, mazos y Forja.
+- 14-adventure-engine-ui.js: motor y presentación de aventura.
+- 17-dragon-contracts.js: contratos/jefes dragón y HUD asociado.
+- 18-dragon-egg.js: huevo de dragón y flujo relacionado.
+- 19-field-figures-3d.js: figuras de campo 3D y su calibración.
+- 15-settings-tuners-events.js: eventos UI, ajustes y paneles de calibración.
+- 16-exact-guides-mobile.js: guías exactas y soporte móvil.
+
+NOTA DE LIMPIEZA 2026-08-11
+- Se retiró el inspector DET legado #inspector. El único DET es #cardInspectModal.
+- Se retiraron funciones/globals sin consumidor y residuos de resultado/mapa de aventura antiguos.
+- Se retiró el MutationObserver permanente del antiguo debug de rareza; la migración de claves viejas permanece en 01-boot-config.js.
+- Se eliminaron assets confirmados sin consumidor.
 
 VALIDACIONES RECOMENDADAS EN NAVEGADOR
 - Arranque y autenticación Firebase.
+- Home, colección, mazos, Forja y tienda.
 - Partida local y online.
-- Ataque normal del jugador y de la IA.
 - Salomón y sus tres entidades.
 - Ericto, cementerio y reanimados.
-- Forja, colección, sobres y aventura.
+- Contratos de dragón y huevo de dragón.
+- Aventura y navegación de mapa.
+- DET, tuners y vista móvil.
 
-COMPATIBILIDAD
-La refactorización no cambia estadísticas, reglas ni assets. Solo cambia la distribución física del JavaScript.
+La modularización por sí sola no debe alterar estadísticas ni reglas de juego.

@@ -291,24 +291,8 @@ function getAdventureMapTheme(chapter){
     points
   };
 }
-function buildAdventureMapPath(points){
-  if(!Array.isArray(points)||!points.length)return "";
-  let d=`M ${points[0].x} ${points[0].y}`;
-  for(let i=1;i<points.length;i++){
-    const prev=points[i-1],cur=points[i];
-    const dx=cur.x-prev.x;
-    const tension=Math.min(Math.max(Math.abs(dx)*0.38,8),18);
-    const c1x=(prev.x+tension).toFixed(2);
-    const c1y=prev.y.toFixed(2);
-    const c2x=(cur.x-tension).toFixed(2);
-    const c2y=cur.y.toFixed(2);
-    d+=` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${cur.x} ${cur.y}`;
-  }
-  return d;
-}
-function buildAdventureMapConnectors(points){
-  return "";
-}
+
+
 function getAdventureBattleCode(chapter,battle){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
   return `${major}-${battle?.num||1}`;
