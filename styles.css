@@ -16383,30 +16383,6 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 /* El modal de carta ya tiene la X en la esquina superior derecha. El PB
    queda debajo para no cubrir el botón de cierre. */
 
-.deck-mini-power{
-  position:absolute;
-  z-index:4;
-  left:3px;
-  bottom:21px;
-  min-width:31px;
-  height:15px;
-  padding:0 4px;
-  display:grid;
-  place-items:center;
-  border-radius:999px;
-  border:1px solid rgba(255,230,150,.48);
-  background:rgba(0,0,0,.82);
-  color:#fff4c8;
-  font-size:7.4px;
-  line-height:1;
-  font-weight:950;
-  letter-spacing:.01em;
-  text-shadow:0 1px 2px #000;
-  pointer-events:none;
-}
-.deck-mini-power.battle-power-gold{border-color:rgba(245,204,93,.82)}
-.deck-mini-power.battle-power-elite{border-color:rgba(126,203,255,.86)}
-.deck-mini-power.battle-power-dominant{border-color:rgba(255,113,220,.90);box-shadow:0 0 8px rgba(255,94,213,.28)}
 
 #deckBuilderPanel #deckBattlePowerFilter,
 #deckBuilderPanel #deckBattlePowerSort{

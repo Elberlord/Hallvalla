@@ -2,7 +2,7 @@
 (()=>{
   'use strict';
 
-  const STORAGE_KEY='hallvalla_forge1_direct_tuner_v2_userlayout';
+  const STORAGE_KEY='hallvalla_forge1_direct_tuner_v3_userlayout2';
   const PANEL_KEY='hallvalla_forge1_direct_tuner_panel_v1';
   const $=id=>document.getElementById(id);
 
@@ -33,13 +33,13 @@
 
   const USER_LAYOUT={
     parchment:{x:-23,y:21,scale:100,width:100,height:168},
-    cards:{x:-29,y:26,scale:70,width:100,height:100},
+    cards:{x:-24,y:51,scale:100,width:100,height:100},
     search:{x:42,y:54,scale:80,width:100,height:100},
     type:{x:5,y:54,scale:80,width:100,height:100},
     rarity:{x:-20,y:55,scale:80,width:100,height:100},
     power:{x:-50,y:55,scale:80,width:100,height:100},
     sort:{x:-70,y:55,scale:80,width:100,height:100},
-    pager:{x:-26,y:-61,scale:100,width:100,height:100},
+    pager:{x:-22,y:92,scale:100,width:100,height:100},
     prev:{x:0,y:0,scale:100,width:100,height:100},
     page:{x:0,y:0,scale:100,width:100,height:100},
     next:{x:0,y:0,scale:100,width:100,height:100},

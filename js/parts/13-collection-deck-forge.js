@@ -663,7 +663,6 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     : `data-deck-card-key="${escapeHtml(card.key||"")}"`;
   const badge=mode==="deck"?`${index+1}`:`${used}/${maxAllowed}`;
   const battlePower=getUnitBattlePower(card);
-  const powerBadge=Number.isFinite(battlePower)?`<span class="deck-mini-power battle-power-${getBattlePowerTier(battlePower)?.key||"initiation"}" title="Poder de batalla ${battlePower}/100">PB ${battlePower}</span>`:"";
   const surplus=getCardSurplusCopies(card);
   const canCraft=mode==="collection"&&canCraftCardCopy(card);
   const material=getMaterialAmountForCard(card);
@@ -698,7 +697,6 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <span class="deck-mini-type">${getDeckBuilderTypeGlyph(card)}</span>
     <span class="deck-mini-badge">${escapeHtml(String(badge))}</span>
     <span class="deck-mini-cost">${escapeHtml(String(card?.cost??"-"))}</span>
-    ${powerBadge}
     ${lockBadge}
     <span class="deck-mini-name">${name}</span>
     ${materialLine}
