@@ -18955,3 +18955,29 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #hvForgeParchmentLayer,#hvForgeParchmentLayer.hv-forge-tuner-group-candidate,#hvForgeParchmentLayer.hv-forge-tuner-selected{z-index:0!important}
 #deckBuilderPanel .deckbuilder-parchment-stage > *:not(.hv-forge-parchment-layer){position:relative!important;z-index:10!important}
 #deckBuilderPanel .deckbuilder-parchment-stage .hv-forge-tuner-selected:not(#hvForgeParchmentLayer){z-index:80!important}
+
+
+/* FORGE1CTRL2INPUT2 · interacción correcta cuando los filtros se desplazan sobre la colección */
+#deckBuilderPanel .deckbuilder-parchment-stage > .deckbuilder-filters{
+  position:relative !important;
+  z-index:40 !important;
+  pointer-events:auto !important;
+}
+#deckBuilderPanel .deckbuilder-parchment-stage > .deckbuilder-collection{
+  position:relative !important;
+  z-index:20 !important;
+}
+#deckBuilderPanel .deckbuilder-filters input,
+#deckBuilderPanel .deckbuilder-filters select,
+#deckBuilderPanel .deckbuilder-filters button{
+  position:relative !important;
+  z-index:45 !important;
+  pointer-events:auto !important;
+}
+/* La capa gráfica del pergamino nunca debe capturar clics del UI. */
+#hvForgeParchmentLayer,
+#hvForgeParchmentLayer.hv-forge-tuner-group-candidate,
+#hvForgeParchmentLayer.hv-forge-tuner-selected{
+  pointer-events:none !important;
+  z-index:0 !important;
+}

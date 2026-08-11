@@ -153,6 +153,13 @@
 
   function findClickedTarget(node){
     if(!(node instanceof Element))return null;
+    /* El pergamino es una capa puramente visual (pointer-events:none). Para moverlo,
+       se usa cualquier zona vacía del escenario mientras el grupo Pergamino está activo. */
+    if(activeGroup==='parchment'){
+      const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
+      const overUi=!!node.closest('input,select,option,button,textarea,a,[contenteditable="true"],.deck-mini-card,.deckbuilder-filters,.deckbuilder-collection');
+      return stage&&stage.contains(node)&&!overUi?'parchment':null;
+    }
     const candidates=Object.entries(TARGETS)
       .filter(([,cfg])=>cfg.group===activeGroup)
       .map(([key,cfg])=>({key,el:targetElement(key),cfg}))
@@ -172,8 +179,12 @@
     document.addEventListener('pointerdown',event=>{
       if(!panelOpen||!isForgeOpen()||event.target.closest('#hvForgeDirectTuner'))return;
       const key=findClickedTarget(event.target);if(!key)return;
-      event.preventDefault();event.stopPropagation();
+      const interactive=!!event.target.closest('input,select,option,button,textarea,a,[contenteditable="true"]');
+      /* Los controles reales deben seguir funcionando aun con el tuner abierto.
+         Clic normal = usar el input/select/botón. Shift + arrastrar = moverlo. */
       selectKey(key);
+      if(interactive&&!event.shiftKey)return;
+      event.preventDefault();event.stopPropagation();
       const value=state[key];
       drag={key,startX:event.clientX,startY:event.clientY,baseX:Number(value.x)||0,baseY:Number(value.y)||0,moved:false};
     },true);
