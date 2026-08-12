@@ -1068,8 +1068,8 @@ function expandEnemyFixedDeck(deckList=[]){
      cartas no básicas; conserva Richard + Hua Lan + William Wallace como núcleo raro.
    - Cada líder conserva una identidad mínima. La IA contrarresta composiciones, no
      destruye por completo el arquetipo del duelista.
-   - El Hechicero de batalla 3 conserva Cañón Arcano como mazo base y su lógica táctica
-     especializada, pero ya llega con lo aprendido en las batallas 1 y 2.
+   - La batalla 3 usa Caballería y la batalla 4 usa Hacha. Ambas conservan un núcleo
+     mínimo de su especialización mientras adaptan counters al historial del jugador.
 ============================================================================ */
 const ADAPTIVE_CAMPAIGN_PROFILE_KEY="campaignTacticalProfileV1";
 const ADAPTIVE_CAMPAIGN_HISTORY_LIMIT=24;
@@ -1096,8 +1096,8 @@ const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
 const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
   battle1:Object.freeze({archer:2,new_kingdom_archer:2,egyptian_line_archer:1,skirmisher_cloak:1,retreat_strap:1}),
   battle2:Object.freeze({spearman:2,greek_hoplite:2,samurai_katana:2,guardian:1,marching_greaves:1,war_visor:1}),
-  battle3:ADAPTIVE_MAGE_CORE_MIN,
-  battle4:Object.freeze({guardian:2,spearman:1,berserker:1,samurai_katana:1}),
+  battle3:Object.freeze({cavalry:2,withdrawal_stirrups:1,light_barding:1,guardian:1}),
+  battle4:Object.freeze({berserker:2,ulfhednar:1,tanned_hide_harness:1,counterweighted_grip:1}),
   battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,guardian:1,samurai_katana:1})
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:3,battle2:4,battle3:6,battle4:8,battle5:10});
@@ -1311,7 +1311,7 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
 }
 function getAdaptiveMap1BaseDeckTemplates(battle,enemyLeaderType,targetDeckSize){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
-  if(battle?.id==="battle3"){
+  if(isAdaptiveMagePilotBattle(battle,enemyLeaderType)){
     const templates=[];
     ADAPTIVE_MAGE_BASE_DECK_COUNTS.forEach(([key,count])=>{
       const card=getAdventureDeckCardTemplateByKey(key);

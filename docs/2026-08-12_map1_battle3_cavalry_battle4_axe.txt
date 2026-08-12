@@ -1,0 +1,12 @@
+HALLVALLA — MAPA 1 · DIVERSIFICACIÓN DE LÍDERES
+
+Cambio aplicado sobre WARRIORIRONWALL1:
+- 1-3 / battle3: deja de ser Hechicero. Ahora usa enemyLeaderType=cavalry (Señor de la Carga rebelde).
+- 1-4 / battle4: deja de repetir Guerrero. Ahora usa enemyLeaderType=axe (Caudillo del Hacha rebelde).
+- Se actualizaron nombre, título, introducción, descripción y estilo de IA de ambos encuentros.
+- 1-3 conserva máximo 6 sustituciones adaptativas.
+- 1-4 conserva máximo 8 sustituciones adaptativas.
+- El antiguo constructor especial Cañón Arcano sólo se activa si battle3 vuelve explícitamente a ser mage; con cavalry ya no se usa.
+- Núcleo adaptativo 1-3: 2 Caballerías Ligeras + Estribos de Retirada + Barda Ligera + 1 Guardián.
+- Núcleo adaptativo 1-4: 2 Berserkers + 1 Ulfhednar + Arnés de Cuero Curtido + Empuñadura Contrapesada.
+- No se diseñaron todavía los mazos definitivos personalizados de 1-3/1-4; mientras tanto parten de los starters Básicos de sus nuevas especializaciones y la IA adaptativa puede modificarlos dentro de sus límites.
