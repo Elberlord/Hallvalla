@@ -13,7 +13,7 @@ function handleAdventureHomeClick(ev){
     requireLeaderSelection(true);
     return;
   }
-  runFirstTimeTutorialBefore(openAdventureStory);
+  openAdventureStory();
 }
 on("adventureBtn","click",handleAdventureHomeClick);
 on("closeAdventureBtn","click",()=>{$("adventurePanel").classList.add("hidden");syncBattleMusic();});

@@ -258,7 +258,7 @@ async function setSelectedLeaderType(type){
 
   const nextAction=pendingAfterLeaderSelection;
   pendingAfterLeaderSelection="";
-  if(nextAction==="adventure")runFirstTimeTutorialBefore(openAdventureStory);
+  if(nextAction==="adventure")openAdventureStory();
   if(nextAction==="online")runFirstTimeTutorialBefore(openOnlineLobby);
   if(nextAction==="beast_event")runFirstTimeTutorialBefore(openBeastmasterEvent);
   if(nextAction==="hallvalla_events")runFirstTimeTutorialBefore(openHallvallaEvents);

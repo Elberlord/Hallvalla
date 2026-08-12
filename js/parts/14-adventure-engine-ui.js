@@ -74,9 +74,48 @@ function getCurrentAdventureChapter(progress=getAdventureProgress()){
   }
   return ADVENTURE_CHAPTERS[ADVENTURE_CHAPTERS.length-1];
 }
+const ADVENTURE_CAMPAIGN_RESET_MARKER_KEY="hallvalla_adventure_campaign_reset_marker";
+const ADVENTURE_CAMPAIGN_RESET_MARKER="adaptive_campaign_map1_restart_v1_2026_08_11";
+function hasAdvancedAdventureProgress(saved){
+  if(!saved||typeof saved!=="object")return false;
+  if(saved.guardianDefeated||saved.guardianRewardClaimed||saved.guardianPackClaimed)return true;
+  return ADVENTURE_CHAPTERS.some(ch=>{
+    const chapter=saved.chapters?.[ch.id]||{};
+    if(Number(chapter.unlockedBattle||1)>1)return true;
+    return Object.values(chapter.completedBattles||{}).some(Boolean);
+  });
+}
+function clearAdaptiveAdventureMemoryForCampaignRestart(){
+  try{
+    const raw=JSON.parse(localStorage.getItem("hallvalla_player_profile")||"null");
+    if(!raw||typeof raw!=="object"||!raw.adaptiveAi)return;
+    const adaptiveAi={...raw.adaptiveAi};
+    delete adaptiveAi.mageCounterV1;
+    if(Object.keys(adaptiveAi).length)raw.adaptiveAi=adaptiveAi;
+    else delete raw.adaptiveAi;
+    localStorage.setItem("hallvalla_player_profile",JSON.stringify(raw));
+  }catch(e){console.warn("[HallValla] No se pudo limpiar la memoria adaptativa durante el reinicio de campaña:",e);}
+}
+function ensureAdventureCampaignRestartMigration(){
+  try{
+    if(localStorage.getItem(ADVENTURE_CAMPAIGN_RESET_MARKER_KEY)===ADVENTURE_CAMPAIGN_RESET_MARKER)return false;
+    const saved=JSON.parse(localStorage.getItem(ADVENTURE_PROGRESS_KEY)||"null");
+    const mustRestart=hasAdvancedAdventureProgress(saved);
+    if(mustRestart){
+      localStorage.removeItem(ADVENTURE_PROGRESS_KEY);
+      clearAdaptiveAdventureMemoryForCampaignRestart();
+    }
+    localStorage.setItem(ADVENTURE_CAMPAIGN_RESET_MARKER_KEY,ADVENTURE_CAMPAIGN_RESET_MARKER);
+    return mustRestart;
+  }catch(e){
+    try{localStorage.setItem(ADVENTURE_CAMPAIGN_RESET_MARKER_KEY,ADVENTURE_CAMPAIGN_RESET_MARKER);}catch(_){}
+    return false;
+  }
+}
 function getAdventureProgress(){
   const blank=()=>({selectedSpecial:"",guardianDefeated:false,guardianRewardClaimed:false,guardianPackClaimed:false,chapters:Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,{unlockedBattle:1,completedBattles:{}}]))});
   try{
+    ensureAdventureCampaignRestartMigration();
     const saved=JSON.parse(localStorage.getItem(ADVENTURE_PROGRESS_KEY)||"null")||{};
     const progress=blank();
     const savedSpecial=ADVENTURE_SPECIALS[saved.selectedSpecial]?saved.selectedSpecial:"";
@@ -157,6 +196,9 @@ async function maybeGrantBeastmasterRareEgg(pub){
 function completeAdventureBattleOnce(pub){
   if(!pub||pub.mode!=="adventure"||pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
+  // La memoria se registra antes de comprobar recompensas/completados: si el jugador
+  // vuelve a desafiar al Hechicero y gana otra vez, la IA aprende también ese reintento.
+  if(pub.adventureAdaptiveMage&&typeof recordAdaptiveMageDefeat==="function")recordAdaptiveMageDefeat(pub);
   if(battle.beastEvent){
     if(hasBeastmasterBattleRewarded(pub))return{awarded:false,xp:0,gems:0,gold:0,levelUps:0,cards:[],battle,progress:getAdventureProgress(),beastEvent:true};
     markBeastCraftingUnlocked();

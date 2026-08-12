@@ -1788,6 +1788,10 @@ async function adventureEnemyTurn(){
     if(card.key==="archer"||cardRange>1)score+=aiLevel>=3?45:20;
     if(card.key==="scout")score+=living(1).some(e=>!e.leader&&d(cell,e)<=cardRange)?55:10;
     if(card.key==="guardian"&&el&&living(1).some(e=>d(e,el)<=3))score+=75;
+    if(pub.adventureAdaptiveMage&&card.key==="arcane_adept"&&el){
+      if(d(cell,el)<=1)score+=360; // Vínculo Arcano: nace pegado al Hechicero siempre que sea seguro.
+      if(playerThreatAtCell(cell,card)<35)score+=110;
+    }
 
     // Estrategia del mazo básico: levantar línea defensiva, esperar con rango y castigar amenazas.
     if(role==="tank"){
@@ -1888,7 +1892,10 @@ async function adventureEnemyTurn(){
       case "withdrawal_stirrups": score+=135+Math.max(0,effectiveMov(ally))*20; if(role==="cavalry")score+=70; break;
       case "light_barding": score+=110+rangedEnemies*55; break;
       case "stabilizing_focus": score+=185+aiAttackRange(ally)*28; if(role==="ranged"||role==="support")score+=45; break;
-      case "channeling_amulet": score+=255+(ally.caster||ally.healer||ally.hechicero||ally.hechicera||ally.nigromante?100:0); break;
+      case "channeling_amulet":
+        score+=255+(ally.caster||ally.healer||ally.hechicero||ally.hechicera||ally.nigromante?100:0);
+        if(pub.adventureAdaptiveMage&&ally.key==="arcane_adept")score+=520+(target?.leader?320:0);
+        break;
       case "instinct_collar": score+=120+Math.min(100,threat*.55); break;
       case "hunting_harness": score+=135+woundedEnemies*32+(target&&Number(target.hp||0)<Number(effectiveMaxHp(target)||target.maxHp||target.hp||0)?100:0); break;
     }
@@ -1910,11 +1917,19 @@ async function adventureEnemyTurn(){
     for(const card of hand.filter(c=>c.spell==="buff"&&effectiveCardCost(c,2)<=honor)){
       for(const ally of living(2).filter(u=>!u.leader)){
         const immediateTarget=bestAttackTarget(ally);
-        let score=(card.buff||0)*8+effectiveAtk(ally)*3+(ally.hp||0);
-        if(immediateTarget)score+=scoreTarget(immediateTarget,effectiveAtk(ally)+(card.buff||0),ally)+90;
+        const buffValue=effectiveCardValue(card,"buff")||card.buff||0;
+        let score=buffValue*12+effectiveAtk(ally)*3+(ally.hp||0);
+        if(immediateTarget)score+=scoreTarget(immediateTarget,effectiveAtk(ally)+buffValue,ally)+90;
         else{
           const pl=playerLeaderNow();
           if(pl)score+=Math.max(0,10-d(ally,pl))*3;
+        }
+        if(pub.adventureAdaptiveMage){
+          const hasChanneling=hasUnitEquipment(ally,"channeling_amulet");
+          if(ally.key==="arcane_adept")score+=hasChanneling?430:210;
+          if(ally.key==="samurai_katana")score+=180;
+          if(immediateTarget?.leader)score+=780;
+          if(!immediateTarget)score-=520; // guarda el +AT hasta que pueda convertirse en daño real.
         }
         options.push({card,ally,score});
       }
@@ -1932,6 +1947,10 @@ async function adventureEnemyTurn(){
         if(ally.leader)score+=leaderDangerScore()>70?120:15;
         if(ally.key==="wallace")score+=45;
         if(ally.key==="joan_of_arc"||ally.key==="leonidas")score+=25;
+        if(pub.adventureAdaptiveMage&&ally.key==="arcane_adept"){
+          score+=hasUnitEquipment(ally,"channeling_amulet")?360:180;
+          if(nearbyThreat)score+=160;
+        }
         options.push({card,ally,score});
       }
     }
@@ -2094,12 +2113,17 @@ async function adventureEnemyTurn(){
   const chooseBestDamageSpell=()=>{
     return hand.filter(c=>c.spell==="damage"&&effectiveCardCost(c,2)<=honor&&living(1).length).map(card=>{
       const target=bestTargetForDamage(card);
-      let score=scoreTarget(target,card.damage||0)-(card.cost||0)*2;
-      // Con el mazo básico de Hechicero, el daño mágico directo al líder es presión central.
-      if(target?.leader)score+=260;
-      if(pub.adventureEnemyLeader==="mage"&&target?.leader)score+=120;
+      let score=scoreTarget(target,effectiveCardValue(card,"damage")||card.damage||0)-(card.cost||0)*2;
+      // Regla Hechicero: la magia ofensiva abre el tablero, nunca quema al líder directamente.
+      if(pub.adventureAdaptiveMage&&target&&!target.leader){
+        const pl=playerLeaderNow();
+        const highGuard=effectiveGuard(target)>=4;
+        if(highGuard)score+=170;
+        if(pl&&d(target,pl)<=2)score+=120; // elimina la pantalla que protege al líder humano.
+        if(aiBasicTacticRole(target)==="ranged")score+=95;
+      }
       return{card,target,score};
-    }).sort((a,b)=>b.score-a.score)[0]||null;
+    }).filter(choice=>choice.target).sort((a,b)=>b.score-a.score)[0]||null;
   };
 
 
@@ -2133,8 +2157,8 @@ async function adventureEnemyTurn(){
         if(!choice.target)return;
         const dmg=effectiveCardValue(choice.card,"damage")||choice.card.damage||0;
         if(choice.target.leader)score+=390;
-        if(pub.adventureEnemyLeader==="mage"&&choice.target.leader)score+=130;
         if(dmg>=(choice.target.hp||0))score+=choice.target.leader?1600:360;
+        if(pub.adventureAdaptiveMage&&!choice.target.leader&&effectiveGuard(choice.target)>=4)score+=120;
         score+=Math.max(0,6-(choice.target.hp||0))*18;
       }
       if(kind==="summon"){
@@ -2174,6 +2198,7 @@ async function adventureEnemyTurn(){
           const beforeRange=aiAttackRange(choice.ally),afterRange=aiAttackRange(equippedGhost);
           if(afterRange>beforeRange)score+=(afterRange-beforeRange)*85;
           if(bestAttackTarget(equippedGhost))score+=75;
+          if(pub.adventureAdaptiveMage&&choice.card.key==="channeling_amulet"&&choice.ally?.key==="arcane_adept")score+=420;
         }
       }
       if(kind==="buff"){

@@ -112,7 +112,7 @@ function getCardPlayState(card){
   if(card.type==="unit"&&summonZones(myPlayer).length===0)return{canPlay:false,reason:"No hay casillas libres junto a tu líder."};
   if(card.type==="equipment"&&!isEquipmentCardAllowedForLeader(card,getLeaderTypeForOwner(myPlayer)))return{canPlay:false,reason:`${card.name} solo puede usarse con ${getEquipmentLeaderLabel(card)}.`};
   if(card.type==="equipment"&&!(publicState.units||[]).some(u=>canEquipCardToUnit(card,u,myPlayer,publicState.units||[])))return{canPlay:false,reason:"No tienes una unidad compatible disponible para equipar."};
-  if(card.spell==="damage"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer))return{canPlay:false,reason:"No hay objetivos rivales para este hechizo."};
+  if(card.spell==="damage"&&!(publicState.units||[]).some(u=>u.owner!==myPlayer&&canDirectlyTarget(card,u)))return{canPlay:false,reason:"No hay unidades rivales válidas para este hechizo."};
   if(card.spell==="buff"&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para potenciar."};
   if((card.spell==="shield"||card.trap==="guard")&&!(publicState.units||[]).some(u=>u.owner===myPlayer))return{canPlay:false,reason:"No hay unidades aliadas para proteger."};
   if(card.spell==="heal"&&!(publicState.units||[]).some(u=>canHealOrCleanseUnit(u,myPlayer)))return{canPlay:false,reason:"No hay unidades aliadas heridas o con estados curables."};
@@ -148,7 +148,7 @@ function canPlayCardWithSnapshot(card,honor,phase,units,player){
     const leader=unitsList.find(u=>u.owner===player&&u.leader&&u.hp>0);
     return !!leader&&isEquipmentCardAllowedForLeader(card,leader.leaderType)&&unitsList.some(u=>canEquipCardToUnit(card,u,player,unitsList));
   }
-  if(card.spell==="damage")return unitsList.some(u=>u.owner!==player);
+  if(card.spell==="damage")return unitsList.some(u=>u.owner!==player&&canDirectlyTarget(card,u));
   if(card.spell==="buff")return unitsList.some(u=>u.owner===player);
   if(card.spell==="shield"||card.trap==="guard")return unitsList.some(u=>u.owner===player);
   if(card.spell==="heal")return unitsList.some(u=>{

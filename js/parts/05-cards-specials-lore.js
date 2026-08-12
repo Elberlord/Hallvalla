@@ -338,7 +338,7 @@ function currentOrNextTurnKeyForOwner(owner,state=publicState){
   const currentPlayer=Number(state?.currentPlayer||1)||1;
   return Number(owner||currentPlayer)===currentPlayer ? (state?.turnKey||`${state?.turn||1}-${currentPlayer}`) : nextTurnKeyForOwner(owner,state);
 }
-function canDirectlyTarget(source,target){return canTargetStealth(source,target);}
+function canDirectlyTarget(source,target){if(!canTargetStealth(source,target))return false;if(source?.spell==="damage"&&source?.leaderType==="mage"&&target?.leader)return false;return true;}
 
 
 function applyBloodBaitAttackBonus(attacker,defender,traps=publicState?.beastTraps||[]){

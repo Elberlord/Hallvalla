@@ -1054,9 +1054,229 @@ function expandEnemyFixedDeck(deckList=[]){
   });
   return templates;
 }
+
+/* === IA ADAPTATIVA · HECHICERO PILOTO (Mapa 1, batalla 3) ==================
+   Primera versión:
+   - El primer duelo usa SIEMPRE el mazo "Cañón Arcano" exacto de 20 cartas.
+   - Si el humano derrota ese mazo, HallValla guarda una memoria táctica local.
+   - En reintentos posteriores, el Hechicero conoce el mazo humano actual y mezcla
+     esa lectura con las victorias previas para sustituir hasta 10 cartas por counters.
+   - Nunca supera 3 copias de una misma carta y conserva un núcleo de identidad mágica.
+============================================================================ */
+const ADAPTIVE_MAGE_PROFILE_KEY="mageCounterV1";
+const ADAPTIVE_MAGE_PILOT_BATTLE_ID="battle3";
+const ADAPTIVE_MAGE_BASE_DECK_COUNTS=Object.freeze([
+  ["arcane_adept",3],
+  ["samurai_katana",3],
+  ["blessing",3],
+  ["inspiration",3],
+  ["fireball",3],
+  ["channeling_amulet",3],
+  ["shield_wall",2]
+]);
+const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
+  arcane_adept:2,
+  samurai_katana:2,
+  blessing:1,
+  inspiration:1,
+  fireball:2,
+  channeling_amulet:1,
+  shield_wall:1
+});
+const ADAPTIVE_MAGE_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
+const ADAPTIVE_MAGE_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga"]);
+function isAdaptiveMagePilotBattle(battle,enemyLeaderType=""){
+  return !!battle&&battle.id===ADAPTIVE_MAGE_PILOT_BATTLE_ID&&String(enemyLeaderType||battle.enemyLeaderType||"")==="mage";
+}
+function getAdaptiveMageMemory(){
+  try{
+    const profile=getPlayerProfile();
+    const raw=profile?.adaptiveAi?.[ADAPTIVE_MAGE_PROFILE_KEY];
+    if(!raw||typeof raw!=="object")return{defeats:0,wins:[],seen:{}};
+    return{
+      defeats:Math.max(0,Number(raw.defeats||0)),
+      wins:Array.isArray(raw.wins)?raw.wins.slice(-8):[],
+      seen:raw.seen&&typeof raw.seen==="object"?{...raw.seen}:{}
+    };
+  }catch(e){return{defeats:0,wins:[],seen:{}};}
+}
+function saveAdaptiveMageMemory(memory){
+  try{
+    const profile=getPlayerProfile();
+    const adaptiveAi={...(profile.adaptiveAi||{})};
+    adaptiveAi[ADAPTIVE_MAGE_PROFILE_KEY]={
+      defeats:Math.max(0,Number(memory?.defeats||0)),
+      wins:(Array.isArray(memory?.wins)?memory.wins:[]).slice(-8),
+      seen:Object.fromEntries(Object.entries(memory?.seen||{}).slice(-24))
+    };
+    savePlayerProfile({...profile,adaptiveAi});
+  }catch(e){console.warn("[HallValla] No se pudo guardar la memoria adaptativa del Hechicero:",e);}
+}
+function getAdaptiveCardRoleMetrics(card){
+  const out={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,unit:0,spell:0};
+  if(!card)return out;
+  const key=String(card.key||card.name||"");
+  const cost=Math.max(0,Number(card.cost||0));
+  if(card.type==="unit"){
+    out.unit=1;
+    if(Number(card.range||0)>=2)out.ranged=1;
+    if(Number(card.guard||0)>=4||Number(card.hp||0)>=7)out.tank=1;
+    if(ADAPTIVE_MAGE_CAVALRY_KEYS.has(key)||(card.leaderBuffGroups||[]).includes?.("cavalry"))out.cavalry=1;
+    if(ADAPTIVE_MAGE_ASSASSIN_KEYS.has(key)||card.stealth||card.ninjutsu)out.assassin=1;
+    if(key==="arcane_adept"||card.caster||card.healer||card.hechicero||card.hechicera||card.nigromante)out.arcane=1;
+    if(cost<=1)out.swarm=1;
+    if(cost>=3||Number(card.hp||0)>=7)out.heavy=1;
+    if(Number(card.atk||0)>=5||key==="samurai_katana"||key==="berserker"||key==="berserker_de_oso")out.burst=1;
+  }else if(card.type==="spell"){
+    out.spell=1;
+    if(card.spell==="damage")out.damageSpell=1;
+    if(card.spell==="buff")out.buffSpell=1;
+    if(card.spell==="heal")out.heal=1;
+  }
+  return out;
+}
+function summarizeAdaptiveCards(cards=[]){
+  const roles={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,unit:0,spell:0};
+  let totalCost=0,totalCards=0;
+  const cardCounts={};
+  for(const card of cards||[]){
+    if(!card)continue;
+    const key=String(card.key||card.name||"");
+    if(!key)continue;
+    cardCounts[key]=(cardCounts[key]||0)+1;
+    const m=getAdaptiveCardRoleMetrics(card);
+    Object.keys(roles).forEach(k=>roles[k]+=Number(m[k]||0));
+    totalCost+=Math.max(0,Number(card.cost||0));
+    totalCards++;
+  }
+  return{cardCounts,roles,totalCards,avgCost:totalCards?Number((totalCost/totalCards).toFixed(2)):0};
+}
+function buildAdventureAdaptivePlayerSnapshot(cards=[],principalKeys=[]){
+  const summary=summarizeAdaptiveCards(cards);
+  return{
+    version:1,
+    cardCounts:summary.cardCounts,
+    roles:summary.roles,
+    totalCards:summary.totalCards,
+    avgCost:summary.avgCost,
+    principalKeys:(Array.isArray(principalKeys)?principalKeys:[]).map(String).filter(Boolean).slice(0,3)
+  };
+}
+function adaptiveSnapshotCards(snapshot){
+  const cards=[];
+  Object.entries(snapshot?.cardCounts||{}).forEach(([key,count])=>{
+    const template=getAdventureDeckCardTemplateByKey(key);
+    if(!template)return;
+    for(let i=0;i<Math.max(0,Number(count||0));i++)cards.push(template);
+  });
+  return cards;
+}
+function getAdaptiveMageCounterProfile(currentSnapshot,memory){
+  const keys=["ranged","tank","cavalry","assassin","arcane","swarm","heavy","burst","damageSpell","buffSpell","heal","unit","spell"];
+  const score=Object.fromEntries(keys.map(k=>[k,0]));
+  const add=(roles,weight)=>keys.forEach(k=>score[k]+=Number(roles?.[k]||0)*weight);
+  if(currentSnapshot?.roles)add(currentSnapshot.roles,2.2);
+  const wins=(memory?.wins||[]).slice(-4).reverse();
+  const weights=[1.25,.85,.55,.35];
+  wins.forEach((win,index)=>{
+    add(win?.snapshot?.roles,weights[index]||.25);
+    if(win?.survivorRoles)add(win.survivorRoles,(weights[index]||.25)*.8);
+  });
+  return score;
+}
+function adaptiveMageCounterCandidates(profile){
+  const candidates=[];
+  const add=(key,score,desired=3)=>{if(score>0)candidates.push({key,score,desired:Math.max(1,Math.min(3,desired))});};
+  add("cavalry",profile.ranged*34+profile.swarm*8,3);
+  add("hattori_shinobi",profile.ranged*30+profile.arcane*18,3);
+  add("numidian_javelin_rider",profile.ranged*18+profile.assassin*12,2);
+  add("berserker",profile.tank*42+profile.heavy*18,3);
+  add("berserker_de_oso",profile.tank*36+profile.heal*20,3);
+  add("spearman",profile.cavalry*58+profile.burst*7,3);
+  add("mongol_explorer",profile.assassin*50+profile.ranged*10,3);
+  add("guardian",profile.burst*24+profile.swarm*18+profile.damageSpell*18,3);
+  add("saboteador_iga",profile.swarm*34+profile.unit*5,3);
+  add("samurai_naginata",profile.burst*15+profile.assassin*12,2);
+  add("ulfhednar",profile.heavy*16+profile.tank*12,2);
+  return candidates.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
+}
+function buildAdaptiveMageDeckTemplates(battle,targetDeckSize=DECK_RULES.drawDeckSize){
+  const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
+  const counts=Object.fromEntries(ADAPTIVE_MAGE_BASE_DECK_COUNTS.map(([key,count])=>[key,count]));
+  const memory=getAdaptiveMageMemory();
+  // Primera derrota todavía no existe: se usa exactamente el mazo aprobado, sin mirar el mazo humano.
+  if(memory.defeats>0){
+    const profile=getAdaptiveMageCounterProfile(battle?.adaptivePlayerSnapshot||null,memory);
+    const candidates=adaptiveMageCounterCandidates(profile);
+    const maxSwaps=Math.min(10,4+Math.min(3,memory.defeats)*2);
+    const removalOrder=["channeling_amulet","blessing","inspiration","shield_wall","samurai_katana","arcane_adept","fireball"];
+    let swaps=0;
+    const bestScore=Number(candidates[0]?.score||0);
+    // No llena seis huecos con una única respuesta. Construye un paquete combinado:
+    // acceso a retaguardia + rompefrente + defensa/anticarga según lo que haya ganado.
+    const active=candidates.filter(c=>c.score>=Math.max(20,bestScore*.34)).slice(0,5);
+    let round=0;
+    while(swaps<maxSwaps&&active.length&&round<4){
+      let changed=false;
+      for(const candidate of active){
+        if(swaps>=maxSwaps)break;
+        if((counts[candidate.key]||0)>=candidate.desired)continue;
+        const removeKey=removalOrder.find(key=>(counts[key]||0)>Number(ADAPTIVE_MAGE_CORE_MIN[key]||0));
+        if(!removeKey)break;
+        counts[removeKey]--;
+        counts[candidate.key]=(counts[candidate.key]||0)+1;
+        swaps++;changed=true;
+      }
+      if(!changed)break;
+      round++;
+    }
+  }
+  const templates=[];
+  for(const [key,count] of Object.entries(counts)){
+    const template=getAdventureDeckCardTemplateByKey(key);
+    if(!template){console.warn(`[HallValla] Counter Hechicero: no se encontró ${key}.`);continue;}
+    for(let i=0;i<Math.min(3,Math.max(0,Number(count||0)));i++)templates.push(template);
+  }
+  // El piloto está diseñado para 20 cartas. Si una futura regla cambia el tamaño, ajusta sin duplicar >3.
+  if(templates.length<target){
+    for(const [key] of ADAPTIVE_MAGE_BASE_DECK_COUNTS){
+      const template=getAdventureDeckCardTemplateByKey(key);
+      while(template&&templates.length<target&&templates.filter(c=>c.key===key).length<3)templates.push(template);
+    }
+  }
+  return templates.slice(0,target);
+}
+function recordAdaptiveMageDefeat(pub){
+  try{
+    if(!pub||pub.mode!=="adventure"||pub.winner!==1||!pub.adventureAdaptiveMage)return false;
+    const memory=getAdaptiveMageMemory();
+    const runKey=`${pub.code||pub.adventureBattleId||"adaptive-mage"}:${pub.endedAt||0}`;
+    if(memory.seen?.[runKey])return false;
+    const snapshot=pub.adventureAdaptivePlayerSnapshot||{cardCounts:{},roles:{}};
+    const survivors=(pub.units||[]).filter(u=>u?.owner===1&&!u.leader&&Number(u.hp||0)>0).map(u=>getAdventureDeckCardTemplateByKey(u.key)||u);
+    const survivorSummary=summarizeAdaptiveCards(survivors);
+    const leader=(pub.units||[]).find(u=>u?.owner===1&&u.leader);
+    memory.defeats=Math.max(0,Number(memory.defeats||0))+1;
+    memory.wins=[...(memory.wins||[]),{
+      at:Date.now(),battleId:String(pub.adventureBattleId||""),turn:Math.max(1,Number(pub.turn||1)),
+      leaderHp:Math.max(0,Number(leader?.hp||0)),snapshot,
+      survivorCounts:survivorSummary.cardCounts,survivorRoles:survivorSummary.roles
+    }].slice(-8);
+    memory.seen={...(memory.seen||{}),[runKey]:Date.now()};
+    saveAdaptiveMageMemory(memory);
+    return true;
+  }catch(e){console.warn("[HallValla] El Hechicero no pudo registrar cómo fue derrotado:",e);return false;}
+}
+
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
   const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
   const targetDeckSize=DECK_RULES.drawDeckSize+principalSlots;
+  if(isAdaptiveMagePilotBattle(battle,enemyLeaderType)){
+    const adaptiveTemplates=buildAdaptiveMageDeckTemplates(battle,targetDeckSize);
+    const adaptiveDeck=shuffle(adaptiveTemplates.map(card=>makeCard(card,2,enemyLeaderType)));
+    const draw=drawCards(adaptiveDeck,[],4);
+    return{deck:draw.deck,hand:draw.hand};
+  }
   if(battle?.beastEvent||enemyLeaderType==="beastmaster"){
     let beastDeck=getBeastmasterDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).slice(0,targetDeckSize);
     if(battle?.beastEvent&&battle?.beastmasterYoungDragon&&typeof getDragonCompanionCardTemplate==="function"){

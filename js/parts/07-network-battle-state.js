@@ -500,12 +500,20 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const playerDraw=drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
+  const adaptivePlayerSnapshot=typeof buildAdventureAdaptivePlayerSnapshot==="function"
+    ?buildAdventureAdaptivePlayerSnapshot(rawPlayerBase,playerPrincipalPrep.principalKeys||[])
+    :null;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle,leaderLevel);
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
-  const enemyRawInitial=makeEnemyDeckForBattle(battle,enemyLeaderType);
-  const enemyInitial=injectLeaderEquipmentIntoInitialState(prepareAiPrincipalInitialState(battle,enemyRawInitial),enemyLeaderType,2);
+  const adaptiveMagePilot=typeof isAdaptiveMagePilotBattle==="function"&&isAdaptiveMagePilotBattle(battle,enemyLeaderType);
+  const enemyDeckBattle=adaptiveMagePilot?{...battle,adaptivePlayerSnapshot}:battle;
+  const enemyRawInitial=makeEnemyDeckForBattle(enemyDeckBattle,enemyLeaderType);
+  const enemyPrepared=prepareAiPrincipalInitialState(battle,enemyRawInitial);
+  // El Hechicero piloto usa exactamente el mazo Cañón Arcano aprobado. No se inyecta
+  // Foco Estabilizador de forma automática porque alteraría esas 20 cartas.
+  const enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   let startingUnits=[
     makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
@@ -533,7 +541,8 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,
     adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,
     adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",
-    adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:battle.aiStyle||"Máxima",
+    adventureAdaptiveMage:!!adaptiveMagePilot,adventureAdaptivePlayerSnapshot:adaptiveMagePilot?adaptivePlayerSnapshot:null,
+    adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:adaptiveMagePilot?"Cañón Arcano adaptativo":(battle.aiStyle||"Máxima"),
     adventureEnemyUnitMasteryRank:battle.beastEvent?UNIT_MASTERY_MAX_RANK:0,
     beastmasterGlobalDuelNumber:battle.beastmasterGlobalDuelNumber||0,
     beastmasterGlobalBlock:battle.beastmasterGlobalBlock||0,
