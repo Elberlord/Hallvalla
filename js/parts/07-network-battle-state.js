@@ -20,6 +20,44 @@ function hallvallaSanitizeFirebaseValue(value){
   return value;
 }
 
+function getStealthUnitsForSharedVisibility(units=publicState?.units||[]){
+  return (Array.isArray(units)?units:[]).filter(u=>u&&!u.leader&&isStealthedUnit(u));
+}
+function sanitizeSharedStealthText(text,units=publicState?.units||[]){
+  let out=String(text??"");
+  for(const hiddenUnit of getStealthUnitsForSharedVisibility(units)){
+    const name=String(hiddenUnit.name||"").trim();
+    if(name)out=out.split(name).join("Presencia oculta");
+  }
+  return out;
+}
+function sanitizeSharedStealthFxEvent(event,units=publicState?.units||[]){
+  if(!event||typeof event!=="object"||Array.isArray(event))return event;
+  const hiddenById=new Map(getStealthUnitsForSharedVisibility(units).map(u=>[String(u.id||""),u]));
+  const out={...event};
+  const attackerHidden=hiddenById.has(String(out.attackerId||""));
+  const targetHidden=hiddenById.has(String(out.targetId||""));
+  const unitHidden=hiddenById.has(String(out.unitId||""));
+  if(attackerHidden){
+    // No destruimos claves visuales/sonoras: el mismo evento lo consume también
+    // el dueño de la unidad. Solo se neutraliza metadata textual compartida.
+    out.attackerName="Presencia oculta";
+    out.attackerText="";
+  }
+  if(targetHidden)out.targetName="Presencia oculta";
+  if(unitHidden)out.unitName="Presencia oculta";
+  return out;
+}
+function sanitizeSharedStealthPatch(patch,units=publicState?.units||[]){
+  const out={...(patch||{})};
+  if(Array.isArray(out.log))out.log=out.log.map(line=>sanitizeSharedStealthText(line,units));
+  if(typeof out.aiActionText==="string")out.aiActionText=sanitizeSharedStealthText(out.aiActionText,units);
+  for(const key of ["battleFxEvent","defenseFxEvent","dodgeFxEvent","statusFxEvent","floatFxEvent"]){
+    if(out[key])out[key]=sanitizeSharedStealthFxEvent(out[key],units);
+  }
+  return out;
+}
+
 const BATTLE_RESULT_SPLASH_DURATION_MS=4300;
 function isHiddenUnitCard(card){
   return !!card&&(card.hiddenUnitTag==="unit"||card.type==="unit");
@@ -200,6 +238,8 @@ async function updatePublic(patch){
     delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
   }
   cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
+  const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
+  cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
   cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
@@ -294,7 +334,7 @@ async function createGame(){
   const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
   const names=principalUnits.map(u=>u.name).join(", ");
-  const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`]};
+  const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[sanitizeSharedStealthText(`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`,units)]};
   await set(ref(db,`games/${code}/public`),pub);
   await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
   enterGame(code,1);
@@ -324,7 +364,7 @@ async function joinGame(){
   const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
   const names=principalUnits.map(u=>u.name).join(", ");
-  await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize}; mano inicial: 4.`,...(entryEffects.logs||[]),...(pub.log||[])]});
+  await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[sanitizeSharedStealthText(`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize}; mano inicial: 4.`,units),...(entryEffects.logs||[]).map(line=>sanitizeSharedStealthText(line,units)),...(pub.log||[])]});
   await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
   enterGame(code,2);
 }

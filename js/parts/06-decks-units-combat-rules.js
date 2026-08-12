@@ -928,7 +928,7 @@ function isMulanBackstabAttack(attacker,defender,units=publicState?.units||[]){
     && Math.sign(rowDelta)===towardRivalLeader
     && Math.abs(attacker.x-defender.x)<=1;
 }
-function getCombatMods(attacker,defender){
+function getCombatMods(attacker,defender,attackContext=null){
   const mods={attackerAtk:0,attackerAgi:0,attackerDex:0,attackerGuard:0,defenderAgi:0,defenderDex:0,defenderGuard:0,damageReduction:0,reroll:false,notes:[]};
   if(!attacker||!defender)return mods;
   const weaponAdvantage=getWeaponAdvantage(attacker,defender);
@@ -958,7 +958,7 @@ function getCombatMods(attacker,defender){
     mods.notes.push(`${defender.name} +2 Guardia por Falange cerrada.`);
   }
 
-  if(isHanzoContractAttack(attacker,defender)){
+  if(isHanzoContractAttack(attacker,defender,attackContext)){
     mods.attackerDex+=3;
     mods.attackerAtk+=2;
     mods.defenderGuard-=3;
@@ -982,7 +982,7 @@ function getCombatMods(attacker,defender){
   const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
   if(joan&&!joan.joanUsedTurn&&defender.noReductionTurnKey!==publicState?.turnKey){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionTurnKey!==publicState?.turnKey){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
-  if(melee&&attacker.key==="bengal_tiger"&&isStealthedUnit(attacker)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
+  if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
   if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
   if(melee&&isWhiteRhinoChargeReady(attacker)){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
@@ -994,7 +994,7 @@ function getCombatMods(attacker,defender){
   if(isRangedAttack(attacker,defender)&&attacker.key==="mongol_explorer"&&Number(attacker.movedSpaces||0)>=2){mods.attackerDex+=1;mods.notes.push(`${attacker.name} +1 DX por Tiro en carrera.`);}
   if(melee&&attacker.key==="hungarian_hussar"&&Number(attacker.movedSpaces||0)>=2){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
   if(melee&&attacker.key==="cossack_rider"&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Persecución cosaca.`);}
-  if(hasUnitEquipment(attacker,"rupture_bracers")&&isAttackFromStealth(attacker)){mods.defenderGuard-=5;mods.notes.push(`${defender.name} -5 Guardia por Guardabrazos de Ruptura.`);}
+  if(hasUnitEquipment(attacker,"rupture_bracers")&&isAttackFromStealth(attacker,attackContext)){mods.defenderGuard-=5;mods.notes.push(`${defender.name} -5 Guardia por Guardabrazos de Ruptura.`);}
   if(hasUnitEquipment(attacker,"counterweighted_grip")&&effectiveGuard(defender)>0){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Mango Contrapesado.`);}
   if(hasUnitEquipment(attacker,"hunting_harness")&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=5;mods.notes.push(`${attacker.name} +5 DX por Arnés de Cacería.`);}
   if(hasUnitEquipment(defender,"war_visor")&&dist(attacker,defender)>=2){mods.attackerPrecisionPenalty=(mods.attackerPrecisionPenalty||0)+5;mods.notes.push(`${attacker.name} -5 PREC por Visera de Guerra.`);}
@@ -1129,8 +1129,23 @@ async function resolveSkiparWarLoot(attacker,targetOwner){
 
 
 
-function isHanzoContractAttack(attacker,defender){
-  return !!(attacker&&defender&&attacker.key==="hattori_hanzo"&&!attacker.hanzoContractConsumed&&!defender.leader&&defender.owner!==attacker.owner&&isAttackFromStealth(attacker));
+function createAttackContext(attacker,defender){
+  const startedFromStealth=!!(attacker&&isStealthedUnit(attacker));
+  return Object.freeze({
+    attackerId:String(attacker?.id||""),
+    defenderId:String(defender?.id||""),
+    startedFromStealth,
+    declaredDistance:attacker&&defender?dist(attacker,defender):null,
+    attackType:attacker&&defender?(dist(attacker,defender)<=1?"melee":"ranged"):"unknown"
+  });
+}
+function isAttackFromStealth(unit,attackContext=null){
+  if(!unit)return false;
+  if(attackContext&&String(attackContext.attackerId||"")===String(unit.id||""))return attackContext.startedFromStealth===true;
+  return isStealthedUnit(unit)||unit.wasStealthedBeforeAttack===true;
+}
+function isHanzoContractAttack(attacker,defender,attackContext=null){
+  return !!(attacker&&defender&&attacker.key==="hattori_hanzo"&&!attacker.hanzoContractConsumed&&!defender.leader&&defender.owner!==attacker.owner&&isAttackFromStealth(attacker,attackContext));
 }
 function resolveHanzoContractAfterAttack(units,attacker,defender,triggered,defenderFell){
   if(!triggered||!attacker)return{units:units||[],triggered:false,succeeded:false,text:""};
@@ -1138,13 +1153,10 @@ function resolveHanzoContractAfterAttack(units,attacker,defender,triggered,defen
   const out=(units||[]).map(u=>u.id===attacker.id?{...u,hanzoContractPending:false,hanzoContractConsumed:true,hanzoContractTargetId:"",hanzoContractTargetName:"",stealth:succeeded,revealed:!succeeded,hidden:false}:u);
   return {units:out,triggered:true,succeeded,text:succeeded?` Contrato del Shogun cumplido: ${attacker.name} elimina a ${defender?.name||"su primer objetivo"} y conserva Sigilo.`:` Contrato del Shogun fallido: ${defender?.name||"el primer objetivo"} sobrevive y ${attacker.name} queda revelado.`};
 }
-function isAttackFromStealth(unit){
-  return !!unit&&(!!unit.stealth||!!unit.wasStealthedBeforeAttack);
-}
-function shouldKeepStealthAfterAttack(attacker,defender){
-  if(!attacker||!isAttackFromStealth(attacker))return false;
+function shouldKeepStealthAfterAttack(attacker,defender,attackContext=null){
+  if(!attacker||!isAttackFromStealth(attacker,attackContext))return false;
   if(attacker.key==="hattori_shinobi"&&defender&&dist(attacker,defender)>1)return true;
-  if(isHanzoContractAttack(attacker,defender))return true;
+  if(isHanzoContractAttack(attacker,defender,attackContext))return true;
   return false;
 }
 function clearStealthAfterAttackIfNeeded(units,attackerId,keep=false){
@@ -1162,10 +1174,10 @@ function canUnitAttackTarget(attacker,target){
   if(attacker.key==="geisha_encubierta"&&target.leader)return false;
   return true;
 }
-function applyGeishaFanKill(units,attacker,defender,hpLoss){
+function applyGeishaFanKill(units,attacker,defender,hpLoss,attackContext=null){
   const list=[...(units||[])];
   if(!attacker||!defender)return{units:list,triggered:false,text:""};
-  if(attacker.key!=="geisha_encubierta"||defender.leader||!isAttackFromStealth(attacker)||Number(hpLoss||0)<=0)return{units:list,triggered:false,text:""};
+  if(attacker.key!=="geisha_encubierta"||defender.leader||!isAttackFromStealth(attacker,attackContext)||Number(hpLoss||0)<=0)return{units:list,triggered:false,text:""};
   const next=list.map(u=>u.id===defender.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
   return{units:next,triggered:true,text:` Corte de Abanico: ${attacker.name} atacó desde Sigilo, dañó HP y destruye a ${defender.name}.`};
 }
@@ -1847,4 +1859,4 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner){
 }
 
 function combatSummary(mods){return mods?.notes?.length?` ${mods.notes.join(" ")}`:""}
-function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState||isTurnWriteBlockedByExpiredClock())return;const logs=[t,...(publicState.log||[])].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}
+function setHint(t){setText("hint",t)}function isBattleEnded(){return !!(publicState?.phase==="ended"||publicState?.battleEnded)}async function pushLog(t){if(!gameId||!publicState||isTurnWriteBlockedByExpiredClock())return;const safeText=typeof sanitizeSharedStealthText==="function"?sanitizeSharedStealthText(t,publicState.units||[]):t;const previousLogs=(publicState.log||[]).map(line=>typeof sanitizeSharedStealthText==="function"?sanitizeSharedStealthText(line,publicState.units||[]):line);const logs=[safeText,...previousLogs].slice(0,18);if(hallvallaIsLocalTestGame()){publicState={...publicState,log:logs};render();maybeStartTurn();maybeTriggerAdventureAI();return;}await update(ref(db,`games/${gameId}/public`),{log:logs})}

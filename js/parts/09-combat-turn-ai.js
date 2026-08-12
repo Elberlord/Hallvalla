@@ -367,10 +367,12 @@ async function attackUnit(a,d){
   a=getLiveUnitRef(a,units);
   d=preTrap.redirect?getLiveUnitRef(preTrap.redirect,units):getLiveUnitRef(d,units);
   if(preTrap.redirect){a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
-  const tigerFromStealthBefore=a.key==="bengal_tiger"&&isStealthedUnit(a);
+  const attackContext=createAttackContext(a,d);
+  const tigerFromStealthBefore=a.key==="bengal_tiger"&&attackContext.startedFromStealth;
   if(tigerFromStealthBefore){
-    units=units.map(u=>u.id===a.id?revealUnit(u,"declarar ataque desde Sigilo"):u);
-    a=units.find(u=>u.id===a.id)||a;
+    const revealedAttacker=revealUnit(a,"declarar ataque desde Sigilo");
+    units=units.map(u=>u.id===a.id?{...u,...revealedAttacker}:u);
+    a=units.find(u=>u.id===a.id)||revealedAttacker;
   }
   if(dist(a,d)<=1&&d.key==="african_buffalo"){
     units=units.map(u=>u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
@@ -387,7 +389,7 @@ async function attackUnit(a,d){
   const warningRune=consumeWarningRuneOnAttack(units,d);
   units=warningRune.units;
   d=warningRune.defender;
-  let mods=getCombatMods(a,d);
+  let mods=getCombatMods(a,d,attackContext);
   if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
   const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,publicState.beastTraps||[]);
   if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
@@ -436,8 +438,8 @@ async function attackUnit(a,d){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
   const declaredMelee=dist(a,d)<=1;
   const declaredRanged=isRangedAttack(a,d);
-  const attackerWasStealthedBeforeAttack=isAttackFromStealth(a);
-  const keepStealthAfterAttack=shouldKeepStealthAfterAttack(a,d);
+  const attackerWasStealthedBeforeAttack=attackContext.startedFromStealth;
+  const keepStealthAfterAttack=shouldKeepStealthAfterAttack(a,d,attackContext);
   units=applyAttackSideEffects(a,d,units);
   const ulyssesAttackTactic=applyUlyssesAttackTactic(units,a);
   units=ulyssesAttackTactic.units;
@@ -472,7 +474,7 @@ async function attackUnit(a,d){
     return u;
   });
   let geishaFanKillResult={units,triggered:false,text:""};
-  if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss);units=geishaFanKillResult.units;}
+  if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
   if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
     const shadowTarget=units.find(u=>u.id===d.id);
     if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){
@@ -748,7 +750,7 @@ async function attackUnit(a,d){
   const attackerUnitNow=units.find(u=>u.id===a.id)||a;
   const defenderUnitNow=units.find(u=>u.id===d.id)||d;
   const fireAreaImpactSound=hit.hit&&String(a.dragonElement||"").toLowerCase()==="fire"&&Number(a.dragonCharge||0)>=2?"fire_area_damage":"";
-  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(a)||!!a?.stealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
+  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:attackContext.startedFromStealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
   const defenderStillAlive=units.some(u=>u.id===d.id);
   const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
     ? {
@@ -1353,10 +1355,12 @@ async function adventureEnemyTurn(){
       return true;
     }
     if(preTrap.redirect){target=preTrap.redirect;attacker={...attacker,tempAtkBuff:(attacker.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
-    const tigerFromStealthBefore=attacker.key==="bengal_tiger"&&isStealthedUnit(attacker);
+    const attackContext=createAttackContext(attacker,target);
+    const tigerFromStealthBefore=attacker.key==="bengal_tiger"&&attackContext.startedFromStealth;
     if(tigerFromStealthBefore){
-      units=units.map(u=>u.id===attacker.id?revealUnit(u,"declarar ataque desde Sigilo"):u);
-      attacker=units.find(u=>u.id===attacker.id)||attacker;
+      const revealedAttacker=revealUnit(attacker,"declarar ataque desde Sigilo");
+      units=units.map(u=>u.id===attacker.id?{...u,...revealedAttacker}:u);
+      attacker=units.find(u=>u.id===attacker.id)||revealedAttacker;
     }
     if(d(attacker,target)<=1&&target.key==="african_buffalo"){
       units=units.map(u=>u.id===attacker.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
@@ -1372,7 +1376,7 @@ async function adventureEnemyTurn(){
     const warningRune=consumeWarningRuneOnAttack(units,target);
     units=warningRune.units;
     target=warningRune.defender;
-    let mods=withAiPublicState(()=>getCombatMods(attacker,target));
+    let mods=withAiPublicState(()=>getCombatMods(attacker,target,attackContext));
     if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
     const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,beastTraps);
     if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
@@ -1419,8 +1423,8 @@ async function adventureEnemyTurn(){
     let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
     const declaredMelee=d(attacker,target)<=1;
     const declaredRanged=isRangedAttack(attacker,target);
-    const attackerWasStealthedBeforeAttack=isAttackFromStealth(attacker);
-    const keepStealthAfterAttack=shouldKeepStealthAfterAttack(attacker,target);
+    const attackerWasStealthedBeforeAttack=attackContext.startedFromStealth;
+    const keepStealthAfterAttack=shouldKeepStealthAfterAttack(attacker,target,attackContext);
     units=applyAttackSideEffects(attacker,target,units);
     const ulyssesAttackTactic=applyUlyssesAttackTactic(units,attacker);
     units=ulyssesAttackTactic.units;
@@ -1456,7 +1460,7 @@ async function adventureEnemyTurn(){
       return u;
     });
     let geishaFanKillResult={units,triggered:false,text:""};
-    if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(attacker,target,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,attacker,target,hpLoss);units=geishaFanKillResult.units;}
+    if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(attacker,target,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,attacker,target,hpLoss,attackContext);units=geishaFanKillResult.units;}
     if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
       const shadowTarget=units.find(u=>u.id===target.id);
       if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){
@@ -1706,7 +1710,7 @@ async function adventureEnemyTurn(){
     const attackerUnitNow=units.find(u=>u.id===attacker.id)||attacker;
     const defenderUnitNow=units.find(u=>u.id===target.id)||target;
     const fireAreaImpactSound=hit.hit&&String(attacker.dragonElement||"").toLowerCase()==="fire"&&Number(attacker.dragonCharge||0)>=2?"fire_area_damage":"";
-    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:isStealthedUnit(attacker)||!!attacker?.stealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
+    pendingAiBattleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:attackContext.startedFromStealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
     const defenderStillAlive=units.some(u=>u.id===target.id);
     pendingAiDefenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
       ? {
