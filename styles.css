@@ -18984,3 +18984,92 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 #deckBuilderPanel.collection-browser-mode .deckbuilder-collection .deck-collection-pager *{
   pointer-events:auto !important;
 }
+
+
+/* ============================================================
+   SIGILO · MÁSCARA VISUAL TOTAL DE UNIDAD
+   - Ambos jugadores ven humo en lugar de la carta mientras dure Sigilo.
+   - La carta, figura 3D, marco, rareza, orbes, estados y personaje no se renderizan debajo.
+   - El dueño conserva DET; el rival no puede abrir DET de la unidad oculta.
+   ============================================================ */
+.cell > .unit-card.unit-stealthed{
+  background:transparent !important;
+  border-color:transparent !important;
+  border-width:0 !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+  filter:none !important;
+  overflow:visible !important;
+  cursor:pointer !important;
+}
+.cell > .unit-card.unit-stealthed::before{
+  content:none !important;
+  display:none !important;
+}
+.cell > .unit-card.unit-stealthed > :not(.stealth-board-cover){
+  display:none !important;
+  visibility:hidden !important;
+}
+.cell > .unit-card.unit-stealthed .stealth-board-cover{
+  position:absolute !important;
+  inset:-20% !important;
+  z-index:1000 !important;
+  display:block !important;
+  pointer-events:none !important;
+  overflow:visible !important;
+  opacity:1 !important;
+  filter:none !important;
+}
+.cell > .unit-card.unit-stealthed .stealth-board-cover img{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center 46% !important;
+  display:block !important;
+  opacity:.98 !important;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 12px rgba(255,28,28,.16)) !important;
+  user-select:none !important;
+}
+.cell > .unit-card.unit-stealthed.unit-exhausted .stealth-board-cover{
+  opacity:.78 !important;
+}
+.grid .cell.attackable:has(.unit-card.unit-stealthed) .unit-card.unit-stealthed{
+  outline:2px solid rgba(255,74,112,.96) !important;
+  outline-offset:2px !important;
+  box-shadow:0 0 14px rgba(255,74,112,.52) !important;
+}
+.grid .cell.valid:has(.unit-card.unit-stealthed) .unit-card.unit-stealthed,
+.grid .cell.summonable:has(.unit-card.unit-stealthed) .unit-card.unit-stealthed{
+  outline:2px solid rgba(122,255,168,.88) !important;
+  outline-offset:2px !important;
+  box-shadow:0 0 13px rgba(122,255,168,.34) !important;
+}
+.unit-context-portrait.is-stealthed{
+  position:relative !important;
+  background:#030303 !important;
+  overflow:hidden !important;
+}
+.unit-context-portrait .stealth-context-cover{
+  position:absolute !important;
+  inset:-10% !important;
+  display:block !important;
+  overflow:hidden !important;
+  border-radius:inherit !important;
+}
+.unit-context-portrait .stealth-context-cover img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center 46% !important;
+  display:block !important;
+  filter:drop-shadow(0 0 8px rgba(255,30,30,.22)) !important;
+}
+.unit-context-mini-stats.is-stealthed span{
+  color:rgba(255,239,206,.76) !important;
+  text-shadow:none !important;
+}
+.unit-stealthed .stealth-silhouette{display:none !important;}

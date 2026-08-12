@@ -862,6 +862,14 @@ async function adventureEnemyTurn(){
   }
 
   const logs=[];
+  const concealStealthIdentityInText=(text)=>{
+    let out=String(text||"");
+    for(const hiddenUnit of (units||[])){
+      if(!hiddenUnit||hiddenUnit.leader||hiddenUnit.owner!==2||!isStealthedUnit(hiddenUnit)||!hiddenUnit.name)continue;
+      out=out.split(String(hiddenUnit.name)).join("Unidad con Sigilo");
+    }
+    return out;
+  };
   let erictoGraveyard=normalizeErictoGraveyard(pub.erictoGraveyard||[]);
   let lastPublishedUnits=[...(pub.units||[])];
   const aiLevel=ADVENTURE_AI_BEST_SKILL_LEVEL;
@@ -878,6 +886,8 @@ async function adventureEnemyTurn(){
     honor=capResourceAmount(honor,cappedMaxHonor);
     maxHonor=cappedMaxHonor;
     const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:"__AI_IN_PROGRESS__",skipFirstTurnDraw:false};
+    const safeStepLogs=logs.map(concealStealthIdentityInText);
+    const safePreviousLogs=(pub.log||[]).map(concealStealthIdentityInText);
     const battleFxEvent=pendingAiBattleFxEvent||null;
     const defenseFxEvent=pendingAiDefenseFxEvent||null;
     const dodgeFxEvent=pendingAiDodgeFxEvent||null;
@@ -897,8 +907,8 @@ async function adventureEnemyTurn(){
       currentPlayer:2,
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0,hand:Array.isArray(privateState?.hand)?privateState.hand.length:(pub.playerStats?.[1]?.hand||0)},
       [`playerStats/2`]:{hp:p2Leader?.hp??20,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),deck:deck.length,hand:hand.length},
-      log:[...logs,...(pub.log||[])].slice(0,18),
-      aiActionText:logs[logs.length-1]||`${pub.adventureEnemyName||"Rival"} está pensando su jugada...`,
+      log:[...safeStepLogs,...safePreviousLogs].slice(0,18),
+      aiActionText:safeStepLogs[safeStepLogs.length-1]||`${pub.adventureEnemyName||"Rival"} está pensando su jugada...`,
       aiStepAt:Date.now(),
       ...extra
     });

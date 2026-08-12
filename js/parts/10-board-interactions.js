@@ -1,6 +1,16 @@
 "use strict";
 /* HallValla 7BOARDCTRL8AC · Interacción de tablero y efectos de unidad */
 
+const STEALTH_BOARD_MASK_SRC="assets/effects/status/stealth/stealth_smoke.webp";
+function isStealthHiddenFromViewer(u){
+  return !!u&&typeof isStealthedUnit==="function"&&isStealthedUnit(u)&&u.owner!==myPlayer;
+}
+function getStealthBoardCoverHtml(){
+  return `<span class="stealth-board-cover" aria-label="Presencia Oculta · Sigilo"><img src="${STEALTH_BOARD_MASK_SRC}" alt="" aria-hidden="true" draggable="false"></span>`;
+}
+function getStealthContextPortraitHtml(){
+  return `<span class="stealth-context-cover" aria-label="Presencia Oculta · Sigilo"><img src="${STEALTH_BOARD_MASK_SRC}" alt="" aria-hidden="true" draggable="false"></span>`;
+}
 
 function getBoardCellFromPoint(clientX,clientY){
   const el=document.elementFromPoint(clientX,clientY);
@@ -75,8 +85,9 @@ function beginBoardDragVisual(ev){
     dragMoveHighlights=getDragUnitMoveKeys(u);
     dragAttackHighlights=getDragUnitAttackKeys(u);
     dragSummonHighlights=[];
-    setHint(`${u.name}: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.`);
-    boardDragGhost=makeBoardDragGhost(boardDragState.sourceEl,u.name);
+    const stealthDrag=isStealthedUnit(u);
+    setHint(stealthDrag?"Unidad con Sigilo: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.":`${u.name}: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.`);
+    boardDragGhost=makeBoardDragGhost(boardDragState.sourceEl,stealthDrag?"Presencia Oculta · Sigilo":u.name);
     render();
   }else if(boardDragState.kind==="hand-unit"){
     const card=(privateState?.hand||[]).find(c=>c.id===boardDragState.cardId);
@@ -243,7 +254,7 @@ async function cellClick(x,y){
 
 
 function getUnitPortraitHtml(u,depthLayer=false){
-  if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
+  if(isStealthHiddenFromViewer(u))return getStealthContextPortraitHtml();
   const alt=escapeHtml(u?.name||"Unidad");
   if(u?.leader){
     const portrait=(u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"";
@@ -273,7 +284,7 @@ function getUnitPortraitHtml(u,depthLayer=false){
 }
 
 function getBoardUnitPortraitHtml(u){
-  if(isStealthedUnit(u)&&u.owner!==myPlayer)return `<span class="stealth-silhouette">?</span>`;
+  if(isStealthHiddenFromViewer(u))return getStealthContextPortraitHtml();
   if(u?.leader){
     const portrait=(u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"";
     if(!portrait)return `<span>${u?.icon||"✦"}</span>`;
@@ -304,6 +315,11 @@ function getBoardUnitPortraitHtml(u){
 
 function showUnit(u){
   if(!u)return;
+  if(isStealthHiddenFromViewer(u)){
+    hideCardInspectModal();
+    setHint("Presencia Oculta · Sigilo: solo el dueño de esta unidad puede consultar su DET mientras permanezca oculta.");
+    return;
+  }
   cardInspectSelection=null;
   const fx=getUnitEffectText(u);
   const activeEntries=getUnitStatusEntries(u);
@@ -361,6 +377,17 @@ function hideUnitContextMenu(){
 }
 function openUnitContextMenu(u,x,y){
   if(!u)return;
+  if(isStealthHiddenFromViewer(u)){
+    unitContextSelection=null;
+    selectedUnitId=null;
+    selectedUnitActionMode=null;
+    selectedUnitEffectChoice=null;
+    highlights=[];
+    hideUnitContextMenu();
+    hideCardInspectModal();
+    setHint("Presencia Oculta · Sigilo: la identidad, estadísticas y DET de esta unidad están ocultos para el rival.");
+    return;
+  }
   unitContextSelection={unitId:u.id,x,y};
   selectedCard=null;
   selectedUnitId=u.id;
@@ -382,15 +409,23 @@ function renderUnitContextMenu(){
   if(!unitContextSelection||!publicState){menu.classList.add("hidden");return;}
   const u=getUnit(unitContextSelection.unitId);
   if(!u){menu.classList.add("hidden");return;}
+  if(isStealthHiddenFromViewer(u)){
+    unitContextSelection=null;
+    menu.classList.add("hidden");
+    return;
+  }
   const options=getUnitContextOptions(u);
   const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMoveWindow(u)&&!isBattleEnded();
   const canAction=isMyTurn()&&u.owner===myPlayer&&isUnitActionWindow(u)&&!isBattleEnded();
   const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
-  const portraitHtml=getUnitPortraitHtml(u);
-  const hpLabel=String(getDisplayHp(u));
-  const atkLabel=effectiveAtk(u);
-  const guardLabel=displayEffectiveGuard(u);
-  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait">${portraitHtml}</div><div class="unit-context-mini-stats"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(u.name||"Invocación")}</div><div class="unit-context-sub">${u.leader?"Líder":"Invocación"} · J${u.owner}</div></div>${options.map(o=>{
+  const stealthMasked=isStealthedUnit(u);
+  const portraitHtml=stealthMasked?getStealthContextPortraitHtml():getUnitPortraitHtml(u);
+  const hpLabel=stealthMasked?"?":String(getDisplayHp(u));
+  const atkLabel=stealthMasked?"?":effectiveAtk(u);
+  const guardLabel=stealthMasked?"?":displayEffectiveGuard(u);
+  const contextName=stealthMasked?"Unidad con Sigilo":(u.name||"Invocación");
+  const contextSub=stealthMasked?`Presencia Oculta · J${u.owner}`:`${u.leader?"Líder":"Invocación"} · J${u.owner}`;
+  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait ${stealthMasked?"is-stealthed":""}">${portraitHtml}</div><div class="unit-context-mini-stats ${stealthMasked?"is-stealthed":""}"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(contextName)}</div><div class="unit-context-sub">${escapeHtml(contextSub)}</div></div>${options.map(o=>{
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const mulanExecChoice=isMulanExecutionChoiceReady(u);
     const disabled=(o.key==="mov"&&(!canMove||(!mulanExecMove&&(u.moved||u.acted))))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted||mulanExecChoice||mulanExecMove))||(o.key==="def"&&(!canAction||(!mulanExecChoice&&u.acted)||u.defenseModeReady||mulanExecMove||(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)));

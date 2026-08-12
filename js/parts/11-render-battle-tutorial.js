@@ -483,16 +483,23 @@ function renderBoard(){
     const u=getUnitAt(x,y);
     if(u&&!u.leader){
       const c=document.createElement("div");
+      const stealthed=isStealthedUnit(u);
       const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
-      c.className=`unit-card unit-key-${String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase()} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${u.principal?"principal-unit":""} ${u.leader?"leader":""} ${u.leader?"":getCardVisualClass(u)}`;
-      c.dataset.unitKey=String(u.key||"").trim().toLowerCase();
-      const invisibleToViewer=isStealthedUnit(u)&&u.owner!==myPlayer;
-      c.dataset.visibilityTag=invisibleToViewer?"invisible":"visible";
-      c.classList.toggle("unit-invisible-to-viewer",invisibleToViewer);
-      const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
-      const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
-      c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
-      const unitStatusEntries=getUnitStatusEntries(u);
+      const visualUnitKey=stealthed?"stealth":String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
+      const principalClass=!stealthed&&u.principal?"principal-unit":"";
+      const rarityClass=stealthed?"":getCardVisualClass(u);
+      c.className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${principalClass} ${stealthed?"unit-stealthed":""} ${rarityClass}`;
+      c.dataset.unitKey=stealthed?"stealth":String(u.key||"").trim().toLowerCase();
+      c.dataset.visibilityTag=stealthed?"stealth":"visible";
+      c.classList.toggle("unit-invisible-to-viewer",stealthed);
+      if(stealthed){
+        c.innerHTML=getStealthBoardCoverHtml();
+      }else{
+        const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
+        const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
+        c.innerHTML=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
+      }
+      const unitStatusEntries=stealthed?[]:getUnitStatusEntries(u);
       c.querySelectorAll(".unit-status-seal[data-status-index]").forEach(btn=>{
         btn.addEventListener("pointerdown",ev=>{ev.stopPropagation();},true);
         btn.addEventListener("pointerup",ev=>{ev.stopPropagation();},true);
@@ -503,7 +510,7 @@ function renderBoard(){
           if(entry)openStatusGuideModal(entry,u);
         });
       });
-      c.title=isStealthedUnit(u)&&u.owner!==myPlayer?`Presencia Oculta · Sigilo${u.principal?" · Personaje Principal":""}`:`${u.name}${u.principal?" · Personaje Principal":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
+      c.title=stealthed?"Presencia Oculta · Sigilo":`${u.name}${u.principal?" · Personaje Principal":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`;
       c.dataset.x=String(x);
       c.dataset.y=String(y);
       c.addEventListener("pointerdown",ev=>{

@@ -507,12 +507,14 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle,leaderLevel);
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
+  const adaptiveCampaignBattle=typeof isAdventureAdaptiveCampaignBattle==="function"&&isAdventureAdaptiveCampaignBattle(battle);
   const adaptiveMagePilot=typeof isAdaptiveMagePilotBattle==="function"&&isAdaptiveMagePilotBattle(battle,enemyLeaderType);
-  const enemyDeckBattle=adaptiveMagePilot?{...battle,adaptivePlayerSnapshot}:battle;
+  const adaptiveExperience=adaptiveCampaignBattle&&typeof getAdaptiveCampaignMemory==="function"?getAdaptiveCampaignMemory():null;
+  const enemyDeckBattle=adaptiveCampaignBattle?{...battle,adaptivePlayerSnapshot}:battle;
   const enemyRawInitial=makeEnemyDeckForBattle(enemyDeckBattle,enemyLeaderType);
   const enemyPrepared=prepareAiPrincipalInitialState(battle,enemyRawInitial);
-  // El Hechicero piloto usa exactamente el mazo Cañón Arcano aprobado. No se inyecta
-  // Foco Estabilizador de forma automática porque alteraría esas 20 cartas.
+  // El Hechicero conserva Cañón Arcano como núcleo adaptativo. No se inyecta
+  // Foco Estabilizador automáticamente porque sustituiría cartas fuera del constructor global.
   const enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   let startingUnits=[
@@ -541,8 +543,12 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,
     adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,
     adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",
-    adventureAdaptiveMage:!!adaptiveMagePilot,adventureAdaptivePlayerSnapshot:adaptiveMagePilot?adaptivePlayerSnapshot:null,
-    adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,adventureAiStyle:adaptiveMagePilot?"Cañón Arcano adaptativo":(battle.aiStyle||"Máxima"),
+    adventureAdaptiveCampaign:!!adaptiveCampaignBattle,adventureAdaptiveMage:!!adaptiveMagePilot,
+    adventureAdaptivePlayerSnapshot:adaptiveCampaignBattle?adaptivePlayerSnapshot:null,
+    adventureAdaptiveExperienceBattles:Math.max(0,Number(adaptiveExperience?.battlesAnalyzed||0)),
+    adventureAdaptiveRarityCap:adaptiveCampaignBattle?(battle.id==="battle5"?"Richard: básicas + núcleo raro":"Solo básicas"):"",
+    adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,
+    adventureAiStyle:adaptiveMagePilot?"Cañón Arcano · adaptación global":(adaptiveCampaignBattle?`${battle.aiStyle||"Máxima"} · adaptación global`:(battle.aiStyle||"Máxima")),
     adventureEnemyUnitMasteryRank:battle.beastEvent?UNIT_MASTERY_MAX_RANK:0,
     beastmasterGlobalDuelNumber:battle.beastmasterGlobalDuelNumber||0,
     beastmasterGlobalBlock:battle.beastmasterGlobalBlock||0,

@@ -156,7 +156,7 @@ function hvFieldFigureStyleText(key){
 function getFieldFigureHtml(u){
   const key=hvEnsureFieldFigureRegistryEntry(u);
   if(!key)return "";
-  if(typeof isStealthedUnit==="function"&&typeof myPlayer!=="undefined"&&isStealthedUnit(u)&&u.owner!==myPlayer)return "";
+  if(typeof isStealthedUnit==="function"&&isStealthedUnit(u))return "";
   const candidates=hvFieldFigureAssetCandidates(key,u);
   if(!candidates.length)return "";
   const src=candidates[0];

@@ -75,7 +75,7 @@ function getCurrentAdventureChapter(progress=getAdventureProgress()){
   return ADVENTURE_CHAPTERS[ADVENTURE_CHAPTERS.length-1];
 }
 const ADVENTURE_CAMPAIGN_RESET_MARKER_KEY="hallvalla_adventure_campaign_reset_marker";
-const ADVENTURE_CAMPAIGN_RESET_MARKER="adaptive_campaign_map1_restart_v1_2026_08_11";
+const ADVENTURE_CAMPAIGN_RESET_MARKER="adaptive_campaign_global_map1_restart_v2_2026_08_12";
 function hasAdvancedAdventureProgress(saved){
   if(!saved||typeof saved!=="object")return false;
   if(saved.guardianDefeated||saved.guardianRewardClaimed||saved.guardianPackClaimed)return true;
@@ -91,6 +91,7 @@ function clearAdaptiveAdventureMemoryForCampaignRestart(){
     if(!raw||typeof raw!=="object"||!raw.adaptiveAi)return;
     const adaptiveAi={...raw.adaptiveAi};
     delete adaptiveAi.mageCounterV1;
+    delete adaptiveAi.campaignTacticalProfileV1;
     if(Object.keys(adaptiveAi).length)raw.adaptiveAi=adaptiveAi;
     else delete raw.adaptiveAi;
     localStorage.setItem("hallvalla_player_profile",JSON.stringify(raw));
@@ -101,10 +102,10 @@ function ensureAdventureCampaignRestartMigration(){
     if(localStorage.getItem(ADVENTURE_CAMPAIGN_RESET_MARKER_KEY)===ADVENTURE_CAMPAIGN_RESET_MARKER)return false;
     const saved=JSON.parse(localStorage.getItem(ADVENTURE_PROGRESS_KEY)||"null");
     const mustRestart=hasAdvancedAdventureProgress(saved);
-    if(mustRestart){
-      localStorage.removeItem(ADVENTURE_PROGRESS_KEY);
-      clearAdaptiveAdventureMemoryForCampaignRestart();
-    }
+    if(mustRestart)localStorage.removeItem(ADVENTURE_PROGRESS_KEY);
+    // La V2 cambia el modelo de memoria: siempre inicia el expediente global limpio
+    // la primera vez que se instala esta versión, haya o no progreso previo visible.
+    clearAdaptiveAdventureMemoryForCampaignRestart();
     localStorage.setItem(ADVENTURE_CAMPAIGN_RESET_MARKER_KEY,ADVENTURE_CAMPAIGN_RESET_MARKER);
     return mustRestart;
   }catch(e){
@@ -194,11 +195,13 @@ async function maybeGrantBeastmasterRareEgg(pub){
 }
 
 function completeAdventureBattleOnce(pub){
-  if(!pub||pub.mode!=="adventure"||pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
+  if(!pub||pub.mode!=="adventure")return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
+  // La campaña aprende de CADA duelo terminado del mapa 1, incluso cuando gana la IA.
+  // El registro ocurre antes de resolver recompensas para que el siguiente duelista
+  // herede inmediatamente la experiencia acumulada.
+  if(pub.adventureAdaptiveCampaign&&typeof recordAdaptiveCampaignBattle==="function")recordAdaptiveCampaignBattle(pub);
+  if(pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
-  // La memoria se registra antes de comprobar recompensas/completados: si el jugador
-  // vuelve a desafiar al Hechicero y gana otra vez, la IA aprende también ese reintento.
-  if(pub.adventureAdaptiveMage&&typeof recordAdaptiveMageDefeat==="function")recordAdaptiveMageDefeat(pub);
   if(battle.beastEvent){
     if(hasBeastmasterBattleRewarded(pub))return{awarded:false,xp:0,gems:0,gold:0,levelUps:0,cards:[],battle,progress:getAdventureProgress(),beastEvent:true};
     markBeastCraftingUnlocked();

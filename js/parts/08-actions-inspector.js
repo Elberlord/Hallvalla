@@ -82,6 +82,7 @@ function getTacticalPreviewClasses(x,y){
   if(selectedCard||selectedUnitActionMode||!unitContextSelection||!publicState)return[];
   const u=getUnit(unitContextSelection.unitId);
   if(!u)return[];
+  if(typeof isStealthHiddenFromViewer==="function"&&isStealthHiddenFromViewer(u))return[];
   const key=`${x},${y}`;
   const attackSet=new Set(attackRangeCells(u,publicState?.units||[]));
 
