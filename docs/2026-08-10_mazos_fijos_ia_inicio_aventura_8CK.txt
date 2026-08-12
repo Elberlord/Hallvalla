@@ -4,6 +4,7 @@ Fuente: mazos_actuales_ia_inicio_aventura_8CJ.csv entregado por el usuario.
 
 Reglas implementadas:
 - guardian_mage (Hechicero guardián): mazo fijo de 20 cartas. Conserva 1 Lancero solar garantizado en la mano inicial; las otras 3 cartas se barajan desde este mismo mazo fijo.
+  Mazo actual: 3 Adepto Arcano, 1 Lancero solar, 1 Guardián de piedra, 1 Samurai de Katana, 1 Saboteador de Iga, 1 Explorador mongol, 3 Fireball, 3 Maldición de arena, 2 Muro de escudos, 1 Luz de Sanación, 1 Inspiration, 1 Foco Estabilizador y 1 Amuleto de Canalización.
 - battle1 (Arquero rebelde): mazo fijo de 20 cartas; mano inicial de 4 cartas barajadas desde ese mazo.
 - battle2 (Guerrero rebelde): mazo fijo de 20 cartas; mano inicial de 4 cartas barajadas desde ese mazo.
 - Ninguno de estos tres combates vuelve a construir su mazo desde getAiBasicDeckTemplates().
