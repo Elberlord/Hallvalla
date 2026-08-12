@@ -1,0 +1,20 @@
+HallValla · CANONICALEVOLUTION2 · 2026-08-12
+
+Objetivo
+- Mantener el mazo canónico de cada clase como ADN.
+- Dar prioridad explícita a counters de cartas concretas que el humano repite.
+- Sacrificar primero cartas del mazo que estén siendo contrarrestadas por el humano.
+- Elegir Principales adicionales por utilidad táctica, sinergia de líder y combinación entre Principales.
+
+Cambios
+1. Las copias repetidas de una carta concreta elevan progresivamente la prioridad de sus counters directos.
+2. Los Personajes Principales del humano pesan más en el expediente porque empiezan desplegados.
+3. Se añadió presión negativa para retirar antes cartas propias que tienen un counter natural frecuente en el mazo humano.
+4. Yabusame deja de considerarse detector de Sigilo; el detector Básico prioritario es Explorador Mongol.
+5. Arquero a caballo escita se valora como hostigador móvil contra piezas pesadas/lentas, no como detector/control de Sigilo.
+6. Los Principales mantienen el jefe narrativo obligatorio y los slots restantes se puntúan por:
+   - counter directo;
+   - plan de la clase;
+   - pareja/sinergia con Principales ya seleccionados;
+   - complementariedad de rango/tanque/movilidad.
+7. Todos los filtros de rareza, Bestias, equipo exclusivo y excepciones de historia siguen intactos.

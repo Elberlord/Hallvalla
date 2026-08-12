@@ -1064,11 +1064,15 @@ function expandEnemyFixedDeck(deckList=[]){
    - Toda batalla normal de capítulo lee el mazo humano ACTUAL antes de construir la IA.
    - Cada duelo terminado, gane quien gane, añade experiencia al mismo perfil global.
    - Mapa 1 conserva sus límites 3/4/6/8/10 y sus restricciones de rareza existentes.
-   - Desde Mapa 2 la IA mantiene sus Principales y núcleo propio; adapta hasta 10
-     slots periféricos usando counters BÁSICOS compatibles.
-   - En Mapa 2 existe un cap duro: ninguna carta superior a Básica entra desde pools
-     automáticos. Sólo las excepciones declaradas por diseño en ese encuentro sobreviven.
-   - Las cartas no básicas asignadas expresamente por diseño nunca se sacrifican.
+   - Cada clase recicla su mazo canónico del Mapa 1 como ADN permanente de campaña.
+   - Mapa 2 adapta hasta 10 slots; Mapa 3 hasta 12; Mapa 4 hasta 14; Mapa 5 hasta 16
+     y Mapa 6+ hasta 18, siempre sin desmontar el núcleo de identidad.
+   - Rarezas para REEMPLAZOS automáticos: M1-M2 Básica; M3 Rara; M4 Épica;
+     M5 Mítica; M6+ Legendaria. Las claves internas históricas siguen siendo
+     basic → epic → glorious → mythic → legendary.
+   - Semidiós/Astral jamás entran por score adaptativo. Sólo un encuentro bespoke puede usarlos.
+   - Los Principales guionizados son slots adicionales y se escogen por utilidad contra
+     el expediente del humano, conservando el Principal firma del jefe cuando exista.
    - Cada líder conserva una identidad mínima: la adaptación contrarresta al humano
      sin convertir el mazo en una mezcla sin arquetipo.
    - Los encuentros especiales con enemyLegendaryMode="deck" conservan su constructor
@@ -1107,6 +1111,225 @@ const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:3,battle2:4,battle3:6,battl
 const ADAPTIVE_CAMPAIGN_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
 const ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga"]);
 const ADAPTIVE_MAP1_RICHARD_RARE_KEYS=new Set(["richard_lionheart","mulan","wallace"]);
+const ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS=Object.freeze({
+  mage:Object.freeze([
+    ["arcane_adept",3],["spearman",1],["guardian",1],["samurai_katana",1],["saboteador_iga",1],["mongol_explorer",1],
+    ["fireball",3],["bolt",3],["shield_wall",2],["heal",1],["inspiration",1],["stabilizing_focus",1],["channeling_amulet",1]
+  ]),
+  archer:Object.freeze([
+    ["archer",3],["new_kingdom_archer",3],["egyptian_line_archer",2],["mongol_explorer",1],["scythian_horse_archer",1],["spearman",2],
+    ["bolt",3],["fireball",2],["smoke_bomb",1],["skirmisher_cloak",1],["retreat_strap",1]
+  ]),
+  warrior:Object.freeze([
+    ["spearman",3],["greek_hoplite",3],["samurai_katana",3],["roman_legionary",2],["guardian",2],["samurai_naginata",1],
+    ["bolt",2],["smoke_bomb",1],["heal",1],["marching_greaves",1],["war_visor",1]
+  ]),
+  cavalry:Object.freeze([
+    ["numidian_javelin_rider",3],["scythian_horse_archer",3],["hungarian_hussar",2],["cavalry",2],["mongol_explorer",1],["cossack_rider",1],
+    ["archer",2],["bolt",2],["fireball",1],["smoke_bomb",1],["withdrawal_stirrups",1],["light_barding",1]
+  ]),
+  axe:Object.freeze([
+    ["ulfhednar",3],["berserker_de_oso",3],["berserker",2],["spearman",2],["mongol_explorer",1],["saboteador_iga",1],
+    ["bolt",3],["smoke_bomb",1],["fireball",1],["heal",1],["tanned_hide_harness",1],["counterweighted_grip",1]
+  ])
+});
+const ADAPTIVE_CAMPAIGN_RARITY_ORDER=Object.freeze(["basic","epic","glorious","mythic","legendary"]);
+const ADAPTIVE_CAMPAIGN_VISIBLE_RARITY=Object.freeze({basic:"Básica",epic:"Rara",glorious:"Épica",mythic:"Mítica",legendary:"Legendaria"});
+
+
+/* CANONICALEVOLUTION2 · Prioridad táctica explícita.
+   Las puntuaciones de esta tabla no conceden cartas por sí solas: el cap de rareza,
+   las restricciones de Bestias/equipo y las excepciones de historia se validan después.
+   El valor sólo indica cuánto desea la IA esa respuesta si el humano repite la amenaza. */
+const ADAPTIVE_EXACT_CARD_COUNTER_PRIORITY=Object.freeze({
+  spearman:Object.freeze({fireball:86,new_kingdom_archer:78,scythian_horse_archer:68,numidian_javelin_rider:58,bolt:48,tomoe_gozen:82}),
+  guardian:Object.freeze({berserker_de_oso:112,berserker:96,geisha_encubierta:82,new_kingdom_archer:58,sand_curse_plus:86,nasu_no_yoichi:138,beowulf:82,primordial_serpent_poison:116}),
+  greek_hoplite:Object.freeze({berserker_de_oso:106,berserker:92,new_kingdom_archer:64,geisha_encubierta:72,nasu_no_yoichi:126,beowulf:70}),
+  armored_man_at_arms:Object.freeze({berserker_de_oso:92,berserker:78,geisha_encubierta:76,fireball:58,nasu_no_yoichi:96}),
+  wallace:Object.freeze({berserker_de_oso:106,berserker:92,nasu_no_yoichi:130,beowulf:92,primordial_serpent_poison:104}),
+  richard_lionheart:Object.freeze({berserker_de_oso:100,berserker:88,nasu_no_yoichi:124,beowulf:90,primordial_serpent_poison:108}),
+  leonidas:Object.freeze({berserker_de_oso:116,berserker:102,nasu_no_yoichi:142,beowulf:94,primordial_serpent_poison:110}),
+  hector_troy:Object.freeze({berserker_de_oso:100,nasu_no_yoichi:118,beowulf:86}),
+  alexander_magnus:Object.freeze({berserker_de_oso:106,nasu_no_yoichi:126,broken_blood_oath:72}),
+
+  samurai_katana:Object.freeze({guardian:88,smoke_bomb:82,new_kingdom_archer:62,joan_of_arc:126,el_cid:92,julius_caesar:88,false_crown:118}),
+  samurai_naginata:Object.freeze({new_kingdom_archer:92,archer:72,scythian_horse_archer:78,fireball:66,simo_hayha:80}),
+  berserker:Object.freeze({archer:72,new_kingdom_archer:88,bolt:92,smoke_bomb:82,snare_trap_plus:118,joan_of_arc:122,julius_caesar:76}),
+  berserker_de_oso:Object.freeze({archer:68,new_kingdom_archer:84,bolt:86,smoke_bomb:80,snare_trap_plus:110,joan_of_arc:116}),
+  ulfhednar:Object.freeze({guardian:74,shield_wall:64,smoke_bomb:66,warning_rune_plus:94,joan_of_arc:112}),
+  skipar_del_drakkar:Object.freeze({fireball:72,new_kingdom_archer:70,geisha_encubierta:64}),
+
+  archer:Object.freeze({cavalry:88,hungarian_hussar:104,hattori_shinobi:86,tomoe_gozen:126}),
+  egyptian_line_archer:Object.freeze({cavalry:86,hungarian_hussar:100,hattori_shinobi:82,tomoe_gozen:122}),
+  new_kingdom_archer:Object.freeze({cavalry:94,hungarian_hussar:108,hattori_shinobi:88,tomoe_gozen:132}),
+  roman_auxiliary_sagittarius:Object.freeze({cavalry:88,hungarian_hussar:102,hattori_shinobi:84,tomoe_gozen:124}),
+  samurai_yabusame:Object.freeze({spearman:70,hungarian_hussar:72,tomoe_gozen:118}),
+  simo_hayha:Object.freeze({mongol_explorer:96,tomoe_gozen:142,false_crown:112}),
+  nasu_no_yoichi:Object.freeze({tomoe_gozen:136,hungarian_hussar:82,false_crown:104}),
+  merlin:Object.freeze({hungarian_hussar:92,cavalry:80,geisha_encubierta:92,tomoe_gozen:132,false_crown:112}),
+
+  cavalry:Object.freeze({spearman:142,bolt:72,snare_trap_plus:122,hannibal_barca:128,thousand_banners_ambush:126}),
+  numidian_javelin_rider:Object.freeze({spearman:138,bolt:76,snare_trap_plus:126,hannibal_barca:126,thousand_banners_ambush:122}),
+  scythian_horse_archer:Object.freeze({spearman:144,bolt:78,snare_trap_plus:132,hannibal_barca:130,thousand_banners_ambush:128}),
+  hungarian_hussar:Object.freeze({spearman:150,bolt:74,snare_trap_plus:130,hannibal_barca:136,thousand_banners_ambush:132}),
+  mongol_explorer:Object.freeze({spearman:118,snare_trap_plus:104,hannibal_barca:112}),
+  cossack_rider:Object.freeze({spearman:132,bolt:70,snare_trap_plus:116,hannibal_barca:120}),
+  saladin:Object.freeze({spearman:86,snare_trap_plus:96,yi_sun_sin:84,hannibal_barca:96}),
+  subotai:Object.freeze({snare_trap_plus:106,hannibal_barca:98,thousand_banners_ambush:104}),
+
+  geisha_encubierta:Object.freeze({mongol_explorer:168}),
+  hattori_shinobi:Object.freeze({mongol_explorer:164}),
+  hattori_hanzo:Object.freeze({mongol_explorer:154}),
+  scout:Object.freeze({mongol_explorer:110}),
+  saboteador_iga:Object.freeze({fireball:96,new_kingdom_archer:82,archer:70,simo_hayha:76}),
+
+  arcane_adept:Object.freeze({geisha_encubierta:102,cavalry:72,hungarian_hussar:82,fireball:66}),
+  acolyte_healer:Object.freeze({geisha_encubierta:94,fireball:88,hungarian_hussar:70,shadow_cut:116,fallen_kings_seal:136}),
+  sun_tzu:Object.freeze({geisha_encubierta:90,fireball:80,broken_blood_oath:126,fallen_kings_seal:138}),
+  king_solomon:Object.freeze({geisha_encubierta:104,hungarian_hussar:76,broken_blood_oath:126,false_crown:94}),
+  ericto:Object.freeze({geisha_encubierta:106,hungarian_hussar:78,fireball:84,broken_blood_oath:120,false_crown:94}),
+
+  mulan:Object.freeze({smoke_bomb:112,guardian:92,warning_rune_plus:76,joan_of_arc:76,false_crown:106}),
+  joan_of_arc:Object.freeze({berserker:72,geisha_encubierta:68,broken_blood_oath:132,fallen_kings_seal:158}),
+  hannibal_barca:Object.freeze({new_kingdom_archer:84,scythian_horse_archer:82,simo_hayha:90}),
+  lu_bu:Object.freeze({guardian:86,joan_of_arc:118,false_crown:110}),
+  ragnar_lodbrok:Object.freeze({geisha_encubierta:70,berserker:74,shadow_cut:104}),
+  el_cid:Object.freeze({fireball:70,geisha_encubierta:72,new_kingdom_archer:68}),
+  spartacus:Object.freeze({guardian:72,berserker:76,fireball:72}),
+  beowulf:Object.freeze({geisha_encubierta:82,berserker:82,primordial_serpent_poison:112}),
+  miyamoto_musashi:Object.freeze({new_kingdom_archer:82,fireball:76,false_crown:120}),
+  khalid_ibn_al_walid:Object.freeze({guardian:88,joan_of_arc:124,false_crown:124}),
+  attila_hun:Object.freeze({fireball:70,new_kingdom_archer:66,shadow_cut:114}),
+  genghis_khan:Object.freeze({guardian:82,joan_of_arc:106,false_crown:108}),
+  julius_caesar:Object.freeze({archer:58,saboteador_iga:54,ulfhednar:64,camp_betrayal:94})
+});
+
+/* Los Principales no se eligen por PB bruto. Esta matriz premia al Principal cuya
+   habilidad concreta invalida la carta que el humano repite. */
+const ADAPTIVE_PRINCIPAL_EXACT_COUNTER_PRIORITY=Object.freeze({
+  guardian:Object.freeze({nasu_no_yoichi:150,beowulf:92,spartacus:48}),
+  greek_hoplite:Object.freeze({nasu_no_yoichi:142,beowulf:78}),
+  armored_man_at_arms:Object.freeze({nasu_no_yoichi:104,beowulf:72}),
+  richard_lionheart:Object.freeze({nasu_no_yoichi:132,beowulf:92}),
+  wallace:Object.freeze({nasu_no_yoichi:138,beowulf:94}),
+  leonidas:Object.freeze({nasu_no_yoichi:154,beowulf:96}),
+  alexander_magnus:Object.freeze({nasu_no_yoichi:142,beowulf:82}),
+  archer:Object.freeze({tomoe_gozen:132}),
+  egyptian_line_archer:Object.freeze({tomoe_gozen:130}),
+  new_kingdom_archer:Object.freeze({tomoe_gozen:142}),
+  roman_auxiliary_sagittarius:Object.freeze({tomoe_gozen:134}),
+  simo_hayha:Object.freeze({tomoe_gozen:150}),
+  nasu_no_yoichi:Object.freeze({tomoe_gozen:144}),
+  merlin:Object.freeze({tomoe_gozen:134}),
+  cavalry:Object.freeze({hannibal_barca:136}),
+  numidian_javelin_rider:Object.freeze({hannibal_barca:132}),
+  scythian_horse_archer:Object.freeze({hannibal_barca:138}),
+  hungarian_hussar:Object.freeze({hannibal_barca:144}),
+  cossack_rider:Object.freeze({hannibal_barca:126}),
+  samurai_katana:Object.freeze({joan_of_arc:138,el_cid:98,julius_caesar:92}),
+  berserker:Object.freeze({joan_of_arc:136,el_cid:88,julius_caesar:82}),
+  berserker_de_oso:Object.freeze({joan_of_arc:128,el_cid:82}),
+  ulfhednar:Object.freeze({joan_of_arc:124,julius_caesar:84}),
+  mulan:Object.freeze({joan_of_arc:80,hannibal_barca:64}),
+  special_heavy:Object.freeze({spartacus:150}),
+  swarm:Object.freeze({yi_sun_sin:138,hector_troy:128,khalid_ibn_al_walid:116,lu_bu:96}),
+  high_hp:Object.freeze({beowulf:138,ragnar_lodbrok:92}),
+  burst:Object.freeze({joan_of_arc:142,el_cid:92,julius_caesar:88})
+});
+
+const ADAPTIVE_PRINCIPAL_LEADER_PLAN_BONUS=Object.freeze({
+  warrior:Object.freeze({richard_lionheart:82,wallace:78,joan_of_arc:86,leonidas:88,el_cid:72,lu_bu:66,hector_troy:76,beowulf:72,julius_caesar:68,alexander_magnus:66}),
+  archer:Object.freeze({simo_hayha:96,nasu_no_yoichi:98,tomoe_gozen:82,saladin:62,subotai:58,sun_tzu:42,merlin:46}),
+  mage:Object.freeze({merlin:108,sun_tzu:82,king_solomon:98,ericto:94,joan_of_arc:48,ulysses:52}),
+  cavalry:Object.freeze({saladin:94,subotai:102,tomoe_gozen:86,hannibal_barca:84,attila_hun:88,genghis_khan:86,khalid_ibn_al_walid:62}),
+  axe:Object.freeze({ragnar_lodbrok:92,lu_bu:82,el_cid:78,boudica:72,beowulf:86,khalid_ibn_al_walid:84,joan_of_arc:52,attila_hun:72})
+});
+const ADAPTIVE_PRINCIPAL_PAIR_SYNERGY=Object.freeze({
+  "richard_lionheart|wallace":96,"joan_of_arc|richard_lionheart":82,"leonidas|richard_lionheart":72,"joan_of_arc|wallace":68,"hector_troy|leonidas":82,"alexander_magnus|julius_caesar":82,
+  "nasu_no_yoichi|simo_hayha":96,"simo_hayha|tomoe_gozen":78,"nasu_no_yoichi|tomoe_gozen":82,"saladin|subotai":86,
+  "hannibal_barca|subotai":82,"hannibal_barca|tomoe_gozen":58,"attila_hun|genghis_khan":76,
+  "merlin|sun_tzu":92,"king_solomon|merlin":86,"ericto|merlin":78,"ericto|king_solomon":66,
+  "boudica|lu_bu":72,"boudica|khalid_ibn_al_walid":66,"beowulf|ragnar_lodbrok":64
+});
+
+function getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType=""){
+  const counts=ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS[String(enemyLeaderType||"")];
+  if(!counts)return[];
+  const out=[];
+  counts.forEach(([key,count])=>{
+    const card=getAdventureDeckCardTemplateByKey(key);
+    for(let i=0;card&&i<Math.max(0,Number(count)||0);i++)out.push(card);
+  });
+  if(out.length!==DECK_RULES.drawDeckSize){
+    console.error(`[HallValla] Arquetipo canónico ${enemyLeaderType}: ${out.length}/${DECK_RULES.drawDeckSize} cartas.`);
+  }
+  return out.slice(0,DECK_RULES.drawDeckSize);
+}
+function getAdaptiveCampaignRarityCapKey(battle){
+  const chapter=Math.floor(getAdaptiveCampaignChapterNumber(battle));
+  if(chapter<=2)return "basic";
+  if(chapter===3)return "epic";      // visible: Rara
+  if(chapter===4)return "glorious";  // visible: Épica
+  if(chapter===5)return "mythic";
+  return "legendary";
+}
+function getAdaptiveCampaignRarityRank(key="basic"){
+  const index=ADAPTIVE_CAMPAIGN_RARITY_ORDER.indexOf(String(key||"basic"));
+  return index<0?99:index;
+}
+function getAdaptiveCampaignCardRarityKey(card){
+  if(typeof getCraftRarityKey==="function")return getCraftRarityKey(card);
+  const rarity=String(card?.rarity||card?.rareza||"Básica").toLowerCase();
+  if(rarity.includes("legend"))return "legendary";
+  if(rarity.includes("mít")||rarity.includes("myth"))return "mythic";
+  if(rarity.includes("glor"))return "glorious";
+  if(rarity.includes("épic")||rarity.includes("epic"))return "epic";
+  return "basic";
+}
+function isAdaptiveCardInsideRarityCap(card,battle){
+  if(!card)return false;
+  const key=getAdaptiveCampaignCardRarityKey(card);
+  if(key==="demigod"||key==="astral")return false;
+  return getAdaptiveCampaignRarityRank(key)<=getAdaptiveCampaignRarityRank(getAdaptiveCampaignRarityCapKey(battle));
+}
+function isAdaptiveCampaignBeastRestricted(card,enemyLeaderType=""){
+  if(!card?.beast)return false;
+  if(String(enemyLeaderType||"")==="beastmaster")return false;
+  // La línea de Dragón es universal, pero nunca se toma de un pool adaptativo genérico;
+  // debe estar declarada por el encuentro/contrato para no saltarse su progresión.
+  return true;
+}
+function getAdaptiveCampaignAllowedSpecialKeys(battle){
+  const keys=new Set();
+  (battle?.enemyLegendaryCards||[]).forEach(key=>{if(key)keys.add(String(key));});
+  if(battle?.rewardCard)keys.add(String(battle.rewardCard));
+  const preferred=typeof getAiPrincipalKeyForBattle==="function"?getAiPrincipalKeyForBattle(battle):"";
+  if(preferred)keys.add(String(preferred));
+  return keys;
+}
+function getAdaptiveCampaignEvolutionPool(battle,enemyLeaderType=""){
+  const pools=[
+    ...(typeof CARD_TEMPLATES!=="undefined"?CARD_TEMPLATES:[]),
+    ...(typeof EQUIPMENT_CARD_TEMPLATES!=="undefined"?EQUIPMENT_CARD_TEMPLATES:[]),
+    ...(typeof BASIC_MAGIC_TRAP_PACK!=="undefined"?BASIC_MAGIC_TRAP_PACK:[]),
+    ...(typeof IMPROVED_MAGIC_TRAP_PACK!=="undefined"?IMPROVED_MAGIC_TRAP_PACK:[]),
+    ...(typeof LEGENDARY_TRAP_CARDS!=="undefined"?LEGENDARY_TRAP_CARDS:[]),
+    ...(typeof SPECIAL_HUMAN_CARD_DATA!=="undefined"?SPECIAL_HUMAN_CARD_DATA:[]),
+    ...(typeof ADVENTURE_SPECIALS!=="undefined"?Object.values(ADVENTURE_SPECIALS||{}):[])
+  ];
+  const allowedSpecial=getAdaptiveCampaignAllowedSpecialKeys(battle);
+  const byKey=new Map();
+  for(const card of pools){
+    const key=String(card?.key||"");
+    if(!key||byKey.has(key))continue;
+    if(isAdaptiveCampaignBeastRestricted(card,enemyLeaderType))continue;
+    if(!isAdaptiveCardInsideRarityCap(card,battle))continue;
+    if(card?.special&&!allowedSpecial.has(key))continue;
+    if(card?.type==="equipment"&&typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(card,enemyLeaderType))continue;
+    byKey.set(key,card);
+  }
+  return [...byKey.values()];
+}
 
 function getAdaptiveCampaignChapterNumber(battle){
   if(!battle||battle.isGuardian||battle.beastEvent)return 0;
@@ -1141,18 +1364,19 @@ function isAdaptiveMap2Battle(battle){
 }
 function getAdaptiveScriptedEncounterExceptionKeys(battle){
   const keys=new Set();
-  // Sólo lo escrito expresamente en el encuentro puede saltarse el cap Básico
-  // del Mapa 2. Los pools generales/adaptativos nunca conceden esa excepción.
-  (battle?.enemyFixedDeck||[]).forEach(entry=>{
-    const key=Array.isArray(entry)?entry[0]:entry?.key;
+  // Mapa 2+ ya no hereda enemyFixedDeck legacy como permiso de rareza. El ADN
+  // proviene del arquetipo canónico. Sólo campos explícitos de guion y Principales
+  // seleccionados pueden saltarse el cap de las 20 cartas robables.
+  (battle?.adaptiveScriptedDrawCards||[]).forEach(entry=>{
+    const key=Array.isArray(entry)?entry[0]:entry?.key||entry;
     if(key)keys.add(String(key));
   });
+  (battle?._adaptivePrincipalKeys||[]).forEach(key=>{if(key)keys.add(String(key));});
   (battle?.enemyLegendaryCards||[]).forEach(key=>{if(key)keys.add(String(key));});
   if(battle?.richardInDeck)keys.add("richard_lionheart");
   const preferred=typeof getAiPrincipalKeyForBattle==="function"?getAiPrincipalKeyForBattle(battle):"";
   if(preferred)keys.add(String(preferred));
-  // El jefe puede presentar su propia carta antes de que la rareza se abra al jugador.
-  if(battle?.rewardCard&&String(battle?.id||"").includes("chapter2_1_battle"))keys.add(String(battle.rewardCard));
+  if(battle?.rewardCard)keys.add(String(battle.rewardCard));
   return keys;
 }
 function isAdaptiveMagePilotBattle(battle,enemyLeaderType=""){
@@ -1193,40 +1417,51 @@ function isAdaptiveBasicCard(card){
   const rarity=String(card.rarity||card.rareza||"").trim().toLowerCase();
   return !rarity||rarity==="basic"||rarity==="básica"||rarity==="basica";
 }
-function isAdaptiveBaseCardAllowedForBattle(card,battle){
+function isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType=""){
   if(!card)return false;
+  if(isAdaptiveCampaignBeastRestricted(card,enemyLeaderType))return false;
   if(isAdaptiveMap1Battle(battle)){
     if(isAdaptiveBasicCard(card))return true;
     return battle?.id==="battle5"&&ADAPTIVE_MAP1_RICHARD_RARE_KEYS.has(String(card?.key||""));
   }
-  if(isAdaptiveMap2Battle(battle)){
-    if(isAdaptiveBasicCard(card))return true;
-    // Mapa 2: ninguna rareza superior entra por pool, utilidad o adaptación.
-    // Sólo sobreviven cartas no Básicas declaradas por el diseñador del encuentro.
-    return getAdaptiveScriptedEncounterExceptionKeys(battle).has(String(card?.key||""));
+  if(isAdaptiveCardInsideRarityCap(card,battle)){
+    // Las especiales dentro del cap sólo pertenecen al arsenal si la historia del
+    // encuentro ya las reconoce; evita sacar héroes futuros por simple puntuación.
+    if(card?.special&&!getAdaptiveCampaignAllowedSpecialKeys(battle).has(String(card?.key||"")))return false;
+    return true;
   }
+  // Principal o excepción narrativa: puede mostrarse antes del desbloqueo general.
+  return getAdaptiveScriptedEncounterExceptionKeys(battle).has(String(card?.key||""));
+}
+function isAdaptiveCounterCardAllowed(card,battle,enemyLeaderType=""){
+  if(!card||isAdaptiveCampaignBeastRestricted(card,enemyLeaderType))return false;
+  if(isAdaptiveMap1Battle(battle))return isAdaptiveBasicCard(card);
+  if(!isAdaptiveCardInsideRarityCap(card,battle))return false;
+  if(card?.special&&!getAdaptiveCampaignAllowedSpecialKeys(battle).has(String(card?.key||"")))return false;
+  if(card?.type==="equipment"&&typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(card,enemyLeaderType))return false;
   return true;
 }
-function isAdaptiveCounterCardAllowed(card,battle){
-  // La adaptación global sólo introduce counters Básicos. Las rarezas/especiales
-  // pertenecen al diseño del encuentro y se conservan si ya estaban en el mazo base.
-  return isAdaptiveBasicCard(card);
-}
 function getAdaptiveCardRoleMetrics(card){
-  const out={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,control:0,unit:0,spell:0,trap:0,equipment:0};
+  const out={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,control:0,unit:0,spell:0,trap:0,equipment:0,special:0,highGuard:0,highHp:0,highAgi:0,mobile:0};
   if(!card)return out;
   const key=String(card.key||card.name||"");
   const cost=Math.max(0,Number(card.cost||0));
+  if(card.special)out.special=1;
   if(card.type==="unit"){
     out.unit=1;
     if(Number(card.range||0)>=2)out.ranged=1;
     if(Number(card.guard||0)>=4||Number(card.hp||0)>=7)out.tank=1;
+    if(Number(card.guard||0)>=6)out.highGuard=1;
+    if(Number(card.hp||0)>=8)out.highHp=1;
+    if(Number(card.agi||0)>=7)out.highAgi=1;
+    if(Number(card.mov||0)>=3)out.mobile=1;
     if(ADAPTIVE_CAMPAIGN_CAVALRY_KEYS.has(key)||(card.leaderBuffGroups||[]).includes?.("cavalry"))out.cavalry=1;
     if(ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS.has(key)||card.stealth||card.ninjutsu)out.assassin=1;
     if(key==="arcane_adept"||card.caster||card.healer||card.hechicero||card.hechicera||card.nigromante)out.arcane=1;
     if(cost<=1)out.swarm=1;
     if(cost>=3||Number(card.hp||0)>=7)out.heavy=1;
     if(Number(card.atk||0)>=5||key==="samurai_katana"||key==="berserker"||key==="berserker_de_oso")out.burst=1;
+    if(card.healer)out.heal=1;
   }else if(card.type==="spell"){
     out.spell=1;
     if(card.spell==="damage")out.damageSpell=1;
@@ -1241,7 +1476,7 @@ function getAdaptiveCardRoleMetrics(card){
   return out;
 }
 function summarizeAdaptiveCards(cards=[]){
-  const roles={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,control:0,unit:0,spell:0,trap:0,equipment:0};
+  const roles={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,control:0,unit:0,spell:0,trap:0,equipment:0,special:0,highGuard:0,highHp:0,highAgi:0,mobile:0};
   let totalCost=0,totalCards=0;
   const cardCounts={};
   for(const card of cards||[]){
@@ -1282,9 +1517,15 @@ function addAdaptiveSnapshotToProfile(roleScores,cardScores,snapshot,weight=1){
   Object.entries(snapshot?.cardCounts||{}).forEach(([key,count])=>{
     cardScores[key]=(cardScores[key]||0)+Math.max(0,Number(count||0))*weight;
   });
+  // Los Principales empiezan desplegados: una copia principal pesa más que una copia
+  // normal del mazo al evaluar amenazas repetidas del humano.
+  (snapshot?.principalKeys||[]).forEach(key=>{
+    key=String(key||"");
+    if(key)cardScores[key]=(cardScores[key]||0)+weight*1.35;
+  });
 }
 function getAdaptiveCampaignCounterProfile(currentSnapshot,memory){
-  const keys=["ranged","tank","cavalry","assassin","arcane","swarm","heavy","burst","damageSpell","buffSpell","heal","control","unit","spell","trap","equipment"];
+  const keys=["ranged","tank","cavalry","assassin","arcane","swarm","heavy","burst","damageSpell","buffSpell","heal","control","unit","spell","trap","equipment","special","highGuard","highHp","highAgi","mobile"];
   const roles=Object.fromEntries(keys.map(k=>[k,0]));
   const cards={};
   // El mazo actual siempre pesa más: los comandantes estudian al rival antes del duelo.
@@ -1303,6 +1544,76 @@ function getAdaptiveCampaignCounterProfile(currentSnapshot,memory){
   });
   return{roles,cards};
 }
+function getAdaptiveProfileCardThreat(profile,key,cap=11){
+  return Math.min(Math.max(1,Number(cap)||11),Math.max(0,Number(profile?.cards?.[String(key||"")]||0)));
+}
+function getAdaptiveExactCounterIntensity(profile,threatKey){
+  const threat=getAdaptiveProfileCardThreat(profile,threatKey,11);
+  if(threat<=0)return 0;
+  // Una sola copia vista una vez importa, pero repetir 2-3 copias o usar la misma carta
+  // durante varios duelos aumenta de forma deliberada la prioridad del counter.
+  return Math.min(2.25,threat/5);
+}
+function getAdaptivePrincipalExactCounterBonus(principalKey,profile){
+  principalKey=String(principalKey||"");
+  let score=0;
+  for(const [threatKey,counters] of Object.entries(ADAPTIVE_PRINCIPAL_EXACT_COUNTER_PRIORITY||{})){
+    if(["special_heavy","swarm","high_hp","burst"].includes(threatKey))continue;
+    const weight=Number(counters?.[principalKey]||0);
+    if(weight<=0)continue;
+    score+=weight*getAdaptiveExactCounterIntensity(profile,threatKey);
+  }
+  const r=profile?.roles||{};
+  score+=Number(ADAPTIVE_PRINCIPAL_EXACT_COUNTER_PRIORITY.special_heavy?.[principalKey]||0)*Math.min(1.8,Math.max(0,Number(r.special||0))/8);
+  score+=Number(ADAPTIVE_PRINCIPAL_EXACT_COUNTER_PRIORITY.swarm?.[principalKey]||0)*Math.min(1.8,Math.max(0,Number(r.swarm||0))/8);
+  score+=Number(ADAPTIVE_PRINCIPAL_EXACT_COUNTER_PRIORITY.high_hp?.[principalKey]||0)*Math.min(1.8,Math.max(0,Number(r.highHp||0))/8);
+  score+=Number(ADAPTIVE_PRINCIPAL_EXACT_COUNTER_PRIORITY.burst?.[principalKey]||0)*Math.min(1.8,Math.max(0,Number(r.burst||0))/8);
+  return score;
+}
+function getAdaptivePrincipalLeaderPlanBonus(principalKey,leaderType=""){
+  return Number(ADAPTIVE_PRINCIPAL_LEADER_PLAN_BONUS?.[String(leaderType||"")]?.[String(principalKey||"")]||0);
+}
+function getAdaptivePrincipalPairSynergy(principalKey,selectedKeys=[]){
+  principalKey=String(principalKey||"");
+  let score=0;
+  for(const other of selectedKeys||[]){
+    const a=String(other||"");
+    if(!a||a===principalKey)continue;
+    const pair=[a,principalKey].sort().join("|");
+    score+=Number(ADAPTIVE_PRINCIPAL_PAIR_SYNERGY?.[pair]||0);
+  }
+  return score;
+}
+function getAdaptivePrincipalComplementBonus(card,selectedKeys=[]){
+  if(!card||!selectedKeys?.length)return 0;
+  const selected=(selectedKeys||[]).map(getAdventureDeckCardTemplateByKey).filter(Boolean);
+  if(!selected.length)return 0;
+  let score=0;
+  const selectedRanged=selected.filter(c=>Number(c.range||0)>=2).length;
+  const selectedTanks=selected.filter(c=>Number(c.guard||0)>=5||Number(c.hp||0)>=7).length;
+  const candidateRanged=Number(card.range||0)>=2;
+  const candidateTank=Number(card.guard||0)>=5||Number(card.hp||0)>=7;
+  if(selectedRanged===selected.length&&!candidateRanged)score+=18;
+  if(selectedRanged===0&&candidateRanged)score+=20;
+  if(selectedTanks===0&&candidateTank)score+=18;
+  if(selectedTanks===selected.length&&!candidateTank&&Number(card.mov||0)>=2)score+=14;
+  return score;
+}
+function getAdaptiveCampaignOpponentPressurePenalty(card,profile){
+  if(!card)return 0;
+  const m=getAdaptiveCardRoleMetrics(card);
+  const t=(key)=>getAdaptiveProfileCardThreat(profile,key,9);
+  let penalty=0;
+  if(m.cavalry)penalty+=t("spearman")*18+t("snare_trap_plus")*12+t("hannibal_barca")*12+t("thousand_banners_ambush")*10;
+  if(m.ranged)penalty+=t("arcane_adept")*8+t("tomoe_gozen")*15;
+  if(m.tank||m.highGuard)penalty+=t("berserker_de_oso")*14+t("berserker")*8+t("nasu_no_yoichi")*16;
+  if(card.special)penalty+=t("spartacus")*18;
+  if(m.heal||m.buffSpell)penalty+=t("broken_blood_oath")*14+t("fallen_kings_seal")*18;
+  if(card.type==="unit"&&Number(card.cost||0)<=1)penalty+=t("saboteador_iga")*9;
+  if(card.type==="unit"&&Number(card.range||0)<=1&&isAdaptiveBasicCard(card))penalty+=t("samurai_naginata")*7;
+  return Math.min(220,penalty);
+}
+
 function getAdaptiveCampaignLeaderIdentityBonus(card,leaderType=""){
   if(!card)return 0;
   const type=String(leaderType||"");
@@ -1328,124 +1639,299 @@ function getAdaptiveCampaignLeaderIdentityBonus(card,leaderType=""){
   }
   return score;
 }
+function getAdaptiveCampaignPrincipalCounterScore(card,profile,enemyLeaderType=""){
+  if(!card||card.type!=="unit")return -Infinity;
+  const r=profile?.roles||{};
+  const key=String(card.key||"");
+  let score=(typeof getPrincipalUtilityScore==="function"?getPrincipalUtilityScore(card):0)*.28;
+  score+=getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType)*.82;
+  score+=getAdaptivePrincipalLeaderPlanBonus(key,enemyLeaderType);
+  score+=getAdaptivePrincipalExactCounterBonus(key,profile);
+  const add=(value)=>{score+=Number(value||0);};
+  const rules={
+    richard_lionheart:()=>add(r.burst*18+r.damageSpell*20+r.heavy*8),
+    wallace:()=>add(r.burst*22+r.damageSpell*16+r.heavy*8),
+    mulan:()=>add(r.ranged*18+r.tank*15+r.heavy*12),
+    simo_hayha:()=>add(r.swarm*24+r.ranged*10+r.highAgi*8),
+    saladin:()=>add(r.ranged*14+r.control*12+r.mobile*8),
+    shaka_zulu:()=>add(r.tank*12+r.heavy*10+r.swarm*8),
+    yi_sun_sin:()=>add(r.swarm*30+r.unit*8+r.burst*8),
+    boudica:()=>add(r.burst*10+r.heavy*8+r.swarm*8),
+    ulysses:()=>add(r.control*18+r.burst*16+r.mobile*10),
+    joan_of_arc:()=>add(r.burst*30+r.damageSpell*28),
+    leonidas:()=>add(r.burst*22+r.swarm*16+r.heavy*10),
+    nasu_no_yoichi:()=>add(r.tank*30+r.highGuard*36+r.heavy*18),
+    tomoe_gozen:()=>add(r.ranged*38+r.highAgi*12+r.mobile*10),
+    hannibal_barca:()=>add(r.cavalry*24+r.mobile*26+r.burst*14),
+    subotai:()=>add(r.control*20+r.ranged*18+r.mobile*12),
+    lu_bu:()=>add(r.swarm*28+r.unit*8),
+    ragnar_lodbrok:()=>add(r.highHp*28+r.tank*18+r.heavy*14),
+    el_cid:()=>add(r.burst*34+r.heavy*10),
+    spartacus:()=>add(r.special*46),
+    sun_tzu:()=>add(r.burst*18+r.control*18+r.ranged*8),
+    merlin:()=>add(r.control*20+r.heavy*10+r.heal*8),
+    king_solomon:()=>add(r.heavy*16+r.control*18+r.special*12),
+    ericto:()=>add(r.heavy*18+r.special*12+r.control*10),
+    hector_troy:()=>add(r.swarm*34+r.burst*16),
+    beowulf:()=>add(r.highHp*36+r.tank*24),
+    miyamoto_musashi:()=>add(r.swarm*24+r.burst*18+r.highAgi*10),
+    hattori_hanzo:()=>add(r.ranged*18+r.tank*16+r.special*12),
+    khalid_ibn_al_walid:()=>add(r.swarm*34+r.unit*10),
+    attila_hun:()=>add(r.heal*18+r.heavy*18+r.tank*14),
+    genghis_khan:()=>add(r.swarm*28+r.mobile*18),
+    alexander_magnus:()=>add(r.burst*18+r.damageSpell*14),
+    julius_caesar:()=>add(r.burst*38+r.highAgi*8)
+  };
+  if(rules[key])rules[key]();
+  return score;
+}
+function getAdaptiveCampaignPrincipalCandidateCards(battle){
+  const keys=[];
+  const push=(key)=>{key=String(key||"");if(key&&!keys.includes(key))keys.push(key);};
+  push(typeof getAiPrincipalKeyForBattle==="function"?getAiPrincipalKeyForBattle(battle):"");
+  if(battle?.rewardCard)push(battle.rewardCard);
+  (battle?.enemyLegendaryCards||[]).forEach(push);
+  return keys.map(getAdventureDeckCardTemplateByKey).filter(card=>card?.type==="unit"&&!card?.beast);
+}
+function selectAdaptiveCampaignPrincipalKeys(battle,enemyLeaderType,profile,principalSlots){
+  const slots=Math.max(0,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||0));
+  if(slots<=0)return[];
+  const cards=getAdaptiveCampaignPrincipalCandidateCards(battle);
+  const preferred=typeof getAiPrincipalKeyForBattle==="function"?String(getAiPrincipalKeyForBattle(battle)||""):"";
+  const out=[];
+  // El Principal narrativo/jefe no se sacrifica. Los demás slots sí son tácticos.
+  if(preferred&&cards.some(card=>String(card.key||"")===preferred))out.push(preferred);
+  while(out.length<slots){
+    const ranked=cards.filter(card=>!out.includes(String(card.key||""))).map(card=>{
+      const key=String(card.key||"");
+      let score=getAdaptiveCampaignPrincipalCounterScore(card,profile,enemyLeaderType);
+      score+=getAdaptivePrincipalPairSynergy(key,out);
+      score+=getAdaptivePrincipalComplementBonus(card,out);
+      return{key,score};
+    }).sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
+    const next=ranked[0];
+    if(!next?.key)break;
+    out.push(next.key);
+  }
+  battle._adaptivePrincipalDecision={
+    preferred,selected:[...out],
+    topThreats:Object.entries(profile?.cards||{}).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,6).map(([key,weight])=>({key,weight:Number(weight||0)}))
+  };
+  return out.slice(0,slots);
+}
+
 function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=null){
   const r=profile?.roles||{};
   const c=profile?.cards||{};
   const sumKeys=(keys)=>keys.reduce((total,key)=>total+Math.max(0,Number(c[key]||0)),0);
   const archerThreat=sumKeys(["archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","samurai_yabusame","scythian_horse_archer"]);
-  const tankThreat=sumKeys(["guardian","greek_hoplite","armored_man_at_arms","spearman","wallace","richard_lionheart"]);
+  const tankThreat=sumKeys(["guardian","greek_hoplite","armored_man_at_arms","spearman","wallace","richard_lionheart","leonidas","hector_troy"]);
   const cavalryThreat=sumKeys(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider"]);
-  const stealthThreat=sumKeys(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga"]);
+  const stealthThreat=sumKeys(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga","hattori_hanzo"]);
   const candidates=[];
   const add=(key,score,desired=3)=>{
     const card=getAdventureDeckCardTemplateByKey(key);
-    if(!card||!isAdaptiveCounterCardAllowed(card,battle))return;
+    if(!card||!isAdaptiveCounterCardAllowed(card,battle,enemyLeaderType))return;
     const identity=getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType);
-    const finalScore=Number(score||0)+identity;
-    if(finalScore>0)candidates.push({key,score:finalScore,desired:Math.max(1,Math.min(3,desired))});
+    const rawScore=Number(score||0);
+    if(rawScore>0||identity>0)candidates.push({key,score:rawScore,desired:Math.max(1,Math.min(3,desired))});
   };
-  // Retaguardia / arquería: velocidad, infiltración y fuego directo a unidades.
+
+  // --- BÁSICAS: respuestas universales probadas desde el Mapa 1 -----------------
   add("cavalry",r.ranged*38+r.swarm*7+archerThreat*18,3);
   add("hungarian_hussar",r.ranged*34+r.burst*8+archerThreat*16,3);
   add("hattori_shinobi",r.ranged*32+r.arcane*22+archerThreat*15,3);
   add("numidian_javelin_rider",r.ranged*22+r.assassin*12,3);
   add("fireball",r.ranged*22+r.swarm*28+r.arcane*18,3);
-  // Tanques / línea pesada: hachas, ruptura y asesinos capaces de ignorar el frente.
-  add("berserker",r.tank*48+r.heavy*22+tankThreat*20,3);
-  add("berserker_de_oso",r.tank*42+r.heal*22+tankThreat*16,3);
+  add("berserker",r.tank*48+r.heavy*22+r.highGuard*28+tankThreat*20,3);
+  add("berserker_de_oso",r.tank*42+r.heal*22+r.highGuard*24+tankThreat*16,3);
   add("samurai_katana",r.tank*28+r.heavy*18+r.burst*10,3);
-  add("geisha_encubierta",r.tank*30+r.heavy*24,2);
-  // Caballería: picas, ralentización y frente duro.
-  add("spearman",r.cavalry*62+r.burst*8+cavalryThreat*24,3);
-  add("bolt",r.cavalry*30+r.heavy*12,3);
+  add("geisha_encubierta",r.tank*30+r.heavy*24+r.ranged*8,2);
+  add("spearman",r.cavalry*62+r.mobile*20+r.burst*8+cavalryThreat*24,3);
+  add("bolt",r.cavalry*30+r.mobile*18+r.heavy*12,3);
   add("guardian",r.cavalry*18+r.burst*28+r.swarm*20+r.damageSpell*18,3);
-  // Sigilo/asesinos: detección móvil y rango.
   add("mongol_explorer",r.assassin*56+r.ranged*10+stealthThreat*25,3);
-  add("samurai_yabusame",r.assassin*28+r.ranged*16+stealthThreat*12,3);
-  // Spam / curva baja: encarecer invocaciones y limpiar cuerpos frágiles.
+  add("samurai_yabusame",r.heavy*16+r.mobile*12+r.ranged*10,3);
   add("saboteador_iga",r.swarm*40+r.unit*6,3);
   add("ulfhednar",r.swarm*16+r.heavy*18+r.tank*12,3);
-  // Mucho burst o magia: sostener la pieza clave y reparar el frente.
   add("shield_wall",r.burst*24+r.damageSpell*26,3);
   add("heal",r.burst*18+r.damageSpell*22+r.control*10,3);
-  // Control/fortificación: presión de rango y movilidad para no jugar al ritmo rival.
   add("new_kingdom_archer",r.control*26+r.tank*12,3);
-  add("scythian_horse_archer",r.control*24+r.ranged*15,3);
-  return candidates.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
-}
-function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckSize){
-  const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
-  // Compatibilidad con la antigua ruta de Cañón Arcano, por si algún encuentro futuro
-  // vuelve a declararla expresamente. En Mapa 1 battle3 ya es Caballería y no entra aquí.
-  if(isAdaptiveMagePilotBattle(battle,enemyLeaderType)){
-    const templates=[];
-    ADAPTIVE_MAGE_BASE_DECK_COUNTS.forEach(([key,count])=>{
-      const card=getAdventureDeckCardTemplateByKey(key);
-      for(let i=0;card&&i<count;i++)templates.push(card);
-    });
-    return templates.slice(0,target);
-  }
-  if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
-    return expandEnemyFixedDeck(battle.enemyFixedDeck)
-      .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle))
-      .slice(0,target);
-  }
-  const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
-  const basicIdentity=(typeof getLeaderStarterFixedDeckTemplates==="function"?getLeaderStarterFixedDeckTemplates(enemyLeaderType):[])
-    .filter(isAdaptiveBasicCard);
-  const basicFallback=getAiBasicDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).filter(isAdaptiveBasicCard);
+  add("scythian_horse_archer",r.heavy*24+r.tank*12+r.mobile*8,3);
 
-  // Mapa 1 mantiene exactamente las reglas aprobadas: básicas en 1-4 y el núcleo
-  // Richard/Mulan/Wallace en 1-5.
-  if(isAdaptiveMap1Battle(battle)){
-    if(battle?.id==="battle5"){
-      const rareCore=["richard_lionheart","mulan","wallace"].map(getAdventureDeckCardTemplateByKey).filter(Boolean);
-      return buildDeckTemplatesWithLimits(rareCore,[...basicIdentity,...basicFallback],target)
-        .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle)).slice(0,target);
+  // --- MAPA 3 / RARO (clave interna epic): control reforzado --------------------
+  add("sand_curse_plus",r.tank*24+r.highHp*24+r.heavy*18+r.mobile*10,1);
+  add("pharaoh_blessing_plus",r.tank*16+r.heavy*14+r.burst*10,1);
+  add("dust_guard_plus",r.burst*30+r.damageSpell*34,1);
+  add("snare_trap_plus",r.cavalry*42+r.mobile*38+r.ranged*14,1);
+  add("warning_rune_plus",r.burst*30+r.ranged*20+r.damageSpell*18,1);
+  add("mulan",r.ranged*18+r.tank*18+r.heavy*14,1);
+  add("wallace",r.burst*24+r.damageSpell*20+r.heavy*10,1);
+
+  // --- MAPA 4 / ÉPICO (clave interna glorious): héroes de función ---------------
+  add("richard_lionheart",r.burst*20+r.damageSpell*22+r.heavy*8,1);
+  add("simo_hayha",r.swarm*26+r.ranged*12+r.highAgi*8,1);
+  add("saladin",r.ranged*16+r.control*14+r.mobile*10,1);
+  add("shaka_zulu",r.tank*18+r.heavy*14+r.swarm*10,1);
+  add("yi_sun_sin",r.swarm*34+r.unit*10+r.burst*8,1);
+  add("boudica",r.swarm*16+r.burst*12+r.heavy*8,1);
+
+  // --- MAPA 5 / MÍTICO: counters duros por habilidad -----------------------------
+  add("joan_of_arc",r.burst*36+r.damageSpell*34,1);
+  add("leonidas",r.burst*28+r.swarm*18+r.heavy*12,1);
+  add("nasu_no_yoichi",r.tank*34+r.highGuard*44+r.heavy*18,1);
+  add("tomoe_gozen",r.ranged*48+r.highAgi*16+r.mobile*12,1);
+  add("hannibal_barca",r.cavalry*30+r.mobile*32+r.burst*14,1);
+  add("subotai",r.control*26+r.ranged*22+r.mobile*18,1);
+  add("lu_bu",r.swarm*34+r.unit*10,1);
+  add("ragnar_lodbrok",r.highHp*34+r.tank*22+r.heavy*16,1);
+  add("el_cid",r.burst*42+r.heavy*12,1);
+  add("spartacus",r.special*54,1);
+  add("sun_tzu",r.burst*22+r.control*24+r.ranged*10,1);
+  add("merlin",r.control*24+r.heavy*12+r.heal*10,1);
+  add("king_solomon",r.heavy*18+r.control*22+r.special*16,1);
+  add("ericto",r.heavy*22+r.special*16+r.control*12,1);
+
+  // --- MAPA 6+ / LEGENDARIO: respuestas de cierre --------------------------------
+  add("hector_troy",r.swarm*42+r.burst*20,1);
+  add("beowulf",r.highHp*44+r.tank*30+r.heavy*18,1);
+  add("miyamoto_musashi",r.swarm*30+r.burst*24+r.highAgi*12,1);
+  add("hattori_hanzo",r.ranged*20+r.tank*18+r.special*14,1);
+  add("khalid_ibn_al_walid",r.swarm*44+r.unit*12,1);
+  add("attila_hun",r.heal*24+r.heavy*24+r.tank*18,1);
+  add("genghis_khan",r.swarm*36+r.mobile*22,1);
+  add("alexander_magnus",r.burst*22+r.damageSpell*18,1);
+  add("julius_caesar",r.burst*48+r.highAgi*10,1);
+  add("false_alliance_legendary",r.cavalry*34+r.mobile*34+r.burst*14,1);
+  add("primordial_serpent_poison",r.highHp*46+r.tank*34+r.heal*20,1);
+  add("traitors_bed",r.burst*38+r.special*16,1);
+  add("broken_blood_oath",r.buffSpell*48+r.heal*34+r.special*12,1);
+  add("true_name_exile",r.burst*32+r.special*20,1);
+  add("ash_banquet",r.highHp*38+r.heal*36+r.tank*20,1);
+  add("thousand_banners_ambush",r.cavalry*42+r.mobile*38,1);
+  add("shadow_cut",r.heal*30+r.highHp*28+r.tank*22,1);
+  add("false_crown",r.burst*44+r.highAgi*12,1);
+  add("fallen_kings_seal",r.buffSpell*54+r.heal*46+r.control*18,1);
+  add("camp_betrayal",r.swarm*42+r.unit*12,1);
+  add("night_without_guard",r.swarm*34+r.burst*30+r.unit*10,1);
+
+  // Counter directo por carta concreta: si el humano insiste con la misma pieza,
+  // la respuesta específica gana prioridad sobre la categoría genérica.
+  for(const [threatKey,counterMap] of Object.entries(ADAPTIVE_EXACT_CARD_COUNTER_PRIORITY||{})){
+    const intensity=getAdaptiveExactCounterIntensity(profile,threatKey);
+    if(intensity<=0)continue;
+    const desired=intensity>=1.35?3:intensity>=.72?2:1;
+    for(const [counterKey,weight] of Object.entries(counterMap||{})){
+      add(counterKey,Number(weight||0)*intensity,desired);
     }
-    return buildDeckTemplatesWithLimits([], [...basicIdentity,...basicFallback],target)
-      .filter(isAdaptiveBasicCard).slice(0,target);
   }
 
-  // Desde Mapa 2 se conserva el arsenal propio del encuentro. En Mapa 2 existe
-  // un cap duro: el pool automático sigue siendo Básico y cualquier carta superior
-  // debe estar declarada expresamente por ese encuentro. Desde Mapa 3 la progresión
-  // podrá abrirse por separado sin que el Mapa 2 herede cartas futuras (p. ej. Aquiles).
-  const improvedPool=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
-  const improvedTemplates=improvedPool.filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle));
-  const legendaryTemplates=[];
-  if(battle?.richardInDeck&&RICHARD_CARD&&isAdaptiveBaseCardAllowedForBattle(RICHARD_CARD,battle))legendaryTemplates.push(RICHARD_CARD);
-  (battle?.enemyLegendaryCards||[]).forEach(key=>{
-    const card=getLegendaryCardByKey(key);
-    if(card&&isAdaptiveBaseCardAllowedForBattle(card,battle))legendaryTemplates.push(card);
-  });
-  const uniqueLegendary=[...new Map(legendaryTemplates.map(c=>[c.key,c])).values()];
-  const preferred=[...uniqueLegendary,...improvedTemplates];
-  return buildDeckTemplatesWithLimits(preferred,[...basicIdentity,...basicFallback],target)
-    .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle)).slice(0,target);
+  // El pool se calcula para que futuros cambios de catálogo respeten automáticamente
+  // cap de rareza, exclusión de bestias y especialidad del encuentro.
+  const allowedPool=new Set(getAdaptiveCampaignEvolutionPool(battle,enemyLeaderType).map(card=>String(card?.key||"")));
+  // Fusiona puntuaciones: una carta puede ser buena por identidad, por rol y además
+  // counter directo. Esas razones se suman en vez de crear candidatos duplicados.
+  const merged=new Map();
+  for(const entry of candidates){
+    if(!allowedPool.has(entry.key))continue;
+    const prev=merged.get(entry.key)||{key:entry.key,score:0,desired:1};
+    prev.score+=Number(entry.score||0);
+    prev.desired=Math.max(prev.desired,Number(entry.desired||1));
+    merged.set(entry.key,prev);
+  }
+  return [...merged.values()].map(entry=>{
+    const card=getAdventureDeckCardTemplateByKey(entry.key);
+    return{...entry,score:Number(entry.score||0)+getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType)};
+  }).sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
 }
-function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[]){
+function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckSize,principalKeys=[]){
+  const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
+  // Mapa 1 queda congelado tal como fue diseñado y aprobado.
+  if(isAdaptiveMap1Battle(battle)){
+    if(isAdaptiveMagePilotBattle(battle,enemyLeaderType)){
+      const templates=[];
+      ADAPTIVE_MAGE_BASE_DECK_COUNTS.forEach(([key,count])=>{
+        const card=getAdventureDeckCardTemplateByKey(key);
+        for(let i=0;card&&i<count;i++)templates.push(card);
+      });
+      return templates.slice(0,target);
+    }
+    if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
+      return expandEnemyFixedDeck(battle.enemyFixedDeck)
+        .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType))
+        .slice(0,target);
+    }
+  }
+
+  // MAPA 2+: SIEMPRE recicla el arquetipo canónico de su clase. Los enemyFixedDeck
+  // antiguos dejan de sustituir la identidad del mazo; sólo sirven los nuevos campos
+  // adaptiveScriptedDrawCards cuando queramos diseñar una excepción conscientemente.
+  let drawBase=getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType);
+  if(!drawBase.length){
+    drawBase=(typeof getLeaderStarterFixedDeckTemplates==="function"?getLeaderStarterFixedDeckTemplates(enemyLeaderType):[])
+      .filter(isAdaptiveBasicCard).slice(0,DECK_RULES.drawDeckSize);
+  }
+  if(drawBase.length<DECK_RULES.drawDeckSize){
+    const filler=getAiBasicDeckTemplates(0).filter(isAdaptiveBasicCard);
+    for(const card of filler){
+      if(drawBase.length>=DECK_RULES.drawDeckSize)break;
+      const copies=drawBase.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
+      if(copies>=Math.min(3,maxCopiesForCard(card)))continue;
+      drawBase.push(card);
+    }
+  }
+
+  // Excepción de guion explícita para las 20 cartas robables. Se reemplazan los
+  // slots menos identitarios sin tocar Principales; actualmente ningún mapa la necesita.
+  const scripted=[];
+  (battle?.adaptiveScriptedDrawCards||[]).forEach(entry=>{
+    const key=Array.isArray(entry)?entry[0]:entry?.key||entry;
+    const count=Math.max(1,Number(Array.isArray(entry)?entry[1]:entry?.count)||1);
+    const card=getAdventureDeckCardTemplateByKey(key);
+    for(let i=0;card&&i<count;i++)scripted.push(card);
+  });
+  for(const card of scripted){
+    if(!isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType))continue;
+    const replaceIndex=[...drawBase].map((c,index)=>({index,score:getAdaptiveCampaignLeaderIdentityBonus(c,enemyLeaderType)}))
+      .filter(entry=>drawBase[entry.index]?.type!=="equipment")
+      .sort((a,b)=>a.score-b.score||b.index-a.index)[0]?.index;
+    if(Number.isFinite(replaceIndex))drawBase.splice(replaceIndex,1,card);
+  }
+
+  const principals=[];
+  for(const key of principalKeys||[]){
+    const card=getAdventureDeckCardTemplateByKey(key);
+    if(card?.type==="unit"&&!principals.some(c=>c.key===card.key))principals.push(card);
+  }
+  const combined=[...drawBase.slice(0,DECK_RULES.drawDeckSize),...principals];
+  return combined.slice(0,target);
+}
+function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[],principalKeys=[]){
   if(isAdaptiveMap1Battle(battle))return ADAPTIVE_MAP1_CORE_MIN[battle?.id]||{};
   const core={};
   const counts={};
+  const principalSet=new Set((principalKeys||[]).map(String));
   for(const card of base||[]){
     const key=String(card?.key||card?.name||"");
     if(!key)continue;
     counts[key]=(counts[key]||0)+1;
-    // Principales, leyendas, épicas y demás cartas propias del encuentro son sagradas.
-    if(!isAdaptiveBasicCard(card))core[key]=(core[key]||0)+1;
-    // Los dos equipos de la especialización también forman parte de su identidad.
-    if(card?.type==="equipment"&&String(card.equipmentLeader||"")==String(enemyLeaderType||""))core[key]=(core[key]||0)+1;
+    if(principalSet.has(key))core[key]=Math.max(Number(core[key]||0),1);
+    // Los dos equipos de especialización siguen definiendo la manera de jugar la clase.
+    if(card?.type==="equipment"&&String(card.equipmentLeader||"")==String(enemyLeaderType||""))core[key]=Math.max(Number(core[key]||0),1);
+    // Cualquier excepción narrativa fuera del cap es sagrada.
+    if(!isAdaptiveCardInsideRarityCap(card,battle))core[key]=Math.max(Number(core[key]||0),1);
   }
-  // Conserva además una columna vertebral de cuatro copias Básicas que mejor
-  // aprovechen la clase. Así hasta una adaptación de 10 cartas sigue pareciendo
-  // Warrior/Archer/Mage/Cavalry/Axe/Assassin y no un mazo genérico de counters.
+  // Cuanto más avanza la campaña, menos copias básicas están congeladas. La identidad
+  // sigue viva por los Principales, equipo y mejores unidades de clase, pero la IA gana
+  // libertad real para contrarrestar al humano.
+  const chapter=Math.floor(getAdaptiveCampaignChapterNumber(battle));
+  const identityBudget=chapter<=2?6:chapter===3?5:chapter===4?4:chapter===5?3:2;
   const identityCandidates=Object.entries(counts).map(([key,count])=>{
     const card=getAdventureDeckCardTemplateByKey(key);
     if(!card||!isAdaptiveBasicCard(card)||card.type!=="unit")return null;
     return{key,count,score:getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType)};
   }).filter(Boolean).sort((a,b)=>b.score-a.score||b.count-a.count||a.key.localeCompare(b.key));
-  let budget=4;
+  let budget=identityBudget;
   for(const entry of identityCandidates){
     if(budget<=0)break;
     const keep=Math.min(entry.count,budget);
@@ -1457,46 +1943,62 @@ function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[]){
 function getAdaptiveCampaignMaxSwaps(battle){
   if(isAdaptiveMap1Battle(battle))return Math.max(0,Math.min(10,Number(ADAPTIVE_MAP1_MAX_SWAPS[battle?.id]||3)));
   const explicit=Number(battle?.adaptiveMaxSwaps);
-  if(Number.isFinite(explicit))return Math.max(0,Math.min(10,explicit));
-  // Richard ya alcanza 10 en 1-5. A partir del Mapa 2 se mantiene ese techo: la
-  // mitad del mazo robable puede reajustarse sin tocar el núcleo especial/principal.
-  return 10;
+  if(Number.isFinite(explicit))return Math.max(0,Math.min(18,explicit));
+  const chapter=Math.floor(getAdaptiveCampaignChapterNumber(battle));
+  if(chapter<=2)return 10;
+  if(chapter===3)return 12;
+  if(chapter===4)return 14;
+  if(chapter===5)return 16;
+  return 18;
 }
 function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSize=DECK_RULES.drawDeckSize){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
-  const base=getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,target);
-  const counts={};
-  base.forEach(card=>{const key=String(card?.key||card?.name||"");if(key)counts[key]=(counts[key]||0)+1;});
   const memory=getAdaptiveCampaignMemory();
   const profile=getAdaptiveCampaignCounterProfile(battle?.adaptivePlayerSnapshot||null,memory);
+  const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
+  const principalKeys=isAdaptiveMap1Battle(battle)
+    ? []
+    : selectAdaptiveCampaignPrincipalKeys(battle,enemyLeaderType,profile,principalSlots);
+  battle._adaptivePrincipalKeys=principalKeys;
+
+  const base=getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,target,principalKeys);
+  const counts={};
+  base.forEach(card=>{const key=String(card?.key||card?.name||"");if(key)counts[key]=(counts[key]||0)+1;});
   const candidates=adaptiveCampaignCounterCandidates(profile,enemyLeaderType,battle);
-  const core=getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base);
+  const core=getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base,principalKeys);
   const maxSwaps=getAdaptiveCampaignMaxSwaps(battle);
   const scoreByKey=Object.fromEntries(candidates.map(c=>[c.key,c.score]));
   let swaps=0;
-  const active=candidates.filter(c=>c.score>=Math.max(20,Number(candidates[0]?.score||0)*.28)).slice(0,7);
+  const active=candidates.filter(c=>c.score>=Math.max(20,Number(candidates[0]?.score||0)*.24)).slice(0,12);
   let round=0;
-  while(swaps<maxSwaps&&active.length&&round<5){
+  while(swaps<maxSwaps&&active.length&&round<8){
     let changed=false;
     for(const candidate of active){
       if(swaps>=maxSwaps)break;
       const candidateCard=getAdventureDeckCardTemplateByKey(candidate.key);
-      if(!candidateCard||!isAdaptiveCounterCardAllowed(candidateCard,battle))continue;
+      if(!candidateCard||!isAdaptiveCounterCardAllowed(candidateCard,battle,enemyLeaderType))continue;
       const copyCap=Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(candidateCard):3);
       const desired=Math.min(copyCap,candidate.desired);
       if((counts[candidate.key]||0)>=desired)continue;
       const removable=Object.keys(counts).filter(key=>{
         if((counts[key]||0)<=Number(core[key]||0))return false;
         if(key===candidate.key)return false;
+        if(principalKeys.includes(key))return false;
         const card=getAdventureDeckCardTemplateByKey(key);
-        if(!card||!isAdaptiveBasicCard(card))return false; // las rarezas de Richard nunca se sacrifican
+        if(!card)return false;
+        // No sacrifica cartas fuera del cap ni Principales; las demás sí pueden evolucionar.
+        if(!isAdaptiveCardInsideRarityCap(card,battle)&&!isAdaptiveBasicCard(card))return false;
         return true;
       }).map(key=>{
         const card=getAdventureDeckCardTemplateByKey(key);
         const identity=getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType);
         const counter=Number(scoreByKey[key]||0);
         const excess=(counts[key]||0)-Number(core[key]||0);
-        return{key,value:identity+counter-excess*3};
+        const rarityPenalty=getAdaptiveCampaignRarityRank(getAdaptiveCampaignCardRarityKey(card))*8;
+        const pressurePenalty=getAdaptiveCampaignOpponentPressurePenalty(card,profile);
+        // Más valor = más difícil de sacrificar. Una carta que el rival contrarresta de
+        // forma natural baja en prioridad de conservación y sale antes del mazo.
+        return{key,value:identity*1.15+counter*.82+rarityPenalty-excess*4-pressurePenalty};
       }).sort((a,b)=>a.value-b.value||a.key.localeCompare(b.key));
       const removeKey=removable[0]?.key;
       if(!removeKey)continue;
@@ -1508,23 +2010,24 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
     if(!changed)break;
     round++;
   }
+
   const templates=[];
-  // Respeta primero el orden del mazo base para conservar identidad visual/táctica.
+  // Mantiene el orden del ADN canónico y luego inserta la evolución.
   for(const card of base){
     const key=String(card?.key||card?.name||"");
     if(!key||!counts[key])continue;
     templates.push(getAdventureDeckCardTemplateByKey(key)||card);
     counts[key]--;
   }
-  // Añade counters nuevos que no estaban en el mazo original.
   for(const [key,count] of Object.entries(counts)){
     const card=getAdventureDeckCardTemplateByKey(key);
-    if(!card||!isAdaptiveBaseCardAllowedForBattle(card,battle))continue;
+    if(!card||!isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType))continue;
     for(let i=0;i<Math.max(0,Number(count||0));i++)templates.push(card);
   }
-  // Fallback: nunca permitir un mazo corto por una referencia inválida.
+
+  // Fallback sólo Básico y compatible; nunca rellena con rarezas futuras.
   if(templates.length<target){
-    const filler=getAiBasicDeckTemplates(battle?.id==="battle5"?1:0).filter(isAdaptiveBasicCard);
+    const filler=getAiBasicDeckTemplates(0).filter(card=>isAdaptiveBasicCard(card)&&!isAdaptiveCampaignBeastRestricted(card,enemyLeaderType));
     for(const card of filler){
       if(templates.length>=target)break;
       const copies=templates.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
@@ -1532,6 +2035,15 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
       templates.push(card);
     }
   }
+  battle._adaptiveEvolutionMeta={
+    canonicalClass:String(enemyLeaderType||""),
+    chapter:Math.floor(getAdaptiveCampaignChapterNumber(battle)),
+    rarityCap:getAdaptiveCampaignRarityCapKey(battle),
+    rarityLabel:ADAPTIVE_CAMPAIGN_VISIBLE_RARITY[getAdaptiveCampaignRarityCapKey(battle)]||"Básica",
+    maxSwaps,swaps,principalKeys:[...principalKeys],
+    topThreats:Object.entries(profile?.cards||{}).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,6).map(([key,weight])=>({key,weight:Number(weight||0)})),
+    topCounters:active.slice(0,6).map(entry=>({key:entry.key,score:Number(entry.score||0),desired:Number(entry.desired||1)}))
+  };
   return templates.slice(0,target);
 }
 function recordAdaptiveCampaignBattle(pub){
@@ -1576,10 +2088,11 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     if(isAdaptiveMap1Battle(battle)&&battle.id!=="battle5"&&adaptiveTemplates.some(card=>!isAdaptiveBasicCard(card))){
       console.error(`[HallValla] Bloqueo de rareza Mapa 1: ${battle.id} intentó incluir una carta no básica.`);
     }
-    if(isAdaptiveMap2Battle(battle)){
-      const forbidden=adaptiveTemplates.filter(card=>!isAdaptiveBaseCardAllowedForBattle(card,battle));
+    if(!isAdaptiveMap1Battle(battle)){
+      const forbidden=adaptiveTemplates.filter(card=>!isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType));
       if(forbidden.length){
-        console.error(`[HallValla] CAP MAPA 2: ${battle.id} intentó introducir cartas no autorizadas: ${forbidden.map(c=>c?.key||c?.name).join(", ")}`);
+        const cap=getAdaptiveCampaignRarityCapKey(battle);
+        console.error(`[HallValla] CAP CAMPAÑA ${battle.id} (${ADAPTIVE_CAMPAIGN_VISIBLE_RARITY[cap]||cap}): cartas no autorizadas: ${forbidden.map(c=>c?.key||c?.name).join(", ")}`);
       }
     }
     const adaptiveDeck=shuffle(adaptiveTemplates.map(card=>makeCard(card,2,enemyLeaderType)));

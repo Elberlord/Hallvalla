@@ -185,10 +185,14 @@ function getAiPrincipalKeysForBattle(battle,initial){
   if(battle?.beastEvent&&typeof getBeastmasterPrincipalKeysForSlots==="function"){
     return getBeastmasterPrincipalKeysForSlots(principalSlots).filter(key=>available.has(key)).slice(0,principalSlots);
   }
+  // El constructor adaptativo ya estudió al humano: respeta primero esa selección.
+  const adaptive=(battle?._adaptivePrincipalKeys||[]).map(String).filter(key=>available.has(key));
+  const out=[];
+  adaptive.forEach(key=>{if(out.length<principalSlots&&!out.includes(key))out.push(key);});
   const preferred=getAiPrincipalKeyForBattle(battle);
-  const out=preferred&&available.has(preferred)?[preferred]:[];
+  if(out.length<principalSlots&&preferred&&available.has(preferred)&&!out.includes(preferred))out.push(preferred);
   const extras=chooseFallbackAiPrincipalKeys(initial,out,principalSlots-out.length);
-  return [...out,...extras].slice(0,principalSlots);
+  return [...out,...extras.filter(key=>!out.includes(key))].slice(0,principalSlots);
 }
 
 const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_CHAPTER_3_1,ADVENTURE_CHAPTER_4_1,ADVENTURE_CHAPTER_5_1,ADVENTURE_CHAPTER_6_1];

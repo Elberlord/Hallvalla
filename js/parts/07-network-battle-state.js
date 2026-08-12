@@ -553,7 +553,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const adaptiveExperience=adaptiveLearningBattle&&typeof getAdaptiveCampaignMemory==="function"?getAdaptiveCampaignMemory():null;
   const enemyDeckBattle=adaptiveCampaignBattle?{...battle,adaptivePlayerSnapshot}:battle;
   const enemyRawInitial=makeEnemyDeckForBattle(enemyDeckBattle,enemyLeaderType);
-  const enemyPrepared=prepareAiPrincipalInitialState(battle,enemyRawInitial);
+  const enemyPrepared=prepareAiPrincipalInitialState(enemyDeckBattle,enemyRawInitial);
   // El Hechicero conserva Cañón Arcano como núcleo adaptativo. No se inyecta
   // Foco Estabilizador automáticamente porque sustituiría cartas fuera del constructor global.
   const enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
