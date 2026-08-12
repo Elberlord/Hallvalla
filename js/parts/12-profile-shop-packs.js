@@ -1097,7 +1097,7 @@ const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
   battle1:Object.freeze({archer:2,new_kingdom_archer:2,egyptian_line_archer:1,skirmisher_cloak:1,retreat_strap:1}),
   battle2:Object.freeze({spearman:2,greek_hoplite:2,samurai_katana:2,guardian:1,marching_greaves:1,war_visor:1}),
   battle3:Object.freeze({numidian_javelin_rider:2,scythian_horse_archer:2,hungarian_hussar:1,cavalry:1,mongol_explorer:1,withdrawal_stirrups:1,light_barding:1}),
-  battle4:Object.freeze({berserker:2,ulfhednar:1,tanned_hide_harness:1,counterweighted_grip:1}),
+  battle4:Object.freeze({ulfhednar:2,berserker_de_oso:2,berserker:2,tanned_hide_harness:1,counterweighted_grip:1}),
   battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,guardian:1,samurai_katana:1})
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:3,battle2:4,battle3:6,battle4:8,battle5:10});
