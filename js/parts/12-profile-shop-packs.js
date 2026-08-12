@@ -1095,7 +1095,7 @@ const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
 });
 const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
   battle1:Object.freeze({archer:2,new_kingdom_archer:2,egyptian_line_archer:1,skirmisher_cloak:1,retreat_strap:1}),
-  battle2:Object.freeze({spearman:2,guardian:2,archer:1,samurai_katana:1}),
+  battle2:Object.freeze({spearman:2,greek_hoplite:2,samurai_katana:2,guardian:1,marching_greaves:1,war_visor:1}),
   battle3:ADAPTIVE_MAGE_CORE_MIN,
   battle4:Object.freeze({guardian:2,spearman:1,berserker:1,samurai_katana:1}),
   battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,guardian:1,samurai_katana:1})
