@@ -757,9 +757,48 @@ function setDeckBuilderDropActive(el,active){
   if(!el)return;
   el.classList.toggle("deck-drop-active",!!active);
 }
+function clearDeckBuilderDropActive(){
+  setDeckBuilderDropActive($("deckCollectionGrid"),false);
+  setDeckBuilderDropActive($("currentDeckList"),false);
+}
+function bindDeckBuilderPersistentDropTargets(collectionGrid,deckList){
+  if(!collectionGrid||!deckList)return;
+  if(deckList.dataset.hvDeckDropBound!=="1"){
+    deckList.addEventListener("dragover",ev=>{
+      const payload=getDeckBuilderDragPayload(ev);
+      if(payload?.action==="add"){ev.preventDefault();ev.dataTransfer.dropEffect="copy";setDeckBuilderDropActive(deckList,true);}
+    });
+    deckList.addEventListener("dragleave",ev=>{if(!deckList.contains(ev.relatedTarget))setDeckBuilderDropActive(deckList,false);});
+    deckList.addEventListener("drop",ev=>{
+      const payload=getDeckBuilderDragPayload(ev);
+      if(payload?.action==="add"){
+        ev.preventDefault();
+        addCardToDeck(payload.key);
+        clearDeckBuilderDropActive();
+      }
+    });
+    deckList.dataset.hvDeckDropBound="1";
+  }
+  if(collectionGrid.dataset.hvDeckDropBound!=="1"){
+    collectionGrid.addEventListener("dragover",ev=>{
+      const payload=getDeckBuilderDragPayload(ev);
+      if(payload?.action==="remove"){ev.preventDefault();ev.dataTransfer.dropEffect="move";setDeckBuilderDropActive(collectionGrid,true);}
+    });
+    collectionGrid.addEventListener("dragleave",ev=>{if(!collectionGrid.contains(ev.relatedTarget))setDeckBuilderDropActive(collectionGrid,false);});
+    collectionGrid.addEventListener("drop",ev=>{
+      const payload=getDeckBuilderDragPayload(ev);
+      if(payload?.action==="remove"){
+        ev.preventDefault();
+        removeCardFromDeckIndex(payload.index);
+        clearDeckBuilderDropActive();
+      }
+    });
+    collectionGrid.dataset.hvDeckDropBound="1";
+  }
+}
 function bindDeckBuilderDragAndClick(collectionGrid,deckList){
   if(!collectionGrid||!deckList)return;
-  const clearDrop=()=>{setDeckBuilderDropActive(collectionGrid,false);setDeckBuilderDropActive(deckList,false);};
+  const clearDrop=clearDeckBuilderDropActive;
   collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
     const openDetail=ev=>{
       if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
@@ -818,32 +857,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
     ev.stopPropagation();
     setCurrentDeckPrincipal(btn.dataset.setPrincipal);
   }));
-  deckList.addEventListener("dragover",ev=>{
-    const payload=getDeckBuilderDragPayload(ev);
-    if(payload?.action==="add"){ev.preventDefault();ev.dataTransfer.dropEffect="copy";setDeckBuilderDropActive(deckList,true);}
-  });
-  deckList.addEventListener("dragleave",ev=>{if(!deckList.contains(ev.relatedTarget))setDeckBuilderDropActive(deckList,false);});
-  deckList.addEventListener("drop",ev=>{
-    const payload=getDeckBuilderDragPayload(ev);
-    if(payload?.action==="add"){
-      ev.preventDefault();
-      addCardToDeck(payload.key);
-      clearDrop();
-    }
-  });
-  collectionGrid.addEventListener("dragover",ev=>{
-    const payload=getDeckBuilderDragPayload(ev);
-    if(payload?.action==="remove"){ev.preventDefault();ev.dataTransfer.dropEffect="move";setDeckBuilderDropActive(collectionGrid,true);}
-  });
-  collectionGrid.addEventListener("dragleave",ev=>{if(!collectionGrid.contains(ev.relatedTarget))setDeckBuilderDropActive(collectionGrid,false);});
-  collectionGrid.addEventListener("drop",ev=>{
-    const payload=getDeckBuilderDragPayload(ev);
-    if(payload?.action==="remove"){
-      ev.preventDefault();
-      removeCardFromDeckIndex(payload.index);
-      clearDrop();
-    }
-  });
+  bindDeckBuilderPersistentDropTargets(collectionGrid,deckList);
 }
 function renderDeckPrincipalSelector(){
   syncCurrentPrincipalWithDraft();

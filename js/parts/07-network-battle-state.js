@@ -299,7 +299,43 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");
   await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});
   return true;
-}function resetBattleState(){unitExhaustionFinalizeLock=false;resetNoPlayableAutoAdvanceState();resetFieldAutoAdvanceState();stopTurnTimerLoop();selectedCard=null;selectedUnitId=null;selectedUnitActionMode=null;selectedUnitEffectChoice=null;cardInspectSelection=null;unitContextSelection=null;hideUnitContextMenu();highlights=[];highlightType="move";publicState=null;privateState=null;gameId=null;myPlayer=null;shownBattleResultKey="";lastBattleFxKey="";lastDemigodSummonKey="";lastEventSplashKey="";lastClockKillBonusEventId="";eventSplashHistory=[];clearBattleFxLayer();clearEventSplashOverlay();hideBattleOutcomeSplash(true);hideDemigodSummonPresentation();if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}}function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");renderHomeProgress();syncBattleMusic()}function maybeShowBattleResult(){
+}function resetBattleState(){
+  unitExhaustionFinalizeLock=false;
+  resetNoPlayableAutoAdvanceState();
+  resetFieldAutoAdvanceState();
+  resetAdventureAiScheduling();
+  stopTurnTimerLoop();
+  clearBattleTransientUiState();
+  selectedCard=null;
+  selectedUnitId=null;
+  selectedUnitActionMode=null;
+  selectedUnitEffectChoice=null;
+  cardInspectSelection=null;
+  unitContextSelection=null;
+  hideUnitContextMenu();
+  highlights=[];
+  highlightType="move";
+  handOpen=true;
+  actionsCollapsed=false;
+  handManualCloseKey="";
+  publicState=null;
+  privateState=null;
+  gameId=null;
+  myPlayer=null;
+  shownBattleResultKey="";
+  lastBattleFxKey="";
+  lastDemigodSummonKey="";
+  lastEventSplashKey="";
+  lastClockKillBonusEventId="";
+  eventSplashHistory=[];
+  nearDeathSoundPlayedKeys=new Set();
+  clearBattleFxLayer();
+  clearEventSplashOverlay();
+  hideBattleOutcomeSplash(true);
+  hideDemigodSummonPresentation();
+  if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null;}
+}
+function leaveCurrentGame(){if(unsubPub){unsubPub();unsubPub=null}if(unsubPriv){unsubPriv();unsubPriv=null}resetBattleState();clearBasicTutorialTargetHighlight();const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");$("adventurePanel").classList.add("hidden");$("onlineLobby").classList.add("hidden");$("gameShell").classList.add("hidden");$("mainMenu").classList.remove("hidden");renderHomeProgress();syncBattleMusic()}function maybeShowBattleResult(){
   if(!publicState||publicState.phase!=="ended"||!publicState.endedAt)return;
   const resultKey=`${gameId}:${publicState.endedAt}`;
   if(shownBattleResultKey===resultKey)return;
@@ -657,8 +693,8 @@ function enterLocalGame(pub,priv,player=1){
   syncBoardDimensionsFromState(publicState);
   privateState=priv;
   shownBattleResultKey="";
-  aiTurnLock=false;
-  lastAiTurnKey="";
+  resetAdventureAiScheduling();
+  clearBattleTransientUiState();
   lastBattleFxKey="";
   lastDemigodSummonKey="";
   lastClockKillBonusEventId="";
@@ -686,8 +722,8 @@ function enterGame(code,player){
   gameId=code;
   myPlayer=player;
   shownBattleResultKey="";
-  aiTurnLock=false;
-  lastAiTurnKey="";
+  resetAdventureAiScheduling();
+  clearBattleTransientUiState();
   lastBattleFxKey="";
   lastDemigodSummonKey="";
   lastClockKillBonusEventId="";
@@ -751,7 +787,9 @@ function maybeTriggerAdventureAI(){
   if(aiTurnLock||lastAiTurnKey===key)return;
   aiTurnLock=true;
   lastAiTurnKey=key;
-  setTimeout(async()=>{
+  if(adventureAiActionTimer){clearTimeout(adventureAiActionTimer);adventureAiActionTimer=null;}
+  adventureAiActionTimer=setTimeout(async()=>{
+    adventureAiActionTimer=null;
     try{await adventureEnemyTurn();}
     catch(e){
       handleBattleListenerError("turno IA",e);

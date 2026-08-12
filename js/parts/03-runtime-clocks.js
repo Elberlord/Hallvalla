@@ -8,7 +8,7 @@
 04_RUNTIME_STATE_PHASES
 -------------------------------------------------------------------------------
 */
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,eventSplashHistory=[],nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="",lastClockKillBonusEventId="";
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,adventureAiTriggerTimer=null,adventureAiActionTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,demigodSummonHideTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,eventSplashExitTimer=null,eventSplashHistory=[],nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="",lastClockKillBonusEventId="";
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -412,11 +412,40 @@ function resolveFirebaseAuthReady(){
 function waitForFirebaseAuthReady(timeoutMs=8000){
   if(isFirebaseAuthReady())return Promise.resolve(true);
   return new Promise(resolve=>{
-    let done=false;
-    const finish=value=>{if(done)return;done=true;resolve(value);};
+    let done=false,timeoutId=null;
+    const finish=value=>{
+      if(done)return;
+      done=true;
+      if(timeoutId!==null){clearTimeout(timeoutId);timeoutId=null;}
+      const waiterIndex=authReadyWaiters.indexOf(finish);
+      if(waiterIndex>=0)authReadyWaiters.splice(waiterIndex,1);
+      resolve(value);
+    };
     authReadyWaiters.push(finish);
-    setTimeout(()=>finish(isFirebaseAuthReady()),timeoutMs);
+    timeoutId=setTimeout(()=>finish(isFirebaseAuthReady()),timeoutMs);
   });
+}
+function resetAdventureAiScheduling(){
+  if(adventureAiTriggerTimer){clearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
+  if(adventureAiActionTimer){clearTimeout(adventureAiActionTimer);adventureAiActionTimer=null;}
+  aiTurnLock=false;
+  lastAiTurnKey="";
+}
+function clearBattleTransientUiState(){
+  if(phaseAnnounceTimer){clearTimeout(phaseAnnounceTimer);phaseAnnounceTimer=null;}
+  lastPhaseAnnounceKey="";
+  const phaseBox=$("phaseAnnounce");
+  if(phaseBox)phaseBox.classList.remove("show");
+
+  if(boardSelectedCellTimer){clearTimeout(boardSelectedCellTimer);boardSelectedCellTimer=null;}
+  boardHoverCellKey="";
+  boardSelectedCellKey="";
+  if(typeof updateBoardAimClasses==="function")updateBoardAimClasses();
+
+  if(honorRechargeTimer){clearTimeout(honorRechargeTimer);honorRechargeTimer=null;}
+  lastHonorRechargeKey="";
+  const honorModal=$("honorRechargeModal");
+  if(honorModal)honorModal.classList.remove("show");
 }
 async function ensureFirebaseAuthReady(surface="online"){
   if(HALLVALLA_LOCALHOST_TEST_MODE){

@@ -14,8 +14,9 @@ function clearBattleFxLayer(){
 }
 function hideDemigodSummonPresentation(){
   const box=$("demigodSummonModal");
-  if(box)box.classList.add("hidden");
+  if(box){box.classList.remove("show");box.classList.add("hidden");}
   if(demigodSummonTimer){clearTimeout(demigodSummonTimer);demigodSummonTimer=null;}
+  if(demigodSummonHideTimer){clearTimeout(demigodSummonHideTimer);demigodSummonHideTimer=null;}
 }
 function showDemigodSummonPresentation(unit){
   if(!unit)return;
@@ -28,11 +29,17 @@ function showDemigodSummonPresentation(unit){
   box.classList.remove("hidden");
   requestAnimationFrame(()=>box.classList.add("show"));
   if(demigodSummonTimer){clearTimeout(demigodSummonTimer);}
-  demigodSummonTimer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.classList.add("hidden"),420);},1700);
+  if(demigodSummonHideTimer){clearTimeout(demigodSummonHideTimer);demigodSummonHideTimer=null;}
+  demigodSummonTimer=setTimeout(()=>{
+    demigodSummonTimer=null;
+    box.classList.remove("show");
+    demigodSummonHideTimer=setTimeout(()=>{demigodSummonHideTimer=null;box.classList.add("hidden");},420);
+  },1700);
 }
 function clearEventSplashOverlay(resetQueue=true){
   const box=$("eventSplashOverlay");
   if(eventSplashTimer){clearTimeout(eventSplashTimer);eventSplashTimer=null;}
+  if(eventSplashExitTimer){clearTimeout(eventSplashExitTimer);eventSplashExitTimer=null;}
   if(box){
     box.className="event-splash-overlay";
     box.innerHTML="";
@@ -151,10 +158,13 @@ function showNextEventSplash(){
   void box.offsetWidth;
   requestAnimationFrame(()=>box.classList.add("show"));
   if(eventSplashTimer){clearTimeout(eventSplashTimer);}
+  if(eventSplashExitTimer){clearTimeout(eventSplashExitTimer);eventSplashExitTimer=null;}
   eventSplashTimer=setTimeout(()=>{
+    eventSplashTimer=null;
     box.classList.remove("show");
     box.classList.add("leaving");
-    setTimeout(()=>{
+    eventSplashExitTimer=setTimeout(()=>{
+      eventSplashExitTimer=null;
       appendEventSplashHistory(visible);
       clearEventSplashOverlay(false);
       showNextEventSplash();

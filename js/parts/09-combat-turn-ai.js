@@ -806,7 +806,10 @@ async function finishTurn(){
   handManualCloseKey="";
   await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
-  if(publicState?.mode==="adventure"&&next===2)setTimeout(maybeTriggerAdventureAI,650);
+  if(publicState?.mode==="adventure"&&next===2){
+    if(adventureAiTriggerTimer){clearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
+    adventureAiTriggerTimer=setTimeout(()=>{adventureAiTriggerTimer=null;maybeTriggerAdventureAI();},650);
+  }
 }
 async function advanceTurnPhase(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
