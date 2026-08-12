@@ -196,10 +196,10 @@ async function maybeGrantBeastmasterRareEgg(pub){
 
 function completeAdventureBattleOnce(pub){
   if(!pub||pub.mode!=="adventure")return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
-  // La campaña aprende de CADA duelo terminado del mapa 1, incluso cuando gana la IA.
-  // El registro ocurre antes de resolver recompensas para que el siguiente duelista
-  // herede inmediatamente la experiencia acumulada.
-  if(pub.adventureAdaptiveCampaign&&typeof recordAdaptiveCampaignBattle==="function")recordAdaptiveCampaignBattle(pub);
+  // La campaña aprende de cada duelo válido de Aventura, desde el Guardián y a través
+  // de todos los mapas. El registro ocurre antes de recompensas para que el siguiente
+  // comandante herede inmediatamente la experiencia acumulada.
+  if((pub.adventureAdaptiveLearning||pub.adventureAdaptiveCampaign)&&typeof recordAdaptiveCampaignBattle==="function")recordAdaptiveCampaignBattle(pub);
   if(pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
   if(battle.beastEvent){

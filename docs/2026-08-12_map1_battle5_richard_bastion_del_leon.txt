@@ -1,0 +1,25 @@
+HallValla · Mapa 1.1 · Battle5 Richard Corazón de León
+
+Cambio: Bastión del León pasa a ser el mazo base explícito del jefe.
+
+Personaje Principal (fuera del mazo de robo):
+- 1 Richard Corazón de León
+
+Mazo de robo (20):
+- 1 Hua Lan
+- 1 William Wallace
+- 3 Samurai de Katana
+- 3 Lancero Solar
+- 3 Hoplita griego
+- 2 Guardián de piedra
+- 2 Hombre de armas acorazado
+- 1 Samurai de Naginata
+- 1 Maldición de arena
+- 1 Smoke Bomb
+- 1 Grebas de Marcha
+- 1 Visera de Guerra
+
+Adaptación:
+- Battle5 mantiene hasta 10 sustituciones.
+- Núcleo protegido: Richard, Hua Lan, Wallace, 2 Katana, 2 Hoplitas, 1 Guardián, Grebas y Visera.
+- Las tres rarezas del núcleo no se sacrifican y el resto de ajustes del mapa 1 siguen limitados por el constructor adaptativo.

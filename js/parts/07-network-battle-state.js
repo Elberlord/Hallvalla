@@ -548,8 +548,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyLeaderAbility=enemyLeaderLevel>=5?(battle.enemyLeaderAbility||getLeaderDefaultLevel5Ability(enemyLeaderType)):"";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
   const adaptiveCampaignBattle=typeof isAdventureAdaptiveCampaignBattle==="function"&&isAdventureAdaptiveCampaignBattle(battle);
+  const adaptiveLearningBattle=typeof isAdventureAdaptiveLearningBattle==="function"&&isAdventureAdaptiveLearningBattle(battle);
   const adaptiveMagePilot=typeof isAdaptiveMagePilotBattle==="function"&&isAdaptiveMagePilotBattle(battle,enemyLeaderType);
-  const adaptiveExperience=adaptiveCampaignBattle&&typeof getAdaptiveCampaignMemory==="function"?getAdaptiveCampaignMemory():null;
+  const adaptiveExperience=adaptiveLearningBattle&&typeof getAdaptiveCampaignMemory==="function"?getAdaptiveCampaignMemory():null;
   const enemyDeckBattle=adaptiveCampaignBattle?{...battle,adaptivePlayerSnapshot}:battle;
   const enemyRawInitial=makeEnemyDeckForBattle(enemyDeckBattle,enemyLeaderType);
   const enemyPrepared=prepareAiPrincipalInitialState(battle,enemyRawInitial);
@@ -583,10 +584,10 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     adventureChapterTitle:battle.isGuardian?"Prueba del guardián":`${chapterForBattle.number} ${chapterForBattle.title}`,
     adventureIsGuardian:!!battle.isGuardian,adventureBattleId:battle.id,adventureBattleNum:battle.num,adventureBattleTitle:battle.title,adventureBattleXp:battle.xp,
     adventureEnemyName:battle.enemyName,adventureEnemyLeaderPortrait:battle.enemyLeaderPortrait||"",
-    adventureAdaptiveCampaign:!!adaptiveCampaignBattle,adventureAdaptiveMage:!!adaptiveMagePilot,
-    adventureAdaptivePlayerSnapshot:adaptiveCampaignBattle?adaptivePlayerSnapshot:null,
+    adventureAdaptiveCampaign:!!adaptiveCampaignBattle,adventureAdaptiveLearning:!!adaptiveLearningBattle,adventureAdaptiveMage:!!adaptiveMagePilot,
+    adventureAdaptivePlayerSnapshot:adaptiveLearningBattle?adaptivePlayerSnapshot:null,
     adventureAdaptiveExperienceBattles:Math.max(0,Number(adaptiveExperience?.battlesAnalyzed||0)),
-    adventureAdaptiveRarityCap:adaptiveCampaignBattle?(battle.id==="battle5"?"Richard: básicas + núcleo raro":"Solo básicas"):"",
+    adventureAdaptiveRarityCap:adaptiveCampaignBattle?(typeof isAdaptiveMap1Battle==="function"&&isAdaptiveMap1Battle(battle)?(battle.id==="battle5"?"Richard: básicas + núcleo especial":"Solo básicas"):(typeof isAdaptiveMap2Battle==="function"&&isAdaptiveMap2Battle(battle)?"Mapa 2: básicas + excepciones guionizadas":"Núcleo del encuentro + counters básicos")):"",
     adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,
     adventureAiStyle:adaptiveMagePilot?"Cañón Arcano · adaptación global":(adaptiveCampaignBattle?`${battle.aiStyle||"Máxima"} · adaptación global`:(battle.aiStyle||"Máxima")),
     adventureEnemyUnitMasteryRank:battle.beastEvent?UNIT_MASTERY_MAX_RANK:0,

@@ -1055,24 +1055,27 @@ function expandEnemyFixedDeck(deckList=[]){
   return templates;
 }
 
-/* === IA ADAPTATIVA GLOBAL · MAPA 1 =========================================
-   HallValla estudia al jugador desde la batalla 1 del mapa 1.1.
+/* === IA ADAPTATIVA GLOBAL · CAMPAÑA COMPLETA ===============================
+   HallValla construye un expediente táctico persistente desde la prueba del
+   Guardián y lo conserva a través de todos los mapas de Aventura.
 
-   Reglas de esta primera fase:
-   - Todas las batallas 1-5 leen el mazo humano ACTUAL antes de construir el mazo IA.
-   - Cada batalla terminada (victoria o derrota humana) añade experiencia a un perfil
-     táctico global que heredan los siguientes duelistas.
-   - La capacidad de sustituir cartas crece con el avance: 3/4/6/8/10 cambios máx.
-   - Batallas 1-4: solo cartas BÁSICAS. Ninguna adaptación puede introducir rarezas.
-   - Batalla 5, Richard Corazón de León: es el único del mapa 1 autorizado a llevar
-     cartas no básicas; conserva Richard + Hua Lan + William Wallace como núcleo raro.
-   - Cada líder conserva una identidad mínima. La IA contrarresta composiciones, no
-     destruye por completo el arquetipo del duelista.
-   - La batalla 3 usa Caballería y la batalla 4 usa Hacha. Ambas conservan un núcleo
-     mínimo de su especialización mientras adaptan counters al historial del jugador.
+   Reglas del sistema global:
+   - El Guardián conserva su mazo tutorial fijo, pero su duelo ya alimenta el expediente.
+   - Toda batalla normal de capítulo lee el mazo humano ACTUAL antes de construir la IA.
+   - Cada duelo terminado, gane quien gane, añade experiencia al mismo perfil global.
+   - Mapa 1 conserva sus límites 3/4/6/8/10 y sus restricciones de rareza existentes.
+   - Desde Mapa 2 la IA mantiene sus Principales y núcleo propio; adapta hasta 10
+     slots periféricos usando counters BÁSICOS compatibles.
+   - En Mapa 2 existe un cap duro: ninguna carta superior a Básica entra desde pools
+     automáticos. Sólo las excepciones declaradas por diseño en ese encuentro sobreviven.
+   - Las cartas no básicas asignadas expresamente por diseño nunca se sacrifican.
+   - Cada líder conserva una identidad mínima: la adaptación contrarresta al humano
+     sin convertir el mazo en una mezcla sin arquetipo.
+   - Los encuentros especiales con enemyLegendaryMode="deck" conservan su constructor
+     bespoke, pero sus resultados también alimentan el expediente global.
 ============================================================================ */
 const ADAPTIVE_CAMPAIGN_PROFILE_KEY="campaignTacticalProfileV1";
-const ADAPTIVE_CAMPAIGN_HISTORY_LIMIT=24;
+const ADAPTIVE_CAMPAIGN_HISTORY_LIMIT=64;
 const ADAPTIVE_MAP1_BATTLE_IDS=new Set(["battle1","battle2","battle3","battle4","battle5"]);
 const ADAPTIVE_MAGE_PILOT_BATTLE_ID="battle3";
 const ADAPTIVE_MAGE_BASE_DECK_COUNTS=Object.freeze([
@@ -1098,15 +1101,59 @@ const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
   battle2:Object.freeze({spearman:2,greek_hoplite:2,samurai_katana:2,guardian:1,marching_greaves:1,war_visor:1}),
   battle3:Object.freeze({numidian_javelin_rider:2,scythian_horse_archer:2,hungarian_hussar:1,cavalry:1,mongol_explorer:1,withdrawal_stirrups:1,light_barding:1}),
   battle4:Object.freeze({ulfhednar:2,berserker_de_oso:2,berserker:2,tanned_hide_harness:1,counterweighted_grip:1}),
-  battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,guardian:1,samurai_katana:1})
+  battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,samurai_katana:2,greek_hoplite:2,guardian:1,marching_greaves:1,war_visor:1})
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:3,battle2:4,battle3:6,battle4:8,battle5:10});
 const ADAPTIVE_CAMPAIGN_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
 const ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga"]);
 const ADAPTIVE_MAP1_RICHARD_RARE_KEYS=new Set(["richard_lionheart","mulan","wallace"]);
 
+function getAdaptiveCampaignChapterNumber(battle){
+  if(!battle||battle.isGuardian||battle.beastEvent)return 0;
+  try{
+    // No usamos el fallback de getAdventureChapterForBattle: contratos/eventos externos
+    // no deben entrar accidentalmente al expediente de la campaña principal.
+    const chapter=(typeof ADVENTURE_CHAPTERS!=="undefined"&&Array.isArray(ADVENTURE_CHAPTERS))
+      ?ADVENTURE_CHAPTERS.find(ch=>(ch?.battles||[]).some(item=>item?.id===battle.id))
+      :null;
+    const number=parseFloat(String(chapter?.number||"0").replace(",","."));
+    return Number.isFinite(number)?number:0;
+  }catch(_){return 0;}
+}
+function isAdventureAdaptiveLearningBattle(battle){
+  if(!battle||battle.beastEvent)return false;
+  if(battle.isGuardian)return true;
+  return getAdaptiveCampaignChapterNumber(battle)>=1;
+}
 function isAdventureAdaptiveCampaignBattle(battle){
-  return !!battle&&ADAPTIVE_MAP1_BATTLE_IDS.has(String(battle.id||""));
+  if(!battle||battle.isGuardian||battle.beastEvent)return false;
+  if(getAdaptiveCampaignChapterNumber(battle)<1)return false;
+  // Duelos especiales con un mazo legendario diseñado a mano conservan su constructor.
+  if(String(battle.enemyLegendaryMode||"")=="deck")return false;
+  return true;
+}
+function isAdaptiveMap1Battle(battle){
+  return ADAPTIVE_MAP1_BATTLE_IDS.has(String(battle?.id||""))&&getAdaptiveCampaignChapterNumber(battle)<2;
+}
+function isAdaptiveMap2Battle(battle){
+  const chapter=getAdaptiveCampaignChapterNumber(battle);
+  return chapter>=2&&chapter<3;
+}
+function getAdaptiveScriptedEncounterExceptionKeys(battle){
+  const keys=new Set();
+  // Sólo lo escrito expresamente en el encuentro puede saltarse el cap Básico
+  // del Mapa 2. Los pools generales/adaptativos nunca conceden esa excepción.
+  (battle?.enemyFixedDeck||[]).forEach(entry=>{
+    const key=Array.isArray(entry)?entry[0]:entry?.key;
+    if(key)keys.add(String(key));
+  });
+  (battle?.enemyLegendaryCards||[]).forEach(key=>{if(key)keys.add(String(key));});
+  if(battle?.richardInDeck)keys.add("richard_lionheart");
+  const preferred=typeof getAiPrincipalKeyForBattle==="function"?getAiPrincipalKeyForBattle(battle):"";
+  if(preferred)keys.add(String(preferred));
+  // El jefe puede presentar su propia carta antes de que la rareza se abra al jugador.
+  if(battle?.rewardCard&&String(battle?.id||"").includes("chapter2_1_battle"))keys.add(String(battle.rewardCard));
+  return keys;
 }
 function isAdaptiveMagePilotBattle(battle,enemyLeaderType=""){
   return !!battle&&battle.id===ADAPTIVE_MAGE_PILOT_BATTLE_ID&&String(enemyLeaderType||battle.enemyLeaderType||"")==="mage";
@@ -1136,7 +1183,7 @@ function saveAdaptiveCampaignMemory(memory){
       humanWins:Math.max(0,Number(memory?.humanWins||0)),
       aiWins:Math.max(0,Number(memory?.aiWins||0)),
       history:(Array.isArray(memory?.history)?memory.history:[]).slice(-ADAPTIVE_CAMPAIGN_HISTORY_LIMIT),
-      seen:Object.fromEntries(Object.entries(memory?.seen||{}).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,80))
+      seen:Object.fromEntries(Object.entries(memory?.seen||{}).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,160))
     };
     savePlayerProfile({...profile,adaptiveAi});
   }catch(e){console.warn("[HallValla] No se pudo guardar el expediente táctico global:",e);}
@@ -1146,9 +1193,24 @@ function isAdaptiveBasicCard(card){
   const rarity=String(card.rarity||card.rareza||"").trim().toLowerCase();
   return !rarity||rarity==="basic"||rarity==="básica"||rarity==="basica";
 }
-function isAdaptiveCardAllowedInMap1(card,battle){
-  if(isAdaptiveBasicCard(card))return true;
-  return battle?.id==="battle5"&&ADAPTIVE_MAP1_RICHARD_RARE_KEYS.has(String(card?.key||""));
+function isAdaptiveBaseCardAllowedForBattle(card,battle){
+  if(!card)return false;
+  if(isAdaptiveMap1Battle(battle)){
+    if(isAdaptiveBasicCard(card))return true;
+    return battle?.id==="battle5"&&ADAPTIVE_MAP1_RICHARD_RARE_KEYS.has(String(card?.key||""));
+  }
+  if(isAdaptiveMap2Battle(battle)){
+    if(isAdaptiveBasicCard(card))return true;
+    // Mapa 2: ninguna rareza superior entra por pool, utilidad o adaptación.
+    // Sólo sobreviven cartas no Básicas declaradas por el diseñador del encuentro.
+    return getAdaptiveScriptedEncounterExceptionKeys(battle).has(String(card?.key||""));
+  }
+  return true;
+}
+function isAdaptiveCounterCardAllowed(card,battle){
+  // La adaptación global sólo introduce counters Básicos. Las rarezas/especiales
+  // pertenecen al diseño del encuentro y se conservan si ya estaban en el mazo base.
+  return isAdaptiveBasicCard(card);
 }
 function getAdaptiveCardRoleMetrics(card){
   const out={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,control:0,unit:0,spell:0,trap:0,equipment:0};
@@ -1227,11 +1289,13 @@ function getAdaptiveCampaignCounterProfile(currentSnapshot,memory){
   const cards={};
   // El mazo actual siempre pesa más: los comandantes estudian al rival antes del duelo.
   addAdaptiveSnapshotToProfile(roles,cards,currentSnapshot,2.65);
-  const history=(memory?.history||[]).slice(-8).reverse();
-  const recency=[1.45,1.15,.9,.7,.52,.38,.28,.2];
+  const history=(memory?.history||[]).slice(-ADAPTIVE_CAMPAIGN_HISTORY_LIMIT).reverse();
+  const recency=[1.45,1.15,.9,.7,.52,.38,.28,.2,.16,.13,.11,.1];
   history.forEach((entry,index)=>{
     const resultWeight=entry?.result==="human_win"?1.2:.7;
-    const w=(recency[index]||.15)*resultWeight;
+    // Lo reciente pesa mucho más, pero ninguna batalla de la campaña se vuelve cero:
+    // el expediente mantiene una huella tenue de los hábitos antiguos del jugador.
+    const w=(recency[index]??.075)*resultWeight;
     addAdaptiveSnapshotToProfile(roles,cards,entry?.snapshot,w);
     if(entry?.survivorRoles){
       Object.keys(roles).forEach(k=>roles[k]+=Number(entry.survivorRoles?.[k]||0)*w*.72);
@@ -1275,7 +1339,7 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   const candidates=[];
   const add=(key,score,desired=3)=>{
     const card=getAdventureDeckCardTemplateByKey(key);
-    if(!card||!isAdaptiveCardAllowedInMap1(card,battle))return;
+    if(!card||!isAdaptiveCounterCardAllowed(card,battle))return;
     const identity=getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType);
     const finalScore=Number(score||0)+identity;
     if(finalScore>0)candidates.push({key,score:finalScore,desired:Math.max(1,Math.min(3,desired))});
@@ -1309,8 +1373,10 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   add("scythian_horse_archer",r.control*24+r.ranged*15,3);
   return candidates.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
 }
-function getAdaptiveMap1BaseDeckTemplates(battle,enemyLeaderType,targetDeckSize){
+function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckSize){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
+  // Compatibilidad con la antigua ruta de Cañón Arcano, por si algún encuentro futuro
+  // vuelve a declararla expresamente. En Mapa 1 battle3 ya es Caballería y no entra aquí.
   if(isAdaptiveMagePilotBattle(battle,enemyLeaderType)){
     const templates=[];
     ADAPTIVE_MAGE_BASE_DECK_COUNTS.forEach(([key,count])=>{
@@ -1320,29 +1386,92 @@ function getAdaptiveMap1BaseDeckTemplates(battle,enemyLeaderType,targetDeckSize)
     return templates.slice(0,target);
   }
   if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
-    return expandEnemyFixedDeck(battle.enemyFixedDeck).filter(card=>isAdaptiveCardAllowedInMap1(card,battle)).slice(0,target);
+    return expandEnemyFixedDeck(battle.enemyFixedDeck)
+      .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle))
+      .slice(0,target);
   }
+  const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
   const basicIdentity=(typeof getLeaderStarterFixedDeckTemplates==="function"?getLeaderStarterFixedDeckTemplates(enemyLeaderType):[])
     .filter(isAdaptiveBasicCard);
-  const basicFallback=getAiBasicDeckTemplates(battle?.id==="battle5"?1:0).filter(isAdaptiveBasicCard);
-  if(battle?.id==="battle5"){
-    const rareCore=["richard_lionheart","mulan","wallace"].map(getAdventureDeckCardTemplateByKey).filter(Boolean);
-    return buildDeckTemplatesWithLimits(rareCore,[...basicIdentity,...basicFallback],target)
-      .filter(card=>isAdaptiveCardAllowedInMap1(card,battle)).slice(0,target);
+  const basicFallback=getAiBasicDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).filter(isAdaptiveBasicCard);
+
+  // Mapa 1 mantiene exactamente las reglas aprobadas: básicas en 1-4 y el núcleo
+  // Richard/Mulan/Wallace en 1-5.
+  if(isAdaptiveMap1Battle(battle)){
+    if(battle?.id==="battle5"){
+      const rareCore=["richard_lionheart","mulan","wallace"].map(getAdventureDeckCardTemplateByKey).filter(Boolean);
+      return buildDeckTemplatesWithLimits(rareCore,[...basicIdentity,...basicFallback],target)
+        .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle)).slice(0,target);
+    }
+    return buildDeckTemplatesWithLimits([], [...basicIdentity,...basicFallback],target)
+      .filter(isAdaptiveBasicCard).slice(0,target);
   }
-  return buildDeckTemplatesWithLimits([], [...basicIdentity,...basicFallback],target)
-    .filter(isAdaptiveBasicCard).slice(0,target);
+
+  // Desde Mapa 2 se conserva el arsenal propio del encuentro. En Mapa 2 existe
+  // un cap duro: el pool automático sigue siendo Básico y cualquier carta superior
+  // debe estar declarada expresamente por ese encuentro. Desde Mapa 3 la progresión
+  // podrá abrirse por separado sin que el Mapa 2 herede cartas futuras (p. ej. Aquiles).
+  const improvedPool=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
+  const improvedTemplates=improvedPool.filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle));
+  const legendaryTemplates=[];
+  if(battle?.richardInDeck&&RICHARD_CARD&&isAdaptiveBaseCardAllowedForBattle(RICHARD_CARD,battle))legendaryTemplates.push(RICHARD_CARD);
+  (battle?.enemyLegendaryCards||[]).forEach(key=>{
+    const card=getLegendaryCardByKey(key);
+    if(card&&isAdaptiveBaseCardAllowedForBattle(card,battle))legendaryTemplates.push(card);
+  });
+  const uniqueLegendary=[...new Map(legendaryTemplates.map(c=>[c.key,c])).values()];
+  const preferred=[...uniqueLegendary,...improvedTemplates];
+  return buildDeckTemplatesWithLimits(preferred,[...basicIdentity,...basicFallback],target)
+    .filter(card=>isAdaptiveBaseCardAllowedForBattle(card,battle)).slice(0,target);
 }
-function buildAdaptiveMap1DeckTemplates(battle,enemyLeaderType,targetDeckSize=DECK_RULES.drawDeckSize){
+function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[]){
+  if(isAdaptiveMap1Battle(battle))return ADAPTIVE_MAP1_CORE_MIN[battle?.id]||{};
+  const core={};
+  const counts={};
+  for(const card of base||[]){
+    const key=String(card?.key||card?.name||"");
+    if(!key)continue;
+    counts[key]=(counts[key]||0)+1;
+    // Principales, leyendas, épicas y demás cartas propias del encuentro son sagradas.
+    if(!isAdaptiveBasicCard(card))core[key]=(core[key]||0)+1;
+    // Los dos equipos de la especialización también forman parte de su identidad.
+    if(card?.type==="equipment"&&String(card.equipmentLeader||"")==String(enemyLeaderType||""))core[key]=(core[key]||0)+1;
+  }
+  // Conserva además una columna vertebral de cuatro copias Básicas que mejor
+  // aprovechen la clase. Así hasta una adaptación de 10 cartas sigue pareciendo
+  // Warrior/Archer/Mage/Cavalry/Axe/Assassin y no un mazo genérico de counters.
+  const identityCandidates=Object.entries(counts).map(([key,count])=>{
+    const card=getAdventureDeckCardTemplateByKey(key);
+    if(!card||!isAdaptiveBasicCard(card)||card.type!=="unit")return null;
+    return{key,count,score:getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType)};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score||b.count-a.count||a.key.localeCompare(b.key));
+  let budget=4;
+  for(const entry of identityCandidates){
+    if(budget<=0)break;
+    const keep=Math.min(entry.count,budget);
+    if(keep>0)core[entry.key]=Math.max(Number(core[entry.key]||0),keep);
+    budget-=keep;
+  }
+  return core;
+}
+function getAdaptiveCampaignMaxSwaps(battle){
+  if(isAdaptiveMap1Battle(battle))return Math.max(0,Math.min(10,Number(ADAPTIVE_MAP1_MAX_SWAPS[battle?.id]||3)));
+  const explicit=Number(battle?.adaptiveMaxSwaps);
+  if(Number.isFinite(explicit))return Math.max(0,Math.min(10,explicit));
+  // Richard ya alcanza 10 en 1-5. A partir del Mapa 2 se mantiene ese techo: la
+  // mitad del mazo robable puede reajustarse sin tocar el núcleo especial/principal.
+  return 10;
+}
+function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSize=DECK_RULES.drawDeckSize){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
-  const base=getAdaptiveMap1BaseDeckTemplates(battle,enemyLeaderType,target);
+  const base=getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,target);
   const counts={};
   base.forEach(card=>{const key=String(card?.key||card?.name||"");if(key)counts[key]=(counts[key]||0)+1;});
   const memory=getAdaptiveCampaignMemory();
   const profile=getAdaptiveCampaignCounterProfile(battle?.adaptivePlayerSnapshot||null,memory);
   const candidates=adaptiveCampaignCounterCandidates(profile,enemyLeaderType,battle);
-  const core=ADAPTIVE_MAP1_CORE_MIN[battle?.id]||{};
-  const maxSwaps=Math.max(0,Math.min(10,Number(ADAPTIVE_MAP1_MAX_SWAPS[battle?.id]||3)));
+  const core=getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base);
+  const maxSwaps=getAdaptiveCampaignMaxSwaps(battle);
   const scoreByKey=Object.fromEntries(candidates.map(c=>[c.key,c.score]));
   let swaps=0;
   const active=candidates.filter(c=>c.score>=Math.max(20,Number(candidates[0]?.score||0)*.28)).slice(0,7);
@@ -1352,7 +1481,7 @@ function buildAdaptiveMap1DeckTemplates(battle,enemyLeaderType,targetDeckSize=DE
     for(const candidate of active){
       if(swaps>=maxSwaps)break;
       const candidateCard=getAdventureDeckCardTemplateByKey(candidate.key);
-      if(!candidateCard||!isAdaptiveCardAllowedInMap1(candidateCard,battle))continue;
+      if(!candidateCard||!isAdaptiveCounterCardAllowed(candidateCard,battle))continue;
       const copyCap=Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(candidateCard):3);
       const desired=Math.min(copyCap,candidate.desired);
       if((counts[candidate.key]||0)>=desired)continue;
@@ -1390,7 +1519,7 @@ function buildAdaptiveMap1DeckTemplates(battle,enemyLeaderType,targetDeckSize=DE
   // Añade counters nuevos que no estaban en el mazo original.
   for(const [key,count] of Object.entries(counts)){
     const card=getAdventureDeckCardTemplateByKey(key);
-    if(!card||!isAdaptiveCardAllowedInMap1(card,battle))continue;
+    if(!card||!isAdaptiveBaseCardAllowedForBattle(card,battle))continue;
     for(let i=0;i<Math.max(0,Number(count||0));i++)templates.push(card);
   }
   // Fallback: nunca permitir un mazo corto por una referencia inválida.
@@ -1407,7 +1536,7 @@ function buildAdaptiveMap1DeckTemplates(battle,enemyLeaderType,targetDeckSize=DE
 }
 function recordAdaptiveCampaignBattle(pub){
   try{
-    if(!pub||pub.mode!=="adventure"||!pub.adventureAdaptiveCampaign||!ADAPTIVE_MAP1_BATTLE_IDS.has(String(pub.adventureBattleId||"")))return false;
+    if(!pub||pub.mode!=="adventure"||!(pub.adventureAdaptiveLearning||pub.adventureAdaptiveCampaign))return false;
     if(!pub.endedAt||![1,2].includes(Number(pub.winner||0)))return false;
     const memory=getAdaptiveCampaignMemory();
     const runKey=`${pub.code||pub.adventureBattleId||"adaptive"}:${pub.endedAt}`;
@@ -1440,12 +1569,18 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
   const targetDeckSize=DECK_RULES.drawDeckSize+principalSlots;
   if(isAdventureAdaptiveCampaignBattle(battle)){
-    const adaptiveTemplates=buildAdaptiveMap1DeckTemplates(battle,enemyLeaderType,targetDeckSize);
+    const adaptiveTemplates=buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSize);
     if(adaptiveTemplates.length!==targetDeckSize){
       console.warn(`[HallValla] IA adaptativa ${battle.id}: mazo ${adaptiveTemplates.length}/${targetDeckSize}.`);
     }
-    if(battle.id!=="battle5"&&adaptiveTemplates.some(card=>!isAdaptiveBasicCard(card))){
+    if(isAdaptiveMap1Battle(battle)&&battle.id!=="battle5"&&adaptiveTemplates.some(card=>!isAdaptiveBasicCard(card))){
       console.error(`[HallValla] Bloqueo de rareza Mapa 1: ${battle.id} intentó incluir una carta no básica.`);
+    }
+    if(isAdaptiveMap2Battle(battle)){
+      const forbidden=adaptiveTemplates.filter(card=>!isAdaptiveBaseCardAllowedForBattle(card,battle));
+      if(forbidden.length){
+        console.error(`[HallValla] CAP MAPA 2: ${battle.id} intentó introducir cartas no autorizadas: ${forbidden.map(c=>c?.key||c?.name).join(", ")}`);
+      }
     }
     const adaptiveDeck=shuffle(adaptiveTemplates.map(card=>makeCard(card,2,enemyLeaderType)));
     const draw=drawCards(adaptiveDeck,[],4);
