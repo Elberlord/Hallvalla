@@ -5,9 +5,11 @@ Fuente: mazos_actuales_ia_inicio_aventura_8CJ.csv entregado por el usuario.
 Reglas implementadas:
 - guardian_mage (Hechicero guardián): mazo fijo de 20 cartas. Conserva 1 Lancero solar garantizado en la mano inicial; las otras 3 cartas se barajan desde este mismo mazo fijo.
   Mazo actual: 3 Adepto Arcano, 1 Lancero solar, 1 Guardián de piedra, 1 Samurai de Katana, 1 Saboteador de Iga, 1 Explorador mongol, 3 Fireball, 3 Maldición de arena, 2 Muro de escudos, 1 Luz de Sanación, 1 Inspiration, 1 Foco Estabilizador y 1 Amuleto de Canalización.
-- battle1 (Arquero rebelde): mazo fijo de 20 cartas; mano inicial de 4 cartas barajadas desde ese mazo.
+- battle1 (Arquero rebelde): mazo base adaptativo de 20 cartas “Cielo Cerrado”; mano inicial de 4 cartas barajadas desde el mazo final.
+  Mazo base actual: 3 Arquera del desierto, 3 Arquero del Imperio Nuevo, 2 Arquero egipcio de línea, 1 Explorador mongol, 1 Arquero a caballo escita, 2 Lancero solar, 3 Maldición de arena, 2 Fireball, 1 Smoke Bomb, 1 Capa de Escaramuza y 1 Correa de Retirada.
+  La IA adaptativa del mapa 1 puede sustituir como máximo 3 cartas según el rival. Conserva como núcleo mínimo 2 Arquera del desierto, 2 Arquero del Imperio Nuevo, 1 Arquero egipcio de línea y ambos equipos exclusivos de Arquero.
 - battle2 (Guerrero rebelde): mazo fijo de 20 cartas; mano inicial de 4 cartas barajadas desde ese mazo.
-- Ninguno de estos tres combates vuelve a construir su mazo desde getAiBasicDeckTemplates().
+- guardian_mage conserva mazo fijo. battle1 usa su mazo base Cielo Cerrado como fuente de verdad y sólo permite hasta 3 sustituciones adaptativas; battle2 conserva su ruta adaptativa existente.
 - Se conservan las mejoras de PB estructural de 8CI y los starters fijos por líder de 8CJ.
 
 Totales validados: 20 / 20 / 20.
