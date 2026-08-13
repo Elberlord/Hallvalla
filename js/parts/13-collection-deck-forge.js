@@ -485,25 +485,18 @@ function renderCraftMaterialPanel(){
   const summary=$("craftMaterialSummary");
   const materials=getCraftMaterials();
   const total=CRAFT_RARITY_KEYS.reduce((sum,k)=>sum+Number(materials[k]||0),0);
-  const rows=CRAFT_RARITY_KEYS.map(k=>{
+  const nodes=CRAFT_RARITY_KEYS.map((k,index)=>{
     const amount=Number(materials[k]||0);
     const cost=getCraftCostByRarityKey(k);
+    const label=getCraftRarityLabel(k);
     const can=amount>=cost;
-    return `<span class="craft-mat-pill ${k} ${can?"can-create":"cant-create"}"><b>${getCraftRarityLabel(k)}</b><em>${amount}</em><small>crear ${cost}</small></span>`;
-  }).join("");
-  const summaryRows=CRAFT_RARITY_KEYS.map(k=>{
-    const amount=Number(materials[k]||0);
-    const cost=getCraftCostByRarityKey(k);
-    const can=amount>=cost;
-    return `<span class="craft-summary-pill ${k} ${can?"can-create":"cant-create"}" title="${getCraftRarityLabel(k)}: tienes ${amount}. Crear cuesta ${cost}."><b>${getCraftRarityLabel(k)}</b><em>${amount}</em><small>/${cost}</small></span>`;
+    return `<div class="craft-material-node ${k} ${can?"can-create":"cant-create"}" style="--craft-slot:${index+1};" title="${escapeHtml(`${label}: tienes ${amount}. Crear cuesta ${cost}.`)}"><span class="craft-material-value">${amount}</span><small class="craft-material-label">${escapeHtml(label)}</small></div>`;
   }).join("");
   if(panel){
-    panel.innerHTML=`<div class="craft-mat-title"><b>Materiales para crear cartas</b><small>Total ${total}</small></div>
-      <div class="craft-mat-grid">${rows}</div>
-      <small class="craft-mat-note">Estos son tus materiales actuales por rareza. Convierte sobrantes para subirlos; cada carta se crea con material de su misma rareza.</small>`;
+    panel.innerHTML=`<div class="craft-material-art" aria-label="Materiales de creación" data-total="${total}">${nodes}</div>`;
   }
   if(summary){
-    summary.innerHTML=`<div class="craft-summary-title">Materiales de creación <strong>${total}</strong></div><div class="craft-summary-grid">${summaryRows}</div>`;
+    summary.innerHTML='';
   }
   updateBulkDustButton();
 }
@@ -886,19 +879,16 @@ function renderDeckPrincipalSelector(){
   const slots=$("deckPrincipalSlots");
   if(!slots)return;
   const principalSlots=getCurrentPrincipalSlots();
-  const leaderType=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
-  const leaderLevel=typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType||"warrior"):1;
+  const visualSlots=Math.max(5,principalSlots);
   const cards=currentPrincipalKeys.slice(0,principalSlots).map(key=>currentDeckDraft.find(c=>c?.key===key&&c.type==="unit")||null);
-  slots.innerHTML=`<div class="deck-principal-tier-note">${escapeHtml(getPrincipalTierSummary(leaderLevel))} · El mazo de robo siempre conserva ${DECK_RULES.drawDeckSize} cartas.</div>`+Array.from({length:principalSlots}).map((_,index)=>{
+  slots.innerHTML=Array.from({length:visualSlots}).map((_,index)=>{
+    if(index>=principalSlots){
+      return `<div class="deck-principal-selector decor-slot" aria-hidden="true"></div>`;
+    }
     const card=cards[index]||null;
-    return `<div class="deck-principal-selector ${card?"filled":"empty"}" data-principal-slot="${index}">
+    return `<div class="deck-principal-selector ${card?"filled":"empty"}" data-principal-slot="${index}" title="${escapeHtml(card?`Principal ${index+1}: ${card.name}`:`Principal ${index+1}`)}">
       <div class="deck-principal-art" aria-hidden="true">${card?getDeckBuilderMiniImageHtml(card):`<span>★${index+1}</span>`}</div>
-      <div class="deck-principal-copy">
-        <span>PERSONAJE PRINCIPAL ${index+1}</span>
-        <strong>${escapeHtml(card?.name||"Sin seleccionar")}</strong>
-        <small>${card?"Esta copia saldrá del mazo y comenzará convocada gratuitamente.":"Marca la estrella de una unidad distinta incluida en el mazo."}</small>
-      </div>
-      <button class="deck-principal-clear ${card?"":"hidden"}" type="button" data-clear-principal-slot="${index}" ${card?"":"disabled"}>Quitar</button>
+      <button class="deck-principal-clear ${card?"":"hidden"}" type="button" data-clear-principal-slot="${index}" ${card?"":"disabled"} aria-label="Quitar principal ${index+1}">×</button>
     </div>`;
   }).join("");
   slots.querySelectorAll("[data-clear-principal-slot]").forEach(btn=>btn.addEventListener("click",()=>clearCurrentDeckPrincipal(Number(btn.dataset.clearPrincipalSlot))));
@@ -1061,7 +1051,7 @@ function renderDeckBuilder(){
     bindDeckBuilderDragAndClick(collectionGrid,deckList);
     const ownedUnique=allCards.filter(card=>Number(card.qty||0)>0).length;
     if($("deckCountText"))$("deckCountText").textContent=`${ownedUnique}/${allCards.length} desbloqueadas`;
-    if($("deckValidText"))$("deckValidText").textContent="Modo catálogo · toca cualquier carta para verla";
+    if($("deckValidText"))$("deckValidText").textContent="";
     return;
   }
   const deckCardsHtml=currentDeckDraft.map((card,index)=>deckBuilderMiniCardHtml(card,{mode:"deck",index})).join("");
@@ -1069,20 +1059,20 @@ function renderDeckBuilder(){
   const principalSlots=getCurrentPrincipalSlots();
   const emptySlots=Math.max(0,requiredDeckSize-currentDeckDraft.length);
   const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot"><span>${currentDeckDraft.length+i+1}</span></div>`).join("");
-  deckList.innerHTML=`<div class="deck-drop-hint">Toca una carta para ver detalles. Usa + para meterla al mazo y × para quitarla.</div>${deckCardsHtml}${emptyHtml}`;
+  deckList.innerHTML=`${deckCardsHtml}${emptyHtml}`;
   bindDeckBuilderDragAndClick(collectionGrid,deckList);
   renderDeckPrincipalSelector();
   renderCraftMaterialPanel();
   const deckValidation=validateDeckList(currentDeckDraft,principalSlots);
   const principalValidation=validatePrincipalSelection(currentPrincipalKeys,currentDeckDraft,principalSlots);
   const validation={valid:deckValidation.valid&&principalValidation.valid,errors:[...deckValidation.errors,...principalValidation.errors]};
-  if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${requiredDeckSize} · Principales ${principalValidation.keys.length}/${principalSlots} · Robo ${DECK_RULES.drawDeckSize}`;
-  if($("deckValidText"))$("deckValidText").textContent=validation.valid?`Mazo válido: ${principalSlots} principal${principalSlots===1?"":"es"} + ${DECK_RULES.drawDeckSize} de robo`:(currentDeckDraft.length<requiredDeckSize?"Mazo incompleto":validation.errors[0]||"Mazo inválido");
+  if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${requiredDeckSize} · ${principalValidation.keys.length}/${principalSlots} · ${DECK_RULES.drawDeckSize}`;
+  if($("deckValidText"))$("deckValidText").textContent="";
   if(drawerCount)drawerCount.textContent=`${currentDeckDraft.length}/${requiredDeckSize}`;
   if(drawerTab)drawerTab.classList.toggle("deck-ready",validation.valid);
   const saveBtn=$("saveDeckBtn");
   if(saveBtn){
-    saveBtn.textContent=validation.valid?"Guardar y salir":`Completa ${requiredDeckSize} cartas y ${principalSlots} principal${principalSlots===1?"":"es"}`;
+    saveBtn.textContent="Guardar";
     saveBtn.disabled=!validation.valid;
     saveBtn.title=validation.valid?"Guardar mazo y cerrar Forja":`El tier actual exige exactamente ${requiredDeckSize} cartas: ${principalSlots} Personaje${principalSlots===1?"":"s"} Principal${principalSlots===1?"":"es"} distinto${principalSlots===1?"":"s"} y ${DECK_RULES.drawDeckSize} cartas de robo.`;
   }
