@@ -1039,30 +1039,12 @@ function ensureStatsTutorialModal(){
   return modal;
 }
 function showStatsTutorial({force=false,onDone=null}={}){
-  return new Promise(resolve=>{
-    if(!force&&hasSeenStatsTutorial()){
-      if(typeof onDone==="function")onDone();
-      resolve(false);
-      return;
-    }
-    const modal=ensureStatsTutorialModal();
-    const finish=(seen)=>{
-      modal.classList.add("hidden");
-      if(seen)markStatsTutorialSeen();
-      if(typeof onDone==="function")onDone();
-      resolve(seen);
-    };
-    const ok=$("statsTutorialOkBtn");
-    const later=$("statsTutorialLaterBtn");
-    const x=$("statsTutorialCloseX");
-    if(ok)ok.onclick=()=>finish(true);
-    if(later)later.onclick=()=>finish(false);
-    if(x)x.onclick=()=>finish(false);
-    modal.classList.remove("hidden");
-  });
+  if(typeof onDone==="function")onDone();
+  return Promise.resolve(false);
 }
 function runFirstTimeTutorialBefore(action){
-  return showStatsTutorial({force:false,onDone:action});
+  if(typeof action==="function")action();
+  return Promise.resolve(false);
 }
 
 function openBattleMenu(){const panel=$("battleMenuPanel");if(panel){panel.classList.remove("hidden");renderBattleChrome();}}

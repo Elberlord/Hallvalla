@@ -271,30 +271,28 @@
     <div id="lobbyStatus" class="visual-status">Listo para jugar.</div>
 
     <section id="pvpRoomPanel" class="pvp-room-panel hidden" aria-live="polite" aria-label="Lobby de duelo">
-      <div class="pvp-room-kicker">SALA DE DUELO</div>
-      <div class="pvp-room-code-line">
-        <span>CÓDIGO</span>
-        <strong id="pvpRoomCode">----</strong>
-        <button id="pvpCopyCodeBtn" class="pvp-room-small-btn" type="button">COPIAR</button>
-      </div>
-      <div class="pvp-room-players">
-        <article class="pvp-room-player" data-pvp-room-player="1">
-          <span class="pvp-room-side">JUGADOR 1</span>
+      <div class="pvp-room-artwrap">
+        <img class="pvp-room-art" src="assets/ui/pvp_lobby/duel_room_lobby.webp" alt="Lobby de duelo HallValla">
+        <div class="pvp-room-code-line">
+          <strong id="pvpRoomCode">----</strong>
+          <button id="pvpCopyCodeBtn" class="pvp-room-hitbox pvp-room-copy-btn" type="button"><span class="hv-sr-only">Copiar código</span></button>
+        </div>
+        <article class="pvp-room-player player1 is-host" data-pvp-room-player="1">
+          <span id="pvpRoomPlayer1Presence" class="pvp-room-presence connected" aria-hidden="true"></span>
           <strong id="pvpRoomPlayer1Name">Esperando...</strong>
-          <em id="pvpRoomPlayer1Ready" class="pvp-room-ready-state">NO LISTO</em>
+          <span id="pvpRoomPlayer1Check" class="pvp-room-ready-check" aria-hidden="true">✓</span>
+          <em id="pvpRoomPlayer1Ready" class="pvp-room-ready-state hv-sr-only">No listo</em>
         </article>
-        <div class="pvp-room-vs">VS</div>
-        <article class="pvp-room-player" data-pvp-room-player="2">
-          <span class="pvp-room-side">JUGADOR 2</span>
-          <strong id="pvpRoomPlayer2Name">Esperando rival...</strong>
-          <em id="pvpRoomPlayer2Ready" class="pvp-room-ready-state waiting">SIN RIVAL</em>
+        <article class="pvp-room-player player2" data-pvp-room-player="2">
+          <span id="pvpRoomPlayer2Presence" class="pvp-room-presence waiting" aria-hidden="true"></span>
+          <strong id="pvpRoomPlayer2Name">Rival pendiente</strong>
+          <span id="pvpRoomPlayer2Check" class="pvp-room-ready-check" aria-hidden="true">✓</span>
+          <em id="pvpRoomPlayer2Ready" class="pvp-room-ready-state hv-sr-only">Sin rival</em>
         </article>
+        <button id="pvpReadyBtn" class="pvp-room-hitbox pvp-room-ready-btn" type="button" aria-label="Marcar listo"><span class="hv-sr-only">Listo</span></button>
+        <button id="pvpLeaveBtn" class="pvp-room-hitbox pvp-room-leave-btn" type="button"><span class="hv-sr-only">Salir de la sala</span></button>
       </div>
-      <div id="pvpRoomMessage" class="pvp-room-message">Esperando rival...</div>
-      <div class="pvp-room-actions">
-        <button id="pvpReadyBtn" class="pvp-room-main-btn" type="button">ESTOY LISTO</button>
-        <button id="pvpLeaveBtn" class="pvp-room-main-btn ghost" type="button">SALIR DE LA SALA</button>
-      </div>
+      <div id="pvpRoomMessage" class="pvp-room-message hv-sr-only">Esperando rival...</div>
     </section>
   </div>
 </div>
@@ -668,7 +666,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <b>Pruebas / partida nueva</b>
       <p>Reinicia solo los datos locales del progreso. No borra Firebase, no borra usuarios y conserva el líder elegido.</p>
       <button id="resetLocalProgressBtn" class="btn ghost full" type="button">Nueva partida local segura</button>
-      <button id="showStatsTutorialBtn" class="btn ghost full" type="button">Ver mini tutorial de stats</button>
       <button id="startBasicTutorialFromSettingsBtn" class="btn ghost full" type="button">Practicar batalla básica</button>
       <button id="openTutorialQuickGuideBtn" class="btn ghost full" type="button">Guía rápida del tutorial</button>
       <button id="openActionsHudTunerBtn" class="btn ghost full" type="button">Ajustar HUD de acciones</button>

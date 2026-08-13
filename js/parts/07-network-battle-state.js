@@ -64,7 +64,25 @@ function setPvpLobbyReadyBadge(id,{ready=false,waiting=false}={}){
   const el=$(id);if(!el)return;
   el.classList.toggle("ready",!!ready);
   el.classList.toggle("waiting",!!waiting);
-  el.textContent=waiting?"SIN RIVAL":(ready?"LISTO":"NO LISTO");
+  el.textContent=waiting?"Sin rival":(ready?"Listo":"No listo");
+  const match=String(id||"").match(/pvpRoomPlayer(\d)Ready/);
+  if(match){
+    const player=match[1];
+    const card=document.querySelector(`[data-pvp-room-player="${player}"]`);
+    const dot=$("pvpRoomPlayer"+player+"Presence");
+    const check=$("pvpRoomPlayer"+player+"Check");
+    const connected=!waiting;
+    if(card){
+      card.classList.toggle("is-connected",connected);
+      card.classList.toggle("is-ready",!!ready);
+      card.classList.toggle("is-waiting",!!waiting);
+    }
+    if(dot){
+      dot.classList.toggle("connected",connected);
+      dot.classList.toggle("waiting",!connected);
+    }
+    if(check)check.classList.toggle("visible",!!ready&&connected);
+  }
 }
 function renderPvpLobbyRoom(pub){
   if(!pub)return;
@@ -82,8 +100,10 @@ function renderPvpLobbyRoom(pub){
   const readyBtn=$("pvpReadyBtn");
   if(readyBtn){
     readyBtn.disabled=!pvpLobbyPlayer||pub.phase!=="waiting";
-    readyBtn.textContent=myReady?"CANCELAR LISTO":"ESTOY LISTO";
     readyBtn.classList.toggle("is-ready",myReady);
+    readyBtn.setAttribute("aria-label",myReady?"Cancelar listo":"Marcar listo");
+    const label=readyBtn.querySelector("span");
+    if(label)label.textContent="LISTO";
   }
   let message="Esperando al rival...";
   if(p2Uid&&!p1Ready&&!p2Ready)message="Rival conectado. Ambos jugadores deben marcar LISTO.";
