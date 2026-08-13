@@ -850,7 +850,7 @@ async function adventureEnemyTurn(){
   if(pub.mode!=="adventure"||pub.currentPlayer!==2||pub.phase==="ended")return;
   let ai=pub.adventureAiState||null;
   // Modo aventura: la IA usa únicamente public.adventureAiState.
-  // No leer /private/player-IA porque player2 no pertenece al UID del jugador.
+  // La IA de Aventura no usa ninguna rama private/playerN: su estado canónico es public.adventureAiState.
   if(!ai)ai={deck:[],hand:[],honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:false};
   if(ai.lastTurnStarted===pub.turnKey){
     const nextTurn=(pub.turn||1)+1;

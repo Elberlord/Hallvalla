@@ -920,7 +920,7 @@ async function startBasicTutorialBattle(){
     log:["Tutorial básico: abre la mano, convoca una unidad y sigue las instrucciones del instructor."]
   };
   await set(ref(db,`games/${code}/public`),pub);
-  await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:10,maxHonor:10,lastTurnStarted:"1-1",skipFirstTurnDraw:false});
+  await set(getPvpPrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:10,maxHonor:10,lastTurnStarted:"1-1",skipFirstTurnDraw:false});
   const main=$("mainMenu");if(main)main.classList.add("hidden");
   enterGame(code,1);
 }

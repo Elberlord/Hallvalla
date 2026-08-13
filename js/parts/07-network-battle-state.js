@@ -20,6 +20,22 @@ function hallvallaSanitizeFirebaseValue(value){
   return value;
 }
 
+const PVP_PRIVATE_PLAYER_KEYS=Object.freeze({1:"player1",2:"player2"});
+function getPvpPrivatePlayerKey(player){
+  const safePlayer=Number(player);
+  const key=PVP_PRIVATE_PLAYER_KEYS[safePlayer];
+  if(!key)throw new Error(`[HallValla] Jugador PvP privado inválido: ${player}`);
+  return key;
+}
+function getPvpPrivatePlayerPath(code,player){
+  const safeCode=String(code||"").trim();
+  if(!safeCode)throw new Error("[HallValla] No se puede resolver una ruta privada PvP sin código de partida.");
+  return `games/${safeCode}/private/${getPvpPrivatePlayerKey(player)}`;
+}
+function getPvpPrivatePlayerRef(code,player){
+  return ref(db,getPvpPrivatePlayerPath(code,player));
+}
+
 function getStealthUnitsForSharedVisibility(units=publicState?.units||[]){
   return (Array.isArray(units)?units:[]).filter(u=>u&&!u.leader&&isStealthedUnit(u));
 }
@@ -262,7 +278,7 @@ async function updatePrivate(patch){
     render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();
     return true;
   }
-  await update(ref(db,`games/${gameId}/private/player${myPlayer}`),cleanPatch);
+  await update(getPvpPrivatePlayerRef(gameId,myPlayer),cleanPatch);
   await update(ref(db,`games/${gameId}/public`),summaryPatch);
   return true;
 }
@@ -372,7 +388,7 @@ async function createGame(){
   const names=principalUnits.map(u=>u.name).join(", ");
   const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[sanitizeSharedStealthText(`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`,units)]};
   await set(ref(db,`games/${code}/public`),pub);
-  await set(ref(db,`games/${code}/private/player1`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+  await set(getPvpPrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
   enterGame(code,1);
 }
 async function joinGame(){
@@ -401,7 +417,7 @@ async function joinGame(){
   const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
   const names=principalUnits.map(u=>u.name).join(", ");
   await update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":uid,"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"turnStartedAt":serverTimestamp(),"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[sanitizeSharedStealthText(`${profileName} se unió con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize}; mano inicial: 4.`,units),...(entryEffects.logs||[]).map(line=>sanitizeSharedStealthText(line,units)),...(pub.log||[])]});
-  await set(ref(db,`games/${code}/private/player-IA`),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+  await set(getPvpPrivatePlayerRef(code,2),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
   enterGame(code,2);
 }
 
@@ -656,7 +672,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   }
   try{
     await set(ref(db,`games/${code}/public`),pub);
-    await set(ref(db,`games/${code}/private/player1`),privatePayload);
+    await set(getPvpPrivatePlayerRef(code,1),privatePayload);
   }catch(error){
     try{await remove(ref(db,`games/${code}`));}catch(_){}
     if(battle.beastEvent&&beastmasterEntryCharged){
@@ -761,7 +777,7 @@ function enterGame(code,player){
     maybeStartTurn();
     maybeTriggerAdventureAI();
   }),e=>handleBattleListenerError("public:onValue",e));
-  unsubPriv=onValue(ref(db,`games/${code}/private/player${player}`),snap=>safeBattleTick("private",()=>{
+  unsubPriv=onValue(getPvpPrivatePlayerRef(code,player),snap=>safeBattleTick("private",()=>{
     const val=snap.val();
     if(!val){
       privateState=null;
