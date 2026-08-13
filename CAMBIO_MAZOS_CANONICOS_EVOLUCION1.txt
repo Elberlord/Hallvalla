@@ -1,0 +1,10 @@
+HallValla · CANONICAL EVOLUTION 1
+
+- Mapa 2+ recicla los mazos canónicos aprobados del Mapa 1 por clase.
+- Archer=Cielo Cerrado; Warrior=Muralla de Hierro; Mage=Fortaleza Arcana; Cavalry=Tormenta de la Estepa; Axe=Festín de Cuervos.
+- Rareza de reemplazo automático: M1-M2 Básica, M3 Rara, M4 Épica, M5 Mítica, M6+ Legendaria.
+- Semidiós/Astral nunca entran por score adaptativo.
+- Swaps: M2=10, M3=12, M4=14, M5=16, M6+=18, sujetos al núcleo protegido.
+- Principales del encuentro se escogen por utilidad contra el perfil del humano, conservando el Principal firma.
+- Nuevos scores de counter consideran rango, tanque/guardia, caballería/movilidad, sigilo, swarm, burst, magia, curación, buffs, especiales, HP/AGI altos y control.
+- Bestias siguen fuera del pool adaptativo de líderes normales.

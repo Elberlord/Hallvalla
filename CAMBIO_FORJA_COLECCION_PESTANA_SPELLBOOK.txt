@@ -1,0 +1,20 @@
+HALLVALLA · FORGE3 · COLECCION + SPELLBOOK EN PESTAÑA
+
+Cambios:
+- La colección conserva el mismo layout visual de catálogo antes y después de derrotar al Hechicero guardián.
+- Nuevo filtro: Todas las cartas / Cartas en posesión / Cartas no poseídas.
+- El constructor de mazo queda oculto por defecto.
+- Nueva pestaña medieval "Spellbook" en el borde derecho; abre/cierra el segundo pergamino sin redimensionar ni desplazar la colección.
+- El contador de la pestaña se actualiza con el tamaño del mazo y señala visualmente cuando el mazo es válido.
+- El estado del mazo, materiales, Personaje Principal, lista del mazo y Guardar viven dentro del pergamino lateral.
+- PvP / Firebase battle state / combate no fueron modificados en esta intervención.
+
+Archivos modificados:
+- index.html
+- styles.css
+- js/parts/13-collection-deck-forge.js
+- js/parts/15-settings-tuners-events.js
+- js/bootstrap-loader.js (solo versión/cache busting)
+
+Archivo agregado:
+- CAMBIO_FORJA_COLECCION_PESTANA_SPELLBOOK.txt
