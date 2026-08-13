@@ -692,6 +692,7 @@ IA enemiga: táctica máxima desde el primer duelo · ${battle.aiStyle||"Sin res
 Recompensa al ganar: ${getBattleRewardLabel(battle)}.`;
 }
 function openOnlineLobby(){
+  if(typeof clearPvpLobbyRoomState==="function")clearPvpLobbyRoomState({hideRoom:true,resetJoin:true});
   $("mainMenu").classList.add("hidden");
   $("onlineLobby").classList.remove("hidden");
   $("gameShell").classList.add("hidden");

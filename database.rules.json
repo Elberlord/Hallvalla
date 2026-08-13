@@ -4,16 +4,21 @@
       "$gameId": {
         "public": {
           ".read": "auth != null",
-          ".write": "auth != null && ((!data.exists() && newData.child('playerSlots/player1Uid').val() === auth.uid) || data.child('playerSlots/player1Uid').val() === auth.uid || data.child('playerSlots/player2Uid').val() === auth.uid || (!data.child('playerSlots/player2Uid').exists() && newData.child('playerSlots/player2Uid').val() === auth.uid && newData.child('playerSlots/player1Uid').val() === data.child('playerSlots/player1Uid').val()))"
+          ".write": "auth != null && ((!data.exists() && newData.child('playerSlots').child('player1Uid').val() === auth.uid) || data.child('playerSlots').child('player1Uid').val() === auth.uid || data.child('playerSlots').child('player2Uid').val() === auth.uid)",
+          "playerSlots": {
+            "player2Uid": {
+              ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid && root.child('games').child($gameId).child('public').child('phase').val() === 'waiting') || data.val() === auth.uid)"
+            }
+          }
         },
         "private": {
           "player1": {
             ".read": "auth != null && data.child('ownerUid').val() === auth.uid",
-            ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots/player1Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
+            ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player1Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
           },
           "player2": {
             ".read": "auth != null && data.child('ownerUid').val() === auth.uid",
-            ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots/player2Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
+            ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player2Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
           }
         }
       }

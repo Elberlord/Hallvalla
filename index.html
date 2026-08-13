@@ -269,6 +269,33 @@
     </button>
 
     <div id="lobbyStatus" class="visual-status">Listo para jugar.</div>
+
+    <section id="pvpRoomPanel" class="pvp-room-panel hidden" aria-live="polite" aria-label="Lobby de duelo">
+      <div class="pvp-room-kicker">SALA DE DUELO</div>
+      <div class="pvp-room-code-line">
+        <span>CÓDIGO</span>
+        <strong id="pvpRoomCode">----</strong>
+        <button id="pvpCopyCodeBtn" class="pvp-room-small-btn" type="button">COPIAR</button>
+      </div>
+      <div class="pvp-room-players">
+        <article class="pvp-room-player" data-pvp-room-player="1">
+          <span class="pvp-room-side">JUGADOR 1</span>
+          <strong id="pvpRoomPlayer1Name">Esperando...</strong>
+          <em id="pvpRoomPlayer1Ready" class="pvp-room-ready-state">NO LISTO</em>
+        </article>
+        <div class="pvp-room-vs">VS</div>
+        <article class="pvp-room-player" data-pvp-room-player="2">
+          <span class="pvp-room-side">JUGADOR 2</span>
+          <strong id="pvpRoomPlayer2Name">Esperando rival...</strong>
+          <em id="pvpRoomPlayer2Ready" class="pvp-room-ready-state waiting">SIN RIVAL</em>
+        </article>
+      </div>
+      <div id="pvpRoomMessage" class="pvp-room-message">Esperando rival...</div>
+      <div class="pvp-room-actions">
+        <button id="pvpReadyBtn" class="pvp-room-main-btn" type="button">ESTOY LISTO</button>
+        <button id="pvpLeaveBtn" class="pvp-room-main-btn ghost" type="button">SALIR DE LA SALA</button>
+      </div>
+    </section>
   </div>
 </div>
 
