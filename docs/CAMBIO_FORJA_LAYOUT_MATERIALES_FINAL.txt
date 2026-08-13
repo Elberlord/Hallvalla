@@ -1,0 +1,1 @@
+Ajuste final de layout solicitado por el usuario. Se incorporó exactamente la configuración de Ajustar Forja suministrada, incluyendo la posición/escala final del arte de Materiales de creación y los desplazamientos individuales de Básica, Épica, Gloriosa, Mítica, Legendaria y Semidiós. No se modificaron gameplay, PvP, combate, bootstrap, progreso ni lógica de colección.
