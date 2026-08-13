@@ -82,7 +82,7 @@
     mainClose:{x:0,y:0,scale:100,width:100,height:100},
     parchmentStage:{x:0,y:0,scale:100,width:100,height:100},
     parchment:{x:-600,y:-420,scale:100,width:100,height:170},
-    filterGroup:{x:4,y:41,scale:100,width:100,height:100},
+    filterGroup:{x:19,y:6,scale:75,width:100,height:100},
     search:{x:0,y:0,scale:100,width:100,height:100},
     type:{x:0,y:0,scale:100,width:100,height:100},
     ownership:{x:0,y:0,scale:100,width:100,height:100},
