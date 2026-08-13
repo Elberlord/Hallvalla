@@ -1,0 +1,6 @@
+Etapa 2 - corrección dirigida de prueba PvP
+
+1. Crear partida ya no entra inmediatamente al tablero. El host permanece en el lobby, el código se muestra en el campo de código y se espera a que J2 reclame el slot. Al conectarse J2, ambos clientes entran al duelo.
+2. La sala nace con phase=waiting y J2 la cambia a phase=active al unirse.
+3. William Wallace y Hua Lan declaran explícitamente fieldFigureAssetBucket=special para evitar el 404 de assets/field_figures/basic/*.webp.
+4. No se modificó Forja, balance ni reglas de Firebase.
