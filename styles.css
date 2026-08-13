@@ -20373,3 +20373,26 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   .pvp-room-presence{width:10px;height:10px;}
   .pvp-room-ready-check{width:22px;height:22px;font-size:14px;}
 }
+
+
+/* STAGE2 FINAL PATCH · visible copy button + tighter lobby alignment */
+.pvp-room-panel{top:19.4%!important;bottom:12.4%!important;left:9.35%!important;right:9.35%!important;}
+.pvp-room-artwrap{width:100%!important;max-width:100%!important;aspect-ratio:1672/941!important;}
+.pvp-room-code-line{left:44.2%!important;top:42.65%!important;gap:12px!important;transform:translateX(-50%)!important;}
+.pvp-room-code-line strong{font-size:clamp(28px,3.15vw,46px)!important;letter-spacing:.16em!important;}
+.pvp-room-copy-btn{position:absolute!important;left:55.8%!important;top:40.85%!important;width:auto!important;height:auto!important;min-width:112px!important;padding:10px 18px!important;border-radius:12px!important;border:1px solid rgba(224,183,92,.72)!important;background:linear-gradient(180deg,#a97621,#5a3b15 58%,#35210b)!important;color:#f8e6b1!important;font:900 16px/1 Georgia,serif!important;letter-spacing:.06em!important;box-shadow:0 8px 18px rgba(0,0,0,.36), inset 0 1px rgba(255,234,189,.25)!important;cursor:pointer!important;}
+.pvp-room-copy-btn:hover{filter:brightness(1.08)!important;box-shadow:0 0 0 2px rgba(235,198,107,.28)!important,0 8px 18px rgba(0,0,0,.36)!important;}
+.pvp-room-copy-btn:focus-visible{outline:2px solid rgba(235,198,107,.92)!important;outline-offset:2px;}
+.pvp-room-player.player1{left:15.25%!important;top:52.95%!important;}
+.pvp-room-player.player2{left:56.0%!important;top:52.95%!important;}
+.pvp-room-player strong{top:46%!important;font-size:clamp(18px,1.7vw,31px)!important;}
+.pvp-room-presence{right:7.8%!important;top:26.5%!important;width:15px!important;height:15px!important;}
+.pvp-room-ready-check{bottom:8.2%!important;width:30px!important;height:30px!important;}
+.pvp-room-ready-btn{left:24.2%!important;top:80.0%!important;width:27.0%!important;height:10.6%!important;}
+.pvp-room-leave-btn{left:52.9%!important;top:80.0%!important;width:26.1%!important;height:10.6%!important;}
+@media(max-width:900px){
+  .pvp-room-panel{top:21.1%!important;bottom:14.4%!important;left:8.8%!important;right:8.8%!important;}
+  .pvp-room-copy-btn{min-width:84px!important;padding:7px 12px!important;font-size:12px!important;top:41.2%!important;left:56.3%!important;}
+  .pvp-room-code-line strong{font-size:clamp(20px,2.8vw,30px)!important;}
+  .pvp-room-player strong{font-size:clamp(13px,1.25vw,20px)!important;}
+}
