@@ -1,9 +1,10 @@
-/* HallValla FORGE5CTRL · editor directo total de la Forja */
+/* HallValla FORGE6CTRL · editor directo individual de la Forja */
 (()=>{
   'use strict';
 
-  const STORAGE_KEY='hallvalla_forge_direct_tuner_v5_totalcontrol';
-  const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v2';
+  /* Clave nueva: no reutiliza posiciones del editor anterior que podían desplazar contenedores completos. */
+  const STORAGE_KEY='hallvalla_forge_direct_tuner_v6_individual';
+  const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v3';
   const $=id=>document.getElementById(id);
 
   const GROUPS={
@@ -17,62 +18,75 @@
     window:{label:'Ventana'}
   };
 
+  /* direct:false = se puede editar desde el selector, pero un clic normal NO lo selecciona.
+     Esto evita volver a mover un contenedor padre entero por accidente. */
   const TARGETS={
-    parchment:{group:'layout',label:'Pergamino principal',selector:'#hvForgeParchmentLayer'},
-    parchmentStage:{group:'layout',label:'Área del pergamino',selector:'#deckBuilderPanel .deckbuilder-parchment-stage'},
-    filterGroup:{group:'filters',label:'Todos los filtros',selector:'#deckBuilderPanel #deckFilterGroup'},
-    search:{group:'filters',label:'Buscador',selector:'#deckBuilderPanel #deckSearchInput'},
-    type:{group:'filters',label:'Filtro Tipo',selector:'#deckBuilderPanel #deckTypeFilter'},
-    ownership:{group:'filters',label:'Filtro Posesión',selector:'#deckBuilderPanel #deckOwnershipFilter'},
-    rarity:{group:'filters',label:'Filtro Rareza',selector:'#deckBuilderPanel #deckRarityFilter'},
-    power:{group:'filters',label:'Filtro Poder',selector:'#deckBuilderPanel #deckBattlePowerFilter'},
-    sort:{group:'filters',label:'Filtro Orden',selector:'#deckBuilderPanel #deckBattlePowerSort'},
+    forgeWindow:{group:'window',label:'Ventana completa de Forja',selector:'#deckBuilderPanel .deckbuilder-card',direct:false},
+    mainClose:{group:'window',label:'Cerrar Forja',selector:'#deckBuilderPanel #closeDeckBuilderBtn',direct:true},
 
-    collectionSection:{group:'collection',label:'Área de colección',selector:'#deckBuilderPanel .deckbuilder-collection'},
-    title:{group:'collection',label:'Cartas disponibles',selector:'#deckBuilderPanel .deckbuilder-collection h3'},
-    cards:{group:'collection',label:'Bloque de cartas',selector:'#deckBuilderPanel #deckCollectionGrid'},
+    parchmentStage:{group:'layout',label:'Área completa del pergamino (grupo)',selector:'#deckBuilderPanel .deckbuilder-parchment-stage',direct:false},
+    parchment:{group:'layout',label:'Imagen del pergamino principal',selector:'#hvForgeParchmentLayer',direct:true},
 
-    materials:{group:'materials',label:'Imagen Materiales',selector:'#deckBuilderPanel #craftMaterialPanel'},
-    material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(1)'},
-    material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(2)'},
-    material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(3)'},
-    material4:{group:'materials',label:'Material Mítica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(4)'},
-    material5:{group:'materials',label:'Material Legendaria',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(5)'},
-    material6:{group:'materials',label:'Material Semidiós',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(6)'},
+    filterGroup:{group:'filters',label:'TODOS los filtros juntos',selector:'#deckBuilderPanel #deckFilterGroup',direct:false},
+    search:{group:'filters',label:'Buscador',selector:'#deckBuilderPanel #deckSearchInput',direct:true},
+    type:{group:'filters',label:'Filtro Tipo',selector:'#deckBuilderPanel #deckTypeFilter',direct:true},
+    ownership:{group:'filters',label:'Filtro Todas / posesión',selector:'#deckBuilderPanel #deckOwnershipFilter',direct:true},
+    rarity:{group:'filters',label:'Filtro Rareza',selector:'#deckBuilderPanel #deckRarityFilter',direct:true},
+    power:{group:'filters',label:'Filtro Poder',selector:'#deckBuilderPanel #deckBattlePowerFilter',direct:true},
+    sort:{group:'filters',label:'Filtro Orden',selector:'#deckBuilderPanel #deckBattlePowerSort',direct:true},
 
-    pager:{group:'navigation',label:'Paginación completa',selector:'#deckBuilderPanel #deckCollectionPager'},
-    prev:{group:'navigation',label:'Anterior',selector:'#deckBuilderPanel #deckCollectionPrevBtn'},
-    page:{group:'navigation',label:'Contador de página',selector:'#deckBuilderPanel #deckCollectionPageInfo'},
-    next:{group:'navigation',label:'Siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn'},
+    collectionSection:{group:'collection',label:'Colección completa (grupo)',selector:'#deckBuilderPanel .deckbuilder-collection',direct:false},
+    title:{group:'collection',label:'Texto Cartas disponibles',selector:'#deckBuilderPanel .deckbuilder-collection h3',direct:true},
+    pageTitle:{group:'collection',label:'Contador pequeño de cartas',selector:'#deckBuilderPanel #deckCollectionPageText',direct:true},
+    cards:{group:'collection',label:'TODAS las cartas visibles (grupo)',selector:'#deckBuilderPanel #deckCollectionGrid',direct:false},
 
-    drawer:{group:'spellbook',label:'Pergamino Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawer'},
-    drawerTab:{group:'spellbook',label:'Pestaña Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawerTab'},
-    drawerClose:{group:'spellbook',label:'Cerrar Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawerClose'},
-    deckCounter:{group:'spellbook',label:'Contador Spellbook',selector:'#deckBuilderPanel #deckCountText'},
-    principalGroup:{group:'spellbook',label:'Principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots'},
-    principal1:{group:'spellbook',label:'Principal 1',selector:'#deckBuilderPanel #deckPrincipalSlots .deck-principal-selector:nth-child(1)'},
-    principal2:{group:'spellbook',label:'Principal 2',selector:'#deckBuilderPanel #deckPrincipalSlots .deck-principal-selector:nth-child(2)'},
-    principal3:{group:'spellbook',label:'Principal 3',selector:'#deckBuilderPanel #deckPrincipalSlots .deck-principal-selector:nth-child(3)'},
-    deckCards:{group:'spellbook',label:'Cartas del Spellbook',selector:'#deckBuilderPanel #currentDeckList'},
+    materialsGroup:{group:'materials',label:'Materiales completo (grupo)',selector:'#deckBuilderPanel #craftMaterialPanel',direct:false},
+    materialsArt:{group:'materials',label:'IMAGEN Materiales de creación',selector:'#deckBuilderPanel #hvCraftMaterialArtLayer',direct:true},
+    material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:1"]',direct:true},
+    material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:2"]',direct:true},
+    material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:3"]',direct:true},
+    material4:{group:'materials',label:'Material Mítica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:4"]',direct:true},
+    material5:{group:'materials',label:'Material Legendaria',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:5"]',direct:true},
+    material6:{group:'materials',label:'Material Semidiós',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:6"]',direct:true},
 
-    actionGroup:{group:'actions',label:'Todos los botones',selector:'#deckBuilderPanel #deckBuilderActionGroup'},
-    save:{group:'actions',label:'Guardar',selector:'#deckBuilderPanel #saveDeckBtn'},
-    dust:{group:'actions',label:'Convertir sobrantes',selector:'#deckBuilderPanel #dustAllSurplusCornerBtn'},
+    pager:{group:'navigation',label:'Paginación completa (grupo)',selector:'#deckBuilderPanel #deckCollectionPager',direct:false},
+    prev:{group:'navigation',label:'Botón Anterior',selector:'#deckBuilderPanel #deckCollectionPrevBtn',direct:true},
+    page:{group:'navigation',label:'Texto Página',selector:'#deckBuilderPanel #deckCollectionPageInfo',direct:true},
+    next:{group:'navigation',label:'Botón Siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn',direct:true},
 
-    mainClose:{group:'window',label:'Cerrar Forja',selector:'#deckBuilderPanel #closeDeckBuilderBtn'}
+    drawerGroup:{group:'spellbook',label:'Spellbook completo (grupo)',selector:'#deckBuilderPanel #deckBuilderDrawer',direct:false},
+    drawerArt:{group:'spellbook',label:'IMAGEN del pergamino Spellbook',selector:'#deckBuilderPanel #hvSpellbookArtLayer',direct:true},
+    drawerTab:{group:'spellbook',label:'Pestaña Spellbook completa',selector:'#deckBuilderPanel #deckBuilderDrawerTab',direct:true},
+    drawerTabLabel:{group:'spellbook',label:'Texto SPELLBOOK de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerTab > span',direct:true},
+    drawerTabCount:{group:'spellbook',label:'Contador de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerCount',direct:true},
+    drawerClose:{group:'spellbook',label:'X cerrar Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawerClose',direct:true},
+    deckCounter:{group:'spellbook',label:'Contador superior del Spellbook',selector:'#deckBuilderPanel #deckCountText',direct:true},
+    principalGroup:{group:'spellbook',label:'Todos los principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots',direct:false},
+    deckCards:{group:'spellbook',label:'Todas las cartas del Spellbook (grupo)',selector:'#deckBuilderPanel #currentDeckList',direct:false},
+
+    actionGroup:{group:'actions',label:'TODOS los botones juntos',selector:'#deckBuilderPanel #deckBuilderActionGroup',direct:false},
+    save:{group:'actions',label:'Botón Guardar',selector:'#deckBuilderPanel #saveDeckBtn',direct:true},
+    dust:{group:'actions',label:'Botón Convertir sobrantes',selector:'#deckBuilderPanel #dustAllSurplusCornerBtn',direct:true}
   };
+
+  /* Cada casilla visible se puede seleccionar de manera individual. */
+  for(let i=1;i<=14;i++)TARGETS[`collectionCard${i}`]={group:'collection',label:`Carta visible ${i}`,selector:`#deckBuilderPanel #deckCollectionGrid > :nth-child(${i})`,direct:true};
+  for(let i=1;i<=5;i++)TARGETS[`principal${i}`]={group:'spellbook',label:`Principal / ranura ${i}`,selector:`#deckBuilderPanel #deckPrincipalSlots > :nth-child(${i})`,direct:true};
+  for(let i=1;i<=21;i++)TARGETS[`deckCard${i}`]={group:'spellbook',label:`Carta / ranura de mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i})`,direct:true};
 
   const defaultValue=()=>({x:0,y:0,scale:100,width:100,height:100});
   const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,defaultValue()]));
   let state=loadState();
-  let activeGroup='collection';
-  let activeKey='cards';
+  let activeGroup='filters';
+  let activeKey='search';
   let panelOpen=false;
   let drag=null;
   let shell=null;
   let body=null;
   let pointerSelectWired=false;
   let keyboardWired=false;
+  let contentObserver=null;
+  let mutationScheduled=false;
 
   function loadState(){
     const base=defaultState();
@@ -105,6 +119,26 @@
     return layer;
   }
 
+  function ensureArtLayers(){
+    ensureParchmentLayer();
+    const drawer=$('deckBuilderDrawer');
+    if(drawer&&!$('hvSpellbookArtLayer')){
+      const art=document.createElement('div');
+      art.id='hvSpellbookArtLayer';
+      art.className='hv-spellbook-art-layer';
+      art.setAttribute('aria-hidden','true');
+      drawer.prepend(art);
+    }
+    const materialArt=document.querySelector('#deckBuilderPanel #craftMaterialPanel .craft-material-art');
+    if(materialArt&&!$('hvCraftMaterialArtLayer')){
+      const art=document.createElement('div');
+      art.id='hvCraftMaterialArtLayer';
+      art.className='hv-craft-material-art-layer';
+      art.setAttribute('aria-hidden','true');
+      materialArt.prepend(art);
+    }
+  }
+
   function clearTunerStyles(el){
     if(!el)return;
     for(const prop of ['translate','scale','width','height','min-height','max-height','transform-origin'])el.style.removeProperty(prop);
@@ -117,8 +151,8 @@
     if(w>2&&h>2)return {width:w,height:h};
     const rect=el.getBoundingClientRect();
     w=rect.width;h=rect.height;
-    if(!(w>2))w=key==='parchment'?1120:key==='cards'?760:160;
-    if(!(h>2))h=key==='parchment'?640:key==='cards'?240:40;
+    if(!(w>2))w=160;
+    if(!(h>2))h=40;
     el.dataset[attrW]=String(w);el.dataset[attrH]=String(h);
     return {width:w,height:h};
   }
@@ -154,7 +188,7 @@
   }
 
   function applyAll(){
-    ensureParchmentLayer();
+    ensureArtLayers();
     for(const key of Object.keys(TARGETS))applyTarget(key);
     refreshSelectionClasses();
     syncControls();
@@ -162,10 +196,11 @@
 
   function refreshSelectionClasses(){
     document.body.classList.toggle('hv-forge-edit-active',panelOpen&&isForgeOpen());
+    document.querySelectorAll('[data-hv-forge-tuner-name]').forEach(el=>{delete el.dataset.hvForgeTunerName;el.classList.remove('hv-forge-tuner-selected');});
     for(const key of Object.keys(TARGETS)){
       const el=targetElement(key);if(!el)continue;
+      if(TARGETS[key].direct!==false)el.dataset.hvForgeTunerName=TARGETS[key].label;
       el.classList.toggle('hv-forge-tuner-selected',panelOpen&&key===activeKey);
-      el.dataset.hvForgeTunerName=TARGETS[key].label;
     }
   }
 
@@ -189,30 +224,49 @@
     syncControls();
   }
 
+  function isVisible(el){
+    if(!el||!el.getClientRects().length)return false;
+    const cs=getComputedStyle(el);
+    return cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity)!==0;
+  }
+
   function findClickedTarget(node){
     if(!(node instanceof Element))return null;
     const candidates=Object.entries(TARGETS)
+      .filter(([,cfg])=>cfg.direct!==false)
       .map(([key,cfg])=>({key,cfg,el:targetElement(key)}))
-      .filter(item=>item.el&&item.el.getClientRects().length>0&&getComputedStyle(item.el).display!=='none'&&getComputedStyle(item.el).visibility!=='hidden'&&item.el.contains(node));
-    if(!candidates.length){
-      const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
-      if(stage&&stage.contains(node))return 'parchment';
-      return null;
+      .filter(item=>isVisible(item.el)&&item.el.contains(node));
+    if(candidates.length){
+      candidates.sort((a,b)=>{
+        const ar=a.el.getBoundingClientRect(),br=b.el.getBoundingClientRect();
+        const aa=Math.max(1,ar.width*ar.height),ba=Math.max(1,br.width*br.height);
+        if(aa!==ba)return aa-ba;
+        return b.el.compareDocumentPosition(a.el)&Node.DOCUMENT_POSITION_CONTAINED_BY?1:-1;
+      });
+      return candidates[0].key;
     }
-    candidates.sort((a,b)=>{
-      const ar=a.el.getBoundingClientRect(),br=b.el.getBoundingClientRect();
-      const aa=Math.max(1,ar.width*ar.height),ba=Math.max(1,br.width*br.height);
-      return aa-ba;
-    });
-    return candidates[0].key;
+    /* Clic en una zona vacía del pergamino: selecciona SOLO la imagen, nunca el contenedor completo. */
+    const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
+    if(stage&&stage.contains(node))return 'parchment';
+    return null;
+  }
+
+  function chosenGroupContains(node){
+    const cfg=TARGETS[activeKey];
+    if(!cfg||cfg.direct!==false)return false;
+    const el=targetElement(activeKey);
+    return !!(el&&node instanceof Element&&el.contains(node));
   }
 
   function wireDirectSelection(){
     if(pointerSelectWired)return;pointerSelectWired=true;
     document.addEventListener('pointerdown',event=>{
       if(!panelOpen||!isForgeOpen()||event.target.closest('#hvForgeDirectTuner'))return;
-      const key=findClickedTarget(event.target);if(!key)return;
-      selectKey(key);
+      /* Si el usuario eligió deliberadamente un grupo en el selector, respétalo. De lo contrario,
+         un clic siempre selecciona la pieza individual más pequeña bajo el puntero. */
+      const key=chosenGroupContains(event.target)?activeKey:findClickedTarget(event.target);
+      if(!key)return;
+      if(key!==activeKey)selectKey(key);
       event.preventDefault();event.stopPropagation();
       const value=state[key]||defaultValue();
       drag={key,startX:event.clientX,startY:event.clientY,baseX:Number(value.x)||0,baseY:Number(value.y)||0};
@@ -232,7 +286,7 @@
 
   function setValue(field,value){
     if(!state[activeKey])return;
-    const limits=field==='x'?[-1200,1200]:field==='y'?[-900,900]:[20,300];
+    const limits=field==='x'?[-1400,1400]:field==='y'?[-1000,1000]:[20,300];
     state[activeKey][field]=Math.max(limits[0],Math.min(limits[1],Number(value)||0));
     saveState();applyTarget(activeKey);syncControls();
   }
@@ -304,11 +358,11 @@
           <div id="hvForgeTunerScroll" class="hv-forge-tuner-scroll">
             <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
             <select id="hvForgeTargetSelect" class="hv-forge-target-select" aria-label="Elemento a editar"></select>
-            <div id="hvForgeSelectedName" class="hv-forge-selected-name">Bloque de cartas</div>
-            <div class="hv-forge-editor-help">Clic + arrastre: mover · <b>+</b>/<b>−</b>: tamaño · Flechas: ajuste fino</div>
+            <div id="hvForgeSelectedName" class="hv-forge-selected-name">Buscador</div>
+            <div class="hv-forge-editor-help"><b>Clic + arrastre</b>: mueve SOLO lo tocado · <b>+</b>/<b>−</b>: tamaño · Flechas: ajuste fino. Para mover un conjunto, elige explícitamente el elemento que dice <b>(grupo)</b>.</div>
             ${['x','y','scale','width','height'].map(field=>{
               const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
-              const min=(field==='x'?-1200:field==='y'?-900:20),max=(field==='x'?1200:field==='y'?900:300);
+              const min=(field==='x'?-1400:field==='y'?-1000:20),max=(field==='x'?1400:field==='y'?1000:300);
               return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:-5">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="1"><button type="button" data-nudge="${field}:5">+</button></div></div>`;
             }).join('')}
           </div>
@@ -327,7 +381,7 @@
       panelOpen=body.classList.contains('hidden');
       body.classList.toggle('hidden',!panelOpen);
       $('hvForgeTunerToggle').textContent=panelOpen?'EDITANDO':'EDITAR FORJA';
-      refreshSelectionClasses();syncControls();
+      ensureArtLayers();refreshSelectionClasses();syncControls();
       requestAnimationFrame(()=>{const box=$('hvForgeTunerScroll'),range=$('hvForgeScrollRange');if(box&&range){const max=Math.max(0,box.scrollHeight-box.clientHeight);range.value=max?String(Math.round(box.scrollTop/max*100)):'0';range.disabled=max<=0;}});
     };
     const closeEditor=()=>{panelOpen=false;body.classList.add('hidden');$('hvForgeTunerToggle').textContent='EDITAR FORJA';refreshSelectionClasses();};
@@ -357,16 +411,26 @@
     makePanelMovable();wireDirectSelection();wireKeyboard();syncControls();
   }
 
+  function scheduleReapply(){
+    if(mutationScheduled)return;
+    mutationScheduled=true;
+    requestAnimationFrame(()=>{mutationScheduled=false;if(isForgeOpen())applyAll();});
+  }
+
   function updateVisibility(){
     if(!shell)return;
     const open=isForgeOpen();shell.classList.toggle('hidden',!open);
-    if(open){ensureParchmentLayer();applyAll();refreshTargetSelect();}
+    if(open){ensureArtLayers();applyAll();refreshTargetSelect();}
     else{panelOpen=false;body?.classList.add('hidden');$('hvForgeTunerToggle')&&($('hvForgeTunerToggle').textContent='EDITAR FORJA');refreshSelectionClasses();}
   }
 
   createTuner();
   const forge=$('deckBuilderPanel');
-  if(forge)new MutationObserver(updateVisibility).observe(forge,{attributes:true,attributeFilter:['class'],subtree:false});
+  if(forge){
+    new MutationObserver(updateVisibility).observe(forge,{attributes:true,attributeFilter:['class'],subtree:false});
+    contentObserver=new MutationObserver(scheduleReapply);
+    contentObserver.observe(forge,{childList:true,subtree:true});
+  }
   window.addEventListener('resize',()=>{
     for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}
     applyAll();

@@ -20037,3 +20037,42 @@ html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-
     width:min(360px,84vw) !important;
   }
 }
+
+/* HALLVALLA FORGE6 · edición individual real: las imágenes son capas independientes */
+#deckBuilderPanel.collection-forge-unlocked #deckBuilderDrawer{
+  background:none !important;
+}
+#deckBuilderPanel #hvSpellbookArtLayer{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  background:url("assets/ui/deck_forge/spellbook_drawer_asset.webp") center/100% 100% no-repeat !important;
+  pointer-events:none !important;
+}
+#deckBuilderPanel #deckBuilderDrawer > *:not(#hvSpellbookArtLayer){z-index:2 !important;}
+body.hv-forge-edit-active #deckBuilderPanel #hvSpellbookArtLayer{pointer-events:auto !important;cursor:grab !important;}
+
+#deckBuilderPanel .craft-material-art{
+  background:none !important;
+}
+#deckBuilderPanel #hvCraftMaterialArtLayer{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  background:url("assets/ui/deck_forge/materiales_creacion_asset.webp") center/100% 100% no-repeat !important;
+  pointer-events:none !important;
+}
+#deckBuilderPanel .craft-material-node{z-index:2 !important;}
+body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{pointer-events:auto !important;cursor:grab !important;}
+
+/* Las piezas seleccionables individuales reciben el cursor; los grupos parentales no interceptan clics. */
+body.hv-forge-edit-active #deckBuilderPanel [data-hv-forge-tuner-name]{cursor:grab !important;user-select:none !important;}
+body.hv-forge-edit-active #deckBuilderPanel .deck-filter-group,
+body.hv-forge-edit-active #deckBuilderPanel .deckbuilder-collection,
+body.hv-forge-edit-active #deckBuilderPanel #deckCollectionGrid,
+body.hv-forge-edit-active #deckBuilderPanel #deckCollectionPager,
+body.hv-forge-edit-active #deckBuilderPanel #deckBuilderActionGroup,
+body.hv-forge-edit-active #deckBuilderPanel #deckPrincipalSlots,
+body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
+  cursor:default !important;
+}
