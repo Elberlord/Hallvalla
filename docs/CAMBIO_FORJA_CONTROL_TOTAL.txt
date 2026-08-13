@@ -1,0 +1,14 @@
+HallValla - Forja / control total de layout
+
+Cambios de esta entrega:
+- El editor de Forja ahora permite seleccionar directamente los elementos visibles con clic y arrastrarlos con el mouse mientras EDITAR FORJA está activo.
+- Teclas + y - cambian el tamaño del elemento seleccionado. Flechas mueven fino; Shift+flechas mueve más rápido.
+- Se añadió selector Grupo + Elemento en el editor.
+- Se añadió el grupo "Todos los filtros" para mover buscador y todos los dropdowns juntos, manteniendo además control individual de cada filtro.
+- Se añadieron controles para pergamino, colección, cartas, materiales y sus seis indicadores, paginación, Spellbook, pestaña, contador, Principales, cartas del mazo, grupo de botones y cierres.
+- Guardar y Convertir sobrantes salieron del drawer y ahora forman un grupo de botones independiente en la pantalla principal.
+- Materiales de creación conserva su asset WEBP como objeto independiente movible/redimensionable.
+- El editor usa una nueva clave de layout y no reutiliza offsets antiguos, evitando que abrir el control reubique la interfaz por sí solo.
+- El editor dejó de forzar position/transform/width de los componentes en estado 100%; solo aplica cambios cuando el usuario realmente los modifica.
+
+No se modificó bootstrap, PvP ni módulos de combate.

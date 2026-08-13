@@ -1,63 +1,78 @@
-/* HallValla FORGE1CTRL2FIX1 · calibrador directo aislado de la Forja */
+/* HallValla FORGE5CTRL · editor directo total de la Forja */
 (()=>{
   'use strict';
 
-  const STORAGE_KEY='hallvalla_forge1_direct_tuner_v3_userlayout2';
-  const PANEL_KEY='hallvalla_forge1_direct_tuner_panel_v1';
+  const STORAGE_KEY='hallvalla_forge_direct_tuner_v5_totalcontrol';
+  const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v2';
   const $=id=>document.getElementById(id);
 
   const GROUPS={
-    parchment:{label:'Pergamino'},
-    cards:{label:'Cartas'},
+    layout:{label:'Pergaminos / layout'},
     filters:{label:'Filtros'},
+    collection:{label:'Colección'},
+    materials:{label:'Materiales'},
     navigation:{label:'Navegación'},
-    other:{label:'Otros'}
+    spellbook:{label:'Spellbook'},
+    actions:{label:'Botones'},
+    window:{label:'Ventana'}
   };
 
   const TARGETS={
-    parchment:{group:'parchment',label:'Pergamino',selector:'#hvForgeParchmentLayer',kind:'layer'},
-    cards:{group:'cards',label:'Bloque de cartas',selector:'#deckBuilderPanel #deckCollectionGrid'},
+    parchment:{group:'layout',label:'Pergamino principal',selector:'#hvForgeParchmentLayer'},
+    parchmentStage:{group:'layout',label:'Área del pergamino',selector:'#deckBuilderPanel .deckbuilder-parchment-stage'},
+    filterGroup:{group:'filters',label:'Todos los filtros',selector:'#deckBuilderPanel #deckFilterGroup'},
     search:{group:'filters',label:'Buscador',selector:'#deckBuilderPanel #deckSearchInput'},
     type:{group:'filters',label:'Filtro Tipo',selector:'#deckBuilderPanel #deckTypeFilter'},
     ownership:{group:'filters',label:'Filtro Posesión',selector:'#deckBuilderPanel #deckOwnershipFilter'},
     rarity:{group:'filters',label:'Filtro Rareza',selector:'#deckBuilderPanel #deckRarityFilter'},
     power:{group:'filters',label:'Filtro Poder',selector:'#deckBuilderPanel #deckBattlePowerFilter'},
     sort:{group:'filters',label:'Filtro Orden',selector:'#deckBuilderPanel #deckBattlePowerSort'},
-    pager:{group:'navigation',label:'Paginador completo',selector:'#deckBuilderPanel #deckCollectionPager'},
+
+    collectionSection:{group:'collection',label:'Área de colección',selector:'#deckBuilderPanel .deckbuilder-collection'},
+    title:{group:'collection',label:'Cartas disponibles',selector:'#deckBuilderPanel .deckbuilder-collection h3'},
+    cards:{group:'collection',label:'Bloque de cartas',selector:'#deckBuilderPanel #deckCollectionGrid'},
+
+    materials:{group:'materials',label:'Imagen Materiales',selector:'#deckBuilderPanel #craftMaterialPanel'},
+    material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(1)'},
+    material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(2)'},
+    material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(3)'},
+    material4:{group:'materials',label:'Material Mítica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(4)'},
+    material5:{group:'materials',label:'Material Legendaria',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(5)'},
+    material6:{group:'materials',label:'Material Semidiós',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node:nth-child(6)'},
+
+    pager:{group:'navigation',label:'Paginación completa',selector:'#deckBuilderPanel #deckCollectionPager'},
     prev:{group:'navigation',label:'Anterior',selector:'#deckBuilderPanel #deckCollectionPrevBtn'},
     page:{group:'navigation',label:'Contador de página',selector:'#deckBuilderPanel #deckCollectionPageInfo'},
     next:{group:'navigation',label:'Siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn'},
-    title:{group:'other',label:'Cartas disponibles',selector:'#deckBuilderPanel .deckbuilder-collection h3'},
-    materials:{group:'other',label:'Materiales',selector:'#deckBuilderPanel #craftMaterialPanel'},
-    save:{group:'other',label:'Guardar',selector:'#deckBuilderPanel #saveDeckBtn'}
+
+    drawer:{group:'spellbook',label:'Pergamino Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawer'},
+    drawerTab:{group:'spellbook',label:'Pestaña Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawerTab'},
+    drawerClose:{group:'spellbook',label:'Cerrar Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawerClose'},
+    deckCounter:{group:'spellbook',label:'Contador Spellbook',selector:'#deckBuilderPanel #deckCountText'},
+    principalGroup:{group:'spellbook',label:'Principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots'},
+    principal1:{group:'spellbook',label:'Principal 1',selector:'#deckBuilderPanel #deckPrincipalSlots .deck-principal-selector:nth-child(1)'},
+    principal2:{group:'spellbook',label:'Principal 2',selector:'#deckBuilderPanel #deckPrincipalSlots .deck-principal-selector:nth-child(2)'},
+    principal3:{group:'spellbook',label:'Principal 3',selector:'#deckBuilderPanel #deckPrincipalSlots .deck-principal-selector:nth-child(3)'},
+    deckCards:{group:'spellbook',label:'Cartas del Spellbook',selector:'#deckBuilderPanel #currentDeckList'},
+
+    actionGroup:{group:'actions',label:'Todos los botones',selector:'#deckBuilderPanel #deckBuilderActionGroup'},
+    save:{group:'actions',label:'Guardar',selector:'#deckBuilderPanel #saveDeckBtn'},
+    dust:{group:'actions',label:'Convertir sobrantes',selector:'#deckBuilderPanel #dustAllSurplusCornerBtn'},
+
+    mainClose:{group:'window',label:'Cerrar Forja',selector:'#deckBuilderPanel #closeDeckBuilderBtn'}
   };
 
-  const USER_LAYOUT={
-    parchment:{x:-23,y:21,scale:100,width:100,height:168},
-    cards:{x:-24,y:51,scale:100,width:100,height:100},
-    search:{x:42,y:54,scale:80,width:100,height:100},
-    type:{x:5,y:54,scale:80,width:100,height:100},
-    ownership:{x:-8,y:54,scale:80,width:100,height:100},
-    rarity:{x:-20,y:55,scale:80,width:100,height:100},
-    power:{x:-50,y:55,scale:80,width:100,height:100},
-    sort:{x:-70,y:55,scale:80,width:100,height:100},
-    pager:{x:-22,y:92,scale:100,width:100,height:100},
-    prev:{x:0,y:0,scale:100,width:100,height:100},
-    page:{x:0,y:0,scale:100,width:100,height:100},
-    next:{x:0,y:0,scale:100,width:100,height:100},
-    title:{x:-9,y:206,scale:75,width:100,height:100},
-    materials:{x:0,y:0,scale:100,width:100,height:100},
-    save:{x:0,y:0,scale:100,width:100,height:100}
-  };
-  const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{x:0,y:0,scale:100,width:100,height:100,...(USER_LAYOUT[key]||{})}]));
+  const defaultValue=()=>({x:0,y:0,scale:100,width:100,height:100});
+  const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,defaultValue()]));
   let state=loadState();
-  let activeGroup='cards';
+  let activeGroup='collection';
   let activeKey='cards';
   let panelOpen=false;
   let drag=null;
   let shell=null;
   let body=null;
   let pointerSelectWired=false;
+  let keyboardWired=false;
 
   function loadState(){
     const base=defaultState();
@@ -73,7 +88,7 @@
     }catch(_){ }
     return base;
   }
-  function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
+  function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){} }
   function isForgeOpen(){const panel=$('deckBuilderPanel');return !!(panel&&!panel.classList.contains('hidden'));}
   function targetElement(key){const cfg=TARGETS[key];return cfg?document.querySelector(cfg.selector):null;}
 
@@ -90,57 +105,51 @@
     return layer;
   }
 
-  function ensureNaturalMetrics(key,el){
+  function clearTunerStyles(el){
+    if(!el)return;
+    for(const prop of ['translate','scale','width','height','min-height','max-height','transform-origin'])el.style.removeProperty(prop);
+  }
+
+  function naturalMetrics(key,el){
     if(!el)return {width:1,height:1};
     const attrW='hvTunerNaturalW',attrH='hvTunerNaturalH';
     let w=Number(el.dataset[attrW]),h=Number(el.dataset[attrH]);
     if(w>2&&h>2)return {width:w,height:h};
-
-    const props=['width','height','min-height','max-width','max-height','transform'];
-    const saved=Object.fromEntries(props.map(p=>[p,[el.style.getPropertyValue(p),el.style.getPropertyPriority(p)]]));
-    props.forEach(p=>el.style.removeProperty(p));
     const rect=el.getBoundingClientRect();
-    for(const p of props){const [value,priority]=saved[p];if(value)el.style.setProperty(p,value,priority||'');}
     w=rect.width;h=rect.height;
-    if(!(w>2))w=key==='parchment'?1120:key==='cards'?720:150;
-    if(!(h>2))h=key==='parchment'?640:key==='cards'?150:34;
+    if(!(w>2))w=key==='parchment'?1120:key==='cards'?760:160;
+    if(!(h>2))h=key==='parchment'?640:key==='cards'?240:40;
     el.dataset[attrW]=String(w);el.dataset[attrH]=String(h);
     return {width:w,height:h};
   }
 
   function applyTarget(key){
     const el=targetElement(key);if(!el)return;
-    const value=state[key]||defaultState()[key];
-    const metrics=ensureNaturalMetrics(key,el);
-    const width=Math.max(20,Math.min(250,Number(value.width)||100));
-    const height=Math.max(20,Math.min(250,Number(value.height)||100));
-    const scale=Math.max(20,Math.min(250,Number(value.scale)||100));
+    const value=state[key]||defaultValue();
+    const x=Math.round(Number(value.x)||0),y=Math.round(Number(value.y)||0);
+    const scale=Math.max(20,Math.min(300,Number(value.scale)||100));
+    const width=Math.max(20,Math.min(300,Number(value.width)||100));
+    const height=Math.max(20,Math.min(300,Number(value.height)||100));
 
-    el.style.setProperty('--hv-tuner-x',`${Number(value.x)||0}px`);
-    el.style.setProperty('--hv-tuner-y',`${Number(value.y)||0}px`);
-    el.style.setProperty('--hv-tuner-scale',String(scale/100));
-    el.style.setProperty('transform',`translate(${Number(value.x)||0}px,${Number(value.y)||0}px) scale(${scale/100})`,'important');
+    if(x||y)el.style.setProperty('translate',`${x}px ${y}px`,'important');
+    else el.style.removeProperty('translate');
+    if(scale!==100)el.style.setProperty('scale',String(scale/100),'important');
+    else el.style.removeProperty('scale');
     el.style.setProperty('transform-origin','center center','important');
 
-    if(key==='parchment'){
-      el.style.setProperty('width',`${Math.round(metrics.width*width/100)}px`,'important');
-      el.style.setProperty('height',`${Math.round(metrics.height*height/100)}px`,'important');
-      el.style.setProperty('left','50%','important');
-      el.style.setProperty('top','50%','important');
-      el.style.setProperty('margin-left',`${-Math.round(metrics.width*width/200)}px`,'important');
-      el.style.setProperty('margin-top',`${-Math.round(metrics.height*height/200)}px`,'important');
+    if(width!==100||height!==100){
+      const metrics=naturalMetrics(key,el);
+      if(width!==100)el.style.setProperty('width',`${Math.max(2,Math.round(metrics.width*width/100))}px`,'important');
+      else el.style.removeProperty('width');
+      if(height!==100){
+        el.style.setProperty('height',`${Math.max(2,Math.round(metrics.height*height/100))}px`,'important');
+        el.style.setProperty('min-height','0px','important');
+        el.style.setProperty('max-height','none','important');
+      }else{
+        el.style.removeProperty('height');el.style.removeProperty('min-height');el.style.removeProperty('max-height');
+      }
     }else{
-      el.style.setProperty('width',`${Math.round(metrics.width*width/100)}px`,'important');
-      el.style.setProperty('height',`${Math.round(metrics.height*height/100)}px`,'important');
-      el.style.setProperty('min-height','0px','important');
-      el.style.setProperty('max-height','none','important');
-    }
-    if(key==='parchment'){
-      el.style.setProperty('position','absolute','important');
-      el.style.setProperty('z-index','0','important');
-    }else{
-      el.style.setProperty('position','relative','important');
-      el.style.setProperty('z-index',key===activeKey&&panelOpen?'80':'20','important');
+      el.style.removeProperty('width');el.style.removeProperty('height');el.style.removeProperty('min-height');el.style.removeProperty('max-height');
     }
   }
 
@@ -152,12 +161,21 @@
   }
 
   function refreshSelectionClasses(){
-    for(const [key,cfg] of Object.entries(TARGETS)){
+    document.body.classList.toggle('hv-forge-edit-active',panelOpen&&isForgeOpen());
+    for(const key of Object.keys(TARGETS)){
       const el=targetElement(key);if(!el)continue;
-      el.classList.toggle('hv-forge-tuner-group-candidate',panelOpen&&cfg.group===activeGroup);
       el.classList.toggle('hv-forge-tuner-selected',panelOpen&&key===activeKey);
-      el.dataset.hvForgeTunerName=cfg.label;
+      el.dataset.hvForgeTunerName=TARGETS[key].label;
     }
+  }
+
+  function keysForGroup(group){return Object.keys(TARGETS).filter(key=>TARGETS[key].group===group);}
+  function refreshTargetSelect(){
+    const select=$('hvForgeTargetSelect');if(!select)return;
+    const keys=keysForGroup(activeGroup);
+    select.innerHTML=keys.map(key=>`<option value="${key}">${TARGETS[key].label}</option>`).join('');
+    if(!keys.includes(activeKey)&&keys.length)activeKey=keys[0];
+    select.value=activeKey;
   }
 
   function selectKey(key){
@@ -165,29 +183,26 @@
     activeKey=key;
     activeGroup=TARGETS[key].group;
     const group=$('hvForgeGroupSelect');if(group)group.value=activeGroup;
-    const label=$('hvForgeSelectedName');if(label)label.textContent=TARGETS[key].label;
-    applyAll();
+    refreshTargetSelect();
+    const label=$('hvForgeSelectedName');if(label)label.textContent=TARGETS[activeKey].label;
+    refreshSelectionClasses();
+    syncControls();
   }
 
   function findClickedTarget(node){
     if(!(node instanceof Element))return null;
-    /* El pergamino es una capa puramente visual (pointer-events:none). Para moverlo,
-       se usa cualquier zona vacía del escenario mientras el grupo Pergamino está activo. */
-    if(activeGroup==='parchment'){
-      const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
-      const overUi=!!node.closest('input,select,option,button,textarea,a,[contenteditable="true"],.deck-mini-card,.deckbuilder-filters,.deckbuilder-collection');
-      return stage&&stage.contains(node)&&!overUi?'parchment':null;
-    }
     const candidates=Object.entries(TARGETS)
-      .filter(([,cfg])=>cfg.group===activeGroup)
-      .map(([key,cfg])=>({key,el:targetElement(key),cfg}))
-      .filter(item=>item.el&&item.el.contains(node));
-    if(!candidates.length)return null;
-    // Prefer the most specific (smallest DOM box), except cards where any card selects the block.
-    if(activeGroup==='cards')return 'cards';
+      .map(([key,cfg])=>({key,cfg,el:targetElement(key)}))
+      .filter(item=>item.el&&item.el.getClientRects().length>0&&getComputedStyle(item.el).display!=='none'&&getComputedStyle(item.el).visibility!=='hidden'&&item.el.contains(node));
+    if(!candidates.length){
+      const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
+      if(stage&&stage.contains(node))return 'parchment';
+      return null;
+    }
     candidates.sort((a,b)=>{
       const ar=a.el.getBoundingClientRect(),br=b.el.getBoundingClientRect();
-      return ar.width*ar.height-br.width*br.height;
+      const aa=Math.max(1,ar.width*ar.height),ba=Math.max(1,br.width*br.height);
+      return aa-ba;
     });
     return candidates[0].key;
   }
@@ -197,35 +212,48 @@
     document.addEventListener('pointerdown',event=>{
       if(!panelOpen||!isForgeOpen()||event.target.closest('#hvForgeDirectTuner'))return;
       const key=findClickedTarget(event.target);if(!key)return;
-      const interactive=!!event.target.closest('input,select,option,button,textarea,a,[contenteditable="true"]');
-      /* Los controles reales deben seguir funcionando aun con el tuner abierto.
-         Clic normal = usar el input/select/botón. Shift + arrastrar = moverlo. */
       selectKey(key);
-      if(interactive&&!event.shiftKey)return;
       event.preventDefault();event.stopPropagation();
-      const value=state[key];
-      drag={key,startX:event.clientX,startY:event.clientY,baseX:Number(value.x)||0,baseY:Number(value.y)||0,moved:false};
+      const value=state[key]||defaultValue();
+      drag={key,startX:event.clientX,startY:event.clientY,baseX:Number(value.x)||0,baseY:Number(value.y)||0};
+      document.documentElement.classList.add('hv-forge-dragging');
     },true);
     document.addEventListener('pointermove',event=>{
       if(!drag)return;
-      const dx=event.clientX-drag.startX,dy=event.clientY-drag.startY;
-      if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;
-      state[drag.key].x=Math.round(drag.baseX+dx);
-      state[drag.key].y=Math.round(drag.baseY+dy);
+      state[drag.key].x=Math.round(drag.baseX+event.clientX-drag.startX);
+      state[drag.key].y=Math.round(drag.baseY+event.clientY-drag.startY);
       applyTarget(drag.key);syncControls();
+      event.preventDefault();
     },true);
-    const finish=()=>{if(!drag)return;saveState();drag=null;};
+    const finish=()=>{if(!drag)return;saveState();drag=null;document.documentElement.classList.remove('hv-forge-dragging');};
     document.addEventListener('pointerup',finish,true);
     document.addEventListener('pointercancel',finish,true);
   }
 
   function setValue(field,value){
     if(!state[activeKey])return;
-    const limits=field==='x'?[-900,900]:field==='y'?[-700,700]:[20,250];
+    const limits=field==='x'?[-1200,1200]:field==='y'?[-900,900]:[20,300];
     state[activeKey][field]=Math.max(limits[0],Math.min(limits[1],Number(value)||0));
     saveState();applyTarget(activeKey);syncControls();
   }
   function nudge(field,delta){setValue(field,(Number(state[activeKey]?.[field])||0)+delta);}
+
+  function wireKeyboard(){
+    if(keyboardWired)return;keyboardWired=true;
+    document.addEventListener('keydown',event=>{
+      if(!panelOpen||!isForgeOpen()||event.target.closest?.('#hvForgeDirectTuner input, #hvForgeDirectTuner select'))return;
+      let handled=true;
+      const step=event.shiftKey?10:2;
+      if(event.key==='+'||event.key==='='||event.code==='NumpadAdd')nudge('scale',5);
+      else if(event.key==='-'||event.key==='_'||event.code==='NumpadSubtract')nudge('scale',-5);
+      else if(event.key==='ArrowLeft')nudge('x',-step);
+      else if(event.key==='ArrowRight')nudge('x',step);
+      else if(event.key==='ArrowUp')nudge('y',-step);
+      else if(event.key==='ArrowDown')nudge('y',step);
+      else handled=false;
+      if(handled){event.preventDefault();event.stopPropagation();}
+    },true);
+  }
 
   function syncControls(){
     const value=state[activeKey];if(!value)return;
@@ -238,8 +266,16 @@
     const label=$('hvForgeSelectedName');if(label)label.textContent=TARGETS[activeKey]?.label||'';
   }
 
-  function resetSelected(){state[activeKey]={...defaultState()[activeKey]};saveState();applyAll();}
-  function resetAll(){state=defaultState();saveState();for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}applyAll();}
+  function resetSelected(){
+    const el=targetElement(activeKey);if(el){clearTunerStyles(el);delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}
+    state[activeKey]=defaultValue();saveState();applyAll();
+  }
+  function resetAll(){
+    for(const key of Object.keys(TARGETS)){
+      const el=targetElement(key);if(el){clearTunerStyles(el);delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}
+    }
+    state=defaultState();saveState();applyAll();
+  }
   function copyJson(button){
     const payload=JSON.stringify(state,null,2);
     const done=()=>{if(!button)return;const old=button.textContent;button.textContent='✓ COPIADO';setTimeout(()=>button.textContent=old,900);};
@@ -262,17 +298,18 @@
     if($('hvForgeDirectTuner'))return;
     shell=document.createElement('div');shell.id='hvForgeDirectTuner';shell.className='hv-forge-direct-tuner hidden';
     shell.innerHTML=`
-      <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">AJUSTAR FORJA</button></div>
+      <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">EDITAR FORJA</button></div>
       <section id="hvForgeTunerBody" class="hv-forge-tuner-body hidden">
         <div class="hv-forge-tuner-scroll-wrap">
           <div id="hvForgeTunerScroll" class="hv-forge-tuner-scroll">
             <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
+            <select id="hvForgeTargetSelect" class="hv-forge-target-select" aria-label="Elemento a editar"></select>
             <div id="hvForgeSelectedName" class="hv-forge-selected-name">Bloque de cartas</div>
+            <div class="hv-forge-editor-help">Clic + arrastre: mover · <b>+</b>/<b>−</b>: tamaño · Flechas: ajuste fino</div>
             ${['x','y','scale','width','height'].map(field=>{
               const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
-              const min=(field==='x'?-900:field==='y'?-700:20),max=(field==='x'?900:field==='y'?700:250),step=field==='x'||field==='y'?1:1;
-              const minus=-5,plus=5;
-              return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:${minus}">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="${step}"><button type="button" data-nudge="${field}:${plus}">+</button></div></div>`;
+              const min=(field==='x'?-1200:field==='y'?-900:20),max=(field==='x'?1200:field==='y'?900:300);
+              return `<div class="hv-forge-control-row"><div class="hv-forge-control-label"><b>${title}</b><output data-out="${field}"></output></div><div class="hv-forge-control-line"><button type="button" data-nudge="${field}:-5">−</button><input data-field="${field}" type="range" min="${min}" max="${max}" step="1"><button type="button" data-nudge="${field}:5">+</button></div></div>`;
             }).join('')}
           </div>
           <div class="hv-forge-custom-scroll" aria-label="Desplazar controles">
@@ -285,13 +322,25 @@
       </section>`;
     document.body.appendChild(shell);
     body=$('hvForgeTunerBody');
-    $('hvForgeTunerToggle').onclick=()=>{panelOpen=body.classList.contains('hidden');body.classList.toggle('hidden',!panelOpen);refreshSelectionClasses();syncControls();requestAnimationFrame(()=>{const box=$('hvForgeTunerScroll'),range=$('hvForgeScrollRange');if(box&&range){const max=Math.max(0,box.scrollHeight-box.clientHeight);range.value=max?String(Math.round(box.scrollTop/max*100)):'0';range.disabled=max<=0;}});};
-    $('hvForgeTunerClose').onclick=()=>{panelOpen=false;body.classList.add('hidden');refreshSelectionClasses();};
-    $('hvForgeTunerDone').onclick=()=>{panelOpen=false;body.classList.add('hidden');refreshSelectionClasses();};
+
+    $('hvForgeTunerToggle').onclick=()=>{
+      panelOpen=body.classList.contains('hidden');
+      body.classList.toggle('hidden',!panelOpen);
+      $('hvForgeTunerToggle').textContent=panelOpen?'EDITANDO':'EDITAR FORJA';
+      refreshSelectionClasses();syncControls();
+      requestAnimationFrame(()=>{const box=$('hvForgeTunerScroll'),range=$('hvForgeScrollRange');if(box&&range){const max=Math.max(0,box.scrollHeight-box.clientHeight);range.value=max?String(Math.round(box.scrollTop/max*100)):'0';range.disabled=max<=0;}});
+    };
+    const closeEditor=()=>{panelOpen=false;body.classList.add('hidden');$('hvForgeTunerToggle').textContent='EDITAR FORJA';refreshSelectionClasses();};
+    $('hvForgeTunerClose').onclick=closeEditor;
+    $('hvForgeTunerDone').onclick=closeEditor;
+
     $('hvForgeGroupSelect').value=activeGroup;
-    $('hvForgeGroupSelect').onchange=event=>{activeGroup=event.currentTarget.value;const first=Object.keys(TARGETS).find(key=>TARGETS[key].group===activeGroup);if(first)selectKey(first);};
+    $('hvForgeGroupSelect').onchange=event=>{activeGroup=event.currentTarget.value;const first=keysForGroup(activeGroup)[0];if(first)selectKey(first);};
+    refreshTargetSelect();
+    $('hvForgeTargetSelect').onchange=event=>selectKey(event.currentTarget.value);
     shell.querySelectorAll('[data-field]').forEach(input=>input.addEventListener('input',()=>setValue(input.dataset.field,input.value)));
     shell.querySelectorAll('[data-nudge]').forEach(button=>button.addEventListener('click',()=>{const [field,delta]=button.dataset.nudge.split(':');nudge(field,Number(delta));}));
+
     const scrollBox=$('hvForgeTunerScroll'),scrollRange=$('hvForgeScrollRange'),scrollUp=$('hvForgeScrollUp'),scrollDown=$('hvForgeScrollDown');
     const syncCustomScroll=()=>{if(!scrollBox||!scrollRange)return;const max=Math.max(0,scrollBox.scrollHeight-scrollBox.clientHeight);scrollRange.value=max?String(Math.round(scrollBox.scrollTop/max*100)):'0';scrollRange.disabled=max<=0;};
     const setCustomScrollFromRange=()=>{if(!scrollBox||!scrollRange)return;const max=Math.max(0,scrollBox.scrollHeight-scrollBox.clientHeight);scrollBox.scrollTop=max*(Number(scrollRange.value)||0)/100;};
@@ -299,24 +348,28 @@
     scrollBox?.addEventListener('scroll',syncCustomScroll,{passive:true});
     scrollUp?.addEventListener('click',()=>scrollBox?.scrollBy({top:-90,behavior:'smooth'}));
     scrollDown?.addEventListener('click',()=>scrollBox?.scrollBy({top:90,behavior:'smooth'}));
-    new ResizeObserver(syncCustomScroll).observe(scrollBox);
+    if(typeof ResizeObserver==='function'&&scrollBox)new ResizeObserver(syncCustomScroll).observe(scrollBox);
     requestAnimationFrame(syncCustomScroll);
+
     $('hvForgeResetSelected').onclick=resetSelected;
     $('hvForgeResetAll').onclick=resetAll;
     $('hvForgeCopyJson').onclick=event=>copyJson(event.currentTarget);
-    makePanelMovable();wireDirectSelection();syncControls();
+    makePanelMovable();wireDirectSelection();wireKeyboard();syncControls();
   }
 
   function updateVisibility(){
     if(!shell)return;
     const open=isForgeOpen();shell.classList.toggle('hidden',!open);
-    if(open){ensureParchmentLayer();applyAll();}
-    else{panelOpen=false;body?.classList.add('hidden');refreshSelectionClasses();}
+    if(open){ensureParchmentLayer();applyAll();refreshTargetSelect();}
+    else{panelOpen=false;body?.classList.add('hidden');$('hvForgeTunerToggle')&&($('hvForgeTunerToggle').textContent='EDITAR FORJA');refreshSelectionClasses();}
   }
 
   createTuner();
   const forge=$('deckBuilderPanel');
   if(forge)new MutationObserver(updateVisibility).observe(forge,{attributes:true,attributeFilter:['class'],subtree:false});
-  window.addEventListener('resize',()=>{for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}applyAll();});
+  window.addEventListener('resize',()=>{
+    for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}
+    applyAll();
+  });
   updateVisibility();
 })();

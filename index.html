@@ -500,46 +500,48 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <div class="deckbuilder-layout">
       <div class="deckbuilder-parchment-stage">
       <aside class="deckbuilder-filters">
-        <div class="deck-search-field">
-          <input id="deckSearchInput" class="deck-search" placeholder="Buscar: hacha, asesino, nombre, ID..." autocomplete="off">
-          <small class="deck-search-hint">Nombre · ID · arma · clase · texto</small>
+        <div id="deckFilterGroup" class="deck-filter-group">
+          <div class="deck-search-field">
+            <input id="deckSearchInput" class="deck-search" placeholder="Buscar: hacha, asesino, nombre, ID..." autocomplete="off">
+            <small class="deck-search-hint">Nombre · ID · arma · clase · texto</small>
+          </div>
+          <select id="deckTypeFilter" class="deck-select">
+            <option value="all">Todos los tipos</option>
+            <option value="unit">Invocaciones</option>
+            <option value="spell">Magias</option>
+            <option value="trap">Trampas</option>
+            <option value="equipment">Equipo</option>
+          </select>
+          <select id="deckOwnershipFilter" class="deck-select">
+            <option value="all">Todas las cartas</option>
+            <option value="owned">Cartas en posesión</option>
+            <option value="unowned">Cartas no poseídas</option>
+          </select>
+          <select id="deckRarityFilter" class="deck-select">
+            <option value="all">Todas las rarezas</option>
+            <option value="basic">Básica</option>
+            <option value="epic">Épica</option>
+            <option value="glorious">Gloriosa</option>
+            <option value="mythic">Mítica</option>
+            <option value="legendary">Legendaria</option>
+            <option value="demigod">Semidiós</option>
+          </select>
+          <select id="deckBattlePowerFilter" class="deck-select">
+            <option value="all">Todo poder de batalla</option>
+            <option value="dominant">PB 90–100 · Dominante</option>
+            <option value="elite">PB 80–89 · Élite</option>
+            <option value="gold">PB 70–79 · Oro</option>
+            <option value="silver">PB 55–69 · Plata</option>
+            <option value="bronze">PB 40–54 · Bronce</option>
+            <option value="initiation">PB 0–39 · Iniciación</option>
+            <option value="unrated">Magias y trampas · Sin PB</option>
+          </select>
+          <select id="deckBattlePowerSort" class="deck-select">
+            <option value="default">Orden: coste y nombre</option>
+            <option value="power_desc">PB: mayor a menor</option>
+            <option value="power_asc">PB: menor a mayor</option>
+          </select>
         </div>
-        <select id="deckTypeFilter" class="deck-select">
-          <option value="all">Todos los tipos</option>
-          <option value="unit">Invocaciones</option>
-          <option value="spell">Magias</option>
-          <option value="trap">Trampas</option>
-          <option value="equipment">Equipo</option>
-        </select>
-        <select id="deckOwnershipFilter" class="deck-select">
-          <option value="all">Todas las cartas</option>
-          <option value="owned">Cartas en posesión</option>
-          <option value="unowned">Cartas no poseídas</option>
-        </select>
-        <select id="deckRarityFilter" class="deck-select">
-          <option value="all">Todas las rarezas</option>
-          <option value="basic">Básica</option>
-          <option value="epic">Épica</option>
-          <option value="glorious">Gloriosa</option>
-          <option value="mythic">Mítica</option>
-          <option value="legendary">Legendaria</option>
-          <option value="demigod">Semidiós</option>
-        </select>
-        <select id="deckBattlePowerFilter" class="deck-select">
-          <option value="all">Todo poder de batalla</option>
-          <option value="dominant">PB 90–100 · Dominante</option>
-          <option value="elite">PB 80–89 · Élite</option>
-          <option value="gold">PB 70–79 · Oro</option>
-          <option value="silver">PB 55–69 · Plata</option>
-          <option value="bronze">PB 40–54 · Bronce</option>
-          <option value="initiation">PB 0–39 · Iniciación</option>
-          <option value="unrated">Magias y trampas · Sin PB</option>
-        </select>
-        <select id="deckBattlePowerSort" class="deck-select">
-          <option value="default">Orden: coste y nombre</option>
-          <option value="power_desc">PB: mayor a menor</option>
-          <option value="power_asc">PB: menor a mayor</option>
-        </select>
         <div id="craftMaterialPanel" class="craft-material-panel"></div>
       </aside>
       <section class="deckbuilder-collection">
@@ -552,6 +554,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         </div>
       </section>
       </div>
+      <div id="deckBuilderActionGroup" class="deck-builder-action-group" aria-label="Acciones de Forja">
+        <button id="dustAllSurplusCornerBtn" class="craft-corner-dust" type="button" disabled>Convertir sobrantes</button>
+        <button id="saveDeckBtn" class="btn primary deck-save-main" type="button">Guardar</button>
+      </div>
       <button id="deckBuilderDrawerTab" class="deck-builder-drawer-tab" type="button" aria-controls="deckBuilderDrawer" aria-expanded="false">
         <span>Spellbook</span><b id="deckBuilderDrawerCount">0/21</b>
       </button>
@@ -562,7 +568,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
           <b id="deckCountText">0/21 · Principales 0/1</b>
           <span id="deckValidText">Mazo incompleto</span>
           <div id="craftMaterialSummary" class="craft-material-summary" aria-live="polite"></div>
-          <button id="dustAllSurplusCornerBtn" class="craft-corner-dust" type="button" disabled>Convertir sobrantes</button>
         </div>
         <div id="deckPrincipalSlots" class="deck-principal-slots" aria-label="Tres Personajes Principales">
           <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★1</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 1</span><strong>Sin seleccionar</strong><small>Marca la estrella de una unidad del mazo.</small></div></div>
@@ -570,7 +575,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
           <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★3</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 3</span><strong>Sin seleccionar</strong><small>Debe ser una unidad diferente.</small></div></div>
         </div>
         <div id="currentDeckList" class="current-deck-list"></div>
-        <button id="saveDeckBtn" class="btn primary full deck-save-scroll" type="button">Guardar y salir</button>
       </section>
     </div>
   </div>
