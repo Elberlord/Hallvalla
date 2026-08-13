@@ -997,7 +997,7 @@ function renderDeckBuilder(){
     if(powerSort==="power_asc")return (Number.isFinite(pa)?pa:101)-(Number.isFinite(pb)?pb:101)||String(a.name||"").localeCompare(String(b.name||""));
     return (a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||""));
   });
-  const pageSize=DECK_BUILDER_COLLECTION_PAGE_SIZE;
+  const pageSize=window.innerWidth<=980?8:DECK_BUILDER_COLLECTION_PAGE_SIZE;
   const totalPages=Math.max(1,Math.ceil(cards.length/pageSize));
   deckBuilderCollectionPage=Math.max(0,Math.min(deckBuilderCollectionPage,totalPages-1));
   const pageStart=deckBuilderCollectionPage*pageSize;
