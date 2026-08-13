@@ -13,7 +13,7 @@
     collection:{label:'Colección'},
     materials:{label:'Materiales'},
     navigation:{label:'Navegación'},
-    spellbook:{label:'Spellbook'},
+    spellbook:{label:'Mazo'},
     actions:{label:'Botones'},
     window:{label:'Ventana'}
   };
@@ -41,28 +41,28 @@
     cards:{group:'collection',label:'TODAS las cartas visibles (grupo)',selector:'#deckBuilderPanel #deckCollectionGrid',direct:false},
 
     materialsGroup:{group:'materials',label:'Materiales completo (grupo)',selector:'#deckBuilderPanel #craftMaterialPanel',direct:false},
-    materialsArt:{group:'materials',label:'IMAGEN Materiales de creación',selector:'#deckBuilderPanel #hvCraftMaterialArtLayer',direct:true},
-    material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:1"]',direct:true},
-    material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:2"]',direct:true},
-    material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:3"]',direct:true},
-    material4:{group:'materials',label:'Material Mítica',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:4"]',direct:true},
-    material5:{group:'materials',label:'Material Legendaria',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:5"]',direct:true},
-    material6:{group:'materials',label:'Material Semidiós',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-node[style*="--craft-slot:6"]',direct:true},
+    materialsArt:{group:'materials',label:'IMAGEN Materiales de creación',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-art',direct:true},
+    material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialBasic',direct:true},
+    material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialEpic',direct:true},
+    material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialGlorious',direct:true},
+    material4:{group:'materials',label:'Material Mítica',selector:'#deckBuilderPanel #craftMaterialMythic',direct:true},
+    material5:{group:'materials',label:'Material Legendaria',selector:'#deckBuilderPanel #craftMaterialLegendary',direct:true},
+    material6:{group:'materials',label:'Material Semidiós',selector:'#deckBuilderPanel #craftMaterialDemigod',direct:true},
 
     pager:{group:'navigation',label:'Paginación completa (grupo)',selector:'#deckBuilderPanel #deckCollectionPager',direct:false},
     prev:{group:'navigation',label:'Botón Anterior',selector:'#deckBuilderPanel #deckCollectionPrevBtn',direct:true},
     page:{group:'navigation',label:'Texto Página',selector:'#deckBuilderPanel #deckCollectionPageInfo',direct:true},
     next:{group:'navigation',label:'Botón Siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn',direct:true},
 
-    drawerGroup:{group:'spellbook',label:'Spellbook completo (grupo)',selector:'#deckBuilderPanel #deckBuilderDrawer',direct:false},
-    drawerArt:{group:'spellbook',label:'IMAGEN del pergamino Spellbook',selector:'#deckBuilderPanel #hvSpellbookArtLayer',direct:true},
-    drawerTab:{group:'spellbook',label:'Pestaña Spellbook completa',selector:'#deckBuilderPanel #deckBuilderDrawerTab',direct:true},
-    drawerTabLabel:{group:'spellbook',label:'Texto SPELLBOOK de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerTab > span',direct:true},
+    drawerGroup:{group:'spellbook',label:'Mazo completo (grupo)',selector:'#deckBuilderPanel #deckBuilderDrawer',direct:false},
+    drawerArt:{group:'spellbook',label:'IMAGEN del pergamino Mazo',selector:'#deckBuilderPanel #hvSpellbookArtLayer',direct:true},
+    drawerTab:{group:'spellbook',label:'Pestaña Mazo completa',selector:'#deckBuilderPanel #deckBuilderDrawerTab',direct:true},
+    drawerTabLabel:{group:'spellbook',label:'Texto MAZO de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerTab > span',direct:true},
     drawerTabCount:{group:'spellbook',label:'Contador de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerCount',direct:true},
-    drawerClose:{group:'spellbook',label:'X cerrar Spellbook',selector:'#deckBuilderPanel #deckBuilderDrawerClose',direct:true},
-    deckCounter:{group:'spellbook',label:'Contador superior del Spellbook',selector:'#deckBuilderPanel #deckCountText',direct:true},
+    drawerClose:{group:'spellbook',label:'X cerrar Mazo',selector:'#deckBuilderPanel #deckBuilderDrawerClose',direct:true},
+    deckCounter:{group:'spellbook',label:'Contador superior del Mazo',selector:'#deckBuilderPanel #deckCountText',direct:true},
     principalGroup:{group:'spellbook',label:'Todos los principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots',direct:false},
-    deckCards:{group:'spellbook',label:'Todas las cartas del Spellbook (grupo)',selector:'#deckBuilderPanel #currentDeckList',direct:false},
+    deckCards:{group:'spellbook',label:'Todas las cartas del Mazo (grupo)',selector:'#deckBuilderPanel #currentDeckList',direct:false},
 
     actionGroup:{group:'actions',label:'TODOS los botones juntos',selector:'#deckBuilderPanel #deckBuilderActionGroup',direct:false},
     save:{group:'actions',label:'Botón Guardar',selector:'#deckBuilderPanel #saveDeckBtn',direct:true},
@@ -75,7 +75,23 @@
   for(let i=1;i<=21;i++)TARGETS[`deckCard${i}`]={group:'spellbook',label:`Carta / ranura de mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i})`,direct:true};
 
   const defaultValue=()=>({x:0,y:0,scale:100,width:100,height:100});
-  const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,defaultValue()]));
+  /* Configuración visual entregada por el usuario el 13-08-2026. Solo fija defaults;
+     cualquier ajuste ya guardado en localStorage conserva prioridad. */
+  const USER_LAYOUT={
+    forgeWindow:{x:-22,y:2,scale:100,width:100,height:100},
+    parchment:{x:-600,y:-420,scale:100,width:100,height:170},
+    filterGroup:{x:4,y:41,scale:100,width:100,height:100},
+    collectionSection:{x:-31,y:4,scale:80,width:100,height:100},
+    materialsGroup:{x:-116,y:-2,scale:100,width:100,height:100},
+    materialsArt:{x:-82,y:-172,scale:50,width:285,height:180},
+    drawerArt:{x:-2,y:4,scale:100,width:100,height:100},
+    drawerClose:{x:-320,y:0,scale:100,width:100,height:100},
+    deckCounter:{x:59,y:26,scale:80,width:130,height:100},
+    deckCards:{x:62,y:-13,scale:65,width:100,height:100},
+    actionGroup:{x:840,y:-15,scale:85,width:100,height:100},
+    principal1:{x:100,y:-14,scale:50,width:100,height:100}
+  };
+  const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{...defaultValue(),...(USER_LAYOUT[key]||{})}]));
   let state=loadState();
   let activeGroup='filters';
   let activeKey='search';

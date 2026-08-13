@@ -490,7 +490,8 @@ function renderCraftMaterialPanel(){
     const cost=getCraftCostByRarityKey(k);
     const label=getCraftRarityLabel(k);
     const can=amount>=cost;
-    return `<div class="craft-material-node ${k} ${can?"can-create":"cant-create"}" style="--craft-slot:${index+1};" title="${escapeHtml(`${label}: tienes ${amount}. Crear cuesta ${cost}.`)}"><span class="craft-material-value">${amount}</span><small class="craft-material-label">${escapeHtml(label)}</small></div>`;
+    const stableId={basic:"craftMaterialBasic",epic:"craftMaterialEpic",glorious:"craftMaterialGlorious",mythic:"craftMaterialMythic",legendary:"craftMaterialLegendary",demigod:"craftMaterialDemigod"}[k]||`craftMaterial${index+1}`;
+    return `<div id="${stableId}" class="craft-material-node ${k} ${can?"can-create":"cant-create"}" data-craft-slot="${index+1}" title="${escapeHtml(`${label}: tienes ${amount}. Crear cuesta ${cost}.`)}"><span id="${stableId}Value" class="craft-material-value">${amount}</span><small id="${stableId}Label" class="craft-material-label">${escapeHtml(label)}</small></div>`;
   }).join("");
   if(panel){
     panel.innerHTML=`<div class="craft-material-art" aria-label="Materiales de creación" data-total="${total}">${nodes}</div>`;
@@ -696,10 +697,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const craftCost=getCraftCostForCard(card);
   const craftRarityLabel=getCraftRarityLabel(getCraftRarityKey(card));
   const craftLock=getCraftLockReason(card);
-  const showMaterialLine=mode==="collection"&&!readOnly&&(card?.craftableMissing||Number(card.qty||0)<maxCopiesForCard(card));
-  const materialLine=showMaterialLine
-    ? `<span class="deck-mini-material ${material>=craftCost&&!craftLock?"can-create":"cant-create"}" title="${craftLock||`Material ${craftRarityLabel}: tienes ${material} de ${craftCost}.`}">${craftRarityLabel}: ${material}/${craftCost}</span>`
-    : "";
+  const materialLine="";
   const craftBtn=mode==="collection"&&!readOnly&&Number(card.qty||0)<maxCopiesForCard(card)
     ? `<button class="deck-mini-craft" type="button" data-craft-card="${escapeHtml(card.key||"")}" ${canCraft?"":"disabled"} title="${craftLock||`Crear por ${craftCost} material ${craftRarityLabel}. Tienes ${material}.`}">✚</button>`
     : "";
@@ -981,7 +979,7 @@ function renderDeckBuilder(){
     if(title)title.textContent="Colección de cartas";
     if(sub)sub.textContent=browseOnly
       ? "Explora todas las cartas disponibles en HallValla. Las cartas con candado todavía no te pertenecen, pero puedes tocarlas para ver su arte, estadísticas, habilidades y detalles. La edición de mazos y el primer espacio de Personaje Principal se desbloquean al derrotar al Hechicero guardián."
-      : "Explora tu colección y usa la pestaña Spellbook del borde derecho para abrir u ocultar el constructor de mazo.";
+      : "Explora tu colección y usa la pestaña Mazo del borde derecho para abrir u ocultar el constructor.";
   }
   const search=($("deckSearchInput")?.value||"").toLowerCase().trim();
   const typeFilter=$("deckTypeFilter")?.value||"all";

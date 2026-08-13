@@ -20076,3 +20076,70 @@ body.hv-forge-edit-active #deckBuilderPanel #deckPrincipalSlots,
 body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
   cursor:default !important;
 }
+
+
+/* HALLVALLA FORGE7 · correcciones sobre la configuración final del usuario */
+/* Las acciones solo existen visualmente cuando el Mazo está desplegado. Su posición editada se conserva. */
+#deckBuilderPanel.collection-forge-unlocked:not(.deck-drawer-open) #deckBuilderActionGroup{
+  display:none !important;
+}
+#deckBuilderPanel.collection-forge-unlocked.deck-drawer-open #deckBuilderActionGroup{
+  display:flex !important;
+}
+
+/* El nombre visible del drawer es MAZO. Cubre el título antiguo que quedó dibujado en el asset sin tocar su arte. */
+#deckBuilderPanel.collection-forge-unlocked #deckBuilderDrawer::before{
+  content:"Mazo" !important;
+  position:absolute !important;
+  z-index:3 !important;
+  top:4.7% !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  min-width:180px !important;
+  padding:5px 22px 7px !important;
+  background:radial-gradient(ellipse at center,rgba(206,159,86,.97) 0%,rgba(196,145,73,.92) 56%,rgba(170,116,53,0) 100%) !important;
+  color:#4c2b0d !important;
+  text-align:center !important;
+  font:900 28px/1 Georgia,"Times New Roman",serif !important;
+  letter-spacing:.025em !important;
+  text-shadow:0 1px rgba(255,232,174,.75) !important;
+  pointer-events:none !important;
+}
+
+/* El catálogo no muestra textos de progreso/material bajo ninguna rareza: deja libre el + de añadir. */
+#deckBuilderPanel #deckCollectionGrid .deck-mini-material{
+  display:none !important;
+}
+
+/* Materiales: el asset, el número y el nombre viajan juntos. Los nodos reciben IDs estables. */
+#deckBuilderPanel #craftMaterialPanel .craft-material-art{
+  position:relative !important;
+}
+#deckBuilderPanel #craftMaterialPanel .craft-material-node{
+  top:35.5% !important;
+  width:13.8% !important;
+  pointer-events:auto !important;
+}
+#deckBuilderPanel #craftMaterialBasic{left:11.5% !important;}
+#deckBuilderPanel #craftMaterialEpic{left:26.2% !important;}
+#deckBuilderPanel #craftMaterialGlorious{left:41% !important;}
+#deckBuilderPanel #craftMaterialMythic{left:55.8% !important;}
+#deckBuilderPanel #craftMaterialLegendary{left:70.7% !important;}
+#deckBuilderPanel #craftMaterialDemigod{left:85.4% !important;}
+#deckBuilderPanel #craftMaterialPanel .craft-material-value{
+  margin-top:0 !important;
+  font-size:15px !important;
+}
+#deckBuilderPanel #craftMaterialPanel .craft-material-label{
+  margin-top:18px !important;
+  font-size:9px !important;
+}
+body.hv-forge-edit-active #deckBuilderPanel #craftMaterialPanel .craft-material-node{
+  pointer-events:auto !important;
+  cursor:grab !important;
+}
+
+/* Como materialsArt ahora apunta al contenedor completo, la capa gráfica interna no debe capturar el clic. */
+body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
+  pointer-events:none !important;
+}
