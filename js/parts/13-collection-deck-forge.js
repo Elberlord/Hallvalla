@@ -567,14 +567,36 @@ function openDeckBuilder(){
   }
   deckBuilderCollectionPage=0;
   panel.classList.toggle("collection-browser-mode",browseOnly);
+  panel.classList.toggle("collection-forge-unlocked",!browseOnly);
+  panel.classList.remove("deck-drawer-open");
+  syncDeckBuilderDrawerAria(false);
   panel.classList.remove("hidden");
   renderDeckBuilder();
+}
+function syncDeckBuilderDrawerAria(open){
+  const tab=$("deckBuilderDrawerTab"),drawer=$("deckBuilderDrawer");
+  if(tab)tab.setAttribute("aria-expanded",open?"true":"false");
+  if(drawer)drawer.setAttribute("aria-hidden",open?"false":"true");
+}
+function setDeckBuilderDrawerOpen(open){
+  const panel=$("deckBuilderPanel");
+  if(!panel||isCollectionBrowseOnly())return false;
+  const next=!!open;
+  panel.classList.toggle("deck-drawer-open",next);
+  syncDeckBuilderDrawerAria(next);
+  return next;
+}
+function toggleDeckBuilderDrawer(){
+  const panel=$("deckBuilderPanel");
+  if(!panel||isCollectionBrowseOnly())return false;
+  return setDeckBuilderDrawerOpen(!panel.classList.contains("deck-drawer-open"));
 }
 function closeDeckBuilder(){
   const panel=$("deckBuilderPanel");
   if(!panel)return;
   panel.classList.add("hidden");
-  panel.classList.remove("collection-browser-mode");
+  panel.classList.remove("collection-browser-mode","collection-forge-unlocked","deck-drawer-open");
+  syncDeckBuilderDrawerAria(false);
 }
 function getDeckBuilderCollectionCard(cardKey){
   const key=String(cardKey||"");
@@ -960,17 +982,20 @@ function renderDeckBuilder(){
   const panel=$("deckBuilderPanel");
   if(panel){
     panel.classList.toggle("collection-browser-mode",browseOnly);
+    panel.classList.toggle("collection-forge-unlocked",!browseOnly);
     const eyebrow=panel.querySelector(".deckbuilder-head .adventure-progress");
     const title=panel.querySelector(".deckbuilder-head .adventure-story-title");
     const sub=panel.querySelector(".deckbuilder-head .deckbuilder-sub");
-    if(eyebrow)eyebrow.textContent=browseOnly?"Colección de cartas":"Colección / Mazo";
-    if(title)title.textContent=browseOnly?"Colección de cartas":"Forja de mazos";
+    // La colección conserva exactamente el enfoque visual de catálogo incluso tras desbloquear mazos.
+    if(eyebrow)eyebrow.textContent="Colección de cartas";
+    if(title)title.textContent="Colección de cartas";
     if(sub)sub.textContent=browseOnly
       ? "Explora todas las cartas disponibles en HallValla. Las cartas con candado todavía no te pertenecen, pero puedes tocarlas para ver su arte, estadísticas, habilidades y detalles. La edición de mazos y el primer espacio de Personaje Principal se desbloquean al derrotar al Hechicero guardián."
-      : "Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 20 cartas para robar más los Personajes Principales permitidos por el tier del líder: 1 en tier 1, 2 en tier 2 y 3 en tier 3 o superior.";
+      : "Explora tu colección y usa la pestaña Spellbook del borde derecho para abrir u ocultar el constructor de mazo.";
   }
   const search=($("deckSearchInput")?.value||"").toLowerCase().trim();
   const typeFilter=$("deckTypeFilter")?.value||"all";
+  const ownershipFilter=$("deckOwnershipFilter")?.value||"all";
   const rarityFilter=$("deckRarityFilter")?.value||"all";
   const powerFilter=$("deckBattlePowerFilter")?.value||"all";
   const powerSort=$("deckBattlePowerSort")?.value||"default";
@@ -980,6 +1005,8 @@ function renderDeckBuilder(){
     const battleTier=getBattlePowerTier(battlePower);
     const searchOk=deckSearchMatchesCard(card,search,battlePower,battleTier);
     const typeOk=typeFilter==="all"||card.type===typeFilter;
+    const ownedQty=Number(card.qty||0);
+    const ownershipOk=ownershipFilter==="all"||(ownershipFilter==="owned"&&ownedQty>0)||(ownershipFilter==="unowned"&&ownedQty<=0);
     const rarity=cardRarity(card);
     const rarityOk=rarityFilter==="all"||
       (rarityFilter==="basic"&&(rarity==="básica"||rarity==="basica"||rarity==="basic"))||
@@ -990,7 +1017,7 @@ function renderDeckBuilder(){
       (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
     const bounds=getBattlePowerFilterBounds(powerFilter);
     const powerOk=powerFilter==="all"||(powerFilter==="unrated"&&!Number.isFinite(battlePower))||(bounds&&Number.isFinite(battlePower)&&battlePower>=bounds.min&&battlePower<=bounds.max);
-    return searchOk&&typeOk&&rarityOk&&powerOk;
+    return searchOk&&typeOk&&ownershipOk&&rarityOk&&powerOk;
   }).sort((a,b)=>{
     const pa=getUnitBattlePower(a),pb=getUnitBattlePower(b);
     if(powerSort==="power_desc")return (Number.isFinite(pb)?pb:-1)-(Number.isFinite(pa)?pa:-1)||String(a.name||"").localeCompare(String(b.name||""));
@@ -1023,7 +1050,13 @@ function renderDeckBuilder(){
   if(pageTitle)pageTitle.textContent=cards.length?`(${from}-${to} de ${cards.length})`:"(0)";
   if(prev){prev.disabled=deckBuilderCollectionPage<=0;prev.onclick=()=>{deckBuilderCollectionPage=Math.max(0,deckBuilderCollectionPage-1);renderDeckBuilder();};}
   if(next){next.disabled=deckBuilderCollectionPage>=totalPages-1;next.onclick=()=>{deckBuilderCollectionPage=Math.min(totalPages-1,deckBuilderCollectionPage+1);renderDeckBuilder();};}
+  const drawerTab=$("deckBuilderDrawerTab");
+  const drawerCount=$("deckBuilderDrawerCount");
+  if(drawerTab)drawerTab.classList.toggle("hidden",browseOnly);
+  if(drawerCount)drawerCount.textContent=browseOnly?"":`${currentDeckDraft.length}/${getCurrentDeckSize()}`;
   if(browseOnly){
+    if(panel)panel.classList.remove("deck-drawer-open");
+    syncDeckBuilderDrawerAria(false);
     deckList.innerHTML="";
     bindDeckBuilderDragAndClick(collectionGrid,deckList);
     const ownedUnique=allCards.filter(card=>Number(card.qty||0)>0).length;
@@ -1045,6 +1078,8 @@ function renderDeckBuilder(){
   const validation={valid:deckValidation.valid&&principalValidation.valid,errors:[...deckValidation.errors,...principalValidation.errors]};
   if($("deckCountText"))$("deckCountText").textContent=`${currentDeckDraft.length}/${requiredDeckSize} · Principales ${principalValidation.keys.length}/${principalSlots} · Robo ${DECK_RULES.drawDeckSize}`;
   if($("deckValidText"))$("deckValidText").textContent=validation.valid?`Mazo válido: ${principalSlots} principal${principalSlots===1?"":"es"} + ${DECK_RULES.drawDeckSize} de robo`:(currentDeckDraft.length<requiredDeckSize?"Mazo incompleto":validation.errors[0]||"Mazo inválido");
+  if(drawerCount)drawerCount.textContent=`${currentDeckDraft.length}/${requiredDeckSize}`;
+  if(drawerTab)drawerTab.classList.toggle("deck-ready",validation.valid);
   const saveBtn=$("saveDeckBtn");
   if(saveBtn){
     saveBtn.textContent=validation.valid?"Guardar y salir":`Completa ${requiredDeckSize} cartas y ${principalSlots} principal${principalSlots===1?"":"es"}`;

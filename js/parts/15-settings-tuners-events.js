@@ -67,10 +67,13 @@ on("closeDeckBuilderBtn","click",closeDeckBuilder);
 function resetDeckBuilderCollectionPageAndRender(){deckBuilderCollectionPage=0;renderDeckBuilder();}
 on("deckSearchInput","input",resetDeckBuilderCollectionPageAndRender);
 on("deckTypeFilter","change",resetDeckBuilderCollectionPageAndRender);
+on("deckOwnershipFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerSort","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
+on("deckBuilderDrawerTab","click",toggleDeckBuilderDrawer);
+on("deckBuilderDrawerClose","click",()=>setDeckBuilderDrawerOpen(false));
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);

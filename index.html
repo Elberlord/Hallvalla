@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Modular 7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE1CLEAN1CTRL2INPUT4LAYOUT2STEALTHCTX1</title>
+<title>HallValla v8 Modular 7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE3DRAWER1OWNFILTER1STEALTHCTX1</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE1CLEAN1CTRL2INPUT4LAYOUT2STEALTHCTX1">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE1CLEAN1CTRL2INPUT4LAYOUT2STEALTHCTX1">
-<meta name="hallvalla-build-name" content="FORGE1 limpio + layout usuario 2 + Sigilo attack-context 1">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE1CLEAN1CTRL2INPUT4LAYOUT2STEALTHCTX1-USERLAYOUT2"/>
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE3DRAWER1OWNFILTER1STEALTHCTX1">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE3DRAWER1OWNFILTER1STEALTHCTX1">
+<meta name="hallvalla-build-name" content="FORGE3 colección intacta + Spellbook lateral + filtro posesión">
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE3DRAWER1OWNFILTER1STEALTHCTX1-USERLAYOUT3"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -496,12 +496,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <h2 class="adventure-story-title">Forja de mazos</h2>
         <p class="deckbuilder-sub">Cartas básicas: máximo 3 copias. Todas las demás rarezas: máximo 1 copia. Mazo válido: 20 cartas para robar más los Personajes Principales permitidos por el tier del líder: 1 en tier 1, 2 en tier 2 y 3 en tier 3 o superior.</p>
       </div>
-      <div class="deckbuilder-status">
-        <b id="deckCountText">0/23 · Principales 0/3</b>
-        <span id="deckValidText">Mazo incompleto</span>
-        <div id="craftMaterialSummary" class="craft-material-summary" aria-live="polite"></div>
-        <button id="dustAllSurplusCornerBtn" class="craft-corner-dust" type="button" disabled>Convertir sobrantes</button>
-      </div>
     </div>
     <div class="deckbuilder-layout">
       <div class="deckbuilder-parchment-stage">
@@ -516,6 +510,11 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
           <option value="spell">Magias</option>
           <option value="trap">Trampas</option>
           <option value="equipment">Equipo</option>
+        </select>
+        <select id="deckOwnershipFilter" class="deck-select">
+          <option value="all">Todas las cartas</option>
+          <option value="owned">Cartas en posesión</option>
+          <option value="unowned">Cartas no poseídas</option>
         </select>
         <select id="deckRarityFilter" class="deck-select">
           <option value="all">Todas las rarezas</option>
@@ -553,8 +552,18 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         </div>
       </section>
       </div>
-      <section class="deckbuilder-current">
+      <button id="deckBuilderDrawerTab" class="deck-builder-drawer-tab" type="button" aria-controls="deckBuilderDrawer" aria-expanded="false">
+        <span>Spellbook</span><b id="deckBuilderDrawerCount">0/21</b>
+      </button>
+      <section id="deckBuilderDrawer" class="deckbuilder-current" aria-hidden="true">
+        <button id="deckBuilderDrawerClose" class="deck-builder-drawer-close" type="button" aria-label="Ocultar constructor">×</button>
         <h3>Spellbook en forja</h3>
+        <div class="deckbuilder-status">
+          <b id="deckCountText">0/21 · Principales 0/1</b>
+          <span id="deckValidText">Mazo incompleto</span>
+          <div id="craftMaterialSummary" class="craft-material-summary" aria-live="polite"></div>
+          <button id="dustAllSurplusCornerBtn" class="craft-corner-dust" type="button" disabled>Convertir sobrantes</button>
+        </div>
         <div id="deckPrincipalSlots" class="deck-principal-slots" aria-label="Tres Personajes Principales">
           <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★1</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 1</span><strong>Sin seleccionar</strong><small>Marca la estrella de una unidad del mazo.</small></div></div>
           <div class="deck-principal-selector empty"><div class="deck-principal-art"><span>★2</span></div><div class="deck-principal-copy"><span>PERSONAJE PRINCIPAL 2</span><strong>Sin seleccionar</strong><small>Debe ser una unidad diferente.</small></div></div>
@@ -924,6 +933,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE1CLEAN1CTRL2INPUT4LAYOUT2STEALTHCTX1-USERLAYOUT2"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE3DRAWER1OWNFILTER1STEALTHCTX1-USERLAYOUT3"></script>
 </body>
 </html>
