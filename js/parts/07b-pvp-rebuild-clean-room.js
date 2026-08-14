@@ -1,23 +1,26 @@
 "use strict";
 /*
 ================================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 3
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 4
 ================================================================================
 Base validada:
 - Paso 1D: J1 crea una sala limpia sin congelar el navegador.
 - Paso 2: J2 se une y ambos clientes se detectan en el mismo lobby.
 
+Base validada además:
+- Paso 3: LISTO sincronizado entre J1 y J2, phase waiting/ready estable.
+
 Objetivo ÚNICO de este paso:
-- añadir LISTO sincronizado para J1 y J2;
-- cada jugador solo modifica su propio flag lobbyReady;
-- ambos clientes ven los checks de LISTO en tiempo real;
-- únicamente J1 cambia phase entre "waiting" y "ready" según ambos flags;
+- preparar el mazo guardado de 21 cartas de cada jugador;
+- guardar las claves del mazo y del Personaje Principal SOLO en private/player1 o private/player2;
+- publicar únicamente un flag playerPrepared por jugador;
+- cada cliente escucha exclusivamente SU rama privada;
+- LISTO solo se habilita cuando ambos jugadores están presentes y preparados;
 - NO entrar todavía al combate.
 
 NO hace todavía:
-- construcción/sincronización del mazo en Firebase;
-- líderes/unidades/Principales;
-- estado privado de combate;
+- selección/carga de líder para combate;
+- mano inicial, Honor, unidades ni tablero;
 - entrada al combate;
 - lifecycle PvP completo;
 - acciones atómicas PvP;
@@ -27,7 +30,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
 ================================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP3";
+  const STEP="PVP-REBUILD-STEP4";
   const FIREBASE_TIMEOUT_MS=10000;
   let busy=false;
   let activeCode="";
@@ -35,6 +38,10 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   let activeRole=0;
   let roomUnsubscribe=null;
   let roomListenerToken=0;
+  let ownPrivateUnsubscribe=null;
+  let ownPrivateListenerToken=0;
+  let ownPrivateState=null;
+  let ownPrivateHealthy=false;
   let phaseWriteInFlight=false;
 
   function normalizeCode(value){
@@ -110,8 +117,24 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   }
 
   function getProfileNameSafe(role=1){
-    // Paso 3 sigue sin consultar perfil, líder ni estado de combate.
+    try{
+      if(typeof getLocalProfileName==="function"){
+        const name=String(getLocalProfileName()||"").trim();
+        if(name)return name;
+      }
+      if(typeof getPlayerProfile==="function"){
+        const name=String(getPlayerProfile()?.name||"").trim();
+        if(name)return name.slice(0,18);
+      }
+    }catch(_){ }
     return Number(role)===2?"Jugador 2":"Jugador 1";
+  }
+
+  function getProfileLevelSafe(){
+    try{
+      if(typeof getPlayerProfile==="function")return Math.max(1,Number(getPlayerProfile()?.level||1)||1);
+    }catch(_){ }
+    return 1;
   }
 
   function getAdventureUnlockState(){
@@ -160,6 +183,104 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       testOverride:false,
       errors:Array.isArray(validation?.errors)?validation.errors:[]
     };
+  }
+
+  function normalizeFirebaseArray(value){
+    if(Array.isArray(value))return value.slice();
+    if(value&&typeof value==="object"){
+      return Object.keys(value).sort((a,b)=>Number(a)-Number(b)).map(k=>value[k]);
+    }
+    return [];
+  }
+
+  function getSavedPrincipalKeysSafe(){
+    try{
+      if(typeof getSavedPrincipalKeys==="function")return (getSavedPrincipalKeys()||[]).map(v=>String(v||"").trim()).filter(Boolean);
+    }catch(_){ }
+    try{
+      const parsed=JSON.parse(localStorage.getItem("hallvalla_principal_units_v2")||"null");
+      if(Array.isArray(parsed))return parsed.map(v=>String(v||"").trim()).filter(Boolean);
+    }catch(_){ }
+    return [];
+  }
+
+  function fingerprintLoadout(deckKeys=[],principalKeys=[]){
+    const text=[...deckKeys,"|",...principalKeys].join("~");
+    let hash=2166136261;
+    for(let i=0;i<text.length;i++){
+      hash^=text.charCodeAt(i);
+      hash=Math.imul(hash,16777619);
+    }
+    return `hv21-${(hash>>>0).toString(16).padStart(8,"0")}`;
+  }
+
+  function buildOwnPrivatePayload(ownerUid,role){
+    let deck=[];
+    try{deck=typeof getSavedDeck==="function"?(getSavedDeck()||[]):JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");}catch(_){deck=[];}
+    if(!Array.isArray(deck))deck=[];
+
+    let deckValidation=null;
+    try{if(typeof validateDeckList==="function")deckValidation=validateDeckList(deck,1);}catch(_){deckValidation=null;}
+    if(deck.length!==21||deckValidation?.valid===false){
+      const detail=Array.isArray(deckValidation?.errors)&&deckValidation.errors.length?` ${deckValidation.errors.join(" ")}`:"";
+      throw new Error(`El mazo online debe tener exactamente 21 cartas válidas.${detail}`);
+    }
+
+    const deckKeys=deck.map(card=>String(card?.key||"").trim());
+    if(deckKeys.some(key=>!key))throw new Error("El mazo contiene una carta sin clave canónica.");
+
+    let principalKeys=getSavedPrincipalKeysSafe();
+    let principalValidation=null;
+    try{if(typeof validatePrincipalSelection==="function")principalValidation=validatePrincipalSelection(principalKeys,deck,1);}catch(_){principalValidation=null;}
+    if(principalValidation){
+      if(!principalValidation.valid)throw new Error(`Personaje Principal inválido: ${(principalValidation.errors||[]).join(" ")}`);
+      principalKeys=(principalValidation.keys||[]).slice(0,1);
+    }else{
+      principalKeys=principalKeys.filter(key=>deckKeys.includes(key)).slice(0,1);
+      if(principalKeys.length!==1)throw new Error("Debes guardar exactamente 1 Personaje Principal dentro de tu mazo de 21 cartas.");
+    }
+
+    const profileName=getProfileNameSafe(role);
+    const profileLevel=getProfileLevelSafe();
+    return {
+      schema:"hallvalla-pvp-private-step4",
+      ownerUid:String(ownerUid||""),
+      role:Number(role),
+      profile:{name:profileName,level:profileLevel},
+      loadout:{
+        deckKeys,
+        principalKeys,
+        deckSize:deckKeys.length,
+        fingerprint:fingerprintLoadout(deckKeys,principalKeys)
+      },
+      prepared:true,
+      preparedAt:Date.now()
+    };
+  }
+
+  function validateOwnPrivateSnapshot(value,ownerUid,role){
+    const data=value&&typeof value==="object"?value:{};
+    const deckKeys=normalizeFirebaseArray(data?.loadout?.deckKeys).map(v=>String(v||""));
+    const principalKeys=normalizeFirebaseArray(data?.loadout?.principalKeys).map(v=>String(v||""));
+    return String(data?.ownerUid||"")===String(ownerUid||"")
+      &&Number(data?.role)===Number(role)
+      &&data?.prepared===true
+      &&deckKeys.length===21
+      &&deckKeys.every(Boolean)
+      &&principalKeys.length===1
+      &&deckKeys.includes(principalKeys[0]);
+  }
+
+  async function writeAndConfirmOwnPrivate(code,role,ownerUid,payload){
+    const privateRef=ref(db,`games/${code}/private/player${role}`);
+    await withTimeout(set(privateRef,payload),`Guardar private/player${role} en ${code}`);
+    const snapshot=await withTimeout(get(privateRef),`Confirmar private/player${role} en ${code}`);
+    if(!snapshot.exists()||!validateOwnPrivateSnapshot(snapshot.val(),ownerUid,role)){
+      throw new Error(`Firebase no confirmó un private/player${role} válido con 21 cartas.`);
+    }
+    ownPrivateState=snapshot.val()||null;
+    ownPrivateHealthy=true;
+    return ownPrivateState;
   }
 
   async function checkOnlineEntryRequirements(){
@@ -217,8 +338,11 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     const p2Uid=String(room?.playerSlots?.player2Uid||"");
     const p1Ready=!!p1Uid&&getReadyFlag(room,1);
     const p2Ready=!!p2Uid&&getReadyFlag(room,2);
+    const p1Prepared=!!p1Uid&&(room?.playerPrepared?.[1]===true||room?.playerPrepared?.["1"]===true);
+    const p2Prepared=!!p2Uid&&(room?.playerPrepared?.[2]===true||room?.playerPrepared?.["2"]===true);
     const bothPresent=!!p1Uid&&!!p2Uid;
-    const bothReady=bothPresent&&p1Ready&&p2Ready;
+    const bothPrepared=bothPresent&&p1Prepared&&p2Prepared;
+    const bothReady=bothPrepared&&p1Ready&&p2Ready;
     const p1Name=String(room?.playerNames?.[1]||room?.playerNames?.["1"]||getProfileNameSafe(1));
     const p2Name=p2Uid?String(room?.playerNames?.[2]||room?.playerNames?.["2"]||getProfileNameSafe(2)):"Rival pendiente";
 
@@ -234,13 +358,15 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     setReadyCheck(2,p2Ready);
 
     if(!p2Uid){
-      setText("pvpRoomMessage","Sala creada. Esperando rival.");
+      setText("pvpRoomMessage",p1Prepared?"J1 preparado con mazo privado 21/21. Esperando rival.":"Preparando mazo privado de J1...");
+    }else if(!bothPrepared){
+      setText("pvpRoomMessage","Paso 4: preparando el mazo privado de ambos jugadores...");
     }else if(bothReady&&String(room?.phase||"")==="ready"){
-      setText("pvpRoomMessage","PASO 3 correcto: ambos jugadores están LISTOS y la sala está READY.");
+      setText("pvpRoomMessage","PASO 4 correcto: ambos privados 21/21 están preparados y ambos están LISTOS.");
     }else if(bothReady){
       setText("pvpRoomMessage","Ambos están LISTOS. Confirmando estado READY...");
     }else{
-      setText("pvpRoomMessage","Paso 3: ambos jugadores deben marcar LISTO.");
+      setText("pvpRoomMessage","Paso 4: privados 21/21 preparados. Ambos jugadores pueden marcar LISTO.");
     }
 
     const input=$("joinCode");
@@ -249,11 +375,11 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     const ownReady=activeRole===2?p2Ready:p1Ready;
     const readyBtn=$("pvpReadyBtn");
     if(readyBtn){
-      readyBtn.disabled=!bothPresent||!activeRole||busy;
+      readyBtn.disabled=!bothPrepared||!activeRole||busy||!ownPrivateHealthy;
       readyBtn.classList.toggle("is-ready",!!ownReady);
       readyBtn.setAttribute("aria-pressed",ownReady?"true":"false");
       readyBtn.setAttribute("aria-label",ownReady?"Desmarcar listo":"Marcar listo");
-      readyBtn.title=!bothPresent?"Esperando rival":(ownReady?"Desmarcar LISTO":"Marcar LISTO");
+      readyBtn.title=!bothPresent?"Esperando rival":(!bothPrepared?"Esperando preparación privada 21/21":(!ownPrivateHealthy?"Tu estado privado no está confirmado":(ownReady?"Desmarcar LISTO":"Marcar LISTO")));
     }
   }
 
@@ -265,8 +391,11 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     const p2Uid=String(room?.playerSlots?.player2Uid||"");
     if(!p1Uid)return;
     const bothPresent=!!p2Uid;
+    const p1Prepared=room?.playerPrepared?.[1]===true||room?.playerPrepared?.["1"]===true;
+    const p2Prepared=room?.playerPrepared?.[2]===true||room?.playerPrepared?.["2"]===true;
+    const bothPrepared=bothPresent&&p1Prepared&&p2Prepared;
     const p1Ready=getReadyFlag(room,1);
-    const bothReady=bothPresent&&p1Ready&&getReadyFlag(room,2);
+    const bothReady=bothPrepared&&p1Ready&&getReadyFlag(room,2);
     const desiredPhase=bothReady?"ready":"waiting";
     const currentPhase=String(room?.phase||"waiting");
 
@@ -303,6 +432,62 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     }
   }
 
+  function detachOwnPrivateListener(){
+    ownPrivateListenerToken++;
+    const off=ownPrivateUnsubscribe;
+    ownPrivateUnsubscribe=null;
+    ownPrivateState=null;
+    ownPrivateHealthy=false;
+    if(typeof off==="function"){
+      try{off();}catch(error){console.warn(`[HallValla][${STEP}] Error al retirar listener privado:`,error);}
+    }
+  }
+
+  function attachOwnPrivateListener(code,role,ownerUid){
+    detachOwnPrivateListener();
+    const token=ownPrivateListenerToken;
+    const privateRef=ref(db,`games/${code}/private/player${role}`);
+    ownPrivateUnsubscribe=onValue(privateRef,snapshot=>{
+      if(token!==ownPrivateListenerToken||code!==activeCode||Number(role)!==Number(activeRole))return;
+      if(!snapshot.exists()){
+        ownPrivateState=null;
+        ownPrivateHealthy=false;
+        mark(`private/player${role} dejó de existir; LISTO bloqueado.`);
+      }else{
+        ownPrivateState=snapshot.val()||null;
+        ownPrivateHealthy=validateOwnPrivateSnapshot(ownPrivateState,ownerUid,role);
+        mark(ownPrivateHealthy?`PASO 4 · private/player${role} confirmado · mazo propio 21/21.`:`private/player${role} inválido; LISTO bloqueado.`);
+      }
+      try{
+        const readyBtn=$("pvpReadyBtn");
+        if(readyBtn&&!ownPrivateHealthy)readyBtn.disabled=true;
+        if(ownPrivateHealthy&&activeCode){
+          void get(ref(db,`games/${activeCode}/public`)).then(roomSnap=>{
+            if(roomSnap?.exists()&&code===activeCode)renderRoomSnapshot(roomSnap.val()||{},activeCode);
+          }).catch(()=>{});
+        }
+      }catch(_){ }
+    },error=>{
+      if(token!==ownPrivateListenerToken)return;
+      ownPrivateHealthy=false;
+      console.error(`[HallValla][${STEP}] Listener privado rechazado:`,error);
+      mark(`Listener private/player${role} falló: ${error?.message||error}`);
+    });
+  }
+
+  async function removeOwnPrivateBranch(code,role,ownerUid){
+    if(!code||!ownerUid||(role!==1&&role!==2))return;
+    try{
+      const privateRef=ref(db,`games/${code}/private/player${role}`);
+      const snapshot=await withTimeout(get(privateRef),`Leer private/player${role} antes de limpiar`,4000);
+      if(snapshot.exists()&&String(snapshot.val()?.ownerUid||"")===String(ownerUid)){
+        await withTimeout(remove(privateRef),`Limpiar private/player${role}`,4000);
+      }
+    }catch(error){
+      console.warn(`[HallValla][${STEP}] No se pudo limpiar private/player${role}:`,error);
+    }
+  }
+
   function detachRoomListener(){
     roomListenerToken++;
     const off=roomUnsubscribe;
@@ -320,6 +505,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     roomUnsubscribe=onValue(roomRef,snapshot=>{
       if(token!==roomListenerToken||code!==activeCode)return;
       if(!snapshot.exists()){
+        if(activeRole===2&&activeCode&&activeOwnerUid)void removeOwnPrivateBranch(activeCode,2,activeOwnerUid);
         setText("pvpRoomMessage","La sala ya no existe. El anfitrión pudo haber salido.");
         setText("pvpRoomPlayer2Name","Sala cerrada");
         setPresence("pvpRoomPlayer2Presence","waiting");
@@ -332,7 +518,11 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       const room=snapshot.val()||{};
       renderRoomSnapshot(room,code);
       const p2Uid=String(room?.playerSlots?.player2Uid||"");
-      if(p2Uid)mark(`PASO 3 · J1 y J2 presentes en ${code} · LISTO sincronizado.`);
+      if(p2Uid){
+        const p1Prepared=room?.playerPrepared?.[1]===true||room?.playerPrepared?.["1"]===true;
+        const p2Prepared=room?.playerPrepared?.[2]===true||room?.playerPrepared?.["2"]===true;
+        mark(p1Prepared&&p2Prepared?`PASO 4 · J1/J2 presentes · privados preparados · LISTO disponible en ${code}.`:`PASO 4 · J1/J2 presentes · esperando preparación privada en ${code}.`);
+      }
       void reconcileRoomPhase(room,code);
     },error=>{
       if(token!==roomListenerToken||code!==activeCode)return;
@@ -343,6 +533,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
 
   function resetUi({resetJoin=true}={}){
     detachRoomListener();
+    detachOwnPrivateListener();
     busy=false;
     activeCode="";
     activeOwnerUid="";
@@ -370,7 +561,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     $("mainMenu")?.classList.add("hidden");
     $("onlineLobby")?.classList.remove("hidden");
     $("gameShell")?.classList.add("hidden");
-    mark("CLEAN ROOM activo · Paso 3: presencia J1/J2 + LISTO sincronizado · sin combate ni PvP legacy.");
+    mark("CLEAN ROOM activo · Paso 4: presencia + LISTO + mazo privado 21/21 por jugador · sin combate ni PvP legacy.");
     syncLocalButtons();
     try{if(typeof syncBattleMusic==="function")syncBattleMusic();}catch(_){ }
     return true;
@@ -382,50 +573,71 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     activeCode="";
     activeOwnerUid="";
     activeRole=0;
+    detachOwnPrivateListener();
 
     try{
       syncLocalButtons();
-      await markAndPaint("1/4 · autenticación limpia Firebase...");
+      await markAndPaint("1/7 · autenticación limpia Firebase...");
       const ownerUid=await ensureCleanRoomAuth();
       if(!ownerUid)throw new Error("Firebase autenticó, pero no existe UID.");
       activeOwnerUid=ownerUid;
       activeRole=1;
 
-      const profileName=getProfileNameSafe(1);
+      await markAndPaint("2/7 · validando mazo local J1 (21 cartas + 1 Principal)...");
+      const privatePayload=buildOwnPrivatePayload(ownerUid,1);
+      const profileName=privatePayload.profile.name;
+      const profileLevel=privatePayload.profile.level;
       let lastError=null;
 
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8);
         activeCode=code;
-        await markAndPaint(`2/4 · intento ${attempt}: escribiendo sala mínima ${code}...`);
+        await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
 
         const publicRef=ref(db,`games/${code}/public`);
         const room={
-          schema:"hallvalla-pvp-rebuild-step3",
+          schema:"hallvalla-pvp-rebuild-step4",
           code,
           createdAt:Date.now(),
           phase:"waiting",
           playerSlots:{player1Uid:ownerUid,player2Uid:null},
           playerNames:{1:profileName,2:"Esperando rival"},
+          playerLevels:{1:profileLevel,2:0},
+          playerPrepared:{1:false,2:false},
           lobbyReady:{1:false,2:false}
         };
 
         try{
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
-          await markAndPaint(`3/4 · Firebase respondió. Confirmando sala ${code}...`);
-          const snapshot=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
-          if(!snapshot.exists())throw new Error("Firebase respondió, pero la sala no quedó guardada.");
-          const saved=snapshot.val()||{};
-          if(String(saved?.playerSlots?.player1Uid||"")!==ownerUid){
-            throw new Error("La sala guardada no pertenece al UID del creador.");
-          }
+          const publicSnapshot=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
+          if(!publicSnapshot.exists())throw new Error("Firebase respondió, pero la sala no quedó guardada.");
+          if(String(publicSnapshot.val()?.playerSlots?.player1Uid||"")!==ownerUid)throw new Error("La sala guardada no pertenece al UID del creador.");
 
-          await markAndPaint(`4/4 · J1 CORRECTO · sala ${code} creada. Esperando J2.`);
+          await markAndPaint(`4/7 · guardando private/player1 con mazo 21/21...`);
+          await writeAndConfirmOwnPrivate(code,1,ownerUid,privatePayload);
+
+          await markAndPaint(`5/7 · publicando únicamente prepared=true para J1...`);
+          await withTimeout(update(publicRef,{
+            "playerPrepared/1":true,
+            "playerNames/1":profileName,
+            "playerLevels/1":profileLevel
+          }),`Publicar preparación J1 en ${code}`);
+
+          await markAndPaint(`6/7 · conectando listener EXCLUSIVO a private/player1...`);
+          attachOwnPrivateListener(code,1,ownerUid);
+
+          const savedSnap=await withTimeout(get(publicRef),`Confirmar preparación J1 en ${code}`);
+          const saved=savedSnap.val()||{};
+          if(!(saved?.playerPrepared?.[1]===true||saved?.playerPrepared?.["1"]===true))throw new Error("Firebase no confirmó playerPrepared/1.");
+
+          await markAndPaint(`7/7 · J1 CORRECTO · privado 21/21 preparado. Esperando J2.`);
           renderRoomSnapshot(saved,code);
           attachRoomListener(code);
           return true;
         }catch(error){
           lastError=error;
+          await removeOwnPrivateBranch(code,1,ownerUid);
+          try{await withTimeout(remove(publicRef),`Rollback sala ${code}`,4000);}catch(_){ }
           const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
           if(denied&&attempt<4){
             await markAndPaint(`Código ${code} rechazado; probando otro código sin tocar reglas...`);
@@ -434,12 +646,12 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
           throw error;
         }
       }
-      throw lastError||new Error("No se pudo crear una sala mínima tras 4 intentos.");
+      throw lastError||new Error("No se pudo crear una sala tras 4 intentos.");
     }catch(error){
       console.error(`[HallValla][${STEP}]`,error);
       const message=`CREAR SALA FALLÓ: ${error?.message||error}`;
       mark(message);
-      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 3");}catch(_){ }
+      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 4");}catch(_){ }
       return false;
     }finally{
       busy=false;
@@ -463,14 +675,18 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
 
     busy=true;
     let claimedNow=false;
+    let privateWritten=false;
     let joinUid="";
     try{
       syncLocalButtons();
-      await markAndPaint(`1/5 · J2 autenticando para entrar a ${code}...`);
+      await markAndPaint(`1/8 · J2 autenticando para entrar a ${code}...`);
       joinUid=await ensureCleanRoomAuth();
       if(!joinUid)throw new Error("Firebase autenticó J2 sin UID.");
 
-      await markAndPaint(`2/5 · leyendo sala ${code}...`);
+      await markAndPaint(`2/8 · validando mazo local J2 (21 cartas + 1 Principal)...`);
+      const privatePayload=buildOwnPrivatePayload(joinUid,2);
+
+      await markAndPaint(`3/8 · leyendo sala ${code}...`);
       const publicRef=ref(db,`games/${code}/public`);
       const beforeSnap=await withTimeout(get(publicRef),`Leer sala ${code}`);
       if(!beforeSnap.exists())throw new Error("La sala no existe o ya fue cerrada.");
@@ -483,45 +699,59 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       if(currentJ2&&currentJ2!==joinUid)throw new Error("La sala ya tiene un segundo jugador.");
 
       if(!currentJ2){
-        await markAndPaint(`3/5 · reclamando slot de J2 en ${code}...`);
+        await markAndPaint(`4/8 · reclamando slot de J2 en ${code}...`);
         await withTimeout(set(ref(db,`games/${code}/public/playerSlots/player2Uid`),joinUid),`Reclamar J2 en ${code}`);
         claimedNow=true;
       }else{
-        await markAndPaint(`3/5 · el slot J2 ya pertenece a este usuario; reanudando...`);
+        await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
       }
 
-      await markAndPaint(`4/5 · publicando presencia de J2 + ready=false...`);
+      await markAndPaint(`5/8 · guardando private/player2 con mazo 21/21...`);
+      await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload);
+      privateWritten=true;
+
+      await markAndPaint(`6/8 · publicando presencia + prepared=true de J2, sin exponer el mazo...`);
       await withTimeout(update(publicRef,{
-        "playerNames/2":getProfileNameSafe(2),
+        "playerNames/2":privatePayload.profile.name,
+        "playerLevels/2":privatePayload.profile.level,
+        "playerPrepared/2":true,
         "lobbyReady/2":false
-      }),`Presencia J2 en ${code}`);
+      }),`Presencia/preparación J2 en ${code}`);
 
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`);
       if(!confirmSnap.exists())throw new Error("La sala desapareció durante la unión.");
       const confirmed=confirmSnap.val()||{};
-      if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid){
-        throw new Error("Firebase no confirmó este UID como Jugador 2.");
-      }
+      if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid)throw new Error("Firebase no confirmó este UID como Jugador 2.");
+      if(!(confirmed?.playerPrepared?.[2]===true||confirmed?.playerPrepared?.["2"]===true))throw new Error("Firebase no confirmó playerPrepared/2.");
 
       activeCode=code;
       activeOwnerUid=joinUid;
       activeRole=2;
+      await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`);
+      attachOwnPrivateListener(code,2,joinUid);
       renderRoomSnapshot(confirmed,code);
       attachRoomListener(code);
-      await markAndPaint(`5/5 · J2 CORRECTO · ambos presentes. Paso 3 habilita LISTO.`);
+      await markAndPaint(`8/8 · J2 CORRECTO · privado 21/21 preparado. Ambos pueden usar LISTO.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Error al unir J2:`,error);
+      if(privateWritten||joinUid)await removeOwnPrivateBranch(code,2,joinUid);
       if(claimedNow&&joinUid){
         try{
-          await withTimeout(remove(ref(db,`games/${code}/public/playerSlots/player2Uid`)),`Rollback J2 ${code}`,4000);
+          await withTimeout(update(ref(db,`games/${code}/public`),{
+            "playerSlots/player2Uid":null,
+            "playerNames/2":"Esperando rival",
+            "playerLevels/2":0,
+            "playerPrepared/2":false,
+            "lobbyReady/2":false
+          }),`Rollback J2 ${code}`,4000);
         }catch(rollbackError){
           console.warn(`[HallValla][${STEP}] No se pudo revertir el claim J2:`,rollbackError);
         }
       }
       const message=`UNIRSE FALLÓ: ${error?.message||error}`;
       mark(message);
-      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 3");}catch(_){ }
+      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 4");}catch(_){ }
       return false;
     }finally{
       busy=false;
@@ -553,7 +783,11 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       const room=snapshot.val()||{};
       const p1Uid=String(room?.playerSlots?.player1Uid||"");
       const p2Uid=String(room?.playerSlots?.player2Uid||"");
+      const p1Prepared=room?.playerPrepared?.[1]===true||room?.playerPrepared?.["1"]===true;
+      const p2Prepared=room?.playerPrepared?.[2]===true||room?.playerPrepared?.["2"]===true;
       if(!p1Uid||!p2Uid)throw new Error("LISTO se habilita cuando ambos jugadores están presentes.");
+      if(!p1Prepared||!p2Prepared)throw new Error("LISTO se habilita cuando ambos estados privados 21/21 están preparados.");
+      if(!ownPrivateHealthy)throw new Error(`Tu private/player${role} no está confirmado.`);
       const slotUid=role===2?p2Uid:p1Uid;
       if(slotUid!==ownerUid)throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
 
@@ -567,7 +801,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       console.error(`[HallValla][${STEP}] Error en LISTO:`,error);
       const message=`LISTO FALLÓ: ${error?.message||error}`;
       mark(message);
-      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 3");}catch(_){ }
+      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 4");}catch(_){ }
       return false;
     }finally{
       busy=false;
@@ -599,22 +833,27 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     const ownerUid=activeOwnerUid;
     const role=activeRole;
     detachRoomListener();
+    detachOwnPrivateListener();
     try{
       if(code&&ownerUid&&role===1){
-        await markAndPaint(`J1 cerrando sala ${code}...`);
+        await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`);
+        await removeOwnPrivateBranch(code,1,ownerUid);
         const publicRef=ref(db,`games/${code}/public`);
         const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`);
         if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid){
           await withTimeout(remove(publicRef),`Cerrar sala ${code}`);
         }
       }else if(code&&ownerUid&&role===2){
-        await markAndPaint(`J2 saliendo de sala ${code}...`);
+        await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`);
+        await removeOwnPrivateBranch(code,2,ownerUid);
         const publicRef=ref(db,`games/${code}/public`);
         const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`);
         if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid){
           await withTimeout(update(publicRef,{
             "playerSlots/player2Uid":null,
             "playerNames/2":"Esperando rival",
+            "playerLevels/2":0,
+            "playerPrepared/2":false,
             "lobbyReady/2":false
           }),`Liberar J2 en ${code}`);
         }
@@ -635,18 +874,18 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   }
 
   // API explícita del clean-room. Ningún módulo legacy participa en estos pasos.
-  globalThis.pvpRebuildStep3Open=openCleanRoom;
-  globalThis.pvpRebuildStep3SyncButtons=syncLocalButtons;
-  globalThis.pvpRebuildStep3Create=createMinimalPublicRoom;
-  globalThis.pvpRebuildStep3Join=joinExistingRoom;
-  globalThis.pvpRebuildStep3Ready=toggleReady;
-  globalThis.pvpRebuildStep3CopyCode=copyCode;
-  globalThis.pvpRebuildStep3Leave=leaveRoom;
-  globalThis.pvpRebuildStep3BackToMain=backToMain;
-  globalThis.pvpRebuildStep3ResetUi=resetUi;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="3-READY-SYNC";
+  globalThis.pvpRebuildStep4Open=openCleanRoom;
+  globalThis.pvpRebuildStep4SyncButtons=syncLocalButtons;
+  globalThis.pvpRebuildStep4Create=createMinimalPublicRoom;
+  globalThis.pvpRebuildStep4Join=joinExistingRoom;
+  globalThis.pvpRebuildStep4Ready=toggleReady;
+  globalThis.pvpRebuildStep4CopyCode=copyCode;
+  globalThis.pvpRebuildStep4Leave=leaveRoom;
+  globalThis.pvpRebuildStep4BackToMain=backToMain;
+  globalThis.pvpRebuildStep4ResetUi=resetUi;
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="4-PRIVATE-LOADOUT";
 
-  // Todos los eventos del lobby PvP continúan viviendo exclusivamente aquí.
+  // Todos los eventos del lobby PvP y el ownership del listener privado continúan viviendo exclusivamente aquí.
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);
   on("backMenuFromLobby","click",backToMain);

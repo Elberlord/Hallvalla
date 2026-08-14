@@ -1,0 +1,50 @@
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 4
+Fecha: 2026-08-14
+Base: Hallvalla_PVP_REBUILD_STEP3_READY_SYNC.zip (validada por usuario con J1/J2 + LISTO)
+
+OBJETIVO
+Añadir únicamente la preparación privada del jugador antes de entrar al combate, sin reintroducir PvP legacy ni activar todavía batalla/turnos.
+
+IMPLEMENTADO
+- J1 y J2 validan localmente un mazo online de exactamente 21 cartas.
+- Se exige 1 Personaje Principal válido dentro de esas 21 cartas.
+- Cada cliente serializa solamente las claves canónicas del mazo (deckKeys) y principalKeys.
+- J1 escribe exclusivamente games/{code}/private/player1.
+- J2 escribe exclusivamente games/{code}/private/player2.
+- Cada rama privada contiene ownerUid, role, perfil mínimo (nombre/nivel), loadout, fingerprint y prepared.
+- El estado public NO contiene deckKeys ni principalKeys.
+- Public solo recibe playerPrepared/1 o playerPrepared/2, nombre y nivel mínimos.
+- Cada cliente instala un único listener en SU propia rama privada; no escucha la rama privada rival.
+- LISTO queda bloqueado hasta que ambos playerPrepared sean true y el private propio esté confirmado.
+- Al salir J2 se elimina private/player2 y se limpia playerPrepared/2.
+- Al cerrar J1 se elimina private/player1 y después se cierra public.
+- Si J1 cierra la sala, J2 intenta limpiar su private/player2 al detectar que public desapareció.
+
+NO IMPLEMENTADO TODAVIA
+- selección/carga de líder para combate;
+- mano inicial, Honor, tablero, unidades o Principales invocados;
+- transición del lobby a la batalla;
+- lifecycle PvP completo;
+- acciones PvP atómicas;
+- GameState canónico de Etapa 6.
+
+FIREBASE RULES
+SIN CAMBIOS. database.rules.json es byte por byte idéntico al Paso 3.
+Las reglas existentes ya permiten a cada owner escribir/leer/eliminar únicamente private/player1 o private/player2 según su slot público.
+
+VALIDACIÓN AUTOMÁTICA
+- Mock J1 crea sala y private/player1 con 21 deckKeys + 1 principalKey.
+- Mock J2 reclama slot y crea private/player2 con 21 deckKeys + 1 principalKey.
+- Se comprueba que el mazo no aparece dentro de public.
+- Se comprueba que J1 escucha solamente /private/player1 y J2 solamente /private/player2.
+- LISTO de ambos lleva phase a ready solo después de playerPrepared 1/2.
+- Salida de J2 borra private/player2, limpia playerPrepared/2 y devuelve phase a waiting.
+
+PRUEBA MANUAL RECOMENDADA
+1. J1 entra a VS Online y crea sala.
+2. Confirmar que la sala abre normalmente y queda esperando J2.
+3. J2 entra con el código.
+4. Confirmar que aparecen los nombres reales de ambos jugadores y LISTO queda disponible.
+5. Marcar LISTO en J1 y J2; debe llegar a ready como en Paso 3.
+6. J2 sale; J1 debe volver a rival pendiente y su LISTO debe reiniciarse.
+7. Si aparece un error de mazo/Principal, guardar nuevamente un mazo válido de 21 cartas en Forja y repetir.
