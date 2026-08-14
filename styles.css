@@ -20468,3 +20468,70 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   .pvp-rps-choice img{width:min(30vw,150px)}
   .pvp-rps-turn-btn{min-width:140px;padding:10px 18px}
 }
+
+
+/* ==========================================================================
+   STEP 4.5C · VISIBILIDAD DE REGLAS (sobre base STEP45 original)
+   Motivo: el arte fijo del lobby ocupa todo el flujo de .pvp-room-artwrap;
+   los controles nuevos quedaban después de la imagen y fuera del área visible.
+   ========================================================================== */
+#pvpRoomPanel .pvp-rule-strip{
+  position:absolute!important;
+  left:50%!important;
+  top:68.25%!important;
+  transform:translateX(-50%)!important;
+  width:70%!important;
+  max-width:none!important;
+  margin:0!important;
+  display:grid!important;
+  grid-template-columns:auto auto auto!important;
+  justify-content:center!important;
+  align-items:center!important;
+  column-gap:10px!important;
+  row-gap:4px!important;
+  z-index:18!important;
+  pointer-events:auto!important;
+}
+#pvpRoomPanel .pvp-rule-title{
+  grid-column:1 / -1!important;
+  text-align:center!important;
+  color:#d9b96f!important;
+  font:900 10px/1 Georgia,serif!important;
+  letter-spacing:.16em!important;
+  text-shadow:0 2px 8px rgba(0,0,0,.78)!important;
+}
+#pvpRoomPanel .pvp-rule-btn{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:118px!important;
+  min-height:27px!important;
+  padding:5px 10px!important;
+  border:1px solid rgba(223,182,88,.58)!important;
+  border-radius:999px!important;
+  background:linear-gradient(180deg,rgba(111,76,27,.96),rgba(53,33,13,.98))!important;
+  color:#f4dfaa!important;
+  font:900 10px/1 Georgia,serif!important;
+  letter-spacing:.025em!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.32),inset 0 1px rgba(255,235,184,.18)!important;
+  cursor:pointer!important;
+  z-index:19!important;
+}
+#pvpRoomPanel .pvp-rule-btn:hover:not(:disabled){filter:brightness(1.1)!important;transform:translateY(-1px)!important;}
+#pvpRoomPanel .pvp-rule-btn:disabled{opacity:.52!important;cursor:default!important;}
+#pvpRoomPanel .pvp-rule-summary{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  margin:0!important;
+  text-align:center!important;
+  color:#d9c69a!important;
+  font:800 9px/1.05 Georgia,serif!important;
+  text-shadow:0 2px 7px rgba(0,0,0,.75)!important;
+}
+@media(max-width:900px){
+  #pvpRoomPanel .pvp-rule-strip{top:68.0%!important;width:74%!important;column-gap:5px!important;row-gap:3px!important;}
+  #pvpRoomPanel .pvp-rule-title{font-size:8px!important;}
+  #pvpRoomPanel .pvp-rule-btn{min-width:88px!important;min-height:23px!important;padding:4px 7px!important;font-size:8px!important;}
+  #pvpRoomPanel .pvp-rule-summary{font-size:7px!important;}
+}

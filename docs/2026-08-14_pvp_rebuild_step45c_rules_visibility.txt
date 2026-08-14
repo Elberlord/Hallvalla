@@ -1,0 +1,17 @@
+HALLVALLA · PVP REBUILD STEP 4.5C · VISIBILIDAD DE REGLAS
+
+Base: Hallvalla_PVP_REBUILD_STEP45_RULES_RPS.zip (NO se usa STEP45B RPS_VISIBLE).
+
+Problema detectado:
+1) index.html seguía usando el query de caché de STEP4 para styles.css y bootstrap-loader.js.
+2) bootstrap-loader.js seguía usando BUILD/CACHE_BUILD de STEP4.
+3) pvpRuleStrip estaba en flujo normal dentro de pvp-room-artwrap, pero el arte fijo del lobby ocupa toda la altura del contenedor; por eso los controles quedaban después de la imagen, fuera del área visible.
+
+Corrección de este paquete:
+- cache bust actualizado a STEP45;
+- BUILD/meta alineados con STEP45;
+- pvpRuleStrip posicionado de forma absoluta en el espacio entre los paneles de jugadores y los botones LISTO/SALIR;
+- título visible REGLAS DEL DUELO;
+- no se aplica el parche STEP45B de visibilidad/capas del RPS.
+
+Firebase Realtime Database Rules: SIN CAMBIOS.
