@@ -451,6 +451,10 @@ function getBoardTeamMarkerHtml(u){
   return `<span class="unit-team-marker ${relation}" title="${label}" aria-label="${label}"></span>`;
 }
 
+function isLocalBoardSouthPerspectiveFlipped(){
+  return !!publicState&&publicState.mode==="online"&&Number(myPlayer)===2;
+}
+
 function renderBoard(){
   const grid=$("grid");
   if(!grid.dataset.boardTargetDelegateBound){
@@ -464,7 +468,10 @@ function renderBoard(){
     },true);
   }
   grid.innerHTML="";
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  const flipSouth=isLocalBoardSouthPerspectiveFlipped();
+  for(let displayY=0;displayY<ROWS;displayY++)for(let displayX=0;displayX<COLS;displayX++){
+    const x=displayX;
+    const y=flipSouth?(ROWS-1-displayY):displayY;
     const cell=document.createElement("div");
     cell.className="cell";
     const coordinate=document.createElement("span");
@@ -664,7 +671,7 @@ function renderLeaderBases(){
   if(!layer||!publicState)return;
   const leaders=(publicState.units||[]).filter(u=>u&&u.leader&&u.hp>0).sort((a,b)=>a.owner-b.owner);
   layer.innerHTML=leaders.map(u=>{
-    const side=u.owner===1?"south":"north";
+    const side=u.owner===myPlayer?"south":"north";
     const key=`${u.x},${u.y}`;
     const isMarked=highlights.includes(key);
     const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":""].filter(Boolean).join(" ");

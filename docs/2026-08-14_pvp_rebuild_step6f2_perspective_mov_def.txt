@@ -1,0 +1,7 @@
+HALLVALLA · PVP REBUILD · PASO 6F2
+
+Correcciones sobre 6F solicitadas tras prueba real:
+1) MOV y DEF vuelven a estar disponibles en Action Phase, siguiendo el comportamiento del motor PvE. ATTK/EFFECT permanecen bloqueados en esta prueba. Esto evita que una unidad/Personaje Principal con acciones legales quede sin posibilidad de actuar por una limitación artificial de 6F.
+2) Perspectiva local del campo: cada cliente ve SIEMPRE su propio lado al SUR y al rival al NORTE. Para J2 solo se invierte localmente el eje Y del render; Firebase conserva las coordenadas canónicas únicas. Clics, invocaciones y movimientos siguen escribiendo coordenadas canónicas.
+
+No se cambian reglas de Firebase.

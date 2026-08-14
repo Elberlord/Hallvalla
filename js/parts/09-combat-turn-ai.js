@@ -76,7 +76,6 @@ function resolveBeastCellTraps(moving,units,traps){
 }
 
 async function moveUnit(u,x,y){
-  if(isPvpStep6fLimitedMode())return setHint("Paso 6F: el movimiento todavía está bloqueado. En esta prueba solo habilitamos fases e invocación de unidades.");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(u?.leader)return setHint("Los líderes están anclados en su Base y no pueden moverse.");
   if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));

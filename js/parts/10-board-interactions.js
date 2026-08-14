@@ -84,10 +84,10 @@ function moveBoardDragGhost(ev){
 function getDragUnitMoveKeys(u){return moveZones(u);}
 function getDragUnitAttackKeys(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`);}
 function startUnitBoardDrag(ev,u,sourceEl){
-  if(isPvpStep6fLimitedMode())return false;
   if(!u||u.owner!==myPlayer||!isMyTurn()||isBattleEnded())return false;
+  const limited=isPvpStep6fLimitedMode();
   const canMoveNow=!u.leader&&getDragUnitMoveKeys(u).length>0;
-  const canAttackNow=getDragUnitAttackKeys(u).length>0;
+  const canAttackNow=!limited&&getDragUnitAttackKeys(u).length>0;
   if(!canMoveNow&&!canAttackNow)return false;
   boardDragState={kind:"unit",unitId:u.id,pointerId:ev.pointerId,startX:ev.clientX,startY:ev.clientY,dragging:false,sourceEl};
   bindBoardDragWindowListeners();
@@ -117,10 +117,10 @@ function beginBoardDragVisual(ev){
     unitContextSelection=null;
     hideUnitContextMenu();
     dragMoveHighlights=getDragUnitMoveKeys(u);
-    dragAttackHighlights=getDragUnitAttackKeys(u);
+    dragAttackHighlights=isPvpStep6fLimitedMode()?[]:getDragUnitAttackKeys(u);
     dragSummonHighlights=[];
     const stealthDrag=isStealthedUnit(u);
-    setHint(stealthDrag?"Unidad con Sigilo: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.":`${u.name}: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.`);
+    setHint(isPvpStep6fLimitedMode()?`${u.name}: arrastra a una casilla verde para mover. ATTK sigue bloqueado en esta prueba.`:(stealthDrag?"Unidad con Sigilo: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.":`${u.name}: arrastra a una casilla verde para mover o sobre un rival rojo para atacar.`));
     boardDragGhost=makeBoardDragGhost(boardDragState.sourceEl,stealthDrag?"Presencia Oculta · Sigilo":u.name);
     render();
   }else if(boardDragState.kind==="hand-unit"){
@@ -166,7 +166,7 @@ async function handleBoardDragEnd(ev){
       const target=drop.unit;
       const moveKey=`${drop.x},${drop.y}`;
       clearBoardDragVisuals({rerender:false});
-      if(target&&target.owner!==myPlayer&&getDragUnitAttackKeys(u).includes(moveKey)){
+      if(!isPvpStep6fLimitedMode()&&target&&target.owner!==myPlayer&&getDragUnitAttackKeys(u).includes(moveKey)){
         selectedUnitId=u.id;selectedUnitActionMode="attk";
         await attackUnit(u.id,target.id);
         return;
@@ -1020,7 +1020,6 @@ async function activateUnitEffect(u,choice=null){
 // No debe crear defenseFxEvent ni floatFxEvent.
 // Esto evita el óvalo/bloque gigante que se generaba en la capa FX.
 async function activateDefenseStance(u){
-  if(isPvpStep6fLimitedMode())return setHint("Paso 6F: DEFENSA todavía está bloqueada. Esta prueba valida únicamente fases e invocación de unidades.");
   if(!u||u.owner!==myPlayer||!isMyTurn())return setHint("Solo puedes usar DEF con tus invocaciones.");
   if(!isUnitActionWindow(u))return setHint(unitActionPhaseHint("DEF"));
   if(u.acted)return setHint(`${u.name} ya usó su acción ofensiva este turno.`);

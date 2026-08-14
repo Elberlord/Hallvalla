@@ -1065,12 +1065,12 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
           const banner=document.getElementById("pvpStep6eRealBadge")||document.createElement("div");
           banner.id="pvpStep6eRealBadge";
           banner.className="pvp-step6e-real-badge pvp-step6f-real-badge";
-          banner.textContent="PASO 6F · MOTOR REAL · FASES + INVOCACIÓN DE UNIDADES ACTIVAS";
+          banner.textContent="PASO 6F · MOTOR REAL · INVOCACIÓN + MOV/DEF · PERSPECTIVA LOCAL";
           document.body.appendChild(banner);
-          if(typeof setHint==="function") setHint("Paso 6F: usa las fases reales y prueba invocar una carta de UNIDAD. Movimiento, ataque, defensa, EFFECT y cartas no-unidad siguen bloqueados en esta prueba.");
+          if(typeof setHint==="function") setHint("Paso 6F: invoca unidades y prueba MOV/DEF. Cada jugador ve su propio lado al sur. ATTK, EFFECT y cartas no-unidad siguen bloqueados en esta prueba.");
         }catch(_){ }
       },250);
-      mark(`PASO 6F · J${activeRole} entregado al motor real con fases + invocación de unidades habilitadas.`);
+      mark(`PASO 6F · J${activeRole} entregado al motor real con invocación + MOV/DEF y perspectiva local sur habilitadas.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Entrada al motor real falló:`,error);
@@ -1446,7 +1446,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6F: motor real existente con fases + invocación de unidades; movimiento/ataque/efectos siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6F: motor real con invocación + MOV/DEF; cada jugador ve su lado al sur; ATTK/EFFECT siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1671,7 +1671,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6F-REAL-ENGINE-UNIT-SUMMON";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6F2-REAL-ENGINE-PERSPECTIVE-MOV-DEF";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);
