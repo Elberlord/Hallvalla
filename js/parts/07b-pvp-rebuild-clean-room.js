@@ -1,31 +1,27 @@
 "use strict";
 /*
 ===============================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6G · MOTOR REAL · ATAQUES SINCRONIZADOS
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6H · FIREBALL + QUEMADURA
 -------------------------------------------------------------------------------
 Base estable conservada:
-- J1 crea sala sin congelar el navegador.
-- J2 entra a la sala.
-- Ambos preparan private/player1 y private/player2 con mazo 21/21.
-- LISTO sincronizado y estable.
+- Paso 6G validado: motor real, perspectiva correcta, invocación, MOV, DEF y ATTK.
+- Lobby, reglas, LISTO, Piedra/Papel/Tijera y orden de turno permanecen intactos.
 
-Objetivo único de este paso:
-- partir de la base 6D validada, NO del tablero experimental 6E anterior;
-- conservar lobby, reglas, LISTO y Piedra/Papel/Tijera ya aprobados;
-- preparar de forma privada el mazo/mano real de cada jugador;
-- revelar al iniciar únicamente líder y Personaje Principal, porque ya son visibles en campo;
-- crear el estado que entiende el MOTOR REAL que ya usa la batalla contra IA;
-- entregar ambos clientes a enterGame(code, role) sobre la arena real existente;
-- retirar el bloqueo general ya validado en 6E;
-- habilitar las fases reales y la invocación de cartas de UNIDAD en el motor existente;
-- mantener bloqueados movimiento, ataque, defensa, EFFECT y cartas no-unidad durante esta prueba;
-- usar commit atómico multipath para coste privado + resultado público de la invocación.
+Objetivo de esta prueba:
+- conservar el motor real PvE como única lógica de combate;
+- habilitar Fireball usando el resolvedor real existente;
+- forzar Fireball en la mano inicial de ambos jugadores SOLO en este build de prueba;
+- validar daño inmediato, aplicación de Quemadura y sus ticks al final de turno;
+- mantener los pasivos del motor real funcionando normalmente;
+- mantener EFFECT activo de unidades, equipos, trampas y el resto de hechizos bloqueados
+  para no mezclar sistemas todavía.
 
-No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el combate existente.
+Fireball mantiene su coste y reglas reales. La mano inicial sigue siendo de 4 cartas.
+No crea una segunda arena ni una implementación PvP paralela de Quemadura.
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP6G-REAL-ATTACK-SYNC";
+  const STEP="PVP-REBUILD-STEP6H-FIREBALL-BURN";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -221,8 +217,29 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
     if(principalIndex<0) throw new Error("El Personaje Principal no existe dentro del mazo privado.");
     drawPool.splice(principalIndex,1);
     const shuffled=seededShuffle6c(drawPool,`${code}|${role}|${privatePayload?.ownerUid||""}|${loadout.fingerprint||""}`);
-    const handKeys=shuffled.slice(0,STEP6C_INITIAL_HAND);
-    const deckKeys=shuffled.slice(STEP6C_INITIAL_HAND);
+    let handKeys=shuffled.slice(0,STEP6C_INITIAL_HAND);
+    let deckKeys=shuffled.slice(STEP6C_INITIAL_HAND);
+
+    // PASO 6H · prueba controlada de magia persistente.
+    // Cada jugador recibe Fireball en la mano inicial para poder validar el mismo
+    // resolvedor del PvE (daño + Quemadura + tick al final del turno) sin depender
+    // del azar del shuffle. Si Fireball ya forma parte del mazo, solo se reordena;
+    // si no está, sustituye temporalmente la primera carta de la mano SOLO en este
+    // build de prueba, manteniendo 4 cartas en mano y 16 en mazo.
+    const fireballKey="fireball";
+    const handFireballIndex=handKeys.indexOf(fireballKey);
+    const deckFireballIndex=deckKeys.indexOf(fireballKey);
+    let testInjectedFireball=false;
+    if(handFireballIndex>0){
+      [handKeys[0],handKeys[handFireballIndex]]=[handKeys[handFireballIndex],handKeys[0]];
+    }else if(handFireballIndex<0&&deckFireballIndex>=0){
+      const displaced=handKeys[0];
+      handKeys[0]=fireballKey;
+      deckKeys[deckFireballIndex]=displaced;
+    }else if(handFireballIndex<0){
+      handKeys[0]=fireballKey;
+      testInjectedFireball=true;
+    }
     return {
       schema:"hallvalla-pvp-private-step6d",
       matchCode:String(code||""),
@@ -238,7 +255,9 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       maxHonor:0,
       lastTurnStarted:"",
       skipFirstTurnDraw:true,
-      resourceSeq:0
+      resourceSeq:0,
+      testOpeningFireball:true,
+      testInjectedFireball
     };
   }
   function validatePrivateCombat6c(data,code,role){
@@ -984,9 +1003,10 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
     const ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
     return {
       schema:"hallvalla-pvp-real-engine-step6f",
-      pvpRebuildStep:"6G_REAL_ENGINE_ATTACK_SYNC",
+      pvpRebuildStep:"6H_FIREBALL_BURN_TEST",
       pvpStep6fMode:"unit_summon_only",
       pvpStep6gAttacks:true,
+      pvpStep6hMagicTest:true,
       pvpAtomicActionMode:"multipath_v1",
       pvpTestClockSuspended:true,
       pvpBridgeReadOnly:false,
@@ -1035,7 +1055,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   }
 
   function isRealEngineState6e(room){
-    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true;
+    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true&&room.pvpStep6hMagicTest===true;
   }
 
   function clearRealEngineStartTimer6e(){
@@ -1068,7 +1088,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
           banner.className="pvp-step6e-real-badge pvp-step6f-real-badge";
           banner.textContent="PASO 6G · MOTOR REAL · MOV/DEF/ATTK SINCRONIZADOS";
           document.body.appendChild(banner);
-          if(typeof setHint==="function") setHint("Paso 6G: MOV, DEF y ATTK están activos con las reglas reales del PvE. Cada jugador ve su lado al sur. EFFECT y cartas no-unidad siguen bloqueados.");
+          if(typeof setHint==="function") setHint("Paso 6H: MOV, DEF y ATTK siguen activos. Fireball está habilitado para probar daño + Quemadura persistente con el motor real. EFFECT, equipos y trampas siguen bloqueados.");
         }catch(_){ }
       },250);
       mark(`PASO 6G · J${activeRole} entregado al motor real con MOV/DEF/ATTK y perspectiva local sur habilitadas.`);
@@ -1447,7 +1467,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6G: motor real con MOV/DEF/ATTK; cada jugador ve su lado al sur; EFFECT y cartas no-unidad siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6H: motor real con MOV/DEF/ATTK + Fireball/Quemadura; pasivos reales activos; EFFECT, equipos y trampas siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1663,6 +1683,9 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.__HALLVALLA_PVP_STEP6G_ATTACKS__=function(){
     try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6gAttacks===true&&publicState.phase==="active";}catch(_){return false;}
   };
+  globalThis.__HALLVALLA_PVP_STEP6H_MAGIC_TEST__=function(){
+    try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6hMagicTest===true&&publicState.phase==="active";}catch(_){return false;}
+  };
 
   globalThis.pvpRebuildStep45Open=openCleanRoom;
   globalThis.pvpRebuildStep45Create=createMinimalPublicRoom;
@@ -1675,7 +1698,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6G-REAL-ENGINE-ATTACK-SYNC";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6H-FIREBALL-BURN-TEST";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);

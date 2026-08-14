@@ -922,7 +922,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   return{success:true,units:out,log,battleFxEvent};
 }
 async function activateUnitEffect(u,choice=null){
-  if(isPvpStep6fLimitedMode())return setHint("Paso 6G: EFFECT todavía está bloqueado. Esta prueba valida MOV, DEF y ATTK con el motor real.");
+  if(isPvpStep6fLimitedMode())return setHint("Paso 6H: EFFECT activo de unidades todavía está bloqueado. Esta prueba añade Fireball + Quemadura persistente sobre MOV/DEF/ATTK ya validados.");
   if(!u||u.owner!==myPlayer||!isUnitActionWindow(u))return setHint(unitActionPhaseHint("EFFECT"));
   if(u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
   const mode=getUnitEffectMode(u);
