@@ -262,10 +262,17 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       hide("pvpRpsOverlay",false); hide("pvpRpsStageChoose",true); hide("pvpRpsStageResult",false);
       const meta=resultCopy(String(rps.resultKey||"rock"));
       const art=$("pvpRpsResultArt"); if(art){ art.src=meta.img; art.alt=meta.headline; }
-      setText("pvpRpsResultHeadline",`GANADOR · ${getPlayerName(room,startCfg.winnerRole)}`);
-      setText("pvpRpsResultSubline",`${meta.sub} ${getPlayerName(room,startCfg.startingRole)} jugará primero.`);
       hide("pvpRpsDecisionPanel",true); hide("pvpRpsWaitingPanel",false);
-      const waiting=$("pvpRpsWaitingPanel"); if(waiting) waiting.textContent=(myRole===startCfg.startingRole)?"Comenzarás primero. Paso 5 abrirá la arena desde aquí.":"Comenzarás segundo. Paso 5 abrirá la arena desde aquí.";
+      const waiting=$("pvpRpsWaitingPanel");
+      if(myRole===Number(startCfg.startingRole||0)){
+        setText("pvpRpsResultHeadline","JUEGAS PRIMERO");
+        setText("pvpRpsResultSubline",meta.sub);
+        if(waiting) waiting.textContent="Tu turno será el primero cuando comience la batalla.";
+      }else{
+        setText("pvpRpsResultHeadline","JUEGAS SEGUNDO");
+        setText("pvpRpsResultSubline",meta.sub);
+        if(waiting) waiting.textContent="Tu turno será el segundo cuando comience la batalla.";
+      }
       return;
     }
 
@@ -292,14 +299,16 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       hide("pvpRpsOverlay",false); hide("pvpRpsStageChoose",true); hide("pvpRpsStageResult",false);
       const meta=resultCopy(String(rps.resultKey||"rock"));
       const art=$("pvpRpsResultArt"); if(art){ art.src=meta.img; art.alt=meta.headline; }
-      const winnerRole=Number(rps.winnerRole||0); const loserRole=winnerRole===1?2:1;
-      setText("pvpRpsResultHeadline",`GANADOR · ${getPlayerName(room,winnerRole)}`);
-      setText("pvpRpsResultSubline",`${meta.sub} ${getPlayerName(room,loserRole)} ha perdido este desempate.`);
+      const winnerRole=Number(rps.winnerRole||0);
       if(activeRole===winnerRole){
+        setText("pvpRpsResultHeadline","ELIGE TU TURNO");
+        setText("pvpRpsResultSubline",`${meta.sub} Decide si quieres jugar primero o segundo.`);
         hide("pvpRpsDecisionPanel",false); hide("pvpRpsWaitingPanel",true);
       }else{
+        setText("pvpRpsResultHeadline","ESPERA");
+        setText("pvpRpsResultSubline",meta.sub);
         hide("pvpRpsDecisionPanel",true); hide("pvpRpsWaitingPanel",false);
-        const waiting=$("pvpRpsWaitingPanel"); if(waiting) waiting.textContent="Esperando la decisión del ganador...";
+        const waiting=$("pvpRpsWaitingPanel"); if(waiting) waiting.textContent="Espera a que el ganador decida si jugará primero o segundo.";
       }
       return;
     }

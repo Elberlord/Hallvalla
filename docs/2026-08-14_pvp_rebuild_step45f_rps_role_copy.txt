@@ -1,0 +1,12 @@
+HALLVALLA PVP REBUILD STEP 4.5F
+
+Base: STEP 4.5E probado por el usuario.
+
+Ajuste visual del desenlace Piedra/Papel/Tijera:
+- Se elimina el texto "GANADOR · <nombre>" de ambos clientes.
+- Cliente ganador: ve "ELIGE TU TURNO" y los controles PRIMERO / SEGUNDO.
+- Cliente perdedor: ve "ESPERA" y el mensaje "Espera a que el ganador decida si jugará primero o segundo."; no recibe los controles de elección.
+- Una vez resuelto el orden: cada cliente ve un mensaje relativo a sí mismo: "JUEGAS PRIMERO" o "JUEGAS SEGUNDO".
+- No se inicia la arena ni el combate en este paquete.
+- Cache build actualizado a 20260814F-RPS-ROLE-COPY-FIX.
+- Firebase Realtime Database Rules: SIN CAMBIOS.
