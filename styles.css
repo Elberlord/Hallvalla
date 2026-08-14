@@ -20603,3 +20603,60 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   .pvp-step5-versus > b{font-size:22px}
   .pvp-step5-versus article{min-height:88px;padding:10px}
 }
+
+/* ==========================================================================
+   HALLVALLA · PVP REBUILD STEP 6A · INICIO CANÓNICO DEL DUELO
+   ========================================================================== */
+.game-shell.pvp-step6a-active .battlefield{
+  background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.18)),url("assets/board_oscuro_11x6.webp") center center/auto 100% no-repeat,#070503!important;
+}
+.game-shell.pvp-step6a-active .battlefield > *{pointer-events:none!important}
+.game-shell.pvp-step6a-active #pvpStep6aCombatGate{pointer-events:auto!important;visibility:visible!important}
+.game-shell.pvp-step6a-active .side,
+.game-shell.pvp-step6a-active #handDrawer,
+.game-shell.pvp-step6a-active .battle-tools,
+.game-shell.pvp-step6a-active #turnHonorHud,
+.game-shell.pvp-step6a-active #rivalHonorHud,
+.game-shell.pvp-step6a-active #mobileToggleActionsBtn,
+.game-shell.pvp-step6a-active #turnTimerHud,
+.game-shell.pvp-step6a-active #playerClock1,
+.game-shell.pvp-step6a-active #playerClock2,
+.game-shell.pvp-step6a-active #log,
+.game-shell.pvp-step6a-active #hint{opacity:.18!important;filter:saturate(.25)!important}
+.pvp-step6a-combat-gate{
+  position:absolute;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;
+  background:radial-gradient(circle at 50% 46%,rgba(74,50,20,.08),rgba(0,0,0,.34) 74%);
+  backdrop-filter:blur(.5px);
+}
+.pvp-step6a-combat-gate.hidden{display:none!important}
+.pvp-step6a-card{
+  width:min(780px,92vw);padding:22px 26px 20px;border:1px solid rgba(219,174,84,.42);border-radius:22px;
+  background:linear-gradient(180deg,rgba(24,17,11,.80),rgba(7,7,6,.86));
+  box-shadow:0 28px 90px rgba(0,0,0,.64),inset 0 0 34px rgba(196,138,44,.05);
+  text-align:center;color:#f3dfb1;font-family:Georgia,serif;
+}
+.pvp-step6a-kicker{color:#d0a654;font:900 11px/1 Georgia,serif;letter-spacing:.2em}
+.pvp-step6a-card h2{margin:8px 0 7px;color:#ffe8aa;font:900 clamp(30px,4vw,50px)/1 Georgia,serif;letter-spacing:.045em;text-shadow:0 4px 18px rgba(0,0,0,.72)}
+.pvp-step6a-status{max-width:680px;margin:0 auto 14px;color:#ddcca5;font:800 clamp(13px,1.25vw,17px)/1.3 Georgia,serif}
+.pvp-step6a-turn-row{display:inline-flex;align-items:baseline;gap:10px;padding:7px 17px;margin:0 auto 8px;border-radius:999px;border:1px solid rgba(218,171,77,.36);background:rgba(67,44,17,.42)}
+.pvp-step6a-turn-row span{color:#bfa16c;font:900 11px/1 Georgia,serif;letter-spacing:.15em}
+.pvp-step6a-turn-row strong{color:#fff1bd;font:900 24px/1 Georgia,serif}
+.pvp-step6a-local-state{margin:4px auto 14px;color:#d4f9a8;font:900 clamp(23px,2.8vw,36px)/1 Georgia,serif;letter-spacing:.08em;text-shadow:0 0 15px rgba(119,211,64,.2)}
+.pvp-step6a-versus{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:center;margin:0 auto 14px}
+.pvp-step6a-versus article{min-height:105px;padding:14px;border-radius:17px;border:1px solid rgba(201,150,63,.32);background:linear-gradient(180deg,rgba(58,37,21,.64),rgba(19,14,10,.70));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.pvp-step6a-versus article span{color:#b79350;font:900 10px/1 Georgia,serif;letter-spacing:.16em}
+.pvp-step6a-versus article strong{color:#fff0c2;font:900 clamp(18px,2.1vw,27px)/1.05 Georgia,serif}
+.pvp-step6a-versus article em{font-style:normal;color:#d7c499;font:900 11px/1 Georgia,serif;letter-spacing:.08em}
+.pvp-step6a-versus > b{color:#d6a34a;font:900 clamp(23px,2.8vw,38px)/1 Georgia,serif;text-shadow:0 3px 12px rgba(0,0,0,.72)}
+.pvp-step6a-state-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 auto 13px}
+.pvp-step6a-state-strip span{padding:7px 12px;border-radius:999px;border:1px solid rgba(212,165,74,.32);background:rgba(55,37,20,.54);color:#ead6aa;font:900 11px/1 Georgia,serif}
+.pvp-step6a-lock{margin:8px auto 9px;color:#c7f29a;font:900 12px/1.2 Georgia,serif;letter-spacing:.12em;text-shadow:0 0 12px rgba(104,187,57,.18)}
+.pvp-step6a-note{max-width:670px;margin:0 auto 15px;color:#baaD91;font:700 11px/1.4 Georgia,serif}
+.pvp-step6a-leave{appearance:none;border:1px solid rgba(204,162,79,.5);border-radius:999px;background:linear-gradient(180deg,#5b4326,#2a2017);color:#e9d5aa;padding:10px 20px;font:900 12px/1 Georgia,serif;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.32);pointer-events:auto!important}
+.pvp-step6a-leave:hover{filter:brightness(1.08)}
+@media(max-width:760px){
+  .pvp-step6a-card{padding:18px 13px 15px}
+  .pvp-step6a-versus{grid-template-columns:1fr;gap:7px}
+  .pvp-step6a-versus > b{font-size:21px}
+  .pvp-step6a-versus article{min-height:76px;padding:9px}
+}

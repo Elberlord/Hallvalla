@@ -1,7 +1,7 @@
 "use strict";
 /*
 ===============================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 5
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6A
 -------------------------------------------------------------------------------
 Base estable conservada:
 - J1 crea sala sin congelar el navegador.
@@ -10,16 +10,17 @@ Base estable conservada:
 - LISTO sincronizado y estable.
 
 Objetivo único de este paso:
-- conservar intacto el flujo validado de reglas + LISTO + Piedra/Papel/Tijera;
-- después del desenlace PRIMERO/SEGUNDO, J1 publica un bootstrap único de arena;
-- ambos clientes entran al mismo duelo y leen exactamente el mismo estado base;
-- todavía NO activar cartas, Honor, fases, movimientos, efectos ni motor de combate.
+- conservar intacto el flujo validado hasta la entrada sincronizada de Paso 5;
+- crear UN estado canónico de combate en Firebase;
+- activar oficialmente el Turno 1 con el jugador decidido por Piedra/Papel/Tijera;
+- ambos clientes renderizan exactamente el mismo turno/fase/orden;
+- las acciones siguen bloqueadas en 6A: fases, cartas, Honor, movimiento y efectos se activan después.
 
 Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP5";
+  const STEP="PVP-REBUILD-STEP6A";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -37,6 +38,8 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
   let roomCache=null;
   let arenaEnteredCode="";
   let arenaLaunchTimer=null;
+  let combatLaunchTimer=null;
+  let combatEnteredCode="";
 
   function $(id){ return document.getElementById(id); }
   function normalizeCode(value){ return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8); }
@@ -81,7 +84,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     if(create){ create.disabled=busy; create.title=busy?"Operación PvP en curso...":"Crear partida"; }
     if(join){ join.disabled=busy; join.title=busy?"Operación PvP en curso...":"Unirse a sala"; }
     if(ready&&busy) ready.disabled=true;
-    const disableRuleButtons=busy||activeRole!==1||!activeCode||["configured","arena_ready"].includes(String(roomCache?.phase||"waiting"));
+    const disableRuleButtons=busy||activeRole!==1||!activeCode||["configured","arena_ready","battle_active"].includes(String(roomCache?.phase||"waiting"));
     for(const id of ["pvpTimerToggleBtn","pvpStakeModeBtn","pvpStakeAmountBtn"]){ const btn=$(id); if(btn) btn.disabled=disableRuleButtons; }
   }
 
@@ -290,6 +293,10 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         const patch={"phase":"arena_ready"};
         if(!existingValid) patch["arenaBootstrap"]=arena;
         await withTimeout(update(publicRef,patch),`Publicar bootstrap de arena en ${code}`);
+        // El listener puede dispararse mientras phaseWriteInFlight sigue activo.
+        // Programamos 6A directamente desde la confirmación del bootstrap para
+        // no depender de una segunda notificación de Firebase.
+        scheduleCanonicalCombatStart(Object.assign({},fresh,{phase:"arena_ready",arenaBootstrap:arena}),code);
       }catch(error){
         console.error(`[HallValla][${STEP}] Bootstrap de arena falló:`,error);
         mark(`Bootstrap de arena falló: ${error?.message||error}`);
@@ -297,11 +304,140 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     },Math.max(0,revealUntil-Date.now()));
   }
 
+  function clearCombatLaunchTimer(){
+    if(combatLaunchTimer!==null){ clearTimeout(combatLaunchTimer); combatLaunchTimer=null; }
+  }
+
+  function buildCanonicalCombatState(room,code){
+    if(!validateArenaBootstrap(room)) return null;
+    const arena=room.arenaBootstrap||{};
+    const rules=arena.settings||getRules(room);
+    const activeRole=Number(arena.currentPlayer||0);
+    const waitingRole=Number(arena.secondPlayer||0);
+    if(![1,2].includes(activeRole)||![1,2].includes(waitingRole)||activeRole===waitingRole) return null;
+    return {
+      schema:"hallvalla-pvp-step6a-combat-state",
+      version:1,
+      status:"active",
+      sourceOfTruth:"firebase",
+      matchCode:String(code||arena.matchCode||room?.code||""),
+      startedAt:Date.now(),
+      turnNumber:1,
+      activeRole,
+      waitingRole,
+      turnPhase:"turn_start",
+      actionsEnabled:false,
+      actionLockReason:"STEP_6A_CANONICAL_START_ONLY",
+      players:{
+        1:{uid:String(arena?.players?.[1]?.uid||""),name:String(arena?.players?.[1]?.name||getPlayerName(room,1))},
+        2:{uid:String(arena?.players?.[2]?.uid||""),name:String(arena?.players?.[2]?.name||getPlayerName(room,2))}
+      },
+      settings:{
+        timerEnabled:!!rules.timerEnabled,
+        stakeMode:String(rules.stakeMode||"none"),
+        goldAmount:Number(rules.goldAmount||500),
+        cardEntryFee:500
+      },
+      economy:{
+        applied:false,
+        state:String(rules.stakeMode||"none")==="none"?"not_required":"deferred_after_6a_validation"
+      }
+    };
+  }
+
+  function validateCanonicalCombatState(room){
+    const combat=room?.combatState;
+    const arena=room?.arenaBootstrap;
+    if(!combat||typeof combat!=="object"||combat.schema!=="hallvalla-pvp-step6a-combat-state"||combat.status!=="active") return false;
+    if(!arena||!validateArenaBootstrap(room)) return false;
+    if(String(combat.matchCode||"")!==String(arena.matchCode||room?.code||activeCode||"")) return false;
+    if(Number(combat.turnNumber||0)!==1||String(combat.turnPhase||"")!=="turn_start") return false;
+    if(Number(combat.activeRole||0)!==Number(arena.currentPlayer||0)) return false;
+    if(Number(combat.waitingRole||0)!==Number(arena.secondPlayer||0)) return false;
+    if(String(combat?.players?.[1]?.uid||"")!==String(room?.playerSlots?.player1Uid||"")) return false;
+    if(String(combat?.players?.[2]?.uid||"")!==String(room?.playerSlots?.player2Uid||"")) return false;
+    return combat.sourceOfTruth==="firebase" && combat.actionsEnabled===false;
+  }
+
+  function clearStep6aCombatView(){
+    combatEnteredCode="";
+    const shell=$("gameShell");
+    if(shell) shell.classList.remove("pvp-step6a-active");
+    hide("pvpStep6aCombatGate",true);
+  }
+
+  function renderStep6aCombat(room){
+    if(String(room?.phase||"")!=="battle_active"||!validateCanonicalCombatState(room)) return false;
+    const combat=room.combatState;
+    const rules=combat.settings||{};
+    const active=Number(combat.activeRole||0);
+    const waiting=Number(combat.waitingRole||0);
+    const myRole=Number(activeRole||0);
+    clearArenaLaunchTimer();
+    setRpsVisualActive(false);
+    $("onlineLobby")?.classList.add("hidden");
+    $("mainMenu")?.classList.add("hidden");
+    const shell=$("gameShell");
+    if(shell){ shell.classList.remove("hidden","pvp-step5-preview"); shell.classList.add("pvp-step6a-active"); }
+    hide("pvpStep5ArenaGate",true);
+    hide("pvpStep6aCombatGate",false);
+    setText("pvpStep6aTurn",String(combat.turnNumber||1));
+    setText("pvpStep6aPlayer1",String(combat?.players?.[1]?.name||"Jugador 1"));
+    setText("pvpStep6aPlayer2",String(combat?.players?.[2]?.name||"Jugador 2"));
+    setText("pvpStep6aPlayer1State",active===1?"TURNO ACTIVO":"EN ESPERA");
+    setText("pvpStep6aPlayer2State",active===2?"TURNO ACTIVO":"EN ESPERA");
+    setText("pvpStep6aLocalState",myRole===active?"TU TURNO":"ESPERA");
+    setText("pvpStep6aPhase","Fase: Inicio de turno");
+    setText("pvpStep6aTimer",`Timer: ${rules.timerEnabled?"ON":"OFF"}`);
+    const stake=rules.stakeMode==="card"?"Carta · economía pendiente 6A":(rules.stakeMode==="gold"?`Oro · ${Number(rules.goldAmount||500)} · economía pendiente 6A`:"Gratis");
+    setText("pvpStep6aStake",`Apuesta: ${stake}`);
+    const activeName=String(combat?.players?.[active]?.name||`J${active}`);
+    setText("pvpStep6aStatus",`Sala ${combat.matchCode} · Turno 1 oficial. ${activeName} es el jugador activo en ambos clientes.`);
+    setText("p1HudName",String(combat?.players?.[1]?.name||"Jugador 1"));
+    setText("p2HudName",String(combat?.players?.[2]?.name||"Jugador 2"));
+    setText("p1Badge",active===1?"Turno":"Espera");
+    setText("p2Badge",active===2?"Turno":"Espera");
+    setText("phaseBanner","TURNO 1 · INICIO");
+    setText("p1Life","—"); setText("p2Life","—");
+    setText("p1Hand","—"); setText("p2Hand","—");
+    setText("p1Deck","21"); setText("p2Deck","21");
+    const first=combatEnteredCode!==String(combat.matchCode||activeCode||"");
+    combatEnteredCode=String(combat.matchCode||activeCode||"");
+    if(first) mark(`PASO 6A · combate ACTIVE · Turno 1 canónico pertenece a J${active} · ambos clientes leen Firebase.`);
+    return true;
+  }
+
+  function scheduleCanonicalCombatStart(room,code){
+    if(activeRole!==1||code!==activeCode) return;
+    if(String(room?.phase||"")==="battle_active"&&validateCanonicalCombatState(room)){ clearCombatLaunchTimer(); return; }
+    if(String(room?.phase||"")!=="arena_ready"||!validateArenaBootstrap(room)) return;
+    clearCombatLaunchTimer();
+    combatLaunchTimer=setTimeout(async()=>{
+      combatLaunchTimer=null;
+      if(activeRole!==1||code!==activeCode||phaseWriteInFlight) return;
+      phaseWriteInFlight=true;
+      try{
+        const publicRef=ref(db,`games/${code}/public`);
+        const snap=await withTimeout(get(publicRef),`Confirmar arena antes de iniciar combate ${code}`,5000);
+        if(!snap.exists()) return;
+        const fresh=snap.val()||{};
+        if(String(fresh?.phase||"")==="battle_active"&&validateCanonicalCombatState(fresh)) return;
+        if(String(fresh?.phase||"")!=="arena_ready"||!validateArenaBootstrap(fresh)) return;
+        const combat=buildCanonicalCombatState(fresh,code);
+        if(!combat) throw new Error("No se pudo construir el estado canónico del Turno 1.");
+        await withTimeout(update(publicRef,{"combatState":combat,"phase":"battle_active"}),`Activar combate canónico ${code}`);
+      }catch(error){
+        console.error(`[HallValla][${STEP}] Inicio canónico falló:`,error);
+        mark(`Inicio canónico falló: ${error?.message||error}`);
+      }finally{ phaseWriteInFlight=false; }
+    },900);
+  }
+
   function renderRules(room){
     const rules=getRules(room);
     const host=activeRole===1;
     const phase=String(room?.phase||"waiting");
-    const configured=["configured","arena_ready"].includes(phase) && room?.startConfig?.resolved===true;
+    const configured=["configured","arena_ready","battle_active"].includes(phase) && room?.startConfig?.resolved===true;
     const timerBtn=$("pvpTimerToggleBtn"), modeBtn=$("pvpStakeModeBtn"), amountBtn=$("pvpStakeAmountBtn");
     if(timerBtn){ timerBtn.textContent=`Timer: ${rules.timerEnabled?"ON":"OFF"}`; timerBtn.disabled=!host||busy||configured; }
     if(modeBtn){ modeBtn.textContent=`Apuesta: ${rules.stakeMode==="gold"?"Oro":(rules.stakeMode==="card"?"Carta":"Gratis")}`; modeBtn.disabled=!host||busy||configured; }
@@ -432,8 +568,10 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
 
   function renderRoomSnapshot(room,code=activeCode){
     room=room&&typeof room==="object"?room:{}; roomCache=room;
-    if(String(room?.phase||"")!=="arena_ready"&&arenaEnteredCode&&arenaEnteredCode===String(code||activeCode||"")){
+    const roomPhase=String(room?.phase||"");
+    if(!["arena_ready","battle_active"].includes(roomPhase)&&arenaEnteredCode&&arenaEnteredCode===String(code||activeCode||"")){
       clearStep5ArenaPreview();
+      clearStep6aCombatView();
       $("onlineLobby")?.classList.remove("hidden");
     }
     const p1Uid=String(room?.playerSlots?.player1Uid||""); const p2Uid=String(room?.playerSlots?.player2Uid||"");
@@ -451,7 +589,8 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     setReadyCheck(1,p1Ready); setReadyCheck(2,p2Ready);
     renderRules(room);
     renderRpsUi(room);
-    const arenaReady=renderStep5ArenaPreview(room);
+    const combatActive=renderStep6aCombat(room);
+    const arenaReady=combatActive?false:renderStep5ArenaPreview(room);
 
     const input=$("joinCode"); if(input){ input.value=code||room?.code||""; input.readOnly=!!activeRole; }
     const ownReady=activeRole===2?p2Ready:p1Ready;
@@ -467,7 +606,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     }else if(!bothPrepared){
       setText("pvpRoomMessage","Paso 4: preparando el mazo privado de ambos jugadores...");
     }else if(startCfg.resolved){
-      setText("pvpRoomMessage",arenaReady?`PASO 5 correcto: ambos clientes entraron al duelo base; ${getPlayerName(room,startCfg.startingRole)} jugará primero.`:`Paso 5: mostrando desenlace y preparando entrada sincronizada al duelo...`);
+      setText("pvpRoomMessage",combatActive?`PASO 6A correcto: Turno 1 canónico ACTIVE; ${getPlayerName(room,startCfg.startingRole)} es el jugador activo.`:(arenaReady?`Paso 5 confirmado: arena conectada. Preparando inicio canónico del Turno 1...`:`Mostrando desenlace y preparando entrada sincronizada al duelo...`));
     }else if(String(room?.phase||"")==="rps"){
       setText("pvpRoomMessage","Ambos están LISTOS. Resolviendo Piedra/Papel/Tijera...");
     }else if(bothReady){
@@ -491,7 +630,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     const rps=Object.assign({},defaultRpsState(0),room?.rps||{});
     const publicRef=ref(db,`games/${code}/public`);
 
-    if(!bothPresent && (p1Ready||startCfg.resolved||room?.arenaBootstrap)){
+    if(!bothPresent && (p1Ready||startCfg.resolved||room?.arenaBootstrap||room?.combatState)){
       clearArenaLaunchTimer();
       phaseWriteInFlight=true;
       try{ await withTimeout(update(publicRef,{
@@ -499,7 +638,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         "rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,
         "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
         "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-        "arenaBootstrap":null
+        "arenaBootstrap":null,"combatState":null
       }),`Reiniciar arranque tras salida del rival en ${code}`); }
       catch(error){ console.error(error); }
       finally{ phaseWriteInFlight=false; }
@@ -507,7 +646,9 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     }
 
     if(startCfg.resolved){
-      scheduleArenaBootstrap(room,code);
+      if(String(room?.phase||"")==="battle_active"&&validateCanonicalCombatState(room)) return;
+      if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room)) scheduleCanonicalCombatStart(room,code);
+      else scheduleArenaBootstrap(room,code);
       return;
     }
 
@@ -523,7 +664,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
             "rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
             "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,
             "startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-            "arenaBootstrap":null
+            "arenaBootstrap":null,"combatState":null
           }),`Restablecer state waiting en ${code}`);
         }catch(error){ console.error(error); }
         finally{ phaseWriteInFlight=false; }
@@ -606,7 +747,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
   }
 
   function resetUi({resetJoin=true}={}){
-    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; clearStep5ArenaPreview(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
     const readyBtn=$("pvpReadyBtn"); if(readyBtn){ readyBtn.disabled=true; readyBtn.classList.remove("is-ready"); readyBtn.setAttribute("aria-pressed","false"); readyBtn.title="Esperando rival"; }
     renderRules({settings:buildDefaultRules(),phase:"waiting"}); syncLocalButtons();
@@ -614,7 +755,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 5: reglas + RPS + entrada sincronizada al duelo · motor de combate todavía apagado."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6A: arena sincronizada + estado canónico ACTIVE del Turno 1 · acciones todavía bloqueadas."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -627,7 +768,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8); activeCode=code; await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        const room={ schema:"hallvalla-pvp-rebuild-step5", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null };
+        const room={ schema:"hallvalla-pvp-rebuild-step6a", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null };
         try{
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
           const publicSnap=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
@@ -647,7 +788,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         }
       }
       throw lastError||new Error("No se pudo crear una sala tras 4 intentos.");
-    }catch(error){ console.error(error); const message=`CREAR SALA FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 5"); return false; }
+    }catch(error){ console.error(error); const message=`CREAR SALA FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6A"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -660,7 +801,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       await markAndPaint(`2/8 · validando mazo local J2 (21 cartas + 1 Principal)...`); const privatePayload=buildOwnPrivatePayload(joinUid,2);
       await markAndPaint(`3/8 · leyendo sala ${code}...`); const publicRef=ref(db,`games/${code}/public`); const beforeSnap=await withTimeout(get(publicRef),`Leer sala ${code}`);
       if(!beforeSnap.exists()) throw new Error("La sala no existe o ya fue cerrada."); const before=beforeSnap.val()||{}; const hostUid=String(before?.playerSlots?.player1Uid||""); const currentJ2=String(before?.playerSlots?.player2Uid||"");
-      if(!hostUid) throw new Error("La sala no tiene un anfitrión válido."); if(hostUid===joinUid) throw new Error("No puedes unirte a tu propia sala desde el mismo usuario."); if(["configured","arena_ready"].includes(String(before?.phase||""))) throw new Error("Esta sala ya definió su arranque. Crea una nueva partida."); if(String(before?.phase||"")!=="waiting") throw new Error("La sala ya no está esperando jugadores."); if(currentJ2&&currentJ2!==joinUid) throw new Error("La sala ya tiene un segundo jugador.");
+      if(!hostUid) throw new Error("La sala no tiene un anfitrión válido."); if(hostUid===joinUid) throw new Error("No puedes unirte a tu propia sala desde el mismo usuario."); if(["configured","arena_ready","battle_active"].includes(String(before?.phase||""))) throw new Error("Esta sala ya definió su arranque. Crea una nueva partida."); if(String(before?.phase||"")!=="waiting") throw new Error("La sala ya no está esperando jugadores."); if(currentJ2&&currentJ2!==joinUid) throw new Error("La sala ya tiene un segundo jugador.");
       if(!currentJ2){ await markAndPaint(`4/8 · reclamando slot de J2 en ${code}...`); await withTimeout(set(ref(db,`games/${code}/public/playerSlots/player2Uid`),joinUid),`Reclamar J2 en ${code}`); claimedNow=true; }
       else await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
       await markAndPaint(`5/8 · guardando private/player2 con mazo 21/21...`); await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload); privateWritten=true;
@@ -669,7 +810,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`); const confirmed=confirmSnap.val()||{};
       if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid) throw new Error("Firebase no confirmó este UID como Jugador 2."); if(!(confirmed?.playerPrepared?.[2]===true||confirmed?.playerPrepared?.["2"]===true)) throw new Error("Firebase no confirmó playerPrepared/2.");
       activeCode=code; activeOwnerUid=joinUid; activeRole=2; await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`); attachOwnPrivateListener(code,2,joinUid); renderRoomSnapshot(confirmed,code); attachRoomListener(code); await markAndPaint(`8/8 · J2 CORRECTO · privado 21/21 preparado. Ambos pueden usar LISTO.`); return true;
-    }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 5"); return false; }
+    }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6A"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -685,7 +826,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       if(!p1Uid||!p2Uid) throw new Error("LISTO se habilita cuando ambos jugadores están presentes."); if(!p1Prepared||!p2Prepared) throw new Error("LISTO se habilita cuando ambos estados privados 21/21 están preparados."); if(!ownPrivateHealthy) throw new Error(`Tu private/player${role} no está confirmado.`);
       const slotUid=role===2?p2Uid:p1Uid; if(slotUid!==ownerUid) throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
       const current=getReadyFlag(room,role), next=!current; await markAndPaint(`LISTO · J${role} → ${next?"LISTO":"NO LISTO"}...`); await withTimeout(set(ref(db,`games/${code}/public/lobbyReady/${role}`),next),`Actualizar LISTO J${role} en ${code}`); mark(`J${role} ${next?"está LISTO":"ya no está listo"}.`); return true;
-    }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 5"); return false; }
+    }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6A"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snapshot?.exists()) renderRoomSnapshot(snapshot.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -709,11 +850,11 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
         "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,
         "startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-        "arenaBootstrap":null
+        "arenaBootstrap":null,"combatState":null
       }),`Actualizar reglas del host en ${activeCode}`);
       mark(`Reglas actualizadas: ${getRulesSummary(rules)}. LISTO se reinició para ambos.`);
       return true;
-    }catch(error){ console.error(error); await hvPopup(`REGLAS FALLARON: ${error?.message||error}`,"PvP reconstrucción · Paso 5"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`REGLAS FALLARON: ${error?.message||error}`,"PvP reconstrucción · Paso 6A"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snapshot?.exists()) renderRoomSnapshot(snapshot.val()||{},activeCode); }catch(_){ } }
   }
   function cycleTimer(){ const rules=getRules(roomCache||{}); void updateHostRules({timerEnabled:!rules.timerEnabled}); }
@@ -730,7 +871,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       const current=String(rps?.choices?.[activeRole]||rps?.choices?.[String(activeRole)]||""); if(current) throw new Error("Tu elección ya fue enviada. Espera al rival.");
       await withTimeout(update(publicRef,{[`rps/choices/${activeRole}`]:choice,[`rps/submissions/${activeRole}`]:true}),`Enviar elección RPS J${activeRole} en ${activeCode}`);
       mark(`J${activeRole} eligió en secreto.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`PIEDRA/PAPEL/TIJERA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 5"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`PIEDRA/PAPEL/TIJERA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6A"); return false; }
     finally{ busy=false; syncLocalButtons(); }
   }
 
@@ -745,7 +886,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       const otherRole=winnerRole===1?2:1; const startingRole=turnChoice==="first"?winnerRole:otherRole; const secondRole=startingRole===1?2:1;
       await withTimeout(update(publicRef,{"phase":"configured","rps/phase":"complete","rps/winnerChoice":turnChoice,"rps/startingRole":startingRole,"startConfig/winnerRole":winnerRole,"startConfig/turnChoice":turnChoice,"startConfig/startingRole":startingRole,"startConfig/secondRole":secondRole,"startConfig/resolved":true,"startConfig/resolvedAt":Date.now()}),`Guardar elección de turno en ${activeCode}`);
       mark(`${getPlayerName(room,winnerRole)} eligió jugar ${turnChoice==="first"?"primero":"segundo"}.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 5"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6A"); return false; }
     finally{ busy=false; syncLocalButtons(); }
   }
 
@@ -755,12 +896,20 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
     try{
       if(code&&ownerUid&&role===1){ await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`); await removeOwnPrivateBranch(code,1,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid) await withTimeout(remove(publicRef),`Cerrar sala ${code}`); }
-      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null}),`Liberar J2 en ${code}`); }
+      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null,"combatState":null}),`Liberar J2 en ${code}`); }
     }catch(error){ console.warn(error); }
-    resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
   function backToMain(){ void leaveRoom(); }
 
+  globalThis.pvpRebuildStep6aOpen=openCleanRoom;
+  globalThis.pvpRebuildStep6aCreate=createMinimalPublicRoom;
+  globalThis.pvpRebuildStep6aJoin=joinExistingRoom;
+  globalThis.pvpRebuildStep6aReady=toggleReady;
+  globalThis.pvpRebuildStep6aLeave=leaveRoom;
+  globalThis.pvpRebuildStep6aCopyCode=copyCode;
+  globalThis.pvpRebuildStep6aRpsChoice=submitRpsChoice;
+  globalThis.pvpRebuildStep6aChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep5Open=openCleanRoom;
   globalThis.pvpRebuildStep5Create=createMinimalPublicRoom;
   globalThis.pvpRebuildStep5Join=joinExistingRoom;
@@ -783,7 +932,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="5-ARENA-ENTRY";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6A-CANONICAL-COMBAT-START";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);
@@ -802,6 +951,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
   on("pvpRpsChooseFirstBtn","click",()=>{ void chooseTurnOrder("first"); });
   on("pvpRpsChooseSecondBtn","click",()=>{ void chooseTurnOrder("second"); });
   on("pvpStep5LeaveBtn","click",leaveRoom);
+  on("pvpStep6aLeaveBtn","click",leaveRoom);
 
   try{ const previous=sessionStorage.getItem("hallvalla_pvp_rebuild_last_marker"); if(previous) console.info(`[HallValla][${STEP}] marcador previo:`,previous); }catch(_){ }
 })();
