@@ -1,0 +1,16 @@
+HALLVALLA - PVP CREATOR CLAIM RECOVERY 2
+
+Motivo:
+La recuperación previa introdujo /games/{code}/roomClaim. En ejecución real Firebase devolvió permission_denied aunque el usuario informó que las reglas requeridas ya estaban publicadas. Además, el modal anterior atribuía cualquier permission_denied a reglas faltantes sin identificar el paso exacto.
+
+Cambio:
+- La creación de sala ya no depende de /roomClaim.
+- El claim atómico mínimo se realiza sobre /games/{code}/public/playerSlots/player1Uid, cubierto por el contrato de reglas PvP que ya existía desde Etapa 4.
+- Antes del claim se comprueba que /public no exista; el claim transaccional evita la carrera entre dos creadores.
+- Tras confirmar el claim, se reemplaza el estado público esquelético por la sala completa.
+- Si el claim confirma tarde tras un timeout, se limpia únicamente el estado esquelético.
+- Los errores visibles ahora incluyen el paso exacto y error.code; no se afirma automáticamente que falten reglas.
+- Cache/build incrementado para evitar mezcla de JS viejo en GitHub Pages.
+
+Firebase Rules:
+SIN CAMBIOS REQUERIDOS para esta reparación. El runtime ya no necesita roomClaim.
