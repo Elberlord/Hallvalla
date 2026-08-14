@@ -403,8 +403,13 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
   recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");
-  await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});
-  return true;
+  const endedAt=Date.now();
+  const finalPatch={...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
+  const wrote=await updatePublic(finalPatch);
+  if(wrote&&state.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
+    try{await globalThis.hvPvpRankingRecordResult({...state,...finalPatch},gameId);}catch(error){console.warn("[HallValla][PvP Ranking] El duelo terminó, pero el registro de ranking deberá reintentarse desde el snapshot final.",error);}
+  }
+  return !!wrote;
 }function resetBattleState(){
   endBattleLifecycle("resetBattleState");
   unsubPub=null;
@@ -467,6 +472,9 @@ function maybeShowBattleResult(){
   stopMusic(false);
   const adventure=publicState.mode==="adventure";
   showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
+  if(!adventure&&publicState.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
+    void globalThis.hvPvpRankingRecordResult(publicState,gameId);
+  }
   if(adventure)completeAdventureBattleOnce(publicState);
 }
 /* Crear/Unirse PvP viven únicamente en el módulo clean-room. */

@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL-20260814A";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-20260814C";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL";
-const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL-20260814A";
+const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS";
+const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-20260814C";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -103,6 +103,7 @@ const PARTS = [
   "06-decks-units-combat-rules.js",
   "07-network-battle-state.js",
   "07b-pvp-rebuild-clean-room.js",
+  "07c-pvp-ranking.js",
   "08-actions-inspector.js",
   "09-combat-turn-ai.js",
   "10-board-interactions.js",

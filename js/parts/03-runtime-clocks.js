@@ -587,8 +587,12 @@ function isUnitMovePhase(){return isActionPhase()}
 function turnPhaseLabel(){return TURN_PHASE_LABELS[getTurnPhase()]||String(getTurnPhase()||"TURNO").toUpperCase()}
 function shouldAutoOpenHand(){return isMyTurn()&&getTurnPhase()==="main"}
 function isMobileBattleViewport(){return typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(max-width:980px), (pointer:coarse)").matches}
-function canManuallyOpenHandNow(){return isMyTurn()&&isHandPlayPhase()}
-function canOpenHandForViewNow(){return canManuallyOpenHandNow()&&(hasPlayableCardsInHand()||(isMobileBattleViewport()&&((privateState?.hand||[]).length>0)))}
+function isOnlineOpponentHandReview(){return publicState?.mode==="online"&&!isMyTurn()&&!isBattleEnded()}
+function canManuallyOpenHandNow(){return isOnlineOpponentHandReview()||(isMyTurn()&&isHandPlayPhase())}
+function canOpenHandForViewNow(){
+  if(isOnlineOpponentHandReview())return ((privateState?.hand||[]).length>0);
+  return canManuallyOpenHandNow()&&(hasPlayableCardsInHand()||(isMobileBattleViewport()&&((privateState?.hand||[]).length>0)))
+}
 
 function getPhaseAnnouncement(){
   if(!publicState||isBattleEnded())return null;

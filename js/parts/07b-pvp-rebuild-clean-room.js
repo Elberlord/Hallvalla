@@ -23,7 +23,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP6I-FULL-DUEL";
+  const STEP="PVP-REBUILD-STEP6I2-RANKING";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -1269,6 +1269,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     setText("pvpRoomCode",code||room?.code||"----");
     setText("pvpRoomPlayer1Name",getPlayerName(room,1));
     setText("pvpRoomPlayer2Name",p2Uid?getPlayerName(room,2):"Rival pendiente");
+    if(typeof globalThis.hvPvpRankingRefreshLobby==="function") void globalThis.hvPvpRankingRefreshLobby(room);
     setText("pvpRoomPlayer1Ready",p1Uid?(p1Ready?"Listo":"No listo"):"Sin anfitrión");
     setText("pvpRoomPlayer2Ready",p2Uid?(p2Ready?"Listo":"No listo"):"Sin rival");
     setPresence("pvpRoomPlayer1Presence",p1Uid?"connected":"waiting"); setPresence("pvpRoomPlayer2Presence",p2Uid?"connected":"waiting");
@@ -1448,6 +1449,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
     const readyBtn=$("pvpReadyBtn"); if(readyBtn){ readyBtn.disabled=true; readyBtn.classList.remove("is-ready"); readyBtn.setAttribute("aria-pressed","false"); readyBtn.title="Esperando rival"; }
+    setText("pvpRoomPlayer1Stats","0 pts · G 0 · P 0 · E 0");
+    setText("pvpRoomPlayer2Stats","Sin historial PvP");
     renderRules({settings:buildDefaultRules(),phase:"waiting"}); syncLocalButtons();
   }
 

@@ -1,0 +1,29 @@
+HALLVALLA · STEP 6I2 · HISTORIAL / RANKING PvP
+Fecha: 2026-08-14
+Base: Hallvalla_PVP_REBUILD_STEP6I1_OPPONENT_HAND_VIEW
+
+CAMBIOS
+- Se conserva la mano propia consultable durante el turno rival.
+- Cada duelo online finalizado crea un registro persistente e inmutable en Firebase:
+  /pvpResults/{codigoSala}
+- El codigo de sala es el Match ID canonico del resultado.
+- Cada registro guarda UID/nombre de J1/J2, ganador/perdedor y timestamps.
+- El ranking se deriva exclusivamente de esos resultados:
+  Victoria +3 puntos.
+  Derrota -2 puntos.
+  Empate 0 puntos y queda registrado.
+- En el lobby se muestran debajo de J1/J2: puntos, ganadas, perdidas y empatadas.
+- Boton RANKING PvP: muestra ID PvP, posicion, puntos, G/P/E, partidas y ranking.
+- Un resultado no puede contarse dos veces: /pvpResults/{codigoSala} se crea una sola vez mediante transaction.
+
+FIREBASE RULES
+CAMBIAN. Debe publicarse manualmente el database.rules.json completo incluido en esta entrega.
+La nueva rama /pvpResults es legible por usuarios autenticados y solo permite crear un resultado cuando:
+- la sala existe;
+- la batalla esta finalizada;
+- el escritor es J1 o J2 de esa sala;
+- UIDs, nombres, ganador, perdedor y timestamps coinciden con el estado final de /games/{codigo}/public.
+Los resultados existentes no pueden sobrescribirse ni borrarse desde cliente.
+
+NOTA
+Los duelos terminados antes de instalar/publicar esta version no se agregan retroactivamente al ranking.

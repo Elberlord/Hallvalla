@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · PvP Rebuild Step 6I · Duelo Completo</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL">
-<meta name="hallvalla-build-name" content="PVP REBUILD STEP6I · Duelo completo · motor real">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL-20260814A"/>
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS">
+<meta name="hallvalla-build-name" content="PVP REBUILD STEP6I.1 · Mano visible durante turno rival">
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-20260814C"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -268,6 +268,8 @@
       <img src="assets/modal/btn_back_home.webp" alt="">
     </button>
 
+    <button id="pvpRankingBtn" class="pvp-ranking-open-btn" type="button" aria-label="Ver ranking PvP">RANKING PvP</button>
+
     <div id="lobbyStatus" class="visual-status">Listo para jugar.</div>
 
     <section id="pvpRoomPanel" class="pvp-room-panel hidden" aria-live="polite" aria-label="Lobby de duelo">
@@ -287,12 +289,14 @@
         <article class="pvp-room-player player1 is-host" data-pvp-room-player="1">
           <span id="pvpRoomPlayer1Presence" class="pvp-room-presence connected" aria-hidden="true"></span>
           <strong id="pvpRoomPlayer1Name">Esperando...</strong>
+          <div id="pvpRoomPlayer1Stats" class="pvp-room-player-stats">0 pts · G 0 · P 0 · E 0</div>
           <span id="pvpRoomPlayer1Check" class="pvp-room-ready-check" aria-hidden="true">✓</span>
           <em id="pvpRoomPlayer1Ready" class="pvp-room-ready-state hv-sr-only">No listo</em>
         </article>
         <article class="pvp-room-player player2" data-pvp-room-player="2">
           <span id="pvpRoomPlayer2Presence" class="pvp-room-presence waiting" aria-hidden="true"></span>
           <strong id="pvpRoomPlayer2Name">Rival pendiente</strong>
+          <div id="pvpRoomPlayer2Stats" class="pvp-room-player-stats">0 pts · G 0 · P 0 · E 0</div>
           <span id="pvpRoomPlayer2Check" class="pvp-room-ready-check" aria-hidden="true">✓</span>
           <em id="pvpRoomPlayer2Ready" class="pvp-room-ready-state hv-sr-only">Sin rival</em>
         </article>
@@ -339,6 +343,17 @@
         <div id="pvpRpsWaitingPanel" class="pvp-rps-waiting hidden">Esperando la decisión del ganador...</div>
       </div>
     </section>
+  </div>
+</div>
+
+<div id="pvpRankingModal" class="pvp-ranking-modal hidden" aria-hidden="true" aria-label="Ranking PvP HallValla">
+  <div class="pvp-ranking-card" role="dialog" aria-modal="true" aria-labelledby="pvpRankingTitle">
+    <button id="pvpRankingCloseBtn" class="pvp-ranking-close" type="button" aria-label="Cerrar ranking">×</button>
+    <div class="pvp-ranking-kicker">HALLVALLA · VS ONLINE</div>
+    <h2 id="pvpRankingTitle" class="pvp-ranking-title">RANKING PvP</h2>
+    <div id="pvpRankingOwnSummary" class="pvp-ranking-own-summary">Cargando tus estadísticas...</div>
+    <div class="pvp-ranking-rules">Victoria +3 · Derrota −2 · Empate 0</div>
+    <div id="pvpRankingList" class="pvp-ranking-list" aria-live="polite"></div>
   </div>
 </div>
 
@@ -1071,6 +1086,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I-FULL-DUEL-20260814A"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-20260814C"></script>
 </body>
 </html>

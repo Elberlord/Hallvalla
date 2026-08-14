@@ -340,6 +340,10 @@ function getHandAvailabilityKey(){
 }
 function syncHandAutoClose(){
   if(!publicState||!privateState)return;
+  // En PvP online, durante el turno rival la mano propia puede permanecer abierta
+  // como visor estratégico. Sigue siendo SOLO CONSULTA: getCardPlayState() bloquea
+  // cualquier intento de jugar/arrastrar cartas cuando no es tu turno.
+  if(isOnlineOpponentHandReview())return;
   if(!isMyTurn()||!isHandPlayPhase()){handOpen=false;return;}
   if(selectedCard)return;
   const modal=$("cardInspectModal");
@@ -1394,7 +1398,9 @@ function openUnifiedDetEntity(entity,{mode="card",live=false,statuses=[],visualH
 function showCardInspectModal(card){
   if(!card)return;
   tryPlaySound("card_select",.45);
-  closeHandForBoardFocus();
+  // Si estamos revisando estrategia durante el turno rival en PvP, mantenemos
+  // el drawer de mano abierto detrás del DET para volver a las cartas al cerrar.
+  if(!isOnlineOpponentHandReview())closeHandForBoardFocus();
   cardInspectSelection=card;
   const state=getCardPlayState(card);
   const costLine=getCardCostExplanation(card,card?.owner||myPlayer,publicState?.units||[]);
