@@ -1,7 +1,7 @@
 "use strict";
 /*
 ===============================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6F · MOTOR REAL · INVOCACIÓN + FASES
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6G · MOTOR REAL · ATAQUES SINCRONIZADOS
 -------------------------------------------------------------------------------
 Base estable conservada:
 - J1 crea sala sin congelar el navegador.
@@ -25,7 +25,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP6F-REAL-UNIT-SUMMON";
+  const STEP="PVP-REBUILD-STEP6G-REAL-ATTACK-SYNC";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -984,8 +984,9 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
     const ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
     return {
       schema:"hallvalla-pvp-real-engine-step6f",
-      pvpRebuildStep:"6F_REAL_ENGINE_UNIT_SUMMON",
+      pvpRebuildStep:"6G_REAL_ENGINE_ATTACK_SYNC",
       pvpStep6fMode:"unit_summon_only",
+      pvpStep6gAttacks:true,
       pvpAtomicActionMode:"multipath_v1",
       pvpTestClockSuspended:true,
       pvpBridgeReadOnly:false,
@@ -1026,15 +1027,15 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       statusFxEvent:entryEffects.statusFxEvent||null,
       floatFxEvent:entryEffects.floatFxEvent||null,
       log:[
-        `PvP 6F: ambos jugadores están en el motor real de HallValla. J${startingRole} tiene el primer turno.`,
-        `Prueba 6F: fases e invocación de unidades activas. Movimiento, ataque, defensa, EFFECT y cartas no-unidad siguen bloqueados.`,
+        `PvP 6G: ambos jugadores están en el motor real de HallValla. J${startingRole} tiene el primer turno.`,
+        `Prueba 6G: MOV, DEF y ATTK usan la resolución real del PvE y se sincronizan por Firebase. EFFECT y cartas no-unidad siguen bloqueados.`,
         ...(entryEffects.logs||[])
       ].slice(0,18)
     };
   }
 
   function isRealEngineState6e(room){
-    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only";
+    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true;
   }
 
   function clearRealEngineStartTimer6e(){
@@ -1065,12 +1066,12 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
           const banner=document.getElementById("pvpStep6eRealBadge")||document.createElement("div");
           banner.id="pvpStep6eRealBadge";
           banner.className="pvp-step6e-real-badge pvp-step6f-real-badge";
-          banner.textContent="PASO 6F · MOTOR REAL · INVOCACIÓN + MOV/DEF · PERSPECTIVA LOCAL";
+          banner.textContent="PASO 6G · MOTOR REAL · MOV/DEF/ATTK SINCRONIZADOS";
           document.body.appendChild(banner);
-          if(typeof setHint==="function") setHint("Paso 6F: invoca unidades y prueba MOV/DEF. Cada jugador ve su propio lado al sur. ATTK, EFFECT y cartas no-unidad siguen bloqueados en esta prueba.");
+          if(typeof setHint==="function") setHint("Paso 6G: MOV, DEF y ATTK están activos con las reglas reales del PvE. Cada jugador ve su lado al sur. EFFECT y cartas no-unidad siguen bloqueados.");
         }catch(_){ }
       },250);
-      mark(`PASO 6F · J${activeRole} entregado al motor real con invocación + MOV/DEF y perspectiva local sur habilitadas.`);
+      mark(`PASO 6G · J${activeRole} entregado al motor real con MOV/DEF/ATTK y perspectiva local sur habilitadas.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Entrada al motor real falló:`,error);
@@ -1104,7 +1105,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
         const engine=buildRealEnginePublic6e(fresh,code);
         if(!engine) throw new Error("No se pudo construir el estado del motor real.");
         await withTimeout(set(publicRef,engine),`Entregar sala ${code} al motor real`,7000);
-        mark(`PASO 6F · motor real publicado para ${code} · fases e invocación de unidades quedarán habilitadas.`);
+        mark(`PASO 6G · motor real publicado para ${code} · MOV/DEF/ATTK quedarán habilitados.`);
       }catch(error){
         console.error(`[HallValla][${STEP}] Puente al motor real falló:`,error);
         mark(`Puente al motor real falló: ${error?.message||error}`);
@@ -1446,7 +1447,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6F: motor real con invocación + MOV/DEF; cada jugador ve su lado al sur; ATTK/EFFECT siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6G: motor real con MOV/DEF/ATTK; cada jugador ve su lado al sur; EFFECT y cartas no-unidad siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1659,6 +1660,9 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.__HALLVALLA_PVP_STEP6F_LIMITED__=function(){
     try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6fMode==="unit_summon_only"&&publicState.phase==="active";}catch(_){return false;}
   };
+  globalThis.__HALLVALLA_PVP_STEP6G_ATTACKS__=function(){
+    try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6gAttacks===true&&publicState.phase==="active";}catch(_){return false;}
+  };
 
   globalThis.pvpRebuildStep45Open=openCleanRoom;
   globalThis.pvpRebuildStep45Create=createMinimalPublicRoom;
@@ -1671,7 +1675,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6F2-REAL-ENGINE-PERSPECTIVE-MOV-DEF";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6G-REAL-ENGINE-ATTACK-SYNC";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);

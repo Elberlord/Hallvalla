@@ -366,7 +366,7 @@ function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defender
   return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
 }
 async function attackUnit(a,d){
-  if(isPvpStep6fLimitedMode())return setHint("Paso 6F: los ataques todavía están bloqueados. Primero validamos la invocación real sincronizada.");
+  if(isPvpStep6fLimitedMode()&&!isPvpStep6gAttackMode())return setHint("Paso 6F: los ataques todavía están bloqueados. Primero validamos la invocación real sincronizada.");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   let liveUnits=[...(publicState?.units||[])];
   a=getLiveUnitRef(a,liveUnits);
