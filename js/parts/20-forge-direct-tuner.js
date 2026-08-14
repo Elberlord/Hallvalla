@@ -525,6 +525,7 @@
 /* HallValla STAGE2 PVP LOBBY DIRECT TUNER V3 */
 (()=>{
   'use strict';
+  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__)return;
   const STORAGE_KEY='hallvalla_pvp_lobby_tuner_v3';
   const PANEL_KEY='hallvalla_pvp_lobby_tuner_panel_v3';
   const $=id=>document.getElementById(id);

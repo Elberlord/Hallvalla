@@ -280,7 +280,7 @@ async function setSelectedLeaderType(type){
   const nextAction=pendingAfterLeaderSelection;
   pendingAfterLeaderSelection="";
   if(nextAction==="adventure")openAdventureStory();
-  if(nextAction==="online")runFirstTimeTutorialBefore(openOnlineLobby);
+  if(nextAction==="online"){if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof pvpRebuildStep1Open==="function")pvpRebuildStep1Open();else runFirstTimeTutorialBefore(openOnlineLobby);}
   if(nextAction==="beast_event")runFirstTimeTutorialBefore(openBeastmasterEvent);
   if(nextAction==="hallvalla_events")runFirstTimeTutorialBefore(openHallvallaEvents);
 }

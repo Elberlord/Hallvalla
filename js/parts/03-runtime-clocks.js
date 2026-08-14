@@ -586,9 +586,12 @@ function isFirebaseAuthReady(){
 function updateAuthActionButtons(){
   const ready=isFirebaseAuthReady();
   const createBtn=$("createBtn"),joinBtn=$("joinBtn"),startBtn=$("startAdventureBattleBtn");
-  const pvpBusy=globalThis.__HALLVALLA_PVP_LOBBY_BUSY__===true;
-  if(createBtn){createBtn.disabled=!ready||pvpBusy;createBtn.setAttribute("aria-disabled",ready&&!pvpBusy?"false":"true");createBtn.title=!ready?"Conectando con Firebase...":(pvpBusy?"Operación PvP en curso...":"Crear partida");}
-  if(joinBtn){joinBtn.disabled=!ready||pvpBusy;joinBtn.setAttribute("aria-disabled",ready&&!pvpBusy?"false":"true");joinBtn.title=!ready?"Conectando con Firebase...":(pvpBusy?"Operación PvP en curso...":"Unirse a partida");}
+  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof globalThis.pvpRebuildStep1SyncButtons==="function")globalThis.pvpRebuildStep1SyncButtons();
+  else{
+    const pvpBusy=globalThis.__HALLVALLA_PVP_LOBBY_BUSY__===true;
+    if(createBtn){createBtn.disabled=!ready||pvpBusy;createBtn.setAttribute("aria-disabled",ready&&!pvpBusy?"false":"true");createBtn.title=!ready?"Conectando con Firebase...":(pvpBusy?"Operación PvP en curso...":"Crear partida");}
+    if(joinBtn){joinBtn.disabled=!ready||pvpBusy;joinBtn.setAttribute("aria-disabled",ready&&!pvpBusy?"false":"true");joinBtn.title=!ready?"Conectando con Firebase...":(pvpBusy?"Operación PvP en curso...":"Unirse a partida");}
+  }
   if(startBtn){startBtn.disabled=!ready;startBtn.setAttribute("aria-disabled",ready?"false":"true");startBtn.textContent=ready?"Iniciar combate":"Conectando...";}
 }
 function resolveFirebaseAuthReady(){

@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPRECOVERY4-20260814D";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP1B-20260814B";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPRECOVERY4";
-const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPRECOVERY4-20260814D";
+const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP1B";
+const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP1B-20260814B";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -22,6 +22,7 @@ if (DECLARED_BUILD !== BUILD) {
 globalThis.__HALLVALLA_BUILD__ = BUILD;
 globalThis.__HALLVALLA_BUILD_VERSION__ = `v8_MODULAR_${BUILD}`;
 globalThis.__HALLVALLA_FIREBASE_CONFIG__ = hallvallaFirebaseConfig;
+globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__ = true;
 
 function sanitizeFirebaseValue(value, seen = new WeakSet()) {
   if (typeof value === "undefined") return undefined;
@@ -102,6 +103,7 @@ const PARTS = [
   "05-cards-specials-lore.js",
   "06-decks-units-combat-rules.js",
   "07-network-battle-state.js",
+  "07b-pvp-rebuild-clean-room.js",
   "08-actions-inspector.js",
   "09-combat-turn-ai.js",
   "10-board-interactions.js",

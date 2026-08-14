@@ -1,0 +1,50 @@
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 1
+Fecha: 14 de agosto de 2026
+
+OBJETIVO
+Reconstruir PvP desde cero, validando una capa por vez. Este paquete NO intenta
+restaurar todo PvP de una sola vez.
+
+PASO 1 ACTIVO
+- El botón Crear partida ya NO ejecuta createGame() del flujo PvP legacy.
+- El nuevo flujo vive en js/parts/07b-pvp-rebuild-clean-room.js.
+- Solo verifica autenticación Firebase, crea una sala pública mínima y confirma
+  que Firebase la guardó.
+- No construye mazo, líder, unidades, private/player1, listeners, lifecycle,
+  LISTO, J2, batalla ni acciones.
+- El botón Unirse queda intencionalmente como stub de Paso 1.
+- LISTO queda intencionalmente desactivado.
+
+AISLAMIENTO
+- js/parts/12-profile-shop-packs.js enlaza los botones PvP únicamente a la API
+  pvpRebuildStep1* del módulo nuevo.
+- openOnlineLobby() ya no llama clearPvpLobbyRoomState() legacy; usa el reset
+  mínimo del módulo nuevo.
+- Volver al inicio desde el lobby usa el leave/reset del módulo nuevo.
+- El código PvP legacy permanece físicamente en 07-network-battle-state.js por
+  seguridad de regresión, pero NO participa en Crear/Unirse/LISTO/Salir durante
+  este Paso 1. Se irá retirando/migrando únicamente después de validar cada capa.
+
+FIREBASE RULES
+SIN CAMBIOS. database.rules.json es idéntico al paquete anterior.
+No publicar reglas nuevas para este paso.
+
+PRUEBA SOLICITADA
+1. Sobrescribir Hallvalla y desplegar en GitHub Pages.
+2. Ctrl+Shift+R una vez.
+3. Entrar a Competir en línea.
+4. Pulsar Crear partida UNA sola vez.
+5. Resultado esperado:
+   - la página NO se congela;
+   - lobbyStatus avanza por 1/4, 2/4, 3/4 y 4/4;
+   - aparece el panel de sala con código de 8 caracteres;
+   - el mensaje termina en "PASO 1 CORRECTO".
+6. No probar Unirse todavía; se implementará en Paso 2 solo después de aprobar
+   esta prueba.
+
+SIGUIENTES CAPAS, SOLO TRAS VALIDACIÓN
+Paso 2: J2 se une y ocupa player2Uid.
+Paso 3: listener de sala + LISTO + transición waiting -> active.
+Paso 4: líder/mazo/Principales y private/player1/player2.
+Paso 5: entrada al combate y sincronización pública/privada.
+Paso 6: lifecycle/atomicidad/fuente de verdad con pruebas entre cada cambio.

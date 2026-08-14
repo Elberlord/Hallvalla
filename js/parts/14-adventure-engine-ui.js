@@ -692,12 +692,13 @@ IA enemiga: táctica máxima desde el primer duelo · ${battle.aiStyle||"Sin res
 Recompensa al ganar: ${getBattleRewardLabel(battle)}.`;
 }
 function openOnlineLobby(){
-  if(typeof clearPvpLobbyRoomState==="function")clearPvpLobbyRoomState({hideRoom:true,resetJoin:true});
+  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof pvpRebuildStep1Open==="function")return pvpRebuildStep1Open();
   $("mainMenu").classList.add("hidden");
   $("onlineLobby").classList.remove("hidden");
   $("gameShell").classList.add("hidden");
 }
 function showOnlineLobby(){
+  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof pvpRebuildStep1Open==="function")return pvpRebuildStep1Open();
   if(!getSelectedLeaderType()){
     pendingAfterLeaderSelection="online";
     requireLeaderSelection(true);
