@@ -277,6 +277,12 @@
           <strong id="pvpRoomCode">----</strong>
           <button id="pvpCopyCodeBtn" class="pvp-room-copy-btn" type="button">COPIAR</button>
         </div>
+        <div id="pvpRuleStrip" class="pvp-rule-strip" aria-live="polite">
+          <button id="pvpTimerToggleBtn" class="pvp-rule-btn" type="button">Timer: OFF</button>
+          <button id="pvpStakeModeBtn" class="pvp-rule-btn" type="button">Apuesta: Gratis</button>
+          <button id="pvpStakeAmountBtn" class="pvp-rule-btn hidden" type="button">Oro: 500</button>
+          <div id="pvpRulesSummary" class="pvp-rule-summary">Sin temporizador · Sin apuesta</div>
+        </div>
         <article class="pvp-room-player player1 is-host" data-pvp-room-player="1">
           <span id="pvpRoomPlayer1Presence" class="pvp-room-presence connected" aria-hidden="true"></span>
           <strong id="pvpRoomPlayer1Name">Esperando...</strong>
@@ -293,6 +299,44 @@
         <button id="pvpLeaveBtn" class="pvp-room-hitbox pvp-room-leave-btn" type="button"><span class="hv-sr-only">Salir de la sala</span></button>
       </div>
       <div id="pvpRoomMessage" class="pvp-room-message hv-sr-only">Esperando rival...</div>
+    </section>
+    <section id="pvpRpsOverlay" class="pvp-rps-overlay hidden" aria-live="polite" aria-label="Piedra Papel Tijera">
+      <div id="pvpRpsStageChoose" class="pvp-rps-stage">
+        <div class="pvp-rps-copy">
+          <h3 class="pvp-rps-title">Piedra · Papel · Tijera</h3>
+          <p id="pvpRpsSubtitle" class="pvp-rps-subtitle">Ambos jugadores están listos. Elige en secreto.</p>
+        </div>
+        <div class="pvp-rps-choices">
+          <button id="pvpRpsRockBtn" class="pvp-rps-choice" type="button" data-rps-choice="rock" aria-label="Piedra">
+            <img src="assets/ui/pvp_rps/rps_rock.png" alt="Piedra">
+            <span>PIEDRA</span>
+          </button>
+          <button id="pvpRpsPaperBtn" class="pvp-rps-choice" type="button" data-rps-choice="paper" aria-label="Papel">
+            <img src="assets/ui/pvp_rps/rps_paper.png" alt="Papel">
+            <span>PAPEL</span>
+          </button>
+          <button id="pvpRpsScissorsBtn" class="pvp-rps-choice" type="button" data-rps-choice="scissors" aria-label="Tijera">
+            <img src="assets/ui/pvp_rps/rps_scissors.png" alt="Tijera">
+            <span>TIJERA</span>
+          </button>
+        </div>
+        <div id="pvpRpsChooseStatus" class="pvp-rps-status">Esperando elección.</div>
+      </div>
+      <div id="pvpRpsStageResult" class="pvp-rps-stage hidden">
+        <img id="pvpRpsResultArt" class="pvp-rps-result-art" src="assets/ui/pvp_rps/result_rock_wins.png" alt="Resultado piedra papel tijera">
+        <div class="pvp-rps-result-copy">
+          <div id="pvpRpsResultHeadline" class="pvp-rps-result-headline">GANADOR</div>
+          <div id="pvpRpsResultSubline" class="pvp-rps-result-subline">Esperando resolución...</div>
+        </div>
+        <div id="pvpRpsDecisionPanel" class="pvp-rps-decision hidden">
+          <div class="pvp-rps-decision-head">Elige tu turno</div>
+          <div class="pvp-rps-turn-actions">
+            <button id="pvpRpsChooseFirstBtn" class="pvp-rps-turn-btn" type="button">PRIMERO</button>
+            <button id="pvpRpsChooseSecondBtn" class="pvp-rps-turn-btn" type="button">SEGUNDO</button>
+          </div>
+        </div>
+        <div id="pvpRpsWaitingPanel" class="pvp-rps-waiting hidden">Esperando la decisión del ganador...</div>
+      </div>
     </section>
   </div>
 </div>
