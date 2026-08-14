@@ -691,8 +691,23 @@ function chooseSmartAcolyteChoice(caster,units=publicState?.units||[],graveyard=
   }
   return null;
 }
+function getUnitEffectHonorCommitState(cost){
+  const amount=Math.max(0,Number(cost||0));
+  const maxHonor=capResourceMax(privateState?.maxHonor||0);
+  const current=capResourceAmount(privateState?.honor||0,maxHonor);
+  if(current<amount)return null;
+  return{amount,maxHonor,honor:current-amount};
+}
 async function spendUnitEffectHonor(cost){
-  const amount=Math.max(0,Number(cost||0));const maxHonor=capResourceMax(privateState?.maxHonor||0);const current=capResourceAmount(privateState?.honor||0,maxHonor);if(current<amount)return false;const honor=current-amount;await updatePrivate({honor,maxHonor});await updatePublic({[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}});pulseTurnHonorHud();return true;
+  const payment=getUnitEffectHonorCommitState(cost);
+  if(!payment)return false;
+  const committed=await commitPvpGameplayAction({
+    privatePatch:{honor:payment.honor,maxHonor:payment.maxHonor},
+    publicPatch:{[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),hp:getLeader(myPlayer)?.hp||0,honor:payment.honor,maxHonor:payment.maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}},
+    kind:"unit-effect-cost"
+  });
+  if(committed)pulseTurnHonorHud();
+  return committed;
 }
 function getUnitEffectMode(u){
   if(!u)return "passive";
@@ -942,13 +957,23 @@ async function activateUnitEffect(u,choice=null){
     if(Number(privateState?.honor||0)<previewCost)return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente para esa capacidad.`);
     let result=applyAcolyteHealerEffectState(u,choice,units);
     if(!result.success)return setHint(result.reason||"No se pudo usar la capacidad curativa.");
-    if(!(await spendUnitEffectHonor(result.honorCost)))return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);
+    const payment=getUnitEffectHonorCommitState(result.honorCost);
+    if(!payment)return setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente.`);
+    const serviceGain=Math.max(0,Math.floor(Number(result.serviceGain||1)));
     const beforePoints=getUnitServicePoints(u);
-    const serviceResult=registerLocalUnitServicePoint(u,result.serviceGain||1)||{key:getUnitMasteryKey(u),name:u.name,beforePoints,afterPoints:beforePoints+(result.serviceGain||1),gain:result.serviceGain||1,unlockedPurification:beforePoints<50&&beforePoints+(result.serviceGain||1)>=50,unlockedResurrection:beforePoints<100&&beforePoints+(result.serviceGain||1)>=100};
+    const afterPoints=beforePoints+serviceGain;
+    const serviceResult={key:getUnitMasteryKey(u),name:u.name,beforePoints,afterPoints,gain:serviceGain,unlockedPurification:beforePoints<50&&afterPoints>=50,unlockedResurrection:beforePoints<100&&afterPoints>=100};
     result.units=applyUnitServicePointsToUnits(result.units,u,serviceResult);
     result.log+=` Puntos de servicio: ${serviceResult.afterPoints}.${unitServiceUnlockText(serviceResult)}`;
-    await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,_clockKillCreditOwner:result.clockKillCreditOwner||myPlayer});
-    await pushLog(result.log);
+    const playerStats={...(publicState?.playerStats?.[myPlayer]||{}),hp:result.units.find(it=>it.owner===myPlayer&&it.leader)?.hp||0,honor:payment.honor,maxHonor:payment.maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length};
+    const committed=await commitPvpGameplayAction({
+      privatePatch:{honor:payment.honor,maxHonor:payment.maxHonor},
+      publicPatch:{units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,_clockKillCreditOwner:result.clockKillCreditOwner||myPlayer,[`playerStats/${myPlayer}`]:playerStats,log:[result.log,...(publicState?.log||[])].slice(0,18)},
+      kind:`unit-effect:${u.key||"effect"}`
+    });
+    if(!committed)return setHint("No se pudo confirmar la capacidad. El Honor y el efecto permanecen sin aplicar parcialmente.");
+    if(serviceGain>0)registerLocalUnitServicePoint(u,serviceGain);
+    pulseTurnHonorHud();
     clearSelection();
     return;
   }

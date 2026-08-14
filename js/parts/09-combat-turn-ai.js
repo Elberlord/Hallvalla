@@ -1,15 +1,42 @@
 "use strict";
 /* HallValla 7BOARDCTRL8AK · Movimiento, ataque, turnos e IA */
 
-async function removeCardAndPay(card,paidCost=null){
-  const hand=(privateState.hand||[]).filter(c=>c.id!==card.id);
-  const maxHonor=capResourceMax(privateState.maxHonor||0);
+function getCardPaymentCommitState(card,paidCost=null){
+  const currentHand=Array.isArray(privateState?.hand)?privateState.hand:[];
+  if(!card||!currentHand.some(c=>c.id===card.id))return null;
+  const hand=currentHand.filter(c=>c.id!==card.id);
+  const maxHonor=capResourceMax(privateState?.maxHonor||0);
   const exactCost=paidCost===null?effectiveCardCost(card,myPlayer):Math.max(0,Number(paidCost||0));
-  const honor=Math.max(0,capResourceAmount(privateState.honor||0,maxHonor)-exactCost);
-  await updatePrivate({hand,honor,maxHonor});
-  await updatePublic({[`playerStats/${myPlayer}`]:{hp:getLeader(myPlayer)?.hp||0,honor,maxHonor,deck:(privateState.deck||[]).length,hand:hand.length}});
+  const currentHonor=capResourceAmount(privateState?.honor||0,maxHonor);
+  if(currentHonor<exactCost)return null;
+  const honor=currentHonor-exactCost;
+  return{hand,honor,maxHonor,exactCost};
+}
+async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
+  const payment=getCardPaymentCommitState(card,paidCost);
+  if(!payment)return false;
+  const nextStats={
+    ...(publicState?.playerStats?.[myPlayer]||{}),
+    hp:(Array.isArray(publicPatch?.units)?publicPatch.units.find(u=>u.owner===myPlayer&&u.leader)?.hp:getLeader(myPlayer)?.hp)||0,
+    honor:payment.honor,
+    maxHonor:payment.maxHonor,
+    deck:(privateState?.deck||[]).length,
+    hand:payment.hand.length
+  };
+  let effectPatch={...(publicPatch||{}),[`playerStats/${myPlayer}`]:nextStats};
+  if(actionLog)effectPatch.log=[String(actionLog),...(publicState?.log||[])].slice(0,18);
+  const committed=await commitPvpGameplayAction({
+    publicPatch:effectPatch,
+    privatePatch:{hand:payment.hand,honor:payment.honor,maxHonor:payment.maxHonor},
+    kind:`card:${card.key||card.type||"play"}`
+  });
+  if(!committed)return false;
   pulseTurnHonorHud();
-  scheduleAutoAdvanceIfHandEmptyAfterPlay(hand,honor);
+  scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
+  return true;
+}
+async function removeCardAndPay(card,paidCost=null){
+  return commitCardPlay(card,{},paidCost,"");
 }
 
 function resolveBeastCellTraps(moving,units,traps){

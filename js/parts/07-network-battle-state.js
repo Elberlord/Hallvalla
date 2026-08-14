@@ -548,6 +548,104 @@ async function updatePublic(patch){
   await update(ref(db,`games/${writeGameId}/public`),cleanPatch);
   return true;
 }
+function mergeHiddenReserveSummaryIntoPublicPatch(patch,player,hasHiddenUnits){
+  const out={...(patch||{})};
+  const playerKey=`playerStats/${player}`;
+  if(out[playerKey]&&typeof out[playerKey]==="object"&&!Array.isArray(out[playerKey])){
+    out[playerKey]={...out[playerKey],hasHiddenUnits:hasHiddenUnits===true};
+    return out;
+  }
+  if(out.playerStats&&typeof out.playerStats==="object"&&!Array.isArray(out.playerStats)){
+    const stats={...out.playerStats};
+    const current=stats[player]||stats[String(player)]||{};
+    stats[player]={...(current&&typeof current==="object"?current:{}),hasHiddenUnits:hasHiddenUnits===true};
+    out.playerStats=stats;
+    return out;
+  }
+  out[`${playerKey}/hasHiddenUnits`]=hasHiddenUnits===true;
+  return out;
+}
+function addRelativePatchToRootUpdate(rootPatch,basePath,patch){
+  for(const [key,value] of Object.entries(patch||{})){
+    const cleanKey=String(key||"").replace(/^\/+|\/+$/g,"");
+    if(!cleanKey)throw new Error("[HallValla] Un commit multipath recibió una ruta vacía.");
+    rootPatch[`${basePath}/${cleanKey}`]=value;
+  }
+  return rootPatch;
+}
+async function prepareAtomicGameplayPublicPatch(sourcePatch){
+  const creditOwner=sourcePatch?._clockKillCreditOwner;
+  const creditMode=sourcePatch?._clockKillCreditMode||"";
+  const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
+  let cleanPatch={...(sourcePatch||{})};
+  if(Array.isArray(cleanPatch.units)){
+    const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
+    cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
+    const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
+    const erictoLife=resolveErictoLifecycle(solomonLife.units);
+    const mongolAura=applyMongolExplorerAura(erictoLife.units);
+    cleanPatch.units=mongolAura.units;
+    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
+    if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
+    cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);
+  }else{
+    delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
+  }
+  cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
+  const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
+  cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
+  return hallvallaSanitizeFirebaseValue(cleanPatch)||{};
+}
+let pvpGameplayAtomicCommitInFlight=false;
+let pvpGameplayAtomicCommitSequence=0;
+function makeGameplayAtomicCommitId(player){
+  pvpGameplayAtomicCommitSequence++;
+  const cryptoPart=globalThis.crypto?.randomUUID?.();
+  return cryptoPart||`${Date.now().toString(36)}-${Number(player||0)}-${pvpGameplayAtomicCommitSequence.toString(36)}`;
+}
+function isPvpAtomicGameplayContext(state=publicState){
+  return !!(state&&state.mode!=="adventure"&&state.mode!=="tutorial"&&state.playerSlots&&Number(myPlayer)>0);
+}
+async function commitPvpGameplayAction({publicPatch={},privatePatch={},kind="gameplay"}={}){
+  if(isTurnWriteBlockedByExpiredClock())return false;
+  const writeGameId=gameId;
+  const writePlayer=myPlayer;
+  const writeLifecycleToken=getBattleLifecycleToken();
+  const writeContextActive=()=>writeGameId&&gameId===writeGameId&&myPlayer===writePlayer&&isBattleLifecycleTokenActive(writeLifecycleToken);
+  if(!writeContextActive())return false;
+  const cleanPrivate=hallvallaSanitizeFirebaseValue(privatePatch||{})||{};
+  const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivate);
+
+  // Aventura/Tutorial conservan exactamente el flujo histórico. La atomicidad cross-branch de esta etapa se limita a PvP.
+  if(!isPvpAtomicGameplayContext()){
+    if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
+    if(Object.keys(cleanPrivate).length&&!(await updatePrivate(cleanPrivate)))return false;
+    return true;
+  }
+  const hiddenUnits=countHiddenUnitReserveFromState(nextPrivate);
+  let sourcePublic=mergeHiddenReserveSummaryIntoPublicPatch(publicPatch,writePlayer,hiddenUnits>0);
+  const commitId=makeGameplayAtomicCommitId(writePlayer);
+  sourcePublic={...sourcePublic,lastActionCommit:{id:commitId,player:writePlayer,kind:String(kind||"gameplay"),turnKey:String(publicState?.turnKey||""),at:Date.now()}};
+  if(pvpGameplayAtomicCommitInFlight)return false;
+  pvpGameplayAtomicCommitInFlight=true;
+  try{
+    const cleanPublic=await prepareAtomicGameplayPublicPatch(sourcePublic);
+    if(!writeContextActive())return false;
+    const rootPatch={};
+    addRelativePatchToRootUpdate(rootPatch,`games/${writeGameId}/public`,cleanPublic);
+    addRelativePatchToRootUpdate(rootPatch,getPvpPrivatePlayerPath(writeGameId,writePlayer),{...cleanPrivate,lastActionCommitId:commitId});
+    await update(ref(db),rootPatch);
+    if(!writeContextActive())return false;
+    privateState=hallvallaApplyLocalPatch(nextPrivate,{lastActionCommitId:commitId});
+    globalThis.__HALLVALLA_LAST_ATOMIC_ACTION_COMMIT__={id:commitId,gameId:writeGameId,player:writePlayer,kind:String(kind||"gameplay"),paths:Object.keys(rootPatch).length,at:Date.now()};
+    return true;
+  }catch(error){
+    console.error("[HallValla] Falló commit atómico de acción PvP; Firebase no debe aplicar un estado parcial:",error);
+    return false;
+  }finally{
+    pvpGameplayAtomicCommitInFlight=false;
+  }
+}
 async function updatePrivate(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
   const writeGameId=gameId;
@@ -558,17 +656,31 @@ async function updatePrivate(patch){
   const cleanPatch=hallvallaSanitizeFirebaseValue(patch||{})||{};
   const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPatch);
   const hiddenUnits=countHiddenUnitReserveFromState(nextPrivate);
-  privateState=nextPrivate;
   const summaryPatch={[`playerStats/${myPlayer}/hasHiddenUnits`]:hiddenUnits>0};
-  const projectedPublic=publicState?hallvallaApplyLocalPatch(publicState,summaryPatch):publicState;
-  if(projectedPublic)publicState=projectedPublic;
+  const applyLocalProjection=()=>{
+    privateState=nextPrivate;
+    const projectedPublic=publicState?hallvallaApplyLocalPatch(publicState,summaryPatch):publicState;
+    if(projectedPublic)publicState=projectedPublic;
+  };
   if(hallvallaIsLocalTestGame()){
+    applyLocalProjection();
     render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();
     return true;
   }
-  await update(getPvpPrivatePlayerRef(writeGameId,writePlayer),cleanPatch);
+  if(!isPvpAtomicGameplayContext()){
+    // Fuera de PvP se conserva el orden histórico de escrituras de esta versión.
+    applyLocalProjection();
+    await update(getPvpPrivatePlayerRef(writeGameId,writePlayer),cleanPatch);
+    if(!writeContextActive())return false;
+    await update(ref(db,`games/${writeGameId}/public`),summaryPatch);
+    return true;
+  }
+  const rootPatch={};
+  addRelativePatchToRootUpdate(rootPatch,getPvpPrivatePlayerPath(writeGameId,writePlayer),cleanPatch);
+  addRelativePatchToRootUpdate(rootPatch,`games/${writeGameId}/public`,summaryPatch);
+  await update(ref(db),rootPatch);
   if(!writeContextActive())return false;
-  await update(ref(db,`games/${writeGameId}/public`),summaryPatch);
+  applyLocalProjection();
   return true;
 }
 function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
