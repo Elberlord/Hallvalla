@@ -84,6 +84,7 @@ function moveBoardDragGhost(ev){
 function getDragUnitMoveKeys(u){return moveZones(u);}
 function getDragUnitAttackKeys(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`);}
 function startUnitBoardDrag(ev,u,sourceEl){
+  if(isPvpStep6fLimitedMode())return false;
   if(!u||u.owner!==myPlayer||!isMyTurn()||isBattleEnded())return false;
   const canMoveNow=!u.leader&&getDragUnitMoveKeys(u).length>0;
   const canAttackNow=getDragUnitAttackKeys(u).length>0;
@@ -920,6 +921,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   return{success:true,units:out,log,battleFxEvent};
 }
 async function activateUnitEffect(u,choice=null){
+  if(isPvpStep6fLimitedMode())return setHint("Paso 6F: EFFECT todavía está bloqueado. Esta prueba valida únicamente fases e invocación de unidades.");
   if(!u||u.owner!==myPlayer||!isUnitActionWindow(u))return setHint(unitActionPhaseHint("EFFECT"));
   if(u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
   const mode=getUnitEffectMode(u);
@@ -1018,6 +1020,7 @@ async function activateUnitEffect(u,choice=null){
 // No debe crear defenseFxEvent ni floatFxEvent.
 // Esto evita el óvalo/bloque gigante que se generaba en la capa FX.
 async function activateDefenseStance(u){
+  if(isPvpStep6fLimitedMode())return setHint("Paso 6F: DEFENSA todavía está bloqueada. Esta prueba valida únicamente fases e invocación de unidades.");
   if(!u||u.owner!==myPlayer||!isMyTurn())return setHint("Solo puedes usar DEF con tus invocaciones.");
   if(!isUnitActionWindow(u))return setHint(unitActionPhaseHint("DEF"));
   if(u.acted)return setHint(`${u.name} ya usó su acción ofensiva este turno.`);

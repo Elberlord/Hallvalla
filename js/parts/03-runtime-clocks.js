@@ -213,9 +213,10 @@ function getRawDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||
 }
 function isTurnTimerEnabled(state=publicState){
   if(!state||state.phase==="ended"||state.battleEnded||state.mode==="tutorial")return false;
-  // Paso 6E: durante la prueba visual del puente al motor real no dejamos correr
-  // el reloj para que la sala no pueda expirar mientras se valida la sincronización.
-  if(state.pvpBridgeReadOnly===true)return false;
+  // Durante los bloques de validación del rebuild no dejamos expirar la sala.
+  // 6E usó pvpBridgeReadOnly; 6F mantiene el reloj suspendido explícitamente
+  // mientras validamos fases + invocación real antes de activar combate completo.
+  if(state.pvpBridgeReadOnly===true||state.pvpTestClockSuspended===true)return false;
   if(![1,2].includes(Number(state.currentPlayer||0)))return false;
   if(state.mode!=="adventure"&&!hallvallaIsLocalTestGame()&&!state.playerSlots?.player2Uid)return false;
   // La configuración del host debe gobernar el reloj PvP real.

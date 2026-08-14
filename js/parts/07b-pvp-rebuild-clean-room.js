@@ -1,7 +1,7 @@
 "use strict";
 /*
 ===============================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6E · PUENTE AL MOTOR REAL
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6F · MOTOR REAL · INVOCACIÓN + FASES
 -------------------------------------------------------------------------------
 Base estable conservada:
 - J1 crea sala sin congelar el navegador.
@@ -16,13 +16,16 @@ Objetivo único de este paso:
 - revelar al iniciar únicamente líder y Personaje Principal, porque ya son visibles en campo;
 - crear el estado que entiende el MOTOR REAL que ya usa la batalla contra IA;
 - entregar ambos clientes a enterGame(code, role) sobre la arena real existente;
-- mantener las acciones BLOQUEADAS en esta prueba para validar primero el puente visual y de datos.
+- retirar el bloqueo general ya validado en 6E;
+- habilitar las fases reales y la invocación de cartas de UNIDAD en el motor existente;
+- mantener bloqueados movimiento, ataque, defensa, EFFECT y cartas no-unidad durante esta prueba;
+- usar commit atómico multipath para coste privado + resultado público de la invocación.
 
 No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el combate existente.
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP6E-REAL-BRIDGE";
+  const STEP="PVP-REBUILD-STEP6F-REAL-UNIT-SUMMON";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -167,7 +170,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
     try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ leaderLevel=1; }
     try{ leaderAbility=String((typeof getLocalLeaderAbility==="function"&&getLocalLeaderAbility(leaderType))||""); }catch(_){ leaderAbility=""; }
     return {
-      schema:"hallvalla-pvp-private-step6e-real-bridge",
+      schema:"hallvalla-pvp-private-step6f-real-unit-summon",
       ownerUid:String(ownerUid||""),
       role:Number(role),
       profile:{name:getProfileNameSafe(role),level:getProfileLevelSafe()},
@@ -924,7 +927,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       const built=buildRealPrivateState6e(payload,code,activeRole);
       const privatePatch={
         combat6c:built.combat6c,
-        engine6e:{schema:"hallvalla-pvp-engine-private-step6e",ready:true,preparedAt:Date.now()},
+        engine6e:{schema:"hallvalla-pvp-engine-private-step6f",ready:true,preparedAt:Date.now()},
         leaderType:built.enginePrivate.leaderType,
         leaderLevel:built.enginePrivate.leaderLevel,
         leaderAbility:built.enginePrivate.leaderAbility,
@@ -940,7 +943,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       };
       await withTimeout(update(ownRef,privatePatch),`Guardar estado privado del motor real J${activeRole}`,6000);
       await withTimeout(set(ref(db,`games/${code}/public/enginePrep/${activeRole}`),built.prep),`Publicar preparación visible J${activeRole}`,5000);
-      mark(`PASO 6E · J${activeRole} preparado para el motor real · mano privada 4 · mazo 16 · Principal revelable al iniciar.`);
+      mark(`PASO 6F · J${activeRole} preparado para el motor real · mano privada 4 · mazo 16.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Preparación motor real J${activeRole} falló:`,error);
@@ -980,9 +983,12 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
     const clockVersion=typeof CLOCK_RULESET_VERSION!=="undefined"?CLOCK_RULESET_VERSION:1;
     const ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
     return {
-      schema:"hallvalla-pvp-real-engine-step6e",
-      pvpRebuildStep:"6E_REAL_ENGINE_BRIDGE",
-      pvpBridgeReadOnly:true,
+      schema:"hallvalla-pvp-real-engine-step6f",
+      pvpRebuildStep:"6F_REAL_ENGINE_UNIT_SUMMON",
+      pvpStep6fMode:"unit_summon_only",
+      pvpAtomicActionMode:"multipath_v1",
+      pvpTestClockSuspended:true,
+      pvpBridgeReadOnly:false,
       code:String(code||room?.code||""),
       boardRows:rows,
       boardCols:cols,
@@ -1002,7 +1008,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
         stakeMode:String(settings.stakeMode||"none"),
         goldAmount:Number(settings.goldAmount||500),
         cardEntryFee:500,
-        economyState:String(settings.stakeMode||"none")==="none"?"not_required":"deferred_until_real_actions"
+        economyState:String(settings.stakeMode||"none")==="none"?"not_required":"deferred_until_full_combat"
       },
       playerSlots:{player1Uid:String(room?.playerSlots?.player1Uid||""),player2Uid:String(room?.playerSlots?.player2Uid||"")},
       playerNames:{1:getPlayerName(room,1),2:getPlayerName(room,2)},
@@ -1020,15 +1026,15 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       statusFxEvent:entryEffects.statusFxEvent||null,
       floatFxEvent:entryEffects.floatFxEvent||null,
       log:[
-        `PvP 6E: ambos jugadores entraron al motor real de HallValla. J${startingRole} tiene reservado el primer turno.`,
-        `Prueba de puente: acciones bloqueadas hasta validar que ambos clientes ven la misma arena, líderes, principales y mano privada.`,
+        `PvP 6F: ambos jugadores están en el motor real de HallValla. J${startingRole} tiene el primer turno.`,
+        `Prueba 6F: fases e invocación de unidades activas. Movimiento, ataque, defensa, EFFECT y cartas no-unidad siguen bloqueados.`,
         ...(entryEffects.logs||[])
       ].slice(0,18)
     };
   }
 
   function isRealEngineState6e(room){
-    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6e"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===true;
+    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only";
   }
 
   function clearRealEngineStartTimer6e(){
@@ -1055,20 +1061,16 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       enterGame(code,activeRole);
       setTimeout(()=>{
         try{
-          const shield=document.getElementById("pvpStep6eShield")||document.createElement("div");
-          shield.id="pvpStep6eShield";
-          shield.className="pvp-step6e-interaction-shield";
-          shield.setAttribute("aria-label","Paso 6E: acciones bloqueadas durante la validación del motor real");
-          document.body.appendChild(shield);
+          document.getElementById("pvpStep6eShield")?.remove();
           const banner=document.getElementById("pvpStep6eRealBadge")||document.createElement("div");
           banner.id="pvpStep6eRealBadge";
-          banner.className="pvp-step6e-real-badge";
-          banner.textContent="PASO 6E · MOTOR REAL CONECTADO · ACCIONES BLOQUEADAS PARA ESTA PRUEBA";
+          banner.className="pvp-step6e-real-badge pvp-step6f-real-badge";
+          banner.textContent="PASO 6F · MOTOR REAL · FASES + INVOCACIÓN DE UNIDADES ACTIVAS";
           document.body.appendChild(banner);
-          if(typeof setHint==="function") setHint("Paso 6E: estás viendo la arena y el motor real de HallValla. Valida que ambos clientes vean el mismo campo. Las acciones están bloqueadas solo en esta prueba.");
+          if(typeof setHint==="function") setHint("Paso 6F: usa las fases reales y prueba invocar una carta de UNIDAD. Movimiento, ataque, defensa, EFFECT y cartas no-unidad siguen bloqueados en esta prueba.");
         }catch(_){ }
       },250);
-      mark(`PASO 6E · J${activeRole} entregado a enterGame(${code}, ${activeRole}) sobre la arena real.`);
+      mark(`PASO 6F · J${activeRole} entregado al motor real con fases + invocación de unidades habilitadas.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Entrada al motor real falló:`,error);
@@ -1102,7 +1104,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
         const engine=buildRealEnginePublic6e(fresh,code);
         if(!engine) throw new Error("No se pudo construir el estado del motor real.");
         await withTimeout(set(publicRef,engine),`Entregar sala ${code} al motor real`,7000);
-        mark(`PASO 6E · motor real publicado para ${code} · ambos clientes deben entrar a la arena existente.`);
+        mark(`PASO 6F · motor real publicado para ${code} · fases e invocación de unidades quedarán habilitadas.`);
       }catch(error){
         console.error(`[HallValla][${STEP}] Puente al motor real falló:`,error);
         mark(`Puente al motor real falló: ${error?.message||error}`);
@@ -1444,7 +1446,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6E: puente al motor real de batalla existente; el tablero experimental queda fuera."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6F: motor real existente con fases + invocación de unidades; movimiento/ataque/efectos siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1457,7 +1459,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8); activeCode=code; await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        const room={ schema:"hallvalla-pvp-rebuild-step6e-real-bridge", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
+        const room={ schema:"hallvalla-pvp-rebuild-step6f-real-unit-summon", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
         try{
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
           const publicSnap=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
@@ -1599,6 +1601,14 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.pvpRebuildStep6eCopyCode=copyCode;
   globalThis.pvpRebuildStep6eRpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep6eChooseTurn=chooseTurnOrder;
+  globalThis.pvpRebuildStep6fOpen=openCleanRoom;
+  globalThis.pvpRebuildStep6fCreate=createMinimalPublicRoom;
+  globalThis.pvpRebuildStep6fJoin=joinExistingRoom;
+  globalThis.pvpRebuildStep6fReady=toggleReady;
+  globalThis.pvpRebuildStep6fLeave=leaveRoom;
+  globalThis.pvpRebuildStep6fCopyCode=copyCode;
+  globalThis.pvpRebuildStep6fRpsChoice=submitRpsChoice;
+  globalThis.pvpRebuildStep6fChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6dOpen=openCleanRoom;
   globalThis.pvpRebuildStep6dCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6dJoin=joinExistingRoom;
@@ -1646,6 +1656,10 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.pvpRebuildStep5StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep5RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep5ChooseTurn=chooseTurnOrder;
+  globalThis.__HALLVALLA_PVP_STEP6F_LIMITED__=function(){
+    try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6fMode==="unit_summon_only"&&publicState.phase==="active";}catch(_){return false;}
+  };
+
   globalThis.pvpRebuildStep45Open=openCleanRoom;
   globalThis.pvpRebuildStep45Create=createMinimalPublicRoom;
   globalThis.pvpRebuildStep45Join=joinExistingRoom;
@@ -1657,7 +1671,7 @@ No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el comb
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6E-REAL-ENGINE-BRIDGE";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6F-REAL-ENGINE-UNIT-SUMMON";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);

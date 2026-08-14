@@ -272,11 +272,75 @@ async function updatePublic(patch){
   await update(ref(db,`games/${writeGameId}/public`),cleanPatch);
   return true;
 }
+let pvpStep6fAtomicActionInFlight=false;
+function isPvpStep6fAtomicActionMode(state=publicState){
+  return !!state&&state.mode==="online"&&state.phase==="active"&&state.pvpAtomicActionMode==="multipath_v1"&&state.pvpStep6fMode==="unit_summon_only";
+}
+async function preparePublicPatchForAtomicPvpAction(sourcePatch={}){
+  const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
+  let cleanPatch={...(sourcePatch||{})};
+  if(Array.isArray(cleanPatch.units)){
+    const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
+    cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
+    const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
+    const erictoLife=resolveErictoLifecycle(solomonLife.units);
+    const mongolAura=applyMongolExplorerAura(erictoLife.units);
+    cleanPatch.units=mongolAura.units;
+    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
+    if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
+  }
+  delete cleanPatch._clockKillCreditOwner;
+  delete cleanPatch._clockKillCreditMode;
+  delete cleanPatch._clockKillIgnoreIds;
+  cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
+  const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
+  cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
+  return hallvallaSanitizeFirebaseValue(cleanPatch)||{};
+}
+async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
+  if(pvpStep6fAtomicActionInFlight)return false;
+  if(!gameId||!publicState||!privateState||!isPvpStep6fAtomicActionMode(publicState))return false;
+  if(Number(publicState.currentPlayer||0)!==Number(myPlayer||0))return false;
+  pvpStep6fAtomicActionInFlight=true;
+  const writeGameId=gameId;
+  const writePlayer=Number(myPlayer||0);
+  const lifecycleToken=getBattleLifecycleToken();
+  const stillActive=()=>gameId===writeGameId&&Number(myPlayer||0)===writePlayer&&isBattleLifecycleTokenActive(lifecycleToken);
+  try{
+    if(!stillActive())return false;
+    const cleanPrivate=hallvallaSanitizeFirebaseValue(privatePatch||{})||{};
+    const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivate);
+    const cleanPublic=await preparePublicPatchForAtomicPvpAction(publicPatch||{});
+    const statsKey=`playerStats/${writePlayer}`;
+    const hasHiddenUnits=countHiddenUnitReserveFromState(nextPrivate)>0;
+    if(cleanPublic[statsKey]&&typeof cleanPublic[statsKey]==="object"&&!Array.isArray(cleanPublic[statsKey])){
+      cleanPublic[statsKey]={...cleanPublic[statsKey],hasHiddenUnits};
+    }else{
+      cleanPublic[`playerStats/${writePlayer}/hasHiddenUnits`]=hasHiddenUnits;
+    }
+    const rootPatch={};
+    for(const [key,value] of Object.entries(cleanPublic))rootPatch[`public/${key}`]=value;
+    for(const [key,value] of Object.entries(cleanPrivate))rootPatch[`private/${getGamePrivatePlayerKey(writePlayer)}/${key}`]=value;
+    if(!Object.keys(rootPatch).length)return true;
+    if(!stillActive())return false;
+    await update(ref(db,`games/${writeGameId}`),rootPatch);
+    if(!stillActive())return false;
+    privateState=nextPrivate;
+    publicState=hallvallaApplyLocalPatch(publicState,cleanPublic);
+    render();
+    return true;
+  }catch(error){
+    console.error("[HallValla][PVP 6F] Falló commit atómico multipath:",error);
+    setHint("No se pudo confirmar la acción PvP. No se aplicó parcialmente.");
+    return false;
+  }finally{
+    pvpStep6fAtomicActionInFlight=false;
+  }
+}
 async function commitGameplayAction({publicPatch={},privatePatch={}}={}){
-  // La capa atómica PvP anterior fue eliminada durante el rebuild.
-  // Aventura/Tutorial conservan el flujo histórico. PvP recuperará atomicidad
-  // en su módulo dedicado cuando esa etapa sea reintroducida y probada.
   if(isTurnWriteBlockedByExpiredClock())return false;
+  if(isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
+  // Aventura/Tutorial conservan el flujo histórico.
   if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
   if(Object.keys(privatePatch||{}).length&&!(await updatePrivate(privatePatch)))return false;
   return true;
