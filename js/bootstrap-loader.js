@@ -114,7 +114,8 @@ const PARTS = [
   "19-field-figures-3d.js",
   "15-settings-tuners-events.js",
   "16-exact-guides-mobile.js",
-  "20-forge-direct-tuner.js"
+  "20-forge-direct-tuner.js",
+  "21-online-lobby-direct-tuner.js"
 ];
 
 function loadClassicScript(file) {
