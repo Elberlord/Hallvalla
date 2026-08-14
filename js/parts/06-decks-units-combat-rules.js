@@ -199,21 +199,7 @@ const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_
 const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,ch]));
 function uid8(){return Math.random().toString(36).slice(2,10)}
 function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}
-const PVP_ROOM_CODE_ALPHABET="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-function makePvpRoomCode(length=6){
-  const safeLength=Math.max(6,Math.min(8,Number(length)||6));
-  const alphabet=PVP_ROOM_CODE_ALPHABET;
-  const cryptoApi=globalThis.crypto;
-  if(cryptoApi&&typeof cryptoApi.getRandomValues==="function"){
-    const bytes=new Uint8Array(safeLength);
-    cryptoApi.getRandomValues(bytes);
-    return Array.from(bytes,value=>alphabet[value%alphabet.length]).join("");
-  }
-  let out="";
-  for(let i=0;i<safeLength;i++)out+=alphabet[Math.floor(Math.random()*alphabet.length)];
-  return out;
-}
-function normalizePvpRoomCode(value){return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8)}
+/* PvP room-code generation lives exclusively in 07b-pvp-rebuild-clean-room.js. */
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 
 function isInitialLeaderAllowed(type){
@@ -280,7 +266,6 @@ async function setSelectedLeaderType(type){
   const nextAction=pendingAfterLeaderSelection;
   pendingAfterLeaderSelection="";
   if(nextAction==="adventure")openAdventureStory();
-  if(nextAction==="online"){if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof pvpRebuildStep1Open==="function")pvpRebuildStep1Open();else runFirstTimeTutorialBefore(openOnlineLobby);}
   if(nextAction==="beast_event")runFirstTimeTutorialBefore(openBeastmasterEvent);
   if(nextAction==="hallvalla_events")runFirstTimeTutorialBefore(openHallvallaEvents);
 }

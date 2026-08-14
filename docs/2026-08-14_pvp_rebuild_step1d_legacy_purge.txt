@@ -1,0 +1,50 @@
+HALLVALLA · PVP REBUILD STEP 1D · LEGACY PURGE
+Fecha: 2026-08-14
+
+Objetivo
+--------
+Eliminar físicamente código PvP viejo que ya no participa en la reconstrucción,
+en lugar de esconderlo detrás de guards, flags o carpetas legacy.
+
+Eliminado
+---------
+- js/legacy/07-pvp-lobby-legacy-disabled.js.
+- test_lobby_tuner.html.
+- Tuner PvP Stage 2 de js/parts/20-forge-direct-tuner.js (observers + interval incluidos).
+- CSS exclusivo de ese tuner.
+- Lifecycle del lobby PvP de Etapa 3 en 03-runtime-clocks.js.
+- Estado busy/fallback antiguo de Crear/Unirse.
+- Helpers legacy de código de sala en 06-decks-units-combat-rules.js.
+- Ruta Online antigua que podía volver a selección de líder/tutorial.
+- Restos clearPvpLobbyRoomState y pvpCreatorDirectInFlight.
+- Atomicidad PvP de Etapa 5 en el script compartido.
+- Bono de reloj PvP por eliminación en el script compartido.
+
+Separación
+----------
+Los helpers private/player1/player2 que también usa Aventura/Tutorial ahora son
+getGamePrivatePlayer*, es decir, infraestructura genérica y no "reglas PvP".
+
+Conservado
+----------
+- Aventura, Tutorial, cartas, combate, Forja, assets y UI general.
+- Lifecycle de BATALLA usado realmente por Aventura/Tutorial.
+- 07b-pvp-rebuild-clean-room.js como única capa de entrada PvP.
+- Puerta: Aventura inicial ganada + mazo guardado de 21 cartas.
+
+Firebase Rules
+--------------
+SIN CAMBIOS. database.rules.json permanece byte por byte igual a STEP 1C.
+
+Prueba funcional
+----------------
+VS Online -> Crear partida -> sala mínima confirmada.
+No se añade J2 todavía; este paquete limpia antes de continuar al Paso 2.
+
+Aislamiento de eventos
+----------------------
+- Los listeners onlineBtn/playBtn/back/create/join/ready/copy/leave fueron retirados de
+  12-profile-shop-packs.js y 15-settings-tuners-events.js.
+- Todos esos listeners se registran ahora exclusivamente dentro de 07b-pvp-rebuild-clean-room.js.
+- updateAuthActionButtons() ya no administra botones PvP; 03-runtime-clocks.js solo conserva
+  la sincronización de autenticación de Aventura.

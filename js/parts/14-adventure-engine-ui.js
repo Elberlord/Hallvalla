@@ -691,21 +691,6 @@ ${introConflict} Derrota a ${battle.enemyName||"el rival"} para avanzar en el ma
 IA enemiga: táctica máxima desde el primer duelo · ${battle.aiStyle||"Sin restricciones"}${principalLine}
 Recompensa al ganar: ${getBattleRewardLabel(battle)}.`;
 }
-function openOnlineLobby(){
-  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof pvpRebuildStep1Open==="function")return pvpRebuildStep1Open();
-  $("mainMenu").classList.add("hidden");
-  $("onlineLobby").classList.remove("hidden");
-  $("gameShell").classList.add("hidden");
-}
-function showOnlineLobby(){
-  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof pvpRebuildStep1Open==="function")return pvpRebuildStep1Open();
-  if(!getSelectedLeaderType()){
-    pendingAfterLeaderSelection="online";
-    requireLeaderSelection(true);
-    return;
-  }
-  runFirstTimeTutorialBefore(openOnlineLobby);
-}
 function backToMainMenu(){
   leaveCurrentGame();
 }

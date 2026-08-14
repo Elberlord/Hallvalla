@@ -8,7 +8,7 @@
 04_RUNTIME_STATE_PHASES
 -------------------------------------------------------------------------------
 */
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,adventureAiTriggerTimer=null,adventureAiActionTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,demigodSummonHideTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,eventSplashExitTimer=null,eventSplashHistory=[],nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="",lastClockKillBonusEventId="";
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,actionsCollapsed=false,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,adventureAiTriggerTimer=null,adventureAiActionTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,demigodSummonHideTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,eventSplashExitTimer=null,eventSplashHistory=[],nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="";
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -21,12 +21,11 @@ let lastHonorRechargeKey="",honorRechargeTimer=null;
 
 /*
 -------------------------------------------------------------------------------
-03_BATTLE_LIFECYCLE_REGISTRY · ETAPA 3
+03_BATTLE_LIFECYCLE_REGISTRY
 -------------------------------------------------------------------------------
-Ownership central de recursos efímeros creados por una sala PvP o una batalla.
-El registro es deliberadamente agnóstico al gameplay: únicamente administra
-suscripciones, timers, RAF, observers, listeners y nodos temporales para que
-salir/reentrar no deje callbacks de una sesión anterior vivos.
+Ownership central de recursos efímeros de una batalla activa.
+El lobby PvP reconstruido NO usa este registro: tendrá su lifecycle propio
+cuando esa capa sea reintroducida y validada por separado.
 */
 function createHallvallaDisposableRegistry(scopeName){
   let generation=0;
@@ -181,7 +180,6 @@ function createHallvallaDisposableRegistry(scopeName){
 }
 
 const hallvallaBattleLifecycle=createHallvallaDisposableRegistry("battle");
-const hallvallaPvpLobbyLifecycle=createHallvallaDisposableRegistry("pvp-lobby");
 function beginBattleLifecycle(meta={}){return hallvallaBattleLifecycle.begin(meta);}
 function endBattleLifecycle(reason="battle-reset"){hallvallaBattleLifecycle.end(reason);}
 function getBattleLifecycleToken(){return hallvallaBattleLifecycle.token();}
@@ -198,12 +196,7 @@ function battleOwnEventListener(target,type,handler,options,label=""){return hal
 function battleOwnObserver(observer,label="observer"){return hallvallaBattleLifecycle.observer(observer,label);}
 function battleOwnNode(node,label="node"){return hallvallaBattleLifecycle.node(node,label);}
 function battleSleep(ms,label="ai-delay"){return hallvallaBattleLifecycle.delay(ms,label);}
-function beginPvpLobbyLifecycle(meta={}){return hallvallaPvpLobbyLifecycle.begin(meta);}
-function endPvpLobbyLifecycle(reason="pvp-lobby-close"){hallvallaPvpLobbyLifecycle.end(reason);}
-function getPvpLobbyLifecycleToken(){return hallvallaPvpLobbyLifecycle.token();}
-function isPvpLobbyLifecycleTokenActive(token){return hallvallaPvpLobbyLifecycle.isTokenActive(token);}
-function pvpLobbyOwnDisposable(disposer,kind="resource",label=""){return hallvallaPvpLobbyLifecycle.own(disposer,kind,label);}
-function getHallvallaLifecycleSnapshot(){return {battle:hallvallaBattleLifecycle.snapshot(),pvpLobby:hallvallaPvpLobbyLifecycle.snapshot()};}
+function getHallvallaLifecycleSnapshot(){return {battle:hallvallaBattleLifecycle.snapshot()};}
 globalThis.__HALLVALLA_LIFECYCLE_SNAPSHOT__=getHallvallaLifecycleSnapshot;
 
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
@@ -212,83 +205,11 @@ const DUEL_TIME_LIMIT_MS=15*60*1000;
 const CLOCK_RULESET_VERSION=2;
 const CLOCK_RULESET_MIGRATION_BONUS_MS=5*60*1000;
 const TURN_TIMER_TICK_MS=200;
-const PVP_KILL_CLOCK_BONUS_MS=5*1000;
-// PvP: 3:00 por turno + 15:00 por jugador. PvE: solo 3:00 por turno; sin relojes acumulados.
-// En PvP cronometrado, cada unidad enemiga destruida concede +5 s al reloj acumulativo
-// del jugador responsable. El reloj puede superar los 15:00 iniciales porque ese tiempo fue ganado.
-function isTimedPvpKillClockEnabled(state=publicState){
-  if(!state||state.phase==="ended"||state.battleEnded||state.mode==="adventure"||state.mode==="tutorial")return false;
-  if(state.pvpTimed===false||state.timed===false||state.clockMode==="untimed")return false;
-  if(!state.playerSlots?.player2Uid&&!hallvallaIsLocalTestGame())return false;
-  return [1,2].includes(Number(state.currentPlayer||0));
-}
+// El bono de reloj por eliminación PvP fue retirado del runtime compartido durante
+// la reconstrucción clean-room. Se reintroducirá en la capa PvP validada, no aquí.
 function getRawDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||0)){
   const raw=Number(state?.playerClockMs?.[owner]);
   return Number.isFinite(raw)&&raw>=0?raw:DUEL_TIME_LIMIT_MS;
-}
-function getDestroyedNonLeaderUnits(beforeUnits=[],afterUnits=[]){
-  const afterAlive=new Set((afterUnits||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>u.id));
-  return (beforeUnits||[]).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&!afterAlive.has(u.id)
-    &&!(u.solomonSummon&&!(afterUnits||[]).some(s=>s.id===u.solomonSourceId&&s.hp>0))
-    &&!(u.reanimated&&!(afterUnits||[]).some(s=>s.id===u.reanimatedByErictoId&&s.hp>0)));
-}
-function applyPvpKillClockBonusToPatch(patch,beforeUnits,afterUnits,state=publicState,creditOwner=null,creditMode=""){
-  const clean={...(patch||{})};
-  const ignoreIds=new Set(Array.isArray(clean._clockKillIgnoreIds)?clean._clockKillIgnoreIds:[]);
-  delete clean._clockKillCreditOwner;
-  delete clean._clockKillCreditMode;
-  delete clean._clockKillIgnoreIds;
-  if(!isTimedPvpKillClockEnabled(state)||!Array.isArray(afterUnits))return clean;
-  const destroyed=getDestroyedNonLeaderUnits(beforeUnits,afterUnits).filter(u=>!ignoreIds.has(u.id));
-  if(!destroyed.length)return clean;
-  const rewards={1:0,2:0};
-  const fixedOwner=Number(creditOwner||0);
-  destroyed.forEach(unit=>{
-    let owner=0;
-    if([1,2].includes(fixedOwner)&&Number(unit.owner)!==fixedOwner)owner=fixedOwner;
-    else if(creditMode==="opposite-owner"&&[1,2].includes(Number(unit.owner)))owner=Number(unit.owner)===1?2:1;
-    if(owner)rewards[owner]+=1;
-  });
-  const rewardEntries=[];
-  [1,2].forEach(owner=>{
-    const count=rewards[owner];
-    if(!count)return;
-    const path=`playerClockMs/${owner}`;
-    const existingPatch=Number(clean[path]);
-    const base=Number.isFinite(existingPatch)&&existingPatch>=0?existingPatch:getRawDuelClockMs(state,owner);
-    clean[path]=base+(count*PVP_KILL_CLOCK_BONUS_MS);
-    rewardEntries.push({owner,count,seconds:count*5});
-  });
-  if(rewardEntries.length){
-    clean.clockKillBonusEvent={
-      id:`${state?.turnKey||"turn"}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-      rewards:rewardEntries,
-      at:Date.now()
-    };
-  }
-  return clean;
-}
-function maybeShowClockKillBonus(prevState,nextState){
-  const event=nextState?.clockKillBonusEvent;
-  if(!event||!event.id||event.id===lastClockKillBonusEventId)return;
-  if(!prevState){lastClockKillBonusEventId=event.id;return;}
-  lastClockKillBonusEventId=event.id;
-  const rewards=Array.isArray(event.rewards)?event.rewards:[];
-  rewards.forEach(reward=>{
-    const owner=Number(reward?.owner||0);
-    const seconds=Math.max(0,Number(reward?.seconds||0));
-    if(![1,2].includes(owner)||seconds<=0)return;
-    const hud=$(owner===1?"playerClock1":"playerClock2");
-    if(!hud||hud.classList.contains("hidden"))return;
-    const badge=document.createElement("span");
-    badge.className="clock-kill-bonus";
-    badge.textContent=`+${seconds} s`;
-    hud.appendChild(badge);
-    hud.classList.remove("clock-kill-pulse");
-    void hud.offsetWidth;
-    hud.classList.add("clock-kill-pulse");
-    battleSetTimeout(()=>{badge.remove();hud.classList.remove("clock-kill-pulse");},1450,"clock-kill-pulse");
-  });
 }
 function isTurnTimerEnabled(state=publicState){
   if(!state||state.phase==="ended"||state.battleEnded||state.mode==="tutorial")return false;
@@ -585,13 +506,8 @@ function isFirebaseAuthReady(){
 }
 function updateAuthActionButtons(){
   const ready=isFirebaseAuthReady();
-  const createBtn=$("createBtn"),joinBtn=$("joinBtn"),startBtn=$("startAdventureBattleBtn");
-  if(globalThis.__HALLVALLA_PVP_REBUILD_ACTIVE__&&typeof globalThis.pvpRebuildStep1SyncButtons==="function")globalThis.pvpRebuildStep1SyncButtons();
-  else{
-    const pvpBusy=globalThis.__HALLVALLA_PVP_LOBBY_BUSY__===true;
-    if(createBtn){createBtn.disabled=!ready||pvpBusy;createBtn.setAttribute("aria-disabled",ready&&!pvpBusy?"false":"true");createBtn.title=!ready?"Conectando con Firebase...":(pvpBusy?"Operación PvP en curso...":"Crear partida");}
-    if(joinBtn){joinBtn.disabled=!ready||pvpBusy;joinBtn.setAttribute("aria-disabled",ready&&!pvpBusy?"false":"true");joinBtn.title=!ready?"Conectando con Firebase...":(pvpBusy?"Operación PvP en curso...":"Unirse a partida");}
-  }
+  const startBtn=$("startAdventureBattleBtn");
+  // VS Online administra sus propios botones en 07b-pvp-rebuild-clean-room.js.
   if(startBtn){startBtn.disabled=!ready;startBtn.setAttribute("aria-disabled",ready?"false":"true");startBtn.textContent=ready?"Iniciar combate":"Conectando...";}
 }
 function resolveFirebaseAuthReady(){

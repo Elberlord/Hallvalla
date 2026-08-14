@@ -1,7 +1,7 @@
 "use strict";
 /*
 ================================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 1C
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 1D
 ================================================================================
 Objetivo único de este paso:
 - aislar por completo el click "Crear partida" del flujo PvP legacy;
@@ -214,7 +214,6 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     busy=false;
     activeCode="";
     activeOwnerUid="";
-    globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=false;
     syncLocalButtons();
     setRoomPanelVisible(false);
     const input=$("joinCode");
@@ -244,7 +243,6 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     busy=true;
     activeCode="";
     activeOwnerUid="";
-    globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=false;
 
     try{
       syncLocalButtons();
@@ -374,10 +372,20 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   globalThis.pvpRebuildStep1Leave=leaveRoom;
   globalThis.pvpRebuildStep1BackToMain=backToMain;
   globalThis.pvpRebuildStep1ResetUi=resetUi;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="1C-ADVENTURE-DECK-GATE";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="1D-CLEAN-LEGACY-PURGE";
+
+  // Todos los eventos de entrada/lobby PvP viven aquí; ningún módulo compartido
+  // instala listeners sobre estos controles durante la reconstrucción.
+  on("onlineBtn","click",openCleanRoom);
+  on("playBtn","click",openCleanRoom);
+  on("backMenuFromLobby","click",backToMain);
+  on("createBtn","click",createMinimalPublicRoom);
+  on("joinBtn","click",joinNotEnabled);
+  on("pvpReadyBtn","click",readyNotEnabled);
+  on("pvpCopyCodeBtn","click",copyCode);
+  on("pvpLeaveBtn","click",leaveRoom);
 
   try{
-    globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=false;
     const previous=sessionStorage.getItem("hallvalla_pvp_rebuild_last_marker");
     if(previous)console.info(`[HallValla][${STEP}] marcador previo:`,previous);
   }catch(_){ }

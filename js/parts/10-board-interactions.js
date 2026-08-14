@@ -701,7 +701,7 @@ function getUnitEffectHonorCommitState(cost){
 async function spendUnitEffectHonor(cost){
   const payment=getUnitEffectHonorCommitState(cost);
   if(!payment)return false;
-  const committed=await commitPvpGameplayAction({
+  const committed=await commitGameplayAction({
     privatePatch:{honor:payment.honor,maxHonor:payment.maxHonor},
     publicPatch:{[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),hp:getLeader(myPlayer)?.hp||0,honor:payment.honor,maxHonor:payment.maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}},
     kind:"unit-effect-cost"
@@ -966,7 +966,7 @@ async function activateUnitEffect(u,choice=null){
     result.units=applyUnitServicePointsToUnits(result.units,u,serviceResult);
     result.log+=` Puntos de servicio: ${serviceResult.afterPoints}.${unitServiceUnlockText(serviceResult)}`;
     const playerStats={...(publicState?.playerStats?.[myPlayer]||{}),hp:result.units.find(it=>it.owner===myPlayer&&it.leader)?.hp||0,honor:payment.honor,maxHonor:payment.maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length};
-    const committed=await commitPvpGameplayAction({
+    const committed=await commitGameplayAction({
       privatePatch:{honor:payment.honor,maxHonor:payment.maxHonor},
       publicPatch:{units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,_clockKillCreditOwner:result.clockKillCreditOwner||myPlayer,[`playerStats/${myPlayer}`]:playerStats,log:[result.log,...(publicState?.log||[])].slice(0,18)},
       kind:`unit-effect:${u.key||"effect"}`

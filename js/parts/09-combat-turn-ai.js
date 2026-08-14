@@ -25,7 +25,7 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
   };
   let effectPatch={...(publicPatch||{}),[`playerStats/${myPlayer}`]:nextStats};
   if(actionLog)effectPatch.log=[String(actionLog),...(publicState?.log||[])].slice(0,18);
-  const committed=await commitPvpGameplayAction({
+  const committed=await commitGameplayAction({
     publicPatch:effectPatch,
     privatePatch:{hand:payment.hand,honor:payment.honor,maxHonor:payment.maxHonor},
     kind:`card:${card.key||card.type||"play"}`

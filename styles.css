@@ -16334,26 +16334,6 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
    Cada unidad enemiga destruida entrega +5 s al reloj acumulativo.
    ===================================================================== */
 .duel-clock-hud{overflow:visible}
-.clock-kill-bonus{
-  position:absolute;
-  left:50%;
-  top:-20px;
-  transform:translateX(-50%);
-  padding:2px 7px 3px;
-  border-radius:10px;
-  color:#bfffd0;
-  background:rgba(10,38,20,.94);
-  border:1px solid rgba(108,255,148,.72);
-  box-shadow:0 0 12px rgba(70,255,125,.28),0 4px 12px rgba(0,0,0,.45);
-  font:900 11px/1 Georgia,serif;
-  letter-spacing:.4px;
-  white-space:nowrap;
-  pointer-events:none;
-  animation:hvClockKillBonusFloat 1.4s ease-out forwards;
-}
-.duel-clock-hud.clock-kill-pulse{
-  animation:hvClockKillPulse .58s ease-out 1;
-}
 @keyframes hvClockKillBonusFloat{
   0%{opacity:0;transform:translate(-50%,8px) scale(.72)}
   20%{opacity:1;transform:translate(-50%,0) scale(1.08)}
@@ -20445,39 +20425,7 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 #pvpRoomPanel #pvpReadyBtn.is-ready{box-shadow:inset 0 0 0 3px rgba(132,225,78,.44),0 0 18px rgba(132,225,78,.22)!important;border-radius:15px!important;}
 #pvpRoomPanel .pvp-room-message{position:absolute!important;left:-99999px!important;}
 
-/* Editor: nunca cambia width/height reales. Los 5 controles son transformaciones, por eso 100% = exactamente el layout natural. */
-#pvpRoomPanel .hv-lobby-editable{
-  --hvLobbyX:0px;--hvLobbyY:0px;--hvLobbyS:1;--hvLobbySX:1;--hvLobbySY:1;
-  translate:var(--hvLobbyX) var(--hvLobbyY);
-  scale:calc(var(--hvLobbyS) * var(--hvLobbySX)) calc(var(--hvLobbyS) * var(--hvLobbySY));
-  transform-origin:center center!important;
-}
-body.hv-lobby-edit-mode #pvpRoomPanel .hv-lobby-editable{cursor:grab!important;user-select:none!important;}
-body.hv-lobby-edit-mode #pvpRoomPanel .hv-lobby-selected{outline:2px dashed rgba(255,221,122,.95)!important;outline-offset:3px!important;}
-.hv-lobby-tuner{position:fixed!important;left:16px;top:100px;z-index:100000!important;width:min(370px,calc(100vw - 24px));font-family:Georgia,serif;color:#f4dfb0;}
-.hv-lobby-tuner.hidden{display:none!important;}
-.hv-lobby-tuner-bar{display:flex;gap:7px;align-items:center;}
-.hv-lobby-tuner-bar button,.hv-lobby-tuner-body button{appearance:none;border:1px solid rgba(220,175,79,.58);background:linear-gradient(180deg,#8a621e,#4d3211 58%,#281a09);color:#fae9ba;box-shadow:0 7px 18px rgba(0,0,0,.36),inset 0 1px rgba(255,236,178,.25);cursor:pointer;font:900 14px/1 Georgia,serif;}
-#hvLobbyTunerMove{width:52px;height:44px;border-radius:50%!important;font-size:20px!important;}
-#hvLobbyToggle{flex:1;height:44px;border-radius:999px!important;}
-.hv-lobby-tuner-body{margin-top:8px;padding:12px;border:1px solid rgba(220,175,79,.48);border-radius:18px;background:linear-gradient(180deg,rgba(29,18,10,.985),rgba(10,8,6,.99));box-shadow:0 16px 40px rgba(0,0,0,.55);}
-.hv-lobby-tuner-body.hidden{display:none!important;}
-.hv-lobby-tuner-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
-.hv-lobby-tuner-head b{font:900 18px/1 Georgia,serif;color:#f3d17c;}
-#hvLobbyClose{width:38px;height:38px;border-radius:10px;font-size:22px;}
-.hv-lobby-target{width:100%;height:38px;padding:0 10px;border:1px solid rgba(220,175,79,.42);border-radius:10px;background:#181008;color:#ffecbd;font:800 13px Georgia,serif;}
-.hv-lobby-selected-name{margin:8px 0;color:#e7bf62;font:900 15px Georgia,serif;}
-.hv-lobby-help{margin-bottom:10px;padding:8px 9px;border:1px solid rgba(220,175,79,.18);border-radius:9px;background:rgba(255,222,133,.05);font:700 11px/1.35 Georgia,serif;color:#dcc89e;}
-.hv-lobby-control{margin-bottom:10px;}
-.hv-lobby-control>div:first-child{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
-.hv-lobby-control output{color:#65ddff;font-weight:900;}
-.hv-lobby-control-line{display:flex;align-items:center;gap:8px;}
-.hv-lobby-control-line input{flex:1;}
-.hv-lobby-control-line button{width:36px;height:34px;border-radius:9px;font-size:18px;}
-.hv-lobby-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
-.hv-lobby-actions button{min-height:38px;border-radius:9px;padding:7px;font-size:11px;}
 @media(max-width:900px){
   .online-modal-art.pvp-room-active{width:min(980px,98vw,calc(94vh * 1.776833))!important;}
-  .hv-lobby-tuner{left:8px;top:76px;width:min(340px,calc(100vw - 16px));}
   #pvpRoomPanel #pvpCopyCodeBtn{min-width:84px!important;padding:7px 11px!important;font-size:11px!important;}
 }

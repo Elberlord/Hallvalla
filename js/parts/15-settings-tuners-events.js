@@ -2,10 +2,6 @@
 /* HallValla 7BOARDCTRL8U · Eventos UI, ajustes y calibradores */
 
 
-on("onlineBtn","click",pvpRebuildStep1Open);
-on("playBtn","click",pvpRebuildStep1Open);
-on("backMenuFromLobby","click",pvpRebuildStep1BackToMain);
-
 function handleAdventureHomeClick(ev){
   if(ev&&typeof ev.preventDefault==="function")ev.preventDefault();
   if(!getSelectedLeaderType()){

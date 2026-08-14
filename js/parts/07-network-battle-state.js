@@ -20,23 +20,23 @@ function hallvallaSanitizeFirebaseValue(value){
   return value;
 }
 
-const PVP_PRIVATE_PLAYER_KEYS=Object.freeze({1:"player1",2:"player2"});
-function getPvpPrivatePlayerKey(player){
+const GAME_PRIVATE_PLAYER_KEYS=Object.freeze({1:"player1",2:"player2"});
+function getGamePrivatePlayerKey(player){
   const safePlayer=Number(player);
-  const key=PVP_PRIVATE_PLAYER_KEYS[safePlayer];
-  if(!key)throw new Error(`[HallValla] Jugador PvP privado inválido: ${player}`);
+  const key=GAME_PRIVATE_PLAYER_KEYS[safePlayer];
+  if(!key)throw new Error(`[HallValla] Jugador privado inválido: ${player}`);
   return key;
 }
-function getPvpPrivatePlayerPath(code,player){
+function getGamePrivatePlayerPath(code,player){
   const safeCode=String(code||"").trim();
-  if(!safeCode)throw new Error("[HallValla] No se puede resolver una ruta privada PvP sin código de partida.");
-  return `games/${safeCode}/private/${getPvpPrivatePlayerKey(player)}`;
+  if(!safeCode)throw new Error("[HallValla] No se puede resolver una ruta privada de partida sin código de partida.");
+  return `games/${safeCode}/private/${getGamePrivatePlayerKey(player)}`;
 }
-function getPvpPrivatePlayerRef(code,player){
-  return ref(db,getPvpPrivatePlayerPath(code,player));
+function getGamePrivatePlayerRef(code,player){
+  return ref(db,getGamePrivatePlayerPath(code,player));
 }
 
-/* PVP legacy lobby extracted to js/legacy/07-pvp-lobby-legacy-disabled.js. */
+/* El lobby PvP legacy fue eliminado del runtime. */
 
 function getStealthUnitsForSharedVisibility(units=publicState?.units||[]){
   return (Array.isArray(units)?units:[]).filter(u=>u&&!u.leader&&isStealthedUnit(u));
@@ -242,8 +242,6 @@ async function updatePublic(patch){
   const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
   if(!writeContextActive())return false;
   const sourcePatch=patch||{};
-  const creditOwner=sourcePatch._clockKillCreditOwner;
-  const creditMode=sourcePatch._clockKillCreditMode||"";
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
   let cleanPatch={...sourcePatch};
   if(Array.isArray(cleanPatch.units)){
@@ -255,7 +253,9 @@ async function updatePublic(patch){
     cleanPatch.units=mongolAura.units;
     const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
     if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
-    cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);
+    delete cleanPatch._clockKillCreditOwner;
+    delete cleanPatch._clockKillCreditMode;
+    delete cleanPatch._clockKillIgnoreIds;
   }else{
     delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
   }
@@ -267,108 +267,19 @@ async function updatePublic(patch){
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
-    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowClockKillBonus(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();return true;
+    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();return true;
   }
   await update(ref(db,`games/${writeGameId}/public`),cleanPatch);
   return true;
 }
-function mergeHiddenReserveSummaryIntoPublicPatch(patch,player,hasHiddenUnits){
-  const out={...(patch||{})};
-  const playerKey=`playerStats/${player}`;
-  if(out[playerKey]&&typeof out[playerKey]==="object"&&!Array.isArray(out[playerKey])){
-    out[playerKey]={...out[playerKey],hasHiddenUnits:hasHiddenUnits===true};
-    return out;
-  }
-  if(out.playerStats&&typeof out.playerStats==="object"&&!Array.isArray(out.playerStats)){
-    const stats={...out.playerStats};
-    const current=stats[player]||stats[String(player)]||{};
-    stats[player]={...(current&&typeof current==="object"?current:{}),hasHiddenUnits:hasHiddenUnits===true};
-    out.playerStats=stats;
-    return out;
-  }
-  out[`${playerKey}/hasHiddenUnits`]=hasHiddenUnits===true;
-  return out;
-}
-function addRelativePatchToRootUpdate(rootPatch,basePath,patch){
-  for(const [key,value] of Object.entries(patch||{})){
-    const cleanKey=String(key||"").replace(/^\/+|\/+$/g,"");
-    if(!cleanKey)throw new Error("[HallValla] Un commit multipath recibió una ruta vacía.");
-    rootPatch[`${basePath}/${cleanKey}`]=value;
-  }
-  return rootPatch;
-}
-async function prepareAtomicGameplayPublicPatch(sourcePatch){
-  const creditOwner=sourcePatch?._clockKillCreditOwner;
-  const creditMode=sourcePatch?._clockKillCreditMode||"";
-  const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
-  let cleanPatch={...(sourcePatch||{})};
-  if(Array.isArray(cleanPatch.units)){
-    const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
-    cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
-    const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
-    const erictoLife=resolveErictoLifecycle(solomonLife.units);
-    const mongolAura=applyMongolExplorerAura(erictoLife.units);
-    cleanPatch.units=mongolAura.units;
-    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
-    if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
-    cleanPatch=applyPvpKillClockBonusToPatch(cleanPatch,beforeUnits,cleanPatch.units,publicState,creditOwner,creditMode);
-  }else{
-    delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
-  }
-  cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
-  const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
-  cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
-  return hallvallaSanitizeFirebaseValue(cleanPatch)||{};
-}
-let pvpGameplayAtomicCommitInFlight=false;
-let pvpGameplayAtomicCommitSequence=0;
-function makeGameplayAtomicCommitId(player){
-  pvpGameplayAtomicCommitSequence++;
-  const cryptoPart=globalThis.crypto?.randomUUID?.();
-  return cryptoPart||`${Date.now().toString(36)}-${Number(player||0)}-${pvpGameplayAtomicCommitSequence.toString(36)}`;
-}
-function isPvpAtomicGameplayContext(state=publicState){
-  return !!(state&&state.mode!=="adventure"&&state.mode!=="tutorial"&&state.playerSlots&&Number(myPlayer)>0);
-}
-async function commitPvpGameplayAction({publicPatch={},privatePatch={},kind="gameplay"}={}){
+async function commitGameplayAction({publicPatch={},privatePatch={}}={}){
+  // La capa atómica PvP anterior fue eliminada durante el rebuild.
+  // Aventura/Tutorial conservan el flujo histórico. PvP recuperará atomicidad
+  // en su módulo dedicado cuando esa etapa sea reintroducida y probada.
   if(isTurnWriteBlockedByExpiredClock())return false;
-  const writeGameId=gameId;
-  const writePlayer=myPlayer;
-  const writeLifecycleToken=getBattleLifecycleToken();
-  const writeContextActive=()=>writeGameId&&gameId===writeGameId&&myPlayer===writePlayer&&isBattleLifecycleTokenActive(writeLifecycleToken);
-  if(!writeContextActive())return false;
-  const cleanPrivate=hallvallaSanitizeFirebaseValue(privatePatch||{})||{};
-  const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivate);
-
-  // Aventura/Tutorial conservan exactamente el flujo histórico. La atomicidad cross-branch de esta etapa se limita a PvP.
-  if(!isPvpAtomicGameplayContext()){
-    if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
-    if(Object.keys(cleanPrivate).length&&!(await updatePrivate(cleanPrivate)))return false;
-    return true;
-  }
-  const hiddenUnits=countHiddenUnitReserveFromState(nextPrivate);
-  let sourcePublic=mergeHiddenReserveSummaryIntoPublicPatch(publicPatch,writePlayer,hiddenUnits>0);
-  const commitId=makeGameplayAtomicCommitId(writePlayer);
-  sourcePublic={...sourcePublic,lastActionCommit:{id:commitId,player:writePlayer,kind:String(kind||"gameplay"),turnKey:String(publicState?.turnKey||""),at:Date.now()}};
-  if(pvpGameplayAtomicCommitInFlight)return false;
-  pvpGameplayAtomicCommitInFlight=true;
-  try{
-    const cleanPublic=await prepareAtomicGameplayPublicPatch(sourcePublic);
-    if(!writeContextActive())return false;
-    const rootPatch={};
-    addRelativePatchToRootUpdate(rootPatch,`games/${writeGameId}/public`,cleanPublic);
-    addRelativePatchToRootUpdate(rootPatch,getPvpPrivatePlayerPath(writeGameId,writePlayer),{...cleanPrivate,lastActionCommitId:commitId});
-    await update(ref(db),rootPatch);
-    if(!writeContextActive())return false;
-    privateState=hallvallaApplyLocalPatch(nextPrivate,{lastActionCommitId:commitId});
-    globalThis.__HALLVALLA_LAST_ATOMIC_ACTION_COMMIT__={id:commitId,gameId:writeGameId,player:writePlayer,kind:String(kind||"gameplay"),paths:Object.keys(rootPatch).length,at:Date.now()};
-    return true;
-  }catch(error){
-    console.error("[HallValla] Falló commit atómico de acción PvP; Firebase no debe aplicar un estado parcial:",error);
-    return false;
-  }finally{
-    pvpGameplayAtomicCommitInFlight=false;
-  }
+  if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
+  if(Object.keys(privatePatch||{}).length&&!(await updatePrivate(privatePatch)))return false;
+  return true;
 }
 async function updatePrivate(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
@@ -391,20 +302,10 @@ async function updatePrivate(patch){
     render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();
     return true;
   }
-  if(!isPvpAtomicGameplayContext()){
-    // Fuera de PvP se conserva el orden histórico de escrituras de esta versión.
-    applyLocalProjection();
-    await update(getPvpPrivatePlayerRef(writeGameId,writePlayer),cleanPatch);
-    if(!writeContextActive())return false;
-    await update(ref(db,`games/${writeGameId}/public`),summaryPatch);
-    return true;
-  }
-  const rootPatch={};
-  addRelativePatchToRootUpdate(rootPatch,getPvpPrivatePlayerPath(writeGameId,writePlayer),cleanPatch);
-  addRelativePatchToRootUpdate(rootPatch,`games/${writeGameId}/public`,summaryPatch);
-  await update(ref(db),rootPatch);
-  if(!writeContextActive())return false;
   applyLocalProjection();
+  await update(getGamePrivatePlayerRef(writeGameId,writePlayer),cleanPatch);
+  if(!writeContextActive())return false;
+  await update(ref(db,`games/${writeGameId}/public`),summaryPatch);
   return true;
 }
 function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
@@ -471,7 +372,6 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   lastBattleFxKey="";
   lastDemigodSummonKey="";
   lastEventSplashKey="";
-  lastClockKillBonusEventId="";
   eventSplashHistory=[];
   nearDeathSoundPlayedKeys=new Set();
   clearBattleFxLayer();
@@ -481,7 +381,6 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   if(aiWatchdogTimer){battleClearInterval(aiWatchdogTimer);aiWatchdogTimer=null;}
 }
 function leaveCurrentGame(){
-  if(typeof clearPvpLobbyRoomState==="function")clearPvpLobbyRoomState();
   if(unsubPub){unsubPub();unsubPub=null}
   if(unsubPriv){unsubPriv();unsubPriv=null}
   resetBattleState();
@@ -506,8 +405,7 @@ function maybeShowBattleResult(){
   showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
   if(adventure)completeAdventureBattleOnce(publicState);
 }
-let pvpCreatorDirectInFlight=false;
-/* Legacy createGame/joinGame extracted; clean-room PvP owns lobby entry. */
+/* Crear/Unirse PvP viven únicamente en el módulo clean-room. */
 
 function extractPrincipalCardsFromDeck(cards=[],principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){
   const deck=[...(cards||[])];
@@ -760,7 +658,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   }
   try{
     await set(ref(db,`games/${code}/public`),pub);
-    await set(getPvpPrivatePlayerRef(code,1),privatePayload);
+    await set(getGamePrivatePlayerRef(code,1),privatePayload);
   }catch(error){
     try{await remove(ref(db,`games/${code}`));}catch(_){}
     if(battle.beastEvent&&beastmasterEntryCharged){
@@ -804,7 +702,6 @@ function enterLocalGame(pub,priv,player=1){
   clearBattleTransientUiState();
   lastBattleFxKey="";
   lastDemigodSummonKey="";
-  lastClockKillBonusEventId="";
   lastFirebaseListenerErrorKey="";
   nearDeathSoundPlayedKeys=new Set();
   resetNoPlayableAutoAdvanceState();
@@ -827,7 +724,6 @@ function enterLocalGame(pub,priv,player=1){
   aiWatchdogTimer=battleSetInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800,"adventure-ai-watchdog-local");
 }
 function enterGame(code,player){
-  if(typeof clearPvpLobbyRoomState==="function")clearPvpLobbyRoomState();
   beginBattleLifecycle({code,player,source:"firebase"});
   if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
   gameId=code;
@@ -837,7 +733,6 @@ function enterGame(code,player){
   clearBattleTransientUiState();
   lastBattleFxKey="";
   lastDemigodSummonKey="";
-  lastClockKillBonusEventId="";
   lastFirebaseListenerErrorKey="";
   nearDeathSoundPlayedKeys=new Set();
   resetNoPlayableAutoAdvanceState();
@@ -870,14 +765,14 @@ function enterGame(code,player){
     syncBattleMusic();
     maybePlayBattleFx(prevPublic,publicState);
     maybeProcessVeilCurseKillEvent(prevPublic,publicState);
-    maybeShowClockKillBonus(prevPublic,publicState);
+    
     maybeShowBattleResult();
     void maybeFinalizeUnitExhaustionFromPublicState();
     maybeStartTurn();
     maybeTriggerAdventureAI();
     });
   },e=>handleBattleListenerError("public:onValue",e)),"firebase","battle-public");
-  unsubPriv=battleOwnDisposable(onValue(getPvpPrivatePlayerRef(code,player),snap=>{
+  unsubPriv=battleOwnDisposable(onValue(getGamePrivatePlayerRef(code,player),snap=>{
     if(!isBattleLifecycleTokenActive(lifecycleToken))return;
     safeBattleTick("private",()=>{
     const val=snap.val();
