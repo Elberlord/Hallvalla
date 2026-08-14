@@ -20731,3 +20731,34 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
   .pvp-step6d-played-grid{grid-template-columns:1fr;}
   .pvp-step6d-played-panel{width:96%;}
 }
+
+/* HallValla PvP rebuild 6E · puente al motor real */
+.pvp-step6e-real-badge{
+  position:fixed;
+  left:50%;
+  top:10px;
+  transform:translateX(-50%);
+  z-index:10050;
+  max-width:min(92vw,900px);
+  padding:8px 18px;
+  border:1px solid rgba(222,179,93,.55);
+  border-radius:999px;
+  background:rgba(23,17,12,.86);
+  color:#f4dfaa;
+  font:900 12px/1.1 Georgia,serif;
+  letter-spacing:.06em;
+  text-align:center;
+  text-shadow:0 2px 8px #000;
+  box-shadow:0 8px 24px rgba(0,0,0,.35),inset 0 1px rgba(255,237,184,.14);
+  pointer-events:none;
+}
+.game-shell.pvp-step6e-real-bridge #pvpStep5ArenaGate,
+.game-shell.pvp-step6e-real-bridge #pvpStep6aCombatGate{display:none!important}
+.pvp-step6e-interaction-shield{
+  position:fixed;
+  inset:0;
+  z-index:10040;
+  background:transparent;
+  pointer-events:auto;
+  cursor:not-allowed;
+}

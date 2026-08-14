@@ -1,7 +1,7 @@
 "use strict";
 /*
 ===============================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6D
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6E · PUENTE AL MOTOR REAL
 -------------------------------------------------------------------------------
 Base estable conservada:
 - J1 crea sala sin congelar el navegador.
@@ -10,18 +10,19 @@ Base estable conservada:
 - LISTO sincronizado y estable.
 
 Objetivo único de este paso:
-- conservar intactos 6A/6B/6C: combate canónico, fases, entrega de turno, mano privada y Honor;
-- habilitar jugar cartas reales durante Main Phase y Action Phase;
-- descontar el coste de Honor y retirar la carta de la mano en una sola actualización Firebase;
-- revelar públicamente una carta únicamente DESPUÉS de jugarla;
-- sincronizar mano/Honor públicos y un registro compartido de cartas jugadas;
-- mantener bloqueados posición de tablero, invocaciones, ataques, movimiento y resolución de efectos.
+- partir de la base 6D validada, NO del tablero experimental 6E anterior;
+- conservar lobby, reglas, LISTO y Piedra/Papel/Tijera ya aprobados;
+- preparar de forma privada el mazo/mano real de cada jugador;
+- revelar al iniciar únicamente líder y Personaje Principal, porque ya son visibles en campo;
+- crear el estado que entiende el MOTOR REAL que ya usa la batalla contra IA;
+- entregar ambos clientes a enterGame(code, role) sobre la arena real existente;
+- mantener las acciones BLOQUEADAS en esta prueba para validar primero el puente visual y de datos.
 
-Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
+No crea una segunda arena ni un segundo motor. El objetivo es reutilizar el combate existente.
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP6D";
+  const STEP="PVP-REBUILD-STEP6E-REAL-BRIDGE";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -50,6 +51,9 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
   let privateCombatInitInFlight=false;
   let turnResourceInFlight=false;
   let cardPlayInFlight=false;
+  let enginePrepInFlight=false;
+  let realEngineStartTimer=null;
+  let realEngineEnteredCode="";
 
   function $(id){ return document.getElementById(id); }
   function normalizeCode(value){ return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8); }
@@ -158,11 +162,16 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       principalKeys=principalKeys.filter(k=>deckKeys.includes(k)).slice(0,1);
       if(principalKeys.length!==1) throw new Error("Debes guardar exactamente 1 Personaje Principal dentro de tu mazo de 21 cartas.");
     }
+    let leaderType="warrior",leaderLevel=1,leaderAbility="";
+    try{ leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior"); }catch(_){ leaderType="warrior"; }
+    try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ leaderLevel=1; }
+    try{ leaderAbility=String((typeof getLocalLeaderAbility==="function"&&getLocalLeaderAbility(leaderType))||""); }catch(_){ leaderAbility=""; }
     return {
-      schema:"hallvalla-pvp-private-step45",
+      schema:"hallvalla-pvp-private-step6e-real-bridge",
       ownerUid:String(ownerUid||""),
       role:Number(role),
       profile:{name:getProfileNameSafe(role),level:getProfileLevelSafe()},
+      battleProfile:{leaderType,leaderLevel,leaderAbility},
       loadout:{deckKeys,principalKeys,deckSize:deckKeys.length,fingerprint:fingerprintLoadout(deckKeys,principalKeys)},
       prepared:true, preparedAt:Date.now()
     };
@@ -419,7 +428,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Jugar carta falló:`,error);
-      await hvPopup(`JUGAR CARTA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6D");
+      await hvPopup(`JUGAR CARTA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E");
       return false;
     }finally{
       cardPlayInFlight=false; busy=false; syncLocalButtons();
@@ -804,7 +813,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Avance de fase falló:`,error);
-      await hvPopup(`AVANCE DE FASE FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6D");
+      await hvPopup(`AVANCE DE FASE FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E");
       return false;
     }finally{
       busy=false;
@@ -813,30 +822,292 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     }
   }
 
+
+  function getBattleProfile6e(payload={}){
+    const raw=payload?.battleProfile||{};
+    let leaderType=String(raw.leaderType||"warrior");
+    try{ if(typeof isInitialLeaderAllowed==="function"&&!isInitialLeaderAllowed(leaderType)) leaderType="warrior"; }catch(_){ leaderType="warrior"; }
+    const leaderLevel=Math.max(1,Number(raw.leaderLevel||1)||1);
+    const leaderAbility=String(raw.leaderAbility||"");
+    return {leaderType,leaderLevel,leaderAbility};
+  }
+
+  function buildRealCard6e(key,role,leaderType){
+    const template=getCardTemplate6c(String(key||""));
+    if(!template||!String(template.key||key||"")) throw new Error(`No se pudo resolver la carta ${key}.`);
+    if(typeof makeCard!=="function") throw new Error("El motor real no expuso makeCard().");
+    return makeCard({...template,key:String(template.key||key)},Number(role),String(leaderType||"warrior"));
+  }
+
+  function countHiddenKeys6e(keys=[]){
+    let count=0;
+    for(const key of normalizeFirebaseArray(keys)){
+      const card=getCardTemplate6c(String(key||""));
+      if(card?.type==="unit") count++;
+    }
+    return count;
+  }
+
+  function buildRealPrivateState6e(payload,code,role){
+    let combat6c=payload?.combat6c||null;
+    if(!validatePrivateCombat6c(combat6c,code,role)) combat6c=buildPrivateCombat6c(payload,code,role);
+    const profile=getBattleProfile6e(payload);
+    const handKeys=normalizeFirebaseArray(combat6c.handKeys).map(v=>String(v||"")).filter(Boolean);
+    const deckKeys=normalizeFirebaseArray(combat6c.deckKeys).map(v=>String(v||"")).filter(Boolean);
+    const principalKey=String(combat6c.principalKey||payload?.loadout?.principalKeys?.[0]||payload?.loadout?.principalKeys?.["0"]||"");
+    if(handKeys.length!==STEP6C_INITIAL_HAND||deckKeys.length!==16||!principalKey) throw new Error(`Estado inicial privado J${role} inválido para motor real.`);
+    const hand=handKeys.map(key=>buildRealCard6e(key,role,profile.leaderType));
+    const deck=deckKeys.map(key=>buildRealCard6e(key,role,profile.leaderType));
+    return {
+      combat6c,
+      enginePrivate:{
+        ownerUid:String(payload?.ownerUid||""),
+        role:Number(role),
+        leaderType:profile.leaderType,
+        leaderLevel:profile.leaderLevel,
+        leaderAbility:profile.leaderAbility,
+        deck,
+        hand,
+        honor:0,
+        maxHonor:0,
+        lastTurnStarted:"",
+        skipFirstTurnDraw:true,
+        principalSlots:1,
+        principalKeys:[principalKey],
+        principalKey
+      },
+      prep:{
+        ownerUid:String(payload?.ownerUid||""),
+        ready:true,
+        role:Number(role),
+        leaderType:profile.leaderType,
+        leaderLevel:profile.leaderLevel,
+        leaderAbility:profile.leaderAbility,
+        principalKey,
+        handCount:hand.length,
+        deckCount:deck.length,
+        hasHiddenUnits:countHiddenKeys6e([...handKeys,...deckKeys])>0,
+        preparedAt:Date.now()
+      }
+    };
+  }
+
+  function getEnginePrep6e(room,role){
+    const prep=room?.enginePrep?.[role]||room?.enginePrep?.[String(role)]||null;
+    return prep&&typeof prep==="object"?prep:null;
+  }
+
+  function validateEnginePrep6e(room,role){
+    const prep=getEnginePrep6e(room,role);
+    const slotUid=String(room?.playerSlots?.[`player${role}Uid`]||"");
+    return !!prep&&prep.ready===true&&Number(prep.role)===Number(role)
+      &&String(prep.ownerUid||"")===slotUid
+      &&!!String(prep.leaderType||"")&&Number(prep.leaderLevel||0)>=1
+      &&!!String(prep.principalKey||"")
+      &&Number(prep.handCount||0)===4&&Number(prep.deckCount||0)===16;
+  }
+
+  function bothEnginePrep6e(room){ return validateEnginePrep6e(room,1)&&validateEnginePrep6e(room,2); }
+
+  async function ensureOwnRealEnginePrep6e(room,code){
+    if(enginePrepInFlight||!code||code!==activeCode||!(activeRole===1||activeRole===2)) return false;
+    if(String(room?.phase||"")!=="arena_ready"||!validateArenaBootstrap(room)) return false;
+    const existing=getEnginePrep6e(room,activeRole);
+    if(existing?.ready===true&&String(existing.ownerUid||"")===String(activeOwnerUid||"")) return true;
+    enginePrepInFlight=true;
+    try{
+      const ownRef=ref(db,`games/${code}/private/player${activeRole}`);
+      const snap=await withTimeout(get(ownRef),`Preparar motor real J${activeRole}`,5000);
+      if(!snap.exists()) throw new Error(`private/player${activeRole} no existe.`);
+      const payload=snap.val()||{};
+      if(String(payload.ownerUid||"")!==String(activeOwnerUid||"")) throw new Error("El estado privado ya no pertenece a este usuario.");
+      const built=buildRealPrivateState6e(payload,code,activeRole);
+      const privatePatch={
+        combat6c:built.combat6c,
+        engine6e:{schema:"hallvalla-pvp-engine-private-step6e",ready:true,preparedAt:Date.now()},
+        leaderType:built.enginePrivate.leaderType,
+        leaderLevel:built.enginePrivate.leaderLevel,
+        leaderAbility:built.enginePrivate.leaderAbility,
+        deck:built.enginePrivate.deck,
+        hand:built.enginePrivate.hand,
+        honor:0,
+        maxHonor:0,
+        lastTurnStarted:"",
+        skipFirstTurnDraw:true,
+        principalSlots:1,
+        principalKeys:built.enginePrivate.principalKeys,
+        principalKey:built.enginePrivate.principalKey
+      };
+      await withTimeout(update(ownRef,privatePatch),`Guardar estado privado del motor real J${activeRole}`,6000);
+      await withTimeout(set(ref(db,`games/${code}/public/enginePrep/${activeRole}`),built.prep),`Publicar preparación visible J${activeRole}`,5000);
+      mark(`PASO 6E · J${activeRole} preparado para el motor real · mano privada 4 · mazo 16 · Principal revelable al iniciar.`);
+      return true;
+    }catch(error){
+      console.error(`[HallValla][${STEP}] Preparación motor real J${activeRole} falló:`,error);
+      mark(`Preparación motor real J${activeRole} falló: ${error?.message||error}`);
+      return false;
+    }finally{ enginePrepInFlight=false; }
+  }
+
+  function buildRealEnginePublic6e(room,code){
+    if(!validateArenaBootstrap(room)||!bothEnginePrep6e(room)) return null;
+    if(typeof makeLeader!=="function"||typeof makeStartingPrincipalUnits!=="function") throw new Error("El motor real de batalla no está disponible.");
+    const arena=room.arenaBootstrap||{};
+    const settings=arena.settings||getRules(room);
+    const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
+    const startingRole=Number(startCfg.startingRole||arena.currentPlayer||0);
+    if(![1,2].includes(startingRole)) throw new Error("Jugador inicial inválido para el motor real.");
+    const p1=getEnginePrep6e(room,1),p2=getEnginePrep6e(room,2);
+    const rows=typeof ROWS!=="undefined"?Number(ROWS):7;
+    const cols=typeof COLS!=="undefined"?Number(COLS):5;
+    let units=[
+      makeLeader(1,Math.floor(cols/2),rows-1,p1.leaderType,p1.leaderLevel,p1.leaderAbility),
+      makeLeader(2,Math.floor(cols/2),0,p2.leaderType,p2.leaderLevel,p2.leaderAbility)
+    ];
+    const p1PrincipalCard=buildRealCard6e(p1.principalKey,1,p1.leaderType);
+    const p2PrincipalCard=buildRealCard6e(p2.principalKey,2,p2.leaderType);
+    const p1Principal=makeStartingPrincipalUnits([p1PrincipalCard],1,p1.leaderType,units,1);
+    units.push(...p1Principal);
+    const p2Principal=makeStartingPrincipalUnits([p2PrincipalCard],2,p2.leaderType,units,1);
+    units.push(...p2Principal);
+    let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
+    try{ if(typeof applyStartingPrincipalEntryEffects==="function") entryEffects=applyStartingPrincipalEntryEffects(units); }catch(_){ }
+    units=entryEffects.units||units;
+    const p1Leader=units.find(u=>u.owner===1&&u.leader);
+    const p2Leader=units.find(u=>u.owner===2&&u.leader);
+    const timerOn=!!settings.timerEnabled;
+    const duelLimit=typeof DUEL_TIME_LIMIT_MS!=="undefined"?Number(DUEL_TIME_LIMIT_MS):600000;
+    const clockVersion=typeof CLOCK_RULESET_VERSION!=="undefined"?CLOCK_RULESET_VERSION:1;
+    const ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
+    return {
+      schema:"hallvalla-pvp-real-engine-step6e",
+      pvpRebuildStep:"6E_REAL_ENGINE_BRIDGE",
+      pvpBridgeReadOnly:true,
+      code:String(code||room?.code||""),
+      boardRows:rows,
+      boardCols:cols,
+      mode:"online",
+      createdAt:Number(room?.createdAt||Date.now()),
+      engineStartedAt:Date.now(),
+      phase:"active",
+      currentPlayer:startingRole,
+      turn:1,
+      turnPhase:"draw",
+      turnKey:`1-${startingRole}`,
+      turnStartedAt:ts,
+      clockRulesetVersion:clockVersion,
+      playerClockMs:{1:duelLimit,2:duelLimit},
+      matchSettings:{
+        timerEnabled:timerOn,
+        stakeMode:String(settings.stakeMode||"none"),
+        goldAmount:Number(settings.goldAmount||500),
+        cardEntryFee:500,
+        economyState:String(settings.stakeMode||"none")==="none"?"not_required":"deferred_until_real_actions"
+      },
+      playerSlots:{player1Uid:String(room?.playerSlots?.player1Uid||""),player2Uid:String(room?.playerSlots?.player2Uid||"")},
+      playerNames:{1:getPlayerName(room,1),2:getPlayerName(room,2)},
+      playerLeaders:{1:p1.leaderType,2:p2.leaderType},
+      playerLeaderLevels:{1:Number(p1.leaderLevel||1),2:Number(p2.leaderLevel||1)},
+      playerLeaderAbilities:{1:String(p1.leaderAbility||""),2:String(p2.leaderAbility||"")},
+      principalSlots:{1:1,2:1},
+      pvpPrincipalKeys:{1:[String(p1.principalKey)],2:[String(p2.principalKey)]},
+      playerStats:{
+        1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:16,hand:4,hasHiddenUnits:p1.hasHiddenUnits===true},
+        2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:16,hand:4,hasHiddenUnits:p2.hasHiddenUnits===true}
+      },
+      erictoGraveyard:[],
+      units,
+      statusFxEvent:entryEffects.statusFxEvent||null,
+      floatFxEvent:entryEffects.floatFxEvent||null,
+      log:[
+        `PvP 6E: ambos jugadores entraron al motor real de HallValla. J${startingRole} tiene reservado el primer turno.`,
+        `Prueba de puente: acciones bloqueadas hasta validar que ambos clientes ven la misma arena, líderes, principales y mano privada.`,
+        ...(entryEffects.logs||[])
+      ].slice(0,18)
+    };
+  }
+
+  function isRealEngineState6e(room){
+    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6e"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===true;
+  }
+
+  function clearRealEngineStartTimer6e(){
+    if(realEngineStartTimer!==null){ clearTimeout(realEngineStartTimer); realEngineStartTimer=null; }
+  }
+
+  async function launchRealEngine6e(code,room){
+    if(realEngineEnteredCode===String(code||"")) return true;
+    if(!isRealEngineState6e(room)||!(activeRole===1||activeRole===2)) return false;
+    try{
+      const ownSnap=await withTimeout(get(ref(db,`games/${code}/private/player${activeRole}`)),`Confirmar privado antes de entrar al motor real J${activeRole}`,5000);
+      if(!ownSnap.exists()||ownSnap.val()?.engine6e?.ready!==true) throw new Error("Tu estado privado del motor real todavía no está preparado.");
+      realEngineEnteredCode=String(code||"");
+      clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
+      detachRoomListener();detachOwnPrivateListener();
+      setRpsVisualActive(false);resetRpsUi();hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
+      const shell=$("gameShell");
+      if(shell){
+        shell.classList.remove("hidden","pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");
+        shell.classList.add("pvp-step6e-real-bridge");
+      }
+      $("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.add("hidden");
+      if(typeof enterGame!=="function") throw new Error("enterGame() del motor real no está disponible.");
+      enterGame(code,activeRole);
+      setTimeout(()=>{
+        try{
+          const shield=document.getElementById("pvpStep6eShield")||document.createElement("div");
+          shield.id="pvpStep6eShield";
+          shield.className="pvp-step6e-interaction-shield";
+          shield.setAttribute("aria-label","Paso 6E: acciones bloqueadas durante la validación del motor real");
+          document.body.appendChild(shield);
+          const banner=document.getElementById("pvpStep6eRealBadge")||document.createElement("div");
+          banner.id="pvpStep6eRealBadge";
+          banner.className="pvp-step6e-real-badge";
+          banner.textContent="PASO 6E · MOTOR REAL CONECTADO · ACCIONES BLOQUEADAS PARA ESTA PRUEBA";
+          document.body.appendChild(banner);
+          if(typeof setHint==="function") setHint("Paso 6E: estás viendo la arena y el motor real de HallValla. Valida que ambos clientes vean el mismo campo. Las acciones están bloqueadas solo en esta prueba.");
+        }catch(_){ }
+      },250);
+      mark(`PASO 6E · J${activeRole} entregado a enterGame(${code}, ${activeRole}) sobre la arena real.`);
+      return true;
+    }catch(error){
+      console.error(`[HallValla][${STEP}] Entrada al motor real falló:`,error);
+      mark(`Entrada al motor real falló: ${error?.message||error}`);
+      return false;
+    }
+  }
+
   function scheduleCanonicalCombatStart(room,code){
-    if(activeRole!==1||code!==activeCode) return;
-    if(String(room?.phase||"")==="battle_active"&&validateCanonicalCombatState(room)){ clearCombatLaunchTimer(); return; }
+    if(!code||code!==activeCode) return;
     if(String(room?.phase||"")!=="arena_ready"||!validateArenaBootstrap(room)) return;
-    clearCombatLaunchTimer();
-    combatLaunchTimer=setTimeout(async()=>{
-      combatLaunchTimer=null;
+    void ensureOwnRealEnginePrep6e(room,code);
+    if(activeRole!==1) return;
+    clearRealEngineStartTimer6e();
+    realEngineStartTimer=setTimeout(async()=>{
+      realEngineStartTimer=null;
       if(activeRole!==1||code!==activeCode||phaseWriteInFlight) return;
       phaseWriteInFlight=true;
       try{
         const publicRef=ref(db,`games/${code}/public`);
-        const snap=await withTimeout(get(publicRef),`Confirmar arena antes de iniciar combate ${code}`,5000);
+        const snap=await withTimeout(get(publicRef),`Confirmar preparación del motor real ${code}`,5000);
         if(!snap.exists()) return;
         const fresh=snap.val()||{};
-        if(String(fresh?.phase||"")==="battle_active"&&validateCanonicalCombatState(fresh)) return;
+        if(isRealEngineState6e(fresh)){ void launchRealEngine6e(code,fresh); return; }
         if(String(fresh?.phase||"")!=="arena_ready"||!validateArenaBootstrap(fresh)) return;
-        const combat=buildCanonicalCombatState(fresh,code);
-        if(!combat) throw new Error("No se pudo construir el estado canónico del Turno 1.");
-        await withTimeout(update(publicRef,{"combatState":combat,"phase":"battle_active"}),`Activar combate canónico ${code}`);
+        if(!bothEnginePrep6e(fresh)){
+          phaseWriteInFlight=false;
+          scheduleCanonicalCombatStart(fresh,code);
+          return;
+        }
+        const engine=buildRealEnginePublic6e(fresh,code);
+        if(!engine) throw new Error("No se pudo construir el estado del motor real.");
+        await withTimeout(set(publicRef,engine),`Entregar sala ${code} al motor real`,7000);
+        mark(`PASO 6E · motor real publicado para ${code} · ambos clientes deben entrar a la arena existente.`);
       }catch(error){
-        console.error(`[HallValla][${STEP}] Inicio canónico falló:`,error);
-        mark(`Inicio canónico falló: ${error?.message||error}`);
+        console.error(`[HallValla][${STEP}] Puente al motor real falló:`,error);
+        mark(`Puente al motor real falló: ${error?.message||error}`);
       }finally{ phaseWriteInFlight=false; }
-    },900);
+    },450);
   }
 
   function renderRules(room){
@@ -1012,7 +1283,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     }else if(!bothPrepared){
       setText("pvpRoomMessage","Paso 4: preparando el mazo privado de ambos jugadores...");
     }else if(startCfg.resolved){
-      setText("pvpRoomMessage",combatActive?`PASO 6D correcto: cartas jugables + mano/Honor privados + fases ACTIVE; ${getPlayerName(room,startCfg.startingRole)} es el jugador activo.`:(arenaReady?`Paso 5 confirmado: arena conectada. Preparando inicio canónico del Turno 1...`:`Mostrando desenlace y preparando entrada sincronizada al duelo...`));
+      setText("pvpRoomMessage",combatActive?`PASO 6D correcto: cartas jugables + mano/Honor privados + fases ACTIVE; ${getPlayerName(room,startCfg.startingRole)} es el jugador activo.`:(arenaReady?`Paso 5 confirmado: arena conectada. Preparando ambos clientes para el motor real de HallValla...`:`Mostrando desenlace y preparando entrada sincronizada al duelo...`));
     }else if(String(room?.phase||"")==="rps"){
       setText("pvpRoomMessage","Ambos están LISTOS. Resolviendo Piedra/Papel/Tijera...");
     }else if(bothReady){
@@ -1044,7 +1315,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         "rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,
         "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
         "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-        "arenaBootstrap":null,"combatState":null
+        "arenaBootstrap":null,"combatState":null,"enginePrep":null
       }),`Reiniciar arranque tras salida del rival en ${code}`); }
       catch(error){ console.error(error); }
       finally{ phaseWriteInFlight=false; }
@@ -1070,7 +1341,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
             "rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
             "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,
             "startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-            "arenaBootstrap":null,"combatState":null
+            "arenaBootstrap":null,"combatState":null,"enginePrep":null
           }),`Restablecer state waiting en ${code}`);
         }catch(error){ console.error(error); }
         finally{ phaseWriteInFlight=false; }
@@ -1154,12 +1425,18 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         const readyBtn=$("pvpReadyBtn"); if(readyBtn){ readyBtn.disabled=true; readyBtn.classList.remove("is-ready"); }
         return;
       }
-      const room=snapshot.val()||{}; renderRoomSnapshot(room,code); void reconcileRoomPhase(room,code);
+      const room=snapshot.val()||{};
+      if(isRealEngineState6e(room)){ void launchRealEngine6e(code,room); return; }
+      renderRoomSnapshot(room,code);
+      if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room)) void ensureOwnRealEnginePrep6e(room,code);
+      void reconcileRoomPhase(room,code);
     },error=>{ if(token!==roomListenerToken||code!==activeCode) return; console.error(error); mark(`Listener de sala falló: ${error?.message||error}`); });
   }
 
   function resetUi({resetJoin=true}={}){
-    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
+    try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
     const readyBtn=$("pvpReadyBtn"); if(readyBtn){ readyBtn.disabled=true; readyBtn.classList.remove("is-ready"); readyBtn.setAttribute("aria-pressed","false"); readyBtn.title="Esperando rival"; }
     renderRules({settings:buildDefaultRules(),phase:"waiting"}); syncLocalButtons();
@@ -1167,7 +1444,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6D: cartas jugables con coste de Honor + mano privada + fases sincronizadas; efectos y tablero aún bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6E: puente al motor real de batalla existente; el tablero experimental queda fuera."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1180,7 +1457,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8); activeCode=code; await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        const room={ schema:"hallvalla-pvp-rebuild-step6d", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null };
+        const room={ schema:"hallvalla-pvp-rebuild-step6e-real-bridge", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
         try{
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
           const publicSnap=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
@@ -1200,7 +1477,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         }
       }
       throw lastError||new Error("No se pudo crear una sala tras 4 intentos.");
-    }catch(error){ console.error(error); const message=`CREAR SALA FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6D"); return false; }
+    }catch(error){ console.error(error); const message=`CREAR SALA FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -1222,7 +1499,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`); const confirmed=confirmSnap.val()||{};
       if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid) throw new Error("Firebase no confirmó este UID como Jugador 2."); if(!(confirmed?.playerPrepared?.[2]===true||confirmed?.playerPrepared?.["2"]===true)) throw new Error("Firebase no confirmó playerPrepared/2.");
       activeCode=code; activeOwnerUid=joinUid; activeRole=2; await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`); attachOwnPrivateListener(code,2,joinUid); renderRoomSnapshot(confirmed,code); attachRoomListener(code); await markAndPaint(`8/8 · J2 CORRECTO · privado 21/21 preparado. Ambos pueden usar LISTO.`); return true;
-    }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6D"); return false; }
+    }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -1238,7 +1515,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       if(!p1Uid||!p2Uid) throw new Error("LISTO se habilita cuando ambos jugadores están presentes."); if(!p1Prepared||!p2Prepared) throw new Error("LISTO se habilita cuando ambos estados privados 21/21 están preparados."); if(!ownPrivateHealthy) throw new Error(`Tu private/player${role} no está confirmado.`);
       const slotUid=role===2?p2Uid:p1Uid; if(slotUid!==ownerUid) throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
       const current=getReadyFlag(room,role), next=!current; await markAndPaint(`LISTO · J${role} → ${next?"LISTO":"NO LISTO"}...`); await withTimeout(set(ref(db,`games/${code}/public/lobbyReady/${role}`),next),`Actualizar LISTO J${role} en ${code}`); mark(`J${role} ${next?"está LISTO":"ya no está listo"}.`); return true;
-    }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6D"); return false; }
+    }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snapshot?.exists()) renderRoomSnapshot(snapshot.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -1262,11 +1539,11 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
         "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
         "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,
         "startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-        "arenaBootstrap":null,"combatState":null
+        "arenaBootstrap":null,"combatState":null,"enginePrep":null
       }),`Actualizar reglas del host en ${activeCode}`);
       mark(`Reglas actualizadas: ${getRulesSummary(rules)}. LISTO se reinició para ambos.`);
       return true;
-    }catch(error){ console.error(error); await hvPopup(`REGLAS FALLARON: ${error?.message||error}`,"PvP reconstrucción · Paso 6D"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`REGLAS FALLARON: ${error?.message||error}`,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snapshot?.exists()) renderRoomSnapshot(snapshot.val()||{},activeCode); }catch(_){ } }
   }
   function cycleTimer(){ const rules=getRules(roomCache||{}); void updateHostRules({timerEnabled:!rules.timerEnabled}); }
@@ -1283,7 +1560,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       const current=String(rps?.choices?.[activeRole]||rps?.choices?.[String(activeRole)]||""); if(current) throw new Error("Tu elección ya fue enviada. Espera al rival.");
       await withTimeout(update(publicRef,{[`rps/choices/${activeRole}`]:choice,[`rps/submissions/${activeRole}`]:true}),`Enviar elección RPS J${activeRole} en ${activeCode}`);
       mark(`J${activeRole} eligió en secreto.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`PIEDRA/PAPEL/TIJERA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6D"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`PIEDRA/PAPEL/TIJERA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); }
   }
 
@@ -1298,7 +1575,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
       const otherRole=winnerRole===1?2:1; const startingRole=turnChoice==="first"?winnerRole:otherRole; const secondRole=startingRole===1?2:1;
       await withTimeout(update(publicRef,{"phase":"configured","rps/phase":"complete","rps/winnerChoice":turnChoice,"rps/startingRole":startingRole,"startConfig/winnerRole":winnerRole,"startConfig/turnChoice":turnChoice,"startConfig/startingRole":startingRole,"startConfig/secondRole":secondRole,"startConfig/resolved":true,"startConfig/resolvedAt":Date.now()}),`Guardar elección de turno en ${activeCode}`);
       mark(`${getPlayerName(room,winnerRole)} eligió jugar ${turnChoice==="first"?"primero":"segundo"}.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6D"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); }
   }
 
@@ -1308,12 +1585,20 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
     const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
     try{
       if(code&&ownerUid&&role===1){ await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`); await removeOwnPrivateBranch(code,1,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid) await withTimeout(remove(publicRef),`Cerrar sala ${code}`); }
-      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null,"combatState":null}),`Liberar J2 en ${code}`); }
+      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`); }
     }catch(error){ console.warn(error); }
     resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
   function backToMain(){ void leaveRoom(); }
 
+  globalThis.pvpRebuildStep6eOpen=openCleanRoom;
+  globalThis.pvpRebuildStep6eCreate=createMinimalPublicRoom;
+  globalThis.pvpRebuildStep6eJoin=joinExistingRoom;
+  globalThis.pvpRebuildStep6eReady=toggleReady;
+  globalThis.pvpRebuildStep6eLeave=leaveRoom;
+  globalThis.pvpRebuildStep6eCopyCode=copyCode;
+  globalThis.pvpRebuildStep6eRpsChoice=submitRpsChoice;
+  globalThis.pvpRebuildStep6eChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6dOpen=openCleanRoom;
   globalThis.pvpRebuildStep6dCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6dJoin=joinExistingRoom;
@@ -1372,7 +1657,7 @@ Este módulo sigue siendo clean-room y no reintroduce el PvP legacy.
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6D-CARD-PLAY";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6E-REAL-ENGINE-BRIDGE";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);
