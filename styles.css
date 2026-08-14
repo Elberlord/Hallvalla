@@ -20660,3 +20660,13 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   .pvp-step6a-versus > b{font-size:21px}
   .pvp-step6a-versus article{min-height:76px;padding:9px}
 }
+
+/* ==========================================================================
+   HALLVALLA · PVP REBUILD STEP 6B · PHASES + TURN HANDOFF
+   ========================================================================== */
+.pvp-step6b-controls{display:flex;flex-direction:column;align-items:center;gap:8px;margin:12px auto 14px;pointer-events:auto!important}
+.pvp-step6b-advance{appearance:none;border:1px solid rgba(218,171,77,.62);border-radius:999px;background:linear-gradient(180deg,#94651f,#5c3b13 58%,#38230e);color:#fff0bd;padding:12px 28px;min-width:220px;font:900 14px/1 Georgia,serif;letter-spacing:.06em;cursor:pointer;box-shadow:0 9px 22px rgba(0,0,0,.34),inset 0 1px rgba(255,236,184,.24);pointer-events:auto!important;transition:filter .16s ease,transform .16s ease,opacity .16s ease}
+.pvp-step6b-advance:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.pvp-step6b-advance:disabled{opacity:.34;cursor:default;filter:saturate(.4)}
+.pvp-step6b-hint{max-width:560px;color:#cdbb95;font:800 11px/1.25 Georgia,serif;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+.game-shell.pvp-step6b-active #pvpStep6bAdvanceBtn{pointer-events:auto!important}

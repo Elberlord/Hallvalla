@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Modular · PvP Rebuild Step 5 · Arena Entry</title>
+<title>HallValla v8 Modular · PvP Rebuild Step 6B · Fases y Turnos</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6A-CANONICAL-START">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6A-CANONICAL-START">
-<meta name="hallvalla-build-name" content="PVP REBUILD STEP6A · inicio canónico del duelo">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6A-CANONICAL-START-20260814A"/>
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS">
+<meta name="hallvalla-build-name" content="PVP REBUILD STEP6B · fases y cambio de turno sincronizados">
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS-20260814B"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -761,10 +761,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <p class="pvp-step5-note">Ya estás dentro del duelo. En este paso todavía no se activan cartas, Honor, fases, movimientos ni efectos.</p>
     <button id="pvpStep5LeaveBtn" class="pvp-step5-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
   </div>
-</section><section id="pvpStep6aCombatGate" class="pvp-step6a-combat-gate hidden" aria-live="polite" aria-label="Inicio canónico del duelo PvP">
+</section><section id="pvpStep6aCombatGate" class="pvp-step6a-combat-gate hidden" aria-live="polite" aria-label="Fases y cambio de turno del duelo PvP">
   <div class="pvp-step6a-card">
-    <div class="pvp-step6a-kicker">VS ONLINE · PASO 6A</div>
-    <h2>COMBATE INICIADO</h2>
+    <div class="pvp-step6a-kicker">VS ONLINE · PASO 6B</div>
+    <h2>FASES SINCRONIZADAS</h2>
     <p id="pvpStep6aStatus" class="pvp-step6a-status">Esperando el estado oficial del duelo...</p>
     <div class="pvp-step6a-turn-row">
       <span>TURNO</span><strong id="pvpStep6aTurn">1</strong>
@@ -776,12 +776,16 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <article><span>JUGADOR 2</span><strong id="pvpStep6aPlayer2">Jugador 2</strong><em id="pvpStep6aPlayer2State">—</em></article>
     </div>
     <div class="pvp-step6a-state-strip">
-      <span id="pvpStep6aPhase">Fase: Inicio</span>
+      <span id="pvpStep6aPhase">Fase: Inicio de turno</span>
       <span id="pvpStep6aTimer">Timer: OFF</span>
       <span id="pvpStep6aStake">Apuesta: Gratis</span>
     </div>
     <div class="pvp-step6a-lock">FUENTE OFICIAL · FIREBASE</div>
-    <p class="pvp-step6a-note">El duelo ya está ACTIVE y el Turno 1 tiene dueño. En 6A las acciones permanecen bloqueadas para validar únicamente el inicio canónico antes de activar fases y cambio de turno.</p>
+    <p class="pvp-step6a-note">En 6B solo se habilita el avance de fases y la entrega del turno al rival. Cartas, Honor, movimiento, ataques y efectos permanecen bloqueados.</p>
+    <div class="pvp-step6b-controls">
+      <button id="pvpStep6bAdvanceBtn" class="pvp-step6b-advance" type="button" disabled>SIGUIENTE FASE</button>
+      <div id="pvpStep6bHint" class="pvp-step6b-hint">Esperando al jugador activo.</div>
+    </div>
     <button id="pvpStep6aLeaveBtn" class="pvp-step6a-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
   </div>
 </section><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button><button id="toggleActionsBtn" class="battle-tool-btn battle-tool-actions" type="button" aria-label="Mostrar u ocultar acciones">Acciones ▾</button></div><div id="hudP1" class="player-status-hud hud-player-left" aria-label="HUD del jugador">
@@ -1049,6 +1053,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6A-CANONICAL-START-20260814A"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS-20260814B"></script>
 </body>
 </html>
