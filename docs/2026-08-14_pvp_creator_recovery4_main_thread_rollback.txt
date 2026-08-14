@@ -1,0 +1,16 @@
+HallValla - PVP Creator Recovery 4
+
+Motivo:
+El navegador muestra "La pagina no responde" justo despues de activar el estado de operacion PvP. Un timeout JavaScript no puede dispararse si el main thread queda bloqueado.
+
+Cambio dirigido:
+- createGame vuelve al flujo directo de creacion usado en Etapa 2.
+- No llama beginPvpLobbyOperation() y no cambia disabled/title del boton al iniciar.
+- No usa runTransaction() para crear J1.
+- Usa codigo aleatorio de 8 caracteres.
+- J2 conserva la reserva transaccional implementada en Etapa 4.
+- Etapa 5 (acciones PvP atomicas) no se revierte.
+- Firebase Rules: sin cambios.
+
+Objetivo:
+Aislar la regresion del main thread sin seguir alterando el protocolo Firebase del resto del PvP.

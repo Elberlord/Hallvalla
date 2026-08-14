@@ -849,7 +849,9 @@ function maybeShowBattleResult(){
   showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
   if(adventure)completeAdventureBattleOnce(publicState);
 }
+let pvpCreatorDirectInFlight=false;
 async function createGame(){
+  if(pvpCreatorDirectInFlight){setText("lobbyStatus","La creación de sala ya está en curso.");return;}
   if(!(await ensureFirebaseAuthReady("online")))return;
   const leaderType=getSelectedLeaderType();
   if(!leaderType){requireLeaderSelection(true);return}
@@ -864,51 +866,37 @@ async function createGame(){
   if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
   const prep=extractPrincipalCardsFromDeck(rawDeck,principalKeys,principalSlots);
   if(prep.principalCards.length!==principalSlots||prep.deck.length!==DECK_RULES.drawDeckSize){await hvAlert(`El líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${requiredDeckSize} cartas totales: ${principalSlots} principal${principalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");openDeckBuilder();return;}
-  const operation=beginPvpLobbyOperation("create-room");
-  if(!operation){setText("lobbyStatus","Ya hay una operación PvP en curso.");return;}
-  let reservedCode="";
-  let createStep="Preparando creación";
+  pvpCreatorDirectInFlight=true;
+  let code="";
   try{
-    createStep="Preparando datos de J1";
-    setText("lobbyStatus",createStep+"...");
-    await yieldPvpLobbyUi();
+    // RECOVERY4: vuelve al flujo de creación que existía en la Etapa 2 y que no
+    // alteraba disabled/title del botón durante el click. Conservamos 8 caracteres
+    // para reducir de forma práctica la posibilidad de colisión sin introducir
+    // una transacción de creación mientras aislamos la regresión del main thread.
     const profileName=getLocalProfileName();
+    code=makePvpRoomCode(8);
     const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,1);
     const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
-    createStep="Preparando unidades iniciales";
-    setText("lobbyStatus",createStep+"...");
-    await yieldPvpLobbyUi();
     let units=[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")];
     const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
     const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
     const names=principalUnits.map(u=>u.name).join(", ");
-    createStep="Construyendo sala PvP";
-    setText("lobbyStatus",createStep+"...");
-    await yieldPvpLobbyUi();
-    const publicTemplate={boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"waiting",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},lobbyReady:{1:false,2:false},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[sanitizeSharedStealthText(`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`,units)]};
-    const reservation=await reserveNewPvpPublicRoom(publicTemplate,operation,label=>{createStep=label;setText("lobbyStatus",label+"...");});
-    if(!reservation)return;
-    reservedCode=reservation.code;
-    if(!isPvpLobbyOperationActive(operation)){await rollbackCreatedPvpRoom(reservedCode,uid);return;}
-    createStep=`Preparando estado privado de J1 en ${reservedCode}`;
-    setText("lobbyStatus",`Sala ${reservedCode} reservada. Preparando tu estado privado...`);
-    await awaitPvpFirebase(set(getPvpPrivatePlayerRef(reservedCode,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys}),`Preparar Jugador 1 en ${reservedCode}`);
-    if(!isPvpLobbyOperationActive(operation)){await rollbackCreatedPvpRoom(reservedCode,uid);return;}
-    finishPvpLobbyOperation(operation);
-    openPvpLobbyRoom(reservedCode,1);
+    const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"waiting",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},lobbyReady:{1:false,2:false},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[sanitizeSharedStealthText(`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`,units)]};
+    setText("lobbyStatus",`Creando sala ${code}...`);
+    await set(ref(db,`games/${code}/public`),pub);
+    await set(getPvpPrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+    openPvpLobbyRoom(code,1);
   }catch(error){
-    console.error("[HallValla] No se pudo crear la sala PvP de forma segura:",error);
-    if(reservedCode)await rollbackCreatedPvpRoom(reservedCode,uid);
-    if(isPvpLobbyOperationActive(operation)){
-      const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
-      const timedOut=isPvpLobbyTimeoutError(error);
-      const errorCode=String(error?.code||"sin código");
-      const message=denied?`Firebase rechazó una operación de PvP. Paso exacto: ${createStep}. Código: ${errorCode}.`:(timedOut?`Firebase no respondió a tiempo. Paso exacto: ${createStep}. La operación se canceló y los botones fueron liberados.`:`No se pudo crear la sala en ${createStep}: ${error?.message||error}`);
-      setText("lobbyStatus",message);
-      if(denied||timedOut)await hvAlert(message,denied?"PvP rechazado por Firebase":"Tiempo de espera PvP");
-    }
+    console.error("[HallValla] No se pudo crear la sala PvP:",error);
+    setText("lobbyStatus",`No se pudo crear la sala${code?` ${code}`:""}: ${error?.message||error}`);
+    try{await hvAlert(`No se pudo crear la sala${code?` ${code}`:""}. ${error?.message||error}`,"Error PvP");}catch(_){}
   }finally{
-    finishPvpLobbyOperation(operation);
+    pvpCreatorDirectInFlight=false;
+    // Asegurar que un busy heredado de una ejecución anterior no mantenga los botones bloqueados.
+    if(globalThis.__HALLVALLA_PVP_LOBBY_BUSY__===true){
+      globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=false;
+      if(typeof updateAuthActionButtons==="function")updateAuthActionButtons();
+    }
   }
 }
 async function joinGame(){
