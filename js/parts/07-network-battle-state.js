@@ -42,6 +42,112 @@ let pvpLobbyUnsub=null;
 let pvpLobbyPublic=null;
 let pvpLobbyStartRequested=false;
 
+const PVP_ROOM_CREATE_MAX_ATTEMPTS=12;
+let pvpLobbyOperationSequence=0;
+let pvpLobbyOperation=null;
+function setPvpLobbyOperationBusy(busy){
+  globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=!!busy;
+  if(typeof updateAuthActionButtons==="function")updateAuthActionButtons();
+}
+function beginPvpLobbyOperation(kind){
+  if(pvpLobbyOperation)return null;
+  const operation={id:++pvpLobbyOperationSequence,kind:String(kind||"pvp"),cancelled:false};
+  pvpLobbyOperation=operation;
+  setPvpLobbyOperationBusy(true);
+  return operation;
+}
+function isPvpLobbyOperationActive(operation){return !!operation&&pvpLobbyOperation===operation&&!operation.cancelled}
+function finishPvpLobbyOperation(operation){
+  if(pvpLobbyOperation!==operation)return false;
+  pvpLobbyOperation=null;
+  setPvpLobbyOperationBusy(false);
+  return true;
+}
+function cancelPvpLobbyOperation(reason="cancelled"){
+  const operation=pvpLobbyOperation;
+  if(operation){operation.cancelled=true;operation.cancelReason=String(reason||"cancelled");}
+  pvpLobbyOperation=null;
+  pvpLobbyOperationSequence++;
+  setPvpLobbyOperationBusy(false);
+  return operation;
+}
+async function reserveNewPvpPublicRoom(publicTemplate,operation){
+  for(let attempt=1;attempt<=PVP_ROOM_CREATE_MAX_ATTEMPTS;attempt++){
+    if(!isPvpLobbyOperationActive(operation))return null;
+    const code=makePvpRoomCode(6);
+    const candidate={...publicTemplate,code};
+    const publicRef=ref(db,`games/${code}/public`);
+    const claim=await runTransaction(publicRef,current=>{
+      if(current!==null&&typeof current!=="undefined")return undefined;
+      return candidate;
+    },{applyLocally:false});
+    if(claim?.committed)return{code,publicState:candidate,attempt};
+  }
+  throw new Error(`No se pudo reservar un código único después de ${PVP_ROOM_CREATE_MAX_ATTEMPTS} intentos.`);
+}
+function getResetPlayer2PublicState(current,baselinePublic=null){
+  const base=baselinePublic&&typeof baselinePublic==="object"?baselinePublic:null;
+  const next={...current};
+  next.playerSlots={...(current?.playerSlots||{}),player2Uid:null};
+  next.lobbyReady={...(current?.lobbyReady||{}),2:false};
+  next.playerNames={...(current?.playerNames||{}),2:base?.playerNames?.[2]||"Esperando rival"};
+  next.principalSlots={...(current?.principalSlots||{}),2:Number(base?.principalSlots?.[2]||1)};
+  next.principalKeys={...(current?.principalKeys||{}),2:Array.isArray(base?.principalKeys?.[2])?[...base.principalKeys[2]]:[]};
+  next.playerStats={...(current?.playerStats||{}),2:base?.playerStats?.[2]?{...base.playerStats[2]}:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}};
+  if(base?.playerLeaders)next.playerLeaders={...(current?.playerLeaders||{}),2:base.playerLeaders[2]||"mage"};
+  if(base?.playerLeaderLevels)next.playerLeaderLevels={...(current?.playerLeaderLevels||{}),2:Number(base.playerLeaderLevels[2]||1)};
+  if(base?.playerLeaderAbilities)next.playerLeaderAbilities={...(current?.playerLeaderAbilities||{}),2:base.playerLeaderAbilities[2]||""};
+  if(Array.isArray(base?.units))next.units=base.units.map(unit=>({...unit}));
+  else if(Array.isArray(current?.units))next.units=current.units.filter(unit=>!(Number(unit?.owner)===2&&!unit?.leader));
+  if(base){
+    next.statusFxEvent=base.statusFxEvent||null;
+    next.floatFxEvent=base.floatFxEvent||null;
+    if(Array.isArray(base.log))next.log=[...base.log];
+  }
+  return next;
+}
+async function resetPvpPlayer2Reservation(code,ownerUid,{baselinePublic=null,removePrivateState=true}={}){
+  const safeCode=normalizePvpRoomCode(code);
+  const safeUid=String(ownerUid||"");
+  if(!safeCode||!safeUid)return false;
+  let released=false;
+  try{
+    const publicRef=ref(db,`games/${safeCode}/public`);
+    const result=await runTransaction(publicRef,current=>{
+      if(!current||String(current?.playerSlots?.player2Uid||"")!==safeUid)return undefined;
+      if(current.phase&&current.phase!=="waiting")return undefined;
+      return getResetPlayer2PublicState(current,baselinePublic);
+    },{applyLocally:false});
+    released=!!result?.committed;
+  }catch(error){
+    console.warn("[HallValla] No se pudo liberar de forma transaccional el slot J2:",error);
+  }
+  if(removePrivateState&&released){
+    try{await remove(getPvpPrivatePlayerRef(safeCode,2));}
+    catch(error){console.warn("[HallValla] No se pudo retirar private/player2 al liberar la reserva:",error);}
+  }
+  return released;
+}
+async function rollbackCreatedPvpRoom(code,ownerUid){
+  const safeCode=normalizePvpRoomCode(code);
+  const safeUid=String(ownerUid||"");
+  if(!safeCode||!safeUid)return false;
+  try{
+    const publicRef=ref(db,`games/${safeCode}/public`);
+    const result=await runTransaction(publicRef,current=>{
+      if(!current||String(current?.playerSlots?.player1Uid||"")!==safeUid)return undefined;
+      if(current?.playerSlots?.player2Uid)return{...current,phase:"abandoned",lobbyReady:{...(current.lobbyReady||{}),1:false}};
+      return null;
+    },{applyLocally:false});
+    const reverted=!!result?.committed;
+    if(reverted){try{await remove(getPvpPrivatePlayerRef(safeCode,1));}catch(error){console.warn("[HallValla] No se pudo retirar private/player1 durante rollback:",error);}}
+    return reverted;
+  }catch(error){
+    console.warn("[HallValla] No se pudo revertir completamente la creación de sala:",error);
+    return false;
+  }
+}
+
 function setPvpLobbyRoomVisible(visible=false){
   const panel=$("pvpRoomPanel");
   const art=document.querySelector("#onlineLobby .online-modal-art");
@@ -49,6 +155,7 @@ function setPvpLobbyRoomVisible(visible=false){
   if(art)art.classList.toggle("pvp-room-active",!!visible);
 }
 function clearPvpLobbyRoomState({hideRoom=true,resetJoin=false}={}){
+  cancelPvpLobbyOperation("clear-pvp-lobby");
   endPvpLobbyLifecycle("clear-pvp-lobby");
   if(pvpLobbyUnsub){try{pvpLobbyUnsub();}catch(_){ }pvpLobbyUnsub=null;}
   pvpLobbyCode="";
@@ -194,11 +301,7 @@ async function leavePvpLobbyRoom(){
   if(code&&player){
     try{
       if(player===2){
-        await update(ref(db,`games/${code}/public`),{
-          "playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","lobbyReady/2":false,
-          "principalKeys/2":[],"playerStats/2":{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}
-        });
-        try{await remove(getPvpPrivatePlayerRef(code,2));}catch(_){ }
+        await resetPvpPlayer2Reservation(code,uid,{removePrivateState:true});
       }else{
         await update(ref(db,`games/${code}/public`),{phase:"abandoned","lobbyReady/1":false});
         try{await remove(getPvpPrivatePlayerRef(code,1));}catch(_){ }
@@ -582,17 +685,37 @@ async function createGame(){
   if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
   const prep=extractPrincipalCardsFromDeck(rawDeck,principalKeys,principalSlots);
   if(prep.principalCards.length!==principalSlots||prep.deck.length!==DECK_RULES.drawDeckSize){await hvAlert(`El líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${requiredDeckSize} cartas totales: ${principalSlots} principal${principalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");openDeckBuilder();return;}
-  const profileName=getLocalProfileName(),code=code4();
-  const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,1);
-  const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
-  let units=[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")];
-  const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
-  const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
-  const names=principalUnits.map(u=>u.name).join(", ");
-  const pub={code,boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"waiting",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},lobbyReady:{1:false,2:false},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[sanitizeSharedStealthText(`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`,units)]};
-  await set(ref(db,`games/${code}/public`),pub);
-  await set(getPvpPrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
-  openPvpLobbyRoom(code,1);
+  const operation=beginPvpLobbyOperation("create-room");
+  if(!operation){setText("lobbyStatus","Ya hay una operación PvP en curso.");return;}
+  let reservedCode="";
+  try{
+    setText("lobbyStatus","Reservando una sala segura...");
+    const profileName=getLocalProfileName();
+    const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,1);
+    const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
+    let units=[makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),makeLeader(2,Math.floor(COLS/2),0,"mage",1,"")];
+    const principalUnits=makeStartingPrincipalUnits(prep.principalCards,1,leaderType,units,principalSlots);units.push(...principalUnits);
+    const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
+    const names=principalUnits.map(u=>u.name).join(", ");
+    const publicTemplate={boardRows:ROWS,boardCols:COLS,createdAt:Date.now(),currentPlayer:1,turn:1,phase:"waiting",turnPhase:"draw",turnKey:"1-1",turnStartedAt:0,clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},playerSlots:{player1Uid:uid,player2Uid:null},lobbyReady:{1:false,2:false},playerNames:{1:profileName,2:"Esperando rival"},playerLeaders:{1:leaderType,2:"mage"},playerLeaderLevels:{1:leaderLevel,2:1},playerLeaderAbilities:{1:leaderAbility,2:""},principalSlots:{1:principalSlots,2:1},principalKeys:{1:prep.principalKeys,2:[]},playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},2:{hp:20,honor:0,maxHonor:0,deck:0,hand:0,hasHiddenUnits:null}},erictoGraveyard:[],units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,log:[sanitizeSharedStealthText(`Duelo creado. ${profileName} eligió ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Mazo de robo: ${DECK_RULES.drawDeckSize} cartas; mano inicial: 4. Esperando Jugador 2.`,units)]};
+    const reservation=await reserveNewPvpPublicRoom(publicTemplate,operation);
+    if(!reservation)return;
+    reservedCode=reservation.code;
+    if(!isPvpLobbyOperationActive(operation)){await rollbackCreatedPvpRoom(reservedCode,uid);return;}
+    await set(getPvpPrivatePlayerRef(reservedCode,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+    if(!isPvpLobbyOperationActive(operation)){await rollbackCreatedPvpRoom(reservedCode,uid);return;}
+    finishPvpLobbyOperation(operation);
+    openPvpLobbyRoom(reservedCode,1);
+  }catch(error){
+    console.error("[HallValla] No se pudo crear la sala PvP de forma segura:",error);
+    if(reservedCode)await rollbackCreatedPvpRoom(reservedCode,uid);
+    if(isPvpLobbyOperationActive(operation)){
+      const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
+      setText("lobbyStatus",denied?"Firebase rechazó la reserva. Publica las reglas database.rules.json de esta versión.":`No se pudo crear la sala: ${error?.message||error}`);
+    }
+  }finally{
+    finishPvpLobbyOperation(operation);
+  }
 }
 async function joinGame(){
   if(!(await ensureFirebaseAuthReady("online")))return;
@@ -609,45 +732,68 @@ async function joinGame(){
   if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
   const prep=extractPrincipalCardsFromDeck(rawDeck,principalKeys,principalSlots);
   if(prep.principalCards.length!==principalSlots||prep.deck.length!==DECK_RULES.drawDeckSize){await hvAlert(`El líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${requiredDeckSize} cartas totales: ${principalSlots} principal${principalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");openDeckBuilder();return;}
-  const code=$("joinCode").value.trim().toUpperCase();if(!code)return $("lobbyStatus").textContent="Escribe el código.";
-  const snap=await get(ref(db,`games/${code}/public`));if(!snap.exists())return $("lobbyStatus").textContent="No existe esa partida.";
-  let pub=snap.val();
-  if(pub.playerSlots?.player1Uid===uid)return $("lobbyStatus").textContent="Ese código pertenece a tu propia sala.";
-  if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid)return $("lobbyStatus").textContent="Partida llena.";
-  if(pub.phase&&pub.phase!=="waiting"&&pub.playerSlots?.player2Uid!==uid)return $("lobbyStatus").textContent="La partida ya comenzó.";
+  const code=normalizePvpRoomCode($("joinCode").value);
+  if(!code)return setText("lobbyStatus","Escribe el código.");
+  const operation=beginPvpLobbyOperation("join-room");
+  if(!operation){setText("lobbyStatus","Ya hay una operación PvP en curso.");return;}
+  let claimOwned=false;
+  let rollbackBaseline=null;
   try{
+    setText("lobbyStatus",`Buscando sala ${code}...`);
+    const publicRef=ref(db,`games/${code}/public`);
+    const snap=await get(publicRef);
+    if(!isPvpLobbyOperationActive(operation))return;
+    if(!snap.exists()){setText("lobbyStatus","No existe esa partida.");return;}
+    let pub=snap.val();
+    if(pub.playerSlots?.player1Uid===uid){setText("lobbyStatus","Ese código pertenece a tu propia sala.");return;}
+    if(pub.playerSlots?.player2Uid&&pub.playerSlots.player2Uid!==uid){setText("lobbyStatus","Partida llena.");return;}
+    if(pub.phase&&pub.phase!=="waiting"&&pub.playerSlots?.player2Uid!==uid){setText("lobbyStatus","La partida ya comenzó.");return;}
+    rollbackBaseline=getResetPlayer2PublicState(pub,null);
+    setText("lobbyStatus",`Reservando Jugador 2 en ${code}...`);
     const slotRef=ref(db,`games/${code}/public/playerSlots/player2Uid`);
     const claim=await runTransaction(slotRef,current=>{
       if(current===null||current===""||current===uid)return uid;
       return undefined;
     },{applyLocally:false});
-    if(!claim?.committed||String(claim.snapshot?.val()||"")!==String(uid))return $("lobbyStatus").textContent="Otro jugador ocupó esta sala antes que tú.";
-  }catch(error){
-    console.error("[HallValla] No se pudo reclamar Jugador 2:",error);
-    const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
-    $("lobbyStatus").textContent=denied?"Firebase rechazó la entrada. Publica las reglas database.rules.json de esta versión.":`No se pudo entrar: ${error?.message||error}`;
-    return;
-  }
-  const claimedSnap=await get(ref(db,`games/${code}/public`));
-  if(!claimedSnap.exists())return $("lobbyStatus").textContent="La sala desapareció durante la unión.";
-  pub=claimedSnap.val();
-  syncBoardDimensionsFromState(pub);
-  const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,2);
-  const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
-  let units=(pub.units||[]).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);
-  const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
-  const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
-  const names=principalUnits.map(u=>u.name).join(", ");
-  try{
-    await update(ref(db,`games/${code}/public`),{"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"lobbyReady/2":false,"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[sanitizeSharedStealthText(`${profileName} entró a la sala con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Esperando confirmación LISTO.`,units),...(entryEffects.logs||[]).map(line=>sanitizeSharedStealthText(line,units)),...(pub.log||[])]});
+    claimOwned=!!claim?.committed&&String(claim.snapshot?.val()||"")===String(uid);
+    if(!claimOwned){setText("lobbyStatus","Otro jugador ocupó esta sala antes que tú.");return;}
+    if(!isPvpLobbyOperationActive(operation)){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;return;}
+    const claimedSnap=await get(publicRef);
+    if(!claimedSnap.exists()){
+      await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;
+      if(isPvpLobbyOperationActive(operation))setText("lobbyStatus","La sala desapareció durante la unión.");
+      return;
+    }
+    pub=claimedSnap.val();
+    if(String(pub?.playerSlots?.player2Uid||"")!==String(uid)||pub.phase!=="waiting"){
+      await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;
+      if(isPvpLobbyOperationActive(operation))setText("lobbyStatus",pub.phase!=="waiting"?"La partida dejó de estar disponible.":"La reserva de Jugador 2 cambió durante la unión.");
+      return;
+    }
+    syncBoardDimensionsFromState(pub);
+    const battleDrawDeck=injectLeaderEquipmentIntoDrawDeck(prep.deck,leaderType,2);
+    const initial=drawCards(shuffle(battleDrawDeck),[],4),deck=initial.deck,hand=initial.hand;
+    let units=(pub.units||[]).filter(u=>!(Number(u?.owner)===2&&!u?.leader)).map(u=>u.leader&&u.owner===2?makeLeader(2,Math.floor(COLS/2),0,leaderType,leaderLevel,leaderAbility):u);
+    const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
+    const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
+    const names=principalUnits.map(u=>u.name).join(", ");
     await set(getPvpPrivatePlayerRef(code,2),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+    if(!isPvpLobbyOperationActive(operation)){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;return;}
+    await update(publicRef,{"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"lobbyReady/2":false,"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[sanitizeSharedStealthText(`${profileName} entró a la sala con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Esperando confirmación LISTO.`,units),...(entryEffects.logs||[]).map(line=>sanitizeSharedStealthText(line,units)),...(pub.log||[])]});
+    if(!isPvpLobbyOperationActive(operation)){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;return;}
+    claimOwned=false;
+    finishPvpLobbyOperation(operation);
+    openPvpLobbyRoom(code,2);
   }catch(error){
-    console.error("[HallValla] Error preparando al Jugador 2:",error);
-    try{await set(ref(db,`games/${code}/public/playerSlots/player2Uid`),null);}catch(_){ }
-    $("lobbyStatus").textContent=`No se pudo preparar la sala: ${error?.message||error}`;
-    return;
+    console.error("[HallValla] No se pudo unir Jugador 2 de forma segura:",error);
+    if(claimOwned){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;}
+    if(isPvpLobbyOperationActive(operation)){
+      const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
+      setText("lobbyStatus",denied?"Firebase rechazó la entrada. Publica las reglas database.rules.json de esta versión.":`No se pudo entrar: ${error?.message||error}`);
+    }
+  }finally{
+    finishPvpLobbyOperation(operation);
   }
-  openPvpLobbyRoom(code,2);
 }
 
 function extractPrincipalCardsFromDeck(cards=[],principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){

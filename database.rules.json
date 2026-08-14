@@ -14,11 +14,11 @@
         "private": {
           "player1": {
             ".read": "auth != null && data.child('ownerUid').val() === auth.uid",
-            ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player1Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
+            ".write": "auth != null && ((newData.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player1Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && !newData.exists()))"
           },
           "player2": {
             ".read": "auth != null && data.child('ownerUid').val() === auth.uid",
-            ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player2Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))"
+            ".write": "auth != null && ((newData.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player2Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && !newData.exists()))"
           }
         }
       }

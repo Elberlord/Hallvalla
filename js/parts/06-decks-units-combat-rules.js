@@ -197,7 +197,24 @@ function getAiPrincipalKeysForBattle(battle,initial){
 
 const ADVENTURE_CHAPTERS=[ADVENTURE_CHAPTER_1_1,ADVENTURE_CHAPTER_2_1,ADVENTURE_CHAPTER_3_1,ADVENTURE_CHAPTER_4_1,ADVENTURE_CHAPTER_5_1,ADVENTURE_CHAPTER_6_1];
 const ADVENTURE_CHAPTER_BY_ID=Object.fromEntries(ADVENTURE_CHAPTERS.map(ch=>[ch.id,ch]));
-function uid8(){return Math.random().toString(36).slice(2,10)}function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function uid8(){return Math.random().toString(36).slice(2,10)}
+function code4(){return Math.random().toString(36).slice(2,6).toUpperCase()}
+const PVP_ROOM_CODE_ALPHABET="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function makePvpRoomCode(length=6){
+  const safeLength=Math.max(6,Math.min(8,Number(length)||6));
+  const alphabet=PVP_ROOM_CODE_ALPHABET;
+  const cryptoApi=globalThis.crypto;
+  if(cryptoApi&&typeof cryptoApi.getRandomValues==="function"){
+    const bytes=new Uint8Array(safeLength);
+    cryptoApi.getRandomValues(bytes);
+    return Array.from(bytes,value=>alphabet[value%alphabet.length]).join("");
+  }
+  let out="";
+  for(let i=0;i<safeLength;i++)out+=alphabet[Math.floor(Math.random()*alphabet.length)];
+  return out;
+}
+function normalizePvpRoomCode(value){return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8)}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 
 function isInitialLeaderAllowed(type){
   const promoActive=typeof isTestPromoActive==="function"&&isTestPromoActive();
