@@ -1,0 +1,51 @@
+HALLVALLA - PVP REBUILD CLEAN ROOM - PASO 2
+Fecha: 14 de agosto de 2026
+
+BASE
+Hallvalla_PVP_REBUILD_STEP1D_LEGACY_PURGE.zip (Paso 1D validado manualmente por el usuario).
+
+OBJETIVO DE ESTA ENTREGA
+Agregar una sola capa nueva: J2 puede escribir el codigo de 8 caracteres, reclamar player2Uid y ambos clientes observan la misma sala mediante un unico onValue publico.
+
+INCLUIDO
+- J1 conserva el flujo de creacion limpia ya validado.
+- J2 autentica, lee la sala y comprueba phase=waiting.
+- J2 no puede unirse a su propia sala.
+- Si player2Uid ya pertenece a otro UID, la union se rechaza.
+- J2 reclama unicamente games/{code}/public/playerSlots/player2Uid.
+- Tras reclamar, publica un nombre provisional Jugador 2.
+- J1 y J2 instalan un unico listener de games/{code}/public.
+- Al entrar J2, ambos clientes deben mostrar Jugador 1 vs Jugador 2.
+- Si J2 sale, libera player2Uid/nombre/ready provisional en una sola update y J1 vuelve a Rival pendiente.
+- Si J1 sale, elimina la sala publica minima.
+
+NO INCLUIDO TODAVIA
+- LISTO.
+- private/player1 o private/player2 de combate.
+- mazo sincronizado en Firebase.
+- lideres/unidades.
+- entrada a batalla.
+- lifecycle PvP completo.
+- acciones atomicas de combate.
+- fuente de verdad de Etapa 6.
+
+FIREBASE RULES
+SIN CAMBIOS. database.rules.json conserva exactamente el mismo SHA-256 que Paso 1D:
+ff158429dffef637284bb3d6b2d46dc0d59f1a4c5f3dda560aadc7aeefb86c52
+
+VALIDACION EJECUTADA
+- 22/22 JavaScript activos pasan node --check (21 parts + bootstrap).
+- 5/5 JSON parsean.
+- Mock de dos clientes: J1 crea, J2 entra, J1 detecta J2, J2 detecta J1.
+- Mock de tercer cliente: no puede reemplazar a J2.
+- Mock de salida J2: el slot se libera y J1 vuelve a Rival pendiente.
+- createGame()/joinGame() legacy: 0 referencias ejecutables en js/parts.
+- Los listeners de controles PvP permanecen exclusivamente en 07b-pvp-rebuild-clean-room.js.
+
+PRUEBA MANUAL SOLICITADA
+1. Cliente J1: VS Online -> Crear partida.
+2. Copiar codigo de 8 caracteres.
+3. Cliente J2: VS Online -> escribir codigo -> Unirse.
+4. Confirmar que ambos muestran Jugador 1 y Jugador 2.
+5. J2 sale: confirmar que J1 vuelve a mostrar Rival pendiente.
+6. Todavia NO probar LISTO ni combate: no estan habilitados en Paso 2.
