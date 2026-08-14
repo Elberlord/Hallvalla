@@ -49,6 +49,7 @@ function setPvpLobbyRoomVisible(visible=false){
   if(art)art.classList.toggle("pvp-room-active",!!visible);
 }
 function clearPvpLobbyRoomState({hideRoom=true,resetJoin=false}={}){
+  endPvpLobbyLifecycle("clear-pvp-lobby");
   if(pvpLobbyUnsub){try{pvpLobbyUnsub();}catch(_){ }pvpLobbyUnsub=null;}
   pvpLobbyCode="";
   pvpLobbyPlayer=0;
@@ -142,9 +143,12 @@ function openPvpLobbyRoom(code,player){
   pvpLobbyPlayer=Number(player)||0;
   if(!pvpLobbyCode||![1,2].includes(pvpLobbyPlayer))return false;
   pvpLobbyStartRequested=false;
+  beginPvpLobbyLifecycle({code:pvpLobbyCode,player:pvpLobbyPlayer});
+  const lobbyLifecycleToken=getPvpLobbyLifecycleToken();
   setPvpLobbyRoomVisible(true);
   const input=$("joinCode");if(input){input.value=pvpLobbyCode;input.readOnly=true;}
-  pvpLobbyUnsub=onValue(ref(db,`games/${pvpLobbyCode}/public`),snap=>{
+  pvpLobbyUnsub=pvpLobbyOwnDisposable(onValue(ref(db,`games/${pvpLobbyCode}/public`),snap=>{
+    if(!isPvpLobbyLifecycleTokenActive(lobbyLifecycleToken))return;
     if(!snap.exists()){
       clearPvpLobbyRoomState({resetJoin:true});
       setText("lobbyStatus","La sala ya no existe.");
@@ -153,9 +157,10 @@ function openPvpLobbyRoom(code,player){
     pvpLobbyPublic=snap.val();
     renderPvpLobbyRoom(pvpLobbyPublic);
   },error=>{
+    if(!isPvpLobbyLifecycleTokenActive(lobbyLifecycleToken))return;
     console.error("[HallValla] Error escuchando lobby PvP:",error);
     setText("pvpRoomMessage",`Firebase no pudo leer la sala: ${error?.message||error}`);
-  });
+  }),"firebase","public-room");
   return true;
 }
 async function togglePvpLobbyReady(){
@@ -352,7 +357,7 @@ function getBattleOutcomeSplashElement(){
   return overlay;
 }
 function hideBattleOutcomeSplash(immediate=false){
-  clearTimeout(showBattleOutcomeSplash._timer);
+  battleClearTimeout(showBattleOutcomeSplash._timer);
   const overlay=document.getElementById("battleOutcomeSplash");
   if(!overlay)return;
   overlay.classList.remove("show","victory","defeat","draw","awaiting-action");
@@ -369,7 +374,7 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
   const drawText=overlay.querySelector(".battle-outcome-draw-text");
   const actions=overlay.querySelector(".battle-outcome-actions");
   overlay.classList.remove("show","victory","defeat","draw","awaiting-action");
-  clearTimeout(showBattleOutcomeSplash._timer);
+  battleClearTimeout(showBattleOutcomeSplash._timer);
   if(actions){
     actions.setAttribute("aria-hidden","true");
     actions.querySelectorAll("button").forEach(btn=>{btn.hidden=false;btn.disabled=false;});
@@ -400,11 +405,15 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
   }
   overlay.classList.add("show");
   if(!adventure){
-    showBattleOutcomeSplash._timer=setTimeout(()=>hideBattleOutcomeSplash(false),BATTLE_RESULT_SPLASH_DURATION_MS+120);
+    showBattleOutcomeSplash._timer=battleSetTimeout(()=>{showBattleOutcomeSplash._timer=null;hideBattleOutcomeSplash(false);},BATTLE_RESULT_SPLASH_DURATION_MS+120,"battle-outcome-splash");
   }
 }
 async function updatePublic(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
+  const writeGameId=gameId;
+  const writeLifecycleToken=getBattleLifecycleToken();
+  const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
+  if(!writeContextActive())return false;
   const sourcePatch=patch||{};
   const creditOwner=sourcePatch._clockKillCreditOwner;
   const creditMode=sourcePatch._clockKillCreditMode||"";
@@ -427,16 +436,22 @@ async function updatePublic(patch){
   const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
   cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
   cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
+  if(!writeContextActive())return false;
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
     render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowClockKillBonus(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();return true;
   }
-  await update(ref(db,`games/${gameId}/public`),cleanPatch);
+  await update(ref(db,`games/${writeGameId}/public`),cleanPatch);
   return true;
 }
 async function updatePrivate(patch){
   if(isTurnWriteBlockedByExpiredClock())return false;
+  const writeGameId=gameId;
+  const writePlayer=myPlayer;
+  const writeLifecycleToken=getBattleLifecycleToken();
+  const writeContextActive=()=>writeGameId&&gameId===writeGameId&&myPlayer===writePlayer&&isBattleLifecycleTokenActive(writeLifecycleToken);
+  if(!writeContextActive())return false;
   const cleanPatch=hallvallaSanitizeFirebaseValue(patch||{})||{};
   const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPatch);
   const hiddenUnits=countHiddenUnitReserveFromState(nextPrivate);
@@ -448,8 +463,9 @@ async function updatePrivate(patch){
     render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();
     return true;
   }
-  await update(getPvpPrivatePlayerRef(gameId,myPlayer),cleanPatch);
-  await update(ref(db,`games/${gameId}/public`),summaryPatch);
+  await update(getPvpPrivatePlayerRef(writeGameId,writePlayer),cleanPatch);
+  if(!writeContextActive())return false;
+  await update(ref(db,`games/${writeGameId}/public`),summaryPatch);
   return true;
 }
 function hasLivingNonLeaderUnitsForOwner(owner,units=publicState?.units||[]){
@@ -486,6 +502,10 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   await updatePublic({...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)});
   return true;
 }function resetBattleState(){
+  endBattleLifecycle("resetBattleState");
+  unsubPub=null;
+  unsubPriv=null;
+  if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
   unitExhaustionFinalizeLock=false;
   resetNoPlayableAutoAdvanceState();
   resetFieldAutoAdvanceState();
@@ -519,7 +539,7 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   clearEventSplashOverlay();
   hideBattleOutcomeSplash(true);
   hideDemigodSummonPresentation();
-  if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null;}
+  if(aiWatchdogTimer){battleClearInterval(aiWatchdogTimer);aiWatchdogTimer=null;}
 }
 function leaveCurrentGame(){
   clearPvpLobbyRoomState();
@@ -912,7 +932,10 @@ function safeBattleTick(label,fn){
   catch(e){handleBattleListenerError(label,e);}
 }
 function enterLocalGame(pub,priv,player=1){
-  gameId=pub?.code||`LOCAL${code4()}`;
+  const nextGameId=pub?.code||`LOCAL${code4()}`;
+  beginBattleLifecycle({code:nextGameId,player,source:"local"});
+  if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
+  gameId=nextGameId;
   myPlayer=player;
   publicState=pub;
   syncBoardDimensionsFromState(publicState);
@@ -929,7 +952,7 @@ function enterLocalGame(pub,priv,player=1){
   resetFieldAutoAdvanceState();
   clearBattleFxLayer();
   hideDemigodSummonPresentation();
-  if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
+  if(aiWatchdogTimer){battleClearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
   $("onlineLobby")?.classList.add("hidden");
   $("mainMenu")?.classList.add("hidden");
   $("adventurePanel")?.classList.add("hidden");
@@ -937,14 +960,17 @@ function enterLocalGame(pub,priv,player=1){
   stopMusic(true);
   if(unsubPub){try{unsubPub();}catch(_){ }unsubPub=null}
   if(unsubPriv){try{unsubPriv();}catch(_){ }unsubPriv=null}
+  stopTurnTimerLoop();
   startTurnTimerLoop();
   render();
   setHint("Modo local de prueba: tablero real sin Firebase. Ajusta Rareza CTRL aquí mismo.");
   maybeStartTurn();
-  aiWatchdogTimer=setInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800);
+  aiWatchdogTimer=battleSetInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800,"adventure-ai-watchdog-local");
 }
 function enterGame(code,player){
   clearPvpLobbyRoomState();
+  beginBattleLifecycle({code,player,source:"firebase"});
+  if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
   gameId=code;
   myPlayer=player;
   shownBattleResultKey="";
@@ -959,15 +985,19 @@ function enterGame(code,player){
   resetFieldAutoAdvanceState();
   clearBattleFxLayer();
   hideDemigodSummonPresentation();
-  if(aiWatchdogTimer){clearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
+  if(aiWatchdogTimer){battleClearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
   $("onlineLobby")?.classList.add("hidden");
   $("mainMenu")?.classList.add("hidden");
   $("gameShell")?.classList.remove("hidden");
   stopMusic(true);
   if(unsubPub)unsubPub();
   if(unsubPriv)unsubPriv();
+  stopTurnTimerLoop();
   startTurnTimerLoop();
-  unsubPub=onValue(ref(db,`games/${code}/public`),snap=>safeBattleTick("public",()=>{
+  const lifecycleToken=getBattleLifecycleToken();
+  unsubPub=battleOwnDisposable(onValue(ref(db,`games/${code}/public`),snap=>{
+    if(!isBattleLifecycleTokenActive(lifecycleToken))return;
+    safeBattleTick("public",()=>{
     const val=snap.val();
     if(!val){
       publicState=null;
@@ -986,8 +1016,11 @@ function enterGame(code,player){
     void maybeFinalizeUnitExhaustionFromPublicState();
     maybeStartTurn();
     maybeTriggerAdventureAI();
-  }),e=>handleBattleListenerError("public:onValue",e));
-  unsubPriv=onValue(getPvpPrivatePlayerRef(code,player),snap=>safeBattleTick("private",()=>{
+    });
+  },e=>handleBattleListenerError("public:onValue",e)),"firebase","battle-public");
+  unsubPriv=battleOwnDisposable(onValue(getPvpPrivatePlayerRef(code,player),snap=>{
+    if(!isBattleLifecycleTokenActive(lifecycleToken))return;
+    safeBattleTick("private",()=>{
     const val=snap.val();
     if(!val){
       privateState=null;
@@ -1000,12 +1033,13 @@ function enterGame(code,player){
     maybeShowBattleResult();
     maybeStartTurn();
     maybeTriggerAdventureAI();
-  }),e=>handleBattleListenerError("private:onValue",e));
-  aiWatchdogTimer=setInterval(()=>{
+    });
+  },e=>handleBattleListenerError("private:onValue",e)),"firebase","battle-private");
+  aiWatchdogTimer=battleSetInterval(()=>{
     safeBattleTick("aiWatchdog",()=>{
       if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();
     });
-  },1800);
+  },1800,"adventure-ai-watchdog");
 }
 function maybeTriggerAdventureAI(){
   if(!gameId||!publicState||publicState.mode!=="adventure"||publicState.currentPlayer!==2||isBattleEnded())return;
@@ -1013,21 +1047,26 @@ function maybeTriggerAdventureAI(){
   if(aiTurnLock||lastAiTurnKey===key)return;
   aiTurnLock=true;
   lastAiTurnKey=key;
-  if(adventureAiActionTimer){clearTimeout(adventureAiActionTimer);adventureAiActionTimer=null;}
-  adventureAiActionTimer=setTimeout(async()=>{
+  const lifecycleToken=getBattleLifecycleToken();
+  const scheduledGameId=gameId;
+  if(adventureAiActionTimer){battleClearTimeout(adventureAiActionTimer);adventureAiActionTimer=null;}
+  adventureAiActionTimer=battleSetTimeout(async()=>{
     adventureAiActionTimer=null;
+    if(!isBattleLifecycleTokenActive(lifecycleToken)||gameId!==scheduledGameId){aiTurnLock=false;return;}
     try{await adventureEnemyTurn();}
     catch(e){
+      if(!isBattleLifecycleTokenActive(lifecycleToken)||gameId!==scheduledGameId)return;
       handleBattleListenerError("turno IA",e);
       lastAiTurnKey=key;
       setHint("La IA encontró un tropiezo. Recuperando el turno automáticamente para J1.");
       try{
+        if(!isBattleLifecycleTokenActive(lifecycleToken)||gameId!==scheduledGameId)return;
         const nextTurn=(publicState?.turn||1)+1;
-        await update(ref(db,`games/${gameId}/public`),{currentPlayer:1,turn:nextTurn,turnPhase:"draw",turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp(),[`playerClockMs/2`]:getCommittedDuelClockMs(publicState,2,Date.now()),log:["Sistema: la IA tuvo un tropiezo y el turno fue recuperado para J1.",...(publicState?.log||[])].slice(0,18)});
+        await update(ref(db,`games/${scheduledGameId}/public`),{currentPlayer:1,turn:nextTurn,turnPhase:"draw",turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp(),[`playerClockMs/2`]:getCommittedDuelClockMs(publicState,2,Date.now()),log:["Sistema: la IA tuvo un tropiezo y el turno fue recuperado para J1.",...(publicState?.log||[])].slice(0,18)});
       }catch(recoverError){console.warn("[HallValla] No se pudo recuperar automáticamente el turno de IA:",recoverError);}
     }
     finally{aiTurnLock=false;}
-  },650);
+  },650,"adventure-ai-action");
 }
 async function maybeStartTurn(){
   if(!publicState||!privateState||!isMyTurn()||isBattleEnded())return;
@@ -1065,7 +1104,7 @@ async function maybeStartTurn(){
     const startLogs=[...merlinDrawLogs,...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(startBloodVictory.logs||[]),...(lionFearStart.logs||[])];
     if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
     const playerStatsUpdate={hp:units.find(u=>u.owner===myPlayer&&u.leader)?.hp||0,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length};
-    if(actualDrawCount>0){tryPlaySound("draw_card",.50);setTimeout(()=>tryPlaySound("mana_charge",.42),120);}else tryPlaySound("mana_charge",.42);
+    if(actualDrawCount>0){tryPlaySound("draw_card",.50);battleSetTimeout(()=>tryPlaySound("mana_charge",.42),120,"turn-mana-charge");}else tryPlaySound("mana_charge",.42);
     const resourceLabel=getResourceLabel(myPlayer);
     const honorCapText=maxHonor>=RESOURCE_MAX_CAP?" (tope 10)":""; 
     const merlinDrawText=actualMerlinDraw>0?" Visión de los Tiempos añade 1 carta adicional.":(merlinDrawBonus>0?" Visión de los Tiempos se activa, pero el mazo no tiene una carta adicional disponible.":"");

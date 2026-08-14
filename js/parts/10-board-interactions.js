@@ -12,6 +12,43 @@ function getStealthContextPortraitHtml(){
   return `<span class="stealth-context-cover" aria-label="Presencia Oculta · Sigilo"><img src="${STEALTH_BOARD_MASK_SRC}" alt="" aria-hidden="true" draggable="false"></span>`;
 }
 
+let boardDragListenerDisposers=[];
+function unbindBoardDragWindowListeners(){
+  const disposers=boardDragListenerDisposers.splice(0);
+  disposers.forEach(dispose=>{try{dispose();}catch(_){ }});
+}
+function bindBoardDragWindowListeners(){
+  unbindBoardDragWindowListeners();
+  if(typeof isBattleLifecycleActive==="function"&&isBattleLifecycleActive()){
+    boardDragListenerDisposers.push(
+      battleOwnEventListener(window,"pointermove",handleBoardDragMove,true,"board-drag-move"),
+      battleOwnEventListener(window,"pointerup",handleBoardDragEnd,true,"board-drag-end"),
+      battleOwnEventListener(window,"pointercancel",handleBoardDragCancel,true,"board-drag-cancel")
+    );
+    return;
+  }
+  window.addEventListener("pointermove",handleBoardDragMove,true);
+  window.addEventListener("pointerup",handleBoardDragEnd,true);
+  window.addEventListener("pointercancel",handleBoardDragCancel,true);
+  boardDragListenerDisposers.push(
+    ()=>window.removeEventListener("pointermove",handleBoardDragMove,true),
+    ()=>window.removeEventListener("pointerup",handleBoardDragEnd,true),
+    ()=>window.removeEventListener("pointercancel",handleBoardDragCancel,true)
+  );
+}
+function clearBattleBoardInteractionState(){
+  unbindBoardDragWindowListeners();
+  boardDragState=null;
+  if(boardDragGhost){try{boardDragGhost.remove();}catch(_){ }boardDragGhost=null;}
+  dragMoveHighlights=[];
+  dragAttackHighlights=[];
+  dragSummonHighlights=[];
+  document.body?.classList?.remove("hv-dragging-board");
+  boardHoverCellKey="";
+  boardSelectedCellKey="";
+  if(boardSelectedCellTimer){battleClearTimeout(boardSelectedCellTimer);boardSelectedCellTimer=null;}
+}
+
 function getBoardCellFromPoint(clientX,clientY){
   const el=document.elementFromPoint(clientX,clientY);
   const cell=el&&el.closest?el.closest(".cell"):null;
@@ -52,9 +89,7 @@ function startUnitBoardDrag(ev,u,sourceEl){
   const canAttackNow=getDragUnitAttackKeys(u).length>0;
   if(!canMoveNow&&!canAttackNow)return false;
   boardDragState={kind:"unit",unitId:u.id,pointerId:ev.pointerId,startX:ev.clientX,startY:ev.clientY,dragging:false,sourceEl};
-  window.addEventListener("pointermove",handleBoardDragMove,true);
-  window.addEventListener("pointerup",handleBoardDragEnd,true);
-  window.addEventListener("pointercancel",handleBoardDragCancel,true);
+  bindBoardDragWindowListeners();
   return true;
 }
 function startHandCardBoardDrag(ev,card,sourceEl){
@@ -62,9 +97,7 @@ function startHandCardBoardDrag(ev,card,sourceEl){
   const playState=getCardPlayState(card);
   if(!playState.canPlay)return false;
   boardDragState={kind:"hand-unit",cardId:card.id,pointerId:ev.pointerId,startX:ev.clientX,startY:ev.clientY,dragging:false,sourceEl};
-  window.addEventListener("pointermove",handleBoardDragMove,true);
-  window.addEventListener("pointerup",handleBoardDragEnd,true);
-  window.addEventListener("pointercancel",handleBoardDragCancel,true);
+  bindBoardDragWindowListeners();
   return true;
 }
 function beginBoardDragVisual(ev){
@@ -117,9 +150,7 @@ function handleBoardDragMove(ev){
 }
 async function handleBoardDragEnd(ev){
   if(!boardDragState||ev.pointerId!==boardDragState.pointerId)return;
-  window.removeEventListener("pointermove",handleBoardDragMove,true);
-  window.removeEventListener("pointerup",handleBoardDragEnd,true);
-  window.removeEventListener("pointercancel",handleBoardDragCancel,true);
+  unbindBoardDragWindowListeners();
   const state=boardDragState;
   boardDragState=null;
   if(!state.dragging){return;}
@@ -166,9 +197,7 @@ async function handleBoardDragEnd(ev){
   }
 }
 function handleBoardDragCancel(){
-  window.removeEventListener("pointermove",handleBoardDragMove,true);
-  window.removeEventListener("pointerup",handleBoardDragEnd,true);
-  window.removeEventListener("pointercancel",handleBoardDragCancel,true);
+  unbindBoardDragWindowListeners();
   boardDragState=null;
   clearBoardDragVisuals();
   setHint("Arrastre cancelado.");
@@ -201,13 +230,13 @@ function setBoardHoverCell(x,y){
 function flashBoardSelectedCell(x,y){
   if(!Number.isFinite(x)||!Number.isFinite(y))return;
   boardSelectedCellKey=getBoardCellKey(x,y);
-  if(boardSelectedCellTimer)clearTimeout(boardSelectedCellTimer);
-  boardSelectedCellTimer=setTimeout(()=>{
+  if(boardSelectedCellTimer)battleClearTimeout(boardSelectedCellTimer);
+  boardSelectedCellTimer=battleSetTimeout(()=>{
     if(boardSelectedCellKey===getBoardCellKey(x,y)){
       boardSelectedCellKey="";
       updateBoardAimClasses();
     }
-  },1200);
+  },1200,"board-selected-cell");
   updateBoardAimClasses();
 }
 
@@ -443,7 +472,7 @@ function renderUnitContextMenu(){
     }
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;
-    requestAnimationFrame(()=>{
+    battleRequestAnimationFrame(()=>{
       const rect=menu.getBoundingClientRect();
       const margin=10;
       const vw=window.innerWidth||document.documentElement.clientWidth||0;
@@ -452,7 +481,7 @@ function renderUnitContextMenu(){
       const clampedTop=Math.min(Math.max(top,rect.height/2+margin),Math.max(rect.height/2+margin,vh-rect.height/2-margin));
       menu.style.left=`${clampedLeft}px`;
       menu.style.top=`${clampedTop}px`;
-    });
+    },"unit-context-clamp");
   }
   menu.classList.remove("hidden");
   menu.querySelectorAll(".unit-context-btn").forEach(btn=>btn.addEventListener("click",ev=>{

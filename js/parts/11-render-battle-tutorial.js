@@ -72,8 +72,8 @@ function maybeShowHonorRecharge(){
   void modal.offsetWidth;
   modal.classList.add("show");
   pulseTurnHonorHud();
-  if(honorRechargeTimer)clearTimeout(honorRechargeTimer);
-  honorRechargeTimer=setTimeout(()=>{modal.classList.remove("show");pulseTurnHonorHud();},2550);
+  if(honorRechargeTimer)battleClearTimeout(honorRechargeTimer);
+  honorRechargeTimer=battleSetTimeout(()=>{modal.classList.remove("show");pulseTurnHonorHud();},2550,"honor-recharge-modal");
 }
 function renderHud(){
   [1,2].forEach(p=>{
@@ -561,6 +561,7 @@ function ensureLeaderBasesLayer(){
     layer.id="leaderBasesLayer";
     layer.className="leader-bases-layer";
     battlefield.appendChild(layer);
+    if(typeof isBattleLifecycleActive==="function"&&isBattleLifecycleActive())battleOwnNode(layer,"leader-bases-layer");
   }
   if(!layer.dataset.boundLeaderBaseClicks){
     layer.dataset.boundLeaderBaseClicks="1";
@@ -614,14 +615,14 @@ function ensureLeaderBasesLayer(){
       layer.dataset.boundLeaderCellProxyResize="1";
       let proxyResizeFrame=0;
       const refreshLeaderCellProxies=()=>{
-        if(proxyResizeFrame)cancelAnimationFrame(proxyResizeFrame);
-        proxyResizeFrame=requestAnimationFrame(()=>{
+        if(proxyResizeFrame)battleCancelAnimationFrame(proxyResizeFrame);
+        proxyResizeFrame=battleRequestAnimationFrame(()=>{
           proxyResizeFrame=0;
           syncLeaderCellProxies();
-        });
+        },"leader-proxy-resize-frame");
       };
-      window.addEventListener("resize",refreshLeaderCellProxies,{passive:true});
-      window.addEventListener("orientationchange",refreshLeaderCellProxies,{passive:true});
+      battleOwnEventListener(window,"resize",refreshLeaderCellProxies,{passive:true},"leader-proxy-resize");
+      battleOwnEventListener(window,"orientationchange",refreshLeaderCellProxies,{passive:true},"leader-proxy-orientation");
     }
   }
   return layer;
@@ -678,7 +679,7 @@ function renderLeaderBases(){
     return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
   }).join("");
   syncLeaderCellProxies();
-  requestAnimationFrame(syncLeaderCellProxies);
+  battleRequestAnimationFrame(syncLeaderCellProxies,"leader-proxy-post-render");
 }
 
 function getCardVisualClass(card){
@@ -969,7 +970,7 @@ function syncBasicTutorialProgress(){
   while(progress<BASIC_TUTORIAL_STEPS.length){const done=typeof BASIC_TUTORIAL_STEPS[progress]?.done==="function"?!!BASIC_TUTORIAL_STEPS[progress].done():false;if(!done)break;awardBasicTutorialStep(progress);progress++;}
   if(progress!==basicTutorialProgressStep){basicTutorialProgressStep=Math.min(progress,BASIC_TUTORIAL_STEPS.length-1);basicTutorialCoachStep=basicTutorialProgressStep;try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_STEP_KEY,String(progress));}catch(e){} }
   const won=publicState.phase==="ended"&&publicState.winner===1;
-  if(won&&!basicTutorialFlags.completionHandled){basicTutorialFlags.completionHandled=true;awardBasicTutorialStep(8);setBasicTutorialComplete();setTimeout(async()=>{await hvAlert("Tutorial Básico completado. Ganaste 45 de oro en total y Misiones quedó activado.","Entrenamiento completado");backToMainMenu();openMissionsPanel();},450);}
+  if(won&&!basicTutorialFlags.completionHandled){basicTutorialFlags.completionHandled=true;awardBasicTutorialStep(8);setBasicTutorialComplete();battleSetTimeout(async()=>{await hvAlert("Tutorial Básico completado. Ganaste 45 de oro en total y Misiones quedó activado.","Entrenamiento completado");backToMainMenu();openMissionsPanel();},450,"tutorial-complete-modal");}
 }
 function applyBasicTutorialTarget(step){clearBasicTutorialTargetHighlight();const el=getBasicTutorialTargetElement(step);const ring=ensureBasicTutorialFocusRing();if(!el||!ring)return;basicTutorialCurrentTarget=el;el.classList.add("tutorial-target-active");const rect=el.getBoundingClientRect();const pad=8;ring.style.left=`${Math.max(6,rect.left-pad)}px`;ring.style.top=`${Math.max(6,rect.top-pad)}px`;ring.style.width=`${Math.max(28,rect.width+(pad*2))}px`;ring.style.height=`${Math.max(28,rect.height+(pad*2))}px`;ring.classList.remove("hidden");}
 function showTutorialQuickGuide(){hvAlert("MANO: pulsa Mano para abrir o minimizar.\nCONVOCAR: elige una carta y una casilla válida.\nDET: consulta estadísticas, efectos y arma.\nMOV: desplaza según MV.\nATTK: ataca dentro del RG.\nUNIDAD AGOTADA: se oscurece cuando no conserva acciones.\nVICTORIA: derrota al líder rival.","Guía rápida");}
@@ -993,7 +994,7 @@ function renderBasicTutorialCoach(forceShow=false){
   setText("basicTutorialStepText",`Paso ${basicTutorialCoachStep+1}/${BASIC_TUTORIAL_STEPS.length}`);setText("basicTutorialCoachTitle",step.title);setText("basicTutorialCoachBody",step.body);setText("basicTutorialCoachHint",step.hint||"");setText("basicTutorialObjectiveText",step.objective||"");
   const bar=$("basicTutorialProgressBar");if(bar)bar.style.width=`${Math.max(5,((basicTutorialProgressStep+1)/BASIC_TUTORIAL_STEPS.length)*100)}%`;
   const prevBtn=$("basicTutorialPrevBtn"),nextBtn=$("basicTutorialNextBtn");if(prevBtn)prevBtn.disabled=basicTutorialCoachStep<=0;if(nextBtn){const canReview=basicTutorialCoachStep<basicTutorialProgressStep;nextBtn.disabled=!canReview;nextBtn.textContent=canReview?"Volver al objetivo actual":"Completa el objetivo";}
-  if(forceShow||coach.classList.contains("hidden"))coach.classList.remove("hidden");requestAnimationFrame(()=>applyBasicTutorialTarget(step));
+  if(forceShow||coach.classList.contains("hidden"))coach.classList.remove("hidden");battleRequestAnimationFrame(()=>applyBasicTutorialTarget(step),"tutorial-target-frame");
 }
 
 function ensureStatsTutorialModal(){

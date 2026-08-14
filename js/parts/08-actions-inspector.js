@@ -164,7 +164,7 @@ function handHasPlayableWithSnapshot(hand,honor,phase,units,player){
   return (hand||[]).some(c=>canPlayCardWithSnapshot(c,honor,phase,units,player));
 }
 function resetNoPlayableAutoAdvanceState(){
-  if(noPlayableAutoAdvanceTimer){clearTimeout(noPlayableAutoAdvanceTimer);noPlayableAutoAdvanceTimer=null;}
+  if(noPlayableAutoAdvanceTimer){battleClearTimeout(noPlayableAutoAdvanceTimer);noPlayableAutoAdvanceTimer=null;}
   noPlayableAutoAdvanceKey="";
   noPlayableAutoAdvanceLock=false;
 }
@@ -186,10 +186,10 @@ function scheduleAutoAdvanceIfNoPlayableHand(delayMs=520){
   const phaseAtSchedule=getTurnPhase();
   const key=getNoPlayableAutoAdvanceKey();
   if(noPlayableAutoAdvanceLock||noPlayableAutoAdvanceKey===key)return;
-  if(noPlayableAutoAdvanceTimer){clearTimeout(noPlayableAutoAdvanceTimer);noPlayableAutoAdvanceTimer=null;}
+  if(noPlayableAutoAdvanceTimer){battleClearTimeout(noPlayableAutoAdvanceTimer);noPlayableAutoAdvanceTimer=null;}
   noPlayableAutoAdvanceKey=key;
 
-  noPlayableAutoAdvanceTimer=setTimeout(async()=>{
+  noPlayableAutoAdvanceTimer=battleSetTimeout(async()=>{
     noPlayableAutoAdvanceTimer=null;
     let advanced=false;
     try{
@@ -233,7 +233,7 @@ function scheduleAutoAdvanceIfNoPlayableHand(delayMs=520){
       noPlayableAutoAdvanceLock=false;
       if(!advanced&&noPlayableAutoAdvanceKey===key)noPlayableAutoAdvanceKey="";
     }
-  },Math.max(120,Number(delayMs)||520));
+  },Math.max(120,Number(delayMs)||520),"auto-advance-hand");
 }
 function scheduleAutoAdvanceIfHandEmptyAfterPlay(handSnapshot,honorSnapshot){
   if(!gameId||!publicState||!privateState||!isMyTurn()||!isHandPlayPhase())return;
@@ -242,7 +242,7 @@ function scheduleAutoAdvanceIfHandEmptyAfterPlay(handSnapshot,honorSnapshot){
   scheduleAutoAdvanceIfNoPlayableHand(260);
 }
 function resetFieldAutoAdvanceState(){
-  if(fieldAutoAdvanceTimer){clearTimeout(fieldAutoAdvanceTimer);fieldAutoAdvanceTimer=null;}
+  if(fieldAutoAdvanceTimer){battleClearTimeout(fieldAutoAdvanceTimer);fieldAutoAdvanceTimer=null;}
   fieldAutoAdvanceKey="";
   fieldAutoAdvanceLock=false;
 }
@@ -300,10 +300,10 @@ function scheduleAutoAdvanceIfFieldActionsExhausted(delayMs=720){
 
   const key=getFieldAutoAdvanceKey();
   if(fieldAutoAdvanceLock||fieldAutoAdvanceKey===key)return;
-  if(fieldAutoAdvanceTimer){clearTimeout(fieldAutoAdvanceTimer);fieldAutoAdvanceTimer=null;}
+  if(fieldAutoAdvanceTimer){battleClearTimeout(fieldAutoAdvanceTimer);fieldAutoAdvanceTimer=null;}
   fieldAutoAdvanceKey=key;
 
-  fieldAutoAdvanceTimer=setTimeout(async()=>{
+  fieldAutoAdvanceTimer=battleSetTimeout(async()=>{
     fieldAutoAdvanceTimer=null;
     let advanced=false;
     try{
@@ -327,7 +327,7 @@ function scheduleAutoAdvanceIfFieldActionsExhausted(delayMs=720){
       fieldAutoAdvanceLock=false;
       if(!advanced&&fieldAutoAdvanceKey===key)fieldAutoAdvanceKey="";
     }
-  },Math.max(180,Number(delayMs)||720));
+  },Math.max(180,Number(delayMs)||720),"auto-advance-field");
 }
 function getHandAvailabilityKey(){
   const ids=(privateState?.hand||[]).map(c=>c.id).join("|");
@@ -845,6 +845,10 @@ function getUnifiedDetProgressText(entity){
 function cleanupUnifiedDetSurface(modal){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
+  card.querySelectorAll('*').forEach(node=>{
+    if(typeof node.__hvDetPortraitResizeDispose==="function"){try{node.__hvDetPortraitResizeDispose();}catch(_){ }node.__hvDetPortraitResizeDispose=null;}
+    else if(node.__hvDetPortraitResizeObserver?.disconnect){try{node.__hvDetPortraitResizeObserver.disconnect();}catch(_){ }node.__hvDetPortraitResizeObserver=null;}
+  });
   [...card.children].forEach(child=>{child.remove();});
   return card;
 }
@@ -864,12 +868,16 @@ function fitUnifiedDetPortraitFromTop(frame){
     img.classList.toggle('hv-det-portrait-fit-height',imageAspect>frameAspect);
   };
   img.addEventListener('load',apply);
-  if(img.complete)requestAnimationFrame(apply);
+  if(img.complete)battleRequestAnimationFrame(apply,"det-portrait-fit-frame");
   if(typeof ResizeObserver==='function'){
     const observer=new ResizeObserver(apply);
     observer.observe(frame);
-    frame.__hvDetPortraitResizeObserver?.disconnect?.();
+    if(typeof frame.__hvDetPortraitResizeDispose==="function")frame.__hvDetPortraitResizeDispose();
+    else frame.__hvDetPortraitResizeObserver?.disconnect?.();
     frame.__hvDetPortraitResizeObserver=observer;
+    frame.__hvDetPortraitResizeDispose=(typeof isBattleLifecycleActive==="function"&&isBattleLifecycleActive())
+      ? battleOwnObserver(observer,"det-portrait-resize")
+      : ()=>observer.disconnect();
   }
 }
 function ensureUnifiedDetPortraitCalibration(modal,entity,{live=false,visualHtml=""}={}){

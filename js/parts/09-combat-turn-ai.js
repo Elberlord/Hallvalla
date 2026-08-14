@@ -44,7 +44,7 @@ function resolveBeastCellTraps(moving,units,traps){
   }
   out=out.map(u=>u.id===moving.id?n:u).filter(u=>u.hp>0);
   nextTraps=removeBeastTrapById(nextTraps,trap.id);
-  if(logs.length&&publicState&&gameId){setTimeout(()=>pushLog(logs.join(" ")),0);}
+  if(logs.length&&publicState&&gameId){battleSetTimeout(()=>pushLog(logs.join(" ")),0,"combat-push-log");}
   return{units:out,traps:nextTraps,logs};
 }
 
@@ -807,8 +807,8 @@ async function finishTurn(){
   await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2){
-    if(adventureAiTriggerTimer){clearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
-    adventureAiTriggerTimer=setTimeout(()=>{adventureAiTriggerTimer=null;maybeTriggerAdventureAI();},650);
+    if(adventureAiTriggerTimer){battleClearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
+    adventureAiTriggerTimer=battleSetTimeout(()=>{adventureAiTriggerTimer=null;maybeTriggerAdventureAI();},650,"adventure-ai-trigger");
   }
 }
 async function advanceTurnPhase(){
@@ -844,8 +844,12 @@ async function advanceTurnPhase(){
 
 async function adventureEnemyTurn(){
   if(!gameId)return;
-  const pubSnap=await get(ref(db,`games/${gameId}/public`));
-  if(!pubSnap.exists())return;
+  const aiGameId=gameId;
+  const lifecycleToken=getBattleLifecycleToken();
+  const aiLifecycleAlive=()=>isBattleLifecycleTokenActive(lifecycleToken)&&gameId===aiGameId;
+  const aiDelay=async(ms)=>aiLifecycleAlive()&&await battleSleep(ms,"adventure-ai-delay")&&aiLifecycleAlive();
+  const pubSnap=await get(ref(db,`games/${aiGameId}/public`));
+  if(!aiLifecycleAlive()||!pubSnap.exists())return;
   const pub=pubSnap.val();
   if(pub.mode!=="adventure"||pub.currentPlayer!==2||pub.phase==="ended")return;
   let ai=pub.adventureAiState||null;
@@ -854,7 +858,8 @@ async function adventureEnemyTurn(){
   if(!ai)ai={deck:[],hand:[],honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:false};
   if(ai.lastTurnStarted===pub.turnKey){
     const nextTurn=(pub.turn||1)+1;
-    await update(ref(db,`games/${gameId}/public`),{
+    if(!aiLifecycleAlive())return;
+    await update(ref(db,`games/${aiGameId}/public`),{
       currentPlayer:1,
       turn:nextTurn,
       turnPhase:"draw",
@@ -879,7 +884,7 @@ async function adventureEnemyTurn(){
   let lastPublishedUnits=[...(pub.units||[])];
   const aiLevel=ADVENTURE_AI_BEST_SKILL_LEVEL;
   const publishAiStep=async(extra={})=>{
-    if((turnTimerExpiredKey===pub.turnKey||duelClockExpiredKey===pub.turnKey)||publicState?.turnKey!==pub.turnKey||publicState?.currentPlayer!==2)return false;
+    if(!aiLifecycleAlive()||(turnTimerExpiredKey===pub.turnKey||duelClockExpiredKey===pub.turnKey)||publicState?.turnKey!==pub.turnKey||publicState?.currentPlayer!==2)return false;
     erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
     const erictoLife=resolveErictoLifecycle(units);
     units=erictoLife.units;
@@ -898,7 +903,8 @@ async function adventureEnemyTurn(){
     const dodgeFxEvent=pendingAiDodgeFxEvent||null;
     const statusFxEvent=pendingAiStatusFxEvent||null;
     const floatFxEvent=pendingAiFloatFxEvent||null;
-    await update(ref(db,`games/${gameId}/public`),{
+    if(!aiLifecycleAlive())return false;
+    await update(ref(db,`games/${aiGameId}/public`),{
       units,
       legendaryTraps,
       beastTraps,
@@ -922,6 +928,7 @@ async function adventureEnemyTurn(){
     pendingAiDodgeFxEvent=null;
     pendingAiStatusFxEvent=null;
     pendingAiFloatFxEvent=null;
+    return true;
   };
   const firstTurnNoDraw=ai.skipFirstTurnDraw===true;
   const finalMapBossDrawBonus=isFinalMapBossBattleId(pub.adventureBattleId)?1:0;
@@ -2447,21 +2454,21 @@ async function adventureEnemyTurn(){
     let mulan=units.find(u=>u.id===unitId&&isMulanExecutionMoveReady(u));
     if(!mulan)return false;
     if(moveUnitSmart(mulan)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
     }else{
       units=units.map(u=>u.id===unitId?{...u,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:u);
     }
     mulan=units.find(u=>u.id===unitId&&u.hp>0);
     if(!mulan)return true;
     if(await attackWith(mulan)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
       return true;
     }
     if(tryAiDefenseStance(mulan)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
       return true;
     }
     units=units.map(u=>u.id===unitId?{...u,acted:true,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false}:u);
@@ -2584,12 +2591,12 @@ async function adventureEnemyTurn(){
   logs.push(firstTurnNoDraw
     ?`${pub.adventureEnemyName||"Rival"} Draw Phase: IA táctica máxima. ${aiResourceLabel} ${honor}/${maxHonor}. Mano antes del efecto: ${aiHandBeforeDraw}; mano actual: ${hand.length}.${aiMerlinText}`
     :`${pub.adventureEnemyName||"Rival"} Draw Phase: roba ${aiActualDrawCount} carta${aiActualDrawCount===1?"":"s"}. IA táctica máxima. ${aiResourceLabel} ${honor}/${maxHonor}.${aiMerlinText}`);
-  await publishAiStep({turnPhase:"draw"});
-  await sleep(AI_PHASE_DELAY_MS);
+  if(!(await publishAiStep({turnPhase:"draw"})))return;
+  if(!(await aiDelay(AI_PHASE_DELAY_MS)))return;
 
   logs.push(`${pub.adventureEnemyName||"Rival"} entra en Main Phase: prepara cartas e invocaciones.`);
-  await publishAiStep({turnPhase:"main"});
-  await sleep(AI_THINK_DELAY_MS);
+  if(!(await publishAiStep({turnPhase:"main"})))return;
+  if(!(await aiDelay(AI_THINK_DELAY_MS)))return;
 
   // Plan táctico: la IA ya no juega por una fila rígida de categorías.
   // Ahora compara TODAS las cartas jugables de la mano, puntúa cada opción y ejecuta la mejor.
@@ -2602,8 +2609,8 @@ async function adventureEnemyTurn(){
     const acted=playAiMainChoice(bestMainChoice);
     if(!acted)break;
     cardsPlayed++;
-    await publishAiStep({turnPhase:"main"});
-    await sleep(AI_ACTION_DELAY_MS);
+    if(!(await publishAiStep({turnPhase:"main"})))return;
+    if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
   }
 
   const battleTrap=withAiPublicState(()=>resolveBattlePhaseLegendaryTraps(units,2));
@@ -2613,12 +2620,13 @@ async function adventureEnemyTurn(){
   if(getBattleOutcome(units).ended){
     const outcome=getBattleOutcome(units);
     erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
-    await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,beastTraps,erictoGraveyard,[`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
+    if(!aiLifecycleAlive())return;
+    await update(ref(db,`games/${aiGameId}/public`),{units,legendaryTraps,beastTraps,erictoGraveyard,[`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
     return;
   }
   logs.push(`${pub.adventureEnemyName||"Rival"} pasa a Action Phase: mueve y ataca con sus unidades.`);
-  await publishAiStep({turnPhase:"actions"});
-  await sleep(AI_PHASE_DELAY_MS);
+  if(!(await publishAiStep({turnPhase:"actions"})))return;
+  if(!(await aiDelay(AI_PHASE_DELAY_MS)))return;
 
   // Unidades inteligentes: primero usan EFFECT si de verdad aporta valor táctico.
   const aiActionRolePriority={spear:0,tank:1,melee:2,cavalry:3,assassin:4,support:5,skirmisher:6,ranged:7,leader:8};
@@ -2684,14 +2692,14 @@ async function adventureEnemyTurn(){
   // Prioridad de presión: si el líder mago rival tiene Descarga arcana disponible, la usa antes de mover unidades.
   const aiLeaderEffect=enemyLeaderNow();
   if(aiLeaderEffect&&tryAiLegendEffect(aiLeaderEffect)){
-    await publishAiStep({turnPhase:"actions"});
-    await sleep(AI_ACTION_DELAY_MS);
+    if(!(await publishAiStep({turnPhase:"actions"})))return;
+    if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
   }
   for(const u of aiUnits()){
     if(getBattleOutcome(units).ended)break;
     if(tryAiLegendEffect(u)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
     }
   }
   for(const u of aiUnits()){
@@ -2699,42 +2707,42 @@ async function adventureEnemyTurn(){
     const repositionFirst=aiShouldRepositionBeforeAttack(u);
     if(!repositionFirst&&await attackWith(u)){
       didSomething=true;
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
       await resolveAiMulanExecution(u.id);
       let chainGuard=0;
       while(chainGuard++<8){
         const liveKhalid=units.find(it=>it.id===u.id&&isKhalidChainAttackReady(it));
         if(!liveKhalid||!(await attackWith(liveKhalid)))break;
-        await publishAiStep({turnPhase:"actions"});
-        await sleep(AI_ACTION_DELAY_MS);
+        if(!(await publishAiStep({turnPhase:"actions"})))return;
+        if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
         if(getBattleOutcome(units).ended)break;
       }
     }else if(moveUnitSmart(u)){
       didSomething=true;
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
       const movedUnit=units.find(it=>it.id===u.id&&it.hp>0);
       if(movedUnit&&await attackWith(movedUnit)){
-        await publishAiStep({turnPhase:"actions"});
-        await sleep(AI_ACTION_DELAY_MS);
+        if(!(await publishAiStep({turnPhase:"actions"})))return;
+        if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
         await resolveAiMulanExecution(movedUnit.id);
         let chainGuard=0;
         while(chainGuard++<8){
           const liveKhalid=units.find(it=>it.id===movedUnit.id&&isKhalidChainAttackReady(it));
           if(!liveKhalid||!(await attackWith(liveKhalid)))break;
-          await publishAiStep({turnPhase:"actions"});
-          await sleep(AI_ACTION_DELAY_MS);
+          if(!(await publishAiStep({turnPhase:"actions"})))return;
+          if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
           if(getBattleOutcome(units).ended)break;
         }
       }else if(movedUnit&&tryAiDefenseStance(movedUnit)){
-        await publishAiStep({turnPhase:"actions"});
-        await sleep(AI_ACTION_DELAY_MS);
+        if(!(await publishAiStep({turnPhase:"actions"})))return;
+        if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
       }
     }else if(tryAiDefenseStance(u)){
       didSomething=true;
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
     }
     if(didSomething&&getBattleOutcome(units).ended)break;
   }
@@ -2742,18 +2750,18 @@ async function adventureEnemyTurn(){
   const el=enemyLeaderNow();
   if(el&&!getBattleOutcome(units).ended){
     if(await attackWith(el)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
     }else if(tryAiDefenseStance(el)){
-      await publishAiStep({turnPhase:"actions"});
-      await sleep(AI_ACTION_DELAY_MS);
+      if(!(await publishAiStep({turnPhase:"actions"})))return;
+      if(!(await aiDelay(AI_ACTION_DELAY_MS)))return;
     }
   }
 
   if(cardsPlayed===0&&!living(2).some(u=>u.moved||u.acted)){
     logs.push("Rival termina sin acción válida: no dispone de ataque, movimiento legal, efecto útil ni carta jugable con sus recursos actuales.");
-    await publishAiStep({turnPhase:"actions"});
-    await sleep(AI_PHASE_DELAY_MS);
+    if(!(await publishAiStep({turnPhase:"actions"})))return;
+    if(!(await aiDelay(AI_PHASE_DELAY_MS)))return;
   }
 
   if((turnTimerExpiredKey===pub.turnKey||duelClockExpiredKey===pub.turnKey)||publicState?.turnKey!==pub.turnKey||publicState?.currentPlayer!==2)return;
@@ -2788,7 +2796,8 @@ async function adventureEnemyTurn(){
   if(outcome.ended){
     const finalLogs=[...logs,outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`,...(pub.log||[])].slice(0,18);
     recordLocalLeaderBattleOutcome(outcome,pub.mode||"adventure");
-    await update(ref(db,`games/${gameId}/public`),{
+    if(!aiLifecycleAlive())return;
+    await update(ref(db,`games/${aiGameId}/public`),{
       units,
       legendaryTraps,
       beastTraps,
@@ -2811,7 +2820,8 @@ async function adventureEnemyTurn(){
   }
   const nextTurn=(pub.turn||1)+1;
   const finalLogs=[...logs,`Rival termina turno. Ahora juega J1.`,...(pub.log||[])].slice(0,18);
-  await update(ref(db,`games/${gameId}/public`),{
+  if(!aiLifecycleAlive())return;
+  await update(ref(db,`games/${aiGameId}/public`),{
     units:restoreTurnGuardForOwner(units,1),
     legendaryTraps,
     beastTraps,

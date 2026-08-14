@@ -376,8 +376,11 @@ function dragonAreaDamageAt(def,cell,isMain=false){
 function dragonElementFxType(def){return def.element==="fire"?"burn_apply":def.element==="ice"?"freeze_apply":"shock_apply";}
 async function dragonContractEnemyTurn(){
   if(!gameId)return;
-  const pubSnap=await get(ref(db,`games/${gameId}/public`));
-  if(!pubSnap.exists())return;
+  const dragonGameId=gameId;
+  const lifecycleToken=getBattleLifecycleToken();
+  const dragonLifecycleAlive=()=>isBattleLifecycleTokenActive(lifecycleToken)&&gameId===dragonGameId;
+  const pubSnap=await get(ref(db,`games/${dragonGameId}/public`));
+  if(!dragonLifecycleAlive()||!pubSnap.exists())return;
   const pub=pubSnap.val();
   const battle=getAdventureBattle(pub.adventureBattleId||"");
   const def=getDragonContractDefByBattle(battle);
@@ -387,8 +390,9 @@ async function dragonContractEnemyTurn(){
   if(ai.lastTurnStarted===pub.turnKey)return;
   ai.lastTurnStarted="__DRAGON_IN_PROGRESS__";
   ai.dragonStartedAt=Date.now();
-  await update(ref(db,`games/${gameId}/public`),{adventureAiState:ai,aiActionText:`${def.enemyName} observa el campo...`});
-  await sleep(Math.max(260,AI_PHASE_DELAY_MS));
+  if(!dragonLifecycleAlive())return;
+  await update(ref(db,`games/${dragonGameId}/public`),{adventureAiState:ai,aiActionText:`${def.enemyName} observa el campo...`});
+  if(!(await battleSleep(Math.max(260,AI_PHASE_DELAY_MS),"dragon-contract-ai-delay"))||!dragonLifecycleAlive())return;
 
   let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?clearTurnTempStatsForOwnerUnit(u,pub.turnKey):u);
   let legendaryTraps=[...(pub.legendaryTraps||[])];
@@ -407,7 +411,8 @@ async function dragonContractEnemyTurn(){
   const startEffectLogs=[...(startTrap.logs||[]),...(bleedStart.logs||[]),...(startBloodVictory.logs||[])];
   if(!dragon){
     const outcome=getBattleOutcome(units,{...pub,units});
-    await update(ref(db,`games/${gameId}/public`),{units,legendaryTraps,beastTraps,phase:"ended",battleEnded:true,winner:outcome.winner||1,loser:outcome.loser||2,endedAt:Date.now(),currentPlayer:0,adventureAiState:{...ai,lastTurnStarted:pub.turnKey,dragonStartedAt:0},log:[...startEffectLogs,`${def.enemyName} cae antes de atacar.`,...(pub.log||[])].slice(0,18),aiActionText:""});
+    if(!dragonLifecycleAlive())return;
+    await update(ref(db,`games/${dragonGameId}/public`),{units,legendaryTraps,beastTraps,phase:"ended",battleEnded:true,winner:outcome.winner||1,loser:outcome.loser||2,endedAt:Date.now(),currentPlayer:0,adventureAiState:{...ai,lastTurnStarted:pub.turnKey,dragonStartedAt:0},log:[...startEffectLogs,`${def.enemyName} cae antes de atacar.`,...(pub.log||[])].slice(0,18),aiActionText:""});
     return;
   }
   const candidates=units.filter(u=>u.owner===1&&u.hp>0&&dist(dragon,u)<=def.range&&canTargetStealth(dragon,u));
@@ -497,11 +502,13 @@ async function dragonContractEnemyTurn(){
   };
   if(outcome.ended){
     recordLocalLeaderBattleOutcome(outcome,pub.mode||"adventure");
-    await update(ref(db,`games/${gameId}/public`),{...common,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0});
+    if(!dragonLifecycleAlive())return;
+    await update(ref(db,`games/${dragonGameId}/public`),{...common,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0});
     return;
   }
   const nextTurn=(pub.turn||1)+1;
-  await update(ref(db,`games/${gameId}/public`),{...common,units:restoreTurnGuardForOwner(units,1),currentPlayer:1,turnPhase:"draw",turn:nextTurn,turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp()});
+  if(!dragonLifecycleAlive())return;
+  await update(ref(db,`games/${dragonGameId}/public`),{...common,units:restoreTurnGuardForOwner(units,1),currentPlayer:1,turnPhase:"draw",turn:nextTurn,turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp()});
 }
 const dragonOriginalAdventureEnemyTurn=adventureEnemyTurn;
 adventureEnemyTurn=async function(){

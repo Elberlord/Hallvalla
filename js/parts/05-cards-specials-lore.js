@@ -497,9 +497,25 @@ function chooseSolomonOrder(owner,units=[]){
     panel.style.cssText="width:min(760px,96vw);background:#090806;border:2px solid #b98a31;border-radius:18px;padding:22px;color:#f6e6b2;box-shadow:0 0 45px #000;text-align:center";
     panel.innerHTML='<h2 style="margin:0 0 8px">Sello de Salomón</h2><p style="margin:0 0 18px">Elige el orden de manifestación. Cuando una entidad caiga, aparecerá la siguiente.</p><div class="solomon-order-buttons" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px"></div><div class="solomon-order-picked" style="margin-top:16px;min-height:24px"></div>';
     overlay.appendChild(panel);document.body.appendChild(overlay);
+    let settled=false,cancelDispose=null;
+    const finish=order=>{
+      if(settled)return;
+      settled=true;
+      overlay.remove();
+      cancelDispose?.forget?.();
+      resolve(order);
+    };
+    if(typeof isBattleLifecycleActive==="function"&&isBattleLifecycleActive()){
+      cancelDispose=battleOwnDisposable(()=>{
+        if(settled)return;
+        settled=true;
+        overlay.remove();
+        resolve(getAiSolomonOrder(units,owner));
+      },"callback","solomon-order-cancel");
+    }
     const picked=[];const labels={solomon_jinn:"Gran Jinn",solomon_ifrit:"Gran Ifrit",solomon_demon:"Demonio Encadenado"};
     const box=panel.querySelector('.solomon-order-buttons'),status=panel.querySelector('.solomon-order-picked');
-    SOLOMON_ENTITY_ORDER.forEach(key=>{const b=document.createElement('button');b.type='button';b.textContent=labels[key];b.style.cssText="padding:14px 8px;border:1px solid #b98a31;border-radius:10px;background:#17120a;color:#f6e6b2;font-weight:800;cursor:pointer";b.onclick=()=>{if(picked.includes(key))return;picked.push(key);b.disabled=true;b.style.opacity='.38';status.textContent='Orden: '+picked.map(k=>labels[k]).join(' → ');if(picked.length===3){setTimeout(()=>{overlay.remove();resolve(picked);},250);}};box.appendChild(b);});
+    SOLOMON_ENTITY_ORDER.forEach(key=>{const b=document.createElement('button');b.type='button';b.textContent=labels[key];b.style.cssText="padding:14px 8px;border:1px solid #b98a31;border-radius:10px;background:#17120a;color:#f6e6b2;font-weight:800;cursor:pointer";b.onclick=()=>{if(picked.includes(key))return;picked.push(key);b.disabled=true;b.style.opacity='.38';status.textContent='Orden: '+picked.map(k=>labels[k]).join(' → ');if(picked.length===3){battleSetTimeout(()=>finish(picked),250,"solomon-order-complete");}};box.appendChild(b);});
   });
 }
 function clearSolomonDemonSeal(units,sourceId){

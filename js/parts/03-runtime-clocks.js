@@ -18,6 +18,194 @@ function hallvallaApplyLocalPatch(target,patch){const base={...(target||{})};Obj
 
 let lastHonorRechargeKey="",honorRechargeTimer=null;
 
+
+/*
+-------------------------------------------------------------------------------
+03_BATTLE_LIFECYCLE_REGISTRY · ETAPA 3
+-------------------------------------------------------------------------------
+Ownership central de recursos efímeros creados por una sala PvP o una batalla.
+El registro es deliberadamente agnóstico al gameplay: únicamente administra
+suscripciones, timers, RAF, observers, listeners y nodos temporales para que
+salir/reentrar no deje callbacks de una sesión anterior vivos.
+*/
+function createHallvallaDisposableRegistry(scopeName){
+  let generation=0;
+  let active=false;
+  let meta=null;
+  let nextResourceId=1;
+  let lastDisposeReason="";
+  const resources=new Map();
+  const timeoutDisposers=new Map();
+  const intervalDisposers=new Map();
+  const rafDisposers=new Map();
+
+  function register(cleanup,kind="resource",label=""){
+    if(typeof cleanup!=="function")return ()=>{};
+    const id=nextResourceId++;
+    let closed=false;
+    const release=(runCleanup=true)=>{
+      if(closed)return;
+      closed=true;
+      resources.delete(id);
+      if(runCleanup){
+        try{cleanup();}
+        catch(error){console.warn(`[HallValla] Cleanup ${scopeName}/${kind}${label?` (${label})`:""} falló:`,error);}
+      }
+    };
+    const disposer=()=>release(true);
+    disposer.forget=()=>release(false);
+    resources.set(id,{id,kind,label:String(label||""),dispose:disposer});
+    return disposer;
+  }
+  function disposeAll(reason="dispose"){
+    lastDisposeReason=String(reason||"dispose");
+    const pending=[...resources.values()].reverse();
+    pending.forEach(item=>item.dispose());
+    resources.clear();
+    timeoutDisposers.clear();
+    intervalDisposers.clear();
+    rafDisposers.clear();
+    active=false;
+    meta=null;
+  }
+  function begin(nextMeta={}){
+    if(active||resources.size)disposeAll("replace-scope");
+    generation+=1;
+    active=true;
+    meta={...(nextMeta||{}),startedAt:Date.now()};
+    return generation;
+  }
+  function end(reason="end-scope"){
+    disposeAll(reason);
+  }
+  function token(){return active?generation:null;}
+  function isTokenActive(value){return active&&value!==null&&value===generation;}
+  function own(cleanup,kind="resource",label=""){
+    if(typeof cleanup!=="function")return ()=>{};
+    if(!active)return cleanup;
+    return register(cleanup,kind,label);
+  }
+  function timeout(fn,ms,label="timeout"){
+    if(!active)return setTimeout(fn,ms);
+    const scopeToken=generation;
+    let nativeId=null,disposer=null;
+    nativeId=setTimeout(()=>{
+      timeoutDisposers.delete(nativeId);
+      disposer?.forget?.();
+      if(!isTokenActive(scopeToken))return;
+      fn();
+    },ms);
+    disposer=register(()=>{timeoutDisposers.delete(nativeId);clearTimeout(nativeId);},"timeout",label);
+    timeoutDisposers.set(nativeId,disposer);
+    return nativeId;
+  }
+  function clearOwnedTimeout(nativeId){
+    const disposer=timeoutDisposers.get(nativeId);
+    if(disposer){disposer();return;}
+    clearTimeout(nativeId);
+  }
+  function interval(fn,ms,label="interval"){
+    if(!active)return setInterval(fn,ms);
+    const scopeToken=generation;
+    let nativeId=null,disposer=null;
+    nativeId=setInterval(()=>{if(isTokenActive(scopeToken))fn();},ms);
+    disposer=register(()=>{intervalDisposers.delete(nativeId);clearInterval(nativeId);},"interval",label);
+    intervalDisposers.set(nativeId,disposer);
+    return nativeId;
+  }
+  function clearOwnedInterval(nativeId){
+    const disposer=intervalDisposers.get(nativeId);
+    if(disposer){disposer();return;}
+    clearInterval(nativeId);
+  }
+  function animationFrame(fn,label="raf"){
+    if(!active)return requestAnimationFrame(fn);
+    const scopeToken=generation;
+    let nativeId=null,disposer=null;
+    nativeId=requestAnimationFrame(timestamp=>{
+      rafDisposers.delete(nativeId);
+      disposer?.forget?.();
+      if(!isTokenActive(scopeToken))return;
+      fn(timestamp);
+    });
+    disposer=register(()=>{rafDisposers.delete(nativeId);cancelAnimationFrame(nativeId);},"raf",label);
+    rafDisposers.set(nativeId,disposer);
+    return nativeId;
+  }
+  function cancelOwnedAnimationFrame(nativeId){
+    const disposer=rafDisposers.get(nativeId);
+    if(disposer){disposer();return;}
+    cancelAnimationFrame(nativeId);
+  }
+  function event(target,type,handler,options,label=""){
+    if(!target?.addEventListener||typeof handler!=="function")return ()=>{};
+    target.addEventListener(type,handler,options);
+    if(!active)return ()=>target.removeEventListener(type,handler,options);
+    return register(()=>target.removeEventListener(type,handler,options),"event",label||type);
+  }
+  function observer(instance,label="observer"){
+    if(!instance?.disconnect)return ()=>{};
+    if(!active)return ()=>instance.disconnect();
+    return register(()=>instance.disconnect(),"observer",label);
+  }
+  function node(instance,label="node"){
+    if(!instance?.remove)return ()=>{};
+    if(!active)return ()=>instance.remove();
+    return register(()=>instance.remove(),"node",label);
+  }
+  function delay(ms,label="delay"){
+    if(!active)return new Promise(resolve=>setTimeout(()=>resolve(true),ms));
+    const scopeToken=generation;
+    return new Promise(resolve=>{
+      let settled=false,nativeId=null,disposer=null;
+      const finish=value=>{if(settled)return;settled=true;resolve(value);};
+      nativeId=setTimeout(()=>{
+        timeoutDisposers.delete(nativeId);
+        disposer?.forget?.();
+        finish(isTokenActive(scopeToken));
+      },ms);
+      disposer=register(()=>{timeoutDisposers.delete(nativeId);clearTimeout(nativeId);finish(false);},"delay",label);
+      timeoutDisposers.set(nativeId,disposer);
+    });
+  }
+  function snapshot(){
+    const byKind={};
+    const resourceList=[];
+    resources.forEach(item=>{
+      byKind[item.kind]=(byKind[item.kind]||0)+1;
+      resourceList.push({kind:item.kind,label:item.label||""});
+    });
+    return {scope:scopeName,active,generation,resourceCount:resources.size,byKind,resources:resourceList,meta:meta?{...meta}:null,lastDisposeReason};
+  }
+  return {begin,end,own,timeout,clearTimeout:clearOwnedTimeout,interval,clearInterval:clearOwnedInterval,animationFrame,cancelAnimationFrame:cancelOwnedAnimationFrame,event,observer,node,delay,token,isTokenActive,snapshot};
+}
+
+const hallvallaBattleLifecycle=createHallvallaDisposableRegistry("battle");
+const hallvallaPvpLobbyLifecycle=createHallvallaDisposableRegistry("pvp-lobby");
+function beginBattleLifecycle(meta={}){return hallvallaBattleLifecycle.begin(meta);}
+function endBattleLifecycle(reason="battle-reset"){hallvallaBattleLifecycle.end(reason);}
+function getBattleLifecycleToken(){return hallvallaBattleLifecycle.token();}
+function isBattleLifecycleTokenActive(token){return hallvallaBattleLifecycle.isTokenActive(token);}
+function isBattleLifecycleActive(){return !!hallvallaBattleLifecycle.snapshot().active;}
+function battleOwnDisposable(disposer,kind="resource",label=""){return hallvallaBattleLifecycle.own(disposer,kind,label);}
+function battleSetTimeout(fn,ms,label="timeout"){return hallvallaBattleLifecycle.timeout(fn,ms,label);}
+function battleClearTimeout(id){hallvallaBattleLifecycle.clearTimeout(id);}
+function battleSetInterval(fn,ms,label="interval"){return hallvallaBattleLifecycle.interval(fn,ms,label);}
+function battleClearInterval(id){hallvallaBattleLifecycle.clearInterval(id);}
+function battleRequestAnimationFrame(fn,label="raf"){return hallvallaBattleLifecycle.animationFrame(fn,label);}
+function battleCancelAnimationFrame(id){hallvallaBattleLifecycle.cancelAnimationFrame(id);}
+function battleOwnEventListener(target,type,handler,options,label=""){return hallvallaBattleLifecycle.event(target,type,handler,options,label);}
+function battleOwnObserver(observer,label="observer"){return hallvallaBattleLifecycle.observer(observer,label);}
+function battleOwnNode(node,label="node"){return hallvallaBattleLifecycle.node(node,label);}
+function battleSleep(ms,label="ai-delay"){return hallvallaBattleLifecycle.delay(ms,label);}
+function beginPvpLobbyLifecycle(meta={}){return hallvallaPvpLobbyLifecycle.begin(meta);}
+function endPvpLobbyLifecycle(reason="pvp-lobby-close"){hallvallaPvpLobbyLifecycle.end(reason);}
+function getPvpLobbyLifecycleToken(){return hallvallaPvpLobbyLifecycle.token();}
+function isPvpLobbyLifecycleTokenActive(token){return hallvallaPvpLobbyLifecycle.isTokenActive(token);}
+function pvpLobbyOwnDisposable(disposer,kind="resource",label=""){return hallvallaPvpLobbyLifecycle.own(disposer,kind,label);}
+function getHallvallaLifecycleSnapshot(){return {battle:hallvallaBattleLifecycle.snapshot(),pvpLobby:hallvallaPvpLobbyLifecycle.snapshot()};}
+globalThis.__HALLVALLA_LIFECYCLE_SNAPSHOT__=getHallvallaLifecycleSnapshot;
+
 const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHASE",last:"LAST PHASE",end:"END PHASE"};
 const TURN_TIME_LIMIT_MS=180*1000;
 const DUEL_TIME_LIMIT_MS=15*60*1000;
@@ -99,7 +287,7 @@ function maybeShowClockKillBonus(prevState,nextState){
     hud.classList.remove("clock-kill-pulse");
     void hud.offsetWidth;
     hud.classList.add("clock-kill-pulse");
-    setTimeout(()=>{badge.remove();hud.classList.remove("clock-kill-pulse");},1450);
+    battleSetTimeout(()=>{badge.remove();hud.classList.remove("clock-kill-pulse");},1450,"clock-kill-pulse");
   });
 }
 function isTurnTimerEnabled(state=publicState){
@@ -361,11 +549,11 @@ function tickTurnTimer(){
 }
 function startTurnTimerLoop(){
   if(turnTimerInterval)return;
-  turnTimerInterval=setInterval(()=>safeBattleTick("turnTimer",tickTurnTimer),TURN_TIMER_TICK_MS);
+  turnTimerInterval=battleSetInterval(()=>safeBattleTick("turnTimer",tickTurnTimer),TURN_TIMER_TICK_MS,"turn-timer-loop");
   tickTurnTimer();
 }
 function stopTurnTimerLoop(){
-  if(turnTimerInterval){clearInterval(turnTimerInterval);turnTimerInterval=null;}
+  if(turnTimerInterval){battleClearInterval(turnTimerInterval);turnTimerInterval=null;}
   turnTimerObservedKey="";turnTimerExpiredKey="";duelClockExpiredKey="";turnTimerExpiryLock=false;duelClockExpiryLock=false;turnTimerAnchorLock=false;turnTimerSystemUpdate=false;
   renderTurnTimerHud();
 }
@@ -426,23 +614,23 @@ function waitForFirebaseAuthReady(timeoutMs=8000){
   });
 }
 function resetAdventureAiScheduling(){
-  if(adventureAiTriggerTimer){clearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
-  if(adventureAiActionTimer){clearTimeout(adventureAiActionTimer);adventureAiActionTimer=null;}
+  if(adventureAiTriggerTimer){battleClearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
+  if(adventureAiActionTimer){battleClearTimeout(adventureAiActionTimer);adventureAiActionTimer=null;}
   aiTurnLock=false;
   lastAiTurnKey="";
 }
 function clearBattleTransientUiState(){
-  if(phaseAnnounceTimer){clearTimeout(phaseAnnounceTimer);phaseAnnounceTimer=null;}
+  if(phaseAnnounceTimer){battleClearTimeout(phaseAnnounceTimer);phaseAnnounceTimer=null;}
   lastPhaseAnnounceKey="";
   const phaseBox=$("phaseAnnounce");
   if(phaseBox)phaseBox.classList.remove("show");
 
-  if(boardSelectedCellTimer){clearTimeout(boardSelectedCellTimer);boardSelectedCellTimer=null;}
+  if(boardSelectedCellTimer){battleClearTimeout(boardSelectedCellTimer);boardSelectedCellTimer=null;}
   boardHoverCellKey="";
   boardSelectedCellKey="";
   if(typeof updateBoardAimClasses==="function")updateBoardAimClasses();
 
-  if(honorRechargeTimer){clearTimeout(honorRechargeTimer);honorRechargeTimer=null;}
+  if(honorRechargeTimer){battleClearTimeout(honorRechargeTimer);honorRechargeTimer=null;}
   lastHonorRechargeKey="";
   const honorModal=$("honorRechargeModal");
   if(honorModal)honorModal.classList.remove("show");
@@ -490,12 +678,12 @@ function showPhaseAnnouncement(info){
   const box=$("phaseAnnounce");
   if(!box||!info)return;
   tryPlaySound("phase_change",.55);
-  if(phaseAnnounceTimer){clearTimeout(phaseAnnounceTimer);phaseAnnounceTimer=null;}
+  if(phaseAnnounceTimer){battleClearTimeout(phaseAnnounceTimer);phaseAnnounceTimer=null;}
   box.className=`phase-announce ${info.sideClass}`;
   box.innerHTML=`<div class="phase-announce-kicker">${escapeHtml(info.playerName)}</div><div class="phase-announce-title">${escapeHtml(info.title)}</div><div class="phase-announce-sub">${escapeHtml(info.subtitle)}</div>`;
   void box.offsetWidth;
   box.classList.add("show");
-  phaseAnnounceTimer=setTimeout(()=>{box.classList.remove("show");},1450);
+  phaseAnnounceTimer=battleSetTimeout(()=>{phaseAnnounceTimer=null;box.classList.remove("show");},1450,"phase-announcement");
 }
 function maybeShowPhaseAnnouncement(){
   const info=getPhaseAnnouncement();

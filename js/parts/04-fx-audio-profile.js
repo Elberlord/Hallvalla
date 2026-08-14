@@ -15,8 +15,8 @@ function clearBattleFxLayer(){
 function hideDemigodSummonPresentation(){
   const box=$("demigodSummonModal");
   if(box){box.classList.remove("show");box.classList.add("hidden");}
-  if(demigodSummonTimer){clearTimeout(demigodSummonTimer);demigodSummonTimer=null;}
-  if(demigodSummonHideTimer){clearTimeout(demigodSummonHideTimer);demigodSummonHideTimer=null;}
+  if(demigodSummonTimer){battleClearTimeout(demigodSummonTimer);demigodSummonTimer=null;}
+  if(demigodSummonHideTimer){battleClearTimeout(demigodSummonHideTimer);demigodSummonHideTimer=null;}
 }
 function showDemigodSummonPresentation(unit){
   if(!unit)return;
@@ -27,19 +27,19 @@ function showDemigodSummonPresentation(unit){
   box.className=`demigod-summon-modal ${sideClass} ${getCardVisualClass(unit)}`;
   box.innerHTML=`<div class="demigod-summon-shell"><div class="demigod-summon-kicker">INVOCACIÓN DE SEMIDIÓS</div><div class="demigod-summon-card">${getCardVisualHtml(unit,"demigod-summon-portrait")}</div><div class="demigod-summon-name">${escapeHtml(unit.name||"Semidiós")}</div><div class="demigod-summon-sub">${escapeHtml(unit.owner===1?"Tu leyenda desciende al campo":"El rival invoca una presencia suprema")}</div></div>`;
   box.classList.remove("hidden");
-  requestAnimationFrame(()=>box.classList.add("show"));
-  if(demigodSummonTimer){clearTimeout(demigodSummonTimer);}
-  if(demigodSummonHideTimer){clearTimeout(demigodSummonHideTimer);demigodSummonHideTimer=null;}
-  demigodSummonTimer=setTimeout(()=>{
+  battleRequestAnimationFrame(()=>box.classList.add("show"));
+  if(demigodSummonTimer){battleClearTimeout(demigodSummonTimer);}
+  if(demigodSummonHideTimer){battleClearTimeout(demigodSummonHideTimer);demigodSummonHideTimer=null;}
+  demigodSummonTimer=battleSetTimeout(()=>{
     demigodSummonTimer=null;
     box.classList.remove("show");
-    demigodSummonHideTimer=setTimeout(()=>{demigodSummonHideTimer=null;box.classList.add("hidden");},420);
+    demigodSummonHideTimer=battleSetTimeout(()=>{demigodSummonHideTimer=null;box.classList.add("hidden");},420);
   },1700);
 }
 function clearEventSplashOverlay(resetQueue=true){
   const box=$("eventSplashOverlay");
-  if(eventSplashTimer){clearTimeout(eventSplashTimer);eventSplashTimer=null;}
-  if(eventSplashExitTimer){clearTimeout(eventSplashExitTimer);eventSplashExitTimer=null;}
+  if(eventSplashTimer){battleClearTimeout(eventSplashTimer);eventSplashTimer=null;}
+  if(eventSplashExitTimer){battleClearTimeout(eventSplashExitTimer);eventSplashExitTimer=null;}
   if(box){
     box.className="event-splash-overlay";
     box.innerHTML="";
@@ -156,14 +156,14 @@ function showNextEventSplash(){
   box.setAttribute("aria-hidden","false");
   box.innerHTML=`<div class="event-splash-stack ${visible.length>1?"is-duo":"is-single"}">${visible.map(buildEventSplashShell).join("")}</div>`;
   void box.offsetWidth;
-  requestAnimationFrame(()=>box.classList.add("show"));
-  if(eventSplashTimer){clearTimeout(eventSplashTimer);}
-  if(eventSplashExitTimer){clearTimeout(eventSplashExitTimer);eventSplashExitTimer=null;}
-  eventSplashTimer=setTimeout(()=>{
+  battleRequestAnimationFrame(()=>box.classList.add("show"));
+  if(eventSplashTimer){battleClearTimeout(eventSplashTimer);}
+  if(eventSplashExitTimer){battleClearTimeout(eventSplashExitTimer);eventSplashExitTimer=null;}
+  eventSplashTimer=battleSetTimeout(()=>{
     eventSplashTimer=null;
     box.classList.remove("show");
     box.classList.add("leaving");
-    eventSplashExitTimer=setTimeout(()=>{
+    eventSplashExitTimer=battleSetTimeout(()=>{
       eventSplashExitTimer=null;
       appendEventSplashHistory(visible);
       clearEventSplashOverlay(false);
@@ -335,7 +335,7 @@ function spawnBattleFxNode(className,left,top,cssVars={},ttl=900,html=""){
   Object.entries(cssVars||{}).forEach(([k,v])=>node.style.setProperty(k,String(v)));
   if(html)node.innerHTML=html;
   layer.appendChild(node);
-  setTimeout(()=>node.remove(),ttl);
+  battleSetTimeout(()=>node.remove(),ttl);
   return node;
 }
 function getFxRarityClass(unit){
@@ -407,12 +407,12 @@ function playIceDragonExplosion(point,fx){
   const image=node?.querySelector?.(".battle-fx-ice-explosion-img");
   if(image){
     let frame=1;
-    const timer=setInterval(()=>{
+    const timer=battleSetInterval(()=>{
       frame+=1;
-      if(frame>8){clearInterval(timer);return;}
+      if(frame>8){battleClearInterval(timer);return;}
       image.src=`assets/effects/ice/explosion/ice_explosion_frame_${String(frame).padStart(2,"0")}.webp`;
     },70);
-    setTimeout(()=>clearInterval(timer),650);
+    battleSetTimeout(()=>battleClearInterval(timer),650);
   }
   return field;
 }
@@ -440,7 +440,7 @@ function playIceDragonBattleFxEvent(fx,attackerRef=null){
     travelMs+180,
     `<img class="battle-fx-ice-projectile-img" src="${getIceDragonProjectileAsset(fx)}" alt="" draggable="false">`
   );
-  setTimeout(()=>{
+  battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(fx.impactSound||"spell_damage",.68);
     playIceDragonExplosion(to,fx);
@@ -497,7 +497,7 @@ function playMagicBattleFxEvent(fx,attackerRef=null){
   }
   spawnBattleFxNode(`battle-fx-magic-cast kind-${kind} ${sideClass}`,from.x,from.y,{"--magic-scale":String(scale)},760,`<img src="${assets.cast}" alt="" draggable="false">`);
   spawnBattleFxNode(`battle-fx-magic-projectile kind-${kind} ${sideClass}`,from.x,from.y,{"--magic-dx":`${dx}px`,"--magic-dy":`${dy}px`,"--magic-angle":`${angle}deg`,"--magic-flight":`${travelMs}ms`,"--magic-scale":String(scale)},travelMs+220,`<img src="${assets.projectile}" alt="" draggable="false">`);
-  setTimeout(()=>{
+  battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(fx.impactSound||(kind==="heal"?"heal":kind==="lightning"?"shock_tick":"impact_magic"),kind==="heal"?.72:.68);
     const impact=spawnBattleFxNode(`battle-fx-magic-impact kind-${kind} ${sideClass}`,to.x,to.y,{"--magic-scale":String(scale)},980,`<img src="${assets.impact}" alt="" draggable="false">`);
@@ -522,7 +522,7 @@ function playSpearBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
   const travelMs=getSpearFxTravelMsByDistance(len);
   const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-spear-trail"></div>':'';
   spawnBattleFxNode(`battle-fx-spear-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--spear-dx":`${to.x-from.x}px`,"--spear-dy":`${to.y-from.y}px`,"--spear-angle":`${angle}deg`,"--spear-flight":`${travelMs}ms`},travelMs+240,`<img src="${getSpearProjectileAsset(fx)}" alt="" draggable="false">${projectileExtra}`);
-  setTimeout(()=>{
+  battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(impactSound,impactVolume);
     spawnBattleFxNode(`battle-fx-spear-impact ${sideClass} ${rarityClass}`,to.x,to.y,{"--spear-angle":`${angle}deg`},980,'<img src="assets/effects/spear/spear_impact_01.webp" alt="" draggable="false">');
@@ -557,11 +557,11 @@ function playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityCla
   const slashTtl=680;
   if(cavalry){
     spawnBattleFxNode(`battle-fx-charge-lines ${sideClass} ${rarityClass}`,from.x,from.y,{"--charge-angle":`${angle}deg`,"--charge-dx":`${(to.x-from.x)*0.58}px`,"--charge-dy":`${(to.y-from.y)*0.58}px`},720,'<img src="assets/effects/charge/charge_speed_lines_01.webp" alt="" draggable="false">');
-    setTimeout(()=>spawnBattleFxNode(`battle-fx-charge-dust ${sideClass} ${rarityClass}`,to.x,to.y,{"--charge-angle":`${angle}deg`},920,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">'),150);
+    battleSetTimeout(()=>spawnBattleFxNode(`battle-fx-charge-dust ${sideClass} ${rarityClass}`,to.x,to.y,{"--charge-angle":`${angle}deg`},920,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">'),150);
   }
   spawnBattleFxNode(`${slashClass} ${sideClass} ${rarityClass}`,slashX,slashY,{"--melee-angle":`${angle}deg`,"--melee-dx":`${(to.x-from.x)*0.18}px`,"--melee-dy":`${(to.y-from.y)*0.18}px`},slashTtl,`<img src="${getPhysicalMeleeSlashAsset(weaponKind)}" alt="" draggable="false">`);
-  setTimeout(()=>{ if(fx.hit!==false) tryPlaySound(impactSound,impactVolume); },120);
-  setTimeout(()=>{
+  battleSetTimeout(()=>{ if(fx.hit!==false) tryPlaySound(impactSound,impactVolume); },120);
+  battleSetTimeout(()=>{
     if(fx.hit===false)return;
     spawnBattleFxNode(`battle-fx-melee-impact-img ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<img src="${getPhysicalImpactAsset(fx,weaponKind)}" alt="" draggable="false">`);
   },Math.min(150, dashMs));
@@ -581,7 +581,7 @@ function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
   const travelMs=getArrowFxTravelMsByDistance(len);
   const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-arrow-trail"></div>':'';
   spawnBattleFxNode(`battle-fx-arrow-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--arrow-dx":`${to.x-from.x}px`,"--arrow-dy":`${to.y-from.y}px`,"--arrow-angle":`${angle}deg`,"--arrow-flight":`${travelMs}ms`},travelMs+240,`<img src="${getArrowProjectileAsset(fx)}" alt="" draggable="false">${projectileExtra}`);
-  setTimeout(()=>{
+  battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(impactSound,impactVolume);
     spawnBattleFxNode(`battle-fx-arrow-impact ${sideClass} ${rarityClass}`,to.x,to.y,{},920,'<img src="assets/effects/arrows/arrow_impact_01.webp" alt="" draggable="false">');
@@ -627,17 +627,17 @@ function playBattleFxEvent(fx,attackerRef=null){
       return;
     }
     const travelMs=Math.max(170,Math.min(380,Math.round(len*2.2)));
-    setTimeout(()=>tryPlaySound(impactSound,impactVolume),Math.max(80,travelMs-55));
+    battleSetTimeout(()=>tryPlaySound(impactSound,impactVolume),Math.max(80,travelMs-55));
     const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-projectile-trail"></div>':'';
     spawnBattleFxNode(`battle-fx-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`,"--fx-flight":`${travelMs}ms`},travelMs+220,`<div class="battle-fx-projectile-shaft"></div><div class="battle-fx-projectile-head"></div><div class="battle-fx-projectile-fletch"></div>${projectileExtra}`);
-    setTimeout(()=>spawnBattleFxNode(`battle-fx-impact ranged ${sideClass} ${rarityClass}`,to.x,to.y,{},940,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`),Math.max(40,travelMs-12));
+    battleSetTimeout(()=>spawnBattleFxNode(`battle-fx-impact ranged ${sideClass} ${rarityClass}`,to.x,to.y,{},940,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`),Math.max(40,travelMs-12));
     return;
   }
   if(["sword","axe","spear"].includes(String(weaponKind||"").toLowerCase())){
     playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume,weaponKind);
     return;
   }
-  setTimeout(()=>tryPlaySound(impactSound,impactVolume),180);
+  battleSetTimeout(()=>tryPlaySound(impactSound,impactVolume),180);
   const slashExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-slash-trail"></div>':'';
   spawnBattleFxNode(`battle-fx-slash ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`},640,`<div class="battle-fx-slash-core"></div>${slashExtra}`);
   spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
@@ -648,7 +648,7 @@ function playDefenseFxEvent(fx){
   const point=getGridCellCenter(fx.at.x,fx.at.y);
   if(!point)return;
   const guardSound=fx.type==="guard_break"?"guard_break":(fx.type==="defend_stance"?"defend_stance":"guard_block");
-  setTimeout(()=>tryPlaySound(guardSound,fx.type==="guard_block"?.76:.64),30);
+  battleSetTimeout(()=>tryPlaySound(guardSound,fx.type==="guard_block"?.76:.64),30);
   const sideClass=fx.unitOwner===1?"player":"enemy";
   const rarityClass=fx.rarityClass||"fx-basic";
   const typeClass=fx.type==="guard_break"?"break":"block";
@@ -699,7 +699,7 @@ function playStatusFxEvent(fx){
   const variantClass=type.endsWith("tick")?"tick":"apply";
   const statusSound=bleed?"bleed":poison?"poison_tick":burn?"burn_tick":paralysis?"shock_tick":"status_tick";
   const hitVol=bleed?.48:poison?.34:burn?.38:paralysis?.38:.30;
-  setTimeout(()=>tryPlaySound(statusSound,hitVol),20);
+  battleSetTimeout(()=>tryPlaySound(statusSound,hitVol),20);
   let badge='';
   if(bleed)badge='<div class="battle-fx-status-drop"></div>';
   else if(poison)badge='<div class="battle-fx-status-poison-drop"></div><div class="battle-fx-status-skull"><span></span><span></span><span></span></div>';
@@ -716,7 +716,7 @@ function playDestroyFx(unit){
   if(!unit)return;
   const point=getGridCellCenter(unit.x,unit.y);
   if(!point)return;
-  setTimeout(()=>tryPlaySound(unit.leader?"leader_death":"attack_impact",unit.leader?.92:.7),40);
+  battleSetTimeout(()=>tryPlaySound(unit.leader?"leader_death":"attack_impact",unit.leader?.92:.7),40);
   const rarityClass=getFxRarityClass(unit);
   const sideClass=unit.owner===1?"player":"enemy";
   const embers=Array.from({length:8},(_,i)=>`<span class="battle-fx-ember ember-${i+1}"></span>`).join("");
@@ -751,17 +751,17 @@ function maybePlayBattleFx(prevPub,nextPub){
   const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted);
   if(!added.length&&!attackers.length&&!destroyed.length&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
   lastBattleFxKey=fxKey;
-  added.forEach(u=>setTimeout(()=>playSummonFx(u),80));
+  added.forEach(u=>battleSetTimeout(()=>playSummonFx(u),80));
   const demigodAdded=added.find(u=>getFxRarityClass(u)==="fx-demigod");
   if(demigodAdded){
     const summonKey=`${gameId||"game"}:${demigodAdded.id||demigodAdded.name}:${nextPub.turnKey||nextPub.turn||0}`;
     if(summonKey!==lastDemigodSummonKey){
       lastDemigodSummonKey=summonKey;
-      setTimeout(()=>showDemigodSummonPresentation(demigodAdded),140);
+      battleSetTimeout(()=>showDemigodSummonPresentation(demigodAdded),140);
     }
   }
   if(explicitAttackFx&&["attack","spell","heal","magic"].includes(explicitAttackFx.type)){
-    setTimeout(()=>playBattleFxEvent(explicitAttackFx),140);
+    battleSetTimeout(()=>playBattleFxEvent(explicitAttackFx),140);
   }else if(!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&(damaged.length||destroyed.length)){
     // Fallback visual only for old/non-explicit damage updates.
     // DEF/EFFECT also flip acted:false -> true, so never infer an attack from acted alone.
@@ -773,30 +773,30 @@ function maybePlayBattleFx(prevPub,nextPub){
         const fallback=prevUnits.filter(t=>t.owner!==attacker.owner&&damaged.some(d=>d.id===t.id)).sort((a,b)=>dist(attacker,a)-dist(attacker,b))[0];
         target=fallback||null;
       }
-      if(target){taken.add(target.id||`${target.x},${target.y}`);setTimeout(()=>playBattleFx(attacker,target),140+(i*120));}
+      if(target){taken.add(target.id||`${target.x},${target.y}`);battleSetTimeout(()=>playBattleFx(attacker,target),140+(i*120));}
     });
   }
   if(explicitDefenseFx&&(explicitDefenseFx.type==="guard_block"||explicitDefenseFx.type==="guard_break")){
     const defenseDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx):120;
-    setTimeout(()=>playDefenseFxEvent(explicitDefenseFx),defenseDelay);
+    battleSetTimeout(()=>playDefenseFxEvent(explicitDefenseFx),defenseDelay);
   }
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge"){
     const dodgeDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx):120;
-    setTimeout(()=>playDodgeFxEvent(explicitDodgeFx),dodgeDelay);
+    battleSetTimeout(()=>playDodgeFxEvent(explicitDodgeFx),dodgeDelay);
   }
   if(explicitStatusFx){
     const statusDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx)+100:(explicitDefenseFx||explicitDodgeFx?280:120);
-    setTimeout(()=>playStatusFxEvent(explicitStatusFx),statusDelay);
+    battleSetTimeout(()=>playStatusFxEvent(explicitStatusFx),statusDelay);
   }
   if(explicitFloatFx){
     const floatDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx)+80:(explicitStatusFx?190:90);
-    setTimeout(()=>playFloatFxEvent(explicitFloatFx),floatDelay);
+    battleSetTimeout(()=>playFloatFxEvent(explicitFloatFx),floatDelay);
   }
   const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);
   if(eventSplashPayloads.length){
-    setTimeout(()=>queueEventSplashGroup(eventSplashPayloads),0);
+    battleSetTimeout(()=>queueEventSplashGroup(eventSplashPayloads),0);
   }
-  destroyed.forEach((unit,i)=>setTimeout(()=>playDestroyFx(unit),280+(i*130)));
+  destroyed.forEach((unit,i)=>battleSetTimeout(()=>playDestroyFx(unit),280+(i*130)));
 }
 
 
@@ -962,7 +962,26 @@ function getVolumePercent(value,fallback=.5){
 }
 function tryPlaySound(name,volume=1){
   if(!gameSettings.sound||!gameSettings.sfx||!name)return;
-  try{const audio=new Audio(audioPath("sfx",name));audio.volume=clampAudioVolume((gameSettings.sfxVolume??.52)*volume,.52);audio.play().catch(()=>{});}catch(e){}
+  try{
+    const audio=new Audio(audioPath("sfx",name));
+    audio.volume=clampAudioVolume((gameSettings.sfxVolume??.52)*volume,.52);
+    if(typeof isBattleLifecycleActive==="function"&&isBattleLifecycleActive()){
+      let disposer=null;
+      const release=()=>{
+        audio.removeEventListener("ended",release);
+        audio.removeEventListener("error",release);
+        disposer?.forget?.();
+      };
+      audio.addEventListener("ended",release,{once:true});
+      audio.addEventListener("error",release,{once:true});
+      disposer=battleOwnDisposable(()=>{
+        audio.removeEventListener("ended",release);
+        audio.removeEventListener("error",release);
+        try{audio.pause();audio.currentTime=0;}catch(_){ }
+      },"audio",`sfx:${name}`);
+    }
+    audio.play().catch(()=>{});
+  }catch(e){}
 }
 const SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS=5;
 function clearSeamlessMusicLoop(){
