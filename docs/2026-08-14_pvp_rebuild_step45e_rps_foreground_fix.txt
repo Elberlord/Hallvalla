@@ -1,0 +1,21 @@
+HallValla · PvP rebuild · Paso 4.5E · corrección visual RPS
+
+Base: Paso 4.5D (reglas visibles + auth fix), ya validado por el usuario para creación de sala y reglas.
+
+Problema observado:
+- ambos jugadores quedaban visualmente en LISTO;
+- el estado RPS sí podía iniciar, pero la pantalla de Piedra/Papel/Tijera no quedaba visible.
+
+Causa concreta:
+- #pvpRoomPanel tenía z-index 31;
+- .pvp-rps-overlay tenía z-index 20;
+- por lo tanto, el ritual RPS quedaba por detrás del panel del lobby.
+
+Corrección:
+- el overlay RPS pasa a z-index 80;
+- al activarse RPS, se añade la clase pvp-rps-active a .online-modal-art;
+- esa clase oculta visualmente solo el panel del lobby y la base del modal, sin desmontar listeners ni estado;
+- al volver a estado no-RPS, la clase se retira;
+- no se entra a arena ni se activa combate.
+
+Firebase Rules: SIN CAMBIOS.
