@@ -20398,46 +20398,86 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 }
 
 
-/* STAGE2 PATCH · visible copy button + PvP lobby direct tuner */
-#pvpRoomPanel .hv-lobby-tunable{transform:translate(var(--hvLobbyTunerX,0px),var(--hvLobbyTunerY,0px)) scale(var(--hvLobbyTunerScale,1));transform-origin:center center;}
-#pvpRoomPanel .hv-lobby-tunable{width:var(--hvLobbyTunerW,auto);height:var(--hvLobbyTunerH,auto);}
-#pvpRoomPanel .pvp-room-artwrap.hv-lobby-tunable,#pvpRoomPanel .pvp-room-art.hv-lobby-tunable{width:var(--hvLobbyTunerW,100%);height:var(--hvLobbyTunerH,100%);}
-#pvpRoomPanel .pvp-room-code-line,#pvpRoomPanel .pvp-room-player,#pvpRoomPanel #pvpReadyBtn,#pvpRoomPanel #pvpLeaveBtn,#pvpRoomPanel #pvpCopyCodeBtn,#pvpRoomPanel .pvp-room-presence,#pvpRoomPanel .pvp-room-ready-check{z-index:5;}
-#pvpCopyCodeBtn{display:inline-flex!important;align-items:center;justify-content:center;position:absolute!important;left:58.2%!important;top:40.85%!important;width:auto!important;height:auto!important;min-width:110px!important;padding:10px 18px!important;border-radius:12px!important;border:1px solid rgba(224,183,92,.72)!important;background:linear-gradient(180deg,#a97621,#5a3b15 58%,#35210b)!important;color:#f8e6b1!important;font:900 16px/1 Georgia,serif!important;letter-spacing:.06em!important;box-shadow:0 8px 18px rgba(0,0,0,.36), inset 0 1px rgba(255,234,189,.25)!important;cursor:pointer!important;}
-#pvpCopyCodeBtn:hover{filter:brightness(1.08)!important;box-shadow:0 0 0 2px rgba(235,198,107,.28)!important,0 8px 18px rgba(0,0,0,.36)!important;}
-#pvpCopyCodeBtn:focus-visible{outline:2px solid rgba(235,198,107,.92)!important;outline-offset:2px;}
-#pvpRoomPanel .pvp-room-artwrap{overflow:visible!important;}
-#pvpRoomPanel .hv-lobby-tuner-selected{outline:2px dashed rgba(235,198,107,.8)!important;outline-offset:2px;}
-.hv-lobby-tuner{position:fixed;left:16px;top:120px;z-index:10000;width:360px;max-width:calc(100vw - 24px);font-family:Georgia,serif;color:#f3dfb0}.hv-lobby-tuner.hidden{display:none!important}.hv-lobby-tuner-bar{display:flex;gap:6px;align-items:center}.hv-lobby-tuner-bar button{appearance:none;border:1px solid rgba(224,183,92,.55);background:linear-gradient(180deg,#8d651f,#4e3413 58%,#2b1c0b);color:#f6e7bf;font:900 16px/1 Georgia,serif;border-radius:999px;box-shadow:0 8px 18px rgba(0,0,0,.34), inset 0 1px rgba(255,235,184,.25);cursor:pointer}.hv-lobby-tuner-bar #hvLobbyTunerMove{width:54px;padding:10px 0}.hv-lobby-tuner-bar #hvLobbyTunerToggle{flex:1;padding:12px 16px}.hv-lobby-tuner-body{margin-top:8px;padding:12px;border-radius:20px;border:1px solid rgba(216,176,86,.55);background:linear-gradient(180deg,rgba(25,16,10,.97),rgba(10,9,7,.98));box-shadow:0 16px 34px rgba(0,0,0,.46), inset 0 1px rgba(255,224,149,.08)}.hv-lobby-tuner-body.hidden{display:none!important}.hv-lobby-tuner-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.hv-lobby-tuner-head strong{font:900 22px/1 Georgia,serif;color:#f1d68d}.hv-lobby-tuner-head button{appearance:none;border:1px solid rgba(224,183,92,.55);background:linear-gradient(180deg,#8d651f,#4e3413 58%,#2b1c0b);color:#fff2cf;font:900 24px/1 Georgia,serif;border-radius:12px;min-width:42px;min-height:42px;cursor:pointer}.hv-lobby-target-select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(216,176,86,.58);background:linear-gradient(180deg,#3b2815,#1a120d);color:#f6e7bf;font:800 16px/1.2 Georgia,serif}.hv-lobby-selected-name{margin:8px 0 10px;color:#e8c474;font:900 18px/1.2 Georgia,serif}.hv-lobby-help{margin-bottom:10px;padding:10px 12px;border:1px solid rgba(214,171,83,.26);border-radius:14px;background:rgba(255,210,120,.05);font:700 13px/1.35 Georgia,serif;color:#f1ddb0}.hv-lobby-control-row{margin-bottom:10px}.hv-lobby-control-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.hv-lobby-control-label b{font:800 16px/1 Georgia,serif}.hv-lobby-control-label output{color:#66d7ff;font:800 15px/1 Georgia,serif}.hv-lobby-control-line{display:flex;align-items:center;gap:8px}.hv-lobby-control-line button,.hv-lobby-tuner-actions button{appearance:none;border:1px solid rgba(224,183,92,.55);background:linear-gradient(180deg,#8d651f,#4e3413 58%,#2b1c0b);color:#fff2cf;font:900 18px/1 Georgia,serif;border-radius:12px;min-width:42px;min-height:42px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.28), inset 0 1px rgba(255,235,184,.25)}.hv-lobby-control-line input[type=range]{flex:1}.hv-lobby-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.hv-lobby-tuner-actions button{padding:12px 10px;font-size:15px}
+/* STAGE2 PVP LOBBY V3 · image keeps native 1672:941 proportions + direct editor */
+.online-modal-art.pvp-room-active{
+  width:min(1180px,96vw,calc(96vh * 1.776833)) !important;
+  aspect-ratio:1672 / 941 !important;
+}
+.online-modal-art.pvp-room-active .online-modal-base{opacity:0 !important;visibility:hidden !important;}
+.online-modal-art.pvp-room-active .visual-create,
+.online-modal-art.pvp-room-active .visual-input-wrap,
+.online-modal-art.pvp-room-active .visual-join,
+.online-modal-art.pvp-room-active .visual-back,
+.online-modal-art.pvp-room-active .visual-status{opacity:0!important;visibility:hidden!important;pointer-events:none!important;}
+.online-modal-art.pvp-room-active #pvpRoomPanel{
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  display:block !important;
+  overflow:visible !important;
+}
+.online-modal-art.pvp-room-active #pvpRoomPanel.hidden{display:none!important;}
+#pvpRoomPanel .pvp-room-artwrap{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;aspect-ratio:1672/941!important;overflow:visible!important;}
+#pvpRoomPanel .pvp-room-art{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;pointer-events:auto!important;user-select:none!important;}
+#pvpRoomPanel .pvp-room-code-line{position:absolute!important;left:46.2%!important;top:43.0%!important;transform:translateX(-50%)!important;display:flex!important;align-items:center!important;gap:18px!important;z-index:10!important;}
+#pvpRoomPanel #pvpRoomCode{color:#fff1bf!important;font:900 clamp(28px,3vw,48px)/1 Georgia,serif!important;letter-spacing:.16em!important;text-shadow:0 2px 12px rgba(0,0,0,.75)!important;}
+#pvpRoomPanel #pvpCopyCodeBtn{position:relative!important;left:auto!important;top:auto!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:112px!important;height:auto!important;padding:10px 18px!important;border-radius:11px!important;border:1px solid rgba(224,183,92,.76)!important;background:linear-gradient(180deg,#a97621,#5a3b15 58%,#35210b)!important;color:#f9e9ba!important;font:900 15px/1 Georgia,serif!important;letter-spacing:.04em!important;box-shadow:0 8px 18px rgba(0,0,0,.38),inset 0 1px rgba(255,234,189,.28)!important;cursor:pointer!important;z-index:12!important;}
+#pvpRoomPanel #pvpCopyCodeBtn:hover{filter:brightness(1.1)!important;}
+#pvpRoomPanel .pvp-room-player{position:absolute!important;width:28.7%!important;height:15.2%!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;z-index:10!important;}
+#pvpRoomPanel .pvp-room-player.player1{left:15.45%!important;top:52.5%!important;}
+#pvpRoomPanel .pvp-room-player.player2{left:55.9%!important;top:52.5%!important;}
+#pvpRoomPanel .pvp-room-player::before{display:none!important;}
+#pvpRoomPanel .pvp-room-player strong{position:absolute!important;left:7%!important;right:7%!important;top:43%!important;transform:translateY(-50%)!important;margin:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;color:#fff0bf!important;font:900 clamp(17px,1.55vw,29px)/1.05 Georgia,serif!important;text-shadow:0 2px 10px rgba(0,0,0,.75)!important;}
+#pvpRoomPanel .pvp-room-presence{position:absolute!important;right:8.5%!important;top:23.5%!important;width:14px!important;height:14px!important;border-radius:50%!important;display:block!important;border:1px solid rgba(255,255,255,.18)!important;z-index:12!important;}
+#pvpRoomPanel .pvp-room-presence.connected{background:radial-gradient(circle at 50% 35%,#c0f89b,#3c7d18 76%)!important;box-shadow:0 0 0 2px rgba(0,0,0,.18),0 0 12px rgba(112,218,73,.38)!important;}
+#pvpRoomPanel .pvp-room-presence.waiting{background:radial-gradient(circle at 50% 35%,#f2afaf,#891c1c 76%)!important;box-shadow:0 0 0 2px rgba(0,0,0,.18),0 0 12px rgba(227,76,76,.26)!important;}
+#pvpRoomPanel .pvp-room-ready-check{position:absolute!important;left:50%!important;bottom:7%!important;transform:translateX(-50%) scale(.72)!important;display:flex!important;align-items:center!important;justify-content:center!important;width:28px!important;height:28px!important;border-radius:50%!important;background:radial-gradient(circle at 50% 35%,#b8f693,#4a8e1f 76%)!important;color:#0f3100!important;font:900 18px/1 Georgia,serif!important;box-shadow:0 0 0 1px rgba(214,251,183,.4),0 0 14px rgba(120,209,62,.35)!important;opacity:0!important;z-index:13!important;}
+#pvpRoomPanel .pvp-room-ready-check.visible{opacity:1!important;transform:translateX(-50%) scale(1)!important;}
+#pvpRoomPanel #pvpReadyBtn,#pvpRoomPanel #pvpLeaveBtn{position:absolute!important;background:transparent!important;border:0!important;color:transparent!important;box-shadow:none!important;cursor:pointer!important;z-index:15!important;}
+#pvpRoomPanel #pvpReadyBtn{left:23.9%!important;top:79.4%!important;width:27.7%!important;height:11.1%!important;}
+#pvpRoomPanel #pvpLeaveBtn{left:53.15%!important;top:79.4%!important;width:25.9%!important;height:11.1%!important;}
+#pvpRoomPanel #pvpReadyBtn.is-ready{box-shadow:inset 0 0 0 3px rgba(132,225,78,.44),0 0 18px rgba(132,225,78,.22)!important;border-radius:15px!important;}
+#pvpRoomPanel .pvp-room-message{position:absolute!important;left:-99999px!important;}
 
-
-/* STAGE2 HOTFIX · lobby tuner visible + copy button clear */
-#pvpRoomPanel .pvp-room-code-line{left:44.4%!important;top:42.2%!important;gap:14px!important;}
-#pvpRoomPanel #pvpRoomCode{font-size:clamp(32px,3.35vw,50px)!important;letter-spacing:.18em!important;}
-#pvpRoomPanel #pvpCopyCodeBtn{left:60.2%!important;top:41.1%!important;min-width:116px!important;padding:10px 18px!important;z-index:20!important;}
-#pvpRoomPanel .pvp-room-player.player1{left:15.1%!important;top:53.2%!important;}
-#pvpRoomPanel .pvp-room-player.player2{left:56.0%!important;top:53.2%!important;}
-#pvpRoomPanel .pvp-room-player strong{top:47%!important;}
-#hvLobbyTuner{position:fixed!important;left:18px;top:90px;z-index:99999!important;width:370px;max-width:calc(100vw - 24px);display:block;}
-#hvLobbyTuner.hidden{display:none!important;}
-#hvLobbyTuner .hv-lobby-tuner-dock{display:flex;gap:6px;align-items:center;}
-#hvLobbyTuner .hv-lobby-tuner-dock button{appearance:none;border:1px solid rgba(224,183,92,.55);background:linear-gradient(180deg,#8d651f,#4e3413 58%,#2b1c0b);color:#f6e7bf;font:900 16px/1 Georgia,serif;border-radius:999px;box-shadow:0 8px 18px rgba(0,0,0,.34), inset 0 1px rgba(255,235,184,.25);cursor:pointer;}
-#hvLobbyTunerMove{width:54px;padding:10px 0!important;}
-#hvLobbyTunerToggle{flex:1;padding:12px 16px!important;}
-#hvLobbyTuner .hv-lobby-tuner-body{display:block;margin-top:8px;padding:12px;border-radius:20px;border:1px solid rgba(216,176,86,.55);background:linear-gradient(180deg,rgba(25,16,10,.97),rgba(10,9,7,.98));box-shadow:0 16px 34px rgba(0,0,0,.46), inset 0 1px rgba(255,224,149,.08);color:#f3dfb0;}
-#hvLobbyTuner .hv-lobby-tuner-body.hidden{display:none!important;}
-#hvLobbyTuner .hv-lobby-tuner-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
-#hvLobbyTuner .hv-lobby-tuner-head strong{font:900 22px/1 Georgia,serif;color:#f1d68d;}
-#hvLobbyTuner .hv-lobby-tuner-head button,#hvLobbyTuner .hv-lobby-control-line button,#hvLobbyTuner .hv-lobby-tuner-actions button{appearance:none;border:1px solid rgba(224,183,92,.55);background:linear-gradient(180deg,#8d651f,#4e3413 58%,#2b1c0b);color:#fff2cf;font:900 18px/1 Georgia,serif;border-radius:12px;min-width:42px;min-height:42px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.28), inset 0 1px rgba(255,235,184,.25)}
-#hvLobbyTuner .hv-lobby-target-select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(216,176,86,.58);background:linear-gradient(180deg,#3b2815,#1a120d);color:#f6e7bf;font:800 16px/1.2 Georgia,serif;}
-#hvLobbyTuner .hv-lobby-selected-name{margin:8px 0 10px;color:#e8c474;font:900 18px/1.2 Georgia,serif;}
-#hvLobbyTuner .hv-lobby-help{margin-bottom:10px;padding:10px 12px;border:1px solid rgba(214,171,83,.26);border-radius:14px;background:rgba(255,210,120,.05);font:700 13px/1.35 Georgia,serif;color:#f1ddb0;}
-#hvLobbyTuner .hv-lobby-control-row{margin-bottom:10px;}
-#hvLobbyTuner .hv-lobby-control-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-#hvLobbyTuner .hv-lobby-control-label b{font:800 16px/1 Georgia,serif;}
-#hvLobbyTuner .hv-lobby-control-label output{color:#66d7ff;font:800 15px/1 Georgia,serif;}
-#hvLobbyTuner .hv-lobby-control-line{display:flex;align-items:center;gap:8px;}
-#hvLobbyTuner .hv-lobby-control-line input[type=range]{flex:1;}
-#hvLobbyTuner .hv-lobby-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
-#hvLobbyTuner .hv-lobby-tuner-actions button{padding:12px 10px;font-size:15px;}
-@media(max-width:900px){#hvLobbyTuner{left:10px!important;top:80px!important;width:min(340px,calc(100vw - 14px));} #pvpRoomPanel #pvpCopyCodeBtn{min-width:84px!important;padding:7px 12px!important;font-size:12px!important;left:60.5%!important;top:41.7%!important;}}
+/* Editor: nunca cambia width/height reales. Los 5 controles son transformaciones, por eso 100% = exactamente el layout natural. */
+#pvpRoomPanel .hv-lobby-editable{
+  --hvLobbyX:0px;--hvLobbyY:0px;--hvLobbyS:1;--hvLobbySX:1;--hvLobbySY:1;
+  translate:var(--hvLobbyX) var(--hvLobbyY);
+  scale:calc(var(--hvLobbyS) * var(--hvLobbySX)) calc(var(--hvLobbyS) * var(--hvLobbySY));
+  transform-origin:center center!important;
+}
+body.hv-lobby-edit-mode #pvpRoomPanel .hv-lobby-editable{cursor:grab!important;user-select:none!important;}
+body.hv-lobby-edit-mode #pvpRoomPanel .hv-lobby-selected{outline:2px dashed rgba(255,221,122,.95)!important;outline-offset:3px!important;}
+.hv-lobby-tuner{position:fixed!important;left:16px;top:100px;z-index:100000!important;width:min(370px,calc(100vw - 24px));font-family:Georgia,serif;color:#f4dfb0;}
+.hv-lobby-tuner.hidden{display:none!important;}
+.hv-lobby-tuner-bar{display:flex;gap:7px;align-items:center;}
+.hv-lobby-tuner-bar button,.hv-lobby-tuner-body button{appearance:none;border:1px solid rgba(220,175,79,.58);background:linear-gradient(180deg,#8a621e,#4d3211 58%,#281a09);color:#fae9ba;box-shadow:0 7px 18px rgba(0,0,0,.36),inset 0 1px rgba(255,236,178,.25);cursor:pointer;font:900 14px/1 Georgia,serif;}
+#hvLobbyTunerMove{width:52px;height:44px;border-radius:50%!important;font-size:20px!important;}
+#hvLobbyToggle{flex:1;height:44px;border-radius:999px!important;}
+.hv-lobby-tuner-body{margin-top:8px;padding:12px;border:1px solid rgba(220,175,79,.48);border-radius:18px;background:linear-gradient(180deg,rgba(29,18,10,.985),rgba(10,8,6,.99));box-shadow:0 16px 40px rgba(0,0,0,.55);}
+.hv-lobby-tuner-body.hidden{display:none!important;}
+.hv-lobby-tuner-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
+.hv-lobby-tuner-head b{font:900 18px/1 Georgia,serif;color:#f3d17c;}
+#hvLobbyClose{width:38px;height:38px;border-radius:10px;font-size:22px;}
+.hv-lobby-target{width:100%;height:38px;padding:0 10px;border:1px solid rgba(220,175,79,.42);border-radius:10px;background:#181008;color:#ffecbd;font:800 13px Georgia,serif;}
+.hv-lobby-selected-name{margin:8px 0;color:#e7bf62;font:900 15px Georgia,serif;}
+.hv-lobby-help{margin-bottom:10px;padding:8px 9px;border:1px solid rgba(220,175,79,.18);border-radius:9px;background:rgba(255,222,133,.05);font:700 11px/1.35 Georgia,serif;color:#dcc89e;}
+.hv-lobby-control{margin-bottom:10px;}
+.hv-lobby-control>div:first-child{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.hv-lobby-control output{color:#65ddff;font-weight:900;}
+.hv-lobby-control-line{display:flex;align-items:center;gap:8px;}
+.hv-lobby-control-line input{flex:1;}
+.hv-lobby-control-line button{width:36px;height:34px;border-radius:9px;font-size:18px;}
+.hv-lobby-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
+.hv-lobby-actions button{min-height:38px;border-radius:9px;padding:7px;font-size:11px;}
+@media(max-width:900px){
+  .online-modal-art.pvp-room-active{width:min(980px,98vw,calc(94vh * 1.776833))!important;}
+  .hv-lobby-tuner{left:8px;top:76px;width:min(340px,calc(100vw - 16px));}
+  #pvpRoomPanel #pvpCopyCodeBtn{min-width:84px!important;padding:7px 11px!important;font-size:11px!important;}
+}
