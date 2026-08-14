@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · PvP Rebuild Step 6B · Fases y Turnos</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS">
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6C-HAND-HONOR">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6C-HAND-HONOR">
 <meta name="hallvalla-build-name" content="PVP REBUILD STEP6B · fases y cambio de turno sincronizados">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS-20260814B"/>
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6C-HAND-HONOR-20260814A"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -763,8 +763,8 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </section><section id="pvpStep6aCombatGate" class="pvp-step6a-combat-gate hidden" aria-live="polite" aria-label="Fases y cambio de turno del duelo PvP">
   <div class="pvp-step6a-card">
-    <div class="pvp-step6a-kicker">VS ONLINE · PASO 6B</div>
-    <h2>FASES SINCRONIZADAS</h2>
+    <div class="pvp-step6a-kicker">VS ONLINE · PASO 6C</div>
+    <h2>MANO Y HONOR SINCRONIZADOS</h2>
     <p id="pvpStep6aStatus" class="pvp-step6a-status">Esperando el estado oficial del duelo...</p>
     <div class="pvp-step6a-turn-row">
       <span>TURNO</span><strong id="pvpStep6aTurn">1</strong>
@@ -781,7 +781,16 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <span id="pvpStep6aStake">Apuesta: Gratis</span>
     </div>
     <div class="pvp-step6a-lock">FUENTE OFICIAL · FIREBASE</div>
-    <p class="pvp-step6a-note">En 6B solo se habilita el avance de fases y la entrega del turno al rival. Cartas, Honor, movimiento, ataques y efectos permanecen bloqueados.</p>
+    <p class="pvp-step6a-note">En 6C cada jugador recibe su mano privada de 4 cartas y su Honor canónico. El rival solo ve cantidades; las cartas del oponente siguen ocultas. Jugar cartas sobre el tablero, movimiento, ataques y efectos permanecen bloqueados hasta el siguiente bloque.</p>
+    <section class="pvp-step6c-resource-panel" aria-label="Mano y Honor privados">
+      <div class="pvp-step6c-resource-head">
+        <span>HONOR PROPIO <strong id="pvpStep6cOwnHonor">0/0</strong></span>
+        <span>MANO <strong id="pvpStep6cOwnHandCount">0</strong></span>
+        <span>MAZO <strong id="pvpStep6cOwnDeckCount">0</strong></span>
+      </div>
+      <div class="pvp-step6c-private-label">MANO PRIVADA · SOLO TÚ VES ESTAS CARTAS</div>
+      <div id="pvpStep6cHand" class="pvp-step6c-hand"><div class="pvp-step6c-hand-wait">Preparando mano privada...</div></div>
+    </section>
     <div class="pvp-step6b-controls">
       <button id="pvpStep6bAdvanceBtn" class="pvp-step6b-advance" type="button" disabled>SIGUIENTE FASE</button>
       <div id="pvpStep6bHint" class="pvp-step6b-hint">Esperando al jugador activo.</div>
@@ -1053,6 +1062,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6B-PHASES-TURNS-20260814B"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6C-HAND-HONOR-20260814A"></script>
 </body>
 </html>

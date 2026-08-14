@@ -1,0 +1,29 @@
+HALLVALLA · PVP REBUILD · PASO 6C
+Fecha: 2026-08-14
+
+BASE
+- Construido directamente sobre Paso 6B validado por el usuario.
+- Se conserva: lobby, reglas, LISTO, RPS, primero/segundo, entrada a arena, combate canónico, fases y entrega de turno.
+
+OBJETIVO 6C
+- Inicializar una mano privada real de 4 cartas por jugador.
+- El Personaje Principal se retira del mazo de robo antes de formar la mano.
+- Las claves de la mano/mazo permanecen SOLO en private/player1 o private/player2.
+- El rival recibe únicamente conteos públicos de mano, mazo y Honor.
+- Al entrar a Draw Phase se procesa Honor y robo de forma controlada:
+  * primer turno personal: no roba (ya inicia con 4 cartas), Honor 1/1;
+  * siguientes turnos: roba 2 cartas;
+  * la recarga de Honor sigue la progresión del motor existente y tope 10.
+- Tablero, colocación de cartas, movimiento, ataques, hechizos y efectos siguen bloqueados.
+
+PRUEBA MOCK J1/J2
+- Ambos privados se inicializan con mano 4 y mazo de robo 16 (21 - 1 Principal - 4 mano).
+- Ningún Principal aparece en mano.
+- No se publican claves de cartas en combatState.
+- J2 primer turno: mano 4, mazo 16, Honor 1/1.
+- Turno 2 J1: mano 4, Honor 1/1.
+- Turno 3 J2: roba 2 -> mano 6, mazo 14, Honor 2/2.
+- Conteos públicos sincronizados.
+
+FIREBASE RULES
+- SIN CAMBIOS respecto a Paso 6B.
