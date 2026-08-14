@@ -1,27 +1,29 @@
 "use strict";
 /*
 ===============================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6H · FIREBALL + QUEMADURA
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6I · DUELO COMPLETO
 -------------------------------------------------------------------------------
 Base estable conservada:
-- Paso 6G validado: motor real, perspectiva correcta, invocación, MOV, DEF y ATTK.
+- Paso 6H validado: motor real, perspectiva correcta, INVOCAR/MOV/DEF/ATTK, pasivos, Fireball, Quemadura y Splash Events.
 - Lobby, reglas, LISTO, Piedra/Papel/Tijera y orden de turno permanecen intactos.
 
-Objetivo de esta prueba:
-- conservar el motor real PvE como única lógica de combate;
-- habilitar Fireball usando el resolvedor real existente;
-- forzar Fireball en la mano inicial de ambos jugadores SOLO en este build de prueba;
-- validar daño inmediato, aplicación de Quemadura y sus ticks al final de turno;
-- mantener los pasivos del motor real funcionando normalmente;
-- mantener EFFECT activo de unidades, equipos, trampas y el resto de hechizos bloqueados
-  para no mezclar sistemas todavía.
+Objetivo de este paso:
+- abrir el duelo completo sobre el mismo motor real usado por PvE;
+- retirar los bloqueos temporales de cartas y EFFECT de los pasos de prueba;
+- permitir unidades, magias, equipos, trampas, pasivos, estados y efectos activos;
+- mantener manos privadas, Honor, fases, perspectiva local y sincronización Firebase;
+- permitir llegar a la condición normal de victoria/derrota del motor real.
 
-Fireball mantiene su coste y reglas reales. La mano inicial sigue siendo de 4 cartas.
-No crea una segunda arena ni una implementación PvP paralela de Quemadura.
+La inyección de Fireball del Paso 6H se retira: la mano inicial vuelve a salir del mazo guardado normal.
+El marcador interno pvpStep6fMode se conserva únicamente para mantener el commit multipath atómico ya validado;
+la bandera pvpFullDuelEnabled desactiva las limitaciones de prueba.
+
+Para la primera prueba integral se recomienda Apuesta=Gratis. La liquidación económica de apuestas
+no se considera validada en este paso. El Timer sí vuelve a usar el reloj real si el host lo activa.
 ===============================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP6H-FIREBALL-BURN";
+  const STEP="PVP-REBUILD-STEP6I-FULL-DUEL";
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
@@ -220,26 +222,9 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
     let handKeys=shuffled.slice(0,STEP6C_INITIAL_HAND);
     let deckKeys=shuffled.slice(STEP6C_INITIAL_HAND);
 
-    // PASO 6H · prueba controlada de magia persistente.
-    // Cada jugador recibe Fireball en la mano inicial para poder validar el mismo
-    // resolvedor del PvE (daño + Quemadura + tick al final del turno) sin depender
-    // del azar del shuffle. Si Fireball ya forma parte del mazo, solo se reordena;
-    // si no está, sustituye temporalmente la primera carta de la mano SOLO en este
-    // build de prueba, manteniendo 4 cartas en mano y 16 en mazo.
-    const fireballKey="fireball";
-    const handFireballIndex=handKeys.indexOf(fireballKey);
-    const deckFireballIndex=deckKeys.indexOf(fireballKey);
-    let testInjectedFireball=false;
-    if(handFireballIndex>0){
-      [handKeys[0],handKeys[handFireballIndex]]=[handKeys[handFireballIndex],handKeys[0]];
-    }else if(handFireballIndex<0&&deckFireballIndex>=0){
-      const displaced=handKeys[0];
-      handKeys[0]=fireballKey;
-      deckKeys[deckFireballIndex]=displaced;
-    }else if(handFireballIndex<0){
-      handKeys[0]=fireballKey;
-      testInjectedFireball=true;
-    }
+    // PASO 6I · mano inicial normal.
+    // Se elimina la inyección de Fireball usada únicamente para la prueba 6H.
+    // La mano vuelve a salir exclusivamente de las 20 cartas no-Principal del mazo guardado.
     return {
       schema:"hallvalla-pvp-private-step6d",
       matchCode:String(code||""),
@@ -256,8 +241,8 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
       lastTurnStarted:"",
       skipFirstTurnDraw:true,
       resourceSeq:0,
-      testOpeningFireball:true,
-      testInjectedFireball
+      testOpeningFireball:false,
+      testInjectedFireball:false
     };
   }
   function validatePrivateCombat6c(data,code,role){
@@ -962,7 +947,7 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
       };
       await withTimeout(update(ownRef,privatePatch),`Guardar estado privado del motor real J${activeRole}`,6000);
       await withTimeout(set(ref(db,`games/${code}/public/enginePrep/${activeRole}`),built.prep),`Publicar preparación visible J${activeRole}`,5000);
-      mark(`PASO 6F · J${activeRole} preparado para el motor real · mano privada 4 · mazo 16.`);
+      mark(`PASO 6I · J${activeRole} preparado para el duelo completo · mano privada 4 · mazo 16.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Preparación motor real J${activeRole} falló:`,error);
@@ -1003,12 +988,13 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
     const ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
     return {
       schema:"hallvalla-pvp-real-engine-step6f",
-      pvpRebuildStep:"6H_FIREBALL_BURN_TEST",
+      pvpRebuildStep:"6I_FULL_DUEL_UNLOCK",
       pvpStep6fMode:"unit_summon_only",
       pvpStep6gAttacks:true,
-      pvpStep6hMagicTest:true,
+      pvpStep6hMagicTest:false,
+      pvpFullDuelEnabled:true,
       pvpAtomicActionMode:"multipath_v1",
-      pvpTestClockSuspended:true,
+      pvpTestClockSuspended:false,
       pvpBridgeReadOnly:false,
       code:String(code||room?.code||""),
       boardRows:rows,
@@ -1029,7 +1015,7 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
         stakeMode:String(settings.stakeMode||"none"),
         goldAmount:Number(settings.goldAmount||500),
         cardEntryFee:500,
-        economyState:String(settings.stakeMode||"none")==="none"?"not_required":"deferred_until_full_combat"
+        economyState:String(settings.stakeMode||"none")==="none"?"not_required":"pending_economy_validation"
       },
       playerSlots:{player1Uid:String(room?.playerSlots?.player1Uid||""),player2Uid:String(room?.playerSlots?.player2Uid||"")},
       playerNames:{1:getPlayerName(room,1),2:getPlayerName(room,2)},
@@ -1047,15 +1033,15 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
       statusFxEvent:entryEffects.statusFxEvent||null,
       floatFxEvent:entryEffects.floatFxEvent||null,
       log:[
-        `PvP 6G: ambos jugadores están en el motor real de HallValla. J${startingRole} tiene el primer turno.`,
-        `Prueba 6G: MOV, DEF y ATTK usan la resolución real del PvE y se sincronizan por Firebase. EFFECT y cartas no-unidad siguen bloqueados.`,
+        `PvP 6I: duelo completo habilitado sobre el motor real de HallValla. J${startingRole} tiene el primer turno.`,
+        `MOV, DEF, ATTK, EFFECT, unidades, magias, equipos, trampas, pasivos y estados usan las rutas reales del motor y sincronizan por Firebase.`,
         ...(entryEffects.logs||[])
       ].slice(0,18)
     };
   }
 
   function isRealEngineState6e(room){
-    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true&&room.pvpStep6hMagicTest===true;
+    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true&&room.pvpFullDuelEnabled===true;
   }
 
   function clearRealEngineStartTimer6e(){
@@ -1086,12 +1072,12 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
           const banner=document.getElementById("pvpStep6eRealBadge")||document.createElement("div");
           banner.id="pvpStep6eRealBadge";
           banner.className="pvp-step6e-real-badge pvp-step6f-real-badge";
-          banner.textContent="PASO 6G · MOTOR REAL · MOV/DEF/ATTK SINCRONIZADOS";
+          banner.textContent="PASO 6I · DUELO COMPLETO · MOTOR REAL";
           document.body.appendChild(banner);
-          if(typeof setHint==="function") setHint("Paso 6H: MOV, DEF y ATTK siguen activos. Fireball está habilitado para probar daño + Quemadura persistente con el motor real. EFFECT, equipos y trampas siguen bloqueados.");
+          if(typeof setHint==="function") setHint("Paso 6I: duelo completo habilitado. MOV, DEF, ATTK, EFFECT, magias, equipos, trampas, pasivos y estados usan el motor real de HallValla.");
         }catch(_){ }
       },250);
-      mark(`PASO 6G · J${activeRole} entregado al motor real con MOV/DEF/ATTK y perspectiva local sur habilitadas.`);
+      mark(`PASO 6I · J${activeRole} entregado al duelo completo con perspectiva local sur y motor real habilitado.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Entrada al motor real falló:`,error);
@@ -1125,7 +1111,7 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
         const engine=buildRealEnginePublic6e(fresh,code);
         if(!engine) throw new Error("No se pudo construir el estado del motor real.");
         await withTimeout(set(publicRef,engine),`Entregar sala ${code} al motor real`,7000);
-        mark(`PASO 6G · motor real publicado para ${code} · MOV/DEF/ATTK quedarán habilitados.`);
+        mark(`PASO 6I · motor real publicado para ${code} · duelo completo habilitado.`);
       }catch(error){
         console.error(`[HallValla][${STEP}] Puente al motor real falló:`,error);
         mark(`Puente al motor real falló: ${error?.message||error}`);
@@ -1467,7 +1453,7 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6H: motor real con MOV/DEF/ATTK + Fireball/Quemadura; pasivos reales activos; EFFECT, equipos y trampas siguen bloqueados."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6I: duelo completo sobre el motor real; todas las rutas de combate PvE quedan abiertas para PvP."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1678,13 +1664,13 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
   globalThis.pvpRebuildStep5RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep5ChooseTurn=chooseTurnOrder;
   globalThis.__HALLVALLA_PVP_STEP6F_LIMITED__=function(){
-    try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6fMode==="unit_summon_only"&&publicState.phase==="active";}catch(_){return false;}
+    try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6fMode==="unit_summon_only"&&publicState.phase==="active"&&publicState.pvpFullDuelEnabled!==true;}catch(_){return false;}
   };
   globalThis.__HALLVALLA_PVP_STEP6G_ATTACKS__=function(){
     try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6gAttacks===true&&publicState.phase==="active";}catch(_){return false;}
   };
   globalThis.__HALLVALLA_PVP_STEP6H_MAGIC_TEST__=function(){
-    try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6hMagicTest===true&&publicState.phase==="active";}catch(_){return false;}
+    try{return false;}catch(_){return false;}
   };
 
   globalThis.pvpRebuildStep45Open=openCleanRoom;
@@ -1698,7 +1684,7 @@ No crea una segunda arena ni una implementación PvP paralela de Quemadura.
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
   globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6H-FIREBALL-BURN-TEST";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6I-FULL-DUEL-UNLOCK";
 
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);
