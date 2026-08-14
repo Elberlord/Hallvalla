@@ -1,28 +1,33 @@
 "use strict";
 /*
 ================================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 2
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 3
 ================================================================================
-Objetivo único de este paso:
-- conservar la creación limpia de J1 ya validada;
-- permitir que J2 escriba el código y reclame el slot player2Uid;
-- instalar UN listener público por sala para que ambos clientes detecten al rival;
-- mantener todo lo demás fuera del PvP hasta validar esta capa.
+Base validada:
+- Paso 1D: J1 crea una sala limpia sin congelar el navegador.
+- Paso 2: J2 se une y ambos clientes se detectan en el mismo lobby.
+
+Objetivo ÚNICO de este paso:
+- añadir LISTO sincronizado para J1 y J2;
+- cada jugador solo modifica su propio flag lobbyReady;
+- ambos clientes ven los checks de LISTO en tiempo real;
+- únicamente J1 cambia phase entre "waiting" y "ready" según ambos flags;
+- NO entrar todavía al combate.
 
 NO hace todavía:
-- construcción/sincronización del mazo;
-- líderes/unidades;
+- construcción/sincronización del mazo en Firebase;
+- líderes/unidades/Principales;
 - estado privado de combate;
-- LISTO;
 - entrada al combate;
 - lifecycle PvP completo;
-- acciones PvP.
+- acciones atómicas PvP;
+- GameState canónico de Etapa 6.
 
 Las reglas desplegadas de Firebase NO cambian en este paso.
 ================================================================================
 */
 (function(){
-  const STEP="PVP-REBUILD-STEP2";
+  const STEP="PVP-REBUILD-STEP3";
   const FIREBASE_TIMEOUT_MS=10000;
   let busy=false;
   let activeCode="";
@@ -30,6 +35,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   let activeRole=0;
   let roomUnsubscribe=null;
   let roomListenerToken=0;
+  let phaseWriteInFlight=false;
 
   function normalizeCode(value){
     return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8);
@@ -83,9 +89,10 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   }
 
   function syncLocalButtons(){
-    const create=$("createBtn"),join=$("joinBtn");
+    const create=$("createBtn"),join=$("joinBtn"),ready=$("pvpReadyBtn");
     if(create){create.disabled=busy;create.setAttribute("aria-disabled",busy?"true":"false");create.title=busy?"Operación PvP en curso...":"Crear partida";}
     if(join){join.disabled=busy;join.setAttribute("aria-disabled",busy?"true":"false");join.title=busy?"Operación PvP en curso...":"Unirse a sala";}
+    if(ready&&busy)ready.disabled=true;
   }
 
   async function ensureCleanRoomAuth(){
@@ -103,14 +110,11 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   }
 
   function getProfileNameSafe(role=1){
-    // Paso 2 sigue sin consultar perfil, líder ni estado de combate.
-    // Los nombres reales se añadirán después de validar la unión básica J1/J2.
+    // Paso 3 sigue sin consultar perfil, líder ni estado de combate.
     return Number(role)===2?"Jugador 2":"Jugador 1";
   }
 
   function getAdventureUnlockState(){
-    // VS Online se desbloquea con la primera victoria real de Aventura:
-    // derrotar al Hechicero guardián. No se usa selección de líder como puerta.
     try{
       if(typeof isTestPromoActive==="function"&&isTestPromoActive()){
         return {guardianDefeated:true,testOverride:true};
@@ -132,8 +136,6 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   }
 
   function getSavedOnlineDeckState(){
-    // En el primer desbloqueo el jugador debe llegar a Online con su mazo ya
-    // construido y guardado. Para un jugador nuevo: 20 robables + 1 Principal = 21.
     try{
       if(typeof isTestPromoActive==="function"&&isTestPromoActive()){
         return {valid:true,size:21,requiredSize:21,testOverride:true,errors:[]};
@@ -146,8 +148,6 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     }catch(_){ deck=[]; }
     if(!Array.isArray(deck))deck=[];
 
-    // El requisito inicial de HallValla es 21 cartas. Usamos el validador existente
-    // con un único Principal para respetar también límites de copias.
     let validation=null;
     try{
       if(typeof validateDeckList==="function")validation=validateDeckList(deck,1);
@@ -202,10 +202,23 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     node.classList.toggle("waiting",state!=="connected");
   }
 
+  function setReadyCheck(role,ready){
+    const check=$(role===2?"pvpRoomPlayer2Check":"pvpRoomPlayer1Check");
+    if(check)check.classList.toggle("visible",!!ready);
+  }
+
+  function getReadyFlag(room,role){
+    return room?.lobbyReady?.[role]===true||room?.lobbyReady?.[String(role)]===true;
+  }
+
   function renderRoomSnapshot(room,code=activeCode){
     room=room&&typeof room==="object"?room:{};
     const p1Uid=String(room?.playerSlots?.player1Uid||"");
     const p2Uid=String(room?.playerSlots?.player2Uid||"");
+    const p1Ready=!!p1Uid&&getReadyFlag(room,1);
+    const p2Ready=!!p2Uid&&getReadyFlag(room,2);
+    const bothPresent=!!p1Uid&&!!p2Uid;
+    const bothReady=bothPresent&&p1Ready&&p2Ready;
     const p1Name=String(room?.playerNames?.[1]||room?.playerNames?.["1"]||getProfileNameSafe(1));
     const p2Name=p2Uid?String(room?.playerNames?.[2]||room?.playerNames?.["2"]||getProfileNameSafe(2)):"Rival pendiente";
 
@@ -213,23 +226,88 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     setText("pvpRoomCode",code||room?.code||"----");
     setText("pvpRoomPlayer1Name",p1Name);
     setText("pvpRoomPlayer2Name",p2Name);
-    setText("pvpRoomPlayer1Ready",p1Uid?"Conectado":"Sin anfitrión");
-    setText("pvpRoomPlayer2Ready",p2Uid?"Conectado":"Esperando rival");
+    setText("pvpRoomPlayer1Ready",p1Uid?(p1Ready?"Listo":"No listo"):"Sin anfitrión");
+    setText("pvpRoomPlayer2Ready",p2Uid?(p2Ready?"Listo":"No listo"):"Sin rival");
     setPresence("pvpRoomPlayer1Presence",p1Uid?"connected":"waiting");
     setPresence("pvpRoomPlayer2Presence",p2Uid?"connected":"waiting");
-    setText("pvpRoomMessage",p2Uid?"PASO 2 correcto: J1 y J2 están en la misma sala.":"Sala creada. Esperando que J2 escriba el código.");
+    setReadyCheck(1,p1Ready);
+    setReadyCheck(2,p2Ready);
+
+    if(!p2Uid){
+      setText("pvpRoomMessage","Sala creada. Esperando rival.");
+    }else if(bothReady&&String(room?.phase||"")==="ready"){
+      setText("pvpRoomMessage","PASO 3 correcto: ambos jugadores están LISTOS y la sala está READY.");
+    }else if(bothReady){
+      setText("pvpRoomMessage","Ambos están LISTOS. Confirmando estado READY...");
+    }else{
+      setText("pvpRoomMessage","Paso 3: ambos jugadores deben marcar LISTO.");
+    }
 
     const input=$("joinCode");
     if(input){input.value=code||room?.code||"";input.readOnly=!!activeRole;}
 
+    const ownReady=activeRole===2?p2Ready:p1Ready;
     const readyBtn=$("pvpReadyBtn");
-    if(readyBtn){readyBtn.disabled=true;readyBtn.title="LISTO se añadirá únicamente después de validar J2.";}
+    if(readyBtn){
+      readyBtn.disabled=!bothPresent||!activeRole||busy;
+      readyBtn.classList.toggle("is-ready",!!ownReady);
+      readyBtn.setAttribute("aria-pressed",ownReady?"true":"false");
+      readyBtn.setAttribute("aria-label",ownReady?"Desmarcar listo":"Marcar listo");
+      readyBtn.title=!bothPresent?"Esperando rival":(ownReady?"Desmarcar LISTO":"Marcar LISTO");
+    }
+  }
+
+  async function reconcileRoomPhase(room,code){
+    // Solo el anfitrión es dueño de phase en el clean-room. Así evitamos que
+    // ambos clientes compitan por escribir el mismo campo al mismo tiempo.
+    if(activeRole!==1||phaseWriteInFlight||code!==activeCode)return;
+    const p1Uid=String(room?.playerSlots?.player1Uid||"");
+    const p2Uid=String(room?.playerSlots?.player2Uid||"");
+    if(!p1Uid)return;
+    const bothPresent=!!p2Uid;
+    const p1Ready=getReadyFlag(room,1);
+    const bothReady=bothPresent&&p1Ready&&getReadyFlag(room,2);
+    const desiredPhase=bothReady?"ready":"waiting";
+    const currentPhase=String(room?.phase||"waiting");
+
+    // Si el rival abandona, J1 retira también SU propio LISTO. De esta forma
+    // un rival nuevo nunca hereda una confirmación hecha contra el anterior.
+    if(!bothPresent&&p1Ready){
+      phaseWriteInFlight=true;
+      try{
+        await withTimeout(update(ref(db,`games/${code}/public`),{
+          "lobbyReady/1":false,
+          "phase":"waiting"
+        }),`Reiniciar LISTO de J1 tras salida del rival en ${code}`);
+        mark(`Rival ausente · LISTO de J1 reiniciado en ${code}.`);
+      }catch(error){
+        console.error(`[HallValla][${STEP}] No se pudo reiniciar LISTO de J1:`,error);
+        mark(`No se pudo reiniciar LISTO de J1: ${error?.message||error}`);
+      }finally{
+        phaseWriteInFlight=false;
+      }
+      return;
+    }
+
+    if(currentPhase===desiredPhase)return;
+
+    phaseWriteInFlight=true;
+    try{
+      await withTimeout(set(ref(db,`games/${code}/public/phase`),desiredPhase),`Sincronizar phase ${desiredPhase} en ${code}`);
+      mark(desiredPhase==="ready"?`PASO 3 · ambos LISTOS · sala ${code} está READY.`:`Sala ${code} volvió a WAITING.`);
+    }catch(error){
+      console.error(`[HallValla][${STEP}] No se pudo sincronizar phase:`,error);
+      mark(`No se pudo sincronizar phase: ${error?.message||error}`);
+    }finally{
+      phaseWriteInFlight=false;
+    }
   }
 
   function detachRoomListener(){
     roomListenerToken++;
     const off=roomUnsubscribe;
     roomUnsubscribe=null;
+    phaseWriteInFlight=false;
     if(typeof off==="function"){
       try{off();}catch(error){console.warn(`[HallValla][${STEP}] Error al retirar listener de sala:`,error);}
     }
@@ -245,12 +323,17 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
         setText("pvpRoomMessage","La sala ya no existe. El anfitrión pudo haber salido.");
         setText("pvpRoomPlayer2Name","Sala cerrada");
         setPresence("pvpRoomPlayer2Presence","waiting");
+        setReadyCheck(1,false);
+        setReadyCheck(2,false);
+        const readyBtn=$("pvpReadyBtn");
+        if(readyBtn){readyBtn.disabled=true;readyBtn.classList.remove("is-ready");}
         return;
       }
       const room=snapshot.val()||{};
       renderRoomSnapshot(room,code);
       const p2Uid=String(room?.playerSlots?.player2Uid||"");
-      if(p2Uid)mark(`PASO 2 · rival detectado en sala ${code}.`);
+      if(p2Uid)mark(`PASO 3 · J1 y J2 presentes en ${code} · LISTO sincronizado.`);
+      void reconcileRoomPhase(room,code);
     },error=>{
       if(token!==roomListenerToken||code!==activeCode)return;
       console.error(`[HallValla][${STEP}] Listener de sala rechazado:`,error);
@@ -266,23 +349,28 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     activeRole=0;
     syncLocalButtons();
     setRoomPanelVisible(false);
+    setReadyCheck(1,false);
+    setReadyCheck(2,false);
     const input=$("joinCode");
     if(input){input.readOnly=false;if(resetJoin)input.value="";}
     const readyBtn=$("pvpReadyBtn");
-    if(readyBtn){readyBtn.disabled=true;readyBtn.title="Paso 2: todavía no se usa LISTO.";}
+    if(readyBtn){
+      readyBtn.disabled=true;
+      readyBtn.classList.remove("is-ready");
+      readyBtn.setAttribute("aria-pressed","false");
+      readyBtn.setAttribute("aria-label","Marcar listo");
+      readyBtn.title="Esperando rival";
+    }
     syncLocalButtons();
   }
 
   async function openCleanRoom(){
-    // Única puerta de entrada al VS Online durante la reconstrucción. Todas las
-    // rutas terminan aquí, por lo que ninguna selección de líder legacy puede
-    // saltarse los requisitos de Aventura + mazo.
     if(!(await checkOnlineEntryRequirements()))return false;
     resetUi({resetJoin:true});
     $("mainMenu")?.classList.add("hidden");
     $("onlineLobby")?.classList.remove("hidden");
     $("gameShell")?.classList.add("hidden");
-    mark("CLEAN ROOM activo · Aventura superada + mazo de 21 validado · sin selector de líder, tutorial, lobby legacy ni tuner PvP.");
+    mark("CLEAN ROOM activo · Paso 3: presencia J1/J2 + LISTO sincronizado · sin combate ni PvP legacy.");
     syncLocalButtons();
     try{if(typeof syncBattleMusic==="function")syncBattleMusic();}catch(_){ }
     return true;
@@ -303,7 +391,6 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       activeOwnerUid=ownerUid;
       activeRole=1;
 
-      // Deliberadamente no se llaman makeDeck(), líderes, unidades, lifecycle ni helpers PvP legacy.
       const profileName=getProfileNameSafe(1);
       let lastError=null;
 
@@ -314,7 +401,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
 
         const publicRef=ref(db,`games/${code}/public`);
         const room={
-          schema:"hallvalla-pvp-rebuild-step2",
+          schema:"hallvalla-pvp-rebuild-step3",
           code,
           createdAt:Date.now(),
           phase:"waiting",
@@ -333,15 +420,13 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
             throw new Error("La sala guardada no pertenece al UID del creador.");
           }
 
-          await markAndPaint(`4/4 · J1 CORRECTO · sala ${code} creada y confirmada. Esperando J2.`);
+          await markAndPaint(`4/4 · J1 CORRECTO · sala ${code} creada. Esperando J2.`);
           renderRoomSnapshot(saved,code);
           attachRoomListener(code);
           return true;
         }catch(error){
           lastError=error;
           const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
-          // Una colisión con una sala existente puede producir permission_denied bajo las reglas actuales.
-          // Probamos un código nuevo, pero cualquier otro error se conserva para diagnóstico.
           if(denied&&attempt<4){
             await markAndPaint(`Código ${code} rechazado; probando otro código sin tocar reglas...`);
             continue;
@@ -354,11 +439,15 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       console.error(`[HallValla][${STEP}]`,error);
       const message=`CREAR SALA FALLÓ: ${error?.message||error}`;
       mark(message);
-      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 2");}catch(_){ }
+      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 3");}catch(_){ }
       return false;
     }finally{
       busy=false;
       syncLocalButtons();
+      try{
+        const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null;
+        if(roomSnap?.exists())renderRoomSnapshot(roomSnap.val()||{},activeCode);
+      }catch(_){ }
     }
   }
 
@@ -395,16 +484,17 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
 
       if(!currentJ2){
         await markAndPaint(`3/5 · reclamando slot de J2 en ${code}...`);
-        // La regla Firebase actual permite escribir player2Uid solo si está vacío
-        // (o si ya pertenece al mismo UID), por lo que otro J2 no puede pisarlo.
         await withTimeout(set(ref(db,`games/${code}/public/playerSlots/player2Uid`),joinUid),`Reclamar J2 en ${code}`);
         claimedNow=true;
       }else{
         await markAndPaint(`3/5 · el slot J2 ya pertenece a este usuario; reanudando...`);
       }
 
-      await markAndPaint(`4/5 · publicando presencia mínima de J2...`);
-      await withTimeout(set(ref(db,`games/${code}/public/playerNames/2`),getProfileNameSafe(2)),`Nombre J2 en ${code}`);
+      await markAndPaint(`4/5 · publicando presencia de J2 + ready=false...`);
+      await withTimeout(update(publicRef,{
+        "playerNames/2":getProfileNameSafe(2),
+        "lobbyReady/2":false
+      }),`Presencia J2 en ${code}`);
 
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`);
       if(!confirmSnap.exists())throw new Error("La sala desapareció durante la unión.");
@@ -418,7 +508,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       activeRole=2;
       renderRoomSnapshot(confirmed,code);
       attachRoomListener(code);
-      await markAndPaint(`5/5 · PASO 2 CORRECTO · J2 entró a ${code}. Ambos clientes deben verse.`);
+      await markAndPaint(`5/5 · J2 CORRECTO · ambos presentes. Paso 3 habilita LISTO.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Error al unir J2:`,error);
@@ -431,17 +521,62 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
       }
       const message=`UNIRSE FALLÓ: ${error?.message||error}`;
       mark(message);
-      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 2");}catch(_){ }
+      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 3");}catch(_){ }
       return false;
     }finally{
       busy=false;
       syncLocalButtons();
+      try{
+        const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null;
+        if(roomSnap?.exists())renderRoomSnapshot(roomSnap.val()||{},activeCode);
+      }catch(_){ }
     }
   }
 
-  async function readyNotEnabled(){
-    mark("PASO 2 no usa LISTO. Primero validamos que J1 y J2 se detecten de forma estable.");
-    return false;
+  async function toggleReady(){
+    if(busy){mark("Espera a que termine la operación PvP actual.");return false;}
+    const code=normalizeCode(activeCode);
+    const role=Number(activeRole);
+    const ownerUid=String(activeOwnerUid||"");
+    if(!code||!ownerUid||(role!==1&&role!==2)){
+      mark("LISTO no está disponible fuera de una sala activa.");
+      return false;
+    }
+
+    busy=true;
+    try{
+      syncLocalButtons();
+      const publicRef=ref(db,`games/${code}/public`);
+      await markAndPaint(`LISTO · J${role} comprobando sala ${code}...`);
+      const snapshot=await withTimeout(get(publicRef),`Leer LISTO en ${code}`);
+      if(!snapshot.exists())throw new Error("La sala ya no existe.");
+      const room=snapshot.val()||{};
+      const p1Uid=String(room?.playerSlots?.player1Uid||"");
+      const p2Uid=String(room?.playerSlots?.player2Uid||"");
+      if(!p1Uid||!p2Uid)throw new Error("LISTO se habilita cuando ambos jugadores están presentes.");
+      const slotUid=role===2?p2Uid:p1Uid;
+      if(slotUid!==ownerUid)throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
+
+      const current=getReadyFlag(room,role);
+      const next=!current;
+      await markAndPaint(`LISTO · J${role} → ${next?"LISTO":"NO LISTO"}...`);
+      await withTimeout(set(ref(db,`games/${code}/public/lobbyReady/${role}`),next),`Actualizar LISTO J${role} en ${code}`);
+      mark(`J${role} ${next?"está LISTO":"ya no está listo"}. Esperando sincronización del rival.`);
+      return true;
+    }catch(error){
+      console.error(`[HallValla][${STEP}] Error en LISTO:`,error);
+      const message=`LISTO FALLÓ: ${error?.message||error}`;
+      mark(message);
+      try{if(typeof hvAlert==="function")await hvAlert(message,"PvP reconstrucción · Paso 3");}catch(_){ }
+      return false;
+    }finally{
+      busy=false;
+      syncLocalButtons();
+      try{
+        const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null;
+        if(snapshot?.exists())renderRoomSnapshot(snapshot.val()||{},activeCode);
+      }catch(_){ }
+    }
   }
 
   async function copyCode(){
@@ -477,8 +612,6 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
         const publicRef=ref(db,`games/${code}/public`);
         const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`);
         if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid){
-          // Una sola escritura: mientras J2 todavía ocupa el slot, las reglas actuales
-          // le permiten limpiar su UID, nombre y ready provisional.
           await withTimeout(update(publicRef,{
             "playerSlots/player2Uid":null,
             "playerNames/2":"Esperando rival",
@@ -501,26 +634,25 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     void leaveRoom();
   }
 
-  // API explícita y separada del PvP legacy.
-  globalThis.pvpRebuildStep2Open=openCleanRoom;
-  globalThis.pvpRebuildStep2SyncButtons=syncLocalButtons;
-  globalThis.pvpRebuildStep2Create=createMinimalPublicRoom;
-  globalThis.pvpRebuildStep2Join=joinExistingRoom;
-  globalThis.pvpRebuildStep2Ready=readyNotEnabled;
-  globalThis.pvpRebuildStep2CopyCode=copyCode;
-  globalThis.pvpRebuildStep2Leave=leaveRoom;
-  globalThis.pvpRebuildStep2BackToMain=backToMain;
-  globalThis.pvpRebuildStep2ResetUi=resetUi;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="2-J1-J2-PRESENCE";
+  // API explícita del clean-room. Ningún módulo legacy participa en estos pasos.
+  globalThis.pvpRebuildStep3Open=openCleanRoom;
+  globalThis.pvpRebuildStep3SyncButtons=syncLocalButtons;
+  globalThis.pvpRebuildStep3Create=createMinimalPublicRoom;
+  globalThis.pvpRebuildStep3Join=joinExistingRoom;
+  globalThis.pvpRebuildStep3Ready=toggleReady;
+  globalThis.pvpRebuildStep3CopyCode=copyCode;
+  globalThis.pvpRebuildStep3Leave=leaveRoom;
+  globalThis.pvpRebuildStep3BackToMain=backToMain;
+  globalThis.pvpRebuildStep3ResetUi=resetUi;
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="3-READY-SYNC";
 
-  // Todos los eventos de entrada/lobby PvP viven aquí; ningún módulo compartido
-  // instala listeners sobre estos controles durante la reconstrucción.
+  // Todos los eventos del lobby PvP continúan viviendo exclusivamente aquí.
   on("onlineBtn","click",openCleanRoom);
   on("playBtn","click",openCleanRoom);
   on("backMenuFromLobby","click",backToMain);
   on("createBtn","click",createMinimalPublicRoom);
   on("joinBtn","click",joinExistingRoom);
-  on("pvpReadyBtn","click",readyNotEnabled);
+  on("pvpReadyBtn","click",toggleReady);
   on("pvpCopyCodeBtn","click",copyCode);
   on("pvpLeaveBtn","click",leaveRoom);
 
