@@ -2,6 +2,10 @@
   "rules": {
     "games": {
       "$gameId": {
+        "roomClaim": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && (newData.val() === auth.uid || !newData.exists())))"
+        },
         "public": {
           ".read": "auth != null",
           ".write": "auth != null && ((!data.exists() && newData.child('playerSlots').child('player1Uid').val() === auth.uid) || data.child('playerSlots').child('player1Uid').val() === auth.uid || data.child('playerSlots').child('player2Uid').val() === auth.uid)",

@@ -43,8 +43,32 @@ let pvpLobbyPublic=null;
 let pvpLobbyStartRequested=false;
 
 const PVP_ROOM_CREATE_MAX_ATTEMPTS=12;
+const PVP_LOBBY_FIREBASE_TIMEOUT_MS=12000;
 let pvpLobbyOperationSequence=0;
 let pvpLobbyOperation=null;
+function makePvpLobbyTimeoutError(label,timeoutMs=PVP_LOBBY_FIREBASE_TIMEOUT_MS){
+  const error=new Error(`${label} no respondió en ${Math.ceil(timeoutMs/1000)} s.`);
+  error.code="HALLVALLA_PVP_TIMEOUT";
+  return error;
+}
+function isPvpLobbyTimeoutError(error){return String(error?.code||"")==="HALLVALLA_PVP_TIMEOUT"}
+function awaitPvpFirebase(promise,label,timeoutMs=PVP_LOBBY_FIREBASE_TIMEOUT_MS){
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    const timer=setTimeout(()=>{
+      if(settled)return;
+      settled=true;
+      reject(makePvpLobbyTimeoutError(label,timeoutMs));
+    },timeoutMs);
+    Promise.resolve(promise).then(value=>{
+      if(settled)return;
+      settled=true;clearTimeout(timer);resolve(value);
+    },error=>{
+      if(settled)return;
+      settled=true;clearTimeout(timer);reject(error);
+    });
+  });
+}
 function setPvpLobbyOperationBusy(busy){
   globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=!!busy;
   if(typeof updateAuthActionButtons==="function")updateAuthActionButtons();
@@ -71,17 +95,70 @@ function cancelPvpLobbyOperation(reason="cancelled"){
   setPvpLobbyOperationBusy(false);
   return operation;
 }
+async function releasePvpRoomClaim(code,ownerUid){
+  const safeCode=normalizePvpRoomCode(code);
+  const safeUid=String(ownerUid||"");
+  if(!safeCode||!safeUid)return false;
+  const claimRef=ref(db,`games/${safeCode}/roomClaim`);
+  try{
+    const snap=await awaitPvpFirebase(get(claimRef),`Comprobar reserva ${safeCode}`,5000);
+    if(!snap.exists()||String(snap.val()||"")!==safeUid)return false;
+    await awaitPvpFirebase(remove(claimRef),`Liberar reserva ${safeCode}`,5000);
+    return true;
+  }catch(error){
+    console.warn("[HallValla] No se pudo liberar roomClaim:",safeCode,error);
+    return false;
+  }
+}
 async function reserveNewPvpPublicRoom(publicTemplate,operation){
   for(let attempt=1;attempt<=PVP_ROOM_CREATE_MAX_ATTEMPTS;attempt++){
     if(!isPvpLobbyOperationActive(operation))return null;
-    const code=makePvpRoomCode(6);
-    const candidate={...publicTemplate,code};
-    const publicRef=ref(db,`games/${code}/public`);
-    const claim=await runTransaction(publicRef,current=>{
-      if(current!==null&&typeof current!=="undefined")return undefined;
-      return candidate;
+    const code=makePvpRoomCode(8);
+    const claimRef=ref(db,`games/${code}/roomClaim`);
+    const claimPromise=runTransaction(claimRef,current=>{
+      if(current===null||current===""||String(current)===String(uid))return uid;
+      return undefined;
     },{applyLocally:false});
-    if(claim?.committed)return{code,publicState:candidate,attempt};
+    let claim;
+    try{
+      claim=await awaitPvpFirebase(claimPromise,`Reservar código PvP ${code}`);
+    }catch(error){
+      if(isPvpLobbyTimeoutError(error)){
+        // La transacción de Firebase no es cancelable. Si confirma tarde, retiramos el claim huérfano.
+        claimPromise.then(result=>{
+          if(result?.committed&&String(result.snapshot?.val()||"")===String(uid))void releasePvpRoomClaim(code,uid);
+        }).catch(()=>{});
+      }
+      throw error;
+    }
+    const claimOwned=!!claim?.committed&&String(claim.snapshot?.val()||"")===String(uid);
+    if(!claimOwned)continue;
+    if(!isPvpLobbyOperationActive(operation)){await releasePvpRoomClaim(code,uid);return null;}
+
+    const publicRef=ref(db,`games/${code}/public`);
+    let existing;
+    try{existing=await awaitPvpFirebase(get(publicRef),`Comprobar sala PvP ${code}`);}
+    catch(error){await releasePvpRoomClaim(code,uid);throw error;}
+    // Compatibilidad con salas antiguas que no tenían roomClaim. Nunca sobrescribir public existente.
+    if(existing.exists()){await releasePvpRoomClaim(code,uid);continue;}
+
+    const candidate={...publicTemplate,code};
+    const writePromise=set(publicRef,candidate);
+    try{
+      await awaitPvpFirebase(writePromise,`Crear sala PvP ${code}`);
+    }catch(error){
+      if(isPvpLobbyTimeoutError(error)){
+        // Si el set termina tarde, la sala todavía no fue expuesta al usuario; limpiarla.
+        writePromise.then(async()=>{
+          try{await remove(publicRef);}catch(_){}
+          await releasePvpRoomClaim(code,uid);
+        }).catch(()=>{});
+      }else{
+        await releasePvpRoomClaim(code,uid);
+      }
+      throw error;
+    }
+    return{code,publicState:candidate,attempt};
   }
   throw new Error(`No se pudo reservar un código único después de ${PVP_ROOM_CREATE_MAX_ATTEMPTS} intentos.`);
 }
@@ -113,11 +190,11 @@ async function resetPvpPlayer2Reservation(code,ownerUid,{baselinePublic=null,rem
   let released=false;
   try{
     const publicRef=ref(db,`games/${safeCode}/public`);
-    const result=await runTransaction(publicRef,current=>{
+    const result=await awaitPvpFirebase(runTransaction(publicRef,current=>{
       if(!current||String(current?.playerSlots?.player2Uid||"")!==safeUid)return undefined;
       if(current.phase&&current.phase!=="waiting")return undefined;
       return getResetPlayer2PublicState(current,baselinePublic);
-    },{applyLocally:false});
+    },{applyLocally:false}),`Liberar Jugador 2 de ${safeCode}`);
     released=!!result?.committed;
   }catch(error){
     console.warn("[HallValla] No se pudo liberar de forma transaccional el slot J2:",error);
@@ -134,13 +211,15 @@ async function rollbackCreatedPvpRoom(code,ownerUid){
   if(!safeCode||!safeUid)return false;
   try{
     const publicRef=ref(db,`games/${safeCode}/public`);
-    const result=await runTransaction(publicRef,current=>{
+    const result=await awaitPvpFirebase(runTransaction(publicRef,current=>{
       if(!current||String(current?.playerSlots?.player1Uid||"")!==safeUid)return undefined;
       if(current?.playerSlots?.player2Uid)return{...current,phase:"abandoned",lobbyReady:{...(current.lobbyReady||{}),1:false}};
       return null;
-    },{applyLocally:false});
+    },{applyLocally:false}),`Revertir sala PvP ${safeCode}`);
     const reverted=!!result?.committed;
+    const publicDeleted=reverted&&!result?.snapshot?.exists();
     if(reverted){try{await remove(getPvpPrivatePlayerRef(safeCode,1));}catch(error){console.warn("[HallValla] No se pudo retirar private/player1 durante rollback:",error);}}
+    if(publicDeleted)await releasePvpRoomClaim(safeCode,safeUid);
     return reverted;
   }catch(error){
     console.warn("[HallValla] No se pudo revertir completamente la creación de sala:",error);
@@ -814,7 +893,8 @@ async function createGame(){
     if(!reservation)return;
     reservedCode=reservation.code;
     if(!isPvpLobbyOperationActive(operation)){await rollbackCreatedPvpRoom(reservedCode,uid);return;}
-    await set(getPvpPrivatePlayerRef(reservedCode,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+    setText("lobbyStatus",`Sala ${reservedCode} reservada. Preparando tu estado privado...`);
+    await awaitPvpFirebase(set(getPvpPrivatePlayerRef(reservedCode,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys}),`Preparar Jugador 1 en ${reservedCode}`);
     if(!isPvpLobbyOperationActive(operation)){await rollbackCreatedPvpRoom(reservedCode,uid);return;}
     finishPvpLobbyOperation(operation);
     openPvpLobbyRoom(reservedCode,1);
@@ -823,7 +903,10 @@ async function createGame(){
     if(reservedCode)await rollbackCreatedPvpRoom(reservedCode,uid);
     if(isPvpLobbyOperationActive(operation)){
       const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
-      setText("lobbyStatus",denied?"Firebase rechazó la reserva. Publica las reglas database.rules.json de esta versión.":`No se pudo crear la sala: ${error?.message||error}`);
+      const timedOut=isPvpLobbyTimeoutError(error);
+      const message=denied?"Firebase rechazó la reserva. Publica las reglas database.rules.json de esta versión.":(timedOut?"Firebase no respondió a tiempo. La operación se canceló y los botones fueron liberados.":`No se pudo crear la sala: ${error?.message||error}`);
+      setText("lobbyStatus",message);
+      if(denied||timedOut)await hvAlert(message,denied?"Reglas Firebase requeridas":"Tiempo de espera PvP");
     }
   }finally{
     finishPvpLobbyOperation(operation);
@@ -853,7 +936,7 @@ async function joinGame(){
   try{
     setText("lobbyStatus",`Buscando sala ${code}...`);
     const publicRef=ref(db,`games/${code}/public`);
-    const snap=await get(publicRef);
+    const snap=await awaitPvpFirebase(get(publicRef),`Buscar sala PvP ${code}`);
     if(!isPvpLobbyOperationActive(operation))return;
     if(!snap.exists()){setText("lobbyStatus","No existe esa partida.");return;}
     let pub=snap.val();
@@ -863,14 +946,24 @@ async function joinGame(){
     rollbackBaseline=getResetPlayer2PublicState(pub,null);
     setText("lobbyStatus",`Reservando Jugador 2 en ${code}...`);
     const slotRef=ref(db,`games/${code}/public/playerSlots/player2Uid`);
-    const claim=await runTransaction(slotRef,current=>{
+    const claimPromise=runTransaction(slotRef,current=>{
       if(current===null||current===""||current===uid)return uid;
       return undefined;
     },{applyLocally:false});
+    let claim;
+    try{claim=await awaitPvpFirebase(claimPromise,`Reservar Jugador 2 en ${code}`);}
+    catch(error){
+      if(isPvpLobbyTimeoutError(error)){
+        claimPromise.then(result=>{
+          if(result?.committed&&String(result.snapshot?.val()||"")===String(uid))void resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});
+        }).catch(()=>{});
+      }
+      throw error;
+    }
     claimOwned=!!claim?.committed&&String(claim.snapshot?.val()||"")===String(uid);
     if(!claimOwned){setText("lobbyStatus","Otro jugador ocupó esta sala antes que tú.");return;}
     if(!isPvpLobbyOperationActive(operation)){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;return;}
-    const claimedSnap=await get(publicRef);
+    const claimedSnap=await awaitPvpFirebase(get(publicRef),`Confirmar reserva de Jugador 2 en ${code}`);
     if(!claimedSnap.exists()){
       await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;
       if(isPvpLobbyOperationActive(operation))setText("lobbyStatus","La sala desapareció durante la unión.");
@@ -889,9 +982,10 @@ async function joinGame(){
     const principalUnits=makeStartingPrincipalUnits(prep.principalCards,2,leaderType,units,principalSlots);units.push(...principalUnits);
     const entryEffects=applyStartingPrincipalEntryEffects(units);units=entryEffects.units;
     const names=principalUnits.map(u=>u.name).join(", ");
-    await set(getPvpPrivatePlayerRef(code,2),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys});
+    setText("lobbyStatus",`Jugador 2 reservado en ${code}. Preparando estado privado...`);
+    await awaitPvpFirebase(set(getPvpPrivatePlayerRef(code,2),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots,principalKeys:prep.principalKeys}),`Preparar Jugador 2 en ${code}`);
     if(!isPvpLobbyOperationActive(operation)){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;return;}
-    await update(publicRef,{"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"lobbyReady/2":false,"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[sanitizeSharedStealthText(`${profileName} entró a la sala con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Esperando confirmación LISTO.`,units),...(entryEffects.logs||[]).map(line=>sanitizeSharedStealthText(line,units)),...(pub.log||[])]});
+    await awaitPvpFirebase(update(publicRef,{"playerNames/2":profileName,"playerLeaders/2":leaderType,"playerLeaderLevels/2":leaderLevel,"playerLeaderAbilities/2":leaderAbility,"principalSlots/2":principalSlots,"principalKeys/2":prep.principalKeys,"lobbyReady/2":false,"playerClockMs/1":getStoredDuelClockMs(pub,1),"playerClockMs/2":getStoredDuelClockMs(pub,2),units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,"playerStats/2":{hp:leaderStats.hp,honor:0,maxHonor:0,deck:deck.length,hand:hand.length,hasHiddenUnits:countHiddenUnitCards([...deck,...hand])>0},log:[sanitizeSharedStealthText(`${profileName} entró a la sala con ${LEADER_DATA[leaderType].name} Nv. ${leaderLevel} (${getPrincipalTierSummary(leaderLevel)}). Principales: ${names}. Esperando confirmación LISTO.`,units),...(entryEffects.logs||[]).map(line=>sanitizeSharedStealthText(line,units)),...(pub.log||[])]}),`Publicar Jugador 2 en ${code}`);
     if(!isPvpLobbyOperationActive(operation)){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;return;}
     claimOwned=false;
     finishPvpLobbyOperation(operation);
@@ -901,7 +995,10 @@ async function joinGame(){
     if(claimOwned){await resetPvpPlayer2Reservation(code,uid,{baselinePublic:rollbackBaseline});claimOwned=false;}
     if(isPvpLobbyOperationActive(operation)){
       const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
-      setText("lobbyStatus",denied?"Firebase rechazó la entrada. Publica las reglas database.rules.json de esta versión.":`No se pudo entrar: ${error?.message||error}`);
+      const timedOut=isPvpLobbyTimeoutError(error);
+      const message=denied?"Firebase rechazó la entrada. Publica las reglas database.rules.json de esta versión.":(timedOut?"Firebase no respondió a tiempo. La entrada se canceló y el slot J2 se liberó.":`No se pudo entrar: ${error?.message||error}`);
+      setText("lobbyStatus",message);
+      if(denied||timedOut)await hvAlert(message,denied?"Reglas Firebase requeridas":"Tiempo de espera PvP");
     }
   }finally{
     finishPvpLobbyOperation(operation);
