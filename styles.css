@@ -20703,3 +20703,31 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 .pvp-step6a-lock{margin:5px auto 6px}
 .pvp-step6a-note{margin-bottom:7px;line-height:1.25}
 .pvp-step6b-controls{margin:7px auto 9px}
+
+/* ========================================================================== 
+   HALLVALLA · PVP REBUILD STEP 6D · PRIMERAS CARTAS JUGABLES
+   ========================================================================== */
+.pvp-step6c-card{position:relative;appearance:none;text-align:left;color:inherit;font:inherit;padding:0;cursor:default;}
+button.pvp-step6c-card{cursor:pointer;transition:transform .16s ease,filter .16s ease,opacity .16s ease,border-color .16s ease;}
+button.pvp-step6c-card:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08);border-color:rgba(224,182,90,.72);}
+button.pvp-step6c-card:disabled{cursor:default;opacity:.58;filter:saturate(.72);}
+.pvp-step6d-card-action{display:block;margin-top:2px;color:#c9ef98!important;font:900 8px/1 Georgia,serif!important;letter-spacing:.08em;text-transform:uppercase;}
+button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;}
+.pvp-step6d-play-hint{margin-top:6px;text-align:center;color:#d5c29b;font:800 10px/1.25 Georgia,serif;text-shadow:0 2px 7px rgba(0,0,0,.65);}
+.pvp-step6d-played-panel{width:min(760px,94%);margin:7px auto 2px;padding:9px 11px 10px;border-radius:15px;border:1px solid rgba(201,150,63,.28);background:linear-gradient(180deg,rgba(24,18,13,.7),rgba(10,8,6,.8));box-shadow:inset 0 0 0 1px rgba(255,227,160,.03);}
+.pvp-step6d-played-title{text-align:center;color:#e2c777;font:900 10px/1.1 Georgia,serif;letter-spacing:.13em;margin-bottom:8px;}
+.pvp-step6d-played-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.pvp-step6d-played-grid>article{min-width:0;padding:7px 8px 8px;border-radius:12px;border:1px solid rgba(197,151,66,.18);background:rgba(62,40,19,.25);}
+.pvp-step6d-played-grid>article>span{display:block;text-align:center;color:#aa8b4e;font:900 9px/1 Georgia,serif;letter-spacing:.1em;margin-bottom:6px;}
+.pvp-step6d-played-list{display:flex;gap:6px;overflow-x:auto;min-height:54px;align-items:center;scrollbar-width:thin;}
+.pvp-step6d-played-list>em{width:100%;text-align:center;color:#887b65;font:700 9px/1.2 Georgia,serif;}
+.pvp-step6d-played-card{flex:0 0 84px;min-height:50px;border-radius:9px;overflow:hidden;border:1px solid rgba(209,165,76,.3);background:rgba(38,27,17,.86);box-shadow:0 5px 12px rgba(0,0,0,.24);}
+.pvp-step6d-played-card img{width:100%;height:36px;display:block;object-fit:cover;object-position:center 25%;background:#0c0a08;}
+.pvp-step6d-played-card div{padding:5px 5px 6px;display:flex;flex-direction:column;gap:3px;}
+.pvp-step6d-played-card strong{color:#f0daa5;font:900 8px/1.05 Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pvp-step6d-played-card small{color:#b79d6f;font:800 7px/1 Georgia,serif;}
+.pvp-step6d-played-note{text-align:center;margin-top:7px;color:#9f9075;font:700 9px/1.2 Georgia,serif;}
+@media (max-width:800px){
+  .pvp-step6d-played-grid{grid-template-columns:1fr;}
+  .pvp-step6d-played-panel{width:96%;}
+}

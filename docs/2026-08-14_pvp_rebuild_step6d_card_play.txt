@@ -1,0 +1,27 @@
+HALLVALLA · PVP REBUILD · STEP 6D · PRIMERAS CARTAS JUGABLES
+Fecha: 2026-08-14
+
+Base validada por usuario:
+- 6A: inicio canónico del combate.
+- 6B: fases y cambio de turno sincronizados.
+- 6C: mano privada + mazo + Honor sincronizados.
+
+Objetivo de 6D:
+- permitir jugar cartas desde la mano durante Main Phase y Action Phase;
+- validar que solo el jugador activo pueda jugar;
+- validar Honor suficiente;
+- descontar Honor y retirar la carta de la mano en una única actualización multipath de Firebase;
+- revelar al rival únicamente la carta ya jugada;
+- sincronizar los contadores públicos de mano/Honor;
+- mostrar una zona pública de cartas jugadas para ambos jugadores;
+- NO resolver todavía efectos, objetivos, posición en tablero, invocaciones, movimiento ni ataques.
+
+Privacidad:
+- las cartas que permanecen en mano/mazo continúan exclusivamente en private/player1 o private/player2;
+- public/combatState únicamente recibe las cartas después de ser jugadas.
+
+Economía/apuestas:
+- sigue diferida; 6D no cobra ni transfiere oro/cartas apostadas.
+
+Firebase Rules:
+- SIN CAMBIOS respecto de 6C.
