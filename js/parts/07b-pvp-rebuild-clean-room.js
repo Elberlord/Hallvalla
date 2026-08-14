@@ -1,7 +1,7 @@
 "use strict";
 /*
 ================================================================================
-HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 1
+HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 1C
 ================================================================================
 Objetivo único de este paso:
 - aislar por completo el click "Crear partida" del flujo PvP legacy;
@@ -107,6 +107,86 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     return "Jugador 1";
   }
 
+  function getAdventureUnlockState(){
+    // VS Online se desbloquea con la primera victoria real de Aventura:
+    // derrotar al Hechicero guardián. No se usa selección de líder como puerta.
+    try{
+      if(typeof isTestPromoActive==="function"&&isTestPromoActive()){
+        return {guardianDefeated:true,testOverride:true};
+      }
+    }catch(_){ }
+    try{
+      if(typeof getAdventureProgress==="function"){
+        const progress=getAdventureProgress()||{};
+        return {guardianDefeated:progress.guardianDefeated===true,testOverride:false};
+      }
+    }catch(_){ }
+    try{
+      const key=typeof ADVENTURE_PROGRESS_KEY!=="undefined"?ADVENTURE_PROGRESS_KEY:"hallvalla_adventure_progress";
+      const progress=JSON.parse(localStorage.getItem(key)||"null")||{};
+      return {guardianDefeated:progress.guardianDefeated===true,testOverride:false};
+    }catch(_){
+      return {guardianDefeated:false,testOverride:false};
+    }
+  }
+
+  function getSavedOnlineDeckState(){
+    // En el primer desbloqueo el jugador debe llegar a Online con su mazo ya
+    // construido y guardado. Para un jugador nuevo: 20 robables + 1 Principal = 21.
+    try{
+      if(typeof isTestPromoActive==="function"&&isTestPromoActive()){
+        return {valid:true,size:21,requiredSize:21,testOverride:true,errors:[]};
+      }
+    }catch(_){ }
+
+    let deck=[];
+    try{
+      deck=typeof getSavedDeck==="function"?(getSavedDeck()||[]):JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");
+    }catch(_){ deck=[]; }
+    if(!Array.isArray(deck))deck=[];
+
+    // El requisito inicial de HallValla es 21 cartas. Usamos el validador existente
+    // con un único Principal para respetar también límites de copias.
+    let validation=null;
+    try{
+      if(typeof validateDeckList==="function")validation=validateDeckList(deck,1);
+    }catch(_){ validation=null; }
+    const valid=validation?validation.valid===true:deck.length===21;
+    return {
+      valid,
+      size:deck.length,
+      requiredSize:21,
+      testOverride:false,
+      errors:Array.isArray(validation?.errors)?validation.errors:[]
+    };
+  }
+
+  async function checkOnlineEntryRequirements(){
+    const adventure=getAdventureUnlockState();
+    if(!adventure.guardianDefeated){
+      const message="Antes de competir en VS Online debes ganar primero el combate inicial del Modo Aventura contra el Hechicero guardián. Al derrotarlo se desbloquea la Forja para que armes y guardes tu primer mazo de 21 cartas. Después podrás entrar a VS Online.";
+      mark("VS Online bloqueado · falta derrotar al Hechicero guardián en Aventura.");
+      try{
+        if(typeof hvAlert==="function")await hvAlert(message,"VS ONLINE BLOQUEADO");
+        else alert(message);
+      }catch(_){ }
+      return false;
+    }
+
+    const deck=getSavedOnlineDeckState();
+    if(!deck.valid){
+      const detail=deck.size?`Tu mazo guardado tiene ${deck.size}/21 cartas.`:"Todavía no tienes un mazo guardado.";
+      const message=`Ya derrotaste al Hechicero guardián. Ahora debes armar y GUARDAR un mazo válido de 21 cartas en la Forja antes de competir en VS Online. ${detail}`;
+      mark(`VS Online bloqueado · mazo inválido ${deck.size}/21.`);
+      try{
+        if(typeof hvAlert==="function")await hvAlert(message,"ARMA TU MAZO DE 21 CARTAS");
+        else alert(message);
+      }catch(_){ }
+      return false;
+    }
+    return true;
+  }
+
   function setRoomPanelVisible(visible){
     const panel=$("pvpRoomPanel");
     const art=document.querySelector("#onlineLobby .online-modal-art");
@@ -144,12 +224,16 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
     syncLocalButtons();
   }
 
-  function openCleanRoom(){
+  async function openCleanRoom(){
+    // Única puerta de entrada al VS Online durante la reconstrucción. Todas las
+    // rutas terminan aquí, por lo que ninguna selección de líder legacy puede
+    // saltarse los requisitos de Aventura + mazo.
+    if(!(await checkOnlineEntryRequirements()))return false;
     resetUi({resetJoin:true});
     $("mainMenu")?.classList.add("hidden");
     $("onlineLobby")?.classList.remove("hidden");
     $("gameShell")?.classList.add("hidden");
-    mark("CLEAN ROOM activo · sin líder, tutorial, lobby legacy ni tuner PvP.");
+    mark("CLEAN ROOM activo · Aventura superada + mazo de 21 validado · sin selector de líder, tutorial, lobby legacy ni tuner PvP.");
     syncLocalButtons();
     try{if(typeof syncBattleMusic==="function")syncBattleMusic();}catch(_){ }
     return true;
@@ -290,7 +374,7 @@ Las reglas desplegadas de Firebase NO cambian en este paso.
   globalThis.pvpRebuildStep1Leave=leaveRoom;
   globalThis.pvpRebuildStep1BackToMain=backToMain;
   globalThis.pvpRebuildStep1ResetUi=resetUi;
-  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="1B-HARD-ISOLATION";
+  globalThis.__HALLVALLA_PVP_REBUILD_STEP__="1C-ADVENTURE-DECK-GATE";
 
   try{
     globalThis.__HALLVALLA_PVP_LOBBY_BUSY__=false;

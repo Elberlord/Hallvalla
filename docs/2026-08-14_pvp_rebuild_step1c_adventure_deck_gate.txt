@@ -1,0 +1,36 @@
+HALLVALLA · PVP REBUILD STEP 1C · ADVENTURE + DECK GATE
+Fecha: 2026-08-14
+
+Objetivo
+- Un jugador nuevo NO entra a VS Online mediante selección de líder.
+- Primero debe derrotar al Hechicero guardián del Modo Aventura.
+- Esa victoria ya es el desbloqueo existente de la Forja/mazos.
+- Después debe armar y GUARDAR un mazo válido de 21 cartas antes de entrar a VS Online.
+
+Comportamiento
+1. Sin victoria contra el Hechicero guardián:
+   VS Online permanece en Home y muestra un aviso que indica que debe ganar primero
+   el combate inicial de Aventura.
+2. Guardián derrotado pero sin mazo válido guardado:
+   VS Online permanece en Home y pide armar/guardar un mazo válido de 21 cartas.
+3. Guardián derrotado + mazo válido de 21:
+   entra al clean-room PvP Paso 1C directamente, sin selector de líder ni tutorial.
+
+Implementación
+- La puerta se centralizó dentro de pvpRebuildStep1Open().
+- Todas las rutas Online ya terminaban en ese punto durante HARD ISOLATION, por lo
+  que no se reintroducen rutas legacy.
+- Progreso: getAdventureProgress().guardianDefeated (con fallback a localStorage).
+- Mazo: getSavedDeck() + validateDeckList(deck, 1), requisito inicial 21 cartas.
+
+Firebase Rules
+- SIN CAMBIOS.
+- database.rules.json permanece intacto.
+
+No se añadió todavía
+- J2 / Unirse.
+- LISTO.
+- estado privado.
+- entrada al combate.
+- lifecycle PvP.
+- atomicidad/fuente de verdad de etapas posteriores.
