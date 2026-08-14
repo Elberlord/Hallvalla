@@ -1,0 +1,27 @@
+HALLVALLA · PVP REBUILD · PASO 5 · ENTRADA SINCRONIZADA AL DUELO
+Fecha: 2026-08-14
+
+BASE:
+- Construido directamente sobre PVP REBUILD STEP 4.5F, validado por el usuario.
+- Se conserva sin cambios funcionales el flujo: reglas del host -> LISTO -> Piedra/Papel/Tijera -> ganador elige PRIMERO/SEGUNDO -> desenlace individual.
+
+OBJETIVO DE ESTE PASO:
+- Después del desenlace de PRIMERO/SEGUNDO, dejarlo visible aproximadamente 2.4 segundos.
+- J1 publica un único arenaBootstrap dentro de games/<code>/public.
+- Ambos clientes leen el mismo arenaBootstrap y entran al gameShell del duelo.
+- Se muestra una compuerta de validación sobre el fondo real de la arena con código, J1/J2, orden de turno y reglas.
+
+ESTADO DEL COMBATE:
+- arenaBootstrap.status = ready
+- turn = 1
+- turnPhase = prebattle
+- combatEnabled = false
+- NO se activan todavía cartas, Honor, fases, movimiento, casteos, efectos ni lógica antigua de combate.
+- El coste de 500 oro de una apuesta de carta NO se cobra todavía: se cobrará cuando el combate sea activado realmente, no en este bootstrap de prebattle.
+
+SALIDA / DESCONEXIÓN:
+- Si J2 sale durante esta prueba, se limpia arenaBootstrap, RPS/startConfig y LISTO, y J1 vuelve a waiting.
+- Si J1 sale, la sala se cierra como en los pasos anteriores.
+
+FIREBASE RULES:
+- SIN CAMBIOS respecto al Step 4.5F.
