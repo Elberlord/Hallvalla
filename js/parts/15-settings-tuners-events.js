@@ -811,7 +811,6 @@ on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
 on("showStatsTutorialBtn","click",()=>showStatsTutorial({force:true}));
 on("startBasicTutorialFromSettingsBtn","click",()=>{const p=$("settingsPanel");if(p)p.classList.add("hidden");startBasicTutorialBattle();});
-on("basicTutorialHomeBtn","click",()=>startBasicTutorialBattle());
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
