@@ -838,7 +838,7 @@ on("forgeBtn","click",()=>showComingSoon("Forja"));
 on("storeBtn","click",openPackShop);
 on("eventsBtn","click",openHallvallaEvents);
 on("clansBtn","click",()=>showComingSoon("Clanes"));
-on("rankingBtn","click",()=>showComingSoon("Ranking"));
+on("rankingBtn","click",()=>{if(typeof globalThis.hvPvpRankingOpen==="function"){void globalThis.hvPvpRankingOpen();}else{showComingSoon("Ranking");}});
 on("profileBtn","click",openProfilePanel);
 on("friendsBtn","click",()=>showComingSoon("Amigos"));
 on("goldPlusBtn","click",()=>showComingSoon("Conseguir oro"));
