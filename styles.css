@@ -16785,6 +16785,11 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .profile-promo-input{min-width:0}
 .profile-promo-status{display:block;margin-top:10px;color:#c9c3ff;line-height:1.4}
 .profile-promo-status.active{color:#8bffb8;font-weight:800}
+/* Herramienta exclusivamente interna: oculta por defecto para evitar cualquier destello en usuarios normales. */
+.profile-promo-box[data-hv-dev-tool]{display:none!important}
+html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!important}
+.profile-promo-box--dev-compact{margin:10px 0 6px;padding:10px 12px}
+.profile-promo-box--dev-compact .profile-promo-status{margin-top:6px;font-size:11px}
 @media(max-width:620px){.profile-promo-controls{grid-template-columns:1fr}.profile-promo-controls .btn{width:100%}}
 
 
