@@ -15,7 +15,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     portrait:"assets/leaders/lightning_dragon_leader.webp",
     boardPortrait:"assets/board_cards/beasts/adult_lightning_dragon.webp",
     hp:40,guard:16,atk:20,precision:14,evasion:12,naturalMov:4,range:5,
-    xp:360,gold:120,
+    xp:720,gold:120,
     directName:"Rayo concentrado",
     areaName:"Tormenta dirigida",
     desc:"El más veloz y evasivo de los tres. Su tercer ataque abre una descarga 3×3 que se propaga primero hacia los lados y luego detrás del objetivo."
@@ -29,7 +29,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     portrait:"assets/leaders/fire_dragon_leader.webp",
     boardPortrait:"assets/board_cards/beasts/adult_fire_dragon.webp",
     hp:48,guard:20,atk:24,precision:12,evasion:10,naturalMov:3,range:5,
-    xp:480,gold:160,
+    xp:960,gold:160,
     directName:"Aliento abrasador",
     areaName:"Erupción ígnea",
     desc:"El más destructivo. Combina el mayor Ataque con Quemadura y una explosión elemental 3×3 centrada en su presa."
@@ -43,7 +43,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     portrait:"assets/leaders/ice_dragon_leader.webp",
     boardPortrait:"assets/board_cards/beasts/adult_ice_dragon.webp",
     hp:56,guard:24,atk:18,precision:10,evasion:8,naturalMov:2,range:5,
-    xp:640,gold:220,
+    xp:1280,gold:220,
     directName:"Lanza glacial",
     areaName:"Estallido glacial",
     desc:"El más resistente. Su Escarcha reduce movimiento y agilidad; una segunda aplicación provoca Congelación."
