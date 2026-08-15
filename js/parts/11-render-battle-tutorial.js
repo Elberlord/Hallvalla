@@ -995,7 +995,15 @@ function applyBasicTutorialTarget(step){
   positionBasicTutorialCoach(step,el);
 }
 function isBasicTutorialDrawComplete(){return !!(privateState&&publicState&&privateState.lastTurnStarted===publicState.turnKey&&getTurnPhase()==="main"&&(privateState.hand||[]).length>=2);}
-function basicTutorialSpellWasPlayed(){const target=getBasicTutorialEnemyUnit();return !!target&&!(privateState?.hand||[]).some(c=>c?.key==="bolt")&&Number(target.hp)<8;}
+function basicTutorialSpellWasPlayed(){
+  // La carta solo sale de la mano cuando commitCardPlay confirma la jugada.
+  // Para el tutorial, eso es la señal fiable de que la magia ya se lanzó.
+  // Usamos también el contador público porque su listener puede llegar antes que
+  // el estado privado; así la guía no queda atrapada en 5/9 por una carrera de Firebase.
+  const privateCardGone=Array.isArray(privateState?.hand)&&!privateState.hand.some(c=>c?.key==="bolt");
+  const publicHandEmpty=Number(publicState?.playerStats?.[myPlayer]?.hand??-1)===0;
+  return privateCardGone||publicHandEmpty;
+}
 const BASIC_TUTORIAL_STEPS=[
   {id:"turn-start",manual:true,title:"Inicio del turno",body:"Tu turno empieza en Robo. Después entra a Main, donde puedes jugar cartas.",hint:"Pulsa Comenzar para ver el robo real.",button:"Comenzar",targetResolver:()=>$("phaseBanner")||$("p1Badge")},
   {id:"draw",manual:true,title:"Robo",body:"Al iniciar, robas 2 cartas. También aumenta tu recurso máximo y se recarga Honor o Mana. El juego lo hace automáticamente.",hint:"Espera a que aparezcan las 2 cartas.",button:"Continuar",canContinue:()=>isBasicTutorialDrawComplete(),targetResolver:()=>$("p1Deck")||$("handBtn")},
