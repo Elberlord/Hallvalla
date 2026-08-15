@@ -434,9 +434,21 @@ function openUnitContextMenu(u,x,y){
     setHint(u.leader?`${u.name}: Base fija. Puede usar DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET, pero no MOV.`:`${u.name}: elige MOV, DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET desde la estrella táctica.`);
   }
 }
+const hallvallaUnitContextDelegatedMenus=new WeakSet();
+function ensureUnitContextMenuDelegation(menu){
+  if(!menu||hallvallaUnitContextDelegatedMenus.has(menu))return;
+  hallvallaUnitContextDelegatedMenus.add(menu);
+  menu.addEventListener("click",ev=>{
+    const btn=ev.target&&ev.target.closest?ev.target.closest(".unit-context-btn[data-action]"):null;
+    if(!btn||!menu.contains(btn))return;
+    ev.stopPropagation();
+    handleUnitContextAction(btn.dataset.action);
+  });
+}
 function renderUnitContextMenu(){
   const menu=$("unitContextMenu");
   if(!menu)return;
+  ensureUnitContextMenuDelegation(menu);
   if(!unitContextSelection||!publicState){menu.classList.add("hidden");return;}
   const u=getUnit(unitContextSelection.unitId);
   if(!u){menu.classList.add("hidden");return;}
@@ -456,16 +468,17 @@ function renderUnitContextMenu(){
   const guardLabel=stealthMasked?"?":displayEffectiveGuard(u);
   const contextName=stealthMasked?"Unidad con Sigilo":(u.name||"Invocación");
   const contextSub=stealthMasked?`Presencia Oculta · J${u.owner}`:`${u.leader?"Líder":"Invocación"} · J${u.owner}`;
-  menu.innerHTML=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait ${stealthMasked?"is-stealthed":""}">${portraitHtml}</div><div class="unit-context-mini-stats ${stealthMasked?"is-stealthed":""}"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(contextName)}</div><div class="unit-context-sub">${escapeHtml(contextSub)}</div></div>${options.map(o=>{
+  const markup=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait ${stealthMasked?"is-stealthed":""}">${portraitHtml}</div><div class="unit-context-mini-stats ${stealthMasked?"is-stealthed":""}"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(contextName)}</div><div class="unit-context-sub">${escapeHtml(contextSub)}</div></div>${options.map(o=>{
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const mulanExecChoice=isMulanExecutionChoiceReady(u);
     const disabled=(o.key==="mov"&&(!canMove||(!mulanExecMove&&(u.moved||u.acted))))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted||mulanExecChoice||mulanExecMove))||(o.key==="def"&&(!canAction||(!mulanExecChoice&&u.acted)||u.defenseModeReady||mulanExecMove||(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)));
     return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
   }).join("")}</div>`;
+  if(menu.__hvContextMarkup!==markup){menu.innerHTML=markup;menu.__hvContextMarkup=markup;}
   const grid=$("grid");
   if(grid){
     const g=grid.getBoundingClientRect();
-    const cellW=g.width/COLS, cellH=g.height/ROWS;
+    const cellW=g.width/COLS,cellH=g.height/ROWS;
     let left=g.left+(unitContextSelection.x+.5)*cellW;
     let top=g.top+(unitContextSelection.y+.5)*cellH;
     if(u.leader){
@@ -486,12 +499,7 @@ function renderUnitContextMenu(){
     },"unit-context-clamp");
   }
   menu.classList.remove("hidden");
-  menu.querySelectorAll(".unit-context-btn").forEach(btn=>btn.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    handleUnitContextAction(btn.dataset.action);
-  }));
 }
-
 
 const ACOLYTE_HEALER_EFFECT_COSTS=Object.freeze({transfer:2,purify:3,resurrect:4});
 function getAcolyteEffectRange(caster){return Math.max(1,Number(caster?.effectRange||3)+Number(getEquipmentRangeBonus(caster)||0));}

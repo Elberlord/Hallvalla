@@ -411,6 +411,8 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   }
   return !!wrote;
 }function resetBattleState(){
+  if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
+  if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   endBattleLifecycle("resetBattleState");
   unsubPub=null;
   unsubPriv=null;
@@ -761,6 +763,8 @@ function safeBattleTick(label,fn){
   catch(e){handleBattleListenerError(label,e);}
 }
 function enterLocalGame(pub,priv,player=1){
+  if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
+  if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   const nextGameId=pub?.code||`LOCAL${code4()}`;
   beginBattleLifecycle({code:nextGameId,player,source:"local"});
   if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
@@ -796,6 +800,8 @@ function enterLocalGame(pub,priv,player=1){
   aiWatchdogTimer=battleSetInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800,"adventure-ai-watchdog-local");
 }
 function enterGame(code,player){
+  if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
+  if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   beginBattleLifecycle({code,player,source:"firebase"});
   if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
   gameId=code;
@@ -850,12 +856,12 @@ function enterGame(code,player){
     const val=snap.val();
     if(!val){
       privateState=null;
-      render();
+      if(typeof requestBattleRender==="function")requestBattleRender("firebase-private-empty");else render();
       setHint("Esperando datos privados del jugador...");
       return;
     }
     privateState=val;
-    render();
+    if(typeof requestBattleRender==="function")requestBattleRender("firebase-private");else render();
     maybeShowBattleResult();
     maybeStartTurn();
     maybeTriggerAdventureAI();
