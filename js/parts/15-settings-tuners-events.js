@@ -1,5 +1,6 @@
 "use strict";
 /* HallValla 7BOARDCTRL8U · Eventos UI, ajustes y calibradores */
+const HALLVALLA_DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
 
 
 function handleAdventureHomeClick(ev){
@@ -175,6 +176,7 @@ function resetActionsHudTuner(){
 }
 function initActionsHudTuner(){
   applyActionsHudTunerState(false);
+  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
   const bindings={
     actionsHudScaleInput:"scale",
     actionsHudXInput:"x",
@@ -357,6 +359,7 @@ function resetFieldStatBadgesTuner(){
 }
 function initFieldStatBadgesTuner(){
   applyFieldStatBadgesTunerState(false);
+  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
   $("fieldBadgeTargetSelect")?.addEventListener("change",()=>{syncFieldStatBadgesTunerControls(); setFieldStatBadgesTunerStatus(`Editando: ${FIELD_STAT_BADGE_TARGETS[getCurrentFieldBadgeTarget()].label}.`);});
   FIELD_STAT_CONTROL_DEFS.forEach(def=>$(def.input)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(def.key,ev.target.value)));
   $("openFieldStatBadgesTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openFieldStatBadgesTuner();});
@@ -466,6 +469,7 @@ function updateBattleVisualSizeValue(key,value,min,max,fallback,message){
 }
 function initBattleVisualSizeTuner(){
   applyBattleVisualSizeState(false);
+  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
   $("openBattleVisualSizeTunerBtn")?.addEventListener("click",openBattleVisualSizeTuner);
   $("closeBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
   $("saveBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
@@ -613,6 +617,7 @@ function initFieldBoardTuner(){
   applyFieldBoardCardScale(false);
   document.documentElement.style.setProperty("--hv-board-rows",String(ROWS));
   document.documentElement.style.setProperty("--hv-board-cols",String(COLS));
+  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
   $("openFieldBoardTunerBattleBtn")?.addEventListener("click",openFieldBoardTuner);
   $("closeFieldBoardTunerBtn")?.addEventListener("click",closeFieldBoardTuner);
   $("saveFieldBoardTunerBtn")?.addEventListener("click",closeFieldBoardTuner);
@@ -783,6 +788,7 @@ function finishBattleClockDrag(){
 }
 function initBattleClockTuner(){
   applyBattleClockTunerState(false);
+  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
   $("battleClockTargetSelect")?.addEventListener("change",()=>{syncBattleClockTunerControls(); setBattleClockTunerStatus("Editando el reloj seleccionado.");});
   [["battleClockXInput","x"],["battleClockYInput","y"],["battleClockScaleInput","scale"]].forEach(([id,key])=>$(id)?.addEventListener("input",ev=>updateBattleClockTunerFromInput(key,ev.target.value)));
   $("openBattleClockTunerBtn")?.addEventListener("click",()=>{closeBattleMenu();openBattleClockTuner();});
@@ -1970,4 +1976,4 @@ function ensureHvDetLayoutTuner(){
   syncGlobal();syncHvDetDirectControls();refreshVisibility();
 }
 applyHvDetLayoutTuner();
-ensureHvDetLayoutTuner();
+if(HALLVALLA_DEV_TOOLS_ENABLED)ensureHvDetLayoutTuner();

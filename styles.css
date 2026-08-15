@@ -5692,8 +5692,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .side .panel{
   margin-bottom:0!important;
 }
-.side .detail,
-#detail{
+.side .detail{
   max-height:210px!important;
   overflow:auto!important;
   padding-right:8px!important;
@@ -5706,7 +5705,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Keep the resource explanation readable when the detail panel gets long. */
-#detail p,
 .detail p{
   margin:4px 0!important;
 }
@@ -5769,7 +5767,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     width:min(340px,34vw)!important;
     max-height:calc(100vh - 140px)!important;
   }
-  .side .detail,#detail{max-height:180px!important}
+  .side .detail{max-height:180px!important}
 }
 @media(max-width:760px){
   .side{
@@ -20961,3 +20959,6 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
   letter-spacing:.06em;
   pointer-events:none;
 }
+
+/* STAGE9CLEAN1 · herramientas internas fuera del runtime de producción */
+html[data-hv-runtime="prod"] [data-hv-dev-tool]{display:none!important;}

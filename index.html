@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Modular · Stage 7 · Renderer y Rendimiento</title>
+<title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1">
-<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1">
-<meta name="hallvalla-build-name" content="STAGE 7 · Renderer incremental · Event delegation · Batching · Profiling">
-<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-20260815B"/>
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1">
+<meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1">
+<meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
+<link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-20260815C"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -726,7 +726,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <p>Reinicia solo los datos locales del progreso. No borra Firebase, no borra usuarios y conserva el líder elegido.</p>
       <button id="resetLocalProgressBtn" class="btn ghost full" type="button">Nueva partida local segura</button>
       <button id="startBasicTutorialFromSettingsBtn" class="btn ghost full" type="button">Tutorial básico</button>
-      <button id="openActionsHudTunerBtn" class="btn ghost full" type="button">Ajustar HUD de acciones</button>
+      <button id="openActionsHudTunerBtn" data-hv-dev-tool class="btn ghost full" type="button">Ajustar HUD de acciones</button>
       <p id="settingsResetStatus" class="settings-reset-status"></p>
     </div>
     <button type="button" id="closeSettingsBtn" class="btn primary full">Guardar y volver</button>
@@ -848,10 +848,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="turnTimerHud" class="battle-clock-hud battle-clock-turn-hud" data-clock-target="turn" aria-label="Tiempo de turno"><span class="turn-timer-label">TURNO</span><strong id="turnTimerValue">03:00</strong></div><div id="playerClock1" class="battle-clock-hud duel-clock-hud duel-clock-p1" data-clock-target="p1" aria-label="Reloj del jugador 1"><span class="duel-clock-label">J1</span><strong id="playerClock1Value">15:00</strong></div><div id="playerClock2" class="battle-clock-hud duel-clock-hud duel-clock-p2" data-clock-target="p2" aria-label="Reloj del jugador 2"><span class="duel-clock-label">J2</span><strong id="playerClock2Value">15:00</strong></div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></div><button id="mobileToggleActionsBtn" class="mobile-honor-actions-btn" type="button" aria-label="Mostrar u ocultar acciones" aria-expanded="true">Acciones ▾</button><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button type="button" id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mano"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mano"><span class="action-btn-label">Mano</span></button><button type="button" id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button type="button" id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><!-- DETAIL HUD REMOVED: panel lateral Detalle eliminado del campo de batalla. --></div><!-- ACTIONS HUD CSS TOOL REMOVED: posición final pegada en styles.css. --><div id="log" class="event-history-dock" aria-label="Historial visual de eventos de combate" aria-hidden="true"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card det-v32-card"></div></div>
-<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openActionsHudTunerBattleBtn" class="btn full" type="button">Ajustar HUD de acciones</button><button id="openFieldStatBadgesTunerBattleBtn" class="btn full" type="button">Ajustar iconos / aros / números</button><button id="openBattleVisualSizeTunerBtn" class="btn full" type="button">Ajustar líderes y cartas de mano</button><button id="openFieldBoardTunerBattleBtn" class="btn full" type="button">Ajustar cartas del campo y cuadrícula</button><button id="openBattleClockTunerBtn" class="btn full" type="button">Ajustar relojes del duelo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
+<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openActionsHudTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar HUD de acciones</button><button id="openFieldStatBadgesTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar iconos / aros / números</button><button id="openBattleVisualSizeTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar líderes y cartas de mano</button><button id="openFieldBoardTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar cartas del campo y cuadrícula</button><button id="openBattleClockTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar relojes del duelo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 
 
-<div id="actionsHudTuner" class="actions-hud-tuner hidden" aria-label="Control del HUD de acciones">
+<div id="actionsHudTuner" data-hv-dev-tool class="actions-hud-tuner hidden" aria-label="Control del HUD de acciones">
   <div class="actions-hud-tuner-head">
     <div>
       <b>Ajustar HUD de acciones</b>
@@ -889,7 +889,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <p id="actionsHudTunerStatus" class="actions-hud-tuner-status" aria-live="polite"></p>
 </div>
 
-<div id="battleClockTuner" class="battle-clock-tuner hidden" aria-label="Control de relojes del duelo">
+<div id="battleClockTuner" data-hv-dev-tool class="battle-clock-tuner hidden" aria-label="Control de relojes del duelo">
   <div class="battle-clock-tuner-head">
     <div>
       <b>Ajustar relojes del duelo</b>
@@ -928,7 +928,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <p id="battleClockTunerStatus" class="battle-clock-tuner-status" aria-live="polite"></p>
 </div>
 
-<div id="fieldStatBadgesTuner" class="field-stat-badges-tuner hidden" aria-label="Control maestro de iconos, aros y números del campo">
+<div id="fieldStatBadgesTuner" data-hv-dev-tool class="field-stat-badges-tuner hidden" aria-label="Control maestro de iconos, aros y números del campo">
   <div class="field-stat-badges-tuner-head">
     <div>
       <b>Ajustar iconos / aros / números</b>
@@ -989,7 +989,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <p id="fieldStatBadgesTunerStatus" class="field-stat-badges-tuner-status" aria-live="polite"></p>
 </div>
 
-<div id="battleVisualSizeTuner" class="battle-visual-size-tuner hidden" aria-label="Control de tamaño y posición de líderes y tamaño de cartas en mano">
+<div id="battleVisualSizeTuner" data-hv-dev-tool class="battle-visual-size-tuner hidden" aria-label="Control de tamaño y posición de líderes y tamaño de cartas en mano">
   <div class="battle-visual-size-head">
     <div>
       <b>Ajustar líderes y cartas de mano</b>
@@ -1027,7 +1027,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <p id="battleVisualSizeTunerStatus" class="battle-visual-size-status" aria-live="polite"></p>
 </div>
 
-<div id="fieldBoardTuner" class="field-board-tuner hidden" aria-label="Control de cartas del campo y estructura de la cuadrícula">
+<div id="fieldBoardTuner" data-hv-dev-tool class="field-board-tuner hidden" aria-label="Control de cartas del campo y estructura de la cuadrícula">
   <div class="field-board-tuner-head">
     <div>
       <b>Cartas del campo y cuadrícula</b>
@@ -1084,6 +1084,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-20260815B"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-20260815C"></script>
 </body>
 </html>

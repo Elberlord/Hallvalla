@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-20260815B";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-20260815C";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1";
-const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-20260815B";
+const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1";
+const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-20260815C";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -22,6 +22,15 @@ if (DECLARED_BUILD !== BUILD) {
 globalThis.__HALLVALLA_BUILD__ = BUILD;
 globalThis.__HALLVALLA_BUILD_VERSION__ = `v8_MODULAR_${BUILD}`;
 globalThis.__HALLVALLA_FIREBASE_CONFIG__ = hallvallaFirebaseConfig;
+
+// Etapa 9: los calibradores internos no participan del runtime normal.
+// Se conservan en el ZIP y pueden habilitarse de forma explícita con ?hvdev=1.
+const DEV_TOOLS_ENABLED = (() => {
+  try { return new URLSearchParams(globalThis.location?.search || "").get("hvdev") === "1"; }
+  catch (_) { return false; }
+})();
+globalThis.__HALLVALLA_DEV_TOOLS__ = DEV_TOOLS_ENABLED;
+document.documentElement.dataset.hvRuntime = DEV_TOOLS_ENABLED ? "dev" : "prod";
 
 function sanitizeFirebaseValue(value, seen = new WeakSet()) {
   if (typeof value === "undefined") return undefined;
@@ -93,8 +102,9 @@ Object.assign(globalThis, {
   onAuthStateChanged
 });
 
-// El cargador incluye únicamente los módulos activos del runtime.
-const PARTS = [
+// Etapa 9: los módulos mixtos conservan su parte de runtime, pero sus editores/calibradores
+// solo se inicializan con ?hvdev=1. El cargador no elimina archivos para evitar regresiones.
+const CORE_PARTS = [
   "01-boot-config.js",
   "02-assets-leaders.js",
   "03-runtime-clocks.js",
@@ -116,8 +126,10 @@ const PARTS = [
   "19-field-figures-3d.js",
   "15-settings-tuners-events.js",
   "16-exact-guides-mobile.js",
+  // Mantiene el aplicador de layout canónico de Forja; el editor interno se activa solo en DEV.
   "20-forge-direct-tuner.js"
 ];
+const PARTS = CORE_PARTS;
 
 function loadClassicScript(file) {
   return new Promise((resolve, reject) => {
@@ -134,7 +146,7 @@ function loadClassicScript(file) {
 try {
   for (const file of PARTS) await loadClassicScript(file);
   globalThis.__HALLVALLA_MODULAR_READY__ = true;
-  console.info(`[HallValla] ${BUILD}: ${PARTS.length} módulos cargados correctamente.`);
+  console.info(`[HallValla] ${BUILD}: ${PARTS.length} módulos cargados correctamente (${DEV_TOOLS_ENABLED ? "DEV" : "PROD"}).`);
 } catch (error) {
   globalThis.__HALLVALLA_MODULAR_READY__ = false;
   console.error("[HallValla] Error durante el arranque modular:", error);

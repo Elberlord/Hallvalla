@@ -1502,15 +1502,6 @@ function buildAdventureAdaptivePlayerSnapshot(cards=[],principalKeys=[]){
     principalKeys:(Array.isArray(principalKeys)?principalKeys:[]).map(String).filter(Boolean).slice(0,3)
   };
 }
-function adaptiveSnapshotCards(snapshot){
-  const cards=[];
-  Object.entries(snapshot?.cardCounts||{}).forEach(([key,count])=>{
-    const template=getAdventureDeckCardTemplateByKey(key);
-    if(!template)return;
-    for(let i=0;i<Math.max(0,Number(count||0));i++)cards.push(template);
-  });
-  return cards;
-}
 function addAdaptiveSnapshotToProfile(roleScores,cardScores,snapshot,weight=1){
   if(!snapshot||weight<=0)return;
   Object.keys(roleScores).forEach(k=>roleScores[k]+=Number(snapshot?.roles?.[k]||0)*weight);

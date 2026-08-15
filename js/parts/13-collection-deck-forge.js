@@ -1050,6 +1050,7 @@ function renderDeckBuilder(){
     const ownedUnique=allCards.filter(card=>Number(card.qty||0)>0).length;
     if($("deckCountText"))$("deckCountText").textContent=`${ownedUnique}/${allCards.length} desbloqueadas`;
     if($("deckValidText"))$("deckValidText").textContent="";
+    globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__?.();
     return;
   }
   const deckCardsHtml=currentDeckDraft.map((card,index)=>deckBuilderMiniCardHtml(card,{mode:"deck",index})).join("");
@@ -1074,6 +1075,7 @@ function renderDeckBuilder(){
     saveBtn.disabled=!validation.valid;
     saveBtn.title=validation.valid?"Guardar mazo y cerrar Forja":`El tier actual exige exactamente ${requiredDeckSize} cartas: ${principalSlots} Personaje${principalSlots===1?"":"s"} Principal${principalSlots===1?"":"es"} distinto${principalSlots===1?"":"s"} y ${DECK_RULES.drawDeckSize} cartas de robo.`;
   }
+  globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__?.();
 }
 function saveCurrentDeck(){
   if(isCollectionBrowseOnly())return;

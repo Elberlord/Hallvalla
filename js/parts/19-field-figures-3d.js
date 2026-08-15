@@ -383,7 +383,10 @@ function hvBindFieldFigureEditor(){
   },{capture:true,passive:false});
 }
 function hvInitFieldFigureEditor(){
-  hvCreateFieldFigureEditor();hvBindFieldFigureEditor();hvSetFieldFigureSelectedKey(hvFieldFigureSelectedKey);applyFieldFigureSettingsToRenderedUnits();
+  // El renderer de figuras sigue activo en PROD; solo el editor/calibrador es DEV.
+  applyFieldFigureSettingsToRenderedUnits();
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
+  hvCreateFieldFigureEditor();hvBindFieldFigureEditor();hvSetFieldFigureSelectedKey(hvFieldFigureSelectedKey);
 }
 
 Object.assign(globalThis,{getFieldFigureHtml,applyFieldFigureSettingsToRenderedUnits,hvIsFieldFigureEditorOpen});

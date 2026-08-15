@@ -1106,36 +1106,10 @@ function renderLog(){
   if(el.__hvLogMarkup!==markup){el.innerHTML=markup;el.__hvLogMarkup=markup;}
 }
 function renderDetail(){
-  const detailEl=$("detail");
-  // DETAIL HUD REMOVED: el panel #detail ya no existe en index.html.
-  // Esta salida evita errores cuando render() intenta actualizarlo.
-  if(!detailEl)return;
-  const isAdventure=publicState?.mode==="adventure";
-  if(selectedCard){
-    const cardStats=selectedCard.type==="unit"
-      ? [["Costo",getCardCostDisplayValue(selectedCard,selectedCard?.owner||myPlayer)],["AT",selectedCard.atk||0],["HP",selectedCard.hp||0],["GD",selectedCard.guard||0],["DX",selectedCard.dex||0],["AGI",selectedCard.agi||0],["MV",selectedCard.mov||0],["RG",getCardDisplayRange(selectedCard)]]
-      : [["Costo",getCardCostDisplayValue(selectedCard,selectedCard?.owner||myPlayer)]];
-    const effectText=normalizeSaboteadorRuleText(selectedCard,selectedCard.text||selectedCard.effectText||selectedCard.ability||"").trim();
-    detailEl.innerHTML=`<p><b>${selectedCard.icon} ${selectedCard.name}</b></p><div class="detail-helper-note">Toca un stat o un botón para ver la explicación.</div>${resourceDetailHtml(selectedCard.owner||myPlayer,{compact:true})}${detailStatGridHtml(cardStats)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(selectedCard,effectText),showWeapon:selectedCard.type==="unit",showFormula:true,showLore:selectedCard.type==="unit",effectLabel:'Ver efecto de la carta',entity:selectedCard})}`;
-    bindStatGuideClicks(detailEl);
-    bindEntityGuideButtons(detailEl,selectedCard,{effectText,effectTitle:`Efecto de ${selectedCard.name}`});
-    return;
-  }
-  if(selectedUnitId){
-    const u=getUnit(selectedUnitId);
-    if(u){
-      const fx=getUnitEffectText(u);
-      const activeEntries=getUnitStatusEntries(u);
-      const unitStats=[["HP",`${getDisplayHp(u)}/${effectiveMaxHp(u)}`],["AT",effectiveAtk(u)],["GD",displayEffectiveGuard(u)],["DX",effectiveDex(u)],["AGI",effectiveAgi(u)],["MV",effectiveMov(u)],["RG",getUnitAttackRange(u)]];
-      detailEl.innerHTML=`<p><b>${u.icon} ${u.name}</b></p><p>${u.leader?`Líder · ${getLeaderProgressText(u.leaderType||"warrior",u.leaderLevel||1,u.leaderAbility||"")}`:`Nexo ${u.nexoX+1},${u.nexoY+1}`}</p>${u.leader?resourceDetailHtml(u.owner,{compact:true}):""}<div class="detail-helper-note">Toca un stat, el efecto o un estado para revisar su explicación.</div>${detailStatGridHtml(unitStats)}${detailStatusButtonsHtml(activeEntries)}${detailGuideButtonsHtml({showEffect:shouldShowEffectGuideButton(u,fx),showWeapon:true,showFormula:true,showLore:!u.leader,effectLabel:u.leader?'Ver líder':'Ver efecto',entity:u})}`;
-      bindStatGuideClicks(detailEl);
-      bindEntityGuideButtons(detailEl,u,{effectText:fx,effectTitle:`Efecto de ${u.name}`,statuses:activeEntries});
-      return;
-    }
-  }
-  const modeLine=isAdventure?`<p><b>Modo:</b> Aventura contra IA</p><p><b>Batalla:</b> ${escapeHtml(publicState?.adventureBattleTitle||"Aventura")}</p>`:`<p><b>Jugador:</b> ${myPlayer||"?"}</p><p><b>Código:</b> ${gameId||"..."}</p><p><b>Modo:</b> Online</p>`;
-  detailEl.innerHTML=`${modeLine}<p>Líder elegido: ${LEADER_DATA[getSelectedLeaderType()]?.name||"sin elegir"}. Guerrero mejora infantería pesada según nivel de buff. Arquero mejora arqueras según nivel de buff. Hechicero reduce costo y aumenta efecto de magias según nivel de buff.</p>${resourceDetailHtml(myPlayer||1,{compact:false})}<p>Toca una carta o unidad para ver sus detalles: el costo usa HONOR normalmente, pero con Hechicero se muestra y se consume como MANA.</p>`
+  // Etapa 9: #detail fue retirado del DOM; se conserva el hook como no-op para
+  // no alterar el contrato de render() ni llamadas externas durante esta etapa.
 }
+
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 
 function ensureHallVallaModal(){

@@ -6,6 +6,7 @@
   const STORAGE_KEY='hallvalla_forge_direct_tuner_v6_individual';
   const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v3';
   const $=id=>document.getElementById(id);
+  const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
 
   const GROUPS={
     layout:{label:'Pergaminos / layout'},
@@ -270,9 +271,14 @@
     }
   }
 
-  function applyAll(){
+  function applyRuntimeLayout(){
     ensureArtLayers();
     for(const key of Object.keys(TARGETS))applyTarget(key);
+  }
+
+  function applyAll(){
+    applyRuntimeLayout();
+    if(!DEV_TOOLS_ENABLED)return;
     refreshSelectionClasses();
     syncControls();
   }
@@ -505,6 +511,24 @@
     const open=isForgeOpen();shell.classList.toggle('hidden',!open);
     if(open){ensureArtLayers();applyAll();refreshTargetSelect();}
     else{panelOpen=false;body?.classList.add('hidden');$('hvForgeTunerToggle')&&($('hvForgeTunerToggle').textContent='EDITAR FORJA');refreshSelectionClasses();}
+  }
+
+  // El layout aprobado forma parte del runtime. La UI de edición y sus observers/listeners, no.
+  globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__=applyRuntimeLayout;
+
+  if(!DEV_TOOLS_ENABLED){
+    if(isForgeOpen())applyRuntimeLayout();
+    let resizeQueued=false;
+    window.addEventListener('resize',()=>{
+      if(!isForgeOpen()||resizeQueued)return;
+      resizeQueued=true;
+      requestAnimationFrame(()=>{
+        resizeQueued=false;
+        for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}
+        applyRuntimeLayout();
+      });
+    },{passive:true});
+    return;
   }
 
   createTuner();
