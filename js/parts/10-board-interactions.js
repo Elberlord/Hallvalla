@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AC · Interacción de tablero y efectos de unidad */
+/* HallValla STAGE8PRIV1 · Interacción de tablero y efectos de unidad */
 
 const STEALTH_BOARD_MASK_SRC="assets/effects/status/stealth/stealth_smoke.webp";
 function isStealthHiddenFromViewer(u){
@@ -461,13 +461,14 @@ function renderUnitContextMenu(){
   const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMoveWindow(u)&&!isBattleEnded();
   const canAction=isMyTurn()&&u.owner===myPlayer&&isUnitActionWindow(u)&&!isBattleEnded();
   const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
-  const stealthMasked=isStealthedUnit(u);
+  const stealthMasked=isStealthHiddenFromViewer(u);
+  const ownerStealth=isStealthedUnit(u)&&u.owner===myPlayer;
   const portraitHtml=stealthMasked?getStealthContextPortraitHtml():getUnitPortraitHtml(u);
   const hpLabel=stealthMasked?"?":String(getDisplayHp(u));
   const atkLabel=stealthMasked?"?":effectiveAtk(u);
   const guardLabel=stealthMasked?"?":displayEffectiveGuard(u);
   const contextName=stealthMasked?"Unidad con Sigilo":(u.name||"Invocación");
-  const contextSub=stealthMasked?`Presencia Oculta · J${u.owner}`:`${u.leader?"Líder":"Invocación"} · J${u.owner}`;
+  const contextSub=stealthMasked?`Presencia Oculta · J${u.owner}`:(ownerStealth?`Sigilo privado · solo tú puedes verla · J${u.owner}`:`${u.leader?"Líder":"Invocación"} · J${u.owner}`);
   const markup=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait ${stealthMasked?"is-stealthed":""}">${portraitHtml}</div><div class="unit-context-mini-stats ${stealthMasked?"is-stealthed":""}"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(contextName)}</div><div class="unit-context-sub">${escapeHtml(contextSub)}</div></div>${options.map(o=>{
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const mulanExecChoice=isMulanExecutionChoiceReady(u);
@@ -884,9 +885,9 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else if(liveCaster.leader&&liveCaster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
     return{success:false,reason:"Veneno de la Manada es una habilidad pasiva."};
   }else if(liveCaster.key==="african_lion"){
-    const rev=revealStealthInRadius(out,owner,liveCaster,3,"Rugido del Rey");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Rugido del Rey y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
+    const rev=revealStealthInRadius(out,owner,liveCaster,3,"Rugido del Rey");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);const detection=typeof makeStage8StealthDetectionEvent==="function"?makeStage8StealthDetectionEvent(owner,liveCaster,3,"Rugido del Rey"):null;log=detection?`${liveCaster.name} usa Rugido del Rey y barre el área en busca de Sigilo.`:`${liveCaster.name} usa Rugido del Rey y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;return{success:true,units:out,log,battleFxEvent,stealthDetectionEvent:detection};
   }else if(liveCaster.key==="black_raven"){
-    const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);log=`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
+    const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);const detection=typeof makeStage8StealthDetectionEvent==="function"?makeStage8StealthDetectionEvent(owner,liveCaster,2,"Ojo del Cazador"):null;log=detection?`${liveCaster.name} usa Ojo del Cazador y inspecciona el área en busca de Sigilo.`:`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;return{success:true,units:out,log,battleFxEvent,stealthDetectionEvent:detection};
   }else if(liveCaster.key==="ericto"){
     if(liveCaster.erictoUsedTurnKey===publicState?.turnKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia este turno."};
     const current=getErictoLinkedReanimated(liveCaster,out).length;
@@ -1014,7 +1015,7 @@ async function activateUnitEffect(u,choice=null){
   if(!result.success)return setHint(result.reason||"No se pudo activar el efecto.");
   if(getBattleOutcome(result.units).ended&&result.battleFxEvent)await updatePublic({battleFxEvent:result.battleFxEvent});
   if(await finalizeBattle(result.units,result.log)){clearSelection();return;}
-  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[],battleFxEvent:result.battleFxEvent||null});
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[],battleFxEvent:result.battleFxEvent||null,stealthDetectionEvent:result.stealthDetectionEvent||null});
   await pushLog(result.log);
   clearSelection();
 }

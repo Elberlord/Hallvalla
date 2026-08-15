@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8BF · Estado de red, creación de partidas y Firebase */
+/* HallValla STAGE8PRIV1 · Estado de red, creación de partidas y Firebase */
 function hallvallaSanitizeFirebaseValue(value){
   const shared=globalThis.__HALLVALLA_SANITIZE_FIREBASE_VALUE__;
   if(typeof shared==="function")return shared(value);
@@ -36,6 +36,185 @@ function getGamePrivatePlayerRef(code,player){
   return ref(db,getGamePrivatePlayerPath(code,player));
 }
 
+/* --------------------------------------------------------------------------
+   ETAPA 8 · PRIVACIDAD REAL DE SIGILO / OCULTO
+   --------------------------------------------------------------------------
+   Contrato de red:
+   - Una unidad que siga bajo Sigilo NO viaja dentro de /public/units.
+   - Su estado completo vive solamente en /private/playerN/stealthBoard/units.
+   - El dueño recompone su vista local mezclando public + su bóveda privada.
+   - El rival jamás recibe id, key, nombre, estadísticas ni coordenadas de esa
+     unidad a través del snapshot público.
+   - Los FX que dependan de una unidad aún oculta se redaccionan en public y se
+     conserva la versión completa únicamente en la rama privada del dueño.
+   -------------------------------------------------------------------------- */
+const HALLVALLA_STAGE8_PRIVACY_MODE="stealth_private_v1";
+const HALLVALLA_STAGE8_STEALTH_SCHEMA="hallvalla-stealth-private-v1";
+const HALLVALLA_STAGE8_FX_KEYS=Object.freeze(["battleFxEvent","defenseFxEvent","dodgeFxEvent","statusFxEvent","floatFxEvent"]);
+let networkPublicStateRaw=null;
+let stage8PrivacyReconcileInFlight=false;
+let stage8LastDetectionEventId="";
+
+function isStage8PrivateStealthMode(state=publicState){
+  return !!state&&state.mode==="online"&&state.privacyMode===HALLVALLA_STAGE8_PRIVACY_MODE;
+}
+function normalizeStage8StealthVaultUnits(value){
+  if(Array.isArray(value))return value.filter(Boolean);
+  if(value&&typeof value==="object")return Object.values(value).filter(Boolean);
+  return [];
+}
+function getStage8OwnStealthVaultUnits(priv=privateState,owner=myPlayer){
+  const safeOwner=Number(owner||0);
+  if(!safeOwner)return[];
+  return normalizeStage8StealthVaultUnits(priv?.stealthBoard?.units).filter(u=>u&&Number(u.owner)===safeOwner&&isStealthedUnit(u));
+}
+function stage8StealthUnitsToObject(units=[]){
+  const out={};
+  for(const unit of units||[]){
+    if(!unit||!unit.id)continue;
+    const key=String(unit.id).replace(/[.#$\[\]\/]/g,"_");
+    out[key]=unit;
+  }
+  return Object.keys(out).length?out:null;
+}
+function stage8FxTouchesHiddenUnit(event,hiddenIds){
+  if(!event||typeof event!=="object"||Array.isArray(event)||!hiddenIds?.size)return false;
+  return [event.attackerId,event.targetId,event.unitId].some(id=>id&&hiddenIds.has(String(id)));
+}
+function redactStage8PrivateFxEvent(event){
+  if(!event||typeof event!=="object"||Array.isArray(event))return event;
+  return {
+    eventId:String(event.eventId||`${Date.now()}_${Math.random().toString(36).slice(2,8)}`),
+    type:"private_stealth",
+    privateStealthEvent:true
+  };
+}
+function composeStage8ViewerPublicState(rawPublic,priv=privateState,owner=myPlayer){
+  if(!rawPublic||!isStage8PrivateStealthMode(rawPublic))return rawPublic;
+  const visibleUnits=Array.isArray(rawPublic.units)?rawPublic.units:[];
+  const ownHidden=getStage8OwnStealthVaultUnits(priv,owner);
+  const byId=new Map();
+  for(const unit of visibleUnits){if(unit?.id)byId.set(String(unit.id),unit);}
+  for(const unit of ownHidden){if(unit?.id)byId.set(String(unit.id),unit);}
+  const out={...rawPublic,units:[...byId.values()]};
+  const privateEvents=priv?.stealthBoard?.privateEvents||{};
+  for(const key of HALLVALLA_STAGE8_FX_KEYS){
+    const publicEvent=rawPublic?.[key];
+    const privateEvent=privateEvents?.[key];
+    if(publicEvent?.privateStealthEvent===true&&privateEvent?.eventId&&String(privateEvent.eventId)===String(publicEvent.eventId||"")){
+      out[key]=privateEvent;
+    }
+  }
+  return out;
+}
+function projectStage8StealthPatchForNetwork(sourcePatch={},owner=myPlayer){
+  const patch={...(sourcePatch||{})};
+  if(!isStage8PrivateStealthMode(publicState)&&patch.privacyMode!==HALLVALLA_STAGE8_PRIVACY_MODE){
+    return{publicPatch:patch,privatePatch:{},visibilityUnits:Array.isArray(patch.units)?patch.units:(publicState?.units||[])};
+  }
+  const safeOwner=Number(owner||0);
+  const visibilityUnits=Array.isArray(patch.units)?patch.units:(publicState?.units||[]);
+  const hiddenUnits=(Array.isArray(visibilityUnits)?visibilityUnits:[]).filter(u=>u&&!u.leader&&isStealthedUnit(u));
+  const ownHidden=hiddenUnits.filter(u=>Number(u.owner)===safeOwner);
+  const hiddenIds=new Set(hiddenUnits.map(u=>String(u.id||"")).filter(Boolean));
+  const ownHiddenIds=new Set(ownHidden.map(u=>String(u.id||"")).filter(Boolean));
+  const publicPatch={...patch};
+  const privatePatch={};
+  if(Array.isArray(patch.units)){
+    publicPatch.units=patch.units.filter(u=>!u||u.leader||!isStealthedUnit(u));
+    privatePatch["stealthBoard/schema"]=HALLVALLA_STAGE8_STEALTH_SCHEMA;
+    privatePatch["stealthBoard/units"]=stage8StealthUnitsToObject(ownHidden);
+    privatePatch["stealthBoard/updatedAt"]=Date.now();
+  }
+  for(const key of HALLVALLA_STAGE8_FX_KEYS){
+    if(!Object.prototype.hasOwnProperty.call(patch,key))continue;
+    const event=patch[key];
+    if(stage8FxTouchesHiddenUnit(event,hiddenIds)){
+      publicPatch[key]=redactStage8PrivateFxEvent(event);
+      if(stage8FxTouchesHiddenUnit(event,ownHiddenIds))privatePatch[`stealthBoard/privateEvents/${key}`]=event;
+    }else{
+      privatePatch[`stealthBoard/privateEvents/${key}`]=null;
+    }
+  }
+  return{publicPatch,privatePatch,visibilityUnits};
+}
+globalThis.__HALLVALLA_STAGE8_PRIVACY_DEBUG__=()=>{
+  const raw=networkPublicStateRaw||null;
+  const rawUnits=Array.isArray(raw?.units)?raw.units:[];
+  const ownHidden=getStage8OwnStealthVaultUnits(privateState,myPlayer);
+  const composed=composeStage8ViewerPublicState(raw,privateState,myPlayer);
+  return{
+    enabled:isStage8PrivateStealthMode(raw),
+    privacyMode:String(raw?.privacyMode||""),
+    publicUnitCount:rawUnits.length,
+    publicHiddenUnitCount:rawUnits.filter(u=>isStealthedUnit(u)).length,
+    privateOwnHiddenUnitCount:ownHidden.length,
+    viewerUnitCount:Array.isArray(composed?.units)?composed.units.length:0,
+    invariantPublicContainsNoStealth:rawUnits.every(u=>!isStealthedUnit(u))
+  };
+};
+
+function makeStage8StealthDetectionEvent(detectorOwner,center,radius,reason="detección"){
+  if(!isStage8PrivateStealthMode(publicState))return null;
+  const x=Number(center?.x),y=Number(center?.y);
+  if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+  return{
+    eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    detectorOwner:Number(detectorOwner||0),
+    center:{x,y},
+    radius:Math.max(0,Number(radius||0)),
+    reason:String(reason||"detección").slice(0,96),
+    turnKey:String(publicState?.turnKey||"")
+  };
+}
+async function maybeResolveStage8StealthDetectionAndAura(){
+  if(stage8PrivacyReconcileInFlight||!gameId||!isStage8PrivateStealthMode(networkPublicStateRaw||publicState)||!privateState)return false;
+  const owner=Number(myPlayer||0);
+  if(!owner)return false;
+  const hidden=getStage8OwnStealthVaultUnits(privateState,owner);
+  if(!hidden.length)return false;
+  const raw=networkPublicStateRaw||publicState;
+  const visible=Array.isArray(raw?.units)?raw.units:[];
+  const detection=raw?.stealthDetectionEvent||null;
+  const revealIds=new Set();
+  let reason="detección";
+  let detectionEventId="";
+  if(detection?.eventId&&Number(detection.detectorOwner||0)!==owner&&String(detection.eventId)!==stage8LastDetectionEventId){
+    detectionEventId=String(detection.eventId);
+    stage8LastDetectionEventId=detectionEventId;
+    const center=detection.center||{};
+    const radius=Math.max(0,Number(detection.radius||0));
+    reason=String(detection.reason||"detección");
+    for(const unit of hidden){if(dist(unit,center)<=radius)revealIds.add(String(unit.id));}
+  }
+  const enemyMongols=visible.filter(u=>u&&u.key==="mongol_explorer"&&Number(u.hp||0)>0&&Number(u.owner)!==owner);
+  if(enemyMongols.length){
+    for(const unit of hidden){
+      if(enemyMongols.some(m=>dist(m,unit)<=2)){revealIds.add(String(unit.id));reason="Ojos de la estepa";}
+    }
+  }
+  if(!revealIds.size){
+    if(detectionEventId){
+      try{await update(ref(db,`games/${gameId}/public`),{stealthDetectionAck:{eventId:detectionEventId,owner,count:0,at:Date.now()}});}catch(_){ }
+    }
+    return false;
+  }
+  const merged=composeStage8ViewerPublicState(raw,privateState,owner);
+  const nextUnits=(merged?.units||[]).map(u=>revealIds.has(String(u.id||""))?revealUnit(u,reason):u);
+  stage8PrivacyReconcileInFlight=true;
+  try{
+    const count=revealIds.size;
+    const patch={
+      units:nextUnits,
+      stealthDetectionAck:{eventId:detectionEventId||`aura_${Date.now()}`,owner,count,at:Date.now()},
+      log:[`${count} presencia${count===1?"":"s"} oculta${count===1?"":"s"} ${count===1?"fue revelada":"fueron reveladas"} por ${reason}.`,...(raw?.log||[])].slice(0,18)
+    };
+    return await updatePublic(patch);
+  }finally{
+    stage8PrivacyReconcileInFlight=false;
+  }
+}
+
 /* El lobby PvP legacy fue eliminado del runtime. */
 
 function getStealthUnitsForSharedVisibility(units=publicState?.units||[]){
@@ -45,7 +224,11 @@ function sanitizeSharedStealthText(text,units=publicState?.units||[]){
   let out=String(text??"");
   for(const hiddenUnit of getStealthUnitsForSharedVisibility(units)){
     const name=String(hiddenUnit.name||"").trim();
-    if(name)out=out.split(name).join("Presencia oculta");
+    if(!name||!out.includes(name))continue;
+    if(isStage8PrivateStealthMode(publicState)){
+      return `J${Number(hiddenUnit.owner||0)||"?"}: una presencia oculta realizó una acción.`;
+    }
+    out=out.split(name).join("Presencia oculta");
   }
   return out;
 }
@@ -260,16 +443,26 @@ async function updatePublic(patch){
     delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
   }
   cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
-  const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
-  cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
-  cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
+  const localFullPatch={...cleanPatch};
+  const privacyProjection=projectStage8StealthPatchForNetwork(cleanPatch,myPlayer);
+  const sharedVisibilityUnits=privacyProjection.visibilityUnits;
+  let publicWritePatch=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
+  publicWritePatch=hallvallaSanitizeFirebaseValue(publicWritePatch)||{};
+  const privateStealthPatch=hallvallaSanitizeFirebaseValue(privacyProjection.privatePatch)||{};
   if(!writeContextActive())return false;
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
-    publicState=hallvallaApplyLocalPatch(publicState,cleanPatch);
+    publicState=hallvallaApplyLocalPatch(publicState,localFullPatch);
     render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();return true;
   }
-  await update(ref(db,`games/${writeGameId}/public`),cleanPatch);
+  if(isStage8PrivateStealthMode(publicState)&&Object.keys(privateStealthPatch).length){
+    const rootPatch={};
+    for(const [key,value] of Object.entries(publicWritePatch))rootPatch[`public/${key}`]=value;
+    for(const [key,value] of Object.entries(privateStealthPatch))rootPatch[`private/${getGamePrivatePlayerKey(myPlayer)}/${key}`]=value;
+    await update(ref(db,`games/${writeGameId}`),rootPatch);
+  }else{
+    await update(ref(db,`games/${writeGameId}/public`),publicWritePatch);
+  }
   return true;
 }
 let pvpStep6fAtomicActionInFlight=false;
@@ -293,8 +486,6 @@ async function preparePublicPatchForAtomicPvpAction(sourcePatch={}){
   delete cleanPatch._clockKillCreditMode;
   delete cleanPatch._clockKillIgnoreIds;
   cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
-  const sharedVisibilityUnits=Array.isArray(cleanPatch.units)?cleanPatch.units:(publicState?.units||[]);
-  cleanPatch=sanitizeSharedStealthPatch(cleanPatch,sharedVisibilityUnits);
   return hallvallaSanitizeFirebaseValue(cleanPatch)||{};
 }
 async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
@@ -308,9 +499,15 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
   const stillActive=()=>gameId===writeGameId&&Number(myPlayer||0)===writePlayer&&isBattleLifecycleTokenActive(lifecycleToken);
   try{
     if(!stillActive())return false;
-    const cleanPrivate=hallvallaSanitizeFirebaseValue(privatePatch||{})||{};
-    const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivate);
-    const cleanPublic=await preparePublicPatchForAtomicPvpAction(publicPatch||{});
+    const cleanPrivateBase=hallvallaSanitizeFirebaseValue(privatePatch||{})||{};
+    let nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivateBase);
+    const fullPublicPatch=await preparePublicPatchForAtomicPvpAction(publicPatch||{});
+    const privacyProjection=projectStage8StealthPatchForNetwork(fullPublicPatch,writePlayer);
+    const sharedVisibilityUnits=privacyProjection.visibilityUnits;
+    let cleanPublic=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
+    cleanPublic=hallvallaSanitizeFirebaseValue(cleanPublic)||{};
+    const cleanPrivate={...cleanPrivateBase,...(hallvallaSanitizeFirebaseValue(privacyProjection.privatePatch)||{})};
+    nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivate);
     const statsKey=`playerStats/${writePlayer}`;
     const hasHiddenUnits=countHiddenUnitReserveFromState(nextPrivate)>0;
     if(cleanPublic[statsKey]&&typeof cleanPublic[statsKey]==="object"&&!Array.isArray(cleanPublic[statsKey])){
@@ -326,7 +523,8 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
     await update(ref(db,`games/${writeGameId}`),rootPatch);
     if(!stillActive())return false;
     privateState=nextPrivate;
-    publicState=hallvallaApplyLocalPatch(publicState,cleanPublic);
+    publicState=hallvallaApplyLocalPatch(publicState,fullPublicPatch);
+    networkPublicStateRaw=networkPublicStateRaw?hallvallaApplyLocalPatch(networkPublicStateRaw,cleanPublic):networkPublicStateRaw;
     render();
     return true;
   }catch(error){
@@ -411,6 +609,9 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   }
   return !!wrote;
 }function resetBattleState(){
+  networkPublicStateRaw=null;
+  stage8PrivacyReconcileInFlight=false;
+  stage8LastDetectionEventId="";
   if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
   if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   endBattleLifecycle("resetBattleState");
@@ -763,6 +964,9 @@ function safeBattleTick(label,fn){
   catch(e){handleBattleListenerError(label,e);}
 }
 function enterLocalGame(pub,priv,player=1){
+  networkPublicStateRaw=null;
+  stage8PrivacyReconcileInFlight=false;
+  stage8LastDetectionEventId="";
   if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
   if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   const nextGameId=pub?.code||`LOCAL${code4()}`;
@@ -800,6 +1004,9 @@ function enterLocalGame(pub,priv,player=1){
   aiWatchdogTimer=battleSetInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800,"adventure-ai-watchdog-local");
 }
 function enterGame(code,player){
+  networkPublicStateRaw=null;
+  stage8PrivacyReconcileInFlight=false;
+  stage8LastDetectionEventId="";
   if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
   if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   beginBattleLifecycle({code,player,source:"firebase"});
@@ -837,7 +1044,8 @@ function enterGame(code,player){
       return;
     }
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
-    publicState=val;
+    networkPublicStateRaw=val;
+    publicState=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
     syncBoardDimensionsFromState(publicState);
     render();
     syncBattleMusic();
@@ -846,6 +1054,7 @@ function enterGame(code,player){
     
     maybeShowBattleResult();
     void maybeFinalizeUnitExhaustionFromPublicState();
+    void maybeResolveStage8StealthDetectionAndAura();
     maybeStartTurn();
     maybeTriggerAdventureAI();
     });
@@ -860,9 +1069,13 @@ function enterGame(code,player){
       setHint("Esperando datos privados del jugador...");
       return;
     }
+    const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     privateState=val;
+    if(networkPublicStateRaw)publicState=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
     if(typeof requestBattleRender==="function")requestBattleRender("firebase-private");else render();
+    if(prevPublic&&publicState)maybePlayBattleFx(prevPublic,publicState);
     maybeShowBattleResult();
+    void maybeResolveStage8StealthDetectionAndAura();
     maybeStartTurn();
     maybeTriggerAdventureAI();
     });

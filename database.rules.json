@@ -13,16 +13,35 @@
             "player2Uid": {
               ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid && root.child('games').child($gameId).child('public').child('phase').val() === 'waiting') || data.val() === auth.uid)"
             }
+          },
+          "units": {
+            "$unitIndex": {
+              ".validate": "root.child('games').child($gameId).child('public').child('privacyMode').val() !== 'stealth_private_v1' || !newData.exists() || newData.child('leader').val() === true || !((newData.child('stealth').val() === true || newData.child('hidden').val() === true) && newData.child('revealed').val() !== true)"
+            }
           }
         },
         "private": {
           "player1": {
             ".read": "auth != null && data.child('ownerUid').val() === auth.uid",
-            ".write": "auth != null && ((newData.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player1Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && !newData.exists()))"
+            ".write": "auth != null && ((newData.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player1Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && !newData.exists()))",
+            "stealthBoard": {
+              "units": {
+                "$unitId": {
+                  ".validate": "!newData.exists() || (newData.child('owner').val() === 1 && newData.child('leader').val() !== true && (newData.child('stealth').val() === true || newData.child('hidden').val() === true) && newData.child('revealed').val() !== true)"
+                }
+              }
+            }
           },
           "player2": {
             ".read": "auth != null && data.child('ownerUid').val() === auth.uid",
-            ".write": "auth != null && ((newData.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player2Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && !newData.exists()))"
+            ".write": "auth != null && ((newData.exists() && newData.child('ownerUid').val() === auth.uid && root.child('games').child($gameId).child('public').child('playerSlots').child('player2Uid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && !newData.exists()))",
+            "stealthBoard": {
+              "units": {
+                "$unitId": {
+                  ".validate": "!newData.exists() || (newData.child('owner').val() === 2 && newData.child('leader').val() !== true && (newData.child('stealth').val() === true || newData.child('hidden').val() === true) && newData.child('revealed').val() !== true)"
+                }
+              }
+            }
           }
         }
       }

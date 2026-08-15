@@ -728,11 +728,11 @@ function maybePlayBattleFx(prevPub,nextPub){
   if(!prevPub||!nextPub||!Array.isArray(prevPub.units)||!Array.isArray(nextPub.units))return;
   // 7HFE: cada turno inicia con la zona de avisos visuales completamente limpia.
   if((prevPub.turnKey||"")!==(nextPub.turnKey||""))clearEventSplashOverlay(true);
-  const explicitAttackFx=nextPub.battleFxEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
-  let explicitDefenseFx=nextPub.defenseFxEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
-  const explicitDodgeFx=nextPub.dodgeFxEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
-  const explicitStatusFx=nextPub.statusFxEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
-  const explicitFloatFx=nextPub.floatFxEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
+  const explicitAttackFx=nextPub.battleFxEvent&&!nextPub.battleFxEvent.privateStealthEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
+  let explicitDefenseFx=nextPub.defenseFxEvent&&!nextPub.defenseFxEvent.privateStealthEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
+  const explicitDodgeFx=nextPub.dodgeFxEvent&&!nextPub.dodgeFxEvent.privateStealthEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
+  const explicitStatusFx=nextPub.statusFxEvent&&!nextPub.statusFxEvent.privateStealthEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
+  const explicitFloatFx=nextPub.floatFxEvent&&!nextPub.floatFxEvent.privateStealthEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
   // Si el resultado fue una esquiva, no se procesa ningún evento de Guardia viejo o concurrente.
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge")explicitDefenseFx=null;
   if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;

@@ -19009,10 +19009,10 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 
 
 /* ============================================================
-   SIGILO · MÁSCARA VISUAL TOTAL DE UNIDAD
-   - Ambos jugadores ven humo en lugar de la carta mientras dure Sigilo.
-   - La carta, figura 3D, marco, rareza, orbes, estados y personaje no se renderizan debajo.
-   - El dueño conserva DET; el rival no puede abrir DET de la unidad oculta.
+   SIGILO · PRIVACIDAD ETAPA 8
+   - El rival no recibe la unidad oculta en su estado público, por lo que no existe token que enmascarar.
+   - La máscara legacy se conserva como defensa visual para estados antiguos/no migrados.
+   - El dueño sí ve su propia unidad con Sigilo, semitransparente, desde su bóveda privada.
    ============================================================ */
 .cell > .unit-card.unit-stealthed{
   background:transparent !important;
@@ -20937,4 +20937,27 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
   .pvp-ranking-row{grid-template-columns:42px minmax(100px,1fr) 70px;gap:7px}
   .pvp-ranking-record{grid-column:2 / 4;text-align:left;font-size:9px}
   .pvp-ranking-points{font-size:12px}
+}
+
+
+/* ETAPA 8 · el propietario conserva una referencia visual semitransparente. */
+.cell > .unit-card.unit-stealthed-owner{
+  opacity:.54 !important;
+  filter:saturate(.82) contrast(.94) drop-shadow(0 0 8px rgba(164,132,255,.34)) !important;
+}
+.cell > .unit-card.unit-stealthed-owner::after{
+  content:"SIGILO";
+  position:absolute;
+  right:4px;
+  top:4px;
+  z-index:1200;
+  padding:2px 5px;
+  border:1px solid rgba(203,190,255,.62);
+  border-radius:7px;
+  background:rgba(25,15,45,.72);
+  color:rgba(243,239,255,.92);
+  font-size:8px;
+  line-height:1;
+  letter-spacing:.06em;
+  pointer-events:none;
 }

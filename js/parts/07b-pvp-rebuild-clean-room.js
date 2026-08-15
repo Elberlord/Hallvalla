@@ -994,6 +994,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       pvpStep6hMagicTest:false,
       pvpFullDuelEnabled:true,
       pvpAtomicActionMode:"multipath_v1",
+      privacyMode:"stealth_private_v1",
       pvpTestClockSuspended:false,
       pvpBridgeReadOnly:false,
       code:String(code||room?.code||""),

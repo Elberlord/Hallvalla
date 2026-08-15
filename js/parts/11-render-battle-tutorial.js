@@ -738,13 +738,16 @@ function syncBattleBoardTrap(record,trap){
 }
 function getBattleBoardUnitSpec(u,x,y){
   const stealthed=isStealthedUnit(u);
+  const hiddenFromViewer=stealthed&&u.owner!==myPlayer;
+  const ownerStealth=stealthed&&u.owner===myPlayer;
   const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
-  const visualUnitKey=stealthed?"stealth":String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
-  const principalClass=!stealthed&&u.principal?"principal-unit":"";
-  const rarityClass=stealthed?"":getCardVisualClass(u);
-  const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${principalClass} ${stealthed?"unit-stealthed":""} ${rarityClass}`.replace(/\s+/g," ").trim();
+  const visualUnitKey=hiddenFromViewer?"stealth":String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
+  const principalClass=!hiddenFromViewer&&u.principal?"principal-unit":"";
+  const rarityClass=hiddenFromViewer?"":getCardVisualClass(u);
+  const stealthClass=hiddenFromViewer?"unit-stealthed":(ownerStealth?"unit-stealthed-owner":"");
+  const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${principalClass} ${stealthClass} ${rarityClass}`.replace(/\s+/g," ").trim();
   let markup="";
-  if(stealthed){
+  if(hiddenFromViewer){
     markup=getStealthBoardCoverHtml();
   }else{
     const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
@@ -754,10 +757,10 @@ function getBattleBoardUnitSpec(u,x,y){
   return{
     className,
     markup,
-    title:stealthed?"Presencia Oculta · Sigilo":`${u.name}${u.principal?" · Personaje Principal":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`,
-    unitKey:stealthed?"stealth":String(u.key||"").trim().toLowerCase(),
-    visibilityTag:stealthed?"stealth":"visible",
-    invisible:stealthed,
+    title:hiddenFromViewer?"Presencia Oculta · Sigilo":`${u.name}${u.principal?" · Personaje Principal":""}${ownerStealth?" · Sigilo privado":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`,
+    unitKey:hiddenFromViewer?"stealth":String(u.key||"").trim().toLowerCase(),
+    visibilityTag:hiddenFromViewer?"stealth":(ownerStealth?"stealth-owner":"visible"),
+    invisible:hiddenFromViewer,
     unitId:String(u.id||""),
     x:String(x),y:String(y)
   };
