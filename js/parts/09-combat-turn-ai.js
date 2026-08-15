@@ -843,6 +843,10 @@ async function advanceTurnPhase(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
   const phase=getTurnPhase();
+  if(publicState?.mode==="tutorial"&&publicState?.tutorialBasic&&typeof getBasicTutorialPhaseGate==="function"){
+    const tutorialGate=getBasicTutorialPhaseGate(phase);
+    if(tutorialGate&&tutorialGate.allowed===false)return setHint(tutorialGate.message||"Sigue el Tutorial básico.");
+  }
   if(phase==="draw")return setHint(`Draw Phase se resuelve automáticamente: roba cartas y recarga ${getResourceLabel(myPlayer)}.`);
   if(phase==="main"){
     handOpen=false;handManualCloseKey="";clearSelection();

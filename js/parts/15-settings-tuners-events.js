@@ -817,7 +817,7 @@ on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
 function isChapterOneCompleteForTutorial(){try{return canAccessDecks();}catch(e){return false;}}
 function renderTutorialMissions(){const list=$("tutorialMissionList");if(!list)return;const basic=isBasicTutorialComplete();const map1=isChapterOneCompleteForTutorial();const homeDone=localStorage.getItem("hallvalla_tutorial_home_complete_v1")==="true";list.innerHTML=`
-  <article class="tutorial-mission-card ${basic?'complete':''}"><div class="tutorial-mission-status">${basic?'✓ GANADA':'1'}</div><div><h3>Tutorial básico</h3><p>Mano, convocación, DET, armas, movimiento, ataque, agotamiento y victoria.</p><span>Recompensa total: 45 oro</span></div><button id="missionBasicBtn" class="btn ${basic?'ghost':'primary'}" type="button">${basic?'Repetir':'Comenzar'}</button></article>
+  <article class="tutorial-mission-card ${basic?'complete':''}"><div class="tutorial-mission-status">${basic?'✓ GANADA':'1'}</div><div><h3>Tutorial básico</h3><p>Inicio de turno, robo, detalles, convocación, magia, movimiento, defensa, ataque y victoria.</p><span>Recompensa total: 45 oro</span></div><button id="missionBasicBtn" class="btn ${basic?'ghost':'primary'}" type="button">${basic?'Repetir':'Comenzar'}</button></article>
   <article class="tutorial-mission-card ${homeDone?'complete':''} ${map1?'':'locked'}"><div class="tutorial-mission-status">${homeDone?'✓':'2'}</div><div><h3>Home y creación de mazo</h3><p>Recorre el Home, la colección y el editor de mazos.</p><span>${map1?'Disponible':'Se desbloquea al derrotar al Hechicero guardián'}</span></div><button id="missionHomeBtn" class="btn ghost" type="button" ${map1?'':'disabled'}>${homeDone?'Revisar':'Iniciar'}</button></article>
   <article class="tutorial-mission-card locked"><div class="tutorial-mission-status">3</div><div><h3>Tácticas avanzadas</h3><p>Estados, trampas, formaciones y decisiones tácticas.</p><span>Se desbloquea después del tutorial de Home.</span></div><button class="btn ghost" type="button" disabled>Bloqueado</button></article>`;
   const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};const h=$("missionHomeBtn");if(h)h.onclick=()=>hvAlert("Esta segunda misión guiará el Home, la colección y la creación del mazo. Su recorrido interactivo se añadirá en la siguiente etapa.","Tutorial de Home");}
@@ -827,7 +827,6 @@ function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("h
 on("missionsBtn","click",openMissionsPanel);
 on("closeMissionsBtn","click",closeMissionsPanel);
 on("closeMissionsX","click",closeMissionsPanel);
-on("openTutorialQuickGuideBtn","click",showTutorialQuickGuide);
 on("mineBtn","click",()=>showComingSoon("Mina"));
 on("collectionBtn","click",openCollectionOrLocked);
 on("forgeBtn","click",()=>showComingSoon("Forja"));

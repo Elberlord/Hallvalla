@@ -896,6 +896,7 @@ function maybeTriggerAdventureAI(){
 }
 async function maybeStartTurn(){
   if(!publicState||!privateState||!isMyTurn()||isBattleEnded())return;
+  if(publicState.mode==="tutorial"&&publicState.tutorialBasic&&typeof isBasicTutorialInitialDrawBlocked==="function"&&isBasicTutorialInitialDrawBlocked())return;
   if(privateState.lastTurnStarted===publicState.turnKey)return;
   if(turnStartLock)return;
   turnStartLock=true;

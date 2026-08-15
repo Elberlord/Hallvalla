@@ -840,9 +840,9 @@ const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_adventure_progress"
 ];
 const HALLVALLA_STATS_TUTORIAL_KEY="hallvalla_stats_tutorial_seen_v1";
-const HALLVALLA_BASIC_TUTORIAL_KEY="hallvalla_basic_battle_tutorial_seen_v2";
-const HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY="hallvalla_tutorial_basic_complete_v1";
-const HALLVALLA_BASIC_TUTORIAL_STEP_KEY="hallvalla_tutorial_basic_step_v1";
+const HALLVALLA_BASIC_TUTORIAL_KEY="hallvalla_basic_battle_tutorial_seen_v3";
+const HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY="hallvalla_tutorial_basic_complete_v2";
+const HALLVALLA_BASIC_TUTORIAL_STEP_KEY="hallvalla_tutorial_basic_step_v2";
 const HALLVALLA_BASIC_TUTORIAL_REWARDS_KEY="hallvalla_tutorial_basic_rewards_v1";
 function clearHallVallaRewardFlags(){
   try{
