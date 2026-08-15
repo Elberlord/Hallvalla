@@ -952,10 +952,28 @@ function getBasicTutorialPhaseGate(phase){
   return {allowed:true};
 }
 function getBasicTutorialProtectedRects(target){
-  const nodes=[...document.querySelectorAll(".action-img-btn,.unit-context-btn,.hv-det-play-card-button,.battle-tool-btn")];
-  return nodes.filter(el=>el!==target&&el.offsetParent!==null).map(el=>el.getBoundingClientRect()).filter(r=>r.width>0&&r.height>0);
+  const selectors=[
+    ".action-img-btn",
+    ".unit-context-btn",
+    ".hv-det-play-card-button",
+    ".battle-tool-btn",
+    "#hudP1",
+    "#hudP2",
+    "#turnHonorHud",
+    "#rivalHonorHud",
+    "#turnTimerHud",
+    "#playerClock1",
+    "#playerClock2",
+    "#phaseBanner",
+    "#mobileToggleActionsBtn",
+    ".side",
+    "#handDrawer"
+  ];
+  const nodes=[...document.querySelectorAll(selectors.join(","))];
+  return nodes.filter(el=>el&&el!==target&&!el.contains?.(target)&&el.offsetParent!==null).map(el=>el.getBoundingClientRect()).filter(r=>r.width>0&&r.height>0);
 }
 function rectOverlapArea(a,b){const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left));const h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));return w*h;}
+function clampBasicTutorialValue(value,min,max){return Math.min(Math.max(value,min),max);}
 function positionBasicTutorialCoach(step,target){
   const coach=$("basicTutorialCoach");if(!coach)return;
   const vw=Math.max(320,window.innerWidth||document.documentElement.clientWidth||320);
@@ -963,13 +981,48 @@ function positionBasicTutorialCoach(step,target){
   const margin=10,gap=14;
   const cr=coach.getBoundingClientRect();
   const cw=Math.min(cr.width||300,vw-margin*2),ch=Math.min(cr.height||120,vh-margin*2);
-  if(!target||target.offsetParent===null){coach.style.setProperty("left",`${margin}px`,"important");coach.style.setProperty("top",`${Math.max(margin,vh-ch-margin)}px`,"important");coach.style.setProperty("right","auto","important");coach.dataset.placement="free";return;}
+
+  const placeCoach=(left,top,name="free")=>{
+    const safeLeft=clampBasicTutorialValue(left,margin,Math.max(margin,vw-cw-margin));
+    const safeTop=clampBasicTutorialValue(top,margin,Math.max(margin,vh-ch-margin));
+    coach.style.setProperty("left",`${safeLeft}px`,"important");
+    coach.style.setProperty("top",`${safeTop}px`,"important");
+    coach.style.setProperty("right","auto","important");
+    coach.dataset.placement=name;
+  };
+
+  if(!target||target.offsetParent===null){placeCoach(margin,Math.max(margin,vh-ch-margin),"free");return;}
+
+  if(step&&(step.id==="turn-start"||step.id==="draw")){
+    const hudRect=$("hudP1")?.getBoundingClientRect?.();
+    const honorRect=$("turnHonorHud")?.getBoundingClientRect?.();
+    const handRect=$("handDrawer")?.getBoundingClientRect?.();
+    const sideRect=document.querySelector(".side")?.getBoundingClientRect?.();
+    const topBlock=Math.max(hudRect?.bottom||0,honorRect?.bottom||0)+12;
+    const bottomBlock=(handRect?.top||vh-margin)-12;
+    const laneHeight=bottomBlock-topBlock;
+    const preferredLeft=margin;
+    if(laneHeight>Math.max(ch,86)){
+      const laneTop=topBlock+Math.max(0,(laneHeight-ch)/2);
+      placeCoach(preferredLeft,laneTop,step.id+"-lane");
+      return;
+    }
+    if(sideRect&&sideRect.left-cw-margin>margin){
+      placeCoach(sideRect.left-cw-margin,margin,step.id+"-side");
+      return;
+    }
+  }
+
   const r=target.getBoundingClientRect();
   const candidates=[
     {name:"right",left:r.right+gap,top:r.top+r.height/2-ch/2},
     {name:"left",left:r.left-cw-gap,top:r.top+r.height/2-ch/2},
     {name:"below",left:r.left+r.width/2-cw/2,top:r.bottom+gap},
-    {name:"above",left:r.left+r.width/2-cw/2,top:r.top-ch-gap}
+    {name:"above",left:r.left+r.width/2-cw/2,top:r.top-ch-gap},
+    {name:"left-mid",left:margin,top:vh*.34-ch/2},
+    {name:"bottom-left",left:margin,top:vh-ch-margin-8},
+    {name:"top-center",left:vw/2-cw/2,top:margin},
+    {name:"bottom-center",left:vw/2-cw/2,top:vh-ch-margin-8}
   ];
   const protectedRects=getBasicTutorialProtectedRects(target);
   let best=null;
@@ -980,10 +1033,11 @@ function positionBasicTutorialCoach(step,target){
     const overflow=Math.max(0,margin-c.left)+Math.max(0,c.left+cw-(vw-margin))+Math.max(0,margin-c.top)+Math.max(0,c.top+ch-(vh-margin));
     const targetOverlap=rectOverlapArea(box,r);
     const controlsOverlap=protectedRects.reduce((sum,pr)=>sum+rectOverlapArea(box,pr),0);
-    const score=overflow*10000+targetOverlap*100+controlsOverlap;
+    const distancePenalty=Math.abs((left+cw/2)-(r.left+r.width/2))*0.05+Math.abs((top+ch/2)-(r.top+r.height/2))*0.02;
+    const score=overflow*10000+targetOverlap*100+controlsOverlap+distancePenalty;
     if(!best||score<best.score)best={...c,left,top,score};
   }
-  coach.style.setProperty("left",`${best?.left??margin}px`,"important");coach.style.setProperty("top",`${best?.top??margin}px`,"important");coach.style.setProperty("right","auto","important");coach.dataset.placement=best?.name||"free";
+  placeCoach(best?.left??margin,best?.top??margin,best?.name||"free");
 }
 function applyBasicTutorialTarget(step){
   clearBasicTutorialTargetHighlight();
