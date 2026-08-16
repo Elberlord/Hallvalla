@@ -1,8 +1,0 @@
-HallValla 7BOARDCTRL8CC
-
-Cambio único: EFECTOS PROPIOS del DET.
-- Grid fijo 3 x 3 (hasta 9 espacios).
-- El parser de habilidades pasa de 4 a 9 secciones nativas.
-- El contenedor queda anclado arriba (align-content: start).
-- overflow: hidden para que cualquier exceso se recorte por abajo del área y no desplace/corte la parte superior.
-- Se conserva la calibración estética 8CB y la lógica de JUGAR sin cambios.

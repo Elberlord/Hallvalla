@@ -1,8 +1,0 @@
-HallValla 7BOARDCTRL8BV
-
-Cambio limitado al DET:
-- level.value: rango/nivel actual.
-- level.bar: barra de progreso visual; el relleno aumenta según las bajas dentro del nivel actual y muestra cuánto falta.
-- battlepower.value: reutiliza getUnitBattlePower() y getBattlePowerTier().
-- No se modificaron reglas de maestría, registro de bajas, IA, PvP, PvE, aventura ni eventos.
-- Se conserva la misma clave de almacenamiento del editor para no mover las posiciones que el usuario ya ajustó en 8BU.

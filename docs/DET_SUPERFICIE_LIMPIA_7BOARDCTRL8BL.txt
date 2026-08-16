@@ -1,9 +1,0 @@
-HallValla 7BOARDCTRL8BL
-
-DET en modo superficie limpia para calibración.
-
-Cambios:
-- cardInspectModal reducido a la imagen base .card-inspect-card.
-- openUnifiedDetEntity elimina del DOM cualquier overlay/panel viejo antes de mostrar el DET.
-- Solo permanece la capa de iconos calibrables hv-det-icon-calibration.
-- No se tocaron mecánicas de juego; solo la superficie DET.

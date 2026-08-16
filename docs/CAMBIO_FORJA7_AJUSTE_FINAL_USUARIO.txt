@@ -1,1 +1,0 @@
-Se conserva la configuración de layout proporcionada por el usuario. El drawer visible pasa a llamarse Mazo; Guardar/Sin sobrantes solo aparecen al abrir Mazo; se eliminan textos Básica 0/800 y equivalentes del catálogo; Materiales usa IDs estables y mueve arte+valores+nombres juntos; no se toca PvP, combate, bootstrap ni progresión.

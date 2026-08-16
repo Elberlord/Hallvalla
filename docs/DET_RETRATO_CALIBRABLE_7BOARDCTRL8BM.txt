@@ -1,8 +1,0 @@
-HallValla 7BOARDCTRL8BM
-
-Se fijaron como base las posiciones de iconos enviadas por el usuario.
-Se añadió un único elemento dinámico nuevo al DET limpio: portrait.image.
-ID DOM: detPortraitImage.
-ID visible/editor: portrait.image.
-Puede moverse con mouse y escalarse con rueda o controles de TAMAÑO.
-No se restauraron paneles viejos.

@@ -1,8 +1,0 @@
-HallValla 7BOARDCTRL8BR
-
-Corrección DET:
-- El nombre se crea como #detCardName / name.text con visibilidad forzada directamente al crear el elemento.
-- Se eliminaron del flujo de colección los postprocesados del DET viejo (cardInspectVisual, cardInspectSub, cardInspectText, utilities, collection box, etc.).
-- Se eliminaron helpers muertos del DET viejo que ya no tenían consumidores.
-- Se cambió la memoria del editor para evitar offsets viejos de name.text.
-- No se tocaron IA, combate, PvP, PvE, aventura ni eventos.

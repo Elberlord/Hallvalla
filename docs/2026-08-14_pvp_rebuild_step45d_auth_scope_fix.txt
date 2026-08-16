@@ -1,8 +1,0 @@
-HALLVALLA PVP REBUILD STEP 4.5D
-
-Correccion puntual sobre Step 4.5C:
-- auth, db, uid y las primitivas Firebase se consumen desde los bindings globales lexicos creados por los modulos clasicos, igual que el Step 4 estable.
-- Se elimina el acceso incorrecto globalThis.auth/globalThis.db, que en GitHub Pages era undefined y provocaba: Cannot read properties of undefined (reading app).
-- Se conserva la UI visible de reglas/apuestas del Step 4.5C.
-- Cache token incrementado para forzar carga del JS corregido.
-- database.rules.json sin cambios.

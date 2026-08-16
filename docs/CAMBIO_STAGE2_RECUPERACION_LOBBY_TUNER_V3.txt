@@ -1,8 +1,0 @@
-Recuperación del lobby PvP desde la última base funcional antes del tuner.
-- bootstrap-loader.js NO se modifica.
-- No existe módulo 21 nuevo; el editor del lobby se integra al final de 20-forge-direct-tuner.js, que ya era parte del runtime.
-- Se corrige la compresión: el asset del lobby conserva proporción nativa 1672:941 y sustituye visualmente al modal base mientras la sala está abierta.
-- COPIAR es visible junto al código.
-- EDITAR LOBBY aparece solo cuando la sala PvP está abierta.
-- Control individual: imagen, código, copiar, nombres J1/J2, puntos, checks y zonas Listo/Salir; además grupos explícitos.
-- Ancho/alto del editor se aplican como escalado, nunca como width/height CSS directos, evitando deformar el layout al 100%.

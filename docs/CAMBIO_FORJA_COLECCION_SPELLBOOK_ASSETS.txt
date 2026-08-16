@@ -1,1 +1,0 @@
-Colección mantiene su composición limpia. Se añadió filtro Todas/En posesión/No poseídas, el control de ajuste reconoce ese dropdown, el Spellbook lateral usa un asset WEBP dedicado y los Materiales de creación usan un banner WEBP en la franja superior. Se redujo el texto del constructor y se conservó la interacción de estrellas/X para principales.
