@@ -26,14 +26,14 @@ const DRAGON_COMPANION_STATS=Object.freeze({
 });
 
 const DRAGON_COMPANION_ASSETS=Object.freeze({
-  egg:Object.freeze({hand:"assets/cards/beasts/dragon_egg.webp",board:"assets/board_cards/beasts/dragon_egg.webp"}),
-  baby:Object.freeze({hand:"assets/cards/beasts/baby_dragon.webp",board:"assets/board_cards/beasts/baby_dragon.webp"}),
-  young_lightning:Object.freeze({hand:"assets/cards/beasts/young_lightning_dragon.webp",board:"assets/board_cards/beasts/young_lightning_dragon.webp"}),
-  young_fire:Object.freeze({hand:"assets/cards/beasts/young_fire_dragon.webp",board:"assets/board_cards/beasts/young_fire_dragon.webp"}),
-  young_ice:Object.freeze({hand:"assets/cards/beasts/young_ice_dragon.webp",board:"assets/board_cards/beasts/young_ice_dragon.webp"}),
-  adult_lightning:Object.freeze({hand:"assets/cards/beasts/adult_lightning_dragon.webp",board:"assets/board_cards/beasts/adult_lightning_dragon.webp"}),
-  adult_fire:Object.freeze({hand:"assets/cards/beasts/adult_fire_dragon.webp",board:"assets/board_cards/beasts/adult_fire_dragon.webp"}),
-  adult_ice:Object.freeze({hand:"assets/cards/beasts/adult_ice_dragon.webp",board:"assets/board_cards/beasts/adult_ice_dragon.webp"})
+  egg:Object.freeze({hand:"assets/cards/beasts/dragon_egg.webp",field:"assets/field_figures/beasts/dragon_egg.webp"}),
+  baby:Object.freeze({hand:"assets/cards/beasts/baby_dragon.webp",field:"assets/field_figures/beasts/baby_dragon.webp"}),
+  young_lightning:Object.freeze({hand:"assets/cards/beasts/young_lightning_dragon.webp",field:"assets/field_figures/beasts/young_lightning_dragon.webp"}),
+  young_fire:Object.freeze({hand:"assets/cards/beasts/young_fire_dragon.webp",field:"assets/field_figures/beasts/young_fire_dragon.webp"}),
+  young_ice:Object.freeze({hand:"assets/cards/beasts/young_ice_dragon.webp",field:"assets/field_figures/beasts/young_ice_dragon.webp"}),
+  adult_lightning:Object.freeze({hand:"assets/cards/beasts/adult_lightning_dragon.webp",field:"assets/field_figures/beasts/adult_lightning_dragon.webp"}),
+  adult_fire:Object.freeze({hand:"assets/cards/beasts/adult_fire_dragon.webp",field:"assets/field_figures/beasts/adult_fire_dragon.webp"}),
+  adult_ice:Object.freeze({hand:"assets/cards/beasts/adult_ice_dragon.webp",field:"assets/field_figures/beasts/adult_ice_dragon.webp"})
 });
 
 function dragonElementLabel(element){return{lightning:"Relámpago",fire:"Fuego",ice:"Hielo"}[element]||"Desconocido";}
@@ -92,7 +92,7 @@ saveDragonEggs=function(records){return saveDragonCompanions(records);};
 
 function makeDragonCompanionCard(stage,element){
   if(stage==="egg")return{
-    key:"dragon_egg",name:"Huevo de Dragón",type:"unit",icon:"🥚",portrait:DRAGON_COMPANION_ASSETS.egg.hand,
+    key:"dragon_egg",name:"Huevo de Dragón",type:"unit",icon:"🥚",portrait:DRAGON_COMPANION_ASSETS.egg.hand,fieldFigure:DRAGON_COMPANION_ASSETS.egg.field,
     rarity:"Especial",special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonEgg:true,dragonStage:"egg",dragonElement:"mystery",
     cost:2,hp:50,atk:0,guard:0,dex:0,agi:0,mov:0,range:0,immobile:true,cannotAttack:true,cannotDefend:true,
     text:"Personaje Personal opcional. No reemplaza al líder. Mientras permanezca vivo en el campo, todas las eliminaciones aliadas cuentan para su incubación. Si es destruido, no pierdes el duelo; conserva el progreso y deja de contar durante ese combate. Eclosiona al terminar un duelo después de alcanzar 1000 eliminaciones."
@@ -106,7 +106,7 @@ function makeDragonCompanionCard(stage,element){
   const growthText=stage==="adult"?"Forma adulta completa.":`Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
-    icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,
+    icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,fieldFigure:DRAGON_COMPANION_ASSETS[visualStage].field,
     rarity,special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
     cost:stage==="adult"?10:stage==="young"?7:4,...stats,aerial:true,flight:true,
     text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. ${growthText}`
@@ -124,13 +124,7 @@ const DRAGON_COMPANION_CARD_BY_KEY=Object.freeze(Object.fromEntries(DRAGON_COMPA
 (function registerDragonCompanionCards(){
   CARD_PORTRAITS.dragonEgg=DRAGON_COMPANION_ASSETS.egg.hand;
   CARD_PORTRAITS.babyDragon=DRAGON_COMPANION_ASSETS.baby.hand;
-  BOARD_PORTRAITS.dragon_egg=DRAGON_COMPANION_ASSETS.egg.board;
   for(const card of DRAGON_COMPANION_CARDS){
-    const visual=getDragonCardStageAndElement(card.key);
-    if(visual){
-      const assetKey=visual.stage==="egg"?"egg":visual.stage==="baby"?"baby":`${visual.stage}_${visual.element}`;
-      BOARD_PORTRAITS[card.key]=DRAGON_COMPANION_ASSETS[assetKey].board;
-    }
     const existing=CARD_TEMPLATES.find(item=>item&&item.key===card.key);
     if(existing)Object.assign(existing,card);else CARD_TEMPLATES.push(card);
     if(typeof CARD_VISUALS_BY_KEY!=="undefined")CARD_VISUALS_BY_KEY[card.key]={portrait:card.portrait,icon:card.icon};

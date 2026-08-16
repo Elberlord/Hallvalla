@@ -13,7 +13,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     enemyName:"Dragón del Relámpago",
     leaderType:"dragon_lightning",
     portrait:"assets/leaders/lightning_dragon_leader.webp",
-    boardPortrait:"assets/board_cards/beasts/adult_lightning_dragon.webp",
+    fieldFigure:"assets/field_figures/beasts/adult_lightning_dragon.webp",
     hp:40,guard:16,atk:20,precision:14,evasion:12,naturalMov:4,range:5,
     xp:720,gold:120,
     directName:"Rayo concentrado",
@@ -27,7 +27,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     enemyName:"Dragón de Fuego",
     leaderType:"dragon_fire",
     portrait:"assets/leaders/fire_dragon_leader.webp",
-    boardPortrait:"assets/board_cards/beasts/adult_fire_dragon.webp",
+    fieldFigure:"assets/field_figures/beasts/adult_fire_dragon.webp",
     hp:48,guard:20,atk:24,precision:12,evasion:10,naturalMov:3,range:5,
     xp:960,gold:160,
     directName:"Aliento abrasador",
@@ -41,7 +41,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     enemyName:"Dragón de Hielo",
     leaderType:"dragon_ice",
     portrait:"assets/leaders/ice_dragon_leader.webp",
-    boardPortrait:"assets/board_cards/beasts/adult_ice_dragon.webp",
+    fieldFigure:"assets/field_figures/beasts/adult_ice_dragon.webp",
     hp:56,guard:24,atk:18,precision:10,evasion:8,naturalMov:2,range:5,
     xp:1280,gold:220,
     directName:"Lanza glacial",
@@ -58,7 +58,7 @@ const DRAGON_CONTRACT_CHAPTER=Object.freeze({
   battles:Object.values(DRAGON_CONTRACT_DEFS).map((def,index)=>({
     id:def.id,num:index+1,dragonContract:true,dragonElement:def.element,
     title:def.title,enemyName:def.enemyName,enemyLeaderType:def.leaderType,enemyLeaderLevel:9,
-    enemyLeaderPortrait:def.portrait,image:def.boardPortrait,
+    enemyLeaderPortrait:def.portrait,image:def.fieldFigure,
     enemyIntro:`${def.desc}\n\nEl dragón permanece anclado en su guarida. No atacará hasta que una unidad rival entre en su radio de 5 casillas. Después alternará dos ataques directos y un ataque elemental de área.`,
     xp:def.xp,gold:def.gold,entryGoldCost:DRAGON_CONTRACT_ENTRY_GOLD_COST,rewardDragonEgg:true,cardPack:false,aiLevel:30,aiDrawBonus:0,aiHonorBonus:0,
     aiStyle:"Jefe único inmóvil · Vuelo · ciclo directo/directo/elemental",
@@ -134,7 +134,6 @@ for(const def of Object.values(DRAGON_CONTRACT_DEFS)){
   LEADER_BASE_ATK[def.leaderType]=def.atk;
   LEADER_BASE_GUARD[def.leaderType]=def.guard;
   LEADER_BASE_RANGE[def.leaderType]=def.range;
-  BOARD_PORTRAITS[def.leaderType]=def.boardPortrait;
 }
 
 const dragonOriginalGetLeaderAttack=getLeaderAttack;

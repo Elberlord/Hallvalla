@@ -38,7 +38,6 @@ function hydrateCardVisualData(card){
   const visual=CARD_VISUALS_BY_KEY[card.key]||null;
   const merged=visual?{...card,...visual}:{...card};
   if(!merged.portrait)merged.portrait=getResolvedCardPortraitSource(merged);
-  if(merged.type==="unit"&&!merged.boardPortrait)merged.boardPortrait=getResolvedBoardPortraitSource(merged);
   if(merged.type==="unit"&&!merged.fieldFigure)merged.fieldFigure=getResolvedFieldFigureSource(merged);
   if(merged.type==="unit")merged.battlePower=getUnitBattlePower(merged);
   return applyAxeDexRule(applyDesertAssassinRule(merged));

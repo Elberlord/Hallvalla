@@ -16493,6 +16493,18 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   -webkit-user-drag:none;
   user-select:none;
 }
+/* PERF6A · fallback liviano: si falta una field_figure, solo se muestra el triángulo. */
+.cell > .unit-card .field-figure-img.hv-missing-asset,
+.field-figure-preview-card .field-figure-img.hv-missing-asset{
+  position:absolute;
+  left:27%;
+  bottom:22%;
+  width:46%;
+  height:46%;
+  object-fit:contain;
+  transform:none!important;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.72))!important;
+}
 body.field-figure-editing .grid .cell > .unit-card[data-unit-key]{cursor:move;}
 body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
   outline:2px solid rgba(255,220,125,.95);

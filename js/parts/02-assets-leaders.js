@@ -95,33 +95,7 @@ const CARD_PORTRAITS={
   ropeCage:"assets/cards/beasts/jaula_de_cuerda.webp"
 };
 
-/* Retratos exclusivos del tablero.
-   No dependen de la carpeta ni del arte usado por las cartas de mano. */
-const BOARD_PORTRAITS={
-  wallace:"assets/board_cards/special/wallace.webp",
-  hattori_hanzo:"assets/board_cards/special/hattori_hanzo.webp",
-  merlin:"assets/board_cards/special/merlin.webp",
-  king_solomon:"assets/board_cards/special/king_solomon.webp",
-  ericto:"assets/board_cards/special/ericto.webp",
-  solomon_jinn:"assets/board_cards/special/solomon_jinn.webp",
-  solomon_ifrit:"assets/board_cards/special/solomon_ifrit.webp",
-  solomon_demon:"assets/board_cards/special/solomon_demon.webp",
-  african_elephant:"assets/board_cards/beasts/african_elephant.webp",
-  egyptian_line_archer:"assets/board_cards/basic/egyptian_line_archer.webp",
-  new_kingdom_archer:"assets/board_cards/basic/new_kingdom_archer.webp",
-  roman_auxiliary_sagittarius:"assets/board_cards/basic/roman_auxiliary_sagittarius.webp",
-  greek_hoplite:"assets/board_cards/basic/greek_hoplite.webp",
-  roman_legionary:"assets/board_cards/basic/roman_legionary.webp",
-  armored_man_at_arms:"assets/board_cards/basic/armored_man_at_arms.webp",
-  numidian_javelin_rider:"assets/board_cards/basic/numidian_javelin_rider.webp",
-  scythian_horse_archer:"assets/board_cards/basic/scythian_horse_archer.webp",
-  hungarian_hussar:"assets/board_cards/basic/hungarian_hussar.webp",
-  mongol_explorer:"assets/board_cards/basic/mongol_explorer.webp",
-  cossack_rider:"assets/board_cards/basic/cossack_rider.webp",
-  acolyte_healer:"assets/board_cards/basic/acolyte_healer.webp",
-  morgana:"assets/board_cards/special/morgana.webp"
-};
-
+/* PERF6A · El tablero usa exclusivamente field_figures. Las cartas completas se reservan para mano/Biblioteca/UI. */
 const HV_WARNING_IMAGE_URI="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' rx='28' fill='%23110f0c'/%3E%3Cpath d='M128 32 L230 214 H26 Z' fill='%23f3b300' stroke='%23ffe082' stroke-width='10' stroke-linejoin='round'/%3E%3Crect x='118' y='88' width='20' height='72' rx='10' fill='%23311f00'/%3E%3Ccircle cx='128' cy='184' r='12' fill='%23311f00'/%3E%3Ctext x='128' y='238' font-family='Arial,sans-serif' font-size='22' text-anchor='middle' fill='%23f7e7b3'%3EFALTA ASSET%3C/text%3E%3C/svg%3E";
 
 function hvEscapeAttr(value){
@@ -154,10 +128,12 @@ function isBasicRarityLabel(value){
   3) key;
   4) name normalizado.
 
-  Con esa identidad se derivan automáticamente las tres capas:
+  Con esa identidad se derivan únicamente las capas que siguen vigentes:
     assets/cards/<bucket>/<assetKey>.webp
-    assets/board_cards/<bucket>/<assetKey>.webp
     assets/field_figures/<bucket>/<assetKey>.webp
+
+  PERF6A: la capa antigua de cartas de tablero fue retirada. En arena no existe fallback a carta; si falta
+  la field_figure se muestra el triángulo liviano de asset faltante.
 
   Los buckets alternativos se prueban automáticamente para mantener compatibilidad
   con assets antiguos ubicados en carpetas distintas (por ejemplo Wallace/Mulan).
@@ -165,7 +141,6 @@ function isBasicRarityLabel(value){
 const HV_ASSET_BUCKETS=Object.freeze(["basic","special","beasts"]);
 const HV_ASSET_LAYER_PROPS=Object.freeze({
   cards:{path:["portrait","cardPortrait","cardImage"],bucket:["cardAssetBucket","cardsAssetBucket"]},
-  board_cards:{path:["boardPortrait","boardImage"],bucket:["boardAssetBucket","boardCardsAssetBucket"]},
   field_figures:{path:["fieldFigure","fieldFigurePortrait","fieldFigureImage"],bucket:["fieldFigureAssetBucket","fieldAssetBucket"]}
 });
 function hvUniqueAssetValues(values){
@@ -174,7 +149,7 @@ function hvUniqueAssetValues(values){
 }
 function getAssetBucketFromPath(value){
   const path=String(value||"").replace(/\\/g,"/");
-  const match=path.match(/assets\/(?:cards|board_cards|field_figures)\/(basic|special|beasts)\//i);
+  const match=path.match(/assets\/(?:cards|field_figures)\/(basic|special|beasts)\//i);
   return match?match[1].toLowerCase():"";
 }
 function getExplicitAssetPath(entity,layer){
@@ -237,20 +212,6 @@ function getResolvedCardPortraitCandidates(entity){
     ...buildAutoAssetCandidates("cards",entity)
   ]);
 }
-function getResolvedBoardPortraitCandidates(entity){
-  if(!entity)return [];
-  if(entity.leader&&entity.leaderType&&typeof LEADER_DATA!=="undefined"&&LEADER_DATA[entity.leaderType])return hvUniqueAssetValues([LEADER_DATA[entity.leaderType].portrait]);
-  const key=normalizeAssetKeyName(entity.key||entity.name||"");
-  const explicitLegacy=key&&typeof BOARD_PORTRAITS!=="undefined"?BOARD_PORTRAITS[key]:"";
-  const cardPath=getExplicitAssetPath(entity,"cards");
-  const transformedCard=cardPath.includes("assets/cards/")?cardPath.replace("assets/cards/","assets/board_cards/"):"";
-  return hvUniqueAssetValues([
-    getExplicitAssetPath(entity,"board_cards"),
-    explicitLegacy,
-    ...buildAutoAssetCandidates("board_cards",entity),
-    transformedCard
-  ]);
-}
 function getResolvedFieldFigureCandidates(entity){
   if(!entity||entity.leader)return [];
   return hvUniqueAssetValues([
@@ -261,9 +222,6 @@ function getResolvedFieldFigureCandidates(entity){
 function getResolvedCardPortraitSource(entity){
   return getResolvedCardPortraitCandidates(entity)[0]||"";
 }
-function getResolvedBoardPortraitSource(entity){
-  return getResolvedBoardPortraitCandidates(entity)[0]||"";
-}
 function getResolvedFieldFigureSource(entity){
   return getResolvedFieldFigureCandidates(entity)[0]||"";
 }
@@ -271,7 +229,6 @@ function getResolvedUnitAssetSet(entity){
   return {
     assetKey:getAssetIdentityKey(entity),
     card:getResolvedCardPortraitCandidates(entity),
-    board:getResolvedBoardPortraitCandidates(entity),
     fieldFigure:getResolvedFieldFigureCandidates(entity)
   };
 }
@@ -315,7 +272,7 @@ function hvHandleImageFallback(img){
   return true;
 }
 
-Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolvedCardPortraitCandidates,getResolvedBoardPortraitCandidates,getResolvedFieldFigureCandidates});
+Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolvedCardPortraitCandidates,getResolvedFieldFigureCandidates});
 
 /*
 -------------------------------------------------------------------------------

@@ -300,8 +300,6 @@ function getUnitPortraitHtml(u,depthLayer=false){
   if(depthLayer){
     const candidates=hvUniqueAssetValues([
       ...getResolvedFieldFigureCandidates(u),
-      ...getResolvedBoardPortraitCandidates(u),
-      ...cardCandidates,
       getAssetWarningImageSrc()
     ]);
     const start=candidates.shift()||getAssetWarningImageSrc();
@@ -323,25 +321,9 @@ function getBoardUnitPortraitHtml(u){
     const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);
     return `<img src="${portrait}" alt="${alt}" ${fallbackAttr}>`;
   }
-
-  const alt=escapeHtml(u?.name||"Unidad");
-  const boardCandidates=getResolvedBoardPortraitCandidates(u);
-  const cardCandidates=getResolvedCardPortraitCandidates(u);
-  const backgroundCandidates=hvUniqueAssetValues([...boardCandidates,...cardCandidates,getAssetWarningImageSrc()]);
-  if(!backgroundCandidates.length)return `<span>${u?.icon||"✦"}</span>`;
-
-  const separateFieldFigure=typeof getFieldFigureHtml==="function";
-  const foregroundCandidates=hvUniqueAssetValues([
-    ...(separateFieldFigure?[]:getResolvedFieldFigureCandidates(u)),
-    ...boardCandidates,
-    ...cardCandidates,
-    getAssetWarningImageSrc()
-  ]);
-  const bgStart=backgroundCandidates.shift()||getAssetWarningImageSrc();
-  const fgStart=foregroundCandidates.shift()||bgStart;
-  const bgFallbackAttr=buildAssetFallbackAttr(backgroundCandidates,`${u?.name||"Unidad"} · board card`);
-  const fgFallbackAttr=buildAssetFallbackAttr(foregroundCandidates,`${u?.name||"Unidad"} · personaje`);
-  return `<div class="unit-portrait-stack"><img class="unit-card-bg-layer" src="${bgStart}" alt="" aria-hidden="true" ${bgFallbackAttr}><img class="unit-card-character-layer" src="${fgStart}" alt="${alt}" ${fgFallbackAttr}></div>`;
+  // PERF6A: las invocaciones del tablero se dibujan exclusivamente con field_figures.
+  // El marco, HUD e iconos viven fuera de unit-portrait y permanecen intactos.
+  return "";
 }
 
 function showUnit(u){
@@ -744,7 +726,7 @@ function makeLightCavalryToken(owner,x,y){
   const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",assetKey:"cavalry_light",assetBucket:"basic",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
   const card=makeCard({...template,assetKey:"cavalry_light",assetBucket:"basic"},owner);
   const token=makeUnit({...card,summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},x,y);
-  return {...token,assetKey:"cavalry_light",assetBucket:"basic",boardPortrait:"assets/board_cards/basic/cavalry_light.webp",fieldFigure:"assets/field_figures/basic/cavalry_light.webp",tokenSummon:true};
+  return {...token,assetKey:"cavalry_light",assetBucket:"basic",fieldFigure:"assets/field_figures/basic/cavalry_light.webp",tokenSummon:true};
 }
 function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(!caster)return[];

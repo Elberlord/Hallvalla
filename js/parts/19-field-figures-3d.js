@@ -115,13 +115,6 @@ function hvFieldFigureAssetCandidates(key,entity=null){
   const source=entity||entry?.entity||{key};
   return typeof getResolvedFieldFigureCandidates==="function"?getResolvedFieldFigureCandidates(source):[];
 }
-function hvFieldFigureBoardCandidates(key,entity=null){
-  const entry=HV_FIELD_FIGURES[key];
-  const source=entity||entry?.entity||{key};
-  return typeof getResolvedBoardPortraitCandidates==="function"?getResolvedBoardPortraitCandidates(source):[];
-}
-
-
 
 function hvFieldFigureStyleText(key){
   const c=getFieldFigureConfig(key);
@@ -156,11 +149,13 @@ function hvFieldFigureStyleText(key){
 function getFieldFigureHtml(u){
   const key=hvEnsureFieldFigureRegistryEntry(u);
   if(!key)return "";
-  if(typeof isStealthedUnit==="function"&&isStealthedUnit(u))return "";
-  const candidates=hvFieldFigureAssetCandidates(key,u);
-  if(!candidates.length)return "";
-  const src=candidates[0];
-  const fallbackAttr=buildOptionalAssetFallbackAttr(candidates.slice(1),`${u?.name||"Unidad"} · figura 3D`,".field-figure-layer");
+  if(typeof isStealthHiddenFromViewer==="function"&&isStealthHiddenFromViewer(u))return "";
+  const candidates=hvUniqueAssetValues([
+    ...hvFieldFigureAssetCandidates(key,u),
+    getAssetWarningImageSrc()
+  ]);
+  const src=candidates.shift()||getAssetWarningImageSrc();
+  const fallbackAttr=buildAssetFallbackAttr(candidates,`${u?.name||"Unidad"} · figura 3D`);
   const label=(HV_FIELD_FIGURES[key]?.name||u?.name||"Unidad").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
   return `<div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true"><img class="field-figure-img" src="${src}" alt="" title="${label}" draggable="false" ${fallbackAttr}></div>`;
 }

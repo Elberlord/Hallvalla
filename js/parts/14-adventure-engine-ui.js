@@ -695,7 +695,6 @@ function hvCollectEntityBattlePrefetchAssets(entity,target){
   if(portrait)target.add(portrait);
   try{ if(typeof getResolvedCardPortraitCandidates==="function")addFirst(getResolvedCardPortraitCandidates(entity)); }catch(_){ }
   if(String(entity.type||"").toLowerCase()==="unit"&&!entity.leader){
-    try{ if(typeof getResolvedBoardPortraitCandidates==="function")addFirst(getResolvedBoardPortraitCandidates(entity)); }catch(_){ }
     try{ if(typeof getResolvedFieldFigureCandidates==="function")addFirst(getResolvedFieldFigureCandidates(entity)); }catch(_){ }
   }
 }

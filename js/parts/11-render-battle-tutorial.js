@@ -767,8 +767,10 @@ function getBattleBoardUnitSpec(u,x,y){
     markup=getStealthBoardCoverHtml();
   }else{
     const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
+    const boardPortraitHtml=getBoardUnitPortraitHtml(u);
+    const portraitLayerHtml=boardPortraitHtml?`<div class="unit-portrait">${boardPortraitHtml}</div>`:"";
     const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
-    markup=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div><div class="unit-portrait">${getBoardUnitPortraitHtml(u)}</div>${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
+    markup=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div>${portraitLayerHtml}${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
   }
   return{
     className,
