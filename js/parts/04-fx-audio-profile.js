@@ -48,6 +48,8 @@ function clearEventSplashOverlay(resetQueue=true){
   eventSplashActive=false;
   if(resetQueue)eventSplashQueue=[];
 }
+const HV_EVENT_KNOWN_ASSET_PATHS=new Set(["assets/cards/basic/equipment/amuleto_de_canalizacion.webp","assets/cards/basic/equipment/arnes_de_caceria.webp","assets/cards/basic/equipment/arnes_de_piel_curtida.webp","assets/cards/basic/equipment/barda_ligera.webp","assets/cards/basic/equipment/capa_de_escaramuza.webp","assets/cards/basic/equipment/collar_del_instinto.webp","assets/cards/basic/equipment/correa_de_retirada.webp","assets/cards/basic/equipment/estribos_de_repliegue.webp","assets/cards/basic/equipment/foco_estabilizador.webp","assets/cards/basic/equipment/grebas_de_marcha.webp","assets/cards/basic/equipment/guardabrazos_de_ruptura.webp","assets/cards/basic/equipment/mango_contrapesado.webp","assets/cards/basic/equipment/manto_del_ejecutor.webp","assets/cards/basic/equipment/visera_de_guerra.webp","assets/cards/basic/spells/athena_blessing.webp","assets/cards/basic/spells/fireball.webp","assets/cards/basic/spells/heal.webp","assets/cards/basic/spells/inspiration.webp","assets/cards/basic/spells/sand_storm.webp","assets/cards/basic/spells/shield_wall.webp","assets/cards/basic/traps/smoke_bomb.webp","assets/cards/basic/traps/warning_rune.webp","assets/cards/basic/units/acolyte_healer.webp","assets/cards/basic/units/archer.webp","assets/cards/basic/units/armored_man_at_arms.webp","assets/cards/basic/units/berserker_de_oso.webp","assets/cards/basic/units/berserker_north.webp","assets/cards/basic/units/cavalry_light.webp","assets/cards/basic/units/cossack_rider.webp","assets/cards/basic/units/egyptian_line_archer.webp","assets/cards/basic/units/geisha_encubierta.webp","assets/cards/basic/units/greek_hoplite.webp","assets/cards/basic/units/heavy_infantry_paladin.webp","assets/cards/basic/units/hungarian_hussar.webp","assets/cards/basic/units/mage.webp","assets/cards/basic/units/mongol_explorer.webp","assets/cards/basic/units/mulan.webp","assets/cards/basic/units/new_kingdom_archer.webp","assets/cards/basic/units/numidian_javelin_rider.webp","assets/cards/basic/units/paladin.webp","assets/cards/basic/units/richard_lionheart.webp","assets/cards/basic/units/rogue.webp","assets/cards/basic/units/roman_auxiliary_sagittarius.webp","assets/cards/basic/units/roman_legionary.webp","assets/cards/basic/units/saboteador_iga.webp","assets/cards/basic/units/samurai_katana.webp","assets/cards/basic/units/samurai_naginata.webp","assets/cards/basic/units/samurai_yabusame.webp","assets/cards/basic/units/scythian_horse_archer.webp","assets/cards/basic/units/skipar_del_drakkar.webp","assets/cards/basic/units/ulfhednar.webp","assets/cards/basic/units/wallace.webp","assets/cards/beasts/adult_fire_dragon.webp","assets/cards/beasts/adult_ice_dragon.webp","assets/cards/beasts/adult_lightning_dragon.webp","assets/cards/beasts/african_buffalo.webp","assets/cards/beasts/african_elephant.webp","assets/cards/beasts/african_lion.webp","assets/cards/beasts/baby_dragon.webp","assets/cards/beasts/bengal_tiger.webp","assets/cards/beasts/black_raven.webp","assets/cards/beasts/carnada_ambar.webp","assets/cards/beasts/cepo_de_hierro.webp","assets/cards/beasts/constrictor_snake.webp","assets/cards/beasts/dragon_egg.webp","assets/cards/beasts/estacas_de_bambu.webp","assets/cards/beasts/foso_cubierto.webp","assets/cards/beasts/honey_badger.webp","assets/cards/beasts/inland_taipan.webp","assets/cards/beasts/iron_jaw_trap.webp","assets/cards/beasts/jaula_de_cuerda.webp","assets/cards/beasts/peregrine_falcon.webp","assets/cards/beasts/porcupine.webp","assets/cards/beasts/red_de_caza.webp","assets/cards/beasts/white_rhino.webp","assets/cards/beasts/wild_boar.webp","assets/cards/beasts/young_fire_dragon.webp","assets/cards/beasts/young_ice_dragon.webp","assets/cards/beasts/young_lightning_dragon.webp","assets/cards/special/units/achilles.webp","assets/cards/special/units/alexander.webp","assets/cards/special/units/arjuna.webp","assets/cards/special/units/attila.webp","assets/cards/special/units/beowulf.webp","assets/cards/special/units/boudica.webp","assets/cards/special/units/cu_chulainn.webp","assets/cards/special/units/el_cid.webp","assets/cards/special/units/ericto.webp","assets/cards/special/units/fuma_kotaro.webp","assets/cards/special/units/genghis_khan.webp","assets/cards/special/units/gilgamesh.webp","assets/cards/special/units/hannibal_barca.webp","assets/cards/special/units/hattori_hanzo.webp","assets/cards/special/units/hector_troy.webp","assets/cards/special/units/joan_of_arc.webp","assets/cards/special/units/julius_caesar.webp","assets/cards/special/units/khalid_ibn_al_walid.webp","assets/cards/special/units/king_solomon.webp","assets/cards/special/units/leonidas.webp","assets/cards/special/units/lu_bu.webp","assets/cards/special/units/merlin.webp","assets/cards/special/units/miyamoto_musashi.webp","assets/cards/special/units/morgana.webp","assets/cards/special/units/nasu_no_yoichi.webp","assets/cards/special/units/ragnar_lodbrok.webp","assets/cards/special/units/saladin.webp","assets/cards/special/units/shaka_zulu_v2.webp","assets/cards/special/units/simo_hayha.webp","assets/cards/special/units/spartacus.webp","assets/cards/special/units/subotai_v2.webp","assets/cards/special/units/sun_tzu.webp","assets/cards/special/units/tomoe_gozen_v2.webp","assets/cards/special/units/ulysses.webp","assets/cards/special/units/yi_sun_sin.webp","assets/field_figures/basic/acolyte_healer.webp","assets/field_figures/basic/archer.webp","assets/field_figures/basic/armored_man_at_arms.webp","assets/field_figures/basic/berserker_de_oso.webp","assets/field_figures/basic/berserker_north.webp","assets/field_figures/basic/cavalry_light.webp","assets/field_figures/basic/cossack_rider.webp","assets/field_figures/basic/egyptian_line_archer.webp","assets/field_figures/basic/geisha_encubierta.webp","assets/field_figures/basic/greek_hoplite.webp","assets/field_figures/basic/heavy_infantry_paladin.webp","assets/field_figures/basic/hungarian_hussar.webp","assets/field_figures/basic/mage.webp","assets/field_figures/basic/mongol_explorer.webp","assets/field_figures/basic/new_kingdom_archer.webp","assets/field_figures/basic/numidian_javelin_rider.webp","assets/field_figures/basic/paladin.webp","assets/field_figures/basic/rogue.webp","assets/field_figures/basic/roman_auxiliary_sagittarius.webp","assets/field_figures/basic/roman_legionary.webp","assets/field_figures/basic/saboteador_iga.webp","assets/field_figures/basic/samurai_katana.webp","assets/field_figures/basic/samurai_naginata.webp","assets/field_figures/basic/samurai_yabusame.webp","assets/field_figures/basic/scythian_horse_archer.webp","assets/field_figures/basic/skipar_del_drakkar.webp","assets/field_figures/basic/ulfhednar.webp","assets/field_figures/beasts/adult_fire_dragon.webp","assets/field_figures/beasts/adult_ice_dragon.webp","assets/field_figures/beasts/adult_lightning_dragon.webp","assets/field_figures/beasts/african_buffalo.webp","assets/field_figures/beasts/african_elephant.webp","assets/field_figures/beasts/african_lion.webp","assets/field_figures/beasts/baby_dragon.webp","assets/field_figures/beasts/bengal_tiger.webp","assets/field_figures/beasts/black_raven.webp","assets/field_figures/beasts/constrictor_snake.webp","assets/field_figures/beasts/dragon_egg.webp","assets/field_figures/beasts/honey_badger.webp","assets/field_figures/beasts/inland_taipan.webp","assets/field_figures/beasts/peregrine_falcon.webp","assets/field_figures/beasts/porcupine.webp","assets/field_figures/beasts/white_rhino.webp","assets/field_figures/beasts/wild_boar.webp","assets/field_figures/beasts/young_fire_dragon.webp","assets/field_figures/beasts/young_ice_dragon.webp","assets/field_figures/beasts/young_lightning_dragon.webp","assets/field_figures/special/achilles.webp","assets/field_figures/special/alexander.webp","assets/field_figures/special/arjuna.webp","assets/field_figures/special/attila.webp","assets/field_figures/special/beowulf.webp","assets/field_figures/special/boudica.webp","assets/field_figures/special/cu_chulainn.webp","assets/field_figures/special/el_cid.webp","assets/field_figures/special/ericto.webp","assets/field_figures/special/fuma_kotaro.webp","assets/field_figures/special/genghis_khan.webp","assets/field_figures/special/gilgamesh.webp","assets/field_figures/special/hannibal_barca.webp","assets/field_figures/special/hattori_hanzo.webp","assets/field_figures/special/hector_troy.webp","assets/field_figures/special/joan_of_arc.webp","assets/field_figures/special/julius_caesar.webp","assets/field_figures/special/khalid_ibn_al_walid.webp","assets/field_figures/special/king_solomon.webp","assets/field_figures/special/leonidas.webp","assets/field_figures/special/lu_bu.webp","assets/field_figures/special/merlin.webp","assets/field_figures/special/miyamoto_musashi.webp","assets/field_figures/special/morgana.webp","assets/field_figures/special/mulan.webp","assets/field_figures/special/nasu_no_yoichi.webp","assets/field_figures/special/ragnar_lodbrok.webp","assets/field_figures/special/richard_lionheart.webp","assets/field_figures/special/saladin.webp","assets/field_figures/special/shaka_zulu_v2.webp","assets/field_figures/special/simo_hayha.webp","assets/field_figures/special/solomon_demon.webp","assets/field_figures/special/solomon_ifrit.webp","assets/field_figures/special/solomon_jinn.webp","assets/field_figures/special/spartacus.webp","assets/field_figures/special/subotai_v2.webp","assets/field_figures/special/sun_tzu.webp","assets/field_figures/special/tomoe_gozen_v2.webp","assets/field_figures/special/ulysses.webp","assets/field_figures/special/wallace.webp","assets/field_figures/special/yi_sun_sin.webp","assets/leaders/fire_dragon_leader.webp","assets/leaders/ice_dragon_leader.webp","assets/leaders/leader_achilles.webp","assets/leaders/leader_archer_3d.webp","assets/leaders/leader_assassin_3d.webp","assets/leaders/leader_axe_3d.webp","assets/leaders/leader_beastmaster_3d.webp","assets/leaders/leader_cavalry_3d.webp","assets/leaders/leader_mage_3d.webp","assets/leaders/leader_warrior_3d.webp","assets/leaders/lightning_dragon_leader.webp","assets/ui/effect_icons/aereo.webp","assets/ui/effect_icons/agarre.webp","assets/ui/effect_icons/anticaballeria.webp","assets/ui/effect_icons/arte_de_la_guerra.webp","assets/ui/effect_icons/asesinato_preciso.webp","assets/ui/effect_icons/ataque_en_picada.webp","assets/ui/effect_icons/ataque_por_la_espalda.webp","assets/ui/effect_icons/azote_de_imperios.webp","assets/ui/effect_icons/bestia_irritante.webp","assets/ui/effect_icons/bestia_torpe.webp","assets/ui/effect_icons/bomba_de_humo.webp","assets/ui/effect_icons/campeador.webp","assets/ui/effect_icons/carga_brusca.webp","assets/ui/effect_icons/carga_desestabilizadora.webp","assets/ui/effect_icons/colera_del_pelida.webp","assets/ui/effect_icons/concentracion_del_pelida.webp","assets/ui/effect_icons/constriccion.webp","assets/ui/effect_icons/corazon_indomable.webp","assets/ui/effect_icons/corte_de_abanico.webp","assets/ui/effect_icons/cuernos_del_bufalo.webp","assets/ui/effect_icons/danza_del_engano.webp","assets/ui/effect_icons/descarga_arcana.webp","assets/ui/effect_icons/desembarco_rapido.webp","assets/ui/effect_icons/desgarro_salvaje.webp","assets/ui/effect_icons/disciplina_de_las_legiones.webp","assets/ui/effect_icons/disparo_de_supresion.webp","assets/ui/effect_icons/dos_manos.webp","assets/ui/effect_icons/embestida_devastadora.webp","assets/ui/effect_icons/empuje_salvaje.webp","assets/ui/effect_icons/escape_forzado.webp","assets/ui/effect_icons/espada_invicta.webp","assets/ui/effect_icons/espinas_defensivas.webp","assets/ui/effect_icons/estratega_de_itaca.webp","assets/ui/effect_icons/estrategia_de_repliegue.webp","assets/ui/effect_icons/filo_de_mando.webp","assets/ui/effect_icons/flecha_del_dharma.webp","assets/ui/effect_icons/formacion_de_picas.webp","assets/ui/effect_icons/furia_de_la_alabarda.webp","assets/ui/effect_icons/furia_del_oso.webp","assets/ui/effect_icons/furia_del_sabueso.webp","assets/ui/effect_icons/graznido_inquietante.webp","assets/ui/effect_icons/horda_de_la_estepa.webp","assets/ui/effect_icons/instinto_de_cornada.webp","assets/ui/effect_icons/ira_de_iceni.webp","assets/ui/effect_icons/jinete_de_la_luna_cortante.webp","assets/ui/effect_icons/liderazgo_de_manada.webp","assets/ui/effect_icons/llama_de_orleans.webp","assets/ui/effect_icons/llamado_de_la_carga.webp","assets/ui/effect_icons/lluvia_de_flechas.webp","assets/ui/effect_icons/marca_del_abanico.webp","assets/ui/effect_icons/marcha_de_mil_horizontes.webp","assets/ui/effect_icons/matador_de_monstruos.webp","assets/ui/effect_icons/media_luna_del_desierto.webp","assets/ui/effect_icons/mordida_fastidiosa.webp","assets/ui/effect_icons/mordida_letal.webp","assets/ui/effect_icons/muralla_de_troya.webp","assets/ui/effect_icons/muro_de_macedonia.webp","assets/ui/effect_icons/ojo_del_cazador.webp","assets/ui/effect_icons/paso_de_sombra.webp","assets/ui/effect_icons/peso_del_rey_de_uruk.webp","assets/ui/effect_icons/presencia_alfa.webp","assets/ui/effect_icons/proteger_al_daimyo.webp","assets/ui/effect_icons/romper_cadenas.webp","assets/ui/effect_icons/rugido_del_rey.webp","assets/ui/effect_icons/ruptura_brutal.webp","assets/ui/effect_icons/sabotaje.webp","assets/ui/effect_icons/salto_de_emboscada.webp","assets/ui/effect_icons/saqueo_de_guerra.webp","assets/ui/effect_icons/saqueo_del_norte.webp","assets/ui/effect_icons/shirahadori.webp","assets/ui/effect_icons/sigilo_de_depredador.webp","assets/ui/effect_icons/temerario.webp","assets/ui/effect_icons/trampa_de_cannas.webp","assets/ui/effect_icons/ultima_formacion.webp","assets/ui/effect_icons/ultima_resistencia.webp","assets/ui/effect_icons/ultimate_blow.webp","assets/ui/effect_icons/ultimo_aliento.webp","assets/ui/effect_icons/ultimo_aliento_clear.webp","assets/ui/status_icons/status_bleed.webp","assets/ui/status_icons/status_buff.webp","assets/ui/status_icons/status_burn.webp","assets/ui/status_icons/status_control.webp","assets/ui/status_icons/status_curse.webp","assets/ui/status_icons/status_debuff.webp","assets/ui/status_icons/status_defense.webp","assets/ui/status_icons/status_generic.webp","assets/ui/status_icons/status_guard.webp","assets/ui/status_icons/status_hp.webp","assets/ui/status_icons/status_lock.webp","assets/ui/status_icons/status_paralysis.webp","assets/ui/status_icons/status_poison.webp","assets/ui/status_icons/status_silence.webp"]);
+let hvEventCardTemplateMap=null;
 function getEventSplashConfig(type,item=null){
   const key=String(type||"").toLowerCase();
   const map={
@@ -67,26 +69,84 @@ function getEventSplashConfig(type,item=null){
   };
   return map[key]||null;
 }
+function hvEventKnownAsset(path){
+  const value=String(path||"").replace(/^\.\//,"");
+  return value&&HV_EVENT_KNOWN_ASSET_PATHS.has(value)?value:"";
+}
+function hvEventFirstKnownAsset(candidates=[]){
+  for(const candidate of (Array.isArray(candidates)?candidates:[candidates])){
+    const hit=hvEventKnownAsset(candidate);
+    if(hit)return hit;
+  }
+  return "";
+}
+function hvBuildEventCardTemplateMap(){
+  const map=new Map();
+  const addPool=pool=>{
+    for(const card of (Array.isArray(pool)?pool:[])){
+      const key=String(card?.key||"");
+      if(key)map.set(key,card);
+    }
+  };
+  try{addPool(typeof CARD_TEMPLATES!=="undefined"?CARD_TEMPLATES:[]);}catch(_){ }
+  try{addPool(typeof EQUIPMENT_CARD_TEMPLATES!=="undefined"?EQUIPMENT_CARD_TEMPLATES:[]);}catch(_){ }
+  try{addPool(typeof BASIC_MAGIC_TRAP_PACK!=="undefined"?BASIC_MAGIC_TRAP_PACK:[]);}catch(_){ }
+  try{addPool(typeof IMPROVED_MAGIC_TRAP_PACK!=="undefined"?IMPROVED_MAGIC_TRAP_PACK:[]);}catch(_){ }
+  try{addPool(typeof LEGENDARY_TRAP_CARDS!=="undefined"?LEGENDARY_TRAP_CARDS:[]);}catch(_){ }
+  try{addPool(typeof SPECIAL_HUMAN_CARD_DATA!=="undefined"?SPECIAL_HUMAN_CARD_DATA:[]);}catch(_){ }
+  try{addPool(typeof LEGENDARY_ALLY_CARDS!=="undefined"?LEGENDARY_ALLY_CARDS:[]);}catch(_){ }
+  try{addPool(typeof BEAST_CARD_TEMPLATES!=="undefined"?BEAST_CARD_TEMPLATES:[]);}catch(_){ }
+  try{addPool(typeof BEAST_TRAP_CARD_TEMPLATES!=="undefined"?BEAST_TRAP_CARD_TEMPLATES:[]);}catch(_){ }
+  try{addPool(typeof DRAGON_COMPANION_CARDS!=="undefined"?DRAGON_COMPANION_CARDS:[]);}catch(_){ }
+  try{if(typeof ADVENTURE_SPECIALS!=="undefined"&&ADVENTURE_SPECIALS)addPool(Object.values(ADVENTURE_SPECIALS));}catch(_){ }
+  try{if(typeof SOLOMON_SUMMON_TEMPLATES!=="undefined"&&SOLOMON_SUMMON_TEMPLATES)addPool(Object.values(SOLOMON_SUMMON_TEMPLATES));}catch(_){ }
+  try{if(typeof SALADIN_TOKEN_CARD!=="undefined"&&SALADIN_TOKEN_CARD)addPool([SALADIN_TOKEN_CARD]);}catch(_){ }
+  return map;
+}
+function getEventCardTemplate(cardKey){
+  const wanted=String(cardKey||"");
+  if(!wanted)return null;
+  if(!hvEventCardTemplateMap)hvEventCardTemplateMap=hvBuildEventCardTemplateMap();
+  let found=hvEventCardTemplateMap.get(wanted)||null;
+  // Expansiones como Dragones pueden registrar cartas después del arranque.
+  if(!found){
+    hvEventCardTemplateMap=hvBuildEventCardTemplateMap();
+    found=hvEventCardTemplateMap.get(wanted)||null;
+  }
+  return found;
+}
 function getEventEntityImage(entity){
   if(!entity)return typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"";
   if(entity.leader){
-    return String(entity.portrait||entity.image||entity.avatar||"")||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
+    let canonical="";
+    try{canonical=entity?.leaderType&&typeof LEADER_DATA!=="undefined"?LEADER_DATA?.[entity.leaderType]?.portrait||"":"";}catch(_){canonical="";}
+    const hit=hvEventFirstKnownAsset([entity.portrait,canonical,entity.image,entity.avatar]);
+    return hit||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
   }
-  const field=typeof getResolvedFieldFigureSource==="function"?getResolvedFieldFigureSource(entity):String(entity.fieldFigure||"");
-  return field||String(entity.fieldFigure||entity.portrait||"")||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
+  let candidates=[];
+  try{candidates=typeof getResolvedFieldFigureCandidates==="function"?getResolvedFieldFigureCandidates(entity):[];}catch(_){candidates=[];}
+  const explicit=hvEventFirstKnownAsset([entity.fieldFigure,entity.fieldFigureSrc]);
+  const hit=explicit||hvEventFirstKnownAsset(candidates);
+  return hit||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
 }
 function getEventCardImage(cardKey){
-  const wanted=String(cardKey||"");
-  let card=null;
-  try{card=Array.isArray(CARD_TEMPLATES)?CARD_TEMPLATES.find(c=>String(c?.key||"")===wanted):null;}catch(_){card=null;}
-  const source=card&&typeof getResolvedCardPortraitSource==="function"?getResolvedCardPortraitSource(card):String(card?.portrait||"");
-  return source||String(card?.portrait||"")||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
+  const card=getEventCardTemplate(cardKey);
+  if(!card)return "";
+  let candidates=[];
+  try{candidates=typeof getResolvedCardPortraitCandidates==="function"?getResolvedCardPortraitCandidates(card):[];}catch(_){candidates=[];}
+  return hvEventFirstKnownAsset([card.portrait,card.cardPortrait,card.cardImage,...candidates]);
 }
 function getEventItemPrimaryImage(item,cfg=null){
   const type=String(item?.type||"").toLowerCase();
-  if(item?.image)return String(item.image);
-  if(type==="spell"&&item?.cardKey)return getEventCardImage(item.cardKey);
-  if(cfg?.icon)return cfg.icon;
+  const direct=hvEventKnownAsset(item?.image);
+  if(direct)return direct;
+  if(String(item?.image||"").startsWith("data:"))return String(item.image);
+  if(type==="spell"&&item?.cardKey){
+    const cardImage=getEventCardImage(item.cardKey);
+    if(cardImage)return cardImage;
+  }
+  const icon=hvEventKnownAsset(cfg?.icon);
+  if(icon)return icon;
   return typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"";
 }
 function getEventImageFallbackAttr(label="Evento"){
@@ -105,8 +165,10 @@ function buildEventSplashShell(item){
   }
   if(type==="summon"||type==="death"){
     const image=getEventItemPrimaryImage(item,cfg);
-    const badge=type==="death"?"☠":"✦";
-    return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-single-figure"><img src="${escapeHtml(image)}" alt="${label}" ${getEventImageFallbackAttr(cfg.title)}><span class="event-splash-corner-badge" aria-hidden="true">${badge}</span></div><div class="event-splash-mini-label">${escapeHtml(cfg.kicker)}</div></div>`;
+    const badge=type==="death"
+      ? '<span class="event-splash-corner-badge" aria-hidden="true">☠</span>'
+      : '<span class="event-splash-corner-badge summon" aria-hidden="true"><img src="assets/ui/effect_icons/ultimo_aliento_clear.webp" alt=""></span>';
+    return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-single-figure"><img src="${escapeHtml(image)}" alt="${label}" ${getEventImageFallbackAttr(cfg.title)}>${badge}</div><div class="event-splash-mini-label">${escapeHtml(cfg.kicker)}</div></div>`;
   }
   if(type==="spell"){
     const image=getEventItemPrimaryImage(item,cfg);
@@ -155,10 +217,19 @@ function makeAttackVisualEvent(fx,prevMap,nextMap){
   if(!attacker||!target)return null;
   return {type:"attack",key:`${gameId||"game"}:visual:attack:${fx.eventId||Date.now()}`,attackerName:attacker.name||fx.attackerName||"Atacante",targetName:target.name||fx.targetName||"Objetivo",attackerImage:getEventEntityImage(attacker),targetImage:getEventEntityImage(target)};
 }
-function makeSpellVisualEvent(event){
+function makeSpellVisualEvent(event,prevMap=null,nextMap=null){
   if(!event)return null;
   const key=String(event.cardKey||event.spellKey||"");
-  return {type:"spell",key:`${gameId||"game"}:visual:spell:${event.eventId||key||Date.now()}`,cardKey:key,cardName:String(event.cardName||event.title||key||"Magia"),title:String(event.cardName||event.title||"Magia"),image:String(event.image||"")};
+  let image=hvEventKnownAsset(event.image)||getEventCardImage(key);
+  if(!image){
+    const actorId=String(event.attackerId||event.casterId||event.sourceId||"");
+    const actor=(actorId&&(nextMap?.[actorId]||prevMap?.[actorId]))||null;
+    if(actor){
+      const actorImage=getEventEntityImage(actor);
+      if(actorImage&&actorImage!==getAssetWarningImageSrc())image=actorImage;
+    }
+  }
+  return {type:"spell",key:`${gameId||"game"}:visual:spell:${event.eventId||key||Date.now()}`,cardKey:key,cardName:String(event.cardName||event.title||key||"Magia"),title:String(event.cardName||event.title||"Magia"),image:String(image||"")};
 }
 
 function showNextEventSplash(){
@@ -820,9 +891,9 @@ function maybePlayBattleFx(prevPub,nextPub){
   const visibleAdded=added.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
   const visibleDestroyed=destroyed.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
   const summonVisuals=visibleAdded.map((u,i)=>makeSummonVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
-  const cardVisual=explicitCardVisualEvent?makeSpellVisualEvent(explicitCardVisualEvent):null;
+  const cardVisual=explicitCardVisualEvent?makeSpellVisualEvent(explicitCardVisualEvent,prevMap,nextMap):null;
   const attackVisual=explicitAttackFx?.type==="attack"?makeAttackVisualEvent(explicitAttackFx,prevMap,nextMap):null;
-  const legacySpellVisual=!cardVisual&&explicitAttackFx&&["spell","magic","heal"].includes(explicitAttackFx.type)?makeSpellVisualEvent(explicitAttackFx):null;
+  const legacySpellVisual=!cardVisual&&explicitAttackFx&&["spell","magic","heal"].includes(explicitAttackFx.type)?makeSpellVisualEvent(explicitAttackFx,prevMap,nextMap):null;
   const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);
   const deathVisuals=visibleDestroyed.map((u,i)=>makeDeathVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
   const primaryVisuals=[...summonVisuals.slice(0,2),cardVisual||legacySpellVisual,attackVisual].filter(Boolean);

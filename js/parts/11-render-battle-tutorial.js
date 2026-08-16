@@ -1136,7 +1136,11 @@ function renderLog(){
       return `<div class="event-history-item ${cfg.className} event-history-attack" title="${escapeHtml(item.attackerName||"Atacante")} → ${escapeHtml(item.targetName||"Objetivo")}"><span class="event-history-duel-figure">${imageTag(item.attackerImage,item.attackerName||"Atacante")}</span><span class="event-history-swords" aria-hidden="true">⚔</span><span class="event-history-duel-figure">${imageTag(item.targetImage,item.targetName||"Objetivo")}</span></div>`;
     }
     const image=typeof getEventItemPrimaryImage==="function"?getEventItemPrimaryImage(item,cfg):(item.image||cfg.icon||getAssetWarningImageSrc());
-    const badge=type==="death"?'<span class="event-history-corner-badge" aria-hidden="true">☠</span>':type==="summon"?'<span class="event-history-corner-badge summon" aria-hidden="true">✦</span>':"";
+    const badge=type==="death"
+      ? '<span class="event-history-corner-badge" aria-hidden="true">☠</span>'
+      : type==="summon"
+        ? '<span class="event-history-corner-badge summon" aria-hidden="true"><img src="assets/ui/effect_icons/ultimo_aliento_clear.webp" alt=""></span>'
+        : "";
     return `<div class="event-history-item ${cfg.className} event-history-${escapeHtml(type)}" title="${escapeHtml(cfg.title)}"><div class="event-history-art-wrap">${imageTag(image,cfg.title)}</div>${badge}</div>`;
   }).join("");
   if(el.__hvLogMarkup!==markup){el.innerHTML=markup;el.__hvLogMarkup=markup;}

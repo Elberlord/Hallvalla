@@ -21353,6 +21353,30 @@ html[data-hv-perf="lite"] #gameShell .battle-menu-card{
 }
 .event-splash-shell.is-death .event-splash-corner-badge{color:#e8e8e8 !important;}
 .event-splash-shell.is-summon .event-splash-corner-badge{color:#ffe39a !important;}
+
+.event-splash-corner-badge.summon img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.72)) !important;
+}
+.event-splash-shell.is-summon .event-splash-corner-badge{
+  color:transparent !important;
+}
+#gameShell .battlefield .event-history-corner-badge.summon{
+  width:16px !important;
+  height:16px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:transparent !important;
+}
+#gameShell .battlefield .event-history-corner-badge.summon img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+}
+
 .event-splash-attack-pair{
   width:128px !important;
   height:86px !important;
