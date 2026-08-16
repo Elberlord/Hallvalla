@@ -175,7 +175,7 @@ function applyMiyamotoHonesakiki(units){
     const damage=Math.max(0,Math.round(effectiveAtk(musashi)*2));
     out=out.map(u=>{
       if(u.id===musashi.id)return {...u,honesakikiUsed:true};
-      if(u.owner===musashi.owner||u.leader||Number(u.hp||0)<=0||dist(musashi,u)>1)return u;
+      if(u.owner===musashi.owner||u.leader||!canReceiveUntargetedAreaEffect(u)||dist(musashi,u)>1)return u;
       let damaged=applyGuardDamage(u,damage,0,0);
       damaged={...damaged,damagedThisTurn:(damaged.lastHpLoss||0)>0||!!damaged.damagedThisTurn,honesakikiSource:musashi.name||"Miyamoto Musashi"};
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -806,7 +806,8 @@ async function attackUnit(a,d){
     : (!hit.hit&&defenderStillAlive
         ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
         : null));
-  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent,...(dragonCompanionResult.stealthAreaDamageEvent?{stealthAreaDamageEvent:dragonCompanionResult.stealthAreaDamageEvent}:{})});
+  const stealthAreaDamageEvent=dragonCompanionResult.stealthAreaDamageEvent||solomonIfritResult.stealthAreaDamageEvent||elephantChargeResult.stealthAreaDamageEvent||null;
+  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent,...(stealthAreaDamageEvent?{stealthAreaDamageEvent}:{})});
   const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" ");
   if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
   clearSelection();

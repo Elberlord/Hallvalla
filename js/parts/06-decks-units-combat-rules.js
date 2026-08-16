@@ -1487,7 +1487,7 @@ function pushUnitStepwise(units,targetId,dx,dy,maxSteps=1){
   return {units:out,moved};
 }
 function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
-  if(!mods.elephantCharge||!attacker||!defender)return {units:units||[],triggered:false,text:"",logs:[],sideTargetIds:[]};
+  if(!mods.elephantCharge||!attacker||!defender)return {units:units||[],triggered:false,text:"",logs:[],sideTargetIds:[],stealthAreaDamageEvent:null};
   let out=[...(units||[])];
   const dx=Math.sign((defender.x||0)-(attacker.x||0));
   const dy=Math.sign((defender.y||0)-(attacker.y||0));
@@ -1518,7 +1518,7 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
     const sideVectors=[{x:-dy,y:dx},{x:dy,y:-dx}];
     for(const vec of sideVectors){
       const sx=origin.x+vec.x,sy=origin.y+vec.y;
-      const side=out.find(u=>u.owner!==attacker.owner&&u.x===sx&&u.y===sy&&u.hp>0);
+      const side=out.find(u=>u.owner!==attacker.owner&&canReceiveUntargetedAreaEffect(u)&&u.x===sx&&u.y===sy);
       if(!side)continue;
       sideTargetIds.push(side.id);
       const sideMods={defenderAgi:-4};
@@ -1566,7 +1566,12 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
   }
 
   logs.push(`${attacker.name} pierde 2 GD hasta el inicio de su próximo turno.`);
-  return {units:out,triggered:true,text:` Arremetida Colosal: ${logs.join(" ")}`,logs,sideTargetIds};
+  const sideVectorsForStealth=[{x:-dy,y:dx},{x:dy,y:-dx}];
+  const hiddenCells=hit?.hit?sideVectorsForStealth.map(vec=>({x:origin.x+vec.x,y:origin.y+vec.y,damage:10,pushDx:dx,pushDy:dy,pushSteps:1})).filter(cell=>cell.x>=0&&cell.x<COLS&&cell.y>=0&&cell.y<ROWS):[];
+  const stealthAreaDamageEvent=hiddenCells.length&&typeof makeStage8StealthAreaDamageEvent==="function"
+    ?makeStage8StealthAreaDamageEvent(attacker.owner,defender.owner,{kind:"cell_attack_damage",label:"Arremetida Colosal",cells:hiddenCells,sourceName:attacker.name,sourceKey:attacker.key,attackScore:typeof getAttackPrecisionScore==="function"?getAttackPrecisionScore(attacker,{}):0,defenderAgi:-4,applyBeastmasterVenom:typeof ownerHasBeastmasterVenom==="function"?ownerHasBeastmasterVenom(attacker.owner,out):false})
+    :null;
+  return {units:out,triggered:true,text:` Arremetida Colosal: ${logs.join(" ")}`,logs,sideTargetIds,stealthAreaDamageEvent};
 }
 
 function applyAttackSideEffects(attacker,defender,units,options={}){

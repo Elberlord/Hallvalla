@@ -161,7 +161,7 @@ function makeStage8StealthAreaDamageEvent(sourceOwner,targetOwner,payload={}){
   const safeSource=Number(sourceOwner||0),safeTarget=Number(targetOwner||0);
   if(!safeSource||!safeTarget||safeSource===safeTarget)return null;
   const kind=String(payload.kind||"");
-  if(!["global_direct_hp","cell_guard_damage"].includes(kind))return null;
+  if(!["global_direct_hp","cell_direct_hp","cell_guard_damage","cell_attack_damage"].includes(kind))return null;
   const event={
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     sourceOwner:safeSource,targetOwner:safeTarget,kind,
@@ -169,12 +169,19 @@ function makeStage8StealthAreaDamageEvent(sourceOwner,targetOwner,payload={}){
     turnKey:String(publicState?.turnKey||"")
   };
   if(kind==="global_direct_hp")event.damage=Math.max(0,Number(payload.damage||0));
-  if(kind==="cell_guard_damage"){
-    event.cells=(Array.isArray(payload.cells)?payload.cells:[]).map(cell=>({x:Number(cell.x),y:Number(cell.y),damage:Math.max(0,Number(cell.damage||0))})).filter(cell=>Number.isFinite(cell.x)&&Number.isFinite(cell.y)&&cell.damage>0).slice(0,64);
+  if(kind==="cell_direct_hp"||kind==="cell_guard_damage"||kind==="cell_attack_damage"){
+    event.cells=(Array.isArray(payload.cells)?payload.cells:[]).map(cell=>({
+      x:Number(cell.x),y:Number(cell.y),damage:Math.max(0,Number(cell.damage||0)),
+      pushDx:Number(cell.pushDx||0),pushDy:Number(cell.pushDy||0),pushSteps:Math.max(0,Number(cell.pushSteps||0))
+    })).filter(cell=>Number.isFinite(cell.x)&&Number.isFinite(cell.y)&&cell.damage>0).slice(0,64);
     event.element=String(payload.element||"");
     event.sourceName=String(payload.sourceName||payload.label||"Daño de área").slice(0,96);
+    event.sourceKey=String(payload.sourceKey||"");
     event.dragonStage=String(payload.dragonStage||"");
     event.statusStacks=Math.max(0,Number(payload.statusStacks||0));
+    event.attackScore=Math.max(0,Number(payload.attackScore||0));
+    event.defenderAgi=Number(payload.defenderAgi||0);
+    event.applyBeastmasterVenom=!!payload.applyBeastmasterVenom;
   }
   return event;
 }
@@ -215,9 +222,21 @@ async function maybeResolveStage8StealthAreaDamage(){
         return {...result.unit,damagedThisTurn:true};
       });
     }
+  }else if(String(event.kind||"")==="cell_direct_hp"){
+    const cellMap=new Map((Array.isArray(event.cells)?event.cells:[]).map(cell=>[`${Number(cell.x)},${Number(cell.y)}`,cell]));
+    hidden=hidden.map(unit=>{
+      if(!canReceiveUntargetedAreaEffect(unit))return unit;
+      const cell=cellMap.get(`${Number(unit.x)},${Number(unit.y)}`);
+      if(!cell)return unit;
+      const damage=Math.max(0,Number(cell.damage||0));
+      if(damage<=0)return unit;
+      hitIds.push(String(unit.id||""));
+      const result=typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(unit,damage):{unit:{...unit,hp:Number(unit.hp||0)-damage}};
+      return {...result.unit,damagedThisTurn:true};
+    });
   }else if(String(event.kind||"")==="cell_guard_damage"){
     const cellMap=new Map((Array.isArray(event.cells)?event.cells:[]).map(cell=>[`${Number(cell.x)},${Number(cell.y)}`,cell]));
-    const attackerRef={name:String(event.sourceName||event.label||"Daño de área"),dragonElement:String(event.element||""),dragonStage:String(event.dragonStage||"adult")};
+    const attackerRef={name:String(event.sourceName||event.label||"Daño de área"),key:String(event.sourceKey||""),owner:Number(event.sourceOwner||0),dragonElement:String(event.element||""),dragonStage:String(event.dragonStage||"adult")};
     hidden=hidden.map(unit=>{
       if(!canReceiveUntargetedAreaEffect(unit))return unit;
       const cell=cellMap.get(`${Number(unit.x)},${Number(unit.y)}`);
@@ -232,6 +251,41 @@ async function maybeResolveStage8StealthAreaDamage(){
       }
       return next;
     });
+  }else if(String(event.kind||"")==="cell_attack_damage"){
+    const cellMap=new Map((Array.isArray(event.cells)?event.cells:[]).map(cell=>[`${Number(cell.x)},${Number(cell.y)}`,cell]));
+    const visible=Array.isArray(raw?.units)?raw.units:[];
+    const attackerRef={name:String(event.sourceName||event.label||"Impacto de área"),key:String(event.sourceKey||""),owner:Number(event.sourceOwner||0)};
+    const nextHidden=[...hidden];
+    for(let i=0;i<nextHidden.length;i++){
+      const unit=nextHidden[i];
+      if(!canReceiveUntargetedAreaEffect(unit))continue;
+      const cell=cellMap.get(`${Number(unit.x)},${Number(unit.y)}`);
+      if(!cell)continue;
+      const attackScore=Math.max(0,Number(event.attackScore||0));
+      const defenseScore=typeof getDefenseEvasionScore==="function"?Math.max(0,Number(getDefenseEvasionScore(unit,{defenderAgi:Number(event.defenderAgi||0)})||0)):0;
+      if(attackScore<defenseScore)continue;
+      let damage=Math.max(0,Number(cell.damage||0));
+      if(typeof reduceDamageForHoneyBadger==="function")damage=reduceDamageForHoneyBadger(unit,damage);
+      if(damage<=0)continue;
+      hitIds.push(String(unit.id||""));
+      let next=typeof applyGuardDamage==="function"?applyGuardDamage(unit,damage):{...unit,hp:Number(unit.hp||0)-damage};
+      const hpLoss=Math.max(0,Number(next?.lastHpLoss||0));
+      delete next.lastGuardLoss;delete next.lastHpLoss;
+      next={...next,damagedThisTurn:hpLoss>0||!!next.damagedThisTurn};
+      if(hpLoss>0&&event.applyBeastmasterVenom&&typeof applyBeastmasterVenomToTarget==="function"){
+        next=(typeof isPoisonImmuneUnit==="function"&&isPoisonImmuneUnit(next)&&typeof clearPoisonStatus==="function")?clearPoisonStatus(next):applyBeastmasterVenomToTarget(next,attackerRef,5);
+      }
+      const steps=Math.max(0,Number(cell.pushSteps||0)),dx=Math.sign(Number(cell.pushDx||0)),dy=Math.sign(Number(cell.pushDy||0));
+      for(let step=0;step<steps&&Number(next.hp||0)>0;step++){
+        const nx=Number(next.x||0)+dx,ny=Number(next.y||0)+dy;
+        if(nx<0||nx>=COLS||ny<0||ny>=ROWS)break;
+        const occupied=visible.some(u=>u&&Number(u.hp||0)>0&&Number(u.x)===nx&&Number(u.y)===ny)||nextHidden.some((u,j)=>j!==i&&u&&Number(u.hp||0)>0&&Number(u.x)===nx&&Number(u.y)===ny);
+        if(occupied)break;
+        next={...next,x:nx,y:ny};
+      }
+      nextHidden[i]=next;
+    }
+    hidden=nextHidden;
   }
   if(hitIds.length&&typeof applyLegendaryFatalSaves==="function")hidden=applyLegendaryFatalSaves(hidden,hitIds);
   hidden=hidden.filter(unit=>Number(unit.hp||0)>0);

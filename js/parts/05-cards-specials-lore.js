@@ -562,13 +562,22 @@ async function resolveSolomonLifecycle(beforeUnits=[],afterUnits=[]){
 }
 function solomonJinnGuardAura(u,units=publicState?.units||[]){return (units||[]).some(j=>j.key==="solomon_jinn"&&j.owner===u?.owner&&j.hp>0&&dist(j,u)<=1)?3:0;}
 function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
-  if(attacker?.key!=="solomon_ifrit"||!hit?.hit||hpLoss<=0)return {units,logs:[]};
+  if(attacker?.key!=="solomon_ifrit"||!hit?.hit||hpLoss<=0)return {units,logs:[],stealthAreaDamageEvent:null};
   let out=[...(units||[])],logs=[];
   const targetState=out.find(u=>u.id===target.id);
   if(targetState&&Number(targetState.hp||0)>0)out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
-  const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&u.hp>0&&dist(u,target)<=1).map(u=>u.id);
+  const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&canReceiveUntargetedAreaEffect(u)&&dist(u,target)<=1).map(u=>u.id);
   if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,4).unit:resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true})):u);logs.push(`Fuego del Mandato causa hasta 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
-  return {units:out,logs};
+  const cells=[];
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(dx===0&&dy===0)continue;
+    const x=Number(target.x)+dx,y=Number(target.y)+dy;
+    if(x>=0&&x<COLS&&y>=0&&y<ROWS)cells.push({x,y,damage:4});
+  }
+  const stealthAreaDamageEvent=typeof makeStage8StealthAreaDamageEvent==="function"
+    ?makeStage8StealthAreaDamageEvent(attacker.owner,target.owner,{kind:"cell_direct_hp",label:"Fuego del Mandato",cells,sourceName:attacker.name,sourceKey:attacker.key})
+    :null;
+  return {units:out,logs,stealthAreaDamageEvent};
 }
 
 
