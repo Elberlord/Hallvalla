@@ -15,7 +15,7 @@ const PACK_SHOP_ITEMS = [
     category:"CARTAS BÁSICAS",
     image:"assets/home/cartas_basicas.webp",
     costGold:100,
-    description:"Contiene 2 cartas básicas aleatorias: unidades, magias o trampas. No incluye bestias del evento.",
+    description:"Contiene 2 cartas básicas aleatorias: unidades, magias o trampas. No incluye cartas exclusivas del Beast Master.",
     contents:["2 cartas básicas aleatorias"],
     pendingType:"shop_basic",
     targetRarity:"basic",
@@ -82,6 +82,7 @@ const defaultPlayerProfile = {
   leaderLevels: {warrior:1, archer:1, mage:1},
   leaderLevel5Abilities: {},
   leaderRecords: {},
+  actionMasteries: {},
   testPromo: null
 };
 
@@ -156,6 +157,7 @@ function getPlayerProfile(){
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
+    profile.actionMasteries=normalizeAccountMasteries(profile.actionMasteries||{});
     if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities)savePlayerProfile(profile);
     return profile;
   }catch(e){
@@ -165,11 +167,265 @@ function getPlayerProfile(){
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
+    profile.actionMasteries=normalizeAccountMasteries(profile.actionMasteries||{});
     return profile;
   }
 }
 function savePlayerProfile(profile){
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
+}
+
+
+/* ============================================================
+   MAESTRÍAS ACUMULATIVAS DE CUENTA
+   - Progreso permanente: nunca se reinicia al reclamar.
+   - Solo se registra después de acciones confirmadas por el motor.
+   - Los hitos alcanzados quedan pendientes hasta que el jugador los reclama.
+   - El máximo depende de la categoría: hasta 10.000 acciones; Trampas/Equipo culminan en 5.000.
+   ============================================================ */
+const ACCOUNT_MASTERY_EVENT_STORAGE_KEY="hallvalla_account_mastery_events_v1";
+const ACCOUNT_MASTERY_EVENT_CACHE_MAX=320;
+const ACCOUNT_MASTERY_DEFS=Object.freeze({
+  summons:Object.freeze({
+    key:"summons",name:"Invocador",verb:"Invocar unidades",icon:"✦",
+    milestones:Object.freeze([
+      {target:25,rewards:[{type:"gold",amount:5}]},
+      {target:50,rewards:[{type:"gold",amount:10}]},
+      {target:100,rewards:[{type:"gold",amount:20}]},
+      {target:250,rewards:[{type:"gold",amount:40}]},
+      {target:500,rewards:[{type:"pack",tier:"basic",amount:1}]},
+      {target:1000,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
+      {target:2500,rewards:[{type:"pack",tier:"rare",amount:1}]},
+      {target:5000,rewards:[{type:"gold",amount:150},{type:"pack",tier:"epic",amount:1}]},
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+    ])
+  }),
+  kills:Object.freeze({
+    key:"kills",name:"Verdugo",verb:"Destruir unidades enemigas",icon:"☠",
+    milestones:Object.freeze([
+      {target:25,rewards:[{type:"gold",amount:5}]},
+      {target:50,rewards:[{type:"gold",amount:15}]},
+      {target:100,rewards:[{type:"gold",amount:30}]},
+      {target:250,rewards:[{type:"gold",amount:60}]},
+      {target:500,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
+      {target:1000,rewards:[{type:"pack",tier:"rare",amount:1}]},
+      {target:2500,rewards:[{type:"gold",amount:150},{type:"pack",tier:"rare",amount:1}]},
+      {target:5000,rewards:[{type:"pack",tier:"epic",amount:1}]},
+      {target:10000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+    ])
+  }),
+  spells:Object.freeze({
+    key:"spells",name:"Arcanista",verb:"Jugar magias",icon:"✧",
+    milestones:Object.freeze([
+      {target:25,rewards:[{type:"gold",amount:5}]},
+      {target:50,rewards:[{type:"gold",amount:10}]},
+      {target:100,rewards:[{type:"gold",amount:20}]},
+      {target:250,rewards:[{type:"gold",amount:40}]},
+      {target:500,rewards:[{type:"pack",tier:"basic",amount:1}]},
+      {target:1000,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
+      {target:2500,rewards:[{type:"pack",tier:"rare",amount:1}]},
+      {target:5000,rewards:[{type:"gold",amount:150},{type:"pack",tier:"epic",amount:1}]},
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+    ])
+  }),
+  traps:Object.freeze({
+    key:"traps",name:"Trampero",verb:"Jugar cartas de Trampa",icon:"◇",
+    milestones:Object.freeze([
+      {target:10,rewards:[{type:"gold",amount:5}]},
+      {target:25,rewards:[{type:"gold",amount:10}]},
+      {target:50,rewards:[{type:"gold",amount:20}]},
+      {target:100,rewards:[{type:"gold",amount:35}]},
+      {target:250,rewards:[{type:"pack",tier:"basic",amount:1}]},
+      {target:500,rewards:[{type:"gold",amount:50},{type:"pack",tier:"basic",amount:1}]},
+      {target:1000,rewards:[{type:"pack",tier:"rare",amount:1}]},
+      {target:2500,rewards:[{type:"gold",amount:100},{type:"pack",tier:"epic",amount:1}]},
+      {target:5000,rewards:[{type:"gold",amount:250},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+    ])
+  }),
+  equipment:Object.freeze({
+    key:"equipment",name:"Armero",verb:"Equipar cartas de Equipo",icon:"⚒",
+    milestones:Object.freeze([
+      {target:10,rewards:[{type:"gold",amount:5}]},
+      {target:25,rewards:[{type:"gold",amount:10}]},
+      {target:50,rewards:[{type:"gold",amount:20}]},
+      {target:100,rewards:[{type:"gold",amount:35}]},
+      {target:250,rewards:[{type:"pack",tier:"basic",amount:1}]},
+      {target:500,rewards:[{type:"gold",amount:50},{type:"pack",tier:"basic",amount:1}]},
+      {target:1000,rewards:[{type:"pack",tier:"rare",amount:1}]},
+      {target:2500,rewards:[{type:"gold",amount:100},{type:"pack",tier:"epic",amount:1}]},
+      {target:5000,rewards:[{type:"gold",amount:250},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+    ])
+  })
+});
+function normalizeAccountMasteries(book={}){
+  const out={};
+  Object.keys(ACCOUNT_MASTERY_DEFS).forEach(key=>{
+    const rec=book?.[key]||{};
+    const claimed=[...new Set((Array.isArray(rec.claimed)?rec.claimed:[]).map(v=>Math.max(0,Math.floor(Number(v)||0))).filter(Boolean))].sort((a,b)=>a-b);
+    out[key]={count:Math.max(0,Math.floor(Number(rec.count||0))),claimed};
+  });
+  return out;
+}
+function getAccountMasteryDef(key){return ACCOUNT_MASTERY_DEFS[String(key||"")]||null;}
+function getAccountMasteryRecord(key,profile=getPlayerProfile()){
+  const normalized=normalizeAccountMasteries(profile?.actionMasteries||{});
+  return normalized[key]||{count:0,claimed:[]};
+}
+function getAccountMasteryPendingMilestones(key,profile=getPlayerProfile()){
+  const def=getAccountMasteryDef(key);if(!def)return[];
+  const rec=getAccountMasteryRecord(key,profile),claimed=new Set(rec.claimed||[]);
+  return def.milestones.filter(m=>rec.count>=m.target&&!claimed.has(m.target));
+}
+function getPendingAccountMasteryRewardCount(profile=getPlayerProfile()){
+  return Object.keys(ACCOUNT_MASTERY_DEFS).reduce((sum,key)=>sum+getAccountMasteryPendingMilestones(key,profile).length,0);
+}
+function getAccountMasteryNextMilestone(key,profile=getPlayerProfile()){
+  const def=getAccountMasteryDef(key);if(!def)return null;
+  const rec=getAccountMasteryRecord(key,profile);
+  return def.milestones.find(m=>rec.count<m.target)||null;
+}
+function readAccountMasteryEventCache(){
+  try{const raw=JSON.parse(localStorage.getItem(ACCOUNT_MASTERY_EVENT_STORAGE_KEY)||"[]");return Array.isArray(raw)?raw.filter(Boolean):[];}catch(_){return[];}
+}
+function registerAccountMasteryEventOnce(eventKey){
+  const key=String(eventKey||"");if(!key)return true;
+  const events=readAccountMasteryEventCache();if(events.includes(key))return false;
+  events.unshift(key);
+  try{localStorage.setItem(ACCOUNT_MASTERY_EVENT_STORAGE_KEY,JSON.stringify(events.slice(0,ACCOUNT_MASTERY_EVENT_CACHE_MAX)));}catch(_){ }
+  return true;
+}
+function registerAccountMasteryAction(key,amount=1,eventKey=""){
+  try{
+    const def=getAccountMasteryDef(key);if(!def)return null;
+    const delta=Math.max(0,Math.floor(Number(amount)||0));if(delta<=0)return null;
+    if(eventKey&&!registerAccountMasteryEventOnce(eventKey))return null;
+    const profile=getPlayerProfile();
+    const book=normalizeAccountMasteries(profile.actionMasteries||{});
+    const before=book[key].count;
+    book[key]={...book[key],count:before+delta};
+    profile.actionMasteries=book;
+    savePlayerProfile(profile);
+    const newlyReached=def.milestones.filter(m=>before<m.target&&book[key].count>=m.target);
+    const missionsOpen=!!($("missionsPanel")&&!$("missionsPanel").classList.contains("hidden"));
+    const homeVisible=!!($("mainMenu")&&!$("mainMenu").classList.contains("hidden"));
+    // En batalla solo persistimos el contador: no hacemos trabajo DOM extra en cada acción.
+    if(homeVisible&&typeof renderNotificationBadge==="function")renderNotificationBadge();
+    if(missionsOpen&&typeof renderAccountMasteries==="function")renderAccountMasteries();
+    return{key,before,count:book[key].count,newlyReached};
+  }catch(error){console.warn("[HallValla] No se pudo registrar progreso de maestría:",error);return null;}
+}
+
+function registerAccountMasterySummonsFromUnitDiff(beforeUnits,afterUnits){
+  try{
+    if(!myPlayer||publicState?.phase!=="active"||!Array.isArray(beforeUnits)||!Array.isArray(afterUnits))return 0;
+    const beforeIds=new Set(beforeUnits.filter(Boolean).map(u=>String(u.id||"")));
+    let credited=0;
+    afterUnits.forEach(unit=>{
+      if(!unit||unit.leader||Number(unit.hp||0)<=0||Number(unit.owner)!==Number(myPlayer))return;
+      const id=String(unit.id||"");if(!id||beforeIds.has(id))return;
+      const eventKey=`${gameId||"local"}:mastery:summon:${id}`;
+      if(registerAccountMasteryAction("summons",1,eventKey))credited+=1;
+    });
+    return credited;
+  }catch(error){console.warn("[HallValla] No se pudo registrar invocaciones acumulativas:",error);return 0;}
+}
+
+function registerAccountMasteryKillsFromUnitDiff(beforeUnits,afterUnits,sourcePatch={}){
+  try{
+    if(!myPlayer||!Array.isArray(beforeUnits)||!Array.isArray(afterUnits))return 0;
+    const afterMap=new Map(afterUnits.filter(Boolean).map(u=>[String(u.id||""),u]));
+    const ignored=new Set((Array.isArray(sourcePatch?._clockKillIgnoreIds)?sourcePatch._clockKillIgnoreIds:[]).map(String));
+    const explicitOwner=Math.max(0,Number(sourcePatch?._clockKillCreditOwner||0));
+    const fxOwner=Math.max(0,Number(sourcePatch?.battleFxEvent?.attackerOwner||sourcePatch?.battleFxEvent?.sourceOwner||0));
+    const mode=String(sourcePatch?._clockKillCreditMode||"");
+    const sourceEvent=String(sourcePatch?.battleFxEvent?.eventId||sourcePatch?.statusFxEvent?.eventId||sourcePatch?.cardVisualEvent?.eventId||sourcePatch?.floatFxEvent?.eventId||"");
+    let credited=0;
+    beforeUnits.forEach(victim=>{
+      if(!victim||victim.leader||Number(victim.hp||0)<=0)return;
+      const id=String(victim.id||"");if(!id||ignored.has(id))return;
+      const after=afterMap.get(id);
+      if(after&&Number(after.hp||0)>0)return;
+      let creditOwner=explicitOwner||fxOwner;
+      if(!creditOwner&&mode==="opposite-owner")creditOwner=Number(victim.owner)===1?2:1;
+      if(Number(creditOwner)!==Number(myPlayer)||Number(victim.owner)===Number(myPlayer))return;
+      const fallbackContext=String(sourcePatch?.turnKey||publicState?.turnKey||publicState?.turn||"");
+      const eventKey=`${gameId||"local"}:mastery:kill:${id}:${sourceEvent||fallbackContext}`;
+      if(registerAccountMasteryAction("kills",1,eventKey))credited+=1;
+    });
+    return credited;
+  }catch(error){console.warn("[HallValla] No se pudo registrar bajas acumulativas:",error);return 0;}
+}
+
+function formatAccountMasteryReward(reward){
+  if(!reward)return"";
+  if(reward.type==="gold")return `${Math.max(0,Number(reward.amount||0))} Oro`;
+  if(reward.type==="pack"){
+    const pack=typeof getShopPackDefinition==="function"?getShopPackDefinition(reward.tier):null;
+    const amount=Math.max(1,Number(reward.amount||1));
+    return `${amount>1?`${amount} × `:""}${pack?.name||`Pack ${reward.tier||""}`}`;
+  }
+  return String(reward.label||reward.type||"Premio");
+}
+function formatAccountMasteryMilestoneRewards(milestone){
+  return (milestone?.rewards||[]).map(formatAccountMasteryReward).filter(Boolean).join(" + ")||"Premio";
+}
+function collectAccountMasteryClaimRequests(requests=[]){
+  const profile=getPlayerProfile();
+  const book=normalizeAccountMasteries(profile.actionMasteries||{});
+  const valid=[];
+  (requests||[]).forEach(req=>{
+    const key=String(req?.key||""),target=Math.max(0,Math.floor(Number(req?.target)||0)),def=getAccountMasteryDef(key);
+    if(!def||!target)return;
+    const rec=book[key],milestone=def.milestones.find(m=>m.target===target);
+    if(!milestone||rec.count<target||rec.claimed.includes(target))return;
+    valid.push({key,target,def,milestone});
+  });
+  return{profile,book,valid};
+}
+function claimAccountMasteryRewards(requests=[]){
+  try{
+    const {profile,book,valid}=collectAccountMasteryClaimRequests(requests);
+    if(!valid.length)return{claimed:0,gold:0,packs:0};
+    let goldGain=0,packGain=0;
+    const pendingPacks=typeof getPendingPacks==="function"?getPendingPacks():[];
+    const pendingIds=new Set(pendingPacks.map(p=>p?.id).filter(Boolean));
+    valid.forEach(({key,target,milestone})=>{
+      (milestone.rewards||[]).forEach((reward,index)=>{
+        if(reward.type==="gold")goldGain+=Math.max(0,Number(reward.amount||0));
+        if(reward.type==="pack"){
+          const amount=Math.max(1,Math.floor(Number(reward.amount||1)));
+          for(let n=0;n<amount;n++){
+            const id=`mastery_${key}_${target}_${reward.tier||"basic"}_${index}_${n}`;
+            if(pendingIds.has(id))continue;
+            const pack=buildPendingShopPack(reward.tier||"basic",{id,source:"account_mastery",masteryKey:key,masteryTarget:target,free:true,costGold:0});
+            pendingPacks.push({...pack,id,createdAt:Date.now(),opened:false});
+            pendingIds.add(id);packGain+=1;
+          }
+        }
+      });
+      book[key].claimed=[...new Set([...(book[key].claimed||[]),target])].sort((a,b)=>a-b);
+    });
+    if(packGain>0&&typeof savePendingPacks==="function")savePendingPacks(pendingPacks);
+    profile.gold=Math.max(0,Number(profile.gold||0))+goldGain;
+    profile.actionMasteries=book;
+    savePlayerProfile(profile);
+    if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);
+    if(typeof renderAccountMasteries==="function")renderAccountMasteries();
+    if(typeof renderNotificationBadge==="function")renderNotificationBadge();
+    return{claimed:valid.length,gold:goldGain,packs:packGain};
+  }catch(error){console.warn("[HallValla] No se pudo reclamar la recompensa de maestría:",error);return{claimed:0,gold:0,packs:0,error};}
+}
+function claimAccountMasteryMilestone(key,target){
+  const result=claimAccountMasteryRewards([{key,target}]);
+  if(result.claimed&&typeof tryPlaySound==="function")tryPlaySound(result.packs>0?"pack_special":"button_click",result.packs>0?.62:.32);
+  return result;
+}
+function claimAllPendingAccountMasteryRewards(){
+  const profile=getPlayerProfile(),requests=[];
+  Object.keys(ACCOUNT_MASTERY_DEFS).forEach(key=>getAccountMasteryPendingMilestones(key,profile).forEach(m=>requests.push({key,target:m.target})));
+  const result=claimAccountMasteryRewards(requests);
+  if(result.claimed&&typeof tryPlaySound==="function")tryPlaySound(result.packs>0?"pack_special":"button_click",result.packs>0?.68:.35);
+  return result;
 }
 
 /* ============================================================

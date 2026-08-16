@@ -41,6 +41,17 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
     kind:`card:${card.key||card.type||"play"}`
   });
   if(!committed)return false;
+  // ACCOUNT MASTERY: solo después de que la jugada quedó confirmada.
+  // Las categorías son excluyentes: Equipo > Trampa > Magia.
+  // Así una carta con metadata auxiliar no puede sumar a dos maestrías.
+  if(typeof registerAccountMasteryAction==="function"){
+    const masteryActionId=card?.id||`${card?.key||card?.type||"card"}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`;
+    const masteryEventBase=`${gameId||"local"}:${publicState?.turnKey||publicState?.turn||0}:${masteryActionId}`;
+    const masteryCardType=String(card?.type||"").toLowerCase();
+    if(masteryCardType==="equipment")registerAccountMasteryAction("equipment",1,`${masteryEventBase}:equipment`);
+    else if(masteryCardType==="trap"||card?.trap)registerAccountMasteryAction("traps",1,`${masteryEventBase}:trap`);
+    else if(masteryCardType==="spell"||card?.spell)registerAccountMasteryAction("spells",1,`${masteryEventBase}:spell`);
+  }
   pulseTurnHonorHud();
   scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
   return true;

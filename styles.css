@@ -21509,3 +21509,183 @@ html.hv-perf-lite .event-splash-spell-art img{
   .event-splash-mini-label{max-width:108px !important;font-size:7px !important;}
   .event-splash-corner-badge{width:21px !important;height:21px !important;font-size:16px !important;}
 }
+
+
+/* ============================================================
+   PACKMOBILEFIT1 · Apertura de packs contenida dentro del viewport móvil
+   - Mantiene siempre visible el footer y el botón Listo.
+   - Reduce escena/cartas solo en pantallas pequeñas.
+   - No altera la lógica de recompensa ni el commit al revelar.
+   ============================================================ */
+@media (max-width:720px){
+  #packOpeningPanel.overlay-panel{
+    padding:6px !important;
+    align-items:center !important;
+    overflow:hidden !important;
+  }
+  #packOpeningPanel .pack-opening-card{
+    width:min(94vw,520px) !important;
+    max-width:94vw !important;
+    height:auto !important;
+    max-height:calc(100dvh - 12px) !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+    border-radius:18px !important;
+  }
+  #packOpeningPanel .pack-opening-scene{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    height:min(54dvh,360px) !important;
+    max-height:min(54dvh,360px) !important;
+    overflow:hidden !important;
+  }
+  #packOpeningPanel .pack-opening-glow{
+    width:180px !important;
+    height:180px !important;
+  }
+  #packOpeningPanel .pack-object{
+    width:min(66vw,270px) !important;
+    max-height:calc(100% - 54px) !important;
+  }
+  #packOpeningPanel .pack-object-image{
+    max-height:100% !important;
+    object-fit:contain !important;
+  }
+  #packOpeningPanel .pack-opening-hint{
+    bottom:10px !important;
+    padding:6px 10px !important;
+    font-size:11px !important;
+  }
+  #packOpeningPanel .pack-reveal-grid{
+    grid-template-columns:repeat(2,minmax(0,118px)) !important;
+    justify-content:center !important;
+    align-items:center !important;
+    gap:10px !important;
+    width:100% !important;
+    max-width:100% !important;
+    padding:12px 8px !important;
+    box-sizing:border-box !important;
+  }
+  #packOpeningPanel .revealed-card.pack-reveal-card-button{
+    width:118px !important;
+    max-width:31vw !important;
+    aspect-ratio:1/1 !important;
+    border-radius:14px !important;
+  }
+  #packOpeningPanel .pack-reveal-icon,
+  #packOpeningPanel .pack-reveal-icon.card-portrait{
+    border-radius:12px !important;
+  }
+  #packOpeningPanel .pack-opening-footer{
+    flex:0 0 auto !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:center !important;
+    gap:8px !important;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px)) !important;
+    min-height:58px !important;
+  }
+  #packOpeningPanel .pack-opening-footer b{
+    font-size:13px !important;
+    line-height:1.1 !important;
+  }
+  #packOpeningPanel .pack-opening-footer span{
+    font-size:10px !important;
+    line-height:1.15 !important;
+    margin-top:2px !important;
+  }
+  #packOpeningPanel .pack-opening-footer .adventure-actions{
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:6px !important;
+    margin:0 !important;
+  }
+  #packOpeningPanel .pack-opening-footer .btn{
+    min-height:40px !important;
+    padding:8px 12px !important;
+    font-size:12px !important;
+    white-space:nowrap !important;
+  }
+  #packOpeningPanel .adventure-result-close{
+    top:7px !important;
+    right:7px !important;
+    z-index:20 !important;
+  }
+}
+
+@media (max-width:720px) and (orientation:landscape){
+  #packOpeningPanel .pack-opening-card{
+    width:min(92vw,700px) !important;
+    max-height:calc(100dvh - 8px) !important;
+  }
+  #packOpeningPanel .pack-opening-scene{
+    height:min(62dvh,220px) !important;
+    max-height:min(62dvh,220px) !important;
+  }
+  #packOpeningPanel .pack-reveal-grid{
+    grid-template-columns:repeat(2,96px) !important;
+    gap:8px !important;
+    padding:8px !important;
+  }
+  #packOpeningPanel .revealed-card.pack-reveal-card-button{
+    width:96px !important;
+    max-width:22vw !important;
+  }
+  #packOpeningPanel .pack-opening-footer{
+    min-height:48px !important;
+    padding:5px 9px calc(5px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  #packOpeningPanel .pack-opening-footer .btn{
+    min-height:36px !important;
+    padding:6px 10px !important;
+  }
+}
+
+/* ============================================================
+   ACCOUNT MASTERY · Misiones acumulativas permanentes
+   ============================================================ */
+.missions-home-btn{position:relative!important;overflow:visible!important}
+.missions-reward-badge{
+  position:absolute;right:2px;top:2px;z-index:4;min-width:22px;height:22px;padding:0 6px;
+  display:grid;place-items:center;border-radius:999px;border:1px solid rgba(255,226,142,.92);
+  background:#a72b20;color:#fff4cf;font:900 10px/1 Arial,sans-serif;box-shadow:0 2px 7px rgba(0,0,0,.55);
+}
+.missions-reward-badge.hidden{display:none!important}
+.mastery-missions-modal{width:min(860px,95vw)!important;max-height:min(92dvh,900px)!important;overflow:auto!important;overscroll-behavior:contain}
+.account-mastery-section{margin:12px 0 18px;padding:12px;border:1px solid rgba(255,209,102,.24);border-radius:16px;background:rgba(9,7,5,.42)}
+.account-mastery-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.account-mastery-head>div{display:grid;gap:2px}.account-mastery-head b{color:#fff0bd;font-family:Georgia,serif;font-size:16px}.account-mastery-head small{color:#d5bd8b;font-size:10px}
+.mastery-claim-all{min-width:140px}.mastery-claim-all:disabled{opacity:.45;cursor:default}
+.account-mastery-list{display:grid;gap:10px}
+.account-mastery-card{padding:12px;border-radius:14px;border:1px solid rgba(225,180,76,.27);background:linear-gradient(180deg,rgba(74,48,20,.27),rgba(7,6,5,.64));box-shadow:0 7px 18px rgba(0,0,0,.18)}
+.account-mastery-card.mastered{border-color:rgba(255,215,108,.58);box-shadow:inset 0 0 18px rgba(255,204,86,.05)}
+.account-mastery-title{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:9px}
+.account-mastery-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(232,190,89,.48);background:#171007;color:#ffe19a;font-size:21px;text-shadow:0 2px 5px #000}
+.account-mastery-title h3{margin:0;color:#fff0c0;font-size:15px;font-family:Georgia,serif}.account-mastery-title p{margin:2px 0 0;color:#cfba92;font-size:10px}.account-mastery-title strong{color:#ffd166;font-size:17px;font-variant-numeric:tabular-nums}
+.account-mastery-progress{height:7px;margin:10px 0 5px;border-radius:999px;overflow:hidden;background:#120d07;border:1px solid rgba(255,209,102,.15)}
+.account-mastery-progress-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#9b651d,#ffd166);transition:width .2s ease}
+.account-mastery-next{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#dac49b;font-size:9.5px}.account-mastery-next b{color:#ffe09a;font-size:10px;white-space:nowrap}
+.mastery-milestone-strip{display:flex;gap:4px;margin-top:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.mastery-milestone-chip{flex:0 0 auto;min-width:37px;padding:4px 5px;border-radius:7px;text-align:center;border:1px solid rgba(204,177,120,.2);background:#100c08;color:#8f8066;font:800 8px/1 Arial,sans-serif}
+.mastery-milestone-chip.claimed{border-color:rgba(92,201,122,.35);color:#91dfa8;background:rgba(35,98,53,.16)}
+.mastery-milestone-chip.ready{border-color:rgba(255,209,102,.72);color:#ffe39a;background:rgba(154,99,23,.26)}
+.mastery-milestone-chip.mastery-final{min-width:44px}
+.mastery-ready-list{display:grid;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,209,102,.13)}
+.mastery-ready-reward{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 7px;border-radius:9px;background:rgba(255,209,102,.07)}
+.mastery-ready-reward>span{display:grid;gap:1px}.mastery-ready-reward b{color:#ffe3a0;font-size:10px}.mastery-ready-reward small{color:#d8c39a;font-size:9px}.mastery-claim-one{min-width:92px;padding:7px 9px!important;font-size:9px!important}
+.mission-section-divider{display:flex;align-items:center;gap:10px;margin:7px 0;color:#caa65c;font:900 9px/1 Arial,sans-serif;letter-spacing:.16em}.mission-section-divider::before,.mission-section-divider::after{content:"";height:1px;flex:1;background:rgba(210,161,62,.22)}
+.tutorial-missions-intro--secondary{margin-top:0!important}
+@media(max-width:650px){
+  .mastery-missions-modal{width:calc(100vw - 12px)!important;max-height:calc(100dvh - 12px)!important;padding:12px!important}
+  .account-mastery-section{padding:8px;margin:8px 0 13px}.account-mastery-head{align-items:stretch;gap:7px}.account-mastery-head b{font-size:14px}.mastery-claim-all{min-width:112px;padding:7px 8px!important;font-size:9px!important}
+  .account-mastery-card{padding:9px}.account-mastery-title{grid-template-columns:34px 1fr auto;gap:7px}.account-mastery-icon{width:32px;height:32px;font-size:17px}.account-mastery-title h3{font-size:13px}.account-mastery-title p{font-size:9px}.account-mastery-title strong{font-size:14px}
+  .account-mastery-next{align-items:flex-start;font-size:8.5px}.account-mastery-next span{max-width:75%}.account-mastery-next b{font-size:9px}
+  .mastery-ready-reward{padding:5px}.mastery-ready-reward small{font-size:8px}.mastery-claim-one{min-width:78px}
+}
+.mastery-milestone-chip{display:grid!important;gap:2px!important;min-width:72px!important;line-height:1.05!important}
+.mastery-milestone-chip b{font-size:8px!important;color:inherit!important}
+.mastery-milestone-chip small{max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:6.5px!important;color:inherit!important;opacity:.86}
+@media(max-width:650px){.mastery-milestone-chip{min-width:66px!important}.mastery-milestone-chip small{max-width:62px;font-size:6px!important}}

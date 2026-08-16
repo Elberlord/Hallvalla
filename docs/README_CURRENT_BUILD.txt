@@ -1,7 +1,7 @@
 HALLVALLA — REFERENCIA MÍNIMA DEL BUILD ACTUAL
 ===============================================
 
-Estado del paquete: PERF6D (2026-08-16)
+Estado del paquete: PERF6F + PACK FIX + ACCOUNT MASTERY (2026-08-16)
 
 FUENTE DE VERDAD
 ----------------
@@ -38,6 +38,23 @@ RENDIMIENTO MÓVIL
 - Para pruebas manuales:
   ?hvperf=lite  fuerza el perfil ligero.
   ?hvperf=full  fuerza el perfil gráfico completo.
+
+MAESTRÍAS ACUMULATIVAS DE CUENTA
+---------------------------------
+- Misiones incluye tres progresiones permanentes: Invocador, Verdugo y Arcanista.
+- Hitos: 25, 50, 100, 250, 500, 1.000, 2.500, 5.000 y 10.000.
+- Reclamar una recompensa no reinicia el contador.
+- Los premios combinan Oro y packs según el hito; 10.000 representa la maestría máxima actual.
+- Invocaciones se registran al entrar una unidad propia al campo durante batalla activa.
+- Magias se registran únicamente después de que commitCardPlay confirma la jugada.
+- Bajas se registran desde el diff confirmado de unidades y respetan el propietario acreditado por el motor.
+- Los premios pendientes aparecen en Misiones y en la campana de notificaciones.
+
+PACKS DE RECOMPENSA
+--------------------
+- La tirada de un pack queda fijada al revelar.
+- Las cartas reveladas se guardan inmediatamente en Colección y el pack se consume; cerrar con X no permite reroll.
+- El modal de apertura tiene layout móvil compacto para mantener el botón final dentro del viewport.
 
 REFERENCIAS DE DISEÑO CONSERVADAS
 ---------------------------------

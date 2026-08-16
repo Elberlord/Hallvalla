@@ -54,9 +54,42 @@ function getRandomBeastEventCards(count=2){
   for(let i=0;i<count;i++){const card=getRandomBeastEventCard();if(card)out.push(card);}
   return out;
 }
+// BEASTPACKEXCLUSIVE1: las cartas exclusivas del Beast Master nunca entran en
+// pools generales de sobres, independientemente de su rareza interna. Su fuente
+// de pack es exclusivamente beast_pack. El flag permite ampliar el catálogo sin
+// depender de que la carta sea una unidad Bestia.
+function isBeastMasterExclusivePackCard(card){
+  if(!card)return false;
+  const key=String(card.key||card.name||"");
+  if(card.beast===true||card.beastPackOnly===true||card.beastmasterExclusive===true)return true;
+  const leaderTags=[card.equipmentLeader,card.spellLeader,card.trapLeader,card.cardLeader,card.leaderType]
+    .map(value=>String(value||"").toLowerCase());
+  if(leaderTags.includes("beastmaster"))return true;
+  if(typeof BEAST_CARD_TEMPLATES!=="undefined"&&Array.isArray(BEAST_CARD_TEMPLATES)&&BEAST_CARD_TEMPLATES.some(c=>String(c?.key||c?.name||"")===key))return true;
+  if(typeof BEAST_TRAP_CARD_TEMPLATES!=="undefined"&&Array.isArray(BEAST_TRAP_CARD_TEMPLATES)&&BEAST_TRAP_CARD_TEMPLATES.some(c=>String(c?.key||c?.name||"")===key))return true;
+  return false;
+}
+function getBeastMasterSpecialPackPool(){
+  const pools=[
+    ...(typeof BEAST_CARD_TEMPLATES!=="undefined"&&Array.isArray(BEAST_CARD_TEMPLATES)?BEAST_CARD_TEMPLATES:[]),
+    ...(typeof BEAST_TRAP_CARD_TEMPLATES!=="undefined"&&Array.isArray(BEAST_TRAP_CARD_TEMPLATES)?BEAST_TRAP_CARD_TEMPLATES:[]),
+    ...(typeof EQUIPMENT_CARD_TEMPLATES!=="undefined"&&Array.isArray(EQUIPMENT_CARD_TEMPLATES)?EQUIPMENT_CARD_TEMPLATES:[]),
+    ...(typeof CARD_TEMPLATES!=="undefined"&&Array.isArray(CARD_TEMPLATES)?CARD_TEMPLATES:[]),
+    ...(typeof BASIC_MAGIC_TRAP_PACK!=="undefined"&&Array.isArray(BASIC_MAGIC_TRAP_PACK)?BASIC_MAGIC_TRAP_PACK:[])
+  ];
+  const byKey=new Map();
+  pools.filter(isBeastMasterExclusivePackCard).forEach(card=>{
+    const key=String(card.key||card.name||"");
+    if(key&&!byKey.has(key))byKey.set(key,{...hydrateCardVisualData(card)});
+  });
+  return [...byKey.values()];
+}
+function getRandomBeastMasterPackCards(count=2){
+  return randomPackCards(getBeastMasterSpecialPackPool(),count);
+}
 function isBasicNonBeastPackCard(card){
   const rarity=String(card?.rarity||card?.rareza||"Básica").toLowerCase();
-  return !!card&&card.key&&card.type&&(rarity==="básica"||rarity==="basica"||rarity==="basic")&&!card.special&&!isBeastCollectionCard(card);
+  return !!card&&card.key&&card.type&&(rarity==="básica"||rarity==="basica"||rarity==="basic")&&!card.special&&!isBeastMasterExclusivePackCard(card);
 }
 function getBasicNonBeastPackPool(){
   const byKey=new Map();
@@ -83,7 +116,7 @@ function getAllShopPackCards(){
     ...(typeof ADVENTURE_SPECIALS!=="undefined"?Object.values(ADVENTURE_SPECIALS||{}):[])
   ];
   const byKey=new Map();
-  pools.filter(Boolean).forEach(card=>{
+  pools.filter(card=>card&&!isBeastMasterExclusivePackCard(card)).forEach(card=>{
     const key=card.key||card.name;
     if(!key)return;
     if(!byKey.has(key))byKey.set(key,{...hydrateCardVisualData(card)});
@@ -134,12 +167,17 @@ function getShopTierPackCards(pack){
 }
 function getPackCards(pack){
   if(!pack)return[];
+  // PACKREVEALCOMMIT1: si un pack ya había fijado su tirada antes de un cierre/reload,
+  // se reutilizan exactamente esas cartas. Nunca se vuelve a tirar una recompensa ya revelada.
+  if(Array.isArray(pack.resolvedCards)&&pack.resolvedCards.length){
+    return pack.resolvedCards.map(card=>hydrateCardVisualData({...card}));
+  }
   const special=getLegendaryCardByKey(pack.rewardCard)||CARD_TEMPLATES.find(c=>c.key===pack.rewardCard);
   if(special)return[{...special}];
   if(pack.shopTier||String(pack.type||"").startsWith("shop_"))return getShopTierPackCards(pack);
   if(pack.type==="basic_epic_guaranteed")return getEpicGuaranteedPackCards();
   if(pack.type==="improved_magic_trap")return randomPackCards(IMPROVED_MAGIC_TRAP_PACK,2);
-  if(pack.type==="beast_pack")return getRandomBeastEventCards(2);
+  if(pack.type==="beast_pack")return getRandomBeastMasterPackCards(2);
   return randomPackCards(getBasicNonBeastPackPool(),2);
 }
 function recordBasicPackOpeningAndMaybeBonus(pack){
@@ -157,6 +195,9 @@ function getPendingPackCount(){return getPendingPacks().length;}
 let hvPackRevealTimer=null;
 let hvPackObjectHideTimer=null;
 let hvPackRaritySoundTimer=null;
+let hvPackRevealStarted=false;
+let hvPackRewardCommitted=false;
+let hvPackBonusAdded=false;
 function clearPackOpeningRuntime(){
   if(hvPackRevealTimer!==null){clearTimeout(hvPackRevealTimer);hvPackRevealTimer=null;}
   if(hvPackObjectHideTimer!==null){clearTimeout(hvPackObjectHideTimer);hvPackObjectHideTimer=null;}
@@ -169,10 +210,61 @@ function releasePackOpeningDom(){
   // El recurso del paquete se vuelve a resolver en openPackOpening().
   if(packImage)packImage.removeAttribute("src");
 }
+function serializePackResolvedCards(cards){
+  try{return JSON.parse(JSON.stringify((cards||[]).filter(Boolean)));}
+  catch(_){return (cards||[]).filter(Boolean).map(card=>({key:card.key,name:card.name,type:card.type,portrait:card.portrait,rarity:card.rarity||card.rareza||"Básica"}));}
+}
+function persistPendingPackResolution(packId,cards){
+  if(!packId)return null;
+  const packs=getPendingPacks();
+  const index=packs.findIndex(pack=>pack.id===packId);
+  if(index<0)return null;
+  if(!Array.isArray(packs[index].resolvedCards)||!packs[index].resolvedCards.length){
+    packs[index]={...packs[index],resolvedCards:serializePackResolvedCards(cards),revealedAt:Date.now()};
+    savePendingPacks(packs);
+  }
+  return packs[index];
+}
+function addPackCardsToCollectionOnce(pack,cards){
+  const packId=String(pack?.id||"");
+  if(!packId){addCardsToCollection(cards);return true;}
+  const collection=getPlayerCollection();
+  collection.cards=Array.isArray(collection.cards)?collection.cards:[];
+  const receipts=Array.isArray(collection.packClaimReceipts)?collection.packClaimReceipts.map(String):[];
+  if(receipts.includes(packId))return false;
+  (cards||[]).forEach(card=>{
+    if(!card?.key)return;
+    const existing=collection.cards.find(c=>c.key===card.key);
+    if(existing)existing.qty=(existing.qty||0)+1;
+    else collection.cards.push({...card,qty:1});
+  });
+  collection.packClaimReceipts=[packId,...receipts.filter(id=>id!==packId)].slice(0,1000);
+  savePlayerCollection(collection);
+  renderNotificationBadge();
+  renderHomeProgress();
+  return true;
+}
+function commitActivePackReward(){
+  if(hvPackRewardCommitted)return {committed:true,bonusAdded:hvPackBonusAdded};
+  if(!activePackOpening||!activePackCards.length)return {committed:false,bonusAdded:false};
+  const persisted=persistPendingPackResolution(activePackOpening.id,activePackCards);
+  if(persisted)activePackOpening={...persisted};
+  const openedPack={...activePackOpening};
+  const newlyAdded=addPackCardsToCollectionOnce(openedPack,activePackCards);
+  removePendingPack(openedPack.id);
+  hvPackBonusAdded=newlyAdded?recordBasicPackOpeningAndMaybeBonus(openedPack):false;
+  hvPackRewardCommitted=true;
+  renderHomeProgress();
+  return {committed:true,bonusAdded:hvPackBonusAdded,newlyAdded};
+}
+
 function openPackOpening(){
   clearPackOpeningRuntime();
   const packs=getPendingPacks();
   if(!packs.length){hvAlert("No tienes paquetes pendientes por abrir.","Sin paquetes");return;}
+  hvPackRevealStarted=false;
+  hvPackRewardCommitted=false;
+  hvPackBonusAdded=false;
   activePackOpening=packs[0];
   activePackCards=getPackCards(activePackOpening);
   const panel=$("packOpeningPanel"),grid=$("packRevealGrid"),obj=$("packOpeningObject"),hint=$("packOpeningHint"),confirm=$("confirmPackCardsBtn"),next=$("openNextPackBtn");
@@ -208,7 +300,12 @@ function playPackRevealRaritySound(cards){
   hvPackRaritySoundTimer=setTimeout(()=>{hvPackRaritySoundTimer=null;tryPlaySound(sound,sound==="pack_demigod"?.88:.72);},620);
 }
 function revealActivePack(){
-  if(!activePackOpening||!activePackCards.length)return;
+  if(!activePackOpening||!activePackCards.length||hvPackRevealStarted)return;
+  hvPackRevealStarted=true;
+  // PACKREVEALCOMMIT1: revelar = aceptar la recompensa. Antes de mostrar las cartas
+  // se fijan, se guardan en Colección y se consume el pack. Cerrar con X ya no puede rerollearlo.
+  const commitResult=commitActivePackReward();
+  if(!commitResult.committed){hvPackRevealStarted=false;return;}
   const grid=$("packRevealGrid"),obj=$("packOpeningObject"),hint=$("packOpeningHint"),confirm=$("confirmPackCardsBtn");
   clearPackOpeningRuntime();
   if(obj){obj.classList.add("opening");hvPackObjectHideTimer=setTimeout(()=>{hvPackObjectHideTimer=null;obj.classList.add("hidden");},850)}
@@ -229,21 +326,21 @@ function revealActivePack(){
       });
     });
     grid.classList.remove("hidden");
-    if(confirm)confirm.classList.remove("hidden");
-    if($("packOpeningStatus"))$("packOpeningStatus").textContent=`${activePackCards.length} cartas reveladas`;
+    if(confirm){confirm.textContent="Listo";confirm.classList.remove("hidden");}
+    if($("packOpeningStatus"))$("packOpeningStatus").textContent=`${activePackCards.length} cartas reveladas · guardadas en Colección`;
   },520);
 }
 function confirmActivePackCards(){
   if(!activePackOpening||!activePackCards.length)return;
-  const openedPack={...activePackOpening};
-  addCardsToCollection(activePackCards);
-  removePendingPack(openedPack.id);
-  const bonusAdded=recordBasicPackOpeningAndMaybeBonus(openedPack);
+  // Compatibilidad defensiva: si por alguna ruta externa se llama antes de reveal, el commit sigue siendo único.
+  const result=commitActivePackReward();
+  if(!result.committed)return;
+  const remaining=getPendingPackCount();
   activePackOpening=null;
   activePackCards=[];
+  hvPackRevealStarted=false;
   if($("confirmPackCardsBtn"))$("confirmPackCardsBtn").classList.add("hidden");
-  const remaining=getPendingPackCount();
-  if($("packOpeningStatus"))$("packOpeningStatus").textContent=bonusAdded?`Cartas agregadas. Bono de 20 packs: recibiste un pack gratis con épica garantizada. Quedan ${remaining} paquetes.`:(remaining?`Cartas agregadas. Quedan ${remaining} paquetes.`:"Cartas agregadas a colección.");
+  if($("packOpeningStatus"))$("packOpeningStatus").textContent=hvPackBonusAdded?`Cartas guardadas. Bono de 20 packs: recibiste un pack gratis con épica garantizada. Quedan ${remaining} paquetes.`:(remaining?`Cartas guardadas en Colección. Quedan ${remaining} paquetes.`:"Cartas guardadas en Colección.");
   if($("openNextPackBtn"))$("openNextPackBtn").classList.toggle("hidden",remaining<=0);
   renderHomeProgress();
 }
@@ -252,6 +349,11 @@ function closePackOpening(){
   if(panel)panel.classList.add("hidden");
   clearPackOpeningRuntime();
   releasePackOpeningDom();
+  activePackOpening=null;
+  activePackCards=[];
+  hvPackRevealStarted=false;
+  hvPackRewardCommitted=false;
+  hvPackBonusAdded=false;
 }
 
 const HALLVALLA_PRINCIPAL_UNIT_KEY="hallvalla_principal_unit_v1";
@@ -1172,8 +1274,10 @@ function getHomeProgressSummary(){
   return{completed,total,chapter,progress,activeChapter};
 }
 function getNotificationItems(){
-  const openPacksBtn=$("openPacksFromNotificationsBtn"),openDeckBtn=$("openDeckBuilderFromNotificationsBtn");
+  const openPacksBtn=$("openPacksFromNotificationsBtn"),openMasteryBtn=$("openMissionsFromNotificationsBtn"),openDeckBtn=$("openDeckBuilderFromNotificationsBtn");
   if(openPacksBtn)openPacksBtn.classList.toggle("hidden",getPendingPackCount()<=0);
+  const pendingMastery=typeof getPendingAccountMasteryRewardCount==="function"?getPendingAccountMasteryRewardCount():0;
+  if(openMasteryBtn)openMasteryBtn.classList.toggle("hidden",pendingMastery<=0);
   if(openDeckBtn)openDeckBtn.classList.toggle("hidden",!canAccessDecks());
   const state=getNotificationState();
   const totalCards=getCollectionCardTotal();
@@ -1184,6 +1288,9 @@ function getNotificationItems(){
   const items=[];
   if(pendingPacks>0){
     items.push({type:"packs",title:"Paquetes pendientes",body:`Tienes ${pendingPacks} paquete${pendingPacks===1?"":"s"} esperando apertura.`});
+  }
+  if(pendingMastery>0){
+    items.push({type:"mastery",title:"Premios de Maestría",body:`Tienes ${pendingMastery} recompensa${pendingMastery===1?"":"s"} de Maestría sin reclamar. Entra a Misiones para retirarla${pendingMastery===1?"":"s"}.`});
   }
   if(newCards>0){
     items.push({type:"cards",title:"Paquetes/cartas nuevas",body:`Tienes ${newCards} carta${newCards===1?"":"s"} nueva${newCards===1?"":"s"} en tu colección. Se guardaron aunque los mazos estén bloqueados.`});
@@ -1215,6 +1322,7 @@ function renderNotificationBadge(){
   const count=getNotificationItems().length;
   badge.textContent=count>9?"9+":String(count);
   badge.classList.toggle("hidden",count<=0);
+  if(typeof renderMasteryHomeBadge==="function")renderMasteryHomeBadge();
 }
 function openNotifications(){
   const panel=$("notificationsPanel"),list=$("notificationsList");

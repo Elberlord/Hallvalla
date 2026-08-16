@@ -562,6 +562,7 @@ async function updatePublic(patch){
   const sourcePatch=patch||{};
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
   let cleanPatch={...sourcePatch};
+  let accountMasteryKillAfter=null;
   if(Array.isArray(cleanPatch.units)){
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
@@ -571,6 +572,7 @@ async function updatePublic(patch){
     cleanPatch.units=mongolAura.units;
     const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
     if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
+    accountMasteryKillAfter=[...(cleanPatch.units||[])];
     delete cleanPatch._clockKillCreditOwner;
     delete cleanPatch._clockKillCreditMode;
     delete cleanPatch._clockKillIgnoreIds;
@@ -588,6 +590,10 @@ async function updatePublic(patch){
   if(hallvallaIsLocalTestGame()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,localFullPatch);
+    if(accountMasteryKillAfter){
+      if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,accountMasteryKillAfter);
+      if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(beforeUnits,accountMasteryKillAfter,sourcePatch);
+    }
     render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();return true;
   }
   if(isStage8PrivateStealthMode(publicState)&&Object.keys(privateStealthPatch).length){
@@ -597,6 +603,10 @@ async function updatePublic(patch){
     await update(ref(db,`games/${writeGameId}`),rootPatch);
   }else{
     await update(ref(db,`games/${writeGameId}/public`),publicWritePatch);
+  }
+  if(accountMasteryKillAfter){
+    if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,accountMasteryKillAfter);
+    if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(beforeUnits,accountMasteryKillAfter,sourcePatch);
   }
   return true;
 }
@@ -630,6 +640,8 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
   pvpStep6fAtomicActionInFlight=true;
   const writeGameId=gameId;
   const writePlayer=Number(myPlayer||0);
+  const accountMasteryBeforeUnits=Array.isArray(publicState?.units)?[...publicState.units]:[];
+  const accountMasterySourcePatch={...(publicPatch||{})};
   const lifecycleToken=getBattleLifecycleToken();
   const stillActive=()=>gameId===writeGameId&&Number(myPlayer||0)===writePlayer&&isBattleLifecycleTokenActive(lifecycleToken);
   try{
@@ -660,6 +672,10 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
     privateState=nextPrivate;
     publicState=hallvallaApplyLocalPatch(publicState,fullPublicPatch);
     networkPublicStateRaw=networkPublicStateRaw?hallvallaApplyLocalPatch(networkPublicStateRaw,cleanPublic):networkPublicStateRaw;
+    if(Array.isArray(fullPublicPatch?.units)){
+      if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(accountMasteryBeforeUnits,fullPublicPatch.units);
+      if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(accountMasteryBeforeUnits,fullPublicPatch.units,accountMasterySourcePatch);
+    }
     render();
     return true;
   }catch(error){

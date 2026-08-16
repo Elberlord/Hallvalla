@@ -945,7 +945,8 @@ const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_current_deck",
   "hallvalla_principal_unit_v1",
   "hallvalla_pending_packs",
-  "hallvalla_adventure_progress"
+  "hallvalla_adventure_progress",
+  "hallvalla_account_mastery_events_v1"
 ];
 const HALLVALLA_STATS_TUTORIAL_KEY="hallvalla_stats_tutorial_seen_v1";
 const HALLVALLA_BASIC_TUTORIAL_KEY="hallvalla_basic_battle_tutorial_seen_v3";

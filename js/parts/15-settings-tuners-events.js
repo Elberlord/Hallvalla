@@ -59,6 +59,7 @@ on("openNextPackBtn","click",openPackOpening);
 on("closePackShopBtn","click",closePackShop);
 on("closePackShopBtn2","click",closePackShop);
 on("openPacksFromNotificationsBtn","click",()=>{closeNotifications();openPackOpening();});
+on("openMissionsFromNotificationsBtn","click",()=>{closeNotifications();openMissionsPanel();});
 on("openDeckBuilderFromNotificationsBtn","click",()=>{closeNotifications();openDeckBuilder();});
 on("closeDeckBuilderBtn","click",closeDeckBuilder);
 function resetDeckBuilderCollectionPageAndRender(){deckBuilderCollectionPage=0;renderDeckBuilder();}
@@ -821,17 +822,58 @@ on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
 function isChapterOneCompleteForTutorial(){try{return canAccessDecks();}catch(e){return false;}}
+function renderMasteryHomeBadge(){
+  const badge=$("missionsRewardBadge");if(!badge)return;
+  const count=typeof getPendingAccountMasteryRewardCount==="function"?getPendingAccountMasteryRewardCount():0;
+  badge.textContent=count>9?"9+":String(count);
+  badge.classList.toggle("hidden",count<=0);
+}
+function renderAccountMasteries(){
+  const list=$("accountMasteryList"),pendingText=$("accountMasteryPendingText"),claimAll=$("claimAllMasteryRewardsBtn");
+  if(!list||typeof ACCOUNT_MASTERY_DEFS==="undefined")return;
+  const profile=getPlayerProfile();
+  const pendingTotal=getPendingAccountMasteryRewardCount(profile);
+  if(pendingText)pendingText.textContent=pendingTotal>0?`${pendingTotal} premio${pendingTotal===1?"":"s"} sin reclamar`:"Sin premios pendientes";
+  if(claimAll){claimAll.disabled=pendingTotal<=0;claimAll.textContent=pendingTotal>0?`Reclamar todo (${pendingTotal})`:"Reclamar todo";}
+  list.innerHTML=Object.values(ACCOUNT_MASTERY_DEFS).map(def=>{
+    const rec=getAccountMasteryRecord(def.key,profile),pending=getAccountMasteryPendingMilestones(def.key,profile),next=getAccountMasteryNextMilestone(def.key,profile);
+    const maxTarget=def.milestones[def.milestones.length-1]?.target||10000;
+    const progressTarget=next?.target||maxTarget;
+    const pct=next?Math.max(0,Math.min(100,(rec.count/progressTarget)*100)):100;
+    const nextCopy=next?`Próximo hito: ${next.target.toLocaleString("es-ES")} · ${formatAccountMasteryMilestoneRewards(next)}`:`MAESTRÍA COMPLETA · ${maxTarget.toLocaleString("es-ES")}`;
+    const milestoneStrip=def.milestones.map(m=>{
+      const claimed=rec.claimed.includes(m.target),ready=rec.count>=m.target&&!claimed;
+      return `<span class="mastery-milestone-chip ${claimed?"claimed":ready?"ready":"locked"} ${m.mastery?"mastery-final":""}" title="${escapeHtml(formatAccountMasteryMilestoneRewards(m))}"><b>${m.target>=1000?`${m.target/1000}k`:m.target}${claimed?" ✓":ready?" !":""}</b><small>${escapeHtml(formatAccountMasteryMilestoneRewards(m))}</small></span>`;
+    }).join("");
+    const pendingRows=pending.map(m=>`<div class="mastery-ready-reward"><span><b>${m.target.toLocaleString("es-ES")}</b><small>${escapeHtml(formatAccountMasteryMilestoneRewards(m))}</small></span><button class="btn primary mastery-claim-one" type="button" data-mastery-key="${def.key}" data-mastery-target="${m.target}">Reclamar</button></div>`).join("");
+    return `<article class="account-mastery-card ${next?"":"mastered"}">
+      <div class="account-mastery-title"><span class="account-mastery-icon" aria-hidden="true">${def.icon}</span><div><h3>${escapeHtml(def.name)}</h3><p>${escapeHtml(def.verb)}</p></div><strong>${rec.count.toLocaleString("es-ES")}</strong></div>
+      <div class="account-mastery-progress"><div class="account-mastery-progress-fill" style="width:${pct.toFixed(2)}%"></div></div>
+      <div class="account-mastery-next"><span>${escapeHtml(nextCopy)}</span><b>${next?`${rec.count.toLocaleString("es-ES")}/${progressTarget.toLocaleString("es-ES")}`:"MAX"}</b></div>
+      <div class="mastery-milestone-strip">${milestoneStrip}</div>
+      ${pendingRows?`<div class="mastery-ready-list">${pendingRows}</div>`:""}
+    </article>`;
+  }).join("");
+  list.querySelectorAll("[data-mastery-key][data-mastery-target]").forEach(btn=>btn.addEventListener("click",()=>{
+    const result=claimAccountMasteryMilestone(btn.dataset.masteryKey,Number(btn.dataset.masteryTarget));
+    if(result?.claimed){renderAccountMasteries();renderMasteryHomeBadge();if(typeof renderNotificationBadge==="function")renderNotificationBadge();}
+  }));
+  renderMasteryHomeBadge();
+}
+
 function renderTutorialMissions(){const list=$("tutorialMissionList");if(!list)return;const basic=isBasicTutorialComplete();const map1=isChapterOneCompleteForTutorial();const homeDone=localStorage.getItem("hallvalla_tutorial_home_complete_v1")==="true";list.innerHTML=`
   <article class="tutorial-mission-card ${basic?'complete':''}"><div class="tutorial-mission-status">${basic?'✓ GANADA':'1'}</div><div><h3>Tutorial básico</h3><p>Inicio de turno, robo, detalles, convocación, magia, movimiento, defensa, ataque y victoria.</p><span>Recompensa total: 45 oro</span></div><button id="missionBasicBtn" class="btn ${basic?'ghost':'primary'}" type="button">${basic?'Repetir':'Comenzar'}</button></article>
   <article class="tutorial-mission-card ${homeDone?'complete':''} ${map1?'':'locked'}"><div class="tutorial-mission-status">${homeDone?'✓':'2'}</div><div><h3>Home y creación de mazo</h3><p>Recorre el Home, la colección y el editor de mazos.</p><span>${map1?'Disponible':'Se desbloquea al derrotar al Hechicero guardián'}</span></div><button id="missionHomeBtn" class="btn ghost" type="button" ${map1?'':'disabled'}>${homeDone?'Revisar':'Iniciar'}</button></article>
   <article class="tutorial-mission-card locked"><div class="tutorial-mission-status">3</div><div><h3>Tácticas avanzadas</h3><p>Estados, trampas, formaciones y decisiones tácticas.</p><span>Se desbloquea después del tutorial de Home.</span></div><button class="btn ghost" type="button" disabled>Bloqueado</button></article>`;
   const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};const h=$("missionHomeBtn");if(h)h.onclick=()=>hvAlert("Esta segunda misión guiará el Home, la colección y la creación del mazo. Su recorrido interactivo se añadirá en la siguiente etapa.","Tutorial de Home");}
-function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderTutorialMissions();p.classList.remove("hidden");}
+function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccountMasteries();renderTutorialMissions();p.classList.remove("hidden");}
 function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("hidden");}
 
 on("missionsBtn","click",openMissionsPanel);
 on("closeMissionsBtn","click",closeMissionsPanel);
 on("closeMissionsX","click",closeMissionsPanel);
+on("claimAllMasteryRewardsBtn","click",()=>{const result=claimAllPendingAccountMasteryRewards();if(result?.claimed){renderAccountMasteries();renderMasteryHomeBadge();if(typeof renderNotificationBadge==="function")renderNotificationBadge();}});
+renderMasteryHomeBadge();
 on("mineBtn","click",()=>showComingSoon("Mina"));
 on("collectionBtn","click",openCollectionOrLocked);
 on("forgeBtn","click",()=>showComingSoon("Forja"));
