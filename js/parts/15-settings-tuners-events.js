@@ -838,7 +838,7 @@ on("forgeBtn","click",()=>showComingSoon("Forja"));
 on("storeBtn","click",openPackShop);
 on("eventsBtn","click",openHallvallaEvents);
 on("clansBtn","click",()=>showComingSoon("Clanes"));
-on("rankingBtn","click",()=>{if(typeof globalThis.hvPvpRankingOpen==="function"){void globalThis.hvPvpRankingOpen();}else{showComingSoon("Ranking");}});
+on("rankingBtn","click",async()=>{try{if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pvp-ranking");if(typeof globalThis.hvPvpRankingOpen==="function")await globalThis.hvPvpRankingOpen();else showComingSoon("Ranking");}catch(error){console.error("[HallValla][PERF2] No se pudo cargar Ranking PvP:",error);showComingSoon("Ranking");}});
 on("profileBtn","click",openProfilePanel);
 on("friendsBtn","click",()=>showComingSoon("Amigos"));
 on("goldPlusBtn","click",()=>showComingSoon("Conseguir oro"));

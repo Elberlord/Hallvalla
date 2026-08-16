@@ -1129,6 +1129,7 @@ function enterLocalGame(pub,priv,player=1){
   $("onlineLobby")?.classList.add("hidden");
   $("mainMenu")?.classList.add("hidden");
   $("adventurePanel")?.classList.add("hidden");
+  globalThis.hvHydrateAssetGroup?.("battle");
   $("gameShell")?.classList.remove("hidden");
   stopMusic(true);
   if(unsubPub){try{unsubPub();}catch(_){ }unsubPub=null}
@@ -1164,6 +1165,7 @@ function enterGame(code,player){
   if(aiWatchdogTimer){battleClearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
   $("onlineLobby")?.classList.add("hidden");
   $("mainMenu")?.classList.add("hidden");
+  globalThis.hvHydrateAssetGroup?.("battle");
   $("gameShell")?.classList.remove("hidden");
   stopMusic(true);
   if(unsubPub)unsubPub();

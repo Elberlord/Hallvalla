@@ -541,7 +541,7 @@ function migrateVisibleStarterDeckForLeader(deck=[],leaderType=getSelectedLeader
   if(deckKeySignature(target)===sig)return{deck:current,changed:false};
   return{deck:target,changed:true};
 }
-function openDeckBuilder(){
+function openDeckBuilderCore(){
   const browseOnly=isCollectionBrowseOnly();
   const panel=$("deckBuilderPanel");
   if(!panel)return;
@@ -566,6 +566,20 @@ function openDeckBuilder(){
   syncDeckBuilderDrawerAria(false);
   panel.classList.remove("hidden");
   renderDeckBuilder();
+}
+function openDeckBuilder(){
+  // PERF2: el layout canónico de Forja/Colección se descarga en la primera
+  // apertura, sin importar si se llega desde Home, Aventura, notificaciones
+  // o Contratos. Si la descarga falla, el panel conserva el CSS base.
+  if(typeof globalThis.hvEnsureFeature==="function"&&typeof globalThis.hvIsFeatureLoaded==="function"&&!globalThis.hvIsFeatureLoaded("forge-layout")){
+    return globalThis.hvEnsureFeature("forge-layout")
+      .then(openDeckBuilderCore)
+      .catch(error=>{
+        console.warn("[HallValla][PERF2] No se pudo cargar el layout lazy de Forja; se abrirá el panel con el CSS base.",error);
+        return openDeckBuilderCore();
+      });
+  }
+  return openDeckBuilderCore();
 }
 function syncDeckBuilderDrawerAria(open){
   const tab=$("deckBuilderDrawerTab"),drawer=$("deckBuilderDrawer");

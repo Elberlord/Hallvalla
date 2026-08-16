@@ -271,6 +271,7 @@ async function setSelectedLeaderType(type){
 }
 function requireLeaderSelection(force=false){
   if((force||leaderProfileLoaded)&&!getSelectedLeaderType()){
+    globalThis.hvHydrateAssetGroup?.("leader-select");
     const overlay=$("leaderSelectOverlay");
     if(overlay)overlay.classList.remove("hidden");
     return true;

@@ -642,7 +642,7 @@ function nextAdventureStoryScene(){
   if(adventureStoryIndex>=ADVENTURE_STORY_SCENES.length-1)return showAdventureChoice();
   showAdventureStoryScene(adventureStoryIndex+1);
 }
-function showAdventureChoice(){setAdventureStoryActors("","");showAdventureStage("adventureChoiceStage")}
+function showAdventureChoice(){globalThis.hvHydrateAssetGroup?.("adventure");setAdventureStoryActors("","");showAdventureStage("adventureChoiceStage")}
 const ADVENTURE_WOUNDED_SCENES={
   mulan:{
     title:"El peso del acero",

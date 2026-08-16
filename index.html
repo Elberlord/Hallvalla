@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2">
+<meta name="hallvalla-version" content="7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1">
 <meta name="hallvalla-build" content="v8_MODULAR_7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
 <link rel="stylesheet" href="styles.css?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-20260815I"/>
@@ -175,7 +175,7 @@
     <p class="leader-select-sub">El líder define tu estilo de juego. Los detalles explican niveles, tiers y habilidad de nivel 5.</p>
     <div class="leader-choice-grid leader-choice-grid-v54">
       <article class="leader-choice" data-leader-card="warrior">
-        <img src="assets/leaders/leader_warrior_3d.webp" alt="Guerrero">
+        <img data-hv-src="assets/leaders/leader_warrior_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Guerrero">
         <h3>Guerrero</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="warrior">Detalles</button>
@@ -184,7 +184,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="archer">
-        <img src="assets/leaders/leader_archer_3d.webp" alt="Arquero">
+        <img data-hv-src="assets/leaders/leader_archer_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Arquero">
         <h3>Arquero</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="archer">Detalles</button>
@@ -193,7 +193,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="mage">
-        <img src="assets/leaders/leader_mage_3d.webp" alt="Hechicero">
+        <img data-hv-src="assets/leaders/leader_mage_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Hechicero">
         <h3>Hechicero</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="mage">Detalles</button>
@@ -202,7 +202,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="axe">
-        <img src="assets/leaders/leader_axe_3d.webp" alt="Caudillo del Hacha">
+        <img data-hv-src="assets/leaders/leader_axe_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Caudillo del Hacha">
         <h3>Caudillo del Hacha</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="axe">Detalles</button>
@@ -211,7 +211,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="cavalry">
-        <img src="assets/leaders/leader_cavalry_3d.webp" alt="Señor de la Carga">
+        <img data-hv-src="assets/leaders/leader_cavalry_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Señor de la Carga">
         <h3>Señor de la Carga</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="cavalry">Detalles</button>
@@ -220,7 +220,7 @@
       </article>
 
       <article class="leader-choice" data-leader-card="assassin">
-        <img src="assets/leaders/leader_assassin_3d.webp" alt="Maestro de Sombras">
+        <img data-hv-src="assets/leaders/leader_assassin_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Maestro de Sombras">
         <h3>Maestro de Sombras</h3>
         <div class="leader-choice-actions">
           <button class="leader-detail-btn" type="button" data-leader-detail="assassin">Detalles</button>
@@ -249,10 +249,10 @@
 <div id="onlineLobby" class="online-visual hidden">
   <div class="online-visual-bg"></div>
   <div class="online-modal-art">
-    <img class="online-modal-base" src="assets/modal/modal_online_base.webp" alt="Competir en línea">
+    <img class="online-modal-base" data-hv-src="assets/modal/modal_online_base.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Competir en línea">
 
     <button id="createBtn" class="visual-btn visual-create" type="button" aria-label="Crear partida">
-      <img src="assets/modal/btn_create_match.webp" alt="">
+      <img data-hv-src="assets/modal/btn_create_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
     </button>
 
     <div class="visual-input-wrap">
@@ -260,11 +260,11 @@
     </div>
 
     <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">
-      <img src="assets/modal/btn_join_match.webp" alt="">
+      <img data-hv-src="assets/modal/btn_join_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
     </button>
 
     <button id="backMenuFromLobby" class="visual-btn visual-back" type="button" aria-label="Volver al inicio">
-      <img src="assets/modal/btn_back_home.webp" alt="">
+      <img data-hv-src="assets/modal/btn_back_home.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
     </button>
 
     <button id="pvpRankingBtn" class="pvp-ranking-open-btn" type="button" aria-label="Ver ranking PvP">RANKING PvP</button>
@@ -273,7 +273,7 @@
 
     <section id="pvpRoomPanel" class="pvp-room-panel hidden" aria-live="polite" aria-label="Lobby de duelo">
       <div class="pvp-room-artwrap">
-        <img class="pvp-room-art" src="assets/ui/pvp_lobby/duel_room_lobby.webp" alt="Lobby de duelo HallValla">
+        <img class="pvp-room-art" data-hv-src="assets/ui/pvp_lobby/duel_room_lobby.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Lobby de duelo HallValla">
         <div class="pvp-room-code-line">
           <strong id="pvpRoomCode">----</strong>
           <button id="pvpCopyCodeBtn" class="pvp-room-copy-btn" type="button">COPIAR</button>
@@ -312,22 +312,22 @@
         </div>
         <div class="pvp-rps-choices">
           <button id="pvpRpsRockBtn" class="pvp-rps-choice" type="button" data-rps-choice="rock" aria-label="Piedra">
-            <img src="assets/ui/pvp_rps/rps_rock.png" alt="Piedra">
+            <img data-hv-src="assets/ui/pvp_rps/rps_rock.png" data-hv-asset-group="pvp-rps" decoding="async" alt="Piedra">
             <span>PIEDRA</span>
           </button>
           <button id="pvpRpsPaperBtn" class="pvp-rps-choice" type="button" data-rps-choice="paper" aria-label="Papel">
-            <img src="assets/ui/pvp_rps/rps_paper.png" alt="Papel">
+            <img data-hv-src="assets/ui/pvp_rps/rps_paper.png" data-hv-asset-group="pvp-rps" decoding="async" alt="Papel">
             <span>PAPEL</span>
           </button>
           <button id="pvpRpsScissorsBtn" class="pvp-rps-choice" type="button" data-rps-choice="scissors" aria-label="Tijera">
-            <img src="assets/ui/pvp_rps/rps_scissors.png" alt="Tijera">
+            <img data-hv-src="assets/ui/pvp_rps/rps_scissors.png" data-hv-asset-group="pvp-rps" decoding="async" alt="Tijera">
             <span>TIJERA</span>
           </button>
         </div>
         <div id="pvpRpsChooseStatus" class="pvp-rps-status">Esperando elección.</div>
       </div>
       <div id="pvpRpsStageResult" class="pvp-rps-stage hidden">
-        <img id="pvpRpsResultArt" class="pvp-rps-result-art" src="assets/ui/pvp_rps/result_rock_wins.png" alt="Resultado piedra papel tijera">
+        <img id="pvpRpsResultArt" class="pvp-rps-result-art" data-hv-src="assets/ui/pvp_rps/result_rock_wins.png" data-hv-asset-group="pvp-rps-result" decoding="async" alt="Resultado piedra papel tijera">
         <div class="pvp-rps-result-copy">
           <div id="pvpRpsResultHeadline" class="pvp-rps-result-headline">RESULTADO</div>
           <div id="pvpRpsResultSubline" class="pvp-rps-result-subline">Esperando resolución...</div>
@@ -393,7 +393,7 @@
       </div>
       <div class="adventure-choice-grid">
         <button class="adventure-choice" type="button" data-adventure-special="mulan">
-          <img src="assets/story/mulan_choice.webp" alt="Mulan">
+          <img data-hv-src="assets/story/mulan_choice.webp" data-hv-asset-group="adventure" decoding="async" alt="Mulan">
           <div class="adventure-choice-copy">
             <h3>Mulan</h3>
             <p>Infiltradora veloz. Ideal para jugar alrededor del posicionamiento y castigar ataques por la espalda.</p>
@@ -401,7 +401,7 @@
           </div>
         </button>
         <button class="adventure-choice" type="button" data-adventure-special="wallace">
-          <img src="assets/story/wallace_choice.webp" alt="William Wallace">
+          <img data-hv-src="assets/story/wallace_choice.webp" data-hv-asset-group="adventure" decoding="async" alt="William Wallace">
           <div class="adventure-choice-copy">
             <h3>William Wallace</h3>
             <p>Tanque ofensivo. Aguanta el frente y sobrevive a golpes fatales en primera línea.</p>
@@ -544,7 +544,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <div class="pack-opening-scene">
       <div class="pack-opening-glow"></div>
       <div id="packOpeningObject" class="pack-object" role="button" tabindex="0" aria-label="Abrir paquete">
-        <img class="pack-object-image" src="assets/home/cartas_basicas.webp" alt="Cartas básicas">
+        <img class="pack-object-image" data-hv-src="assets/home/cartas_basicas.webp" data-hv-asset-group="packs" decoding="async" alt="Cartas básicas">
       </div>
       <div id="packOpeningHint" class="pack-opening-hint">Toca el paquete para abrirlo</div>
       <div id="packRevealGrid" class="pack-reveal-grid hidden"></div>
@@ -838,7 +838,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     </div>
     <span id="p2Honor" class="hud-hidden-value" aria-hidden="true">0</span>
   </div>
-</div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="turnTimerHud" class="battle-clock-hud battle-clock-turn-hud" data-clock-target="turn" aria-label="Tiempo de turno"><span class="turn-timer-label">TURNO</span><strong id="turnTimerValue">03:00</strong></div><div id="playerClock1" class="battle-clock-hud duel-clock-hud duel-clock-p1" data-clock-target="p1" aria-label="Reloj del jugador 1"><span class="duel-clock-label">J1</span><strong id="playerClock1Value">15:00</strong></div><div id="playerClock2" class="battle-clock-hud duel-clock-hud duel-clock-p2" data-clock-target="p2" aria-label="Reloj del jugador 2"><span class="duel-clock-label">J2</span><strong id="playerClock2Value">15:00</strong></div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></div><button id="mobileToggleActionsBtn" class="mobile-honor-actions-btn" type="button" aria-label="Mostrar u ocultar acciones" aria-expanded="true">Acciones ▾</button><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button type="button" id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mano"><img src="assets/ui/Hand_Combat_Panel.webp" alt="Mano"><span class="action-btn-label">Mano</span></button><button type="button" id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img src="assets/ui/Cancel_Combat_Panel.webp" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button type="button" id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img src="assets/ui/NextPhase_Combat_Panel.webp" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><!-- DETAIL HUD REMOVED: panel lateral Detalle eliminado del campo de batalla. --></div><!-- ACTIONS HUD CSS TOOL REMOVED: posición final pegada en styles.css. --><div id="log" class="event-history-dock" aria-label="Historial visual de eventos de combate" aria-hidden="true"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+</div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="turnTimerHud" class="battle-clock-hud battle-clock-turn-hud" data-clock-target="turn" aria-label="Tiempo de turno"><span class="turn-timer-label">TURNO</span><strong id="turnTimerValue">03:00</strong></div><div id="playerClock1" class="battle-clock-hud duel-clock-hud duel-clock-p1" data-clock-target="p1" aria-label="Reloj del jugador 1"><span class="duel-clock-label">J1</span><strong id="playerClock1Value">15:00</strong></div><div id="playerClock2" class="battle-clock-hud duel-clock-hud duel-clock-p2" data-clock-target="p2" aria-label="Reloj del jugador 2"><span class="duel-clock-label">J2</span><strong id="playerClock2Value">15:00</strong></div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></div><button id="mobileToggleActionsBtn" class="mobile-honor-actions-btn" type="button" aria-label="Mostrar u ocultar acciones" aria-expanded="true">Acciones ▾</button><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div class="side"><div class="actions-visual-panel"><div class="actions-visual-buttons"><button type="button" id="handBtn" class="action-img-btn hand-action-btn" aria-label="Abrir o cerrar mano" title="Mano"><img data-hv-src="assets/ui/Hand_Combat_Panel.webp" data-hv-asset-group="battle" decoding="async" alt="Mano"><span class="action-btn-label">Mano</span></button><button type="button" id="cancelBtn" class="action-img-btn" aria-label="Cancelar selección" title="Cancelar"><img data-hv-src="assets/ui/Cancel_Combat_Panel.webp" data-hv-asset-group="battle" decoding="async" alt="Cancelar"><span class="action-btn-label">Cancelar</span></button><button type="button" id="endBtn" class="action-img-btn" aria-label="Siguiente fase o fin de turno" title="Siguiente fase"><img data-hv-src="assets/ui/NextPhase_Combat_Panel.webp" data-hv-asset-group="battle" decoding="async" alt="Siguiente fase"><span class="action-btn-label">Siguiente fase</span></button></div></div><!-- DETAIL HUD REMOVED: panel lateral Detalle eliminado del campo de batalla. --></div><!-- ACTIONS HUD CSS TOOL REMOVED: posición final pegada en styles.css. --><div id="log" class="event-history-dock" aria-label="Historial visual de eventos de combate" aria-hidden="true"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card det-v32-card"></div></div>
 <div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openActionsHudTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar HUD de acciones</button><button id="openFieldStatBadgesTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar iconos / aros / números</button><button id="openBattleVisualSizeTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar líderes y cartas de mano</button><button id="openFieldBoardTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar cartas del campo y cuadrícula</button><button id="openBattleClockTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar relojes del duelo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 
@@ -1076,6 +1076,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-20260815I"></script>
+<script type="module" src="js/bootstrap-loader.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-20260816B"></script>
 </body>
 </html>

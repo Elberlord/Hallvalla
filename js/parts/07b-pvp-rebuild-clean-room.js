@@ -579,6 +579,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     setRpsVisualActive(false);
     $("onlineLobby")?.classList.add("hidden");
     $("mainMenu")?.classList.add("hidden");
+    globalThis.hvHydrateAssetGroup?.("battle");
     const shell=$("gameShell");
     if(shell){ shell.classList.remove("hidden"); shell.classList.add("pvp-step5-preview"); }
     hide("pvpStep5ArenaGate",false);
@@ -725,6 +726,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     setRpsVisualActive(false);
     $("onlineLobby")?.classList.add("hidden");
     $("mainMenu")?.classList.add("hidden");
+    globalThis.hvHydrateAssetGroup?.("battle");
     const shell=$("gameShell");
     if(shell){ shell.classList.remove("hidden","pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); shell.classList.add("pvp-step6b-active","pvp-step6d-active"); }
     hide("pvpStep5ArenaGate",true);
@@ -1192,6 +1194,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
     if(!bothReady && !startCfg.resolved){ resetRpsUi(); return; }
     if(phase!=="rps" && !startCfg.resolved){ resetRpsUi(); return; }
+    globalThis.hvHydrateAssetGroup?.("pvp-rps");
 
     const myRole=Number(activeRole||0), otherRole=myRole===1?2:1;
     if(startCfg.resolved){
@@ -1457,6 +1460,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
+    globalThis.hvHydrateAssetGroup?.("pvp-lobby");
     resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6I: duelo completo sobre el motor real; todas las rutas de combate PvE quedan abiertas para PvP."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
 
