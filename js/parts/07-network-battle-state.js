@@ -53,7 +53,9 @@ const HALLVALLA_STAGE8_STEALTH_SCHEMA="hallvalla-stealth-private-v1";
 const HALLVALLA_STAGE8_FX_KEYS=Object.freeze(["battleFxEvent","defenseFxEvent","dodgeFxEvent","statusFxEvent","floatFxEvent"]);
 let networkPublicStateRaw=null;
 let stage8PrivacyReconcileInFlight=false;
+let stage8AreaDamageReconcileInFlight=false;
 let stage8LastDetectionEventId="";
+let stage8LastAreaDamageEventId="";
 
 function isStage8PrivateStealthMode(state=publicState){
   return !!state&&state.mode==="online"&&state.privacyMode===HALLVALLA_STAGE8_PRIVACY_MODE;
@@ -154,6 +156,29 @@ globalThis.__HALLVALLA_STAGE8_PRIVACY_DEBUG__=()=>{
   };
 };
 
+function makeStage8StealthAreaDamageEvent(sourceOwner,targetOwner,payload={}){
+  if(!isStage8PrivateStealthMode(publicState))return null;
+  const safeSource=Number(sourceOwner||0),safeTarget=Number(targetOwner||0);
+  if(!safeSource||!safeTarget||safeSource===safeTarget)return null;
+  const kind=String(payload.kind||"");
+  if(!["global_direct_hp","cell_guard_damage"].includes(kind))return null;
+  const event={
+    eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    sourceOwner:safeSource,targetOwner:safeTarget,kind,
+    label:String(payload.label||"Daño de área").slice(0,96),
+    turnKey:String(publicState?.turnKey||"")
+  };
+  if(kind==="global_direct_hp")event.damage=Math.max(0,Number(payload.damage||0));
+  if(kind==="cell_guard_damage"){
+    event.cells=(Array.isArray(payload.cells)?payload.cells:[]).map(cell=>({x:Number(cell.x),y:Number(cell.y),damage:Math.max(0,Number(cell.damage||0))})).filter(cell=>Number.isFinite(cell.x)&&Number.isFinite(cell.y)&&cell.damage>0).slice(0,64);
+    event.element=String(payload.element||"");
+    event.sourceName=String(payload.sourceName||payload.label||"Daño de área").slice(0,96);
+    event.dragonStage=String(payload.dragonStage||"");
+    event.statusStacks=Math.max(0,Number(payload.statusStacks||0));
+  }
+  return event;
+}
+
 function makeStage8StealthDetectionEvent(detectorOwner,center,radius,reason="detección"){
   if(!isStage8PrivateStealthMode(publicState))return null;
   const x=Number(center?.x),y=Number(center?.y);
@@ -167,6 +192,62 @@ function makeStage8StealthDetectionEvent(detectorOwner,center,radius,reason="det
     turnKey:String(publicState?.turnKey||"")
   };
 }
+async function maybeResolveStage8StealthAreaDamage(){
+  if(stage8AreaDamageReconcileInFlight||!gameId||!isStage8PrivateStealthMode(networkPublicStateRaw||publicState)||!privateState)return false;
+  const owner=Number(myPlayer||0);
+  if(!owner)return false;
+  const raw=networkPublicStateRaw||publicState;
+  const event=raw?.stealthAreaDamageEvent||null;
+  if(!event?.eventId||Number(event.targetOwner||0)!==owner||Number(event.sourceOwner||0)===owner)return false;
+  const eventId=String(event.eventId);
+  const privateAck=String(privateState?.stealthBoard?.lastAreaDamageEventId||"");
+  if(eventId===privateAck||eventId===stage8LastAreaDamageEventId)return false;
+  stage8LastAreaDamageEventId=eventId;
+  let hidden=getStage8OwnStealthVaultUnits(privateState,owner);
+  const hitIds=[];
+  if(String(event.kind||"")==="global_direct_hp"){
+    const damage=Math.max(0,Number(event.damage||0));
+    if(damage>0){
+      hidden=hidden.map(unit=>{
+        if(!canReceiveUntargetedAreaEffect(unit))return unit;
+        hitIds.push(String(unit.id||""));
+        const result=typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(unit,damage):{unit:{...unit,hp:Number(unit.hp||0)-damage}};
+        return {...result.unit,damagedThisTurn:true};
+      });
+    }
+  }else if(String(event.kind||"")==="cell_guard_damage"){
+    const cellMap=new Map((Array.isArray(event.cells)?event.cells:[]).map(cell=>[`${Number(cell.x)},${Number(cell.y)}`,cell]));
+    const attackerRef={name:String(event.sourceName||event.label||"Daño de área"),dragonElement:String(event.element||""),dragonStage:String(event.dragonStage||"adult")};
+    hidden=hidden.map(unit=>{
+      if(!canReceiveUntargetedAreaEffect(unit))return unit;
+      const cell=cellMap.get(`${Number(unit.x)},${Number(unit.y)}`);
+      if(!cell)return unit;
+      const damage=Math.max(0,Number(cell.damage||0));
+      if(damage<=0)return unit;
+      hitIds.push(String(unit.id||""));
+      let next=typeof applyGuardDamage==="function"?applyGuardDamage(unit,damage):{...unit,hp:Number(unit.hp||0)-damage};
+      next={...next,damagedThisTurn:true};
+      if(Number(next.hp||0)>0&&Number(event.statusStacks||0)>0&&typeof applyDragonCompanionElementStatus==="function"){
+        next=applyDragonCompanionElementStatus(next,attackerRef,Number(event.statusStacks||0),publicState);
+      }
+      return next;
+    });
+  }
+  if(hitIds.length&&typeof applyLegendaryFatalSaves==="function")hidden=applyLegendaryFatalSaves(hidden,hitIds);
+  hidden=hidden.filter(unit=>Number(unit.hp||0)>0);
+  stage8AreaDamageReconcileInFlight=true;
+  try{
+    return await updatePrivate({
+      "stealthBoard/schema":HALLVALLA_STAGE8_STEALTH_SCHEMA,
+      "stealthBoard/units":stage8StealthUnitsToObject(hidden),
+      "stealthBoard/lastAreaDamageEventId":eventId,
+      "stealthBoard/updatedAt":Date.now()
+    });
+  }finally{
+    stage8AreaDamageReconcileInFlight=false;
+  }
+}
+
 async function maybeResolveStage8StealthDetectionAndAura(){
   if(stage8PrivacyReconcileInFlight||!gameId||!isStage8PrivateStealthMode(networkPublicStateRaw||publicState)||!privateState)return false;
   const owner=Number(myPlayer||0);
@@ -611,7 +692,9 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
 }function resetBattleState(){
   networkPublicStateRaw=null;
   stage8PrivacyReconcileInFlight=false;
+  stage8AreaDamageReconcileInFlight=false;
   stage8LastDetectionEventId="";
+  stage8LastAreaDamageEventId="";
   if(typeof resetBattleRenderScheduler==="function")resetBattleRenderScheduler();
   if(typeof resetHallvallaBoardRenderCache==="function")resetHallvallaBoardRenderCache();
   endBattleLifecycle("resetBattleState");
@@ -1054,6 +1137,7 @@ function enterGame(code,player){
     
     maybeShowBattleResult();
     void maybeFinalizeUnitExhaustionFromPublicState();
+    void maybeResolveStage8StealthAreaDamage();
     void maybeResolveStage8StealthDetectionAndAura();
     maybeStartTurn();
     maybeTriggerAdventureAI();
@@ -1075,6 +1159,7 @@ function enterGame(code,player){
     if(typeof requestBattleRender==="function")requestBattleRender("firebase-private");else render();
     if(prevPublic&&publicState)maybePlayBattleFx(prevPublic,publicState);
     maybeShowBattleResult();
+    void maybeResolveStage8StealthAreaDamage();
     void maybeResolveStage8StealthDetectionAndAura();
     maybeStartTurn();
     maybeTriggerAdventureAI();

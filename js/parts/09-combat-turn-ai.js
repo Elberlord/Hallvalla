@@ -806,7 +806,7 @@ async function attackUnit(a,d){
     : (!hit.hit&&defenderStillAlive
         ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
         : null));
-  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent});
+  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent,...(dragonCompanionResult.stealthAreaDamageEvent?{stealthAreaDamageEvent:dragonCompanionResult.stealthAreaDamageEvent}:{})});
   const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" ");
   if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
   clearSelection();

@@ -344,7 +344,7 @@ function getFxRarityClass(unit){
   if(rarity.includes("astral"))return "fx-demigod";
   if(rarity.includes("semid")||rarity.includes("demigod"))return "fx-demigod";
   if(rarity.includes("mít")||rarity.includes("mitic")||rarity.includes("mythic"))return "fx-mythic";
-  if(rarity.includes("épic")||rarity.includes("epic"))return "fx-epic";
+  if(rarity.includes("rara")||rarity.includes("rare")||rarity.includes("épic")||rarity.includes("epic"))return "fx-epic";
   if(rarity.includes("gloriosa")||rarity.includes("glorious")||unit.key==="richard_lionheart")return "fx-glorious";
   if(rarity.includes("heroica")||rarity.includes("heroic")||unit.special)return "fx-heroic";
   if(rarity.includes("poco")||rarity.includes("improved"))return "fx-improved";

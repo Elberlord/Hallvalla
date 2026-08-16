@@ -22,7 +22,7 @@ const CARD_VISUALS_BY_KEY={
   samurai_yabusame:{portrait:CARD_PORTRAITS.samuraiYabusame,icon:"🏹"},
   samurai_naginata:{portrait:CARD_PORTRAITS.samuraiNaginata,icon:"🗡️"},
   geisha_encubierta:{portrait:CARD_PORTRAITS.geishaEncubierta,icon:"🪭"},
-  hattori_shinobi:{portrait:CARD_PORTRAITS.hattoriShinobi,icon:"🥷"},
+  fuma_kotaro:{portrait:CARD_PORTRAITS.fumaKotaro,icon:"🥷"},
   saboteador_iga:{portrait:CARD_PORTRAITS.saboteadorIga,icon:"💣"},
   berserker_de_oso:{portrait:CARD_PORTRAITS.berserkerDeOso,icon:"🐻"},
   ulfhednar:{portrait:CARD_PORTRAITS.ulfhednar,icon:"🐺"},
@@ -627,7 +627,7 @@ function isAntiCavalryTargetUnit(u){
 const ASSASSIN_UNIT_KEYS=new Set([
   "scout",
   "geisha_encubierta",
-  "hattori_shinobi",
+  "fuma_kotaro",
   "saboteador_iga"
 ]);
 function isAssassinUnit(u){
@@ -1161,7 +1161,7 @@ function resolveHanzoContractAfterAttack(units,attacker,defender,triggered,defen
 }
 function shouldKeepStealthAfterAttack(attacker,defender,attackContext=null){
   if(!attacker||!isAttackFromStealth(attacker,attackContext))return false;
-  if(attacker.key==="hattori_shinobi"&&defender&&dist(attacker,defender)>1)return true;
+  if(attacker.key==="fuma_kotaro"&&defender&&dist(attacker,defender)>1)return true;
   if(isHanzoContractAttack(attacker,defender,attackContext))return true;
   return false;
 }

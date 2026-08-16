@@ -310,7 +310,7 @@ function applyDragonCompanionAttackEffects(units,attacker,target,context={}){
   const secondaryIds=[];
   let firstAffected=null,totalSecondaryDamage=0;
   for(const cell of unique.values()){
-    const victim=out.find(unit=>unit&&unit.id!==target.id&&Number(unit.owner)!==Number(attacker.owner)&&Number(unit.hp||0)>0&&unit.x===cell.x&&unit.y===cell.y);
+    const victim=out.find(unit=>unit&&unit.id!==target.id&&Number(unit.owner)!==Number(attacker.owner)&&canReceiveUntargetedAreaEffect(unit)&&unit.x===cell.x&&unit.y===cell.y);
     if(!victim||secondaryIds.includes(victim.id))continue;
     const damage=getDragonCompanionAreaDamage(attacker,cell);
     out=out.map(unit=>{
@@ -323,11 +323,15 @@ function applyDragonCompanionAttackEffects(units,attacker,target,context={}){
     secondaryIds.push(victim.id);totalSecondaryDamage+=damage;
   }
   const areaName=attacker.dragonElement==="fire"?"Erupción ígnea":attacker.dragonElement==="ice"?"Estallido glacial":"Tormenta dirigida";
+  const stealthAreaDamageEvent=typeof makeStage8StealthAreaDamageEvent==="function"
+    ?makeStage8StealthAreaDamageEvent(attacker.owner,target.owner,{kind:"cell_guard_damage",label:areaName,cells:[...unique.values()].map(cell=>({x:cell.x,y:cell.y,damage:getDragonCompanionAreaDamage(attacker,cell)})),element:attacker.dragonElement,sourceName:attacker.name,dragonStage:attacker.dragonStage,statusStacks:1})
+    :null;
   return{
     units:out,
     text:` ${areaName}: el tercer ataque alcanza ${secondaryIds.length} objetivo${secondaryIds.length===1?" secundario":"s secundarios"} con daño atenuado.`,
     statusFxEvent:firstAffected?makeStatusFxEvent(dragonElementFxType({element:attacker.dragonElement}),firstAffected,1):(primary?makeStatusFxEvent(dragonElementFxType({element:attacker.dragonElement}),primary,1):null),
-    floatFxEvent:firstAffected?makeFloatFxEvent("damage",firstAffected,totalSecondaryDamage||1):null
+    floatFxEvent:firstAffected?makeFloatFxEvent("damage",firstAffected,totalSecondaryDamage||1):null,
+    stealthAreaDamageEvent
   };
 }
 

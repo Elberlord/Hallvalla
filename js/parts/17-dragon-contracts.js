@@ -456,7 +456,7 @@ async function dragonContractEnemyTurn(){
       const beforeDragonArea=[...units];
       let firstAffected=null;
       for(const cell of unique.values()){
-        const victim=units.find(u=>u.owner===1&&u.hp>0&&u.x===cell.x&&u.y===cell.y);
+        const victim=units.find(u=>u.owner===1&&canReceiveUntargetedAreaEffect(u)&&u.x===cell.x&&u.y===cell.y);
         if(!victim||hitIds.includes(victim.id))continue;
         const isMain=victim.id===target.id;
         const damage=dragonAreaDamageAt(def,cell,isMain);

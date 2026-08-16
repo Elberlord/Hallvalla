@@ -982,7 +982,7 @@ function getCardVisualClass(card){
   else if(rarity.includes("legend"))parts.push("card-rarity-legendary");
   else if(rarity.includes("semid")||rarity.includes("demigod"))parts.push("card-rarity-demigod");
   else if(rarity.includes("mít")||rarity.includes("mitic")||rarity.includes("mythic"))parts.push("card-rarity-mythic");
-  else if(rarity.includes("épic")||rarity.includes("epic"))parts.push("card-rarity-epic");
+  else if(rarity.includes("rara")||rarity.includes("rare")||rarity.includes("épic")||rarity.includes("epic"))parts.push("card-rarity-epic");
   else if(rarity.includes("gloriosa")||rarity.includes("glorious"))parts.push("card-rarity-glorious");
   else if(rarity.includes("heroica")||rarity.includes("heroic")||card?.special||["mulan","wallace"].includes(key))parts.push("card-rarity-heroic");
   else if(rarity.includes("poco")||rarity.includes("improved")||key.endsWith("_plus"))parts.push("card-rarity-improved");

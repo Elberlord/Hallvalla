@@ -1109,7 +1109,7 @@ const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:3,battle2:4,battle3:6,battle4:8,battle5:10});
 const ADAPTIVE_CAMPAIGN_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
-const ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga"]);
+const ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","fuma_kotaro","saboteador_iga"]);
 const ADAPTIVE_MAP1_RICHARD_RARE_KEYS=new Set(["richard_lionheart","mulan","wallace"]);
 const ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS=Object.freeze({
   mage:Object.freeze([
@@ -1159,10 +1159,10 @@ const ADAPTIVE_EXACT_CARD_COUNTER_PRIORITY=Object.freeze({
   ulfhednar:Object.freeze({guardian:74,shield_wall:64,smoke_bomb:66,warning_rune_plus:94,joan_of_arc:112}),
   skipar_del_drakkar:Object.freeze({fireball:72,new_kingdom_archer:70,geisha_encubierta:64}),
 
-  archer:Object.freeze({cavalry:88,hungarian_hussar:104,hattori_shinobi:86,tomoe_gozen:126}),
-  egyptian_line_archer:Object.freeze({cavalry:86,hungarian_hussar:100,hattori_shinobi:82,tomoe_gozen:122}),
-  new_kingdom_archer:Object.freeze({cavalry:94,hungarian_hussar:108,hattori_shinobi:88,tomoe_gozen:132}),
-  roman_auxiliary_sagittarius:Object.freeze({cavalry:88,hungarian_hussar:102,hattori_shinobi:84,tomoe_gozen:124}),
+  archer:Object.freeze({cavalry:88,hungarian_hussar:104,fuma_kotaro:86,tomoe_gozen:126}),
+  egyptian_line_archer:Object.freeze({cavalry:86,hungarian_hussar:100,fuma_kotaro:82,tomoe_gozen:122}),
+  new_kingdom_archer:Object.freeze({cavalry:94,hungarian_hussar:108,fuma_kotaro:88,tomoe_gozen:132}),
+  roman_auxiliary_sagittarius:Object.freeze({cavalry:88,hungarian_hussar:102,fuma_kotaro:84,tomoe_gozen:124}),
   samurai_yabusame:Object.freeze({spearman:70,hungarian_hussar:72,tomoe_gozen:118}),
   simo_hayha:Object.freeze({mongol_explorer:96,tomoe_gozen:142,false_crown:112}),
   nasu_no_yoichi:Object.freeze({tomoe_gozen:136,hungarian_hussar:82,false_crown:104}),
@@ -1178,7 +1178,7 @@ const ADAPTIVE_EXACT_CARD_COUNTER_PRIORITY=Object.freeze({
   subotai:Object.freeze({snare_trap_plus:106,hannibal_barca:98,thousand_banners_ambush:104}),
 
   geisha_encubierta:Object.freeze({mongol_explorer:168}),
-  hattori_shinobi:Object.freeze({mongol_explorer:164}),
+  fuma_kotaro:Object.freeze({mongol_explorer:164}),
   hattori_hanzo:Object.freeze({mongol_explorer:154}),
   scout:Object.freeze({mongol_explorer:110}),
   saboteador_iga:Object.freeze({fireball:96,new_kingdom_archer:82,archer:70,simo_hayha:76}),
@@ -1283,7 +1283,7 @@ function getAdaptiveCampaignCardRarityKey(card){
   if(rarity.includes("legend"))return "legendary";
   if(rarity.includes("mít")||rarity.includes("myth"))return "mythic";
   if(rarity.includes("glor"))return "glorious";
-  if(rarity.includes("épic")||rarity.includes("epic"))return "epic";
+  if(rarity.includes("rara")||rarity.includes("rare")||rarity.includes("épic")||rarity.includes("epic"))return "epic";
   return "basic";
 }
 function isAdaptiveCardInsideRarityCap(card,battle){
@@ -1718,7 +1718,7 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   const archerThreat=sumKeys(["archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","samurai_yabusame","scythian_horse_archer"]);
   const tankThreat=sumKeys(["guardian","greek_hoplite","armored_man_at_arms","spearman","wallace","richard_lionheart","leonidas","hector_troy"]);
   const cavalryThreat=sumKeys(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider"]);
-  const stealthThreat=sumKeys(["scout","geisha_encubierta","hattori_shinobi","saboteador_iga","hattori_hanzo"]);
+  const stealthThreat=sumKeys(["scout","geisha_encubierta","fuma_kotaro","saboteador_iga","hattori_hanzo"]);
   const candidates=[];
   const add=(key,score,desired=3)=>{
     const card=getAdventureDeckCardTemplateByKey(key);
@@ -1731,7 +1731,7 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   // --- BÁSICAS: respuestas universales probadas desde el Mapa 1 -----------------
   add("cavalry",r.ranged*38+r.swarm*7+archerThreat*18,3);
   add("hungarian_hussar",r.ranged*34+r.burst*8+archerThreat*16,3);
-  add("hattori_shinobi",r.ranged*32+r.arcane*22+archerThreat*15,3);
+  add("fuma_kotaro",r.ranged*32+r.arcane*22+archerThreat*15,3);
   add("numidian_javelin_rider",r.ranged*22+r.assassin*12,3);
   add("fireball",r.ranged*22+r.swarm*28+r.arcane*18,3);
   add("berserker",r.tank*48+r.heavy*22+r.highGuard*28+tankThreat*20,3);

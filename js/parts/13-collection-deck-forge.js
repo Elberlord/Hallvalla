@@ -999,7 +999,7 @@ function renderDeckBuilder(){
     const rarityOk=rarityFilter==="all"||
       (rarityFilter==="basic"&&(rarity==="básica"||rarity==="basica"||rarity==="basic"))||
       (rarityFilter==="glorious"&&rarity==="gloriosa")||
-      (rarityFilter==="epic"&&(rarity==="épica"||rarity==="epica"))||
+      (rarityFilter==="epic"&&(rarity==="rara"||rarity==="rare"||rarity==="épica"||rarity==="epica"))||
       (rarityFilter==="mythic"&&(rarity==="mítica"||rarity==="mitica"))||
       (rarityFilter==="legendary"&&(rarity==="legendaria"||rarity==="legendary"))||
       (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));

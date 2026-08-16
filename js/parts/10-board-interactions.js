@@ -755,7 +755,10 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
   }
   if(caster.leader&&caster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
     if(caster.arrowRainUsedTurn)return[];
-    return (units||[]).some(it=>it.owner!==owner&&!it.leader&&it.hp>0)?[caster]:[];
+    // Es un efecto global, no una selección de objetivo. En PvP privado debe poder
+    // activarse aunque no haya unidades visibles, para no revelar si existe Sigilo.
+    if(typeof isStage8PrivateStealthMode==="function"&&isStage8PrivateStealthMode(publicState))return[caster];
+    return (units||[]).some(it=>it.owner!==owner&&!it.leader&&canReceiveUntargetedAreaEffect(it))?[caster]:[];
   }
   if(caster.leader&&caster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"){
     if(caster.arcaneBoltUsedTurn)return[];
@@ -846,7 +849,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     if(!valid)return{success:false,reason:"Objetivo inválido para este EFFECT."};
     target=valid;
   }
-  let out=[...(units||[])],log="",battleFxEvent=null;
+  let out=[...(units||[])],log="",battleFxEvent=null,stealthAreaDamageEvent=null;
   if(liveCaster.leader&&liveCaster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"){
     if(liveCaster.arcaneBoltUsedTurn)return{success:false,reason:"Descarga arcana ya fue usada este turno."};
     const enemyLeader=out.find(it=>it.owner!==owner&&it.leader&&it.hp>0);
@@ -862,8 +865,10 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     log=`${liveCaster.name} lanza Descarga arcana: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats.`;
   }else if(liveCaster.leader&&liveCaster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
     if(liveCaster.arrowRainUsedTurn)return{success:false,reason:"Lluvia de flechas ya fue usada este turno."};
-    const enemyIds=out.filter(it=>it.owner!==owner&&!it.leader&&it.hp>0).map(it=>it.id);
-    if(!enemyIds.length)return{success:false,reason:"No hay unidades enemigas válidas para Lluvia de flechas."};
+    const enemyIds=out.filter(it=>it.owner!==owner&&!it.leader&&canReceiveUntargetedAreaEffect(it)).map(it=>it.id);
+    const privateStealthMode=typeof isStage8PrivateStealthMode==="function"&&isStage8PrivateStealthMode(publicState);
+    if(!enemyIds.length&&!privateStealthMode)return{success:false,reason:"No hay unidades enemigas válidas para Lluvia de flechas."};
+    if(typeof makeStage8StealthAreaDamageEvent==="function")stealthAreaDamageEvent=makeStage8StealthAreaDamageEvent(owner,owner===1?2:1,{kind:"global_direct_hp",damage:1,label:"Lluvia de flechas"});
     const beforeRain=[...out];
     out=out.map(it=>{
       if(it.id===liveCaster.id)return{...it,acted:true,arrowRainUsedTurn:true};
@@ -874,7 +879,9 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.filter(it=>it.hp>0);
     const bloodVictoryResult=applyBloodVictoryForDeaths(beforeRain,out);
     out=bloodVictoryResult.units;
-    log=`${liveCaster.name} lanza Lluvia de flechas: inflige 1 daño directo a ${enemyIds.length} unidad${enemyIds.length===1?"":"es"} enemiga${enemyIds.length===1?"":"s"}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
+    log=privateStealthMode&&enemyIds.length===0
+      ?`${liveCaster.name} lanza Lluvia de flechas sobre el campo enemigo.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`
+      :`${liveCaster.name} lanza Lluvia de flechas: inflige 1 daño directo a ${enemyIds.length} unidad${enemyIds.length===1?"":"es"} enemiga${enemyIds.length===1?"":"s"}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
   }else if(liveCaster.leader&&liveCaster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call"){
     if(liveCaster.cavalryCallUsedTurn)return{success:false,reason:"El Llamado de la carga ya fue usado este turno."};
     const spots=getAdjacentFreeCells(liveCaster,out).slice(0,3);
@@ -928,7 +935,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else{
     return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante combate/turno."};
   }
-  return{success:true,units:out,log,battleFxEvent};
+  return{success:true,units:out,log,battleFxEvent,stealthAreaDamageEvent};
 }
 async function activateUnitEffect(u,choice=null){
   if(isPvpStep6fLimitedMode())return setHint("Paso 6H: EFFECT activo de unidades todavía está bloqueado. Esta prueba añade Fireball + Quemadura persistente sobre MOV/DEF/ATTK ya validados.");
@@ -1015,7 +1022,7 @@ async function activateUnitEffect(u,choice=null){
   if(!result.success)return setHint(result.reason||"No se pudo activar el efecto.");
   if(getBattleOutcome(result.units).ended&&result.battleFxEvent)await updatePublic({battleFxEvent:result.battleFxEvent});
   if(await finalizeBattle(result.units,result.log)){clearSelection();return;}
-  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[],battleFxEvent:result.battleFxEvent||null,stealthDetectionEvent:result.stealthDetectionEvent||null});
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],beastTraps:result.beastTraps||publicState.beastTraps||[],battleFxEvent:result.battleFxEvent||null,stealthDetectionEvent:result.stealthDetectionEvent||null,...(result.stealthAreaDamageEvent?{stealthAreaDamageEvent:result.stealthAreaDamageEvent}:{})});
   await pushLog(result.log);
   clearSelection();
 }

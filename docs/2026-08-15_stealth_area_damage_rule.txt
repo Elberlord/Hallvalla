@@ -1,0 +1,13 @@
+HallValla · Regla de Sigilo vs daño de área
+
+Regla canónica:
+- Sigilo/Oculto impide seleccionar directamente a la unidad como objetivo.
+- Sigilo NO evita daño global, de área o de sector.
+- Si la casilla ocupada por una unidad con Sigilo queda dentro de un área dañada, la unidad recibe el daño aunque el rival no pueda verla ni seleccionarla.
+- Recibir daño de área no revela por sí mismo a la unidad; conserva Sigilo si sobrevive, salvo que otra regla indique revelado.
+
+Aplicado a:
+- Lluvia de flechas de la líder Arquera (Nv.5).
+- Ataques de área/sector de dragones de contrato.
+- Tercer ataque de área de dragones compañeros.
+- PvP con privacidad real de Sigilo: el rival no recibe posición/ID de la unidad; el propietario resuelve privadamente el daño usando la geometría pública del área.

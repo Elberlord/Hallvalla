@@ -33,7 +33,7 @@ const CARD_PORTRAITS={
   samuraiYabusame:"assets/cards/basic/units/samurai_yabusame.webp",
   samuraiNaginata:"assets/cards/basic/units/samurai_naginata.webp",
   geishaEncubierta:"assets/cards/basic/units/geisha_encubierta.webp",
-  hattoriShinobi:"assets/cards/basic/units/hattori_shinobi.webp",
+  fumaKotaro:"assets/cards/special/units/fuma_kotaro.webp",
   saboteadorIga:"assets/cards/basic/units/saboteador_iga.webp",
   berserkerDeOso:"assets/cards/basic/units/berserker_de_oso.webp",
   ulfhednar:"assets/cards/basic/units/ulfhednar.webp",
