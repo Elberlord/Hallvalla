@@ -614,16 +614,21 @@ function resetHallvallaBoardRenderCache(){
 function ensureBattleBoardDelegation(grid){
   if(!grid||hallvallaBoardDelegatedGrids.has(grid))return;
   hallvallaBoardDelegatedGrids.add(grid);
-  grid.addEventListener("pointermove",ev=>{
-    const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
-    if(!cell||!grid.contains(cell))return;
-    const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
-    if(Number.isFinite(x)&&Number.isFinite(y))setBoardHoverCell(x,y);
-  },{passive:true});
-  grid.addEventListener("pointerleave",ev=>{
-    if(ev.relatedTarget&&grid.contains(ev.relatedTarget))return;
-    setBoardHoverCell(NaN,NaN);
-  },{passive:true});
+  /* PERF6B: hover no existe en pantallas táctiles. Evitar ejecutar
+     query/class updates por pointermove en cada pequeño desplazamiento del dedo. */
+  const hvBoardHoverEnabled=globalThis.matchMedia?.("(pointer:fine)")?.matches!==false;
+  if(hvBoardHoverEnabled){
+    grid.addEventListener("pointermove",ev=>{
+      const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
+      if(!cell||!grid.contains(cell))return;
+      const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
+      if(Number.isFinite(x)&&Number.isFinite(y))setBoardHoverCell(x,y);
+    },{passive:true});
+    grid.addEventListener("pointerleave",ev=>{
+      if(ev.relatedTarget&&grid.contains(ev.relatedTarget))return;
+      setBoardHoverCell(NaN,NaN);
+    },{passive:true});
+  }
   grid.addEventListener("pointerdown",ev=>{
     const seal=ev.target&&ev.target.closest?ev.target.closest(".unit-status-seal[data-status-index]"):null;
     if(seal)return;
@@ -836,7 +841,10 @@ function renderBoard(){
     syncBattleBoardUnit(record,unitsByCell.get(key)||null,x,y);
   }
   renderLeaderBases();
-  if(typeof applyFieldFigureSettingsToRenderedUnits==="function")applyFieldFigureSettingsToRenderedUnits();
+  /* PERF6B: getFieldFigureHtml() ya imprime la configuración como style inline.
+     Reaplicarla a TODAS las figuras en cada render provocaba decenas/cientos
+     de style.setProperty por interacción. Solo el editor DEV necesita ese barrido. */
+  if(globalThis.__HALLVALLA_DEV_TOOLS__===true&&typeof applyFieldFigureSettingsToRenderedUnits==="function")applyFieldFigureSettingsToRenderedUnits();
 }
 
 function ensureLeaderBasesLayer(){

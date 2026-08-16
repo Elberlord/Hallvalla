@@ -21065,3 +21065,180 @@ html.hv-document-hidden .leader-base.ally .leader-base-token::before,
 html.hv-document-hidden .leader-base.enemy .leader-base-token::before{
   animation-play-state:paused !important;
 }
+
+
+/* ========================================================================== 
+   PERF6B · Perfil de latencia para hardware móvil limitado
+   Activación: html[data-hv-perf="lite"]. Conserva field_figures, marcos,
+   rareza, estados, targeting y FX funcionales. Reduce solo composición cara.
+   ========================================================================== */
+html[data-hv-perf="lite"] #gameShell .cell > .unit-card .field-figure-img:not(.hv-missing-asset){
+  /* Mantiene correcciones visuales configuradas y una sola sombra de profundidad.
+     Se eliminan las cuatro sombras usadas para dibujar el halo plateado alrededor
+     de CADA figura: son especialmente caras cuando hay muchas unidades. */
+  filter:
+    brightness(var(--ff-brightness,1))
+    contrast(var(--ff-contrast,1))
+    saturate(var(--ff-saturation,1))
+    drop-shadow(0 4px 4px rgb(0 0 0 / .34)) !important;
+}
+
+html[data-hv-perf="lite"] #gameShell .actions-visual-panel,
+html[data-hv-perf="lite"] #gameShell .side,
+html[data-hv-perf="lite"] #gameShell .hand-drawer,
+html[data-hv-perf="lite"] #gameShell .battle-menu-card{
+  will-change:auto !important;
+}
+
+/* En touch no existe hover real; no gastar pintura en reglas hover persistentes. */
+@media (pointer:coarse){
+  html[data-hv-perf="lite"] #gameShell .cell.board-hover{
+    box-shadow:none !important;
+  }
+}
+
+
+/* ==========================================================
+   PERF6C · Splash lateral 50% más compacto + log visual imagen-first
+   - Reduce el splash lateral para que invada menos el campo.
+   - Mantiene legibilidad con tipografía/iconos proporcionados.
+   - El historial visual queda orientado a miniaturas, sin título visible.
+   ========================================================== */
+.event-splash-overlay{
+  width:min(176px,17vw) !important;
+  padding:0 4px 0 0 !important;
+}
+.event-splash-stack,
+.event-splash-stack.is-single,
+.event-splash-stack.is-duo{
+  gap:8px !important;
+}
+.event-splash-shell,
+.event-splash-stack.is-duo .event-splash-shell{
+  width:min(14vw,144px) !important;
+  max-width:144px !important;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.34)) !important;
+}
+.event-splash-stack.is-duo .event-splash-shell{
+  width:min(11.5vw,116px) !important;
+  max-width:116px !important;
+}
+.event-splash-card,
+.event-splash-stack.is-duo .event-splash-card{
+  border-radius:10px !important;
+}
+.event-splash-art-wrap{
+  border-radius:10px 10px 0 0 !important;
+}
+.event-splash-copy,
+.event-splash-stack.is-duo .event-splash-copy{
+  padding:9px 10px 10px !important;
+  gap:4px !important;
+}
+.event-splash-kicker,
+.event-splash-stack.is-duo .event-splash-kicker{
+  font-size:7px !important;
+  letter-spacing:.12em !important;
+}
+.event-splash-title,
+.event-splash-stack.is-duo .event-splash-title{
+  font-size:clamp(12px,1.05vw,16px) !important;
+  line-height:1.05 !important;
+}
+.event-splash-sub,
+.event-splash-stack.is-duo .event-splash-sub{
+  font-size:8px !important;
+  line-height:1.2 !important;
+}
+.event-splash-icon-anchor{bottom:32px !important;}
+.event-splash-icon-badge{--event-icon-size:38px !important;}
+.event-splash-stack.is-duo .event-splash-icon-anchor{bottom:26px !important;}
+.event-splash-stack.is-duo .event-splash-icon-badge{--event-icon-size:31px !important;}
+
+@media(max-width:980px){
+  .event-splash-overlay{
+    right:4px !important;
+    width:min(156px,24vw) !important;
+    padding-right:2px !important;
+  }
+  .event-splash-stack,
+  .event-splash-stack.is-single,
+  .event-splash-stack.is-duo{
+    gap:6px !important;
+  }
+  .event-splash-shell,
+  .event-splash-stack.is-duo .event-splash-shell{
+    width:min(20vw,130px) !important;
+    max-width:130px !important;
+  }
+  .event-splash-stack.is-duo .event-splash-shell{
+    width:min(17vw,104px) !important;
+    max-width:104px !important;
+  }
+  .event-splash-copy,
+  .event-splash-stack.is-duo .event-splash-copy{
+    padding:7px 8px 8px !important;
+    gap:3px !important;
+  }
+  .event-splash-kicker,
+  .event-splash-stack.is-duo .event-splash-kicker{
+    font-size:6px !important;
+  }
+  .event-splash-title,
+  .event-splash-stack.is-duo .event-splash-title{
+    font-size:clamp(10px,2.7vw,14px) !important;
+  }
+  .event-splash-sub,
+  .event-splash-stack.is-duo .event-splash-sub{
+    font-size:7px !important;
+  }
+  .event-splash-icon-anchor{bottom:26px !important;}
+  .event-splash-icon-badge{--event-icon-size:30px !important;}
+  .event-splash-stack.is-duo .event-splash-icon-anchor{bottom:22px !important;}
+  .event-splash-stack.is-duo .event-splash-icon-badge{--event-icon-size:24px !important;}
+}
+@media(max-width:720px){
+  .event-splash-overlay{
+    width:min(148px,28vw) !important;
+  }
+  .event-splash-shell,
+  .event-splash-stack.is-duo .event-splash-shell{
+    width:min(24vw,122px) !important;
+    max-width:122px !important;
+  }
+  .event-splash-stack.is-duo .event-splash-shell{
+    width:min(20vw,96px) !important;
+    max-width:96px !important;
+  }
+  .event-splash-sub,
+  .event-splash-stack.is-duo .event-splash-sub{
+    display:none !important;
+  }
+}
+
+#gameShell .battlefield #log.event-history-dock{
+  width:84px !important;
+  max-width:84px !important;
+  gap:4px !important;
+}
+#gameShell .battlefield .event-history-item{
+  width:84px !important;
+  height:46px !important;
+  flex-basis:46px !important;
+  border-radius:7px !important;
+}
+#gameShell .battlefield .event-history-title{
+  display:none !important;
+}
+@media(max-width:980px){
+  #gameShell .battlefield #log.event-history-dock{
+    width:64px !important;
+    max-width:64px !important;
+    gap:3px !important;
+  }
+  #gameShell .battlefield .event-history-item{
+    width:64px !important;
+    height:36px !important;
+    flex-basis:36px !important;
+  }
+}

@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1-20260816F";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1-PERF6BLATENCY1-PERF6CSPLASH1-20260816H";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1";
-const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1-20260816F";
+const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1-PERF6BLATENCY1-PERF6CSPLASH1";
+const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1-PERF6BLATENCY1-PERF6CSPLASH1-20260816H";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -28,6 +28,28 @@ function hvSyncDocumentVisibility(){
 }
 hvSyncDocumentVisibility();
 document.addEventListener("visibilitychange", hvSyncDocumentVisibility, {passive:true});
+
+/* PERF6B · Perfil automático para hardware móvil limitado.
+   No modifica reglas, timers, hitboxes ni sincronización. Solo activa
+   optimizaciones visuales/runtime que no cambian información de gameplay.
+   ?hvperf=lite fuerza el perfil; ?hvperf=full lo desactiva para comparar. */
+function hvResolvePerformanceProfile(){
+  let forced="";
+  try{forced=String(new URLSearchParams(location.search).get("hvperf")||"").toLowerCase();}catch(_){ }
+  const coarse=globalThis.matchMedia?.("(pointer:coarse)")?.matches===true;
+  const memory=Number(navigator.deviceMemory||0);
+  const cores=Number(navigator.hardwareConcurrency||0);
+  const lowMemory=memory>0&&memory<=4;
+  const lowCpu=cores>0&&cores<=4;
+  const mobileFallback=coarse&&!memory&&!cores&&Math.min(screen.width||innerWidth,screen.height||innerHeight)<=900;
+  const lite=forced==="lite"?true:forced==="full"?false:(coarse&&(lowMemory||lowCpu||mobileFallback));
+  const profile=lite?"lite":"full";
+  document.documentElement.dataset.hvPerf=profile;
+  globalThis.__HALLVALLA_PERF_PROFILE__={profile,coarse,deviceMemory:memory||null,hardwareConcurrency:cores||null,forced:forced||null};
+  return profile;
+}
+hvResolvePerformanceProfile();
+
 globalThis.__HALLVALLA_FIREBASE_CONFIG__ = hallvallaFirebaseConfig;
 
 
