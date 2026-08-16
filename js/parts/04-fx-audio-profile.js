@@ -48,96 +48,117 @@ function clearEventSplashOverlay(resetQueue=true){
   eventSplashActive=false;
   if(resetQueue)eventSplashQueue=[];
 }
-function getEventSplashConfig(type){
+function getEventSplashConfig(type,item=null){
   const key=String(type||"").toLowerCase();
   const map={
-    dodge:{
-      className:"is-dodge",
-      image:"assets/ui/event_splashes/event_dodge.webp",
-      icon:"assets/ui/status_icons/status_generic.webp",
-      kicker:"EVENTO DE COMBATE",
-      title:"ESQUIVA",
-      subtitle:"El objetivo evitó el golpe."
-    },
-    guard:{
-      className:"is-guard",
-      image:"assets/ui/event_splashes/event_guard.webp",
-      icon:"assets/ui/status_icons/status_defense.webp",
-      kicker:"EVENTO DE COMBATE",
-      title:"GUARDIA",
-      subtitle:"El ataque chocó contra la defensa."
-    },
-    bleed:{
-      className:"is-bleed",
-      image:"assets/ui/event_splashes/event_bleed.webp",
-      icon:"assets/ui/status_icons/status_bleed.webp",
-      kicker:"EVENTO DE COMBATE",
-      title:"SANGRADO",
-      subtitle:"La herida queda marcada."
-    },
-    stealth:{
-      className:"is-stealth",
-      image:"assets/ui/event_splashes/event_stealth.webp",
-      icon:"assets/ui/effect_icons/sigilo_de_depredador.webp",
-      kicker:"EVENTO DE COMBATE",
-      title:"EMBOSCADA",
-      subtitle:"Ataque lanzado desde sigilo."
-    },
-    burn:{
-      className:"is-burn",
-      image:"assets/ui/event_splashes/event_burn.webp",
-      icon:"assets/ui/status_icons/status_burn.webp",
-      kicker:"EVENTO DE COMBATE",
-      title:"QUEMADURA",
-      subtitle:"El fuego queda prendido sobre el objetivo."
-    },
-    poison:{
-      className:"is-poison",
-      image:"assets/ui/event_splashes/event_poison.webp",
-      icon:"assets/ui/status_icons/status_poison.webp",
-      kicker:"ESTADO ALTERADO",
-      title:"VENENO",
-      subtitle:"La toxina empieza a avanzar."
-    },
-    fear:{
-      className:"is-fear",
-      image:"assets/ui/event_splashes/event_fear.webp",
-      icon:"assets/ui/status_icons/status_control.webp",
-      kicker:"ESTADO ALTERADO",
-      title:"MIEDO",
-      subtitle:"La voluntad del objetivo tiembla."
-    },
-    stun:{
-      className:"is-stun",
-      image:"assets/ui/event_splashes/event_stun.webp",
-      icon:"assets/ui/status_icons/status_paralysis.webp",
-      kicker:"ESTADO ALTERADO",
-      title:"ATURDIDO",
-      subtitle:"El objetivo queda desorientado."
-    },
-    debuff:{
-      className:"is-debuff",
-      image:"assets/ui/event_splashes/event_debuff.webp",
-      icon:"assets/ui/status_icons/status_debuff.webp",
-      kicker:"ESTADO ALTERADO",
-      title:"DEBILITADO",
-      subtitle:"Sus atributos quedan reducidos."
-    }
+    dodge:{className:"is-dodge",icon:"assets/ui/status_icons/status_generic.webp",kicker:"EVENTO",title:"ESQUIVA",subtitle:""},
+    guard:{className:"is-guard",icon:"assets/ui/status_icons/status_defense.webp",kicker:"EVENTO",title:"GUARDIA",subtitle:""},
+    bleed:{className:"is-bleed",icon:"assets/ui/status_icons/status_bleed.webp",kicker:"ESTADO",title:"SANGRADO",subtitle:""},
+    stealth:{className:"is-stealth",icon:"assets/ui/effect_icons/sigilo_de_depredador.webp",kicker:"EVENTO",title:"EMBOSCADA",subtitle:""},
+    burn:{className:"is-burn",icon:"assets/ui/status_icons/status_burn.webp",kicker:"ESTADO",title:"QUEMADURA",subtitle:""},
+    poison:{className:"is-poison",icon:"assets/ui/status_icons/status_poison.webp",kicker:"ESTADO",title:"VENENO",subtitle:""},
+    fear:{className:"is-fear",icon:"assets/ui/status_icons/status_control.webp",kicker:"ESTADO",title:"MIEDO",subtitle:""},
+    stun:{className:"is-stun",icon:"assets/ui/status_icons/status_paralysis.webp",kicker:"ESTADO",title:"ATURDIDO",subtitle:""},
+    debuff:{className:"is-debuff",icon:"assets/ui/status_icons/status_debuff.webp",kicker:"ESTADO",title:"DEBILITADO",subtitle:""},
+    summon:{className:"is-summon",kicker:"INVOCACIÓN",title:String(item?.title||item?.unitName||"INVOCACIÓN"),subtitle:""},
+    attack:{className:"is-attack",kicker:"ATAQUE",title:"ATAQUE",subtitle:""},
+    death:{className:"is-death",kicker:"DERROTADO",title:String(item?.title||item?.unitName||"UNIDAD DERROTADA"),subtitle:""},
+    spell:{className:"is-spell",kicker:"MAGIA",title:String(item?.title||item?.cardName||"MAGIA"),subtitle:""}
   };
   return map[key]||null;
 }
+function getEventEntityImage(entity){
+  if(!entity)return typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"";
+  if(entity.leader){
+    return String(entity.portrait||entity.image||entity.avatar||"")||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
+  }
+  const field=typeof getResolvedFieldFigureSource==="function"?getResolvedFieldFigureSource(entity):String(entity.fieldFigure||"");
+  return field||String(entity.fieldFigure||entity.portrait||"")||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
+}
+function getEventCardImage(cardKey){
+  const wanted=String(cardKey||"");
+  let card=null;
+  try{card=Array.isArray(CARD_TEMPLATES)?CARD_TEMPLATES.find(c=>String(c?.key||"")===wanted):null;}catch(_){card=null;}
+  const source=card&&typeof getResolvedCardPortraitSource==="function"?getResolvedCardPortraitSource(card):String(card?.portrait||"");
+  return source||String(card?.portrait||"")||(typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"");
+}
+function getEventItemPrimaryImage(item,cfg=null){
+  const type=String(item?.type||"").toLowerCase();
+  if(item?.image)return String(item.image);
+  if(type==="spell"&&item?.cardKey)return getEventCardImage(item.cardKey);
+  if(cfg?.icon)return cfg.icon;
+  return typeof getAssetWarningImageSrc==="function"?getAssetWarningImageSrc():"";
+}
+function getEventImageFallbackAttr(label="Evento"){
+  if(typeof buildAssetFallbackAttr!=="function")return "";
+  return buildAssetFallbackAttr([getAssetWarningImageSrc()],label);
+}
 function buildEventSplashShell(item){
-  const cfg=getEventSplashConfig(item?.type);
+  const cfg=getEventSplashConfig(item?.type,item);
   if(!cfg)return "";
-  return `<div class="event-splash-shell ${cfg.className}"><div class="event-splash-shadow-layer" aria-hidden="true"></div><div class="event-splash-card"><div class="event-splash-depth-glow" aria-hidden="true"></div><div class="event-splash-panel-sheen" aria-hidden="true"></div><div class="event-splash-art-wrap"><img class="event-splash-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><div class="event-splash-icon-anchor"><span class="event-splash-icon-badge"><span class="event-splash-icon-badge-core" aria-hidden="true"></span><img class="event-splash-icon" src="${cfg.icon||cfg.image}" alt="" aria-hidden="true"></span></div><div class="event-splash-copy"><div class="event-splash-kicker">${escapeHtml(cfg.kicker)}</div><div class="event-splash-title">${escapeHtml(cfg.title)}</div><div class="event-splash-sub">${escapeHtml(cfg.subtitle)}</div></div></div></div>`;
+  const type=String(item?.type||"").toLowerCase();
+  const label=escapeHtml(cfg.title||"Evento");
+  if(type==="attack"){
+    const a=String(item?.attackerImage||getAssetWarningImageSrc());
+    const d=String(item?.targetImage||getAssetWarningImageSrc());
+    return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-attack-pair"><span class="event-splash-figure event-splash-attacker"><img src="${escapeHtml(a)}" alt="${escapeHtml(item?.attackerName||"Atacante")}" ${getEventImageFallbackAttr(item?.attackerName||"Atacante")}></span><span class="event-splash-swords" aria-hidden="true">⚔</span><span class="event-splash-figure event-splash-target"><img src="${escapeHtml(d)}" alt="${escapeHtml(item?.targetName||"Objetivo")}" ${getEventImageFallbackAttr(item?.targetName||"Objetivo")}></span></div><div class="event-splash-mini-label">ATAQUE</div></div>`;
+  }
+  if(type==="summon"||type==="death"){
+    const image=getEventItemPrimaryImage(item,cfg);
+    const badge=type==="death"?"☠":"✦";
+    return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-single-figure"><img src="${escapeHtml(image)}" alt="${label}" ${getEventImageFallbackAttr(cfg.title)}><span class="event-splash-corner-badge" aria-hidden="true">${badge}</span></div><div class="event-splash-mini-label">${escapeHtml(cfg.kicker)}</div></div>`;
+  }
+  if(type==="spell"){
+    const image=getEventItemPrimaryImage(item,cfg);
+    return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-spell-art"><img src="${escapeHtml(image)}" alt="${label}" ${getEventImageFallbackAttr(cfg.title)}></div><div class="event-splash-mini-label">${label}</div></div>`;
+  }
+  const icon=getEventItemPrimaryImage(item,cfg);
+  return `<div class="event-splash-shell ${cfg.className} event-splash-icon-only"><div class="event-splash-floating-icon"><img src="${escapeHtml(icon)}" alt="${label}" ${getEventImageFallbackAttr(cfg.title)}></div><div class="event-splash-mini-label">${label}</div></div>`;
+}
+function normalizeEventHistoryItem(item){
+  if(!item||!item.type||!getEventSplashConfig(item.type,item))return null;
+  const type=String(item.type||"").toLowerCase();
+  return {
+    type,
+    key:item.key||`${type}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
+    title:String(item.title||item.unitName||item.cardName||""),
+    unitName:String(item.unitName||""),
+    cardName:String(item.cardName||""),
+    cardKey:String(item.cardKey||""),
+    image:String(item.image||""),
+    attackerImage:String(item.attackerImage||""),
+    targetImage:String(item.targetImage||""),
+    attackerName:String(item.attackerName||""),
+    targetName:String(item.targetName||"")
+  };
 }
 function appendEventSplashHistory(items){
-  const incoming=(Array.isArray(items)?items:[items]).filter(item=>item&&item.type&&getEventSplashConfig(item.type)).map(item=>({type:String(item.type||"").toLowerCase(),key:item.key||`${item.type}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`}));
+  const incoming=(Array.isArray(items)?items:[items]).map(normalizeEventHistoryItem).filter(Boolean);
   if(!incoming.length)return;
   const incomingKeys=new Set(incoming.map(item=>item.key));
   const previous=Array.isArray(eventSplashHistory)?eventSplashHistory:[];
   eventSplashHistory=[...incoming,...previous.filter(item=>item&&!incomingKeys.has(item.key))].slice(0,5);
   if(typeof renderLog==="function")renderLog();
+}
+function makeSummonVisualEvent(unit,keySuffix=""){
+  if(!unit)return null;
+  return {type:"summon",key:`${gameId||"game"}:visual:summon:${unit.id||unit.name}:${keySuffix}`,unitName:unit.name||"Invocación",title:unit.name||"Invocación",image:getEventEntityImage(unit)};
+}
+function makeDeathVisualEvent(unit,keySuffix=""){
+  if(!unit)return null;
+  return {type:"death",key:`${gameId||"game"}:visual:death:${unit.id||unit.name}:${keySuffix}`,unitName:unit.name||"Unidad",title:unit.name||"Unidad",image:getEventEntityImage(unit)};
+}
+function makeAttackVisualEvent(fx,prevMap,nextMap){
+  if(!fx||fx.type!=="attack")return null;
+  const attacker=nextMap?.[fx.attackerId]||prevMap?.[fx.attackerId]||null;
+  const target=nextMap?.[fx.targetId]||prevMap?.[fx.targetId]||null;
+  if(!attacker||!target)return null;
+  return {type:"attack",key:`${gameId||"game"}:visual:attack:${fx.eventId||Date.now()}`,attackerName:attacker.name||fx.attackerName||"Atacante",targetName:target.name||fx.targetName||"Objetivo",attackerImage:getEventEntityImage(attacker),targetImage:getEventEntityImage(target)};
+}
+function makeSpellVisualEvent(event){
+  if(!event)return null;
+  const key=String(event.cardKey||event.spellKey||"");
+  return {type:"spell",key:`${gameId||"game"}:visual:spell:${event.eventId||key||Date.now()}`,cardKey:key,cardName:String(event.cardName||event.title||key||"Magia"),title:String(event.cardName||event.title||"Magia"),image:String(event.image||"")};
 }
 
 function showNextEventSplash(){
@@ -168,8 +189,8 @@ function showNextEventSplash(){
       appendEventSplashHistory(visible);
       clearEventSplashOverlay(false);
       showNextEventSplash();
-    },760);
-  },2100);
+    },340);
+  },1250);
 }
 
 function queueEventSplashGroup(payloads){
@@ -733,11 +754,12 @@ function maybePlayBattleFx(prevPub,nextPub){
   const explicitDodgeFx=nextPub.dodgeFxEvent&&!nextPub.dodgeFxEvent.privateStealthEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
   const explicitStatusFx=nextPub.statusFxEvent&&!nextPub.statusFxEvent.privateStealthEvent&&nextPub.statusFxEvent.eventId!==prevPub?.statusFxEvent?.eventId?nextPub.statusFxEvent:null;
   const explicitFloatFx=nextPub.floatFxEvent&&!nextPub.floatFxEvent.privateStealthEvent&&nextPub.floatFxEvent.eventId!==prevPub?.floatFxEvent?.eventId?nextPub.floatFxEvent:null;
+  const explicitCardVisualEvent=nextPub.cardVisualEvent&&nextPub.cardVisualEvent.eventId!==prevPub?.cardVisualEvent?.eventId?nextPub.cardVisualEvent:null;
   // Si el resultado fue una esquiva, no se procesa ningún evento de Guardia viejo o concurrente.
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge")explicitDefenseFx=null;
-  if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
-  const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx)
-    ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}`
+  if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&!explicitCardVisualEvent)return;
+  const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx||explicitCardVisualEvent)
+    ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}:${explicitCardVisualEvent?.eventId||"none"}`
     : `${gameId||"game"}:${nextPub.turnKey||nextPub.turn||0}:${(nextPub.log||[])[0]||""}:${nextPub.units.length}`;
   if(fxKey===lastBattleFxKey)return;
   const prevUnits=prevPub.units||[];
@@ -749,7 +771,7 @@ function maybePlayBattleFx(prevPub,nextPub){
   const damaged=[...nextUnits.filter(u=>prevMap[u.id]&&u.hp<prevMap[u.id].hp),...prevUnits.filter(u=>!nextMap[u.id]&&u.hp>0)];
   const destroyed=prevUnits.filter(u=>u.hp>0&&((!nextMap[u.id])||(nextMap[u.id]&&nextMap[u.id].hp<=0)));
   const attackers=nextUnits.filter(u=>prevMap[u.id]&&u.acted&&!prevMap[u.id].acted);
-  if(!added.length&&!attackers.length&&!destroyed.length&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx)return;
+  if(!added.length&&!attackers.length&&!destroyed.length&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&!explicitCardVisualEvent)return;
   lastBattleFxKey=fxKey;
   added.forEach(u=>battleSetTimeout(()=>playSummonFx(u),80));
   const demigodAdded=added.find(u=>getFxRarityClass(u)==="fx-demigod");
@@ -792,10 +814,25 @@ function maybePlayBattleFx(prevPub,nextPub){
     const floatDelay=explicitAttackFx?getBattleFxImpactDelay(explicitAttackFx)+80:(explicitStatusFx?190:90);
     battleSetTimeout(()=>playFloatFxEvent(explicitFloatFx),floatDelay);
   }
+  /* PERF6D · Registro visual ligero.
+     Orden: invocación/magia/ataque -> resultado especial -> muerte.
+     Los eventos ocultos por Sigilo nunca se fabrican desde una unidad no visible. */
+  const visibleAdded=added.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
+  const visibleDestroyed=destroyed.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
+  const summonVisuals=visibleAdded.map((u,i)=>makeSummonVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
+  const cardVisual=explicitCardVisualEvent?makeSpellVisualEvent(explicitCardVisualEvent):null;
+  const attackVisual=explicitAttackFx?.type==="attack"?makeAttackVisualEvent(explicitAttackFx,prevMap,nextMap):null;
+  const legacySpellVisual=!cardVisual&&explicitAttackFx&&["spell","magic","heal"].includes(explicitAttackFx.type)?makeSpellVisualEvent(explicitAttackFx):null;
   const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);
+  const deathVisuals=visibleDestroyed.map((u,i)=>makeDeathVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
+  const primaryVisuals=[...summonVisuals.slice(0,2),cardVisual||legacySpellVisual,attackVisual].filter(Boolean);
+  primaryVisuals.forEach((item,i)=>battleSetTimeout(()=>queueEventSplashGroup([item]),i*80));
+  if(summonVisuals.length>2)appendEventSplashHistory(summonVisuals.slice(2));
   if(eventSplashPayloads.length){
-    battleSetTimeout(()=>queueEventSplashGroup(eventSplashPayloads),0);
+    battleSetTimeout(()=>queueEventSplashGroup(eventSplashPayloads),Math.max(0,primaryVisuals.length*80));
   }
+  deathVisuals.slice(0,2).forEach((item,i)=>battleSetTimeout(()=>queueEventSplashGroup([item]),Math.max(120,(primaryVisuals.length*80)+120+(i*80))));
+  if(deathVisuals.length>2)appendEventSplashHistory(deathVisuals.slice(2));
   destroyed.forEach((unit,i)=>battleSetTimeout(()=>playDestroyFx(unit),280+(i*130)));
 }
 

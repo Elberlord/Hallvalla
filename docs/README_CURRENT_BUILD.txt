@@ -1,7 +1,7 @@
 HALLVALLA — REFERENCIA MÍNIMA DEL BUILD ACTUAL
 ===============================================
 
-Estado del paquete: PERF6C (2026-08-16)
+Estado del paquete: PERF6D (2026-08-16)
 
 FUENTE DE VERDAD
 ----------------
@@ -22,6 +22,14 @@ ARQUITECTURA VISUAL DE BATALLA
 - Si falta o falla una field figure, el fallback visual del tablero es el triángulo de advertencia ligero.
 - Marcos, rareza, iconos, estados y HUD de las unidades son capas independientes y se conservan.
 - Las cartas de mano, colección, biblioteca/constructor e inspección continúan usando sus assets de carta normales.
+
+EVENTOS VISUALES DE BATALLA
+----------------------------
+- Los antiguos artes grandes assets/ui/event_splashes fueron retirados.
+- Estados como Esquiva, Guardia, Sangrado, Quemadura, etc. usan iconos ligeros sin panel de fondo.
+- Invocación usa la field figure; Ataque muestra atacante + espadas + objetivo; Muerte usa la figura con calavera.
+- Las magias muestran el arte de la carta jugada.
+- El historial visual conserva como máximo 5 eventos y su tamaño PERF6C.
 
 RENDIMIENTO MÓVIL
 -----------------

@@ -1128,7 +1128,17 @@ function renderLog(){
   const history=(Array.isArray(eventSplashHistory)?eventSplashHistory:[]).slice(0,5);
   el.classList.toggle("is-empty",history.length===0);
   el.setAttribute("aria-hidden",String(history.length===0));
-  const markup=history.map(item=>{const cfg=getEventSplashConfig(item?.type);if(!cfg)return "";return `<div class="event-history-item ${cfg.className}" title="${escapeHtml(cfg.title)}"><div class="event-history-art-wrap"><img class="event-history-art" src="${cfg.image}" alt="${escapeHtml(cfg.title)}"></div><span class="event-history-icon-badge"><img src="${cfg.icon||cfg.image}" alt="" aria-hidden="true"></span><span class="event-history-title">${escapeHtml(cfg.title)}</span></div>`}).join("");
+  const imageTag=(src,alt="")=>`<img src="${escapeHtml(src||getAssetWarningImageSrc())}" alt="${escapeHtml(alt)}" ${typeof getEventImageFallbackAttr==="function"?getEventImageFallbackAttr(alt||"Evento"):""}>`;
+  const markup=history.map(item=>{
+    const cfg=getEventSplashConfig(item?.type,item);if(!cfg)return "";
+    const type=String(item?.type||"").toLowerCase();
+    if(type==="attack"){
+      return `<div class="event-history-item ${cfg.className} event-history-attack" title="${escapeHtml(item.attackerName||"Atacante")} → ${escapeHtml(item.targetName||"Objetivo")}"><span class="event-history-duel-figure">${imageTag(item.attackerImage,item.attackerName||"Atacante")}</span><span class="event-history-swords" aria-hidden="true">⚔</span><span class="event-history-duel-figure">${imageTag(item.targetImage,item.targetName||"Objetivo")}</span></div>`;
+    }
+    const image=typeof getEventItemPrimaryImage==="function"?getEventItemPrimaryImage(item,cfg):(item.image||cfg.icon||getAssetWarningImageSrc());
+    const badge=type==="death"?'<span class="event-history-corner-badge" aria-hidden="true">☠</span>':type==="summon"?'<span class="event-history-corner-badge summon" aria-hidden="true">✦</span>':"";
+    return `<div class="event-history-item ${cfg.className} event-history-${escapeHtml(type)}" title="${escapeHtml(cfg.title)}"><div class="event-history-art-wrap">${imageTag(image,cfg.title)}</div>${badge}</div>`;
+  }).join("");
   if(el.__hvLogMarkup!==markup){el.innerHTML=markup;el.__hvLogMarkup=markup;}
 }
 function renderDetail(){

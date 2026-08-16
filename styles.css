@@ -21242,3 +21242,246 @@ html[data-hv-perf="lite"] #gameShell .battle-menu-card{
     flex-basis:36px !important;
   }
 }
+
+/* ==========================================================
+   PERF6D · Splash events ligeros + eventos visuales dinámicos
+   - Sin tarjeta/fondo grande: estados se muestran como iconos flotantes.
+   - Invocación y muerte reutilizan field figures.
+   - Ataque muestra atacante ⚔ objetivo.
+   - El log conserva el tamaño PERF6C aprobado.
+   ========================================================== */
+.event-splash-shadow-layer,
+.event-splash-depth-glow,
+.event-splash-panel-sheen,
+.event-splash-card,
+.event-splash-art-wrap,
+.event-splash-copy,
+.event-splash-icon-anchor{
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.event-splash-overlay.show .event-splash-shell{
+  animation:eventSplashLightReveal .26s cubic-bezier(.2,.82,.26,1) forwards !important;
+}
+.event-splash-overlay.leaving .event-splash-shell{
+  animation:eventSplashLightHide .32s ease-in forwards !important;
+}
+@keyframes eventSplashLightReveal{
+  from{opacity:0;transform:translate3d(24px,0,0) scale(.82);}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1);}
+}
+@keyframes eventSplashLightHide{
+  from{opacity:1;transform:translate3d(0,0,0) scale(1);}
+  to{opacity:0;transform:translate3d(34px,0,0) scale(.88);}
+}
+.event-splash-shell.event-splash-icon-only,
+.event-splash-shell.event-splash-visual{
+  width:132px !important;
+  max-width:132px !important;
+  min-height:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+  padding:2px !important;
+  margin-left:auto !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  overflow:visible !important;
+}
+.event-splash-floating-icon{
+  width:62px !important;
+  height:62px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:transparent !important;
+}
+.event-splash-floating-icon img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.48)) !important;
+}
+.event-splash-mini-label{
+  max-width:130px !important;
+  overflow:hidden !important;
+  white-space:nowrap !important;
+  text-overflow:ellipsis !important;
+  color:#f4ddb0 !important;
+  font-size:8px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:.07em !important;
+  text-align:center !important;
+  text-shadow:0 2px 4px #000,0 0 5px #000 !important;
+}
+.event-splash-single-figure{
+  position:relative !important;
+  width:76px !important;
+  height:96px !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  overflow:visible !important;
+}
+.event-splash-single-figure>img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 4px 5px rgba(0,0,0,.48)) !important;
+}
+.event-splash-corner-badge{
+  position:absolute !important;
+  right:-3px !important;
+  top:-2px !important;
+  z-index:2 !important;
+  width:25px !important;
+  height:25px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#f2e5c3 !important;
+  font-size:19px !important;
+  line-height:1 !important;
+  text-shadow:0 2px 4px #000,0 0 6px rgba(0,0,0,.9) !important;
+}
+.event-splash-shell.is-death .event-splash-corner-badge{color:#e8e8e8 !important;}
+.event-splash-shell.is-summon .event-splash-corner-badge{color:#ffe39a !important;}
+.event-splash-attack-pair{
+  width:128px !important;
+  height:86px !important;
+  display:grid !important;
+  grid-template-columns:52px 22px 52px !important;
+  align-items:end !important;
+  justify-content:center !important;
+  gap:1px !important;
+}
+.event-splash-figure{
+  width:52px !important;
+  height:82px !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  overflow:visible !important;
+}
+.event-splash-figure img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.44)) !important;
+}
+.event-splash-swords{
+  align-self:center !important;
+  color:#f1d48d !important;
+  font-size:20px !important;
+  line-height:1 !important;
+  text-align:center !important;
+  text-shadow:0 2px 4px #000 !important;
+}
+.event-splash-spell-art{
+  width:68px !important;
+  height:88px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+  border-radius:6px !important;
+  background:transparent !important;
+}
+.event-splash-spell-art img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.42)) !important;
+}
+
+/* Historial PERF6C: mismas dimensiones, contenido ahora admite figuras/duelos. */
+#gameShell .battlefield .event-history-item{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#gameShell .battlefield .event-history-art-wrap{
+  position:absolute !important;
+  inset:2px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#gameShell .battlefield .event-history-art-wrap img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:none !important;
+}
+#gameShell .battlefield .event-history-attack{
+  display:grid !important;
+  grid-template-columns:1fr 14px 1fr !important;
+  align-items:center !important;
+  gap:1px !important;
+  padding:2px !important;
+}
+#gameShell .battlefield .event-history-duel-figure{
+  min-width:0 !important;
+  height:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#gameShell .battlefield .event-history-duel-figure img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+}
+#gameShell .battlefield .event-history-swords{
+  color:#f0d18c !important;
+  font-size:12px !important;
+  text-align:center !important;
+  text-shadow:0 1px 3px #000 !important;
+  z-index:2 !important;
+}
+#gameShell .battlefield .event-history-corner-badge{
+  position:absolute !important;
+  right:2px !important;
+  top:1px !important;
+  z-index:3 !important;
+  color:#eee !important;
+  font-size:13px !important;
+  line-height:1 !important;
+  text-shadow:0 1px 3px #000 !important;
+}
+#gameShell .battlefield .event-history-corner-badge.summon{color:#ffe29b !important;}
+
+/* Perfil ligero: ni siquiera la sombra cosmética de los iconos/event figures. */
+html.hv-perf-lite .event-splash-floating-icon img,
+html.hv-perf-lite .event-splash-single-figure>img,
+html.hv-perf-lite .event-splash-figure img,
+html.hv-perf-lite .event-splash-spell-art img{
+  filter:none !important;
+}
+
+@media(max-width:980px){
+  .event-splash-shell.event-splash-icon-only,
+  .event-splash-shell.event-splash-visual{
+    width:112px !important;
+    max-width:112px !important;
+  }
+  .event-splash-floating-icon{width:50px !important;height:50px !important;}
+  .event-splash-single-figure{width:62px !important;height:78px !important;}
+  .event-splash-attack-pair{
+    width:108px !important;
+    height:72px !important;
+    grid-template-columns:43px 20px 43px !important;
+  }
+  .event-splash-figure{width:43px !important;height:69px !important;}
+  .event-splash-swords{font-size:17px !important;}
+  .event-splash-spell-art{width:56px !important;height:72px !important;}
+  .event-splash-mini-label{max-width:108px !important;font-size:7px !important;}
+  .event-splash-corner-badge{width:21px !important;height:21px !important;font-size:16px !important;}
+}

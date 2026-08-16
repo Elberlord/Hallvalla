@@ -25,6 +25,16 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
   };
   let effectPatch={...(publicPatch||{}),[`playerStats/${myPlayer}`]:nextStats};
   if(actionLog)effectPatch.log=[String(actionLog),...(publicState?.log||[])].slice(0,18);
+  // PERF6D: las magias alimentan el registro visual con metadata mínima.
+  // No altera la resolución de la carta; solo informa a la UI después del commit.
+  if(card&&(card.type==="spell"||card.spell)&&!effectPatch.cardVisualEvent){
+    effectPatch.cardVisualEvent={
+      eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+      type:"spell",
+      cardKey:String(card.key||""),
+      cardName:String(card.name||"Magia")
+    };
+  }
   const committed=await commitGameplayAction({
     publicPatch:effectPatch,
     privatePatch:{hand:payment.hand,honor:payment.honor,maxHonor:payment.maxHonor},
@@ -936,6 +946,7 @@ async function adventureEnemyTurn(){
     const dodgeFxEvent=pendingAiDodgeFxEvent||null;
     const statusFxEvent=pendingAiStatusFxEvent||null;
     const floatFxEvent=pendingAiFloatFxEvent||null;
+    const cardVisualEvent=pendingAiCardVisualEvent||null;
     if(!aiLifecycleAlive())return false;
     await update(ref(db,`games/${aiGameId}/public`),{
       units,
@@ -947,6 +958,7 @@ async function adventureEnemyTurn(){
       dodgeFxEvent,
       statusFxEvent,
       floatFxEvent,
+      cardVisualEvent,
       adventureAiState:nextAiState,
       currentPlayer:2,
       [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:p1Leader?.hp||0,hand:Array.isArray(privateState?.hand)?privateState.hand.length:(pub.playerStats?.[1]?.hand||0)},
@@ -961,6 +973,7 @@ async function adventureEnemyTurn(){
     pendingAiDodgeFxEvent=null;
     pendingAiStatusFxEvent=null;
     pendingAiFloatFxEvent=null;
+    pendingAiCardVisualEvent=null;
     return true;
   };
   const firstTurnNoDraw=ai.skipFirstTurnDraw===true;
@@ -988,6 +1001,7 @@ async function adventureEnemyTurn(){
   let pendingAiDodgeFxEvent=null;
   let pendingAiStatusFxEvent=null;
   let pendingAiFloatFxEvent=null;
+  let pendingAiCardVisualEvent=null;
   const withAiPublicState=(fn)=>{
     const prev=publicState;
     publicState={...pub,units,legendaryTraps,beastTraps,erictoGraveyard,currentPlayer:2,turnKey:pub.turnKey,turn:pub.turn,phase:pub.phase};
@@ -1020,6 +1034,10 @@ async function adventureEnemyTurn(){
   const at=(x,y)=>units.find(u=>u.x===x&&u.y===y);
   const leader=(owner)=>units.find(u=>u.owner===owner&&u.leader);
   const removeCard=(card)=>{hand=hand.filter(c=>c.id!==card.id)};
+  const markAiSpellVisual=(card)=>{
+    if(!card||!(card.type==="spell"||card.spell))return;
+    pendingAiCardVisualEvent={eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,type:"spell",cardKey:String(card.key||""),cardName:String(card.name||"Magia")};
+  };
   const killDead=()=>{units=units.filter(u=>(u.hp===undefined||u.hp>0))};
   const living=(owner)=>units.filter(u=>u.owner===owner&&(u.hp===undefined||u.hp>0));
   const aiAttackRange=(unit)=>{
@@ -2760,6 +2778,7 @@ async function adventureEnemyTurn(){
     pendingAiFloatFxEvent=makeFloatFxEvent("damage",damagedTarget||originalTarget,actualSpellDamage);
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
+    markAiSpellVisual(choice.card);
     logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${actualSpellDamage} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
     return true;
   };
@@ -2789,6 +2808,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
+    markAiSpellVisual(choice.card);
     logs.push(bhTrap.cancel?bhTrap.logs.join(" "):`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${effectiveCardValue(choice.card,"buff")} AT este turno.`);
     return true;
   };
@@ -2801,6 +2821,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
+    markAiSpellVisual(choice.card);
     logs.push(bhTrap.cancel?bhTrap.logs.join(" "):(choice.card.trap==="guard"?`Rival coloca ${choice.card.name} sobre ${choice.ally.name}. La próxima vez que sea atacada obtendrá +${effectiveCardValue(choice.card,"guard")} GUARDIA durante ese combate.`:`Rival usa ${choice.card.name}: ${choice.ally.name} gana +${effectiveCardValue(choice.card,"guard")} GUARDIA durante 2 turnos (turno actual y próximo turno rival).`));
     return true;
   };
@@ -2818,6 +2839,7 @@ async function adventureEnemyTurn(){
     legendaryTraps=bhTrap.traps;
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
+    markAiSpellVisual(choice.card);
     logs.push(bhTrap.cancel?bhTrap.logs.join(" "):`Rival usa ${choice.card.name}: ${choice.ally.name} ${actualHeal>0?`cura ${actualHeal} HP`:"no recupera HP"}${canCleanse&&hasCurableStatus(choice.ally)?" y limpia estados curables":""}.`);
     return true;
   };
