@@ -340,6 +340,18 @@ function currentOrNextTurnKeyForOwner(owner,state=publicState){
   const currentPlayer=Number(state?.currentPlayer||1)||1;
   return Number(owner||currentPlayer)===currentPlayer ? (state?.turnKey||`${state?.turn||1}-${currentPlayer}`) : nextTurnKeyForOwner(owner,state);
 }
+function applyBasicParalysisSpell(target,sourceName="Parálisis",state=publicState){
+  if(!target||target.leader)return target;
+  const turnKey=currentOrNextTurnKeyForOwner(target.owner,state);
+  return {...target,paralysisSource:sourceName,noMoveTurnKey:turnKey,noAttackTurnKey:turnKey,noDefTurnKey:turnKey,noCounterTurnKey:turnKey};
+}
+function applyBasicPoisonSpell(target,sourceName="Veneno",turns=3,startDamage=1){
+  if(!target||target.leader)return target;
+  if(isPoisonImmuneUnit(target))return clearPoisonStatus(target);
+  const existingTurns=Math.max(0,Number(target.poisonTurns||0));
+  const existingDamage=Math.max(0,Number(target.poisonDamage||0));
+  return {...target,poisonTurns:Math.max(existingTurns,Math.max(1,Number(turns)||3)),poisonStage:target.poisonStage||1,poisonDamage:Math.max(existingDamage,Math.max(1,Number(startDamage)||1)),poisonSourceName:sourceName};
+}
 function canDirectlyTarget(source,target){if(!canTargetStealth(source,target))return false;if(source?.spell==="damage"&&source?.leaderType==="mage"&&target?.leader)return false;return true;}
 
 

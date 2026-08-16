@@ -1678,7 +1678,7 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
     if(!floatFxEvent&&dmg>0)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"☠"});
     const protectedTick=applyDirectHpDamageWithEquipment(u,dmg);
     let next={...protectedTick.unit,poisonTurns:(u.poisonTurns||0)-1}; if(next.poisonStage){next.poisonStage+=1;next.poisonDamage=Math.max(1,dmg*2);}
-    logs.push(`${u.name} sufre ${dmg} daño directo por veneno mítico.`);
+    logs.push(`${u.name} sufre ${dmg} daño directo por Veneno.`);
     if(next.poisonTurns<=0){delete next.poisonTurns;delete next.poisonDamage;delete next.noHealWhilePoisoned;}
     return next;
   }).filter(u=>u.hp>0);

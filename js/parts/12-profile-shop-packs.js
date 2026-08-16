@@ -932,6 +932,31 @@ const BASIC_MAGIC_TRAP_PACK = [
     trap:"guard",
     guard:1,
     text:"Colócala sobre una unidad aliada. La primera vez que esa unidad sea atacada, obtiene +1 GUARDIA durante ese combate y la runa se consume."
+  },
+  {
+    key:"paralysis_spell",
+    name:"Parálisis",
+    type:"spell",
+    icon:"⚡",
+    portrait:"assets/cards/basic/spells/paralisis.webp",
+    rarity:"Básica",
+    cost:2,
+    spell:"paralysis",
+    paralysisTurns:1,
+    text:"Paraliza una invocación rival durante su próximo turno. No puede moverse, atacar, defender ni contraatacar. No afecta líderes."
+  },
+  {
+    key:"poison_spell",
+    name:"Veneno",
+    type:"spell",
+    icon:"☠",
+    portrait:"assets/cards/basic/spells/veneno.webp",
+    rarity:"Básica",
+    cost:2,
+    spell:"poison",
+    poisonTurns:3,
+    poisonDamage:1,
+    text:"Envenena una invocación rival durante 3 turnos. Pierde 1 Vida al inicio de su turno y el daño se duplica en cada tick: 1 → 2 → 4. No afecta líderes."
   }
 ];
 

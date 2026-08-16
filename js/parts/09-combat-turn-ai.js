@@ -2271,6 +2271,33 @@ async function adventureEnemyTurn(){
     return options.sort((a,b)=>b.score-a.score)[0]||null;
   };
 
+  const chooseBestParalysisSpell=()=>{
+    const options=[];
+    for(const card of hand.filter(c=>c.spell==="paralysis"&&effectiveCardCost(c,2)<=honor)){
+      for(const target of living(1).filter(u=>!u.leader&&canDirectlyTarget(card,u))){
+        const immediateThreat=bestAttackTarget(target)?95:0;
+        const score=90+effectiveAtk(target)*13+effectiveDex(target)*5+effectiveAgi(target)*5+effectiveMov(target)*8+aiUnitValue(target)*0.35+immediateThreat;
+        options.push({card,target,score});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+
+  const chooseBestPoisonSpell=()=>{
+    const options=[];
+    for(const card of hand.filter(c=>c.spell==="poison"&&effectiveCardCost(c,2)<=honor)){
+      for(const target of living(1).filter(u=>!u.leader&&canDirectlyTarget(card,u)&&!isPoisonImmuneUnit(u))){
+        const maxHp=Math.max(1,effectiveMaxHp(target));
+        const alreadyPoisoned=Number(target.poisonTurns||0)>0&&Number(target.poisonDamage||0)>0;
+        let score=75+maxHp*12+effectiveAtk(target)*7+effectiveMov(target)*4+aiUnitValue(target)*0.25;
+        if(alreadyPoisoned)score-=120;
+        if((target.hp||0)<=2)score-=55;
+        options.push({card,target,score});
+      }
+    }
+    return options.sort((a,b)=>b.score-a.score)[0]||null;
+  };
+
   const chooseBestBeastTargetTrap=()=>{
     const options=[];
     const el=enemyLeaderNow();
@@ -2426,6 +2453,8 @@ async function adventureEnemyTurn(){
     if(choice.kind==="heal")return danger>=80?45:70;
     if(choice.kind==="guard")return danger>=80?55:90;
     if(choice.kind==="slow")return 75;
+    if(choice.kind==="paralysis")return 95;
+    if(choice.kind==="poison")return 90;
     if(choice.kind==="legendaryTrap")return 80;
     if(choice.kind==="revealTrap")return 65;
     if(choice.kind==="beastTargetTrap")return 70;
@@ -2514,6 +2543,14 @@ async function adventureEnemyTurn(){
         if(d(choice.target,enemyLeaderNow()||choice.target)<=3)score+=75;
         if(d(choice.target,playerLeaderNow()||choice.target)<=3)score+=45;
       }
+      if(kind==="paralysis"&&choice.target){
+        if(bestAttackTarget(choice.target))score+=110;
+        if(d(choice.target,enemyLeaderNow()||choice.target)<=3)score+=85;
+      }
+      if(kind==="poison"&&choice.target){
+        if((choice.target.hp||0)>=6)score+=80;
+        if(Number(choice.target.poisonTurns||0)>0)score-=140;
+      }
       choices.push({...choice,kind,score});
     };
 
@@ -2524,6 +2561,8 @@ async function adventureEnemyTurn(){
     pushChoice("heal",chooseBestHeal());
     pushChoice("guard",chooseBestGuard());
     pushChoice("slow",chooseBestSlow());
+    pushChoice("paralysis",chooseBestParalysisSpell());
+    pushChoice("poison",chooseBestPoisonSpell());
     pushChoice("legendaryTrap",chooseBestLegendaryTrap());
     pushChoice("revealTrap",chooseBestRevealTrap());
     pushChoice("beastTargetTrap",chooseBestBeastTargetTrap());
@@ -2556,6 +2595,8 @@ async function adventureEnemyTurn(){
     if(choice.kind==="heal")return playHeal(choice);
     if(choice.kind==="guard")return playGuard(choice);
     if(choice.kind==="slow")return playSlow(choice);
+    if(choice.kind==="paralysis")return playParalysisSpell(choice);
+    if(choice.kind==="poison")return playPoisonSpell(choice);
     if(choice.kind==="legendaryTrap")return playLegendaryTrap(choice);
     if(choice.kind==="revealTrap")return playRevealTrap(choice);
     if(choice.kind==="beastTargetTrap")return playBeastTargetTrap(choice);
@@ -2869,6 +2910,38 @@ async function adventureEnemyTurn(){
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     logs.push(`Rival activa ${choice.card.name}: ${choice.target.name} pierde ${amount} MOV${agiSlow>0?` y ${agiSlow} AGI`:""} hasta su próximo turno. DET mostrará el origen del debuff.`);
+    return true;
+  };
+
+  const playParalysisSpell=(choice)=>{
+    if(!choice?.card||!choice?.target||choice.target.leader)return false;
+    const originalTarget=choice.target;
+    units=units.map(u=>u.id===originalTarget.id?applyBasicParalysisSpell(u,choice.card.name,pub):u);
+    const liveTarget=units.find(u=>u.id===originalTarget.id)||originalTarget;
+    const spellFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
+    pendingAiBattleFxEvent=spellFxCaster?makeMagicFxEvent(spellFxCaster,liveTarget,"lightning",{type:"spell",spellKey:choice.card.key,effectAction:"paralysis",impactSound:"impact_magic",hit:true}):pendingAiBattleFxEvent;
+    pendingAiStatusFxEvent=makeStatusFxEvent("paralysis_apply",liveTarget,0);
+    pendingAiFloatFxEvent=makeFloatFxEvent("paralysis",liveTarget,0,{iconText:"⚡",labelText:"PARÁLISIS"});
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    markAiSpellVisual(choice.card);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} queda paralizada durante su próximo turno y no podrá moverse, atacar, defender ni contraatacar.`);
+    return true;
+  };
+
+  const playPoisonSpell=(choice)=>{
+    if(!choice?.card||!choice?.target||choice.target.leader||isPoisonImmuneUnit(choice.target))return false;
+    const originalTarget=choice.target;
+    units=units.map(u=>u.id===originalTarget.id?applyBasicPoisonSpell(u,choice.card.name,choice.card.poisonTurns||3,choice.card.poisonDamage||1):u);
+    const liveTarget=units.find(u=>u.id===originalTarget.id)||originalTarget;
+    const spellFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
+    pendingAiBattleFxEvent=spellFxCaster?makeMagicFxEvent(spellFxCaster,liveTarget,"arcane",{type:"spell",spellKey:choice.card.key,effectAction:"poison",impactSound:"impact_magic",hit:true}):pendingAiBattleFxEvent;
+    pendingAiStatusFxEvent=makeStatusFxEvent("poison_apply",liveTarget,liveTarget.poisonDamage||1);
+    pendingAiFloatFxEvent=makeFloatFxEvent("poison",liveTarget,liveTarget.poisonDamage||1,{iconText:"☠"});
+    honor-=effectiveCardCost(choice.card,2);
+    removeCard(choice.card);
+    markAiSpellVisual(choice.card);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe Veneno durante ${choice.card.poisonTurns||3} turnos. El daño inicia en ${choice.card.poisonDamage||1} y se duplica en cada tick.`);
     return true;
   };
 
