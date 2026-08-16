@@ -1081,7 +1081,7 @@ function expandEnemyFixedDeck(deckList=[]){
 const ADAPTIVE_CAMPAIGN_PROFILE_KEY="campaignTacticalProfileV1";
 const ADAPTIVE_CAMPAIGN_HISTORY_LIMIT=64;
 const ADAPTIVE_MAP1_BATTLE_IDS=new Set(["battle1","battle2","battle3","battle4","battle5"]);
-const ADAPTIVE_MAGE_PILOT_BATTLE_ID="battle3";
+const ADAPTIVE_MAGE_PILOT_BATTLE_ID="guardian_mage";
 const ADAPTIVE_MAGE_BASE_DECK_COUNTS=Object.freeze([
   ["arcane_adept",3],
   ["samurai_katana",3],

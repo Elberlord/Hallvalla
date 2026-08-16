@@ -1259,33 +1259,43 @@ async function adventureEnemyTurn(){
     return score;
   };
   const estimateCombat=(attacker,target)=>{
-    if(!attacker||!target)return{chance:0,damage:0,expected:0,mods:{}};
+    if(!attacker||!target)return{chance:0,damage:0,hpDamage:0,expected:0,expectedHp:0,mods:{}};
     const mods=withAiPublicState(()=>getCombatMods(attacker,target));
     let chance=mods.falconDive?100:withAiPublicState(()=>getHitChance(attacker,target,mods));
     let damage=withAiPublicState(()=>getBattleDamage(attacker,mods));
     if(attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn)chance=Math.min(98,100-((100-chance)*(100-chance)/100));
-    if(shouldIgnoreGuardForAttack(attacker,target,units))damage=Math.max(0,damage);
-    const expected=Math.max(0,damage)*(chance/100);
-    return{chance,damage,expected,mods};
+    damage=Math.max(0,damage);
+    const ignoreGuard=withAiPublicState(()=>shouldIgnoreGuardForAttack(attacker,target,units));
+    let hpDamage=0;
+    if(ignoreGuard){
+      hpDamage=Math.max(0,Number(applyDirectHpDamageWithEquipment({...target},damage)?.damage||0));
+    }else{
+      const preview=withAiPublicState(()=>applyGuardDamage({...target},damage,mods.defenderGuard||0,0));
+      hpDamage=Math.max(0,Number(preview?.lastHpLoss||0));
+    }
+    const expected=damage*(chance/100);
+    const expectedHp=hpDamage*(chance/100);
+    return{chance,damage,hpDamage,expected,expectedHp,mods};
   };
   const scoreTarget=(target,damage=0,attacker=null)=>{
     if(!target)return -9999;
     if(attacker&&hasWarriorLeaderUnitShield(target,attacker,units))return -9999;
-    const combat=attacker?estimateCombat(attacker,target):{chance:100,damage,expected:damage};
+    const combat=attacker?estimateCombat(attacker,target):{chance:100,damage,hpDamage:damage,expected:damage,expectedHp:damage};
     const realDamage=attacker?combat.damage:damage;
-    const expected=attacker?combat.expected:damage;
-    const lethal=realDamage>=(target.hp||0);
+    const hpDamage=attacker?combat.hpDamage:damage;
+    const expectedHp=attacker?combat.expectedHp:damage;
+    const lethal=hpDamage>=(target.hp||0);
     const leaderBonus=target.leader?(aiLevel>=4?220:aiLevel>=2?130:80):0;
     const lethalBonus=lethal?(target.leader?1400:260):0;
     const lowHpBonus=Math.max(0,36-(target.hp||0)*5);
     const valueBonus=aiUnitValue(target)*0.55;
     const proximityBonus=attacker?Math.max(0,10-d(attacker,target))*3:0;
     const hitReliability=attacker?(combat.chance-50)*1.2:0;
-    const weaponMatch=attacker?aiWeaponMatchupScore(attacker,target,realDamage):0;
+    const weaponMatch=attacker?aiWeaponMatchupScore(attacker,target,hpDamage):0;
     const fireSupport=attacker?aiAlliedFireSupportCount(target,attacker)*62:0;
     const targetSupport=living(target.owner).filter(a=>a.id!==target.id&&d(a,target)<=2).length;
     const exposedTargetBonus=attacker&&!target.leader&&targetSupport===0?70:0;
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expected*32+weaponMatch+fireSupport+exposedTargetBonus;
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus;
   };
 
   const bestTargetForDamage=(card)=>{
@@ -1299,9 +1309,23 @@ async function adventureEnemyTurn(){
       const role=aiBasicTacticRole(attacker);
       const leaderNeed=aiLeaderProtectionNeed();
       const rangedNeed=aiRangedProtectionNeed();
+      const combat=estimateCombat(attacker,t);
+      const humanHandCount=Math.max(0,Number(pub.playerStats?.[1]?.hand||0));
       if(role==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
       if(aiAttackRange(attacker)>=3&&t.leader)score+=130;
       if(role==="spear"&&(t.key==="cavalry"||getWeaponClassForCard(t)==="cavalry"))score+=260;
+      // Geisha: desde Sigilo no busca "raspar" una pieza barata; busca una ejecución de alto valor.
+      if(attacker.key==="geisha_encubierta"&&isStealthedUnit(attacker)&&!t.leader&&combat.hpDamage>0){
+        score+=620+aiUnitValue(t)*0.85+Math.max(0,combat.chance-55)*4;
+        if(t.principal||t.special)score+=220;
+        if((t.equipmentKeys||[]).length)score+=90*(t.equipmentKeys||[]).length;
+      }
+      // Skipar entiende que una baja también destruye ventaja de mano. Solo usa el bono con una línea de kill realista.
+      if(attacker.key==="skipar_del_drakkar"&&!t.leader&&combat.hpDamage>=(t.hp||0)&&combat.chance>=60&&humanHandCount>0){
+        score+=Math.min(2,humanHandCount)*190;
+      }
+      // El Adepto valora atravesar Vida porque activa Ruptura Arcana, no solo el daño bruto.
+      if(attacker.key==="arcane_adept"&&!t.leader&&combat.hpDamage>0)score+=95+aiUnitValue(t)*0.12;
       if(leaderNeed){
         const threat=leaderNeed.threats.find(th=>th.unit.id===t.id);
         if(threat)score+=520+threat.score*0.45;
@@ -1377,6 +1401,119 @@ async function adventureEnemyTurn(){
       if(role==="spear"&&(enemy.key==="cavalry"||getWeaponClassForCard(enemy)==="cavalry"||isLightCavalryUnit(enemy)))score+=210;
       if((protector?.range||1)>1&&distToThreat<=1)score-=120;
     }
+    return score;
+  };
+
+  // === Piloto maestro del Hechicero guardián =====================================
+  // No obtiene información oculta ni recursos extra. La ventaja proviene de evaluar
+  // economía de cartas, sobre-daño, amenazas reales y líneas de eliminación antes de
+  // comprometer Fireball/Maldición u otros recursos de mano.
+  const aiMageDamageCardsRemaining=()=>[...hand,...deck].filter(c=>c?.spell==="damage").length;
+  const aiTargetThreatValue=(target)=>{
+    if(!target)return 0;
+    if(target.leader)return 900;
+    const el=enemyLeaderNow();
+    const role=aiBasicTacticRole(target);
+    const reach=Math.max(1,(effectiveMov(target)||0)+aiAttackRange(target));
+    const distance=el?d(target,el):99;
+    let score=aiUnitValue(target)*0.72+(effectiveAtk(target)||0)*14+(effectiveMov(target)||0)*10+aiAttackRange(target)*12;
+    if(el&&distance<=reach)score+=340;
+    else if(el&&distance<=reach+1)score+=190;
+    else if(el&&distance<=3)score+=120;
+    if(role==="ranged"||role==="assassin"||role==="cavalry")score+=75;
+    if(target.principal)score+=210;
+    if(target.special)score+=130;
+    score+=Math.min(3,(target.equipmentKeys||[]).length)*95;
+    if(target.key==="samurai_katana"||target.key==="skipar_del_drakkar"||target.key==="berserker"||target.key==="ulfhednar")score+=80;
+    return score;
+  };
+  const aiBoardKillPotential=(target)=>{
+    if(!target)return{direct:false,reachable:false,bestChance:0,bestHpDamage:0};
+    let direct=false,reachable=false,bestChance=0,bestHpDamage=0;
+    for(const ally of living(2)){
+      if(!ally||ally.hp<=0||(ally.acted&&!isKhalidChainAttackReady(ally)&&!isMulanExecutionChoiceReady(ally)))continue;
+      if(ally.noAttackTurnKey&&ally.noAttackTurnKey===pub.turnKey)continue;
+      if(!aiCanEverTarget(ally,target))continue;
+      const combat=estimateCombat(ally,target);
+      bestChance=Math.max(bestChance,Number(combat.chance||0));
+      bestHpDamage=Math.max(bestHpDamage,Number(combat.hpDamage||0));
+      const reliableKill=combat.hpDamage>=(target.hp||0)&&combat.chance>=68;
+      if(canHit(ally,target)&&reliableKill){direct=true;break;}
+      if(!ally.leader&&!ally.moved&&reliableKill){
+        const gap=Math.max(0,d(ally,target)-aiAttackReachForTarget(ally,target));
+        if(gap<=Math.max(0,effectiveMov(ally)||0))reachable=true;
+      }
+    }
+    return{direct,reachable,bestChance,bestHpDamage};
+  };
+  const aiIsBaitUnitForMage=(target,spellDamage)=>{
+    if(!target||target.leader||target.principal||target.special)return false;
+    if((target.equipmentKeys||[]).length)return false;
+    const threat=aiTargetThreatValue(target);
+    const maxHp=Math.max(1,effectiveMaxHp(target)||target.maxHp||target.hp||1);
+    const hp=Math.max(0,Number(target.hp||0));
+    const lowRemaining=hp<=Math.max(1,Math.floor(Number(spellDamage||0)*0.4));
+    const alreadySpent=hp<maxHp*0.45;
+    return lowRemaining&&alreadySpent&&threat<235;
+  };
+  const aiMageDamageSpellScore=(card,target)=>{
+    if(!card||!target)return -9999;
+    const rawDamage=Math.max(0,Number(effectiveCardValue(card,"damage")||card.damage||0));
+    const reduced=Math.max(0,Number(reduceDamageForHoneyBadger(target,rawDamage)||0));
+    const directPreview=applyDirectHpDamageWithEquipment({...target},reduced);
+    const actual=Math.max(0,Number(directPreview?.damage||reduced));
+    const hp=Math.max(0,Number(target.hp||0));
+    const dealt=Math.min(hp,actual);
+    const lethal=actual>=hp&&hp>0;
+    const overkill=Math.max(0,actual-hp);
+    const threat=aiTargetThreatValue(target);
+    const value=aiUnitValue(target);
+    const boardKill=target.leader?{direct:false,reachable:false}:aiBoardKillPotential(target);
+    const bait=aiIsBaitUnitForMage(target,actual);
+    let score=dealt*52+threat*0.62+value*0.42;
+
+    if(target.leader){
+      let leaderScore=dealt*52;
+      if(lethal)leaderScore+=3600;
+      else{
+        const remaining=Math.max(0,hp-actual);
+        // No quema cartas en la cara por costumbre: conserva el removal hasta que
+        // el hechizo deje al líder a un golpe o cierre la partida directamente.
+        leaderScore+=remaining<=5?620:remaining<=8?170:-980;
+      }
+      return leaderScore-overkill*40;
+    }
+
+    if(lethal)score+=300+value*0.52;
+    else score+=80;
+    // Un hechizo sigue costando una CARTA aunque el Hechicero lo reduzca a 0 Honor.
+    score-=overkill*125;
+    if(overkill>=Math.max(2,Math.ceil(actual*0.5)))score-=150;
+    if(boardKill.direct)score-=390;
+    else if(boardKill.reachable)score-=205;
+    if(bait)score-=520;
+    if(aiMageDamageCardsRemaining()<=2&&bait)score-=220;
+
+    const el=enemyLeaderNow();
+    if(el){
+      const reach=Math.max(1,(effectiveMov(target)||0)+aiAttackRange(target));
+      const distance=d(target,el);
+      if(distance<=reach)score+=430;
+      else if(distance<=reach+1)score+=190;
+    }
+
+    // Valor residual: solo existe si el objetivo SOBREVIVE al impacto.
+    if(!lethal&&card.key==="fireball"){
+      if(!target.burnTurnsRemaining&&!target.burnTurns)score+=90;
+      else score+=25;
+    }
+    if(!lethal&&(card.key==="bolt"||String(card.key||"").includes("sand_curse"))){
+      const mov=Math.max(0,effectiveMov(target)||target.mov||0);
+      score+=Math.min(4,mov)*42;
+      if(mov>=3)score+=95;
+    }
+    if(effectiveGuard(target)>=5)score+=115; // daño directo evita invertir ataques en atravesar GD.
+    if(aiBasicTacticRole(target)==="ranged")score+=75;
     return score;
   };
 
@@ -1848,6 +1985,15 @@ async function adventureEnemyTurn(){
       if(d(cell,el)<=1)score+=360; // Vínculo Arcano: nace pegado al Hechicero siempre que sea seguro.
       if(playerThreatAtCell(cell,card)<35)score+=110;
     }
+    if(pub.adventureAdaptiveMage&&card.key==="saboteador_iga"){
+      const humanMaxHonor=Math.max(0,Number(pub.playerStats?.[1]?.maxHonor||0));
+      // Sabotaje es tempo de apertura, no condición de victoria. Cuando el humano ya
+      // recarga 8-10 Honor, la IA deja de sobrevalorar un simple +1 al coste.
+      if(humanMaxHonor<=4)score+=190;
+      else if(humanMaxHonor<=6)score+=80;
+      else if(humanMaxHonor>=10)score-=290;
+      else if(humanMaxHonor>=8)score-=180;
+    }
 
     // Estrategia del mazo básico: levantar línea defensiva, esperar con rango y castigar amenazas.
     if(role==="tank"){
@@ -1955,6 +2101,27 @@ async function adventureEnemyTurn(){
       case "instinct_collar": score+=120+Math.min(100,threat*.55); break;
       case "hunting_harness": score+=135+woundedEnemies*32+(target&&Number(target.hp||0)<Number(effectiveMaxHp(target)||target.maxHp||target.hp||0)?100:0); break;
     }
+    if(pub.adventureAdaptiveMage&&ally.key==="arcane_adept"){
+      const screens=aiScreeningFrontliners(ally,ally).length;
+      const effect=String(card.equipmentEffect||card.key||"");
+      if(threat>=65&&screens===0)score-=Math.min(420,120+threat*2.2);
+      if(hpRatio<.5&&threat>=35)score-=190;
+      const ghost=equipCardOnUnit(card,ally);
+      const afterTarget=bestAttackTarget(ghost);
+      if(effect==="stabilizing_focus"){
+        if(!target&&afterTarget)score+=460;
+        if(afterTarget?.leader)score+=240;
+        if(target&&afterTarget?.id===target.id)score+=70;
+      }
+      if(effect==="channeling_amulet"){
+        if(afterTarget){
+          const before=estimateCombat(ally,afterTarget);
+          const after=estimateCombat(ghost,afterTarget);
+          score+=Math.max(0,(after.expectedHp||0)-(before.expectedHp||0))*62;
+          if(afterTarget.leader)score+=360;
+        }else if(threat>=45)score-=180;
+      }
+    }
     return score;
   };
   const chooseBestEquipment=()=>{
@@ -1982,10 +2149,24 @@ async function adventureEnemyTurn(){
         }
         if(pub.adventureAdaptiveMage){
           const hasChanneling=hasUnitEquipment(ally,"channeling_amulet");
-          if(ally.key==="arcane_adept")score+=hasChanneling?430:210;
-          if(ally.key==="samurai_katana")score+=180;
-          if(immediateTarget?.leader)score+=780;
-          if(!immediateTarget)score-=520; // guarda el +AT hasta que pueda convertirse en daño real.
+          if(ally.key==="arcane_adept")score+=hasChanneling?350:150;
+          if(ally.key==="samurai_katana")score+=120;
+          if(!immediateTarget){
+            score-=1050; // una carta de +AT sin ataque este turno es una carta desperdiciada.
+          }else{
+            const before=estimateCombat(ally,immediateTarget);
+            const ghost={...ally,buffAtk:(ally.buffAtk||0)+buffValue};
+            const after=estimateCombat(ghost,immediateTarget);
+            const beforeLethal=before.hpDamage>=(immediateTarget.hp||0)&&before.chance>=68;
+            const afterLethal=after.hpDamage>=(immediateTarget.hp||0)&&after.chance>=68;
+            const incrementalHp=Math.max(0,Number(after.expectedHp||0)-Number(before.expectedHp||0));
+            score+=incrementalHp*72;
+            if(afterLethal&&!beforeLethal)score+=720;
+            if(beforeLethal)score-=immediateTarget.leader?3200:1100; // no gasta Inspiration para matar algo que ya moría igual.
+            if(immediateTarget.leader&&afterLethal&&!beforeLethal)score+=1700;
+            else if(immediateTarget.leader&&!beforeLethal)score+=360;
+            if(aiIsBaitUnitForMage(immediateTarget,Math.max(1,after.hpDamage||buffValue))&&!afterLethal)score-=330;
+          }
         }
         options.push({card,ally,score});
       }
@@ -1997,15 +2178,22 @@ async function adventureEnemyTurn(){
     const options=[];
     for(const card of hand.filter(c=>(c.spell==="shield"||c.trap==="guard")&&effectiveCardCost(c,2)<=honor)){
       for(const ally of living(2)){
-        const nearbyThreat=living(1).some(e=>d(e,ally)<=Math.max(1,(e.range||1)+(effectiveMov(e)||0)));
-        let score=(card.guard||0)*10+(ally.atk||0)*2+Math.max(0,12-(ally.hp||0))*4;
-        if(nearbyThreat)score+=85;
-        if(ally.leader)score+=leaderDangerScore()>70?120:15;
+        const threatScore=playerThreatAtCell(ally,ally);
+        const nearbyThreat=living(1).some(e=>d(e,ally)<=Math.max(1,aiAttackRange(e)+(effectiveMov(e)||0)));
+        const guardValue=effectiveCardValue(card,"guard")||card.guard||0;
+        let score=guardValue*12+(ally.atk||0)*2+Math.max(0,12-(ally.hp||0))*4;
+        if(nearbyThreat)score+=85+Math.min(180,threatScore*1.2);
+        if(ally.leader)score+=leaderDangerScore()>70?160:10;
         if(ally.key==="wallace")score+=45;
         if(ally.key==="joan_of_arc"||ally.key==="leonidas")score+=25;
-        if(pub.adventureAdaptiveMage&&ally.key==="arcane_adept"){
-          score+=hasUnitEquipment(ally,"channeling_amulet")?360:180;
-          if(nearbyThreat)score+=160;
+        if(pub.adventureAdaptiveMage){
+          if(!nearbyThreat&&threatScore<22&&!(ally.leader&&leaderDangerScore()>=55))score-=430;
+          if(ally.key==="arcane_adept"){
+            score+=hasUnitEquipment(ally,"channeling_amulet")?390:150;
+            if(nearbyThreat)score+=190;
+            const el=enemyLeaderNow();
+            if(el&&d(ally,el)<=1)score+=90;
+          }
         }
         options.push({card,ally,score});
       }
@@ -2018,10 +2206,21 @@ async function adventureEnemyTurn(){
     for(const card of hand.filter(c=>c.spell==="heal"&&effectiveCardCost(c,2)<=honor)){
       for(const ally of living(2).filter(u=>u.owner===2&&canReceiveHealFromCard(card,u,2))){
         const missing=Math.max(0,effectiveMaxHp(ally)-(ally.hp||0));
+        const healValue=Math.max(0,effectiveCardValue(card,"heal")||0);
+        const actual=Math.min(missing,healValue);
+        const waste=Math.max(0,healValue-actual);
         const curable=cardCleanseEnabled(card)&&hasCurableStatus(ally);
-        let score=Math.min(missing,effectiveCardValue(card,"heal"))*22+(ally.atk||0)*3+(ally.key==="wallace"?25:0);
+        const threat=playerThreatAtCell(ally,ally);
+        let score=actual*28+(ally.atk||0)*3+(ally.key==="wallace"?25:0)-waste*18;
         if(missing>=2)score+=35;
         if(curable)score+=65;
+        if(pub.adventureAdaptiveMage){
+          score+=Math.min(170,threat*1.15);
+          if(ally.leader)score+=leaderDangerScore()>=55?260:40;
+          if(ally.key==="arcane_adept"&&hasUnitEquipment(ally,"channeling_amulet"))score+=190;
+          if(actual<=1&&!curable&&threat<35&&!ally.leader)score-=300;
+          if(waste>=Math.max(3,Math.ceil(healValue*.55))&&!curable)score-=180;
+        }
         options.push({card,ally,score});
       }
     }
@@ -2167,17 +2366,19 @@ async function adventureEnemyTurn(){
   };
 
   const chooseBestDamageSpell=()=>{
-    return hand.filter(c=>c.spell==="damage"&&effectiveCardCost(c,2)<=honor&&living(1).length).map(card=>{
-      const target=bestTargetForDamage(card);
-      let score=scoreTarget(target,effectiveCardValue(card,"damage")||card.damage||0)-(card.cost||0)*2;
-      // Regla Hechicero: la magia ofensiva abre el tablero, nunca quema al líder directamente.
-      if(pub.adventureAdaptiveMage&&target&&!target.leader){
-        const pl=playerLeaderNow();
-        const highGuard=effectiveGuard(target)>=4;
-        if(highGuard)score+=170;
-        if(pl&&d(target,pl)<=2)score+=120; // elimina la pantalla que protege al líder humano.
-        if(aiBasicTacticRole(target)==="ranged")score+=95;
+    const playable=hand.filter(c=>c.spell==="damage"&&effectiveCardCost(c,2)<=honor&&living(1).length);
+    if(pub.adventureAdaptiveMage){
+      const options=[];
+      for(const card of playable){
+        for(const target of living(1).filter(t=>canDirectlyTarget(card,t))){
+          options.push({card,target,score:aiMageDamageSpellScore(card,target),masterMageScore:true});
+        }
       }
+      return options.sort((a,b)=>b.score-a.score)[0]||null;
+    }
+    return playable.map(card=>{
+      const target=bestTargetForDamage(card);
+      const score=scoreTarget(target,effectiveCardValue(card,"damage")||card.damage||0)-(card.cost||0)*2;
       return{card,target,score};
     }).filter(choice=>choice.target).sort((a,b)=>b.score-a.score)[0]||null;
   };
@@ -2188,7 +2389,7 @@ async function adventureEnemyTurn(){
     if(!choice)return 999999;
     const aiHasBoard=living(2).some(u=>!u.leader);
     const danger=leaderDangerScore();
-    if(choice.kind==="damage")return choice.target?.leader?70:85;
+    if(choice.kind==="damage")return pub.adventureAdaptiveMage?(choice.target?.leader?160:190):(choice.target?.leader?70:85);
     if(choice.kind==="summon")return aiHasBoard?55:18;
     if(choice.kind==="equipment")return 105;
     if(choice.kind==="buff")return choice.immediate?85:120;
@@ -2212,10 +2413,15 @@ async function adventureEnemyTurn(){
       if(kind==="damage"){
         if(!choice.target)return;
         const dmg=effectiveCardValue(choice.card,"damage")||choice.card.damage||0;
-        if(choice.target.leader)score+=390;
-        if(dmg>=(choice.target.hp||0))score+=choice.target.leader?1600:360;
-        if(pub.adventureAdaptiveMage&&!choice.target.leader&&effectiveGuard(choice.target)>=4)score+=120;
-        score+=Math.max(0,6-(choice.target.hp||0))*18;
+        if(pub.adventureAdaptiveMage&&choice.masterMageScore){
+          // El score maestro ya incluye letalidad, sobre-daño, amenaza, conservación de mano
+          // y disponibilidad de una kill por combate. No volver a premiar HP bajo aquí.
+          if(choice.target.leader&&dmg>=(choice.target.hp||0))score+=900;
+        }else{
+          if(choice.target.leader)score+=390;
+          if(dmg>=(choice.target.hp||0))score+=choice.target.leader?1600:360;
+          score+=Math.max(0,6-(choice.target.hp||0))*18;
+        }
       }
       if(kind==="summon"){
         const aiHasBoard=living(2).some(u=>!u.leader);
@@ -2335,7 +2541,12 @@ async function adventureEnemyTurn(){
     const pl=playerLeaderNow(), el=enemyLeaderNow();
     const maxMove=mulanExecMove?1:effectiveMov(u);
     const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t));
-    const primaryTarget=strategicTargets.map(t=>({target:t,score:scoreTarget(t,0,u)+(t.leader?90:0)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
+    const primaryTarget=strategicTargets.map(t=>{
+      let targetScore=scoreTarget(t,0,u)+(t.leader?90:0);
+      if(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&!t.leader)targetScore+=520+aiUnitValue(t)*0.8;
+      if(u.key==="skipar_del_drakkar"&&!t.leader&&Math.max(0,Number(pub.playerStats?.[1]?.hand||0))>0)targetScore+=120;
+      return{target:t,score:targetScore};
+    }).sort((a,b)=>b.score-a.score)[0]?.target||null;
     const currentGap=primaryTarget?Math.max(0,d(u,primaryTarget)-aiAttackReachForTarget(u,primaryTarget)):999;
     const options=[];
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -2379,6 +2590,16 @@ async function adventureEnemyTurn(){
         }
         score+=allySupportAtCell(pos)*0.45;
         score-=playerThreatAtCell(pos,u)*0.7;
+        if(pub.adventureAdaptiveMage&&u.key==="arcane_adept"&&el){
+          const linkedNow=d(start,el)<=1;
+          const linkedNext=d(pos,el)<=1;
+          if(linkedNext)score+=260+(hasUnitEquipment(u,"channeling_amulet")?130:0);
+          if(linkedNow&&!linkedNext){
+            const createsLeaderShot=targets.some(t=>t.leader);
+            const createsHighValueShot=targets.some(t=>!t.leader&&aiTargetThreatValue(t)>=360);
+            score-=createsLeaderShot?40:(createsHighValueShot?135:430);
+          }
+        }
         const nextGap=primaryTarget?Math.max(0,d(pos,primaryTarget)-aiAttackReachForTarget(ghost,primaryTarget)):999;
         const progress=primaryTarget?currentGap-nextGap:0;
         if(progress>0)score+=progress*72;
