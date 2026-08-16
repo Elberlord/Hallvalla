@@ -1268,6 +1268,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const p1Ready=!!p1Uid&&getReadyFlag(room,1), p2Ready=!!p2Uid&&getReadyFlag(room,2);
     const p1Prepared=!!p1Uid&&getPreparedFlag(room,1), p2Prepared=!!p2Uid&&getPreparedFlag(room,2);
     const bothPresent=!!p1Uid&&!!p2Uid, bothPrepared=bothPresent&&p1Prepared&&p2Prepared, bothReady=bothPrepared&&p1Ready&&p2Ready;
+    // PERF3: cuando ambos mazos privados ya están preparados, RPS es el siguiente
+    // paso predecible. Cuando ambos marcan LISTO, el combate ya es inminente.
+    if(bothPrepared)globalThis.hvPrefetchAssetGroup?.("pvp-rps");
+    if(bothReady){
+      globalThis.hvPrefetchAssetGroup?.("battle");
+      try{
+        if(typeof audioPath==="function")globalThis.hvPrefetchUrls?.([audioPath("music","duel_hallvalla_focus"),audioPath("sfx","phase_change"),audioPath("sfx","card_play")]);
+      }catch(_){ }
+    }
     const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
     setRoomPanelVisible(true);
     setText("pvpRoomCode",code||room?.code||"----");

@@ -793,9 +793,11 @@ function leaveCurrentGame(){
   if(unsubPub){unsubPub();unsubPub=null}
   if(unsubPriv){unsubPriv();unsubPriv=null}
   resetBattleState();
+  if(typeof globalThis.__HALLVALLA_RELEASE_BATTLE_DOM__==="function")globalThis.__HALLVALLA_RELEASE_BATTLE_DOM__();
   clearBasicTutorialTargetHighlight();
   const tutorialCoach=$("basicTutorialCoach");if(tutorialCoach)tutorialCoach.classList.add("hidden");
   $("adventurePanel").classList.add("hidden");
+  globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__?.();
   $("onlineLobby").classList.add("hidden");
   $("gameShell").classList.add("hidden");
   $("mainMenu").classList.remove("hidden");
@@ -1129,6 +1131,7 @@ function enterLocalGame(pub,priv,player=1){
   $("onlineLobby")?.classList.add("hidden");
   $("mainMenu")?.classList.add("hidden");
   $("adventurePanel")?.classList.add("hidden");
+  globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__?.();
   globalThis.hvHydrateAssetGroup?.("battle");
   $("gameShell")?.classList.remove("hidden");
   stopMusic(true);
@@ -1165,6 +1168,7 @@ function enterGame(code,player){
   if(aiWatchdogTimer){battleClearInterval(aiWatchdogTimer);aiWatchdogTimer=null}
   $("onlineLobby")?.classList.add("hidden");
   $("mainMenu")?.classList.add("hidden");
+  if($("adventurePanel")?.classList.contains("hidden"))globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__?.();
   globalThis.hvHydrateAssetGroup?.("battle");
   $("gameShell")?.classList.remove("hidden");
   stopMusic(true);

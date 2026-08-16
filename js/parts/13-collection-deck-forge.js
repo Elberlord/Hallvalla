@@ -154,7 +154,23 @@ function recordBasicPackOpeningAndMaybeBonus(pack){
   return false;
 }
 function getPendingPackCount(){return getPendingPacks().length;}
+let hvPackRevealTimer=null;
+let hvPackObjectHideTimer=null;
+let hvPackRaritySoundTimer=null;
+function clearPackOpeningRuntime(){
+  if(hvPackRevealTimer!==null){clearTimeout(hvPackRevealTimer);hvPackRevealTimer=null;}
+  if(hvPackObjectHideTimer!==null){clearTimeout(hvPackObjectHideTimer);hvPackObjectHideTimer=null;}
+  if(hvPackRaritySoundTimer!==null){clearTimeout(hvPackRaritySoundTimer);hvPackRaritySoundTimer=null;}
+}
+function releasePackOpeningDom(){
+  const grid=$("packRevealGrid"),obj=$("packOpeningObject"),packImage=obj?.querySelector?.(".pack-object-image");
+  if(grid){grid.replaceChildren();grid.classList.add("hidden");}
+  if(obj)obj.classList.remove("opening");
+  // El recurso del paquete se vuelve a resolver en openPackOpening().
+  if(packImage)packImage.removeAttribute("src");
+}
 function openPackOpening(){
+  clearPackOpeningRuntime();
   const packs=getPendingPacks();
   if(!packs.length){hvAlert("No tienes paquetes pendientes por abrir.","Sin paquetes");return;}
   activePackOpening=packs[0];
@@ -188,16 +204,19 @@ function getPackRevealSound(cards){
 function playPackRevealRaritySound(cards){
   const sound=getPackRevealSound(cards);
   if(!sound)return;
-  setTimeout(()=>tryPlaySound(sound,sound==="pack_demigod"?.88:.72),620);
+  if(hvPackRaritySoundTimer!==null)clearTimeout(hvPackRaritySoundTimer);
+  hvPackRaritySoundTimer=setTimeout(()=>{hvPackRaritySoundTimer=null;tryPlaySound(sound,sound==="pack_demigod"?.88:.72);},620);
 }
 function revealActivePack(){
   if(!activePackOpening||!activePackCards.length)return;
   const grid=$("packRevealGrid"),obj=$("packOpeningObject"),hint=$("packOpeningHint"),confirm=$("confirmPackCardsBtn");
-  if(obj){obj.classList.add("opening");setTimeout(()=>obj.classList.add("hidden"),850)}
+  clearPackOpeningRuntime();
+  if(obj){obj.classList.add("opening");hvPackObjectHideTimer=setTimeout(()=>{hvPackObjectHideTimer=null;obj.classList.add("hidden");},850)}
   if(hint)hint.classList.add("hidden");
   tryPlaySound("pack_open");
   playPackRevealRaritySound(activePackCards);
-  setTimeout(()=>{
+  hvPackRevealTimer=setTimeout(()=>{
+    hvPackRevealTimer=null;
     if(!grid)return;
     grid.innerHTML=activePackCards.map((card,i)=>`<button class="revealed-card pack-reveal-card-button ${getCardVisualClass(card)}" type="button" data-pack-card-index="${i}" style="animation-delay:${i*.09}s" aria-label="Abrir DET de ${escapeHtml(card.name||"Carta")}" title="Abrir DET: ${escapeHtml(card.name||"Carta")}">
       ${getCardVisualHtml(card,"pack-reveal-icon")}
@@ -228,7 +247,12 @@ function confirmActivePackCards(){
   if($("openNextPackBtn"))$("openNextPackBtn").classList.toggle("hidden",remaining<=0);
   renderHomeProgress();
 }
-function closePackOpening(){const panel=$("packOpeningPanel");if(panel)panel.classList.add("hidden");}
+function closePackOpening(){
+  const panel=$("packOpeningPanel");
+  if(panel)panel.classList.add("hidden");
+  clearPackOpeningRuntime();
+  releasePackOpeningDom();
+}
 
 const HALLVALLA_PRINCIPAL_UNIT_KEY="hallvalla_principal_unit_v1";
 const HALLVALLA_PRINCIPAL_UNITS_KEY="hallvalla_principal_units_v2";
@@ -599,12 +623,25 @@ function toggleDeckBuilderDrawer(){
   if(!panel||isCollectionBrowseOnly())return false;
   return setDeckBuilderDrawerOpen(!panel.classList.contains("deck-drawer-open"));
 }
+function releaseDeckBuilderDom(){
+  // PERF4: las miniaturas y sus listeners son reconstruibles. Mantenerlas dentro
+  // de un panel oculto retiene nodos e imágenes decodificadas sin aportar UI.
+  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),principalSlots=$("deckPrincipalSlots"),materialPanel=$("craftMaterialPanel"),materialSummary=$("craftMaterialSummary");
+  collectionGrid?.replaceChildren();
+  deckList?.replaceChildren();
+  principalSlots?.replaceChildren();
+  materialPanel?.replaceChildren();
+  materialSummary?.replaceChildren();
+  deckBuilderDragPayload=null;
+  clearDeckBuilderDropActive();
+}
 function closeDeckBuilder(){
   const panel=$("deckBuilderPanel");
   if(!panel)return;
   panel.classList.add("hidden");
   panel.classList.remove("collection-browser-mode","collection-forge-unlocked","deck-drawer-open");
   syncDeckBuilderDrawerAria(false);
+  releaseDeckBuilderDom();
 }
 function getDeckBuilderCollectionCard(cardKey){
   const key=String(cardKey||"");

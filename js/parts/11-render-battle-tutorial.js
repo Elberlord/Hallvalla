@@ -108,6 +108,22 @@ globalThis.__HALLVALLA_RENDER_PERF__=getBattleRenderPerfSnapshot;
 globalThis.__HALLVALLA_RENDER_PERF_RESET__=resetBattleRenderPerf;
 globalThis.__HALLVALLA_REQUEST_RENDER__=requestBattleRender;
 
+function releaseBattleDynamicDom(){
+  // PERF4: al abandonar un duelo, el estado ya fue descartado por resetBattleState().
+  // Estas superficies son completamente reconstruibles por render() en la próxima entrada.
+  resetBattleRenderScheduler();
+  resetHallvallaBoardRenderCache();
+  const grid=$("grid"),handRow=$("handRow"),log=$("log");
+  grid?.replaceChildren();
+  handRow?.replaceChildren();
+  if(log){log.replaceChildren();log.__hvLogMarkup="";log.classList.add("is-empty");log.setAttribute("aria-hidden","true");}
+  const leaderLayer=document.getElementById("leaderBasesLayer");
+  if(leaderLayer)leaderLayer.remove();
+  hallvallaLeaderRenderLayer=null;
+  hallvallaLeaderRenderMarkup="";
+}
+globalThis.__HALLVALLA_RELEASE_BATTLE_DOM__=releaseBattleDynamicDom;
+
 function render(reason="direct"){
   if(!publicState)return;
   if(!String(reason).startsWith("batched:")&&hallvallaBattleRenderFrame)cancelQueuedBattleRender({countAsAbsorbed:true});

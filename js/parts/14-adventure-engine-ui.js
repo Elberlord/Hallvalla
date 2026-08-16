@@ -567,6 +567,22 @@ function openAdventureStory(){
   $("adventurePanel").classList.remove("hidden");
   showAdventureStoryScene(0);
 }
+function releaseAdventureRuntimeDom(){
+  // PERF4: el panel oculto no conserva mapas/escenas pesadas. Todos estos
+  // recursos se reconstruyen desde progreso persistente al volver a abrir Aventura.
+  $("adventureMapNodes")?.replaceChildren();
+  ["adventureSceneVisual","adventureWoundedVisual","adventureGuardianVisual"].forEach(id=>{
+    const visual=$(id);
+    if(!visual)return;
+    visual.style.backgroundImage="";
+    visual.querySelectorAll(":scope > .adventure-scene-bg-img").forEach(img=>img.remove());
+  });
+  setAdventureStoryActors("","");
+  setAdventureGuardianActor("");
+  document.querySelectorAll('[data-hv-asset-group="adventure"][data-hv-src]').forEach(img=>img.removeAttribute("src"));
+}
+globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__=releaseAdventureRuntimeDom;
+
 function scrollAdventureToTop(){
   const card=document.querySelector(".adventure-card");
   if(card) card.scrollTop=0;
@@ -669,6 +685,53 @@ function showAdventureWoundedIntro(specialKey){
   $("adventureWoundedTitle").textContent=s.title;
   $("adventureWoundedText").textContent=s.text;
 }
+function hvCollectEntityBattlePrefetchAssets(entity,target){
+  if(!entity||!target)return;
+  const addFirst=(values)=>{
+    const first=Array.isArray(values)?String(values[0]||"").trim():"";
+    if(first)target.add(first);
+  };
+  const portrait=String(entity.portrait||"").trim();
+  if(portrait)target.add(portrait);
+  try{ if(typeof getResolvedCardPortraitCandidates==="function")addFirst(getResolvedCardPortraitCandidates(entity)); }catch(_){ }
+  if(String(entity.type||"").toLowerCase()==="unit"&&!entity.leader){
+    try{ if(typeof getResolvedBoardPortraitCandidates==="function")addFirst(getResolvedBoardPortraitCandidates(entity)); }catch(_){ }
+    try{ if(typeof getResolvedFieldFigureCandidates==="function")addFirst(getResolvedFieldFigureCandidates(entity)); }catch(_){ }
+  }
+}
+function hvPrefetchAdventureBattleContext(battle,specialKey,previewEnemyDeck=[]){
+  if(!battle||typeof globalThis.hvPrefetchUrls!=="function")return;
+  const urls=new Set(["assets/board_oscuro_11x6.webp"]);
+  const leaderType=getSelectedLeaderType?.()||"warrior";
+  const enemyLeaderType=battle.enemyLeaderType||"mage";
+  try{ if(LEADER_DATA?.[leaderType]?.portrait)urls.add(LEADER_DATA[leaderType].portrait); }catch(_){ }
+  try{ if(LEADER_DATA?.[enemyLeaderType]?.portrait)urls.add(LEADER_DATA[enemyLeaderType].portrait); }catch(_){ }
+  hvCollectEntityBattlePrefetchAssets(ADVENTURE_SPECIALS?.[specialKey],urls);
+  for(const card of (Array.isArray(previewEnemyDeck)?previewEnemyDeck:[]))hvCollectEntityBattlePrefetchAssets(card,urls);
+
+  // Prefetch tolerante: prepara tanto el mazo guardado como el starter posible.
+  // No decide cuál se usará ni reproduce reglas de validación; solo llena caché.
+  try{
+    if(typeof getSavedDeck==="function")for(const card of (getSavedDeck()||[]))hvCollectEntityBattlePrefetchAssets(card,urls);
+  }catch(_){ }
+  try{
+    if(typeof getStarterAdventureDeckTemplates==="function"){
+      const slots=typeof getCurrentPrincipalSlots==="function"?getCurrentPrincipalSlots():0;
+      for(const card of (getStarterAdventureDeckTemplates(specialKey,slots,leaderType)||[]))hvCollectEntityBattlePrefetchAssets(card,urls);
+    }
+  }catch(_){ }
+
+  try{
+    if(typeof audioPath==="function"){
+      urls.add(audioPath("music","duel_hallvalla_focus"));
+      for(const sfx of ["phase_change","card_play","draw_card","summon_basic","attack_impact","impact_magic"])urls.add(audioPath("sfx",sfx));
+    }
+  }catch(_){ }
+  globalThis.hvPrefetchAssetGroup?.("battle");
+  globalThis.hvPrefetchUrls([...urls]);
+  console.info(`[HallValla][PERF3] Prefetch de combate preparado para ${battle.id||battle.title||"Aventura"}: ${urls.size} recursos candidatos.`);
+}
+
 function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   pendingAdventureSpecial=ADVENTURE_SPECIALS[specialKey]?specialKey:"mulan";
   pendingAdventureBattleId=battleId||ADVENTURE_GUARDIAN_BATTLE.id;
@@ -680,6 +743,7 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   $("adventureGuardianTitle").textContent=battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`;
   const introConflict=introChapter.id===ADVENTURE_CHAPTER_2_1.id?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas.":"Los rebeldes intentan usurpar el trono y crear un golpe de estado.";
   const previewInitial=makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage");
+  hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
   const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
   const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);
   const principalLine=principalCards.length?`

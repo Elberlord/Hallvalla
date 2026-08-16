@@ -13,14 +13,14 @@ function handleAdventureHomeClick(ev){
   openAdventureStory();
 }
 on("adventureBtn","click",handleAdventureHomeClick);
-on("closeAdventureBtn","click",()=>{$("adventurePanel").classList.add("hidden");syncBattleMusic();});
+on("closeAdventureBtn","click",()=>{$("adventurePanel").classList.add("hidden");globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__?.();syncBattleMusic();});
 on("skipAdventureStoryBtn","click",showAdventureChoice);
 on("nextAdventureStoryBtn","click",nextAdventureStoryScene);
 on("backToAdventureChoiceBtn","click",()=>openAdventureMap(pendingAdventureSpecial));
 on("continueAdventureMapIntroBtn","click",showAdventureMapOnly);
 on("skipAdventureMapIntroBtn","click",showAdventureMapOnly);
 on("reopenAdventureMapStoryBtn","click",()=>{ renderAdventureMap(); showAdventureStage("adventureMapIntroStage"); });
-on("closeAdventureMapBtn","click",()=>{$("adventurePanel").classList.add("hidden");syncBattleMusic();});
+on("closeAdventureMapBtn","click",()=>{$("adventurePanel").classList.add("hidden");globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__?.();syncBattleMusic();});
 on("skipWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 on("continueWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 async function startPendingAdventureBattle(){

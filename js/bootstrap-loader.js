@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-20260816B";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-20260816D";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1";
-const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-20260816B";
+const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1";
+const CACHE_BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-20260816D";
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -58,21 +58,45 @@ function hvHydrateAssetGroup(group){
   hvAssetGroupLoads.set(safe,task);
   return task;
 }
+/* PERF3 · Prefetch contextual de baja prioridad ----------------------------
+   A diferencia de hidratar un <img>, <link rel="prefetch"> permite preparar
+   el recurso en caché sin forzar su decodificación inmediata. Esto evita
+   recuperar latencia a costa de volver a inflar la memoria gráfica móvil. */
+const hvContextPrefetchLinks=new Map();
+function hvInferPrefetchAs(url){
+  const clean=String(url||"").split("?")[0].toLowerCase();
+  if(/\.(png|jpe?g|webp|gif|avif|svg)$/.test(clean))return "image";
+  if(/\.(mp3|ogg|wav|m4a|aac)$/.test(clean))return "audio";
+  if(/\.css$/.test(clean))return "style";
+  if(/\.js$/.test(clean))return "script";
+  return "";
+}
+function hvPrefetchUrl(url,asHint=""){
+  const href=String(url||"").trim();
+  if(!href)return false;
+  if(hvContextPrefetchLinks.has(href))return true;
+  const link=document.createElement("link");
+  link.rel="prefetch";
+  link.href=href;
+  const as=String(asHint||"").trim()||hvInferPrefetchAs(href);
+  if(as)link.as=as;
+  link.setAttribute("fetchpriority","low");
+  link.dataset.hvContextPrefetch="1";
+  document.head.appendChild(link);
+  hvContextPrefetchLinks.set(href,link);
+  return true;
+}
+function hvPrefetchUrls(urls,asHint=""){
+  const unique=[...new Set((Array.isArray(urls)?urls:[urls]).map(v=>String(v||"").trim()).filter(Boolean))];
+  return unique.map(url=>hvPrefetchUrl(url,asHint));
+}
 function hvPrefetchAssetGroup(group){
   const safe=String(group||"").trim();
   if(!safe)return Promise.resolve([]);
-  const nodes=hvDeferredAssetNodes(safe);
-  return Promise.all(nodes.map(img=>new Promise(resolve=>{
-    const src=String(img.dataset.hvSrc||"").trim();
-    if(!src){resolve(false);return;}
-    const probe=new Image();
-    probe.decoding="async";
-    probe.onload=()=>resolve(true);
-    probe.onerror=()=>resolve(false);
-    probe.src=src;
-  })));
+  const urls=hvDeferredAssetNodes(safe).map(img=>String(img.dataset.hvSrc||"").trim()).filter(Boolean);
+  return Promise.resolve(hvPrefetchUrls(urls,"image"));
 }
-Object.assign(globalThis,{hvHydrateAssetGroup,hvPrefetchAssetGroup});
+Object.assign(globalThis,{hvHydrateAssetGroup,hvPrefetchAssetGroup,hvPrefetchUrl,hvPrefetchUrls});
 
 // Etapa 9: los calibradores internos no participan del runtime normal.
 // Se conservan en el ZIP y pueden habilitarse de forma explícita con ?hvdev=1.
