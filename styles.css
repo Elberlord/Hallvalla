@@ -20967,3 +20967,89 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
 
 /* STAGE9CLEAN1 · herramientas internas fuera del runtime de producción */
 html[data-hv-runtime="prod"] [data-hv-dev-tool]{display:none!important;}
+
+/* ========================================================================== 
+   PERF5GPU1 · Optimización de composición GPU / CSS para móvil
+   - No altera estados, targeting, FX funcionales, timers ni hitboxes.
+   - Conserva rareza/color, pero elimina repintados cosméticos redundantes.
+   - Los marcadores de mover/atacar/invocar, estados persistentes y relojes
+     mantienen sus animaciones porque comunican información de juego.
+   ========================================================================== */
+@media (max-width:900px), (pointer:coarse){
+  /* El blur de fondo fuerza composición de superficies grandes. En móvil las
+     tarjetas ya tienen fondos suficientemente opacos para conservar lectura. */
+  *{
+    -webkit-backdrop-filter:none !important;
+    backdrop-filter:none !important;
+  }
+
+  /* La rareza del token sigue visible mediante el borde/glow estático de
+     ::after. ::before era una segunda capa de glow animada sobre cada unidad. */
+  .cell > .unit-card::before,
+  .grid .cell > .unit-card::before{
+    animation:none !important;
+    opacity:0 !important;
+    border-color:transparent !important;
+    box-shadow:none !important;
+  }
+
+  /* Mantener el marco y su color de rareza, sin pulsar continuamente. */
+  .cell > .unit-card::after,
+  .grid .cell > .unit-card::after,
+  .cell > .unit-card .unit-frame-skin,
+  .grid .cell > .unit-card .unit-frame-skin,
+  .cell > .unit-card .unit-frame-rarity::after,
+  .grid .cell > .unit-card .unit-frame-rarity::after{
+    animation:none !important;
+  }
+
+  /* Bases de líder: el aura permanece visible, solo deja de escalar 24/7. */
+  .leader-base.ally .leader-base-token::before,
+  .leader-base.enemy .leader-base-token::before{
+    animation:none !important;
+    transform:translateX(-50%) scale(1) !important;
+  }
+
+  /* Pulsos de rareza en cartas de mano/revelado/inspección son decorativos. */
+  .card-rarity-heroic.hand-card,
+  .card-rarity-glorious.hand-card,
+  .card-rarity-demigod.hand-card,
+  .card-rarity-heroic.revealed-card,
+  .card-rarity-glorious.revealed-card,
+  .card-rarity-demigod.revealed-card,
+  .card-inspect-modal.card-rarity-heroic .card-inspect-card,
+  .card-inspect-modal.card-rarity-glorious .card-inspect-card,
+  .card-inspect-modal.card-rarity-demigod .card-inspect-card,
+  .card-rarity-heroic.hand-card::after,
+  .card-rarity-glorious.hand-card::after,
+  .card-rarity-heroic.revealed-card::after,
+  .card-rarity-glorious.revealed-card::after,
+  .card-inspect-modal.card-rarity-heroic .card-inspect-card::before,
+  .card-inspect-modal.card-rarity-glorious .card-inspect-card::before{
+    animation:none !important;
+  }
+
+  /* Decoración de pantallas no jugables: conservar el arte sin loop infinito. */
+  .pack-opening-glow,
+  .stat-guide-card::after{
+    animation:none !important;
+  }
+
+  /* Evita promover capas por cambios de filter en animaciones cosméticas. */
+  .pack-object,
+  .story-actor,
+  .guardian-actor img{
+    will-change:auto !important;
+  }
+}
+
+/* Si la pestaña/documento no es visible, ningún loop puramente decorativo
+   necesita seguir avanzando. No se incluyen FX de batalla ni estados. */
+html.hv-document-hidden .pack-opening-glow,
+html.hv-document-hidden .card-rarity-heroic.hand-card,
+html.hv-document-hidden .card-rarity-glorious.hand-card,
+html.hv-document-hidden .card-rarity-demigod.hand-card,
+html.hv-document-hidden .leader-base.ally .leader-base-token::before,
+html.hv-document-hidden .leader-base.enemy .leader-base-token::before{
+  animation-play-state:paused !important;
+}
