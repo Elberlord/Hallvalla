@@ -370,7 +370,10 @@ function renderLeaderStatusSeal(entry,idx=0){
   const kind=escapeHtml(entry?.kind||"neutral");
   const shortText=getUnitStatusSealShortText(entry);
   const title=escapeHtml(`${entry?.name||entry?.label||"Estado"}: ${entry?.desc||""}`.trim());
-  return `<button class="leader-status-seal unit-status-seal ${kind}" type="button" data-status-index="${idx}" title="${title}" aria-label="${title}" onclick="return openLeaderStatusModalFromSeal(this,event)"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</button>`;
+  // TARGETPRIORITY1: el click se resuelve por delegación en leaderBasesLayer.
+  // No usar onclick inline: durante ATTK / carta / EFFECT el objetivo del tablero
+  // debe tener prioridad sobre el modal informativo del estado.
+  return `<button class="leader-status-seal unit-status-seal ${kind}" type="button" data-status-index="${idx}" title="${title}" aria-label="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</button>`;
 }
 
 function getLeaderStatusBubblesHtml(u){
@@ -649,7 +652,21 @@ function ensureBattleBoardDelegation(grid){
   },true);
   grid.addEventListener("pointerup",ev=>{
     const seal=ev.target&&ev.target.closest?ev.target.closest(".unit-status-seal[data-status-index]"):null;
-    if(seal)return;
+    // TARGETPRIORITY1: si el jugador ya está eligiendo objetivo (ATTK, carta o
+    // EFFECT), tocar un sello de estado cuenta como tocar la unidad/casilla.
+    // En móvil estos sellos ocupan una parte importante de la figura y antes
+    // abrían "Reducción de Guardia" u otro modal en vez de confirmar el ataque.
+    if(seal){
+      if(!shouldDirectBoardTarget())return;
+      const unitEl=seal.closest(".unit-card[data-unit-id]");
+      if(!unitEl||!grid.contains(unitEl))return;
+      const x=Number(unitEl.dataset.x),y=Number(unitEl.dataset.y);
+      if(Number.isFinite(x)&&Number.isFinite(y)&&handleDirectBoardTargetEvent(ev,x,y)){
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
     if(!shouldDirectBoardTarget())return;
     const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
     if(!cell||!grid.contains(cell))return;
@@ -672,6 +689,14 @@ function ensureBattleBoardDelegation(grid){
     const seal=ev.target&&ev.target.closest?ev.target.closest(".unit-status-seal[data-status-index]"):null;
     if(seal&&grid.contains(seal)){
       const unitEl=seal.closest(".unit-card[data-unit-id]");
+      const x=Number(unitEl?.dataset.x),y=Number(unitEl?.dataset.y);
+      // TARGETPRIORITY1: el segundo evento click que sigue al pointerup se
+      // consume por el dedupe de handleDirectBoardTargetEvent; nunca abre DET
+      // de estado mientras hay un objetivo activo.
+      if(shouldDirectBoardTarget()&&Number.isFinite(x)&&Number.isFinite(y)){
+        handleDirectBoardTargetEvent(ev,x,y);
+        return;
+      }
       const u=unitEl?getUnit(unitEl.dataset.unitId):null;
       const entry=u?getUnitStatusEntries(u)[Number(seal.dataset.statusIndex||0)]:null;
       ev.preventDefault();
@@ -877,6 +902,13 @@ function ensureLeaderBasesLayer(){
       const seal=ev.target&&ev.target.closest?ev.target.closest(".leader-status-seal[data-status-index],.unit-status-seal[data-status-index]"):null;
       if(seal){
         const btn=seal.closest(".leader-base");
+        const x=Number(btn?.dataset.x),y=Number(btn?.dataset.y);
+        // TARGETPRIORITY1: igual que con invocaciones, los estados del líder no
+        // pueden robar el toque cuando ATTK/carta/EFFECT está esperando objetivo.
+        if(shouldDirectBoardTarget()&&Number.isFinite(x)&&Number.isFinite(y)){
+          handleDirectBoardTargetEvent(ev,x,y);
+          return;
+        }
         const u=btn?getUnit(btn.dataset.leaderId):null;
         const entry=u?getUnitStatusEntries(u)[Number(seal.dataset.statusIndex||0)]:null;
         ev.preventDefault();
