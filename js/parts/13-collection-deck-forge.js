@@ -846,7 +846,7 @@ function getDeckBuilderTypeGlyph(card){
   if(card?.type==="equipment")return "E";
   return "C";
 }
-function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
+function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,addDisabled=false,addLockReason="",used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
   const principalSlot=mode==="deck"&&card?.type==="unit"?currentPrincipalKeys.indexOf(card.key):-1;
   const isPrincipal=principalSlot>=0;
   const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""} ${collectionLocked?"collection-locked":""} ${gameplayLocked?"gameplay-locked":""} ${readOnly?"read-only":""} ${isPrincipal?"is-principal":""}`;
@@ -860,12 +860,13 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const surplus=getCardSurplusCopies(card);
   const canCraft=mode==="collection"&&canCraftCardCopy(card);
   const material=getMaterialAmountForCard(card);
-  const addLockReason=mode==="collection"
-    ? (Number(card?.qty||0)<=0?"No tienes copias de esta carta. Puedes ver sus detalles y crearla si tienes materiales.":(isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType())?`Equipo exclusivo de ${getEquipmentLeaderLabel(card)}.`:(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting()?"Las cartas de bestias se ven aquí, pero solo se pueden usar después de completar su evento.":"")))
-    : "";
+  const resolvedAddLockReason=mode==="collection"?String(addLockReason||""):"";
+  const addStateAttrs=addDisabled
+    ? `data-add-locked="${escapeHtml(resolvedAddLockReason||"No se puede añadir esta carta ahora.")}" aria-disabled="true"`
+    : `aria-disabled="false"`;
   const actionBtn=mode==="deck"
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
-    : (readOnly?"":`<button class="deck-mini-plus" type="button" data-add-card="${escapeHtml(card.key||"")}" ${disabled?"disabled":""} aria-label="Añadir ${name} al mazo" title="${escapeHtml(addLockReason||"Añadir al mazo")}">+</button>`);
+    : (readOnly?"":`<button class="deck-mini-plus${addDisabled?" is-add-locked":""}" type="button" data-add-card="${escapeHtml(card.key||"")}" ${addStateAttrs} aria-label="Añadir ${name} al mazo" title="${escapeHtml(resolvedAddLockReason||"Añadir al mazo")}">+</button>`);
   const principalBtn=mode==="deck"&&card?.type==="unit"
     ? `<button class="deck-mini-principal ${isPrincipal?"selected":""}" type="button" data-set-principal="${escapeHtml(card.key||"")}" aria-label="${isPrincipal?`Personaje Principal ${principalSlot+1}; toca para quitarlo`:"Agregar como Personaje Principal"}" title="${isPrincipal?`Personaje Principal ${principalSlot+1}; toca para quitarlo`:"Agregar como Personaje Principal"}">${isPrincipal?`★${principalSlot+1}`:"★"}</button>`
     : "";
@@ -1028,18 +1029,33 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
     });
     el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
   });
-  collectionGrid.querySelectorAll("[data-add-card]").forEach(btn=>btn.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    addCardToDeck(btn.dataset.addCard);
-  }));
-  collectionGrid.querySelectorAll("[data-dust-card]").forEach(btn=>btn.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    disenchantCardSurplus(btn.dataset.dustCard);
-  }));
-  collectionGrid.querySelectorAll("[data-craft-card]").forEach(btn=>btn.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    craftCardCopy(btn.dataset.craftCard);
-  }));
+  // E26: las acciones del catálogo se delegan al grid persistente. Así ningún + queda
+  // sin listener después de paginar, filtrar, abrir un pack o reconstruir las miniaturas.
+  if(collectionGrid.dataset.hvCardActionsBound!=="1"){
+    collectionGrid.addEventListener("click",ev=>{
+      const addBtn=ev.target.closest?.("[data-add-card]");
+      if(addBtn&&collectionGrid.contains(addBtn)){
+        ev.preventDefault();ev.stopPropagation();
+        const lockReason=String(addBtn.dataset.addLocked||"").trim();
+        if(lockReason){setHint(lockReason);return;}
+        addCardToDeck(addBtn.dataset.addCard);
+        return;
+      }
+      const dustBtn=ev.target.closest?.("[data-dust-card]");
+      if(dustBtn&&collectionGrid.contains(dustBtn)){
+        ev.preventDefault();ev.stopPropagation();
+        disenchantCardSurplus(dustBtn.dataset.dustCard);
+        return;
+      }
+      const craftBtn=ev.target.closest?.("[data-craft-card]");
+      if(craftBtn&&collectionGrid.contains(craftBtn)){
+        ev.preventDefault();ev.stopPropagation();
+        if(craftBtn.disabled){setHint(craftBtn.title||"No tienes los materiales necesarios para crear esta copia.");return;}
+        craftCardCopy(craftBtn.dataset.craftCard);
+      }
+    });
+    collectionGrid.dataset.hvCardActionsBound="1";
+  }
   deckList.querySelectorAll("[data-remove-index]").forEach(btn=>btn.addEventListener("click",ev=>{
     ev.stopPropagation();
     removeCardFromDeckIndex(btn.dataset.removeIndex);
@@ -1141,6 +1157,19 @@ function deckSearchMatchesCard(card,rawSearch,battlePower=null,battleTier=null){
     return !!group&&group.some(alias=>hay.includes(alias));
   });
 }
+function getDeckBuilderAddLockReason(card,used=0,addLimit=0){
+  if(!card)return "No se pudo identificar esta carta.";
+  const ownedQty=Math.max(0,Number(card.qty||0));
+  if(ownedQty<=0)return "No tienes copias de esta carta. Puedes crearla si tienes materiales.";
+  if(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting())return "Esta carta de bestia todavía está bloqueada por su evento.";
+  if(isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType()))return `${card.name} es exclusivo de ${getEquipmentLeaderLabel(card)}.`;
+  if(currentDeckDraft.length>=getCurrentDeckSize())return `El mazo ya tiene ${getCurrentDeckSize()} cartas. Quita una antes de agregar otra.`;
+  const limit=Math.max(0,Number(addLimit||0));
+  if(limit<=0)return "No tienes una copia utilizable de esta carta.";
+  if(Number(used||0)>=limit)return `Ya usaste ${limit} copia${limit===1?"":"s"} utilizable${limit===1?"":"s"} de ${card.name}.`;
+  return "";
+}
+
 function renderDeckBuilder(){
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
   if(!collectionGrid||!deckList)return;
@@ -1205,8 +1234,10 @@ function renderDeckBuilder(){
     const collectionLocked=ownedQty<=0;
     const cannotAddBeast=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting();
     const cannotAddEquipment=isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType());
-    const disabled=collectionLocked||cannotAddBeast||cannotAddEquipment||used>=addLimit||currentDeckDraft.length>=getCurrentDeckSize();
-    return deckBuilderMiniCardHtml(card,{mode:"collection",disabled,used,maxAllowed,readOnly:browseOnly,collectionLocked,gameplayLocked:cannotAddBeast||cannotAddEquipment});
+    const hardLocked=collectionLocked||cannotAddBeast||cannotAddEquipment;
+    const addLockReason=getDeckBuilderAddLockReason(card,used,addLimit);
+    const addDisabled=!!addLockReason;
+    return deckBuilderMiniCardHtml(card,{mode:"collection",disabled:hardLocked,addDisabled,addLockReason,used,maxAllowed:addLimit,readOnly:browseOnly,collectionLocked,gameplayLocked:cannotAddBeast||cannotAddEquipment});
   }).join("")||`<div class="notification-item deck-builder-empty-note"><b>No hay cartas</b><small>Cambia los filtros para volver a mostrar el catálogo.</small></div>`;
   const pager=$("deckCollectionPager"),pageInfo=$("deckCollectionPageInfo"),pageTitle=$("deckCollectionPageText"),prev=$("deckCollectionPrevBtn"),next=$("deckCollectionNextBtn");
   if(pager)pager.classList.toggle("hidden",cards.length<=pageSize);

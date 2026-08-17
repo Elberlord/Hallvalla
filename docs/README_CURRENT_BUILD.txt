@@ -82,3 +82,10 @@ E25 · FORJA / BOTÓN AÑADIR AL MAZO
 - El + de añadir al mazo queda siempre visible en cartas poseídas cuando la Forja está desbloqueada.
 - Crear copia se desplaza a un control separado y usa un icono distinto (◆).
 - Si el mazo está vacío, las cartas poseídas pueden volver a añadirse normalmente hasta completar el límite.
+
+E26 · FORJA / ACCIONES DE CARTA
+- El botón + de Añadir al mazo y el botón ◆ de Crear copia ya no comparten la misma franja: Añadir queda abajo a la derecha y Crear arriba a la derecha.
+- Las acciones del catálogo usan delegación de eventos sobre el grid persistente, por lo que siguen funcionando tras paginar, filtrar, abrir paquetes o reconstruir la colección.
+- El + ya no usa el atributo HTML disabled para bloqueos temporales. Si una carta no se puede añadir, el botón sigue respondiendo y muestra la causa en el aviso de la Forja.
+- Una carta no se oscurece completa solo porque ya se usaron sus copias o el mazo esté lleno; se bloquea únicamente la acción +.
+- El contador de la miniatura muestra las copias realmente utilizables en el mazo (usadas / disponibles), no un máximo genérico que podía inducir a error.
