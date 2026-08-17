@@ -56,9 +56,6 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
   scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
   return true;
 }
-async function removeCardAndPay(card,paidCost=null){
-  return commitCardPlay(card,{},paidCost,"");
-}
 
 function resolveBeastCellTraps(moving,units,traps){
   let out=[...(units||[])],nextTraps=[...(traps||[])],logs=[];

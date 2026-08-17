@@ -691,17 +691,6 @@ function getUnitEffectHonorCommitState(cost){
   if(current<amount)return null;
   return{amount,maxHonor,honor:current-amount};
 }
-async function spendUnitEffectHonor(cost){
-  const payment=getUnitEffectHonorCommitState(cost);
-  if(!payment)return false;
-  const committed=await commitGameplayAction({
-    privatePatch:{honor:payment.honor,maxHonor:payment.maxHonor},
-    publicPatch:{[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),hp:getLeader(myPlayer)?.hp||0,honor:payment.honor,maxHonor:payment.maxHonor,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}},
-    kind:"unit-effect-cost"
-  });
-  if(committed)pulseTurnHonorHud();
-  return committed;
-}
 function getUnitEffectMode(u){
   if(!u)return "passive";
   if(u.leader&&u.leaderType==="cavalry"&&getLeaderAbilityForOwner(u.owner)==="cavalry_call")return "self";

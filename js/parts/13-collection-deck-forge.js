@@ -49,11 +49,6 @@ function randomPackCards(pool,count=2){
   for(let i=0;i<count;i++)out.push({...source[Math.floor(Math.random()*source.length)]});
   return out;
 }
-function getRandomBeastEventCards(count=2){
-  const out=[];
-  for(let i=0;i<count;i++){const card=getRandomBeastEventCard();if(card)out.push(card);}
-  return out;
-}
 // BEASTPACKEXCLUSIVE1: las cartas exclusivas del Beast Master nunca entran en
 // pools generales de sobres, independientemente de su rareza interna. Su fuente
 // de pack es exclusivamente beast_pack. El flag permite ampliar el catálogo sin

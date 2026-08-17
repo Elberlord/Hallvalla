@@ -1,7 +1,7 @@
 HALLVALLA — REFERENCIA MÍNIMA DEL BUILD ACTUAL
 ===============================================
 
-Estado del paquete: PERF6F + PACK FIX + ACCOUNT MASTERY + BASIC STATUS MAGIC (2026-08-16)
+Estado del paquete: E38 · TERCERA PASADA QUIRÚRGICA · NORMALIZACIÓN PVP (2026-08-17)
 
 FUENTE DE VERDAD
 ----------------
@@ -77,18 +77,21 @@ actualizar este archivo o una referencia canónica específica. Las notas de tra
 changelogs y estados intermedios deben mantenerse fuera del paquete de producción.
 
 
-E25 · FORJA / BOTÓN AÑADIR AL MAZO
-- Corregido solapamiento: el botón de crear copia estaba colocado exactamente encima del botón + de añadir al mazo.
-- El + de añadir al mazo queda siempre visible en cartas poseídas cuando la Forja está desbloqueada.
-- Crear copia se desplaza a un control separado y usa un icono distinto (◆).
-- Si el mazo está vacío, las cartas poseídas pueden volver a añadirse normalmente hasta completar el límite.
 
-E26 · FORJA / ACCIONES DE CARTA
-- El botón + de Añadir al mazo y el botón ◆ de Crear copia ya no comparten la misma franja: Añadir queda abajo a la derecha y Crear arriba a la derecha.
-- Las acciones del catálogo usan delegación de eventos sobre el grid persistente, por lo que siguen funcionando tras paginar, filtrar, abrir paquetes o reconstruir la colección.
-- El + ya no usa el atributo HTML disabled para bloqueos temporales. Si una carta no se puede añadir, el botón sigue respondiendo y muestra la causa en el aviso de la Forja.
-- Una carta no se oscurece completa solo porque ya se usaron sus copias o el mazo esté lleno; se bloquea únicamente la acción +.
-- El contador de la miniatura muestra las copias realmente utilizables en el mazo (usadas / disponibles), no un máximo genérico que podía inducir a error.
+PVP / NORMALIZACIÓN DE ESCRITURA
+---------------------------------
+- La preparación común del estado público antes de commit vive en normalizePublicPatchBeforeCommit().
+- updatePublic() y el commit atómico multipath reutilizan esa misma normalización para cementerio de Ericto, ciclos Solomon/Ericto, aura de Explorador Mongol, logs de ciclo, limpieza de metadatos internos de kill-credit y normalización de hasHiddenUnits.
+- El camino atómico conserva su sanitización Firebase previa a la proyección de privacidad; el camino normal conserva su comportamiento histórico.
+- No se añadieron lecturas, escrituras, listeners, temporizadores ni rondas de red adicionales. La cantidad y ubicación de commits Firebase permanece igual que en E37.
+
+FORJA / ESTADO CANÓNICO
+-----------------------
+- El catálogo usa acciones separadas: + añade al mazo, ◆ crea una copia y ⛏ convierte sobrantes.
+- El + permanece clicable cuando una restricción temporal impide añadir; el aviso explica la causa en lugar de bloquear toda la carta.
+- El panel visual de Materiales de creación no intercepta punteros durante el uso normal. En modo editor solo las piezas editables recuperan interacción.
+- La colección mantiene sus hitboxes por carta y el Spellbook se despliega como drawer lateral sin deformar el catálogo.
+- La cascada CSS de Forja se sanea de forma conservadora: no se reordenan reglas entre selectores distintos ni se mezclan contextos responsive.
 
 E27 · HISTORIA 1.1
 - El primer capítulo dejó de repetir el golpe de Estado y pasó a abrir con desertores que asaltan viajeros en las rutas de frontera.
@@ -102,7 +105,28 @@ E28 · RECONSTRUCCIÓN NARRATIVA GENERAL
 - Los modales narrativos de capítulo mantienen tamaño compacto y usan desplazamiento vertical para textos largos.
 - La narrativa usa Hua Lan como nombre visible canónico en lugar de Mulan.
 
-E35 · FORJA / HITBOX DE MATERIALES
-- Corregido un bloqueo invisible sobre varias cartas del catálogo: la caja transparente del panel "Materiales de creación" quedaba por encima de parte de la fila y capturaba los clics destinados al botón +.
-- En uso normal, el panel y sus piezas visuales ya no reciben eventos de puntero; por eso Saboteador de Iga, Samurai de Katana y las demás cartas poseídas bajo esa zona vuelven a poder añadirse al mazo.
-- El editor visual conserva interacción sobre el arte y los nodos de materiales únicamente mientras el modo de edición está activo.
+E36 · PRIMERA PASADA DE SANEAMIENTO ESTÁTICO
+- Eliminadas 21 funciones sin ninguna referencia ejecutable en JS/HTML; la limpieza se hizo por alcance estático conservador, sin tocar funciones con llamadas activas aunque hoy sean no-op.
+- Eliminado HALLVALLA_STATS_TUTORIAL_KEY después de quedar huérfano por la retirada del mini tutorial antiguo.
+- Eliminadas 8 copias CSS exactamente duplicadas, conservando siempre la copia posterior equivalente para no alterar la cascada efectiva.
+- No se tocaron overrides CSS distintos, monkey-patches, pipelines de combate ni compatibilidad PvP histórica en esta pasada.
+- Validación posterior: todos los archivos JavaScript pasan node --check; styles.css se parsea sin errores y ya no quedan reglas CSS exactamente duplicadas en el mismo contexto.
+
+
+
+E37 · SEGUNDA PASADA QUIRÚRGICA · FORJA CSS
+- Consolidados los parches E25/E26 de acciones de carta en una única definición canónica, conservando exactamente la geometría final y el tratamiento visual vigente.
+- Eliminadas 120 declaraciones CSS de Forja demostrablemente anuladas por la misma propiedad en el mismo selector y contexto de media query; no se cruzaron selectores ni especificidades.
+- Eliminadas 23 reglas de Forja que quedaron completamente vacías al retirar declaraciones anuladas.
+- Los grupos selector/contexto repetidos de Forja bajaron de 59 a 41 y los overrides repetidos de 72 a 46.
+- Se conservaron intactos los contextos responsive, el editor directo, el drawer de Spellbook y el firewall de pointer-events de Materiales.
+- Verificación de cascada: el mapa efectivo de propiedades por rama de selector/contexto de Forja es idéntico entre E36 y E37.
+- Validación posterior: todos los JS pasan node --check, styles.css parsea sin errores, index.html no contiene IDs duplicados y database.rules.json continúa válido.
+
+
+E38 · TERCERA PASADA QUIRÚRGICA · NORMALIZACIÓN PVP
+- Eliminada la duplicación entre updatePublic() y preparePublicPatchForAtomicPvpAction(); la segunda función deja de existir y ambos caminos usan normalizePublicPatchBeforeCommit().
+- La normalización común conserva exactamente el orden histórico: graveyard de Ericto → Solomon → Ericto → aura Mongol → logs → limpieza de metadatos internos → normalizeHiddenUnitStatsPatch().
+- El commit atómico solicita sanitizeFirebase:true para conservar el punto exacto en el que E37 sanitizaba su fullPublicPatch; updatePublic() no activa esa opción y conserva su flujo anterior.
+- No se modificó projectStage8StealthPatchForNetwork(), sanitizeSharedStealthPatch(), updatePrivate(), los listeners Firebase ni la cantidad de operaciones update().
+- Verificación diferencial: 1.000 casos aleatorios compararon E37 vs E38 para normalización normal, normalización atómica, proyección pública/privada y payload final sanitizado; 0 diferencias.

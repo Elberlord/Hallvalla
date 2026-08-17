@@ -507,7 +507,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function defaultStartConfig(){ return {winnerRole:0,turnChoice:"",startingRole:0,secondRole:0,resolved:false,resolvedAt:0}; }
   function buildDefaultRules(){ return {timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500}; }
   function getRules(room){ return Object.assign({},buildDefaultRules(),room?.settings||{}); }
-  function getStakeModeLabel(mode){ return mode==="gold"?"Apuesta de oro":(mode==="card"?"Apuesta de carta":"Gratis"); }
   function getRulesSummary(rules){
     const timer=rules.timerEnabled?"Con temporizador":"Sin temporizador";
     if(rules.stakeMode==="card") return `${timer} · Apuesta de carta · 500 oro retenidos al iniciar`;
@@ -637,56 +636,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(combatLaunchTimer!==null){ clearTimeout(combatLaunchTimer); combatLaunchTimer=null; }
   }
 
-  function buildCanonicalCombatState(room,code){
-    if(!validateArenaBootstrap(room)) return null;
-    const arena=room.arenaBootstrap||{};
-    const rules=arena.settings||getRules(room);
-    const activeRole=Number(arena.currentPlayer||0);
-    const waitingRole=Number(arena.secondPlayer||0);
-    if(![1,2].includes(activeRole)||![1,2].includes(waitingRole)||activeRole===waitingRole) return null;
-    return {
-      schema:"hallvalla-pvp-step6d-combat-state",
-      version:4,
-      status:"active",
-      sourceOfTruth:"firebase",
-      matchCode:String(code||arena.matchCode||room?.code||""),
-      startedAt:Date.now(),
-      updatedAt:Date.now(),
-      turnNumber:1,
-      activeRole,
-      waitingRole,
-      turnPhase:"turn_start",
-      phaseSeq:0,
-      phaseControlEnabled:true,
-      resourceControlEnabled:true,
-      privateHands:true,
-      actionsEnabled:true,
-      cardPlayEnabled:true,
-      actionLockReason:"STEP_6D_CARD_PLAY_NO_EFFECTS",
-      actionSeq:0,
-      playedCards:{1:{},2:{}},
-      lastAction:null,
-      lastTransition:{from:"prebattle",to:"turn_start",byRole:activeRole,at:Date.now()},
-      players:{
-        1:{uid:String(arena?.players?.[1]?.uid||""),name:String(arena?.players?.[1]?.name||getPlayerName(room,1))},
-        2:{uid:String(arena?.players?.[2]?.uid||""),name:String(arena?.players?.[2]?.name||getPlayerName(room,2))}
-      },
-      playerStats:{
-        1:{hand:0,deck:0,honor:0,maxHonor:0,privateReady:false},
-        2:{hand:0,deck:0,honor:0,maxHonor:0,privateReady:false}
-      },
-      settings:{
-        timerEnabled:!!rules.timerEnabled,
-        stakeMode:String(rules.stakeMode||"none"),
-        goldAmount:Number(rules.goldAmount||500),
-        cardEntryFee:500
-      },
-      economy:{
-        applied:false,
-        state:String(rules.stakeMode||"none")==="none"?"not_required":"deferred_after_6d_validation"
-      }
-    };
-  }
 
   function validateCanonicalCombatState(room){
     const combat=room?.combatState;

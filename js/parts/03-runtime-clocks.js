@@ -207,10 +207,6 @@ const CLOCK_RULESET_MIGRATION_BONUS_MS=5*60*1000;
 const TURN_TIMER_TICK_MS=200;
 // El bono de reloj por eliminación PvP fue retirado del runtime compartido durante
 // la reconstrucción clean-room. Se reintroducirá en la capa PvP validada, no aquí.
-function getRawDuelClockMs(state=publicState,owner=Number(state?.currentPlayer||0)){
-  const raw=Number(state?.playerClockMs?.[owner]);
-  return Number.isFinite(raw)&&raw>=0?raw:DUEL_TIME_LIMIT_MS;
-}
 function isTurnTimerEnabled(state=publicState){
   if(!state||state.phase==="ended"||state.battleEnded||state.mode==="tutorial")return false;
   // Durante los bloques de validación del rebuild no dejamos expirar la sala.
@@ -498,7 +494,6 @@ const AI_THINK_DELAY_MS=1400;
 const AI_ACTION_DELAY_MS=2200;
 const AI_PHASE_DELAY_MS=1200;
 const ADVENTURE_AI_BEST_SKILL_LEVEL=20;
-function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 let authReady=false,authReadyWaiters=[];
 function isFirebaseAuthReady(){

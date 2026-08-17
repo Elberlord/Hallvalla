@@ -48,12 +48,6 @@ function isDragonCompanionKey(key){
   const safe=String(key||"");
   return safe==="dragon_egg"||/^(baby|young|adult)_(lightning|fire|ice)_dragon$/.test(safe);
 }
-function getDragonCardStageAndElement(key){
-  const safe=String(key||"");
-  if(safe==="dragon_egg")return{stage:"egg",element:"mystery"};
-  const match=safe.match(/^(baby|young|adult)_(lightning|fire|ice)_dragon$/);
-  return match?{stage:match[1],element:match[2]}:null;
-}
 function getDragonStageThreshold(stage){return DRAGON_STAGE_THRESHOLDS[stage]||10000;}
 function normalizeDragonCompanionRecord(record,index=0){
   const source=record&&typeof record==="object"?record:{};

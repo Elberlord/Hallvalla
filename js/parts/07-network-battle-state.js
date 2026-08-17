@@ -555,16 +555,9 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
     showBattleOutcomeSplash._timer=battleSetTimeout(()=>{showBattleOutcomeSplash._timer=null;hideBattleOutcomeSplash(false);},BATTLE_RESULT_SPLASH_DURATION_MS+120,"battle-outcome-splash");
   }
 }
-async function updatePublic(patch){
-  if(isTurnWriteBlockedByExpiredClock())return false;
-  const writeGameId=gameId;
-  const writeLifecycleToken=getBattleLifecycleToken();
-  const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
-  if(!writeContextActive())return false;
-  const sourcePatch=patch||{};
+async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
-  let cleanPatch={...sourcePatch};
-  let accountMasteryKillAfter=null;
+  let cleanPatch={...(sourcePatch||{})};
   if(Array.isArray(cleanPatch.units)){
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
@@ -574,14 +567,25 @@ async function updatePublic(patch){
     cleanPatch.units=mongolAura.units;
     const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
     if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
-    accountMasteryKillAfter=[...(cleanPatch.units||[])];
-    delete cleanPatch._clockKillCreditOwner;
-    delete cleanPatch._clockKillCreditMode;
-    delete cleanPatch._clockKillIgnoreIds;
-  }else{
-    delete cleanPatch._clockKillCreditOwner;delete cleanPatch._clockKillCreditMode;delete cleanPatch._clockKillIgnoreIds;
   }
+  delete cleanPatch._clockKillCreditOwner;
+  delete cleanPatch._clockKillCreditMode;
+  delete cleanPatch._clockKillIgnoreIds;
   cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
+  if(options.sanitizeFirebase===true)cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
+  return{patch:cleanPatch,beforeUnits};
+}
+async function updatePublic(patch){
+  if(isTurnWriteBlockedByExpiredClock())return false;
+  const writeGameId=gameId;
+  const writeLifecycleToken=getBattleLifecycleToken();
+  const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
+  if(!writeContextActive())return false;
+  const sourcePatch=patch||{};
+  const normalized=await normalizePublicPatchBeforeCommit(sourcePatch);
+  const beforeUnits=normalized.beforeUnits;
+  const cleanPatch=normalized.patch;
+  const accountMasteryKillAfter=Array.isArray(cleanPatch.units)?[...(cleanPatch.units||[])]:null;
   const localFullPatch={...cleanPatch};
   const privacyProjection=projectStage8StealthPatchForNetwork(cleanPatch,myPlayer);
   const sharedVisibilityUnits=privacyProjection.visibilityUnits;
@@ -616,25 +620,6 @@ let pvpStep6fAtomicActionInFlight=false;
 function isPvpStep6fAtomicActionMode(state=publicState){
   return !!state&&state.mode==="online"&&state.phase==="active"&&state.pvpAtomicActionMode==="multipath_v1"&&state.pvpStep6fMode==="unit_summon_only";
 }
-async function preparePublicPatchForAtomicPvpAction(sourcePatch={}){
-  const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
-  let cleanPatch={...(sourcePatch||{})};
-  if(Array.isArray(cleanPatch.units)){
-    const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
-    cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
-    const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
-    const erictoLife=resolveErictoLifecycle(solomonLife.units);
-    const mongolAura=applyMongolExplorerAura(erictoLife.units);
-    cleanPatch.units=mongolAura.units;
-    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
-    if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
-  }
-  delete cleanPatch._clockKillCreditOwner;
-  delete cleanPatch._clockKillCreditMode;
-  delete cleanPatch._clockKillIgnoreIds;
-  cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
-  return hallvallaSanitizeFirebaseValue(cleanPatch)||{};
-}
 async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
   if(pvpStep6fAtomicActionInFlight)return false;
   if(!gameId||!publicState||!privateState||!isPvpStep6fAtomicActionMode(publicState))return false;
@@ -650,7 +635,7 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
     if(!stillActive())return false;
     const cleanPrivateBase=hallvallaSanitizeFirebaseValue(privatePatch||{})||{};
     let nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPrivateBase);
-    const fullPublicPatch=await preparePublicPatchForAtomicPvpAction(publicPatch||{});
+    const fullPublicPatch=(await normalizePublicPatchBeforeCommit(publicPatch||{},{sanitizeFirebase:true})).patch;
     const privacyProjection=projectStage8StealthPatchForNetwork(fullPublicPatch,writePlayer);
     const sharedVisibilityUnits=privacyProjection.visibilityUnits;
     let cleanPublic=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);

@@ -962,7 +962,6 @@ const HALLVALLA_LOCAL_PROGRESS_KEYS=[
   "hallvalla_adventure_progress",
   "hallvalla_account_mastery_events_v1"
 ];
-const HALLVALLA_STATS_TUTORIAL_KEY="hallvalla_stats_tutorial_seen_v1";
 const HALLVALLA_BASIC_TUTORIAL_KEY="hallvalla_basic_battle_tutorial_seen_v3";
 const HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY="hallvalla_tutorial_basic_complete_v2";
 const HALLVALLA_BASIC_TUTORIAL_STEP_KEY="hallvalla_tutorial_basic_step_v2";

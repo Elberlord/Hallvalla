@@ -521,15 +521,6 @@ function openStatGuideModal(label=""){
   applyRarityClassToElement(modal,data?.card||null);
   modal.classList.remove("hidden");
 }
-function bindStatGuideClicks(container){
-  if(!container)return;
-  container.querySelectorAll("[data-stat]").forEach(el=>{
-    el.addEventListener("click",ev=>{ev.stopPropagation();openStatGuideModal(el.dataset.stat||el.textContent||"");});
-  });
-}
-function detailStatGridHtml(stats){
-  return `<div class="detail-stat-grid">${stats.map(([l,v])=>`<button class="detail-stat-chip stat-click" type="button" data-stat="${escapeHtml(l)}"><span>${escapeHtml(String(l))}</span><strong>${escapeHtml(String(v))}</strong></button>`).join("")}</div>`;
-}
 
 function normalizeEffectGuideKey(entity){
   return String(entity?.key||entity?.name||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9_]+/g,"_");
@@ -640,32 +631,7 @@ function openExactEntityEffectGuide(entity,effectText="",effectTitle=""){
   openStatGuideModal(data);
 }
 
-function shouldShowEffectGuideButton(entity,effectText=""){
-  if(!String(effectText||"").trim())return false;
-  // Las unidades pasivas/automáticas ya muestran sus reglas en la lista de EFECTOS.
-  // No necesitan botón "Ver efecto", porque no se activan manualmente.
-  if(entity&&(entity.type==="unit"||(!entity.spell&&!entity.trap&&!entity.leader&&entity.key))){
-    return getUnitEffectMode(entity)!=="passive";
-  }
-  // Líderes, hechizos y trampas sí pueden conservar el botón informativo.
-  return true;
-}
 
-function detailGuideButtonsHtml({showEffect=false,showWeapon=false,showFormula=true,showLore=false,effectLabel="Ver efecto",entity=null}={}){
-  const chips=[];
-  if(showEffect)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-effect-btn" type="button" aria-label="${escapeHtml(effectLabel)}"><img class="det-btn-img" src="assets/ui/det_icons/trigger.webp" alt="${escapeHtml(effectLabel)}"></button><span>${escapeHtml(effectLabel)}</span></div>`);
-  if(showWeapon){
-    const weaponIcon=entity?getWeaponClassIcon(entity):"assets/ui/det_icons/tactical.webp";
-    chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-weapon-btn" type="button" aria-label="Arma / ventaja y desventaja" title="Arma / ventaja y desventaja"><img class="det-btn-img" src="${weaponIcon}" alt=""></button><span>Arma / ventaja y desventaja</span></div>`);
-  }
-  if(showFormula)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-formula-btn" type="button" aria-label="PREC / EVA"><img class="det-btn-img" src="assets/ui/det_icons/dexterity.webp" alt="PREC / EVA"></button><span>PREC / EVA</span></div>`);
-  if(showLore)chips.push(`<div class="detail-guide-chip"><button class="detail-token-btn guide-lore-btn" type="button" aria-label="Conóceme"><img class="det-btn-img" src="assets/ui/det_icons/lore.webp" alt="Conóceme"></button><span>Conóceme</span></div>`);
-  return chips.length?`<div class="detail-guide-row">${chips.join("")}</div>`:"";
-}
-function detailStatusButtonsHtml(entries=[]){
-  if(!entries.length)return "";
-  return `<div class="detail-guide-block"><div class="detail-guide-caption">Estados activos</div><div class="detail-chip-row">${entries.map((entry,idx)=>`<div class="detail-status-chip"><button class="guide-status-btn det-status-icon-btn" type="button" data-status-index="${idx}" aria-label="${escapeHtml(entry.name||entry.label||"Estado")}">${getStatusEntryIconHtml(entry)}</button><span>${escapeHtml(entry.name||entry.label||"Estado")}</span></div>`).join("")}</div></div>`;
-}
 function openStatusGuideModal(entry={},entity=null){
   if(!entry)return;
   const label=entry.name||entry.label||"Estado activo";
@@ -766,40 +732,6 @@ function bindCardInspectDetModalDelegation(modal){
   },false);
 }
 
-function bindEntityGuideButtons(container,entity,{effectText="",effectTitle="",statuses=[]}={}){
-  if(!container)return;
-  const effectBtn=container.querySelector('.guide-effect-btn');
-  if(effectBtn)effectBtn.addEventListener('click',ev=>{
-    ev.stopPropagation();
-    openExactEntityEffectGuide(entity,effectText,effectTitle||`Efecto exacto de ${entity?.name||'la carta'}`);
-  });
-  const weaponBtn=container.querySelector('.guide-weapon-btn');
-  if(weaponBtn)weaponBtn.addEventListener('click',ev=>{ev.stopPropagation();openWeaponGuide(entity);});
-  const formulaBtn=container.querySelector('.guide-formula-btn');
-  if(formulaBtn)formulaBtn.addEventListener('click',ev=>{ev.stopPropagation();openStatGuideModal('formula');});
-  const loreBtn=container.querySelector('.guide-lore-btn');
-  if(loreBtn)loreBtn.addEventListener('click',ev=>{
-    ev.stopPropagation();
-    openUnitLoreModal(entity);
-  });
-  container.querySelectorAll('.guide-status-btn, .det-status-row').forEach(btn=>btn.addEventListener('click',ev=>{
-    ev.stopPropagation();
-    const idx=Number(btn.dataset.statusIndex||0);
-    const entry=statuses[idx];
-    if(!entry)return;
-    openStatusGuideModal(entry,entity);
-  }));
-  container.querySelectorAll('.guide-ability-btn').forEach(btn=>btn.addEventListener('click',ev=>{
-    ev.stopPropagation();
-    openStatGuideModal({
-      title:btn.dataset.abilityTitle||'Efecto',
-      short:"",
-      formula:btn.dataset.abilityText||'Sin explicación adicional.',
-      example:"",
-      hideCombatButton:true
-    });
-  }));
-}
 
 
 

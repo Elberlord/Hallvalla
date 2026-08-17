@@ -1230,18 +1230,10 @@ function hvDialog(message,{title="Información",confirmText="Aceptar",cancelText
 function hvAlert(message,title="Información"){return hvDialog(message,{title,confirmText:"Aceptar"});}
 function hvConfirm(message,title="Confirmar",confirmText="Aceptar",cancelText="Cancelar",danger=false){return hvDialog(message,{title,confirmText,cancelText,showCancel:true,danger});}
 
-function markStatsTutorialSeen(){
-  try{localStorage.setItem(HALLVALLA_STATS_TUTORIAL_KEY,"true");}catch(e){}
-}
-function hasSeenStatsTutorial(){
-  try{return localStorage.getItem(HALLVALLA_STATS_TUTORIAL_KEY)==="true";}catch(e){return false;}
-}
 
-function hasSeenBasicBattleTutorial(){try{return localStorage.getItem(HALLVALLA_BASIC_TUTORIAL_KEY)==="true";}catch(e){return false;}}
 function markBasicBattleTutorialSeen(){try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_KEY,"true");}catch(e){}}
 // El tutorial antiguo de entrada por modal fue retirado. El Tutorial básico se inicia
 // desde su botón y enseña todo dentro del tablero mediante texto flotante.
-function showBasicTutorialGate(){return Promise.resolve(false);}
 function maybeShowBasicTutorialGate(){}
 function getTutorialCardTemplate(key){
   const card=getStarterBasicCardByKey(key);
@@ -1556,48 +1548,6 @@ function renderBasicTutorialCoach(forceShow=false){
   battleRequestAnimationFrame(()=>applyBasicTutorialTarget(step),"tutorial-target-frame");
 }
 
-function ensureStatsTutorialModal(){
-  let modal=$("statsTutorialModal");
-  if(modal)return modal;
-  modal=document.createElement("div");
-  modal.id="statsTutorialModal";
-  modal.className="stats-tutorial-modal hidden";
-  modal.innerHTML=`
-    <div class="stats-tutorial-card">
-      <div class="stats-tutorial-head">
-        <div>
-          <div class="stats-tutorial-kicker">Mini tutorial</div>
-          <h2>Stats básicos de HallValla</h2>
-        </div>
-        <button id="statsTutorialCloseX" class="stats-tutorial-x" type="button" aria-label="Cerrar tutorial">×</button>
-      </div>
-      <p class="stats-tutorial-intro">Antes del primer duelo, aprende qué significa cada número. No necesitas memorizarlo todo: piensa en esto como tu brújula de batalla.</p>
-      <div class="stats-tutorial-grid">
-        <div class="stats-tutorial-stat"><b>HP / Vida</b><span>Cuánto daño puede resistir la unidad antes de caer.</span></div>
-        <div class="stats-tutorial-stat"><b>AT / Ataque</b><span>Daño base que causa al atacar. Más AT significa golpes más fuertes.</span></div>
-        <div class="stats-tutorial-stat"><b>GD / Guardia</b><span>Amortigua el daño recibido durante el turno. Se consume antes de la Vida y se restaura al inicio del turno de su dueño si la unidad sobrevive.</span></div>
-        <div class="stats-tutorial-stat"><b>DX / Destreza</b><span>Técnica de combate. En ataque suma a la precisión; en defensa suma a la evasión.</span></div>
-        <div class="stats-tutorial-stat"><b>AGI / Agilidad</b><span>Velocidad táctica. También suma a precisión y evasión, por eso las unidades ágiles golpean y esquivan mejor.</span></div>
-        <div class="stats-tutorial-stat"><b>MV / Movimiento</b><span>Cuántas casillas puede moverse una unidad durante su acción.</span></div>
-        <div class="stats-tutorial-stat"><b>RG / Rango</b><span>Distancia máxima de ataque. Rango 1 es cuerpo a cuerpo.</span></div>
-        <div class="stats-tutorial-stat"><b>Costo / Honor/Mana</b><span>Recurso necesario para jugar cartas. Con Hechicero se muestra como Mana; con otros líderes, como Honor.</span></div>
-      </div>
-      <div class="stats-tutorial-leaders">
-        <b>Fórmula de precisión y evasión</b>
-        <span>PREC/EVA = DX + AGI - stats gastados este turno. Atacar consume solo la precisión necesaria para superar la evasión disponible del objetivo. Recibir ataques reduce más la evasión. La reserva vuelve al inicio del próximo turno del dueño. Contra líderes, el golpe impacta fijo y la Guardia absorbe daño primero.</span>
-      </div>
-      <div class="stats-tutorial-leaders">
-        <b>Recuerda los líderes</b>
-        <span>Guerrero mejora solo infantería pesada. Arquero mejora solo arqueras. Hechicero mejora solo magias.</span>
-      </div>
-      <div class="stats-tutorial-actions">
-        <button id="statsTutorialLaterBtn" class="btn ghost" type="button">Ver luego</button>
-        <button id="statsTutorialOkBtn" class="btn primary" type="button">Entendido, continuar</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  return modal;
-}
 function showStatsTutorial({force=false,onDone=null}={}){
   if(typeof onDone==="function")onDone();
   return Promise.resolve(false);

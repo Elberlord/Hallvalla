@@ -507,26 +507,6 @@ function getResourceRecharge(prevMax,rawGain){
 }
 function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const label=ownerUsesMana(owner)?"Mana":"Honor";return caps?label.toUpperCase():label}
 
-function getOwnerResourceState(owner){
-  const pubStats=publicState?.playerStats?.[owner]||{};
-  const privOwner=(owner===myPlayer&&privateState)?privateState:null;
-  const rawMax=Number((privOwner?privOwner.maxHonor:pubStats.maxHonor)||0);
-  const maxHonor=capResourceMax(rawMax);
-  const honor=capResourceAmount(Number((privOwner?privOwner.honor:pubStats.honor)||0),maxHonor);
-  return {honor,maxHonor,label:getResourceLabel(owner,{caps:true}),softLabel:getResourceLabel(owner)};
-}
-function resourceDetailHtml(owner,{compact=false,includeReason=true}={}){
-  const st=getOwnerResourceState(owner);
-  const usesMana=ownerUsesMana(owner);
-  const leaderType=getLeaderTypeForOwner(owner);
-  const leaderName=LEADER_DATA[leaderType]?.name||"líder";
-  const reason=usesMana
-    ? `Como ${leaderName} es Hechicero, el recurso de cartas se muestra como MANA en vez de Honor.`
-    : `Este líder usa HONOR como recurso de cartas.`;
-  const main=`${st.label} ${st.honor}/${st.maxHonor}`;
-  if(compact)return `<div class="detail-helper-note"><b>Recurso:</b> ${escapeHtml(main)}. ${includeReason?escapeHtml(reason):""}</div>`;
-  return `<div class="stat-help-box"><div class="stat-help-title">Recurso del turno</div><div class="stat-help-line"><b>${escapeHtml(st.label)}</b>: ${escapeHtml(`${st.honor}/${st.maxHonor}`)} restante.</div><div class="stat-help-line"><b>Regla</b>: ${escapeHtml(reason)} Se recarga al iniciar el turno del dueño, baja cuando juegas cartas y no puede superar 10.</div></div>`;
-}
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
 function hasWarriorLeaderUnitShield(defender,attacker,units=publicState?.units||[]){
   return !!(defender&&attacker

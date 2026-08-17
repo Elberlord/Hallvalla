@@ -859,11 +859,22 @@ El CSS original se conserva para no romper visuales. El bloque final
 @keyframes packGlow{0%,100%{transform:scale(.94);opacity:.72}50%{transform:scale(1.08);opacity:1}}
 @keyframes packOpen{0%{transform:scale(1)}35%{transform:scale(1.08) rotate(-1deg)}70%{transform:scale(.98) rotate(1deg)}100%{transform:scale(.9);opacity:0}}
 @keyframes cardReveal{0%{opacity:0;transform:translateY(24px) rotateY(70deg)}100%{opacity:1;transform:translateY(0) rotateY(0)}}
-.deckbuilder-card{width:min(1180px,97vw);height:min(92vh,880px);padding:18px;overflow:hidden;background:linear-gradient(180deg,rgba(34,22,14,.98),rgba(6,5,4,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.76)}
+.deckbuilder-card{
+  height:min(92vh,880px);
+  padding:18px;
+  overflow:hidden;
+  background:linear-gradient(180deg,rgba(34,22,14,.98),rgba(6,5,4,.98));
+  border:1px solid rgba(255,209,102,.34);
+  box-shadow:0 30px 90px rgba(0,0,0,.76);
+}
 .deckbuilder-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.deckbuilder-sub{color:#e8d2a8;margin:4px 0 0;line-height:1.35}
 .deckbuilder-status{min-width:130px;text-align:center;border-radius:16px;padding:12px;background:rgba(0,0,0,.32);border:1px solid rgba(255,209,102,.22)}
 .deckbuilder-status b{display:block;color:#fff1c4;font-size:22px}.deckbuilder-status span{display:block;color:#d8c29a;font-size:12px}
-.deckbuilder-layout{height:calc(100% - 110px);display:grid;grid-template-columns:190px 1fr 310px;gap:12px}
+.deckbuilder-layout{
+  height:calc(100% - 110px);
+  display:grid;
+  gap:12px;
+}
 .deckbuilder-filters,.deckbuilder-collection,.deckbuilder-current{min-height:0;border-radius:20px;padding:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,209,102,.18);overflow:auto}
 .deckbuilder-collection h3,.deckbuilder-current h3{margin:0 0 10px;color:#fff1c4}
 .deck-search,.deck-select{width:100%;margin-bottom:10px;border-radius:12px;border:1px solid rgba(255,209,102,.22);background:rgba(0,0,0,.38);color:#fff1c4;padding:10px}
@@ -874,7 +885,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 .current-deck-list{display:grid;gap:8px}
 
-@media (max-width:980px){.deckbuilder-layout{grid-template-columns:1fr;height:auto}.deckbuilder-card{height:92vh;overflow:auto}.pack-reveal-grid{grid-template-columns:repeat(2,1fr)}.pack-opening-footer,.deckbuilder-head{flex-direction:column;align-items:stretch}}
+@media (max-width:980px){.deckbuilder-card{height:92vh;overflow:auto}.pack-reveal-grid{grid-template-columns:repeat(2,1fr)}.pack-opening-footer,.deckbuilder-head{flex-direction:column;align-items:stretch}}
 
 .profile-card{width:min(540px,94vw)}
 .profile-help{margin-bottom:14px}
@@ -11765,7 +11776,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   border:1px solid rgba(255,209,102,.26);
   background:linear-gradient(180deg,rgba(49,32,18,.98),rgba(9,7,6,.98));
   box-shadow:0 8px 18px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.04);
-  cursor:grab;
   user-select:none;
   touch-action:none;
 }
@@ -11782,7 +11792,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .deck-mini-card.disabled{
   opacity:.42;
   filter:grayscale(.55);
-  cursor:not-allowed;
 }
 .deck-mini-art{
   position:absolute;
@@ -12262,9 +12271,7 @@ body.mobile-landscape-locked{overflow:hidden!important}
 /* ==========================================================
    7HEH · Forja: detalle de cartas al click/tap
    ========================================================== */
-.deck-mini-card{
-  cursor:pointer;
-}
+
 .deck-mini-card:hover{
   filter:brightness(1.08);
 }
@@ -12466,7 +12473,6 @@ body.mobile-landscape-locked{overflow:hidden!important}
 .deck-card-grid.hv-mini-gallery.is-paged .deck-mini-card{
   height:112px !important;
   cursor:pointer !important;
-  touch-action:manipulation !important;
 }
 
 
@@ -12624,17 +12630,10 @@ body.mobile-landscape-locked{overflow:hidden!important}
 /* ==========================================================
    7HEL · Forja compacta: materiales pequeños + paginador visible
    ========================================================== */
-#deckBuilderPanel.overlay-panel{
-  padding:10px !important;
-  align-items:center !important;
-}
+
 #deckBuilderPanel .deckbuilder-card{
-  width:min(1280px,98vw) !important;
-  height:min(94vh,900px) !important;
-  padding:12px !important;
   display:flex !important;
   flex-direction:column !important;
-  overflow:hidden !important;
 }
 #deckBuilderPanel .deckbuilder-head{
   flex:0 0 auto !important;
@@ -12722,13 +12721,7 @@ body.mobile-landscape-locked{overflow:hidden!important}
   font-size:9px !important;
   border-radius:999px !important;
 }
-#deckBuilderPanel .deckbuilder-layout{
-  flex:1 1 auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  grid-template-columns:185px minmax(0,1fr) 430px !important;
-  gap:10px !important;
-}
+
 #deckBuilderPanel .deckbuilder-filters,
 #deckBuilderPanel .deckbuilder-collection,
 #deckBuilderPanel .deckbuilder-current{
@@ -12736,14 +12729,10 @@ body.mobile-landscape-locked{overflow:hidden!important}
   border-radius:17px !important;
   min-height:0 !important;
 }
-#deckBuilderPanel .deckbuilder-filters{
-  overflow:auto !important;
-}
+
 #deckBuilderPanel .deck-search,
 #deckBuilderPanel .deck-select{
-  padding:8px 10px !important;
   margin-bottom:8px !important;
-  min-height:38px !important;
   font-size:13px !important;
 }
 #deckBuilderPanel .craft-material-panel{
@@ -12784,29 +12773,13 @@ body.mobile-landscape-locked{overflow:hidden!important}
   font-size:17px !important;
   line-height:1.1 !important;
 }
-#deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged{
-  grid-template-columns:repeat(7,minmax(60px,1fr)) !important;
-  grid-auto-rows:minmax(96px,1fr) !important;
-  gap:7px !important;
-  min-height:0 !important;
-  flex:1 1 auto !important;
-}
-#deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged .deck-mini-card{
-  height:96px !important;
-}
-#deckBuilderPanel .deck-collection-pager{
-  flex:0 0 auto !important;
-  margin-top:7px !important;
-  padding-top:7px !important;
-  gap:8px !important;
-}
+
+
+
 #deckBuilderPanel .deck-page-btn{
-  min-height:30px !important;
-  padding:5px 11px !important;
   font-size:11px !important;
 }
 #deckBuilderPanel .deck-page-info{
-  min-width:165px !important;
   font-size:11px !important;
 }
 #deckBuilderPanel .current-deck-list.hv-mini-deck{
@@ -12826,27 +12799,20 @@ body.mobile-landscape-locked{overflow:hidden!important}
   #deckBuilderPanel .deckbuilder-head{
     grid-template-columns:minmax(0,1fr) minmax(260px,390px) !important;
   }
-  #deckBuilderPanel .deckbuilder-layout{
-    grid-template-columns:170px minmax(0,1fr) 360px !important;
-  }
+  
   #deckBuilderPanel .craft-summary-grid{
     grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   }
 }
 @media(max-width:980px){
-  #deckBuilderPanel .deckbuilder-card{
-    overflow:auto !important;
-    height:94vh !important;
-  }
+  
   #deckBuilderPanel .deckbuilder-head{
     grid-template-columns:1fr !important;
   }
   #deckBuilderPanel .craft-summary-grid{
     grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   }
-  #deckBuilderPanel .deckbuilder-layout{
-    grid-template-columns:1fr !important;
-  }
+  
   #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged{
     grid-template-columns:repeat(7,minmax(52px,1fr)) !important;
   }
@@ -16889,9 +16855,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 /* ==========================================================
    8BH · Colección visible desde el inicio / Forja bloqueada
    ========================================================== */
-#deckBuilderPanel.collection-browser-mode .deckbuilder-layout{
-  grid-template-columns:210px minmax(0,1fr) !important;
-}
+
 #deckBuilderPanel.collection-browser-mode .deckbuilder-current,
 #deckBuilderPanel.collection-browser-mode #craftMaterialPanel,
 #deckBuilderPanel.collection-browser-mode #saveDeckBtn,
@@ -16902,9 +16866,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 #deckBuilderPanel.collection-browser-mode .deckbuilder-collection{
   min-width:0 !important;
 }
-#deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
-  grid-template-columns:repeat(8,minmax(60px,1fr)) !important;
-}
+
 #deckBuilderPanel .deck-mini-lock{
   position:absolute;
   z-index:10;
@@ -18585,7 +18547,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 @media(max-width:520px){.daily-reward-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.daily-reward-day img{width:42px;height:42px}}
 
 /* ==========================================================
-   FORGE1 · Forja HallValla sobre escenario + pergamino WEBP
+   FORGE · ESCENA Y PERGAMINO BASE
    ========================================================== */
 #deckBuilderPanel.overlay-panel{
   padding:0 !important;
@@ -18598,7 +18560,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 #deckBuilderPanel .deckbuilder-card{
   width:100vw !important;
-  height:100dvh !important;
   max-width:none !important;
   max-height:none !important;
   margin:0 !important;
@@ -18661,13 +18622,8 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   align-content:stretch;
   gap:5px;
   padding:15.5vh 7.4vw 9.4vh !important;
-  background:url("assets/ui/deck_forge/forge_parchment.webp") center/100% 100% no-repeat;
-  filter:drop-shadow(0 18px 28px rgba(0,0,0,.55));
-  overflow:hidden;
 }
 #deckBuilderPanel .deckbuilder-filters{
-  display:grid !important;
-  grid-template-columns:minmax(170px,1.45fr) repeat(4,minmax(105px,1fr)) !important;
   grid-auto-flow:row;
   align-items:start;
   gap:6px !important;
@@ -18702,16 +18658,13 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   text-shadow:0 1px rgba(255,242,197,.35);
   outline:none !important;
 }
-#deckBuilderPanel .deck-search::placeholder{color:rgba(64,37,13,.66) !important;}
+
 #deckBuilderPanel .deck-search:focus,
 #deckBuilderPanel .deck-select:focus{
   border-color:rgba(124,67,15,.92) !important;
   box-shadow:0 0 0 2px rgba(148,88,22,.13),inset 0 1px rgba(255,255,255,.42) !important;
 }
-#deckBuilderPanel .deck-select option{
-  background:#1b1209;
-  color:#f4dda7;
-}
+
 #deckBuilderPanel .deck-search-hint{
   padding-left:9px;
   color:rgba(70,40,14,.72);
@@ -18720,7 +18673,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   white-space:nowrap;
 }
 #deckBuilderPanel .deckbuilder-filters #craftMaterialPanel{
-  grid-column:1 / 5 !important;
   margin:0 !important;
   min-height:38px !important;
   padding:4px 7px !important;
@@ -18746,7 +18698,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 #deckBuilderPanel .deckbuilder-collection{
   min-width:0 !important;
-  min-height:0 !important;
   display:flex !important;
   flex-direction:column !important;
   padding:3px 2px 0 !important;
@@ -18766,17 +18717,9 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   flex:1 1 auto !important;
   min-height:0 !important;
   display:grid !important;
-  grid-template-columns:repeat(7,minmax(62px,1fr)) !important;
-  grid-template-rows:minmax(118px,1fr) !important;
-  grid-auto-rows:minmax(118px,1fr) !important;
-  align-content:center !important;
-  gap:7px !important;
   overflow:visible !important;
 }
 #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged .deck-mini-card{
-  height:min(17vh,132px) !important;
-  min-height:112px !important;
-  max-height:138px !important;
   box-shadow:0 7px 14px rgba(49,24,5,.35) !important;
 }
 #deckBuilderPanel .deck-collection-pager{
@@ -18794,8 +18737,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   padding:4px 14px !important;
   border-radius:999px !important;
   border:1px solid rgba(102,59,14,.78) !important;
-  background:linear-gradient(180deg,rgba(99,60,18,.92),rgba(51,29,8,.96)) !important;
-  color:#ffeab2 !important;
   box-shadow:inset 0 1px rgba(255,231,157,.25),0 3px 8px rgba(54,27,5,.3) !important;
   font:800 10px Georgia,"Times New Roman",serif !important;
   text-transform:uppercase;
@@ -18845,7 +18786,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   overflow:visible !important;
 }
 #deckBuilderPanel.collection-browser-mode .deckbuilder-parchment-stage{
-  width:min(1120px,94vw);
   justify-self:center;
   padding-left:8.2vw !important;
   padding-right:8.2vw !important;
@@ -18877,9 +18817,8 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 @media(max-width:980px){
   #deckBuilderPanel .deckbuilder-card{
-    height:100dvh !important;
-    overflow:auto !important;
-  }
+  overflow:auto !important;
+}
   #deckBuilderPanel .deckbuilder-head{margin-inline:36px !important;}
   #deckBuilderPanel .deckbuilder-layout{
     grid-template-columns:1fr !important;
@@ -18889,10 +18828,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
     min-height:610px;
     padding:118px 8vw 92px !important;
   }
-  #deckBuilderPanel .deckbuilder-filters{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  }
-  #deckBuilderPanel .deck-search-field{grid-column:1/-1;}
+  
   #deckBuilderPanel .deckbuilder-filters #craftMaterialPanel{grid-column:1/-1 !important;}
   #deckBuilderPanel .deckbuilder-filters #saveDeckBtn{grid-column:1/-1 !important;}
   #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged,
@@ -18902,13 +18838,13 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   }
   #deckBuilderPanel .deckbuilder-current{min-height:430px !important;}
 }
-/* FORGE1 fallback para navegadores sin unidades dinámicas de viewport. */
+/* Compatibilidad de altura para navegadores sin dvh. */
 #deckBuilderPanel .deckbuilder-card{height:100vh !important;height:100dvh !important;}
 @media(max-width:980px){#deckBuilderPanel .deckbuilder-card{height:100vh !important;height:100dvh !important;}}
 
 
 /* ==========================================================
-   FORGE1CTRL1 · calibrador directo aislado
+   FORGE · CALIBRADOR DIRECTO
    ========================================================== */
 #deckBuilderPanel .deckbuilder-parchment-stage{
   background:none !important;
@@ -18916,10 +18852,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   overflow:visible !important;
   isolation:isolate;
 }
-#deckBuilderPanel .deckbuilder-parchment-stage > *:not(.hv-forge-parchment-layer){
-  position:relative;
-  z-index:2;
-}
+
 .hv-forge-parchment-layer{
   position:absolute !important;
   z-index:0 !important;
@@ -18965,18 +18898,18 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 .hv-forge-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:0 0 auto;padding-top:7px;border-top:1px solid rgba(218,170,72,.18);background:#0b0805}
 .hv-forge-tuner-actions button{min-height:32px;border-radius:999px;border:1px solid rgba(218,170,72,.35);background:linear-gradient(180deg,#704b17,#382309);color:#ffe9b1;font:800 10px Georgia,serif;cursor:pointer}
 .hv-forge-tuner-group-candidate{cursor:crosshair!important}
-.hv-forge-tuner-selected{outline:2px dashed rgba(255,224,127,.95)!important;outline-offset:4px!important;box-shadow:0 0 0 1px rgba(255,224,127,.25),0 0 22px rgba(196,137,35,.22)!important}
+
 #hvForgeParchmentLayer.hv-forge-tuner-group-candidate{pointer-events:auto!important;cursor:crosshair!important}
-#hvForgeParchmentLayer.hv-forge-tuner-selected{pointer-events:auto!important}
+
 @media(max-width:720px){.hv-forge-direct-tuner{left:6px;top:66px;width:300px}.hv-forge-tuner-body{height:calc(100vh - 118px);max-height:calc(100vh - 118px)}}
 
-/* FORGE1CTRL2FIX1 · pergamino siempre detrás del contenido. */
+/* El pergamino permanece detrás del contenido interactivo. */
 #hvForgeParchmentLayer,#hvForgeParchmentLayer.hv-forge-tuner-group-candidate,#hvForgeParchmentLayer.hv-forge-tuner-selected{z-index:0!important}
 #deckBuilderPanel .deckbuilder-parchment-stage > *:not(.hv-forge-parchment-layer){position:relative!important;z-index:10!important}
 #deckBuilderPanel .deckbuilder-parchment-stage .hv-forge-tuner-selected:not(#hvForgeParchmentLayer){z-index:80!important}
 
 
-/* FORGE1CTRL2INPUT2 · interacción correcta cuando los filtros se desplazan sobre la colección */
+/* Interacción cuando filtros y colección se solapan visualmente. */
 #deckBuilderPanel .deckbuilder-parchment-stage > .deckbuilder-filters{
   position:relative !important;
   z-index:40 !important;
@@ -19002,15 +18935,9 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 
 
-/* FORGE1CTRL2INPUT3 · layout del usuario + hitbox compacto del bloque de cartas */
+/* Hitboxes compactos de colección y controles. */
 #deckBuilderPanel.collection-browser-mode #deckCollectionGrid.deck-card-grid.hv-mini-gallery.is-paged{
   flex:0 0 auto !important;
-  min-height:0 !important;
-  height:max-content !important;
-  grid-template-rows:auto !important;
-  grid-auto-rows:auto !important;
-  align-content:start !important;
-  align-self:center !important;
   overflow:visible !important;
   pointer-events:none !important;
 }
@@ -19119,7 +19046,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 
 
 /* ==========================================================
-   FORGE2 · Colección 14 cartas + constructor medieval lateral
+   FORGE · CATÁLOGO Y COMPOSICIÓN DE CARTAS
    ----------------------------------------------------------
    Alcance exclusivo: Colección / Forja de mazos.
    PvP, combate y reglas de juego no se modifican.
@@ -19354,7 +19281,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 
 
 /* ==========================================================
-   FORGE3 · Colección intacta + Spellbook en pestaña lateral
+   FORGE · DRAWER DE SPELLBOOK
    ----------------------------------------------------------
    - La colección conserva el layout de catálogo aun después
      de derrotar al Hechicero guardián.
@@ -19364,9 +19291,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
    ========================================================== */
 
 /* Colección desbloqueada: misma composición visual que el catálogo inicial. */
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-head{
-  display:none !important;
-}
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-layout{
   grid-template-columns:minmax(0,1fr) !important;
   padding-top:8px !important;
@@ -19428,14 +19352,10 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 
 /* Seis controles: buscador + tipo + posesión + rareza + PB + orden. */
-#deckBuilderPanel .deckbuilder-filters{
-  grid-template-columns:minmax(165px,1.45fr) repeat(5,minmax(96px,1fr)) !important;
-}
+
 
 /* La creación/materiales no ensancha la colección: vive dentro del Spellbook. */
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-  display:none !important;
-}
+
 
 /* Acciones de una carta solo se hacen protagonistas al pasar el cursor. */
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus,
@@ -19443,11 +19363,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-dust{
   opacity:.34 !important;
   transition:opacity .14s ease,filter .14s ease !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection:hover .deck-mini-plus,
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection:hover .deck-mini-craft,
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection:hover .deck-mini-dust{
-  opacity:1 !important;
 }
 
 /* Pestaña de Spellbook: discreta cuando el constructor está guardado. */
@@ -19508,24 +19423,14 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current{
   position:fixed !important;
   z-index:210 !important;
-  top:5.2vh !important;
-  right:10px !important;
-  bottom:4.8vh !important;
-  width:min(410px,92vw) !important;
   min-width:0 !important;
   min-height:0 !important;
   margin:0 !important;
-  padding:54px 30px 34px !important;
   border:0 !important;
   border-radius:0 !important;
-  background:
-    linear-gradient(90deg,rgba(91,49,14,.10),rgba(255,239,181,.08) 48%,rgba(86,45,12,.13)),
-    url("assets/ui/deck_forge/forge_parchment.webp") center/168% 104% no-repeat !important;
   box-shadow:none !important;
-  filter:drop-shadow(0 18px 30px rgba(0,0,0,.64)) !important;
   backdrop-filter:none !important;
   color:#3b210a !important;
-  overflow:auto !important;
   opacity:0 !important;
   transform:translateX(calc(100% + 72px)) !important;
   pointer-events:none !important;
@@ -19537,9 +19442,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   transform:translateX(0) !important;
   pointer-events:auto !important;
 }
-#deckBuilderPanel.collection-forge-unlocked.deck-drawer-open .deck-builder-drawer-tab{
-  right:min(420px,calc(92vw + 10px)) !important;
-}
+
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current h3{
   margin:0 30px 10px !important;
   color:#4b290b !important;
@@ -19573,16 +19476,10 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   cursor:pointer !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deckbuilder-status{
-  display:flex !important;
   flex-direction:column !important;
   gap:4px !important;
-  margin:0 0 11px !important;
-  padding:8px 10px !important;
-  border:1px solid rgba(103,58,14,.27) !important;
   border-radius:12px !important;
-  background:rgba(104,60,17,.09) !important;
   color:#4a2a0c !important;
-  box-shadow:inset 0 1px rgba(255,240,189,.28) !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deckbuilder-status>b{
   color:#442407 !important;
@@ -19617,28 +19514,26 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 #deckBuilderPanel.collection-forge-unlocked .deck-principal-copy>span{color:#8b5a16 !important;}
 #deckBuilderPanel.collection-forge-unlocked .deck-principal-copy strong{color:#3a2008 !important;text-shadow:0 1px rgba(255,241,194,.45) !important;}
 #deckBuilderPanel.collection-forge-unlocked .deck-principal-copy small{color:#6b4a28 !important;}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-art{border-color:#8d5c17 !important;background:rgba(85,48,12,.20) !important;color:#7d4d0e !important;}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-clear{border-color:#7e4d10 !important;background:linear-gradient(180deg,#d4a13d,#8a5915) !important;color:#241305 !important;}
+#deckBuilderPanel.collection-forge-unlocked .deck-principal-art{
+  border-color:#8d5c17 !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-principal-clear{
+  border-color:#7e4d10 !important;
+}
 #deckBuilderPanel.collection-forge-unlocked .deck-drop-hint{border-color:rgba(106,62,14,.37) !important;background:rgba(98,57,15,.10) !important;color:#5b3817 !important;}
 #deckBuilderPanel.collection-forge-unlocked .deck-empty-slot{border-color:rgba(104,60,13,.36) !important;background:rgba(112,65,18,.08) !important;color:rgba(74,40,8,.48) !important;}
-#deckBuilderPanel.collection-forge-unlocked .current-deck-list.hv-mini-deck{grid-template-columns:repeat(5,minmax(52px,1fr)) !important;gap:6px !important;min-height:0 !important;padding-bottom:7px !important;}
+#deckBuilderPanel.collection-forge-unlocked .current-deck-list.hv-mini-deck{
+  padding-bottom:7px !important;
+}
 #deckBuilderPanel.collection-forge-unlocked .current-deck-list.hv-mini-deck .deck-mini-card,
 #deckBuilderPanel.collection-forge-unlocked .deck-empty-slot{height:82px !important;}
 #deckBuilderPanel.collection-forge-unlocked #saveDeckBtn.deck-save-scroll{
-  position:sticky !important;
-  bottom:0 !important;
-  z-index:30 !important;
-  width:100% !important;
-  min-height:38px !important;
-  margin:9px 0 0 !important;
-  padding:8px 12px !important;
   border:1px solid #70420b !important;
   border-radius:999px !important;
   background:linear-gradient(180deg,#d7a746,#8b5915) !important;
   color:#251405 !important;
   text-shadow:0 1px rgba(255,239,174,.55) !important;
   box-shadow:inset 0 1px rgba(255,249,206,.50),0 4px 10px rgba(59,30,5,.24) !important;
-  font:900 11px Georgia,"Times New Roman",serif !important;
 }
 
 @media(max-width:1180px){
@@ -19654,25 +19549,23 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
     padding-bottom:74px !important;
   }
   #deckBuilderPanel .deckbuilder-filters{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
-  #deckBuilderPanel .deck-search-field{grid-column:1/-1 !important;}
   #deckBuilderPanel.collection-forge-unlocked #deckCollectionGrid.deck-card-grid.hv-mini-gallery.is-paged{
     grid-template-columns:repeat(4,minmax(56px,1fr)) !important;
     grid-template-rows:repeat(2,minmax(92px,1fr)) !important;
     grid-auto-rows:minmax(92px,1fr) !important;
   }
   #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current{
-    top:3vh !important;bottom:3vh !important;right:4px !important;width:min(390px,94vw) !important;
-  }
-  #deckBuilderPanel.collection-forge-unlocked.deck-drawer-open .deck-builder-drawer-tab{
-    right:min(394px,calc(94vw + 4px)) !important;
-  }
+  top:3vh !important;
+  bottom:3vh !important;
+  right:4px !important;
+}
+  
 }
 
 
-/* HALLVALLA FORGE4 · assets de Spellbook y Materiales */
+/* FORGE · ASSETS DE SPELLBOOK Y MATERIALES */
 #deckBuilderPanel .deckbuilder-filters{
   grid-template-columns:minmax(170px,1.45fr) repeat(5,minmax(105px,1fr)) !important;
-  position:relative !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-head{
   display:none !important;
@@ -19689,10 +19582,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
   display:block !important;
   position:fixed !important;
-  top:16px !important;
-  right:84px !important;
-  width:min(420px,34vw) !important;
-  min-width:320px !important;
   min-height:110px !important;
   padding:0 !important;
   margin:0 !important;
@@ -19707,7 +19596,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   position:relative !important;
   width:100% !important;
   aspect-ratio:3 / 1 !important;
-  background:url("assets/ui/deck_forge/materiales_creacion_asset.webp") center/100% 100% no-repeat !important;
 }
 #deckBuilderPanel .craft-material-art::after{
   content:attr(data-total) !important;
@@ -19930,10 +19818,9 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
     grid-template-columns:minmax(150px,1.3fr) repeat(5,minmax(76px,1fr)) !important;
   }
   #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-    width:min(360px,36vw) !important;
-    min-width:260px !important;
-    right:68px !important;
-  }
+  min-width:260px !important;
+  right:68px !important;
+}
 }
 @media(max-width:980px){
   #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters,
@@ -19942,11 +19829,10 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   }
   #deckBuilderPanel .deck-search-field{grid-column:1/-1 !important;}
   #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-    width:min(320px,58vw) !important;
-    min-width:220px !important;
-    top:12px !important;
-    right:54px !important;
-  }
+  min-width:220px !important;
+  top:12px !important;
+  right:54px !important;
+}
   #deckBuilderPanel #dustAllSurplusCornerBtn{
     top:103px !important;
     right:66px !important;
@@ -19967,7 +19853,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   }
 }
 
-/* HALLVALLA FORGE5 · control total no destructivo + grupos movibles */
+/* FORGE · CONTROLES EDITABLES Y GRUPOS */
 #deckBuilderPanel .deckbuilder-filters{
   display:block !important;
   position:relative !important;
@@ -20081,7 +19967,7 @@ html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-
   }
 }
 
-/* HALLVALLA FORGE6 · edición individual real: las imágenes son capas independientes */
+/* FORGE · CAPAS GRÁFICAS EDITABLES */
 #deckBuilderPanel.collection-forge-unlocked #deckBuilderDrawer{
   background:none !important;
 }
@@ -20106,7 +19992,9 @@ body.hv-forge-edit-active #deckBuilderPanel #hvSpellbookArtLayer{pointer-events:
   pointer-events:none !important;
 }
 #deckBuilderPanel .craft-material-node{z-index:2 !important;}
-body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{pointer-events:auto !important;cursor:grab !important;}
+body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
+  cursor:grab !important;
+}
 
 /* Las piezas seleccionables individuales reciben el cursor; los grupos parentales no interceptan clics. */
 body.hv-forge-edit-active #deckBuilderPanel [data-hv-forge-tuner-name]{cursor:grab !important;user-select:none !important;}
@@ -20121,7 +20009,7 @@ body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
 }
 
 
-/* HALLVALLA FORGE7 · correcciones sobre la configuración final del usuario */
+/* FORGE · CONFIGURACIÓN VISUAL FINAL */
 /* Las acciones solo existen visualmente cuando el Mazo está desplegado. Su posición editada se conserva. */
 #deckBuilderPanel.collection-forge-unlocked:not(.deck-drawer-open) #deckBuilderActionGroup{
   display:none !important;
@@ -20318,8 +20206,6 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 
 
 /* STAGE2 PVP LOBBY ART REFINEMENT + no mini stats modal */
-.hv-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;}
-#showStatsTutorialBtn{display:none!important;}
 .online-modal-art.pvp-room-active .visual-status{opacity:0;pointer-events:none;}
 .pvp-room-panel{
   left:8.8%!important;right:8.8%!important;top:34.8%!important;bottom:11.4%!important;
@@ -20356,8 +20242,6 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 .pvp-room-player strong{display:block;margin-top:14px;color:#ffefbf!important;font:900 clamp(18px,1.7vw,28px)/1.06 Georgia,serif!important;text-align:center;text-shadow:0 2px 9px rgba(0,0,0,.55);}
 .pvp-room-player-foot{display:flex;align-items:center;justify-content:center;min-height:28px;margin-top:14px;}
 .pvp-room-presence{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 0 2px rgba(0,0,0,.18);background:radial-gradient(circle at 50% 35%,#f49d9d,#7a1d1d 76%);}
-.pvp-room-presence.connected{background:radial-gradient(circle at 50% 35%,#c0f89b,#3c7d18 76%);box-shadow:0 0 0 2px rgba(0,0,0,.18),0 0 12px rgba(112,218,73,.38);}
-.pvp-room-presence.waiting{background:radial-gradient(circle at 50% 35%,#f2afaf,#891c1c 76%);box-shadow:0 0 0 2px rgba(0,0,0,.18),0 0 12px rgba(227,76,76,.26);}
 .pvp-room-ready-check{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#b8f693,#4a8e1f 76%);color:#0f3100;font:900 18px/1 Georgia,serif;box-shadow:0 0 0 1px rgba(214,251,183,.4),0 0 14px rgba(120,209,62,.35);opacity:0;transform:scale(.7);transition:opacity .18s ease,transform .18s ease;}
 .pvp-room-ready-check.visible{opacity:1;transform:scale(1);}
 .pvp-room-vs{align-self:center;padding:0 2px;color:#ddaf4c!important;font:900 clamp(30px,3.4vw,48px)/1 Georgia,serif!important;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 18px rgba(222,168,65,.16)!important;}
@@ -22286,47 +22170,9 @@ html.hv-perf-lite .event-splash-spell-art img{
 
 
 /* ==========================================================
-   E25 · Forja: separar claramente "Añadir al mazo" de "Crear copia"
-   El botón de crear estaba exactamente encima del botón + del mazo.
-   ========================================================== */
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus{
-  right:4px !important;
-  bottom:21px !important;
-  z-index:12 !important;
-  opacity:1 !important;
-  width:22px !important;
-  height:22px !important;
-  background:rgba(83,58,10,.96) !important;
-  border-color:rgba(255,218,93,.9) !important;
-  color:#fff1a8 !important;
-  box-shadow:0 2px 8px rgba(0,0,0,.72),0 0 7px rgba(255,202,74,.22) !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-craft{
-  right:30px !important;
-  bottom:21px !important;
-  z-index:11 !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-dust{
-  left:4px !important;
-  bottom:21px !important;
-  z-index:11 !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection:hover .deck-mini-plus{
-  opacity:1 !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus:disabled{
-  opacity:.32 !important;
-}
-/* Las cartas no poseídas conservan solo el control de creación. */
-#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.craft-missing .deck-mini-craft{
-  right:4px !important;
-}
-
-/* ==========================================================
-   E26 · Forja: acciones de carta separadas + botón Añadir robusto
-   - Añadir (+) y Crear (◆) ya no comparten la misma franja.
-   - El + bloqueado sigue siendo clicable para explicar el motivo.
-   - Las acciones tienen áreas táctiles independientes.
+   FORGE · ACCIONES DE CARTA (CANÓNICO)
+   + = añadir al mazo · ◆ = crear copia · ⛏ = convertir sobrante.
+   Hitboxes separados y estados bloqueados explicables por click/tap.
    ========================================================== */
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus{
   right:4px !important;
@@ -22339,6 +22185,10 @@ html.hv-perf-lite .event-splash-spell-art img{
   place-items:center !important;
   touch-action:manipulation !important;
   pointer-events:auto !important;
+  background:rgba(83,58,10,.96) !important;
+  border-color:rgba(255,218,93,.9) !important;
+  color:#fff1a8 !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.72),0 0 7px rgba(255,202,74,.22) !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-craft{
   right:4px !important;
@@ -22359,6 +22209,12 @@ html.hv-perf-lite .event-splash-spell-art img{
   z-index:17 !important;
   touch-action:manipulation !important;
   pointer-events:auto !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus:disabled{
+  opacity:.32 !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.craft-missing .deck-mini-craft{
+  right:4px !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus.is-add-locked,
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus[aria-disabled="true"]{
@@ -22376,7 +22232,6 @@ html.hv-perf-lite .event-splash-spell-art img{
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus[aria-disabled="true"]:hover{
   opacity:.58 !important;
 }
-/* Una carta temporalmente sin cupo no se apaga completa: solo su +. */
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection:not(.collection-locked):not(.gameplay-locked){
   pointer-events:auto !important;
 }
@@ -22413,7 +22268,7 @@ html.hv-perf-lite .event-splash-spell-art img{
 }
 
 /* ==========================================================
-   E35 · FORJA / HITBOX DE MATERIALES NO BLOQUEA LAS CARTAS
+   FORGE · INTERACCIÓN DE MATERIALES / HITBOX CANÓNICO
    El panel de "Materiales de creación" es visual y su caja real es
    bastante más grande que el arte visible después del ajuste del tuner.
    Esa zona transparente quedaba por encima de varias miniaturas y
