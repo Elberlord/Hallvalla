@@ -22151,3 +22151,165 @@ html.hv-perf-lite .event-splash-spell-art img{
     min-width:92px!important;
   }
 }
+
+
+/* ============================================================
+   PACKCOMPACT2 · Modal de apertura compacto en escritorio y móvil
+   - Evita ocupar casi toda la pantalla.
+   - Mantiene siempre visibles el cierre y las acciones inferiores.
+   - Dos cartas reveladas se muestran lado a lado sin inflar la escena.
+   ============================================================ */
+#packOpeningPanel.overlay-panel{
+  padding:14px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+}
+#packOpeningPanel .pack-opening-card{
+  width:min(760px,88vw) !important;
+  max-width:760px !important;
+  height:auto !important;
+  max-height:min(86vh,620px) !important;
+  min-height:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+  border-radius:20px !important;
+}
+#packOpeningPanel .pack-opening-scene{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  height:clamp(300px,48vh,390px) !important;
+  max-height:390px !important;
+  overflow:hidden !important;
+}
+#packOpeningPanel .pack-opening-glow{
+  width:220px !important;
+  height:220px !important;
+}
+#packOpeningPanel .pack-object{
+  width:min(300px,42vw) !important;
+  max-height:calc(100% - 44px) !important;
+}
+#packOpeningPanel .pack-object-image{
+  max-height:100% !important;
+  object-fit:contain !important;
+}
+#packOpeningPanel .pack-opening-hint{
+  bottom:14px !important;
+  padding:7px 11px !important;
+  font-size:11px !important;
+}
+#packOpeningPanel .pack-reveal-grid{
+  grid-template-columns:repeat(2,minmax(0,165px)) !important;
+  justify-content:center !important;
+  align-items:center !important;
+  gap:16px !important;
+  width:100% !important;
+  max-width:100% !important;
+  padding:18px !important;
+  box-sizing:border-box !important;
+}
+#packOpeningPanel .revealed-card.pack-reveal-card-button{
+  width:165px !important;
+  max-width:24vw !important;
+  min-height:0 !important;
+  aspect-ratio:1/1 !important;
+  border-radius:17px !important;
+}
+#packOpeningPanel .pack-reveal-icon,
+#packOpeningPanel .pack-reveal-icon.card-portrait{
+  border-radius:15px !important;
+}
+#packOpeningPanel .pack-opening-footer{
+  flex:0 0 auto !important;
+  min-height:54px !important;
+  padding:9px 12px !important;
+  gap:10px !important;
+}
+#packOpeningPanel .pack-opening-footer b{font-size:13px !important;line-height:1.1 !important;}
+#packOpeningPanel .pack-opening-footer span{font-size:10px !important;line-height:1.15 !important;}
+#packOpeningPanel .pack-opening-footer .adventure-actions{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:6px !important;
+  margin:0 !important;
+}
+#packOpeningPanel .pack-opening-footer .btn{
+  min-height:34px !important;
+  padding:6px 11px !important;
+  font-size:11px !important;
+  border-radius:10px !important;
+  white-space:nowrap !important;
+}
+#packOpeningPanel .adventure-result-close{
+  top:7px !important;
+  right:7px !important;
+  z-index:30 !important;
+}
+@media (max-width:720px){
+  #packOpeningPanel.overlay-panel{padding:5px !important;}
+  #packOpeningPanel .pack-opening-card{
+    width:min(92vw,500px) !important;
+    max-width:92vw !important;
+    max-height:calc(100dvh - 10px) !important;
+    border-radius:16px !important;
+  }
+  #packOpeningPanel .pack-opening-scene{
+    height:min(50dvh,310px) !important;
+    max-height:min(50dvh,310px) !important;
+  }
+  #packOpeningPanel .pack-object{width:min(58vw,230px) !important;}
+  #packOpeningPanel .pack-reveal-grid{grid-template-columns:repeat(2,minmax(0,104px)) !important;gap:8px !important;padding:9px !important;}
+  #packOpeningPanel .revealed-card.pack-reveal-card-button{width:104px !important;max-width:28vw !important;border-radius:12px !important;}
+  #packOpeningPanel .pack-reveal-icon,#packOpeningPanel .pack-reveal-icon.card-portrait{border-radius:10px !important;}
+  #packOpeningPanel .pack-opening-footer{min-height:46px !important;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px)) !important;}
+  #packOpeningPanel .pack-opening-footer .btn{min-height:32px !important;padding:5px 9px !important;font-size:10px !important;}
+}
+@media (max-width:720px) and (orientation:landscape){
+  #packOpeningPanel .pack-opening-card{width:min(82vw,620px) !important;max-height:calc(100dvh - 8px) !important;}
+  #packOpeningPanel .pack-opening-scene{height:min(58dvh,205px) !important;max-height:min(58dvh,205px) !important;}
+  #packOpeningPanel .pack-object{width:min(34vw,190px) !important;}
+  #packOpeningPanel .pack-reveal-grid{grid-template-columns:repeat(2,86px) !important;gap:8px !important;padding:7px !important;}
+  #packOpeningPanel .revealed-card.pack-reveal-card-button{width:86px !important;max-width:18vw !important;}
+  #packOpeningPanel .pack-opening-footer{min-height:42px !important;padding:4px 8px calc(4px + env(safe-area-inset-bottom,0px)) !important;}
+}
+
+
+/* ==========================================================
+   E25 · Forja: separar claramente "Añadir al mazo" de "Crear copia"
+   El botón de crear estaba exactamente encima del botón + del mazo.
+   ========================================================== */
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus{
+  right:4px !important;
+  bottom:21px !important;
+  z-index:12 !important;
+  opacity:1 !important;
+  width:22px !important;
+  height:22px !important;
+  background:rgba(83,58,10,.96) !important;
+  border-color:rgba(255,218,93,.9) !important;
+  color:#fff1a8 !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.72),0 0 7px rgba(255,202,74,.22) !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-craft{
+  right:30px !important;
+  bottom:21px !important;
+  z-index:11 !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-dust{
+  left:4px !important;
+  bottom:21px !important;
+  z-index:11 !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection:hover .deck-mini-plus{
+  opacity:1 !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.in-collection .deck-mini-plus:disabled{
+  opacity:.32 !important;
+}
+/* Las cartas no poseídas conservan solo el control de creación. */
+#deckBuilderPanel.collection-forge-unlocked .deck-mini-card.craft-missing .deck-mini-craft{
+  right:4px !important;
+}

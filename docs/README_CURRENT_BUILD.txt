@@ -75,3 +75,10 @@ REGLA PARA DOCUMENTACIÓN FUTURA
 No añadir al build una nota por cada parche. Si una decisión necesita documentación persistente,
 actualizar este archivo o una referencia canónica específica. Las notas de trabajo, auditorías,
 changelogs y estados intermedios deben mantenerse fuera del paquete de producción.
+
+
+E25 · FORJA / BOTÓN AÑADIR AL MAZO
+- Corregido solapamiento: el botón de crear copia estaba colocado exactamente encima del botón + de añadir al mazo.
+- El + de añadir al mazo queda siempre visible en cartas poseídas cuando la Forja está desbloqueada.
+- Crear copia se desplaza a un control separado y usa un icono distinto (◆).
+- Si el mazo está vacío, las cartas poseídas pueden volver a añadirse normalmente hasta completar el límite.
