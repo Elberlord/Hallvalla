@@ -11802,8 +11802,15 @@ El CSS original se conserva para no romper visuales. El bloque final
   width:100%;
   height:100%;
   object-fit:cover;
+  object-position:center center;
   display:block;
-  transform:scale(1.03);
+  transform:scale(1.01);
+}
+/* E42 · Miniaturas del mazo: los retratos de unidad se anclan más arriba para
+   evitar cabezas cortadas dentro del formato horizontal compacto. */
+.deck-mini-card.card-type-unit .deck-mini-art img{
+  object-position:center 18%;
+  transform:scale(1);
 }
 .deck-mini-fallback{
   width:100%;
