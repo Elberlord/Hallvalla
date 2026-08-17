@@ -1422,6 +1422,56 @@ async function adventureEnemyTurn(){
     if(u.key==="wallace"||u.key==="joan_of_arc"||u.key==="leonidas")value+=35;
     return value;
   };
+
+  // AI DOCTRINE V1 ---------------------------------------------------------
+  // La comprensión del tablero vive en un script separado. Este archivo solo
+  // le entrega snapshots/callbacks del combate y consume sus puntuaciones.
+  const aiCombatEngine=globalThis.HallvallaAICombatEngine||null;
+  const aiDoctrineLeaderType=()=>String(getLeaderTypeForOwner(2,units)||pub.playerLeaders?.[2]||"").toLowerCase();
+  // El expediente no cambia dentro de un mismo turno: se cachea para que la búsqueda
+  // de celdas/objetivos no vuelva a leer el perfil cientos de veces.
+  const aiDoctrineLearning=(()=>{
+    try{return aiCombatEngine?.getLearningProfile?.(aiDoctrineLeaderType())||null;}catch(_){return null;}
+  })();
+  const aiDoctrineBaseContext=(extra={})=>{
+    const leaderType=aiDoctrineLeaderType();
+    const base={
+      leaderType,
+      ownUnits:living(2),
+      enemyUnits:living(1),
+      ownLeader:enemyLeaderNow(),
+      enemyLeader:playerLeaderNow(),
+      roleOf:aiBasicTacticRole,
+      unitValue:aiUnitValue,
+      maxHp:effectiveMaxHp,
+      attackRange:aiAttackRange,
+      movement:effectiveMov,
+      attack:effectiveAtk,
+      guard:effectiveGuard,
+      canEverTarget:aiCanEverTarget,
+      estimateCombat,
+      cardCost:(card)=>effectiveCardCost(card,2),
+      learningProfile:aiDoctrineLearning,
+      previewDirectDamage:(card,target)=>{
+        const raw=Math.max(0,Number(effectiveCardValue(card,"damage")||card?.damage||0));
+        const reduced=Math.max(0,Number(reduceDamageForHoneyBadger(target,raw)||0));
+        const directPreview=applyDirectHpDamageWithEquipment({...target},reduced);
+        return{raw,actual:Math.max(0,Number(directPreview?.damage||reduced))};
+      },
+      boardKillPotential:(target)=>aiBoardKillPotential(target),
+      followupKillPotential:(card,target,actual)=>{
+        const remaining=Math.max(0,Number(target?.hp||0)-Math.max(0,Number(actual||0)));
+        if(remaining<=0)return{direct:true,reachable:true};
+        return aiBoardKillPotential({...target,hp:remaining});
+      }
+    };
+    if(aiCombatEngine?.enemyRoleCounts)base.enemyRoleCounts=aiCombatEngine.enemyRoleCounts(base.enemyUnits,{roleOf:aiBasicTacticRole});
+    return {...base,...extra};
+  };
+  const aiDoctrineTurnPlan=(()=>{
+    try{return aiCombatEngine?.selectTurnPlan?.(aiDoctrineBaseContext())||null;}catch(_){return null;}
+  })();
+  const aiDoctrineContext=(extra={})=>({...aiDoctrineBaseContext(),turnPlan:aiDoctrineTurnPlan,...extra});
   const aiWeaponMatchupScore=(attacker,target,estimatedDamage=0)=>{
     if(!attacker||!target||attacker.leader||target.leader)return 0;
     const advantage=getWeaponAdvantage(attacker,target);
@@ -1549,7 +1599,10 @@ async function adventureEnemyTurn(){
     const fireSupport=attacker?aiAlliedFireSupportCount(target,attacker)*62:0;
     const targetSupport=living(target.owner).filter(a=>a.id!==target.id&&d(a,target)<=2).length;
     const exposedTargetBonus=attacker&&!target.leader&&targetSupport===0?70:0;
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus;
+    const doctrineBonus=attacker&&aiCombatEngine?.scoreAttackTarget
+      ?Number(aiCombatEngine.scoreAttackTarget(target,attacker,aiDoctrineContext())||0)
+      :0;
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus;
   };
 
   const bestTargetForDamage=(card)=>{
@@ -2204,9 +2257,14 @@ async function adventureEnemyTurn(){
     const options=[];
     for(const card of hand.filter(c=>c.spell==="paralysis"&&effectiveCardCost(c,2)<=honor)){
       for(const target of living(1).filter(u=>!u.leader&&canDirectlyTarget(card,u))){
-        const immediateThreat=bestAttackTarget(target)?95:0;
-        const score=90+effectiveAtk(target)*13+effectiveDex(target)*5+effectiveAgi(target)*5+effectiveMov(target)*8+aiUnitValue(target)*0.35+immediateThreat;
-        options.push({card,target,score});
+        let score;
+        if(aiCombatEngine?.scoreParalysisSpell){
+          score=Number(aiCombatEngine.scoreParalysisSpell(card,target,aiDoctrineContext())?.score||-9999);
+        }else{
+          const immediateThreat=bestAttackTarget(target)?95:0;
+          score=90+effectiveAtk(target)*13+effectiveDex(target)*5+effectiveAgi(target)*5+effectiveMov(target)*8+aiUnitValue(target)*0.35+immediateThreat;
+        }
+        options.push({card,target,score,doctrineEngine:!!aiCombatEngine});
       }
     }
     return options.sort((a,b)=>b.score-a.score)[0]||null;
@@ -2216,12 +2274,17 @@ async function adventureEnemyTurn(){
     const options=[];
     for(const card of hand.filter(c=>c.spell==="poison"&&effectiveCardCost(c,2)<=honor)){
       for(const target of living(1).filter(u=>!u.leader&&canDirectlyTarget(card,u)&&!isPoisonImmuneUnit(u))){
-        const maxHp=Math.max(1,effectiveMaxHp(target));
-        const alreadyPoisoned=Number(target.poisonTurns||0)>0&&Number(target.poisonDamage||0)>0;
-        let score=75+maxHp*12+effectiveAtk(target)*7+effectiveMov(target)*4+aiUnitValue(target)*0.25;
-        if(alreadyPoisoned)score-=120;
-        if((target.hp||0)<=2)score-=55;
-        options.push({card,target,score});
+        let score;
+        if(aiCombatEngine?.scorePoisonSpell){
+          score=Number(aiCombatEngine.scorePoisonSpell(card,target,aiDoctrineContext())?.score||-9999);
+        }else{
+          const maxHp=Math.max(1,effectiveMaxHp(target));
+          const alreadyPoisoned=Number(target.poisonTurns||0)>0&&Number(target.poisonDamage||0)>0;
+          score=75+maxHp*12+effectiveAtk(target)*7+effectiveMov(target)*4+aiUnitValue(target)*0.25;
+          if(alreadyPoisoned)score-=120;
+          if((target.hp||0)<=2)score-=55;
+        }
+        options.push({card,target,score,doctrineEngine:!!aiCombatEngine});
       }
     }
     return options.sort((a,b)=>b.score-a.score)[0]||null;
@@ -2353,6 +2416,16 @@ async function adventureEnemyTurn(){
 
   const chooseBestDamageSpell=()=>{
     const playable=hand.filter(c=>c.spell==="damage"&&effectiveCardCost(c,2)<=honor&&living(1).length);
+    if(aiCombatEngine?.scoreDamageSpell){
+      const options=[];
+      for(const card of playable){
+        for(const target of living(1).filter(t=>canDirectlyTarget(card,t))){
+          const result=aiCombatEngine.scoreDamageSpell(card,target,aiDoctrineContext());
+          options.push({card,target,score:Number(result?.score||-9999),doctrineEngine:true,doctrineResult:result});
+        }
+      }
+      return options.sort((a,b)=>b.score-a.score)[0]||null;
+    }
     if(pub.adventureAdaptiveMage){
       const options=[];
       for(const card of playable){
@@ -2403,11 +2476,16 @@ async function adventureEnemyTurn(){
       let score=(Number(choice.score)||0)+base-aiChoiceCostPenalty(choice);
       const cost=effectiveCardCost(choice.card,2);
       if(cost>honor)return;
+      if(aiCombatEngine?.scoreChoicePlanFit)score+=Number(aiCombatEngine.scoreChoicePlanFit(kind,choice,aiDoctrineContext())||0);
       if(kind==="damage"){
         if(!choice.target)return;
         const dmg=effectiveCardValue(choice.card,"damage")||choice.card.damage||0;
-        if(pub.adventureAdaptiveMage&&choice.masterMageScore){
-          // El score maestro ya incluye letalidad, sobre-daño, amenaza, conservación de mano
+        if(choice.doctrineEngine){
+          // El motor de doctrina ya incluyó lethal, DOT, camping, acceso, coste de oportunidad
+          // y aprendizaje. Solo mantenemos un cierre adicional de líder para no diluir un mate.
+          if(choice.target.leader&&dmg>=(choice.target.hp||0))score+=700;
+        }else if(pub.adventureAdaptiveMage&&choice.masterMageScore){
+          // El score maestro legacy ya incluye letalidad, sobre-daño, amenaza, conservación de mano
           // y disponibilidad de una kill por combate. No volver a premiar HP bajo aquí.
           if(choice.target.leader&&dmg>=(choice.target.hp||0))score+=900;
         }else{
@@ -2420,6 +2498,7 @@ async function adventureEnemyTurn(){
         const aiHasBoard=living(2).some(u=>!u.leader);
         const role=aiBasicTacticRole(choice.card);
         const tactic=aiBasicTacticState();
+        if(aiCombatEngine?.scoreSummon)score+=Number(aiCombatEngine.scoreSummon(choice.card,aiDoctrineContext())||0);
         const berserkerPressure=aiEnemyBerserkerPressure();
         const rangedNeed=aiRangedProtectionNeed();
         if(!aiHasBoard)score+=95;
@@ -2609,6 +2688,9 @@ async function adventureEnemyTurn(){
         const progress=primaryTarget?currentGap-nextGap:0;
         if(progress>0)score+=progress*72;
         if(nextGap===0&&currentGap>0)score+=180;
+        if(aiCombatEngine?.scoreMoveCell){
+          score+=Number(aiCombatEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);
+        }
         options.push({x,y,score,progress,nextGap,canAttack:targets.length>0,formationScore});
       }
     }

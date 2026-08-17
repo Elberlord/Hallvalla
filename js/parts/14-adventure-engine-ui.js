@@ -202,9 +202,11 @@ function completeAdventureBattleOnce(pub){
   const override=resolveHallvallaOverride("adventure.completeBattleOnce",{pub});
   if(override.handled)return override.value;
   if(!pub||pub.mode!=="adventure")return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
-  // La campaña aprende de cada duelo válido de Aventura, desde el Guardián y a través
-  // de todos los mapas. El registro ocurre antes de recompensas para que el siguiente
-  // comandante herede inmediatamente la experiencia acumulada.
+  // AI DOCTRINE V1: memoria táctica separada por tipo de líder. Se registra en todos
+  // los duelos de Aventura (incluidos eventos Beastmaster) y solo sesga prioridades;
+  // no sustituye al motor táctico ni modifica reglas de combate.
+  if(globalThis.HallvallaAICombatEngine?.recordBattleOutcome)globalThis.HallvallaAICombatEngine.recordBattleOutcome(pub);
+  // La campaña conserva además su expediente adaptativo legacy para construcción de mazo.
   if((pub.adventureAdaptiveLearning||pub.adventureAdaptiveCampaign)&&typeof recordAdaptiveCampaignBattle==="function")recordAdaptiveCampaignBattle(pub);
   if(pub.winner!==1)return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   const battle=getAdventureBattle(pub.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id)||ADVENTURE_CHAPTER_1_1.battles[0];
