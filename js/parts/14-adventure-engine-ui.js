@@ -349,8 +349,8 @@ function renderAdventureMap(){
   const special=ADVENTURE_SPECIALS[progress.selectedSpecial||pendingAdventureSpecial]||ADVENTURE_SPECIALS.mulan;
   const introTitle=$("adventureMapIntroTitle"), introText=$("adventureMapIntroText"), introMeta=$("adventureMapIntroMeta"), nodes=$("adventureMapNodes");
   const chapterLabel=`${activeChapter.number} ${activeChapter.title}`;
-  if(introTitle)introTitle.textContent=chapterLabel;
-  if(introText)introText.textContent=activeChapter.desc;
+  if(introTitle)introTitle.textContent=activeChapter.introTitle||chapterLabel;
+  if(introText)introText.textContent=activeChapter.introText||activeChapter.desc;
   const requiredBattles=getRequiredChapterBattles(activeChapter);
   const optionalBattles=getOptionalChapterBattles(activeChapter);
   const completedRequired=requiredBattles.filter(b=>chapter.completedBattles?.[b.id]).length;
@@ -549,9 +549,10 @@ function initAdventureMapNodeTuner(){
 initAdventureMapNodeTuner();
 
 const ADVENTURE_STORY_SCENES=[
-  {title:"El llamado de HallValla",mark:"",cls:"scene-call",image:"assets/story/hallvalla_call.webp",text:"En los confines de HallValla, donde las viejas guerras dejaron cicatrices sobre la tierra, el Honor vuelve a llamar.\n\nNo todos nacen para mandar ejércitos, pero quienes escuchan ese llamado deben cruzar el campo y demostrar que su voluntad pesa más que el miedo.\n\nHoy comienza tu camino."},
-  {title:"Dos leyendas responden",mark:"",cls:"scene-heroes",image:"assets/story/hallvalla_call.webp",leftActor:"assets/story/scene_mulan_actor.webp",rightActor:"assets/story/scene_wallace_actor.webp",text:"Antes de tu primera batalla, dos héroes se alzan entre las ruinas.\n\nMulan representa precisión, movimiento y decisión. William Wallace representa coraje, resistencia y fuerza frontal.\n\nAmbos son héroes de su propia historia. Uno de ellos peleará a tu lado en esta primera prueba."}
-];
+  {title:"El mercenario que volvió",mark:"",cls:"scene-call",image:"assets/story/hallvalla_call.webp",text:"HallValla está en guerra. Fuerzas extranjeras cruzan sus fronteras mientras oro y armas alimentan levantamientos desde dentro. Años atrás, una disputa con la Corona convirtió tu nombre en el de un traidor y te obligó a sobrevivir como mercenario. Podrías dejar que el reino ardiera.\n\nTerral te observa afilar la espada.\n\n—Vas a volver.\n\n—No.\n\nTerral mira el equipo preparado junto a la puerta.\n\n—Claro. Nos quedaremos aquí con todas estas armas y dos caballos ensillados.\n\n—No voy por ellos. Mi madre nació allí.\n\nTerral deja de bromear.\n\n—Ya lo sé."},
+  {title:"Terral",mark:"",cls:"scene-call",image:"assets/story/hallvalla_call.webp",text:"Terral fue la única persona que permaneció a tu lado cuando HallValla comenzó a escupir tu nombre. Compartió contratos, hambre, heridas y demasiadas noches durmiendo bajo la lluvia. Nunca necesitó preguntarte si las acusaciones eran ciertas.\n\nMientras preparas el viaje, él ensilla su caballo.\n\n—¿Qué haces?\n\n—Si vas a cometer la estupidez de regresar al reino que te odia, alguien tendrá que evitar que te maten antes de llegar.\n\n—No necesito que me cuides.\n\n—Lo sé. Eso nunca me ha detenido."},
+  {title:"Dos leyendas en el umbral",mark:"",cls:"scene-heroes",image:"assets/story/hallvalla_call.webp",leftActor:"assets/story/scene_mulan_actor.webp",rightActor:"assets/story/scene_wallace_actor.webp",text:"En las primeras ruinas de HallValla encontráis a dos guerreros que todavía resisten el avance enemigo: Hua Lan y William Wallace.\n\nHua Lan pelea con precisión, movilidad y decisiones rápidas. Wallace representa resistencia, coraje y fuerza frontal.\n\nUno de los dos podrá acompañarte en la primera prueba. Terral se queda fuera del duelo.\n\n—Elige bien —dice—. Ya tenemos suficiente con uno de nosotros tomando malas decisiones."}
+]
 let adventureStoryIndex=0,pendingAdventureSpecial="",pendingAdventureBattleId="battle1";
 function openAdventureStory(){
   const progress=getAdventureProgress();
@@ -623,7 +624,7 @@ function setAdventureStoryActors(leftSrc,rightSrc){
   if(!wrap||!left||!right)return;
   if(leftSrc||rightSrc){
     wrap.classList.remove("hidden");
-    if(leftSrc){left.src=leftSrc;left.alt="Mulan";left.classList.remove("hidden");} else {left.removeAttribute("src");left.classList.add("hidden");}
+    if(leftSrc){left.src=leftSrc;left.alt="Hua Lan";left.classList.remove("hidden");} else {left.removeAttribute("src");left.classList.add("hidden");}
     if(rightSrc){right.src=rightSrc;right.alt="William Wallace";right.classList.remove("hidden");} else {right.removeAttribute("src");right.classList.add("hidden");}
   }else{
     wrap.classList.add("hidden");
@@ -672,7 +673,7 @@ const ADVENTURE_WOUNDED_SCENES={
     mark:"",
     cls:"scene-mulan-wounded",
     image:"assets/story/mulan_wounded.webp",
-    text:"A un lado del camino, Mulan se sostiene de su espada mientras contiene el dolor de una herida reciente. No puede entrar en esta prueba, pero su temple no se quiebra.\n\n“No subestimes a ese hechicero. Su poder espera el momento exacto para golpear.”\n\n“Yo seguiré en pie. Esta batalla debes ganarla tú.”"
+    text:"A un lado del camino, Hua Lan se sostiene de su espada mientras contiene el dolor de una herida reciente. No puede entrar en esta prueba, pero su temple no se quiebra.\n\n“No subestimes a ese hechicero. Su poder espera el momento exacto para golpear.”\n\n“Yo seguiré en pie. Esta batalla debes ganarla tú.”"
   }
 };
 function showAdventureWoundedIntro(specialKey){
@@ -741,10 +742,8 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   const introChapter=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   $("adventureGuardianTitle").textContent=battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`;
   const introConflict=battle.isGuardian
-    ?"Más allá del umbral, los invasores extranjeros avanzan hacia el corazón del reino. Derrota al Hechicero guardián y sal a darles cacería."
-    :(introChapter.id===ADVENTURE_CHAPTER_2_1.id
-      ?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas."
-      :"Los rebeldes intentan usurpar el trono y crear un golpe de estado.");
+    ?"Más allá del umbral, Terral te espera para continuar hacia el interior de HallValla. Derrota al Hechicero guardián y demuestra que has regresado para defender esta tierra."
+    :"";
   const previewInitial=makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage");
   hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
   const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
@@ -755,9 +754,8 @@ Personajes Principales enemigos: ${principalCards.map(card=>card.name).join(", "
   guardianText.replaceChildren();
   const storyText=document.createElement("span");
   storyText.className="guardian-story-main";
-  storyText.textContent=`${battle.enemyIntro||battle.desc}
-
-${introConflict}${battle.isGuardian?"":` Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.`}${principalLine}`;
+  const advanceLine=battle.isGuardian?"":`Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.`;
+  storyText.textContent=[battle.enemyIntro||battle.desc,introConflict,advanceLine].filter(Boolean).join("\n\n")+principalLine;
   const rewardText=document.createElement("span");
   rewardText.className="guardian-reward-line";
   rewardText.textContent=battle.isGuardian

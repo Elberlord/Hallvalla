@@ -89,3 +89,15 @@ E26 · FORJA / ACCIONES DE CARTA
 - El + ya no usa el atributo HTML disabled para bloqueos temporales. Si una carta no se puede añadir, el botón sigue respondiendo y muestra la causa en el aviso de la Forja.
 - Una carta no se oscurece completa solo porque ya se usaron sus copias o el mazo esté lleno; se bloquea únicamente la acción +.
 - El contador de la miniatura muestra las copias realmente utilizables en el mazo (usadas / disponibles), no un máximo genérico que podía inducir a error.
+
+E27 · HISTORIA 1.1
+- El primer capítulo dejó de repetir el golpe de Estado y pasó a abrir con desertores que asaltan viajeros en las rutas de frontera.
+
+E28 · RECONSTRUCCIÓN NARRATIVA GENERAL
+- Reescritos prólogo, Guardián y capítulos 1.1 a 6.1 alrededor del mercenario que regresa a HallValla, su mejor amigo Terral y el antagonista Satanyahu.
+- Terral acompaña al protagonista durante los primeros capítulos y muere en 4.1, asesinado por Satanyahu al protegerlo durante una trampa.
+- Los encuentros posteriores incorporan Memorias de Terral que reconstruyen gradualmente sus últimos minutos y su descubrimiento sobre el padre del protagonista.
+- Satanyahu queda establecido como la mente que financia facciones, compra ejércitos y conoce a la familia del protagonista desde generaciones anteriores.
+- El tramo actualmente jugable termina tras Hannibal con el camino abierto hacia la fortaleza de Satanyahu; no se inventó todavía un combate final sin diseño propio.
+- Los modales narrativos de capítulo mantienen tamaño compacto y usan desplazamiento vertical para textos largos.
+- La narrativa usa Hua Lan como nombre visible canónico en lugar de Mulan.
