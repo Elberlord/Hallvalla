@@ -101,3 +101,8 @@ E28 · RECONSTRUCCIÓN NARRATIVA GENERAL
 - El tramo actualmente jugable termina tras Hannibal con el camino abierto hacia la fortaleza de Satanyahu; no se inventó todavía un combate final sin diseño propio.
 - Los modales narrativos de capítulo mantienen tamaño compacto y usan desplazamiento vertical para textos largos.
 - La narrativa usa Hua Lan como nombre visible canónico en lugar de Mulan.
+
+E35 · FORJA / HITBOX DE MATERIALES
+- Corregido un bloqueo invisible sobre varias cartas del catálogo: la caja transparente del panel "Materiales de creación" quedaba por encima de parte de la fila y capturaba los clics destinados al botón +.
+- En uso normal, el panel y sus piezas visuales ya no reciben eventos de puntero; por eso Saboteador de Iga, Samurai de Katana y las demás cartas poseídas bajo esa zona vuelven a poder añadirse al mazo.
+- El editor visual conserva interacción sobre el arte y los nodos de materiales únicamente mientras el modo de edición está activo.

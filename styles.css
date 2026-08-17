@@ -22411,3 +22411,24 @@ html.hv-perf-lite .event-splash-spell-art img{
     line-height:1.38!important;
   }
 }
+
+/* ==========================================================
+   E35 · FORJA / HITBOX DE MATERIALES NO BLOQUEA LAS CARTAS
+   El panel de "Materiales de creación" es visual y su caja real es
+   bastante más grande que el arte visible después del ajuste del tuner.
+   Esa zona transparente quedaba por encima de varias miniaturas y
+   capturaba el click del botón + (Saboteador, Samurai, etc.).
+   En juego normal no debe interceptar ningún puntero. El modo editor
+   recupera interacción únicamente sobre las piezas que sí se editan.
+   ========================================================== */
+#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel,
+#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-art,
+#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-node,
+#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-value,
+#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-label{
+  pointer-events:none !important;
+}
+body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-art,
+body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-node{
+  pointer-events:auto !important;
+}
