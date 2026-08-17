@@ -420,7 +420,7 @@ function validatePrincipalSelection(keys=[],deck=[],principalSlots=getCurrentPri
   const errors=[];
   if(new Set(raw).size!==raw.length)errors.push("Los Personajes Principales no pueden ser la misma carta.");
   if(safe.length!==required)errors.push(`El tier actual del líder exige exactamente ${required} Personaje${required===1?"":"s"} Principal${required===1?"":"es"} distinto${required===1?"":"s"}.`);
-  return{valid:errors.length===0,errors,keys:safe,principalSlots:required};
+  return applyHallvallaValueHooks("deck.principalValidation",{valid:errors.length===0,errors,keys:safe,principalSlots:required},{keys,deck,principalSlots});
 }
 function isBeastCollectionCard(card){
   if(!card)return false;
@@ -526,8 +526,8 @@ function getMaterialAmountForCard(card){
   return getCraftMaterials()[getCraftRarityKey(card)]||0;
 }
 function getCraftLockReason(card){
-  if(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting())return "Gana el evento del Señor de las Bestias al menos una vez para crear cartas de bestias.";
-  return "";
+  const base=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting()?"Gana el evento del Señor de las Bestias al menos una vez para crear cartas de bestias.":"";
+  return applyHallvallaValueHooks("forge.craftLockReason",base,{card});
 }
 function canCraftCardCopy(card){
   if(!card||Number(card.qty||0)>=maxCopiesForCard(card))return false;
@@ -753,12 +753,16 @@ function releaseDeckBuilderDom(){
   clearDeckBuilderDropActive();
 }
 function closeDeckBuilder(){
-  const panel=$("deckBuilderPanel");
-  if(!panel)return;
-  panel.classList.add("hidden");
-  panel.classList.remove("collection-browser-mode","collection-forge-unlocked","deck-drawer-open");
-  syncDeckBuilderDrawerAria(false);
-  releaseDeckBuilderDom();
+  const result=(()=>{
+    const panel=$("deckBuilderPanel");
+    if(!panel)return;
+    panel.classList.add("hidden");
+    panel.classList.remove("collection-browser-mode","collection-forge-unlocked","deck-drawer-open");
+    syncDeckBuilderDrawerAria(false);
+    releaseDeckBuilderDom();
+  })();
+  runHallvallaEffectHooks("deckBuilder.closed",{});
+  return result;
 }
 function getDeckBuilderCollectionCard(cardKey){
   const key=String(cardKey||"");
@@ -773,6 +777,8 @@ function getDeckBuilderCollectionCard(cardKey){
   return forgeCard?{...forgeCard}:null;
 }
 function addCardToDeck(cardKey){
+  const hookOverride=resolveHallvallaOverride("deck.addCard",{cardKey});
+  if(hookOverride.handled)return hookOverride.value;
   if(isCollectionBrowseOnly())return false;
   const card=getCollectionCardsExpanded().find(c=>c.key===cardKey);
   if(!card){
@@ -1281,7 +1287,9 @@ function renderDeckBuilder(){
   }
   globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__?.();
 }
-function saveCurrentDeck(){
+async function saveCurrentDeck(){
+  const hookOverride=await resolveHallvallaAsyncOverride("deck.save",{});
+  if(hookOverride.handled)return hookOverride.value;
   if(isCollectionBrowseOnly())return;
   const principalSlots=getCurrentPrincipalSlots();
   const requiredDeckSize=getDeckSizeForPrincipalSlots(principalSlots);

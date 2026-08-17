@@ -807,20 +807,24 @@ function leaveCurrentGame(){
   renderHomeProgress();syncBattleMusic();
 }
 function maybeShowBattleResult(){
-  if(!publicState||publicState.phase!=="ended"||!publicState.endedAt)return;
-  const resultKey=`${gameId}:${publicState.endedAt}`;
-  if(shownBattleResultKey===resultKey)return;
-  shownBattleResultKey=resultKey;
-  const draw=Number(publicState.winner||0)===0;
-  const win=!draw&&Number(publicState.winner||0)===Number(myPlayer||0);
-  if(!draw)tryPlaySound(win?"victory":"defeat",.95);
-  stopMusic(false);
-  const adventure=publicState.mode==="adventure";
-  showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
-  if(!adventure&&publicState.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
-    void globalThis.hvPvpRankingRecordResult(publicState,gameId);
-  }
-  if(adventure)completeAdventureBattleOnce(publicState);
+  const result=(()=>{
+    if(!publicState||publicState.phase!=="ended"||!publicState.endedAt)return;
+    const resultKey=`${gameId}:${publicState.endedAt}`;
+    if(shownBattleResultKey===resultKey)return;
+    shownBattleResultKey=resultKey;
+    const draw=Number(publicState.winner||0)===0;
+    const win=!draw&&Number(publicState.winner||0)===Number(myPlayer||0);
+    if(!draw)tryPlaySound(win?"victory":"defeat",.95);
+    stopMusic(false);
+    const adventure=publicState.mode==="adventure";
+    showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
+    if(!adventure&&publicState.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
+      void globalThis.hvPvpRankingRecordResult(publicState,gameId);
+    }
+    if(adventure)completeAdventureBattleOnce(publicState);
+  })();
+  runHallvallaEffectHooks("battle.resultChecked",{state:publicState});
+  return result;
 }
 /* Crear/Unirse PvP viven únicamente en el módulo clean-room. */
 
@@ -876,9 +880,11 @@ function makeStartingPrincipalUnit(card,owner,leaderType,units=[],slotIndex=0){
   const cell=getPrincipalStartCell(owner,units,slotIndex);
   if(!cell)return null;
   const unit=makeUnit({...card,owner,leaderType,summonOrigin:"principal",fieldGeneratedSummon:true},cell.x,cell.y);
-  return{...unit,principal:true,principalStart:true,principalSlot:slotIndex+1,summonOrigin:"principal",fieldGeneratedSummon:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+  const principal={...unit,principal:true,principalStart:true,principalSlot:slotIndex+1,summonOrigin:"principal",fieldGeneratedSummon:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+  return applyHallvallaValueHooks("principal.makeUnit",principal,{card,owner,leaderType,units,slotIndex});
 }
 function makeStartingPrincipalUnits(cards=[],owner,leaderType,units=[],principalSlots=(cards||[]).length){
+  runHallvallaEffectHooks("principal.beforeMakeUnits",{cards,owner,leaderType,units,principalSlots});
   const out=[];
   (cards||[]).slice(0,principalSlots).forEach((card,index)=>{
     const unit=makeStartingPrincipalUnit(card,owner,leaderType,[...(units||[]),...out],index);

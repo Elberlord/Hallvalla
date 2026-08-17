@@ -109,11 +109,19 @@ function normalizeDragonEggs(list){
   }));
 }
 function getDragonEggs(){
+  const override=resolveHallvallaOverride("dragon.eggs.get",{});
+  if(override.handled)return override.value;
   try{return normalizeDragonEggs(JSON.parse(localStorage.getItem(DRAGON_EGG_STORAGE_KEY)||"[]"));}
   catch(e){return[];}
 }
-function saveDragonEggs(eggs){try{localStorage.setItem(DRAGON_EGG_STORAGE_KEY,JSON.stringify(normalizeDragonEggs(eggs)));}catch(e){}}
+function saveDragonEggs(eggs){
+  const override=resolveHallvallaOverride("dragon.eggs.save",{eggs});
+  if(override.handled)return override.value;
+  try{localStorage.setItem(DRAGON_EGG_STORAGE_KEY,JSON.stringify(normalizeDragonEggs(eggs)));}catch(e){}
+}
 function grantDragonEgg(battle){
+  const override=resolveHallvallaOverride("dragon.egg.grant",{battle});
+  if(override.handled)return override.value;
   const def=getDragonContractDefByBattle(battle);
   if(!def)return null;
   const eggs=getDragonEggs();
@@ -136,101 +144,62 @@ for(const def of Object.values(DRAGON_CONTRACT_DEFS)){
   LEADER_BASE_RANGE[def.leaderType]=def.range;
 }
 
-const dragonOriginalGetLeaderAttack=getLeaderAttack;
-getLeaderAttack=function(type,level=1){
-  const def=Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===type);
-  return def?def.atk:dragonOriginalGetLeaderAttack(type,level);
-};
-const dragonOriginalGetLeaderGuard=getLeaderGuard;
-getLeaderGuard=function(type,level=1){
-  const def=Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===type);
-  return def?def.guard:dragonOriginalGetLeaderGuard(type,level);
-};
-const dragonOriginalGetLeaderRange=getLeaderRange;
-getLeaderRange=function(type,level=1){
-  const def=Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===type);
-  return def?def.range:dragonOriginalGetLeaderRange(type,level);
-};
-const dragonOriginalGetLeaderBattleStats=getLeaderBattleStats;
-getLeaderBattleStats=function(type,level,abilityKey=""){
-  const def=Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===type);
-  if(def)return{hp:def.hp,atk:def.atk,buffTier:4};
-  return dragonOriginalGetLeaderBattleStats(type,level,abilityKey);
-};
-const dragonOriginalGetLeaderProgressText=getLeaderProgressText;
-getLeaderProgressText=function(type,level,abilityKey=""){
-  const def=Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===type);
-  if(def)return `Jefe adulto · HP ${def.hp} · AT ${def.atk} · GD ${def.guard} · PREC ${def.precision} · EVA ${def.evasion} · MOV natural ${def.naturalMov} · RG ${def.range} · Vuelo · MOV efectivo 0 como líder`;
-  return dragonOriginalGetLeaderProgressText(type,level,abilityKey);
-};
+(function registerDragonContractLeaderCombatHooks(){
+  const findDef=type=>Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===type)||null;
+  registerHallvallaHook("leader.attack",(value,{type})=>findDef(type)?.atk??value,{id:"dragon-contract:leader-attack"});
+  registerHallvallaHook("leader.guard",(value,{type})=>findDef(type)?.guard??value,{id:"dragon-contract:leader-guard"});
+  registerHallvallaHook("leader.range",(value,{type})=>findDef(type)?.range??value,{id:"dragon-contract:leader-range"});
+  registerHallvallaHook("leader.battleStats",(value,{type})=>{const def=findDef(type);return def?{hp:def.hp,atk:def.atk,buffTier:4}:value;},{id:"dragon-contract:leader-stats"});
+  registerHallvallaHook("leader.progressText",({type})=>{const def=findDef(type);return def?{handled:true,value:`Jefe adulto · HP ${def.hp} · AT ${def.atk} · GD ${def.guard} · PREC ${def.precision} · EVA ${def.evasion} · MOV natural ${def.naturalMov} · RG ${def.range} · Vuelo · MOV efectivo 0 como líder`}:{handled:false};},{id:"dragon-contract:leader-progress"});
+  registerHallvallaHook("leader.make",(leader,{owner,leaderType})=>{
+    const def=findDef(leaderType);
+    if(!def)return leader;
+    return{
+      ...leader,
+      key:def.leaderType,
+      name:`${def.enemyName} J${owner}`,
+      portrait:def.portrait,
+      hp:def.hp,maxHp:def.hp,atk:def.atk,baseGuard:def.guard,guard:def.guard,
+      dex:def.precision,agi:def.evasion,dragonPrecision:def.precision,dragonEvasion:def.evasion,
+      mov:def.naturalMov,dragonNaturalMov:def.naturalMov,range:def.range,
+      aerial:true,flight:true,dragonBoss:true,dragonElement:def.element,
+      usesCombatPrecision:true,usesCombatEvasion:true,
+      icon:def.element==="fire"?"🔥":def.element==="ice"?"❄️":"⚡",
+      text:`Vuelo. Jefe inmóvil: MOV efectivo 0. Se activa cuando un rival entra en RG 5. Ciclo: ataque directo, ataque directo, ataque elemental 3×3.`
+    };
+  },{id:"dragon-contract:make-leader"});
+  registerHallvallaHook("leader.makeAdventureEnemy",(leader,{battle})=>{const def=getDragonContractDefByBattle(battle);return def?{...leader,name:def.enemyName,portrait:def.portrait,dragonContractBattleId:battle.id}:leader;},{id:"dragon-contract:make-adventure-enemy"});
 
-const dragonOriginalMakeLeader=makeLeader;
-makeLeader=function(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){
-  const leader=dragonOriginalMakeLeader(owner,x,y,leaderType,leaderLevel,leaderAbility);
-  const def=Object.values(DRAGON_CONTRACT_DEFS).find(it=>it.leaderType===leaderType);
-  if(!def)return leader;
-  return{
-    ...leader,
-    key:def.leaderType,
-    name:`${def.enemyName} J${owner}`,
-    portrait:def.portrait,
-    hp:def.hp,maxHp:def.hp,atk:def.atk,baseGuard:def.guard,guard:def.guard,
-    dex:def.precision,agi:def.evasion,dragonPrecision:def.precision,dragonEvasion:def.evasion,
-    mov:def.naturalMov,dragonNaturalMov:def.naturalMov,range:def.range,
-    aerial:true,flight:true,dragonBoss:true,dragonElement:def.element,
-    usesCombatPrecision:true,usesCombatEvasion:true,
-    icon:def.element==="fire"?"🔥":def.element==="ice"?"❄️":"⚡",
-    text:`Vuelo. Jefe inmóvil: MOV efectivo 0. Se activa cuando un rival entra en RG 5. Ciclo: ataque directo, ataque directo, ataque elemental 3×3.`
-  };
-};
-const dragonOriginalMakeAdventureEnemyLeader=makeAdventureEnemyLeader;
-makeAdventureEnemyLeader=function(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility){
-  const leader=dragonOriginalMakeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);
-  const def=getDragonContractDefByBattle(battle);
-  if(!def)return leader;
-  return{...leader,name:def.enemyName,portrait:def.portrait,dragonContractBattleId:battle.id};
-};
-
-/* Dragones usan PREC/EVA reales; los demás líderes conservan la regla de impacto automático. */
-const dragonOriginalGetCombatMods=getCombatMods;
-getCombatMods=function(attacker,defender){
-  const mods=dragonOriginalGetCombatMods(attacker,defender);
-  if(Number(defender?.electrocutionTurns||0)>0){mods.noCounter=true;mods.notes=[...(mods.notes||[]),`${defender.name} no puede contraatacar por Electrocución.`];}
-  return mods;
-};
-
-const dragonOriginalGetAttackPrecisionScore=getAttackPrecisionScore;
-getAttackPrecisionScore=function(attacker,mods={}){
-  if(attacker?.dragonBoss||attacker?.usesCombatPrecision){
+  registerHallvallaHook("combat.mods",(mods,{defender})=>{
+    if(Number(defender?.electrocutionTurns||0)>0){mods.noCounter=true;mods.notes=[...(mods.notes||[]),`${defender.name} no puede contraatacar por Electrocución.`];}
+    return mods;
+  },{id:"dragon-contract:combat-mods"});
+  registerHallvallaHook("combat.attackPrecision",({attacker,mods={}})=>{
+    if(!(attacker?.dragonBoss||attacker?.usesCombatPrecision))return{handled:false};
     const raw=Number(attacker.dragonPrecision??attacker.dex??0)+(Number(mods.attackerDex)||0);
-    return applyCombatPrecisionPercentPenalty(raw,mods);
-  }
-  return dragonOriginalGetAttackPrecisionScore(attacker,mods);
-};
-const dragonOriginalGetDefenseEvasionScore=getDefenseEvasionScore;
-getDefenseEvasionScore=function(defender,mods={}){
-  if(defender?.dragonBoss||defender?.usesCombatEvasion)return Math.max(0,Number(defender.dragonEvasion??defender.agi??0)+(Number(mods.defenderAgi)||0));
-  return dragonOriginalGetDefenseEvasionScore(defender,mods);
-};
-const dragonOriginalGetHitChance=getHitChance;
-getHitChance=function(attacker,defender,mods={}){
-  if(!attacker)return 0;
-  const dragonAttacker=!!(attacker.dragonBoss||attacker.usesCombatPrecision);
-  const dragonDefender=!!(defender?.dragonBoss||defender?.usesCombatEvasion);
-  if(!dragonAttacker&&!dragonDefender)return dragonOriginalGetHitChance(attacker,defender,mods);
-  const attackScore=dragonAttacker?getAttackPrecisionScore(attacker,mods):(attacker.leader?999:getAttackPrecisionScore(attacker,mods));
-  const defenseScore=dragonDefender?getDefenseEvasionScore(defender,mods):(defender?.leader?0:getDefenseEvasionScore(defender,mods));
-  if(attackScore<=0)return 0;
-  return attackScore>=defenseScore?100:0;
-};
-const dragonOriginalRollHit=rollHit;
-rollHit=function(attacker,defender,mods={}){
-  if(!(attacker?.dragonBoss||attacker?.usesCombatPrecision||defender?.dragonBoss||defender?.usesCombatEvasion))return dragonOriginalRollHit(attacker,defender,mods);
-  const chance=getHitChance(attacker,defender,mods);
-  const attackScore=attacker?.dragonBoss||attacker?.usesCombatPrecision?getAttackPrecisionScore(attacker,mods):(attacker?.leader?"LÍDER":getAttackPrecisionScore(attacker,mods));
-  const defenseScore=defender?.dragonBoss||defender?.usesCombatEvasion?getDefenseEvasionScore(defender,mods):(defender?.leader?"LÍDER":getDefenseEvasionScore(defender,mods));
-  return{hit:chance>=100,roll:`PREC ${attackScore}`,chance:`EVA ${defenseScore}`};
-};
+    return{handled:true,value:applyCombatPrecisionPercentPenalty(raw,mods)};
+  },{id:"dragon-contract:attack-precision"});
+  registerHallvallaHook("combat.defenseEvasion",({defender,mods={}})=>{
+    if(!(defender?.dragonBoss||defender?.usesCombatEvasion))return{handled:false};
+    return{handled:true,value:Math.max(0,Number(defender.dragonEvasion??defender.agi??0)+(Number(mods.defenderAgi)||0))};
+  },{id:"dragon-contract:defense-evasion"});
+  registerHallvallaHook("combat.hitChance",({attacker,defender,mods={}})=>{
+    if(!attacker)return{handled:false};
+    const dragonAttacker=!!(attacker.dragonBoss||attacker.usesCombatPrecision);
+    const dragonDefender=!!(defender?.dragonBoss||defender?.usesCombatEvasion);
+    if(!dragonAttacker&&!dragonDefender)return{handled:false};
+    const attackScore=dragonAttacker?getAttackPrecisionScore(attacker,mods):(attacker.leader?999:getAttackPrecisionScore(attacker,mods));
+    const defenseScore=dragonDefender?getDefenseEvasionScore(defender,mods):(defender?.leader?0:getDefenseEvasionScore(defender,mods));
+    return{handled:true,value:attackScore<=0?0:(attackScore>=defenseScore?100:0)};
+  },{id:"dragon-contract:hit-chance"});
+  registerHallvallaHook("combat.rollHit",({attacker,defender,mods={}})=>{
+    if(!(attacker?.dragonBoss||attacker?.usesCombatPrecision||defender?.dragonBoss||defender?.usesCombatEvasion))return{handled:false};
+    const chance=getHitChance(attacker,defender,mods);
+    const attackScore=attacker?.dragonBoss||attacker?.usesCombatPrecision?getAttackPrecisionScore(attacker,mods):(attacker?.leader?"LÍDER":getAttackPrecisionScore(attacker,mods));
+    const defenseScore=defender?.dragonBoss||defender?.usesCombatEvasion?getDefenseEvasionScore(defender,mods):(defender?.leader?"LÍDER":getDefenseEvasionScore(defender,mods));
+    return{handled:true,value:{hit:chance>=100,roll:`PREC ${attackScore}`,chance:`EVA ${defenseScore}`}};
+  },{id:"dragon-contract:roll-hit"});
+})();
 
 /* -------------------------------------------------------------------------
    Estados elementales
@@ -251,83 +220,64 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
   }
   return{...unit,dragonFrostTurns:Math.max(1,Number(stacks)||1),dragonFrostFresh:true,dragonFrostSource:sourceName};
 }
-const dragonOriginalEffectiveAgi=effectiveAgi;
-effectiveAgi=function(u){
-  const base=dragonOriginalEffectiveAgi(u);
-  const penalty=(Number(u?.electrocutionTurns||0)>0?2:0)+(Number(u?.dragonFrostTurns||0)>0?2:0);
-  return Math.max(0,base-penalty);
-};
-const dragonOriginalEffectiveMov=effectiveMov;
-effectiveMov=function(u){
-  const base=dragonOriginalEffectiveMov(u);
-  return Math.max(0,base-(Number(u?.dragonFrostTurns||0)>0?2:0));
-};
-const dragonOriginalClearTurnTempStatsForOwnerUnit=clearTurnTempStatsForOwnerUnit;
-clearTurnTempStatsForOwnerUnit=function(u,turnKey){
-  let next=dragonOriginalClearTurnTempStatsForOwnerUnit(u,turnKey);
-  const electroFresh=!!next.electrocutionFresh;
-  const frostFresh=!!next.dragonFrostFresh;
-  const electro=electroFresh?Math.max(0,Number(next.electrocutionTurns||0)):Math.max(0,Number(next.electrocutionTurns||0)-1);
-  const frost=frostFresh?Math.max(0,Number(next.dragonFrostTurns||0)):Math.max(0,Number(next.dragonFrostTurns||0)-1);
-  next={...next,electrocutionTurns:electro,dragonFrostTurns:frost,electrocutionFresh:false,dragonFrostFresh:false};
-  if(electro<=0){next.electrocutionSource="";}
-  if(frost<=0){next.dragonFrostSource="";}
-  return next;
-};
-const dragonOriginalGetUnitStatusEntries=getUnitStatusEntries;
-getUnitStatusEntries=function(u){
-  const entries=dragonOriginalGetUnitStatusEntries(u);
-  if(Number(u?.electrocutionTurns||0)>0)entries.push({label:`Electrocución ${u.electrocutionTurns}`,name:"Electrocución",desc:"-2 AGI y no puede contraatacar. Si recibe otro ataque eléctrico antes de disiparse, el estado se consume y recibe Parálisis 1.",kind:"debuff agi-debuff",icon:"paralysis"});
-  if(Number(u?.dragonFrostTurns||0)>0)entries.push({label:`Escarcha ${u.dragonFrostTurns}`,name:"Escarcha",desc:"-2 MOV y -2 AGI. Si recibe otro ataque de hielo antes de disiparse, Escarcha se consume y recibe Congelación 1.",kind:"debuff mov-debuff",icon:"debuff"});
-  if(u?.frozenSource&&u.noAttackTurnKey===publicState?.turnKey)entries.push({label:"Congelación 1",name:"Congelación",desc:"No puede moverse, atacar, defender ni contraatacar durante esta activación.",kind:"debuff",icon:"control"});
-  if(u?.dragonBoss&&Number(u.dragonCharge||0)>=2)entries.push({label:"Carga 3/3",name:"Ataque elemental preparado",desc:"En su próxima activación con un objetivo dentro de RG 5, el dragón usará su ataque elemental de área 3×3.",kind:"buff atk-buff",icon:"buff"});
-  else if(u?.dragonBoss&&Number(u.dragonCharge||0)>0)entries.push({label:`Carga ${Number(u.dragonCharge||0)+1}/3`,name:"Carga elemental",desc:"El dragón está avanzando hacia su tercer ataque: la descarga elemental de área.",kind:"buff",icon:"buff"});
-  return entries;
-};
+(function registerDragonContractStatusHooks(){
+  registerHallvallaHook("unit.effectiveAgi",(base,{unit:u})=>{
+    const penalty=(Number(u?.electrocutionTurns||0)>0?2:0)+(Number(u?.dragonFrostTurns||0)>0?2:0);
+    return Math.max(0,base-penalty);
+  },{id:"dragon-contract:effective-agi"});
+  registerHallvallaHook("unit.effectiveMov",(base,{unit:u})=>Math.max(0,base-(Number(u?.dragonFrostTurns||0)>0?2:0)),{id:"dragon-contract:effective-mov"});
+  registerHallvallaHook("turn.clearTempStats",(next)=>{
+    const electroFresh=!!next.electrocutionFresh;
+    const frostFresh=!!next.dragonFrostFresh;
+    const electro=electroFresh?Math.max(0,Number(next.electrocutionTurns||0)):Math.max(0,Number(next.electrocutionTurns||0)-1);
+    const frost=frostFresh?Math.max(0,Number(next.dragonFrostTurns||0)):Math.max(0,Number(next.dragonFrostTurns||0)-1);
+    next={...next,electrocutionTurns:electro,dragonFrostTurns:frost,electrocutionFresh:false,dragonFrostFresh:false};
+    if(electro<=0)next.electrocutionSource="";
+    if(frost<=0)next.dragonFrostSource="";
+    return next;
+  },{id:"dragon-contract:clear-temp-stats"});
+  registerHallvallaHook("unit.statusEntries",(entries,{unit:u})=>{
+    if(Number(u?.electrocutionTurns||0)>0)entries.push({label:`Electrocución ${u.electrocutionTurns}`,name:"Electrocución",desc:"-2 AGI y no puede contraatacar. Si recibe otro ataque eléctrico antes de disiparse, el estado se consume y recibe Parálisis 1.",kind:"debuff agi-debuff",icon:"paralysis"});
+    if(Number(u?.dragonFrostTurns||0)>0)entries.push({label:`Escarcha ${u.dragonFrostTurns}`,name:"Escarcha",desc:"-2 MOV y -2 AGI. Si recibe otro ataque de hielo antes de disiparse, Escarcha se consume y recibe Congelación 1.",kind:"debuff mov-debuff",icon:"debuff"});
+    if(u?.frozenSource&&u.noAttackTurnKey===publicState?.turnKey)entries.push({label:"Congelación 1",name:"Congelación",desc:"No puede moverse, atacar, defender ni contraatacar durante esta activación.",kind:"debuff",icon:"control"});
+    if(u?.dragonBoss&&Number(u.dragonCharge||0)>=2)entries.push({label:"Carga 3/3",name:"Ataque elemental preparado",desc:"En su próxima activación con un objetivo dentro de RG 5, el dragón usará su ataque elemental de área 3×3.",kind:"buff atk-buff",icon:"buff"});
+    else if(u?.dragonBoss&&Number(u.dragonCharge||0)>0)entries.push({label:`Carga ${Number(u.dragonCharge||0)+1}/3`,name:"Carga elemental",desc:"El dragón está avanzando hacia su tercer ataque: la descarga elemental de área.",kind:"buff",icon:"buff"});
+    return entries;
+  },{id:"dragon-contract:status-entries"});
+})();
 
 /* -------------------------------------------------------------------------
    Integración en aventura y mazos
    ------------------------------------------------------------------------- */
-const dragonOriginalGetAdventureBattle=getAdventureBattle;
-getAdventureBattle=function(battleId){return DRAGON_CONTRACT_BATTLES[battleId]||dragonOriginalGetAdventureBattle(battleId);};
-const dragonOriginalGetAdventureChapterForBattle=getAdventureChapterForBattle;
-getAdventureChapterForBattle=function(battle){return isDragonContractBattle(battle)?DRAGON_CONTRACT_CHAPTER:dragonOriginalGetAdventureChapterForBattle(battle);};
-const dragonOriginalIsBattleUnlocked=isBattleUnlocked;
-isBattleUnlocked=function(battle){return isDragonContractBattle(battle)?areDragonContractsUnlocked():dragonOriginalIsBattleUnlocked(battle);};
-const dragonOriginalBattleAllowsAiPrincipal=battleAllowsAiPrincipal;
-battleAllowsAiPrincipal=function(battle){return isDragonContractBattle(battle)?false:dragonOriginalBattleAllowsAiPrincipal(battle);};
-const dragonOriginalGetAiPrincipalSlotsForBattle=getAiPrincipalSlotsForBattle;
-getAiPrincipalSlotsForBattle=function(battle){return isDragonContractBattle(battle)?0:dragonOriginalGetAiPrincipalSlotsForBattle(battle);};
-const dragonOriginalGetAiPrincipalKeysForBattle=getAiPrincipalKeysForBattle;
-getAiPrincipalKeysForBattle=function(battle,initial){return isDragonContractBattle(battle)?[]:dragonOriginalGetAiPrincipalKeysForBattle(battle,initial);};
-const dragonOriginalMakeEnemyDeckForBattle=makeEnemyDeckForBattle;
-makeEnemyDeckForBattle=function(battle,enemyLeaderType){return isDragonContractBattle(battle)?{deck:[],hand:[]}:dragonOriginalMakeEnemyDeckForBattle(battle,enemyLeaderType);};
-const dragonOriginalGetBattleRewardLabel=getBattleRewardLabel;
-getBattleRewardLabel=function(battle){
-  if(!isDragonContractBattle(battle))return dragonOriginalGetBattleRewardLabel(battle);
-  return `${battle.xp} EXP · ${battle.gold} Oro · Huevo de Dragón x1`;
-};
-const dragonOriginalGetNextAdventureBattle=getNextAdventureBattle;
-getNextAdventureBattle=function(battle){return isDragonContractBattle(battle)?null:dragonOriginalGetNextAdventureBattle(battle);};
-const dragonOriginalGetNextAdventureBattleId=getNextAdventureBattleId;
-getNextAdventureBattleId=function(){return isDragonContractBattle(publicState?.adventureBattleId)?"":dragonOriginalGetNextAdventureBattleId();};
+(function registerDragonContractAdventureHooks(){
+  registerHallvallaHook("adventure.getBattle",({battleId})=>DRAGON_CONTRACT_BATTLES[battleId]?{handled:true,value:DRAGON_CONTRACT_BATTLES[battleId]}:{handled:false},{id:"dragon-contract:get-battle"});
+  registerHallvallaHook("adventure.chapterForBattle",({battle})=>isDragonContractBattle(battle)?{handled:true,value:DRAGON_CONTRACT_CHAPTER}:{handled:false},{id:"dragon-contract:chapter"});
+  registerHallvallaHook("adventure.isBattleUnlocked",({battle})=>isDragonContractBattle(battle)?{handled:true,value:areDragonContractsUnlocked()}:{handled:false},{id:"dragon-contract:unlocked"});
+  registerHallvallaHook("adventure.aiPrincipalAllowed",({battle})=>isDragonContractBattle(battle)?{handled:true,value:false}:{handled:false},{id:"dragon-contract:ai-principal-allowed"});
+  registerHallvallaHook("adventure.aiPrincipalSlots",({battle})=>isDragonContractBattle(battle)?{handled:true,value:0}:{handled:false},{id:"dragon-contract:ai-principal-slots"});
+  registerHallvallaHook("adventure.aiPrincipalKeys",({battle})=>isDragonContractBattle(battle)?{handled:true,value:[]}:{handled:false},{id:"dragon-contract:ai-principal-keys"});
+  registerHallvallaHook("adventure.makeEnemyDeck",({battle})=>isDragonContractBattle(battle)?{handled:true,value:{deck:[],hand:[]}}:{handled:false},{id:"dragon-contract:enemy-deck"});
+  registerHallvallaHook("adventure.rewardLabel",({battle})=>isDragonContractBattle(battle)?{handled:true,value:`${battle.xp} EXP · ${battle.gold} Oro · Huevo de Dragón x1`}:{handled:false},{id:"dragon-contract:reward-label"});
+  registerHallvallaHook("adventure.nextBattle",({battle})=>isDragonContractBattle(battle)?{handled:true,value:null}:{handled:false},{id:"dragon-contract:next-battle"});
+  registerHallvallaHook("adventure.nextBattleId",({state})=>isDragonContractBattle(state?.adventureBattleId)?{handled:true,value:""}:{handled:false},{id:"dragon-contract:next-battle-id"});
+  registerHallvallaHook("adventure.completeBattleOnce",({pub})=>{
+    if(!pub||pub.mode!=="adventure"||pub.winner!==1||!isDragonContractBattle(pub.adventureBattleId))return{handled:false};
+    const battle=getAdventureBattle(pub.adventureBattleId);
+    const already=hasClaimedDragonContract(battle.id);
+    if(already)return{handled:true,value:{awarded:false,xp:battle.xp||0,gold:0,levelUps:0,cards:[],battle,progress:getAdventureProgress(),dragonContract:true,eggAwarded:false}};
+    const xpResult=addPlayerXp(battle.xp||0);
+    const profile=getPlayerProfile();
+    profile.gold=(profile.gold||0)+(battle.gold||0);
+    savePlayerProfile(profile);
+    const egg=grantDragonEgg(battle);
+    markDragonContractClaimed(battle.id);
+    renderPlayerProfile(profile);renderHomeProgress();
+    setTimeout(()=>hvAlert(`Has reclamado un Huevo de Dragón. Debe equiparse como Personaje Principal y acumular 1000 eliminaciones aliadas para quedar listo para eclosionar.
 
-const dragonOriginalCompleteAdventureBattleOnce=completeAdventureBattleOnce;
-completeAdventureBattleOnce=function(pub){
-  if(!pub||pub.mode!=="adventure"||pub.winner!==1||!isDragonContractBattle(pub.adventureBattleId))return dragonOriginalCompleteAdventureBattleOnce(pub);
-  const battle=getAdventureBattle(pub.adventureBattleId);
-  const already=hasClaimedDragonContract(battle.id);
-  if(already)return{awarded:false,xp:battle.xp||0,gold:0,levelUps:0,cards:[],battle,progress:getAdventureProgress(),dragonContract:true,eggAwarded:false};
-  const xpResult=addPlayerXp(battle.xp||0);
-  const profile=getPlayerProfile();
-  profile.gold=(profile.gold||0)+(battle.gold||0);
-  savePlayerProfile(profile);
-  const egg=grantDragonEgg(battle);
-  markDragonContractClaimed(battle.id);
-  renderPlayerProfile(profile);renderHomeProgress();
-  setTimeout(()=>hvAlert(`Has reclamado un Huevo de Dragón. Debe equiparse como Personaje Principal y acumular 1000 eliminaciones aliadas para quedar listo para eclosionar.\n\nHuevos guardados: ${getDragonEggs().length}.`,`Contrato completado: ${battle.enemyName}`),220);
-  return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps||0,cards:[],battle,progress:getAdventureProgress(),profile,dragonContract:true,eggAwarded:!!egg,egg};
-};
+Huevos guardados: ${getDragonEggs().length}.`,`Contrato completado: ${battle.enemyName}`),220);
+    return{handled:true,value:{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps||0,cards:[],battle,progress:getAdventureProgress(),profile,dragonContract:true,eggAwarded:!!egg,egg}};
+  },{id:"dragon-contract:complete-battle"});
+})();
 
 /* -------------------------------------------------------------------------
    IA del jefe: inmóvil, radio 5, dos ataques directos y un elemental 3×3.
@@ -509,24 +459,17 @@ async function dragonContractEnemyTurn(){
   if(!dragonLifecycleAlive())return;
   await update(ref(db,`games/${dragonGameId}/public`),{...common,units:restoreTurnGuardForOwner(units,1),currentPlayer:1,turnPhase:"draw",turn:nextTurn,turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp()});
 }
-const dragonOriginalAdventureEnemyTurn=adventureEnemyTurn;
-adventureEnemyTurn=async function(){
-  if(publicState?.mode==="adventure"&&isDragonContractBattle(publicState?.adventureBattleId))return dragonContractEnemyTurn();
-  if(gameId){
+registerHallvallaHook("adventure.enemyTurn",async({state,gameId:currentGameId})=>{
+  if(state?.mode==="adventure"&&isDragonContractBattle(state?.adventureBattleId))return{handled:true,value:await dragonContractEnemyTurn()};
+  if(currentGameId){
     try{
-      const snap=await get(ref(db,`games/${gameId}/public/adventureBattleId`));
-      if(snap.exists()&&isDragonContractBattle(snap.val()))return dragonContractEnemyTurn();
+      const snap=await get(ref(db,`games/${currentGameId}/public/adventureBattleId`));
+      if(snap.exists()&&isDragonContractBattle(snap.val()))return{handled:true,value:await dragonContractEnemyTurn()};
     }catch(e){}
   }
-  return dragonOriginalAdventureEnemyTurn();
-};
+  return{handled:false};
+},{id:"dragon-contract:enemy-turn"});
 
-/* Marca el duelo para la interfaz y deja claro que el enemigo no tiene mazo. */
-const dragonOriginalStartAdventure=startAdventure;
-startAdventure=async function(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
-  const result=await dragonOriginalStartAdventure(specialKey,battleId);
-  return result;
-};
 
 /* -------------------------------------------------------------------------
    Flujo del botón Eventos y preparación obligatoria del mazo
@@ -1793,15 +1736,9 @@ async function prepareDragonContractDeck(battleId){
   setTimeout(()=>setHint?.('Guarda el mazo para iniciar El Contrato de las Bestias.'),50);
 }
 applyHallvallaEventUiSettings();
-const dragonOriginalCloseDeckBuilder=closeDeckBuilder;
-closeDeckBuilder=function(){
-  const result=dragonOriginalCloseDeckBuilder();
-  pendingDragonContractBattleId="";
-  return result;
-};
-const dragonOriginalSaveCurrentDeck=saveCurrentDeck;
-saveCurrentDeck=async function(){
-  if(!pendingDragonContractBattleId)return dragonOriginalSaveCurrentDeck();
+registerHallvallaHook("deckBuilder.closed",()=>{pendingDragonContractBattleId="";},{id:"dragon-contract:deck-builder-closed"});
+registerHallvallaHook("deck.save",async()=>{
+  if(!pendingDragonContractBattleId)return{handled:false};
   const principalSlots=getCurrentPrincipalSlots();
   const requiredDeckSize=getDeckSizeForPrincipalSlots(principalSlots);
   currentDeckDraft=sanitizeDeckDraftToCollection(currentDeckDraft);
@@ -1810,13 +1747,14 @@ saveCurrentDeck=async function(){
   const principalValidation=validatePrincipalSelection(currentPrincipalKeys,currentDeckDraft,principalSlots);
   const errors=[...deckValidation.errors,...principalValidation.errors];
   if(principalSlots!==3)errors.unshift("El Contrato exige líder nivel 7 y tres Personajes Principales.");
-  if(errors.length){await hvAlert(`No se puede iniciar todavía: ${errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return;}
+  if(errors.length){await hvAlert(`No se puede iniciar todavía: ${errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return{handled:true,value:undefined};}
   const battleId=pendingDragonContractBattleId;pendingDragonContractBattleId="";
   saveDeck(currentDeckDraft);savePrincipalKeys(currentPrincipalKeys);closeDeckBuilder();
   await hvAlert(`Mazo guardado con ${requiredDeckSize} cartas. Entrarás con 3 Personajes Principales ya desplegados y 20 cartas para robar.`,"Contrato preparado");
   const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
   await startAdventure(special,battleId);
-};
+  return{handled:true,value:undefined};
+},{id:"dragon-contract:deck-save"});
 
 /* Estilos autocontenidos del selector de eventos y escala de los líderes dragón. */
 

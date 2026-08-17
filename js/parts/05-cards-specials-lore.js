@@ -414,7 +414,8 @@ function normalizeCraftMaterials(materials={}){
 }
 function maxCopiesForCard(card){
   const rarity=cardRarity(card);
-  return rarity==="básica"||rarity==="basica"||rarity==="basic"?DECK_RULES.basicMaxCopies:DECK_RULES.nonBasicMaxCopies;
+  const base=rarity==="básica"||rarity==="basica"||rarity==="basic"?DECK_RULES.basicMaxCopies:DECK_RULES.nonBasicMaxCopies;
+  return applyHallvallaValueHooks("deck.maxCopies",base,{card});
 }
 function getCardSurplusCopies(card){
   return Math.max(0,Number(card?.qty||0)-maxCopiesForCard(card));
@@ -437,7 +438,7 @@ function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
     }
   });
   if(cards.length!==requiredSize)errors.push(`El mazo debe tener exactamente ${requiredSize} cartas: ${requiredSlots} Personaje${requiredSlots===1?"":"s"} Principal${requiredSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`);
-  return{valid:errors.length===0,errors,counts,principalSlots:requiredSlots,deckSize:requiredSize};
+  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:requiredSlots,deckSize:requiredSize},{cards,principalSlots});
 }
 
 const SPECIAL_HUMAN_CARD_DATA=[
@@ -644,7 +645,8 @@ function getErictoLinkedReanimated(ericto,units=publicState?.units||[]){
   return (units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===ericto.id&&Number(u.hp||0)>0);
 }
 function getErictoEligibleCorpses(_ericto,graveyard=publicState?.erictoGraveyard||[]){
-  return normalizeErictoGraveyard(graveyard).filter(rec=>!rec.used&&rec.snapshot&&!rec.snapshot.leader&&!rec.snapshot.reanimated&&!rec.snapshot.solomonSummon);
+  const corpses=normalizeErictoGraveyard(graveyard).filter(rec=>!rec.used&&rec.snapshot&&!rec.snapshot.leader&&!rec.snapshot.reanimated&&!rec.snapshot.solomonSummon);
+  return applyHallvallaValueHooks("ericto.eligibleCorpses",corpses,{ericto:_ericto,graveyard});
 }
 function resolveErictoLifecycle(afterUnits=[]){
   let units=[...(afterUnits||[])],logs=[];
@@ -1816,7 +1818,7 @@ function clearTurnTempStatsForOwnerUnit(u,turnKey){
   const genghisMovStillActive=!!(u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===turnKey);
   const hannibalAtkStillActive=!!(u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===turnKey);
   const hannibalMovStillActive=!!(u&&u.hannibalMovDebuffTurnKey&&u.hannibalMovDebuffTurnKey===turnKey);
-  return {
+  const next={
     ...u,
     moved:false,
     movedSpaces:0,
@@ -1880,6 +1882,7 @@ function clearTurnTempStatsForOwnerUnit(u,turnKey){
     arcaneBoltUsedTurn:false,
     prepareHuntUsedTurn:false
   };
+  return applyHallvallaValueHooks("turn.clearTempStats",next,{unit:u,turnKey});
 }
 function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
   let out=[...(units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;

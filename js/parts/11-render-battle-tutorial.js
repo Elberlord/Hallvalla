@@ -320,7 +320,7 @@ function getUnitStatusEntries(u){
   if(u.richardBuffSource)add(`+2 Vida`,`Vida aumentada`,`Vida máxima y actual aumentada mientras Richard siga en campo.`,"buff hp-buff","hp");
   if(u.convertedByTrap)add(`Control`,`Control alterado`,`Unidad convertida temporalmente por trampa legendaria.`,"debuff curse","control");
   if(hasVeilCurse(u)){const count=Math.max(1,Number(u.veilCurseTurnsRemaining||1));add(`Cuenta ${count}`,`Cuenta regresiva mortal`,`Al final de cada turno propio baja 1. Cuando llegue a 0, esta unidad caerá derrotada. Puede eliminarse con Purificación. Fuente: ${u.veilCurseSourceName||"Morgana"}.`,"debuff curse","curse",{hiddenOnBoard:true});}
-  return entries;
+  return applyHallvallaValueHooks("unit.statusEntries",entries,{unit:u});
 }
 
 function getUnitStatusSealShortText(entry){
@@ -348,9 +348,9 @@ function renderUnitStatusSeal(entry,idx=0){
   return `<button class="unit-status-bubble unit-status-seal ${kind}" type="button" data-status-index="${idx}" title="${title}" aria-label="${title}"><span class="unit-status-seal-ring" aria-hidden="true"></span><span class="unit-status-seal-core">${getStatusEntryIconHtml(entry)}</span>${shortText?`<span class="unit-status-seal-stack">${escapeHtml(shortText)}</span>`:""}</button>`;
 }
 function getUnitStatusBubblesHtml(u){
-  if(!u)return "";
+  if(!u)return applyHallvallaValueHooks("unit.statusBubblesHtml","",{unit:u});
   const entries=getUnitStatusEntries(u).filter(entry=>!entry.hiddenOnBoard);
-  if(!entries.length)return "";
+  if(!entries.length)return applyHallvallaValueHooks("unit.statusBubblesHtml","",{unit:u});
   const helpful=[];
   const harmful=[];
   entries.forEach(entry=>{(isHelpfulStatusEntry(entry)?helpful:harmful).push(entry);});
@@ -366,7 +366,8 @@ function getUnitStatusBubblesHtml(u){
   const extra=remaining.length;
   const leftHtml=left.map((entry,idx)=>renderUnitStatusSeal(entry,idx)).join("");
   const rightHtml=right.map((entry,idx)=>renderUnitStatusSeal(entry,left.length+idx)).join("");
-  return `<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
+  const html=`<div class="unit-status-bubbles unit-status-seals">${leftHtml?`<div class="status-seal-rail left">${leftHtml}</div>`:""}${rightHtml?`<div class="status-seal-rail right">${rightHtml}</div>`:""}${extra>0?`<div class="unit-status-seal-extra" title="${extra} estado(s) adicional(es). Abre DET para ver todos.">+${extra}</div>`:""}</div>`;
+  return applyHallvallaValueHooks("unit.statusBubblesHtml",html,{unit:u});
 }
 
 

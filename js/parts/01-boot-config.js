@@ -100,6 +100,29 @@ function readFieldBoardPreferences(){
 const FIELD_BOARD_INITIAL=readFieldBoardPreferences();
 let ROWS=FIELD_BOARD_INITIAL.rows,COLS=FIELD_BOARD_INITIAL.cols;
 const $=id=>document.getElementById(id);
+
+/* E40 · Registro canónico de extensiones -----------------------------------
+   Los subsistemas opcionales registran hooks explícitos en el núcleo en vez
+   de reemplazar funciones ya definidas (monkey-patching). */
+const HALLVALLA_HOOKS=new Map();
+let hallvallaHookSequence=0;
+function registerHallvallaHook(name,handler,options={}){
+  const key=String(name||"").trim();
+  if(!key||typeof handler!=="function")throw new TypeError("registerHallvallaHook requiere nombre y función.");
+  const entry={id:String(options?.id||`${key}:${hallvallaHookSequence+1}`),priority:Number(options?.priority||0),sequence:++hallvallaHookSequence,handler};
+  const list=HALLVALLA_HOOKS.get(key)||[];
+  if(list.some(item=>item.id===entry.id))throw new Error(`Hook duplicado: ${entry.id}`);
+  list.push(entry);
+  list.sort((a,b)=>(a.priority-b.priority)||(a.sequence-b.sequence));
+  HALLVALLA_HOOKS.set(key,list);
+  return()=>{const current=HALLVALLA_HOOKS.get(key)||[];const next=current.filter(item=>item!==entry);if(next.length)HALLVALLA_HOOKS.set(key,next);else HALLVALLA_HOOKS.delete(key);};
+}
+function applyHallvallaValueHooks(name,value,context={}){let next=value;for(const entry of HALLVALLA_HOOKS.get(String(name||""))||[]){const candidate=entry.handler(next,context);if(candidate!==undefined)next=candidate;}return next;}
+function resolveHallvallaOverride(name,context={}){for(const entry of HALLVALLA_HOOKS.get(String(name||""))||[]){const result=entry.handler(context);if(result&&result.handled===true)return result;}return{handled:false,value:undefined};}
+async function resolveHallvallaAsyncOverride(name,context={}){for(const entry of HALLVALLA_HOOKS.get(String(name||""))||[]){const result=await entry.handler(context);if(result&&result.handled===true)return result;}return{handled:false,value:undefined};}
+function runHallvallaEffectHooks(name,context={}){for(const entry of HALLVALLA_HOOKS.get(String(name||""))||[])entry.handler(context);}
+function getHallvallaHookSnapshot(){return Object.fromEntries([...HALLVALLA_HOOKS.entries()].map(([name,list])=>[name,list.map(({id,priority,sequence})=>({id,priority,sequence}))]));}
+Object.assign(globalThis,{registerHallvallaHook,applyHallvallaValueHooks,resolveHallvallaOverride,resolveHallvallaAsyncOverride,runHallvallaEffectHooks,getHallvallaHookSnapshot});
 function syncBoardDimensionsFromState(state){
   const nextRows=clampFieldBoardNumber(state?.boardRows,...FIELD_BOARD_LIMITS.rows,FIELD_BOARD_DEFAULTS.rows);
   const nextCols=clampFieldBoardNumber(state?.boardCols,...FIELD_BOARD_LIMITS.cols,FIELD_BOARD_DEFAULTS.cols);

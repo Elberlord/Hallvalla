@@ -143,6 +143,8 @@ const AI_PRINCIPAL_BY_BATTLE_ID=Object.freeze({
   chapter6_1_battle6:"leonidas"
 });
 function battleAllowsAiPrincipal(battle){
+  const override=resolveHallvallaOverride("adventure.aiPrincipalAllowed",{battle});
+  if(override.handled)return override.value;
   if(!battle||battle.isGuardian)return false;
   if(battle.beastEvent)return true;
   if(battle.id==="battle5")return true;
@@ -173,11 +175,15 @@ function chooseFallbackAiPrincipalKeys(initial,excludedKeys=[],limit=DECK_RULES.
 }
 
 function getAiPrincipalSlotsForBattle(battle){
+  const override=resolveHallvallaOverride("adventure.aiPrincipalSlots",{battle});
+  if(override.handled)return override.value;
   if(!battleAllowsAiPrincipal(battle))return 0;
   const level=typeof getAdventureEnemyLeaderLevel==="function"?getAdventureEnemyLeaderLevel(battle):1;
   return getPrincipalSlotsForLeaderLevel(level);
 }
 function getAiPrincipalKeysForBattle(battle,initial){
+  const override=resolveHallvallaOverride("adventure.aiPrincipalKeys",{battle,initial});
+  if(override.handled)return override.value;
   const principalSlots=getAiPrincipalSlotsForBattle(battle);
   if(principalSlots<=0)return[];
   const available=new Set([...(initial?.hand||[]),...(initial?.deck||[])].filter(card=>card?.type==="unit").map(card=>card.key||card.name));
@@ -475,8 +481,8 @@ function injectLeaderEquipmentIntoInitialState(initial={},leaderType="",owner=2)
 
 
 function drawCards(deck,hand,n){const d=[...(deck||[])],h=[...(hand||[])];for(let i=0;i<n;i++)if(d.length)h.push(d.shift());return{deck:d,hand:h}}
-function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const normalizedAbility=normalizeLeaderAbilityKey(leaderAbility);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[normalizedAbility]?normalizedAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);return{id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:leaderType==="beastmaster"?"beastmaster":"leader",icon:leaderType==="beastmaster"?"🐾":(owner===1?"👑":"🔮"),portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."}}
-function makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility){const leader=makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);if(battle?.enemyLeaderPortrait)leader.portrait=battle.enemyLeaderPortrait;if(battle?.enemyName)leader.name=battle.enemyName;return leader}
+function makeLeader(owner,x,y,leaderType=getSelectedLeaderType()||"warrior",leaderLevel=1,leaderAbility=""){const data=LEADER_DATA[leaderType]||LEADER_DATA.warrior;const level=normalizeLeaderLevel(leaderLevel);const normalizedAbility=normalizeLeaderAbilityKey(leaderAbility);const ability=level>=5&&LEADER_LEVEL5_ABILITY_MAP[normalizedAbility]?normalizedAbility:"";const stats=getLeaderBattleStats(leaderType,level,ability);const leaderGuard=getLeaderGuard(leaderType,level);const leader={id:`leader${owner}`,owner,leader:true,name:`${data.name} J${owner}`,key:leaderType==="beastmaster"?"beastmaster":"leader",icon:leaderType==="beastmaster"?"🐾":(owner===1?"👑":"🔮"),portrait:data.portrait,leaderType,leaderLevel:level,leaderAbility:ability,x,y,hp:stats.hp,maxHp:stats.hp,atk:stats.atk,baseGuard:leaderGuard,guard:leaderGuard,dex:0,agi:0,mov:1,range:getLeaderRange(leaderType,level),moved:false,movedSpaces:0,acted:false,buffAtk:0,evasionSpent:0,cost:0,text:ability?`Habilidad Nv.5: ${getLeaderAbilityText(ability)}`:"Regla de líder: no usa Destreza ni Agilidad; sus ataques y los ataques contra él impactan siempre, con daño reducido por Guardia."};return applyHallvallaValueHooks("leader.make",leader,{owner,x,y,leaderType,leaderLevel:level,leaderAbility:ability})}
+function makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility){let leader=makeLeader(2,Math.floor(COLS/2),0,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility);if(battle?.enemyLeaderPortrait)leader.portrait=battle.enemyLeaderPortrait;if(battle?.enemyName)leader.name=battle.enemyName;return applyHallvallaValueHooks("leader.makeAdventureEnemy",leader,{battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility})}
 function getCardEffectTextByKey(key){
   if(!key)return "";
   const pools=[CARD_TEMPLATES||[],EQUIPMENT_CARD_TEMPLATES||[],BASIC_MAGIC_TRAP_PACK||[],IMPROVED_MAGIC_TRAP_PACK||[],LEGENDARY_TRAP_CARDS||[],Object.values(ADVENTURE_SPECIALS||{}),LEGENDARY_ALLY_CARDS.filter(Boolean)];
@@ -807,10 +813,10 @@ function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcan
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
 function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);if(forcedZero)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroTurnKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
-function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedTurnKey&&u.summonedTurnKey===state.turnKey);}
-function effectiveMov(u){const bonus=getLeaderBonus(u);const summonBonus=isSkiparSummonMoveActive(u)?1:0;const equipmentMoveBonus=(!u?.leader&&hasUnitEquipment(u,"marching_greaves")&&!u?.moved)?2:0;const canonicalBaseMov=isCanonicalFootArcherMovementOne(u)?1:(u?.mov||0);return u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u))}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
+function effectiveMov(u){const bonus=getLeaderBonus(u);const summonBonus=isSkiparSummonMoveActive(u)?1:0;const equipmentMoveBonus=(!u?.leader&&hasUnitEquipment(u,"marching_greaves")&&!u?.moved)?2:0;const canonicalBaseMov=isCanonicalFootArcherMovementOne(u)?1:(u?.mov||0);const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u));return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u})}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function isAfricanElephantChargeReady(u,target){
   if(!u||!target||u.key!=="african_elephant")return false;
   if(Number(u.lastMoveDistance||0)!==1||u.lastMoveTurnKey!==publicState?.turnKey)return false;
@@ -916,7 +922,7 @@ function isMulanBackstabAttack(attacker,defender,units=publicState?.units||[]){
 }
 function getCombatMods(attacker,defender,attackContext=null){
   const mods={attackerAtk:0,attackerAgi:0,attackerDex:0,attackerGuard:0,defenderAgi:0,defenderDex:0,defenderGuard:0,damageReduction:0,reroll:false,notes:[]};
-  if(!attacker||!defender)return mods;
+  if(!attacker||!defender)return applyHallvallaValueHooks("combat.mods",mods,{attacker,defender,attackContext});
   const weaponAdvantage=getWeaponAdvantage(attacker,defender);
   if(weaponAdvantage){
     mods.attackerDex+=weaponAdvantage.dexBonus;
@@ -998,7 +1004,7 @@ function getCombatMods(attacker,defender,attackContext=null){
     mods.attackerGuard-=999;
     mods.notes.push(`${attacker.name} queda con AGI 0 y Guardia 0 por Anticaballería.`);
   }
-  return mods;
+  return applyHallvallaValueHooks("combat.mods",mods,{attacker,defender,attackContext});
 }
 function countEnemyUnitsInCardRange(unit,units=publicState?.units||[]){
   if(!unit)return 0;
@@ -1219,15 +1225,21 @@ function applyCombatPrecisionPercentPenalty(score,mods={}){
   return penaltyPct>0?Math.max(0,Math.floor(raw*((100-penaltyPct)/100))):raw;
 }
 function getAttackPrecisionScore(attacker,mods={}){
+  const override=resolveHallvallaOverride("combat.attackPrecision",{attacker,mods});
+  if(override.handled)return override.value;
   if(!attacker||attacker.leader)return 0;
   const raw=effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)-getEvasionPressure(attacker)-Math.max(0,Number(mods.attackerPrecisionPenalty||0));
   return applyCombatPrecisionPercentPenalty(raw,mods);
 }
 function getDefenseEvasionScore(defender,mods={}){
+  const override=resolveHallvallaOverride("combat.defenseEvasion",{defender,mods});
+  if(override.handled)return override.value;
   if(typeof mods.defenderDefenseOverride==="number")return Math.max(0,mods.defenderDefenseOverride);
   return getAvailableEvasionScore(defender,mods);
 }
 function getHitChance(attacker,defender,mods={}){
+  const override=resolveHallvallaOverride("combat.hitChance",{attacker,defender,mods});
+  if(override.handled)return override.value;
   if(!attacker)return 0;
   if(attacker.leader)return 100;
   const attackScore=getAttackPrecisionScore(attacker,mods);
@@ -1237,6 +1249,8 @@ function getHitChance(attacker,defender,mods={}){
   return attackScore>=defenseScore?100:0;
 }
 function rollHit(attacker,defender,mods={}){
+  const override=resolveHallvallaOverride("combat.rollHit",{attacker,defender,mods});
+  if(override.handled)return override.value;
   const chance=getHitChance(attacker,defender,mods);
   const attackScore=attacker?.leader?"LÍDER":Math.max(0,Number(getAttackPrecisionScore(attacker,mods)||0));
   const defenseScore=defender?.leader?"LÍDER":Math.max(0,Number(getDefenseEvasionScore(defender,mods)||0));

@@ -303,9 +303,9 @@ const LEADER_LEVEL_TABLE={
 const LEADER_BASE_ATK={warrior:3,archer:3,mage:3,axe:4,cavalry:3,assassin:2,beastmaster:2};
 const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
 const LEADER_BASE_RANGE={warrior:1,archer:2,mage:2,axe:1,cavalry:1,assassin:1,beastmaster:1};
-function getLeaderAttack(type){return LEADER_BASE_ATK[type]??3}
-function getLeaderGuard(type,level=1){if(type==="beastmaster")return 2;return Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3))}
-function getLeaderRange(type){return LEADER_BASE_RANGE[type]??1}
+function getLeaderAttack(type,level=1){return applyHallvallaValueHooks("leader.attack",LEADER_BASE_ATK[type]??3,{type,level})}
+function getLeaderGuard(type,level=1){const base=type==="beastmaster"?2:Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
+function getLeaderRange(type,level=1){return applyHallvallaValueHooks("leader.range",LEADER_BASE_RANGE[type]??1,{type,level})}
 const LEADER_BUFF_TABLE={
   warrior:{1:{hp:3,guard:3},2:{hp:4,guard:4},3:{hp:5,guard:5},4:{hp:6,guard:6}},
   archer:{1:{atk:1,dex:2,agi:1,range:1},2:{atk:1,dex:3,agi:1,range:2},3:{atk:2,dex:5,agi:2,range:2},4:{atk:3,dex:6,agi:3,range:2}},
@@ -353,10 +353,10 @@ function normalizeLeaderLevel5Abilities(abilities={},leaderLevels={}){
 }
 function getLeaderAbilityData(key){return LEADER_LEVEL5_ABILITY_MAP[normalizeLeaderAbilityKey(key)]||null}
 function getLeaderAbilityText(key){const a=getLeaderAbilityData(key);return a?`${a.name}: ${a.short}`:"Sin habilidad Nv.5"}
-function getLeaderBattleStats(type,level){
+function getLeaderBattleStats(type,level,abilityKey=""){
   const base={...getLeaderLevelStats(level)};
   base.atk=getLeaderAttack(type,level);
-  return base;
+  return applyHallvallaValueHooks("leader.battleStats",base,{type,level,abilityKey});
 }
 function normalizeLeaderLevels(levels={},profileLevel=1){
   const fallback=normalizeLeaderLevel(profileLevel);
@@ -387,6 +387,8 @@ function getLeaderLevelForOwner(owner,units=publicState?.units||[]){
 }
 function getLeaderBuffTierForOwner(owner,units=publicState?.units||[]){return getLeaderBuffTierFromLevel(getLeaderLevelForOwner(owner,units))}
 function getLeaderProgressText(type,level,abilityKey=""){
+  const override=resolveHallvallaOverride("leader.progressText",{type,level,abilityKey});
+  if(override.handled)return override.value;
   const stats=getLeaderBattleStats(type,level,abilityKey);
   const tier=stats.buffTier;
   const abilityLine=normalizeLeaderLevel(level)>=5?` · Hab. Nv.5: ${getLeaderAbilityText(abilityKey)}`:"";

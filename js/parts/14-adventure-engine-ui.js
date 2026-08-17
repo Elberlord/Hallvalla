@@ -5,6 +5,8 @@
 
 
 function getAdventureChapterForBattle(battle){
+  const override=resolveHallvallaOverride("adventure.chapterForBattle",{battle});
+  if(override.handled)return override.value;
   if(!battle||battle.isGuardian||battle.beastEvent)return null;
   return ADVENTURE_CHAPTERS.find(ch=>ch.battles.some(b=>b.id===battle.id))||ADVENTURE_CHAPTER_1_1;
 }
@@ -30,6 +32,8 @@ function getAdventureEnemyLeaderLevel(battle,playerLevelOverride=null){
 }
 
 function getAdventureBattle(battleId){
+  const override=resolveHallvallaOverride("adventure.getBattle",{battleId});
+  if(override.handled)return override.value;
   if(battleId===BEASTMASTER_EVENT_BATTLE.id)return BEASTMASTER_EVENT_BATTLE;
   if(battleId===ADVENTURE_GUARDIAN_BATTLE.id)return ADVENTURE_GUARDIAN_BATTLE;
   for(const chapter of ADVENTURE_CHAPTERS){
@@ -195,6 +199,8 @@ async function maybeGrantBeastmasterRareEgg(pub){
 }
 
 function completeAdventureBattleOnce(pub){
+  const override=resolveHallvallaOverride("adventure.completeBattleOnce",{pub});
+  if(override.handled)return override.value;
   if(!pub||pub.mode!=="adventure")return{awarded:false,xp:0,gold:0,levelUps:0,cards:[]};
   // La campaña aprende de cada duelo válido de Aventura, desde el Guardián y a través
   // de todos los mapas. El registro ocurre antes de recompensas para que el siguiente
@@ -288,6 +294,8 @@ function completeAdventureBattleOnce(pub){
   return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,packPending:!!battle.cardPack};
 }
 function getNextAdventureBattleId(){
+  const override=resolveHallvallaOverride("adventure.nextBattleId",{state:publicState});
+  if(override.handled)return override.value;
   const progress=getAdventureProgress();
   if(!progress.guardianDefeated)return ADVENTURE_GUARDIAN_BATTLE.id;
   for(const chapter of ADVENTURE_CHAPTERS){

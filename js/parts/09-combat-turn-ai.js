@@ -383,6 +383,152 @@ function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defender
   const first=out.find(u=>affectedIds.has(u.id))||affected[0];
   return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
 }
+/* E41 · Etapa 4B · declaración y preparación canónica del ataque ----------
+   El jugador y la IA conservan sus decisiones/UI/persistencia, pero comparten
+   una sola ruta para validar la declaración común y resolver todo lo que ocurre
+   antes del impacto: trampas preataque, revelado, Cornada, Runa de Advertencia,
+   postura/equipo defensivo, Primera Embestida de Lanza, desgaste PREC/EVA y
+   Flecha del Dharma. No realiza escrituras de red ni publica logs. */
+function inspectSharedAttackTargetBasics(attacker,defender,{runInState=(fn)=>fn(),stateSnapshot=null}={}){
+  const inState=(fn)=>runInState(fn,stateSnapshot);
+  if(!attacker||!defender||attacker.owner===defender.owner)return{ok:false,code:"invalid_target"};
+  if(!inState(()=>canUnitAttackTarget(attacker,defender)))return{ok:false,code:"blocked_target"};
+  return{ok:true};
+}
+function inspectSharedAttackActionEligibility(attacker,defender,{turnKey="",runInState=(fn)=>fn(),stateSnapshot=null,distanceFn=dist}={}){
+  const inState=(fn)=>runInState(fn,stateSnapshot);
+  const mulanChoiceAttack=inState(()=>isMulanExecutionChoiceReady(attacker));
+  const khalidChainAttack=inState(()=>isKhalidChainAttackReady(attacker));
+  if(attacker.acted&&!mulanChoiceAttack&&!khalidChainAttack)return{ok:false,code:"already_acted",mulanChoiceAttack,khalidChainAttack};
+  if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===turnKey)return{ok:false,code:"attack_locked",mulanChoiceAttack,khalidChainAttack};
+  const baseRange=inState(()=>getUnitAttackRange(attacker));
+  const rg=baseRange+(attacker.key==="bengal_tiger"&&inState(()=>isStealthedUnit(attacker))?2:0);
+  const distance=distanceFn(attacker,defender);
+  const assassinFinalBlow=inState(()=>isAssassinFinalBlowEligible(attacker,defender));
+  if(distance>rg&&!assassinFinalBlow)return{ok:false,code:"out_of_range",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
+  if(inState(()=>isStealthedUnit(defender)))return{ok:false,code:"stealthed_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
+  if(defender.aerial&&!(inState(()=>getUnitAttackRange(attacker))>3||attacker.antiaerial))return{ok:false,code:"aerial_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
+  return{ok:true,mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
+}
+function resolveSharedAttackPreparation({
+  a,
+  d,
+  units,
+  liveUnits,
+  legendaryTraps=null,
+  beastTraps=[],
+  runInState=(fn)=>fn(),
+  statefulCombatStats=false,
+  distanceFn=dist,
+  refreshRefsAfterPreTrap=true
+}){
+  const snapshot=(snapshotUnits=units,snapshotLegendary=legendaryTraps,snapshotBeast=beastTraps)=>({
+    units:snapshotUnits,
+    legendaryTraps:snapshotLegendary,
+    beastTraps:snapshotBeast
+  });
+  const inState=(fn,snap=snapshot())=>runInState(fn,snap);
+  const combatStat=(fn,snap=snapshot())=>statefulCombatStats?inState(fn,snap):fn();
+
+  const preTrap=inState(()=>resolvePreAttackLegendaryTraps(a,liveUnits,legendaryTraps),snapshot(liveUnits,legendaryTraps,beastTraps));
+  if(preTrap.cancel){
+    const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
+    return{terminal:"pretrap_cancel",a,d,units:preTrap.units,liveUnits,preTrap,cancelSpend,beastTraps};
+  }
+
+  units=[...(preTrap.units||liveUnits)];
+  if(refreshRefsAfterPreTrap){
+    a=getLiveUnitRef(a,units)||a;
+    d=preTrap.redirect?(getLiveUnitRef(preTrap.redirect,units)||preTrap.redirect):(getLiveUnitRef(d,units)||d);
+  }else if(preTrap.redirect){
+    d=preTrap.redirect;
+  }
+  if(preTrap.redirect)a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};
+
+  const attackContext=createAttackContext(a,d);
+  const tigerFromStealthBefore=a.key==="bengal_tiger"&&attackContext.startedFromStealth;
+  if(tigerFromStealthBefore){
+    const revealedAttacker=revealUnit(a,"declarar ataque desde Sigilo");
+    units=units.map(u=>u.id===a.id?{...u,...revealedAttacker}:u);
+    a=units.find(u=>u.id===a.id)||revealedAttacker;
+  }
+
+  if(distanceFn(a,d)<=1&&d.key==="african_buffalo"){
+    units=units.map(u=>u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
+    if(!units.some(u=>u.id===a.id)){
+      const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
+      units=bloodVictoryResult.units;
+      return{terminal:"buffalo_attacker_fell",a,d,units,liveUnits,preTrap,beastTraps,attackContext,tigerFromStealthBefore,bloodVictoryResult};
+    }
+    a=units.find(u=>u.id===a.id)||a;
+  }
+
+  const warningRune=consumeWarningRuneOnAttack(units,d);
+  units=warningRune.units;
+  d=warningRune.defender;
+  let mods=combatStat(()=>getCombatMods(a,d,attackContext),snapshot(units,preTrap.traps,beastTraps));
+  if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
+
+  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,beastTraps);
+  if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex){
+    mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
+  }
+  beastTraps=bloodBaitBonus.trapId?removeBeastTrapById(beastTraps,bloodBaitBonus.trapId):beastTraps;
+
+  const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
+  units=defensePrep.units;
+  mods=defensePrep.mods;
+  d=defensePrep.defender;
+  const equipmentDefense=consumeEquipmentPrecisionDefenseForAttack(d,a,units,mods);
+  units=equipmentDefense.units;
+  mods=equipmentDefense.mods;
+  d=equipmentDefense.defender;
+
+  let firstStrikeText="";
+  if(canLanceFirstStrike(a,d,mods)){
+    const firstStrike=resolveLanceFirstStrike(a,d,units);
+    units=firstStrike.units;
+    a=units.find(u=>u.id===a.id)||a;
+    d=units.find(u=>u.id===d.id)||d;
+    firstStrikeText=firstStrike.text||"";
+    if(firstStrike.attackerFell){
+      const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
+      units=bloodVictoryResult.units;
+      return{terminal:"lance_attacker_fell",a,d,units,liveUnits,preTrap,beastTraps,attackContext,tigerFromStealthBefore,warningRune,bloodBaitBonus,mods,firstStrikeText,bloodVictoryResult};
+    }
+  }
+
+  const actionSpendDefenseNeeded=combatStat(()=>getDefenseEvasionScore(d,mods),snapshot(units,preTrap.traps,beastTraps));
+  const actionSpendAttackAvailable=combatStat(()=>getAttackPrecisionScore(a,mods),snapshot(units,preTrap.traps,beastTraps));
+  let evasionPressure={units,spent:0,remaining:d?.leader?null:actionSpendDefenseNeeded};
+  if(!mods.falconDive){
+    evasionPressure=combatStat(()=>spendEvasionByAttack(a,d,units,mods),snapshot(units,preTrap.traps,beastTraps));
+    units=evasionPressure.units;
+    d=units.find(u=>u.id===d.id)||d;
+  }
+
+  let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(a,d,mods);
+  hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:actionSpendAttackAvailable,defenderEvasionSpent:evasionPressure.spent};
+  let rerollText="",arjunaDharmaPoison=false;
+  if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedTurn){
+    const first=hit;
+    const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
+    hit=rollHit(a,d,dharmaMods);
+    if(hit.hit){
+      mods=dharmaMods;
+      arjunaDharmaPoison=true;
+      hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:combatStat(()=>getAttackPrecisionScore(a,mods),snapshot(units,preTrap.traps,beastTraps)),defenderEvasionSpent:evasionPressure.spent};
+    }
+    rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
+  }
+
+  return{
+    terminal:"",
+    a,d,units,liveUnits,preTrap,beastTraps,attackContext,tigerFromStealthBefore,
+    warningRune,bloodBaitBonus,mods,firstStrikeText,evasionPressure,hit,rerollText,arjunaDharmaPoison
+  };
+}
+
 async function resolveSharedAttackOutcome({
   a,
   d,
@@ -748,103 +894,70 @@ async function resolveSharedAttackOutcome({
   };
 }
 async function attackUnit(a,d){
+  const hookOverride=await resolveHallvallaAsyncOverride("combat.attackUnit",{attacker:a,defender:d});
+  if(hookOverride.handled)return hookOverride.value;
   if(isPvpStep6fLimitedMode()&&!isPvpStep6gAttackMode())return setHint("Paso 6F: los ataques todavía están bloqueados. Primero validamos la invocación real sincronizada.");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   let liveUnits=[...(publicState?.units||[])];
   a=getLiveUnitRef(a,liveUnits);
   d=getLiveUnitRef(d,liveUnits);
-  if(!a||!d||a.owner===d.owner)return setHint("Elige una unidad rival válida.");
-  if(!canUnitAttackTarget(a,d))return setHint("Geisha Encubierta no puede atacar líderes.");
+
+  const targetCheck=inspectSharedAttackTargetBasics(a,d);
+  if(!targetCheck.ok){
+    if(targetCheck.code==="blocked_target")return setHint("Geisha Encubierta no puede atacar líderes.");
+    return setHint("Elige una unidad rival válida.");
+  }
   if(!isMyTurn()||!isActionPhase()||a.owner!==myPlayer)return setHint(unitActionPhaseHint("ATTK"));
-  const mulanChoiceAttack=isMulanExecutionChoiceReady(a);
-  const khalidChainAttack=isKhalidChainAttackReady(a);
-  if(a.acted&&!mulanChoiceAttack&&!khalidChainAttack)return setHint(`${a.name} ya atacó o defendió este turno.`);
-  if(a.noAttackTurnKey&&a.noAttackTurnKey===publicState.turnKey)return setHint(`${a.name} no puede atacar este turno.`);
-  const rg=getUnitAttackRange(a)+(a.key==="bengal_tiger"&&isStealthedUnit(a)?2:0);
-  const distance=dist(a,d);
-  const assassinFinalBlow=isAssassinFinalBlowEligible(a,d);
-  if(distance>rg&&!assassinFinalBlow)return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${rg} y ${d.name} está a ${distance}.`);
-  if(isStealthedUnit(d))return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
-  if(d.aerial&&!(getUnitAttackRange(a)>3||a.antiaerial))return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
-  let preTrap=resolvePreAttackLegendaryTraps(a,liveUnits);
-  if(preTrap.cancel){
-    const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
-    await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true,khalidChainReady:false}:u),legendaryTraps:preTrap.traps});
-    await pushLog(`${preTrap.logs.join(" ")}${actionStatSpendText(a.name,cancelSpend.spent,cancelSpend.remaining)}`);
+
+  const declaration=inspectSharedAttackActionEligibility(a,d,{turnKey:publicState?.turnKey||""});
+  if(!declaration.ok){
+    if(declaration.code==="already_acted")return setHint(`${a.name} ya atacó o defendió este turno.`);
+    if(declaration.code==="attack_locked")return setHint(`${a.name} no puede atacar este turno.`);
+    if(declaration.code==="out_of_range")return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${declaration.rg} y ${d.name} está a ${declaration.distance}.`);
+    if(declaration.code==="stealthed_target")return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
+    if(declaration.code==="aerial_target")return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
+    return setHint("No se puede declarar ese ataque.");
+  }
+  const mulanChoiceAttack=declaration.mulanChoiceAttack;
+
+  const prep=resolveSharedAttackPreparation({
+    a,d,units:liveUnits,liveUnits,
+    legendaryTraps:null,
+    beastTraps:publicState?.beastTraps||[]
+  });
+  a=prep.a||a;
+  d=prep.d||d;
+
+  if(prep.terminal==="pretrap_cancel"){
+    const cancelSpend=prep.cancelSpend;
+    await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true,khalidChainReady:false}:u),legendaryTraps:prep.preTrap.traps});
+    await pushLog(`${prep.preTrap.logs.join(" ")}${actionStatSpendText(a.name,cancelSpend.spent,cancelSpend.remaining)}`);
     clearSelection();return;
   }
-  let units=[...(preTrap.units||liveUnits)];
-  a=getLiveUnitRef(a,units);
-  d=preTrap.redirect?getLiveUnitRef(preTrap.redirect,units):getLiveUnitRef(d,units);
-  if(preTrap.redirect){a={...a,tempAtkBuff:(a.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
-  const attackContext=createAttackContext(a,d);
-  const tigerFromStealthBefore=a.key==="bengal_tiger"&&attackContext.startedFromStealth;
-  if(tigerFromStealthBefore){
-    const revealedAttacker=revealUnit(a,"declarar ataque desde Sigilo");
-    units=units.map(u=>u.id===a.id?{...u,...revealedAttacker}:u);
-    a=units.find(u=>u.id===a.id)||revealedAttacker;
+  if(prep.terminal==="buffalo_attacker_fell"){
+    const units=prep.units;
+    const log=`${d.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${a.name} cae. El ataque se cancela.${prep.bloodVictoryResult.logs.length?` ${prep.bloodVictoryResult.logs.join(" ")}`:""}`;
+    await updatePublic({units,_clockKillCreditMode:"opposite-owner",legendaryTraps:prep.preTrap.traps});
+    if(!(await finalizeBattle(units,log)))await pushLog(log);
+    clearSelection();return;
   }
-  if(dist(a,d)<=1&&d.key==="african_buffalo"){
-    units=units.map(u=>u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
-    if(!units.some(u=>u.id===a.id)){
-      const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
-      units=bloodVictoryResult.units;
-      const log=`${d.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${a.name} cae. El ataque se cancela.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
-      await updatePublic({units,_clockKillCreditMode:"opposite-owner",legendaryTraps:preTrap.traps});
-      if(!(await finalizeBattle(units,log)))await pushLog(log);
-      clearSelection();return;
-    }
-    a=units.find(u=>u.id===a.id)||a;
+  if(prep.terminal==="lance_attacker_fell"){
+    const units=prep.units;
+    const fsLog=`${a.name} declara ataque contra ${d.name}.${prep.firstStrikeText} El atacante cae antes de completar el golpe.${prep.bloodVictoryResult.logs.length?` ${prep.bloodVictoryResult.logs.join(" ")}`:""}`;
+    await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps,legendaryTraps:prep.preTrap.traps});
+    if(!(await finalizeBattle(units,fsLog)))await pushLog([...prep.preTrap.logs,fsLog].filter(Boolean).join(" "));
+    clearSelection();
+    return;
   }
-  const warningRune=consumeWarningRuneOnAttack(units,d);
-  units=warningRune.units;
-  d=warningRune.defender;
-  let mods=getCombatMods(a,d,attackContext);
-  if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
-  const bloodBaitBonus=applyBloodBaitAttackBonus(a,d,publicState.beastTraps||[]);
-  if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
-  const beastTrapsAfterBloodBait=bloodBaitBonus.trapId?removeBeastTrapById(publicState.beastTraps||[],bloodBaitBonus.trapId):(publicState.beastTraps||[]);
-  const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
-  units=defensePrep.units;
-  mods=defensePrep.mods;
-  d=defensePrep.defender;
-  const equipmentDefense=consumeEquipmentPrecisionDefenseForAttack(d,a,units,mods);
-  units=equipmentDefense.units;mods=equipmentDefense.mods;d=equipmentDefense.defender;
-  let firstStrikeText="";
-  if(canLanceFirstStrike(a,d,mods)){
-    const firstStrike=resolveLanceFirstStrike(a,d,units);
-    units=firstStrike.units;
-    a=units.find(u=>u.id===a.id)||a;
-    d=units.find(u=>u.id===d.id)||d;
-    firstStrikeText=firstStrike.text||"";
-    if(firstStrike.attackerFell){
-      const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
-      units=bloodVictoryResult.units;
-      const fsLog=`${a.name} declara ataque contra ${d.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
-      await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:preTrap.traps});
-      if(!(await finalizeBattle(units,fsLog)))await pushLog([...preTrap.logs,fsLog].filter(Boolean).join(" "));
-      clearSelection();
-      return;
-    }
-  }
-  const actionSpendDefenseNeeded=getDefenseEvasionScore(d,mods);
-  const actionSpendAttackAvailable=getAttackPrecisionScore(a,mods);
-  let evasionPressure={units,spent:0,remaining:typeof d?.leader!=="undefined"&&d.leader?null:actionSpendDefenseNeeded};
-  if(!mods.falconDive){
-    evasionPressure=spendEvasionByAttack(a,d,units,mods);
-    units=evasionPressure.units;
-    d=units.find(u=>u.id===d.id)||d;
-  }
-  let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(a,d,mods);
-  hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:actionSpendAttackAvailable,defenderEvasionSpent:evasionPressure.spent};
-  let rerollText="",arjunaDharmaPoison=false;
-  if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedTurn){
-    const first=hit;
-    const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
-    hit=rollHit(a,d,dharmaMods);
-    if(hit.hit){mods=dharmaMods;arjunaDharmaPoison=true;hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:getAttackPrecisionScore(a,mods),defenderEvasionSpent:evasionPressure.spent};}
-    rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
-  }
+
+  let units=prep.units;
+  a=prep.a;
+  d=prep.d;
+  const {
+    attackContext,mods,hit,firstStrikeText,rerollText,arjunaDharmaPoison,evasionPressure,
+    preTrap,warningRune,bloodBaitBonus,tigerFromStealthBefore
+  }=prep;
+  const beastTrapsAfterBloodBait=prep.beastTraps;
   const attackOutcome=await resolveSharedAttackOutcome({
     a,
     d,
@@ -987,6 +1100,8 @@ async function advanceTurnPhase(){
 }
 
 async function adventureEnemyTurn(){
+  const hookOverride=await resolveHallvallaAsyncOverride("adventure.enemyTurn",{state:publicState,gameId});
+  if(hookOverride.handled)return hookOverride.value;
   if(!gameId)return;
   const aiGameId=gameId;
   const lifecycleToken=getBattleLifecycleToken();
@@ -1657,87 +1772,58 @@ async function adventureEnemyTurn(){
   };
 
   const attackWith=async(attacker)=>{
-    if(!attacker||(attacker.acted&&!isKhalidChainAttackReady(attacker)&&!isMulanExecutionChoiceReady(attacker)))return false;
+    if(!attacker)return false;
     let target=bestAttackTarget(attacker);
     if(!target)return false;
-    if(!canUnitAttackTarget(attacker,target))return false;
-    if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===pub.turnKey)return false;
-    const aiAttackBefore=[...units];
 
-    let preTrap=withAiPublicState(()=>resolvePreAttackLegendaryTraps(attacker,units,legendaryTraps));
-    legendaryTraps=preTrap.traps;
-    if(preTrap.cancel){
-      const cancelSpend=spendActionStatsByAttack(attacker,target,preTrap.units,getCombatMods(attacker,target),{hit:false});
-        units=cancelSpend.units.map(u=>u.id===attacker.id?{...u,acted:true,khalidChainReady:false}:u);
-      logs.push(preTrap.logs.join(" "));
+    const declarationSnapshot={units,legendaryTraps,beastTraps};
+    const targetCheck=inspectSharedAttackTargetBasics(attacker,target,{runInState:withAiPublicState,stateSnapshot:declarationSnapshot});
+    if(!targetCheck.ok)return false;
+    const declaration=inspectSharedAttackActionEligibility(attacker,target,{turnKey:pub.turnKey,runInState:withAiPublicState,stateSnapshot:declarationSnapshot,distanceFn:d});
+    if(!declaration.ok)return false;
+
+    const aiAttackBefore=[...units];
+    const prep=resolveSharedAttackPreparation({
+      a:attacker,
+      d:target,
+      units,
+      liveUnits:aiAttackBefore,
+      legendaryTraps,
+      beastTraps,
+      runInState:withAiPublicState,
+      statefulCombatStats:true,
+      distanceFn:d,
+      refreshRefsAfterPreTrap:false
+    });
+    legendaryTraps=prep.preTrap?.traps||legendaryTraps;
+    beastTraps=prep.beastTraps||beastTraps;
+    attacker=prep.a||attacker;
+    target=prep.d||target;
+
+    if(prep.terminal==="pretrap_cancel"){
+      const cancelSpend=prep.cancelSpend;
+      units=cancelSpend.units.map(u=>u.id===attacker.id?{...u,acted:true,khalidChainReady:false}:u);
+      logs.push(prep.preTrap.logs.join(" "));
       return true;
     }
-    if(preTrap.redirect){target=preTrap.redirect;attacker={...attacker,tempAtkBuff:(attacker.tempAtkBuff||0)+(preTrap.bonusAtk||0)};}
-    const attackContext=createAttackContext(attacker,target);
-    const tigerFromStealthBefore=attacker.key==="bengal_tiger"&&attackContext.startedFromStealth;
-    if(tigerFromStealthBefore){
-      const revealedAttacker=revealUnit(attacker,"declarar ataque desde Sigilo");
-      units=units.map(u=>u.id===attacker.id?{...u,...revealedAttacker}:u);
-      attacker=units.find(u=>u.id===attacker.id)||revealedAttacker;
+    if(prep.terminal==="buffalo_attacker_fell"){
+      units=prep.units;
+      logs.push([...(prep.preTrap.logs||[]),`Rival: ${target.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${attacker.name} cae. El ataque se cancela.${prep.bloodVictoryResult.logs.length?` ${prep.bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
+      return true;
     }
-    if(d(attacker,target)<=1&&target.key==="african_buffalo"){
-      units=units.map(u=>u.id===attacker.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
-      if(!units.some(u=>u.id===attacker.id)){
-        const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
-        units=bloodVictoryResult.units;
-        logs.push([...(preTrap.logs||[]),`Rival: ${target.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${attacker.name} cae. El ataque se cancela.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
-        return true;
-      }
-      attacker=units.find(u=>u.id===attacker.id)||attacker;
+    if(prep.terminal==="lance_attacker_fell"){
+      units=prep.units;
+      logs.push([...(prep.preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${prep.firstStrikeText} El atacante cae antes de completar el golpe.${prep.bloodVictoryResult.logs.length?` ${prep.bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
+      return true;
     }
 
-    const warningRune=consumeWarningRuneOnAttack(units,target);
-    units=warningRune.units;
-    target=warningRune.defender;
-    let mods=withAiPublicState(()=>getCombatMods(attacker,target,attackContext));
-    if(warningRune.guardBonus>0)mods={...mods,defenderGuard:(mods.defenderGuard||0)+warningRune.guardBonus};
-    const bloodBaitBonus=applyBloodBaitAttackBonus(attacker,target,beastTraps);
-    if(bloodBaitBonus.mods?.attackerAtk||bloodBaitBonus.mods?.attackerDex)mods={...mods,attackerAtk:(mods.attackerAtk||0)+(bloodBaitBonus.mods?.attackerAtk||0),attackerDex:(mods.attackerDex||0)+(bloodBaitBonus.mods?.attackerDex||0)};
-    if(bloodBaitBonus.trapId)beastTraps=removeBeastTrapById(beastTraps,bloodBaitBonus.trapId);
-    const defensePrep=consumeDefensiveStanceForAttack(target,units,mods);
-    units=defensePrep.units;
-    mods=defensePrep.mods;
-    target=defensePrep.defender;
-    const equipmentDefense=consumeEquipmentPrecisionDefenseForAttack(target,attacker,units,mods);
-    units=equipmentDefense.units;mods=equipmentDefense.mods;target=equipmentDefense.defender;
-    let firstStrikeText="";
-    if(canLanceFirstStrike(attacker,target,mods)){
-      const firstStrike=resolveLanceFirstStrike(attacker,target,units);
-      units=firstStrike.units;
-      attacker=units.find(u=>u.id===attacker.id)||attacker;
-      target=units.find(u=>u.id===target.id)||target;
-      firstStrikeText=firstStrike.text||"";
-      if(firstStrike.attackerFell){
-        const bloodVictoryResult=applyBloodVictoryForDeaths(aiAttackBefore,units);
-        units=bloodVictoryResult.units;
-        logs.push([...(preTrap.logs||[]),`Rival: ${attacker.name} declara ataque contra ${target.name}.${firstStrikeText} El atacante cae antes de completar el golpe.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`].filter(Boolean).join(" "));
-        return true;
-      }
-    }
-    const actionSpendDefenseNeeded=withAiPublicState(()=>getDefenseEvasionScore(target,mods));
-    const actionSpendAttackAvailable=withAiPublicState(()=>getAttackPrecisionScore(attacker,mods));
-    let evasionPressure=withAiPublicState(()=>({units,spent:0,remaining:target?.leader?null:actionSpendDefenseNeeded}));
-    if(!mods.falconDive){
-      evasionPressure=withAiPublicState(()=>spendEvasionByAttack(attacker,target,units,mods));
-      units=evasionPressure.units;
-      target=units.find(u=>u.id===target.id)||target;
-    }
-    let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(attacker,target,mods);
-    hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:actionSpendAttackAvailable,defenderEvasionSpent:evasionPressure.spent};
-    let rerollText="",arjunaDharmaPoison=false;
-    if(!hit.hit&&attacker.key==="arjuna"&&isRangedAttack(attacker,target)&&!attacker.arjunaRerollUsedTurn){
-      const first=hit;
-      const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
-      hit=rollHit(attacker,target,dharmaMods);
-      if(hit.hit){mods=dharmaMods;arjunaDharmaPoison=true;hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:withAiPublicState(()=>getAttackPrecisionScore(attacker,mods)),defenderEvasionSpent:evasionPressure.spent};}
-      rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
-    }
-
+    units=prep.units;
+    attacker=prep.a;
+    target=prep.d;
+    const {
+      attackContext,mods,hit,firstStrikeText,rerollText,arjunaDharmaPoison,evasionPressure,
+      preTrap,warningRune,bloodBaitBonus,tigerFromStealthBefore
+    }=prep;
     const attackOutcome=await resolveSharedAttackOutcome({
       a:attacker,
       d:target,

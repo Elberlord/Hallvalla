@@ -1,7 +1,29 @@
 HALLVALLA — REFERENCIA MÍNIMA DEL BUILD ACTUAL
 ===============================================
 
-Estado del paquete: E39 · ETAPA 4A · NÚCLEO COMPARTIDO DE RESOLUCIÓN DE ATAQUE (2026-08-17)
+Estado del paquete: E41 · ETAPA 4 COMPLETA (4A + 4B) · ETAPA 5 CONSERVADA (2026-08-17)
+
+ETAPA 4 · PIPELINE CANÓNICO DE ATAQUE
+--------------------------------------
+- 4A: jugador e IA comparten resolveSharedAttackOutcome() para la resolución posterior a determinar impacto/fallo.
+- 4B: jugador e IA comparten resolveSharedAttackPreparation() para todo el tramo previo al impacto.
+- La preparación común incluye trampas preataque, redirección, revelado de Sigilo del Tigre, Instinto de Cornada, Runa de Advertencia, Carnada Ámbar, postura/equipo defensivo, Primera Embestida de Lanza, consumo de EVA, cálculo PREC/EVA y reroll de Flecha del Dharma.
+- Las validaciones comunes de objetivo/acción se concentran en inspectSharedAttackTargetBasics() e inspectSharedAttackActionEligibility().
+- La selección táctica del objetivo sigue perteneciendo a la IA; la UI, hints, persistencia, FX y logs siguen perteneciendo a cada consumidor. No se mezclaron esas responsabilidades con el núcleo compartido.
+- resolveSharedAttackPreparation() no realiza escrituras Firebase, updatePublic/updatePrivate, pushLog ni temporizadores.
+- Las salidas tempranas de trampa, Cornada y Lanza se devuelven como terminales al consumidor para conservar exactamente su persistencia/log original.
+
+VALIDACIÓN DE ETAPA 4B
+----------------------
+- El bloque posterior a resolveSharedAttackOutcome() quedó byte-a-byte idéntico a E40 tanto para jugador como para IA.
+- Prueba diferencial aislada de preparación: 3.000 comparaciones (1.500 jugador + 1.500 IA) entre la ruta E40 de referencia y resolveSharedAttackPreparation(), cubriendo cancelación/redirección de trampa, Sigilo, Cornada, Runa, Carnada, defensa/equipo, Lanza, PREC/EVA y Dharma: 0 diferencias.
+- Se añadió cache-bust E41ATTACK4B al loader/partes para evitar que el navegador reutilice 09-combat-turn-ai.js de un build anterior.
+
+ETAPA 5 · EXTENSIONES DE DRAGONES (CONSERVADA)
+-----------------------------------------------
+- Los módulos 17-dragon-contracts.js y 18-dragon-egg.js continúan usando el registro canónico de hooks de E40; no se reintrodujeron monkey-patches.
+- El orden Contratos -> Crecimiento de Dragón sigue estable en hooks compartidos.
+- E41 está construido encima de E40, por lo que conserva íntegramente la Etapa 5.
 
 FUENTE DE VERDAD
 ----------------

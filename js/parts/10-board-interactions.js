@@ -554,11 +554,12 @@ function getAcolytePurifyTargets(caster,units=publicState?.units||[]){
   return (units||[]).filter(target=>target&&!target.leader&&target.owner===caster.owner&&Number(target.hp||0)>0&&dist(caster,target)<=rg&&getAcolytePurifiableStatuses(target).length>0);
 }
 function getAcolyteEligibleCorpses(caster,graveyard=publicState?.erictoGraveyard||[]){
-  if(!caster)return[];
-  return normalizeErictoGraveyard(graveyard).filter(rec=>{
+  if(!caster)return applyHallvallaValueHooks("acolyte.eligibleCorpses",[],{caster,graveyard});
+  const corpses=normalizeErictoGraveyard(graveyard).filter(rec=>{
     const snap=rec?.snapshot||{};
     return !rec.used&&Number(rec.originalOwner||snap.owner||0)===Number(caster.owner)&&!snap.leader&&!snap.token&&!snap.tokenSummon&&!snap.fieldGeneratedSummon&&!snap.solomonSummon&&!snap.reanimated&&!snap.resurrectedByHealer&&!snap.principal&&!snap.principalStart;
   });
+  return applyHallvallaValueHooks("acolyte.eligibleCorpses",corpses,{caster,graveyard});
 }
 function getAcolyteResurrectionCells(caster,units=publicState?.units||[]){return getAdjacentFreeCells(caster,units);}
 function getAcolyteTemplateForCorpse(record){
@@ -1008,6 +1009,8 @@ async function activateUnitEffect(u,choice=null){
 // No debe crear defenseFxEvent ni floatFxEvent.
 // Esto evita el óvalo/bloque gigante que se generaba en la capa FX.
 async function activateDefenseStance(u){
+  const hookOverride=await resolveHallvallaAsyncOverride("combat.activateDefenseStance",{unit:u});
+  if(hookOverride.handled)return hookOverride.value;
   if(!u||u.owner!==myPlayer||!isMyTurn())return setHint("Solo puedes usar DEF con tus invocaciones.");
   if(!isUnitActionWindow(u))return setHint(unitActionPhaseHint("DEF"));
   if(u.acted)return setHint(`${u.name} ya usó su acción ofensiva este turno.`);

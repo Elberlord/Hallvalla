@@ -726,26 +726,30 @@ const VEIL_CURSE_KILL_EVENT_STORAGE_KEY="hallvalla_veil_curse_kill_event_v1";
 let lastVeilCurseKillEventId="";
 try{lastVeilCurseKillEventId=localStorage.getItem(VEIL_CURSE_KILL_EVENT_STORAGE_KEY)||"";}catch(e){}
 function maybeProcessVeilCurseKillEvent(prevState,nextState){
-  const event=nextState?.veilCurseKillEvent;
-  if(!event?.id||event.id===lastVeilCurseKillEventId)return;
-  lastVeilCurseKillEventId=event.id;
-  try{localStorage.setItem(VEIL_CURSE_KILL_EVENT_STORAGE_KEY,event.id);}catch(e){}
-  if(!prevState)return;
-  const kills=Array.isArray(event.kills)?event.kills:[];
-  let upgradedUnits=[...(nextState?.units||[])];
-  let changed=false;
-  kills.forEach(entry=>{
-    const killer=entry?.killer,victim=entry?.victim;
-    if(!killer||!victim||Number(killer.owner)!==Number(myPlayer))return;
-    const result=registerLocalUnitMasteryKill(killer,victim);
-    if(result?.rankedUp){
-      const nextUnits=applyUnitMasteryRankUpToUnits(upgradedUnits,killer,result);
-      changed=changed||nextUnits.some((unit,index)=>Number(unit.maxHp||0)!==Number(upgradedUnits[index]?.maxHp||0));
-      upgradedUnits=nextUnits;
-      setHint(`Cuenta regresiva mortal: la baja de ${victim.name} cuenta para ${killer.name}.${unitMasteryRankUpText(result)}`);
-    }
-  });
-  if(changed&&Array.isArray(publicState?.units))void updatePublic({units:upgradedUnits});
+  const result=(()=>{
+    const event=nextState?.veilCurseKillEvent;
+    if(!event?.id||event.id===lastVeilCurseKillEventId)return;
+    lastVeilCurseKillEventId=event.id;
+    try{localStorage.setItem(VEIL_CURSE_KILL_EVENT_STORAGE_KEY,event.id);}catch(e){}
+    if(!prevState)return;
+    const kills=Array.isArray(event.kills)?event.kills:[];
+    let upgradedUnits=[...(nextState?.units||[])];
+    let changed=false;
+    kills.forEach(entry=>{
+      const killer=entry?.killer,victim=entry?.victim;
+      if(!killer||!victim||Number(killer.owner)!==Number(myPlayer))return;
+      const result=registerLocalUnitMasteryKill(killer,victim);
+      if(result?.rankedUp){
+        const nextUnits=applyUnitMasteryRankUpToUnits(upgradedUnits,killer,result);
+        changed=changed||nextUnits.some((unit,index)=>Number(unit.maxHp||0)!==Number(upgradedUnits[index]?.maxHp||0));
+        upgradedUnits=nextUnits;
+        setHint(`Cuenta regresiva mortal: la baja de ${victim.name} cuenta para ${killer.name}.${unitMasteryRankUpText(result)}`);
+      }
+    });
+    if(changed&&Array.isArray(publicState?.units))void updatePublic({units:upgradedUnits});
+  })();
+  runHallvallaEffectHooks("veilCurse.killEventProcessed",{prevState,nextState});
+  return result;
 }
 
 function applyUnitMasteryRankUpToUnits(units,killer,result){
@@ -1043,6 +1047,8 @@ function getRewardCardsForBattle(battle,selectedSpecial=""){
   return[];
 }
 function getBattleRewardLabel(battle){
+  const override=resolveHallvallaOverride("adventure.rewardLabel",{battle});
+  if(override.handled)return override.value;
   if(!battle)return"";
   const parts=[];
   if(battle.xp)parts.push(`${battle.xp} EXP`);
@@ -1061,12 +1067,16 @@ function getBattleRewardLabel(battle){
 
 
 function getNextAdventureBattle(battle){
+  const override=resolveHallvallaOverride("adventure.nextBattle",{battle});
+  if(override.handled)return override.value;
   if(!battle)return null;
   if(battle.isGuardian)return ADVENTURE_CHAPTER_1_1.battles[0]||null;
   const chapter=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   return chapter.battles.find(b=>b.num===battle.num+1)||null;
 }
 function isBattleUnlocked(battle){
+  const override=resolveHallvallaOverride("adventure.isBattleUnlocked",{battle});
+  if(override.handled)return override.value;
   if(!battle)return false;
   if(battle.beastEvent)return true;
   const progress=getAdventureProgress();
@@ -2350,6 +2360,8 @@ function recordAdaptiveCampaignBattle(pub){
 }
 
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
+  const override=resolveHallvallaOverride("adventure.makeEnemyDeck",{battle,enemyLeaderType});
+  if(override.handled)return override.value;
   const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
   const targetDeckSize=DECK_RULES.drawDeckSize+principalSlots;
   if(isAdventureAdaptiveCampaignBattle(battle)){
