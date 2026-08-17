@@ -1,7 +1,7 @@
 HALLVALLA — REFERENCIA MÍNIMA DEL BUILD ACTUAL
 ===============================================
 
-Estado del paquete: E38 · TERCERA PASADA QUIRÚRGICA · NORMALIZACIÓN PVP (2026-08-17)
+Estado del paquete: E39 · ETAPA 4A · NÚCLEO COMPARTIDO DE RESOLUCIÓN DE ATAQUE (2026-08-17)
 
 FUENTE DE VERDAD
 ----------------
