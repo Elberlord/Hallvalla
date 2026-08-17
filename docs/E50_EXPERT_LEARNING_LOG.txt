@@ -1,0 +1,11 @@
+HALLVALLA E50 — EXPERT LEARNING LOG
+
+La IA de Aventura mantiene dos memorias paralelas:
+1) campaignTacticalProfileV1: estructura numérica usada automáticamente para adaptar mazos.
+2) expertLearningTextLogV1: diario humano-legible exportable desde Configuración.
+
+Para compartir datos de juego experto:
+Configuración -> Exportar log de aprendizaje (.txt)
+Luego compartir el archivo Hallvalla_AI_Expert_Learning_*.txt.
+
+El diario no revela mano oculta ni RNG futuro. Solo usa información legítimamente observable en Aventura.

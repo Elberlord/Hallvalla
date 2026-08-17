@@ -342,8 +342,9 @@ function currentOrNextTurnKeyForOwner(owner,state=publicState){
 }
 function applyBasicParalysisSpell(target,sourceName="Parálisis",state=publicState){
   if(!target||target.leader)return target;
-  const turnKey=currentOrNextTurnKeyForOwner(target.owner,state);
-  return {...target,paralysisSource:sourceName,noMoveTurnKey:turnKey,noAttackTurnKey:turnKey,noDefTurnKey:turnKey,noCounterTurnKey:turnKey};
+  const actionTurnKey=currentOrNextTurnKeyForOwner(target.owner,state);
+  const reactionTurnKey=state?.turnKey||actionTurnKey;
+  return {...target,paralysisSource:sourceName,noMoveTurnKey:actionTurnKey,noAttackTurnKey:actionTurnKey,noDefTurnKey:actionTurnKey,noCounterTurnKey:reactionTurnKey};
 }
 function applyBasicPoisonSpell(target,sourceName="Veneno",turns=3,startDamage=1){
   if(!target||target.leader)return target;

@@ -1,41 +1,72 @@
 ﻿enemigo,carta_nombre,cantidad
 Hechicero guardián,Adepto Arcano,3
-Hechicero guardián,Lancero solar,1
-Hechicero guardián,Guardián de piedra,1
-Hechicero guardián,Samurai de Katana,1
-Hechicero guardián,Saboteador de Iga,1
-Hechicero guardián,Explorador mongol,1
+Hechicero guardián,Guardián de piedra,3
+Hechicero guardián,Lancero solar,3
+Hechicero guardián,Samurai de Katana,2
+Hechicero guardián,Acólita sanadora,1
 Hechicero guardián,Fireball,3
 Hechicero guardián,Maldición de arena,3
-Hechicero guardián,Muro de escudos,2
-Hechicero guardián,Luz de Sanacion,1
-Hechicero guardián,Inspiration,1
 Hechicero guardián,Foco Estabilizador,1
 Hechicero guardián,Amuleto de Canalización,1
 ,,20
 ,,
-Arquero rebelde,Arquera del desierto,3
-Arquero rebelde,Arquero del Imperio Nuevo,3
-Arquero rebelde,Arquero egipcio de linea,2
-Arquero rebelde,Explorador mongol,1
-Arquero rebelde,Arquero a caballo escita,1
-Arquero rebelde,Lancero solar,2
-Arquero rebelde,Maldición de arena,3
-Arquero rebelde,Fireball,2
-Arquero rebelde,Smoke Bomb,1
-Arquero rebelde,Capa de Escaramuza,1
-Arquero rebelde,Correa de Retirada,1
+Arquero bribón,Guardián de piedra,3
+Arquero bribón,Samurai de Katana,3
+Arquero bribón,Arquera del desierto,3
+Arquero bribón,Arquero del Imperio Nuevo,3
+Arquero bribón,Parálisis,3
+Arquero bribón,Maldición de arena,2
+Arquero bribón,Fireball,1
+Arquero bribón,Correa de Retirada,1
+Arquero bribón,Veneno,1
 ,,20
 ,,
-Guerrero rebelde,Lancero solar,3
-Guerrero rebelde,Hoplita griego,3
-Guerrero rebelde,Samurai de Katana,3
-Guerrero rebelde,Legionario romano,2
-Guerrero rebelde,Guardián de piedra,2
-Guerrero rebelde,Samurai de Naginata,1
-Guerrero rebelde,Maldición de arena,2
-Guerrero rebelde,Smoke Bomb,1
-Guerrero rebelde,Luz de Sanacion,1
-Guerrero rebelde,Grebas de Marcha,1
-Guerrero rebelde,Visera de Guerra,1
+Guerrero del puente,Guardián de piedra,3
+Guerrero del puente,Hoplita griego,3
+Guerrero del puente,Samurai de Katana,3
+Guerrero del puente,Hombre de armas acorazado,2
+Guerrero del puente,Arquero a caballo escita,3
+Guerrero del puente,Fireball,2
+Guerrero del puente,Maldición de arena,2
+Guerrero del puente,Luz de sanación,1
+Guerrero del puente,Bomba de humo,1
 ,,20
+,,
+Señor de la Carga,Guardián de piedra,3
+Señor de la Carga,Hoplita griego,3
+Señor de la Carga,Samurai de Katana,3
+Señor de la Carga,Arquero a caballo escita,3
+Señor de la Carga,Jinete númida,2
+Señor de la Carga,Maldición de arena,2
+Señor de la Carga,Parálisis,2
+Señor de la Carga,Luz de sanación,1
+Señor de la Carga,Estribos de Repliegue,1
+,,20
+,,
+Caudillo del Hacha,ulfhednar,3
+Caudillo del Hacha,berserker_de_oso,3
+Caudillo del Hacha,berserker,2
+Caudillo del Hacha,Lancero solar,2
+Caudillo del Hacha,mongol_explorer,1
+Caudillo del Hacha,saboteador_iga,1
+Caudillo del Hacha,Maldición de arena,3
+Caudillo del Hacha,Bomba de humo,1
+Caudillo del Hacha,Fireball,1
+Caudillo del Hacha,Luz de sanación,1
+Caudillo del Hacha,tanned_hide_harness,1
+Caudillo del Hacha,counterweighted_grip,1
+,,20
+,,
+Richard Corazón de León · fallback,Richard Corazón de León,1
+Richard Corazón de León · fallback,Mulan,1
+Richard Corazón de León · fallback,Guardián de piedra,3
+Richard Corazón de León · fallback,Hoplita griego,3
+Richard Corazón de León · fallback,Samurai de Katana,3
+Richard Corazón de León · fallback,Hombre de armas acorazado,2
+Richard Corazón de León · fallback,Arquero a caballo escita,3
+Richard Corazón de León · fallback,Fireball,2
+Richard Corazón de León · fallback,Maldición de arena,2
+Richard Corazón de León · fallback,Luz de sanación,1
+Richard Corazón de León · fallback,Bomba de humo,1
+,,22
+,,

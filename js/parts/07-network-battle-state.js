@@ -917,6 +917,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const specialTemplate=ADVENTURE_SPECIALS[specialKey];
   if(!specialTemplate)return;
   let battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
+  if(typeof isAdventureMapBattleCompleted==="function"&&isAdventureMapBattleCompleted(battle)){
+    await hvAlert("Esta batalla ya fue completada. Avanza al siguiente encuentro del mapa.","Batalla completada");
+    openAdventureMap(specialKey);
+    return;
+  }
   if(battle.isGuardian&&typeof ensureInitialLeaderStarterCollection==="function"){
     ensureInitialLeaderStarterCollection(leaderType,specialKey);
   }

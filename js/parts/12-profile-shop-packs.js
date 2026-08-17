@@ -1098,6 +1098,12 @@ function showAdventureMapFromResult(){
 function retryCurrentAdventureBattle(){
   const battleId=publicState?.adventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id;
   const specialKey=publicState?.adventureSpecial||privateState?.adventureSpecial||pendingAdventureSpecial||getAdventureProgress().selectedSpecial||"mulan";
+  const battle=typeof getAdventureBattle==="function"?getAdventureBattle(battleId):null;
+  if(typeof isAdventureMapBattleCompleted==="function"&&isAdventureMapBattleCompleted(battle)){
+    void hvAlert("Esta batalla ya fue ganada y quedó cerrada en el mapa.","Batalla completada");
+    showAdventureMapFromResult();
+    return;
+  }
   if(unsubPub){unsubPub();unsubPub=null}
   if(unsubPriv){unsubPriv();unsubPriv=null}
   resetBattleState();
@@ -1358,8 +1364,8 @@ function expandEnemyFixedDeck(deckList=[]){
    - Cada clase recicla su mazo canónico del Mapa 1 como ADN permanente de campaña.
    - Mapa 2 adapta hasta 10 slots; Mapa 3 hasta 12; Mapa 4 hasta 14; Mapa 5 hasta 16
      y Mapa 6+ hasta 18, siempre sin desmontar el núcleo de identidad.
-   - Rarezas para REEMPLAZOS automáticos: M1-M2 Básica; M3 Rara; M4 Épica;
-     M5 Mítica; M6+ Legendaria. Las claves internas históricas siguen siendo
+   - Rarezas para REEMPLAZOS automáticos: M1 Básica; M2 Rara; M3 Épica;
+     M4 Mítica; M5+ Legendaria. Las claves internas históricas siguen siendo
      basic → epic → glorious → mythic → legendary.
    - Semidiós/Astral jamás entran por score adaptativo. Sólo un encuentro bespoke puede usarlos.
    - Los Principales guionizados son slots adicionales y se escogen por utilidad contra
@@ -1370,54 +1376,46 @@ function expandEnemyFixedDeck(deckList=[]){
      bespoke, pero sus resultados también alimentan el expediente global.
 ============================================================================ */
 const ADAPTIVE_CAMPAIGN_PROFILE_KEY="campaignTacticalProfileV1";
+const ADAPTIVE_EXPERT_TEXT_LOG_KEY="expertLearningTextLogV1";
+const ADAPTIVE_EXPERT_TEXT_LOG_LIMIT=120;
+const ADAPTIVE_EXPERT_PUBLIC_EVENT_LIMIT=18;
 const ADAPTIVE_CAMPAIGN_HISTORY_LIMIT=64;
 const ADAPTIVE_MAP1_BATTLE_IDS=new Set(["battle1","battle2","battle3","battle4","battle5"]);
 const ADAPTIVE_MAGE_PILOT_BATTLE_ID="guardian_mage";
 const ADAPTIVE_MAGE_BASE_DECK_COUNTS=Object.freeze([
-  ["arcane_adept",3],
-  ["samurai_katana",3],
-  ["blessing",3],
-  ["inspiration",3],
-  ["fireball",3],
-  ["channeling_amulet",3],
-  ["shield_wall",2]
+  ["arcane_adept",3],["guardian",3],["spearman",3],["samurai_katana",2],["acolyte_healer",1],
+  ["fireball",3],["bolt",3],["stabilizing_focus",1],["channeling_amulet",1]
 ]);
 const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
-  arcane_adept:2,
-  samurai_katana:2,
-  blessing:1,
-  inspiration:1,
-  fireball:2,
-  channeling_amulet:1,
-  shield_wall:1
+  arcane_adept:2,guardian:2,spearman:2,samurai_katana:1,acolyte_healer:1,fireball:2,bolt:2
 });
 const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
-  battle1:Object.freeze({archer:2,new_kingdom_archer:2,egyptian_line_archer:1,skirmisher_cloak:1,retreat_strap:1}),
-  battle2:Object.freeze({spearman:2,greek_hoplite:2,samurai_katana:2,guardian:1,marching_greaves:1,war_visor:1}),
-  battle3:Object.freeze({numidian_javelin_rider:2,scythian_horse_archer:2,hungarian_hussar:1,cavalry:1,mongol_explorer:1,withdrawal_stirrups:1,light_barding:1}),
+  battle1:Object.freeze({guardian:2,samurai_katana:2,archer:2,new_kingdom_archer:2,paralysis_spell:1}),
+  battle2:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,armored_man_at_arms:1,scythian_horse_archer:2}),
+  battle3:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,scythian_horse_archer:2,numidian_javelin_rider:1,bolt:1,paralysis_spell:1}),
   battle4:Object.freeze({ulfhednar:2,berserker_de_oso:2,berserker:2,tanned_hide_harness:1,counterweighted_grip:1}),
-  battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,samurai_katana:2,greek_hoplite:2,guardian:1,marching_greaves:1,war_visor:1})
+  battle5:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,armored_man_at_arms:1,scythian_horse_archer:2})
 });
-const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:3,battle2:4,battle3:6,battle4:8,battle5:10});
+const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:4,battle2:4,battle3:5,battle4:8,battle5:10});
 const ADAPTIVE_CAMPAIGN_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
 const ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","fuma_kotaro","saboteador_iga"]);
 const ADAPTIVE_MAP1_RICHARD_RARE_KEYS=new Set(["richard_lionheart","mulan","wallace"]);
 const ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS=Object.freeze({
   mage:Object.freeze([
-    ["arcane_adept",3],["spearman",1],["guardian",1],["samurai_katana",1],["saboteador_iga",1],["mongol_explorer",1],
-    ["fireball",3],["bolt",3],["shield_wall",2],["heal",1],["inspiration",1],["stabilizing_focus",1],["channeling_amulet",1]
+    ["arcane_adept",3],["guardian",3],["spearman",3],["samurai_katana",2],["acolyte_healer",1],
+    ["fireball",3],["bolt",3],["stabilizing_focus",1],["channeling_amulet",1]
   ]),
   archer:Object.freeze([
-    ["archer",3],["new_kingdom_archer",3],["egyptian_line_archer",2],["mongol_explorer",1],["scythian_horse_archer",1],["spearman",2],
-    ["bolt",3],["fireball",2],["smoke_bomb",1],["skirmisher_cloak",1],["retreat_strap",1]
+    ["guardian",3],["samurai_katana",3],["archer",3],["new_kingdom_archer",3],
+    ["paralysis_spell",3],["bolt",2],["fireball",1],["retreat_strap",1],["poison_spell",1]
   ]),
   warrior:Object.freeze([
-    ["spearman",3],["greek_hoplite",3],["samurai_katana",3],["roman_legionary",2],["guardian",2],["samurai_naginata",1],
-    ["bolt",2],["smoke_bomb",1],["heal",1],["marching_greaves",1],["war_visor",1]
+    ["guardian",3],["greek_hoplite",3],["samurai_katana",3],["armored_man_at_arms",2],["scythian_horse_archer",3],
+    ["fireball",2],["bolt",2],["heal",1],["smoke_bomb",1]
   ]),
   cavalry:Object.freeze([
-    ["numidian_javelin_rider",3],["scythian_horse_archer",3],["hungarian_hussar",2],["cavalry",2],["mongol_explorer",1],["cossack_rider",1],
-    ["archer",2],["bolt",2],["fireball",1],["smoke_bomb",1],["withdrawal_stirrups",1],["light_barding",1]
+    ["guardian",3],["greek_hoplite",3],["samurai_katana",3],["scythian_horse_archer",3],["numidian_javelin_rider",2],
+    ["bolt",2],["paralysis_spell",2],["heal",1],["withdrawal_stirrups",1]
   ]),
   axe:Object.freeze([
     ["ulfhednar",3],["berserker_de_oso",3],["berserker",2],["spearman",2],["mongol_explorer",1],["saboteador_iga",1],
@@ -1544,7 +1542,10 @@ const ADAPTIVE_PRINCIPAL_PAIR_SYNERGY=Object.freeze({
 });
 
 function getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType=""){
-  const counts=ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS[String(enemyLeaderType||"")];
+  const doctrineCounts=globalThis.HallvallaAiDeckDoctrine?.getCanonicalDeckCounts?.(String(enemyLeaderType||""));
+  const counts=Array.isArray(doctrineCounts)&&doctrineCounts.length
+    ?doctrineCounts
+    :ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS[String(enemyLeaderType||"")];
   if(!counts)return[];
   const out=[];
   counts.forEach(([key,count])=>{
@@ -1558,11 +1559,11 @@ function getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType=""){
 }
 function getAdaptiveCampaignRarityCapKey(battle){
   const chapter=Math.floor(getAdaptiveCampaignChapterNumber(battle));
-  if(chapter<=2)return "basic";
-  if(chapter===3)return "epic";      // visible: Rara
-  if(chapter===4)return "glorious";  // visible: Épica
-  if(chapter===5)return "mythic";
-  return "legendary";
+  if(chapter<=1)return "basic";
+  if(chapter===2)return "epic";      // visible: Rara
+  if(chapter===3)return "glorious";  // visible: Épica
+  if(chapter===4)return "mythic";    // visible: Mítica
+  return "legendary";               // Mapa 5+
 }
 function getAdaptiveCampaignRarityRank(key="basic"){
   const index=ADAPTIVE_CAMPAIGN_RARITY_ORDER.indexOf(String(key||"basic"));
@@ -1703,6 +1704,165 @@ function saveAdaptiveCampaignMemory(memory){
     savePlayerProfile({...profile,adaptiveAi});
   }catch(e){console.warn("[HallValla] No se pudo guardar el expediente táctico global:",e);}
 }
+
+/* ============================================================================
+   E50 · EXPERT LEARNING TEXT LOG
+   ---------------------------------------------------------------------------
+   La IA conserva su memoria estructurada para jugar, pero además mantiene un
+   diario táctico HUMANO-LEGIBLE. No cambia reglas ni da información oculta.
+   Solo resume datos legítimamente observables: mazo presentado, adaptación de
+   la IA, resultado, supervivientes y el log público reciente del combate.
+
+   El navegador no puede escribir silenciosamente un .txt en el disco del
+   usuario. Por eso el diario persiste dentro del perfil/localStorage y puede
+   exportarse bajo demanda desde Configuración como archivo de texto.
+============================================================================ */
+function getAdaptiveExpertTextLog(){
+  try{
+    const profile=getPlayerProfile();
+    const raw=profile?.adaptiveAi?.[ADAPTIVE_EXPERT_TEXT_LOG_KEY];
+    if(!raw||typeof raw!=="object")return{version:1,entries:[]};
+    return{
+      version:1,
+      entries:(Array.isArray(raw.entries)?raw.entries:[]).filter(entry=>entry&&typeof entry.text==="string").slice(-ADAPTIVE_EXPERT_TEXT_LOG_LIMIT)
+    };
+  }catch(_){return{version:1,entries:[]};}
+}
+function saveAdaptiveExpertTextLog(log){
+  try{
+    const profile=getPlayerProfile();
+    const adaptiveAi={...(profile.adaptiveAi||{})};
+    adaptiveAi[ADAPTIVE_EXPERT_TEXT_LOG_KEY]={
+      version:1,
+      entries:(Array.isArray(log?.entries)?log.entries:[]).filter(entry=>entry&&typeof entry.text==="string").slice(-ADAPTIVE_EXPERT_TEXT_LOG_LIMIT)
+    };
+    savePlayerProfile({...profile,adaptiveAi});
+    return true;
+  }catch(e){console.warn("[HallValla] No se pudo guardar el diario experto de IA:",e);return false;}
+}
+function adaptiveExpertCardLabel(key){
+  key=String(key||"");
+  try{return String(getAdventureDeckCardTemplateByKey(key)?.name||key||"desconocida");}catch(_){return key||"desconocida";}
+}
+function adaptiveExpertFormatCounts(counts={},limit=12){
+  const rows=Object.entries(counts||{}).filter(([,count])=>Number(count||0)>0).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)||String(a[0]).localeCompare(String(b[0]))).slice(0,limit);
+  return rows.length?rows.map(([key,count])=>`${Number(count||0)}× ${adaptiveExpertCardLabel(key)}`).join(", "):"ninguna";
+}
+function adaptiveExpertTopRoles(roles={},limit=6){
+  const labels={ranged:"ranged",tank:"tanques",cavalry:"caballería",assassin:"asesinos/sigilo",arcane:"arcano",swarm:"swarm",heavy:"pesadas",burst:"burst melee",damageSpell:"magia de daño",buffSpell:"buffs",heal:"curación",control:"control",highGuard:"Guardia alta",highHp:"Vida alta",mobile:"movilidad"};
+  return Object.entries(labels).map(([key,label])=>({key,label,value:Number(roles?.[key]||0)})).filter(x=>x.value>0).sort((a,b)=>b.value-a.value).slice(0,limit).map(x=>`${x.label}=${x.value}`).join(", ")||"sin patrón dominante";
+}
+function adaptiveExpertInferLessons({result,snapshot,humanSummary,aiSummary,meta}){
+  const lessons=[];
+  const r=snapshot?.roles||{};
+  const hs=humanSummary?.roles||{};
+  const as=aiSummary?.roles||{};
+  const humanWon=result==="human_win";
+
+  if(humanWon&&Number(hs.ranged||0)>=2)lessons.push("FALLO: la backline/ranged humana sobrevivió demasiado. Próximo duelo: subir presión remota, acceso móvil o ejecución de backline sin vender el frontline.");
+  if(humanWon&&Number(hs.cavalry||0)>=2)lessons.push("FALLO: varias monturas humanas terminaron vivas. Próximo duelo: más picas, control de MOV y/o Parálisis; no perseguirlas con tanques lentos.");
+  if(humanWon&&Number(hs.assassin||0)>=1)lessons.push("FALLO: Sigilo/asesinos conservaron valor al final. Próximo duelo: detector, bodyguards y protección explícita de supports/ranged.");
+  if(humanWon&&Number(as.tank||0)<=0&&(Number(r.burst||0)>=2||Number(r.mobile||0)>=3))lessons.push("FALLO: el frontline de IA colapsó frente a presión explosiva/móvil. Considerar más tanques, curación o control antes de añadir daño.");
+  if(Number(r.heal||0)>=1)lessons.push("AMENAZA: el humano lleva curación. Healer/support debe subir en Urgency cuando pueda eliminarse sin exponer piezas frágiles.");
+  if(Number(r.highGuard||0)>=3||Number(r.tank||0)>=4)lessons.push("AMENAZA: mucha Guardia/tanque. Priorizar Veneno, ruptura de Guardia, Samurai/Berserker u otra respuesta de daño eficiente; evitar gastar ataques pequeños en una pared.");
+  if(Number(r.ranged||0)>=4)lessons.push("PATRÓN: composición ranged significativa. Mantener screens delante de las piezas frágiles y usar Fireball/Veneno/control contra campers cuando el acceso físico tarde demasiado.");
+  if(Number(r.burst||0)>=3)lessons.push("PATRÓN: alto burst melee. No ofrecer caballería/ranged como intercambio; primero fijar con tanques y castigar desde segunda línea.");
+  if(Number(r.cavalry||0)>=3)lessons.push("PATRÓN: movilidad alta. Amenaza prioritaria no significa perseguir con Guardianes; responder con picas, ranged, magia o control sin abandonar la backline.");
+  if(!humanWon&&Number(humanSummary?.totalCards||0)===0)lessons.push("ÉXITO: la IA limpió por completo las unidades humanas. Conservar el núcleo y evitar sobre-adaptar el próximo mazo salvo que el humano cambie su composición.");
+  if(!humanWon&&meta?.swaps>0)lessons.push(`ÉXITO PARCIAL: la adaptación previa realizó ${Number(meta.swaps||0)} cambio(s) y ganó. Esos counters deben conservar peso, pero no convertirse en reglas absolutas.`);
+  if(!lessons.length)lessons.push("OBSERVACIÓN: no apareció una causa dominante con las métricas actuales. Conservar el arquetipo y acumular más muestras antes de alterar fuertemente el mazo.");
+  return lessons.slice(0,8);
+}
+function buildAdaptiveExpertBattleText(pub,{runKey,snapshot,humanSummary,aiSummary,result}={}){
+  const at=new Date(Number(pub?.endedAt||Date.now()));
+  const battleId=String(pub?.adventureBattleId||"");
+  let battle=null;
+  try{battle=typeof getAdventureBattle==="function"?getAdventureBattle(battleId):null;}catch(_){battle=null;}
+  const meta=battle?._adaptiveEvolutionMeta||null;
+  const principalKeys=(snapshot?.principalKeys||[]).map(adaptiveExpertCardLabel);
+  const publicEvents=(Array.isArray(pub?.log)?pub.log:[]).slice(0,ADAPTIVE_EXPERT_PUBLIC_EVENT_LIMIT).reverse().map(line=>String(line||"").trim().slice(0,420)).filter(Boolean);
+  const topThreats=(meta?.topThreats||[]).slice(0,6).map(x=>`${adaptiveExpertCardLabel(x.key)}(${Number(x.weight||0).toFixed(2)})`).join(", ")||"sin datos";
+  const topCounters=(meta?.topCounters||[]).slice(0,6).map(x=>`${adaptiveExpertCardLabel(x.key)} score=${Math.round(Number(x.score||0))}`).join(", ")||"sin cambios adaptativos registrados";
+  const lessons=adaptiveExpertInferLessons({result,snapshot,humanSummary,aiSummary,meta});
+  const resultLabel=result==="human_win"?"GANÓ EL HUMANO":"GANÓ LA IA";
+  const lines=[
+    "================================================================================",
+    `[${at.toLocaleString("es-ES")}] ${battle?.enemyName||battleId||"Duelo de Aventura"} · ${resultLabel}`,
+    `Run: ${runKey||"sin-id"} · Turno final: ${Math.max(1,Number(pub?.turn||1))} · Líder IA: ${String(pub?.playerLeaders?.[2]||battle?.enemyLeaderType||"desconocido")}`,
+    "",
+    "[MAZO HUMANO OBSERVADO]",
+    `Cartas: ${adaptiveExpertFormatCounts(snapshot?.cardCounts||{},20)}`,
+    `Principales: ${principalKeys.length?principalKeys.join(", "):"sin datos"}`,
+    `Perfil: ${adaptiveExpertTopRoles(snapshot?.roles||{})}`,
+    "",
+    "[ADAPTACIÓN PREVIA DE LA IA]",
+    meta?`Mapa ${Number(meta.chapter||0)} · cap ${String(meta.rarityLabel||meta.rarityCap||"?")} · cambios ${Number(meta.swaps||0)}/${Number(meta.maxSwaps||0)}`:"Encuentro sin metadatos del constructor adaptativo.",
+    meta?`Mazo IA final: ${adaptiveExpertFormatCounts(meta.finalDeckCounts||{},20)}`:"Mazo IA final: sin datos",
+    meta?`Entraron por adaptación: ${adaptiveExpertFormatCounts(meta.adaptiveAdded||{},12)}`:"Entraron por adaptación: sin datos",
+    meta?`Salieron por adaptación: ${adaptiveExpertFormatCounts(meta.adaptiveRemoved||{},12)}`:"Salieron por adaptación: sin datos",
+    `Amenazas que más pesaron: ${topThreats}`,
+    `Counters priorizados: ${topCounters}`,
+    "",
+    "[RESULTADO OBSERVABLE]",
+    `Supervivientes humanos: ${adaptiveExpertFormatCounts(humanSummary?.cardCounts||{})}`,
+    `Roles humanos supervivientes: ${adaptiveExpertTopRoles(humanSummary?.roles||{})}`,
+    `Supervivientes IA: ${adaptiveExpertFormatCounts(aiSummary?.cardCounts||{})}`,
+    `Roles IA supervivientes: ${adaptiveExpertTopRoles(aiSummary?.roles||{})}`,
+    "",
+    "[LO QUE LA IA APRENDE / HIPÓTESIS PARA EL PRÓXIMO DUELO]",
+    ...lessons.map((line,index)=>`${index+1}. ${line}`)
+  ];
+  if(publicEvents.length){
+    lines.push("",`[ÚLTIMOS ${publicEvents.length} EVENTOS PÚBLICOS DEL COMBATE]`,...publicEvents.map((line,index)=>`${index+1}. ${line}`));
+  }
+  lines.push("================================================================================","");
+  return lines.join("\n");
+}
+function appendAdaptiveExpertBattleLog(pub,context={}){
+  try{
+    const runKey=String(context?.runKey||`${pub?.code||pub?.adventureBattleId||"adaptive"}:${pub?.endedAt||Date.now()}`);
+    const log=getAdaptiveExpertTextLog();
+    if(log.entries.some(entry=>entry?.runKey===runKey))return false;
+    const text=buildAdaptiveExpertBattleText(pub,{...context,runKey});
+    log.entries=[...log.entries,{runKey,at:Number(pub?.endedAt||Date.now()),battleId:String(pub?.adventureBattleId||""),text:text.slice(0,20000)}].slice(-ADAPTIVE_EXPERT_TEXT_LOG_LIMIT);
+    return saveAdaptiveExpertTextLog(log);
+  }catch(e){console.warn("[HallValla] No se pudo añadir el duelo al diario experto:",e);return false;}
+}
+function getAdaptiveExpertLearningLogText(){
+  const log=getAdaptiveExpertTextLog();
+  const header=[
+    "HALLVALLA — DIARIO DE APRENDIZAJE DE IA CONTRA HUMANO",
+    `Build: ${String(globalThis.__HALLVALLA_BUILD_VERSION__||globalThis.__HALLVALLA_BUILD__||"desconocida")}`,
+    `Exportado: ${new Date().toLocaleString("es-ES")}`,
+    `Duelos registrados: ${log.entries.length}`,
+    "",
+    "Este archivo resume únicamente información observada legalmente por la IA durante Aventura.",
+    "Sirve para estudiar patrones de jugadores expertos y mejorar doctrinas/counters en futuras builds.",
+    ""
+  ].join("\n");
+  return header+log.entries.map(entry=>entry.text).join("\n");
+}
+function getAdaptiveExpertLearningLogStatus(){
+  const log=getAdaptiveExpertTextLog();
+  const last=log.entries[log.entries.length-1];
+  return{entries:log.entries.length,lastAt:last?.at||0,lastBattleId:last?.battleId||""};
+}
+function exportAdaptiveExpertLearningLog(){
+  try{
+    const text=getAdaptiveExpertLearningLogText();
+    const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+    a.href=url;a.download=`Hallvalla_AI_Expert_Learning_${stamp}.txt`;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    return true;
+  }catch(e){console.warn("[HallValla] No se pudo exportar el diario experto:",e);return false;}
+}
+globalThis.getAdaptiveExpertLearningLogText=getAdaptiveExpertLearningLogText;
+globalThis.getAdaptiveExpertLearningLogStatus=getAdaptiveExpertLearningLogStatus;
+globalThis.exportAdaptiveExpertLearningLog=exportAdaptiveExpertLearningLog;
 function isAdaptiveBasicCard(card){
   if(!card||card.special)return false;
   const rarity=String(card.rarity||card.rareza||"").trim().toLowerCase();
@@ -1793,6 +1953,30 @@ function buildAdventureAdaptivePlayerSnapshot(cards=[],principalKeys=[]){
     principalKeys:(Array.isArray(principalKeys)?principalKeys:[]).map(String).filter(Boolean).slice(0,3)
   };
 }
+
+function inferAdaptiveCampaignCauseSignals({result,snapshot,humanSummary,aiSummary}={}){
+  const r=snapshot?.roles||{},hs=humanSummary?.roles||{},as=aiSummary?.roles||{};
+  const humanWon=result==="human_win";
+  const causes={
+    backlineSurvived:0,
+    mobileSurvived:0,
+    stealthSurvived:0,
+    frontlineCollapsed:0,
+    tankWall:0,
+    burstPressure:0,
+    rangedPressure:0,
+    healingEngine:0
+  };
+  if(humanWon&&Number(hs.ranged||0)>=2)causes.backlineSurvived=1+Math.min(2,Number(hs.ranged||0)*.25);
+  if(humanWon&&Number(hs.cavalry||0)>=2)causes.mobileSurvived=1+Math.min(2,Number(hs.cavalry||0)*.25);
+  if(humanWon&&Number(hs.assassin||0)>=1)causes.stealthSurvived=1+Math.min(1.5,Number(hs.assassin||0)*.35);
+  if(humanWon&&Number(as.tank||0)<=0&&(Number(r.burst||0)>=2||Number(r.mobile||0)>=3))causes.frontlineCollapsed=1.5;
+  if(Number(r.highGuard||0)>=3||Number(r.tank||0)>=4)causes.tankWall=Math.min(3,Math.max(Number(r.highGuard||0)/3,Number(r.tank||0)/4));
+  if(Number(r.burst||0)>=3)causes.burstPressure=Math.min(3,Number(r.burst||0)/3);
+  if(Number(r.ranged||0)>=4)causes.rangedPressure=Math.min(3,Number(r.ranged||0)/4);
+  if(Number(r.heal||0)>=1)causes.healingEngine=Math.min(3,Number(r.heal||0));
+  return causes;
+}
 function addAdaptiveSnapshotToProfile(roleScores,cardScores,snapshot,weight=1){
   if(!snapshot||weight<=0)return;
   Object.keys(roleScores).forEach(k=>roleScores[k]+=Number(snapshot?.roles?.[k]||0)*weight);
@@ -1806,25 +1990,33 @@ function addAdaptiveSnapshotToProfile(roleScores,cardScores,snapshot,weight=1){
     if(key)cardScores[key]=(cardScores[key]||0)+weight*1.35;
   });
 }
-function getAdaptiveCampaignCounterProfile(currentSnapshot,memory){
+function getAdaptiveCampaignCounterProfile(currentSnapshot,memory,enemyLeaderType=""){
   const keys=["ranged","tank","cavalry","assassin","arcane","swarm","heavy","burst","damageSpell","buffSpell","heal","control","unit","spell","trap","equipment","special","highGuard","highHp","highAgi","mobile"];
   const roles=Object.fromEntries(keys.map(k=>[k,0]));
   const cards={};
+  const causes={backlineSurvived:0,mobileSurvived:0,stealthSurvived:0,frontlineCollapsed:0,tankWall:0,burstPressure:0,rangedPressure:0,healingEngine:0};
   // El mazo actual siempre pesa más: los comandantes estudian al rival antes del duelo.
   addAdaptiveSnapshotToProfile(roles,cards,currentSnapshot,2.65);
   const history=(memory?.history||[]).slice(-ADAPTIVE_CAMPAIGN_HISTORY_LIMIT).reverse();
   const recency=[1.45,1.15,.9,.7,.52,.38,.28,.2,.16,.13,.11,.1];
   history.forEach((entry,index)=>{
     const resultWeight=entry?.result==="human_win"?1.2:.7;
-    // Lo reciente pesa mucho más, pero ninguna batalla de la campaña se vuelve cero:
-    // el expediente mantiene una huella tenue de los hábitos antiguos del jugador.
-    const w=(recency[index]??.075)*resultWeight;
+    const sameLeader=String(entry?.enemyLeaderType||"")===String(enemyLeaderType||"");
+    // La experiencia del mismo líder pesa mucho más: Caballería debe aprender qué
+    // respuestas le funcionan a Caballería, sin perder por completo lo descubierto
+    // por los demás comandantes contra el mismo jugador.
+    const doctrineTransfer=enemyLeaderType?(sameLeader?1:.32):1;
+    // Lo reciente pesa mucho más, pero ninguna batalla de la campaña se vuelve cero.
+    const w=(recency[index]??.075)*resultWeight*doctrineTransfer;
     addAdaptiveSnapshotToProfile(roles,cards,entry?.snapshot,w);
     if(entry?.survivorRoles){
       Object.keys(roles).forEach(k=>roles[k]+=Number(entry.survivorRoles?.[k]||0)*w*.72);
     }
+    if(entry?.causeSignals){
+      Object.keys(causes).forEach(k=>causes[k]+=Number(entry.causeSignals?.[k]||0)*w);
+    }
   });
-  return{roles,cards};
+  return{roles,cards,causes};
 }
 function getAdaptiveProfileCardThreat(profile,key,cap=11){
   return Math.min(Math.max(1,Number(cap)||11),Math.max(0,Number(profile?.cards?.[String(key||"")]||0)));
@@ -1881,12 +2073,19 @@ function getAdaptivePrincipalComplementBonus(card,selectedKeys=[]){
   if(selectedTanks===selected.length&&!candidateTank&&Number(card.mov||0)>=2)score+=14;
   return score;
 }
-function getAdaptiveCampaignOpponentPressurePenalty(card,profile){
+function getAdaptiveCampaignOpponentPressurePenalty(card,profile,leaderType=""){
   if(!card)return 0;
   const m=getAdaptiveCardRoleMetrics(card);
   const t=(key)=>getAdaptiveProfileCardThreat(profile,key,9);
   let penalty=0;
-  if(m.cavalry)penalty+=t("spearman")*18+t("snare_trap_plus")*12+t("hannibal_barca")*12+t("thousand_banners_ambush")*10;
+  const deckDoctrine=globalThis.HallvallaAiDeckDoctrine;
+  if(m.cavalry){
+    if(String(leaderType||"")==="cavalry"&&deckDoctrine?.getPressurePenalty){
+      penalty+=Number(deckDoctrine.getPressurePenalty(card,profile,leaderType)||0);
+    }else{
+      penalty+=t("spearman")*18+t("snare_trap_plus")*12+t("hannibal_barca")*12+t("thousand_banners_ambush")*10;
+    }
+  }
   if(m.ranged)penalty+=t("arcane_adept")*8+t("tomoe_gozen")*15;
   if(m.tank||m.highGuard)penalty+=t("berserker_de_oso")*14+t("berserker")*8+t("nasu_no_yoichi")*16;
   if(card.special)penalty+=t("spartacus")*18;
@@ -2005,6 +2204,7 @@ function selectAdaptiveCampaignPrincipalKeys(battle,enemyLeaderType,profile,prin
 function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=null){
   const r=profile?.roles||{};
   const c=profile?.cards||{};
+  const cause=profile?.causes||{};
   const sumKeys=(keys)=>keys.reduce((total,key)=>total+Math.max(0,Number(c[key]||0)),0);
   const archerThreat=sumKeys(["archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","samurai_yabusame","scythian_horse_archer"]);
   const tankThreat=sumKeys(["guardian","greek_hoplite","armored_man_at_arms","spearman","wallace","richard_lionheart","leonidas","hector_troy"]);
@@ -2020,37 +2220,39 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   };
 
   // --- BÁSICAS: respuestas universales probadas desde el Mapa 1 -----------------
-  add("cavalry",r.ranged*38+r.swarm*7+archerThreat*18,3);
-  add("hungarian_hussar",r.ranged*34+r.burst*8+archerThreat*16,3);
-  add("fuma_kotaro",r.ranged*32+r.arcane*22+archerThreat*15,3);
+  add("cavalry",r.ranged*38+r.swarm*7+archerThreat*18+Number(cause.backlineSurvived||0)*30,3);
+  add("hungarian_hussar",r.ranged*34+r.burst*8+archerThreat*16+Number(cause.backlineSurvived||0)*34,3);
+  add("fuma_kotaro",r.ranged*32+r.arcane*22+archerThreat*15+Number(cause.backlineSurvived||0)*40,3);
   add("numidian_javelin_rider",r.ranged*22+r.assassin*12,3);
-  add("fireball",r.ranged*22+r.swarm*28+r.arcane*18,3);
-  add("berserker",r.tank*48+r.heavy*22+r.highGuard*28+tankThreat*20,3);
-  add("berserker_de_oso",r.tank*42+r.heal*22+r.highGuard*24+tankThreat*16,3);
+  add("fireball",r.ranged*22+r.swarm*28+r.arcane*18+Number(cause.backlineSurvived||0)*58+Number(cause.healingEngine||0)*42,3);
+  add("berserker",r.tank*48+r.heavy*22+r.highGuard*28+tankThreat*20+Number(cause.tankWall||0)*48,3);
+  add("berserker_de_oso",r.tank*42+r.heal*22+r.highGuard*24+tankThreat*16+Number(cause.tankWall||0)*42,3);
   add("samurai_katana",r.tank*28+r.heavy*18+r.burst*10,3);
   add("geisha_encubierta",r.tank*30+r.heavy*24+r.ranged*8,2);
-  add("spearman",r.cavalry*62+r.mobile*20+r.burst*8+cavalryThreat*24,3);
-  add("bolt",r.cavalry*30+r.mobile*18+r.heavy*12,3);
-  add("guardian",r.cavalry*18+r.burst*28+r.swarm*20+r.damageSpell*18,3);
-  add("mongol_explorer",r.assassin*56+r.ranged*10+stealthThreat*25,3);
+  add("spearman",r.cavalry*62+r.mobile*20+r.burst*8+cavalryThreat*24+Number(cause.mobileSurvived||0)*72,3);
+  add("bolt",r.cavalry*30+r.mobile*18+r.heavy*12+Number(cause.mobileSurvived||0)*44,3);
+  add("paralysis_spell",r.burst*24+r.cavalry*18+Number(cause.mobileSurvived||0)*36+Number(cause.frontlineCollapsed||0)*34,3);
+  add("poison_spell",r.tank*24+r.highHp*34+r.heal*18+Number(cause.tankWall||0)*58+Number(cause.healingEngine||0)*38,3);
+  add("guardian",r.cavalry*18+r.burst*28+r.swarm*20+r.damageSpell*18+Number(cause.frontlineCollapsed||0)*72+Number(cause.burstPressure||0)*26,3);
+  add("mongol_explorer",r.assassin*56+r.ranged*10+stealthThreat*25+Number(cause.stealthSurvived||0)*92,3);
   add("samurai_yabusame",r.heavy*16+r.mobile*12+r.ranged*10,3);
   add("saboteador_iga",r.swarm*40+r.unit*6,3);
   add("ulfhednar",r.swarm*16+r.heavy*18+r.tank*12,3);
-  add("shield_wall",r.burst*24+r.damageSpell*26,3);
-  add("heal",r.burst*18+r.damageSpell*22+r.control*10,3);
+  add("shield_wall",r.burst*24+r.damageSpell*26+Number(cause.frontlineCollapsed||0)*56+Number(cause.burstPressure||0)*28,3);
+  add("heal",r.burst*18+r.damageSpell*22+r.control*10+Number(cause.frontlineCollapsed||0)*52+Number(cause.burstPressure||0)*22,3);
   add("new_kingdom_archer",r.control*26+r.tank*12,3);
   add("scythian_horse_archer",r.heavy*24+r.tank*12+r.mobile*8,3);
 
-  // --- MAPA 3 / RARO (clave interna epic): control reforzado --------------------
+  // --- MAPA 2 / RARO (clave interna epic): control reforzado --------------------
   add("sand_curse_plus",r.tank*24+r.highHp*24+r.heavy*18+r.mobile*10,1);
   add("pharaoh_blessing_plus",r.tank*16+r.heavy*14+r.burst*10,1);
   add("dust_guard_plus",r.burst*30+r.damageSpell*34,1);
-  add("snare_trap_plus",r.cavalry*42+r.mobile*38+r.ranged*14,1);
+  add("snare_trap_plus",r.cavalry*42+r.mobile*38+r.ranged*14+Number(cause.mobileSurvived||0)*88,1);
   add("warning_rune_plus",r.burst*30+r.ranged*20+r.damageSpell*18,1);
   add("mulan",r.ranged*18+r.tank*18+r.heavy*14,1);
   add("wallace",r.burst*24+r.damageSpell*20+r.heavy*10,1);
 
-  // --- MAPA 4 / ÉPICO (clave interna glorious): héroes de función ---------------
+  // --- MAPA 3 / ÉPICO (clave interna glorious): héroes de función ---------------
   add("richard_lionheart",r.burst*20+r.damageSpell*22+r.heavy*8,1);
   add("simo_hayha",r.swarm*26+r.ranged*12+r.highAgi*8,1);
   add("saladin",r.ranged*16+r.control*14+r.mobile*10,1);
@@ -2058,11 +2260,11 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   add("yi_sun_sin",r.swarm*34+r.unit*10+r.burst*8,1);
   add("boudica",r.swarm*16+r.burst*12+r.heavy*8,1);
 
-  // --- MAPA 5 / MÍTICO: counters duros por habilidad -----------------------------
+  // --- MAPA 4 / MÍTICO: counters duros por habilidad -----------------------------
   add("joan_of_arc",r.burst*36+r.damageSpell*34,1);
   add("leonidas",r.burst*28+r.swarm*18+r.heavy*12,1);
   add("nasu_no_yoichi",r.tank*34+r.highGuard*44+r.heavy*18,1);
-  add("tomoe_gozen",r.ranged*48+r.highAgi*16+r.mobile*12,1);
+  add("tomoe_gozen",r.ranged*48+r.highAgi*16+r.mobile*12+Number(cause.backlineSurvived||0)*84,1);
   add("hannibal_barca",r.cavalry*30+r.mobile*32+r.burst*14,1);
   add("subotai",r.control*26+r.ranged*22+r.mobile*18,1);
   add("lu_bu",r.swarm*34+r.unit*10,1);
@@ -2074,7 +2276,7 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   add("king_solomon",r.heavy*18+r.control*22+r.special*16,1);
   add("ericto",r.heavy*22+r.special*16+r.control*12,1);
 
-  // --- MAPA 6+ / LEGENDARIO: respuestas de cierre --------------------------------
+  // --- MAPA 5+ / LEGENDARIO: respuestas de cierre --------------------------------
   add("hector_troy",r.swarm*42+r.burst*20,1);
   add("beowulf",r.highHp*44+r.tank*30+r.heavy*18,1);
   add("miyamoto_musashi",r.swarm*30+r.burst*24+r.highAgi*12,1);
@@ -2091,11 +2293,19 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
   add("true_name_exile",r.burst*32+r.special*20,1);
   add("ash_banquet",r.highHp*38+r.heal*36+r.tank*20,1);
   add("thousand_banners_ambush",r.cavalry*42+r.mobile*38,1);
-  add("shadow_cut",r.heal*30+r.highHp*28+r.tank*22,1);
+  add("shadow_cut",r.heal*30+r.highHp*28+r.tank*22+Number(cause.healingEngine||0)*72,1);
   add("false_crown",r.burst*44+r.highAgi*12,1);
   add("fallen_kings_seal",r.buffSpell*54+r.heal*46+r.control*18,1);
   add("camp_betrayal",r.swarm*42+r.unit*12,1);
   add("night_without_guard",r.swarm*34+r.burst*30+r.unit*10,1);
+
+  // Doctrina de construcción del líder: añade respuestas que sólo tienen sentido
+  // para su plan estratégico (p. ej. Caballería conserva hostigadores frente a picas
+  // y aumenta removal para abrir rutas de carga).
+  const doctrineCandidates=globalThis.HallvallaAiDeckDoctrine?.getAdaptiveCandidates?.(profile,enemyLeaderType,battle)||[];
+  for(const entry of doctrineCandidates){
+    add(entry?.key,Number(entry?.score||0),Number(entry?.desired||1));
+  }
 
   // Counter directo por carta concreta: si el humano insiste con la misma pieza,
   // la respuesta específica gana prioridad sobre la categoría genérica.
@@ -2128,8 +2338,19 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
 }
 function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckSize,principalKeys=[]){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
-  // Mapa 1 queda congelado tal como fue diseñado y aprobado.
+  // Mapa 1 conserva su identidad, pero una doctrina de mazo puede publicar una
+  // base mejorada explícita sin tocar el enemyFixedDeck legacy del encuentro.
   if(isAdaptiveMap1Battle(battle)){
+    const doctrineCounts=globalThis.HallvallaAiDeckDoctrine?.getMap1DeckCounts?.(battle?.id,enemyLeaderType);
+    if(Array.isArray(doctrineCounts)&&doctrineCounts.length){
+      const templates=[];
+      doctrineCounts.forEach(([key,count])=>{
+        const card=getAdventureDeckCardTemplateByKey(key);
+        for(let i=0;card&&i<Math.max(0,Number(count)||0);i++)templates.push(card);
+      });
+      if(templates.length===target)return templates.slice(0,target);
+      console.warn(`[HallValla][AI Deck] Base doctrinal ${battle?.id}: ${templates.length}/${target}. Se usa fallback legacy.`);
+    }
     if(isAdaptiveMagePilotBattle(battle,enemyLeaderType)){
       const templates=[];
       ADAPTIVE_MAGE_BASE_DECK_COUNTS.forEach(([key,count])=>{
@@ -2137,6 +2358,15 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
         for(let i=0;card&&i<count;i++)templates.push(card);
       });
       return templates.slice(0,target);
+    }
+    if(battle?.id==="battle5"&&String(enemyLeaderType||"")==="warrior"){
+      const drawBase=getAdaptiveCanonicalClassDeckTemplates("warrior").slice(0,DECK_RULES.drawDeckSize);
+      const principals=[];
+      for(const key of principalKeys||[]){
+        const card=getAdventureDeckCardTemplateByKey(key);
+        if(card?.type==="unit"&&!principals.some(c=>c.key===card.key))principals.push(card);
+      }
+      return [...drawBase,...principals].slice(0,target);
     }
     if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
       return expandEnemyFixedDeck(battle.enemyFixedDeck)
@@ -2189,8 +2419,12 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
   return combined.slice(0,target);
 }
 function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[],principalKeys=[]){
-  if(isAdaptiveMap1Battle(battle))return ADAPTIVE_MAP1_CORE_MIN[battle?.id]||{};
-  const core={};
+  const doctrineCore=globalThis.HallvallaAiDeckDoctrine?.getCoreMinimums?.(enemyLeaderType,battle);
+  if(isAdaptiveMap1Battle(battle)){
+    if(doctrineCore&&typeof doctrineCore==="object")return {...doctrineCore};
+    return ADAPTIVE_MAP1_CORE_MIN[battle?.id]||{};
+  }
+  const core=doctrineCore&&typeof doctrineCore==="object"?{...doctrineCore}:{};
   const counts={};
   const principalSet=new Set((principalKeys||[]).map(String));
   for(const card of base||[]){
@@ -2236,9 +2470,9 @@ function getAdaptiveCampaignMaxSwaps(battle){
 function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSize=DECK_RULES.drawDeckSize){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
   const memory=getAdaptiveCampaignMemory();
-  const profile=getAdaptiveCampaignCounterProfile(battle?.adaptivePlayerSnapshot||null,memory);
+  const profile=getAdaptiveCampaignCounterProfile(battle?.adaptivePlayerSnapshot||null,memory,enemyLeaderType);
   const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
-  const principalKeys=isAdaptiveMap1Battle(battle)
+  const principalKeys=(isAdaptiveMap1Battle(battle)&&battle?.id!=="battle5")
     ? []
     : selectAdaptiveCampaignPrincipalKeys(battle,enemyLeaderType,profile,principalSlots);
   battle._adaptivePrincipalKeys=principalKeys;
@@ -2270,6 +2504,15 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
         if(!card)return false;
         // No sacrifica cartas fuera del cap ni Principales; las demás sí pueden evolucionar.
         if(!isAdaptiveCardInsideRarityCap(card,battle)&&!isAdaptiveBasicCard(card))return false;
+        const doctrine=globalThis.HallvallaAiDeckDoctrine;
+        if(doctrine?.canRemoveCardForCandidate){
+          const currentCards=[];
+          for(const [currentKey,currentCount] of Object.entries(counts)){
+            const currentCard=getAdventureDeckCardTemplateByKey(currentKey);
+            for(let i=0;currentCard&&i<Math.max(0,Number(currentCount)||0);i++)currentCards.push(currentCard);
+          }
+          if(!doctrine.canRemoveCardForCandidate(card,candidateCard,currentCards,enemyLeaderType,battle))return false;
+        }
         return true;
       }).map(key=>{
         const card=getAdventureDeckCardTemplateByKey(key);
@@ -2277,10 +2520,13 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
         const counter=Number(scoreByKey[key]||0);
         const excess=(counts[key]||0)-Number(core[key]||0);
         const rarityPenalty=getAdaptiveCampaignRarityRank(getAdaptiveCampaignCardRarityKey(card))*8;
-        const pressurePenalty=getAdaptiveCampaignOpponentPressurePenalty(card,profile);
+        const pressurePenalty=getAdaptiveCampaignOpponentPressurePenalty(card,profile,enemyLeaderType);
+        const doctrineKeep=Number(globalThis.HallvallaAiDeckDoctrine?.getKeepBonus?.(card,profile,enemyLeaderType,battle)||0);
         // Más valor = más difícil de sacrificar. Una carta que el rival contrarresta de
         // forma natural baja en prioridad de conservación y sale antes del mazo.
-        return{key,value:identity*1.15+counter*.82+rarityPenalty-excess*4-pressurePenalty};
+        // La doctrina puede conservar una herramienta aunque su valor bruto sea modesto
+        // si cubre una debilidad estructural concreta del líder.
+        return{key,value:identity*1.15+counter*.82+rarityPenalty+doctrineKeep-excess*4-pressurePenalty};
       }).sort((a,b)=>a.value-b.value||a.key.localeCompare(b.key));
       const removeKey=removable[0]?.key;
       if(!removeKey)continue;
@@ -2317,12 +2563,22 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
       templates.push(card);
     }
   }
+  const metaCount=(cards=[])=>cards.reduce((acc,card)=>{const key=String(card?.key||card?.name||"");if(key)acc[key]=(acc[key]||0)+1;return acc;},{});
+  const canonicalDeckCounts=metaCount(base);
+  const finalDeckCounts=metaCount(templates.slice(0,target));
+  const adaptiveAdded={},adaptiveRemoved={};
+  for(const key of new Set([...Object.keys(canonicalDeckCounts),...Object.keys(finalDeckCounts)])){
+    const delta=Number(finalDeckCounts[key]||0)-Number(canonicalDeckCounts[key]||0);
+    if(delta>0)adaptiveAdded[key]=delta;
+    else if(delta<0)adaptiveRemoved[key]=-delta;
+  }
   battle._adaptiveEvolutionMeta={
     canonicalClass:String(enemyLeaderType||""),
     chapter:Math.floor(getAdaptiveCampaignChapterNumber(battle)),
     rarityCap:getAdaptiveCampaignRarityCapKey(battle),
     rarityLabel:ADAPTIVE_CAMPAIGN_VISIBLE_RARITY[getAdaptiveCampaignRarityCapKey(battle)]||"Básica",
     maxSwaps,swaps,principalKeys:[...principalKeys],
+    canonicalDeckCounts,finalDeckCounts,adaptiveAdded,adaptiveRemoved,
     topThreats:Object.entries(profile?.cards||{}).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,6).map(([key,weight])=>({key,weight:Number(weight||0)})),
     topCounters:active.slice(0,6).map(entry=>({key:entry.key,score:Number(entry.score||0),desired:Number(entry.desired||1)}))
   };
@@ -2346,15 +2602,17 @@ function recordAdaptiveCampaignBattle(pub){
     memory.battlesAnalyzed=Math.max(0,Number(memory.battlesAnalyzed||0))+1;
     if(result==="human_win")memory.humanWins=Math.max(0,Number(memory.humanWins||0))+1;
     else memory.aiWins=Math.max(0,Number(memory.aiWins||0))+1;
+    const causeSignals=inferAdaptiveCampaignCauseSignals({result,snapshot,humanSummary,aiSummary});
     memory.history=[...(memory.history||[]),{
       at:Date.now(),battleId:String(pub.adventureBattleId||""),battleNum:Math.max(1,Number(pub.adventureBattleNum||1)),
       enemyLeaderType:String(pub.playerLeaders?.[2]||""),result,turn:Math.max(1,Number(pub.turn||1)),
       humanLeaderHp:Math.max(0,Number(humanLeader?.hp||0)),aiLeaderHp:Math.max(0,Number(aiLeader?.hp||0)),
       snapshot,survivorCounts:humanSummary.cardCounts,survivorRoles:humanSummary.roles,
-      aiSurvivorCounts:aiSummary.cardCounts,aiSurvivorRoles:aiSummary.roles
+      aiSurvivorCounts:aiSummary.cardCounts,aiSurvivorRoles:aiSummary.roles,causeSignals
     }].slice(-ADAPTIVE_CAMPAIGN_HISTORY_LIMIT);
     memory.seen={...(memory.seen||{}),[runKey]:Date.now()};
     saveAdaptiveCampaignMemory(memory);
+    appendAdaptiveExpertBattleLog(pub,{runKey,snapshot,humanSummary,aiSummary,result});
     return true;
   }catch(e){console.warn("[HallValla] La campaña no pudo registrar la experiencia táctica del duelo:",e);return false;}
 }

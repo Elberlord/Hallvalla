@@ -54,6 +54,14 @@ function getRequiredChapterBattles(chapter){
 function getOptionalChapterBattles(chapter){
   return (chapter?.battles||[]).filter(b=>!isBattleRequiredForChapter(b));
 }
+function isAdventureMapBattleCompleted(battle,progress=getAdventureProgress()){
+  if(!battle||battle.isGuardian||battle.beastEvent||battle.dragonContract)return false;
+  const chapterInfo=getAdventureChapterForBattle(battle);
+  if(!chapterInfo)return false;
+  const chapter=getChapterProgress(progress,chapterInfo);
+  return !!chapter.completedBattles?.[battle.id];
+}
+
 function isFinalMapBossBattleId(battleId){
   const battle=getAdventureBattle(battleId);
   const chapter=getAdventureChapterForBattle(battle);
@@ -385,7 +393,7 @@ function renderAdventureMap(){
       const label=completed?"Completada":unlocked?(optional?"Extra opcional":"Iniciar combate"):"Bloqueada";
       const bossClass=b.id===boss?.id?" boss":optional?" optional":"";
       const nodeCode=getAdventureBattleCode(activeChapter,b);
-      return `<button class="map-node ${state}${bossClass}" type="button" data-battle-id="${b.id}" data-node-code="${escapeHtml(nodeCode)}" style="left:${point.x}%;top:${point.y}%;" ${unlocked?"":"disabled"} title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
+      return `<button class="map-node ${state}${bossClass}" type="button" data-battle-id="${b.id}" data-node-code="${escapeHtml(nodeCode)}" style="left:${point.x}%;top:${point.y}%;" ${(!unlocked||completed)?"disabled":""} aria-disabled="${(!unlocked||completed)?"true":"false"}" title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
         <span class="map-node-ring"></span>
         <span class="map-node-number">${nodeCode}</span>
       </button>`;
@@ -393,7 +401,7 @@ function renderAdventureMap(){
   </div>`;
   refreshAdventureMapNodeTunerTargets();
   applyAdventureMapNodeTunerState(false);
-  nodes.querySelectorAll(".map-node:not(.locked)").forEach(btn=>{
+  nodes.querySelectorAll(".map-node.unlocked:not(:disabled)").forEach(btn=>{
     btn.addEventListener("click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,btn.dataset.battleId));
   });
 }
@@ -746,6 +754,11 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   pendingAdventureSpecial=ADVENTURE_SPECIALS[specialKey]?specialKey:"mulan";
   pendingAdventureBattleId=battleId||ADVENTURE_GUARDIAN_BATTLE.id;
   const battle=getAdventureBattle(pendingAdventureBattleId)||ADVENTURE_GUARDIAN_BATTLE;
+  if(isAdventureMapBattleCompleted(battle)){
+    void hvAlert("Esta batalla ya fue completada. Las batallas ganadas del mapa no pueden repetirse.","Batalla completada");
+    openAdventureMap(pendingAdventureSpecial);
+    return;
+  }
   showAdventureStage("adventureGuardianStage");
   applyAdventureSceneVisual("adventureGuardianVisual","adventureGuardianMark","scene-guardian","",battle.image||"assets/story/guardian_intro.webp");
   setAdventureGuardianActor(battle.isGuardian ? (battle.actorImage||"assets/story/guardian_hechicero_actor.webp") : "");

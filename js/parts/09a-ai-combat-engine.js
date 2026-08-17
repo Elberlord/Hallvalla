@@ -12,7 +12,7 @@
 (function installHallvallaAICombatEngine(global){
   "use strict";
 
-  const VERSION="AI-DOCTRINE-V1";
+  const VERSION="AI-DOCTRINE-V5-E49";
   const MEMORY_KEY="combatDoctrineMemoryV1";
   const MEMORY_HISTORY_LIMIT=48;
 
@@ -59,12 +59,12 @@
       poison:.92, paralysis:.88, movement:"berserk"
     }),
     cavalry:Object.freeze({
-      name:"Señor de la Carga", aggression:1.38, lethal:1.35, delayedLethal:1.05,
+      name:"Señor de la Carga", aggression:1.38, lethal:1.35, delayedLethal:1.18,
       spellConservation:.78, overkillPenalty:.86, physicalAlternativePenalty:.95,
       campPressure:1.30, accessibility:1.35, snowball:1.25,
-      role:{ranged:1.52,support:1.42,assassin:1.10,cavalry:1.04,spear:1.78,tank:.94,melee:.92,skirmisher:1.26},
+      role:{ranged:1.52,support:1.42,assassin:1.10,cavalry:1.04,spear:1.90,tank:1.04,melee:.92,skirmisher:1.26},
       summon:{tank:.76,spear:.78,melee:.84,ranged:1.02,skirmisher:1.18,cavalry:1.56,assassin:.92,support:.82},
-      poison:.96, paralysis:1.28, movement:"flank"
+      poison:1.20, paralysis:1.42, movement:"flank"
     }),
     assassin:Object.freeze({
       name:"Maestro de Sombras", aggression:1.28, lethal:1.48, delayedLethal:1.04,
@@ -104,6 +104,22 @@
     if(guard>=5||hp+guard*1.25>=12)return "tank";
     if(mov>=3)return "skirmisher";
     return "melee";
+  }
+
+  function cavalryTacticalRole(unit){
+    if(!unit)return "";
+    try{
+      const external=global.HallvallaAiDeckDoctrine?.getTacticalRole?.(unit);
+      if(external)return String(external);
+    }catch(_){ }
+    const key=keyOf(unit);
+    if(["guardian","samurai_naginata","spearman"].includes(key))return "bodyguard";
+    if(["samurai_katana","berserker","berserker_de_oso","new_kingdom_archer"].includes(key))return "breaker";
+    if(key==="archer")return "suppressor";
+    if(key==="cossack_rider")return "finisher";
+    if(["numidian_javelin_rider","scythian_horse_archer","mongol_explorer"].includes(key))return "harasser";
+    if(["cavalry","hungarian_hussar"].includes(key))return "charger";
+    return "support";
   }
 
   function readProfileMemory(){
@@ -296,6 +312,32 @@
     if(gap<=reach+1)return 105;
     return 0;
   }
+
+  // "Caos" no significa simplemente AT alto. Una pieza que ya puede alcanzar
+  // la retaguardia frágil obliga a la IA a resolverla antes, pero sin mandar
+  // automáticamente al tanque a perseguirla.
+  function backlinePressure(target,ctx){
+    if(!target||target.leader)return {score:0,threatened:0};
+    const own=(ctx?.ownUnits||[]).filter(u=>u&&num(u.hp,1)>0&&!u.leader);
+    const fragile=own.filter(u=>{
+      const role=getRole(u,ctx);
+      return role==="ranged"||role==="support"||role==="skirmisher";
+    });
+    if(!fragile.length)return {score:0,threatened:0};
+    const reach=movement(target,ctx)+attackRange(target,ctx);
+    let score=0,threatened=0;
+    for(const ally of fragile){
+      const gap=dist(target,ally);
+      if(gap<=reach){
+        threatened++;
+        score+=115+attack(target,ctx)*13+Math.max(0,reach-gap)*32;
+        if(getRole(ally,ctx)==="support")score+=35;
+      }else if(gap<=reach+1){
+        score+=52;
+      }
+    }
+    return {score,threatened};
+  }
   function threatBreakdown(target,ctx={}){
     if(!target)return {total:0,role:"melee",accessTurns:6,camp:0,growth:0,learned:0};
     if(target.leader)return {total:950,role:"leader",accessTurns:0,camp:0,growth:0,learned:0};
@@ -311,9 +353,10 @@
     const roleWeight=doc.role?.[role]||1;
     const special=(target.principal?155:0)+(target.special?90:0)+Math.min(4,(target.equipmentKeys||[]).length)*55;
     const danger=leaderPressure(target,ctx);
+    const backline=backlinePressure(target,ctx);
     const access=Math.max(0,accessTurns-1)*46*doc.accessibility;
-    const total=(base+special+danger+growth*doc.snowball+camp*doc.campPressure+access+learned)*roleWeight;
-    return {total,role,accessTurns,camp,growth,learned,leaderPressure:danger,roleWeight};
+    const total=(base+special+danger+backline.score+growth*doc.snowball+camp*doc.campPressure+access+learned)*roleWeight;
+    return {total,role,accessTurns,camp,growth,learned,leaderPressure:danger,backlinePressure:backline.score,backlineThreatened:backline.threatened,roleWeight};
   }
 
   function previewDamage(card,target,ctx){
@@ -359,6 +402,9 @@
     const exactLethal=lethal&&overkill===0;
     const threat=threatBreakdown(target,ctx);
     const burn=burnForecast(card,target,actual);
+    const permanentSlow=!target.leader?Math.max(0,num(card?.slowPermanent,0)):0;
+    const targetMov=movement(target,ctx);
+    const immobilizes=permanentSlow>0&&targetMov>0&&permanentSlow>=targetMov;
     const delayedLethal=!lethal&&hp>0&&(actual+burn.future)>=hp;
     const boardKill=target.leader?{}:boardKillPotential(target,ctx);
     let followupKill={};
@@ -378,6 +424,19 @@
     if(delayedLethal)score+=480*doc.delayedLethal;
     else if(burn.future>0)score+=burn.future*42+threat.camp*.24;
 
+    // Maldición de arena y futuros efectos equivalentes: para un ejército móvil,
+    // restar MOV permanente no es adorno; altera cuántos tempi necesita el rival.
+    if(permanentSlow>0){
+      const slowBase=permanentSlow*(62+Math.max(0,targetMov)*24);
+      score+=slowBase;
+      if(immobilizes)score+=210;
+      if(ctx.leaderType==="cavalry"){
+        score+=permanentSlow*(105+Math.max(0,targetMov)*32);
+        if(immobilizes)score+=245;
+        if(["spear","tank","melee"].includes(threat.role))score+=90;
+      }
+    }
+
     score-=overkill*112*doc.overkillPenalty;
     if(actual>0&&overkill>=Math.max(2,Math.ceil(actual*.50)))score-=165*doc.overkillPenalty;
     if(boardKill.direct)score-=360*doc.physicalAlternativePenalty;
@@ -387,6 +446,17 @@
     if(!boardKill.direct&&!boardKill.reachable){
       if(followupKill.direct)score+=285*doc.aggression;
       else if(followupKill.reachable)score+=145*doc.aggression;
+    }
+
+    // Una amenaza que campea o genera caos desde una zona físicamente cara de
+    // alcanzar debe resolverse a distancia. No obligamos a un Guardián a caminar
+    // tres turnos hacia una arquera si Fireball/Maldición pueden cortar el motor ya.
+    const remoteProblem=threat.accessTurns>=2&&(threat.camp>=85||threat.backlinePressure>=120||["ranged","support"].includes(threat.role));
+    if(remoteProblem){
+      score+=95+Math.min(230,threat.camp*.38+threat.backlinePressure*.24);
+      if(lethal)score+=300;
+      else if(delayedLethal)score+=220;
+      if(threat.accessTurns>=3)score+=95;
     }
 
     // Doctrinas específicas de oportunidad/cobertura de debilidades.
@@ -402,6 +472,10 @@
     if(ctx.leaderType==="cavalry"){
       if(role==="spear")score+=240; // abrir una ruta de carga vale más que el daño bruto.
       if(role==="ranged"||role==="support")score+=95;
+      // Fireball es removal; Bolt es control estratégico. Contra una muralla de mucha
+      // Vida/Guardia no fingimos que 2 de daño son una respuesta suficiente.
+      if(keyOf(card)==="fireball"&&(role==="tank"||guard(target,ctx)>=5)&&!lethal&&!delayedLethal)score-=145;
+      if(keyOf(card)==="bolt"&&permanentSlow>0)score+=threat.accessTurns*22;
     }
     if(ctx.leaderType==="assassin"){
       if(role==="support"||role==="ranged")score+=130;
@@ -421,7 +495,7 @@
       if(alreadyPoisoned&&!lethal)score-=95; // deja que el reloj haga su trabajo.
       if(threat.accessTurns>=2)score+=80;
     }
-    return {score,lethal,delayedLethal,exactLethal,threat,overkill,actual,burn,boardKill,followupKill};
+    return {score,lethal,delayedLethal,exactLethal,threat,overkill,actual,burn,permanentSlow,immobilizes,boardKill,followupKill};
   }
 
   function scorePoisonSpell(card,target,ctx={}){
@@ -438,6 +512,11 @@
     if(delayedLethal)score+=430*doc.delayedLethal;
     if(threat.accessTurns>=2)score+=145*doc.campPressure;
     if(threat.camp>100)score+=100;
+    if(threat.accessTurns>=2&&(threat.camp>=85||threat.backlinePressure>=120)){
+      score+=110+Math.min(220,threat.camp*.30+threat.backlinePressure*.22);
+      if(delayedLethal)score+=260; // deja de perseguir: coloca el reloj de muerte.
+      if(threat.accessTurns>=3)score+=85;
+    }
     if(already)score-=360;
     if(boardKill.direct)score-=210*doc.physicalAlternativePenalty;
     else if(boardKill.reachable)score-=105*doc.physicalAlternativePenalty;
@@ -447,6 +526,15 @@
       if(!already)score+=150;
       if(maxHp(target,ctx)>=6)score+=95;
       if(threat.role==="ranged"||threat.role==="support")score+=70;
+    }
+    if(ctx.leaderType==="cavalry"){
+      // Veneno es artillería de desgaste: ignora Guardia y deja que la movilidad
+      // del ejército gane tiempo mientras una muralla pesada se consume sola.
+      if(threat.role==="tank"||guard(target,ctx)>=5)score+=205+guard(target,ctx)*18;
+      if(threat.role==="spear")score+=125;
+      if(movement(target,ctx)<=1)score+=85;
+      if(delayedLethal)score+=120;
+      if(boardKill.direct)score-=85;
     }
     return {score,delayedLethal,threat,poison,already};
   }
@@ -459,7 +547,22 @@
     let score=(160+threat.total*.26+attack(target,ctx)*14+movement(target,ctx)*14)*doc.paralysis;
     if(threat.leaderPressure>0)score+=170;
     if(ctx.leaderType==="archer"&&(role==="cavalry"||role==="assassin"||role==="skirmisher"))score+=250;
-    if(ctx.leaderType==="cavalry"&&role==="spear")score+=230;
+    if(ctx.leaderType==="cavalry"&&role==="spear"){
+      // Una pica activa sigue siendo zona prohibida. Parálisis se convierte en
+      // combo premium SOLO si una montura melee puede llegar por una ruta legal
+      // y explotar la ventana en este mismo turno.
+      let exploit=null;
+      try{exploit=ctx?.canExploitParalysis?ctx.canExploitParalysis(target):null;}catch(_){exploit=null;}
+      const canExploit=!!(exploit&&exploit.canExploit);
+      if(canExploit){
+        score+=520;
+        if(exploit.reliableKill)score+=240;
+        if(exploit.direct)score+=90;
+      }else{
+        score+=95; // sigue siendo control, pero no la malgasta sólo por ver una lanza.
+        if(threat.leaderPressure<=0&&threat.backlinePressure<120)score-=85;
+      }
+    }
     if(ctx.leaderType==="assassin"&&(role==="tank"||role==="spear"))score+=130; // apagar escolta para abrir ejecución.
     if(ctx.leaderType==="beastmaster"&&num(target.poisonTurns,0)>0)score+=190; // compra tiempo para los ticks.
     if(target.noMoveTurnKey||target.noAttackTurnKey)score-=240;
@@ -483,8 +586,31 @@
     if(ctx.leaderType==="warrior"&&(threat.role==="ranged"||threat.role==="support"))score+=95;
     if(ctx.leaderType==="archer"&&(threat.role==="cavalry"||threat.role==="assassin"))score+=120;
     if(ctx.leaderType==="cavalry"){
+      const tactical=cavalryTacticalRole(attacker);
       if(threat.role==="ranged"||threat.role==="support")score+=160;
-      if(threat.role==="spear"&&attackerRole==="cavalry")score-=210; // no cargar de frente contra anticaballería.
+      // Anticaballería sólo castiga el COMBATE CUERPO A CUERPO. Un Númida/Escita
+      // disparando desde rango es precisamente una de las respuestas correctas.
+      const spearCounterLocked=!!(target.noCounterTurnKey&&ctx.turnKey&&target.noCounterTurnKey===ctx.turnKey);
+      if(threat.role==="spear"&&attackerRole==="cavalry"&&dist(attacker,target)<=1){
+        if(spearCounterLocked)score+=215; // Parálisis/lock: ésta sí es la ventana de carga.
+        else score-=285;                 // pica activa: no regalar una montura.
+      }
+      if(threat.role==="spear"&&tactical==="harasser"&&dist(attacker,target)>=2)score+=195;
+      if(tactical==="breaker"&&(threat.role==="tank"||threat.role==="spear"||guard(target,ctx)>=4))score+=220+guard(target,ctx)*18;
+      if(tactical==="bodyguard"){
+        if(threat.leaderPressure>0)score+=250;
+        else if(ctx.ownLeader&&dist(target,ctx.ownLeader)>3)score-=95;
+      }
+      if(tactical==="finisher"&&num(target.hp,0)<maxHp(target,ctx))score+=145;
+      if(tactical==="suppressor"&&keyOf(attacker)==="archer"){
+        try{
+          const c=ctx.estimateCombat?ctx.estimateCombat(attacker,target)||{}:{};
+          if(num(c.hpDamage,0)>0&&movement(target,ctx)>0){
+            score+=150+movement(target,ctx)*28;
+            if(movement(target,ctx)<=1)score+=90; // puede dejar MOV 0 durante la ventana crítica.
+          }
+        }catch(_){ }
+      }
     }
     if(ctx.leaderType==="assassin"){
       if(threat.role==="support"||threat.role==="ranged")score+=180;
@@ -510,7 +636,23 @@
     const enemyRoles=ctx.enemyRoleCounts||{};
     if(ctx.leaderType==="archer"&&(role==="tank"||role==="spear")&&num(enemyRoles.cavalry)+num(enemyRoles.assassin)>0)score+=90;
     if(ctx.leaderType==="warrior"&&(role==="tank"||role==="spear"||role==="melee"))score+=55;
-    if(ctx.leaderType==="cavalry"&&role==="cavalry")score+=95;
+    if(ctx.leaderType==="cavalry"){
+      const tactical=cavalryTacticalRole(card);
+      if(role==="cavalry")score+=95;
+      const spearCount=num(enemyRoles.spear),tankCount=num(enemyRoles.tank);
+      const mobileCount=num(enemyRoles.cavalry)+num(enemyRoles.assassin)+num(enemyRoles.skirmisher);
+      if(tactical==="breaker")score+=(spearCount+tankCount)*92;
+      if(tactical==="suppressor")score+=(spearCount+mobileCount)*68;
+      if(tactical==="bodyguard"){
+        const danger=(ctx.enemyUnits||[]).reduce((sum,u)=>sum+leaderPressure(u,ctx),0);
+        if(danger>0)score+=Math.min(330,120+danger*.38);
+        score+=num(enemyRoles.assassin)*75+num(enemyRoles.cavalry)*45;
+      }
+      const ownFront=(ctx.ownUnits||[]).filter(u=>["bodyguard","breaker"].includes(cavalryTacticalRole(u))||["tank","melee","spear"].includes(getRole(u,ctx))).length;
+      if(tactical==="harasser")score+=spearCount*86+tankCount*34+(ownFront?95:-55);
+      if(tactical==="charger")score+=(num(enemyRoles.ranged)+num(enemyRoles.support))*48+(ownFront?30:-135);
+      if(tactical==="finisher")score+=(num(enemyRoles.ranged)+num(enemyRoles.support))*55+(ownFront?40:-110);
+    }
     if(ctx.leaderType==="assassin"&&role==="assassin")score+=100;
     if(ctx.leaderType==="axe"&&role==="melee")score+=80;
     if(ctx.leaderType==="mage"&&(role==="ranged"||role==="support"))score+=55;
@@ -528,6 +670,15 @@
     const enemyLeader=ctx.enemyLeader||null;
     let score=0;
     const nearestEnemy=enemies.filter(e=>e&&num(e.hp,1)>0).sort((a,b)=>dist(cell,a)-dist(cell,b))[0]||null;
+
+    // La prioridad de una amenaza no autoriza a romper la formación. El motor
+    // principal puede calcular cuánto cuesta abandonar la pantalla/backline.
+    if(["tank","spear","melee"].includes(role)){
+      try{
+        const abandonment=Math.max(0,num(ctx?.frontlineAbandonmentRisk?.(u,cell,input.primaryTarget),0));
+        score-=abandonment;
+      }catch(_){ }
+    }
     const adjacentThreats=enemies.filter(e=>e&&!e.leader&&dist(cell,e)<=1).length;
 
     if(type==="archer"&&(role==="ranged"||role==="support")){
@@ -546,13 +697,67 @@
       score+=Math.max(0,num(input.progress,0))*105;
       if(adjacentThreats>0)score+=60+adjacentThreats*28;
     }
-    if(type==="cavalry"&&role==="cavalry"){
+    if(type==="cavalry"){
+      const tactical=cavalryTacticalRole(u);
       const spears=enemies.filter(e=>getRole(e,ctx)==="spear");
-      if(spears.some(s=>dist(cell,s)<=1))score-=260;
-      const prey=enemies.filter(e=>["ranged","support"].includes(getRole(e,ctx))).sort((a,b)=>dist(cell,a)-dist(cell,b))[0];
-      if(prey)score+=Math.max(0,6-dist(cell,prey))*40;
-      if(enemyLeader)score+=Math.max(0,7-dist(cell,enemyLeader))*18;
-      score+=Math.max(0,num(input.progress,0))*80;
+      const activeSpears=spears.filter(e=>!(e.noCounterTurnKey&&ctx.turnKey&&e.noCounterTurnKey===ctx.turnKey));
+      const ownFront=(ctx.ownUnits||[]).filter(a=>a&&a.id!==u.id&&(["bodyguard","breaker"].includes(cavalryTacticalRole(a))||["tank","melee","spear"].includes(getRole(a,ctx))));
+      const nearestFront=ownFront.sort((a,b)=>dist(cell,a)-dist(cell,b))[0]||null;
+      if(role==="cavalry"){
+        if(activeSpears.some(sp=>dist(cell,sp)<=1))score-=390;
+        const prey=enemies.filter(e=>["ranged","support"].includes(getRole(e,ctx))).sort((a,b)=>dist(cell,a)-dist(cell,b))[0];
+        if(prey)score+=Math.max(0,6-dist(cell,prey))*32;
+        if(enemyLeader)score+=Math.max(0,7-dist(cell,enemyLeader))*12;
+
+        if(tactical==="harasser"){
+          // El jinete de rango gana por distancia: dispara detrás de la pantalla y no pone pecho.
+          if(nearestEnemy){
+            const gap=dist(cell,nearestEnemy),rg=Math.max(2,attackRange(u,ctx));
+            if(gap>=2&&gap<=rg)score+=235;
+            else if(gap===rg+1)score+=90;
+            if(gap<=1)score-=330;
+          }
+          if(activeSpears.some(sp=>dist(cell,sp)<=1))score-=310;
+          if(nearestFront&&dist(cell,nearestFront)<=2)score+=125;
+          if(!ownFront.length)score-=135;
+          if(ownLeader&&dist(cell,ownLeader)>=2&&dist(cell,ownLeader)<=5)score+=45;
+          score+=Math.max(0,num(input.progress,0))*24; // avanzar sí, pero no a costa de perder el rango.
+        }else if(tactical==="charger"||tactical==="finisher"){
+          // Reserva melee: entra solo cuando hay pantalla, presa herida o ventana de pica apagada.
+          const woundedPrey=enemies.find(e=>num(e.hp,0)<maxHp(e,ctx)&&["ranged","support","cavalry","skirmisher"].includes(getRole(e,ctx)));
+          if(!ownFront.length)score-=210;
+          if(woundedPrey)score+=Math.max(0,6-dist(cell,woundedPrey))*55;
+          if(activeSpears.some(sp=>dist(cell,sp)<=2))score-=145;
+          if(spears.some(sp=>sp.noCounterTurnKey&&ctx.turnKey&&sp.noCounterTurnKey===ctx.turnKey&&dist(cell,sp)<=2))score+=170;
+          if(nearestFront&&dist(cell,nearestFront)<=3)score+=55;
+          score+=Math.max(0,num(input.progress,0))*42;
+        }
+      }
+      if(tactical==="bodyguard"&&ownLeader){
+        const gap=dist(cell,ownLeader);
+        if(gap<=1)score+=285;
+        else if(gap===2)score+=120;
+        else score-=190+(gap-2)*60;
+        const leaderThreats=enemies.filter(e=>leaderPressure(e,ctx)>0);
+        if(leaderThreats.length&&gap<=1)score+=205;
+      }
+      if(tactical==="suppressor"){
+        if(nearestEnemy){
+          const gap=dist(cell,nearestEnemy);
+          if(gap>=2&&gap<=3)score+=175;
+          if(gap<=1)score-=245;
+        }
+        if(ownLeader&&dist(cell,ownLeader)<=4)score+=55;
+        if(nearestFront&&dist(cell,nearestFront)<=2)score+=80;
+      }
+      if(tactical==="breaker"){
+        const wall=enemies.filter(e=>["spear","tank"].includes(getRole(e,ctx))||guard(e,ctx)>=5)
+          .sort((a,b)=>dist(cell,a)-dist(cell,b))[0];
+        if(wall)score+=Math.max(0,6-dist(cell,wall))*48;
+        if(ownLeader&&dist(cell,ownLeader)<=4)score+=35;
+        // El rompedor SÍ es una pieza que debe ocupar el frente y abrir el hueco.
+        if(nearestEnemy&&dist(cell,nearestEnemy)<=1)score+=95;
+      }
     }
     if(type==="assassin"&&role==="assassin"){
       const prey=enemies.filter(e=>!e.leader&&["ranged","support"].includes(getRole(e,ctx))).sort((a,b)=>threatBreakdown(b,ctx).total-threatBreakdown(a,ctx).total)[0];
@@ -588,6 +793,12 @@
     const leaderDanger=ownLeader?ranked.reduce((sum,t)=>sum+(t.leaderPressure||0),0):0;
     if(leaderDanger>=420)return {key:"stabilize",target:top?.unit||null,priority:leaderDanger};
 
+    // Si el principal generador de caos está campeando y llegar físicamente
+    // requiere varios tempi, la IA deja de "caminar hacia el problema" y busca
+    // daño/DOT/control remoto.
+    const remoteProblem=ranked.find(t=>t.accessTurns>=2&&(t.camp>=120||t.backlinePressure>=170)&&t.total>=(top?.total||0)*.78);
+    if(remoteProblem)return {key:"remote_suppression",target:remoteProblem.unit,priority:remoteProblem.total};
+
     if(type==="warrior"){
       const backline=ranked.find(t=>["ranged","support"].includes(t.role)&&t.accessTurns>=2);
       return backline?{key:"break_backline",target:backline.unit,priority:backline.total}:{key:"hold_front",target:top?.unit||null,priority:top?.total||0};
@@ -602,9 +813,14 @@
     }
     if(type==="axe")return {key:"blood_pressure",target:top?.unit||null,priority:top?.total||0};
     if(type==="cavalry"){
+      const commanderThreat=ranked.find(t=>t.leaderPressure>0);
+      if(commanderThreat&&leaderDanger>=170)return {key:"protect_commander",target:commanderThreat.unit,priority:leaderDanger};
       const spear=ranked.find(t=>t.role==="spear");
+      if(spear)return {key:"open_charge_lane",target:spear.unit,priority:spear.total};
+      const wall=ranked.find(t=>t.role==="tank"||guard(t.unit,ctx)>=5||maxHp(t.unit,ctx)>=7);
+      if(wall)return {key:"break_heavy_wall",target:wall.unit,priority:wall.total};
       const backline=ranked.find(t=>["ranged","support"].includes(t.role));
-      return spear?{key:"open_charge_lane",target:spear.unit,priority:spear.total}:{key:"flank_backline",target:(backline||top)?.unit||null,priority:(backline||top)?.total||0};
+      return {key:"flank_backline",target:(backline||top)?.unit||null,priority:(backline||top)?.total||0};
     }
     if(type==="assassin"){
       const engine=ranked.find(t=>["support","ranged"].includes(t.role)||t.unit.principal||t.unit.special);
@@ -630,6 +846,13 @@
         if(["heal","guard","paralysis","damage","slow"].includes(kind))score+=90;
         if(target&&leaderPressure(target,ctx)>0)score+=150;
         break;
+      case "remote_suppression":
+        if(["damage","poison","slow","paralysis"].includes(kind)&&isPlanTarget)score+=225;
+        if(kind==="damage"&&isPlanTarget)score+=95;
+        if(kind==="poison"&&isPlanTarget)score+=80;
+        if(kind==="summon"&&["ranged","skirmisher"].includes(cardRole))score+=55;
+        if(kind==="summon"&&["tank","spear","melee"].includes(cardRole))score-=35;
+        break;
       case "break_backline":
         if(["damage","poison","paralysis","slow"].includes(kind)&&["ranged","support"].includes(role))score+=145;
         if(kind==="summon"&&["tank","spear","melee"].includes(cardRole))score+=45;
@@ -646,13 +869,28 @@
         if(["damage","buff","summon"].includes(kind))score+=65;
         if(kind==="heal"&&ctx?.ownLeader&&num(ctx.ownLeader.hp,0)>5)score-=35;
         break;
+      case "protect_commander":
+        if(["damage","paralysis","slow","guard","heal"].includes(kind))score+=120;
+        if(kind==="summon"&&choice.card&&cavalryTacticalRole(choice.card)==="bodyguard")score+=245;
+        if(target&&leaderPressure(target,ctx)>0)score+=175;
+        break;
       case "open_charge_lane":
-        if(["damage","paralysis","slow"].includes(kind)&&role==="spear")score+=190;
-        if(kind==="summon"&&cardRole==="cavalry")score+=70;
+        if(["damage","paralysis","slow"].includes(kind)&&role==="spear")score+=235;
+        if(kind==="poison"&&role==="spear")score+=105;
+        if(kind==="summon"&&choice.card&&cavalryTacticalRole(choice.card)==="breaker")score+=180;
+        if(kind==="summon"&&choice.card&&cavalryTacticalRole(choice.card)==="harasser")score+=145;
+        if(kind==="summon"&&choice.card&&["charger","finisher"].includes(cavalryTacticalRole(choice.card)))score-=80;
+        break;
+      case "break_heavy_wall":
+        if(kind==="summon"&&choice.card&&cavalryTacticalRole(choice.card)==="breaker")score+=220;
+        if(["slow","paralysis"].includes(kind))score+=150;
+        if(kind==="poison")score+=190;
+        if(kind==="damage"&&isPlanTarget)score+=70;
         break;
       case "flank_backline":
         if(["damage","paralysis"].includes(kind)&&["ranged","support"].includes(role))score+=115;
-        if(kind==="summon"&&cardRole==="cavalry")score+=95;
+        if(kind==="summon"&&choice.card&&cavalryTacticalRole(choice.card)==="harasser")score+=130;
+        if(kind==="summon"&&choice.card&&["charger","finisher"].includes(cavalryTacticalRole(choice.card)))score+=55;
         break;
       case "execute_engine":
         if(["damage","paralysis","slow"].includes(kind)&&["support","ranged"].includes(role))score+=150;

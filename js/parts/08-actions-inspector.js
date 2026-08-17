@@ -59,7 +59,122 @@ function getAttackableTargets(u,units=publicState?.units||[]){
     return (inNormalRange||finalBlow)&&canTargetStealth(live,t)&&canUnitAttackTarget(live,t)&&(!(t.aerial)||(getUnitAttackRange(live)>3||live.antiaerial));
   });
 }
-function moveZones(u){const live=getLiveUnitRef(u);if(!live||!isUnitMoveWindow(live))return[];const mulanExecMove=isMulanExecutionMoveReady(live);if(!mulanExecMove&&(live.moved||live.acted))return[];if(!mulanExecMove&&live.noMoveTurnKey&&live.noMoveTurnKey===publicState?.turnKey)return[];const res=[];const maxMove=mulanExecMove?1:effectiveMov(live);for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(x===live.x&&y===live.y)continue;if(getUnitAt(x,y))continue;if(dist(live,{x,y})<=maxMove)res.push(`${x},${y}`)}return res}
+// E47 · Movimiento con bloqueo real de líneas.
+// Las unidades terrestres necesitan un camino de casillas libres; las aéreas pueden
+// sobrevolar piezas intermedias, aunque nunca terminar encima de otra unidad.
+function isAerialMovementUnit(u){return !!(u&&(u.aerial||u.flight));}
+function movementStateUnits(unitsOverride=null){return Array.isArray(unitsOverride)?unitsOverride:(publicState?.units||[]);}
+function movementOccupiedSet(unitsOverride=null,movingId=""){
+  return new Set(movementStateUnits(unitsOverride).filter(it=>it&&it.hp>0&&it.id!==movingId).map(it=>`${it.x},${it.y}`));
+}
+function movementStepAllowed(from,to,occupied){
+  if(!to||to.x<0||to.x>=COLS||to.y<0||to.y>=ROWS)return false;
+  if(occupied.has(`${to.x},${to.y}`))return false;
+  const dx=to.x-from.x,dy=to.y-from.y;
+  if(Math.abs(dx)>1||Math.abs(dy)>1||(dx===0&&dy===0))return false;
+  // No se puede atravesar una esquina completamente sellada por dos cuerpos.
+  // Si uno de los lados está libre, existe un hueco por el que la unidad puede filtrarse.
+  if(dx!==0&&dy!==0){
+    const sideA=`${from.x+dx},${from.y}`;
+    const sideB=`${from.x},${from.y+dy}`;
+    if(occupied.has(sideA)&&occupied.has(sideB))return false;
+  }
+  return true;
+}
+function buildUnitMovementReachability(u,unitsOverride=null,maxMoveOverride=null){
+  if(!u)return new Map();
+  const maxMove=maxMoveOverride===null||maxMoveOverride===undefined?Math.max(0,effectiveMov(u)):Math.max(0,Number(maxMoveOverride)||0);
+  const start={x:Number(u.x),y:Number(u.y)};
+  const startKey=`${start.x},${start.y}`;
+  const occupied=movementOccupiedSet(unitsOverride,u.id);
+  const reached=new Map([[startKey,{x:start.x,y:start.y,steps:0,parent:null}]]);
+  if(maxMove<=0)return reached;
+  if(isAerialMovementUnit(u)){
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      if(x===start.x&&y===start.y)continue;
+      if(occupied.has(`${x},${y}`))continue;
+      const steps=dist(start,{x,y});
+      if(steps<=maxMove)reached.set(`${x},${y}`,{x,y,steps,parent:startKey,aerial:true});
+    }
+    return reached;
+  }
+  const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+  const queue=[startKey];
+  for(let qi=0;qi<queue.length;qi++){
+    const key=queue[qi],node=reached.get(key);
+    if(!node||node.steps>=maxMove)continue;
+    for(const [dx,dy] of dirs){
+      const next={x:node.x+dx,y:node.y+dy};
+      if(!movementStepAllowed(node,next,occupied))continue;
+      const nk=`${next.x},${next.y}`;
+      if(reached.has(nk))continue;
+      reached.set(nk,{x:next.x,y:next.y,steps:node.steps+1,parent:key});
+      queue.push(nk);
+    }
+  }
+  return reached;
+}
+function getUnitMovementPath(u,x,y,unitsOverride=null,maxMoveOverride=null){
+  if(!u)return null;
+  const maxMove=maxMoveOverride===null||maxMoveOverride===undefined?Math.max(0,effectiveMov(u)):Math.max(0,Number(maxMoveOverride)||0);
+  const sx=Number(u.x),sy=Number(u.y),tx=Number(x),ty=Number(y);
+  const directDx=tx-sx,directDy=ty-sy;
+  const directSteps=Math.max(Math.abs(directDx),Math.abs(directDy));
+  const directIsLine=directSteps>0&&(directDx===0||directDy===0||Math.abs(directDx)===Math.abs(directDy));
+  // Si el jugador/IA eligió un destino alineado y la línea está libre, preservamos
+  // exactamente esa ruta. Esto mantiene correctas las reglas de carga recta.
+  if(!isAerialMovementUnit(u)&&directIsLine&&directSteps<=maxMove){
+    const occupied=movementOccupiedSet(unitsOverride,u.id);
+    const stepX=Math.sign(directDx),stepY=Math.sign(directDy);
+    const direct=[{x:sx,y:sy}];let prev=direct[0],clear=true;
+    for(let i=1;i<=directSteps;i++){
+      const next={x:sx+stepX*i,y:sy+stepY*i};
+      if(!movementStepAllowed(prev,next,occupied)){clear=false;break;}
+      direct.push(next);prev=next;
+    }
+    if(clear)return direct;
+  }
+  const reach=buildUnitMovementReachability(u,unitsOverride,maxMove);
+  const endKey=`${tx},${ty}`;
+  const end=reach.get(endKey);
+  if(!end)return null;
+  const startKey=`${sx},${sy}`;
+  if(end.aerial)return [{x:sx,y:sy},{x:tx,y:ty}];
+  const path=[];let key=endKey;
+  while(key){
+    const node=reach.get(key);if(!node)break;
+    path.push({x:node.x,y:node.y});
+    if(key===startKey)break;
+    key=node.parent;
+  }
+  path.reverse();
+  return path.length&&path[0].x===Number(u.x)&&path[0].y===Number(u.y)?path:null;
+}
+function getUnitMovementZonesForState(u,unitsOverride=null,maxMoveOverride=null){
+  if(!u)return[];
+  const startKey=`${Number(u.x)},${Number(u.y)}`;
+  return [...buildUnitMovementReachability(u,unitsOverride,maxMoveOverride).keys()].filter(key=>key!==startKey);
+}
+function movementPathDistance(path){return Array.isArray(path)?Math.max(0,path.length-1):0;}
+function isMovementPathStraight(path){
+  if(!Array.isArray(path)||path.length<3)return false;
+  const dx=Math.sign(path[1].x-path[0].x),dy=Math.sign(path[1].y-path[0].y);
+  if(dx===0&&dy===0)return false;
+  for(let i=2;i<path.length;i++)if(Math.sign(path[i].x-path[i-1].x)!==dx||Math.sign(path[i].y-path[i-1].y)!==dy)return false;
+  return true;
+}
+function movementPathLastDirection(path,fallbackFrom=null,fallbackTo=null){
+  if(Array.isArray(path)&&path.length>=2){const a=path[path.length-2],b=path[path.length-1];return{dx:Math.sign(b.x-a.x),dy:Math.sign(b.y-a.y)};}
+  return{dx:Math.sign(Number(fallbackTo?.x||0)-Number(fallbackFrom?.x||0)),dy:Math.sign(Number(fallbackTo?.y||0)-Number(fallbackFrom?.y||0))};
+}
+function moveZones(u){
+  const live=getLiveUnitRef(u);if(!live||!isUnitMoveWindow(live))return[];
+  const mulanExecMove=isMulanExecutionMoveReady(live);
+  if(!mulanExecMove&&(live.moved||live.acted))return[];
+  if(!mulanExecMove&&live.noMoveTurnKey&&live.noMoveTurnKey===publicState?.turnKey)return[];
+  const maxMove=mulanExecMove?1:effectiveMov(live);
+  return getUnitMovementZonesForState(live,publicState?.units||[],maxMove);
+}
 function attackZones(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`)}
 function attackRangeCells(u,units=publicState?.units||[]){
   if(!u)return[];

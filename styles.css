@@ -1932,6 +1932,15 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .settings-danger-zone b{display:block;color:#fff1c4;margin-bottom:4px;}
 .settings-danger-zone p{margin:6px 0 10px;font-size:.92rem;}
+.settings-learning-zone{
+  margin:14px 0;
+  padding:12px;
+  border:1px solid rgba(87,181,105,.28);
+  border-radius:16px;
+  background:rgba(0,0,0,.22);
+}
+.settings-learning-zone b{display:block;color:#dfffe4;margin-bottom:4px;}
+.settings-learning-zone p{margin:6px 0 10px;font-size:.92rem;}
 .settings-reset-status{min-height:1.1em;color:#ffd166;font-size:.9rem;}
 #battleDeleteCloudBattleBtn{border-color:rgba(255,140,100,.35);}
 

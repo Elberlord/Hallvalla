@@ -813,8 +813,24 @@ function initBattleClockTuner(){
 initBattleClockTuner();
 
 
-on("settingsBtn","click",()=>$("settingsPanel").classList.remove("hidden"));
+function refreshAiLearningLogStatus(message=""){
+  const el=$("aiLearningLogStatus");if(!el)return;
+  if(message){el.textContent=message;return;}
+  try{
+    const state=typeof getAdaptiveExpertLearningLogStatus==="function"?getAdaptiveExpertLearningLogStatus():{entries:0};
+    if(!Number(state?.entries||0)){el.textContent="Todavía no hay duelos registrados en el diario experto.";return;}
+    const last=Number(state?.lastAt||0)?new Date(Number(state.lastAt)).toLocaleString("es-ES"):"sin fecha";
+    el.textContent=`${Number(state.entries||0)} duelo(s) registrados · último: ${last}`;
+  }catch(_){el.textContent="El diario experto todavía no está disponible.";}
+}
+function exportAiLearningLogFromSettings(){
+  const ok=typeof exportAdaptiveExpertLearningLog==="function"&&exportAdaptiveExpertLearningLog();
+  refreshAiLearningLogStatus(ok?"Log .txt exportado. Puedes compartirlo para analizar patrones y diseñar counters.":"No se pudo exportar el log.");
+  setTimeout(()=>refreshAiLearningLogStatus(),1800);
+}
+on("settingsBtn","click",()=>{$("settingsPanel").classList.remove("hidden");refreshAiLearningLogStatus();});
 on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
+on("exportAiLearningLogBtn","click",exportAiLearningLogFromSettings);
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
 on("showStatsTutorialBtn","click",()=>showStatsTutorial({force:true}));
 on("startBasicTutorialFromSettingsBtn","click",()=>{const p=$("settingsPanel");if(p)p.classList.add("hidden");startBasicTutorialBattle();});
