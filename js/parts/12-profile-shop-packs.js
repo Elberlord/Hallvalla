@@ -1393,7 +1393,7 @@ const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
   battle1:Object.freeze({guardian:2,samurai_katana:2,archer:2,new_kingdom_archer:2,paralysis_spell:1}),
   battle2:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,armored_man_at_arms:1,scythian_horse_archer:2}),
   battle3:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,scythian_horse_archer:2,numidian_javelin_rider:1,bolt:1,paralysis_spell:1}),
-  battle4:Object.freeze({ulfhednar:2,berserker_de_oso:2,berserker:2,tanned_hide_harness:1,counterweighted_grip:1}),
+  battle4:Object.freeze({guardian:2,spearman:1,ulfhednar:2,berserker_de_oso:2,berserker:1,scythian_horse_archer:1,tanned_hide_harness:1,counterweighted_grip:1}),
   battle5:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,armored_man_at_arms:1,scythian_horse_archer:2})
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:4,battle2:4,battle3:5,battle4:8,battle5:10});
@@ -1418,8 +1418,8 @@ const ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS=Object.freeze({
     ["bolt",2],["paralysis_spell",2],["heal",1],["withdrawal_stirrups",1]
   ]),
   axe:Object.freeze([
-    ["ulfhednar",3],["berserker_de_oso",3],["berserker",2],["spearman",2],["mongol_explorer",1],["saboteador_iga",1],
-    ["bolt",3],["smoke_bomb",1],["fireball",1],["heal",1],["tanned_hide_harness",1],["counterweighted_grip",1]
+    ["guardian",3],["spearman",2],["ulfhednar",3],["berserker_de_oso",3],["berserker",2],["scythian_horse_archer",2],
+    ["fireball",1],["bolt",1],["paralysis_spell",1],["tanned_hide_harness",1],["counterweighted_grip",1]
   ])
 });
 const ADAPTIVE_CAMPAIGN_RARITY_ORDER=Object.freeze(["basic","epic","glorious","mythic","legendary"]);
