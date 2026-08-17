@@ -452,7 +452,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"ulysses",name:"Ulises / Odiseo",type:"unit",icon:"🧭",portrait:CARD_PORTRAITS.ulysses,cost:3,hp:5,atk:3,guard:4,dex:6,agi:6,mov:2,range:1,rarity:"Mítica",special:true,text:"Estratega de Ítaca: cuando Ulises ataca, todas las unidades aliadas en radio 2 alrededor de él obtienen +3 Guardia y +1 MOV. No afecta líderes ni al propio Ulises. El bonus de MOV se mantiene hasta el próximo turno del dueño."},
   {key:"joan_of_arc",name:"Juana de Arco",type:"unit",icon:"🕯️",portrait:CARD_PORTRAITS.joan,cost:3,hp:5,atk:3,guard:4,dex:4,agi:4,mov:1,range:1,rarity:"Mítica",special:true,leaderBuffGroups:["warrior"],text:"Llama de Orléans: una vez por turno, cuando un aliado fuera a recibir daño, reduce ese daño en 3. Si el aliado permanece con Vida, obtiene +8 Guardia hasta el final de su próximo turno."},
   {key:"leonidas",name:"Leónidas",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.leonidas,cost:4,hp:8,atk:5,guard:7,dex:4,agi:3,mov:2,range:1,rarity:"Mítica",special:true,leaderBuffGroups:["warrior"],text:"Última Formación: las unidades básicas aliadas adyacentes a Leónidas obtienen +4 Guardia. Última Resistencia: cuando Leónidas recibe daño fatal por un ataque, su asesino pierde 3 Vida. Si ese daño derrota al asesino, Leónidas queda con 1 Vida."},
-  {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:3,hp:4,atk:4,guard:3,dex:9,agi:8,mov:2,range:2,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -4 Guardia durante ese combate. Si acierta, conserva -4 Guardia hasta el final de su próximo turno. No acumulable."},
+  {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:3,hp:4,atk:4,guard:3,dex:9,agi:8,mov:1,range:2,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -4 Guardia durante ese combate. Si acierta, conserva -4 Guardia hasta el final de su próximo turno. No acumulable."},
   {key:"tomoe_gozen",name:"Tomoe Gozen",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.tomoe,cost:3,hp:5,atk:5,guard:4,dex:8,agi:7,mov:3,range:1,rarity:"Mítica",special:true,text:"Jinete de la Luna Cortante: si Tomoe se movió 2 o más casillas antes de atacar, el objetivo recibe -6 Agilidad durante ese combate. Si el objetivo tiene Rango 2 o más, Tomoe obtiene +8 Ataque durante ese combate."},
   {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:4,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,rarity:"Mítica",special:true,text:"Trampa de Cannas: una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde 5 AT y 1 MOV hasta su próximo turno."},
   {key:"subotai",name:"Subotai / Subutai",type:"unit",icon:"🏇",portrait:CARD_PORTRAITS.subotai,cost:3,hp:5,atk:4,guard:4,dex:5,agi:5,mov:2,range:2,rarity:"Mítica",special:true,text:"Marcha de Mil Horizontes: una vez por turno, elige una unidad aliada. Esa unidad puede moverse 2 casillas adicionales este turno. Puede elegir la misma unidad en turnos seguidos."},
@@ -475,7 +475,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"julius_caesar",name:"Julio César",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.caesar,cost:4,hp:7,atk:4,guard:5,dex:7,agi:4,mov:1,range:1,rarity:"Legendaria",special:true,text:"Disciplina de las Legiones: mientras Julio César esté en campo, la primera vez por turno que una unidad enemiga ataque, recibe -4 Ataque y -3 Destreza durante ese combate."},
   {key:"cu_chulainn",name:"Cú Chulainn",type:"unit",icon:"🐕",portrait:CARD_PORTRAITS.cuChulainn,cost:5,hp:7,atk:7,guard:4,dex:8,agi:7,mov:2,range:1,rarity:"Semidiós",special:true,text:"Furia del Sabueso: mientras Cú Chulainn tenga la mitad o menos de su Vida máxima, obtiene +5 Ataque y +5 Agilidad. Alma de Dragón: las unidades enemigas en rango 1 reciben Miedo y pierden 3 Ataque mientras permanezcan en el aura."},
   {key:"gilgamesh",name:"Gilgamesh",type:"unit",icon:"👑",portrait:CARD_PORTRAITS.gilgamesh,cost:5,hp:8,atk:7,guard:6,dex:8,agi:5,mov:1,range:1,rarity:"Semidiós",special:true,text:"Peso del Rey de Uruk: mientras Gilgamesh esté en campo, los enemigos adyacentes a él tienen -3 Ataque y -3 Agilidad. Además, el daño que Gilgamesh recibe de proyectiles, arqueros o ataques mágicos a distancia se reduce en 2."},
-  {key:"arjuna",name:"Arjuna",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.arjuna,cost:5,hp:6,atk:6,guard:4,dex:10,agi:7,mov:2,range:2,rarity:"Semidiós",special:true,text:"Flecha del Dharma: una vez por turno, cuando Arjuna falle un ataque a distancia, puede repetir la tirada con +6 Destreza. Si acierta con esa repetición, provoca Veneno."},
+  {key:"arjuna",name:"Arjuna",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.arjuna,cost:5,hp:6,atk:6,guard:4,dex:10,agi:7,mov:1,range:2,rarity:"Semidiós",special:true,text:"Flecha del Dharma: una vez por turno, cuando Arjuna falle un ataque a distancia, puede repetir la tirada con +6 Destreza. Si acierta con esa repetición, provoca Veneno."},
   {key:"achilles",name:"Aquiles",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.achilles,cost:5,hp:7,atk:8,guard:6,dex:10,agi:8,mov:2,range:1,rarity:"Semidiós",special:true,leaderBuffGroups:["warrior"],text:"Cólera del Pélida: la primera vez por turno que Aquiles ataca, obtiene +5 Ataque durante ese combate. Concentración del Pélida: si tiene 2 o más enemigos adyacentes, obtiene +6 Guardia. Sangre del Pélida: al inicio de tu turno, recupera 1 Vida."}
 ];
 const LEGENDARY_ALLY_CARDS=SPECIAL_HUMAN_CARD_DATA.map(c=>({...c}));
@@ -2230,6 +2230,32 @@ const ARCHER_UNIT_KEYS=new Set([
   "scythian_horse_archer",
   "mongol_explorer"
 ]);
+// Regla canónica: todo arquero A PIE tiene MOV base 1.
+// Los arqueros montados conservan la movilidad de su montura.
+const FOOT_ARCHER_MOVEMENT_ONE_KEYS=new Set([
+  "archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius",
+  "simo_hayha","nasu_no_yoichi","arjuna"
+]);
+function isMountedArcherCard(card){
+  if(!card||card.type!=="unit")return false;
+  const key=String(card.key||"").toLowerCase();
+  return getWeaponClassForCard(card)==="cavalry"||[
+    "saladin_archer_cavalry","samurai_yabusame","scythian_horse_archer","mongol_explorer","tomoe_gozen"
+  ].includes(key);
+}
+function isCanonicalFootArcherMovementOne(card){
+  if(!card||card.type!=="unit"||isMountedArcherCard(card))return false;
+  const key=String(card.key||"").toLowerCase();
+  const name=String(card.name||"").toLowerCase();
+  const icon=String(card.icon||"");
+  return FOOT_ARCHER_MOVEMENT_ONE_KEYS.has(key)||icon.includes("🏹")||name.includes("arquero")||name.includes("arquera");
+}
+function applyArcherMovementRule(card){
+  if(!card||!isCanonicalFootArcherMovementOne(card))return card;
+  card.mov=1;
+  card.archerMovementRuleApplied=true;
+  return card;
+}
 // Unidades que no pertenecen a la clase Arco pero sí tienen un ataque a distancia
 // escrito directamente en su diseño. Cualquier otra Espada, Caballería, Hacha o
 // Bestia queda limitada a RG 1, aunque un estado antiguo conserve un rango corrupto.

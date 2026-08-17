@@ -448,11 +448,13 @@ let unitExhaustionFinalizeLock=false;
 async function maybeFinalizeUnitExhaustionFromPublicState(){
   if(unitExhaustionFinalizeLock||!gameId||!publicState||isBattleEnded()||publicState.mode==="tutorial")return false;
   if(publicState.mode!=="adventure"&&Number(publicState.currentPlayer||0)!==Number(myPlayer||0))return false;
-  const outcome=getUnitExhaustionOutcome(publicState.units||[],publicState);
+  const exhaustionState=publicState.mode==="adventure"?(networkPublicStateRaw||publicState):publicState;
+  const visibleUnits=publicState.units||exhaustionState.units||[];
+  const outcome=getUnitExhaustionOutcome(visibleUnits,exhaustionState);
   if(!outcome?.ended)return false;
   unitExhaustionFinalizeLock=true;
   try{
-    return await finalizeBattle(publicState.units||[],"",publicState);
+    return await finalizeBattle(visibleUnits,"",exhaustionState);
   }finally{
     unitExhaustionFinalizeLock=false;
   }

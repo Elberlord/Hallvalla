@@ -227,7 +227,11 @@ function renderHud(){
     const st=publicState.playerStats?.[p]||{hp:0,honor:0,deck:0,hand:0};
     const leader=getLeader(p);
     const nameEl=$("p"+p+"HudName");
-    if(nameEl)nameEl.textContent=getHudPlayerDisplayName(p);
+    if(nameEl){
+      const shouldHideAdventureEnemyName=publicState?.mode==="adventure"&&p===2;
+      nameEl.textContent=shouldHideAdventureEnemyName?"":getHudPlayerDisplayName(p);
+      nameEl.style.display=shouldHideAdventureEnemyName?"none":"";
+    }
 
     const lifeEl=$("p"+p+"Life");
     const honorEl=$("p"+p+"Honor");
@@ -1166,6 +1170,9 @@ function renderLog(){
     const type=String(item?.type||"").toLowerCase();
     if(type==="attack"){
       return `<div class="event-history-item ${cfg.className} event-history-attack" title="${escapeHtml(item.attackerName||"Atacante")} → ${escapeHtml(item.targetName||"Objetivo")}"><span class="event-history-duel-figure">${imageTag(item.attackerImage,item.attackerName||"Atacante")}</span><span class="event-history-swords" aria-hidden="true">⚔</span><span class="event-history-duel-figure">${imageTag(item.targetImage,item.targetName||"Objetivo")}</span></div>`;
+    }
+    if(type==="heal"){
+      return `<div class="event-history-item ${cfg.className} event-history-attack event-history-heal" title="${escapeHtml(item.attackerName||"Lanzador")} → ${escapeHtml(item.targetName||"Objetivo")}"><span class="event-history-duel-figure">${imageTag(item.attackerImage,item.attackerName||"Lanzador")}</span><span class="event-history-heal-cross" aria-hidden="true">✚</span><span class="event-history-duel-figure">${imageTag(item.targetImage,item.targetName||"Objetivo")}</span></div>`;
     }
     const image=typeof getEventItemPrimaryImage==="function"?getEventItemPrimaryImage(item,cfg):(item.image||cfg.icon||getAssetWarningImageSrc());
     const badge=type==="death"

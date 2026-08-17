@@ -1054,7 +1054,7 @@ function getBattleRewardLabel(battle){
   else if(battle.rewardCard==="improved_magic_trap_pack")parts.push("Paquete reforzado completo");
   if(battle.cardPack){
     const rewardPackType=getBattleRewardPackType(battle);
-    parts.push(rewardPackType==="beast_pack"?"Paquete de Bestias x1 · 2 cartas":(rewardPackType==="improved_magic_trap"?"Paquete reforzado de 2 cartas":"Pack básico normal x1 · 2 cartas básicas aleatorias"));
+    parts.push(rewardPackType==="beast_pack"?"Paquete de Bestias x1":(rewardPackType==="improved_magic_trap"?"Paquete reforzado x1":"Pack básico x1"));
   }
   return parts.join(" · ");
 }

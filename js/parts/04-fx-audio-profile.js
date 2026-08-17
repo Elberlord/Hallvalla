@@ -64,6 +64,7 @@ function getEventSplashConfig(type,item=null){
     debuff:{className:"is-debuff",icon:"assets/ui/status_icons/status_debuff.webp",kicker:"ESTADO",title:"DEBILITADO",subtitle:""},
     summon:{className:"is-summon",kicker:"INVOCACIÓN",title:String(item?.title||item?.unitName||"INVOCACIÓN"),subtitle:""},
     attack:{className:"is-attack",kicker:"ATAQUE",title:"ATAQUE",subtitle:""},
+    heal:{className:"is-heal",kicker:"CURACIÓN",title:String(item?.title||"CURACIÓN"),subtitle:""},
     death:{className:"is-death",kicker:"DERROTADO",title:String(item?.title||item?.unitName||"UNIDAD DERROTADA"),subtitle:""},
     spell:{className:"is-spell",kicker:"MAGIA",title:String(item?.title||item?.cardName||"MAGIA"),subtitle:""}
   };
@@ -163,6 +164,11 @@ function buildEventSplashShell(item){
     const d=String(item?.targetImage||getAssetWarningImageSrc());
     return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-attack-pair"><span class="event-splash-figure event-splash-attacker"><img src="${escapeHtml(a)}" alt="${escapeHtml(item?.attackerName||"Atacante")}" ${getEventImageFallbackAttr(item?.attackerName||"Atacante")}></span><span class="event-splash-swords" aria-hidden="true">⚔</span><span class="event-splash-figure event-splash-target"><img src="${escapeHtml(d)}" alt="${escapeHtml(item?.targetName||"Objetivo")}" ${getEventImageFallbackAttr(item?.targetName||"Objetivo")}></span></div><div class="event-splash-mini-label">ATAQUE</div></div>`;
   }
+  if(type==="heal"){
+    const a=String(item?.attackerImage||getAssetWarningImageSrc());
+    const d=String(item?.targetImage||getAssetWarningImageSrc());
+    return `<div class="event-splash-shell ${cfg.className} event-splash-visual"><div class="event-splash-attack-pair"><span class="event-splash-figure event-splash-attacker"><img src="${escapeHtml(a)}" alt="${escapeHtml(item?.attackerName||"Lanzador")}" ${getEventImageFallbackAttr(item?.attackerName||"Lanzador")}></span><span class="event-splash-swords event-splash-heal-cross" aria-hidden="true">✚</span><span class="event-splash-figure event-splash-target"><img src="${escapeHtml(d)}" alt="${escapeHtml(item?.targetName||"Objetivo")}" ${getEventImageFallbackAttr(item?.targetName||"Objetivo")}></span></div><div class="event-splash-mini-label">CURACIÓN</div></div>`;
+  }
   if(type==="summon"||type==="death"){
     const image=getEventItemPrimaryImage(item,cfg);
     const badge=type==="death"
@@ -216,6 +222,13 @@ function makeAttackVisualEvent(fx,prevMap,nextMap){
   const target=nextMap?.[fx.targetId]||prevMap?.[fx.targetId]||null;
   if(!attacker||!target)return null;
   return {type:"attack",key:`${gameId||"game"}:visual:attack:${fx.eventId||Date.now()}`,attackerName:attacker.name||fx.attackerName||"Atacante",targetName:target.name||fx.targetName||"Objetivo",attackerImage:getEventEntityImage(attacker),targetImage:getEventEntityImage(target)};
+}
+function makeHealVisualEvent(fx,prevMap,nextMap){
+  if(!fx||fx.type!=="heal")return null;
+  const attacker=nextMap?.[fx.attackerId]||prevMap?.[fx.attackerId]||null;
+  const target=nextMap?.[fx.targetId]||prevMap?.[fx.targetId]||null;
+  if(!attacker||!target)return null;
+  return {type:"heal",key:`${gameId||"game"}:visual:heal:${fx.eventId||Date.now()}`,title:String(fx.title||fx.cardName||"Curación"),attackerName:attacker.name||fx.attackerName||"Lanzador",targetName:target.name||fx.targetName||"Objetivo",attackerImage:getEventEntityImage(attacker),targetImage:getEventEntityImage(target)};
 }
 function makeSpellVisualEvent(event,prevMap=null,nextMap=null){
   if(!event)return null;
@@ -893,10 +906,11 @@ function maybePlayBattleFx(prevPub,nextPub){
   const summonVisuals=visibleAdded.map((u,i)=>makeSummonVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
   const cardVisual=explicitCardVisualEvent?makeSpellVisualEvent(explicitCardVisualEvent,prevMap,nextMap):null;
   const attackVisual=explicitAttackFx?.type==="attack"?makeAttackVisualEvent(explicitAttackFx,prevMap,nextMap):null;
-  const legacySpellVisual=!cardVisual&&explicitAttackFx&&["spell","magic","heal"].includes(explicitAttackFx.type)?makeSpellVisualEvent(explicitAttackFx,prevMap,nextMap):null;
+  const healVisual=explicitAttackFx?.type==="heal"?makeHealVisualEvent(explicitAttackFx,prevMap,nextMap):null;
+  const legacySpellVisual=!cardVisual&&!healVisual&&explicitAttackFx&&["spell","magic","heal"].includes(explicitAttackFx.type)?makeSpellVisualEvent(explicitAttackFx,prevMap,nextMap):null;
   const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);
   const deathVisuals=visibleDestroyed.map((u,i)=>makeDeathVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
-  const primaryVisuals=[...summonVisuals.slice(0,2),cardVisual||legacySpellVisual,attackVisual].filter(Boolean);
+  const primaryVisuals=[...summonVisuals.slice(0,2),cardVisual||healVisual||legacySpellVisual,attackVisual].filter(Boolean);
   primaryVisuals.forEach((item,i)=>battleSetTimeout(()=>queueEventSplashGroup([item]),i*80));
   if(summonVisuals.length>2)appendEventSplashHistory(summonVisuals.slice(2));
   if(eventSplashPayloads.length){

@@ -1013,6 +1013,14 @@ async function adventureEnemyTurn(){
   let pendingAiStatusFxEvent=null;
   let pendingAiFloatFxEvent=null;
   let pendingAiCardVisualEvent=null;
+  const getAiTransientState=()=>({
+    ...pub,
+    units,
+    legendaryTraps,
+    beastTraps,
+    erictoGraveyard,
+    adventureAiState:{deck:[...deck],hand:[...hand],honor,maxHonor,lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false}
+  });
   const withAiPublicState=(fn)=>{
     const prev=publicState;
     publicState={...pub,units,legendaryTraps,beastTraps,erictoGraveyard,currentPlayer:2,turnKey:pub.turnKey,turn:pub.turn,phase:pub.phase};
@@ -1036,7 +1044,7 @@ async function adventureEnemyTurn(){
   if(lionFearStart.logs.length){logs.push(...lionFearStart.logs);}
   pendingAiStatusFxEvent=lionFearStart.statusFxEvent||bleedStart.statusFxEvent||startTrap.statusFxEvent||null;
   pendingAiFloatFxEvent=lionFearStart.floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null;
-  if((startTrap.logs.length||bleedStart.logs.length||lionFearStart.logs.length)&&await finalizeBattle(units,logs.join(" ")))return;
+  if((startTrap.logs.length||bleedStart.logs.length||lionFearStart.logs.length)&&await finalizeBattle(units,logs.join(" "),getAiTransientState()))return;
   // El antiguo sistema stalemateNoPlay fue retirado del motor de batalla.
   // La IA continúa directamente con su turno normal después de recargar Honor,
   // robar y resolver los efectos de inicio de turno.
@@ -2463,6 +2471,11 @@ async function adventureEnemyTurn(){
   };
 
   const chooseBestAiMainPlay=()=>{
+    const aiHasFieldUnit=living(2).some(u=>!u.leader);
+    if(!aiHasFieldUnit){
+      const forcedSummon=chooseBestSummon();
+      if(forcedSummon)return {...forcedSummon,kind:"summon",score:Number(forcedSummon.score||0)+100000,forcedNoBoardSummon:true};
+    }
     const choices=[];
     const pushChoice=(kind,choice,base=0)=>{
       if(!choice||!choice.card)return;
@@ -2977,8 +2990,8 @@ async function adventureEnemyTurn(){
   units=battleTrap.units;
   legendaryTraps=battleTrap.traps;
   if(battleTrap.logs.length)logs.push(...battleTrap.logs);
-  if(getBattleOutcome(units).ended){
-    const outcome=getBattleOutcome(units);
+  if(getBattleOutcome(units,getAiTransientState()).ended){
+    const outcome=getBattleOutcome(units,getAiTransientState());
     erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
     if(!aiLifecycleAlive())return;
     await update(ref(db,`games/${aiGameId}/public`),{units,legendaryTraps,beastTraps,erictoGraveyard,[`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt:Date.now(),currentPlayer:0,log:[...logs,...(pub.log||[])].slice(0,18)});
