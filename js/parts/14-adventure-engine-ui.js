@@ -740,19 +740,30 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   setAdventureGuardianActor(battle.isGuardian ? (battle.actorImage||"assets/story/guardian_hechicero_actor.webp") : "");
   const introChapter=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   $("adventureGuardianTitle").textContent=battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`;
-  const introConflict=introChapter.id===ADVENTURE_CHAPTER_2_1.id?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas.":"Los rebeldes intentan usurpar el trono y crear un golpe de estado.";
+  const introConflict=battle.isGuardian
+    ?"Más allá del umbral, los invasores extranjeros avanzan hacia el corazón del reino. Derrota al Hechicero guardián y sal a darles cacería."
+    :(introChapter.id===ADVENTURE_CHAPTER_2_1.id
+      ?"La rebelión ahora pelea con cartas legendarias copiadas y magias/trampas reforzadas."
+      :"Los rebeldes intentan usurpar el trono y crear un golpe de estado.");
   const previewInitial=makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage");
   hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
   const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
   const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);
   const principalLine=principalCards.length?`
 Personajes Principales enemigos: ${principalCards.map(card=>card.name).join(", ")}. Comenzarán ya convocados.`:"";
-  $("adventureGuardianText").textContent=`${battle.enemyIntro||battle.desc}
+  const guardianText=$("adventureGuardianText");
+  guardianText.replaceChildren();
+  const storyText=document.createElement("span");
+  storyText.className="guardian-story-main";
+  storyText.textContent=`${battle.enemyIntro||battle.desc}
 
-${introConflict} Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.
-
-IA enemiga: táctica máxima desde el primer duelo · ${battle.aiStyle||"Sin restricciones"}${principalLine}
-Recompensa al ganar: ${getBattleRewardLabel(battle)}.`;
+${introConflict}${battle.isGuardian?"":` Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.`}${principalLine}`;
+  const rewardText=document.createElement("span");
+  rewardText.className="guardian-reward-line";
+  rewardText.textContent=battle.isGuardian
+    ?"Recompensa al ganar: 20 EXP · 10 Oro · Héroe no elegido: Hua Lan o William Wallace · Pack básico x1"
+    :`Recompensa al ganar: ${getBattleRewardLabel(battle)}.`;
+  guardianText.append(storyText,rewardText);
 }
 function backToMainMenu(){
   leaveCurrentGame();

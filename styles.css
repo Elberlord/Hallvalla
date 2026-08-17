@@ -21689,3 +21689,465 @@ html.hv-perf-lite .event-splash-spell-art img{
 .mastery-milestone-chip b{font-size:8px!important;color:inherit!important}
 .mastery-milestone-chip small{max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:6.5px!important;color:inherit!important;opacity:.86}
 @media(max-width:650px){.mastery-milestone-chip{min-width:66px!important}.mastery-milestone-chip small{max-width:62px;font-size:6px!important}}
+
+/* ============================================================================
+   7HE22 · REFERENCIA MÓVIL MOTO E22 (1600×720 físico / ~800×360 CSS)
+   SOLO MÓVIL HORIZONTAL. ESCRITORIO/PC NO SE MODIFICA.
+
+   Objetivos:
+   - reservar el corredor central exclusivamente para arena/gameplay;
+   - concentrar HUD y botones interactivos en los laterales;
+   - mantener targets táctiles de ~32–36 CSS px sin volverlos intrusivos;
+   - adaptarse a la altura dinámica real de Chrome mediante dvh/dvw;
+   - neutralizar offsets del tuner de escritorio únicamente en este perfil.
+   ============================================================================ */
+@media (max-width:900px) and (max-height:430px) and (orientation:landscape){
+  html.hv-mobile-landscape{
+    --hv-e22-edge-x:max(7px,env(safe-area-inset-left,0px));
+    --hv-e22-edge-r:max(7px,env(safe-area-inset-right,0px));
+    --hv-e22-edge-b:max(5px,env(safe-area-inset-bottom,0px));
+    --hv-e22-hud-w:clamp(176px,24.5dvw,198px);
+    --hv-e22-hud-h:58px;
+    --hv-e22-control-h:28px;
+    --hv-e22-actions-w:clamp(126px,17.5dvw,142px);
+  }
+
+  /* HUD de jugadores: compactos, totalmente fuera del corredor central. */
+  html.hv-mobile-landscape body #gameShell #hudP1.player-status-hud,
+  html.hv-mobile-landscape body #gameShell #hudP2.player-status-hud{
+    top:4px!important;
+    width:var(--hv-e22-hud-w)!important;
+    height:var(--hv-e22-hud-h)!important;
+    min-height:0!important;
+    max-height:var(--hv-e22-hud-h)!important;
+    transform:none!important;
+    z-index:180!important;
+  }
+  html.hv-mobile-landscape body #gameShell #hudP1.player-status-hud{
+    left:var(--hv-e22-edge-x)!important;
+    right:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell #hudP2.player-status-hud{
+    right:var(--hv-e22-edge-r)!important;
+    left:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell .player-status-card{
+    height:100%!important;
+    padding:4px 6px!important;
+    border-radius:10px!important;
+  }
+  html.hv-mobile-landscape body #gameShell .player-status-head{
+    gap:4px!important;
+    margin-bottom:3px!important;
+  }
+  html.hv-mobile-landscape body #gameShell .player-status-name{font-size:9px!important;}
+  html.hv-mobile-landscape body #gameShell .player-status-turn{
+    min-width:34px!important;
+    height:15px!important;
+    padding:0 4px!important;
+    font-size:6.5px!important;
+  }
+  html.hv-mobile-landscape body #gameShell .player-status-row{gap:3px!important;}
+  html.hv-mobile-landscape body #gameShell .player-status-mini{
+    min-height:20px!important;
+    border-radius:7px!important;
+    gap:1px!important;
+  }
+  html.hv-mobile-landscape body #gameShell .player-status-mini span{font-size:6px!important;}
+  html.hv-mobile-landscape body #gameShell .player-status-mini strong{font-size:9px!important;}
+
+  /* Honor debajo de cada HUD: misma altura y sin invadir el tablero. */
+  html.hv-mobile-landscape body #gameShell .battlefield #turnHonorHud.turn-honor-hud,
+  html.hv-mobile-landscape body #gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+    top:66px!important;
+    min-width:88px!important;
+    height:var(--hv-e22-control-h)!important;
+    min-height:var(--hv-e22-control-h)!important;
+    padding:0 8px!important;
+    gap:6px!important;
+    border-radius:10px!important;
+    transform:none!important;
+    font-size:8px!important;
+    z-index:176!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield #turnHonorHud.turn-honor-hud{
+    left:var(--hv-e22-edge-x)!important;
+    right:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+    right:var(--hv-e22-edge-r)!important;
+    left:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield #turnHonorHud .turn-honor-label,
+  html.hv-mobile-landscape body #gameShell .battlefield #rivalHonorHud .turn-honor-label{
+    font-size:8px!important;
+    line-height:1!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield #turnHonorHud strong,
+  html.hv-mobile-landscape body #gameShell .battlefield #rivalHonorHud strong{
+    font-size:9px!important;
+    line-height:1!important;
+  }
+
+  /* Toggle de acciones junto al Honor local. El botón grande original queda oculto. */
+  html.hv-mobile-landscape body #gameShell #toggleActionsBtn{display:none!important;}
+  html.hv-mobile-landscape body #gameShell #mobileToggleActionsBtn.mobile-honor-actions-btn{
+    display:flex!important;
+    position:fixed!important;
+    left:calc(var(--hv-e22-edge-x) + 94px)!important;
+    right:auto!important;
+    top:66px!important;
+    width:76px!important;
+    min-width:76px!important;
+    max-width:76px!important;
+    height:var(--hv-e22-control-h)!important;
+    min-height:var(--hv-e22-control-h)!important;
+    padding:0 6px!important;
+    border-radius:10px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    z-index:182!important;
+  }
+
+  /* Menú: esquina inferior izquierda, accesible pero fuera del tablero. */
+  html.hv-mobile-landscape body #gameShell .battlefield .battle-tools{
+    position:fixed!important;
+    left:var(--hv-e22-edge-x)!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:var(--hv-e22-edge-b)!important;
+    transform:none!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    gap:5px!important;
+    padding:0!important;
+    z-index:190!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .battle-tools #battleMenuBtn{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    padding:0!important;
+    font-size:15px!important;
+    border-radius:10px!important;
+  }
+
+  /*
+     Acciones: columna derecha compacta. Se neutraliza SOLO EN MÓVIL el transform
+     del tuner de escritorio para que la calibración de PC no arrastre los botones.
+  */
+  html.hv-mobile-landscape body #gameShell .battlefield .side,
+  html.hv-mobile-landscape body #gameShell .battlefield.hand-open .side,
+  html.hv-mobile-landscape body #gameShell .battlefield.hand-open .side:not(.actions-collapsed){
+    position:fixed!important;
+    left:auto!important;
+    right:var(--hv-e22-edge-r)!important;
+    top:132px!important;
+    bottom:auto!important;
+    width:var(--hv-e22-actions-w)!important;
+    height:auto!important;
+    max-width:var(--hv-e22-actions-w)!important;
+    transform:none!important;
+    overflow:visible!important;
+    display:block!important;
+    visibility:visible!important;
+    z-index:188!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side.actions-collapsed,
+  html.hv-mobile-landscape body #gameShell .battlefield.hand-open .side.actions-collapsed{
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel,
+  html.hv-mobile-landscape body #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:6px!important;
+    transform:none!important;
+    transform-origin:top right!important;
+    border:1px solid rgba(216,166,74,.55)!important;
+    border-radius:11px!important;
+    background:linear-gradient(180deg,rgba(21,16,11,.90),rgba(7,6,5,.88))!important;
+    box-shadow:0 6px 16px rgba(0,0,0,.38)!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side:not(.actions-collapsed) .actions-visual-panel::before,
+  html.hv-mobile-landscape body #gameShell .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel::before{
+    content:none!important;
+    display:none!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side .actions-visual-buttons{
+    position:static!important;
+    left:auto!important;
+    top:auto!important;
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    align-items:start!important;
+    gap:4px!important;
+    transform:none!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side .action-img-btn{
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    gap:2px!important;
+    touch-action:manipulation!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side .action-img-btn img{
+    width:32px!important;
+    height:32px!important;
+    max-width:32px!important;
+    max-height:32px!important;
+    object-fit:contain!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield .side .action-btn-label{
+    display:block!important;
+    width:100%!important;
+    min-height:13px!important;
+    max-width:none!important;
+    margin:0!important;
+    font-size:7px!important;
+    line-height:1!important;
+    white-space:normal!important;
+    text-align:center!important;
+  }
+
+  /* Relojes: también a los bordes. El reloj de turno queda centrado y pequeño. */
+  html.hv-mobile-landscape body #gameShell .battle-clock-hud{
+    min-height:18px!important;
+    padding:3px 6px 4px!important;
+    gap:4px!important;
+    border-radius:9px!important;
+  }
+  html.hv-mobile-landscape body #gameShell #turnTimerHud.battle-clock-turn-hud{
+    top:32px!important;
+    left:50%!important;
+    min-width:82px!important;
+    transform:translateX(-50%)!important;
+    z-index:178!important;
+  }
+  html.hv-mobile-landscape body #gameShell #playerClock1,
+  html.hv-mobile-landscape body #gameShell #playerClock2{
+    top:99px!important;
+    min-width:70px!important;
+    transform:none!important;
+    z-index:176!important;
+  }
+  html.hv-mobile-landscape body #gameShell #playerClock1{
+    left:var(--hv-e22-edge-x)!important;
+    right:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell #playerClock2{
+    right:var(--hv-e22-edge-r)!important;
+    left:auto!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battle-clock-turn-hud .turn-timer-label{font-size:6px!important;}
+  html.hv-mobile-landscape body #gameShell .battle-clock-turn-hud strong{font-size:10px!important;}
+  html.hv-mobile-landscape body #gameShell .duel-clock-label{font-size:5.5px!important;}
+  html.hv-mobile-landscape body #gameShell .duel-clock-hud strong{font-size:9px!important;}
+
+  /* Fase: pequeña, arriba al centro; no ocupa una franja del tablero. */
+  html.hv-mobile-landscape body #gameShell #phaseBanner.phase-banner{
+    top:4px!important;
+    left:50%!important;
+    min-width:92px!important;
+    max-width:120px!important;
+    padding:3px 7px!important;
+    border-radius:9px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    transform:translateX(-50%)!important;
+    z-index:178!important;
+  }
+
+  /*
+     Mano: deja libre la esquina de menú (izq.) y la banda de acciones (der.).
+     Con Chrome visible/oculto se ajusta por dvh, no por una altura fija del E22.
+  */
+  html.hv-mobile-landscape body #gameShell #handDrawer.hand-drawer.open{
+    position:fixed!important;
+    left:48px!important;
+    right:calc(var(--hv-e22-actions-w) + 14px)!important;
+    bottom:var(--hv-e22-edge-b)!important;
+    width:auto!important;
+    max-width:none!important;
+    max-height:min(34dvh,122px)!important;
+    padding:5px 6px!important;
+    border-radius:10px!important;
+    transform:none!important;
+    z-index:186!important;
+    overflow:hidden!important;
+  }
+  html.hv-mobile-landscape body #gameShell #handDrawer .hand-top{
+    margin-bottom:3px!important;
+    font-size:8px!important;
+    line-height:1!important;
+  }
+  html.hv-mobile-landscape body #gameShell #handDrawer .hand-row{
+    gap:4px!important;
+    padding-bottom:1px!important;
+  }
+  html.hv-mobile-landscape body #gameShell #handDrawer .hand-card{
+    flex:0 0 clamp(68px,9dvw,78px)!important;
+    min-height:86px!important;
+    padding:4px!important;
+    border-radius:8px!important;
+  }
+  html.hv-mobile-landscape body #gameShell #handDrawer .hand-name{font-size:7px!important;}
+  html.hv-mobile-landscape body #gameShell #handDrawer .hand-stats{font-size:6px!important;}
+
+  /* Historial: una tira discreta; al abrir mano queda detrás sin bloquear controles. */
+  html.hv-mobile-landscape body #gameShell #log.log{
+    position:fixed!important;
+    left:48px!important;
+    right:calc(var(--hv-e22-actions-w) + 14px)!important;
+    bottom:var(--hv-e22-edge-b)!important;
+    width:auto!important;
+    max-height:48px!important;
+    padding:4px 6px!important;
+    font-size:7px!important;
+    z-index:170!important;
+    pointer-events:none!important;
+  }
+  html.hv-mobile-landscape body #gameShell .battlefield.hand-open #log.log{
+    visibility:hidden!important;
+  }
+
+  /* Menús/contextuales nunca pueden crecer fuera del viewport útil del E22. */
+  html.hv-mobile-landscape body #gameShell #battleMenuPanel.battle-menu-panel{
+    width:min(410px,88dvw)!important;
+    max-width:88dvw!important;
+    max-height:88dvh!important;
+  }
+  html.hv-mobile-landscape body #gameShell .unit-context-menu{
+    max-width:min(210px,42dvw)!important;
+    max-height:70dvh!important;
+    overflow:auto!important;
+  }
+}
+
+
+/* === E23 · Guardian story pass: compact narrative intro ===
+   Only affects the initial Guardian scene. Other Adventure modals keep their layout. */
+#adventurePanel:has(#adventureGuardianStage:not(.hidden)){
+  padding:12px!important;
+}
+#adventurePanel:has(#adventureGuardianStage:not(.hidden)) .adventure-card{
+  width:min(980px,88vw)!important;
+  height:min(68vh,560px)!important;
+  max-height:calc(100svh - 34px)!important;
+  border-radius:22px!important;
+}
+#adventureGuardianStage.adventure-stage:not(.hidden){
+  padding:12px!important;
+  gap:8px!important;
+  min-height:0!important;
+}
+#adventureGuardianVisual.scene-guardian.has-guardian-actor{
+  border-radius:18px!important;
+}
+#adventureGuardianVisual.scene-guardian.has-guardian-actor .adventure-scene-overlay{
+  padding:14px 220px 14px 22px!important;
+}
+#adventureGuardianVisual.scene-guardian.has-guardian-actor .adventure-scene-copy{
+  width:min(560px,57vw)!important;
+  max-width:min(560px,57vw)!important;
+  padding:14px 18px!important;
+  border-radius:16px!important;
+  max-height:calc(100% - 8px)!important;
+  overflow:auto!important;
+}
+#adventureGuardianVisual .adventure-progress{
+  font-size:10px!important;
+  line-height:1.1!important;
+  margin-bottom:3px!important;
+}
+#adventureGuardianVisual .adventure-story-title{
+  font-size:clamp(25px,2.7vw,34px)!important;
+  line-height:1.04!important;
+  margin:0 0 7px!important;
+}
+#adventureGuardianVisual .adventure-story-text{
+  font-size:12.5px!important;
+  line-height:1.38!important;
+}
+#adventureGuardianVisual .guardian-story-main,
+#adventureGuardianVisual .guardian-reward-line{
+  display:block;
+  white-space:pre-line;
+}
+#adventureGuardianVisual .guardian-reward-line{
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px solid rgba(255,209,102,.18);
+  color:#f1cf83;
+  font-size:10.5px;
+  line-height:1.3;
+}
+#adventureGuardianVisual.scene-guardian.has-guardian-actor .guardian-actor img{
+  right:1.5%!important;
+  height:min(94%,500px)!important;
+  max-width:32%!important;
+}
+#adventureGuardianStage .guardian-story-footer{
+  justify-content:flex-end!important;
+  min-height:34px!important;
+  padding:0 2px!important;
+}
+#adventureGuardianStage .adventure-actions{
+  gap:7px!important;
+}
+#adventureGuardianStage .adventure-actions .btn{
+  min-height:32px!important;
+  padding:7px 14px!important;
+  border-radius:12px!important;
+  font-size:12px!important;
+  line-height:1!important;
+}
+
+@media(max-width:900px), (pointer:coarse){
+  #adventurePanel:has(#adventureGuardianStage:not(.hidden)) .adventure-card{
+    width:calc(100vw - 20px)!important;
+    height:min(82svh,620px)!important;
+    max-height:calc(100svh - 20px)!important;
+  }
+  #adventureGuardianVisual.scene-guardian.has-guardian-actor .adventure-scene-overlay{
+    padding:12px!important;
+    align-items:flex-start!important;
+  }
+  #adventureGuardianVisual.scene-guardian.has-guardian-actor .adventure-scene-copy{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:70%!important;
+    padding:12px 14px!important;
+  }
+  #adventureGuardianVisual .adventure-story-text{
+    font-size:12px!important;
+    line-height:1.34!important;
+  }
+  #adventureGuardianVisual .guardian-reward-line{
+    font-size:10px!important;
+  }
+  #adventureGuardianVisual.scene-guardian.has-guardian-actor .guardian-actor img{
+    right:50%!important;
+    transform:translateX(50%)!important;
+    height:44%!important;
+    max-width:none!important;
+  }
+  #adventureGuardianStage .adventure-actions{
+    width:100%;
+    justify-content:flex-end!important;
+  }
+  #adventureGuardianStage .adventure-actions .btn{
+    width:auto!important;
+    min-width:92px!important;
+  }
+}
