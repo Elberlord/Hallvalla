@@ -844,46 +844,193 @@ function renderMasteryHomeBadge(){
   badge.textContent=count>9?"9+":String(count);
   badge.classList.toggle("hidden",count<=0);
 }
+/* ============================================================
+   MISIONES + MAESTRÍAS · SKIN VISUAL SOBRE ARTE APROBADO
+   El fondo contiene solamente arte fijo. Barras, cifras y botones se
+   posicionan como capas HTML para que sigan siendo dinámicos.
+   ============================================================ */
+const HV_MISSIONS_ART_W=1619;
+const HV_MISSIONS_ART_H=972;
+const HV_MISSIONS_LAYOUT_STORAGE_KEY="hallvalla_missions_visual_layout_v1";
+const HV_MISSIONS_TUNER_POS_KEY="hallvalla_missions_visual_tuner_pos_v1";
+const HV_MISSIONS_LAYOUT_DEFAULT=Object.freeze({
+  tutorial:{bar:{x:248,y:290,w:150,h:8},number:{x:247,y:309,w:116,h:24,font:20},button:{x:422,y:287,w:106,h:48}},
+  home:{bar:{x:748,y:290,w:151,h:8},number:{x:747,y:309,w:116,h:24,font:20},button:{x:912,y:287,w:104,h:48}},
+  tactics:{bar:{x:1205,y:290,w:151,h:8},number:{x:1204,y:309,w:116,h:24,font:20},button:{x:1380,y:287,w:107,h:48}},
+  mastery1:{bar:{x:248,y:562,w:150,h:8},number:{x:247,y:581,w:116,h:24,font:19},button:{x:422,y:558,w:106,h:48}},
+  mastery2:{bar:{x:748,y:562,w:151,h:8},number:{x:747,y:581,w:116,h:24,font:19},button:{x:912,y:558,w:104,h:48}},
+  mastery3:{bar:{x:1205,y:562,w:151,h:8},number:{x:1204,y:581,w:116,h:24,font:19},button:{x:1380,y:558,w:107,h:48}},
+  mastery4:{bar:{x:248,y:751,w:150,h:8},number:{x:247,y:770,w:116,h:24,font:19},button:{x:422,y:747,w:106,h:48}},
+  mastery5:{bar:{x:748,y:751,w:151,h:8},number:{x:747,y:770,w:116,h:24,font:19},button:{x:912,y:747,w:104,h:48}},
+  mastery6:{bar:{x:1205,y:751,w:151,h:8},number:{x:1204,y:770,w:116,h:24,font:19},button:{x:1380,y:747,w:107,h:48}},
+  claimAll:{button:{x:669,y:871,w:282,h:65}}
+});
+function cloneHvMissionsLayout(src=HV_MISSIONS_LAYOUT_DEFAULT){return JSON.parse(JSON.stringify(src));}
+function readHvMissionsLayout(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(HV_MISSIONS_LAYOUT_STORAGE_KEY)||"null");
+    const out=cloneHvMissionsLayout();
+    if(saved&&typeof saved==="object")Object.keys(out).forEach(slot=>{
+      if(!saved[slot])return;
+      Object.keys(out[slot]).forEach(type=>{if(saved[slot][type]&&typeof saved[slot][type]==="object")out[slot][type]={...out[slot][type],...saved[slot][type]};});
+    });
+    return out;
+  }catch(_){return cloneHvMissionsLayout();}
+}
+let hvMissionsLayout=readHvMissionsLayout();
+function saveHvMissionsLayout(){try{localStorage.setItem(HV_MISSIONS_LAYOUT_STORAGE_KEY,JSON.stringify(hvMissionsLayout));}catch(_){}}
+function hvMissionUnitX(v){return `${(Number(v||0)/HV_MISSIONS_ART_W)*100}%`;}
+function hvMissionUnitY(v){return `${(Number(v||0)/HV_MISSIONS_ART_H)*100}%`;}
+function applyHvMissionsLayout(){
+  const shell=$("missionsVisualShell");if(!shell)return;
+  shell.querySelectorAll("[data-hv-layout-slot][data-hv-layout-element]").forEach(node=>{
+    const slot=node.dataset.hvLayoutSlot,type=node.dataset.hvLayoutElement,cfg=hvMissionsLayout?.[slot]?.[type];if(!cfg)return;
+    node.style.left=hvMissionUnitX(cfg.x);node.style.top=hvMissionUnitY(cfg.y);
+    node.style.width=hvMissionUnitX(cfg.w);node.style.height=hvMissionUnitY(cfg.h);
+    if(type==="number")node.style.fontSize=`${(Number(cfg.font||18)/HV_MISSIONS_ART_W)*100}cqw`;
+  });
+}
+function hvVisualProgressHtml(slot,pct,label){
+  const safePct=Math.max(0,Math.min(100,Number(pct)||0));
+  return `<div class="hv-mission-progress" data-hv-layout-slot="${slot}" data-hv-layout-element="bar"><div class="hv-mission-progress-fill" style="width:${safePct.toFixed(2)}%"></div></div><div class="hv-mission-progress-number" data-hv-layout-slot="${slot}" data-hv-layout-element="number">${escapeHtml(String(label||""))}</div>`;
+}
+function hvMissionActionHtml(slot,id,label,disabled=false){
+  return `<button id="${id}" class="hv-mission-action-slot" data-hv-layout-slot="${slot}" data-hv-layout-element="button" type="button" ${disabled?"disabled":""}>${escapeHtml(label)}</button>`;
+}
+function hvMasteryClaimHtml(slot,key,target,rewardTitle=""){
+  return `<button class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${escapeHtml(key)}" data-mastery-target="${Number(target)||0}" type="button" aria-label="Reclamar recompensa ${escapeHtml(rewardTitle)}" title="${escapeHtml(rewardTitle)}"><img src="assets/ui/missions/btn_reclamar.png" alt="Reclamar" draggable="false"></button>`;
+}
 function renderAccountMasteries(){
-  const list=$("accountMasteryList"),pendingText=$("accountMasteryPendingText"),claimAll=$("claimAllMasteryRewardsBtn");
+  const list=$("accountMasteryList"),claimAll=$("claimAllMasteryRewardsBtn");
   if(!list||typeof ACCOUNT_MASTERY_DEFS==="undefined")return;
   const profile=getPlayerProfile();
+  const defs=Object.values(ACCOUNT_MASTERY_DEFS);
   const pendingTotal=getPendingAccountMasteryRewardCount(profile);
-  if(pendingText)pendingText.textContent=pendingTotal>0?`${pendingTotal} premio${pendingTotal===1?"":"s"} sin reclamar`:"Sin premios pendientes";
-  if(claimAll){claimAll.disabled=pendingTotal<=0;claimAll.textContent=pendingTotal>0?`Reclamar todo (${pendingTotal})`:"Reclamar todo";}
-  list.innerHTML=Object.values(ACCOUNT_MASTERY_DEFS).map(def=>{
-    const rec=getAccountMasteryRecord(def.key,profile),pending=getAccountMasteryPendingMilestones(def.key,profile),next=getAccountMasteryNextMilestone(def.key,profile);
-    const maxTarget=def.milestones[def.milestones.length-1]?.target||10000;
-    const progressTarget=next?.target||maxTarget;
-    const pct=next?Math.max(0,Math.min(100,(rec.count/progressTarget)*100)):100;
-    const nextCopy=next?`Próximo hito: ${next.target.toLocaleString("es-ES")} · ${formatAccountMasteryMilestoneRewards(next)}`:`MAESTRÍA COMPLETA · ${maxTarget.toLocaleString("es-ES")}`;
-    const milestoneStrip=def.milestones.map(m=>{
-      const claimed=rec.claimed.includes(m.target),ready=rec.count>=m.target&&!claimed;
-      return `<span class="mastery-milestone-chip ${claimed?"claimed":ready?"ready":"locked"} ${m.mastery?"mastery-final":""}" title="${escapeHtml(formatAccountMasteryMilestoneRewards(m))}"><b>${m.target>=1000?`${m.target/1000}k`:m.target}${claimed?" ✓":ready?" !":""}</b><small>${escapeHtml(formatAccountMasteryMilestoneRewards(m))}</small></span>`;
-    }).join("");
-    const pendingRows=pending.map(m=>`<div class="mastery-ready-reward"><span><b>${m.target.toLocaleString("es-ES")}</b><small>${escapeHtml(formatAccountMasteryMilestoneRewards(m))}</small></span><button class="btn primary mastery-claim-one" type="button" data-mastery-key="${def.key}" data-mastery-target="${m.target}">Reclamar</button></div>`).join("");
-    return `<article class="account-mastery-card ${next?"":"mastered"}">
-      <div class="account-mastery-title"><span class="account-mastery-icon" aria-hidden="true">${def.icon}</span><div><h3>${escapeHtml(def.name)}</h3><p>${escapeHtml(def.verb)}</p></div><strong>${rec.count.toLocaleString("es-ES")}</strong></div>
-      <div class="account-mastery-progress"><div class="account-mastery-progress-fill" style="width:${pct.toFixed(2)}%"></div></div>
-      <div class="account-mastery-next"><span>${escapeHtml(nextCopy)}</span><b>${next?`${rec.count.toLocaleString("es-ES")}/${progressTarget.toLocaleString("es-ES")}`:"MAX"}</b></div>
-      <div class="mastery-milestone-strip">${milestoneStrip}</div>
-      ${pendingRows?`<div class="mastery-ready-list">${pendingRows}</div>`:""}
-    </article>`;
+  if(claimAll){claimAll.classList.toggle("hidden",pendingTotal<=0);claimAll.disabled=pendingTotal<=0;claimAll.dataset.hvLayoutSlot="claimAll";claimAll.dataset.hvLayoutElement="button";}
+  // El arte reserva el tercer espacio para Coleccionista, que todavía no existe como
+  // maestría funcional en esta build. No reutilizamos ahí el contador de otra maestría.
+  const slotByKey={summons:"mastery1",kills:"mastery2",spells:"mastery4",traps:"mastery5",equipment:"mastery6"};
+  list.innerHTML=defs.map(def=>{
+    const slot=slotByKey[def.key];if(!slot)return"";
+    const rec=getAccountMasteryRecord(def.key,profile);
+    const claimed=new Set(rec.claimed||[]);
+    const current=def.milestones.find(m=>!claimed.has(m.target))||null;
+    const target=current?.target||def.milestones[def.milestones.length-1]?.target||1;
+    const shown=current?Math.min(rec.count,target):target;
+    const pct=current?Math.max(0,Math.min(100,(rec.count/target)*100)):100;
+    const ready=!!(current&&rec.count>=target);
+    const label=current?`${shown.toLocaleString("es-ES")}/${target.toLocaleString("es-ES")}`:"MAX";
+    const claim=ready?hvMasteryClaimHtml(slot,def.key,current.target,formatAccountMasteryMilestoneRewards(current)):"";
+    return hvVisualProgressHtml(slot,pct,label)+claim;
   }).join("");
   list.querySelectorAll("[data-mastery-key][data-mastery-target]").forEach(btn=>btn.addEventListener("click",()=>{
     const result=claimAccountMasteryMilestone(btn.dataset.masteryKey,Number(btn.dataset.masteryTarget));
     if(result?.claimed){renderAccountMasteries();renderMasteryHomeBadge();if(typeof renderNotificationBadge==="function")renderNotificationBadge();}
   }));
+  applyHvMissionsLayout();
   renderMasteryHomeBadge();
 }
 
-function renderTutorialMissions(){const list=$("tutorialMissionList");if(!list)return;const basic=isBasicTutorialComplete();const map1=isChapterOneCompleteForTutorial();const homeDone=localStorage.getItem("hallvalla_tutorial_home_complete_v1")==="true";list.innerHTML=`
-  <article class="tutorial-mission-card ${basic?'complete':''}"><div class="tutorial-mission-status">${basic?'✓ GANADA':'1'}</div><div><h3>Tutorial básico</h3><p>Inicio de turno, robo, detalles, convocación, magia, movimiento, defensa, ataque y victoria.</p><span>Recompensa total: 45 oro</span></div><button id="missionBasicBtn" class="btn ${basic?'ghost':'primary'}" type="button">${basic?'Repetir':'Comenzar'}</button></article>
-  <article class="tutorial-mission-card ${homeDone?'complete':''} ${map1?'':'locked'}"><div class="tutorial-mission-status">${homeDone?'✓':'2'}</div><div><h3>Home y creación de mazo</h3><p>Recorre el Home, la colección y el editor de mazos.</p><span>${map1?'Disponible':'Se desbloquea al derrotar al Hechicero guardián'}</span></div><button id="missionHomeBtn" class="btn ghost" type="button" ${map1?'':'disabled'}>${homeDone?'Revisar':'Iniciar'}</button></article>
-  <article class="tutorial-mission-card locked"><div class="tutorial-mission-status">3</div><div><h3>Tácticas avanzadas</h3><p>Estados, trampas, formaciones y decisiones tácticas.</p><span>Se desbloquea después del tutorial de Home.</span></div><button class="btn ghost" type="button" disabled>Bloqueado</button></article>`;
-  const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};const h=$("missionHomeBtn");if(h)h.onclick=()=>hvAlert("Esta segunda misión guiará el Home, la colección y la creación del mazo. Su recorrido interactivo se añadirá en la siguiente etapa.","Tutorial de Home");}
-function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccountMasteries();renderTutorialMissions();p.classList.remove("hidden");}
+function renderTutorialMissions(){
+  const list=$("tutorialMissionList");if(!list)return;
+  const basic=isBasicTutorialComplete();
+  const map1=isChapterOneCompleteForTutorial();
+  const homeDone=localStorage.getItem("hallvalla_tutorial_home_complete_v1")==="true";
+  let basicDone=basic?1:0,basicTotal=1;
+  try{
+    if(typeof getTutorialRewardedSteps==="function"&&typeof BASIC_TUTORIAL_STEPS!=="undefined"){
+      basicTotal=Math.max(1,BASIC_TUTORIAL_STEPS.length||1);basicDone=Math.min(basicTotal,getTutorialRewardedSteps().size||0);
+      if(basic)basicDone=basicTotal;
+    }
+  }catch(_){ }
+  const basicPct=(basicDone/basicTotal)*100;
+  const homePct=homeDone?100:0;
+  const tacticsDone=localStorage.getItem("hallvalla_tutorial_tactics_complete_v1")==="true";
+  const tacticsAvailable=homeDone;
+  const tacticsPct=tacticsDone?100:0;
+  list.innerHTML=[
+    hvVisualProgressHtml("tutorial",basicPct,`${basicDone}/${basicTotal}`)+hvMissionActionHtml("tutorial","missionBasicBtn",basic?"Repetir":"Comenzar",false),
+    hvVisualProgressHtml("home",homePct,`${homeDone?1:0}/1`)+hvMissionActionHtml("home","missionHomeBtn",homeDone?"Revisar":map1?"Iniciar":"Bloqueado",!map1),
+    hvVisualProgressHtml("tactics",tacticsPct,`${tacticsDone?1:0}/1`)+hvMissionActionHtml("tactics","missionTacticsBtn",tacticsDone?"Revisar":tacticsAvailable?"Iniciar":"Bloqueado",!tacticsAvailable)
+  ].join("");
+  const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};
+  const h=$("missionHomeBtn");if(h)h.onclick=()=>hvAlert("Esta segunda misión guiará el Home, la colección y la creación del mazo. Su recorrido interactivo se añadirá en la siguiente etapa.","Tutorial de Home");
+  const t=$("missionTacticsBtn");if(t&&!t.disabled)t.onclick=()=>hvAlert("Tácticas avanzadas conservará este espacio y se conectará a su recorrido interactivo cuando esté disponible.","Tácticas avanzadas");
+  applyHvMissionsLayout();
+}
+function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccountMasteries();renderTutorialMissions();p.classList.remove("hidden");applyHvMissionsLayout();syncHvMissionsTunerControls();}
 function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("hidden");}
+
+/* ---------- Tuner visual: posición/tamaño + JSON ---------- */
+const HV_MISSIONS_TUNER_SLOT_LABELS={tutorial:"Tutorial",home:"Home y mazo",tactics:"Tácticas",mastery1:"Invocador",mastery2:"Verdugo",mastery3:"Coleccionista / slot 3",mastery4:"Maestría 4",mastery5:"Maestría 5",mastery6:"Maestría 6",claimAll:"Reclamar todo"};
+function initHvMissionsTunerOptions(){
+  const select=$("missionsTunerSlot");if(!select||select.options.length)return;
+  select.innerHTML=Object.keys(HV_MISSIONS_TUNER_SLOT_LABELS).map(key=>`<option value="${key}">${HV_MISSIONS_TUNER_SLOT_LABELS[key]}</option>`).join("");
+}
+function getHvMissionsTunerSelection(){
+  const slot=$("missionsTunerSlot")?.value||"tutorial";
+  let type=$("missionsTunerElement")?.value||"bar";
+  if(slot==="claimAll")type="button";
+  return{slot,type};
+}
+function syncHvMissionsTunerControls(){
+  initHvMissionsTunerOptions();
+  const slotSelect=$("missionsTunerSlot"),typeSelect=$("missionsTunerElement");if(!slotSelect||!typeSelect)return;
+  if(slotSelect.value==="claimAll"){typeSelect.value="button";typeSelect.disabled=true;}else typeSelect.disabled=false;
+  const{slot,type}=getHvMissionsTunerSelection();
+  const cfg=hvMissionsLayout?.[slot]?.[type];if(!cfg)return;
+  const pairs=[["missionsTunerX","missionsTunerXOut","x"],["missionsTunerY","missionsTunerYOut","y"],["missionsTunerW","missionsTunerWOut","w"],["missionsTunerH","missionsTunerHOut","h"]];
+  pairs.forEach(([id,out,key])=>{const input=$(id),output=$(out);if(input)input.value=String(Math.round(Number(cfg[key]||0)));if(output)output.textContent=`${Math.round(Number(cfg[key]||0))} px`;});
+  const fontRow=$("missionsTunerFontRow"),font=$("missionsTunerFont"),fontOut=$("missionsTunerFontOut");
+  const isNumber=type==="number";if(fontRow)fontRow.style.display=isNumber?"grid":"none";
+  if(isNumber){if(font)font.value=String(Math.round(Number(cfg.font||18)));if(fontOut)fontOut.textContent=`${Math.round(Number(cfg.font||18))} px`;}
+}
+function updateHvMissionsTunerValue(key,value){
+  const{slot,type}=getHvMissionsTunerSelection(),cfg=hvMissionsLayout?.[slot]?.[type];if(!cfg)return;
+  cfg[key]=Number(value)||0;saveHvMissionsLayout();applyHvMissionsLayout();syncHvMissionsTunerControls();
+}
+function exportHvMissionsLayoutJson(){
+  const payload={version:1,art:{width:HV_MISSIONS_ART_W,height:HV_MISSIONS_ART_H,file:"assets/ui/missions/missions_masteries_panel.png"},layout:hvMissionsLayout};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="hallvalla_misiones_layout.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  const status=$("missionsTunerStatus");if(status)status.textContent="JSON exportado. Envíame ese archivo y puedo fijar tus ubicaciones finales.";
+}
+function makeHvMissionsDraggable(node,handle=node,storageKey="",clickHandler=null){
+  if(!node||!handle||node.dataset.hvDragReady==="1")return;node.dataset.hvDragReady="1";
+  let dragging=false,moved=false,startX=0,startY=0,startL=0,startT=0,pointerId=null;
+  handle.addEventListener("pointerdown",e=>{
+    if(e.button!==undefined&&e.button!==0)return;if(e.target.closest?.("button")&&e.target!==handle)return;
+    dragging=true;moved=false;pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;
+    const r=node.getBoundingClientRect();startL=r.left;startT=r.top;handle.setPointerCapture?.(pointerId);e.preventDefault();
+  });
+  handle.addEventListener("pointermove",e=>{
+    if(!dragging||e.pointerId!==pointerId)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)+Math.abs(dy)>4)moved=true;
+    const maxL=Math.max(0,innerWidth-node.offsetWidth),maxT=Math.max(0,innerHeight-node.offsetHeight);
+    node.style.left=`${Math.max(0,Math.min(maxL,startL+dx))}px`;node.style.top=`${Math.max(0,Math.min(maxT,startT+dy))}px`;node.style.right="auto";node.style.bottom="auto";
+  });
+  const finish=e=>{
+    if(!dragging||e.pointerId!==pointerId)return;dragging=false;handle.releasePointerCapture?.(pointerId);
+    if(storageKey){const r=node.getBoundingClientRect();try{const all=JSON.parse(localStorage.getItem(HV_MISSIONS_TUNER_POS_KEY)||"{}");all[storageKey]={left:Math.round(r.left),top:Math.round(r.top)};localStorage.setItem(HV_MISSIONS_TUNER_POS_KEY,JSON.stringify(all));}catch(_){}}
+    if(!moved&&typeof clickHandler==="function")clickHandler();
+  };
+  handle.addEventListener("pointerup",finish);handle.addEventListener("pointercancel",()=>{dragging=false;});
+}
+function restoreHvMissionsTunerPositions(){
+  try{const all=JSON.parse(localStorage.getItem(HV_MISSIONS_TUNER_POS_KEY)||"{}");[["missionsLayoutTunerHandle","handle"],["missionsLayoutTuner","panel"]].forEach(([id,key])=>{const n=$(id),p=all[key];if(n&&p){n.style.left=`${Math.max(0,Number(p.left)||0)}px`;n.style.top=`${Math.max(0,Number(p.top)||0)}px`;n.style.right="auto";n.style.bottom="auto";}});}catch(_){ }
+}
+function initHvMissionsLayoutTuner(){
+  initHvMissionsTunerOptions();restoreHvMissionsTunerPositions();
+  const handle=$("missionsLayoutTunerHandle"),panel=$("missionsLayoutTuner"),drag=$("missionsLayoutTunerDrag");
+  makeHvMissionsDraggable(handle,handle,"handle",()=>{panel?.classList.toggle("hidden");syncHvMissionsTunerControls();});
+  makeHvMissionsDraggable(panel,drag,"panel");
+  on("missionsLayoutTunerClose","click",()=>panel?.classList.add("hidden"));
+  on("missionsTunerSlot","change",syncHvMissionsTunerControls);on("missionsTunerElement","change",syncHvMissionsTunerControls);
+  [["missionsTunerX","x"],["missionsTunerY","y"],["missionsTunerW","w"],["missionsTunerH","h"],["missionsTunerFont","font"]].forEach(([id,key])=>on(id,"input",e=>updateHvMissionsTunerValue(key,e.target.value)));
+  on("missionsTunerReset","click",()=>{hvMissionsLayout=cloneHvMissionsLayout();saveHvMissionsLayout();applyHvMissionsLayout();syncHvMissionsTunerControls();const s=$("missionsTunerStatus");if(s)s.textContent="Ubicaciones restablecidas a la propuesta inicial.";});
+  on("missionsTunerExport","click",exportHvMissionsLayoutJson);
+  syncHvMissionsTunerControls();
+}
+initHvMissionsLayoutTuner();
 
 on("missionsBtn","click",openMissionsPanel);
 on("closeMissionsBtn","click",closeMissionsPanel);

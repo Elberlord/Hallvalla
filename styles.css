@@ -22303,3 +22303,113 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-node{
   pointer-events:auto !important;
 }
+
+/* ============================================================================
+   MISIONES + MAESTRÍAS · SKIN VISUAL 2026-08-18
+   - Usa el arte aprobado como base única del modal.
+   - Progreso, cifras y botones son capas HTML dinámicas.
+   - Incluye tuner visual exportable a JSON.
+   ============================================================================ */
+#missionsPanel.hv-missions-panel{
+  padding:8px!important;
+  overflow:hidden!important;
+  background:rgba(0,0,0,.76)!important;
+}
+.hv-missions-visual-shell{
+  position:relative;
+  width:min(97vw,calc(94dvh * 1.66564));
+  aspect-ratio:1619 / 972;
+  flex:0 0 auto;
+  isolation:isolate;
+  container-type:inline-size;
+  filter:drop-shadow(0 26px 55px rgba(0,0,0,.72));
+  user-select:none;
+}
+.hv-missions-panel-art{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none;
+}
+.hv-missions-close-hotspot{
+  position:absolute;z-index:8;left:89.55%;top:4.6%;width:5.1%;height:8.1%;
+  border:0;background:transparent;cursor:pointer;border-radius:14px;
+}
+.hv-missions-close-hotspot:hover{background:rgba(255,210,100,.07);box-shadow:0 0 18px rgba(255,191,54,.12)}
+.hv-missions-close-hotspot:focus-visible{outline:2px solid #ffd166;outline-offset:2px}
+.hv-missions-dynamic-layer{position:absolute;inset:0;z-index:5;pointer-events:none}
+.hv-mission-progress{
+  position:absolute;overflow:hidden;border-radius:999px;pointer-events:none;
+  background:transparent;
+}
+.hv-mission-progress-fill{
+  position:absolute;inset:0 auto 0 0;width:0%;border-radius:inherit;
+  background:linear-gradient(90deg,#8a5a13 0%,#c9932f 48%,#ffd36c 100%);
+  box-shadow:0 0 5px rgba(255,199,79,.34),inset 0 1px 0 rgba(255,245,192,.65);
+  transition:width .22s ease;
+}
+.hv-mission-progress-number{
+  position:absolute;display:flex;align-items:center;justify-content:flex-start;
+  color:#f2d28c;font-family:Georgia,'Times New Roman',serif;font-weight:700;
+  line-height:1;white-space:nowrap;text-shadow:0 2px 3px rgba(0,0,0,.95);
+  font-variant-numeric:tabular-nums;pointer-events:none;
+}
+.hv-mission-action-slot,.hv-mission-image-button{
+  position:absolute;z-index:7;margin:0;padding:0;border:0;background:transparent;
+  display:grid;place-items:center;cursor:pointer;pointer-events:auto;
+}
+.hv-mission-action-slot{
+  color:#f3d394;font:700 1.05cqw/1 Georgia,'Times New Roman',serif;
+  text-shadow:0 2px 3px #000;
+}
+.hv-mission-action-slot:hover:not(:disabled){color:#ffe7ad;filter:brightness(1.12)}
+.hv-mission-action-slot:disabled{opacity:.34;cursor:default}
+.hv-mission-image-button img{width:100%;height:100%;display:block;object-fit:fill;pointer-events:none}
+.hv-mission-image-button:hover:not(:disabled){filter:brightness(1.12)}
+.hv-mission-image-button:active:not(:disabled){transform:translateY(1px) scale(.985)}
+.hv-mission-image-button:disabled{opacity:.38;cursor:default;filter:saturate(.55)}
+.hv-mission-claim-all{z-index:9}
+.hv-mission-claim-all.hidden{display:none!important}
+
+/* Herramienta de ajuste del modal */
+.hv-missions-tuner-handle{
+  position:fixed;z-index:2450;left:14px;top:14px;padding:8px 11px;
+  border:1px solid rgba(236,190,85,.68);border-radius:10px;
+  background:linear-gradient(180deg,rgba(70,47,18,.97),rgba(22,14,7,.98));
+  color:#ffe1a0;box-shadow:0 7px 22px rgba(0,0,0,.55);
+  font:800 10px/1 Georgia,serif;letter-spacing:.03em;cursor:grab;touch-action:none;
+}
+.hv-missions-tuner-handle:active{cursor:grabbing}
+.hv-missions-layout-tuner{
+  position:fixed;z-index:2445;left:18px;top:58px;width:min(340px,calc(100vw - 24px));
+  max-height:min(82dvh,680px);overflow:auto;color:#f6e3b3;
+  border:1px solid rgba(236,190,85,.52);border-radius:16px;
+  background:linear-gradient(180deg,rgba(29,20,11,.985),rgba(8,7,6,.99));
+  box-shadow:0 20px 58px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,233,176,.08);
+  touch-action:none;
+}
+.hv-missions-layout-tuner.hidden{display:none!important}
+.hv-missions-layout-tuner-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px 13px 10px;
+  border-bottom:1px solid rgba(230,184,79,.19);cursor:grab;touch-action:none;
+}
+.hv-missions-layout-tuner-head:active{cursor:grabbing}
+.hv-missions-layout-tuner-head b{display:block;color:#ffe3a0;font:800 14px/1.1 Georgia,serif}
+.hv-missions-layout-tuner-head small{display:block;margin-top:4px;color:#baa77d;font-size:9px;line-height:1.25}
+#missionsLayoutTunerClose{width:28px;height:28px;flex:0 0 28px;border:1px solid rgba(235,187,78,.35);border-radius:50%;background:#100c08;color:#f3d28c;font-size:18px;cursor:pointer}
+.hv-missions-layout-tuner-body{padding:11px 13px 13px}
+.hv-missions-layout-tuner-body>label{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:8px;margin-bottom:8px}
+.hv-missions-layout-tuner-body label span{font-size:9px;font-weight:800;color:#d7bd86}
+.hv-missions-layout-tuner select{width:100%;min-height:30px;border:1px solid rgba(232,184,77,.27);border-radius:8px;background:#110d09;color:#f5deb0;padding:5px 7px;font-size:10px}
+.hv-missions-tuner-grid{display:grid;gap:7px;margin-top:10px}
+.hv-missions-tuner-grid label{display:grid;grid-template-columns:76px 1fr 48px;align-items:center;gap:7px}
+.hv-missions-tuner-grid input[type=range]{width:100%;accent-color:#c4912d}
+.hv-missions-tuner-grid output{display:grid;place-items:center;min-height:26px;border-radius:7px;background:#0d0a07;border:1px solid rgba(234,186,78,.18);color:#ffe2a0;font:800 9px/1 Arial,sans-serif}
+.hv-missions-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.hv-missions-tuner-status{display:block;min-height:15px;margin-top:8px;color:#bca77c;font-size:8.5px;line-height:1.3}
+
+@media(max-width:760px){
+  #missionsPanel.hv-missions-panel{padding:3px!important}
+  .hv-missions-visual-shell{width:min(99vw,calc(97dvh * 1.66564))}
+  .hv-missions-tuner-handle{padding:6px 8px;font-size:8px}
+  .hv-missions-layout-tuner{width:min(300px,calc(100vw - 12px));left:6px;top:42px;max-height:88dvh}
+  .hv-missions-layout-tuner-body{padding:8px 10px 10px}
+}
