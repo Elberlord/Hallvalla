@@ -851,20 +851,9 @@ function renderMasteryHomeBadge(){
    ============================================================ */
 const HV_MISSIONS_ART_W=1619;
 const HV_MISSIONS_ART_H=972;
-const HV_MISSIONS_LAYOUT_STORAGE_KEY="hallvalla_missions_visual_layout_v1";
+const HV_MISSIONS_LAYOUT_STORAGE_KEY="hallvalla_missions_visual_layout_v2";
 const HV_MISSIONS_TUNER_POS_KEY="hallvalla_missions_visual_tuner_pos_v1";
-const HV_MISSIONS_LAYOUT_DEFAULT=Object.freeze({
-  tutorial:{bar:{x:248,y:290,w:150,h:8},number:{x:247,y:309,w:116,h:24,font:20},button:{x:422,y:287,w:106,h:48}},
-  home:{bar:{x:748,y:290,w:151,h:8},number:{x:747,y:309,w:116,h:24,font:20},button:{x:912,y:287,w:104,h:48}},
-  tactics:{bar:{x:1205,y:290,w:151,h:8},number:{x:1204,y:309,w:116,h:24,font:20},button:{x:1380,y:287,w:107,h:48}},
-  mastery1:{bar:{x:248,y:562,w:150,h:8},number:{x:247,y:581,w:116,h:24,font:19},button:{x:422,y:558,w:106,h:48}},
-  mastery2:{bar:{x:748,y:562,w:151,h:8},number:{x:747,y:581,w:116,h:24,font:19},button:{x:912,y:558,w:104,h:48}},
-  mastery3:{bar:{x:1205,y:562,w:151,h:8},number:{x:1204,y:581,w:116,h:24,font:19},button:{x:1380,y:558,w:107,h:48}},
-  mastery4:{bar:{x:248,y:751,w:150,h:8},number:{x:247,y:770,w:116,h:24,font:19},button:{x:422,y:747,w:106,h:48}},
-  mastery5:{bar:{x:748,y:751,w:151,h:8},number:{x:747,y:770,w:116,h:24,font:19},button:{x:912,y:747,w:104,h:48}},
-  mastery6:{bar:{x:1205,y:751,w:151,h:8},number:{x:1204,y:770,w:116,h:24,font:19},button:{x:1380,y:747,w:107,h:48}},
-  claimAll:{button:{x:669,y:871,w:282,h:65}}
-});
+const HV_MISSIONS_LAYOUT_DEFAULT=Object.freeze({"tutorial":{"bar":{"x":248,"y":291,"w":150,"h":8},"number":{"x":247,"y":309,"w":116,"h":24,"font":20},"button":{"x":422,"y":291,"w":106,"h":48}},"home":{"bar":{"x":748,"y":290,"w":151,"h":8},"number":{"x":747,"y":309,"w":116,"h":24,"font":20},"button":{"x":912,"y":287,"w":104,"h":48}},"tactics":{"bar":{"x":1205,"y":285,"w":151,"h":8},"number":{"x":1204,"y":309,"w":116,"h":24,"font":20},"button":{"x":1391,"y":291,"w":117,"h":48}},"mastery1":{"bar":{"x":248,"y":568,"w":150,"h":8},"number":{"x":247,"y":595,"w":116,"h":24,"font":19},"button":{"x":422,"y":558,"w":106,"h":48}},"mastery2":{"bar":{"x":733,"y":568,"w":151,"h":8},"number":{"x":747,"y":581,"w":116,"h":24,"font":19},"button":{"x":912,"y":558,"w":104,"h":48}},"mastery3":{"bar":{"x":1205,"y":562,"w":151,"h":8},"number":{"x":1204,"y":581,"w":116,"h":24,"font":19},"button":{"x":1380,"y":558,"w":107,"h":48}},"mastery4":{"bar":{"x":248,"y":761,"w":150,"h":8},"number":{"x":247,"y":782,"w":116,"h":24,"font":19},"button":{"x":422,"y":747,"w":106,"h":48}},"mastery5":{"bar":{"x":748,"y":686,"w":151,"h":8},"number":{"x":747,"y":777,"w":116,"h":24,"font":19},"button":{"x":912,"y":747,"w":104,"h":48}},"mastery6":{"bar":{"x":1222,"y":761,"w":151,"h":8},"number":{"x":1222,"y":782,"w":116,"h":24,"font":19},"button":{"x":1380,"y":747,"w":107,"h":48}},"claimAll":{"button":{"x":669,"y":871,"w":282,"h":65}}});
 function cloneHvMissionsLayout(src=HV_MISSIONS_LAYOUT_DEFAULT){return JSON.parse(JSON.stringify(src));}
 function readHvMissionsLayout(){
   try{
@@ -897,8 +886,11 @@ function hvVisualProgressHtml(slot,pct,label){
 function hvMissionActionHtml(slot,id,label,disabled=false){
   return `<button id="${id}" class="hv-mission-action-slot" data-hv-layout-slot="${slot}" data-hv-layout-element="button" type="button" ${disabled?"disabled":""}>${escapeHtml(label)}</button>`;
 }
-function hvMasteryClaimHtml(slot,key,target,rewardTitle=""){
-  return `<button class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${escapeHtml(key)}" data-mastery-target="${Number(target)||0}" type="button" aria-label="Reclamar recompensa ${escapeHtml(rewardTitle)}" title="${escapeHtml(rewardTitle)}"><img src="assets/ui/missions/btn_reclamar.png" alt="Reclamar" draggable="false"></button>`;
+function hvMasteryClaimHtml(slot,key,target,rewardTitle="",disabled=false){
+  const safeKey=escapeHtml(key||"");
+  const safeTitle=escapeHtml(rewardTitle||"");
+  const aria=safeTitle?`Reclamar recompensa ${safeTitle}`:"Reclamar recompensa";
+  return `<button class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${safeKey}" data-mastery-target="${Number(target)||0}" type="button" aria-label="${aria}" title="${safeTitle}" ${disabled?"disabled":""}><img src="assets/ui/missions/btn_reclamar.png" alt="Reclamar" draggable="false"></button>`;
 }
 function renderAccountMasteries(){
   const list=$("accountMasteryList"),claimAll=$("claimAllMasteryRewardsBtn");
@@ -906,9 +898,11 @@ function renderAccountMasteries(){
   const profile=getPlayerProfile();
   const defs=Object.values(ACCOUNT_MASTERY_DEFS);
   const pendingTotal=getPendingAccountMasteryRewardCount(profile);
-  if(claimAll){claimAll.classList.toggle("hidden",pendingTotal<=0);claimAll.disabled=pendingTotal<=0;claimAll.dataset.hvLayoutSlot="claimAll";claimAll.dataset.hvLayoutElement="button";}
-  // El arte reserva el tercer espacio para Coleccionista, que todavía no existe como
-  // maestría funcional en esta build. No reutilizamos ahí el contador de otra maestría.
+  if(claimAll){claimAll.classList.remove("hidden");claimAll.disabled=pendingTotal<=0;claimAll.dataset.hvLayoutSlot="claimAll";claimAll.dataset.hvLayoutElement="button";}
+  // La build tiene cinco maestrías funcionales de cuenta:
+  // 1 Invocador, 2 Verdugo, 4 Arcanista, 5 Trampero y 6 Armero.
+  // El slot visual 3 dice "Coleccionista" en el arte, pero esa maestría todavía no existe
+  // en ACCOUNT_MASTERY_DEFS, por lo que se mantiene sin contador funcional.
   const slotByKey={summons:"mastery1",kills:"mastery2",spells:"mastery4",traps:"mastery5",equipment:"mastery6"};
   list.innerHTML=defs.map(def=>{
     const slot=slotByKey[def.key];if(!slot)return"";
@@ -920,7 +914,8 @@ function renderAccountMasteries(){
     const pct=current?Math.max(0,Math.min(100,(rec.count/target)*100)):100;
     const ready=!!(current&&rec.count>=target);
     const label=current?`${shown.toLocaleString("es-ES")}/${target.toLocaleString("es-ES")}`:"MAX";
-    const claim=ready?hvMasteryClaimHtml(slot,def.key,current.target,formatAccountMasteryMilestoneRewards(current)):"";
+    const rewardTitle=current?formatAccountMasteryMilestoneRewards(current):"";
+    const claim=hvMasteryClaimHtml(slot,def.key,current?.target||0,rewardTitle,!ready);
     return hvVisualProgressHtml(slot,pct,label)+claim;
   }).join("");
   list.querySelectorAll("[data-mastery-key][data-mastery-target]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -962,7 +957,7 @@ function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccou
 function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("hidden");}
 
 /* ---------- Tuner visual: posición/tamaño + JSON ---------- */
-const HV_MISSIONS_TUNER_SLOT_LABELS={tutorial:"Tutorial",home:"Home y mazo",tactics:"Tácticas",mastery1:"Invocador",mastery2:"Verdugo",mastery3:"Coleccionista / slot 3",mastery4:"Maestría 4",mastery5:"Maestría 5",mastery6:"Maestría 6",claimAll:"Reclamar todo"};
+const HV_MISSIONS_TUNER_SLOT_LABELS={tutorial:"Tutorial",home:"Home y mazo",tactics:"Tácticas",mastery1:"Invocador",mastery2:"Verdugo",mastery3:"Coleccionista / sin lógica todavía",mastery4:"Maestría 4 · Arcanista",mastery5:"Maestría 5 · Trampero",mastery6:"Maestría 6 · Armero",claimAll:"Reclamar todo"};
 function initHvMissionsTunerOptions(){
   const select=$("missionsTunerSlot");if(!select||select.options.length)return;
   select.innerHTML=Object.keys(HV_MISSIONS_TUNER_SLOT_LABELS).map(key=>`<option value="${key}">${HV_MISSIONS_TUNER_SLOT_LABELS[key]}</option>`).join("");

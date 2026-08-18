@@ -1,0 +1,12 @@
+MISIONES VISUAL V2
+- Ubicaciones/tamaños fijados desde hallvalla_misiones_layout.json del usuario.
+- Reclamar y Reclamar todo permanecen visibles como botones de arte.
+- Si no hay premio disponible, aparecen deshabilitados.
+- Mapeo funcional actual:
+  mastery1 = Invocador (Invocar unidades)
+  mastery2 = Verdugo (Destruir unidades enemigas)
+  mastery3 = Coleccionista SOLO EN EL ARTE; no existe definición funcional todavía
+  mastery4 = Arcanista (Jugar magias)
+  mastery5 = Trampero (Jugar cartas de Trampa)
+  mastery6 = Armero (Equipar cartas de Equipo)
+- El tuner sigue disponible para retoques.
