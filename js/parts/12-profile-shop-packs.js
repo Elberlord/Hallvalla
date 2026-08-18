@@ -146,6 +146,14 @@ function buildPendingShopPack(packKey="basic",extra={}){
     ...extra
   };
 }
+function getStoredCollectionCardTotalForMastery(){
+  try{
+    const saved=JSON.parse(localStorage.getItem("hallvalla_player_collection")||"null");
+    const cards=Array.isArray(saved?.cards)?saved.cards:[];
+    return cards.reduce((sum,card)=>sum+Math.max(0,Math.floor(Number(card?.qty||0))),0);
+  }catch(_){return 0;}
+}
+
 function getPlayerProfile(){
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_profile") || "null");
@@ -153,12 +161,17 @@ function getPlayerProfile(){
     profile.level=profile.level||1;
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     const beforeAbilities=JSON.stringify(profile.leaderLevel5Abilities||{});
+    const rawActionMasteries=profile.actionMasteries&&typeof profile.actionMasteries==="object"?profile.actionMasteries:{};
+    const needsCollectionMasteryMigration=!Object.prototype.hasOwnProperty.call(rawActionMasteries,"collection");
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
-    profile.actionMasteries=normalizeAccountMasteries(profile.actionMasteries||{});
-    if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities)savePlayerProfile(profile);
+    profile.actionMasteries=normalizeAccountMasteries(rawActionMasteries);
+    if(needsCollectionMasteryMigration){
+      profile.actionMasteries.collection.count=Math.max(Number(profile.actionMasteries.collection?.count||0),getStoredCollectionCardTotalForMastery());
+    }
+    if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities||needsCollectionMasteryMigration)savePlayerProfile(profile);
     return profile;
   }catch(e){
     const profile={...defaultPlayerProfile};
@@ -168,6 +181,7 @@ function getPlayerProfile(){
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
     profile.actionMasteries=normalizeAccountMasteries(profile.actionMasteries||{});
+    profile.actionMasteries.collection.count=Math.max(Number(profile.actionMasteries.collection?.count||0),getStoredCollectionCardTotalForMastery());
     return profile;
   }
 }
@@ -214,8 +228,22 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:10000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"mythic",amount:1}],mastery:true}
     ])
   }),
+  collection:Object.freeze({
+    key:"collection",name:"Coleccionista",verb:"Obtener cartas",icon:"▣",
+    milestones:Object.freeze([
+      {target:25,rewards:[{type:"gold",amount:5}]},
+      {target:50,rewards:[{type:"gold",amount:10}]},
+      {target:100,rewards:[{type:"gold",amount:20}]},
+      {target:250,rewards:[{type:"gold",amount:40}]},
+      {target:500,rewards:[{type:"pack",tier:"basic",amount:1}]},
+      {target:1000,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
+      {target:2500,rewards:[{type:"pack",tier:"rare",amount:1}]},
+      {target:5000,rewards:[{type:"gold",amount:150},{type:"pack",tier:"epic",amount:1}]},
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+    ])
+  }),
   spells:Object.freeze({
-    key:"spells",name:"Arcanista",verb:"Jugar magias",icon:"✧",
+    key:"spells",name:"Arcano",verb:"Jugar magias",icon:"✧",
     milestones:Object.freeze([
       {target:25,rewards:[{type:"gold",amount:5}]},
       {target:50,rewards:[{type:"gold",amount:10}]},
@@ -229,7 +257,7 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
     ])
   }),
   traps:Object.freeze({
-    key:"traps",name:"Trampero",verb:"Jugar cartas de Trampa",icon:"◇",
+    key:"traps",name:"Amo de trampas",verb:"Jugar cartas de Trampa",icon:"◇",
     milestones:Object.freeze([
       {target:10,rewards:[{type:"gold",amount:5}]},
       {target:25,rewards:[{type:"gold",amount:10}]},
@@ -978,8 +1006,15 @@ function getPlayerCollection(){
   }
 }
 function savePlayerCollection(collection){
+  // Coleccionista es acumulativa: solo suma copias nuevas; descomponer o perder cartas nunca resta progreso.
+  const beforeTotal=getStoredCollectionCardTotalForMastery();
+  // Fuerza la migración una sola vez ANTES de guardar el nuevo total, evitando contar dos veces colecciones existentes.
+  try{if(typeof getPlayerProfile==="function")getPlayerProfile();}catch(_){ }
   const safe={...(collection||{}),cards:Array.isArray(collection?.cards)?collection.cards:[],materials:normalizeCraftMaterials(collection?.materials||{})};
+  const afterTotal=safe.cards.reduce((sum,card)=>sum+Math.max(0,Math.floor(Number(card?.qty||0))),0);
   localStorage.setItem("hallvalla_player_collection", JSON.stringify(safe));
+  const gained=Math.max(0,afterTotal-beforeTotal);
+  if(gained>0&&typeof registerAccountMasteryAction==="function")registerAccountMasteryAction("collection",gained);
 }
 function addCardsToCollection(cards){
   const collection = getPlayerCollection();

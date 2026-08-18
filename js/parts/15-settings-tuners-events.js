@@ -851,9 +851,9 @@ function renderMasteryHomeBadge(){
    ============================================================ */
 const HV_MISSIONS_ART_W=1619;
 const HV_MISSIONS_ART_H=972;
-const HV_MISSIONS_LAYOUT_STORAGE_KEY="hallvalla_missions_visual_layout_v2";
+const HV_MISSIONS_LAYOUT_STORAGE_KEY="hallvalla_missions_visual_layout_v3";
 const HV_MISSIONS_TUNER_POS_KEY="hallvalla_missions_visual_tuner_pos_v1";
-const HV_MISSIONS_LAYOUT_DEFAULT=Object.freeze({"tutorial":{"bar":{"x":248,"y":291,"w":150,"h":8},"number":{"x":247,"y":309,"w":116,"h":24,"font":20},"button":{"x":422,"y":291,"w":106,"h":48}},"home":{"bar":{"x":748,"y":290,"w":151,"h":8},"number":{"x":747,"y":309,"w":116,"h":24,"font":20},"button":{"x":912,"y":287,"w":104,"h":48}},"tactics":{"bar":{"x":1205,"y":285,"w":151,"h":8},"number":{"x":1204,"y":309,"w":116,"h":24,"font":20},"button":{"x":1391,"y":291,"w":117,"h":48}},"mastery1":{"bar":{"x":248,"y":568,"w":150,"h":8},"number":{"x":247,"y":595,"w":116,"h":24,"font":19},"button":{"x":422,"y":558,"w":106,"h":48}},"mastery2":{"bar":{"x":733,"y":568,"w":151,"h":8},"number":{"x":747,"y":581,"w":116,"h":24,"font":19},"button":{"x":912,"y":558,"w":104,"h":48}},"mastery3":{"bar":{"x":1205,"y":562,"w":151,"h":8},"number":{"x":1204,"y":581,"w":116,"h":24,"font":19},"button":{"x":1380,"y":558,"w":107,"h":48}},"mastery4":{"bar":{"x":248,"y":761,"w":150,"h":8},"number":{"x":247,"y":782,"w":116,"h":24,"font":19},"button":{"x":422,"y":747,"w":106,"h":48}},"mastery5":{"bar":{"x":748,"y":686,"w":151,"h":8},"number":{"x":747,"y":777,"w":116,"h":24,"font":19},"button":{"x":912,"y":747,"w":104,"h":48}},"mastery6":{"bar":{"x":1222,"y":761,"w":151,"h":8},"number":{"x":1222,"y":782,"w":116,"h":24,"font":19},"button":{"x":1380,"y":747,"w":107,"h":48}},"claimAll":{"button":{"x":669,"y":871,"w":282,"h":65}}});
+const HV_MISSIONS_LAYOUT_DEFAULT=Object.freeze({"tutorial":{"bar":{"x":248,"y":291,"w":150,"h":8},"number":{"x":247,"y":309,"w":116,"h":24,"font":20},"button":{"x":422,"y":291,"w":106,"h":48}},"home":{"bar":{"x":748,"y":290,"w":151,"h":8},"number":{"x":747,"y":309,"w":116,"h":24,"font":20},"button":{"x":912,"y":287,"w":104,"h":48}},"tactics":{"bar":{"x":1205,"y":285,"w":151,"h":8},"number":{"x":1204,"y":309,"w":116,"h":24,"font":20},"button":{"x":1391,"y":291,"w":117,"h":48}},"mastery1":{"bar":{"x":248,"y":568,"w":150,"h":8},"number":{"x":247,"y":595,"w":116,"h":24,"font":19},"button":{"x":426,"y":560,"w":113,"h":66}},"mastery2":{"bar":{"x":733,"y":568,"w":151,"h":8},"number":{"x":747,"y":581,"w":116,"h":24,"font":19},"button":{"x":915,"y":555,"w":110,"h":73}},"mastery3":{"bar":{"x":1205,"y":562,"w":151,"h":8},"number":{"x":1204,"y":581,"w":116,"h":24,"font":19},"button":{"x":1380,"y":558,"w":107,"h":48}},"mastery4":{"bar":{"x":248,"y":761,"w":150,"h":8},"number":{"x":247,"y":782,"w":116,"h":24,"font":19},"button":{"x":422,"y":747,"w":115,"h":73}},"mastery5":{"bar":{"x":748,"y":761,"w":151,"h":8},"number":{"x":747,"y":777,"w":116,"h":24,"font":19},"button":{"x":912,"y":747,"w":110,"h":74}},"mastery6":{"bar":{"x":1222,"y":761,"w":151,"h":8},"number":{"x":1222,"y":782,"w":116,"h":24,"font":19},"button":{"x":1395,"y":747,"w":107,"h":74}},"claimAll":{"button":{"x":669,"y":871,"w":282,"h":65}}});
 function cloneHvMissionsLayout(src=HV_MISSIONS_LAYOUT_DEFAULT){return JSON.parse(JSON.stringify(src));}
 function readHvMissionsLayout(){
   try{
@@ -863,6 +863,12 @@ function readHvMissionsLayout(){
       if(!saved[slot])return;
       Object.keys(out[slot]).forEach(type=>{if(saved[slot][type]&&typeof saved[slot][type]==="object")out[slot][type]={...out[slot][type],...saved[slot][type]};});
     });
+    // Reparación: en versiones anteriores la barra de Amo de trampas quedó desplazada hacia arriba (y=686).
+    // Si detectamos ese valor antiguo u otro fuera de la fila inferior, lo corregimos sin tocar el resto del layout.
+    if(out?.mastery5?.bar){
+      const trapBarY=Number(out.mastery5.bar.y||0);
+      if(!Number.isFinite(trapBarY)||trapBarY<730)out.mastery5.bar.y=761;
+    }
     return out;
   }catch(_){return cloneHvMissionsLayout();}
 }
@@ -879,18 +885,24 @@ function applyHvMissionsLayout(){
     if(type==="number")node.style.fontSize=`${(Number(cfg.font||18)/HV_MISSIONS_ART_W)*100}cqw`;
   });
 }
-function hvVisualProgressHtml(slot,pct,label){
+function hvVisualProgressHtml(slot,pct,label,idBase=""){
   const safePct=Math.max(0,Math.min(100,Number(pct)||0));
-  return `<div class="hv-mission-progress" data-hv-layout-slot="${slot}" data-hv-layout-element="bar"><div class="hv-mission-progress-fill" style="width:${safePct.toFixed(2)}%"></div></div><div class="hv-mission-progress-number" data-hv-layout-slot="${slot}" data-hv-layout-element="number">${escapeHtml(String(label||""))}</div>`;
+  const safeId=String(idBase||slot||"").replace(/[^a-zA-Z0-9_-]/g,"");
+  const barId=safeId?` id="${safeId}ProgressBar"`:"";
+  const fillId=safeId?` id="${safeId}ProgressFill"`:"";
+  const numberId=safeId?` id="${safeId}ProgressNumber"`:"";
+  return `<div${barId} class="hv-mission-progress" data-hv-layout-slot="${slot}" data-hv-layout-element="bar"><div${fillId} class="hv-mission-progress-fill" style="width:${safePct.toFixed(2)}%"></div></div><div${numberId} class="hv-mission-progress-number" data-hv-layout-slot="${slot}" data-hv-layout-element="number">${escapeHtml(String(label||""))}</div>`;
 }
 function hvMissionActionHtml(slot,id,label,disabled=false){
   return `<button id="${id}" class="hv-mission-action-slot" data-hv-layout-slot="${slot}" data-hv-layout-element="button" type="button" ${disabled?"disabled":""}>${escapeHtml(label)}</button>`;
 }
 function hvMasteryClaimHtml(slot,key,target,rewardTitle="",disabled=false){
-  const safeKey=escapeHtml(key||"");
+  const rawKey=String(key||"");
+  const safeKey=escapeHtml(rawKey);
+  const safeDomKey=rawKey.replace(/[^a-zA-Z0-9_-]/g,"");
   const safeTitle=escapeHtml(rewardTitle||"");
   const aria=safeTitle?`Reclamar recompensa ${safeTitle}`:"Reclamar recompensa";
-  return `<button class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${safeKey}" data-mastery-target="${Number(target)||0}" type="button" aria-label="${aria}" title="${safeTitle}" ${disabled?"disabled":""}><img src="assets/ui/missions/btn_reclamar.png" alt="Reclamar" draggable="false"></button>`;
+  return `<button id="${safeDomKey}MasteryClaimBtn" class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${safeKey}" data-mastery-target="${Number(target)||0}" type="button" aria-label="${aria}" title="${safeTitle}" ${disabled?"disabled":""}><img src="assets/ui/missions/btn_reclamar.png" alt="Reclamar" draggable="false"></button>`;
 }
 function renderAccountMasteries(){
   const list=$("accountMasteryList"),claimAll=$("claimAllMasteryRewardsBtn");
@@ -899,11 +911,8 @@ function renderAccountMasteries(){
   const defs=Object.values(ACCOUNT_MASTERY_DEFS);
   const pendingTotal=getPendingAccountMasteryRewardCount(profile);
   if(claimAll){claimAll.classList.remove("hidden");claimAll.disabled=pendingTotal<=0;claimAll.dataset.hvLayoutSlot="claimAll";claimAll.dataset.hvLayoutElement="button";}
-  // La build tiene cinco maestrías funcionales de cuenta:
-  // 1 Invocador, 2 Verdugo, 4 Arcanista, 5 Trampero y 6 Armero.
-  // El slot visual 3 dice "Coleccionista" en el arte, pero esa maestría todavía no existe
-  // en ACCOUNT_MASTERY_DEFS, por lo que se mantiene sin contador funcional.
-  const slotByKey={summons:"mastery1",kills:"mastery2",spells:"mastery4",traps:"mastery5",equipment:"mastery6"};
+  // Las seis tarjetas del arte aprobado están conectadas a una maestría funcional.
+  const slotByKey={summons:"mastery1",kills:"mastery2",collection:"mastery3",spells:"mastery4",traps:"mastery5",equipment:"mastery6"};
   list.innerHTML=defs.map(def=>{
     const slot=slotByKey[def.key];if(!slot)return"";
     const rec=getAccountMasteryRecord(def.key,profile);
@@ -916,7 +925,7 @@ function renderAccountMasteries(){
     const label=current?`${shown.toLocaleString("es-ES")}/${target.toLocaleString("es-ES")}`:"MAX";
     const rewardTitle=current?formatAccountMasteryMilestoneRewards(current):"";
     const claim=hvMasteryClaimHtml(slot,def.key,current?.target||0,rewardTitle,!ready);
-    return hvVisualProgressHtml(slot,pct,label)+claim;
+    return hvVisualProgressHtml(slot,pct,label,`${def.key}Mastery`)+claim;
   }).join("");
   list.querySelectorAll("[data-mastery-key][data-mastery-target]").forEach(btn=>btn.addEventListener("click",()=>{
     const result=claimAccountMasteryMilestone(btn.dataset.masteryKey,Number(btn.dataset.masteryTarget));
@@ -957,7 +966,7 @@ function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccou
 function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("hidden");}
 
 /* ---------- Tuner visual: posición/tamaño + JSON ---------- */
-const HV_MISSIONS_TUNER_SLOT_LABELS={tutorial:"Tutorial",home:"Home y mazo",tactics:"Tácticas",mastery1:"Invocador",mastery2:"Verdugo",mastery3:"Coleccionista / sin lógica todavía",mastery4:"Maestría 4 · Arcanista",mastery5:"Maestría 5 · Trampero",mastery6:"Maestría 6 · Armero",claimAll:"Reclamar todo"};
+const HV_MISSIONS_TUNER_SLOT_LABELS={tutorial:"Tutorial",home:"Home y mazo",tactics:"Tácticas",mastery1:"Invocador",mastery2:"Verdugo",mastery3:"Coleccionista",mastery4:"Arcano",mastery5:"Amo de trampas",mastery6:"Armero",claimAll:"Reclamar todo"};
 function initHvMissionsTunerOptions(){
   const select=$("missionsTunerSlot");if(!select||select.options.length)return;
   select.innerHTML=Object.keys(HV_MISSIONS_TUNER_SLOT_LABELS).map(key=>`<option value="${key}">${HV_MISSIONS_TUNER_SLOT_LABELS[key]}</option>`).join("");
