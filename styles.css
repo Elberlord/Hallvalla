@@ -19006,6 +19006,30 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   opacity:1 !important;
   filter:none !important;
 }
+.cell > .unit-card.unit-stealthed .stealth-board-cover::before,
+.cell > .unit-card.unit-stealthed .stealth-board-cover::after,
+.unit-context-portrait .stealth-context-cover::before,
+.unit-context-portrait .stealth-context-cover::after{
+  content:"";position:absolute;pointer-events:none;display:block;
+  background:url("assets/effects/status/stealth/stealth_smoke.webp") center 46%/cover no-repeat;
+}
+.cell > .unit-card.unit-stealthed .stealth-board-cover::before,
+.unit-context-portrait .stealth-context-cover::before{
+  inset:0;
+  opacity:.34;
+  filter:blur(7px) brightness(.72) saturate(.92);
+  mix-blend-mode:screen;
+  animation:hvStealthSmokePulse 5.1s ease-in-out infinite;
+}
+.cell > .unit-card.unit-stealthed .stealth-board-cover::after,
+.unit-context-portrait .stealth-context-cover::after{
+  inset:0;
+  opacity:.98;
+  clip-path:inset(36% 22% 42% 22% round 999px);
+  transform-origin:50% 50%;
+  filter:brightness(1.18) saturate(1.12) drop-shadow(0 0 8px rgba(255,40,40,.28));
+  animation:hvStealthEyesBlink 6.4s infinite;
+}
 .cell > .unit-card.unit-stealthed .stealth-board-cover img{
   position:absolute !important;
   inset:0 !important;
@@ -19017,8 +19041,10 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   object-position:center 46% !important;
   display:block !important;
   opacity:.98 !important;
-  filter:drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 12px rgba(255,28,28,.16)) !important;
+  filter:brightness(.92) contrast(1.06) saturate(.96) drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 12px rgba(255,28,28,.16)) !important;
   user-select:none !important;
+  transform-origin:50% 50% !important;
+  animation:hvStealthSmokeMain 4.4s ease-in-out infinite !important;
 }
 .cell > .unit-card.unit-stealthed.unit-exhausted .stealth-board-cover{
   opacity:.78 !important;
@@ -19052,13 +19078,39 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   object-fit:cover !important;
   object-position:center 46% !important;
   display:block !important;
-  filter:drop-shadow(0 0 8px rgba(255,30,30,.22)) !important;
+  opacity:.98 !important;
+  filter:brightness(.93) contrast(1.05) saturate(.97) drop-shadow(0 0 8px rgba(255,30,30,.22)) !important;
+  transform-origin:50% 50% !important;
+  animation:hvStealthSmokeMain 4.7s ease-in-out infinite !important;
 }
 .unit-context-mini-stats.is-stealthed span{
   color:rgba(255,239,206,.76) !important;
   text-shadow:none !important;
 }
 .unit-stealthed .stealth-silhouette{display:none !important;}
+
+@keyframes hvStealthSmokeMain{
+  0%,100%{transform:translate3d(0,0,0) scale(1.00,1.00);filter:brightness(.9) contrast(1.05) saturate(.95) drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 12px rgba(255,28,28,.16));}
+  18%{transform:translate3d(-1.2%,.5%,0) scale(1.05,.94);filter:brightness(1.02) contrast(1.08) saturate(1.04) drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 13px rgba(255,32,32,.18));}
+  34%{transform:translate3d(.8%,-1.4%,0) scale(.96,1.09);filter:brightness(.82) contrast(1.02) saturate(.9) drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 11px rgba(180,20,20,.14));}
+  58%{transform:translate3d(-.7%,-.8%,0) scale(1.08,.92);filter:brightness(1.04) contrast(1.08) saturate(1.02) drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 14px rgba(255,38,38,.18));}
+  78%{transform:translate3d(.6%,.9%,0) scale(.97,1.05);filter:brightness(.86) contrast(1.02) saturate(.92) drop-shadow(0 8px 10px rgba(0,0,0,.74)) drop-shadow(0 0 10px rgba(160,18,18,.12));}
+}
+@keyframes hvStealthSmokePulse{
+  0%,100%{transform:translate3d(0,0,0) scale(.98,1.02);opacity:.28;}
+  25%{transform:translate3d(1%,-1%,0) scale(1.08,.94);opacity:.42;}
+  50%{transform:translate3d(-1%,1%,0) scale(.94,1.08);opacity:.24;}
+  75%{transform:translate3d(.5%,-.6%,0) scale(1.04,.98);opacity:.38;}
+}
+@keyframes hvStealthEyesBlink{
+  0%,8%,38%,68%,100%{opacity:.96;transform:translateY(0) scaleY(1);}
+  10%{opacity:.92;transform:translateY(.5%) scaleY(.22);}
+  12%{opacity:.98;transform:translateY(0) scaleY(1);}
+  40%{opacity:.9;transform:translateY(.5%) scaleY(.18);}
+  42%{opacity:.96;transform:translateY(0) scaleY(1);}
+  70%{opacity:.88;transform:translateY(.4%) scaleY(.14);}
+  72%{opacity:.96;transform:translateY(0) scaleY(1);}
+}
 
 
 /* ==========================================================

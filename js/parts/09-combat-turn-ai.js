@@ -1681,8 +1681,33 @@ async function adventureEnemyTurn(){
     return living(1).filter(t=>canDirectlyTarget(card,t)).map(t=>({target:t,score:scoreTarget(t,dmg)})).sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
 
+  const aiStealthExecutionValue=(attacker,target)=>{
+    if(!attacker||!target||target.leader||!isStealthedUnit(attacker))return -Infinity;
+    const combat=estimateCombat(attacker,target);
+    if(combat.hpDamage<=0||combat.chance<48)return -9999;
+    let value=aiUnitValue(target)+Math.max(0,combat.chance-45)*6;
+    const targetRole=aiBasicTacticRole(target);
+    if(["ranged","support","assassin","skirmisher"].includes(targetRole))value+=180;
+    if(target.principal||target.special)value+=240;
+    if((target.equipmentKeys||[]).length)value+=110*(target.equipmentKeys||[]).length;
+    if(Number(target.hp||0)<=2)value+=70;
+    return value;
+  };
+  const aiShouldHoldStealthAttack=(attacker,target)=>{
+    if(!attacker||!target||attacker.key!=="geisha_encubierta"||!isStealthedUnit(attacker)||target.leader)return false;
+    const combat=estimateCombat(attacker,target);
+    if(combat.hpDamage<=0||combat.chance<48)return true;
+    return aiStealthExecutionValue(attacker,target)<420;
+  };
+  const aiStealthHuntTarget=(attacker)=>{
+    if(!attacker||!isStealthedUnit(attacker))return null;
+    return living(1)
+      .filter(t=>!t.leader&&aiCanEverTarget(attacker,t))
+      .map(t=>({target:t,score:aiStealthExecutionValue(attacker,t)}))
+      .sort((a,b)=>b.score-a.score)[0]?.target||null;
+  };
   const bestAttackTarget=(attacker)=>{
-    return living(1).filter(t=>canHit(attacker,t)).map(t=>{
+    const ranked=living(1).filter(t=>canHit(attacker,t)).map(t=>{
       let score=scoreTarget(t,0,attacker);
       const role=aiBasicTacticRole(attacker);
       const leaderNeed=aiLeaderProtectionNeed();
@@ -1692,11 +1717,14 @@ async function adventureEnemyTurn(){
       if(role==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
       if(aiAttackRange(attacker)>=3&&t.leader)score+=130;
       if(role==="spear"&&(t.key==="cavalry"||getWeaponClassForCard(t)==="cavalry"))score+=260;
-      // Geisha: desde Sigilo no busca "raspar" una pieza barata; busca una ejecución de alto valor.
+      // Geisha: desde Sigilo no busca "raspar" una pieza barata; espera la ejecución correcta.
       if(attacker.key==="geisha_encubierta"&&isStealthedUnit(attacker)&&!t.leader&&combat.hpDamage>0){
         score+=620+aiUnitValue(t)*0.85+Math.max(0,combat.chance-55)*4;
         if(t.principal||t.special)score+=220;
         if((t.equipmentKeys||[]).length)score+=90*(t.equipmentKeys||[]).length;
+        const stealthValue=aiStealthExecutionValue(attacker,t);
+        if(stealthValue<420)score-=520;
+        else score+=stealthValue*0.65;
       }
       // Skipar entiende que una baja también destruye ventaja de mano. Solo usa el bono con una línea de kill realista.
       if(attacker.key==="skipar_del_drakkar"&&!t.leader&&combat.hpDamage>=(t.hp||0)&&combat.chance>=60&&humanHandCount>0){
@@ -1715,7 +1743,10 @@ async function adventureEnemyTurn(){
         if(d(t,rangedNeed.unit)<=1)score+=210;
       }
       return{target:t,score};
-    }).sort((a,b)=>b.score-a.score)[0]?.target||null;
+    }).sort((a,b)=>b.score-a.score);
+    const best=ranked[0]?.target||null;
+    if(best&&aiShouldHoldStealthAttack(attacker,best))return null;
+    return best;
   };
 
   const playerThreatAtCell=(cell,unitLike=null)=>{
@@ -2717,9 +2748,15 @@ async function adventureEnemyTurn(){
     const moverRole=aiBasicTacticRole(u);
     const rangedNeedForPursuit=aiRangedProtectionNeed();
     const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t));
+    const stealthVeilActive=!!(isStealthedUnit(u)&&["geisha_encubierta","fuma_kotaro","hattori_hanzo"].includes(u.key));
+    const stealthPriorityTarget=stealthVeilActive?aiStealthHuntTarget(u):null;
     const primaryTarget=strategicTargets.map(t=>{
       let targetScore=scoreTarget(t,0,u)+(t.leader?90:0);
-      if(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&!t.leader)targetScore+=520+aiUnitValue(t)*0.8;
+      if(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&!t.leader){
+        targetScore+=520+aiUnitValue(t)*0.8;
+        targetScore+=Math.max(0,aiStealthExecutionValue(u,t))*0.55;
+      }
+      if(stealthPriorityTarget&&t.id===stealthPriorityTarget.id)targetScore+=260;
       if(u.key==="skipar_del_drakkar"&&!t.leader&&Math.max(0,Number(pub.playerStats?.[1]?.hand||0))>0)targetScore+=120;
 
       // Una pantalla reconoce a una caballería/asesino como amenaza, pero no la
@@ -2732,7 +2769,8 @@ async function adventureEnemyTurn(){
       }
       return{target:t,score:targetScore};
     }).sort((a,b)=>b.score-a.score)[0]?.target||null;
-    const currentGap=primaryTarget?Math.max(0,d(u,primaryTarget)-aiAttackReachForTarget(u,primaryTarget)):999;
+    const huntTarget=stealthPriorityTarget||primaryTarget;
+    const currentGap=huntTarget?Math.max(0,d(u,huntTarget)-aiAttackReachForTarget(u,huntTarget)):999;
     const options=[];
     const legalMoveKeys=new Set(getUnitMovementZonesForState(u,units,maxMove));
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -2753,7 +2791,7 @@ async function adventureEnemyTurn(){
         if(ghostRange>1&&pl&&d(pos,pl)<=ghostRange)score+=55;
         const formationScore=aiFormationCellScore(pos,ghost);
         score+=formationScore;
-        if(role==="ranged"||role==="skirmisher"){
+        if((role==="ranged"||role==="skirmisher")&&!stealthVeilActive){
           const localBalance=aiLocalForceBalance(pos,ghost);
           if(playerThreatAtCell(pos,u)>=30)score-=role==="ranged"?210:130;
           if(allySupportAtCell(pos)<=12)score-=role==="ranged"?85:45;
@@ -2775,7 +2813,20 @@ async function adventureEnemyTurn(){
           }
         }
         score+=allySupportAtCell(pos)*0.45;
-        score-=playerThreatAtCell(pos,u)*0.7;
+        const cellThreat=playerThreatAtCell(pos,u);
+        if(stealthVeilActive){
+          score-=cellThreat*0.16;
+          if(huntTarget){
+            const huntDist=d(pos,huntTarget);
+            if(huntDist<=1)score+=235;
+            else if(huntDist===2)score+=145;
+            if(huntTarget.special||huntTarget.principal)score+=huntDist<=1?120:60;
+            const nearbyOthers=living(1).filter(e=>e.id!==huntTarget.id&&!e.leader&&d(e,pos)<=1).length;
+            score-=nearbyOthers*28;
+          }
+        }else{
+          score-=cellThreat*0.7;
+        }
         if(pub.adventureAdaptiveMage&&u.key==="arcane_adept"&&el){
           const linkedNow=d(start,el)<=1;
           const linkedNext=d(pos,el)<=1;
@@ -2786,15 +2837,15 @@ async function adventureEnemyTurn(){
             score-=createsLeaderShot?40:(createsHighValueShot?135:430);
           }
         }
-        const nextGap=primaryTarget?Math.max(0,d(pos,primaryTarget)-aiAttackReachForTarget(ghost,primaryTarget)):999;
-        const progress=primaryTarget?currentGap-nextGap:0;
+        const nextGap=huntTarget?Math.max(0,d(pos,huntTarget)-aiAttackReachForTarget(ghost,huntTarget)):999;
+        const progress=huntTarget?currentGap-nextGap:0;
         if(progress>0)score+=progress*72;
         if(nextGap===0&&currentGap>0)score+=180;
         if(aiCombatEngine?.scoreMoveCell){
-          score+=Number(aiCombatEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);
+          score+=Number(aiCombatEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget:huntTarget||primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);
         }
         if(aiTempoEngine?.scoreMoveCell){
-          score+=Number(aiTempoEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);
+          score+=Number(aiTempoEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget:huntTarget||primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);
         }
         options.push({x,y,score,progress,nextGap,canAttack:targets.length>0,formationScore});
       }
