@@ -11,9 +11,9 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260819.1";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260819.2";
 
-const BUILD = "20260819.1";
+const BUILD = "20260819.2";
 const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {

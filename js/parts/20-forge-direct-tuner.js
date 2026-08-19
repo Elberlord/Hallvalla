@@ -3,10 +3,11 @@
   'use strict';
 
   /* Clave nueva: no reutiliza posiciones del editor anterior que podían desplazar contenedores completos. */
-  const STORAGE_KEY='hallvalla_forge_direct_tuner_v6_individual';
+  const STORAGE_KEY='hallvalla_forge_direct_tuner_v7_individual';
   const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v3';
   const $=id=>document.getElementById(id);
   const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
+  const ALWAYS_ENABLE_FORGE_TUNER=true;
 
   const GROUPS={
     layout:{label:'Pergaminos / layout'},
@@ -132,7 +133,7 @@
     collectionCard12:{x:0,y:0,scale:100,width:100,height:100},
     collectionCard13:{x:0,y:0,scale:100,width:100,height:100},
     collectionCard14:{x:0,y:0,scale:100,width:100,height:100},
-    principal1:{x:100,y:-14,scale:50,width:100,height:100},
+    principal1:{x:0,y:0,scale:100,width:100,height:100},
     principal2:{x:0,y:0,scale:100,width:100,height:100},
     principal3:{x:0,y:0,scale:100,width:100,height:100},
     principal4:{x:0,y:0,scale:100,width:100,height:100},
@@ -161,8 +162,8 @@
   };
   const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{...defaultValue(),...(USER_LAYOUT[key]||{})}]));
   let state=loadState();
-  let activeGroup='filters';
-  let activeKey='search';
+  let activeGroup='spellbook';
+  let activeKey='principal1';
   let panelOpen=false;
   let drag=null;
   let shell=null;
@@ -441,7 +442,7 @@
     if($('hvForgeDirectTuner'))return;
     shell=document.createElement('div');shell.id='hvForgeDirectTuner';shell.className='hv-forge-direct-tuner hidden';
     shell.innerHTML=`
-      <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">EDITAR FORJA</button></div>
+      <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">AJUSTAR FORJA</button></div>
       <section id="hvForgeTunerBody" class="hv-forge-tuner-body hidden">
         <div class="hv-forge-tuner-scroll-wrap">
           <div id="hvForgeTunerScroll" class="hv-forge-tuner-scroll">
@@ -469,11 +470,11 @@
     $('hvForgeTunerToggle').onclick=()=>{
       panelOpen=body.classList.contains('hidden');
       body.classList.toggle('hidden',!panelOpen);
-      $('hvForgeTunerToggle').textContent=panelOpen?'EDITANDO':'EDITAR FORJA';
+      $('hvForgeTunerToggle').textContent=panelOpen?'AJUSTANDO':'AJUSTAR FORJA';
       ensureArtLayers();refreshSelectionClasses();syncControls();
       requestAnimationFrame(()=>{const box=$('hvForgeTunerScroll'),range=$('hvForgeScrollRange');if(box&&range){const max=Math.max(0,box.scrollHeight-box.clientHeight);range.value=max?String(Math.round(box.scrollTop/max*100)):'0';range.disabled=max<=0;}});
     };
-    const closeEditor=()=>{panelOpen=false;body.classList.add('hidden');$('hvForgeTunerToggle').textContent='EDITAR FORJA';refreshSelectionClasses();};
+    const closeEditor=()=>{panelOpen=false;body.classList.add('hidden');$('hvForgeTunerToggle').textContent='AJUSTAR FORJA';refreshSelectionClasses();};
     $('hvForgeTunerClose').onclick=closeEditor;
     $('hvForgeTunerDone').onclick=closeEditor;
 
@@ -516,7 +517,7 @@
   // El layout aprobado forma parte del runtime. La UI de edición y sus observers/listeners, no.
   globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__=applyRuntimeLayout;
 
-  if(!DEV_TOOLS_ENABLED){
+  if(!ALWAYS_ENABLE_FORGE_TUNER && !DEV_TOOLS_ENABLED){
     if(isForgeOpen())applyRuntimeLayout();
     let resizeQueued=false;
     window.addEventListener('resize',()=>{

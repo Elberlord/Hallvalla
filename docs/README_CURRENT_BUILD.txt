@@ -1,11 +1,11 @@
-HallValla v8 Modular · Release 20260819.1
+HallValla v8 Modular · Release 20260819.2
 
 PASO 2 · ENDURECIMIENTO FIREBASE / PVP
 
 Base: 20260818.1 (cache saneado).
 
 Cambios de esta release:
-- La version de cache sigue siendo corta y unica: 20260819.1.
+- La version de cache sigue siendo corta y unica: 20260819.2.
 - No se concatenan nombres de fixes ni historial de parches en ?v=.
 - database.rules.json protege la identidad del anfitrion y el slot de J2 contra reasignaciones arbitrarias.
 - Solo J1 puede alterar las reglas de sala (timer/apuesta) una vez creada la partida.
@@ -32,7 +32,7 @@ STEP 3 · Deck/PvP
 - Cache/build de ese parche: 20260818.3. No concatenar nombres de fixes.
 
 
-PASO 3 REAL · LIMPIEZA CSS CONSERVADORA · 20260819.1
+PASO 3 REAL · LIMPIEZA CSS CONSERVADORA · 20260819.2
 - Base funcional: Deck 21+ / Principales 20260818.3.
 - No se reordenaron selectores ni bloques CSS.
 - No se fusionaron reglas que pudieran cambiar la cascada.
@@ -41,4 +41,11 @@ PASO 3 REAL · LIMPIEZA CSS CONSERVADORA · 20260819.1
 - styles.css paso de 868029 a 863857 bytes sin minificarlo ni volverlo ilegible.
 - !important paso de 7608 a 7517.
 - Se conservaron Misiones, Deck 21+, Principales, PvP, Aventura, DET, HUD y responsive sin cambios funcionales intencionales.
-- Build/cache actual: 20260819.1. La version se reemplaza; nunca se concatenan nombres de fixes.
+- Build/cache actual: 20260819.2. La version se reemplaza; nunca se concatenan nombres de fixes.
+
+
+PASO 4 · AJUSTE DE PRINCIPALES · 20260819.2
+- Se reinician los offsets viejos que estaban empujando el Principal 1 sobre el siguiente slot.
+- El afinador de Forja queda disponible en tiempo de ejecucion para cualquier usuario que abra la Forja.
+- El panel abre centrado en Spellbook > Principal 1 para mover, escalar y recolocar los Principales sin tocar gameplay.
+- Nueva clave de almacenamiento: hallvalla_forge_direct_tuner_v7_individual.

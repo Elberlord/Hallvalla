@@ -1,4 +1,4 @@
-/* HALLVALLA 20260819.1 · STEP 3 CSS: limpieza conservadora.
+/* HALLVALLA 20260819.2 · STEP 3 CSS: limpieza conservadora.
    Solo se retiraron declaraciones exactamente repetidas en el mismo selector y contexto,
    conservando siempre la última copia. No se reordenaron reglas ni se tocaron contratos visuales. */
 /*
