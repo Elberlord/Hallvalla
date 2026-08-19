@@ -421,13 +421,16 @@ function maxCopiesForCard(card){
 function getCardSurplusCopies(card){
   return Math.max(0,Number(card?.qty||0)-maxCopiesForCard(card));
 }
-function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
+function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots(),options={}){
   const counts={};
   const errors=[];
   const requiredSlots=principalSlots===0
     ? 0
     : Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
   const requiredSize=getDeckSizeForPrincipalSlots(requiredSlots);
+  const minimumSizeRaw=Number(options?.minimumSize);
+  const useMinimumSize=Number.isFinite(minimumSizeRaw)&&minimumSizeRaw>0;
+  const minimumSize=useMinimumSize?Math.max(1,Math.floor(minimumSizeRaw)):requiredSize;
   const selectedLeader=(typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"");
   cards.forEach(card=>{
     const key=card.key||card.name;
@@ -438,8 +441,12 @@ function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
       errors.push(`${card.name||key}: este Equipo es exclusivo de ${getEquipmentLeaderLabel(card)}.`);
     }
   });
-  if(cards.length!==requiredSize)errors.push(`El mazo debe tener exactamente ${requiredSize} cartas: ${requiredSlots} Personaje${requiredSlots===1?"":"s"} Principal${requiredSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`);
-  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:requiredSlots,deckSize:requiredSize},{cards,principalSlots});
+  if(useMinimumSize){
+    if(cards.length<minimumSize)errors.push(`El mazo debe tener al menos ${minimumSize} cartas.`);
+  }else if(cards.length!==requiredSize){
+    errors.push(`El mazo debe tener exactamente ${requiredSize} cartas: ${requiredSlots} Personaje${requiredSlots===1?"":"s"} Principal${requiredSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`);
+  }
+  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:requiredSlots,deckSize:cards.length,requiredDeckSize:requiredSize,minimumDeckSize:useMinimumSize?minimumSize:null},{cards,principalSlots,options});
 }
 
 const SPECIAL_HUMAN_CARD_DATA=[

@@ -125,12 +125,39 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     try{ if(typeof getAdventureProgress==="function"){ const p=getAdventureProgress()||{}; return {guardianDefeated:p.guardianDefeated===true}; } }catch(_){ }
     try{ const key=typeof globalThis.ADVENTURE_PROGRESS_KEY!=="undefined"?globalThis.ADVENTURE_PROGRESS_KEY:"hallvalla_adventure_progress"; const p=JSON.parse(localStorage.getItem(key)||"null")||{}; return {guardianDefeated:p.guardianDefeated===true}; }catch(_){ return {guardianDefeated:false}; }
   }
+  const ONLINE_MIN_DECK_SIZE=21;
+  function getOnlineLocalBattleProfileSafe(role=1){
+    let leaderType="warrior",leaderLevel=1,leaderAbility="";
+    try{ leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior"); }catch(_){ leaderType="warrior"; }
+    try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ leaderLevel=1; }
+    try{ leaderAbility=String((typeof getLocalLeaderAbility==="function"&&getLocalLeaderAbility(leaderType))||""); }catch(_){ leaderAbility=""; }
+    let principalSlots=1;
+    try{
+      if(typeof getPrincipalSlotsForLeaderLevel==="function") principalSlots=Number(getPrincipalSlotsForLeaderLevel(leaderLevel)||1);
+      else if(typeof getCurrentPrincipalSlots==="function") principalSlots=Number(getCurrentPrincipalSlots()||1);
+    }catch(_){ principalSlots=1; }
+    const maxSlots=(typeof DECK_RULES!=="undefined"?Number(DECK_RULES.maxPrincipalSlots||3):3);
+    principalSlots=Math.max(1,Math.min(maxSlots,Math.floor(principalSlots)||1));
+    return {leaderType,leaderLevel,leaderAbility,principalSlots,role:Number(role)||1};
+  }
   function getSavedOnlineDeckState(){
-    try{ if(typeof globalThis.isTestPromoActive==="function"&&globalThis.isTestPromoActive()) return {valid:true,size:21,requiredSize:21}; }catch(_){ }
+    try{ if(typeof globalThis.isTestPromoActive==="function"&&globalThis.isTestPromoActive()) return {valid:true,size:21,requiredSize:ONLINE_MIN_DECK_SIZE,principalSlots:1}; }catch(_){ }
     let deck=[]; try{ deck=typeof getSavedDeck==="function" ? (getSavedDeck()||[]) : JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]"); }catch(_){ deck=[]; }
     if(!Array.isArray(deck)) deck=[];
-    let validation=null; try{ if(typeof globalThis.validateDeckList==="function") validation=globalThis.validateDeckList(deck,1); }catch(_){ }
-    return { valid:validation? validation.valid===true : deck.length===21, size:deck.length, requiredSize:21, errors:Array.isArray(validation?.errors)? validation.errors:[] };
+    const profile=getOnlineLocalBattleProfileSafe(1);
+    let validation=null; try{ if(typeof globalThis.validateDeckList==="function") validation=globalThis.validateDeckList(deck,profile.principalSlots,{minimumSize:ONLINE_MIN_DECK_SIZE}); }catch(_){ }
+    const principalKeys=getSavedPrincipalKeysSafe();
+    let principalValidation=null; try{ if(typeof globalThis.validatePrincipalSelection==="function") principalValidation=globalThis.validatePrincipalSelection(principalKeys,deck,profile.principalSlots); }catch(_){ }
+    const fallbackPrincipalKeys=principalKeys.filter(key=>deck.some(card=>String(card?.key||"")===String(key||""))).slice(0,profile.principalSlots);
+    const deckValid=validation?validation.valid===true:deck.length>=ONLINE_MIN_DECK_SIZE;
+    const principalsValid=principalValidation?principalValidation.valid===true:fallbackPrincipalKeys.length===profile.principalSlots;
+    return {
+      valid:deckValid&&principalsValid,
+      size:deck.length,
+      requiredSize:ONLINE_MIN_DECK_SIZE,
+      principalSlots:profile.principalSlots,
+      errors:[...(Array.isArray(validation?.errors)?validation.errors:[]),...(Array.isArray(principalValidation?.errors)?principalValidation.errors:[])]
+    };
   }
   function normalizeFirebaseArray(value){ if(Array.isArray(value)) return value.slice(); if(value&&typeof value==="object") return Object.keys(value).sort((a,b)=>Number(a)-Number(b)).map(k=>value[k]); return []; }
   function getSavedPrincipalKeysSafe(){
@@ -142,56 +169,57 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const text=[...deckKeys,"|",...principalKeys].join("~");
     let hash=2166136261;
     for(let i=0;i<text.length;i++){ hash^=text.charCodeAt(i); hash=Math.imul(hash,16777619); }
-    return `hv21-${(hash>>>0).toString(16).padStart(8,"0")}`;
+    return `hvdeck-${(hash>>>0).toString(16).padStart(8,"0")}`;
   }
   function buildOwnPrivatePayload(ownerUid,role){
     let deck=[]; try{ deck=typeof getSavedDeck==="function"?(getSavedDeck()||[]):JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]"); }catch(_){ deck=[]; }
     if(!Array.isArray(deck)) deck=[];
-    let deckValidation=null; try{ if(typeof globalThis.validateDeckList==="function") deckValidation=globalThis.validateDeckList(deck,1); }catch(_){ }
-    if(deck.length!==21 || deckValidation?.valid===false){
+    const profile=getOnlineLocalBattleProfileSafe(role);
+    let deckValidation=null; try{ if(typeof globalThis.validateDeckList==="function") deckValidation=globalThis.validateDeckList(deck,profile.principalSlots,{minimumSize:ONLINE_MIN_DECK_SIZE}); }catch(_){ }
+    if(deck.length<ONLINE_MIN_DECK_SIZE || deckValidation?.valid===false){
       const detail=Array.isArray(deckValidation?.errors)&&deckValidation.errors.length?` ${deckValidation.errors.join(" ")}`:"";
-      throw new Error(`El mazo online debe tener exactamente 21 cartas válidas.${detail}`);
+      throw new Error(`El mazo online debe tener al menos ${ONLINE_MIN_DECK_SIZE} cartas válidas.${detail}`);
     }
     const deckKeys=deck.map(card=>String(card?.key||"").trim());
     if(deckKeys.some(k=>!k)) throw new Error("El mazo contiene una carta sin clave canónica.");
     let principalKeys=getSavedPrincipalKeysSafe();
-    let principalValidation=null; try{ if(typeof globalThis.validatePrincipalSelection==="function") principalValidation=globalThis.validatePrincipalSelection(principalKeys,deck,1); }catch(_){ }
+    let principalValidation=null; try{ if(typeof globalThis.validatePrincipalSelection==="function") principalValidation=globalThis.validatePrincipalSelection(principalKeys,deck,profile.principalSlots); }catch(_){ }
     if(principalValidation){
-      if(!principalValidation.valid) throw new Error(`Personaje Principal inválido: ${(principalValidation.errors||[]).join(" ")}`);
-      principalKeys=(principalValidation.keys||[]).slice(0,1);
+      if(!principalValidation.valid) throw new Error(`Personajes Principales inválidos: ${(principalValidation.errors||[]).join(" ")}`);
+      principalKeys=(principalValidation.keys||[]).slice(0,profile.principalSlots);
     }else{
-      principalKeys=principalKeys.filter(k=>deckKeys.includes(k)).slice(0,1);
-      if(principalKeys.length!==1) throw new Error("Debes guardar exactamente 1 Personaje Principal dentro de tu mazo de 21 cartas.");
+      principalKeys=[...new Set(principalKeys.filter(k=>deckKeys.includes(k)))].slice(0,profile.principalSlots);
+      if(principalKeys.length!==profile.principalSlots) throw new Error(`Debes guardar ${profile.principalSlots} Personaje${profile.principalSlots===1?"":"s"} Principal${profile.principalSlots===1?"":"es"} dentro del mazo.`);
     }
-    let leaderType="warrior",leaderLevel=1,leaderAbility="";
-    try{ leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior"); }catch(_){ leaderType="warrior"; }
-    try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ leaderLevel=1; }
-    try{ leaderAbility=String((typeof getLocalLeaderAbility==="function"&&getLocalLeaderAbility(leaderType))||""); }catch(_){ leaderAbility=""; }
     return {
       schema:"hallvalla-pvp-private-step6f-real-unit-summon",
       ownerUid:String(ownerUid||""),
       role:Number(role),
       profile:{name:getProfileNameSafe(role),level:getProfileLevelSafe()},
-      battleProfile:{leaderType,leaderLevel,leaderAbility},
-      loadout:{deckKeys,principalKeys,deckSize:deckKeys.length,fingerprint:fingerprintLoadout(deckKeys,principalKeys)},
+      battleProfile:{leaderType:profile.leaderType,leaderLevel:profile.leaderLevel,leaderAbility:profile.leaderAbility},
+      loadout:{deckKeys,principalKeys,principalSlots:profile.principalSlots,deckSize:deckKeys.length,fingerprint:fingerprintLoadout(deckKeys,principalKeys)},
       prepared:true, preparedAt:Date.now()
     };
   }
   function validateOwnPrivateSnapshot(value,ownerUid,role){
     const data=value&&typeof value==="object"?value:{};
     const deckKeys=normalizeFirebaseArray(data?.loadout?.deckKeys).map(v=>String(v||""));
-    const principalKeys=normalizeFirebaseArray(data?.loadout?.principalKeys).map(v=>String(v||""));
+    const principalKeys=normalizeFirebaseArray(data?.loadout?.principalKeys).map(v=>String(v||"")).filter(Boolean);
+    const maxSlots=(typeof DECK_RULES!=="undefined"?Number(DECK_RULES.maxPrincipalSlots||3):3);
+    const principalSlots=Math.max(1,Math.min(maxSlots,Number(data?.loadout?.principalSlots||principalKeys.length||1)||1));
     return String(data?.ownerUid||"")===String(ownerUid||"")
       && Number(data?.role)===Number(role)
       && data?.prepared===true
-      && deckKeys.length===21 && deckKeys.every(Boolean)
-      && principalKeys.length===1 && deckKeys.includes(principalKeys[0]);
+      && deckKeys.length>=ONLINE_MIN_DECK_SIZE && deckKeys.every(Boolean)
+      && principalKeys.length===principalSlots
+      && new Set(principalKeys).size===principalKeys.length
+      && principalKeys.every(key=>deckKeys.includes(key));
   }
   async function writeAndConfirmOwnPrivate(code,role,ownerUid,payload){
     const privateRef=ref(db,`games/${code}/private/player${role}`);
     await withTimeout(set(privateRef,payload),`Guardar private/player${role} en ${code}`);
     const snap=await withTimeout(get(privateRef),`Confirmar private/player${role} en ${code}`);
-    if(!snap.exists() || !validateOwnPrivateSnapshot(snap.val(),ownerUid,role)) throw new Error(`Firebase no confirmó un private/player${role} válido con 21 cartas.`);
+    if(!snap.exists() || !validateOwnPrivateSnapshot(snap.val(),ownerUid,role)) throw new Error(`Firebase no confirmó un private/player${role} válido con ${ONLINE_MIN_DECK_SIZE}+ cartas.`);
     ownPrivateState=snap.val()||null; ownPrivateHealthy=true; return ownPrivateState;
   }
 
@@ -211,27 +239,31 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function buildPrivateCombat6c(privatePayload,code,role){
     const loadout=privatePayload?.loadout||{};
     const allKeys=normalizeFirebaseArray(loadout.deckKeys).map(v=>String(v||"")).filter(Boolean);
-    const principalKeys=normalizeFirebaseArray(loadout.principalKeys).map(v=>String(v||"")).filter(Boolean);
-    if(allKeys.length!==21||principalKeys.length!==1) throw new Error("El loadout privado no contiene 21 cartas + 1 Principal válidos.");
-    const principal=principalKeys[0];
+    const principalKeys=[...new Set(normalizeFirebaseArray(loadout.principalKeys).map(v=>String(v||"")).filter(Boolean))];
+    const maxSlots=(typeof DECK_RULES!=="undefined"?Number(DECK_RULES.maxPrincipalSlots||3):3);
+    const principalSlots=Math.max(1,Math.min(maxSlots,Number(loadout.principalSlots||principalKeys.length||1)||1));
+    if(allKeys.length<ONLINE_MIN_DECK_SIZE||principalKeys.length!==principalSlots) throw new Error(`El loadout privado necesita ${ONLINE_MIN_DECK_SIZE}+ cartas y sus ${principalSlots} Principal${principalSlots===1?"":"es"}.`);
     const drawPool=[...allKeys];
-    const principalIndex=drawPool.indexOf(principal);
-    if(principalIndex<0) throw new Error("El Personaje Principal no existe dentro del mazo privado.");
-    drawPool.splice(principalIndex,1);
+    for(const principal of principalKeys){
+      const principalIndex=drawPool.indexOf(principal);
+      if(principalIndex<0) throw new Error(`El Personaje Principal ${principal} no existe dentro del mazo privado.`);
+      drawPool.splice(principalIndex,1);
+    }
     const shuffled=seededShuffle6c(drawPool,`${code}|${role}|${privatePayload?.ownerUid||""}|${loadout.fingerprint||""}`);
-    let handKeys=shuffled.slice(0,STEP6C_INITIAL_HAND);
-    let deckKeys=shuffled.slice(STEP6C_INITIAL_HAND);
+    const handKeys=shuffled.slice(0,STEP6C_INITIAL_HAND);
+    const deckKeys=shuffled.slice(STEP6C_INITIAL_HAND);
 
-    // PASO 6I · mano inicial normal.
-    // Se elimina la inyección de Fireball usada únicamente para la prueba 6H.
-    // La mano vuelve a salir exclusivamente de las 20 cartas no-Principal del mazo guardado.
+    // La mano inicial sale exclusivamente de las cartas no-Principal del mazo guardado.
     return {
       schema:"hallvalla-pvp-private-step6d",
       matchCode:String(code||""),
       role:Number(role),
       initialized:true,
       initializedAt:Date.now(),
-      principalKey:principal,
+      principalSlots,
+      principalKeys,
+      principalKey:principalKeys[0]||"",
+      playableCardCount:drawPool.length,
       handKeys,
       deckKeys,
       discardKeys:[],
@@ -250,9 +282,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const hand=normalizeFirebaseArray(state.handKeys).map(v=>String(v||""));
     const deck=normalizeFirebaseArray(state.deckKeys).map(v=>String(v||""));
     const played=normalizeFirebaseArray(state.playedKeys).map(v=>String(v||""));
+    const principalKeys=[...new Set(normalizeFirebaseArray(state.principalKeys).map(v=>String(v||"")).filter(Boolean))];
+    const principalSlots=Math.max(1,Number(state.principalSlots||principalKeys.length||1)||1);
+    const playableCardCount=Math.max(0,Number(state.playableCardCount||20)||0);
     return state.schema==="hallvalla-pvp-private-step6d" && state.initialized===true
       && String(state.matchCode||"")===String(code||"") && Number(state.role)===Number(role)
-      && hand.every(Boolean) && deck.every(Boolean) && played.every(Boolean) && hand.length+deck.length+played.length===20
+      && principalKeys.length===principalSlots && principalKeys.length>=1
+      && hand.every(Boolean) && deck.every(Boolean) && played.every(Boolean)
+      && hand.length+deck.length+played.length===playableCardCount
       && Number(state.honor||0)>=0 && Number(state.maxHonor||0)>=0;
   }
   function getOwnPrivateCombat6c(){ return ownPrivateState?.combat6c||null; }
@@ -812,8 +849,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const profile=getBattleProfile6e(payload);
     const handKeys=normalizeFirebaseArray(combat6c.handKeys).map(v=>String(v||"")).filter(Boolean);
     const deckKeys=normalizeFirebaseArray(combat6c.deckKeys).map(v=>String(v||"")).filter(Boolean);
-    const principalKey=String(combat6c.principalKey||payload?.loadout?.principalKeys?.[0]||payload?.loadout?.principalKeys?.["0"]||"");
-    if(handKeys.length!==STEP6C_INITIAL_HAND||deckKeys.length!==16||!principalKey) throw new Error(`Estado inicial privado J${role} inválido para motor real.`);
+    const principalKeys=[...new Set(normalizeFirebaseArray(combat6c.principalKeys||payload?.loadout?.principalKeys).map(v=>String(v||"")).filter(Boolean))];
+    const principalSlots=Math.max(1,Number(combat6c.principalSlots||payload?.loadout?.principalSlots||principalKeys.length||1)||1);
+    const playableCardCount=Math.max(0,Number(combat6c.playableCardCount||handKeys.length+deckKeys.length)||0);
+    if(handKeys.length!==STEP6C_INITIAL_HAND||principalKeys.length!==principalSlots||deckKeys.length!==Math.max(0,playableCardCount-STEP6C_INITIAL_HAND)) throw new Error(`Estado inicial privado J${role} inválido para motor real.`);
     const hand=handKeys.map(key=>buildRealCard6e(key,role,profile.leaderType));
     const deck=deckKeys.map(key=>buildRealCard6e(key,role,profile.leaderType));
     return {
@@ -830,9 +869,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         maxHonor:0,
         lastTurnStarted:"",
         skipFirstTurnDraw:true,
-        principalSlots:1,
-        principalKeys:[principalKey],
-        principalKey
+        principalSlots,
+        principalKeys,
+        principalKey:principalKeys[0]||""
       },
       prep:{
         ownerUid:String(payload?.ownerUid||""),
@@ -841,9 +880,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         leaderType:profile.leaderType,
         leaderLevel:profile.leaderLevel,
         leaderAbility:profile.leaderAbility,
-        principalKey,
+        principalSlots,
+        principalKeys,
+        principalKey:principalKeys[0]||"",
         handCount:hand.length,
         deckCount:deck.length,
+        playableCardCount,
+        loadoutDeckSize:Number(payload?.loadout?.deckSize||0),
         hasHiddenUnits:countHiddenKeys6e([...handKeys,...deckKeys])>0,
         preparedAt:Date.now()
       }
@@ -858,11 +901,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function validateEnginePrep6e(room,role){
     const prep=getEnginePrep6e(room,role);
     const slotUid=String(room?.playerSlots?.[`player${role}Uid`]||"");
+    const principalKeys=[...new Set(normalizeFirebaseArray(prep?.principalKeys).map(v=>String(v||"")).filter(Boolean))];
+    const principalSlots=Math.max(1,Number(prep?.principalSlots||principalKeys.length||1)||1);
+    const handCount=Number(prep?.handCount||0),deckCount=Number(prep?.deckCount||0),playableCardCount=Number(prep?.playableCardCount||0);
     return !!prep&&prep.ready===true&&Number(prep.role)===Number(role)
       &&String(prep.ownerUid||"")===slotUid
       &&!!String(prep.leaderType||"")&&Number(prep.leaderLevel||0)>=1
-      &&!!String(prep.principalKey||"")
-      &&Number(prep.handCount||0)===4&&Number(prep.deckCount||0)===16;
+      &&principalKeys.length===principalSlots&&principalKeys.length>=1
+      &&handCount===STEP6C_INITIAL_HAND&&deckCount>=0&&playableCardCount===handCount+deckCount;
   }
 
   function bothEnginePrep6e(room){ return validateEnginePrep6e(room,1)&&validateEnginePrep6e(room,2); }
@@ -892,13 +938,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         maxHonor:0,
         lastTurnStarted:"",
         skipFirstTurnDraw:true,
-        principalSlots:1,
+        principalSlots:built.enginePrivate.principalSlots,
         principalKeys:built.enginePrivate.principalKeys,
         principalKey:built.enginePrivate.principalKey
       };
       await withTimeout(update(ownRef,privatePatch),`Guardar estado privado del motor real J${activeRole}`,6000);
       await withTimeout(set(ref(db,`games/${code}/public/enginePrep/${activeRole}`),built.prep),`Publicar preparación visible J${activeRole}`,5000);
-      mark(`PASO 6I · J${activeRole} preparado para el duelo completo · mano privada 4 · mazo 16.`);
+      mark(`PASO 6I · J${activeRole} preparado para el duelo completo · mano privada ${built.prep.handCount} · mazo ${built.prep.deckCount} · ${built.prep.principalSlots} Principal${built.prep.principalSlots===1?"":"es"}.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Preparación motor real J${activeRole} falló:`,error);
@@ -922,11 +968,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       makeLeader(1,Math.floor(cols/2),rows-1,p1.leaderType,p1.leaderLevel,p1.leaderAbility),
       makeLeader(2,Math.floor(cols/2),0,p2.leaderType,p2.leaderLevel,p2.leaderAbility)
     ];
-    const p1PrincipalCard=buildRealCard6e(p1.principalKey,1,p1.leaderType);
-    const p2PrincipalCard=buildRealCard6e(p2.principalKey,2,p2.leaderType);
-    const p1Principal=makeStartingPrincipalUnits([p1PrincipalCard],1,p1.leaderType,units,1);
+    const p1PrincipalKeys=[...new Set(normalizeFirebaseArray(p1.principalKeys).map(v=>String(v||"")).filter(Boolean))];
+    const p2PrincipalKeys=[...new Set(normalizeFirebaseArray(p2.principalKeys).map(v=>String(v||"")).filter(Boolean))];
+    const p1PrincipalCards=p1PrincipalKeys.map(key=>buildRealCard6e(key,1,p1.leaderType));
+    const p2PrincipalCards=p2PrincipalKeys.map(key=>buildRealCard6e(key,2,p2.leaderType));
+    const p1Principal=makeStartingPrincipalUnits(p1PrincipalCards,1,p1.leaderType,units,p1PrincipalCards.length);
     units.push(...p1Principal);
-    const p2Principal=makeStartingPrincipalUnits([p2PrincipalCard],2,p2.leaderType,units,1);
+    const p2Principal=makeStartingPrincipalUnits(p2PrincipalCards,2,p2.leaderType,units,p2PrincipalCards.length);
     units.push(...p2Principal);
     let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
     try{ if(typeof applyStartingPrincipalEntryEffects==="function") entryEffects=applyStartingPrincipalEntryEffects(units); }catch(_){ }
@@ -974,11 +1022,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       playerLeaders:{1:p1.leaderType,2:p2.leaderType},
       playerLeaderLevels:{1:Number(p1.leaderLevel||1),2:Number(p2.leaderLevel||1)},
       playerLeaderAbilities:{1:String(p1.leaderAbility||""),2:String(p2.leaderAbility||"")},
-      principalSlots:{1:1,2:1},
-      pvpPrincipalKeys:{1:[String(p1.principalKey)],2:[String(p2.principalKey)]},
+      principalSlots:{1:p1PrincipalKeys.length,2:p2PrincipalKeys.length},
+      pvpPrincipalKeys:{1:p1PrincipalKeys,2:p2PrincipalKeys},
       playerStats:{
-        1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:16,hand:4,hasHiddenUnits:p1.hasHiddenUnits===true},
-        2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:16,hand:4,hasHiddenUnits:p2.hasHiddenUnits===true}
+        1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:Number(p1.deckCount||0),hand:Number(p1.handCount||STEP6C_INITIAL_HAND),hasHiddenUnits:p1.hasHiddenUnits===true},
+        2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:Number(p2.deckCount||0),hand:Number(p2.handCount||STEP6C_INITIAL_HAND),hasHiddenUnits:p2.hasHiddenUnits===true}
       },
       erictoGraveyard:[],
       units,
@@ -1087,13 +1135,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const adventure=getAdventureUnlockState();
     if(!adventure.guardianDefeated){
       mark("VS Online bloqueado · falta derrotar al Hechicero guardián en Aventura.");
-      await hvPopup("Antes de competir en VS Online debes ganar primero el combate inicial del Modo Aventura contra el Hechicero guardián. Al derrotarlo se desbloquea la Forja para que armes y guardes tu primer mazo de 21 cartas.","VS ONLINE BLOQUEADO");
+      await hvPopup("Antes de competir en VS Online debes ganar primero el combate inicial del Modo Aventura contra el Hechicero guardián. Al derrotarlo se desbloquea la Forja para que armes y guardes tu primer mazo de al menos 21 cartas.","VS ONLINE BLOQUEADO");
       return false;
     }
     const deck=getSavedOnlineDeckState();
     if(!deck.valid){
-      mark(`VS Online bloqueado · mazo inválido ${deck.size}/21.`);
-      await hvPopup(`Debes armar y guardar un mazo válido de 21 cartas en la Forja antes de competir en VS Online. Tu mazo actual tiene ${deck.size}/21 cartas.`,"ARMA TU MAZO DE 21 CARTAS");
+      mark(`VS Online bloqueado · mazo inválido ${deck.size} cartas; mínimo ${ONLINE_MIN_DECK_SIZE}.`);
+      await hvPopup(`Debes armar y guardar un mazo válido de al menos ${ONLINE_MIN_DECK_SIZE} cartas en la Forja antes de competir en VS Online. Tu mazo actual tiene ${deck.size} cartas.`,"ARMA TU MAZO");
       return false;
     }
     return true;
@@ -1247,11 +1295,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(readyBtn){
       const canReady=bothPrepared&&!!activeRole&&ownPrivateHealthy&&!startCfg.resolved;
       readyBtn.disabled=!canReady||busy; readyBtn.classList.toggle("is-ready",!!ownReady); readyBtn.setAttribute("aria-pressed",ownReady?"true":"false");
-      readyBtn.title=!bothPresent?"Esperando rival":(!bothPrepared?"Esperando preparación privada 21/21":(!ownPrivateHealthy?"Tu estado privado no está confirmado":(startCfg.resolved?"El duelo ya fue configurado":(ownReady?"Desmarcar LISTO":"Marcar LISTO"))));
+      readyBtn.title=!bothPresent?"Esperando rival":(!bothPrepared?"Esperando preparación privada 21+":(!ownPrivateHealthy?"Tu estado privado no está confirmado":(startCfg.resolved?"El duelo ya fue configurado":(ownReady?"Desmarcar LISTO":"Marcar LISTO"))));
     }
 
     if(!p2Uid){
-      setText("pvpRoomMessage",p1Prepared?"J1 preparado con mazo privado 21/21. Esperando rival.":"Preparando mazo privado de J1...");
+      setText("pvpRoomMessage",p1Prepared?"J1 preparado con mazo privado 21+. Esperando rival.":"Preparando mazo privado de J1...");
     }else if(!bothPrepared){
       setText("pvpRoomMessage","Paso 4: preparando el mazo privado de ambos jugadores...");
     }else if(startCfg.resolved){
@@ -1261,7 +1309,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }else if(bothReady){
       setText("pvpRoomMessage","Ambos están LISTOS. Preparando Piedra/Papel/Tijera...");
     }else{
-      setText("pvpRoomMessage","Paso 4.5: privados 21/21 preparados. El host puede definir reglas antes de marcar LISTO.");
+      setText("pvpRoomMessage","Paso 4.5: mazos privados 21+ preparados. El host puede definir reglas antes de marcar LISTO.");
     }
     syncLocalButtons();
   }
@@ -1380,7 +1428,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         ownPrivateHealthy=validateOwnPrivateSnapshot(ownPrivateState,ownerUid,role);
         const battlePrivate=ownPrivateState?.combat6c;
         if(ownPrivateHealthy&&validatePrivateCombat6c(battlePrivate,code,role)) mark(`PASO 6D · private/player${role} · mano ${normalizeFirebaseArray(battlePrivate.handKeys).length} · Honor ${Number(battlePrivate.honor||0)}/${Number(battlePrivate.maxHonor||0)}.`);
-        else mark(ownPrivateHealthy?`PASO 4 · private/player${role} confirmado · mazo propio 21/21.`:`private/player${role} inválido; LISTO bloqueado.`);
+        else mark(ownPrivateHealthy?`PASO 4 · private/player${role} confirmado · mazo propio 21+.`:`private/player${role} inválido; LISTO bloqueado.`);
       }
       try{ if(activeCode) void get(ref(db,`games/${activeCode}/public`)).then(roomSnap=>{ if(roomSnap?.exists()&&code===activeCode) renderRoomSnapshot(roomSnap.val()||{},activeCode); }).catch(()=>{}); }catch(_){ }
     },error=>{ if(token!==ownPrivateListenerToken) return; ownPrivateHealthy=false; console.error(error); mark(`Listener private/player${role} falló: ${error?.message||error}`); });
@@ -1427,7 +1475,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     busy=true; activeCode=""; activeOwnerUid=""; activeRole=0; detachOwnPrivateListener();
     try{
       syncLocalButtons(); await markAndPaint("1/7 · autenticación limpia Firebase..."); const ownerUid=await ensureCleanRoomAuth(); activeOwnerUid=ownerUid; activeRole=1;
-      await markAndPaint("2/7 · validando mazo local J1 (21 cartas + 1 Principal)..."); const privatePayload=buildOwnPrivatePayload(ownerUid,1); const profileName=privatePayload.profile.name; const profileLevel=privatePayload.profile.level;
+      await markAndPaint("2/7 · validando mazo local J1 (21+ cartas + Principales por tier)..."); const privatePayload=buildOwnPrivatePayload(ownerUid,1); const profileName=privatePayload.profile.name; const profileLevel=privatePayload.profile.level;
       let lastError=null;
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8); activeCode=code; await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
@@ -1437,13 +1485,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
           const publicSnap=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
           if(!publicSnap.exists()||String(publicSnap.val()?.playerSlots?.player1Uid||"")!==ownerUid) throw new Error("La sala guardada no pertenece al UID del creador.");
-          await markAndPaint("4/7 · guardando private/player1 con mazo 21/21..."); await writeAndConfirmOwnPrivate(code,1,ownerUid,privatePayload);
+          await markAndPaint("4/7 · guardando private/player1 con mazo 21+..."); await writeAndConfirmOwnPrivate(code,1,ownerUid,privatePayload);
           await markAndPaint("5/7 · publicando únicamente prepared=true para J1...");
           await withTimeout(update(publicRef,{"playerPrepared/1":true,"playerNames/1":profileName,"playerLevels/1":profileLevel}),`Publicar preparación J1 en ${code}`);
           await markAndPaint("6/7 · conectando listener EXCLUSIVO a private/player1..."); attachOwnPrivateListener(code,1,ownerUid);
           const savedSnap=await withTimeout(get(publicRef),`Confirmar preparación J1 en ${code}`); const saved=savedSnap.val()||{};
           if(!(saved?.playerPrepared?.[1]===true||saved?.playerPrepared?.["1"]===true)) throw new Error("Firebase no confirmó playerPrepared/1.");
-          await markAndPaint("7/7 · J1 CORRECTO · privado 21/21 preparado. Esperando J2."); renderRoomSnapshot(saved,code); attachRoomListener(code); return true;
+          await markAndPaint("7/7 · J1 CORRECTO · privado 21+ preparado. Esperando J2."); renderRoomSnapshot(saved,code); attachRoomListener(code); return true;
         }catch(error){
           lastError=error; await removeOwnPrivateBranch(code,1,ownerUid); try{ await withTimeout(remove(publicRef),`Rollback sala ${code}`,4000); }catch(_){ }
           const denied=String(error?.code||error?.message||"").toLowerCase().includes("permission_denied")||String(error?.message||"").toLowerCase().includes("permission denied");
@@ -1462,18 +1510,18 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     busy=true; let claimedNow=false, privateWritten=false, joinUid="";
     try{
       syncLocalButtons(); await markAndPaint(`1/8 · J2 autenticando para entrar a ${code}...`); joinUid=await ensureCleanRoomAuth();
-      await markAndPaint(`2/8 · validando mazo local J2 (21 cartas + 1 Principal)...`); const privatePayload=buildOwnPrivatePayload(joinUid,2);
+      await markAndPaint(`2/8 · validando mazo local J2 (21+ cartas + Principales por tier)...`); const privatePayload=buildOwnPrivatePayload(joinUid,2);
       await markAndPaint(`3/8 · leyendo sala ${code}...`); const publicRef=ref(db,`games/${code}/public`); const beforeSnap=await withTimeout(get(publicRef),`Leer sala ${code}`);
       if(!beforeSnap.exists()) throw new Error("La sala no existe o ya fue cerrada."); const before=beforeSnap.val()||{}; const hostUid=String(before?.playerSlots?.player1Uid||""); const currentJ2=String(before?.playerSlots?.player2Uid||"");
       if(!hostUid) throw new Error("La sala no tiene un anfitrión válido."); if(hostUid===joinUid) throw new Error("No puedes unirte a tu propia sala desde el mismo usuario."); if(["configured","arena_ready","battle_active"].includes(String(before?.phase||""))) throw new Error("Esta sala ya definió su arranque. Crea una nueva partida."); if(String(before?.phase||"")!=="waiting") throw new Error("La sala ya no está esperando jugadores."); if(currentJ2&&currentJ2!==joinUid) throw new Error("La sala ya tiene un segundo jugador.");
       if(!currentJ2){ await markAndPaint(`4/8 · reclamando slot de J2 en ${code}...`); await withTimeout(set(ref(db,`games/${code}/public/playerSlots/player2Uid`),joinUid),`Reclamar J2 en ${code}`); claimedNow=true; }
       else await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
-      await markAndPaint(`5/8 · guardando private/player2 con mazo 21/21...`); await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload); privateWritten=true;
+      await markAndPaint(`5/8 · guardando private/player2 con mazo 21+...`); await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload); privateWritten=true;
       await markAndPaint(`6/8 · publicando presencia + prepared=true de J2, sin exponer el mazo...`);
       await withTimeout(update(publicRef,{"playerNames/2":privatePayload.profile.name,"playerLevels/2":privatePayload.profile.level,"playerPrepared/2":true,"lobbyReady/2":false}),`Presencia/preparación J2 en ${code}`);
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`); const confirmed=confirmSnap.val()||{};
       if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid) throw new Error("Firebase no confirmó este UID como Jugador 2."); if(!(confirmed?.playerPrepared?.[2]===true||confirmed?.playerPrepared?.["2"]===true)) throw new Error("Firebase no confirmó playerPrepared/2.");
-      activeCode=code; activeOwnerUid=joinUid; activeRole=2; await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`); attachOwnPrivateListener(code,2,joinUid); renderRoomSnapshot(confirmed,code); attachRoomListener(code); await markAndPaint(`8/8 · J2 CORRECTO · privado 21/21 preparado. Ambos pueden usar LISTO.`); return true;
+      activeCode=code; activeOwnerUid=joinUid; activeRole=2; await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`); attachOwnPrivateListener(code,2,joinUid); renderRoomSnapshot(confirmed,code); attachRoomListener(code); await markAndPaint(`8/8 · J2 CORRECTO · privado 21+ preparado. Ambos pueden usar LISTO.`); return true;
     }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
@@ -1487,7 +1535,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       syncLocalButtons(); const publicRef=ref(db,`games/${code}/public`); await markAndPaint(`LISTO · J${role} comprobando sala ${code}...`); const snapshot=await withTimeout(get(publicRef),`Leer LISTO en ${code}`);
       if(!snapshot.exists()) throw new Error("La sala ya no existe."); const room=snapshot.val()||{}; if(room?.startConfig?.resolved===true) throw new Error("El arranque del duelo ya fue definido.");
       const p1Uid=String(room?.playerSlots?.player1Uid||""); const p2Uid=String(room?.playerSlots?.player2Uid||""); const p1Prepared=getPreparedFlag(room,1), p2Prepared=getPreparedFlag(room,2);
-      if(!p1Uid||!p2Uid) throw new Error("LISTO se habilita cuando ambos jugadores están presentes."); if(!p1Prepared||!p2Prepared) throw new Error("LISTO se habilita cuando ambos estados privados 21/21 están preparados."); if(!ownPrivateHealthy) throw new Error(`Tu private/player${role} no está confirmado.`);
+      if(!p1Uid||!p2Uid) throw new Error("LISTO se habilita cuando ambos jugadores están presentes."); if(!p1Prepared||!p2Prepared) throw new Error("LISTO se habilita cuando ambos estados privados 21+ están preparados."); if(!ownPrivateHealthy) throw new Error(`Tu private/player${role} no está confirmado.`);
       const slotUid=role===2?p2Uid:p1Uid; if(slotUid!==ownerUid) throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
       const current=getReadyFlag(room,role), next=!current; await markAndPaint(`LISTO · J${role} → ${next?"LISTO":"NO LISTO"}...`); await withTimeout(set(ref(db,`games/${code}/public/lobbyReady/${role}`),next),`Actualizar LISTO J${role} en ${code}`); mark(`J${role} ${next?"está LISTO":"ya no está listo"}.`); return true;
     }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }

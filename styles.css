@@ -1,6 +1,6 @@
-/* HALLVALLA 7BOARDCTRL8R · FASE 4: consolidación conservadora de mapa, HUD y responsive.
-   Se eliminaron únicamente declaraciones anuladas dentro de selectores/contextos idénticos;
-   DET, cartas del campo y el retrato especial de William Wallace permanecen intactos. */
+/* HALLVALLA 20260819.1 · STEP 3 CSS: limpieza conservadora.
+   Solo se retiraron declaraciones exactamente repetidas en el mismo selector y contexto,
+   conservando siempre la última copia. No se reordenaron reglas ni se tocaron contratos visuales. */
 /*
 ================================================================================
 HALLVALLA STYLES ORGANIZED V2
@@ -369,7 +369,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   display:none !important;
 }
 .adventure-story-text{white-space:pre-line;color:#f0ddbc!important;font-size:clamp(15px,1.18vw,18px);line-height:1.58!important;margin:0!important}
-.adventure-story-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}#adventureMapIntroStage .adventure-actions{margin-left:auto}.adventure-progress{font-size:12px;color:#ffd166;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.adventure-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.btn.ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,209,102,.24);color:#ffe6b0}.adventure-choice-title{margin:0 0 8px!important;font-family:Georgia,serif;color:#fff1c4;font-size:clamp(25px,3vw,40px)}
+.adventure-story-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}#adventureMapIntroStage .adventure-actions{margin-left:auto}.adventure-progress{font-size:12px;color:#ffd166;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.adventure-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.btn.ghost{background:rgba(255,255,255,.07);color:#ffe6b0}.adventure-choice-title{margin:0 0 8px!important;font-family:Georgia,serif;color:#fff1c4;font-size:clamp(25px,3vw,40px)}
 .adventure-choice-hero{position:relative;min-height:280px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,209,102,.26);background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.66)),url("assets/story/hallvalla_call.webp") center/cover no-repeat;box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 38px rgba(0,0,0,.35)}
 .adventure-choice-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.78),rgba(0,0,0,.18) 55%,rgba(0,0,0,.62));pointer-events:none}
 
@@ -1083,7 +1083,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .card-inspect-card{
   width:min(520px,94vw);
   max-height:92svh;
-  overflow:auto;
+  
   border-radius:24px;
   padding:16px;
   background:linear-gradient(180deg,rgba(38,23,13,.98),rgba(9,8,7,.98));
@@ -1224,7 +1224,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .unit-context-name{
   position:relative;
   z-index:1;
-  font-family:Georgia,serif;
+  
   font-weight:1000;
   font-size:15px;
   line-height:1.05;
@@ -1238,8 +1238,8 @@ El CSS original se conserva para no romper visuales. El bloque final
   z-index:1;
   text-align:center;
   font-size:9px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
+  
+  
   color:#e7c987;
   margin-bottom:10px;
   text-shadow:0 1px 3px rgba(0,0,0,.9);
@@ -1254,23 +1254,23 @@ El CSS original se conserva para no romper visuales. El bloque final
     radial-gradient(circle at 50% 0%,rgba(255,214,120,.12),transparent 48%),
     linear-gradient(180deg,rgba(56,40,20,.98) 0%,rgba(25,18,11,.98) 44%,rgba(9,8,7,.99) 100%);
   color:#fff2c8;
-  font-family:Georgia,serif;
+  
   font-size:11px;
-  font-weight:1000;
-  letter-spacing:.10em;
+  
+  
   cursor:pointer;
   box-shadow:inset 0 1px 0 rgba(255,238,196,.12),0 8px 18px rgba(0,0,0,.42),0 0 12px rgba(214,156,62,.10);
   overflow:hidden;
 }
 .unit-context-btn::before{
-  content:"";
-  position:absolute;
+  
+  
   inset:1px;
   border-radius:13px;
   border:1px solid rgba(255,241,196,.10);
-  pointer-events:none;
+  
 }
-.unit-context-btn span{position:relative;z-index:1;text-shadow:0 2px 4px rgba(0,0,0,.88)}
+.unit-context-btn span{text-shadow:0 2px 4px rgba(0,0,0,.88)}
 .unit-context-btn:hover:not(:disabled){
   filter:brightness(1.16) saturate(1.06);
   border-color:rgba(248,205,111,.84);
@@ -1587,8 +1587,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .hand-card-visual .hand-name{
   margin:0 0 4px;
-  font-size:12px;
-  line-height:1.05;
+  
+  
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
@@ -2395,7 +2395,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     min-height:520px!important;
     max-height:62svh!important;
     background-size:cover!important;
-    background-position:center center!important;
+    
   }
   #adventureGuardianVisual.scene-guardian:not(.has-guardian-actor)::before{
     background:
@@ -2641,7 +2641,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .stat-guide-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;}
 .stat-guide-kicker{color:#ffd166;font-weight:900;text-transform:uppercase;letter-spacing:1.4px;font-size:11px;}
 .stat-guide-head h2{margin:3px 0 0;font-family:Georgia,serif;color:#fff1c4;font-size:clamp(24px,4vw,36px);}
-.stat-guide-x{width:38px;height:38px;border-radius:999px;border:1px solid rgba(255,209,102,.30);background:rgba(0,0,0,.38);color:#fff1c4;font-size:28px;line-height:1;cursor:pointer;}
+.stat-guide-x{width:38px;height:38px;border-radius:999px;border:1px solid rgba(255,209,102,.30);background:rgba(0,0,0,.38);font-size:28px;line-height:1;cursor:pointer;}
 .stat-guide-short{color:#ead7b5;line-height:1.42;margin:8px 0 14px;}
 .stat-guide-box{padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.22));border:1px solid rgba(255,209,102,.20);margin:10px 0;}
 .stat-guide-box b{display:block;color:#ffd166;font-family:Georgia,serif;font-size:16px;margin-bottom:5px;}
@@ -3477,10 +3477,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 .grid .cell.valid,
 .grid .cell.attackable,
 .grid .cell.summonable{
-  background:transparent !important;
+  
   border-color:transparent !important;
-  outline:0 !important;
-  box-shadow:none !important;
+  
+  
 }
 
 /* Movimiento: runa pequeña en el suelo, no cuadro */
@@ -3811,7 +3811,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* v7GO: ornate card proportion fix + safer board silhouettes
    El marco gótico es vertical (2:3). Antes se estiraba al ancho de la casilla y aplastaba el arte. */
 .grid .cell{
-  overflow:visible !important;
+  
 }
 .cell > .unit-card,
 .cell > .unit-card.leader,
@@ -4081,13 +4081,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   width:220px !important;
   height:220px !important;
   min-width:220px !important;
-  max-width:none !important;
-  padding:0 !important;
-  border:none !important;
-  background:none !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-  transform:translate(-50%,-50%) !important;
+  
+  
+  
+  
+  
+  
+  
 }
 .unit-context-menu::before,
 .unit-context-menu::after{display:none !important;}
@@ -4095,13 +4095,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   position:relative;
   width:220px;
   height:220px;
-  pointer-events:none;
+  
 }
 .unit-context-star-shell::before{
-  content:"";
-  position:absolute;
+  
+  
   inset:42px;
-  border-radius:50%;
+  
   background:radial-gradient(circle,rgba(255,214,120,.16),rgba(0,0,0,0) 72%);
   filter:blur(10px);
 }
@@ -4146,15 +4146,15 @@ El CSS original se conserva para no romper visuales. El bloque final
   margin:0 0 4px !important;
 }
 .unit-context-sub{
-  font-size:8px !important;
+  
   letter-spacing:.16em;
   text-transform:uppercase;
   color:#ffd977 !important;
-  margin:0 !important;
+  
   text-shadow:0 1px 4px rgba(0,0,0,.9),0 0 10px rgba(255,201,84,.22);
 }
 .unit-context-btn{
-  position:absolute !important;
+  
   width:70px;
   min-width:70px !important;
   height:38px;
@@ -4164,7 +4164,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   align-items:center;
   justify-content:center;
   pointer-events:auto;
-  padding:0 8px !important;
+  
   border:1px solid rgba(244,199,103,.72) !important;
   background:
     radial-gradient(circle at 50% 18%,rgba(255,227,156,.17),transparent 34%),
@@ -4197,7 +4197,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   .unit-context-star-shell{width:196px !important;height:196px !important;min-width:196px !important;}
   .unit-context-core{width:96px;height:96px;}
   .unit-context-btn{width:64px;min-width:64px !important;height:34px;min-height:34px !important;font-size:10px !important;}
-  .unit-context-name{font-size:11px !important;}
+  .unit-context-name{}
   
   
   
@@ -5301,7 +5301,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .card-inspect-card{
   position:relative;
-  width:min(1120px,96vw)!important;
+  
   max-height:min(92svh,940px);
   overflow:auto;
   border-radius:28px;
@@ -5386,11 +5386,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* === DET premium visual match override v22 === */
 .card-inspect-modal{
-  position:fixed!important;
-  inset:0!important;
+  
+  
   z-index:260!important;
-  align-items:center!important;
-  justify-content:center!important;
+  
+  
   padding:18px!important;
   background:
     radial-gradient(circle at 50% 35%,rgba(26,20,14,.45),rgba(0,0,0,.86) 60%),
@@ -5402,14 +5402,14 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 .card-inspect-card{
-  box-sizing:border-box!important;
   
   
   
   
   
-  border-radius:24px!important;
-  display:grid!important;
+  
+  
+  
   
   
   
@@ -5425,12 +5425,12 @@ El CSS original se conserva para no romper visuales. El bloque final
     inset 0 0 0 1px rgba(255,244,197,.035)!important;
 }
 .card-inspect-card::before{
-  content:""!important;
-  position:absolute!important;
-  inset:8px!important;
-  border-radius:18px!important;
+  
+  
+  
+  
   border:1px solid rgba(238,190,91,.13)!important;
-  pointer-events:none!important;
+  
   box-shadow:inset 0 0 34px rgba(0,0,0,.34)!important;
   background:none!important;
 }
@@ -5442,7 +5442,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* right column */
 .detail-guide-block{
-  border-radius:14px!important;
+  
   border:1px solid rgba(238,190,91,.23)!important;
   background:
     linear-gradient(180deg,rgba(23,19,13,.92),rgba(8,8,7,.94))!important;
@@ -5451,10 +5451,10 @@ El CSS original se conserva para no romper visuales. El bloque final
 .detail-guide-caption{
   
   
-  line-height:1!important;
-  color:#efc96d!important;
-  letter-spacing:.07em!important;
-  text-align:center!important;
+  
+  
+  
+  
   border-bottom:1px solid rgba(238,190,91,.14)!important;
 }
 
@@ -5466,8 +5466,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .detail-chip-row{
   padding:9px!important;
-  display:grid!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  
+  
   gap:8px!important;
 }
 .detail-status-chip{
@@ -5510,11 +5510,11 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* rarity glow match */
 .card-rarity-mythic .card-inspect-card{
-  border-color:rgba(92,194,255,.62)!important;
+  
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 34px rgba(92,194,255,.16),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
 .card-rarity-legendary .card-inspect-card{
-  border-color:rgba(208,112,255,.62)!important;
+  
   box-shadow:0 30px 90px rgba(0,0,0,.78),0 0 34px rgba(208,112,255,.17),inset 0 0 0 1px rgba(255,255,255,.035)!important;
 }
 .card-rarity-demigod .card-inspect-card{
@@ -5549,7 +5549,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 .detail-guide-caption{
   padding:8px 10px!important;
-  font-size:12px!important;
+  
 }
 
 
@@ -5557,7 +5557,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .detail-chip-row{
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
   gap:6px!important;
-  padding:8px!important;
+  
 }
 .detail-status-chip{
   
@@ -5613,7 +5613,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .det-status-icon-btn + span{font-size:10px!important;color:#e4d0a3!important;font-weight:700!important;line-height:1.1!important}
 .detail-guide-block .detail-chip-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 @media(max-width:980px){
-  .card-inspect-card{height:min(92svh,820px)!important;overflow:auto!important;grid-template-columns:1fr!important}
+  .card-inspect-card{height:min(92svh,820px)!important;}
   .detail-guide-row{position:static!important;grid-template-columns:1fr 1fr!important;justify-content:stretch!important}
 }
 
@@ -5625,8 +5625,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 .card-inspect-modal.hidden{display:none!important}
 .card-inspect-card{
-  position:relative!important;box-sizing:border-box!important;width:min(1120px,96vw)!important;overflow:hidden!important;
-  padding:16px!important;border-radius:24px!important;display:grid!important;
+  box-sizing:border-box!important;
+  border-radius:24px!important;display:grid!important;
   gap:12px 16px!important;background:linear-gradient(180deg,#17130d 0%,#070706 100%)!important;
   border:1px solid rgba(238,190,91,.48)!important;box-shadow:0 30px 90px rgba(0,0,0,.76),inset 0 0 0 1px rgba(255,238,180,.05)!important;
 }
@@ -6657,9 +6657,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Topbar slightly slimmer so the logo has breathing room. */
 #mainMenu .asset-topbar{
-  top:12px!important;
-  left:14px!important;
-  right:14px!important;
+  
+  
+  
   height:86px!important;
   max-height:86px!important;
   align-items:center!important;
@@ -6712,7 +6712,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   display:flex!important;
   flex-direction:column!important;
   justify-content:center!important;
-  gap:14px!important;
+  
   min-height:0!important;
   height:100%!important;
   overflow:visible!important;
@@ -6727,16 +6727,16 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 #mainMenu .image-button img{
-  width:100%!important;
+  
   height:clamp(74px,10.6vh,96px)!important;
-  object-fit:fill!important;
+  
   display:block!important;
   border-radius:12px!important;
 }
 
 /* Center logo/play button gets shifted just a little up to avoid bottom tabs. */
 #mainMenu .asset-center{
-  justify-content:center!important;
+  
   transform:translateY(-8px)!important;
   z-index:3!important;
 }
@@ -6762,7 +6762,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* Promos are pinned below the main card columns, not over Mina/Eventos. */
 #mainMenu .asset-promo.daily-panel{
-  left:22px!important;
+  
   bottom:24px!important;
   width:min(330px,24vw)!important;
   height:76px!important;
@@ -6770,7 +6770,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 #mainMenu .asset-promo.welcome-panel{
-  right:22px!important;
+  
   bottom:24px!important;
   width:min(390px,28vw)!important;
   height:76px!important;
@@ -6791,7 +6791,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   bottom:16px!important;
   width:auto!important;
   max-width:430px!important;
-  gap:12px!important;
+  
   z-index:9!important;
 }
 
@@ -6934,9 +6934,9 @@ El CSS original se conserva para no romper visuales. El bloque final
 #mainMenu .asset-main{
   top:126px!important;
   bottom:110px!important;
-  left:22px!important;
-  right:22px!important;
-  gap:26px!important;
+  
+  
+  
   grid-template-columns:minmax(350px,29.5vw) minmax(260px,1fr) minmax(350px,29.5vw)!important;
 }
 #mainMenu .asset-column{
@@ -6950,7 +6950,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 #mainMenu .asset-center{
   transform:translateY(0)!important;
-  justify-content:center!important;
+  
 }
 #mainMenu .asset-logo{
   top:-2px!important;
@@ -7857,8 +7857,8 @@ El CSS original se conserva para no romper visuales. El bloque final
 .battle-fx-layer{
   position:absolute!important;
   inset:0!important;
-  pointer-events:none!important;
-  overflow:visible!important;
+  
+  
   contain:layout paint style!important;
 }
 
@@ -8191,9 +8191,9 @@ El CSS original se conserva para no romper visuales. El bloque final
   --hud-new-p2-right:52px;
   --hud-new-p2-top:20px;
   --hud-new-x-nudge:0px;
-  --hud-new-scale:1;
+  
   --hud-new-width:230px;
-  --hud-new-name-font:15px;
+  
   --hud-new-stat-font:16px;
   --hud-new-mini-height:42px;
   --hud-new-gap:6px;
@@ -8392,18 +8392,18 @@ El CSS original se conserva para no romper visuales. El bloque final
   --hud-new-mini-height:35px;
   --hud-new-gap:18px;
 
-  --honor-hud-left:25px;
-  --honor-hud-top:97px;
-  --honor-hud-scale:.87;
-  --honor-hud-min-width:104px;
-  --honor-hud-pad-x:12px;
-  --honor-hud-pad-y:8px;
-  --honor-hud-label-font:15px;
-  --honor-hud-number-font:16px;
-  --honor-hud-gap:18px;
-  --honor-pop-left:60px;
-  --honor-pop-top:164px;
-  --honor-pop-scale:.96;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 }
 
 /* ============================================================
@@ -8940,7 +8940,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   height:100%!important;
   min-height:0!important;
   padding:14px!important;
-  gap:10px!important;
+  
   overflow:hidden!important;
 }
 
@@ -8969,7 +8969,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-radius:18px!important;
 }
 #adventureMapStage .adventure-story-footer{
-  flex:0 0 auto!important;
+  
   padding-top:6px!important;
   margin:0!important;
 }
@@ -8981,10 +8981,10 @@ El CSS original se conserva para no romper visuales. El bloque final
     max-height:92svh!important;
     width:96vw!important;
   }
-  #adventureMapStage.adventure-stage:not(.hidden){padding:10px!important;gap:8px!important;}
+  #adventureMapStage.adventure-stage:not(.hidden){gap:8px!important;}
   
   #adventureMapStage .adventure-scene-copy.narrow{
-    max-width:92%!important;
+    
     padding:14px 16px!important;
   }
   
@@ -9604,13 +9604,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   justify-content:flex-end;
 }
 .basic-tutorial-coach{
-  position:fixed;
+  
   z-index:90;
   left:50%;
   top:76px;
   transform:translateX(-50%);
   width:min(560px,calc(100vw - 24px));
-  pointer-events:none;
+  
 }
 
 .basic-tutorial-coach-card{
@@ -9620,21 +9620,21 @@ El CSS original se conserva para no romper visuales. El bloque final
   background:linear-gradient(180deg,rgba(34,22,13,.97),rgba(8,7,6,.95));
   box-shadow:0 18px 48px rgba(0,0,0,.58),0 0 24px rgba(255,209,102,.10);
   color:#f7e5bd;
-  pointer-events:auto;
+  
 }
 .basic-tutorial-coach-top{
-  display:flex;
-  justify-content:space-between;
+  
+  
   align-items:flex-start;
   gap:10px;
 }
 .basic-tutorial-coach h3{
   margin:2px 0 6px;
   color:#fff1c4;
-  font-family:Georgia,serif;
+  
   font-size:20px;
 }
-.basic-tutorial-coach p{margin:0;color:#e4cfaa;line-height:1.38;font-size:13px}
+.basic-tutorial-coach p{color:#e4cfaa;line-height:1.38;font-size:13px}
 .basic-tutorial-step{
   color:#ffd166;
   font-size:11px;
@@ -9673,13 +9673,13 @@ El CSS original se conserva para no romper visuales. El bloque final
   background:linear-gradient(180deg,rgba(255,209,102,.30),rgba(116,72,22,.55));
 }
 .basic-tutorial-focus-ring{
-  position:fixed;
+  
   z-index:89;
   border-radius:18px;
   border:2px solid rgba(255,209,102,.98);
   box-shadow:0 0 0 3px rgba(255,209,102,.18),0 0 16px rgba(255,209,102,.58),0 0 30px rgba(255,209,102,.24);
   animation:basicTutorialPulse 1.18s ease-in-out infinite;
-  pointer-events:none;
+  
 }
 
 .tutorial-target-active{
@@ -11144,7 +11144,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   overflow:hidden;
   pointer-events:none;
   z-index:46;
-  opacity:0;
+  
   visibility:hidden;
   transition:opacity .24s ease,visibility 0s linear .24s;
   isolation:isolate;
@@ -11425,7 +11425,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 #battleMenuPanel .battle-audio-toggle{
   appearance:none !important;
   border:1px solid rgba(255,209,102,.28) !important;
-  border-radius:999px !important;
+  
   background:rgba(49,55,68,.82) !important;
   color:#fff7dc !important;
   font-family:Georgia,serif !important;
@@ -12881,7 +12881,7 @@ html.hv-mobile-landscape body{
   width:100%;
   height:100%;
   min-height:100%;
-  overflow:hidden!important;
+  
   background:#000!important;
 }
 
@@ -14021,10 +14021,10 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   position:absolute !important;
   inset:0 !important;
   width:100% !important;
-  height:100% !important;
+  
   display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
+  
+  
   opacity:0;
   visibility:hidden !important;
   pointer-events:none !important;
@@ -14051,8 +14051,8 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   display:flex !important;
   flex-direction:row !important;
   align-items:center !important;
-  justify-content:center !important;
-  gap:12px !important;
+  
+  
 }
 .event-splash-shell,
 .event-splash-stack.is-duo .event-splash-shell{
@@ -14066,7 +14066,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   opacity:0;
   transform:translate3d(0,12px,0) scale(.82);
   transform-origin:center center !important;
-  filter:drop-shadow(0 9px 20px rgba(0,0,0,.48));
+  
   animation:none !important;
   transition:none !important;
   will-change:transform,opacity,filter !important;
@@ -14123,7 +14123,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   left:0 !important;
   right:0 !important;
   bottom:0 !important;
-  z-index:2 !important;
+  
   padding:9px 11px 11px !important;
   display:block !important;
   min-width:0 !important;
@@ -14134,7 +14134,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   max-width:100% !important;
   margin:0 0 4px !important;
   padding:3px 7px !important;
-  font-size:7px !important;
+  
   letter-spacing:.15em !important;
   line-height:1.1 !important;
 }
@@ -14237,11 +14237,11 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   }
   .event-splash-copy,
   .event-splash-stack.is-duo .event-splash-copy{
-    padding:7px 8px 8px !important;
+    
   }
   .event-splash-kicker,
   .event-splash-stack.is-duo .event-splash-kicker{
-    font-size:6px !important;
+    
     letter-spacing:.11em !important;
     padding:2px 6px !important;
   }
@@ -14251,7 +14251,7 @@ html.hv-mobile-landscape #gameShell .battlefield .side .action-btn-label{
   }
   .event-splash-sub,
   .event-splash-stack.is-duo .event-splash-sub{
-    font-size:7px !important;
+    
     margin-top:2px !important;
   }
 }
@@ -15134,7 +15134,7 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 .field-stat-badges-tuner-control span{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:10px;font-weight:800;color:#f1d695}
 .field-stat-badges-tuner-control output{color:#7cecff;font-variant-numeric:tabular-nums}
 .field-stat-badges-tuner-control input{width:100%;accent-color:#e2b14d;cursor:pointer}
-.field-stat-badges-tuner-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:9px}
+.field-stat-badges-tuner-actions{justify-content:flex-end;margin-top:9px}
 .field-stat-badges-tuner-actions .btn{min-width:110px;padding:8px 12px}
 .field-stat-badges-tuner-status{min-height:14px;margin:6px 2px 0;color:#9feaff;font-size:10px;text-align:right}
 @media(max-width:720px){
@@ -15208,13 +15208,13 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 .field-stat-badges-tuner{
   left:auto !important;
   right:12px !important;
-  top:88px !important;
-  bottom:12px !important;
-  transform:none !important;
+  
+  
+  
   width:min(360px,calc(100vw - 16px)) !important;
-  max-height:none !important;
-  display:flex;
-  flex-direction:column;
+  
+  
+  
 }
 .field-stat-badges-tuner-grid{
   grid-template-columns:1fr !important;
@@ -15224,11 +15224,11 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
   padding-right:6px;
 }
 .field-stat-badges-tuner-actions{
-  position:sticky;
-  bottom:0;
+  
+  
   background:linear-gradient(180deg,rgba(9,8,6,0),rgba(9,8,6,.94) 24%,rgba(9,8,6,.98));
-  padding-top:10px;
-  margin-top:8px;
+  
+  
 }
 
 @media (max-width: 720px){
@@ -17408,7 +17408,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   height:auto!important;
   min-height:auto!important;
   padding:0!important;
-  overflow:visible!important;
+  
   border:none!important;
   border-radius:0!important;
   display:block!important;
@@ -20150,8 +20150,8 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 .online-modal-art.pvp-room-active .visual-join,
 .online-modal-art.pvp-room-active .visual-back,
 .online-modal-art.pvp-room-active .visual-status{
-  visibility:hidden !important;
-  pointer-events:none !important;
+  
+  
 }
 .pvp-room-panel{
   position:absolute;
@@ -20163,7 +20163,7 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   display:flex;
   flex-direction:column;
   align-items:stretch;
-  justify-content:center;
+  
   gap:clamp(7px,1vh,13px);
   padding:clamp(12px,1.5vw,22px) clamp(16px,2.1vw,30px);
   border:1px solid rgba(218,166,68,.62);
@@ -20174,7 +20174,7 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   box-shadow:inset 0 0 0 2px rgba(72,43,16,.78),inset 0 0 34px rgba(0,0,0,.55),0 14px 30px rgba(0,0,0,.48);
   color:#f6e3b4;
 }
-.pvp-room-panel.hidden{display:none!important}
+.pvp-room-panel.hidden{}
 .pvp-room-kicker{
   position:absolute;
   top:-13px;
@@ -20186,15 +20186,15 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   border-radius:999px;
   background:linear-gradient(180deg,#6b4315,#2d1b09);
   color:#ffe4a0;
-  text-align:center;
+  
   font:900 clamp(9px,.9vw,13px)/1 Georgia,"Times New Roman",serif;
   letter-spacing:.12em;
   box-shadow:0 5px 12px rgba(0,0,0,.38),inset 0 1px rgba(255,235,175,.24);
 }
 .pvp-room-code-line{
-  display:flex;
+  
   justify-content:center;
-  align-items:center;
+  
   gap:10px;
   min-height:34px;
   color:#c9ad77;
@@ -20248,7 +20248,7 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
   text-align:center;
 }
 .pvp-room-side{color:#a9874c;font:900 clamp(8px,.75vw,11px)/1 Georgia,serif;letter-spacing:.12em}
-.pvp-room-player strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe9b4;font:900 clamp(12px,1.3vw,18px)/1.1 Georgia,serif}
+.pvp-room-player strong{max-width:100%;color:#ffe9b4;font:900 clamp(12px,1.3vw,18px)/1.1 Georgia,serif}
 .pvp-room-ready-state{
   margin-top:2px;
   padding:4px 10px;
@@ -20262,9 +20262,9 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 }
 .pvp-room-ready-state.ready{border-color:rgba(145,194,67,.58);background:rgba(46,76,17,.58);color:#dcffab}
 .pvp-room-ready-state.waiting{border-color:rgba(144,120,75,.42);background:rgba(62,52,34,.48);color:#d7c59e}
-.pvp-room-vs{align-self:center;color:#d9a747;font:900 clamp(17px,2vw,28px)/1 Georgia,serif;text-shadow:0 2px 8px #000}
-.pvp-room-message{min-height:18px;text-align:center;color:#d7c090;font:800 clamp(9px,.85vw,12px)/1.2 Georgia,serif}
-.pvp-room-actions{display:flex;justify-content:center;gap:12px;align-items:center}
+.pvp-room-vs{color:#d9a747;font:900 clamp(17px,2vw,28px)/1 Georgia,serif;text-shadow:0 2px 8px #000}
+.pvp-room-message{min-height:18px;color:#d7c090;font:800 clamp(9px,.85vw,12px)/1.2 Georgia,serif}
+.pvp-room-actions{gap:12px;}
 @media(max-width:980px){
   .pvp-room-panel{left:10.5%;right:10.5%;top:36.5%;bottom:12.8%;padding:9px 12px;gap:6px}
   .pvp-room-players{gap:7px}.pvp-room-player{padding:7px 8px}.pvp-room-main-btn{min-width:105px;padding:7px 10px}
@@ -20307,11 +20307,11 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 .pvp-room-player::before{content:"";position:absolute;inset:7px;border:1px solid rgba(229,187,95,.1);border-radius:13px;pointer-events:none;}
 .pvp-room-player-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .pvp-room-side{color:#b99044!important;font:900 10px/1 Georgia,serif!important;letter-spacing:.18em!important;}
-.pvp-room-player strong{display:block;margin-top:14px;color:#ffefbf!important;font:900 clamp(18px,1.7vw,28px)/1.06 Georgia,serif!important;text-align:center;text-shadow:0 2px 9px rgba(0,0,0,.55);}
+.pvp-room-player strong{display:block;margin-top:14px;color:#ffefbf!important;font:900 clamp(18px,1.7vw,28px)/1.06 Georgia,serif!important;text-shadow:0 2px 9px rgba(0,0,0,.55);}
 .pvp-room-player-foot{display:flex;align-items:center;justify-content:center;min-height:28px;margin-top:14px;}
-.pvp-room-presence{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 0 2px rgba(0,0,0,.18);background:radial-gradient(circle at 50% 35%,#f49d9d,#7a1d1d 76%);}
-.pvp-room-ready-check{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#b8f693,#4a8e1f 76%);color:#0f3100;font:900 18px/1 Georgia,serif;box-shadow:0 0 0 1px rgba(214,251,183,.4),0 0 14px rgba(120,209,62,.35);opacity:0;transform:scale(.7);transition:opacity .18s ease,transform .18s ease;}
-.pvp-room-ready-check.visible{opacity:1;transform:scale(1);}
+.pvp-room-presence{background:radial-gradient(circle at 50% 35%,#f49d9d,#7a1d1d 76%);}
+.pvp-room-ready-check{display:inline-flex;width:30px;height:30px;transform:scale(.7);}
+.pvp-room-ready-check.visible{transform:scale(1);}
 .pvp-room-vs{align-self:center;padding:0 2px;color:#ddaf4c!important;font:900 clamp(30px,3.4vw,48px)/1 Georgia,serif!important;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 18px rgba(222,168,65,.16)!important;}
 .pvp-room-message{min-height:20px;margin-top:2px;text-align:center;color:#e7d0a3!important;font:800 clamp(10px,.95vw,13px)/1.3 Georgia,serif!important;}
 .pvp-room-actions{display:flex;justify-content:center;gap:14px;align-items:center;margin-top:2px;}
@@ -20332,7 +20332,7 @@ body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
 .online-modal-art.pvp-room-active .visual-input-wrap,
 .online-modal-art.pvp-room-active .visual-join,
 .online-modal-art.pvp-room-active .visual-back,
-.online-modal-art.pvp-room-active .visual-status{opacity:0!important;pointer-events:none!important;}
+.online-modal-art.pvp-room-active .visual-status{}
 .pvp-room-panel{
   position:absolute!important;left:9.1%!important;right:9.1%!important;top:18.6%!important;bottom:11.6%!important;
   display:flex!important;align-items:center;justify-content:center;
@@ -21579,7 +21579,7 @@ html.hv-perf-lite .event-splash-spell-art img{
 @media (max-width:720px) and (orientation:landscape){
   #packOpeningPanel .pack-opening-card{
     width:min(92vw,700px) !important;
-    max-height:calc(100dvh - 8px) !important;
+    
   }
   #packOpeningPanel .pack-opening-scene{
     height:min(62dvh,220px) !important;
@@ -21587,7 +21587,7 @@ html.hv-perf-lite .event-splash-spell-art img{
   }
   #packOpeningPanel .pack-reveal-grid{
     grid-template-columns:repeat(2,96px) !important;
-    gap:8px !important;
+    
     padding:8px !important;
   }
   #packOpeningPanel .revealed-card.pack-reveal-card-button{
@@ -22464,4 +22464,26 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   .hv-missions-tuner-handle{padding:6px 8px;font-size:8px}
   .hv-missions-layout-tuner{width:min(300px,calc(100vw - 12px));left:6px;top:42px;max-height:88dvh}
   .hv-missions-layout-tuner-body{padding:8px 10px 10px}
+}
+
+/* 20260818.3 · Principales: cada ficha ocupa su propia celda y nunca se superpone. */
+#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots > .deck-principal-selector{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  z-index:1 !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots > .deck-principal-selector .deck-principal-art{
+  position:relative !important;
+  flex:0 0 auto !important;
+  margin:0 auto !important;
+}
+#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots > .deck-principal-selector .deck-principal-art img{
+  position:static !important;
+  inset:auto !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  object-fit:cover !important;
+  transform:none !important;
 }

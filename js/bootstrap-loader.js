@@ -11,10 +11,10 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=fix-misionlayout";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260819.1";
 
-const BUILD = "7BOARDCTRL8CMSFX1C2GF1UB1C3DR1UI2FORGE4ASSETDRAWER1OWNFILTER1-PVPREBUILDSTEP6I2-PVP-RANKING-STATS-STAGE7RENDER1-STAGE8PRIV1-STAGE9CLEAN1-RANKINGACT1-PVE2XP1-PROFILEDEV1-MASTERAI1-FUMAKOTARO1-AOESTEALTH1-AOEMULTI2-PERF1LAZYASSET1-PERF2LAZYJS1-PERF3PREFETCH1-PERF4RUNTIMECLEAN1-PERF5GPU1-PERF6ABOARDCLEAN1-PERF6BLATENCY1-PERF6CSPLASH1-PERF6DVISUALEVENTS1-PERF6EINVOSWIRL1-PERF6FVISUALMAP1-PACKREVEALCOMMIT1-PACKMOBILEFIT1-ACCOUNTMASTERY1-TRAPEQUIPMASTERY1-BEASTPACKEXCLUSIVE1-TARGETPRIORITY1-BASICSTATUSMAGIC1-PACKCOMPACT2-PACKFORGESYNC1-20260817S-E42MONGOLMINI1-20260817T-AIDOCTRINE1-20260817U-E44MAPONCE1-20260817V-E45CAVDECK1-20260817W-E46CAVWAR3-20260817X-E47PATHCAV4-20260817Y-E48TEMPO1-20260817Z-E49TACTICSEQ1-20260817ZA-E49MAP1DECKS1-20260817ZB-E50EXPERTLOG1-E50AXEDECK1";
-const CACHE_BUILD = "fix-misionlayout";
+const BUILD = "20260819.1";
+const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -253,19 +253,37 @@ const featureLoadPromises = new Map();
 const loadedParts = new Set();
 const loadedFeatures = new Set();
 
+const SCRIPT_LOAD_RETRY_DELAYS = [300,700];
+
 function loadClassicScript(file) {
   const safe=String(file||"").trim();
   if(!safe)return Promise.resolve(false);
   if(loadedParts.has(safe))return Promise.resolve(true);
   if(partLoadPromises.has(safe))return partLoadPromises.get(safe);
   const task=new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = `js/parts/${safe}?v=${CACHE_BUILD}`;
-    script.async = false;
-    script.dataset.hallvallaPart = safe;
-    script.onload = () => { loadedParts.add(safe); resolve(true); };
-    script.onerror = () => reject(new Error(`No se pudo cargar ${safe}`));
-    document.head.appendChild(script);
+    let attempt=0;
+    const tryLoad=()=>{
+      const script=document.createElement("script");
+      const retrySuffix=attempt>0?`&retry=${attempt}`:"";
+      script.src=`js/parts/${safe}?v=${CACHE_BUILD}${retrySuffix}`;
+      script.async=false;
+      script.dataset.hallvallaPart=safe;
+      script.dataset.hallvallaLoadAttempt=String(attempt+1);
+      script.onload=()=>{loadedParts.add(safe);resolve(true);};
+      script.onerror=()=>{
+        script.remove();
+        if(attempt<SCRIPT_LOAD_RETRY_DELAYS.length){
+          const delay=SCRIPT_LOAD_RETRY_DELAYS[attempt];
+          attempt+=1;
+          console.warn(`[HallValla] Falló la carga de ${safe}; reintento ${attempt+1}/${SCRIPT_LOAD_RETRY_DELAYS.length+1} en ${delay} ms.`);
+          setTimeout(tryLoad,delay);
+          return;
+        }
+        reject(new Error(`No se pudo cargar ${safe} después de ${attempt+1} intentos`));
+      };
+      document.head.appendChild(script);
+    };
+    tryLoad();
   }).finally(()=>partLoadPromises.delete(safe));
   partLoadPromises.set(safe,task);
   return task;
