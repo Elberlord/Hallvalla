@@ -514,21 +514,9 @@ function getResourceRecharge(prevMax,rawGain){
 function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const label=ownerUsesMana(owner)?"Mana":"Honor";return caps?label.toUpperCase():label}
 
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
-function hasWarriorLeaderUnitShield(defender,attacker,units=publicState?.units||[]){
-  return !!(defender&&attacker
-    && defender.leader
-    && defender.leaderType==="warrior"
-    && !attacker.leader
-    && attacker.owner!==defender.owner
-    && (units||[]).some(u=>u&&u.owner===defender.owner&&!u.leader&&u.hp>0));
-}
+function hasWarriorLeaderUnitShield(){return false;}
 function applyWarriorLeaderUnitShield(defenderBefore,attacker,damaged,units=publicState?.units||[]){
-  if(!hasWarriorLeaderUnitShield(defenderBefore,attacker,units))return{unit:damaged,blocked:false};
-  const hpBefore=Number(defenderBefore?.hp||0);
-  const hpAfter=Number(damaged?.hp||0);
-  const hpLoss=Math.max(0,Number(damaged?.lastHpLoss||0),hpBefore-hpAfter);
-  if(hpLoss<=0)return{unit:damaged,blocked:false};
-  return{unit:{...damaged,hp:hpBefore,lastHpLoss:0,warriorUnitShieldBlocked:true},blocked:true};
+  return{unit:damaged,blocked:false};
 }
 const HEAVY_INFANTRY_KEYS=new Set([
   "guardian","paladin","knight","spearman",

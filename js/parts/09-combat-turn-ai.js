@@ -139,6 +139,41 @@ async function moveUnit(u,x,y){
   clearSelection();
 }
 function getBattleDamage(attacker,mods={}){const base=Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0));return Math.max(0,Math.round(base*getEquipmentDamageMultiplier(attacker)))}
+function isWarriorLeaderSweepAttacker(unit){
+  return !!(unit&&unit.leader&&unit.leaderType==="warrior"&&Number(unit.hp||0)>0);
+}
+function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(fn)=>fn(),legendaryTraps=[],beastTraps=[]}={}){
+  let out=[...(units||[])];
+  if(!isWarriorLeaderSweepAttacker(attacker))return{units:out,triggered:false,text:"",hits:[]};
+  const liveAttacker=out.find(u=>u.id===attacker.id&&Number(u.hp||0)>0)||attacker;
+  const range=runInState(()=>getUnitAttackRange(liveAttacker),{units:out,legendaryTraps,beastTraps});
+  const sideTargets=out.filter(target=>target&&target.id!==primaryDefender?.id&&target.id!==liveAttacker.id&&target.owner!==liveAttacker.owner&&Number(target.hp||0)>0&&dist(liveAttacker,target)<=range&&canReceiveUntargetedAreaEffect(target)&&(!(target.aerial)||(range>3||liveAttacker.antiaerial)));
+  if(!sideTargets.length)return{units:out,triggered:false,text:"",hits:[]};
+  const hits=[];
+  for(const originalTarget of sideTargets){
+    const target=out.find(u=>u.id===originalTarget.id&&Number(u.hp||0)>0);
+    if(!target)continue;
+    const state={units:out,legendaryTraps,beastTraps};
+    const mods=runInState(()=>getCombatMods(liveAttacker,target,{startedFromStealth:false,warriorSweep:true}),state);
+    const hit=runInState(()=>rollHit(liveAttacker,target,mods),state);
+    if(!hit.hit){hits.push(`${target.name}: evade`);continue;}
+    const damage=runInState(()=>getBattleDamage(liveAttacker,mods),state);
+    let guardLoss=0,hpLoss=0;
+    out=out.map(unit=>{
+      if(unit.id!==target.id)return unit;
+      let damaged=runInState(()=>applyGuardDamage(unit,damage,mods.defenderGuard||0,0),state);
+      guardLoss=Math.max(0,Number(damaged.lastGuardLoss||0));
+      hpLoss=Math.max(0,Number(damaged.lastHpLoss||0));
+      damaged={...damaged,damagedThisTurn:hpLoss>0||!!damaged.damagedThisTurn};
+      delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
+      return damaged;
+    });
+    hits.push(`${target.name}: ${guardLoss>0?`-${guardLoss} GD`:""}${guardLoss>0&&hpLoss>0?", ":""}${hpLoss>0?`-${hpLoss} Vida`:(guardLoss<=0?"sin daño a Vida":"")}`);
+  }
+  const affectedIds=sideTargets.map(t=>t.id);
+  out=applyLegendaryFatalSaves(out,affectedIds).filter(u=>Number(u.hp||0)>0);
+  return{units:out,triggered:hits.length>0,text:hits.length?` Barrido de Guerra: ${hits.join(" · ")}.`:"",hits};
+}
 function getEquipmentRetreatCell(unit,target,units=publicState?.units||[]){
   if(!unit||!target)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&u.hp>0).map(u=>`${u.x},${u.y}`));
@@ -595,6 +630,8 @@ async function resolveSharedAttackOutcome({
     }
     return u;
   });
+  const warriorSweepResult=resolveWarriorLeaderSweep(units,a,d,{runInState,legendaryTraps:resolvedLegendaryTraps,beastTraps});
+  units=warriorSweepResult.units;
   let geishaFanKillResult={units,triggered:false,text:""};
   if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
   if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
@@ -870,7 +907,7 @@ async function resolveSharedAttackOutcome({
   const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorSweepResult.text||""}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${warriorSweepResult.text||""}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   return {
     units,
     prePostCombatUnits,

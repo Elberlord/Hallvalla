@@ -280,7 +280,7 @@ Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolve
 -------------------------------------------------------------------------------
 */
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo: AT 3, GD 4, RG 1. Infantería pesada + VIDA/GUARDIA. Mientras tenga una unidad aliada viva, ataques de unidades no bajan su Vida."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Bonificación propia por tier: +4 AT/+4 GD en Tier 1, aumentando +1/+1 por tier. La infantería pesada conserva su buff normal. Barrido de Guerra: al atacar, golpea también a todas las demás unidades enemigas dentro de su alcance."},
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras."},
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Mejora magias."},
   axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: los berserkers rompen Guardia y activan Grito de Guerra para subir AT aliado."},
@@ -303,8 +303,9 @@ const LEADER_LEVEL_TABLE={
 const LEADER_BASE_ATK={warrior:3,archer:3,mage:3,axe:4,cavalry:3,assassin:2,beastmaster:2};
 const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
 const LEADER_BASE_RANGE={warrior:1,archer:2,mage:2,axe:1,cavalry:1,assassin:1,beastmaster:1};
-function getLeaderAttack(type,level=1){return applyHallvallaValueHooks("leader.attack",LEADER_BASE_ATK[type]??3,{type,level})}
-function getLeaderGuard(type,level=1){const base=type==="beastmaster"?2:Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
+function getWarriorLeaderSelfTierBonus(level=1){return 3+getLeaderBuffTierFromLevel(level)}
+function getLeaderAttack(type,level=1){const base=(LEADER_BASE_ATK[type]??3)+(type==="warrior"?getWarriorLeaderSelfTierBonus(level):0);return applyHallvallaValueHooks("leader.attack",base,{type,level})}
+function getLeaderGuard(type,level=1){const base=type==="beastmaster"?2:(type==="warrior"?Math.max(0,(LEADER_BASE_GUARD[type]??2)+getWarriorLeaderSelfTierBonus(level)):Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3)));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
 function getLeaderRange(type,level=1){return applyHallvallaValueHooks("leader.range",LEADER_BASE_RANGE[type]??1,{type,level})}
 const LEADER_BUFF_TABLE={
   warrior:{1:{hp:3,guard:3},2:{hp:4,guard:4},3:{hp:5,guard:5},4:{hp:6,guard:6}},
@@ -392,7 +393,7 @@ function getLeaderProgressText(type,level,abilityKey=""){
   const stats=getLeaderBattleStats(type,level,abilityKey);
   const tier=stats.buffTier;
   const abilityLine=normalizeLeaderLevel(level)>=5?` · Hab. Nv.5: ${getLeaderAbilityText(abilityKey)}`:"";
-  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.hp} VIDA/+${b.guard} GUARDIA · Muralla: si queda una unidad aliada viva, ataques de unidades no bajan Vida al líder${abilityLine}`;}
+  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.hp} VIDA/+${b.guard} GUARDIA · Barrido de Guerra: al atacar, golpea también a todas las demás unidades enemigas dentro de su alcance${abilityLine}`;}
   if(type==="archer"){const b=LEADER_BUFF_TABLE.archer[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: arqueras +${b.atk} AT/+${b.dex} DX/+${b.agi} AGI${abilityLine}`;}
   if(type==="axe"){const b=LEADER_BUFF_TABLE.axe[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: hachas +${b.atk} AT/+${b.dex} DX · Grito de Guerra: al romper toda la Guardia enemiga, aliados +1 AT hasta fin de turno${abilityLine}`;}
   if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería ligera +${b.atk||0} AT/+${b.agi||0} AGI${b.guard?`/+${b.guard} GD`:""}${abilityLine}`;}
