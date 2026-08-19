@@ -1703,7 +1703,16 @@ async function adventureEnemyTurn(){
     if(!attacker||!isStealthedUnit(attacker))return null;
     return living(1)
       .filter(t=>!t.leader&&aiCanEverTarget(attacker,t))
-      .map(t=>({target:t,score:aiStealthExecutionValue(attacker,t)}))
+      .map(t=>{
+        const combat=estimateCombat(attacker,t);
+        let score=aiUnitValue(t)+(t.special||t.principal?180:0)+((t.equipmentKeys||[]).length*70);
+        if(attacker.key==="geisha_encubierta")score=Math.max(score,aiStealthExecutionValue(attacker,t));
+        else {
+          if(["ranged","support","assassin","skirmisher"].includes(aiBasicTacticRole(t)))score+=120;
+          if(combat.hpDamage>0)score+=90+Math.max(0,combat.chance-45)*3;
+        }
+        return {target:t,score};
+      })
       .sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
   const bestAttackTarget=(attacker)=>{
@@ -2748,10 +2757,13 @@ async function adventureEnemyTurn(){
     const moverRole=aiBasicTacticRole(u);
     const rangedNeedForPursuit=aiRangedProtectionNeed();
     const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t));
-    const stealthVeilActive=!!(isStealthedUnit(u)&&["geisha_encubierta","fuma_kotaro","hattori_hanzo"].includes(u.key));
+    const stealthVeilActive=!!isStealthedUnit(u);
     const stealthPriorityTarget=stealthVeilActive?aiStealthHuntTarget(u):null;
     const primaryTarget=strategicTargets.map(t=>{
       let targetScore=scoreTarget(t,0,u)+(t.leader?90:0);
+      if(isStealthedUnit(u)&&!t.leader){
+        targetScore+=160+aiUnitValue(t)*0.2;
+      }
       if(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&!t.leader){
         targetScore+=520+aiUnitValue(t)*0.8;
         targetScore+=Math.max(0,aiStealthExecutionValue(u,t))*0.55;
