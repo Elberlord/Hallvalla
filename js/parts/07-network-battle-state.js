@@ -1292,7 +1292,11 @@ async function maybeStartTurn(){
     const honorGain=recharge.gain;
     const maxHonor=recharge.maxHonor;
     const honor=recharge.honor;
-    await updatePrivate({deck:drawn.deck,hand:drawn.hand,honor,maxHonor,lastTurnStarted:publicState.turnKey,skipFirstTurnDraw:false});
+    const turnPrivatePatch={deck:drawn.deck,hand:drawn.hand,honor,maxHonor,lastTurnStarted:publicState.turnKey,skipFirstTurnDraw:false};
+    const atomicOnlineTurnStart=isPvpStep6fAtomicActionMode(publicState);
+    // PvP online: private draw/Honor + public turn state must land in one Firebase multipath update.
+    // Keeping them separate can mark lastTurnStarted privately while public stays in Draw, stranding J2.
+    if(!atomicOnlineTurnStart&&!(await updatePrivate(turnPrivatePatch)))return;
     let units=restoreTurnGuardForOwner(publicState.units||[],myPlayer).map(u=>u.owner===myPlayer?clearTurnTempStatsForOwnerUnit(u,publicState.turnKey):u);units=units.map(u=>u.owner===myPlayer&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
     const heroicEdgeStart=applyHeroicEdgeStartHealing(units,myPlayer);
     units=heroicEdgeStart.units;
@@ -1316,7 +1320,7 @@ async function maybeStartTurn(){
     const logText=firstTurnNoDraw
       ?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano antes del efecto: ${handBeforeDraw} cartas.${merlinDrawText} Mano actual: ${drawn.hand.length}. Pasa a Main Phase.`
       :`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba ${actualDrawCount} carta${actualDrawCount===1?"":"s"}.${merlinDrawText} Pasa a Main Phase.`;
-    await updatePublic({
+    const turnPublicPatch={
       units,
       _clockKillCreditMode:"opposite-owner",
       legendaryTraps:startTrap.traps||getActiveLegendaryTraps(),
@@ -1326,6 +1330,9 @@ async function maybeStartTurn(){
       floatFxEvent:lionFearStart.floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null,
       honorRechargeEvent:{key:`${publicState.turnKey}-${myPlayer}-${honorGain}-${maxHonor}`,owner:myPlayer,gain:honorGain,honor,maxHonor,resourceLabel:getResourceLabel(myPlayer,{caps:true}),turnKey:publicState.turnKey,at:Date.now()},
       log:[logText,...startLogs,...(publicState.log||[])].slice(0,18)
-    });
+    };
+    if(atomicOnlineTurnStart){
+      if(!(await commitPvpStep6fAtomicAction(turnPublicPatch,turnPrivatePatch)))return;
+    }else if(!(await updatePublic(turnPublicPatch)))return;
   }finally{turnStartLock=false}
 }
