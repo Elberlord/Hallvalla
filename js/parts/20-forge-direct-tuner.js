@@ -273,6 +273,11 @@
 
   function applyRuntimeLayout(){
     ensureArtLayers();
+    const forge=$('deckBuilderPanel');
+    if(forge?.classList.contains('hv-forge-collection-v2')){
+      for(const key of Object.keys(TARGETS))clearTunerStyles(targetElement(key));
+      return;
+    }
     for(const key of Object.keys(TARGETS))applyTarget(key);
   }
 
