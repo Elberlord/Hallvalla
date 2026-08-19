@@ -464,9 +464,18 @@ function renderUnitContextMenu(){
     const cellW=g.width/COLS,cellH=g.height/ROWS;
     let left=g.left+(unitContextSelection.x+.5)*cellW;
     let top=g.top+(unitContextSelection.y+.5)*cellH;
-    if(u.leader){
-      const base=document.querySelector(`.leader-base[data-leader-id="${CSS.escape(u.id)}"]`);
+    const safeUnitId=CSS.escape(String(u.id||""));
+    const unitEl=safeUnitId?document.querySelector(`.unit-card[data-unit-id="${safeUnitId}"]`):null;
+    if(unitEl){
+      const r=unitEl.getBoundingClientRect();
+      left=r.left+r.width/2;
+      top=r.top+r.height/2;
+    }else if(u.leader){
+      const base=document.querySelector(`.leader-base[data-leader-id="${safeUnitId}"]`);
       if(base){const r=base.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2;}
+    }else{
+      const cellEl=document.querySelector(`.cell[data-x="${u.x}"][data-y="${u.y}"]`);
+      if(cellEl){const r=cellEl.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2;}
     }
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;
