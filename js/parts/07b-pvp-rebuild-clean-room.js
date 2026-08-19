@@ -1041,11 +1041,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       setTimeout(()=>{
         try{
           document.getElementById("pvpStep6eShield")?.remove();
-          const banner=document.getElementById("pvpStep6eRealBadge")||document.createElement("div");
-          banner.id="pvpStep6eRealBadge";
-          banner.className="pvp-step6e-real-badge pvp-step6f-real-badge";
-          banner.textContent="PASO 6I · DUELO COMPLETO · MOTOR REAL";
-          document.body.appendChild(banner);
+          document.getElementById("pvpStep6eRealBadge")?.remove();
           if(typeof setHint==="function") setHint("Paso 6I: duelo completo habilitado. MOV, DEF, ATTK, EFFECT, magias, equipos, trampas, pasivos y estados usan el motor real de HallValla.");
         }catch(_){ }
       },250);

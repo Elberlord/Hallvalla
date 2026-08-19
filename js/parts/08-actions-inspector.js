@@ -59,96 +59,55 @@ function getAttackableTargets(u,units=publicState?.units||[]){
     return (inNormalRange||finalBlow)&&canTargetStealth(live,t)&&canUnitAttackTarget(live,t)&&(!(t.aerial)||(getUnitAttackRange(live)>3||live.antiaerial));
   });
 }
-// E47 · Movimiento con bloqueo real de líneas.
-// Las unidades terrestres necesitan un camino de casillas libres; las aéreas pueden
-// sobrevolar piezas intermedias, aunque nunca terminar encima de otra unidad.
+// Movimiento libre entre casillas dentro del MOV.
+// Las piezas intermedias ya no bloquean el desplazamiento: una unidad puede atravesar
+// aliados, enemigos y líderes. La única ocupación prohibida es la casilla de destino.
 function isAerialMovementUnit(u){return !!(u&&(u.aerial||u.flight));}
 function movementStateUnits(unitsOverride=null){return Array.isArray(unitsOverride)?unitsOverride:(publicState?.units||[]);}
 function movementOccupiedSet(unitsOverride=null,movingId=""){
   return new Set(movementStateUnits(unitsOverride).filter(it=>it&&it.hp>0&&it.id!==movingId).map(it=>`${it.x},${it.y}`));
 }
-function movementStepAllowed(from,to,occupied){
-  if(!to||to.x<0||to.x>=COLS||to.y<0||to.y>=ROWS)return false;
-  if(occupied.has(`${to.x},${to.y}`))return false;
-  const dx=to.x-from.x,dy=to.y-from.y;
-  if(Math.abs(dx)>1||Math.abs(dy)>1||(dx===0&&dy===0))return false;
-  // No se puede atravesar una esquina completamente sellada por dos cuerpos.
-  // Si uno de los lados está libre, existe un hueco por el que la unidad puede filtrarse.
-  if(dx!==0&&dy!==0){
-    const sideA=`${from.x+dx},${from.y}`;
-    const sideB=`${from.x},${from.y+dy}`;
-    if(occupied.has(sideA)&&occupied.has(sideB))return false;
+function buildDirectMovementPath(u,x,y,maxMoveOverride=null){
+  if(!u)return null;
+  const maxMove=maxMoveOverride===null||maxMoveOverride===undefined?Math.max(0,effectiveMov(u)):Math.max(0,Number(maxMoveOverride)||0);
+  const sx=Number(u.x),sy=Number(u.y),tx=Number(x),ty=Number(y);
+  const dx=tx-sx,dy=ty-sy;
+  const steps=Math.max(Math.abs(dx),Math.abs(dy));
+  if(steps<=0||steps>maxMove)return null;
+  const path=[{x:sx,y:sy}];
+  let cx=sx,cy=sy;
+  for(let i=0;i<steps;i++){
+    if(cx!==tx)cx+=Math.sign(tx-cx);
+    if(cy!==ty)cy+=Math.sign(ty-cy);
+    path.push({x:cx,y:cy});
   }
-  return true;
+  return path;
 }
 function buildUnitMovementReachability(u,unitsOverride=null,maxMoveOverride=null){
-  if(!u)return new Map();
+  const reached=new Map();
+  if(!u)return reached;
   const maxMove=maxMoveOverride===null||maxMoveOverride===undefined?Math.max(0,effectiveMov(u)):Math.max(0,Number(maxMoveOverride)||0);
-  const start={x:Number(u.x),y:Number(u.y)};
-  const startKey=`${start.x},${start.y}`;
-  const occupied=movementOccupiedSet(unitsOverride,u.id);
-  const reached=new Map([[startKey,{x:start.x,y:start.y,steps:0,parent:null}]]);
+  const sx=Number(u.x),sy=Number(u.y);
+  const startKey=`${sx},${sy}`;
+  reached.set(startKey,{x:sx,y:sy,steps:0,parent:null});
   if(maxMove<=0)return reached;
-  if(isAerialMovementUnit(u)){
-    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-      if(x===start.x&&y===start.y)continue;
-      if(occupied.has(`${x},${y}`))continue;
-      const steps=dist(start,{x,y});
-      if(steps<=maxMove)reached.set(`${x},${y}`,{x,y,steps,parent:startKey,aerial:true});
-    }
-    return reached;
-  }
-  const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-  const queue=[startKey];
-  for(let qi=0;qi<queue.length;qi++){
-    const key=queue[qi],node=reached.get(key);
-    if(!node||node.steps>=maxMove)continue;
-    for(const [dx,dy] of dirs){
-      const next={x:node.x+dx,y:node.y+dy};
-      if(!movementStepAllowed(node,next,occupied))continue;
-      const nk=`${next.x},${next.y}`;
-      if(reached.has(nk))continue;
-      reached.set(nk,{x:next.x,y:next.y,steps:node.steps+1,parent:key});
-      queue.push(nk);
-    }
+  const occupied=movementOccupiedSet(unitsOverride,u.id);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(x===sx&&y===sy)continue;
+    if(occupied.has(`${x},${y}`))continue;
+    const steps=Math.max(Math.abs(x-sx),Math.abs(y-sy));
+    if(steps>maxMove)continue;
+    reached.set(`${x},${y}`,{x,y,steps,parent:startKey,aerial:isAerialMovementUnit(u)});
   }
   return reached;
 }
 function getUnitMovementPath(u,x,y,unitsOverride=null,maxMoveOverride=null){
   if(!u)return null;
-  const maxMove=maxMoveOverride===null||maxMoveOverride===undefined?Math.max(0,effectiveMov(u)):Math.max(0,Number(maxMoveOverride)||0);
-  const sx=Number(u.x),sy=Number(u.y),tx=Number(x),ty=Number(y);
-  const directDx=tx-sx,directDy=ty-sy;
-  const directSteps=Math.max(Math.abs(directDx),Math.abs(directDy));
-  const directIsLine=directSteps>0&&(directDx===0||directDy===0||Math.abs(directDx)===Math.abs(directDy));
-  // Si el jugador/IA eligió un destino alineado y la línea está libre, preservamos
-  // exactamente esa ruta. Esto mantiene correctas las reglas de carga recta.
-  if(!isAerialMovementUnit(u)&&directIsLine&&directSteps<=maxMove){
-    const occupied=movementOccupiedSet(unitsOverride,u.id);
-    const stepX=Math.sign(directDx),stepY=Math.sign(directDy);
-    const direct=[{x:sx,y:sy}];let prev=direct[0],clear=true;
-    for(let i=1;i<=directSteps;i++){
-      const next={x:sx+stepX*i,y:sy+stepY*i};
-      if(!movementStepAllowed(prev,next,occupied)){clear=false;break;}
-      direct.push(next);prev=next;
-    }
-    if(clear)return direct;
-  }
-  const reach=buildUnitMovementReachability(u,unitsOverride,maxMove);
-  const endKey=`${tx},${ty}`;
-  const end=reach.get(endKey);
-  if(!end)return null;
-  const startKey=`${sx},${sy}`;
-  if(end.aerial)return [{x:sx,y:sy},{x:tx,y:ty}];
-  const path=[];let key=endKey;
-  while(key){
-    const node=reach.get(key);if(!node)break;
-    path.push({x:node.x,y:node.y});
-    if(key===startKey)break;
-    key=node.parent;
-  }
-  path.reverse();
-  return path.length&&path[0].x===Number(u.x)&&path[0].y===Number(u.y)?path:null;
+  const occupied=movementOccupiedSet(unitsOverride,u.id);
+  const tx=Number(x),ty=Number(y);
+  if(tx<0||tx>=COLS||ty<0||ty>=ROWS)return null;
+  if(occupied.has(`${tx},${ty}`))return null;
+  return buildDirectMovementPath(u,tx,ty,maxMoveOverride);
 }
 function getUnitMovementZonesForState(u,unitsOverride=null,maxMoveOverride=null){
   if(!u)return[];
