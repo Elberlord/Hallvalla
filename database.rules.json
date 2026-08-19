@@ -8,49 +8,10 @@
         },
         "public": {
           ".read": "auth != null",
-          ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('playerSlots').child('player1Uid').val() === auth.uid && newData.child('code').val() === $gameId) || (data.exists() && !newData.exists() && data.child('playerSlots').child('player1Uid').val() === auth.uid) || (data.exists() && newData.exists() && (data.child('playerSlots').child('player1Uid').val() === auth.uid || data.child('playerSlots').child('player2Uid').val() === auth.uid || (!data.child('playerSlots').child('player2Uid').exists() && newData.child('playerSlots').child('player2Uid').val() === auth.uid && data.child('phase').val() === 'waiting')) && newData.child('code').val() === data.child('code').val() && newData.child('playerSlots').child('player1Uid').val() === data.child('playerSlots').child('player1Uid').val() && (newData.child('playerSlots').child('player2Uid').val() === data.child('playerSlots').child('player2Uid').val() || (!data.child('playerSlots').child('player2Uid').exists() && newData.child('playerSlots').child('player2Uid').val() === auth.uid && data.child('phase').val() === 'waiting') || (data.child('playerSlots').child('player2Uid').val() === auth.uid && !newData.child('playerSlots').child('player2Uid').exists())) && (newData.child('schema').val() === data.child('schema').val() || data.child('playerSlots').child('player1Uid').val() === auth.uid) && (data.child('playerSlots').child('player1Uid').val() === auth.uid || (newData.child('settings').child('timerEnabled').val() === data.child('settings').child('timerEnabled').val() && newData.child('settings').child('stakeMode').val() === data.child('settings').child('stakeMode').val() && newData.child('settings').child('goldAmount').val() === data.child('settings').child('goldAmount').val() && newData.child('settings').child('cardEntryFee').val() === data.child('settings').child('cardEntryFee').val())) && (data.child('playerSlots').child('player1Uid').val() === auth.uid || (newData.child('playerNames').child('1').val() === data.child('playerNames').child('1').val() && newData.child('playerLevels').child('1').val() === data.child('playerLevels').child('1').val() && newData.child('playerPrepared').child('1').val() === data.child('playerPrepared').child('1').val())) && (data.child('playerSlots').child('player2Uid').val() === auth.uid || (data.child('playerSlots').child('player1Uid').val() === auth.uid && data.child('schema').val() === 'hallvalla-pvp-rebuild-step6f-real-unit-summon' && newData.child('schema').val() === 'hallvalla-pvp-real-engine-step6f') || (newData.child('playerNames').child('2').val() === data.child('playerNames').child('2').val() && newData.child('playerLevels').child('2').val() === data.child('playerLevels').child('2').val() && newData.child('playerPrepared').child('2').val() === data.child('playerPrepared').child('2').val()))))",
-          "code": {
-            ".validate": "newData.isString() && newData.val() === $gameId"
-          },
-          "createdAt": {
-            ".validate": "newData.isNumber() && newData.val() > 0"
-          },
-          "phase": {
-            ".validate": "newData.isString() && (newData.val() === 'waiting' || newData.val() === 'rps' || newData.val() === 'configured' || newData.val() === 'arena_ready' || newData.val() === 'battle_active' || newData.val() === 'active' || newData.val() === 'ended')"
-          },
-          "currentPlayer": {
-            ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2)"
-          },
-          "winner": {
-            ".validate": "newData.isNumber() && (newData.val() === 1 || newData.val() === 2)"
-          },
-          "loser": {
-            ".validate": "newData.isNumber() && (newData.val() === 1 || newData.val() === 2)"
-          },
-          "battleEnded": {
-            ".validate": "newData.val() === true || newData.val() === false"
-          },
+          ".write": "auth != null && ((!data.exists() && newData.child('playerSlots').child('player1Uid').val() === auth.uid) || data.child('playerSlots').child('player1Uid').val() === auth.uid || data.child('playerSlots').child('player2Uid').val() === auth.uid)",
           "playerSlots": {
-            "player1Uid": {
-              ".validate": "newData.isString() && newData.val() !== ''"
-            },
             "player2Uid": {
-              ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid && root.child('games').child($gameId).child('public').child('phase').val() === 'waiting') || (data.val() === auth.uid && (!newData.exists() || newData.val() === auth.uid)))",
-              ".validate": "newData.isString() && newData.val() !== ''"
-            }
-          },
-          "settings": {
-            "timerEnabled": {
-              ".validate": "newData.val() === true || newData.val() === false"
-            },
-            "stakeMode": {
-              ".validate": "newData.isString() && (newData.val() === 'none' || newData.val() === 'gold' || newData.val() === 'card')"
-            },
-            "goldAmount": {
-              ".validate": "newData.isNumber() && (newData.val() === 100 || newData.val() === 250 || newData.val() === 500 || newData.val() === 1000)"
-            },
-            "cardEntryFee": {
-              ".validate": "newData.isNumber() && newData.val() === 500"
+              ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid && root.child('games').child($gameId).child('public').child('phase').val() === 'waiting') || data.val() === auth.uid)"
             }
           },
           "units": {

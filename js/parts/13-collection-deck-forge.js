@@ -1079,7 +1079,7 @@ function renderDeckPrincipalSelector(){
       return `<div class="deck-principal-selector decor-slot" aria-hidden="true"></div>`;
     }
     const card=cards[index]||null;
-    return `<div class="deck-principal-selector ${card?"filled":"empty"}" data-principal-slot="${index}" aria-label="${escapeHtml(card?`Principal ${index+1}: ${card.name}`:`Principal ${index+1}`)}">
+    return `<div class="deck-principal-selector ${card?"filled":"empty"}" data-principal-slot="${index}" title="${escapeHtml(card?`Principal ${index+1}: ${card.name}`:`Principal ${index+1}`)}">
       <div class="deck-principal-art" aria-hidden="true">${card?getDeckBuilderMiniImageHtml(card):`<span>★${index+1}</span>`}</div>
       <button class="deck-principal-clear ${card?"":"hidden"}" type="button" data-clear-principal-slot="${index}" ${card?"":"disabled"} aria-label="Quitar principal ${index+1}">×</button>
     </div>`;
