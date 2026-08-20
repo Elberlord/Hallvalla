@@ -1165,7 +1165,7 @@ function renderDeckBuilder(){
   }
   const allCards=getDeckBuilderCardPoolForForge();
   const cards=allCards.filter(card=>deckBuilderCardMatchesUnitCategory(card)).sort((a,b)=>(a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||"")));
-  const pageSize=20;
+  const pageSize=15;
   const totalPages=Math.max(1,Math.ceil(cards.length/pageSize));
   deckBuilderCollectionPage=Math.max(0,Math.min(deckBuilderCollectionPage,totalPages-1));
   const pageStart=deckBuilderCollectionPage*pageSize;

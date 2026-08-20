@@ -22508,7 +22508,7 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   margin:0 !important;
   display:grid !important;
   grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-  grid-template-rows:repeat(4,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(3,minmax(0,1fr)) !important;
   grid-auto-rows:minmax(0,1fr) !important;
   gap:1.25% 1.6% !important;
   align-items:center !important;
@@ -23003,4 +23003,56 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 #deckBuilderPanel.hv-forge-collection-v2 .deck-mini-principal,
 #deckBuilderPanel.hv-forge-collection-v2 .deck-principal-clear{
   display:block !important;
+}
+
+
+/* ========================================================================== */
+/* FORGE-CLEAN-3 · Colección 5x3 + visibilidad robusta del mazo.              */
+/* No modifica el asset de fondo; solo elementos HTML superpuestos.           */
+/* ========================================================================== */
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid.deck-card-grid.hv-mini-gallery.is-paged{
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(3,minmax(0,1fr)) !important;
+  grid-auto-rows:minmax(0,1fr) !important;
+}
+
+/* Las cartas añadidas al mazo y sus imágenes siempre deben renderizarse por
+   encima de la decoración del fondo. */
+#deckBuilderPanel.hv-forge-collection-v2 #deckBuilderDeckPanel{
+  z-index:120 !important;
+  isolation:isolate !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList.current-deck-list.hv-mini-deck{
+  z-index:130 !important;
+  isolation:isolate !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck{
+  display:block !important;
+  z-index:140 !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  filter:none !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck .deck-mini-art{
+  display:block !important;
+  z-index:2 !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck .deck-mini-art img{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots,
+#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots .deck-principal-selector,
+#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots .deck-principal-art,
+#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots .deck-principal-art img{
+  visibility:visible !important;
+  opacity:1 !important;
 }
