@@ -23056,3 +23056,79 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   visibility:visible !important;
   opacity:1 !important;
 }
+
+
+/* ========================================================================== */
+/* FORGE-FILTER-HITBOXES-1 · Cinco filtros funcionales, 100% visualmente      */
+/* transparentes sobre los cinco iconos ya dibujados en el fondo aprobado.    */
+/* No restaura buscador, textos, cajas ni dropdowns permanentes visibles.      */
+/* ========================================================================== */
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-filters.hv-invisible-filter-hitboxes{
+  display:block !important;
+  position:absolute !important;
+  z-index:90 !important;
+  left:0 !important;
+  right:0 !important;
+  top:0 !important;
+  height:8.9% !important;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  overflow:visible !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  pointer-events:none !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup.deck-filter-group{
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,2.05fr) !important;
+  gap:1.15% !important;
+  width:100% !important;
+  height:100% !important;
+  padding:0 !important;
+  margin:0 !important;
+  align-items:stretch !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  pointer-events:none !important;
+  translate:none !important;
+  scale:1 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckTypeFilter{grid-column:1 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckOwnershipFilter{grid-column:2 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckRarityFilter{grid-column:3 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerFilter{grid-column:4 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerSort{grid-column:5 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:transparent !important;
+  text-shadow:none !important;
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  opacity:.001 !important;
+  cursor:pointer !important;
+  pointer-events:auto !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select:focus{
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+}
+/* Durante calibración únicamente, el selector activo puede recibir el outline
+   del editor directo; fuera del editor los hitboxes siguen siendo invisibles. */
+body:not(.hv-forge-edit-active) #deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select{
+  opacity:.001 !important;
+}

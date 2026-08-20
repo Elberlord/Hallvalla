@@ -582,6 +582,46 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <button id="closeDeckBuilderBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
     <div class="deckbuilder-layout">
       <div class="deckbuilder-parchment-stage">
+        <aside class="deckbuilder-filters hv-invisible-filter-hitboxes" aria-label="Filtros de cartas">
+          <div id="deckFilterGroup" class="deck-filter-group">
+            <select id="deckTypeFilter" class="deck-select" aria-label="Filtrar por tipo de carta">
+              <option value="all">Todos los tipos</option>
+              <option value="unit">Invocaciones</option>
+              <option value="spell">Magias</option>
+              <option value="trap">Trampas</option>
+              <option value="equipment">Equipo</option>
+            </select>
+            <select id="deckOwnershipFilter" class="deck-select" aria-label="Filtrar por posesión">
+              <option value="all">Todas las cartas</option>
+              <option value="owned">Cartas en posesión</option>
+              <option value="unowned">Cartas no poseídas</option>
+            </select>
+            <select id="deckRarityFilter" class="deck-select" aria-label="Filtrar por rareza">
+              <option value="all">Todas las rarezas</option>
+              <option value="basic">Básica</option>
+              <option value="epic">Épica</option>
+              <option value="glorious">Gloriosa</option>
+              <option value="mythic">Mítica</option>
+              <option value="legendary">Legendaria</option>
+              <option value="demigod">Semidiós</option>
+            </select>
+            <select id="deckBattlePowerFilter" class="deck-select" aria-label="Filtrar por poder de batalla">
+              <option value="all">Todo poder de batalla</option>
+              <option value="dominant">PB 90–100 · Dominante</option>
+              <option value="elite">PB 80–89 · Élite</option>
+              <option value="gold">PB 70–79 · Oro</option>
+              <option value="silver">PB 55–69 · Plata</option>
+              <option value="bronze">PB 40–54 · Bronce</option>
+              <option value="initiation">PB 0–39 · Iniciación</option>
+              <option value="unrated">Magias y trampas · Sin PB</option>
+            </select>
+            <select id="deckBattlePowerSort" class="deck-select" aria-label="Ordenar cartas">
+              <option value="default">Orden: coste y nombre</option>
+              <option value="power_desc">PB: mayor a menor</option>
+              <option value="power_asc">PB: menor a mayor</option>
+            </select>
+          </div>
+        </aside>
         <section class="deckbuilder-collection">
           <div id="deckCollectionGrid" class="deck-card-grid"></div>
           <div id="deckCollectionPager" class="deck-collection-pager" aria-label="Paginación de cartas">

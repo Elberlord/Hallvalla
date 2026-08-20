@@ -1163,8 +1163,35 @@ function renderDeckBuilder(){
     panel.classList.toggle("collection-browser-mode",browseOnly);
     panel.classList.toggle("collection-forge-unlocked",!browseOnly);
   }
+  const typeFilter=$("deckTypeFilter")?.value||"all";
+  const ownershipFilter=$("deckOwnershipFilter")?.value||"all";
+  const rarityFilter=$("deckRarityFilter")?.value||"all";
+  const powerFilter=$("deckBattlePowerFilter")?.value||"all";
+  const powerSort=$("deckBattlePowerSort")?.value||"default";
   const allCards=getDeckBuilderCardPoolForForge();
-  const cards=allCards.filter(card=>deckBuilderCardMatchesUnitCategory(card)).sort((a,b)=>(a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||"")));
+  const cards=allCards.filter(card=>{
+    if(!deckBuilderCardMatchesUnitCategory(card))return false;
+    const battlePower=getUnitBattlePower(card);
+    const typeOk=typeFilter==="all"||card.type===typeFilter;
+    const ownedQty=Number(card.qty||0);
+    const ownershipOk=ownershipFilter==="all"||(ownershipFilter==="owned"&&ownedQty>0)||(ownershipFilter==="unowned"&&ownedQty<=0);
+    const rarity=cardRarity(card);
+    const rarityOk=rarityFilter==="all"||
+      (rarityFilter==="basic"&&(rarity==="básica"||rarity==="basica"||rarity==="basic"))||
+      (rarityFilter==="glorious"&&rarity==="gloriosa")||
+      (rarityFilter==="epic"&&(rarity==="rara"||rarity==="rare"||rarity==="épica"||rarity==="epica"))||
+      (rarityFilter==="mythic"&&(rarity==="mítica"||rarity==="mitica"))||
+      (rarityFilter==="legendary"&&(rarity==="legendaria"||rarity==="legendary"))||
+      (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
+    const bounds=getBattlePowerFilterBounds(powerFilter);
+    const powerOk=powerFilter==="all"||(powerFilter==="unrated"&&!Number.isFinite(battlePower))||(bounds&&Number.isFinite(battlePower)&&battlePower>=bounds.min&&battlePower<=bounds.max);
+    return typeOk&&ownershipOk&&rarityOk&&powerOk;
+  }).sort((a,b)=>{
+    const pa=getUnitBattlePower(a),pb=getUnitBattlePower(b);
+    if(powerSort==="power_desc")return (Number.isFinite(pb)?pb:-1)-(Number.isFinite(pa)?pa:-1)||String(a.name||"").localeCompare(String(b.name||""));
+    if(powerSort==="power_asc")return (Number.isFinite(pa)?pa:101)-(Number.isFinite(pb)?pb:101)||String(a.name||"").localeCompare(String(b.name||""));
+    return (a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||""));
+  });
   const pageSize=15;
   const totalPages=Math.max(1,Math.ceil(cards.length/pageSize));
   deckBuilderCollectionPage=Math.max(0,Math.min(deckBuilderCollectionPage,totalPages-1));
