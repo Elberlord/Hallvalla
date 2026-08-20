@@ -22919,3 +22919,86 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   #deckBuilderPanel.hv-forge-collection-v2 .deck-mini-craft,
   #deckBuilderPanel.hv-forge-collection-v2 .deck-mini-dust{width:16px !important;height:16px !important;min-width:16px !important;min-height:16px !important;font-size:9px !important;line-height:14px !important;}
 }
+
+/* ========================================================================== */
+/* FORGE-CLEAN-1 · Limpieza quirúrgica sobre el fondo aprobado.               */
+/* Solo afecta elementos superpuestos de Colección/Mazo.                      */
+/* ========================================================================== */
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-filters,
+#deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup,
+#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel,
+#deckBuilderPanel.hv-forge-collection-v2 #dustAllSurplusCornerBtn,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-lock,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-craft,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-dust,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-name,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-type,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-badge,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-cost,
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-status,
+#deckBuilderPanel.hv-forge-collection-v2 #deckCountText,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-page-info{
+  display:none !important;
+}
+
+/* Las seis pestañas conservan solamente el área de clic del dibujo de fondo.
+   No muestran borde, caja, brillo ni selección superpuesta. */
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-leader-tabs button,
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-leader-tabs button:hover,
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-leader-tabs button.is-selected{
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+}
+
+/* Fuerza las cartas de colección, mazo y principales por delante de cualquier
+   capa de decoración interna. La imagen de fondo no se modifica. */
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-parchment-stage{
+  z-index:20 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-collection{
+  z-index:30 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid{
+  z-index:32 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid .deck-mini-card{
+  z-index:34 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-current{
+  z-index:70 !important;
+  isolation:isolate !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList.current-deck-list.hv-mini-deck{
+  z-index:74 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card{
+  z-index:76 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots.deck-principal-slots{
+  z-index:78 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector{
+  z-index:80 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-art,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-art{
+  z-index:1 !important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-plus,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-remove,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-principal,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-clear{
+  z-index:12 !important;
+}
+
+/* Los controles que quedan son únicamente: + en colección; quitar y estrella
+   dentro del mazo; quitar en la ranura Principal. */
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-plus,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-remove,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-principal,
+#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-clear{
+  display:block !important;
+}

@@ -3,74 +3,65 @@
   'use strict';
 
   /* Clave nueva: no reutiliza posiciones del editor anterior que podían desplazar contenedores completos. */
-  const STORAGE_KEY='hallvalla_forge_direct_tuner_collection_v2';
-  const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v3';
+  const STORAGE_KEY='hallvalla_forge_direct_tuner_clean_v1';
+  const PANEL_KEY='hallvalla_forge_direct_tuner_panel_clean_v1';
   const $=id=>document.getElementById(id);
-  const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
+  const DEV_TOOLS_ENABLED=true; // FORGE-CLEAN-1: control temporal visible durante la calibración de esta pantalla.
 
   const GROUPS={
-    filters:{label:'Filtros'},
+    tabs:{label:'Pestañas de unidades'},
     collection:{label:'Colección'},
-    materials:{label:'Materiales'},
     navigation:{label:'Navegación'},
     spellbook:{label:'Mazo'},
     actions:{label:'Botones'},
     window:{label:'Ventana'}
   };
 
-  /* direct:false = se puede editar desde el selector, pero un clic normal NO lo selecciona.
-     Esto evita volver a mover un contenedor padre entero por accidente. */
+  /* direct:false = grupo seleccionable desde el panel, sin secuestrar un clic normal. */
   const TARGETS={
     forgeWindow:{group:'window',label:'Ventana completa de Forja',selector:'#deckBuilderPanel .deckbuilder-card',direct:false},
-    mainClose:{group:'window',label:'Cerrar Forja',selector:'#deckBuilderPanel #closeDeckBuilderBtn',direct:true},
+    mainClose:{group:'actions',label:'Botón cerrar',selector:'#deckBuilderPanel #closeDeckBuilderBtn',direct:true},
+    save:{group:'actions',label:'Botón guardar',selector:'#deckBuilderPanel #saveDeckBtn',direct:true},
 
-    filterGroup:{group:'filters',label:'TODOS los filtros juntos',selector:'#deckBuilderPanel #deckFilterGroup',direct:false},
-    search:{group:'filters',label:'Buscador',selector:'#deckBuilderPanel #deckSearchInput',direct:true},
-    type:{group:'filters',label:'Filtro Tipo',selector:'#deckBuilderPanel #deckTypeFilter',direct:true},
-    ownership:{group:'filters',label:'Filtro Todas / posesión',selector:'#deckBuilderPanel #deckOwnershipFilter',direct:true},
-    rarity:{group:'filters',label:'Filtro Rareza',selector:'#deckBuilderPanel #deckRarityFilter',direct:true},
-    power:{group:'filters',label:'Filtro Poder',selector:'#deckBuilderPanel #deckBattlePowerFilter',direct:true},
-    sort:{group:'filters',label:'Filtro Orden',selector:'#deckBuilderPanel #deckBattlePowerSort',direct:true},
+    tabsGroup:{group:'tabs',label:'Todas las pestañas (grupo)',selector:'#deckBuilderPanel .deckbuilder-leader-tabs',direct:false},
+    tabWarrior:{group:'tabs',label:'Hitbox Guerrero',selector:'#deckBuilderPanel [data-deck-unit-filter="warrior"]',direct:true},
+    tabArcher:{group:'tabs',label:'Hitbox Arquero',selector:'#deckBuilderPanel [data-deck-unit-filter="archer"]',direct:true},
+    tabAssassin:{group:'tabs',label:'Hitbox Asesino',selector:'#deckBuilderPanel [data-deck-unit-filter="assassin"]',direct:true},
+    tabMage:{group:'tabs',label:'Hitbox Arcano',selector:'#deckBuilderPanel [data-deck-unit-filter="mage"]',direct:true},
+    tabCavalry:{group:'tabs',label:'Hitbox Caballería',selector:'#deckBuilderPanel [data-deck-unit-filter="cavalry"]',direct:true},
+    tabAxe:{group:'tabs',label:'Hitbox Hacha',selector:'#deckBuilderPanel [data-deck-unit-filter="axe"]',direct:true},
 
     collectionSection:{group:'collection',label:'Colección completa (grupo)',selector:'#deckBuilderPanel .deckbuilder-collection',direct:false},
-    title:{group:'collection',label:'Texto Cartas disponibles',selector:'#deckBuilderPanel .deckbuilder-collection h3',direct:true},
-    pageTitle:{group:'collection',label:'Contador pequeño de cartas',selector:'#deckBuilderPanel #deckCollectionPageText',direct:true},
-    cards:{group:'collection',label:'TODAS las cartas visibles (grupo)',selector:'#deckBuilderPanel #deckCollectionGrid',direct:false},
-
-    materialsGroup:{group:'materials',label:'Materiales completo (grupo)',selector:'#deckBuilderPanel #craftMaterialPanel',direct:false},
-    material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialBasic',direct:true},
-    material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialEpic',direct:true},
-    material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialGlorious',direct:true},
-    material4:{group:'materials',label:'Material Mítica',selector:'#deckBuilderPanel #craftMaterialMythic',direct:true},
-    material5:{group:'materials',label:'Material Legendaria',selector:'#deckBuilderPanel #craftMaterialLegendary',direct:true},
-    material6:{group:'materials',label:'Material Semidiós',selector:'#deckBuilderPanel #craftMaterialDemigod',direct:true},
+    cards:{group:'collection',label:'Todas las cartas visibles (grupo)',selector:'#deckBuilderPanel #deckCollectionGrid',direct:false},
 
     pager:{group:'navigation',label:'Paginación completa (grupo)',selector:'#deckBuilderPanel #deckCollectionPager',direct:false},
-    prev:{group:'navigation',label:'Botón Anterior',selector:'#deckBuilderPanel #deckCollectionPrevBtn',direct:true},
-    page:{group:'navigation',label:'Texto Página',selector:'#deckBuilderPanel #deckCollectionPageInfo',direct:true},
-    next:{group:'navigation',label:'Botón Siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn',direct:true},
+    prev:{group:'navigation',label:'Flecha anterior',selector:'#deckBuilderPanel #deckCollectionPrevBtn',direct:true},
+    next:{group:'navigation',label:'Flecha siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn',direct:true},
 
     deckGroup:{group:'spellbook',label:'Mazo completo (grupo)',selector:'#deckBuilderPanel #deckBuilderDeckPanel',direct:false},
-    deckCounter:{group:'spellbook',label:'Contador superior del Mazo',selector:'#deckBuilderPanel #deckCountText',direct:true},
-    principalGroup:{group:'spellbook',label:'Todos los principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots',direct:false},
-    deckCards:{group:'spellbook',label:'Todas las cartas del Mazo (grupo)',selector:'#deckBuilderPanel #currentDeckList',direct:false},
-
-    actionGroup:{group:'actions',label:'TODOS los botones juntos',selector:'#deckBuilderPanel #deckBuilderActionGroup',direct:false},
-    save:{group:'actions',label:'Botón Guardar',selector:'#deckBuilderPanel #saveDeckBtn',direct:true},
-    dust:{group:'actions',label:'Botón Convertir sobrantes',selector:'#deckBuilderPanel #dustAllSurplusCornerBtn',direct:true}
+    principalGroup:{group:'spellbook',label:'Principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots',direct:false},
+    deckCards:{group:'spellbook',label:'Cartas del mazo (grupo)',selector:'#deckBuilderPanel #currentDeckList',direct:false}
   };
 
-  /* Cada casilla visible se puede seleccionar de manera individual. */
-  for(let i=1;i<=20;i++)TARGETS[`collectionCard${i}`]={group:'collection',label:`Carta visible ${i}`,selector:`#deckBuilderPanel #deckCollectionGrid > :nth-child(${i})`,direct:true};
-  for(let i=1;i<=3;i++)TARGETS[`principal${i}`]={group:'spellbook',label:`Principal / ranura ${i}`,selector:`#deckBuilderPanel #deckPrincipalSlots > :nth-child(${i})`,direct:true};
-  for(let i=1;i<=20;i++)TARGETS[`deckCard${i}`]={group:'spellbook',label:`Carta / ranura de mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i})`,direct:true};
+  /* Cada carta y cada botón funcional restante se calibra de forma independiente. */
+  for(let i=1;i<=20;i++){
+    TARGETS[`collectionCard${i}`]={group:'collection',label:`Carta colección ${i}`,selector:`#deckBuilderPanel #deckCollectionGrid > :nth-child(${i})`,direct:true};
+    TARGETS[`collectionPlus${i}`]={group:'collection',label:`Botón + ${i}`,selector:`#deckBuilderPanel #deckCollectionGrid > :nth-child(${i}) .deck-mini-plus`,direct:true};
+    TARGETS[`deckCard${i}`]={group:'spellbook',label:`Carta mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i})`,direct:true};
+    TARGETS[`deckRemove${i}`]={group:'spellbook',label:`Quitar mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i}) .deck-mini-remove`,direct:true};
+    TARGETS[`deckStar${i}`]={group:'spellbook',label:`Estrella mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i}) .deck-mini-principal`,direct:true};
+  }
+  for(let i=1;i<=3;i++){
+    TARGETS[`principal${i}`]={group:'spellbook',label:`Principal ${i}`,selector:`#deckBuilderPanel #deckPrincipalSlots > :nth-child(${i})`,direct:true};
+    TARGETS[`principalClear${i}`]={group:'spellbook',label:`Quitar principal ${i}`,selector:`#deckBuilderPanel #deckPrincipalSlots > :nth-child(${i}) .deck-principal-clear`,direct:true};
+  }
 
   const defaultValue=()=>({x:0,y:0,scale:100,width:100,height:100});
   const USER_LAYOUT={};
   const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{...defaultValue(),...(USER_LAYOUT[key]||{})}]));
   let state=loadState();
-  let activeGroup='filters';
-  let activeKey='search';
+  let activeGroup='collection';
+  let activeKey='collectionCard1';
   let panelOpen=false;
   let drag=null;
   let shell=null;
@@ -319,7 +310,7 @@
           <div id="hvForgeTunerScroll" class="hv-forge-tuner-scroll">
             <div class="hv-forge-tuner-top"><select id="hvForgeGroupSelect">${Object.entries(GROUPS).map(([key,g])=>`<option value="${key}">${g.label}</option>`).join('')}</select><button id="hvForgeTunerClose" type="button">×</button></div>
             <select id="hvForgeTargetSelect" class="hv-forge-target-select" aria-label="Elemento a editar"></select>
-            <div id="hvForgeSelectedName" class="hv-forge-selected-name">Buscador</div>
+            <div id="hvForgeSelectedName" class="hv-forge-selected-name">Carta colección 1</div>
             <div class="hv-forge-editor-help"><b>Clic + arrastre</b>: mueve SOLO lo tocado · <b>+</b>/<b>−</b>: tamaño · Flechas: ajuste fino. Para mover un conjunto, elige explícitamente el elemento que dice <b>(grupo)</b>.</div>
             ${['x','y','scale','width','height'].map(field=>{
               const title={x:'Horizontal',y:'Vertical',scale:'Tamaño',width:'Ancho',height:'Altura'}[field];
