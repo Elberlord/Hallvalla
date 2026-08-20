@@ -22545,7 +22545,8 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 #deckBuilderPanel.hv-forge-collection-v2 .deck-mini-art img{
   width:100% !important;
   height:100% !important;
-  object-fit:contain !important;
+  object-fit:cover !important;
+  object-position:center center !important;
   display:block !important;
   filter:drop-shadow(0 5px 5px rgba(0,0,0,.48)) !important;
 }
@@ -22751,7 +22752,8 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 #deckBuilderPanel.hv-forge-collection-v2 .deck-principal-art img{
   width:100% !important;
   height:100% !important;
-  object-fit:contain !important;
+  object-fit:cover !important;
+  object-position:center center !important;
   filter:drop-shadow(0 5px 6px rgba(0,0,0,.5)) !important;
 }
 #deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector.empty .deck-principal-art span{display:none !important;}

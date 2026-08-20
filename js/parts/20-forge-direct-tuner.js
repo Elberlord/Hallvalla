@@ -3,7 +3,8 @@
   'use strict';
 
   /* Clave nueva: no reutiliza posiciones del editor anterior que podían desplazar contenedores completos. */
-  const STORAGE_KEY='hallvalla_forge_direct_tuner_clean_v1';
+  const STORAGE_KEY='hallvalla_forge_direct_tuner_clean_v2';
+  const LEGACY_STORAGE_KEYS=['hallvalla_forge_direct_tuner_clean_v1'];
   const PANEL_KEY='hallvalla_forge_direct_tuner_panel_clean_v1';
   const $=id=>document.getElementById(id);
   const DEV_TOOLS_ENABLED=true; // FORGE-CLEAN-1: control temporal visible durante la calibración de esta pantalla.
@@ -59,6 +60,22 @@
   const defaultValue=()=>({x:0,y:0,scale:100,width:100,height:100});
   const USER_LAYOUT={};
   const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{...defaultValue(),...(USER_LAYOUT[key]||{})}]));
+
+  function isUniformCardKey(key){
+    return /^(collectionCard\d+|deckCard\d+|principal\d+)$/.test(String(key||''));
+  }
+
+  function normalizeUniformCardSizing(layout){
+    if(!layout||typeof layout!=='object')return layout;
+    for(const key of Object.keys(layout)){
+      if(!isUniformCardKey(key)||!layout[key])continue;
+      layout[key].scale=100;
+      layout[key].width=100;
+      layout[key].height=100;
+    }
+    return layout;
+  }
+
   let state=loadState();
   let activeGroup='collection';
   let activeKey='collectionCard1';
@@ -74,7 +91,14 @@
   function loadState(){
     const base=defaultState();
     try{
-      const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||{};
+      let raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+      if(!raw){
+        for(const legacyKey of LEGACY_STORAGE_KEYS){
+          raw=JSON.parse(localStorage.getItem(legacyKey)||'null');
+          if(raw)break;
+        }
+      }
+      raw=normalizeUniformCardSizing(raw||{})||{};
       for(const key of Object.keys(base)){
         const src=raw[key]||{};
         for(const field of Object.keys(base[key])){
