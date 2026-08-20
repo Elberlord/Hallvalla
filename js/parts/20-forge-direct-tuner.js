@@ -3,13 +3,12 @@
   'use strict';
 
   /* Clave nueva: no reutiliza posiciones del editor anterior que podían desplazar contenedores completos. */
-  const STORAGE_KEY='hallvalla_forge_direct_tuner_v6_individual';
+  const STORAGE_KEY='hallvalla_forge_direct_tuner_collection_v2';
   const PANEL_KEY='hallvalla_forge_direct_tuner_panel_v3';
   const $=id=>document.getElementById(id);
   const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
 
   const GROUPS={
-    layout:{label:'Pergaminos / layout'},
     filters:{label:'Filtros'},
     collection:{label:'Colección'},
     materials:{label:'Materiales'},
@@ -25,9 +24,6 @@
     forgeWindow:{group:'window',label:'Ventana completa de Forja',selector:'#deckBuilderPanel .deckbuilder-card',direct:false},
     mainClose:{group:'window',label:'Cerrar Forja',selector:'#deckBuilderPanel #closeDeckBuilderBtn',direct:true},
 
-    parchmentStage:{group:'layout',label:'Área completa del pergamino (grupo)',selector:'#deckBuilderPanel .deckbuilder-parchment-stage',direct:false},
-    parchment:{group:'layout',label:'Imagen del pergamino principal',selector:'#hvForgeParchmentLayer',direct:true},
-
     filterGroup:{group:'filters',label:'TODOS los filtros juntos',selector:'#deckBuilderPanel #deckFilterGroup',direct:false},
     search:{group:'filters',label:'Buscador',selector:'#deckBuilderPanel #deckSearchInput',direct:true},
     type:{group:'filters',label:'Filtro Tipo',selector:'#deckBuilderPanel #deckTypeFilter',direct:true},
@@ -42,7 +38,6 @@
     cards:{group:'collection',label:'TODAS las cartas visibles (grupo)',selector:'#deckBuilderPanel #deckCollectionGrid',direct:false},
 
     materialsGroup:{group:'materials',label:'Materiales completo (grupo)',selector:'#deckBuilderPanel #craftMaterialPanel',direct:false},
-    materialsArt:{group:'materials',label:'IMAGEN Materiales de creación',selector:'#deckBuilderPanel #craftMaterialPanel .craft-material-art',direct:true},
     material1:{group:'materials',label:'Material Básica',selector:'#deckBuilderPanel #craftMaterialBasic',direct:true},
     material2:{group:'materials',label:'Material Épica',selector:'#deckBuilderPanel #craftMaterialEpic',direct:true},
     material3:{group:'materials',label:'Material Gloriosa',selector:'#deckBuilderPanel #craftMaterialGlorious',direct:true},
@@ -55,12 +50,7 @@
     page:{group:'navigation',label:'Texto Página',selector:'#deckBuilderPanel #deckCollectionPageInfo',direct:true},
     next:{group:'navigation',label:'Botón Siguiente',selector:'#deckBuilderPanel #deckCollectionNextBtn',direct:true},
 
-    drawerGroup:{group:'spellbook',label:'Mazo completo (grupo)',selector:'#deckBuilderPanel #deckBuilderDrawer',direct:false},
-    drawerArt:{group:'spellbook',label:'IMAGEN del pergamino Mazo',selector:'#deckBuilderPanel #hvSpellbookArtLayer',direct:true},
-    drawerTab:{group:'spellbook',label:'Pestaña Mazo completa',selector:'#deckBuilderPanel #deckBuilderDrawerTab',direct:true},
-    drawerTabLabel:{group:'spellbook',label:'Texto MAZO de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerTab > span',direct:true},
-    drawerTabCount:{group:'spellbook',label:'Contador de pestaña',selector:'#deckBuilderPanel #deckBuilderDrawerCount',direct:true},
-    drawerClose:{group:'spellbook',label:'X cerrar Mazo',selector:'#deckBuilderPanel #deckBuilderDrawerClose',direct:true},
+    deckGroup:{group:'spellbook',label:'Mazo completo (grupo)',selector:'#deckBuilderPanel #deckBuilderDeckPanel',direct:false},
     deckCounter:{group:'spellbook',label:'Contador superior del Mazo',selector:'#deckBuilderPanel #deckCountText',direct:true},
     principalGroup:{group:'spellbook',label:'Todos los principales (grupo)',selector:'#deckBuilderPanel #deckPrincipalSlots',direct:false},
     deckCards:{group:'spellbook',label:'Todas las cartas del Mazo (grupo)',selector:'#deckBuilderPanel #currentDeckList',direct:false},
@@ -71,94 +61,12 @@
   };
 
   /* Cada casilla visible se puede seleccionar de manera individual. */
-  for(let i=1;i<=14;i++)TARGETS[`collectionCard${i}`]={group:'collection',label:`Carta visible ${i}`,selector:`#deckBuilderPanel #deckCollectionGrid > :nth-child(${i})`,direct:true};
-  for(let i=1;i<=5;i++)TARGETS[`principal${i}`]={group:'spellbook',label:`Principal / ranura ${i}`,selector:`#deckBuilderPanel #deckPrincipalSlots > :nth-child(${i})`,direct:true};
-  for(let i=1;i<=21;i++)TARGETS[`deckCard${i}`]={group:'spellbook',label:`Carta / ranura de mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i})`,direct:true};
+  for(let i=1;i<=20;i++)TARGETS[`collectionCard${i}`]={group:'collection',label:`Carta visible ${i}`,selector:`#deckBuilderPanel #deckCollectionGrid > :nth-child(${i})`,direct:true};
+  for(let i=1;i<=3;i++)TARGETS[`principal${i}`]={group:'spellbook',label:`Principal / ranura ${i}`,selector:`#deckBuilderPanel #deckPrincipalSlots > :nth-child(${i})`,direct:true};
+  for(let i=1;i<=20;i++)TARGETS[`deckCard${i}`]={group:'spellbook',label:`Carta / ranura de mazo ${i}`,selector:`#deckBuilderPanel #currentDeckList > :nth-child(${i})`,direct:true};
 
   const defaultValue=()=>({x:0,y:0,scale:100,width:100,height:100});
-  /* Configuración visual final entregada por el usuario el 13-08-2026. Solo fija defaults;
-     cualquier ajuste ya guardado en localStorage conserva prioridad. */
-  const USER_LAYOUT={
-    forgeWindow:{x:-22,y:2,scale:100,width:100,height:100},
-    mainClose:{x:0,y:0,scale:100,width:100,height:100},
-    parchmentStage:{x:0,y:0,scale:100,width:100,height:100},
-    parchment:{x:-600,y:-420,scale:100,width:100,height:170},
-    filterGroup:{x:19,y:6,scale:75,width:100,height:100},
-    search:{x:0,y:0,scale:100,width:100,height:100},
-    type:{x:0,y:0,scale:100,width:100,height:100},
-    ownership:{x:0,y:0,scale:100,width:100,height:100},
-    rarity:{x:0,y:0,scale:100,width:100,height:100},
-    power:{x:0,y:0,scale:100,width:100,height:100},
-    sort:{x:0,y:0,scale:100,width:100,height:100},
-    collectionSection:{x:-31,y:4,scale:80,width:100,height:100},
-    title:{x:0,y:0,scale:100,width:100,height:100},
-    pageTitle:{x:0,y:0,scale:100,width:100,height:100},
-    cards:{x:0,y:0,scale:100,width:100,height:100},
-    materialsGroup:{x:-116,y:-2,scale:100,width:100,height:100},
-    materialsArt:{x:-77,y:-164,scale:50,width:285,height:180},
-    material1:{x:20,y:20,scale:100,width:100,height:100},
-    material2:{x:14,y:23,scale:100,width:100,height:100},
-    material3:{x:15,y:23,scale:100,width:100,height:100},
-    material4:{x:8,y:23,scale:100,width:100,height:100},
-    material5:{x:9,y:24,scale:100,width:100,height:100},
-    material6:{x:0,y:23,scale:100,width:100,height:100},
-    pager:{x:0,y:0,scale:100,width:100,height:100},
-    prev:{x:0,y:0,scale:100,width:100,height:100},
-    page:{x:0,y:0,scale:100,width:100,height:100},
-    next:{x:0,y:0,scale:100,width:100,height:100},
-    drawerGroup:{x:0,y:0,scale:100,width:100,height:100},
-    drawerArt:{x:-2,y:4,scale:100,width:100,height:100},
-    drawerTab:{x:0,y:0,scale:100,width:100,height:100},
-    drawerTabLabel:{x:0,y:0,scale:100,width:100,height:100},
-    drawerTabCount:{x:0,y:0,scale:100,width:100,height:100},
-    drawerClose:{x:-320,y:0,scale:100,width:100,height:100},
-    deckCounter:{x:59,y:26,scale:80,width:130,height:100},
-    principalGroup:{x:0,y:0,scale:100,width:100,height:100},
-    deckCards:{x:62,y:-13,scale:65,width:100,height:100},
-    actionGroup:{x:840,y:-15,scale:85,width:100,height:100},
-    save:{x:0,y:0,scale:100,width:100,height:100},
-    dust:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard1:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard2:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard3:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard4:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard5:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard6:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard7:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard8:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard9:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard10:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard11:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard12:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard13:{x:0,y:0,scale:100,width:100,height:100},
-    collectionCard14:{x:0,y:0,scale:100,width:100,height:100},
-    principal1:{x:100,y:-14,scale:50,width:100,height:100},
-    principal2:{x:0,y:0,scale:100,width:100,height:100},
-    principal3:{x:0,y:0,scale:100,width:100,height:100},
-    principal4:{x:0,y:0,scale:100,width:100,height:100},
-    principal5:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard1:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard2:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard3:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard4:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard5:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard6:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard7:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard8:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard9:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard10:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard11:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard12:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard13:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard14:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard15:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard16:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard17:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard18:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard19:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard20:{x:0,y:0,scale:100,width:100,height:100},
-    deckCard21:{x:0,y:0,scale:100,width:100,height:100}
-  };
+  const USER_LAYOUT={};
   const defaultState=()=>Object.fromEntries(Object.keys(TARGETS).map(key=>[key,{...defaultValue(),...(USER_LAYOUT[key]||{})}]));
   let state=loadState();
   let activeGroup='filters';
@@ -189,39 +97,6 @@
   function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){} }
   function isForgeOpen(){const panel=$('deckBuilderPanel');return !!(panel&&!panel.classList.contains('hidden'));}
   function targetElement(key){const cfg=TARGETS[key];return cfg?document.querySelector(cfg.selector):null;}
-
-  function ensureParchmentLayer(){
-    const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
-    if(!stage)return null;
-    let layer=$('hvForgeParchmentLayer');
-    if(!layer){
-      layer=document.createElement('div');
-      layer.id='hvForgeParchmentLayer';
-      layer.className='hv-forge-parchment-layer';
-      stage.prepend(layer);
-    }
-    return layer;
-  }
-
-  function ensureArtLayers(){
-    ensureParchmentLayer();
-    const drawer=$('deckBuilderDrawer');
-    if(drawer&&!$('hvSpellbookArtLayer')){
-      const art=document.createElement('div');
-      art.id='hvSpellbookArtLayer';
-      art.className='hv-spellbook-art-layer';
-      art.setAttribute('aria-hidden','true');
-      drawer.prepend(art);
-    }
-    const materialArt=document.querySelector('#deckBuilderPanel #craftMaterialPanel .craft-material-art');
-    if(materialArt&&!$('hvCraftMaterialArtLayer')){
-      const art=document.createElement('div');
-      art.id='hvCraftMaterialArtLayer';
-      art.className='hv-craft-material-art-layer';
-      art.setAttribute('aria-hidden','true');
-      materialArt.prepend(art);
-    }
-  }
 
   function clearTunerStyles(el){
     if(!el)return;
@@ -272,12 +147,7 @@
   }
 
   function applyRuntimeLayout(){
-    ensureArtLayers();
-    const forge=$('deckBuilderPanel');
-    if(forge?.classList.contains('hv-forge-collection-v2')){
-      for(const key of Object.keys(TARGETS))clearTunerStyles(targetElement(key));
-      return;
-    }
+    if(!DEV_TOOLS_ENABLED)return;
     for(const key of Object.keys(TARGETS))applyTarget(key);
   }
 
@@ -339,9 +209,6 @@
       });
       return candidates[0].key;
     }
-    /* Clic en una zona vacía del pergamino: selecciona SOLO la imagen, nunca el contenedor completo. */
-    const stage=document.querySelector('#deckBuilderPanel .deckbuilder-parchment-stage');
-    if(stage&&stage.contains(node))return 'parchment';
     return null;
   }
 
@@ -475,7 +342,7 @@
       panelOpen=body.classList.contains('hidden');
       body.classList.toggle('hidden',!panelOpen);
       $('hvForgeTunerToggle').textContent=panelOpen?'EDITANDO':'EDITAR FORJA';
-      ensureArtLayers();refreshSelectionClasses();syncControls();
+      refreshSelectionClasses();syncControls();
       requestAnimationFrame(()=>{const box=$('hvForgeTunerScroll'),range=$('hvForgeScrollRange');if(box&&range){const max=Math.max(0,box.scrollHeight-box.clientHeight);range.value=max?String(Math.round(box.scrollTop/max*100)):'0';range.disabled=max<=0;}});
     };
     const closeEditor=()=>{panelOpen=false;body.classList.add('hidden');$('hvForgeTunerToggle').textContent='EDITAR FORJA';refreshSelectionClasses();};
@@ -514,7 +381,7 @@
   function updateVisibility(){
     if(!shell)return;
     const open=isForgeOpen();shell.classList.toggle('hidden',!open);
-    if(open){ensureArtLayers();applyAll();refreshTargetSelect();}
+    if(open){applyAll();refreshTargetSelect();}
     else{panelOpen=false;body?.classList.add('hidden');$('hvForgeTunerToggle')&&($('hvForgeTunerToggle').textContent='EDITAR FORJA');refreshSelectionClasses();}
   }
 

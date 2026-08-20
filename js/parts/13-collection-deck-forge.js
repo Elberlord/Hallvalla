@@ -703,8 +703,6 @@ function openDeckBuilderCore(){
   deckBuilderCollectionPage=0;
   panel.classList.toggle("collection-browser-mode",browseOnly);
   panel.classList.toggle("collection-forge-unlocked",!browseOnly);
-  panel.classList.toggle("deck-drawer-open",!browseOnly);
-  syncDeckBuilderDrawerAria(!browseOnly);
   panel.classList.remove("hidden");
   renderDeckBuilder();
 }
@@ -722,33 +720,15 @@ function openDeckBuilder(){
   }
   return openDeckBuilderCore();
 }
-function syncDeckBuilderDrawerAria(open){
-  const tab=$("deckBuilderDrawerTab"),drawer=$("deckBuilderDrawer");
-  if(tab)tab.setAttribute("aria-expanded",open?"true":"false");
-  if(drawer)drawer.setAttribute("aria-hidden",open?"false":"true");
-}
-function setDeckBuilderDrawerOpen(open){
-  const panel=$("deckBuilderPanel");
-  if(!panel||isCollectionBrowseOnly())return false;
-  const next=!!open;
-  panel.classList.toggle("deck-drawer-open",next);
-  syncDeckBuilderDrawerAria(next);
-  return next;
-}
-function toggleDeckBuilderDrawer(){
-  const panel=$("deckBuilderPanel");
-  if(!panel||isCollectionBrowseOnly())return false;
-  return setDeckBuilderDrawerOpen(!panel.classList.contains("deck-drawer-open"));
-}
+
 function releaseDeckBuilderDom(){
   // PERF4: las miniaturas y sus listeners son reconstruibles. Mantenerlas dentro
   // de un panel oculto retiene nodos e imágenes decodificadas sin aportar UI.
-  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),principalSlots=$("deckPrincipalSlots"),materialPanel=$("craftMaterialPanel"),materialSummary=$("craftMaterialSummary");
+  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),principalSlots=$("deckPrincipalSlots"),materialPanel=$("craftMaterialPanel");
   collectionGrid?.replaceChildren();
   deckList?.replaceChildren();
   principalSlots?.replaceChildren();
   materialPanel?.replaceChildren();
-  materialSummary?.replaceChildren();
   deckBuilderDragPayload=null;
   clearDeckBuilderDropActive();
 }
@@ -757,8 +737,7 @@ function closeDeckBuilder(){
     const panel=$("deckBuilderPanel");
     if(!panel)return;
     panel.classList.add("hidden");
-    panel.classList.remove("collection-browser-mode","collection-forge-unlocked","deck-drawer-open");
-    syncDeckBuilderDrawerAria(false);
+    panel.classList.remove("collection-browser-mode","collection-forge-unlocked");
     releaseDeckBuilderDom();
   })();
   runHallvallaEffectHooks("deckBuilder.closed",{});
@@ -1258,18 +1237,12 @@ function renderDeckBuilder(){
   if(pageTitle)pageTitle.textContent=cards.length?`(${from}-${to} de ${cards.length})`:"(0)";
   if(prev){prev.disabled=deckBuilderCollectionPage<=0;prev.onclick=()=>{deckBuilderCollectionPage=Math.max(0,deckBuilderCollectionPage-1);renderDeckBuilder();};}
   if(next){next.disabled=deckBuilderCollectionPage>=totalPages-1;next.onclick=()=>{deckBuilderCollectionPage=Math.min(totalPages-1,deckBuilderCollectionPage+1);renderDeckBuilder();};}
-  const drawerTab=$("deckBuilderDrawerTab");
-  const drawerCount=$("deckBuilderDrawerCount");
-  if(drawerTab)drawerTab.classList.toggle("hidden",browseOnly);
-  if(drawerCount)drawerCount.textContent=browseOnly?"":`${currentDeckDraft.length}/${getCurrentDeckSize()}`;
   if(browseOnly){
-    if(panel)panel.classList.remove("deck-drawer-open");
-    syncDeckBuilderDrawerAria(false);
     deckList.innerHTML="";
+    principalSlots.innerHTML="";
     bindDeckBuilderDragAndClick(collectionGrid,deckList);
     const ownedUnique=allCards.filter(card=>Number(card.qty||0)>0).length;
     if($("deckCountText"))$("deckCountText").textContent=`${ownedUnique}/${allCards.length} desbloqueadas`;
-    if($("deckValidText"))$("deckValidText").textContent="";
     globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__?.();
     return;
   }
@@ -1298,9 +1271,6 @@ function renderDeckBuilder(){
   const principalValidation=validatePrincipalSelection(currentPrincipalKeys,currentDeckDraft,principalSlots);
   const validation={valid:deckValidation.valid&&principalValidation.valid,errors:[...deckValidation.errors,...principalValidation.errors]};
   if($("deckCountText"))$("deckCountText").textContent=`${drawEntries.length}/${DECK_RULES.drawDeckSize} · P ${principalValidation.keys.length}/${principalSlots}`;
-  if($("deckValidText"))$("deckValidText").textContent="";
-  if(drawerCount)drawerCount.textContent=`${currentDeckDraft.length}/${requiredDeckSize}`;
-  if(drawerTab)drawerTab.classList.toggle("deck-ready",validation.valid);
   const saveBtn=$("saveDeckBtn");
   if(saveBtn){
     saveBtn.textContent="Guardar";

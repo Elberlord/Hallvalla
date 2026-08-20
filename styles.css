@@ -18915,14 +18915,14 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 .hv-forge-tuner-actions button{min-height:32px;border-radius:999px;border:1px solid rgba(218,170,72,.35);background:linear-gradient(180deg,#704b17,#382309);color:#ffe9b1;font:800 10px Georgia,serif;cursor:pointer}
 .hv-forge-tuner-group-candidate{cursor:crosshair!important}
 
-#hvForgeParchmentLayer.hv-forge-tuner-group-candidate{pointer-events:auto!important;cursor:crosshair!important}
+
 
 @media(max-width:720px){.hv-forge-direct-tuner{left:6px;top:66px;width:300px}.hv-forge-tuner-body{height:calc(100vh - 118px);max-height:calc(100vh - 118px)}}
 
 /* El pergamino permanece detrás del contenido interactivo. */
-#hvForgeParchmentLayer,#hvForgeParchmentLayer.hv-forge-tuner-group-candidate,#hvForgeParchmentLayer.hv-forge-tuner-selected{z-index:0!important}
+
 #deckBuilderPanel .deckbuilder-parchment-stage > *:not(.hv-forge-parchment-layer){position:relative!important;z-index:10!important}
-#deckBuilderPanel .deckbuilder-parchment-stage .hv-forge-tuner-selected:not(#hvForgeParchmentLayer){z-index:80!important}
+
 
 
 /* Interacción cuando filtros y colección se solapan visualmente. */
@@ -18943,12 +18943,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   pointer-events:auto !important;
 }
 /* La capa gráfica del pergamino nunca debe capturar clics del UI. */
-#hvForgeParchmentLayer,
-#hvForgeParchmentLayer.hv-forge-tuner-group-candidate,
-#hvForgeParchmentLayer.hv-forge-tuner-selected{
-  pointer-events:none !important;
-  z-index:0 !important;
-}
+
 
 
 /* Hitboxes compactos de colección y controles. */
@@ -19348,15 +19343,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 
 
-/* ==========================================================
-   FORGE · DRAWER DE SPELLBOOK
-   ----------------------------------------------------------
-   - La colección conserva el layout de catálogo aun después
-     de derrotar al Hechicero guardián.
-   - El constructor no participa del grid: permanece oculto
-     y se despliega desde una pestaña medieval a la derecha.
-   - Nuevo filtro de posesión en la fila de filtros.
-   ========================================================== */
+
 
 /* Colección desbloqueada: misma composición visual que el catálogo inicial. */
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-layout{
@@ -19434,58 +19421,12 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 }
 
 /* Pestaña de Spellbook: discreta cuando el constructor está guardado. */
-#deckBuilderPanel .deck-builder-drawer-tab{
-  position:fixed !important;
-  z-index:220 !important;
-  top:50% !important;
-  right:0 !important;
-  transform:translateY(-50%) !important;
-  width:48px !important;
-  min-height:176px !important;
-  padding:14px 7px !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap:10px !important;
-  border:1px solid rgba(226,176,73,.72) !important;
-  border-right:0 !important;
-  border-radius:16px 0 0 16px !important;
-  background:
-    linear-gradient(90deg,rgba(58,31,6,.92),rgba(142,91,20,.96) 48%,rgba(73,39,7,.96)) !important;
-  color:#ffe5a0 !important;
-  box-shadow:-8px 8px 24px rgba(0,0,0,.52),inset 1px 0 rgba(255,229,154,.26) !important;
-  cursor:pointer !important;
-  transition:right .32s cubic-bezier(.2,.76,.24,1),filter .16s ease !important;
-}
-#deckBuilderPanel .deck-builder-drawer-tab:hover{filter:brightness(1.12) !important;}
-#deckBuilderPanel .deck-builder-drawer-tab span{
-  writing-mode:vertical-rl !important;
-  transform:rotate(180deg) !important;
-  font:900 12px/1 Georgia,"Times New Roman",serif !important;
-  letter-spacing:.12em !important;
-  text-transform:uppercase !important;
-}
-#deckBuilderPanel .deck-builder-drawer-tab b{
-  display:grid !important;
-  place-items:center !important;
-  min-width:35px !important;
-  min-height:24px !important;
-  padding:3px 4px !important;
-  border-radius:999px !important;
-  border:1px solid rgba(255,222,133,.34) !important;
-  background:rgba(19,10,2,.48) !important;
-  color:#fff0bb !important;
-  font:900 9px/1 Georgia,serif !important;
-}
-#deckBuilderPanel .deck-builder-drawer-tab.deck-ready b{
-  color:#d9ffbd !important;
-  box-shadow:0 0 12px rgba(146,216,94,.18) !important;
-}
-#deckBuilderPanel.collection-browser-mode .deck-builder-drawer-tab,
-#deckBuilderPanel .deck-builder-drawer-tab.hidden{
-  display:none !important;
-}
+
+
+
+
+
+
 
 /* El segundo pergamino es un drawer superpuesto: nunca deforma la colección. */
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current{
@@ -19505,11 +19446,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   animation:none !important;
   transition:transform .34s cubic-bezier(.2,.76,.24,1),opacity .22s ease !important;
 }
-#deckBuilderPanel.collection-forge-unlocked.deck-drawer-open .deckbuilder-current{
-  opacity:1 !important;
-  transform:translateX(0) !important;
-  pointer-events:auto !important;
-}
+
 
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current h3{
   margin:0 30px 10px !important;
@@ -19527,22 +19464,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   font:900 8px/1.1 Georgia,"Times New Roman",serif !important;
   letter-spacing:.19em !important;
 }
-#deckBuilderPanel .deck-builder-drawer-close{
-  position:absolute !important;
-  z-index:4 !important;
-  top:34px !important;
-  right:27px !important;
-  width:30px !important;
-  height:30px !important;
-  padding:0 !important;
-  border:1px solid rgba(111,66,15,.66) !important;
-  border-radius:50% !important;
-  background:linear-gradient(180deg,#d7a746,#8b5915) !important;
-  color:#2c1805 !important;
-  box-shadow:inset 0 1px rgba(255,245,196,.5),0 3px 8px rgba(61,31,5,.22) !important;
-  font:900 20px/1 Georgia,serif !important;
-  cursor:pointer !important;
-}
+
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deckbuilder-status{
   flex-direction:column !important;
   gap:4px !important;
@@ -19871,13 +19793,8 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   padding:4px 10px !important;
   font:900 10px/1 Georgia,"Times New Roman",serif !important;
 }
-#deckBuilderPanel.collection-forge-unlocked.deck-drawer-open .deck-builder-drawer-tab{
-  right:min(512px,calc(94vw + 2px)) !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-builder-drawer-close{
-  top:3.3% !important;
-  right:8.1% !important;
-}
+
+
 #deckBuilderPanel.collection-forge-unlocked .deck-mini-card.is-principal{
   box-shadow:0 0 0 1px rgba(243,214,130,.85),0 0 14px rgba(222,184,95,.34) !important;
 }
@@ -19916,9 +19833,7 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
     width:52px !important;
     height:74px !important;
   }
-  #deckBuilderPanel.collection-forge-unlocked.deck-drawer-open .deck-builder-drawer-tab{
-    right:min(422px,calc(94vw + 2px)) !important;
-  }
+  
 }
 
 /* FORGE · CONTROLES EDITABLES Y GRUPOS */
@@ -19992,7 +19907,7 @@ html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-
   outline-offset:4px !important;
   box-shadow:0 0 0 1px rgba(255,224,127,.2),0 0 24px rgba(196,137,35,.22) !important;
 }
-#hvForgeParchmentLayer.hv-forge-tuner-selected{pointer-events:none !important;}
+
 
 /* Selector de elemento + ayuda del editor. */
 .hv-forge-target-select{
@@ -20035,34 +19950,18 @@ html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-
   }
 }
 
-/* FORGE · CAPAS GRÁFICAS EDITABLES */
-#deckBuilderPanel.collection-forge-unlocked #deckBuilderDrawer{
-  background:none !important;
-}
-#deckBuilderPanel #hvSpellbookArtLayer{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:0 !important;
-  background:url("assets/ui/deck_forge/spellbook_drawer_asset.webp") center/100% 100% no-repeat !important;
-  pointer-events:none !important;
-}
-#deckBuilderPanel #deckBuilderDrawer > *:not(#hvSpellbookArtLayer){z-index:2 !important;}
-body.hv-forge-edit-active #deckBuilderPanel #hvSpellbookArtLayer{pointer-events:auto !important;cursor:grab !important;}
+
+
+
+
+
 
 #deckBuilderPanel .craft-material-art{
   background:none !important;
 }
-#deckBuilderPanel #hvCraftMaterialArtLayer{
-  position:absolute !important;
-  inset:0 !important;
-  z-index:0 !important;
-  background:url("assets/ui/deck_forge/materiales_creacion_asset.webp") center/100% 100% no-repeat !important;
-  pointer-events:none !important;
-}
+
 #deckBuilderPanel .craft-material-node{z-index:2 !important;}
-body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
-  cursor:grab !important;
-}
+
 
 /* Las piezas seleccionables individuales reciben el cursor; los grupos parentales no interceptan clics. */
 body.hv-forge-edit-active #deckBuilderPanel [data-hv-forge-tuner-name]{cursor:grab !important;user-select:none !important;}
@@ -20079,31 +19978,11 @@ body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
 
 /* FORGE · CONFIGURACIÓN VISUAL FINAL */
 /* Las acciones solo existen visualmente cuando el Mazo está desplegado. Su posición editada se conserva. */
-#deckBuilderPanel.collection-forge-unlocked:not(.deck-drawer-open) #deckBuilderActionGroup{
-  display:none !important;
-}
-#deckBuilderPanel.collection-forge-unlocked.deck-drawer-open #deckBuilderActionGroup{
-  display:flex !important;
-}
+
+
 
 /* El nombre visible del drawer es MAZO. Cubre el título antiguo que quedó dibujado en el asset sin tocar su arte. */
-#deckBuilderPanel.collection-forge-unlocked #deckBuilderDrawer::before{
-  content:"Mazo" !important;
-  position:absolute !important;
-  z-index:3 !important;
-  top:4.7% !important;
-  left:50% !important;
-  transform:translateX(-50%) !important;
-  min-width:180px !important;
-  padding:5px 22px 7px !important;
-  background:radial-gradient(ellipse at center,rgba(206,159,86,.97) 0%,rgba(196,145,73,.92) 56%,rgba(170,116,53,0) 100%) !important;
-  color:#4c2b0d !important;
-  text-align:center !important;
-  font:900 28px/1 Georgia,"Times New Roman",serif !important;
-  letter-spacing:.025em !important;
-  text-shadow:0 1px rgba(255,232,174,.75) !important;
-  pointer-events:none !important;
-}
+
 
 /* El catálogo no muestra textos de progreso/material bajo ninguna rareza: deja libre el + de añadir. */
 #deckBuilderPanel #deckCollectionGrid .deck-mini-material{
@@ -20139,9 +20018,7 @@ body.hv-forge-edit-active #deckBuilderPanel #craftMaterialPanel .craft-material-
 }
 
 /* Como materialsArt ahora apunta al contenedor completo, la capa gráfica interna no debe capturar el clic. */
-body.hv-forge-edit-active #deckBuilderPanel #hvCraftMaterialArtLayer{
-  pointer-events:none !important;
-}
+
 
 
 /* === HallValla Etapa 2 · Lobby PvP con confirmación de ambos jugadores === */
@@ -22400,7 +22277,7 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 }
 .hv-mission-progress-number{
   position:absolute;display:flex;align-items:center;justify-content:flex-start;
-  color:#f2d28c;font-family:Georgia,'Times New Roman',serif;font-weight:700;
+  color:#f2d28c;font-family:Georgia,"Times New Roman",serif;font-weight:700;
   line-height:1;white-space:nowrap;text-shadow:0 2px 3px rgba(0,0,0,.95);
   font-variant-numeric:tabular-nums;pointer-events:none;
 }
@@ -22409,7 +22286,7 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   display:grid;place-items:center;cursor:pointer;pointer-events:auto;
 }
 .hv-mission-action-slot{
-  color:#f3d394;font:700 1.05cqw/1 Georgia,'Times New Roman',serif;
+  color:#f3d394;font:700 1.05cqw/1 Georgia,"Times New Roman",serif;
   text-shadow:0 2px 3px #000;
 }
 .hv-mission-action-slot:hover:not(:disabled){color:#ffe7ad;filter:brightness(1.12)}
@@ -22491,24 +22368,7 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   background:url("assets/ui/deck_forge/collection_builder_hallvalla.png") center/100% 100% no-repeat !important;
   box-shadow:0 28px 70px rgba(0,0,0,.72) !important;
 }
-#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-head,
-#deckBuilderPanel.hv-forge-collection-v2 #deckBuilderDrawerTab,
-#deckBuilderPanel.hv-forge-collection-v2 #deckBuilderDrawerClose,
-#deckBuilderPanel.hv-forge-collection-v2 #hvForgeParchmentLayer,
-#deckBuilderPanel.hv-forge-collection-v2 #hvSpellbookArtLayer,
-#deckBuilderPanel.hv-forge-collection-v2 #hvCraftMaterialArtLayer,
-#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-collection>h3,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-search-hint,
-#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-current>h3,
-#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-current .deckbuilder-status>span,
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialSummary,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-type,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-badge,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-cost,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-name,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-material{
-  display:none !important;
-}
+
 
 /* Seis pestañas superiores: Guerrero, Arquero, Asesino, Hechicero, Caballería, Hacha. */
 #deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-leader-tabs{

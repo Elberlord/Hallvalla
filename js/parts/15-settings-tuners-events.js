@@ -70,8 +70,6 @@ on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerSort","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
-on("deckBuilderDrawerTab","click",toggleDeckBuilderDrawer);
-on("deckBuilderDrawerClose","click",()=>setDeckBuilderDrawerOpen(false));
 on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);
