@@ -703,9 +703,6 @@ function getUnitEffectHonorCommitState(cost){
 }
 function getUnitEffectMode(u){
   if(!u)return "passive";
-  if(u.leader&&u.leaderType==="cavalry"&&getLeaderAbilityForOwner(u.owner)==="cavalry_call")return "self";
-  if(u.leader&&u.leaderType==="archer"&&getLeaderAbilityForOwner(u.owner)==="arrow_rain")return "self";
-  if(u.leader&&u.leaderType==="mage"&&getLeaderAbilityForOwner(u.owner)==="arcane_bolt")return "self";
   if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "passive";
   if(u.key==="acolyte_healer")return "choice";
   if(["african_lion","black_raven","ericto"].includes(u.key))return "self";
@@ -730,20 +727,8 @@ function makeLightCavalryToken(owner,x,y){
 function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(!caster)return[];
   const owner=caster.owner;
-  if(caster.leader&&caster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call"){
-    if(caster.cavalryCallUsedTurn)return[];
-    return getAdjacentFreeCells(caster,units).length?[caster]:[];
-  }
-  if(caster.leader&&caster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
-    if(caster.arrowRainUsedTurn)return[];
-    // Es un efecto global, no una selección de objetivo. En PvP privado debe poder
-    // activarse aunque no haya unidades visibles, para no revelar si existe Sigilo.
-    if(typeof isStage8PrivateStealthMode==="function"&&isStage8PrivateStealthMode(publicState))return[caster];
-    return (units||[]).some(it=>it.owner!==owner&&!it.leader&&canReceiveUntargetedAreaEffect(it))?[caster]:[];
-  }
-  if(caster.leader&&caster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"){
-    if(caster.arcaneBoltUsedTurn)return[];
-    return (units||[]).some(it=>it.owner!==owner&&it.leader&&it.hp>0)?[caster]:[];
+  if(caster.leader&&((caster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call")||(caster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain")||(caster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"))){
+    return[];
   }
   if(caster.leader&&caster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
     return[];
@@ -831,46 +816,10 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     target=valid;
   }
   let out=[...(units||[])],log="",battleFxEvent=null,stealthAreaDamageEvent=null;
-  if(liveCaster.leader&&liveCaster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"){
-    if(liveCaster.arcaneBoltUsedTurn)return{success:false,reason:"Descarga arcana ya fue usada este turno."};
-    const enemyLeader=out.find(it=>it.owner!==owner&&it.leader&&it.hp>0);
-    if(!enemyLeader)return{success:false,reason:"No hay líder enemigo válido para Descarga arcana."};
-    out=out.map(it=>{
-      if(it.id===liveCaster.id)return{...it,acted:true,arcaneBoltUsedTurn:true};
-      if(it.id===enemyLeader.id)return resolveBlessedArmorTransition(it,{...it,hp:(it.hp||0)-2,damagedThisTurn:true});
-      return it;
-    });
-    out=applyLegendaryFatalSaves(out,[enemyLeader.id]);
-    out=out.filter(it=>it.hp>0);
-    battleFxEvent=makeMagicFxEvent(liveCaster,out.find(it=>it.id===enemyLeader.id)||enemyLeader,"arcane",{type:"spell",spellKey:"arcane_bolt",effectAction:"damage",impactScale:1.15,hit:true});
-    log=`${liveCaster.name} lanza Descarga arcana: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats.`;
-  }else if(liveCaster.leader&&liveCaster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain"){
-    if(liveCaster.arrowRainUsedTurn)return{success:false,reason:"Lluvia de flechas ya fue usada este turno."};
-    const enemyIds=out.filter(it=>it.owner!==owner&&!it.leader&&canReceiveUntargetedAreaEffect(it)).map(it=>it.id);
-    const privateStealthMode=typeof isStage8PrivateStealthMode==="function"&&isStage8PrivateStealthMode(publicState);
-    if(!enemyIds.length&&!privateStealthMode)return{success:false,reason:"No hay unidades enemigas válidas para Lluvia de flechas."};
-    if(typeof makeStage8StealthAreaDamageEvent==="function")stealthAreaDamageEvent=makeStage8StealthAreaDamageEvent(owner,owner===1?2:1,{kind:"global_direct_hp",damage:1,label:"Lluvia de flechas"});
-    const beforeRain=[...out];
-    out=out.map(it=>{
-      if(it.id===liveCaster.id)return{...it,acted:true,arrowRainUsedTurn:true};
-      if(enemyIds.includes(it.id))return applyDirectHpDamageWithEquipment(it,1).unit;
-      return it;
-    });
-    out=applyLegendaryFatalSaves(out,enemyIds);
-    out=out.filter(it=>it.hp>0);
-    const bloodVictoryResult=applyBloodVictoryForDeaths(beforeRain,out);
-    out=bloodVictoryResult.units;
-    log=privateStealthMode&&enemyIds.length===0
-      ?`${liveCaster.name} lanza Lluvia de flechas sobre el campo enemigo.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`
-      :`${liveCaster.name} lanza Lluvia de flechas: inflige 1 daño directo a ${enemyIds.length} unidad${enemyIds.length===1?"":"es"} enemiga${enemyIds.length===1?"":"s"}.${bloodVictoryResult.logs.length?` ${bloodVictoryResult.logs.join(" ")}`:""}`;
-  }else if(liveCaster.leader&&liveCaster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call"){
-    if(liveCaster.cavalryCallUsedTurn)return{success:false,reason:"El Llamado de la carga ya fue usado este turno."};
-    const spots=getAdjacentFreeCells(liveCaster,out).slice(0,3);
-    if(!spots.length)return{success:false,reason:"No hay espacio junto al líder para convocar Caballería Ligera."};
-    const tokens=spots.map(s=>makeLightCavalryToken(owner,s.x,s.y));
-    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,cavalryCallUsedTurn:true}:it).concat(tokens);
-    log=`${liveCaster.name} activa Llamado de la carga: convoca ${tokens.length} Caballería${tokens.length===1?" Ligera":"s Ligeras"} junto a él.`;
-  }else if(liveCaster.leader&&liveCaster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
+  if(liveCaster.leader&&((liveCaster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call")||(liveCaster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain")||(liveCaster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"))){
+    return{success:false,reason:"Esta habilidad de líder se activa automáticamente al final del turno rival."};
+  }
+  if(liveCaster.leader&&liveCaster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
     return{success:false,reason:"Veneno de la Manada es una habilidad pasiva."};
   }else if(liveCaster.key==="african_lion"){
     const rev=revealStealthInRadius(out,owner,liveCaster,3,"Rugido del Rey");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);const detection=typeof makeStage8StealthDetectionEvent==="function"?makeStage8StealthDetectionEvent(owner,liveCaster,3,"Rugido del Rey"):null;log=detection?`${liveCaster.name} usa Rugido del Rey y barre el área en busca de Sigilo.`:`${liveCaster.name} usa Rugido del Rey y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;return{success:true,units:out,log,battleFxEvent,stealthDetectionEvent:detection};

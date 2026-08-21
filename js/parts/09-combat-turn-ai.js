@@ -174,6 +174,84 @@ function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(f
   out=applyLegendaryFatalSaves(out,affectedIds).filter(u=>Number(u.hp||0)>0);
   return{units:out,triggered:hits.length>0,text:hits.length?` Barrido de Guerra: ${hits.join(" · ")}.`:"",hits};
 }
+function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=[],beastTraps=[],runInState=null}={}){
+  let out=[...(units||[])];
+  const leader=out.find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0);
+  if(!leader)return{units:out,logs:[],triggered:false,battleFxEvent:null};
+  const inState=typeof runInState==="function"?runInState:(fn,stateSnapshot={})=>{
+    const prev=publicState;
+    publicState={...(prev||{}),...(stateSnapshot||{}),units:stateSnapshot?.units??out,legendaryTraps:stateSnapshot?.legendaryTraps??legendaryTraps,beastTraps:stateSnapshot?.beastTraps??beastTraps};
+    try{return fn();}finally{publicState=prev;}
+  };
+  const isPrivateStealth=typeof isStage8PrivateStealthMode==="function"&&isStage8PrivateStealthMode(publicState);
+  const isHidden=(u)=>isPrivateStealth&&typeof isStealthedUnit==="function"&&isStealthedUnit(u);
+  const ability=getLeaderAbilityForOwner(owner,out);
+  const enemyOwner=owner===1?2:1;
+
+  if(leader.leaderType==="warrior"){
+    const liveLeader=out.find(u=>u.id===leader.id)||leader;
+    const range=inState(()=>getUnitAttackRange(liveLeader),{units:out,legendaryTraps,beastTraps});
+    const targets=out.filter(target=>target&&target.owner===enemyOwner&&target.id!==liveLeader.id&&Number(target.hp||0)>0&&dist(liveLeader,target)<=range&&canReceiveUntargetedAreaEffect(target)&&(!(target.aerial)||(range>3||liveLeader.antiaerial)));
+    if(!targets.length)return{units:out,logs:[],triggered:false,battleFxEvent:null};
+    const before=[...out];
+    const sweep=resolveWarriorLeaderSweep(out,liveLeader,null,{runInState:inState,legendaryTraps,beastTraps});
+    out=sweep.units;
+    const blood=applyBloodVictoryForDeaths(before,out);
+    out=blood.units;
+    const visibleTargets=targets.filter(target=>!isHidden(target));
+    const logs=[];
+    if(!isPrivateStealth||visibleTargets.length>0){
+      logs.push(`${liveLeader.name} activa Barrido de Guerra al final del turno rival y golpea únicamente a los enemigos dentro de su alcance.`);
+      if(blood.logs.length)logs.push(...blood.logs);
+    }
+    return{units:out,logs,triggered:!!sweep.triggered,battleFxEvent:null};
+  }
+
+  if(leader.leaderType==="archer"&&ability==="arrow_rain"){
+    const liveLeader=out.find(u=>u.id===leader.id)||leader;
+    const targets=out.filter(target=>target&&target.owner===enemyOwner&&!target.leader&&Number(target.hp||0)>0&&dist(liveLeader,target)<=4&&canReceiveUntargetedAreaEffect(target));
+    if(!targets.length)return{units:out,logs:[],triggered:false,battleFxEvent:null};
+    const before=[...out];
+    const targetIds=new Set(targets.map(target=>target.id));
+    out=out.map(unit=>{
+      if(!targetIds.has(unit.id))return unit;
+      const damaged=applyDirectHpDamageWithEquipment(unit,1).unit;
+      return{...damaged,damagedThisTurn:true};
+    });
+    out=applyLegendaryFatalSaves(out,[...targetIds]);
+    out=out.filter(unit=>Number(unit.hp||0)>0);
+    const blood=applyBloodVictoryForDeaths(before,out);
+    out=blood.units;
+    const visibleTargets=targets.filter(target=>!isHidden(target));
+    const logs=[];
+    if(!isPrivateStealth||visibleTargets.length>0){
+      logs.push(`${liveLeader.name} activa automáticamente Lluvia de flechas al final del turno rival: 1 daño directo a las unidades enemigas a rango 4 o menos, ignorando Guardia y stats.`);
+      if(blood.logs.length)logs.push(...blood.logs);
+    }
+    return{units:out,logs,triggered:true,battleFxEvent:null};
+  }
+
+  if(leader.leaderType==="mage"&&ability==="arcane_bolt"){
+    const liveLeader=out.find(u=>u.id===leader.id)||leader;
+    const enemyLeader=out.find(unit=>unit&&unit.owner===enemyOwner&&unit.leader&&Number(unit.hp||0)>0);
+    if(!enemyLeader)return{units:out,logs:[],triggered:false,battleFxEvent:null};
+    out=out.map(unit=>unit.id===enemyLeader.id?resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit.hp||0)-2,damagedThisTurn:true}):unit);
+    out=applyLegendaryFatalSaves(out,[enemyLeader.id]).filter(unit=>Number(unit.hp||0)>0);
+    const battleFxEvent=typeof makeMagicFxEvent==="function"?makeMagicFxEvent(liveLeader,out.find(unit=>unit.id===enemyLeader.id)||enemyLeader,"arcane",{type:"spell",spellKey:"arcane_bolt",effectAction:"damage",impactScale:1.15,hit:true}):null;
+    return{units:out,logs:[`${liveLeader.name} activa automáticamente Descarga arcana al final del turno rival: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`],triggered:true,battleFxEvent};
+  }
+
+  if(leader.leaderType==="cavalry"&&ability==="cavalry_call"){
+    const liveLeader=out.find(u=>u.id===leader.id)||leader;
+    const spots=typeof getAdjacentFreeCells==="function"?getAdjacentFreeCells(liveLeader,out).slice(0,3):[];
+    if(!spots.length||typeof makeLightCavalryToken!=="function")return{units:out,logs:[],triggered:false,battleFxEvent:null};
+    const tokens=spots.map(spot=>makeLightCavalryToken(owner,spot.x,spot.y));
+    out=out.concat(tokens);
+    return{units:out,logs:[`${liveLeader.name} activa automáticamente Llamado de la carga al final del turno rival: convoca ${tokens.length} Caballería${tokens.length===1?" Ligera":"s Ligeras"} en casillas libres adyacentes.`],triggered:true,battleFxEvent:null};
+  }
+
+  return{units:out,logs:[],triggered:false,battleFxEvent:null};
+}
 function getEquipmentRetreatCell(unit,target,units=publicState?.units||[]){
   if(!unit||!target)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&u.hp>0).map(u=>`${u.x},${u.y}`));
@@ -630,8 +708,6 @@ async function resolveSharedAttackOutcome({
     }
     return u;
   });
-  const warriorSweepResult=resolveWarriorLeaderSweep(units,a,d,{runInState,legendaryTraps:resolvedLegendaryTraps,beastTraps});
-  units=warriorSweepResult.units;
   let geishaFanKillResult={units,triggered:false,text:""};
   if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
   if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
@@ -907,7 +983,7 @@ async function resolveSharedAttackOutcome({
   const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorSweepResult.text||""}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${warriorSweepResult.text||""}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   return {
     units,
     prePostCombatUnits,
@@ -1093,10 +1169,16 @@ async function finishTurn(){
   const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
   if((erictoUpkeep.logs.length||erictoLife.logs.length)&&await finalizeBattle(erictoLife.units,endLogs.join(" ")))return;
   const tutorialMode=publicState?.mode==="tutorial";const next=tutorialMode?1:(myPlayer===1?2:1),turn=tutorialMode?(publicState.turn||1)+1:(next===1?(publicState.turn||1)+1:(publicState.turn||1));
-  let refreshedUnits=restoreTurnGuardForOwner(erictoLife.units,next);
+  const leaderEndEffect=!tutorialMode&&next!==myPlayer?resolveAutomaticLeaderEffectAfterRivalTurn(erictoLife.units,next,{legendaryTraps:getActiveLegendaryTraps(),beastTraps:publicState.beastTraps||[]}):{units:erictoLife.units,logs:[],triggered:false,battleFxEvent:null};
+  if(leaderEndEffect.logs.length)endLogs.push(...leaderEndEffect.logs);
+  if(leaderEndEffect.triggered){
+    if(getBattleOutcome(leaderEndEffect.units).ended&&leaderEndEffect.battleFxEvent)await updatePublic({battleFxEvent:leaderEndEffect.battleFxEvent});
+    if(await finalizeBattle(leaderEndEffect.units,endLogs.join(" ")))return;
+  }
+  let refreshedUnits=restoreTurnGuardForOwner(leaderEndEffect.units,next);
   handOpen=false;
   handManualCloseKey="";
-  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
+  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,...(leaderEndEffect.battleFxEvent?{battleFxEvent:leaderEndEffect.battleFxEvent}:{}),...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
   clearSelection();
   if(publicState?.mode==="adventure"&&next===2){
     if(adventureAiTriggerTimer){battleClearTimeout(adventureAiTriggerTimer);adventureAiTriggerTimer=null;}
@@ -3279,7 +3361,7 @@ async function adventureEnemyTurn(){
     logs.push(`Rival: ${result.log}`);
     return true;
   };
-  // Prioridad de presión: si el líder mago rival tiene Descarga arcana disponible, la usa antes de mover unidades.
+  // El líder rival conserva aquí únicamente los EFFECT manuales que sigan siendo activos; las habilidades automáticas de fin de turno no pasan por esta ruta.
   const aiLeaderEffect=enemyLeaderNow();
   if(aiLeaderEffect&&tryAiLegendEffect(aiLeaderEffect)){
     if(!(await publishAiStep({turnPhase:"actions"})))return;
@@ -3398,6 +3480,10 @@ async function adventureEnemyTurn(){
   const erictoLife=resolveErictoLifecycle(units);
   units=erictoLife.units;
   if(erictoLife.logs.length)logs.push(...erictoLife.logs);
+  const leaderEndEffect=resolveAutomaticLeaderEffectAfterRivalTurn(units,1,{legendaryTraps,beastTraps,runInState:withAiPublicState});
+  units=leaderEndEffect.units;
+  if(leaderEndEffect.logs.length)logs.push(...leaderEndEffect.logs);
+  if(leaderEndEffect.battleFxEvent)pendingAiBattleFxEvent=leaderEndEffect.battleFxEvent;
   erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
   lastPublishedUnits=[...units];
   const outcome=getBattleOutcome(units);
@@ -3411,6 +3497,7 @@ async function adventureEnemyTurn(){
       legendaryTraps,
       beastTraps,
       erictoGraveyard,
+      ...(pendingAiBattleFxEvent?{battleFxEvent:pendingAiBattleFxEvent}:{}),
       ...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),
       phase:"ended",
       battleEnded:true,
@@ -3435,6 +3522,7 @@ async function adventureEnemyTurn(){
     legendaryTraps,
     beastTraps,
     erictoGraveyard,
+    ...(pendingAiBattleFxEvent?{battleFxEvent:pendingAiBattleFxEvent}:{}),
     ...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),
     currentPlayer:1,
     turnPhase:"draw",

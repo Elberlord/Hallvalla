@@ -1453,7 +1453,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +3 AT / +6 DX / +2 AGI"
     ],
     abilityName:"Lluvia de flechas",
-    ability:"Desde nivel 5, puede usar EFFECT una vez por turno para hacer 1 daño directo a todas las unidades enemigas."
+    ability:"Desde nivel 5, al final del turno rival se activa automáticamente si hay al menos una unidad enemiga a rango 4 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 4, ignorando Guardia y stats, y también afecta unidades con Sigilo."
   },
   mage:{
     target:"Magias",
@@ -1465,7 +1465,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): -3 costo / +6 efecto"
     ],
     abilityName:"Descarga arcana",
-    ability:"Desde nivel 5, una vez por turno puede usar EFFECT para hacer 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."
+    ability:"Desde nivel 5, al final del turno rival se activa automáticamente para hacer 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."
   },
   axe:{
     target:"Unidades de hacha / berserkers",
@@ -1477,7 +1477,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +3 AT / +2 DX"
     ],
     abilityName:"Victoria sangrienta",
-    ability:"Desde nivel 5, cada vez que una unidad aliada muere, las demás unidades aliadas vivas en el campo ganan +3 AT permanente."
+    ability:"Desde nivel 5, cada vez que una unidad aliada muere, las demás unidades aliadas que estén vivas y actualmente en el campo ganan +3 AT permanente. Las unidades del mazo o las que entren después no reciben acumulaciones anteriores."
   },
   cavalry:{
     target:"Caballería ligera",
@@ -1489,7 +1489,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +2 MOV / +3 AGI / +1 AT"
     ],
     abilityName:"Llamado de la carga",
-    ability:"Desde nivel 5, puede usar EFFECT para convocar hasta 3 Caballerías Ligeras aliadas en casillas libres adyacentes al líder."
+    ability:"Desde nivel 5, al final del turno rival se activa automáticamente siempre que exista al menos una casilla libre adyacente al líder y convoca hasta 3 Caballerías Ligeras aliadas en los espacios disponibles."
   },
   assassin:{
     target:"Asesinos",
