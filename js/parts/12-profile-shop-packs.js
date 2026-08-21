@@ -1193,9 +1193,12 @@ function shopHotspot(label,action,x,y,w,h,extra=""){
 function shopWallet(profile){
   const gold=Math.max(0,Number(profile?.gold||0)).toLocaleString("es-CR");
   const gems=Math.max(0,Number(profile?.gems||0)).toLocaleString("es-CR");
-  return `<div class="hv-shop-wallet" aria-label="Saldo"><span>ORO ${gold}</span><span>GEMAS ${gems}</span></div>`;
+  return `<div class="hv-shop-wallet" aria-label="Saldo de recursos">
+    <span class="hv-shop-wallet-item hv-shop-wallet-gold" title="Oro disponible"><img src="assets/home/icon_gold.webp" alt="Oro"><b>${gold}</b></span>
+    <span class="hv-shop-wallet-item hv-shop-wallet-gems" title="Gemas disponibles"><img src="assets/home/icon_gems.webp" alt="Gemas"><b>${gems}</b></span>
+  </div>`;
 }
-function shopBackButton(){return `<button class="hv-shop-back" type="button" data-shop-action="view-main" aria-label="Volver a tienda">← TIENDA</button>`;}
+function shopBackButton(action="go-back",label="Volver"){return `<button class="hv-shop-back" type="button" data-shop-action="${escapeHtml(action)}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><span aria-hidden="true">←</span></button>`;}
 function shopStage(background,content="",profile=null,view="main"){
   return `<div class="hv-shop-stage-shell"><div id="hvShopStage" class="hv-shop-stage hv-shop-view-${view}" data-shop-view="${view}"><img class="hv-shop-background" src="${background}" alt="">${profile?shopWallet(profile):""}${content}</div></div>`;
 }
@@ -1205,7 +1208,7 @@ function buildShopMain(profile){
     shopHotspot("Abrir oro","view-gold",594,145,486,675),
     shopHotspot("Abrir gemas","view-gems",1098,145,486,675)
   ].join("");
-  return shopStage("assets/shop/v6/tienda.webp",hotspots,profile,"main");
+  return shopStage("assets/shop/v6/tienda.webp",`${shopBackButton("close-shop","Salir de tienda")}${hotspots}`,profile,"main");
 }
 function buildShopPacks(profile){
   const packs=(PACK_SHOP_ITEMS||[]).slice(0,5);
@@ -1219,7 +1222,7 @@ function buildShopPacks(profile){
       <span class="hv-shop-choice-label"><b>${escapeHtml(pack.name)}</b><small>${cost} ORO</small></span>
     </button>`;
   }).join("");
-  return shopStage("assets/shop/v6/sobres.webp",`${shopBackButton()}${packButtons}`,profile,"packs");
+  return shopStage("assets/shop/v6/sobres.webp",`${shopBackButton("go-back","Volver")}${packButtons}`,profile,"packs");
 }
 function buildShopGems(profile){
   const slots=[
@@ -1232,7 +1235,7 @@ function buildShopGems(profile){
       <span class="hv-shop-currency-label"><b>${amount.toLocaleString("es-CR")} GEMAS</b><small>PRÓXIMAMENTE</small></span>
     </button>`;
   }).join("");
-  return shopStage("assets/shop/v6/gemas.webp",`${shopBackButton()}${offers}`,profile,"gems");
+  return shopStage("assets/shop/v6/gemas.webp",`${shopBackButton("go-back","Volver")}${offers}`,profile,"gems");
 }
 function buildShopGold(profile){
   const slots=[
@@ -1245,7 +1248,7 @@ function buildShopGold(profile){
       <span class="hv-shop-currency-label"><b>${offer.gold.toLocaleString("es-CR")} ORO</b><small>${offer.gems.toLocaleString("es-CR")} GEMAS</small></span>
     </button>`;
   }).join("");
-  return shopStage("assets/shop/v6/oro.webp",`${shopBackButton()}${offers}`,profile,"gold");
+  return shopStage("assets/shop/v6/oro.webp",`${shopBackButton("go-back","Volver")}${offers}`,profile,"gold");
 }
 function buildLayeredPackShop(profile,view=currentShopView){
   if(view==="packs")return buildShopPacks(profile);
@@ -1290,6 +1293,12 @@ function bindLayeredShopActions(){
   if(!stage)return;
   stage.querySelectorAll("[data-shop-action]").forEach(button=>button.addEventListener("click",async()=>{
     const action=button.dataset.shopAction;
+    if(action==="close-shop"){closePackShop();return;}
+    if(action==="go-back"){
+      if(currentShopView==="main")closePackShop();
+      else renderShopView("main");
+      return;
+    }
     if(action==="view-main"){renderShopView("main");return;}
     if(action==="view-packs"){renderShopView("packs");return;}
     if(action==="view-gold"){renderShopView("gold");return;}
