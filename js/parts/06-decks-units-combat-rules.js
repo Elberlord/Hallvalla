@@ -1330,6 +1330,7 @@ function resolveLanceFirstStrike(attacker,defender,units){
     }
   }
 
+  // Atacar Primero ES el Contraataque de Lanza. Se marcan ambos flags legacy para registrar una sola reacción gastada y evitar un segundo golpe posterior.
   units=(units||[]).map(u=>u.id===currentDefender.id?{...u,lanceFirstStrikeUsedTurn:true,counterUsedTurn:true}:u);
   currentAttacker=(units||[]).find(u=>u.id===currentAttacker.id)||currentAttacker;
   currentDefender=(units||[]).find(u=>u.id===currentDefender.id)||currentDefender;

@@ -10833,15 +10833,20 @@ El CSS original se conserva para no romper visuales. El bloque final
   display:block !important;
   visibility:visible !important;
   position:absolute !important;
-  inset:3px !important;
-  border-radius:4px !important;
+  inset:auto !important;
+  left:50% !important;
+  top:50% !important;
+  width:14px !important;
+  height:14px !important;
+  transform:translate(-50%,-50%) !important;
+  border-radius:50% !important;
   pointer-events:none !important;
   opacity:1 !important;
   z-index:7 !important;
-  background:rgba(112,224,138,.10) !important;
+  background:rgba(112,224,138,.38) !important;
   border:none !important;
   outline:none !important;
-  box-shadow:inset 0 0 0 2px rgba(112,224,138,.82),0 0 7px rgba(112,224,138,.18) !important;
+  box-shadow:0 0 0 2px rgba(112,224,138,.88),0 0 8px rgba(112,224,138,.32) !important;
   filter:none !important;
   animation:none !important;
 }

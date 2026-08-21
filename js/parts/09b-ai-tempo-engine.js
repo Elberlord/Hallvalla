@@ -8,7 +8,7 @@
 (function installHallvallaAITempoEngine(global){
   "use strict";
 
-  const VERSION="AI-TEMPO-V5-RANGED-KITE-FOCUS";
+  const VERSION="AI-TEMPO-V6-SPEAR-REARGUARD";
   const num=(v,f=0)=>Number.isFinite(Number(v))?Number(v):f;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,num(v)));
   const dist=(a,b)=>a&&b?Math.max(Math.abs(num(a.x)-num(b.x)),Math.abs(num(a.y)-num(b.y))):99;
@@ -42,10 +42,17 @@
 
   function isTankAsset(u,ctx){
     if(!u||u.leader||hpMax(u,ctx)<5)return false;
-    const role=roleOf(u,ctx), tactical=tacticalRole(u), key=keyOf(u);
-    if(role==="tank"||role==="spear")return true;
-    if(tactical==="bodyguard")return true;
-    return ["guardian","samurai_naginata","spearman","greek_hoplite"].includes(key);
+    const role=roleOf(u,ctx), key=keyOf(u);
+    // Tanque real: 5+ Vida Y rol de tanque. Las picas/lanceros son retaguardia,
+    // aunque tengan suficiente Vida; no habilitan la presión como un tanque.
+    if(role==="tank")return true;
+    return key==="guardian";
+  }
+  function isRearGuardAsset(u,ctx){
+    if(!u||u.leader||num(u.hp,1)<=0)return false;
+    const role=roleOf(u,ctx), tactical=tacticalRole(u);
+    // Picas/lanceros y bodyguards no-tanque protegen a los ranged desde atrás.
+    return role==="spear"||(tactical==="bodyguard"&&!isTankAsset(u,ctx));
   }
   function isBreakerAsset(u,ctx){
     if(!u||u.leader||rg(u,ctx)>1)return false;
@@ -56,13 +63,11 @@
   }
   function isFrontAsset(u,ctx){
     if(!u||u.leader)return false;
-    if(isTankAsset(u,ctx)||isBreakerAsset(u,ctx))return true;
-    const role=roleOf(u,ctx), tactical=tacticalRole(u);
-    if(role==="spear"||tactical==="bodyguard")return true; // primera línea por función, no clasificación de tanque.
-    return false;
+    // La línea de presión la forman tanques reales y rompedores.
+    return isTankAsset(u,ctx)||isBreakerAsset(u,ctx);
   }
   function isDpsAsset(u,ctx){
-    if(!u||u.leader||num(u.hp,1)<=0||isTankAsset(u,ctx))return false;
+    if(!u||u.leader||num(u.hp,1)<=0||isTankAsset(u,ctx)||isRearGuardAsset(u,ctx))return false;
     const role=roleOf(u,ctx), tactical=tacticalRole(u);
     if(["ranged","skirmisher","assassin","cavalry","melee"].includes(role))return atk(u,ctx)>0;
     if(["breaker","harasser","suppressor","finisher","charger"].includes(tactical))return atk(u,ctx)>0;
@@ -84,6 +89,7 @@
   function battlePosture(ctx={}){
     const troops=(ctx?.ownUnits||[]).filter(u=>u&&num(u.hp,1)>0&&!u.leader);
     const fronts=troops.filter(u=>isFrontAsset(u,ctx));
+    const rearGuards=troops.filter(u=>isRearGuardAsset(u,ctx));
     const tanks=troops.filter(u=>isTankAsset(u,ctx));
     const healthyTanks=tanks.filter(u=>tankHpRatio(u,ctx)>.50);
     const criticalTanks=tanks.filter(u=>isCriticalTank(u,ctx));
@@ -108,7 +114,7 @@
     return {
       mode:retreat?"retreat":(pressure?"pressure":"hold"),
       pressure,retreat,hold:!pressure&&!retreat,
-      troops,fronts,tanks,healthyTanks,criticalTanks,dps,sturdyFronts,backline,nearbySupport,localFormationReady,
+      troops,fronts,rearGuards,tanks,healthyTanks,criticalTanks,dps,sturdyFronts,backline,nearbySupport,localFormationReady,
       enemyRanged,rangedSaturation,noTanks,tanksAtHalfOrWorse,noDps
     };
   }
@@ -129,6 +135,7 @@
       return ratio<=.50||posture.noDps||posture.rangedSaturation;
     }
     const role=roleOf(u,ctx);
+    if(isRearGuardAsset(u,ctx))return true; // repliega escoltando la línea de tiro.
     return isBackline(u,ctx)||isDpsAsset(u,ctx)||["cavalry","skirmisher","assassin"].includes(role)||rg(u,ctx)>=2;
   }
 
@@ -243,7 +250,9 @@
   function backlineScreenLoss(front,cell,ctx={}){
     if(!front||!cell||!isFrontAsset(front,ctx))return {score:0,critical:0};
     const enemies=(ctx.enemyUnits||[]).filter(e=>e&&!e.leader&&num(e.hp,1)>0);
-    const otherFront=(ctx.ownUnits||[]).filter(a=>a&&a.id!==front.id&&!a.leader&&num(a.hp,1)>0&&isFrontAsset(a,ctx));
+    // Un lancero de retaguardia sí cuenta como pantalla de los ranged aunque no
+    // cuente como frontline de presión.
+    const otherFront=(ctx.ownUnits||[]).filter(a=>a&&a.id!==front.id&&!a.leader&&num(a.hp,1)>0&&(isFrontAsset(a,ctx)||isRearGuardAsset(a,ctx)));
     let score=0,critical=0;
     for(const back of fragileBackline(ctx)){
       const threatening=enemies.filter(e=>enemyCanPressureCell(e,back,ctx)||dist(e,back)<=mov(e,ctx)+rg(e,ctx)+1);
@@ -329,6 +338,34 @@
       // Mantener contacto con la red de apoyo es más importante que ganar una casilla.
       const rangedCover=(ctx.ownUnits||[]).filter(a=>a&&a.id!==u.id&&isBackline(a,ctx)&&num(a.hp,1)>0&&dist(a,cell)<=3).length;
       score+=Math.min(3,rangedCover)*75;
+    }else if(isRearGuardAsset(u,ctx)){
+      // El lancero no acompaña el empuje: se ancla a la retaguardia y se coloca
+      // entre la pieza ranged más expuesta y la amenaza más cercana.
+      const rears=fragileBackline(ctx);
+      const anchor=rears.slice().sort((a,b)=>{
+        const aNear=(ctx.enemyUnits||[]).reduce((best,e)=>Math.min(best,dist(a,e)),99);
+        const bNear=(ctx.enemyUnits||[]).reduce((best,e)=>Math.min(best,dist(b,e)),99);
+        return aNear-bNear;
+      })[0]||null;
+      if(anchor){
+        const gap=dist(cell,anchor);
+        if(gap===1)score+=310;
+        else if(gap===2)score+=225;
+        else if(gap===3)score+=70;
+        else if(gap>3)score-=Math.min(520,(gap-3)*145);
+        const enemies=(ctx.enemyUnits||[]).filter(e=>e&&!e.leader&&num(e.hp,1)>0);
+        const threat=enemies.slice().sort((a,b)=>dist(a,anchor)-dist(b,anchor))[0]||null;
+        if(threat){
+          if(dist(cell,threat)<dist(anchor,threat)&&gap<=2)score+=180;
+          if(roleOf(u,ctx)==="spear"&&(roleOf(threat,ctx)==="cavalry"||String(threat?.key||"").toLowerCase().includes("cavalry"))&&dist(cell,threat)<=Math.max(2,rg(u,ctx)))score+=260;
+        }
+      }else if(ownLeader){
+        // Sin ranged que escoltar, espera cerca del líder en vez de sumarse al frente.
+        const gap=dist(cell,ownLeader);
+        if(gap>=1&&gap<=2)score+=140;
+        else if(gap>3)score-=90;
+      }
+      if(num(input.progress,0)>0&&anchor&&dist(cell,anchor)>dist(u,anchor))score-=240+num(input.progress,0)*65;
     }else if(need&&need.score>=80){
       // Las piezas de apoyo se colocan donde puedan castigar al que intente tumbar la pantalla.
       const answerable=need.attackers.filter(e=>dist(cell,e)<=rg(u,ctx)).length;
@@ -347,7 +384,7 @@
     // Percepción táctica global: una vez estabilizada la línea resistente, las
     // piezas de daño acompañan y buscan tiros. Si la pantalla cae, esas mismas
     // piezas retroceden y fuerzan al rival a entrar antes de volver a exponerse.
-    if(posture.pressure&&!isFrontAsset(u,ctx)&&isRetreatAsset(u,ctx)){
+    if(posture.pressure&&!isFrontAsset(u,ctx)&&!isRearGuardAsset(u,ctx)&&isRetreatAsset(u,ctx)){
       const front=posture.sturdyFronts.slice().sort((a,b)=>dist(cell,a)-dist(cell,b))[0]||null;
       if(front){
         const gap=dist(cell,front);
@@ -422,6 +459,7 @@
     version:VERSION,
     isTankAsset,
     isBreakerAsset,
+    isRearGuardAsset,
     isDpsAsset,
     isCriticalTank,
     isFrontAsset,

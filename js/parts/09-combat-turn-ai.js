@@ -1443,7 +1443,8 @@ async function adventureEnemyTurn(){
     if(range>=2)return "skirmisher";
     return "melee";
   };
-  const aiIsFrontlineRole=(role)=>role==="tank"||role==="spear";
+  const aiIsFrontlineRole=(role)=>role==="tank";
+  const aiIsRearGuardRole=(role)=>role==="spear";
   const aiIsBacklineRole=(role)=>role==="ranged"||role==="skirmisher"||role==="support";
   const aiIsBreakerUnit=(u)=>{
     if(!u||u.leader||aiAttackRange(u)>1)return false;
@@ -1454,8 +1455,8 @@ async function adventureEnemyTurn(){
   const aiIsFrontlineUnit=(u)=>{
     if(!u||u.leader)return false;
     if(aiTempoEngine?.isFrontAsset){try{return !!aiTempoEngine.isFrontAsset(u,aiDoctrineContext());}catch(_){ }}
-    // Fallback coherente con Tempo: tanque/pica reales o rompedor explícito.
-    // Un melee genérico no se convierte en frontline solo por tener 5+ Vida.
+    // Fallback coherente con Tempo: solo tanque real o rompedor explícito.
+    // Las picas/lanceros son guardia de retaguardia y no forman la línea de presión.
     const role=aiBasicTacticRole(u);
     return aiIsFrontlineRole(role)||aiIsBreakerUnit(u);
   };
@@ -1588,6 +1589,40 @@ async function adventureEnemyTurn(){
     }
     return score;
   };
+  const aiSpearGuardAnchor=()=>{
+    const ranged=aiRangedAllies();
+    if(!ranged.length)return null;
+    const urgent=aiRangedProtectionNeed();
+    if(urgent?.unit)return urgent.unit;
+    const enemies=living(1).filter(e=>e&&e.hp>0&&!e.leader);
+    return ranged.slice().sort((a,b)=>{
+      const da=enemies.reduce((best,e)=>Math.min(best,d(a,e)),99);
+      const db=enemies.reduce((best,e)=>Math.min(best,d(b,e)),99);
+      return da-db;
+    })[0]||null;
+  };
+  const aiSpearGuardCellScore=(cell,protector=null)=>{
+    if(!cell||aiBasicTacticRole(protector)!=="spear")return 0;
+    const anchor=aiSpearGuardAnchor();
+    const el=enemyLeaderNow();
+    if(!anchor){
+      if(!el)return 0;
+      const gap=d(cell,el);
+      return gap<=2?110:(gap>3?-90:25);
+    }
+    let score=0;
+    const gap=d(cell,anchor);
+    if(gap===1)score+=320;
+    else if(gap===2)score+=235;
+    else if(gap===3)score+=70;
+    else if(gap>3)score-=Math.min(560,(gap-3)*150);
+    const nearest=living(1).filter(e=>!e.leader&&e.hp>0).sort((a,b)=>d(a,anchor)-d(b,anchor))[0]||null;
+    if(nearest){
+      if(gap<=2&&d(cell,nearest)<d(anchor,nearest))score+=185; // ponerse entre amenaza y ranged.
+      if((nearest.key==="cavalry"||getWeaponClassForCard(nearest)==="cavalry"||isLightCavalryUnit(nearest))&&d(cell,nearest)<=Math.max(2,protector?.range||2))score+=275;
+    }
+    return score+aiProtectRangedCellScore(cell,protector);
+  };
 
   // ¿Mover esta pantalla abre la retaguardia? Una amenaza puede ser prioritaria
   // sin que el Guardián tenga permiso de perseguirla.
@@ -1595,7 +1630,7 @@ async function adventureEnemyTurn(){
     if(!protector||!cell)return 0;
     if(!aiIsFrontlineUnit(protector))return 0;
     let risk=0;
-    const frontAllies=living(2).filter(a=>a.id!==protector.id&&!a.leader&&aiIsFrontlineUnit(a));
+    const frontAllies=living(2).filter(a=>a.id!==protector.id&&!a.leader&&(aiIsFrontlineUnit(a)||aiIsRearGuardRole(aiBasicTacticRole(a))));
     for(const back of aiRangedAllies()){
       const threats=living(1).filter(e=>{
         const reach=(effectiveMov(e)||0)+aiAttackRange(e);
@@ -1851,6 +1886,17 @@ async function adventureEnemyTurn(){
         if(pl&&d(cell,pl)<d(currentUnit,pl))score-=320;
       }
       if(el&&d(cell,el)<=3)score+=45;
+    }else if(aiIsRearGuardRole(role)){
+      score+=aiSpearGuardCellScore(cell,unitLike);
+      const anchor=aiSpearGuardAnchor();
+      if(anchor){
+        const currentGap=d(currentUnit,anchor),nextGap=d(cell,anchor);
+        if(nextGap>currentGap&&nextGap>2)score-=(nextGap-currentGap)*180;
+        if(nextGap<=2)score+=110;
+      }
+      // La pica no acompaña el push de tanques/rompedores; sólo avanza si con ello
+      // sigue escoltando la retaguardia o intercepta una amenaza sobre ella.
+      if(pl&&anchor&&d(cell,pl)<d(currentUnit,pl)&&d(cell,anchor)>2)score-=310;
     }else if(aiIsFrontlineRole(role)){
       if(outnumberedBy>0)score-=outnumberedBy*70;
       if(allyCount===0&&enemyCount>=2)score-=115;
@@ -2014,37 +2060,126 @@ async function adventureEnemyTurn(){
     if(combat.hpDamage<=0||combat.chance<48)return true;
     return aiStealthExecutionValue(attacker,target)<420;
   };
+  const aiGeishaBacklineExecutionValue=(attacker,target)=>{
+    if(!attacker||attacker.key!=="geisha_encubierta"||!isStealthedUnit(attacker)||!target||target.leader)return -Infinity;
+    const executionValue=aiStealthExecutionValue(attacker,target);
+    if(executionValue<420)return -Infinity;
+    const role=aiBasicTacticRole(target);
+    const targetRange=aiAttackRange(target);
+    const guard=Math.max(0,Number(effectiveGuard(target)||0));
+    const targetLeader=leader(target.owner);
+    let score=executionValue;
+
+    // Doctrina propia de Geisha: Sigilo sirve para atravesar la línea frontal y
+    // cazar la retaguardia. Arqueros/ranged de poca Guardia son su presa ideal.
+    if(role==="ranged")score+=430;
+    else if(role==="support")score+=300;
+    else if(role==="skirmisher")score+=180;
+    if(targetRange>=3)score+=150+Math.min(3,targetRange-2)*55;
+    if(guard<=1)score+=330;
+    else if(guard===2)score+=250;
+    else if(guard===3)score+=150;
+    else if(guard===4)score+=55;
+
+    // Una pieza cercana a su propio Líder suele estar realmente en la línea trasera.
+    // Este bono no convierte un blanco con Guardia cerrada en ejecución válida: esa
+    // condición ya fue filtrada arriba por aiStealthExecutionValue.
+    if(targetLeader){
+      const rearDepth=Math.max(0,6-d(target,targetLeader));
+      score+=rearDepth*58;
+    }
+    if(target.principal||target.special)score+=120;
+    return score;
+  };
+  const aiStealthBacklineHuntValue=(attacker,target)=>{
+    if(!attacker||!target||target.leader||!isStealthedUnit(attacker))return -Infinity;
+    if(!aiCanEverTarget(attacker,target)||aiIsDoomedByDotAtNextTurn(target))return -Infinity;
+    const role=aiBasicTacticRole(target);
+    const combat=estimateCombat(attacker,target);
+    const guard=Math.max(0,Number(effectiveGuard(target)||0));
+    const targetRange=Math.max(1,aiAttackRange(target));
+    const targetLeader=leader(target.owner);
+    let score=aiUnitValue(target)+(target.special||target.principal?210:0)+((target.equipmentKeys||[]).length*75);
+
+    // Doctrina global de Sigilo: atravesar/bordear la frontline para cazar piezas
+    // que normalmente son difíciles de alcanzar. La frontline NO es la presa natural.
+    if(role==="ranged")score+=520;
+    else if(role==="support")score+=470;
+    else if(role==="skirmisher")score+=315;
+    else if(role==="assassin")score+=205;
+    else if(role==="spear")score-=170;
+    else if(role==="tank")score-=520;
+    else if(role==="melee")score-=190;
+
+    if(targetRange>=3)score+=155+Math.min(4,targetRange-2)*55;
+    else if(targetRange===2)score+=70;
+    if(guard<=1)score+=145;
+    else if(guard===2)score+=90;
+    if(Number(target.hp||0)<=3)score+=95;
+    if(combat.hpDamage>0)score+=115+Math.max(0,combat.chance-45)*3;
+
+    // Cercanía al líder propio del blanco funciona como una señal de profundidad:
+    // cuanto más atrás esté una pieza valiosa, más justifica gastar Sigilo en llegar.
+    if(targetLeader){
+      const rearDepth=Math.max(0,6-d(target,targetLeader));
+      score+=rearDepth*48;
+    }
+    return score;
+  };
   const aiStealthHuntTarget=(attacker)=>{
     if(!attacker||!isStealthedUnit(attacker))return null;
     return living(1)
-      .filter(t=>!t.leader&&aiCanEverTarget(attacker,t))
+      .filter(t=>!t.leader&&aiCanEverTarget(attacker,t)&&!aiIsDoomedByDotAtNextTurn(t))
       .map(t=>{
-        const combat=estimateCombat(attacker,t);
-        let score=aiUnitValue(t)+(t.special||t.principal?180:0)+((t.equipmentKeys||[]).length*70);
-        if(attacker.key==="geisha_encubierta")score=Math.max(score,aiStealthExecutionValue(attacker,t));
-        else {
-          if(["ranged","support","assassin","skirmisher"].includes(aiBasicTacticRole(t)))score+=120;
-          if(combat.hpDamage>0)score+=90+Math.max(0,combat.chance-45)*3;
+        let score=aiStealthBacklineHuntValue(attacker,t);
+        const role=aiBasicTacticRole(t);
+        if(aiFocusTargetId&&t.id===aiFocusTargetId&&["ranged","support","skirmisher"].includes(role))score+=260;
+        if(attacker.key==="geisha_encubierta"){
+          const backlineExecutionValue=aiGeishaBacklineExecutionValue(attacker,t);
+          // La Geisha conserva su requisito especial: solo convierte la infiltración
+          // en ataque cuando Corte de Abanico puede atravesar HP y ejecutar.
+          if(!Number.isFinite(backlineExecutionValue))return null;
+          score=Math.max(score,backlineExecutionValue);
         }
-        return {target:t,score};
+        return Number.isFinite(score)?{target:t,score}:null;
       })
+      .filter(Boolean)
       .sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
   const bestAttackTarget=(attacker)=>{
     const validTargets=living(1).filter(t=>canHit(attacker,t)&&!aiIsDoomedByDotAtNextTurn(t));
     const focused=aiFocusedTarget();
-    if(aiIsRangedCombatUnit(attacker)){
-      // Si una amenaza entra a distancia corta, el ranged primero gana espacio y la convierte en el nuevo foco.
+    const stealthActive=!!isStealthedUnit(attacker);
+    const stealthHunt=stealthActive?aiStealthHuntTarget(attacker):null;
+    const stealthHuntValue=stealthHunt?aiStealthBacklineHuntValue(attacker,stealthHunt):-Infinity;
+    if(aiIsRangedCombatUnit(attacker)&&!stealthActive){
+      // Si una amenaza entra a distancia corta, un ranged VISIBLE primero gana espacio.
+      // Mientras conserve Sigilo, no revela su infiltración solo porque pasó junto a la frontline.
       const close=validTargets.filter(t=>!t.leader&&d(attacker,t)<3)
         .map(t=>({target:t,score:scoreTarget(t,0,attacker)+Math.max(0,3-d(attacker,t))*420}))
         .sort((a,b)=>b.score-a.score)[0]?.target||null;
       if(close)return close;
     }
+    // Una unidad con Sigilo no desperdicia la infiltración pegándole a la pantalla
+    // solo porque un ranged aliado fijó ese foco. Si tiene una presa real de backline,
+    // conserva Sigilo y sigue atravesando las líneas hasta alcanzarla.
+    if(stealthHunt&&stealthHuntValue>=420){
+      const huntInRange=validTargets.some(t=>t.id===stealthHunt.id);
+      if(huntInRange){
+        if(attacker.key!=="geisha_encubierta"||!aiShouldHoldStealthAttack(attacker,stealthHunt))return stealthHunt;
+      }else{
+        return null; // mantiene Sigilo y usa el movimiento para seguir infiltrándose hacia esa presa.
+      }
+    }
     if(focused){
-      if(validTargets.some(t=>t.id===focused.id))return focused;
-      // El primer ataque ranged fija el blanco. Si todavía no está en alcance,
-      // la siguiente unidad no cambia de objetivo gratuitamente: se moverá hacia ese foco.
-      if(aiCanEverTarget(attacker,focused))return null;
+      if(validTargets.some(t=>t.id===focused.id)){
+        // La Geisha conserva su regla especial de no romper Sigilo sin Corte de Abanico.
+        if(!(attacker.key==="geisha_encubierta"&&stealthActive&&aiShouldHoldStealthAttack(attacker,focused)))return focused;
+      }else{
+        // El primer ataque ranged fija el blanco. Las unidades con Sigilo quedan exentas
+        // cuando ya tienen una presa de retaguardia más coherente con su infiltración.
+        if(aiCanEverTarget(attacker,focused)&&!(stealthActive&&stealthHunt&&stealthHuntValue>=420))return null;
+      }
     }
     const ranked=validTargets.map(t=>{
       let score=scoreTarget(t,0,attacker);
@@ -2465,11 +2600,14 @@ async function adventureEnemyTurn(){
       if(berserkerPressure)score+=80;
     }
     if(role==="spear"){
-      score+=tactic.tanks.length?170:70;
-      if(rangedNeed)score+=190+aiProtectRangedCellScore(cell,card);
-      if(tactic.spears.length<2)score+=90;
-      if(el&&d(cell,el)<=2)score+=80;
-      if(pl&&d(cell,pl)<=cardRange+1)score+=55;
+      // Guardia de retaguardia: su prioridad es aparecer junto a los ranged, no
+      // sumarse al frente con tanques y rompedores.
+      score+=tactic.backline.length?190:25;
+      score+=aiSpearGuardCellScore(cell,card);
+      if(rangedNeed)score+=220+aiProtectRangedCellScore(cell,card);
+      if(tactic.spears.length<2&&tactic.backline.length)score+=75;
+      if(!tactic.backline.length)score-=120;
+      if(el&&d(cell,el)<=2&&!tactic.backline.length)score+=35;
       if(berserkerPressure)score+=55;
       if(cavalryPressure){
         const cav=cavalryPressure.unit;
@@ -2992,7 +3130,7 @@ async function adventureEnemyTurn(){
         const warriorLeader=aiDoctrineLeaderType()==="warrior";
         if(warriorLeader){
           const fieldTroops=living(2).filter(u=>!u.leader&&u.hp>0);
-          const fieldFront=fieldTroops.filter(u=>aiIsFrontlineRole(aiBasicTacticRole(u)));
+          const fieldFront=fieldTroops.filter(u=>aiIsFrontlineUnit(u));
           const fieldFire=fieldTroops.filter(u=>{
             const r=aiBasicTacticRole(u);
             return aiIsBacklineRole(r)||r==="cavalry"||aiAttackRange(u)>=2;
@@ -3036,7 +3174,8 @@ async function adventureEnemyTurn(){
           score+=role==="tank"?280:role==="spear"?240:150;
           if(choice.cell)score+=aiProtectRangedCellScore(choice.cell,choice.card);
         }
-        if(role==="spear"&&tactic.spears.length<2)score+=240;
+        if(role==="spear"&&tactic.backline.length&&tactic.spears.length<2)score+=240;
+        if(role==="spear"&&!tactic.backline.length)score-=170;
         if(role==="spear"&&cavalryPressure)score+=520;
         if(aiIsBacklineRole(role)&&tactic.frontline.length)score+=role==="ranged"?285:175;
         if(aiIsBacklineRole(role)&&!tactic.frontline.length)score-=role==="ranged"?260:125;
@@ -3191,8 +3330,16 @@ async function adventureEnemyTurn(){
         targetScore+=160+aiUnitValue(t)*0.2;
       }
       if(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&!t.leader){
-        targetScore+=520+aiUnitValue(t)*0.8;
-        targetScore+=Math.max(0,aiStealthExecutionValue(u,t))*0.55;
+        const executionValue=aiStealthExecutionValue(u,t);
+        const backlineExecutionValue=aiGeishaBacklineExecutionValue(u,t);
+        if(executionValue>=420){
+          targetScore+=620+aiUnitValue(t)*0.8+executionValue*0.62;
+          if(Number.isFinite(backlineExecutionValue))targetScore+=backlineExecutionValue*0.72;
+        }else{
+          // Puede acercarse con cautela si no existe otra presa, pero no trata una
+          // unidad que bloquea todo el HP como una oportunidad real de ejecución.
+          targetScore-=420;
+        }
       }
       if(stealthPriorityTarget&&t.id===stealthPriorityTarget.id)targetScore+=260;
       if(u.key==="skipar_del_drakkar"&&!t.leader&&Math.max(0,Number(pub.playerStats?.[1]?.hand||0))>0)targetScore+=120;
@@ -3210,6 +3357,12 @@ async function adventureEnemyTurn(){
     const rangedAnchorTarget=aiIsRangedCombatUnit(u)?bestAttackTarget(u):null;
     const huntTarget=rangedAnchorTarget||stealthPriorityTarget||primaryTarget;
     const currentGap=huntTarget?Math.max(0,d(u,huntTarget)-aiAttackReachForTarget(u,huntTarget)):999;
+    const geishaBacklineHunt=(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&huntTarget&&!huntTarget.leader)
+      ?aiGeishaBacklineExecutionValue(u,huntTarget)
+      :-Infinity;
+    const stealthBacklineHunt=(stealthVeilActive&&huntTarget&&!huntTarget.leader)
+      ?aiStealthBacklineHuntValue(u,huntTarget)
+      :-Infinity;
     const options=[];
     const legalMoveKeys=new Set(getUnitMovementZonesForState(u,units,maxMove));
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -3223,7 +3376,27 @@ async function adventureEnemyTurn(){
         const role=moverRole;
         const ghostRange=aiAttackRange(ghost);
         const targets=living(1).filter(t=>!aiIsDoomedByDotAtNextTurn(t)&&aiCanEverTarget(ghost,t)&&d(pos,t)<=aiAttackReachForTarget(ghost,t));
-        if(targets.length)score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
+        const geishaExecutionTargets=(u.key==="geisha_encubierta"&&isStealthedUnit(u))
+          ?targets.filter(t=>!t.leader&&aiStealthExecutionValue(ghost,t)>=420)
+          :[];
+        if(geishaExecutionTargets.length){
+          const executionOptions=geishaExecutionTargets.map(t=>({
+            target:t,
+            value:aiStealthExecutionValue(ghost,t),
+            distance:d(pos,t),
+            reach:aiAttackReachForTarget(ghost,t)
+          }));
+          const bestExecution=executionOptions.sort((a,b)=>
+            b.value-a.value||b.distance-a.distance
+          )[0];
+          // Casilla de ejecución inmediata: prioriza la presa correcta y, cuando una
+          // regla de Asesino permite atacar desde más lejos, usa el borde exterior
+          // de ese alcance para no revelar a la Geisha más cerca de lo necesario.
+          score+=1120+bestExecution.value*0.85+bestExecution.distance*105;
+          if(bestExecution.distance===bestExecution.reach)score+=210;
+        }else if(targets.length&&!(u.key==="geisha_encubierta"&&isStealthedUnit(u))){
+          score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
+        }
         if(pl)score+=Math.max(0,12-d(pos,pl))*6;
         if(el&&u.key==="guardian")score+=Math.max(0,8-d(pos,el))*7;
         if(el&&leaderDangerScore()>80&&d(pos,el)<=2)score+=75;
@@ -3268,13 +3441,15 @@ async function adventureEnemyTurn(){
           }
         }
         if(role==="spear"){
+          score+=aiSpearGuardCellScore(pos,u);
+          const anchor=aiSpearGuardAnchor();
+          if(anchor&&d(pos,anchor)>3)score-=220;
           const cavalryThreat=aiEnemyCavalryPressure();
           if(cavalryThreat){
             const cav=cavalryThreat.unit;
             const controlRange=Math.max(2,ghostRange);
-            if(d(pos,cav)<=controlRange)score+=220;
-            else if(d(pos,cav)<=controlRange+(effectiveMov(u)||1))score+=95;
-            if(el&&d(pos,el)<=2)score+=85;
+            if(d(pos,cav)<=controlRange&&(!anchor||d(pos,anchor)<=3))score+=220;
+            else if(d(pos,cav)<=controlRange+(effectiveMov(u)||1)&&(!anchor||d(pos,anchor)<=3))score+=95;
           }
         }
         score+=allySupportAtCell(pos)*0.45;
@@ -3283,11 +3458,38 @@ async function adventureEnemyTurn(){
           score-=cellThreat*0.16;
           if(huntTarget){
             const huntDist=d(pos,huntTarget);
-            if(huntDist<=1)score+=235;
-            else if(huntDist===2)score+=145;
-            if(huntTarget.special||huntTarget.principal)score+=huntDist<=1?120:60;
+            if(u.key==="geisha_encubierta"){
+              const executionValue=aiStealthExecutionValue(ghost,huntTarget);
+              const executionReach=aiAttackReachForTarget(ghost,huntTarget);
+              const canExecuteHere=huntDist<=executionReach&&executionValue>=420;
+              if(canExecuteHere){
+                score+=980+executionValue*0.55+huntDist*95;
+                if(huntDist===executionReach)score+=190;
+                if(huntTarget.special||huntTarget.principal)score+=180;
+              }else if(executionValue>=420&&huntDist===executionReach+1){
+                score+=120; // prepara la entrada sin confundirla con una ejecución inmediata.
+              }else if(huntDist<=Math.max(1,executionReach)){
+                score-=520; // no se expone dentro de alcance si Corte de Abanico no atravesará HP.
+              }
+            }else{
+              const huntRole=aiBasicTacticRole(huntTarget);
+              const reach=Math.max(1,aiAttackReachForTarget(ghost,huntTarget));
+              // Todas las unidades con Sigilo atraviesan/bordean la línea frontal para
+              // llegar a piezas de retaguardia. Si son ranged (p.ej. Fūma), atacan desde
+              // el borde exterior de su alcance en vez de acercarse de más.
+              if(huntDist<=reach){
+                score+=330+huntDist*70;
+                if(huntDist===reach)score+=190;
+              }else{
+                const startDist=d(start,huntTarget);
+                if(huntDist<startDist)score+=(startDist-huntDist)*145;
+              }
+              if(["ranged","support","skirmisher"].includes(huntRole))score+=210;
+              if(huntTarget.special||huntTarget.principal)score+=125;
+              if(Number.isFinite(stealthBacklineHunt))score+=Math.max(0,stealthBacklineHunt-300)*0.22;
+            }
             const nearbyOthers=living(1).filter(e=>e.id!==huntTarget.id&&!e.leader&&d(e,pos)<=1).length;
-            score-=nearbyOthers*28;
+            score-=nearbyOthers*42;
           }
         }else{
           score-=cellThreat*0.7;
@@ -3305,6 +3507,23 @@ async function adventureEnemyTurn(){
         const nextGap=huntTarget?Math.max(0,d(pos,huntTarget)-aiAttackReachForTarget(ghost,huntTarget)):999;
         const progress=huntTarget?currentGap-nextGap:0;
         if(progress>0)score+=progress*72;
+        if(Number.isFinite(stealthBacklineHunt)&&huntTarget){
+          // Doctrina global de Sigilo: una presa de backline guía la ruta incluso si
+          // la frontline ofrece blancos más cercanos. La Geisha añade encima su filtro
+          // de ejecución; las demás conservan sus propias reglas de ataque/emboscada.
+          const startDist=d(start,huntTarget);
+          const nextDist=d(pos,huntTarget);
+          if(nextDist<startDist)score+=(startDist-nextDist)*(Number.isFinite(geishaBacklineHunt)?165:145);
+          const huntRole=aiBasicTacticRole(huntTarget);
+          if(["ranged","support","skirmisher"].includes(huntRole))score+=Number.isFinite(geishaBacklineHunt)?170:150;
+          const enemyRearLeader=leader(huntTarget.owner);
+          if(enemyRearLeader&&d(pos,enemyRearLeader)<d(start,enemyRearLeader))score+=55;
+          const reach=Math.max(1,aiAttackReachForTarget({...u,x:pos.x,y:pos.y},huntTarget));
+          if(nextDist<=reach){
+            score+=180;
+            if(nextDist===reach)score+=aiAttackRange(u)>1?160:70;
+          }
+        }
         if(nextGap===0&&currentGap>0)score+=180;
         if(aiCombatEngine?.scoreMoveCell){
           score+=Number(aiCombatEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget:huntTarget||primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);

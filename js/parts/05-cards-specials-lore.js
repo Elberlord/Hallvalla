@@ -1162,7 +1162,7 @@ function getBattlePowerFilterBounds(filter){
 
 
 // v7EM - Regla global de lanzas.
-// Todas las unidades que usan lanza/alabarda/pica tienen RG 1 fijo y atacan primero la primera vez por turno que reciben un ataque cuerpo a cuerpo adyacente de una unidad con RG 1.
+// Todas las unidades que usan lanza/alabarda/pica tienen RG 1 fijo y una única reacción defensiva de Lanza: Atacar Primero (su Contraataque), la primera vez por turno que reciben un ataque cuerpo a cuerpo adyacente de una unidad con RG 1.
 const LANCE_UNIT_KEYS=new Set([
   "spearman",
   "greek_hoplite",
@@ -1190,8 +1190,8 @@ function isLanceUnitCardLike(card){
 }
 function applyLanceWeaponRule(card){
   if(!isLanceUnitCardLike(card))return card;
-  // Regla innata de la clase Lanza. Toda unidad de lanza recibe las dos habilidades:
-  // 1) Atacar Primero solo contra ataques cuerpo a cuerpo adyacentes de unidades con RG 1.
+  // Regla innata de la clase Lanza. Toda unidad de lanza recibe:
+  // 1) Una única reacción Atacar Primero/Contraataque: responde antes del ataque cuerpo a cuerpo adyacente de una unidad con RG 1. No existe un segundo golpe posterior.
   // 2) Anticaballería tanto al atacar como al defender en combate cuerpo a cuerpo.
   // Toda arma de clase Lanza combate a alcance adyacente. La regla es fija:
   // no hereda bonos de Arco, líder, vínculos ni rangos impresos antiguos.
