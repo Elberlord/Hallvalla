@@ -907,6 +907,190 @@ function applyStartingPrincipalEntryEffects(units=[]){
   return{units:out,logs,statusFxEvent:lion.statusFxEvent||null,floatFxEvent:lion.floatFxEvent||null};
 }
 
+
+/* HALLVALLA VS · presentación previa al combate ---------------------------
+   Usa exclusivamente los líderes y Personajes Principales reales del estado
+   de batalla. No altera reglas, unidades, manos, turnos ni estadísticas. */
+const HALLVALLA_VS_BACKGROUND="assets/ui/vs_intro/vs_battlefield.png";
+const HALLVALLA_VS_EMBLEM="assets/ui/vs_intro/vs_emblem.png";
+let hallvallaVsIntroKey="";
+let hallvallaVsIntroPromise=null;
+let hallvallaVsCountdownTimer=null;
+
+function hvVsArray(value){
+  if(Array.isArray(value))return value.slice();
+  if(value&&typeof value==="object")return Object.keys(value).sort((a,b)=>Number(a)-Number(b)).map(key=>value[key]);
+  return [];
+}
+function hvVsOwnerValue(branch,owner){
+  if(branch==null)return null;
+  return branch?.[owner]??branch?.[String(owner)]??null;
+}
+function hvVsUnique(values=[]){
+  const seen=new Set();
+  return values.map(v=>String(v||"").trim()).filter(v=>v&&!seen.has(v)&&(seen.add(v),true));
+}
+function hvVsResolveCardTemplate(key){
+  const safe=String(key||"").trim();
+  if(!safe)return null;
+  const resolvers=["getEquipmentTemplateByKey","getStarterBasicCardByKey","getLegendaryCardByKey","getAdventureDeckCardTemplateByKey","getDragonCompanionCardTemplate"];
+  for(const name of resolvers){
+    try{
+      const fn=globalThis[name];
+      if(typeof fn!=="function")continue;
+      const found=fn(safe);
+      if(found)return found;
+    }catch(_){ }
+  }
+  return null;
+}
+function hvVsImageCandidates(entity){
+  const source=entity&&typeof entity==="object"?entity:{};
+  let field=[],cards=[];
+  try{ if(typeof getResolvedFieldFigureCandidates==="function")field=getResolvedFieldFigureCandidates(source)||[]; }catch(_){ }
+  try{ if(typeof getResolvedCardPortraitCandidates==="function")cards=getResolvedCardPortraitCandidates(source)||[]; }catch(_){ }
+  return hvVsUnique([
+    source.fieldFigure,source.fieldFigurePortrait,source.fieldFigureImage,
+    ...field,
+    source.portrait,source.cardPortrait,source.cardImage,
+    ...cards
+  ]);
+}
+function hvVsApplyImageCandidates(img,candidates=[]){
+  if(!img)return;
+  const queue=hvVsUnique(candidates);
+  let index=0;
+  img.onerror=()=>{
+    index+=1;
+    if(index<queue.length)img.src=queue[index];
+    else img.classList.add("hv-vs-image-missing");
+  };
+  img.classList.remove("hv-vs-image-missing");
+  if(queue.length)img.src=queue[0];
+  else img.classList.add("hv-vs-image-missing");
+}
+function hvVsPrincipalKeysForOwner(state,owner){
+  const branches=[state?.adventurePrincipalKeys,state?.pvpPrincipalKeys,state?.principalKeys];
+  for(const branch of branches){
+    const values=hvVsArray(hvVsOwnerValue(branch,owner)).map(v=>String(v||"").trim()).filter(Boolean);
+    if(values.length)return values;
+  }
+  return (state?.units||[]).filter(u=>Number(u?.owner)===Number(owner)&&!u?.leader&&u?.principal).map(u=>String(u?.key||"")).filter(Boolean);
+}
+function hvVsBuildTeam(state,owner){
+  const units=Array.isArray(state?.units)?state.units:[];
+  const leader=units.find(u=>Number(u?.owner)===Number(owner)&&u?.leader)||null;
+  const leaderType=String(hvVsOwnerValue(state?.playerLeaders,owner)||leader?.leaderType||leader?.type||"warrior");
+  const leaderSrc=String(leader?.portrait||LEADER_PORTRAITS?.[leaderType]||"");
+  const keys=hvVsPrincipalKeysForOwner(state,owner);
+  const usedUnits=new Set();
+  const principals=keys.map(key=>{
+    const unitIndex=units.findIndex((u,index)=>!usedUnits.has(index)&&Number(u?.owner)===Number(owner)&&!u?.leader&&String(u?.key||"")===String(key));
+    const unit=unitIndex>=0?units[unitIndex]:null;
+    if(unitIndex>=0)usedUnits.add(unitIndex);
+    const template=hvVsResolveCardTemplate(key);
+    const entity=unit||template||{key};
+    return {key:String(key),name:String(entity?.name||template?.name||key),candidates:hvVsImageCandidates(entity)};
+  });
+  return {owner:Number(owner),leaderType,leaderName:String(leader?.name||LEADER_DATA?.[leaderType]?.name||"Líder"),leaderCandidates:hvVsUnique([leaderSrc,LEADER_PORTRAITS?.[leaderType]]),principals};
+}
+function hvVsEnsureOverlay(){
+  let overlay=document.getElementById("hallvallaVsIntro");
+  if(overlay)return overlay;
+  overlay=document.createElement("div");
+  overlay.id="hallvallaVsIntro";
+  overlay.className="hallvalla-vs-intro";
+  overlay.setAttribute("aria-hidden","true");
+  overlay.innerHTML=`
+    <div class="hallvalla-vs-bg" aria-hidden="true"></div>
+    <div class="hallvalla-vs-grass hallvalla-vs-grass-a" aria-hidden="true"></div>
+    <div class="hallvalla-vs-grass hallvalla-vs-grass-b" aria-hidden="true"></div>
+    <div class="hallvalla-vs-vignette" aria-hidden="true"></div>
+    <section class="hallvalla-vs-team hallvalla-vs-team-left" data-vs-team="left"><div class="hallvalla-vs-principals"></div><img class="hallvalla-vs-leader" alt="Líder aliado"></section>
+    <section class="hallvalla-vs-team hallvalla-vs-team-right" data-vs-team="right"><div class="hallvalla-vs-principals"></div><img class="hallvalla-vs-leader" alt="Líder rival"></section>
+    <div class="hallvalla-vs-center" aria-hidden="true"><img class="hallvalla-vs-emblem" src="${HALLVALLA_VS_EMBLEM}" alt=""><div class="hallvalla-vs-countdown">3</div></div>`;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+function hvVsRenderTeam(overlay,team,side){
+  const holder=overlay.querySelector(`[data-vs-team="${side}"]`);
+  if(!holder)return;
+  const leader=holder.querySelector(".hallvalla-vs-leader");
+  if(leader){
+    leader.alt=side==="left"?`Líder aliado: ${team.leaderName}`:`Líder rival: ${team.leaderName}`;
+    hvVsApplyImageCandidates(leader,team.leaderCandidates);
+  }
+  const principalHolder=holder.querySelector(".hallvalla-vs-principals");
+  if(!principalHolder)return;
+  principalHolder.replaceChildren();
+  team.principals.slice(0,3).forEach((principal,index)=>{
+    const figure=document.createElement("div");
+    figure.className="hallvalla-vs-principal";
+    figure.style.setProperty("--vs-principal-index",String(index));
+    figure.style.setProperty("--vs-principal-count",String(Math.min(3,team.principals.length)));
+    figure.style.setProperty("--vs-principal-offset",`${1+(index*11)}%`);
+    figure.style.zIndex=String(3-index);
+    const img=document.createElement("img");
+    img.alt=principal.name;
+    hvVsApplyImageCandidates(img,principal.candidates);
+    figure.appendChild(img);
+    principalHolder.appendChild(figure);
+  });
+}
+function hvVsSetDigit(node,value){
+  if(!node)return;
+  const text=String(value);
+  if(node.textContent===text&&node.classList.contains("is-ticking"))return;
+  node.textContent=text;
+  node.classList.remove("is-ticking","is-zero");
+  void node.offsetWidth;
+  if(value===0)node.classList.add("is-zero");
+  node.classList.add("is-ticking");
+}
+function hideHallvallaPreBattleVs(){
+  if(hallvallaVsCountdownTimer!==null){clearTimeout(hallvallaVsCountdownTimer);hallvallaVsCountdownTimer=null;}
+  const overlay=document.getElementById("hallvallaVsIntro");
+  if(overlay){overlay.classList.remove("is-visible");overlay.setAttribute("aria-hidden","true");}
+  document.documentElement.classList.remove("hallvalla-vs-running");
+  hallvallaVsIntroKey="";
+  hallvallaVsIntroPromise=null;
+}
+function showHallvallaPreBattleVs(state,options={}){
+  const leftOwner=Number(options.leftOwner||1);
+  const rightOwner=Number(options.rightOwner||(leftOwner===1?2:1));
+  const key=String(options.key||state?.code||`${state?.mode||"battle"}:${Date.now()}`);
+  if(hallvallaVsIntroPromise&&hallvallaVsIntroKey===key)return hallvallaVsIntroPromise;
+  hideHallvallaPreBattleVs();
+  hallvallaVsIntroKey=key;
+  const overlay=hvVsEnsureOverlay();
+  hvVsRenderTeam(overlay,hvVsBuildTeam(state,leftOwner),"left");
+  hvVsRenderTeam(overlay,hvVsBuildTeam(state,rightOwner),"right");
+  overlay.classList.add("is-visible");
+  overlay.setAttribute("aria-hidden","false");
+  document.documentElement.classList.add("hallvalla-vs-running");
+  const countdown=overlay.querySelector(".hallvalla-vs-countdown");
+  const requestedStart=Number(options.startAt||0);
+  const startAt=Number.isFinite(requestedStart)&&requestedStart>0?requestedStart:Date.now()+120;
+  const requestedEnd=Number(options.endAt||0);
+  const endAt=Number.isFinite(requestedEnd)&&requestedEnd>startAt?requestedEnd:startAt+3250;
+  if(countdown){countdown.textContent="3";countdown.classList.remove("is-ticking","is-zero");}
+  hallvallaVsIntroPromise=new Promise(resolve=>{
+    let lastDigit=null;
+    const tick=()=>{
+      const now=Date.now();
+      if(now<startAt){hallvallaVsCountdownTimer=setTimeout(tick,Math.min(50,startAt-now));return;}
+      const elapsed=now-startAt;
+      const digit=elapsed<1000?3:(elapsed<2000?2:(elapsed<3000?1:0));
+      if(digit!==lastDigit){lastDigit=digit;hvVsSetDigit(countdown,digit);}
+      if(now>=endAt){hallvallaVsCountdownTimer=null;hvVsSetDigit(countdown,0);resolve(true);return;}
+      hallvallaVsCountdownTimer=setTimeout(tick,40);
+    };
+    tick();
+  });
+  return hallvallaVsIntroPromise;
+}
+Object.assign(globalThis,{showHallvallaPreBattleVs,hideHallvallaPreBattleVs});
+
 async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(!(await ensureFirebaseAuthReady("adventure")))return;
   const leaderType=getSelectedLeaderType();
@@ -1077,10 +1261,18 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
   const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:playerPrincipalSlots,principalKeys:playerPrincipalPrep.principalKeys||[],principalKey:playerPrincipalPrep.principalKeys?.[0]||""};
+
+  // VS previo: aparece después de que el duelo ya está completamente preparado,
+  // pero antes de publicar/iniciar el turno real para que el reloj no consuma estos 3 segundos.
+  $("adventurePanel")?.classList.add("hidden");
+  await showHallvallaPreBattleVs(pub,{key:`adventure:${pub.code}`,leftOwner:1,rightOwner:2});
+
   if(HALLVALLA_LOCALHOST_TEST_MODE){
     pub.code=`LOCAL${code4()}`;
     pub.localhostVisualTest=true;
+    pub.turnStartedAt=Date.now();
     pub.log=["Modo local: prueba visual en tablero real sin Firebase.",...(pub.log||[])].slice(0,18);
+    hideHallvallaPreBattleVs();
     enterLocalGame(pub,privatePayload,1);
     return;
   }
@@ -1088,6 +1280,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     await set(ref(db,`games/${code}/public`),pub);
     await set(getGamePrivatePlayerRef(code,1),privatePayload);
   }catch(error){
+    hideHallvallaPreBattleVs();
     try{await remove(ref(db,`games/${code}`));}catch(_){}
     if(battle.beastEvent&&beastmasterEntryCharged){
       const refundProfile=getPlayerProfile();
@@ -1100,6 +1293,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     return;
   }
   $("adventurePanel").classList.add("hidden");
+  hideHallvallaPreBattleVs();
   enterGame(code,1);
 }
 

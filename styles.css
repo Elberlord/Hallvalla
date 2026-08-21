@@ -23211,3 +23211,166 @@ body:not(.hv-forge-edit-active) #deckBuilderPanel.hv-forge-collection-v2 #deckFi
   #packShopPanel .hv-shop-back{width:46px;height:34px;font-size:16px;}
   #packShopPanel .hv-shop-choice-label,#packShopPanel .hv-shop-currency-label{padding:3px 5px;}
 }
+
+/* ========================================================================== */
+/* HALLVALLA · VS PREVIO AL COMBATE                                          */
+/* ========================================================================== */
+.hallvalla-vs-intro{
+  position:fixed;
+  inset:0;
+  z-index:120000;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  background:#050504;
+  transition:opacity .16s ease,visibility 0s linear .16s;
+  isolation:isolate;
+}
+.hallvalla-vs-intro.is-visible{
+  opacity:1;
+  visibility:visible;
+  transition:opacity .16s ease;
+}
+.hallvalla-vs-bg,
+.hallvalla-vs-grass{
+  position:absolute;
+  inset:0;
+  background-image:url("assets/ui/vs_intro/vs_battlefield.png");
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+}
+.hallvalla-vs-bg{z-index:0;}
+.hallvalla-vs-grass{
+  z-index:1;
+  top:43%;
+  opacity:.14;
+  background-position:center bottom;
+  transform-origin:50% 100%;
+  -webkit-mask-image:linear-gradient(to top,#000 0%,#000 48%,transparent 96%);
+  mask-image:linear-gradient(to top,#000 0%,#000 48%,transparent 96%);
+  will-change:transform;
+}
+.hallvalla-vs-grass-a{animation:hallvallaVsGrassWindA 3.8s ease-in-out infinite alternate;}
+.hallvalla-vs-grass-b{opacity:.09;animation:hallvallaVsGrassWindB 5.2s ease-in-out infinite alternate-reverse;}
+@keyframes hallvallaVsGrassWindA{
+  0%{transform:translate3d(-5px,1px,0) skewX(-.35deg) scale(1.006);}
+  50%{transform:translate3d(4px,-1px,0) skewX(.45deg) scale(1.01);}
+  100%{transform:translate3d(8px,0,0) skewX(.7deg) scale(1.006);}
+}
+@keyframes hallvallaVsGrassWindB{
+  0%{transform:translate3d(6px,0,0) skewX(.4deg) scale(1.008);}
+  100%{transform:translate3d(-7px,-1px,0) skewX(-.55deg) scale(1.012);}
+}
+.hallvalla-vs-vignette{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  background:
+    radial-gradient(circle at 50% 47%,rgba(0,0,0,.02) 0 21%,rgba(0,0,0,.18) 55%,rgba(0,0,0,.48) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.22),transparent 28%,transparent 72%,rgba(0,0,0,.22));
+}
+.hallvalla-vs-team{
+  position:absolute;
+  bottom:0;
+  width:44%;
+  height:94%;
+  z-index:6;
+}
+.hallvalla-vs-team-left{left:0;}
+.hallvalla-vs-team-right{right:0;}
+.hallvalla-vs-leader{
+  position:absolute;
+  bottom:-1.5%;
+  z-index:5;
+  width:auto;
+  height:min(82vh,76vw);
+  max-width:62%;
+  object-fit:contain;
+  object-position:center bottom;
+  filter:drop-shadow(0 18px 16px rgba(0,0,0,.64)) drop-shadow(0 0 11px rgba(209,157,48,.22));
+}
+.hallvalla-vs-team-left .hallvalla-vs-leader{left:31%;}
+.hallvalla-vs-team-right .hallvalla-vs-leader{right:31%;transform:scaleX(-1);}
+.hallvalla-vs-principals{
+  position:absolute;
+  inset:0;
+  z-index:2;
+}
+.hallvalla-vs-principal{
+  position:absolute;
+  bottom:2.5%;
+  width:34%;
+  height:65%;
+  z-index:2;
+  opacity:.94;
+  overflow:visible;
+}
+.hallvalla-vs-team-left .hallvalla-vs-principal{left:var(--vs-principal-offset,1%);}
+.hallvalla-vs-team-right .hallvalla-vs-principal{right:var(--vs-principal-offset,1%);}
+.hallvalla-vs-principal img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 38%;
+  filter:drop-shadow(0 14px 16px rgba(0,0,0,.7));
+  -webkit-mask-image:radial-gradient(ellipse 68% 88% at 50% 48%,#000 0%,#000 57%,rgba(0,0,0,.92) 70%,transparent 98%);
+  mask-image:radial-gradient(ellipse 68% 88% at 50% 48%,#000 0%,#000 57%,rgba(0,0,0,.92) 70%,transparent 98%);
+}
+.hallvalla-vs-team-right .hallvalla-vs-principal img{transform:scaleX(-1);}
+.hv-vs-image-missing{visibility:hidden!important;}
+.hallvalla-vs-center{
+  position:absolute;
+  left:50%;
+  top:48%;
+  z-index:12;
+  width:clamp(170px,22vw,360px);
+  aspect-ratio:1/1;
+  transform:translate(-50%,-50%);
+  display:grid;
+  place-items:center;
+}
+.hallvalla-vs-emblem{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 12px 20px rgba(0,0,0,.72)) drop-shadow(0 0 14px rgba(220,154,40,.34));
+}
+.hallvalla-vs-countdown{
+  position:relative;
+  z-index:2;
+  display:grid;
+  place-items:center;
+  min-width:1em;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(92px,12vw,205px);
+  line-height:.8;
+  font-weight:900;
+  color:#f5d36e;
+  -webkit-text-stroke:2px rgba(61,31,0,.78);
+  text-shadow:0 5px 0 #6c390a,0 9px 18px rgba(0,0,0,.85),0 0 22px rgba(255,182,48,.68);
+  transform-origin:center center;
+}
+.hallvalla-vs-countdown.is-ticking{animation:hallvallaVsCountShrink .9s cubic-bezier(.18,.8,.24,1) both;}
+.hallvalla-vs-countdown.is-zero{font-size:clamp(100px,13vw,220px);}
+@keyframes hallvallaVsCountShrink{
+  0%{transform:scale(1.7);opacity:.15;}
+  10%{opacity:1;}
+  72%{opacity:1;}
+  100%{transform:scale(.34);opacity:.72;}
+}
+html.hv-document-hidden .hallvalla-vs-intro *{animation-play-state:paused!important;}
+@media (max-width:900px){
+  .hallvalla-vs-team{width:48%;height:90%;}
+  .hallvalla-vs-leader{height:min(70vh,98vw);max-width:72%;}
+  .hallvalla-vs-team-left .hallvalla-vs-leader{left:25%;}
+  .hallvalla-vs-team-right .hallvalla-vs-leader{right:25%;}
+  .hallvalla-vs-principal{width:42%;height:58%;}
+  .hallvalla-vs-center{top:45%;width:clamp(135px,27vw,250px);}
+}
+@media (prefers-reduced-motion:reduce){
+  .hallvalla-vs-grass-a,.hallvalla-vs-grass-b{animation:none;}
+}

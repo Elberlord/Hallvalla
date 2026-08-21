@@ -55,6 +55,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let enginePrepInFlight=false;
   let realEngineStartTimer=null;
   let realEngineEnteredCode="";
+  let realEngineVsCode="";
+  let realEngineVsPromise=null;
 
   function $(id){ return document.getElementById(id); }
   function normalizeCode(value){ return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8); }
@@ -584,28 +586,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(String(room?.phase||"")!=="arena_ready"||!validateArenaBootstrap(room)) return false;
     const arena=room.arenaBootstrap;
     const firstEntry=arenaEnteredCode!==String(arena.matchCode||activeCode||"");
-    const rules=arena.settings||{};
-    const startingRole=Number(arena.currentPlayer||0);
-    const secondRole=Number(arena.secondPlayer||0);
-    setRpsVisualActive(false);
-    $("onlineLobby")?.classList.add("hidden");
-    $("mainMenu")?.classList.add("hidden");
-    globalThis.hvHydrateAssetGroup?.("battle");
+    // El antiguo gate/modal de inicio deja de mostrarse. Mientras se prepara el
+    // motor real se conserva el desenlace de Piedra/Papel/Tijera; el siguiente
+    // visual que toma la pantalla completa es el VS animado.
+    hide("pvpStep5ArenaGate",true);
     const shell=$("gameShell");
-    if(shell){ shell.classList.remove("hidden"); shell.classList.add("pvp-step5-preview"); }
-    hide("pvpStep5ArenaGate",false);
-    setText("pvpStep5Code",String(arena.matchCode||activeCode||"--------"));
-    setText("pvpStep5Player1",String(arena?.players?.[1]?.name||"Jugador 1"));
-    setText("pvpStep5Player2",String(arena?.players?.[2]?.name||"Jugador 2"));
-    setText("pvpStep5Player1Order",startingRole===1?"JUEGA PRIMERO":(secondRole===1?"JUEGA SEGUNDO":"—"));
-    setText("pvpStep5Player2Order",startingRole===2?"JUEGA PRIMERO":(secondRole===2?"JUEGA SEGUNDO":"—"));
-    setText("pvpStep5Timer",`Timer: ${rules.timerEnabled?"ON":"OFF"}`);
-    const stakeLabel=rules.stakeMode==="card"?"Carta · 500 oro al iniciar combate":(rules.stakeMode==="gold"?`Oro · ${Number(rules.goldAmount||500)}`:"Gratis");
-    setText("pvpStep5Stake",`Apuesta: ${stakeLabel}`);
-    setText("pvpStep5Start",`Inicia: ${String(arena?.players?.[startingRole]?.name||`J${startingRole}`)}`);
-    setText("pvpStep5ArenaStatus",`Sala ${arena.matchCode} sincronizada en ambos clientes. ${String(arena?.players?.[startingRole]?.name||`J${startingRole}`)} tiene reservado el primer turno.`);
+    if(shell){shell.classList.add("hidden");shell.classList.remove("pvp-step5-preview");}
     arenaEnteredCode=String(arena.matchCode||activeCode||"");
-    if(firstEntry) mark(`PASO 5 · ambos clientes entraron al duelo ${arenaEnteredCode} · J${startingRole} iniciará · motor de combate aún apagado.`);
+    if(firstEntry) mark(`PASO 5 · orden resuelto para ${arenaEnteredCode}; preparando VS previo al combate.`);
     return true;
   }
 
@@ -973,13 +961,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       boardCols:cols,
       mode:"online",
       createdAt:Number(room?.createdAt||Date.now()),
-      engineStartedAt:Date.now(),
-      phase:"active",
+      engineStartedAt:0,
+      phase:"prebattle",
+      prebattleStartedAt:ts,
+      prebattleLeadInMs:250,
+      prebattleDurationMs:3250,
       currentPlayer:startingRole,
       turn:1,
-      turnPhase:"draw",
-      turnKey:`1-${startingRole}`,
-      turnStartedAt:ts,
+      turnPhase:"prebattle",
+      turnKey:"",
+      turnStartedAt:null,
       clockRulesetVersion:clockVersion,
       playerClockMs:{1:duelLimit,2:duelLimit},
       matchSettings:{
@@ -1012,23 +1003,76 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     };
   }
 
-  function isRealEngineState6e(room){
-    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.phase==="active"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true&&room.pvpFullDuelEnabled===true;
+  function isRealEnginePayload6e(room){
+    return !!room&&room.schema==="hallvalla-pvp-real-engine-step6f"&&room.mode==="online"&&room.pvpBridgeReadOnly===false&&room.pvpStep6fMode==="unit_summon_only"&&room.pvpStep6gAttacks===true&&room.pvpFullDuelEnabled===true;
   }
+  function isRealEnginePrebattle6e(room){ return isRealEnginePayload6e(room)&&room.phase==="prebattle"; }
+  function isRealEngineState6e(room){ return isRealEnginePayload6e(room)&&room.phase==="active"; }
 
   function clearRealEngineStartTimer6e(){
     if(realEngineStartTimer!==null){ clearTimeout(realEngineStartTimer); realEngineStartTimer=null; }
   }
 
   async function launchRealEngine6e(code,room){
+    if(!(activeRole===1||activeRole===2)||!isRealEnginePayload6e(room)) return false;
+
+    if(isRealEnginePrebattle6e(room)){
+      if(realEngineVsCode===String(code||"")&&realEngineVsPromise) return realEngineVsPromise;
+      realEngineVsCode=String(code||"");
+      realEngineVsPromise=(async()=>{
+        try{
+          const ownSnap=await withTimeout(get(ref(db,`games/${code}/private/player${activeRole}`)),`Confirmar privado antes del VS J${activeRole}`,5000);
+          if(!ownSnap.exists()||ownSnap.val()?.engine6e?.ready!==true) throw new Error("Tu estado privado del motor real todavía no está preparado.");
+          clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
+          setRpsVisualActive(false);hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
+          $("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.add("hidden");
+          const shell=$("gameShell");
+          if(shell){shell.classList.add("hidden");shell.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");}
+          const startedAt=Math.max(0,Number(room?.prebattleStartedAt||0));
+          const lead=Math.max(0,Number(room?.prebattleLeadInMs||250));
+          const duration=Math.max(3000,Number(room?.prebattleDurationMs||3250));
+          const startAt=(startedAt||Date.now())+lead;
+          const endAt=startAt+duration;
+          if(typeof globalThis.showHallvallaPreBattleVs!=="function") throw new Error("La presentación VS no está disponible.");
+          await globalThis.showHallvallaPreBattleVs(room,{key:`pvp:${code}`,leftOwner:activeRole,rightOwner:activeRole===1?2:1,startAt,endAt});
+          if(activeRole===1){
+            const publicRef=ref(db,`games/${code}/public`);
+            const freshSnap=await withTimeout(get(publicRef),`Confirmar fin del VS ${code}`,5000);
+            if(freshSnap.exists()){
+              const fresh=freshSnap.val()||{};
+              if(isRealEnginePrebattle6e(fresh)){
+                const firstRole=Number(fresh.currentPlayer||1);
+                await withTimeout(update(publicRef,{
+                  phase:"active",
+                  turnPhase:"draw",
+                  turnKey:`1-${firstRole}`,
+                  turnStartedAt:serverTimestamp(),
+                  engineStartedAt:Date.now(),
+                  prebattleCompletedAt:serverTimestamp()
+                }),`Activar combate después del VS ${code}`,5000);
+              }
+            }
+          }
+          return true;
+        }catch(error){
+          console.error(`[HallValla][${STEP}] VS previo al motor real falló:`,error);
+          mark(`VS previo al motor real falló: ${error?.message||error}`);
+          globalThis.hideHallvallaPreBattleVs?.();
+          return false;
+        }
+      })();
+      return realEngineVsPromise;
+    }
+
+    if(!isRealEngineState6e(room)) return false;
     if(realEngineEnteredCode===String(code||"")) return true;
-    if(!isRealEngineState6e(room)||!(activeRole===1||activeRole===2)) return false;
     try{
       const ownSnap=await withTimeout(get(ref(db,`games/${code}/private/player${activeRole}`)),`Confirmar privado antes de entrar al motor real J${activeRole}`,5000);
       if(!ownSnap.exists()||ownSnap.val()?.engine6e?.ready!==true) throw new Error("Tu estado privado del motor real todavía no está preparado.");
       realEngineEnteredCode=String(code||"");
       clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
       detachRoomListener();detachOwnPrivateListener();
+      globalThis.hideHallvallaPreBattleVs?.();
       setRpsVisualActive(false);resetRpsUi();hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
       const shell=$("gameShell");
       if(shell){
@@ -1045,7 +1089,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           if(typeof setHint==="function") setHint("Paso 6I: duelo completo habilitado. MOV, DEF, ATTK, EFFECT, magias, equipos, trampas, pasivos y estados usan el motor real de HallValla.");
         }catch(_){ }
       },250);
-      mark(`PASO 6I · J${activeRole} entregado al duelo completo con perspectiva local sur y motor real habilitado.`);
+      mark(`PASO 6I · J${activeRole} entregado al duelo completo después del VS previo.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Entrada al motor real falló:`,error);
@@ -1069,7 +1113,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         const snap=await withTimeout(get(publicRef),`Confirmar preparación del motor real ${code}`,5000);
         if(!snap.exists()) return;
         const fresh=snap.val()||{};
-        if(isRealEngineState6e(fresh)){ void launchRealEngine6e(code,fresh); return; }
+        if(isRealEnginePayload6e(fresh)){ void launchRealEngine6e(code,fresh); return; }
         if(String(fresh?.phase||"")!=="arena_ready"||!validateArenaBootstrap(fresh)) return;
         if(!bothEnginePrep6e(fresh)){
           phaseWriteInFlight=false;
@@ -1399,7 +1443,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         if(ownPrivateHealthy&&validatePrivateCombat6c(battlePrivate,code,role)) mark(`PASO 6D · private/player${role} · mano ${normalizeFirebaseArray(battlePrivate.handKeys).length} · Honor ${Number(battlePrivate.honor||0)}/${Number(battlePrivate.maxHonor||0)}.`);
         else mark(ownPrivateHealthy?`PASO 4 · private/player${role} confirmado · mazo propio preparado.`:`private/player${role} inválido; LISTO bloqueado.`);
       }
-      try{ if(activeCode) void get(ref(db,`games/${activeCode}/public`)).then(roomSnap=>{ if(roomSnap?.exists()&&code===activeCode) renderRoomSnapshot(roomSnap.val()||{},activeCode); }).catch(()=>{}); }catch(_){ }
+      try{ if(activeCode) void get(ref(db,`games/${activeCode}/public`)).then(roomSnap=>{
+        if(!roomSnap?.exists()||code!==activeCode)return;
+        const fresh=roomSnap.val()||{};
+        if(isRealEnginePayload6e(fresh))void launchRealEngine6e(code,fresh);
+        else renderRoomSnapshot(fresh,activeCode);
+      }).catch(()=>{}); }catch(_){ }
     },error=>{ if(token!==ownPrivateListenerToken) return; ownPrivateHealthy=false; console.error(error); mark(`Listener private/player${role} falló: ${error?.message||error}`); });
   }
   async function removeOwnPrivateBranch(code,role,ownerUid){ if(!code||!ownerUid||(role!==1&&role!==2)) return; try{ const privateRef=ref(db,`games/${code}/private/player${role}`); const snapshot=await withTimeout(get(privateRef),`Leer private/player${role} antes de limpiar`,4000); if(snapshot.exists()&&String(snapshot.val()?.ownerUid||"")===String(ownerUid)) await withTimeout(remove(privateRef),`Limpiar private/player${role}`,4000); }catch(error){ console.warn(error); } }
@@ -1415,7 +1464,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         return;
       }
       const room=snapshot.val()||{};
-      if(isRealEngineState6e(room)){ void launchRealEngine6e(code,room); return; }
+      if(isRealEnginePayload6e(room)){ void launchRealEngine6e(code,room); return; }
       renderRoomSnapshot(room,code);
       if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room)) void ensureOwnRealEnginePrep6e(room,code);
       void reconcileRoomPhase(room,code);
@@ -1423,7 +1472,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
