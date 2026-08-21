@@ -136,6 +136,10 @@
     }
     const role=roleOf(u,ctx);
     if(isRearGuardAsset(u,ctx))return true; // repliega escoltando la línea de tiro.
+    const posture=battlePosture(ctx);
+    // Saturación ranged es una señal de repliegue para la formación, pero la caballería
+    // es la excepción móvil: con tanque sano y DPS disponible flanquea la batería de tiro.
+    if(role==="cavalry"&&posture.rangedSaturation&&!posture.noTanks&&!posture.tanksAtHalfOrWorse&&!posture.noDps)return false;
     return isBackline(u,ctx)||isDpsAsset(u,ctx)||["cavalry","skirmisher","assassin"].includes(role)||rg(u,ctx)>=2;
   }
 

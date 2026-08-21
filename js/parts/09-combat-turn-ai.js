@@ -209,7 +209,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
 
   if(leader.leaderType==="archer"&&ability==="arrow_rain"){
     const liveLeader=out.find(u=>u.id===leader.id)||leader;
-    const targets=out.filter(target=>target&&target.owner===enemyOwner&&!target.leader&&Number(target.hp||0)>0&&dist(liveLeader,target)<=4&&canReceiveUntargetedAreaEffect(target));
+    const targets=out.filter(target=>target&&target.owner===enemyOwner&&!target.leader&&Number(target.hp||0)>0&&dist(liveLeader,target)<=3&&canReceiveUntargetedAreaEffect(target));
     if(!targets.length)return{units:out,logs:[],triggered:false,battleFxEvent:null};
     const before=[...out];
     const targetIds=new Set(targets.map(target=>target.id));
@@ -225,7 +225,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     const visibleTargets=targets.filter(target=>!isHidden(target));
     const logs=[];
     if(!isPrivateStealth||visibleTargets.length>0){
-      logs.push(`${liveLeader.name} activa automáticamente Lluvia de flechas al final del turno rival: 1 daño directo a las unidades enemigas a rango 4 o menos, ignorando Guardia y stats.`);
+      logs.push(`${liveLeader.name} activa automáticamente Lluvia de flechas al final del turno rival: 1 daño directo a las unidades enemigas a rango 3 o menos, ignorando Guardia y stats.`);
       if(blood.logs.length)logs.push(...blood.logs);
     }
     return{units:out,logs,triggered:true,battleFxEvent:null};
@@ -977,10 +977,12 @@ async function resolveSharedAttackOutcome({
   units=cossackAdvanceResult.units;
   const cavalryExtraText=`${equipmentRetreatResult.text||""}${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
   const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
-  units=clearStealthAfterAttackIfNeeded(units,a.id,keepStealthAfterAttack);
+  const geishaKeepsStealthAfterKill=!!(a.key==="geisha_encubierta"&&attackerWasStealthedBeforeAttack&&geishaFanKillResult?.triggered&&defenderFell);
+  const finalKeepStealthAfterAttack=keepStealthAfterAttack||geishaKeepsStealthAfterKill;
+  units=clearStealthAfterAttackIfNeeded(units,a.id,finalKeepStealthAfterAttack);
   const simoStealthResult=grantSimoStealthAfterKill(units,a,d,hit.hit&&defenderFell);
   units=simoStealthResult.units;
-  const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`):"";
+  const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(geishaKeepsStealthAfterKill?` Danza del Engaño: ${a.name} destruye a su objetivo con Corte de Abanico y conserva Sigilo.`:(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`)):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
   const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
@@ -1992,8 +1994,34 @@ async function adventureEnemyTurn(){
     const tempoBonus=attacker&&aiTempoEngine?.scoreAttackTarget
       ?Number(aiTempoEngine.scoreAttackTarget(target,attacker,aiDoctrineContext())||0)
       :0;
-    const rangedSuppressionBonus=attacker&&!target.leader&&aiBattlePosture().rangedSaturation&&aiAttackRange(target)>=2?560:0;
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus;
+    const postureNow=attacker?aiBattlePosture():null;
+    const attackerRole=attacker?aiBasicTacticRole(attacker):"";
+    const rangedSuppressionBonus=attacker&&!target.leader&&postureNow?.rangedSaturation&&aiAttackRange(target)>=2?560:0;
+    // Crisis anti-ranged: la caballería usa su movilidad para romper la batería de tiro,
+    // no para orbitar al Líder mientras arqueros/magos siguen disparando gratis.
+    const cavalryRangedCrisis=attackerRole==="cavalry"&&!!postureNow?.rangedSaturation;
+    const cavalryRangedBonus=cavalryRangedCrisis&&!target.leader&&aiAttackRange(target)>=2
+      ?1150+aiAttackRange(target)*95+(effectiveAtk(target)||0)*35
+      :0;
+    const cavalryLeaderPenalty=cavalryRangedCrisis&&target.leader?-900:0;
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus+cavalryRangedBonus+cavalryLeaderPenalty;
+  };
+
+  const aiCavalryRangedCrisisTarget=(attacker)=>{
+    if(!attacker||aiBasicTacticRole(attacker)!=="cavalry"||!aiBattlePosture().rangedSaturation)return null;
+    return living(1)
+      .filter(t=>!t.leader&&!aiIsDoomedByDotAtNextTurn(t)&&aiAttackRange(t)>=2&&(effectiveAtk(t)||0)>0&&aiCanEverTarget(attacker,t))
+      .map(t=>{
+        const gap=Math.max(0,d(attacker,t)-Math.max(1,effectiveMov(attacker)||0)-aiAttackReachForTarget(attacker,t));
+        let score=scoreTarget(t,0,attacker)-gap*65;
+        const role=aiBasicTacticRole(t);
+        if(role==="ranged")score+=430;
+        else if(role==="support"||role==="skirmisher")score+=210;
+        if(Number(t.hp||0)<=3)score+=180;
+        if(t.principal||t.special)score+=145;
+        return{target:t,score};
+      })
+      .sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
 
   const aiIsLowHpNuisanceTarget=(target)=>{
@@ -2149,6 +2177,8 @@ async function adventureEnemyTurn(){
   const bestAttackTarget=(attacker)=>{
     const validTargets=living(1).filter(t=>canHit(attacker,t)&&!aiIsDoomedByDotAtNextTurn(t));
     const focused=aiFocusedTarget();
+    const cavalryRangedCrisisTarget=aiCavalryRangedCrisisTarget(attacker);
+    const cavalryRangedCrisis=!!cavalryRangedCrisisTarget;
     const stealthActive=!!isStealthedUnit(attacker);
     const stealthHunt=stealthActive?aiStealthHuntTarget(attacker):null;
     const stealthHuntValue=stealthHunt?aiStealthBacklineHuntValue(attacker,stealthHunt):-Infinity;
@@ -2171,7 +2201,16 @@ async function adventureEnemyTurn(){
         return null; // mantiene Sigilo y usa el movimiento para seguir infiltrándose hacia esa presa.
       }
     }
-    if(focused){
+    if(cavalryRangedCrisis){
+      const rangedInRange=validTargets
+        .filter(t=>!t.leader&&aiAttackRange(t)>=2)
+        .map(t=>({target:t,score:scoreTarget(t,0,attacker)}))
+        .sort((a,b)=>b.score-a.score)[0]?.target||null;
+      if(rangedInRange)return rangedInRange;
+      // Un foco previo sobre Líder/frontline no secuestra a la caballería durante
+      // saturación de ranged. Si todavía no llega a la batería, primero maniobra.
+    }
+    if(focused&&!(cavalryRangedCrisis&&(focused.leader||aiAttackRange(focused)<2))){
       if(validTargets.some(t=>t.id===focused.id)){
         // La Geisha conserva su regla especial de no romper Sigilo sin Corte de Abanico.
         if(!(attacker.key==="geisha_encubierta"&&stealthActive&&aiShouldHoldStealthAttack(attacker,focused)))return focused;
@@ -3315,6 +3354,7 @@ async function adventureEnemyTurn(){
     const maxMove=mulanExecMove?1:effectiveMov(u);
     const moverRole=aiBasicTacticRole(u);
     const movePosture=aiBattlePosture();
+    const cavalryRangedCrisisTarget=moverRole==="cavalry"&&movePosture.rangedSaturation?aiCavalryRangedCrisisTarget(u):null;
     // Un tanque crítico se queda haciendo pantalla aunque el resto del ejército
     // haya recuperado presión: su último valor es comprar distancia para el ranged.
     const criticalRearGuard=!!(aiTempoEngine?.isCriticalTank?.(u,aiDoctrineContext()));
@@ -3325,7 +3365,15 @@ async function adventureEnemyTurn(){
     const stealthPriorityTarget=stealthVeilActive?aiStealthHuntTarget(u):null;
     const primaryTarget=strategicTargets.map(t=>{
       let targetScore=scoreTarget(t,0,u)+(t.leader?90:0);
-      if(aiFocusTargetId&&t.id===aiFocusTargetId)targetScore+=1400;
+      if(aiFocusTargetId&&t.id===aiFocusTargetId){
+        const focusOverriddenByRangedCrisis=!!(cavalryRangedCrisisTarget&&(t.leader||aiAttackRange(t)<2));
+        if(!focusOverriddenByRangedCrisis)targetScore+=1400;
+      }
+      if(cavalryRangedCrisisTarget){
+        if(t.id===cavalryRangedCrisisTarget.id)targetScore+=2200;
+        else if(t.leader)targetScore-=1450;
+        else if(aiAttackRange(t)<2)targetScore-=520;
+      }
       if(isStealthedUnit(u)&&!t.leader){
         targetScore+=160+aiUnitValue(t)*0.2;
       }
@@ -3355,7 +3403,7 @@ async function adventureEnemyTurn(){
       return{target:t,score:targetScore};
     }).sort((a,b)=>b.score-a.score)[0]?.target||null;
     const rangedAnchorTarget=aiIsRangedCombatUnit(u)?bestAttackTarget(u):null;
-    const huntTarget=rangedAnchorTarget||stealthPriorityTarget||primaryTarget;
+    const huntTarget=stealthPriorityTarget||cavalryRangedCrisisTarget||rangedAnchorTarget||primaryTarget;
     const currentGap=huntTarget?Math.max(0,d(u,huntTarget)-aiAttackReachForTarget(u,huntTarget)):999;
     const geishaBacklineHunt=(u.key==="geisha_encubierta"&&isStealthedUnit(u)&&huntTarget&&!huntTarget.leader)
       ?aiGeishaBacklineExecutionValue(u,huntTarget)
@@ -3439,6 +3487,17 @@ async function adventureEnemyTurn(){
               score-=520; // nunca abandona un disparo disponible solo para acercarse/recolocarse.
             }
           }
+        }
+        if(role==="cavalry"&&cavalryRangedCrisisTarget){
+          const currentCrisisDist=d(start,cavalryRangedCrisisTarget);
+          const nextCrisisDist=d(pos,cavalryRangedCrisisTarget);
+          if(nextCrisisDist<currentCrisisDist)score+=(currentCrisisDist-nextCrisisDist)*235;
+          if(nextCrisisDist<=aiAttackReachForTarget(ghost,cavalryRangedCrisisTarget))score+=520;
+          if(nextCrisisDist===aiAttackReachForTarget(ghost,cavalryRangedCrisisTarget))score+=145;
+          // No convertir la misión anti-ranged en otra órbita alrededor del Líder rival.
+          if(pl&&d(pos,pl)<d(start,pl)&&nextCrisisDist>=currentCrisisDist)score-=320;
+          const activeSpearAdjacent=living(1).some(e=>aiBasicTacticRole(e)==="spear"&&d(pos,e)<=1&&!(e.noCounterTurnKey&&pub.turnKey&&e.noCounterTurnKey===pub.turnKey));
+          if(activeSpearAdjacent)score-=620;
         }
         if(role==="spear"){
           score+=aiSpearGuardCellScore(pos,u);
@@ -3582,6 +3641,17 @@ async function adventureEnemyTurn(){
     const posture=aiBattlePosture();
     const isTank=!!aiTempoEngine?.isTankAsset?.(u,aiDoctrineContext());
     const unitMustRetreat=isTank?retreatAsset:(posture.retreat&&retreatAsset);
+    const cavalryRangedCrisisTarget=role==="cavalry"&&posture.rangedSaturation?aiCavalryRangedCrisisTarget(u):null;
+
+    // Con una batería ranged rival dominante, la caballería sana no malgasta el turno
+    // pegando al Líder/frontline si puede flanquear hacia la fuente de daño.
+    if(cavalryRangedCrisisTarget&&!canHit(u,cavalryRangedCrisisTarget)){
+      const best=bestMoveFor(u);
+      if(best&&d(best,cavalryRangedCrisisTarget)<d(u,cavalryRangedCrisisTarget)){
+        const activeSpearAdjacent=living(1).some(e=>aiBasicTacticRole(e)==="spear"&&d(best,e)<=1&&!(e.noCounterTurnKey&&pub.turnKey&&e.noCounterTurnKey===pub.turnKey));
+        if(!activeSpearAdjacent)return true;
+      }
+    }
 
     // Kiting universal: un ranged que ya puede disparar se aleja primero si conserva ese mismo tiro.
     if(aiIsRangedCombatUnit(u)&&target){

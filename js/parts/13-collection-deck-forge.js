@@ -1453,7 +1453,7 @@ const LEADER_DETAIL_META={
       "Tier 4 (nivel 9): +3 AT / +6 DX / +2 AGI"
     ],
     abilityName:"Lluvia de flechas",
-    ability:"Desde nivel 5, al final del turno rival se activa automáticamente si hay al menos una unidad enemiga a rango 4 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 4, ignorando Guardia y stats, y también afecta unidades con Sigilo."
+    ability:"Desde nivel 5, al final del turno rival se activa automáticamente si hay al menos una unidad enemiga a rango 3 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 3, ignorando Guardia y stats, y también afecta unidades con Sigilo."
   },
   mage:{
     target:"Magias",
