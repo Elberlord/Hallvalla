@@ -23236,7 +23236,7 @@ body:not(.hv-forge-edit-active) #deckBuilderPanel.hv-forge-collection-v2 #deckFi
 .hallvalla-vs-grass{
   position:absolute;
   inset:0;
-  background-image:url("assets/ui/vs_intro/vs_battlefield.png");
+  background-image:url("assets/ui/vs_intro/vs_battlefield.webp");
   background-repeat:no-repeat;
   background-position:center center;
   background-size:cover;

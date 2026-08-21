@@ -12,7 +12,7 @@
 (function installHallvallaAICombatEngine(global){
   "use strict";
 
-  const VERSION="AI-DOCTRINE-V5-E49";
+  const VERSION="AI-DOCTRINE-V6-DOT-EXECUTION";
   const MEMORY_KEY="combatDoctrineMemoryV1";
   const MEMORY_HISTORY_LIMIT=48;
 
@@ -359,6 +359,30 @@
     return {total,role,accessTurns,camp,growth,learned,leaderPressure:danger,backlinePressure:backline.score,backlineThreatened:backline.threatened,roleWeight};
   }
 
+  function isDotExecutionRole(role){
+    return ["ranged","support","assassin","skirmisher"].includes(String(role||"").toLowerCase());
+  }
+  function dotExecutionProfile(target,ctx={}){
+    if(!target||target.leader)return {qualifies:false,lowHp:false,nuisance:false,hardToReach:false,doomedByNextTick:false,threat:null,boardKill:{}};
+    const threat=threatBreakdown(target,ctx);
+    const hp=Math.max(0,num(target.hp,0));
+    const max=Math.max(1,maxHp(target,ctx));
+    const lowHp=hp>0&&(hp<=3||hp/max<=.45);
+    const nuisance=isDotExecutionRole(threat.role);
+    const boardKill=boardKillPotential(target,ctx);
+    const hardToReach=threat.accessTurns>=2||(!boardKill.direct&&!boardKill.reachable&&threat.accessTurns>=1);
+    const burnTick=(num(target.burnTurns||target.burnTurnsRemaining,0)>0)?Math.max(0,num(target.burnDamage,1)):0;
+    const poisonTick=(num(target.poisonTurns,0)>0)?Math.max(0,num(target.poisonDamage,1)):0;
+    const bleedTick=Math.max(0,num(target.bleedDamage,0));
+    const nextDot=burnTick+poisonTick+bleedTick;
+    const doomedByNextTick=hp>0&&nextDot>=hp;
+    return {
+      qualifies:lowHp&&nuisance&&hardToReach&&!doomedByNextTick,
+      lowHp,nuisance,hardToReach,doomedByNextTick,nextDot,threat,boardKill,
+      alreadyBurn:burnTick>0,alreadyPoison:poisonTick>0,alreadyBleed:bleedTick>0
+    };
+  }
+
   function previewDamage(card,target,ctx){
     try{
       if(ctx?.previewDirectDamage){
@@ -407,6 +431,7 @@
     const immobilizes=permanentSlow>0&&targetMov>0&&permanentSlow>=targetMov;
     const delayedLethal=!lethal&&hp>0&&(actual+burn.future)>=hp;
     const boardKill=target.leader?{}:boardKillPotential(target,ctx);
+    const dotExecution=target.leader?null:dotExecutionProfile(target,ctx);
     let followupKill={};
     if(!lethal&&!target.leader&&ctx?.followupKillPotential){
       try{followupKill=ctx.followupKillPotential(card,target,actual)||{};}catch(_){followupKill={};}
@@ -423,6 +448,19 @@
     if(lethal)score+=(exactLethal?650:505)*doc.lethal+unitValue(target,ctx)*.45;
     if(delayedLethal)score+=480*doc.delayedLethal;
     else if(burn.future>0)score+=burn.future*42+threat.camp*.24;
+
+    // Ejecución remota por DOT: si una pieza frágil/molesta (arquero, soporte,
+    // asesino o hostigador) está baja de Vida y cuesta varios tempi alcanzarla,
+    // Quemadura vale mucho más que mandar la frontline a perseguirla.
+    if(dotExecution?.qualifies&&burn.future>0&&burn.newStatus){
+      const remainingAfterHit=Math.max(0,hp-actual);
+      if(remainingAfterHit>0){
+        score+=310+Math.min(310,threat.total*.24)+Math.max(0,threat.accessTurns-1)*95;
+        if(burn.future>=remainingAfterHit)score+=720*doc.delayedLethal;
+        if(threat.role==="ranged"||threat.role==="assassin")score+=185;
+        if(hp<=2)score+=120;
+      }
+    }
 
     // Maldición de arena y futuros efectos equivalentes: para un ejército móvil,
     // restar MOV permanente no es adorno; altera cuántos tempi necesita el rival.
@@ -507,6 +545,7 @@
     const poison=poisonForecast(card,target);
     const delayedLethal=hp>0&&poison.future>=hp;
     const boardKill=boardKillPotential(target,ctx);
+    const dotExecution=dotExecutionProfile(target,ctx);
     let score=105+threat.total*.22+maxHp(target,ctx)*8+poison.future*14;
     score+=(doc.poison-1)*180;
     if(delayedLethal)score+=430*doc.delayedLethal;
@@ -520,7 +559,15 @@
     if(already)score-=360;
     if(boardKill.direct)score-=210*doc.physicalAlternativePenalty;
     else if(boardKill.reachable)score-=105*doc.physicalAlternativePenalty;
-    if(hp<=2&&!delayedLethal&&threat.camp<80)score-=80;
+    if(hp<=2&&!delayedLethal&&threat.camp<80&&!dotExecution.qualifies)score-=80;
+    // Ejecución remota: Veneno es una herramienta de remate especialmente valiosa
+    // contra backline/asesinos bajos de Vida que la formación no puede alcanzar ya.
+    if(dotExecution.qualifies&&!already){
+      score+=360+Math.min(330,threat.total*.26)+Math.max(0,threat.accessTurns-1)*105;
+      if(delayedLethal)score+=760*doc.delayedLethal;
+      if(threat.role==="ranged"||threat.role==="assassin")score+=190;
+      if(hp<=2)score+=145;
+    }
     // Beastmaster quiere propagar relojes de muerte, no duplicarlos sobre una presa condenada.
     if(ctx.leaderType==="beastmaster"){
       if(!already)score+=150;
@@ -793,6 +840,21 @@
     const leaderDanger=ownLeader?ranked.reduce((sum,t)=>sum+(t.leaderPressure||0),0):0;
     if(leaderDanger>=420)return {key:"stabilize",target:top?.unit||null,priority:leaderDanger};
 
+    // Remate remoto universal: una pieza molesta con poca Vida no justifica romper
+    // la formación para perseguirla. Si está lejos, el plan busca Quemadura/Veneno
+    // (o daño remoto equivalente) mientras la frontline continúa cubriendo al DPS.
+    const remoteExecution=ranked.find(t=>{
+      const hp=Math.max(0,num(t.unit?.hp,0));
+      const max=Math.max(1,maxHp(t.unit,ctx));
+      const lowHp=hp>0&&(hp<=3||hp/max<=.45);
+      const nuisance=isDotExecutionRole(t.role);
+      const burnTick=(num(t.unit?.burnTurns||t.unit?.burnTurnsRemaining,0)>0)?Math.max(0,num(t.unit?.burnDamage,1)):0;
+      const poisonTick=(num(t.unit?.poisonTurns,0)>0)?Math.max(0,num(t.unit?.poisonDamage,1)):0;
+      const bleedTick=Math.max(0,num(t.unit?.bleedDamage,0));
+      return nuisance&&lowHp&&t.accessTurns>=2&&(burnTick+poisonTick+bleedTick)<hp;
+    });
+    if(remoteExecution)return {key:"remote_suppression",target:remoteExecution.unit,priority:remoteExecution.total+260};
+
     // Si el principal generador de caos está campeando y llegar físicamente
     // requiere varios tempi, la IA deja de "caminar hacia el problema" y busca
     // daño/DOT/control remoto.
@@ -841,6 +903,29 @@
     const cardRole=choice.card?getRole(choice.card,ctx):"";
     const isPlanTarget=!!(target&&plan?.target&&target.id&&plan.target.id&&target.id===plan.target.id);
     let score=isPlanTarget?145:0;
+
+    // Todos los líderes comparten esta lectura: si una pieza frágil y peligrosa está
+    // baja de Vida pero fuera del contacto práctico, es mejor ponerle un reloj de
+    // muerte que desmontar la pantalla para ir a buscarla.
+    if(target&&!target.leader){
+      const dotExecution=dotExecutionProfile(target,ctx);
+      if(dotExecution.qualifies){
+        if(kind==="poison"&&!dotExecution.alreadyPoison){
+          const poison=poisonForecast(choice.card,target);
+          score+=430+Math.min(260,(dotExecution.threat?.total||0)*.20);
+          if(poison.future>=num(target.hp,0))score+=390;
+        }
+        if(kind==="damage"){
+          const preview=previewDamage(choice.card,target,ctx);
+          const burn=burnForecast(choice.card,target,preview.actual);
+          const remaining=Math.max(0,num(target.hp,0)-preview.actual);
+          if(burn.future>0&&burn.newStatus&&remaining>0){
+            score+=390+Math.min(240,(dotExecution.threat?.total||0)*.18);
+            if(burn.future>=remaining)score+=360;
+          }
+        }
+      }
+    }
     switch(plan?.key){
       case "stabilize":
         if(["heal","guard","paralysis","damage","slow"].includes(kind))score+=90;

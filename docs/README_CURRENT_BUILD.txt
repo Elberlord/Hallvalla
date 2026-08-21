@@ -1,6 +1,20 @@
 HallValla v8 Modular · Build actual
 ===================================
 
+Estado del paquete: E49.2 · VS PREBATTLE + ASSETS WEBP + FIREBASE RULES UPDATE (2026-08-21)
+
+E49.2 · VS prebatalla, optimización de peso y reglas Firebase
+--------------------------------------------------------------
+- Los dos assets del VS previo al combate se convierten de PNG a WEBP para reducir el peso del paquete.
+- Se eliminan del proyecto los PNG del VS (`assets/ui/vs_intro/vs_battlefield.png` y `assets/ui/vs_intro/vs_emblem.png`) y las rutas se actualizan a `vs_battlefield.webp` y `vs_emblem.webp`.
+- El flujo PvP/IA con pantalla VS previa al combate se mantiene igual; el cambio es solo de formato/ruta de asset.
+- `database.rules.json` queda actualizado para permitir la fase `prebattle` en Realtime Database.
+- Cambio concreto en reglas: `phase` ahora acepta `waiting`, `rps`, `configured`, `arena_ready`, `prebattle`, `battle_active`, `active` y `ended`.
+- Esta nota deja documentado que, al publicar reglas en Firebase, el estado `prebattle` debe estar incluido para que la intro VS funcione correctamente en PvP.
+
+HallValla v8 Modular · Build actual
+===================================
+
 Estado del paquete: E49.1 · TACTICAL SEQUENCES + MAPA 1 DECK BASES (2026-08-17)
 
 E49.1 · Integración de mazos aprobados del Mapa 1

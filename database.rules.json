@@ -16,7 +16,7 @@
             ".validate": "newData.isNumber() && newData.val() > 0"
           },
           "phase": {
-            ".validate": "newData.isString() && (newData.val() === 'waiting' || newData.val() === 'rps' || newData.val() === 'configured' || newData.val() === 'arena_ready' || newData.val() === 'battle_active' || newData.val() === 'active' || newData.val() === 'ended')"
+            ".validate": "newData.isString() && (newData.val() === 'waiting' || newData.val() === 'rps' || newData.val() === 'configured' || newData.val() === 'arena_ready' || newData.val() === 'prebattle' || newData.val() === 'battle_active' || newData.val() === 'active' || newData.val() === 'ended')"
           },
           "currentPlayer": {
             ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2)"

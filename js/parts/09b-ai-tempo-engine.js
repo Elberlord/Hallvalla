@@ -8,7 +8,7 @@
 (function installHallvallaAITempoEngine(global){
   "use strict";
 
-  const VERSION="AI-TEMPO-V2-E49";
+  const VERSION="AI-TEMPO-V5-RANGED-KITE-FOCUS";
   const num=(v,f=0)=>Number.isFinite(Number(v))?Number(v):f;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,num(v)));
   const dist=(a,b)=>a&&b?Math.max(Math.abs(num(a.x)-num(b.x)),Math.abs(num(a.y)-num(b.y))):99;
@@ -38,15 +38,38 @@
   function mov(u,ctx){try{return Math.max(0,num(ctx?.movement?.(u),u?.mov||0));}catch(_){return Math.max(0,num(u?.mov));}}
   function rg(u,ctx){try{return Math.max(1,num(ctx?.attackRange?.(u),u?.range||1));}catch(_){return Math.max(1,num(u?.range,1));}}
   function unitValue(u,ctx){try{return Math.max(0,num(ctx?.unitValue?.(u),0));}catch(_){return 0;}}
+  function gd(u,ctx){try{return Math.max(0,num(ctx?.guard?.(u),u?.guard||0));}catch(_){return Math.max(0,num(u?.guard));}}
 
+  function isTankAsset(u,ctx){
+    if(!u||u.leader||hpMax(u,ctx)<5)return false;
+    const role=roleOf(u,ctx), tactical=tacticalRole(u), key=keyOf(u);
+    if(role==="tank"||role==="spear")return true;
+    if(tactical==="bodyguard")return true;
+    return ["guardian","samurai_naginata","spearman","greek_hoplite"].includes(key);
+  }
+  function isBreakerAsset(u,ctx){
+    if(!u||u.leader||rg(u,ctx)>1)return false;
+    const tactical=tacticalRole(u), key=keyOf(u);
+    // "Rompedor" de mazo no implica automáticamente frontline: sólo las piezas
+    // melee capaces de sostener el contacto (Samurai/Berserkers y equivalentes).
+    return tactical==="breaker"||["samurai_katana","berserker","berserker_de_oso"].includes(key);
+  }
   function isFrontAsset(u,ctx){
     if(!u||u.leader)return false;
+    if(isTankAsset(u,ctx)||isBreakerAsset(u,ctx))return true;
     const role=roleOf(u,ctx), tactical=tacticalRole(u);
-    if(["tank","spear"].includes(role))return true;
-    if(["bodyguard","breaker"].includes(tactical))return true;
-    const key=keyOf(u);
-    return ["guardian","samurai_katana","samurai_naginata","spearman"].includes(key);
+    if(role==="spear"||tactical==="bodyguard")return true; // primera línea por función, no clasificación de tanque.
+    return false;
   }
+  function isDpsAsset(u,ctx){
+    if(!u||u.leader||num(u.hp,1)<=0||isTankAsset(u,ctx))return false;
+    const role=roleOf(u,ctx), tactical=tacticalRole(u);
+    if(["ranged","skirmisher","assassin","cavalry","melee"].includes(role))return atk(u,ctx)>0;
+    if(["breaker","harasser","suppressor","finisher","charger"].includes(tactical))return atk(u,ctx)>0;
+    return rg(u,ctx)>=2&&atk(u,ctx)>0;
+  }
+  function tankHpRatio(u,ctx){return clamp(num(u?.hp,0)/hpMax(u,ctx),0,1);}
+  function isCriticalTank(u,ctx){return isTankAsset(u,ctx)&&(num(u.hp,0)<=1||tankHpRatio(u,ctx)<=.25);}
   function isBackline(u,ctx){
     if(!u||u.leader)return false;
     const role=roleOf(u,ctx), tactical=tacticalRole(u);
@@ -56,6 +79,57 @@
 
   function fragileBackline(ctx){
     return (ctx?.ownUnits||[]).filter(u=>u&&num(u.hp,1)>0&&!u.leader&&isBackline(u,ctx));
+  }
+
+  function battlePosture(ctx={}){
+    const troops=(ctx?.ownUnits||[]).filter(u=>u&&num(u.hp,1)>0&&!u.leader);
+    const fronts=troops.filter(u=>isFrontAsset(u,ctx));
+    const tanks=troops.filter(u=>isTankAsset(u,ctx));
+    const healthyTanks=tanks.filter(u=>tankHpRatio(u,ctx)>.50);
+    const criticalTanks=tanks.filter(u=>isCriticalTank(u,ctx));
+    const dps=troops.filter(u=>isDpsAsset(u,ctx));
+    const backline=troops.filter(u=>isBackline(u,ctx)||["cavalry","skirmisher","assassin"].includes(roleOf(u,ctx))||rg(u,ctx)>=2);
+    const sturdyFronts=fronts.filter(u=>{
+      if(isTankAsset(u,ctx))return tankHpRatio(u,ctx)>.50;
+      const hpRatio=clamp(num(u.hp,1)/hpMax(u,ctx),0,1);
+      return isBreakerAsset(u,ctx)?hpRatio>.35:hpRatio>.45;
+    });
+    const nearbySupport=healthyTanks.reduce((best,front)=>Math.max(best,troops.filter(a=>a.id!==front.id&&dist(a,front)<=4).length),0);
+    const localFormationReady=healthyTanks.some(front=>troops.filter(a=>a.id!==front.id&&dist(a,front)<=4).length>=2);
+
+    const enemies=(ctx?.enemyUnits||[]).filter(u=>u&&num(u.hp,1)>0&&!u.leader);
+    const enemyRanged=enemies.filter(u=>rg(u,ctx)>=2&&atk(u,ctx)>0);
+    const rangedSaturation=enemyRanged.length>=3||(enemyRanged.length>=2&&enemyRanged.length>=Math.ceil(Math.max(1,enemies.length)*.5));
+    const noTanks=tanks.length===0;
+    const tanksAtHalfOrWorse=tanks.length>0&&healthyTanks.length===0;
+    const noDps=dps.length===0;
+    const retreat=troops.length>0&&(noTanks||tanksAtHalfOrWorse||noDps||rangedSaturation);
+    const pressure=!retreat&&troops.length>=3&&healthyTanks.length>=1&&dps.length>=1&&localFormationReady;
+    return {
+      mode:retreat?"retreat":(pressure?"pressure":"hold"),
+      pressure,retreat,hold:!pressure&&!retreat,
+      troops,fronts,tanks,healthyTanks,criticalTanks,dps,sturdyFronts,backline,nearbySupport,localFormationReady,
+      enemyRanged,rangedSaturation,noTanks,tanksAtHalfOrWorse,noDps
+    };
+  }
+
+  function warriorPressureState(ctx={}){
+    const type=String(ctx?.leaderType||"").toLowerCase();
+    const posture=battlePosture(ctx);
+    const fireSupport=posture.troops.filter(u=>isBackline(u,ctx)||roleOf(u,ctx)==="cavalry"||rg(u,ctx)>=2);
+    return {ready:type==="warrior"&&posture.pressure,troops:posture.troops,fronts:posture.fronts,fireSupport};
+  }
+
+  function isRetreatAsset(u,ctx){
+    if(!u||u.leader||num(u.hp,1)<=0)return false;
+    if(isTankAsset(u,ctx)){
+      if(isCriticalTank(u,ctx))return false; // condenado: se queda cubriendo la retirada.
+      const ratio=tankHpRatio(u,ctx);
+      const posture=battlePosture(ctx);
+      return ratio<=.50||posture.noDps||posture.rangedSaturation;
+    }
+    const role=roleOf(u,ctx);
+    return isBackline(u,ctx)||isDpsAsset(u,ctx)||["cavalry","skirmisher","assassin"].includes(role)||rg(u,ctx)>=2;
   }
 
   function enemyCanPressureCell(enemy,cell,ctx){
@@ -110,8 +184,12 @@
 
   function actionPriority(unit,ctx={}){
     if(!unit||unit.leader||num(unit.hp,1)<=0)return 0;
+    const posture=battlePosture(ctx);
+    let postureScore=0;
+    if(posture.retreat&&isRetreatAsset(unit,ctx))postureScore+=260;
+    if(posture.pressure&&isBackline(unit,ctx))postureScore+=95;
     const need=mostThreatenedFront(ctx);
-    if(!need||need.score<95)return 0;
+    if(!need||need.score<95)return postureScore;
     const role=roleOf(unit,ctx), tactical=tacticalRole(unit);
     const isNeed=unit.id===need.unit.id;
     let score=0;
@@ -128,7 +206,7 @@
       score-=need.exposed?170:70;
       if(need.hpRatio<=.45)score-=80;
     }
-    return score;
+    return score+postureScore;
   }
 
   function scoreAttackTarget(target,attacker,ctx={}){
@@ -143,6 +221,13 @@
       score+=110+urgency;
       if(attacker.id!==front.id&&isBackline(attacker,ctx))score+=125; // fuego de cobertura antes de comprometer la pantalla.
       if(num(target.hp,0)<=Math.max(1,atk(attacker,ctx)))score+=90;
+    }
+    const posture=battlePosture(ctx);
+    if(posture.pressure&&!target.leader){
+      if(isBackline(target,{...ctx,ownUnits:ctx.enemyUnits,enemyUnits:ctx.ownUnits}))score+=165;
+      if(target.special||target.principal)score+=135;
+      score+=Math.min(130,unitValue(target,ctx)*.24);
+      if(num(target.hp,0)<=Math.max(1,atk(attacker,ctx)))score+=125;
     }
     return score;
   }
@@ -181,6 +266,8 @@
     if(!u||!cell)return 0;
     const need=mostThreatenedFront(ctx);
     const ownLeader=ctx.ownLeader||null;
+    const warriorPush=warriorPressureState(ctx);
+    const posture=battlePosture(ctx);
     let score=0;
 
     if(isFrontAsset(u,ctx)){
@@ -191,19 +278,54 @@
       const hpRatio=clamp(num(u.hp,1)/hpMax(u,ctx),0,1);
       const progress=Math.max(0,num(input.progress,0));
       const screenLoss=backlineScreenLoss(u,cell,ctx);
-      score-=screenLoss.score;
-      if(screenLoss.critical>0&&!input.canAttack)score-=180*screenLoss.critical;
-      if(nextAttackers.length>=3&&nextSupport<2)score-=310;
-      if(nextAttackers.length>current.attackers.length&&nextSupport<=current.support)score-=145*(nextAttackers.length-current.attackers.length);
-      if(progress>0&&current.exposed)score-=190+progress*45;
-      if(progress>0&&hpRatio<=.55)score-=180;
+      const tankAsset=isTankAsset(u,ctx);
+      const criticalTank=tankAsset&&isCriticalTank(u,ctx);
+      const tankMustRetreat=tankAsset&&!criticalTank&&(hpRatio<=.50||posture.noDps||posture.rangedSaturation||posture.tanksAtHalfOrWorse);
+      if(tankAsset&&(criticalTank||tankMustRetreat)){
+        if(criticalTank){
+          // Un tanque condenado no abandona la pantalla: compra distancia para que huya el DPS.
+          if(ownLeader&&dist(cell,ownLeader)<dist(u,ownLeader))score-=420;
+          if(progress>0)score-=90;
+          const nearbyBack=(ctx.ownUnits||[]).filter(a=>a&&a.id!==u.id&&!a.leader&&isRetreatAsset(a,ctx)&&dist(a,u)<=3).length;
+          if(nearbyBack)score+=Math.min(3,nearbyBack)*95;
+        }else{
+          const enemies=(ctx.enemyUnits||[]).filter(e=>e&&num(e.hp,1)>0&&!e.leader);
+          const currentNearest=enemies.reduce((best,e)=>Math.min(best,dist(u,e)),99);
+          const nextNearest=enemies.reduce((best,e)=>Math.min(best,dist(cell,e)),99);
+          score+=(nextNearest-currentNearest)*165;
+          if(ownLeader){
+            const homeGain=dist(u,ownLeader)-dist(cell,ownLeader);
+            if(homeGain>0)score+=homeGain*150;
+          }
+          if(progress>0)score-=260+progress*80;
+        }
+      }
+      const screenPenalty=warriorPush.ready&&nextSupport>=1?screenLoss.score*.30:(posture.pressure&&nextSupport>=1?screenLoss.score*.55:screenLoss.score);
+      score-=screenPenalty;
+      if(screenLoss.critical>0&&!input.canAttack)score-=(warriorPush.ready&&nextSupport>=1?55:(posture.pressure&&nextSupport>=1?105:180))*screenLoss.critical;
+      if(nextAttackers.length>=3&&nextSupport<2)score-=warriorPush.ready&&nextSupport>=1?125:(posture.pressure&&nextSupport>=1?185:310);
+      if(nextAttackers.length>current.attackers.length&&nextSupport<=current.support)score-=(warriorPush.ready?60:(posture.pressure?95:145))*(nextAttackers.length-current.attackers.length);
+      if(progress>0&&current.exposed)score-=warriorPush.ready&&nextSupport>=1?55+progress*15:(posture.pressure&&nextSupport>=1?105+progress*25:190+progress*45);
+      if(progress>0&&hpRatio<=.55)score-=warriorPush.ready&&hpRatio>.35?65:(posture.pressure&&hpRatio>.42?110:180);
       const targetRole=roleOf(input.primaryTarget,ctx);
       if(progress>0&&["cavalry","skirmisher","assassin"].includes(targetRole)&&screenLoss.score>0){
         // No perseguir una pieza rápida si para hacerlo se abre la retaguardia.
-        score-=220+Math.min(360,screenLoss.score*.45);
+        score-=warriorPush.ready&&nextSupport>=1?70:220+Math.min(360,screenLoss.score*.45);
       }
-      if(nextSupport>=2)score+=85;
-      if(ownLeader&&hpRatio<=.50&&dist(cell,ownLeader)<dist(u,ownLeader))score+=135;
+      if(nextSupport>=2)score+=warriorPush.ready?145:85;
+      if(posture.pressure&&!warriorPush.ready&&!tankMustRetreat&&!criticalTank&&progress>0){
+        if(nextSupport>=1)score+=progress*95+65;
+        else score-=260;
+        if(input.canAttack)score+=105;
+      }
+      if(warriorPush.ready&&!tankMustRetreat&&!criticalTank&&progress>0){
+        if(nextSupport>=1)score+=progress*135+95;
+        else score-=340; // presión sí, unidades solas no.
+        const rangedCover=warriorPush.fireSupport.filter(a=>a.id!==u.id&&dist(a,cell)<=4).length;
+        if(rangedCover)score+=115+Math.min(2,rangedCover)*50;
+        if(input.canAttack)score+=145;
+      }
+      if(ownLeader&&tankMustRetreat&&dist(cell,ownLeader)<dist(u,ownLeader))score+=135;
       // Mantener contacto con la red de apoyo es más importante que ganar una casilla.
       const rangedCover=(ctx.ownUnits||[]).filter(a=>a&&a.id!==u.id&&isBackline(a,ctx)&&num(a.hp,1)>0&&dist(a,cell)<=3).length;
       score+=Math.min(3,rangedCover)*75;
@@ -221,12 +343,58 @@
         if(dist(cell,need.unit)<=3)score+=45;
       }
     }
+
+    // Percepción táctica global: una vez estabilizada la línea resistente, las
+    // piezas de daño acompañan y buscan tiros. Si la pantalla cae, esas mismas
+    // piezas retroceden y fuerzan al rival a entrar antes de volver a exponerse.
+    if(posture.pressure&&!isFrontAsset(u,ctx)&&isRetreatAsset(u,ctx)){
+      const front=posture.sturdyFronts.slice().sort((a,b)=>dist(cell,a)-dist(cell,b))[0]||null;
+      if(front){
+        const gap=dist(cell,front);
+        if(gap>=1&&gap<=3)score+=warriorPush.ready?155:115;
+        else if(gap>4)score-=warriorPush.ready?110:80;
+      }
+      if(input.canAttack)score+=warriorPush.ready?285:205;
+      if(num(input.progress,0)>0&&front&&dist(cell,front)<=3)score+=num(input.progress,0)*(warriorPush.ready?70:50);
+    }
+    if(posture.retreat&&isRetreatAsset(u,ctx)){
+      const enemies=(ctx.enemyUnits||[]).filter(e=>e&&num(e.hp,1)>0);
+      const currentNearest=enemies.reduce((best,e)=>Math.min(best,dist(u,e)),99);
+      const nextNearest=enemies.reduce((best,e)=>Math.min(best,dist(cell,e)),99);
+      const escapeGain=nextNearest-currentNearest;
+      score+=escapeGain*210;
+      if(escapeGain<0)score+=escapeGain*170;
+      if(ownLeader){
+        const homeGain=dist(u,ownLeader)-dist(cell,ownLeader);
+        if(homeGain>0)score+=homeGain*135;
+        if(dist(cell,ownLeader)<=2)score+=120;
+      }
+      if(num(input.progress,0)>0)score-=320+num(input.progress,0)*90;
+      if(nextNearest<=1)score-=360;
+      else if(nextNearest===2)score-=155;
+      if(input.canAttack&&escapeGain>=0)score+=70;
+    }
     return score;
   }
 
   function shouldDefendFrontline(unit,ctx={}){
     if(!isFrontAsset(unit,ctx)||num(unit.hp,1)<=0)return false;
     const risk=frontlineRisk(unit,ctx);
+    const warriorPush=warriorPressureState(ctx);
+    const posture=battlePosture(ctx);
+    if(warriorPush.ready){
+      const nearby=warriorPush.troops.filter(a=>a.id!==unit.id&&dist(a,unit)<=3).length;
+      // Un rompedor puede sostener primera línea por habilidad; un TANQUE, en cambio,
+      // deja de recibir permiso de presión al llegar a la mitad de su Vida.
+      const tank=isTankAsset(unit,ctx);
+      const pressFloor=tank?.50:.35;
+      if(nearby>=1&&risk.hpRatio>pressFloor)return false;
+      if(risk.hpRatio<=pressFloor)return true;
+    }
+    if(posture.pressure){
+      const nearby=posture.troops.filter(a=>a.id!==unit.id&&dist(a,unit)<=3).length;
+      if(nearby>=1&&risk.hpRatio>.50)return false;
+    }
     if(risk.score<170)return false;
     if(risk.hpRatio<=.50)return true;
     if(risk.exposed&&risk.attackers.length>=3)return true;
@@ -236,13 +404,30 @@
   function shouldAvoidAdvance(unit,ctx={}){
     if(!isFrontAsset(unit,ctx))return false;
     const risk=frontlineRisk(unit,ctx);
-    return risk.exposed||risk.hpRatio<=.55||risk.score>=220;
+    const warriorPush=warriorPressureState(ctx);
+    const posture=battlePosture(ctx);
+    if(posture.retreat)return true;
+    if(warriorPush.ready){
+      const nearby=warriorPush.troops.filter(a=>a.id!==unit.id&&dist(a,unit)<=3).length;
+      if(nearby>=1&&(!isTankAsset(unit,ctx)||risk.hpRatio>.50))return false;
+    }
+    if(posture.pressure){
+      const nearby=posture.troops.filter(a=>a.id!==unit.id&&dist(a,unit)<=3).length;
+      if(nearby>=1&&(!isTankAsset(unit,ctx)||risk.hpRatio>.50))return false;
+    }
+    return risk.exposed||(isTankAsset(unit,ctx)&&risk.hpRatio<=.50)||risk.score>=220;
   }
 
   const api=Object.freeze({
     version:VERSION,
+    isTankAsset,
+    isBreakerAsset,
+    isDpsAsset,
+    isCriticalTank,
     isFrontAsset,
     isBackline,
+    isRetreatAsset,
+    battlePosture,
     frontlineRisk,
     mostThreatenedFront,
     actionPriority,

@@ -1,15 +1,16 @@
 /* ============================================================
-   E47 · AI DECK DOCTRINES V4
+   E50 · AI DECK DOCTRINES V6
    Construcción adaptativa separada del motor de combate.
-   - V2 reconstruye al Señor de la Carga como ejército de guerra:
+   - Todas las IA conservan una composición funcional mínima:
+     tanque real, DPS ranged, rompedor, DPS melee y magia DOT.
+   - El Señor de la Carga mantiene además su doctrina específica de
      caballería móvil + supresión + ruptura + escolta del líder.
-   - El aprendizaje puede cambiar piezas, pero no eliminar las
-     funciones mínimas necesarias para sobrevivir a un rival experto.
+   - El aprendizaje puede cambiar piezas, pero no eliminar esas funciones.
    ============================================================ */
 (function(global){
   "use strict";
 
-  const VERSION="E49-CAVALRY-SCREEN-HARASSMENT-DOCTRINE-V5";
+  const VERSION="E50-GLOBAL-COMBAT-COMPOSITION-DOCTRINE-V6";
 
   // Debe coincidir con isLightCavalryUnit() del motor real.
   // Yabusame NO cuenta: tiene MOV 3 y arco, pero no recibe el buff de Caballería.
@@ -27,6 +28,7 @@
   const HARASSER_KEYS=new Set(["numidian_javelin_rider","scythian_horse_archer","mongol_explorer"]);
   const FINISHER_KEYS=new Set(["cossack_rider"]);
   const ANTI_PIKE_KEYS=new Set(["numidian_javelin_rider","scythian_horse_archer","mongol_explorer","archer","bolt","fireball","paralysis_spell","poison_spell"]);
+  const DOT_MAGIC_KEYS=new Set(["fireball","poison_spell"]);
 
   // 20 robables · Ejército base E49 del Señor de la Carga.
   // Doctrina: tanques especializados compran tiempo; caballería ranged convierte
@@ -38,7 +40,8 @@
     Object.freeze(["scythian_horse_archer",3]),
     Object.freeze(["numidian_javelin_rider",2]),
     Object.freeze(["bolt",2]),
-    Object.freeze(["paralysis_spell",2]),
+    Object.freeze(["paralysis_spell",1]),
+    Object.freeze(["fireball",1]),
     Object.freeze(["heal",1]),
     Object.freeze(["withdrawal_stirrups",1])
   ]);
@@ -62,6 +65,13 @@
   function isHarasser(card){return HARASSER_KEYS.has(keyOf(card));}
   function isFinisher(card){return FINISHER_KEYS.has(keyOf(card));}
   function isAntiPike(card){return ANTI_PIKE_KEYS.has(keyOf(card));}
+  function isDotMagic(card){return !!card&&DOT_MAGIC_KEYS.has(keyOf(card));}
+  function isTankCard(card){
+    if(!card||card.type!=="unit"||Number(card.hp||card.maxHp||0)<5)return false;
+    return isBodyguard(card);
+  }
+  function isRangedDpsCard(card){return !!card&&card.type==="unit"&&Number(card.range||0)>=2&&Number(card.atk||0)>=2;}
+  function isMeleeDpsCard(card){return !!card&&card.type==="unit"&&Number(card.range||0)<=1&&Number(card.atk||0)>=3&&!isTankCard(card);}
   function cardThreat(profile,key,cap=12){return Math.min(cap,n(profile?.cards?.[String(key||"")]));}
   function sumThreat(profile,keys){return keys.reduce((s,key)=>s+cardThreat(profile,key),0);}
 
@@ -79,12 +89,12 @@
       return Object.freeze({
         guardian:2,greek_hoplite:2,samurai_katana:2,
         scythian_horse_archer:2,numidian_javelin_rider:1,
-        bolt:1,paralysis_spell:1
+        bolt:1,paralysis_spell:1,fireball:1
       });
     }
     return Object.freeze({
       guardian:1,greek_hoplite:1,samurai_katana:1,
-      scythian_horse_archer:1,numidian_javelin_rider:1,bolt:1
+      scythian_horse_archer:1,numidian_javelin_rider:1,bolt:1,fireball:1
     });
   }
 
@@ -214,10 +224,11 @@
   function countBy(currentCards,predicate){return (currentCards||[]).reduce((total,card)=>total+(predicate(card)?1:0),0);}
 
   function canRemoveCardForCandidate(removingCard,candidateCard,currentCards,leaderType,battle){
-    if(String(leaderType||"")!=="cavalry")return true;
     if(!removingCard)return false;
 
     // Simulamos el intercambio y comprobamos que ninguna función estratégica desaparezca.
+    // Esta base funcional es común a TODAS las IA: pantalla real (5+ Vida),
+    // DPS ranged, rompedor, DPS melee y al menos una magia DOT.
     const after=(currentCards||[]).filter((card,index)=>{
       if(card!==removingCard)return true;
       // elimina una sola instancia por identidad de objeto; fallback por key más abajo
@@ -234,6 +245,14 @@
     }
     if(candidateCard)after.push(candidateCard);
 
+    if(countBy(after,isTankCard)<1)return false;
+    if(countBy(after,isRangedDpsCard)<1)return false;
+    if(countBy(after,isBreaker)<1)return false;
+    if(countBy(after,isMeleeDpsCard)<1)return false;
+    if(countBy(after,isDotMagic)<1)return false;
+
+    // A partir de aquí las restricciones extra son propias del Señor de la Carga.
+    if(String(leaderType||"")!=="cavalry")return true;
     const minCav=getMinimumRoleCount(leaderType,"cavalry",battle);
     const minRangedCav=getMinimumRoleCount(leaderType,"rangedCavalry",battle);
     const minBreaker=getMinimumRoleCount(leaderType,"breaker",battle);
@@ -272,7 +291,7 @@
     getAdaptiveCandidates,
     canRemoveCardForCandidate,
     getTacticalRole,
-    isCavalry,isRangedCavalry,isMeleeCavalry,isBreaker,isBodyguard,isSuppressor,isAntiPike
+    isCavalry,isRangedCavalry,isMeleeCavalry,isBreaker,isBodyguard,isSuppressor,isAntiPike,isDotMagic,isTankCard,isRangedDpsCard,isMeleeDpsCard
   });
   global.HallvallaAiDeckDoctrine=api;
   console.info(`[HallValla][AI Deck] ${VERSION} listo.`);

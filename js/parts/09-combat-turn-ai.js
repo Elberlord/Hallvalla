@@ -1401,6 +1401,8 @@ async function adventureEnemyTurn(){
     const base=withAiPublicState(()=>getUnitAttackRange(unit));
     return Math.max(1,base+(unit.key==="bengal_tiger"&&isStealthedUnit(unit)?2:0));
   };
+  const aiIsRangedCombatUnit=(unit)=>!!unit&&!unit.leader&&aiAttackRange(unit)>=2;
+  const aiIsMageRangedUnit=(unit)=>aiIsRangedCombatUnit(unit)&&getWeaponClassForCard(unit)==="mage";
   const aiCanEverTarget=(attacker,target)=>!!attacker&&!!target
     && attacker.owner!==target.owner
     && canUnitAttackTarget(attacker,target)
@@ -1422,6 +1424,8 @@ async function adventureEnemyTurn(){
     const text=(cardOrUnit?.text||"").toLowerCase();
     const range=cardOrUnit?.id?getUnitAttackRange(cardOrUnit):getCardDisplayRange(cardOrUnit);
     const hp=Math.max(0,Number(cardOrUnit?.hp||0));
+    const deployed=Number.isFinite(Number(cardOrUnit?.x))&&Number.isFinite(Number(cardOrUnit?.y))&&Number.isFinite(Number(cardOrUnit?.owner));
+    const maxHp=Math.max(0,Number(deployed?effectiveMaxHp(cardOrUnit):cardOrUnit?.maxHp||cardOrUnit?.hp||0));
     const guard=Math.max(0,Number(cardOrUnit?.guard||0));
     const mov=Math.max(0,Number(cardOrUnit?.mov||0));
     const weapon=getWeaponClassForCard(cardOrUnit);
@@ -1434,13 +1438,27 @@ async function adventureEnemyTurn(){
     if(key==="ulysses")return "melee";
     if(weapon==="neutral")return "support";
     if(cardOrUnit?.aerial||((hp+guard)<=3&&mov>=3))return "skirmisher";
-    if(key==="guardian"||name.includes("guardián")||name.includes("guardian")||guard>=5||(hp+guard*1.25)>=12)return "tank";
+    if(maxHp>=5&&(key==="guardian"||name.includes("guardián")||name.includes("guardian")||guard>=5||(maxHp+guard*1.25)>=12))return "tank";
     if(weapon==="bow"||weapon==="mage"||key==="archer"||name.includes("arquera")||name.includes("arquero")||range>=3)return "ranged";
     if(range>=2)return "skirmisher";
     return "melee";
   };
-  const aiIsFrontlineRole=(role)=>role==="tank"||role==="spear"||role==="melee";
+  const aiIsFrontlineRole=(role)=>role==="tank"||role==="spear";
   const aiIsBacklineRole=(role)=>role==="ranged"||role==="skirmisher"||role==="support";
+  const aiIsBreakerUnit=(u)=>{
+    if(!u||u.leader||aiAttackRange(u)>1)return false;
+    const tactical=String(globalThis.HallvallaAiDeckDoctrine?.getTacticalRole?.(u)||"").toLowerCase();
+    const key=String(u.key||"").toLowerCase();
+    return tactical==="breaker"||["samurai_katana","berserker","berserker_de_oso"].includes(key);
+  };
+  const aiIsFrontlineUnit=(u)=>{
+    if(!u||u.leader)return false;
+    if(aiTempoEngine?.isFrontAsset){try{return !!aiTempoEngine.isFrontAsset(u,aiDoctrineContext());}catch(_){ }}
+    // Fallback coherente con Tempo: tanque/pica reales o rompedor explícito.
+    // Un melee genérico no se convierte en frontline solo por tener 5+ Vida.
+    const role=aiBasicTacticRole(u);
+    return aiIsFrontlineRole(role)||aiIsBreakerUnit(u);
+  };
   const aiBasicTacticState=()=>{
     const aiUnits=living(2).filter(u=>!u.leader);
     const playerUnits=living(1).filter(u=>!u.leader);
@@ -1454,10 +1472,48 @@ async function adventureEnemyTurn(){
       skirmishers:aiUnits.filter(u=>roles.get(u.id)==="skirmisher"),
       supports:aiUnits.filter(u=>roles.get(u.id)==="support"),
       assassins:aiUnits.filter(u=>roles.get(u.id)==="assassin"),
-      frontline:aiUnits.filter(u=>aiIsFrontlineRole(roles.get(u.id))),
+      frontline:aiUnits.filter(u=>aiIsFrontlineUnit(u)),
       backline:aiUnits.filter(u=>aiIsBacklineRole(roles.get(u.id))),
       enemyBerserkers:playerUnits.filter(u=>u.key==="berserker"||(u.name||"").toLowerCase().includes("berserker"))
     };
+  };
+
+  // Doctrina Guerrero: con 3+ unidades desplegadas deja de esperar una pantalla
+  // perfecta y convierte la formación en un empuje coordinado. La vanguardia
+  // absorbe presión; ranged/magos y móviles con alcance acompañan desde detrás.
+  // No autoriza cargas solitarias: cada avance agresivo sigue necesitando apoyo cercano.
+  const aiWarriorPressureState=()=>{
+    const troops=living(2).filter(u=>u&&!u.leader&&u.hp>0);
+    const leaderType=String(getLeaderTypeForOwner(2,units)||pub.playerLeaders?.[2]||"").toLowerCase();
+    const frontline=troops.filter(u=>aiIsFrontlineUnit(u));
+    const fireSupport=troops.filter(u=>{
+      const role=aiBasicTacticRole(u);
+      return aiIsBacklineRole(role)||role==="cavalry"||aiAttackRange(u)>=2;
+    });
+    const posture=aiTempoEngine?.battlePosture?aiTempoEngine.battlePosture(aiDoctrineContext?.()||{}):null;
+    return {ready:leaderType==="warrior"&&(posture?!!posture.pressure:troops.length>=3),troops,frontline,fireSupport};
+  };
+  let aiBattlePostureCacheKey="";
+  let aiBattlePostureCacheValue=null;
+  const aiBattlePostureStateKey=()=>{
+    const pieces=units.filter(u=>u&&u.hp>0).map(u=>[
+      u.id,u.owner,u.leader?1:0,u.x,u.y,u.hp,effectiveMaxHp(u),effectiveAtk(u),aiAttackRange(u),aiBasicTacticRole(u)
+    ].join(":")).sort().join("|");
+    return `${pub.turnKey||""}#${aiDoctrineLeaderType?.()||""}#${pieces}`;
+  };
+  const aiBattlePosture=()=>{
+    try{
+      const key=aiBattlePostureStateKey();
+      if(aiBattlePostureCacheValue&&key===aiBattlePostureCacheKey)return aiBattlePostureCacheValue;
+      const value=aiTempoEngine?.battlePosture?.(aiDoctrineContext())||{mode:"hold",pressure:false,retreat:false,hold:true,troops:[],fronts:[],sturdyFronts:[],backline:[]};
+      aiBattlePostureCacheKey=key;
+      aiBattlePostureCacheValue=value;
+      return value;
+    }catch(_){return {mode:"hold",pressure:false,retreat:false,hold:true,troops:[],fronts:[],sturdyFronts:[],backline:[]};}
+  };
+  const aiIsRetreatAsset=(u)=>{
+    try{return !!aiTempoEngine?.isRetreatAsset?.(u,aiDoctrineContext());}
+    catch(_){const role=aiBasicTacticRole(u);return aiIsBacklineRole(role)||["cavalry","skirmisher","assassin"].includes(role)||aiAttackRange(u)>=2;}
   };
   const aiEnemyBerserkerPressure=()=>{
     const el=enemyLeaderNow();
@@ -1537,10 +1593,9 @@ async function adventureEnemyTurn(){
   // sin que el Guardián tenga permiso de perseguirla.
   const aiFrontlineAbandonmentRisk=(protector,cell,primaryTarget=null)=>{
     if(!protector||!cell)return 0;
-    const role=aiBasicTacticRole(protector);
-    if(!aiIsFrontlineRole(role))return 0;
+    if(!aiIsFrontlineUnit(protector))return 0;
     let risk=0;
-    const frontAllies=living(2).filter(a=>a.id!==protector.id&&!a.leader&&aiIsFrontlineRole(aiBasicTacticRole(a)));
+    const frontAllies=living(2).filter(a=>a.id!==protector.id&&!a.leader&&aiIsFrontlineUnit(a));
     for(const back of aiRangedAllies()){
       const threats=living(1).filter(e=>{
         const reach=(effectiveMov(e)||0)+aiAttackRange(e);
@@ -1561,6 +1616,17 @@ async function adventureEnemyTurn(){
       if(["cavalry","skirmisher","assassin"].includes(tRole)&&need&&!targetThreatensProtected&&d(cell,primaryTarget)<d(protector,primaryTarget)){
         risk+=260; // no convertir al tanque en perseguidor de unidades rápidas.
       }
+    }
+    const warriorPush=aiWarriorPressureState();
+    if(warriorPush.ready){
+      const nearbyAllies=warriorPush.troops.filter(a=>a.id!==protector.id&&d(a,cell)<=3).length;
+      const nearbyFire=warriorPush.fireSupport.filter(a=>a.id!==protector.id&&d(a,cell)<=4).length;
+      // El Guerrero no debe quedar clavado protegiendo una retaguardia que ya puede
+      // avanzar con él. Reducimos el castigo solo cuando el empuje sigue acompañado.
+      if(nearbyAllies>=2)risk*=.22;
+      else if(nearbyAllies===1)risk*=.45;
+      else risk+=300;
+      if(nearbyFire>0)risk*=.78;
     }
     return risk;
   };
@@ -1655,10 +1721,27 @@ async function adventureEnemyTurn(){
     if(aiCombatEngine?.enemyRoleCounts)base.enemyRoleCounts=aiCombatEngine.enemyRoleCounts(base.enemyUnits,{roleOf:aiBasicTacticRole});
     return {...base,...extra};
   };
-  const aiDoctrineTurnPlan=(()=>{
+  let aiDoctrineTurnPlan=(()=>{
     try{return aiCombatEngine?.selectTurnPlan?.(aiDoctrineBaseContext())||null;}catch(_){return null;}
   })();
-  const aiDoctrineContext=(extra={})=>({...aiDoctrineBaseContext(),turnPlan:aiDoctrineTurnPlan,...extra});
+  const aiTurnPlanTargetStillUseful=()=>{
+    const target=aiDoctrineTurnPlan?.target;
+    if(!target)return true;
+    const live=living(1).find(u=>u.id===target.id)||null;
+    if(!live)return false;
+    if(Number(live.hp||0)!==1)return true;
+    const bleed=(typeof hasBleeding==="function"?hasBleeding(live):Number(live.bleedDamage||0)>0);
+    const poison=Number(live.poisonTurns||0)>0&&Number(live.poisonDamage||0)>0;
+    const burn=Number(live.burnTurns||live.burnTurnsRemaining||0)>0&&Number(live.burnDamage||0)>0;
+    return !(bleed||poison||burn);
+  };
+  const aiCurrentTurnPlan=()=>{
+    if(!aiTurnPlanTargetStillUseful()){
+      try{aiDoctrineTurnPlan=aiCombatEngine?.selectTurnPlan?.(aiDoctrineBaseContext())||null;}catch(_){aiDoctrineTurnPlan=null;}
+    }
+    return aiDoctrineTurnPlan;
+  };
+  const aiDoctrineContext=(extra={})=>({...aiDoctrineBaseContext(),turnPlan:aiCurrentTurnPlan(),...extra});
   const aiWeaponMatchupScore=(attacker,target,estimatedDamage=0)=>{
     if(!attacker||!target||attacker.leader||target.leader)return 0;
     const advantage=getWeaponAdvantage(attacker,target);
@@ -1680,8 +1763,7 @@ async function adventureEnemyTurn(){
     const cellProgress=d(cell,pl);
     return living(2).filter(a=>{
       if(a.leader||a.id===unitId)return false;
-      const role=aiBasicTacticRole(a);
-      if(!aiIsFrontlineRole(role))return false;
+      if(!aiIsFrontlineUnit(a))return false;
       return d(a,cell)<=2&&d(a,pl)<=cellProgress;
     });
   };
@@ -1693,7 +1775,7 @@ async function adventureEnemyTurn(){
       return d(e,cell)<=reach;
     });
     const closeEnemies=living(1).filter(e=>d(e,cell)<=2);
-    const allyPower=allies.reduce((sum,a)=>sum+aiUnitValue(a)*0.16+(aiIsFrontlineRole(aiBasicTacticRole(a))?24:8),0);
+    const allyPower=allies.reduce((sum,a)=>sum+aiUnitValue(a)*0.16+(aiIsFrontlineUnit(a)?24:8),0);
     const enemyPower=threateningEnemies.reduce((sum,e)=>sum+aiUnitValue(e)*0.15+(effectiveAtk(e)||0)*4,0);
     const screens=aiScreeningFrontliners(cell,unitLike);
     return {allies,threateningEnemies,closeEnemies,allyPower,enemyPower,screens};
@@ -1704,6 +1786,10 @@ async function adventureEnemyTurn(){
     const pl=playerLeaderNow();
     const el=enemyLeaderNow();
     const balance=aiLocalForceBalance(cell,unitLike);
+    const warriorPush=aiWarriorPressureState();
+    const posture=aiBattlePosture();
+    const currentUnit=units.find(a=>a.id===unitLike.id)||unitLike;
+    const individualTankRetreat=!!(aiTempoEngine?.isTankAsset?.(currentUnit,aiDoctrineContext())&&aiIsRetreatAsset(currentUnit));
     let score=0;
     const enemyCount=balance.threateningEnemies.length;
     const allyCount=balance.allies.length;
@@ -1727,6 +1813,43 @@ async function adventureEnemyTurn(){
           score+=55;
         }
       }
+      if(posture.pressure&&pl&&!warriorPush.ready){
+        const nearestFront=(posture.sturdyFronts||[])
+          .filter(f=>f.id!==unitLike.id)
+          .sort((a,b)=>d(a,cell)-d(b,cell))[0]||null;
+        if(nearestFront){
+          const gap=d(cell,nearestFront);
+          if(gap>=1&&gap<=3)score+=115;
+          else if(gap>4)score-=85;
+        }
+        const progress=d(currentUnit,pl)-d(cell,pl);
+        if(progress>0&&nearestFront&&d(cell,nearestFront)<=3)score+=progress*55;
+        const hasShot=living(1).some(e=>aiCanEverTarget(unitLike,e)&&d(cell,e)<=aiAttackReachForTarget(unitLike,e));
+        if(hasShot)score+=175;
+      }
+      if(warriorPush.ready&&pl){
+        const nearestFront=warriorPush.frontline
+          .filter(f=>f.id!==unitLike.id)
+          .sort((a,b)=>d(a,cell)-d(b,cell))[0]||null;
+        if(nearestFront){
+          const gap=d(cell,nearestFront);
+          if(gap>=1&&gap<=3)score+=165;
+          else if(gap>4)score-=130;
+        }
+        const progress=d(currentUnit,pl)-d(cell,pl);
+        if(progress>0&&nearestFront&&d(cell,nearestFront)<=3)score+=progress*85;
+        const hasShot=living(1).some(e=>aiCanEverTarget(unitLike,e)&&d(cell,e)<=aiAttackReachForTarget(unitLike,e));
+        if(hasShot)score+=230;
+      }
+      if(posture.retreat){
+        const nearestEnemy=living(1).reduce((best,e)=>Math.min(best,d(cell,e)),99);
+        score+=Math.min(6,nearestEnemy)*65;
+        if(el){
+          score+=Math.max(0,6-d(cell,el))*55;
+          if(d(cell,el)<=2)score+=130;
+        }
+        if(pl&&d(cell,pl)<d(currentUnit,pl))score-=320;
+      }
       if(el&&d(cell,el)<=3)score+=45;
     }else if(aiIsFrontlineRole(role)){
       if(outnumberedBy>0)score-=outnumberedBy*70;
@@ -1738,6 +1861,15 @@ async function adventureEnemyTurn(){
         if(pl&&d(cell,pl)<d(rear,pl)&&distToRear<=3)score+=role==="spear"?120:95;
         if(pl&&d(cell,pl)>d(rear,pl)&&distToRear<=2)score-=130;
       }
+      if(warriorPush.ready&&pl&&!individualTankRetreat){
+        const progress=d(currentUnit,pl)-d(cell,pl);
+        const nearbyAllies=warriorPush.troops.filter(a=>a.id!==unitLike.id&&d(a,cell)<=3).length;
+        const nearbyFire=warriorPush.fireSupport.filter(a=>a.id!==unitLike.id&&d(a,cell)<=4).length;
+        if(progress>0&&nearbyAllies>=1)score+=progress*155+90;
+        else if(progress>0&&nearbyAllies===0)score-=320;
+        if(nearbyFire>0)score+=110+Math.min(2,nearbyFire)*45;
+        if(living(1).some(e=>aiCanEverTarget(unitLike,e)&&d(cell,e)<=aiAttackReachForTarget(unitLike,e)))score+=105;
+      }
       if(role==="spear")score+=balance.screens.length?35:0;
     }else{
       if(outnumberedBy>1)score-=outnumberedBy*95;
@@ -1745,6 +1877,14 @@ async function adventureEnemyTurn(){
       if(role==="cavalry"||role==="assassin"){
         if(allyCount>=1)score+=45;
         if(nearestEnemyDistance<=1&&enemyCount>=3)score-=120;
+      }
+      if(posture.retreat&&aiIsRetreatAsset(unitLike)){
+        score+=Math.min(6,nearestEnemyDistance)*60;
+        if(el){
+          score+=Math.max(0,6-d(cell,el))*50;
+          if(d(cell,el)<=2)score+=115;
+        }
+        if(pl&&d(cell,pl)<d(currentUnit,pl))score-=300;
       }
     }
     return score;
@@ -1768,8 +1908,22 @@ async function adventureEnemyTurn(){
     const expectedHp=hpDamage*(chance/100);
     return{chance,damage,hpDamage,expected,expectedHp,mods};
   };
+  let aiFocusTargetId="";
+  const aiIsDoomedByDotAtNextTurn=(target)=>{
+    if(!target||target.leader||Number(target.hp||0)!==1)return false;
+    const bleeding=typeof hasBleeding==="function"?hasBleeding(target):Number(target.bleedDamage||0)>0;
+    const poisoned=Number(target.poisonTurns||0)>0&&Number(target.poisonDamage||0)>0;
+    const burning=Number(target.burnTurns||target.burnTurnsRemaining||0)>0&&Number(target.burnDamage||0)>0;
+    return !!(bleeding||poisoned||burning);
+  };
+  const aiFocusedTarget=()=>{
+    if(!aiFocusTargetId)return null;
+    const target=living(1).find(t=>t.id===aiFocusTargetId)||null;
+    if(!target||aiIsDoomedByDotAtNextTurn(target)){aiFocusTargetId="";return null;}
+    return target;
+  };
   const scoreTarget=(target,damage=0,attacker=null)=>{
-    if(!target)return -9999;
+    if(!target||aiIsDoomedByDotAtNextTurn(target))return -9999;
     if(attacker&&hasWarriorLeaderUnitShield(target,attacker,units))return -9999;
     const combat=attacker?estimateCombat(attacker,target):{chance:100,damage,hpDamage:damage,expected:damage,expectedHp:damage};
     const realDamage=attacker?combat.damage:damage;
@@ -1792,7 +1946,49 @@ async function adventureEnemyTurn(){
     const tempoBonus=attacker&&aiTempoEngine?.scoreAttackTarget
       ?Number(aiTempoEngine.scoreAttackTarget(target,attacker,aiDoctrineContext())||0)
       :0;
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus;
+    const rangedSuppressionBonus=attacker&&!target.leader&&aiBattlePosture().rangedSaturation&&aiAttackRange(target)>=2?560:0;
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus;
+  };
+
+  const aiIsLowHpNuisanceTarget=(target)=>{
+    if(!target||target.leader)return false;
+    const role=aiBasicTacticRole(target);
+    if(!["ranged","support","assassin","skirmisher"].includes(role))return false;
+    const hp=Math.max(0,Number(target.hp||0));
+    const maxHp=Math.max(1,effectiveMaxHp(target)||target.maxHp||hp||1);
+    return hp>0&&(hp<=3||hp/maxHp<=.45);
+  };
+  const aiDotAttackExecutionBonus=(attacker,target,combat)=>{
+    if(!attacker||!target||!combat||!aiIsLowHpNuisanceTarget(target))return 0;
+    const hpDamage=Math.max(0,Number(combat.hpDamage||0));
+    if(hpDamage<=0)return 0; // Sangrado/Veneno de ataque requieren atravesar Guardia.
+    const hp=Math.max(0,Number(target.hp||0));
+    const remaining=Math.max(0,hp-hpDamage);
+    if(remaining<=0)return 0; // Ya es lethal directo; no hace falta valorar el DOT.
+    let score=0;
+    const role=aiBasicTacticRole(target);
+
+    // Scout aplica Sangrado garantizado al hacer daño real a HP; el Tigre de Bengala
+    // lo garantiza desde Sigilo y fuera de Sigilo mantiene una oportunidad de 50%.
+    if(!hasBleeding(target)&&(attacker.key==="scout"||attacker.key==="bengal_tiger")){
+      const guaranteed=attacker.key==="scout"||(attacker.key==="bengal_tiger"&&isStealthedUnit(attacker));
+      score+=guaranteed?310:155;
+      if(remaining<=1)score+=guaranteed?430:210;
+      else if(remaining<=2)score+=guaranteed?220:105;
+    }
+
+    // Veneno de la Manada convierte cualquier impacto real de las tropas del
+    // Beastmaster en un reloj de muerte, ideal para dejar de perseguir backline.
+    const alreadyPoisoned=Number(target.poisonTurns||0)>0&&Number(target.poisonDamage||0)>0;
+    if(!alreadyPoisoned&&!isPoisonImmuneUnit(target)&&ownerHasBeastmasterVenom(attacker.owner,units)){
+      score+=340;
+      if(remaining<=1)score+=470;
+      else if(remaining<=3)score+=245;
+    }
+
+    if(score>0&&(role==="ranged"||role==="assassin"))score+=145;
+    if(score>0&&(target.principal||target.special))score+=120;
+    return score;
   };
 
   const bestTargetForDamage=(card)=>{
@@ -1835,12 +2031,28 @@ async function adventureEnemyTurn(){
       .sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
   const bestAttackTarget=(attacker)=>{
-    const ranked=living(1).filter(t=>canHit(attacker,t)).map(t=>{
+    const validTargets=living(1).filter(t=>canHit(attacker,t)&&!aiIsDoomedByDotAtNextTurn(t));
+    const focused=aiFocusedTarget();
+    if(aiIsRangedCombatUnit(attacker)){
+      // Si una amenaza entra a distancia corta, el ranged primero gana espacio y la convierte en el nuevo foco.
+      const close=validTargets.filter(t=>!t.leader&&d(attacker,t)<3)
+        .map(t=>({target:t,score:scoreTarget(t,0,attacker)+Math.max(0,3-d(attacker,t))*420}))
+        .sort((a,b)=>b.score-a.score)[0]?.target||null;
+      if(close)return close;
+    }
+    if(focused){
+      if(validTargets.some(t=>t.id===focused.id))return focused;
+      // El primer ataque ranged fija el blanco. Si todavía no está en alcance,
+      // la siguiente unidad no cambia de objetivo gratuitamente: se moverá hacia ese foco.
+      if(aiCanEverTarget(attacker,focused))return null;
+    }
+    const ranked=validTargets.map(t=>{
       let score=scoreTarget(t,0,attacker);
       const role=aiBasicTacticRole(attacker);
       const leaderNeed=aiLeaderProtectionNeed();
       const rangedNeed=aiRangedProtectionNeed();
       const combat=estimateCombat(attacker,t);
+      score+=aiDotAttackExecutionBonus(attacker,t,combat);
       const humanHandCount=Math.max(0,Number(pub.playerStats?.[1]?.hand||0));
       if(role==="assassin"&&(t.key==="berserker"||(t.name||"").toLowerCase().includes("berserker")))score+=520;
       if(aiAttackRange(attacker)>=3&&t.leader)score+=130;
@@ -2192,6 +2404,12 @@ async function adventureEnemyTurn(){
           : null));
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
+    if(aiIsRangedCombatUnit(attacker)){
+      const focusedAfter=units.find(it=>it.id===target.id&&it.hp>0)||null;
+      aiFocusTargetId=focusedAfter&&!aiIsDoomedByDotAtNextTurn(focusedAfter)?focusedAfter.id:"";
+    }else if(aiFocusTargetId){
+      aiFocusedTarget(); // limpia el foco si el ataque anterior ya lo dejó condenado o muerto.
+    }
     return true;
   };
 
@@ -2206,6 +2424,7 @@ async function adventureEnemyTurn(){
     const berserkerPressure=aiEnemyBerserkerPressure();
     const cavalryPressure=aiEnemyCavalryPressure();
     const rangedNeed=aiRangedProtectionNeed();
+    const posture=aiBattlePosture();
     const distToCaster=pl?d(cell,pl):6;
     score+=Math.max(0,12-distToCaster)*6;
     if(pl&&distToCaster<=cardRange)score+=160+cardAtk*8;
@@ -2290,6 +2509,26 @@ async function adventureEnemyTurn(){
       }else{
         score+=living(1).some(e=>!e.leader&&d(cell,e)<=Math.max(1,cardRange+(card.mov||0)))?70:5;
       }
+    }
+    if(posture.retreat){
+      const damageSupport=aiIsBacklineRole(role)||["cavalry","skirmisher","assassin"].includes(role)||cardRange>=2||role==="melee";
+      if(posture.noTanks||posture.tanksAtHalfOrWorse){
+        if(aiIsFrontlineRole(role))score+=role==="tank"?440:(role==="spear"?350:260);
+        else if(damageSupport)score-=180;
+        if(el&&aiIsFrontlineRole(role)&&d(cell,el)<=3)score+=145;
+      }else if(posture.noDps){
+        if(damageSupport)score+=role==="ranged"?430:330;
+        if(aiIsFrontlineRole(role))score-=190;
+      }else if(posture.rangedSaturation){
+        if(damageSupport)score+=role==="ranged"?390:275;
+        if(cardRange>=3)score+=120;
+        if(aiIsFrontlineRole(role))score-=90;
+      }
+    }else if(posture.pressure){
+      const damageSupport=aiIsBacklineRole(role)||["cavalry","skirmisher","assassin"].includes(role)||cardRange>=2;
+      if(damageSupport)score+=role==="ranged"?250:190;
+      if(cardRange>=3)score+=85;
+      if(aiIsFrontlineRole(role)&&(posture.fronts?.length||0)>=2)score-=95;
     }
     return score;
   };
@@ -2503,7 +2742,7 @@ async function adventureEnemyTurn(){
   const chooseBestPoisonSpell=()=>{
     const options=[];
     for(const card of hand.filter(c=>c.spell==="poison"&&effectiveCardCost(c,2)<=honor)){
-      for(const target of living(1).filter(u=>!u.leader&&canDirectlyTarget(card,u)&&!isPoisonImmuneUnit(u))){
+      for(const target of living(1).filter(u=>!u.leader&&!aiIsDoomedByDotAtNextTurn(u)&&canDirectlyTarget(card,u)&&!isPoisonImmuneUnit(u))){
         let score;
         if(aiCombatEngine?.scorePoisonSpell){
           score=Number(aiCombatEngine.scorePoisonSpell(card,target,aiDoctrineContext())?.score||-9999);
@@ -2649,7 +2888,7 @@ async function adventureEnemyTurn(){
     if(aiCombatEngine?.scoreDamageSpell){
       const options=[];
       for(const card of playable){
-        for(const target of living(1).filter(t=>canDirectlyTarget(card,t))){
+        for(const target of living(1).filter(t=>!aiIsDoomedByDotAtNextTurn(t)&&canDirectlyTarget(card,t))){
           const result=aiCombatEngine.scoreDamageSpell(card,target,aiDoctrineContext());
           options.push({card,target,score:Number(result?.score||-9999),doctrineEngine:true,doctrineResult:result});
         }
@@ -2659,7 +2898,7 @@ async function adventureEnemyTurn(){
     if(pub.adventureAdaptiveMage){
       const options=[];
       for(const card of playable){
-        for(const target of living(1).filter(t=>canDirectlyTarget(card,t))){
+        for(const target of living(1).filter(t=>!aiIsDoomedByDotAtNextTurn(t)&&canDirectlyTarget(card,t))){
           options.push({card,target,score:aiMageDamageSpellScore(card,target),masterMageScore:true});
         }
       }
@@ -2703,10 +2942,23 @@ async function adventureEnemyTurn(){
     const choices=[];
     const pushChoice=(kind,choice,base=0)=>{
       if(!choice||!choice.card)return;
+      if(choice.target&&aiIsDoomedByDotAtNextTurn(choice.target))return;
       let score=(Number(choice.score)||0)+base-aiChoiceCostPenalty(choice);
       const cost=effectiveCardCost(choice.card,2);
       if(cost>honor)return;
       if(aiCombatEngine?.scoreChoicePlanFit)score+=Number(aiCombatEngine.scoreChoicePlanFit(kind,choice,aiDoctrineContext())||0);
+
+      const hostileKinds=["damage","poison","slow","paralysis"];
+      const turnPlanNow=aiCurrentTurnPlan();
+      const leaderNeedNow=aiLeaderProtectionNeed();
+      if(turnPlanNow?.key==="stabilize"&&choice.target&&hostileKinds.includes(kind)){
+        const emergencyTarget=Array.isArray(leaderNeedNow?.threats)&&leaderNeedNow.threats.some(th=>th?.unit?.id===choice.target.id);
+        if(!emergencyTarget)score-=720;
+      }
+      const postureForChoice=aiBattlePosture();
+      if(postureForChoice.rangedSaturation&&choice.target&&!choice.target.leader&&aiAttackRange(choice.target)>=2&&hostileKinds.includes(kind)){
+        score+=(kind==="damage"||kind==="poison")?390:265;
+      }
       if(kind==="damage"){
         if(!choice.target)return;
         const dmg=effectiveCardValue(choice.card,"damage")||choice.card.damage||0;
@@ -2737,6 +2989,45 @@ async function adventureEnemyTurn(){
         const cavalryPressure=aiEnemyCavalryPressure();
         const frontlineInHand=hand.some(c=>c.id!==choice.card.id&&c.type==="unit"&&effectiveCardCost(c,2)<=honor&&aiIsFrontlineRole(aiBasicTacticRole(c)));
         const backlineInHand=hand.some(c=>c.id!==choice.card.id&&c.type==="unit"&&effectiveCardCost(c,2)<=honor&&aiIsBacklineRole(aiBasicTacticRole(c)));
+        const warriorLeader=aiDoctrineLeaderType()==="warrior";
+        if(warriorLeader){
+          const fieldTroops=living(2).filter(u=>!u.leader&&u.hp>0);
+          const fieldFront=fieldTroops.filter(u=>aiIsFrontlineRole(aiBasicTacticRole(u)));
+          const fieldFire=fieldTroops.filter(u=>{
+            const r=aiBasicTacticRole(u);
+            return aiIsBacklineRole(r)||r==="cavalry"||aiAttackRange(u)>=2;
+          });
+          const choiceRange=Math.max(1,getCardDisplayRange(choice.card)||1);
+          const choiceFire=aiIsBacklineRole(role)||role==="cavalry"||choiceRange>=2;
+          // Tras establecer dos cuerpos en campo, el Guerrero busca completar el
+          // grupo de presión con daño de apoyo en vez de seguir apilando solo muro.
+          if(fieldTroops.length>=2&&fieldFront.length>=1&&choiceFire){
+            score+=fieldFire.length===0?430:185;
+            if(choiceRange>=3)score+=95;
+            if(role==="cavalry")score+=70;
+          }
+          if(fieldTroops.length>=3&&fieldFront.length>=2&&fieldFire.length===0&&aiIsFrontlineRole(role))score-=220;
+        }
+        const posture=aiBattlePosture();
+        const choiceRange=Math.max(1,getCardDisplayRange(choice.card)||1);
+        const choiceDamageSupport=aiIsBacklineRole(role)||["cavalry","skirmisher","assassin"].includes(role)||choiceRange>=2;
+        if(posture.retreat){
+          if(posture.noTanks||posture.tanksAtHalfOrWorse){
+            if(aiIsFrontlineRole(role))score+=role==="tank"?520:(role==="spear"?420:300);
+            else if(choiceDamageSupport)score-=220;
+          }else if(posture.noDps){
+            if(choiceDamageSupport||role==="melee")score+=role==="ranged"?560:410;
+            if(aiIsFrontlineRole(role))score-=240;
+          }else if(posture.rangedSaturation){
+            if(choiceDamageSupport)score+=role==="ranged"?500:345;
+            if(choiceRange>=3)score+=135;
+            if(aiIsFrontlineRole(role))score-=110;
+          }
+        }else if(posture.pressure){
+          if(choiceDamageSupport)score+=role==="ranged"?320:235;
+          if(choiceRange>=3)score+=90;
+          if(aiIsFrontlineRole(role)&&(posture.fronts?.length||0)>=2)score-=120;
+        }
         if(role==="tank"&&!tactic.tanks.length)score+=360;
         if(aiIsFrontlineRole(role)&&!tactic.frontline.length)score+=420;
         if(aiIsFrontlineRole(role)&&tactic.backline.length)score+=180;
@@ -2801,6 +3092,16 @@ async function adventureEnemyTurn(){
       if(kind==="poison"&&choice.target){
         if((choice.target.hp||0)>=6)score+=80;
         if(Number(choice.target.poisonTurns||0)>0)score-=140;
+        const role=aiBasicTacticRole(choice.target);
+        const hp=Math.max(0,Number(choice.target.hp||0));
+        const maxHp=Math.max(1,effectiveMaxHp(choice.target)||choice.target.maxHp||hp||1);
+        const lowNuisance=["ranged","support","assassin","skirmisher"].includes(role)&&(hp<=3||hp/maxHp<=.45);
+        const accessTurns=Number(choice.doctrineResult?.threat?.accessTurns||0);
+        if(lowNuisance&&accessTurns>=2&&Number(choice.target.poisonTurns||0)<=0){
+          score+=430;
+          if(choice.doctrineResult?.delayedLethal)score+=330;
+          if(role==="ranged"||role==="assassin")score+=120;
+        }
       }
       const tempoNeed=aiTempoEngine?.mostThreatenedFront?aiTempoEngine.mostThreatenedFront(aiDoctrineContext()):null;
       if(tempoNeed&&tempoNeed.score>=95){
@@ -2874,12 +3175,18 @@ async function adventureEnemyTurn(){
     const pl=playerLeaderNow(), el=enemyLeaderNow();
     const maxMove=mulanExecMove?1:effectiveMov(u);
     const moverRole=aiBasicTacticRole(u);
+    const movePosture=aiBattlePosture();
+    // Un tanque crítico se queda haciendo pantalla aunque el resto del ejército
+    // haya recuperado presión: su último valor es comprar distancia para el ranged.
+    const criticalRearGuard=!!(aiTempoEngine?.isCriticalTank?.(u,aiDoctrineContext()));
+    if(criticalRearGuard&&!mulanExecMove)return null; // aguanta el punto: ataca/DEF, pero no abandona la pantalla.
     const rangedNeedForPursuit=aiRangedProtectionNeed();
-    const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t));
+    const strategicTargets=living(1).filter(t=>aiCanEverTarget(u,t)&&!aiIsDoomedByDotAtNextTurn(t));
     const stealthVeilActive=!!isStealthedUnit(u);
     const stealthPriorityTarget=stealthVeilActive?aiStealthHuntTarget(u):null;
     const primaryTarget=strategicTargets.map(t=>{
       let targetScore=scoreTarget(t,0,u)+(t.leader?90:0);
+      if(aiFocusTargetId&&t.id===aiFocusTargetId)targetScore+=1400;
       if(isStealthedUnit(u)&&!t.leader){
         targetScore+=160+aiUnitValue(t)*0.2;
       }
@@ -2892,7 +3199,7 @@ async function adventureEnemyTurn(){
 
       // Una pantalla reconoce a una caballería/asesino como amenaza, pero no la
       // persigue si esa pieza NO está atacando la retaguardia que debe proteger.
-      if(aiIsFrontlineRole(moverRole)&&rangedNeedForPursuit&&!t.leader){
+      if(aiIsFrontlineUnit(u)&&rangedNeedForPursuit&&!t.leader){
         const tRole=aiBasicTacticRole(t);
         const threatensProtected=rangedNeedForPursuit.threats.some(th=>th.unit.id===t.id);
         if(["cavalry","skirmisher","assassin"].includes(tRole)&&!threatensProtected)targetScore-=520;
@@ -2900,7 +3207,8 @@ async function adventureEnemyTurn(){
       }
       return{target:t,score:targetScore};
     }).sort((a,b)=>b.score-a.score)[0]?.target||null;
-    const huntTarget=stealthPriorityTarget||primaryTarget;
+    const rangedAnchorTarget=aiIsRangedCombatUnit(u)?bestAttackTarget(u):null;
+    const huntTarget=rangedAnchorTarget||stealthPriorityTarget||primaryTarget;
     const currentGap=huntTarget?Math.max(0,d(u,huntTarget)-aiAttackReachForTarget(u,huntTarget)):999;
     const options=[];
     const legalMoveKeys=new Set(getUnitMovementZonesForState(u,units,maxMove));
@@ -2909,11 +3217,12 @@ async function adventureEnemyTurn(){
       if(!legalMoveKeys.has(`${x},${y}`))continue;
       {
         const pos={x,y};
+        if(criticalRearGuard&&el&&d(pos,el)<d(start,el))continue;
         let score=0;
         const ghost={...u,x:pos.x,y:pos.y};
         const role=moverRole;
         const ghostRange=aiAttackRange(ghost);
-        const targets=living(1).filter(t=>aiCanEverTarget(ghost,t)&&d(pos,t)<=aiAttackReachForTarget(ghost,t));
+        const targets=living(1).filter(t=>!aiIsDoomedByDotAtNextTurn(t)&&aiCanEverTarget(ghost,t)&&d(pos,t)<=aiAttackReachForTarget(ghost,t));
         if(targets.length)score+=Math.max(...targets.map(t=>scoreTarget(t,0,ghost)))+135;
         if(pl)score+=Math.max(0,12-d(pos,pl))*6;
         if(el&&u.key==="guardian")score+=Math.max(0,8-d(pos,el))*7;
@@ -2933,6 +3242,31 @@ async function adventureEnemyTurn(){
         if(role==="tank"||role==="spear"||role==="melee")score+=aiProtectRangedCellScore(pos,u);
         score+=aiProtectLeaderCellScore(pos,u);
         if(ghostRange>1&&targets.length&&living(1).some(e=>d(e,pos)<=1))score-=45;
+        if(aiIsRangedCombatUnit(u)&&!stealthVeilActive){
+          const enemies=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e));
+          const currentNearest=enemies.reduce((best,e)=>Math.min(best,d(u,e)),99);
+          const nextNearest=enemies.reduce((best,e)=>Math.min(best,d(pos,e)),99);
+          const minSafe=Math.min(3,ghostRange);
+          if(nextNearest>=minSafe)score+=125+Math.min(ghostRange,nextNearest)*22;
+          else score-=(minSafe-nextNearest)*280;
+          if(nextNearest>currentNearest)score+=(nextNearest-currentNearest)*150;
+          else if(nextNearest<currentNearest)score-=(currentNearest-nextNearest)*210;
+          if(huntTarget&&aiCanEverTarget(ghost,huntTarget)){
+            const currentTargetDist=d(u,huntTarget);
+            const nextTargetDist=d(pos,huntTarget);
+            const nextCanHit=nextTargetDist<=aiAttackReachForTarget(ghost,huntTarget);
+            const currentCanHit=currentTargetDist<=aiAttackReachForTarget(u,huntTarget);
+            if(nextCanHit){
+              score+=nextTargetDist*85;
+              if(nextTargetDist===aiAttackReachForTarget(ghost,huntTarget))score+=240;
+              if(nextTargetDist>=minSafe)score+=115;
+              if(currentCanHit&&nextTargetDist>currentTargetDist)score+=(nextTargetDist-currentTargetDist)*175;
+              if(currentCanHit&&nextTargetDist<currentTargetDist)score-=(currentTargetDist-nextTargetDist)*260;
+            }else if(currentCanHit){
+              score-=520; // nunca abandona un disparo disponible solo para acercarse/recolocarse.
+            }
+          }
+        }
         if(role==="spear"){
           const cavalryThreat=aiEnemyCavalryPressure();
           if(cavalryThreat){
@@ -2981,6 +3315,30 @@ async function adventureEnemyTurn(){
         options.push({x,y,score,progress,nextGap,canAttack:targets.length>0,formationScore});
       }
     }
+    if(aiIsRangedCombatUnit(u)&&huntTarget&&!stealthVeilActive){
+      const currentCanHit=aiCanEverTarget(u,huntTarget)&&d(u,huntTarget)<=aiAttackReachForTarget(u,huntTarget);
+      const currentDist=d(u,huntTarget);
+      const currentNearest=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e)).reduce((v,e)=>Math.min(v,d(u,e)),99);
+      const shotOptions=options.filter(o=>{
+        const ghost={...u,x:o.x,y:o.y};
+        return aiCanEverTarget(ghost,huntTarget)&&d(ghost,huntTarget)<=aiAttackReachForTarget(ghost,huntTarget);
+      });
+      if(shotOptions.length){
+        const minSafe=Math.min(3,aiAttackRange(u));
+        const rankedShots=shotOptions.sort((a,b)=>{
+          const ad=d(a,huntTarget),bd=d(b,huntTarget);
+          const an=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e)).reduce((v,e)=>Math.min(v,d(a,e)),99);
+          const bn=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e)).reduce((v,e)=>Math.min(v,d(b,e)),99);
+          const aSafe=an>=minSafe?1:0,bSafe=bn>=minSafe?1:0;
+          return bSafe-aSafe||bd-ad||bn-an||b.score-a.score;
+        });
+        const kite=rankedShots[0];
+        const kiteDist=d(kite,huntTarget);
+        const kiteNearest=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e)).reduce((v,e)=>Math.min(v,d(kite,e)),99);
+        if(!currentCanHit)return kite; // entra a alcance desde la mayor distancia útil, nunca más cerca de lo necesario.
+        if(kiteDist>currentDist||currentNearest<minSafe&&kiteNearest>currentNearest)return kite;
+      }
+    }
     const ranked=options.sort((a,b)=>b.score-a.score);
     const best=ranked[0]||null;
     const role=aiBasicTacticRole(u);
@@ -2998,9 +3356,44 @@ async function adventureEnemyTurn(){
     return safeAdvance;
   };
   const aiShouldRepositionBeforeAttack=(u)=>{
-    if(!u||u.acted||!aiIsBacklineRole(aiBasicTacticRole(u)))return false;
+    if(!u||u.acted)return false;
+    const role=aiBasicTacticRole(u);
+    const retreatAsset=aiIsRetreatAsset(u);
     const target=bestAttackTarget(u);
-    if(!target)return false;
+    const posture=aiBattlePosture();
+    const isTank=!!aiTempoEngine?.isTankAsset?.(u,aiDoctrineContext());
+    const unitMustRetreat=isTank?retreatAsset:(posture.retreat&&retreatAsset);
+
+    // Kiting universal: un ranged que ya puede disparar se aleja primero si conserva ese mismo tiro.
+    if(aiIsRangedCombatUnit(u)&&target){
+      const best=bestMoveFor(u);
+      if(best){
+        const ghost={...u,x:best.x,y:best.y};
+        const keepsShot=aiCanEverTarget(ghost,target)&&d(ghost,target)<=aiAttackReachForTarget(ghost,target);
+        if(keepsShot){
+          const currentTargetDist=d(u,target),nextTargetDist=d(ghost,target);
+          const currentNearest=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e)).reduce((v,e)=>Math.min(v,d(u,e)),99);
+          const nextNearest=living(1).filter(e=>!aiIsDoomedByDotAtNextTurn(e)).reduce((v,e)=>Math.min(v,d(ghost,e)),99);
+          const minSafe=Math.min(3,aiAttackRange(u));
+          if(nextTargetDist>currentTargetDist&&nextTargetDist<=aiAttackReachForTarget(ghost,target))return true;
+          if(currentNearest<minSafe&&nextNearest>currentNearest)return true;
+        }
+      }
+    }
+
+    if(!aiIsBacklineRole(role)&&!unitMustRetreat)return false;
+    if(unitMustRetreat){
+      const best=bestMoveFor(u);
+      if(!best)return false;
+      const currentFormation=aiFormationCellScore(u,u);
+      const currentNearest=living(1).reduce((bestDist,e)=>Math.min(bestDist,d(u,e)),99);
+      const nextNearest=living(1).reduce((bestDist,e)=>Math.min(bestDist,d(best,e)),99);
+      if(nextNearest>currentNearest)return true;
+      if(best.formationScore>currentFormation+35&&nextNearest>=currentNearest)return true;
+      return false; // un score ofensivo alto nunca se confunde con retirada.
+    }
+    if(!aiIsBacklineRole(role)||!target)return false;
+    if(posture.pressure)return false;
     const combat=estimateCombat(u,target);
     if(target.leader&&combat.damage>=(target.hp||0)&&combat.chance>=60)return false;
     if(!target.leader&&combat.damage>=(target.hp||0)&&combat.chance>=75)return false;
@@ -3018,6 +3411,19 @@ async function adventureEnemyTurn(){
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const best=bestMoveFor(u);
     if(!best)return false;
+    if(!mulanExecMove){
+      const posture=aiBattlePosture();
+      const retreatAsset=aiIsRetreatAsset(u);
+      const isTank=!!aiTempoEngine?.isTankAsset?.(u,aiDoctrineContext());
+      const unitMustRetreat=isTank?retreatAsset:(posture.retreat&&retreatAsset);
+      if(unitMustRetreat){
+        const currentNearest=living(1).reduce((bestDist,e)=>Math.min(bestDist,d(u,e)),99);
+        const nextNearest=living(1).reduce((bestDist,e)=>Math.min(bestDist,d(best,e)),99);
+        const currentFormation=aiFormationCellScore(u,u);
+        if(nextNearest<currentNearest)return false;
+        if(nextNearest===currentNearest&&best.formationScore<=currentFormation+35)return false;
+      }
+    }
     const movePath=getUnitMovementPath(u,best.x,best.y,units,mulanExecMove?1:effectiveMov(u));
     if(!movePath)return false;
     const movedNow=isAerialMovementUnit(u)?d(u,best):movementPathDistance(movePath);
@@ -3309,6 +3715,20 @@ async function adventureEnemyTurn(){
     const aRole=aiBasicTacticRole(a),bRole=aiBasicTacticRole(b);
     return (aiActionRolePriority[aRole]??9)-(aiActionRolePriority[bRole]??9)||aiUnitValue(b)-aiUnitValue(a);
   });
+  const aiAttackBand=(u)=>{
+    if(aiIsRangedCombatUnit(u))return aiIsMageRangedUnit(u)?1:0;
+    return 2;
+  };
+  const aiAttackUnits=()=>living(2).filter(u=>!u.leader).sort((a,b)=>{
+    const band=aiAttackBand(a)-aiAttackBand(b);
+    if(band!==0)return band;
+    const aHas=bestAttackTarget(a)?1:0,bHas=bestAttackTarget(b)?1:0;
+    if(aHas!==bHas)return bHas-aHas;
+    const aTempo=aiTempoEngine?.actionPriority?Number(aiTempoEngine.actionPriority(a,aiDoctrineContext())||0):0;
+    const bTempo=aiTempoEngine?.actionPriority?Number(aiTempoEngine.actionPriority(b,aiDoctrineContext())||0):0;
+    if(aTempo!==bTempo)return bTempo-aTempo;
+    return effectiveAtk(b)-effectiveAtk(a)||aiUnitValue(b)-aiUnitValue(a);
+  });
   const tryAiLegendEffect=(u)=>{
     if(!u||u.acted)return false;
     const mode=getUnitEffectMode(u);
@@ -3377,6 +3797,16 @@ async function adventureEnemyTurn(){
   const aiShouldTempoDefendBeforeAttack=(u)=>{
     if(!u||!aiTempoEngine?.shouldDefendFrontline)return false;
     if(!aiTempoEngine.shouldDefendFrontline(u,aiDoctrineContext()))return false;
+    const warriorPush=aiWarriorPressureState();
+    const posture=aiBattlePosture();
+    if(posture.pressure&&aiIsFrontlineUnit(u)){
+      const maxHp=Math.max(1,effectiveMaxHp(u)||u.hp||1);
+      const hpRatio=Math.max(0,Number(u.hp||0))/maxHp;
+      const nearbyAllies=(posture.troops||[]).filter(a=>a.id!==u.id&&d(a,u)<=3).length;
+      const isTank=!!aiTempoEngine?.isTankAsset?.(u,aiDoctrineContext());
+      const canKeepPressing=isTank?hpRatio>.50:hpRatio>.35;
+      if(canKeepPressing&&nearbyAllies>=1)return false;
+    }
     const target=bestAttackTarget(u);
     if(!target)return true;
     const combat=estimateCombat(u,target);
@@ -3386,7 +3816,7 @@ async function adventureEnemyTurn(){
     if(tempoNeed?.unit?.id===u.id&&tempoNeed.attackers?.some(e=>e.id===target.id)&&combat.chance>=72&&combat.expectedHp>=Math.max(1,(target.hp||0)*.65))return false;
     return true;
   };
-  for(const u of aiUnits()){
+  for(const u of aiAttackUnits()){
     let didSomething=false;
     if(aiShouldTempoDefendBeforeAttack(u)&&tryAiDefenseStance(u,{allowDespiteAttack:true})){
       didSomething=true;

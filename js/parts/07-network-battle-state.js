@@ -911,8 +911,8 @@ function applyStartingPrincipalEntryEffects(units=[]){
 /* HALLVALLA VS · presentación previa al combate ---------------------------
    Usa exclusivamente los líderes y Personajes Principales reales del estado
    de batalla. No altera reglas, unidades, manos, turnos ni estadísticas. */
-const HALLVALLA_VS_BACKGROUND="assets/ui/vs_intro/vs_battlefield.png";
-const HALLVALLA_VS_EMBLEM="assets/ui/vs_intro/vs_emblem.png";
+const HALLVALLA_VS_BACKGROUND="assets/ui/vs_intro/vs_battlefield.webp";
+const HALLVALLA_VS_EMBLEM="assets/ui/vs_intro/vs_emblem.webp";
 let hallvallaVsIntroKey="";
 let hallvallaVsIntroPromise=null;
 let hallvallaVsCountdownTimer=null;
