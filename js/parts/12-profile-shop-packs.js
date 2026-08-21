@@ -1160,116 +1160,223 @@ function openCollectionOrLocked(){
 }
 const SHOP_ARTBOARD_WIDTH=1672;
 const SHOP_ARTBOARD_HEIGHT=941;
+let currentShopView="main";
+let shopPackFlowActive=false;
+let shopPackRevealObserver=null;
+let shopPackPostRevealBound=false;
+
+const SHOP_PACK_VISUALS=Object.freeze({
+  /* Claves visibles del Shop -> rareza interna histórica de HallValla. */
+  basic:"assets/shop/v6/packs/basic.webp",       // Básica -> basic -> negro
+  rare:"assets/shop/v6/packs/epic.webp",        // Rara -> epic -> plateado
+  epic:"assets/shop/v6/packs/glorious.webp",    // Épica -> glorious -> verde
+  mythic:"assets/shop/v6/packs/mythic.webp",    // Mítica -> mythic -> azul
+  legendary:"assets/shop/v6/packs/legendary.webp" // Legendaria -> legendary -> púrpura
+});
+
+/* Cantidades provisionales: solo economía interna. No hay dinero real conectado. */
+const SHOP_GEM_BUNDLES=Object.freeze([100,250,500,1000,2500,5000,10000,25000]);
+const SHOP_GOLD_OFFERS=Object.freeze([
+  {gold:5000,gems:90},
+  {gold:2500,gems:50},
+  {gold:7500,gems:130},
+  {gold:10000,gems:170},
+  {gold:15000,gems:240},
+  {gold:50000,gems:700},
+  {gold:25000,gems:380}
+]);
+
 function shopPercent(value,total){return `${(Number(value||0)/total*100).toFixed(5)}%`;}
-function shopLayer(name,x,y,w,h,extraClass=""){
-  return `<img class="hv-shop-layer ${extraClass}" src="assets/shop/layers/${name}.webp" alt="" aria-hidden="true" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}">`;
-}
 function shopHotspot(label,action,x,y,w,h,extra=""){
-  return `<button class="hv-shop-hotspot" type="button" aria-label="${label}" data-shop-action="${action}" ${extra} style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}"><span>${label}</span></button>`;
+  return `<button class="hv-shop-hotspot" type="button" aria-label="${escapeHtml(label)}" data-shop-action="${action}" ${extra} style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}"><span>${escapeHtml(label)}</span></button>`;
 }
-function shopLiveValue(value,x,y,w,h,extraClass=""){
-  return `<div class="hv-shop-live-value ${extraClass}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}">${value}</div>`;
+function shopWallet(profile){
+  const gold=Math.max(0,Number(profile?.gold||0)).toLocaleString("es-CR");
+  const gems=Math.max(0,Number(profile?.gems||0)).toLocaleString("es-CR");
+  return `<div class="hv-shop-wallet" aria-label="Saldo"><span>ORO ${gold}</span><span>GEMAS ${gems}</span></div>`;
 }
-function buildLayeredPackShop(profile){
-  const format=value=>Math.max(0,Number(value||0)).toLocaleString("es-CR");
-  const layers=[
-    `<img class="hv-shop-background" src="assets/shop/layers/shop_background.webp" alt="Tienda digital de HallValla">`,
-    shopLayer("topbar",257,0,1415,104,"hv-shop-topbar-layer"),
-    shopLayer("sidebar",0,0,258,941,"hv-shop-sidebar-layer"),
-    shopLayer("header",257,104,1415,80,"hv-shop-header-layer"),
-    shopLayer("pack_basic",288,184,244,417,"hv-shop-pack-layer hv-shop-pack-basic"),
-    shopLayer("pack_rare",545,184,245,417,"hv-shop-pack-layer hv-shop-pack-rare"),
-    shopLayer("pack_epic",803,184,247,417,"hv-shop-pack-layer hv-shop-pack-epic"),
-    shopLayer("pack_mythic",1062,184,248,417,"hv-shop-pack-layer hv-shop-pack-mythic"),
-    shopLayer("pack_legendary",1320,184,254,417,"hv-shop-pack-layer hv-shop-pack-legendary"),
-    shopLayer("featured_bundle",278,615,979,278,"hv-shop-bundle-layer"),
-    shopLayer("daily_offer",1265,615,339,278,"hv-shop-daily-layer")
-  ].join("");
-  const liveValues=[
-    shopLiveValue(format(profile.level||1),1514,74,43,38,"hv-shop-level-value"),
-    shopLiveValue(String(profile.name||"Jugador"),1513,118,133,28,"hv-shop-name-value")
-  ].join("");
+function shopBackButton(){return `<button class="hv-shop-back" type="button" data-shop-action="view-main" aria-label="Volver a tienda">← TIENDA</button>`;}
+function shopStage(background,content="",profile=null,view="main"){
+  return `<div class="hv-shop-stage-shell"><div id="hvShopStage" class="hv-shop-stage hv-shop-view-${view}" data-shop-view="${view}"><img class="hv-shop-background" src="${background}" alt="">${profile?shopWallet(profile):""}${content}</div></div>`;
+}
+function buildShopMain(profile){
   const hotspots=[
-    shopHotspot("Volver a jugar","close",286,10,139,78),
-    shopHotspot("Abrir colección","collection",425,10,165,78),
-    shopHotspot("Abrir misiones","missions",591,10,161,78),
-    shopHotspot("Tienda","shop",752,10,137,78),
-    shopHotspot("Abrir perfil","profile",1485,5,181,151),
-    shopHotspot("Ver sobres","packs",17,187,236,62),
-    shopHotspot("Comprar oro","gold",17,249,236,59),
-    shopHotspot("Comprar gemas","gems",17,309,236,59),
-    shopHotspot("Ver lotes","bundles",17,369,236,58),
-    shopHotspot("Ver cosméticos","cosmetics",17,428,236,58),
-    shopHotspot("Ver consumibles","consumables",17,487,236,58),
-    shopHotspot("Ver ofertas diarias","daily",17,546,236,58),
-    shopHotspot("Ver pase VIP","vip",17,605,236,58),
-    shopHotspot("Canjear código","redeem",17,707,228,83),
-    shopHotspot("Ver probabilidades","probabilities",1298,118,178,39),
-    shopHotspot("Comprar Pack básico por 100 oro","buy-pack",315,535,191,50,'data-pack-key="basic"'),
-    shopHotspot("Comprar Pack raro por 400 oro","buy-pack",574,535,191,50,'data-pack-key="rare"'),
-    shopHotspot("Comprar Pack épico por 900 oro","buy-pack",832,535,192,50,'data-pack-key="epic"'),
-    shopHotspot("Comprar Pack mítico por 1400 oro","buy-pack",1091,535,192,50,'data-pack-key="mythic"'),
-    shopHotspot("Comprar Pack legendario por 2000 oro","buy-pack",1350,535,194,50,'data-pack-key="legendary"'),
-    shopHotspot("Comprar lote destacado","featured-buy",1037,730,192,54),
-    shopHotspot("Comprar oferta diaria","daily-buy",1296,812,275,53)
+    shopHotspot("Abrir sobres","view-packs",90,145,485,675),
+    shopHotspot("Abrir oro","view-gold",594,145,486,675),
+    shopHotspot("Abrir gemas","view-gems",1098,145,486,675)
   ].join("");
-  return `<div class="hv-shop-stage-shell"><div id="hvShopStage" class="hv-shop-stage">${layers}${liveValues}${hotspots}</div></div>`;
+  return shopStage("assets/shop/v6/tienda.webp",hotspots,profile,"main");
+}
+function buildShopPacks(profile){
+  const packs=(PACK_SHOP_ITEMS||[]).slice(0,5);
+  const xs=[365,555,745,935,1125];
+  const packButtons=packs.map((pack,index)=>{
+    const x=xs[index]??(365+index*190);
+    const visual=SHOP_PACK_VISUALS[pack.key]||pack.image;
+    const cost=Math.max(0,Number(pack.costGold||0)).toLocaleString("es-CR");
+    return `<button class="hv-shop-pack-choice" type="button" data-shop-action="buy-pack" data-pack-key="${escapeHtml(pack.key)}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(490,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(178,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(285,SHOP_ARTBOARD_HEIGHT)}" aria-label="Comprar ${escapeHtml(pack.name)} por ${cost} de oro">
+      <img src="${visual}" alt="${escapeHtml(pack.name)}">
+      <span class="hv-shop-choice-label"><b>${escapeHtml(pack.name)}</b><small>${cost} ORO</small></span>
+    </button>`;
+  }).join("");
+  return shopStage("assets/shop/v6/sobres.webp",`${shopBackButton()}${packButtons}`,profile,"packs");
+}
+function buildShopGems(profile){
+  const slots=[
+    [132,174,340,315],[484,174,340,315],[836,174,340,315],[1188,174,340,315],
+    [132,520,340,315],[484,520,340,315],[836,520,340,315],[1188,520,340,315]
+  ];
+  const offers=SHOP_GEM_BUNDLES.map((amount,index)=>{
+    const [x,y,w,h]=slots[index];
+    return `<button class="hv-shop-currency-choice hv-shop-gem-choice" type="button" data-shop-action="gem-bundle" data-gem-amount="${amount}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}" aria-label="${amount.toLocaleString("es-CR")} gemas">
+      <span class="hv-shop-currency-label"><b>${amount.toLocaleString("es-CR")} GEMAS</b><small>PRÓXIMAMENTE</small></span>
+    </button>`;
+  }).join("");
+  return shopStage("assets/shop/v6/gemas.webp",`${shopBackButton()}${offers}`,profile,"gems");
+}
+function buildShopGold(profile){
+  const slots=[
+    [120,176,345,310],[472,176,345,310],[824,176,345,310],[1176,176,365,310],
+    [120,521,438,310],[566,521,548,310],[1122,521,420,310]
+  ];
+  const offers=SHOP_GOLD_OFFERS.map((offer,index)=>{
+    const [x,y,w,h]=slots[index];
+    return `<button class="hv-shop-currency-choice hv-shop-gold-choice" type="button" data-shop-action="buy-gold" data-gold-index="${index}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}" aria-label="Comprar ${offer.gold.toLocaleString("es-CR")} oro por ${offer.gems.toLocaleString("es-CR")} gemas">
+      <span class="hv-shop-currency-label"><b>${offer.gold.toLocaleString("es-CR")} ORO</b><small>${offer.gems.toLocaleString("es-CR")} GEMAS</small></span>
+    </button>`;
+  }).join("");
+  return shopStage("assets/shop/v6/oro.webp",`${shopBackButton()}${offers}`,profile,"gold");
+}
+function buildLayeredPackShop(profile,view=currentShopView){
+  if(view==="packs")return buildShopPacks(profile);
+  if(view==="gold")return buildShopGold(profile);
+  if(view==="gems")return buildShopGems(profile);
+  return buildShopMain(profile);
+}
+function renderShopView(view="main"){
+  const content=$("packShopContent");
+  if(!content)return;
+  currentShopView=["main","packs","gold","gems"].includes(view)?view:"main";
+  content.innerHTML=buildLayeredPackShop(getPlayerProfile(),currentShopView);
+  bindLayeredShopActions();
+}
+async function buyGoldWithGems(index){
+  const offer=SHOP_GOLD_OFFERS[Number(index)];
+  if(!offer)return;
+  const profile=getPlayerProfile();
+  const currentGems=Math.max(0,Number(profile.gems||0));
+  const cost=Math.max(0,Number(offer.gems||0));
+  const gold=Math.max(0,Number(offer.gold||0));
+  if(currentGems<cost){
+    await hvAlert(`Tienes ${currentGems.toLocaleString("es-CR")} gemas y necesitas ${cost.toLocaleString("es-CR")} gemas.\n\nNecesitas ganar o comprar más gemas para obtener este oro.`,"Gemas insuficientes");
+    return;
+  }
+  const confirmed=await hvConfirm(`¿Comprar ${gold.toLocaleString("es-CR")} de oro por ${cost.toLocaleString("es-CR")} gemas?\n\nGemas después de la compra: ${(currentGems-cost).toLocaleString("es-CR")}`,"Confirmar compra","Comprar","Cancelar");
+  if(!confirmed)return;
+  profile.gems=currentGems-cost;
+  profile.gold=Math.max(0,Number(profile.gold||0))+gold;
+  savePlayerProfile(profile);
+  renderPlayerProfile(profile);
+  renderHomeProgress();
+  await hvAlert(`Recibiste ${gold.toLocaleString("es-CR")} de oro.`,"Compra realizada");
+  renderShopView("gold");
+}
+async function showGemBundleInfo(amount){
+  const safe=Math.max(0,Number(amount||0));
+  await hvAlert(`${safe.toLocaleString("es-CR")} gemas.\n\nLa compra de gemas con dinero real todavía no está habilitada. El precio se definirá más adelante.`,"Gemas");
 }
 function bindLayeredShopActions(){
   const stage=$("hvShopStage");
   if(!stage)return;
   stage.querySelectorAll("[data-shop-action]").forEach(button=>button.addEventListener("click",async()=>{
     const action=button.dataset.shopAction;
-    if(action==="close"){closePackShop();return;}
-    if(action==="collection"){closePackShop();openCollectionOrLocked();return;}
-    if(action==="missions"){showComingSoon("Misiones");return;}
-    if(action==="shop"||action==="packs")return;
-    if(action==="profile"){closePackShop();openProfilePanel();return;}
-    if(action==="gold-plus"||action==="gold"){showComingSoon("Conseguir oro");return;}
-    if(action==="gems-plus"||action==="gems"){showComingSoon("Comprar gemas");return;}
-    if(action==="fragments-plus"){showComingSoon("Conseguir fragmentos");return;}
-    if(action==="bundles"||action==="featured-buy"){showComingSoon("Lotes");return;}
-    if(action==="cosmetics"){showComingSoon("Cosméticos");return;}
-    if(action==="consumables"){showComingSoon("Consumibles");return;}
-    if(action==="daily"||action==="daily-buy"){showComingSoon("Ofertas diarias");return;}
-    if(action==="vip"){showComingSoon("Pase VIP");return;}
-    if(action==="redeem"){showComingSoon("Canjear código");return;}
-    if(action==="chat"){showComingSoon("Chat");return;}
-    if(action==="friends"){showComingSoon("Amigos");return;}
-    if(action==="clans"){showComingSoon("Clanes");return;}
-    if(action==="settings"){closePackShop();$("settingsPanel")?.classList.remove("hidden");return;}
-    if(action==="probabilities"){
-      await hvAlert(`Todos los packs contienen 2 cartas.
-
-Pack básico: 2 Básicas.
-
-Pack raro: 1 Rara garantizada + 1 Básica.
-
-Pack épico: 1 Épica garantizada. Segunda carta: 80% Básica · 20% Rara.
-
-Pack mítico: 1 Mítica garantizada. Segunda carta: 60% Básica · 30% Rara · 10% Épica.
-
-Pack legendario: 1 Legendaria garantizada. Segunda carta: 40% Básica · 30% Rara · 20% Épica · 10% Mítica.`,"Probabilidades de sobres");
-      return;
-    }
+    if(action==="view-main"){renderShopView("main");return;}
+    if(action==="view-packs"){renderShopView("packs");return;}
+    if(action==="view-gold"){renderShopView("gold");return;}
+    if(action==="view-gems"){renderShopView("gems");return;}
     if(action==="buy-pack"){
       const key=button.dataset.packKey;
       if(key)await buyPackWithGold(key);
+      return;
     }
+    if(action==="buy-gold"){await buyGoldWithGems(button.dataset.goldIndex);return;}
+    if(action==="gem-bundle"){await showGemBundleInfo(button.dataset.gemAmount);return;}
   }));
 }
-function openPackShop(){
+function openPackShop(view="main"){
   const panel=$("packShopPanel"),content=$("packShopContent");
   if(!panel||!content)return showComingSoon("Tienda");
-  const profile=getPlayerProfile();
-  content.innerHTML=buildLayeredPackShop(profile);
-  bindLayeredShopActions();
   panel.classList.remove("hidden");
+  renderShopView(view);
 }
 function closePackShop(){
   const panel=$("packShopPanel");
   if(panel)panel.classList.add("hidden");
 }
+function cleanupShopPackRevealObserver(){
+  if(shopPackRevealObserver){shopPackRevealObserver.disconnect();shopPackRevealObserver=null;}
+  const panel=$("packOpeningPanel");
+  panel?.classList.remove("hv-shop-pack-flash");
+}
+function queuePurchasedShopPackFirst(pack){
+  const queued={...pack,id:pack.id||`shop_pack_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,createdAt:Date.now(),opened:false};
+  if(typeof getPendingPacks==="function"&&typeof savePendingPacks==="function"){
+    const pending=getPendingPacks();
+    savePendingPacks([queued,...pending]);
+    return queued;
+  }
+  addPendingPack(queued);
+  return queued;
+}
+function syncShopPackPostRevealControls(){
+  if(!shopPackFlowActive)return;
+  const grid=$("packRevealGrid"),confirm=$("confirmPackCardsBtn"),next=$("openNextPackBtn"),obj=$("packOpeningObject"),panel=$("packOpeningPanel");
+  if(obj?.classList.contains("opening")&&panel&&!panel.classList.contains("hv-shop-pack-flash")){
+    panel.classList.add("hv-shop-pack-flash");
+    setTimeout(()=>panel.classList.remove("hv-shop-pack-flash"),720);
+  }
+  const revealed=!!(grid&&!grid.classList.contains("hidden")&&grid.children.length);
+  if(!revealed)return;
+  if(confirm){confirm.textContent="Ir a colección";confirm.classList.remove("hidden");}
+  if(next){next.textContent="Seguir comprando";next.classList.remove("hidden");}
+}
+function installShopPackPostRevealControls(){
+  cleanupShopPackRevealObserver();
+  const grid=$("packRevealGrid"),obj=$("packOpeningObject"),confirm=$("confirmPackCardsBtn");
+  if(typeof MutationObserver!=="function"||!grid||!obj)return;
+  shopPackRevealObserver=new MutationObserver(syncShopPackPostRevealControls);
+  shopPackRevealObserver.observe(grid,{attributes:true,attributeFilter:["class"],childList:true,subtree:false});
+  shopPackRevealObserver.observe(obj,{attributes:true,attributeFilter:["class"]});
+  if(confirm)shopPackRevealObserver.observe(confirm,{attributes:true,attributeFilter:["class"]});
+  syncShopPackPostRevealControls();
+}
+function bindShopPackPostRevealNavigation(){
+  if(shopPackPostRevealBound)return;
+  shopPackPostRevealBound=true;
+  document.addEventListener("click",event=>{
+    if(!shopPackFlowActive)return;
+    const next=event.target.closest?.("#openNextPackBtn");
+    const confirm=event.target.closest?.("#confirmPackCardsBtn");
+    const close=event.target.closest?.("#closePackOpeningBtn");
+    if(close){shopPackFlowActive=false;cleanupShopPackRevealObserver();$("packOpeningPanel")?.classList.remove("hv-shop-pack-flow");return;}
+    if(next){
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+      shopPackFlowActive=false;cleanupShopPackRevealObserver();
+      $("packOpeningPanel")?.classList.remove("hv-shop-pack-flow");
+      closePackOpening();
+      openPackShop("packs");
+      return;
+    }
+    if(confirm){
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+      shopPackFlowActive=false;cleanupShopPackRevealObserver();
+      $("packOpeningPanel")?.classList.remove("hv-shop-pack-flow");
+      closePackOpening();
+      openCollectionOrLocked();
+    }
+  },true);
+}
+bindShopPackPostRevealNavigation();
 async function buyPackWithGold(packKey){
   const pack=(PACK_SHOP_ITEMS||[]).find(p=>p.key===packKey)||null;
   if(!pack)return;
@@ -1282,47 +1389,27 @@ async function buyPackWithGold(packKey){
 
   if(remainingGold<0){
     const missingGold=Math.abs(remainingGold);
-    await hvAlert(
-      `Oro disponible: ${formatGold(currentGold)}
-Costo del sobre: ${formatGold(packCost)}
-Te faltan: ${formatGold(missingGold)} de oro.`,
-      "Oro insuficiente"
-    );
+    await hvAlert(`Oro disponible: ${formatGold(currentGold)}\nCosto del sobre: ${formatGold(packCost)}\nTe faltan: ${formatGold(missingGold)} de oro.`,"Oro insuficiente");
     return;
   }
 
-  const confirmed=await hvConfirm(
-    `Oro disponible: ${formatGold(currentGold)}
-Costo del sobre: ${formatGold(packCost)}
-Oro después de comprar: ${formatGold(remainingGold)}
-
-¿Comprar ${pack.name}?`,
-    "Confirmar compra",
-    "Comprar",
-    "Cancelar"
-  );
+  const confirmed=await hvConfirm(`Oro disponible: ${formatGold(currentGold)}\nCosto del sobre: ${formatGold(packCost)}\nOro después de comprar: ${formatGold(remainingGold)}\n\n¿Comprar ${pack.name}?`,"Confirmar compra","Comprar","Cancelar");
   if(!confirmed)return;
 
   profile.gold=remainingGold;
   savePlayerProfile(profile);
-  addPendingPack(buildPendingShopPack(pack.key,{
+  queuePurchasedShopPackFirst(buildPendingShopPack(pack.key,{
     source:"shop",
-    costGold:packCost
+    costGold:packCost,
+    image:SHOP_PACK_VISUALS[pack.key]||pack.image
   }));
   renderPlayerProfile(profile);
   renderHomeProgress();
   closePackShop();
-
-  if(await hvConfirm(
-    `Compraste ${pack.name}.
-Oro gastado: ${formatGold(packCost)}
-Oro restante: ${formatGold(remainingGold)}
-
-¿Abrir el sobre ahora?`,
-    "Compra realizada",
-    "Abrir pack",
-    "Después"
-  ))openPackOpening();
+  shopPackFlowActive=true;
+  openPackOpening();
+  $("packOpeningPanel")?.classList.add("hv-shop-pack-flow");
+  installShopPackPostRevealControls();
 }
 function getLegendaryCardByKey(key){
   return LEGENDARY_ALLY_CARDS.find(c=>c.key===key)||null;

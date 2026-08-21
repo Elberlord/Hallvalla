@@ -23132,3 +23132,72 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 body:not(.hv-forge-edit-active) #deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select{
   opacity:.001 !important;
 }
+
+/* ========================================================================== */
+/* SHOP V6 · Tienda / Sobres / Oro / Gemas. SOLO afecta #packShopPanel y      */
+/* la apertura de sobres iniciada desde Shop.                                  */
+/* ========================================================================== */
+#packShopPanel .hv-shop-stage{position:absolute!important;inset:0!important;overflow:hidden!important;}
+#packShopPanel .hv-shop-background{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;z-index:0!important;}
+#packShopPanel .hv-shop-wallet{
+  position:absolute;z-index:35;right:2.6%;top:2.2%;display:flex;gap:7px;align-items:center;
+  padding:6px 9px;border:1px solid rgba(211,158,64,.48);border-radius:6px;
+  background:rgba(5,4,3,.78);box-shadow:0 4px 14px rgba(0,0,0,.52),inset 0 0 8px rgba(222,168,69,.08);
+  color:#e4c077;font:800 clamp(7px,.72vw,12px)/1 Georgia,"Times New Roman",serif;text-shadow:0 2px 4px #000;
+  pointer-events:none;
+}
+#packShopPanel .hv-shop-wallet span+span{padding-left:7px;border-left:1px solid rgba(211,158,64,.34);}
+#packShopPanel .hv-shop-back{
+  position:absolute;z-index:36;left:2.2%;top:2.1%;min-width:92px;padding:7px 13px;
+  border:1px solid rgba(211,158,64,.62);border-radius:5px;background:rgba(8,6,4,.86);color:#e9c77e;
+  box-shadow:0 4px 14px rgba(0,0,0,.55),inset 0 0 10px rgba(216,155,51,.08);
+  font:900 clamp(8px,.8vw,13px)/1 Georgia,"Times New Roman",serif;cursor:pointer;
+}
+#packShopPanel .hv-shop-back:hover{filter:brightness(1.16);box-shadow:0 0 12px rgba(233,185,85,.28);}
+#packShopPanel .hv-shop-pack-choice{
+  position:absolute;z-index:25;margin:0;padding:0;border:0;background:transparent;cursor:pointer;overflow:visible;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transform-origin:center bottom;
+  transition:transform .16s ease,filter .16s ease;
+}
+#packShopPanel .hv-shop-pack-choice:hover{transform:translateY(-7px) scale(1.055);filter:brightness(1.12);}
+#packShopPanel .hv-shop-pack-choice img{
+  width:100%;height:81%;object-fit:contain;display:block;pointer-events:none;
+  filter:drop-shadow(0 8px 8px rgba(0,0,0,.74));
+}
+#packShopPanel .hv-shop-choice-label,
+#packShopPanel .hv-shop-currency-label{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:78%;padding:5px 9px;border:1px solid rgba(221,171,75,.55);border-radius:4px;
+  background:linear-gradient(180deg,rgba(25,17,8,.92),rgba(5,4,3,.94));
+  color:#f0cf86;text-shadow:0 2px 4px #000;box-shadow:0 4px 10px rgba(0,0,0,.55);
+  font-family:Georgia,"Times New Roman",serif;pointer-events:none;
+}
+#packShopPanel .hv-shop-choice-label b,
+#packShopPanel .hv-shop-currency-label b{font-size:clamp(7px,.7vw,12px);line-height:1;white-space:nowrap;}
+#packShopPanel .hv-shop-choice-label small,
+#packShopPanel .hv-shop-currency-label small{font-size:clamp(6px,.58vw,10px);line-height:1;color:#cfaa5b;white-space:nowrap;}
+#packShopPanel .hv-shop-currency-choice{
+  position:absolute;z-index:24;margin:0;padding:0;border:0;background:transparent;cursor:pointer;
+  display:flex;align-items:flex-end;justify-content:center;transition:filter .16s ease,transform .16s ease;
+}
+#packShopPanel .hv-shop-currency-choice:hover{filter:brightness(1.1);transform:scale(1.015);}
+#packShopPanel .hv-shop-currency-label{margin-bottom:2.2%;min-width:52%;}
+#packShopPanel .hv-shop-gem-choice .hv-shop-currency-label small{color:#bda2e8;}
+#packShopPanel .hv-shop-gold-choice .hv-shop-currency-label small{color:#c9a6e9;}
+#packShopPanel .hv-shop-hotspot[data-shop-action^="view-"]{z-index:18!important;}
+
+/* El flujo de compra de sobre usa la apertura ya existente, pero añade un flash
+   y cambia los dos botones finales SOLO cuando el origen fue Shop. */
+#packOpeningPanel.hv-shop-pack-flow{z-index:10020!important;}
+#packOpeningPanel.hv-shop-pack-flash::after{
+  content:"";position:fixed;inset:0;z-index:100000;pointer-events:none;
+  background:radial-gradient(circle at 50% 45%,rgba(255,246,198,.98),rgba(205,153,255,.65) 22%,rgba(255,255,255,.15) 52%,transparent 72%);
+  animation:hvShopPackFlash .72s ease-out both;
+}
+@keyframes hvShopPackFlash{0%{opacity:0}18%{opacity:1}52%{opacity:.62}100%{opacity:0}}
+
+@media(max-width:900px){
+  #packShopPanel .hv-shop-wallet{font-size:7px;padding:4px 6px;}
+  #packShopPanel .hv-shop-back{font-size:8px;padding:5px 8px;min-width:70px;}
+  #packShopPanel .hv-shop-choice-label,#packShopPanel .hv-shop-currency-label{padding:3px 5px;}
+}
