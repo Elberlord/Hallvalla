@@ -162,15 +162,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
     const deckKeys=deck.map(card=>String(card?.key||"").trim());
     if(deckKeys.some(k=>!k)) throw new Error("El mazo contiene una carta sin clave canónica.");
-    let principalKeys=getSavedPrincipalKeysSafe().filter(k=>deckKeys.includes(k)).slice(0,1);
-    if(principalKeys.length){
-      try{
-        if(typeof globalThis.validatePrincipalSelection==="function"){
-          const principalValidation=globalThis.validatePrincipalSelection(principalKeys,deck,1);
-          principalKeys=principalValidation?.valid ? (principalValidation.keys||[]).slice(0,1) : [];
-        }
-      }catch(_){ principalKeys=[]; }
-    }
+    const principalKeys=[];
+    getSavedPrincipalKeysSafe().forEach(key=>{
+      const safe=String(key||"").trim();
+      if(safe&&deckKeys.includes(safe)&&!principalKeys.includes(safe)) principalKeys.push(safe);
+    });
     let leaderType="warrior",leaderLevel=1,leaderAbility="";
     try{ leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior"); }catch(_){ leaderType="warrior"; }
     try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ leaderLevel=1; }
@@ -193,7 +189,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       && Number(data?.role)===Number(role)
       && data?.prepared===true
       && deckKeys.length>=1 && deckKeys.every(Boolean)
-      && principalKeys.length<=1 && principalKeys.every(key=>deckKeys.includes(key))
+      && principalKeys.every(Boolean)
+      && new Set(principalKeys).size===principalKeys.length
+      && principalKeys.every(key=>deckKeys.includes(key))
       && (!Number.isFinite(Number(data?.loadout?.deckSize)) || Number(data.loadout.deckSize)===deckKeys.length);
   }
   async function writeAndConfirmOwnPrivate(code,role,ownerUid,payload){
@@ -220,15 +218,21 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function buildPrivateCombat6c(privatePayload,code,role){
     const loadout=privatePayload?.loadout||{};
     const allKeys=normalizeFirebaseArray(loadout.deckKeys).map(v=>String(v||"")).filter(Boolean);
-    const principalKeys=normalizeFirebaseArray(loadout.principalKeys).map(v=>String(v||"")).filter(Boolean).slice(0,1);
+    const requestedPrincipalKeys=[];
+    normalizeFirebaseArray(loadout.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
+      if(!requestedPrincipalKeys.includes(key)) requestedPrincipalKeys.push(key);
+    });
     if(allKeys.length<1) throw new Error("El loadout privado debe contener al menos 1 carta válida.");
-    let principal=principalKeys[0]||"";
     const drawPool=[...allKeys];
-    if(principal){
-      const principalIndex=drawPool.indexOf(principal);
-      if(principalIndex>=0) drawPool.splice(principalIndex,1);
-      else principal="";
-    }
+    const principalKeys=[];
+    requestedPrincipalKeys.forEach(key=>{
+      const principalIndex=drawPool.indexOf(key);
+      if(principalIndex>=0){
+        drawPool.splice(principalIndex,1);
+        principalKeys.push(key);
+      }
+    });
+    const principal=principalKeys[0]||"";
     const shuffled=seededShuffle6c(drawPool,`${code}|${role}|${privatePayload?.ownerUid||""}|${loadout.fingerprint||""}`);
     let handKeys=shuffled.slice(0,STEP6C_INITIAL_HAND);
     let deckKeys=shuffled.slice(STEP6C_INITIAL_HAND);
@@ -242,6 +246,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       role:Number(role),
       initialized:true,
       initializedAt:Date.now(),
+      principalKeys,
       principalKey:principal,
       handKeys,
       deckKeys,
@@ -812,7 +817,17 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const profile=getBattleProfile6e(payload);
     const handKeys=normalizeFirebaseArray(combat6c.handKeys).map(v=>String(v||"")).filter(Boolean);
     const deckKeys=normalizeFirebaseArray(combat6c.deckKeys).map(v=>String(v||"")).filter(Boolean);
-    const principalKey=String(combat6c.principalKey||payload?.loadout?.principalKeys?.[0]||payload?.loadout?.principalKeys?.["0"]||"");
+    const combatPrincipalKeys=[];
+    normalizeFirebaseArray(combat6c.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
+      if(!combatPrincipalKeys.includes(key)) combatPrincipalKeys.push(key);
+    });
+    const payloadPrincipalKeys=[];
+    normalizeFirebaseArray(payload?.loadout?.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
+      if(!payloadPrincipalKeys.includes(key)) payloadPrincipalKeys.push(key);
+    });
+    const legacyPrincipalKey=String(combat6c.principalKey||payload?.loadout?.principalKeys?.[0]||payload?.loadout?.principalKeys?.["0"]||"").trim();
+    const principalKeys=combatPrincipalKeys.length?combatPrincipalKeys:(payloadPrincipalKeys.length?payloadPrincipalKeys:(legacyPrincipalKey?[legacyPrincipalKey]:[]));
+    const principalKey=principalKeys[0]||"";
     const playableCardCount=Math.max(0,Number(combat6c.initialPlayableCount)||0);
     const expectedHandCount=Math.min(STEP6C_INITIAL_HAND,playableCardCount);
     if(handKeys.length!==expectedHandCount||handKeys.length+deckKeys.length!==playableCardCount) throw new Error(`Estado inicial privado J${role} inválido para motor real.`);
@@ -832,8 +847,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         maxHonor:0,
         lastTurnStarted:"",
         skipFirstTurnDraw:true,
-        principalSlots:principalKey?1:0,
-        principalKeys:principalKey?[principalKey]:[],
+        principalSlots:principalKeys.length,
+        principalKeys,
         principalKey
       },
       prep:{
@@ -843,7 +858,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         leaderType:profile.leaderType,
         leaderLevel:profile.leaderLevel,
         leaderAbility:profile.leaderAbility,
-        principalSlots:principalKey?1:0,
+        principalSlots:principalKeys.length,
+        principalKeys,
         principalKey,
         handCount:hand.length,
         deckCount:deck.length,
@@ -927,14 +943,24 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       makeLeader(1,Math.floor(cols/2),rows-1,p1.leaderType,p1.leaderLevel,p1.leaderAbility),
       makeLeader(2,Math.floor(cols/2),0,p2.leaderType,p2.leaderLevel,p2.leaderAbility)
     ];
-    if((p1.principalKey||p2.principalKey)&&typeof makeStartingPrincipalUnits!=="function") throw new Error("El motor real no expuso makeStartingPrincipalUnits().");
-    if(p1.principalKey){
-      const p1PrincipalCard=buildRealCard6e(p1.principalKey,1,p1.leaderType);
-      units.push(...makeStartingPrincipalUnits([p1PrincipalCard],1,p1.leaderType,units,1));
+    const p1PrincipalKeys=[];
+    normalizeFirebaseArray(p1.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
+      if(!p1PrincipalKeys.includes(key)) p1PrincipalKeys.push(key);
+    });
+    if(!p1PrincipalKeys.length&&p1.principalKey) p1PrincipalKeys.push(String(p1.principalKey));
+    const p2PrincipalKeys=[];
+    normalizeFirebaseArray(p2.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
+      if(!p2PrincipalKeys.includes(key)) p2PrincipalKeys.push(key);
+    });
+    if(!p2PrincipalKeys.length&&p2.principalKey) p2PrincipalKeys.push(String(p2.principalKey));
+    if((p1PrincipalKeys.length||p2PrincipalKeys.length)&&typeof makeStartingPrincipalUnits!=="function") throw new Error("El motor real no expuso makeStartingPrincipalUnits().");
+    if(p1PrincipalKeys.length){
+      const p1PrincipalCards=p1PrincipalKeys.map(key=>buildRealCard6e(key,1,p1.leaderType));
+      units.push(...makeStartingPrincipalUnits(p1PrincipalCards,1,p1.leaderType,units,p1PrincipalCards.length));
     }
-    if(p2.principalKey){
-      const p2PrincipalCard=buildRealCard6e(p2.principalKey,2,p2.leaderType);
-      units.push(...makeStartingPrincipalUnits([p2PrincipalCard],2,p2.leaderType,units,1));
+    if(p2PrincipalKeys.length){
+      const p2PrincipalCards=p2PrincipalKeys.map(key=>buildRealCard6e(key,2,p2.leaderType));
+      units.push(...makeStartingPrincipalUnits(p2PrincipalCards,2,p2.leaderType,units,p2PrincipalCards.length));
     }
     let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
     try{ if(typeof applyStartingPrincipalEntryEffects==="function") entryEffects=applyStartingPrincipalEntryEffects(units); }catch(_){ }
@@ -985,8 +1011,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       playerLeaders:{1:p1.leaderType,2:p2.leaderType},
       playerLeaderLevels:{1:Number(p1.leaderLevel||1),2:Number(p2.leaderLevel||1)},
       playerLeaderAbilities:{1:String(p1.leaderAbility||""),2:String(p2.leaderAbility||"")},
-      principalSlots:{1:p1.principalKey?1:0,2:p2.principalKey?1:0},
-      pvpPrincipalKeys:{1:p1.principalKey?[String(p1.principalKey)]:[],2:p2.principalKey?[String(p2.principalKey)]:[]},
+      principalSlots:{1:p1PrincipalKeys.length,2:p2PrincipalKeys.length},
+      pvpPrincipalKeys:{1:p1PrincipalKeys,2:p2PrincipalKeys},
       playerStats:{
         1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:Number(p1.deckCount||0),hand:Number(p1.handCount||0),hasHiddenUnits:p1.hasHiddenUnits===true},
         2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:Number(p2.deckCount||0),hand:Number(p2.handCount||0),hasHiddenUnits:p2.hasHiddenUnits===true}
