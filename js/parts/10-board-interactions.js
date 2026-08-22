@@ -288,7 +288,7 @@ function getUnitPortraitHtml(u,depthLayer=false){
   if(isStealthHiddenFromViewer(u))return getStealthContextPortraitHtml();
   const alt=escapeHtml(u?.name||"Unidad");
   if(u?.leader){
-    const portrait=(u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"";
+    const portrait=String(u?.portrait||"")||((u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"");
     if(!portrait)return `<span>${u?.icon||"✦"}</span>`;
     const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);
     return depthLayer?`<div class="unit-depth-stack"><img class="unit-depth-front board-cropped-art" src="${portrait}" alt="${alt}" ${fallbackAttr}></div>`:`<img src="${portrait}" alt="${alt}" ${fallbackAttr}>`;
@@ -315,7 +315,7 @@ function getUnitPortraitHtml(u,depthLayer=false){
 function getBoardUnitPortraitHtml(u){
   if(isStealthHiddenFromViewer(u))return getStealthContextPortraitHtml();
   if(u?.leader){
-    const portrait=(u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"";
+    const portrait=String(u?.portrait||"")||((u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"");
     if(!portrait)return `<span>${u?.icon||"✦"}</span>`;
     const alt=escapeHtml(u.name||"Unidad");
     const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${u?.name||"Unidad"} · líder`);

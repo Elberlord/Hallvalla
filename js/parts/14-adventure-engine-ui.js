@@ -723,6 +723,7 @@ function hvPrefetchAdventureBattleContext(battle,specialKey,previewEnemyDeck=[])
   const leaderType=getSelectedLeaderType?.()||"warrior";
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   try{ if(LEADER_DATA?.[leaderType]?.portrait)urls.add(LEADER_DATA[leaderType].portrait); }catch(_){ }
+  if(battle?.enemyLeaderPortrait)urls.add(battle.enemyLeaderPortrait);
   try{ if(LEADER_DATA?.[enemyLeaderType]?.portrait)urls.add(LEADER_DATA[enemyLeaderType].portrait); }catch(_){ }
   hvCollectEntityBattlePrefetchAssets(ADVENTURE_SPECIALS?.[specialKey],urls);
   for(const card of (Array.isArray(previewEnemyDeck)?previewEnemyDeck:[]))hvCollectEntityBattlePrefetchAssets(card,urls);
