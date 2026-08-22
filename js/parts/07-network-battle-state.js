@@ -487,7 +487,7 @@ function getBattleOutcomeSplashElement(){
   overlay.className="battle-outcome-splash";
   overlay.setAttribute("aria-live","assertive");
   overlay.setAttribute("aria-atomic","true");
-  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">Ir a Home</button></div>';
+  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">Ir a Home</button></div>';
   const actions=overlay.querySelector(".battle-outcome-actions");
   if(actions){
     actions.addEventListener("click",ev=>{
@@ -503,11 +503,61 @@ function getBattleOutcomeSplashElement(){
   document.body.appendChild(overlay);
   return overlay;
 }
+function getAdventureBattleOutcomeRewardEntries(battle){
+  if(!battle)return[];
+  const entries=[];
+  const push=(label,value)=>{
+    const safeLabel=String(label||"").trim();
+    const safeValue=String(value||"").trim();
+    if(safeLabel&&safeValue)entries.push({label:safeLabel,value:safeValue});
+  };
+  if(battle.xp)push("EXP",`${battle.xp}`);
+  if(battle.gems)push("Gemas",`${battle.gems}`);
+  if(battle.gold)push("Oro",`${battle.gold}`);
+  if(battle.beastEvent&&battle.rewardBeastCard)push("Carta","1 Bestia aleatoria (sin Dragones)");
+  if(battle.rewardCard==="starter_complement")push("Carta","Carta no elegida: Hua Lan o William Wallace");
+  else if(typeof getLegendaryCardByKey==="function"){
+    const special=getLegendaryCardByKey(battle.rewardCard);
+    if(special?.name)push("Carta",special.name);
+    else if(battle.rewardCard==="improved_magic_trap_pack")push("Carta","Paquete reforzado completo");
+  }
+  if(battle.cardPack){
+    const rewardPackType=typeof getBattleRewardPackType==="function"?getBattleRewardPackType(battle):(battle?.rewardPackType||battle?.packType||"shop_basic");
+    const packLabel=rewardPackType==="beast_pack"?"Paquete de Bestias x1":(rewardPackType==="improved_magic_trap"?"Paquete reforzado x1":"Pack básico x1");
+    push("Pack",packLabel);
+  }
+  if(!entries.length&&typeof getBattleRewardLabel==="function"){
+    const text=String(getBattleRewardLabel(battle)||"").trim();
+    if(text)push("Recompensa",text);
+  }
+  return entries;
+}
+function renderBattleOutcomeRewards(result,adventure){
+  const overlay=document.getElementById("battleOutcomeSplash");
+  const panel=overlay?.querySelector(".battle-outcome-rewards");
+  if(!panel)return;
+  panel.innerHTML="";
+  panel.setAttribute("aria-hidden","true");
+  if(!(adventure&&result==="victory"))return;
+  const battleId=String(publicState?.adventureBattleId||"").trim();
+  const battle=typeof getAdventureBattle==="function"?getAdventureBattle(battleId):null;
+  if(!battle)return;
+  const entries=getAdventureBattleOutcomeRewardEntries(battle);
+  if(!entries.length)return;
+  const battleTitle=escapeHtml?.(battle.title||battle.enemyName||"Batalla")||String(battle.title||battle.enemyName||"Batalla");
+  panel.innerHTML=`<div class="battle-outcome-reward-title">Recompensas de "${battleTitle}"</div><div class="battle-outcome-reward-list">${entries.map(entry=>`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">${escapeHtml?.(entry.label)||entry.label}</span><strong class="battle-outcome-reward-value">${escapeHtml?.(entry.value)||entry.value}</strong></div>`).join("")}</div>`;
+  panel.setAttribute("aria-hidden","false");
+}
 function hideBattleOutcomeSplash(immediate=false){
   battleClearTimeout(showBattleOutcomeSplash._timer);
   const overlay=document.getElementById("battleOutcomeSplash");
   if(!overlay)return;
   overlay.classList.remove("show","victory","defeat","draw","awaiting-action");
+  const rewards=overlay.querySelector(".battle-outcome-rewards");
+  if(rewards){
+    rewards.innerHTML="";
+    rewards.setAttribute("aria-hidden","true");
+  }
   const actions=overlay.querySelector(".battle-outcome-actions");
   if(actions){
     actions.setAttribute("aria-hidden","true");
@@ -519,9 +569,14 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
   const overlay=getBattleOutcomeSplashElement();
   const img=overlay.querySelector(".battle-outcome-splash-art");
   const drawText=overlay.querySelector(".battle-outcome-draw-text");
+  const rewards=overlay.querySelector(".battle-outcome-rewards");
   const actions=overlay.querySelector(".battle-outcome-actions");
   overlay.classList.remove("show","victory","defeat","draw","awaiting-action");
   battleClearTimeout(showBattleOutcomeSplash._timer);
+  if(rewards){
+    rewards.innerHTML="";
+    rewards.setAttribute("aria-hidden","true");
+  }
   if(actions){
     actions.setAttribute("aria-hidden","true");
     actions.querySelectorAll("button").forEach(btn=>{btn.hidden=false;btn.disabled=false;});
@@ -547,6 +602,7 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
     const retryBtn=actions.querySelector('[data-battle-outcome-action="retry"]');
     if(mapBtn)mapBtn.hidden=result!=="victory";
     if(retryBtn)retryBtn.hidden=result==="victory";
+    renderBattleOutcomeRewards(result,adventure);
     actions.setAttribute("aria-hidden","false");
     overlay.classList.add("awaiting-action");
   }
