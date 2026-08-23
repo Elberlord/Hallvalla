@@ -24000,3 +24000,147 @@ body.home-deck-tutorial-active{overflow:hidden}
     width:100%;
   }
 }
+
+/* === Mina · V6.8E · compactación real + contenedores invisibles === */
+.mine-panel-content{
+  gap:10px;
+  padding:20px 26px;
+}
+
+/* Información superior: texto limpio, sin píldoras/rectángulos. */
+.mine-chip-row{
+  gap:18px;
+  margin:0 0 6px;
+  align-items:center;
+}
+.mine-chip{
+  min-height:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  font-size:13px;
+  line-height:1.1;
+  text-shadow:0 2px 10px rgba(0,0,0,.6);
+}
+
+/* Las cinco ranuras dejan de ser cinco paneles enormes. */
+.mine-miner-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:18px;
+  margin-top:8px;
+  align-items:start;
+}
+.mine-miner-card,
+.mine-miner-card.active,
+.mine-miner-card.empty,
+.mine-miner-card.selected{
+  min-height:82px !important;
+  padding:8px 6px 6px !important;
+  overflow:visible;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  text-align:center;
+  gap:5px;
+}
+.mine-miner-card::before{display:none !important;}
+.mine-miner-card.selected .mine-miner-no{
+  border-color:#6bd8ff;
+  box-shadow:0 0 0 2px rgba(71,183,255,.22),0 0 22px rgba(61,178,255,.34);
+}
+.mine-miner-no{
+  position:static !important;
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  background:rgba(18,49,82,.72);
+  border:1px solid rgba(102,191,255,.52);
+  box-shadow:0 5px 16px rgba(0,0,0,.3);
+}
+.mine-miner-title{
+  align-items:center;
+  gap:2px;
+}
+.mine-miner-title b{
+  font-size:14px !important;
+  line-height:1.05;
+}
+.mine-miner-title small{
+  display:none !important;
+}
+.mine-slot-sub{
+  display:none !important;
+}
+.mine-miner-pending{
+  position:absolute !important;
+  top:-3px;
+  right:calc(50% - 34px);
+  padding:2px 6px;
+  border-radius:999px;
+  font-size:10px;
+  background:rgba(12,40,70,.86);
+  border:1px solid rgba(107,190,255,.3);
+}
+
+/* Quitar por completo los paneles informativos que ocupaban media pantalla. */
+.mine-inline-card,
+.mine-selected-card,
+.mine-status-line,
+.mine-lock-note{
+  display:none !important;
+}
+.mine-bottom-row{
+  margin:4px 0 0 !important;
+  gap:0 !important;
+  min-height:52px;
+  align-items:center;
+}
+.mine-cta-btn{
+  min-width:158px;
+  min-height:52px;
+  padding:0 24px;
+}
+.mine-assign-shell{
+  display:flex !important;
+  justify-content:flex-end;
+  align-items:center;
+  margin:-62px 0 0;
+  min-height:52px;
+  pointer-events:none;
+}
+.mine-ghost-btn{
+  pointer-events:auto;
+  min-height:52px !important;
+  min-width:136px;
+  background:linear-gradient(180deg,rgba(35,64,99,.88),rgba(15,29,49,.9));
+}
+.mine-ghost-btn:disabled{
+  opacity:.28;
+}
+
+/* La colección para elegir mineros sube y aprovecha el espacio liberado. */
+.mine-roster-row{
+  margin-top:14px;
+  grid-template-columns:repeat(auto-fill,minmax(105px,1fr));
+  gap:10px;
+}
+.mine-roster-card{
+  min-height:130px;
+}
+
+@media (max-width:980px){
+  .mine-miner-grid{grid-template-columns:repeat(5,minmax(72px,1fr));overflow-x:auto;gap:10px}
+  .mine-assign-shell{margin:0;justify-content:flex-start}
+}
+@media (max-width:640px){
+  .mine-panel-content{padding:14px}
+  .mine-chip-row{gap:10px}
+  .mine-miner-grid{grid-template-columns:repeat(5,78px)}
+  .mine-roster-row{grid-template-columns:repeat(3,minmax(88px,1fr))}
+}
