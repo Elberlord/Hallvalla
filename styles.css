@@ -24266,29 +24266,38 @@ body.home-deck-tutorial-active{overflow:hidden}
 }
 .mine-roster-row{
   margin-top:8px !important;
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(56px,1fr)) !important;
+  align-content:start !important;
+  justify-items:center !important;
   min-height:108px !important;
+  max-height:240px !important;
   gap:8px !important;
-  padding-bottom:4px !important;
+  padding:0 2px 4px !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
 }
 .mine-roster-card{
-  flex:0 0 84px !important;
-  width:84px !important;
-  min-height:102px !important;
-  height:102px !important;
+  flex:none !important;
+  width:56px !important;
+  min-height:66px !important;
+  height:auto !important;
   background:transparent !important;
   border:none !important;
   box-shadow:none !important;
   overflow:visible !important;
+  padding:0 !important;
 }
 .mine-roster-card::after{display:none !important;}
 .mine-roster-thumb{
-  width:84px;
-  height:84px;
-  border-radius:12px;
+  width:42px;
+  height:42px;
+  border-radius:10px;
   overflow:hidden;
   background:rgba(8,15,25,.42);
-  box-shadow:0 8px 18px rgba(0,0,0,.22);
+  box-shadow:0 6px 14px rgba(0,0,0,.2);
   border:1px solid rgba(129,172,236,.2);
+  margin:0 auto;
 }
 .mine-roster-card img{
   width:100% !important;
@@ -24304,18 +24313,20 @@ body.home-deck-tutorial-active{overflow:hidden}
   margin-top:4px;
   padding:0 1px;
   gap:1px !important;
+  align-items:center !important;
 }
 .mine-roster-meta b{
-  font-size:10px !important;
-  line-height:1.1 !important;
+  font-size:8px !important;
+  line-height:1.08 !important;
   -webkit-line-clamp:2 !important;
+  text-align:center !important;
 }
 .mine-roster-meta small{
-  font-size:9px !important;
+  font-size:7px !important;
 }
 .mine-roster-card.selected .mine-roster-thumb{
   border-color:rgba(107,216,255,.72);
-  box-shadow:0 0 0 2px rgba(71,183,255,.22),0 8px 18px rgba(0,0,0,.22);
+  box-shadow:0 0 0 2px rgba(71,183,255,.22),0 6px 14px rgba(0,0,0,.2);
 }
 .mine-roster-empty{
   font-size:11px !important;
@@ -24328,8 +24339,9 @@ body.home-deck-tutorial-active{overflow:hidden}
 }
 @media (max-width:640px){
   .mine-panel-content{padding:10px 12px !important;}
-  .mine-roster-card{flex-basis:74px !important;width:74px !important;min-height:94px !important;height:94px !important;}
-  .mine-roster-thumb{width:74px;height:74px;}
+  .mine-roster-row{grid-template-columns:repeat(auto-fill,minmax(50px,1fr)) !important;max-height:200px !important;}
+  .mine-roster-card{width:50px !important;min-height:60px !important;}
+  .mine-roster-thumb{width:38px;height:38px;}
   .mine-cta-btn{min-width:110px !important;}
 }
 

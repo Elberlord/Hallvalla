@@ -1632,8 +1632,7 @@ function renderHallvallaMineRoster(mineState,unlocked){
   const mineCounts=getHallvallaMineAssignedCounts(mineState);
   const available=getHallvallaMineCollectionPool()
     .map(card=>({card,free:getHallvallaMineFreeCopyCount(card,mineState,deckCounts,mineCounts)}))
-    .filter(entry=>entry.free>0)
-    .slice(0,24);
+    .filter(entry=>entry.free>0);
   if(!unlocked){row.innerHTML=`<div class="mine-roster-empty">Nivel 2</div>`;return;}
   if(!available.length){row.innerHTML=`<div class="mine-roster-empty">Sin unidades libres</div>`;return;}
   row.innerHTML=available.map(({card,free})=>{
