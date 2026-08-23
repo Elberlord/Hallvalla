@@ -24332,3 +24332,120 @@ body.home-deck-tutorial-active{overflow:hidden}
   .mine-roster-thumb{width:74px;height:74px;}
   .mine-cta-btn{min-width:110px !important;}
 }
+
+
+/* === Mina only · V6.8H paneles compactos e invisibles ===
+   Solo afecta a las secciones internas de Mina distintas de Producción.
+   Quita los rectángulos gigantes y deja tarjetas invisibles/compactas.
+*/
+.mine-panel[data-mine-panel="events"] .mine-panel-content,
+.mine-panel[data-mine-panel="missions"] .mine-panel-content,
+.mine-panel[data-mine-panel="shop"] .mine-panel-content,
+.mine-panel[data-mine-panel="rewards"] .mine-panel-content{
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-chip-row,
+.mine-panel[data-mine-panel="missions"] .mine-chip-row,
+.mine-panel[data-mine-panel="shop"] .mine-chip-row,
+.mine-panel[data-mine-panel="rewards"] .mine-chip-row{
+  gap:10px !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-grid,
+.mine-panel[data-mine-panel="missions"] .mine-mission-grid,
+.mine-panel[data-mine-panel="shop"] .mine-shop-grid,
+.mine-panel[data-mine-panel="rewards"] .mine-reward-grid{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:flex-end !important;
+  justify-content:flex-start !important;
+  gap:18px !important;
+  margin-top:auto !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card,
+.mine-panel[data-mine-panel="missions"] .mine-mission-card,
+.mine-panel[data-mine-panel="shop"] .mine-shop-card,
+.mine-panel[data-mine-panel="rewards"] .mine-reward-card{
+  flex:0 1 220px !important;
+  min-height:auto !important;
+  padding:0 !important;
+  border:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  gap:5px !important;
+  justify-content:flex-end !important;
+  align-items:flex-start !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.negative,
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive,
+.mine-panel[data-mine-panel="missions"] .mine-mission-card.done,
+.mine-panel[data-mine-panel="shop"] .mine-shop-card.premium{
+  border:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card b,
+.mine-panel[data-mine-panel="missions"] .mine-mission-card b,
+.mine-panel[data-mine-panel="shop"] .mine-shop-card b,
+.mine-panel[data-mine-panel="rewards"] .mine-reward-card b{
+  font-size:16px !important;
+  line-height:1.05 !important;
+  text-shadow:0 2px 12px rgba(0,0,0,.55);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card small,
+.mine-panel[data-mine-panel="missions"] .mine-mission-card small,
+.mine-panel[data-mine-panel="shop"] .mine-shop-card small,
+.mine-panel[data-mine-panel="rewards"] .mine-reward-card small,
+.mine-panel[data-mine-panel="missions"] .mine-progress{
+  max-width:150px !important;
+}
+.mine-panel[data-mine-panel="shop"] .mine-shop-card strong,
+.mine-panel[data-mine-panel="rewards"] .mine-reward-card strong{
+  font-size:20px !important;
+  line-height:1.05 !important;
+  margin-top:0 !important;
+  text-shadow:0 2px 12px rgba(0,0,0,.45);
+}
+.mine-panel[data-mine-panel="events"] .mine-mini-btn,
+.mine-panel[data-mine-panel="missions"] .mine-mini-btn,
+.mine-panel[data-mine-panel="shop"] .mine-mini-btn,
+.mine-panel[data-mine-panel="rewards"] .mine-mini-btn{
+  min-height:34px !important;
+  padding:6px 14px !important;
+  font-size:12px !important;
+  border-radius:999px !important;
+}
+.mine-panel[data-mine-panel="missions"] .mine-progress{
+  height:6px !important;
+  background:rgba(255,255,255,.12) !important;
+  border-radius:999px !important;
+}
+@media (max-width:980px){
+  .mine-panel[data-mine-panel="events"] .mine-event-grid,
+  .mine-panel[data-mine-panel="missions"] .mine-mission-grid,
+  .mine-panel[data-mine-panel="shop"] .mine-shop-grid,
+  .mine-panel[data-mine-panel="rewards"] .mine-reward-grid{
+    gap:14px !important;
+  }
+  .mine-panel[data-mine-panel="events"] .mine-event-card,
+  .mine-panel[data-mine-panel="missions"] .mine-mission-card,
+  .mine-panel[data-mine-panel="shop"] .mine-shop-card,
+  .mine-panel[data-mine-panel="rewards"] .mine-reward-card{
+    flex-basis:180px !important;
+  }
+}
+@media (max-width:640px){
+  .mine-panel[data-mine-panel="events"] .mine-event-grid,
+  .mine-panel[data-mine-panel="missions"] .mine-mission-grid,
+  .mine-panel[data-mine-panel="shop"] .mine-shop-grid,
+  .mine-panel[data-mine-panel="rewards"] .mine-reward-grid{
+    gap:12px !important;
+  }
+  .mine-panel[data-mine-panel="events"] .mine-event-card,
+  .mine-panel[data-mine-panel="missions"] .mine-mission-card,
+  .mine-panel[data-mine-panel="shop"] .mine-shop-card,
+  .mine-panel[data-mine-panel="rewards"] .mine-reward-card{
+    flex-basis:140px !important;
+  }
+}
