@@ -1258,6 +1258,11 @@ const HALLVALLA_MINE_SLOT_COUNT=5;
 const HALLVALLA_MINE_LEVEL_UNLOCK=2;
 const HALLVALLA_MINE_RATE_HOURS=Object.freeze({1:24,2:20,3:16,4:12,5:8});
 let hallvallaMineUi={selectedSlot:0,tick:0};
+let hallvallaMineServerOffsetMs=0;
+let hallvallaMineServerClockReady=false;
+let hallvallaMineRemoteReady=false;
+let hallvallaMineRemoteSyncPromise=null;
+let hallvallaMineRemoteWriteQueue=Promise.resolve();
 function createHallvallaMineSlot(){return {cardKey:"",cardName:"",image:"",startedAt:0,claimedCycles:0};}
 function normalizeHallvallaMineSlot(slot={}){
   return {
@@ -1268,18 +1273,73 @@ function normalizeHallvallaMineSlot(slot={}){
     claimedCycles:Math.max(0,Math.floor(Number(slot?.claimedCycles||0)))
   };
 }
-function getHallvallaMineState(){
+function normalizeHallvallaMineState(state={}){
+  return {
+    level:Math.max(1,Math.min(5,Math.floor(Number(state?.level||1)))),
+    slots:Array.from({length:HALLVALLA_MINE_SLOT_COUNT},(_,i)=>normalizeHallvallaMineSlot(state?.slots?.[i]||{}))
+  };
+}
+function getHallvallaMineNow(){return Date.now()+hallvallaMineServerOffsetMs;}
+function getHallvallaMineUserUid(){return String(auth?.currentUser?.uid||uid||"").trim();}
+function hallvallaMineOnlineReady(){return HALLVALLA_LOCALHOST_TEST_MODE===true||!!(hallvallaMineRemoteReady&&hallvallaMineServerClockReady&&getHallvallaMineUserUid());}
+async function syncHallvallaMineServerClock(){
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){hallvallaMineServerOffsetMs=0;hallvallaMineServerClockReady=true;return true;}
   try{
-    const saved=JSON.parse(localStorage.getItem(HALLVALLA_MINE_STORAGE_KEY)||"null")||{};
-    const slots=Array.from({length:HALLVALLA_MINE_SLOT_COUNT},(_,i)=>normalizeHallvallaMineSlot(saved?.slots?.[i]||{}));
-    return {level:Math.max(1,Math.min(5,Math.floor(Number(saved?.level||1)))),slots};
-  }catch(_){
-    return {level:1,slots:Array.from({length:HALLVALLA_MINE_SLOT_COUNT},()=>createHallvallaMineSlot())};
+    const snapshot=await get(ref(db,".info/serverTimeOffset"));
+    hallvallaMineServerOffsetMs=Number(snapshot?.val?.()||0)||0;
+    hallvallaMineServerClockReady=true;
+    return true;
+  }catch(error){
+    hallvallaMineServerClockReady=false;
+    console.warn("[HallValla][Mina] No se pudo sincronizar la hora del servidor:",error);
+    return false;
   }
 }
+function queueHallvallaMineRemotePatch(patch={}){
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true||!hallvallaMineRemoteReady||!hallvallaMineServerClockReady)return;
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return;
+  const safePatch={...patch};
+  hallvallaMineRemoteWriteQueue=hallvallaMineRemoteWriteQueue
+    .then(()=>update(ref(db,`users/${userId}/mine`),safePatch))
+    .catch(error=>console.warn("[HallValla][Mina] No se pudo guardar el estado remoto:",error));
+}
+async function transactHallvallaMineStateRemote(mutator){
+  if(typeof mutator!=="function"||!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineState()};
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    const current=getHallvallaMineState(),next=mutator(normalizeHallvallaMineState(current));
+    if(!next)return {committed:false,state:current};
+    const safe=normalizeHallvallaMineState(next);
+    localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+    return {committed:true,state:safe};
+  }
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return {committed:false,state:getHallvallaMineState()};
+  try{
+    await hallvallaMineRemoteWriteQueue;
+    const result=await runTransaction(ref(db,`users/${userId}/mine/state`),current=>{
+      if(!current)return;
+      const next=mutator(normalizeHallvallaMineState(current));
+      return next?normalizeHallvallaMineState(next):undefined;
+    },{applyLocally:false});
+    if(!result?.committed)return {committed:false,state:getHallvallaMineState()};
+    const safe=normalizeHallvallaMineState(result.snapshot.val()||{});
+    localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+    queueHallvallaMineRemotePatch({stateUpdatedAt:serverTimestamp()});
+    return {committed:true,state:safe};
+  }catch(error){
+    console.warn("[HallValla][Mina] No se pudo confirmar la transacción de producción:",error);
+    return {committed:false,state:getHallvallaMineState()};
+  }
+}
+function getHallvallaMineState(){
+  try{return normalizeHallvallaMineState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_STORAGE_KEY)||"null")||{});}
+  catch(_){return normalizeHallvallaMineState({});}
+}
 function saveHallvallaMineState(state){
-  const safe={level:Math.max(1,Math.min(5,Math.floor(Number(state?.level||1)))),slots:Array.from({length:HALLVALLA_MINE_SLOT_COUNT},(_,i)=>normalizeHallvallaMineSlot(state?.slots?.[i]||{}))};
+  const safe=normalizeHallvallaMineState(state);
   localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+  queueHallvallaMineRemotePatch({state:safe,stateUpdatedAt:serverTimestamp()});
 }
 function hallvallaMineRateHours(level=1){return HALLVALLA_MINE_RATE_HOURS[Math.max(1,Math.min(5,Math.floor(Number(level)||1)))]||24;}
 function hallvallaMineRateMs(level=1){return hallvallaMineRateHours(level)*60*60*1000;}
@@ -1352,21 +1412,102 @@ const HALLVALLA_MINE_EVENT_DEFS=Object.freeze({
 function normalizeHallvallaMineEventInstance(event={}){
   const key=String(event?.key||"");
   if(!HALLVALLA_MINE_EVENT_DEFS[key])return null;
-  return {id:String(event?.id||`${key}_${Math.random().toString(36).slice(2,9)}`),key,createdAt:Math.max(0,Number(event?.createdAt||Date.now())),effectText:String(event?.effectText||HALLVALLA_MINE_EVENT_DEFS[key].baseEffect||"")};
+  return {id:String(event?.id||`${key}_${Math.random().toString(36).slice(2,9)}`),key,createdAt:Math.max(0,Number(event?.createdAt||getHallvallaMineNow())),effectText:String(event?.effectText||HALLVALLA_MINE_EVENT_DEFS[key].baseEffect||"")};
 }
-function createHallvallaMineEventState(){return {nextCheckAt:Date.now()+HALLVALLA_MINE_EVENT_CHECK_MS,active:[]};}
+function normalizeHallvallaMineEventState(state={}){
+  const rawActive=Array.isArray(state?.active)?state.active:(state?.active&&typeof state.active==="object"?Object.keys(state.active).sort((a,b)=>Number(a)-Number(b)).map(key=>state.active[key]):[]);
+  return {
+    nextCheckAt:Math.max(0,Number(state?.nextCheckAt||getHallvallaMineNow()+HALLVALLA_MINE_EVENT_CHECK_MS)),
+    active:rawActive.map(normalizeHallvallaMineEventInstance).filter(Boolean).slice(0,HALLVALLA_MINE_MAX_ACTIVE_EVENTS)
+  };
+}
+function createHallvallaMineEventState(){return {nextCheckAt:getHallvallaMineNow()+HALLVALLA_MINE_EVENT_CHECK_MS,active:[]};}
 function getHallvallaMineEventState(){
   try{
     const raw=localStorage.getItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY);
-    if(!raw){const fresh=createHallvallaMineEventState();saveHallvallaMineEventState(fresh);return fresh;}
-    const saved=JSON.parse(raw)||{};
-    const active=(Array.isArray(saved.active)?saved.active:[]).map(normalizeHallvallaMineEventInstance).filter(Boolean).slice(0,HALLVALLA_MINE_MAX_ACTIVE_EVENTS);
-    return {nextCheckAt:Math.max(0,Number(saved.nextCheckAt||Date.now()+HALLVALLA_MINE_EVENT_CHECK_MS)),active};
-  }catch(_){const fresh=createHallvallaMineEventState();saveHallvallaMineEventState(fresh);return fresh;}
+    if(!raw){const fresh=createHallvallaMineEventState();localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(fresh));return fresh;}
+    return normalizeHallvallaMineEventState(JSON.parse(raw)||{});
+  }catch(_){const fresh=createHallvallaMineEventState();localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(fresh));return fresh;}
 }
 function saveHallvallaMineEventState(state){
-  const safe={nextCheckAt:Math.max(0,Number(state?.nextCheckAt||Date.now()+HALLVALLA_MINE_EVENT_CHECK_MS)),active:(Array.isArray(state?.active)?state.active:[]).map(normalizeHallvallaMineEventInstance).filter(Boolean).slice(0,HALLVALLA_MINE_MAX_ACTIVE_EVENTS)};
+  const safe=normalizeHallvallaMineEventState(state);
   localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+  queueHallvallaMineRemotePatch({events:safe,eventsUpdatedAt:serverTimestamp()});
+}
+async function transactHallvallaMineEventStateRemote(mutator){
+  if(typeof mutator!=="function"||!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineEventState()};
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    const current=getHallvallaMineEventState(),next=mutator(normalizeHallvallaMineEventState(current));
+    if(!next)return {committed:false,state:current};
+    const safe=normalizeHallvallaMineEventState(next);
+    localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+    return {committed:true,state:safe};
+  }
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return {committed:false,state:getHallvallaMineEventState()};
+  try{
+    await hallvallaMineRemoteWriteQueue;
+    const result=await runTransaction(ref(db,`users/${userId}/mine/events`),current=>{
+      if(!current)return;
+      const next=mutator(normalizeHallvallaMineEventState(current));
+      return next?normalizeHallvallaMineEventState(next):undefined;
+    },{applyLocally:false});
+    if(!result?.committed)return {committed:false,state:getHallvallaMineEventState()};
+    const safe=normalizeHallvallaMineEventState(result.snapshot.val()||{});
+    localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+    queueHallvallaMineRemotePatch({eventsUpdatedAt:serverTimestamp()});
+    return {committed:true,state:safe};
+  }catch(error){
+    console.warn("[HallValla][Mina] No se pudo confirmar la transacción de eventos:",error);
+    return {committed:false,state:getHallvallaMineEventState()};
+  }
+}
+async function syncHallvallaMineRemoteState(){
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){hallvallaMineRemoteReady=true;hallvallaMineServerClockReady=true;return true;}
+  if(hallvallaMineRemoteSyncPromise)return hallvallaMineRemoteSyncPromise;
+  hallvallaMineRemoteSyncPromise=(async()=>{
+    const authOk=typeof waitForFirebaseAuthReady==="function"?await waitForFirebaseAuthReady(8000):!!auth?.currentUser;
+    const userId=getHallvallaMineUserUid();
+    if(!authOk||!userId){hallvallaMineRemoteReady=false;return false;}
+    const clockOk=await syncHallvallaMineServerClock();
+    if(!clockOk){hallvallaMineRemoteReady=false;return false;}
+    try{
+      await hallvallaMineRemoteWriteQueue;
+      const snapshot=await get(ref(db,`users/${userId}/mine`));
+      const remote=snapshot?.exists?.()?snapshot.val()||{}:{};
+      const localState=getHallvallaMineState();
+      const localEvents=getHallvallaMineEventState();
+      const patch={};
+      if(remote?.state){
+        const safe=normalizeHallvallaMineState(remote.state);
+        localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+      }else{
+        const migrated=normalizeHallvallaMineState(localState);
+        const serverNow=getHallvallaMineNow();
+        migrated.slots=migrated.slots.map(slot=>slot.cardKey&&slot.startedAt>serverNow?{...slot,startedAt:serverNow}:slot);
+        localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(migrated));
+        patch.state=migrated;patch.stateUpdatedAt=serverTimestamp();
+      }
+      if(remote?.events){
+        const safe=normalizeHallvallaMineEventState(remote.events);
+        localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+      }else{
+        const migrated=normalizeHallvallaMineEventState(localEvents);
+        const serverNow=getHallvallaMineNow();
+        migrated.active=migrated.active.map(event=>event.createdAt>serverNow?{...event,createdAt:serverNow}:event);
+        localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(migrated));
+        patch.events=migrated;patch.eventsUpdatedAt=serverTimestamp();
+      }
+      hallvallaMineRemoteReady=true;
+      if(Object.keys(patch).length)await update(ref(db,`users/${userId}/mine`),patch);
+      return true;
+    }catch(error){
+      hallvallaMineRemoteReady=false;
+      console.warn("[HallValla][Mina] No se pudo sincronizar la Mina con Firebase:",error);
+      return false;
+    }
+  })();
+  try{return await hallvallaMineRemoteSyncPromise;}finally{hallvallaMineRemoteSyncPromise=null;}
 }
 function hallvallaMineHasDamage(eventState=getHallvallaMineEventState()){
   return (eventState?.active||[]).some(event=>HALLVALLA_MINE_EVENT_DEFS[event.key]?.kind==="negative");
@@ -1374,7 +1515,7 @@ function hallvallaMineHasDamage(eventState=getHallvallaMineEventState()){
 function hallvallaMineLoseGems(amount=1){
   let remaining=Math.max(0,Math.floor(Number(amount)||0)),lostPending=0,lostWallet=0;
   if(!remaining)return {lostPending,lostWallet,total:0};
-  const mineState=getHallvallaMineState(),now=Date.now();
+  const mineState=getHallvallaMineState(),now=getHallvallaMineNow();
   mineState.slots=mineState.slots.map(slot=>{
     if(remaining<=0)return slot;
     const safe=normalizeHallvallaMineSlot(slot),view=getHallvallaMineSlotView(safe,mineState,now);
@@ -1417,10 +1558,10 @@ function pickHallvallaMineEventKey(activeKeys=new Set()){
 }
 function processHallvallaMineEvents(){
   const profile=getPlayerProfile();
-  if(!hallvallaMineUnlocked(profile))return getHallvallaMineEventState();
+  if(!hallvallaMineUnlocked(profile)||!hallvallaMineOnlineReady())return getHallvallaMineEventState();
   const mineState=getHallvallaMineState();
   const activeMiners=mineState.slots.filter(slot=>slot?.cardKey).length;
-  const state=getHallvallaMineEventState(),now=Date.now();
+  const state=getHallvallaMineEventState(),now=getHallvallaMineNow();
   if(activeMiners<=0){if(state.nextCheckAt<=now)state.nextCheckAt=now+HALLVALLA_MINE_EVENT_CHECK_MS;saveHallvallaMineEventState(state);return state;}
   let changed=false,loops=0;
   while(state.nextCheckAt<=now&&loops<6){
@@ -1490,16 +1631,26 @@ function flashHallvallaMineEventButton(button,text){
   button.textContent=text;
   window.setTimeout(()=>{button.textContent=original;},1400);
 }
-function handleHallvallaMineEventAction(key,button=null){
+async function handleHallvallaMineEventAction(key,button=null){
+  if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
   const state=getHallvallaMineEventState(),index=state.active.findIndex(event=>event.key===key);
   if(index<0)return;
-  const instance=state.active[index],def=HALLVALLA_MINE_EVENT_DEFS[key];
+  const def=HALLVALLA_MINE_EVENT_DEFS[key];
   if(!def)return;
   const profile=getPlayerProfile();
   if(def.kind==="negative"){
     const cost=Math.max(0,Number(def.costGold||0));
     if(Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))} Oro`);return;}
-    profile.gold=Math.max(0,Number(profile.gold||0)-cost);
+  }
+  const tx=await transactHallvallaMineEventStateRemote(current=>{
+    const currentIndex=current.active.findIndex(event=>event.key===key);
+    if(currentIndex<0)return;
+    return {...current,active:current.active.filter((_,eventIndex)=>eventIndex!==currentIndex)};
+  });
+  if(!tx.committed){setHallvallaMineStatus("Ese evento ya fue resuelto en otro dispositivo o no pudo confirmarse con Firebase.");return;}
+  const nextState=tx.state;
+  if(def.kind==="negative"){
+    profile.gold=Math.max(0,Number(profile.gold||0)-Math.max(0,Number(def.costGold||0)));
   }else{
     const reward=def.reward||{};
     profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.gems||0));
@@ -1507,13 +1658,11 @@ function handleHallvallaMineEventAction(key,button=null){
     profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.fragments||0));
   }
   savePlayerProfile(profile);
-  state.active.splice(index,1);
-  saveHallvallaMineEventState(state);
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   renderMineScreen();
-  renderHallvallaMineEvents(state);
+  renderHallvallaMineEvents(nextState);
 }
-function getHallvallaMineSlotView(slot,mineState,now=Date.now()){
+function getHallvallaMineSlotView(slot,mineState,now=getHallvallaMineNow()){
   const active=!!slot?.cardKey;
   const rateMs=hallvallaMineRateMs(mineState?.level||1);
   if(!active||!slot?.startedAt)return {active:false,pending:0,produced:0,nextMs:rateMs,progress:0,name:"Vacía",image:""};
@@ -1527,7 +1676,7 @@ function getHallvallaMineSlotView(slot,mineState,now=Date.now()){
   const progress=Math.max(0,Math.min(1,remainder/rateMs));
   return {active:true,pending,produced,claimed,nextMs:safeNext,progress,name:String(slot.cardName||"Unidad"),image:String(slot.image||"")};
 }
-function getHallvallaMineAggregate(mineState,now=Date.now()){
+function getHallvallaMineAggregate(mineState,now=getHallvallaMineNow()){
   const slots=(mineState?.slots||[]).map(slot=>getHallvallaMineSlotView(slot,mineState,now));
   const activeCount=slots.filter(slot=>slot.active).length;
   const pendingTotal=slots.reduce((sum,slot)=>sum+Math.max(0,Number(slot.pending||0)),0);
@@ -1574,7 +1723,7 @@ function renderHallvallaMineProduction(profile=getPlayerProfile()){
     level:$("mineChipLevel"),active:$("mineChipActive"),rate:$("mineChipRate"),pending:$("mineChipPending"),
     ready:$("mineReadyValue"),next:$("mineNextValue")
   };
-  const aggregate=getHallvallaMineAggregate(mineState,Date.now());
+  const aggregate=getHallvallaMineAggregate(mineState,getHallvallaMineNow());
   if(chips.level)chips.level.textContent=`Nivel ${mineState.level}`;
   if(chips.active)chips.active.textContent=`${aggregate.activeCount}/${HALLVALLA_MINE_SLOT_COUNT} activas`;
   if(chips.rate)chips.rate.textContent=`1💎 / ${hallvallaMineRateHours(mineState.level)}h`;
@@ -1584,9 +1733,10 @@ function renderHallvallaMineProduction(profile=getPlayerProfile()){
   const claimBtn=$("mineClaimBtn");
   const mineDamaged=hallvallaMineHasDamage();
   if(claimBtn){
-    claimBtn.disabled=!unlocked||aggregate.pendingTotal<=0||mineDamaged;
+    const onlineReady=hallvallaMineOnlineReady();
+    claimBtn.disabled=!unlocked||!onlineReady||aggregate.pendingTotal<=0||mineDamaged;
     claimBtn.textContent=mineDamaged?"Repara la Mina":"Recoger";
-    claimBtn.title=mineDamaged?"Hay un evento de daño activo en la Mina.":"";
+    claimBtn.title=!onlineReady?"Sincronizando con Firebase...":(mineDamaged?"Hay un evento de daño activo en la Mina.":"");
   }
   renderHallvallaMineSlots(mineState,aggregate,unlocked);
   renderHallvallaMineSelectedCard(mineState,aggregate,unlocked);
@@ -1614,7 +1764,7 @@ function renderHallvallaMineSelectedCard(mineState,aggregate,unlocked){
   if(!box||!btn)return;
   const index=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
   const slot=mineState.slots[index]||createHallvallaMineSlot();
-  const view=aggregate.slots[index]||getHallvallaMineSlotView(slot,mineState,Date.now());
+  const view=aggregate.slots[index]||getHallvallaMineSlotView(slot,mineState,getHallvallaMineNow());
   if(view.active){
     const thumb=view.image?`<div class="mine-selected-thumb"><img src="${escapeHtml(view.image)}" alt=""></div>`:"";
     box.innerHTML=`${thumb}<div class="mine-selected-copy"><span>Ranura ${index+1}</span><b>${escapeHtml(view.name)}</b><small>${view.pending}💎 listas · próxima ${formatHallvallaMineDuration(view.nextMs)}</small></div>`;
@@ -1638,14 +1788,16 @@ function renderHallvallaMineRoster(mineState,unlocked){
   row.innerHTML=available.map(({card,free})=>{
     const image=getHallvallaMineCardImage(card);
     const visual=image?`<div class="mine-roster-thumb"><img src="${escapeHtml(image)}" alt="${escapeHtml(String(card.name||"Unidad"))}" loading="lazy"></div>`:`<div class="mine-roster-thumb"><span class="mine-roster-fallback">${escapeHtml(String(card.icon||"◆"))}</span></div>`;
-    const disabled=selectedOccupied?" disabled":"";
-    const title=selectedOccupied?' title="Selecciona una ranura vacía para asignar otra copia."':"";
+    const onlineReady=hallvallaMineOnlineReady();
+    const disabled=(selectedOccupied||!onlineReady)?" disabled":"";
+    const title=selectedOccupied?' title="Selecciona una ranura vacía para asignar otra copia."':(!onlineReady?' title="Sincronizando con Firebase..."':"");
     return `<button class="mine-roster-card" type="button" data-mine-assign="${escapeHtml(String(card.key||""))}"${disabled}${title}>${visual}<div class="mine-roster-meta"><b>${escapeHtml(String(card.name||"Unidad"))}</b><small>x${free}</small></div></button>`;
   }).join("");
   row.querySelectorAll("[data-mine-assign]").forEach(btn=>btn.addEventListener("click",()=>assignHallvallaMineUnit(String(btn.dataset.mineAssign||""))));
 }
 
-function assignHallvallaMineUnit(cardKey=""){
+async function assignHallvallaMineUnit(cardKey=""){
+  if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
   const profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
   const mineState=getHallvallaMineState();
@@ -1663,47 +1815,67 @@ function assignHallvallaMineUnit(cardKey=""){
     renderHallvallaMineProduction(profile);
     return;
   }
-  mineState.slots[selectedIndex]={cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:getHallvallaMineCardImage(card),startedAt:Date.now(),claimedCycles:0};
-  saveHallvallaMineState(mineState);
+  const startedAt=getHallvallaMineNow();
+  const tx=await transactHallvallaMineStateRemote(current=>{
+    const currentSlot=current.slots[selectedIndex]||createHallvallaMineSlot();
+    if(currentSlot.cardKey)return;
+    const next=normalizeHallvallaMineState(current);
+    next.slots[selectedIndex]={cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:getHallvallaMineCardImage(card),startedAt,claimedCycles:0};
+    return next;
+  });
+  if(!tx.committed){setHallvallaMineStatus(`La ranura ${selectedIndex+1} ya fue ocupada en otro dispositivo o Firebase no pudo confirmar la asignación.`);renderMineScreen();return;}
   setHallvallaMineStatus(`${card.name||"Unidad"} enviada a minar en la ranura ${selectedIndex+1}.`);
   renderMineScreen();
 }
-function unassignHallvallaMineUnit(){
+async function unassignHallvallaMineUnit(){
+  if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
   const profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
   const mineState=getHallvallaMineState();
   const selectedIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
   const slot=mineState.slots[selectedIndex]||createHallvallaMineSlot();
   if(!slot.cardKey){setHallvallaMineStatus("");return;}
-  const view=getHallvallaMineSlotView(slot,mineState,Date.now());
-  const earned=Math.max(0,Math.floor(Number(view.pending||0)));
-  if(earned>0){
-    profile.gems=Math.max(0,Number(profile.gems||0))+earned;
-    savePlayerProfile(profile);
-  }
-  mineState.slots[selectedIndex]=createHallvallaMineSlot();
-  saveHallvallaMineState(mineState);
+  let earned=0,removedName=String(slot.cardName||"Unidad");
+  const now=getHallvallaMineNow();
+  const tx=await transactHallvallaMineStateRemote(current=>{
+    const currentSlot=current.slots[selectedIndex]||createHallvallaMineSlot();
+    if(!currentSlot.cardKey)return;
+    const view=getHallvallaMineSlotView(currentSlot,current,now);
+    earned=Math.max(0,Math.floor(Number(view.pending||0)));
+    removedName=String(currentSlot.cardName||removedName||"Unidad");
+    const next=normalizeHallvallaMineState(current);
+    next.slots[selectedIndex]=createHallvallaMineSlot();
+    return next;
+  });
+  if(!tx.committed){setHallvallaMineStatus("La unidad ya fue retirada en otro dispositivo o Firebase no pudo confirmar la operación.");return;}
+  if(earned>0){profile.gems=Math.max(0,Number(profile.gems||0))+earned;savePlayerProfile(profile);}
   try{if(earned>0){if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}}catch(_){ }
-  setHallvallaMineStatus(earned>0?`${slot.cardName||"Unidad"} retirada de la mina. Recogiste ${earned} gema${earned===1?"":"s"}.`:`${slot.cardName||"Unidad"} retirada de la mina.`);
+  setHallvallaMineStatus(earned>0?`${removedName} retirada de la mina. Recogiste ${earned} gema${earned===1?"":"s"}.`:`${removedName} retirada de la mina.`);
   renderMineScreen();
 }
-function claimHallvallaMineRewards(){
+async function claimHallvallaMineRewards(){
+  if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
   const profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
-  const mineState=getHallvallaMineState();
   let total=0;
-  const now=Date.now();
-  mineState.slots=(mineState.slots||[]).map(slot=>{
-    const safe=normalizeHallvallaMineSlot(slot);
-    const view=getHallvallaMineSlotView(safe,mineState,now);
-    if(!view.active||view.pending<=0)return safe;
-    total+=view.pending;
-    return {...safe,claimedCycles:view.produced};
+  const now=getHallvallaMineNow();
+  const tx=await transactHallvallaMineStateRemote(current=>{
+    let transactionTotal=0;
+    const next=normalizeHallvallaMineState(current);
+    next.slots=next.slots.map(slot=>{
+      const safe=normalizeHallvallaMineSlot(slot);
+      const view=getHallvallaMineSlotView(safe,next,now);
+      if(!view.active||view.pending<=0)return safe;
+      transactionTotal+=view.pending;
+      return {...safe,claimedCycles:view.produced};
+    });
+    if(transactionTotal<=0)return;
+    total=transactionTotal;
+    return next;
   });
-  if(total<=0){setHallvallaMineStatus("Aún no hay gemas listas.");renderMineScreen();return;}
+  if(!tx.committed){setHallvallaMineStatus("No hay gemas nuevas por recoger o ya fueron reclamadas desde otro dispositivo.");renderMineScreen();return;}
   profile.gems=Math.max(0,Number(profile.gems||0))+total;
   savePlayerProfile(profile);
-  saveHallvallaMineState(mineState);
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   setHallvallaMineStatus(`Recogiste ${total} gema${total===1?"":"s"}.`);
   renderMineScreen();
@@ -1732,10 +1904,14 @@ function stopHallvallaMineTick(){
   clearInterval(hallvallaMineUi.tick);
   hallvallaMineUi.tick=0;
 }
-function openMineScreen(section="production"){
+async function openMineScreen(section="production"){
+  $("mineScreen")?.classList.remove("hidden");
+  stopHallvallaMineTick();
+  setHallvallaMineStatus("Sincronizando la Mina con el servidor...");
+  const synced=await syncHallvallaMineRemoteState();
   renderMineScreen();
   setMineSection(section);
-  $("mineScreen")?.classList.remove("hidden");
+  setHallvallaMineStatus(synced||HALLVALLA_LOCALHOST_TEST_MODE===true?"":"No se pudo conectar con Firebase. La Mina queda en modo de solo lectura.");
   startHallvallaMineTick();
 }
 function closeMineScreen(){

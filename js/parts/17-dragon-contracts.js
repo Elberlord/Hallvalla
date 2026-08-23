@@ -1414,6 +1414,7 @@ function wireHallvallaEventSettings(modal){
   markHallvallaHudElements();
 }
 function closeHallvallaEventModals(){
+  if(beastmasterSeasonCountdownTimer){clearInterval(beastmasterSeasonCountdownTimer);beastmasterSeasonCountdownTimer=0;}
   document.getElementById('hallvallaEventsModal')?.classList.add('hidden');
   document.getElementById('hallvallaDragonsModal')?.classList.add('hidden');
 }
@@ -1454,6 +1455,14 @@ function ensureHallvallaEventsModal(){
     <section class="hallvalla-beast-panel hallvalla-beast-panel--info is-active" data-beast-panel="info">
       <div class="hallvalla-beast-artboard hallvalla-beast-artboard--info">
         <div class="hallvalla-beast-overlay hallvalla-beast-overlay--info">
+          <div class="hallvalla-beast-season-seal is-upcoming" data-beast-season-seal="1" aria-live="polite">
+            <div class="hallvalla-beast-season-crown" aria-hidden="true">◆</div>
+            <div class="hallvalla-beast-season-state" data-beast-season-state>PRÓXIMO EVENTO</div>
+            <div class="hallvalla-beast-season-rule"></div>
+            <div class="hallvalla-beast-season-caption" data-beast-season-caption>COMIENZA EN</div>
+            <div class="hallvalla-beast-season-clock" data-beast-season-clock>--D  --:--:--</div>
+            <div class="hallvalla-beast-season-date" data-beast-season-date>1 SEP · 00:00 UTC</div>
+          </div>
           <div class="hallvalla-beast-pill hallvalla-beast-pill--cost">
             <div class="hallvalla-beast-mini">Costo del duelo</div>
             <div class="hallvalla-beast-cost">${formatHallvallaEventNumber(BEASTMASTER_EVENT_BATTLE.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)}</div>
@@ -1654,6 +1663,47 @@ async function refreshBeastmasterGlobalUi(modal=ensureHallvallaEventsModal()){
       : 'Cada jugador solo puede obtener este Huevo excepcional una vez.';
   }
 }
+let beastmasterSeasonCountdownTimer=0;
+let beastmasterSeasonServerOffsetMs=0;
+function formatBeastmasterSeasonCountdown(ms=0){
+  const total=Math.max(0,Math.floor((Number(ms)||0)/1000));
+  const days=Math.floor(total/86400);
+  const hours=Math.floor((total%86400)/3600);
+  const minutes=Math.floor((total%3600)/60);
+  const seconds=total%60;
+  return `${String(days).padStart(2,"0")}D  ${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+}
+function renderBeastmasterSeasonSeal(modal=ensureHallvallaEventsModal(),nowMs=Date.now()+beastmasterSeasonServerOffsetMs){
+  const seal=modal?.querySelector('[data-beast-season-seal]');
+  if(!seal)return;
+  const status=getBeastmasterHuntSeasonWindow(nowMs);
+  const state=seal.querySelector('[data-beast-season-state]');
+  const caption=seal.querySelector('[data-beast-season-caption]');
+  const clock=seal.querySelector('[data-beast-season-clock]');
+  const date=seal.querySelector('[data-beast-season-date]');
+  const target=status.open?status.endAt:status.startAt;
+  seal.classList.toggle('is-active',status.open);
+  seal.classList.toggle('is-upcoming',!status.open);
+  if(state)state.textContent=status.open?'TEMPORADA ACTIVA':'PRÓXIMO EVENTO';
+  if(caption)caption.textContent=status.open?'TERMINA EN':'COMIENZA EN';
+  if(clock)clock.textContent=formatBeastmasterSeasonCountdown(target-nowMs);
+  if(date)date.textContent=status.open
+    ?`Hasta 30 NOV ${status.seasonYear} · 23:59 UTC`
+    :`1 SEP ${status.seasonYear} · 00:00 UTC`;
+}
+async function startBeastmasterSeasonCountdown(modal=ensureHallvallaEventsModal()){
+  if(beastmasterSeasonCountdownTimer){clearInterval(beastmasterSeasonCountdownTimer);beastmasterSeasonCountdownTimer=0;}
+  renderBeastmasterSeasonSeal(modal);
+  try{
+    const serverStatus=await getBeastmasterHuntSeasonStatusFromServer();
+    beastmasterSeasonServerOffsetMs=Number(serverStatus?.offsetMs||0)||0;
+  }catch(_error){beastmasterSeasonServerOffsetMs=0;}
+  renderBeastmasterSeasonSeal(modal);
+  beastmasterSeasonCountdownTimer=setInterval(()=>{
+    if(!modal||modal.classList.contains('hidden'))return;
+    renderBeastmasterSeasonSeal(modal);
+  },1000);
+}
 function updateBeastmasterFightButton(modal=ensureHallvallaEventsModal()){
   const btn=modal.querySelector('[data-beast-fight]');
   if(!btn)return;
@@ -1694,6 +1744,7 @@ function openBeastmasterEventModal(initialTab='info'){
   ensureHallvallaDragonsModal();
   applyHallvallaEventUiSettings();
   updateBeastmasterFightButton(modal);
+  startBeastmasterSeasonCountdown(modal);
   setActiveBeastmasterTab(initialTab);
   modal.classList.remove('hidden');
   document.getElementById('hallvallaDragonsModal')?.classList.add('hidden');
@@ -1801,6 +1852,19 @@ registerHallvallaHook("deck.save",async()=>{
   .hallvalla-beast-artboard--global{background-image:url('assets/ui/beastmaster/beastmaster_global_panel_ai.webp')}
   .hallvalla-beast-overlay,.hallvalla-rewards-overlay,.hallvalla-global-card--overlay,.hallvalla-global-note--overlay,.hallvalla-warning-strip--overlay{position:absolute}
   .hallvalla-beast-overlay--info{inset:0}
+  .hallvalla-beast-season-seal{position:absolute;left:57.2%;top:12.2%;width:31.5%;min-height:12.8%;z-index:8;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"crown state" "crown rule" "crown caption" "crown clock" "crown date";column-gap:13px;align-content:center;padding:10px 18px 10px 14px;border-radius:20px;border:1px solid rgba(230,184,84,.62);background:radial-gradient(circle at 12% 50%,rgba(126,78,14,.28),transparent 35%),linear-gradient(135deg,rgba(18,11,5,.93),rgba(6,8,9,.91) 58%,rgba(28,18,6,.91));box-shadow:0 14px 34px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,231,155,.06),inset 0 0 28px rgba(214,154,46,.08);text-shadow:0 2px 10px rgba(0,0,0,.72);overflow:hidden}
+  .hallvalla-beast-season-seal::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 0 40%,rgba(255,228,143,.08) 48%,transparent 56%);transform:translateX(-120%);animation:beastSeasonSealSweep 5s ease-in-out infinite;pointer-events:none}
+  .hallvalla-beast-season-seal.is-active{border-color:rgba(166,229,106,.7);background:radial-gradient(circle at 12% 50%,rgba(87,142,34,.24),transparent 35%),linear-gradient(135deg,rgba(8,20,9,.94),rgba(5,10,7,.92) 58%,rgba(18,31,10,.92));box-shadow:0 14px 34px rgba(0,0,0,.42),0 0 24px rgba(126,210,80,.13),inset 0 0 0 1px rgba(216,255,174,.06)}
+  .hallvalla-beast-season-crown{grid-area:crown;align-self:center;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(233,190,89,.72);outline:1px solid rgba(233,190,89,.22);outline-offset:4px;color:#f4cf73;font-family:Georgia,serif;font-size:26px;transform:rotate(45deg);box-shadow:inset 0 0 18px rgba(229,172,51,.16),0 0 18px rgba(229,172,51,.12)}
+  .hallvalla-beast-season-seal.is-active .hallvalla-beast-season-crown{border-color:rgba(169,230,112,.78);color:#ccef9b;box-shadow:inset 0 0 18px rgba(121,205,72,.18),0 0 18px rgba(121,205,72,.12)}
+  .hallvalla-beast-season-state{grid-area:state;font-family:Georgia,serif;font-weight:900;font-size:clamp(15px,1.35vw,23px);letter-spacing:.12em;color:#ffe29a;white-space:nowrap}
+  .hallvalla-beast-season-seal.is-active .hallvalla-beast-season-state{color:#d9f5aa}
+  .hallvalla-beast-season-rule{grid-area:rule;height:1px;margin:3px 0 4px;background:linear-gradient(90deg,rgba(230,184,84,.7),rgba(230,184,84,.08))}
+  .hallvalla-beast-season-caption{grid-area:caption;font-size:clamp(8px,.66vw,11px);font-weight:900;letter-spacing:.2em;color:#bea873}
+  .hallvalla-beast-season-clock{grid-area:clock;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:clamp(15px,1.55vw,26px);line-height:1.08;font-weight:900;letter-spacing:.04em;color:#fff0c3;font-variant-numeric:tabular-nums}
+  .hallvalla-beast-season-seal.is-active .hallvalla-beast-season-clock{color:#e4ffc2}
+  .hallvalla-beast-season-date{grid-area:date;margin-top:3px;font-size:clamp(8px,.67vw,11px);letter-spacing:.08em;color:#ab9a74}
+  @keyframes beastSeasonSealSweep{0%,64%{transform:translateX(-120%)}78%,100%{transform:translateX(125%)}}
   .hallvalla-beast-pill{position:absolute;color:#f0e7d2;background:rgba(5,9,15,.08);border-radius:18px;padding:10px 14px}
   .hallvalla-beast-pill--cost{left:54.8%;top:27%;width:37%;text-align:left}
   .hallvalla-beast-pill--description{left:54.4%;top:39%;width:38%;min-height:28%}
@@ -1910,7 +1974,7 @@ registerHallvallaHook("deck.save",async()=>{
   @media(max-width:1180px){.hallvalla-beast-tab-btn{width:300px;max-width:34vw}.hallvalla-beast-tab-btn--info{left:170px;top:240px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 150px);top:240px}.hallvalla-beast-tab-btn--global{right:120px;left:auto;top:240px}.hallvalla-events-secondary--inline{min-width:0}.hallvalla-global-card--overlay{padding:14px 18px}}
   @media(max-width:980px){.hallvalla-events-shell--dragons{width:min(96vw,var(--hv-event-modal-width))}.hallvalla-beast-tab-btn{width:260px;max-width:38vw}.hallvalla-beast-tab-btn--info{left:36px;top:228px}.hallvalla-beast-tab-btn--rewards{left:calc(50vw - 130px);top:228px}.hallvalla-beast-tab-btn--global{right:36px;left:auto;top:228px}.hallvalla-beast-artboard{transform:none}.hallvalla-rewards-overlay{left:11%;right:11%;top:42%;bottom:17%;gap:4.5%}.hallvalla-reward-copy{left:28%;right:4%}.hallvalla-beast-reward-badge{left:5%;width:17%}.hallvalla-global-note--overlay{padding:0 7.5%}.hallvalla-dragon-grid{grid-template-columns:1fr}.hallvalla-events-settings{right:18px;left:18px;width:auto}}
   @media(max-width:720px){.hallvalla-events-shell--beast{padding:6px}.hallvalla-beast-tab-btn{width:250px;max-width:68vw}.hallvalla-beast-tab-btn--info{left:12px;top:180px}.hallvalla-beast-tab-btn--rewards{left:12px;top:255px}.hallvalla-beast-tab-btn--global{left:12px;top:330px;right:auto}.hallvalla-beast-artboard{aspect-ratio:auto;height:auto;min-height:620px;background-size:cover;background-position:center top}.hallvalla-beast-pill--cost{left:8%;right:8%;top:28%;width:auto}.hallvalla-beast-pill--description{left:8%;right:8%;top:42%;width:auto}.hallvalla-rewards-overlay{left:10%;right:10%;top:35%;bottom:19%;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);gap:2%}.hallvalla-reward-copy{left:34%;right:4%}.hallvalla-beast-reward-badge{left:7%;width:22%}.hallvalla-warning-strip--overlay{left:9%;right:9%;bottom:6%;padding:0 16px}.hallvalla-global-card--overlay{left:7%;right:7%;width:auto;min-height:26%}.hallvalla-global-card--dragon{top:37%}.hallvalla-global-card--egg{top:61%}.hallvalla-global-label{top:7%}.hallvalla-global-value{top:22%}.hallvalla-global-progress-shell{top:42%}.hallvalla-global-desc{top:58%}.hallvalla-global-note--overlay{left:6%;right:6%;bottom:4%;padding:0 4%}.hallvalla-dragon-card img{height:220px}.hallvalla-dragon-detail-artboard{aspect-ratio:auto;min-height:720px;background-size:cover}.hallvalla-dragon-detail-status{left:10%;right:10%;top:30%;width:auto}.hallvalla-dragon-detail-info{left:10%;right:10%;top:40%;width:auto}.hallvalla-dragon-detail-rewards{left:10%;right:10%;top:64%;width:auto}.hallvalla-dragon-detail-cost{left:8%;width:24%;bottom:11%}.hallvalla-events-primary--dragon{left:34%;width:32%;bottom:4.5%}.hallvalla-dragon-fire-fight-hud{left:34%;width:32%;bottom:4.5%}}
-  @media(max-width:720px){.hallvalla-beast-overlay--info>.hallvalla-events-image-button--pay{left:8%;top:77%;width:52%}.hallvalla-beast-overlay--info>.hallvalla-events-image-button--dragon{left:67%;top:78%;width:22%}}
+  @media(max-width:720px){.hallvalla-beast-season-seal{left:8%;top:13%;width:84%;min-height:90px;padding:9px 14px}.hallvalla-beast-season-crown{width:46px;height:46px;font-size:20px}.hallvalla-beast-season-state{font-size:15px}.hallvalla-beast-season-clock{font-size:18px}.hallvalla-beast-overlay--info>.hallvalla-events-image-button--pay{left:8%;top:77%;width:52%}.hallvalla-beast-overlay--info>.hallvalla-events-image-button--dragon{left:67%;top:78%;width:22%}}
   `;
   document.head.appendChild(style);
 })();

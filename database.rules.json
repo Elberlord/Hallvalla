@@ -95,7 +95,88 @@
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        "profile": {
+          ".write": "auth != null && auth.uid === $uid"
+        },
+        "rewards": {
+          ".write": "auth != null && auth.uid === $uid"
+        },
+        "mine": {
+          ".write": "auth != null && auth.uid === $uid && newData.exists()",
+          ".validate": "newData.hasChildren(['state','events'])",
+          "state": {
+            ".validate": "newData.hasChildren(['level','slots'])",
+            "level": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 1 && newData.val() <= 5 && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val()))"
+            },
+            "slots": {
+              ".validate": "newData.hasChildren(['0','1','2','3','4'])",
+              "$slotIndex": {
+                ".validate": "($slotIndex === '0' || $slotIndex === '1' || $slotIndex === '2' || $slotIndex === '3' || $slotIndex === '4') && newData.hasChildren(['cardKey','cardName','image','startedAt','claimedCycles']) && newData.child('cardKey').isString() && newData.child('cardName').isString() && newData.child('image').isString() && newData.child('startedAt').isNumber() && newData.child('startedAt').val() >= 0 && newData.child('startedAt').val() <= now + 60000 && newData.child('claimedCycles').isNumber() && newData.child('claimedCycles').val() >= 0 && newData.child('claimedCycles').val() % 1 === 0 && (newData.child('cardKey').val() === '' || newData.child('claimedCycles').val() * 86400000 <= now - newData.child('startedAt').val()) && ((!data.exists()) || (newData.child('cardKey').val() === data.child('cardKey').val() && newData.child('startedAt').val() === data.child('startedAt').val() && newData.child('claimedCycles').val() >= data.child('claimedCycles').val()) || (data.child('cardKey').val() === '' && newData.child('cardKey').val() !== '' && newData.child('startedAt').val() >= now - 60000 && newData.child('startedAt').val() <= now + 60000 && newData.child('claimedCycles').val() === 0) || (data.child('cardKey').val() !== '' && newData.child('cardKey').val() === '' && newData.child('startedAt').val() === 0 && newData.child('claimedCycles').val() === 0))",
+                "cardKey": {
+                  ".validate": "newData.isString()"
+                },
+                "cardName": {
+                  ".validate": "newData.isString()"
+                },
+                "image": {
+                  ".validate": "newData.isString()"
+                },
+                "startedAt": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= now + 60000"
+                },
+                "claimedCycles": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "events": {
+            ".validate": "newData.child('nextCheckAt').isNumber() && newData.child('nextCheckAt').val() >= 0 && (!data.exists() || newData.child('nextCheckAt').val() >= data.child('nextCheckAt').val())",
+            "nextCheckAt": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "active": {
+              ".validate": true,
+              "$eventIndex": {
+                ".validate": "($eventIndex === '0' || $eventIndex === '1' || $eventIndex === '2') && newData.hasChildren(['id','key','createdAt','effectText']) && newData.child('id').isString() && newData.child('key').isString() && (newData.child('key').val() === 'incendio' || newData.child('key').val() === 'inundacion' || newData.child('key').val() === 'derrumbe' || newData.child('key').val() === 'tesoro' || newData.child('key').val() === 'veta_rica' || newData.child('key').val() === 'camara_secreta') && newData.child('createdAt').isNumber() && newData.child('createdAt').val() >= 0 && newData.child('createdAt').val() <= now + 60000 && newData.child('effectText').isString()",
+                "id": {
+                  ".validate": "newData.isString()"
+                },
+                "key": {
+                  ".validate": "newData.isString() && (newData.val() === 'incendio' || newData.val() === 'inundacion' || newData.val() === 'derrumbe' || newData.val() === 'tesoro' || newData.val() === 'veta_rica' || newData.val() === 'camara_secreta')"
+                },
+                "createdAt": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= now + 60000"
+                },
+                "effectText": {
+                  ".validate": "newData.isString()"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "stateUpdatedAt": {
+            ".validate": "newData.isNumber() && newData.val() >= now - 60000 && newData.val() <= now + 10000"
+          },
+          "eventsUpdatedAt": {
+            ".validate": "newData.isNumber() && newData.val() >= now - 60000 && newData.val() <= now + 10000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
       }
     },
     "events": {
