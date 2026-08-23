@@ -1290,6 +1290,12 @@ function formatHallvallaMineDuration(ms=0){
   const pad=v=>String(v).padStart(2,"0");
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
+function getHallvallaMineCardImage(card){
+  if(!card)return "";
+  const direct=String(card?.portrait||card?.image||"").trim();
+  if(direct)return direct;
+  try{return String(typeof getResolvedCardPortraitSource==="function"?getResolvedCardPortraitSource(card)||"":"").trim();}catch(_){return "";}
+}
 function getHallvallaMineCollectionPool(){
   let cards=[];
   try{cards=typeof getCollectionCardsExpanded==="function"?getCollectionCardsExpanded():[];}catch(_){cards=[];}
@@ -1301,6 +1307,22 @@ function getHallvallaMineCollectionPool(){
     if(qb!==qa)return qb-qa;
     return String(a?.name||"").localeCompare(String(b?.name||""),"es");
   });
+}
+function getHallvallaDeckReservedKeys(){
+  const keys=new Set();
+  try{
+    const deck=JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");
+    if(Array.isArray(deck))deck.forEach(card=>{const key=String(card?.key||"").trim();if(key)keys.add(key);});
+  }catch(_){ }
+  try{
+    const principals=JSON.parse(localStorage.getItem("hallvalla_principal_units_v2")||"null");
+    if(Array.isArray(principals))principals.forEach(key=>{key=String(key||"").trim();if(key)keys.add(key);});
+  }catch(_){ }
+  try{
+    const legacy=String(localStorage.getItem("hallvalla_principal_unit_v1")||"").trim();
+    if(legacy)keys.add(legacy);
+  }catch(_){ }
+  return keys;
 }
 function getHallvallaMineSlotView(slot,mineState,now=Date.now()){
   const active=!!slot?.cardKey;
@@ -1341,6 +1363,19 @@ function renderMineScreen(){
 }
 function renderHallvallaMineProduction(profile=getPlayerProfile()){
   const mineState=getHallvallaMineState();
+  try{
+    const byKey=new Map(getHallvallaMineCollectionPool().map(card=>[String(card?.key||""),card]));
+    let repaired=false;
+    mineState.slots=mineState.slots.map(slot=>{
+      if(!slot?.cardKey||String(slot.image||"").trim())return slot;
+      const card=byKey.get(String(slot.cardKey||""));
+      const image=getHallvallaMineCardImage(card);
+      if(!image)return slot;
+      repaired=true;
+      return {...slot,image};
+    });
+    if(repaired)saveHallvallaMineState(mineState);
+  }catch(_){ }
   const unlocked=hallvallaMineUnlocked(profile);
   const lockedNote=$("mineLockedNote");
   if(lockedNote)lockedNote.classList.toggle("hidden",unlocked);
@@ -1398,12 +1433,26 @@ function renderHallvallaMineRoster(mineState,unlocked){
   const selectedIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
   const currentKey=String(mineState.slots[selectedIndex]?.cardKey||"");
   const assignedKeys=new Set((mineState.slots||[]).map(slot=>String(slot?.cardKey||"")).filter(Boolean));
-  const available=getHallvallaMineCollectionPool().filter(card=>!assignedKeys.has(String(card.key||""))||String(card.key||"")===currentKey).slice(0,24);
-  if(!unlocked){row.innerHTML=`<div class="mine-roster-empty">Alcanza el Nivel 2 para abrir la Mina.</div>`;return;}
-  if(!available.length){row.innerHTML=`<div class="mine-roster-empty">No tienes unidades disponibles para asignar.</div>`;return;}
-  row.innerHTML=available.map(card=>`<button class="mine-roster-card ${String(card.key||"")===currentKey?"selected":""}" type="button" data-mine-assign="${escapeHtml(String(card.key||""))}"><img src="${escapeHtml(String(card.image||""))}" alt=""><div class="mine-roster-meta"><b>${escapeHtml(String(card.name||"Unidad"))}</b><small>x${Math.max(1,Number(card.qty||1))}</small></div></button>`).join("");
+  const reservedDeckKeys=getHallvallaDeckReservedKeys();
+  const available=getHallvallaMineCollectionPool()
+    .filter(card=>{
+      const key=String(card?.key||"");
+      if(!key)return false;
+      if(key!==currentKey && assignedKeys.has(key))return false;
+      if(key!==currentKey && reservedDeckKeys.has(key))return false;
+      return true;
+    })
+    .slice(0,24);
+  if(!unlocked){row.innerHTML=`<div class="mine-roster-empty">Nivel 2</div>`;return;}
+  if(!available.length){row.innerHTML=`<div class="mine-roster-empty">Sin unidades libres</div>`;return;}
+  row.innerHTML=available.map(card=>{
+    const image=getHallvallaMineCardImage(card);
+    const visual=image?`<div class="mine-roster-thumb"><img src="${escapeHtml(image)}" alt="${escapeHtml(String(card.name||"Unidad"))}" loading="lazy"></div>`:`<div class="mine-roster-thumb"><span class="mine-roster-fallback">${escapeHtml(String(card.icon||"◆"))}</span></div>`;
+    return `<button class="mine-roster-card ${String(card.key||"")===currentKey?"selected":""}" type="button" data-mine-assign="${escapeHtml(String(card.key||""))}">${visual}<div class="mine-roster-meta"><b>${escapeHtml(String(card.name||"Unidad"))}</b><small>x${Math.max(1,Number(card.qty||1))}</small></div></button>`;
+  }).join("");
   row.querySelectorAll("[data-mine-assign]").forEach(btn=>btn.addEventListener("click",()=>assignHallvallaMineUnit(String(btn.dataset.mineAssign||""))));
 }
+
 function assignHallvallaMineUnit(cardKey=""){
   const profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
@@ -1413,7 +1462,7 @@ function assignHallvallaMineUnit(cardKey=""){
   if(!card){setHallvallaMineStatus("Esa unidad ya no está disponible.");renderHallvallaMineProduction(profile);return;}
   const duplicated=(mineState.slots||[]).some((slot,index)=>index!==selectedIndex&&String(slot?.cardKey||"")===String(card.key||""));
   if(duplicated){setHallvallaMineStatus("Esa unidad ya está minando.");return;}
-  mineState.slots[selectedIndex]={cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:String(card.image||""),startedAt:Date.now(),claimedCycles:0};
+  mineState.slots[selectedIndex]={cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:getHallvallaMineCardImage(card),startedAt:Date.now(),claimedCycles:0};
   saveHallvallaMineState(mineState);
   setHallvallaMineStatus(`${card.name||"Unidad"} enviada a minar.`);
   renderMineScreen();

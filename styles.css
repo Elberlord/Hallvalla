@@ -24144,3 +24144,191 @@ body.home-deck-tutorial-active{overflow:hidden}
   .mine-miner-grid{grid-template-columns:repeat(5,78px)}
   .mine-roster-row{grid-template-columns:repeat(3,minmax(88px,1fr))}
 }
+
+
+/* Mina · retratos de colección corregidos */
+.mine-roster-fallback{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-size:42px;color:#d9edff;background:rgba(7,14,24,.62);
+}
+
+/* Mina · colección de mineros: una sola franja desplazable, sin recorte vertical */
+.mine-panel-content{
+  height:100%;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+.mine-roster-row{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  gap:10px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  margin-top:auto !important;
+  padding:0 0 6px;
+  min-height:146px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(99,182,255,.45) rgba(7,14,24,.28);
+}
+.mine-roster-card{
+  flex:0 0 120px;
+  width:120px;
+  min-height:140px !important;
+  height:140px;
+}
+.mine-roster-row::-webkit-scrollbar{height:7px}
+.mine-roster-row::-webkit-scrollbar-track{background:rgba(7,14,24,.28);border-radius:999px}
+.mine-roster-row::-webkit-scrollbar-thumb{background:rgba(99,182,255,.45);border-radius:999px}
+@media (max-width:640px){
+  .mine-roster-row{min-height:132px}
+  .mine-roster-card{flex-basis:106px;width:106px;min-height:126px !important;height:126px}
+}
+
+/* === Mina · V6.8G compacta real === */
+.mine-layout{
+  grid-template-columns:92px 1fr !important;
+  gap:12px !important;
+  padding:12px !important;
+}
+.mine-nav{
+  gap:8px !important;
+  padding:8px !important;
+  border-radius:22px !important;
+}
+.mine-nav-btn{
+  min-height:54px !important;
+  padding:6px 4px !important;
+  gap:3px !important;
+  border-radius:16px !important;
+}
+.mine-nav-btn img{
+  width:28px !important;
+  height:28px !important;
+}
+.mine-nav-btn span{
+  font-size:8px !important;
+  line-height:1.05 !important;
+  letter-spacing:.03em !important;
+}
+.mine-panel{
+  border-radius:24px !important;
+}
+.mine-panel-content{
+  padding:14px 16px !important;
+  gap:8px !important;
+}
+.mine-chip-row{
+  gap:12px !important;
+  margin-bottom:0 !important;
+}
+.mine-chip{
+  font-size:11px !important;
+}
+.mine-miner-grid{
+  gap:10px !important;
+  margin-top:2px !important;
+}
+.mine-miner-card,
+.mine-miner-card.active,
+.mine-miner-card.empty,
+.mine-miner-card.selected{
+  min-height:58px !important;
+  padding:4px 2px !important;
+  gap:3px !important;
+}
+.mine-miner-no{
+  width:36px !important;
+  height:36px !important;
+  flex-basis:36px !important;
+  font-size:11px !important;
+}
+.mine-miner-title b{
+  font-size:11px !important;
+}
+.mine-cta-btn{
+  min-width:126px !important;
+  min-height:42px !important;
+  padding:0 18px !important;
+  font-size:13px !important;
+}
+.mine-bottom-row{
+  min-height:42px !important;
+}
+.mine-assign-shell{
+  margin:-48px 0 0 !important;
+  min-height:42px !important;
+}
+.mine-ghost-btn{
+  min-height:42px !important;
+  min-width:92px !important;
+  border-radius:14px !important;
+  font-size:13px !important;
+}
+.mine-roster-row{
+  margin-top:8px !important;
+  min-height:108px !important;
+  gap:8px !important;
+  padding-bottom:4px !important;
+}
+.mine-roster-card{
+  flex:0 0 84px !important;
+  width:84px !important;
+  min-height:102px !important;
+  height:102px !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+.mine-roster-card::after{display:none !important;}
+.mine-roster-thumb{
+  width:84px;
+  height:84px;
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(8,15,25,.42);
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+  border:1px solid rgba(129,172,236,.2);
+}
+.mine-roster-card img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center top !important;
+  display:block;
+  opacity:1 !important;
+  transform:scale(1.02);
+}
+.mine-roster-meta{
+  position:static !important;
+  margin-top:4px;
+  padding:0 1px;
+  gap:1px !important;
+}
+.mine-roster-meta b{
+  font-size:10px !important;
+  line-height:1.1 !important;
+  -webkit-line-clamp:2 !important;
+}
+.mine-roster-meta small{
+  font-size:9px !important;
+}
+.mine-roster-card.selected .mine-roster-thumb{
+  border-color:rgba(107,216,255,.72);
+  box-shadow:0 0 0 2px rgba(71,183,255,.22),0 8px 18px rgba(0,0,0,.22);
+}
+.mine-roster-empty{
+  font-size:11px !important;
+}
+@media (max-width:980px){
+  .mine-layout{grid-template-columns:1fr !important;}
+  .mine-nav{flex-direction:row !important;gap:6px !important;padding:6px !important;}
+  .mine-nav-btn{min-width:68px !important;min-height:50px !important;}
+  .mine-nav-btn img{width:24px !important;height:24px !important;}
+}
+@media (max-width:640px){
+  .mine-panel-content{padding:10px 12px !important;}
+  .mine-roster-card{flex-basis:74px !important;width:74px !important;min-height:94px !important;height:94px !important;}
+  .mine-roster-thumb{width:74px;height:74px;}
+  .mine-cta-btn{min-width:110px !important;}
+}
