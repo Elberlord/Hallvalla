@@ -91,6 +91,12 @@
         ".write": "auth != null && !data.exists() && newData.exists() && root.child('games').child($gameCode).child('public').child('battleEnded').val() === true && root.child('games').child($gameCode).child('public').child('phase').val() === 'ended' && (root.child('games').child($gameCode).child('public').child('playerSlots').child('player1Uid').val() === auth.uid || root.child('games').child($gameCode).child('public').child('playerSlots').child('player2Uid').val() === auth.uid)",
         ".validate": "newData.hasChildren(['schema','gameCode','createdAt','endedAt','player1Uid','player2Uid','player1Name','player2Name','winnerRole','loserRole']) && newData.child('schema').val() === 'hallvalla-pvp-result-v1' && newData.child('gameCode').val() === $gameCode && newData.child('createdAt').val() === root.child('games').child($gameCode).child('public').child('createdAt').val() && newData.child('endedAt').val() === root.child('games').child($gameCode).child('public').child('endedAt').val() && newData.child('player1Uid').val() === root.child('games').child($gameCode).child('public').child('playerSlots').child('player1Uid').val() && newData.child('player2Uid').val() === root.child('games').child($gameCode).child('public').child('playerSlots').child('player2Uid').val() && newData.child('player1Name').val() === root.child('games').child($gameCode).child('public').child('playerNames').child('1').val() && newData.child('player2Name').val() === root.child('games').child($gameCode).child('public').child('playerNames').child('2').val() && newData.child('winnerRole').val() === root.child('games').child($gameCode).child('public').child('winner').val() && newData.child('loserRole').val() === root.child('games').child($gameCode).child('public').child('loser').val()"
       }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
     }
   }
 }
