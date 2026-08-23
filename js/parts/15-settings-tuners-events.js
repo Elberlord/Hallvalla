@@ -1675,9 +1675,16 @@ function unassignHallvallaMineUnit(){
   const selectedIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
   const slot=mineState.slots[selectedIndex]||createHallvallaMineSlot();
   if(!slot.cardKey){setHallvallaMineStatus("");return;}
+  const view=getHallvallaMineSlotView(slot,mineState,Date.now());
+  const earned=Math.max(0,Math.floor(Number(view.pending||0)));
+  if(earned>0){
+    profile.gems=Math.max(0,Number(profile.gems||0))+earned;
+    savePlayerProfile(profile);
+  }
   mineState.slots[selectedIndex]=createHallvallaMineSlot();
   saveHallvallaMineState(mineState);
-  setHallvallaMineStatus(`${slot.cardName||"Unidad"} retirada de la mina.`);
+  try{if(earned>0){if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}}catch(_){ }
+  setHallvallaMineStatus(earned>0?`${slot.cardName||"Unidad"} retirada de la mina. Recogiste ${earned} gema${earned===1?"":"s"}.`:`${slot.cardName||"Unidad"} retirada de la mina.`);
   renderMineScreen();
 }
 function claimHallvallaMineRewards(){

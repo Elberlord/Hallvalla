@@ -22,10 +22,10 @@
             ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2)"
           },
           "winner": {
-            ".validate": "newData.isNumber() && (newData.val() === 1 || newData.val() === 2)"
+            ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2)"
           },
           "loser": {
-            ".validate": "newData.isNumber() && (newData.val() === 1 || newData.val() === 2)"
+            ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2)"
           },
           "battleEnded": {
             ".validate": "newData.val() === true || newData.val() === false"
