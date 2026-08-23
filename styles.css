@@ -23859,3 +23859,144 @@ body.home-deck-tutorial-active{overflow:hidden}
   .mine-selected-thumb{width:52px;height:70px}
   .mine-roster-row{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* === Mina · limpieza visual solicitada ===
+   Quitar cajitas/rectángulos pequeños y dejar una lectura más limpia.
+   Se conservan únicamente los botones y la información esencial.
+*/
+.mine-chip-row{
+  gap:14px;
+}
+.mine-chip,
+.mine-inline-card,
+.mine-selected-card,
+.mine-lock-note,
+.mine-roster-empty{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+.mine-chip{
+  min-height:auto;
+  font-size:14px;
+  font-weight:800;
+  color:#f0f7ff;
+  text-shadow:0 2px 10px rgba(0,0,0,.42);
+}
+.mine-lock-note{
+  justify-content:flex-start;
+  color:#ffe6ab;
+  font-size:13px;
+  text-shadow:0 2px 10px rgba(0,0,0,.48);
+}
+.mine-bottom-row{
+  gap:18px;
+  align-items:flex-end;
+}
+.mine-inline-card{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.mine-inline-card span,
+.mine-selected-copy span{
+  color:rgba(195,219,247,.8);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.mine-inline-card strong{
+  font-size:32px;
+  line-height:1;
+  color:#fff;
+  text-shadow:0 4px 18px rgba(0,0,0,.38);
+}
+.mine-assign-shell{
+  grid-template-columns:minmax(0,1fr) 136px;
+  gap:18px;
+  align-items:end;
+}
+.mine-selected-card{
+  min-height:auto;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.mine-selected-thumb{
+  border:none;
+  background:transparent;
+  box-shadow:0 10px 24px rgba(0,0,0,.26);
+}
+.mine-selected-copy{
+  gap:4px;
+}
+.mine-selected-copy b{
+  font-size:20px;
+  text-shadow:0 3px 12px rgba(0,0,0,.42);
+}
+.mine-selected-copy small,
+.mine-status-line,
+.mine-slot-sub,
+.mine-miner-card small{
+  color:rgba(227,238,255,.88);
+  text-shadow:0 2px 10px rgba(0,0,0,.48);
+}
+.mine-status-line{
+  min-height:18px;
+}
+.mine-roster-empty{
+  text-align:left;
+}
+@media (max-width:640px){
+  .mine-inline-card strong{font-size:28px}
+}
+
+/* === Mina · limpieza extra: ocultar paneles informativos grandes ===
+   El usuario prefirió quitar casi por completo los bloques informativos
+   que ocupan demasiado espacio. Se dejan los botones y la información mínima.
+*/
+.mine-inline-card,
+.mine-selected-card,
+.mine-status-line,
+.mine-lock-note{
+  display:none !important;
+}
+.mine-chip-row{
+  gap:10px;
+  margin-bottom:4px;
+}
+.mine-chip{
+  font-size:13px;
+  line-height:1.1;
+}
+.mine-bottom-row{
+  gap:14px;
+  margin-top:0;
+  align-items:center;
+  justify-content:flex-start;
+}
+.mine-assign-shell{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:0;
+  margin-top:-4px;
+}
+.mine-ghost-btn{
+  min-height:52px;
+  min-width:136px;
+}
+@media (max-width:640px){
+  .mine-bottom-row{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+  .mine-assign-shell{
+    justify-content:stretch;
+  }
+  .mine-ghost-btn{
+    width:100%;
+  }
+}
