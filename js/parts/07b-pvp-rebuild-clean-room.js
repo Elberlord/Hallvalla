@@ -1205,9 +1205,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     return {tie:false,winnerRole:2,resultKey:choice2};
   }
   function resultCopy(resultKey){
-    if(resultKey==="rock") return {headline:"PIEDRA VENCE",sub:"La piedra quiebra la tijera.",img:"assets/ui/pvp_rps/result_rock_wins.png"};
-    if(resultKey==="paper") return {headline:"PAPEL VENCE",sub:"El pergamino envuelve la piedra.",img:"assets/ui/pvp_rps/result_paper_wins.png"};
-    return {headline:"TIJERA VENCE",sub:"La tijera corta el pergamino.",img:"assets/ui/pvp_rps/result_scissors_wins.png"};
+    if(resultKey==="rock") return {headline:"PIEDRA VENCE",sub:"La piedra quiebra la tijera.",img:"assets/ui/pvp_rps/result_rock_wins.webp"};
+    if(resultKey==="paper") return {headline:"PAPEL VENCE",sub:"El pergamino envuelve la piedra.",img:"assets/ui/pvp_rps/result_paper_wins.webp"};
+    return {headline:"TIJERA VENCE",sub:"La tijera corta el pergamino.",img:"assets/ui/pvp_rps/result_scissors_wins.webp"};
   }
   function setRpsVisualActive(active){
     const art=document.querySelector("#onlineLobby .online-modal-art");

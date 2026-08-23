@@ -22426,7 +22426,7 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   overflow:hidden !important;
   border:0 !important;
   border-radius:0 !important;
-  background:url("assets/ui/deck_forge/collection_builder_hallvalla.png") center/100% 100% no-repeat !important;
+  background:url("assets/ui/deck_forge/collection_builder_hallvalla.webp") center/100% 100% no-repeat !important;
   box-shadow:0 28px 70px rgba(0,0,0,.72) !important;
 }
 

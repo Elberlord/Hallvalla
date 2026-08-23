@@ -900,7 +900,7 @@ function hvMasteryClaimHtml(slot,key,target,rewardTitle="",disabled=false){
   const safeDomKey=rawKey.replace(/[^a-zA-Z0-9_-]/g,"");
   const safeTitle=escapeHtml(rewardTitle||"");
   const aria=safeTitle?`Reclamar recompensa ${safeTitle}`:"Reclamar recompensa";
-  return `<button id="${safeDomKey}MasteryClaimBtn" class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${safeKey}" data-mastery-target="${Number(target)||0}" type="button" aria-label="${aria}" title="${safeTitle}" ${disabled?"disabled":""}><img src="assets/ui/missions/btn_reclamar.png" alt="Reclamar" draggable="false"></button>`;
+  return `<button id="${safeDomKey}MasteryClaimBtn" class="hv-mission-image-button hv-mastery-claim-one" data-hv-layout-slot="${slot}" data-hv-layout-element="button" data-mastery-key="${safeKey}" data-mastery-target="${Number(target)||0}" type="button" aria-label="${aria}" title="${safeTitle}" ${disabled?"disabled":""}><img src="assets/ui/missions/btn_reclamar.webp" alt="Reclamar" draggable="false"></button>`;
 }
 function renderAccountMasteries(){
   const list=$("accountMasteryList"),claimAll=$("claimAllMasteryRewardsBtn");
@@ -1203,7 +1203,7 @@ function updateHvMissionsTunerValue(key,value){
   cfg[key]=Number(value)||0;saveHvMissionsLayout();applyHvMissionsLayout();syncHvMissionsTunerControls();
 }
 function exportHvMissionsLayoutJson(){
-  const payload={version:1,art:{width:HV_MISSIONS_ART_W,height:HV_MISSIONS_ART_H,file:"assets/ui/missions/missions_masteries_panel.png"},layout:hvMissionsLayout};
+  const payload={version:1,art:{width:HV_MISSIONS_ART_W,height:HV_MISSIONS_ART_H,file:"assets/ui/missions/missions_masteries_panel.webp"},layout:hvMissionsLayout};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="hallvalla_misiones_layout.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
   const status=$("missionsTunerStatus");if(status)status.textContent="JSON exportado. Envíame ese archivo y puedo fijar tus ubicaciones finales.";

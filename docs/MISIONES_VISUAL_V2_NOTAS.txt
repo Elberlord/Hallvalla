@@ -16,6 +16,6 @@ COLECCIONISTA V3
 - mastery3 ahora es funcional: Coleccionista = copias de cartas obtenidas.
 - El progreso es acumulativo y nunca disminuye al descomponer/perder cartas.
 - Las colecciones existentes se migran una sola vez al contador actual.
-- mastery3 usa barra, contador y btn_reclamar.png igual que las demás maestrías.
+- mastery3 usa barra, contador y btn_reclamar.webp igual que las demás maestrías.
 - IDs DOM: collectionMasteryProgressBar, collectionMasteryProgressFill, collectionMasteryProgressNumber, collectionMasteryClaimBtn.
 - El layout base incorpora hallvalla_misiones_layout.json entregado por el usuario.
