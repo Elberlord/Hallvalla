@@ -23435,3 +23435,135 @@ html.hv-document-hidden .hallvalla-vs-intro *{animation-play-state:paused!import
 @media (prefers-reduced-motion:reduce){
   .hallvalla-vs-grass-a,.hallvalla-vs-grass-b{animation:none;}
 }
+
+/* ============================================================
+   HOME + MAZO · tutorial guiado
+   ============================================================ */
+.home-deck-tutorial{
+  position:fixed;
+  inset:0;
+  z-index:32000;
+  pointer-events:none;
+}
+.home-deck-tutorial.hidden{display:none!important}
+.home-deck-tutorial-shield{
+  position:fixed;
+  inset:0;
+  z-index:32000;
+  pointer-events:auto;
+  background:transparent;
+}
+.home-deck-tutorial-focus{
+  position:fixed;
+  z-index:32001;
+  box-sizing:border-box;
+  border:2px solid rgba(255,214,112,.98);
+  border-radius:18px;
+  background:rgba(255,218,122,.035);
+  box-shadow:0 0 0 9999px rgba(2,4,9,.72),0 0 0 4px rgba(255,214,112,.12),0 0 30px rgba(255,204,82,.58);
+  pointer-events:none;
+  transition:left .2s ease,top .2s ease,width .2s ease,height .2s ease;
+}
+.home-deck-tutorial-focus.hidden{display:none!important}
+.home-deck-tutorial-card{
+  position:fixed;
+  z-index:32002;
+  width:min(500px,calc(100vw - 48px));
+  max-height:min(72vh,720px);
+  overflow:auto;
+  padding:18px 20px 16px;
+  border:1px solid rgba(255,213,110,.52);
+  border-radius:22px;
+  background:linear-gradient(160deg,rgba(21,17,11,.97),rgba(8,11,18,.98));
+  box-shadow:0 22px 70px rgba(0,0,0,.62),inset 0 0 30px rgba(255,215,124,.055),0 0 24px rgba(206,156,54,.13);
+  color:#f6ead0;
+  pointer-events:auto;
+  backdrop-filter:blur(14px);
+}
+.home-deck-tutorial-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.home-deck-tutorial-step{
+  color:#e9bd62;
+  font-size:11px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.home-deck-tutorial-close{
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid rgba(255,219,139,.32);
+  background:rgba(0,0,0,.28);
+  color:#fff0c9;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+}
+.home-deck-tutorial-card h2{
+  margin:0 0 9px;
+  color:#fff1c8;
+  font:700 clamp(20px,2.1vw,27px)/1.12 Georgia,"Times New Roman",serif;
+  text-shadow:0 0 18px rgba(255,198,77,.12);
+}
+.home-deck-tutorial-body{
+  color:#e7d7b8;
+  font-size:13.5px;
+  line-height:1.48;
+}
+.home-deck-tutorial-body b{color:#fff2c8}
+.home-deck-tutorial-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:16px;
+}
+.home-deck-tutorial-btn{
+  min-width:118px;
+  min-height:42px;
+  padding:10px 16px;
+  border-radius:999px;
+  font:800 13px/1 inherit;
+  cursor:pointer;
+  transition:transform .15s ease,filter .15s ease,opacity .15s ease;
+}
+.home-deck-tutorial-btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.08)}
+.home-deck-tutorial-btn:disabled{opacity:.36;cursor:default}
+.home-deck-tutorial-btn.primary{
+  color:#1b1206;
+  border:1px solid #f2c76d;
+  background:linear-gradient(180deg,#ffe2a0,#d9a84c);
+  box-shadow:0 7px 22px rgba(190,135,38,.24);
+}
+.home-deck-tutorial-btn.ghost{
+  color:#f2dfb8;
+  border:1px solid rgba(236,203,131,.28);
+  background:rgba(255,255,255,.04);
+}
+body.home-deck-tutorial-active{overflow:hidden}
+@media(max-width:720px){
+  .home-deck-tutorial-card{
+    left:10px!important;
+    right:10px!important;
+    top:auto!important;
+    bottom:10px!important;
+    width:auto;
+    max-height:46vh;
+    padding:13px 14px 12px;
+    border-radius:17px;
+  }
+  .home-deck-tutorial-card h2{font-size:18px}
+  .home-deck-tutorial-body{font-size:12px;line-height:1.4}
+  .home-deck-tutorial-actions{gap:7px;margin-top:12px}
+  .home-deck-tutorial-btn{min-width:0;flex:1 1 0;min-height:39px;padding:9px 10px;font-size:12px}
+  .home-deck-tutorial-focus{border-radius:13px}
+}
