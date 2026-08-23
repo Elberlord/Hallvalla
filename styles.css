@@ -24509,3 +24509,90 @@ body.home-deck-tutorial-active{overflow:hidden}
 @media (max-width:640px){
   .mine-event-scene img{object-position:center center;}
 }
+
+/* === Mina · V6.8J sistema funcional de eventos === */
+.mine-nav-btn{position:relative}
+.mine-events-badge{
+  position:absolute;
+  top:3px;
+  right:5px;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:#ff5c55;
+  border:1px solid rgba(255,255,255,.78);
+  color:#fff;
+  font-size:10px;
+  line-height:1;
+  font-weight:900;
+  box-shadow:0 0 0 3px rgba(255,70,65,.13),0 4px 12px rgba(0,0,0,.38);
+  animation:mineEventBadgePulse 1.4s ease-in-out infinite;
+}
+@keyframes mineEventBadgePulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(255,70,65,.13),0 4px 12px rgba(0,0,0,.38)}
+  50%{transform:scale(1.12);box-shadow:0 0 0 6px rgba(255,70,65,.06),0 4px 15px rgba(0,0,0,.42)}
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card{
+  position:relative;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive{
+  opacity:.24 !important;
+  filter:saturate(.18) brightness(.72);
+  transform:none !important;
+  cursor:default !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive b,
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive small{
+  color:rgba(220,230,243,.72) !important;
+  text-shadow:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive .mine-mini-btn{
+  opacity:.22 !important;
+  filter:grayscale(1);
+  cursor:not-allowed !important;
+  box-shadow:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event{
+  opacity:1 !important;
+  filter:none;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event::before{
+  content:"!";
+  position:absolute;
+  top:-8px;
+  left:-10px;
+  width:20px;
+  height:20px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#ff5c55;
+  border:1px solid rgba(255,255,255,.82);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  box-shadow:0 0 14px rgba(255,77,70,.46);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive.active-event::before{
+  content:"+";
+  background:#39d79c;
+  box-shadow:0 0 14px rgba(57,215,156,.42);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .mine-mini-btn:not(:disabled){
+  opacity:1 !important;
+  filter:none !important;
+  cursor:pointer !important;
+  box-shadow:0 8px 20px rgba(0,0,0,.28),0 0 18px rgba(63,140,244,.16) !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event.selected b{
+  color:#fff !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.negative.active-event [data-mine-event-effect]{
+  color:#ffd0ca !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive.active-event [data-mine-event-effect]{
+  color:#bdf7dc !important;
+}

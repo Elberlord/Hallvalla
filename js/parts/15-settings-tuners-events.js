@@ -1324,6 +1324,178 @@ function getHallvallaDeckReservedKeys(){
   }catch(_){ }
   return keys;
 }
+const HALLVALLA_MINE_EVENTS_STORAGE_KEY="hallvalla_mine_events_v1";
+const HALLVALLA_MINE_EVENT_CHECK_MS=6*60*60*1000;
+const HALLVALLA_MINE_EVENT_CHANCE=.55;
+const HALLVALLA_MINE_MAX_ACTIVE_EVENTS=3;
+const HALLVALLA_MINE_EVENT_DEFS=Object.freeze({
+  incendio:Object.freeze({key:"incendio",name:"Incendio",kind:"negative",scene:"assets/mine/events/event_incendio.webp",weight:20,action:"repair",costGold:200,button:"Reparar 200",baseEffect:"Daño por fuego"}),
+  inundacion:Object.freeze({key:"inundacion",name:"Inundación",kind:"negative",scene:"assets/mine/events/event_inundacion.webp",weight:17,action:"repair",costGold:250,button:"Reparar 250",baseEffect:"Galerías anegadas"}),
+  derrumbe:Object.freeze({key:"derrumbe",name:"Derrumbe",kind:"negative",scene:"assets/mine/events/event_derrumbe.webp",weight:15,action:"repair",costGold:300,button:"Reparar 300",baseEffect:"Galería dañada"}),
+  tesoro:Object.freeze({key:"tesoro",name:"Tesoro",kind:"positive",scene:"assets/mine/events/event_tesoro.webp",weight:20,action:"reward",button:"Reclamar",reward:{gems:2,gold:120},baseEffect:"+2💎 +120🪙"}),
+  veta_rica:Object.freeze({key:"veta_rica",name:"Veta rica",kind:"positive",scene:"assets/mine/events/event_veta_rica.webp",weight:17,action:"reward",button:"Reclamar",reward:{gems:3},baseEffect:"+3💎"}),
+  camara_secreta:Object.freeze({key:"camara_secreta",name:"Cámara secreta",kind:"positive",scene:"assets/mine/events/event_camara_secreta.webp",weight:11,action:"reward",button:"Abrir",reward:{gems:2,fragments:60},baseEffect:"+2💎 +60 fragmentos"})
+});
+function normalizeHallvallaMineEventInstance(event={}){
+  const key=String(event?.key||"");
+  if(!HALLVALLA_MINE_EVENT_DEFS[key])return null;
+  return {id:String(event?.id||`${key}_${Math.random().toString(36).slice(2,9)}`),key,createdAt:Math.max(0,Number(event?.createdAt||Date.now())),effectText:String(event?.effectText||HALLVALLA_MINE_EVENT_DEFS[key].baseEffect||"")};
+}
+function createHallvallaMineEventState(){return {nextCheckAt:Date.now()+HALLVALLA_MINE_EVENT_CHECK_MS,active:[]};}
+function getHallvallaMineEventState(){
+  try{
+    const raw=localStorage.getItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY);
+    if(!raw){const fresh=createHallvallaMineEventState();saveHallvallaMineEventState(fresh);return fresh;}
+    const saved=JSON.parse(raw)||{};
+    const active=(Array.isArray(saved.active)?saved.active:[]).map(normalizeHallvallaMineEventInstance).filter(Boolean).slice(0,HALLVALLA_MINE_MAX_ACTIVE_EVENTS);
+    return {nextCheckAt:Math.max(0,Number(saved.nextCheckAt||Date.now()+HALLVALLA_MINE_EVENT_CHECK_MS)),active};
+  }catch(_){const fresh=createHallvallaMineEventState();saveHallvallaMineEventState(fresh);return fresh;}
+}
+function saveHallvallaMineEventState(state){
+  const safe={nextCheckAt:Math.max(0,Number(state?.nextCheckAt||Date.now()+HALLVALLA_MINE_EVENT_CHECK_MS)),active:(Array.isArray(state?.active)?state.active:[]).map(normalizeHallvallaMineEventInstance).filter(Boolean).slice(0,HALLVALLA_MINE_MAX_ACTIVE_EVENTS)};
+  localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+}
+function hallvallaMineHasDamage(eventState=getHallvallaMineEventState()){
+  return (eventState?.active||[]).some(event=>HALLVALLA_MINE_EVENT_DEFS[event.key]?.kind==="negative");
+}
+function hallvallaMineLoseGems(amount=1){
+  let remaining=Math.max(0,Math.floor(Number(amount)||0)),lostPending=0,lostWallet=0;
+  if(!remaining)return {lostPending,lostWallet,total:0};
+  const mineState=getHallvallaMineState(),now=Date.now();
+  mineState.slots=mineState.slots.map(slot=>{
+    if(remaining<=0)return slot;
+    const safe=normalizeHallvallaMineSlot(slot),view=getHallvallaMineSlotView(safe,mineState,now);
+    const take=Math.min(remaining,Math.max(0,Number(view.pending||0)));
+    if(take<=0)return safe;
+    remaining-=take;lostPending+=take;
+    return {...safe,claimedCycles:Math.max(0,Number(safe.claimedCycles||0))+take};
+  });
+  if(lostPending>0)saveHallvallaMineState(mineState);
+  if(remaining>0){
+    const profile=getPlayerProfile(),available=Math.max(0,Number(profile.gems||0)),take=Math.min(remaining,available);
+    if(take>0){profile.gems=available-take;savePlayerProfile(profile);lostWallet+=take;remaining-=take;}
+  }
+  return {lostPending,lostWallet,total:lostPending+lostWallet};
+}
+function applyHallvallaMineEventSpawnEffect(def){
+  if(!def||def.kind!=="negative")return def?.baseEffect||"";
+  if(def.key==="incendio"){
+    const loss=hallvallaMineLoseGems(1).total;
+    return loss>0?`Perdiste ${loss}💎 · requiere reparación`:`Daño por fuego · requiere reparación`;
+  }
+  if(def.key==="inundacion"){
+    const loss=hallvallaMineLoseGems(1).total;
+    return loss>0?`El agua arrastró ${loss}💎 · requiere reparación`:`Galerías anegadas · requiere reparación`;
+  }
+  if(def.key==="derrumbe"){
+    const profile=getPlayerProfile(),lost=Math.min(100,Math.max(0,Number(profile.gold||0)));
+    if(lost>0){profile.gold=Math.max(0,Number(profile.gold||0)-lost);savePlayerProfile(profile);}
+    return lost>0?`Perdiste ${lost}🪙 · requiere reparación`:`Galería dañada · requiere reparación`;
+  }
+  return def.baseEffect||"Daño";
+}
+function pickHallvallaMineEventKey(activeKeys=new Set()){
+  const defs=Object.values(HALLVALLA_MINE_EVENT_DEFS).filter(def=>!activeKeys.has(def.key));
+  const total=defs.reduce((sum,def)=>sum+Math.max(0,Number(def.weight||0)),0);
+  if(!defs.length||total<=0)return "";
+  let roll=Math.random()*total;
+  for(const def of defs){roll-=Math.max(0,Number(def.weight||0));if(roll<=0)return def.key;}
+  return defs[defs.length-1]?.key||"";
+}
+function processHallvallaMineEvents(){
+  const profile=getPlayerProfile();
+  if(!hallvallaMineUnlocked(profile))return getHallvallaMineEventState();
+  const mineState=getHallvallaMineState();
+  const activeMiners=mineState.slots.filter(slot=>slot?.cardKey).length;
+  const state=getHallvallaMineEventState(),now=Date.now();
+  if(activeMiners<=0){if(state.nextCheckAt<=now)state.nextCheckAt=now+HALLVALLA_MINE_EVENT_CHECK_MS;saveHallvallaMineEventState(state);return state;}
+  let changed=false,loops=0;
+  while(state.nextCheckAt<=now&&loops<6){
+    loops++;
+    state.nextCheckAt+=HALLVALLA_MINE_EVENT_CHECK_MS;
+    if(state.active.length>=HALLVALLA_MINE_MAX_ACTIVE_EVENTS)continue;
+    if(Math.random()>HALLVALLA_MINE_EVENT_CHANCE)continue;
+    const activeKeys=new Set(state.active.map(event=>event.key));
+    const key=pickHallvallaMineEventKey(activeKeys),def=HALLVALLA_MINE_EVENT_DEFS[key];
+    if(!def)continue;
+    const effectText=applyHallvallaMineEventSpawnEffect(def);
+    state.active.push({id:`${key}_${now}_${Math.random().toString(36).slice(2,7)}`,key,createdAt:now,effectText});
+    changed=true;
+  }
+  if(changed||loops)saveHallvallaMineEventState(state);
+  return state;
+}
+function getHallvallaMineEventRewardText(reward={}){
+  const parts=[];
+  if(Number(reward.gems||0)>0)parts.push(`+${Number(reward.gems)}💎`);
+  if(Number(reward.gold||0)>0)parts.push(`+${Number(reward.gold)}🪙`);
+  if(Number(reward.fragments||0)>0)parts.push(`+${Number(reward.fragments)} fragmentos`);
+  return parts.join(" ")||"Recompensa";
+}
+function renderHallvallaMineEvents(eventState=processHallvallaMineEvents()){
+  const active=Array.isArray(eventState?.active)?eventState.active:[];
+  const activeMap=new Map(active.map(event=>[event.key,event]));
+  const positiveCount=active.filter(event=>HALLVALLA_MINE_EVENT_DEFS[event.key]?.kind==="positive").length;
+  const damageCount=active.length-positiveCount;
+  const activeChip=$("mineEventsActiveChip"),positiveChip=$("mineEventsPositiveChip"),damageChip=$("mineEventsDamageChip"),badge=$("mineEventsBadge");
+  if(activeChip)activeChip.textContent=`Activos ${active.length}`;
+  if(positiveChip)positiveChip.textContent=`${positiveCount} positivo${positiveCount===1?"":"s"}`;
+  if(damageChip)damageChip.textContent=`${damageCount} daño${damageCount===1?"":"s"}`;
+  if(badge){badge.textContent=String(active.length);badge.classList.toggle("hidden",active.length<=0);}
+  const cards=[...document.querySelectorAll('.mine-event-card[data-mine-event-key]')];
+  let selected=cards.find(card=>card.classList.contains("selected")&&activeMap.has(String(card.dataset.mineEventKey||"")));
+  if(!selected)selected=cards.find(card=>activeMap.has(String(card.dataset.mineEventKey||"")))||null;
+  cards.forEach(card=>{
+    const key=String(card.dataset.mineEventKey||""),def=HALLVALLA_MINE_EVENT_DEFS[key],instance=activeMap.get(key),isActive=!!instance;
+    card.dataset.mineEventActive=isActive?"1":"0";
+    card.classList.toggle("active-event",isActive);
+    card.classList.toggle("inactive",!isActive);
+    card.classList.toggle("selected",card===selected&&isActive);
+    const effect=card.querySelector("[data-mine-event-effect]"),button=card.querySelector("[data-mine-event-action]");
+    if(effect)effect.textContent=isActive?String(instance.effectText||def?.baseEffect||""):String(def?.baseEffect||"Inactivo");
+    if(button){button.disabled=!isActive;button.textContent=def?.button||"Acción";}
+  });
+  setHallvallaMineEventScene(selected);
+}
+function setHallvallaMineEventScene(card){
+  const img=$("mineEventSceneImage");
+  if(!img)return;
+  const src=card&&card.dataset.mineEventActive==="1"?String(card.dataset.mineEventScene||"").trim():"assets/mine/bg_events.webp";
+  if(!src||img.getAttribute("src")===src)return;
+  img.classList.add("switching");
+  const next=new Image();
+  next.onload=()=>{img.src=src;requestAnimationFrame(()=>img.classList.remove("switching"));};
+  next.src=src;
+}
+function flashHallvallaMineEventButton(button,text){
+  if(!button)return;
+  const original=button.textContent;
+  button.textContent=text;
+  window.setTimeout(()=>{button.textContent=original;},1400);
+}
+function handleHallvallaMineEventAction(key,button=null){
+  const state=getHallvallaMineEventState(),index=state.active.findIndex(event=>event.key===key);
+  if(index<0)return;
+  const instance=state.active[index],def=HALLVALLA_MINE_EVENT_DEFS[key];
+  if(!def)return;
+  const profile=getPlayerProfile();
+  if(def.kind==="negative"){
+    const cost=Math.max(0,Number(def.costGold||0));
+    if(Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))}🪙`);return;}
+    profile.gold=Math.max(0,Number(profile.gold||0)-cost);
+  }else{
+    const reward=def.reward||{};
+    profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.gems||0));
+    profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.gold||0));
+    profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.fragments||0));
+  }
+  savePlayerProfile(profile);
+  state.active.splice(index,1);
+  saveHallvallaMineEventState(state);
+  try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
+  renderMineScreen();
+  renderHallvallaMineEvents(state);
+}
 function getHallvallaMineSlotView(slot,mineState,now=Date.now()){
   const active=!!slot?.cardKey;
   const rateMs=hallvallaMineRateMs(mineState?.level||1);
@@ -1350,6 +1522,7 @@ function setHallvallaMineStatus(message=""){
   if(status)status.textContent=String(message||"");
 }
 function renderMineScreen(){
+  const eventState=processHallvallaMineEvents();
   let profile={};
   try{ profile=typeof getPlayerProfile==="function"?getPlayerProfile():{}; }catch(_){ profile={}; }
   const gold=Math.max(0,Number(profile?.gold||0));
@@ -1360,6 +1533,7 @@ function renderMineScreen(){
   if(gemsEl)gemsEl.textContent=gems.toLocaleString("es-ES");
   if(levelEl)levelEl.textContent=`Nv. ${level}`;
   renderHallvallaMineProduction(profile);
+  renderHallvallaMineEvents(eventState);
 }
 function renderHallvallaMineProduction(profile=getPlayerProfile()){
   const mineState=getHallvallaMineState();
@@ -1391,7 +1565,12 @@ function renderHallvallaMineProduction(profile=getPlayerProfile()){
   if(chips.ready)chips.ready.textContent=`${aggregate.pendingTotal}💎`;
   if(chips.next)chips.next.textContent=aggregate.activeCount?formatHallvallaMineDuration(aggregate.nextReadyMs):"--:--:--";
   const claimBtn=$("mineClaimBtn");
-  if(claimBtn)claimBtn.disabled=!unlocked||aggregate.pendingTotal<=0;
+  const mineDamaged=hallvallaMineHasDamage();
+  if(claimBtn){
+    claimBtn.disabled=!unlocked||aggregate.pendingTotal<=0||mineDamaged;
+    claimBtn.textContent=mineDamaged?"Repara la Mina":"Recoger";
+    claimBtn.title=mineDamaged?"Hay un evento de daño activo en la Mina.":"";
+  }
   renderHallvallaMineSlots(mineState,aggregate,unlocked);
   renderHallvallaMineSelectedCard(mineState,aggregate,unlocked);
   renderHallvallaMineRoster(mineState,unlocked);
@@ -1507,10 +1686,17 @@ function setMineSection(section="production"){
   const title=$("mineHeaderTitle");
   if(title)title.textContent=HALLVALLA_MINE_SECTION_TITLES[key]||"Mina";
   if(key==="production")renderMineScreen();
+  if(key==="events")renderHallvallaMineEvents(processHallvallaMineEvents());
 }
 function startHallvallaMineTick(){
   if(hallvallaMineUi.tick)return;
-  hallvallaMineUi.tick=window.setInterval(()=>{if(!$("mineScreen")?.classList.contains("hidden")&&document.querySelector('.mine-panel[data-mine-panel="production"]')?.classList.contains("active"))renderMineScreen();},1000);
+  hallvallaMineUi.tick=window.setInterval(()=>{
+    if($("mineScreen")?.classList.contains("hidden"))return;
+    const productionOpen=document.querySelector('.mine-panel[data-mine-panel="production"]')?.classList.contains("active");
+    const eventsOpen=document.querySelector('.mine-panel[data-mine-panel="events"]')?.classList.contains("active");
+    if(productionOpen)renderMineScreen();
+    else if(eventsOpen)renderHallvallaMineEvents(processHallvallaMineEvents());
+  },1000);
 }
 function stopHallvallaMineTick(){
   if(!hallvallaMineUi.tick)return;
@@ -1529,33 +1715,27 @@ function closeMineScreen(){
   setHallvallaMineStatus("");
 }
 function initHallvallaMineEventScenes(){
-  const img=$("mineEventSceneImage");
-  if(!img)return;
-  const cards=[...document.querySelectorAll('.mine-event-card[data-mine-event-scene]')];
-  const setScene=card=>{
-    if(!card)return;
-    const src=String(card.dataset.mineEventScene||"").trim();
-    if(!src)return;
-    cards.forEach(entry=>entry.classList.toggle("selected",entry===card));
-    if(img.getAttribute("src")===src)return;
-    img.classList.add("switching");
-    const next=new Image();
-    next.onload=()=>{
-      img.src=src;
-      requestAnimationFrame(()=>img.classList.remove("switching"));
-    };
-    next.src=src;
-  };
+  const cards=[...document.querySelectorAll('.mine-event-card[data-mine-event-key]')];
   cards.forEach(card=>{
     if(card.dataset.mineSceneReady==="1")return;
     card.dataset.mineSceneReady="1";
-    card.addEventListener("click",event=>{
-      if(event.target.closest("button"))return;
-      setScene(card);
+    const select=()=>{
+      if(card.dataset.mineEventActive!=="1")return;
+      cards.forEach(entry=>entry.classList.toggle("selected",entry===card&&entry.dataset.mineEventActive==="1"));
+      setHallvallaMineEventScene(card);
+    };
+    card.addEventListener("click",event=>{if(event.target.closest("button"))return;select();});
+    card.addEventListener("pointerenter",select);
+    const button=card.querySelector("[data-mine-event-action]");
+    button?.addEventListener("click",event=>{
+      event.stopPropagation();
+      if(card.dataset.mineEventActive!=="1")return;
+      handleHallvallaMineEventAction(String(card.dataset.mineEventKey||""),button);
     });
-    card.addEventListener("pointerenter",()=>setScene(card));
+    const src=String(card.dataset.mineEventScene||"").trim();
+    if(src){const preload=new Image();preload.src=src;}
   });
-  cards.forEach(card=>{const src=String(card.dataset.mineEventScene||"").trim();if(src){const preload=new Image();preload.src=src;}});
+  renderHallvallaMineEvents(processHallvallaMineEvents());
 }
 try{document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.addEventListener("click",()=>setMineSection(btn.dataset.mineTab||"production")));}catch(_){ }
 initHallvallaMineEventScenes();
