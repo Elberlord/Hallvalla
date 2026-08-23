@@ -24602,3 +24602,23 @@ body.home-deck-tutorial-active{overflow:hidden}
 .mine-resource-amount{display:inline-flex;align-items:center;gap:5px;}
 .mine-resource-icon{width:18px;height:18px;object-fit:contain;vertical-align:-3px;display:inline-block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));}
 .mine-event-card small .mine-resource-icon{width:14px;height:14px;margin-left:2px;vertical-align:-2px;}
+
+/* === Mina · V6.8M · reloj individual visible por minero === */
+.mine-miner-card.active .mine-miner-title small{
+  display:block !important;
+  margin-top:3px;
+  font-size:11px !important;
+  line-height:1 !important;
+  font-weight:800;
+  letter-spacing:.03em;
+  color:#8fddff !important;
+  text-shadow:0 2px 10px rgba(0,0,0,.72);
+  white-space:nowrap;
+}
+.mine-miner-card.empty .mine-miner-title small{
+  display:none !important;
+}
+.mine-miner-card.active .mine-miner-title small::before{
+  content:"⏱ ";
+  color:#d8f4ff;
+}
