@@ -1432,6 +1432,10 @@ function getHallvallaMineEventRewardText(reward={}){
   if(Number(reward.fragments||0)>0)parts.push(`+${Number(reward.fragments)} fragmentos`);
   return parts.join(" ")||"Recompensa";
 }
+function formatHallvallaMineEventEffectHtml(text=""){
+  const safe=escapeHtml(String(text||""));
+  return safe.replaceAll("🪙",'<img class="mine-resource-icon" src="assets/home/icon_gold.webp" alt="Oro">');
+}
 function renderHallvallaMineEvents(eventState=processHallvallaMineEvents()){
   const active=Array.isArray(eventState?.active)?eventState.active:[];
   const activeMap=new Map(active.map(event=>[event.key,event]));
@@ -1481,7 +1485,7 @@ function handleHallvallaMineEventAction(key,button=null){
   const profile=getPlayerProfile();
   if(def.kind==="negative"){
     const cost=Math.max(0,Number(def.costGold||0));
-    if(Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))}🪙`);return;}
+    if(Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))} Oro`);return;}
     profile.gold=Math.max(0,Number(profile.gold||0)-cost);
   }else{
     const reward=def.reward||{};
