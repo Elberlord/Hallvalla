@@ -1245,12 +1245,250 @@ function initHvMissionsLayoutTuner(){
 }
 initHvMissionsLayoutTuner();
 
+
+const HALLVALLA_MINE_SECTION_TITLES=Object.freeze({
+  production:"Producción",
+  events:"Eventos",
+  missions:"Misiones",
+  shop:"Tienda",
+  rewards:"Recompensas"
+});
+const HALLVALLA_MINE_STORAGE_KEY="hallvalla_mine_state_v1";
+const HALLVALLA_MINE_SLOT_COUNT=5;
+const HALLVALLA_MINE_LEVEL_UNLOCK=2;
+const HALLVALLA_MINE_RATE_HOURS=Object.freeze({1:24,2:20,3:16,4:12,5:8});
+let hallvallaMineUi={selectedSlot:0,tick:0};
+function createHallvallaMineSlot(){return {cardKey:"",cardName:"",image:"",startedAt:0,claimedCycles:0};}
+function normalizeHallvallaMineSlot(slot={}){
+  return {
+    cardKey:String(slot?.cardKey||""),
+    cardName:String(slot?.cardName||""),
+    image:String(slot?.image||""),
+    startedAt:Math.max(0,Number(slot?.startedAt||0)),
+    claimedCycles:Math.max(0,Math.floor(Number(slot?.claimedCycles||0)))
+  };
+}
+function getHallvallaMineState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(HALLVALLA_MINE_STORAGE_KEY)||"null")||{};
+    const slots=Array.from({length:HALLVALLA_MINE_SLOT_COUNT},(_,i)=>normalizeHallvallaMineSlot(saved?.slots?.[i]||{}));
+    return {level:Math.max(1,Math.min(5,Math.floor(Number(saved?.level||1)))),slots};
+  }catch(_){
+    return {level:1,slots:Array.from({length:HALLVALLA_MINE_SLOT_COUNT},()=>createHallvallaMineSlot())};
+  }
+}
+function saveHallvallaMineState(state){
+  const safe={level:Math.max(1,Math.min(5,Math.floor(Number(state?.level||1)))),slots:Array.from({length:HALLVALLA_MINE_SLOT_COUNT},(_,i)=>normalizeHallvallaMineSlot(state?.slots?.[i]||{}))};
+  localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+}
+function hallvallaMineRateHours(level=1){return HALLVALLA_MINE_RATE_HOURS[Math.max(1,Math.min(5,Math.floor(Number(level)||1)))]||24;}
+function hallvallaMineRateMs(level=1){return hallvallaMineRateHours(level)*60*60*1000;}
+function hallvallaMineUnlocked(profile=getPlayerProfile()){return Math.max(1,Number(profile?.level||1))>=HALLVALLA_MINE_LEVEL_UNLOCK;}
+function formatHallvallaMineDuration(ms=0){
+  const total=Math.max(0,Math.ceil(Number(ms||0)/1000));
+  const h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+  const pad=v=>String(v).padStart(2,"0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+function getHallvallaMineCollectionPool(){
+  let cards=[];
+  try{cards=typeof getCollectionCardsExpanded==="function"?getCollectionCardsExpanded():[];}catch(_){cards=[];}
+  if(!Array.isArray(cards)||!cards.length){
+    try{cards=(getPlayerCollection()?.cards||[]).map(card=>typeof hydrateCardVisualData==="function"?hydrateCardVisualData(card):card);}catch(_){cards=[];}
+  }
+  return cards.filter(card=>card&&card.type==="unit"&&Number(card.qty||0)>0&&!card.leader).sort((a,b)=>{
+    const qa=Number(a?.qty||0),qb=Number(b?.qty||0);
+    if(qb!==qa)return qb-qa;
+    return String(a?.name||"").localeCompare(String(b?.name||""),"es");
+  });
+}
+function getHallvallaMineSlotView(slot,mineState,now=Date.now()){
+  const active=!!slot?.cardKey;
+  const rateMs=hallvallaMineRateMs(mineState?.level||1);
+  if(!active||!slot?.startedAt)return {active:false,pending:0,produced:0,nextMs:rateMs,progress:0,name:"Vacía",image:""};
+  const elapsed=Math.max(0,now-Number(slot.startedAt||0));
+  const produced=Math.max(0,Math.floor(elapsed/rateMs));
+  const claimed=Math.max(0,Math.floor(Number(slot.claimedCycles||0)));
+  const pending=Math.max(0,produced-claimed);
+  const remainder=elapsed%rateMs;
+  const nextMs=rateMs-(remainder===0&&elapsed>0?0:remainder||0);
+  const safeNext=nextMs<=0?rateMs:nextMs;
+  const progress=Math.max(0,Math.min(1,remainder/rateMs));
+  return {active:true,pending,produced,claimed,nextMs:safeNext,progress,name:String(slot.cardName||"Unidad"),image:String(slot.image||"")};
+}
+function getHallvallaMineAggregate(mineState,now=Date.now()){
+  const slots=(mineState?.slots||[]).map(slot=>getHallvallaMineSlotView(slot,mineState,now));
+  const activeCount=slots.filter(slot=>slot.active).length;
+  const pendingTotal=slots.reduce((sum,slot)=>sum+Math.max(0,Number(slot.pending||0)),0);
+  const nextReadyMs=slots.filter(slot=>slot.active).reduce((best,slot)=>Math.min(best,Math.max(0,Number(slot.nextMs||0))),Infinity);
+  return {slots,activeCount,pendingTotal,nextReadyMs:Number.isFinite(nextReadyMs)?nextReadyMs:0};
+}
+function setHallvallaMineStatus(message=""){
+  const status=$("mineStatusLine");
+  if(status)status.textContent=String(message||"");
+}
+function renderMineScreen(){
+  let profile={};
+  try{ profile=typeof getPlayerProfile==="function"?getPlayerProfile():{}; }catch(_){ profile={}; }
+  const gold=Math.max(0,Number(profile?.gold||0));
+  const gems=Math.max(0,Number(profile?.gems||0));
+  const level=Math.max(1,Number(profile?.level||1));
+  const goldEl=$("mineGoldValue"),gemsEl=$("mineGemsValue"),levelEl=$("mineLevelValue");
+  if(goldEl)goldEl.textContent=gold.toLocaleString("es-ES");
+  if(gemsEl)gemsEl.textContent=gems.toLocaleString("es-ES");
+  if(levelEl)levelEl.textContent=`Nv. ${level}`;
+  renderHallvallaMineProduction(profile);
+}
+function renderHallvallaMineProduction(profile=getPlayerProfile()){
+  const mineState=getHallvallaMineState();
+  const unlocked=hallvallaMineUnlocked(profile);
+  const lockedNote=$("mineLockedNote");
+  if(lockedNote)lockedNote.classList.toggle("hidden",unlocked);
+  const chips={
+    level:$("mineChipLevel"),active:$("mineChipActive"),rate:$("mineChipRate"),pending:$("mineChipPending"),
+    ready:$("mineReadyValue"),next:$("mineNextValue")
+  };
+  const aggregate=getHallvallaMineAggregate(mineState,Date.now());
+  if(chips.level)chips.level.textContent=`Nivel ${mineState.level}`;
+  if(chips.active)chips.active.textContent=`${aggregate.activeCount}/${HALLVALLA_MINE_SLOT_COUNT} activas`;
+  if(chips.rate)chips.rate.textContent=`1💎 / ${hallvallaMineRateHours(mineState.level)}h`;
+  if(chips.pending)chips.pending.textContent=`Pendiente ${aggregate.pendingTotal}💎`;
+  if(chips.ready)chips.ready.textContent=`${aggregate.pendingTotal}💎`;
+  if(chips.next)chips.next.textContent=aggregate.activeCount?formatHallvallaMineDuration(aggregate.nextReadyMs):"--:--:--";
+  const claimBtn=$("mineClaimBtn");
+  if(claimBtn)claimBtn.disabled=!unlocked||aggregate.pendingTotal<=0;
+  renderHallvallaMineSlots(mineState,aggregate,unlocked);
+  renderHallvallaMineSelectedCard(mineState,aggregate,unlocked);
+  renderHallvallaMineRoster(mineState,unlocked);
+}
+function renderHallvallaMineSlots(mineState,aggregate,unlocked){
+  const grid=$("mineMinerGrid");
+  if(!grid)return;
+  const selected=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Math.floor(Number(hallvallaMineUi.selectedSlot||0))));
+  hallvallaMineUi.selectedSlot=selected;
+  grid.innerHTML=aggregate.slots.map((view,index)=>{
+    const slot=mineState.slots[index]||createHallvallaMineSlot();
+    const cls=["mine-miner-card",view.active?"active":"empty",selected===index?"selected":""].filter(Boolean).join(" ");
+    const img=view.image?` style="--mine-slot-image:url('${String(view.image).replace(/'/g,"%27")}')"`:'';
+    const body=view.active
+      ?`<div class="mine-miner-pending">${view.pending}💎</div><div class="mine-miner-title"><b>${escapeHtml(view.name)}</b><small>${formatHallvallaMineDuration(view.nextMs)}</small></div><div class="mine-slot-sub">${Math.max(0,view.produced)} total</div>`
+      :`<div class="mine-miner-title"><b>Vacía</b><small>Toca para asignar</small></div><div class="mine-slot-sub">—</div>`;
+    return `<article class="${cls}" data-mine-slot="${index}"${img}><span class="mine-miner-no">${String(index+1).padStart(2,"0")}</span>${body}</article>`;
+  }).join("");
+  grid.querySelectorAll("[data-mine-slot]").forEach(btn=>btn.addEventListener("click",()=>{hallvallaMineUi.selectedSlot=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(btn.dataset.mineSlot||0)));renderHallvallaMineProduction();}));
+  grid.classList.toggle("mine-grid-locked",!unlocked);
+}
+function renderHallvallaMineSelectedCard(mineState,aggregate,unlocked){
+  const box=$("mineSelectedCard"),btn=$("mineUnassignBtn");
+  if(!box||!btn)return;
+  const index=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
+  const slot=mineState.slots[index]||createHallvallaMineSlot();
+  const view=aggregate.slots[index]||getHallvallaMineSlotView(slot,mineState,Date.now());
+  if(view.active){
+    const thumb=view.image?`<div class="mine-selected-thumb"><img src="${escapeHtml(view.image)}" alt=""></div>`:"";
+    box.innerHTML=`${thumb}<div class="mine-selected-copy"><span>Ranura ${index+1}</span><b>${escapeHtml(view.name)}</b><small>${view.pending}💎 listas · próxima ${formatHallvallaMineDuration(view.nextMs)}</small></div>`;
+  }else{
+    box.innerHTML=`<div class="mine-selected-copy"><span>Ranura ${index+1}</span><b>Vacía</b><small>Selecciona una unidad debajo para enviarla a minar.</small></div>`;
+  }
+  btn.disabled=!unlocked||!view.active;
+}
+function renderHallvallaMineRoster(mineState,unlocked){
+  const row=$("mineRosterRow");
+  if(!row)return;
+  const selectedIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
+  const currentKey=String(mineState.slots[selectedIndex]?.cardKey||"");
+  const assignedKeys=new Set((mineState.slots||[]).map(slot=>String(slot?.cardKey||"")).filter(Boolean));
+  const available=getHallvallaMineCollectionPool().filter(card=>!assignedKeys.has(String(card.key||""))||String(card.key||"")===currentKey).slice(0,24);
+  if(!unlocked){row.innerHTML=`<div class="mine-roster-empty">Alcanza el Nivel 2 para abrir la Mina.</div>`;return;}
+  if(!available.length){row.innerHTML=`<div class="mine-roster-empty">No tienes unidades disponibles para asignar.</div>`;return;}
+  row.innerHTML=available.map(card=>`<button class="mine-roster-card ${String(card.key||"")===currentKey?"selected":""}" type="button" data-mine-assign="${escapeHtml(String(card.key||""))}"><img src="${escapeHtml(String(card.image||""))}" alt=""><div class="mine-roster-meta"><b>${escapeHtml(String(card.name||"Unidad"))}</b><small>x${Math.max(1,Number(card.qty||1))}</small></div></button>`).join("");
+  row.querySelectorAll("[data-mine-assign]").forEach(btn=>btn.addEventListener("click",()=>assignHallvallaMineUnit(String(btn.dataset.mineAssign||""))));
+}
+function assignHallvallaMineUnit(cardKey=""){
+  const profile=getPlayerProfile();
+  if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
+  const mineState=getHallvallaMineState();
+  const selectedIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
+  const card=getHallvallaMineCollectionPool().find(entry=>String(entry?.key||"")===String(cardKey||""));
+  if(!card){setHallvallaMineStatus("Esa unidad ya no está disponible.");renderHallvallaMineProduction(profile);return;}
+  const duplicated=(mineState.slots||[]).some((slot,index)=>index!==selectedIndex&&String(slot?.cardKey||"")===String(card.key||""));
+  if(duplicated){setHallvallaMineStatus("Esa unidad ya está minando.");return;}
+  mineState.slots[selectedIndex]={cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:String(card.image||""),startedAt:Date.now(),claimedCycles:0};
+  saveHallvallaMineState(mineState);
+  setHallvallaMineStatus(`${card.name||"Unidad"} enviada a minar.`);
+  renderMineScreen();
+}
+function unassignHallvallaMineUnit(){
+  const profile=getPlayerProfile();
+  if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
+  const mineState=getHallvallaMineState();
+  const selectedIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(hallvallaMineUi.selectedSlot||0)));
+  const slot=mineState.slots[selectedIndex]||createHallvallaMineSlot();
+  if(!slot.cardKey){setHallvallaMineStatus("");return;}
+  mineState.slots[selectedIndex]=createHallvallaMineSlot();
+  saveHallvallaMineState(mineState);
+  setHallvallaMineStatus(`${slot.cardName||"Unidad"} retirada de la mina.`);
+  renderMineScreen();
+}
+function claimHallvallaMineRewards(){
+  const profile=getPlayerProfile();
+  if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
+  const mineState=getHallvallaMineState();
+  let total=0;
+  const now=Date.now();
+  mineState.slots=(mineState.slots||[]).map(slot=>{
+    const safe=normalizeHallvallaMineSlot(slot);
+    const view=getHallvallaMineSlotView(safe,mineState,now);
+    if(!view.active||view.pending<=0)return safe;
+    total+=view.pending;
+    return {...safe,claimedCycles:view.produced};
+  });
+  if(total<=0){setHallvallaMineStatus("Aún no hay gemas listas.");renderMineScreen();return;}
+  profile.gems=Math.max(0,Number(profile.gems||0))+total;
+  savePlayerProfile(profile);
+  saveHallvallaMineState(mineState);
+  try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
+  setHallvallaMineStatus(`Recogiste ${total} gema${total===1?"":"s"}.`);
+  renderMineScreen();
+}
+function setMineSection(section="production"){
+  const key=HALLVALLA_MINE_SECTION_TITLES[section]?section:"production";
+  document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.mineTab===key));
+  document.querySelectorAll(".mine-panel").forEach(panel=>panel.classList.toggle("active",panel.dataset.minePanel===key));
+  const title=$("mineHeaderTitle");
+  if(title)title.textContent=HALLVALLA_MINE_SECTION_TITLES[key]||"Mina";
+  if(key==="production")renderMineScreen();
+}
+function startHallvallaMineTick(){
+  if(hallvallaMineUi.tick)return;
+  hallvallaMineUi.tick=window.setInterval(()=>{if(!$("mineScreen")?.classList.contains("hidden")&&document.querySelector('.mine-panel[data-mine-panel="production"]')?.classList.contains("active"))renderMineScreen();},1000);
+}
+function stopHallvallaMineTick(){
+  if(!hallvallaMineUi.tick)return;
+  clearInterval(hallvallaMineUi.tick);
+  hallvallaMineUi.tick=0;
+}
+function openMineScreen(section="production"){
+  renderMineScreen();
+  setMineSection(section);
+  $("mineScreen")?.classList.remove("hidden");
+  startHallvallaMineTick();
+}
+function closeMineScreen(){
+  $("mineScreen")?.classList.add("hidden");
+  stopHallvallaMineTick();
+  setHallvallaMineStatus("");
+}
+try{document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.addEventListener("click",()=>setMineSection(btn.dataset.mineTab||"production")));}catch(_){ }
+on("mineBackBtn","click",closeMineScreen);
+on("mineClaimBtn","click",claimHallvallaMineRewards);
+on("mineUnassignBtn","click",unassignHallvallaMineUnit);
 on("missionsBtn","click",openMissionsPanel);
 on("closeMissionsBtn","click",closeMissionsPanel);
 on("closeMissionsX","click",closeMissionsPanel);
 on("claimAllMasteryRewardsBtn","click",()=>{const result=claimAllPendingAccountMasteryRewards();if(result?.claimed){renderAccountMasteries();renderMasteryHomeBadge();if(typeof renderNotificationBadge==="function")renderNotificationBadge();}});
 renderMasteryHomeBadge();
-on("mineBtn","click",()=>showComingSoon("Mina"));
+on("mineBtn","click",()=>openMineScreen("production"));
 on("collectionBtn","click",openCollectionOrLocked);
 on("forgeBtn","click",()=>showComingSoon("Forja"));
 on("storeBtn","click",openPackShop);

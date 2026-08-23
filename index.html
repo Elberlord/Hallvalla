@@ -168,6 +168,164 @@
 </div>
 
 
+<div id="mineScreen" class="mine-screen hidden">
+  <header class="mine-topbar">
+    <button id="mineBackBtn" class="mine-back-btn" type="button" aria-label="Volver al Home">←</button>
+    <div class="mine-title-block">
+      <span class="mine-kicker">Mina</span>
+      <strong id="mineHeaderTitle">Producción</strong>
+    </div>
+    <div class="mine-resource-strip">
+      <div class="mine-resource-pill"><img src="assets/home/icon_gold.webp" alt=""><b id="mineGoldValue">0</b></div>
+      <div class="mine-resource-pill"><img src="assets/home/icon_gems.webp" alt=""><b id="mineGemsValue">0</b></div>
+      <div class="mine-resource-pill"><span class="mine-pill-dot"></span><b id="mineLevelValue">Nv. 1</b></div>
+    </div>
+  </header>
+
+  <div class="mine-layout">
+    <nav class="mine-nav" aria-label="Secciones de la Mina">
+      <button class="mine-nav-btn active" type="button" data-mine-tab="production">
+        <img src="assets/mine/icon_production.webp" alt="">
+        <span>Producción</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="events">
+        <img src="assets/mine/icon_events.webp" alt="">
+        <span>Eventos</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="missions">
+        <img src="assets/mine/icon_missions.webp" alt="">
+        <span>Misiones</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="shop">
+        <img src="assets/mine/icon_shop.webp" alt="">
+        <span>Tienda</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="rewards">
+        <img src="assets/mine/icon_rewards.webp" alt="">
+        <span>Recompensas</span>
+      </button>
+    </nav>
+
+    <main class="mine-content">
+      <section class="mine-panel active" data-mine-panel="production" style="background-image:url('assets/mine/bg_production.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content">
+          <div class="mine-chip-row">
+            <span id="mineChipLevel" class="mine-chip">Nivel 1</span>
+            <span id="mineChipActive" class="mine-chip">0/5 activas</span>
+            <span id="mineChipRate" class="mine-chip">1💎 / 24h</span>
+            <span id="mineChipPending" class="mine-chip">Pendiente 0💎</span>
+          </div>
+          <div id="mineLockedNote" class="mine-lock-note hidden">Se desbloquea en Nivel 2</div>
+          <div id="mineMinerGrid" class="mine-miner-grid"></div>
+          <div class="mine-bottom-row">
+            <div class="mine-inline-card">
+              <span>Listo</span><strong id="mineReadyValue">0💎</strong>
+            </div>
+            <div class="mine-inline-card">
+              <span>Próxima</span><strong id="mineNextValue">--:--:--</strong>
+            </div>
+            <button id="mineClaimBtn" class="mine-cta-btn" type="button">Recoger</button>
+          </div>
+          <div class="mine-assign-shell">
+            <div id="mineSelectedCard" class="mine-selected-card"></div>
+            <button id="mineUnassignBtn" class="mine-ghost-btn" type="button">Retirar</button>
+          </div>
+          <div id="mineRosterRow" class="mine-roster-row"></div>
+          <div id="mineStatusLine" class="mine-status-line" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="events" style="background-image:url('assets/mine/bg_events.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content">
+          <div class="mine-chip-row">
+            <span class="mine-chip">Activos 3</span>
+            <span class="mine-chip">1 positivo</span>
+            <span class="mine-chip">2 daños</span>
+          </div>
+          <div class="mine-event-grid">
+            <article class="mine-event-card negative">
+              <b>Incendio</b><small>-50%</small><button class="mine-mini-btn" type="button">Reparar 200</button>
+            </article>
+            <article class="mine-event-card negative">
+              <b>Inundación</b><small>2 bloqueos</small><button class="mine-mini-btn" type="button">Reparar 250</button>
+            </article>
+            <article class="mine-event-card positive">
+              <b>Tesoro</b><small>+2💎 +120🪙</small><button class="mine-mini-btn" type="button">Reclamar</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="missions" style="background-image:url('assets/mine/bg_missions.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content">
+          <div class="mine-chip-row">
+            <span class="mine-chip">Diarias 3</span>
+            <span class="mine-chip">1 completada</span>
+          </div>
+          <div class="mine-mission-grid">
+            <article class="mine-mission-card">
+              <b>5 activas</b><small>3/5</small><div class="mine-progress"><span style="width:60%"></span></div>
+            </article>
+            <article class="mine-mission-card">
+              <b>Recoge 10💎</b><small>6/10</small><div class="mine-progress"><span style="width:60%"></span></div>
+            </article>
+            <article class="mine-mission-card done">
+              <b>Primer evento</b><small>Lista</small><button class="mine-mini-btn" type="button">Cobrar</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="shop" style="background-image:url('assets/mine/bg_shop.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content">
+          <div class="mine-chip-row">
+            <span class="mine-chip">Exclusivas</span>
+            <span class="mine-chip">Solo 💎</span>
+          </div>
+          <div class="mine-shop-grid">
+            <article class="mine-shop-card">
+              <b>Excavador Arcano</b><small>Utilidad</small><strong>65💎</strong><button class="mine-mini-btn" type="button">Comprar</button>
+            </article>
+            <article class="mine-shop-card">
+              <b>Guardiana del Cristal</b><small>Soporte</small><strong>180💎</strong><button class="mine-mini-btn" type="button">Comprar</button>
+            </article>
+            <article class="mine-shop-card premium">
+              <b>Rey del Filón</b><small>Legendaria</small><strong>320💎</strong><button class="mine-mini-btn" type="button">Comprar</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="rewards" style="background-image:url('assets/mine/bg_rewards.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content">
+          <div class="mine-chip-row">
+            <span class="mine-chip">Pendientes 3</span>
+            <span class="mine-chip">Hoy 6💎</span>
+          </div>
+          <div class="mine-reward-grid">
+            <article class="mine-reward-card">
+              <b>Minería</b><strong>3💎</strong><button class="mine-mini-btn" type="button">Cobrar</button>
+            </article>
+            <article class="mine-reward-card">
+              <b>Tesoro</b><strong>120🪙</strong><button class="mine-mini-btn" type="button">Cobrar</button>
+            </article>
+            <article class="mine-reward-card">
+              <b>Misión</b><strong>1💎</strong><button class="mine-mini-btn" type="button">Cobrar</button>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+
+
 
 <div id="leaderSelectOverlay" class="leader-select-overlay hidden">
   <div class="leader-select-card leader-select-card-v54">
