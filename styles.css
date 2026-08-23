@@ -24449,3 +24449,63 @@ body.home-deck-tutorial-active{overflow:hidden}
     flex-basis:140px !important;
   }
 }
+
+/* === Mina · V6.8I escenas visuales de eventos === */
+.mine-panel[data-mine-panel="events"]{
+  background-image:none !important;
+}
+.mine-event-scene{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+}
+.mine-event-scene::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg,rgba(4,8,14,.18) 0%,rgba(4,8,14,.08) 36%,rgba(4,8,14,.20) 64%,rgba(4,8,14,.50) 100%),
+    linear-gradient(90deg,rgba(4,8,14,.18),transparent 18%,transparent 82%,rgba(4,8,14,.18));
+}
+.mine-event-scene img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center center;
+  opacity:1;
+  transform:scale(1.015);
+  transition:opacity .22s ease,transform .4s ease;
+}
+.mine-event-scene img.switching{
+  opacity:.28;
+  transform:scale(1.025);
+}
+.mine-panel[data-mine-panel="events"] .mine-panel-scrim{
+  z-index:1;
+  background:linear-gradient(180deg,rgba(3,7,13,.26) 0%,rgba(3,7,13,.04) 28%,rgba(3,7,13,.08) 58%,rgba(3,7,13,.46) 100%) !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-panel-content{
+  z-index:2;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-grid{
+  padding-bottom:4px;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card{
+  cursor:pointer;
+  opacity:.72;
+  transition:opacity .18s ease,transform .18s ease;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card:hover,
+.mine-panel[data-mine-panel="events"] .mine-event-card.selected{
+  opacity:1;
+  transform:translateY(-2px);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.selected b{
+  text-shadow:0 0 14px rgba(126,211,255,.42),0 2px 12px rgba(0,0,0,.65);
+}
+@media (max-width:640px){
+  .mine-event-scene img{object-position:center center;}
+}

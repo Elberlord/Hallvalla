@@ -1528,7 +1528,37 @@ function closeMineScreen(){
   stopHallvallaMineTick();
   setHallvallaMineStatus("");
 }
+function initHallvallaMineEventScenes(){
+  const img=$("mineEventSceneImage");
+  if(!img)return;
+  const cards=[...document.querySelectorAll('.mine-event-card[data-mine-event-scene]')];
+  const setScene=card=>{
+    if(!card)return;
+    const src=String(card.dataset.mineEventScene||"").trim();
+    if(!src)return;
+    cards.forEach(entry=>entry.classList.toggle("selected",entry===card));
+    if(img.getAttribute("src")===src)return;
+    img.classList.add("switching");
+    const next=new Image();
+    next.onload=()=>{
+      img.src=src;
+      requestAnimationFrame(()=>img.classList.remove("switching"));
+    };
+    next.src=src;
+  };
+  cards.forEach(card=>{
+    if(card.dataset.mineSceneReady==="1")return;
+    card.dataset.mineSceneReady="1";
+    card.addEventListener("click",event=>{
+      if(event.target.closest("button"))return;
+      setScene(card);
+    });
+    card.addEventListener("pointerenter",()=>setScene(card));
+  });
+  cards.forEach(card=>{const src=String(card.dataset.mineEventScene||"").trim();if(src){const preload=new Image();preload.src=src;}});
+}
 try{document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.addEventListener("click",()=>setMineSection(btn.dataset.mineTab||"production")));}catch(_){ }
+initHallvallaMineEventScenes();
 on("mineBackBtn","click",closeMineScreen);
 on("mineClaimBtn","click",claimHallvallaMineRewards);
 on("mineUnassignBtn","click",unassignHallvallaMineUnit);
