@@ -1213,7 +1213,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
       beastmasterEntry=await reserveBeastmasterGlobalDuel();
     }catch(error){
       console.error("[HallValla] No se pudo reservar el duelo global del Beastmaster:",error);
-      await hvAlert("No se pudo registrar este intento en el contador global del Señor de las Bestias. No se descontó oro. Inténtalo otra vez.","Evento no disponible");
+      if(error?.code==="beastmaster/season-closed"){
+        await hvAlert(error.message,"Temporada Mundial de Caza");
+      }else{
+        await hvAlert("No se pudo registrar este intento en el contador global del Señor de las Bestias. No se descontó oro. Inténtalo otra vez.","Evento no disponible");
+      }
       return;
     }
     profile.gold=Math.max(0,(profile.gold||0)-entryCost);

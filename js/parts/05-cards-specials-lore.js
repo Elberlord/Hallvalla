@@ -163,6 +163,37 @@ const BEASTMASTER_DUEL_GOLD_COST=100;
 const BEASTMASTER_YOUNG_DRAGON_INTERVAL=100;
 const BEASTMASTER_EGG_BLOCK_SIZE=5000;
 const BEASTMASTER_GLOBAL_STATE_PATH="events/beastmaster/global_v1";
+const BEASTMASTER_HUNT_START_MONTH_UTC=8; // Septiembre
+const BEASTMASTER_HUNT_END_MONTH_UTC=11; // Diciembre 1 = cierre
+function getBeastmasterHuntSeasonWindow(timestamp=Date.now()){
+  const nowMs=Math.max(0,Number(timestamp)||Date.now());
+  const date=new Date(nowMs);
+  let seasonYear=date.getUTCFullYear();
+  let startAt=Date.UTC(seasonYear,BEASTMASTER_HUNT_START_MONTH_UTC,1,0,0,0,0);
+  let endAt=Date.UTC(seasonYear,BEASTMASTER_HUNT_END_MONTH_UTC,1,0,0,0,0);
+  const open=nowMs>=startAt&&nowMs<endAt;
+  if(!open&&nowMs>=endAt){
+    seasonYear+=1;
+    startAt=Date.UTC(seasonYear,BEASTMASTER_HUNT_START_MONTH_UTC,1,0,0,0,0);
+    endAt=Date.UTC(seasonYear,BEASTMASTER_HUNT_END_MONTH_UTC,1,0,0,0,0);
+  }
+  return{open,seasonYear,startAt,endAt,nowMs};
+}
+async function getBeastmasterHuntSeasonStatusFromServer(){
+  try{
+    const snapshot=await get(ref(db,".info/serverTimeOffset"));
+    const offsetMs=Number(snapshot?.val()||0)||0;
+    return{...getBeastmasterHuntSeasonWindow(Date.now()+offsetMs),authoritative:true,offsetMs};
+  }catch(error){
+    console.warn("[HallValla] No se pudo consultar el desfase horario del servidor Beastmaster; Firebase Rules seguirá siendo la autoridad.",error);
+    return{...getBeastmasterHuntSeasonWindow(Date.now()),authoritative:false,offsetMs:0};
+  }
+}
+function makeBeastmasterSeasonClosedError(status=getBeastmasterHuntSeasonWindow()){
+  const error=new Error(`La Temporada Mundial de Caza está cerrada. Beastmaster solo está disponible del 1 de septiembre al 30 de noviembre (UTC). Próxima apertura: 1 de septiembre de ${status.seasonYear}.`);
+  error.code="beastmaster/season-closed";
+  return error;
+}
 const BEASTMASTER_EVENT_BATTLE={
   id:"beastmaster_annual_hunt",
   num:1,
@@ -234,6 +265,8 @@ function normalizeBeastmasterGlobalState(raw){
 }
 async function reserveBeastmasterGlobalDuel(){
   if(!uid)throw new Error("No hay una sesión autenticada para registrar el duelo global del Beastmaster.");
+  const seasonStatus=await getBeastmasterHuntSeasonStatusFromServer();
+  if(seasonStatus.authoritative&&!seasonStatus.open)throw makeBeastmasterSeasonClosedError(seasonStatus);
   const token=`duel_${uid}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
   const stateRef=ref(db,BEASTMASTER_GLOBAL_STATE_PATH);
   const tx=await runTransaction(stateRef,current=>{
