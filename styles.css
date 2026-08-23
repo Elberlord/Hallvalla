@@ -24622,3 +24622,13 @@ body.home-deck-tutorial-active{overflow:hidden}
   content:"⏱ ";
   color:#d8f4ff;
 }
+
+/* === Mina · copias individuales === */
+.mine-roster-card:disabled{
+  opacity:.42 !important;
+  cursor:not-allowed !important;
+  filter:saturate(.55) brightness(.86);
+}
+.mine-roster-card:disabled .mine-roster-thumb{
+  box-shadow:none !important;
+}
