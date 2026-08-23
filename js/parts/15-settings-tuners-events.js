@@ -1452,7 +1452,7 @@ function renderHallvallaMineEvents(eventState=processHallvallaMineEvents()){
     card.classList.toggle("inactive",!isActive);
     card.classList.toggle("selected",card===selected&&isActive);
     const effect=card.querySelector("[data-mine-event-effect]"),button=card.querySelector("[data-mine-event-action]");
-    if(effect)effect.textContent=isActive?String(instance.effectText||def?.baseEffect||""):String(def?.baseEffect||"Inactivo");
+    if(effect)effect.innerHTML=formatHallvallaMineEventEffectHtml(isActive?String(instance.effectText||def?.baseEffect||""):String(def?.baseEffect||"Inactivo"));
     if(button){button.disabled=!isActive;button.textContent=def?.button||"Acción";}
   });
   setHallvallaMineEventScene(selected);

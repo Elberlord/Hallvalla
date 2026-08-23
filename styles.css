@@ -24596,3 +24596,9 @@ body.home-deck-tutorial-active{overflow:hidden}
 .mine-panel[data-mine-panel="events"] .mine-event-card.positive.active-event [data-mine-event-effect]{
   color:#bdf7dc !important;
 }
+
+
+/* Mina · iconos de recursos con asset real, sin emoji dependiente de fuente */
+.mine-resource-amount{display:inline-flex;align-items:center;gap:5px;}
+.mine-resource-icon{width:18px;height:18px;object-fit:contain;vertical-align:-3px;display:inline-block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35));}
+.mine-event-card small .mine-resource-icon{width:14px;height:14px;margin-left:2px;vertical-align:-2px;}
