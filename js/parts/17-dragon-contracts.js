@@ -1089,6 +1089,7 @@ const HALLVALLA_HUD_TARGETS=Object.freeze({
   "beast.info.art":{group:"Beast Master · Información",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--info"},
   "beast.info.cost":{group:"Beast Master · Información",label:"Costo",selector:"#hallvallaEventsModal .hallvalla-beast-pill--cost"},
   "beast.info.description":{group:"Beast Master · Información",label:"Descripción",selector:"#hallvallaEventsModal .hallvalla-beast-pill--description"},
+  "beast.info.seasonCountdown":{group:"Beast Master · Información",label:"Sello · Cuenta regresiva",selector:"#hallvallaEventsModal .hallvalla-beast-season-seal"},
   "beast.info.fightButton":{group:"Beast Master · Información",label:"Botón · Pagar Oro",selector:"#hallvallaEventsModal [data-beast-fight=\"1\"]"},
   "beast.info.dragonsButton":{group:"Beast Master · Información",label:"Botón · Ir a Dragones",selector:"#hallvallaEventsModal [data-open-dragons=\"1\"]"},
   "beast.rewards.art":{group:"Beast Master · Recompensas",label:"Arte / panel base",selector:"#hallvallaEventsModal .hallvalla-beast-artboard--rewards"},
@@ -1251,6 +1252,7 @@ function buildHallvallaEventSettingsHtml(){
     <span class="hallvalla-hud-mini-label" data-hud-mini-label>HUD</span>
     <button type="button" data-hud-scale-down title="Reducir escala">−</button>
     <button type="button" data-hud-scale-up title="Aumentar escala">+</button>
+    <button type="button" data-hud-copy-selected-json="1" title="Copiar JSON del elemento seleccionado">JSON XY</button>
     <button type="button" data-event-copy-json="1" title="Copiar toda la configuración">JSON</button>
     <button type="button" data-hud-reset-selected="1" title="Restablecer elemento">↺</button>
     <button type="button" data-hud-edit-done="1" title="Salir de edición">✓</button>
@@ -1280,6 +1282,25 @@ function copyHallvallaHudJson(button){
   const done=()=>{if(button){const old=button.textContent;button.textContent='✓';setTimeout(()=>button.textContent=old||'JSON',1100);}};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>{try{window.prompt('Copia este JSON:',payload);}catch(e){}});return;}
   try{const ta=document.createElement('textarea');ta.value=payload;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}catch(e){try{window.prompt('Copia este JSON:',payload);}catch(err){}}
+}
+function copyHallvallaSelectedHudJson(button){
+  const settings=getHallvallaEventUiSettings();
+  const key=HALLVALLA_HUD_TARGETS[settings.selectedHud]?settings.selectedHud:HALLVALLA_EVENT_UI_DEFAULTS.selectedHud;
+  const v=normalizeHallvallaHudSetting(settings.hud?.[key]);
+  const payload=JSON.stringify({
+    target:key,
+    label:HALLVALLA_HUD_TARGETS[key]?.label||key,
+    x:v.x,
+    y:v.y,
+    scale:v.scale,
+    width:v.width,
+    height:v.height,
+    padding:v.padding,
+    gap:v.gap
+  },null,2);
+  const done=()=>{if(button){const old=button.textContent;button.textContent='✓';setTimeout(()=>button.textContent=old||'JSON XY',1100);}};
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(done).catch(()=>{try{window.prompt('Copia el JSON del elemento seleccionado:',payload);}catch(e){}});return;}
+  try{const ta=document.createElement('textarea');ta.value=payload;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}catch(e){try{window.prompt('Copia el JSON del elemento seleccionado:',payload);}catch(err){}}
 }
 function markHallvallaHudElements(){
   Object.entries(HALLVALLA_HUD_TARGETS).forEach(([key,def])=>{
@@ -1392,6 +1413,7 @@ function wireHallvallaEventSettings(modal){
     toolbar.addEventListener('click',ev=>ev.stopPropagation());
     toolbar.querySelector('[data-hud-scale-down]')?.addEventListener('click',()=>adjustSelectedHallvallaHudScale(modal,-10));
     toolbar.querySelector('[data-hud-scale-up]')?.addEventListener('click',()=>adjustSelectedHallvallaHudScale(modal,10));
+    toolbar.querySelector('[data-hud-copy-selected-json]')?.addEventListener('click',ev=>copyHallvallaSelectedHudJson(ev.currentTarget));
     toolbar.querySelector('[data-event-copy-json]')?.addEventListener('click',ev=>copyHallvallaHudJson(ev.currentTarget));
     toolbar.querySelector('[data-hud-reset-selected]')?.addEventListener('click',()=>{
       const settings=getHallvallaEventUiSettings();
