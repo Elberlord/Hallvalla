@@ -1164,6 +1164,161 @@ document.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&homeDeckTutorialState.active){event.preventDefault();exitHomeDeckTutorial();}
 });
 
+
+/* ============================================================
+   TUTORIAL · TÁCTICAS AVANZADAS
+   - Consejos estratégicos propios de HallValla.
+   - 13 lecciones, 5 de oro por lección completada por primera vez.
+   - No modifica mazos, cartas ni estado de combate.
+   ============================================================ */
+const HALLVALLA_TACTICS_TUTORIAL_COMPLETE_KEY="hallvalla_tutorial_tactics_complete_v1";
+const HALLVALLA_TACTICS_TUTORIAL_REWARDS_KEY="hallvalla_tutorial_tactics_rewards_v1";
+let tacticsTutorialState={active:false,index:0};
+
+const TACTICS_TUTORIAL_STEPS=[
+  {
+    title:"La magia es una herramienta de eliminación",
+    body:`Hechizos como <b>Veneno</b> y <b>Fireball</b> suelen obtener mucho más valor cuando se usan contra unidades con <b>muy poca Vida</b>.<br><br><b>Magos, Arqueros y Asesinos</b> pueden ser frágiles, pero si sobreviven varios turnos pueden convertirse en amenazas muy molestas. No gastes una magia solo porque puedes hacer daño: úsala cuando puedas quitar del campo una pieza que seguirá generando valor.`
+  },
+  {
+    title:"En batalla, elimina primero los DPS",
+    body:`Una unidad resistente puede absorber muchísimo castigo, pero un tanque aislado normalmente no gana la batalla por sí solo.<br><br>Si el rival tiene una primera línea dura y detrás mantiene unidades que producen gran parte del daño, busca la forma de llegar a esos <b>DPS</b>. Una vez desaparece la fuente de daño, el tanque deja de ser tan urgente.`
+  },
+  {
+    title:"La primera línea debe tener mucha Vida",
+    body:`Tus unidades principales son las que van a recibir el primer contacto. Por eso conviene que esa primera línea tenga <b>mucha Vida, buena resistencia o herramientas defensivas</b>.<br><br>Su trabajo no tiene que ser hacer el mayor daño. Su trabajo es <b>comprar tiempo y espacio</b> para que tus unidades de daño trabajen detrás.`
+  },
+  {
+    title:"Lleva la cantidad correcta de DPS",
+    body:`Un ejército con demasiados tanques puede sobrevivir mucho tiempo y aun así no tener suficiente daño para cerrar la batalla. Un ejército lleno de DPS puede desaparecer cuando recibe el primer golpe.<br><br>Busca una composición con una proporción clara de <b>primera línea + DPS + utilidad</b>. Si una de esas funciones falta, tu formación tendrá un punto débil.`
+  },
+  {
+    title:"Protege el DPS que está ganando la batalla",
+    body:`No todas tus unidades tienen el mismo valor en cada momento. Si una pieza está produciendo gran parte de tu daño, puede ser correcto protegerla incluso si eso significa sacrificar una unidad secundaria.<br><br>Una fuente de daño que sobrevive varios turnos puede generar mucho más valor que una unidad que simplemente aguanta un ataque adicional.`
+  },
+  {
+    title:"Termina de eliminar las amenazas",
+    body:`Una unidad con <b>1 de Vida</b> puede seguir atacando con toda su capacidad. Repartir daño entre muchos enemigos puede dejar varias amenazas vivas al mismo tiempo.<br><br>Cuando una unidad peligrosa ya está al alcance de ser eliminada, muchas veces conviene <b>terminar el trabajo</b> antes de empezar a dañar otra cosa.`
+  },
+  {
+    title:"No permitas una masa crítica de DPS",
+    body:`Un Arquero, Mago o Asesino aislado puede ser manejable. Varios DPS acumulados durante muchos turnos pueden producir más daño del que tu primera línea puede absorber.<br><br>No esperes hasta que el ejército rival esté completamente armado. Si ves que está acumulando amenazas ofensivas, <b>corta su crecimiento antes de que alcance masa crítica</b>.`
+  },
+  {
+    title:"Obliga al rival a atacar objetivos malos",
+    body:`Una buena primera línea no solo aguanta: también <b>condiciona las decisiones del rival</b>.<br><br>Coloca tus unidades resistentes de forma que atravesarlas cueste ataques, movimiento o cartas. Mientras el enemigo gasta recursos en objetivos que preferiría ignorar, tus piezas importantes permanecen activas detrás.`
+  },
+  {
+    title:"No agrupes todos tus DPS",
+    body:`Varias unidades frágiles colocadas juntas pueden convertir una sola magia o efecto de área en un intercambio devastador.<br><br>Distribuye tus amenazas cuando sea posible. El objetivo es que el rival no pueda eliminar una parte enorme de tu capacidad ofensiva con <b>una sola respuesta</b>.`
+  },
+  {
+    title:"El objetivo más fácil no siempre es el mejor",
+    body:`Matar una unidad débil solo porque está a mano puede sentirse bien, pero la pregunta correcta es: <b>¿qué pieza hace más peligroso al ejército rival?</b><br><br>Una unidad mediocre con poca Vida puede importar menos que un Mago, Arquero o Asesino que todavía está sosteniendo toda la ofensiva enemiga.`
+  },
+  {
+    title:"Guarda respuestas para las amenazas decisivas",
+    body:`Si conoces el tipo de ejército del rival, no gastes automáticamente todas tus mejores respuestas en la primera unidad que aparezca.<br><br>Veneno, Fireball y otras herramientas de eliminación pueden ser mucho más valiosas si las conservas para la pieza que realmente puede <b>cambiar el resultado de la batalla</b>.`
+  },
+  {
+    title:"Piensa en el valor del intercambio",
+    body:`No todas las eliminaciones son buenos negocios. Si sacrificas una unidad muy valiosa para destruir una pieza barata y luego pierdes a tu atacante, quizá el intercambio favoreció al rival.<br><br>Antes de comprometer una unidad importante, pregúntate qué estás ganando a cambio y <b>cuánto valor seguirá produciendo tu pieza si sobrevive</b>.`
+  },
+  {
+    title:"Gana la batalla de atrás hacia adelante",
+    body:`Antes de combatir, identifica las funciones de tu composición:<br><br>• <b>¿Quién aguanta el frente?</b><br>• <b>¿Quién produce el daño?</b><br>• <b>¿Quién elimina amenazas?</b><br>• <b>¿Quién aporta utilidad?</b><br><br>Recuerda la regla principal: <b>no destruyas primero lo más resistente; destruye primero lo que hace peligroso al ejército enemigo</b>. Cuando los DPS y apoyos desaparecen, los tanques suelen ser mucho más fáciles de controlar.`
+  }
+];
+
+function getTacticsTutorialRewardedSteps(){
+  try{return new Set(JSON.parse(localStorage.getItem(HALLVALLA_TACTICS_TUTORIAL_REWARDS_KEY)||"[]"));}
+  catch(_){return new Set();}
+}
+function awardTacticsTutorialStep(stepIndex){
+  const safe=Math.max(0,Math.min(TACTICS_TUTORIAL_STEPS.length-1,Number(stepIndex)||0));
+  const rewarded=getTacticsTutorialRewardedSteps();
+  if(rewarded.has(safe))return false;
+  rewarded.add(safe);
+  try{localStorage.setItem(HALLVALLA_TACTICS_TUTORIAL_REWARDS_KEY,JSON.stringify([...rewarded]));}catch(_){ }
+  const profile=getPlayerProfile();
+  profile.gold=(Number(profile.gold)||0)+5;
+  savePlayerProfile(profile);
+  if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);
+  if(typeof setHint==="function")setHint(`Tácticas avanzadas · Lección ${safe+1}: +5 de oro.`);
+  return true;
+}
+function ensureTacticsTutorialUi(){
+  let root=$("tacticsTutorial");
+  if(root)return root;
+  root=document.createElement("div");
+  root.id="tacticsTutorial";
+  root.className="home-deck-tutorial hidden";
+  root.innerHTML=`
+    <div class="home-deck-tutorial-shield" style="background:rgba(2,4,9,.76)" aria-hidden="true"></div>
+    <section id="tacticsTutorialCard" class="home-deck-tutorial-card" style="right:24px;bottom:24px" role="dialog" aria-modal="true" aria-labelledby="tacticsTutorialTitle">
+      <div class="home-deck-tutorial-top">
+        <span id="tacticsTutorialStep" class="home-deck-tutorial-step">TÁCTICAS AVANZADAS</span>
+        <button id="tacticsTutorialClose" class="home-deck-tutorial-close" type="button" aria-label="Salir del tutorial">×</button>
+      </div>
+      <h2 id="tacticsTutorialTitle"></h2>
+      <div id="tacticsTutorialBody" class="home-deck-tutorial-body"></div>
+      <div class="home-deck-tutorial-actions">
+        <button id="tacticsTutorialPrev" class="home-deck-tutorial-btn ghost" type="button">Anterior</button>
+        <button id="tacticsTutorialNext" class="home-deck-tutorial-btn primary" type="button">Continuar</button>
+      </div>
+    </section>`;
+  document.body.appendChild(root);
+  $("tacticsTutorialClose")?.addEventListener("click",exitTacticsTutorial);
+  $("tacticsTutorialPrev")?.addEventListener("click",()=>showTacticsTutorialStep(tacticsTutorialState.index-1));
+  $("tacticsTutorialNext")?.addEventListener("click",()=>{
+    awardTacticsTutorialStep(tacticsTutorialState.index);
+    if(tacticsTutorialState.index>=TACTICS_TUTORIAL_STEPS.length-1)finishTacticsTutorial();
+    else showTacticsTutorialStep(tacticsTutorialState.index+1);
+  });
+  return root;
+}
+function showTacticsTutorialStep(index=0){
+  if(!tacticsTutorialState.active)return;
+  const safe=Math.max(0,Math.min(TACTICS_TUTORIAL_STEPS.length-1,Number(index)||0));
+  const step=TACTICS_TUTORIAL_STEPS[safe];
+  tacticsTutorialState.index=safe;
+  const title=$("tacticsTutorialTitle"),body=$("tacticsTutorialBody"),counter=$("tacticsTutorialStep");
+  const prev=$("tacticsTutorialPrev"),next=$("tacticsTutorialNext");
+  if(title)title.textContent=step.title||"Tácticas avanzadas";
+  if(body)body.innerHTML=step.body||"";
+  if(counter)counter.textContent=`TÁCTICAS AVANZADAS · ${safe+1}/${TACTICS_TUTORIAL_STEPS.length}`;
+  if(prev)prev.disabled=safe===0;
+  if(next)next.textContent=safe===TACTICS_TUTORIAL_STEPS.length-1?"Finalizar tutorial":"Continuar";
+}
+function startTacticsTutorial(){
+  if(tacticsTutorialState.active)return;
+  const root=ensureTacticsTutorialUi();
+  tacticsTutorialState={active:true,index:0};
+  closeMissionsPanel();
+  root.classList.remove("hidden");
+  document.body.classList.add("home-deck-tutorial-active");
+  showTacticsTutorialStep(0);
+}
+function exitTacticsTutorial(){
+  if(!tacticsTutorialState.active)return;
+  tacticsTutorialState.active=false;
+  $("tacticsTutorial")?.classList.add("hidden");
+  document.body.classList.remove("home-deck-tutorial-active");
+}
+function finishTacticsTutorial(){
+  if(!tacticsTutorialState.active)return;
+  awardTacticsTutorialStep(tacticsTutorialState.index);
+  try{localStorage.setItem(HALLVALLA_TACTICS_TUTORIAL_COMPLETE_KEY,"true");}catch(_){ }
+  tacticsTutorialState.active=false;
+  $("tacticsTutorial")?.classList.add("hidden");
+  document.body.classList.remove("home-deck-tutorial-active");
+  if(typeof renderTutorialMissions==="function")renderTutorialMissions();
+  if(typeof setHint==="function")setHint("Tácticas avanzadas completado · 13 lecciones, 5 de oro por cada lección nueva.");
+}
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&tacticsTutorialState.active){event.preventDefault();exitTacticsTutorial();}
+});
+
 function renderTutorialMissions(){
   const list=$("tutorialMissionList");if(!list)return;
   const basic=isBasicTutorialComplete();
@@ -1178,17 +1333,19 @@ function renderTutorialMissions(){
   }catch(_){ }
   const basicPct=(basicDone/basicTotal)*100;
   const homePct=homeDone?100:0;
-  const tacticsDone=localStorage.getItem("hallvalla_tutorial_tactics_complete_v1")==="true";
+  const tacticsDone=localStorage.getItem(HALLVALLA_TACTICS_TUTORIAL_COMPLETE_KEY)==="true";
   const tacticsAvailable=homeDone;
-  const tacticsPct=tacticsDone?100:0;
+  const tacticsTotal=TACTICS_TUTORIAL_STEPS.length;
+  const tacticsRewarded=Math.min(tacticsTotal,getTacticsTutorialRewardedSteps().size||0);
+  const tacticsPct=tacticsDone?100:(tacticsRewarded/tacticsTotal)*100;
   list.innerHTML=[
     hvVisualProgressHtml("tutorial",basicPct,`${basicDone}/${basicTotal}`)+hvMissionActionHtml("tutorial","missionBasicBtn",basic?"Repetir":"Comenzar",false),
     hvVisualProgressHtml("home",homePct,`${homeDone?1:0}/1`)+hvMissionActionHtml("home","missionHomeBtn",homeDone?"Revisar":homeAvailable?"Iniciar":"Bloqueado",!homeAvailable),
-    hvVisualProgressHtml("tactics",tacticsPct,`${tacticsDone?1:0}/1`)+hvMissionActionHtml("tactics","missionTacticsBtn",tacticsDone?"Revisar":tacticsAvailable?"Iniciar":"Bloqueado",!tacticsAvailable)
+    hvVisualProgressHtml("tactics",tacticsPct,`${tacticsDone?tacticsTotal:tacticsRewarded}/${tacticsTotal}`)+hvMissionActionHtml("tactics","missionTacticsBtn",tacticsDone?"Revisar":tacticsAvailable?"Iniciar":"Bloqueado",!tacticsAvailable)
   ].join("");
   const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};
   const h=$("missionHomeBtn");if(h&&!h.disabled)h.onclick=startHomeDeckTutorial;
-  const t=$("missionTacticsBtn");if(t&&!t.disabled)t.onclick=()=>hvAlert("Tácticas avanzadas conservará este espacio y se conectará a su recorrido interactivo cuando esté disponible.","Tácticas avanzadas");
+  const t=$("missionTacticsBtn");if(t&&!t.disabled)t.onclick=startTacticsTutorial;
   applyHvMissionsLayout();
 }
 function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccountMasteries();renderTutorialMissions();p.classList.remove("hidden");applyHvMissionsLayout();syncHvMissionsTunerControls();}
