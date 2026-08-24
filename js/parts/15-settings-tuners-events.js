@@ -1462,7 +1462,9 @@ function hallvallaMineOnlineReady(){return HALLVALLA_LOCALHOST_TEST_MODE===true|
 async function syncHallvallaMineServerClock(){
   if(HALLVALLA_LOCALHOST_TEST_MODE===true){hallvallaMineServerOffsetMs=0;hallvallaMineServerClockReady=true;return true;}
   try{
-    const snapshot=await get(ref(db,".info/serverTimeOffset"));
+    const snapshot=await new Promise((resolve,reject)=>{
+      onValue(ref(db,".info/serverTimeOffset"),resolve,reject,{onlyOnce:true});
+    });
     hallvallaMineServerOffsetMs=Number(snapshot?.val?.()||0)||0;
     hallvallaMineServerClockReady=true;
     return true;
