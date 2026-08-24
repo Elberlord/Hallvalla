@@ -57,7 +57,25 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let realEngineEnteredCode="";
   let realEngineVsCode="";
   let realEngineVsPromise=null;
+  const REMATCH_WAIT_MS=20000;
+  let rematchWaitTimer=null;
+  let rematchWaitActive=false;
 
+  function clearRematchWait(){
+    rematchWaitActive=false;
+    if(rematchWaitTimer){ clearTimeout(rematchWaitTimer); rematchWaitTimer=null; }
+  }
+  function startRematchWait(){
+    clearRematchWait();
+    rematchWaitActive=true;
+    rematchWaitTimer=setTimeout(()=>{
+      if(!rematchWaitActive)return;
+      clearRematchWait();
+      mark("REMATCH · el rival no respondió en 20 segundos. Volviendo a Home.");
+      void leaveBattleResultToHome();
+    },REMATCH_WAIT_MS);
+  }
+  function getRematchReadyFlag(room,role){ return room?.rematchReady?.[role]===true || room?.rematchReady?.[String(role)]===true; }
   function $(id){ return document.getElementById(id); }
   function normalizeCode(value){ return String(value||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8); }
   function makeCode(length=8){
@@ -1366,6 +1384,45 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const rps=Object.assign({},defaultRpsState(0),room?.rps||{});
     const publicRef=ref(db,`games/${code}/public`);
 
+    // Rematch online: cada jugador confirma de forma explícita con su propio rematchReady.
+    // El host reinicia la misma sala solo cuando ambos pulsaron Rematch.
+    if(String(room?.phase||"")==="ended"&&String(room?.mode||"")==="online"){
+      const bothRematchReady=bothPresent&&getRematchReadyFlag(room,1)&&getRematchReadyFlag(room,2);
+      if(!bothRematchReady)return;
+      phaseWriteInFlight=true;
+      try{
+        const match=room?.matchSettings||{};
+        const rematchRoom={
+          schema:"hallvalla-pvp-rebuild-step6f-real-unit-summon",
+          code:String(code||room?.code||""),
+          createdAt:Number(room?.createdAt||Date.now()),
+          phase:"waiting",
+          playerSlots:{player1Uid:p1Uid,player2Uid:p2Uid},
+          playerNames:{1:getPlayerName(room,1),2:getPlayerName(room,2)},
+          playerPrepared:{1:true,2:true},
+          rematchReady:{1:false,2:false},
+          lobbyReady:{1:true,2:true},
+          settings:{
+            timerEnabled:!!match.timerEnabled,
+            stakeMode:String(match.stakeMode||"none"),
+            goldAmount:Number(match.goldAmount||500),
+            cardEntryFee:Number(match.cardEntryFee||500)
+          },
+          rps:defaultRpsState(0),
+          startConfig:defaultStartConfig(),
+          arenaBootstrap:null,
+          combatState:null,
+          enginePrep:null
+        };
+        await withTimeout(set(publicRef,rematchRoom),`Preparar rematch en ${code}`,6000);
+        mark(`REMATCH · ambos jugadores aceptaron. Reiniciando Piedra/Papel/Tijera en ${code}.`);
+      }catch(error){
+        console.error(error);
+        mark(`REMATCH falló: ${error?.message||error}`);
+      }finally{phaseWriteInFlight=false;}
+      return;
+    }
+
     if(!bothPresent && (p1Ready||startCfg.resolved||room?.arenaBootstrap||room?.combatState)){
       clearArenaLaunchTimer();
       phaseWriteInFlight=true;
@@ -1484,13 +1541,32 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     roomUnsubscribe=onValue(roomRef,snapshot=>{
       if(token!==roomListenerToken||code!==activeCode) return;
       if(!snapshot.exists()){
+        if(rematchWaitActive){
+          clearRematchWait();
+          mark("REMATCH · el rival salió de la partida. Volviendo a Home.");
+          void leaveBattleResultToHome();
+          return;
+        }
         if(activeRole===2&&activeCode&&activeOwnerUid) void removeOwnPrivateBranch(activeCode,2,activeOwnerUid);
         setText("pvpRoomMessage","La sala ya no existe. El anfitrión pudo haber salido."); setText("pvpRoomPlayer2Name","Sala cerrada"); setPresence("pvpRoomPlayer2Presence","waiting"); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
         const readyBtn=$("pvpReadyBtn"); if(readyBtn){ readyBtn.disabled=true; readyBtn.classList.remove("is-ready"); }
         return;
       }
       const room=snapshot.val()||{};
-      if(isRealEnginePayload6e(room)){ void launchRealEngine6e(code,room); return; }
+      if(rematchWaitActive){
+        const otherRole=activeRole===1?2:1;
+        const otherUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
+        if(!otherUid){
+          clearRematchWait();
+          mark("REMATCH · el rival eligió salir. Volviendo a Home.");
+          void leaveBattleResultToHome();
+          return;
+        }
+        if(String(room?.phase||"")!=="ended" || (getRematchReadyFlag(room,1)&&getRematchReadyFlag(room,2))){
+          clearRematchWait();
+        }
+      }
+      if(isRealEnginePayload6e(room)&&String(room?.phase||"")!=="ended"){ void launchRealEngine6e(code,room); return; }
       renderRoomSnapshot(room,code);
       if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room)) void ensureOwnRealEnginePrep6e(room,code);
       void reconcileRoomPhase(room,code);
@@ -1498,7 +1574,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    clearRematchWait(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -1648,16 +1724,75 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
   async function copyCode(){ const code=normalizeCode(activeCode||$("pvpRoomCode")?.textContent||""); if(!code) return false; try{ await navigator.clipboard.writeText(code); mark(`Código ${code} copiado.`); return true; }catch(_){ const input=$("joinCode"); if(input){ input.value=code; try{ input.focus(); input.select(); }catch(__){ } } mark(`Código de sala: ${code}`); return false; } }
 
+  async function prepareBattleResultRematch(){
+    if(busy){mark("Espera a que termine la operación PvP actual.");return false;}
+    const code=normalizeCode(activeCode||((typeof gameId!=="undefined"&&gameId)||""));
+    const role=Number(activeRole||((typeof myPlayer!=="undefined"&&myPlayer)||0));
+    const ownerUid=String(activeOwnerUid||((typeof uid!=="undefined"&&uid)||""));
+    if(!code||!ownerUid||(role!==1&&role!==2)){
+      await hvPopup("No se pudo recuperar la sala de esta partida para solicitar el rematch.","Rematch");
+      return false;
+    }
+    busy=true;
+    try{
+      const publicRef=ref(db,`games/${code}/public`);
+      const snap=await withTimeout(get(publicRef),`Leer final de duelo ${code}`,5000);
+      if(!snap.exists())throw new Error("La sala ya no existe.");
+      const room=snap.val()||{};
+      if(String(room?.mode||"")!=="online"||String(room?.phase||"")!=="ended")throw new Error("El rematch solo está disponible después de terminar un duelo online.");
+      const slotUid=String(room?.playerSlots?.[`player${role}Uid`]||"");
+      if(slotUid!==ownerUid)throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
+      const otherRole=role===1?2:1;
+      if(!String(room?.playerSlots?.[`player${otherRole}Uid`]||""))throw new Error("El rival ya no está en la sala.");
+
+      // Reconstruye exclusivamente el privado del jugador que aceptó la revancha.
+      const privatePayload=buildOwnPrivatePayload(ownerUid,role);
+      await writeAndConfirmOwnPrivate(code,role,ownerUid,privatePayload);
+      await withTimeout(update(publicRef,{[`playerPrepared/${role}`]:true,[`rematchReady/${role}`]:true}),`Confirmar rematch J${role} en ${code}`,5000);
+      startRematchWait();
+
+      // Salimos del motor terminado, pero conservamos la misma sala/roles clean-room.
+      if(typeof resetBattleState==="function")resetBattleState();
+      realEngineEnteredCode="";realEngineVsCode="";realEngineVsPromise=null;
+      clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
+      $("gameShell")?.classList.add("hidden");
+      $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active","pvp-step6e-real-bridge");
+      $("mainMenu")?.classList.add("hidden");
+      $("onlineLobby")?.classList.remove("hidden");
+      setRoomPanelVisible(true);
+      attachOwnPrivateListener(code,role,ownerUid);
+      attachRoomListener(code);
+      const fresh=await withTimeout(get(publicRef),`Confirmar espera de rematch ${code}`,5000);
+      if(fresh.exists())renderRoomSnapshot(fresh.val()||{},code);
+      setText("pvpRoomMessage",`Rematch solicitado por J${role}. El rival tiene hasta 20 segundos para aceptar.`);
+      mark(`REMATCH · J${role} listo. Esperando al rival por un máximo de 20 segundos.`);
+      return true;
+    }catch(error){
+      console.error(error);
+      await hvPopup(`REMATCH FALLÓ: ${error?.message||error}`,"Rematch");
+      return false;
+    }finally{busy=false;syncLocalButtons();}
+  }
+
+  async function leaveBattleResultToHome(){
+    clearRematchWait();
+    if(typeof resetBattleState==="function")resetBattleState();
+    return leaveRoom();
+  }
+
   async function leaveRoom(){
+    clearRematchWait();
     const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
     try{
       if(code&&ownerUid&&role===1){ await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`); await removeOwnPrivateBranch(code,1,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid) await withTimeout(remove(publicRef),`Cerrar sala ${code}`); }
-      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`); }
+      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"rematchReady/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`); }
     }catch(error){ console.warn(error); }
     resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
   function backToMain(){ void leaveRoom(); }
 
+  globalThis.hvPvpBattleResultRematch=prepareBattleResultRematch;
+  globalThis.hvPvpBattleResultHome=leaveBattleResultToHome;
   globalThis.pvpRebuildStep6eOpen=openCleanRoom;
   globalThis.pvpRebuildStep6eCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6eJoin=joinExistingRoom;

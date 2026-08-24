@@ -487,7 +487,7 @@ function getBattleOutcomeSplashElement(){
   overlay.className="battle-outcome-splash";
   overlay.setAttribute("aria-live","assertive");
   overlay.setAttribute("aria-atomic","true");
-  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">Ir a Home</button></div>';
+  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">Ir a Home</button></div>';
   const actions=overlay.querySelector(".battle-outcome-actions");
   if(actions){
     actions.addEventListener("click",ev=>{
@@ -497,7 +497,16 @@ function getBattleOutcomeSplashElement(){
       btn.disabled=true;
       if(action==="map")showAdventureMapFromResult();
       else if(action==="retry")retryCurrentAdventureBattle();
-      else if(action==="home")backToMainMenu();
+      else if(action==="rematch"){
+        const rematch=globalThis.hvPvpBattleResultRematch;
+        if(typeof rematch==="function")void rematch();
+        else{btn.disabled=false;void hvAlert("La revancha online no está disponible en esta sesión.","Rematch");}
+      }
+      else if(action==="home"){
+        const onlineHome=globalThis.hvPvpBattleResultHome;
+        if(publicState?.mode==="online"&&typeof onlineHome==="function")void onlineHome();
+        else backToMainMenu();
+      }
     });
   }
   document.body.appendChild(overlay);
@@ -565,7 +574,7 @@ function hideBattleOutcomeSplash(immediate=false){
   }
   if(immediate)overlay.remove();
 }
-function showBattleOutcomeSplash(result,{adventure=false}={}){
+function showBattleOutcomeSplash(result,{adventure=false,online=false}={}){
   const overlay=getBattleOutcomeSplashElement();
   const img=overlay.querySelector(".battle-outcome-splash-art");
   const drawText=overlay.querySelector(".battle-outcome-draw-text");
@@ -597,17 +606,19 @@ function showBattleOutcomeSplash(result,{adventure=false}={}){
     if(drawText)drawText.setAttribute("aria-hidden","true");
     overlay.setAttribute("aria-label",victory?"Has ganado la partida":"Has sido derrotado");
   }
-  if(adventure&&actions){
+  if((adventure||online)&&actions){
     const mapBtn=actions.querySelector('[data-battle-outcome-action="map"]');
     const retryBtn=actions.querySelector('[data-battle-outcome-action="retry"]');
-    if(mapBtn)mapBtn.hidden=result!=="victory";
-    if(retryBtn)retryBtn.hidden=result==="victory";
-    renderBattleOutcomeRewards(result,adventure);
+    const rematchBtn=actions.querySelector('[data-battle-outcome-action="rematch"]');
+    if(mapBtn)mapBtn.hidden=!adventure||result!=="victory";
+    if(retryBtn)retryBtn.hidden=!adventure||result==="victory";
+    if(rematchBtn)rematchBtn.hidden=!online;
+    if(adventure)renderBattleOutcomeRewards(result,adventure);
     actions.setAttribute("aria-hidden","false");
     overlay.classList.add("awaiting-action");
   }
   overlay.classList.add("show");
-  if(!adventure){
+  if(!adventure&&!online){
     showBattleOutcomeSplash._timer=battleSetTimeout(()=>{showBattleOutcomeSplash._timer=null;hideBattleOutcomeSplash(false);},BATTLE_RESULT_SPLASH_DURATION_MS+120,"battle-outcome-splash");
   }
 }
@@ -873,7 +884,8 @@ function maybeShowBattleResult(){
     if(!draw)tryPlaySound(win?"victory":"defeat",.95);
     stopMusic(false);
     const adventure=publicState.mode==="adventure";
-    showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure});
+    const online=publicState.mode==="online";
+    showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure,online});
     if(!adventure&&publicState.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
       void globalThis.hvPvpRankingRecordResult(publicState,gameId);
     }
