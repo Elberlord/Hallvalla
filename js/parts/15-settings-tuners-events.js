@@ -2031,31 +2031,74 @@ async function unassignHallvallaMineUnit(){
   renderMineScreen();
 }
 async function claimHallvallaMineRewards(){
-  if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
+  const claimBtn=$("mineClaimBtn");
+  if(!hallvallaMineOnlineReady()){
+    setHallvallaMineStatus("Sincronizando la Mina con el servidor...");
+    void syncHallvallaMineRemoteState();
+    return;
+  }
   const profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
-  let total=0;
+  if(claimBtn){claimBtn.disabled=true;claimBtn.textContent="Recogiendo...";}
   const now=getHallvallaMineNow();
-  const tx=await transactHallvallaMineStateRemote(current=>{
-    let transactionTotal=0;
-    const next=normalizeHallvallaMineState(current);
-    next.slots=next.slots.map(slot=>{
-      const safe=normalizeHallvallaMineSlot(slot);
-      const view=getHallvallaMineSlotView(safe,next,now);
-      if(!view.active||view.pending<=0)return safe;
-      transactionTotal+=view.pending;
-      return {...safe,claimedCycles:view.produced};
+  let confirmedTotal=0;
+  try{
+    // Refrescamos el estado autoritativo antes de reclamar. Esto evita que el botón
+    // dependa de una copia local desactualizada y garantiza que el premio corresponda
+    // únicamente a ciclos realmente confirmados por Firebase.
+    if(HALLVALLA_LOCALHOST_TEST_MODE!==true){
+      const userId=getHallvallaMineUserUid();
+      if(!userId)throw new Error("Usuario no autenticado");
+      await hallvallaMineRemoteWriteQueue;
+      const freshSnapshot=await get(ref(db,`users/${userId}/mine/state`));
+      if(!freshSnapshot?.exists?.())throw new Error("Estado remoto de Mina no disponible");
+      const freshState=normalizeHallvallaMineState(freshSnapshot.val()||{});
+      localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(freshState));
+    }
+
+    const tx=await transactHallvallaMineStateRemote(current=>{
+      let transactionTotal=0;
+      const source=normalizeHallvallaMineState(current);
+      const next=normalizeHallvallaMineState(source);
+      next.slots=source.slots.map(slot=>{
+        const safe=normalizeHallvallaMineSlot(slot);
+        const view=getHallvallaMineSlotView(safe,source,now);
+        if(!view.active||view.pending<=0)return safe;
+        transactionTotal+=Math.max(0,Math.floor(Number(view.pending||0)));
+        return {...safe,claimedCycles:Math.max(safe.claimedCycles,view.produced)};
+      });
+      if(transactionTotal<=0){confirmedTotal=0;return;}
+      confirmedTotal=transactionTotal;
+      return next;
     });
-    if(transactionTotal<=0)return;
-    total=transactionTotal;
-    return next;
-  });
-  if(!tx.committed){setHallvallaMineStatus("No hay gemas nuevas por recoger o ya fueron reclamadas desde otro dispositivo.");renderMineScreen();return;}
-  profile.gems=Math.max(0,Number(profile.gems||0))+total;
-  savePlayerProfile(profile);
-  try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
-  setHallvallaMineStatus(`Recogiste ${total} gema${total===1?"":"s"}.`);
-  renderMineScreen();
+
+    if(!tx.committed||confirmedTotal<=0){
+      setHallvallaMineStatus("No hay gemas nuevas por recoger o ya fueron reclamadas desde otro dispositivo.");
+      renderMineScreen();
+      return;
+    }
+
+    const reward=Math.max(0,Math.floor(Number(confirmedTotal||0)));
+    const updatedProfile={...profile,gems:Math.max(0,Number(profile.gems||0))+reward};
+    savePlayerProfile(updatedProfile);
+
+    // Actualización inmediata del contador visible de la Mina, además del render general.
+    const gemsEl=$("mineGemsValue");
+    if(gemsEl)gemsEl.textContent=Math.max(0,Number(updatedProfile.gems||0)).toLocaleString("es-ES");
+    try{
+      if(typeof renderPlayerProfile==="function")renderPlayerProfile(updatedProfile);
+      if(typeof renderHomeProgress==="function")renderHomeProgress();
+    }catch(_){ }
+    setHallvallaMineStatus(`Recogiste ${reward} gema${reward===1?"":"s"}.`);
+    renderMineScreen();
+  }catch(error){
+    console.warn("[HallValla][Mina] No se pudo completar Recoger:",error);
+    setHallvallaMineStatus("No se pudo confirmar el cobro con Firebase. Las gemas siguen pendientes; inténtalo de nuevo.");
+    renderMineScreen();
+  }finally{
+    const btn=$("mineClaimBtn");
+    if(btn&&btn.textContent==="Recogiendo...")btn.textContent="Recoger";
+  }
 }
 function setMineSection(section="production"){
   const key=HALLVALLA_MINE_SECTION_TITLES[section]?section:"production";
