@@ -570,6 +570,15 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "padding": 0,
     "gap": 0
   },
+  "beast.info.seasonCountdown": {
+    "x": 306.08697509765625,
+    "y": 572.1739044189453,
+    "scale": 100,
+    "width": 100,
+    "height": 100,
+    "padding": 0,
+    "gap": 0
+  },
   "beast.info.fightButton": {
     "x": -13.91302490234375,
     "y": 8.695648193359375,
