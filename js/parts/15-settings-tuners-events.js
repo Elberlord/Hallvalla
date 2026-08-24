@@ -941,6 +941,7 @@ function renderAccountMasteries(){
    - Al llegar a la sección de mazo abre Colección/Forja de forma controlada.
    ============================================================ */
 const HALLVALLA_HOME_DECK_TUTORIAL_COMPLETE_KEY="hallvalla_tutorial_home_complete_v1";
+const HALLVALLA_HOME_DECK_TUTORIAL_REWARDS_KEY="hallvalla_tutorial_home_rewards_v1";
 let homeDeckTutorialState={active:false,index:0,openedDeck:false,deckWasOpen:false};
 
 function homeDeckTutorialEscape(value){
@@ -955,7 +956,7 @@ function getHomeDeckTutorialDeckSummary(){
 const HOME_DECK_TUTORIAL_STEPS=[
   {
     phase:"home",selector:"#mainMenu .asset-logo",title:"Home: tu centro de mando",
-    body:()=>`El Home reúne todas las rutas principales de HallValla. Desde aquí entras a Aventura, PvP, Misiones, Colección, Tienda, Eventos y los sistemas sociales.<br><br>Este recorrido solo explica la interfaz: <b>no cambiará tu mazo, recursos ni progreso</b>.`
+    body:()=>`El Home reúne todas las rutas principales de HallValla. Desde aquí entras a Aventura, PvP, Misiones, Colección, Tienda, Eventos y los sistemas sociales.<br><br>Este recorrido solo explica la interfaz: <b>no cambiará tu mazo ni tu progreso</b>. Cada paso completado por primera vez entrega <b>5 de oro</b>.`
   },
   {
     phase:"home",selector:"#profileBtn",title:"Perfil, nivel y experiencia",
@@ -1007,9 +1008,26 @@ const HOME_DECK_TUTORIAL_STEPS=[
   },
   {
     phase:"deck",selector:".deckbuilder-card",title:"Tu mazo actual es el que combate",
-    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Resumen final:<br><br>1. Elige solo cartas que poseas.<br>2. Completa exactamente <b>${r.draw}</b> cartas de robo.<br>3. Selecciona exactamente <b>${r.slots}</b> Principal${r.slots===1?"":"es"} para tu tier actual.<br>4. Guarda la composición.<br><br>Después de guardarla, <b>Aventura y PvP utilizan ese mazo actual</b>. El tutorial no ha cambiado nada; al finalizar puedes editarlo con libertad.`;}
+    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Resumen final:<br><br>1. Elige solo cartas que poseas.<br>2. Completa exactamente <b>${r.draw}</b> cartas de robo.<br>3. Selecciona exactamente <b>${r.slots}</b> Principal${r.slots===1?"":"es"} para tu tier actual.<br>4. Guarda la composición.<br><br>Después de guardarla, <b>Aventura y PvP utilizan ese mazo actual</b>. El tutorial no ha cambiado tu mazo; al finalizar puedes editarlo con libertad.`;}
   }
 ];
+
+function getHomeDeckTutorialRewardedSteps(){
+  try{return new Set(JSON.parse(localStorage.getItem(HALLVALLA_HOME_DECK_TUTORIAL_REWARDS_KEY)||"[]"));}
+  catch(_){return new Set();}
+}
+function awardHomeDeckTutorialStep(stepIndex){
+  const safe=Math.max(0,Math.min(HOME_DECK_TUTORIAL_STEPS.length-1,Number(stepIndex)||0));
+  const rewarded=getHomeDeckTutorialRewardedSteps();
+  if(rewarded.has(safe))return false;
+  rewarded.add(safe);
+  try{localStorage.setItem(HALLVALLA_HOME_DECK_TUTORIAL_REWARDS_KEY,JSON.stringify([...rewarded]));}catch(_){ }
+  const profile=getPlayerProfile();
+  profile.gold=(Number(profile.gold)||0)+5;
+  savePlayerProfile(profile);
+  if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);
+  return true;
+}
 
 function ensureHomeDeckTutorialUi(){
   let root=$("homeDeckTutorial");
@@ -1036,6 +1054,7 @@ function ensureHomeDeckTutorialUi(){
   $("homeDeckTutorialClose")?.addEventListener("click",exitHomeDeckTutorial);
   $("homeDeckTutorialPrev")?.addEventListener("click",()=>showHomeDeckTutorialStep(homeDeckTutorialState.index-1));
   $("homeDeckTutorialNext")?.addEventListener("click",()=>{
+    awardHomeDeckTutorialStep(homeDeckTutorialState.index);
     if(homeDeckTutorialState.index>=HOME_DECK_TUTORIAL_STEPS.length-1)finishHomeDeckTutorial();
     else showHomeDeckTutorialStep(homeDeckTutorialState.index+1);
   });
@@ -1127,13 +1146,14 @@ function exitHomeDeckTutorial(){
 }
 function finishHomeDeckTutorial(){
   if(!homeDeckTutorialState.active)return;
+  awardHomeDeckTutorialStep(homeDeckTutorialState.index);
   try{localStorage.setItem(HALLVALLA_HOME_DECK_TUTORIAL_COMPLETE_KEY,"true");}catch(_){ }
   homeDeckTutorialState.active=false;
   $("homeDeckTutorial")?.classList.add("hidden");
   $("homeDeckTutorialFocus")?.classList.add("hidden");
   document.body.classList.remove("home-deck-tutorial-active");
   if(typeof renderTutorialMissions==="function")renderTutorialMissions();
-  if(typeof setHint==="function")setHint("Tutorial de Home y mazo completado. Tu mazo no fue modificado.");
+  if(typeof setHint==="function")setHint("Tutorial de Home y mazo completado. Cada paso nuevo otorga 5 de oro y tu mazo no fue modificado.");
 }
 window.addEventListener("resize",()=>{
   if(!homeDeckTutorialState.active)return;
