@@ -1577,9 +1577,9 @@ function getHallvallaMineFreeCopyCount(card,mineState=getHallvallaMineState(),de
   return Math.max(0,owned-inDeck-inMine);
 }
 const HALLVALLA_MINE_EVENTS_STORAGE_KEY="hallvalla_mine_events_v1";
-const HALLVALLA_MINE_EVENT_CHECK_MS=6*60*60*1000;
-const HALLVALLA_MINE_EVENT_CHANCE=.55;
-const HALLVALLA_MINE_MAX_ACTIVE_EVENTS=3;
+const HALLVALLA_MINE_EVENT_CHECK_MS=30*24*60*60*1000;
+const HALLVALLA_MINE_EVENT_CHANCE=1;
+const HALLVALLA_MINE_MAX_ACTIVE_EVENTS=1;
 const HALLVALLA_MINE_EVENT_DEFS=Object.freeze({
   incendio:Object.freeze({key:"incendio",name:"Incendio",kind:"negative",scene:"assets/mine/events/event_incendio.webp",weight:20,action:"repair",costGold:200,button:"Reparar 200",baseEffect:"Daño por fuego"}),
   inundacion:Object.freeze({key:"inundacion",name:"Inundación",kind:"negative",scene:"assets/mine/events/event_inundacion.webp",weight:17,action:"repair",costGold:250,button:"Reparar 250",baseEffect:"Galerías anegadas"}),
@@ -1741,21 +1741,22 @@ function processHallvallaMineEvents(){
   const mineState=getHallvallaMineState();
   const activeMiners=mineState.slots.filter(slot=>slot?.cardKey).length;
   const state=getHallvallaMineEventState(),now=getHallvallaMineNow();
-  if(activeMiners<=0){if(state.nextCheckAt<=now)state.nextCheckAt=now+HALLVALLA_MINE_EVENT_CHECK_MS;saveHallvallaMineEventState(state);return state;}
-  let changed=false,loops=0;
-  while(state.nextCheckAt<=now&&loops<6){
-    loops++;
-    state.nextCheckAt+=HALLVALLA_MINE_EVENT_CHECK_MS;
-    if(state.active.length>=HALLVALLA_MINE_MAX_ACTIVE_EVENTS)continue;
-    if(Math.random()>HALLVALLA_MINE_EVENT_CHANCE)continue;
+  if(activeMiners<=0){
+    if(state.nextCheckAt<=now){state.nextCheckAt=now+HALLVALLA_MINE_EVENT_CHECK_MS;saveHallvallaMineEventState(state);}
+    return state;
+  }
+  if(state.active.length>=HALLVALLA_MINE_MAX_ACTIVE_EVENTS)return state;
+  if(state.nextCheckAt>now)return state;
+  state.nextCheckAt=now+HALLVALLA_MINE_EVENT_CHECK_MS;
+  if(Math.random()<=HALLVALLA_MINE_EVENT_CHANCE){
     const activeKeys=new Set(state.active.map(event=>event.key));
     const key=pickHallvallaMineEventKey(activeKeys),def=HALLVALLA_MINE_EVENT_DEFS[key];
-    if(!def)continue;
-    const effectText=applyHallvallaMineEventSpawnEffect(def);
-    state.active.push({id:`${key}_${now}_${Math.random().toString(36).slice(2,7)}`,key,createdAt:now,effectText});
-    changed=true;
+    if(def){
+      const effectText=applyHallvallaMineEventSpawnEffect(def);
+      state.active=[{id:`${key}_${now}_${Math.random().toString(36).slice(2,7)}`,key,createdAt:now,effectText}];
+    }
   }
-  if(changed||loops)saveHallvallaMineEventState(state);
+  saveHallvallaMineEventState(state);
   return state;
 }
 function getHallvallaMineEventRewardText(reward={}){
@@ -1824,7 +1825,7 @@ async function handleHallvallaMineEventAction(key,button=null){
   const tx=await transactHallvallaMineEventStateRemote(current=>{
     const currentIndex=current.active.findIndex(event=>event.key===key);
     if(currentIndex<0)return;
-    return {...current,active:current.active.filter((_,eventIndex)=>eventIndex!==currentIndex)};
+    return {...current,nextCheckAt:getHallvallaMineNow()+HALLVALLA_MINE_EVENT_CHECK_MS,active:current.active.filter((_,eventIndex)=>eventIndex!==currentIndex)};
   });
   if(!tx.committed){setHallvallaMineStatus("Ese evento ya fue resuelto en otro dispositivo o no pudo confirmarse con Firebase.");return;}
   const nextState=tx.state;
