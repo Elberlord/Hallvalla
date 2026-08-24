@@ -331,10 +331,15 @@ function getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodge
 function getGridCellCenter(x,y){
   const grid=$("grid"), battlefield=document.querySelector(".battlefield");
   if(!grid||!battlefield)return null;
-  const g=grid.getBoundingClientRect();
   const b=battlefield.getBoundingClientRect();
+  const cell=grid.querySelector(`.cell[data-x="${Number(x)}"][data-y="${Number(y)}"]`);
+  if(cell){
+    const c=cell.getBoundingClientRect();
+    return {x:(c.left-b.left)+(c.width/2),y:(c.top-b.top)+(c.height/2)};
+  }
+  const g=grid.getBoundingClientRect();
   const cellW=g.width/COLS, cellH=g.height/ROWS;
-  return {x:(g.left-b.left)+(x+.5)*cellW,y:(g.top-b.top)+(y+.5)*cellH};
+  return {x:(g.left-b.left)+(Number(x)+.5)*cellW,y:(g.top-b.top)+(Number(y)+.5)*cellH};
 }
 function makeBattleFxEvent(type,attacker,target,meta={}){
   if(!attacker||!target)return null;
