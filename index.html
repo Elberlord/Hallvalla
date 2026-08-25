@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260825.1">
+<meta name="hallvalla-version" content="20260825.2">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
 <link rel="stylesheet" href="styles.css?v=20260825.1"/>
@@ -849,6 +849,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <label for="accountCreatePasswordConfirm">Repetir contraseña</label>
         <input id="accountCreatePasswordConfirm" class="profile-name-input" type="password" autocomplete="new-password" minlength="6" required placeholder="Repite la contraseña">
         <button id="accountCreateSubmitBtn" class="btn primary" type="submit">Crear cuenta y migrar progreso</button>
+        <button id="accountGoogleMigrateBtn" class="btn ghost" type="button">Continuar con Google y migrar progreso</button>
       </form>
 
       <form id="accountLoginForm" class="hv-account-form hidden" autocomplete="on">
@@ -859,6 +860,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <div class="hv-account-inline-actions">
           <button id="accountLoginSubmitBtn" class="btn primary" type="submit">Iniciar sesión</button>
           <button id="accountResetPasswordBtn" class="btn ghost" type="button">Recuperar contraseña</button>
+          <button id="accountGoogleLoginBtn" class="btn ghost" type="button">Entrar con Google</button>
         </div>
       </form>
     </div>
@@ -867,10 +869,12 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <div class="hv-account-summary">
         <span>Correo</span><b id="accountEmailValue">—</b>
         <span>Verificación</span><b id="accountVerificationValue">—</b>
+        <span>Google</span><b id="accountGoogleValue">—</b>
         <span>Nube</span><b id="accountCloudValue">—</b>
       </div>
       <div class="hv-account-inline-actions">
         <button id="accountVerifyEmailBtn" class="btn ghost" type="button">Enviar verificación</button>
+        <button id="accountLinkGoogleBtn" class="btn ghost" type="button">Vincular Google</button>
         <button id="accountSyncNowBtn" class="btn primary" type="button">Sincronizar ahora</button>
         <button id="accountSignOutBtn" class="btn ghost" type="button">Cerrar sesión</button>
       </div>
@@ -1308,6 +1312,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260825.1"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260825.2"></script>
 </body>
 </html>

@@ -60,6 +60,14 @@ let hallvallaAccountLastCloudState="Sin sincronizar";
 function hallvallaIsPermanentAccount(user=auth?.currentUser){
   return !!(user&&!user.isAnonymous&&String(user.email||"").trim());
 }
+function hallvallaHasGoogleProvider(user=auth?.currentUser){
+  return !!user?.providerData?.some(provider=>provider?.providerId==="google.com");
+}
+function hallvallaGoogleProvider(){
+  const provider=new GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"});
+  return provider;
+}
 function hallvallaIsAccountStorageKey(key){
   const safe=String(key||"");
   return HALLVALLA_ACCOUNT_STORAGE_KEYS.has(safe)||HALLVALLA_ACCOUNT_STORAGE_PREFIXES.some(prefix=>safe.startsWith(prefix));
@@ -123,7 +131,8 @@ function hallvallaAuthErrorMessage(error){
   const messages={
     "auth/invalid-email":"El correo electrónico no es válido.",
     "auth/email-already-in-use":"Ese correo ya está vinculado a otra cuenta. Usa «Ya tengo cuenta».",
-    "auth/credential-already-in-use":"Ese correo ya pertenece a otra cuenta. Usa «Ya tengo cuenta».",
+    "auth/credential-already-in-use":"Esa cuenta de Google ya pertenece a otra cuenta de HallValla. Usa «Ya tengo cuenta» e inicia con Google.",
+    "auth/account-exists-with-different-credential":"Ese correo ya existe con otro método. Inicia con correo/contraseña y vincula Google desde tu cuenta.",
     "auth/weak-password":"La contraseña es demasiado débil. Usa al menos 6 caracteres.",
     "auth/invalid-credential":"Correo o contraseña incorrectos.",
     "auth/wrong-password":"Correo o contraseña incorrectos.",
@@ -131,7 +140,11 @@ function hallvallaAuthErrorMessage(error){
     "auth/too-many-requests":"Demasiados intentos. Espera un momento y vuelve a intentarlo.",
     "auth/network-request-failed":"No se pudo conectar con Firebase. Revisa tu conexión.",
     "auth/operation-not-allowed":"Debes activar Email/Password en Firebase Authentication antes de usar esta función.",
-    "auth/requires-recent-login":"Firebase requiere que vuelvas a iniciar sesión para esta operación."
+    "auth/requires-recent-login":"Firebase requiere que vuelvas a iniciar sesión para esta operación.",
+    "auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.",
+    "auth/popup-blocked":"El navegador bloqueó la ventana de Google. Permite ventanas emergentes para HallValla e inténtalo otra vez.",
+    "auth/cancelled-popup-request":"La operación de Google fue cancelada porque ya había otra ventana de acceso abierta.",
+    "auth/unauthorized-domain":"Este dominio todavía no está autorizado en Firebase Authentication."
   };
   return messages[code]||String(error?.message||"No se pudo completar la operación de cuenta.");
 }
@@ -143,7 +156,7 @@ function hallvallaSetAccountMessage(message,type=""){
   el.classList.toggle("success",type==="success");
 }
 function hallvallaSetAccountBusy(busy){
-  ["accountCreateSubmitBtn","accountLoginSubmitBtn","accountResetPasswordBtn","accountVerifyEmailBtn","accountSyncNowBtn","accountSignOutBtn"].forEach(id=>{
+  ["accountCreateSubmitBtn","accountGoogleMigrateBtn","accountLoginSubmitBtn","accountGoogleLoginBtn","accountResetPasswordBtn","accountVerifyEmailBtn","accountLinkGoogleBtn","accountSyncNowBtn","accountSignOutBtn"].forEach(id=>{
     const el=$(id);if(el)el.disabled=!!busy;
   });
 }
@@ -158,11 +171,14 @@ function hallvallaRenderAccountState(user=auth?.currentUser){
       :"Cuenta temporal. Crea una cuenta para conservar este UID y migrar el progreso actual al correo que elijas.";
   }
   if(permanent){
-    const email=$("accountEmailValue"),verified=$("accountVerificationValue"),cloud=$("accountCloudValue"),verifyBtn=$("accountVerifyEmailBtn");
+    const email=$("accountEmailValue"),verified=$("accountVerificationValue"),google=$("accountGoogleValue"),cloud=$("accountCloudValue"),verifyBtn=$("accountVerifyEmailBtn"),googleBtn=$("accountLinkGoogleBtn");
+    const googleLinked=hallvallaHasGoogleProvider(user);
     if(email)email.textContent=user.email||"—";
-    if(verified)verified.textContent=user.emailVerified?"Correo verificado":"Pendiente";
+    if(verified)verified.textContent=user.emailVerified?"Correo verificado":googleLinked?"Verificada con Google":"Pendiente";
+    if(google)google.textContent=googleLinked?"Vinculado":"No vinculado";
     if(cloud)cloud.textContent=hallvallaAccountLastCloudState;
-    if(verifyBtn)verifyBtn.classList.toggle("hidden",!!user.emailVerified);
+    if(verifyBtn)verifyBtn.classList.toggle("hidden",!!user.emailVerified||googleLinked);
+    if(googleBtn)googleBtn.classList.toggle("hidden",googleLinked);
   }
 }
 function hallvallaShowAccountTab(tab){
@@ -195,11 +211,14 @@ function hallvallaCloseAccountPanel(){
 
 async function hallvallaWriteAccountMetadata(user,extra={}){
   if(!hallvallaIsPermanentAccount(user))return false;
+  const providers=[...new Set((user.providerData||[]).map(provider=>String(provider?.providerId||"").trim()).filter(Boolean))];
   const payload={
     schemaVersion:HALLVALLA_ACCOUNT_SCHEMA_VERSION,
     email:String(user.email||"").trim().toLowerCase(),
     emailVerified:!!user.emailVerified,
-    provider:"password",
+    googleLinked:providers.includes("google.com"),
+    providers,
+    provider:providers.includes("google.com")?"google":providers.includes("password")?"password":providers[0]||"unknown",
     updatedAt:Date.now(),
     ...extra
   };
@@ -325,6 +344,50 @@ async function hallvallaLoginPermanentAccount(email,password){
     return result.user;
   }finally{hallvallaAccountManualAuthTransition=false;}
 }
+async function hallvallaCreatePermanentAccountWithGoogle(){
+  let current=auth.currentUser;
+  if(!current){
+    const anonymous=await signInAnonymously(auth);
+    current=anonymous.user;
+  }
+  if(!current?.isAnonymous)throw new Error("Ya hay una cuenta permanente iniciada.");
+  const originalUid=current.uid;
+  hallvallaAccountManualAuthTransition=true;
+  try{
+    const result=await linkWithPopup(current,hallvallaGoogleProvider());
+    if(result.user.uid!==originalUid)throw new Error("Firebase cambió inesperadamente el UID durante la vinculación con Google.");
+    hallvallaSetLocalOwnerUid(result.user.uid);
+    await hallvallaWriteAccountMetadata(result.user,{linkedAt:Date.now(),migrationSource:"anonymous_uid_google"});
+    await hallvallaUploadCloudSave(result.user,{force:true,reason:"account_link_google"});
+    hallvallaRenderAccountState(result.user);
+    return result.user;
+  }finally{hallvallaAccountManualAuthTransition=false;}
+}
+async function hallvallaLoginWithGoogle(){
+  hallvallaAccountManualAuthTransition=true;
+  try{
+    const result=await signInWithPopup(auth,hallvallaGoogleProvider());
+    await hallvallaBootstrapPermanentAccount(result.user,{explicitLogin:true});
+    return result.user;
+  }finally{hallvallaAccountManualAuthTransition=false;}
+}
+async function hallvallaLinkGoogleToCurrentAccount(){
+  const current=auth.currentUser;
+  if(!hallvallaIsPermanentAccount(current))throw new Error("No hay una cuenta permanente iniciada.");
+  if(hallvallaHasGoogleProvider(current))return current;
+  const originalUid=current.uid;
+  hallvallaAccountManualAuthTransition=true;
+  try{
+    const result=await linkWithPopup(current,hallvallaGoogleProvider());
+    if(result.user.uid!==originalUid)throw new Error("Firebase cambió inesperadamente el UID durante la vinculación con Google.");
+    await result.user.reload();
+    const refreshed=auth.currentUser||result.user;
+    await hallvallaWriteAccountMetadata(refreshed,{googleLinkedAt:Date.now()});
+    await hallvallaUploadCloudSave(refreshed,{force:true,reason:"google_link"});
+    hallvallaRenderAccountState(refreshed);
+    return refreshed;
+  }finally{hallvallaAccountManualAuthTransition=false;}
+}
 async function hallvallaRequestPasswordReset(email){
   const cleanEmail=String(email||"").trim().toLowerCase();
   if(!cleanEmail)throw new Error("Escribe primero el correo de la cuenta.");
@@ -370,6 +433,33 @@ $("accountCreateForm")?.addEventListener("submit",async event=>{
   try{
     const result=await hallvallaCreatePermanentAccount($("accountCreateEmail")?.value,$("accountCreatePassword")?.value,$("accountCreatePasswordConfirm")?.value);
     hallvallaSetAccountMessage(result.cloudOk?"Cuenta creada. Conservaste tu UID y el progreso quedó guardado en Firebase. Te enviamos un correo de verificación.":"La cuenta quedó creada y conserva tu UID. La sincronización con Firebase quedó pendiente; usa «Sincronizar ahora» después de desplegar las reglas.",result.cloudOk?"success":"error");
+  }catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
+  finally{hallvallaSetAccountBusy(false);}
+});
+$("accountGoogleMigrateBtn")?.addEventListener("click",async()=>{
+  hallvallaSetAccountBusy(true);hallvallaSetAccountMessage("Abriendo Google y conservando tu UID actual...");
+  try{
+    const user=await hallvallaCreatePermanentAccountWithGoogle();
+    hallvallaSetAccountMessage("Cuenta vinculada con Google. Conservaste tu UID y tu progreso quedó sincronizado.","success");
+    hallvallaRenderAccountState(user);
+  }catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
+  finally{hallvallaSetAccountBusy(false);}
+});
+$("accountGoogleLoginBtn")?.addEventListener("click",async()=>{
+  hallvallaSetAccountBusy(true);hallvallaSetAccountMessage("Abriendo Google...");
+  try{
+    const user=await hallvallaLoginWithGoogle();
+    hallvallaRenderAccountState(user);
+    hallvallaSetAccountMessage("Sesión iniciada con Google.","success");
+  }catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
+  finally{hallvallaSetAccountBusy(false);}
+});
+$("accountLinkGoogleBtn")?.addEventListener("click",async()=>{
+  hallvallaSetAccountBusy(true);hallvallaSetAccountMessage("Vinculando Google a esta misma cuenta...");
+  try{
+    const user=await hallvallaLinkGoogleToCurrentAccount();
+    hallvallaSetAccountMessage("Google quedó vinculado a esta misma cuenta y al mismo UID.","success");
+    hallvallaRenderAccountState(user);
   }catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
   finally{hallvallaSetAccountBusy(false);}
 });
