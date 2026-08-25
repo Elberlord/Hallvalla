@@ -1838,12 +1838,8 @@ async function resolveHallvallaMineNegativeEventRemote(key){
 
     if(remoteEntry){
       const [remoteIndex]=remoteEntry;
-      const result=await runTransaction(ref(db,`users/${userId}/mine/events/active/${remoteIndex}`),current=>{
-        if(!current||String(current?.key||"")!==key)return;
-        return null;
-      },{applyLocally:false});
-      if(!result?.committed)return {committed:false,state:getHallvallaMineEventState()};
-      await runTransaction(ref(db,`users/${userId}/mine/events/nextCheckAt`),current=>Math.max(Number(current||0),nextCheckAt),{applyLocally:false});
+      // Escritura directa y atómica: evita que runTransaction aborte por caché local null.
+      await update(eventsRef,{[`active/${remoteIndex}`]:null,nextCheckAt});
     }else{
       const local=getHallvallaMineEventState();
       const localIndex=local.active.findIndex(event=>event.key===key);
