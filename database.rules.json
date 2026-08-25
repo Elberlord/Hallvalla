@@ -96,6 +96,56 @@
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
+        "account": {
+          ".write": "auth != null && auth.uid === $uid",
+          "schemaVersion": {
+            ".validate": "newData.isNumber() && newData.val() === 1"
+          },
+          "email": {
+            ".validate": "newData.isString()"
+          },
+          "emailVerified": {
+            ".validate": "newData.val() === true || newData.val() === false"
+          },
+          "provider": {
+            ".validate": "newData.isString() && newData.val() === 'password'"
+          },
+          "linkedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "migrationSource": {
+            ".validate": "newData.isString()"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "cloudSaveV1": {
+          ".write": "auth != null && auth.uid === $uid",
+          "version": {
+            ".validate": "newData.isNumber() && newData.val() === 1"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "reason": {
+            ".validate": "newData.isString()"
+          },
+          "fingerprint": {
+            ".validate": "newData.isString()"
+          },
+          "storage": {
+            "$storageKey": {
+              ".validate": "newData.isString()"
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
         "profile": {
           ".write": "auth != null && auth.uid === $uid"
         },

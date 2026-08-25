@@ -10,10 +10,20 @@ import {
   runTransaction as firebaseRunTransaction,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  EmailAuthProvider,
+  linkWithCredential,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260823.3";
 
-const BUILD = "20260824.23";
+const BUILD = "20260825.1";
 const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
@@ -203,7 +213,13 @@ Object.assign(globalThis, {
   serverTimestamp,
   getAuth,
   signInAnonymously,
-  onAuthStateChanged
+  onAuthStateChanged,
+  EmailAuthProvider,
+  linkWithCredential,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signOut
 });
 
 // Etapa 9: los módulos mixtos conservan su parte de runtime, pero sus editores/calibradores
@@ -223,6 +239,7 @@ const CORE_PARTS = [
   "10-board-interactions.js",
   "11-render-battle-tutorial.js",
   "12-profile-shop-packs.js",
+  "12b-account-auth.js",
   "12a-ai-deck-doctrines.js",
   "13-collection-deck-forge.js",
   "14-adventure-engine-ui.js",
