@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260824.14">
+<meta name="hallvalla-version" content="20260824.15">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
-<link rel="stylesheet" href="styles.css?v=20260824.14"/>
+<link rel="stylesheet" href="styles.css?v=20260824.15"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -315,21 +315,26 @@
 
       <section class="mine-panel" data-mine-panel="rewards" style="background-image:url('assets/mine/bg_rewards.webp')">
         <div class="mine-panel-scrim"></div>
-        <div class="mine-panel-content">
-          <div class="mine-chip-row">
-            <span class="mine-chip">Pendientes 3</span>
-            <span class="mine-chip">Hoy 6💎</span>
+        <div class="mine-panel-content mine-wheel-panel-content">
+          <div class="mine-chip-row mine-wheel-chip-row">
+            <span id="mineWheelFreeChip" class="mine-chip">Tiros gratis 1/30</span>
+            <span id="mineWheelRemainingChip" class="mine-chip">Premios restantes 50/50</span>
+            <span id="mineWheelNextChip" class="mine-chip">Próximo tiro gratis --:--:--</span>
           </div>
-          <div class="mine-reward-grid">
-            <article class="mine-reward-card">
-              <b>Minería</b><strong>3💎</strong><button class="mine-mini-btn" type="button">Cobrar</button>
-            </article>
-            <article class="mine-reward-card">
-              <b>Tesoro</b><strong class="mine-resource-amount">120<img class="mine-resource-icon" src="assets/home/icon_gold.webp" alt="Oro"></strong><button class="mine-mini-btn" type="button">Cobrar</button>
-            </article>
-            <article class="mine-reward-card">
-              <b>Misión</b><strong>1💎</strong><button class="mine-mini-btn" type="button">Cobrar</button>
-            </article>
+          <div class="mine-wheel-stage">
+            <div class="mine-wheel-shell" aria-label="Rueda de la fortuna de la Mina">
+              <div class="mine-wheel-pointer" aria-hidden="true"></div>
+              <div id="mineFortuneWheel" class="mine-fortune-wheel" aria-hidden="true">
+                <div class="mine-wheel-rings"></div>
+                <div class="mine-wheel-hub">HV</div>
+              </div>
+            </div>
+            <button id="mineWheelSpinBtn" class="mine-wheel-spin-btn" type="button">SPIN</button>
+            <div id="mineWheelPriceHint" class="mine-wheel-price-hint">1 tiro gratuito disponible</div>
+            <div id="mineWheelResult" class="mine-wheel-result" aria-live="polite">
+              <b>Rueda de la Mina</b>
+              <span>Presiona SPIN para tentar tu suerte.</span>
+            </div>
           </div>
         </div>
       </section>
@@ -1267,6 +1272,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260824.14"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260824.15"></script>
 </body>
 </html>

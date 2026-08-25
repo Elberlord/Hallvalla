@@ -2200,6 +2200,347 @@ async function claimHallvallaMineRewards(){
     if(btn&&btn.textContent==="Recogiendo...")btn.textContent="Recoger";
   }
 }
+
+
+/* ============================================================
+   MINA · RECOMPENSAS · RULETA PERSONAL
+   - 50 resultados por ciclo: 20 positivos / 30 negativos.
+   - Sin reemplazo dentro de la rueda actual.
+   - 1 tiro gratis diario, acumulable hasta 30 (hora servidor).
+   - Tiros pagados: 100, 250, 400... (+150 por tiro pagado).
+   - Estado personal por UID en Firebase.
+   - El premio mayor existe internamente, pero no se anuncia en HUD.
+   ============================================================ */
+const HALLVALLA_MINE_WHEEL_STORAGE_KEY="hallvalla_mine_rewards_wheel_v1";
+const HALLVALLA_MINE_WHEEL_DAY_MS=24*60*60*1000;
+const HALLVALLA_MINE_WHEEL_CYCLE_MS=30*HALLVALLA_MINE_WHEEL_DAY_MS;
+const HALLVALLA_MINE_WHEEL_FREE_MAX=30;
+const HALLVALLA_MINE_WHEEL_JACKPOT_BASE=1000;
+const HALLVALLA_MINE_WHEEL_PAID_BASE=100;
+const HALLVALLA_MINE_WHEEL_PAID_STEP=150;
+
+const HALLVALLA_MINE_WHEEL_POSITIVE=Object.freeze([
+  Object.freeze({id:"p_jackpot",kind:"positive",name:"Premio Mayor",effect:"jackpot"}),
+  Object.freeze({id:"p_half_all",kind:"positive",name:"Fiebre Minera",effect:"half_all"}),
+  Object.freeze({id:"p_half_slot",kind:"positive",name:"Impulso de Filón",effect:"half_slot"}),
+  Object.freeze({id:"p_complete_slot",kind:"positive",name:"Extracción Instantánea",effect:"complete_slot"}),
+  Object.freeze({id:"p_complete_all",kind:"positive",name:"Turno Productivo",effect:"complete_all"}),
+  Object.freeze({id:"p_cycle_slot_1",kind:"positive",name:"Filón Doble",effect:"cycles_slot",amount:1}),
+  Object.freeze({id:"p_cycle_slot_2",kind:"positive",name:"Veta Abundante",effect:"cycles_slot",amount:2}),
+  Object.freeze({id:"p_cycle_slot_3",kind:"positive",name:"Veta Excepcional",effect:"cycles_slot",amount:3}),
+  Object.freeze({id:"p_cycle_all_1",kind:"positive",name:"Jornada Productiva",effect:"cycles_all",amount:1}),
+  Object.freeze({id:"p_cycle_all_2",kind:"positive",name:"Fiebre de Cristal",effect:"cycles_all",amount:2}),
+  Object.freeze({id:"p_advance_slot_6",kind:"positive",name:"Aceleración Individual",effect:"advance_slot",hours:6}),
+  Object.freeze({id:"p_advance_all_6",kind:"positive",name:"Turno Acelerado",effect:"advance_all",hours:6}),
+  Object.freeze({id:"p_advance_slot_12",kind:"positive",name:"Impulso Mayor",effect:"advance_slot",hours:12}),
+  Object.freeze({id:"p_advance_all_12",kind:"positive",name:"Gran Impulso Minero",effect:"advance_all",hours:12}),
+  Object.freeze({id:"p_gems_25",kind:"positive",name:"Bolsa de Cristales",effect:"gems",amount:25}),
+  Object.freeze({id:"p_gems_50",kind:"positive",name:"Gran Alijo de Cristales",effect:"gems",amount:50}),
+  Object.freeze({id:"p_gold_300",kind:"positive",name:"Tesoro Minero",effect:"gold",amount:300}),
+  Object.freeze({id:"p_fragments_75",kind:"positive",name:"Fragmentos Antiguos",effect:"fragments",amount:75}),
+  Object.freeze({id:"p_free_1",kind:"positive",name:"Segundo Intento",effect:"free_spin",amount:1}),
+  Object.freeze({id:"p_free_3",kind:"positive",name:"Racha de Fortuna",effect:"free_spin",amount:3})
+]);
+const HALLVALLA_MINE_WHEEL_NEGATIVE=Object.freeze([
+  Object.freeze({id:"n_minegem_1a",kind:"negative",name:"Bolsa Rota",effect:"mine_gems",amount:1}),
+  Object.freeze({id:"n_gold_25",kind:"negative",name:"Herramienta Rota",effect:"gold_loss",amount:25}),
+  Object.freeze({id:"n_empty_1",kind:"negative",name:"Piedra Inútil",effect:"nothing"}),
+  Object.freeze({id:"n_minegem_1b",kind:"negative",name:"Cristal Fracturado",effect:"mine_gems",amount:1}),
+  Object.freeze({id:"n_gold_40",kind:"negative",name:"Repuesto Menor",effect:"gold_loss",amount:40}),
+  Object.freeze({id:"n_frag_10",kind:"negative",name:"Fragmentos Dañados",effect:"fragments_loss",amount:10}),
+  Object.freeze({id:"n_minegem_2a",kind:"negative",name:"Carga Perdida",effect:"mine_gems",amount:2}),
+  Object.freeze({id:"n_gold_50",kind:"negative",name:"Mantenimiento Forzado",effect:"gold_loss",amount:50}),
+  Object.freeze({id:"n_free_1",kind:"negative",name:"Mala Fortuna",effect:"free_loss",amount:1}),
+  Object.freeze({id:"n_minegem_2b",kind:"negative",name:"Carretilla Volcada",effect:"mine_gems",amount:2}),
+  Object.freeze({id:"n_gold_75",kind:"negative",name:"Suministros Perdidos",effect:"gold_loss",amount:75}),
+  Object.freeze({id:"n_frag_20",kind:"negative",name:"Caja Extraviada",effect:"fragments_loss",amount:20}),
+  Object.freeze({id:"n_minegem_3",kind:"negative",name:"Veta Inestable",effect:"mine_gems",amount:3}),
+  Object.freeze({id:"n_gold_100",kind:"negative",name:"Equipo Averiado",effect:"gold_loss",amount:100}),
+  Object.freeze({id:"n_empty_2",kind:"negative",name:"Galería Vacía",effect:"nothing"}),
+  Object.freeze({id:"n_gems_1",kind:"negative",name:"Cristal Perdido",effect:"gem_loss",amount:1}),
+  Object.freeze({id:"n_gold_125",kind:"negative",name:"Accidente Menor",effect:"gold_loss",amount:125}),
+  Object.freeze({id:"n_frag_30",kind:"negative",name:"Material Contaminado",effect:"fragments_loss",amount:30}),
+  Object.freeze({id:"n_gems_2",kind:"negative",name:"Robo Menor",effect:"gem_loss",amount:2}),
+  Object.freeze({id:"n_gold_150",kind:"negative",name:"Avería de Equipo",effect:"gold_loss",amount:150}),
+  Object.freeze({id:"n_paid_1a",kind:"negative",name:"Impuesto de Fortuna",effect:"paid_penalty",amount:1}),
+  Object.freeze({id:"n_gems_3",kind:"negative",name:"Mal Cargamento",effect:"gem_loss",amount:3}),
+  Object.freeze({id:"n_gold_200",kind:"negative",name:"Reparación Costosa",effect:"gold_loss",amount:200}),
+  Object.freeze({id:"n_frag_40",kind:"negative",name:"Derrame de Material",effect:"fragments_loss",amount:40}),
+  Object.freeze({id:"n_free_2",kind:"negative",name:"Racha Perdida",effect:"free_loss",amount:2}),
+  Object.freeze({id:"n_paid_1b",kind:"negative",name:"Tasa de Riesgo",effect:"paid_penalty",amount:1}),
+  Object.freeze({id:"n_frag_50",kind:"negative",name:"Lote Dañado",effect:"fragments_loss",amount:50}),
+  Object.freeze({id:"n_paid_2",kind:"negative",name:"Mala Racha",effect:"paid_penalty",amount:2}),
+  Object.freeze({id:"n_empty_3",kind:"negative",name:"Polvo y Nada Más",effect:"nothing"}),
+  Object.freeze({id:"n_empty_4",kind:"negative",name:"Filón Agotado",effect:"nothing"})
+]);
+const HALLVALLA_MINE_WHEEL_OUTCOMES=Object.freeze((()=>{
+  const list=[];
+  for(let i=0;i<10;i++)list.push(HALLVALLA_MINE_WHEEL_POSITIVE[i*2],HALLVALLA_MINE_WHEEL_NEGATIVE[i*3],HALLVALLA_MINE_WHEEL_POSITIVE[i*2+1],HALLVALLA_MINE_WHEEL_NEGATIVE[i*3+1],HALLVALLA_MINE_WHEEL_NEGATIVE[i*3+2]);
+  return list;
+})());
+const HALLVALLA_MINE_WHEEL_BY_ID=new Map(HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>[def.id,def]));
+let hallvallaMineWheelBusy=false;
+let hallvallaMineWheelRotation=0;
+let hallvallaMineWheelRemoteSyncPromise=null;
+
+function getHallvallaMineWheelDay(now=getHallvallaMineNow()){return Math.floor(Math.max(0,Number(now||0))/HALLVALLA_MINE_WHEEL_DAY_MS);}
+function createHallvallaMineWheelState(now=getHallvallaMineNow()){
+  return {version:1,cycleEndsAt:now+HALLVALLA_MINE_WHEEL_CYCLE_MS,freeSpins:1,lastGrantDay:getHallvallaMineWheelDay(now),paidSpins:0,spinsThisCycle:0,jackpot:HALLVALLA_MINE_WHEEL_JACKPOT_BASE,jackpotWon:false,remaining:HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>def.id),lastResult:null};
+}
+function normalizeHallvallaMineWheelState(raw={},now=getHallvallaMineNow()){
+  const fallback=createHallvallaMineWheelState(now);
+  const rawRemaining=Array.isArray(raw?.remaining)?raw.remaining:(raw?.remaining&&typeof raw.remaining==="object"?Object.keys(raw.remaining).sort((a,b)=>Number(a)-Number(b)).map(k=>raw.remaining[k]):fallback.remaining);
+  const seen=new Set();
+  const remaining=rawRemaining.map(v=>String(v||"")).filter(id=>HALLVALLA_MINE_WHEEL_BY_ID.has(id)&&!seen.has(id)&&(seen.add(id),true));
+  return {
+    version:1,
+    cycleEndsAt:Math.max(0,Number(raw?.cycleEndsAt||fallback.cycleEndsAt)),
+    freeSpins:Math.max(0,Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,Math.floor(Number(raw?.freeSpins??fallback.freeSpins)||0))),
+    lastGrantDay:Math.max(0,Math.floor(Number(raw?.lastGrantDay??fallback.lastGrantDay)||0)),
+    paidSpins:Math.max(0,Math.floor(Number(raw?.paidSpins||0))),
+    spinsThisCycle:Math.max(0,Math.floor(Number(raw?.spinsThisCycle||0))),
+    jackpot:Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Math.floor(Number(raw?.jackpot||HALLVALLA_MINE_WHEEL_JACKPOT_BASE))),
+    jackpotWon:raw?.jackpotWon===true,
+    remaining,
+    lastResult:raw?.lastResult&&typeof raw.lastResult==="object"?{id:String(raw.lastResult.id||""),at:Math.max(0,Number(raw.lastResult.at||0)),cost:Math.max(0,Number(raw.lastResult.cost||0)),usedFree:raw.lastResult.usedFree===true}:null
+  };
+}
+function refreshHallvallaMineWheelState(raw={},now=getHallvallaMineNow()){
+  const state=normalizeHallvallaMineWheelState(raw,now);
+  const today=getHallvallaMineWheelDay(now);
+  if(state.lastGrantDay<today){
+    const gained=Math.max(0,today-state.lastGrantDay);
+    state.freeSpins=Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,state.freeSpins+gained);
+    state.lastGrantDay=today;
+  }else if(state.lastGrantDay>today)state.lastGrantDay=today;
+  if(state.cycleEndsAt<=now||state.remaining.length===0){
+    if(state.jackpotWon)state.jackpot=HALLVALLA_MINE_WHEEL_JACKPOT_BASE;
+    else if(state.spinsThisCycle>0)state.jackpot+=HALLVALLA_MINE_WHEEL_JACKPOT_BASE;
+    state.jackpotWon=false;
+    state.cycleEndsAt=now+HALLVALLA_MINE_WHEEL_CYCLE_MS;
+    state.paidSpins=0;
+    state.spinsThisCycle=0;
+    state.remaining=HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>def.id);
+  }
+  return state;
+}
+function getHallvallaMineWheelState(){
+  try{return refreshHallvallaMineWheelState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_WHEEL_STORAGE_KEY)||"null")||{});}
+  catch(_){return createHallvallaMineWheelState();}
+}
+function cacheHallvallaMineWheelState(state){
+  const safe=normalizeHallvallaMineWheelState(state);
+  localStorage.setItem(HALLVALLA_MINE_WHEEL_STORAGE_KEY,JSON.stringify(safe));
+  return safe;
+}
+function getHallvallaMineWheelPaidCost(state=getHallvallaMineWheelState()){return HALLVALLA_MINE_WHEEL_PAID_BASE+Math.max(0,Number(state?.paidSpins||0))*HALLVALLA_MINE_WHEEL_PAID_STEP;}
+function getHallvallaMineWheelNextFreeMs(state=getHallvallaMineWheelState(),now=getHallvallaMineNow()){
+  if(state.freeSpins>=HALLVALLA_MINE_WHEEL_FREE_MAX)return 0;
+  const next=(getHallvallaMineWheelDay(now)+1)*HALLVALLA_MINE_WHEEL_DAY_MS;
+  return Math.max(0,next-now);
+}
+function buildHallvallaMineWheelGradient(){
+  const step=360/HALLVALLA_MINE_WHEEL_OUTCOMES.length;
+  return `conic-gradient(${HALLVALLA_MINE_WHEEL_OUTCOMES.map((def,index)=>{
+    const a=(index*step).toFixed(3),b=((index+1)*step).toFixed(3);
+    const tone=def.kind==="positive"?(index%2?"#2ebd85":"#1f9470"):(index%2?"#8f3340":"#b04444");
+    return `${tone} ${a}deg ${b}deg`;
+  }).join(",")})`;
+}
+function renderHallvallaMineWheel(state=getHallvallaMineWheelState()){
+  const safe=refreshHallvallaMineWheelState(state);
+  cacheHallvallaMineWheelState(safe);
+  const free=$("mineWheelFreeChip"),remaining=$("mineWheelRemainingChip"),next=$("mineWheelNextChip"),btn=$("mineWheelSpinBtn"),hint=$("mineWheelPriceHint"),wheel=$("mineFortuneWheel");
+  if(free)free.textContent=`Tiros gratis ${safe.freeSpins}/${HALLVALLA_MINE_WHEEL_FREE_MAX}`;
+  if(remaining)remaining.textContent=`Premios restantes ${safe.remaining.length}/50`;
+  if(next){
+    const ms=getHallvallaMineWheelNextFreeMs(safe);
+    next.textContent=safe.freeSpins>=HALLVALLA_MINE_WHEEL_FREE_MAX?"Tiros gratis al máximo":`Próximo tiro gratis ${formatHallvallaMineDuration(ms)}`;
+  }
+  if(wheel&&!wheel.style.backgroundImage)wheel.style.backgroundImage=buildHallvallaMineWheelGradient();
+  const cost=getHallvallaMineWheelPaidCost(safe),hasFree=safe.freeSpins>0;
+  if(btn){btn.disabled=hallvallaMineWheelBusy||!hallvallaMineOnlineReady();btn.textContent=hasFree?"SPIN":`SPIN · ${cost}💎`;}
+  if(hint)hint.textContent=hasFree?`${safe.freeSpins} tiro${safe.freeSpins===1?"":"s"} gratuito${safe.freeSpins===1?"":"s"} disponible${safe.freeSpins===1?"":"s"}`:`Siguiente tiro pagado: ${cost}💎`;
+  return safe;
+}
+function updateHallvallaMineWheelCountdown(){
+  const next=$("mineWheelNextChip");
+  if(!next)return;
+  const state=getHallvallaMineWheelState();
+  const ms=getHallvallaMineWheelNextFreeMs(state);
+  next.textContent=state.freeSpins>=HALLVALLA_MINE_WHEEL_FREE_MAX?"Tiros gratis al máximo":`Próximo tiro gratis ${formatHallvallaMineDuration(ms)}`;
+}
+async function syncHallvallaMineWheelRemote(){
+  if(hallvallaMineWheelRemoteSyncPromise)return hallvallaMineWheelRemoteSyncPromise;
+  hallvallaMineWheelRemoteSyncPromise=(async()=>{
+    const local=refreshHallvallaMineWheelState(getHallvallaMineWheelState());
+    if(HALLVALLA_LOCALHOST_TEST_MODE===true)return cacheHallvallaMineWheelState(local);
+    const userId=getHallvallaMineUserUid();
+    if(!userId||!hallvallaMineOnlineReady())return cacheHallvallaMineWheelState(local);
+    try{
+      await hallvallaMineRemoteWriteQueue;
+      const wheelRef=ref(db,`users/${userId}/mine/rewardsWheel`);
+      const snapshot=await get(wheelRef);
+      const source=snapshot?.exists?.()?snapshot.val()||{}:local;
+      const safe=refreshHallvallaMineWheelState(source);
+      cacheHallvallaMineWheelState(safe);
+      if(!snapshot?.exists?.()||JSON.stringify(normalizeHallvallaMineWheelState(source))!==JSON.stringify(safe))await set(wheelRef,safe);
+      return safe;
+    }catch(error){
+      console.warn("[HallValla][Mina][Ruleta] No se pudo sincronizar la ruleta:",error);
+      return cacheHallvallaMineWheelState(local);
+    }
+  })();
+  try{return await hallvallaMineWheelRemoteSyncPromise;}finally{hallvallaMineWheelRemoteSyncPromise=null;}
+}
+function randomHallvallaMineWheelIndex(length){
+  const max=Math.max(1,Math.floor(Number(length||1)));
+  try{const data=new Uint32Array(1);crypto.getRandomValues(data);return Number(data[0]%max);}catch(_){return Math.floor(Math.random()*max);}
+}
+async function transactHallvallaMineWheelSpin(profile){
+  const seed=await syncHallvallaMineWheelRemote();
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    const state=refreshHallvallaMineWheelState(seed);
+    const usingFree=state.freeSpins>0,cost=usingFree?0:getHallvallaMineWheelPaidCost(state);
+    if(!usingFree&&Math.max(0,Number(profile?.gems||0))<cost)return {committed:false,reason:"gems",state,cost};
+    const pick=randomHallvallaMineWheelIndex(state.remaining.length),id=state.remaining[pick],def=HALLVALLA_MINE_WHEEL_BY_ID.get(id);
+    state.remaining.splice(pick,1);state.spinsThisCycle+=1;
+    if(usingFree)state.freeSpins=Math.max(0,state.freeSpins-1);else state.paidSpins+=1;
+    if(def?.effect==="free_spin")state.freeSpins=Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,state.freeSpins+Math.max(0,Number(def.amount||0)));
+    if(def?.effect==="free_loss")state.freeSpins=Math.max(0,state.freeSpins-Math.max(0,Number(def.amount||0)));
+    if(def?.effect==="paid_penalty")state.paidSpins+=Math.max(0,Number(def.amount||0));
+    if(def?.effect==="jackpot")state.jackpotWon=true;
+    state.lastResult={id,at:getHallvallaMineNow(),cost,usedFree:usingFree};
+    cacheHallvallaMineWheelState(state);
+    return {committed:true,state,def,cost,usedFree:usingFree};
+  }
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return {committed:false,reason:"auth",state:seed,cost:0};
+  try{
+    const wheelRef=ref(db,`users/${userId}/mine/rewardsWheel`);
+    const result=await runTransaction(wheelRef,current=>{
+      const state=refreshHallvallaMineWheelState(current||seed);
+      if(!state.remaining.length)return;
+      const usingFree=state.freeSpins>0,cost=usingFree?0:getHallvallaMineWheelPaidCost(state);
+      if(!usingFree&&Math.max(0,Number(profile?.gems||0))<cost)return;
+      const pick=randomHallvallaMineWheelIndex(state.remaining.length),id=state.remaining[pick],def=HALLVALLA_MINE_WHEEL_BY_ID.get(id);
+      state.remaining.splice(pick,1);state.spinsThisCycle+=1;
+      if(usingFree)state.freeSpins=Math.max(0,state.freeSpins-1);else state.paidSpins+=1;
+      if(def?.effect==="free_spin")state.freeSpins=Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,state.freeSpins+Math.max(0,Number(def.amount||0)));
+      if(def?.effect==="free_loss")state.freeSpins=Math.max(0,state.freeSpins-Math.max(0,Number(def.amount||0)));
+      if(def?.effect==="paid_penalty")state.paidSpins+=Math.max(0,Number(def.amount||0));
+      if(def?.effect==="jackpot")state.jackpotWon=true;
+      state.lastResult={id,at:getHallvallaMineNow(),cost,usedFree:usingFree};
+      return state;
+    },{applyLocally:false});
+    if(!result?.committed)return {committed:false,reason:"gems",state:seed,cost:getHallvallaMineWheelPaidCost(seed)};
+    const state=cacheHallvallaMineWheelState(result.snapshot.val()||seed),id=String(state.lastResult?.id||""),def=HALLVALLA_MINE_WHEEL_BY_ID.get(id),cost=Math.max(0,Number(state.lastResult?.cost||0));
+    return {committed:!!def,state,def,cost,usedFree:state.lastResult?.usedFree===true};
+  }catch(error){
+    console.warn("[HallValla][Mina][Ruleta] No se pudo confirmar el SPIN:",error);
+    return {committed:false,reason:"firebase",state:seed,cost:0};
+  }
+}
+function getHallvallaMineWheelTargetSlot(mineState=getHallvallaMineState()){
+  let index=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Math.floor(Number(hallvallaMineUi.selectedSlot||0))));
+  if(mineState.slots[index]?.cardKey)return index;
+  index=mineState.slots.findIndex(slot=>slot?.cardKey);
+  return index>=0?index:-1;
+}
+function rewardHallvallaMineWheelCompensation(){
+  const profile=getPlayerProfile();profile.gems=Math.max(0,Number(profile.gems||0))+5;savePlayerProfile(profile);return "No había mineros activos: recibiste +5💎 como compensación.";
+}
+function applyHallvallaMineWheelAcceleration(def){
+  const mineState=getHallvallaMineState(),now=getHallvallaMineNow(),rate=hallvallaMineRateMs(mineState.level||1);
+  const target=getHallvallaMineWheelTargetSlot(mineState);
+  const active=mineState.slots.map((slot,index)=>slot?.cardKey?index:-1).filter(index=>index>=0);
+  if(!active.length)return rewardHallvallaMineWheelCompensation();
+  const shiftSlot=(index,ms)=>{const slot=mineState.slots[index];if(slot?.cardKey)mineState.slots[index]={...slot,startedAt:Math.max(0,Number(slot.startedAt||now)-Math.max(0,Math.floor(ms)))};};
+  if(def.effect==="half_slot"){
+    const view=getHallvallaMineSlotView(mineState.slots[target],mineState,now);shiftSlot(target,Math.ceil(view.nextMs*.5));saveHallvallaMineState(mineState);return `Ranura ${target+1}: el tiempo restante se redujo 50%.`;
+  }
+  if(def.effect==="half_all"){
+    active.forEach(index=>{const view=getHallvallaMineSlotView(mineState.slots[index],mineState,now);shiftSlot(index,Math.ceil(view.nextMs*.5));});saveHallvallaMineState(mineState);return "Todos los mineros redujeron 50% de su tiempo restante.";
+  }
+  if(def.effect==="complete_slot"){
+    const view=getHallvallaMineSlotView(mineState.slots[target],mineState,now);shiftSlot(target,Math.max(1000,view.nextMs+1000));saveHallvallaMineState(mineState);return `Ranura ${target+1}: completó inmediatamente su próximo ciclo.`;
+  }
+  if(def.effect==="complete_all"){
+    active.forEach(index=>{const view=getHallvallaMineSlotView(mineState.slots[index],mineState,now);shiftSlot(index,Math.max(1000,view.nextMs+1000));});saveHallvallaMineState(mineState);return "Todos los mineros completaron inmediatamente su próximo ciclo.";
+  }
+  if(def.effect==="cycles_slot"){
+    const cycles=Math.max(1,Math.floor(Number(def.amount||1)));shiftSlot(target,rate*cycles);saveHallvallaMineState(mineState);return `Ranura ${target+1}: obtuvo ${cycles} ciclo${cycles===1?"":"s"} extra${cycles===1?"":"s"} de producción.`;
+  }
+  if(def.effect==="cycles_all"){
+    const cycles=Math.max(1,Math.floor(Number(def.amount||1)));active.forEach(index=>shiftSlot(index,rate*cycles));saveHallvallaMineState(mineState);return `Todos los mineros obtuvieron ${cycles} ciclo${cycles===1?"":"s"} extra${cycles===1?"":"s"}.`;
+  }
+  if(def.effect==="advance_slot"){
+    const hours=Math.max(1,Number(def.hours||1));shiftSlot(target,hours*60*60*1000);saveHallvallaMineState(mineState);return `Ranura ${target+1}: avanzó ${hours}h de producción.`;
+  }
+  if(def.effect==="advance_all"){
+    const hours=Math.max(1,Number(def.hours||1));active.forEach(index=>shiftSlot(index,hours*60*60*1000));saveHallvallaMineState(mineState);return `Todos los mineros avanzaron ${hours}h de producción.`;
+  }
+  return "Bonificación aplicada.";
+}
+function applyHallvallaMineWheelOutcome(def,state){
+  if(!def)return "Resultado no disponible.";
+  if(["half_all","half_slot","complete_slot","complete_all","cycles_slot","cycles_all","advance_slot","advance_all"].includes(def.effect))return applyHallvallaMineWheelAcceleration(def);
+  if(def.effect==="jackpot"){
+    const profile=getPlayerProfile(),amount=Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Number(state?.jackpot||HALLVALLA_MINE_WHEEL_JACKPOT_BASE));profile.gems=Math.max(0,Number(profile.gems||0))+amount;savePlayerProfile(profile);return `¡Premio Mayor! +${amount}💎.`;
+  }
+  if(def.effect==="gems"||def.effect==="gold"||def.effect==="fragments"){
+    const profile=getPlayerProfile(),amount=Math.max(0,Number(def.amount||0));profile[def.effect]=Math.max(0,Number(profile[def.effect]||0))+amount;savePlayerProfile(profile);return `+${amount}${def.effect==="gems"?"💎":def.effect==="gold"?" de oro":" fragmentos"}.`;
+  }
+  if(def.effect==="gold_loss"||def.effect==="gem_loss"||def.effect==="fragments_loss"){
+    const profile=getPlayerProfile(),field=def.effect==="gold_loss"?"gold":def.effect==="gem_loss"?"gems":"fragments",amount=Math.min(Math.max(0,Number(def.amount||0)),Math.max(0,Number(profile[field]||0)));profile[field]=Math.max(0,Number(profile[field]||0)-amount);savePlayerProfile(profile);return amount>0?`Perdiste ${amount}${field==="gems"?"💎":field==="gold"?" de oro":" fragmentos"}.`:"No tenías recursos de ese tipo para perder.";
+  }
+  if(def.effect==="mine_gems"){
+    const loss=hallvallaMineLoseGems(Math.max(0,Number(def.amount||0))).total;return loss>0?`Perdiste ${loss}💎 de la producción/cartera.`:"No había diamantes disponibles para perder.";
+  }
+  if(def.effect==="free_spin")return `Ganaste ${Math.max(1,Number(def.amount||1))} tiro${Number(def.amount||1)===1?"":"s"} gratuito${Number(def.amount||1)===1?"":"s"}.`;
+  if(def.effect==="free_loss")return `Perdiste hasta ${Math.max(1,Number(def.amount||1))} tiro${Number(def.amount||1)===1?"":"s"} gratuito${Number(def.amount||1)===1?"":"s"} acumulado${Number(def.amount||1)===1?"":"s"}.`;
+  if(def.effect==="paid_penalty")return `Mala racha: el contador de tiros pagados avanzó ${Math.max(1,Number(def.amount||1))}.`;
+  return "No obtuviste ningún premio esta vez.";
+}
+function refreshHallvallaMineWheelCurrencies(){
+  const profile=getPlayerProfile(),gold=$("mineGoldValue"),gems=$("mineGemsValue");
+  if(gold)gold.textContent=Math.max(0,Number(profile.gold||0)).toLocaleString("es-ES");
+  if(gems)gems.textContent=Math.max(0,Number(profile.gems||0)).toLocaleString("es-ES");
+  try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
+}
+function animateHallvallaMineWheelTo(def){
+  const wheel=$("mineFortuneWheel");if(!wheel||!def)return Promise.resolve();
+  const index=Math.max(0,HALLVALLA_MINE_WHEEL_OUTCOMES.findIndex(entry=>entry.id===def.id)),step=360/HALLVALLA_MINE_WHEEL_OUTCOMES.length,center=(index+.5)*step,targetBase=(360-center)%360,currentBase=((hallvallaMineWheelRotation%360)+360)%360,delta=(targetBase-currentBase+360)%360;
+  hallvallaMineWheelRotation+=360*6+delta;
+  wheel.style.transform=`rotate(${hallvallaMineWheelRotation}deg)`;
+  return new Promise(resolve=>window.setTimeout(resolve,4300));
+}
+async function spinHallvallaMineWheel(){
+  if(hallvallaMineWheelBusy)return;
+  hallvallaMineWheelBusy=true;
+  const btn=$("mineWheelSpinBtn"),result=$("mineWheelResult");
+  if(btn){btn.disabled=true;btn.textContent="SPIN...";}
+  if(result){result.className="mine-wheel-result spinning";result.innerHTML="<b>Girando...</b><span>La rueda está decidiendo tu resultado.</span>";}
+  try{
+    const profile=getPlayerProfile(),tx=await transactHallvallaMineWheelSpin(profile);
+    if(!tx.committed){
+      if(result){result.className="mine-wheel-result negative";result.innerHTML=`<b>No se pudo girar</b><span>${tx.reason==="gems"?`Necesitas ${Math.max(0,Number(tx.cost||0))}💎 para el siguiente tiro pagado.`:"No se pudo confirmar el tiro con Firebase."}</span>`;}
+      return;
+    }
+    if(tx.cost>0){const fresh=getPlayerProfile();fresh.gems=Math.max(0,Number(fresh.gems||0)-tx.cost);savePlayerProfile(fresh);}
+    const effectText=applyHallvallaMineWheelOutcome(tx.def,tx.state);
+    refreshHallvallaMineWheelCurrencies();
+    await animateHallvallaMineWheelTo(tx.def);
+    if(result){result.className=`mine-wheel-result ${tx.def.kind}`;result.innerHTML=`<b>${escapeHtml(tx.def.name)}</b><span>${escapeHtml(effectText)}</span>`;}
+  }catch(error){
+    console.warn("[HallValla][Mina][Ruleta] Error durante SPIN:",error);
+    if(result){result.className="mine-wheel-result negative";result.innerHTML="<b>Error de ruleta</b><span>El tiro no pudo completarse correctamente.</span>";}
+  }finally{
+    hallvallaMineWheelBusy=false;
+    renderHallvallaMineWheel(getHallvallaMineWheelState());
+  }
+}
+
 function setMineSection(section="production"){
   const key=HALLVALLA_MINE_SECTION_TITLES[section]?section:"production";
   document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.mineTab===key));
@@ -2208,6 +2549,10 @@ function setMineSection(section="production"){
   if(title)title.textContent=HALLVALLA_MINE_SECTION_TITLES[key]||"Mina";
   if(key==="production")renderMineScreen();
   if(key==="events")renderHallvallaMineEvents(processHallvallaMineEvents());
+  if(key==="rewards"){
+    renderHallvallaMineWheel(getHallvallaMineWheelState());
+    void syncHallvallaMineWheelRemote().then(state=>renderHallvallaMineWheel(state));
+  }
 }
 function startHallvallaMineTick(){
   if(hallvallaMineUi.tick)return;
@@ -2215,8 +2560,10 @@ function startHallvallaMineTick(){
     if($("mineScreen")?.classList.contains("hidden"))return;
     const productionOpen=document.querySelector('.mine-panel[data-mine-panel="production"]')?.classList.contains("active");
     const eventsOpen=document.querySelector('.mine-panel[data-mine-panel="events"]')?.classList.contains("active");
+    const rewardsOpen=document.querySelector('.mine-panel[data-mine-panel="rewards"]')?.classList.contains("active");
     if(productionOpen)renderMineScreen();
     else if(eventsOpen)renderHallvallaMineEvents(processHallvallaMineEvents());
+    else if(rewardsOpen)updateHallvallaMineWheelCountdown();
   },1000);
 }
 function stopHallvallaMineTick(){
@@ -2264,6 +2611,7 @@ function initHallvallaMineEventScenes(){
 }
 try{document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.addEventListener("click",()=>setMineSection(btn.dataset.mineTab||"production")));}catch(_){ }
 initHallvallaMineEventScenes();
+on("mineWheelSpinBtn","click",spinHallvallaMineWheel);
 on("mineBackBtn","click",closeMineScreen);
 on("mineClaimBtn","click",claimHallvallaMineRewards);
 on("mineUnassignBtn","click",unassignHallvallaMineUnit);

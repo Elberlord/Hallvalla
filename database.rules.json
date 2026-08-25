@@ -168,6 +168,9 @@
               ".validate": false
             }
           },
+          "rewardsWheel": {
+            ".validate": true
+          },
           "stateUpdatedAt": {
             ".validate": "newData.isNumber() && newData.val() >= now - 60000 && newData.val() <= now + 10000"
           },
