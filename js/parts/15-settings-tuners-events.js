@@ -1972,9 +1972,11 @@ function renderHallvallaMineProduction(profile=getPlayerProfile()){
   const mineDamaged=hallvallaMineHasDamage();
   if(claimBtn){
     const onlineReady=hallvallaMineOnlineReady();
-    claimBtn.disabled=!unlocked||!onlineReady||aggregate.pendingTotal<=0||mineDamaged;
+    claimBtn.disabled=!unlocked||!onlineReady||(mineDamaged?false:aggregate.pendingTotal<=0);
     claimBtn.textContent=mineDamaged?"Repara la Mina":"Recoger";
-    claimBtn.title=!onlineReady?"Sincronizando con Firebase...":(mineDamaged?"Hay un evento de daño activo en la Mina.":"");
+    claimBtn.title=!onlineReady
+      ?"Sincronizando con Firebase..."
+      :(mineDamaged?"Ir a Eventos para revisar y reparar la avería activa.":"");
   }
   renderHallvallaMineSlots(mineState,aggregate,unlocked);
   renderHallvallaMineSelectedCard(mineState,aggregate,unlocked);
@@ -2100,6 +2102,12 @@ async function claimHallvallaMineRewards(){
   }
   const profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
+  if(hallvallaMineHasDamage()){
+    setMineSection("events");
+    renderHallvallaMineEvents(processHallvallaMineEvents());
+    setHallvallaMineStatus("Hay una avería activa en la Mina. Revísala y repárala desde Eventos.");
+    return;
+  }
   if(claimBtn){claimBtn.disabled=true;claimBtn.textContent="Recogiendo...";}
   const now=getHallvallaMineNow();
   let confirmedTotal=0;
