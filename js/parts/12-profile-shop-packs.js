@@ -1295,10 +1295,122 @@ async function buyGoldWithGems(index){
   await hvAlert(`Recibiste ${gold.toLocaleString("es-CR")} de oro.`,"Compra realizada");
   renderShopView("gold");
 }
-async function showGemBundleInfo(amount,price){
-  const safe=Math.max(0,Number(amount||0));
+const HALLVALLA_SHOP_PAYPAL_CLIENT_ID="AUXfqsZc5G7J1XLXdnys3uFIuVpt4wwPUN8ipJqfJ44fufokMo3rUXJsMH2VCaMrTupgFTlHshmznJ-y";
+let hallvallaShopPayPalSdkPromise=null;
+
+function getShopGemBundle(amount,price){
+  const safeAmount=Math.max(0,Number(amount||0));
   const safePrice=Math.max(0,Number(price||0));
-  await hvAlert(`${safe.toLocaleString("es-CR")} gemas por $${safePrice.toFixed(2)} USD.\n\nLa compra de gemas con dinero real todavía no está habilitada en esta vista.`,"Gemas");
+  return SHOP_GEM_BUNDLES.find(offer=>Number(offer.gems)===safeAmount&&Number(offer.usd).toFixed(2)===safePrice.toFixed(2))||null;
+}
+function ensureHallvallaShopPayPalModal(){
+  let modal=$("shopGemPayPalModal");
+  if(modal)return modal;
+  modal=document.createElement("div");
+  modal.id="shopGemPayPalModal";
+  modal.className="welcome-paypal-modal hidden";
+  modal.setAttribute("role","dialog");
+  modal.setAttribute("aria-modal","true");
+  modal.setAttribute("aria-labelledby","shopGemPayPalTitle");
+  modal.innerHTML=`
+    <section class="welcome-paypal-card">
+      <button id="shopGemPayPalCloseBtn" class="welcome-paypal-close" type="button" aria-label="Cerrar">×</button>
+      <span class="welcome-paypal-kicker">TIENDA DE GEMAS</span>
+      <h2 id="shopGemPayPalTitle">COMPRAR GEMAS</h2>
+      <div id="shopGemPayPalAmount" class="welcome-paypal-price"></div>
+      <p id="shopGemPayPalPrice" class="welcome-paypal-once"></p>
+      <div class="welcome-paypal-sandbox">SANDBOX · PAGO DE PRUEBA</div>
+      <div id="shopGemPayPalButtonContainer" class="welcome-paypal-button"></div>
+      <p id="shopGemPayPalStatus" class="welcome-paypal-status" aria-live="polite"></p>
+      <small class="welcome-paypal-note">Esta prueba procesa el checkout en PayPal Sandbox. Las gemas todavía no se acreditan automáticamente hasta conectar la verificación segura en Firebase.</small>
+    </section>`;
+  document.body.appendChild(modal);
+  const close=()=>modal.classList.add("hidden");
+  $("shopGemPayPalCloseBtn")?.addEventListener("click",close);
+  modal.addEventListener("click",event=>{if(event.target===modal)close();});
+  return modal;
+}
+function loadHallvallaShopPayPalSdk(){
+  if(globalThis.paypal?.Buttons)return Promise.resolve(globalThis.paypal);
+  if(hallvallaShopPayPalSdkPromise)return hallvallaShopPayPalSdkPromise;
+  hallvallaShopPayPalSdkPromise=new Promise((resolve,reject)=>{
+    const existing=document.getElementById("hallvallaShopPayPalSdk")||document.getElementById("hallvallaWelcomePayPalSdk");
+    if(existing){
+      existing.addEventListener("load",()=>globalThis.paypal?.Buttons?resolve(globalThis.paypal):reject(new Error("PayPal SDK no disponible.")),{once:true});
+      existing.addEventListener("error",()=>reject(new Error("No se pudo cargar PayPal SDK.")),{once:true});
+      return;
+    }
+    const script=document.createElement("script");
+    script.id="hallvallaShopPayPalSdk";
+    script.src=`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(HALLVALLA_SHOP_PAYPAL_CLIENT_ID)}&currency=USD&intent=capture&commit=true&components=buttons`;
+    script.async=true;
+    script.addEventListener("load",()=>globalThis.paypal?.Buttons?resolve(globalThis.paypal):reject(new Error("PayPal SDK no disponible.")),{once:true});
+    script.addEventListener("error",()=>reject(new Error("No se pudo cargar PayPal SDK.")),{once:true});
+    document.head.appendChild(script);
+  }).catch(error=>{
+    hallvallaShopPayPalSdkPromise=null;
+    throw error;
+  });
+  return hallvallaShopPayPalSdkPromise;
+}
+async function renderHallvallaShopGemPayPalButton(offer){
+  const container=$("shopGemPayPalButtonContainer");
+  const status=$("shopGemPayPalStatus");
+  if(!container||!offer)return;
+  const amount=Math.max(0,Number(offer.gems||0));
+  const price=Math.max(0,Number(offer.usd||0)).toFixed(2);
+  container.innerHTML="";
+  if(status)status.textContent="Cargando PayPal Sandbox...";
+  try{
+    const paypalSdk=await loadHallvallaShopPayPalSdk();
+    if(status)status.textContent="";
+    await paypalSdk.Buttons({
+      style:{layout:"vertical",shape:"rect",label:"paypal",height:42},
+      createOrder(_data,actions){
+        if(status)status.textContent="Abriendo PayPal Sandbox...";
+        return actions.order.create({
+          purchase_units:[{
+            description:`Hallvalla - ${amount} gemas`,
+            custom_id:`hallvalla_gems_${amount}`,
+            amount:{currency_code:"USD",value:price}
+          }]
+        });
+      },
+      onApprove(_data,actions){
+        if(status)status.textContent="Confirmando pago de prueba...";
+        return actions.order.capture().then(details=>{
+          const orderId=String(details?.id||"");
+          if(status)status.textContent=`Pago Sandbox completado${orderId?` · Orden ${orderId}`:""}. Las gemas todavía no se acreditan automáticamente.`;
+        });
+      },
+      onCancel(){
+        if(status)status.textContent="Pago de prueba cancelado.";
+      },
+      onError(error){
+        console.error("[HallValla][Shop PayPal Sandbox]",error);
+        if(status)status.textContent="No se pudo completar el pago de prueba. Revisa la consola o vuelve a intentarlo.";
+      }
+    }).render(container);
+  }catch(error){
+    console.error("[HallValla][Shop PayPal Sandbox] No se pudo iniciar PayPal:",error);
+    if(status)status.textContent="No se pudo cargar PayPal Sandbox. Comprueba la conexión y el Client ID.";
+  }
+}
+async function openGemBundlePayPal(amount,price){
+  const offer=getShopGemBundle(amount,price);
+  if(!offer){
+    await hvAlert("Ese paquete de gemas no coincide con una oferta válida de la tienda.","Gemas");
+    return;
+  }
+  const modal=ensureHallvallaShopPayPalModal();
+  const amountEl=$("shopGemPayPalAmount");
+  const priceEl=$("shopGemPayPalPrice");
+  const status=$("shopGemPayPalStatus");
+  if(amountEl)amountEl.innerHTML=`${Number(offer.gems).toLocaleString("es-CR")} <small>GEMAS</small>`;
+  if(priceEl)priceEl.textContent=`$${Number(offer.usd).toFixed(2)} USD`;
+  if(status)status.textContent="";
+  modal.classList.remove("hidden");
+  await renderHallvallaShopGemPayPalButton(offer);
 }
 function bindLayeredShopActions(){
   const stage=$("hvShopStage");
@@ -1321,7 +1433,7 @@ function bindLayeredShopActions(){
       return;
     }
     if(action==="buy-gold"){await buyGoldWithGems(button.dataset.goldIndex);return;}
-    if(action==="gem-bundle"){await showGemBundleInfo(button.dataset.gemAmount,button.dataset.gemPrice);return;}
+    if(action==="gem-bundle"){await openGemBundlePayPal(button.dataset.gemAmount,button.dataset.gemPrice);return;}
   }));
 }
 function openPackShop(view="main"){
