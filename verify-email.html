@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Verificar correo · HallValla</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#090704;color:#f4e5bd;font-family:Georgia,"Times New Roman",serif}
+    .card{width:min(560px,100%);padding:28px;border:1px solid #8b641b;border-radius:18px;background:#171008;box-shadow:0 18px 60px #0009}
+    h1{margin:0 0 12px;color:#ffd66b;font-size:32px}
+    p{line-height:1.55;margin:10px 0;color:#e9d9b1}
+    .status{margin:18px 0;padding:14px;border-radius:12px;background:#0d0a06;border:1px solid #4c3712}
+    .status.error{border-color:#8c382c;color:#ffb6aa}
+    .status.success{border-color:#3b7b45;color:#b9ffc3}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    button,a{appearance:none;border:1px solid #8b641b;border-radius:12px;padding:12px 18px;font:700 16px Georgia,"Times New Roman",serif;text-decoration:none;cursor:pointer}
+    button{background:#ffd15a;color:#211300}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    a{background:#20170d;color:#ffe29a}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Verificar correo</h1>
+    <p>HallValla recibió tu solicitud de verificación. El código no se utilizará hasta que pulses el botón.</p>
+    <div id="status" class="status">Comprobando el enlace…</div>
+    <div class="actions">
+      <button id="verifyBtn" type="button" disabled>Verificar mi correo</button>
+      <a id="backBtn" href="https://elberlord.github.io/Hallvalla/">Volver a HallValla</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {getAuth,checkActionCode,applyActionCode} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {firebaseConfig} from "./firebase-config.js";
+
+    const app=initializeApp(firebaseConfig);
+    const auth=getAuth(app);
+    const params=new URLSearchParams(location.search);
+    const mode=params.get("mode")||"";
+    const actionCode=params.get("oobCode")||"";
+    const status=document.getElementById("status");
+    const verifyBtn=document.getElementById("verifyBtn");
+
+    function setStatus(message,type=""){
+      status.textContent=message;
+      status.className=`status${type?` ${type}`:""}`;
+    }
+
+    async function validateLink(){
+      if(mode!=="verifyEmail"||!actionCode){
+        setStatus("Este enlace no contiene una solicitud válida de verificación de correo.","error");
+        return;
+      }
+      try{
+        await checkActionCode(auth,actionCode);
+        setStatus("El enlace es válido. Pulsa «Verificar mi correo» para completar la verificación.");
+        verifyBtn.disabled=false;
+      }catch(error){
+        console.warn("[HallValla] Enlace de verificación no válido:",error);
+        setStatus("Este enlace ya fue utilizado, venció o no es válido. Vuelve a HallValla y solicita un correo de verificación nuevo.","error");
+      }
+    }
+
+    verifyBtn.addEventListener("click",async()=>{
+      verifyBtn.disabled=true;
+      setStatus("Verificando correo…");
+      try{
+        await applyActionCode(auth,actionCode);
+        setStatus("Correo verificado correctamente. Ya puedes volver a HallValla.","success");
+      }catch(error){
+        console.warn("[HallValla] No se pudo aplicar la verificación:",error);
+        setStatus("No se pudo verificar este enlace. Vuelve a HallValla y solicita un correo nuevo.","error");
+      }
+    });
+
+    validateLink();
+  </script>
+</body>
+</html>
