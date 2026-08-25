@@ -25089,3 +25089,115 @@ body.home-deck-tutorial-active{overflow:hidden}
 #mainMenu #dailyBtn{left:2.19619327%!important;top:87.44113030%!important;width:25.62225476%!important;height:11.61695447%!important;}
 #mainMenu #welcomeBtn{left:72.76720351%!important;top:87.44113030%!important;width:25.18301611%!important;height:11.61695447%!important;}
 
+/* === PAQUETE DE BIENVENIDA · PAYPAL SANDBOX (ETAPA 1) === */
+.welcome-paypal-modal{
+  position:fixed;
+  inset:0;
+  z-index:460;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(5px);
+}
+.welcome-paypal-modal.hidden{display:none!important}
+.welcome-paypal-card{
+  position:relative;
+  width:min(470px,94vw);
+  max-height:92vh;
+  overflow:auto;
+  padding:24px 24px 20px;
+  border-radius:22px;
+  border:1px solid rgba(255,196,70,.58);
+  background:linear-gradient(180deg,rgba(39,22,10,.99),rgba(8,6,5,.99));
+  box-shadow:0 30px 90px rgba(0,0,0,.82),inset 0 1px 0 rgba(255,235,180,.14);
+  color:#fff1c4;
+  text-align:center;
+}
+.welcome-paypal-close{
+  position:absolute;
+  top:10px;
+  right:12px;
+  width:34px;
+  height:34px;
+  border:0;
+  background:transparent;
+  color:#f8d37b;
+  font-size:28px;
+  line-height:1;
+  cursor:pointer;
+}
+.welcome-paypal-kicker{
+  display:block;
+  color:#f2b632;
+  font-family:Georgia,serif;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:1.7px;
+}
+.welcome-paypal-card h2{
+  margin:7px 32px 4px;
+  color:#ffd166;
+  font-family:Georgia,serif;
+  font-size:25px;
+  line-height:1.12;
+}
+.welcome-paypal-price{
+  margin:4px 0 14px;
+  color:#fff5d7;
+  font-family:Georgia,serif;
+  font-size:35px;
+  font-weight:900;
+}
+.welcome-paypal-price small{font-size:13px;color:#d8bd88}
+.welcome-paypal-rewards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:0 0 10px;
+}
+.welcome-paypal-rewards div{
+  min-width:0;
+  padding:11px 7px;
+  border:1px solid rgba(255,209,102,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.045);
+}
+.welcome-paypal-rewards strong{
+  display:block;
+  color:#ffd166;
+  font-size:23px;
+  line-height:1;
+}
+.welcome-paypal-rewards span{
+  display:block;
+  margin-top:5px;
+  color:#ead7b8;
+  font-size:12px;
+  line-height:1.15;
+}
+.welcome-paypal-once{margin:7px 0 10px;color:#d7c5a7;font-size:12px}
+.welcome-paypal-sandbox{
+  display:inline-block;
+  margin:0 0 12px;
+  padding:5px 9px;
+  border:1px solid rgba(255,208,88,.35);
+  border-radius:999px;
+  color:#ffd166;
+  background:rgba(255,193,51,.08);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.welcome-paypal-button{min-height:42px;margin:0 auto;width:min(100%,360px)}
+.welcome-paypal-status{min-height:18px;margin:9px 0 2px;color:#f4d99d;font-size:12px;line-height:1.25}
+.welcome-paypal-note{display:block;color:#aa987c;font-size:10px;line-height:1.3}
+@media (max-width:520px){
+  .welcome-paypal-card{padding:20px 14px 16px}
+  .welcome-paypal-card h2{font-size:21px}
+  .welcome-paypal-rewards{gap:5px}
+  .welcome-paypal-rewards strong{font-size:20px}
+  .welcome-paypal-rewards span{font-size:11px}
+}
+

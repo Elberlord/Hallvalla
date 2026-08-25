@@ -2985,7 +2985,119 @@ on("friendsBtn","click",()=>showComingSoon("Amigos"));
 on("goldPlusBtn","click",()=>showComingSoon("Conseguir oro"));
 on("gemsPlusBtn","click",()=>showComingSoon("Comprar gemas"));
 on("fragmentsPlusBtn","click",()=>showComingSoon("Conseguir fragmentos"));
-on("welcomeBtn","click",()=>showComingSoon("Paquete de bienvenida"));
+/* ============================================================
+   PAQUETE DE BIENVENIDA · PAYPAL SANDBOX
+   Etapa 1: checkout de prueba únicamente. No entrega recompensas.
+   ============================================================ */
+const HALLVALLA_WELCOME_PACK_PAYPAL_CLIENT_ID="AUXfqsZc5G7J1XLXdnys3uFIuVpt4wwPUN8ipJqfJ44fufokMo3rUXJsMH2VCaMrTupgFTlHshmznJ-y";
+const HALLVALLA_WELCOME_PACK_PRICE_USD="1.99";
+let hallvallaWelcomePayPalSdkPromise=null;
+
+function ensureHallvallaWelcomePayPalModal(){
+  let modal=$("welcomePayPalModal");
+  if(modal)return modal;
+  modal=document.createElement("div");
+  modal.id="welcomePayPalModal";
+  modal.className="welcome-paypal-modal hidden";
+  modal.setAttribute("role","dialog");
+  modal.setAttribute("aria-modal","true");
+  modal.setAttribute("aria-labelledby","welcomePayPalTitle");
+  modal.innerHTML=`
+    <section class="welcome-paypal-card">
+      <button id="welcomePayPalCloseBtn" class="welcome-paypal-close" type="button" aria-label="Cerrar">×</button>
+      <span class="welcome-paypal-kicker">PAQUETE DE BIENVENIDA</span>
+      <h2 id="welcomePayPalTitle">COMIENZA CON VENTAJA</h2>
+      <div class="welcome-paypal-price">$1.99 <small>USD</small></div>
+      <div class="welcome-paypal-rewards" aria-label="Contenido del paquete">
+        <div><strong>3</strong><span>Sobres básicos</span></div>
+        <div><strong>300</strong><span>Oro</span></div>
+        <div><strong>10</strong><span>Gemas</span></div>
+      </div>
+      <p class="welcome-paypal-once">Oferta prevista como compra única por cuenta.</p>
+      <div class="welcome-paypal-sandbox">SANDBOX · PAGO DE PRUEBA</div>
+      <div id="welcomePayPalButtonContainer" class="welcome-paypal-button"></div>
+      <p id="welcomePayPalStatus" class="welcome-paypal-status" aria-live="polite"></p>
+      <small class="welcome-paypal-note">Esta etapa solo valida PayPal. Todavía no entrega sobres, oro ni gemas.</small>
+    </section>`;
+  document.body.appendChild(modal);
+  const close=()=>modal.classList.add("hidden");
+  $("welcomePayPalCloseBtn")?.addEventListener("click",close);
+  modal.addEventListener("click",event=>{if(event.target===modal)close();});
+  return modal;
+}
+
+function loadHallvallaWelcomePayPalSdk(){
+  if(globalThis.paypal?.Buttons)return Promise.resolve(globalThis.paypal);
+  if(hallvallaWelcomePayPalSdkPromise)return hallvallaWelcomePayPalSdkPromise;
+  hallvallaWelcomePayPalSdkPromise=new Promise((resolve,reject)=>{
+    const existing=document.getElementById("hallvallaWelcomePayPalSdk");
+    if(existing){
+      existing.addEventListener("load",()=>globalThis.paypal?.Buttons?resolve(globalThis.paypal):reject(new Error("PayPal SDK no disponible.")),{once:true});
+      existing.addEventListener("error",()=>reject(new Error("No se pudo cargar PayPal SDK.")),{once:true});
+      return;
+    }
+    const script=document.createElement("script");
+    script.id="hallvallaWelcomePayPalSdk";
+    script.src=`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(HALLVALLA_WELCOME_PACK_PAYPAL_CLIENT_ID)}&currency=USD&intent=capture&commit=true&components=buttons`;
+    script.async=true;
+    script.addEventListener("load",()=>globalThis.paypal?.Buttons?resolve(globalThis.paypal):reject(new Error("PayPal SDK no disponible.")),{once:true});
+    script.addEventListener("error",()=>reject(new Error("No se pudo cargar PayPal SDK.")),{once:true});
+    document.head.appendChild(script);
+  }).catch(error=>{
+    hallvallaWelcomePayPalSdkPromise=null;
+    throw error;
+  });
+  return hallvallaWelcomePayPalSdkPromise;
+}
+
+async function renderHallvallaWelcomePayPalButton(){
+  const container=$("welcomePayPalButtonContainer");
+  const status=$("welcomePayPalStatus");
+  if(!container)return;
+  container.innerHTML="";
+  if(status)status.textContent="Cargando PayPal Sandbox...";
+  try{
+    const paypalSdk=await loadHallvallaWelcomePayPalSdk();
+    if(status)status.textContent="";
+    await paypalSdk.Buttons({
+      style:{layout:"vertical",shape:"rect",label:"paypal",height:42},
+      createOrder(_data,actions){
+        if(status)status.textContent="Abriendo PayPal Sandbox...";
+        return actions.order.create({
+          purchase_units:[{
+            description:"Hallvalla - Paquete de bienvenida",
+            amount:{currency_code:"USD",value:HALLVALLA_WELCOME_PACK_PRICE_USD}
+          }]
+        });
+      },
+      onApprove(_data,actions){
+        if(status)status.textContent="Confirmando pago de prueba...";
+        return actions.order.capture().then(details=>{
+          const orderId=String(details?.id||"");
+          if(status)status.textContent=`Pago Sandbox completado${orderId?` · Orden ${orderId}`:""}. No se entregaron recompensas.`;
+        });
+      },
+      onCancel(){
+        if(status)status.textContent="Pago de prueba cancelado.";
+      },
+      onError(error){
+        console.error("[HallValla][PayPal Sandbox]",error);
+        if(status)status.textContent="No se pudo completar el pago de prueba. Revisa la consola o vuelve a intentarlo.";
+      }
+    }).render(container);
+  }catch(error){
+    console.error("[HallValla][PayPal Sandbox] No se pudo iniciar PayPal:",error);
+    if(status)status.textContent="No se pudo cargar PayPal Sandbox. Comprueba la conexión y el Client ID.";
+  }
+}
+
+function openHallvallaWelcomePack(){
+  const modal=ensureHallvallaWelcomePayPalModal();
+  modal.classList.remove("hidden");
+  void renderHallvallaWelcomePayPalButton();
+}
+
+on("welcomeBtn","click",openHallvallaWelcomePack);
 /* ============================================================
    RECOMPENSA DIARIA · CADENA MENSUAL
    - Una reclamación cada 24 horas reales.
