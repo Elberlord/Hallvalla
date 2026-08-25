@@ -2125,21 +2125,52 @@ async function claimHallvallaMineRewards(){
       localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(freshState));
     }
 
-    const tx=await transactHallvallaMineStateRemote(current=>{
-      let transactionTotal=0;
-      const source=normalizeHallvallaMineState(current);
-      const next=normalizeHallvallaMineState(source);
-      next.slots=source.slots.map(slot=>{
-        const safe=normalizeHallvallaMineSlot(slot);
-        const view=getHallvallaMineSlotView(safe,source,now);
-        if(!view.active||view.pending<=0)return safe;
-        transactionTotal+=Math.max(0,Math.floor(Number(view.pending||0)));
-        return {...safe,claimedCycles:Math.max(safe.claimedCycles,view.produced)};
+    let tx={committed:false,state:getHallvallaMineState()};
+    if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+      tx=await transactHallvallaMineStateRemote(current=>{
+        let transactionTotal=0;
+        const source=normalizeHallvallaMineState(current);
+        const next=normalizeHallvallaMineState(source);
+        next.slots=source.slots.map(slot=>{
+          const safe=normalizeHallvallaMineSlot(slot);
+          const view=getHallvallaMineSlotView(safe,source,now);
+          if(!view.active||view.pending<=0)return safe;
+          transactionTotal+=Math.max(0,Math.floor(Number(view.pending||0)));
+          return {...safe,claimedCycles:Math.max(safe.claimedCycles,view.produced)};
+        });
+        if(transactionTotal<=0){confirmedTotal=0;return;}
+        confirmedTotal=transactionTotal;
+        return next;
       });
-      if(transactionTotal<=0){confirmedTotal=0;return;}
-      confirmedTotal=transactionTotal;
-      return next;
-    });
+    }else{
+      const userId=getHallvallaMineUserUid();
+      if(!userId)throw new Error("Usuario no autenticado");
+      await hallvallaMineRemoteWriteQueue;
+      const stateRef=ref(db,`users/${userId}/mine/state`);
+      const seedSnapshot=await get(stateRef);
+      if(!seedSnapshot?.exists?.())throw new Error("Estado remoto de Mina no disponible");
+      const remoteSeed=normalizeHallvallaMineState(seedSnapshot.val()||{});
+      const result=await runTransaction(stateRef,current=>{
+        const source=normalizeHallvallaMineState(current==null?remoteSeed:current);
+        let transactionTotal=0;
+        const next=normalizeHallvallaMineState(source);
+        next.slots=source.slots.map(slot=>{
+          const safe=normalizeHallvallaMineSlot(slot);
+          const view=getHallvallaMineSlotView(safe,source,now);
+          if(!view.active||view.pending<=0)return safe;
+          transactionTotal+=Math.max(0,Math.floor(Number(view.pending||0)));
+          return {...safe,claimedCycles:Math.max(safe.claimedCycles,view.produced)};
+        });
+        confirmedTotal=transactionTotal;
+        return transactionTotal>0?next:undefined;
+      },{applyLocally:false});
+      if(result?.committed){
+        const safe=normalizeHallvallaMineState(result.snapshot.val()||{});
+        localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+        queueHallvallaMineRemotePatch({stateUpdatedAt:serverTimestamp()});
+        tx={committed:true,state:safe};
+      }
+    }
 
     if(!tx.committed||confirmedTotal<=0){
       setHallvallaMineStatus("No hay gemas nuevas por recoger o ya fueron reclamadas desde otro dispositivo.");
