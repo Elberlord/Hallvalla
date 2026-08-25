@@ -24794,10 +24794,19 @@ body.home-deck-tutorial-active{overflow:hidden}
   border:4px solid rgba(255,244,194,.92);
   box-shadow:0 5px 18px rgba(0,0,0,.48),inset 0 1px 8px rgba(255,255,255,.42);
   color:#251509;
-  font-size:clamp(17px,2vw,28px);
-  font-weight:1000;
-  letter-spacing:.06em;
   text-shadow:0 1px 0 rgba(255,255,255,.38);
+}
+.mine-wheel-hallvalla-mark{
+  display:block;
+  font-family:Georgia,serif;
+  font-size:clamp(7px,.82vw,12px);
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.03em;
+  color:#2b1709;
+  text-shadow:0 1px 0 rgba(255,255,255,.50),0 2px 4px rgba(0,0,0,.18);
+  transform:scaleX(.92);
+  white-space:nowrap;
 }
 .mine-wheel-pointer{
   position:absolute;
