@@ -1880,7 +1880,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6I-FULL-DUEL-UNLOCK";
 
   on("onlineBtn","click",openCleanRoom);
-  on("playBtn","click",openCleanRoom);
   on("backMenuFromLobby","click",backToMain);
   on("createBtn","click",createMinimalPublicRoom);
   on("joinBtn","click",joinExistingRoom);
