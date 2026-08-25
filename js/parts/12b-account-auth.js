@@ -175,10 +175,18 @@ function hallvallaShowAccountTab(tab){
   $("accountLoginTabBtn")?.classList.toggle("ghost",create);
   hallvallaSetAccountMessage("");
 }
-function hallvallaOpenAccountPanel(){
+async function hallvallaOpenAccountPanel(){
   $("profilePanel")?.classList.add("hidden");
   $("accountPanel")?.classList.remove("hidden");
   hallvallaRenderAccountState();
+  const user=auth?.currentUser;
+  if(!hallvallaIsPermanentAccount(user))return;
+  try{
+    await user.reload();
+    hallvallaRenderAccountState(auth.currentUser);
+  }catch(error){
+    console.warn("[HallValla] No se pudo refrescar el estado de verificación del correo:",error);
+  }
 }
 function hallvallaCloseAccountPanel(){
   $("accountPanel")?.classList.add("hidden");
