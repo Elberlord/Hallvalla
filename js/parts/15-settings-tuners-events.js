@@ -2837,8 +2837,7 @@ function renderHallvallaMineShop(state=getHallvallaMineShopState()){
     const art=String(card.portrait||getHallvallaMineCardImage(card)||"");
     const buttonText=complete?"DESBLOQUEADA":boughtToday?"PIEZA COMPRADA HOY":`COMPRAR PIEZA · ${HALLVALLA_MINE_SHOP_PIECE_COST}💎`;
     return `<article class="mine-shop-card mine-undead-offer${complete?" unlocked":""}">
-      <div class="mine-shop-puzzle-art"><img src="${escapeHtml(art)}" alt="${escapeHtml(card.name)}" draggable="false"><div class="mine-shop-puzzle-grid">${getHallvallaMineShopPuzzleHtml(key,pieces)}</div></div>
-      <div class="mine-shop-offer-copy"><b>${escapeHtml(card.name)}</b><small>Legendaria · No Muerto</small><strong>${pieces}/25 piezas</strong></div>
+      <div class="mine-shop-puzzle-art"><img src="${escapeHtml(art)}" alt="${escapeHtml(card.name)}" draggable="false"><div class="mine-shop-puzzle-grid">${getHallvallaMineShopPuzzleHtml(key,pieces)}</div><div class="mine-shop-offer-overlay"><b>${escapeHtml(card.name)}</b><small>Legendaria · No Muerto</small><strong>${pieces}/25 piezas</strong></div></div>
       <button class="mine-mini-btn mine-shop-buy-piece" data-mine-shop-buy="${escapeHtml(key)}" type="button" ${complete||boughtToday?"disabled":""}>${escapeHtml(buttonText)}</button>
     </article>`;
   }).join("");
