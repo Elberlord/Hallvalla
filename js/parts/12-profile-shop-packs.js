@@ -1553,6 +1553,15 @@ const ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS=Object.freeze({
     ["fireball",1],["bolt",1],["paralysis_spell",1],["tanned_hide_harness",1],["counterweighted_grip",1]
   ])
 });
+function isMineExclusiveCard(card){
+  if(!card)return false;
+  return card.mineExclusive===true
+    || card.minePuzzle===true
+    || card.packEligible===false
+    || card.craftable===false
+    || String(card.obtainSource||card.source||card.packSource||"").toLowerCase()==="mine"
+    || String(card.exclusiveSource||"").toLowerCase()==="mine";
+}
 const ADAPTIVE_CAMPAIGN_RARITY_ORDER=Object.freeze(["basic","epic","glorious","mythic","legendary"]);
 const ADAPTIVE_CAMPAIGN_VISIBLE_RARITY=Object.freeze({basic:"Básica",epic:"Rara",glorious:"Épica",mythic:"Mítica",legendary:"Legendaria"});
 

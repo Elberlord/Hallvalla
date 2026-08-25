@@ -92,7 +92,13 @@ const CARD_PORTRAITS={
   huntingNet:"assets/cards/beasts/red_de_caza.webp",
   bloodBait:"assets/cards/beasts/carnada_ambar.webp",
   trackingSmoke:"assets/cards/beasts/estacas_de_bambu.webp",
-  ropeCage:"assets/cards/beasts/jaula_de_cuerda.webp"
+  ropeCage:"assets/cards/beasts/jaula_de_cuerda.webp",
+  vorthalixOraculoOsario:"assets/cards/special/units/vorthalix_oraculo_osario.webp",
+  drakorGuardiaSepulcro:"assets/cards/special/units/drakor_guardia_sepulcro.webp",
+  gorthakHachaTumulo:"assets/cards/special/units/gorthak_hacha_tumulo.webp",
+  zyrekSombraCripta:"assets/cards/special/units/zyrek_sombra_cripta.webp",
+  morgashJineteOsario:"assets/cards/special/units/morgash_jinete_osario.webp",
+  xultharOjoSepulcro:"assets/cards/special/units/xulthar_ojo_sepulcro.webp",
 };
 
 /* PERF6A · El tablero usa exclusivamente field_figures. Las cartas completas se reservan para mano/Biblioteca/UI. */

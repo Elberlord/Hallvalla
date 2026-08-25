@@ -56,6 +56,15 @@ function randomPackCards(pool,count=2){
 // pools generales de sobres, independientemente de su rareza interna. Su fuente
 // de pack es exclusivamente beast_pack. El flag permite ampliar el catálogo sin
 // depender de que la carta sea una unidad Bestia.
+function isMineExclusiveCard(card){
+  if(!card)return false;
+  return card.mineExclusive===true
+    || card.minePuzzle===true
+    || card.packEligible===false
+    || card.craftable===false
+    || String(card.obtainSource||card.source||card.packSource||"").toLowerCase()==="mine"
+    || String(card.exclusiveSource||"").toLowerCase()==="mine";
+}
 function isBeastMasterExclusivePackCard(card){
   if(!card)return false;
   const key=String(card.key||card.name||"");
@@ -87,7 +96,7 @@ function getRandomBeastMasterPackCards(count=2){
 }
 function isBasicNonBeastPackCard(card){
   const rarity=String(card?.rarity||card?.rareza||"Básica").toLowerCase();
-  return !!card&&card.key&&card.type&&(rarity==="básica"||rarity==="basica"||rarity==="basic")&&!card.special&&!isBeastMasterExclusivePackCard(card);
+  return !!card&&card.key&&card.type&&(rarity==="básica"||rarity==="basica"||rarity==="basic")&&!card.special&&!isBeastMasterExclusivePackCard(card)&&!isMineExclusiveCard(card);
 }
 function getBasicNonBeastPackPool(){
   const byKey=new Map();
@@ -114,7 +123,7 @@ function getAllShopPackCards(){
     ...(typeof ADVENTURE_SPECIALS!=="undefined"?Object.values(ADVENTURE_SPECIALS||{}):[])
   ];
   const byKey=new Map();
-  pools.filter(card=>card&&!isBeastMasterExclusivePackCard(card)).forEach(card=>{
+  pools.filter(card=>card&&!isBeastMasterExclusivePackCard(card)&&!isMineExclusiveCard(card)).forEach(card=>{
     const key=card.key||card.name;
     if(!key)return;
     if(!byKey.has(key))byKey.set(key,{...hydrateCardVisualData(card)});
@@ -503,7 +512,7 @@ function getCraftableCardPool(){
   ];
   const byKey=new Map();
   pools.flat().filter(Boolean).forEach(card=>{
-    if(!card.key)return;
+    if(!card.key||isMineExclusiveCard(card))return;
     const hydrated=hydrateCardVisualData(card);
     byKey.set(hydrated.key,{...hydrated});
   });
