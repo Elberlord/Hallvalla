@@ -168,6 +168,9 @@
               ".validate": false
             }
           },
+          "missions": {
+            ".validate": true
+          },
           "rewardsWheel": {
             ".validate": true
           },

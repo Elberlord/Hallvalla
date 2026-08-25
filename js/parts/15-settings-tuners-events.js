@@ -1880,6 +1880,7 @@ async function handleHallvallaMineEventAction(key,button=null){
     savePlayerProfile(profile);
     try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
     setHallvallaMineStatus(`Reparación completada: -${cost} de oro.`);
+    void recordHallvallaMineMissionStat(`repair_${key}`,1);
     renderMineScreen();
     renderHallvallaMineEvents(tx.state);
     return;
@@ -2065,6 +2066,7 @@ async function assignHallvallaMineUnit(cardKey=""){
   });
   if(!tx.committed){setHallvallaMineStatus(`La ranura ${selectedIndex+1} ya fue ocupada en otro dispositivo o Firebase no pudo confirmar la asignación.`);renderMineScreen();return;}
   setHallvallaMineStatus(`${card.name||"Unidad"} enviada a minar en la ranura ${selectedIndex+1}.`);
+  void recordHallvallaMineMissionStat("max_active",tx.state.slots.filter(slot=>slot?.cardKey).length,"max");
   renderMineScreen();
 }
 async function unassignHallvallaMineUnit(){
@@ -2088,7 +2090,7 @@ async function unassignHallvallaMineUnit(){
     return next;
   });
   if(!tx.committed){setHallvallaMineStatus("La unidad ya fue retirada en otro dispositivo o Firebase no pudo confirmar la operación.");return;}
-  if(earned>0){profile.gems=Math.max(0,Number(profile.gems||0))+earned;savePlayerProfile(profile);}
+  if(earned>0){profile.gems=Math.max(0,Number(profile.gems||0))+earned;savePlayerProfile(profile);void recordHallvallaMineMissionStat("collected_gems",earned);}
   try{if(earned>0){if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}}catch(_){ }
   setHallvallaMineStatus(earned>0?`${removedName} retirada de la mina. Recogiste ${earned} gema${earned===1?"":"s"}.`:`${removedName} retirada de la mina.`);
   renderMineScreen();
@@ -2181,6 +2183,7 @@ async function claimHallvallaMineRewards(){
     const reward=Math.max(0,Math.floor(Number(confirmedTotal||0)));
     const updatedProfile={...profile,gems:Math.max(0,Number(profile.gems||0))+reward};
     savePlayerProfile(updatedProfile);
+    if(reward>0)void recordHallvallaMineMissionStat("collected_gems",reward);
 
     // Actualización inmediata del contador visible de la Mina, además del render general.
     const gemsEl=$("mineGemsValue");
@@ -2529,6 +2532,8 @@ async function spinHallvallaMineWheel(){
     }
     if(tx.cost>0){const fresh=getPlayerProfile();fresh.gems=Math.max(0,Number(fresh.gems||0)-tx.cost);savePlayerProfile(fresh);}
     const effectText=applyHallvallaMineWheelOutcome(tx.def,tx.state);
+    void recordHallvallaMineMissionStat("wheel_spins",1);
+    if(tx.def?.effect==="jackpot")void recordHallvallaMineMissionStat("jackpot_wins",1);
     refreshHallvallaMineWheelCurrencies();
     await animateHallvallaMineWheelTo(tx.def);
     if(result){result.className=`mine-wheel-result ${tx.def.kind}`;result.innerHTML=`<b>${escapeHtml(tx.def.name)}</b><span>${escapeHtml(effectText)}</span>`;}
@@ -2541,6 +2546,163 @@ async function spinHallvallaMineWheel(){
   }
 }
 
+
+/* ============================================================
+   MINA · MISIONES FUNCIONALES
+   - Sustituye la maqueta visual anterior de Mina > Misiones.
+   - Progreso personal por UID en Firebase.
+   - Recompensas reclamables una sola vez.
+   ============================================================ */
+const HALLVALLA_MINE_MISSIONS_STORAGE_KEY="hallvalla_mine_missions_v1";
+const HALLVALLA_MINE_MISSION_DEFS=Object.freeze([
+  Object.freeze({id:"fire_control",title:"Fuego bajo control",description:"Apaga 1 incendio de la Mina.",stat:"repair_incendio",target:1,reward:{gold:75}}),
+  Object.freeze({id:"flood_control",title:"Aguas bajo control",description:"Repara 1 inundación de la Mina.",stat:"repair_inundacion",target:1,reward:{gold:75}}),
+  Object.freeze({id:"cave_secure",title:"Galería asegurada",description:"Repara 1 derrumbe de la Mina.",stat:"repair_derrumbe",target:1,reward:{gold:100}}),
+  Object.freeze({id:"collect_10",title:"Jornada de extracción",description:"Recoge 10 gemas producidas por tus mineros.",stat:"collected_gems",target:10,reward:{gold:120}}),
+  Object.freeze({id:"full_capacity",title:"Mina a plena capacidad",description:"Mantén las 5 ranuras de minería activas al mismo tiempo.",stat:"max_active",target:5,reward:{gems:3}}),
+  Object.freeze({id:"wheel_5",title:"Tentando a la fortuna",description:"Completa 5 giros en la Rueda de la Mina.",stat:"wheel_spins",target:5,reward:{gold:100}}),
+  Object.freeze({id:"jackpot",title:"Golpe de suerte",description:"Obtén el Premio Mayor en la Rueda de la Mina.",stat:"jackpot_wins",target:1,reward:{gold:500}}),
+  Object.freeze({id:"collect_50",title:"Maestro minero",description:"Recoge un total de 50 gemas producidas por la Mina.",stat:"collected_gems",target:50,reward:{gems:10}})
+]);
+const HALLVALLA_MINE_MISSION_STATS=Object.freeze(["repair_incendio","repair_inundacion","repair_derrumbe","collected_gems","max_active","wheel_spins","jackpot_wins"]);
+let hallvallaMineMissionsRemoteSyncPromise=null;
+
+function createHallvallaMineMissionsState(){
+  const stats={};HALLVALLA_MINE_MISSION_STATS.forEach(key=>stats[key]=0);
+  return {version:1,stats,claimed:{}};
+}
+function normalizeHallvallaMineMissionsState(raw={}){
+  const base=createHallvallaMineMissionsState(),stats={};
+  HALLVALLA_MINE_MISSION_STATS.forEach(key=>stats[key]=Math.max(0,Math.floor(Number(raw?.stats?.[key]||0))));
+  const claimed={};
+  if(raw?.claimed&&typeof raw.claimed==="object")HALLVALLA_MINE_MISSION_DEFS.forEach(def=>{if(raw.claimed[def.id]===true)claimed[def.id]=true;});
+  return {version:1,stats,claimed};
+}
+function getHallvallaMineMissionsState(){
+  try{return normalizeHallvallaMineMissionsState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_MISSIONS_STORAGE_KEY)||"null")||{});}
+  catch(_){return createHallvallaMineMissionsState();}
+}
+function cacheHallvallaMineMissionsState(state){
+  const safe=normalizeHallvallaMineMissionsState(state);
+  try{localStorage.setItem(HALLVALLA_MINE_MISSIONS_STORAGE_KEY,JSON.stringify(safe));}catch(_){ }
+  return safe;
+}
+function getHallvallaMineMissionRewardText(reward={}){
+  const parts=[];
+  if(Number(reward.gold||0)>0)parts.push(`${Math.floor(Number(reward.gold))} de oro`);
+  if(Number(reward.gems||0)>0)parts.push(`${Math.floor(Number(reward.gems))}💎`);
+  if(Number(reward.fragments||0)>0)parts.push(`${Math.floor(Number(reward.fragments))} fragmentos`);
+  return parts.join(" + ")||"Recompensa";
+}
+function seedHallvallaMineMissionFacts(state=getHallvallaMineMissionsState()){
+  const safe=normalizeHallvallaMineMissionsState(state);
+  try{
+    const active=getHallvallaMineState().slots.filter(slot=>slot?.cardKey).length;
+    safe.stats.max_active=Math.max(safe.stats.max_active,active);
+  }catch(_){ }
+  try{
+    const wheel=getHallvallaMineWheelState();
+    safe.stats.wheel_spins=Math.max(safe.stats.wheel_spins,Math.max(0,Number(wheel?.spinsThisCycle||0)));
+    if(wheel?.jackpotWon===true)safe.stats.jackpot_wins=Math.max(1,safe.stats.jackpot_wins);
+  }catch(_){ }
+  return safe;
+}
+async function syncHallvallaMineMissionsRemote(){
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true)return cacheHallvallaMineMissionsState(seedHallvallaMineMissionFacts());
+  if(hallvallaMineMissionsRemoteSyncPromise)return hallvallaMineMissionsRemoteSyncPromise;
+  hallvallaMineMissionsRemoteSyncPromise=(async()=>{
+    const userId=getHallvallaMineUserUid();
+    if(!userId||!hallvallaMineOnlineReady())return getHallvallaMineMissionsState();
+    try{
+      await hallvallaMineRemoteWriteQueue;
+      const missionsRef=ref(db,`users/${userId}/mine/missions`),snapshot=await get(missionsRef);
+      let safe=snapshot?.exists?.()?normalizeHallvallaMineMissionsState(snapshot.val()||{}):seedHallvallaMineMissionFacts(getHallvallaMineMissionsState());
+      safe=seedHallvallaMineMissionFacts(safe);
+      if(!snapshot?.exists?.())await set(missionsRef,safe);
+      else{
+        const remote=normalizeHallvallaMineMissionsState(snapshot.val()||{});
+        if(JSON.stringify(remote)!==JSON.stringify(safe))await set(missionsRef,safe);
+      }
+      return cacheHallvallaMineMissionsState(safe);
+    }catch(error){
+      console.warn("[HallValla][Mina][Misiones] No se pudo sincronizar:",error);
+      return getHallvallaMineMissionsState();
+    }
+  })();
+  try{return await hallvallaMineMissionsRemoteSyncPromise;}finally{hallvallaMineMissionsRemoteSyncPromise=null;}
+}
+async function recordHallvallaMineMissionStat(stat,value=1,mode="add"){
+  if(!HALLVALLA_MINE_MISSION_STATS.includes(stat))return false;
+  const amount=Math.max(0,Math.floor(Number(value||0)));if(amount<=0)return false;
+  const local=getHallvallaMineMissionsState();
+  local.stats[stat]=mode==="max"?Math.max(local.stats[stat],amount):local.stats[stat]+amount;
+  cacheHallvallaMineMissionsState(local);
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){renderHallvallaMineMissions(local);return true;}
+  const userId=getHallvallaMineUserUid();if(!userId||!hallvallaMineOnlineReady())return false;
+  try{
+    const statRef=ref(db,`users/${userId}/mine/missions/stats/${stat}`);
+    const result=await runTransaction(statRef,current=>{
+      const n=Math.max(0,Math.floor(Number(current||0)));
+      return mode==="max"?Math.max(n,amount):n+amount;
+    },{applyLocally:false});
+    if(result?.committed){
+      const fresh=getHallvallaMineMissionsState();fresh.stats[stat]=Math.max(0,Math.floor(Number(result.snapshot.val()||0)));cacheHallvallaMineMissionsState(fresh);renderHallvallaMineMissions(fresh);return true;
+    }
+  }catch(error){console.warn("[HallValla][Mina][Misiones] No se pudo registrar progreso:",error);}
+  return false;
+}
+function getHallvallaMineMissionProgress(def,state=getHallvallaMineMissionsState()){
+  return Math.max(0,Math.floor(Number(state?.stats?.[def.stat]||0)));
+}
+function applyHallvallaMineMissionReward(reward={}){
+  const profile=getPlayerProfile();
+  if(Number(reward.gold||0)>0)profile.gold=Math.max(0,Number(profile.gold||0))+Math.floor(Number(reward.gold));
+  if(Number(reward.gems||0)>0)profile.gems=Math.max(0,Number(profile.gems||0))+Math.floor(Number(reward.gems));
+  if(Number(reward.fragments||0)>0)profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.floor(Number(reward.fragments));
+  savePlayerProfile(profile);
+  try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
+  const gold=$("mineGoldValue"),gems=$("mineGemsValue");
+  if(gold)gold.textContent=Math.max(0,Number(profile.gold||0)).toLocaleString("es-ES");
+  if(gems)gems.textContent=Math.max(0,Number(profile.gems||0)).toLocaleString("es-ES");
+}
+async function claimHallvallaMineMission(missionId=""){
+  const def=HALLVALLA_MINE_MISSION_DEFS.find(entry=>entry.id===missionId);if(!def)return;
+  let state=await syncHallvallaMineMissionsRemote();
+  const progress=getHallvallaMineMissionProgress(def,state);
+  if(progress<def.target)return;
+  if(state.claimed?.[def.id])return;
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){state.claimed[def.id]=true;cacheHallvallaMineMissionsState(state);applyHallvallaMineMissionReward(def.reward);renderHallvallaMineMissions(state);return;}
+  const userId=getHallvallaMineUserUid();if(!userId)return;
+  try{
+    const claimRef=ref(db,`users/${userId}/mine/missions/claimed/${def.id}`);
+    const result=await runTransaction(claimRef,current=>current===true?undefined:true,{applyLocally:false});
+    if(!result?.committed)return;
+    state=getHallvallaMineMissionsState();state.claimed[def.id]=true;cacheHallvallaMineMissionsState(state);
+    applyHallvallaMineMissionReward(def.reward);
+    const status=$("mineMissionStatus");if(status)status.textContent=`Recompensa recibida: ${getHallvallaMineMissionRewardText(def.reward)}.`;
+    renderHallvallaMineMissions(state);
+  }catch(error){
+    console.warn("[HallValla][Mina][Misiones] No se pudo reclamar:",error);
+    const status=$("mineMissionStatus");if(status)status.textContent="No se pudo confirmar la recompensa con Firebase.";
+  }
+}
+function renderHallvallaMineMissions(state=seedHallvallaMineMissionFacts(getHallvallaMineMissionsState())){
+  const grid=$("mineMissionGrid");if(!grid)return;
+  const safe=cacheHallvallaMineMissionsState(state);
+  let complete=0,pending=0;
+  grid.innerHTML=HALLVALLA_MINE_MISSION_DEFS.map(def=>{
+    const progress=getHallvallaMineMissionProgress(def,safe),shown=Math.min(progress,def.target),pct=Math.max(0,Math.min(100,(shown/Math.max(1,def.target))*100));
+    const done=progress>=def.target,claimed=safe.claimed?.[def.id]===true;if(done)complete++;if(done&&!claimed)pending++;
+    const status=claimed?"Reclamada":done?"Lista":`${shown}/${def.target}`;
+    return `<article class="mine-mission-home-card${done?" done":""}${claimed?" claimed":""}"><div class="mine-mission-home-copy"><b>${escapeHtml(def.title)}</b><small>${escapeHtml(def.description)}</small></div><div class="mine-mission-home-progress"><span style="width:${pct.toFixed(1)}%"></span></div><div class="mine-mission-home-footer"><span class="mine-mission-home-count">${escapeHtml(status)}</span><span class="mine-mission-home-reward">${escapeHtml(getHallvallaMineMissionRewardText(def.reward))}</span><button class="mine-mission-home-claim" data-mine-mission-claim="${escapeHtml(def.id)}" type="button" aria-label="Reclamar ${escapeHtml(def.title)}" ${done&&!claimed?"":"disabled"}><img src="assets/ui/missions/btn_reclamar.webp" alt="Reclamar" draggable="false"></button></div></article>`;
+  }).join("");
+  const total=$("mineMissionsTotalChip"),completed=$("mineMissionsCompleteChip"),pendingChip=$("mineMissionsPendingChip");
+  if(total)total.textContent=`Misiones ${HALLVALLA_MINE_MISSION_DEFS.length}`;
+  if(completed)completed.textContent=`Completadas ${complete}/${HALLVALLA_MINE_MISSION_DEFS.length}`;
+  if(pendingChip)pendingChip.textContent=`Por reclamar ${pending}`;
+  grid.querySelectorAll("[data-mine-mission-claim]").forEach(btn=>btn.addEventListener("click",()=>claimHallvallaMineMission(String(btn.dataset.mineMissionClaim||""))));
+}
+
 function setMineSection(section="production"){
   const key=HALLVALLA_MINE_SECTION_TITLES[section]?section:"production";
   document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.mineTab===key));
@@ -2549,6 +2711,10 @@ function setMineSection(section="production"){
   if(title)title.textContent=HALLVALLA_MINE_SECTION_TITLES[key]||"Mina";
   if(key==="production")renderMineScreen();
   if(key==="events")renderHallvallaMineEvents(processHallvallaMineEvents());
+  if(key==="missions"){
+    renderHallvallaMineMissions(seedHallvallaMineMissionFacts(getHallvallaMineMissionsState()));
+    void syncHallvallaMineMissionsRemote().then(state=>renderHallvallaMineMissions(state));
+  }
   if(key==="rewards"){
     renderHallvallaMineWheel(getHallvallaMineWheelState());
     void syncHallvallaMineWheelRemote().then(state=>renderHallvallaMineWheel(state));

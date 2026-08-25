@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260824.16">
+<meta name="hallvalla-version" content="20260824.17">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
-<link rel="stylesheet" href="styles.css?v=20260824.16"/>
+<link rel="stylesheet" href="styles.css?v=20260824.17"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -273,22 +273,14 @@
 
       <section class="mine-panel" data-mine-panel="missions" style="background-image:url('assets/mine/bg_missions.webp')">
         <div class="mine-panel-scrim"></div>
-        <div class="mine-panel-content">
+        <div class="mine-panel-content mine-missions-functional-content">
           <div class="mine-chip-row">
-            <span class="mine-chip">Diarias 3</span>
-            <span class="mine-chip">1 completada</span>
+            <span id="mineMissionsTotalChip" class="mine-chip">Misiones 8</span>
+            <span id="mineMissionsCompleteChip" class="mine-chip">Completadas 0/8</span>
+            <span id="mineMissionsPendingChip" class="mine-chip">Por reclamar 0</span>
           </div>
-          <div class="mine-mission-grid">
-            <article class="mine-mission-card">
-              <b>5 activas</b><small>3/5</small><div class="mine-progress"><span style="width:60%"></span></div>
-            </article>
-            <article class="mine-mission-card">
-              <b>Recoge 10💎</b><small>6/10</small><div class="mine-progress"><span style="width:60%"></span></div>
-            </article>
-            <article class="mine-mission-card done">
-              <b>Primer evento</b><small>Lista</small><button class="mine-mini-btn" type="button">Cobrar</button>
-            </article>
-          </div>
+          <div id="mineMissionGrid" class="mine-mission-grid mine-mission-home-grid"></div>
+          <div id="mineMissionStatus" class="mine-mission-status" aria-live="polite"></div>
         </div>
       </section>
 
@@ -1272,6 +1264,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260824.16"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260824.17"></script>
 </body>
 </html>
