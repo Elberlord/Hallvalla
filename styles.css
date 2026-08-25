@@ -25027,3 +25027,118 @@ body.home-deck-tutorial-active{overflow:hidden}
 .mine-panel[data-mine-panel="shop"] .mine-undead-offer{flex:0 1 196px !important;min-width:196px;}
 @media (max-width:980px){.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(3,minmax(162px,1fr)) !important;overflow-x:auto;padding-bottom:6px;}.mine-panel[data-mine-panel="shop"] .mine-undead-offer{flex-basis:162px !important;min-width:162px;}.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay b{font-size:13px !important;}}
 @media (max-width:640px){.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(3,minmax(146px,1fr)) !important;gap:10px !important;}.mine-panel[data-mine-panel="shop"] .mine-undead-offer{padding:7px !important;flex-basis:146px !important;min-width:146px;}.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay{padding:8px 8px 9px;}.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay b{font-size:12px !important;}.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay strong{font-size:16px !important;}}
+
+/* ============================================================
+   HOME BUTTON LAYOUT TUNER · botones flotantes sobre el fondo
+   Solo afecta los banners/botones visuales del Home y sus promos.
+   ============================================================ */
+#mainMenu .asset-main{
+  pointer-events:none !important;
+}
+#mainMenu .asset-column{
+  display:contents !important;
+}
+#mainMenu .asset-center{
+  pointer-events:none !important;
+}
+#mainMenu .image-button,
+#mainMenu .play-image-button,
+#mainMenu .asset-promo.daily-panel,
+#mainMenu .asset-promo.welcome-panel{
+  position:fixed !important;
+  right:auto !important;
+  bottom:auto !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  max-width:none !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  outline:0;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  pointer-events:auto !important;
+  z-index:4;
+}
+#mainMenu .image-button img,
+#mainMenu .play-image-button img,
+#mainMenu .asset-promo.daily-panel img,
+#mainMenu .asset-promo.welcome-panel img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  max-width:none !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  object-fit:fill !important;
+}
+body.hv-home-layout-editing #mainMenu .hv-home-float-target{
+  cursor:move !important;
+}
+body.hv-home-layout-editing #mainMenu .hv-home-float-target:hover{
+  transform:none !important;
+  filter:brightness(1.04) drop-shadow(0 0 10px rgba(100,206,255,.35)) !important;
+}
+body.hv-home-layout-editing #mainMenu .hv-home-float-target.hv-home-layout-selected{
+  outline:2px dashed rgba(94,212,255,.96) !important;
+  outline-offset:3px !important;
+  filter:brightness(1.06) drop-shadow(0 0 12px rgba(83,203,255,.55)) !important;
+}
+
+.hv-home-layout-tuner-toggle{
+  position:fixed;
+  right:10px;
+  top:232px;
+  z-index:138;
+  border:1px solid rgba(104,205,255,.72);
+  border-radius:10px;
+  padding:7px 10px;
+  background:rgba(5,16,27,.92);
+  color:#dff6ff;
+  font:900 10px/1 Arial,sans-serif;
+  letter-spacing:.4px;
+  box-shadow:0 8px 22px rgba(0,0,0,.44),inset 0 0 12px rgba(65,181,243,.12);
+  cursor:pointer;
+}
+.hv-home-layout-tuner-panel{
+  position:fixed;
+  right:10px;
+  top:268px;
+  width:min(330px,calc(100vw - 20px));
+  z-index:139;
+  padding:12px;
+  border:1px solid rgba(109,205,255,.54);
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(8,20,32,.97),rgba(3,8,14,.97));
+  box-shadow:0 20px 55px rgba(0,0,0,.68),inset 0 0 26px rgba(55,157,219,.06);
+  color:#e8f8ff;
+  font-family:Arial,sans-serif;
+}
+.hv-home-layout-tuner-panel.hidden{display:none!important}
+.hv-home-layout-tuner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px}
+.hv-home-layout-tuner-head b{display:block;font-size:14px;color:#fff}
+.hv-home-layout-tuner-head small{display:block;margin-top:3px;color:#91b8ca;font-size:10px;line-height:1.25}
+.hv-home-layout-tuner-close{width:28px;height:28px;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:rgba(255,255,255,.04);color:#fff;font-size:18px;cursor:pointer}
+.hv-home-layout-tuner-panel select{
+  width:100%;height:34px;margin-bottom:9px;padding:0 8px;border:1px solid rgba(111,200,242,.35);border-radius:8px;background:#07111b;color:#effaff;font-weight:800;
+}
+.hv-home-layout-control{display:grid;grid-template-columns:64px 1fr 62px;align-items:center;gap:8px;margin:7px 0;font-size:11px;color:#cfeafa}
+.hv-home-layout-control input[type="range"]{width:100%;accent-color:#66cfff}
+.hv-home-layout-control output{text-align:right;color:#fff;font-weight:900;font-variant-numeric:tabular-nums}
+.hv-home-layout-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.hv-home-layout-tuner-actions button{min-height:32px;border:1px solid rgba(111,200,242,.26);border-radius:8px;background:rgba(28,76,105,.32);color:#eaf9ff;font-size:10px;font-weight:900;cursor:pointer}
+.hv-home-layout-tuner-actions button.primary{background:linear-gradient(180deg,#1677b4,#0d4d79);border-color:rgba(139,220,255,.65)}
+.hv-home-layout-tuner-status{min-height:28px;margin:9px 0 0;color:#9dd8f4;font-size:10px;line-height:1.3}
+@media(max-width:800px){
+  .hv-home-layout-tuner-toggle{top:164px;right:6px}
+  .hv-home-layout-tuner-panel{top:198px;right:6px;width:min(300px,calc(100vw - 12px));max-height:calc(100vh - 206px);overflow:auto}
+}

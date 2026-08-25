@@ -4118,3 +4118,166 @@ function ensureHvDetLayoutTuner(){
 }
 applyHvDetLayoutTuner();
 if(HALLVALLA_DEV_TOOLS_ENABLED)ensureHvDetLayoutTuner();
+
+/* ============================================================
+   HOME · editor visual de posición/tamaño de botones
+   Referencia: 1366 x 637. Guarda localmente y exporta JSON.
+   ============================================================ */
+const HV_HOME_LAYOUT_REF=Object.freeze({width:1366,height:637});
+const HV_HOME_LAYOUT_STORAGE_KEY="hallvalla_home_button_layout_v1";
+const HV_HOME_LAYOUT_TARGETS=Object.freeze({
+  adventure:{id:"adventureBtn",label:"Aventura"},
+  online:{id:"onlineBtn",label:"Competir en línea"},
+  missions:{id:"missionsBtn",label:"Misiones"},
+  mine:{id:"mineBtn",label:"Mina"},
+  collection:{id:"collectionBtn",label:"Colección"},
+  forge:{id:"forgeBtn",label:"Forja"},
+  store:{id:"storeBtn",label:"Tienda"},
+  events:{id:"eventsBtn",label:"Eventos"},
+  play:{id:"playBtn",label:"Jugar"},
+  daily:{id:"dailyBtn",label:"Recompensa diaria"},
+  welcome:{id:"welcomeBtn",label:"Paquete de bienvenida"}
+});
+const HV_HOME_LAYOUT_DEFAULT=Object.freeze({
+  adventure:{x:28,y:116,w:410,h:82},
+  online:{x:28,y:219,w:410,h:88},
+  missions:{x:28,y:341,w:410,h:80},
+  mine:{x:28,y:444,w:410,h:82},
+  collection:{x:930,y:114,w:407,h:87},
+  forge:{x:930,y:220,w:407,h:82},
+  store:{x:930,y:341,w:407,h:79},
+  events:{x:930,y:440,w:407,h:84},
+  play:{x:560,y:289,w:236,h:239},
+  daily:{x:30,y:557,w:350,h:74},
+  welcome:{x:994,y:557,w:344,h:74}
+});
+function cloneHvHomeLayout(src=HV_HOME_LAYOUT_DEFAULT){return JSON.parse(JSON.stringify(src));}
+function normalizeHvHomeLayout(raw){
+  const out=cloneHvHomeLayout();
+  if(!raw||typeof raw!=="object")return out;
+  Object.keys(out).forEach(key=>{
+    const src=raw[key];if(!src||typeof src!=="object")return;
+    ["x","y","w","h"].forEach(prop=>{const n=Number(src[prop]);if(Number.isFinite(n))out[key][prop]=n;});
+  });
+  return out;
+}
+function readHvHomeLayout(){
+  try{return normalizeHvHomeLayout(JSON.parse(localStorage.getItem(HV_HOME_LAYOUT_STORAGE_KEY)||"null"));}
+  catch(_){return cloneHvHomeLayout();}
+}
+let hvHomeLayout=readHvHomeLayout();
+let hvHomeLayoutSelected="adventure";
+let hvHomeLayoutEditing=false;
+function saveHvHomeLayout(){try{localStorage.setItem(HV_HOME_LAYOUT_STORAGE_KEY,JSON.stringify(hvHomeLayout));}catch(_){} }
+function hvHomePctX(v){return `${(Number(v||0)/HV_HOME_LAYOUT_REF.width)*100}%`;}
+function hvHomePctY(v){return `${(Number(v||0)/HV_HOME_LAYOUT_REF.height)*100}%`;}
+function getHvHomeTargetNode(key){const id=HV_HOME_LAYOUT_TARGETS[key]?.id;return id?document.getElementById(id):null;}
+function applyHvHomeLayout(){
+  Object.keys(HV_HOME_LAYOUT_TARGETS).forEach(key=>{
+    const node=getHvHomeTargetNode(key),cfg=hvHomeLayout[key];if(!node||!cfg)return;
+    node.classList.add("hv-home-float-target");
+    node.dataset.hvHomeLayoutKey=key;
+    node.style.setProperty("position","fixed","important");
+    node.style.setProperty("left",hvHomePctX(cfg.x),"important");
+    node.style.setProperty("top",hvHomePctY(cfg.y),"important");
+    node.style.setProperty("width",hvHomePctX(cfg.w),"important");
+    node.style.setProperty("height",hvHomePctY(cfg.h),"important");
+    node.style.setProperty("right","auto","important");
+    node.style.setProperty("bottom","auto","important");
+    node.style.setProperty("margin","0","important");
+    node.style.setProperty("padding","0","important");
+    node.style.setProperty("border","0","important");
+    node.style.setProperty("background","transparent","important");
+    node.style.setProperty("box-shadow","none","important");
+    node.classList.toggle("hv-home-layout-selected",hvHomeLayoutEditing&&key===hvHomeLayoutSelected);
+  });
+}
+function syncHvHomeLayoutTuner(){
+  const select=document.getElementById("hvHomeLayoutTarget");if(!select)return;
+  if(!select.options.length)select.innerHTML=Object.entries(HV_HOME_LAYOUT_TARGETS).map(([key,def])=>`<option value="${key}">${def.label}</option>`).join("");
+  select.value=hvHomeLayoutSelected;
+  const cfg=hvHomeLayout[hvHomeLayoutSelected];if(!cfg)return;
+  [["X","x"],["Y","y"],["W","w"],["H","h"]].forEach(([suffix,prop])=>{
+    const input=document.getElementById(`hvHomeLayout${suffix}`),out=document.getElementById(`hvHomeLayout${suffix}Out`);
+    if(input)input.value=String(Math.round(cfg[prop]));if(out)out.textContent=`${Math.round(cfg[prop])} px`;
+  });
+  applyHvHomeLayout();
+}
+function updateHvHomeLayoutValue(prop,value){
+  const cfg=hvHomeLayout[hvHomeLayoutSelected];if(!cfg)return;
+  let n=Number(value);if(!Number.isFinite(n))return;
+  if(prop==="w")n=Math.max(60,Math.min(800,n));
+  if(prop==="h")n=Math.max(30,Math.min(350,n));
+  if(prop==="x")n=Math.max(-300,Math.min(HV_HOME_LAYOUT_REF.width+300,n));
+  if(prop==="y")n=Math.max(-200,Math.min(HV_HOME_LAYOUT_REF.height+200,n));
+  cfg[prop]=n;saveHvHomeLayout();syncHvHomeLayoutTuner();
+}
+function setHvHomeLayoutEditing(enabled){
+  hvHomeLayoutEditing=!!enabled;
+  document.body.classList.toggle("hv-home-layout-editing",hvHomeLayoutEditing);
+  applyHvHomeLayout();
+}
+function getHvHomeLayoutPayload(){
+  return {version:1,reference:{...HV_HOME_LAYOUT_REF},layout:cloneHvHomeLayout(hvHomeLayout)};
+}
+function copyHvHomeLayoutJson(){
+  const text=JSON.stringify(getHvHomeLayoutPayload(),null,2),status=document.getElementById("hvHomeLayoutStatus");
+  const done=()=>{if(status)status.textContent="JSON copiado. Pégamelo aquí y puedo fijarlo como diseño predeterminado.";};
+  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>{window.prompt("Copia el JSON del Home:",text);done();});
+  else{window.prompt("Copia el JSON del Home:",text);done();}
+}
+function exportHvHomeLayoutJson(){
+  const blob=new Blob([JSON.stringify(getHvHomeLayoutPayload(),null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="hallvalla_home_layout.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
+  const status=document.getElementById("hvHomeLayoutStatus");if(status)status.textContent="JSON descargado. Envíame ese archivo cuando termines de acomodar los botones.";
+}
+function createHvHomeLayoutTuner(){
+  if(document.getElementById("hvHomeLayoutTunerToggle"))return;
+  const toggle=document.createElement("button");toggle.id="hvHomeLayoutTunerToggle";toggle.className="hv-home-layout-tuner-toggle";toggle.type="button";toggle.textContent="AJUSTAR HOME";
+  const panel=document.createElement("section");panel.id="hvHomeLayoutTunerPanel";panel.className="hv-home-layout-tuner-panel hidden";panel.innerHTML=`
+    <div class="hv-home-layout-tuner-head"><div><b>Ajustar botones del Home</b><small>Selecciona o arrastra un botón. Ancho y alto se ajustan por separado.</small></div><button id="hvHomeLayoutClose" class="hv-home-layout-tuner-close" type="button">×</button></div>
+    <select id="hvHomeLayoutTarget" aria-label="Botón a editar"></select>
+    <label class="hv-home-layout-control"><span>Horizontal</span><input id="hvHomeLayoutX" type="range" min="-300" max="1666" step="1"><output id="hvHomeLayoutXOut"></output></label>
+    <label class="hv-home-layout-control"><span>Vertical</span><input id="hvHomeLayoutY" type="range" min="-200" max="837" step="1"><output id="hvHomeLayoutYOut"></output></label>
+    <label class="hv-home-layout-control"><span>Ancho</span><input id="hvHomeLayoutW" type="range" min="60" max="800" step="1"><output id="hvHomeLayoutWOut"></output></label>
+    <label class="hv-home-layout-control"><span>Alto</span><input id="hvHomeLayoutH" type="range" min="30" max="350" step="1"><output id="hvHomeLayoutHOut"></output></label>
+    <div class="hv-home-layout-tuner-actions"><button id="hvHomeLayoutResetOne" type="button">RESTAURAR ESTE</button><button id="hvHomeLayoutResetAll" type="button">RESTAURAR TODO</button><button id="hvHomeLayoutCopy" class="primary" type="button">COPIAR JSON</button><button id="hvHomeLayoutExport" class="primary" type="button">DESCARGAR JSON</button></div>
+    <p id="hvHomeLayoutStatus" class="hv-home-layout-tuner-status">Mientras este panel esté abierto, puedes arrastrar directamente los botones del Home sin activar sus funciones.</p>`;
+  (document.getElementById("mainMenu")||document.body).append(toggle,panel);
+  toggle.addEventListener("click",()=>{panel.classList.toggle("hidden");setHvHomeLayoutEditing(!panel.classList.contains("hidden"));syncHvHomeLayoutTuner();});
+  document.getElementById("hvHomeLayoutClose")?.addEventListener("click",()=>{panel.classList.add("hidden");setHvHomeLayoutEditing(false);});
+  document.getElementById("hvHomeLayoutTarget")?.addEventListener("change",e=>{hvHomeLayoutSelected=String(e.target.value||"adventure");syncHvHomeLayoutTuner();});
+  [["X","x"],["Y","y"],["W","w"],["H","h"]].forEach(([suffix,prop])=>document.getElementById(`hvHomeLayout${suffix}`)?.addEventListener("input",e=>updateHvHomeLayoutValue(prop,e.target.value)));
+  document.getElementById("hvHomeLayoutResetOne")?.addEventListener("click",()=>{hvHomeLayout[hvHomeLayoutSelected]={...HV_HOME_LAYOUT_DEFAULT[hvHomeLayoutSelected]};saveHvHomeLayout();syncHvHomeLayoutTuner();});
+  document.getElementById("hvHomeLayoutResetAll")?.addEventListener("click",()=>{hvHomeLayout=cloneHvHomeLayout();saveHvHomeLayout();syncHvHomeLayoutTuner();});
+  document.getElementById("hvHomeLayoutCopy")?.addEventListener("click",copyHvHomeLayoutJson);
+  document.getElementById("hvHomeLayoutExport")?.addEventListener("click",exportHvHomeLayoutJson);
+  syncHvHomeLayoutTuner();
+}
+function initHvHomeLayoutDrag(){
+  Object.keys(HV_HOME_LAYOUT_TARGETS).forEach(key=>{
+    const node=getHvHomeTargetNode(key);if(!node||node.dataset.hvHomeDragReady==="1")return;node.dataset.hvHomeDragReady="1";
+    let drag=null;
+    node.addEventListener("pointerdown",e=>{
+      if(!hvHomeLayoutEditing||e.button!==0)return;
+      hvHomeLayoutSelected=key;syncHvHomeLayoutTuner();
+      const cfg=hvHomeLayout[key];drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:cfg.x,y:cfg.y};node.setPointerCapture?.(e.pointerId);e.preventDefault();e.stopPropagation();
+    },true);
+    node.addEventListener("pointermove",e=>{
+      if(!drag||e.pointerId!==drag.id)return;
+      const vw=Math.max(1,window.innerWidth),vh=Math.max(1,window.innerHeight);
+      hvHomeLayout[key].x=drag.x+(e.clientX-drag.startX)*(HV_HOME_LAYOUT_REF.width/vw);
+      hvHomeLayout[key].y=drag.y+(e.clientY-drag.startY)*(HV_HOME_LAYOUT_REF.height/vh);
+      saveHvHomeLayout();syncHvHomeLayoutTuner();e.preventDefault();e.stopPropagation();
+    },true);
+    const finish=e=>{if(!drag||e.pointerId!==drag.id)return;node.releasePointerCapture?.(e.pointerId);drag=null;saveHvHomeLayout();syncHvHomeLayoutTuner();e.preventDefault();e.stopPropagation();};
+    node.addEventListener("pointerup",finish,true);node.addEventListener("pointercancel",()=>{drag=null;},true);
+  });
+  document.addEventListener("click",e=>{
+    if(!hvHomeLayoutEditing)return;
+    const target=e.target?.closest?.("[data-hv-home-layout-key]");if(!target)return;
+    e.preventDefault();e.stopImmediatePropagation();
+  },true);
+}
+function initHvHomeLayoutTuner(){createHvHomeLayoutTuner();applyHvHomeLayout();initHvHomeLayoutDrag();window.addEventListener("resize",applyHvHomeLayout,{passive:true});}
+initHvHomeLayoutTuner();
