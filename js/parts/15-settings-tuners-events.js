@@ -2703,6 +2703,188 @@ function renderHallvallaMineMissions(state=seedHallvallaMineMissionFacts(getHall
   grid.querySelectorAll("[data-mine-mission-claim]").forEach(btn=>btn.addEventListener("click",()=>claimHallvallaMineMission(String(btn.dataset.mineMissionClaim||""))));
 }
 
+
+/* ============================================================
+   MINA · TIENDA NO MUERTOS
+   - 3 ofertas distintas por día, rotación basada en hora del servidor (UTC).
+   - Cada aparición permite comprar 1 sola pieza de esa unidad durante ese día.
+   - 25 piezas por unidad, 250 gemas por pieza.
+   - Al llegar a 25/25 se añade 1 copia permanente a la Colección.
+   - Progreso personal: users/{uid}/mine/shop.
+   ============================================================ */
+const HALLVALLA_MINE_SHOP_STORAGE_KEY="hallvalla_mine_shop_v1";
+const HALLVALLA_MINE_SHOP_PIECES_REQUIRED=25;
+const HALLVALLA_MINE_SHOP_PIECE_COST=250;
+const HALLVALLA_MINE_SHOP_OFFER_COUNT=3;
+const HALLVALLA_MINE_SHOP_KEYS=Object.freeze([
+  "vorthalix_oraculo_osario",
+  "drakor_guardia_sepulcro",
+  "gorthak_hacha_tumulo",
+  "zyrek_sombra_cripta",
+  "morgash_jinete_osario",
+  "xulthar_ojo_sepulcro"
+]);
+function getHallvallaMineShopTemplate(key){
+  const wanted=String(key||"");
+  try{
+    if(typeof HALLVALLA_MINE_UNDEAD_CARDS!=="undefined"){
+      const hit=(HALLVALLA_MINE_UNDEAD_CARDS||[]).find(card=>card?.key===wanted);
+      if(hit)return hit;
+    }
+  }catch(_){ }
+  try{return (CARD_TEMPLATES||[]).find(card=>card?.key===wanted&&card?.mineExclusive===true)||null;}catch(_){return null;}
+}
+function createHallvallaMineShopUnitState(){return {pieces:0,lastPurchaseDay:-1};}
+function normalizeHallvallaMineShopUnitState(state={}){
+  return {
+    pieces:Math.max(0,Math.min(HALLVALLA_MINE_SHOP_PIECES_REQUIRED,Math.floor(Number(state?.pieces||0)))),
+    lastPurchaseDay:Math.max(-1,Math.floor(Number(state?.lastPurchaseDay??-1)))
+  };
+}
+function normalizeHallvallaMineShopState(state={}){
+  const raw=state?.units&&typeof state.units==="object"?state.units:{};
+  const units={};
+  HALLVALLA_MINE_SHOP_KEYS.forEach(key=>units[key]=normalizeHallvallaMineShopUnitState(raw[key]||{}));
+  return {units};
+}
+function getHallvallaMineShopState(){
+  try{return normalizeHallvallaMineShopState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_SHOP_STORAGE_KEY)||"null")||{});}
+  catch(_){return normalizeHallvallaMineShopState({});}
+}
+function cacheHallvallaMineShopState(state){
+  const safe=normalizeHallvallaMineShopState(state);
+  localStorage.setItem(HALLVALLA_MINE_SHOP_STORAGE_KEY,JSON.stringify(safe));
+  return safe;
+}
+function getHallvallaMineShopDayIndex(now=getHallvallaMineNow()){return Math.floor(Math.max(0,Number(now||0))/86400000);}
+function getHallvallaMineShopDayKey(dayIndex=getHallvallaMineShopDayIndex()){
+  return new Date(dayIndex*86400000).toISOString().slice(0,10);
+}
+function hashHallvallaMineShopString(value=""){
+  let h=2166136261>>>0;
+  const text=String(value||"");
+  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+  return h>>>0;
+}
+function createHallvallaMineShopRng(seed){
+  let x=(Number(seed)||0)>>>0;
+  return ()=>{x=(x+0x6D2B79F5)>>>0;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
+}
+function getHallvallaMineShopOffers(dayIndex=getHallvallaMineShopDayIndex()){
+  const list=[...HALLVALLA_MINE_SHOP_KEYS];
+  const rng=createHallvallaMineShopRng(hashHallvallaMineShopString(`hallvalla_mine_shop_v1:${dayIndex}`));
+  for(let i=list.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
+  return list.slice(0,Math.min(HALLVALLA_MINE_SHOP_OFFER_COUNT,list.length));
+}
+function getHallvallaMineShopNextRotationMs(now=getHallvallaMineNow()){
+  const current=Math.max(0,Number(now||0)),next=(Math.floor(current/86400000)+1)*86400000;
+  return Math.max(0,next-current);
+}
+function getHallvallaMineShopRevealOrder(key){
+  const cells=Array.from({length:HALLVALLA_MINE_SHOP_PIECES_REQUIRED},(_,i)=>i);
+  const rng=createHallvallaMineShopRng(hashHallvallaMineShopString(`puzzle:${key}`));
+  for(let i=cells.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}
+  return cells;
+}
+function getHallvallaMineShopPuzzleHtml(key,pieces){
+  const revealed=new Set(getHallvallaMineShopRevealOrder(key).slice(0,Math.max(0,Math.min(25,Number(pieces)||0))));
+  return Array.from({length:25},(_,i)=>`<span class="mine-shop-puzzle-piece${revealed.has(i)?" revealed":" locked"}" aria-hidden="true"></span>`).join("");
+}
+function ensureHallvallaMineUndeadCollectionUnlock(cardKey){
+  const template=getHallvallaMineShopTemplate(cardKey);if(!template)return false;
+  try{
+    const collection=getPlayerCollection();collection.cards=Array.isArray(collection.cards)?collection.cards:[];
+    const found=collection.cards.find(card=>String(card?.key||"")===cardKey);
+    if(found&&Number(found.qty||0)>0)return true;
+    const card=typeof hydrateCardVisualData==="function"?hydrateCardVisualData({...template}):{...template};
+    if(found){Object.assign(found,card,{qty:1});}else collection.cards.push({...card,qty:1});
+    savePlayerCollection(collection);
+    if(typeof renderNotificationBadge==="function")renderNotificationBadge();
+    if(typeof renderHomeProgress==="function")renderHomeProgress();
+    return true;
+  }catch(error){console.warn("[HallValla][Mina][Tienda] No se pudo desbloquear la carta:",error);return false;}
+}
+async function syncHallvallaMineShopRemote(){
+  const local=cacheHallvallaMineShopState(getHallvallaMineShopState());
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true)return local;
+  try{
+    if(!hallvallaMineOnlineReady()){
+      const ok=await syncHallvallaMineRemoteState();if(!ok)return local;
+    }
+    const userId=getHallvallaMineUserUid();if(!userId)return local;
+    const shopRef=ref(db,`users/${userId}/mine/shop`),snapshot=await get(shopRef);
+    let safe;
+    if(snapshot?.exists?.())safe=normalizeHallvallaMineShopState(snapshot.val()||{});
+    else{safe=local;await set(shopRef,safe);}
+    cacheHallvallaMineShopState(safe);
+    HALLVALLA_MINE_SHOP_KEYS.forEach(key=>{if(Number(safe.units?.[key]?.pieces||0)>=25)ensureHallvallaMineUndeadCollectionUnlock(key);});
+    return safe;
+  }catch(error){
+    console.warn("[HallValla][Mina][Tienda] No se pudo sincronizar:",error);
+    return local;
+  }
+}
+function updateHallvallaMineShopCountdown(){
+  const chip=$("mineShopNextChip");if(chip)chip.textContent=`Nueva rotación ${formatHallvallaMineDuration(getHallvallaMineShopNextRotationMs())}`;
+}
+function renderHallvallaMineShop(state=getHallvallaMineShopState()){
+  const grid=$("mineShopGrid");if(!grid)return;
+  const safe=cacheHallvallaMineShopState(state),day=getHallvallaMineShopDayIndex(),offers=getHallvallaMineShopOffers(day);
+  grid.innerHTML=offers.map(key=>{
+    const card=getHallvallaMineShopTemplate(key);if(!card)return "";
+    const progress=safe.units?.[key]||createHallvallaMineShopUnitState(),pieces=Math.max(0,Math.min(25,Number(progress.pieces||0)));
+    const complete=pieces>=25,boughtToday=Number(progress.lastPurchaseDay)===day;
+    const art=String(card.portrait||getHallvallaMineCardImage(card)||"");
+    const buttonText=complete?"DESBLOQUEADA":boughtToday?"PIEZA COMPRADA HOY":`COMPRAR PIEZA · ${HALLVALLA_MINE_SHOP_PIECE_COST}💎`;
+    return `<article class="mine-shop-card mine-undead-offer${complete?" unlocked":""}">
+      <div class="mine-shop-puzzle-art"><img src="${escapeHtml(art)}" alt="${escapeHtml(card.name)}" draggable="false"><div class="mine-shop-puzzle-grid">${getHallvallaMineShopPuzzleHtml(key,pieces)}</div></div>
+      <div class="mine-shop-offer-copy"><b>${escapeHtml(card.name)}</b><small>Legendaria · No Muerto</small><strong>${pieces}/25 piezas</strong></div>
+      <button class="mine-mini-btn mine-shop-buy-piece" data-mine-shop-buy="${escapeHtml(key)}" type="button" ${complete||boughtToday?"disabled":""}>${escapeHtml(buttonText)}</button>
+    </article>`;
+  }).join("");
+  grid.querySelectorAll("[data-mine-shop-buy]").forEach(btn=>btn.addEventListener("click",()=>buyHallvallaMineShopPiece(String(btn.dataset.mineShopBuy||""),btn)));
+  updateHallvallaMineShopCountdown();
+}
+async function buyHallvallaMineShopPiece(cardKey,button=null){
+  const key=String(cardKey||"");if(!HALLVALLA_MINE_SHOP_KEYS.includes(key))return;
+  const status=$("mineShopStatus"),day=getHallvallaMineShopDayIndex();
+  if(!getHallvallaMineShopOffers(day).includes(key)){if(status)status.textContent="Esta unidad ya no forma parte de la rotación de hoy.";renderHallvallaMineShop();return;}
+  const current=getHallvallaMineShopState(),currentUnit=current.units?.[key]||createHallvallaMineShopUnitState();
+  if(Number(currentUnit.pieces||0)>=25){ensureHallvallaMineUndeadCollectionUnlock(key);if(status)status.textContent="Esta unidad ya está desbloqueada.";renderHallvallaMineShop(current);return;}
+  if(Number(currentUnit.lastPurchaseDay)===day){if(status)status.textContent="Ya compraste la pieza disponible de esta unidad hoy.";return;}
+  const profile=getPlayerProfile(),gems=Math.max(0,Number(profile?.gems||0));
+  if(gems<HALLVALLA_MINE_SHOP_PIECE_COST){if(status)status.textContent=`Necesitas ${HALLVALLA_MINE_SHOP_PIECE_COST} gemas para comprar esta pieza.`;return;}
+  if(!hallvallaMineOnlineReady()&&HALLVALLA_LOCALHOST_TEST_MODE!==true){if(status)status.textContent="Sin conexión con Firebase. La compra no se realizará para proteger tu progreso.";return;}
+  if(button){button.disabled=true;button.textContent="COMPRANDO...";}
+  try{
+    let nextState=current,committed=false;
+    if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+      nextState=normalizeHallvallaMineShopState(current);nextState.units[key]={pieces:Number(currentUnit.pieces||0)+1,lastPurchaseDay:day};cacheHallvallaMineShopState(nextState);committed=true;
+    }else{
+      const userId=getHallvallaMineUserUid();if(!userId)throw new Error("Usuario no autenticado");
+      const unitRef=ref(db,`users/${userId}/mine/shop/units/${key}`);
+      const result=await runTransaction(unitRef,raw=>{
+        const unit=normalizeHallvallaMineShopUnitState(raw||{});
+        if(unit.pieces>=25||unit.lastPurchaseDay===day)return;
+        return {pieces:unit.pieces+1,lastPurchaseDay:day};
+      },{applyLocally:false});
+      if(result?.committed){
+        nextState=normalizeHallvallaMineShopState(current);nextState.units[key]=normalizeHallvallaMineShopUnitState(result.snapshot.val()||{});cacheHallvallaMineShopState(nextState);committed=true;
+      }
+    }
+    if(!committed){if(status)status.textContent="La compra no fue confirmada. No se descontaron gemas.";renderHallvallaMineShop(await syncHallvallaMineShopRemote());return;}
+    profile.gems=Math.max(0,gems-HALLVALLA_MINE_SHOP_PIECE_COST);savePlayerProfile(profile);if(typeof renderHomeProgress==="function")renderHomeProgress();
+    const pieces=Number(nextState.units?.[key]?.pieces||0),card=getHallvallaMineShopTemplate(key);
+    if(pieces>=25){ensureHallvallaMineUndeadCollectionUnlock(key);if(status)status.textContent=`${card?.name||"Unidad No Muerta"} completada: 25/25. La carta fue añadida a tu Colección.`;}
+    else if(status)status.textContent=`Pieza comprada para ${card?.name||"la unidad"}: ${pieces}/25.`;
+    renderHallvallaMineShop(nextState);
+  }catch(error){
+    console.warn("[HallValla][Mina][Tienda] Compra fallida:",error);
+    if(status)status.textContent="No se pudo confirmar la compra con Firebase. No se descontaron gemas.";
+    renderHallvallaMineShop(getHallvallaMineShopState());
+  }
+}
+
 function setMineSection(section="production"){
   const key=HALLVALLA_MINE_SECTION_TITLES[section]?section:"production";
   document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.mineTab===key));
@@ -2711,6 +2893,10 @@ function setMineSection(section="production"){
   if(title)title.textContent=HALLVALLA_MINE_SECTION_TITLES[key]||"Mina";
   if(key==="production")renderMineScreen();
   if(key==="events")renderHallvallaMineEvents(processHallvallaMineEvents());
+  if(key==="shop"){
+    renderHallvallaMineShop(getHallvallaMineShopState());
+    void syncHallvallaMineShopRemote().then(state=>renderHallvallaMineShop(state));
+  }
   if(key==="missions"){
     renderHallvallaMineMissions(seedHallvallaMineMissionFacts(getHallvallaMineMissionsState()));
     void syncHallvallaMineMissionsRemote().then(state=>renderHallvallaMineMissions(state));
@@ -2727,9 +2913,11 @@ function startHallvallaMineTick(){
     const productionOpen=document.querySelector('.mine-panel[data-mine-panel="production"]')?.classList.contains("active");
     const eventsOpen=document.querySelector('.mine-panel[data-mine-panel="events"]')?.classList.contains("active");
     const rewardsOpen=document.querySelector('.mine-panel[data-mine-panel="rewards"]')?.classList.contains("active");
+    const shopOpen=document.querySelector('.mine-panel[data-mine-panel="shop"]')?.classList.contains("active");
     if(productionOpen)renderMineScreen();
     else if(eventsOpen)renderHallvallaMineEvents(processHallvallaMineEvents());
     else if(rewardsOpen)updateHallvallaMineWheelCountdown();
+    else if(shopOpen)updateHallvallaMineShopCountdown();
   },1000);
 }
 function stopHallvallaMineTick(){

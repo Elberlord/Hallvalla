@@ -182,6 +182,27 @@
           },
           "$other": {
             ".validate": false
+          },
+          "shop": {
+            ".validate": "newData.hasChild('units')",
+            "units": {
+              ".validate": "newData.hasChildren(['vorthalix_oraculo_osario','drakor_guardia_sepulcro','gorthak_hacha_tumulo','zyrek_sombra_cripta','morgash_jinete_osario','xulthar_ojo_sepulcro'])",
+              "$cardKey": {
+                ".validate": "($cardKey === 'vorthalix_oraculo_osario' || $cardKey === 'drakor_guardia_sepulcro' || $cardKey === 'gorthak_hacha_tumulo' || $cardKey === 'zyrek_sombra_cripta' || $cardKey === 'morgash_jinete_osario' || $cardKey === 'xulthar_ojo_sepulcro') && newData.hasChildren(['pieces','lastPurchaseDay']) && newData.child('pieces').isNumber() && newData.child('pieces').val() % 1 === 0 && newData.child('pieces').val() >= 0 && newData.child('pieces').val() <= 25 && newData.child('lastPurchaseDay').isNumber() && newData.child('lastPurchaseDay').val() % 1 === 0 && newData.child('lastPurchaseDay').val() >= -1 && ((!data.exists() && newData.child('pieces').val() === 0 && newData.child('lastPurchaseDay').val() === -1) || (data.exists() && newData.child('pieces').val() === data.child('pieces').val() && newData.child('lastPurchaseDay').val() === data.child('lastPurchaseDay').val()) || (data.exists() && data.child('pieces').val() < 25 && newData.child('pieces').val() === data.child('pieces').val() + 1 && newData.child('lastPurchaseDay').val() === ((now - (now % 86400000)) / 86400000) && newData.child('lastPurchaseDay').val() > data.child('lastPurchaseDay').val()))",
+                "pieces": {
+                  ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 25"
+                },
+                "lastPurchaseDay": {
+                  ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= -1"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         }
       }

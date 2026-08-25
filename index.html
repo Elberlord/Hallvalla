@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260824.20">
+<meta name="hallvalla-version" content="20260824.21">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
-<link rel="stylesheet" href="styles.css?v=20260824.20"/>
+<link rel="stylesheet" href="styles.css?v=20260824.21"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -286,22 +286,14 @@
 
       <section class="mine-panel" data-mine-panel="shop" style="background-image:url('assets/mine/bg_shop.webp')">
         <div class="mine-panel-scrim"></div>
-        <div class="mine-panel-content">
+        <div class="mine-panel-content mine-undead-shop-content">
           <div class="mine-chip-row">
-            <span class="mine-chip">Exclusivas</span>
-            <span class="mine-chip">Solo 💎</span>
+            <span class="mine-chip">No Muertos exclusivos</span>
+            <span class="mine-chip">1 pieza · 250💎</span>
+            <span id="mineShopNextChip" class="mine-chip">Nueva rotación --:--:--</span>
           </div>
-          <div class="mine-shop-grid">
-            <article class="mine-shop-card">
-              <b>Excavador Arcano</b><small>Utilidad</small><strong>65💎</strong><button class="mine-mini-btn" type="button">Comprar</button>
-            </article>
-            <article class="mine-shop-card">
-              <b>Guardiana del Cristal</b><small>Soporte</small><strong>180💎</strong><button class="mine-mini-btn" type="button">Comprar</button>
-            </article>
-            <article class="mine-shop-card premium">
-              <b>Rey del Filón</b><small>Legendaria</small><strong>320💎</strong><button class="mine-mini-btn" type="button">Comprar</button>
-            </article>
-          </div>
+          <div id="mineShopGrid" class="mine-shop-grid mine-undead-shop-grid"></div>
+          <div id="mineShopStatus" class="mine-shop-status" aria-live="polite"></div>
         </div>
       </section>
 
@@ -1264,6 +1256,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260824.20"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260824.21"></script>
 </body>
 </html>

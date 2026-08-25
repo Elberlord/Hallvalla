@@ -24983,3 +24983,46 @@ body.home-deck-tutorial-active{overflow:hidden}
   .mine-panel[data-mine-panel="missions"] .mine-mission-home-grid{grid-template-columns:1fr !important;}
   .mine-panel[data-mine-panel="missions"] .mine-mission-home-footer{grid-template-columns:auto 1fr 72px;}
 }
+
+
+/* === Mina · Tienda No Muertos v1 === */
+.mine-panel[data-mine-panel="shop"] .mine-undead-shop-content{justify-content:flex-start !important;}
+.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:16px !important;
+  width:100%;
+  margin-top:10px !important;
+  align-items:stretch !important;
+}
+.mine-panel[data-mine-panel="shop"] .mine-undead-offer{
+  position:relative;
+  flex:none !important;
+  min-width:0;
+  min-height:0 !important;
+  padding:10px !important;
+  border:1px solid rgba(90,166,229,.38) !important;
+  background:linear-gradient(180deg,rgba(4,10,18,.90),rgba(4,8,14,.82)) !important;
+  border-radius:16px !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.34) !important;
+  overflow:hidden;
+  gap:9px !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+}
+.mine-panel[data-mine-panel="shop"] .mine-undead-offer.unlocked{border-color:rgba(221,183,92,.65) !important;box-shadow:0 0 24px rgba(221,183,92,.16),0 14px 34px rgba(0,0,0,.34) !important;}
+.mine-shop-puzzle-art{position:relative;width:100%;aspect-ratio:4/5;overflow:hidden;border-radius:11px;background:#06080c;}
+.mine-shop-puzzle-art>img{width:100%;height:100%;object-fit:cover;display:block;}
+.mine-shop-puzzle-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);pointer-events:none;}
+.mine-shop-puzzle-piece{display:block;border:1px solid rgba(160,205,242,.14);transition:opacity .18s ease,background .18s ease;}
+.mine-shop-puzzle-piece.locked{background:linear-gradient(135deg,rgba(1,5,10,.97),rgba(9,20,30,.94));box-shadow:inset 0 0 14px rgba(29,116,176,.08);}
+.mine-shop-puzzle-piece.revealed{background:transparent;border-color:rgba(255,255,255,.05);}
+.mine-shop-offer-copy{display:flex;flex-direction:column;gap:3px;min-height:64px;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-offer-copy b{font-size:15px !important;color:#fff;line-height:1.08 !important;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-offer-copy small{max-width:none !important;color:rgba(214,229,242,.72);font-size:11px;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-offer-copy strong{font-size:17px !important;color:#86d9ff;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-buy-piece{width:100%;min-height:38px !important;margin-top:auto;border-radius:10px !important;font-size:11px !important;font-weight:900;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-buy-piece:disabled{opacity:.55;cursor:default;filter:saturate(.55);}
+.mine-shop-status{min-height:22px;margin-top:8px;color:#d9efff;font-size:12px;font-weight:800;text-shadow:0 1px 8px rgba(0,0,0,.7);}
+@media (max-width:980px){.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(3,minmax(150px,1fr)) !important;overflow-x:auto;padding-bottom:6px;}.mine-panel[data-mine-panel="shop"] .mine-undead-offer{min-width:150px;}}
+@media (max-width:640px){.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(3,minmax(138px,1fr)) !important;gap:10px !important;}.mine-panel[data-mine-panel="shop"] .mine-undead-offer{padding:7px !important;}.mine-panel[data-mine-panel="shop"] .mine-shop-offer-copy b{font-size:13px !important;}}
