@@ -25078,14 +25078,14 @@ body.home-deck-tutorial-active{overflow:hidden}
   object-fit:fill !important;
 }
 /* HOME layout definitivo · referencia 1366 x 637. */
-#adventureBtn{left:2.04978038%!important;top:18.21036107%!important;width:30.01464129%!important;height:12.87284144%!important;}
-#onlineBtn{left:2.04978038%!important;top:34.37990581%!important;width:30.01464129%!important;height:13.81475667%!important;}
-#missionsBtn{left:2.04978038%!important;top:53.53218210%!important;width:30.01464129%!important;height:12.55886970%!important;}
-#mineBtn{left:2.04978038%!important;top:69.70172684%!important;width:30.01464129%!important;height:12.87284144%!important;}
-#collectionBtn{left:68.08199122%!important;top:17.89638932%!important;width:29.79502196%!important;height:13.65777080%!important;}
-#forgeBtn{left:68.08199122%!important;top:34.53689168%!important;width:29.79502196%!important;height:12.87284144%!important;}
-#storeBtn{left:68.08199122%!important;top:53.53218210%!important;width:29.79502196%!important;height:12.40188383%!important;}
-#eventsBtn{left:68.08199122%!important;top:69.07378336%!important;width:29.79502196%!important;height:13.18681319%!important;}
-#dailyBtn{left:2.19619327%!important;top:87.44113030%!important;width:25.62225476%!important;height:11.61695447%!important;}
-#welcomeBtn{left:72.76720351%!important;top:87.44113030%!important;width:25.18301611%!important;height:11.61695447%!important;}
+#mainMenu #adventureBtn{left:2.04978038%!important;top:18.21036107%!important;width:30.01464129%!important;height:12.87284144%!important;}
+#mainMenu #onlineBtn{left:2.04978038%!important;top:34.37990581%!important;width:30.01464129%!important;height:13.81475667%!important;}
+#mainMenu #missionsBtn{left:2.04978038%!important;top:53.53218210%!important;width:30.01464129%!important;height:12.55886970%!important;}
+#mainMenu #mineBtn{left:2.04978038%!important;top:69.70172684%!important;width:30.01464129%!important;height:12.87284144%!important;}
+#mainMenu #collectionBtn{left:68.08199122%!important;top:17.89638932%!important;width:29.79502196%!important;height:13.65777080%!important;}
+#mainMenu #forgeBtn{left:68.08199122%!important;top:34.53689168%!important;width:29.79502196%!important;height:12.87284144%!important;}
+#mainMenu #storeBtn{left:68.08199122%!important;top:53.53218210%!important;width:29.79502196%!important;height:12.40188383%!important;}
+#mainMenu #eventsBtn{left:68.08199122%!important;top:69.07378336%!important;width:29.79502196%!important;height:13.18681319%!important;}
+#mainMenu #dailyBtn{left:2.19619327%!important;top:87.44113030%!important;width:25.62225476%!important;height:11.61695447%!important;}
+#mainMenu #welcomeBtn{left:72.76720351%!important;top:87.44113030%!important;width:25.18301611%!important;height:11.61695447%!important;}
 
