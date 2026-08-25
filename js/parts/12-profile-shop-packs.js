@@ -1174,8 +1174,17 @@ const SHOP_PACK_VISUALS=Object.freeze({
   legendary:"assets/shop/v6/packs/legendary.webp" // Legendaria -> legendary -> púrpura
 });
 
-/* Cantidades provisionales: solo economía interna. No hay dinero real conectado. */
-const SHOP_GEM_BUNDLES=Object.freeze([100,250,500,1000,2500,5000,10000,25000]);
+/* Precios definidos para la tienda de gemas. El cobro real todavía no está conectado en esta vista. */
+const SHOP_GEM_BUNDLES=Object.freeze([
+  Object.freeze({gems:100,usd:0.99}),
+  Object.freeze({gems:250,usd:1.99}),
+  Object.freeze({gems:500,usd:2.99}),
+  Object.freeze({gems:1000,usd:4.99}),
+  Object.freeze({gems:2500,usd:9.99}),
+  Object.freeze({gems:5000,usd:14.99}),
+  Object.freeze({gems:10000,usd:24.99}),
+  Object.freeze({gems:25000,usd:39.99})
+]);
 const SHOP_GOLD_OFFERS=Object.freeze([
   {gold:5000,gems:90},
   {gold:2500,gems:50},
@@ -1229,10 +1238,12 @@ function buildShopGems(profile){
     [132,174,340,315],[484,174,340,315],[836,174,340,315],[1188,174,340,315],
     [132,520,340,315],[484,520,340,315],[836,520,340,315],[1188,520,340,315]
   ];
-  const offers=SHOP_GEM_BUNDLES.map((amount,index)=>{
+  const offers=SHOP_GEM_BUNDLES.map((offer,index)=>{
     const [x,y,w,h]=slots[index];
-    return `<button class="hv-shop-currency-choice hv-shop-gem-choice" type="button" data-shop-action="gem-bundle" data-gem-amount="${amount}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}" aria-label="${amount.toLocaleString("es-CR")} gemas">
-      <span class="hv-shop-currency-label"><b>${amount.toLocaleString("es-CR")} GEMAS</b><small>PRÓXIMAMENTE</small></span>
+    const amount=Math.max(0,Number(offer?.gems||0));
+    const price=Math.max(0,Number(offer?.usd||0));
+    return `<button class="hv-shop-currency-choice hv-shop-gem-choice" type="button" data-shop-action="gem-bundle" data-gem-amount="${amount}" data-gem-price="${price.toFixed(2)}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(y,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(w,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(h,SHOP_ARTBOARD_HEIGHT)}" aria-label="${amount.toLocaleString("es-CR")} gemas por $${price.toFixed(2)} USD">
+      <span class="hv-shop-currency-label"><b>${amount.toLocaleString("es-CR")} GEMAS</b><small>$${price.toFixed(2)} USD</small></span>
     </button>`;
   }).join("");
   return shopStage("assets/shop/v6/gemas.webp",`${shopBackButton("go-back","Volver")}${offers}`,profile,"gems");
@@ -1284,9 +1295,10 @@ async function buyGoldWithGems(index){
   await hvAlert(`Recibiste ${gold.toLocaleString("es-CR")} de oro.`,"Compra realizada");
   renderShopView("gold");
 }
-async function showGemBundleInfo(amount){
+async function showGemBundleInfo(amount,price){
   const safe=Math.max(0,Number(amount||0));
-  await hvAlert(`${safe.toLocaleString("es-CR")} gemas.\n\nLa compra de gemas con dinero real todavía no está habilitada. El precio se definirá más adelante.`,"Gemas");
+  const safePrice=Math.max(0,Number(price||0));
+  await hvAlert(`${safe.toLocaleString("es-CR")} gemas por $${safePrice.toFixed(2)} USD.\n\nLa compra de gemas con dinero real todavía no está habilitada en esta vista.`,"Gemas");
 }
 function bindLayeredShopActions(){
   const stage=$("hvShopStage");
@@ -1309,7 +1321,7 @@ function bindLayeredShopActions(){
       return;
     }
     if(action==="buy-gold"){await buyGoldWithGems(button.dataset.goldIndex);return;}
-    if(action==="gem-bundle"){await showGemBundleInfo(button.dataset.gemAmount);return;}
+    if(action==="gem-bundle"){await showGemBundleInfo(button.dataset.gemAmount,button.dataset.gemPrice);return;}
   }));
 }
 function openPackShop(view="main"){

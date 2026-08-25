@@ -2990,7 +2990,7 @@ on("fragmentsPlusBtn","click",()=>showComingSoon("Conseguir fragmentos"));
    Etapa 1: checkout de prueba únicamente. No entrega recompensas.
    ============================================================ */
 const HALLVALLA_WELCOME_PACK_PAYPAL_CLIENT_ID="AUXfqsZc5G7J1XLXdnys3uFIuVpt4wwPUN8ipJqfJ44fufokMo3rUXJsMH2VCaMrTupgFTlHshmznJ-y";
-const HALLVALLA_WELCOME_PACK_PRICE_USD="1.99";
+const HALLVALLA_WELCOME_PACK_PRICE_USD="0.99";
 let hallvallaWelcomePayPalSdkPromise=null;
 
 function ensureHallvallaWelcomePayPalModal(){
@@ -3007,7 +3007,7 @@ function ensureHallvallaWelcomePayPalModal(){
       <button id="welcomePayPalCloseBtn" class="welcome-paypal-close" type="button" aria-label="Cerrar">×</button>
       <span class="welcome-paypal-kicker">PAQUETE DE BIENVENIDA</span>
       <h2 id="welcomePayPalTitle">COMIENZA CON VENTAJA</h2>
-      <div class="welcome-paypal-price">$1.99 <small>USD</small></div>
+      <div class="welcome-paypal-price">$0.99 <small>USD</small></div>
       <div class="welcome-paypal-rewards" aria-label="Contenido del paquete">
         <div><strong>3</strong><span>Sobres básicos</span></div>
         <div><strong>300</strong><span>Oro</span></div>
