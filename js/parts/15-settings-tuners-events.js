@@ -1581,9 +1581,9 @@ const HALLVALLA_MINE_EVENT_CHECK_MS=30*24*60*60*1000;
 const HALLVALLA_MINE_EVENT_CHANCE=1;
 const HALLVALLA_MINE_MAX_ACTIVE_EVENTS=1;
 const HALLVALLA_MINE_EVENT_DEFS=Object.freeze({
-  incendio:Object.freeze({key:"incendio",name:"Incendio",kind:"negative",scene:"assets/mine/events/event_incendio.webp",weight:20,action:"repair",costGold:200,button:"Reparar 200",baseEffect:"Daño por fuego"}),
-  inundacion:Object.freeze({key:"inundacion",name:"Inundación",kind:"negative",scene:"assets/mine/events/event_inundacion.webp",weight:17,action:"repair",costGold:250,button:"Reparar 250",baseEffect:"Galerías anegadas"}),
-  derrumbe:Object.freeze({key:"derrumbe",name:"Derrumbe",kind:"negative",scene:"assets/mine/events/event_derrumbe.webp",weight:15,action:"repair",costGold:300,button:"Reparar 300",baseEffect:"Galería dañada"}),
+  incendio:Object.freeze({key:"incendio",name:"Incendio",kind:"negative",scene:"assets/mine/events/event_incendio.webp",weight:20,action:"repair",costGold:40,button:"Reparar 40",baseEffect:"Daño por fuego"}),
+  inundacion:Object.freeze({key:"inundacion",name:"Inundación",kind:"negative",scene:"assets/mine/events/event_inundacion.webp",weight:17,action:"repair",costGold:50,button:"Reparar 50",baseEffect:"Galerías anegadas"}),
+  derrumbe:Object.freeze({key:"derrumbe",name:"Derrumbe",kind:"negative",scene:"assets/mine/events/event_derrumbe.webp",weight:15,action:"repair",costGold:60,button:"Reparar 60",baseEffect:"Galería dañada"}),
   tesoro:Object.freeze({key:"tesoro",name:"Tesoro",kind:"positive",scene:"assets/mine/events/event_tesoro.webp",weight:20,action:"reward",button:"Reclamar",reward:{gems:2,gold:120},baseEffect:"+2💎 +120🪙"}),
   veta_rica:Object.freeze({key:"veta_rica",name:"Veta rica",kind:"positive",scene:"assets/mine/events/event_veta_rica.webp",weight:17,action:"reward",button:"Reclamar",reward:{gems:3},baseEffect:"+3💎"}),
   camara_secreta:Object.freeze({key:"camara_secreta",name:"Cámara secreta",kind:"positive",scene:"assets/mine/events/event_camara_secreta.webp",weight:11,action:"reward",button:"Abrir",reward:{gems:2,fragments:60},baseEffect:"+2💎 +60 fragmentos"})
@@ -1626,9 +1626,13 @@ async function transactHallvallaMineEventStateRemote(mutator){
   if(!userId)return {committed:false,state:getHallvallaMineEventState()};
   try{
     await hallvallaMineRemoteWriteQueue;
-    const result=await runTransaction(ref(db,`users/${userId}/mine/events`),current=>{
-      if(!current)return;
-      const next=mutator(normalizeHallvallaMineEventState(current));
+    const eventsRef=ref(db,`users/${userId}/mine/events`);
+    const remoteSnapshot=await get(eventsRef);
+    if(!remoteSnapshot?.exists?.())return {committed:false,state:getHallvallaMineEventState()};
+    const remoteSeed=remoteSnapshot.val()||{};
+    const result=await runTransaction(eventsRef,current=>{
+      const authoritativeCurrent=current==null?remoteSeed:current;
+      const next=mutator(normalizeHallvallaMineEventState(authoritativeCurrent));
       return next?normalizeHallvallaMineEventState(next):undefined;
     },{applyLocally:false});
     if(!result?.committed)return {committed:false,state:getHallvallaMineEventState()};
@@ -1811,6 +1815,54 @@ function flashHallvallaMineEventButton(button,text){
   button.textContent=text;
   window.setTimeout(()=>{button.textContent=original;},1400);
 }
+async function resolveHallvallaMineNegativeEventRemote(key){
+  if(!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineEventState()};
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    const current=getHallvallaMineEventState();
+    const index=current.active.findIndex(event=>event.key===key);
+    if(index<0)return {committed:false,state:current};
+    const safe=normalizeHallvallaMineEventState({...current,nextCheckAt:getHallvallaMineNow()+HALLVALLA_MINE_EVENT_CHECK_MS,active:current.active.filter((_,i)=>i!==index)});
+    localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+    return {committed:true,state:safe};
+  }
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return {committed:false,state:getHallvallaMineEventState()};
+  try{
+    await hallvallaMineRemoteWriteQueue;
+    const eventsRef=ref(db,`users/${userId}/mine/events`);
+    const snapshot=await get(eventsRef);
+    const remote=snapshot?.exists?.()?snapshot.val()||{}:{};
+    const rawActive=remote?.active&&typeof remote.active==="object"?remote.active:{};
+    const remoteEntry=Object.entries(rawActive).find(([,event])=>String(event?.key||"")===key);
+    const nextCheckAt=Math.max(Number(remote?.nextCheckAt||0),getHallvallaMineNow()+HALLVALLA_MINE_EVENT_CHECK_MS);
+
+    if(remoteEntry){
+      const [remoteIndex]=remoteEntry;
+      const result=await runTransaction(ref(db,`users/${userId}/mine/events/active/${remoteIndex}`),current=>{
+        if(!current||String(current?.key||"")!==key)return;
+        return null;
+      },{applyLocally:false});
+      if(!result?.committed)return {committed:false,state:getHallvallaMineEventState()};
+      await runTransaction(ref(db,`users/${userId}/mine/events/nextCheckAt`),current=>Math.max(Number(current||0),nextCheckAt),{applyLocally:false});
+    }else{
+      const local=getHallvallaMineEventState();
+      const localIndex=local.active.findIndex(event=>event.key===key);
+      if(localIndex<0)return {committed:false,state:local};
+      const hasOtherRemote=Object.values(rawActive).some(event=>event&&String(event?.key||"")!==key);
+      if(hasOtherRemote)return {committed:false,state:local};
+      await update(eventsRef,{active:null,nextCheckAt});
+    }
+
+    const local=getHallvallaMineEventState();
+    const safe=normalizeHallvallaMineEventState({...local,nextCheckAt,active:local.active.filter(event=>event.key!==key)});
+    localStorage.setItem(HALLVALLA_MINE_EVENTS_STORAGE_KEY,JSON.stringify(safe));
+    queueHallvallaMineRemotePatch({eventsUpdatedAt:serverTimestamp()});
+    return {committed:true,state:safe};
+  }catch(error){
+    console.warn("[HallValla][Mina] No se pudo resolver el evento negativo:",error);
+    return {committed:false,state:getHallvallaMineEventState()};
+  }
+}
 async function handleHallvallaMineEventAction(key,button=null){
   if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
   const state=getHallvallaMineEventState(),index=state.active.findIndex(event=>event.key===key);
@@ -1821,6 +1873,20 @@ async function handleHallvallaMineEventAction(key,button=null){
   if(def.kind==="negative"){
     const cost=Math.max(0,Number(def.costGold||0));
     if(Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))} Oro`);return;}
+    if(button){button.disabled=true;button.textContent="Reparando...";}
+    const tx=await resolveHallvallaMineNegativeEventRemote(key);
+    if(!tx.committed){
+      if(button){button.disabled=false;button.textContent=def.button||"Reparar";}
+      setHallvallaMineStatus("No se pudo confirmar la reparación con Firebase. No se descontó oro.");
+      return;
+    }
+    profile.gold=Math.max(0,Number(profile.gold||0)-cost);
+    savePlayerProfile(profile);
+    try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
+    setHallvallaMineStatus(`Reparación completada: -${cost} de oro.`);
+    renderMineScreen();
+    renderHallvallaMineEvents(tx.state);
+    return;
   }
   const tx=await transactHallvallaMineEventStateRemote(current=>{
     const currentIndex=current.active.findIndex(event=>event.key===key);
@@ -1829,14 +1895,10 @@ async function handleHallvallaMineEventAction(key,button=null){
   });
   if(!tx.committed){setHallvallaMineStatus("Ese evento ya fue resuelto en otro dispositivo o no pudo confirmarse con Firebase.");return;}
   const nextState=tx.state;
-  if(def.kind==="negative"){
-    profile.gold=Math.max(0,Number(profile.gold||0)-Math.max(0,Number(def.costGold||0)));
-  }else{
-    const reward=def.reward||{};
-    profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.gems||0));
-    profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.gold||0));
-    profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.fragments||0));
-  }
+  const reward=def.reward||{};
+  profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.gems||0));
+  profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.gold||0));
+  profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.fragments||0));
   savePlayerProfile(profile);
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   renderMineScreen();
