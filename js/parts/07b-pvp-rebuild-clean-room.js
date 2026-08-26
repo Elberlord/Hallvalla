@@ -66,6 +66,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let randomMatchTimer=null;
   let randomOwnCreatedAt=0;
   let randomQueueDisconnect=null;
+  let onlineFlowMode="select";
+  let randomAutoReadyTimer=null;
+  let randomAutoReadyCode="";
 
   function clearRematchWait(){
     rematchWaitActive=false;
@@ -118,6 +121,126 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   async function hvPopup(message,title){
     try{ if(typeof hvAlert==="function") return await hvAlert(message,title); }catch(_){ }
     alert(`${title? title+": ":""}${message}`);
+  }
+
+  function clearRandomAutoReady(){
+    if(randomAutoReadyTimer){ clearTimeout(randomAutoReadyTimer); randomAutoReadyTimer=null; }
+    randomAutoReadyCode="";
+  }
+  function setOnlineFlowMode(mode){
+    onlineFlowMode=String(mode||"select");
+    const selector=$("onlineModeSelect");
+    const matchmaking=$("onlineMatchmakingView");
+    const art=document.querySelector("#onlineLobby .online-modal-art");
+    const isSelect=onlineFlowMode==="select";
+    const isRandom=onlineFlowMode==="random";
+    const isWager=onlineFlowMode==="wager";
+    if(selector)selector.classList.toggle("hidden",!isSelect);
+    if(matchmaking)matchmaking.classList.toggle("hidden",!isRandom);
+    if(art){
+      const rpsActive=art.classList.contains("pvp-rps-active");
+      art.classList.toggle("hidden",!(isWager||(isRandom&&rpsActive)));
+      art.classList.toggle("hv-random-rps-shell",isRandom&&rpsActive);
+    }
+  }
+  function showOnlineModeSelect(){
+    clearRandomAutoReady();
+    setOnlineFlowMode("select");
+  }
+  function showWagerLobby(){
+    clearRandomAutoReady();
+    globalThis.hvHydrateAssetGroup?.("pvp-lobby");
+    setOnlineFlowMode("wager");
+  }
+  function uniqueStrings(values=[]){
+    const seen=new Set();
+    return (Array.isArray(values)?values:[values]).map(v=>String(v||"").trim()).filter(v=>v&&!seen.has(v)&&(seen.add(v),true));
+  }
+  function resolveShowcaseCard(key){
+    const safe=String(key||"").trim();
+    if(!safe)return null;
+    const resolvers=["getEquipmentTemplateByKey","getStarterBasicCardByKey","getLegendaryCardByKey","getAdventureDeckCardTemplateByKey","getDragonCompanionCardTemplate"];
+    for(const name of resolvers){
+      try{const fn=globalThis[name];if(typeof fn==="function"){const found=fn(safe);if(found)return found;}}catch(_){ }
+    }
+    try{if(typeof CARD_TEMPLATES!=="undefined"){const found=(CARD_TEMPLATES||[]).find(card=>String(card?.key||"")===safe);if(found)return found;}}catch(_){ }
+    return null;
+  }
+  function showcaseImageCandidates(entity){
+    const source=entity&&typeof entity==="object"?entity:{};
+    let field=[],cards=[];
+    try{if(typeof getResolvedFieldFigureCandidates==="function")field=getResolvedFieldFigureCandidates(source)||[];}catch(_){ }
+    try{if(typeof getResolvedCardPortraitCandidates==="function")cards=getResolvedCardPortraitCandidates(source)||[];}catch(_){ }
+    return uniqueStrings([source.portrait,source.cardPortrait,source.cardImage,...cards,source.fieldFigure,source.fieldFigurePortrait,source.fieldFigureImage,...field]);
+  }
+  function applyShowcaseImage(img,candidates=[]){
+    if(!img)return;
+    const queue=uniqueStrings(candidates);
+    let index=0;
+    img.onerror=()=>{index+=1;if(index<queue.length)img.src=queue[index];else{img.removeAttribute("src");img.style.visibility="hidden";}};
+    if(queue.length){img.style.visibility="visible";img.src=queue[0];}
+    else{img.removeAttribute("src");img.style.visibility="hidden";}
+  }
+  function buildPublicShowcase(privatePayload=null){
+    let leaderType=String(privatePayload?.battleProfile?.leaderType||"").trim();
+    let principalKeys=normalizeFirebaseArray(privatePayload?.loadout?.principalKeys).map(v=>String(v||"").trim()).filter(Boolean);
+    if(!leaderType){try{leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior");}catch(_){leaderType="warrior";}}
+    if(!principalKeys.length)principalKeys=getSavedPrincipalKeysSafe().slice(0,3);
+    return {leaderType:leaderType||"warrior",principalKeys:uniqueStrings(principalKeys).slice(0,3)};
+  }
+  function renderShowcaseSide(side,showcase){
+    const safe=showcase&&typeof showcase==="object"?showcase:{};
+    const leaderType=String(safe.leaderType||"").trim();
+    const leaderId=side==="opponent"?"matchmakingOpponentLeader":"matchmakingPlayerLeader";
+    const leader=$(leaderId);
+    let leaderSrc="";
+    try{leaderSrc=String(LEADER_PORTRAITS?.[leaderType]||"");}catch(_){ }
+    applyShowcaseImage(leader,[leaderSrc]);
+    const principalKeys=normalizeFirebaseArray(safe.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).slice(0,3);
+    for(let i=0;i<3;i++){
+      const img=$(side==="opponent"?`matchmakingOpponentPrincipal${i+1}`:`matchmakingPlayerPrincipal${i+1}`);
+      const card=resolveShowcaseCard(principalKeys[i]||"");
+      applyShowcaseImage(img,card?showcaseImageCandidates(card):[]);
+    }
+  }
+  function renderRandomMatchmakingUi(room={}){
+    if(onlineFlowMode!=="random")return;
+    const role=Number(activeRole||1);
+    const otherRole=role===1?2:1;
+    const localShowcase=room?.playerShowcase?.[role]||room?.playerShowcase?.[String(role)]||buildPublicShowcase();
+    const opponentShowcase=room?.playerShowcase?.[otherRole]||room?.playerShowcase?.[String(otherRole)]||null;
+    renderShowcaseSide("player",localShowcase);
+    const otherUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
+    const found=!!otherUid;
+    renderShowcaseSide("opponent",found?opponentShowcase:null);
+    hide("matchmakingSearchingState",found);
+    hide("matchmakingVsArt",!found);
+  }
+  function scheduleRandomAutoReady(room,code){
+    if(onlineFlowMode!=="random"||String(room?.entryMode||"")!=="random")return;
+    const role=Number(activeRole||0);
+    if(role!==1&&role!==2)return;
+    const p1=String(room?.playerSlots?.player1Uid||""),p2=String(room?.playerSlots?.player2Uid||"");
+    const bothPresent=!!p1&&!!p2;
+    const bothPrepared=bothPresent&&getPreparedFlag(room,1)&&getPreparedFlag(room,2);
+    if(!bothPrepared||getReadyFlag(room,role)||room?.startConfig?.resolved===true)return;
+    if(randomAutoReadyTimer&&randomAutoReadyCode===String(code||""))return;
+    clearRandomAutoReady();
+    randomAutoReadyCode=String(code||"");
+    randomAutoReadyTimer=setTimeout(async()=>{
+      randomAutoReadyTimer=null;
+      try{
+        if(onlineFlowMode!=="random"||activeCode!==code||activeRole!==role)return;
+        const publicRef=ref(db,`games/${code}/public`);
+        const snap=await get(publicRef);
+        if(!snap.exists())return;
+        const fresh=snap.val()||{};
+        const stillReady=getPreparedFlag(fresh,1)&&getPreparedFlag(fresh,2)&&!!String(fresh?.playerSlots?.player1Uid||"")&&!!String(fresh?.playerSlots?.player2Uid||"");
+        if(!stillReady||getReadyFlag(fresh,role)||fresh?.startConfig?.resolved===true)return;
+        await set(ref(db,`games/${code}/public/lobbyReady/${role}`),true);
+        mark(`Matchmaking · J${role} listo automáticamente después de la presentación VS.`);
+      }catch(error){console.warn(`[HallValla][${STEP}] Auto-LISTO de matchmaking falló:`,error);}
+    },2300);
   }
 
   function syncLocalButtons(){
@@ -1018,6 +1141,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       boardRows:rows,
       boardCols:cols,
       mode:"online",
+      entryMode:String(room?.entryMode||"wager"),
       createdAt:Number(room?.createdAt||Date.now()),
       engineStartedAt:0,
       phase:"prebattle",
@@ -1082,6 +1206,20 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           const ownSnap=await withTimeout(get(ref(db,`games/${code}/private/player${activeRole}`)),`Confirmar privado antes del VS J${activeRole}`,5000);
           if(!ownSnap.exists()||ownSnap.val()?.engine6e?.ready!==true) throw new Error("Tu estado privado del motor real todavía no está preparado.");
           clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
+          if(String(room?.entryMode||"")==="random"){
+            if(activeRole===1){
+              const publicRef=ref(db,`games/${code}/public`);
+              const freshSnap=await withTimeout(get(publicRef),`Confirmar arranque directo de matchmaking ${code}`,5000);
+              if(freshSnap.exists()){
+                const fresh=freshSnap.val()||{};
+                if(isRealEnginePrebattle6e(fresh)){
+                  const firstRole=Number(fresh.currentPlayer||1);
+                  await withTimeout(update(publicRef,{phase:"active",turnPhase:"draw",turnKey:`1-${firstRole}`,turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate de matchmaking ${code}`,5000);
+                }
+              }
+            }
+            return true;
+          }
           setRpsVisualActive(false);hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
           $("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.add("hidden");
           const shell=$("gameShell");
@@ -1226,8 +1364,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function setRoomPanelVisible(visible){
     const panel=$("pvpRoomPanel");
     const art=document.querySelector("#onlineLobby .online-modal-art");
-    if(panel) panel.classList.toggle("hidden",!visible);
-    if(art) art.classList.toggle("pvp-room-active",!!visible);
+    const randomFlow=onlineFlowMode==="random";
+    if(panel) panel.classList.toggle("hidden",!visible||randomFlow);
+    if(art){
+      art.classList.toggle("pvp-room-active",!!visible&&!randomFlow);
+      const rpsActive=art.classList.contains("pvp-rps-active");
+      art.classList.toggle("hidden",!(onlineFlowMode==="wager"||(randomFlow&&rpsActive)));
+    }
   }
   function setPresence(id,state){ const n=$(id); if(!n) return; n.classList.toggle("connected",state==="connected"); n.classList.toggle("waiting",state!=="connected"); }
   function setReadyCheck(role,ready){ const c=$(role===2?"pvpRoomPlayer2Check":"pvpRoomPlayer1Check"); if(c) c.classList.toggle("visible",!!ready); }
@@ -1264,7 +1407,18 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
   function setRpsVisualActive(active){
     const art=document.querySelector("#onlineLobby .online-modal-art");
-    if(art) art.classList.toggle("pvp-rps-active",!!active);
+    const randomFlow=onlineFlowMode==="random";
+    if(art){
+      art.classList.toggle("pvp-rps-active",!!active);
+      art.classList.toggle("hv-random-rps-shell",randomFlow&&!!active);
+      art.classList.toggle("hidden",!(onlineFlowMode==="wager"||(randomFlow&&!!active)));
+    }
+    if(randomFlow){
+      const matchmaking=$("onlineMatchmakingView");
+      if(matchmaking)matchmaking.classList.toggle("hidden",!!active);
+      const selector=$("onlineModeSelect");
+      if(selector)selector.classList.add("hidden");
+    }
   }
   function resetRpsUi(){
     setRpsVisualActive(false);
@@ -1358,6 +1512,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const p1Ready=!!p1Uid&&getReadyFlag(room,1), p2Ready=!!p2Uid&&getReadyFlag(room,2);
     const p1Prepared=!!p1Uid&&getPreparedFlag(room,1), p2Prepared=!!p2Uid&&getPreparedFlag(room,2);
     const bothPresent=!!p1Uid&&!!p2Uid, bothPrepared=bothPresent&&p1Prepared&&p2Prepared, bothReady=bothPrepared&&p1Ready&&p2Ready;
+    if(onlineFlowMode==="random"){
+      renderRandomMatchmakingUi(room);
+      if(bothPrepared&&room?.startConfig?.resolved!==true)scheduleRandomAutoReady(room,String(code||activeCode||""));
+    }
     // PERF3: cuando ambos mazos privados ya están preparados, RPS es el siguiente
     // paso predecible. Cuando ambos marcan LISTO, el combate ya es inminente.
     if(bothPrepared)globalThis.hvPrefetchAssetGroup?.("pvp-rps");
@@ -1433,8 +1591,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           code:String(code||room?.code||""),
           createdAt:Number(room?.createdAt||Date.now()),
           phase:"waiting",
+          entryMode:String(room?.entryMode||"wager"),
           playerSlots:{player1Uid:p1Uid,player2Uid:p2Uid},
           playerNames:{1:getPlayerName(room,1),2:getPlayerName(room,2)},
+          playerShowcase:{
+            1:{leaderType:String(room?.playerLeaders?.[1]||room?.playerLeaders?.["1"]||"warrior"),principalKeys:normalizeFirebaseArray(room?.pvpPrincipalKeys?.[1]||room?.pvpPrincipalKeys?.["1"]||[]).slice(0,3)},
+            2:{leaderType:String(room?.playerLeaders?.[2]||room?.playerLeaders?.["2"]||"warrior"),principalKeys:normalizeFirebaseArray(room?.pvpPrincipalKeys?.[2]||room?.pvpPrincipalKeys?.["2"]||[]).slice(0,3)}
+          },
           playerPrepared:{1:true,2:true},
           rematchReady:{1:false,2:false},
           lobbyReady:{1:true,2:true},
@@ -1611,7 +1774,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    clearRematchWait(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    clearRematchWait(); clearRandomAutoReady(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -1751,6 +1914,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       return false;
     }
     if(!(await checkOnlineEntryRequirements()))return false;
+    globalThis.hvHydrateAssetGroup?.("pvp-online");
+    setOnlineFlowMode("random");
+    renderRandomMatchmakingUi({playerShowcase:{1:buildPublicShowcase()},playerSlots:{player1Uid:String(auth?.currentUser?.uid||""),player2Uid:""}});
     randomMatchSearching=true;syncLocalButtons();mark("Buscando rival aleatorio...");
     try{
       if(await scanRandomQueue())return true;
@@ -1772,8 +1938,37 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
-    globalThis.hvHydrateAssetGroup?.("pvp-lobby");
-    resetUi({resetJoin:true}); $("mainMenu")?.classList.add("hidden"); $("onlineLobby")?.classList.remove("hidden"); $("gameShell")?.classList.add("hidden"); mark("CLEAN ROOM activo · Paso 6I: duelo completo sobre el motor real; todas las rutas de combate PvE quedan abiertas para PvP."); try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    globalThis.hvHydrateAssetGroup?.("pvp-online");
+    resetUi({resetJoin:true});
+    $("mainMenu")?.classList.add("hidden");
+    $("onlineLobby")?.classList.remove("hidden");
+    $("gameShell")?.classList.add("hidden");
+    showOnlineModeSelect();
+    mark("VS Online listo · elige Matchmaking o Apuestas.");
+    try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ }
+    return true;
+  }
+
+  async function openMatchmakingFromSelector(){
+    if(!(await checkOnlineEntryRequirements()))return false;
+    setOnlineFlowMode("random");
+    return startRandomMatchmaking();
+  }
+  function openWagerFromSelector(){
+    showWagerLobby();
+    mark("Apuestas · crea una partida o únete con código y define las reglas del duelo.");
+  }
+  async function returnToOnlineSelector(){
+    clearRandomAutoReady();
+    if(activeCode||randomMatchSearching){
+      await leaveRoom();
+      return openCleanRoom();
+    }
+    resetUi({resetJoin:true});
+    $("mainMenu")?.classList.add("hidden");
+    $("onlineLobby")?.classList.remove("hidden");
+    showOnlineModeSelect();
+    return true;
   }
 
   async function createMinimalPublicRoom(){
@@ -1786,7 +1981,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8); activeCode=code; await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        const room={ schema:"hallvalla-pvp-rebuild-step6f-real-unit-summon", code, createdAt:Date.now(), phase:"waiting", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
+        const room={ schema:"hallvalla-pvp-rebuild-step6f-real-unit-summon", code, createdAt:Date.now(), phase:"waiting", entryMode:onlineFlowMode==="random"?"random":"wager", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerShowcase:{1:buildPublicShowcase(privatePayload),2:{leaderType:"",principalKeys:[]}}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
         try{
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
           const publicSnap=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
@@ -1824,7 +2019,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       else await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
       await markAndPaint(`5/8 · guardando private/player2 con mazo...`); await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload); privateWritten=true;
       await markAndPaint(`6/8 · publicando presencia + prepared=true de J2, sin exponer el mazo...`);
-      await withTimeout(update(publicRef,{"playerNames/2":privatePayload.profile.name,"playerLevels/2":privatePayload.profile.level,"playerPrepared/2":true,"lobbyReady/2":false}),`Presencia/preparación J2 en ${code}`);
+      await withTimeout(update(publicRef,{"playerNames/2":privatePayload.profile.name,"playerLevels/2":privatePayload.profile.level,"playerShowcase/2":buildPublicShowcase(privatePayload),"playerPrepared/2":true,"lobbyReady/2":false}),`Presencia/preparación J2 en ${code}`);
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`); const confirmed=confirmSnap.val()||{};
       if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid) throw new Error("Firebase no confirmó este UID como Jugador 2."); if(!(confirmed?.playerPrepared?.[2]===true||confirmed?.playerPrepared?.["2"]===true)) throw new Error("Firebase no confirmó playerPrepared/2.");
       activeCode=code; activeOwnerUid=joinUid; activeRole=2; await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`); attachOwnPrivateListener(code,2,joinUid); renderRoomSnapshot(confirmed,code); attachRoomListener(code); await markAndPaint(`8/8 · J2 CORRECTO · privado preparado. Ambos pueden usar LISTO.`); return true;
@@ -2068,10 +2263,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6I-FULL-DUEL-UNLOCK";
 
   on("onlineBtn","click",openCleanRoom);
-  on("backMenuFromLobby","click",backToMain);
+  on("onlineModeMatchBtn","click",()=>{void openMatchmakingFromSelector();});
+  on("onlineModeWagerBtn","click",openWagerFromSelector);
+  on("onlineModeBackBtn","click",backToMain);
+  on("matchmakingCancelBtn","click",()=>{void returnToOnlineSelector();});
+  on("backMenuFromLobby","click",()=>{void returnToOnlineSelector();});
   on("createBtn","click",createMinimalPublicRoom);
   on("joinBtn","click",joinExistingRoom);
-  on("randomMatchBtn","click",startRandomMatchmaking);
   on("pvpReadyBtn","click",toggleReady);
   on("pvpCopyCodeBtn","click",copyCode);
   on("pvpLeaveBtn","click",leaveRoom);

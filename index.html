@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260826.1">
+<meta name="hallvalla-version" content="20260826.2">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
-<link rel="stylesheet" href="styles.css?v=20260826.3"/>
+<link rel="stylesheet" href="styles.css?v=20260826.4"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -413,7 +413,48 @@
 
 <div id="onlineLobby" class="online-visual hidden">
   <div class="online-visual-bg"></div>
-  <div class="online-modal-art">
+
+  <section id="onlineModeSelect" class="hv-online-mode-select hidden" aria-label="Competir en línea">
+    <img class="hv-online-mode-bg" data-hv-src="assets/ui/pvp_online/online_mode_select_bg.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Competir en línea">
+    <button id="onlineModeMatchBtn" class="hv-online-mode-btn hv-online-mode-match" type="button" aria-label="Matchmaking">
+      <img data-hv-src="assets/ui/pvp_online/online_matchmaking_btn.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Matchmaking">
+    </button>
+    <button id="onlineModeWagerBtn" class="hv-online-mode-btn hv-online-mode-wager" type="button" aria-label="Apuestas">
+      <img data-hv-src="assets/ui/pvp_online/online_wager_btn.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Apuestas">
+    </button>
+    <button id="onlineModeBackBtn" class="hv-online-subtle-back" type="button">VOLVER</button>
+  </section>
+
+  <section id="onlineMatchmakingView" class="hv-matchmaking-view hidden" aria-live="polite" aria-label="Matchmaking">
+    <img class="hv-matchmaking-bg" data-hv-src="assets/ui/pvp_online/matchmaking_bg.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Matchmaking">
+
+    <div class="hv-match-team hv-match-team-player" aria-label="Tu equipo">
+      <img id="matchmakingPlayerLeader" class="hv-match-leader hv-match-player-leader" alt="Tu líder">
+      <div class="hv-match-principals hv-match-player-principals">
+        <img id="matchmakingPlayerPrincipal1" class="hv-match-principal" alt="Tu personaje principal 1">
+        <img id="matchmakingPlayerPrincipal2" class="hv-match-principal" alt="Tu personaje principal 2">
+        <img id="matchmakingPlayerPrincipal3" class="hv-match-principal" alt="Tu personaje principal 3">
+      </div>
+    </div>
+
+    <div class="hv-match-team hv-match-team-opponent" aria-label="Equipo rival">
+      <img id="matchmakingOpponentLeader" class="hv-match-leader hv-match-opponent-leader" alt="Líder rival">
+      <div class="hv-match-principals hv-match-opponent-principals">
+        <img id="matchmakingOpponentPrincipal1" class="hv-match-principal" alt="Personaje principal rival 1">
+        <img id="matchmakingOpponentPrincipal2" class="hv-match-principal" alt="Personaje principal rival 2">
+        <img id="matchmakingOpponentPrincipal3" class="hv-match-principal" alt="Personaje principal rival 3">
+      </div>
+    </div>
+
+    <div id="matchmakingSearchingState" class="hv-match-searching">
+      <span class="hv-match-search-spinner" aria-hidden="true"></span>
+      <strong>BUSCANDO RIVAL...</strong>
+    </div>
+    <img id="matchmakingVsArt" class="hv-match-vs hidden" data-hv-src="assets/ui/pvp_online/matchmaking_vs.webp" data-hv-asset-group="pvp-online" decoding="async" alt="VS">
+    <button id="matchmakingCancelBtn" class="hv-online-subtle-back hv-match-cancel" type="button">CANCELAR</button>
+  </section>
+
+  <div class="online-modal-art hidden">
     <img class="online-modal-base" data-hv-src="assets/modal/modal_online_base.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Competir en línea">
 
     <button id="createBtn" class="visual-btn visual-create" type="button" aria-label="Crear partida">
@@ -428,7 +469,6 @@
       <img data-hv-src="assets/modal/btn_join_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
     </button>
 
-    <button id="randomMatchBtn" class="pvp-random-match-btn" type="button">BATALLA ALEATORIA</button>
 
     <button id="backMenuFromLobby" class="visual-btn visual-back" type="button" aria-label="Volver al inicio">
       <img data-hv-src="assets/modal/btn_back_home.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
