@@ -25346,3 +25346,48 @@ body.hv-google-auth-required #accountPanel{z-index:10050!important;}
 .pvp-random-match-btn.is-searching{color:#fff0bf;animation:hvRandomMatchPulse 1.1s ease-in-out infinite alternate;}
 @keyframes hvRandomMatchPulse{from{box-shadow:0 0 8px rgba(221,170,64,.25)}to{box-shadow:0 0 22px rgba(221,170,64,.65)}}
 .online-modal-art.pvp-room-active .pvp-random-match-btn{opacity:0!important;visibility:hidden!important;pointer-events:none!important;}
+
+
+/* HallValla · Portada de acceso Google (antes del Home) */
+.hv-google-login-splash{
+  position:fixed;
+  inset:0;
+  z-index:120000;
+  overflow:hidden;
+  background:#000 url("assets/home/hallvalla_login_google.webp") center center / cover no-repeat;
+}
+.hv-google-login-splash.hidden{display:none!important;}
+.hv-google-login-splash-btn{
+  position:absolute;
+  left:50%;
+  bottom:clamp(46px,8.1vh,84px);
+  transform:translateX(-50%);
+  width:min(78vw,49vh);
+  max-width:500px;
+  min-width:250px;
+  height:clamp(58px,8.8vh,92px);
+  padding:0;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  cursor:pointer;
+  color:transparent;
+  -webkit-tap-highlight-color:transparent;
+}
+.hv-google-login-splash-btn:hover,
+.hv-google-login-splash-btn:focus-visible{
+  outline:2px solid rgba(255,214,120,.72);
+  outline-offset:3px;
+  box-shadow:0 0 22px rgba(255,152,42,.35);
+}
+.hv-google-login-splash-btn:disabled{cursor:wait;opacity:.7;}
+body.hv-google-auth-required{overflow:hidden!important;}
+body.hv-google-auth-required #accountPanel{display:none!important;}
+@media (max-width:620px){
+  .hv-google-login-splash{background-position:center center;}
+  .hv-google-login-splash-btn{
+    width:min(82vw,49vh);
+    min-width:230px;
+    bottom:clamp(42px,8vh,72px);
+  }
+}

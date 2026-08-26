@@ -75,24 +75,17 @@ function hallvallaIsGoogleAccount(user=auth?.currentUser){
 function hallvallaApplyMandatoryGoogleGate(user=auth?.currentUser){
   const allowed=hallvallaIsGoogleAccount(user);
   const panel=$("accountPanel");
+  const splash=$("googleLoginSplash");
   const closeBtn=$("closeAccountPanelBtn");
   document.body.classList.toggle("hv-google-auth-required",!allowed);
+  splash?.classList.toggle("hidden",allowed);
   if(!allowed){
     hallvallaGoogleGateForced=true;
-    if(panel){panel.dataset.authGate="1";panel.classList.remove("hidden");}
+    if(panel){panel.dataset.authGate="0";panel.classList.add("hidden");}
     $("profilePanel")?.classList.add("hidden");
-    closeBtn?.classList.add("hidden");
-    if(user&&!user.isAnonymous&&hallvallaIsPermanentAccount(user)){
-      hallvallaSetAccountMessage("Vincula Google para continuar usando HallValla.","error");
-    }else{
-      hallvallaSetAccountMessage("Inicia sesión con Google para entrar a HallValla.");
-    }
+    closeBtn?.classList.remove("hidden");
   }else{
     closeBtn?.classList.remove("hidden");
-    if(panel?.dataset.authGate==="1"){
-      panel.dataset.authGate="0";
-      panel.classList.add("hidden");
-    }
     hallvallaGoogleGateForced=false;
   }
   return allowed;
@@ -563,6 +556,27 @@ function hallvallaStartCloudSyncLoop(){
     hallvallaUploadCloudSave(user).catch(error=>console.warn("[HallValla] Sincronización automática pendiente:",error));
   },HALLVALLA_ACCOUNT_SYNC_INTERVAL_MS);
 }
+
+$("googleLoginSplashBtn")?.addEventListener("click",async()=>{
+  const button=$("googleLoginSplashBtn");
+  if(button?.disabled)return;
+  if(button)button.disabled=true;
+  try{
+    const current=auth.currentUser;
+    const user=current?.isAnonymous
+      ?await hallvallaCreatePermanentAccountWithGoogle()
+      :current&&!hallvallaHasGoogleProvider(current)&&hallvallaIsPermanentAccount(current)
+        ?await hallvallaLinkGoogleToCurrentAccount()
+        :await hallvallaLoginWithGoogle();
+    hallvallaRenderAccountState(user);
+    hallvallaApplyMandatoryGoogleGate(user);
+  }catch(error){
+    console.warn("[HallValla] No se pudo iniciar sesión con Google desde la portada:",error);
+    alert(hallvallaAuthErrorMessage(error));
+  }finally{
+    if(button)button.disabled=false;
+  }
+});
 
 $("manageAccountBtn")?.addEventListener("click",hallvallaOpenAccountPanel);
 $("closeAccountPanelBtn")?.addEventListener("click",hallvallaCloseAccountPanel);
