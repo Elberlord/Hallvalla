@@ -25816,3 +25816,227 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   transform-origin:50% 50%;
 }
 /* === Fin Matchmaking jugador layout fijado === */
+
+
+/* ========================================================================== 
+   HALLVALLA · AVENTURA CINEMÁTICA RESPONSIVE
+   Convierte únicamente las escenas narrativas de Aventura en un lienzo 1672:941
+   que cabe completo dentro del viewport, igual que las pantallas visuales PvP.
+   La caja de historia queda visualmente transparente sobre el arte.
+   ========================================================================== */
+#adventurePanel.hv-adventure-cinematic-panel{
+  padding:0!important;
+  overflow:hidden!important;
+  background:#000!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.adventure-card.hv-adventure-cinematic-fit{
+  position:relative!important;
+  width:min(100vw,calc(100dvh * 1.7768331562))!important;
+  height:min(100dvh,calc(100vw / 1.7768331562))!important;
+  max-width:none!important;
+  max-height:none!important;
+  aspect-ratio:1672 / 941!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  filter:drop-shadow(0 24px 64px rgba(0,0,0,.68));
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-stage:not(.hidden){
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  padding:0!important;
+  margin:0!important;
+  gap:0!important;
+  overflow:hidden!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-visual,
+.adventure-card.hv-adventure-cinematic-fit .adventure-map-hero{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  background-color:#050404!important;
+  background-size:100% 100%!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-bg-img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:fill!important;
+  object-position:center center!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-overlay{
+  position:absolute!important;
+  inset:0!important;
+  z-index:5!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:center!important;
+  padding:clamp(42px,7vh,78px) clamp(18px,4vw,64px) clamp(70px,10vh,108px)!important;
+  pointer-events:none!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-overlay::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:44%;
+  z-index:-1;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.20) 28%,rgba(0,0,0,.62));
+  pointer-events:none;
+}
+
+/* Ajuste: la historia ocupa un rectángulo pequeño y desplazable sobre el arte.
+   El scroll es interno: nunca aumenta la altura del lienzo ni empuja botones/escena. */
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy,
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy.narrow,
+.adventure-card.hv-adventure-cinematic-fit .scene-heroes .adventure-scene-copy,
+.adventure-card.hv-adventure-cinematic-fit .scene-guardian .adventure-scene-copy{
+  position:relative!important;
+  z-index:2!important;
+  width:min(470px,46%)!important;
+  max-width:min(470px,46%)!important;
+  height:auto!important;
+  max-height:24%!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  touch-action:pan-y!important;
+  margin:0 auto!important;
+  padding:4px 12px 4px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  box-shadow:none!important;
+  pointer-events:auto!important;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(211,167,83,.82) rgba(0,0,0,.18);
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy::-webkit-scrollbar{
+  width:7px;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.18);
+  border-radius:999px;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy::-webkit-scrollbar-thumb{
+  background:rgba(211,167,83,.82);
+  border-radius:999px;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-progress{
+  color:#f1c46a!important;
+  text-shadow:0 2px 5px #000,0 0 12px rgba(0,0,0,.9)!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-story-text{
+  color:#f4e5c8!important;
+  font-size:clamp(13px,1.15vw,18px)!important;
+  line-height:1.48!important;
+  text-shadow:0 2px 4px #000,0 0 10px #000,0 0 18px rgba(0,0,0,.95)!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-story-footer{
+  position:absolute!important;
+  left:clamp(12px,2.5vw,38px)!important;
+  right:clamp(12px,2.5vw,38px)!important;
+  bottom:clamp(8px,1.8vh,22px)!important;
+  z-index:12!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  pointer-events:none!important;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-story-footer .adventure-note{
+  opacity:.76;
+  text-shadow:0 2px 5px #000;
+}
+.adventure-card.hv-adventure-cinematic-fit .adventure-actions{
+  pointer-events:auto!important;
+}
+
+/* En teléfonos el lienzo mantiene exactamente la proporción del arte y nunca
+   puede exceder el viewport, aunque cambie la barra del navegador. */
+@media(max-width:900px), (pointer:coarse){
+  .adventure-card.hv-adventure-cinematic-fit{
+    width:min(100vw,calc(100dvh * 1.7768331562))!important;
+    height:min(100dvh,calc(100vw / 1.7768331562))!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-scene-overlay{
+    padding:7% 6% 15%!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy,
+  .adventure-card.hv-adventure-cinematic-fit .adventure-scene-copy.narrow,
+  .adventure-card.hv-adventure-cinematic-fit .scene-heroes .adventure-scene-copy,
+  .adventure-card.hv-adventure-cinematic-fit .scene-guardian .adventure-scene-copy{
+    width:min(420px,62%)!important;
+    max-width:min(420px,62%)!important;
+    height:auto!important;
+    max-height:27%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    padding:3px 10px 3px 3px!important;
+    background:transparent!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-story-text{
+    font-size:clamp(10px,2.8vw,15px)!important;
+    line-height:1.38!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-progress{
+    font-size:clamp(8px,2.2vw,11px)!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-story-footer{
+    left:2%!important;
+    right:2%!important;
+    bottom:1.4%!important;
+    flex-direction:row!important;
+    align-items:center!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-story-footer .adventure-note{
+    display:none!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-actions{
+    margin-left:auto!important;
+    width:auto!important;
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:6px!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-actions .btn{
+    width:auto!important;
+    min-width:0!important;
+    padding:7px 12px!important;
+    font-size:clamp(9px,2.4vw,12px)!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .story-actor.left{
+    left:-2%!important;
+    height:82%!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .story-actor.right{
+    right:-3%!important;
+    height:84%!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .guardian-actor img{
+    height:88%!important;
+  }
+}

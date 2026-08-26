@@ -186,7 +186,7 @@ function hallvallaSetAccountMessage(message,type=""){
   el.classList.toggle("success",type==="success");
 }
 function hallvallaSetAccountBusy(busy){
-  ["accountCreateSubmitBtn","accountGoogleMigrateBtn","accountLoginSubmitBtn","accountGoogleLoginBtn","accountResetPasswordBtn","accountVerifyEmailBtn","accountLinkGoogleBtn","accountSyncNowBtn","accountSignOutBtn"].forEach(id=>{
+  ["accountCreateSubmitBtn","accountGoogleMigrateBtn","accountLoginSubmitBtn","accountGoogleLoginBtn","accountResetPasswordBtn","accountLinkGoogleBtn","accountSyncNowBtn","accountSignOutBtn"].forEach(id=>{
     const el=$(id);if(el)el.disabled=!!busy;
   });
 }
@@ -201,13 +201,12 @@ function hallvallaRenderAccountState(user=auth?.currentUser){
       :"Cuenta temporal. Crea una cuenta para conservar este UID y migrar el progreso actual al correo que elijas.";
   }
   if(permanent){
-    const email=$("accountEmailValue"),verified=$("accountVerificationValue"),google=$("accountGoogleValue"),cloud=$("accountCloudValue"),verifyBtn=$("accountVerifyEmailBtn"),googleBtn=$("accountLinkGoogleBtn");
+    const email=$("accountEmailValue"),verified=$("accountVerificationValue"),google=$("accountGoogleValue"),cloud=$("accountCloudValue"),googleBtn=$("accountLinkGoogleBtn");
     const googleLinked=hallvallaHasGoogleProvider(user);
     if(email)email.textContent=user.email||"—";
     if(verified)verified.textContent=user.emailVerified?"Correo verificado":googleLinked?"Verificada con Google":"Pendiente";
     if(google)google.textContent=googleLinked?"Vinculado":"No vinculado";
     if(cloud)cloud.textContent=hallvallaAccountLastCloudState;
-    if(verifyBtn)verifyBtn.classList.toggle("hidden",!!user.emailVerified||googleLinked);
     if(googleBtn)googleBtn.classList.toggle("hidden",googleLinked);
   }
 }
@@ -249,7 +248,6 @@ async function hallvallaWriteAccountMetadata(user,extra={}){
   const payload={
     schemaVersion:HALLVALLA_ACCOUNT_SCHEMA_VERSION,
     email:String(user.email||"").trim().toLowerCase(),
-    emailVerified:!!user.emailVerified,
     googleLinked:providers.includes("google.com"),
     providers,
     provider:providers.includes("google.com")?"google":providers.includes("password")?"password":providers[0]||"unknown",
@@ -465,7 +463,6 @@ async function hallvallaCreatePermanentAccount(email,password,confirmPassword){
       cloudOk=false;
       console.warn("[HallValla] La cuenta se vinculó, pero el guardado inicial no terminó:",error);
     }
-    try{if(!result.user.emailVerified)await sendEmailVerification(result.user);}catch(error){console.warn("[HallValla] No se pudo enviar verificación de correo:",error);}
     hallvallaRenderAccountState(result.user);
     return{user:result.user,cloudOk};
   }finally{hallvallaAccountManualAuthTransition=false;}
@@ -525,14 +522,6 @@ async function hallvallaRequestPasswordReset(email){
   const cleanEmail=String(email||"").trim().toLowerCase();
   if(!cleanEmail)throw new Error("Escribe primero el correo de la cuenta.");
   await sendPasswordResetEmail(auth,cleanEmail);
-}
-async function hallvallaResendVerification(){
-  const user=auth.currentUser;
-  if(!hallvallaIsPermanentAccount(user))throw new Error("No hay una cuenta permanente iniciada.");
-  await user.reload();
-  if(user.emailVerified)return false;
-  await sendEmailVerification(user);
-  return true;
 }
 async function hallvallaSignOutPermanentAccount(){
   const user=auth.currentUser;
@@ -632,15 +621,6 @@ $("accountResetPasswordBtn")?.addEventListener("click",async()=>{
   hallvallaSetAccountBusy(true);
   try{await hallvallaRequestPasswordReset($("accountLoginEmail")?.value);hallvallaSetAccountMessage("Firebase envió el correo para restablecer la contraseña.","success");}
   catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
-  finally{hallvallaSetAccountBusy(false);}
-});
-$("accountVerifyEmailBtn")?.addEventListener("click",async()=>{
-  hallvallaSetAccountBusy(true);
-  try{
-    const sent=await hallvallaResendVerification();
-    hallvallaSetAccountMessage(sent?"Correo de verificación enviado.":"El correo ya está verificado.","success");
-    hallvallaRenderAccountState(auth.currentUser);
-  }catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
   finally{hallvallaSetAccountBusy(false);}
 });
 $("accountSyncNowBtn")?.addEventListener("click",async()=>{

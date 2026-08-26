@@ -21,13 +21,12 @@ import {
   signInWithPopup,
   browserPopupRedirectResolver,
   signInWithEmailAndPassword,
-  sendEmailVerification,
   sendPasswordResetEmail,
   signOut
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260823.3";
 
-const BUILD = "20260826.6";
+const BUILD = "20260826.7";
 const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
@@ -225,7 +224,6 @@ Object.assign(globalThis, {
   signInWithPopup,
   browserPopupRedirectResolver,
   signInWithEmailAndPassword,
-  sendEmailVerification,
   sendPasswordResetEmail,
   signOut
 });

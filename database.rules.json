@@ -104,9 +104,6 @@
           "email": {
             ".validate": "newData.isString()"
           },
-          "emailVerified": {
-            ".validate": "newData.val() === true || newData.val() === false"
-          },
           "provider": {
             ".validate": "newData.isString() && (newData.val() === 'password' || newData.val() === 'google')"
           },

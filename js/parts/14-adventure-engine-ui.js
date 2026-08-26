@@ -610,6 +610,10 @@ function scrollAdventureToTop(){
 }
 function showAdventureStage(stage){
   ["adventureStoryStage","adventureChoiceStage","adventureWoundedStage","adventureGuardianStage","adventureMapIntroStage","adventureMapStage"].forEach(id=>$(id).classList.toggle("hidden",id!==stage));
+  const cinematicStages=new Set(["adventureStoryStage","adventureWoundedStage","adventureGuardianStage","adventureMapIntroStage"]);
+  const cinematic=cinematicStages.has(stage);
+  $("adventurePanel")?.classList.toggle("hv-adventure-cinematic-panel",cinematic);
+  document.querySelector(".adventure-card")?.classList.toggle("hv-adventure-cinematic-fit",cinematic);
   if(stage!=="adventureMapStage")closeAdventureMapNodeTuner();
   syncBattleMusic();
   requestAnimationFrame(scrollAdventureToTop);
