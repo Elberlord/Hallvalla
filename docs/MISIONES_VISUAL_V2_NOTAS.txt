@@ -1,4 +1,4 @@
-MISIONS VISUAL V2
+MISIONES VISUAL V2
 - Ubicaciones/tamaños fijados desde hallvalla_misiones_layout.json del usuario.
 - Reclamar y Reclamar todo permanecen visibles como botones de arte.
 - Si no hay premio disponible, aparecen deshabilitados.
