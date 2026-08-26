@@ -354,7 +354,7 @@ async function hallvallaCreatePermanentAccountWithGoogle(){
   const originalUid=current.uid;
   hallvallaAccountManualAuthTransition=true;
   try{
-    const result=await linkWithPopup(current,hallvallaGoogleProvider());
+    const result=await linkWithPopup(current,hallvallaGoogleProvider(),browserPopupRedirectResolver);
     if(result.user.uid!==originalUid)throw new Error("Firebase cambió inesperadamente el UID durante la vinculación con Google.");
     hallvallaSetLocalOwnerUid(result.user.uid);
     await hallvallaWriteAccountMetadata(result.user,{linkedAt:Date.now(),migrationSource:"anonymous_uid_google"});
@@ -366,7 +366,7 @@ async function hallvallaCreatePermanentAccountWithGoogle(){
 async function hallvallaLoginWithGoogle(){
   hallvallaAccountManualAuthTransition=true;
   try{
-    const result=await signInWithPopup(auth,hallvallaGoogleProvider());
+    const result=await signInWithPopup(auth,hallvallaGoogleProvider(),browserPopupRedirectResolver);
     await hallvallaBootstrapPermanentAccount(result.user,{explicitLogin:true});
     return result.user;
   }finally{hallvallaAccountManualAuthTransition=false;}
@@ -378,7 +378,7 @@ async function hallvallaLinkGoogleToCurrentAccount(){
   const originalUid=current.uid;
   hallvallaAccountManualAuthTransition=true;
   try{
-    const result=await linkWithPopup(current,hallvallaGoogleProvider());
+    const result=await linkWithPopup(current,hallvallaGoogleProvider(),browserPopupRedirectResolver);
     if(result.user.uid!==originalUid)throw new Error("Firebase cambió inesperadamente el UID durante la vinculación con Google.");
     await result.user.reload();
     const refreshed=auth.currentUser||result.user;

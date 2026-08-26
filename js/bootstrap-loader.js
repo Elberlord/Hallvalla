@@ -19,6 +19,7 @@ import {
   linkWithCredential,
   linkWithPopup,
   signInWithPopup,
+  browserPopupRedirectResolver,
   signInWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -26,7 +27,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260823.3";
 
-const BUILD = "20260825.2";
+const BUILD = "20260825.3";
 const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
@@ -222,6 +223,7 @@ Object.assign(globalThis, {
   linkWithCredential,
   linkWithPopup,
   signInWithPopup,
+  browserPopupRedirectResolver,
   signInWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
