@@ -60,6 +60,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   const REMATCH_WAIT_MS=20000;
   let rematchWaitTimer=null;
   let rematchWaitActive=false;
+  const RANDOM_QUEUE_PATH="matchmaking/random";
+  const RANDOM_QUEUE_STALE_MS=120000;
+  let randomMatchSearching=false;
+  let randomMatchTimer=null;
+  let randomOwnCreatedAt=0;
+  let randomQueueDisconnect=null;
 
   function clearRematchWait(){
     rematchWaitActive=false;
@@ -115,9 +121,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function syncLocalButtons(){
-    const create=$("createBtn"),join=$("joinBtn"),ready=$("pvpReadyBtn");
-    if(create){ create.disabled=busy; create.title=busy?"Operación PvP en curso...":"Crear partida"; }
-    if(join){ join.disabled=busy; join.title=busy?"Operación PvP en curso...":"Unirse a sala"; }
+    const create=$("createBtn"),join=$("joinBtn"),random=$("randomMatchBtn"),ready=$("pvpReadyBtn");
+    if(create){ create.disabled=busy||randomMatchSearching; create.title=busy?"Operación PvP en curso...":"Crear partida"; }
+    if(join){ join.disabled=busy||randomMatchSearching; join.title=busy?"Operación PvP en curso...":"Unirse a sala"; }
+    if(random){
+      random.disabled=busy&&!randomMatchSearching;
+      random.textContent=randomMatchSearching?"BUSCANDO RIVAL...":"BATALLA ALEATORIA";
+      random.classList.toggle("is-searching",randomMatchSearching);
+    }
     if(ready&&busy) ready.disabled=true;
     const disableRuleButtons=busy||activeRole!==1||!activeCode||["configured","arena_ready","battle_active"].includes(String(roomCache?.phase||"waiting"));
     for(const id of ["pvpTimerToggleBtn","pvpStakeModeBtn","pvpStakeAmountBtn"]){ const btn=$(id); if(btn) btn.disabled=disableRuleButtons; }
@@ -125,13 +136,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
   async function ensureCleanRoomAuth(){
     if(HALLVALLA_LOCALHOST_TEST_MODE){ uid=uid||"LOCALHOST_TEST_USER"; return String(uid); }
-    const existing=String(auth?.currentUser?.uid||"");
-    if(existing){ uid=existing; return existing; }
-    const credential=await withTimeout(signInAnonymously(auth),"Autenticación anónima limpia",8000);
-    const signedUid=String(credential?.user?.uid||auth?.currentUser?.uid||"");
-    if(!signedUid) throw new Error("Firebase autenticó sin devolver UID.");
-    uid=signedUid;
-    return signedUid;
+    const user=auth?.currentUser||null;
+    const googleLinked=!!user&&!user.isAnonymous&&user.providerData?.some(provider=>provider?.providerId==="google.com");
+    if(!googleLinked){
+      globalThis.hallvallaRequireGoogleLogin?.();
+      throw new Error("VS Online requiere iniciar sesión con Google.");
+    }
+    const existing=String(user.uid||"");
+    if(!existing)throw new Error("Firebase no devolvió un UID para la cuenta de Google.");
+    uid=existing;
+    return existing;
   }
 
   function getProfileNameSafe(role=1){
@@ -1188,6 +1202,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   async function checkOnlineEntryRequirements(){
+    try{await ensureCleanRoomAuth();}catch(error){
+      mark("VS Online bloqueado · se requiere Google.");
+      await hvPopup("Para competir en VS Online debes iniciar sesión con tu cuenta de Google.","CUENTA REQUERIDA");
+      return false;
+    }
     const adventure=getAdventureUnlockState();
     if(!adventure.guardianDefeated){
       mark("VS Online bloqueado · falta derrotar al Hechicero guardián en Aventura.");
@@ -1335,6 +1354,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       $("onlineLobby")?.classList.remove("hidden");
     }
     const p1Uid=String(room?.playerSlots?.player1Uid||""); const p2Uid=String(room?.playerSlots?.player2Uid||"");
+    if(randomMatchSearching&&activeRole===1&&p2Uid){void stopRandomMatchSearch();mark("Rival aleatorio encontrado.");}
     const p1Ready=!!p1Uid&&getReadyFlag(room,1), p2Ready=!!p2Uid&&getReadyFlag(room,2);
     const p1Prepared=!!p1Uid&&getPreparedFlag(room,1), p2Prepared=!!p2Uid&&getPreparedFlag(room,2);
     const bothPresent=!!p1Uid&&!!p2Uid, bothPrepared=bothPresent&&p1Prepared&&p2Prepared, bothReady=bothPrepared&&p1Ready&&p2Ready;
@@ -1601,6 +1621,155 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     renderRules({settings:buildDefaultRules(),phase:"waiting"}); syncLocalButtons();
   }
 
+  function clearRandomMatchTimer(){
+    if(randomMatchTimer){clearInterval(randomMatchTimer);randomMatchTimer=null;}
+  }
+  async function removeOwnRandomQueue(){
+    const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
+    if(!myUid)return;
+    try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`));}catch(_){ }
+    try{await randomQueueDisconnect?.cancel?.();}catch(_){ }
+    randomQueueDisconnect=null;
+  }
+  async function stopRandomMatchSearch({removeQueueEntry=true}={}){
+    randomMatchSearching=false;
+    randomOwnCreatedAt=0;
+    clearRandomMatchTimer();
+    if(removeQueueEntry)await removeOwnRandomQueue();
+    syncLocalButtons();
+  }
+  function randomCandidateIsOlder(entry,myUid,myCreatedAt){
+    const created=Number(entry?.createdAt||0);
+    if(!created||!myCreatedAt)return true;
+    if(created<myCreatedAt)return true;
+    if(created>myCreatedAt)return false;
+    return String(entry?.uid||"")<String(myUid||"");
+  }
+  async function claimRandomCandidate(candidate,myUid){
+    const candidateUid=String(candidate?.uid||"");
+    if(!candidateUid||candidateUid===myUid)return null;
+    const targetRef=ref(db,`${RANDOM_QUEUE_PATH}/${candidateUid}`);
+    const nowTs=Date.now();
+    const result=await withTimeout(runTransaction(targetRef,current=>{
+      if(!current||String(current.uid||"")!==candidateUid)return;
+      if(String(current.claimedBy||""))return;
+      const created=Number(current.createdAt||0);
+      if(!created||nowTs-created>RANDOM_QUEUE_STALE_MS)return;
+      return Object.assign({},current,{claimedBy:myUid,claimedAt:nowTs});
+    }),`Reclamar rival aleatorio ${candidateUid}`,6000);
+    return result?.committed?(result.snapshot?.val()||null):null;
+  }
+  async function releaseRandomCandidate(candidateUid,myUid){
+    const targetUid=String(candidateUid||"");
+    if(!targetUid||!myUid)return;
+    try{
+      await runTransaction(ref(db,`${RANDOM_QUEUE_PATH}/${targetUid}`),current=>{
+        if(!current||String(current.claimedBy||"")!==String(myUid))return;
+        return Object.assign({},current,{claimedBy:"",claimedAt:0});
+      });
+    }catch(_){ }
+  }
+  async function closeOwnRandomHostedRoomSilently(){
+    const code=String(activeCode||""),ownerUid=String(activeOwnerUid||""),role=Number(activeRole||0);
+    if(!code||!ownerUid||role!==1)return;
+    detachRoomListener();detachOwnPrivateListener();
+    try{await removeOwnPrivateBranch(code,1,ownerUid);}catch(_){ }
+    try{
+      const publicRef=ref(db,`games/${code}/public`);
+      const snap=await get(publicRef);
+      if(snap.exists()&&String(snap.val()?.playerSlots?.player1Uid||"")===ownerUid)await remove(publicRef);
+    }catch(_){ }
+    resetUi({resetJoin:false});
+    $("mainMenu")?.classList.add("hidden");
+    $("onlineLobby")?.classList.remove("hidden");
+  }
+  async function randomJoinClaimedEntry(entry){
+    const myUid=String(auth?.currentUser?.uid||"");
+    const code=normalizeCode(entry?.code||"");
+    const ownerUid=String(entry?.uid||"");
+    if(!myUid||!ownerUid||code.length!==8)return false;
+    const roomSnap=await withTimeout(get(ref(db,`games/${code}/public`)),`Validar sala aleatoria ${code}`,6000);
+    const room=roomSnap.exists()?(roomSnap.val()||{}):null;
+    if(!room||String(room?.playerSlots?.player1Uid||"")!==ownerUid||String(room?.phase||"")!=="waiting"||String(room?.playerSlots?.player2Uid||"")){
+      try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${ownerUid}`));}catch(_){ }
+      return false;
+    }
+    if(activeRole===1&&activeCode)await closeOwnRandomHostedRoomSilently();
+    await removeOwnRandomQueue();
+    const input=$("joinCode");if(input)input.value=code;
+    const joined=await joinExistingRoom();
+    if(joined){
+      try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${ownerUid}`));}catch(_){ }
+      await stopRandomMatchSearch({removeQueueEntry:false});
+      mark(`Rival aleatorio encontrado · sala ${code}.`);
+      return true;
+    }
+    await releaseRandomCandidate(ownerUid,myUid);
+    if(randomMatchSearching&&!activeCode){
+      const created=await createMinimalPublicRoom();
+      if(created)await publishOwnRandomQueue();
+    }
+    return false;
+  }
+  async function scanRandomQueue(){
+    if(!randomMatchSearching||busy)return false;
+    const myUid=String(auth?.currentUser?.uid||"");
+    if(!myUid)return false;
+    let snap;
+    try{snap=await get(ref(db,RANDOM_QUEUE_PATH));}catch(_){return false;}
+    const all=snap.exists()?(snap.val()||{}):{};
+    const nowTs=Date.now();
+    const candidates=Object.values(all).filter(entry=>{
+      if(!entry||String(entry.uid||"")===myUid||String(entry.claimedBy||""))return false;
+      const created=Number(entry.createdAt||0);
+      if(!created||nowTs-created>RANDOM_QUEUE_STALE_MS)return false;
+      if(activeRole===1&&randomOwnCreatedAt&&!randomCandidateIsOlder(entry,myUid,randomOwnCreatedAt))return false;
+      return normalizeCode(entry.code||"").length===8;
+    }).sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0)||String(a.uid||"").localeCompare(String(b.uid||"")));
+    for(const candidate of candidates){
+      let claimed=null;
+      try{claimed=await claimRandomCandidate(candidate,myUid);}catch(_){claimed=null;}
+      if(!claimed)continue;
+      if(await randomJoinClaimedEntry(claimed))return true;
+    }
+    return false;
+  }
+  async function publishOwnRandomQueue(){
+    const myUid=String(activeOwnerUid||auth?.currentUser?.uid||"");
+    const code=normalizeCode(activeCode||"");
+    if(!myUid||code.length!==8||activeRole!==1)throw new Error("No se pudo publicar la búsqueda aleatoria.");
+    randomOwnCreatedAt=Date.now();
+    const payload={uid:myUid,code,createdAt:randomOwnCreatedAt,name:getProfileNameSafe(1),level:getProfileLevelSafe(),claimedBy:"",claimedAt:0};
+    await set(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`),payload);
+    try{randomQueueDisconnect=onDisconnect(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`));await randomQueueDisconnect.remove();}catch(_){randomQueueDisconnect=null;}
+  }
+  async function startRandomMatchmaking(){
+    if(randomMatchSearching){
+      await stopRandomMatchSearch();
+      if(activeRole===1&&activeCode&&!String(roomCache?.playerSlots?.player2Uid||""))await closeOwnRandomHostedRoomSilently();
+      mark("Búsqueda aleatoria cancelada.");
+      return false;
+    }
+    if(!(await checkOnlineEntryRequirements()))return false;
+    randomMatchSearching=true;syncLocalButtons();mark("Buscando rival aleatorio...");
+    try{
+      if(await scanRandomQueue())return true;
+      const created=await createMinimalPublicRoom();
+      if(!created)throw new Error("No se pudo preparar la sala para matchmaking.");
+      await publishOwnRandomQueue();
+      mark("Buscando rival aleatorio... sala preparada.");
+      randomMatchTimer=setInterval(()=>{void scanRandomQueue();},1800);
+      void scanRandomQueue();
+      return true;
+    }catch(error){
+      console.error(error);
+      await stopRandomMatchSearch();
+      if(activeRole===1&&activeCode&&!String(roomCache?.playerSlots?.player2Uid||""))await closeOwnRandomHostedRoomSilently();
+      await hvPopup(`BÚSQUEDA ALEATORIA FALLÓ: ${error?.message||error}`,"VS Online");
+      return false;
+    }finally{syncLocalButtons();}
+  }
+
   async function openCleanRoom(){
     if(!(await checkOnlineEntryRequirements())) return false;
     globalThis.hvHydrateAssetGroup?.("pvp-lobby");
@@ -1799,6 +1968,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
   async function leaveRoom(){
     clearRematchWait();
+    await stopRandomMatchSearch();
     const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
     try{
       if(code&&ownerUid&&role===1){ await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`); await removeOwnPrivateBranch(code,1,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid) await withTimeout(remove(publicRef),`Cerrar sala ${code}`); }
@@ -1813,6 +1983,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6eOpen=openCleanRoom;
   globalThis.pvpRebuildStep6eCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6eJoin=joinExistingRoom;
+  globalThis.pvpRandomMatch=startRandomMatchmaking;
   globalThis.pvpRebuildStep6eReady=toggleReady;
   globalThis.pvpRebuildStep6eLeave=leaveRoom;
   globalThis.pvpRebuildStep6eCopyCode=copyCode;
@@ -1900,6 +2071,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   on("backMenuFromLobby","click",backToMain);
   on("createBtn","click",createMinimalPublicRoom);
   on("joinBtn","click",joinExistingRoom);
+  on("randomMatchBtn","click",startRandomMatchmaking);
   on("pvpReadyBtn","click",toggleReady);
   on("pvpCopyCodeBtn","click",copyCode);
   on("pvpLeaveBtn","click",leaveRoom);

@@ -61,12 +61,41 @@ let hallvallaAccountSyncInFlight=false;
 let hallvallaAccountBootstrapInFlight=null;
 let hallvallaAccountManualAuthTransition=false;
 let hallvallaAccountLastCloudState="Sin sincronizar";
+let hallvallaGoogleGateForced=false;
 
 function hallvallaIsPermanentAccount(user=auth?.currentUser){
   return !!(user&&!user.isAnonymous&&String(user.email||"").trim());
 }
 function hallvallaHasGoogleProvider(user=auth?.currentUser){
   return !!user?.providerData?.some(provider=>provider?.providerId==="google.com");
+}
+function hallvallaIsGoogleAccount(user=auth?.currentUser){
+  return !!(user&&!user.isAnonymous&&hallvallaHasGoogleProvider(user));
+}
+function hallvallaApplyMandatoryGoogleGate(user=auth?.currentUser){
+  const allowed=hallvallaIsGoogleAccount(user);
+  const panel=$("accountPanel");
+  const closeBtn=$("closeAccountPanelBtn");
+  document.body.classList.toggle("hv-google-auth-required",!allowed);
+  if(!allowed){
+    hallvallaGoogleGateForced=true;
+    if(panel){panel.dataset.authGate="1";panel.classList.remove("hidden");}
+    $("profilePanel")?.classList.add("hidden");
+    closeBtn?.classList.add("hidden");
+    if(user&&!user.isAnonymous&&hallvallaIsPermanentAccount(user)){
+      hallvallaSetAccountMessage("Vincula Google para continuar usando HallValla.","error");
+    }else{
+      hallvallaSetAccountMessage("Inicia sesión con Google para entrar a HallValla.");
+    }
+  }else{
+    closeBtn?.classList.remove("hidden");
+    if(panel?.dataset.authGate==="1"){
+      panel.dataset.authGate="0";
+      panel.classList.add("hidden");
+    }
+    hallvallaGoogleGateForced=false;
+  }
+  return allowed;
 }
 function hallvallaGoogleProvider(){
   const provider=new GoogleAuthProvider();
@@ -213,6 +242,10 @@ async function hallvallaOpenAccountPanel(){
   }
 }
 function hallvallaCloseAccountPanel(){
+  if(hallvallaGoogleGateForced||!hallvallaIsGoogleAccount(auth?.currentUser)){
+    hallvallaApplyMandatoryGoogleGate(auth?.currentUser);
+    return;
+  }
   $("accountPanel")?.classList.add("hidden");
   $("profilePanel")?.classList.remove("hidden");
 }
@@ -422,10 +455,7 @@ async function hallvallaCreatePermanentAccount(email,password,confirmPassword){
   if(String(password||"").length<6)throw new Error("La contraseña debe tener al menos 6 caracteres.");
   if(password!==confirmPassword)throw new Error("Las contraseñas no coinciden.");
   let current=auth.currentUser;
-  if(!current){
-    const anonymous=await signInAnonymously(auth);
-    current=anonymous.user;
-  }
+  if(!current)throw new Error("La creación de cuentas por correo ya no está disponible. Usa Google.");
   if(!current?.isAnonymous)throw new Error("Ya hay una cuenta permanente iniciada.");
   const originalUid=current.uid;
   const credential=EmailAuthProvider.credential(cleanEmail,password);
@@ -459,10 +489,7 @@ async function hallvallaLoginPermanentAccount(email,password){
 }
 async function hallvallaCreatePermanentAccountWithGoogle(){
   let current=auth.currentUser;
-  if(!current){
-    const anonymous=await signInAnonymously(auth);
-    current=anonymous.user;
-  }
+  if(!current)return hallvallaLoginWithGoogle();
   if(!current?.isAnonymous)throw new Error("Ya hay una cuenta permanente iniciada.");
   const originalUid=current.uid;
   hallvallaAccountManualAuthTransition=true;
@@ -561,8 +588,10 @@ $("accountGoogleMigrateBtn")?.addEventListener("click",async()=>{
 $("accountGoogleLoginBtn")?.addEventListener("click",async()=>{
   hallvallaSetAccountBusy(true);hallvallaSetAccountMessage("Abriendo Google...");
   try{
-    const user=await hallvallaLoginWithGoogle();
+    const current=auth.currentUser;
+    const user=current?.isAnonymous?await hallvallaCreatePermanentAccountWithGoogle():await hallvallaLoginWithGoogle();
     hallvallaRenderAccountState(user);
+    hallvallaApplyMandatoryGoogleGate(user);
     hallvallaSetAccountMessage("Sesión iniciada con Google.","success");
   }catch(error){hallvallaSetAccountMessage(hallvallaAuthErrorMessage(error),"error");}
   finally{hallvallaSetAccountBusy(false);}
@@ -614,10 +643,11 @@ $("accountSignOutBtn")?.addEventListener("click",async()=>{
 
 onAuthStateChanged(auth,user=>{
   hallvallaRenderAccountState(user);
+  hallvallaApplyMandatoryGoogleGate(user);
   if(!user)return;
   if(user.isAnonymous){
     hallvallaSetLocalOwnerUid(user.uid);
-    hallvallaAccountLastCloudState="Cuenta temporal";
+    hallvallaAccountLastCloudState="Cuenta temporal heredada";
     hallvallaRenderAccountState(user);
     return;
   }
@@ -636,6 +666,8 @@ hallvallaRenderAccountState();
 
 Object.assign(globalThis,{
   hallvallaIsPermanentAccount,
+  hallvallaIsGoogleAccount,
+  hallvallaRequireGoogleLogin:()=>hallvallaApplyMandatoryGoogleGate(auth?.currentUser),
   hallvallaOpenAccountPanel,
   hallvallaUploadCloudSave,
   hallvallaBootstrapPermanentAccount

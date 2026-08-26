@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260825.7">
+<meta name="hallvalla-version" content="20260825.8">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
 <link rel="stylesheet" href="styles.css?v=20260825.1"/>
@@ -420,6 +420,8 @@
     <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">
       <img data-hv-src="assets/modal/btn_join_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
     </button>
+
+    <button id="randomMatchBtn" class="pvp-random-match-btn" type="button">BATALLA ALEATORIA</button>
 
     <button id="backMenuFromLobby" class="visual-btn visual-back" type="button" aria-label="Volver al inicio">
       <img data-hv-src="assets/modal/btn_back_home.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
@@ -836,34 +838,10 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <p id="accountStatusText" class="hv-account-status" aria-live="polite">Comprobando cuenta...</p>
 
     <div id="accountAnonymousView">
-      <p class="hv-account-help">Vincula este progreso a un correo para conservar tu UID actual y guardar tu cuenta en Firebase.</p>
-      <div class="hv-account-tabs" role="tablist" aria-label="Acceso a la cuenta">
-        <button id="accountCreateTabBtn" class="btn primary" type="button">Crear cuenta</button>
-        <button id="accountLoginTabBtn" class="btn ghost" type="button">Ya tengo cuenta</button>
+      <p class="hv-account-help">HallValla requiere una cuenta de Google. Tu progreso, amigos, PvP y compras quedan ligados a tu UID permanente de Firebase.</p>
+      <div class="hv-account-google-only-actions">
+        <button id="accountGoogleLoginBtn" class="btn primary" type="button">Continuar con Google</button>
       </div>
-
-      <form id="accountCreateForm" class="hv-account-form" autocomplete="on">
-        <label for="accountCreateEmail">Correo electrónico</label>
-        <input id="accountCreateEmail" class="profile-name-input" type="email" autocomplete="email" maxlength="320" required placeholder="tu@correo.com">
-        <label for="accountCreatePassword">Contraseña</label>
-        <input id="accountCreatePassword" class="profile-name-input" type="password" autocomplete="new-password" minlength="6" required placeholder="Mínimo 6 caracteres">
-        <label for="accountCreatePasswordConfirm">Repetir contraseña</label>
-        <input id="accountCreatePasswordConfirm" class="profile-name-input" type="password" autocomplete="new-password" minlength="6" required placeholder="Repite la contraseña">
-        <button id="accountCreateSubmitBtn" class="btn primary" type="submit">Crear cuenta y migrar progreso</button>
-        <button id="accountGoogleMigrateBtn" class="btn ghost" type="button">Continuar con Google y migrar progreso</button>
-      </form>
-
-      <form id="accountLoginForm" class="hv-account-form hidden" autocomplete="on">
-        <label for="accountLoginEmail">Correo electrónico</label>
-        <input id="accountLoginEmail" class="profile-name-input" type="email" autocomplete="email" maxlength="320" required placeholder="tu@correo.com">
-        <label for="accountLoginPassword">Contraseña</label>
-        <input id="accountLoginPassword" class="profile-name-input" type="password" autocomplete="current-password" minlength="6" required placeholder="Tu contraseña">
-        <div class="hv-account-inline-actions">
-          <button id="accountLoginSubmitBtn" class="btn primary" type="submit">Iniciar sesión</button>
-          <button id="accountResetPasswordBtn" class="btn ghost" type="button">Recuperar contraseña</button>
-          <button id="accountGoogleLoginBtn" class="btn ghost" type="button">Entrar con Google</button>
-        </div>
-      </form>
     </div>
 
     <div id="accountPermanentView" class="hidden">
@@ -1346,6 +1324,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260825.7"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260825.8"></script>
 </body>
 </html>

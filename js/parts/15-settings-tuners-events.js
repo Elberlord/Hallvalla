@@ -3428,10 +3428,9 @@ if(HALLVALLA_LOCALHOST_TEST_MODE){
   authReady=true;
   loadLeaderProfile(false).finally(()=>{resolveFirebaseAuthReady();setText("lobbyStatus","Modo local listo. Firebase no se usa para la prueba visual.");});
 }else{
-  let hallvallaAnonymousSignInInFlight=false;
   onAuthStateChanged(auth,async u=>{
-    if(u){
-      hallvallaAnonymousSignInInFlight=false;
+    const googleReady=!!u&&!u.isAnonymous&&!!globalThis.hallvallaIsGoogleAccount?.(u);
+    if(googleReady){
       uid=u.uid;
       setText("lobbyStatus","Cargando perfil...");
       await loadLeaderProfile(false);
@@ -3441,17 +3440,8 @@ if(HALLVALLA_LOCALHOST_TEST_MODE){
       authReady=false;
       uid="";
       updateAuthActionButtons();
-      setText("lobbyStatus","Conectando con Firebase...");
-      // Solo crea una identidad anónima cuando Firebase confirma que no existe
-      // una sesión persistente. Así una cuenta por correo nunca es reemplazada
-      // accidentalmente por signInAnonymously durante el arranque.
-      if(!hallvallaAnonymousSignInInFlight){
-        hallvallaAnonymousSignInInFlight=true;
-        signInAnonymously(auth).catch(e=>{
-          hallvallaAnonymousSignInInFlight=false;
-          authReady=false;updateAuthActionButtons();setText("lobbyStatus",e.message);
-        });
-      }
+      setText("lobbyStatus","Inicia sesión con Google para jugar.");
+      globalThis.hallvallaRequireGoogleLogin?.();
     }
   });
 }

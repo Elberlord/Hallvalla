@@ -8,11 +8,11 @@ import {
   onValue,
   remove,
   runTransaction as firebaseRunTransaction,
-  serverTimestamp
+  serverTimestamp,
+  onDisconnect
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import {
   getAuth,
-  signInAnonymously,
   onAuthStateChanged,
   EmailAuthProvider,
   GoogleAuthProvider,
@@ -27,7 +27,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260823.3";
 
-const BUILD = "20260825.7";
+const BUILD = "20260825.8";
 const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
@@ -215,8 +215,8 @@ Object.assign(globalThis, {
   remove,
   runTransaction: safeRunTransaction,
   serverTimestamp,
+  onDisconnect,
   getAuth,
-  signInAnonymously,
   onAuthStateChanged,
   EmailAuthProvider,
   GoogleAuthProvider,

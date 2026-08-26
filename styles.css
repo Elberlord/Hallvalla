@@ -25330,3 +25330,19 @@ body.home-deck-tutorial-active{overflow:hidden}
   .hv-friend-row-copy{flex:1 1 100%;}
   .hv-friend-row-action,.hv-friend-reject-action{flex:1 1 140px;}
 }
+
+/* HallValla · Cuenta Google obligatoria + matchmaking aleatorio */
+.hv-account-google-only-actions{display:flex;justify-content:center;margin-top:18px;}
+body.hv-google-auth-required #accountPanel{z-index:10050!important;}
+.pvp-random-match-btn{
+  position:absolute;z-index:6;left:35%;top:39.5%;width:30%;height:8.4%;
+  border:1px solid rgba(219,165,54,.72);border-radius:12px;
+  background:linear-gradient(180deg,rgba(48,28,11,.94),rgba(17,9,4,.96));
+  color:#ffe09a;font-family:Georgia,"Times New Roman",serif;font-weight:900;
+  font-size:clamp(11px,1.15vw,17px);letter-spacing:.06em;cursor:pointer;
+  text-shadow:0 2px 3px #000;box-shadow:inset 0 0 0 1px rgba(255,225,150,.08),0 8px 16px rgba(0,0,0,.35);
+}
+.pvp-random-match-btn:hover{filter:brightness(1.12);}
+.pvp-random-match-btn.is-searching{color:#fff0bf;animation:hvRandomMatchPulse 1.1s ease-in-out infinite alternate;}
+@keyframes hvRandomMatchPulse{from{box-shadow:0 0 8px rgba(221,170,64,.25)}to{box-shadow:0 0 22px rgba(221,170,64,.65)}}
+.online-modal-art.pvp-room-active .pvp-random-match-btn{opacity:0!important;visibility:hidden!important;pointer-events:none!important;}

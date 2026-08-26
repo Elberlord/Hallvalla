@@ -387,6 +387,39 @@
           }
         }
       }
+    },
+    "matchmaking": {
+      "random": {
+        ".read": "auth != null && auth.token.email != null",
+        "$uid": {
+          ".write": "auth != null && auth.token.email != null && (auth.uid === $uid || (data.exists() && newData.exists() && data.child('claimedBy').val() === '' && newData.child('uid').val() === data.child('uid').val() && newData.child('code').val() === data.child('code').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('name').val() === data.child('name').val() && newData.child('level').val() === data.child('level').val() && newData.child('claimedBy').val() === auth.uid && newData.child('claimedAt').val() > 0) || (data.exists() && newData.exists() && data.child('claimedBy').val() === auth.uid && newData.child('uid').val() === data.child('uid').val() && newData.child('code').val() === data.child('code').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('name').val() === data.child('name').val() && newData.child('level').val() === data.child('level').val() && newData.child('claimedBy').val() === '' && newData.child('claimedAt').val() === 0) || (data.exists() && !newData.exists() && data.child('claimedBy').val() === auth.uid))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['uid','code','createdAt','name','level','claimedBy','claimedAt']) && newData.child('uid').val() === $uid && newData.child('uid').isString() && newData.child('code').isString() && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('name').isString() && newData.child('level').isNumber() && newData.child('level').val() >= 1 && newData.child('claimedBy').isString() && newData.child('claimedAt').isNumber() && newData.child('claimedAt').val() >= 0)",
+          "uid": {
+            ".validate": "newData.isString() && newData.val() === $uid"
+          },
+          "code": {
+            ".validate": "newData.isString()"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "name": {
+            ".validate": "newData.isString()"
+          },
+          "level": {
+            ".validate": "newData.isNumber() && newData.val() >= 1"
+          },
+          "claimedBy": {
+            ".validate": "newData.isString()"
+          },
+          "claimedAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }
