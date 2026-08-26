@@ -301,6 +301,92 @@
           ".write": "auth != null && (((((now - 946684800000) % 126230400000) >= 21081600000) && (((now - 946684800000) % 126230400000) < 28944000000)) || ((((now - 946684800000) % 126230400000) >= 52617600000) && (((now - 946684800000) % 126230400000) < 60480000000)) || ((((now - 946684800000) % 126230400000) >= 84153600000) && (((now - 946684800000) % 126230400000) < 92016000000)) || ((((now - 946684800000) % 126230400000) >= 115689600000) && (((now - 946684800000) % 126230400000) < 123552000000)))"
         }
       }
+    },
+    "publicProfiles": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email != null",
+        ".write": "auth != null && auth.uid === $uid && auth.token.email != null",
+        ".validate": "newData.hasChildren(['uid','name','level','updatedAt']) && newData.child('uid').val() === $uid",
+        "uid": {
+          ".validate": "newData.isString() && newData.val() === $uid"
+        },
+        "name": {
+          ".validate": "newData.isString()"
+        },
+        "level": {
+          ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 1"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "friendRequests": {
+      "$targetUid": {
+        ".read": "auth != null && auth.uid === $targetUid",
+        "$senderUid": {
+          ".read": "auth != null && (auth.uid === $targetUid || auth.uid === $senderUid)",
+          ".write": "auth != null && (((auth.uid === $senderUid) && !data.exists() && newData.exists() && $targetUid !== $senderUid && root.child('publicProfiles').child($senderUid).exists() && root.child('publicProfiles').child($targetUid).exists()) || ((auth.uid === $targetUid || auth.uid === $senderUid) && data.exists() && !newData.exists()))",
+          ".validate": "newData.hasChildren(['fromUid','fromName','createdAt']) && newData.child('fromUid').val() === $senderUid && newData.child('fromName').val() === root.child('publicProfiles').child($senderUid).child('name').val()",
+          "fromUid": {
+            ".validate": "newData.isString() && newData.val() === $senderUid"
+          },
+          "fromName": {
+            ".validate": "newData.isString()"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$friendUid": {
+          ".write": "auth != null && $uid !== $friendUid && ((!data.exists() && newData.exists() && ((auth.uid === $uid && root.child('friendRequests').child($uid).child($friendUid).exists()) || (auth.uid === $friendUid && root.child('friendRequests').child($friendUid).child($uid).exists()))) || (data.exists() && !newData.exists() && (auth.uid === $uid || auth.uid === $friendUid)))",
+          ".validate": "newData.hasChildren(['uid','sinceAt']) && newData.child('uid').val() === $friendUid",
+          "uid": {
+            ".validate": "newData.isString() && newData.val() === $friendUid"
+          },
+          "sinceAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "recentOpponents": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$opponentUid": {
+          ".write": "auth != null && auth.uid === $uid && $uid !== $opponentUid",
+          ".validate": "newData.hasChildren(['uid','name','playedAt','matchCode']) && newData.child('uid').val() === $opponentUid",
+          "uid": {
+            ".validate": "newData.isString() && newData.val() === $opponentUid"
+          },
+          "name": {
+            ".validate": "newData.isString()"
+          },
+          "playedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "matchCode": {
+            ".validate": "newData.isString()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }

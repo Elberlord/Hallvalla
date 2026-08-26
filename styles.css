@@ -25256,3 +25256,77 @@ body.home-deck-tutorial-active{overflow:hidden}
   .hv-account-summary{grid-template-columns:1fr;gap:3px;}
   .hv-account-summary b{margin-bottom:7px;}
 }
+
+/* ============================================================
+   HallValla · Amigos · Etapa 3
+   Solo UI del panel social y rivales recientes.
+   ============================================================ */
+.hv-friends-card{
+  width:min(720px,94vw);
+  max-height:min(820px,90vh);
+  overflow:auto;
+}
+.hv-friends-help,
+.hv-friends-note{
+  margin:0 0 12px;
+  line-height:1.4;
+  color:var(--muted);
+}
+.hv-friends-note{font-size:.86rem;}
+.hv-friends-section{
+  margin:14px 0;
+  padding:12px;
+  border:1px solid rgba(255,199,73,.24);
+  border-radius:14px;
+  background:rgba(0,0,0,.16);
+}
+.hv-friends-section h3{
+  margin:0 0 10px;
+  color:#fff0bd;
+}
+.hv-friends-list{
+  display:grid;
+  gap:8px;
+}
+.hv-friend-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 11px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+}
+.hv-friend-row-copy{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.hv-friend-row-copy strong{
+  color:#fff;
+  overflow-wrap:anywhere;
+}
+.hv-friend-row-copy small{
+  color:var(--muted);
+  line-height:1.3;
+}
+.hv-friend-row-action,
+.hv-friend-reject-action{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+.hv-friend-reject-action{margin-left:4px;}
+.hv-friends-empty{
+  margin:2px 0;
+  color:var(--muted);
+  font-size:.9rem;
+}
+#friendsMessage.success{color:#baf3c2;}
+#friendsMessage.error{color:#ffb4b4;}
+@media (max-width:620px){
+  .hv-friends-card{width:95vw;max-height:92vh;}
+  .hv-friend-row{align-items:flex-start;flex-wrap:wrap;}
+  .hv-friend-row-copy{flex:1 1 100%;}
+  .hv-friend-row-action,.hv-friend-reject-action{flex:1 1 140px;}
+}

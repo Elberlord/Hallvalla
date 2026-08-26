@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260825.6">
+<meta name="hallvalla-version" content="20260825.7">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
 <link rel="stylesheet" href="styles.css?v=20260825.1"/>
@@ -824,6 +824,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <div class="adventure-actions">
       <button id="saveProfileNameBtn" class="btn primary" type="button">Guardar nombre</button>
       <button id="manageAccountBtn" class="btn ghost" type="button">Cuenta</button>
+      <button id="manageFriendsBtn" class="btn ghost" type="button">Amigos</button>
       <button id="closeProfilePanelBtn" class="btn ghost" type="button">Cerrar</button>
     </div>
   </div>
@@ -883,6 +884,39 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <p id="accountMessage" class="profile-message" aria-live="polite"></p>
     <div class="adventure-actions">
       <button id="closeAccountPanelBtn" class="btn ghost" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="friendsPanel" class="overlay-panel hidden" aria-labelledby="friendsPanelTitle">
+  <div class="modal-card hv-friends-card">
+    <h2 id="friendsPanelTitle">Amigos</h2>
+    <p class="hv-friends-help">Añade jugadores con los que te hayas enfrentado y gestiona solicitudes de amistad.</p>
+
+    <div id="friendsAccountGate" class="hidden">
+      <p>Necesitas una cuenta permanente para usar Amigos.</p>
+      <button id="openAccountFromFriendsBtn" class="btn primary" type="button">Abrir Cuenta</button>
+    </div>
+
+    <div id="friendsContent">
+      <section class="hv-friends-section" aria-labelledby="friendsListTitle">
+        <h3 id="friendsListTitle">Mis amigos</h3>
+        <div id="friendsList" class="hv-friends-list"><p class="hv-friends-empty">Cargando...</p></div>
+      </section>
+      <section class="hv-friends-section" aria-labelledby="friendRequestsTitle">
+        <h3 id="friendRequestsTitle">Solicitudes</h3>
+        <div id="friendRequestsList" class="hv-friends-list"><p class="hv-friends-empty">Cargando...</p></div>
+      </section>
+      <section class="hv-friends-section" aria-labelledby="recentOpponentsTitle">
+        <h3 id="recentOpponentsTitle">Últimos rivales</h3>
+        <p class="hv-friends-note">Aquí aparecerán tus rivales de partidas PvP online. Desde esta lista puedes enviarles una solicitud.</p>
+        <div id="recentOpponentsList" class="hv-friends-list"><p class="hv-friends-empty">Cargando...</p></div>
+      </section>
+    </div>
+
+    <p id="friendsMessage" class="profile-message" aria-live="polite"></p>
+    <div class="adventure-actions">
+      <button id="closeFriendsPanelBtn" class="btn ghost" type="button">Cerrar</button>
     </div>
   </div>
 </div>
@@ -1312,6 +1346,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260825.6"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260825.7"></script>
 </body>
 </html>

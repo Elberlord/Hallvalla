@@ -870,6 +870,7 @@ function saveProfileNameChange(){
   profile.nameChangeCount=(profile.nameChangeCount||0)+1;
   savePlayerProfile(profile);
   renderPlayerProfile(profile);
+  try{void globalThis.hallvallaSyncPublicProfile?.();}catch(_){ }
   const rule=$("profileRenameRule"),gems=$("profileGemsValue");
   if(rule)rule.textContent=`Tu próximo cambio costará ${RENAME_COST_GEMS} gemas.`;
   if(gems)gems.textContent=profile.gems||0;

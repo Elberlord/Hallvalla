@@ -1215,6 +1215,22 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function getReadyFlag(room,role){ return room?.lobbyReady?.[role]===true || room?.lobbyReady?.[String(role)]===true; }
   function getPreparedFlag(room,role){ return room?.playerPrepared?.[role]===true || room?.playerPrepared?.[String(role)]===true; }
   function getPlayerName(room,role){ return String(room?.playerNames?.[role] || room?.playerNames?.[String(role)] || getProfileNameSafe(role)); }
+  function recordRecentOpponentFromRoom(room,code){
+    const phase=String(room?.phase||"");
+    if(!(phase==="active"||phase==="battle_active"||phase==="ended"))return;
+    const role=Number(activeRole);
+    if(role!==1&&role!==2)return;
+    const otherRole=role===1?2:1;
+    const opponentUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
+    if(!opponentUid||opponentUid==="ADVENTURE_AI"||opponentUid===String(activeOwnerUid||""))return;
+    try{
+      void globalThis.hallvallaRecordRecentOpponent?.({
+        uid:opponentUid,
+        name:getPlayerName(room,otherRole),
+        matchCode:String(code||room?.code||"")
+      });
+    }catch(_){ }
+  }
 
   function compareRps(choice1,choice2){
     if(!choice1||!choice2||choice1===choice2) return {tie:true};
@@ -1553,6 +1569,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         return;
       }
       const room=snapshot.val()||{};
+      recordRecentOpponentFromRoom(room,code);
       if(rematchWaitActive){
         const otherRole=activeRole===1?2:1;
         const otherUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
