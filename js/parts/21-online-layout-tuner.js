@@ -3,6 +3,7 @@
   if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
 
   const STORAGE_KEY="hallvalla_online_layout_tuner_v1";
+  const PANEL_POS_KEY="hallvalla_online_layout_tuner_panel_v1";
   const TARGETS=[
     {key:"matchmaking.player.leader",label:"Matchmaking · Tu líder",selector:"#matchmakingPlayerLeader",stage:"#onlineMatchmakingView",refW:1672,refH:941},
     {key:"matchmaking.player.principal1",label:"Matchmaking · Tu principal 1",selector:"#matchmakingPlayerPrincipal1",stage:"#onlineMatchmakingView",refW:1672,refH:941},
@@ -26,6 +27,7 @@
   let selectedKey="matchmaking.player.principal1";
   let editing=false;
   let drag=null;
+  let panelDrag=null;
 
   const $=(s,r=document)=>r.querySelector(s);
   const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
@@ -118,8 +120,8 @@
     panel.dataset.hvDevTool="";
     panel.className="hv-online-layout-tuner hidden";
     panel.innerHTML=`
-      <div class="hv-online-layout-head">
-        <div><b>Calibrador PvP</b><small>Arrastra el elemento o usa los controles. Los cambios se guardan solo en este navegador.</small></div>
+      <div class="hv-online-layout-head" id="hvLayoutDragHandle" title="Arrastra esta cabecera para mover el panel">
+        <div><b>Calibrador PvP</b><small>Arrastra esta cabecera para mover el panel. Arrastra los elementos o usa los controles. Los cambios se guardan solo en este navegador.</small></div>
         <button id="hvLayoutClose" type="button" aria-label="Cerrar">×</button>
       </div>
       <label class="hv-online-layout-field"><span>Elemento</span><select id="hvLayoutTarget"></select></label>
@@ -157,12 +159,53 @@
     $("#hvLayoutX",panel).addEventListener("input",onControlInput);
     $("#hvLayoutY",panel).addEventListener("input",onControlInput);
     $("#hvLayoutScale",panel).addEventListener("input",onControlInput);
+    const dragHandle=$("#hvLayoutDragHandle",panel);
+    dragHandle?.addEventListener("pointerdown",onPanelPointerDown);
+    dragHandle?.addEventListener("pointermove",onPanelPointerMove);
+    dragHandle?.addEventListener("pointerup",onPanelPointerUp);
+    dragHandle?.addEventListener("pointercancel",onPanelPointerUp);
     updateJsonPreview();syncPanel();
+    requestAnimationFrame(restorePanelPosition);
   }
 
   function panel(){return $("#hvOnlineLayoutTuner");}
   function launcher(){return $("#hvOnlineLayoutTunerLauncher");}
   function status(msg){const n=$("#hvLayoutStatus");if(n)n.textContent=msg;}
+  function readPanelPosition(){
+    try{
+      const raw=localStorage.getItem(PANEL_POS_KEY);
+      if(!raw)return null;
+      const parsed=JSON.parse(raw);
+      if(Number.isFinite(Number(parsed?.left))&&Number.isFinite(Number(parsed?.top))){
+        return {left:Number(parsed.left),top:Number(parsed.top)};
+      }
+    }catch(_){ }
+    return null;
+  }
+  function writePanelPosition(left,top){
+    try{localStorage.setItem(PANEL_POS_KEY,JSON.stringify({left:round(left,1),top:round(top,1)}));}catch(_){ }
+  }
+  function setPanelPosition(left,top,{save=false}={}){
+    const p=panel();if(!p)return;
+    const margin=6;
+    const rect=p.getBoundingClientRect();
+    const maxLeft=Math.max(margin,window.innerWidth-rect.width-margin);
+    const maxTop=Math.max(margin,window.innerHeight-Math.min(rect.height,window.innerHeight-margin*2)-margin);
+    const nextLeft=clamp(Number(left)||0,margin,maxLeft);
+    const nextTop=clamp(Number(top)||0,margin,maxTop);
+    p.style.left=`${nextLeft}px`;
+    p.style.top=`${nextTop}px`;
+    p.style.right="auto";
+    p.style.bottom="auto";
+    if(save)writePanelPosition(nextLeft,nextTop);
+  }
+  function restorePanelPosition(){
+    const p=panel();if(!p)return;
+    const saved=readPanelPosition();
+    if(saved){setPanelPosition(saved.left,saved.top);return;}
+    const rect=p.getBoundingClientRect();
+    setPanelPosition(rect.left,rect.top);
+  }
   function syncPanel(){
     const p=panel();if(!p)return;
     const s=stateFor(selectedKey);
@@ -196,6 +239,33 @@
     launcher()?.classList.toggle("is-active",editing);
     applyAll();syncPanel();
     status(editing?"Modo edición activo: arrastra una unidad/botón o usa X, Y y Tamaño.":"Calibrador cerrado.");
+  }
+
+  function onPanelPointerDown(event){
+    if(event.button!==0||event.target?.closest?.("button,input,select,textarea"))return;
+    const p=panel();if(!p)return;
+    const rect=p.getBoundingClientRect();
+    panelDrag={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,startLeft:rect.left,startTop:rect.top,handle:event.currentTarget};
+    p.classList.add("hv-layout-panel-dragging");
+    try{event.currentTarget.setPointerCapture?.(event.pointerId);}catch(_){ }
+    event.preventDefault();
+  }
+  function onPanelPointerMove(event){
+    if(!panelDrag||event.pointerId!==panelDrag.pointerId)return;
+    setPanelPosition(panelDrag.startLeft+(event.clientX-panelDrag.startX),panelDrag.startTop+(event.clientY-panelDrag.startY));
+    event.preventDefault();
+  }
+  function onPanelPointerUp(event){
+    if(!panelDrag||event.pointerId!==panelDrag.pointerId)return;
+    const p=panel();
+    try{panelDrag.handle?.releasePointerCapture?.(event.pointerId);}catch(_){ }
+    if(p){
+      p.classList.remove("hv-layout-panel-dragging");
+      const rect=p.getBoundingClientRect();
+      writePanelPosition(rect.left,rect.top);
+    }
+    panelDrag=null;
+    event.preventDefault();
   }
 
   function targetFromEvent(event){
@@ -252,7 +322,10 @@
   document.addEventListener("pointerup",onPointerUp,true);
   document.addEventListener("pointercancel",onPointerUp,true);
   document.addEventListener("click",suppressGameplayClick,true);
-  window.addEventListener("resize",()=>requestAnimationFrame(applyAll),{passive:true});
+  window.addEventListener("resize",()=>requestAnimationFrame(()=>{
+    applyAll();
+    const p=panel();if(p&&!p.classList.contains("hidden")){const r=p.getBoundingClientRect();setPanelPosition(r.left,r.top);}
+  }),{passive:true});
 
   const observer=new MutationObserver(()=>{requestAnimationFrame(()=>{applyAll();updateLauncherVisibility();});});
   for(const selector of ["#onlineLobby","#onlineModeSelect","#onlineMatchmakingView",".online-modal-art"]){const n=$(selector);if(n)observer.observe(n,{attributes:true,attributeFilter:["class","style"]});}

@@ -25734,7 +25734,9 @@ body.hv-google-auth-required #accountPanel{display:none!important;}
   background:rgba(12,10,8,.94);color:#ead9b0;box-shadow:0 18px 48px rgba(0,0,0,.66);backdrop-filter:blur(8px);
 }
 .hv-online-layout-tuner.hidden{display:none!important}
-.hv-online-layout-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.hv-online-layout-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:-4px -4px 10px;padding:4px;cursor:grab;user-select:none;touch-action:none;border-radius:8px}
+.hv-online-layout-head:active,.hv-online-layout-tuner.hv-layout-panel-dragging .hv-online-layout-head{cursor:grabbing}
+.hv-online-layout-head button{cursor:pointer;touch-action:auto}
 .hv-online-layout-head b{display:block;color:#f1d79f;font:900 17px/1.1 Georgia,serif}
 .hv-online-layout-head small{display:block;margin-top:4px;color:#a99671;font:600 10px/1.35 Arial,sans-serif}
 .hv-online-layout-head button{flex:0 0 auto;width:28px;height:28px;border:1px solid rgba(204,163,84,.4);border-radius:7px;background:#21170e;color:#d9bc82;font:900 18px/1 Arial;cursor:pointer}
