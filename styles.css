@@ -25759,3 +25759,60 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   .hv-online-layout-launcher{left:8px;top:8px;padding:7px 9px;font-size:9px}
   .hv-online-layout-tuner{left:8px;top:46px;width:min(310px,calc(100vw - 16px));max-height:calc(100dvh - 54px);padding:10px}
 }
+
+/* === HallValla · Apuestas layout fijado desde calibrador (2026-08-26) ===
+   Fuente JSON aprobada:
+   crear   x:+2  y:+16 scale:.83
+   codigo  x:-22 y:+7  scale:.72
+   unirse  x:-22 y:-10 scale:.81
+   volver  x:-15 y:-7  scale:.76
+   Los desplazamientos design-px se convierten a porcentajes del artboard 1060x737. */
+.online-modal-art .visual-create{
+  left:13.8886792453%;
+  top:58.0709633650%;
+  scale:.83;
+  transform-origin:50% 50%;
+}
+.online-modal-art .visual-input-wrap{
+  left:51.3245283019%;
+  top:49.7497964722%;
+  scale:.72;
+  transform-origin:50% 50%;
+}
+.online-modal-art .visual-join{
+  left:51.9245283019%;
+  top:60.5431478969%;
+  scale:.81;
+  transform-origin:50% 50%;
+}
+.online-modal-art .visual-back{
+  left:16.5849056604%;
+  top:78.2502035278%;
+  scale:.76;
+  transform-origin:50% 50%;
+}
+/* === Fin Apuestas layout fijado === */
+
+/* === HallValla · Matchmaking jugador layout fijado desde calibrador (2026-08-26) ===
+   Fuente JSON aprobada:
+   leader      x:0   y:+23 scale:.92
+   principal1  x:+23 y:0   scale:.76
+   principal2  x:+16 y:0   scale:.88
+   Principal 3 y todo el lado rival quedan SIN FIJAR hasta poder probarlos.
+   Los desplazamientos design-px respetan el artboard responsive 1672x941. */
+#matchmakingPlayerLeader{
+  translate:0 min(1.3755980861vw,2.4442082891dvh);
+  scale:.92;
+  transform-origin:50% 50%;
+}
+#matchmakingPlayerPrincipal1{
+  translate:min(1.3755980861vw,2.4442082891dvh) 0;
+  scale:.76;
+  transform-origin:50% 50%;
+}
+#matchmakingPlayerPrincipal2{
+  translate:min(.9569377990vw,1.7003188098dvh) 0;
+  scale:.88;
+  transform-origin:50% 50%;
+}
+/* === Fin Matchmaking jugador layout fijado === */

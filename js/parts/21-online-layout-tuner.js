@@ -2,7 +2,7 @@
   "use strict";
   if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
 
-  const STORAGE_KEY="hallvalla_online_layout_tuner_v1";
+  const STORAGE_KEY="hallvalla_online_layout_tuner_v3";
   const PANEL_POS_KEY="hallvalla_online_layout_tuner_panel_v1";
   const TARGETS=[
     {key:"matchmaking.player.leader",label:"Matchmaking · Tu líder",selector:"#matchmakingPlayerLeader",stage:"#onlineMatchmakingView",refW:1672,refH:941},
