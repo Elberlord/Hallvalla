@@ -1,14 +1,18 @@
 "use strict";
-/* HallValla · Cuenta por correo + migración/sincronización de progreso v1
-   - Firebase UID sigue siendo la identidad canónica.
-   - Crear cuenta enlaza el usuario anónimo actual con email/password y conserva el UID.
-   - El guardado en nube v1 es transitorio y sirve para migrar el progreso local actual.
-   - La economía segura de compras se endurecerá después con backend/Cloud Functions. */
+/* HallValla · Cuenta y progreso en nube v2
+   - Firebase UID sigue siendo la identidad canónica de la cuenta.
+   - El progreso importante se conserva bajo users/{uid}/cloudSaveV2.
+   - cloudSaveV1 se mantiene como puente temporal para clientes de Etapa 1.
+   - Las preferencias puramente visuales/audio continúan siendo locales al dispositivo.
+   - La economía de compras se endurecerá después con backend/Cloud Functions. */
 
 const HALLVALLA_ACCOUNT_SCHEMA_VERSION=1;
+const HALLVALLA_CLOUD_SCHEMA_VERSION=2;
 const HALLVALLA_ACCOUNT_OWNER_KEY="__hallvalla_account_owner_uid_v1";
-const HALLVALLA_ACCOUNT_SYNC_FP_PREFIX="__hallvalla_account_sync_fp_v1_";
-const HALLVALLA_ACCOUNT_CLOUD_PATH="cloudSaveV1";
+const HALLVALLA_ACCOUNT_SYNC_FP_PREFIX="__hallvalla_account_sync_fp_v2_";
+const HALLVALLA_ACCOUNT_LEGACY_SYNC_FP_PREFIX="__hallvalla_account_sync_fp_v1_";
+const HALLVALLA_ACCOUNT_CLOUD_PATH="cloudSaveV2";
+const HALLVALLA_ACCOUNT_LEGACY_CLOUD_PATH="cloudSaveV1";
 const HALLVALLA_ACCOUNT_SYNC_INTERVAL_MS=8000;
 
 const HALLVALLA_ACCOUNT_STORAGE_KEYS=new Set([
@@ -48,7 +52,8 @@ const HALLVALLA_ACCOUNT_STORAGE_KEYS=new Set([
 ]);
 const HALLVALLA_ACCOUNT_STORAGE_PREFIXES=Object.freeze([
   "hallvalla_reward_claimed_",
-  "hallvalla_beast_event_claimed_"
+  "hallvalla_beast_event_claimed_",
+  "hallvalla_dragon_contract_claimed_"
 ]);
 
 let hallvallaAccountSyncTimer=null;
@@ -95,6 +100,9 @@ function hallvallaCloudFingerprint(storage){
 }
 function hallvallaGetLocalSyncFingerprint(uidValue){
   try{return localStorage.getItem(`${HALLVALLA_ACCOUNT_SYNC_FP_PREFIX}${uidValue}`)||"";}catch(_){return"";}
+}
+function hallvallaGetLegacyLocalSyncFingerprint(uidValue){
+  try{return localStorage.getItem(`${HALLVALLA_ACCOUNT_LEGACY_SYNC_FP_PREFIX}${uidValue}`)||"";}catch(_){return"";}
 }
 function hallvallaSetLocalSyncFingerprint(uidValue,fingerprint){
   try{localStorage.setItem(`${HALLVALLA_ACCOUNT_SYNC_FP_PREFIX}${uidValue}`,String(fingerprint||""));}catch(_){ }
@@ -225,27 +233,99 @@ async function hallvallaWriteAccountMetadata(user,extra={}){
   await update(ref(db,`users/${user.uid}/account`),payload);
   return true;
 }
+function hallvallaNormalizeRemoteCloud(raw,path){
+  if(!raw||typeof raw!=="object"||!raw.storage||typeof raw.storage!=="object")return null;
+  const storage=Object.fromEntries(Object.entries(raw.storage).filter(([key,value])=>hallvallaIsAccountStorageKey(key)&&typeof value==="string").sort(([a],[b])=>a.localeCompare(b)));
+  return{
+    path:String(path||""),
+    version:Number(raw.version||0),
+    updatedAt:Math.max(0,Number(raw.updatedAt||0)),
+    fingerprint:String(raw.fingerprint||hallvallaCloudFingerprint(storage)),
+    storage
+  };
+}
+async function hallvallaReadRemoteCloud(uidValue){
+  const [v2Snapshot,v1Snapshot]=await Promise.all([
+    get(ref(db,`users/${uidValue}/${HALLVALLA_ACCOUNT_CLOUD_PATH}`)),
+    get(ref(db,`users/${uidValue}/${HALLVALLA_ACCOUNT_LEGACY_CLOUD_PATH}`))
+  ]);
+  const v2=hallvallaNormalizeRemoteCloud(v2Snapshot.exists()?v2Snapshot.val():null,HALLVALLA_ACCOUNT_CLOUD_PATH);
+  const v1=hallvallaNormalizeRemoteCloud(v1Snapshot.exists()?v1Snapshot.val():null,HALLVALLA_ACCOUNT_LEGACY_CLOUD_PATH);
+  if(v2&&v1){
+    if(v2.fingerprint===v1.fingerprint)return{selected:v2,v2,v1};
+    return{selected:(v1.updatedAt>v2.updatedAt?v1:v2),v2,v1};
+  }
+  return{selected:v2||v1||null,v2,v1};
+}
+async function hallvallaMirrorLegacyCloudSave(user,storage,fingerprint,reason){
+  try{
+    await set(ref(db,`users/${user.uid}/${HALLVALLA_ACCOUNT_LEGACY_CLOUD_PATH}`),{
+      version:1,
+      updatedAt:Date.now(),
+      reason:String(reason||"v2_mirror").slice(0,40),
+      fingerprint:String(fingerprint||hallvallaCloudFingerprint(storage)),
+      storage
+    });
+  }catch(error){
+    console.warn("[HallValla] No se pudo actualizar el espejo cloudSaveV1:",error);
+  }
+}
+async function hallvallaSeedCloudV2(user,storage,fingerprint,reason="migrate_v1"){
+  const cleanStorage=storage&&typeof storage==="object"?storage:{};
+  const cleanFingerprint=String(fingerprint||hallvallaCloudFingerprint(cleanStorage));
+  await set(ref(db,`users/${user.uid}/${HALLVALLA_ACCOUNT_CLOUD_PATH}`),{
+    version:HALLVALLA_CLOUD_SCHEMA_VERSION,
+    updatedAt:Date.now(),
+    reason:String(reason||"migrate_v1").slice(0,40),
+    fingerprint:cleanFingerprint,
+    previousFingerprint:"",
+    storage:cleanStorage
+  });
+  hallvallaSetLocalSyncFingerprint(user.uid,cleanFingerprint);
+  await hallvallaMirrorLegacyCloudSave(user,cleanStorage,cleanFingerprint,reason);
+  return cleanFingerprint;
+}
 async function hallvallaUploadCloudSave(user=auth?.currentUser,{force=false,reason="auto"}={}){
   if(!hallvallaIsPermanentAccount(user)||hallvallaAccountSyncInFlight)return false;
   if(hallvallaGetLocalOwnerUid()!==user.uid&&!force)return false;
   const storage=hallvallaCollectAccountStorage();
   const fingerprint=hallvallaCloudFingerprint(storage);
-  if(!force&&fingerprint===hallvallaGetLocalSyncFingerprint(user.uid))return false;
+  const baseFingerprint=hallvallaGetLocalSyncFingerprint(user.uid)||hallvallaGetLegacyLocalSyncFingerprint(user.uid);
+  if(!force&&fingerprint===baseFingerprint)return false;
   hallvallaAccountSyncInFlight=true;
   hallvallaAccountLastCloudState="Sincronizando...";
   hallvallaRenderAccountState(user);
   try{
-    await set(ref(db,`users/${user.uid}/${HALLVALLA_ACCOUNT_CLOUD_PATH}`),{
-      version:HALLVALLA_ACCOUNT_SCHEMA_VERSION,
-      updatedAt:Date.now(),
-      reason:String(reason||"auto").slice(0,40),
-      fingerprint,
-      storage
-    });
+    let conflictFingerprint="";
+    const result=await runTransaction(ref(db,`users/${user.uid}/${HALLVALLA_ACCOUNT_CLOUD_PATH}`),current=>{
+      const currentCloud=hallvallaNormalizeRemoteCloud(current,HALLVALLA_ACCOUNT_CLOUD_PATH);
+      const currentFingerprint=String(currentCloud?.fingerprint||"");
+      // Protección multi-dispositivo: si la nube cambió desde nuestra última base
+      // y nuestro estado local también cambió, no sobrescribimos silenciosamente.
+      if(currentCloud&&baseFingerprint&&currentFingerprint!==baseFingerprint&&currentFingerprint!==fingerprint){
+        conflictFingerprint=currentFingerprint;
+        return;
+      }
+      return{
+        version:HALLVALLA_CLOUD_SCHEMA_VERSION,
+        updatedAt:Date.now(),
+        reason:String(reason||"auto").slice(0,40),
+        fingerprint,
+        previousFingerprint:currentFingerprint,
+        storage
+      };
+    },{applyLocally:false});
+    if(!result.committed){
+      hallvallaAccountLastCloudState="Cambios en otro dispositivo";
+      hallvallaRenderAccountState(user);
+      console.warn("[HallValla] Sincronización detenida para evitar sobrescribir cambios remotos.",{baseFingerprint,conflictFingerprint,fingerprint});
+      return false;
+    }
     hallvallaSetLocalOwnerUid(user.uid);
     hallvallaSetLocalSyncFingerprint(user.uid,fingerprint);
     hallvallaAccountLastCloudState="Sincronizado";
     hallvallaRenderAccountState(user);
+    await hallvallaMirrorLegacyCloudSave(user,storage,fingerprint,reason);
     return true;
   }catch(error){
     hallvallaAccountLastCloudState="Error de sincronización";
@@ -259,37 +339,70 @@ async function hallvallaBootstrapPermanentAccount(user,{explicitLogin=false}={})
   hallvallaAccountBootstrapInFlight=(async()=>{
     try{
       await hallvallaWriteAccountMetadata(user);
-      const snapshot=await get(ref(db,`users/${user.uid}/${HALLVALLA_ACCOUNT_CLOUD_PATH}`));
-      const remote=snapshot.exists()?snapshot.val():null;
+      const remoteState=await hallvallaReadRemoteCloud(user.uid);
+      const remote=remoteState.selected;
       const localStorageSnapshot=hallvallaCollectAccountStorage();
       const localFingerprint=hallvallaCloudFingerprint(localStorageSnapshot);
       const owner=hallvallaGetLocalOwnerUid();
-      const lastSync=hallvallaGetLocalSyncFingerprint(user.uid);
-      if(remote&&remote.storage&&typeof remote.storage==="object"){
-        const remoteFingerprint=String(remote.fingerprint||hallvallaCloudFingerprint(remote.storage));
+      const lastSync=hallvallaGetLocalSyncFingerprint(user.uid)||hallvallaGetLegacyLocalSyncFingerprint(user.uid);
+      if(remote){
+        const remoteFingerprint=remote.fingerprint;
         const localBelongsToUser=owner===user.uid;
-        const localHasUnsyncedChanges=localBelongsToUser&&!!lastSync&&localFingerprint!==lastSync;
-        if(localHasUnsyncedChanges&&!explicitLogin){
-          await hallvallaUploadCloudSave(user,{force:true,reason:"resume_local"});
-          return true;
+        const localChangedSinceBase=localBelongsToUser&&!!lastSync&&localFingerprint!==lastSync;
+        const remoteChangedSinceBase=!!lastSync&&remoteFingerprint!==lastSync;
+        let restoreRemote=false;
+        let uploadLocal=false;
+
+        if(explicitLogin||!localBelongsToUser){
+          restoreRemote=remoteFingerprint!==localFingerprint||!localBelongsToUser;
+        }else if(remoteFingerprint===localFingerprint){
+          // Mismo contenido: solo actualizamos la base de sincronización.
+        }else if(localChangedSinceBase&&!remoteChangedSinceBase){
+          uploadLocal=true;
+        }else if(!localChangedSinceBase&&remoteChangedSinceBase){
+          restoreRemote=true;
+        }else if(localChangedSinceBase&&remoteChangedSinceBase){
+          // Ambos cambiaron desde la misma base. La nube gana al reanudar para no
+          // pisar silenciosamente el progreso hecho en otro dispositivo.
+          restoreRemote=true;
+          hallvallaAccountLastCloudState="Nube más reciente restaurada";
+        }else{
+          // Migración antigua sin huella local fiable: una cuenta permanente ya
+          // existente recupera la copia de nube como fuente canónica.
+          restoreRemote=true;
         }
-        if(!localBelongsToUser||remoteFingerprint!==localFingerprint){
+
+        if(restoreRemote){
           hallvallaApplyCloudStorage(remote.storage);
           hallvallaSetLocalOwnerUid(user.uid);
           hallvallaSetLocalSyncFingerprint(user.uid,remoteFingerprint);
-          hallvallaAccountLastCloudState="Restaurado desde nube";
+          hallvallaAccountLastCloudState=hallvallaAccountLastCloudState==="Nube más reciente restaurada"?hallvallaAccountLastCloudState:"Restaurado desde nube";
+          // Si el dato más reciente aún venía de Etapa 1, lo promovemos a V2.
+          if(remote.path===HALLVALLA_ACCOUNT_LEGACY_CLOUD_PATH||!remoteState.v2||remoteState.v2.fingerprint!==remoteFingerprint){
+            await hallvallaSeedCloudV2(user,remote.storage,remoteFingerprint,"migrate_v1_remote");
+          }
           hallvallaRenderAccountState(user);
           sessionStorage.setItem(`__hallvalla_cloud_restored_${user.uid}`,"1");
           location.reload();
           return true;
         }
+        if(uploadLocal){
+          const uploaded=await hallvallaUploadCloudSave(user,{force:true,reason:"resume_local"});
+          if(uploaded)return true;
+        }
         hallvallaSetLocalOwnerUid(user.uid);
         hallvallaSetLocalSyncFingerprint(user.uid,remoteFingerprint);
+        // Promueve V1 a V2 aunque el contenido local ya coincida.
+        if(remote.path===HALLVALLA_ACCOUNT_LEGACY_CLOUD_PATH||!remoteState.v2){
+          await hallvallaSeedCloudV2(user,remote.storage,remoteFingerprint,"migrate_v1_equal");
+        }
         hallvallaAccountLastCloudState="Sincronizado";
       }else{
-        // Primera migración de esta cuenta: el estado local actual se convierte en su semilla de nube.
+        // Primera migración de esta cuenta: el estado local actual se convierte
+        // en su semilla canónica de nube V2 y se refleja temporalmente en V1.
         hallvallaSetLocalOwnerUid(user.uid);
-        await hallvallaUploadCloudSave(user,{force:true,reason:"initial_migration"});
+        await hallvallaSeedCloudV2(user,localStorageSnapshot,localFingerprint,"initial_migration_v2");
+        hallvallaAccountLastCloudState="Sincronizado";
       }
       hallvallaRenderAccountState(user);
       return true;

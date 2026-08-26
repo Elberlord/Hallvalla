@@ -108,7 +108,7 @@
             ".validate": "newData.val() === true || newData.val() === false"
           },
           "provider": {
-            ".validate": "newData.isString() && newData.val() === 'password'"
+            ".validate": "newData.isString() && (newData.val() === 'password' || newData.val() === 'google')"
           },
           "linkedAt": {
             ".validate": "newData.isNumber() && newData.val() > 0"
@@ -117,6 +117,17 @@
             ".validate": "newData.isString()"
           },
           "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "googleLinked": {
+            ".validate": "newData.val() === true || newData.val() === false"
+          },
+          "providers": {
+            "$providerIndex": {
+              ".validate": "newData.isString() && (newData.val() === 'password' || newData.val() === 'google.com')"
+            }
+          },
+          "googleLinkedAt": {
             ".validate": "newData.isNumber() && newData.val() > 0"
           },
           "$other": {
@@ -135,6 +146,32 @@
             ".validate": "newData.isString()"
           },
           "fingerprint": {
+            ".validate": "newData.isString()"
+          },
+          "storage": {
+            "$storageKey": {
+              ".validate": "newData.isString()"
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "cloudSaveV2": {
+          ".write": "auth != null && auth.uid === $uid",
+          "version": {
+            ".validate": "newData.isNumber() && newData.val() === 2"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "reason": {
+            ".validate": "newData.isString()"
+          },
+          "fingerprint": {
+            ".validate": "newData.isString()"
+          },
+          "previousFingerprint": {
             ".validate": "newData.isString()"
           },
           "storage": {
