@@ -2987,7 +2987,7 @@ on("claimAllMasteryRewardsBtn","click",()=>{const result=claimAllPendingAccountM
 renderMasteryHomeBadge();
 on("mineBtn","click",()=>openMineScreen("production"));
 on("collectionBtn","click",openCollectionOrLocked);
-on("forgeBtn","click",()=>showComingSoon("Forja"));
+on("forgeBtn","click",()=>openForgeHub());
 on("storeBtn","click",openPackShop);
 on("eventsBtn","click",openHallvallaEvents);
 on("clansBtn","click",()=>showComingSoon("Clanes"));

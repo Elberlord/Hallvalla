@@ -26,9 +26,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260827.10";
+const BUILD = "20260827.12";
 const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"a62f577b94ba","parts/05-cards-specials-lore.js":"b260ce7308b4","parts/06-decks-units-combat-rules.js":"7cd6931b9e21","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"d2dd879c3acf","parts/09-combat-turn-ai.js":"92c3265f3910","parts/10-board-interactions.js":"b9891f45393b","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"b7be55c4c3d6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"84b7449bb640","parts/14-adventure-engine-ui.js":"fdc1d01f971c","parts/15-settings-tuners-events.js":"169e4c57fff6","parts/16-exact-guides-mobile.js":"cb820147638e","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/battle-layout.js":"dc616bfe2e18","features/forge-layout.js":"3aaf8ac2eb65","features/hvdev.js":"58fc514f1002","features/pve.js":"3eb0e46decaf","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"a62f577b94ba","parts/05-cards-specials-lore.js":"b260ce7308b4","parts/06-decks-units-combat-rules.js":"143bbcf092c3","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"d2dd879c3acf","parts/09-combat-turn-ai.js":"92c3265f3910","parts/10-board-interactions.js":"b9891f45393b","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"b7be55c4c3d6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"1ac2f9f39355","parts/14-adventure-engine-ui.js":"fdc1d01f971c","parts/15-settings-tuners-events.js":"9f14e5e5847d","parts/16-exact-guides-mobile.js":"cb820147638e","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/battle-layout.js":"dc616bfe2e18","features/forge-layout.js":"3aaf8ac2eb65","features/forge.js":"c6f640f8f213","features/hvdev.js":"58fc514f1002","features/pve.js":"3eb0e46decaf","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -265,6 +265,7 @@ const FEATURE_PARTS = Object.freeze({
   pve: ["features/pve.js"],
   pvp: ["features/pvp.js"],
   shop: ["features/shop.js"],
+  forge: ["features/forge.js"],
   adventure: ["features/adventure.js"],
   "battle-layout": ["features/battle-layout.js"],
   "forge-layout": ["features/forge-layout.js"],
@@ -362,6 +363,8 @@ function installAsyncFeatureProxy(globalName,feature){
 }
 installAsyncFeatureProxy("openPackShop","shop");
 installAsyncFeatureProxy("closePackShop","shop");
+installAsyncFeatureProxy("openForgeHub","forge");
+installAsyncFeatureProxy("closeForgeHub","forge");
 installAsyncFeatureProxy("adventureEnemyTurn","pve");
 installAsyncFeatureProxy("openAdventureMap","adventure");
 installAsyncFeatureProxy("showAdventureMapOnly","adventure");

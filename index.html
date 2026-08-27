@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>HallValla v8 Modular · Stage 10 · Carga bajo demanda + caché controlada</title>
+<title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260827.10">
-<meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
-<meta name="hallvalla-build-name" content="STAGE 10 · PvE/PvP/Shop/HVDEV bajo demanda · Service Worker runtime cache">
-<link rel="stylesheet" href="styles.css?h=9aabf2c89135"/>
+<meta name="hallvalla-version" content="20260827.12">
+<meta name="hallvalla-build" content="v8_MODULAR_20260827.11">
+<meta name="hallvalla-build-name" content="STAGE 10.3 · Forja lazy separada + miniaturas de trampas reparadas">
+<link rel="stylesheet" href="styles.css?h=ff14bb00e2c3"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -823,8 +823,24 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
               <option value="initiation">PB 0–39 · Iniciación</option>
               <option value="unrated">Magias y trampas · Sin PB</option>
             </select>
-            <select id="deckBattlePowerSort" class="deck-select" aria-label="Ordenar cartas">
+            <select id="deckBattlePowerSort" class="deck-select" aria-label="Ordenar cartas por estadística">
               <option value="default">Orden: coste y nombre</option>
+              <option value="hp_desc">Vida: mayor a menor</option>
+              <option value="hp_asc">Vida: menor a mayor</option>
+              <option value="atk_desc">Ataque: mayor a menor</option>
+              <option value="atk_asc">Ataque: menor a mayor</option>
+              <option value="guard_desc">Guardia: mayor a menor</option>
+              <option value="guard_asc">Guardia: menor a mayor</option>
+              <option value="dex_desc">DX: mayor a menor</option>
+              <option value="dex_asc">DX: menor a mayor</option>
+              <option value="agi_desc">AGI: mayor a menor</option>
+              <option value="agi_asc">AGI: menor a mayor</option>
+              <option value="mov_desc">MOV: mayor a menor</option>
+              <option value="mov_asc">MOV: menor a mayor</option>
+              <option value="range_desc">Rango: mayor a menor</option>
+              <option value="range_asc">Rango: menor a mayor</option>
+              <option value="cost_desc">Costo: mayor a menor</option>
+              <option value="cost_asc">Costo: menor a mayor</option>
               <option value="power_desc">PB: mayor a menor</option>
               <option value="power_asc">PB: menor a mayor</option>
             </select>
@@ -1372,6 +1388,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=4c1ef03f2c16"></script>
+<script type="module" src="js/bootstrap-loader.js?h=21731f10cadd"></script>
 </body>
 </html>

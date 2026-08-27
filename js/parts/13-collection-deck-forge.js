@@ -825,9 +825,10 @@ function removeCardFromDeckIndex(index){
 }
 function getDeckBuilderMiniImageHtml(card){
   const name=escapeHtml(card?.name||"Carta");
-  const portrait=getResolvedCardPortraitSource(card);
+  const candidates=typeof getResolvedCardPortraitCandidates==="function"?getResolvedCardPortraitCandidates(card):[];
+  const portrait=candidates[0]||getResolvedCardPortraitSource(card);
   if(portrait){
-    const fallbackAttr=buildAssetFallbackAttr([getAssetWarningImageSrc()],`${card?.name||"Carta"} · miniatura`);
+    const fallbackAttr=buildAssetFallbackAttr([...candidates.slice(1),getAssetWarningImageSrc()],`${card?.name||"Carta"} · miniatura`);
     return `<img src="${escapeHtml(portrait)}" alt="${name}" draggable="false" ${fallbackAttr}>`;
   }
   return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
@@ -1196,9 +1197,24 @@ function renderDeckBuilder(){
     const powerOk=powerFilter==="all"||(powerFilter==="unrated"&&!Number.isFinite(battlePower))||(bounds&&Number.isFinite(battlePower)&&battlePower>=bounds.min&&battlePower<=bounds.max);
     return typeOk&&ownershipOk&&rarityOk&&powerOk;
   }).sort((a,b)=>{
-    const pa=getUnitBattlePower(a),pb=getUnitBattlePower(b);
-    if(powerSort==="power_desc")return (Number.isFinite(pb)?pb:-1)-(Number.isFinite(pa)?pa:-1)||String(a.name||"").localeCompare(String(b.name||""));
-    if(powerSort==="power_asc")return (Number.isFinite(pa)?pa:101)-(Number.isFinite(pb)?pb:101)||String(a.name||"").localeCompare(String(b.name||""));
+    const sortMatch=/^(power|hp|atk|guard|dex|agi|mov|range|cost)_(asc|desc)$/.exec(powerSort);
+    if(sortMatch){
+      const stat=sortMatch[1],direction=sortMatch[2];
+      const statValue=card=>{
+        if(stat==="power")return getUnitBattlePower(card);
+        const value=Number(card?.[stat]);
+        return Number.isFinite(value)?value:NaN;
+      };
+      const va=statValue(a),vb=statValue(b);
+      const aValid=Number.isFinite(va),bValid=Number.isFinite(vb);
+      // Magias, trampas u otras cartas sin el stat elegido siempre quedan al final.
+      if(aValid!==bValid)return aValid?-1:1;
+      if(aValid&&bValid){
+        const delta=direction==="desc"?vb-va:va-vb;
+        if(delta)return delta;
+      }
+      return String(a.name||"").localeCompare(String(b.name||""));
+    }
     return (a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||""));
   });
   const pageSize=15;

@@ -22511,9 +22511,9 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 #deckBuilderPanel.hv-forge-collection-v2 .deck-search-field{order:6 !important;min-width:0 !important;height:100% !important;}
 #deckBuilderPanel.hv-forge-collection-v2 #deckTypeFilter{order:1 !important;}
 #deckBuilderPanel.hv-forge-collection-v2 #deckOwnershipFilter{order:2 !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #deckRarityFilter{order:3 !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerFilter{order:4 !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerSort{order:5 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerSort{order:3 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckRarityFilter{order:4 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerFilter{order:5 !important;}
 #deckBuilderPanel.hv-forge-collection-v2 .deck-select,
 #deckBuilderPanel.hv-forge-collection-v2 .deck-search{
   width:100% !important;
@@ -23155,9 +23155,9 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 }
 #deckBuilderPanel.hv-forge-collection-v2 #deckTypeFilter{grid-column:1 !important;}
 #deckBuilderPanel.hv-forge-collection-v2 #deckOwnershipFilter{grid-column:2 !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #deckRarityFilter{grid-column:3 !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerFilter{grid-column:4 !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerSort{grid-column:5 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerSort{grid-column:3 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckRarityFilter{grid-column:4 !important;}
+#deckBuilderPanel.hv-forge-collection-v2 #deckBattlePowerFilter{grid-column:5 !important;}
 #deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select{
   display:block !important;
   width:100% !important;
