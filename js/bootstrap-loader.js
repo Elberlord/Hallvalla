@@ -24,10 +24,11 @@ import {
   sendPasswordResetEmail,
   signOut
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260823.3";
+import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260827.7";
+const BUILD = "20260827.8";
 const CACHE_BUILD = BUILD;
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"a62f577b94ba","parts/05-cards-specials-lore.js":"8773a5ac69c3","parts/06-decks-units-combat-rules.js":"10471a305fff","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"c4a273998d8e","parts/09-combat-turn-ai.js":"92c3265f3910","parts/10-board-interactions.js":"b9891f45393b","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"b7be55c4c3d6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"84b7449bb640","parts/14-adventure-engine-ui.js":"fdc1d01f971c","parts/15-settings-tuners-events.js":"169e4c57fff6","parts/16-exact-guides-mobile.js":"b0987418a824","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/hvdev.js":"84fec18f0470","features/pve.js":"3eb0e46decaf","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -239,15 +240,12 @@ const CORE_PARTS = [
   "06-decks-units-combat-rules.js",
   "07-network-battle-state.js",
   "08-actions-inspector.js",
-  "09a-ai-combat-engine.js",
-  "09b-ai-tempo-engine.js",
   "09-combat-turn-ai.js",
   "10-board-interactions.js",
   "11-render-battle-tutorial.js",
   "12-profile-shop-packs.js",
   "12b-account-auth.js",
   "12c-friends.js",
-  "12a-ai-deck-doctrines.js",
   "13-collection-deck-forge.js",
   "14-adventure-engine-ui.js",
   "17-dragon-contracts.js",
@@ -255,30 +253,45 @@ const CORE_PARTS = [
   "19-field-figures-3d.js",
   "15-settings-tuners-events.js",
   "16-exact-guides-mobile.js",
-  "22-battle-layout-tuner.js"
 ];
-if (DEV_TOOLS_ENABLED) CORE_PARTS.push("21-online-layout-tuner.js","23-dev-tools-hub.js");
 
-/* PERF2 · Lazy loading real de JavaScript ----------------------------------
-   Estos módulos dejan de formar parte del bootstrap obligatorio. Se cargan
-   únicamente cuando el usuario entra al sistema que los necesita.
-   No se fragmenta el motor de combate ni las reglas compartidas: solo UI y
-   subsistemas con puntos de entrada claros y dependencias controladas. */
-const OPTIONAL_CORE_PARTS = new Set(["09a-ai-combat-engine.js","09b-ai-tempo-engine.js","12a-ai-deck-doctrines.js"]);
+const OPTIONAL_CORE_PARTS = new Set();
 
+/* STAGE10 · Feature loading real + caché de sesión ---------------------------
+   Cada subsistema pesado tiene un único bundle de entrada. El bundle se
+   descarga una sola vez por sesión y el Service Worker lo conserva para
+   visitas futuras. Una carga fallida nunca se marca como READY. */
 const FEATURE_PARTS = Object.freeze({
-  "pvp-ranking": ["07c-pvp-ranking.js"],
-  "pvp": ["07b-pvp-rebuild-clean-room.js"],
-  "forge-layout": ["20-forge-direct-tuner.js"]
+  pve: ["features/pve.js"],
+  pvp: ["features/pvp.js"],
+  shop: ["features/shop.js"],
+  adventure: ["features/adventure.js"],
+  hvdev: ["features/hvdev.js"]
 });
-const FEATURE_DEPENDENCIES = Object.freeze({
-  "pvp": ["pvp-ranking"]
+const FEATURE_ALIASES = Object.freeze({
+  "pvp-ranking":"pvp",
+  "forge-layout":"hvdev"
 });
 const partLoadPromises = new Map();
 const featureLoadPromises = new Map();
 const loadedParts = new Set();
 const loadedFeatures = new Set();
 
+function hvFeatureName(feature){
+  const raw=String(feature||"").trim();
+  return FEATURE_ALIASES[raw]||raw;
+}
+function hvFeatureMetaWrite(feature,state,error=""){
+  try{
+    const key=`hallvalla_feature_${hvFeatureName(feature)}_v1`;
+    localStorage.setItem(key,JSON.stringify({state,build:BUILD,at:Date.now(),error:String(error||"").slice(0,180)}));
+  }catch(_){ }
+}
+function hvVersionedResourceUrl(relative){
+  const safe=String(relative||"").replace(/^\/+/,"");
+  const hash=RESOURCE_HASHES[safe]||BUILD;
+  return `js/${safe}?h=${encodeURIComponent(hash)}`;
+}
 function loadClassicScript(file) {
   const safe=String(file||"").trim();
   if(!safe)return Promise.resolve(false);
@@ -286,7 +299,8 @@ function loadClassicScript(file) {
   if(partLoadPromises.has(safe))return partLoadPromises.get(safe);
   const task=new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `js/parts/${safe}?v=${CACHE_BUILD}`;
+    const relative=safe.includes("/")?safe:`parts/${safe}`;
+    script.src = hvVersionedResourceUrl(relative);
     script.async = false;
     script.dataset.hallvallaPart = safe;
     script.onload = () => { loadedParts.add(safe); resolve(true); };
@@ -298,29 +312,65 @@ function loadClassicScript(file) {
 }
 
 async function hvEnsureFeature(feature){
-  const safe=String(feature||"").trim();
+  const safe=hvFeatureName(feature);
   if(!safe)return false;
+  if(safe==="hvdev"&&!DEV_TOOLS_ENABLED)throw new Error("HVDEV solo está disponible con ?hvdev=1");
   if(loadedFeatures.has(safe))return true;
   if(featureLoadPromises.has(safe))return featureLoadPromises.get(safe);
   const files=FEATURE_PARTS[safe];
   if(!files)throw new Error(`Feature JS desconocida: ${safe}`);
+  hvFeatureMetaWrite(safe,"downloading");
   const task=(async()=>{
-    for(const dependency of FEATURE_DEPENDENCIES[safe]||[])await hvEnsureFeature(dependency);
     for(const file of files)await loadClassicScript(file);
     loadedFeatures.add(safe);
+    hvFeatureMetaWrite(safe,"ready");
     document.documentElement.dataset[`hvFeature${safe.replace(/[^a-z0-9]+(.)/gi,(_,c)=>String(c||"").toUpperCase())}`]="ready";
-    console.info(`[HallValla][PERF2] Feature ${safe} cargada bajo demanda (${files.join(", ")}).`);
+    console.info(`[HallValla][STAGE10] ${safe} READY (${files.join(", ")}).`);
     return true;
   })().catch(error=>{
     loadedFeatures.delete(safe);
-    console.error(`[HallValla][PERF2] No se pudo cargar feature ${safe}:`,error);
+    hvFeatureMetaWrite(safe,"failed",error?.message||error);
+    console.error(`[HallValla][STAGE10] No se pudo cargar ${safe}:`,error);
     throw error;
   }).finally(()=>featureLoadPromises.delete(safe));
   featureLoadPromises.set(safe,task);
   return task;
 }
-function hvIsFeatureLoaded(feature){return loadedFeatures.has(String(feature||"").trim());}
+function hvIsFeatureLoaded(feature){return loadedFeatures.has(hvFeatureName(feature));}
 Object.assign(globalThis,{hvEnsureFeature,hvIsFeatureLoaded});
+
+/* Proxies síncronos de enlace: permiten que los handlers legacy se registren
+   sin cargar Shop/PvE. El trabajo real empieza únicamente al invocarlos. */
+function installAsyncFeatureProxy(globalName,feature){
+  if(typeof globalThis[globalName]==="function")return globalThis[globalName];
+  let pendingInvocation=null;
+  const proxy=(...args)=>{
+    if(pendingInvocation)return pendingInvocation;
+    pendingInvocation=(async()=>{
+      await hvEnsureFeature(feature);
+      const implementation=globalThis[globalName];
+      if(typeof implementation!=="function"||implementation===proxy){
+        throw new Error(`${globalName} no quedó disponible tras cargar ${feature}.`);
+      }
+      return implementation(...args);
+    })().finally(()=>{pendingInvocation=null;});
+    return pendingInvocation;
+  };
+  globalThis[globalName]=proxy;
+  return proxy;
+}
+installAsyncFeatureProxy("openPackShop","shop");
+installAsyncFeatureProxy("closePackShop","shop");
+installAsyncFeatureProxy("adventureEnemyTurn","pve");
+installAsyncFeatureProxy("openAdventureMap","adventure");
+installAsyncFeatureProxy("showAdventureMapOnly","adventure");
+installAsyncFeatureProxy("renderAdventureMap","adventure");
+installAsyncFeatureProxy("openAdventureStory","adventure");
+installAsyncFeatureProxy("showAdventureStage","adventure");
+installAsyncFeatureProxy("nextAdventureStoryScene","adventure");
+installAsyncFeatureProxy("showAdventureChoice","adventure");
+installAsyncFeatureProxy("showAdventureWoundedIntro","adventure");
+installAsyncFeatureProxy("showAdventureGuardianIntro","adventure");
 
 function bindLazyPvpEntry(id){
   const node=document.getElementById(id);
@@ -330,18 +380,56 @@ function bindLazyPvpEntry(id){
     if(hvIsFeatureLoaded("pvp"))return;
     event.preventDefault();
     event.stopImmediatePropagation();
+    if(node.getAttribute("aria-busy")==="true")return;
     node.setAttribute("aria-busy","true");
     try{
       await hvEnsureFeature("pvp");
       if(typeof globalThis.pvpRebuildStep6eOpen==="function")await globalThis.pvpRebuildStep6eOpen(event);
       else throw new Error("El punto de entrada PvP no quedó disponible después de cargar el módulo.");
     }catch(error){
-      console.error("[HallValla][PERF2] Falló la entrada lazy a PvP:",error);
+      console.error("[HallValla][STAGE10] Falló la entrada lazy a PvP:",error);
       const status=document.getElementById("lobbyStatus");
       if(status)status.textContent=`No se pudo abrir VS Online: ${error.message}`;
     }finally{node.removeAttribute("aria-busy");}
   },true);
 }
+
+function installLazyAdventureWrapper(){
+  const original=globalThis.startAdventure;
+  if(typeof original!=="function"||original.__hvPveWrapped)return;
+  const wrapped=async(...args)=>{
+    await hvEnsureFeature("pve");
+    return original(...args);
+  };
+  wrapped.__hvPveWrapped=true;
+  wrapped.__hvOriginal=original;
+  globalThis.startAdventure=wrapped;
+}
+
+/* Service Worker: Cache Storage controlado por HallValla. No precarga módulos
+   opcionales. Solo guarda recursos que realmente fueron solicitados. */
+async function hvRegisterServiceWorker(){
+  if(!('serviceWorker' in navigator))return null;
+  if(location.protocol!=="https:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")return null;
+  try{
+    const registration=await navigator.serviceWorker.register(`service-worker.js?v=${BUILD}`,{scope:"./",updateViaCache:"none"});
+    globalThis.__HALLVALLA_SW_REGISTRATION__=registration;
+    return registration;
+  }catch(error){
+    console.warn("[HallValla][CACHE] Service Worker no disponible:",error);
+    return null;
+  }
+}
+void hvRegisterServiceWorker();
+
+function hvRequestPersistentStorageOnce(){
+  if(!navigator.storage?.persist)return;
+  navigator.storage.persisted?.().then(already=>{
+    if(already)return;
+    return navigator.storage.persist();
+  }).then(granted=>{if(typeof granted==="boolean")globalThis.__HALLVALLA_STORAGE_PERSISTENT__=granted;}).catch(()=>{});
+}
+document.addEventListener("pointerdown",hvRequestPersistentStorageOnce,{once:true,capture:true,passive:true});
 
 try {
   for (const file of CORE_PARTS) {
@@ -351,11 +439,13 @@ try {
       console.warn(`[HallValla][AI] ${file} no pudo cargarse; continúa la IA legacy sin doctrinas V1.`,error);
     }
   }
+  installLazyAdventureWrapper();
   bindLazyPvpEntry("onlineBtn");
+  if(DEV_TOOLS_ENABLED)await hvEnsureFeature("hvdev");
   globalThis.__HALLVALLA_MODULAR_READY__ = true;
   globalThis.__HALLVALLA_CORE_PARTS__=[...CORE_PARTS];
   globalThis.__HALLVALLA_LAZY_FEATURES__=Object.keys(FEATURE_PARTS);
-  console.info(`[HallValla] ${BUILD}: ${CORE_PARTS.length} módulos núcleo cargados; ${Object.keys(FEATURE_PARTS).length} features JS quedan bajo demanda (${DEV_TOOLS_ENABLED ? "DEV" : "PROD"}).`);
+  console.info(`[HallValla] ${BUILD}: ${CORE_PARTS.length} módulos núcleo; bundles lazy=${Object.keys(FEATURE_PARTS).join(", ")} (${DEV_TOOLS_ENABLED ? "DEV" : "PROD"}).`);
 } catch (error) {
   globalThis.__HALLVALLA_MODULAR_READY__ = false;
   console.error("[HallValla] Error durante el arranque modular:", error);

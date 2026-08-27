@@ -1,0 +1,19 @@
+HallValla Stage 10 — modularización controlada
+
+Cambios arquitectónicos únicamente:
+- pve.js: IA táctica + tempo + doctrinas + campaña adaptativa + turno enemigo.
+- pvp.js: ranking + sala/duelo online.
+- shop.js: interfaz y flujo de tienda.
+- hvdev.js: calibradores internos, solo con ?hvdev=1.
+- service-worker.js: Cache Storage runtime; no precarga features no utilizadas.
+- El loader mantiene una sola Promise por feature. Una descarga fallida no se marca READY.
+- El Service Worker solo guarda respuestas completas y válidas.
+- El HTML principal usa network-first para poder recibir builds nuevas.
+
+No se cambiaron reglas, stats, IA, cartas, layout, economía ni assets. El código fue reubicado, no reescrito.
+- Los JS/CSS usan hash de contenido en la URL. Si un archivo no cambia, conserva la misma URL y puede reutilizarse del Cache Storage entre builds.
+- El cache runtime es estable; una build nueva no borra automáticamente módulos sin cambios.
+- adventure.js: mapa/historia/escenas de Aventura bajo demanda; el progreso ligero permanece en core.
+- Los antiguos fragmentos ahora absorbidos por pve.js/pvp.js/hvdev.js se retiraron de js/parts para evitar dobles fuentes y cargas accidentales.
+- Los 616 assets actuales tienen hash de contenido dentro del Service Worker: un asset sin cambios reutiliza la misma copia interna entre builds; si cambia, solo ese asset genera una clave nueva.
+- El guardado del cache ocurre fuera del hilo principal y en segundo plano; una descarga incompleta no queda publicada como recurso válido.
