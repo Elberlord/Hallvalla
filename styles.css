@@ -26411,3 +26411,93 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
 }
 
 @media(max-width:680px){.hv-battle-layout-launcher{left:8px;top:8px;min-width:128px;padding:8px 10px;font-size:11px}.hv-battle-layout-tuner{left:8px;top:48px;width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 56px)}.hv-battle-layout-head{padding:10px 11px}.hv-battle-layout-head b{font-size:17px}.hv-battle-layout-body{padding:10px 11px}}
+
+
+/* ========================================================================== 
+   HALLVALLA · 20260827.5 · MENÚ CONTEXTUAL SIN MODAL / SIN ACERCAMIENTO
+   Al pulsar una unidad del campo solo aparecen ATK / DEF / MOV / EFFECT / DET.
+   La unidad real del tablero es el centro visual; no se crea tarjeta, retrato,
+   panel oscuro ni ampliación adicional.
+   ========================================================================== */
+#gameShell .unit-context-menu{
+  width:292px!important;
+  height:292px!important;
+  min-width:292px!important;
+  max-width:292px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transform:translate(-50%,-50%)!important;
+  pointer-events:none!important;
+}
+#gameShell .unit-context-menu::before,
+#gameShell .unit-context-menu::after,
+#gameShell .unit-context-star-shell::before,
+#gameShell .unit-context-star-shell::after{
+  content:none!important;
+  display:none!important;
+}
+#gameShell .unit-context-star-shell,
+#gameShell .unit-context-star-shell.unit-context-actions-only{
+  position:relative!important;
+  width:292px!important;
+  height:292px!important;
+  min-width:292px!important;
+  min-height:292px!important;
+  filter:none!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+}
+/* Compatibilidad defensiva con markup cacheado de una versión anterior. */
+#gameShell .unit-context-core{
+  display:none!important;
+}
+#gameShell .unit-context-btn{
+  pointer-events:auto!important;
+  z-index:3!important;
+}
+/* Los botones orbitan la ficha REAL del campo, sin taparla. */
+#gameShell .unit-context-btn.slot-top{
+  left:50%!important;
+  top:-2px!important;
+  transform:translateX(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-left{
+  left:-2px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-right{
+  right:-2px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-left-bottom{
+  left:20px!important;
+  bottom:22px!important;
+}
+#gameShell .unit-context-btn.slot-bottom{
+  left:50%!important;
+  bottom:-2px!important;
+  transform:translateX(-50%)!important;
+}
+@media(max-width:980px), (pointer:coarse){
+  #gameShell .unit-context-menu,
+  #gameShell .unit-context-star-shell,
+  #gameShell .unit-context-star-shell.unit-context-actions-only{
+    width:244px!important;
+    height:244px!important;
+    min-width:244px!important;
+    min-height:244px!important;
+    max-width:244px!important;
+  }
+  #gameShell .unit-context-btn.slot-left-bottom{
+    left:15px!important;
+    bottom:18px!important;
+  }
+}

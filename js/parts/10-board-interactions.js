@@ -450,15 +450,11 @@ function renderUnitContextMenu(){
     effect:"assets/ui/context_menu/effect.webp",
     det:"assets/ui/context_menu/det.webp"
   };
-  const stealthMasked=isStealthHiddenFromViewer(u);
-  const ownerStealth=isStealthedUnit(u)&&u.owner===myPlayer;
-  const portraitHtml=stealthMasked?getStealthContextPortraitHtml():getUnitPortraitHtml(u);
-  const hpLabel=stealthMasked?"?":String(getDisplayHp(u));
-  const atkLabel=stealthMasked?"?":effectiveAtk(u);
-  const guardLabel=stealthMasked?"?":displayEffectiveGuard(u);
-  const contextName=stealthMasked?"Unidad con Sigilo":(u.name||"Invocación");
-  const contextSub=stealthMasked?`Presencia Oculta · J${u.owner}`:(ownerStealth?`Sigilo privado · solo tú puedes verla · J${u.owner}`:`${u.leader?"Líder":"Invocación"} · J${u.owner}`);
-  const markup=`<div class="unit-context-star-shell"><div class="unit-context-core"><div class="unit-context-portrait ${stealthMasked?"is-stealthed":""}">${portraitHtml}</div><div class="unit-context-mini-stats ${stealthMasked?"is-stealthed":""}"><span>${hpLabel}</span><span>${atkLabel}</span><span>${guardLabel}</span></div><div class="unit-context-name">${escapeHtml(contextName)}</div><div class="unit-context-sub">${escapeHtml(contextSub)}</div></div>${options.map(o=>{
+  // UI v20260827.5: el menú contextual ya no duplica/acerca la unidad.
+  // La propia ficha del campo permanece visible en el centro y solo se
+  // despliegan alrededor las acciones disponibles. DET conserva su función
+  // de abrir los detalles cuando el jugador lo solicita explícitamente.
+  const markup=`<div class="unit-context-star-shell unit-context-actions-only">${options.map(o=>{
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const mulanExecChoice=isMulanExecutionChoiceReady(u);
     const disabled=(o.key==="mov"&&(!canMove||(!mulanExecMove&&(u.moved||u.acted))))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted||mulanExecChoice||mulanExecMove))||(o.key==="def"&&(!canAction||(!mulanExecChoice&&u.acted)||u.defenseModeReady||mulanExecMove||(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)));

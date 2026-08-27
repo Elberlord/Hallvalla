@@ -1,8 +1,8 @@
 (()=>{
   "use strict";
-  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
+  const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
 
-  const STORAGE_KEY="hallvalla_battle_layout_tuner_v1";
+  const STORAGE_KEY="hallvalla_battle_layout_tuner_v2";
   const PANEL_POS_KEY="hallvalla_battle_layout_tuner_panel_v1";
   const REF_W=1366;
   const REF_H=768;
@@ -60,21 +60,24 @@
     "battle.player.life":{x:3.03,y:-14.84,scale:.9,visible:true},
     "battle.player.hand":{x:0,y:-16.07,scale:.89,visible:true},
     "battle.player.deck":{x:2.02,y:-16.07,scale:.9,visible:true},
-    "battle.player.honor":{x:1,y:28,scale:.8,visible:true},
+    "battle.player.honor":{x:188,y:28,scale:.92,visible:true},
+    "battle.player.honorText":{x:0,y:6,scale:.72,visible:true},
     "battle.rival.turn":{x:6.06,y:2.47,scale:.98,visible:true},
     "battle.rival.life":{x:2.02,y:-17.31,scale:.9,visible:true},
     "battle.rival.hand":{x:3.03,y:-16.07,scale:.89,visible:true},
     "battle.rival.deck":{x:4.04,y:-14.84,scale:.89,visible:true},
-    "battle.rival.honor":{x:3,y:18,scale:.8,visible:true},
-    "battle.tool.settings":{x:-8.08,y:-255.92,scale:1,visible:true},
-    "battle.tool.actions":{x:-17.16,y:-407.99,scale:1,visible:true},
-    "battle.action.hand":{x:116.08,y:-64.29,scale:.8,visible:true},
-    "battle.action.cancel":{x:-26.25,y:92.73,scale:.8,visible:true},
-    "battle.action.next":{x:-167.57,y:252.21,scale:.8,visible:true},
+    "battle.rival.honor":{x:-211,y:18,scale:.72,visible:true},
+    "battle.rival.honorText":{x:0,y:6,scale:.89,visible:true},
+    "battle.clock.turn":{x:93.88,y:-223.77,scale:1,visible:true},
+    "battle.tool.settings":{x:-27.24,y:107.72,scale:.8,visible:true},
+    "battle.tool.actions":{x:9.42,y:36.32,scale:.65,visible:true},
+    "battle.action.hand":{x:-13.13,y:-2.47,scale:.8,visible:true},
+    "battle.action.cancel":{x:-154.45,y:325.15,scale:.8,visible:true},
+    "battle.action.next":{x:-296.78,y:160.72,scale:.8,visible:true},
     "battle.spellbook":{x:0,y:0,scale:.8,visible:true},
-    "battle.history":{x:35,y:0,scale:.5,visible:true}
-  };
-  let config={version:1,units:"design-px",targets:{...PRESET_TARGETS}};
+    "battle.history":{x:11,y:3,scale:.7,visible:true},
+    "battle.context":{x:0,y:0,scale:.8,visible:true}
+  };  let config={version:1,units:"design-px",targets:{...PRESET_TARGETS}};
   let selectedKey=TARGETS[0].key;
   let editing=false;
   let drag=null;
@@ -233,6 +236,19 @@
   function onPointerUp(event){if(!drag||event.pointerId!==drag.pointerId)return;try{drag.node.releasePointerCapture?.(event.pointerId);}catch(_){ }status(drag.moved?"Posición actualizada. Cuando termines, copia el JSON.":"Elemento seleccionado.");drag=null;event.preventDefault();}
   function suppressGameplayClick(event){if(!editing)return;const hit=targetFromEvent(event);if(!hit)return;event.preventDefault();event.stopImmediatePropagation();}
   function updateLauncherVisibility(){const shell=$("#gameShell"),btn=launcher();if(!btn)return;const visible=!!shell&&!shell.classList.contains("hidden");btn.classList.toggle("hidden",!visible);if(!visible&&editing)setEditing(false);}
+
+  // El layout aprobado se aplica también en producción. El editor visual solo existe con ?hvdev=1.
+  if(!DEV_TOOLS_ENABLED){
+    config={version:1,units:"design-px",targets:{...PRESET_TARGETS}};
+    const reapply=()=>requestAnimationFrame(applyAll);
+    applyAll();
+    window.addEventListener("resize",reapply,{passive:true});
+    const runtimeObserver=new MutationObserver(reapply);
+    runtimeObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]});
+    const battlefield=$(STAGE);if(globalThis.ResizeObserver&&battlefield){const ro=new ResizeObserver(reapply);ro.observe(battlefield);}
+    globalThis.hallvallaBattleLayout={get:()=>exportConfig(),apply:applyAll};
+    return;
+  }
 
   readConfig();createUi();applyAll();updateLauncherVisibility();
   document.addEventListener("pointerdown",onPointerDown,true);document.addEventListener("pointermove",onPointerMove,true);document.addEventListener("pointerup",onPointerUp,true);document.addEventListener("pointercancel",onPointerUp,true);document.addEventListener("click",suppressGameplayClick,true);
