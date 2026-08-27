@@ -2,7 +2,7 @@
   "use strict";
   const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
 
-  const STORAGE_KEY="hallvalla_battle_layout_tuner_v2";
+  const STORAGE_KEY="hallvalla_battle_layout_tuner_v3_dev";
   const PANEL_POS_KEY="hallvalla_battle_layout_tuner_panel_v1";
   const REF_W=1366;
   const REF_H=768;
@@ -114,11 +114,11 @@
     };
     config.targets[key]=clean;writeConfig();applyTarget(key);syncPanel();updateJsonPreview();
   }
-  function applyTarget(key){
+  function applyTarget(key,sharedRect=null){
     const target=byKey.get(key);if(!target)return;
     const node=nodeFor(target),stage=stageFor(target);if(!node||!stage)return;
     node.dataset.hvBattleLayoutTarget=key;
-    const s=stateFor(key),rect=stage.getBoundingClientRect();
+    const s=stateFor(key),rect=sharedRect||stage.getBoundingClientRect();
     if(rect.width>0&&rect.height>0){
       const pxX=s.x*(rect.width/target.refW),pxY=s.y*(rect.height/target.refH);
       node.style.translate=`${pxX}px ${pxY}px`;
@@ -137,7 +137,13 @@
     node.classList.toggle("hv-battle-layout-selected",editing&&key===selectedKey);
     node.classList.toggle("hv-battle-layout-hidden-preview",editing&&!s.visible);
   }
-  function applyAll(){for(const t of TARGETS)applyTarget(t.key);}
+  function applyAll(){
+    const stage=$(STAGE);
+    if(!stage)return;
+    const rect=stage.getBoundingClientRect();
+    if(rect.width<=0||rect.height<=0)return;
+    for(const t of TARGETS)applyTarget(t.key,rect);
+  }
   function clearTargetStyle(key){
     const target=byKey.get(key),node=nodeFor(target);if(!node)return;
     for(const p of ["translate","scale","transform-origin","visibility","opacity","pointer-events"])node.style.removeProperty(p);
@@ -237,15 +243,37 @@
   function suppressGameplayClick(event){if(!editing)return;const hit=targetFromEvent(event);if(!hit)return;event.preventDefault();event.stopImmediatePropagation();}
   function updateLauncherVisibility(){const shell=$("#gameShell"),btn=launcher();if(!btn)return;const visible=!!shell&&!shell.classList.contains("hidden");btn.classList.toggle("hidden",!visible);if(!visible&&editing)setEditing(false);}
 
-  // El layout aprobado se aplica también en producción. El editor visual solo existe con ?hvdev=1.
+  // Layout aprobado: producción NO lee localStorage del calibrador.
+  // Se aplica solo en eventos estructurales (entrada/salida de combate y resize).
+  // No observamos todo el body: eso provocaba recalculo de layout con cada cambio
+  // de clase durante combate y podia introducir lag, especialmente contra IA.
   if(!DEV_TOOLS_ENABLED){
     config={version:1,units:"design-px",targets:{...PRESET_TARGETS}};
-    const reapply=()=>requestAnimationFrame(applyAll);
-    applyAll();
-    window.addEventListener("resize",reapply,{passive:true});
-    const runtimeObserver=new MutationObserver(reapply);
-    runtimeObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]});
-    const battlefield=$(STAGE);if(globalThis.ResizeObserver&&battlefield){const ro=new ResizeObserver(reapply);ro.observe(battlefield);}
+    const reapplyStable=()=>{
+      requestAnimationFrame(()=>{
+        applyAll();
+        requestAnimationFrame(applyAll);
+      });
+      setTimeout(applyAll,90);
+      setTimeout(applyAll,260);
+    };
+    reapplyStable();
+    window.addEventListener("resize",reapplyStable,{passive:true});
+    const shell=$("#gameShell");
+    if(shell){
+      const shellObserver=new MutationObserver(reapplyStable);
+      shellObserver.observe(shell,{attributes:true,attributeFilter:["class"]});
+    }
+    const battlefield=$(STAGE);
+    if(globalThis.ResizeObserver&&battlefield){
+      let resizeQueued=false;
+      const ro=new ResizeObserver(()=>{
+        if(resizeQueued)return;
+        resizeQueued=true;
+        requestAnimationFrame(()=>{resizeQueued=false;applyAll();});
+      });
+      ro.observe(battlefield);
+    }
     globalThis.hallvallaBattleLayout={get:()=>exportConfig(),apply:applyAll};
     return;
   }
