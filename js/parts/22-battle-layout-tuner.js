@@ -15,7 +15,10 @@
     T("battle.player.life","Jugador · Vida","#hudP1 .player-status-life","JUGADOR"),
     T("battle.player.hand","Jugador · Mano","#hudP1 .player-status-hand","JUGADOR"),
     T("battle.player.deck","Jugador · Mazo","#hudP1 .player-status-deck","JUGADOR"),
-    T("battle.player.honor","Jugador · Honor","#turnHonorHud","JUGADOR"),
+    T("battle.player.honor","Jugador · Honor · Marco","#turnHonorHud","JUGADOR"),
+    T("battle.player.honorText","Jugador · Honor · Texto completo","#turnHonorHudText","JUGADOR"),
+    T("battle.player.honorLabel","Jugador · Honor · Palabra HONOR","#turnHonorHud .turn-honor-label","JUGADOR"),
+    T("battle.player.honorValue","Jugador · Honor · Valor","#turnHonorHudValue","JUGADOR"),
 
     T("battle.rival.hud","Rival · HUD completo","#hudP2","RIVAL"),
     T("battle.rival.name","Rival · Nombre","#p2HudName","RIVAL"),
@@ -23,7 +26,10 @@
     T("battle.rival.life","Rival · Vida","#hudP2 .player-status-life","RIVAL"),
     T("battle.rival.hand","Rival · Mano","#hudP2 .player-status-hand","RIVAL"),
     T("battle.rival.deck","Rival · Mazo","#hudP2 .player-status-deck","RIVAL"),
-    T("battle.rival.honor","Rival · Honor","#rivalHonorHud","RIVAL"),
+    T("battle.rival.honor","Rival · Honor · Marco","#rivalHonorHud","RIVAL"),
+    T("battle.rival.honorText","Rival · Honor · Texto completo","#rivalHonorHudText","RIVAL"),
+    T("battle.rival.honorLabel","Rival · Honor · Palabra HONOR","#rivalHonorHud .turn-honor-label","RIVAL"),
+    T("battle.rival.honorValue","Rival · Honor · Valor","#rivalHonorHudValue","RIVAL"),
 
     T("battle.clock.turn","Reloj · Turno","#turnTimerHud","RELOJES / ESTADO"),
     T("battle.clock.player","Reloj · Jugador","#playerClock1","RELOJES / ESTADO"),
@@ -47,7 +53,28 @@
   const $=(s,r=document)=>r.querySelector(s);
   const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
   const round=(v,d=2)=>Number(Number(v||0).toFixed(d));
-  let config={version:1,units:"design-px",targets:{}};
+  const PRESET_TARGETS={
+    "battle.player.hud":{x:-3.03,y:-1.24,scale:1,visible:true},
+    "battle.player.name":{x:46.43,y:2.47,scale:1,visible:true},
+    "battle.player.turn":{x:-43.41,y:3.71,scale:1,visible:true},
+    "battle.player.life":{x:3.03,y:-14.84,scale:.9,visible:true},
+    "battle.player.hand":{x:0,y:-16.07,scale:.89,visible:true},
+    "battle.player.deck":{x:2.02,y:-16.07,scale:.9,visible:true},
+    "battle.player.honor":{x:1,y:28,scale:.8,visible:true},
+    "battle.rival.turn":{x:6.06,y:2.47,scale:.98,visible:true},
+    "battle.rival.life":{x:2.02,y:-17.31,scale:.9,visible:true},
+    "battle.rival.hand":{x:3.03,y:-16.07,scale:.89,visible:true},
+    "battle.rival.deck":{x:4.04,y:-14.84,scale:.89,visible:true},
+    "battle.rival.honor":{x:3,y:18,scale:.8,visible:true},
+    "battle.tool.settings":{x:-8.08,y:-255.92,scale:1,visible:true},
+    "battle.tool.actions":{x:-17.16,y:-407.99,scale:1,visible:true},
+    "battle.action.hand":{x:116.08,y:-64.29,scale:.8,visible:true},
+    "battle.action.cancel":{x:-26.25,y:92.73,scale:.8,visible:true},
+    "battle.action.next":{x:-167.57,y:252.21,scale:.8,visible:true},
+    "battle.spellbook":{x:0,y:0,scale:.8,visible:true},
+    "battle.history":{x:35,y:0,scale:.5,visible:true}
+  };
+  let config={version:1,units:"design-px",targets:{...PRESET_TARGETS}};
   let selectedKey=TARGETS[0].key;
   let editing=false;
   let drag=null;
@@ -192,7 +219,15 @@
   function onPanelPointerMove(event){if(!panelDrag||event.pointerId!==panelDrag.pointerId)return;setPanelPosition(panelDrag.startLeft+(event.clientX-panelDrag.startX),panelDrag.startTop+(event.clientY-panelDrag.startY));event.preventDefault();}
   function onPanelPointerUp(event){if(!panelDrag||event.pointerId!==panelDrag.pointerId)return;const p=panel();try{panelDrag.handle?.releasePointerCapture?.(event.pointerId);}catch(_){ }if(p){p.classList.remove("hv-battle-layout-panel-dragging");const r=p.getBoundingClientRect();writePanelPosition(r.left,r.top);}panelDrag=null;event.preventDefault();}
 
-  function targetFromEvent(event){const node=event.target?.closest?.("[data-hv-battle-layout-target]");if(!node)return null;const key=node.dataset.hvBattleLayoutTarget;return byKey.has(key)?{key,target:byKey.get(key),node}:null;}
+  function targetFromEvent(event){
+    let node=event.target instanceof Element?event.target:null;
+    while(node){
+      const key=node.dataset?.hvBattleLayoutTarget;
+      if(key&&byKey.has(key))return {key,target:byKey.get(key),node};
+      node=node.parentElement;
+    }
+    return null;
+  }
   function onPointerDown(event){if(!editing||event.button!==0)return;const hit=targetFromEvent(event);if(!hit)return;const stage=stageFor(hit.target);if(!stage)return;const rect=stage.getBoundingClientRect();if(rect.width<=0||rect.height<=0)return;selectedKey=hit.key;syncPanel();applyAll();const s=stateFor(hit.key);drag={pointerId:event.pointerId,key:hit.key,target:hit.target,node:hit.node,startX:event.clientX,startY:event.clientY,startState:s,stageRect:rect,moved:false};try{hit.node.setPointerCapture?.(event.pointerId);}catch(_){ }event.preventDefault();event.stopPropagation();}
   function onPointerMove(event){if(!editing||!drag||event.pointerId!==drag.pointerId)return;const dx=event.clientX-drag.startX,dy=event.clientY-drag.startY;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;const designDx=dx*(drag.target.refW/drag.stageRect.width),designDy=dy*(drag.target.refH/drag.stageRect.height);setState(drag.key,{x:drag.startState.x+designDx,y:drag.startState.y+designDy,scale:drag.startState.scale,visible:drag.startState.visible});event.preventDefault();}
   function onPointerUp(event){if(!drag||event.pointerId!==drag.pointerId)return;try{drag.node.releasePointerCapture?.(event.pointerId);}catch(_){ }status(drag.moved?"Posición actualizada. Cuando termines, copia el JSON.":"Elemento seleccionado.");drag=null;event.preventDefault();}

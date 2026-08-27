@@ -26371,7 +26371,43 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
 .hv-battle-layout-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.hv-battle-layout-actions button{padding:9px 6px;border:1px solid #71501a;border-radius:9px;background:linear-gradient(180deg,#3a250c,#201406);color:#f4dc9f;font:800 11px Arial;cursor:pointer}
 #hvBattleLayoutJson{display:block;width:100%;height:122px;margin-top:10px;resize:vertical;border:1px solid #5b431a;border-radius:9px;padding:8px;background:#080705;color:#dbc384;font:11px/1.35 Consolas,monospace;box-sizing:border-box}
 .hv-battle-layout-status{margin:9px 0 0;color:#bba87d;font:600 11px/1.3 Arial}.hv-battle-layout-panel-dragging{opacity:.93}
+
+/* Honor: el marco y el texto se calibran por separado. */
+#gameShell .battlefield .turn-honor-content{
+  display:inline-flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:.28em;
+  transform-origin:50% 50%;
+}
+
 html.hv-battle-layout-editing [data-hv-battle-layout-target]{cursor:move!important;outline:1px dashed rgba(255,214,104,.42);outline-offset:2px}
+html.hv-battle-layout-editing [data-hv-battle-layout-target]{pointer-events:auto!important;touch-action:none!important}
 html.hv-battle-layout-editing .hv-battle-layout-selected{outline:3px solid #ffd35b!important;outline-offset:4px!important;filter:drop-shadow(0 0 8px rgba(255,203,64,.7))}
 html.hv-battle-layout-editing .hv-battle-layout-hidden-preview{outline-style:dotted!important}
+/* DEV · selección precisa de Honor y del cronómetro -----------------------
+   Estos elementos tenían pointer-events desactivados o quedaban por debajo
+   de otras capas del combate. En modo calibración cada pieza textual puede
+   seleccionarse por separado y el reloj completo queda arrastrable. */
+html.hv-battle-layout-editing #gameShell #turnTimerHud,
+html.hv-battle-layout-editing #gameShell #turnTimerHud *,
+html.hv-battle-layout-editing #gameShell #turnHonorHud,
+html.hv-battle-layout-editing #gameShell #turnHonorHud *,
+html.hv-battle-layout-editing #gameShell #rivalHonorHud,
+html.hv-battle-layout-editing #gameShell #rivalHonorHud *{
+  pointer-events:auto!important;
+  touch-action:none!important;
+}
+html.hv-battle-layout-editing #gameShell #turnTimerHud{
+  z-index:2147482000!important;
+}
+html.hv-battle-layout-editing #gameShell #turnHonorHudText,
+html.hv-battle-layout-editing #gameShell #rivalHonorHudText,
+html.hv-battle-layout-editing #gameShell .turn-honor-label,
+html.hv-battle-layout-editing #gameShell #turnHonorHudValue,
+html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
+  display:inline-block;
+  transform-origin:50% 50%;
+}
+
 @media(max-width:680px){.hv-battle-layout-launcher{left:8px;top:8px;min-width:128px;padding:8px 10px;font-size:11px}.hv-battle-layout-tuner{left:8px;top:48px;width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 56px)}.hv-battle-layout-head{padding:10px 11px}.hv-battle-layout-head b{font-size:17px}.hv-battle-layout-body{padding:10px 11px}}
