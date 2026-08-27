@@ -443,6 +443,13 @@ function renderUnitContextMenu(){
   const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMoveWindow(u)&&!isBattleEnded();
   const canAction=isMyTurn()&&u.owner===myPlayer&&isUnitActionWindow(u)&&!isBattleEnded();
   const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
+  const actionArt={
+    mov:"assets/ui/context_menu/mov.webp",
+    def:"assets/ui/context_menu/def.webp",
+    attk:"assets/ui/context_menu/atk.webp",
+    effect:"assets/ui/context_menu/effect.webp",
+    det:"assets/ui/context_menu/det.webp"
+  };
   const stealthMasked=isStealthHiddenFromViewer(u);
   const ownerStealth=isStealthedUnit(u)&&u.owner===myPlayer;
   const portraitHtml=stealthMasked?getStealthContextPortraitHtml():getUnitPortraitHtml(u);
@@ -455,7 +462,9 @@ function renderUnitContextMenu(){
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const mulanExecChoice=isMulanExecutionChoiceReady(u);
     const disabled=(o.key==="mov"&&(!canMove||(!mulanExecMove&&(u.moved||u.acted))))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted||mulanExecChoice||mulanExecMove))||(o.key==="def"&&(!canAction||(!mulanExecChoice&&u.acted)||u.defenseModeReady||mulanExecMove||(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)));
-    return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} title="${escapeHtml(o.hint)}"><span>${o.label}</span></button>`;
+    const visualLabel=o.key==="attk"?"ATK":o.label;
+    const artSrc=actionArt[o.key]||actionArt.det;
+    return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} aria-label="${escapeHtml(visualLabel)}" title="${escapeHtml(o.hint)}"><img class="unit-context-action-art" src="${artSrc}" alt="" aria-hidden="true"><span class="unit-context-action-text">${escapeHtml(visualLabel)}</span></button>`;
   }).join("")}</div>`;
   if(menu.__hvContextMarkup!==markup){menu.innerHTML=markup;menu.__hvContextMarkup=markup;}
   const grid=$("grid");

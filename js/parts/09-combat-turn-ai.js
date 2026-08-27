@@ -1277,7 +1277,7 @@ async function adventureEnemyTurn(){
     const cappedMaxHonor=capResourceMax(maxHonor);
     honor=capResourceAmount(honor,cappedMaxHonor);
     maxHonor=cappedMaxHonor;
-    const nextAiState={deck,hand,honor,maxHonor,lastTurnStarted:"__AI_IN_PROGRESS__",skipFirstTurnDraw:false};
+    const nextAiState={deck,hand,honor,maxHonor,focusTargetId:aiFocusTargetId||"",lastTurnStarted:"__AI_IN_PROGRESS__",skipFirstTurnDraw:false};
     const safeStepLogs=logs.map(concealStealthIdentityInText);
     const safePreviousLogs=(pub.log||[]).map(concealStealthIdentityInText);
     const battleFxEvent=pendingAiBattleFxEvent||null;
@@ -1956,7 +1956,7 @@ async function adventureEnemyTurn(){
     const expectedHp=hpDamage*(chance/100);
     return{chance,damage,hpDamage,expected,expectedHp,mods};
   };
-  let aiFocusTargetId="";
+  let aiFocusTargetId=String(ai?.focusTargetId||"");
   const aiIsDoomedByDotAtNextTurn=(target)=>{
     if(!target||target.leader||Number(target.hp||0)!==1)return false;
     const bleeding=typeof hasBleeding==="function"?hasBleeding(target):Number(target.bleedDamage||0)>0;
@@ -1969,6 +1969,34 @@ async function adventureEnemyTurn(){
     const target=living(1).find(t=>t.id===aiFocusTargetId)||null;
     if(!target||aiIsDoomedByDotAtNextTurn(target)){aiFocusTargetId="";return null;}
     return target;
+  };
+  // Aventura · doctrina de concentración total:
+  // el ejército rival fija UNA presa y todo el grupo la persigue/ataca hasta eliminarla.
+  // Solo entonces se elige la siguiente. Esto evita turnos pasivos donde cada unidad
+  // intenta cumplir una micro-doctrina distinta y ninguna termina comprometiéndose.
+  const aiChooseArmyFocusTarget=()=>{
+    const attackers=living(2).filter(u=>u&&!u.leader&&u.hp>0);
+    const candidates=living(1).filter(t=>t&&t.hp>0&&!aiIsDoomedByDotAtNextTurn(t));
+    if(!candidates.length)return null;
+    return candidates.map(t=>{
+      const compatible=attackers.filter(a=>aiCanEverTarget(a,t));
+      const coverage=attackers.length?compatible.length/attackers.length:1;
+      const nearest=compatible.length?Math.min(...compatible.map(a=>d(a,t))):99;
+      const avg=compatible.length?compatible.reduce((sum,a)=>sum+d(a,t),0)/compatible.length:99;
+      const hp=Math.max(1,Number(t.hp||1));
+      let score=coverage*1800-nearest*75-avg*24-hp*34+aiUnitValue(t)*.34;
+      if(!t.leader)score+=320;
+      if(hp<=3)score+=420;
+      if(t.principal||t.special)score+=170;
+      return{target:t,score};
+    }).sort((a,b)=>b.score-a.score)[0]?.target||null;
+  };
+  const aiEnsureArmyFocusTarget=()=>{
+    const current=aiFocusedTarget();
+    if(current)return current;
+    const next=aiChooseArmyFocusTarget();
+    aiFocusTargetId=next?.id||"";
+    return next;
   };
   const scoreTarget=(target,damage=0,attacker=null)=>{
     if(!target||aiIsDoomedByDotAtNextTurn(target))return -9999;
@@ -2176,7 +2204,16 @@ async function adventureEnemyTurn(){
   };
   const bestAttackTarget=(attacker)=>{
     const validTargets=living(1).filter(t=>canHit(attacker,t)&&!aiIsDoomedByDotAtNextTurn(t));
-    const focused=aiFocusedTarget();
+    const focused=aiEnsureArmyFocusTarget();
+    // Concentración total: si esta unidad puede golpear a la presa común, no cambia
+    // de blanco por kiting, rol, crisis ranged, Sigilo o valor individual.
+    if(focused){
+      const direct=validTargets.find(t=>t.id===focused.id)||null;
+      if(direct)return direct;
+      // Si puede atacarla en principio pero todavía está fuera de alcance, se reserva
+      // el ataque para avanzar hacia ella en vez de dispersar daño en otra unidad.
+      if(aiCanEverTarget(attacker,focused))return null;
+    }
     const cavalryRangedCrisisTarget=aiCavalryRangedCrisisTarget(attacker);
     const cavalryRangedCrisis=!!cavalryRangedCrisisTarget;
     const stealthActive=!!isStealthedUnit(attacker);
@@ -2578,11 +2615,12 @@ async function adventureEnemyTurn(){
           : null));
     logs.push([...(preTrap.logs||[]),...(dmgTrap.logs||[]),...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" "));
     killDead();
-    if(aiIsRangedCombatUnit(attacker)){
-      const focusedAfter=units.find(it=>it.id===target.id&&it.hp>0)||null;
-      aiFocusTargetId=focusedAfter&&!aiIsDoomedByDotAtNextTurn(focusedAfter)?focusedAfter.id:"";
-    }else if(aiFocusTargetId){
-      aiFocusedTarget(); // limpia el foco si el ataque anterior ya lo dejó condenado o muerto.
+    const focusedAfter=units.find(it=>it.id===target.id&&it.hp>0)||null;
+    if(focusedAfter&&!aiIsDoomedByDotAtNextTurn(focusedAfter)){
+      aiFocusTargetId=focusedAfter.id;
+    }else{
+      aiFocusTargetId="";
+      aiEnsureArmyFocusTarget(); // baja confirmada: todo el ejército cambia junto a la siguiente presa.
     }
     return true;
   };
@@ -3352,6 +3390,29 @@ async function adventureEnemyTurn(){
     const start={x:u.x,y:u.y};
     const pl=playerLeaderNow(), el=enemyLeaderNow();
     const maxMove=mulanExecMove?1:effectiveMov(u);
+    const armyFocus=aiEnsureArmyFocusTarget();
+    // Si existe una presa común y esta unidad puede atacarla, la ruta de Aventura
+    // prioriza cerrar distancia hasta entrar en RG. La formación deja de bloquear el
+    // avance; los espacios legales siguen respetando pathfinding, ocupación y MOV.
+    if(armyFocus&&aiCanEverTarget(u,armyFocus)){
+      const currentReach=aiAttackReachForTarget(u,armyFocus);
+      const currentGap=Math.max(0,d(u,armyFocus)-currentReach);
+      if(currentGap>0){
+        const legal=[...new Set(getUnitMovementZonesForState(u,units,maxMove))].map(key=>{
+          const [x,y]=String(key).split(",").map(Number);
+          if(!Number.isFinite(x)||!Number.isFinite(y)||(x===u.x&&y===u.y))return null;
+          const ghost={...u,x,y};
+          const reach=aiAttackReachForTarget(ghost,armyFocus);
+          const distance=d(ghost,armyFocus);
+          const gap=Math.max(0,distance-reach);
+          // Una unidad ranged prefiere quedarse justo en el borde de su alcance.
+          const rangeEdge=gap===0?Math.abs(distance-reach):0;
+          return{x,y,gap,distance,score:(gap===0?100000:0)-gap*10000-rangeEdge*120-distance};
+        }).filter(Boolean).sort((a,b)=>b.score-a.score);
+        const bestFocusMove=legal[0]||null;
+        if(bestFocusMove&&bestFocusMove.gap<currentGap)return bestFocusMove;
+      }
+    }
     const moverRole=aiBasicTacticRole(u);
     const movePosture=aiBattlePosture();
     const cavalryRangedCrisisTarget=moverRole==="cavalry"&&movePosture.rangedSaturation?aiCavalryRangedCrisisTarget(u):null;
@@ -3635,6 +3696,8 @@ async function adventureEnemyTurn(){
   };
   const aiShouldRepositionBeforeAttack=(u)=>{
     if(!u||u.acted)return false;
+    const armyFocus=aiEnsureArmyFocusTarget();
+    if(armyFocus&&canHit(u,armyFocus))return false;
     const role=aiBasicTacticRole(u);
     const retreatAsset=aiIsRetreatAsset(u);
     const target=bestAttackTarget(u);
@@ -3700,7 +3763,7 @@ async function adventureEnemyTurn(){
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const best=bestMoveFor(u);
     if(!best)return false;
-    if(!mulanExecMove){
+    if(!mulanExecMove&&!aiEnsureArmyFocusTarget()){
       const posture=aiBattlePosture();
       const retreatAsset=aiIsRetreatAsset(u);
       const isTank=!!aiTempoEngine?.isTankAsset?.(u,aiDoctrineContext());
@@ -4084,6 +4147,7 @@ async function adventureEnemyTurn(){
     }
   }
   const aiShouldTempoDefendBeforeAttack=(u)=>{
+    if(aiEnsureArmyFocusTarget())return false;
     if(!u||!aiTempoEngine?.shouldDefendFrontline)return false;
     if(!aiTempoEngine.shouldDefendFrontline(u,aiDoctrineContext()))return false;
     const warriorPush=aiWarriorPressureState();
@@ -4206,7 +4270,7 @@ async function adventureEnemyTurn(){
   erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
   lastPublishedUnits=[...units];
   const outcome=getBattleOutcome(units);
-  const nextAiState={deck,hand,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
+  const nextAiState={deck,hand,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),focusTargetId:aiFocusTargetId||"",lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
   if(outcome.ended){
     const finalLogs=[...logs,outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`,...(pub.log||[])].slice(0,18);
     recordLocalLeaderBattleOutcome(outcome,pub.mode||"adventure");

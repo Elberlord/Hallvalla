@@ -675,7 +675,14 @@ function showAdventureStoryScene(index){
   $("adventureStoryTitle").textContent=s.title;
   $("adventureStoryText").textContent=s.text;
   $("adventureProgress").textContent=`${adventureStoryIndex+1}/${ADVENTURE_STORY_SCENES.length}`;
-  $("nextAdventureStoryBtn").textContent=adventureStoryIndex===ADVENTURE_STORY_SCENES.length-1?"Elegir aliado":"Continuar";
+  const nextStoryBtn=$("nextAdventureStoryBtn");
+  const chooseAlly=adventureStoryIndex===ADVENTURE_STORY_SCENES.length-1;
+  if(nextStoryBtn){
+    nextStoryBtn.setAttribute("aria-label",chooseAlly?"Elegir aliado":"Continuar");
+    nextStoryBtn.title=chooseAlly?"Elegir aliado":"Continuar";
+    const art=nextStoryBtn.querySelector(".hv-adventure-btn-art");
+    if(art)art.src=chooseAlly?"assets/ui/adventure/btn_elegir_aliado.webp":"assets/ui/adventure/btn_continuar.webp";
+  }
 }
 function nextAdventureStoryScene(){
   if(adventureStoryIndex>=ADVENTURE_STORY_SCENES.length-1)return showAdventureChoice();

@@ -509,7 +509,14 @@ function updateAuthActionButtons(){
   const ready=isFirebaseAuthReady();
   const startBtn=$("startAdventureBattleBtn");
   // VS Online administra sus propios botones en 07b-pvp-rebuild-clean-room.js.
-  if(startBtn){startBtn.disabled=!ready;startBtn.setAttribute("aria-disabled",ready?"false":"true");startBtn.textContent=ready?"Iniciar combate":"Conectando...";}
+  if(startBtn){
+    startBtn.disabled=!ready;
+    startBtn.setAttribute("aria-disabled",ready?"false":"true");
+    startBtn.setAttribute("aria-label",ready?"Iniciar combate":"Conectando...");
+    startBtn.title=ready?"Iniciar combate":"Conectando...";
+    const art=startBtn.querySelector(".hv-adventure-btn-art");
+    if(art)art.src=ready?"assets/ui/adventure/btn_iniciar_combate.webp":"assets/ui/adventure/btn_conectando.webp";
+  }
 }
 function resolveFirebaseAuthReady(){
   authReady=true;

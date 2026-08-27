@@ -35,7 +35,13 @@ async function startPendingAdventureBattle(){
   pendingAdventureSpecial=safeSpecial;
   const safeBattleId=pendingAdventureBattleId||ADVENTURE_GUARDIAN_BATTLE.id;
   const btn=$("startAdventureBattleBtn");
-  if(btn){btn.disabled=true;btn.textContent="Creando combate...";}
+  if(btn){
+    btn.disabled=true;
+    btn.setAttribute("aria-label","Creando combate...");
+    btn.title="Creando combate...";
+    const art=btn.querySelector(".hv-adventure-btn-art");
+    if(art)art.src="assets/ui/adventure/btn_creando_combate.webp";
+  }
   try{
     await startAdventure(pendingAdventureSpecial,safeBattleId);
   }catch(e){
@@ -43,7 +49,13 @@ async function startPendingAdventureBattle(){
     setHint("No se pudo iniciar el combate de aventura. Revisa conexión/Firebase y vuelve a intentar.");
     if(typeof hvAlert==="function")await hvAlert("No se pudo iniciar el combate de aventura. Revisa conexión/Firebase y vuelve a intentar.","Aventura");
   }finally{
-    if(btn){btn.disabled=false;btn.textContent="Iniciar combate";}
+    if(btn){
+      btn.disabled=false;
+      btn.setAttribute("aria-label","Iniciar combate");
+      btn.title="Iniciar combate";
+      const art=btn.querySelector(".hv-adventure-btn-art");
+      if(art)art.src="assets/ui/adventure/btn_iniciar_combate.webp";
+    }
   }
 }
 on("startAdventureBattleBtn","click",startPendingAdventureBattle);

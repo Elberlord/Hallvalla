@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260826.7">
+<meta name="hallvalla-version" content="20260826.9">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
-<link rel="stylesheet" href="styles.css?v=20260826.11"/>
+<link rel="stylesheet" href="styles.css?v=20260826.14"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -584,8 +584,8 @@
       <div class="adventure-story-footer">
         <span class="adventure-note">Historia de aventura</span>
         <div class="adventure-actions">
-          <button id="skipAdventureStoryBtn" class="btn ghost" type="button">Saltar</button>
-          <button id="nextAdventureStoryBtn" class="btn primary" type="button">Continuar</button>
+          <button id="skipAdventureStoryBtn" class="hv-adventure-image-btn" type="button" aria-label="Saltar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_saltar.webp" alt="" aria-hidden="true"></button>
+          <button id="nextAdventureStoryBtn" class="hv-adventure-image-btn" type="button" aria-label="Continuar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_continuar.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
@@ -620,7 +620,7 @@
       <div class="adventure-story-footer">
         <span class="adventure-note">Ambos son héroes de su propia historia. Esta elección define tu primera carta especial de aventura.</span>
         <div class="adventure-actions">
-          <button id="closeAdventureBtn" class="btn ghost" type="button">Volver</button>
+          <button id="closeAdventureBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
@@ -638,8 +638,8 @@
       <div class="adventure-story-footer">
         <span class="adventure-note">El héroe no elegido queda fuera de esta primera prueba.</span>
         <div class="adventure-actions">
-          <button id="skipWoundedSceneBtn" class="btn ghost" type="button">Saltar</button>
-          <button id="continueWoundedSceneBtn" class="btn primary" type="button">Continuar</button>
+          <button id="skipWoundedSceneBtn" class="hv-adventure-image-btn" type="button" aria-label="Saltar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_saltar.webp" alt="" aria-hidden="true"></button>
+          <button id="continueWoundedSceneBtn" class="hv-adventure-image-btn" type="button" aria-label="Continuar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_continuar.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
@@ -656,8 +656,8 @@
       </div>
       <div class="adventure-story-footer">
         <div class="adventure-actions">
-          <button id="skipAdventureMapIntroBtn" class="btn ghost" type="button">Ir al mapa</button>
-          <button id="continueAdventureMapIntroBtn" class="btn primary" type="button">Siguiente</button>
+          <button id="skipAdventureMapIntroBtn" class="hv-adventure-image-btn" type="button" aria-label="Ir al mapa"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_ir_mapa.webp" alt="" aria-hidden="true"></button>
+          <button id="continueAdventureMapIntroBtn" class="hv-adventure-image-btn" type="button" aria-label="Siguiente"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_siguiente.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
@@ -667,9 +667,9 @@
       <div class="adventure-story-footer">
         <span class="adventure-note">Cada combate entrega EXP una sola vez al completarse.</span>
         <div class="adventure-actions">
-          <button id="openAdventureMapNodeTunerBtn" class="btn ghost" type="button">Ajustar burbujas</button>
-          <button id="reopenAdventureMapStoryBtn" class="btn ghost" type="button">Historia</button>
-          <button id="closeAdventureMapBtn" class="btn ghost" type="button">Volver al inicio</button>
+          <button id="openAdventureMapNodeTunerBtn" class="hv-adventure-image-btn" type="button" aria-label="Ajustar burbujas"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_ajustar_burbujas.webp" alt="" aria-hidden="true"></button>
+          <button id="reopenAdventureMapStoryBtn" class="hv-adventure-image-btn" type="button" aria-label="Historia"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_historia.webp" alt="" aria-hidden="true"></button>
+          <button id="closeAdventureMapBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver al inicio"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver_inicio.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
@@ -734,8 +734,8 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       </div>
       <div class="adventure-story-footer guardian-story-footer">
         <div class="adventure-actions">
-          <button id="backToAdventureChoiceBtn" class="btn ghost" type="button">Volver</button>
-          <button id="startAdventureBattleBtn" class="btn primary" type="button">Iniciar combate</button>
+          <button id="backToAdventureChoiceBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver.webp" alt="" aria-hidden="true"></button>
+          <button id="startAdventureBattleBtn" class="hv-adventure-image-btn" type="button" aria-label="Iniciar combate"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_iniciar_combate.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
@@ -1372,6 +1372,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?v=20260826.6"></script>
+<script type="module" src="js/bootstrap-loader.js?v=20260826.7"></script>
 </body>
 </html>

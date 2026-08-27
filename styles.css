@@ -25917,7 +25917,7 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   width:min(470px,46%)!important;
   max-width:min(470px,46%)!important;
   height:auto!important;
-  max-height:24%!important;
+  max-height:12%!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
   overscroll-behavior:contain!important;
@@ -25992,7 +25992,7 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
     width:min(420px,62%)!important;
     max-width:min(420px,62%)!important;
     height:auto!important;
-    max-height:27%!important;
+    max-height:13.5%!important;
     overflow-x:hidden!important;
     overflow-y:auto!important;
     padding:3px 10px 3px 3px!important;
@@ -26039,4 +26039,309 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   .adventure-card.hv-adventure-cinematic-fit .guardian-actor img{
     height:88%!important;
   }
+}
+
+
+/* ========================================================================== 
+   HALLVALLA · AVENTURA · BOTONES GRÁFICOS + HISTORIA 50% MÁS COMPACTA
+   Los controles de juego conservan un <button> transparente solo como hitbox
+   accesible; todo lo visible está rasterizado en WEBP, como en VS Online.
+   ========================================================================== */
+#adventurePanel .adventure-actions .hv-adventure-image-btn{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:clamp(150px,15vw,230px)!important;
+  height:auto!important;
+  aspect-ratio:800 / 220!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  overflow:visible!important;
+  cursor:pointer!important;
+  opacity:1;
+  filter:none;
+  transition:transform .14s ease,filter .14s ease,opacity .14s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+#adventurePanel .adventure-actions .hv-adventure-image-btn .hv-adventure-btn-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+}
+#adventurePanel .adventure-actions .hv-adventure-image-btn:hover:not(:disabled){
+  transform:scale(1.025)!important;
+  filter:brightness(1.08)!important;
+}
+#adventurePanel .adventure-actions .hv-adventure-image-btn:active:not(:disabled){
+  transform:scale(.975)!important;
+}
+#adventurePanel .adventure-actions .hv-adventure-image-btn:disabled{
+  cursor:default!important;
+  opacity:.62!important;
+  filter:saturate(.62) brightness(.78)!important;
+}
+#adventurePanel .adventure-actions .hv-adventure-image-btn:focus-visible{
+  outline:2px solid rgba(228,194,117,.92)!important;
+  outline-offset:3px!important;
+}
+
+/* En las escenas cinemáticas los botones son capas absolutas del footer;
+   no alteran la altura de la historia ni del lienzo. */
+.adventure-card.hv-adventure-cinematic-fit .adventure-actions .hv-adventure-image-btn{
+  width:clamp(118px,13vw,205px)!important;
+}
+
+/* El mapa/elección no usa el fit cinemático, pero comparte el mismo arte. */
+#adventureChoiceStage .adventure-actions .hv-adventure-image-btn,
+#adventureMapStage .adventure-actions .hv-adventure-image-btn{
+  width:clamp(145px,14vw,220px)!important;
+}
+
+@media(max-width:900px), (pointer:coarse){
+  #adventurePanel .adventure-actions .hv-adventure-image-btn{
+    width:clamp(96px,23vw,150px)!important;
+  }
+  .adventure-card.hv-adventure-cinematic-fit .adventure-actions .hv-adventure-image-btn{
+    width:clamp(92px,20vw,142px)!important;
+  }
+  #adventureMapStage .adventure-actions .hv-adventure-image-btn{
+    width:clamp(88px,21vw,142px)!important;
+  }
+}
+
+/* ============================================================
+   ETAPA 5 · HUD DE COMBATE HALLVALLA
+   Arte WEBP negro/oro; los textos/valores dinámicos quedan encima.
+   ============================================================ */
+#gameShell .battlefield .player-status-card{
+  height:100px!important;
+  padding:12px 17px 12px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:url("assets/ui/battle_hud/hallvalla_status_hud.webp") center/100% 100% no-repeat!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+#gameShell .battlefield .player-status-head{
+  height:30px!important;
+  margin:0 8px 8px!important;
+  padding:0 4px!important;
+  align-items:center!important;
+}
+#gameShell .battlefield .player-status-name{
+  color:#f3d79a!important;
+  text-shadow:0 2px 2px #000,0 0 7px rgba(226,177,86,.22)!important;
+}
+#gameShell .battlefield .player-status-turn{
+  min-width:46px!important;
+  height:20px!important;
+  border:0!important;
+  background:rgba(0,0,0,.20)!important;
+  color:#e3bd70!important;
+  box-shadow:none!important;
+}
+#gameShell .battlefield .player-status-row{
+  height:43px!important;
+  gap:7px!important;
+  align-items:stretch!important;
+}
+#gameShell .battlefield .player-status-mini{
+  min-height:0!important;
+  height:43px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  gap:1px!important;
+}
+#gameShell .battlefield .player-status-mini span{
+  color:#b99760!important;
+  font-size:9px!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+#gameShell .battlefield .player-status-mini strong{
+  color:#fff3cf!important;
+  text-shadow:0 2px 2px #000,0 0 6px rgba(255,207,113,.18)!important;
+}
+#gameShell .battlefield #hudP1.player-status-hud{
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,.72)) drop-shadow(0 0 5px rgba(43,146,255,.12))!important;
+}
+#gameShell .battlefield #hudP2.player-status-hud{
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,.72)) drop-shadow(0 0 5px rgba(202,61,46,.12))!important;
+}
+
+#gameShell .battlefield #turnHonorHud.turn-honor-hud,
+#gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+  min-width:132px!important;
+  min-height:39px!important;
+  padding:7px 18px 12px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:url("assets/ui/battle_hud/hallvalla_honor_hud.webp") center/100% 100% no-repeat!important;
+  box-shadow:none!important;
+  color:#d9ba78!important;
+  text-shadow:0 2px 2px #000!important;
+}
+#gameShell .battlefield #turnHonorHud .turn-honor-label,
+#gameShell .battlefield #rivalHonorHud .turn-honor-label{
+  color:#cfae6b!important;
+  letter-spacing:.08em!important;
+}
+#gameShell .battlefield #turnHonorHud strong,
+#gameShell .battlefield #rivalHonorHud strong{
+  color:#ffe5a3!important;
+}
+
+@media(max-width:980px){
+  #gameShell .battlefield .player-status-card{
+    height:86px!important;
+    padding:10px 13px 10px!important;
+  }
+  #gameShell .battlefield .player-status-head{
+    height:25px!important;
+    margin:0 7px 6px!important;
+  }
+  #gameShell .battlefield .player-status-row,
+  #gameShell .battlefield .player-status-mini{
+    height:36px!important;
+  }
+  #gameShell .battlefield .player-status-mini span{font-size:7px!important;}
+  #gameShell .battlefield #turnHonorHud.turn-honor-hud,
+  #gameShell .battlefield #rivalHonorHud.turn-honor-hud{
+    min-width:112px!important;
+    min-height:34px!important;
+    padding:6px 14px 10px!important;
+  }
+}
+
+
+/* ========================================================================== 
+   HALLVALLA · PULIDO VISUAL FINAL · HUD / AVENTURA / MENÚ CONTEXTUAL
+   Los controles visibles usan arte WEBP. El HTML queda como hitbox accesible.
+   ========================================================================== */
+
+/* Los nuevos botones de Aventura tienen proporción artística 3:1. */
+#adventurePanel .adventure-actions .hv-adventure-image-btn{
+  aspect-ratio:3 / 1!important;
+}
+
+/* El nuevo HUD deja la iconografía a la izquierda de cada bloque y desplaza
+   los valores dinámicos ligeramente a la derecha sin cambiar sus IDs. */
+#gameShell .battlefield .player-status-mini{
+  padding-left:20%!important;
+}
+
+/* Menú contextual: las cinco acciones aprobadas son imágenes independientes. */
+#gameShell .unit-context-menu:not(.hidden){
+  animation:hvUnitContextFade .13s ease-out both;
+}
+#gameShell .unit-context-menu:not(.hidden) .unit-context-star-shell{
+  animation:hvUnitContextReveal .17s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes hvUnitContextFade{
+  from{opacity:0}to{opacity:1}
+}
+@keyframes hvUnitContextReveal{
+  from{transform:scale(.88);filter:blur(1px)}
+  to{transform:scale(1);filter:none}
+}
+#gameShell .unit-context-btn{
+  width:88px!important;
+  min-width:88px!important;
+  height:88px!important;
+  min-height:88px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transition:transform .13s ease,filter .13s ease,opacity .13s ease!important;
+}
+#gameShell .unit-context-btn::before{display:none!important;}
+#gameShell .unit-context-btn .unit-context-action-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  filter:drop-shadow(0 9px 14px rgba(0,0,0,.62));
+}
+#gameShell .unit-context-btn .unit-context-action-text{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+#gameShell .unit-context-btn:hover:not(:disabled){
+  transform:scale(1.09)!important;
+  filter:brightness(1.10) saturate(1.04)!important;
+  box-shadow:none!important;
+}
+#gameShell .unit-context-btn.slot-top:hover:not(:disabled){transform:translateX(-50%) scale(1.09)!important;}
+#gameShell .unit-context-btn.slot-left:hover:not(:disabled){transform:translateY(-50%) scale(1.09)!important;}
+#gameShell .unit-context-btn.slot-right:hover:not(:disabled){transform:translateY(-50%) scale(1.09)!important;}
+#gameShell .unit-context-btn.slot-bottom:hover:not(:disabled){transform:translateX(-50%) scale(1.09)!important;}
+#gameShell .unit-context-btn:active:not(:disabled){filter:brightness(.92)!important;}
+#gameShell .unit-context-btn:disabled{
+  opacity:.32!important;
+  filter:grayscale(.48) brightness(.70)!important;
+}
+
+/* Posición radial equivalente al concepto aprobado: MOV arriba, DEF izquierda,
+   ATK derecha, EFFECT abajo-izquierda y DET abajo. */
+#gameShell .unit-context-btn.slot-top{
+  left:50%!important;top:-4px!important;transform:translateX(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-left{
+  left:-8px!important;top:50%!important;transform:translateY(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-right{
+  right:-8px!important;top:50%!important;transform:translateY(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-bottom{
+  left:50%!important;bottom:-4px!important;transform:translateX(-50%)!important;
+}
+#gameShell .unit-context-btn.slot-left-bottom{
+  left:18px!important;bottom:31px!important;
+}
+
+@media(max-width:980px), (pointer:coarse){
+  #gameShell .battlefield .player-status-mini{padding-left:17%!important;}
+  #gameShell .unit-context-btn{
+    width:68px!important;min-width:68px!important;
+    height:68px!important;min-height:68px!important;
+  }
+  #gameShell .unit-context-btn.slot-top{top:-3px!important;}
+  #gameShell .unit-context-btn.slot-left{left:-5px!important;}
+  #gameShell .unit-context-btn.slot-right{right:-5px!important;}
+  #gameShell .unit-context-btn.slot-bottom{bottom:-3px!important;}
+  #gameShell .unit-context-btn.slot-left-bottom{left:15px!important;bottom:29px!important;}
 }
