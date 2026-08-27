@@ -100,7 +100,7 @@ const CODE_TRUTH_EFFECTS_7HAI={
   gilgamesh:{trigger:["Mientras está en campo y por posición/tipo de ataque."],does:["Enemigos adyacentes reciben -3 AT y -3 AGI.","Recibe 2 menos de daño de proyectiles, arqueros o ataques mágicos a distancia."],doesNot:["La reducción no aplica a todo daño, solo a distancia/proyectil/magia según código."],example:"Acercarse a Gilgamesh debilita tu ofensiva."},
   arjuna:{trigger:["Una vez por turno, cuando falla un ataque a distancia."],does:["Repite el intento con +6 DX.","Si acierta con esa repetición, provoca Veneno."],doesNot:["No repite ataques cuerpo a cuerpo.","No repite más de una vez por turno."],example:"Su primer fallo a distancia todavía puede volverse amenaza."},
   achilles:{concise:true,trigger:[],does:["Cólera del Pélida: en su primer ataque del turno gana +5 AT. Concentración del Pélida: con 2 o más enemigos adyacentes gana +6 Guardia. Sangre del Pélida: al inicio de su turno recupera 1 Vida."],doesNot:[],example:""},
-  saboteador_iga:{concise:true,trigger:[],does:["Escape Forzado: si sobrevive a un ataque, las unidades enemigas en rango 1 quedan con DX 0 hasta el final del turno. Sabotaje: cada Saboteador aliado vivo aumenta en 1 el costo de las unidades enemigas."],doesNot:[],example:""},
+  saboteador_iga:{concise:true,trigger:[],does:["Escape Forzado: si sobrevive a un ataque, las unidades enemigas en rango 1 quedan con DX 0 hasta el final del turno. Sabotaje: cada Saboteador aliado vivo aumenta en 3 el costo de las unidades enemigas."],doesNot:[],example:""},
 };
 function getExactEffectGuideData(entity,effectText=""){
   if(entity?.leader)return getLeaderExactEffectGuideData(entity);

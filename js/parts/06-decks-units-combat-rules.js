@@ -686,14 +686,15 @@ function getCardCostBreakdown(card,player=card?.owner,units=publicState?.units||
     ? Math.min(base,Math.max(0,Number(mageBuff.costReduction||0)))
     : 0;
   const sabotageStacks=card?.type==="unit"?countEnemySaboteadoresIga(owner,units):0;
+  const sabotagePenalty=sabotageStacks*3;
   const afterLeader=Math.max(0,base-mageReduction);
-  const effective=Math.max(0,afterLeader+sabotageStacks);
-  return{owner,base,mageReduction,sabotageStacks,effective};
+  const effective=Math.max(0,afterLeader+sabotagePenalty);
+  return{owner,base,mageReduction,sabotageStacks,sabotagePenalty,effective};
 }
 function effectiveCardCost(card,player=card?.owner){return getCardCostBreakdown(card,player,publicState?.units||[]).effective}
 function getCardCostDisplayValue(card,player=card?.owner){
   const info=getCardCostBreakdown(card,player,publicState?.units||[]);
-  if(info.sabotageStacks>0)return `${info.effective} (${info.base}+${info.sabotageStacks})`;
+  if(info.sabotageStacks>0)return `${info.effective} (${info.base}+${info.sabotagePenalty})`;
   if(info.mageReduction>0)return `${info.effective} (${info.base}-${info.mageReduction})`;
   return String(info.effective);
 }
@@ -702,7 +703,7 @@ function getCardCostExplanation(card,player=card?.owner,units=publicState?.units
   const resource=getResourceLabel(info.owner);
   if(info.sabotageStacks>0){
     const plural=info.sabotageStacks===1?"Saboteador enemigo":"Saboteadores enemigos";
-    return `Costo real: ${info.effective} ${resource} = base ${info.base} +${info.sabotageStacks} por Sabotaje (${info.sabotageStacks} ${plural}).`;
+    return `Costo real: ${info.effective} ${resource} = base ${info.base} +${info.sabotagePenalty} por Sabotaje (${info.sabotageStacks} ${plural}, +3 cada uno).`;
   }
   if(info.mageReduction>0)return `Costo real: ${info.effective} ${resource} = base ${info.base} -${info.mageReduction} por el líder Hechicero.`;
   return `Costo real: ${info.effective} ${resource}.`;
@@ -710,7 +711,7 @@ function getCardCostExplanation(card,player=card?.owner,units=publicState?.units
 function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units||[]){
   const info=getCardCostBreakdown(card,player,units);
   const resource=getResourceLabel(info.owner);
-  if(info.sabotageStacks>0)return `paga ${info.effective} ${resource} (base ${info.base} +${info.sabotageStacks} por Sabotaje de ${info.sabotageStacks} Saboteador${info.sabotageStacks===1?"":"es"})`;
+  if(info.sabotageStacks>0)return `paga ${info.effective} ${resource} (base ${info.base} +${info.sabotagePenalty} por Sabotaje de ${info.sabotageStacks} Saboteador${info.sabotageStacks===1?"":"es"}, +3 cada uno)`;
   return `paga ${info.effective} ${resource}`;
 }
 function effectiveCardValue(card,field){const mageBuff=getMageLeaderBuff(card?.owner);const abilityBonus=0;return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&typeof card?.[field]==="number"?card[field]+(mageBuff.effectBonus||0)+abilityBonus:(card?.[field]||0)+abilityBonus}
@@ -1169,7 +1170,8 @@ function countEnemySaboteadoresIga(owner,units=publicState?.units||[]){
 function normalizeSaboteadorRuleText(entity,value){
   let text=String(value||"");
   if(String(entity?.key||"")!=="saboteador_iga")return text;
-  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas\.\s*No se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
+  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas\.\s*No se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +3 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
+  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas por cada Saboteador de Iga aliado vivo\.\s*El aumento se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +3 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
   return text;
 }
 function applySaboteadorEscapeForzado(units,defenderId){
