@@ -26420,10 +26420,10 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
    panel oscuro ni ampliación adicional.
    ========================================================================== */
 #gameShell .unit-context-menu{
-  width:292px!important;
-  height:292px!important;
-  min-width:292px!important;
-  max-width:292px!important;
+  width:260px!important;
+  height:260px!important;
+  min-width:260px!important;
+  max-width:260px!important;
   padding:0!important;
   border:0!important;
   border-radius:0!important;
@@ -26443,10 +26443,10 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
 #gameShell .unit-context-star-shell,
 #gameShell .unit-context-star-shell.unit-context-actions-only{
   position:relative!important;
-  width:292px!important;
-  height:292px!important;
-  min-width:292px!important;
-  min-height:292px!important;
+  width:260px!important;
+  height:260px!important;
+  min-width:260px!important;
+  min-height:260px!important;
   filter:none!important;
   background:transparent!important;
   border:0!important;
@@ -26490,11 +26490,11 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
   #gameShell .unit-context-menu,
   #gameShell .unit-context-star-shell,
   #gameShell .unit-context-star-shell.unit-context-actions-only{
-    width:244px!important;
-    height:244px!important;
-    min-width:244px!important;
-    min-height:244px!important;
-    max-width:244px!important;
+    width:220px!important;
+    height:220px!important;
+    min-width:220px!important;
+    min-height:220px!important;
+    max-width:220px!important;
   }
   #gameShell .unit-context-btn.slot-left-bottom{
     left:15px!important;

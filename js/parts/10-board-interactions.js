@@ -471,16 +471,17 @@ function renderUnitContextMenu(){
     let top=g.top+(unitContextSelection.y+.5)*cellH;
     const safeUnitId=CSS.escape(String(u.id||""));
     const unitEl=safeUnitId?document.querySelector(`.unit-card[data-unit-id="${safeUnitId}"]`):null;
+    const contextAnchorLift=(r)=>Math.min(40,Math.max(24,(Number(r?.height)||0)*.38));
     if(unitEl){
       const r=unitEl.getBoundingClientRect();
       left=r.left+r.width/2;
-      top=r.top+r.height/2;
+      top=r.top+r.height/2-contextAnchorLift(r);
     }else if(u.leader){
       const base=document.querySelector(`.leader-base[data-leader-id="${safeUnitId}"]`);
-      if(base){const r=base.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2;}
+      if(base){const r=base.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2-contextAnchorLift(r);}
     }else{
       const cellEl=document.querySelector(`.cell[data-x="${u.x}"][data-y="${u.y}"]`);
-      if(cellEl){const r=cellEl.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2;}
+      if(cellEl){const r=cellEl.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2-contextAnchorLift(r);}
     }
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;

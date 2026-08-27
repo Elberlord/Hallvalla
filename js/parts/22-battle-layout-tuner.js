@@ -72,7 +72,7 @@
     "battle.tool.settings":{x:-27.24,y:107.72,scale:.8,visible:true},
     "battle.tool.actions":{x:9.42,y:36.32,scale:.65,visible:true},
     "battle.action.hand":{x:-13.13,y:-2.47,scale:.8,visible:true},
-    "battle.action.cancel":{x:-154.45,y:325.15,scale:.8,visible:true},
+    "battle.action.cancel":{x:0,y:0,scale:.8,visible:true},
     "battle.action.next":{x:-296.78,y:160.72,scale:.8,visible:true},
     "battle.spellbook":{x:0,y:0,scale:.8,visible:true},
     "battle.history":{x:11,y:3,scale:.7,visible:true},
