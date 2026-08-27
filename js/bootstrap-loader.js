@@ -26,9 +26,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260827.8";
+const BUILD = "20260827.10";
 const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"a62f577b94ba","parts/05-cards-specials-lore.js":"56606c7a145f","parts/06-decks-units-combat-rules.js":"10471a305fff","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"c4a273998d8e","parts/09-combat-turn-ai.js":"92c3265f3910","parts/10-board-interactions.js":"b9891f45393b","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"b7be55c4c3d6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"84b7449bb640","parts/14-adventure-engine-ui.js":"fdc1d01f971c","parts/15-settings-tuners-events.js":"169e4c57fff6","parts/16-exact-guides-mobile.js":"b0987418a824","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/forge-layout.js":"3aaf8ac2eb65","features/hvdev.js":"58fc514f1002","features/pve.js":"3eb0e46decaf","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"a62f577b94ba","parts/05-cards-specials-lore.js":"56606c7a145f","parts/06-decks-units-combat-rules.js":"10471a305fff","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"c4a273998d8e","parts/09-combat-turn-ai.js":"92c3265f3910","parts/10-board-interactions.js":"b9891f45393b","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"b7be55c4c3d6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"84b7449bb640","parts/14-adventure-engine-ui.js":"fdc1d01f971c","parts/15-settings-tuners-events.js":"169e4c57fff6","parts/16-exact-guides-mobile.js":"b0987418a824","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/battle-layout.js":"dc616bfe2e18","features/forge-layout.js":"3aaf8ac2eb65","features/hvdev.js":"58fc514f1002","features/pve.js":"3eb0e46decaf","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -266,6 +266,7 @@ const FEATURE_PARTS = Object.freeze({
   pvp: ["features/pvp.js"],
   shop: ["features/shop.js"],
   adventure: ["features/adventure.js"],
+  "battle-layout": ["features/battle-layout.js"],
   "forge-layout": ["features/forge-layout.js"],
   hvdev: ["features/hvdev.js"]
 });
@@ -406,6 +407,30 @@ function installLazyAdventureWrapper(){
   globalThis.startAdventure=wrapped;
 }
 
+/* Stage 10.2 · layout de combate lazy en producción.
+   El preset visual NO es una herramienta DEV: se carga solo cuando el tablero
+   se vuelve visible. El editor continúa exclusivamente dentro de hvdev.js. */
+function installLazyBattleLayoutRuntime(){
+  if(DEV_TOOLS_ENABLED)return;
+  const shell=document.getElementById("gameShell");
+  if(!shell)return;
+  let pending=null;
+  const ensure=()=>{
+    if(shell.classList.contains("hidden"))return;
+    if(hvIsFeatureLoaded("battle-layout")){
+      requestAnimationFrame(()=>globalThis.hallvallaBattleLayout?.apply?.());
+      return;
+    }
+    if(pending)return;
+    pending=hvEnsureFeature("battle-layout")
+      .then(()=>requestAnimationFrame(()=>globalThis.hallvallaBattleLayout?.apply?.()))
+      .catch(error=>console.error("[HallValla][BattleLayout] No se pudo aplicar el layout aprobado:",error))
+      .finally(()=>{pending=null;});
+  };
+  new MutationObserver(ensure).observe(shell,{attributes:true,attributeFilter:["class"]});
+  ensure();
+}
+
 /* Service Worker: Cache Storage controlado por HallValla. No precarga módulos
    opcionales. Solo guarda recursos que realmente fueron solicitados. */
 async function hvRegisterServiceWorker(){
@@ -441,6 +466,7 @@ try {
   }
   installLazyAdventureWrapper();
   bindLazyPvpEntry("onlineBtn");
+  installLazyBattleLayoutRuntime();
   if(DEV_TOOLS_ENABLED)await hvEnsureFeature("hvdev");
   globalThis.__HALLVALLA_MODULAR_READY__ = true;
   globalThis.__HALLVALLA_CORE_PARTS__=[...CORE_PARTS];
