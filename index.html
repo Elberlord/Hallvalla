@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 9 · Limpieza técnica controlada</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260827.6">
+<meta name="hallvalla-version" content="20260827.7">
 <meta name="hallvalla-build" content="v8_MODULAR_20260823.3">
 <meta name="hallvalla-build-name" content="STAGE 9 · Limpieza técnica controlada · DEV tooling aislado · código muerto comprobado">
-<link rel="stylesheet" href="styles.css?v=20260827.6"/>
+<link rel="stylesheet" href="styles.css?v=20260827.7"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -667,14 +667,14 @@
       <div class="adventure-story-footer">
         <span class="adventure-note">Cada combate entrega EXP una sola vez al completarse.</span>
         <div class="adventure-actions">
-          <button id="openAdventureMapNodeTunerBtn" class="hv-adventure-image-btn" type="button" aria-label="Ajustar burbujas"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_ajustar_burbujas.webp" alt="" aria-hidden="true"></button>
+          <button id="openAdventureMapNodeTunerBtn" data-hv-dev-tool class="hv-adventure-image-btn" type="button" aria-label="Ajustar burbujas"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_ajustar_burbujas.webp" alt="" aria-hidden="true"></button>
           <button id="reopenAdventureMapStoryBtn" class="hv-adventure-image-btn" type="button" aria-label="Historia"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_historia.webp" alt="" aria-hidden="true"></button>
           <button id="closeAdventureMapBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver al inicio"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver_inicio.webp" alt="" aria-hidden="true"></button>
         </div>
       </div>
     </div>
 
-    <aside id="adventureMapNodeTuner" class="map-node-tuner hidden" aria-label="Ajustar burbujas del mapa">
+    <aside id="adventureMapNodeTuner" data-hv-dev-tool class="map-node-tuner hidden" aria-label="Ajustar burbujas del mapa">
       <div class="map-node-tuner-head">
         <div>
           <b>Ajustar burbujas del mapa</b>

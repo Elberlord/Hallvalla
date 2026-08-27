@@ -26501,3 +26501,120 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
     bottom:18px!important;
   }
 }
+
+/* ========================================================================== 
+   DEVHUB1 · Centro único de controles internos (?hvdev=1)
+   - Los accesos temporales ya no aparecen dispersos por Home, Aventura,
+     Configuración, menú de combate, PvP, DET o Forja.
+   - Producción conserva únicamente el layout aprobado; el hub no se crea.
+   ========================================================================== */
+html[data-hv-runtime="dev"] #openActionsHudTunerBtn,
+html[data-hv-runtime="dev"] #openActionsHudTunerBattleBtn,
+html[data-hv-runtime="dev"] #openFieldStatBadgesTunerBattleBtn,
+html[data-hv-runtime="dev"] #openBattleVisualSizeTunerBtn,
+html[data-hv-runtime="dev"] #openFieldBoardTunerBattleBtn,
+html[data-hv-runtime="dev"] #openBattleClockTunerBtn,
+html[data-hv-runtime="dev"] #openFieldFigureEditorBtn,
+html[data-hv-runtime="dev"] #openAdventureMapNodeTunerBtn,
+html[data-hv-runtime="dev"] #hvBattleLayoutTunerLauncher,
+html[data-hv-runtime="dev"] #hvOnlineLayoutTunerLauncher,
+html[data-hv-runtime="dev"] #hvDetLayoutTunerToggle{
+  display:none!important;
+}
+
+/* La Forja conserva siempre su layout canónico, pero su editor solo se hace
+   visible cuando se invoca desde el centro DEV. */
+html[data-hv-runtime="dev"] #hvForgeDirectTuner:not(.hv-dev-hub-tool-open){display:none!important;}
+html[data-hv-runtime="dev"] #hvForgeDirectTuner.hv-dev-hub-tool-open #hvForgeTunerToggle{display:none!important;}
+
+#hvDevToolsHubLauncher{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  z-index:20020;
+  min-width:86px;
+  height:40px;
+  padding:0 14px;
+  border:1px solid rgba(239,191,91,.72);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(112,75,23,.98),rgba(46,28,8,.98));
+  color:#ffe8ad;
+  box-shadow:0 12px 30px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,230,170,.16);
+  font:900 11px Georgia,serif;
+  letter-spacing:.08em;
+  cursor:pointer;
+}
+#hvDevToolsHubLauncher:hover,
+#hvDevToolsHubLauncher.is-active{filter:brightness(1.14);box-shadow:0 12px 34px rgba(0,0,0,.72),0 0 18px rgba(235,178,72,.24);}
+
+.hv-dev-tools-hub{
+  position:fixed;
+  right:14px;
+  bottom:62px;
+  z-index:20010;
+  width:min(338px,calc(100vw - 20px));
+  max-height:min(78vh,760px);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid rgba(226,177,79,.58);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(19,13,8,.985),rgba(7,5,4,.985));
+  color:#f7dfaa;
+  box-shadow:0 24px 70px rgba(0,0,0,.76),inset 0 1px 0 rgba(255,228,164,.10);
+  backdrop-filter:blur(10px);
+}
+.hv-dev-tools-hub.hidden{display:none!important;}
+.hv-dev-hub-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 12px 10px;
+  border-bottom:1px solid rgba(223,176,78,.24);
+  background:linear-gradient(180deg,rgba(77,50,16,.45),rgba(29,19,8,.18));
+}
+.hv-dev-hub-head b{display:block;color:#ffe5a4;font:900 13px Georgia,serif;letter-spacing:.035em;}
+.hv-dev-hub-head small{display:block;margin-top:3px;color:#bda777;font-size:10px;}
+.hv-dev-hub-head>button{
+  flex:0 0 30px;width:30px;height:30px;border-radius:9px;border:1px solid rgba(231,183,86,.38);
+  background:rgba(0,0,0,.28);color:#ffe5a4;font-size:20px;cursor:pointer;
+}
+.hv-dev-hub-scroll{min-height:0;overflow:auto;padding:10px 10px 4px;scrollbar-width:thin;scrollbar-color:#866126 #171008;}
+.hv-dev-hub-group{margin:0 0 11px;padding:0;border:0;background:transparent;}
+.hv-dev-hub-group h4{margin:0 0 6px;color:#c9ab6b;font:900 9px Arial,sans-serif;letter-spacing:.16em;}
+.hv-dev-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.hv-dev-hub-grid>button,
+#hvDevHubCloseEditors{
+  min-height:38px;
+  padding:7px 8px;
+  border:1px solid rgba(223,176,78,.30);
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(71,48,18,.86),rgba(31,20,8,.90));
+  color:#f9e3b0;
+  font:800 10px Arial,sans-serif;
+  line-height:1.15;
+  cursor:pointer;
+}
+.hv-dev-hub-grid>button:hover,#hvDevHubCloseEditors:hover{filter:brightness(1.18);border-color:rgba(244,201,108,.66);}
+.hv-dev-hub-foot{padding:8px 10px 10px;border-top:1px solid rgba(223,176,78,.20);background:rgba(0,0,0,.18);}
+#hvDevHubCloseEditors{width:100%;min-height:34px;}
+#hvDevToolsHubStatus{min-height:24px;margin:7px 2px 0;color:#c8b48a;font-size:10px;line-height:1.3;}
+#hvDevHubInlineTools:empty::before{content:"Sin controles internos adicionales activos.";display:block;color:#887b62;font-size:10px;padding:4px 2px;}
+#hvDevToolsHub .profile-promo-box[data-hv-dev-tool]{
+  display:block!important;
+  margin:0!important;
+  padding:8px!important;
+  border-radius:10px!important;
+  max-width:none!important;
+}
+#hvDevToolsHub .profile-promo-controls{gap:6px!important;}
+#hvDevToolsHub .profile-promo-input{min-width:0!important;font-size:11px!important;}
+#hvDevToolsHub .profile-promo-controls .btn{min-height:34px!important;padding:6px 8px!important;font-size:10px!important;}
+#hvDevToolsHub .profile-promo-status{font-size:10px!important;line-height:1.25!important;}
+
+@media(max-width:720px){
+  #hvDevToolsHubLauncher{right:7px;bottom:7px;height:38px;min-width:78px;padding:0 11px;}
+  .hv-dev-tools-hub{right:7px;bottom:52px;width:min(322px,calc(100vw - 14px));max-height:76vh;}
+  .hv-dev-hub-grid{grid-template-columns:1fr;}
+}

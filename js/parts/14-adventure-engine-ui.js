@@ -554,6 +554,7 @@ async function copyAdventureMapNodeValues(){
   setAdventureMapNodeTunerStatus("Valores copiados al portapapeles.");
 }
 function initAdventureMapNodeTuner(){
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
   $("openAdventureMapNodeTunerBtn")?.addEventListener("click",openAdventureMapNodeTuner);
   $("closeAdventureMapNodeTunerBtn")?.addEventListener("click",closeAdventureMapNodeTuner);
   $("saveMapNodeTunerBtn")?.addEventListener("click",closeAdventureMapNodeTuner);

@@ -7,7 +7,7 @@
   const LEGACY_STORAGE_KEYS=[];
   const PANEL_KEY='hallvalla_forge_direct_tuner_panel_clean_v1';
   const $=id=>document.getElementById(id);
-  const DEV_TOOLS_ENABLED=true; // FORGE-CLEAN-1: control temporal visible durante la calibración de esta pantalla.
+  const DEV_TOOLS_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true; // El editor solo existe en ?hvdev=1; el layout aprobado sigue siendo runtime.
 
   const GROUPS={
     tabs:{label:'Pestañas de unidades'},
@@ -172,7 +172,6 @@
   }
 
   function applyRuntimeLayout(){
-    if(!DEV_TOOLS_ENABLED)return;
     for(const key of Object.keys(TARGETS))applyTarget(key);
   }
 
@@ -336,7 +335,7 @@
 
   function createTuner(){
     if($('hvForgeDirectTuner'))return;
-    shell=document.createElement('div');shell.id='hvForgeDirectTuner';shell.className='hv-forge-direct-tuner hidden';
+    shell=document.createElement('div');shell.id='hvForgeDirectTuner';shell.className='hv-forge-direct-tuner hidden';shell.dataset.hvDevTool='';
     shell.innerHTML=`
       <div class="hv-forge-tuner-bar"><button id="hvForgeTunerMove" type="button" title="Mover control">⠿</button><button id="hvForgeTunerToggle" type="button">EDITAR FORJA</button></div>
       <section id="hvForgeTunerBody" class="hv-forge-tuner-body hidden">

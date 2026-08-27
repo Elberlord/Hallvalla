@@ -220,6 +220,7 @@ function hvCreateFieldFigureEditor(){
     btn.id="openFieldFigureEditorBtn";
     btn.className="btn full";
     btn.type="button";
+    btn.dataset.hvDevTool="";
     btn.textContent="Ajustar figuras 3D del campo";
     const anchor=document.getElementById("openBattleClockTunerBtn")||document.getElementById("battleResetBtn");
     menu.insertBefore(btn,anchor||null);

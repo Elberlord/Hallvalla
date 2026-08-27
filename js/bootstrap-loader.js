@@ -26,7 +26,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?v=20260823.3";
 
-const BUILD = "20260827.6";
+const BUILD = "20260827.7";
 const CACHE_BUILD = BUILD;
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
@@ -257,7 +257,7 @@ const CORE_PARTS = [
   "16-exact-guides-mobile.js",
   "22-battle-layout-tuner.js"
 ];
-if (DEV_TOOLS_ENABLED) CORE_PARTS.push("21-online-layout-tuner.js");
+if (DEV_TOOLS_ENABLED) CORE_PARTS.push("21-online-layout-tuner.js","23-dev-tools-hub.js");
 
 /* PERF2 · Lazy loading real de JavaScript ----------------------------------
    Estos módulos dejan de formar parte del bootstrap obligatorio. Se cargan
