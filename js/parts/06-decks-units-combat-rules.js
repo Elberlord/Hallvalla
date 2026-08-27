@@ -552,6 +552,10 @@ function enemyHasAdjacentHeavyInfantryOfAttacker(attacker,defender,units=publicS
   if(!attacker||!defender)return false;
   return (units||[]).some(other=>other&&other.id!==attacker.id&&other.owner===attacker.owner&&other.hp>0&&isHeavyInfantryUnit(other)&&dist(defender,other)<=1);
 }
+function isAdjacentToOwnLeader(unit,units=publicState?.units||[]){
+  if(!unit)return false;
+  return (units||[]).some(other=>other&&other.owner===unit.owner&&other.leader&&dist(unit,other)<=1);
+}
 function hoplitePhalanxGuard(unit,units=publicState?.units||[]){
   if(!unit||unit.key!=="greek_hoplite")return 0;
   return (units||[]).some(other=>other&&other.id!==unit.id&&other.owner===unit.owner&&other.hp>0&&isHeavyInfantryUnit(other)&&dist(unit,other)<=1)?2:0;
@@ -983,6 +987,12 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(melee&&attacker.key==="samurai_katana"){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Dos Manos.`);}
   if(defender.key==="samurai_katana"||defender.key==="miyamoto_musashi"){const shirahadoriCount=countEnemyUnitsInCardRange(defender,publicState?.units||[]);if(shirahadoriCount>0){mods.defenderDex+=(shirahadoriCount*2);mods.notes.push(`${defender.name} +${shirahadoriCount*2} DX por Shirahadori (${shirahadoriCount} rival${shirahadoriCount===1?"":"es"} en su rango).`);}}
   if(melee&&attacker.key==="guardian"){if(defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.notes.push(`${defender.name} -1 AT y -1 MOV por Aplastamiento.`)}}
+  if(melee&&defender.key==="huscarl_anglosajon_hacha"&&!defender.moved&&Number(defender.movedSpaces||0)===0){mods.defenderGuard+=2;mods.notes.push(`${defender.name} +2 Guardia por Muro sajón.`);}
+  if(attacker.key==="guardia_varega_hacha"&&isAdjacentToOwnLeader(attacker,combatUnits)){mods.attackerGuard+=2;mods.notes.push(`${attacker.name} +2 Guardia por Juramento imperial.`);}
+  if(defender.key==="guardia_varega_hacha"&&isAdjacentToOwnLeader(defender,combatUnits)){mods.defenderGuard+=2;mods.notes.push(`${defender.name} +2 Guardia por Juramento imperial.`);}
+  if(isRangedAttack(attacker,defender)&&attacker.key==="guerrero_franco_hacha"){mods.defenderGuard-=2;mods.notes.push(`${defender.name} -2 Guardia por Hacha arrojadiza.`);}
+  if(melee&&attacker.key==="gallowglass_irlandes_hacha"&&!attacker.moved&&Number(attacker.movedSpaces||0)===0){mods.attackerAtk+=2;mods.notes.push(`${attacker.name} +2 AT por Golpe pesado.`);}
+  if(melee&&attacker.key==="caballero_poleaxe"&&effectiveGuard(defender)>=4){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Enganche de poleaxe.`);}
   if(melee&&isLanceUnitCardLike(attacker)&&isAntiCavalryTargetUnit(defender)){
     if(defenderUsesEvasion)mods.defenderAgi-=999;
     mods.defenderGuard-=999;
