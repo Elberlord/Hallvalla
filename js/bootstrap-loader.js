@@ -26,9 +26,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260908.11";
+const BUILD = "20260908.14";
 const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"28a93658ec50","parts/02-assets-leaders.js":"35f3b0f19e9f","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"e5e8cf43ae0d","parts/05-cards-specials-lore.js":"9ae32dfb41f7","parts/06-decks-units-combat-rules.js":"0a4f667041c4","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"791b19b74c43","parts/09-combat-turn-ai.js":"bfc0b33aa1d3","parts/10-board-interactions.js":"d235223d8c2e","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"a9a58a41ecb6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"055d70e31ad4","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"c7b7994cf1f1","parts/16-exact-guides-mobile.js":"cb820147638e","parts/17-dragon-contracts.js":"3fded1bbb93a","parts/18-dragon-egg.js":"273d15cb4d37","parts/19-field-figures-3d.js":"a11579e8d8aa","features/adventure.js":"ed0742a81163","features/battle-layout.js":"58e6a324da41","features/forge-layout.js":"c724b29f6c00","features/forge.js":"c6f640f8f213","features/hvdev.js":"9a403cc6e427","features/pve.js":"560fae8da467","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"28a93658ec50","parts/02-assets-leaders.js":"35f3b0f19e9f","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"e5e8cf43ae0d","parts/05-cards-specials-lore.js":"eae00526164d","parts/05b-unit-load-profiles.js":"e750aebcbd2a","parts/06-decks-units-combat-rules.js":"30174c5c0cdf","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"791b19b74c43","parts/09-combat-turn-ai.js":"bfc0b33aa1d3","parts/10-board-interactions.js":"d235223d8c2e","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"a9a58a41ecb6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"055d70e31ad4","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"c7b7994cf1f1","parts/16-exact-guides-mobile.js":"cb820147638e","parts/17-dragon-contracts.js":"3fded1bbb93a","parts/18-dragon-egg.js":"cafb890e7475","parts/19-field-figures-3d.js":"a11579e8d8aa","features/adventure.js":"ed0742a81163","features/battle-layout.js":"58e6a324da41","features/forge-layout.js":"c724b29f6c00","features/forge.js":"c6f640f8f213","features/hvdev.js":"9a403cc6e427","features/pve.js":"560fae8da467","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -237,6 +237,7 @@ const CORE_PARTS = [
   "03-runtime-clocks.js",
   "04-fx-audio-profile.js",
   "05-cards-specials-lore.js",
+  "05b-unit-load-profiles.js",
   "06-decks-units-combat-rules.js",
   "07-network-battle-state.js",
   "08-actions-inspector.js",

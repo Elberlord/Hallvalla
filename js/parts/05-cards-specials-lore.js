@@ -502,7 +502,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"leonidas",name:"Leónidas",type:"unit",icon:"🛡️",portrait:CARD_PORTRAITS.leonidas,cost:4,hp:8,atk:5,guard:7,dex:4,agi:3,mov:1,range:1,rarity:"Mítica",special:true,leaderBuffGroups:["warrior"],text:"Última Formación: las unidades básicas aliadas adyacentes a Leónidas obtienen +4 Guardia. Última Resistencia: cuando Leónidas recibe daño fatal por un ataque, su asesino pierde 3 Vida. Si ese daño derrota al asesino, Leónidas queda con 1 Vida."},
   {key:"nasu_no_yoichi",name:"Nasu no Yoichi",type:"unit",icon:"🎯",portrait:CARD_PORTRAITS.nasu,cost:3,hp:4,atk:4,guard:3,dex:9,agi:8,mov:1,range:2,rarity:"Mítica",special:true,text:"Marca del Abanico: si Nasu ataca desde Rango 3 o más, el objetivo recibe -4 Guardia durante ese combate. Si acierta, conserva -4 Guardia hasta el final de su próximo turno. No acumulable."},
   {key:"tomoe_gozen",name:"Tomoe Gozen",type:"unit",icon:"🌙",portrait:CARD_PORTRAITS.tomoe,cost:3,hp:5,atk:5,guard:4,dex:8,agi:7,mov:3,range:1,rarity:"Mítica",special:true,text:"Jinete de la Luna Cortante: si Tomoe se movió 2 o más casillas antes de atacar, el objetivo recibe -6 Agilidad durante ese combate. Si el objetivo tiene Rango 2 o más, Tomoe obtiene +8 Ataque durante ese combate."},
-  {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:4,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,rarity:"Mítica",special:true,text:"Trampa de Cannas: una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde 5 AT y 1 MOV hasta su próximo turno."},
+  {key:"hannibal_barca",name:"Hannibal Barca",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.hannibal,cost:4,hp:7,atk:5,guard:5,dex:7,agi:4,mov:3,range:1,rarity:"Mítica",special:true,mountType:"war_elephant",locomotionClass:"mounted_elephant",stompSupport:true,text:"Montura de guerra: Hannibal entra montado en elefante. Trampa de Cannas: una vez por turno, cuando una unidad enemiga queda adyacente a 2 o más unidades aliadas de Hannibal, esa unidad pierde 5 AT y 1 MOV hasta su próximo turno."},
   {key:"subotai",name:"Subotai / Subutai",type:"unit",icon:"🏇",portrait:CARD_PORTRAITS.subotai,cost:3,hp:5,atk:4,guard:4,dex:5,agi:5,mov:2,range:2,rarity:"Mítica",special:true,text:"Marcha de Mil Horizontes: una vez por turno, elige una unidad aliada. Esa unidad puede moverse 2 casillas adicionales este turno. Puede elegir la misma unidad en turnos seguidos."},
   {key:"lu_bu",name:"Lü Bu",type:"unit",icon:"🐴",portrait:CARD_PORTRAITS.luBu,cost:4,hp:6,atk:7,guard:4,dex:8,agi:6,mov:1,range:1,rarity:"Mítica",special:true,leaderBuffGroups:["warrior"],text:"Furia de la Alabarda: cada vez que Lü Bu derrota a una unidad enemiga, obtiene +3 Ataque permanente mientras siga en campo. Sin límite de acumulaciones."},
   {key:"ragnar_lodbrok",name:"Ragnar Lodbrok",type:"unit",icon:"🐺",portrait:CARD_PORTRAITS.ragnar,cost:3,hp:6,atk:6,guard:4,dex:6,agi:5,mov:1,range:1,rarity:"Mítica",special:true,text:"Saqueo del Norte: una vez por turno, cuando Ragnar haga daño a un líder, estructura o unidad con más Vida máxima que él, recupera 1 Vida."},
@@ -2301,9 +2301,8 @@ function isCanonicalFootArcherMovementOne(card){
   return FOOT_ARCHER_MOVEMENT_ONE_KEYS.has(key)||icon.includes("🏹")||name.includes("arquero")||name.includes("arquera");
 }
 function applyArcherMovementRule(card){
-  if(!card||!isCanonicalFootArcherMovementOne(card))return card;
-  card.mov=1;
-  card.archerMovementRuleApplied=true;
+  // 20260908.14: MOV ya no se fuerza por clase Arco. La locomoción natural + carga
+  // es la única fuente canónica del movimiento base.
   return card;
 }
 // Unidades que no pertenecen a la clase Arco pero sí tienen un ataque a distancia

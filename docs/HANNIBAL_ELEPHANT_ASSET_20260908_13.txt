@@ -1,0 +1,15 @@
+HALLVALLA · HANNIBAL EN ELEFANTE · 20260908.13
+=================================================
+
+Cambios integrados
+------------------
+- Se reemplaza el retrato de carta de Hannibal Barca por una nueva ilustración WEBP con el general liderando desde un elefante de guerra.
+- Se reemplaza la figura de campo ligera de Hannibal Barca por un recorte WEBP transparente del general montado en elefante.
+- La carta recibe metadatos de locomoción `mounted_elephant` y `mountType: war_elephant`.
+- El modelo interno de carga pasa a tratar a Hannibal como unidad montada en elefante de guerra.
+- `effectiveMov()` ahora ya contempla una penalización por peso para locomoción `mounted_elephant`, con mínimo de 1 MOV. En el perfil actual de Hannibal la penalización resultante es 0, así que conserva MOV 3.
+
+Notas
+-----
+- No se alteró el efecto Trampa de Cannas.
+- El gancho de penalización por peso queda listo para futuras unidades montadas en elefante.

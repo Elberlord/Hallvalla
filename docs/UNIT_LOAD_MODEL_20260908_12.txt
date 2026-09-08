@@ -1,0 +1,50 @@
+HALLVALLA · MODELO CANÓNICO DE CARGA Y PENALIZACIÓN POR PESO · 20260908.12
+
+PRINCIPIO
+- La carga NO define el MOV base de una unidad.
+- Un humano, un caballo, un elefante, una bestia y un dragón tendrán bases de locomoción distintas.
+- Este sistema produce únicamente una PENALIZACIÓN DE CARGA (weightPenaltySteps).
+- En esta build la penalización NO se aplica todavía a MOV. Se conserva como metadato interno.
+
+CÁLCULO A PIE
+carriedLoadKg = armadura + armas + escudo/equipo + misceláneos
+effectiveLoadKg = carriedLoadKg × distributionFactor
+burdenRatio = effectiveLoadKg / mobilityCapacityKg
+
+CÁLCULO MONTADO
+mountTotalLoadKg = masa del jinete + carga equipada + silla/arreos + armadura de montura
+burdenRatio = mountTotalLoadKg / mountComfortLoadKg
+
+UMBRALES
+ratio <= 1.00 : penalización 0
+1.00 < ratio <= 1.20 : penalización 1
+1.20 < ratio <= 1.40 : penalización 2
+ratio > 1.40 : penalización 3
+
+NOTA DE DISEÑO
+Los kilos son estimaciones internas basadas en la representación visual, equipo, constitución y naturaleza de cada unidad. No pretenden ser una reconstrucción histórica exacta. La capacidad representa carga tolerable SIN perder movilidad de combate, no la carga máxima que alguien podría transportar lentamente.
+
+UNIDADES QUE ACTUALMENTE GENERAN PENALIZACIÓN DE CARGA
+- Atila el Huno [attila_hun] -> penalización 1; carga de montura 113.5 kg / capacidad cómoda 112 kg; ratio 1.013.
+- Caballero de poleaxe [caballero_poleaxe] -> penalización 2; carga equipada 33.5 kg / capacidad de movilidad 24 kg; ratio 1.256.
+- Caballería ligera [cavalry] -> penalización 1; carga de montura 137.5 kg / capacidad cómoda 118 kg; ratio 1.165.
+- Drakor, Guardia del Sepulcro [drakor_guardia_sepulcro] -> penalización 1; carga equipada 44 kg / capacidad de movilidad 36 kg; ratio 1.076.
+- Gengis Kan [genghis_khan] -> penalización 1; carga de montura 118 kg / capacidad cómoda 115 kg; ratio 1.026.
+- Guardia varega [guardia_varega_hacha] -> penalización 1; carga equipada 25.5 kg / capacidad de movilidad 22 kg; ratio 1.1.
+- Guardián de piedra [guardian] -> penalización 2; carga equipada 36 kg / capacidad de movilidad 25 kg; ratio 1.296.
+- Hombre de armas acorazado [armored_man_at_arms] -> penalización 2; carga equipada 32.5 kg / capacidad de movilidad 23 kg; ratio 1.272.
+- Hoplita griego [greek_hoplite] -> penalización 1; carga equipada 21.5 kg / capacidad de movilidad 20 kg; ratio 1.055.
+- Hua Lan [mulan] -> penalización 1; carga equipada 25 kg / capacidad de movilidad 20 kg; ratio 1.16.
+- Héctor de Troya [hector_troy] -> penalización 1; carga equipada 26 kg / capacidad de movilidad 22 kg; ratio 1.136.
+- Juana de Arco [joan_of_arc] -> penalización 2; carga equipada 30.5 kg / capacidad de movilidad 20 kg; ratio 1.373.
+- Lancero solar [spearman] -> penalización 2; carga equipada 35 kg / capacidad de movilidad 24 kg; ratio 1.312.
+- Legionario romano [roman_legionary] -> penalización 1; carga equipada 23.5 kg / capacidad de movilidad 22 kg; ratio 1.068.
+- Richard Corazón de León [richard_lionheart] -> penalización 2; carga equipada 42.5 kg / capacidad de movilidad 28 kg; ratio 1.366.
+- Samurai Yabusame [samurai_yabusame] -> penalización 1; carga de montura 103.4 kg / capacidad cómoda 100 kg; ratio 1.034.
+- Samurai de Katana [samurai_katana] -> penalización 1; carga equipada 22 kg / capacidad de movilidad 18 kg; ratio 1.122.
+- Samurai de Naginata [samurai_naginata] -> penalización 1; carga equipada 22.2 kg / capacidad de movilidad 19 kg; ratio 1.074.
+
+COBERTURA
+- Perfiles explícitos: 102.
+- Incluye unidades básicas, especiales, no muertos, invocaciones de Salomón, bestias, Huevo de Dragón y las 9 variantes de dragón compañero.
+- La Caballería Arquera de Saladino también tiene perfil aunque sea una unidad token.

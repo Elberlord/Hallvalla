@@ -119,6 +119,7 @@ const DRAGON_COMPANION_CARD_BY_KEY=Object.freeze(Object.fromEntries(DRAGON_COMPA
   CARD_PORTRAITS.dragonEgg=DRAGON_COMPANION_ASSETS.egg.hand;
   CARD_PORTRAITS.babyDragon=DRAGON_COMPANION_ASSETS.baby.hand;
   for(const card of DRAGON_COMPANION_CARDS){
+    applyHallvallaUnitLoadProfile(card);
     const existing=CARD_TEMPLATES.find(item=>item&&item.key===card.key);
     if(existing)Object.assign(existing,card);else CARD_TEMPLATES.push(card);
     if(typeof CARD_VISUALS_BY_KEY!=="undefined")CARD_VISUALS_BY_KEY[card.key]={portrait:card.portrait,icon:card.icon};

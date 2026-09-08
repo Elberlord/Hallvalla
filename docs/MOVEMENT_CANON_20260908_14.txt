@@ -1,0 +1,60 @@
+HALLVALLA · MOVIMIENTO CANÓNICO · 20260908.14
+================================================
+
+ORDEN DE CÁLCULO
+----------------
+1. Locomoción natural -> MOV base.
+2. Penalización de carga -> resta pasos.
+3. La carga nunca deja una unidad móvil en MOV 0; mínimo 1.
+4. Buffs/debuffs temporales se aplican después y sí pueden alterar el MOV efectivo de combate.
+
+BASES NATURALES
+----------------
+- Humano/humanoide a pie: MOV 2 antes de carga.
+- Caballo / caballo no muerto: MOV 4 antes de carga.
+- Elefante: MOV 2 antes de carga.
+- Hannibal usa locomoción de elefante: base 2; carga actual no lo penaliza -> MOV 2.
+
+BESTIAS TERRESTRES (sin carga externa)
+--------------------------------------
+- Puercoespín: 1
+- Serpiente constrictora: 1
+- Taipán del interior: 1
+- Tejón mielero: 2
+- Elefante africano: 2
+- Jabalí salvaje: 3
+- León africano: 4
+- Tigre de Bengala: 4
+- Búfalo africano: 4
+- Rinoceronte blanco: 4
+
+AÉREAS
+------
+- Cuervo negro: MOV 4 aéreo.
+- Halcón peregrino: MOV 5 aéreo.
+- Dragón bebé (Fuego/Hielo/Rayo): MOV 1 aéreo.
+- Dragón joven (Fuego/Hielo/Rayo): MOV 2 aéreo.
+- Dragón adulto (Fuego/Hielo/Rayo): MOV 3 aéreo.
+- Huevo de dragón: MOV 0.
+
+CABALLERÍA: RESULTADO CON CARGA ACTUAL
+--------------------------------------
+- Caballería pesada (cavalry): 4 - 1 = 3
+- Jinete númida: 4 - 0 = 4
+- Arquero escita: 4 - 0 = 4
+- Húsar húngaro: 4 - 0 = 4
+- Explorador mongol: 4 - 0 = 4
+- Jinete cosaco: 4 - 0 = 4
+- Samurai Yabusame: 4 - 1 = 3
+- Caballería arquera de Saladino: 4 - 0 = 4
+- Atila: 4 - 1 = 3
+- Gengis Kan: 4 - 1 = 3
+- Subotai: 4 - 0 = 4
+- Tomoe Gozen: 4 - 0 = 4
+- Morgash: 4 - 0 = 4
+
+NOTA DE DISEÑO
+--------------
+MOV mide desplazamiento táctico en el tablero, no km/h literales. El MOV aéreo
+puede tener mayor valor táctico que el mismo número terrestre aunque la figura
+no se renderice levitando permanentemente.

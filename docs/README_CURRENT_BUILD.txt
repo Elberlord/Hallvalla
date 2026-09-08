@@ -1,22 +1,16 @@
 HallValla v8 Modular · Build actual
 ===================================
 
-Estado del paquete: E50 + MISIONES VISUAL V2 + MINA FUNCIONAL / COPIAS INDIVIDUALES (2026-08-23)
+Estado del paquete: MOV CANÓNICO · LOCOMOCIÓN + CARGA (2026-09-08)
 
 Estado actual verificado
 ------------------------
-- La base lógica declarada por `index.html` y `js/bootstrap-loader.js` llega a `E50EXPERTLOG1-E50AXEDECK1`.
-- E50 mantiene el Expert Learning Log, aprendizaje causal y las doctrinas/mazos adaptativos documentados más abajo en este archivo.
-- Misiones Visual V2 está integrada (`MISSIONSVISUAL1`). El tuner de misiones permanece disponible para retoques visuales.
-- Coleccionista (`mastery3`) ya es funcional: contabiliza copias de cartas obtenidas de forma acumulativa y no reduce progreso al descomponer o perder cartas.
-- La Mina actual incorpora las capas `MINECOMPACT6`, `MINEEVENTSCENE1`, `MINEGOLDFIX2`, `MINECLOCK1` y `MINECOPIES1`.
-- Producción de Mina: 5 ranuras; desbloqueo a nivel de jugador 2; 1 gema por ciclo; ritmos por nivel de Mina 1-5 de 24h, 20h, 16h, 12h y 8h.
-- Copias individuales de Mina: una unidad solo puede asignarse si queda una copia libre después de restar las copias reservadas en mazos y las copias ya asignadas a la Mina.
-- Eventos de Mina: comprobación cada 6 horas, probabilidad base del 55% y hasta 3 eventos activos. Están definidos Incendio, Inundación, Derrumbe, Tesoro, Veta rica y Cámara secreta.
-- La producción y los eventos de Mina se persisten actualmente en `localStorage` mediante `hallvalla_mine_state_v1` y `hallvalla_mine_events_v1`.
-- Este paquete es una build de CONTROL de Forja y mantiene habilitado el afinador directo (`DEV_TOOLS_ENABLED=true`) en `js/parts/20-forge-direct-tuner.js`.
-- `database.rules.json` conserva el soporte de la fase PvP `prebattle` documentado en E49.2.
-- El historial E49.2 y anteriores se conserva íntegro a continuación; esos bloques ya no se etiquetan como “Build actual”.
+- MOV natural y penalización de carga quedan separados.
+- Humanos/humanoides a pie parten de MOV 2; el peso puede reducirlos hasta mínimo 1.
+- Caballos parten de MOV 4 y aplican su carga de jinete/equipo.
+- Elefante Africano y Hannibal quedan en base MOV 2; Hannibal no recibe penalización con su carga actual.
+- Bestias terrestres, aves y dragones usan la escala canónica documentada en `docs/MOVEMENT_CANON_20260908_14.txt`.
+- El antiguo bloqueo universal de arqueros a MOV 1 deja de ser la fuente de movimiento.
 
 Historial acumulado
 ===================
@@ -403,3 +397,10 @@ Archivos modificados respecto de E49 Map1 Decks
 - js/parts/12-profile-shop-packs.js
 - js/parts/15-settings-tuners-events.js
 - docs/README_CURRENT_BUILD.txt
+
+
+20260908.12 · MODELO INTERNO DE CARGA
+- Se añaden 102 perfiles explícitos de peso/carga para todas las unidades actuales, incluidos tokens y dragones compañeros.
+- La carga calcula weightPenaltySteps de forma independiente al tipo de locomoción.
+- En esta build weightPenaltySteps es SOLO metadato: NO altera MOV todavía.
+- Ver docs/UNIT_LOAD_MODEL_20260908_12.txt y .csv.

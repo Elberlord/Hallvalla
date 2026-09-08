@@ -1,0 +1,103 @@
+﻿key,name,locomotion,bodyMassKg,armorWeightKg,armorClass,weaponWeightKg,shieldGearWeightKg,miscWeightKg,carriedLoadKg,distributionFactor,effectiveLoadKg,mobilityCapacityKg,mountType,mountComfortLoadKg,tackWeightKg,mountArmorWeightKg,mountTotalLoadKg,burdenRatio,weightPenaltySteps,loadModel,estimateConfidence,note
+acolyte_healer,Acólita sanadora,foot,58,1,none,0.8,0,2,3.8,1.0,3.8,14,,,0,0,,0.271,0,carried,medium,"Ropajes, foco y equipo médico ligero."
+arcane_adept,Adepto Arcano,foot,72,4,light,2,0,4,10,1.0,10.0,16,,,0,0,,0.625,0,carried,medium,"Ropajes reforzados, bastón/foco y componentes arcanos."
+alexander_magnus,Alejandro Magno,foot,78,12,medium,3,6,2,23,0.96,22.1,25,,,0,0,,0.883,0,carried,medium,"Coraza, lanza y escudo."
+achilles,Aquiles,foot,88,10,medium,3.5,6,2,21.5,0.96,20.6,30,,,0,0,,0.688,0,carried,medium,Guerrero excepcional; armadura y escudo bien tolerados.
+arjuna,Arjuna,foot,75,8,medium,2,0,4,14,1.0,14.0,22,,,0,0,,0.636,0,carried,medium,"Armadura media-ligera, arco y carcaj."
+archer,Arquera del desierto,foot,62,5,light,1.4,0,4,10.4,1.03,10.7,17,,,0,0,,0.63,0,carried,medium,"Armadura ligera, arco y carcaj."
+scythian_horse_archer,Arquero a caballo escita,mounted_horse,70,7,light,2.2,0,3,12.2,1.0,12.2,21,steppe_horse,108,8,0,90.2,0.835,0,carried,medium,Arquero montado ligero.
+roman_auxiliary_sagittarius,Arquero auxiliar romano,foot,72,8,medium,1.5,0,4,13.5,1.0,13.5,19,,,0,0,,0.711,0,carried,medium,"Protección militar media, arco y munición."
+new_kingdom_archer,Arquero del Imperio Nuevo,foot,68,5,light,1.3,0,4,10.3,1.0,10.3,18,,,0,0,,0.572,0,carried,medium,"Protección ligera, arco y munición."
+egyptian_line_archer,Arquero egipcio de línea,foot,65,2,light,1.2,0,3,6.2,1.0,6.2,16,,,0,0,,0.388,0,carried,medium,"Protección mínima, arco y carcaj."
+scout,Asesina del desierto,foot,58,4,light,2,0,2,8,1.0,8.0,18,,,0,0,,0.444,0,carried,medium,Equipo de asesina ligero y distribuido.
+attila_hun,Atila el Huno,mounted_horse,82,16,medium,3.5,0,2,21.5,1.0,21.5,28,steppe_warhorse,112,10,0,113.5,1.013,1,carried,medium,Se modela como jinete estepario por su identidad de combate y MOV alto.
+beowulf,Beowulf,foot,105,18,heavy,2,6,2,28,0.95,26.6,35,,,0,0,,0.76,0,carried,medium,Constitución excepcional; equipo pesado sin sobrecarga.
+berserker_de_oso,Berserker de Oso,foot,92,4,light,3.5,5,2,14.5,1.03,14.9,28,,,0,0,,0.533,0,carried,medium,"Pieles, hacha y escudo."
+berserker,Berserker del norte,foot,100,8,medium,7,0,3,18,1.02,18.4,32,,,0,0,,0.574,0,carried,medium,Constitución excepcional y varias hachas.
+boudica,Boudica,foot,70,5,light,2.5,5,2,14.5,1.0,14.5,22,,,0,0,,0.659,0,carried,medium,"Protección ligera-media, lanza y escudo."
+african_buffalo,Búfalo Africano,beast,700,0,none,0,0,0,0,1.0,0.0,105.0,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+caballero_poleaxe,Caballero de poleaxe,foot,88,28,heavy,3.5,0,2,33.5,0.9,30.2,24,,,0,0,,1.256,2,carried,medium,Arnés de placas completo y poleaxe.
+saladin_archer_cavalry,Caballería Arquera de Saladino,mounted_horse,72,8,medium,2.2,0,3,13.2,1.0,13.2,22,desert_horse,110,9,0,94.2,0.856,0,carried,medium,Caballería arquera convocada; carga deliberadamente ligera.
+cavalry,Caballería ligera,mounted_horse,85,28,heavy,1.5,0,3,32.5,1.0,32.5,24,warhorse,118,12,8,137.5,1.165,1,carried,high,Jinete fuertemente acorazado sobre caballo de guerra; el caballo sí siente la masa total.
+black_raven,Cuervo Negro,flying_beast,1.2,0,none,0,0,0,0,1.0,0.0,1,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+cu_chulainn,Cú Chulainn,foot,88,6,light,3,0,2,11,1.0,11.0,32,,,0,0,,0.344,0,carried,medium,Constitución heroica y equipamiento relativamente ligero.
+solomon_demon,Demonio de los Nombres Encadenados,supernatural,160,0,none,0,0,0,0,1.0,0.0,80,,,0,0,,0.0,0,intrinsic,medium,Manifestación demoníaca; masa natural no es carga equipada.
+adult_fire_dragon,Dragón Adulto de Fuego,flying_beast,2500,0,none,0,0,0,0,1.0,0.0,500.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+adult_ice_dragon,Dragón Adulto de Hielo,flying_beast,2500,0,none,0,0,0,0,1.0,0.0,500.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+adult_lightning_dragon,Dragón Adulto de Relámpago,flying_beast,2500,0,none,0,0,0,0,1.0,0.0,500.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+baby_fire_dragon,Dragón Bebé de Fuego,flying_beast,120,0,none,0,0,0,0,1.0,0.0,24.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+baby_ice_dragon,Dragón Bebé de Hielo,flying_beast,120,0,none,0,0,0,0,1.0,0.0,24.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+baby_lightning_dragon,Dragón Bebé de Relámpago,flying_beast,120,0,none,0,0,0,0,1.0,0.0,24.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+young_fire_dragon,Dragón Joven de Fuego,flying_beast,700,0,none,0,0,0,0,1.0,0.0,140.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+young_ice_dragon,Dragón Joven de Hielo,flying_beast,700,0,none,0,0,0,0,1.0,0.0,140.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+young_lightning_dragon,Dragón Joven de Relámpago,flying_beast,700,0,none,0,0,0,0,1.0,0.0,140.0,,,0,0,,0.0,0,intrinsic,medium,Dragón sin carga equipada; la masa corporal forma parte de su movilidad natural.
+drakor_guardia_sepulcro,"Drakor, Guardia del Sepulcro",foot,82,30,heavy,2,8,4,44,0.88,38.7,36,,,0,0,,1.076,1,carried,medium,"No muerto: capacidad superior a un humano ordinario, pero la armadura conserva inercia."
+el_cid,El Cid Campeador,foot,80,7,light,1.5,0,3,11.5,1.0,11.5,24,,,0,0,,0.479,0,carried,medium,Equipo moderado en la representación actual.
+african_elephant,Elefante Africano,beast,5000,0,none,0,0,0,0,1.0,0.0,750.0,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+ericto,Ericto,foot,60,1,none,0.5,0,3,4.5,1.0,4.5,14,,,0,0,,0.321,0,carried,medium,Ropajes rituales y componentes mágicos.
+spartacus,Espartaco,foot,85,3,light,1.5,5,1,10.5,1.0,10.5,28,,,0,0,,0.375,0,carried,medium,Gladiador robusto con protección mínima.
+mongol_explorer,Explorador mongol,mounted_horse,70,10,medium,2.2,0,3,15.2,1.0,15.2,22,steppe_horse,108,9,0,94.2,0.872,0,carried,medium,"Explorador montado con arco, sable y protección lamelar."
+fuma_kotaro,Fūma Kotarō,foot,72,5,light,3,0,4,12,1.0,12.0,22,,,0,0,,0.545,0,carried,medium,Equipo ninja distribuido y herramientas.
+gallowglass_irlandes_hacha,Gallowglass irlandés,foot,90,13,medium,4.5,0,3,20.5,0.98,20.1,21,,,0,0,,0.957,0,carried,medium,Malla y hacha de dos manos.
+geisha_encubierta,Geisha Encubierta,foot,55,3,light,1.2,0,2,6.2,1.0,6.2,16,,,0,0,,0.388,0,carried,medium,Protección oculta y arma ligera.
+genghis_khan,Gengis Kan,mounted_horse,82,20,heavy,3,0,3,26,1.0,26.0,30,steppe_warhorse,115,10,0,118,1.026,1,carried,medium,Se modela montado; armadura lamelar pesada sobre montura robusta.
+gilgamesh,Gilgamesh,foot,110,20,heavy,8,0,4,32,0.95,30.4,42,,,0,0,,0.724,0,carried,medium,Constitución semidivina; maza y armadura pesadas.
+gorthak_hacha_tumulo,"Gorthak, Hacha del Túmulo",foot,90,28,heavy,6,0,4,38,0.9,34.2,38,,,0,0,,0.9,0,carried,medium,No muerto corpulento con armadura pesada y gran hacha.
+solomon_ifrit,Gran Ifrit del Castigo,supernatural,180,0,none,0,0,8,8,1.0,0.0,80,,,0,0,,0.0,0,intrinsic,medium,Cadenas y forma ígnea sobrenatural; sin penalización de carga convencional.
+solomon_jinn,Gran Jinn de la Fortaleza,supernatural,140,30,heavy,0,0,0,30,1.0,0.0,60,,,0,0,,0.0,0,intrinsic,medium,Armadura manifestada/intrínseca: no se trata como carga fatigante convencional.
+guardia_varega_hacha,Guardia varega,foot,92,18,heavy,4.5,0,3,25.5,0.95,24.2,22,,,0,0,,1.1,1,carried,medium,Armadura pesada bien distribuida y hacha danesa.
+guardian,Guardián de piedra,foot,90,30,heavy,3,0,3,36,0.9,32.4,25,,,0,0,,1.296,2,carried,medium,Paladín/guardián con protección integral muy pesada.
+guerrero_franco_hacha,Guerrero franco de hacha,foot,86,12,medium,4,0,3,19,0.98,18.6,24,,,0,0,,0.776,0,carried,medium,Malla media y hacha.
+peregrine_falcon,Halcón Peregrino,flying_beast,1.0,0,none,0,0,0,0,1.0,0.0,1,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+hannibal_barca,Hannibal Barca,mounted_elephant,80,12,medium,1.5,0,2,15.5,1.0,15.5,25,war_elephant,260,20,0,115.5,0.444,0,carried,medium,El icono y MOV se interpretan como desplazamiento con elefante; la masa del jinete no penaliza significativamente a la montura.
+hattori_hanzo,Hattori Hanzō,foot,75,8,medium,4,0,3,15,1.0,15.0,24,,,0,0,,0.625,0,carried,medium,Armadura ninja ligera-media y varias armas.
+armored_man_at_arms,Hombre de armas acorazado,foot,85,28,heavy,2.5,0,2,32.5,0.9,29.2,23,,,0,0,,1.272,2,carried,medium,Armadura completa de placas.
+greek_hoplite,Hoplita griego,foot,82,10,medium,2.5,7,2,21.5,0.98,21.1,20,,,0,0,,1.055,1,carried,medium,"Coraza, lanza y gran aspis."
+mulan,Hua Lan,foot,65,20,heavy,2,0,3,25,0.93,23.2,20,,,0,0,,1.16,1,carried,medium,Armadura completa relativamente ajustada; combatiente muy entrenada.
+dragon_egg,Huevo de Dragón,immobile,40,0,none,0,0,0,0,1.0,0.0,1,,,0,0,,0.0,0,intrinsic,medium,Objeto/compañero inmóvil; la masa no se convierte en penalización de movimiento.
+hector_troy,Héctor de Troya,foot,88,14,medium,3,7,2,26,0.96,25.0,22,,,0,0,,1.136,1,carried,medium,"Panoplia pesada, lanza y escudo."
+hungarian_hussar,Húsar húngaro,mounted_horse,78,10,medium,1.2,0,3,14.2,1.0,14.2,23,cavalry_horse,112,10,0,102.2,0.912,0,carried,medium,Caballería de sable con protección media.
+huscarl_anglosajon_hacha,Húscarl anglosajón,foot,90,14,medium,3.5,0,3,20.5,0.95,19.5,21,,,0,0,,0.929,0,carried,medium,Malla/lamelar y hacha pesada.
+wild_boar,Jabalí Salvaje,beast,90,0,none,0,0,0,0,1.0,0.0,13.5,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+cossack_rider,Jinete cosaco,mounted_horse,78,6,light,4,0,2,12,1.0,12.0,23,cavalry_horse,110,10,0,100,0.909,0,carried,medium,Jinete cosaco con arma larga/sable y protección ligera.
+numidian_javelin_rider,Jinete númida,mounted_horse,68,3,light,5,0,2,10,1.0,10.0,20,light_horse,105,8,0,86,0.819,0,carried,medium,Jinete ligero con jabalinas y escudo.
+joan_of_arc,Juana de Arco,foot,62,24,heavy,1.5,0,5,30.5,0.9,27.4,20,,,0,0,,1.373,2,carried,medium,Placas completas más espada y estandarte.
+julius_caesar,Julio César,foot,78,10,medium,1.5,0,2,13.5,1.0,13.5,22,,,0,0,,0.614,0,carried,medium,Coraza y espada de oficial.
+khalid_ibn_al_walid,Khalid ibn al-Walid,foot,82,10,medium,3,5,3,21,1.0,21.0,26,,,0,0,,0.808,0,carried,medium,"Armadura media, dos hojas y escudo."
+spearman,Lancero solar,foot,82,24,heavy,3,6,2,35,0.9,31.5,24,,,0,0,,1.312,2,carried,medium,"Armadura pesada, lanza y escudo grande."
+roman_legionary,Legionario romano,foot,80,11,medium,1.5,8,3,23.5,1.0,23.5,22,,,0,0,,1.068,1,carried,medium,"Armadura segmentada/malla, gladius y scutum."
+african_lion,León Africano,beast,190,0,none,0,0,0,0,1.0,0.0,28.5,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+leonidas,Leónidas,foot,88,8,medium,4,7,2,21,1.0,21.0,31,,,0,0,,0.677,0,carried,medium,"Guerrero excepcional con lanza, espada y gran escudo."
+lu_bu,Lü Bu,foot,98,26,heavy,5,0,3,34,0.92,31.3,36,,,0,0,,0.869,0,carried,medium,Armadura muy pesada y alabarda; constitución excepcional.
+merlin,Merlín,foot,75,3,light,2,0,5,10,1.0,10.0,15,,,0,0,,0.667,0,carried,medium,"Ropajes, bastón y componentes arcanos."
+miyamoto_musashi,Miyamoto Musashi,foot,82,4,light,2.5,0,1,7.5,1.0,7.5,28,,,0,0,,0.268,0,carried,medium,Ropajes y dos espadas; carga baja para su constitución.
+morgana,Morgana,foot,60,3,light,0.5,0,4,7.5,1.0,7.5,14,,,0,0,,0.536,0,carried,medium,Ropajes y foco arcano.
+morgash_jinete_osario,"Morgash, Jinete del Osario",mounted_undead_horse,90,32,heavy,4,0,4,40,1.0,40.0,40,undead_warhorse,180,12,20,162,0.9,0,carried,medium,"Jinete y montura no muertos; capacidad sobrenatural alta, aunque la masa física existe."
+nasu_no_yoichi,Nasu no Yoichi,foot,70,10,medium,2,0,4,16,1.0,16.0,22,,,0,0,,0.727,0,carried,medium,"Armadura samurái media, arco y flechas."
+porcupine,Puercoespín,beast,18,0,none,0,0,0,0,1.0,0.0,2.6999999999999997,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+ragnar_lodbrok,Ragnar Lodbrok,foot,95,12,medium,3,5,3,23,0.95,21.8,32,,,0,0,,0.683,0,carried,medium,Guerrero robusto con hacha y escudo.
+king_solomon,Rey Salomón,foot,75,3,light,1,0,4,8,1.0,8.0,18,,,0,0,,0.444,0,carried,medium,Ropajes regios y foco/espada; carga ligera.
+richard_lionheart,Richard Corazón de León,foot,92,30,heavy,1.5,8,3,42.5,0.9,38.2,28,,,0,0,,1.366,2,carried,medium,"Placas completas, espada y escudo muy grande."
+white_rhino,Rinoceronte Blanco,beast,2300,0,none,0,0,0,0,1.0,0.0,345.0,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+saboteador_iga,Saboteador de Iga,foot,70,5,light,2,0,4,11,1.0,11.0,20,,,0,0,,0.55,0,carried,medium,"Equipo ninja, herramientas y explosivos ligeros."
+saladin,Saladino,foot,80,6,light,3,0,3,12,1.0,12.0,26,,,0,0,,0.462,0,carried,medium,Protección ligera-media y dos hojas.
+samurai_katana,Samurai de Katana,foot,75,18,heavy,2,0,2,22,0.92,20.2,18,,,0,0,,1.122,1,carried,medium,Armadura samurái completa y daishō.
+samurai_naginata,Samurai de Naginata,foot,77,18,heavy,2.2,0,2,22.2,0.92,20.4,19,,,0,0,,1.074,1,carried,medium,Armadura samurái completa y naginata.
+samurai_yabusame,Samurai Yabusame,mounted_horse,72,16,medium,2.4,0,3,21.4,1.0,21.4,22,warhorse,100,10,0,103.4,1.034,1,carried,medium,Samurái arquero montado con armadura sustancial.
+constrictor_snake,Serpiente Constrictora,beast,8,0,none,0,0,0,0,1.0,0.0,1.2,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+shaka_zulu,Shaka Zulu,foot,82,2,light,2,5,2,11,1.0,11.0,26,,,0,0,,0.423,0,carried,medium,Equipo ligero con lanza y escudo.
+simo_hayha,Simo Häyhä,foot,72,2,light,4,0,8,14,1.03,14.4,22,,,0,0,,0.655,0,carried,medium,"Ropa invernal, rifle, munición y equipo de campaña."
+skipar_del_drakkar,Skipar del Drakkar,foot,84,8,medium,2,5,3,18,1.0,18.0,23,,,0,0,,0.783,0,carried,medium,"Protección media, espada y escudo."
+subotai,Subotai / Subutai,mounted_horse,75,11,medium,3,0,3,17,1.0,17.0,25,steppe_horse,110,9,0,101,0.918,0,carried,medium,Se modela montado por identidad táctica e iconografía.
+sun_tzu,Sun Tzu,foot,68,4,light,1,0,3,8,1.0,8.0,18,,,0,0,,0.444,0,carried,medium,"Ropajes, espada y equipo de mando."
+inland_taipan,Taipán del Interior,beast,1.5,0,none,0,0,0,0,1.0,0.0,1,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+honey_badger,Tejón Mielero,beast,12,0,none,0,0,0,0,1.0,0.0,1.7999999999999998,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+bengal_tiger,Tigre de Bengala,beast,220,0,none,0,0,0,0,1.0,0.0,33.0,,,0,0,,0.0,0,intrinsic,medium,"Bestia sin equipo: su masa corporal pertenece a su locomoción natural, no a la carga."
+tomoe_gozen,Tomoe Gozen,mounted_horse,68,18,heavy,2.5,0,2,22.5,1.0,22.5,24,warhorse,118,10,0,100.5,0.852,0,carried,medium,Jinete explícita por su habilidad; armadura samurái pesada.
+ulfhednar,Ulfhednar,foot,88,4,light,3,0,2,9,1.0,9.0,28,,,0,0,,0.321,0,carried,medium,Pieles y hachas arrojadizas.
+ulysses,Ulises / Odiseo,foot,80,10,medium,3,6,2,21,1.0,21.0,28,,,0,0,,0.75,0,carried,medium,"Panoplia moderada, lanza y escudo."
+vorthalix_oraculo_osario,"Vorthalix, Oráculo del Osario",foot,72,24,heavy,3,0,4,31,0.9,27.9,30,,,0,0,,0.93,0,carried,medium,"No muerto con placas, túnicas y báculo."
+wallace,William Wallace,foot,90,14,medium,4,0,3,21,0.95,19.9,28,,,0,0,,0.713,0,carried,medium,Protección media-pesada y gran espada.
+xulthar_ojo_sepulcro,"Xulthar, Ojo del Sepulcro",foot,68,12,medium,2,0,4,18,0.95,17.1,28,,,0,0,,0.611,0,carried,medium,Arquero no muerto con protección media.
+yi_sun_sin,Yi Sun-sin,foot,75,7,light,1.5,0,3,11.5,1.0,11.5,22,,,0,0,,0.523,0,carried,medium,Protección de oficial y espada.
+zyrek_sombra_cripta,"Zyrek, Sombra de la Cripta",foot,70,16,medium,3,0,3,22,0.94,20.7,32,,,0,0,,0.646,0,carried,medium,Asesino no muerto con armadura media-pesada.
