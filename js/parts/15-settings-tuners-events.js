@@ -2212,7 +2212,9 @@ async function claimHallvallaMineRewards(){
 
 /* ============================================================
    MINA · RECOMPENSAS · RULETA PERSONAL
-   - 50 resultados por ciclo: 20 positivos / 30 negativos.
+   - 50 resultados por ciclo: 35 positivos / 5 neutros / 10 negativos.
+   - Los resultados negativos son deliberadamente leves: no quitan gemas del
+     perfil, tiros gratis ni encarecen artificialmente los tiros pagados.
    - Sin reemplazo dentro de la rueda actual.
    - 1 tiro gratis diario, acumulable hasta 30 (hora servidor).
    - Tiros pagados: 100, 250, 400... (+150 por tiro pagado).
@@ -2220,6 +2222,7 @@ async function claimHallvallaMineRewards(){
    - El premio mayor existe internamente, pero no se anuncia en HUD.
    ============================================================ */
 const HALLVALLA_MINE_WHEEL_STORAGE_KEY="hallvalla_mine_rewards_wheel_v1";
+const HALLVALLA_MINE_WHEEL_STATE_VERSION=2;
 const HALLVALLA_MINE_WHEEL_DAY_MS=24*60*60*1000;
 const HALLVALLA_MINE_WHEEL_CYCLE_MS=30*HALLVALLA_MINE_WHEEL_DAY_MS;
 const HALLVALLA_MINE_WHEEL_FREE_MAX=30;
@@ -2247,43 +2250,59 @@ const HALLVALLA_MINE_WHEEL_POSITIVE=Object.freeze([
   Object.freeze({id:"p_gold_300",kind:"positive",name:"Tesoro Minero",effect:"gold",amount:300}),
   Object.freeze({id:"p_fragments_75",kind:"positive",name:"Fragmentos Antiguos",effect:"fragments",amount:75}),
   Object.freeze({id:"p_free_1",kind:"positive",name:"Segundo Intento",effect:"free_spin",amount:1}),
-  Object.freeze({id:"p_free_3",kind:"positive",name:"Racha de Fortuna",effect:"free_spin",amount:3})
+  Object.freeze({id:"p_free_3",kind:"positive",name:"Racha de Fortuna",effect:"free_spin",amount:3}),
+  Object.freeze({id:"p_gems_10",kind:"positive",name:"Cristales Encontrados",effect:"gems",amount:10}),
+  Object.freeze({id:"p_gems_15",kind:"positive",name:"Bolsillo de Cristales",effect:"gems",amount:15}),
+  Object.freeze({id:"p_gold_100",kind:"positive",name:"Hallazgo de Oro",effect:"gold",amount:100}),
+  Object.freeze({id:"p_gold_150",kind:"positive",name:"Caja de Oro",effect:"gold",amount:150}),
+  Object.freeze({id:"p_gold_200",kind:"positive",name:"Reserva de Oro",effect:"gold",amount:200}),
+  Object.freeze({id:"p_fragments_25",kind:"positive",name:"Fragmentos Útiles",effect:"fragments",amount:25}),
+  Object.freeze({id:"p_fragments_40",kind:"positive",name:"Lote de Fragmentos",effect:"fragments",amount:40}),
+  Object.freeze({id:"p_free_1b",kind:"positive",name:"Otra Oportunidad",effect:"free_spin",amount:1}),
+  Object.freeze({id:"p_advance_slot_3",kind:"positive",name:"Empuje de Turno",effect:"advance_slot",hours:3}),
+  Object.freeze({id:"p_advance_all_3",kind:"positive",name:"Buen Ritmo Minero",effect:"advance_all",hours:3}),
+  Object.freeze({id:"p_cycle_slot_1b",kind:"positive",name:"Ciclo Extra",effect:"cycles_slot",amount:1}),
+  Object.freeze({id:"p_cycle_all_1b",kind:"positive",name:"Ciclo de Bonanza",effect:"cycles_all",amount:1}),
+  Object.freeze({id:"p_half_slot_b",kind:"positive",name:"Golpe de Suerte",effect:"half_slot"}),
+  Object.freeze({id:"p_gems_20",kind:"positive",name:"Veta de Cristal",effect:"gems",amount:20}),
+  Object.freeze({id:"p_fragments_50",kind:"positive",name:"Alijo de Fragmentos",effect:"fragments",amount:50})
+]);
+const HALLVALLA_MINE_WHEEL_NEUTRAL=Object.freeze([
+  Object.freeze({id:"q_empty_1",kind:"neutral",name:"Piedra Común",effect:"nothing"}),
+  Object.freeze({id:"q_empty_2",kind:"neutral",name:"Galería Tranquila",effect:"nothing"}),
+  Object.freeze({id:"q_empty_3",kind:"neutral",name:"Veta Dormida",effect:"nothing"}),
+  Object.freeze({id:"q_empty_4",kind:"neutral",name:"Polvo de Mina",effect:"nothing"}),
+  Object.freeze({id:"q_empty_5",kind:"neutral",name:"Sin Hallazgo",effect:"nothing"})
 ]);
 const HALLVALLA_MINE_WHEEL_NEGATIVE=Object.freeze([
   Object.freeze({id:"n_minegem_1a",kind:"negative",name:"Bolsa Rota",effect:"mine_gems",amount:1}),
   Object.freeze({id:"n_gold_25",kind:"negative",name:"Herramienta Rota",effect:"gold_loss",amount:25}),
-  Object.freeze({id:"n_empty_1",kind:"negative",name:"Piedra Inútil",effect:"nothing"}),
   Object.freeze({id:"n_minegem_1b",kind:"negative",name:"Cristal Fracturado",effect:"mine_gems",amount:1}),
   Object.freeze({id:"n_gold_40",kind:"negative",name:"Repuesto Menor",effect:"gold_loss",amount:40}),
   Object.freeze({id:"n_frag_10",kind:"negative",name:"Fragmentos Dañados",effect:"fragments_loss",amount:10}),
   Object.freeze({id:"n_minegem_2a",kind:"negative",name:"Carga Perdida",effect:"mine_gems",amount:2}),
   Object.freeze({id:"n_gold_50",kind:"negative",name:"Mantenimiento Forzado",effect:"gold_loss",amount:50}),
-  Object.freeze({id:"n_free_1",kind:"negative",name:"Mala Fortuna",effect:"free_loss",amount:1}),
   Object.freeze({id:"n_minegem_2b",kind:"negative",name:"Carretilla Volcada",effect:"mine_gems",amount:2}),
   Object.freeze({id:"n_gold_75",kind:"negative",name:"Suministros Perdidos",effect:"gold_loss",amount:75}),
-  Object.freeze({id:"n_frag_20",kind:"negative",name:"Caja Extraviada",effect:"fragments_loss",amount:20}),
-  Object.freeze({id:"n_minegem_3",kind:"negative",name:"Veta Inestable",effect:"mine_gems",amount:3}),
-  Object.freeze({id:"n_gold_100",kind:"negative",name:"Equipo Averiado",effect:"gold_loss",amount:100}),
-  Object.freeze({id:"n_empty_2",kind:"negative",name:"Galería Vacía",effect:"nothing"}),
-  Object.freeze({id:"n_gems_1",kind:"negative",name:"Cristal Perdido",effect:"gem_loss",amount:1}),
-  Object.freeze({id:"n_gold_125",kind:"negative",name:"Accidente Menor",effect:"gold_loss",amount:125}),
-  Object.freeze({id:"n_frag_30",kind:"negative",name:"Material Contaminado",effect:"fragments_loss",amount:30}),
-  Object.freeze({id:"n_gems_2",kind:"negative",name:"Robo Menor",effect:"gem_loss",amount:2}),
-  Object.freeze({id:"n_gold_150",kind:"negative",name:"Avería de Equipo",effect:"gold_loss",amount:150}),
-  Object.freeze({id:"n_paid_1a",kind:"negative",name:"Impuesto de Fortuna",effect:"paid_penalty",amount:1}),
-  Object.freeze({id:"n_gems_3",kind:"negative",name:"Mal Cargamento",effect:"gem_loss",amount:3}),
-  Object.freeze({id:"n_gold_200",kind:"negative",name:"Reparación Costosa",effect:"gold_loss",amount:200}),
-  Object.freeze({id:"n_frag_40",kind:"negative",name:"Derrame de Material",effect:"fragments_loss",amount:40}),
-  Object.freeze({id:"n_free_2",kind:"negative",name:"Racha Perdida",effect:"free_loss",amount:2}),
-  Object.freeze({id:"n_paid_1b",kind:"negative",name:"Tasa de Riesgo",effect:"paid_penalty",amount:1}),
-  Object.freeze({id:"n_frag_50",kind:"negative",name:"Lote Dañado",effect:"fragments_loss",amount:50}),
-  Object.freeze({id:"n_paid_2",kind:"negative",name:"Mala Racha",effect:"paid_penalty",amount:2}),
-  Object.freeze({id:"n_empty_3",kind:"negative",name:"Polvo y Nada Más",effect:"nothing"}),
-  Object.freeze({id:"n_empty_4",kind:"negative",name:"Filón Agotado",effect:"nothing"})
+  Object.freeze({id:"n_frag_20",kind:"negative",name:"Caja Extraviada",effect:"fragments_loss",amount:20})
 ]);
 const HALLVALLA_MINE_WHEEL_OUTCOMES=Object.freeze((()=>{
   const list=[];
-  for(let i=0;i<10;i++)list.push(HALLVALLA_MINE_WHEEL_POSITIVE[i*2],HALLVALLA_MINE_WHEEL_NEGATIVE[i*3],HALLVALLA_MINE_WHEEL_POSITIVE[i*2+1],HALLVALLA_MINE_WHEEL_NEGATIVE[i*3+1],HALLVALLA_MINE_WHEEL_NEGATIVE[i*3+2]);
+  for(let i=0;i<5;i++){
+    const p=i*7,n=i*2,q=i;
+    list.push(
+      HALLVALLA_MINE_WHEEL_POSITIVE[p],
+      HALLVALLA_MINE_WHEEL_NEGATIVE[n],
+      HALLVALLA_MINE_WHEEL_POSITIVE[p+1],
+      HALLVALLA_MINE_WHEEL_NEUTRAL[q],
+      HALLVALLA_MINE_WHEEL_POSITIVE[p+2],
+      HALLVALLA_MINE_WHEEL_POSITIVE[p+3],
+      HALLVALLA_MINE_WHEEL_NEGATIVE[n+1],
+      HALLVALLA_MINE_WHEEL_POSITIVE[p+4],
+      HALLVALLA_MINE_WHEEL_POSITIVE[p+5],
+      HALLVALLA_MINE_WHEEL_POSITIVE[p+6]
+    );
+  }
   return list;
 })());
 const HALLVALLA_MINE_WHEEL_BY_ID=new Map(HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>[def.id,def]));
@@ -2293,20 +2312,21 @@ let hallvallaMineWheelRemoteSyncPromise=null;
 
 function getHallvallaMineWheelDay(now=getHallvallaMineNow()){return Math.floor(Math.max(0,Number(now||0))/HALLVALLA_MINE_WHEEL_DAY_MS);}
 function createHallvallaMineWheelState(now=getHallvallaMineNow()){
-  return {version:1,cycleEndsAt:now+HALLVALLA_MINE_WHEEL_CYCLE_MS,freeSpins:1,lastGrantDay:getHallvallaMineWheelDay(now),paidSpins:0,spinsThisCycle:0,jackpot:HALLVALLA_MINE_WHEEL_JACKPOT_BASE,jackpotWon:false,remaining:HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>def.id),lastResult:null};
+  return {version:HALLVALLA_MINE_WHEEL_STATE_VERSION,cycleEndsAt:now+HALLVALLA_MINE_WHEEL_CYCLE_MS,freeSpins:1,lastGrantDay:getHallvallaMineWheelDay(now),paidSpins:0,spinsThisCycle:0,jackpot:HALLVALLA_MINE_WHEEL_JACKPOT_BASE,jackpotWon:false,remaining:HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>def.id),lastResult:null};
 }
 function normalizeHallvallaMineWheelState(raw={},now=getHallvallaMineNow()){
   const fallback=createHallvallaMineWheelState(now);
-  const rawRemaining=Array.isArray(raw?.remaining)?raw.remaining:(raw?.remaining&&typeof raw.remaining==="object"?Object.keys(raw.remaining).sort((a,b)=>Number(a)-Number(b)).map(k=>raw.remaining[k]):fallback.remaining);
+  const legacy=Number(raw?.version||0)!==HALLVALLA_MINE_WHEEL_STATE_VERSION;
+  const rawRemaining=legacy?fallback.remaining:(Array.isArray(raw?.remaining)?raw.remaining:(raw?.remaining&&typeof raw.remaining==="object"?Object.keys(raw.remaining).sort((a,b)=>Number(a)-Number(b)).map(k=>raw.remaining[k]):fallback.remaining));
   const seen=new Set();
   const remaining=rawRemaining.map(v=>String(v||"")).filter(id=>HALLVALLA_MINE_WHEEL_BY_ID.has(id)&&!seen.has(id)&&(seen.add(id),true));
   return {
-    version:1,
+    version:HALLVALLA_MINE_WHEEL_STATE_VERSION,
     cycleEndsAt:Math.max(0,Number(raw?.cycleEndsAt||fallback.cycleEndsAt)),
     freeSpins:Math.max(0,Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,Math.floor(Number(raw?.freeSpins??fallback.freeSpins)||0))),
     lastGrantDay:Math.max(0,Math.floor(Number(raw?.lastGrantDay??fallback.lastGrantDay)||0)),
-    paidSpins:Math.max(0,Math.floor(Number(raw?.paidSpins||0))),
-    spinsThisCycle:Math.max(0,Math.floor(Number(raw?.spinsThisCycle||0))),
+    paidSpins:legacy?0:Math.max(0,Math.floor(Number(raw?.paidSpins||0))),
+    spinsThisCycle:legacy?0:Math.max(0,Math.floor(Number(raw?.spinsThisCycle||0))),
     jackpot:Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Math.floor(Number(raw?.jackpot||HALLVALLA_MINE_WHEEL_JACKPOT_BASE))),
     jackpotWon:raw?.jackpotWon===true,
     remaining,
@@ -2351,7 +2371,9 @@ function buildHallvallaMineWheelGradient(){
   const step=360/HALLVALLA_MINE_WHEEL_OUTCOMES.length;
   return `conic-gradient(${HALLVALLA_MINE_WHEEL_OUTCOMES.map((def,index)=>{
     const a=(index*step).toFixed(3),b=((index+1)*step).toFixed(3);
-    const tone=def.kind==="positive"?(index%2?"#2ebd85":"#1f9470"):(index%2?"#8f3340":"#b04444");
+    const tone=def.kind==="positive"
+      ?(index%2?"#2ebd85":"#1f9470")
+      :(def.kind==="neutral"?(index%2?"#8b7b55":"#736747"):(index%2?"#8f3340":"#b04444"));
     return `${tone} ${a}deg ${b}deg`;
   }).join(",")})`;
 }
@@ -2508,6 +2530,7 @@ function applyHallvallaMineWheelOutcome(def,state){
   if(def.effect==="free_spin")return `Ganaste ${Math.max(1,Number(def.amount||1))} tiro${Number(def.amount||1)===1?"":"s"} gratuito${Number(def.amount||1)===1?"":"s"}.`;
   if(def.effect==="free_loss")return `Perdiste hasta ${Math.max(1,Number(def.amount||1))} tiro${Number(def.amount||1)===1?"":"s"} gratuito${Number(def.amount||1)===1?"":"s"} acumulado${Number(def.amount||1)===1?"":"s"}.`;
   if(def.effect==="paid_penalty")return `Mala racha: el contador de tiros pagados avanzó ${Math.max(1,Number(def.amount||1))}.`;
+  if(def.kind==="neutral")return "No ganaste nada, pero tampoco perdiste recursos.";
   return "No obtuviste ningún premio esta vez.";
 }
 function refreshHallvallaMineWheelCurrencies(){

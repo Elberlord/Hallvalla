@@ -1,0 +1,17 @@
+HallValla · Ajuste de balance de la Rueda de la Mina · build 20260908.5
+
+Cambio principal
+- Antes: 20 resultados positivos / 30 negativos (40% / 60%).
+- Ahora: 35 positivos / 5 neutros / 10 negativos (70% / 10% / 20%).
+
+Criterio
+- La ruleta debe sentirse como una recompensa y una tentación divertida, no como un mecanismo que castiga al jugador la mayoría de las veces.
+- Se eliminaron de la rueda nueva los castigos que quitaban gemas del perfil, eliminaban tiros gratis o adelantaban el contador de tiros pagados.
+- Los 10 resultados negativos restantes son pérdidas leves: pequeñas cantidades de producción de mina, oro o fragmentos.
+- Los 5 resultados neutros no entregan premio, pero tampoco quitan recursos.
+- Se añadieron 15 premios positivos nuevos de nivel bajo/medio para completar la distribución 35/5/10 sin inflar solamente los premios máximos.
+- El Premio Mayor y los premios fuertes existentes se mantienen.
+
+Migración
+- Estado de ruleta subido a versión 2.
+- Al cargar una rueda antigua, se conserva el saldo de tiros gratis y el jackpot, pero se reinicia la bolsa de resultados al nuevo reparto y se limpia el contador de tiros pagados de la rueda anterior.

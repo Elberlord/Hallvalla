@@ -47,28 +47,29 @@
   ];
 
   const PRESET_TARGETS={
-    "battle.player.hud":{x:-3.03,y:-1.24,scale:1,visible:true},
+    "battle.player.hud":{x:1,y:-1,scale:.88,visible:true},
     "battle.player.name":{x:46.43,y:2.47,scale:1,visible:true},
     "battle.player.turn":{x:-43.41,y:3.71,scale:1,visible:true},
     "battle.player.life":{x:3.03,y:-14.84,scale:.9,visible:true},
     "battle.player.hand":{x:0,y:-16.07,scale:.89,visible:true},
     "battle.player.deck":{x:2.02,y:-16.07,scale:.9,visible:true},
-    "battle.player.honor":{x:188,y:28,scale:.92,visible:true},
+    "battle.player.honor":{x:1,y:28,scale:.92,visible:true},
     "battle.player.honorText":{x:0,y:6,scale:.72,visible:true},
+    "battle.rival.hud":{x:0,y:0,scale:.88,visible:true},
     "battle.rival.turn":{x:6.06,y:2.47,scale:.98,visible:true},
     "battle.rival.life":{x:2.02,y:-17.31,scale:.9,visible:true},
     "battle.rival.hand":{x:3.03,y:-16.07,scale:.89,visible:true},
     "battle.rival.deck":{x:4.04,y:-14.84,scale:.89,visible:true},
-    "battle.rival.honor":{x:-211,y:18,scale:.72,visible:true},
+    "battle.rival.honor":{x:3,y:18,scale:.72,visible:true},
     "battle.rival.honorText":{x:0,y:6,scale:.89,visible:true},
-    "battle.clock.turn":{x:93.88,y:-223.77,scale:1,visible:true},
+    "battle.clock.turn":{x:-95,y:-314,scale:1,visible:true},
     "battle.tool.settings":{x:-27.24,y:107.72,scale:.8,visible:true},
     "battle.tool.actions":{x:9.42,y:36.32,scale:.65,visible:true},
-    "battle.action.hand":{x:-13.13,y:-2.47,scale:.8,visible:true},
-    "battle.action.cancel":{x:0,y:0,scale:.8,visible:true},
-    "battle.action.next":{x:-296.78,y:160.72,scale:.8,visible:true},
+    "battle.action.hand":{x:168.57,y:-82.83,scale:.8,visible:true},
+    "battle.action.cancel":{x:147.38,y:-81.6,scale:.8,visible:true},
+    "battle.action.next":{x:-234.2,y:-81.6,scale:.8,visible:true},
     "battle.spellbook":{x:0,y:0,scale:.8,visible:true},
-    "battle.history":{x:11,y:3,scale:.7,visible:true},
+    "battle.history":{x:11,y:3,scale:.5,visible:true},
     "battle.context":{x:0,y:0,scale:.8,visible:true}
   };
 

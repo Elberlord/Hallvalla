@@ -25944,3 +25944,9 @@ body.hv-dragging-board #grid{
     max-width:64px!important;
   }
 }
+
+/* 20260908.5 · Ruleta de Mina: resultado neutro (sin premio ni pérdida). */
+.mine-wheel-result.neutral{
+  border-color:rgba(206,183,120,.42);
+  box-shadow:0 10px 24px rgba(0,0,0,.30),0 0 20px rgba(206,183,120,.10);
+}
