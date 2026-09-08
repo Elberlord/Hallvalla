@@ -1,0 +1,22 @@
+HallValla 20260908.8 · PRUEBA A/B DE FIGURAS LIGERAS EN CAMPO
+
+BASE: 20260908.6 estable.
+No incluye la rama experimental de pagos 20260908.7.
+
+CAMBIO ÚNICO DE RENDIMIENTO:
+- Las unidades colocadas en el tablero cargan assets/field_figures_light/.
+- Resolución objetivo: 384x576 px (una figura cuadrada queda 384x384).
+- Las 100 figuras originales permanecen intactas en assets/field_figures/.
+- DET, editor y otras vistas mantienen las rutas originales.
+- Si una figura ligera falta, el runtime cae automáticamente a la original.
+- No se cambian tamaño visual, hitboxes, reglas, estadísticas, timers ni Firebase.
+
+MEDICIÓN DEL PAQUETE DE FIGURAS:
+- Originales: ~53.45 MiB en disco.
+- Ligeras: ~4.05 MiB en disco.
+- Reducción de transferencia del set: ~92.4%.
+- Memoria RGBA teórica del set completo: ~600 MiB -> ~84 MiB.
+- Reducción teórica de memoria decodificada: ~86%.
+
+OBJETIVO:
+Comparar tirones, fluidez de drag/movimiento y estabilidad con varias unidades simultáneas.
