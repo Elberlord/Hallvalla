@@ -1,16 +1,15 @@
 HallValla v8 Modular · Build actual
 ===================================
 
-Estado del paquete: MOV CANÓNICO · LOCOMOCIÓN + CARGA (2026-09-08)
+Estado del paquete: AT HUMANO CANÓNICO (2026-09-08)
 
 Estado actual verificado
 ------------------------
-- MOV natural y penalización de carga quedan separados.
-- Humanos/humanoides a pie parten de MOV 2; el peso puede reducirlos hasta mínimo 1.
-- Caballos parten de MOV 4 y aplican su carga de jinete/equipo.
-- Elefante Africano y Hannibal quedan en base MOV 2; Hannibal no recibe penalización con su carga actual.
-- Bestias terrestres, aves y dragones usan la escala canónica documentada en `docs/MOVEMENT_CANON_20260908_14.txt`.
-- El antiguo bloqueo universal de arqueros a MOV 1 deja de ser la fuente de movimiento.
+- Se normaliza exclusivamente el AT base humano/humaniforme en escala 1-6 según poder destructivo del arma.
+- AT 6 es el techo base; efectos y habilidades pueden superar temporalmente ese valor.
+- No se modifican HP, GD, DX, AG, MOV, RG, coste ni habilidades en esta pasada.
+- Bestias, dragones, no-muertos y entidades de Salomón conservan su AT previo.
+- Ver docs/HUMAN_ATTACK_CANON_20260908_15.txt y .csv.
 
 Historial acumulado
 ===================

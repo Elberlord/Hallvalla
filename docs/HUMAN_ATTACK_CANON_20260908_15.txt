@@ -1,0 +1,22 @@
+HALLVALLA · AT HUMANO CANÓNICO · 20260908.15
+================================================
+
+Objetivo
+--------
+Normalizar el AT base de unidades humanas/humaniformes según el poder destructivo de un impacto limpio con su arma, sin mezclar precisión, evasión, armadura o resistencia corporal.
+
+Escala base
+-----------
+AT 1 · ataque mínimo / soporte.
+AT 2 · daga, arma ligera o ataque de baja potencia.
+AT 3 · arma militar estándar / arco o jabalina común.
+AT 4 · arma o impacto militar fuerte.
+AT 5 · arma pesada o golpe de gran poder destructivo.
+AT 6 · techo humano/humaniforme para poder destructivo base.
+
+Regla importante
+-----------------
+El techo 6 corresponde al AT BASE. Habilidades, críticos, cargas, auras y otros efectos de combate continúan pudiendo aumentar el AT efectivo temporalmente.
+
+Esta pasada NO modifica HP, GD, DX, AG, MOV, RG, coste ni habilidades.
+Bestias, dragones, no-muertos y entidades de Salomón quedan fuera de esta normalización y se revisarán en sus propias escalas.
