@@ -1,0 +1,17 @@
+HallValla · Buffs canónicos de líder por tier · 2026-09-08
+
+SOLO cambia el buff de progresión por tier. Las habilidades y efectos propios de los líderes permanecen separados e intactos. Vínculo Arcano del Hechicero se conserva.
+
+Tier 1: +2/+2
+Tier 2: +4/+4
+Tier 3: +6/+6
+Tier 4: +8/+8
+
+Guerrero -> Infantería pesada: GD + DX
+Arquero -> Arqueras: AT + DX (sin RG por tier)
+Caudillo del Hacha -> Hachas: AT + DX
+Caballería -> Caballería: DX + AG
+Asesino -> Asesinos: AT + AG
+Beast Master -> Bestias: DX + AG
+
+Hechicero: +2/+4/+6/+8 al daño de magias según tier. Ya no reduce el coste de las magias y el tier no aumenta curación, buffs ni escudos.

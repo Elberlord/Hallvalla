@@ -1,0 +1,7 @@
+HallValla 20260908.9 · Scroll de batalla
+
+- El viewport del navegador queda bloqueado durante combate.
+- Se eliminan las barras vertical y horizontal de la página mientras #gameShell está visible.
+- La mano (#handDrawer .hand-row) conserva exclusivamente su scroll horizontal.
+- Fuera de batalla, menús y pantallas recuperan su scroll normal.
+- Basado en 20260908.8 (figuras ligeras).

@@ -654,12 +654,12 @@ function getLeaderBonus(u){
   const type=getLeaderTypeForOwner(u.owner);
   const tier=getLeaderBuffTierForOwner(u.owner);
   const bonus={atk:0,hp:0,guard:0,dex:0,agi:0,mov:0,range:0};
-  if(type==="warrior"&&isHeavyInfantryUnit(u)){const b=LEADER_BUFF_TABLE.warrior[tier]||LEADER_BUFF_TABLE.warrior[1];bonus.hp+=(b.hp||0);bonus.guard+=(b.guard||0);}
-  if(type==="archer"&&isArcherUnit(u)){const b=LEADER_BUFF_TABLE.archer[tier]||LEADER_BUFF_TABLE.archer[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);bonus.range+=(b.range||0);}
+  if(type==="warrior"&&isHeavyInfantryUnit(u)){const b=LEADER_BUFF_TABLE.warrior[tier]||LEADER_BUFF_TABLE.warrior[1];bonus.guard+=(b.guard||0);bonus.dex+=(b.dex||0);}
+  if(type==="archer"&&isArcherUnit(u)){const b=LEADER_BUFF_TABLE.archer[tier]||LEADER_BUFF_TABLE.archer[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
   if(type==="axe"&&isAxeUnitCardLike(u)){const b=LEADER_BUFF_TABLE.axe[tier]||LEADER_BUFF_TABLE.axe[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
-  if(type==="cavalry"&&isLightCavalryUnit(u)){const b=LEADER_BUFF_TABLE.cavalry[tier]||LEADER_BUFF_TABLE.cavalry[1];bonus.atk+=(b.atk||0);bonus.agi+=(b.agi||0);bonus.guard+=(b.guard||0);}
-  if(type==="assassin"&&isAssassinUnit(u)){const b=LEADER_BUFF_TABLE.assassin[tier]||LEADER_BUFF_TABLE.assassin[1];bonus.agi+=(b.agi||0);bonus.dex+=(b.dex||0);bonus.atk+=(b.atk||0);}
-  if(type==="beastmaster"&&isBeastUnit(u)){const b=LEADER_BUFF_TABLE.beastmaster[tier]||LEADER_BUFF_TABLE.beastmaster[1];bonus.atk+=(b.atk||0);bonus.agi+=(b.agi||0);}
+  if(type==="cavalry"&&isLightCavalryUnit(u)){const b=LEADER_BUFF_TABLE.cavalry[tier]||LEADER_BUFF_TABLE.cavalry[1];bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);}
+  if(type==="assassin"&&isAssassinUnit(u)){const b=LEADER_BUFF_TABLE.assassin[tier]||LEADER_BUFF_TABLE.assassin[1];bonus.atk+=(b.atk||0);bonus.agi+=(b.agi||0);}
+  if(type==="beastmaster"&&isBeastUnit(u)){const b=LEADER_BUFF_TABLE.beastmaster[tier]||LEADER_BUFF_TABLE.beastmaster[1];bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);}
   return bonus;
 }
 function syncLeaderHpBonuses(units){
@@ -685,21 +685,15 @@ function resolveCardCostOwner(card,player){
 function getCardCostBreakdown(card,player=card?.owner,units=publicState?.units||[]){
   const owner=resolveCardCostOwner(card,player);
   const base=Math.max(0,Number(card?.cost||0));
-  const mageBuff=getMageLeaderBuff(owner);
-  const mageReduction=getMageLeaderTypeForPlayer(owner)==="mage"&&card?.type==="spell"
-    ? Math.min(base,Math.max(0,Number(mageBuff.costReduction||0)))
-    : 0;
   const sabotageStacks=card?.type==="unit"?countEnemySaboteadoresIga(owner,units):0;
   const sabotagePenalty=sabotageStacks*3;
-  const afterLeader=Math.max(0,base-mageReduction);
-  const effective=Math.max(0,afterLeader+sabotagePenalty);
-  return{owner,base,mageReduction,sabotageStacks,sabotagePenalty,effective};
+  const effective=Math.max(0,base+sabotagePenalty);
+  return{owner,base,sabotageStacks,sabotagePenalty,effective};
 }
 function effectiveCardCost(card,player=card?.owner){return getCardCostBreakdown(card,player,publicState?.units||[]).effective}
 function getCardCostDisplayValue(card,player=card?.owner){
   const info=getCardCostBreakdown(card,player,publicState?.units||[]);
   if(info.sabotageStacks>0)return `${info.effective} (${info.base}+${info.sabotagePenalty})`;
-  if(info.mageReduction>0)return `${info.effective} (${info.base}-${info.mageReduction})`;
   return String(info.effective);
 }
 function getCardCostExplanation(card,player=card?.owner,units=publicState?.units||[]){
@@ -709,7 +703,6 @@ function getCardCostExplanation(card,player=card?.owner,units=publicState?.units
     const plural=info.sabotageStacks===1?"Saboteador enemigo":"Saboteadores enemigos";
     return `Costo real: ${info.effective} ${resource} = base ${info.base} +${info.sabotagePenalty} por Sabotaje (${info.sabotageStacks} ${plural}, +3 cada uno).`;
   }
-  if(info.mageReduction>0)return `Costo real: ${info.effective} ${resource} = base ${info.base} -${info.mageReduction} por el líder Hechicero.`;
   return `Costo real: ${info.effective} ${resource}.`;
 }
 function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units||[]){
@@ -718,7 +711,7 @@ function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units|
   if(info.sabotageStacks>0)return `paga ${info.effective} ${resource} (base ${info.base} +${info.sabotagePenalty} por Sabotaje de ${info.sabotageStacks} Saboteador${info.sabotageStacks===1?"":"es"}, +3 cada uno)`;
   return `paga ${info.effective} ${resource}`;
 }
-function effectiveCardValue(card,field){const mageBuff=getMageLeaderBuff(card?.owner);const abilityBonus=0;return getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&typeof card?.[field]==="number"?card[field]+(mageBuff.effectBonus||0)+abilityBonus:(card?.[field]||0)+abilityBonus}
+function effectiveCardValue(card,field){const mageBuff=getMageLeaderBuff(card?.owner);const abilityBonus=0;const mageDamageBonus=getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&field==="damage"&&typeof card?.damage==="number"?Math.max(0,Number(mageBuff.damageBonus||0)):0;return (card?.[field]||0)+mageDamageBonus+abilityBonus}
 function unitsInPlay(units=publicState?.units||[]){return units||[]}
 function ownerHasUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).some(u=>u.owner===owner&&u.key===key&&u.hp>0)}
 function getMerlinDrawBonus(owner,units=publicState?.units||[]){return ownerHasUnit(owner,"merlin",units)?1:0}

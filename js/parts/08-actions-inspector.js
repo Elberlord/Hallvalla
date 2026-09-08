@@ -469,7 +469,7 @@ function weaponGuideData(entity){
   if(entity?.leader){
     const lt=String(entity.leaderType||"").toLowerCase();
     if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
-    if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: controla el ritmo de las magias.",formula:"Ventaja: reduce costos y aumenta efectos mágicos por nivel de buff. Su arma real es acelerar el spellbook.",example:"Un hechicero fuerte convierte magias baratas en cambios grandes de tablero."};
+    if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: amplifica el daño de sus magias.",formula:"Ventaja de tier: +2/+4/+6/+8 al daño de las magias. El tier ya no reduce su coste. Sus efectos propios se resuelven por separado.",example:"Una magia de daño 2 pasa a daño 6 con Tier 2 (+4), manteniendo su coste original."};
     return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
   }
   if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Espada de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: aunque pertenece a la clase táctica Caballería, esta unidad ataca con espada. Si se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación. Cuidado con lanceros: son su respuesta natural."};
@@ -613,7 +613,7 @@ function getLeaderExactEffectGuideData(entity){
       target:"Infantería pesada aliada",
       affected:"Afecta a unidades aliadas que el sistema reconoce como infantería pesada: Guardián de piedra, Lancero solar y otras cartas marcadas como guardianes, paladines, knights o infantería pesada.",
       notAffected:"No afecta arqueras, magias, caballería ligera, asesinos, bestias ni al propio líder.",
-      buff:`+${buff.hp||0} Vida máxima y +${buff.guard||0} Guardia base a cada infantería pesada aliada. La Vida extra se añade al entrar o al sincronizar el campo; la Guardia se usa como reserva de armadura del turno.`,
+      buff:`+${buff.guard||0} GD y +${buff.dex||0} DX a cada infantería pesada aliada. El Guerrero aumenta moral, disciplina y capacidad defensiva; el buff de tier ya no aumenta Vida.`,
       passive:`Muralla de unidades: mientras este líder tenga al menos una unidad aliada viva en el campo, los ataques de unidades enemigas no bajan la Vida del líder. La Guardia puede recibir daño, pero la Vida queda protegida contra ataques de unidades. Hechizos, trampas y efectos de líderes sí pueden dañar al líder normalmente.`,
       example:"Si el Guerrero tiene un Guardián aliado vivo y una unidad enemiga le pega al líder, ese ataque no baja la Vida del líder. Si no queda ninguna unidad aliada viva, la protección se apaga."
     },
@@ -621,17 +621,17 @@ function getLeaderExactEffectGuideData(entity){
       target:"Arqueras aliadas",
       affected:"Afecta a unidades aliadas reconocidas como arqueras, principalmente Arquera del desierto y cartas cuyo nombre/texto/clase indiquen arquera, arquero, arco, flecha o archer.",
       notAffected:"No afecta infantería pesada, caballería ligera, asesinos, bestias, magias ni al propio líder.",
-      buff:`+${buff.atk||0} AT, +${buff.dex||0} DX, +${buff.agi||0} AGI${buff.range?` y +${buff.range} RG`:""} a cada arquera aliada.`,
-      passive:"El bonus mejora disparo, alcance y presión táctica. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
+      buff:`+${buff.atk||0} AT y +${buff.dex||0} DX a cada arquera aliada. El buff de tier ya no aumenta RG ni AGI.`,
+      passive:"El bonus representa habilidad con el arco: aumenta Ataque y Destreza, no Rango. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
       example:"Una Arquera con este líder puede pegar desde más lejos y conectar mejor, pero si su disparo solo rompe Guardia y no toca Vida, no aplica el -1 MOV."
     },
     mage:{
       target:"Magias aliadas",
       affected:"Afecta a cartas de tipo magia/hechizo jugadas por el dueño de este líder.",
       notAffected:"No afecta unidades normales, arqueras, bestias, caballería ni ataques básicos. Tampoco cambia el costo de invocar unidades.",
-      buff:`Las magias cuestan -${buff.costReduction||0} recurso y sus valores numéricos de efecto suben +${buff.effectBonus||0}. Esto aplica a daño, curación, buffs o escudos cuando la carta tenga un campo numérico compatible.`,
-      passive:"El recurso del Hechicero se muestra como MANA. La reducción de costo no baja de 0. Si una magia no tiene objetivo válido, la mejora no la vuelve jugable automáticamente.",
-      example:"Una magia de daño con costo 3 y daño 2, con buff -2 costo/+4 efecto, pasa a costar 1 y hacer 6 de daño si tiene objetivo válido."
+      buff:`Las magias de daño reciben +${buff.damageBonus||0} daño. El tier del Hechicero ya no reduce costes y no aumenta curación, buffs ni escudos.`,
+      passive:"El recurso del Hechicero se muestra como MANA. El coste de las magias se mantiene en su valor normal salvo otros efectos independientes. Vínculo Arcano y las demás habilidades propias del Hechicero se conservan por separado del buff de tier.",
+      example:"Una magia de daño con costo 3 y daño 2, con Tier 2 (+4 daño), sigue costando 3 y hace 6 de daño si tiene objetivo válido."
     },
     axe:{
       target:"Unidades de hacha / berserkers aliados",
@@ -645,15 +645,15 @@ function getLeaderExactEffectGuideData(entity){
       target:"Caballería ligera aliada",
       affected:"Afecta a Caballería ligera aliada y unidades marcadas como cavalry o Caballería Arquera de Saladino.",
       notAffected:"No afecta infantería pesada, arqueras normales, asesinos, bestias, magias ni al propio líder.",
-      buff:`+${buff.mov||0} MOV y +${buff.agi||0} AGI${buff.atk?` y +${buff.atk} AT`:""} a cada caballería ligera aliada.`,
-      passive:"El bonus ayuda a cargar, reposicionarse y aprovechar efectos que dependen de moverse antes de atacar. La Caballería ligera puede activar su carga si se movió 3 o más espacios antes de atacar cuerpo a cuerpo.",
-      example:"Con más MOV, la Caballería ligera llega más fácil a los 3 espacios necesarios para activar Carga desestabilizadora."
+      buff:`+${buff.dex||0} DX y +${buff.agi||0} AGI a cada caballería aliada.`,
+      passive:"El bonus mejora control de montura, precisión y evasión mediante Destreza y Agilidad. No aumenta MOV por tier. La Caballería ligera conserva sus efectos propios de carga.",
+      example:"Con más DX y AGI, la Caballería conecta y evade mejor, pero debe cumplir por sí misma cualquier requisito de movimiento de sus efectos de carga."
     },
     assassin:{
       target:"Asesinos aliados",
       affected:"Afecta a unidades aliadas reconocidas como asesinos, principalmente Asesina del desierto y cartas con nombre de asesina/asesino.",
       notAffected:"No afecta guerreros pesados, arqueras, caballería, bestias, magias ni al propio líder.",
-      buff:`+${buff.agi||0} AGI, +${buff.dex||0} DX${buff.atk?` y +${buff.atk} AT`:""} a cada asesino aliado.`,
+      buff:`+${buff.atk||0} AT y +${buff.agi||0} AGI a cada asesino aliado.`,
       passive:"El bonus aumenta sus stats de combate. Con la habilidad Nv.5 Niebla de sangre, los asesinos aliados ignoran Guardia al atacar y gastan solo la mitad de PREC/EVA cuando el sistema les cobre ese desgaste.",
       example:"La Asesina del desierto se vuelve más difícil de esquivar y más difícil de alcanzar. Si además está activa Niebla de sangre, su daño atraviesa Guardia."
     },
@@ -661,7 +661,7 @@ function getLeaderExactEffectGuideData(entity){
       target:"Bestias aliadas",
       affected:"Afecta a unidades aliadas marcadas como bestia: Tejón Mielero, Puercoespín, Jabalí Salvaje, Cuervo Negro, Serpiente, Búfalo, Halcón, Taipán, León, Tigre, Rinoceronte y futuras bestias.",
       notAffected:"No afecta humanos, arqueras, magias, caballería común, asesinos ni al propio líder.",
-      buff:`+${buff.atk||0} AT y +${buff.agi||0} AGI a cada bestia aliada.`,
+      buff:`+${buff.dex||0} DX y +${buff.agi||0} AGI a cada bestia aliada.`,
       passive:"La mejora vuelve a las bestias más agresivas y móviles. Con la habilidad Nv.5 Veneno de la Manada, cualquier unidad aliada que cause daño real a HP aplica Veneno, incluso si no es bestia.",
       example:"Un Jabalí o Tigre bajo este líder golpea más fuerte. Si está activa Veneno de la Manada, el daño real a HP también deja veneno."
     }

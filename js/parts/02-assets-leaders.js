@@ -286,13 +286,13 @@ Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolve
 -------------------------------------------------------------------------------
 */
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Bonificación propia por tier: +4 AT/+4 GD en Tier 1, aumentando +1/+1 por tier. La infantería pesada conserva su buff normal. Barrido de Guerra: al final del turno rival, si hay al menos un enemigo dentro de su alcance, se activa automáticamente y golpea únicamente a unidades enemigas dentro de ese alcance."},
-  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras."},
-  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Mejora magias."},
-  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: los berserkers rompen Guardia y activan Grito de Guerra para subir AT aliado."},
-  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil: potencia Caballería Ligera con AT/AGI y culmina con Guardia adicional; puede llamar refuerzos al nivel 5."},
-  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con AGI/DX; en Nv.5 vuelve sus ataques más limpios y su desgaste táctico más eficiente."},
-  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias crecen por tier hasta llegar a +4 AT y +2 AGI."}
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Conserva su bonificación propia del líder por tier. Por separado, su buff de categoría da Guardia y Destreza a la infantería pesada (+2/+2 hasta +8/+8), sin aumentar Vida."},
+  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras con Ataque y Destreza según el tier; el buff de líder ya no aumenta Rango."},
+  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Su buff de tier aumenta únicamente el daño de las magias (+2 a +8) y ya no reduce su coste. Sus efectos propios, incluido Vínculo Arcano, se conservan aparte."},
+  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: las unidades de hacha ganan Ataque y Destreza según el tier (+2/+2 hasta +8/+8). Sus efectos propios se conservan aparte."},
+  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil: la Caballería gana Destreza y Agilidad según el tier (+2/+2 hasta +8/+8); puede llamar refuerzos al nivel 5."},
+  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con Ataque y Agilidad según el tier (+2/+2 hasta +8/+8), priorizando crítico y evasión. Su habilidad Nv.5 se conserva aparte."},
+  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias ganan Destreza y Agilidad según el tier (+2/+2 hasta +8/+8)."}
 };
 const LEADER_LEVEL_MAX=9;
 const LEADER_LEVEL_TABLE={
@@ -314,13 +314,13 @@ function getLeaderAttack(type,level=1){const base=(LEADER_BASE_ATK[type]??3)+(ty
 function getLeaderGuard(type,level=1){const base=type==="beastmaster"?2:(type==="warrior"?Math.max(0,(LEADER_BASE_GUARD[type]??2)+getWarriorLeaderSelfTierBonus(level)):Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3)));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
 function getLeaderRange(type,level=1){return applyHallvallaValueHooks("leader.range",LEADER_BASE_RANGE[type]??1,{type,level})}
 const LEADER_BUFF_TABLE={
-  warrior:{1:{hp:3,guard:3},2:{hp:4,guard:4},3:{hp:5,guard:5},4:{hp:6,guard:6}},
-  archer:{1:{atk:1,dex:1,agi:1,range:1},2:{atk:2,dex:2,agi:2,range:1},3:{atk:3,dex:3,agi:3,range:1},4:{atk:4,dex:4,agi:4,range:1}},
-  mage:{1:{costReduction:2,effectBonus:3},2:{costReduction:2,effectBonus:4},3:{costReduction:3,effectBonus:5},4:{costReduction:3,effectBonus:6}},
-  axe:{1:{atk:4,dex:2},2:{atk:8,dex:4},3:{atk:12,dex:6},4:{atk:16,dex:8}},
-  cavalry:{1:{atk:1,agi:1},2:{atk:1,agi:2},3:{atk:2,agi:2},4:{atk:2,agi:2,guard:2}},
-  assassin:{1:{agi:2,atk:1},2:{agi:3,atk:2},3:{agi:4,atk:3},4:{agi:5,atk:4,dex:1}},
-  beastmaster:{1:{atk:1,agi:1},2:{atk:2,agi:1},3:{atk:3,agi:2},4:{atk:4,agi:2}}
+  warrior:{1:{guard:2,dex:2},2:{guard:4,dex:4},3:{guard:6,dex:6},4:{guard:8,dex:8}},
+  archer:{1:{atk:2,dex:2},2:{atk:4,dex:4},3:{atk:6,dex:6},4:{atk:8,dex:8}},
+  mage:{1:{damageBonus:2},2:{damageBonus:4},3:{damageBonus:6},4:{damageBonus:8}},
+  axe:{1:{atk:2,dex:2},2:{atk:4,dex:4},3:{atk:6,dex:6},4:{atk:8,dex:8}},
+  cavalry:{1:{dex:2,agi:2},2:{dex:4,agi:4},3:{dex:6,agi:6},4:{dex:8,agi:8}},
+  assassin:{1:{atk:2,agi:2},2:{atk:4,agi:4},3:{atk:6,agi:6},4:{atk:8,agi:8}},
+  beastmaster:{1:{dex:2,agi:2},2:{dex:4,agi:4},3:{dex:6,agi:6},4:{dex:8,agi:8}}
 };
 const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"heroic_edge",name:"Filo de mando",short:"+1 HP por turno a unidades aliadas",desc:"Al inicio de cada turno propio, las unidades aliadas recuperan 1 HP sin superar su Vida máxima."},
@@ -399,13 +399,13 @@ function getLeaderProgressText(type,level,abilityKey=""){
   const stats=getLeaderBattleStats(type,level,abilityKey);
   const tier=stats.buffTier;
   const abilityLine=normalizeLeaderLevel(level)>=5?` · Hab. Nv.5: ${getLeaderAbilityText(abilityKey)}`:"";
-  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.hp} VIDA/+${b.guard} GUARDIA · Barrido de Guerra: al final del turno rival, si hay un enemigo en alcance, se activa automáticamente y golpea únicamente a las unidades enemigas dentro de su alcance${abilityLine}`;}
-  if(type==="archer"){const b=LEADER_BUFF_TABLE.archer[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: arqueras +${b.atk} AT/+${b.dex} DX/+${b.agi} AGI${abilityLine}`;}
+  if(type==="warrior"){const b=LEADER_BUFF_TABLE.warrior[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: infantería pesada +${b.guard} GD/+${b.dex} DX · Barrido de Guerra: al final del turno rival, si hay un enemigo en alcance, se activa automáticamente y golpea únicamente a las unidades enemigas dentro de su alcance${abilityLine}`;}
+  if(type==="archer"){const b=LEADER_BUFF_TABLE.archer[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: arqueras +${b.atk} AT/+${b.dex} DX${abilityLine}`;}
   if(type==="axe"){const b=LEADER_BUFF_TABLE.axe[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: hachas +${b.atk} AT/+${b.dex} DX · Grito de Guerra: al romper toda la Guardia enemiga, aliados +1 AT hasta fin de turno${abilityLine}`;}
-  if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería ligera +${b.atk||0} AT/+${b.agi||0} AGI${b.guard?`/+${b.guard} GD`:""}${abilityLine}`;}
-  if(type==="assassin"){const b=LEADER_BUFF_TABLE.assassin[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: asesinos +${b.agi||0} AGI/+${b.dex||0} DX${b.atk?`/+${b.atk} AT`:""}${abilityLine}`;}
-  if(type==="beastmaster"){const b=LEADER_BUFF_TABLE.beastmaster[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: bestias +${b.atk||0} AT/+${b.agi||0} AGI${abilityLine}`;}
-  const b=LEADER_BUFF_TABLE.mage[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: magias -${b.costReduction} costo/+${b.effectBonus} efecto${abilityLine}`;
+  if(type==="cavalry"){const b=LEADER_BUFF_TABLE.cavalry[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: caballería +${b.dex} DX/+${b.agi} AGI${abilityLine}`;}
+  if(type==="assassin"){const b=LEADER_BUFF_TABLE.assassin[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: asesinos +${b.atk} AT/+${b.agi} AGI${abilityLine}`;}
+  if(type==="beastmaster"){const b=LEADER_BUFF_TABLE.beastmaster[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: bestias +${b.dex} DX/+${b.agi} AGI${abilityLine}`;}
+  const b=LEADER_BUFF_TABLE.mage[tier];return `Nv. ${normalizeLeaderLevel(level)} · HP ${stats.hp} · AT ${stats.atk} · GD ${getLeaderGuard(type,level)} · RG ${getLeaderRange(type,level)} · Buff ${tier}: magias +${b.damageBonus} daño${abilityLine}`;
 }
 function getLeaderAbilityForOwner(owner,units=publicState?.units||[]){
   const leader=(units||[]).find(u=>u.owner===owner&&u.leader);
