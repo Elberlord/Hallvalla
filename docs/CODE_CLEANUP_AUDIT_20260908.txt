@@ -1,0 +1,26 @@
+HALLVALLA — AUDITORÍA DE LIMPIEZA DE CÓDIGO — BUILD 20260908.4
+
+Objetivo
+- Eliminar código demostrablemente muerto o duplicado sin alterar reglas de juego.
+- Consolidar el menú MOV/ATK/DEF/DET/EFFECT en una única implementación CSS.
+- Retirar scaffolding legacy vacío.
+
+Limpieza aplicada
+- 19 declaraciones de funciones sin ninguna referencia en el proyecto fueron retiradas (incluyendo cadenas de helpers que quedaron sin uso).
+- Se eliminó el fallback LEGACY_STORAGE_KEYS vacío de forge-layout.
+- Se eliminó OPTIONAL_CORE_PARTS vacío y su rama de carga imposible del bootstrap.
+- Se retiraron 124 reglas / 608 declaraciones CSS pertenecientes a generaciones antiguas del menú contextual.
+- El menú bajo el reloj quedó como única implementación canónica.
+- Se eliminaron 2 reglas CSS exactamente duplicadas.
+- Tras la limpieza: 0 funciones nombradas con una sola aparición léxica y 0 reglas CSS exactamente duplicadas.
+
+Hallazgos que NO se borraron automáticamente
+- styles.css sigue siendo grande y contiene múltiples capas históricas de otros subsistemas (DET, PvP, Home, Mina, etc.).
+- Hay selectores repetidos con valores distintos; algunos son ajustes responsive/estado y otros son deuda histórica. No se borraron en masa porque hacerlo sin recorrer cada pantalla podría producir regresiones.
+- Los editores/calibradores DEV están bloqueados en producción, pero parte de sus definiciones reside en módulos core y por tanto se parsea aunque no se inicialice. Una separación física completa DEV/runtime requiere una refactorización modular dedicada.
+
+Validaciones de esta build
+- Sintaxis JavaScript comprobada con node --check para todos los módulos.
+- CSS parseable comprobado con PostCSS.
+- Hashes de loader, index y Service Worker regenerados.
+- No se modificaron reglas de MOV/ATK/DEF/DET/EFFECT ni sincronización de combate durante esta limpieza.

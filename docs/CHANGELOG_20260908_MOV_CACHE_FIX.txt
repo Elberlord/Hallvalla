@@ -1,0 +1,13 @@
+HallValla · build 20260908.2
+
+Correcciones de integridad de movimiento y caché:
+- MOV ahora tiene un bloqueo de acción en vuelo: un segundo clic no puede iniciar otro movimiento mientras el primero sigue confirmándose.
+- moveUnit vuelve a resolver la unidad viva antes de validar y rechaza moved/acted de forma autoritativa.
+- Se conserva la excepción de movimiento especial de Mulan.
+- El loader añade el BUILD a la URL de cada módulo además del hash individual.
+- Se recalcularon los hashes de todos los módulos y assets declarados por el Service Worker.
+- Se corrigieron manifiestos desfasados preexistentes en 04/05/06 y varios assets de hachas/figuras.
+- Build actualizado a 20260908.2.
+
+Diagnóstico:
+El fallo MOV podía aparecer bajo latencia/congelamiento porque la interfaz ocultaba MOV tras recibir estado actualizado, pero moveUnit no comprobaba por sí misma moved/acted ni impedía invocaciones simultáneas. Varios clics podían entrar antes de terminar la primera escritura. Además, los hashes de caché desfasados podían mantener módulos antiguos en el navegador.

@@ -1,0 +1,40 @@
+HALLVALLA · AUDITORÍA MOV / LATENCIA · 2026-09-08
+Build corregido: 20260908.2
+
+HALLAZGO CRÍTICO 1 — MOV podía reentrar durante una escritura lenta
+- La capa visual (moveZones / menú) sí impedía mostrar un segundo movimiento cuando moved/acted ya estaban actualizados.
+- moveUnit, sin embargo, no volvía a rechazar moved/acted y no tenía un bloqueo "in flight".
+- Bajo lag, varios eventos de entrada podían entrar antes de que el primer update terminara y antes de clearSelection().
+- Resultado posible: una unidad MOV 1 podía encadenar movimientos válidos de 1 casilla durante el mismo turno.
+
+CORRECCIÓN
+- moveUnit resuelve otra vez la unidad viva antes de validar.
+- Rechaza autoritativamente moved/acted (salvo la excepción especial de Mulan).
+- Añadido hallvallaMoveActionInFlight para bloquear reentrada hasta completar el commit.
+- Si updatePublic no confirma, no se registra el log como si el movimiento hubiera sido válido.
+
+HALLAZGO CRÍTICO 2 — hashes de caché desfasados
+- RESOURCE_HASHES tenía 3 módulos cuyo hash no coincidía con el archivo real: 04, 05 y 06.
+- ASSET_HASHES tenía 13 discrepancias en total, incluidas 05 y 06.
+- 05 contiene reglas/canon de cartas; 06 contiene effectiveMov y reglas de combate.
+- En un navegador con Service Worker previo, esto podía permitir una mezcla de scripts viejos/nuevos dependiendo del contenido ya cacheado.
+
+CORRECCIÓN
+- Recalculados todos los hashes declarados: 0 discrepancias tras la reparación.
+- Cada módulo ahora se carga con hash + BUILD en la URL.
+- Build incrementado a 20260908.2 para forzar actualización del Service Worker/loader.
+
+COMPROBACIONES ESTÁTICAS
+- 30 archivos JavaScript: node --check sin errores de sintaxis.
+- RESOURCE_HASHES: 0 discrepancias.
+- ASSET_HASHES: 0 discrepancias.
+- Hash de styles.css en index: correcto.
+- Hash de bootstrap-loader.js en index: correcto.
+- Regla canónica de arqueros a pie: MOV base 1 confirmada.
+- El cambio anterior del menú bajo el reloj no modificó moveUnit, getUnitMovementPath, moveZones ni effectiveMov.
+
+OBSERVACIÓN DE RENDIMIENTO
+- El snapshot público de Firebase llama render() completo.
+- updatePublic/pushLog pueden producir actualizaciones/renderizados consecutivos.
+- Esto no cambia por sí solo MOV, pero sí puede agrandar la ventana de lag que hacía visible la condición de carrera.
+- Se recomienda optimizar renderizado en una etapa separada, sin mezclarlo con esta corrección de reglas.

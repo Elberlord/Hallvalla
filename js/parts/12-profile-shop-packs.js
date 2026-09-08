@@ -307,11 +307,6 @@ function getAccountMasteryPendingMilestones(key,profile=getPlayerProfile()){
 function getPendingAccountMasteryRewardCount(profile=getPlayerProfile()){
   return Object.keys(ACCOUNT_MASTERY_DEFS).reduce((sum,key)=>sum+getAccountMasteryPendingMilestones(key,profile).length,0);
 }
-function getAccountMasteryNextMilestone(key,profile=getPlayerProfile()){
-  const def=getAccountMasteryDef(key);if(!def)return null;
-  const rec=getAccountMasteryRecord(key,profile);
-  return def.milestones.find(m=>rec.count<m.target)||null;
-}
 function readAccountMasteryEventCache(){
   try{const raw=JSON.parse(localStorage.getItem(ACCOUNT_MASTERY_EVENT_STORAGE_KEY)||"[]");return Array.isArray(raw)?raw.filter(Boolean):[];}catch(_){return[];}
 }
@@ -1102,14 +1097,6 @@ function getBattleRewardLabel(battle){
 }
 
 
-function getNextAdventureBattle(battle){
-  const override=resolveHallvallaOverride("adventure.nextBattle",{battle});
-  if(override.handled)return override.value;
-  if(!battle)return null;
-  if(battle.isGuardian)return ADVENTURE_CHAPTER_1_1.battles[0]||null;
-  const chapter=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
-  return chapter.battles.find(b=>b.num===battle.num+1)||null;
-}
 function isBattleUnlocked(battle){
   const override=resolveHallvallaOverride("adventure.isBattleUnlocked",{battle});
   if(override.handled)return override.value;

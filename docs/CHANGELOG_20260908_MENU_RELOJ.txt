@@ -1,0 +1,33 @@
+HallValla · 2026-09-08 · Menú contextual bajo reloj
+=====================================================
+
+Cambio visual aplicado
+----------------------
+- MOV / ATK / DEF / DET dejan de orbitar/flotar sobre la unidad del tablero.
+- El menú se ancla dinámicamente debajo del HUD "TURNO" usando su posición real en pantalla.
+- Distribución estándar:
+
+      MOV   ATK
+      DEF   DET
+       EFFECT
+
+- EFFECT solo aparece cuando corresponde y queda centrado en una tercera fila.
+- Si solo existe DET (por ejemplo, consulta de unidad rival), el botón se centra.
+- Las variantes con 2 o 3 acciones conservan una cuadrícula compacta.
+- En pantallas táctiles / estrechas se reduce el tamaño del bloque para limitar la invasión visual.
+
+Lógica preservada
+-----------------
+- No se modificaron las reglas de MOV, ATK, DEF, DET ni EFFECT.
+- Se conservaron los mismos assets WEBP y los mismos handlers de acciones.
+- Selección, highlights, ventanas de movimiento/acción, restricciones y estados disabled siguen usando la lógica previa.
+
+Archivos modificados
+--------------------
+- js/parts/10-board-interactions.js
+- styles.css
+- js/bootstrap-loader.js (cache-bust / hash del módulo)
+- index.html (build + cache-bust)
+- service-worker.js (build + hashes de runtime)
+
+Build declarado: 20260908.1

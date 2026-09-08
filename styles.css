@@ -1105,9 +1105,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* === v0.7AS: Log de duelo oculto por defecto === */
 
-@media(max-width:980px){
-}
-
 /* === v0.7AW: Phase announcement modal/banner === */
 .phase-announce{
   
@@ -1171,124 +1168,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   .phase-announce{z-index:92;}
   .phase-announce-kicker{font-size:10px;letter-spacing:2px;}
   .phase-announce-sub{font-size:10px;margin-top:6px;}
-}
-
-/* === v0.7BK / PATCH 7EW: Menú contextual negro+dorado sin imagen de fondo === */
-.unit-context-menu{
-  position:fixed;
-  z-index:260;
-  min-width:184px;
-  max-width:238px;
-  padding:13px 12px 12px;
-  border-radius:22px;
-  transform:translate(-50%,calc(-100% - 16px));
-  border:1px solid rgba(241,195,96,.66);
-  background:
-    radial-gradient(circle at 50% 0%,rgba(255,214,120,.18),transparent 38%),
-    linear-gradient(180deg,rgba(34,24,12,.96) 0%,rgba(15,11,8,.985) 20%,rgba(8,7,6,.992) 58%,rgba(19,13,8,.985) 100%);
-  box-shadow:
-    0 24px 58px rgba(0,0,0,.72),
-    inset 0 1px 0 rgba(255,235,176,.20),
-    inset 0 -20px 32px rgba(0,0,0,.44),
-    inset 0 0 0 1px rgba(87,61,28,.42),
-    0 0 24px rgba(214,156,62,.14);
-  color:#fff1c4;
-  pointer-events:auto;
-  animation:unitContextPop .14s ease-out both;
-  overflow:hidden;
-}
-.unit-context-menu::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(180deg,rgba(255,222,139,.10),transparent 18%,transparent 74%,rgba(176,116,34,.10)),
-    linear-gradient(90deg,rgba(255,211,115,.10),transparent 14%,transparent 86%,rgba(255,211,115,.10));
-  pointer-events:none;
-}
-.unit-context-menu.hidden{display:none!important}
-
-
-.unit-context-menu::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:-9px;
-  width:16px;
-  height:16px;
-  transform:translateX(-50%) rotate(45deg);
-  background:linear-gradient(135deg,rgba(28,20,11,.98),rgba(9,8,7,.99));
-  border-right:1px solid rgba(241,195,96,.56);
-  border-bottom:1px solid rgba(241,195,96,.56);
-}
-.unit-context-name{
-  position:relative;
-  z-index:1;
-  font-family:Georgia,serif;
-  font-weight:1000;
-  font-size:15px;
-  line-height:1.05;
-  text-align:center;
-  color:#fff5d6;
-  text-shadow:0 2px 5px #000,0 0 12px rgba(255,209,102,.22);
-  margin-bottom:3px;
-}
-.unit-context-sub{
-  position:relative;
-  z-index:1;
-  text-align:center;
-  font-size:9px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:#e7c987;
-  margin-bottom:10px;
-  text-shadow:0 1px 3px rgba(0,0,0,.9);
-}
-
-.unit-context-btn{
-  position:relative;
-  min-height:38px;
-  border-radius:15px;
-  border:1px solid rgba(226,177,78,.48);
-  background:
-    radial-gradient(circle at 50% 0%,rgba(255,214,120,.12),transparent 48%),
-    linear-gradient(180deg,rgba(56,40,20,.98) 0%,rgba(25,18,11,.98) 44%,rgba(9,8,7,.99) 100%);
-  color:#fff2c8;
-  font-family:Georgia,serif;
-  font-size:11px;
-  font-weight:1000;
-  letter-spacing:.10em;
-  cursor:pointer;
-  box-shadow:inset 0 1px 0 rgba(255,238,196,.12),0 8px 18px rgba(0,0,0,.42),0 0 12px rgba(214,156,62,.10);
-  overflow:hidden;
-}
-.unit-context-btn::before{
-  content:"";
-  position:absolute;
-  inset:1px;
-  border-radius:13px;
-  border:1px solid rgba(255,241,196,.10);
-  pointer-events:none;
-}
-.unit-context-btn span{position:relative;z-index:1;text-shadow:0 2px 4px rgba(0,0,0,.88)}
-.unit-context-btn:hover:not(:disabled){
-  filter:brightness(1.16) saturate(1.06);
-  border-color:rgba(248,205,111,.84);
-  box-shadow:inset 0 1px 0 rgba(255,244,214,.16),0 8px 18px rgba(0,0,0,.42),0 0 18px rgba(214,156,62,.18);
-}
-.unit-context-btn:disabled{
-  opacity:.36;
-  filter:grayscale(.35);
-  cursor:not-allowed;
-}
-@keyframes unitContextPop{
-  from{opacity:0;transform:translate(-50%,calc(-100% - 6px)) scale(.94)}
-  to{opacity:1;transform:translate(-50%,calc(-100% - 16px)) scale(1)}
-}
-@media(max-width:680px){
-  .unit-context-menu{min-width:158px;padding:10px;border-radius:18px;}
-  .unit-context-btn{min-height:34px;font-size:10px;border-radius:13px;}
-  .unit-context-name{font-size:13px;}
 }
 
 
@@ -1736,14 +1615,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === v0.7CE: Pack shop unlocked after map 2 === */
 .pack-shop-card{width:min(760px,94vw);padding:18px;border-radius:26px;background:linear-gradient(180deg,rgba(32,22,12,.98),rgba(7,6,5,.98));border:1px solid rgba(255,209,102,.34);box-shadow:0 30px 90px rgba(0,0,0,.72)}
 .pack-shop-content{display:grid;gap:14px;margin-top:14px}
-
-
-
-
-
-
-
-@media(max-width:760px){}
 
 
 /* PATCH 7CF - HallValla campaign map option B: fondo WEBP + nodos reales por código */
@@ -3430,34 +3301,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@media(max-width:980px){
-  
-  
-  
-  
-}
-
 /* v7FZ: evita que vida/acierto/estados se corten en los bordes de la casilla */
 .grid,
 .grid .cell{
@@ -4075,365 +3918,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   border-right:2px solid rgba(255,250,222,.92);
   border-bottom:2px solid rgba(255,250,222,.92);
   transform:translate(-50%,-20%) rotate(40deg);
-}
-
-.unit-context-menu{
-  width:220px !important;
-  height:220px !important;
-  min-width:220px !important;
-  max-width:none !important;
-  padding:0 !important;
-  border:none !important;
-  background:none !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-  transform:translate(-50%,-50%) !important;
-}
-.unit-context-menu::before,
-.unit-context-menu::after{display:none !important;}
-.unit-context-star-shell{
-  position:relative;
-  width:220px;
-  height:220px;
-  pointer-events:none;
-}
-.unit-context-star-shell::before{
-  content:"";
-  position:absolute;
-  inset:42px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(255,214,120,.16),rgba(0,0,0,0) 72%);
-  filter:blur(10px);
-}
-.unit-context-core{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:108px;
-  height:108px;
-  transform:translate(-50%,-50%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:14px 10px;
-  border-radius:24px;
-  background:
-    radial-gradient(circle at 50% 18%,rgba(255,223,145,.22),transparent 32%),
-    linear-gradient(180deg,rgba(30,22,14,.98),rgba(9,8,7,.99));
-  border:1px solid rgba(244,199,103,.72);
-  box-shadow:0 18px 42px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,236,187,.18), 0 0 22px rgba(229,173,71,.18);
-}
-.unit-context-core::before{
-  content:"";
-  position:absolute;
-  inset:-10px;
-  clip-path:polygon(50% 0%,61% 16%,79% 8%,73% 27%,92% 31%,78% 45%,100% 50%,78% 55%,92% 69%,73% 73%,79% 92%,61% 84%,50% 100%,39% 84%,21% 92%,27% 73%,8% 69%,22% 55%,0% 50%,22% 45%,8% 31%,27% 27%,21% 8%,39% 16%);
-  background:linear-gradient(180deg,rgba(71,50,24,.84),rgba(16,12,8,.98));
-  border:1px solid rgba(244,199,103,.22);
-  z-index:-1;
-  box-shadow:0 0 14px rgba(227,176,72,.15);
-}
-
-.unit-context-name{
-  font-family:Georgia,serif;
-  font-weight:900;
-  font-size:12px !important;
-  line-height:1.06;
-  color:#fff4d3 !important;
-  text-shadow:0 2px 7px rgba(0,0,0,.9),0 0 10px rgba(255,214,120,.18);
-  margin:0 0 4px !important;
-}
-.unit-context-sub{
-  font-size:8px !important;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:#ffd977 !important;
-  margin:0 !important;
-  text-shadow:0 1px 4px rgba(0,0,0,.9),0 0 10px rgba(255,201,84,.22);
-}
-.unit-context-btn{
-  position:absolute !important;
-  width:70px;
-  min-width:70px !important;
-  height:38px;
-  min-height:38px !important;
-  border-radius:16px !important;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  pointer-events:auto;
-  padding:0 8px !important;
-  border:1px solid rgba(244,199,103,.72) !important;
-  background:
-    radial-gradient(circle at 50% 18%,rgba(255,227,156,.17),transparent 34%),
-    linear-gradient(180deg,rgba(42,30,16,.98),rgba(10,8,7,.99)) !important;
-  color:#ffd978 !important;
-  font-family:Georgia,serif;
-  font-size:11px !important;
-  font-weight:1000;
-  letter-spacing:.10em;
-  box-shadow:0 10px 24px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,236,187,.12), 0 0 14px rgba(241,190,89,.16);
-}
-.unit-context-btn span{
-  text-shadow:0 0 10px rgba(255,212,96,.35),0 2px 6px rgba(0,0,0,.95) !important;
-}
-.unit-context-btn:hover:not(:disabled){
-  filter:brightness(1.12) saturate(1.04);
-  box-shadow:0 12px 26px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,244,214,.16), 0 0 18px rgba(255,214,102,.28);
-}
-.unit-context-btn:disabled{
-  opacity:.38;
-  filter:grayscale(.12);
-}
-.unit-context-btn.slot-top{left:50%; top:4px; transform:translateX(-50%);}
-
-
-.unit-context-btn.slot-left-bottom{left:6px; bottom:48px;}
-
-@media(max-width:980px){
-  .unit-context-menu,
-  .unit-context-star-shell{width:196px !important;height:196px !important;min-width:196px !important;}
-  .unit-context-core{width:96px;height:96px;}
-  .unit-context-btn{width:64px;min-width:64px !important;height:34px;min-height:34px !important;font-size:10px !important;}
-  .unit-context-name{font-size:11px !important;}
-  
-  
-  
-  .unit-context-btn.slot-left-bottom{left:4px;bottom:42px;}
-  
-}
-
-/* === v0.7BU: menú contextual con retrato central negro + dorado neón === */
-.unit-context-menu{
-  width:292px !important;
-  height:292px !important;
-  min-width:292px !important;
-  max-width:none !important;
-  padding:0 !important;
-  border:none !important;
-  background:none !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-  transform:translate(-50%,-50%) !important;
-  z-index:280 !important;
-}
-.unit-context-star-shell{
-  position:relative !important;
-  width:292px !important;
-  height:292px !important;
-  pointer-events:none;
-  filter:drop-shadow(0 24px 42px rgba(0,0,0,.72));
-}
-.unit-context-star-shell::before{
-  content:"";
-  position:absolute;
-  inset:22px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 50% 50%,rgba(255,213,91,.24),rgba(255,191,63,.08) 42%,transparent 72%);
-  filter:blur(12px);
-  opacity:.95;
-}
-.unit-context-star-shell::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:218px;
-  height:218px;
-  transform:translate(-50%,-50%);
-  border-radius:38px;
-  background:
-    linear-gradient(135deg,transparent 14%,rgba(218,161,55,.66) 15%,transparent 16% 84%,rgba(218,161,55,.48) 85%,transparent 86%),
-    radial-gradient(circle at 50% 0%,rgba(255,222,133,.16),transparent 45%),
-    linear-gradient(180deg,rgba(18,13,8,.94),rgba(4,4,4,.98));
-  border:1px solid rgba(244,199,103,.70);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,236,173,.10),
-    inset 0 18px 34px rgba(255,204,90,.05),
-    inset 0 -24px 48px rgba(0,0,0,.70),
-    0 0 28px rgba(255,200,74,.24);
-  z-index:0;
-}
-.unit-context-core{
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  width:124px !important;
-  height:164px !important;
-  transform:translate(-50%,-50%) !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
-  gap:4px !important;
-  padding:8px 8px 9px !important;
-  border-radius:16px !important;
-  background:
-    radial-gradient(circle at 50% 0%,rgba(255,224,139,.18),transparent 33%),
-    linear-gradient(180deg,rgba(33,23,13,.98),rgba(8,7,6,.99) 58%,rgba(17,11,7,.98)) !important;
-  border:1px solid rgba(249,209,113,.86) !important;
-  box-shadow:
-    0 12px 32px rgba(0,0,0,.70),
-    inset 0 1px 0 rgba(255,239,190,.18),
-    inset 0 0 0 1px rgba(80,55,23,.44),
-    0 0 22px rgba(255,210,92,.26) !important;
-  z-index:2 !important;
-  overflow:hidden !important;
-}
-.unit-context-core::before{
-  content:"" !important;
-  position:absolute !important;
-  inset:3px !important;
-  clip-path:none !important;
-  border-radius:13px !important;
-  background:linear-gradient(180deg,rgba(255,226,144,.08),transparent 38%,rgba(255,185,56,.08)) !important;
-  border:1px solid rgba(255,230,167,.10) !important;
-  box-shadow:none !important;
-  z-index:0 !important;
-  pointer-events:none !important;
-}
-
-.unit-context-portrait{
-  position:relative;
-  z-index:1;
-  width:78px;
-  height:82px;
-  border-radius:10px;
-  overflow:hidden;
-  border:1px solid rgba(255,213,105,.72);
-  background:linear-gradient(180deg,rgba(37,25,12,.95),rgba(7,6,5,.98));
-  box-shadow:0 0 0 1px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,243,207,.14), 0 0 15px rgba(255,205,83,.22);
-}
-.unit-context-portrait img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-.unit-context-portrait span{
-  width:100%;
-  height:100%;
-  display:grid;
-  place-items:center;
-  font-size:32px;
-}
-.unit-context-mini-stats{
-  position:relative;
-  z-index:2;
-  width:88px;
-  display:flex;
-  justify-content:space-between;
-  margin-top:-15px;
-  pointer-events:none;
-}
-.unit-context-mini-stats span{
-  min-width:24px;
-  height:21px;
-  display:grid;
-  place-items:center;
-  border-radius:8px;
-  border:1px solid rgba(255,215,111,.64);
-  background:linear-gradient(180deg,rgba(29,20,11,.98),rgba(7,6,5,.99));
-  color:#fff0bd;
-  font-family:Georgia,serif;
-  font-size:11px;
-  font-weight:1000;
-  text-shadow:0 0 8px rgba(255,211,96,.32),0 2px 4px #000;
-  box-shadow:0 5px 11px rgba(0,0,0,.45),0 0 10px rgba(255,198,72,.13);
-}
-.unit-context-name{
-  position:relative !important;
-  z-index:1 !important;
-  max-width:108px;
-  margin:4px 0 0 !important;
-  color:#ffe28a !important;
-  font-size:13px !important;
-  line-height:1.05 !important;
-  letter-spacing:.02em !important;
-  text-shadow:0 0 12px rgba(255,211,84,.45),0 2px 6px #000 !important;
-}
-.unit-context-sub{
-  position:relative !important;
-  z-index:1 !important;
-  margin:0 !important;
-  color:#ffd66f !important;
-  font-size:8px !important;
-  line-height:1 !important;
-  letter-spacing:.13em !important;
-  text-shadow:0 0 10px rgba(255,203,79,.30),0 2px 5px #000 !important;
-}
-.unit-context-btn{
-  position:absolute !important;
-  width:82px !important;
-  min-width:82px !important;
-  height:43px !important;
-  min-height:43px !important;
-  border-radius:17px !important;
-  pointer-events:auto !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  padding:0 8px !important;
-  border:1px solid rgba(255,209,105,.82) !important;
-  background:
-    radial-gradient(circle at 50% 10%,rgba(255,226,150,.22),transparent 38%),
-    linear-gradient(180deg,rgba(42,30,16,.99),rgba(6,6,5,.99)) !important;
-  color:#ffd86f !important;
-  box-shadow:
-    0 12px 25px rgba(0,0,0,.58),
-    inset 0 1px 0 rgba(255,242,206,.16),
-    inset 0 -8px 18px rgba(0,0,0,.48),
-    0 0 18px rgba(255,203,77,.24) !important;
-  z-index:3 !important;
-}
-.unit-context-btn::before{
-  content:"";
-  position:absolute;
-  inset:3px;
-  border-radius:14px;
-  border:1px solid rgba(255,239,190,.12);
-  pointer-events:none;
-}
-.unit-context-btn span{
-  position:relative;
-  z-index:1;
-  color:#ffd86f !important;
-  font-size:13px !important;
-  letter-spacing:.08em !important;
-  text-shadow:0 0 12px rgba(255,211,83,.60),0 2px 6px #000 !important;
-}
-.unit-context-btn:hover:not(:disabled){
-  filter:brightness(1.18) saturate(1.08) !important;
-  border-color:rgba(255,230,153,.96) !important;
-  box-shadow:0 14px 30px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,244,214,.20), 0 0 26px rgba(255,215,93,.40) !important;
-}
-.unit-context-btn:disabled{
-  opacity:.36 !important;
-  filter:grayscale(.28) brightness(.82) !important;
-}
-.unit-context-btn.slot-top{left:50% !important; top:4px !important; transform:translateX(-50%) !important;}
-.unit-context-btn.slot-left{left:1px !important; top:50% !important; transform:translateY(-50%) !important;}
-.unit-context-btn.slot-right{right:1px !important; top:50% !important; transform:translateY(-50%) !important;}
-.unit-context-btn.slot-bottom{left:50% !important; bottom:4px !important; transform:translateX(-50%) !important;}
-.unit-context-btn.slot-left-bottom{left:20px !important; bottom:45px !important;}
-
-
-
-@media(max-width:980px){
-  .unit-context-menu,
-  .unit-context-star-shell{width:244px !important;height:244px !important;min-width:244px !important;}
-  .unit-context-star-shell::after{width:184px;height:184px;border-radius:31px;}
-  .unit-context-core{width:104px !important;height:144px !important;padding:7px !important;}
-  .unit-context-portrait{width:68px;height:72px;}
-  .unit-context-mini-stats{width:78px;}
-  .unit-context-mini-stats span{min-width:22px;height:19px;font-size:10px;}
-  .unit-context-name{font-size:11px !important;max-width:94px;}
-  .unit-context-sub{font-size:7px !important;}
-  .unit-context-btn{width:70px !important;min-width:70px !important;height:38px !important;min-height:38px !important;}
-  .unit-context-btn span{font-size:11px !important;}
 }
 
 
@@ -6606,12 +6090,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* Prevent resource bar from covering title/logo on narrower desktop. */
-@media(max-width:1180px){
-  
-  
-  
-  
-}
 
 /* Strong cleanup for known image-card overlays: text stays on top-left, rewards bottom-right. */
 [class*="mina"],
@@ -7457,10 +6935,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 .cell > .unit-card.unit-key-spearman .unit-depth-stack img{
   object-position:center 20% !important;
 }
-@media(max-width:980px){
-  
-  
-}
 
 /* === Patch 60: DET enemy modal click shield ===
    Ensures every guide/status/lore/stat icon inside enemy AI DET keeps pointer events.
@@ -8159,24 +7633,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-@media(max-width:980px){
-  
-  
-}
-
-
 /* ============================================================
    NUEVO HUD JUGADOR / IA + CONTROL VISUAL
    Reemplaza visualmente el HUD viejo de nombre unido al marco.
@@ -8445,11 +7901,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   
   
   z-index:78!important;
-}
-
-@media(max-width:980px){
-  
-  
 }
 
 
@@ -10254,16 +9705,6 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   #handDrawer .hand-name{font-size:10px!important;}
   #handDrawer .hand-stats{font-size:8px!important;}
-
-  .unit-context-menu{
-    min-width:162px!important;
-    max-width:min(90vw, 220px)!important;
-    padding:11px 10px 10px!important;
-    border-radius:18px!important;
-  }
-  .unit-context-name{font-size:13px!important;}
-  
-  .unit-context-btn{min-height:34px!important;font-size:10px!important;border-radius:12px!important;}
 
   .basic-tutorial-coach{
     top:128px!important;
@@ -12295,11 +11736,6 @@ body.mobile-landscape-locked{overflow:hidden!important}
 .deck-mini-card:focus-visible{
   outline:2px solid rgba(255,209,102,.72);
   outline-offset:2px;
-}
-
-
-@media(max-width:900px){
-  
 }
 
 
@@ -15678,12 +15114,6 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
 
 /* 7HPACKPREVIEW · Tienda visible sin compra conectada */
 
-
-
-
-
-@media(max-width:760px){}
-
 /* ===== TIENDA HALLVALLA POR CAPAS — arte 1672x941 + hotspots funcionales ===== */
 #packShopPanel.overlay-panel{
   padding:0;
@@ -15965,10 +15395,6 @@ html.hv-mobile-landscape #gameShell .hand-drawer .hand-card{
    - Reorganiza el modal para que efectos y estados no se recorten ni se superpongan.
    - El consejo deja de ocupar espacio y pasa a una pastilla "?".
    ============================================================ */
-@media(max-width:980px){
-}
-@media(max-width:560px){
-}
 
 
 /* === 7BOARDCTRL1 · Escala completa de cartas + cuadrícula dinámica === */
@@ -16396,9 +15822,6 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
 #deckBuilderPanel #deckBattlePowerFilter,
 #deckBuilderPanel #deckBattlePowerSort{
   border-color:rgba(126,203,255,.34)!important;
-}
-
-@media(max-width:720px){
 }
 
 @media(max-width:1100px){.deck-principal-slots{grid-template-columns:1fr;}}
@@ -17354,11 +16777,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
 
 /* Ficha de campo: solo muestra el asset ya existente; no introduce sistema 3D. */
 
-@media(max-width:1080px){
-}
-@media(max-width:720px){
-}
-
 
 /* === v28 · Rareza Astral ==================================================
    Rareza propia para entidades por encima de la escala humana convencional.
@@ -17378,11 +16796,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
    Solo corrige el DET y reinicia una distribución limpia.
    ============================================================ */
 
-@media (max-width:1400px){
-}
-@media (max-width:1080px){
-}
-
 
 /* ============================================================
    v29 · DET FIT VIEWPORT
@@ -17391,9 +16804,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
    ============================================================ */
 
 /* El editor sigue operativo; el modal completo nunca genera barras externas. */
-
-@media(max-width:980px){
-}
 
 
 /* v30 · DET editor: selector directo para elementos fuera de pantalla */
@@ -17428,8 +16838,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
    Usa la imagen vacía elegida por el usuario y monta texto/iconos encima.
    Se aplica solo al DET de construcción de mazo.
    ============================================================ */
-@media(max-width:1100px){
-}
 
 
 /* ============================================================
@@ -19058,30 +18466,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   opacity:1 !important;
   filter:none !important;
 }
-.cell > .unit-card.unit-stealthed .stealth-board-cover::before,
-.cell > .unit-card.unit-stealthed .stealth-board-cover::after,
-.unit-context-portrait .stealth-context-cover::before,
-.unit-context-portrait .stealth-context-cover::after{
-  content:"";position:absolute;pointer-events:none;display:block;
-  background:url("assets/effects/status/stealth/stealth_smoke.webp") center 46%/cover no-repeat;
-}
-.cell > .unit-card.unit-stealthed .stealth-board-cover::before,
-.unit-context-portrait .stealth-context-cover::before{
-  inset:0;
-  opacity:.34;
-  filter:blur(7px) brightness(.72) saturate(.92);
-  mix-blend-mode:screen;
-  animation:hvStealthSmokePulse 5.1s ease-in-out infinite;
-}
-.cell > .unit-card.unit-stealthed .stealth-board-cover::after,
-.unit-context-portrait .stealth-context-cover::after{
-  inset:0;
-  opacity:.98;
-  clip-path:inset(36% 22% 42% 22% round 999px);
-  transform-origin:50% 50%;
-  filter:brightness(1.18) saturate(1.12) drop-shadow(0 0 8px rgba(255,40,40,.28));
-  animation:hvStealthEyesBlink 6.4s infinite;
-}
 .cell > .unit-card.unit-stealthed .stealth-board-cover img{
   position:absolute !important;
   inset:0 !important;
@@ -19111,33 +18495,6 @@ html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!i
   outline:2px solid rgba(122,255,168,.88) !important;
   outline-offset:2px !important;
   box-shadow:0 0 13px rgba(122,255,168,.34) !important;
-}
-.unit-context-portrait.is-stealthed{
-  position:relative !important;
-  background:#030303 !important;
-  overflow:hidden !important;
-}
-.unit-context-portrait .stealth-context-cover{
-  position:absolute !important;
-  inset:-10% !important;
-  display:block !important;
-  overflow:hidden !important;
-  border-radius:inherit !important;
-}
-.unit-context-portrait .stealth-context-cover img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:cover !important;
-  object-position:center 46% !important;
-  display:block !important;
-  opacity:.98 !important;
-  filter:brightness(.93) contrast(1.05) saturate(.97) drop-shadow(0 0 8px rgba(255,30,30,.22)) !important;
-  transform-origin:50% 50% !important;
-  animation:hvStealthSmokeMain 4.7s ease-in-out infinite !important;
-}
-.unit-context-mini-stats.is-stealthed span{
-  color:rgba(255,239,206,.76) !important;
-  text-shadow:none !important;
 }
 .unit-stealthed .stealth-silhouette{display:none !important;}
 
@@ -20108,7 +19465,6 @@ body.hv-forge-edit-active #deckBuilderPanel #craftMaterialPanel .craft-material-
   box-shadow:inset 0 0 0 2px rgba(72,43,16,.78),inset 0 0 34px rgba(0,0,0,.55),0 14px 30px rgba(0,0,0,.48);
   color:#f6e3b4;
 }
-.pvp-room-panel.hidden{display:none!important}
 .pvp-room-kicker{
   position:absolute;
   top:-13px;
@@ -21920,11 +21276,6 @@ html.hv-perf-lite .event-splash-spell-art img{
     width:min(410px,88dvw)!important;
     max-width:88dvw!important;
     max-height:88dvh!important;
-  }
-  html.hv-mobile-landscape body #gameShell .unit-context-menu{
-    max-width:min(210px,42dvw)!important;
-    max-height:70dvh!important;
-    overflow:auto!important;
   }
 }
 
@@ -23953,12 +23304,6 @@ body.home-deck-tutorial-active{overflow:hidden}
    El usuario prefirió quitar casi por completo los bloques informativos
    que ocupan demasiado espacio. Se dejan los botones y la información mínima.
 */
-.mine-inline-card,
-.mine-selected-card,
-.mine-status-line,
-.mine-lock-note{
-  display:none !important;
-}
 .mine-chip-row{
   gap:10px;
   margin-bottom:4px;
@@ -26232,12 +25577,6 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   }
 }
 
-
-/* ========================================================================== 
-   HALLVALLA · PULIDO VISUAL FINAL · HUD / AVENTURA / MENÚ CONTEXTUAL
-   Los controles visibles usan arte WEBP. El HTML queda como hitbox accesible.
-   ========================================================================== */
-
 /* Los nuevos botones de Aventura tienen proporción artística 3:1. */
 #adventurePanel .adventure-actions .hv-adventure-image-btn{
   aspect-ratio:3 / 1!important;
@@ -26249,101 +25588,11 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   padding-left:20%!important;
 }
 
-/* Menú contextual: las cinco acciones aprobadas son imágenes independientes. */
-#gameShell .unit-context-menu:not(.hidden){
-  animation:hvUnitContextFade .13s ease-out both;
-}
-#gameShell .unit-context-menu:not(.hidden) .unit-context-star-shell{
-  animation:hvUnitContextReveal .17s cubic-bezier(.2,.8,.2,1) both;
-}
-@keyframes hvUnitContextFade{
-  from{opacity:0}to{opacity:1}
-}
-@keyframes hvUnitContextReveal{
-  from{transform:scale(.88);filter:blur(1px)}
-  to{transform:scale(1);filter:none}
-}
-#gameShell .unit-context-btn{
-  width:88px!important;
-  min-width:88px!important;
-  height:88px!important;
-  min-height:88px!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:50%!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  overflow:visible!important;
-  transition:transform .13s ease,filter .13s ease,opacity .13s ease!important;
-}
-#gameShell .unit-context-btn::before{display:none!important;}
-#gameShell .unit-context-btn .unit-context-action-art{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  object-fit:contain!important;
-  display:block!important;
-  pointer-events:none!important;
-  user-select:none!important;
-  -webkit-user-drag:none!important;
-  filter:drop-shadow(0 9px 14px rgba(0,0,0,.62));
-}
-#gameShell .unit-context-btn .unit-context-action-text{
-  position:absolute!important;
-  width:1px!important;
-  height:1px!important;
-  padding:0!important;
-  margin:-1px!important;
-  overflow:hidden!important;
-  clip:rect(0,0,0,0)!important;
-  white-space:nowrap!important;
-  border:0!important;
-}
-#gameShell .unit-context-btn:hover:not(:disabled){
-  transform:scale(1.09)!important;
-  filter:brightness(1.10) saturate(1.04)!important;
-  box-shadow:none!important;
-}
-#gameShell .unit-context-btn.slot-top:hover:not(:disabled){transform:translateX(-50%) scale(1.09)!important;}
-#gameShell .unit-context-btn.slot-left:hover:not(:disabled){transform:translateY(-50%) scale(1.09)!important;}
-#gameShell .unit-context-btn.slot-right:hover:not(:disabled){transform:translateY(-50%) scale(1.09)!important;}
-#gameShell .unit-context-btn.slot-bottom:hover:not(:disabled){transform:translateX(-50%) scale(1.09)!important;}
-#gameShell .unit-context-btn:active:not(:disabled){filter:brightness(.92)!important;}
-#gameShell .unit-context-btn:disabled{
-  opacity:.32!important;
-  filter:grayscale(.48) brightness(.70)!important;
-}
-
 /* Posición radial equivalente al concepto aprobado: MOV arriba, DEF izquierda,
    ATK derecha, EFFECT abajo-izquierda y DET abajo. */
-#gameShell .unit-context-btn.slot-top{
-  left:50%!important;top:-4px!important;transform:translateX(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-left{
-  left:-8px!important;top:50%!important;transform:translateY(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-right{
-  right:-8px!important;top:50%!important;transform:translateY(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-bottom{
-  left:50%!important;bottom:-4px!important;transform:translateX(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-left-bottom{
-  left:18px!important;bottom:31px!important;
-}
 
 @media(max-width:980px), (pointer:coarse){
   #gameShell .battlefield .player-status-mini{padding-left:17%!important;}
-  #gameShell .unit-context-btn{
-    width:68px!important;min-width:68px!important;
-    height:68px!important;min-height:68px!important;
-  }
-  #gameShell .unit-context-btn.slot-top{top:-3px!important;}
-  #gameShell .unit-context-btn.slot-left{left:-5px!important;}
-  #gameShell .unit-context-btn.slot-right{right:-5px!important;}
-  #gameShell .unit-context-btn.slot-bottom{bottom:-3px!important;}
-  #gameShell .unit-context-btn.slot-left-bottom{left:15px!important;bottom:29px!important;}
 }
 
 /* DEV · Calibrador integral de interfaz de combate -------------------------
@@ -26411,96 +25660,8 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
 }
 
 @media(max-width:680px){.hv-battle-layout-launcher{left:8px;top:8px;min-width:128px;padding:8px 10px;font-size:11px}.hv-battle-layout-tuner{left:8px;top:48px;width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 56px)}.hv-battle-layout-head{padding:10px 11px}.hv-battle-layout-head b{font-size:17px}.hv-battle-layout-body{padding:10px 11px}}
-
-
-/* ========================================================================== 
-   HALLVALLA · 20260827.5 · MENÚ CONTEXTUAL SIN MODAL / SIN ACERCAMIENTO
-   Al pulsar una unidad del campo solo aparecen ATK / DEF / MOV / EFFECT / DET.
-   La unidad real del tablero es el centro visual; no se crea tarjeta, retrato,
-   panel oscuro ni ampliación adicional.
-   ========================================================================== */
-#gameShell .unit-context-menu{
-  width:260px!important;
-  height:260px!important;
-  min-width:260px!important;
-  max-width:260px!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  overflow:visible!important;
-  transform:translate(-50%,-50%)!important;
-  pointer-events:none!important;
-}
-#gameShell .unit-context-menu::before,
-#gameShell .unit-context-menu::after,
-#gameShell .unit-context-star-shell::before,
-#gameShell .unit-context-star-shell::after{
-  content:none!important;
-  display:none!important;
-}
-#gameShell .unit-context-star-shell,
-#gameShell .unit-context-star-shell.unit-context-actions-only{
-  position:relative!important;
-  width:260px!important;
-  height:260px!important;
-  min-width:260px!important;
-  min-height:260px!important;
-  filter:none!important;
-  background:transparent!important;
-  border:0!important;
-  box-shadow:none!important;
-  pointer-events:none!important;
-}
 /* Compatibilidad defensiva con markup cacheado de una versión anterior. */
-#gameShell .unit-context-core{
-  display:none!important;
-}
-#gameShell .unit-context-btn{
-  pointer-events:auto!important;
-  z-index:3!important;
-}
 /* Los botones orbitan la ficha REAL del campo, sin taparla. */
-#gameShell .unit-context-btn.slot-top{
-  left:50%!important;
-  top:-2px!important;
-  transform:translateX(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-left{
-  left:-2px!important;
-  top:50%!important;
-  transform:translateY(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-right{
-  right:-2px!important;
-  top:50%!important;
-  transform:translateY(-50%)!important;
-}
-#gameShell .unit-context-btn.slot-left-bottom{
-  left:20px!important;
-  bottom:22px!important;
-}
-#gameShell .unit-context-btn.slot-bottom{
-  left:50%!important;
-  bottom:-2px!important;
-  transform:translateX(-50%)!important;
-}
-@media(max-width:980px), (pointer:coarse){
-  #gameShell .unit-context-menu,
-  #gameShell .unit-context-star-shell,
-  #gameShell .unit-context-star-shell.unit-context-actions-only{
-    width:220px!important;
-    height:220px!important;
-    min-width:220px!important;
-    min-height:220px!important;
-    max-width:220px!important;
-  }
-  #gameShell .unit-context-btn.slot-left-bottom{
-    left:15px!important;
-    bottom:18px!important;
-  }
-}
 
 /* ========================================================================== 
    DEVHUB1 · Centro único de controles internos (?hvdev=1)
@@ -26617,4 +25778,169 @@ html[data-hv-runtime="dev"] #hvForgeDirectTuner.hv-dev-hub-tool-open #hvForgeTun
   #hvDevToolsHubLauncher{right:7px;bottom:7px;height:38px;min-width:78px;padding:0 11px;}
   .hv-dev-tools-hub{right:7px;bottom:52px;width:min(322px,calc(100vw - 14px));max-height:76vh;}
   .hv-dev-hub-grid{grid-template-columns:1fr;}
+}
+
+/* ========================================================================== 
+   HALLVALLA · 20260908 · ACCIONES DE UNIDAD BAJO EL RELOJ DE TURNO
+   - Libera completamente el tablero de MOV / ATK / DEF / DET / EFFECT.
+   - Distribución estándar: MOV | ATK / DEF | DET / EFFECT centrado abajo.
+   - La lógica y los assets originales de cada acción permanecen intactos.
+   ========================================================================== */
+
+/* La quinta acción siempre queda centrada bajo la matriz 2x2. */
+/* Un único DET (por ejemplo, unidad rival) se muestra centrado. */
+/* Con tres acciones, la última queda centrada en la segunda fila. */
+
+/* Móvil / puntero táctil: misma estructura, reducida para no invadir la arena. */
+
+/* === 20260908.3 · bloqueo de slide horizontal durante drag táctico ===
+   El viewport de batalla no debe desplazarse lateralmente al arrastrar una
+   unidad o una carta. Los scrollers internos (mano, listas, etc.) conservan
+   su overflow propio fuera del gesto táctico. */
+html,
+body{
+  max-width:100%;
+  overflow-x:hidden !important;
+  overscroll-behavior-x:none;
+}
+body.hv-dragging-board{
+  overflow-x:hidden !important;
+  overscroll-behavior:none !important;
+  touch-action:none !important;
+}
+body.hv-dragging-board #gameShell,
+body.hv-dragging-board .battlefield,
+body.hv-dragging-board .grid-wrap,
+body.hv-dragging-board #grid{
+  overscroll-behavior:none !important;
+  touch-action:none !important;
+}
+/* ==========================================================================
+   HALLVALLA · MENÚ DE ACCIONES BAJO EL RELOJ · IMPLEMENTACIÓN CANÓNICA
+   Única implementación vigente de MOV / ATK / DEF / DET / EFFECT.
+   ========================================================================== */
+#gameShell .unit-context-menu,
+#gameShell .unit-context-menu:not(.hidden){
+  position:fixed!important;
+  z-index:260!important;
+  width:auto!important;
+  height:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transform:translateX(-50%)!important;
+  pointer-events:none!important;
+}
+#gameShell .unit-context-menu.hidden{display:none!important;}
+#gameShell .unit-context-menu::before,
+#gameShell .unit-context-menu::after,
+#gameShell .unit-context-star-shell::before,
+#gameShell .unit-context-star-shell::after{display:none!important;content:none!important;}
+#gameShell .unit-context-menu:not(.hidden){animation:hvUnitContextFade .13s ease-out both;}
+#gameShell .unit-context-menu:not(.hidden) .unit-context-star-shell{animation:hvUnitContextReveal .17s cubic-bezier(.2,.8,.2,1) both;}
+@keyframes hvUnitContextFade{from{opacity:0}to{opacity:1}}
+@keyframes hvUnitContextReveal{from{transform:scale(.88);filter:blur(1px)}to{transform:scale(1);filter:none}}
+#gameShell .unit-context-star-shell,
+#gameShell .unit-context-star-shell.unit-context-actions-only{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:88px 88px!important;
+  grid-auto-rows:88px!important;
+  gap:4px 8px!important;
+  width:184px!important;
+  height:auto!important;
+  min-width:184px!important;
+  min-height:0!important;
+  max-width:184px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  filter:none!important;
+  pointer-events:none!important;
+  align-items:center!important;
+  justify-items:center!important;
+}
+#gameShell .unit-context-btn{
+  position:relative!important;
+  inset:auto!important;
+  width:88px!important;
+  min-width:88px!important;
+  height:88px!important;
+  min-height:88px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transform:none!important;
+  pointer-events:auto!important;
+  align-self:center!important;
+  justify-self:center!important;
+  transition:transform .13s ease,filter .13s ease,opacity .13s ease!important;
+}
+#gameShell .unit-context-btn::before{display:none!important;content:none!important;}
+#gameShell .unit-context-btn .unit-context-action-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  filter:drop-shadow(0 9px 14px rgba(0,0,0,.62));
+}
+#gameShell .unit-context-btn .unit-context-action-text{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+#gameShell .unit-context-btn:hover:not(:disabled){
+  transform:scale(1.08)!important;
+  filter:brightness(1.10) saturate(1.04)!important;
+}
+#gameShell .unit-context-btn:active:not(:disabled){filter:brightness(.92)!important;}
+#gameShell .unit-context-btn:disabled{opacity:.32!important;filter:grayscale(.48) brightness(.70)!important;}
+#gameShell .unit-context-star-shell .unit-context-action-effect{grid-column:1 / -1!important;justify-self:center!important;}
+#gameShell .unit-context-star-shell.unit-context-actions-count-1{grid-template-columns:88px!important;width:88px!important;min-width:88px!important;max-width:88px!important;}
+#gameShell .unit-context-star-shell.unit-context-actions-count-3 > .unit-context-btn:last-child{grid-column:1 / -1!important;}
+@media(max-width:980px), (pointer:coarse){
+  #gameShell .unit-context-star-shell,
+  #gameShell .unit-context-star-shell.unit-context-actions-only{
+    grid-template-columns:64px 64px!important;
+    grid-auto-rows:64px!important;
+    gap:3px 6px!important;
+    width:134px!important;
+    min-width:134px!important;
+    max-width:134px!important;
+  }
+  #gameShell .unit-context-btn{
+    width:64px!important;
+    min-width:64px!important;
+    height:64px!important;
+    min-height:64px!important;
+  }
+  #gameShell .unit-context-star-shell.unit-context-actions-count-1{
+    grid-template-columns:64px!important;
+    width:64px!important;
+    min-width:64px!important;
+    max-width:64px!important;
+  }
 }

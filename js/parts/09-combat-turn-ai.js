@@ -93,14 +93,23 @@ function resolveBeastCellTraps(moving,units,traps){
   return{units:out,traps:nextTraps,logs};
 }
 
+let hallvallaMoveActionInFlight=false;
 async function moveUnit(u,x,y){
+  if(hallvallaMoveActionInFlight)return setHint("MOV: espera a que termine el movimiento actual.");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
+  const live=getLiveUnitRef(u);
+  if(!live)return setHint("La unidad ya no está disponible en el campo.");
+  u=live;
   if(u?.leader)return setHint("Los líderes están anclados en su Base y no pueden moverse.");
   if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
   const mulanExecMove=isMulanExecutionMoveReady(u);
+  if(!mulanExecMove&&u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
+  if(!mulanExecMove&&u.moved)return setHint(`${u.name} ya se movió este turno.`);
   const movePath=getUnitMovementPath(u,x,y,publicState?.units||[],mulanExecMove?1:effectiveMov(u));
-  if(!movePath)return setHint("Movimiento inválido: una unidad terrestre no puede atravesar otras piezas.");
+  if(!movePath)return setHint("Movimiento inválido: el destino supera el MOV disponible o está ocupado.");
   if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse este turno.`);
+  hallvallaMoveActionInFlight=true;
+  try{
   const moveStartUnits=[...(publicState.units||[])];
   const movedNow=isAerialMovementUnit(u)?dist(u,{x,y}):movementPathDistance(movePath);
   const straightMoveNow=isAerialMovementUnit(u)?(isStraightLineDelta(x-u.x,y-u.y)?movedNow:0):(isMovementPathStraight(movePath)?movedNow:0);
@@ -132,11 +141,16 @@ async function moveUnit(u,x,y){
   }
   const movementBloodVictory=applyBloodVictoryForDeaths(moveStartUnits,units);
   units=movementBloodVictory.units;
-  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapResult.traps,legendaryTraps:trapMove.traps,statusFxEvent:lionFearMove.statusFxEvent||null,floatFxEvent:lionFearMove.floatFxEvent||null});
+  const committed=await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapResult.traps,legendaryTraps:trapMove.traps,statusFxEvent:lionFearMove.statusFxEvent||null,floatFxEvent:lionFearMove.floatFxEvent||null});
+  if(!committed)return setHint("MOV: no se pudo confirmar el movimiento; inténtalo de nuevo.");
   const mulanExtraText=mulanExecMove&&!trapMove.cancel&&units.some(it=>it.id===u.id)?` ${u.name} completa el movimiento de ejecución y ahora debe elegir ATK o DEF para gastar su acción restante.`:"";
   const bloodVictoryText=movementBloodVictory.logs.length?` ${movementBloodVictory.logs.join(" ")}`:"";
   await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}${mulanExtraText}${bloodVictoryText}`,...lionFearMove.logs].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}${mulanExtraText}${bloodVictoryText}`,...trapMove.logs,...beastTrapResult.logs,...lionFearMove.logs].join(" "));
   clearSelection();
+  return true;
+  }finally{
+    hallvallaMoveActionInFlight=false;
+  }
 }
 function getBattleDamage(attacker,mods={}){const base=Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0));return Math.max(0,Math.round(base*getEquipmentDamageMultiplier(attacker)))}
 function isWarriorLeaderSweepAttacker(unit){

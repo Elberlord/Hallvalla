@@ -467,9 +467,6 @@ function maxCopiesForCard(card){
   const base=rarity==="básica"||rarity==="basica"||rarity==="basic"?DECK_RULES.basicMaxCopies:DECK_RULES.nonBasicMaxCopies;
   return applyHallvallaValueHooks("deck.maxCopies",base,{card});
 }
-function getCardSurplusCopies(card){
-  return Math.max(0,Number(card?.qty||0)-maxCopiesForCard(card));
-}
 function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
   const counts={};
   const errors=[];

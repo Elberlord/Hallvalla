@@ -26,9 +26,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260827.12";
+const BUILD = "20260908.4";
 const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"1dc404a6ace6","parts/05-cards-specials-lore.js":"423ad82293d3","parts/06-decks-units-combat-rules.js":"21e3baba9621","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"d2dd879c3acf","parts/09-combat-turn-ai.js":"92c3265f3910","parts/10-board-interactions.js":"b9891f45393b","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"b7be55c4c3d6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"1ac2f9f39355","parts/14-adventure-engine-ui.js":"fdc1d01f971c","parts/15-settings-tuners-events.js":"9f14e5e5847d","parts/16-exact-guides-mobile.js":"cb820147638e","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/battle-layout.js":"dc616bfe2e18","features/forge-layout.js":"3aaf8ac2eb65","features/forge.js":"c6f640f8f213","features/hvdev.js":"58fc514f1002","features/pve.js":"3eb0e46decaf","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"b328eb1856b5","parts/02-assets-leaders.js":"7c700e9b0da8","parts/03-runtime-clocks.js":"8b208ccee385","parts/04-fx-audio-profile.js":"cdef2b3c914e","parts/05-cards-specials-lore.js":"342045d50e9a","parts/06-decks-units-combat-rules.js":"32d50b76a139","parts/07-network-battle-state.js":"944b9d2f973f","parts/08-actions-inspector.js":"d2dd879c3acf","parts/09-combat-turn-ai.js":"bfc0b33aa1d3","parts/10-board-interactions.js":"0cdaa347b7ad","parts/11-render-battle-tutorial.js":"c56765f4522c","parts/12-profile-shop-packs.js":"a9a58a41ecb6","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"fc714d33d9ec","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"9163a6e3fb1b","parts/16-exact-guides-mobile.js":"cb820147638e","parts/17-dragon-contracts.js":"d96c4f18732e","parts/18-dragon-egg.js":"1bc39b21d296","parts/19-field-figures-3d.js":"8cf4456fbb48","features/adventure.js":"ed0742a81163","features/battle-layout.js":"dc616bfe2e18","features/forge-layout.js":"c724b29f6c00","features/forge.js":"c6f640f8f213","features/hvdev.js":"58fc514f1002","features/pve.js":"560fae8da467","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -255,8 +255,6 @@ const CORE_PARTS = [
   "16-exact-guides-mobile.js",
 ];
 
-const OPTIONAL_CORE_PARTS = new Set();
-
 /* STAGE10 · Feature loading real + caché de sesión ---------------------------
    Cada subsistema pesado tiene un único bundle de entrada. El bundle se
    descarga una sola vez por sesión y el Service Worker lo conserva para
@@ -292,7 +290,7 @@ function hvFeatureMetaWrite(feature,state,error=""){
 function hvVersionedResourceUrl(relative){
   const safe=String(relative||"").replace(/^\/+/,"");
   const hash=RESOURCE_HASHES[safe]||BUILD;
-  return `js/${safe}?h=${encodeURIComponent(hash)}`;
+  return `js/${safe}?h=${encodeURIComponent(hash)}&v=${encodeURIComponent(BUILD)}`;
 }
 function loadClassicScript(file) {
   const safe=String(file||"").trim();
@@ -460,13 +458,7 @@ function hvRequestPersistentStorageOnce(){
 document.addEventListener("pointerdown",hvRequestPersistentStorageOnce,{once:true,capture:true,passive:true});
 
 try {
-  for (const file of CORE_PARTS) {
-    try{await loadClassicScript(file);}
-    catch(error){
-      if(!OPTIONAL_CORE_PARTS.has(file))throw error;
-      console.warn(`[HallValla][AI] ${file} no pudo cargarse; continúa la IA legacy sin doctrinas V1.`,error);
-    }
-  }
+  for (const file of CORE_PARTS) await loadClassicScript(file);
   installLazyAdventureWrapper();
   bindLazyPvpEntry("onlineBtn");
   installLazyBattleLayoutRuntime();

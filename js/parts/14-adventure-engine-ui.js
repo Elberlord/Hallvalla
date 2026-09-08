@@ -303,19 +303,6 @@ function completeAdventureBattleOnce(pub){
 
   return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,packPending:!!battle.cardPack};
 }
-function getNextAdventureBattleId(){
-  const override=resolveHallvallaOverride("adventure.nextBattleId",{state:publicState});
-  if(override.handled)return override.value;
-  const progress=getAdventureProgress();
-  if(!progress.guardianDefeated)return ADVENTURE_GUARDIAN_BATTLE.id;
-  for(const chapter of ADVENTURE_CHAPTERS){
-    if(chapter.requiresChapter&&!isChapterComplete(ADVENTURE_CHAPTER_BY_ID[chapter.requiresChapter],progress))continue;
-    const ch=getChapterProgress(progress,chapter);
-    const next=getRequiredChapterBattles(chapter).find(b=>!ch.completedBattles[b.id]&&b.num<=ch.unlockedBattle);
-    if(next)return next.id;
-  }
-  return "";
-}
 function backToMainMenu(){
   leaveCurrentGame();
 }

@@ -2631,13 +2631,6 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     return score;
   }
 
-  function supportCoverageForCell(cell,front,ctx){
-    if(!cell||!front)return 0;
-    const enemies=(ctx.enemyUnits||[]).filter(e=>e&&!e.leader&&num(e.hp,1)>0&&enemyCanPressureCell(e,front,ctx));
-    if(!enemies.length)return 0;
-    const fake={x:cell.x,y:cell.y};
-    return enemies.filter(e=>dist(fake,e)<=rg(front,ctx)+mov(front,ctx)).length;
-  }
 
   function backlineScreenLoss(front,cell,ctx={}){
     if(!front||!cell||!isFrontAsset(front,ctx))return {score:0,critical:0};

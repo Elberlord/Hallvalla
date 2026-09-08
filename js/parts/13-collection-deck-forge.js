@@ -531,20 +531,9 @@ function getDeckBuilderCardPoolForForge(){
   });
   return [...byKey.values()];
 }
-function getCraftMaterials(){
-  return normalizeCraftMaterials(getPlayerCollection().materials||{});
-}
-function getMaterialAmountForCard(card){
-  return getCraftMaterials()[getCraftRarityKey(card)]||0;
-}
 function getCraftLockReason(card){
   const base=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting()?"Gana el evento del Señor de las Bestias al menos una vez para crear cartas de bestias.":"";
   return applyHallvallaValueHooks("forge.craftLockReason",base,{card});
-}
-function canCraftCardCopy(card){
-  if(!card||Number(card.qty||0)>=maxCopiesForCard(card))return false;
-  if(getCraftLockReason(card))return false;
-  return getMaterialAmountForCard(card)>=getCraftCostForCard(card);
 }
 function disenchantCardSurplus(cardKey){
   if(isCollectionBrowseOnly())return false;
@@ -619,40 +608,6 @@ function disenchantAllSurplusCards(){
   renderDeckBuilder();
   hvAlert(`Convertiste ${destroyed} copia${destroyed===1?"":"s"} sobrante${destroyed===1?"":"s"} en material de rareza.`,"Material obtenido");
   return true;
-}
-function getTotalSurplusCopies(){
-  return getCollectionCardsExpanded().reduce((sum,c)=>sum+getCardSurplusCopies(c),0);
-}
-function updateBulkDustButton(){
-  const surplus=getTotalSurplusCopies();
-  const btn=$("dustAllSurplusCornerBtn");
-  if(!btn)return;
-  btn.disabled=surplus<=0;
-  btn.textContent=surplus>0?`Convertir sobrantes (${surplus})`:"Sin sobrantes";
-  btn.title=surplus>0
-    ? `Convierte ${surplus} copia${surplus===1?"":"s"} sobrante${surplus===1?"":"s"} en material de su rareza.`
-    : "No tienes copias sobrantes para convertir.";
-}
-function renderCraftMaterialPanel(){
-  const panel=$("craftMaterialPanel");
-  const summary=$("craftMaterialSummary");
-  const materials=getCraftMaterials();
-  const total=CRAFT_RARITY_KEYS.reduce((sum,k)=>sum+Number(materials[k]||0),0);
-  const nodes=CRAFT_RARITY_KEYS.map((k,index)=>{
-    const amount=Number(materials[k]||0);
-    const cost=getCraftCostByRarityKey(k);
-    const label=getCraftRarityLabel(k);
-    const can=amount>=cost;
-    const stableId={basic:"craftMaterialBasic",epic:"craftMaterialEpic",glorious:"craftMaterialGlorious",mythic:"craftMaterialMythic",legendary:"craftMaterialLegendary",demigod:"craftMaterialDemigod"}[k]||`craftMaterial${index+1}`;
-    return `<div id="${stableId}" class="craft-material-node ${k} ${can?"can-create":"cant-create"}" data-craft-slot="${index+1}" title="${escapeHtml(`${label}: tienes ${amount}. Crear cuesta ${cost}.`)}"><span id="${stableId}Value" class="craft-material-value">${amount}</span><small id="${stableId}Label" class="craft-material-label">${escapeHtml(label)}</small></div>`;
-  }).join("");
-  if(panel){
-    panel.innerHTML=`<div class="craft-material-art" aria-label="Materiales de creación" data-total="${total}">${nodes}</div>`;
-  }
-  if(summary){
-    summary.innerHTML='';
-  }
-  updateBulkDustButton();
 }
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
 function sanitizeDeckDraftToCollection(deck=[]){
@@ -832,13 +787,6 @@ function getDeckBuilderMiniImageHtml(card){
     return `<img src="${escapeHtml(portrait)}" alt="${name}" draggable="false" ${fallbackAttr}>`;
   }
   return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
-}
-function getDeckBuilderTypeGlyph(card){
-  if(card?.type==="unit")return "U";
-  if(card?.type==="spell")return "S";
-  if(card?.type==="trap")return "T";
-  if(card?.type==="equipment")return "E";
-  return "C";
 }
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,addDisabled=false,addLockReason="",used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
   const principalSlot=mode==="deck"&&card?.type==="unit"?currentPrincipalKeys.indexOf(card.key):-1;
@@ -1059,15 +1007,6 @@ function renderDeckPrincipalSelector(){
   slots.querySelectorAll("[data-clear-principal-slot]").forEach(btn=>btn.addEventListener("click",()=>clearCurrentDeckPrincipal(Number(btn.dataset.clearPrincipalSlot))));
 }
 
-function normalizeDeckSearchValue(value){
-  return String(value??"")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .toLowerCase()
-    .replace(/[_-]+/g," ")
-    .replace(/\s+/g," ")
-    .trim();
-}
 const DECK_SEARCH_ALIAS_GROUPS=[
   ["hacha","axe","hachero","hachera"],
   ["espada","sword","espadachin","espadachina"],
@@ -1088,49 +1027,6 @@ const DECK_SEARCH_ALIAS_GROUPS=[
   ["legendaria","legendary"],
   ["semidios","demigod"]
 ];
-function getDeckSearchSemanticText(card,battlePower=null,battleTier=null){
-  if(!card)return "";
-  const weapon=typeof getWeaponClassForCard==="function"?String(getWeaponClassForCard(card)||""):"";
-  const weaponLabel=typeof getWeaponClassLabel==="function"?String(getWeaponClassLabel(card)||""):"";
-  const tags=[
-    card.name,card.key,card.type,card.rarity,card.text,card.effectText,card.ability,
-    card.element,card.elementType,card.subtype,card.role,card.unitClass,card.quality,
-    weapon,weaponLabel
-  ];
-  if(typeof isAssassinUnit==="function"&&isAssassinUnit(card))tags.push("asesino asesina assassin ultimate blow");
-  if(weapon==="axe")tags.push("hacha axe");
-  if(weapon==="sword")tags.push("espada sword");
-  if(weapon==="spear")tags.push("lanza spear lance lancero pica");
-  if(weapon==="bow")tags.push("arco bow archer arquero arquera flecha tirador");
-  if(weapon==="cavalry")tags.push("caballeria cavalry jinete montado");
-  if(weapon==="mage")tags.push("mago mage hechicero hechicera caster arcano");
-  if(weapon==="beast"||card.beast)tags.push("bestia beast animal");
-  if(card.caster||card.hechicero||card.hechicera)tags.push("caster hechicero hechicera mago magia");
-  if(card.healer)tags.push("sanador sanadora curacion curar healer");
-  if(card.nigromante)tags.push("nigromante necromancer");
-  if(card.stealth)tags.push("oculto sigilo stealth");
-  if(card.ninjutsu)tags.push("ninjutsu ninja shinobi");
-  if(card.type==="unit")tags.push("unidad invocacion unit");
-  if(card.type==="spell")tags.push("magia hechizo spell");
-  if(card.type==="trap")tags.push("trampa trap");
-  if(card.type==="equipment")tags.push("equipo equipment");
-  if(Number.isFinite(battlePower))tags.push(`pb ${battlePower} poder de batalla ${battleTier?.label||""}`);
-  else tags.push("sin poder de batalla");
-  if(Array.isArray(card.tags))tags.push(card.tags.join(" "));
-  if(Array.isArray(card.keywords))tags.push(card.keywords.join(" "));
-  return normalizeDeckSearchValue(tags.filter(Boolean).join(" "));
-}
-function deckSearchMatchesCard(card,rawSearch,battlePower=null,battleTier=null){
-  const query=normalizeDeckSearchValue(rawSearch);
-  if(!query)return true;
-  const hay=getDeckSearchSemanticText(card,battlePower,battleTier);
-  const tokens=query.split(" ").filter(Boolean);
-  return tokens.every(token=>{
-    if(hay.includes(token))return true;
-    const group=DECK_SEARCH_ALIAS_GROUPS.find(items=>items.includes(token));
-    return !!group&&group.some(alias=>hay.includes(alias));
-  });
-}
 function getDeckBuilderAddLockReason(card,used=0,addLimit=0){
   if(!card)return "No se pudo identificar esta carta.";
   const ownedQty=Math.max(0,Number(card.qty||0));

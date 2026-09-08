@@ -411,9 +411,9 @@ function openUnitContextMenu(u,x,y){
   hideCardInspectModal();
   render();
   if(u.owner!==myPlayer){
-    setHint(`${u.name}: abre DET desde la estrella táctica para revisar sus datos.`);
+    setHint(`${u.name}: abre DET desde el menú de acciones bajo el reloj para revisar sus datos.`);
   }else{
-    setHint(u.leader?`${u.name}: Base fija. Puede usar DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET, pero no MOV.`:`${u.name}: elige MOV, DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET desde la estrella táctica.`);
+    setHint(u.leader?`${u.name}: Base fija. Puede usar DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET, pero no MOV.`:`${u.name}: elige MOV, DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET desde el menú bajo el reloj.`);
   }
 }
 const hallvallaUnitContextDelegatedMenus=new WeakSet();
@@ -439,10 +439,16 @@ function renderUnitContextMenu(){
     menu.classList.add("hidden");
     return;
   }
-  const options=getUnitContextOptions(u);
+  const rawOptions=getUnitContextOptions(u);
+  // HUD v20260908: orden visual fijo para aprovechar el área bajo el reloj.
+  // Unidad estándar: MOV | ATK / DEF | DET / EFFECT centrado debajo.
+  const preferredOrder=["mov","attk","def","det","effect"];
+  const options=[...rawOptions].sort((a,b)=>{
+    const ai=preferredOrder.indexOf(a.key),bi=preferredOrder.indexOf(b.key);
+    return (ai<0?99:ai)-(bi<0?99:bi);
+  });
   const canMove=isMyTurn()&&u.owner===myPlayer&&isUnitMoveWindow(u)&&!isBattleEnded();
   const canAction=isMyTurn()&&u.owner===myPlayer&&isUnitActionWindow(u)&&!isBattleEnded();
-  const slotMap={mov:"slot-top",def:"slot-left",effect:"slot-left-bottom",attk:"slot-right",det:"slot-bottom"};
   const actionArt={
     mov:"assets/ui/context_menu/mov.webp",
     def:"assets/ui/context_menu/def.webp",
@@ -450,39 +456,30 @@ function renderUnitContextMenu(){
     effect:"assets/ui/context_menu/effect.webp",
     det:"assets/ui/context_menu/det.webp"
   };
-  // UI v20260827.5: el menú contextual ya no duplica/acerca la unidad.
-  // La propia ficha del campo permanece visible en el centro y solo se
-  // despliegan alrededor las acciones disponibles. DET conserva su función
-  // de abrir los detalles cuando el jugador lo solicita explícitamente.
-  const markup=`<div class="unit-context-star-shell unit-context-actions-only">${options.map(o=>{
+  const hasEffect=options.some(o=>o.key==="effect");
+  const layoutClasses=[
+    "unit-context-star-shell",
+    "unit-context-actions-only",
+    `unit-context-actions-count-${options.length}`,
+    hasEffect?"unit-context-has-effect":"unit-context-no-effect"
+  ].join(" ");
+  const markup=`<div class="${layoutClasses}">${options.map(o=>{
     const mulanExecMove=isMulanExecutionMoveReady(u);
     const mulanExecChoice=isMulanExecutionChoiceReady(u);
     const disabled=(o.key==="mov"&&(!canMove||(!mulanExecMove&&(u.moved||u.acted))))||(o.key==="attk"&&(!canUnitDeclareAttack(u)))||(o.key==="effect"&&(!canAction||u.acted||mulanExecChoice||mulanExecMove))||(o.key==="def"&&(!canAction||(!mulanExecChoice&&u.acted)||u.defenseModeReady||mulanExecMove||(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)));
     const visualLabel=o.key==="attk"?"ATK":o.label;
     const artSrc=actionArt[o.key]||actionArt.det;
-    return `<button class="unit-context-btn ${slotMap[o.key]||"slot-top"}" data-action="${o.key}" ${disabled?"disabled":""} aria-label="${escapeHtml(visualLabel)}" title="${escapeHtml(o.hint)}"><img class="unit-context-action-art" src="${artSrc}" alt="" aria-hidden="true"><span class="unit-context-action-text">${escapeHtml(visualLabel)}</span></button>`;
+    return `<button class="unit-context-btn unit-context-action-${o.key}" data-action="${o.key}" ${disabled?"disabled":""} aria-label="${escapeHtml(visualLabel)}" title="${escapeHtml(o.hint)}"><img class="unit-context-action-art" src="${artSrc}" alt="" aria-hidden="true"><span class="unit-context-action-text">${escapeHtml(visualLabel)}</span></button>`;
   }).join("")}</div>`;
   if(menu.__hvContextMarkup!==markup){menu.innerHTML=markup;menu.__hvContextMarkup=markup;}
-  const grid=$("grid");
-  if(grid){
-    const g=grid.getBoundingClientRect();
-    const cellW=g.width/COLS,cellH=g.height/ROWS;
-    let left=g.left+(unitContextSelection.x+.5)*cellW;
-    let top=g.top+(unitContextSelection.y+.5)*cellH;
-    const safeUnitId=CSS.escape(String(u.id||""));
-    const unitEl=safeUnitId?document.querySelector(`.unit-card[data-unit-id="${safeUnitId}"]`):null;
-    const contextAnchorLift=(r)=>Math.min(40,Math.max(24,(Number(r?.height)||0)*.38));
-    if(unitEl){
-      const r=unitEl.getBoundingClientRect();
-      left=r.left+r.width/2;
-      top=r.top+r.height/2-contextAnchorLift(r);
-    }else if(u.leader){
-      const base=document.querySelector(`.leader-base[data-leader-id="${safeUnitId}"]`);
-      if(base){const r=base.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2-contextAnchorLift(r);}
-    }else{
-      const cellEl=document.querySelector(`.cell[data-x="${u.x}"][data-y="${u.y}"]`);
-      if(cellEl){const r=cellEl.getBoundingClientRect();left=r.left+r.width/2;top=r.top+r.height/2-contextAnchorLift(r);}
-    }
+
+  // El menú ya no orbita la unidad. Se ancla al HUD de TURNO para dejar el
+  // tablero completamente libre de controles flotantes.
+  const clock=$("turnTimerHud");
+  if(clock){
+    const r=clock.getBoundingClientRect();
+    let left=r.left+r.width/2;
+    let top=r.bottom+12;
     menu.style.left=`${left}px`;
     menu.style.top=`${top}px`;
     battleRequestAnimationFrame(()=>{
@@ -491,13 +488,15 @@ function renderUnitContextMenu(){
       const vw=window.innerWidth||document.documentElement.clientWidth||0;
       const vh=window.innerHeight||document.documentElement.clientHeight||0;
       const clampedLeft=Math.min(Math.max(left,rect.width/2+margin),Math.max(rect.width/2+margin,vw-rect.width/2-margin));
-      const clampedTop=Math.min(Math.max(top,rect.height/2+margin),Math.max(rect.height/2+margin,vh-rect.height/2-margin));
+      const maxTop=Math.max(margin,vh-rect.height-margin);
+      const clampedTop=Math.min(Math.max(top,margin),maxTop);
       menu.style.left=`${clampedLeft}px`;
       menu.style.top=`${clampedTop}px`;
-    },"unit-context-clamp");
+    },"unit-context-clock-anchor");
   }
   menu.classList.remove("hidden");
 }
+
 
 const ACOLYTE_HEALER_EFFECT_COSTS=Object.freeze({transfer:2,purify:3,resurrect:4});
 function getAcolyteEffectRange(caster){return Math.max(1,Number(caster?.effectRange||3)+Number(getEquipmentRangeBonus(caster)||0));}

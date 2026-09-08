@@ -1775,13 +1775,6 @@ function processHallvallaMineEvents(){
   saveHallvallaMineEventState(state);
   return state;
 }
-function getHallvallaMineEventRewardText(reward={}){
-  const parts=[];
-  if(Number(reward.gems||0)>0)parts.push(`+${Number(reward.gems)}💎`);
-  if(Number(reward.gold||0)>0)parts.push(`+${Number(reward.gold)}🪙`);
-  if(Number(reward.fragments||0)>0)parts.push(`+${Number(reward.fragments)} fragmentos`);
-  return parts.join(" ")||"Recompensa";
-}
 function formatHallvallaMineEventEffectHtml(text=""){
   const safe=escapeHtml(String(text||""));
   return safe.replaceAll("🪙",'<img class="mine-resource-icon" src="assets/home/icon_gold.webp" alt="Oro">');
@@ -2769,9 +2762,6 @@ function cacheHallvallaMineShopState(state){
   return safe;
 }
 function getHallvallaMineShopDayIndex(now=getHallvallaMineNow()){return Math.floor(Math.max(0,Number(now||0))/86400000);}
-function getHallvallaMineShopDayKey(dayIndex=getHallvallaMineShopDayIndex()){
-  return new Date(dayIndex*86400000).toISOString().slice(0,10);
-}
 function hashHallvallaMineShopString(value=""){
   let h=2166136261>>>0;
   const text=String(value||"");
