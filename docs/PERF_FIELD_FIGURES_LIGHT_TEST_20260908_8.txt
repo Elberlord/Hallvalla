@@ -6,7 +6,7 @@ No incluye la rama experimental de pagos 20260908.7.
 CAMBIO ÚNICO DE RENDIMIENTO:
 - Las unidades colocadas en el tablero cargan assets/field_figures_light/.
 - Resolución objetivo: 384x576 px (una figura cuadrada queda 384x384).
-- Las 100 figuras originales permanecen intactas en assets/field_figures/.
+- Las 100 figuras originales permanecen intactas en assets/field_figures_light/.
 - DET, editor y otras vistas mantienen las rutas originales.
 - Si una figura ligera falta, el runtime cae automáticamente a la original.
 - No se cambian tamaño visual, hitboxes, reglas, estadísticas, timers ni Firebase.

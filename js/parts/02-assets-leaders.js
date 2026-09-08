@@ -136,10 +136,10 @@ function isBasicRarityLabel(value){
 
   Con esa identidad se derivan únicamente las capas que siguen vigentes:
     assets/cards/<bucket>/<assetKey>.webp
-    assets/field_figures/<bucket>/<assetKey>.webp
+    assets/field_figures_light/<bucket>/<assetKey>.webp
 
-  PERF6A: la capa antigua de cartas de tablero fue retirada. En arena no existe fallback a carta; si falta
-  la field_figure se muestra el triángulo liviano de asset faltante.
+  PERF8B: las figuras de arena usan directamente la colección ligera. No existe fallback a la colección 1024×1536; si falta
+  una field_figure se muestra el triángulo liviano de asset faltante.
 
   Los buckets alternativos se prueban automáticamente para mantener compatibilidad
   con assets antiguos ubicados en carpetas distintas (por ejemplo Wallace/Mulan).
@@ -155,7 +155,7 @@ function hvUniqueAssetValues(values){
 }
 function getAssetBucketFromPath(value){
   const path=String(value||"").replace(/\\/g,"/");
-  const match=path.match(/assets\/(?:cards|field_figures)\/(basic|special|beasts)\//i);
+  const match=path.match(/assets\/(?:cards|field_figures(?:_light)?)\/(basic|special|beasts|no_muertos)\//i);
   return match?match[1].toLowerCase():"";
 }
 function getExplicitAssetPath(entity,layer){
@@ -208,7 +208,8 @@ function buildAutoAssetCandidates(layer,entityOrKey){
   const source=entityOrKey&&typeof entityOrKey==="object"?entityOrKey:{key:entityOrKey};
   const key=getAssetIdentityKey(source);
   if(!key)return [];
-  return getAssetBucketCandidates(source,layer).map(folder=>`assets/${layer}/${folder}/${key}.webp`);
+  const physicalLayer=layer==="field_figures"?"field_figures_light":layer;
+  return getAssetBucketCandidates(source,layer).map(folder=>`assets/${physicalLayer}/${folder}/${key}.webp`);
 }
 
 function getResolvedCardPortraitCandidates(entity){
@@ -220,8 +221,9 @@ function getResolvedCardPortraitCandidates(entity){
 }
 function getResolvedFieldFigureCandidates(entity){
   if(!entity||entity.leader)return [];
+  const explicit=String(getExplicitAssetPath(entity,"field_figures")||"").replace(/^assets\/field_figures\//,"assets/field_figures_light/");
   return hvUniqueAssetValues([
-    getExplicitAssetPath(entity,"field_figures"),
+    explicit,
     ...buildAutoAssetCandidates("field_figures",entity)
   ]);
 }

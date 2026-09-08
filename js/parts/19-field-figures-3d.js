@@ -115,14 +115,10 @@ function hvFieldFigureAssetCandidates(key,entity=null){
   const source=entity||entry?.entity||{key};
   return typeof getResolvedFieldFigureCandidates==="function"?getResolvedFieldFigureCandidates(source):[];
 }
-/* PERF7 · El tablero usa una copia reducida de cada field figure.
-   Las rutas originales se conservan como fallback y siguen disponibles para
-   DET/editor/otras vistas. Esto reduce descarga y memoria gráfica sin cambiar
-   el tamaño visual de la unidad ni ninguna regla de combate. */
+/* PERF8B · La colección ligera ya es la fuente canónica de figuras del campo.
+   No se mantiene una segunda textura 1024×1536 como fallback. */
 function hvBattleFieldFigureAssetCandidates(key,entity=null){
-  const originals=hvFieldFigureAssetCandidates(key,entity);
-  const light=originals.map(path=>String(path||"").replace(/^assets\/field_figures\//,"assets/field_figures_light/"));
-  return hvUniqueAssetValues([...light,...originals]);
+  return hvFieldFigureAssetCandidates(key,entity);
 }
 
 function hvFieldFigureStyleText(key){

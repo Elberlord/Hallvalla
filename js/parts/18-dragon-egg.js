@@ -26,14 +26,14 @@ const DRAGON_COMPANION_STATS=Object.freeze({
 });
 
 const DRAGON_COMPANION_ASSETS=Object.freeze({
-  egg:Object.freeze({hand:"assets/cards/beasts/dragon_egg.webp",field:"assets/field_figures/beasts/dragon_egg.webp"}),
-  baby:Object.freeze({hand:"assets/cards/beasts/baby_dragon.webp",field:"assets/field_figures/beasts/baby_dragon.webp"}),
-  young_lightning:Object.freeze({hand:"assets/cards/beasts/young_lightning_dragon.webp",field:"assets/field_figures/beasts/young_lightning_dragon.webp"}),
-  young_fire:Object.freeze({hand:"assets/cards/beasts/young_fire_dragon.webp",field:"assets/field_figures/beasts/young_fire_dragon.webp"}),
-  young_ice:Object.freeze({hand:"assets/cards/beasts/young_ice_dragon.webp",field:"assets/field_figures/beasts/young_ice_dragon.webp"}),
-  adult_lightning:Object.freeze({hand:"assets/cards/beasts/adult_lightning_dragon.webp",field:"assets/field_figures/beasts/adult_lightning_dragon.webp"}),
-  adult_fire:Object.freeze({hand:"assets/cards/beasts/adult_fire_dragon.webp",field:"assets/field_figures/beasts/adult_fire_dragon.webp"}),
-  adult_ice:Object.freeze({hand:"assets/cards/beasts/adult_ice_dragon.webp",field:"assets/field_figures/beasts/adult_ice_dragon.webp"})
+  egg:Object.freeze({hand:"assets/cards/beasts/dragon_egg.webp",field:"assets/field_figures_light/beasts/dragon_egg.webp"}),
+  baby:Object.freeze({hand:"assets/cards/beasts/baby_dragon.webp",field:"assets/field_figures_light/beasts/baby_dragon.webp"}),
+  young_lightning:Object.freeze({hand:"assets/cards/beasts/young_lightning_dragon.webp",field:"assets/field_figures_light/beasts/young_lightning_dragon.webp"}),
+  young_fire:Object.freeze({hand:"assets/cards/beasts/young_fire_dragon.webp",field:"assets/field_figures_light/beasts/young_fire_dragon.webp"}),
+  young_ice:Object.freeze({hand:"assets/cards/beasts/young_ice_dragon.webp",field:"assets/field_figures_light/beasts/young_ice_dragon.webp"}),
+  adult_lightning:Object.freeze({hand:"assets/cards/beasts/adult_lightning_dragon.webp",field:"assets/field_figures_light/beasts/adult_lightning_dragon.webp"}),
+  adult_fire:Object.freeze({hand:"assets/cards/beasts/adult_fire_dragon.webp",field:"assets/field_figures_light/beasts/adult_fire_dragon.webp"}),
+  adult_ice:Object.freeze({hand:"assets/cards/beasts/adult_ice_dragon.webp",field:"assets/field_figures_light/beasts/adult_ice_dragon.webp"})
 });
 
 function dragonElementLabel(element){return{lightning:"Relámpago",fire:"Fuego",ice:"Hielo"}[element]||"Desconocido";}

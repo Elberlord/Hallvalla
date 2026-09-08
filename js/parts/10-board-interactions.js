@@ -727,7 +727,7 @@ function makeLightCavalryToken(owner,x,y){
   const template=(CARD_TEMPLATES||[]).find(c=>c.key==="cavalry")||{key:"cavalry",assetKey:"cavalry_light",assetBucket:"basic",name:"Caballería ligera",type:"unit",icon:"🐎",portrait:CARD_PORTRAITS.cavalry,cost:2,hp:5,atk:4,guard:3,dex:4,agi:2,mov:3,range:1,text:"Carga desestabilizadora."};
   const card=makeCard({...template,assetKey:"cavalry_light",assetBucket:"basic"},owner);
   const token=makeUnit({...card,summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},x,y);
-  return {...token,assetKey:"cavalry_light",assetBucket:"basic",fieldFigure:"assets/field_figures/basic/cavalry_light.webp",tokenSummon:true};
+  return {...token,assetKey:"cavalry_light",assetBucket:"basic",fieldFigure:"assets/field_figures_light/basic/cavalry_light.webp",tokenSummon:true};
 }
 function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(!caster)return[];

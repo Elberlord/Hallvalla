@@ -1,0 +1,8 @@
+HallValla 20260908.11 · Consolidación de figuras de campo ligeras
+
+- La prueba 384×576 fue confirmada visualmente.
+- assets/field_figures_light/ pasa a ser la colección canónica para figuras en batalla.
+- Se elimina assets/field_figures/ para evitar duplicar las 100 texturas grandes.
+- Las tres imágenes de invocaciones de Salomón que también funcionan como retrato grande se conservaron en assets/cards/special/units/.
+- Mano, colección y DET siguen utilizando sus assets de cards cuando existen; no se redujo la resolución de las cartas normales.
+- No cambia el tamaño visual, hitbox, estadísticas, movimiento ni reglas de combate.
