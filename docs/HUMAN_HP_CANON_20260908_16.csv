@@ -1,0 +1,70 @@
+﻿key,unidad,HP_anterior,HP_canonico
+acolyte_healer,Acólita sanadora,3,2
+scout,Asesina del desierto,2,2
+ericto,Ericto,3,2
+geisha_encubierta,Geisha Encubierta,2,2
+morgana,Morgana,4,2
+arcane_adept,Adepto Arcano,3,3
+archer,Arquera del desierto,2,3
+scythian_horse_archer,Arquero a caballo escita,3,3
+roman_auxiliary_sagittarius,Arquero auxiliar romano,3,3
+new_kingdom_archer,Arquero del Imperio Nuevo,3,3
+egyptian_line_archer,Arquero egipcio de línea,2,3
+mongol_explorer,Explorador mongol,3,3
+fuma_kotaro,Fūma Kotarō,3,3
+mulan,Hua Lan,4,3
+cossack_rider,Jinete cosaco,3,3
+numidian_javelin_rider,Jinete númida,3,3
+joan_of_arc,Juana de Arco,5,3
+merlin,Merlín,3,3
+nasu_no_yoichi,Nasu no Yoichi,4,3
+king_solomon,Rey Salomón,4,3
+saboteador_iga,Saboteador de Iga,3,3
+samurai_yabusame,Samurai Yabusame,3,3
+simo_hayha,Simo Häyhä,4,3
+sun_tzu,Sun Tzu,4,3
+tomoe_gozen,Tomoe Gozen,5,3
+alexander_magnus,Alejandro Magno,7,4
+arjuna,Arjuna,6,4
+attila_hun,Atila el Huno,6,4
+boudica,Boudica,6,4
+el_cid,El Cid Campeador,6,4
+genghis_khan,Gengis Kan,7,4
+hannibal_barca,Hannibal Barca,7,4
+hattori_hanzo,Hattori Hanzō,5,4
+armored_man_at_arms,Hombre de armas acorazado,5,4
+greek_hoplite,Hoplita griego,4,4
+hungarian_hussar,Húsar húngaro,4,4
+julius_caesar,Julio César,7,4
+khalid_ibn_al_walid,Khalid ibn al-Walid,6,4
+spearman,Lancero solar,3,4
+roman_legionary,Legionario romano,4,4
+miyamoto_musashi,Miyamoto Musashi,6,4
+saladin,Saladino,6,4
+samurai_katana,Samurai de Katana,3,4
+samurai_naginata,Samurai de Naginata,3,4
+shaka_zulu,Shaka Zulu,6,4
+skipar_del_drakkar,Skipar del Drakkar,4,4
+subotai,Subotai / Subutai,5,4
+ulysses,Ulises / Odiseo,5,4
+yi_sun_sin,Yi Sun-sin,6,4
+caballero_poleaxe,caballero_poleaxe,6,4
+cavalry,cavalry,5,4
+guerrero_franco_hacha,guerrero_franco_hacha,5,4
+achilles,Aquiles,7,5
+beowulf,Beowulf,8,5
+berserker_de_oso,Berserker de Oso,5,5
+berserker,Berserker del norte,8,5
+cu_chulainn,Cú Chulainn,7,5
+spartacus,Espartaco,6,5
+guardian,Guardián de piedra,9,5
+hector_troy,Héctor de Troya,7,5
+leonidas,Leónidas,8,5
+lu_bu,Lü Bu,6,5
+ragnar_lodbrok,Ragnar Lodbrok,6,5
+richard_lionheart,Richard Corazón de León,6,5
+ulfhednar,Ulfhednar,3,5
+wallace,William Wallace,6,5
+gallowglass_irlandes_hacha,gallowglass_irlandes_hacha,7,5
+guardia_varega_hacha,guardia_varega_hacha,7,5
+huscarl_anglosajon_hacha,huscarl_anglosajon_hacha,8,5

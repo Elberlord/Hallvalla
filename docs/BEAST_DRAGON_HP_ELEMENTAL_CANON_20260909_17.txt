@@ -1,0 +1,47 @@
+HallValla 20260909.17 — HP bestial, HP dragón y base elemental
+
+REGLA HP
+HP representa trauma corporal después de atravesar protección. GD no se cuenta como HP.
+Referencia intuitiva: cuántos impactos humanos limpios requiere aproximadamente incapacitar el cuerpo.
+
+BESTIAS — HP CANÓNICO
+Cuervo Negro 1
+Halcón Peregrino 1
+Taipán del Interior 1
+Puercoespín 2
+Serpiente Constrictora 3
+Tejón Mielero 3
+Jabalí Salvaje 5
+León Africano 6
+Tigre de Bengala 7
+Búfalo Africano 9
+Rinoceronte Blanco 12
+Elefante Africano 18
+
+DRAGONES — HP CANÓNICO
+Bebé Relámpago 6
+Bebé Fuego 8
+Bebé Hielo 10
+Joven Relámpago 24
+Joven Fuego 30
+Joven Hielo 36
+Adulto Relámpago 60
+Adulto Fuego 78
+Adulto Hielo 108
+
+AT FÍSICO DRAGONES
+Bebé: Hielo 4 / Relámpago 5 / Fuego 6
+Joven: Hielo 9 / Relámpago 10 / Fuego 11
+Adulto: Hielo 16 / Relámpago 18 / Fuego 20
+
+DAÑO MÁGICO / ELEMENTAL
+- No usa GD; entra directo a HP.
+- Dragón de Fuego: Fuego x0.
+- Dragón de Hielo: Hielo x0; Fuego x2.
+- Dragón de Relámpago: Relámpago x0.
+- El motor admite afinidades explícitas por unidad y queda preparado para Naturaleza/Bosque (Fuego x2 cuando elementalNature=true).
+- Fireball está tipado como Fuego; Maldición de arena como Arena.
+- El AT normal de los dragones sigue siendo físico. No se convirtió el aliento/ataque elemental de dragón a una nueva cifra de daño mágico porque ese valor aún no se ha definido por separado.
+
+NO MODIFICADO EN ESTA PASADA
+GD, DX, AG, MOV, RG, costes y habilidades base (salvo la interacción de inmunidad elemental con Quemadura).

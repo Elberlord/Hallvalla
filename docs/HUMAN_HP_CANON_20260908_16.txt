@@ -1,0 +1,21 @@
+HALLVALLA · HP HUMANO CANÓNICO · 20260908.16
+================================================
+
+Principio
+---------
+Todos los humanos de HallValla son combatientes entrenados. HP representa la resistencia fisiológica del cuerpo cuando el golpe ya atravesó las otras defensas. Armadura/escudo pertenecen a GD; evitar o defender golpes pertenece a DX/AG.
+
+Escala humana natural
+---------------------
+HP 2 = combatiente físicamente muy frágil.
+HP 3 = combatiente entrenado de constitución ligera/media.
+HP 4 = combatiente robusto/veterano.
+HP 5 = techo fisiológico de un guerrero humano natural.
+
+Excepciones
+-----------
+- Gilgamesh no se fuerza al techo 5 porque su naturaleza es semidivina.
+- No-muertos, manifestaciones de Salomón, bestias y dragones conservan por ahora su HP propio.
+- Hannibal queda con HP humano 4 en la estadística base de la carta. La protección de su elefante se resolverá después en las capas defensivas/reglas de montura; esta pasada no modifica GD/DX/AG.
+
+No se modifican aquí: GD, DX, AG, MOV, RG ni habilidades.

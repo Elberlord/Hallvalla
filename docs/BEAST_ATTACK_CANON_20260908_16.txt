@@ -1,0 +1,21 @@
+HALLVALLA · AT FÍSICO DE BESTIAS Y DRAGONES · 20260908.16
+================================================================
+
+Referencia
+----------
+- Techo físico humano natural: AT 6.
+- El AT de bestias puede superar 6 por masa, mordida, garras, cuernos y potencia corporal.
+- AT base representa el impacto físico normal. Carga, picado, Stomp, veneno, constricción y alientos elementales permanecen como habilidades separadas.
+
+Bestias normales
+----------------
+Cuervo 1 · Halcón peregrino 2 · Puercoespín 1 · Taipán 1 · Constrictora 2 · Tejón mielero 3 · Jabalí 5 · León 7 · Tigre 8 · Búfalo 9 · Rinoceronte 12 · Elefante 16.
+
+Dragones: AT físico
+------------------
+Bebé: Hielo 4 · Relámpago 5 · Fuego 6
+Joven: Hielo 9 · Relámpago 10 · Fuego 11
+Adulto: Hielo 16 · Relámpago 18 · Fuego 20
+
+El aliento elemental NO está incluido en esos valores.
+No se modifican aquí: HP de bestias/dragones, GD, DX, AG, MOV, RG ni habilidades.

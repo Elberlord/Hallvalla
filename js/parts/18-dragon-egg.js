@@ -9,19 +9,19 @@ const DRAGON_GROWTH_BATTLE_KEY="hallvalla_dragon_growth_battle_v1";
 
 const DRAGON_COMPANION_STATS=Object.freeze({
   lightning:Object.freeze({
-    baby:Object.freeze({hp:20,guard:8,atk:10,dex:7,agi:6,mov:2,range:3}),
-    young:Object.freeze({hp:30,guard:12,atk:15,dex:11,agi:9,mov:3,range:4}),
-    adult:Object.freeze({hp:40,guard:16,atk:20,dex:14,agi:12,mov:4,range:5})
+    baby:Object.freeze({hp:6,guard:8,atk:5,dex:7,agi:6,mov:2,range:3}),
+    young:Object.freeze({hp:24,guard:12,atk:10,dex:11,agi:9,mov:3,range:4}),
+    adult:Object.freeze({hp:60,guard:16,atk:18,dex:14,agi:12,mov:4,range:5})
   }),
   fire:Object.freeze({
-    baby:Object.freeze({hp:24,guard:10,atk:12,dex:6,agi:5,mov:1,range:3}),
-    young:Object.freeze({hp:36,guard:15,atk:18,dex:9,agi:8,mov:2,range:4}),
-    adult:Object.freeze({hp:48,guard:20,atk:24,dex:12,agi:10,mov:3,range:5})
+    baby:Object.freeze({hp:8,guard:10,atk:6,dex:6,agi:5,mov:1,range:3}),
+    young:Object.freeze({hp:30,guard:15,atk:11,dex:9,agi:8,mov:2,range:4}),
+    adult:Object.freeze({hp:78,guard:20,atk:20,dex:12,agi:10,mov:3,range:5})
   }),
   ice:Object.freeze({
-    baby:Object.freeze({hp:28,guard:12,atk:9,dex:5,agi:4,mov:1,range:3}),
-    young:Object.freeze({hp:42,guard:18,atk:14,dex:8,agi:6,mov:1,range:4}),
-    adult:Object.freeze({hp:56,guard:24,atk:18,dex:10,agi:8,mov:2,range:5})
+    baby:Object.freeze({hp:10,guard:12,atk:4,dex:5,agi:4,mov:1,range:3}),
+    young:Object.freeze({hp:36,guard:18,atk:9,dex:8,agi:6,mov:1,range:4}),
+    adult:Object.freeze({hp:108,guard:24,atk:16,dex:10,agi:8,mov:2,range:5})
   })
 });
 
@@ -102,8 +102,9 @@ function makeDragonCompanionCard(stage,element){
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,fieldFigure:DRAGON_COMPANION_ASSETS[visualStage].field,
     rarity,special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
+    elementalAffinity:element==="ice"?{ice:0,fire:2}:{[element]:0},
     cost:stage==="adult"?10:stage==="young"?7:4,...stats,aerial:true,flight:true,
-    text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. ${growthText}`
+    text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. Afinidad: inmune a ${elementName}${element==="ice"?"; Fuego le causa ×2 daño mágico":""}. ${growthText}`
   };
 }
 

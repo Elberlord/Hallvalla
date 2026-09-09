@@ -3683,9 +3683,8 @@ async function adventureEnemyTurn(){
       learningProfile:aiDoctrineLearning,
       previewDirectDamage:(card,target)=>{
         const raw=Math.max(0,Number(effectiveCardValue(card,"damage")||card?.damage||0));
-        const reduced=Math.max(0,Number(reduceDamageForHoneyBadger(target,raw)||0));
-        const directPreview=applyDirectHpDamageWithEquipment({...target},reduced);
-        return{raw,actual:Math.max(0,Number(directPreview?.damage||reduced))};
+        const directPreview=applyMagicHpDamage({...target},raw,getCardMagicDamageType(card));
+        return{raw,actual:Math.max(0,Number(directPreview?.damage||0)),multiplier:Number(directPreview?.multiplier??1)};
       },
       boardKillPotential:(target)=>aiBoardKillPotential(target),
       followupKillPotential:(card,target,actual)=>{
@@ -4360,9 +4359,8 @@ async function adventureEnemyTurn(){
   const aiMageDamageSpellScore=(card,target)=>{
     if(!card||!target)return -9999;
     const rawDamage=Math.max(0,Number(effectiveCardValue(card,"damage")||card.damage||0));
-    const reduced=Math.max(0,Number(reduceDamageForHoneyBadger(target,rawDamage)||0));
-    const directPreview=applyDirectHpDamageWithEquipment({...target},reduced);
-    const actual=Math.max(0,Number(directPreview?.damage||reduced));
+    const directPreview=applyMagicHpDamage({...target},rawDamage,getCardMagicDamageType(card));
+    const actual=Math.max(0,Number(directPreview?.damage||0));
     const hp=Math.max(0,Number(target.hp||0));
     const dealt=Math.min(hp,actual);
     const lethal=actual>=hp&&hp>0;
@@ -5812,15 +5810,15 @@ async function adventureEnemyTurn(){
     if(!choice?.card||!choice?.target)return false;
     const originalTarget=choice.target;
     const beforeSpellDamage=[...units];
-    const dmg=reduceDamageForHoneyBadger(originalTarget,effectiveCardValue(choice.card,"damage"));
-    const appliesBurn=choice.card.key==="fireball"&&!originalTarget.leader;
+    const dmg=Math.max(0,Number(effectiveCardValue(choice.card,"damage")||0));
+    const spellMagicKind=getCardMagicDamageType(choice.card);
+    const appliesBurn=choice.card.key==="fireball"&&!originalTarget.leader&&getUnitElementalAffinity(originalTarget,"fire")>0;
     const appliesSandSlow=choice.card.key==="bolt"&&!originalTarget.leader;
     const sandSlowAmount=Math.max(0,Number(choice.card.slowPermanent||0));
     const spellFxCaster=enemyLeaderNow()||units.find(u=>u.owner===2&&u.leader);
-    const spellMagicKind=choice.card.key==="fireball"?"fire":(choice.card.key==="bolt"||String(choice.card.key||"").includes("sand_curse")?"sand":"arcane");
     pendingAiBattleFxEvent=spellFxCaster?makeMagicFxEvent(spellFxCaster,originalTarget,spellMagicKind,{type:"spell",spellKey:choice.card.key,effectAction:"damage",impactScale:choice.card.key==="fireball"?1.12:1,hit:true}):pendingAiBattleFxEvent;
-    let actualSpellDamage=dmg;
-    units=units.map(u=>{if(u.id!==originalTarget.id)return u;const protectedDamage=applyDirectHpDamageWithEquipment(u,dmg);actualSpellDamage=protectedDamage.damage;return protectedDamage.unit;});
+    let actualSpellDamage=dmg,spellAffinityMultiplier=1;
+    units=units.map(u=>{if(u.id!==originalTarget.id)return u;const magicDamage=applyMagicHpDamage(u,dmg,spellMagicKind);actualSpellDamage=magicDamage.damage;spellAffinityMultiplier=magicDamage.multiplier;return magicDamage.unit;});
     units=applyLegendaryFatalSaves(units,[originalTarget.id]);
     let damagedTarget=units.find(u=>u.id===originalTarget.id)||null;
     const fatalSaveTriggered=!!damagedTarget&&Number(damagedTarget.hp||0)>0&&Number(originalTarget.hp||0)-actualSpellDamage<=0;
@@ -5839,7 +5837,8 @@ async function adventureEnemyTurn(){
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     markAiSpellVisual(choice.card);
-    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${actualSpellDamage} daño${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
+    const affinityText=spellAffinityMultiplier===0?" · INMUNE al elemento":spellAffinityMultiplier>1?` · DEBILIDAD elemental ×${spellAffinityMultiplier}`:spellAffinityMultiplier<1?` · RESISTENCIA elemental ×${spellAffinityMultiplier}`:"";
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${actualSpellDamage} daño mágico directo${affinityText}${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
     return true;
   };
 

@@ -893,6 +893,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     rarity:"Básica",
     cost:1,
     spell:"damage",
+    damageType:"fire",
     damage:2,
     burnDamage:1,
     burnTurns:2,

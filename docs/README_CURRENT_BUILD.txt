@@ -1,15 +1,16 @@
 HallValla v8 Modular · Build actual
 ===================================
 
-Estado del paquete: AT HUMANO CANÓNICO (2026-09-08)
+Estado del paquete: HP HUMANO + AT BESTIAS/DRAGONES CANÓNICO (2026-09-08)
 
 Estado actual verificado
 ------------------------
-- Se normaliza exclusivamente el AT base humano/humaniforme en escala 1-6 según poder destructivo del arma.
-- AT 6 es el techo base; efectos y habilidades pueden superar temporalmente ese valor.
-- No se modifican HP, GD, DX, AG, MOV, RG, coste ni habilidades en esta pasada.
-- Bestias, dragones, no-muertos y entidades de Salomón conservan su AT previo.
-- Ver docs/HUMAN_ATTACK_CANON_20260908_15.txt y .csv.
+- HP humano natural normalizado a 2–5; 5 es el techo fisiológico del guerrero humano natural.
+- Gilgamesh queda fuera de ese techo por naturaleza semidivina.
+- AT físico de bestias normalizado frente al techo humano AT 6.
+- Dragones conservan perfiles ofensivos distintos por elemento: Hielo < Relámpago < Fuego.
+- No se modificaron GD, DX, AG, MOV, RG ni habilidades.
+- Ver docs/HUMAN_HP_CANON_20260908_16.* y docs/BEAST_ATTACK_CANON_20260908_16.*.
 
 Historial acumulado
 ===================

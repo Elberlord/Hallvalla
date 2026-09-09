@@ -60,7 +60,7 @@ const LEGENDARY_TRAP_CARDS=[
 
 const IMPROVED_MAGIC_TRAP_PACK=[
   MORGANA_CARD,
-  {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:2,spell:"damage",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
+  {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:2,spell:"damage",damageType:"sand",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
   {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
   {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
   {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",portrait:"assets/cards/beasts/iron_jaw_trap.webp",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante este turno."},
@@ -499,7 +499,7 @@ function getUnitEffectText(u){
   const eqText=equipped.map(eq=>`${eq.name}: ${eq.text||""}`).join(" ");
   return [base,`Equipo: ${eqText}`].filter(Boolean).join(" ");
 }
-function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,elementalAffinity:card.elementalAffinity&&typeof card.elementalAffinity==="object"?{...card.elementalAffinity}:null,elementalNature:!!card.elementalNature,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -1384,6 +1384,53 @@ function applyEquipmentHpDamageReduction(unit,damage){
   const reduced=Math.min(5,incoming);
   return{unit:{...unit,tannedHideHarnessUsedTurnKey:turnKey},damage:Math.max(0,incoming-reduced),reduced};
 }
+const HALLVALLA_MAGIC_DAMAGE_TYPES=Object.freeze(["fire","ice","lightning","nature","arcane","sand","dark","light"]);
+function normalizeMagicDamageType(type){
+  const safe=String(type||"arcane").trim().toLowerCase();
+  const aliases={fuego:"fire",hielo:"ice",rayo:"lightning",relampago:"lightning",relámpago:"lightning",bosque:"nature",naturaleza:"nature",arena:"sand",oscuro:"dark",luz:"light"};
+  return HALLVALLA_MAGIC_DAMAGE_TYPES.includes(safe)?safe:(aliases[safe]||"arcane");
+}
+function getCardMagicDamageType(card){
+  if(!card)return"arcane";
+  const explicit=card.damageType||card.magicDamageType||card.element;
+  if(explicit)return normalizeMagicDamageType(explicit);
+  const key=String(card.key||"").toLowerCase();
+  if(key==="fireball"||key.includes("fire"))return"fire";
+  if(key.includes("ice")||key.includes("frost"))return"ice";
+  if(key.includes("lightning")||key.includes("thunder"))return"lightning";
+  if(key==="bolt"||key.includes("sand_curse"))return"sand";
+  return"arcane";
+}
+function getUnitElementalAffinity(unit,damageType){
+  const type=normalizeMagicDamageType(damageType);
+  if(!unit)return 1;
+  const explicit=unit.elementalAffinity&&typeof unit.elementalAffinity==="object"?Number(unit.elementalAffinity[type]):NaN;
+  if(Number.isFinite(explicit))return Math.max(0,explicit);
+  let dragonElement=String(unit.dragonElement||"").toLowerCase();
+  if(!dragonElement){
+    const match=String(unit.key||"").toLowerCase().match(/(?:baby|young|adult)_(lightning|fire|ice)_dragon/);
+    if(match)dragonElement=match[1];
+    else if(String(unit.key||"").toLowerCase()==="dragon_fire")dragonElement="fire";
+    else if(String(unit.key||"").toLowerCase()==="dragon_ice")dragonElement="ice";
+    else if(String(unit.key||"").toLowerCase()==="dragon_lightning")dragonElement="lightning";
+  }
+  if(dragonElement&&type===dragonElement)return 0;
+  if(dragonElement==="ice"&&type==="fire")return 2;
+  if(type==="fire"&&unit.elementalNature)return 2;
+  return 1;
+}
+function applyMagicHpDamage(unit,damage,damageType="arcane"){
+  const raw=Math.max(0,Number(damage)||0);
+  const type=normalizeMagicDamageType(damageType);
+  const multiplier=getUnitElementalAffinity(unit,type);
+  let scaled=Math.max(0,Math.round(raw*multiplier));
+  // Armadura Natural del Tejón es una habilidad explícita de reducción de daño,
+  // no Guardia. Se conserva; la GD nunca participa en esta resolución mágica.
+  scaled=Math.max(0,Number(reduceDamageForHoneyBadger(unit,scaled))||0);
+  const damaged=resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit?.hp||0)-scaled,lastGuardLoss:0,lastHpLoss:scaled,damagedThisTurn:scaled>0||!!unit?.damagedThisTurn});
+  return{unit:damaged,damage:scaled,rawDamage:raw,damageType:type,multiplier,immune:multiplier===0,weak:multiplier>1,resistant:multiplier>0&&multiplier<1};
+}
+
 function applyDirectHpDamageWithEquipment(unit,damage){
   const prep=applyEquipmentHpDamageReduction(unit,damage);
   const damaged=resolveBlessedArmorTransition(prep.unit,{...prep.unit,hp:Number(prep.unit?.hp||0)-prep.damage,lastGuardLoss:0,lastHpLoss:prep.damage,damagedThisTurn:prep.damage>0||!!prep.unit?.damagedThisTurn});
