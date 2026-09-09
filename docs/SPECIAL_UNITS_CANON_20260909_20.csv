@@ -1,0 +1,11 @@
+﻿group,key,name,hp,at,gd,dx,ag,mov,rg
+undead,vorthalix_oraculo_osario,"Vorthalix, Oráculo del Osario",5,3,7,7,3,1,3
+undead,drakor_guardia_sepulcro,"Drakor, Guardia del Sepulcro",7,4,10,7,2,1,1
+undead,gorthak_hacha_tumulo,"Gorthak, Hacha del Túmulo",8,6,8,6,3,1,1
+undead,zyrek_sombra_cripta,"Zyrek, Sombra de la Cripta",5,4,5,9,8,1,1
+undead,morgash_jinete_osario,"Morgash, Jinete del Osario",7,5,9,8,7,1,1
+undead,xulthar_ojo_sepulcro,"Xulthar, Ojo del Sepulcro",5,4,4,8,6,1,4
+solomon,solomon_jinn,Gran Jinn de la Fortaleza,18,8,14,7,4,1,2
+solomon,solomon_ifrit,Gran Ifrit del Castigo,14,14,7,8,9,1,3
+solomon,solomon_demon,Demonio de los Nombres Encadenados,12,8,6,10,8,1,3
+token,saladin_archer_cavalry,Caballería Arquera de Saladino,3,3,4,8,7,1,4

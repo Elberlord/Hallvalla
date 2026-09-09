@@ -288,11 +288,11 @@ Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolve
 -------------------------------------------------------------------------------
 */
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Conserva su bonificación propia del líder por tier. Por separado, su buff de categoría da Guardia y Destreza a la infantería pesada (+2/+2 hasta +8/+8), sin aumentar Vida."},
-  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia arqueras con Ataque y Destreza según el tier; el buff de líder ya no aumenta Rango."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Conserva su bonificación propia del líder por tier. Por separado, su buff de categoría da Guardia y Destreza a guerreros y unidades con armadura pesada (+2/+2 hasta +8/+8), incluso si además están montados, sin aumentar Vida."},
+  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia unidades que usan arco con Ataque y Destreza según el tier, incluidas arqueras montadas; el buff de líder ya no aumenta Rango."},
   mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Su buff de tier aumenta únicamente el daño de las magias (+2 a +8) y ya no reduce su coste. Sus efectos propios, incluido Vínculo Arcano, se conservan aparte."},
   axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: las unidades de hacha ganan Ataque y Destreza según el tier (+2/+2 hasta +8/+8). Sus efectos propios se conservan aparte."},
-  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil: la Caballería gana Destreza y Agilidad según el tier (+2/+2 hasta +8/+8); puede llamar refuerzos al nivel 5."},
+  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil: las unidades montadas a caballo ganan Destreza y Agilidad según el tier (+2/+2 hasta +8/+8), aunque también sean arqueras o guerreros pesados; puede llamar refuerzos al nivel 5."},
   assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con Ataque y Agilidad según el tier (+2/+2 hasta +8/+8), priorizando crítico y evasión. Su habilidad Nv.5 se conserva aparte."},
   beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias ganan Destreza y Agilidad según el tier (+2/+2 hasta +8/+8)."}
 };

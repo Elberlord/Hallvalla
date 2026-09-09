@@ -162,8 +162,9 @@ function applyHallvallaUnitLoadProfile(unit){
   const movement=getHallvallaUnitMovementProfile(unit);
   if(movement){
     unit.naturalMovBase=movement.naturalBaseMov;
-    unit.canonicalMov=movement.finalMov;
-    unit.mov=movement.finalMov;
+    const fixedMov=Number.isFinite(Number(unit.fixedMov))?Math.max(0,Number(unit.fixedMov)):null;
+    unit.canonicalMov=fixedMov??movement.finalMov;
+    unit.mov=fixedMov??movement.finalMov;
     if(movement.aerial)unit.aerial=true;
   }
   return unit;

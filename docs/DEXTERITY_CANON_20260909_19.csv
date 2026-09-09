@@ -1,0 +1,93 @@
+﻿group,key,name,old_dx,new_dx
+beast,african_buffalo,Búfalo Africano,1,1
+beast,porcupine,Puercoespín,1,1
+beast,white_rhino,Rinoceronte Blanco,1,1
+beast,constrictor_snake,Serpiente Constrictora,3,1
+beast,inland_taipan,Taipán del Interior,4,1
+beast,black_raven,Cuervo Negro,3,2
+beast,peregrine_falcon,Halcón Peregrino,0,2
+beast,wild_boar,Jabalí Salvaje,2,2
+beast,honey_badger,Tejón Mielero,2,2
+beast,african_elephant,Elefante Africano,3,3
+beast,african_lion,León Africano,3,3
+beast,bengal_tiger,Tigre de Bengala,4,3
+dragon,baby_fire_dragon,Dragón baby fire,6,1
+dragon,baby_ice_dragon,Dragón baby ice,5,1
+dragon,baby_lightning_dragon,Dragón baby lightning,7,1
+dragon,young_fire_dragon,Dragón young fire,9,2
+dragon,young_ice_dragon,Dragón young ice,8,2
+dragon,young_lightning_dragon,Dragón young lightning,11,2
+dragon,adult_fire_dragon,Dragón adult fire,12,4
+dragon,adult_ice_dragon,Dragón adult ice,10,4
+dragon,adult_lightning_dragon,Dragón adult lightning,14,4
+human,acolyte_healer,Acólita sanadora,4,3
+human,arcane_adept,Adepto Arcano,4,4
+human,archer,Arquera del desierto,3,5
+human,egyptian_line_archer,Arquero egipcio de línea,4,5
+human,berserker_de_oso,Berserker de Oso,3,5
+human,berserker,Berserker del norte,3,5
+human,ericto,Ericto,9,5
+human,morgana,Morgana,6,5
+human,king_solomon,Rey Salomón,8,5
+human,new_kingdom_archer,Arquero del Imperio Nuevo,5,6
+human,cavalry,Caballería ligera,4,6
+human,guerrero_franco_hacha,Guerrero franco de hacha,5,6
+human,spearman,Lancero solar,3,6
+human,merlin,Merlín,9,6
+human,skipar_del_drakkar,Skipar del Drakkar,4,6
+human,ulfhednar,Ulfhednar,5,6
+human,roman_auxiliary_sagittarius,Arquero auxiliar romano,5,7
+human,gallowglass_irlandes_hacha,Gallowglass irlandés,3,7
+human,geisha_encubierta,Geisha Encubierta,6,7
+human,guardian,Guardián de piedra,5,7
+human,greek_hoplite,Hoplita griego,3,7
+human,huscarl_anglosajon_hacha,Húscarl anglosajón,4,7
+human,joan_of_arc,Juana de Arco,4,7
+human,saboteador_iga,Saboteador de Iga,4,7
+human,scout,Asesina del desierto,6,8
+human,boudica,Boudica,6,8
+human,caballero_poleaxe,Caballero de poleaxe,5,8
+human,mongol_explorer,Explorador mongol,5,8
+human,guardia_varega_hacha,Guardia varega,4,8
+human,armored_man_at_arms,Hombre de armas acorazado,3,8
+human,hungarian_hussar,Húsar húngaro,6,8
+human,cossack_rider,Jinete cosaco,5,8
+human,numidian_javelin_rider,Jinete númida,5,8
+human,roman_legionary,Legionario romano,4,8
+human,samurai_naginata,Samurai de Naginata,4,8
+human,scythian_horse_archer,Arquero a caballo escita,6,9
+human,beowulf,Beowulf,5,9
+human,fuma_kotaro,Fūma Kotarō,6,9
+human,mulan,Hua Lan,4,9
+human,ragnar_lodbrok,Ragnar Lodbrok,6,9
+human,richard_lionheart,Richard Corazón de León,6,9
+human,samurai_yabusame,Samurai Yabusame,6,9
+human,samurai_katana,Samurai de Katana,5,9
+human,wallace,William Wallace,6,9
+human,attila_hun,Atila el Huno,7,10
+human,el_cid,El Cid Campeador,7,10
+human,spartacus,Espartaco,7,10
+human,genghis_khan,Gengis Kan,7,10
+human,gilgamesh,Gilgamesh,8,10
+human,hector_troy,Héctor de Troya,7,10
+human,julius_caesar,Julio César,7,10
+human,leonidas,Leónidas,4,10
+human,saladin,Saladino,6,10
+human,shaka_zulu,Shaka Zulu,6,10
+human,sun_tzu,Sun Tzu,5,10
+human,tomoe_gozen,Tomoe Gozen,8,10
+human,yi_sun_sin,Yi Sun-sin,6,10
+human,alexander_magnus,Alejandro Magno,7,11
+human,achilles,Aquiles,10,11
+human,arjuna,Arjuna,10,11
+human,cu_chulainn,Cú Chulainn,8,11
+human,hannibal_barca,Hannibal Barca,7,11
+human,hattori_hanzo,Hattori Hanzō,9,11
+human,khalid_ibn_al_walid,Khalid ibn al-Walid,7,11
+human,lu_bu,Lü Bu,8,11
+human,nasu_no_yoichi,Nasu no Yoichi,9,11
+human,simo_hayha,Simo Häyhä,9,11
+human,subotai,Subotai / Subutai,5,11
+human,ulysses,Ulises / Odiseo,6,11
+human,miyamoto_musashi,Miyamoto Musashi,9,12
+human_token,saladin_archer_cavalry,Caballería Arquera de Saladino,7,8

@@ -628,16 +628,30 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   if(Array.isArray(cleanPatch.units)){
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
+    const baseUndeadRemains=Array.isArray(cleanPatch.undeadRemains)?cleanPatch.undeadRemains:(publicState?.undeadRemains||[]);
+    const undeadCapture=captureUndeadRemains(baseUndeadRemains,beforeUnits,cleanPatch.units,{incineratedIds:cleanPatch._undeadIncineratedIds||[],frozenIds:cleanPatch._undeadFrozenIds||[]});
+    cleanPatch.undeadRemains=undeadCapture.remains;
     const solomonLife=await resolveSolomonLifecycle(beforeUnits,cleanPatch.units);
     const erictoLife=resolveErictoLifecycle(solomonLife.units);
     const mongolAura=applyMongolExplorerAura(erictoLife.units);
     cleanPatch.units=mongolAura.units;
-    const lifeLogs=[...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
+    let undeadTurnLogs=[];
+    const nextOwner=Number(cleanPatch.currentPlayer||0);
+    const previousOwner=Number(publicState?.currentPlayer||0);
+    if((nextOwner===1||nextOwner===2)&&nextOwner!==previousOwner){
+      const undeadAdvance=advanceUndeadRemainsForOwner(cleanPatch.undeadRemains,cleanPatch.units,nextOwner);
+      cleanPatch.undeadRemains=undeadAdvance.remains;
+      cleanPatch.units=undeadAdvance.units;
+      undeadTurnLogs=undeadAdvance.logs||[];
+    }
+    const lifeLogs=[...(undeadCapture.logs||[]),...undeadTurnLogs,...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
     if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
   }
   delete cleanPatch._clockKillCreditOwner;
   delete cleanPatch._clockKillCreditMode;
   delete cleanPatch._clockKillIgnoreIds;
+  delete cleanPatch._undeadIncineratedIds;
+  delete cleanPatch._undeadFrozenIds;
   cleanPatch=normalizeHiddenUnitStatsPatch(cleanPatch);
   if(options.sanitizeFirebase===true)cleanPatch=hallvallaSanitizeFirebaseValue(cleanPatch)||{};
   return{patch:cleanPatch,beforeUnits};

@@ -1,0 +1,22 @@
+﻿key,unidad,grupo,GD_anterior,GD_canonica
+black_raven,Cuervo Negro,bestia,0,0
+peregrine_falcon,Halcón Peregrino,bestia,0,0
+inland_taipan,Taipán del Interior,bestia,0,0
+constrictor_snake,Serpiente Constrictora,bestia,1,1
+african_lion,León Africano,bestia,2,2
+porcupine,Puercoespín,bestia,3,2
+honey_badger,Tejón Mielero,bestia,4,2
+bengal_tiger,Tigre de Bengala,bestia,1,2
+wild_boar,Jabalí Salvaje,bestia,2,4
+african_buffalo,Búfalo Africano,bestia,0,5
+african_elephant,Elefante Africano,bestia,8,7
+white_rhino,Rinoceronte Blanco,bestia,10,9
+baby_lightning_dragon,Dragón Bebé de Relámpago,dragon,8,2
+baby_fire_dragon,Dragón Bebé de Fuego,dragon,10,3
+baby_ice_dragon,Dragón Bebé de Hielo,dragon,12,4
+young_lightning_dragon,Dragón Joven de Relámpago,dragon,12,8
+young_fire_dragon,Dragón Joven de Fuego,dragon,15,10
+young_ice_dragon,Dragón Joven de Hielo,dragon,18,12
+adult_lightning_dragon,Dragón Adulto de Relámpago,dragon,16,16
+adult_fire_dragon,Dragón Adulto de Fuego,dragon,20,20
+adult_ice_dragon,Dragón Adulto de Hielo,dragon,24,24

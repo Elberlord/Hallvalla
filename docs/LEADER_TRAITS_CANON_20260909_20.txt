@@ -1,0 +1,19 @@
+HallValla · Rasgos múltiples para buffs de líder · 20260909.20
+
+Una unidad puede poseer varios rasgos de combate simultáneos. Los rasgos no son clases exclusivas.
+
+Ejemplos:
+- Caballería Arquera de Saladino = cavalry + archer.
+- Arquero montado = cavalry + archer.
+- Caballero montado con armadura pesada = cavalry + warrior.
+- Montado con hacha = cavalry + axe (+ warrior si la armadura/perfil también lo acredita).
+- Lanza se conserva como rasgo spear para compatibilidad futura.
+
+Solo existe un líder activo. Por ello una unidad híbrida recibe únicamente el buff del líder seleccionado; nunca acumula simultáneamente dos buffs de líderes distintos.
+
+Detección actual:
+- cavalry: montura de caballo (incluye caballo no muerto) o tag explícito cavalry.
+- archer: arma/tag de arco.
+- warrior: tag Guerrero/infantería pesada o armadura pesada según el perfil de carga.
+- axe: arma/tag de hacha.
+- assassin, mage y beastmaster conservan sus reglas de compatibilidad.

@@ -1,0 +1,12 @@
+HallValla · No Muertos — reglas raciales canónicas · 20260909.20
+
+- Inmunidad total a Veneno.
+- Inmunidad total a Sangrado.
+- Muerte normal: deja Restos Persistentes en la casilla.
+- Los Restos Persistentes cuentan 3 turnos de su propietario y después reaniman la unidad con 50% de su HP máximo.
+- Si la unidad estaba Congelada al morir: el contador inicial es 5 turnos.
+- Fuego/Quemadura al morir: INCINERADO; no deja restos capaces de reanimarse.
+- Fuego aplicado a Restos Persistentes: los destruye definitivamente.
+- Hielo aplicado a Restos Persistentes: +2 turnos al contador de reanimación.
+- Los restos muestran marcador en tablero con contador REANIMACIÓN; el retraso de hielo se identifica visualmente.
+- Si la casilla está ocupada cuando el contador llega a 0, la reanimación espera hasta un siguiente turno del propietario con la casilla libre.

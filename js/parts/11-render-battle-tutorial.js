@@ -743,7 +743,7 @@ function buildBattleBoardSkeleton(grid,flipSouth){
     coordinate.setAttribute("aria-hidden","true");
     cell.appendChild(coordinate);
     fragment.appendChild(cell);
-    hallvallaBoardRenderCells.set(`${x},${y}`,{cell,tacticalClasses:[],tacticalKey:"",trapEl:null,trapKey:"",unitEl:null,unitMarkup:""});
+    hallvallaBoardRenderCells.set(`${x},${y}`,{cell,tacticalClasses:[],tacticalKey:"",trapEl:null,trapKey:"",remainsEl:null,remainsKey:"",unitEl:null,unitMarkup:""});
   }
   grid.appendChild(fragment);
   hallvallaBattleRenderPerf.board.skeletonBuilds+=1;
@@ -786,6 +786,23 @@ function syncBattleBoardTrap(record,trap){
   marker.textContent=trap.owner===myPlayer?(trap.trapKey==="covered_pit"?"🕳️":trap.trapKey==="rope_cage"?"🪢":trap.trapKey==="blood_bait"?"🥩":"🪤"):"?";
   record.trapKey=trapKey;
   hallvallaBattleRenderPerf.board.trapUpdates+=1;
+}
+function syncBattleBoardUndeadRemains(record,remain){
+  const remainsKey=remain?`${remain.id||""}|${remain.owner||0}|${remain.turnsRemaining||0}|${remain.frozenDelayed?1:0}`:"";
+  if(record.remainsKey===remainsKey&&(!remain||record.remainsEl?.isConnected))return;
+  if(!remain){
+    if(record.remainsEl)record.remainsEl.remove();
+    record.remainsEl=null;record.remainsKey="";return;
+  }
+  let marker=record.remainsEl;
+  if(!marker||!marker.isConnected){
+    marker=document.createElement("div");record.remainsEl=marker;
+    record.cell.insertBefore(marker,record.unitEl&&record.unitEl.parentElement===record.cell?record.unitEl:null);
+  }
+  marker.className=`undead-remains-marker ${Number(remain.owner)===1?"p1":"p2"} ${remain.frozenDelayed?"frozen":""}`;
+  marker.title=`Restos Persistentes · ${remain.name||"No Muerto"} · REANIMACIÓN: ${Math.max(0,Number(remain.turnsRemaining||0))}`;
+  marker.innerHTML=`<span class="undead-remains-icon" aria-hidden="true">${remain.frozenDelayed?"❄️":"☠️"}</span><b>${Math.max(0,Number(remain.turnsRemaining||0))}</b>`;
+  record.remainsKey=remainsKey;
 }
 function getBattleBoardUnitSpec(u,x,y){
   const stealthed=isStealthedUnit(u);
@@ -863,11 +880,14 @@ function renderBoard(){
   (publicState.units||[]).forEach(u=>{if(u&&!u.leader&&Number(u.hp||0)>0)unitsByCell.set(`${u.x},${u.y}`,u);});
   const trapsByCell=new Map();
   getBeastTraps(publicState).forEach(trap=>{if(trap)trapsByCell.set(`${trap.x},${trap.y}`,trap);});
+  const remainsByCell=new Map();
+  getUndeadRemains(publicState).forEach(remain=>{if(remain&&!remainsByCell.has(`${remain.x},${remain.y}`))remainsByCell.set(`${remain.x},${remain.y}`,remain);});
   for(const [key,record] of hallvallaBoardRenderCells){
     const [xRaw,yRaw]=key.split(",");
     const x=Number(xRaw),y=Number(yRaw);
     syncBattleBoardCellClasses(record,x,y);
     syncBattleBoardTrap(record,trapsByCell.get(key)||null);
+    syncBattleBoardUndeadRemains(record,remainsByCell.get(key)||null);
     syncBattleBoardUnit(record,unitsByCell.get(key)||null,x,y);
   }
   renderLeaderBases();

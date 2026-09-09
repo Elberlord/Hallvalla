@@ -370,14 +370,17 @@ function buildTimedOutTurnState(state,now=Date.now()){
   const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,owner);
   const erictoLife=resolveErictoLifecycle(erictoUpkeep.units);
   const erictoGraveyard=captureErictoGraveyard(state.erictoGraveyard||[],state.units||[],erictoLife.units);
-  const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
+  const undeadCapture=captureUndeadRemains(state.undeadRemains||[],state.units||[],erictoLife.units);
   const next=owner===1?2:1;
+  const undeadAdvance=advanceUndeadRemainsForOwner(undeadCapture.remains,erictoLife.units,next);
+  const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[]),...(undeadCapture.logs||[]),...(undeadAdvance.logs||[])];
   const nextTurn=next===1?(Number(state.turn||1)+1):Number(state.turn||1);
   const ownerName=cleanPlayerName(state.playerNames?.[owner]||"")||`J${owner}`;
   const nextState={
     ...state,
-    units:restoreTurnGuardForOwner(erictoLife.units,next),
+    units:restoreTurnGuardForOwner(undeadAdvance.units,next),
     erictoGraveyard,
+    undeadRemains:undeadAdvance.remains,
     beastTraps:state.beastTraps||[],
     legendaryTraps:state.legendaryTraps||[],
     currentPlayer:next,

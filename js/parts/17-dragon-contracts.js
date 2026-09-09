@@ -14,7 +14,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     leaderType:"dragon_lightning",
     portrait:"assets/leaders/lightning_dragon_leader.webp",
     fieldFigure:"assets/field_figures_light/beasts/adult_lightning_dragon.webp",
-    hp:60,guard:16,atk:18,precision:14,evasion:12,naturalMov:4,range:5,
+    hp:60,guard:16,atk:18,agi:14,precision:18,evasion:18,naturalMov:4,range:5,
     xp:720,gold:120,
     directName:"Rayo concentrado",
     areaName:"Tormenta dirigida",
@@ -28,7 +28,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     leaderType:"dragon_fire",
     portrait:"assets/leaders/fire_dragon_leader.webp",
     fieldFigure:"assets/field_figures_light/beasts/adult_fire_dragon.webp",
-    hp:78,guard:20,atk:20,precision:12,evasion:10,naturalMov:3,range:5,
+    hp:78,guard:20,atk:20,agi:10,precision:14,evasion:14,naturalMov:3,range:5,
     xp:960,gold:160,
     directName:"Aliento abrasador",
     areaName:"Erupción ígnea",
@@ -42,7 +42,7 @@ const DRAGON_CONTRACT_DEFS=Object.freeze({
     leaderType:"dragon_ice",
     portrait:"assets/leaders/ice_dragon_leader.webp",
     fieldFigure:"assets/field_figures_light/beasts/adult_ice_dragon.webp",
-    hp:108,guard:24,atk:16,precision:10,evasion:8,naturalMov:2,range:5,
+    hp:108,guard:24,atk:16,agi:8,precision:12,evasion:12,naturalMov:2,range:5,
     xp:1280,gold:220,
     directName:"Lanza glacial",
     areaName:"Estallido glacial",
@@ -131,6 +131,9 @@ function grantDragonEgg(battle){
 
 /* -------------------------------------------------------------------------
    Datos de líder y rutas de arte
+   DX canónica bestial: los jefes dragón adultos muestran DX 4.
+   Sus campos dragonPrecision/dragonEvasion conservan el comportamiento especial
+   de los contratos y no redefinen la escala DX de las unidades.
    ------------------------------------------------------------------------- */
 for(const def of Object.values(DRAGON_CONTRACT_DEFS)){
   LEADER_PORTRAITS[def.leaderType]=def.portrait;
@@ -160,7 +163,7 @@ for(const def of Object.values(DRAGON_CONTRACT_DEFS)){
       name:`${def.enemyName} J${owner}`,
       portrait:def.portrait,
       hp:def.hp,maxHp:def.hp,atk:def.atk,baseGuard:def.guard,guard:def.guard,
-      dex:def.precision,agi:def.evasion,dragonPrecision:def.precision,dragonEvasion:def.evasion,
+      dex:4,agi:def.agi,dragonPrecision:def.precision,dragonEvasion:def.evasion,
       mov:def.naturalMov,dragonNaturalMov:def.naturalMov,range:def.range,
       aerial:true,flight:true,dragonBoss:true,dragonElement:def.element,
       elementalAffinity:def.element==="ice"?{ice:0,fire:2}:{[def.element]:0},
@@ -347,6 +350,8 @@ async function dragonContractEnemyTurn(){
   let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?clearTurnTempStatsForOwnerUnit(u,pub.turnKey):u);
   let legendaryTraps=[...(pub.legendaryTraps||[])];
   const beastTraps=[...(pub.beastTraps||[])];
+  let undeadRemains=[...(pub.undeadRemains||[])];
+  const dragonIncineratedUndeadIds=new Set();
   const previousPublicState=publicState;
   publicState={...pub,units,legendaryTraps,beastTraps,currentPlayer:2};
   const startTurnBeforeEffects=[...units];
@@ -388,9 +393,14 @@ async function dragonContractEnemyTurn(){
       units=units.map(u=>{
         if(u.id!==target.id)return u;
         let next=dragonApplyDamageToUnit(u,def.atk);
+        if(def.element==="fire"&&isUndeadUnit(u)&&Number(next.hp||0)<=0)dragonIncineratedUndeadIds.add(String(u.id));
         if(next.hp>0)next=dragonApplyElementStatus(next,def,2,pub);
         affected=next;return next;
       });
+      if(def.element==="fire"||def.element==="ice"){
+        const remainsHit=applyElementToUndeadRemains(undeadRemains,target.x,target.y,def.element);
+        undeadRemains=remainsHit.remains;if(remainsHit.logs.length)logs.push(...remainsHit.logs);
+      }
       units=applyLegendaryFatalSaves(units,[target.id]).filter(u=>u.hp>0);
       const dragonBloodVictory=applyBloodVictoryForDeaths(beforeDragonHit,units);
       units=dragonBloodVictory.units;
@@ -406,6 +416,10 @@ async function dragonContractEnemyTurn(){
       const beforeDragonArea=[...units];
       let firstAffected=null;
       for(const cell of unique.values()){
+        if(def.element==="fire"||def.element==="ice"){
+          const remainsHit=applyElementToUndeadRemains(undeadRemains,cell.x,cell.y,def.element);
+          undeadRemains=remainsHit.remains;if(remainsHit.logs.length)logs.push(...remainsHit.logs);
+        }
         const victim=units.find(u=>u.owner===1&&canReceiveUntargetedAreaEffect(u)&&u.x===cell.x&&u.y===cell.y);
         if(!victim||hitIds.includes(victim.id))continue;
         const isMain=victim.id===target.id;
@@ -413,6 +427,7 @@ async function dragonContractEnemyTurn(){
         units=units.map(u=>{
           if(u.id!==victim.id)return u;
           let next=dragonApplyDamageToUnit(u,damage);
+          if(def.element==="fire"&&isUndeadUnit(u)&&Number(next.hp||0)<=0)dragonIncineratedUndeadIds.add(String(u.id));
           if(next.hp>0)next=dragonApplyElementStatus(next,def,isMain?2:1,pub);
           if(!firstAffected)firstAffected=next;
           return next;
@@ -441,10 +456,12 @@ async function dragonContractEnemyTurn(){
   if(burnEnd.logs?.length)logs.push(...burnEnd.logs);
   if(!statusFxEvent&&burnEnd.statusFxEvent)statusFxEvent=burnEnd.statusFxEvent;
   if(!floatFxEvent&&burnEnd.floatFxEvent)floatFxEvent=burnEnd.floatFxEvent;
+  const undeadCapture=captureUndeadRemains(undeadRemains,pub.units||[],units,{incineratedIds:[...dragonIncineratedUndeadIds]});
+  undeadRemains=undeadCapture.remains;if(undeadCapture.logs.length)logs.push(...undeadCapture.logs);
   const outcome=getBattleOutcome(units,{...pub,units});
   const finalAiState={...ai,deck:[],hand:[],honor:0,maxHonor:0,lastTurnStarted:pub.turnKey,dragonStartedAt:0,skipFirstTurnDraw:false,dragonCycle:nextCycle,dragonAwake};
   const common={
-    units,legendaryTraps,beastTraps,adventureAiState:finalAiState,battleFxEvent,statusFxEvent:statusFxEvent||bleedStart.statusFxEvent||startTrap.statusFxEvent||null,floatFxEvent:floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null,
+    units,undeadRemains,legendaryTraps,beastTraps,adventureAiState:finalAiState,battleFxEvent,statusFxEvent:statusFxEvent||bleedStart.statusFxEvent||startTrap.statusFxEvent||null,floatFxEvent:floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null,
     [`playerClockMs/2`]:getCommittedDuelClockMs(pub,2,Date.now()),
     [`playerStats/1`]:{...(pub.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0},
     [`playerStats/2`]:{...(pub.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0,honor:0,maxHonor:0,deck:0,hand:0},
@@ -457,8 +474,10 @@ async function dragonContractEnemyTurn(){
     return;
   }
   const nextTurn=(pub.turn||1)+1;
+  const undeadAdvance=advanceUndeadRemainsForOwner(undeadRemains,units,1);
+  if(undeadAdvance.logs.length)common.log=[...undeadAdvance.logs,...(common.log||[])].slice(0,18);
   if(!dragonLifecycleAlive())return;
-  await update(ref(db,`games/${dragonGameId}/public`),{...common,units:restoreTurnGuardForOwner(units,1),currentPlayer:1,turnPhase:"draw",turn:nextTurn,turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp()});
+  await update(ref(db,`games/${dragonGameId}/public`),{...common,undeadRemains:undeadAdvance.remains,units:restoreTurnGuardForOwner(undeadAdvance.units,1),currentPlayer:1,turnPhase:"draw",turn:nextTurn,turnKey:`${nextTurn}-1`,turnStartedAt:serverTimestamp()});
 }
 registerHallvallaHook("adventure.enemyTurn",async({state,gameId:currentGameId})=>{
   if(state?.mode==="adventure"&&isDragonContractBattle(state?.adventureBattleId))return{handled:true,value:await dragonContractEnemyTurn()};

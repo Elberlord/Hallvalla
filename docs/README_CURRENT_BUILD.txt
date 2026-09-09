@@ -1,16 +1,20 @@
 HallValla v8 Modular · Build actual
 ===================================
 
-Estado del paquete: HP HUMANO + AT BESTIAS/DRAGONES CANÓNICO (2026-09-08)
+Estado del paquete: STATS CERRADOS + ESPECIALES/NO MUERTOS + RASGOS DE LÍDER (2026-09-09)
 
 Estado actual verificado
 ------------------------
-- HP humano natural normalizado a 2–5; 5 es el techo fisiológico del guerrero humano natural.
-- Gilgamesh queda fuera de ese techo por naturaleza semidivina.
-- AT físico de bestias normalizado frente al techo humano AT 6.
-- Dragones conservan perfiles ofensivos distintos por elemento: Hielo < Relámpago < Fuego.
-- No se modificaron GD, DX, AG, MOV, RG ni habilidades.
-- Ver docs/HUMAN_HP_CANON_20260908_16.* y docs/BEAST_ATTACK_CANON_20260908_16.*.
+- AG canónica aplicada: humanos 1–9; bestias 1–15; dragones diferenciados por etapa/elemento.
+- DX + AG continúa siendo la base de PREC/EVA; DX representa dominio de combate y AG capacidad física.
+- Stats finales de No Muertos, Grandes Entidades de Salomón y Caballería Arquera de Saladino aplicados.
+- Vorthalix/Drakor/Gorthak/Zyrek/Morgash/Xulthar, las entidades de Salomón y el token de Saladino tienen MOV efectivo fijo 1.
+- RG: Xulthar y Caballería Arquera RG 4; Vorthalix/Ifrit/Demonio a distancia según magia; melees RG 1.
+- No Muertos: inmunes a Veneno/Sangrado; Restos Persistentes 3 turnos, 5 si mueren congelados; Fuego incinera y Hielo retrasa +2.
+- Restos Persistentes se muestran en tablero con contador visible.
+- Unidades híbridas admiten múltiples rasgos de líder (cavalry/archer/warrior/axe/etc.) pero solo reciben el buff del único líder activo.
+- Ifrit es inmune a Fuego y Quemadura.
+- Ver docs/AGILITY_CANON_20260909_20.csv, SPECIAL_UNITS_CANON_20260909_20.csv, UNDEAD_RULES_CANON_20260909_20.txt y LEADER_TRAITS_CANON_20260909_20.txt.
 
 Historial acumulado
 ===================
@@ -404,3 +408,21 @@ Archivos modificados respecto de E49 Map1 Decks
 - La carga calcula weightPenaltySteps de forma independiente al tipo de locomoción.
 - En esta build weightPenaltySteps es SOLO metadato: NO altera MOV todavía.
 - Ver docs/UNIT_LOAD_MODEL_20260908_12.txt y .csv.
+
+
+20260909.18 · GUARDIA FÍSICA CANÓNICA
+- Normalizada GD de humanos según cobertura, material, tecnología, escudo y carga protectora.
+- Normalizada GD de bestias según protección externa natural.
+- Dragones: Rayo 2/8/16, Fuego 3/10/20, Hielo 4/12/24 por bebé/joven/adulto.
+- Se retira el antiguo +3 GD automático de Espada para que la GD de carta sea la Guardia física real.
+- No se modifican HP, AT, DX, AG, MOV ni afinidades mágicas.
+
+
+20260909.19 · DESTREZA CANÓNICA
+- Humanos: DX 3–12 según entrenamiento, experiencia, dominio técnico, lectura, coordinación, timing, táctica y astucia.
+- Miyamoto Musashi queda como techo humano DX 12.
+- Bestias: escala DX 1–4; las bestias naturales actuales ocupan 1–3.
+- Dragones: bebé DX 1, joven DX 2, adulto DX 4.
+- La fórmula existente DX + AGI para PREC/EVA permanece intacta.
+- No se modifican HP, AT, GD, AGI, MOV, RG ni habilidades.
+- Ver docs/DEXTERITY_CANON_20260909_19.txt y .csv.

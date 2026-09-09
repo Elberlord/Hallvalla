@@ -1,0 +1,24 @@
+HallValla 20260909.18 — Guardia física canónica
+
+REGLA
+- GD representa protección física externa/cobertura antes de que el daño llegue a HP.
+- En humanos: cobertura + material/calidad tecnológica + escudo + peso como indicador, no como equivalencia directa.
+- En bestias: piel, cuero, púas, placas o escamas; HP sigue representando el trauma que soporta el organismo después de penetrar.
+- Magia elemental/mágica continúa ignorando GD según el sistema introducido en 20260909.17.
+- DX y AG no se modifican en esta build.
+- Se elimina el antiguo +3 GD automático por portar espada: la nueva GD ya representa exclusivamente armadura/cobertura física.
+
+ESCALA HUMANA
+0 sin protección real; 10 techo de protección física humana convencional de las cartas evaluadas.
+
+BESTIAS NATURALES
+Cuervo 0; Halcón 0; Taipán 0; Constrictora 1; Puercoespín 2; Tejón 2; León 2; Tigre 2; Jabalí 4; Búfalo 5; Elefante 7; Rinoceronte 9.
+
+DRAGONES
+Rayo: bebé 2, joven 8, adulto 16.
+Fuego: bebé 3, joven 10, adulto 20.
+Hielo: bebé 4, joven 12, adulto 24.
+El Adulto de Hielo queda como máxima expresión tanque: GD 24 + HP 108; la magia no usa esa GD.
+
+NO TOCADO
+HP, AT, DX, AG, MOV, RG, costes, habilidades y afinidades elementales se preservan desde 20260909.17.

@@ -19,7 +19,6 @@ function getCodeTruthGlobalRuleLines7hai(entity){
   if(!entity||entity.spell||entity.trap||entity.leader)return lines;
   const cls=getWeaponClassForCard(entity);
   if(cls)lines.push(`Clase táctica usada por el sistema: ${WEAPON_CLASS_LABELS[cls]||cls}.`);
-  if(isSwordUnitCardLike(entity))lines.push(`Regla global de espada: recibe +3 Guardia base. Este bonus ya está incluido en la GD que ves en DET.`);
   if(isArcherWeaponUnitCardLike(entity))lines.push(`Regla global de arco: recibe +1 Rango base. Este bonus ya está incluido en el RG que ves en DET.`);
   if(isLanceUnitCardLike(entity))lines.push(`Regla global de lanza: tiene RG 1 fijo y ataca primero la primera vez por turno que una unidad enemiga de cuerpo a cuerpo con RG 1 la ataque desde una casilla adyacente. Las unidades con RG 2 o más no activan esta reacción. Si derrota al atacante, cancela ese ataque. Halcón con Ataque en Picada también la ignora. Anticaballería es igualmente innata: en combate cuerpo a cuerpo, atacando o defendiendo, la Caballería rival queda con Guardia 0 y AGI 0 durante ese combate.`);
   if(cls&&WEAPON_ADVANTAGE[cls]?.length){

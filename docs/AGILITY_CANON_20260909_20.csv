@@ -1,0 +1,92 @@
+﻿group,key,name,dx,ag,dx_plus_ag
+human,guardian,Guardián de piedra,7,1,8
+human,caballero_poleaxe,Caballero de poleaxe,8,2,10
+human,hannibal_barca,Hannibal Barca,11,2,13
+human,armored_man_at_arms,Hombre de armas acorazado,8,2,10
+human,gallowglass_irlandes_hacha,Gallowglass irlandés,7,3,10
+human,greek_hoplite,Hoplita griego,7,3,10
+human,spearman,Lancero solar,6,3,9
+human,richard_lionheart,Richard Corazón de León,9,3,12
+human,guardia_varega_hacha,Guardia varega,8,4,12
+human,huscarl_anglosajon_hacha,Húscarl anglosajón,7,4,11
+human,joan_of_arc,Juana de Arco,7,4,11
+human,roman_legionary,Legionario romano,8,4,12
+human,king_solomon,Rey Salomón,5,4,9
+human,acolyte_healer,Acólita sanadora,3,5,8
+human,arcane_adept,Adepto Arcano,4,5,9
+human,roman_auxiliary_sagittarius,Arquero auxiliar romano,7,5,12
+human,new_kingdom_archer,Arquero del Imperio Nuevo,6,5,11
+human,egyptian_line_archer,Arquero egipcio de línea,5,5,10
+human,berserker_de_oso,Berserker de Oso,5,5,10
+human,cavalry,Caballería ligera,6,5,11
+human,guerrero_franco_hacha,Guerrero franco de hacha,6,5,11
+human,julius_caesar,Julio César,10,5,15
+human,leonidas,Leónidas,10,5,15
+human,merlin,Merlín,6,5,11
+human,samurai_naginata,Samurai de Naginata,8,5,13
+human,sun_tzu,Sun Tzu,10,5,15
+human,wallace,William Wallace,9,5,14
+human,yi_sun_sin,Yi Sun-sin,10,5,15
+human,archer,Arquera del desierto,5,6,11
+human,beowulf,Beowulf,9,6,15
+human,berserker,Berserker del norte,5,6,11
+human,el_cid,El Cid Campeador,10,6,16
+human,ericto,Ericto,5,6,11
+human,morgana,Morgana,5,6,11
+human,ragnar_lodbrok,Ragnar Lodbrok,9,6,15
+human,samurai_katana,Samurai de Katana,9,6,15
+human,simo_hayha,Simo Häyhä,11,6,17
+human,skipar_del_drakkar,Skipar del Drakkar,6,6,12
+human,alexander_magnus,Alejandro Magno,11,7,18
+human,boudica,Boudica,8,7,15
+human,genghis_khan,Gengis Kan,10,7,17
+human,gilgamesh,Gilgamesh,10,7,17
+human,hector_troy,Héctor de Troya,10,7,17
+human,hungarian_hussar,Húsar húngaro,8,7,15
+human,cossack_rider,Jinete cosaco,8,7,15
+human,khalid_ibn_al_walid,Khalid ibn al-Walid,11,7,18
+human,lu_bu,Lü Bu,11,7,18
+human,miyamoto_musashi,Miyamoto Musashi,12,7,19
+human,saladin,Saladino,10,7,17
+human,ulfhednar,Ulfhednar,6,7,13
+human,ulysses,Ulises / Odiseo,11,7,18
+human,arjuna,Arjuna,11,8,19
+human,attila_hun,Atila el Huno,10,8,18
+human,spartacus,Espartaco,10,8,18
+human,mongol_explorer,Explorador mongol,8,8,16
+human,mulan,Hua Lan,9,8,17
+human,numidian_javelin_rider,Jinete númida,8,8,16
+human,nasu_no_yoichi,Nasu no Yoichi,11,8,19
+human,saboteador_iga,Saboteador de Iga,7,8,15
+human,samurai_yabusame,Samurai Yabusame,9,8,17
+human,shaka_zulu,Shaka Zulu,10,8,18
+human,subotai,Subotai / Subutai,11,8,19
+human,tomoe_gozen,Tomoe Gozen,10,8,18
+human,achilles,Aquiles,11,9,20
+human,scythian_horse_archer,Arquero a caballo escita,9,9,18
+human,scout,Asesina del desierto,8,9,17
+human,cu_chulainn,Cú Chulainn,11,9,20
+human,fuma_kotaro,Fūma Kotarō,9,9,18
+human,geisha_encubierta,Geisha Encubierta,7,9,16
+human,hattori_hanzo,Hattori Hanzō,11,9,20
+beast,african_elephant,Elefante Africano,3,3,6
+beast,porcupine,Puercoespín,1,4,5
+beast,white_rhino,Rinoceronte Blanco,1,4,5
+beast,african_buffalo,Búfalo Africano,1,5,6
+beast,wild_boar,Jabalí Salvaje,2,7,9
+beast,honey_badger,Tejón Mielero,2,9,11
+beast,constrictor_snake,Serpiente Constrictora,1,9,10
+beast,african_lion,León Africano,3,11,14
+beast,bengal_tiger,Tigre de Bengala,3,12,15
+beast,inland_taipan,Taipán del Interior,1,13,14
+beast,black_raven,Cuervo Negro,2,14,16
+beast,peregrine_falcon,Halcón Peregrino,2,15,17
+dragon,baby_ice_dragon,Dragón Bebé de Hielo,1,6,7
+dragon,baby_fire_dragon,Dragón Bebé de Fuego,1,7,8
+dragon,baby_lightning_dragon,Dragón Bebé de Relámpago,1,9,10
+dragon,young_ice_dragon,Dragón Joven de Hielo,2,7,9
+dragon,young_fire_dragon,Dragón Joven de Fuego,2,9,11
+dragon,young_lightning_dragon,Dragón Joven de Relámpago,2,12,14
+dragon,adult_ice_dragon,Dragón Adulto de Hielo,4,8,12
+dragon,adult_fire_dragon,Dragón Adulto de Fuego,4,10,14
+dragon,adult_lightning_dragon,Dragón Adulto de Relámpago,4,14,18

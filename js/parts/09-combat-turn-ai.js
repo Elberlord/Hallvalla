@@ -1162,8 +1162,21 @@ async function attackUnit(a,d){
         ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
         : null));
   const stealthAreaDamageEvent=dragonCompanionResult.stealthAreaDamageEvent||solomonIfritResult.stealthAreaDamageEvent||elephantChargeResult.stealthAreaDamageEvent||null;
-  await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent,...(stealthAreaDamageEvent?{stealthAreaDamageEvent}:{})});
-  const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog].filter(Boolean).join(" ");
+  const fireAttackSource=a.key==="solomon_ifrit"||String(a.dragonElement||"").toLowerCase()==="fire";
+  const undeadIncineratedIds=fireAttackSource?(publicState?.units||[]).filter(before=>isUndeadUnit(before)&&Number(before.owner)!==Number(a.owner)&&!(units||[]).some(after=>after.id===before.id&&Number(after.hp||0)>0)).map(before=>before.id):[];
+  let combatUndeadRemains=[...(publicState?.undeadRemains||[])];
+  const remainsInteractionLogs=[];
+  const applyRemainsElementCell=(cx,cy,element)=>{const result=applyElementToUndeadRemains(combatUndeadRemains,cx,cy,element);combatUndeadRemains=result.remains;if(result.logs.length)remainsInteractionLogs.push(...result.logs);};
+  if(a.key==="solomon_ifrit"){
+    applyRemainsElementCell(d.x,d.y,"fire");
+    for(let ry=-1;ry<=1;ry++)for(let rx=-1;rx<=1;rx++)if(rx||ry){const cx=Number(d.x)+rx,cy=Number(d.y)+ry;if(cx>=0&&cx<COLS&&cy>=0&&cy<ROWS)applyRemainsElementCell(cx,cy,"fire");}
+  }else if(["fire","ice"].includes(String(a.dragonElement||"").toLowerCase())){
+    const dragonElement=String(a.dragonElement).toLowerCase();
+    if(Number(a.dragonCharge||0)>=2&&typeof dragonCellsCentered3x3==="function")for(const cell of dragonCellsCentered3x3(d).filter(dragonInBounds))applyRemainsElementCell(cell.x,cell.y,dragonElement);
+    else applyRemainsElementCell(d.x,d.y,dragonElement);
+  }
+  await updatePublic({units,undeadRemains:combatUndeadRemains,_undeadIncineratedIds:undeadIncineratedIds,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent,...(stealthAreaDamageEvent?{stealthAreaDamageEvent}:{})});
+  const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog,...remainsInteractionLogs].filter(Boolean).join(" ");
   if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
   clearSelection();
 }

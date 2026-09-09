@@ -1,0 +1,23 @@
+HallValla 20260909.19 — Destreza canónica
+
+DEFINICIÓN
+DX = dominio del combate: técnica, coordinación, experiencia, lectura del rival,
+timing, táctica y astucia aplicada. DX se combina con AGI en la reserva PREC/EVA
+existente; esta build no modifica la fórmula de evasión ni la AGI.
+
+ESCALA HUMANA
+- Humanos entrenados: DX 3–12 en el roster actual.
+- DX 12: cúspide humana; Miyamoto Musashi.
+- Guardia de piedra se fija en DX 7 como guardián pesado de élite; había quedado
+  omitido de la tabla conversacional anterior por error.
+- Caballería Arquera de Saladino: DX 8.
+
+ESCALA BESTIAL
+- Bestias naturales: DX 1–3 en el roster actual.
+- Tope bestial reservado: DX 4 para criaturas con experiencia excepcional.
+- Dragones: bebé DX 1, joven DX 2, adulto DX 4, sin diferencia por elemento.
+- Los jefes de Contrato muestran DX 4. Sus campos especiales dragonPrecision y
+  dragonEvasion se conservan para no alterar el comportamiento bespoke del jefe.
+
+NO MODIFICADO
+HP, AT, GD, AGI, MOV, RG, costes, habilidades y afinidades elementales.

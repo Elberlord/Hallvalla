@@ -26003,3 +26003,11 @@ html:has(#gameShell:not(.hidden)) body{
     max-height:100dvh !important;
   }
 }
+
+/* 20260909.20 · No Muertos: Restos Persistentes y contador visible */
+.undead-remains-marker{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;gap:.18em;padding:.14em .32em;border-radius:999px;background:rgba(20,18,24,.82);border:1px solid rgba(232,224,205,.68);box-shadow:0 0 10px rgba(0,0,0,.5);font-size:clamp(10px,1.5vh,15px);line-height:1;pointer-events:none;color:#f0e8d5}
+.undead-remains-marker b{font-size:.9em;min-width:1ch;text-align:center}
+.undead-remains-marker.p1{outline:1px solid rgba(80,150,255,.35)}
+.undead-remains-marker.p2{outline:1px solid rgba(255,90,90,.35)}
+.undead-remains-marker.frozen{filter:drop-shadow(0 0 4px rgba(170,225,255,.85));border-color:rgba(190,235,255,.9)}
+.undead-remains-icon{font-size:1.05em}

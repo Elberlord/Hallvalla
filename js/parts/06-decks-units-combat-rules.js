@@ -10,7 +10,7 @@ const WALLACE_CARD=LEGENDARY_ALLY_CARDS.find(c=>c.key==="wallace");
 
 
 
-const SALADIN_TOKEN_CARD=applyHallvallaUnitLoadProfile(applyArcherRangeRule({key:"saladin_archer_cavalry",name:"Caballería Arquera de Saladino",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.cavalry,cost:0,hp:3,atk:3,guard:2,dex:7,agi:7,mov:3,range:2,rarity:"Básica",special:true,token:true,text:"Unidad convocada por Media Luna del Desierto de Saladino."}));
+const SALADIN_TOKEN_CARD=applyHallvallaUnitLoadProfile(applyArcherRangeRule({key:"saladin_archer_cavalry",name:"Caballería Arquera de Saladino",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.cavalry,cost:0,hp:3,atk:3,guard:4,dex:8,agi:7,mov:1,fixedMov:1,range:3,leaderBuffGroups:["cavalry","archer"],rarity:"Básica",special:true,token:true,text:"Unidad convocada por Media Luna del Desierto de Saladino."}));
 const CARD_VISUALS_BY_KEY={
   spearman:{portrait:CARD_PORTRAITS.heavyInfantry,icon:"🛡️"},
   cavalry:{portrait:CARD_PORTRAITS.cavalry,icon:"🐎"},
@@ -499,7 +499,7 @@ function getUnitEffectText(u){
   const eqText=equipped.map(eq=>`${eq.name}: ${eq.text||""}`).join(" ");
   return [base,`Equipo: ${eqText}`].filter(Boolean).join(" ");
 }
-function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,elementalAffinity:card.elementalAffinity&&typeof card.elementalAffinity==="object"?{...card.elementalAffinity}:null,elementalNature:!!card.elementalNature,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,fixedMov:Number.isFinite(Number(card.fixedMov))?Math.max(0,Number(card.fixedMov)):null,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,elementalAffinity:card.elementalAffinity&&typeof card.elementalAffinity==="object"?{...card.elementalAffinity}:null,elementalNature:!!card.elementalNature,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryHpBonus=Math.max(0,Number(unit.masteryHpBonus||0));if(masteryHpBonus>0){unit.maxHp=(unit.maxHp||0)+masteryHpBonus;unit.hp=(unit.hp||0)+masteryHpBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -623,17 +623,27 @@ function isAssassinFinalBlowEligible(attacker,target){
   const hp=Number(target.hp||0);
   return isAssassinUnit(attacker)&&hp>0&&hp<ASSASSIN_FINAL_BLOW_HP_THRESHOLD&&dist(attacker,target)<=ASSASSIN_FINAL_BLOW_RANGE;
 }
+function getUnitLeaderBuffTraits(unit){
+  if(!unit||unit.leader||String(unit.type||"unit")!=="unit")return[];
+  const traits=new Set((Array.isArray(unit.leaderBuffGroups)?unit.leaderBuffGroups:[]).map(v=>String(v||"").toLowerCase()).filter(Boolean));
+  const profile=unit.loadProfile||(typeof getHallvallaUnitLoadProfile==="function"?getHallvallaUnitLoadProfile(unit):null);
+  const locomotion=String(profile?.locomotion||unit.locomotionClass||"").toLowerCase();
+  // Una unidad híbrida conserva todos sus rasgos reales. Solo existe un líder activo,
+  // por lo que nunca acumula dos buffs de líder a la vez.
+  if(locomotion==="mounted_horse"||locomotion==="mounted_undead_horse"||isLightCavalryUnit(unit))traits.add("cavalry");
+  if(isArcherUnit(unit)||isArcherWeaponUnitCardLike(unit))traits.add("archer");
+  if(isAxeUnitCardLike(unit))traits.add("axe");
+  if(typeof isLanceUnitCardLike==="function"&&isLanceUnitCardLike(unit))traits.add("spear");
+  if(isAssassinUnit(unit))traits.add("assassin");
+  if(isMageUnitCardLike(unit))traits.add("mage");
+  if(isBeastUnit(unit))traits.add("beastmaster");
+  if(isHeavyInfantryUnit(unit)||String(profile?.armorClass||unit.armorClass||"").toLowerCase()==="heavy")traits.add("warrior");
+  return[...traits];
+}
+function unitHasLeaderBuffTrait(unit,trait){return getUnitLeaderBuffTraits(unit).includes(String(trait||"").toLowerCase());}
 function isUnitCompatibleWithEquipmentLeader(unit,leaderType){
   if(!unit||unit.leader||String(unit.type||"unit")!=="unit")return false;
-  const type=String(leaderType||"");
-  if(type==="assassin")return isAssassinUnit(unit);
-  if(type==="axe")return isAxeUnitCardLike(unit);
-  if(type==="warrior")return isHeavyInfantryUnit(unit);
-  if(type==="archer")return isArcherUnit(unit);
-  if(type==="cavalry")return isLightCavalryUnit(unit);
-  if(type==="mage")return isMageUnitCardLike(unit);
-  if(type==="beastmaster")return isBeastUnit(unit);
-  return false;
+  return unitHasLeaderBuffTrait(unit,leaderType);
 }
 function canEquipCardToUnit(card,unit,owner=unit?.owner,units=publicState?.units||[]){
   if(!isEquipmentCard(card)||!unit||unit.leader||unit.owner!==owner||Number(unit.hp||0)<=0)return false;
@@ -654,12 +664,12 @@ function getLeaderBonus(u){
   const type=getLeaderTypeForOwner(u.owner);
   const tier=getLeaderBuffTierForOwner(u.owner);
   const bonus={atk:0,hp:0,guard:0,dex:0,agi:0,mov:0,range:0};
-  if(type==="warrior"&&isHeavyInfantryUnit(u)){const b=LEADER_BUFF_TABLE.warrior[tier]||LEADER_BUFF_TABLE.warrior[1];bonus.guard+=(b.guard||0);bonus.dex+=(b.dex||0);}
-  if(type==="archer"&&isArcherUnit(u)){const b=LEADER_BUFF_TABLE.archer[tier]||LEADER_BUFF_TABLE.archer[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
-  if(type==="axe"&&isAxeUnitCardLike(u)){const b=LEADER_BUFF_TABLE.axe[tier]||LEADER_BUFF_TABLE.axe[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
-  if(type==="cavalry"&&isLightCavalryUnit(u)){const b=LEADER_BUFF_TABLE.cavalry[tier]||LEADER_BUFF_TABLE.cavalry[1];bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);}
-  if(type==="assassin"&&isAssassinUnit(u)){const b=LEADER_BUFF_TABLE.assassin[tier]||LEADER_BUFF_TABLE.assassin[1];bonus.atk+=(b.atk||0);bonus.agi+=(b.agi||0);}
-  if(type==="beastmaster"&&isBeastUnit(u)){const b=LEADER_BUFF_TABLE.beastmaster[tier]||LEADER_BUFF_TABLE.beastmaster[1];bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);}
+  if(type==="warrior"&&unitHasLeaderBuffTrait(u,"warrior")){const b=LEADER_BUFF_TABLE.warrior[tier]||LEADER_BUFF_TABLE.warrior[1];bonus.guard+=(b.guard||0);bonus.dex+=(b.dex||0);}
+  if(type==="archer"&&unitHasLeaderBuffTrait(u,"archer")){const b=LEADER_BUFF_TABLE.archer[tier]||LEADER_BUFF_TABLE.archer[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
+  if(type==="axe"&&unitHasLeaderBuffTrait(u,"axe")){const b=LEADER_BUFF_TABLE.axe[tier]||LEADER_BUFF_TABLE.axe[1];bonus.atk+=(b.atk||0);bonus.dex+=(b.dex||0);}
+  if(type==="cavalry"&&unitHasLeaderBuffTrait(u,"cavalry")){const b=LEADER_BUFF_TABLE.cavalry[tier]||LEADER_BUFF_TABLE.cavalry[1];bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);}
+  if(type==="assassin"&&unitHasLeaderBuffTrait(u,"assassin")){const b=LEADER_BUFF_TABLE.assassin[tier]||LEADER_BUFF_TABLE.assassin[1];bonus.atk+=(b.atk||0);bonus.agi+=(b.agi||0);}
+  if(type==="beastmaster"&&unitHasLeaderBuffTrait(u,"beastmaster")){const b=LEADER_BUFF_TABLE.beastmaster[tier]||LEADER_BUFF_TABLE.beastmaster[1];bonus.dex+=(b.dex||0);bonus.agi+=(b.agi||0);}
   return bonus;
 }
 function syncLeaderHpBonuses(units){
@@ -811,7 +821,7 @@ function effectiveMov(u){
   const summonBonus=isSkiparSummonMoveActive(u)?1:0;
   const equipmentMoveBonus=(!u?.leader&&hasUnitEquipment(u,"marching_greaves")&&!u?.moved)?2:0;
   const canonical=getCanonicalNaturalMovement(u);
-  const canonicalBaseMov=canonical?canonical.finalMov:(u?.mov||0);
+  const canonicalBaseMov=Number.isFinite(Number(u?.fixedMov))?Math.max(0,Number(u.fixedMov)):(canonical?canonical.finalMov:(u?.mov||0));
   const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u));
   return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u});
 }function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
