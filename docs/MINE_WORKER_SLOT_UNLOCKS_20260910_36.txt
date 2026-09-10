@@ -1,0 +1,27 @@
+HALLVALLA · MINA · DESBLOQUEO DE TRABAJADORES · BUILD 20260910.36
+
+- La Mina empieza con 5 ranuras de trabajadores desbloqueadas.
+- Máximo total: 20 ranuras.
+- Las ranuras 6 a 20 se compran en orden con gemas.
+- Precio de la ranura 6: 5 gemas. Cada ranura siguiente duplica el precio anterior.
+
+Costes:
+6 = 5
+7 = 10
+8 = 20
+9 = 40
+10 = 80
+11 = 160
+12 = 320
+13 = 640
+14 = 1.280
+15 = 2.560
+16 = 5.120
+17 = 10.240
+18 = 20.480
+19 = 40.960
+20 = 81.920
+
+Coste acumulado para abrir las 15 ranuras extra: 163.835 gemas.
+- Las cuentas anteriores migran a 5 ranuras desbloqueadas si aún no tenían el nuevo campo unlockedSlots.
+- Si una ranura 6-20 ya tenía un trabajador activo durante la build anterior, el trabajador no se borra; al retirarlo, la ranura permanece bloqueada hasta comprarla.

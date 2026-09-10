@@ -1,0 +1,11 @@
+HALLVALLA · RULETA DE LA MINA · POOL TRANSPARENTE · BUILD 20260910.33
+
+- 50 líneas totales: 35 positivas, 5 neutras, 10 negativas.
+- Cuando sale un resultado positivo o negativo, esa línea deja de ser elegible temporalmente.
+- Los 5 neutros permanecen repetibles y no se consumen.
+- Al quedar únicamente los 5 neutros, el pool de 50 líneas se reinicia automáticamente.
+- Botón “PREMIOS POSIBLES”: muestra las 50 líneas, su efecto exacto y su estado.
+- Los resultados positivos/negativos que ya salieron aparecen oscuros con la marca “YA SALIÓ”.
+- La propia rueda oscurece los segmentos ya consumidos.
+- Se reemplazaron varios premios positivos de bajo valor por piezas de esqueletos del Osario, eliminaciones gratis de desastre, Pack Mítico y Pack Legendario.
+- No se modificaron las reglas Firebase: users/$uid/mine/rewardsWheel ya admite el estado de la ruleta y el perfil ya admite los vouchers/recompensas correspondientes.

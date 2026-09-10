@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260910.32">
-<meta name="hallvalla-build" content="v8_MODULAR_20260910.32">
+<meta name="hallvalla-version" content="20260910.36">
+<meta name="hallvalla-build" content="v8_MODULAR_20260910.36">
 <meta name="hallvalla-build-name" content="Campo 5x9 + herramientas DEV aisladas">
-<link rel="stylesheet" href="styles.css?h=6ddc01cdfb7c"/>
+<link rel="stylesheet" href="styles.css?h=734d1c8f5f43"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -306,7 +306,7 @@
         <div class="mine-panel-content mine-wheel-panel-content">
           <div class="mine-chip-row mine-wheel-chip-row">
             <span id="mineWheelFreeChip" class="mine-chip">Tiros gratis 1/30</span>
-            <span id="mineWheelRemainingChip" class="mine-chip">Premios restantes 50/50</span>
+            <span id="mineWheelRemainingChip" class="mine-chip">Premios posibles 50/50</span>
             <span id="mineWheelNextChip" class="mine-chip">Próximo tiro gratis --:--:--</span>
           </div>
           <div class="mine-wheel-stage">
@@ -319,9 +319,25 @@
             </div>
             <button id="mineWheelSpinBtn" class="mine-wheel-spin-btn" type="button">SPIN</button>
             <div id="mineWheelPriceHint" class="mine-wheel-price-hint">1 tiro gratuito disponible</div>
+            <button id="mineWheelPrizePoolBtn" class="mine-wheel-prize-pool-btn" type="button" aria-expanded="false" aria-controls="mineWheelPrizePool">🎁 PREMIOS POSIBLES</button>
             <div id="mineWheelResult" class="mine-wheel-result" aria-live="polite">
               <b>Rueda de la Mina</b>
               <span>Presiona SPIN para tentar tu suerte.</span>
+            </div>
+          </div>
+
+          <div id="mineWheelPrizePool" class="mine-wheel-prize-pool" hidden>
+            <div class="mine-wheel-prize-pool-card" role="dialog" aria-modal="true" aria-labelledby="mineWheelPrizePoolTitle">
+              <div class="mine-wheel-prize-pool-head">
+                <div>
+                  <span>TRANSPARENCIA DE RULETA</span>
+                  <h3 id="mineWheelPrizePoolTitle">Premios posibles</h3>
+                </div>
+                <button id="mineWheelPrizePoolCloseBtn" class="mine-wheel-prize-pool-close" type="button" aria-label="Cerrar premios posibles">×</button>
+              </div>
+              <p id="mineWheelPrizePoolStatus" class="mine-wheel-prize-pool-status"></p>
+              <div class="mine-wheel-prize-legend"><span class="positive">Positivo</span><span class="neutral">Neutro repetible</span><span class="negative">Negativo</span><span class="consumed">Oscuro = ya salió</span></div>
+              <div id="mineWheelPrizePoolGrid" class="mine-wheel-prize-pool-grid"></div>
             </div>
           </div>
         </div>
@@ -1389,6 +1405,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=c4c4c7310107"></script>
+<script type="module" src="js/bootstrap-loader.js?h=cb683ce550c9"></script>
 </body>
 </html>

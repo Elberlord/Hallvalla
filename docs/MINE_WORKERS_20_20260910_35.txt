@@ -1,0 +1,10 @@
+HALLVALLA · MINA · 20 TRABAJADORES · 20260910.35
+
+- Límite de trabajadores/ranuras activas aumentado de 5 a 20.
+- Las 20 ranuras producen con la misma tasa definida por el nivel de la Mina.
+- Se conservan las unidades ya asignadas en las ranuras 1–5.
+- Las minas antiguas se migran automáticamente agregando vacías las ranuras 6–20.
+- Firebase valida exactamente los índices de ranura 0–19.
+- La misión «Mina a plena capacidad» ahora requiere 20 trabajadores activos.
+- No se cambió el nivel máximo de la Mina (sigue siendo 5) ni su tabla de tiempos.
+- Esta build conserva la ruleta 25 positivos / 20 negativos / 5 neutros.

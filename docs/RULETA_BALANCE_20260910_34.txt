@@ -1,0 +1,28 @@
+HALLVALLA · RULETA DE LA MINA · BALANCE 20260910.34
+
+Nueva distribución del pool:
+- 25 premios positivos.
+- 20 premios negativos.
+- 5 resultados neutros repetibles.
+- Total: 50 líneas.
+
+Agotamiento:
+- Cada positivo o negativo obtenido se elimina temporalmente de la ronda.
+- Los neutros no se consumen.
+- Al quedar únicamente los 5 neutros, se restauran las 50 líneas.
+- El reinicio del pool no reinicia paidSpins, spinsThisCycle ni el costo progresivo.
+
+Transparencia:
+- “Premios posibles” muestra las 50 líneas.
+- Los positivos/negativos ya obtenidos aparecen oscuros como YA SALIÓ.
+- Los neutros muestran REPETIBLE.
+
+Premios positivos de alto valor conservados:
+- Premio Mayor.
+- Piezas del Osario a elección.
+- Eliminación gratis de desastre.
+- Pack Mítico.
+- Pack Legendario.
+
+Reglas Firebase:
+- No se modifican en esta build; se conserva database.rules.json verificado de 20260910.32.
