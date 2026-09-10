@@ -3272,6 +3272,15 @@ async function adventureEnemyTurn(){
   let maxHonor=recharge.maxHonor;
   let honor=recharge.honor;
   let units=restoreTurnGuardForOwner(pub.units||[],2).map(u=>u.owner===2?clearTurnTempStatsForOwnerUnit(u,pub.turnKey):u);units=units.map(u=>u.owner===2&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
+  const moraleAtAiStart=getMoralePressureState({...pub,units,moralePressure:pub.moralePressure||{}},units);
+  if(moraleAtAiStart.presence?.[1]&&!moraleAtAiStart.presence?.[2]){
+    const penalty=Math.max(0,Number(moraleAtAiStart.penalties?.[2]||0));
+    logs.push(penalty>0?`Doctrina IA: presión territorial enemiga detectada (-${penalty} AT). Prioridad alta: expulsar la incursión o cruzar la línea para neutralizarla.`:`Doctrina IA: una unidad enemiga cruzó la línea. Prioridad alta: impedir que consolide la presión moral o responder con una incursión propia.`);
+  }else if(moraleAtAiStart.presence?.[2]&&!moraleAtAiStart.presence?.[1]){
+    logs.push(`Doctrina IA: presencia propia al otro lado de la línea. La IA prioriza conservar esa cabeza de puente para aumentar la presión moral.`);
+  }else if(moraleAtAiStart.neutralized){
+    logs.push(`Doctrina IA: ambas fuerzas tienen presencia tras la línea; la penalización de moral está neutralizada.`);
+  }
   const heroicEdgeStart=applyHeroicEdgeStartHealing(units,2);
   units=heroicEdgeStart.units;
   let legendaryTraps=[...(pub.legendaryTraps||[])];
@@ -3931,7 +3940,21 @@ async function adventureEnemyTurn(){
       return{target:t,score};
     }).sort((a,b)=>b.score-a.score)[0]?.target||null;
   };
+  const aiMoraleSnapshot=()=>getMoralePressureState({...pub,units,moralePressure:pub.moralePressure||{}},units);
+  const aiMoraleInvaders=()=>living(1).filter(t=>!t.leader&&isUnitAcrossMidline(t,{...pub,units}));
+  const aiMoraleCrisis=()=>{const m=aiMoraleSnapshot();return !!(m.presence?.[1]&&!m.presence?.[2]);};
+  const aiMoraleTargetBonus=(target)=>{
+    if(!target||target.leader||!isUnitAcrossMidline(target,{...pub,units}))return 0;
+    const m=aiMoraleSnapshot();
+    const pressure=Math.max(0,Number(m.turns?.[1]||0));
+    const penalty=Math.max(0,Number(m.penalties?.[2]||0));
+    return 900+pressure*320+penalty*240;
+  };
   const aiEnsureArmyFocusTarget=()=>{
+    if(aiMoraleCrisis()){
+      const invader=aiMoraleInvaders().map(t=>({t,score:aiUnitValue(t)+aiMoraleTargetBonus(t)-Math.min(...living(2).map(a=>d(a,t)))*45})).sort((a,b)=>b.score-a.score)[0]?.t||null;
+      if(invader){aiFocusTargetId=invader.id;return invader;}
+    }
     const current=aiFocusedTarget();
     if(current)return current;
     const next=aiChooseArmyFocusTarget();
@@ -3972,7 +3995,8 @@ async function adventureEnemyTurn(){
       ?1150+aiAttackRange(target)*95+(effectiveAtk(target)||0)*35
       :0;
     const cavalryLeaderPenalty=cavalryRangedCrisis&&target.leader?-900:0;
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus+cavalryRangedBonus+cavalryLeaderPenalty;
+    const moraleInvaderBonus=aiMoraleTargetBonus(target);
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus+cavalryRangedBonus+cavalryLeaderPenalty+moraleInvaderBonus;
   };
 
   const aiCavalryRangedCrisisTarget=(attacker)=>{
@@ -5584,6 +5608,21 @@ async function adventureEnemyTurn(){
           }
         }
         if(nextGap===0&&currentGap>0)score+=180;
+        const moraleNow=aiMoraleSnapshot();
+        const wasAcross=isUnitAcrossMidline(u,{...pub,units});
+        const willAcross=isUnitAcrossMidline(ghost,{...pub,units});
+        const aiAlreadyAcross=!!moraleNow.presence?.[2];
+        const enemyAcross=!!moraleNow.presence?.[1];
+        const activePenalty=Math.max(0,Number(moraleNow.penalties?.[2]||0));
+        const ownPressure=Math.max(0,Number(moraleNow.turns?.[2]||0));
+        if(willAcross&&!aiAlreadyAcross){
+          score+=enemyAcross?1500+activePenalty*280:480;
+        }else if(willAcross&&wasAcross){
+          score+=420+ownPressure*105;
+        }else if(wasAcross&&!willAcross){
+          score-=720+ownPressure*180;
+        }
+        if(enemyAcross&&!aiAlreadyAcross&&willAcross)score+=600; // cruzar neutraliza inmediatamente la penalización enemiga.
         if(aiCombatEngine?.scoreMoveCell){
           score+=Number(aiCombatEngine.scoreMoveCell({unit:u,cell:pos,primaryTarget:huntTarget||primaryTarget,progress,nextGap,canAttack:targets.length>0,formationScore},aiDoctrineContext())||0);
         }
@@ -6209,6 +6248,8 @@ async function adventureEnemyTurn(){
   if(leaderEndEffect.battleFxEvent)pendingAiBattleFxEvent=leaderEndEffect.battleFxEvent;
   erictoGraveyard=captureErictoGraveyard(erictoGraveyard,lastPublishedUnits,units);
   lastPublishedUnits=[...units];
+  const moraleUpdate=advanceMoralePressureAfterTurn({...pub,moralePressure:pub.moralePressure||{}},2,units);
+  if(moraleUpdate.logs.length)logs.push(...moraleUpdate.logs);
   const outcome=getBattleOutcome(units);
   const nextAiState={deck,hand,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),focusTargetId:aiFocusTargetId||"",lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
   if(outcome.ended){
@@ -6217,6 +6258,7 @@ async function adventureEnemyTurn(){
     if(!aiLifecycleAlive())return;
     await update(ref(db,`games/${aiGameId}/public`),{
       units,
+      moralePressure:moraleUpdate.moralePressure,
       legendaryTraps,
       beastTraps,
       erictoGraveyard,
@@ -6242,6 +6284,7 @@ async function adventureEnemyTurn(){
   if(!aiLifecycleAlive())return;
   await update(ref(db,`games/${aiGameId}/public`),{
     units:restoreTurnGuardForOwner(units,1),
+    moralePressure:moraleUpdate.moralePressure,
     legendaryTraps,
     beastTraps,
     erictoGraveyard,

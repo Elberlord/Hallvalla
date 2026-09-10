@@ -1,0 +1,24 @@
+HallValla · Presión territorial / Moral · 20260909.21
+
+REGLA
+- La línea central divide el campo. El centro exacto se calcula con las filas reales del tablero.
+- Una unidad (no Líder) cuenta como invasora cuando está estrictamente del lado enemigo de esa línea.
+- Cruzar por sí solo no baja AT. Debe sobrevivir un turno completo del rival.
+- Tras sobrevivir 1 turno rival: ejército defensor -2 AT.
+- Tras 2 turnos: -3 AT. Tras 3: -4 AT. Continúa +1 de penalización por turno completo.
+- La penalización afecta a las unidades de campo, no al Líder, y nunca baja AT por debajo de 0 porque effectiveAtk ya aplica piso 0.
+- Varias unidades invasoras NO apilan contadores: existe un solo contador por jugador.
+- Si ambos jugadores tienen al menos una unidad tras la línea rival, las penalizaciones quedan neutralizadas mientras dure la presencia mutua. Los contadores pueden seguir madurando.
+- Si un jugador pierde toda presencia invasora, su contador se reinicia.
+
+IA
+- La IA reconoce una incursión como amenaza estratégica prioritaria.
+- Puede responder matando/expulsando al invasor o cruzando una unidad propia para neutralizar la penalización.
+- Si la IA ya tiene presencia invasora, aumenta el valor táctico de conservarla y evita retirarla sin razón fuerte.
+- Cuanto mayor sea el contador / penalización, mayor es la urgencia de respuesta.
+
+UI
+- MORAL BAJA · AT -N: tu ejército está penalizado.
+- PRESIÓN PROPIA · RIVAL AT -N: el rival está penalizado.
+- PRESIÓN MUTUA · MORAL ESTABLE: ambos cruzaron; penalizaciones neutralizadas.
+- INCURSIÓN · CONSOLIDANDO PRESIÓN: existe invasión pero aún no sobrevivió un turno rival completo.

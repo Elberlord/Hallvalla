@@ -251,6 +251,24 @@ function renderHud(){
   });
   const banner=$("phaseBanner");
   if(banner)banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);
+  const battlefield=document.querySelector("#gameShell .battlefield");
+  let moraleHud=$("moralePressureHud");
+  if(!moraleHud&&battlefield){moraleHud=document.createElement("div");moraleHud.id="moralePressureHud";moraleHud.className="morale-pressure-hud hidden";moraleHud.setAttribute("aria-live","polite");battlefield.appendChild(moraleHud);}
+  if(moraleHud){
+    const morale=getMoralePressureState(publicState,publicState?.units||[]);
+    const mine=Math.max(0,Number(morale.penalties?.[myPlayer]||0));
+    const rivalOwner=myPlayer===1?2:1;
+    const rival=Math.max(0,Number(morale.penalties?.[rivalOwner]||0));
+    const anyPresence=!!(morale.presence?.[1]||morale.presence?.[2]);
+    moraleHud.classList.toggle("hidden",!anyPresence||isBattleEnded());
+    moraleHud.classList.toggle("morale-danger",mine>0);
+    moraleHud.classList.toggle("morale-advantage",mine===0&&rival>0);
+    moraleHud.classList.toggle("morale-neutralized",!!morale.neutralized);
+    if(morale.neutralized)moraleHud.textContent="PRESIÓN MUTUA · MORAL ESTABLE";
+    else if(mine>0)moraleHud.textContent=`MORAL BAJA · AT -${mine}`;
+    else if(rival>0)moraleHud.textContent=`PRESIÓN PROPIA · RIVAL AT -${rival}`;
+    else moraleHud.textContent="INCURSIÓN · CONSOLIDANDO PRESIÓN";
+  }
 }
 
 

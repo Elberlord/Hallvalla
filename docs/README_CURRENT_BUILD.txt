@@ -1,11 +1,23 @@
 HallValla v8 Modular · Build actual
 ===================================
 
-Estado del paquete: STATS CERRADOS + ESPECIALES/NO MUERTOS + RASGOS DE LÍDER (2026-09-09)
+Estado del paquete: PRESIÓN TERRITORIAL / MORAL + IA CONSCIENTE (2026-09-09)
 
-Estado actual verificado
-------------------------
-- AG canónica aplicada: humanos 1–9; bestias 1–15; dragones diferenciados por etapa/elemento.
+20260909.21 · Presión territorial / Moral
+-----------------------------------------
+- Una unidad que cruza estrictamente la línea central debe sobrevivir un turno completo del rival para consolidar presión.
+- Primer turno sobrevivido: ejército rival -2 AT; después -3, -4, -5... aumentando 1 por turno completo.
+- No acumula por cantidad de invasores: un solo contador por jugador.
+- Si ambos jugadores tienen presencia tras la línea rival, la penalización queda neutralizada mientras persistan ambas incursiones.
+- Si se pierde toda presencia invasora, el contador se reinicia.
+- effectiveAtk incorpora la penalización global con piso 0.
+- HUD visible: consolidación, moral baja, ventaja propia o presión mutua neutralizada.
+- La IA trata la incursión como objetivo estratégico: prioriza expulsar/matar invasores o cruzar una pieza propia para neutralizar el castigo; también valora conservar su propia cabeza de puente.
+- Ver docs/MORALE_PRESSURE_CANON_20260909_21.txt.
+
+Estado anterior 20260909.20
+----------------------------
+ AG canónica aplicada: humanos 1–9; bestias 1–15; dragones diferenciados por etapa/elemento.
 - DX + AG continúa siendo la base de PREC/EVA; DX representa dominio de combate y AG capacidad física.
 - Stats finales de No Muertos, Grandes Entidades de Salomón y Caballería Arquera de Saladino aplicados.
 - Vorthalix/Drakor/Gorthak/Zyrek/Morgash/Xulthar, las entidades de Salomón y el token de Saladino tienen MOV efectivo fijo 1.
@@ -15,6 +27,7 @@ Estado actual verificado
 - Unidades híbridas admiten múltiples rasgos de líder (cavalry/archer/warrior/axe/etc.) pero solo reciben el buff del único líder activo.
 - Ifrit es inmune a Fuego y Quemadura.
 - Ver docs/AGILITY_CANON_20260909_20.csv, SPECIAL_UNITS_CANON_20260909_20.csv, UNDEAD_RULES_CANON_20260909_20.txt y LEADER_TRAITS_CANON_20260909_20.txt.
+
 
 Historial acumulado
 ===================

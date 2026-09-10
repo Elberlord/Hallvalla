@@ -805,7 +805,62 @@ function getArcaneLinkBonus(u,units=publicState?.units||[]){
 }
 function getArcaneAdeptLinkBonus(u,units=publicState?.units||[]){return getArcaneLinkBonus(u,units);}
 
-function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
+function getBattleMidlineY(state=publicState){
+  const rows=Math.max(1,Number(state?.boardRows||ROWS||1));
+  return (rows-1)/2;
+}
+function isUnitAcrossMidline(u,state=publicState){
+  if(!u||u.leader||Number(u.hp||0)<=0)return false;
+  const owner=Number(u.owner||0),y=Number(u.y);
+  if(!Number.isFinite(y)||(owner!==1&&owner!==2))return false;
+  const mid=getBattleMidlineY(state);
+  return owner===1?y<mid:y>mid;
+}
+function hasMoraleIntrusion(owner,units=publicState?.units||[],state=publicState){
+  owner=Number(owner||0);
+  return (units||[]).some(u=>Number(u?.owner)===owner&&isUnitAcrossMidline(u,state));
+}
+function getMoralePressureState(state=publicState,units=state?.units||publicState?.units||[]){
+  const presence1=hasMoraleIntrusion(1,units,state),presence2=hasMoraleIntrusion(2,units,state);
+  const raw=state?.moralePressure||{};
+  const turns1=presence1?Math.max(0,Number(raw?.[1]??raw?.["1"]??0)):0;
+  const turns2=presence2?Math.max(0,Number(raw?.[2]??raw?.["2"]??0)):0;
+  const neutralized=presence1&&presence2;
+  const penalty1=!neutralized&&presence2&&turns2>0?turns2+1:0;
+  const penalty2=!neutralized&&presence1&&turns1>0?turns1+1:0;
+  return{presence:{1:presence1,2:presence2},turns:{1:turns1,2:turns2},penalties:{1:penalty1,2:penalty2},neutralized};
+}
+function getMoraleAttackPenalty(owner,state=publicState,units=state?.units||publicState?.units||[]){
+  const snapshot=getMoralePressureState(state,units);
+  return Math.max(0,Number(snapshot.penalties?.[Number(owner)]||0));
+}
+function advanceMoralePressureAfterTurn(state,endingOwner,units=state?.units||[]){
+  endingOwner=Number(endingOwner||0);
+  const other=endingOwner===1?2:1;
+  const beforeRaw=state?.moralePressure||{};
+  const before={1:Math.max(0,Number(beforeRaw?.[1]??beforeRaw?.["1"]??0)),2:Math.max(0,Number(beforeRaw?.[2]??beforeRaw?.["2"]??0))};
+  const presence1=hasMoraleIntrusion(1,units,state),presence2=hasMoraleIntrusion(2,units,state);
+  const next={1:presence1?before[1]:0,2:presence2?before[2]:0};
+  if(other===1&&presence1)next[1]+=1;
+  if(other===2&&presence2)next[2]+=1;
+  const nextState={...state,units,moralePressure:{1:next[1],2:next[2]}};
+  const status=getMoralePressureState(nextState,units);
+  const logs=[];
+  for(const owner of [1,2]){
+    if(before[owner]>0&&next[owner]===0)logs.push(`J${owner} pierde su presencia al otro lado de la línea: su contador de presión moral se reinicia.`);
+  }
+  if(other===1&&presence1){
+    const p=status.penalties[2]||0;
+    logs.push(status.neutralized?`J1 mantiene su incursión ${next[1]} turno${next[1]===1?"":"s"}, pero la presión queda neutralizada porque J2 también cruzó la línea.`:`J1 consolida su incursión ${next[1]} turno${next[1]===1?"":"s"}: la moral de J2 cae y sus ataques reciben -${p} AT.`);
+  }
+  if(other===2&&presence2){
+    const p=status.penalties[1]||0;
+    logs.push(status.neutralized?`J2 mantiene su incursión ${next[2]} turno${next[2]===1?"":"s"}, pero la presión queda neutralizada porque J1 también cruzó la línea.`:`J2 consolida su incursión ${next[2]} turno${next[2]===1?"":"s"}: la moral de J1 cae y sus ataques reciben -${p} AT.`);
+  }
+  return{moralePressure:{1:next[1],2:next[2]},status,logs};
+}
+
+function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
 function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);if(forcedZero)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroTurnKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
