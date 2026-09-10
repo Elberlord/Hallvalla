@@ -617,7 +617,7 @@ async function changeFieldBoardDimensions(rowDelta=0,colDelta=0,{reset=false}={}
 function resetFieldCardScale(){
   fieldBoardTunerState.cardScale=FIELD_BOARD_DEFAULTS.cardScale;
   applyFieldBoardCardScale(true);
-  setFieldBoardTunerStatus("Tamaño de cartas del campo restablecido a 100%.");
+  setFieldBoardTunerStatus(`Tamaño de cartas del campo restablecido a ${FIELD_BOARD_DEFAULTS.cardScale}%.`);
 }
 async function copyFieldBoardValues(){
   const text=`Cartas del campo ${fieldBoardTunerState.cardScale}% · Campo ${COLS} columnas × ${ROWS} filas (${COLS*ROWS} celdas)`;

@@ -1,0 +1,17 @@
+HALLVALLA · CAMPO CANÓNICO · 20260910.22
+
+Configuración base:
+- Cartas del campo: 80%
+- Columnas: 5
+- Filas: 9
+- Total: 45 celdas
+
+Persistencia:
+- Nueva clave local: hallvalla_field_board_tuner_v5_final_80_5x9
+- Evita heredar automáticamente la configuración histórica 100% / 5x7.
+
+Compatibilidad:
+- El editor de dimensiones sigue operativo.
+- Nuevos combates creados desde esta base usan 5x9.
+- Estados de combate ya existentes conservan sus boardRows/boardCols guardados hasta crear/restablecer el campo.
+- Presión Territorial usa la dimensión real del estado y no está fijada a 7 filas.

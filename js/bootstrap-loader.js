@@ -26,9 +26,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260909.21";
+const BUILD = "20260910.23";
 const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"28a93658ec50","parts/02-assets-leaders.js":"2212ed8560b6","parts/03-runtime-clocks.js":"754f57e2044b","parts/04-fx-audio-profile.js":"e5e8cf43ae0d","parts/05-cards-specials-lore.js":"41f05916a24d","parts/05b-unit-load-profiles.js":"cb7445a15dcf","parts/06-decks-units-combat-rules.js":"42f03ff6a2da","parts/07-network-battle-state.js":"a841824d08fd","parts/08-actions-inspector.js":"f9b3e0fcc776","parts/09-combat-turn-ai.js":"9aafa8514405","parts/10-board-interactions.js":"7b39a9270bd3","parts/11-render-battle-tutorial.js":"f29d7e36e8a5","parts/12-profile-shop-packs.js":"4af4e596754e","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"055d70e31ad4","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"c7b7994cf1f1","parts/16-exact-guides-mobile.js":"1db6635e3288","parts/17-dragon-contracts.js":"a70471388517","parts/18-dragon-egg.js":"d48b533fbeab","parts/19-field-figures-3d.js":"a11579e8d8aa","features/adventure.js":"ed0742a81163","features/battle-layout.js":"58e6a324da41","features/forge-layout.js":"c724b29f6c00","features/forge.js":"c6f640f8f213","features/hvdev.js":"9a403cc6e427","features/pve.js":"a07587e17681","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"07d6908942cf","parts/02-assets-leaders.js":"2212ed8560b6","parts/03-runtime-clocks.js":"754f57e2044b","parts/04-fx-audio-profile.js":"e5e8cf43ae0d","parts/05-cards-specials-lore.js":"41f05916a24d","parts/05b-unit-load-profiles.js":"cb7445a15dcf","parts/06-decks-units-combat-rules.js":"42f03ff6a2da","parts/07-network-battle-state.js":"a841824d08fd","parts/08-actions-inspector.js":"f9b3e0fcc776","parts/09-combat-turn-ai.js":"9aafa8514405","parts/10-board-interactions.js":"7b39a9270bd3","parts/11-render-battle-tutorial.js":"f29d7e36e8a5","parts/12-profile-shop-packs.js":"4af4e596754e","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"055d70e31ad4","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"21076b30244c","parts/16-exact-guides-mobile.js":"1db6635e3288","parts/17-dragon-contracts.js":"a70471388517","parts/18-dragon-egg.js":"d48b533fbeab","parts/19-field-figures-3d.js":"a11579e8d8aa","features/adventure.js":"ed0742a81163","features/battle-layout.js":"58e6a324da41","features/forge-layout.js":"c724b29f6c00","features/forge.js":"c6f640f8f213","features/hvdev.js":"7818fff44a5c","features/pve.js":"a07587e17681","features/pvp.js":"d8f5980f506d","features/shop.js":"76ff462c9242"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   throw new Error(`Versión inconsistente: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}`);
@@ -142,10 +142,14 @@ function hvPrefetchAssetGroup(group){
 Object.assign(globalThis,{hvHydrateAssetGroup,hvPrefetchAssetGroup,hvPrefetchUrl,hvPrefetchUrls});
 
 // Etapa 9: los calibradores internos no participan del runtime normal.
-// Se conservan en el ZIP y pueden habilitarse de forma explícita con ?hvdev=1.
+// Se conservan en el ZIP y solo pueden habilitarse de forma explícita con ?dev.
 const DEV_TOOLS_ENABLED = (() => {
-  try { return new URLSearchParams(globalThis.location?.search || "").get("hvdev") === "1"; }
-  catch (_) { return false; }
+  try {
+    const params=new URLSearchParams(globalThis.location?.search || "");
+    if(!params.has("dev"))return false;
+    const value=String(params.get("dev")??"").trim().toLowerCase();
+    return value===""||value==="1"||value==="true";
+  } catch (_) { return false; }
 })();
 globalThis.__HALLVALLA_DEV_TOOLS__ = DEV_TOOLS_ENABLED;
 document.documentElement.dataset.hvRuntime = DEV_TOOLS_ENABLED ? "dev" : "prod";
@@ -230,7 +234,7 @@ Object.assign(globalThis, {
 });
 
 // Etapa 9: los módulos mixtos conservan su parte de runtime, pero sus editores/calibradores
-// solo se inicializan con ?hvdev=1. El cargador no elimina archivos para evitar regresiones.
+// solo se inicializan con ?dev. El cargador no elimina archivos para evitar regresiones.
 const CORE_PARTS = [
   "01-boot-config.js",
   "02-assets-leaders.js",
@@ -315,7 +319,7 @@ function loadClassicScript(file) {
 async function hvEnsureFeature(feature){
   const safe=hvFeatureName(feature);
   if(!safe)return false;
-  if(safe==="hvdev"&&!DEV_TOOLS_ENABLED)throw new Error("HVDEV solo está disponible con ?hvdev=1");
+  if(safe==="hvdev"&&!DEV_TOOLS_ENABLED)throw new Error("HVDEV solo está disponible con ?dev");
   if(loadedFeatures.has(safe))return true;
   if(featureLoadPromises.has(safe))return featureLoadPromises.get(safe);
   const files=FEATURE_PARTS[safe];

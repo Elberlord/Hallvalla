@@ -1,3 +1,11 @@
+20260910.22 · Campo canónico 5 × 9 / cartas 80%
+
+- Configuración base del campo: 5 columnas × 9 filas = 45 celdas.
+- Escala base de cartas del campo: 80%.
+- Se usa una nueva clave de preferencias para que configuraciones antiguas 5 × 7 / 100% no sobrescriban esta base.
+- El editor del campo continúa disponible dentro de sus límites existentes.
+- La mecánica de Presión Territorial sigue calculando la línea media con boardRows, por lo que se adapta al nuevo campo.
+
 HallValla v8 Modular · Build actual
 ===================================
 

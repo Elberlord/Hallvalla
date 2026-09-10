@@ -1,0 +1,8 @@
+HALLVALLA 20260910.23 — HERRAMIENTAS DEV
+
+- Las herramientas marcadas con data-hv-dev-tool quedan ocultas desde el HTML inicial.
+- El runtime normal arranca explícitamente como data-hv-runtime="prod" para evitar flashes de herramientas internas antes de cargar JS.
+- El modo de desarrollo se activa únicamente con ?dev (también acepta ?dev=1 o ?dev=true).
+- ?hvdev=1 deja de habilitar herramientas internas.
+- El botón "Ajustar burbujas" y su editor solo son visibles en modo ?dev.
+- No se modificó lógica de combate, tablero, stats ni aventura.

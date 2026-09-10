@@ -1,5 +1,5 @@
 /* HallValla Stage 10.1 · HVDEV bundle
-   Calibradores internos; solo existe en runtime con ?hvdev=1. */
+   Calibradores internos; solo existe en runtime con ?dev. */
 
 (()=>{
   "use strict";
@@ -800,7 +800,7 @@
     hub.className="hv-dev-tools-hub hidden";
     hub.setAttribute("aria-label","Centro de controles de desarrollo de HallValla");
     hub.innerHTML=`
-      <header class="hv-dev-hub-head"><div><b>HALLVALLA · CONTROLES DEV</b><small>Único acceso de calibración · ?hvdev=1</small></div><button id="hvDevToolsHubClose" type="button" aria-label="Cerrar">×</button></header>
+      <header class="hv-dev-hub-head"><div><b>HALLVALLA · CONTROLES DEV</b><small>Único acceso de calibración · ?dev</small></div><button id="hvDevToolsHubClose" type="button" aria-label="Cerrar">×</button></header>
       <div class="hv-dev-hub-scroll">${buildButtons()}<section class="hv-dev-hub-group"><h4>PRUEBAS INTERNAS</h4><div id="hvDevHubInlineTools"></div></section></div>
       <footer class="hv-dev-hub-foot"><button id="hvDevHubCloseEditors" type="button">Cerrar paneles abiertos</button><p id="hvDevToolsHubStatus" aria-live="polite">Selecciona el sistema que quieres ajustar.</p></footer>`;
 
