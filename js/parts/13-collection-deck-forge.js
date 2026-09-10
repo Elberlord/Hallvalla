@@ -824,7 +824,7 @@ function getDeckBuilderDetProgressText(card){
     const record=getUnitMasteryRecord(card);
     const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
     const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
-    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:10;
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:15;
     const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
     let detail=`${kills} muertes · nivel máximo`;
     if(rank<maxRank){
@@ -1359,7 +1359,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 GD / +2 DX",
       "Tier 2 (niveles 4–6): +4 GD / +4 DX",
       "Tier 3 (niveles 7–8): +6 GD / +6 DX",
-      "Tier 4 (nivel 9): +8 GD / +8 DX"
+      "Tier 4 (niveles 9–14): +8 GD / +8 DX",
+      "Tier 5 (nivel 15): +10 GD / +10 DX"
     ],
     abilityName:"Muralla de unidades",
     ability:"Mientras quede al menos una unidad aliada viva, los ataques de unidades enemigas no bajan la Vida del líder Warrior. Hechizos, trampas y efectos de líderes rivales sí hacen daño normalmente."
@@ -1371,7 +1372,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 AT / +2 DX",
       "Tier 2 (niveles 4–6): +4 AT / +4 DX",
       "Tier 3 (niveles 7–8): +6 AT / +6 DX",
-      "Tier 4 (nivel 9): +8 AT / +8 DX"
+      "Tier 4 (niveles 9–14): +8 AT / +8 DX",
+      "Tier 5 (nivel 15): +10 AT / +10 DX"
     ],
     abilityName:"Lluvia de flechas",
     ability:"Desde nivel 5, al final del turno rival se activa automáticamente si hay al menos una unidad enemiga a rango 3 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 3, ignorando Guardia y stats, y también afecta unidades con Sigilo."
@@ -1383,7 +1385,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 daño de magias",
       "Tier 2 (niveles 4–6): +4 daño de magias",
       "Tier 3 (niveles 7–8): +6 daño de magias",
-      "Tier 4 (nivel 9): +8 daño de magias"
+      "Tier 4 (niveles 9–14): +8 daño de magias",
+      "Tier 5 (nivel 15): +10 daño de magias"
     ],
     abilityName:"Descarga arcana",
     ability:"Desde nivel 5, al final del turno rival se activa automáticamente para hacer 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."
@@ -1395,7 +1398,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 AT / +2 DX",
       "Tier 2 (niveles 4–6): +4 AT / +4 DX",
       "Tier 3 (niveles 7–8): +6 AT / +6 DX",
-      "Tier 4 (nivel 9): +8 AT / +8 DX"
+      "Tier 4 (niveles 9–14): +8 AT / +8 DX",
+      "Tier 5 (nivel 15): +10 AT / +10 DX"
     ],
     abilityName:"Victoria sangrienta",
     ability:"Desde nivel 5, cada vez que una unidad aliada muere, las demás unidades aliadas que estén vivas y actualmente en el campo ganan +3 AT permanente. Las unidades del mazo o las que entren después no reciben acumulaciones anteriores."
@@ -1407,7 +1411,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 DX / +2 AGI",
       "Tier 2 (niveles 4–6): +4 DX / +4 AGI",
       "Tier 3 (niveles 7–8): +6 DX / +6 AGI",
-      "Tier 4 (nivel 9): +8 DX / +8 AGI"
+      "Tier 4 (niveles 9–14): +8 DX / +8 AGI",
+      "Tier 5 (nivel 15): +10 DX / +10 AGI"
     ],
     abilityName:"Llamado de la carga",
     ability:"Desde nivel 5, al final del turno rival se activa automáticamente siempre que exista al menos una casilla libre adyacente al líder y convoca hasta 3 Caballerías Ligeras aliadas en los espacios disponibles."
@@ -1419,7 +1424,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 AT / +2 AGI",
       "Tier 2 (niveles 4–6): +4 AT / +4 AGI",
       "Tier 3 (niveles 7–8): +6 AT / +6 AGI",
-      "Tier 4 (nivel 9): +8 AT / +8 AGI"
+      "Tier 4 (niveles 9–14): +8 AT / +8 AGI",
+      "Tier 5 (nivel 15): +10 AT / +10 AGI"
     ],
     abilityName:"Niebla de sangre",
     ability:"Desde nivel 5, los asesinos aliados ignoran Guardia al atacar. Además, gastan solo la mitad de PREC/EVA cuando el sistema les cobre ese desgaste, redondeado hacia arriba."
@@ -1431,7 +1437,8 @@ const LEADER_DETAIL_META={
       "Tier 1 (niveles 1–3): +2 DX / +2 AGI",
       "Tier 2 (niveles 4–6): +4 DX / +4 AGI",
       "Tier 3 (niveles 7–8): +6 DX / +6 AGI",
-      "Tier 4 (nivel 9): +8 DX / +8 AGI"
+      "Tier 4 (niveles 9–14): +8 DX / +8 AGI",
+      "Tier 5 (nivel 15): +10 DX / +10 AGI"
     ],
     abilityName:"Veneno de la Manada",
     ability:"Desde nivel 5, todas las unidades aliadas causan Veneno cuando hacen daño real a HP, incluso en contrataque si atraviesan Guardia. El veneno dura 5 turnos y se duplica cada tick: 1 → 2 → 4 → 8 → 16."

@@ -288,15 +288,15 @@ Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolve
 -------------------------------------------------------------------------------
 */
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Conserva su bonificación propia del líder por tier. Por separado, su buff de categoría da Guardia y Destreza a guerreros y unidades con armadura pesada (+2/+2 hasta +8/+8), incluso si además están montados, sin aumentar Vida."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Conserva su bonificación propia del líder por tier. Por separado, su buff de categoría da Guardia y Destreza a guerreros y unidades con armadura pesada (+2/+2 hasta +10/+10), incluso si además están montados, sin aumentar Vida."},
   archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Potencia unidades que usan arco con Ataque y Destreza según el tier, incluidas arqueras montadas; el buff de líder ya no aumenta Rango."},
-  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Su buff de tier aumenta únicamente el daño de las magias (+2 a +8) y ya no reduce su coste. Sus efectos propios, incluido Vínculo Arcano, se conservan aparte."},
-  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: las unidades de hacha ganan Ataque y Destreza según el tier (+2/+2 hasta +8/+8). Sus efectos propios se conservan aparte."},
-  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil: las unidades montadas a caballo ganan Destreza y Agilidad según el tier (+2/+2 hasta +8/+8), aunque también sean arqueras o guerreros pesados; puede llamar refuerzos al nivel 5."},
-  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con Ataque y Agilidad según el tier (+2/+2 hasta +8/+8), priorizando crítico y evasión. Su habilidad Nv.5 se conserva aparte."},
-  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias ganan Destreza y Agilidad según el tier (+2/+2 hasta +8/+8)."}
+  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Su buff de tier aumenta únicamente el daño de las magias (+2 a +10) y ya no reduce su coste. Sus efectos propios, incluido Vínculo Arcano, se conservan aparte."},
+  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal: las unidades de hacha ganan Ataque y Destreza según el tier (+2/+2 hasta +10/+10). Sus efectos propios se conservan aparte."},
+  cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil: las unidades montadas a caballo ganan Destreza y Agilidad según el tier (+2/+2 hasta +10/+10), aunque también sean arqueras o guerreros pesados; puede llamar refuerzos al nivel 5."},
+  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal: potencia asesinos con Ataque y Agilidad según el tier (+2/+2 hasta +10/+10), priorizando crítico y evasión. Su habilidad Nv.5 se conserva aparte."},
+  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Sus bestias ganan Destreza y Agilidad según el tier (+2/+2 hasta +10/+10)."}
 };
-const LEADER_LEVEL_MAX=9;
+const LEADER_LEVEL_MAX=15;
 const LEADER_LEVEL_TABLE={
   1:{hp:20,atk:2,buffTier:1},
   2:{hp:22,atk:2,buffTier:1},
@@ -306,7 +306,13 @@ const LEADER_LEVEL_TABLE={
   6:{hp:30,atk:4,buffTier:2},
   7:{hp:32,atk:5,buffTier:3},
   8:{hp:34,atk:5,buffTier:3},
-  9:{hp:36,atk:6,buffTier:4}
+  9:{hp:36,atk:6,buffTier:4},
+  10:{hp:38,atk:6,buffTier:4},
+  11:{hp:40,atk:7,buffTier:4},
+  12:{hp:42,atk:7,buffTier:4},
+  13:{hp:44,atk:8,buffTier:4},
+  14:{hp:46,atk:8,buffTier:4},
+  15:{hp:48,atk:9,buffTier:5}
 };
 const LEADER_BASE_ATK={warrior:3,archer:3,mage:3,axe:4,cavalry:3,assassin:2,beastmaster:2};
 const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
@@ -316,13 +322,13 @@ function getLeaderAttack(type,level=1){const base=(LEADER_BASE_ATK[type]??3)+(ty
 function getLeaderGuard(type,level=1){const base=type==="beastmaster"?2:(type==="warrior"?Math.max(0,(LEADER_BASE_GUARD[type]??2)+getWarriorLeaderSelfTierBonus(level)):Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3)));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
 function getLeaderRange(type,level=1){return applyHallvallaValueHooks("leader.range",LEADER_BASE_RANGE[type]??1,{type,level})}
 const LEADER_BUFF_TABLE={
-  warrior:{1:{guard:2,dex:2},2:{guard:4,dex:4},3:{guard:6,dex:6},4:{guard:8,dex:8}},
-  archer:{1:{atk:2,dex:2},2:{atk:4,dex:4},3:{atk:6,dex:6},4:{atk:8,dex:8}},
-  mage:{1:{damageBonus:2},2:{damageBonus:4},3:{damageBonus:6},4:{damageBonus:8}},
-  axe:{1:{atk:2,dex:2},2:{atk:4,dex:4},3:{atk:6,dex:6},4:{atk:8,dex:8}},
-  cavalry:{1:{dex:2,agi:2},2:{dex:4,agi:4},3:{dex:6,agi:6},4:{dex:8,agi:8}},
-  assassin:{1:{atk:2,agi:2},2:{atk:4,agi:4},3:{atk:6,agi:6},4:{atk:8,agi:8}},
-  beastmaster:{1:{dex:2,agi:2},2:{dex:4,agi:4},3:{dex:6,agi:6},4:{dex:8,agi:8}}
+  warrior:{1:{guard:2,dex:2},2:{guard:4,dex:4},3:{guard:6,dex:6},4:{guard:8,dex:8},5:{guard:10,dex:10}},
+  archer:{1:{atk:2,dex:2},2:{atk:4,dex:4},3:{atk:6,dex:6},4:{atk:8,dex:8},5:{atk:10,dex:10}},
+  mage:{1:{damageBonus:2},2:{damageBonus:4},3:{damageBonus:6},4:{damageBonus:8},5:{damageBonus:10}},
+  axe:{1:{atk:2,dex:2},2:{atk:4,dex:4},3:{atk:6,dex:6},4:{atk:8,dex:8},5:{atk:10,dex:10}},
+  cavalry:{1:{dex:2,agi:2},2:{dex:4,agi:4},3:{dex:6,agi:6},4:{dex:8,agi:8},5:{dex:10,agi:10}},
+  assassin:{1:{atk:2,agi:2},2:{atk:4,agi:4},3:{atk:6,agi:6},4:{atk:8,agi:8},5:{atk:10,agi:10}},
+  beastmaster:{1:{dex:2,agi:2},2:{dex:4,agi:4},3:{dex:6,agi:6},4:{dex:8,agi:8},5:{dex:10,agi:10}}
 };
 const LEADER_LEVEL5_ABILITY_POOL=[
   {key:"heroic_edge",name:"Filo de mando",short:"+1 HP por turno a unidades aliadas",desc:"Al inicio de cada turno propio, las unidades aliadas recuperan 1 HP sin superar su Vida máxima."},

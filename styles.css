@@ -26032,3 +26032,8 @@ html:has(#gameShell:not(.hidden)) body{
 .hv-mission-complete-shade--tactics{left:64.8%;top:19.3%;width:28.3%;height:18.6%;}
 .hv-tutorial-visual-layer .hv-mission-progress,
 .hv-tutorial-visual-layer .hv-mission-progress-number{z-index:2;}
+
+/* Mina · pociones de nivel */
+.mine-shop-potion-art{min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:10px;border-radius:11px;background:linear-gradient(180deg,rgba(38,23,63,.72),rgba(9,12,19,.82));border:1px solid rgba(194,157,255,.28)}
+.mine-level-potion-offer{border-color:rgba(194,157,255,.42)!important}
+.mine-level-potion-offer .mine-mini-btn:disabled{opacity:.58;cursor:not-allowed}

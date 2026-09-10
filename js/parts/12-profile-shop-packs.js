@@ -769,20 +769,20 @@ function unitServiceUnlockText(result){
 }
 function annotateUnitWithServiceProgress(unit){
   if(!isUnitServiceProgression(unit))return unit;
-  return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryHpBonus:0};
+  return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryHpBonus:0,masteryStatBonus:0};
 }
 
-const UNIT_MASTERY_MAX_RANK=10;
+const UNIT_MASTERY_MAX_RANK=15;
 function getUnitMasteryKillsForRank(rank){
   const safeRank=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(rank)||1)));
   if(safeRank<=1)return 0;
-  // Progresión acumulada: Nv.2=20, Nv.3=50, Nv.4=90, Nv.5=140...
-  // Cada nuevo nivel exige 10 bajas más que el anterior: +20, +30, +40, +50...
+  // Progresión acumulada creciente hasta Nv. XV: Nv.2=20, Nv.3=50, Nv.4=90, Nv.5=140... Nv.15=1190.
+  // Cada nuevo nivel exige 10 bajas adicionales respecto al salto anterior: +20, +30, +40... +150.
   return 5*safeRank*(safeRank+1)-10;
 }
 function romanUnitRank(n){
   const v=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(n)||1)));
-  return ["","I","II","III","IV","V","VI","VII","VIII","IX","X"][v]||"I";
+  return ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV"][v]||"I";
 }
 function normalizeUnitMasteryName(name){return String(name||"").trim().replace(/\s+/g," ");}
 function getUnitMasteryKey(entity){return normalizeUnitMasteryName(entity?.name||"").toLowerCase();}
@@ -818,7 +818,8 @@ function getUnitMasteryRank(entity){
   if(entity.owner&&myPlayer&&Number(entity.owner)!==Number(myPlayer))return 1;
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
-function getUnitMasteryHpBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
+function getUnitMasteryStatBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
+function getUnitMasteryHpBonusByRank(rank){return getUnitMasteryStatBonusByRank(rank);}
 
 function getUnitMasteryProgressText(entity){
   if(isUnitServiceProgression(entity))return getAcolyteServiceProgressText(entity);
@@ -849,7 +850,8 @@ function registerLocalUnitMasteryKill(killer,victim){
     const afterRank=getUnitMasteryRankFromKills(afterKills);
     book[key]={name:normalizeUnitMasteryName(creditedKiller.name||before.name||key),kills:afterKills};
     savePlayerProfile({...profile,unitMastery:book});
-    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,hpGain:getUnitMasteryHpBonusByRank(afterRank)-getUnitMasteryHpBonusByRank(beforeRank),creditedFromReanimated:creditedKiller.id!==killer.id};
+    const statGain=getUnitMasteryStatBonusByRank(afterRank)-getUnitMasteryStatBonusByRank(beforeRank);
+    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,statGain,hpGain:statGain,creditedFromReanimated:creditedKiller.id!==killer.id};
   }catch(e){console.warn("[HallValla] No se pudo registrar maestría de unidad:",e);return null;}
 }
 const VEIL_CURSE_KILL_EVENT_STORAGE_KEY="hallvalla_veil_curse_kill_event_v1";
@@ -884,25 +886,42 @@ function maybeProcessVeilCurseKillEvent(prevState,nextState){
 
 function applyUnitMasteryRankUpToUnits(units,killer,result){
   if(!result||!result.rankedUp||!killer||!Array.isArray(units))return units;
-  const hpGain=Math.max(0,Number(result.hpGain||0));
-  if(hpGain<=0)return units;
+  const statGain=Math.max(0,Number(result.statGain??result.hpGain??0));
+  if(statGain<=0)return units;
   const key=result.key||getUnitMasteryKey(killer);
   return units.map(u=>{
     if(!u||u.leader||Number(u.owner)!==Number(killer.owner)||getUnitMasteryKey(u)!==key)return u;
-    const nextMax=Number(u.maxHp||u.hp||0)+hpGain;
-    return {...u,maxHp:nextMax,hp:Math.min(nextMax,Number(u.hp||0)+hpGain),masteryRank:result.afterRank,masteryHpBonus:getUnitMasteryHpBonusByRank(result.afterRank)};
+    const currentMax=Number(u.maxHp||u.hp||0);
+    const nextMax=currentMax+statGain;
+    const currentBaseGuard=Number(u.baseGuard??u.guard??0);
+    const currentGuard=Number(u.guard||0);
+    const bonus=getUnitMasteryStatBonusByRank(result.afterRank);
+    return {
+      ...u,
+      maxHp:nextMax,
+      hp:Math.min(nextMax,Number(u.hp||0)+statGain),
+      atk:Number(u.atk||0)+statGain,
+      baseGuard:currentBaseGuard+statGain,
+      guard:currentGuard+statGain,
+      dex:Number(u.dex||0)+statGain,
+      agi:Number(u.agi||0)+statGain,
+      masteryRank:result.afterRank,
+      masteryHpBonus:bonus,
+      masteryStatBonus:bonus
+    };
   });
 }
 function unitMasteryRankUpText(result){
   if(!result||!result.rankedUp)return "";
-  return ` Maestría: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} y las unidades con ese mismo nombre ganan +${result.hpGain} Vida máxima.`;
+  const gain=Math.max(0,Number(result.statGain??result.hpGain??0));
+  return ` Maestría: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} y las unidades con ese mismo nombre ganan +${gain} DX, +${gain} GD, +${gain} HP, +${gain} AT y +${gain} AG.`;
 }
 function annotateUnitWithMastery(unit){
   if(!unit||unit.leader)return unit;
   if(isUnitServiceProgression(unit))return annotateUnitWithServiceProgress(unit);
   const rank=getUnitMasteryRank(unit);
-  const bonus=getUnitMasteryHpBonusByRank(rank);
-  return {...unit,masteryRank:rank,masteryHpBonus:bonus};
+  const bonus=getUnitMasteryStatBonusByRank(rank);
+  return {...unit,masteryRank:rank,masteryHpBonus:bonus,masteryStatBonus:bonus};
 }
 function cleanPlayerName(name){
   return String(name||"").trim().replace(/\s+/g," ").slice(0,18);

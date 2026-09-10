@@ -1,0 +1,17 @@
+HallValla · Líder Nivel XV = Tier 5 · Build 20260910.30
+
+REGLA
+- El Nivel XV de cada líder pertenece al Tier 5.
+- Niveles IX a XIV permanecen en Tier 4.
+- Tier 5 incrementa en +2/+2 el buff de categoría respecto a Tier 4.
+
+BUFFS TIER 5
+- Guerrero: +10 GD / +10 DX a unidades compatibles.
+- Arquero: +10 AT / +10 DX a unidades compatibles.
+- Caudillo del Hacha: +10 AT / +10 DX.
+- Señor de la Carga: +10 DX / +10 AG.
+- Maestro de Sombras: +10 AT / +10 AG.
+- Señor de las Bestias: +10 DX / +10 AG.
+- Hechicero: +10 al daño de magias.
+
+El límite de líder continúa siendo Nivel XV. La poción de líder mantiene su costo y límite diario existentes.

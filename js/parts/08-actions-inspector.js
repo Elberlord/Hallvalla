@@ -479,7 +479,7 @@ function weaponGuideData(entity){
   if(entity?.leader){
     const lt=String(entity.leaderType||"").toLowerCase();
     if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
-    if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: amplifica el daño de sus magias.",formula:"Ventaja de tier: +2/+4/+6/+8 al daño de las magias. El tier ya no reduce su coste. Sus efectos propios se resuelven por separado.",example:"Una magia de daño 2 pasa a daño 6 con Tier 2 (+4), manteniendo su coste original."};
+    if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: amplifica el daño de sus magias.",formula:"Ventaja de tier: +2/+4/+6/+8/+10 al daño de las magias. El tier ya no reduce su coste. Sus efectos propios se resuelven por separado.",example:"Una magia de daño 2 pasa a daño 6 con Tier 2 (+4), manteniendo su coste original."};
     return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
   }
   if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Espada de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: aunque pertenece a la clase táctica Caballería, esta unidad ataca con espada. Si se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación. Cuidado con lanceros: son su respuesta natural."};
@@ -859,7 +859,7 @@ function getUnifiedDetProgressText(entity){
     const record=getUnitMasteryRecord(entity);
     const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
     const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
-    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:10;
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:15;
     const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
     if(rank>=maxRank)return `NIVEL ${rankText} · ${kills} muertes · nivel máximo`;
     const next=Math.max(kills,Math.floor(Number(getUnitMasteryKillsForRank(rank+1)||kills)));
@@ -1021,13 +1021,16 @@ function getUnifiedDetDisplayedStats(entity,{live=false}={}){
       };
     }
     if(entity.type==='unit'||entity.leader){
+      const masteryBonus=(!entity.leader&&typeof getUnitMasteryRank==='function'&&typeof getUnitMasteryStatBonusByRank==='function'&&!(typeof isUnitServiceProgression==='function'&&isUnitServiceProgression(entity)))
+        ? Math.max(0,Number(getUnitMasteryStatBonusByRank(getUnitMasteryRank(entity))||0))
+        : 0;
       return {
-        hp:entity.hp??0,
-        dexterity:typeof getCardDisplayDex==='function'?getCardDisplayDex(entity):(entity.dx??entity.dex??0),
+        hp:Number(entity.hp??0)+masteryBonus,
+        dexterity:Number(typeof getCardDisplayDex==='function'?getCardDisplayDex(entity):(entity.dx??entity.dex??0))+masteryBonus,
         movement:entity.mov??0,
-        attack:entity.atk??0,
-        guard:entity.guard??0,
-        agility:entity.agi??0,
+        attack:Number(entity.atk??0)+masteryBonus,
+        guard:Number(entity.guard??0)+masteryBonus,
+        agility:Number(entity.agi??0)+masteryBonus,
         range:typeof getCardDisplayRange==='function'?getCardDisplayRange(entity):(entity.range??entity.rg??1),
         cost:costValue
       };
@@ -1321,7 +1324,7 @@ function getUnifiedDetLevelDisplayData(entity){
     const record=getUnitMasteryRecord(entity);
     const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
     const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
-    const maxRank=typeof UNIT_MASTERY_MAX_RANK==='number'?UNIT_MASTERY_MAX_RANK:10;
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==='number'?UNIT_MASTERY_MAX_RANK:15;
     const rankText=typeof romanUnitRank==='function'?romanUnitRank(rank):String(rank);
     if(rank>=maxRank){
       return {...empty,visible:true,rank:rankText,progressText:'NIVEL MÁXIMO',percent:100,maxed:true,current:kills,total:kills,remaining:0};

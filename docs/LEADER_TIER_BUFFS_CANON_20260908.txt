@@ -6,6 +6,7 @@ Tier 1: +2/+2
 Tier 2: +4/+4
 Tier 3: +6/+6
 Tier 4: +8/+8
+Tier 5: +10/+10 (exclusivo del Nivel XV)
 
 Guerrero -> Infantería pesada: GD + DX
 Arquero -> Arqueras: AT + DX (sin RG por tier)
@@ -14,4 +15,11 @@ Caballería -> Caballería: DX + AG
 Asesino -> Asesinos: AT + AG
 Beast Master -> Bestias: DX + AG
 
-Hechicero: +2/+4/+6/+8 al daño de magias según tier. Ya no reduce el coste de las magias y el tier no aumenta curación, buffs ni escudos.
+Hechicero: +2/+4/+6/+8/+10 al daño de magias según tier. Ya no reduce el coste de las magias y el tier no aumenta curación, buffs ni escudos.
+
+
+Actualización 2026-09-10 · Tier 5
+- Nivel XV del líder = Tier 5.
+- Niveles IX–XIV = Tier 4.
+- Tier 5 añade +2/+2 sobre Tier 4: pasa de +8/+8 a +10/+10.
+- Hechicero Tier 5: +10 al daño de magias.

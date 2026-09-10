@@ -2754,6 +2754,7 @@ function renderHallvallaMineMissions(state=seedHallvallaMineMissionFacts(getHall
 const HALLVALLA_MINE_SHOP_STORAGE_KEY="hallvalla_mine_shop_v1";
 const HALLVALLA_MINE_SHOP_PIECES_REQUIRED=25;
 const HALLVALLA_MINE_SHOP_PIECE_COST=250;
+const HALLVALLA_MINE_LEVEL_POTION_COST=5000;
 const HALLVALLA_MINE_SHOP_OFFER_COUNT=3;
 const HALLVALLA_MINE_SHOP_KEYS=Object.freeze([
   "vorthalix_oraculo_osario",
@@ -2784,7 +2785,8 @@ function normalizeHallvallaMineShopState(state={}){
   const raw=state?.units&&typeof state.units==="object"?state.units:{};
   const units={};
   HALLVALLA_MINE_SHOP_KEYS.forEach(key=>units[key]=normalizeHallvallaMineShopUnitState(raw[key]||{}));
-  return {units};
+  const potions=state?.potions&&typeof state.potions==="object"?state.potions:{};
+  return {units,potions:{unitLastPurchaseDay:Math.max(-1,Math.floor(Number(potions.unitLastPurchaseDay??-1))),leaderLastPurchaseDay:Math.max(-1,Math.floor(Number(potions.leaderLastPurchaseDay??-1)))}};
 }
 function getHallvallaMineShopState(){
   try{return normalizeHallvallaMineShopState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_SHOP_STORAGE_KEY)||"null")||{});}
@@ -2863,11 +2865,76 @@ async function syncHallvallaMineShopRemote(){
 function updateHallvallaMineShopCountdown(){
   const chip=$("mineShopNextChip");if(chip)chip.textContent=`Nueva rotación ${formatHallvallaMineDuration(getHallvallaMineShopNextRotationMs())}`;
 }
+function getHallvallaPotionEligibleUnits(){
+  try{
+    const collection=getPlayerCollection(),cards=Array.isArray(collection?.cards)?collection.cards:[];
+    return cards.filter(card=>card&&card.type==="unit"&&Number(card.qty||0)>0&&!(typeof isUnitServiceProgression==="function"&&isUnitServiceProgression(card))).map(card=>{
+      const rec=getUnitMasteryRecord(card),rank=getUnitMasteryRankFromKills(rec.kills);
+      return {...card,_masteryRank:rank,_masteryKills:rec.kills};
+    }).filter(card=>card._masteryRank<UNIT_MASTERY_MAX_RANK).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+  }catch(_){return [];}
+}
+function chooseHallvallaPotionUnit(){
+  const list=getHallvallaPotionEligibleUnits();
+  if(!list.length)return null;
+  const lines=list.map((card,i)=>`${i+1}. ${card.name} · Nv. ${romanUnitRank(card._masteryRank)}`).join("\n");
+  const raw=window.prompt(`Elige la unidad que subirá +1 nivel:\n\n${lines}\n\nEscribe el número de la unidad.`);
+  const index=Math.floor(Number(raw))-1;
+  return index>=0&&index<list.length?list[index]:null;
+}
+function chooseHallvallaPotionLeader(){
+  const profile=getPlayerProfile();
+  const list=Object.keys(LEADER_DATA).map(type=>({type,name:LEADER_DATA[type]?.name||type,level:getProfileLeaderLevel(type,profile)})).filter(x=>x.level<LEADER_LEVEL_MAX);
+  if(!list.length)return null;
+  const lines=list.map((item,i)=>`${i+1}. ${item.name} · Nv. ${item.level}`).join("\n");
+  const raw=window.prompt(`Elige el líder que subirá +1 nivel:\n\n${lines}\n\nEscribe el número del líder.`);
+  const index=Math.floor(Number(raw))-1;
+  return index>=0&&index<list.length?list[index]:null;
+}
+async function buyHallvallaMineLevelPotion(kind,button=null){
+  const potionKind=kind==="leader"?"leader":"unit",status=$("mineShopStatus"),day=getHallvallaMineShopDayIndex();
+  const current=getHallvallaMineShopState(),field=potionKind==="leader"?"leaderLastPurchaseDay":"unitLastPurchaseDay";
+  if(Number(current.potions?.[field])===day){if(status)status.textContent=`Ya compraste la poción de ${potionKind==="leader"?"líder":"unidad"} disponible hoy.`;return;}
+  const profile=getPlayerProfile(),gems=Math.max(0,Number(profile?.gems||0));
+  if(gems<HALLVALLA_MINE_LEVEL_POTION_COST){if(status)status.textContent=`Necesitas ${HALLVALLA_MINE_LEVEL_POTION_COST} gemas para comprar esta poción.`;return;}
+  const target=potionKind==="leader"?chooseHallvallaPotionLeader():chooseHallvallaPotionUnit();
+  if(!target){if(status)status.textContent=potionKind==="leader"?"No seleccionaste un líder válido o todos ya son Nivel XV.":"No seleccionaste una unidad válida o todas ya son Nivel XV.";return;}
+  if(!hallvallaMineOnlineReady()&&HALLVALLA_LOCALHOST_TEST_MODE!==true){if(status)status.textContent="Sin conexión con Firebase. La compra no se realizará para proteger tu progreso.";return;}
+  if(button){button.disabled=true;button.textContent="COMPRANDO...";}
+  try{
+    let committed=false,nextState=current;
+    if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+      nextState=normalizeHallvallaMineShopState(current);nextState.potions[field]=day;cacheHallvallaMineShopState(nextState);committed=true;
+    }else{
+      const userId=getHallvallaMineUserUid();if(!userId)throw new Error("Usuario no autenticado");
+      const potionRef=ref(db,`users/${userId}/mine/shop/potions/${field}`);
+      const result=await runTransaction(potionRef,raw=>Number(raw)===day?undefined:day,{applyLocally:false});
+      if(result?.committed){nextState=normalizeHallvallaMineShopState(current);nextState.potions[field]=day;cacheHallvallaMineShopState(nextState);committed=true;}
+    }
+    if(!committed){if(status)status.textContent="La compra no fue confirmada. No se descontaron gemas.";renderHallvallaMineShop(await syncHallvallaMineShopRemote());return;}
+    if(potionKind==="unit"){
+      const book=normalizeUnitMasteryBook(profile.unitMastery||{}),key=getUnitMasteryKey(target),before=book[key]||{name:target.name,kills:0};
+      const rank=getUnitMasteryRankFromKills(before.kills),nextRank=Math.min(UNIT_MASTERY_MAX_RANK,rank+1);
+      book[key]={name:target.name,kills:Math.max(Number(before.kills||0),getUnitMasteryKillsForRank(nextRank))};profile.unitMastery=book;
+      if(status)status.textContent=`${target.name} subió a Nivel ${romanUnitRank(nextRank)}.`;
+    }else{
+      profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level||1);
+      const next=Math.min(LEADER_LEVEL_MAX,getProfileLeaderLevel(target.type,profile)+1);profile.leaderLevels[target.type]=next;
+      profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
+      if(status)status.textContent=`${target.name} subió a Nivel ${next}.`;
+    }
+    profile.gems=Math.max(0,gems-HALLVALLA_MINE_LEVEL_POTION_COST);savePlayerProfile(profile);
+    if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);if(typeof renderSelectedLeaderBadge==="function")renderSelectedLeaderBadge();if(typeof renderHomeProgress==="function")renderHomeProgress();
+    renderHallvallaMineShop(nextState);if(typeof renderMineResourceValues==="function")renderMineResourceValues();
+  }catch(error){console.warn("[HallValla][Mina][Pociones] Compra fallida:",error);if(status)status.textContent="No se pudo completar la compra.";renderHallvallaMineShop(getHallvallaMineShopState());}
+}
 function renderHallvallaMineShop(state=getHallvallaMineShopState()){
   const grid=$("mineShopGrid");if(!grid)return;
   const safe=cacheHallvallaMineShopState(state),day=getHallvallaMineShopDayIndex(),offers=getHallvallaMineShopOffers(day);
   const pieceVouchers=Math.max(0,Math.floor(Number(getPlayerProfile()?.minePuzzleVouchers||0)));
-  grid.innerHTML=offers.map(key=>{
+  const unitPotionBought=Number(safe.potions?.unitLastPurchaseDay)===day,leaderPotionBought=Number(safe.potions?.leaderLastPurchaseDay)===day;
+  const potionHtml=`<article class="mine-shop-card mine-level-potion-offer"><div class="mine-shop-potion-art"><strong style="font-size:52px">🧪</strong><b>Poción de Experiencia</b><small>Sube +1 nivel a la unidad que elijas · Máx. XV</small></div><button class="mine-mini-btn" data-mine-potion-buy="unit" type="button" ${unitPotionBought?"disabled":""}>${unitPotionBought?"COMPRADA HOY":`COMPRAR · ${HALLVALLA_MINE_LEVEL_POTION_COST}💎`}</button></article><article class="mine-shop-card mine-level-potion-offer"><div class="mine-shop-potion-art"><strong style="font-size:52px">⚗️</strong><b>Poción de Mando</b><small>Sube +1 nivel al líder que elijas · Máx. XV</small></div><button class="mine-mini-btn" data-mine-potion-buy="leader" type="button" ${leaderPotionBought?"disabled":""}>${leaderPotionBought?"COMPRADA HOY":`COMPRAR · ${HALLVALLA_MINE_LEVEL_POTION_COST}💎`}</button></article>`;
+  grid.innerHTML=potionHtml+offers.map(key=>{
     const card=getHallvallaMineShopTemplate(key);if(!card)return "";
     const progress=safe.units?.[key]||createHallvallaMineShopUnitState(),pieces=Math.max(0,Math.min(25,Number(progress.pieces||0)));
     const complete=pieces>=25,boughtToday=Number(progress.lastPurchaseDay)===day;
@@ -2878,6 +2945,7 @@ function renderHallvallaMineShop(state=getHallvallaMineShopState()){
       <button class="mine-mini-btn mine-shop-buy-piece" data-mine-shop-buy="${escapeHtml(key)}" type="button" ${complete||(boughtToday&&pieceVouchers<=0)?"disabled":""}>${escapeHtml(buttonText)}</button>
     </article>`;
   }).join("");
+  grid.querySelectorAll("[data-mine-potion-buy]").forEach(btn=>btn.addEventListener("click",()=>buyHallvallaMineLevelPotion(String(btn.dataset.minePotionBuy||""),btn)));
   grid.querySelectorAll("[data-mine-shop-buy]").forEach(btn=>btn.addEventListener("click",()=>buyHallvallaMineShopPiece(String(btn.dataset.mineShopBuy||""),btn)));
   updateHallvallaMineShopCountdown();
 }

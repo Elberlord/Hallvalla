@@ -434,8 +434,8 @@ function getUnitTopLeftTitle(u){
   }
   if(isUnitServiceProgression(u))return `Puntos de servicio de ${u.name}: ${getUnitServicePoints(u)}. Purificación se desbloquea en 50 y Resurrección en 100. Esta progresión no usa bajas ni concede Vida máxima.`;
   const rank=getUnitMasteryRank(u);
-  const bonus=getUnitMasteryHpBonusByRank(rank);
-  return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} Vida máxima. Máximo: Rango X.`;
+  const bonus=typeof getUnitMasteryStatBonusByRank==="function"?getUnitMasteryStatBonusByRank(rank):getUnitMasteryHpBonusByRank(rank);
+  return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} DX / GD / HP / AT / AG. Máximo: Rango X.`;
 }
 function getUnitAuxStatData(u){
   if(!u)return {text:"",kind:"guard",title:""};

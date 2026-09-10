@@ -1,0 +1,37 @@
+HallValla · Maestría de unidades hasta Nivel XV · Build 20260910.28
+=================================================================
+
+Límite de nivel
+---------------
+- Las unidades con Maestría por experiencia de combate ahora pueden alcanzar NIVEL XV.
+- Nivel I es la base; cada nivel ganado sigue otorgando +2 DX, +2 GD, +2 HP, +2 AT y +2 AG.
+- El bono es acumulativo. En Nivel XV la unidad tiene +28 en cada una de esas cinco estadísticas respecto a su base.
+- MOV, RG, costo y habilidades no aumentan por nivel.
+- Las unidades con progresión especial de Servicio mantienen su sistema independiente.
+
+Curva de experiencia por bajas
+------------------------------
+La dificultad crece en cada salto. El primer ascenso requiere 20 bajas; después cada nuevo salto exige 10 bajas más que el salto anterior.
+Los requisitos listados son bajas acumuladas de esa unidad:
+
+- Nivel I: 0 bajas · bono +0
+- Nivel II: 20 bajas acumuladas · salto +20 · bono +2 DX/GD/HP/AT/AG
+- Nivel III: 50 bajas acumuladas · salto +30 · bono +4 DX/GD/HP/AT/AG
+- Nivel IV: 90 bajas acumuladas · salto +40 · bono +6 DX/GD/HP/AT/AG
+- Nivel V: 140 bajas acumuladas · salto +50 · bono +8 DX/GD/HP/AT/AG
+- Nivel VI: 200 bajas acumuladas · salto +60 · bono +10 DX/GD/HP/AT/AG
+- Nivel VII: 270 bajas acumuladas · salto +70 · bono +12 DX/GD/HP/AT/AG
+- Nivel VIII: 350 bajas acumuladas · salto +80 · bono +14 DX/GD/HP/AT/AG
+- Nivel IX: 440 bajas acumuladas · salto +90 · bono +16 DX/GD/HP/AT/AG
+- Nivel X: 540 bajas acumuladas · salto +100 · bono +18 DX/GD/HP/AT/AG
+- Nivel XI: 650 bajas acumuladas · salto +110 · bono +20 DX/GD/HP/AT/AG
+- Nivel XII: 770 bajas acumuladas · salto +120 · bono +22 DX/GD/HP/AT/AG
+- Nivel XIII: 900 bajas acumuladas · salto +130 · bono +24 DX/GD/HP/AT/AG
+- Nivel XIV: 1040 bajas acumuladas · salto +140 · bono +26 DX/GD/HP/AT/AG
+- Nivel XV: 1190 bajas acumuladas · salto +150 · bono +28 DX/GD/HP/AT/AG
+
+Comportamiento en batalla
+------------------------
+- Cuando una baja provoca un ascenso, todas las copias vivas del mismo nombre reciben inmediatamente el +2 del nuevo nivel.
+- Las nuevas copias invocadas calculan el bono total correspondiente al nivel persistente.
+- El DET y la Forja muestran NIVEL XI, XII, XIII, XIV y XV correctamente y marcan XV como NIVEL MÁXIMO.

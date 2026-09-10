@@ -1,0 +1,27 @@
+HallValla · Maestría de unidades · Build 20260910.27
+======================================================
+
+Cambio de progresión
+---------------------
+Antes, cada rango de maestría por experiencia de combate otorgaba únicamente +2 HP.
+
+Desde este build, CADA rango ganado por una unidad otorga simultáneamente:
+- +2 DX (Destreza)
+- +2 GD (Guardia)
+- +2 HP (Vida máxima y Vida actual al subir de rango)
+- +2 AT (Ataque)
+- +2 AG (Agilidad)
+
+La mejora es acumulativa por rango sobre las estadísticas base:
+- Rango I: +0 a las cinco estadísticas.
+- Rango II: +2 a DX/GD/HP/AT/AG.
+- Rango III: +4 a DX/GD/HP/AT/AG.
+- Rango IV: +6 a DX/GD/HP/AT/AG.
+- Rango V: +8 a DX/GD/HP/AT/AG.
+- ...
+- Rango X: +18 a DX/GD/HP/AT/AG.
+
+Al subir de rango durante una batalla, las copias vivas del mismo nombre reciben inmediatamente el incremento de +2 correspondiente en esas cinco estadísticas.
+Las unidades invocadas posteriormente calculan el bono total según su rango de maestría guardado.
+MOV, RG, costo y habilidades no aumentan con esta progresión.
+Las unidades con progresión especial de Servicio conservan su sistema propio y no usan esta maestría por bajas.

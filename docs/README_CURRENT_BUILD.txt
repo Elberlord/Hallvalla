@@ -1,3 +1,26 @@
+20260910.30 · LÍDER NIVEL XV = TIER 5
+- Nivel XV ahora pertenece al Tier 5.
+- Tier 4 comprende niveles IX–XIV.
+- Tier 5 mejora el buff de categoría de +8/+8 a +10/+10.
+- Hechicero Tier 5 pasa de +8 a +10 daño de magias.
+- Ver docs/LEADER_TIER5_LEVEL_XV_20260910_30.txt.
+
+20260910.28 · MAESTRÍA DE UNIDADES HASTA NIVEL XV
+- El límite de Maestría de combate sube de Nivel X a Nivel XV.
+- Cada nivel ganado mantiene +2 DX, +2 GD, +2 HP, +2 AT y +2 AG.
+- Nivel XV acumula +28 en cada una de esas cinco estadísticas sobre la base.
+- La experiencia sigue una curva creciente: II=20, III=50, IV=90, V=140, VI=200, VII=270, VIII=350, IX=440, X=540, XI=650, XII=770, XIII=900, XIV=1040, XV=1190 bajas acumuladas.
+- Ver docs/UNIT_MASTERY_LEVEL_XV_20260910_28.txt.
+
+20260910.27 · Maestría de combate: crecimiento integral
+
+- Cada rango de maestría de unidad ahora concede +2 DX, +2 GD, +2 HP, +2 AT y +2 AG.
+- El bono es acumulativo: Rango V = +8 en las cinco estadísticas; Rango X = +18.
+- El aumento se aplica al invocar según el rango guardado y también inmediatamente cuando se sube de rango en batalla.
+- El DET muestra las estadísticas de la carta incorporando el bono de maestría.
+- MOV, RG, costo y habilidades permanecen sin cambios.
+- Ver docs/UNIT_MASTERY_ALL_STATS_20260910_27.txt.
+
 20260910.22 · Campo canónico 5 × 9 / cartas 80%
 
 - Configuración base del campo: 5 columnas × 9 filas = 45 celdas.
