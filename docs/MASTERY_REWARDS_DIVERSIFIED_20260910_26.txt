@@ -1,0 +1,25 @@
+HallValla · 20260910.26 · Premios de Maestría diversificados
+
+Las Maestrías mantienen hitos infinitos y premios crecientes.
+Además de Oro y Packs, los hitos pueden entregar:
+- Fragmentos.
+- Gemas.
+- Piezas comodín del rompecabezas de la Mina. Se guardan en el perfil y, al comprar/obtener una pieza en la Tienda de la Mina, se consume primero una pieza gratis si existe. El jugador elige a qué No Muerto aplicarla mediante la propia oferta de la Tienda.
+- Eliminaciones gratuitas de desastre de Mina. Si hay Incendio, Inundación o Derrumbe activo y el perfil dispone de vales, el botón ofrece eliminarlo gratis y consume un vale en lugar de Oro.
+
+Escalado destacado:
+10: 5 Oro
+25: 10 Oro + 10 Fragmentos
+50: 20 Oro + 1 Gema + 25 Fragmentos
+100: 40 Oro + 2 Gemas + 50 Fragmentos
+250: 75 Oro + Pack básico + 3 Gemas + 100 Fragmentos
+500: 150 Oro + Pack raro + 5 Gemas + 200 Fragmentos + 1 pieza Mina
+1.000: 300 Oro + Pack épico + 10 Gemas + 350 Fragmentos + 1 pieza Mina
+5.000: 600 Oro + Pack mítico + 20 Gemas + 600 Fragmentos + 2 piezas Mina + 1 desastre gratis
+10.000: 1.000 Oro + Pack legendario + 35 Gemas + 1.000 Fragmentos + 3 piezas Mina + 1 desastre gratis
+50.000: 2.000 Oro + 2 Packs legendarios + 75 Gemas + 2.000 Fragmentos + 5 piezas Mina + 2 desastres gratis
+100.000: 4.000 Oro + 3 Packs legendarios + 125 Gemas + 3.500 Fragmentos + 7 piezas Mina + 2 desastres gratis
+500.000: 8.000 Oro + 4 Packs legendarios + 250 Gemas + 7.000 Fragmentos + 12 piezas Mina + 3 desastres gratis
+1.000.000: 12.000 Oro + 5 Packs legendarios + 500 Gemas + 12.000 Fragmentos + 20 piezas Mina + 5 desastres gratis
+
+Después de 1M, cada hito infinito suma +4.000 Oro, +1 Pack legendario, +150 Gemas, +3.000 Fragmentos, +5 piezas Mina y +1 eliminación gratuita de desastre respecto al hito previo.

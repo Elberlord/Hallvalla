@@ -1804,7 +1804,11 @@ function renderHallvallaMineEvents(eventState=processHallvallaMineEvents()){
     card.classList.toggle("selected",card===selected&&isActive);
     const effect=card.querySelector("[data-mine-event-effect]"),button=card.querySelector("[data-mine-event-action]");
     if(effect)effect.innerHTML=formatHallvallaMineEventEffectHtml(isActive?String(instance.effectText||def?.baseEffect||""):String(def?.baseEffect||"Inactivo"));
-    if(button){button.disabled=!isActive;button.textContent=def?.button||"Acción";}
+    if(button){
+      button.disabled=!isActive;
+      const freeClears=Math.max(0,Math.floor(Number(getPlayerProfile()?.freeMineDisasterClears||0)));
+      button.textContent=isActive&&def?.kind==="negative"&&freeClears>0?`Eliminar gratis · ${freeClears}`:(def?.button||"Acción");
+    }
   });
   setHallvallaMineEventScene(selected);
 }
@@ -1877,18 +1881,21 @@ async function handleHallvallaMineEventAction(key,button=null){
   const profile=getPlayerProfile();
   if(def.kind==="negative"){
     const cost=Math.max(0,Number(def.costGold||0));
-    if(Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))} Oro`);return;}
-    if(button){button.disabled=true;button.textContent="Reparando...";}
+    const freeClears=Math.max(0,Math.floor(Number(profile.freeMineDisasterClears||0)));
+    const useFreeClear=freeClears>0;
+    if(!useFreeClear&&Number(profile.gold||0)<cost){flashHallvallaMineEventButton(button,`Faltan ${cost-Math.max(0,Number(profile.gold||0))} Oro`);return;}
+    if(button){button.disabled=true;button.textContent=useFreeClear?"Eliminando gratis...":"Reparando...";}
     const tx=await resolveHallvallaMineNegativeEventRemote(key);
     if(!tx.committed){
-      if(button){button.disabled=false;button.textContent=def.button||"Reparar";}
-      setHallvallaMineStatus("No se pudo confirmar la reparación con Firebase. No se descontó oro.");
+      if(button){button.disabled=false;button.textContent=useFreeClear?`Eliminar gratis · ${freeClears}`:(def.button||"Reparar");}
+      setHallvallaMineStatus(`No se pudo confirmar la reparación con Firebase. No se descontó ${useFreeClear?"el vale":"oro"}.`);
       return;
     }
-    profile.gold=Math.max(0,Number(profile.gold||0)-cost);
+    if(useFreeClear)profile.freeMineDisasterClears=Math.max(0,freeClears-1);
+    else profile.gold=Math.max(0,Number(profile.gold||0)-cost);
     savePlayerProfile(profile);
     try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
-    setHallvallaMineStatus(`Reparación completada: -${cost} de oro.`);
+    setHallvallaMineStatus(useFreeClear?"Desastre eliminado gratis con una recompensa de Maestría.":`Reparación completada: -${cost} de oro.`);
     void recordHallvallaMineMissionStat(`repair_${key}`,1);
     renderMineScreen();
     renderHallvallaMineEvents(tx.state);
@@ -2859,15 +2866,16 @@ function updateHallvallaMineShopCountdown(){
 function renderHallvallaMineShop(state=getHallvallaMineShopState()){
   const grid=$("mineShopGrid");if(!grid)return;
   const safe=cacheHallvallaMineShopState(state),day=getHallvallaMineShopDayIndex(),offers=getHallvallaMineShopOffers(day);
+  const pieceVouchers=Math.max(0,Math.floor(Number(getPlayerProfile()?.minePuzzleVouchers||0)));
   grid.innerHTML=offers.map(key=>{
     const card=getHallvallaMineShopTemplate(key);if(!card)return "";
     const progress=safe.units?.[key]||createHallvallaMineShopUnitState(),pieces=Math.max(0,Math.min(25,Number(progress.pieces||0)));
     const complete=pieces>=25,boughtToday=Number(progress.lastPurchaseDay)===day;
     const art=String(card.portrait||getHallvallaMineCardImage(card)||"");
-    const buttonText=complete?"DESBLOQUEADA":boughtToday?"PIEZA COMPRADA HOY":`COMPRAR PIEZA · ${HALLVALLA_MINE_SHOP_PIECE_COST}💎`;
+    const buttonText=complete?"DESBLOQUEADA":pieceVouchers>0?`USAR PIEZA GRATIS · ${pieceVouchers}`:boughtToday?"PIEZA COMPRADA HOY":`COMPRAR PIEZA · ${HALLVALLA_MINE_SHOP_PIECE_COST}💎`;
     return `<article class="mine-shop-card mine-undead-offer${complete?" unlocked":""}">
       <div class="mine-shop-puzzle-art"><img src="${escapeHtml(art)}" alt="${escapeHtml(card.name)}" draggable="false"><div class="mine-shop-puzzle-grid">${getHallvallaMineShopPuzzleHtml(key,pieces)}</div><div class="mine-shop-offer-overlay"><b>${escapeHtml(card.name)}</b><small>Legendaria · No Muerto</small><strong>${pieces}/25 piezas</strong></div></div>
-      <button class="mine-mini-btn mine-shop-buy-piece" data-mine-shop-buy="${escapeHtml(key)}" type="button" ${complete||boughtToday?"disabled":""}>${escapeHtml(buttonText)}</button>
+      <button class="mine-mini-btn mine-shop-buy-piece" data-mine-shop-buy="${escapeHtml(key)}" type="button" ${complete||(boughtToday&&pieceVouchers<=0)?"disabled":""}>${escapeHtml(buttonText)}</button>
     </article>`;
   }).join("");
   grid.querySelectorAll("[data-mine-shop-buy]").forEach(btn=>btn.addEventListener("click",()=>buyHallvallaMineShopPiece(String(btn.dataset.mineShopBuy||""),btn)));
@@ -2879,32 +2887,36 @@ async function buyHallvallaMineShopPiece(cardKey,button=null){
   if(!getHallvallaMineShopOffers(day).includes(key)){if(status)status.textContent="Esta unidad ya no forma parte de la rotación de hoy.";renderHallvallaMineShop();return;}
   const current=getHallvallaMineShopState(),currentUnit=current.units?.[key]||createHallvallaMineShopUnitState();
   if(Number(currentUnit.pieces||0)>=25){ensureHallvallaMineUndeadCollectionUnlock(key);if(status)status.textContent="Esta unidad ya está desbloqueada.";renderHallvallaMineShop(current);return;}
-  if(Number(currentUnit.lastPurchaseDay)===day){if(status)status.textContent="Ya compraste la pieza disponible de esta unidad hoy.";return;}
   const profile=getPlayerProfile(),gems=Math.max(0,Number(profile?.gems||0));
-  if(gems<HALLVALLA_MINE_SHOP_PIECE_COST){if(status)status.textContent=`Necesitas ${HALLVALLA_MINE_SHOP_PIECE_COST} gemas para comprar esta pieza.`;return;}
+  const pieceVouchers=Math.max(0,Math.floor(Number(profile?.minePuzzleVouchers||0)));
+  const useVoucher=pieceVouchers>0;
+  if(Number(currentUnit.lastPurchaseDay)===day&&!useVoucher){if(status)status.textContent="Ya compraste la pieza disponible de esta unidad hoy.";return;}
+  if(!useVoucher&&gems<HALLVALLA_MINE_SHOP_PIECE_COST){if(status)status.textContent=`Necesitas ${HALLVALLA_MINE_SHOP_PIECE_COST} gemas para comprar esta pieza.`;return;}
   if(!hallvallaMineOnlineReady()&&HALLVALLA_LOCALHOST_TEST_MODE!==true){if(status)status.textContent="Sin conexión con Firebase. La compra no se realizará para proteger tu progreso.";return;}
-  if(button){button.disabled=true;button.textContent="COMPRANDO...";}
+  if(button){button.disabled=true;button.textContent=useVoucher?"USANDO PIEZA GRATIS...":"COMPRANDO...";}
   try{
     let nextState=current,committed=false;
     if(HALLVALLA_LOCALHOST_TEST_MODE===true){
-      nextState=normalizeHallvallaMineShopState(current);nextState.units[key]={pieces:Number(currentUnit.pieces||0)+1,lastPurchaseDay:day};cacheHallvallaMineShopState(nextState);committed=true;
+      nextState=normalizeHallvallaMineShopState(current);nextState.units[key]={pieces:Number(currentUnit.pieces||0)+1,lastPurchaseDay:useVoucher?Number(currentUnit.lastPurchaseDay||-1):day};cacheHallvallaMineShopState(nextState);committed=true;
     }else{
       const userId=getHallvallaMineUserUid();if(!userId)throw new Error("Usuario no autenticado");
       const unitRef=ref(db,`users/${userId}/mine/shop/units/${key}`);
       const result=await runTransaction(unitRef,raw=>{
         const unit=normalizeHallvallaMineShopUnitState(raw||{});
-        if(unit.pieces>=25||unit.lastPurchaseDay===day)return;
-        return {pieces:unit.pieces+1,lastPurchaseDay:day};
+        if(unit.pieces>=25||(!useVoucher&&unit.lastPurchaseDay===day))return;
+        return {pieces:unit.pieces+1,lastPurchaseDay:useVoucher?unit.lastPurchaseDay:day};
       },{applyLocally:false});
       if(result?.committed){
         nextState=normalizeHallvallaMineShopState(current);nextState.units[key]=normalizeHallvallaMineShopUnitState(result.snapshot.val()||{});cacheHallvallaMineShopState(nextState);committed=true;
       }
     }
     if(!committed){if(status)status.textContent="La compra no fue confirmada. No se descontaron gemas.";renderHallvallaMineShop(await syncHallvallaMineShopRemote());return;}
-    profile.gems=Math.max(0,gems-HALLVALLA_MINE_SHOP_PIECE_COST);savePlayerProfile(profile);if(typeof renderHomeProgress==="function")renderHomeProgress();
+    if(useVoucher)profile.minePuzzleVouchers=Math.max(0,pieceVouchers-1);
+    else profile.gems=Math.max(0,gems-HALLVALLA_MINE_SHOP_PIECE_COST);
+    savePlayerProfile(profile);if(typeof renderHomeProgress==="function")renderHomeProgress();
     const pieces=Number(nextState.units?.[key]?.pieces||0),card=getHallvallaMineShopTemplate(key);
     if(pieces>=25){ensureHallvallaMineUndeadCollectionUnlock(key);if(status)status.textContent=`${card?.name||"Unidad No Muerta"} completada: 25/25. La carta fue añadida a tu Colección.`;}
-    else if(status)status.textContent=`Pieza comprada para ${card?.name||"la unidad"}: ${pieces}/25.`;
+    else if(status)status.textContent=`Pieza ${useVoucher?"gratis aplicada":"comprada"} para ${card?.name||"la unidad"}: ${pieces}/25.`;
     renderHallvallaMineShop(nextState);
   }catch(error){
     console.warn("[HallValla][Mina][Tienda] Compra fallida:",error);

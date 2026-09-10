@@ -1,0 +1,24 @@
+HallValla 20260910.25 — Premios crecientes de Maestrías
+
+Regla:
+- Cada hito nuevo da una recompensa superior al anterior.
+- El progreso de Maestría nunca se reinicia al reclamar.
+- Los hitos ya reclamados permanecen reclamados y no se pagan de nuevo.
+- Un hito alcanzado pero aún no reclamado usa la nueva recompensa.
+
+Escala común por objetivo:
+10 -> 5 Oro
+25 -> 10 Oro
+50 -> 20 Oro
+100 -> 40 Oro
+250 -> 75 Oro + 1 Pack básico
+500 -> 150 Oro + 1 Pack raro
+1.000 -> 300 Oro + 1 Pack épico
+5.000 -> 600 Oro + 1 Pack mítico
+10.000 -> 1.000 Oro + 1 Pack legendario
+50.000 -> 2.000 Oro + 2 Packs legendarios
+100.000 -> 4.000 Oro + 3 Packs legendarios
+500.000 -> 8.000 Oro + 4 Packs legendarios
+1.000.000 -> 12.000 Oro + 5 Packs legendarios
+
+Después de 1.000.000, cada nuevo hito de la secuencia infinita aumenta +4.000 Oro y +1 Pack legendario respecto al anterior.

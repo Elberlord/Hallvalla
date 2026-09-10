@@ -450,3 +450,8 @@ Archivos modificados respecto de E49 Map1 Decks
 
 
 20260910.24 — Misiones terminadas se oscurecen; Maestrías de cuenta perpetuas sin estado MAX, con hitos crecientes y continuación después de 1.000.000.
+
+20260910.26 — Las recompensas de Maestría ahora mejoran en cada hito: más Oro y progresión de packs Básico → Raro → Épico → Mítico → Legendario; después aumentan la cantidad de Packs legendarios de forma perpetua. Los hitos ya reclamados no se vuelven a entregar.
+
+
+20260910.26: Maestrías diversificadas con Gemas, Fragmentos, piezas comodín de la Mina y eliminaciones gratuitas de desastres.

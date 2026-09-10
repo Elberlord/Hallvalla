@@ -78,6 +78,8 @@ const defaultPlayerProfile = {
   gold: 0,
   gems: 0,
   fragments: 0,
+  minePuzzleVouchers: 0,
+  freeMineDisasterClears: 0,
   nameChangeCount: 0,
   leaderLevels: {warrior:1, archer:1, mage:1},
   leaderLevel5Abilities: {},
@@ -314,15 +316,56 @@ function getNextInfiniteAccountMasteryTarget(current){
   const next=mantissa<4.999999?5*power:10*power;
   return Number.isSafeInteger(next)&&next>n?next:null;
 }
+/* Premios de Maestría 20260910.26
+   Cada nuevo hito entrega una recompensa mejor y más variada.
+   Además de Oro/Packs, la progresión incorpora Fragmentos, Gemas,
+   piezas comodín del rompecabezas de la Mina y reparaciones gratuitas
+   para desastres negativos de la Mina. */
+function getEscalatingAccountMasteryRewards(target){
+  const safe=Math.max(0,Math.floor(Number(target)||0));
+  const known=new Map([
+    [10,[{type:"gold",amount:5}]],
+    [25,[{type:"gold",amount:10},{type:"fragments",amount:10}]],
+    [50,[{type:"gold",amount:20},{type:"gems",amount:1},{type:"fragments",amount:25}]],
+    [100,[{type:"gold",amount:40},{type:"gems",amount:2},{type:"fragments",amount:50}]],
+    [250,[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1},{type:"gems",amount:3},{type:"fragments",amount:100}]],
+    [500,[{type:"gold",amount:150},{type:"pack",tier:"rare",amount:1},{type:"gems",amount:5},{type:"fragments",amount:200},{type:"mine_piece",amount:1}]],
+    [1000,[{type:"gold",amount:300},{type:"pack",tier:"epic",amount:1},{type:"gems",amount:10},{type:"fragments",amount:350},{type:"mine_piece",amount:1}]],
+    [5000,[{type:"gold",amount:600},{type:"pack",tier:"mythic",amount:1},{type:"gems",amount:20},{type:"fragments",amount:600},{type:"mine_piece",amount:2},{type:"mine_disaster_clear",amount:1}]],
+    [10000,[{type:"gold",amount:1000},{type:"pack",tier:"legendary",amount:1},{type:"gems",amount:35},{type:"fragments",amount:1000},{type:"mine_piece",amount:3},{type:"mine_disaster_clear",amount:1}]],
+    [50000,[{type:"gold",amount:2000},{type:"pack",tier:"legendary",amount:2},{type:"gems",amount:75},{type:"fragments",amount:2000},{type:"mine_piece",amount:5},{type:"mine_disaster_clear",amount:2}]],
+    [100000,[{type:"gold",amount:4000},{type:"pack",tier:"legendary",amount:3},{type:"gems",amount:125},{type:"fragments",amount:3500},{type:"mine_piece",amount:7},{type:"mine_disaster_clear",amount:2}]],
+    [500000,[{type:"gold",amount:8000},{type:"pack",tier:"legendary",amount:4},{type:"gems",amount:250},{type:"fragments",amount:7000},{type:"mine_piece",amount:12},{type:"mine_disaster_clear",amount:3}]],
+    [1000000,[{type:"gold",amount:12000},{type:"pack",tier:"legendary",amount:5},{type:"gems",amount:500},{type:"fragments",amount:12000},{type:"mine_piece",amount:20},{type:"mine_disaster_clear",amount:5}]]
+  ]);
+  if(known.has(safe))return known.get(safe).map(reward=>Object.freeze({...reward}));
+  // Secuencia infinita posterior a 1M: 5M, 10M, 50M, 100M...
+  // Cada hito aumenta todas las recompensas de alto nivel.
+  let cursor=1000000,steps=0;
+  while(cursor<safe&&steps<100){
+    const next=getNextInfiniteAccountMasteryTarget(cursor);
+    if(!next)break;
+    cursor=next;steps+=1;
+  }
+  if(cursor===safe&&safe>1000000){
+    return [
+      Object.freeze({type:"gold",amount:12000+(steps*4000)}),
+      Object.freeze({type:"pack",tier:"legendary",amount:5+steps}),
+      Object.freeze({type:"gems",amount:500+(steps*150)}),
+      Object.freeze({type:"fragments",amount:12000+(steps*3000)}),
+      Object.freeze({type:"mine_piece",amount:20+(steps*5)}),
+      Object.freeze({type:"mine_disaster_clear",amount:5+steps})
+    ];
+  }
+  return [Object.freeze({type:"gold",amount:Math.max(5,Math.ceil(safe/5))})];
+}
 function buildInfiniteAccountMasteryMilestone(target){
   const safe=Math.max(1000000,Math.floor(Number(target)||1000000));
-  const magnitude=Math.max(0,Math.floor(Math.log10(safe/1000000)));
-  const gold=Math.min(10000,3000+(magnitude*1000));
-  return Object.freeze({target:safe,rewards:Object.freeze([{type:"gold",amount:gold},{type:"pack",tier:"mythic",amount:2}]),infinite:true});
+  return Object.freeze({target:safe,rewards:Object.freeze(getEscalatingAccountMasteryRewards(safe)),infinite:true});
 }
 function getAccountMasteryMilestones(def,record=null){
   if(!def)return[];
-  const fixed=Array.isArray(def.milestones)?[...def.milestones]:[];
+  const fixed=Array.isArray(def.milestones)?def.milestones.map(m=>Object.freeze({...m,rewards:Object.freeze(getEscalatingAccountMasteryRewards(m.target))})):[];
   if(!fixed.length)return[];
   const rec=record||{count:0,claimed:[]};
   const claimed=Array.isArray(rec.claimed)?rec.claimed:[];
@@ -431,11 +474,16 @@ function registerAccountMasteryKillsFromUnitDiff(beforeUnits,afterUnits,sourcePa
 
 function formatAccountMasteryReward(reward){
   if(!reward)return"";
-  if(reward.type==="gold")return `${Math.max(0,Number(reward.amount||0))} Oro`;
+  const amount=Math.max(0,Math.floor(Number(reward.amount||0)));
+  if(reward.type==="gold")return `${amount} Oro`;
+  if(reward.type==="gems")return `${amount} Gema${amount===1?"":"s"}`;
+  if(reward.type==="fragments")return `${amount} Fragmento${amount===1?"":"s"}`;
+  if(reward.type==="mine_piece")return `${amount} Pieza${amount===1?"":"s"} de rompecabezas de Mina`;
+  if(reward.type==="mine_disaster_clear")return `${amount} eliminación${amount===1?"":"es"} gratis de desastre`;
   if(reward.type==="pack"){
     const pack=typeof getShopPackDefinition==="function"?getShopPackDefinition(reward.tier):null;
-    const amount=Math.max(1,Number(reward.amount||1));
-    return `${amount>1?`${amount} × `:""}${pack?.name||`Pack ${reward.tier||""}`}`;
+    const packAmount=Math.max(1,Number(reward.amount||1));
+    return `${packAmount>1?`${packAmount} × `:""}${pack?.name||`Pack ${reward.tier||""}`}`;
   }
   return String(reward.label||reward.type||"Premio");
 }
@@ -459,13 +507,17 @@ function collectAccountMasteryClaimRequests(requests=[]){
 function claimAccountMasteryRewards(requests=[]){
   try{
     const {profile,book,valid}=collectAccountMasteryClaimRequests(requests);
-    if(!valid.length)return{claimed:0,gold:0,packs:0};
-    let goldGain=0,packGain=0;
+    if(!valid.length)return{claimed:0,gold:0,gems:0,fragments:0,minePieces:0,freeDisasterClears:0,packs:0};
+    let goldGain=0,gemsGain=0,fragmentsGain=0,minePieceGain=0,freeDisasterClearGain=0,packGain=0;
     const pendingPacks=typeof getPendingPacks==="function"?getPendingPacks():[];
     const pendingIds=new Set(pendingPacks.map(p=>p?.id).filter(Boolean));
     valid.forEach(({key,target,milestone})=>{
       (milestone.rewards||[]).forEach((reward,index)=>{
         if(reward.type==="gold")goldGain+=Math.max(0,Number(reward.amount||0));
+        if(reward.type==="gems")gemsGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
+        if(reward.type==="fragments")fragmentsGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
+        if(reward.type==="mine_piece")minePieceGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
+        if(reward.type==="mine_disaster_clear")freeDisasterClearGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
         if(reward.type==="pack"){
           const amount=Math.max(1,Math.floor(Number(reward.amount||1)));
           for(let n=0;n<amount;n++){
@@ -481,13 +533,17 @@ function claimAccountMasteryRewards(requests=[]){
     });
     if(packGain>0&&typeof savePendingPacks==="function")savePendingPacks(pendingPacks);
     profile.gold=Math.max(0,Number(profile.gold||0))+goldGain;
+    profile.gems=Math.max(0,Number(profile.gems||0))+gemsGain;
+    profile.fragments=Math.max(0,Number(profile.fragments||0))+fragmentsGain;
+    profile.minePuzzleVouchers=Math.max(0,Math.floor(Number(profile.minePuzzleVouchers||0)))+minePieceGain;
+    profile.freeMineDisasterClears=Math.max(0,Math.floor(Number(profile.freeMineDisasterClears||0)))+freeDisasterClearGain;
     profile.actionMasteries=book;
     savePlayerProfile(profile);
     if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);
     if(typeof renderAccountMasteries==="function")renderAccountMasteries();
     if(typeof renderNotificationBadge==="function")renderNotificationBadge();
-    return{claimed:valid.length,gold:goldGain,packs:packGain};
-  }catch(error){console.warn("[HallValla] No se pudo reclamar la recompensa de maestría:",error);return{claimed:0,gold:0,packs:0,error};}
+    return{claimed:valid.length,gold:goldGain,gems:gemsGain,fragments:fragmentsGain,minePieces:minePieceGain,freeDisasterClears:freeDisasterClearGain,packs:packGain};
+  }catch(error){console.warn("[HallValla] No se pudo reclamar la recompensa de maestría:",error);return{claimed:0,gold:0,gems:0,fragments:0,minePieces:0,freeDisasterClears:0,packs:0,error};}
 }
 function claimAccountMasteryMilestone(key,target){
   const result=claimAccountMasteryRewards([{key,target}]);
