@@ -661,6 +661,7 @@ function ensureBattleBoardDelegation(grid){
     const unitEl=ev.target&&ev.target.closest?ev.target.closest(".unit-card[data-unit-id]"):null;
     if(unitEl&&grid.contains(unitEl)){
       const u=getUnit(unitEl.dataset.unitId);
+      if(u)beginBoardLongPressDetail(ev,u);
       if(u&&startUnitBoardDrag(ev,u,unitEl)){
         ev.preventDefault();
         ev.stopPropagation();
@@ -673,7 +674,11 @@ function ensureBattleBoardDelegation(grid){
     const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
     if(cell&&grid.contains(cell))flashBoardSelectedCell(Number(cell.dataset.x),Number(cell.dataset.y));
   },true);
+  grid.addEventListener("pointermove",ev=>trackBoardLongPressDetailMove(ev),{passive:true});
+  grid.addEventListener("pointercancel",()=>cancelBoardLongPressDetail(),{passive:true});
   grid.addEventListener("pointerup",ev=>{
+    cancelBoardLongPressDetail();
+    if(consumeRecentBoardLongPressDetail(ev))return;
     const seal=ev.target&&ev.target.closest?ev.target.closest(".unit-status-seal[data-status-index]"):null;
     // TARGETPRIORITY1: si el jugador ya está eligiendo objetivo (ATTK, carta o
     // EFFECT), tocar un sello de estado cuenta como tocar la unidad/casilla.
@@ -706,9 +711,11 @@ function ensureBattleBoardDelegation(grid){
     if(!u)return;
     ev.preventDefault();
     ev.stopPropagation();
-    openUnitContextMenu(u,Number(unitEl.dataset.x),Number(unitEl.dataset.y));
+    cancelBoardLongPressDetail();
+    showUnit(u);
   });
   grid.addEventListener("click",ev=>{
+    if(consumeRecentBoardLongPressDetail(ev))return;
     const seal=ev.target&&ev.target.closest?ev.target.closest(".unit-status-seal[data-status-index]"):null;
     if(seal&&grid.contains(seal)){
       const unitEl=seal.closest(".unit-card[data-unit-id]");
@@ -831,7 +838,8 @@ function getBattleBoardUnitSpec(u,x,y){
   const principalClass=!hiddenFromViewer&&u.principal?"principal-unit":"";
   const rarityClass=hiddenFromViewer?"":getCardVisualClass(u);
   const stealthClass=hiddenFromViewer?"unit-stealthed":(ownerStealth?"unit-stealthed-owner":"");
-  const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${principalClass} ${stealthClass} ${rarityClass}`.replace(/\s+/g," ").trim();
+  const directSelectedClass=!hiddenFromViewer&&u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard&&!selectedUnitActionMode?"unit-direct-selected":"";
+  const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${principalClass} ${stealthClass} ${directSelectedClass} ${rarityClass}`.replace(/\s+/g," ").trim();
   let markup="";
   if(hiddenFromViewer){
     markup=getStealthBoardCoverHtml();
@@ -937,11 +945,16 @@ function ensureLeaderBasesLayer(){
       }
       const base=ev.target&&ev.target.closest?ev.target.closest(".leader-base"):null;
       const u=base?getUnit(base.dataset.leaderId):null;
+      if(u)beginBoardLongPressDetail(ev,u);
       if(u&&startUnitBoardDrag(ev,u,base)){ev.preventDefault();ev.stopPropagation();return;}
       const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.unit-status-seal"):null;
       if(hit)ev.stopPropagation();
     },true);
+    layer.addEventListener("pointermove",ev=>trackBoardLongPressDetailMove(ev),{passive:true});
+    layer.addEventListener("pointercancel",()=>cancelBoardLongPressDetail(),{passive:true});
+    layer.addEventListener("pointerup",ev=>{cancelBoardLongPressDetail();if(consumeRecentBoardLongPressDetail(ev)){ev.preventDefault();ev.stopPropagation();}},true);
     layer.addEventListener("click",ev=>{
+      if(consumeRecentBoardLongPressDetail(ev))return;
       const seal=ev.target&&ev.target.closest?ev.target.closest(".leader-status-seal[data-status-index],.unit-status-seal[data-status-index]"):null;
       if(seal){
         const btn=seal.closest(".leader-base");
@@ -978,8 +991,9 @@ function ensureLeaderBasesLayer(){
       if(!source)return;
       ev.preventDefault();
       ev.stopPropagation();
+      cancelBoardLongPressDetail();
       const u=getUnit(source.dataset.leaderId);
-      if(u)openUnitContextMenu(u,Number(source.dataset.x),Number(source.dataset.y));
+      if(u)showUnit(u);
     },true);
     if(!layer.dataset.boundLeaderCellProxyResize){
       layer.dataset.boundLeaderCellProxyResize="1";
@@ -1050,8 +1064,11 @@ function renderLeaderBases(){
   const markup=leaders.map(u=>{
     const side=u.owner===myPlayer?"south":"north";
     const key=`${u.x},${u.y}`;
-    const isMarked=highlights.includes(key);
-    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":""].filter(Boolean).join(" ");
+    const tacticalAttacker=isDirectTacticalUnitSelection()?getUnit(selectedUnitId):null;
+    const directTarget=!!(tacticalAttacker&&u.owner!==myPlayer&&getAttackableTargets(tacticalAttacker,publicState?.units||[]).some(t=>t.id===u.id));
+    const isMarked=highlights.includes(key)||directTarget;
+    const directSelected=u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard&&!selectedUnitActionMode;
+    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":"",directSelected?"leader-direct-selected":""].filter(Boolean).join(" ");
     return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
   }).join("");
   if(markup!==hallvallaLeaderRenderMarkup){
@@ -1513,9 +1530,9 @@ const BASIC_TUTORIAL_STEPS=[
   {id:"details",title:"Ver detalles en la mano",body:"Abre Mano y toca Lancero solar. DET te muestra costo, estadísticas y efecto.",hint:"Solo necesitas saber dónde consultar la carta.",targetResolver:()=>handOpen?(getBasicTutorialHandCardEl("spearman")||$("handBtn")):$("handBtn"),done:()=>basicTutorialFlags.inspectedCardKey==="spearman"},
   {id:"summon",title:"Convocar desde la mano",body:"Pulsa Jugar en el Lancero y elige una casilla resaltada junto a tu líder.",hint:"El costo se descuenta al confirmar la invocación.",targetResolver:()=>selectedCard?.key==="spearman"?document.querySelector(".cell.summonable"):(getBasicTutorialVisibleDetPlayButton("spearman")||(handOpen?getBasicTutorialHandCardEl("spearman"):$("handBtn"))),done:()=>!!getBasicTutorialSummonedUnit()},
   {id:"spell",title:"Jugar una magia",body:"Abre Mano, toca Maldición de arena, pulsa Jugar y elige la Guardia rival marcada.",hint:"Las magias resuelven su efecto y salen de tu mano.",targetResolver:()=>selectedCard?.key==="bolt"?(getBasicTutorialBoardUnitEl(getBasicTutorialEnemyUnit())||document.querySelector(".cell.attackable")):(getBasicTutorialVisibleDetPlayButton("bolt")||(handOpen?getBasicTutorialHandCardEl("bolt"):$("handBtn"))),done:()=>basicTutorialSpellWasPlayed()},
-  {id:"move",title:"Movimiento",body:"Pulsa Siguiente fase. Luego toca tu Lancero, MOV y una casilla verde.",hint:"MV indica cuántas casillas puede recorrer.",targetResolver:()=>getTurnPhase()==="main"?$("endBtn"):(selectedUnitId===getBasicTutorialSummonedUnit()?.id&&selectedUnitActionMode==="mov"?document.querySelector(".cell.valid"):(getBasicTutorialUnitContextButton("mov",getBasicTutorialSummonedUnit())||getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit()))),done:()=>!!getBasicTutorialSummonedUnit()?.moved},
+  {id:"move",title:"Movimiento",body:"Pulsa Siguiente fase. Luego toca tu Lancero y una casilla verde. MOV sigue disponible como alternativa.",hint:"MV indica cuántas casillas puede recorrer.",targetResolver:()=>getTurnPhase()==="main"?$("endBtn"):(selectedUnitId===getBasicTutorialSummonedUnit()?.id?(document.querySelector(".cell.move-range-preview,.cell.valid")||getBasicTutorialUnitContextButton("mov",getBasicTutorialSummonedUnit())):getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit())),done:()=>!!getBasicTutorialSummonedUnit()?.moved},
   {id:"defense",title:"Defensa",body:"Toca el Lancero y pulsa DEF: gana +2 Guardia y el primer ataque contra él tiene -10% Precisión.",hint:"DEF consume su acción de combate de este turno.",targetResolver:()=>getBasicTutorialUnitContextButton("def",getBasicTutorialSummonedUnit())||getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit()),done:()=>!!getBasicTutorialSummonedUnit()?.defenseModeReady},
-  {id:"attack",title:"Ataque",body:"Toca la Arquera de práctica, pulsa ATTK y elige la Guardia rival.",hint:"Solo puedes atacar objetivos dentro de RG.",targetResolver:()=>selectedUnitId===getBasicTutorialAttackUnit()?.id&&selectedUnitActionMode==="attk"?(document.querySelector(".cell.attackable")||getBasicTutorialBoardUnitEl(getBasicTutorialEnemyUnit())):(getBasicTutorialUnitContextButton("attk",getBasicTutorialAttackUnit())||getBasicTutorialBoardUnitEl(getBasicTutorialAttackUnit())),done:()=>!!getBasicTutorialAttackUnit()?.acted},
+  {id:"attack",title:"Ataque",body:"Toca la Arquera de práctica y luego toca directamente la Guardia rival marcada en rojo. ATTK sigue disponible como alternativa.",hint:"Solo puedes atacar objetivos dentro de RG.",targetResolver:()=>selectedUnitId===getBasicTutorialAttackUnit()?.id?(document.querySelector(".cell.attack-range-preview,.cell.attackable")||getBasicTutorialBoardUnitEl(getBasicTutorialEnemyUnit())):getBasicTutorialBoardUnitEl(getBasicTutorialAttackUnit()),done:()=>!!getBasicTutorialAttackUnit()?.acted},
   {id:"victory",manual:true,final:true,title:"Condiciones de victoria",body:"Ganas al llevar la Vida del líder rival a 0. Pierdes si tu líder llega a 0; no necesitas eliminar todas las unidades.",hint:"Con esto ya tienes lo necesario para jugar una partida básica.",button:"Finalizar tutorial",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialEnemyLeader())}
 ];
 let basicTutorialCoachStep=0;

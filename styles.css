@@ -26151,3 +26151,28 @@ html:has(#gameShell:not(.hidden)) body{
 .mine-slot-lock small{display:block !important;font-size:9px !important;line-height:1.1;color:rgba(210,228,245,.72) !important;white-space:nowrap;}
 .mine-miner-card.next-unlock .mine-slot-lock strong{color:#8fddff;}
 .mine-slot-lock-badge{position:absolute;right:0;top:0;font-size:10px;filter:none;}
+
+
+/* ==========================================================
+   20260910.38 · CONTROL TÁCTICO DIRECTO
+   Selección por clic/tap, MOV verde, objetivos rojos y DET por pulsación larga.
+   ========================================================== */
+.grid .cell > .unit-card.unit-direct-selected{
+  box-shadow:0 0 0 2px rgba(255,215,112,.98),0 0 14px rgba(255,194,74,.45),0 5px 8px rgba(0,0,0,.38)!important;
+  border-radius:10px!important;
+}
+.grid .cell > .unit-card.unit-direct-selected .unit-frame-skin{
+  filter:drop-shadow(0 0 6px rgba(255,211,105,.46)) drop-shadow(0 4px 10px rgba(0,0,0,.56))!important;
+}
+.leader-base.leader-direct-selected .leader-base-pedestal{
+  filter:drop-shadow(0 0 8px rgba(255,211,105,.75)) drop-shadow(0 0 16px rgba(255,181,55,.45))!important;
+}
+#cancelBtn.has-immediate-undo{
+  filter:drop-shadow(0 0 7px rgba(112,224,138,.65))!important;
+}
+#cancelBtn.has-immediate-undo .action-btn-label{
+  text-shadow:0 0 7px rgba(112,224,138,.75)!important;
+}
+@media (pointer:coarse){
+  #grid .unit-card,.leader-bases-layer .leader-base{touch-action:none;}
+}

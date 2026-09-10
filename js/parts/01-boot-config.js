@@ -141,7 +141,7 @@ function on(id,event,handler){
 }
 function setText(id,value){const el=$(id);if(el)el.textContent=value;}
 let lastBoardTargetTapAt=0;
-function shouldDirectBoardTarget(){return !!(selectedCard||selectedUnitActionMode);}
+function shouldDirectBoardTarget(){return !!(selectedCard||selectedUnitActionMode||(typeof isDirectTacticalUnitSelection==="function"&&isDirectTacticalUnitSelection()));}
 function handleDirectBoardTargetEvent(ev,x,y){
   if(!shouldDirectBoardTarget())return false;
   const now=Date.now();

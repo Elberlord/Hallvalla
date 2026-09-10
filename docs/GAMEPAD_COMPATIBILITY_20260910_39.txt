@@ -1,0 +1,31 @@
+HallValla · COMPATIBILIDAD GAMEPAD · build 20260910.39
+
+Objetivo
+- Compatibilidad con controles estándar detectados por navegador en PC/Windows y Android.
+- Mantener mouse y táctil funcionando en paralelo.
+
+Mapa de control principal (layout Xbox / Gamepad estándar)
+- Stick izquierdo / Cruceta: mover cursor por tablero o navegar UI.
+- A: seleccionar / confirmar / mover / atacar.
+- B: cancelar selección; si existe Deshacer MOV inmediato usa exactamente esa misma regla.
+- X: DEF de la unidad propia seleccionada.
+- Y: DET / Detalles de la unidad bajo el cursor o carta elegida en Mano.
+- LB / RB: unidad propia anterior / siguiente; dentro de Mano, carta anterior / siguiente.
+- View / Back: abrir/cerrar Mano y entrar en navegación de cartas.
+- Menu / Start: Siguiente fase.
+
+Mano con gamepad
+- View abre Mano.
+- Izquierda/Derecha o LB/RB recorre cartas.
+- A elige/juega la carta y devuelve el foco al tablero para escoger objetivo/celda.
+- Y abre DET de la carta.
+- B vuelve al tablero.
+
+Compatibilidad
+- Usa navigator.getGamepads / Gamepad API; no requiere librería externa.
+- Se prioriza mapping=standard, pero se admite layout genérico con índices compatibles.
+- La página muestra un indicador breve "Control conectado".
+- En Android depende de que el navegador exponga el mando mediante Gamepad API (Bluetooth o USB/OTG).
+
+Firebase
+- No hay cambios de reglas ni datos persistentes para esta función.

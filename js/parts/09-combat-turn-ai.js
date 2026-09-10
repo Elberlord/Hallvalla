@@ -13,6 +13,7 @@ function getCardPaymentCommitState(card,paidCost=null){
   return{hand,honor,maxHonor,exactCost};
 }
 async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
+  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("card_play");
   const payment=getCardPaymentCommitState(card,paidCost);
   if(!payment)return false;
   const nextStats={
@@ -96,6 +97,7 @@ function resolveBeastCellTraps(moving,units,traps){
 let hallvallaMoveActionInFlight=false;
 async function moveUnit(u,x,y){
   if(hallvallaMoveActionInFlight)return setHint("MOV: espera a que termine el movimiento actual.");
+  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("new_move");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   const live=getLiveUnitRef(u);
   if(!live)return setHint("La unidad ya no está disponible en el campo.");
@@ -110,7 +112,8 @@ async function moveUnit(u,x,y){
   if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse este turno.`);
   hallvallaMoveActionInFlight=true;
   try{
-  const moveStartUnits=[...(publicState.units||[])];
+  const moveStartUnits=JSON.parse(JSON.stringify(publicState.units||[]));
+  const moveUndoLogBefore=[...(publicState?.log||[])];
   const movedNow=isAerialMovementUnit(u)?dist(u,{x,y}):movementPathDistance(movePath);
   const straightMoveNow=isAerialMovementUnit(u)?(isStraightLineDelta(x-u.x,y-u.y)?movedNow:0):(isMovementPathStraight(movePath)?movedNow:0);
   const moveDir=movementPathLastDirection(movePath,u,{x,y});
@@ -146,6 +149,8 @@ async function moveUnit(u,x,y){
   const mulanExtraText=mulanExecMove&&!trapMove.cancel&&units.some(it=>it.id===u.id)?` ${u.name} completa el movimiento de ejecución y ahora debe elegir ATK o DEF para gastar su acción restante.`:"";
   const bloodVictoryText=movementBloodVictory.logs.length?` ${movementBloodVictory.logs.join(" ")}`:"";
   await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}${mulanExtraText}${bloodVictoryText}`,...lionFearMove.logs].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}${mulanExtraText}${bloodVictoryText}`,...trapMove.logs,...beastTrapResult.logs,...lionFearMove.logs].join(" "));
+  const plainUndoSafe=!mulanExecMove&&!trapMove.cancel&&!extra&&!trapMove.logs.length&&!beastTrapResult.logs.length&&!lionFearMove.logs.length&&!movementBloodVictory.logs.length;
+  if(plainUndoSafe&&typeof registerImmediateMoveUndo==="function")registerImmediateMoveUndo({unitId:u.id,unitName:u.name,beforeUnits:moveStartUnits,beforeLog:moveUndoLogBefore,turnKey:publicState?.turnKey||"",from:{x:u.x,y:u.y},to:{x,y}});
   clearSelection();
   return true;
   }finally{
@@ -1050,6 +1055,7 @@ async function attackUnit(a,d){
     return setHint("No se puede declarar ese ataque.");
   }
   const mulanChoiceAttack=declaration.mulanChoiceAttack;
+  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("attack");
 
   const prep=resolveSharedAttackPreparation({
     a,d,units:liveUnits,liveUnits,
@@ -1219,6 +1225,7 @@ async function finishTurn(){
 async function advanceTurnPhase(){
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
+  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("phase_change");
   const phase=getTurnPhase();
   if(publicState?.mode==="tutorial"&&publicState?.tutorialBasic&&typeof getBasicTutorialPhaseGate==="function"){
     const tutorialGate=getBasicTutorialPhaseGate(phase);

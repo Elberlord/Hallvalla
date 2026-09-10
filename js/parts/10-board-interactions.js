@@ -47,6 +47,108 @@ function clearBattleBoardInteractionState(){
   boardHoverCellKey="";
   boardSelectedCellKey="";
   if(boardSelectedCellTimer){battleClearTimeout(boardSelectedCellTimer);boardSelectedCellTimer=null;}
+  invalidateImmediateMoveUndo("battle_reset");
+  cancelBoardLongPressDetail();
+}
+
+const IMMEDIATE_MOVE_UNDO_MS=4500;
+let immediateMoveUndoState=null;
+let immediateMoveUndoTimer=null;
+let immediateMoveUndoInFlight=false;
+function syncBattleCancelUndoUi(){
+  const btn=$("cancelBtn");
+  if(!btn)return;
+  const active=!!immediateMoveUndoState&&Date.now()<=Number(immediateMoveUndoState.expiresAt||0);
+  const label=btn.querySelector(".action-btn-label");
+  if(label)label.textContent=active?"Deshacer MOV":"Cancelar";
+  btn.title=active?"Deshacer el último movimiento inmediato":"Cancelar selección";
+  btn.setAttribute("aria-label",active?"Deshacer último movimiento":"Cancelar selección");
+  btn.classList.toggle("has-immediate-undo",active);
+}
+function invalidateImmediateMoveUndo(_reason=""){
+  immediateMoveUndoState=null;
+  if(immediateMoveUndoTimer){battleClearTimeout(immediateMoveUndoTimer);immediateMoveUndoTimer=null;}
+  syncBattleCancelUndoUi();
+}
+function registerImmediateMoveUndo(snapshot){
+  invalidateImmediateMoveUndo("replace");
+  if(!snapshot||!Array.isArray(snapshot.beforeUnits)||!snapshot.unitId)return false;
+  immediateMoveUndoState={
+    ...snapshot,
+    gameId:String(gameId||""),
+    player:Number(myPlayer||0),
+    turnKey:String(publicState?.turnKey||snapshot.turnKey||""),
+    beforeUnits:JSON.parse(JSON.stringify(snapshot.beforeUnits)),
+    beforeLog:Array.isArray(snapshot.beforeLog)?[...snapshot.beforeLog]:[],
+    expiresAt:Date.now()+IMMEDIATE_MOVE_UNDO_MS
+  };
+  immediateMoveUndoTimer=battleSetTimeout(()=>invalidateImmediateMoveUndo("expired"),IMMEDIATE_MOVE_UNDO_MS+50,"immediate-move-undo-expire");
+  syncBattleCancelUndoUi();
+  return true;
+}
+async function tryImmediateMoveUndo(){
+  const snap=immediateMoveUndoState;
+  if(!snap||immediateMoveUndoInFlight)return false;
+  if(Date.now()>Number(snap.expiresAt||0)||String(gameId||"")!==snap.gameId||Number(myPlayer||0)!==snap.player||String(publicState?.turnKey||"")!==snap.turnKey||!isMyTurn()||isBattleEnded()){
+    invalidateImmediateMoveUndo("invalid_context");
+    return false;
+  }
+  immediateMoveUndoInFlight=true;
+  immediateMoveUndoState=null;
+  if(immediateMoveUndoTimer){battleClearTimeout(immediateMoveUndoTimer);immediateMoveUndoTimer=null;}
+  syncBattleCancelUndoUi();
+  try{
+    const ok=await updatePublic({units:JSON.parse(JSON.stringify(snap.beforeUnits)),log:[...snap.beforeLog]});
+    if(!ok){setHint("No se pudo deshacer el movimiento.");return false;}
+    clearSelection();
+    setHint(`${snap.unitName||"La unidad"}: movimiento deshecho.`);
+    return true;
+  }catch(error){
+    console.warn("[HallValla] Falló Deshacer MOV inmediato:",error);
+    setHint("No se pudo deshacer el movimiento.");
+    return false;
+  }finally{
+    immediateMoveUndoInFlight=false;
+  }
+}
+async function handleBattleCancelButton(){
+  if(await tryImmediateMoveUndo())return;
+  clearSelection();
+}
+
+let boardLongPressDetailState=null;
+let boardLongPressDetailTimer=null;
+let lastBoardLongPressDetailAt=0;
+const BOARD_LONG_PRESS_DETAIL_MS=560;
+function cancelBoardLongPressDetail(){
+  boardLongPressDetailState=null;
+  if(boardLongPressDetailTimer){battleClearTimeout(boardLongPressDetailTimer);boardLongPressDetailTimer=null;}
+}
+function beginBoardLongPressDetail(ev,u){
+  if(!ev||!u||ev.pointerType==="mouse")return;
+  cancelBoardLongPressDetail();
+  boardLongPressDetailState={pointerId:ev.pointerId,startX:ev.clientX,startY:ev.clientY,unitId:u.id};
+  boardLongPressDetailTimer=battleSetTimeout(()=>{
+    const state=boardLongPressDetailState;
+    boardLongPressDetailTimer=null;
+    boardLongPressDetailState=null;
+    if(!state)return;
+    const live=getUnit(state.unitId);
+    if(!live)return;
+    lastBoardLongPressDetailAt=Date.now();
+    if(navigator.vibrate)try{navigator.vibrate(18);}catch(_){ }
+    showUnit(live);
+  },BOARD_LONG_PRESS_DETAIL_MS,"board-long-press-detail");
+}
+function trackBoardLongPressDetailMove(ev){
+  const state=boardLongPressDetailState;
+  if(!state||!ev||ev.pointerId!==state.pointerId)return;
+  if(Math.max(Math.abs(ev.clientX-state.startX),Math.abs(ev.clientY-state.startY))>10)cancelBoardLongPressDetail();
+}
+function consumeRecentBoardLongPressDetail(ev){
+  if(Date.now()-lastBoardLongPressDetailAt>700)return false;
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  return true;
 }
 
 function getBoardCellFromPoint(clientX,clientY){
@@ -106,6 +208,7 @@ function beginBoardDragVisual(ev){
   if(!boardDragState||boardDragState.dragging)return;
   const dx=Math.abs(ev.clientX-boardDragState.startX),dy=Math.abs(ev.clientY-boardDragState.startY);
   if(Math.max(dx,dy)<8)return;
+  cancelBoardLongPressDetail();
   boardDragState.dragging=true;
   document.body.classList.add("hv-dragging-board");
   if(boardDragState.kind==="unit"){
@@ -268,8 +371,28 @@ async function cellClick(x,y){
       if(u&&u.owner===myPlayer)return activateUnitEffect(s,u);
       return setHint("EFFECT: elige una unidad aliada marcada.");
     }
-    // Sin modo explícito, selectedUnitId solo representa inspección/contexto.
-    // No auto-atacar ni auto-mover: eso bloqueaba DET en enemigos.
+    // CONTROL DIRECTO 38: una unidad propia seleccionada interpreta el tablero
+    // sin exigir MOV/ATTK. Celda verde = mover; enemigo rojo = atacar.
+    if(s.owner===myPlayer&&isMyTurn()&&isActionPhase()){
+      const key=`${x},${y}`;
+      if(u&&u.owner===myPlayer){
+        if(u.id===s.id)return setHint(`${s.name} seleccionada. Verde = MOV · borde rojo = objetivo de ATK.`);
+        return openUnitContextMenu(u,x,y);
+      }
+      if(u&&u.owner!==myPlayer){
+        const validTarget=getAttackableTargets(s,publicState?.units||[]).some(t=>t.id===u.id);
+        if(validTarget){
+          selectedUnitActionMode="attk";
+          return await attackUnit(s.id,u.id);
+        }
+        return setHint(`${u.name} no es un objetivo válido de ${s.name} en este momento.`);
+      }
+      if(!u&&moveZones(s).includes(key)){
+        selectedUnitActionMode="mov";
+        return await moveUnit(s,x,y);
+      }
+      return setHint(`${s.name}: toca una casilla verde para MOV o un rival con borde rojo para ATK.`);
+    }
     if(u)return openUnitContextMenu(u,x,y);
     clearSelection();
     return;
@@ -390,6 +513,7 @@ function hideUnitContextMenu(){
 }
 function openUnitContextMenu(u,x,y){
   if(!u)return;
+  if(immediateMoveUndoState)invalidateImmediateMoveUndo("new_selection");
   if(isStealthHiddenFromViewer(u)){
     unitContextSelection=null;
     selectedUnitId=null;
@@ -411,9 +535,13 @@ function openUnitContextMenu(u,x,y){
   hideCardInspectModal();
   render();
   if(u.owner!==myPlayer){
-    setHint(`${u.name}: abre DET desde el menú de acciones bajo el reloj para revisar sus datos.`);
+    setHint(`${u.name}: clic derecho o pulsación larga abre DET.`);
+  }else if(isMyTurn()&&isActionPhase()){
+    const directTargets=getAttackableTargets(u,publicState?.units||[]).length;
+    const directMoves=moveZones(u).length;
+    setHint(u.leader?`${u.name}: borde rojo = objetivo de ATK. Clic/tap directo para atacar; clic derecho o pulsación larga = DET.`:`${u.name} seleccionada · ${directMoves} destinos MOV · ${directTargets} objetivos ATK. Toca verde para mover o un rival rojo para atacar.`);
   }else{
-    setHint(u.leader?`${u.name}: Base fija. Puede usar DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET, pero no MOV.`:`${u.name}: elige MOV, DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET desde el menú bajo el reloj.`);
+    setHint(u.leader?`${u.name}: Base fija. Puede usar DEF, ATTK${unitHasContextEffect(u)?', EFFECT':''} o DET, pero no MOV.`:`${u.name}: las acciones directas estarán disponibles en Action Phase.`);
   }
 }
 const hallvallaUnitContextDelegatedMenus=new WeakSet();
@@ -878,6 +1006,7 @@ async function activateUnitEffect(u,choice=null){
   if(u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
   const mode=getUnitEffectMode(u);
   if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante combate/turno.");
+  invalidateImmediateMoveUndo("effect");
   let units=[...(publicState.units||[])];
   if(u.key==="acolyte_healer"){
     if(!choice){
@@ -979,6 +1108,7 @@ async function activateDefenseStance(u){
   if(u.acted)return setHint(`${u.name} ya usó su acción ofensiva este turno.`);
   if(u.defenseModeReady)return setHint(`${u.name} ya está en guardia defensiva.`);
   if(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)return setHint(`${u.name} no puede defenderse este turno.`);
+  invalidateImmediateMoveUndo("defense");
   const units=(publicState?.units||[]).map(it=>it.id===u.id?{...it,acted:true,defenseModeReady:true,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false}:it);
   clearSelection();
   await updatePublic({
