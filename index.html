@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260910.30">
-<meta name="hallvalla-build" content="v8_MODULAR_20260910.30">
+<meta name="hallvalla-version" content="20260910.32">
+<meta name="hallvalla-build" content="v8_MODULAR_20260910.32">
 <meta name="hallvalla-build-name" content="Campo 5x9 + herramientas DEV aisladas">
-<link rel="stylesheet" href="styles.css?h=4e6e4ec9ad5f"/>
+<link rel="stylesheet" href="styles.css?h=6ddc01cdfb7c"/>
 
 <link rel="icon" href="data:,">
 </head>
@@ -451,6 +451,7 @@
     <div id="matchmakingSearchingState" class="hv-match-searching">
       <span class="hv-match-search-spinner" aria-hidden="true"></span>
       <strong>BUSCANDO RIVAL...</strong>
+      <span id="matchmakingLeagueLabel" class="hv-match-league-label">LIGA PIEDRA · 0 PTS</span>
     </div>
     <img id="matchmakingVsArt" class="hv-match-vs hidden" data-hv-src="assets/ui/pvp_online/matchmaking_vs.webp" data-hv-asset-group="pvp-online" decoding="async" alt="VS">
     <button id="matchmakingCancelBtn" class="hv-online-subtle-back hv-match-cancel" type="button">CANCELAR</button>
@@ -559,7 +560,7 @@
     <div class="pvp-ranking-kicker">HALLVALLA · VS ONLINE</div>
     <h2 id="pvpRankingTitle" class="pvp-ranking-title">RANKING PvP</h2>
     <div id="pvpRankingOwnSummary" class="pvp-ranking-own-summary">Cargando tus estadísticas...</div>
-    <div class="pvp-ranking-rules">Victoria +3 · Derrota −2 · Empate 0</div>
+    <div class="pvp-ranking-rules">Victoria +3 · Derrota −2 · Empate 0 · Matchmaking cerrado por liga</div>
     <div id="pvpRankingList" class="pvp-ranking-list" aria-live="polite"></div>
   </div>
 </div>
@@ -1388,6 +1389,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=29d915018c8e"></script>
+<script type="module" src="js/bootstrap-loader.js?h=c4c4c7310107"></script>
 </body>
 </html>

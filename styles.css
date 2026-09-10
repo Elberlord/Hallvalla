@@ -20164,9 +20164,12 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
   border-radius:14px;
   background:rgba(10,8,6,.42);
 }
-.pvp-ranking-my-position{grid-row:1 / span 3;min-width:120px;text-align:center;color:#ffd76f;font:900 clamp(24px,3.2vw,40px)/1 Georgia,serif}
+.pvp-ranking-my-position{grid-row:1 / span 4;min-width:120px;text-align:center;color:#ffd76f;font:900 clamp(24px,3.2vw,40px)/1 Georgia,serif}
 .pvp-ranking-my-name{font:900 20px/1.1 Georgia,serif;color:#fff0c0}
 .pvp-ranking-my-id{font:700 11px/1.1 Georgia,serif;color:#a99161}
+.pvp-ranking-my-league{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:2px 0;color:#dfc786;font:800 11px/1.15 Georgia,serif}
+.pvp-ranking-my-league b{display:inline-flex;align-items:center;min-height:24px;padding:4px 10px;border:1px solid rgba(225,180,84,.38);border-radius:999px;background:rgba(87,57,22,.36);color:#ffe19a;font:900 11px/1 Georgia,serif;letter-spacing:.08em}
+.pvp-ranking-my-league span{color:#aa9467;font:700 10px/1.15 Georgia,serif}
 .pvp-ranking-my-stats{font:800 13px/1.2 Georgia,serif;color:#dec68e}
 .pvp-ranking-rules{text-align:center;margin:10px 0 18px;color:#bba16b;font:800 11px/1 Georgia,serif;letter-spacing:.05em}
 .pvp-ranking-list{display:flex;flex-direction:column;gap:7px}
@@ -20190,6 +20193,8 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
 .pvp-ranking-points{color:#ffd66f;font:900 15px/1 Georgia,serif;text-align:right}
 .pvp-ranking-separator{text-align:center;color:#8d784f;font:900 9px/1 Georgia,serif;letter-spacing:.15em;margin:8px 0 2px}
 .pvp-ranking-empty{text-align:center;padding:26px;color:#c8b082;font:800 13px/1.4 Georgia,serif}
+
+.hv-match-league-label{display:block;margin-top:7px;color:#f3d38c;font:900 11px/1 Georgia,serif;letter-spacing:.09em;text-shadow:0 2px 6px rgba(0,0,0,.75)}
 
 @media(max-width:760px){
   .pvp-ranking-open-btn{right:3%;top:6%;min-width:112px;min-height:32px;padding:6px 10px;font-size:10px}

@@ -1,4 +1,10 @@
-20260910.30 · LÍDER NIVEL XV = TIER 5
+20260910.32 · REGLAS VERIFICADAS + AUDITORÍA DE CAMBIOS DEL DÍA
+- Base de reglas: archivo actual compartido por el usuario el 2026-09-10.
+- Añadido únicamente soporte de pociones de Mina y ligas PvP cerradas.
+- Corregido tooltip de maestría que todavía decía máximo Rango X; el máximo real es XV.
+- El Tier 5 de líder sigue siendo exclusivo de Nivel XV y su buff de categoría es +10/+10 (Hechicero +10 daño).
+
+20260910.31 · LÍDER NIVEL XV = TIER 5
 - Nivel XV ahora pertenece al Tier 5.
 - Tier 4 comprende niveles IX–XIV.
 - Tier 5 mejora el buff de categoría de +8/+8 a +10/+10.
@@ -478,3 +484,6 @@ Archivos modificados respecto de E49 Map1 Decks
 
 
 20260910.26: Maestrías diversificadas con Gemas, Fragmentos, piezas comodín de la Mina y eliminaciones gratuitas de desastres.
+
+
+20260910.31: PvP con ligas cerradas y visibles; matchmaking aleatorio restringido a la misma liga. Ver PVP_CLOSED_LEAGUES_20260910_31.txt.

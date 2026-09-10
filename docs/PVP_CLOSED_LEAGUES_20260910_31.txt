@@ -1,0 +1,38 @@
+HALLVALLA · PvP LIGAS CERRADAS · BUILD 20260910.31
+
+La clasificación PvP se deriva de los puntos persistentes del ranking:
+- Victoria: +3 puntos
+- Derrota: -2 puntos
+- Empate: 0 puntos
+
+Ligas y umbral mínimo:
+1. Piedra: 0
+2. Madera: 30
+3. Fuego: 75
+4. Hierro: 135
+5. Acero: 210
+6. Plata: 300
+7. Oro: 420
+8. Platino: 570
+9. Obsidiana: 750
+10. Diamante: 960
+11. Mítica: 1200
+12. Valhalla: 1500
+
+MATCHMAKING
+- Las ligas son cerradas.
+- El matchmaking aleatorio solo puede reclamar y unir jugadores con exactamente la misma leagueKey.
+- No existe ampliación automática a una liga superior o inferior aunque la espera sea larga.
+- La cola publica leagueKey, leagueName y pvpPoints como snapshot de emparejamiento.
+- Las reglas de Firebase preservan esos campos durante claim/release para evitar cruces accidentales.
+- Las salas privadas/apuestas por código siguen siendo libres; el cierre aplica al matchmaking aleatorio competitivo.
+
+VISIBILIDAD
+- El Ranking muestra la liga del jugador, puntos y progreso hacia la siguiente liga.
+- Cada fila del ranking muestra la liga correspondiente.
+- La pantalla de búsqueda muestra LIGA <NOMBRE> y los puntos actuales.
+
+BOTS (SIGUIENTE ETAPA)
+- Se crearán bots por liga para cubrir baja población.
+- Un bot deberá pertenecer a una leagueKey concreta y usar dificultad/mazos acordes a esa liga.
+- Los bots no deben provocar emparejamientos entre ligas distintas.

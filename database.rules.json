@@ -104,6 +104,9 @@
           "email": {
             ".validate": "newData.isString()"
           },
+          "emailVerified": {
+            ".validate": "newData.val() === true || newData.val() === false"
+          },
           "provider": {
             ".validate": "newData.isString() && (newData.val() === 'password' || newData.val() === 'google')"
           },
@@ -222,13 +225,7 @@
               ".validate": false
             }
           },
-          "economy": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": false
-      }
-    },
-    "events": {
+          "events": {
             ".validate": "newData.child('nextCheckAt').isNumber() && newData.child('nextCheckAt').val() >= 0 && (!data.exists() || newData.child('nextCheckAt').val() >= data.child('nextCheckAt').val())",
             "nextCheckAt": {
               ".validate": "newData.isNumber() && newData.val() >= 0"
@@ -288,6 +285,17 @@
                 "$other": {
                   ".validate": false
                 }
+              }
+            },
+            "potions": {
+              "unitLastPurchaseDay": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= -1 && ((!data.exists() && (newData.val() === -1 || newData.val() === ((now - (now % 86400000)) / 86400000))) || (data.exists() && (newData.val() === data.val() || (newData.val() === ((now - (now % 86400000)) / 86400000) && newData.val() > data.val()))))"
+              },
+              "leaderLastPurchaseDay": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= -1 && ((!data.exists() && (newData.val() === -1 || newData.val() === ((now - (now % 86400000)) / 86400000))) || (data.exists() && (newData.val() === data.val() || (newData.val() === ((now - (now % 86400000)) / 86400000) && newData.val() > data.val()))))"
+              },
+              "$other": {
+                ".validate": false
               }
             },
             "$other": {
@@ -395,8 +403,8 @@
       "random": {
         ".read": "auth != null && auth.token.email != null",
         "$uid": {
-          ".write": "auth != null && auth.token.email != null && (auth.uid === $uid || (data.exists() && newData.exists() && data.child('claimedBy').val() === '' && newData.child('uid').val() === data.child('uid').val() && newData.child('code').val() === data.child('code').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('name').val() === data.child('name').val() && newData.child('level').val() === data.child('level').val() && newData.child('claimedBy').val() === auth.uid && newData.child('claimedAt').val() > 0) || (data.exists() && newData.exists() && data.child('claimedBy').val() === auth.uid && newData.child('uid').val() === data.child('uid').val() && newData.child('code').val() === data.child('code').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('name').val() === data.child('name').val() && newData.child('level').val() === data.child('level').val() && newData.child('claimedBy').val() === '' && newData.child('claimedAt').val() === 0) || (data.exists() && !newData.exists() && data.child('claimedBy').val() === auth.uid))",
-          ".validate": "!newData.exists() || (newData.hasChildren(['uid','code','createdAt','name','level','claimedBy','claimedAt']) && newData.child('uid').val() === $uid && newData.child('uid').isString() && newData.child('code').isString() && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('name').isString() && newData.child('level').isNumber() && newData.child('level').val() >= 1 && newData.child('claimedBy').isString() && newData.child('claimedAt').isNumber() && newData.child('claimedAt').val() >= 0)",
+          ".write": "auth != null && auth.token.email != null && (auth.uid === $uid || (data.exists() && newData.exists() && data.child('claimedBy').val() === '' && newData.child('uid').val() === data.child('uid').val() && newData.child('code').val() === data.child('code').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('name').val() === data.child('name').val() && newData.child('level').val() === data.child('level').val() && newData.child('leagueKey').val() === data.child('leagueKey').val() && newData.child('leagueName').val() === data.child('leagueName').val() && newData.child('pvpPoints').val() === data.child('pvpPoints').val() && root.child('matchmaking').child('random').child(auth.uid).child('leagueKey').val() === data.child('leagueKey').val() && newData.child('claimedBy').val() === auth.uid && newData.child('claimedAt').val() > 0) || (data.exists() && newData.exists() && data.child('claimedBy').val() === auth.uid && newData.child('uid').val() === data.child('uid').val() && newData.child('code').val() === data.child('code').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('name').val() === data.child('name').val() && newData.child('level').val() === data.child('level').val() && newData.child('leagueKey').val() === data.child('leagueKey').val() && newData.child('leagueName').val() === data.child('leagueName').val() && newData.child('pvpPoints').val() === data.child('pvpPoints').val() && newData.child('claimedBy').val() === '' && newData.child('claimedAt').val() === 0) || (data.exists() && !newData.exists() && data.child('claimedBy').val() === auth.uid))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['uid','code','createdAt','name','level','leagueKey','leagueName','pvpPoints','claimedBy','claimedAt']) && newData.child('uid').val() === $uid && newData.child('uid').isString() && newData.child('code').isString() && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('name').isString() && newData.child('level').isNumber() && newData.child('level').val() >= 1 && newData.child('leagueKey').isString() && newData.child('leagueName').isString() && newData.child('pvpPoints').isNumber() && newData.child('pvpPoints').val() % 1 === 0 && newData.child('claimedBy').isString() && newData.child('claimedAt').isNumber() && newData.child('claimedAt').val() >= 0)",
           "uid": {
             ".validate": "newData.isString() && newData.val() === $uid"
           },
@@ -417,6 +425,15 @@
           },
           "claimedAt": {
             ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "leagueKey": {
+            ".validate": "newData.isString() && (newData.val() === 'stone' || newData.val() === 'wood' || newData.val() === 'fire' || newData.val() === 'iron' || newData.val() === 'steel' || newData.val() === 'silver' || newData.val() === 'gold' || newData.val() === 'platinum' || newData.val() === 'obsidian' || newData.val() === 'diamond' || newData.val() === 'mythic' || newData.val() === 'valhalla')"
+          },
+          "leagueName": {
+            ".validate": "newData.isString() && (newData.val() === 'Piedra' || newData.val() === 'Madera' || newData.val() === 'Fuego' || newData.val() === 'Hierro' || newData.val() === 'Acero' || newData.val() === 'Plata' || newData.val() === 'Oro' || newData.val() === 'Platino' || newData.val() === 'Obsidiana' || newData.val() === 'Diamante' || newData.val() === 'Mítica' || newData.val() === 'Valhalla')"
+          },
+          "pvpPoints": {
+            ".validate": "newData.isNumber() && newData.val() % 1 === 0"
           },
           "$other": {
             ".validate": false

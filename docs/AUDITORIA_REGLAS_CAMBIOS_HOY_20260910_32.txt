@@ -1,0 +1,27 @@
+HallValla · Auditoría de reglas y cambios del 2026-09-10 · Build 20260910.32
+
+BASE DE REGLAS
+- Se tomó literalmente como base el archivo de reglas actualmente desplegado y compartido por el usuario.
+- No se reemplazaron bloques de cuenta, cloudSave, eventos, amigos, resultados PvP, perfiles públicos ni Mina existentes.
+
+CAMBIOS VERIFICADOS
+1. Maestría de unidades: máximo XV; cada nivel aporta +2 acumulativo a DX/GD/HP/AT/AG. Nivel XV = +28.
+2. Curva de maestría: II=20, III=50, IV=90, V=140, VI=200, VII=270, VIII=350, IX=440, X=540, XI=650, XII=770, XIII=900, XIV=1040, XV=1190 bajas acumuladas.
+3. Poción de Experiencia: 5000 gemas; +1 nivel de unidad; máximo XV; 1 compra diaria independiente.
+4. Poción de Mando: 5000 gemas; +1 nivel de líder; máximo XV; 1 compra diaria independiente.
+5. Líderes: máximo XV. Nivel XV = Tier 5. Buff de categoría Tier 5 = +10/+10; Hechicero = +10 daño de magias.
+6. PvP: ligas visibles y matchmaking aleatorio cerrado por leagueKey exacta.
+
+REGLAS NUEVAS NECESARIAS
+- users/{uid}/mine/shop/potions/{unitLastPurchaseDay,leaderLastPurchaseDay}: permite inicialización y una actualización al día UTC del servidor; no permite retroceder ni escribir otros campos.
+- matchmaking/random/{uid}: acepta leagueKey, leagueName y pvpPoints; al reclamar una cola ajena exige que el reclamante tenga una entrada de cola con la misma leagueKey.
+
+PERSISTENCIA
+- unitMastery y leaderLevels viven en hallvalla_player_profile. Ese localStorage está incluido en cloudSaveV2/cloudSaveV1, por lo que las reglas existentes de cloudSave ya permiten sincronizarlos.
+- hallvalla_mine_shop_v1 también está incluido en el conjunto de claves de sincronización de cuenta.
+
+CORRECCIÓN VISUAL
+- El tooltip de unidad en batalla decía “Máximo: Rango X”. Se corrigió a “Máximo: Rango XV”.
+
+NOTA SOBRE VÍNCULO ARCANO
+- Existe una tabla propia de Vínculo Arcano limitada a Tier 4. No es el buff de categoría del Hechicero; la regla de Tier 5 solicitada afecta al daño de magias y sí llega a +10. Por eso Vínculo Arcano no se modificó en esta auditoría.

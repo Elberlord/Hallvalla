@@ -21,6 +21,28 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
   const RESULT_SCHEMA="hallvalla-pvp-result-v1";
   const RESULT_CACHE_MS=8000;
   const TOP_VISIBLE=20;
+  const PVP_LEAGUES=Object.freeze([
+    Object.freeze({key:"stone",name:"Piedra",min:0}),
+    Object.freeze({key:"wood",name:"Madera",min:30}),
+    Object.freeze({key:"fire",name:"Fuego",min:75}),
+    Object.freeze({key:"iron",name:"Hierro",min:135}),
+    Object.freeze({key:"steel",name:"Acero",min:210}),
+    Object.freeze({key:"silver",name:"Plata",min:300}),
+    Object.freeze({key:"gold",name:"Oro",min:420}),
+    Object.freeze({key:"platinum",name:"Platino",min:570}),
+    Object.freeze({key:"obsidian",name:"Obsidiana",min:750}),
+    Object.freeze({key:"diamond",name:"Diamante",min:960}),
+    Object.freeze({key:"mythic",name:"Mítica",min:1200}),
+    Object.freeze({key:"valhalla",name:"Valhalla",min:1500})
+  ]);
+  function leagueForPoints(points){
+    const safe=Math.max(0,Math.floor(Number(points)||0));
+    let index=0;
+    for(let i=1;i<PVP_LEAGUES.length;i++){if(safe>=PVP_LEAGUES[i].min)index=i;else break;}
+    const base=PVP_LEAGUES[index];
+    const next=PVP_LEAGUES[index+1]||null;
+    return {...base,index,points:safe,nextKey:next?.key||"",nextName:next?.name||"",nextMin:next?Number(next.min):null};
+  }
   let rankingCache={loadedAt:0,rows:[],byUid:new Map(),raw:{}};
   let rankingLoadPromise=null;
 
@@ -98,7 +120,8 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
 
   function statsText(row){
     row=row||makeBlank("","");
-    return `${Number(row.points||0)} pts · G ${Number(row.wins||0)} · P ${Number(row.losses||0)} · E ${Number(row.draws||0)}`;
+    const league=leagueForPoints(row.points);
+    return `Liga ${league.name} · ${Number(row.points||0)} pts · G ${Number(row.wins||0)} · P ${Number(row.losses||0)} · E ${Number(row.draws||0)}`;
   }
 
   async function refreshLobby(room){
@@ -133,7 +156,9 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     const summary=$("pvpRankingOwnSummary");
     if(summary){
       const pos=mine.position?`#${mine.position}`:"SIN CLASIFICAR";
-      summary.innerHTML=`<div class="pvp-ranking-my-position">${esc(pos)}</div><div class="pvp-ranking-my-name">${esc(mine.name)}</div><div class="pvp-ranking-my-id" title="${esc(myUid)}">ID PvP: ${esc(shortUid(myUid))}</div><div class="pvp-ranking-my-stats">${esc(statsText(mine))} · Partidas ${Number(mine.games||0)}</div>`;
+      const league=leagueForPoints(mine.points);
+      const leagueProgress=league.nextMin===null?"Liga máxima":`${Math.max(0,league.nextMin-league.points)} pts para Liga ${league.nextName}`;
+      summary.innerHTML=`<div class="pvp-ranking-my-position">${esc(pos)}</div><div class="pvp-ranking-my-name">${esc(mine.name)}</div><div class="pvp-ranking-my-id" title="${esc(myUid)}">ID PvP: ${esc(shortUid(myUid))}</div><div class="pvp-ranking-my-league" data-league="${esc(league.key)}"><b>LIGA ${esc(league.name.toUpperCase())}</b><span>${esc(leagueProgress)}</span></div><div class="pvp-ranking-my-stats">${esc(statsText(mine))} · Partidas ${Number(mine.games||0)}</div>`;
     }
     const list=$("pvpRankingList");
     if(!list)return;
@@ -146,7 +171,8 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     if(myOutside)visible.push({...mine,_separator:true});
     list.innerHTML=visible.map(row=>{
       const isMe=row.uid===myUid;
-      return `${row._separator?'<div class="pvp-ranking-separator">··· TU POSICIÓN ···</div>':''}<div class="pvp-ranking-row${isMe?' is-me':''}"><span class="pvp-ranking-pos">#${Number(row.position||0)}</span><span class="pvp-ranking-player"><b>${esc(row.name)}</b><small>${esc(shortUid(row.uid))}</small></span><span class="pvp-ranking-record">G ${Number(row.wins||0)} · P ${Number(row.losses||0)} · E ${Number(row.draws||0)}</span><span class="pvp-ranking-points">${Number(row.points||0)} pts</span></div>`;
+      const league=leagueForPoints(row.points);
+      return `${row._separator?'<div class="pvp-ranking-separator">··· TU POSICIÓN ···</div>':''}<div class="pvp-ranking-row${isMe?' is-me':''}"><span class="pvp-ranking-pos">#${Number(row.position||0)}</span><span class="pvp-ranking-player"><b>${esc(row.name)}</b><small>${esc(shortUid(row.uid))} · Liga ${esc(league.name)}</small></span><span class="pvp-ranking-record">G ${Number(row.wins||0)} · P ${Number(row.losses||0)} · E ${Number(row.draws||0)}</span><span class="pvp-ranking-points">${Number(row.points||0)} pts</span></div>`;
     }).join("");
   }
 
@@ -219,6 +245,8 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
   globalThis.hvPvpRankingClose=closeRanking;
   globalThis.hvPvpRankingRecordResult=recordBattleResult;
   globalThis.hvPvpRankingLoad=loadRanking;
+  globalThis.hvPvpLeagueForPoints=leagueForPoints;
+  globalThis.HALLVALLA_PVP_LEAGUES=PVP_LEAGUES;
 
   document.getElementById("pvpRankingBtn")?.addEventListener("click",()=>{void openRanking();});
   document.getElementById("pvpRankingCloseBtn")?.addEventListener("click",closeRanking);
@@ -294,6 +322,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let randomMatchTimer=null;
   let randomOwnCreatedAt=0;
   let randomQueueDisconnect=null;
+  let randomLeagueSnapshot=null;
   let onlineFlowMode="select";
   let randomAutoReadyTimer=null;
   let randomAutoReadyCode="";
@@ -349,6 +378,24 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   async function hvPopup(message,title){
     try{ if(typeof hvAlert==="function") return await hvAlert(message,title); }catch(_){ }
     alert(`${title? title+": ":""}${message}`);
+  }
+  async function resolveMyRandomLeague({force=false}={}){
+    const myUid=String(auth?.currentUser?.uid||"");
+    let points=0;
+    try{
+      const cache=typeof globalThis.hvPvpRankingLoad==="function"?await globalThis.hvPvpRankingLoad({force}):null;
+      const row=cache?.byUid instanceof Map?cache.byUid.get(myUid):null;
+      points=Number(row?.points||0);
+    }catch(error){console.warn(`[HallValla][${STEP}] No se pudo leer la puntuación PvP; se usará Liga Piedra.`,error);}
+    const league=typeof globalThis.hvPvpLeagueForPoints==="function"?globalThis.hvPvpLeagueForPoints(points):{key:"stone",name:"Piedra",min:0,nextMin:null};
+    return {key:String(league?.key||"stone"),name:String(league?.name||"Piedra"),points:Number(points||0),min:Number(league?.min||0),nextMin:league?.nextMin??null};
+  }
+  function renderMatchmakingLeague(snapshot=randomLeagueSnapshot){
+    const node=$("matchmakingLeagueLabel");
+    if(!node)return;
+    const safe=snapshot&&typeof snapshot==="object"?snapshot:{key:"stone",name:"Piedra",points:0};
+    node.textContent=`LIGA ${String(safe.name||"Piedra").toUpperCase()} · ${Number(safe.points||0)} PTS`;
+    node.dataset.league=String(safe.key||"stone");
   }
 
   function clearRandomAutoReady(){
@@ -2027,6 +2074,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     randomOwnCreatedAt=0;
     clearRandomMatchTimer();
     if(removeQueueEntry)await removeOwnRandomQueue();
+    randomLeagueSnapshot=null;
+    renderMatchmakingLeague();
     syncLocalButtons();
   }
   function randomCandidateIsOlder(entry,myUid,myCreatedAt){
@@ -2036,13 +2085,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(created>myCreatedAt)return false;
     return String(entry?.uid||"")<String(myUid||"");
   }
-  async function claimRandomCandidate(candidate,myUid){
+  async function claimRandomCandidate(candidate,myUid,myLeagueKey){
     const candidateUid=String(candidate?.uid||"");
-    if(!candidateUid||candidateUid===myUid)return null;
+    const leagueKey=String(myLeagueKey||"");
+    if(!candidateUid||candidateUid===myUid||!leagueKey)return null;
     const targetRef=ref(db,`${RANDOM_QUEUE_PATH}/${candidateUid}`);
     const nowTs=Date.now();
     const result=await withTimeout(runTransaction(targetRef,current=>{
       if(!current||String(current.uid||"")!==candidateUid)return;
+      if(String(current.leagueKey||"")!==leagueKey)return;
       if(String(current.claimedBy||""))return;
       const created=Number(current.createdAt||0);
       if(!created||nowTs-created>RANDOM_QUEUE_STALE_MS)return;
@@ -2078,7 +2129,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const myUid=String(auth?.currentUser?.uid||"");
     const code=normalizeCode(entry?.code||"");
     const ownerUid=String(entry?.uid||"");
-    if(!myUid||!ownerUid||code.length!==8)return false;
+    const myLeagueKey=String(randomLeagueSnapshot?.key||"");
+    if(!myUid||!ownerUid||code.length!==8||!myLeagueKey)return false;
+    if(String(entry?.leagueKey||"")!==myLeagueKey){await releaseRandomCandidate(ownerUid,myUid);return false;}
     const roomSnap=await withTimeout(get(ref(db,`games/${code}/public`)),`Validar sala aleatoria ${code}`,6000);
     const room=roomSnap.exists()?(roomSnap.val()||{}):null;
     if(!room||String(room?.playerSlots?.player1Uid||"")!==ownerUid||String(room?.phase||"")!=="waiting"||String(room?.playerSlots?.player2Uid||"")){
@@ -2106,12 +2159,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(!randomMatchSearching||busy)return false;
     const myUid=String(auth?.currentUser?.uid||"");
     if(!myUid)return false;
+    if(!randomLeagueSnapshot)randomLeagueSnapshot=await resolveMyRandomLeague();
+    const myLeagueKey=String(randomLeagueSnapshot?.key||"stone");
+    renderMatchmakingLeague(randomLeagueSnapshot);
     let snap;
     try{snap=await get(ref(db,RANDOM_QUEUE_PATH));}catch(_){return false;}
     const all=snap.exists()?(snap.val()||{}):{};
     const nowTs=Date.now();
     const candidates=Object.values(all).filter(entry=>{
       if(!entry||String(entry.uid||"")===myUid||String(entry.claimedBy||""))return false;
+      if(String(entry.leagueKey||"")!==myLeagueKey)return false;
       const created=Number(entry.createdAt||0);
       if(!created||nowTs-created>RANDOM_QUEUE_STALE_MS)return false;
       if(activeRole===1&&randomOwnCreatedAt&&!randomCandidateIsOlder(entry,myUid,randomOwnCreatedAt))return false;
@@ -2119,7 +2176,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }).sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0)||String(a.uid||"").localeCompare(String(b.uid||"")));
     for(const candidate of candidates){
       let claimed=null;
-      try{claimed=await claimRandomCandidate(candidate,myUid);}catch(_){claimed=null;}
+      try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}catch(_){claimed=null;}
       if(!claimed)continue;
       if(await randomJoinClaimedEntry(claimed))return true;
     }
@@ -2130,7 +2187,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const code=normalizeCode(activeCode||"");
     if(!myUid||code.length!==8||activeRole!==1)throw new Error("No se pudo publicar la búsqueda aleatoria.");
     randomOwnCreatedAt=Date.now();
-    const payload={uid:myUid,code,createdAt:randomOwnCreatedAt,name:getProfileNameSafe(1),level:getProfileLevelSafe(),claimedBy:"",claimedAt:0};
+    if(!randomLeagueSnapshot)randomLeagueSnapshot=await resolveMyRandomLeague({force:true});
+    renderMatchmakingLeague(randomLeagueSnapshot);
+    const payload={uid:myUid,code,createdAt:randomOwnCreatedAt,name:getProfileNameSafe(1),level:getProfileLevelSafe(),leagueKey:String(randomLeagueSnapshot.key||"stone"),leagueName:String(randomLeagueSnapshot.name||"Piedra"),pvpPoints:Number(randomLeagueSnapshot.points||0),claimedBy:"",claimedAt:0};
     await set(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`),payload);
     try{randomQueueDisconnect=onDisconnect(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`));await randomQueueDisconnect.remove();}catch(_){randomQueueDisconnect=null;}
   }
@@ -2144,14 +2203,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(!(await checkOnlineEntryRequirements()))return false;
     globalThis.hvHydrateAssetGroup?.("pvp-online");
     setOnlineFlowMode("random");
+    randomLeagueSnapshot=await resolveMyRandomLeague({force:true});
+    renderMatchmakingLeague(randomLeagueSnapshot);
     renderRandomMatchmakingUi({playerShowcase:{1:buildPublicShowcase()},playerSlots:{player1Uid:String(auth?.currentUser?.uid||""),player2Uid:""}});
-    randomMatchSearching=true;syncLocalButtons();mark("Buscando rival aleatorio...");
+    randomMatchSearching=true;syncLocalButtons();mark(`Buscando rival de Liga ${randomLeagueSnapshot.name}...`);
     try{
       if(await scanRandomQueue())return true;
       const created=await createMinimalPublicRoom();
       if(!created)throw new Error("No se pudo preparar la sala para matchmaking.");
       await publishOwnRandomQueue();
-      mark("Buscando rival aleatorio... sala preparada.");
+      mark(`Buscando rival de Liga ${randomLeagueSnapshot?.name||"Piedra"}... sala preparada.`);
       randomMatchTimer=setInterval(()=>{void scanRandomQueue();},1800);
       void scanRandomQueue();
       return true;
