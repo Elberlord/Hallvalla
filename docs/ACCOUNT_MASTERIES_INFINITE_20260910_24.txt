@@ -1,0 +1,19 @@
+HALLVALLA 20260910.24 — MISIONES FINITAS / MAESTRÍAS PERPETUAS
+
+MISIONES
+- Tutorial, Home y mazo y Tácticas siguen siendo misiones finitas.
+- Al completarse, su tarjeta se oscurece en negro para marcar visualmente que ya fue terminada.
+- Se conservan los botones de Repetir/Revisar.
+
+MAESTRÍAS
+- Invocador, Verdugo, Coleccionista, Arcano, Amo de trampas y Armero ya no tienen estado MAX.
+- El progreso acumulado nunca se reinicia.
+- Secuencia principal acordada: 50, 100, 250, 500, 1.000, 5.000, 10.000, 50.000, 100.000, 500.000, 1.000.000.
+- Se conservan hitos iniciales de 10/25 o 25 para no romper el progreso existente.
+- Después de 1.000.000 la progresión continúa sin límite práctico: 5.000.000, 10.000.000, 50.000.000, 100.000.000, etc.
+- Nunca se muestra MAX: siempre existe un siguiente objetivo mientras el número sea representable de forma segura por el motor.
+- Los hitos superiores conservan recompensas reclamables y se generan dinámicamente.
+
+COMPATIBILIDAD
+- Los contadores y hitos ya reclamados se conservan.
+- Un antiguo hito reclamado que ya no forme parte de la secuencia visible no borra ni reduce progreso.

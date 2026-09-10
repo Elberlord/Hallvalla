@@ -447,3 +447,6 @@ Archivos modificados respecto de E49 Map1 Decks
 - La fórmula existente DX + AGI para PREC/EVA permanece intacta.
 - No se modifican HP, AT, GD, AGI, MOV, RG ni habilidades.
 - Ver docs/DEXTERITY_CANON_20260909_19.txt y .csv.
+
+
+20260910.24 — Misiones terminadas se oscurecen; Maestrías de cuenta perpetuas sin estado MAX, con hitos crecientes y continuación después de 1.000.000.

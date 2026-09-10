@@ -195,7 +195,8 @@ function savePlayerProfile(profile){
    - Progreso permanente: nunca se reinicia al reclamar.
    - Solo se registra después de acciones confirmadas por el motor.
    - Los hitos alcanzados quedan pendientes hasta que el jugador los reclama.
-   - El máximo depende de la categoría: hasta 10.000 acciones; Trampas/Equipo culminan en 5.000.
+   - Las Maestrías NO tienen rango máximo. Tras 1.000.000 continúan en
+     5.000.000, 10.000.000, 50.000.000, etc. sin mostrar nunca "MAX".
    ============================================================ */
 const ACCOUNT_MASTERY_EVENT_STORAGE_KEY="hallvalla_account_mastery_events_v1";
 const ACCOUNT_MASTERY_EVENT_CACHE_MAX=320;
@@ -209,9 +210,12 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:250,rewards:[{type:"gold",amount:40}]},
       {target:500,rewards:[{type:"pack",tier:"basic",amount:1}]},
       {target:1000,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
-      {target:2500,rewards:[{type:"pack",tier:"rare",amount:1}]},
       {target:5000,rewards:[{type:"gold",amount:150},{type:"pack",tier:"epic",amount:1}]},
-      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}]},
+      {target:50000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"epic",amount:1}]},
+      {target:100000,rewards:[{type:"gold",amount:750},{type:"pack",tier:"mythic",amount:1}]},
+      {target:500000,rewards:[{type:"gold",amount:1500},{type:"pack",tier:"mythic",amount:1}]},
+      {target:1000000,rewards:[{type:"gold",amount:3000},{type:"pack",tier:"mythic",amount:2}]}
     ])
   }),
   kills:Object.freeze({
@@ -223,9 +227,12 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:250,rewards:[{type:"gold",amount:60}]},
       {target:500,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
       {target:1000,rewards:[{type:"pack",tier:"rare",amount:1}]},
-      {target:2500,rewards:[{type:"gold",amount:150},{type:"pack",tier:"rare",amount:1}]},
       {target:5000,rewards:[{type:"pack",tier:"epic",amount:1}]},
-      {target:10000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+      {target:10000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"mythic",amount:1}]},
+      {target:50000,rewards:[{type:"gold",amount:650},{type:"pack",tier:"epic",amount:1}]},
+      {target:100000,rewards:[{type:"gold",amount:900},{type:"pack",tier:"mythic",amount:1}]},
+      {target:500000,rewards:[{type:"gold",amount:1750},{type:"pack",tier:"mythic",amount:1}]},
+      {target:1000000,rewards:[{type:"gold",amount:3500},{type:"pack",tier:"mythic",amount:2}]}
     ])
   }),
   collection:Object.freeze({
@@ -237,9 +244,12 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:250,rewards:[{type:"gold",amount:40}]},
       {target:500,rewards:[{type:"pack",tier:"basic",amount:1}]},
       {target:1000,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
-      {target:2500,rewards:[{type:"pack",tier:"rare",amount:1}]},
       {target:5000,rewards:[{type:"gold",amount:150},{type:"pack",tier:"epic",amount:1}]},
-      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}]},
+      {target:50000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"epic",amount:1}]},
+      {target:100000,rewards:[{type:"gold",amount:750},{type:"pack",tier:"mythic",amount:1}]},
+      {target:500000,rewards:[{type:"gold",amount:1500},{type:"pack",tier:"mythic",amount:1}]},
+      {target:1000000,rewards:[{type:"gold",amount:3000},{type:"pack",tier:"mythic",amount:2}]}
     ])
   }),
   spells:Object.freeze({
@@ -251,9 +261,12 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:250,rewards:[{type:"gold",amount:40}]},
       {target:500,rewards:[{type:"pack",tier:"basic",amount:1}]},
       {target:1000,rewards:[{type:"gold",amount:75},{type:"pack",tier:"basic",amount:1}]},
-      {target:2500,rewards:[{type:"pack",tier:"rare",amount:1}]},
       {target:5000,rewards:[{type:"gold",amount:150},{type:"pack",tier:"epic",amount:1}]},
-      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}]},
+      {target:50000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"epic",amount:1}]},
+      {target:100000,rewards:[{type:"gold",amount:750},{type:"pack",tier:"mythic",amount:1}]},
+      {target:500000,rewards:[{type:"gold",amount:1500},{type:"pack",tier:"mythic",amount:1}]},
+      {target:1000000,rewards:[{type:"gold",amount:3000},{type:"pack",tier:"mythic",amount:2}]}
     ])
   }),
   traps:Object.freeze({
@@ -266,8 +279,12 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:250,rewards:[{type:"pack",tier:"basic",amount:1}]},
       {target:500,rewards:[{type:"gold",amount:50},{type:"pack",tier:"basic",amount:1}]},
       {target:1000,rewards:[{type:"pack",tier:"rare",amount:1}]},
-      {target:2500,rewards:[{type:"gold",amount:100},{type:"pack",tier:"epic",amount:1}]},
-      {target:5000,rewards:[{type:"gold",amount:250},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+      {target:5000,rewards:[{type:"gold",amount:250},{type:"pack",tier:"mythic",amount:1}]},
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}]},
+      {target:50000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"epic",amount:1}]},
+      {target:100000,rewards:[{type:"gold",amount:750},{type:"pack",tier:"mythic",amount:1}]},
+      {target:500000,rewards:[{type:"gold",amount:1500},{type:"pack",tier:"mythic",amount:1}]},
+      {target:1000000,rewards:[{type:"gold",amount:3000},{type:"pack",tier:"mythic",amount:2}]}
     ])
   }),
   equipment:Object.freeze({
@@ -280,11 +297,44 @@ const ACCOUNT_MASTERY_DEFS=Object.freeze({
       {target:250,rewards:[{type:"pack",tier:"basic",amount:1}]},
       {target:500,rewards:[{type:"gold",amount:50},{type:"pack",tier:"basic",amount:1}]},
       {target:1000,rewards:[{type:"pack",tier:"rare",amount:1}]},
-      {target:2500,rewards:[{type:"gold",amount:100},{type:"pack",tier:"epic",amount:1}]},
-      {target:5000,rewards:[{type:"gold",amount:250},{type:"pack",tier:"mythic",amount:1}],mastery:true}
+      {target:5000,rewards:[{type:"gold",amount:250},{type:"pack",tier:"mythic",amount:1}]},
+      {target:10000,rewards:[{type:"gold",amount:300},{type:"pack",tier:"mythic",amount:1}]},
+      {target:50000,rewards:[{type:"gold",amount:500},{type:"pack",tier:"epic",amount:1}]},
+      {target:100000,rewards:[{type:"gold",amount:750},{type:"pack",tier:"mythic",amount:1}]},
+      {target:500000,rewards:[{type:"gold",amount:1500},{type:"pack",tier:"mythic",amount:1}]},
+      {target:1000000,rewards:[{type:"gold",amount:3000},{type:"pack",tier:"mythic",amount:2}]}
     ])
   })
 });
+function getNextInfiniteAccountMasteryTarget(current){
+  const n=Math.max(1000000,Math.floor(Number(current)||1000000));
+  const exponent=Math.floor(Math.log10(n));
+  const power=Math.pow(10,exponent);
+  const mantissa=n/power;
+  const next=mantissa<4.999999?5*power:10*power;
+  return Number.isSafeInteger(next)&&next>n?next:null;
+}
+function buildInfiniteAccountMasteryMilestone(target){
+  const safe=Math.max(1000000,Math.floor(Number(target)||1000000));
+  const magnitude=Math.max(0,Math.floor(Math.log10(safe/1000000)));
+  const gold=Math.min(10000,3000+(magnitude*1000));
+  return Object.freeze({target:safe,rewards:Object.freeze([{type:"gold",amount:gold},{type:"pack",tier:"mythic",amount:2}]),infinite:true});
+}
+function getAccountMasteryMilestones(def,record=null){
+  if(!def)return[];
+  const fixed=Array.isArray(def.milestones)?[...def.milestones]:[];
+  if(!fixed.length)return[];
+  const rec=record||{count:0,claimed:[]};
+  const claimed=Array.isArray(rec.claimed)?rec.claimed:[];
+  const relevant=Math.max(Math.floor(Number(rec.count)||0),...claimed.map(v=>Math.floor(Number(v)||0)),fixed[fixed.length-1].target);
+  const out=[...fixed];
+  let last=out[out.length-1].target;
+  while(last<=relevant){
+    const next=getNextInfiniteAccountMasteryTarget(last);if(!next)break;
+    out.push(buildInfiniteAccountMasteryMilestone(next));last=next;
+  }
+  return out;
+}
 function normalizeAccountMasteries(book={}){
   const out={};
   Object.keys(ACCOUNT_MASTERY_DEFS).forEach(key=>{
@@ -302,7 +352,7 @@ function getAccountMasteryRecord(key,profile=getPlayerProfile()){
 function getAccountMasteryPendingMilestones(key,profile=getPlayerProfile()){
   const def=getAccountMasteryDef(key);if(!def)return[];
   const rec=getAccountMasteryRecord(key,profile),claimed=new Set(rec.claimed||[]);
-  return def.milestones.filter(m=>rec.count>=m.target&&!claimed.has(m.target));
+  return getAccountMasteryMilestones(def,rec).filter(m=>rec.count>=m.target&&!claimed.has(m.target));
 }
 function getPendingAccountMasteryRewardCount(profile=getPlayerProfile()){
   return Object.keys(ACCOUNT_MASTERY_DEFS).reduce((sum,key)=>sum+getAccountMasteryPendingMilestones(key,profile).length,0);
@@ -328,7 +378,7 @@ function registerAccountMasteryAction(key,amount=1,eventKey=""){
     book[key]={...book[key],count:before+delta};
     profile.actionMasteries=book;
     savePlayerProfile(profile);
-    const newlyReached=def.milestones.filter(m=>before<m.target&&book[key].count>=m.target);
+    const newlyReached=getAccountMasteryMilestones(def,book[key]).filter(m=>before<m.target&&book[key].count>=m.target);
     const missionsOpen=!!($("missionsPanel")&&!$("missionsPanel").classList.contains("hidden"));
     const homeVisible=!!($("mainMenu")&&!$("mainMenu").classList.contains("hidden"));
     // En batalla solo persistimos el contador: no hacemos trabajo DOM extra en cada acción.
@@ -399,7 +449,8 @@ function collectAccountMasteryClaimRequests(requests=[]){
   (requests||[]).forEach(req=>{
     const key=String(req?.key||""),target=Math.max(0,Math.floor(Number(req?.target)||0)),def=getAccountMasteryDef(key);
     if(!def||!target)return;
-    const rec=book[key],milestone=def.milestones.find(m=>m.target===target);
+    const rec=book[key];
+    const milestone=getAccountMasteryMilestones(def,rec).find(m=>m.target===target);
     if(!milestone||rec.count<target||rec.claimed.includes(target))return;
     valid.push({key,target,def,milestone});
   });

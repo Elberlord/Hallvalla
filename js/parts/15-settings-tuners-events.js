@@ -906,6 +906,9 @@ function hvVisualProgressHtml(slot,pct,label,idBase=""){
 function hvMissionActionHtml(slot,id,label,disabled=false){
   return `<button id="${id}" class="hv-mission-action-slot" data-hv-layout-slot="${slot}" data-hv-layout-element="button" type="button" ${disabled?"disabled":""}>${escapeHtml(label)}</button>`;
 }
+function hvMissionCompletedShadeHtml(slot,complete=false){
+  return complete?`<div class="hv-mission-complete-shade hv-mission-complete-shade--${escapeHtml(slot)}" aria-hidden="true"></div>`:"";
+}
 function hvMasteryClaimHtml(slot,key,target,rewardTitle="",disabled=false){
   const rawKey=String(key||"");
   const safeKey=escapeHtml(rawKey);
@@ -927,12 +930,13 @@ function renderAccountMasteries(){
     const slot=slotByKey[def.key];if(!slot)return"";
     const rec=getAccountMasteryRecord(def.key,profile);
     const claimed=new Set(rec.claimed||[]);
-    const current=def.milestones.find(m=>!claimed.has(m.target))||null;
-    const target=current?.target||def.milestones[def.milestones.length-1]?.target||1;
-    const shown=current?Math.min(rec.count,target):target;
-    const pct=current?Math.max(0,Math.min(100,(rec.count/target)*100)):100;
-    const ready=!!(current&&rec.count>=target);
-    const label=current?`${shown.toLocaleString("es-ES")}/${target.toLocaleString("es-ES")}`:"MAX";
+    const milestones=typeof getAccountMasteryMilestones==="function"?getAccountMasteryMilestones(def,rec):[...(def.milestones||[])];
+    const current=milestones.find(m=>!claimed.has(m.target))||milestones[milestones.length-1]||null;
+    const target=current?.target||1;
+    const shown=Math.min(rec.count,target);
+    const pct=Math.max(0,Math.min(100,(rec.count/target)*100));
+    const ready=!!(current&&rec.count>=target&&!claimed.has(target));
+    const label=`${shown.toLocaleString("es-ES")}/${target.toLocaleString("es-ES")}`;
     const rewardTitle=current?formatAccountMasteryMilestoneRewards(current):"";
     const claim=hvMasteryClaimHtml(slot,def.key,current?.target||0,rewardTitle,!ready);
     return hvVisualProgressHtml(slot,pct,label,`${def.key}Mastery`)+claim;
@@ -1351,9 +1355,9 @@ function renderTutorialMissions(){
   const tacticsRewarded=Math.min(tacticsTotal,getTacticsTutorialRewardedSteps().size||0);
   const tacticsPct=tacticsDone?100:(tacticsRewarded/tacticsTotal)*100;
   list.innerHTML=[
-    hvVisualProgressHtml("tutorial",basicPct,`${basicDone}/${basicTotal}`)+hvMissionActionHtml("tutorial","missionBasicBtn",basic?"Repetir":"Comenzar",false),
-    hvVisualProgressHtml("home",homePct,`${homeDone?1:0}/1`)+hvMissionActionHtml("home","missionHomeBtn",homeDone?"Revisar":homeAvailable?"Iniciar":"Bloqueado",!homeAvailable),
-    hvVisualProgressHtml("tactics",tacticsPct,`${tacticsDone?tacticsTotal:tacticsRewarded}/${tacticsTotal}`)+hvMissionActionHtml("tactics","missionTacticsBtn",tacticsDone?"Revisar":tacticsAvailable?"Iniciar":"Bloqueado",!tacticsAvailable)
+    hvMissionCompletedShadeHtml("tutorial",basic)+hvVisualProgressHtml("tutorial",basicPct,`${basicDone}/${basicTotal}`)+hvMissionActionHtml("tutorial","missionBasicBtn",basic?"Repetir":"Comenzar",false),
+    hvMissionCompletedShadeHtml("home",homeDone)+hvVisualProgressHtml("home",homePct,`${homeDone?1:0}/1`)+hvMissionActionHtml("home","missionHomeBtn",homeDone?"Revisar":homeAvailable?"Iniciar":"Bloqueado",!homeAvailable),
+    hvMissionCompletedShadeHtml("tactics",tacticsDone)+hvVisualProgressHtml("tactics",tacticsPct,`${tacticsDone?tacticsTotal:tacticsRewarded}/${tacticsTotal}`)+hvMissionActionHtml("tactics","missionTacticsBtn",tacticsDone?"Revisar":tacticsAvailable?"Iniciar":"Bloqueado",!tacticsAvailable)
   ].join("");
   const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};
   const h=$("missionHomeBtn");if(h&&!h.disabled)h.onclick=startHomeDeckTutorial;

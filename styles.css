@@ -26020,3 +26020,15 @@ html:has(#gameShell:not(.hidden)) body{
 #gameShell .battlefield .morale-pressure-hud.morale-advantage{color:#d9ffd7!important;border-color:rgba(112,224,138,.68)!important;background:rgba(11,48,22,.86)!important}
 #gameShell .battlefield .morale-pressure-hud.morale-neutralized{color:#d8e7ff!important;border-color:rgba(118,169,255,.62)!important;background:rgba(12,25,48,.86)!important}
 @media(max-width:980px){#gameShell .battlefield .morale-pressure-hud{top:96px!important;min-width:180px!important;font-size:9px!important;padding:5px 9px!important}}
+
+/* 20260910.24 · Misiones finitas / Maestrías perpetuas */
+.hv-mission-complete-shade{
+  position:absolute;z-index:1;pointer-events:none;border-radius:7px;
+  background:rgba(0,0,0,.78);
+  box-shadow:inset 0 0 22px rgba(0,0,0,.9);
+}
+.hv-mission-complete-shade--tutorial{left:5.7%;top:19.3%;width:28.3%;height:18.6%;}
+.hv-mission-complete-shade--home{left:35.2%;top:19.3%;width:28.3%;height:18.6%;}
+.hv-mission-complete-shade--tactics{left:64.8%;top:19.3%;width:28.3%;height:18.6%;}
+.hv-tutorial-visual-layer .hv-mission-progress,
+.hv-tutorial-visual-layer .hv-mission-progress-number{z-index:2;}
