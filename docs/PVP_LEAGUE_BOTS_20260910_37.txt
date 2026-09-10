@@ -1,0 +1,55 @@
+HALLVALLA — BOTS PvP POR LIGA
+Build 20260910.37
+
+OBJETIVO
+- Rellenar el matchmaking PvP de ligas cerradas cuando no haya otro jugador humano disponible de la misma liga.
+- Mantener prioridad para jugadores humanos antes de introducir un bot.
+
+LÍDERES PERMITIDOS PARA BOTS PvP
+- Guerrero (warrior)
+- Arquero (archer)
+- Caballería / Señor de la Carga (cavalry)
+- Hacha / Berserker / Caudillo del Hacha (axe)
+- Asesino / Maestro de Sombras (assassin)
+
+EXCLUIDOS COMO LÍDER PvP BOT
+- Hechicero / Mage
+- Beast Master / Señor de las Bestias
+- Cualquier líder especial no incluido expresamente en la lista anterior.
+
+VERSIÓN DEL LÍDER
+- Todos los bots usan el líder en Nivel XV.
+- Nivel XV = Tier 5.
+- Se usa la habilidad canónica de nivel 5 del líder correspondiente.
+
+VARIEDAD
+- 25 perfiles base: 5 por cada uno de los 5 líderes elegibles.
+- Los 25 perfiles existen en las 12 ligas, dando 300 combinaciones perfil/liga validadas.
+- Cada mazo respeta 23 cartas totales: 20 del mazo de robo + 3 Principales.
+- Límites normales: Básicas hasta 3 copias; no Básicas hasta 1 copia.
+
+MATCHMAKING
+- Las ligas permanecen cerradas: el bot siempre pertenece a la liga exacta del jugador.
+- Durante 9 segundos se prioriza encontrar un humano de la misma liga.
+- Si no aparece humano, se intenta crear un bot de esa misma liga.
+- Existe una comprobación final para no crear el bot si otro humano ya reclamó la partida.
+
+RAREZA POR LIGA
+- Piedra: Básicas.
+- Madera: Básicas.
+- Fuego: empieza Épica.
+- Hierro: más presencia Épica.
+- Acero/Plata: entran Gloriosas.
+- Oro/Platino: entran Míticas.
+- Obsidiana/Diamante: entran Legendarias.
+- Mítica/Valhalla: alta presencia Legendaria y Semidiós.
+
+RESULTADOS
+- Las partidas contra bot cuentan como PvP para el jugador humano: victoria +3, derrota -2, empate 0.
+- El bot no crea una fila propia en el ranking público.
+- Una partida bot PvP no concede recompensas ni avance de Aventura.
+- No se ofrece revancha directa contra el mismo bot al terminar.
+
+FIREBASE
+- Esta función no agrega nuevas ramas persistentes ni nuevos campos a matchmaking.
+- database.rules.json permanece sin cambios respecto a 20260910.36.

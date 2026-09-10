@@ -80,16 +80,20 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
       }
       return row;
     };
+    const isBotUid=value=>/^BOT_PVP_[A-Z0-9_:-]+$/i.test(String(value||""));
     for(const result of getResultList(raw)){
       if(String(result.schema||"")!==RESULT_SCHEMA)continue;
-      const p1=ensure(result.player1Uid,result.player1Name,result.endedAt);
-      const p2=ensure(result.player2Uid,result.player2Name,result.endedAt);
-      if(!p1||!p2||p1.uid===p2.uid)continue;
-      p1.games++;p2.games++;
+      const p1Uid=safeUid(result.player1Uid),p2Uid=safeUid(result.player2Uid);
+      if(!p1Uid||!p2Uid||p1Uid===p2Uid)continue;
+      const p1=isBotUid(p1Uid)?null:ensure(p1Uid,result.player1Name,result.endedAt);
+      const p2=isBotUid(p2Uid)?null:ensure(p2Uid,result.player2Name,result.endedAt);
+      if(!p1&&!p2)continue;
+      if(p1)p1.games++;
+      if(p2)p2.games++;
       const winner=Number(result.winnerRole||0);
-      if(winner===1){p1.wins++;p1.points+=3;p2.losses++;p2.points-=2;}
-      else if(winner===2){p2.wins++;p2.points+=3;p1.losses++;p1.points-=2;}
-      else{p1.draws++;p2.draws++;}
+      if(winner===1){if(p1){p1.wins++;p1.points+=3;}if(p2){p2.losses++;p2.points-=2;}}
+      else if(winner===2){if(p2){p2.wins++;p2.points+=3;}if(p1){p1.losses++;p1.points-=2;}}
+      else{if(p1)p1.draws++;if(p2)p2.draws++;}
     }
     const rows=[...players.values()].sort((a,b)=>
       (b.points-a.points)||
@@ -218,7 +222,8 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
 
   async function recordBattleResult(state,gameCode){
     try{
-      if(!state||String(state.mode||"")!=="online"||state.phase!=="ended"||state.battleEnded!==true)return false;
+      const rankedMode=String(state?.mode||"")==="online"||(String(state?.mode||"")==="adventure"&&state?.pvpBotMatch===true);
+      if(!state||!rankedMode||state.phase!=="ended"||state.battleEnded!==true)return false;
       const payload=buildResultPayload(state,gameCode);
       if(!payload)return false;
       const mine=getMyUid();
@@ -326,6 +331,74 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let onlineFlowMode="select";
   let randomAutoReadyTimer=null;
   let randomAutoReadyCode="";
+
+  /* PvP bots · relleno de ligas cerradas ----------------------------------
+     - Solo usan líderes PvP elegibles: Guerrero, Arquero, Caballería,
+       Caudillo del Hacha y Asesino.
+     - Todos los líderes bot juegan en Nivel XV (Tier 5) con su habilidad
+       canónica de Nivel 5.
+     - 25 perfiles base (5 por líder), disponibles en las 12 ligas.
+     - La rareza del mazo escala por liga; Piedra/Madera son básicas y los
+       rangos altos incorporan Épicas, Gloriosas, Míticas, Legendarias y
+       Semidiós de forma progresiva.
+  ------------------------------------------------------------------------- */
+  const PVP_BOT_FALLBACK_MS=9000;
+  const PVP_BOT_LEADER_LEVEL=15;
+  const PVP_BOT_ALLOWED_LEADERS=Object.freeze(["warrior","archer","cavalry","axe","assassin"]);
+  const PVP_BOT_LEAGUE_POLICIES=Object.freeze([
+    Object.freeze({key:"stone",maxRarity:0,rareSlots:0}),
+    Object.freeze({key:"wood",maxRarity:0,rareSlots:0}),
+    Object.freeze({key:"fire",maxRarity:1,rareSlots:1}),
+    Object.freeze({key:"iron",maxRarity:1,rareSlots:2}),
+    Object.freeze({key:"steel",maxRarity:2,rareSlots:3}),
+    Object.freeze({key:"silver",maxRarity:2,rareSlots:4}),
+    Object.freeze({key:"gold",maxRarity:3,rareSlots:5}),
+    Object.freeze({key:"platinum",maxRarity:3,rareSlots:6}),
+    Object.freeze({key:"obsidian",maxRarity:4,rareSlots:7}),
+    Object.freeze({key:"diamond",maxRarity:4,rareSlots:8}),
+    Object.freeze({key:"mythic",maxRarity:5,rareSlots:10}),
+    Object.freeze({key:"valhalla",maxRarity:5,rareSlots:12})
+  ]);
+  const PVP_BOT_RARE_PREFERENCES=Object.freeze({
+    warrior:Object.freeze(["richard_lionheart","boudica","joan_of_arc","leonidas","hector_troy","julius_caesar","beowulf","alexander_magnus","achilles","gilgamesh"]),
+    archer:Object.freeze(["simo_hayha","yi_sun_sin","nasu_no_yoichi","tomoe_gozen","sun_tzu","ulysses","genghis_khan","arjuna","alexander_magnus","hattori_hanzo"]),
+    cavalry:Object.freeze(["saladin","el_cid","hannibal_barca","attila_hun","khalid_ibn_al_walid","genghis_khan","subotai","alexander_magnus","achilles","gilgamesh"]),
+    axe:Object.freeze(["boudica","ragnar_lodbrok","lu_bu","beowulf","hector_troy","attila_hun","cu_chulainn","gilgamesh","alexander_magnus","julius_caesar"]),
+    assassin:Object.freeze(["fuma_kotaro","hattori_hanzo","miyamoto_musashi","simo_hayha","morgana","shadow_cut","false_crown","true_name_exile","broken_blood_oath","arjuna"])
+  });
+  const PVP_BOT_PROFILES=Object.freeze([
+    Object.freeze({id:"war_ironwall",name:"Hroald",leaderType:"warrior",style:"defense",signature:["guardian","greek_hoplite","roman_legionary","armored_man_at_arms","shield_wall","heal"]}),
+    Object.freeze({id:"war_vanguard",name:"Torsten",leaderType:"warrior",style:"pressure",signature:["samurai_katana","berserker_de_oso","cavalry","inspiration","fireball","roman_legionary"]}),
+    Object.freeze({id:"war_pike",name:"Einar",leaderType:"warrior",style:"control",signature:["spearman","greek_hoplite","guardian","warning_rune","paralysis_spell","new_kingdom_archer"]}),
+    Object.freeze({id:"war_kingsguard",name:"Sigrun",leaderType:"warrior",style:"defense",signature:["armored_man_at_arms","guardia_varega_hacha","huscarl_anglosajon_hacha","war_visor","heal","shield_wall"]}),
+    Object.freeze({id:"war_lionbanner",name:"Bjorn",leaderType:"warrior",style:"balanced",signature:["guardian","samurai_naginata","roman_legionary","new_kingdom_archer","marching_greaves","inspiration"]}),
+
+    Object.freeze({id:"arc_desert",name:"Astrid",leaderType:"archer",style:"pressure",signature:["archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","bolt","inspiration"]}),
+    Object.freeze({id:"arc_steppe",name:"Runa",leaderType:"archer",style:"mobility",signature:["scythian_horse_archer","mongol_explorer","numidian_javelin_rider","archer","retreat_strap","skirmisher_cloak"]}),
+    Object.freeze({id:"arc_suppression",name:"Eydis",leaderType:"archer",style:"control",signature:["new_kingdom_archer","roman_auxiliary_sagittarius","warning_rune","paralysis_spell","fireball","shield_wall"]}),
+    Object.freeze({id:"arc_skirmish",name:"Skadi",leaderType:"archer",style:"mobility",signature:["archer","scout","cossack_rider","skirmisher_cloak","retreat_strap","smoke_bomb"]}),
+    Object.freeze({id:"arc_eagle",name:"Yrsa",leaderType:"archer",style:"balanced",signature:["roman_auxiliary_sagittarius","samurai_yabusame","new_kingdom_archer","archer","bolt","heal"]}),
+
+    Object.freeze({id:"cav_charge",name:"Leif",leaderType:"cavalry",style:"pressure",signature:["cavalry","hungarian_hussar","cossack_rider","numidian_javelin_rider","inspiration","light_barding"]}),
+    Object.freeze({id:"cav_steppe",name:"Sten",leaderType:"cavalry",style:"mobility",signature:["scythian_horse_archer","mongol_explorer","cossack_rider","cavalry","retreat_strap","withdrawal_stirrups"]}),
+    Object.freeze({id:"cav_hussar",name:"Halvar",leaderType:"cavalry",style:"balanced",signature:["hungarian_hussar","cavalry","withdrawal_stirrups","light_barding","inspiration","heal"]}),
+    Object.freeze({id:"cav_horsearcher",name:"Freydis",leaderType:"cavalry",style:"control",signature:["scythian_horse_archer","samurai_yabusame","mongol_explorer","numidian_javelin_rider","retreat_strap","warning_rune"]}),
+    Object.freeze({id:"cav_raider",name:"Knut",leaderType:"cavalry",style:"pressure",signature:["cossack_rider","numidian_javelin_rider","skipar_del_drakkar","cavalry","fireball","inspiration"]}),
+
+    Object.freeze({id:"axe_berserk",name:"Gunnar",leaderType:"axe",style:"pressure",signature:["berserker","berserker_de_oso","ulfhednar","gallowglass_irlandes_hacha","inspiration","fireball"]}),
+    Object.freeze({id:"axe_varangian",name:"Ulf",leaderType:"axe",style:"defense",signature:["guardia_varega_hacha","huscarl_anglosajon_hacha","caballero_poleaxe","guardian","shield_wall","heal"]}),
+    Object.freeze({id:"axe_thrower",name:"Ragnvald",leaderType:"axe",style:"control",signature:["guerrero_franco_hacha","ulfhednar","new_kingdom_archer","warning_rune","paralysis_spell","bolt"]}),
+    Object.freeze({id:"axe_breaker",name:"Viggo",leaderType:"axe",style:"pressure",signature:["berserker","gallowglass_irlandes_hacha","caballero_poleaxe","berserker_de_oso","fireball","inspiration"]}),
+    Object.freeze({id:"axe_drakkar",name:"Hakon",leaderType:"axe",style:"balanced",signature:["skipar_del_drakkar","ulfhednar","huscarl_anglosajon_hacha","samurai_katana","guardian","heal"]}),
+
+    Object.freeze({id:"asn_iga",name:"Svala",leaderType:"assassin",style:"pressure",signature:["saboteador_iga","geisha_encubierta","samurai_katana","scout","smoke_bomb","inspiration"]}),
+    Object.freeze({id:"asn_shadow",name:"Kaisa",leaderType:"assassin",style:"control",signature:["scout","saboteador_iga","smoke_bomb","paralysis_spell","poison_spell","warning_rune"]}),
+    Object.freeze({id:"asn_execution",name:"Varek",leaderType:"assassin",style:"pressure",signature:["samurai_katana","executioner_mantle","rupture_bracers","saboteador_iga","berserker","fireball"]}),
+    Object.freeze({id:"asn_silentarrow",name:"Nott",leaderType:"assassin",style:"mobility",signature:["scout","archer","geisha_encubierta","smoke_bomb","new_kingdom_archer","skirmisher_cloak"]}),
+    Object.freeze({id:"asn_bloodmist",name:"Fenja",leaderType:"assassin",style:"balanced",signature:["saboteador_iga","geisha_encubierta","samurai_katana","fireball","inspiration","rupture_bracers"]})
+  ]);
+  let pvpBotFallbackInFlight=false;
+  let activePvpBotProfile=null;
 
   function clearRematchWait(){
     rematchWaitActive=false;
@@ -727,6 +800,168 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     for(const fn of resolvers){ try{ if(typeof globalThis[fn]==="function"){ const hit=globalThis[fn](wanted); if(hit) return hit; } }catch(_){ } }
     return {key:wanted,name:wanted.replace(/_/g," ").replace(/\b\w/g,m=>m.toUpperCase()),cost:0};
   }
+  function pvpBotRarityRank(card){
+    let rarity="basic";
+    try{ if(typeof getCraftRarityKey==="function") rarity=String(getCraftRarityKey(card)||"basic"); }catch(_){ }
+    return ({basic:0,epic:1,glorious:2,mythic:3,legendary:4,demigod:5,astral:6})[rarity]??0;
+  }
+  function pvpBotRarityLabel(rank){return ["Básica","Épica","Gloriosa","Mítica","Legendaria","Semidiós","Astral"][Math.max(0,Math.min(6,Number(rank)||0))]||"Básica";}
+  function getPvpBotLeaguePolicy(leagueKey="stone"){
+    return PVP_BOT_LEAGUE_POLICIES.find(item=>item.key===String(leagueKey||""))||PVP_BOT_LEAGUE_POLICIES[0];
+  }
+  function getPvpBotCatalog(){
+    const pools=[];
+    try{ if(Array.isArray(CARD_TEMPLATES))pools.push(CARD_TEMPLATES); }catch(_){ }
+    try{ if(Array.isArray(EQUIPMENT_CARD_TEMPLATES))pools.push(EQUIPMENT_CARD_TEMPLATES); }catch(_){ }
+    try{ if(Array.isArray(BASIC_MAGIC_TRAP_PACK))pools.push(BASIC_MAGIC_TRAP_PACK); }catch(_){ }
+    try{ if(Array.isArray(IMPROVED_MAGIC_TRAP_PACK))pools.push(IMPROVED_MAGIC_TRAP_PACK); }catch(_){ }
+    try{ if(Array.isArray(LEGENDARY_TRAP_CARDS))pools.push(LEGENDARY_TRAP_CARDS); }catch(_){ }
+    try{ if(typeof ADVENTURE_SPECIALS==="object"&&ADVENTURE_SPECIALS)pools.push(Object.values(ADVENTURE_SPECIALS)); }catch(_){ }
+    try{ if(Array.isArray(LEGENDARY_ALLY_CARDS))pools.push(LEGENDARY_ALLY_CARDS.filter(Boolean)); }catch(_){ }
+    const byKey=new Map();
+    for(const pool of pools){
+      for(const card of pool||[]){
+        const key=String(card?.key||"").trim();
+        if(key&&!byKey.has(key))byKey.set(key,card);
+      }
+    }
+    return [...byKey.values()];
+  }
+  function pvpBotCardAllowed(card,leaderType,policy){
+    if(!card||!String(card.key||"").trim())return false;
+    if(card.token||card.dragonCompanion||card.dragonEgg||card.personalCharacter||card.beast)return false;
+    const type=String(card.type||"");
+    if(!["unit","spell","trap","equipment"].includes(type))return false;
+    if(pvpBotRarityRank(card)>Number(policy?.maxRarity||0))return false;
+    if(type==="equipment"){
+      try{ if(typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(card,leaderType))return false; }catch(_){ }
+    }
+    return true;
+  }
+  function pvpBotCardCopies(card){
+    try{ if(typeof maxCopiesForCard==="function")return Math.max(1,Number(maxCopiesForCard(card))||1); }catch(_){ }
+    return pvpBotRarityRank(card)===0?3:1;
+  }
+  function pvpBotStyleScore(card,profile){
+    const style=String(profile?.style||"balanced");
+    const type=String(card?.type||"");
+    const atk=Number(card?.atk||0),guard=Number(card?.guard||0),hp=Number(card?.hp||0),dex=Number(card?.dex||0),agi=Number(card?.agi||0),mov=Number(card?.mov||0),range=Number(card?.range||0),cost=Number(card?.cost||0);
+    let score=0;
+    if(type==="unit")score+=42+atk*4+guard*2.4+hp*3+dex*1.7+agi*1.5+mov*4+range*4-cost*2;
+    if(type==="spell")score+=30+Number(card?.damage||0)*8+Number(card?.buff||0)*5+Number(card?.guard||0)*4-cost*1.5;
+    if(type==="trap")score+=34+Number(card?.guard||0)*4+Number(card?.slow||0)*5-cost;
+    if(type==="equipment")score+=32-cost;
+    if(style==="pressure")score+=atk*6+dex*2.5+mov*3+(type==="spell"&&card?.spell==="damage"?28:0)+(type==="unit"?8:0)-guard*.4;
+    else if(style==="defense")score+=guard*5+hp*4+(card?.spell==="heal"?32:0)+(card?.spell==="shield"?26:0)+(type==="trap"?10:0);
+    else if(style==="control")score+=(type==="trap"?28:0)+(card?.spell==="paralysis"||card?.trap==="slow"?32:0)+range*5+dex*1.5;
+    else if(style==="mobility")score+=mov*9+agi*4+range*3+(Array.isArray(card?.leaderBuffGroups)&&card.leaderBuffGroups.includes("cavalry")?20:0);
+    else score+=atk*2+guard*2+hp*2+dex+agi+mov*2+range*2;
+    const key=String(card?.key||"");
+    const sig=(profile?.signature||[]).indexOf(key);
+    if(sig>=0)score+=155-sig*7;
+    const rarePref=(PVP_BOT_RARE_PREFERENCES[profile?.leaderType]||[]).indexOf(key);
+    if(rarePref>=0)score+=120-rarePref*5;
+    const groups=Array.isArray(card?.leaderBuffGroups)?card.leaderBuffGroups:[];
+    const leaderGroup=profile?.leaderType==="warrior"?"warrior":profile?.leaderType==="archer"?"archer":profile?.leaderType==="cavalry"?"cavalry":profile?.leaderType==="axe"?"axe":profile?.leaderType==="assassin"?"assassin":"";
+    if(leaderGroup&&groups.includes(leaderGroup))score+=58;
+    if(profile?.leaderType==="archer"&&type==="unit"&&range>=2)score+=28;
+    if(profile?.leaderType==="cavalry"&&type==="unit"&&mov>=3)score+=30;
+    if(profile?.leaderType==="axe"&&(/berserker|hacha|ulfhednar|poleaxe|varega|huscarl|gallowglass/.test(key)))score+=34;
+    if(profile?.leaderType==="assassin"&&(card?.stealth||card?.ninjutsu||/saboteador|geisha|hanzo|kotaro|shadow|executioner|rupture/.test(key)))score+=38;
+    return score;
+  }
+  function pvpBotNoise(seed,key){return (hashText6c(`${seed}|${key}`)%10000)/10000;}
+  function buildPvpBotDeck(profile,league){
+    const policy=getPvpBotLeaguePolicy(league?.key||league||"stone");
+    const seed=`${profile.id}|${policy.key}|${profile.leaderType}`;
+    const catalog=getPvpBotCatalog().filter(card=>pvpBotCardAllowed(card,profile.leaderType,policy));
+    const scored=catalog.map(card=>({card,rank:pvpBotRarityRank(card),score:pvpBotStyleScore(card,profile)+pvpBotNoise(seed,card.key)*17}));
+    const rare=scored.filter(x=>x.rank>0).sort((a,b)=>(b.rank-a.rank)||(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
+    const basics=scored.filter(x=>x.rank===0).sort((a,b)=>(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
+    const selected=[];
+    const counts=new Map();
+    const add=(card)=>{
+      if(!card)return false;
+      const key=String(card.key||"");
+      const next=(counts.get(key)||0)+1;
+      if(next>pvpBotCardCopies(card))return false;
+      counts.set(key,next);selected.push(card);return true;
+    };
+
+    let rareLeft=Math.max(0,Math.min(18,Number(policy.rareSlots||0)));
+    // En cada liga que habilita una nueva rareza se garantiza al menos una carta
+    // del techo de esa liga, y después se completa por valor táctico.
+    for(let rank=Number(policy.maxRarity||0);rank>=1&&rareLeft>0;rank--){
+      const candidate=rare.find(x=>x.rank===rank&&!counts.has(String(x.card.key||"")));
+      if(candidate&&add(candidate.card))rareLeft--;
+    }
+    for(const entry of rare){
+      if(rareLeft<=0)break;
+      if(counts.has(String(entry.card.key||"")))continue;
+      if(add(entry.card))rareLeft--;
+    }
+
+    // El resto del mazo usa Básicas. Se permiten hasta 3 copias, tal como el
+    // constructor normal, y las preferencias de cada perfil cambian la composición.
+    for(let copyRound=0;selected.length<23&&copyRound<3;copyRound++){
+      for(const entry of basics){
+        if(selected.length>=23)break;
+        if((counts.get(entry.card.key)||0)!==copyRound)continue;
+        add(entry.card);
+      }
+    }
+    if(selected.length<23){
+      const fallback=[];
+      try{ fallback.push(...getLeaderStarterFixedDeckTemplates(profile.leaderType)); }catch(_){ }
+      for(const card of fallback){if(selected.length>=23)break;add(card);}
+    }
+    if(selected.length!==23)throw new Error(`Bot ${profile.id}: mazo incompleto ${selected.length}/23.`);
+
+    const uniqueUnits=[...new Map(selected.filter(card=>card?.type==="unit").map(card=>[card.key,card])).values()]
+      .sort((a,b)=>(pvpBotStyleScore(b,profile)+pvpBotRarityRank(b)*28)-(pvpBotStyleScore(a,profile)+pvpBotRarityRank(a)*28));
+    if(uniqueUnits.length<3)throw new Error(`Bot ${profile.id}: necesita al menos 3 unidades distintas para Principales.`);
+    const principalKeys=uniqueUnits.slice(0,3).map(card=>String(card.key));
+    const keyCounts=[];
+    for(const [key,count] of counts.entries())keyCounts.push([key,count]);
+    const rarityCounts={basic:0,epic:0,glorious:0,mythic:0,legendary:0,demigod:0};
+    const rarityKeys=["basic","epic","glorious","mythic","legendary","demigod"];
+    for(const card of selected){
+      const r=Math.max(0,Math.min(5,pvpBotRarityRank(card)));
+      rarityCounts[rarityKeys[r]]++;
+    }
+    return {keys:selected.map(card=>String(card.key)),keyCounts,principalKeys,rarityCounts,policy};
+  }
+  function selectPvpBotProfile(leagueKey="stone"){
+    const candidates=PVP_BOT_PROFILES.filter(profile=>PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType));
+    if(!candidates.length)throw new Error("No existen perfiles PvP bot elegibles.");
+    let recent=[];
+    try{recent=JSON.parse(localStorage.getItem(`hallvalla_pvp_bot_recent_${leagueKey}_v1`)||"[]");if(!Array.isArray(recent))recent=[];}catch(_){recent=[];}
+    const available=candidates.filter(profile=>!recent.slice(-4).includes(profile.id));
+    const pool=available.length?available:candidates;
+    const picked=pool[Math.floor(Math.random()*pool.length)]||candidates[0];
+    try{localStorage.setItem(`hallvalla_pvp_bot_recent_${leagueKey}_v1`,JSON.stringify([...recent,picked.id].slice(-4)));}catch(_){ }
+    return picked;
+  }
+  function getPvpBotPublicName(profile){return `${String(profile?.name||"Guerrero")} · BOT`;}
+  function getPvpBotUid(profile,leagueKey){return `BOT_PVP_${String(leagueKey||"stone").toUpperCase()}_${String(profile?.id||"bot").toUpperCase()}`.replace(/[^A-Z0-9_:-]/g,"_");}
+  function auditPvpBotDefinitions(){
+    const errors=[];
+    if(PVP_BOT_PROFILES.length<20)errors.push(`Solo existen ${PVP_BOT_PROFILES.length} perfiles bot.`);
+    for(const profile of PVP_BOT_PROFILES){
+      if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))errors.push(`${profile.id}: líder no permitido ${profile.leaderType}.`);
+      for(const league of (globalThis.HALLVALLA_PVP_LEAGUES||[])){
+        try{
+          const deck=buildPvpBotDeck(profile,league);
+          if(deck.keys.length!==23)errors.push(`${profile.id}/${league.key}: ${deck.keys.length}/23.`);
+          if(deck.principalKeys.length!==3)errors.push(`${profile.id}/${league.key}: ${deck.principalKeys.length}/3 principales.`);
+          if(deck.keys.some(key=>!getPvpBotCatalog().some(card=>String(card?.key||"")===key)))errors.push(`${profile.id}/${league.key}: carta sin catálogo.`);
+        }catch(error){errors.push(`${profile.id}/${league.key}: ${error?.message||error}`);}
+      }
+    }
+    return {valid:errors.length===0,profiles:PVP_BOT_PROFILES.length,leagues:(globalThis.HALLVALLA_PVP_LEAGUES||[]).length,combinations:PVP_BOT_PROFILES.length*(globalThis.HALLVALLA_PVP_LEAGUES||[]).length,errors};
+  }
+  globalThis.hvPvpBotAudit=auditPvpBotDefinitions;
+
   function getCardPortrait6c(card){
     try{ if(card?.portrait) return String(card.portrait); }catch(_){ }
     try{ if(typeof getResolvedCardPortraitSource==="function") return String(getResolvedCardPortraitSource(card)||""); }catch(_){ }
@@ -2049,7 +2284,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    clearRematchWait(); clearRandomAutoReady(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    clearRematchWait(); clearRandomAutoReady(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -2155,6 +2390,201 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
     return false;
   }
+  async function startPvpBotFallback(){
+    if(pvpBotFallbackInFlight||!randomMatchSearching||busy||activeRole!==1||!activeCode)return false;
+    const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
+    const code=normalizeCode(activeCode||"");
+    if(!myUid||code.length!==8)return false;
+    const league=randomLeagueSnapshot||await resolveMyRandomLeague();
+    const leagueKey=String(league?.key||"stone");
+    const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
+    pvpBotFallbackInFlight=true;
+    let selfClaimed=false;
+    let botTransitionStarted=false;
+    try{
+      // Bloquea nuestra propia entrada antes de crear el BOT. Si otro humano ya
+      // la reclamó, el BOT no entra y se conserva la prioridad del jugador real.
+      const claimAt=Date.now();
+      const claim=await withTimeout(runTransaction(ownQueueRef,current=>{
+        if(!current||String(current.uid||"")!==myUid)return;
+        if(String(current.leagueKey||"")!==leagueKey)return;
+        if(String(current.claimedBy||""))return;
+        return Object.assign({},current,{claimedBy:myUid,claimedAt:claimAt});
+      }),`Reservar fallback BOT ${code}`,6000);
+      if(!claim?.committed)return false;
+      selfClaimed=true;
+
+      const publicRef=ref(db,`games/${code}/public`);
+      const waitingSnap=await withTimeout(get(publicRef),`Confirmar sala antes del BOT ${code}`,5000);
+      if(!waitingSnap.exists())return false;
+      const waiting=waitingSnap.val()||{};
+      if(String(waiting?.playerSlots?.player1Uid||"")!==myUid||String(waiting?.phase||"")!=="waiting"||String(waiting?.playerSlots?.player2Uid||""))return false;
+
+      if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pve");
+      if(typeof adventureEnemyTurn!=="function")throw new Error("La IA táctica no está disponible para el BOT PvP.");
+      if(typeof makeLeader!=="function"||typeof makeStartingPrincipalUnits!=="function"||typeof applyStartingPrincipalEntryEffects!=="function")throw new Error("El motor real de HallValla no está listo para crear el BOT PvP.");
+
+      const profile=selectPvpBotProfile(leagueKey);
+      if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
+      const botDeck=buildPvpBotDeck(profile,league);
+      const botUid=getPvpBotUid(profile,leagueKey);
+      const botName=getPvpBotPublicName(profile);
+      const botAbility=String((typeof getLeaderDefaultLevel5Ability==="function"&&getLeaderDefaultLevel5Ability(profile.leaderType))||"");
+
+      const ownPrivateRef=ref(db,`games/${code}/private/player1`);
+      const ownSnap=await withTimeout(get(ownPrivateRef),`Leer mazo privado antes del BOT ${code}`,5000);
+      if(!ownSnap.exists())throw new Error("No se encontró el mazo privado del jugador.");
+      const ownPayload=ownSnap.val()||{};
+      if(!validateOwnPrivateSnapshot(ownPayload,myUid,1))throw new Error("El mazo privado del jugador dejó de ser válido.");
+      const humanBuilt=buildRealPrivateState6e(ownPayload,code,1);
+      const human=humanBuilt.enginePrivate;
+
+      const allBotCards=botDeck.keys.map(key=>buildRealCard6e(key,2,profile.leaderType));
+      const botPrincipalPrep=extractPrincipalCardsFromDeck(allBotCards,botDeck.principalKeys,3);
+      if(botPrincipalPrep.principalCards.length!==3||botPrincipalPrep.deck.length!==20)throw new Error(`Mazo BOT inválido: ${botPrincipalPrep.deck.length} de robo + ${botPrincipalPrep.principalCards.length} Principales.`);
+      const shuffledBotDeck=seededShuffle6c(botPrincipalPrep.deck,`${code}|BOT|${profile.id}|${leagueKey}`);
+      const botDraw=drawCards(shuffledBotDeck,[],STEP6C_INITIAL_HAND);
+
+      const requestedHumanPrincipalKeys=uniqueStrings(normalizeFirebaseArray(human.principalKeys).map(v=>String(v||"").trim()).filter(Boolean)).slice(0,3);
+      const humanPrincipalCards=requestedHumanPrincipalKeys.map(key=>buildRealCard6e(key,1,human.leaderType)).filter(card=>card?.type==="unit");
+      const humanPrincipalKeys=humanPrincipalCards.map(card=>String(card.key||"")).filter(Boolean);
+      const botPrincipalCards=botPrincipalPrep.principalCards;
+      const rows=typeof ROWS!=="undefined"?Number(ROWS):7;
+      const cols=typeof COLS!=="undefined"?Number(COLS):5;
+      let units=[
+        makeLeader(1,Math.floor(cols/2),rows-1,human.leaderType,human.leaderLevel,human.leaderAbility),
+        makeLeader(2,Math.floor(cols/2),0,profile.leaderType,PVP_BOT_LEADER_LEVEL,botAbility)
+      ];
+      if(humanPrincipalCards.length)units.push(...makeStartingPrincipalUnits(humanPrincipalCards,1,human.leaderType,units,humanPrincipalCards.length));
+      units.push(...makeStartingPrincipalUnits(botPrincipalCards,2,profile.leaderType,units,3));
+      let entryEffects=applyStartingPrincipalEntryEffects(units)||{units,logs:[],statusFxEvent:null,floatFxEvent:null};
+      units=entryEffects.units||units;
+      const p1Leader=units.find(u=>u?.owner===1&&u?.leader);
+      const p2Leader=units.find(u=>u?.owner===2&&u?.leader);
+      const startingRole=Math.random()<0.5?1:2;
+      const duelLimit=typeof DUEL_TIME_LIMIT_MS!=="undefined"?Number(DUEL_TIME_LIMIT_MS):600000;
+      const clockVersion=typeof CLOCK_RULESET_VERSION!=="undefined"?CLOCK_RULESET_VERSION:1;
+      const rarityCap=pvpBotRarityLabel(botDeck.policy.maxRarity);
+      const publicShowcase={
+        1:buildPublicShowcase(ownPayload),
+        2:{leaderType:profile.leaderType,principalKeys:botPrincipalPrep.principalKeys}
+      };
+      const pub={
+        schema:"hallvalla-pvp-bot-v1",
+        code,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
+        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
+        pvpBotStyle:String(profile.style||"balanced"),pvpBotRarityCap:rarityCap,pvpBotRarityCounts:botDeck.rarityCounts,
+        adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,
+        adventureEnemyName:botName,
+        adventureAdaptiveCampaign:false,adventureAdaptiveLearning:false,adventureAdaptiveMage:false,
+        adventureAiLevel:typeof ADVENTURE_AI_BEST_SKILL_LEVEL!=="undefined"?ADVENTURE_AI_BEST_SKILL_LEVEL:5,
+        adventureAiDrawBonus:0,adventureAiHonorBonus:0,
+        adventureAiStyle:`BOT PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")}`,
+        adventureEnemyUnitMasteryRank:0,
+        adventurePrincipalKeys:{1:humanPrincipalKeys,2:botPrincipalPrep.principalKeys},
+        principalSlots:{1:humanPrincipalKeys.length,2:3},
+        pvpPrincipalKeys:{1:humanPrincipalKeys,2:botPrincipalPrep.principalKeys},
+        adventureAiState:{deck:botDraw.deck,hand:botDraw.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:3,principalKeys:botPrincipalPrep.principalKeys,principalKey:botPrincipalPrep.principalKeys[0]||""},
+        createdAt:Date.now(),currentPlayer:startingRole,turn:1,phase:"active",turnPhase:"draw",turnKey:`1-${startingRole}`,turnStartedAt:Date.now(),
+        clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
+        playerSlots:{player1Uid:myUid,player2Uid:botUid},
+        playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:PVP_BOT_LEADER_LEVEL},
+        playerShowcase:publicShowcase,playerPrepared:{1:true,2:true},lobbyReady:{1:true,2:true},
+        playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:PVP_BOT_LEADER_LEVEL},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
+        settings:buildDefaultRules(),matchSettings:{timerEnabled:false,stakeMode:"none",goldAmount:500,cardEntryFee:500,economyState:"not_required"},
+        playerStats:{
+          1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:human.deck.length,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
+          2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:botDraw.deck.length,hand:botDraw.hand.length,hasHiddenUnits:countHiddenKeys6e([...botDraw.deck,...botDraw.hand].map(card=>card?.key||""))>0}
+        },
+        erictoGraveyard:[],moralePressure:{1:0,2:0},units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
+        battleEnded:false,winner:0,loser:0,
+        log:[
+          `PvP de Liga ${String(league?.name||"Piedra")}: ${botName} cubre la plaza mientras no hay otro jugador disponible.`,
+          `${botName}: ${profile.leaderType} Nivel XV · Tier 5 · mazo con techo ${rarityCap}.`,
+          `El resultado cuenta para tus puntos PvP; el BOT no ocupa puestos del ranking.`,
+          ...(entryEffects.logs||[])
+        ].slice(0,18)
+      };
+      const privatePatch={
+        combat6c:humanBuilt.combat6c,
+        engine6e:{schema:"hallvalla-pvp-bot-private-v1",ready:true,preparedAt:Date.now()},
+        leaderType:human.leaderType,leaderLevel:human.leaderLevel,leaderAbility:human.leaderAbility,
+        deck:human.deck,hand:human.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,
+        principalSlots:humanPrincipalKeys.length,principalKeys:humanPrincipalKeys,principalKey:humanPrincipalKeys[0]||""
+      };
+
+      // Última comprobación de carrera: un jugador humano siempre tiene prioridad.
+      if(!randomMatchSearching||activeRole!==1||activeCode!==code)return false;
+      const finalWaitingSnap=await withTimeout(get(publicRef),`Revalidar plaza humana antes del BOT ${code}`,4000);
+      const finalWaiting=finalWaitingSnap.exists()?(finalWaitingSnap.val()||{}):null;
+      if(!finalWaiting||String(finalWaiting?.playerSlots?.player1Uid||"")!==myUid||String(finalWaiting?.phase||"")!=="waiting"||String(finalWaiting?.playerSlots?.player2Uid||""))return false;
+
+      // A partir de aquí ya no permitimos que otro humano tome la sala antigua.
+      botTransitionStarted=true;
+      clearRandomMatchTimer();
+      randomMatchSearching=false;
+      try{await randomQueueDisconnect?.cancel?.();}catch(_){ }
+      randomQueueDisconnect=null;
+      await withTimeout(remove(ownQueueRef),`Cerrar cola antes del BOT ${code}`,4000);
+      randomOwnCreatedAt=0;
+      detachRoomListener();detachOwnPrivateListener();
+      await withTimeout(remove(publicRef),`Cerrar sala de espera antes del BOT ${code}`,5000);
+
+      renderRandomMatchmakingUi({playerShowcase:publicShowcase,playerSlots:pub.playerSlots});
+      setText("pvpRoomMessage",`${botName} encontrado · Liga ${String(league?.name||"Piedra")} · líder Nivel XV.`);
+      if(typeof globalThis.showHallvallaPreBattleVs==="function"){
+        await globalThis.showHallvallaPreBattleVs(pub,{key:`pvpbot:${code}`,leftOwner:1,rightOwner:2});
+      }
+
+      const networkPub={...pub,turnStartedAt:serverTimestamp()};
+      await withTimeout(set(publicRef,networkPub),`Crear duelo BOT PvP ${code}`,7000);
+      await withTimeout(update(ownPrivateRef,privatePatch),`Preparar privado humano contra BOT ${code}`,6000);
+      const confirm=await withTimeout(get(publicRef),`Confirmar duelo BOT PvP ${code}`,5000);
+      if(!confirm.exists()||confirm.val()?.pvpBotMatch!==true||String(confirm.val()?.playerSlots?.player2Uid||"")!==botUid)throw new Error("Firebase no confirmó el duelo contra BOT.");
+
+      activePvpBotProfile={...profile,leagueKey,leagueName:String(league?.name||"Piedra"),botUid,rarityCap};
+      roomCache=confirm.val()||networkPub;
+      randomLeagueSnapshot=league;
+      globalThis.hideHallvallaPreBattleVs?.();
+      $("onlineLobby")?.classList.add("hidden");
+      $("mainMenu")?.classList.add("hidden");
+      if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
+      enterGame(code,1);
+      mark(`BOT PvP listo · ${botName} · Liga ${String(league?.name||"Piedra")} · ${profile.leaderType} XV · ${rarityCap}.`);
+      return true;
+    }catch(error){
+      console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);
+      globalThis.hideHallvallaPreBattleVs?.();
+      // Si todavía estamos en la sala de espera, liberamos el auto-claim para
+      // que el matchmaking humano pueda continuar en el siguiente escaneo.
+      if(selfClaimed&&randomMatchSearching){
+        try{await runTransaction(ownQueueRef,current=>{
+          if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
+          return Object.assign({},current,{claimedBy:"",claimedAt:0});
+        });}catch(_){ }
+      }else if(!randomMatchSearching){
+        try{await remove(ref(db,`games/${code}/public`));}catch(_){ }
+        try{await removeOwnPrivateBranch(code,1,myUid);}catch(_){ }
+        resetUi({resetJoin:false});
+        setOnlineFlowMode("random");
+        $("mainMenu")?.classList.add("hidden");
+        $("onlineLobby")?.classList.remove("hidden");
+        renderMatchmakingLeague(league);
+      }
+      mark(`No se pudo iniciar BOT PvP: ${error?.message||error}`);
+      return false;
+    }finally{
+      if(selfClaimed&&!botTransitionStarted&&randomMatchSearching){
+        try{await runTransaction(ownQueueRef,current=>{
+          if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
+          return Object.assign({},current,{claimedBy:"",claimedAt:0});
+        });}catch(_){ }
+      }
+      pvpBotFallbackInFlight=false;
+      syncLocalButtons();
+    }
+  }
+
   async function scanRandomQueue(){
     if(!randomMatchSearching||busy)return false;
     const myUid=String(auth?.currentUser?.uid||"");
@@ -2179,6 +2609,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}catch(_){claimed=null;}
       if(!claimed)continue;
       if(await randomJoinClaimedEntry(claimed))return true;
+    }
+    if(randomMatchSearching&&activeRole===1&&randomOwnCreatedAt&&Date.now()-randomOwnCreatedAt>=PVP_BOT_FALLBACK_MS){
+      if(await startPvpBotFallback())return true;
     }
     return false;
   }

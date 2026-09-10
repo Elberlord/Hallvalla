@@ -6253,8 +6253,12 @@ async function adventureEnemyTurn(){
   const outcome=getBattleOutcome(units);
   const nextAiState={deck,hand,honor:capResourceAmount(honor,maxHonor),maxHonor:capResourceMax(maxHonor),focusTargetId:aiFocusTargetId||"",lastTurnStarted:pub.turnKey,skipFirstTurnDraw:false};
   if(outcome.ended){
-    const finalLogs=[...logs,outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`,...(pub.log||[])].slice(0,18);
-    recordLocalLeaderBattleOutcome(outcome,pub.mode||"adventure");
+    const pvpBot=pub?.pvpBotMatch===true;
+    const outcomeText=pvpBot
+      ?(outcome.winner===2?`Derrota PvP contra ${pub.adventureEnemyName||"BOT"}.`:(outcome.winner===1?`Victoria PvP contra ${pub.adventureEnemyName||"BOT"}.`:`Empate PvP contra ${pub.adventureEnemyName||"BOT"}.`))
+      :(outcome.winner===2?`Has caído en ${pub.adventureBattleTitle||"la batalla"}.`:`Has ganado ${pub.adventureBattleTitle||"la batalla"}.`);
+    const finalLogs=[...logs,outcomeText,...(pub.log||[])].slice(0,18);
+    recordLocalLeaderBattleOutcome(outcome,pvpBot?"pvp_bot":(pub.mode||"adventure"));
     if(!aiLifecycleAlive())return;
     await update(ref(db,`games/${aiGameId}/public`),{
       units,

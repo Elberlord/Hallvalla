@@ -504,7 +504,7 @@ function getBattleOutcomeSplashElement(){
       }
       else if(action==="home"){
         const onlineHome=globalThis.hvPvpBattleResultHome;
-        if(publicState?.mode==="online"&&typeof onlineHome==="function")void onlineHome();
+        if((publicState?.mode==="online"||publicState?.pvpBotMatch===true)&&typeof onlineHome==="function")void onlineHome();
         else backToMainMenu();
       }
     });
@@ -574,7 +574,7 @@ function hideBattleOutcomeSplash(immediate=false){
   }
   if(immediate)overlay.remove();
 }
-function showBattleOutcomeSplash(result,{adventure=false,online=false}={}){
+function showBattleOutcomeSplash(result,{adventure=false,online=false,botPvp=false}={}){
   const overlay=getBattleOutcomeSplashElement();
   const img=overlay.querySelector(".battle-outcome-splash-art");
   const drawText=overlay.querySelector(".battle-outcome-draw-text");
@@ -612,7 +612,7 @@ function showBattleOutcomeSplash(result,{adventure=false,online=false}={}){
     const rematchBtn=actions.querySelector('[data-battle-outcome-action="rematch"]');
     if(mapBtn)mapBtn.hidden=!adventure||result!=="victory";
     if(retryBtn)retryBtn.hidden=!adventure||result==="victory";
-    if(rematchBtn)rematchBtn.hidden=!online;
+    if(rematchBtn)rematchBtn.hidden=!online||botPvp;
     if(adventure)renderBattleOutcomeRewards(result,adventure);
     actions.setAttribute("aria-hidden","false");
     overlay.classList.add("awaiting-action");
@@ -812,18 +812,21 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   if(actionLog)baseLogs.push(actionLog);
   const unitExhaustionText=getUnitExhaustionOutcomeText(outcome);
   if(unitExhaustionText)baseLogs.push(unitExhaustionText);
-  if(state.mode==="adventure"){
+  const pvpBot=state?.pvpBotMatch===true;
+  if(pvpBot){
+    baseLogs.push(outcome.winner===1?`Victoria PvP contra ${state.adventureEnemyName||"BOT"}. El resultado cuenta para tu liga.`:(outcome.winner===2?`Derrota PvP contra ${state.adventureEnemyName||"BOT"}. El resultado cuenta para tu liga.`:`El duelo PvP contra ${state.adventureEnemyName||"BOT"} terminó en empate.`));
+  }else if(state.mode==="adventure"){
     baseLogs.push(outcome.winner===1?`Has ganado ${state.adventureBattleTitle||"la batalla"}. La misión avanza.`:`Has caído en ${state.adventureBattleTitle||"la batalla"}. Puedes reintentar.`);
   }else if(!unitExhaustionText){
     baseLogs.push(outcome.winner?`La partida terminó. Gana J${outcome.winner}.`:"La partida terminó en un estado sin líderes.");
   }
   const nextStats1={...(state.playerStats?.[1]||{}),hp:outcome.p1Leader?.hp||0};
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
-  recordLocalLeaderBattleOutcome(outcome,state.mode||"pvp");
+  recordLocalLeaderBattleOutcome(outcome,pvpBot?"pvp_bot":(state.mode||"pvp"));
   const endedAt=Date.now();
   const finalPatch={...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
   const wrote=await updatePublic(finalPatch);
-  if(wrote&&state.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
+  if(wrote&&(state.mode==="online"||pvpBot)&&typeof globalThis.hvPvpRankingRecordResult==="function"){
     try{await globalThis.hvPvpRankingRecordResult({...state,...finalPatch},gameId);}catch(error){console.warn("[HallValla][PvP Ranking] El duelo terminó, pero el registro de ranking deberá reintentarse desde el snapshot final.",error);}
   }
   return !!wrote;
@@ -897,10 +900,11 @@ function maybeShowBattleResult(){
     const win=!draw&&Number(publicState.winner||0)===Number(myPlayer||0);
     if(!draw)tryPlaySound(win?"victory":"defeat",.95);
     stopMusic(false);
-    const adventure=publicState.mode==="adventure";
-    const online=publicState.mode==="online";
-    showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure,online});
-    if(!adventure&&publicState.mode==="online"&&typeof globalThis.hvPvpRankingRecordResult==="function"){
+    const botPvp=publicState?.pvpBotMatch===true;
+    const adventure=publicState.mode==="adventure"&&!botPvp;
+    const online=publicState.mode==="online"||botPvp;
+    showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure,online,botPvp});
+    if(online&&typeof globalThis.hvPvpRankingRecordResult==="function"){
       void globalThis.hvPvpRankingRecordResult(publicState,gameId);
     }
     if(adventure)completeAdventureBattleOnce(publicState);
