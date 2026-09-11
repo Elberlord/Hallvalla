@@ -1,0 +1,27 @@
+HallValla · CURSOR VIRTUAL CON ANALÓGICO DERECHO · build 20260911.41
+
+Objetivo
+- Añadir un cursor virtual controlado por gamepad para alcanzar elementos difíciles de navegar con foco direccional.
+- Mantener intacta la navegación ya existente por D-pad / stick izquierdo.
+
+Controles
+- Stick derecho: mueve el cursor virtual por toda la pantalla.
+- A: si el cursor virtual fue activado con el stick derecho, hace clic donde apunta.
+- RT: hace clic en la posición del cursor siempre que el cursor ya haya aparecido.
+- D-pad / stick izquierdo: conserva navegación normal y desactiva temporalmente el modo cursor para que A vuelva a actuar sobre el foco/tablero.
+- B, X, Y, LB/RB, View y Menu conservan su comportamiento previo.
+
+Comportamiento
+- El cursor aparece solamente cuando se mueve el stick derecho.
+- Tiene zona muerta para reducir movimiento por drift del analógico.
+- La velocidad es analógica: inclinación pequeña = movimiento fino; inclinación grande = movimiento rápido.
+- En modales/overlays activos, el clic del cursor queda limitado a la capa superior y no activa accidentalmente botones del Home detrás.
+- El cursor es interno al juego. El navegador no permite mover físicamente el puntero del sistema operativo mediante JavaScript.
+
+Archivos funcionales modificados
+- js/parts/20-gamepad-controls.js
+- js/bootstrap-loader.js (build/hash)
+- index.html (build/hash)
+- service-worker.js (build/hash)
+
+No se tocaron reglas de combate, economía, unidades, PvP, Firebase ni Xsolla.

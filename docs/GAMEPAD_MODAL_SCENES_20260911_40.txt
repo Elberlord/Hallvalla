@@ -1,0 +1,24 @@
+HallValla · GAMEPAD EN MODALES / ESCENAS · build 20260911.40
+
+Problema corregido
+- El mando funcionaba en Home, pero al abrir overlays/modales podía seguir navegando los controles del Home que quedaban detrás.
+- En escenas con burbujas o nodos del mapa, el foco no quedaba encerrado en la escena y esos elementos podían quedar fuera de la navegación del gamepad.
+
+Cambio aplicado
+- El sistema detecta ahora la capa UI visible superior: overlay-panel, diálogos, modales, PvP, recompensas, perfil/tienda, aventura, etc.
+- Cuando existe una capa superior, la cruceta/stick navega únicamente dentro de esa escena.
+- Los botones/nodos semánticos siguen siendo prioritarios.
+- También se reconocen controles clicables no semánticos con cursor:pointer, para cubrir burbujas/divs interactivos sin tocar su DOM ni el orden de tabulación.
+- A confirma/click; B conserva la lógica de cierre/cancelación existente.
+- Home, tablero y Mano conservan su comportamiento anterior.
+
+Archivos funcionales modificados
+- js/parts/20-gamepad-controls.js
+
+Archivos de versionado/cache actualizados
+- js/bootstrap-loader.js
+- index.html
+- service-worker.js
+
+Hash gamepad: 86300bf8c063
+Hash loader: 3c0cfa0a0a20

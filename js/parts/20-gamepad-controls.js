@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260910.39 · Gamepad estándar (PC / Android)
+/* HallValla 20260911.41 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B cancelar · X DEF · Y DET
    View/Back mano · Menu/Start siguiente fase · LB/RB ciclar unidades.
@@ -13,6 +13,8 @@ const HV_GAMEPAD_DEADZONE=.56;
 const HV_GAMEPAD_REPEAT_DELAY=285;
 const HV_GAMEPAD_REPEAT_MS=115;
 const HV_GAMEPAD_SCAN_MS=1300;
+const HV_GAMEPAD_POINTER_DEADZONE=.18;
+const HV_GAMEPAD_POINTER_SPEED=1180;
 
 const hvGamepadState={
   connected:false,
@@ -31,7 +33,13 @@ const hvGamepadState={
   raf:0,
   scanTimer:0,
   lastInputAt:0,
-  returnToHandAfterDet:false
+  returnToHandAfterDet:false,
+  pointerX:null,
+  pointerY:null,
+  pointerVisible:false,
+  pointerMode:false,
+  pointerHoverEl:null,
+  pointerFrameAt:0
 };
 
 function hvGamepadInstallStyles(){
@@ -47,6 +55,12 @@ function hvGamepadInstallStyles(){
     .cell.hv-gamepad-cursor::after{content:"";position:absolute;inset:5px;border:1px dashed rgba(255,242,185,.9);pointer-events:none;z-index:90}
     #handRow .hand-card.hv-gamepad-hand-focus{outline:3px solid rgba(255,225,126,.96)!important;outline-offset:2px;filter:brightness(1.08);transform:translateY(-7px) scale(1.025);z-index:40}
     .hv-gamepad-ui-focus{outline:3px solid rgba(255,225,126,.96)!important;outline-offset:3px!important;box-shadow:0 0 14px rgba(255,211,79,.5)!important}
+    #hallvallaGamepadPointer{position:fixed;left:0;top:0;width:27px;height:34px;z-index:2147483000;pointer-events:none;opacity:0;transform:translate3d(-100px,-100px,0);transition:opacity .12s ease;filter:drop-shadow(0 2px 2px rgba(0,0,0,.9)) drop-shadow(0 0 5px rgba(255,211,79,.42));will-change:transform}
+    #hallvallaGamepadPointer.show{opacity:1}
+    #hallvallaGamepadPointer.inactive{opacity:.58}
+    #hallvallaGamepadPointer svg{display:block;width:27px;height:34px;overflow:visible}
+    #hallvallaGamepadPointer .hv-gp-pointer-fill{fill:#ffe083}
+    #hallvallaGamepadPointer .hv-gp-pointer-stroke{stroke:#160f05;stroke-width:2.2;stroke-linejoin:round}
     @media(max-width:720px){#hallvallaGamepadBadge{font-size:10px;padding:6px 9px;max-width:82vw}}
   `;
   document.head.appendChild(style);
@@ -73,6 +87,111 @@ function hvGamepadShowBadge(text,{disconnected=false,linger=0}={}){
 }
 hvGamepadShowBadge._timer=0;
 
+function hvGamepadPointerElement(){
+  let pointer=document.getElementById("hallvallaGamepadPointer");
+  if(pointer)return pointer;
+  pointer=document.createElement("div");
+  pointer.id="hallvallaGamepadPointer";
+  pointer.setAttribute("aria-hidden","true");
+  pointer.innerHTML=`<svg viewBox="0 0 27 34" focusable="false" aria-hidden="true">
+    <path class="hv-gp-pointer-fill hv-gp-pointer-stroke" d="M3 2.5 23.5 20l-9.1 1.3 5.5 9.1-5.1 3-5.4-9.2-6.4 6.5z"/>
+  </svg>`;
+  document.body.appendChild(pointer);
+  return pointer;
+}
+function hvGamepadPointerEnsurePosition(){
+  if(Number.isFinite(hvGamepadState.pointerX)&&Number.isFinite(hvGamepadState.pointerY))return;
+  const focus=hvGamepadState.uiElement&&hvGamepadIsVisible(hvGamepadState.uiElement)?hvGamepadState.uiElement:null;
+  if(focus){
+    const r=focus.getBoundingClientRect();
+    hvGamepadState.pointerX=r.left+r.width/2;
+    hvGamepadState.pointerY=r.top+r.height/2;
+  }else{
+    hvGamepadState.pointerX=Math.max(8,innerWidth/2);
+    hvGamepadState.pointerY=Math.max(8,innerHeight/2);
+  }
+}
+function hvGamepadPointerRender(){
+  const pointer=hvGamepadPointerElement();
+  if(!hvGamepadState.pointerVisible){
+    pointer.classList.remove("show");
+    return;
+  }
+  hvGamepadPointerEnsurePosition();
+  pointer.classList.add("show");
+  pointer.classList.toggle("inactive",!hvGamepadState.pointerMode);
+  pointer.style.transform=`translate3d(${Math.round(hvGamepadState.pointerX-3)}px,${Math.round(hvGamepadState.pointerY-3)}px,0)`;
+}
+function hvGamepadPointerTarget(){
+  hvGamepadPointerEnsurePosition();
+  const x=Math.max(0,Math.min(innerWidth-1,Number(hvGamepadState.pointerX)||0));
+  const y=Math.max(0,Math.min(innerHeight-1,Number(hvGamepadState.pointerY)||0));
+  let target=document.elementFromPoint(x,y);
+  const modal=hvGamepadVisibleModal();
+  if(modal&&target&&target!==modal&&!modal.contains(target))target=null;
+  return target;
+}
+function hvGamepadPointerDispatchMove(){
+  const target=hvGamepadPointerTarget();
+  const previous=hvGamepadState.pointerHoverEl;
+  const x=Number(hvGamepadState.pointerX)||0,y=Number(hvGamepadState.pointerY)||0;
+  if(previous&&previous!==target){
+    try{previous.dispatchEvent(new MouseEvent("mouseout",{bubbles:true,clientX:x,clientY:y,relatedTarget:target||null}));}catch(_){ }
+  }
+  if(target&&previous!==target){
+    try{target.dispatchEvent(new MouseEvent("mouseover",{bubbles:true,clientX:x,clientY:y,relatedTarget:previous||null}));}catch(_){ }
+  }
+  hvGamepadState.pointerHoverEl=target||null;
+  if(target){
+    try{target.dispatchEvent(new MouseEvent("mousemove",{bubbles:true,clientX:x,clientY:y}));}catch(_){ }
+  }
+}
+function hvGamepadPointerDeactivate(){
+  if(!hvGamepadState.pointerMode)return;
+  hvGamepadState.pointerMode=false;
+  hvGamepadPointerRender();
+}
+function hvGamepadPointerUpdate(gp,now){
+  const axes=gp?.axes||[];
+  const rawX=Number(axes[2]||0),rawY=Number(axes[3]||0);
+  const last=Number(hvGamepadState.pointerFrameAt||now);
+  hvGamepadState.pointerFrameAt=now;
+  const dt=Math.max(0,Math.min(.05,(now-last)/1000));
+  const shape=value=>{
+    const a=Math.abs(value);
+    if(a<=HV_GAMEPAD_POINTER_DEADZONE)return 0;
+    const scaled=Math.min(1,(a-HV_GAMEPAD_POINTER_DEADZONE)/(1-HV_GAMEPAD_POINTER_DEADZONE));
+    return Math.sign(value)*Math.pow(scaled,1.28);
+  };
+  const vx=shape(rawX),vy=shape(rawY);
+  if(!vx&&!vy)return false;
+  hvGamepadPointerEnsurePosition();
+  hvGamepadState.pointerX=Math.max(1,Math.min(innerWidth-3,hvGamepadState.pointerX+vx*HV_GAMEPAD_POINTER_SPEED*dt));
+  hvGamepadState.pointerY=Math.max(1,Math.min(innerHeight-3,hvGamepadState.pointerY+vy*HV_GAMEPAD_POINTER_SPEED*dt));
+  hvGamepadState.pointerVisible=true;
+  hvGamepadState.pointerMode=true;
+  hvGamepadPointerRender();
+  hvGamepadPointerDispatchMove();
+  return true;
+}
+function hvGamepadPointerClick(button=0){
+  if(!hvGamepadState.pointerVisible)return false;
+  const target=hvGamepadPointerTarget();
+  if(!target)return false;
+  const x=Number(hvGamepadState.pointerX)||0,y=Number(hvGamepadState.pointerY)||0;
+  const common={bubbles:true,cancelable:true,view:window,clientX:x,clientY:y,button,buttons:button===0?1:button===2?2:0};
+  try{
+    if(typeof PointerEvent==="function")target.dispatchEvent(new PointerEvent("pointerdown",{...common,pointerId:1,pointerType:"mouse",isPrimary:true}));
+  }catch(_){ }
+  try{target.dispatchEvent(new MouseEvent("mousedown",common));}catch(_){ }
+  try{
+    if(typeof PointerEvent==="function")target.dispatchEvent(new PointerEvent("pointerup",{...common,buttons:0,pointerId:1,pointerType:"mouse",isPrimary:true}));
+  }catch(_){ }
+  try{target.dispatchEvent(new MouseEvent("mouseup",{...common,buttons:0}));}catch(_){ }
+  try{target.dispatchEvent(new MouseEvent(button===2?"contextmenu":"click",{...common,buttons:0}));}catch(_){ }
+  return true;
+}
+
 function hvGamepadAvailablePads(){
   if(typeof navigator.getGamepads!=="function")return[];
   try{return Array.from(navigator.getGamepads()||[]).filter(Boolean);}catch(_){return[];}
@@ -91,6 +210,7 @@ function hvGamepadConnect(gp){
   hvGamepadState.mapping=String(gp.mapping||"");
   hvGamepadState.prevButtons=[];
   hvGamepadState.directionKey="";
+  hvGamepadState.pointerFrameAt=0;
   if(changed){
     const kind=hvGamepadState.mapping==="standard"?"estándar":"compatible";
     const badge=hvGamepadBadge();
@@ -109,6 +229,11 @@ function hvGamepadDisconnect(){
   hvGamepadState.mapping="";
   hvGamepadState.prevButtons=[];
   hvGamepadState.directionKey="";
+  hvGamepadState.pointerMode=false;
+  hvGamepadState.pointerVisible=false;
+  hvGamepadState.pointerHoverEl=null;
+  hvGamepadState.pointerFrameAt=0;
+  hvGamepadPointerRender();
   hvGamepadClearVisualFocus();
   hvGamepadShowBadge("🎮 Control desconectado",{disconnected:true,linger:2200});
 }
@@ -126,19 +251,92 @@ function hvGamepadBattleOpen(){
   const grid=document.getElementById("grid");
   return !!(shell&&grid&&!shell.classList.contains("hidden")&&hvGamepadIsVisible(grid));
 }
-function hvGamepadVisibleModal(){
-  const selectors=[
-    "#cardInspectModal:not(.hidden)","#battleMenuPanel:not(.hidden)","[role='dialog']:not(.hidden)",
-    ".modal:not(.hidden)",".daily-reward-panel:not(.hidden)",".leader-detail-modal:not(.hidden)",".leader-ability-modal:not(.hidden)"
-  ];
-  for(const selector of selectors){
-    for(const el of document.querySelectorAll(selector))if(hvGamepadIsVisible(el))return el;
+function hvGamepadUiLayerZ(el){
+  let best=0,node=el;
+  while(node&&node!==document.documentElement){
+    const raw=getComputedStyle(node).zIndex;
+    const z=Number.parseInt(raw,10);
+    if(Number.isFinite(z))best=Math.max(best,z);
+    node=node.parentElement;
   }
-  return null;
+  return best;
+}
+function hvGamepadUiDepth(el){
+  let depth=0,node=el;
+  while(node&&node!==document.documentElement){depth++;node=node.parentElement;}
+  return depth;
+}
+function hvGamepadVisibleModal(){
+  /*
+    El juego no usa una sola clase para sus escenas superpuestas. Aventura,
+    tienda, perfil, PvP, recompensas, etc. pueden ser overlay-panel, overlay
+    o modal. Si no aislamos la capa superior, la navegación termina viendo
+    también los botones del Home que siguen detrás del panel.
+  */
+  const selectors=[
+    "[role='dialog']:not(.hidden)","[aria-modal='true']:not(.hidden)",
+    ".overlay-panel:not(.hidden)",".daily-reward-overlay:not(.hidden)",
+    ".leader-select-overlay:not(.hidden)",".leader-info-modal:not(.hidden)",
+    ".pvp-room-panel:not(.hidden)",".pvp-rps-overlay:not(.hidden)",
+    ".pvp-ranking-modal:not(.hidden)",".honor-recharge-modal:not(.hidden)",
+    ".event-splash-overlay:not(.hidden)",".demigod-summon-modal:not(.hidden)",
+    ".card-inspect-modal:not(.hidden)",".battle-menu-panel:not(.hidden)",
+    ".mobile-rotate-overlay:not(.hidden)",".modal:not(.hidden)"
+  ];
+  const candidates=[];
+  const seen=new Set();
+  for(const selector of selectors){
+    for(const el of document.querySelectorAll(selector)){
+      if(seen.has(el)||!hvGamepadIsVisible(el))continue;
+      if(el.matches?.("[data-hv-dev-tool]")||el.closest?.("[data-hv-dev-tool]"))continue;
+      seen.add(el);candidates.push(el);
+    }
+  }
+  if(!candidates.length)return null;
+  candidates.sort((a,b)=>{
+    const za=hvGamepadUiLayerZ(a),zb=hvGamepadUiLayerZ(b);
+    if(za!==zb)return zb-za;
+    const da=hvGamepadUiDepth(a),db=hvGamepadUiDepth(b);
+    if(da!==db)return db-da;
+    const rel=a.compareDocumentPosition(b);
+    return rel&Node.DOCUMENT_POSITION_FOLLOWING?1:rel&Node.DOCUMENT_POSITION_PRECEDING?-1:0;
+  });
+  return candidates[0]||null;
+}
+function hvGamepadIsSemanticFocusable(el){
+  return !!el?.matches?.("button:not([disabled]),a[href],[role='button']:not([aria-disabled='true']),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])");
+}
+function hvGamepadIsImplicitClickable(el,root){
+  if(!el||el===root||!hvGamepadIsVisible(el))return false;
+  if(el.matches?.("[disabled],[aria-disabled='true'],[data-hv-dev-tool]")||el.closest?.("[data-hv-dev-tool]"))return false;
+  const semanticAncestor=el.parentElement?.closest?.("button,a[href],[role='button'],input,select,textarea,[tabindex]");
+  if(semanticAncestor&&semanticAncestor!==root)return false;
+  const cs=getComputedStyle(el);
+  if(cs.pointerEvents==="none"||cs.cursor!=="pointer")return false;
+  /* cursor se hereda: conserva solo el contenedor clicable exterior. */
+  const parent=el.parentElement;
+  if(parent&&parent!==root&&hvGamepadIsVisible(parent)){
+    const pcs=getComputedStyle(parent);
+    if(pcs.pointerEvents!=="none"&&pcs.cursor==="pointer"&&!hvGamepadIsSemanticFocusable(parent))return false;
+  }
+  return true;
 }
 function hvGamepadFocusable(root=document){
   const selector="button:not([disabled]),a[href],[role='button']:not([aria-disabled='true']),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])";
-  return [...root.querySelectorAll(selector)].filter(el=>hvGamepadIsVisible(el)&&!el.matches("[data-hv-dev-tool]")&&!el.closest?.("[data-hv-dev-tool]"));
+  const items=[...root.querySelectorAll(selector)].filter(el=>hvGamepadIsVisible(el)&&!el.matches("[data-hv-dev-tool]")&&!el.closest?.("[data-hv-dev-tool]"));
+  const seen=new Set(items);
+  /* Home ya funcionaba con controles semánticos; evita escanear todo el DOM allí. */
+  if(root===document)return items;
+  /*
+    Algunas escenas usan nodos/divs clicables (por ejemplo burbujas de mapa)
+    en lugar de <button>. Los incluimos por cursor:pointer sin alterar su DOM
+    ni el orden de tabulación para teclado.
+  */
+  for(const el of root.querySelectorAll("*")){
+    if(seen.has(el)||!hvGamepadIsImplicitClickable(el,root))continue;
+    seen.add(el);items.push(el);
+  }
+  return items;
 }
 function hvGamepadSetUiFocus(el){
   if(hvGamepadState.uiElement&&hvGamepadState.uiElement!==el)hvGamepadState.uiElement.classList?.remove("hv-gamepad-ui-focus");
@@ -388,6 +586,7 @@ function hvGamepadDirectionShouldFire(direction,now){
 }
 
 function hvGamepadUseDirection(dx,dy){
+  hvGamepadPointerDeactivate();
   const modal=hvGamepadVisibleModal();
   if(modal){hvGamepadState.mode="ui";hvGamepadMoveUi(dx,dy);return;}
   if(hvGamepadBattleOpen()){
@@ -409,10 +608,12 @@ function hvGamepadHandleButtons(gp){
   const battle=hvGamepadBattleOpen();
 
   if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.A)){
-    if(modal||!battle)hvGamepadActivateUi();
+    if(hvGamepadState.pointerMode&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
+    else if(modal||!battle)hvGamepadActivateUi();
     else if(hvGamepadState.mode==="hand")hvGamepadPlayHandCard();
     else void hvGamepadActivateBoard();
   }
+  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RT)&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
   if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.B)){
     if(hvGamepadCloseTopUi()){}
     else if(battle&&hvGamepadState.mode==="hand"){
@@ -445,6 +646,7 @@ function hvGamepadLoop(now){
   const gp=hvGamepadResolveActive();
   if(!gp){hvGamepadDisconnect();return;}
   if(document.hidden){hvGamepadState.raf=requestAnimationFrame(hvGamepadLoop);return;}
+  hvGamepadPointerUpdate(gp,now);
   hvGamepadHandleButtons(gp);
   const direction=hvGamepadDirection(gp);
   if(hvGamepadDirectionShouldFire(direction,now))hvGamepadUseDirection(direction.dx,direction.dy);
@@ -470,13 +672,19 @@ function hvGamepadInit(){
   },{passive:true});
   hvGamepadState.scanTimer=window.setInterval(hvGamepadScan,HV_GAMEPAD_SCAN_MS);
   hvGamepadScan();
+  window.addEventListener("resize",()=>{
+    if(!hvGamepadState.pointerVisible)return;
+    hvGamepadState.pointerX=Math.max(1,Math.min(innerWidth-3,Number(hvGamepadState.pointerX)||innerWidth/2));
+    hvGamepadState.pointerY=Math.max(1,Math.min(innerHeight-3,Number(hvGamepadState.pointerY)||innerHeight/2));
+    hvGamepadPointerRender();
+  },{passive:true});
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)hvGamepadScan();},{passive:true});
 }
 
 Object.assign(globalThis,{
   HallVallaGamepad:Object.freeze({
     buttons:HV_GAMEPAD_BUTTONS,
-    getState:()=>({connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,mode:hvGamepadState.mode}),
+    getState:()=>({connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,mode:hvGamepadState.mode,pointerMode:hvGamepadState.pointerMode,pointerVisible:hvGamepadState.pointerVisible,pointerX:hvGamepadState.pointerX,pointerY:hvGamepadState.pointerY}),
     rescan:hvGamepadScan
   })
 });
