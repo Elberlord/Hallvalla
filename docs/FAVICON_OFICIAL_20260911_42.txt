@@ -1,0 +1,8 @@
+HALLVALLA 20260911.42 · FAVICON OFICIAL
+
+- Se incorpora el logo oficial compartido por el usuario como icono del navegador.
+- Se reemplaza el favicon vacío anterior (data:,).
+- Se generan variantes 64x64, 180x180, 192x192 y 512x512, además de favicon.ico multiresolución.
+- El favicon usa archivo versionado para evitar que el navegador conserve el icono antiguo en caché.
+- No se modifican reglas, economía, combate, PvP, Firebase ni Xsolla.
+- Se conserva íntegra la funcionalidad de gamepad y cursor virtual de 20260911.41.
