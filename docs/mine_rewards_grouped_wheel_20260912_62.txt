@@ -1,0 +1,50 @@
+HallValla — Mina Recompensas / Tienda — ajuste 2026-09-12 v62
+
+Cambios principales
+1) Ruleta de la Mina agrupada por familias visuales.
+   - Ya no representa los 50 premios como 50 espacios separados.
+   - La ruleta ahora gira con una imagen circular agrupada por categorías.
+   - Cada giro sigue resolviendo un premio real del pool interno; la animación cae en la familia visual correspondiente.
+
+2) Familias visuales implementadas
+   - Premio Mayor
+   - Impulsos de producción
+   - Gemas positivas
+   - Oro positivo
+   - Fragmentos positivos
+   - Tiros gratis
+   - Piezas del Osario
+   - Packs y pergaminos
+   - Sin hallazgo (neutral)
+   - Pérdida de gemas de Mina
+   - Pérdida de oro
+   - Pérdida de fragmentos
+   - Pérdida de tiros gratis
+   - Penalización de costo
+   - Pérdida de gemas
+   - Eliminar desastre
+
+3) Oscurecimiento por agotamiento
+   - Si una familia ya no tiene premios reales pendientes en el ciclo actual, ese sector queda oscuro en la ruleta.
+   - La familia neutral sigue disponible.
+
+4) Modal "Premios posibles"
+   - Ahora usa estilo negro/dorado.
+   - Muestra familias visuales y, dentro de cada una, los premios reales todavía pendientes.
+   - Las familias agotadas aparecen apagadas.
+
+5) Asset nueva
+   - assets/mine/rewards/wheel_grouped_categories.webp
+   - PNG fuente incluida también.
+
+Archivos tocados
+- js/parts/15-settings-tuners-events.js
+- styles.css
+- assets/mine/rewards/wheel_grouped_categories.png
+- assets/mine/rewards/wheel_grouped_categories.webp
+
+
+Ajuste visual adicional
+- Se sustituyó la rueda previa por la rueda visual aprobada por el usuario, con colores alternados rojo/verde y reloj de arena en verde.
+- La calavera verde representa la familia positiva de piezas del Osario (no quita piezas; las otorga).
+- La pérdida de piezas NO está planificada en esta ruleta.

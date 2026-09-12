@@ -1,0 +1,15 @@
+HALLVALLA — CAMBIOS 20260912_61
+
+Mina > Tienda
+- Se reajustó el grid para que entren las pociones y no-muertos sin quedar despelotados ni recortados.
+- Se mantuvo el estilo flotante sin cajas visibles.
+- Se redujo el tamaño base de iconos y textos para evitar que tapen la información.
+
+Mina > Recompensas
+- La ruleta ahora usa una imagen única de rueda con 50 segmentos reales y fondo transparente.
+- La rueda gira como una sola pieza visual, en vez de reconstruirse con iconos sueltos.
+- Se añadió sombreado sobre los premios ya consumidos para que se vea oscuro lo que ya salió.
+- Se redujo el tamaño visual de la ruleta para que no se corte.
+
+Assets
+- Nuevo asset: assets/mine/rewards/wheel_rewards_realpool.webp
