@@ -1560,6 +1560,46 @@ async function transactHallvallaMineStateRemote(mutator){
     return {committed:false,state:getHallvallaMineState(),reason:/permission|denied/i.test(code)?"FIREBASE_RULES":"FIREBASE_ERROR",errorCode:code};
   }
 }
+
+async function transactHallvallaMineSingleSlotRemote(slotIndex,mutator){
+  const safeIndex=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Math.floor(Number(slotIndex)||0)));
+  if(typeof mutator!=="function"||!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineState(),reason:"NOT_READY"};
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    const state=getHallvallaMineState(),current=normalizeHallvallaMineSlot(state.slots[safeIndex]||{}),next=mutator(current);
+    if(!next)return {committed:false,state,reason:"ABORTED"};
+    state.slots[safeIndex]=normalizeHallvallaMineSlot(next);
+    localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(normalizeHallvallaMineState(state)));
+    return {committed:true,state:normalizeHallvallaMineState(state),reason:"OK"};
+  }
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return {committed:false,state:getHallvallaMineState(),reason:"NO_USER"};
+  try{
+    await hallvallaMineRemoteWriteQueue;
+    const slotRef=ref(db,`users/${userId}/mine/state/slots/${safeIndex}`);
+    const seen=[];
+    const result=await runTransaction(slotRef,current=>{
+      seen.push(current);
+      const next=mutator(normalizeHallvallaMineSlot(current||{}));
+      return next?normalizeHallvallaMineSlot(next):undefined;
+    },{applyLocally:false});
+    if(!result?.committed){
+      console.error("[HallValla][Mina][Assign] transacción de slot abortada",{slotIndex:safeIndex,seen});
+      return {committed:false,state:getHallvallaMineState(),reason:"ABORTED"};
+    }
+    const state=getHallvallaMineState();
+    state.slots[safeIndex]=normalizeHallvallaMineSlot(result.snapshot.val()||{});
+    const safe=normalizeHallvallaMineState(state);
+    localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
+    queueHallvallaMineRemotePatch({stateUpdatedAt:serverTimestamp()});
+    console.info("[HallValla][Mina][Assign] slot confirmado",{slotIndex:safeIndex,cardKey:safe.slots[safeIndex]?.cardKey||""});
+    return {committed:true,state:safe,reason:"OK"};
+  }catch(error){
+    const code=String(error?.code||error?.message||"");
+    console.error("[HallValla][Mina][Assign] Firebase rechazó la asignación",{slotIndex:safeIndex,code,error});
+    return {committed:false,state:getHallvallaMineState(),reason:/permission|denied/i.test(code)?"FIREBASE_RULES":"FIREBASE_ERROR",errorCode:code};
+  }
+}
+
 function getHallvallaMineState(){
   try{return normalizeHallvallaMineState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_STORAGE_KEY)||"null")||{});}
   catch(_){return normalizeHallvallaMineState({});}
@@ -2352,15 +2392,23 @@ async function assignHallvallaMineUnit(cardKey=""){
     renderHallvallaMineProduction(profile);
     return;
   }
-  const startedAt=getHallvallaMineNow();
-  const tx=await transactHallvallaMineStateRemote(current=>{
-    const currentSlot=current.slots[selectedIndex]||createHallvallaMineSlot();
+  // Dejamos un pequeño margen hacia atrás para no depender de que el reloj estimado del cliente
+  // quede unos milisegundos por delante del `now` de las reglas de RTDB.
+  const startedAt=Math.max(0,Math.floor(getHallvallaMineNow()-1000));
+  console.info("[HallValla][Mina][Assign] solicitud",{slotIndex:selectedIndex,cardKey:String(card.key||""),startedAt});
+  const tx=await transactHallvallaMineSingleSlotRemote(selectedIndex,currentSlot=>{
     if(currentSlot.cardKey)return;
-    const next=normalizeHallvallaMineState(current);
-    next.slots[selectedIndex]={cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:getHallvallaMineCardImage(card),startedAt,claimedCycles:0};
-    return next;
+    return {cardKey:String(card.key||""),cardName:String(card.name||"Unidad"),image:getHallvallaMineCardImage(card),startedAt,claimedCycles:0};
   });
-  if(!tx.committed){setHallvallaMineStatus(`La ranura ${selectedIndex+1} ya fue ocupada en otro dispositivo o Firebase no pudo confirmar la asignación.`);renderMineScreen();return;}
+  if(!tx.committed){
+    const message=tx.reason==="FIREBASE_RULES"
+      ?`Firebase rechazó la asignación de la ranura ${selectedIndex+1} por las reglas de seguridad.`
+      :`La ranura ${selectedIndex+1} ya fue ocupada en otro dispositivo o Firebase no pudo confirmar la asignación.`;
+    setHallvallaMineStatus(message);
+    try{if(typeof hvAlert==="function")await hvAlert(message,"Mina · Asignación");}catch(_){}
+    renderMineScreen();
+    return;
+  }
   setHallvallaMineStatus(`${card.name||"Unidad"} enviada a minar en la ranura ${selectedIndex+1}.`);
   void recordHallvallaMineMissionStat("max_active",tx.state.slots.filter(slot=>slot?.cardKey).length,"max");
   renderMineScreen();

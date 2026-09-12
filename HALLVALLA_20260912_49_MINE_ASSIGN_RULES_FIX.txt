@@ -1,0 +1,9 @@
+HallValla 20260912.49 — Mina / asignación de trabajadores
+
+- Corrige la asignación de unidades en ranuras 6–20.
+- La asignación transacciona únicamente el slot seleccionado en RTDB, no todo /mine/state.
+- Añade diagnóstico [HallValla][Mina][Assign].
+- startedAt usa 1 s de margen para evitar desfase milimétrico cliente/Firebase.
+- database.rules.json corrige una contradicción: la regla permitía startedAt hasta now+60000, pero otra condición exigía implícitamente startedAt<=now para claimedCycles=0. Ahora ambas respetan la tolerancia de 60 s.
+- IMPORTANTE: database.rules.json debe publicarse en Firebase para aplicar el cambio de reglas.
+- No se rediseña la UI en esta build.
