@@ -1,0 +1,9 @@
+HallValla 20260912.47
+
+- Producción rehecha como escena compacta de 5 espacios por página.
+- Se usa icon_production.webp como pico/mina real del juego; se retiraron las figuras de pico/roca hechas con CSS.
+- Se eliminan las tarjetas gigantes y se evita que los nodos invadan el HUD.
+- Botón único Comprar nuevo espacio.
+- Causa encontrada del botón aparentemente muerto: hvModal tenía z-index 400 y la Mina z-index 9400. La confirmación y errores se abrían detrás de la Mina. Ahora hvModal usa z-index 20000.
+- Botón enlazado con onclick directo y log [HallValla][Mina][BuySlotButton].
+- Hashes de styles.css, bootstrap-loader y parts/15 actualizados para impedir que GitHub Pages/navegador sirvan la lógica anterior por caché.

@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260912.46">
-<meta name="hallvalla-build" content="v8_MODULAR_20260912.46">
+<meta name="hallvalla-version" content="20260912.47">
+<meta name="hallvalla-build" content="v8_MODULAR_20260912.47">
 <meta name="hallvalla-build-name" content="Mina Cinematic Frontend + gamepad + favicon oficial HallValla">
-<link rel="stylesheet" href="styles.css?h=635c30c85d91"/>
+<link rel="stylesheet" href="styles.css?h=24d2745b7834"/>
 
-<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260912.46">
-<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260912.46">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260912.46">
+<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260912.47">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260912.47">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260912.47">
 </head>
 <!-- HALLVALLA ORGANIZED V2: index conserva la estructura visual original. -->
 <body>
@@ -214,54 +214,32 @@
     </nav>
 
     <main class="mine-content">
-      <section class="mine-panel active" data-mine-panel="production" style="background-image:url('assets/mine/bg_production.webp')">
-        <div class="mine-panel-scrim"></div>
-        <div class="mine-panel-content mine-production-content">
-          <div class="mine-production-hud" aria-label="Estado de producción">
-            <div class="mine-hud-stat"><span>Nivel</span><strong id="mineChipLevel">1</strong></div>
-            <div class="mine-hud-stat"><span>Mineros</span><strong id="mineChipActive">0/5</strong></div>
-            <div class="mine-hud-stat"><span>Ritmo</span><strong id="mineChipRate">1💎 / 24h</strong></div>
-            <div class="mine-hud-stat mine-hud-stat--accent"><span>Pendiente</span><strong id="mineChipPending">0💎</strong></div>
+      <section class="mine-panel active hv47-mine-production-panel" data-mine-panel="production" style="background-image:url('assets/mine/bg_production.webp')">
+        <div class="hv47-mine-production-shade" aria-hidden="true"></div>
+        <div class="hv47-mine-production">
+          <div class="hv47-mine-hud" aria-label="Estado de producción">
+            <span><em>Nivel</em><b id="mineChipLevel">1</b></span><i></i>
+            <span><em>Mineros</em><b id="mineChipActive">0/5</b></span><i></i>
+            <span><em>Espacios</em><b id="mineChipSlots">5/20</b></span><i></i>
+            <span><em>Ritmo</em><b id="mineChipRate">1💎 / 24h</b></span><i></i>
+            <span class="is-accent"><em>Pendiente</em><b id="mineChipPending">0💎</b></span>
           </div>
-
-          <div id="mineLockedNote" class="mine-lock-note hidden">La Mina se desbloquea en Nivel 2</div>
-
-          <div class="mine-production-stage" data-mine-stage>
-            <button id="minePrevPageBtn" class="mine-page-arrow mine-page-arrow--prev" type="button" aria-label="Cinco espacios anteriores">‹</button>
-            <div id="mineMinerGrid" class="mine-miner-grid" aria-live="polite"></div>
-            <button id="mineNextPageBtn" class="mine-page-arrow mine-page-arrow--next" type="button" aria-label="Cinco espacios siguientes">›</button>
+          <div id="mineLockedNote" class="hv47-mine-lock-note hidden">La Mina se desbloquea en Nivel 2</div>
+          <div class="hv47-mine-stage" data-mine-stage>
+            <button id="minePrevPageBtn" class="hv47-mine-page-arrow hv47-mine-page-arrow--prev" type="button" aria-label="Cinco espacios anteriores">‹</button>
+            <div id="mineMinerGrid" class="hv47-mine-slots" aria-live="polite"></div>
+            <button id="mineNextPageBtn" class="hv47-mine-page-arrow hv47-mine-page-arrow--next" type="button" aria-label="Cinco espacios siguientes">›</button>
           </div>
-
-          <div class="mine-production-commandbar">
-            <div class="mine-page-status">
-              <span id="minePageLabel">01—05</span>
-              <div id="minePageDots" class="mine-page-dots"></div>
-            </div>
-
-            <button id="mineBuySlotBtn" class="mine-action-btn mine-action-btn--buy" type="button">
-              <span class="mine-action-icon" aria-hidden="true">✦</span>
-              <span class="mine-action-copy"><b>Comprar nuevo espacio</b><small id="mineBuySlotHint">Ranura 06 · 5💎</small></span>
+          <div class="hv47-mine-controls">
+            <div class="hv47-mine-page-status"><b id="minePageLabel">01—05</b><div id="minePageDots" class="hv47-mine-page-dots"></div></div>
+            <button id="mineBuySlotBtn" class="hv47-mine-command hv47-mine-command--buy" type="button">
+              <img src="assets/mine/icon_production.webp" alt="" aria-hidden="true"><span><b>Comprar nuevo espacio</b><small id="mineBuySlotHint">Ranura 06 · 5💎</small></span>
             </button>
-
-            <div class="mine-ready-readout">
-              <span>Listo para recoger</span>
-              <strong id="mineReadyValue">0💎</strong>
-              <small>Próxima <b id="mineNextValue">--:--:--</b></small>
-            </div>
-
-            <button id="mineClaimBtn" class="mine-action-btn mine-action-btn--primary" type="button">
-              <span class="mine-action-icon" aria-hidden="true">◆</span>
-              <span class="mine-action-copy"><b>Recoger</b><small>Transferir producción</small></span>
-            </button>
+            <div class="hv47-mine-ready"><span>Listo</span><strong id="mineReadyValue">0💎</strong><small>Próxima <b id="mineNextValue">--:--:--</b></small></div>
+            <button id="mineClaimBtn" class="hv47-mine-command hv47-mine-command--claim" type="button"><span class="hv47-mine-command-gem">◆</span><span class="mine-action-copy"><b>Recoger</b><small>Transferir producción</small></span></button>
           </div>
-
-          <div class="mine-worker-dock">
-            <div id="mineSelectedCard" class="mine-selected-card"></div>
-            <button id="mineUnassignBtn" class="mine-action-btn mine-action-btn--ghost" type="button">Retirar</button>
-            <div id="mineRosterRow" class="mine-roster-row"></div>
-          </div>
-
-          <div id="mineStatusLine" class="mine-status-line" aria-live="polite"></div>
+          <div class="hv47-mine-roster-dock"><div id="mineSelectedCard" class="hv47-mine-selected"></div><button id="mineUnassignBtn" class="hv47-mine-unassign" type="button">Retirar</button><div id="mineRosterRow" class="hv47-mine-roster"></div></div>
+          <div id="mineStatusLine" class="hv47-mine-status" aria-live="polite"></div>
         </div>
       </section>
 
@@ -1429,6 +1407,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=598dff2df15f"></script>
+<script type="module" src="js/bootstrap-loader.js?h=eb01e377c98d"></script>
 </body>
 </html>
