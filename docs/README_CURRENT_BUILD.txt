@@ -1,1 +1,5 @@
+BUILD ACTUAL: 20260912.50
+Mina Producción UI canónica implementada en código.
+Ver docs/MINE_PRODUCTION_CANON_UI_20260912_50.txt
+
 20260912.47 · MINA CLEAN SCENE UI + BUY SLOT MODAL FIX

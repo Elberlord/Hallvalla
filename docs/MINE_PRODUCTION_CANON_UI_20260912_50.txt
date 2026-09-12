@@ -1,0 +1,31 @@
+HALLVALLA · MINA PRODUCCIÓN · BUILD 20260912.50
+
+Objetivo
+- Implementar en HTML/CSS/JS la maqueta visual de Producción aprobada el 12-09-2026.
+- La maqueta es la referencia canónica: escena de mina full-bleed, HUD flotante, cinco nodos mineros, dock inferior y acciones mediante iconos.
+
+Cambios visuales
+- El fondo de Producción es el lienzo completo, sin panel rectangular principal.
+- Navegación lateral vertical negro/oro, con marca HallValla y reserva real de espacio para que nunca tape contenido.
+- Header integrado visualmente en la escena con título y recursos.
+- HUD compacto: Mineros / Espacios / Ritmo / Pendiente.
+- Cinco espacios por página como nodos flotantes, sin tarjetas gigantes.
+- Cada nodo usa icono oficial de Producción, retrato pequeño de unidad, nombre, temporizador y producción.
+- Plataforma flotante construida con CSS y microanimación de actividad.
+- Paginación centrada 01—05 y flechas laterales.
+- Dock inferior conserva la lista de unidades disponibles para asignación.
+- Nuevo espacio / Recoger todo / Retirar son controles circulares por icono, no botones horizontales gigantes.
+- Se eliminaron marcos externos y divisores visuales innecesarios del área principal.
+- Los modales HallValla permanecen por encima de la Mina.
+
+Funcionalidad preservada
+- Compra secuencial de slots y costos existentes.
+- Asignación de unidades con la corrección Firebase de la build 49.
+- Retiro, producción, recogida, paginación y estado de Mina.
+- Reglas database.rules.json de la build 49 sin cambios.
+- Gamepad, cursor virtual, favicon y demás sistemas previos intactos.
+
+Responsive
+- Landscape conserva rail vertical incluso en anchos reducidos.
+- Portrait muy estrecho convierte navegación en barra superior para evitar superposición.
+- La escala de nodos, roster y acciones baja progresivamente en alturas/ancho reducidos.

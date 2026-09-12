@@ -26958,3 +26958,539 @@ html:has(#gameShell:not(.hidden)) body{
 @media(max-width:980px){.hv47-mine-production{padding:7px 8px 6px;gap:4px}.hv47-mine-hud{gap:5px;padding:5px 8px}.hv47-mine-hud>span em{font-size:6px}.hv47-mine-hud>span b{font-size:8px}.hv47-mine-slots{grid-template-columns:repeat(5,minmax(62px,1fr));gap:3px}.hv47-mine-slot{height:108px;padding:4px 2px 5px}.hv47-mine-node{width:52px;height:52px;flex-basis:52px}.hv47-mine-worker{width:25px;height:30px;right:2px;top:22px}.hv47-mine-slot-copy strong{font-size:7px}.hv47-mine-slot-copy small{font-size:6px}.hv47-mine-controls{grid-template-columns:55px minmax(150px,1fr) minmax(95px,.55fr) minmax(118px,.7fr);gap:4px}.hv47-mine-command{min-height:37px;padding:3px 6px}.hv47-mine-command>img{width:25px;height:25px}.hv47-mine-command span b{font-size:7px}.hv47-mine-command span small{font-size:6px}.hv47-mine-roster-dock{grid-template-columns:minmax(110px,.65fr) 50px minmax(0,2.5fr);min-height:44px}}
 @media(max-width:700px){.hv47-mine-hud{width:100%;overflow-x:auto;box-sizing:border-box;scrollbar-width:none}.hv47-mine-stage{grid-template-columns:22px minmax(0,1fr) 22px;gap:1px}.hv47-mine-page-arrow{width:22px;height:36px;font-size:20px}.hv47-mine-slots{grid-template-columns:repeat(5,minmax(48px,1fr));gap:1px}.hv47-mine-slot{height:94px}.hv47-mine-node{width:44px;height:44px;flex-basis:44px}.hv47-mine-worker{width:21px;height:25px}.hv47-mine-controls{grid-template-columns:48px minmax(132px,1fr) minmax(96px,.7fr)}.hv47-mine-ready{display:none}.hv47-mine-roster-dock{grid-template-columns:92px 46px minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.hv47-mine-slot,.hv47-mine-node img,.hv47-mine-node::after,.hv47-mine-command{animation:none!important;transition:none!important}}
+
+/* ======================================================================
+   HALLVALLA · MINA PRODUCCIÓN · UI CANÓNICA 20260912.50
+   Referencia visual: mockup aprobado el 12-09-2026.
+   - escena full-bleed;
+   - rail vertical flotante;
+   - HUD compacto;
+   - 5 nodos mineros sin tarjetas/cajas;
+   - dock de unidades + acciones por iconos;
+   - responsive real sin solapamientos.
+   ====================================================================== */
+.mine-screen{
+  --hv50-gold:#d8a84f;
+  --hv50-gold-hi:#ffd98a;
+  --hv50-gold-soft:#b78a3e;
+  --hv50-ink:#050608;
+  --hv50-ink2:#0b0b0d;
+  --hv50-cyan:#6edfff;
+  --hv50-text:#f7ead0;
+  --hv50-muted:#b9ab91;
+  background:#030405 !important;
+  overflow:hidden !important;
+}
+
+/* Header integrado a la escena, sin franja pesada. */
+.mine-topbar{
+  position:absolute !important;
+  z-index:120 !important;
+  top:0;left:128px;right:0;
+  min-height:116px !important;
+  padding:24px 28px 18px 100px !important;
+  border:0 !important;
+  background:linear-gradient(180deg,rgba(2,3,5,.88),rgba(2,3,5,.38) 58%,transparent) !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  pointer-events:none;
+}
+.mine-topbar::after{display:none !important}
+.mine-topbar>*{pointer-events:auto}
+.mine-back-btn{
+  position:absolute !important;
+  left:28px;top:28px;
+  width:46px !important;height:46px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(216,168,79,.4) !important;
+  color:#ffe7ad !important;
+  background:rgba(8,8,9,.76) !important;
+  box-shadow:0 10px 22px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.025) !important;
+  font-size:24px !important;
+}
+.mine-title-block{max-width:540px}
+.mine-kicker{
+  color:#d9aa57 !important;
+  font:900 13px/1.1 system-ui,sans-serif !important;
+  letter-spacing:.28em !important;
+}
+#mineHeaderTitle{
+  margin-top:4px;
+  color:#fff6e4 !important;
+  font:700 clamp(32px,3vw,52px)/.96 Georgia,"Times New Roman",serif !important;
+  letter-spacing:-.03em !important;
+  text-shadow:0 3px 14px #000,0 0 24px rgba(216,168,79,.08) !important;
+}
+.mine-resource-strip{
+  margin-left:auto;
+  align-self:flex-start;
+  gap:12px !important;
+}
+.mine-resource-pill{
+  min-height:48px !important;
+  padding:8px 16px !important;
+  border:1px solid rgba(216,168,79,.42) !important;
+  border-radius:15px !important;
+  background:linear-gradient(180deg,rgba(22,18,11,.82),rgba(5,6,8,.88)) !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.32),inset 0 1px rgba(255,238,200,.05) !important;
+  backdrop-filter:blur(10px) !important;
+}
+.mine-resource-pill img{width:23px !important;height:23px !important}
+.mine-resource-pill b{font:900 16px/1 system-ui,sans-serif !important;color:#fff2d6 !important}
+
+/* El lienzo de la Mina ocupa toda la pantalla. */
+.mine-layout{
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+.mine-content{
+  position:absolute !important;
+  inset:0 !important;
+  border-radius:0 !important;
+  overflow:hidden !important;
+}
+.mine-panel{
+  border-radius:0 !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.mine-panel::before{display:none !important}
+.mine-panel.hv50-mine-production-panel{
+  overflow:hidden !important;
+  background-size:cover !important;
+  background-position:center center !important;
+}
+.hv50-mine-production-shade{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 52% 45%,transparent 25%,rgba(0,0,0,.18) 67%,rgba(0,0,0,.56) 100%),
+    linear-gradient(180deg,rgba(1,2,3,.1),rgba(1,2,3,0) 25%,rgba(1,2,3,.08) 58%,rgba(1,2,3,.5) 100%);
+}
+
+/* Rail vertical canónico. El contenido se reserva a la derecha: nunca lo tapa. */
+.mine-nav{
+  position:absolute !important;
+  z-index:130 !important;
+  left:18px !important;
+  top:16px !important;
+  bottom:18px !important;
+  transform:none !important;
+  width:112px !important;
+  max-height:none !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  gap:3px !important;
+  padding:10px 8px 12px !important;
+  overflow:hidden !important;
+  border:0 !important;
+  border-radius:28px !important;
+  background:linear-gradient(180deg,rgba(3,4,6,.92),rgba(3,4,6,.74)) !important;
+  box-shadow:0 22px 52px rgba(0,0,0,.42),inset 0 0 0 1px rgba(216,168,79,.21) !important;
+  backdrop-filter:blur(13px) saturate(120%) !important;
+  -webkit-backdrop-filter:blur(13px) saturate(120%) !important;
+}
+.mine-nav::before{display:none !important}
+.hv50-mine-brand{
+  min-height:72px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:1px;
+  margin-bottom:3px;
+  color:#f0bf62;
+  text-shadow:0 2px 10px #000,0 0 16px rgba(216,168,79,.12);
+}
+.hv50-mine-brand-mark{font:900 24px/1 Georgia,serif;color:#ffd886}
+.hv50-mine-brand strong{font:900 13px/1 Georgia,serif;letter-spacing:.03em}
+.mine-nav-btn{
+  min-height:91px !important;
+  padding:7px 4px 8px !important;
+  gap:4px !important;
+  border:0 !important;
+  border-radius:18px !important;
+  background:transparent !important;
+  color:#d6c8aa !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  transition:transform .18s ease,color .18s ease,filter .18s ease !important;
+}
+.mine-nav-btn::after{display:none !important}
+.mine-nav-btn img{
+  width:49px !important;height:49px !important;
+  filter:drop-shadow(0 6px 11px rgba(0,0,0,.5)) saturate(.9) !important;
+}
+.mine-nav-btn span{font:900 9px/1.1 system-ui,sans-serif !important;letter-spacing:.04em !important}
+.mine-nav-btn:hover,.mine-nav-btn:focus-visible{
+  transform:translateX(3px) !important;
+  color:#ffecc0 !important;
+  filter:brightness(1.08);
+  outline:none !important;
+}
+.mine-nav-btn.active{
+  transform:none !important;
+  color:#fff4d5 !important;
+  background:radial-gradient(circle at 50% 36%,rgba(216,168,79,.14),transparent 65%) !important;
+  box-shadow:inset 0 0 0 1px rgba(255,216,128,.45),0 0 18px rgba(216,168,79,.1) !important;
+}
+.mine-nav-btn.active img{filter:drop-shadow(0 5px 12px rgba(0,0,0,.55)) saturate(1.12) brightness(1.04) !important}
+
+/* Producción: distribución idéntica a la maqueta aprobada. */
+.hv50-mine-production{
+  position:absolute;
+  z-index:5;
+  inset:0;
+  box-sizing:border-box;
+  padding:126px 28px 20px 154px;
+  display:grid;
+  grid-template-rows:auto minmax(240px,1fr) 28px minmax(110px,auto) auto;
+  gap:8px;
+  overflow:hidden;
+}
+.hv50-mine-hud{
+  position:relative;
+  z-index:12;
+  justify-self:start;
+  max-width:min(780px,calc(100vw - 470px));
+  min-height:43px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 18px;
+  border:1px solid rgba(216,168,79,.44);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(13,11,8,.83),rgba(4,5,7,.82));
+  box-shadow:0 8px 22px rgba(0,0,0,.28),inset 0 1px rgba(255,238,199,.045);
+  backdrop-filter:blur(9px);
+}
+.hv50-mine-hud>span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.hv50-mine-hud>span em{
+  color:#d9c59e;
+  font:850 11px/1 system-ui,sans-serif;
+  font-style:normal;
+  letter-spacing:.02em;
+}
+.hv50-mine-hud>span b{
+  color:#fff5df;
+  font:900 13px/1 system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+.hv50-mine-hud>span.is-accent b{color:#83e5ff;text-shadow:0 0 10px rgba(99,217,255,.18)}
+.hv50-mine-hud>i{width:1px;height:18px;background:linear-gradient(180deg,transparent,rgba(216,168,79,.48),transparent)}
+.hv50-level-ghost{display:none !important}
+.hv50-mine-lock-note{
+  position:absolute;z-index:90;left:50%;top:50%;transform:translate(-50%,-50%);
+  padding:10px 16px;border:1px solid rgba(216,168,79,.42);border-radius:999px;
+  background:rgba(6,6,7,.94);color:#f5dca2;font:800 11px/1.2 system-ui;
+}
+
+/* Cinco nodos flotantes: sin tarjetas visibles. */
+.hv50-mine-stage{
+  position:relative;
+  z-index:10;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) 44px;
+  align-items:center;
+  gap:4px;
+  min-height:0;
+  overflow:visible;
+}
+.hv50-mine-slots{
+  height:100%;min-width:0;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  align-items:end;
+  gap:clamp(8px,1.3vw,26px);
+  padding:6px 4px 18px;
+  overflow:visible;
+}
+.hv50-mine-slots.is-disabled{opacity:.56;pointer-events:none}
+.hv50-mine-slot{
+  position:relative;
+  isolation:isolate;
+  min-width:0;
+  height:190px;
+  padding:0 4px 7px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  gap:2px;
+  border:0;
+  background:transparent;
+  color:var(--hv50-text);
+  cursor:pointer;
+  overflow:visible;
+  transition:transform .2s cubic-bezier(.2,.9,.2,1),filter .2s ease;
+}
+.hv50-mine-slot::before{
+  content:"";
+  position:absolute;
+  z-index:-2;
+  left:50%;bottom:4px;
+  width:min(142px,92%);height:56px;
+  transform:translateX(-50%);
+  clip-path:polygon(9% 7%,91% 7%,100% 40%,84% 80%,59% 100%,38% 96%,14% 78%,0 39%);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(99,217,255,.22),transparent 38%),
+    linear-gradient(180deg,rgba(25,20,13,.95),rgba(6,7,9,.98) 56%,rgba(2,3,4,.98));
+  box-shadow:inset 0 1px rgba(255,222,153,.18),0 16px 18px rgba(0,0,0,.34);
+  filter:drop-shadow(0 1px 0 rgba(216,168,79,.44));
+  opacity:.93;
+}
+.hv50-mine-slot::after{
+  content:"";
+  position:absolute;
+  left:50%;bottom:49px;
+  width:96px;height:17px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(ellipse,rgba(70,216,255,.2),rgba(70,216,255,0) 70%);
+  filter:blur(5px);
+  opacity:.45;
+  transition:.2s ease;
+  pointer-events:none;
+}
+.hv50-mine-slot:hover:not(:disabled),.hv50-mine-slot:focus-visible:not(:disabled){transform:translateY(-5px);filter:brightness(1.08);outline:none}
+.hv50-mine-slot:hover::after,.hv50-mine-slot:focus-visible::after,.hv50-mine-slot.is-selected::after{opacity:.9;transform:translateX(-50%) scale(1.16)}
+.hv50-mine-slot.is-selected{transform:translateY(-4px)}
+.hv50-mine-slot.is-selected::before{filter:drop-shadow(0 1px 0 rgba(255,219,143,.72)) drop-shadow(0 0 14px rgba(216,168,79,.18))}
+.hv50-mine-slot.is-locked{filter:grayscale(.75) brightness(.58);cursor:default}
+.hv50-mine-slot.is-locked::before{opacity:.5}
+.hv50-mine-slot-no{
+  position:absolute;z-index:7;top:4px;left:50%;transform:translateX(-50%);
+  min-width:27px;padding:4px 7px;border-radius:999px;
+  border:1px solid rgba(216,168,79,.54);
+  background:rgba(4,5,6,.89);
+  color:#f0c771;
+  font:900 8px/1 system-ui,sans-serif;
+  letter-spacing:.08em;
+  box-shadow:0 4px 10px rgba(0,0,0,.28);
+}
+.hv50-mine-node{
+  position:relative;
+  z-index:3;
+  display:block;
+  width:clamp(70px,6.4vw,100px);
+  height:clamp(70px,6.4vw,100px);
+  margin-bottom:21px;
+  flex:0 0 auto;
+}
+.hv50-mine-node img{
+  width:100%;height:100%;object-fit:contain;display:block;
+  filter:drop-shadow(0 9px 12px rgba(0,0,0,.52)) drop-shadow(0 0 8px rgba(65,210,255,.08));
+  transform-origin:50% 75%;
+}
+.hv50-mine-slot.is-working .hv50-mine-node img{animation:hv50MineBreath 2.35s ease-in-out infinite}
+.hv50-mine-slot.is-working .hv50-mine-node::after{
+  content:"";position:absolute;inset:8% 8%;border-radius:50%;
+  box-shadow:0 0 18px rgba(78,216,255,.18),inset 0 0 15px rgba(78,216,255,.08);
+  animation:hv50MinePulse 2.35s ease-in-out infinite;pointer-events:none;
+}
+@keyframes hv50MineBreath{0%,100%{transform:translateY(0) rotate(0)}48%{transform:translateY(-2px) rotate(-1.2deg)}58%{transform:translateY(1px) rotate(.7deg)}}
+@keyframes hv50MinePulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+.hv50-mine-worker{
+  position:absolute;
+  z-index:8;
+  left:calc(50% + 24px);
+  bottom:63px;
+  width:34px;height:42px;
+  border-radius:9px;
+  overflow:hidden;
+  border:1px solid rgba(255,220,148,.66);
+  background:#08090a;
+  box-shadow:0 5px 12px rgba(0,0,0,.5),0 0 0 2px rgba(0,0,0,.28);
+}
+.hv50-mine-worker img{width:100%;height:100%;object-fit:cover;display:block}
+.hv50-mine-slot-copy{
+  position:absolute;z-index:6;
+  left:2px;right:2px;bottom:8px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  min-width:0;text-align:center;text-shadow:0 2px 6px #000;
+}
+.hv50-mine-slot-copy strong{
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#fff2d4;font:700 12px/1.1 Georgia,"Times New Roman",serif;
+}
+.hv50-mine-slot-copy small{
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#84dff8;font:800 9px/1.1 system-ui,sans-serif;font-variant-numeric:tabular-nums;
+}
+.hv50-mine-slot.is-open .hv50-mine-slot-copy small{color:#bfb4a0}
+.hv50-mine-slot.is-locked .hv50-mine-slot-copy{opacity:.7}
+.hv50-mine-page-arrow{
+  width:42px;height:70px;padding:0;border:0;background:transparent;
+  display:grid;place-items:center;color:#f3c971;
+  font:300 60px/.8 Georgia,serif;cursor:pointer;
+  text-shadow:0 0 12px rgba(216,168,79,.18),0 4px 8px #000;
+  transition:transform .16s ease,color .16s ease,opacity .16s ease;
+}
+.hv50-mine-page-arrow:hover:not(:disabled),.hv50-mine-page-arrow:focus-visible:not(:disabled){transform:scale(1.12);color:#ffe3a0;outline:none}
+.hv50-mine-page-arrow:disabled{opacity:.14;cursor:default}
+.hv50-mine-pagebar{
+  position:relative;z-index:12;justify-self:center;
+  display:flex;align-items:center;gap:12px;
+  min-height:24px;padding:2px 12px;
+  color:#e8c779;text-shadow:0 2px 5px #000;
+}
+.hv50-mine-pagebar>b{font:900 14px/1 system-ui,sans-serif;letter-spacing:.08em}
+.hv50-mine-page-dots{display:flex;gap:4px;align-items:center}
+.hv50-mine-page-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(216,168,79,.24);cursor:pointer}
+.hv50-mine-page-dot.is-active{width:17px;border-radius:999px;background:#d8a84f;box-shadow:0 0 8px rgba(216,168,79,.18)}
+
+/* Dock inferior: flotante, sin marco externo. */
+.hv50-mine-bottom-dock{
+  position:relative;z-index:16;
+  display:grid;
+  grid-template-columns:130px minmax(0,1fr) auto;
+  align-items:center;
+  gap:14px;
+  min-height:112px;
+  padding:9px 16px 10px;
+  background:
+    linear-gradient(90deg,transparent 0,rgba(2,3,5,.54) 6%,rgba(2,3,5,.77) 19%,rgba(2,3,5,.8) 82%,rgba(2,3,5,.5) 95%,transparent 100%);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+.hv50-mine-roster-title{
+  align-self:center;
+  color:#dcb568;
+  text-align:center;
+  text-shadow:0 2px 8px #000;
+}
+.hv50-mine-roster-title span,.hv50-mine-roster-title strong{display:block}
+.hv50-mine-roster-title span{font:800 11px/1.15 system-ui,sans-serif;letter-spacing:.08em}
+.hv50-mine-roster-title strong{font:900 12px/1.2 system-ui,sans-serif;letter-spacing:.05em}
+.hv50-mine-roster{
+  min-width:0;
+  display:flex !important;
+  align-items:center;
+  gap:8px !important;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:7px 4px 9px !important;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(216,168,79,.3) transparent;
+}
+.hv50-mine-roster .mine-roster-card{
+  flex:0 0 76px !important;
+  min-width:76px !important;
+  height:82px !important;
+  border-radius:12px !important;
+  border:0 !important;
+  background:rgba(6,7,8,.45) !important;
+  box-shadow:inset 0 0 0 1px rgba(216,168,79,.18),0 7px 14px rgba(0,0,0,.24) !important;
+  overflow:hidden !important;
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease !important;
+}
+.hv50-mine-roster .mine-roster-card:hover:not(:disabled),.hv50-mine-roster .mine-roster-card:focus-visible:not(:disabled){
+  transform:translateY(-4px) !important;
+  box-shadow:inset 0 0 0 1px rgba(255,219,143,.78),0 9px 17px rgba(0,0,0,.32),0 0 16px rgba(216,168,79,.13) !important;
+  outline:none;
+}
+.hv50-mine-roster .mine-roster-thumb{height:100% !important}
+.hv50-mine-roster .mine-roster-thumb::after{background:linear-gradient(180deg,transparent 40%,rgba(3,4,5,.92) 90%) !important}
+.hv50-mine-roster .mine-roster-meta{left:5px !important;right:5px !important;bottom:5px !important;text-shadow:0 2px 5px #000}
+.hv50-mine-roster .mine-roster-meta b{font:700 8px/1.05 Georgia,serif !important;color:#fff2dc !important;-webkit-line-clamp:1 !important}
+.hv50-mine-roster .mine-roster-meta small{font:900 7px/1 system-ui,sans-serif !important;color:#d8b768 !important}
+.hv50-mine-roster .mine-roster-card:disabled{opacity:.3;filter:grayscale(.65);cursor:default}
+.hv50-mine-actions{
+  display:flex;align-items:center;justify-content:flex-end;gap:20px;
+  padding-left:10px;
+}
+.hv50-action{
+  position:relative;
+  width:78px;min-width:78px;
+  padding:0;
+  display:grid;
+  justify-items:center;
+  gap:4px;
+  border:0;
+  background:transparent;
+  color:#e8c676;
+  cursor:pointer;
+  overflow:visible;
+}
+.hv50-action-ring{
+  width:58px;height:58px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid rgba(216,168,79,.58);
+  background:
+    radial-gradient(circle at 45% 35%,rgba(255,225,164,.08),transparent 45%),
+    linear-gradient(180deg,rgba(28,20,10,.91),rgba(5,6,8,.96));
+  box-shadow:0 8px 16px rgba(0,0,0,.32),inset 0 0 0 2px rgba(0,0,0,.27),0 0 0 1px rgba(255,219,143,.04);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,filter .16s ease;
+}
+.hv50-action-ring svg{width:33px;height:33px;fill:none;stroke:currentColor;stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round}
+.hv50-action-label{color:#f4dfae;font:800 9px/1.08 Georgia,serif;text-align:center;text-shadow:0 2px 4px #000}
+.hv50-action-hint{max-width:76px;color:#9e917c;font:750 6px/1.05 system-ui,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hv50-action:hover:not(:disabled) .hv50-action-ring,.hv50-action:focus-visible:not(:disabled) .hv50-action-ring{
+  transform:translateY(-3px) scale(1.04);
+  border-color:#ffd98a;
+  box-shadow:0 11px 20px rgba(0,0,0,.38),0 0 20px rgba(216,168,79,.13),inset 0 0 0 2px rgba(0,0,0,.25);
+  filter:brightness(1.07);
+}
+.hv50-action:focus-visible{outline:none}
+.hv50-action:disabled{opacity:.35;cursor:default}
+.hv50-action--claim{color:#8ce9ff}
+.hv50-action--claim .hv50-action-ring{border-color:rgba(99,217,255,.46)}
+.hv50-action--buy.is-insufficient{color:#d38878}
+.hv50-action--buy.is-complete{color:#8ce7b2}
+.hv50-selected-state,.hv50-ready-meta{display:none !important}
+.hv50-mine-status{
+  position:relative;z-index:18;
+  min-height:15px;
+  padding:0 12px;
+  color:#cbbda4;
+  font:700 8px/1.2 system-ui,sans-serif;
+  text-align:center;
+  text-shadow:0 2px 5px #000;
+}
+
+/* Modales de HallValla siempre por encima de la Mina. */
+.hv-modal{z-index:30000 !important}
+
+/* Las otras pestañas no quedan debajo del rail ni del header. */
+.mine-panel:not([data-mine-panel="production"]) .mine-panel-content{
+  padding-top:128px !important;
+  padding-left:154px !important;
+  padding-right:24px !important;
+  padding-bottom:24px !important;
+}
+
+/* Pantallas más estrechas: mantenemos el rail vertical en landscape; reducimos escala, no solapamos. */
+@media(max-width:1100px){
+  .mine-topbar{left:112px;padding-left:78px !important;padding-right:16px !important}
+  .mine-back-btn{left:18px !important}
+  .mine-nav{left:10px !important;top:10px !important;bottom:10px !important;width:96px !important;border-radius:22px !important}
+  .hv50-mine-brand{min-height:62px}.hv50-mine-brand strong{font-size:11px}.hv50-mine-brand-mark{font-size:20px}
+  .mine-nav-btn{min-height:76px !important}.mine-nav-btn img{width:39px !important;height:39px !important}.mine-nav-btn span{font-size:7px !important}
+  .hv50-mine-production{padding:116px 12px 12px 118px;grid-template-rows:auto minmax(205px,1fr) 24px minmax(94px,auto) auto;gap:5px}
+  .hv50-mine-hud{max-width:680px;min-height:38px;padding:6px 12px;gap:7px}.hv50-mine-hud>span em{font-size:9px}.hv50-mine-hud>span b{font-size:11px}
+  .hv50-mine-stage{grid-template-columns:32px minmax(0,1fr) 32px}.hv50-mine-page-arrow{width:32px;font-size:46px}
+  .hv50-mine-slots{gap:4px;padding-bottom:12px}.hv50-mine-slot{height:158px}.hv50-mine-node{width:68px;height:68px;margin-bottom:19px}.hv50-mine-worker{width:27px;height:34px;left:calc(50% + 17px);bottom:56px}.hv50-mine-slot::before{width:min(112px,96%);height:48px}.hv50-mine-slot-copy strong{font-size:9px}.hv50-mine-slot-copy small{font-size:7px}
+  .hv50-mine-bottom-dock{grid-template-columns:95px minmax(0,1fr) auto;min-height:92px;padding:6px 8px;gap:8px}.hv50-mine-roster-title span{font-size:8px}.hv50-mine-roster-title strong{font-size:9px}.hv50-mine-roster .mine-roster-card{flex-basis:58px !important;min-width:58px !important;height:66px !important}.hv50-mine-actions{gap:8px}.hv50-action{width:58px;min-width:58px}.hv50-action-ring{width:44px;height:44px}.hv50-action-ring svg{width:25px;height:25px}.hv50-action-label{font-size:7px}.hv50-action-hint{display:none}
+  .mine-panel:not([data-mine-panel="production"]) .mine-panel-content{padding-top:116px !important;padding-left:118px !important}
+}
+
+@media(max-height:720px) and (min-width:701px){
+  .mine-topbar{min-height:94px !important;padding-top:14px !important}.mine-back-btn{top:17px !important}
+  #mineHeaderTitle{font-size:31px !important}.mine-kicker{font-size:10px !important}.mine-resource-pill{min-height:39px !important;padding:6px 10px !important}.mine-resource-pill b{font-size:12px !important}.mine-resource-pill img{width:18px !important;height:18px !important}
+  .hv50-mine-production{padding-top:96px;grid-template-rows:auto minmax(150px,1fr) 20px 80px auto}
+  .hv50-mine-hud{min-height:32px;padding:4px 10px}.hv50-mine-slot{height:126px}.hv50-mine-node{width:54px;height:54px;margin-bottom:17px}.hv50-mine-worker{width:22px;height:28px;bottom:48px}.hv50-mine-slot::before{height:40px}.hv50-mine-bottom-dock{min-height:78px}.hv50-mine-roster .mine-roster-card{height:56px !important}.hv50-action-ring{width:38px;height:38px}.hv50-action-ring svg{width:22px;height:22px}.hv50-action-label{font-size:6px}
+}
+
+/* Portrait muy estrecho: la navegación pasa arriba; landscape de Android conserva rail vertical. */
+@media(max-width:700px) and (orientation:portrait){
+  .mine-topbar{left:0;top:68px;min-height:86px !important;padding:8px 12px 8px 64px !important}.mine-back-btn{left:10px !important;top:10px !important;width:40px !important;height:40px !important}.mine-resource-strip{position:absolute;right:8px;top:8px}.mine-resource-pill{min-height:32px !important;padding:4px 6px !important}.mine-resource-pill b{font-size:10px !important}.mine-resource-pill img{width:15px !important;height:15px !important}#mineHeaderTitle{font-size:24px !important}.mine-kicker{font-size:8px !important}
+  .mine-nav{left:6px !important;right:6px !important;top:6px !important;bottom:auto !important;width:auto !important;height:58px !important;flex-direction:row !important;padding:4px 6px !important;gap:3px !important;border-radius:17px !important}.hv50-mine-brand{display:none}.mine-nav-btn{flex:1 1 0;min-width:0 !important;min-height:48px !important;padding:2px !important}.mine-nav-btn img{width:27px !important;height:27px !important}.mine-nav-btn span{font-size:6px !important}
+  .hv50-mine-production{padding:160px 5px 8px;grid-template-rows:auto minmax(210px,1fr) 24px auto auto}.hv50-mine-hud{max-width:100%;overflow-x:auto;justify-self:stretch}.hv50-mine-stage{grid-template-columns:24px minmax(0,1fr) 24px}.hv50-mine-slots{overflow-x:auto;grid-template-columns:repeat(5,minmax(88px,1fr));gap:2px}.hv50-mine-slot{height:150px}.hv50-mine-bottom-dock{grid-template-columns:1fr;gap:4px}.hv50-mine-roster-title{display:none}.hv50-mine-actions{justify-content:center}.mine-panel:not([data-mine-panel="production"]) .mine-panel-content{padding:160px 8px 12px !important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hv50-mine-slot,.hv50-mine-node img,.hv50-mine-node::after,.hv50-action-ring,.mine-nav-btn{animation:none !important;transition:none !important}
+}

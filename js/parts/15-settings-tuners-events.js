@@ -2071,10 +2071,10 @@ function renderHallvallaMineProduction(profile=getPlayerProfile()){
   if(claimBtn){
     const onlineReady=hallvallaMineOnlineReady();
     claimBtn.disabled=!unlocked||!onlineReady||(mineDamaged?false:aggregate.pendingTotal<=0);
-    const label=claimBtn.querySelector(".mine-action-copy b");
-    const hint=claimBtn.querySelector(".mine-action-copy small");
-    if(label)label.textContent=mineDamaged?"Reparar Mina":"Recoger";
-    else claimBtn.textContent=mineDamaged?"Reparar Mina":"Recoger";
+    const label=claimBtn.querySelector(".hv50-action-label, .mine-action-copy b");
+    const hint=claimBtn.querySelector(".hv50-action-hint, .mine-action-copy small");
+    if(label)label.textContent=mineDamaged?"Reparar Mina":"Recoger todo";
+    else claimBtn.setAttribute("aria-label",mineDamaged?"Reparar Mina":"Recoger producción");
     if(hint)hint.textContent=!onlineReady?"Sincronizando con Firebase…":(mineDamaged?"Revisar avería activa":"Transferir producción");
     claimBtn.title=!onlineReady?"Sincronizando con Firebase...":(mineDamaged?"Ir a Eventos para revisar y reparar la avería activa.":"");
   }
@@ -2086,14 +2086,14 @@ function renderHallvallaMineProduction(profile=getPlayerProfile()){
     buyBtn.disabled=!unlocked||soldOut;
     buyBtn.classList.toggle("is-complete",soldOut);
     if(soldOut){
-      const label=buyBtn.querySelector("span b");
-      if(label)label.textContent="Mina completa";
+      const label=buyBtn.querySelector(".hv50-action-label, span b");
+      if(label)label.textContent="Completa";
       if(buyHint)buyHint.textContent="20 / 20 espacios";
     }else{
       const nextIndex=unlockedSlots;
       const cost=getHallvallaMineSlotUnlockCost(nextIndex);
-      const label=buyBtn.querySelector("span b");
-      if(label)label.textContent="Comprar nuevo espacio";
+      const label=buyBtn.querySelector(".hv50-action-label, span b");
+      if(label)label.textContent="Nuevo espacio";
       if(buyHint)buyHint.textContent=`Ranura ${String(nextIndex+1).padStart(2,"0")} · ${cost.toLocaleString("es-ES")}💎`;
       const gems=Math.max(0,Number(profile?.gems||0));
       buyBtn.classList.toggle("is-insufficient",gems<cost);
@@ -2132,16 +2132,16 @@ function renderHallvallaMineSlots(mineState,aggregate,unlocked){
   hallvallaMineUi.selectedSlot=selected;
   grid.innerHTML=Array.from({length:end-start},(_,offset)=>start+offset).map(index=>{
     const slot=mineState.slots[index]||createHallvallaMineSlot(),view=aggregate.slots[index]||getHallvallaMineSlotView(slot,mineState,getHallvallaMineNow()),slotUnlocked=index<unlockedSlots,legacyActive=!slotUnlocked&&view.active;
-    const number=String(index+1).padStart(2,"0"),cls=["hv47-mine-slot",view.active?"is-working":(slotUnlocked?"is-open":"is-locked"),legacyActive?"is-legacy":"",selected===index&&slotUnlocked?"is-selected":""].filter(Boolean).join(" "),data=slotUnlocked||view.active?` data-mine-slot="${index}"`:"";
-    const portrait=view.image?`<span class="hv47-mine-worker"><img src="${escapeHtml(view.image)}" alt=""></span>`:"";
+    const number=String(index+1).padStart(2,"0"),cls=["hv50-mine-slot",view.active?"is-working":(slotUnlocked?"is-open":"is-locked"),legacyActive?"is-legacy":"",selected===index&&slotUnlocked?"is-selected":""].filter(Boolean).join(" "),data=slotUnlocked||view.active?` data-mine-slot="${index}"`:"";
+    const portrait=view.image?`<span class="hv50-mine-worker"><img src="${escapeHtml(view.image)}" alt=""></span>`:"";
     const copy=view.active?`<strong>${escapeHtml(view.name)}</strong><small>${formatHallvallaMineDuration(view.nextMs)} · ${view.pending}💎</small>`:slotUnlocked?`<strong>Espacio libre</strong><small>Selecciona una unidad</small>`:`<strong>Bloqueado</strong><small>${index===unlockedSlots?"Siguiente espacio":"Compra los anteriores"}</small>`;
-    return `<button type="button" class="${cls}"${data}${slotUnlocked||view.active?"":" disabled"} aria-label="Espacio ${number}${view.active?`, ${escapeHtml(view.name)}`:""}"><span class="hv47-mine-slot-no">${number}</span><span class="hv47-mine-node" aria-hidden="true"><img src="assets/mine/icon_production.webp" alt=""></span>${portrait}<span class="hv47-mine-slot-copy">${copy}</span></button>`;
+    return `<button type="button" class="${cls}"${data}${slotUnlocked||view.active?"":" disabled"} aria-label="Espacio ${number}${view.active?`, ${escapeHtml(view.name)}`:""}"><span class="hv50-mine-slot-no">${number}</span><span class="hv50-mine-node" aria-hidden="true"><img src="assets/mine/icon_production.webp" alt=""></span>${portrait}<span class="hv50-mine-slot-copy">${copy}</span></button>`;
   }).join("");
   grid.onclick=event=>{const card=event.target?.closest?.("[data-mine-slot]");if(!card||!grid.contains(card))return;const index=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(card.dataset.mineSlot||0))),state=getHallvallaMineState();if(!hallvallaMineSlotUnlocked(index,state)&&!state.slots[index]?.cardKey)return;hallvallaMineUi.selectedSlot=index;renderHallvallaMineProduction();};
   grid.classList.toggle("is-disabled",!unlocked);
   const prev=$("minePrevPageBtn"),next=$("mineNextPageBtn"),label=$("minePageLabel"),dots=$("minePageDots");
   if(prev)prev.disabled=page<=0;if(next)next.disabled=page>=maxPage;if(label)label.textContent=`${String(start+1).padStart(2,"0")}—${String(end).padStart(2,"0")}`;
-  if(dots){dots.innerHTML=Array.from({length:maxPage+1},(_,p)=>`<button type="button" class="hv47-mine-page-dot${p===page?" is-active":""}" data-mine-page="${p}" aria-label="Ver espacios ${p*5+1} a ${Math.min(p*5+5,HALLVALLA_MINE_SLOT_COUNT)}"></button>`).join("");dots.onclick=event=>{const dot=event.target?.closest?.("[data-mine-page]");if(dot)setHallvallaMinePage(Number(dot.dataset.minePage||0));};}
+  if(dots){dots.innerHTML=Array.from({length:maxPage+1},(_,p)=>`<button type="button" class="hv50-mine-page-dot${p===page?" is-active":""}" data-mine-page="${p}" aria-label="Ver espacios ${p*5+1} a ${Math.min(p*5+5,HALLVALLA_MINE_SLOT_COUNT)}"></button>`).join("");dots.onclick=event=>{const dot=event.target?.closest?.("[data-mine-page]");if(dot)setHallvallaMinePage(Number(dot.dataset.minePage||0));};}
 }
 
 async function transactHallvallaMineSlotUnlockRemote(targetIndex){
