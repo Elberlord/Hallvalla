@@ -28373,3 +28373,48 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:move!important;
   .hv-universal-layout-tuner{left:7px;top:55px;width:min(340px,calc(100vw - 14px));max-height:calc(100dvh - 62px);}
   .hv-universal-body{padding:9px;gap:7px;}
 }
+
+/* ============================================================
+   HallValla 20260912.71 — TR EXPERIMENTAL (solo ?dev)
+   ============================================================ */
+.hallvalla-rt-status{
+  position:absolute;
+  z-index:34;
+  left:50%;
+  top:10px;
+  transform:translateX(-50%);
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid rgba(240,196,92,.55);
+  background:rgba(4,6,8,.82);
+  color:#f3d77f;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.035em;
+  white-space:nowrap;
+  pointer-events:none;
+  box-shadow:0 8px 20px rgba(0,0,0,.35);
+}
+.hallvalla-rt-status[hidden]{display:none !important;}
+.hv-rt-experimental #turnTimerHud,
+.hv-rt-experimental #playerClock1,
+.hv-rt-experimental #playerClock2,
+.hv-rt-experimental #endBtn,
+.hv-rt-experimental #toggleActionsBtn,
+.hv-rt-experimental #mobileToggleActionsBtn{
+  display:none !important;
+}
+.hv-rt-experimental #handDrawer{
+  pointer-events:auto !important;
+}
+.hv-rt-experimental #handDrawer.open{
+  visibility:visible !important;
+  opacity:1 !important;
+}
+.hv-rt-experimental .hv-rt-dev-toggle.active{
+  border-color:rgba(99,238,152,.72) !important;
+  box-shadow:0 0 0 1px rgba(99,238,152,.2),0 0 18px rgba(99,238,152,.14) !important;
+}
+@media (max-width:760px){
+  .hallvalla-rt-status{top:6px;font-size:9px;padding:5px 8px;max-width:92vw;overflow:hidden;text-overflow:ellipsis;}
+}

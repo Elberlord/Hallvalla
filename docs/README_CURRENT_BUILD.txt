@@ -1,4 +1,6 @@
-BUILD ACTUAL: 20260912.52
+BUILD ACTUAL: 20260912.71
 
-Mina Eventos: iconos flotantes interactivos.
-Ver docs/MINE_EVENTS_FLOATING_ICONS_20260912_52.txt
+Prueba DEV: Combate TR experimental sin reemplazar el modo normal.
+Ver docs/REALTIME_EXPERIMENTAL_20260912_71.txt
+
+Mina y sistemas previos se conservan.

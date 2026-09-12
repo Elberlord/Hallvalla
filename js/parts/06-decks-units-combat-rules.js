@@ -504,7 +504,9 @@ function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}fun
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
 const RESOURCE_MAX_CAP=10;
-function capResourceMax(value){return Math.min(RESOURCE_MAX_CAP,Math.max(0,Number(value||0)));}
+const REALTIME_EXPERIMENTAL_RESOURCE_MAX_CAP=20;
+function getActiveResourceMaxCap(){return (typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())?REALTIME_EXPERIMENTAL_RESOURCE_MAX_CAP:RESOURCE_MAX_CAP;}
+function capResourceMax(value){return Math.min(getActiveResourceMaxCap(),Math.max(0,Number(value||0)));}
 function capResourceAmount(value,maxValue){return Math.min(capResourceMax(maxValue),Math.max(0,Number(value||0)));}
 function getResourceRecharge(prevMax,rawGain){
   const previousMax=capResourceMax(prevMax);

@@ -54,7 +54,7 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
     else if(masteryCardType==="spell"||card?.spell)registerAccountMasteryAction("spells",1,`${masteryEventBase}:spell`);
   }
   pulseTurnHonorHud();
-  scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
+  if(!(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()))scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
   return true;
 }
 

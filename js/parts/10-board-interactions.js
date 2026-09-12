@@ -186,6 +186,7 @@ function moveBoardDragGhost(ev){
 function getDragUnitMoveKeys(u){return moveZones(u);}
 function getDragUnitAttackKeys(u){return getAttackableTargets(u).map(t=>`${t.x},${t.y}`);}
 function startUnitBoardDrag(ev,u,sourceEl){
+  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return false;
   if(!u||u.owner!==myPlayer||!isMyTurn()||isBattleEnded())return false;
   const limited=isPvpStep6fLimitedMode();
   const attackEnabled=!limited||isPvpStep6gAttackMode();
@@ -482,6 +483,7 @@ function unitHasContextEffect(u){
 }
 function getUnitContextOptions(u){
   if(!u)return[];
+  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return[{key:"det",label:"DET",hint:"Detalles"}];
   const mine=u.owner===myPlayer;
   const opts=[];
   if(mine){

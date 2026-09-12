@@ -1,0 +1,31 @@
+HALLVALLA 20260912.71 — COMBATE TR EXPERIMENTAL
+
+Objetivo
+- Probar el gameplay continuo sin reemplazar todavía el combate normal.
+- Disponible únicamente con ?dev y bloqueado en PvP online real.
+
+Activación
+- Abre una batalla de Aventura/Local.
+- Menú de duelo > TR EXPERIMENTAL: OFF.
+- Al activarlo, para volver al sistema por turnos hay que reiniciar el duelo.
+
+Prueba incluida
+- Mano permanece abierta.
+- Recurso continuo: +1 cada 3 s, máximo experimental 20.
+- Robo automático: 1 carta cada 5 s si la mano tiene menos de 5.
+- Las unidades del jugador se siguen desplegando arrastrando desde la mano.
+- Las unidades no tienen MOV/ATK/DEF manual en TR; DET permanece disponible.
+- Después de ser desplegadas avanzan automáticamente.
+- Prioridad: unidad enemiga más cercana al líder propio.
+- Varias unidades pueden concentrarse sobre el mismo objetivo.
+- Las unidades de rango atacan al entrar en su rango.
+- Si no quedan invocaciones rivales, avanzan/atacan al líder rival.
+- La IA de Aventura gana recurso, roba cartas y despliega unidades automáticamente.
+
+Compatibilidad de combate
+- Los buffs de líderes NO se redefinen: se usan los cálculos existentes del motor.
+- La resolución de ataques reutiliza resolveSharedAttackPreparation / resolveSharedAttackOutcome para conservar la mayor cantidad posible de reglas actuales.
+- Los efectos que dependen textualmente de "turno" se interpretan provisionalmente por ciclos TR de 3 segundos. Esto es solo para prueba de gameplay; habrá que recanonizarlos si el modo TR se adopta definitivamente.
+
+Seguridad
+- PvP online no se modifica ni permite activar este prototipo.

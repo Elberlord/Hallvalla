@@ -1530,6 +1530,7 @@ function enterGame(code,player){
   },1800,"adventure-ai-watchdog");
 }
 function maybeTriggerAdventureAI(){
+  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return;
   if(!gameId||!publicState||publicState.mode!=="adventure"||publicState.currentPlayer!==2||isBattleEnded())return;
   const key=`${gameId}:${publicState.turnKey||""}:${publicState.turn||0}`;
   if(aiTurnLock||lastAiTurnKey===key)return;
@@ -1557,6 +1558,7 @@ function maybeTriggerAdventureAI(){
   },650,"adventure-ai-action");
 }
 async function maybeStartTurn(){
+  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return;
   if(!publicState||!privateState||!isMyTurn()||isBattleEnded())return;
   if(publicState.mode==="tutorial"&&publicState.tutorialBasic&&typeof isBasicTutorialInitialDrawBlocked==="function"&&isBasicTutorialInitialDrawBlocked())return;
   if(privateState.lastTurnStarted===publicState.turnKey)return;
