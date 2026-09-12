@@ -1,0 +1,10 @@
+HallValla 20260912.55 — Mina · Misiones claim fix
+
+- Corrige el botón RECLAMAR de Misiones a partir del segundo peldaño.
+- Causa: runTransaction() podía iniciar con cache null aunque Firebase ya tuviera claimed=1,2,...; .54 abortaba antes de reconciliar.
+- Se precalienta claimed/{missionId}, se tolera el primer null y se valida el tier real antes de entregar premio.
+- El premio solo se aplica después de commit confirmado.
+- Oro/gemas se reflejan inmediatamente y se fuerza cloudSaveV2 cuando hay cuenta permanente.
+- Se añaden logs [HallValla][Mina][Misiones][Claim] para diagnóstico.
+- Las recompensas siguen escalando con cada peldaño mediante HALLVALLA_MINE_MISSION_REWARD_FACTORS.
+- No se modifica el diseño visual de Misiones ni las reglas de Firebase.

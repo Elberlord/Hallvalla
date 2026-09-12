@@ -3199,32 +3199,109 @@ function applyHallvallaMineMissionReward(reward={}){
   if(gold)gold.textContent=Math.max(0,Number(profile.gold||0)).toLocaleString("es-ES");
   if(gems)gems.textContent=Math.max(0,Number(profile.gems||0)).toLocaleString("es-ES");
 }
+const hallvallaMineMissionClaimBusy=new Set();
 async function claimHallvallaMineMission(missionId=""){
   const def=HALLVALLA_MINE_MISSION_DEFS.find(entry=>entry.id===missionId);if(!def)return;
-  let state=await syncHallvallaMineMissionsRemote();
-  const tierIndex=getHallvallaMineMissionClaimedTiers(state.claimed?.[def.id]);
-  const target=getHallvallaMineMissionTierTarget(def,tierIndex);
-  const reward=getHallvallaMineMissionTierReward(def,tierIndex);
-  const progress=getHallvallaMineMissionProgress(def,state);
-  if(progress<target)return;
-  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
-    state.claimed[def.id]=tierIndex+1;cacheHallvallaMineMissionsState(state);applyHallvallaMineMissionReward(reward);renderHallvallaMineMissions(state);return;
-  }
-  const userId=getHallvallaMineUserUid();if(!userId)return;
+  if(hallvallaMineMissionClaimBusy.has(def.id))return;
+  hallvallaMineMissionClaimBusy.add(def.id);
+  const status=$("mineMissionStatus");
   try{
+    let state=await syncHallvallaMineMissionsRemote();
+    let tierIndex=getHallvallaMineMissionClaimedTiers(state.claimed?.[def.id]);
+    let target=getHallvallaMineMissionTierTarget(def,tierIndex);
+    let progress=getHallvallaMineMissionProgress(def,state);
+    if(progress<target){
+      if(status)status.textContent="La misión todavía no está lista para reclamar.";
+      renderHallvallaMineMissions(state);
+      return;
+    }
+    if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+      const reward=getHallvallaMineMissionTierReward(def,tierIndex);
+      state.claimed[def.id]=tierIndex+1;
+      cacheHallvallaMineMissionsState(state);
+      applyHallvallaMineMissionReward(reward);
+      if(status)status.textContent=`Peldaño ${tierIndex+1} completado: ${getHallvallaMineMissionRewardText(reward)}.`;
+      renderHallvallaMineMissions(state);
+      return;
+    }
+    const userId=getHallvallaMineUserUid();
+    if(!userId){
+      if(status)status.textContent="No se encontró la cuenta de Firebase para confirmar la recompensa.";
+      return;
+    }
+
     const claimRef=ref(db,`users/${userId}/mine/missions/claimed/${def.id}`);
+    /*
+       Firebase puede invocar primero el callback de runTransaction() con null
+       aunque el servidor ya tenga un peldaño reclamado. En .54 eso abortaba
+       silenciosamente cualquier misión a partir del segundo peldaño porque
+       null se normalizaba a 0 y no coincidía con tierIndex=1,2,3...
+
+       Primero calentamos el valor autoritativo y, si el callback arranca con
+       null, proponemos el siguiente valor esperado. El servidor reconcilia y
+       vuelve a ejecutar el callback con el valor real antes de confirmar.
+    */
+    const serverClaimSnapshot=await get(claimRef);
+    const serverTier=getHallvallaMineMissionClaimedTiers(serverClaimSnapshot.exists()?serverClaimSnapshot.val():null);
+    if(serverTier!==tierIndex){
+      state=await syncHallvallaMineMissionsRemote();
+      tierIndex=getHallvallaMineMissionClaimedTiers(state.claimed?.[def.id]);
+      target=getHallvallaMineMissionTierTarget(def,tierIndex);
+      progress=getHallvallaMineMissionProgress(def,state);
+      if(progress<target){
+        if(status)status.textContent="El progreso cambió al sincronizar con Firebase.";
+        renderHallvallaMineMissions(state);
+        return;
+      }
+    }
+
+    const expectedTier=tierIndex;
+    console.info("[HallValla][Mina][Misiones][Claim] inicio",{missionId:def.id,expectedTier,target,progress,serverTier});
     const result=await runTransaction(claimRef,current=>{
+      if(current==null&&expectedTier>0)return expectedTier+1;
       const remoteTier=getHallvallaMineMissionClaimedTiers(current);
-      return remoteTier===tierIndex?tierIndex+1:undefined;
+      return remoteTier===expectedTier?expectedTier+1:undefined;
     },{applyLocally:false});
-    if(!result?.committed){await syncHallvallaMineMissionsRemote();renderHallvallaMineMissions();return;}
-    state=getHallvallaMineMissionsState();state.claimed[def.id]=Math.max(tierIndex+1,getHallvallaMineMissionClaimedTiers(result.snapshot.val()));cacheHallvallaMineMissionsState(state);
+
+    if(!result?.committed){
+      console.warn("[HallValla][Mina][Misiones][Claim] transacción abortada",{missionId:def.id,expectedTier,serverTier});
+      state=await syncHallvallaMineMissionsRemote();
+      if(status)status.textContent="Firebase no confirmó el premio; el estado fue sincronizado.";
+      renderHallvallaMineMissions(state);
+      return;
+    }
+
+    const committedTier=getHallvallaMineMissionClaimedTiers(result.snapshot.val());
+    if(committedTier!==expectedTier+1){
+      console.warn("[HallValla][Mina][Misiones][Claim] peldaño inesperado",{missionId:def.id,expectedTier,committedTier});
+      state=await syncHallvallaMineMissionsRemote();
+      if(status)status.textContent="La misión cambió en otro dispositivo; se sincronizó el estado.";
+      renderHallvallaMineMissions(state);
+      return;
+    }
+
+    const reward=getHallvallaMineMissionTierReward(def,expectedTier);
+    state=getHallvallaMineMissionsState();
+    state.claimed[def.id]=committedTier;
+    cacheHallvallaMineMissionsState(state);
     applyHallvallaMineMissionReward(reward);
-    const status=$("mineMissionStatus");if(status)status.textContent=`Peldaño ${tierIndex+1} completado: ${getHallvallaMineMissionRewardText(reward)}.`;
+    console.info("[HallValla][Mina][Misiones][Claim] premio aplicado",{missionId:def.id,tier:committedTier,reward});
+
+    /* El perfil forma parte del cloudSaveV2. Forzamos una sincronización tras
+       entregar el premio para que oro/gemas no dependan del ciclo automático. */
+    try{
+      if(typeof hallvallaUploadCloudSave==="function"&&typeof hallvallaIsPermanentAccount==="function"&&hallvallaIsPermanentAccount(auth?.currentUser)){
+        await hallvallaUploadCloudSave(auth.currentUser,{force:true,reason:"mine_mission_reward"});
+      }
+    }catch(syncError){console.warn("[HallValla][Mina][Misiones][Claim] premio local entregado; nube pendiente:",syncError);}
+
+    if(status)status.textContent=`Peldaño ${committedTier} completado: ${getHallvallaMineMissionRewardText(reward)}.`;
     renderHallvallaMineMissions(state);
   }catch(error){
     console.warn("[HallValla][Mina][Misiones] No se pudo reclamar:",error);
-    const status=$("mineMissionStatus");if(status)status.textContent="No se pudo confirmar la recompensa con Firebase.";
+    if(status)status.textContent="No se pudo confirmar la recompensa con Firebase.";
+  }finally{
+    hallvallaMineMissionClaimBusy.delete(def.id);
   }
 }
 function renderHallvallaMineMissions(state=seedHallvallaMineMissionFacts(getHallvallaMineMissionsState())){
