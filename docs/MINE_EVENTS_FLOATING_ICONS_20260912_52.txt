@@ -1,0 +1,25 @@
+HALLVALLA · MINA EVENTOS · BUILD 20260912.52
+
+OBJETIVO
+- Rehacer la pestaña Eventos con el mismo lenguaje visual aprobado para Producción.
+- Quitar rectángulos/paneles grandes.
+- Usar iconos de evento flotantes y clicables.
+- Mantener los eventos oscuros mientras no estén activos.
+
+CAMBIOS
+- 6 iconos nuevos transparentes: Incendio, Inundación, Derrumbe, Tesoro, Veta rica y Cámara secreta.
+- El icono principal del evento es ahora el control clicable para Reparar / Reclamar / Abrir.
+- Los eventos inactivos se muestran desaturados, oscuros y no son clicables.
+- El evento activo recupera color, glow y feedback hover/focus/touch.
+- Se eliminó visualmente la cuadrícula de tarjetas y sus bordes.
+- El resumen Activos / positivos / daños queda como HUD textual flotante.
+- Se conserva la lógica de Firebase y resolución de eventos.
+- Se conserva gamepad: los iconos de eventos son botones HTML reales.
+- Los documentos TXT sueltos de builds 48 y 49 fueron movidos a docs/.
+
+NO CAMBIADO
+- Probabilidades/frecuencia de eventos.
+- Costos de reparación.
+- Recompensas.
+- Reglas de Firebase.
+- Producción, PvP, combate, cartas o economía general.

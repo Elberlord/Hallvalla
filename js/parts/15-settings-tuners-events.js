@@ -1879,12 +1879,17 @@ function renderHallvallaMineEvents(eventState=processHallvallaMineEvents()){
     card.classList.toggle("active-event",isActive);
     card.classList.toggle("inactive",!isActive);
     card.classList.toggle("selected",card===selected&&isActive);
-    const effect=card.querySelector("[data-mine-event-effect]"),button=card.querySelector("[data-mine-event-action]");
-    if(effect)effect.innerHTML=formatHallvallaMineEventEffectHtml(isActive?String(instance.effectText||def?.baseEffect||""):String(def?.baseEffect||"Inactivo"));
+    const effect=card.querySelector("[data-mine-event-effect]"),
+          button=card.querySelector("[data-mine-event-action]"),
+          actionLabel=card.querySelector("[data-mine-event-action-label]");
+    if(effect)effect.innerHTML=formatHallvallaMineEventEffectHtml(isActive?String(instance.effectText||def?.baseEffect||""):String(def?.baseEffect||""));
     if(button){
       button.disabled=!isActive;
       const freeClears=Math.max(0,Math.floor(Number(getPlayerProfile()?.freeMineDisasterClears||0)));
-      button.textContent=isActive&&def?.kind==="negative"&&freeClears>0?`Eliminar gratis · ${freeClears}`:(def?.button||"Acción");
+      const actionText=isActive&&def?.kind==="negative"&&freeClears>0?`Eliminar gratis · ${freeClears}`:(def?.button||"Acción");
+      button.title=isActive?actionText:`${def?.name||"Evento"} · inactivo`;
+      button.setAttribute("aria-label",isActive?`${def?.name||"Evento"} · ${actionText}`:`${def?.name||"Evento"} · inactivo`);
+      if(actionLabel)actionLabel.textContent=isActive?actionText:"";
     }
   });
   setHallvallaMineEventScene(selected);
@@ -1901,9 +1906,12 @@ function setHallvallaMineEventScene(card){
 }
 function flashHallvallaMineEventButton(button,text){
   if(!button)return;
-  const original=button.textContent;
-  button.textContent=text;
-  window.setTimeout(()=>{button.textContent=original;},1400);
+  const card=button.closest?.(".mine-event-card");
+  const label=card?.querySelector?.("[data-mine-event-action-label]");
+  if(!label)return;
+  const original=label.textContent;
+  label.textContent=String(text||"");
+  window.setTimeout(()=>{label.textContent=original;},1400);
 }
 async function resolveHallvallaMineNegativeEventRemote(key){
   if(!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineEventState()};
@@ -3469,22 +3477,14 @@ function initHallvallaMineEventScenes(){
   cards.forEach(card=>{
     if(card.dataset.mineSceneReady==="1")return;
     card.dataset.mineSceneReady="1";
-    const select=()=>{
-      if(card.dataset.mineEventActive!=="1")return;
-      cards.forEach(entry=>entry.classList.toggle("selected",entry===card&&entry.dataset.mineEventActive==="1"));
-      setHallvallaMineEventScene(card);
-    };
-    card.addEventListener("click",event=>{if(event.target.closest("button"))return;select();});
-    card.addEventListener("pointerenter",select);
     const button=card.querySelector("[data-mine-event-action]");
     button?.addEventListener("click",event=>{
       event.stopPropagation();
       if(card.dataset.mineEventActive!=="1")return;
       handleHallvallaMineEventAction(String(card.dataset.mineEventKey||""),button);
     });
-    const src=String(card.dataset.mineEventScene||"").trim();
-    if(src){const preload=new Image();preload.src=src;}
   });
+  setHallvallaMineEventScene(null);
   renderHallvallaMineEvents(processHallvallaMineEvents());
 }
 try{document.querySelectorAll(".mine-nav-btn").forEach(btn=>btn.addEventListener("click",()=>setMineSection(btn.dataset.mineTab||"production")));}catch(_){ }

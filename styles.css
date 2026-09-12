@@ -27482,3 +27482,250 @@ html:has(#gameShell:not(.hidden)) body{
 @media(prefers-reduced-motion:reduce){
   .hv50-mine-slot,.hv50-mine-node img,.hv50-mine-node::after,.hv50-action-ring,.mine-nav-btn{animation:none !important;transition:none !important}
 }
+
+
+/* === HallValla · Mina Eventos · 20260912.52 =========================
+   Iconografía flotante canónica: sin tarjetas/paneles visibles.
+   Los eventos inactivos permanecen oscuros; solo un evento activo
+   recupera color, glow y capacidad de clic.
+==================================================================== */
+.mine-panel[data-mine-panel="events"] .mine-panel-content{
+  justify-content:flex-start !important;
+  gap:10px !important;
+  overflow:visible !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-panel-scrim{
+  background:
+    radial-gradient(circle at 58% 46%,rgba(16,52,76,.08),transparent 34%),
+    linear-gradient(180deg,rgba(2,5,9,.18) 0%,rgba(2,5,9,.04) 34%,rgba(2,5,9,.13) 72%,rgba(2,5,9,.28) 100%) !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-chip-row{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  gap:0 !important;
+  min-height:24px !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-chip{
+  position:relative;
+  min-height:auto !important;
+  padding:0 11px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#e4d0a1 !important;
+  font:800 11px/1.15 system-ui,sans-serif !important;
+  text-shadow:0 2px 7px rgba(0,0,0,.9);
+}
+.mine-panel[data-mine-panel="events"] .mine-chip:first-child{padding-left:0 !important}
+.mine-panel[data-mine-panel="events"] .mine-chip + .mine-chip::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:22%;
+  width:1px;
+  height:56%;
+  background:linear-gradient(transparent,rgba(221,181,93,.5),transparent);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-grid.hv52-event-grid{
+  flex:1 1 auto !important;
+  width:100% !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:10px clamp(18px,4vw,56px) 16px !important;
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(118px,1fr)) !important;
+  grid-template-rows:repeat(2,minmax(150px,1fr)) !important;
+  align-items:center !important;
+  justify-items:center !important;
+  gap:clamp(8px,1.4vw,22px) clamp(14px,3vw,46px) !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card{
+  position:relative !important;
+  width:min(100%,210px) !important;
+  min-height:0 !important;
+  padding:0 !important;
+  display:grid !important;
+  grid-template-rows:auto auto auto auto !important;
+  justify-items:center !important;
+  align-content:center !important;
+  gap:2px !important;
+  overflow:visible !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  transform:none !important;
+  opacity:1 !important;
+  filter:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card::before{display:none !important}
+.mine-panel[data-mine-panel="events"] .hv52-event-icon-btn{
+  position:relative;
+  width:clamp(86px,9.5vw,132px);
+  aspect-ratio:1;
+  display:grid;
+  place-items:center;
+  padding:0;
+  margin:0 0 2px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:inherit;
+  cursor:pointer;
+  overflow:visible;
+  outline:none;
+  isolation:isolate;
+  -webkit-tap-highlight-color:transparent;
+}
+.mine-panel[data-mine-panel="events"] .hv52-event-icon-btn::before{
+  content:"";
+  position:absolute;
+  inset:9%;
+  z-index:-1;
+  border-radius:50%;
+  opacity:0;
+  transform:scale(.84);
+  background:radial-gradient(circle,rgba(73,201,255,.22),rgba(218,168,66,.08) 52%,transparent 72%);
+  filter:blur(9px);
+  transition:opacity .22s ease,transform .22s ease;
+}
+.mine-panel[data-mine-panel="events"] .hv52-event-icon-btn img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+  transform:translateZ(0);
+  transition:filter .22s ease,opacity .22s ease,transform .2s cubic-bezier(.2,.8,.2,1);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive{
+  opacity:1 !important;
+  filter:none !important;
+  cursor:default !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive .hv52-event-icon-btn{
+  cursor:default;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive .hv52-event-icon-btn img{
+  opacity:.42;
+  filter:grayscale(.92) saturate(.16) brightness(.38) contrast(.94);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive b{
+  color:rgba(224,217,205,.43) !important;
+  text-shadow:0 2px 6px rgba(0,0,0,.88) !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive small{
+  color:rgba(188,198,210,.34) !important;
+  text-shadow:0 2px 6px rgba(0,0,0,.78) !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .hv52-event-icon-btn img{
+  opacity:1;
+  filter:saturate(1.05) brightness(1.02) drop-shadow(0 9px 13px rgba(0,0,0,.46));
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .hv52-event-icon-btn::before{
+  opacity:1;
+  transform:scale(1);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event.negative .hv52-event-icon-btn::before{
+  background:radial-gradient(circle,rgba(255,102,61,.28),rgba(220,157,54,.10) 50%,transparent 72%);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event.positive .hv52-event-icon-btn::before{
+  background:radial-gradient(circle,rgba(67,218,255,.30),rgba(102,226,181,.08) 50%,transparent 72%);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .hv52-event-icon-btn:hover img,
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .hv52-event-icon-btn:focus-visible img{
+  transform:translateY(-4px) scale(1.055);
+  filter:saturate(1.12) brightness(1.10) drop-shadow(0 12px 18px rgba(0,0,0,.52));
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .hv52-event-icon-btn:active img{
+  transform:translateY(-1px) scale(.97);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event .hv52-event-icon-btn:focus-visible::after{
+  content:"";
+  position:absolute;
+  inset:-4px;
+  border-radius:50%;
+  border:1px solid rgba(255,218,139,.78);
+  box-shadow:0 0 0 3px rgba(255,205,101,.10),0 0 24px rgba(89,207,255,.18);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card b{
+  max-width:100% !important;
+  color:#f4e7cc !important;
+  font:700 clamp(12px,1.2vw,16px)/1.1 Georgia,"Times New Roman",serif !important;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,.9);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card small{
+  max-width:100% !important;
+  min-height:16px;
+  color:#9fdcf0 !important;
+  font:800 clamp(8px,.78vw,10px)/1.15 system-ui,sans-serif !important;
+  text-align:center;
+  text-shadow:0 2px 7px rgba(0,0,0,.88);
+}
+.mine-panel[data-mine-panel="events"] .hv52-event-action-label{
+  min-height:13px;
+  color:#d9b66b;
+  font:850 clamp(7px,.7vw,9px)/1.1 system-ui,sans-serif;
+  letter-spacing:.02em;
+  text-align:center;
+  text-shadow:0 2px 6px rgba(0,0,0,.92);
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive.active-event .hv52-event-action-label{
+  color:#8fe3c2;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.negative.active-event .hv52-event-action-label{
+  color:#f2bf86;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive .hv52-event-action-label{
+  opacity:0;
+}
+@media(max-width:1100px){
+  .mine-panel[data-mine-panel="events"] .mine-event-grid.hv52-event-grid{
+    grid-template-columns:repeat(3,minmax(96px,1fr)) !important;
+    grid-template-rows:repeat(2,minmax(126px,1fr)) !important;
+    padding:5px 12px 10px !important;
+  }
+  .mine-panel[data-mine-panel="events"] .hv52-event-icon-btn{width:clamp(72px,9vw,98px)}
+}
+@media(max-width:760px){
+  .mine-panel[data-mine-panel="events"] .mine-event-grid.hv52-event-grid{
+    grid-template-columns:repeat(3,minmax(80px,1fr)) !important;
+    gap:5px 8px !important;
+  }
+  .mine-panel[data-mine-panel="events"] .hv52-event-icon-btn{width:70px}
+  .mine-panel[data-mine-panel="events"] .mine-event-card b{font-size:10px !important}
+  .mine-panel[data-mine-panel="events"] .mine-event-card small{font-size:7px !important}
+}
+@media(prefers-reduced-motion:reduce){
+  .mine-panel[data-mine-panel="events"] .hv52-event-icon-btn img,
+  .mine-panel[data-mine-panel="events"] .hv52-event-icon-btn::before{transition:none !important}
+}
+
+/* 20260912.52 · anula específicamente estilos legacy con mayor especificidad. */
+.mine-panel[data-mine-panel="events"] .mine-event-card.negative,
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive,
+.mine-panel[data-mine-panel="events"] .mine-event-card.selected,
+.mine-panel[data-mine-panel="events"] .mine-event-card:hover{
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  transform:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event::before,
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive.active-event::before,
+.mine-panel[data-mine-panel="events"] .mine-event-card.negative.active-event::before{
+  display:none !important;
+  content:none !important;
+}
