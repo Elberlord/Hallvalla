@@ -1,0 +1,10 @@
+HallValla 20260912.68 — limpieza real de CSS de la ruleta
+
+Cambios:
+- Se auditaron todas las reglas antiguas de la ruleta de Mina.
+- Se eliminaron las reglas históricas duplicadas de geometría, borde, sombra, contenedor, pseudo-elementos y tamaños de versiones anteriores.
+- Quedó un único bloque canónico para la ruleta visible.
+- El contenedor de la ruleta queda totalmente invisible: sin fondo, borde, outline, box-shadow ni frame.
+- La única decoración visible es la que ya viene dentro del asset WebP de la propia ruleta.
+- La ruleta queda en 260x260 px escritorio y 220x220 px móvil.
+- No se modificó la lógica de premios ni ninguna otra mecánica del juego.
