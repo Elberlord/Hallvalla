@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260912.71 · Combate TR experimental (DEV only)
+/* HallValla 20260912.72 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, robo automático, mano abierta,
      despliegue por arrastre y unidades autónomas.
@@ -315,10 +315,17 @@ async function enableHallvallaRealtimeExperimental(){
     return false;
   }
   hallvallaRtState.enabled=true;
-  await hallvallaRtInitializeState();
-  hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
-  void hallvallaRtLoop();
-  return true;
+  try{
+    await hallvallaRtInitializeState();
+    hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
+    void hallvallaRtLoop();
+    return true;
+  }catch(error){
+    console.error("[HallValla][RT] No se pudo activar TR experimental:",error);
+    hallvallaRtStop();
+    setHint("TR EXPERIMENTAL no pudo iniciar. Revisa consola; el modo normal sigue intacto.");
+    return false;
+  }
 }
 globalThis.enableHallvallaRealtimeExperimental=enableHallvallaRealtimeExperimental;
 

@@ -145,6 +145,7 @@ function isBasicRarityLabel(value){
   con assets antiguos ubicados en carpetas distintas (por ejemplo Wallace/Mulan).
 */
 const HV_ASSET_BUCKETS=Object.freeze(["basic","special","beasts"]);
+const HV_FIELD_FIGURE_SPECIAL_KEYS=new Set(["mulan","wallace","richard_lionheart"]);
 const HV_ASSET_LAYER_PROPS=Object.freeze({
   cards:{path:["portrait","cardPortrait","cardImage"],bucket:["cardAssetBucket","cardsAssetBucket"]},
   field_figures:{path:["fieldFigure","fieldFigurePortrait","fieldFigureImage"],bucket:["fieldFigureAssetBucket","fieldAssetBucket"]}
@@ -195,8 +196,11 @@ function getAssetBucketCandidates(entity,layer="cards"){
   const layerPathBucket=getAssetBucketFromPath(getExplicitAssetPath(source,layer));
   const cardPathBucket=getAssetBucketFromPath(source.portrait||source.cardPortrait||source.cardImage||"");
   const inferred=getCardAssetBucket(source);
+  const identity=getAssetIdentityKey(source);
+  const legacyFieldBucket=layer==="field_figures"&&HV_FIELD_FIGURE_SPECIAL_KEYS.has(identity)?"special":"";
   return hvUniqueAssetValues([
     explicitLayerBucket,
+    legacyFieldBucket,
     HV_ASSET_BUCKETS.includes(commonBucket)?commonBucket:"",
     layerPathBucket,
     cardPathBucket,

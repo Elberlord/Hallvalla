@@ -475,7 +475,19 @@ function normalizeHiddenUnitStatsPatch(patch){
   }
   if(out.adventureAiState&&typeof out.adventureAiState==="object"&&publicState?.mode==="adventure"){
     const nextAi={...(publicState?.adventureAiState||{}),...out.adventureAiState};
-    out["playerStats/2/hasHiddenUnits"]=countHiddenUnitCards([...(nextAi.deck||[]),...(nextAi.hand||[])])>0;
+    const hasHiddenUnits=countHiddenUnitCards([...(nextAi.deck||[]),...(nextAi.hand||[])])>0;
+    const statsKey="playerStats/2";
+    // Firebase update() rejects a parent path together with one of its child paths.
+    // If this patch already writes playerStats/2, fold hasHiddenUnits into that object
+    // instead of adding playerStats/2/hasHiddenUnits as a second multipath entry.
+    if(out[statsKey]&&typeof out[statsKey]==="object"&&!Array.isArray(out[statsKey])){
+      out[statsKey]={...out[statsKey],hasHiddenUnits};
+    }else if(out.playerStats&&typeof out.playerStats==="object"&&!Array.isArray(out.playerStats)){
+      const stats2=out.playerStats[2]||out.playerStats["2"]||{};
+      out.playerStats={...out.playerStats,2:{...stats2,hasHiddenUnits}};
+    }else{
+      out["playerStats/2/hasHiddenUnits"]=hasHiddenUnits;
+    }
   }
   return out;
 }

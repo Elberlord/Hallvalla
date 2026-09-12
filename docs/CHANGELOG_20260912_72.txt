@@ -1,0 +1,8 @@
+HallValla 20260912.72 — TR experimental FIX
+
+- Corregido el bloqueo al activar TR EXPERIMENTAL en Aventura/Firebase.
+- Firebase update() ya no recibe simultáneamente playerStats/2 y playerStats/2/hasHiddenUnits.
+  El valor hasHiddenUnits se integra dentro del objeto playerStats/2 cuando ese padre ya forma parte del mismo patch.
+- El interruptor TR ahora revierte limpiamente a OFF si la inicialización falla, evitando dejar el duelo en estado parcial.
+- Wallace, Mulan y Richard Lionheart priorizan su field figure existente en /special para evitar solicitudes 404 innecesarias a /basic.
+- No se modificaron buffs de líderes, economía, Mina ni reglas normales del combate por turnos.
