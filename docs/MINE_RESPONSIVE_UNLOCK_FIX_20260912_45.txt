@@ -1,0 +1,13 @@
+HallValla 20260912.45
+
+Mina · corrección visual y desbloqueo de ranuras
+
+1) Se corrige el recorte general en las pantallas de Mina. La causa era la combinación de compactación agresiva, min-height fijo en viewport angosto y overflow:hidden en mine-panel-content.
+2) Los paneles de Producción/Eventos/Misiones/Tienda/Recompensas ahora usan el espacio real disponible y tienen scroll vertical interno solamente cuando hace falta.
+3) Se elevan line-heights de textos de Mina para evitar cortar acentos/descendentes.
+4) La siguiente ranura comprable recibe clic/tap incluso al pulsar sobre el candado o texto interior.
+5) El desbloqueo muestra el modal de HallValla antes de esperar a Firebase; la .44 podía quedarse esperando sincronización sin dar feedback visible.
+6) El grid usa delegación de clic para sobrevivir re-renderizados.
+7) Se agregan logs [HallValla][Mina][SlotClick] y [HallValla][Mina][Unlock] desde el primer clic.
+
+No se cambiaron reglas de combate, economía, PvP, Xsolla ni contenido de unidades.

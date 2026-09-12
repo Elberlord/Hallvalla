@@ -2062,17 +2062,25 @@ function renderHallvallaMineSlots(mineState,aggregate,unlocked){
     }
     return `<article class="${cls}" data-mine-slot="${index}"${img}><span class="mine-miner-no">${String(index+1).padStart(2,"0")}</span>${body}</article>`;
   }).join("");
-  grid.querySelectorAll("[data-mine-slot]").forEach(btn=>btn.addEventListener("click",()=>{
+  // Delegación de clic: sobrevive a re-render y acepta clic/tap en cualquier hijo visual.
+  grid.onclick=event=>{
+    const btn=event.target?.closest?.("[data-mine-slot]");
+    if(!btn||!grid.contains(btn))return;
     const index=Math.max(0,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Number(btn.dataset.mineSlot||0)));
     const state=getHallvallaMineState();
+    console.info("[HallValla][Mina][SlotClick]",{index,unlockedSlots:Number(state.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)});
     if(!hallvallaMineSlotUnlocked(index,state)&&!state.slots[index]?.cardKey){
       if(index===Number(state.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS))void buyHallvallaMineWorkerSlot(index);
-      else setHallvallaMineStatus(`Debes desbloquear primero la ranura ${Number(state.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)+1}.`);
+      else{
+        const message=`Debes desbloquear primero la ranura ${Number(state.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)+1}.`;
+        setHallvallaMineStatus(message);
+        if(typeof hvAlert==="function")void hvAlert(message,"Mina · Desbloqueo");
+      }
       return;
     }
     hallvallaMineUi.selectedSlot=index;
     renderHallvallaMineProduction();
-  }));
+  };
   grid.classList.toggle("mine-grid-locked",!unlocked);
 }
 async function transactHallvallaMineSlotUnlockRemote(targetIndex){
@@ -2142,24 +2150,16 @@ async function buyHallvallaMineWorkerSlot(index){
   let profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
 
-  if(HALLVALLA_LOCALHOST_TEST_MODE!==true){
-    setHallvallaMineStatus("Verificando la ranura con Firebase...");
-    const synced=await syncHallvallaMineRemoteState();
-    if(!synced){
-      const message="No se pudo sincronizar la Mina con Firebase. No se descontaron gemas.";
-      setHallvallaMineStatus(message);
-      if(typeof hvAlert==="function")await hvAlert(message,"Mina · Desbloqueo");
-      return;
-    }
-  }
-
-  const current=getHallvallaMineState();
-  const unlockedSlots=Math.max(HALLVALLA_MINE_BASE_UNLOCKED_SLOTS,Math.min(HALLVALLA_MINE_SLOT_COUNT,Number(current.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)));
+  // La confirmación se muestra INMEDIATAMENTE. La .44 sincronizaba Firebase antes
+  // del modal y, si esa lectura quedaba pendiente, parecía que el botón no hacía nada.
+  let current=getHallvallaMineState();
+  let unlockedSlots=Math.max(HALLVALLA_MINE_BASE_UNLOCKED_SLOTS,Math.min(HALLVALLA_MINE_SLOT_COUNT,Number(current.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)));
   const targetIndex=Math.max(HALLVALLA_MINE_BASE_UNLOCKED_SLOTS,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Math.floor(Number(index)||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)));
+  console.info("[HallValla][Mina][Unlock] solicitud",{targetIndex,unlockedSlots});
   if(unlockedSlots>=HALLVALLA_MINE_SLOT_COUNT){setHallvallaMineStatus("Ya tienes las 20 ranuras de trabajadores desbloqueadas.");return;}
   if(targetIndex!==unlockedSlots){
     const message=`Debes desbloquear primero la ranura ${unlockedSlots+1}.`;
-    setHallvallaMineStatus(message);renderMineScreen();
+    setHallvallaMineStatus(message);
     if(typeof hvAlert==="function")await hvAlert(message,"Mina · Desbloqueo");
     return;
   }
@@ -2177,7 +2177,34 @@ async function buyHallvallaMineWorkerSlot(index){
   const ok=typeof hvConfirm==="function"
     ?await hvConfirm(prompt,"Desbloquear ranura","COMPRAR","CANCELAR")
     :window.confirm(`¿Desbloquear la ranura ${targetIndex+1} por ${cost.toLocaleString("es-ES")} gemas?`);
+  console.info("[HallValla][Mina][Unlock] confirmación",{targetIndex,ok});
   if(!ok)return;
+
+  // Solo después de COMPRAR validamos el estado remoto.
+  if(HALLVALLA_LOCALHOST_TEST_MODE!==true){
+    setHallvallaMineStatus("Verificando la ranura con Firebase...");
+    const synced=await syncHallvallaMineRemoteState();
+    if(!synced){
+      const message="No se pudo sincronizar la Mina con Firebase. No se descontaron gemas.";
+      setHallvallaMineStatus(message);
+      if(typeof hvAlert==="function")await hvAlert(message,"Mina · Desbloqueo");
+      return;
+    }
+    current=getHallvallaMineState();
+    unlockedSlots=Math.max(HALLVALLA_MINE_BASE_UNLOCKED_SLOTS,Math.min(HALLVALLA_MINE_SLOT_COUNT,Number(current.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)));
+    if(unlockedSlots===targetIndex+1){
+      setHallvallaMineStatus(`La ranura ${targetIndex+1} ya aparece desbloqueada en Firebase.`);
+      renderMineScreen();
+      return;
+    }
+    if(unlockedSlots!==targetIndex){
+      const message=`Firebase reporta ${unlockedSlots} ranuras desbloqueadas. Vuelve a intentar sobre la siguiente ranura disponible.`;
+      setHallvallaMineStatus(message);
+      renderMineScreen();
+      if(typeof hvAlert==="function")await hvAlert(message,"Mina · Desbloqueo");
+      return;
+    }
+  }
 
   setHallvallaMineStatus("Confirmando compra con Firebase...");
   const tx=await transactHallvallaMineSlotUnlockRemote(targetIndex);

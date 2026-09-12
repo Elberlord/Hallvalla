@@ -26176,3 +26176,81 @@ html:has(#gameShell:not(.hidden)) body{
 @media (pointer:coarse){
   #grid .unit-card,.leader-bases-layer .leader-base{touch-action:none;}
 }
+
+
+/* ==========================================================
+   20260912.45 · MINA RESPONSIVE / TIPOGRAFÍA SIN RECORTES
+   Corrige el recorte causado por la compactación V6.8G/H:
+   - el panel ya no fuerza una altura mayor que el espacio real;
+   - cada escena puede desplazarse verticalmente si no cabe;
+   - line-height seguro para acentos, descendentes y botones.
+   ========================================================== */
+.mine-screen{overflow:hidden !important;}
+.mine-layout{min-height:0 !important;overflow:hidden !important;}
+.mine-content{min-width:0 !important;min-height:0 !important;overflow:hidden !important;}
+.mine-panel{min-width:0 !important;min-height:0 !important;}
+.mine-panel-content{
+  height:100% !important;
+  min-height:0 !important;
+  box-sizing:border-box !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(105,190,255,.38) rgba(5,10,18,.24);
+  padding-bottom:22px !important;
+}
+.mine-panel-content::-webkit-scrollbar{width:7px;}
+.mine-panel-content::-webkit-scrollbar-track{background:rgba(5,10,18,.24);border-radius:999px;}
+.mine-panel-content::-webkit-scrollbar-thumb{background:rgba(105,190,255,.38);border-radius:999px;}
+
+/* Tipografía: nunca usar cajas de línea tan cerradas que corten glifos. */
+#mineHeaderTitle{line-height:1.18 !important;padding:1px 0 3px;overflow:visible !important;}
+.mine-kicker{line-height:1.35 !important;padding-top:1px;}
+.mine-resource-pill,.mine-resource-pill b{line-height:1.25 !important;}
+.mine-nav-btn{overflow:visible !important;}
+.mine-nav-btn span{line-height:1.30 !important;padding:1px 1px 2px;overflow:visible !important;}
+.mine-chip{line-height:1.28 !important;padding-top:1px !important;padding-bottom:2px !important;overflow:visible !important;}
+.mine-miner-title,.mine-slot-lock{overflow:visible !important;}
+.mine-miner-title b{line-height:1.22 !important;padding:1px 0 2px;overflow:visible !important;}
+.mine-miner-card.active .mine-miner-title small{line-height:1.22 !important;padding-bottom:1px;}
+.mine-slot-lock b{line-height:1.22 !important;}
+.mine-slot-lock strong{line-height:1.24 !important;padding:1px 0;}
+.mine-slot-lock small{line-height:1.26 !important;padding-bottom:1px;}
+.mine-event-card b,.mine-event-card small,
+.mine-mission-card b,.mine-mission-card small,
+.mine-shop-card b,.mine-shop-card small,
+.mine-reward-card b,.mine-reward-card small{line-height:1.24 !important;}
+.mine-panel[data-mine-panel="missions"] .mine-mission-home-copy b{line-height:1.22 !important;padding-bottom:1px;}
+.mine-panel[data-mine-panel="missions"] .mine-mission-home-copy small{line-height:1.36 !important;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay b{line-height:1.22 !important;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay small{line-height:1.28 !important;}
+.mine-panel[data-mine-panel="shop"] .mine-shop-offer-overlay strong{line-height:1.18 !important;}
+.mine-wheel-result b,.mine-wheel-result span,.mine-wheel-price-hint,.mine-wheel-prize-pool-btn{line-height:1.28 !important;}
+.mine-mini-btn,.mine-cta-btn,.mine-ghost-btn,.mine-wheel-spin-btn{line-height:1.22 !important;padding-top:2px;padding-bottom:2px;}
+
+/* En viewport angosto (DevTools, tablet, Android landscape) el contenido debe
+   ocupar EXACTAMENTE la fila disponible; el scroll ocurre dentro del panel. */
+@media (max-width:980px){
+  .mine-layout{grid-template-rows:auto minmax(0,1fr) !important;}
+  .mine-content{height:100% !important;}
+  .mine-panel{
+    position:absolute !important;
+    inset:0 !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+  }
+  .mine-nav-btn{min-height:58px !important;padding:6px 5px 7px !important;}
+  .mine-nav-btn span{font-size:9px !important;}
+}
+@media (max-width:640px){
+  .mine-topbar{row-gap:8px !important;}
+  .mine-panel-content{padding-bottom:18px !important;}
+  .mine-nav-btn{min-height:56px !important;}
+}
+
+/* La siguiente ranura comprable debe recibir el clic aunque se pulse sobre
+   el candado/texto interior. */
+.mine-miner-card.next-unlock{pointer-events:auto !important;touch-action:manipulation;}
+.mine-miner-card.next-unlock > *{pointer-events:none !important;}

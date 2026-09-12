@@ -1,4 +1,4 @@
-20260912.44 · MINA SLOT UNLOCK TRANSACTION FIX
+20260912.45 · MINA SLOT UNLOCK TRANSACTION FIX
 
 - Base conservada: 20260912.43 y todas las actualizaciones anteriores.
 - Desbloqueo de ranuras de Mina ahora transacciona únicamente unlockedSlots en Firebase.
