@@ -27729,3 +27729,38 @@ html:has(#gameShell:not(.hidden)) body{
   display:none !important;
   content:none !important;
 }
+
+/* === HallValla · Mina Eventos · 20260912.53 =========================
+   Limpieza final: los contenedores de evento existen solo para layout.
+   Ningún blur/backdrop/card debe dibujar un rectángulo sobre la escena.
+==================================================================== */
+.mine-panel[data-mine-panel="events"] .mine-event-grid.hv52-event-grid,
+.mine-panel[data-mine-panel="events"] .mine-event-card,
+.mine-panel[data-mine-panel="events"] .mine-event-card.negative,
+.mine-panel[data-mine-panel="events"] .mine-event-card.positive,
+.mine-panel[data-mine-panel="events"] .mine-event-card.inactive,
+.mine-panel[data-mine-panel="events"] .mine-event-card.active-event,
+.mine-panel[data-mine-panel="events"] .mine-event-card.selected,
+.mine-panel[data-mine-panel="events"] .mine-event-card:hover{
+  background:none !important;
+  background-color:transparent !important;
+  background-image:none !important;
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+.mine-panel[data-mine-panel="events"] .mine-event-card::before,
+.mine-panel[data-mine-panel="events"] .mine-event-card::after{
+  content:none !important;
+  display:none !important;
+}
+/* El propio icono es el único control visual. */
+.mine-panel[data-mine-panel="events"] .hv52-event-icon-btn{
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}

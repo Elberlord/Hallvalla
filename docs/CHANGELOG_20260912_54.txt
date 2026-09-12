@@ -1,0 +1,12 @@
+HallValla 20260912.54 — Mina · Misiones progresivas
+
+- La UI de Mina > Misiones no se rediseñó; conserva el aspecto de la versión anterior.
+- Las 8 misiones ahora son cadenas permanentes por peldaños.
+- Al reclamar una misión completada, la misma tarjeta pasa inmediatamente al siguiente objetivo.
+- El progreso estadístico es acumulativo y no se reinicia.
+- Los objetivos crecen en secuencias progresivas y continúan más allá de 1.000.000 (5M, 10M, 50M...).
+- Las recompensas aumentan con cada peldaño.
+- Compatibilidad con datos v1: una misión antiguamente reclamada se interpreta como el primer peldaño completado.
+- “Mina a plena capacidad” ahora registra cada ocasión en que se llega de menos de 20 a las 20 ranuras activas.
+- No se cambiaron reglas de Firebase: /users/{uid}/mine/missions ya tiene validación abierta para este subestado.
+- No se modificaron Producción, Eventos, Tienda, Recompensas, combate, PvP ni economía ajena a estas recompensas de misión.

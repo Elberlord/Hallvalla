@@ -1,0 +1,7 @@
+HallValla 20260912.53
+Mina > Eventos
+- Eliminado el backdrop-filter heredado de las tarjetas legacy de eventos.
+- Los wrappers de layout ya no dibujan fondo, blur, borde, sombra ni pseudo-elementos.
+- Solo el icono del evento y su texto flotan sobre el escenario.
+- Eventos inactivos permanecen oscuros/no clicables; activos conservan la acción directa sobre el icono.
+- Sin cambios de lógica, recompensas, probabilidades o Firebase.

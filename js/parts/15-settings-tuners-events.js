@@ -2418,7 +2418,10 @@ async function assignHallvallaMineUnit(cardKey=""){
     return;
   }
   setHallvallaMineStatus(`${card.name||"Unidad"} enviada a minar en la ranura ${selectedIndex+1}.`);
-  void recordHallvallaMineMissionStat("max_active",tx.state.slots.filter(slot=>slot?.cardKey).length,"max");
+  const activeBefore=mineState.slots.filter(slot=>slot?.cardKey).length;
+  const activeAfter=tx.state.slots.filter(slot=>slot?.cardKey).length;
+  void recordHallvallaMineMissionStat("max_active",activeAfter,"max");
+  if(activeBefore<20&&activeAfter>=20)void recordHallvallaMineMissionStat("full_capacity_hits",1);
   renderMineScreen();
 }
 async function unassignHallvallaMineUnit(){
@@ -3011,35 +3014,102 @@ async function spinHallvallaMineWheel(){
 
 
 /* ============================================================
-   MINA · MISIONES FUNCIONALES
-   - Sustituye la maqueta visual anterior de Mina > Misiones.
-   - Progreso personal por UID en Firebase.
-   - Recompensas reclamables una sola vez.
+   MINA · MISIONES FUNCIONALES · PROGRESIÓN INFINITA
+   - Conserva exactamente el layout visual actual de Mina > Misiones.
+   - Cada tarjeta es una cadena permanente: al reclamar un peldaño,
+     inmediatamente muestra el siguiente objetivo y un premio mayor.
+   - El progreso estadístico es acumulativo y nunca se reinicia.
+   - Compatibilidad con estados v1: `claimed[id] === true` migra a 1 peldaño.
    ============================================================ */
 const HALLVALLA_MINE_MISSIONS_STORAGE_KEY="hallvalla_mine_missions_v1";
+const HALLVALLA_MINE_MISSION_TARGETS_STANDARD=Object.freeze([1,2,5,10,25,50,100,250,500,1000,5000,10000,50000,100000,500000,1000000]);
+const HALLVALLA_MINE_MISSION_TARGETS_WHEEL=Object.freeze([5,10,25,50,100,250,500,1000,5000,10000,50000,100000,500000,1000000]);
+const HALLVALLA_MINE_MISSION_TARGETS_GEMS=Object.freeze([10,25,50,100,250,500,1000,5000,10000,50000,100000,500000,1000000]);
+const HALLVALLA_MINE_MISSION_TARGETS_GEMS_ADV=Object.freeze([50,100,250,500,1000,5000,10000,50000,100000,500000,1000000]);
+const HALLVALLA_MINE_MISSION_REWARD_FACTORS=Object.freeze([1,2,3,5,8,12,18,26,36,48,62,78,96,116,138,162]);
 const HALLVALLA_MINE_MISSION_DEFS=Object.freeze([
-  Object.freeze({id:"fire_control",title:"Fuego bajo control",description:"Apaga 1 incendio de la Mina.",stat:"repair_incendio",target:1,reward:{gold:75}}),
-  Object.freeze({id:"flood_control",title:"Aguas bajo control",description:"Repara 1 inundación de la Mina.",stat:"repair_inundacion",target:1,reward:{gold:75}}),
-  Object.freeze({id:"cave_secure",title:"Galería asegurada",description:"Repara 1 derrumbe de la Mina.",stat:"repair_derrumbe",target:1,reward:{gold:100}}),
-  Object.freeze({id:"collect_10",title:"Jornada de extracción",description:"Recoge 10 gemas producidas por tus mineros.",stat:"collected_gems",target:10,reward:{gold:120}}),
-  Object.freeze({id:"full_capacity",title:"Mina a plena capacidad",description:"Mantén las 20 ranuras de minería activas al mismo tiempo.",stat:"max_active",target:20,reward:{gems:3}}),
-  Object.freeze({id:"wheel_5",title:"Tentando a la fortuna",description:"Completa 5 giros en la Rueda de la Mina.",stat:"wheel_spins",target:5,reward:{gold:100}}),
-  Object.freeze({id:"jackpot",title:"Golpe de suerte",description:"Obtén el Premio Mayor en la Rueda de la Mina.",stat:"jackpot_wins",target:1,reward:{gold:500}}),
-  Object.freeze({id:"collect_50",title:"Maestro minero",description:"Recoge un total de 50 gemas producidas por la Mina.",stat:"collected_gems",target:50,reward:{gems:10}})
+  Object.freeze({id:"fire_control",title:"Fuego bajo control",stat:"repair_incendio",targets:HALLVALLA_MINE_MISSION_TARGETS_STANDARD,reward:{gold:75},descriptionKind:"fire"}),
+  Object.freeze({id:"flood_control",title:"Aguas bajo control",stat:"repair_inundacion",targets:HALLVALLA_MINE_MISSION_TARGETS_STANDARD,reward:{gold:75},descriptionKind:"flood"}),
+  Object.freeze({id:"cave_secure",title:"Galería asegurada",stat:"repair_derrumbe",targets:HALLVALLA_MINE_MISSION_TARGETS_STANDARD,reward:{gold:100},descriptionKind:"cave"}),
+  Object.freeze({id:"collect_10",title:"Jornada de extracción",stat:"collected_gems",targets:HALLVALLA_MINE_MISSION_TARGETS_GEMS,reward:{gold:120},descriptionKind:"collect"}),
+  Object.freeze({id:"full_capacity",title:"Mina a plena capacidad",stat:"full_capacity_hits",targets:HALLVALLA_MINE_MISSION_TARGETS_STANDARD,reward:{gems:3},descriptionKind:"capacity"}),
+  Object.freeze({id:"wheel_5",title:"Tentando a la fortuna",stat:"wheel_spins",targets:HALLVALLA_MINE_MISSION_TARGETS_WHEEL,reward:{gold:100},descriptionKind:"wheel"}),
+  Object.freeze({id:"jackpot",title:"Golpe de suerte",stat:"jackpot_wins",targets:HALLVALLA_MINE_MISSION_TARGETS_STANDARD,reward:{gold:500},descriptionKind:"jackpot"}),
+  Object.freeze({id:"collect_50",title:"Maestro minero",stat:"collected_gems",targets:HALLVALLA_MINE_MISSION_TARGETS_GEMS_ADV,reward:{gems:10},descriptionKind:"master_collect"})
 ]);
-const HALLVALLA_MINE_MISSION_STATS=Object.freeze(["repair_incendio","repair_inundacion","repair_derrumbe","collected_gems","max_active","wheel_spins","jackpot_wins"]);
+const HALLVALLA_MINE_MISSION_STATS=Object.freeze(["repair_incendio","repair_inundacion","repair_derrumbe","collected_gems","max_active","full_capacity_hits","wheel_spins","jackpot_wins"]);
 let hallvallaMineMissionsRemoteSyncPromise=null;
 
+function getNextInfiniteHallvallaMineMissionTarget(current){
+  const n=Math.max(1000000,Math.floor(Number(current)||1000000));
+  const exponent=Math.floor(Math.log10(n));
+  const power=Math.pow(10,exponent);
+  const mantissa=n/power;
+  const next=mantissa<4.999999?5*power:10*power;
+  return Number.isSafeInteger(next)&&next>n?next:null;
+}
+function getHallvallaMineMissionClaimedTiers(value){
+  if(value===true)return 1;
+  if(value===false||value==null)return 0;
+  return Math.max(0,Math.floor(Number(value)||0));
+}
+function getHallvallaMineMissionTierTarget(def,tierIndex=0){
+  const tier=Math.max(0,Math.floor(Number(tierIndex)||0));
+  const fixed=Array.isArray(def?.targets)?def.targets:[];
+  if(!fixed.length)return Math.max(1,Number(def?.target)||1);
+  if(tier<fixed.length)return fixed[tier];
+  let value=fixed[fixed.length-1];
+  for(let i=fixed.length;i<=tier;i++){
+    const next=getNextInfiniteHallvallaMineMissionTarget(value);
+    if(!next)return value;
+    value=next;
+  }
+  return value;
+}
+function getHallvallaMineMissionPreviousTarget(def,tierIndex=0){
+  const tier=Math.max(0,Math.floor(Number(tierIndex)||0));
+  return tier<=0?0:getHallvallaMineMissionTierTarget(def,tier-1);
+}
+function getHallvallaMineMissionRewardFactor(tierIndex=0){
+  const tier=Math.max(0,Math.floor(Number(tierIndex)||0));
+  if(tier<HALLVALLA_MINE_MISSION_REWARD_FACTORS.length)return HALLVALLA_MINE_MISSION_REWARD_FACTORS[tier];
+  const base=HALLVALLA_MINE_MISSION_REWARD_FACTORS[HALLVALLA_MINE_MISSION_REWARD_FACTORS.length-1];
+  return base+((tier-HALLVALLA_MINE_MISSION_REWARD_FACTORS.length+1)*28);
+}
+function getHallvallaMineMissionTierReward(def,tierIndex=0){
+  const factor=getHallvallaMineMissionRewardFactor(tierIndex),base=def?.reward||{},out={};
+  if(Number(base.gold||0)>0)out.gold=Math.max(1,Math.floor(Number(base.gold)*factor));
+  if(Number(base.gems||0)>0)out.gems=Math.max(1,Math.floor(Number(base.gems)*factor));
+  if(Number(base.fragments||0)>0)out.fragments=Math.max(1,Math.floor(Number(base.fragments)*factor));
+  return out;
+}
+function getHallvallaMineMissionTierDescription(def,target){
+  const n=Math.max(1,Math.floor(Number(target)||1));
+  switch(def?.descriptionKind){
+    case "fire":return `Apaga ${n} incendio${n===1?"":"s"} de la Mina.`;
+    case "flood":return `Repara ${n} inundación${n===1?"":"es"} de la Mina.`;
+    case "cave":return `Repara ${n} derrumbe${n===1?"":"s"} de la Mina.`;
+    case "collect":return `Recoge ${n} gema${n===1?"":"s"} producida${n===1?"":"s"} por tus mineros.`;
+    case "capacity":return `Completa ${n} jornada${n===1?"":"s"} con las 20 ranuras de minería activas.`;
+    case "wheel":return `Completa ${n} giro${n===1?"":"s"} en la Rueda de la Mina.`;
+    case "jackpot":return `Obtén ${n} Premio${n===1?"":"s"} Mayor${n===1?"":"es"} en la Rueda de la Mina.`;
+    case "master_collect":return `Recoge un total de ${n} gema${n===1?"":"s"} producida${n===1?"":"s"} por la Mina.`;
+    default:return String(def?.description||"Completa el objetivo de la Mina.");
+  }
+}
 function createHallvallaMineMissionsState(){
   const stats={};HALLVALLA_MINE_MISSION_STATS.forEach(key=>stats[key]=0);
-  return {version:1,stats,claimed:{}};
+  return {version:2,stats,claimed:{}};
 }
 function normalizeHallvallaMineMissionsState(raw={}){
-  const base=createHallvallaMineMissionsState(),stats={};
+  const stats={};
   HALLVALLA_MINE_MISSION_STATS.forEach(key=>stats[key]=Math.max(0,Math.floor(Number(raw?.stats?.[key]||0))));
   const claimed={};
-  if(raw?.claimed&&typeof raw.claimed==="object")HALLVALLA_MINE_MISSION_DEFS.forEach(def=>{if(raw.claimed[def.id]===true)claimed[def.id]=true;});
-  return {version:1,stats,claimed};
+  HALLVALLA_MINE_MISSION_DEFS.forEach(def=>{
+    const tiers=getHallvallaMineMissionClaimedTiers(raw?.claimed?.[def.id]);
+    if(tiers>0)claimed[def.id]=tiers;
+  });
+  return {version:2,stats,claimed};
 }
 function getHallvallaMineMissionsState(){
   try{return normalizeHallvallaMineMissionsState(JSON.parse(localStorage.getItem(HALLVALLA_MINE_MISSIONS_STORAGE_KEY)||"null")||{});}
@@ -3062,6 +3132,7 @@ function seedHallvallaMineMissionFacts(state=getHallvallaMineMissionsState()){
   try{
     const active=getHallvallaMineState().slots.filter(slot=>slot?.cardKey).length;
     safe.stats.max_active=Math.max(safe.stats.max_active,active);
+    if(active>=20)safe.stats.full_capacity_hits=Math.max(1,safe.stats.full_capacity_hits);
   }catch(_){ }
   try{
     const wheel=getHallvallaMineWheelState();
@@ -3131,18 +3202,25 @@ function applyHallvallaMineMissionReward(reward={}){
 async function claimHallvallaMineMission(missionId=""){
   const def=HALLVALLA_MINE_MISSION_DEFS.find(entry=>entry.id===missionId);if(!def)return;
   let state=await syncHallvallaMineMissionsRemote();
+  const tierIndex=getHallvallaMineMissionClaimedTiers(state.claimed?.[def.id]);
+  const target=getHallvallaMineMissionTierTarget(def,tierIndex);
+  const reward=getHallvallaMineMissionTierReward(def,tierIndex);
   const progress=getHallvallaMineMissionProgress(def,state);
-  if(progress<def.target)return;
-  if(state.claimed?.[def.id])return;
-  if(HALLVALLA_LOCALHOST_TEST_MODE===true){state.claimed[def.id]=true;cacheHallvallaMineMissionsState(state);applyHallvallaMineMissionReward(def.reward);renderHallvallaMineMissions(state);return;}
+  if(progress<target)return;
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    state.claimed[def.id]=tierIndex+1;cacheHallvallaMineMissionsState(state);applyHallvallaMineMissionReward(reward);renderHallvallaMineMissions(state);return;
+  }
   const userId=getHallvallaMineUserUid();if(!userId)return;
   try{
     const claimRef=ref(db,`users/${userId}/mine/missions/claimed/${def.id}`);
-    const result=await runTransaction(claimRef,current=>current===true?undefined:true,{applyLocally:false});
-    if(!result?.committed)return;
-    state=getHallvallaMineMissionsState();state.claimed[def.id]=true;cacheHallvallaMineMissionsState(state);
-    applyHallvallaMineMissionReward(def.reward);
-    const status=$("mineMissionStatus");if(status)status.textContent=`Recompensa recibida: ${getHallvallaMineMissionRewardText(def.reward)}.`;
+    const result=await runTransaction(claimRef,current=>{
+      const remoteTier=getHallvallaMineMissionClaimedTiers(current);
+      return remoteTier===tierIndex?tierIndex+1:undefined;
+    },{applyLocally:false});
+    if(!result?.committed){await syncHallvallaMineMissionsRemote();renderHallvallaMineMissions();return;}
+    state=getHallvallaMineMissionsState();state.claimed[def.id]=Math.max(tierIndex+1,getHallvallaMineMissionClaimedTiers(result.snapshot.val()));cacheHallvallaMineMissionsState(state);
+    applyHallvallaMineMissionReward(reward);
+    const status=$("mineMissionStatus");if(status)status.textContent=`Peldaño ${tierIndex+1} completado: ${getHallvallaMineMissionRewardText(reward)}.`;
     renderHallvallaMineMissions(state);
   }catch(error){
     console.warn("[HallValla][Mina][Misiones] No se pudo reclamar:",error);
@@ -3152,12 +3230,17 @@ async function claimHallvallaMineMission(missionId=""){
 function renderHallvallaMineMissions(state=seedHallvallaMineMissionFacts(getHallvallaMineMissionsState())){
   const grid=$("mineMissionGrid");if(!grid)return;
   const safe=cacheHallvallaMineMissionsState(state);
-  let complete=0,pending=0;
+  let complete=0,pending=0,totalPeldaños=0;
   grid.innerHTML=HALLVALLA_MINE_MISSION_DEFS.map(def=>{
-    const progress=getHallvallaMineMissionProgress(def,safe),shown=Math.min(progress,def.target),pct=Math.max(0,Math.min(100,(shown/Math.max(1,def.target))*100));
-    const done=progress>=def.target,claimed=safe.claimed?.[def.id]===true;if(done)complete++;if(done&&!claimed)pending++;
-    const status=claimed?"Reclamada":done?"Lista":`${shown}/${def.target}`;
-    return `<article class="mine-mission-home-card${done?" done":""}${claimed?" claimed":""}"><div class="mine-mission-home-copy"><b>${escapeHtml(def.title)}</b><small>${escapeHtml(def.description)}</small></div><div class="mine-mission-home-progress"><span style="width:${pct.toFixed(1)}%"></span></div><div class="mine-mission-home-footer"><span class="mine-mission-home-count">${escapeHtml(status)}</span><span class="mine-mission-home-reward">${escapeHtml(getHallvallaMineMissionRewardText(def.reward))}</span><button class="mine-mission-home-claim" data-mine-mission-claim="${escapeHtml(def.id)}" type="button" aria-label="Reclamar ${escapeHtml(def.title)}" ${done&&!claimed?"":"disabled"}><img src="assets/ui/missions/btn_reclamar.webp" alt="Reclamar" draggable="false"></button></div></article>`;
+    const tierIndex=getHallvallaMineMissionClaimedTiers(safe.claimed?.[def.id]);totalPeldaños+=tierIndex;
+    const target=getHallvallaMineMissionTierTarget(def,tierIndex),previousTarget=getHallvallaMineMissionPreviousTarget(def,tierIndex);
+    const reward=getHallvallaMineMissionTierReward(def,tierIndex),description=getHallvallaMineMissionTierDescription(def,target);
+    const progress=getHallvallaMineMissionProgress(def,safe),done=progress>=target;
+    const segmentTotal=Math.max(1,target-previousTarget),segmentProgress=Math.max(0,Math.min(segmentTotal,progress-previousTarget));
+    const pct=Math.max(0,Math.min(100,(segmentProgress/segmentTotal)*100));
+    if(done){complete++;pending++;}
+    const shown=Math.min(progress,target),status=done?"Lista":`${shown}/${target}`;
+    return `<article class="mine-mission-home-card${done?" done":""}"><div class="mine-mission-home-copy"><b>${escapeHtml(def.title)}</b><small>${escapeHtml(description)}</small></div><div class="mine-mission-home-progress"><span style="width:${pct.toFixed(1)}%"></span></div><div class="mine-mission-home-footer"><span class="mine-mission-home-count">${escapeHtml(status)}</span><span class="mine-mission-home-reward">${escapeHtml(getHallvallaMineMissionRewardText(reward))}</span><button class="mine-mission-home-claim" data-mine-mission-claim="${escapeHtml(def.id)}" type="button" aria-label="Reclamar peldaño ${tierIndex+1} de ${escapeHtml(def.title)}" ${done?"":"disabled"}><img src="assets/ui/missions/btn_reclamar.webp" alt="Reclamar" draggable="false"></button></div></article>`;
   }).join("");
   const total=$("mineMissionsTotalChip"),completed=$("mineMissionsCompleteChip"),pendingChip=$("mineMissionsPendingChip");
   if(total)total.textContent=`Misiones ${HALLVALLA_MINE_MISSION_DEFS.length}`;
