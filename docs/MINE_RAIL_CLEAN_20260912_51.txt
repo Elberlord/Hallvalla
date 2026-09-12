@@ -1,0 +1,7 @@
+HALLVALLA · MINA · BUILD 20260912.51
+
+Cambio único de interfaz solicitado:
+- Se retiró la marca decorativa “HALLVALLA” de la parte superior del rail vertical izquierdo de la Mina.
+- Las cinco secciones Producción / Eventos / Misiones / Tienda / Recompensas conservan exactamente su estilo y ahora disponen de más altura útil.
+- Producción conserva sin cambios el layout canónico de la build 20260912.50.
+- No se modificaron lógica de Mina, Firebase, economía, unidades, PvP, combate, gamepad ni otras pantallas.
