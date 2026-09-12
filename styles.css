@@ -27764,3 +27764,149 @@ html:has(#gameShell:not(.hidden)) body{
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
 }
+
+/* ============================================================
+   HallValla 20260912.56 — Mina Shop/Rewards floating cleanup
+   ============================================================ */
+.mine-panel[data-mine-panel="shop"] .mine-undead-shop-content,
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-panel-content{
+  position:relative;
+  z-index:2;
+}
+.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:20px !important;
+  align-items:start !important;
+  margin-top:18px !important;
+  width:100%;
+}
+.mine-shop-floating-offer,
+.mine-panel[data-mine-panel="shop"] .mine-undead-offer,
+.mine-panel[data-mine-panel="shop"] .mine-level-potion-offer{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  padding:0 !important;
+  min-height:0 !important;
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  overflow:visible !important;
+}
+.mine-shop-float-icon-btn{
+  position:relative;
+  width:clamp(94px,10vw,122px);
+  height:clamp(94px,10vw,122px);
+  border:0;
+  background:transparent;
+  padding:0;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.52));
+}
+.mine-shop-float-icon-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.02);}
+.mine-shop-float-icon-btn:disabled{cursor:default;opacity:.72;filter:grayscale(.18) brightness(.92) drop-shadow(0 8px 14px rgba(0,0,0,.45));}
+.mine-shop-potion-icon{
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 25%,rgba(121,86,184,.95),rgba(46,28,83,.92) 58%,rgba(8,10,19,.0) 72%);
+}
+.mine-shop-potion-glyph{font-size:54px;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,.55));}
+.mine-shop-undead-btn img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  display:block;
+  filter:drop-shadow(0 12px 18px rgba(0,0,0,.58));
+}
+.mine-shop-piece-counter{
+  position:absolute;
+  right:-2px;
+  bottom:4px;
+  padding:3px 8px;
+  border-radius:999px;
+  background:rgba(5,10,18,.86);
+  border:1px solid rgba(255,214,118,.48);
+  color:#9fe0ff;
+  font-size:11px;
+  font-weight:900;
+  box-shadow:0 4px 12px rgba(0,0,0,.34);
+}
+.mine-shop-floating-offer b{
+  max-width:150px;
+  text-align:center;
+  font-size:15px !important;
+  color:#fff !important;
+  line-height:1.15 !important;
+  text-shadow:0 2px 10px rgba(0,0,0,.7);
+}
+.mine-shop-floating-offer small{
+  max-width:150px;
+  text-align:center;
+  color:rgba(222,235,248,.82) !important;
+  font-size:11px !important;
+  line-height:1.15 !important;
+}
+.mine-shop-action-text{
+  display:block;
+  max-width:160px;
+  text-align:center;
+  color:#f7d681;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.15;
+  text-shadow:0 2px 10px rgba(0,0,0,.75);
+}
+.mine-shop-puzzle-art,.mine-shop-puzzle-grid,.mine-shop-offer-overlay,.mine-shop-buy-piece{display:none !important;}
+.mine-shop-status{
+  margin-top:14px;
+  text-align:center;
+}
+.mine-panel[data-mine-panel="shop"] .mine-chip-row{justify-content:center;}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-stage{
+  padding-top:8px;
+  gap:10px;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+  width:min(35vw,320px);
+  min-width:240px;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 16px 28px rgba(0,0,0,.52));
+  overflow:visible;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-fortune-wheel{
+  inset:0;
+  width:100%;
+  height:100%;
+  aspect-ratio:1/1;
+  margin:0 auto;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result{
+  width:min(460px,94%);
+  min-height:auto;
+  padding:0;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-prize-pool-btn{
+  background:rgba(8,15,25,.36);
+  backdrop-filter:none;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell::before,
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell::after{display:none !important;}
+@media (max-width:1100px){
+  .mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+}
+@media (max-width:760px){
+  .mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:16px !important;}
+  .mine-shop-float-icon-btn{width:96px;height:96px;}
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{width:min(62vw,280px);min-width:220px;}
+}

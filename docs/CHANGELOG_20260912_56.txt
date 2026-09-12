@@ -1,0 +1,10 @@
+HallValla 20260912.56 — Mina · Tienda flotante + Ruleta limpia
+
+Cambios:
+- Tienda de la Mina ahora muestra pociones y no-muertos como iconos/unidades flotantes, sin tarjetas rectangulares.
+- La Tienda ya no limita la vista a 3 no-muertos; ahora se muestran todos los exclusivos de Mina.
+- Las unidades no-muertas se muestran limpias, sin fondo ni líneas.
+- Recompensas: se redujo y limpió la ruleta para que flote sin cuadro semitransparente visible.
+- Ajuste visual: la rueda mantiene proporción 1:1 para evitar apariencia ovalada y cortes al girar.
+
+No se tocaron combate, PvP ni economía base fuera de estos apartados de Mina.
