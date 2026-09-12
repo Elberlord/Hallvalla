@@ -1511,31 +1511,53 @@ function queueHallvallaMineRemotePatch(patch={}){
     .catch(error=>console.warn("[HallValla][Mina] No se pudo guardar el estado remoto:",error));
 }
 async function transactHallvallaMineStateRemote(mutator){
-  if(typeof mutator!=="function"||!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineState()};
+  if(typeof mutator!=="function"||!hallvallaMineOnlineReady())return {committed:false,state:getHallvallaMineState(),reason:"NOT_READY"};
   if(HALLVALLA_LOCALHOST_TEST_MODE===true){
     const current=getHallvallaMineState(),next=mutator(normalizeHallvallaMineState(current));
-    if(!next)return {committed:false,state:current};
+    if(!next)return {committed:false,state:current,reason:"ABORTED"};
     const safe=normalizeHallvallaMineState(next);
     localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
-    return {committed:true,state:safe};
+    return {committed:true,state:safe,reason:"OK"};
   }
   const userId=getHallvallaMineUserUid();
-  if(!userId)return {committed:false,state:getHallvallaMineState()};
+  if(!userId)return {committed:false,state:getHallvallaMineState(),reason:"NO_USER"};
   try{
     await hallvallaMineRemoteWriteQueue;
-    const result=await runTransaction(ref(db,`users/${userId}/mine/state`),current=>{
+    const stateRef=ref(db,`users/${userId}/mine/state`);
+
+    // Las cuentas antiguas pueden tener /mine pero no el state migrado con unlockedSlots.
+    // Antes esta situación hacía que runTransaction recibiera null y abortara en silencio.
+    let before=await get(stateRef);
+    if(!before?.exists?.()){
+      const synced=await syncHallvallaMineRemoteState();
+      if(!synced)return {committed:false,state:getHallvallaMineState(),reason:"REMOTE_STATE_MISSING"};
+      before=await get(stateRef);
+      if(!before?.exists?.())return {committed:false,state:getHallvallaMineState(),reason:"REMOTE_STATE_MISSING"};
+    }
+
+    // Fuerza la migración segura del campo unlockedSlots=5 antes de intentar comprar la sexta ranura.
+    // Las reglas permiten crear por primera vez unlockedSlots únicamente con valor 5.
+    const rawBefore=before.val()||{};
+    if(!Object.prototype.hasOwnProperty.call(rawBefore,"unlockedSlots")){
+      const migrated=normalizeHallvallaMineState(rawBefore);
+      await update(stateRef,migrated);
+      localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(migrated));
+    }
+
+    const result=await runTransaction(stateRef,current=>{
       if(!current)return;
       const next=mutator(normalizeHallvallaMineState(current));
       return next?normalizeHallvallaMineState(next):undefined;
     },{applyLocally:false});
-    if(!result?.committed)return {committed:false,state:getHallvallaMineState()};
+    if(!result?.committed)return {committed:false,state:getHallvallaMineState(),reason:"ABORTED"};
     const safe=normalizeHallvallaMineState(result.snapshot.val()||{});
     localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(safe));
     queueHallvallaMineRemotePatch({stateUpdatedAt:serverTimestamp()});
-    return {committed:true,state:safe};
+    return {committed:true,state:safe,reason:"OK"};
   }catch(error){
-    console.warn("[HallValla][Mina] No se pudo confirmar la transacción de producción:",error);
-    return {committed:false,state:getHallvallaMineState()};
+    const code=String(error?.code||error?.message||"");
+    console.error("[HallValla][Mina] No se pudo confirmar la transacción de producción:",error);
+    return {committed:false,state:getHallvallaMineState(),reason:/permission|denied/i.test(code)?"FIREBASE_RULES":"FIREBASE_ERROR",errorCode:code};
   }
 }
 function getHallvallaMineState(){
@@ -2054,25 +2076,51 @@ function renderHallvallaMineSlots(mineState,aggregate,unlocked){
   grid.classList.toggle("mine-grid-locked",!unlocked);
 }
 async function buyHallvallaMineWorkerSlot(index){
-  const profile=getPlayerProfile();
+  let profile=getPlayerProfile();
   if(!hallvallaMineUnlocked(profile)){setHallvallaMineStatus("La Mina se desbloquea en Nivel 2.");return;}
-  if(!hallvallaMineOnlineReady()&&HALLVALLA_LOCALHOST_TEST_MODE!==true){setHallvallaMineStatus("Sincronizando la Mina con Firebase...");void syncHallvallaMineRemoteState();return;}
+
+  // Relee/migra Firebase justo antes de comprar. Así no dependemos de un estado local viejo.
+  if(HALLVALLA_LOCALHOST_TEST_MODE!==true){
+    setHallvallaMineStatus("Verificando la ranura con Firebase...");
+    const synced=await syncHallvallaMineRemoteState();
+    if(!synced){
+      setHallvallaMineStatus("No se pudo sincronizar la Mina con Firebase. No se descontaron gemas.");
+      return;
+    }
+  }
+
   const current=getHallvallaMineState();
   const unlockedSlots=Math.max(HALLVALLA_MINE_BASE_UNLOCKED_SLOTS,Math.min(HALLVALLA_MINE_SLOT_COUNT,Number(current.unlockedSlots||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)));
   const targetIndex=Math.max(HALLVALLA_MINE_BASE_UNLOCKED_SLOTS,Math.min(HALLVALLA_MINE_SLOT_COUNT-1,Math.floor(Number(index)||HALLVALLA_MINE_BASE_UNLOCKED_SLOTS)));
   if(unlockedSlots>=HALLVALLA_MINE_SLOT_COUNT){setHallvallaMineStatus("Ya tienes las 20 ranuras de trabajadores desbloqueadas.");return;}
-  if(targetIndex!==unlockedSlots){setHallvallaMineStatus(`Debes desbloquear primero la ranura ${unlockedSlots+1}.`);return;}
+  if(targetIndex!==unlockedSlots){setHallvallaMineStatus(`Debes desbloquear primero la ranura ${unlockedSlots+1}.`);renderMineScreen();return;}
+
+  profile=getPlayerProfile();
   const cost=getHallvallaMineSlotUnlockCost(targetIndex),gems=Math.max(0,Number(profile?.gems||0));
   if(gems<cost){setHallvallaMineStatus(`Necesitas ${cost.toLocaleString("es-ES")} gemas para desbloquear la ranura ${targetIndex+1}.`);return;}
   const ok=window.confirm(`¿Desbloquear la ranura ${targetIndex+1} por ${cost.toLocaleString("es-ES")} gemas?`);
   if(!ok)return;
+
+  setHallvallaMineStatus("Confirmando compra con Firebase...");
   const tx=await transactHallvallaMineStateRemote(state=>{
     const safe=normalizeHallvallaMineState(state);
-    if(Number(safe.unlockedSlots)!==unlockedSlots||safe.unlockedSlots>=HALLVALLA_MINE_SLOT_COUNT)return;
-    safe.unlockedSlots=unlockedSlots+1;
+    // La autoridad es el valor remoto: solo se compra exactamente la siguiente ranura.
+    if(Number(safe.unlockedSlots)!==targetIndex||safe.unlockedSlots>=HALLVALLA_MINE_SLOT_COUNT)return;
+    safe.unlockedSlots=Number(safe.unlockedSlots)+1;
     return safe;
   });
-  if(!tx.committed){setHallvallaMineStatus("La compra no pudo confirmarse. No se descontaron gemas.");renderMineScreen();return;}
+  if(!tx.committed){
+    let message="La compra no pudo confirmarse. No se descontaron gemas.";
+    if(tx.reason==="FIREBASE_RULES")message="Firebase rechazó el desbloqueo. Revisa que las reglas database.rules.json de la build actual estén desplegadas.";
+    else if(tx.reason==="REMOTE_STATE_MISSING")message="La cuenta todavía no tiene el estado de Mina migrado en Firebase. Vuelve a abrir la Mina y reintenta.";
+    else if(tx.reason==="ABORTED")message="Firebase detectó que la ranura cambió mientras comprabas. Se volvió a sincronizar sin descontar gemas.";
+    setHallvallaMineStatus(message);
+    try{if(typeof hvAlert==="function")await hvAlert(message,"Mina · Desbloqueo");}catch(_){ }
+    await syncHallvallaMineRemoteState();
+    renderMineScreen();
+    return;
+  }
+
   const fresh=getPlayerProfile(),freshGems=Math.max(0,Number(fresh?.gems||0));
   fresh.gems=Math.max(0,freshGems-cost);
   savePlayerProfile(fresh);

@@ -1,0 +1,15 @@
+HALLVALLA · MINA · FIX DESBLOQUEO DE RANURAS · BUILD 20260912.43
+
+Problema detectado:
+- El desbloqueo podía abortar silenciosamente cuando /users/{uid}/mine/state aún no estaba migrado o el campo unlockedSlots no existía en Firebase.
+- runTransaction devolvía committed=false sin lanzar excepción, por eso F12 podía no mostrar error.
+
+Corrección:
+- Se fuerza sincronización/migración Firebase justo antes de comprar.
+- Si unlockedSlots falta, se migra primero a 5 (valor inicial permitido por las reglas) y luego se hace la compra.
+- La transacción usa el valor remoto como autoridad y solo permite abrir exactamente la siguiente ranura.
+- Los fallos ahora muestran un mensaje visible; si Firebase responde PERMISSION_DENIED se indica revisar/desplegar database.rules.json.
+- No se descuentan gemas cuando Firebase no confirma el desbloqueo.
+
+Nota:
+- database.rules.json incluido en esta build YA contempla unlockedSlots 5..20 y aumentos de +1. Si las reglas desplegadas en Firebase son anteriores, deben publicarse desde este archivo.
