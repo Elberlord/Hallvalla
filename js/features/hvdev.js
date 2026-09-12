@@ -739,6 +739,16 @@
     setStatus("Paneles de ajuste cerrados.");
   }
 
+  function openUniversalControl(){
+    const open=globalThis.hvUniversalLayoutDevOpen;
+    if(typeof open!=="function"){
+      setStatus("Control universal: todavía no está disponible.");
+      return;
+    }
+    open();
+    setStatus("Control universal: selecciona cualquier elemento visible del juego.");
+  }
+
   const GROUPS=[
     {title:"COMBATE",items:[
       {label:"Interfaz completa",action:openBattleLayoutControl},
@@ -751,6 +761,7 @@
       {label:"DET",action:openDetControl}
     ]},
     {title:"PANTALLAS",items:[
+      {label:"CONTROL UNIVERSAL",action:openUniversalControl},
       {label:"Creación de mazo",action:openForgeControl},
       {label:"PvP / Online",action:openOnlineControl},
       {label:"Mapa de Aventura",action:openAdventureMapControl}
@@ -821,4 +832,423 @@
 
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",createHub,{once:true});
   else createHub();
+})();
+
+
+/* ============================================================
+   HallValla DEV · CONTROL UNIVERSAL DE INTERFAZ
+   - Solo existe con ?dev.
+   - Permite seleccionar CUALQUIER elemento visible del DOM.
+   - Ajustes locales: posición, escala X/Y, opacidad, z-index,
+     fondo/borde/sombra invisibles y ocultación temporal.
+   - Los ajustes se reaplican a elementos que se vuelvan a renderizar.
+   ============================================================ */
+(()=>{
+  "use strict";
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
+
+  const STORAGE_KEY="hallvalla_universal_layout_dev_v1";
+  const PANEL_KEY="hallvalla_universal_layout_panel_v1";
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
+  const cssEscape=value=>globalThis.CSS?.escape?globalThis.CSS.escape(String(value)):String(value).replace(/[^a-zA-Z0-9_-]/g,ch=>`\\${ch}`);
+  const originalStyles=new WeakMap();
+  let config={version:1,items:{}};
+  let selected=null;
+  let selectedSelector="";
+  let hoverTarget=null;
+  let picking=false;
+  let dragEnabled=false;
+  let elementDrag=null;
+  let panelDrag=null;
+  let mutationFrame=0;
+
+  function readConfig(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+      if(raw&&typeof raw==="object"&&raw.items&&typeof raw.items==="object")config={version:1,items:{...raw.items}};
+    }catch(error){console.warn("[HallValla][UniversalDev] No se pudo leer la configuración.",error);}
+  }
+  function writeConfig(){
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(config));}
+    catch(error){console.warn("[HallValla][UniversalDev] No se pudo guardar la configuración.",error);}
+  }
+  function captureOriginal(node){
+    if(!node||originalStyles.has(node))return;
+    originalStyles.set(node,{
+      translate:node.style.translate||"",
+      scale:node.style.scale||"",
+      opacity:node.style.opacity||"",
+      zIndex:node.style.zIndex||"",
+      background:node.style.getPropertyValue("background")||"",
+      backgroundPriority:node.style.getPropertyPriority("background")||"",
+      border:node.style.getPropertyValue("border")||"",
+      borderPriority:node.style.getPropertyPriority("border")||"",
+      boxShadow:node.style.getPropertyValue("box-shadow")||"",
+      boxShadowPriority:node.style.getPropertyPriority("box-shadow")||"",
+      visibility:node.style.visibility||"",
+      pointerEvents:node.style.pointerEvents||""
+    });
+  }
+  function restoreNode(node){
+    const o=originalStyles.get(node);
+    if(!node||!o)return;
+    node.style.translate=o.translate;
+    node.style.scale=o.scale;
+    node.style.opacity=o.opacity;
+    node.style.zIndex=o.zIndex;
+    if(o.background)node.style.setProperty("background",o.background,o.backgroundPriority);else node.style.removeProperty("background");
+    if(o.border)node.style.setProperty("border",o.border,o.borderPriority);else node.style.removeProperty("border");
+    if(o.boxShadow)node.style.setProperty("box-shadow",o.boxShadow,o.boxShadowPriority);else node.style.removeProperty("box-shadow");
+    node.style.visibility=o.visibility;
+    node.style.pointerEvents=o.pointerEvents;
+  }
+  function normalizeState(raw={}){
+    return {
+      x:clamp(raw.x,-1200,1200),
+      y:clamp(raw.y,-1200,1200),
+      sx:clamp(raw.sx||100,20,400),
+      sy:clamp(raw.sy||100,20,400),
+      opacity:clamp(raw.opacity==null?100:raw.opacity,5,100),
+      z:Math.round(clamp(raw.z,-100,99999)),
+      backgroundOff:raw.backgroundOff===true,
+      borderOff:raw.borderOff===true,
+      shadowOff:raw.shadowOff===true,
+      hidden:raw.hidden===true,
+      label:String(raw.label||"").slice(0,120)
+    };
+  }
+  function stateFor(selector){return normalizeState(config.items[selector]||{});}
+  function isDevNode(node){return !!node?.closest?.('[data-hv-dev-tool],#hvUniversalLayoutTuner,#hvDevToolsHub,#hvDevToolsHubLauncher');}
+  function stableClasses(node){
+    return Array.from(node.classList||[]).filter(c=>c&&!/^(active|hidden|selected|open|show|is-|has-|hover|focus|disabled|loading)/i.test(c)&&!c.startsWith("hv-universal-")).slice(0,3);
+  }
+  function stableDataAttrs(node){
+    const priority=["data-mine-panel","data-mine-nav","data-action","data-mode","data-view","data-slot-index","data-card-id","data-unit-id","data-adventure-node","data-id","data-key"];
+    const attrs=[];
+    for(const name of priority){
+      const value=node.getAttribute?.(name);
+      if(value!=null&&String(value).length<80)attrs.push([name,String(value)]);
+    }
+    if(attrs.length)return attrs.slice(0,2);
+    for(const attr of Array.from(node.attributes||[])){
+      if(!attr.name.startsWith("data-")||attr.name.startsWith("data-hv-")||attr.value.length>80)continue;
+      attrs.push([attr.name,attr.value]);
+      if(attrs.length>=1)break;
+    }
+    return attrs;
+  }
+  function selectorPart(node){
+    const tag=(node.tagName||"div").toLowerCase();
+    if(node.id&&document.querySelectorAll(`#${cssEscape(node.id)}`).length===1)return `#${cssEscape(node.id)}`;
+    let part=tag;
+    const data=stableDataAttrs(node);
+    for(const [name,value] of data)part+=`[${name}="${String(value).replace(/"/g,'\\"')}"]`;
+    const classes=stableClasses(node);
+    if(!data.length&&classes.length)part+=classes.map(c=>`.${cssEscape(c)}`).join("");
+    const parent=node.parentElement;
+    if(parent){
+      const same=Array.from(parent.children).filter(child=>child.tagName===node.tagName);
+      if(same.length>1){
+        const idx=same.indexOf(node)+1;
+        part+=`:nth-of-type(${idx})`;
+      }
+    }
+    return part;
+  }
+  function buildSelector(node){
+    if(!node||node===document.body||node===document.documentElement)return "body";
+    if(node.id&&document.querySelectorAll(`#${cssEscape(node.id)}`).length===1)return `#${cssEscape(node.id)}`;
+    const parts=[];
+    let cur=node;
+    for(let depth=0;cur&&cur!==document.body&&depth<7;depth++,cur=cur.parentElement){
+      parts.unshift(selectorPart(cur));
+      const candidate=parts.join(" > ");
+      try{if(document.querySelectorAll(candidate).length===1)return candidate;}catch(_){ }
+    }
+    return parts.join(" > ")||selectorPart(node);
+  }
+  function nodeLabel(node){
+    if(!node)return "Sin selección";
+    const text=String(node.getAttribute?.("aria-label")||node.textContent||"").replace(/\s+/g," ").trim().slice(0,46);
+    return `${node.tagName?.toLowerCase()||"elemento"}${node.id?`#${node.id}`:""}${text?` · ${text}`:""}`;
+  }
+  function applyStateToNode(node,selector,state=stateFor(selector)){
+    if(!node||isDevNode(node))return;
+    captureOriginal(node);
+    node.dataset.hvUniversalTarget=selector;
+    const original=originalStyles.get(node)||{};
+    node.style.translate=(state.x!==0||state.y!==0)?`${state.x}px ${state.y}px`:(original.translate||"");
+    node.style.scale=(state.sx!==100||state.sy!==100)?`${state.sx/100} ${state.sy/100}`:(original.scale||"");
+    node.style.opacity=state.opacity!==100?String(state.opacity/100):(original.opacity||"");
+    if(state.z!==0)node.style.zIndex=String(state.z);else node.style.zIndex=original.zIndex||"";
+    if(state.backgroundOff)node.style.setProperty("background","transparent","important");
+    else{
+      const o=originalStyles.get(node);if(o?.background)node.style.setProperty("background",o.background,o.backgroundPriority);else node.style.removeProperty("background");
+    }
+    if(state.borderOff)node.style.setProperty("border","0","important");
+    else{
+      const o=originalStyles.get(node);if(o?.border)node.style.setProperty("border",o.border,o.borderPriority);else node.style.removeProperty("border");
+    }
+    if(state.shadowOff)node.style.setProperty("box-shadow","none","important");
+    else{
+      const o=originalStyles.get(node);if(o?.boxShadow)node.style.setProperty("box-shadow",o.boxShadow,o.boxShadowPriority);else node.style.removeProperty("box-shadow");
+    }
+    if(state.hidden){node.style.visibility="hidden";node.style.pointerEvents="none";}
+    else{
+      const o=originalStyles.get(node);node.style.visibility=o?.visibility||"";node.style.pointerEvents=o?.pointerEvents||"";
+    }
+  }
+  function applySelector(selector){
+    if(!selector||!config.items[selector])return;
+    let nodes=[];try{nodes=$$(selector);}catch(_){return;}
+    const state=stateFor(selector);
+    nodes.forEach(node=>applyStateToNode(node,selector,state));
+  }
+  function applyAll(){Object.keys(config.items).forEach(applySelector);}
+  function saveState(next){
+    if(!selectedSelector)return;
+    const state=normalizeState({...stateFor(selectedSelector),...next,label:nodeLabel(selected)});
+    config.items[selectedSelector]=state;
+    writeConfig();
+    applySelector(selectedSelector);
+    syncPanel();
+    syncSavedSelect();
+  }
+  function clearSelectionClasses(){
+    document.querySelectorAll('.hv-universal-selected,.hv-universal-hover').forEach(node=>node.classList.remove('hv-universal-selected','hv-universal-hover'));
+  }
+  function selectNode(node){
+    if(!node||isDevNode(node)||node===document.body||node===document.documentElement)return;
+    clearSelectionClasses();
+    selected=node;
+    selectedSelector=buildSelector(node);
+    selected.classList.add("hv-universal-selected");
+    syncPanel();
+  }
+  function selectBySelector(selector){
+    let node=null;try{node=$(selector);}catch(_){ }
+    if(node)selectNode(node);
+    else{selected=null;selectedSelector=selector||"";syncPanel();}
+  }
+  function resetCurrent(){
+    if(!selectedSelector)return;
+    let nodes=[];try{nodes=$$(selectedSelector);}catch(_){ }
+    nodes.forEach(node=>{restoreNode(node);node.removeAttribute("data-hv-universal-target");});
+    delete config.items[selectedSelector];writeConfig();syncPanel();syncSavedSelect();
+  }
+  function resetAll(){
+    for(const selector of Object.keys(config.items)){
+      let nodes=[];try{nodes=$$(selector);}catch(_){ }
+      nodes.forEach(node=>{restoreNode(node);node.removeAttribute("data-hv-universal-target");});
+    }
+    config={version:1,items:{}};writeConfig();syncPanel();syncSavedSelect();
+  }
+  function setPicking(on){
+    picking=!!on;
+    document.documentElement.classList.toggle("hv-universal-picking",picking);
+    const btn=$("#hvUniversalPick");if(btn)btn.classList.toggle("is-active",picking);
+    if(!picking&&hoverTarget){hoverTarget.classList.remove("hv-universal-hover");hoverTarget=null;}
+    setStatus(picking?"Haz clic sobre cualquier elemento del juego. El clic NO ejecutará su acción.":"Selector detenido.");
+  }
+  function setDragEnabled(on){
+    dragEnabled=!!on;
+    document.documentElement.classList.toggle("hv-universal-dragging-enabled",dragEnabled);
+    const btn=$("#hvUniversalDragToggle");if(btn){btn.classList.toggle("is-active",dragEnabled);btn.textContent=`ARRASTRAR: ${dragEnabled?"ON":"OFF"}`;}
+    setStatus(dragEnabled?"Arrastra directamente el elemento seleccionado para moverlo.":"Arrastre directo desactivado.");
+  }
+  function onPickMove(event){
+    if(!picking)return;
+    const node=document.elementFromPoint(event.clientX,event.clientY);
+    if(!node||isDevNode(node)||node===hoverTarget)return;
+    hoverTarget?.classList.remove("hv-universal-hover");
+    hoverTarget=node;hoverTarget.classList.add("hv-universal-hover");
+  }
+  function onPickClick(event){
+    if(!picking)return;
+    const node=document.elementFromPoint(event.clientX,event.clientY);
+    if(!node||isDevNode(node))return;
+    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+    hoverTarget?.classList.remove("hv-universal-hover");hoverTarget=null;
+    selectNode(node);setPicking(false);
+  }
+  function onElementPointerDown(event){
+    if(!dragEnabled||!selected||event.button!==0||isDevNode(event.target))return;
+    if(!(event.target===selected||selected.contains(event.target)))return;
+    event.preventDefault();event.stopPropagation();
+    const s=stateFor(selectedSelector);
+    elementDrag={id:event.pointerId,startX:event.clientX,startY:event.clientY,x:s.x,y:s.y};
+    try{selected.setPointerCapture(event.pointerId);}catch(_){ }
+  }
+  function onElementPointerMove(event){
+    if(!elementDrag||event.pointerId!==elementDrag.id)return;
+    const x=elementDrag.x+(event.clientX-elementDrag.startX),y=elementDrag.y+(event.clientY-elementDrag.startY);
+    saveState({x,y});
+  }
+  function onElementPointerUp(event){
+    if(!elementDrag||event.pointerId!==elementDrag.id)return;
+    elementDrag=null;
+  }
+  function setStatus(text){const node=$("#hvUniversalStatus");if(node)node.textContent=String(text||"");}
+  function controlValue(id){return Number($(id)?.value||0);}
+  function onControls(){
+    saveState({
+      x:controlValue("#hvUniversalX"),y:controlValue("#hvUniversalY"),
+      sx:controlValue("#hvUniversalSX"),sy:controlValue("#hvUniversalSY"),
+      opacity:controlValue("#hvUniversalOpacity"),z:controlValue("#hvUniversalZ")
+    });
+  }
+  function toggleFlag(flag){const s=stateFor(selectedSelector);saveState({[flag]:!s[flag]});}
+  function syncPanel(){
+    const panel=$("#hvUniversalLayoutTuner");if(!panel)return;
+    const s=stateFor(selectedSelector);
+    const set=(id,value)=>{const node=$(id,panel);if(node)node.value=String(value);};
+    set("#hvUniversalX",s.x);set("#hvUniversalY",s.y);set("#hvUniversalSX",s.sx);set("#hvUniversalSY",s.sy);set("#hvUniversalOpacity",s.opacity);set("#hvUniversalZ",s.z);
+    const label=$("#hvUniversalSelected",panel);if(label)label.textContent=selected?nodeLabel(selected):(selectedSelector||"Selecciona un elemento");
+    const sel=$("#hvUniversalSelector",panel);if(sel)sel.value=selectedSelector;
+    const bg=$("#hvUniversalBg",panel);if(bg)bg.classList.toggle("is-active",s.backgroundOff);
+    const border=$("#hvUniversalBorder",panel);if(border)border.classList.toggle("is-active",s.borderOff);
+    const shadow=$("#hvUniversalShadow",panel);if(shadow)shadow.classList.toggle("is-active",s.shadowOff);
+    const hidden=$("#hvUniversalHidden",panel);if(hidden){hidden.classList.toggle("is-active",s.hidden);hidden.textContent=s.hidden?"MOSTRAR":"OCULTAR";}
+  }
+  function syncSavedSelect(){
+    const select=$("#hvUniversalSaved");if(!select)return;
+    const previous=select.value;
+    select.innerHTML='<option value="">— Ajustes guardados —</option>';
+    for(const [selector,raw] of Object.entries(config.items)){
+      const option=document.createElement("option");option.value=selector;option.textContent=raw.label||selector;select.appendChild(option);
+    }
+    if(previous&&config.items[previous])select.value=previous;
+  }
+  function exportJson(){return JSON.stringify({version:1,items:config.items},null,2);}
+  function exportCss(){
+    return Object.entries(config.items).map(([selector,raw])=>{
+      const s=normalizeState(raw),rules=[`translate:${s.x}px ${s.y}px`,`scale:${s.sx/100} ${s.sy/100}`,`opacity:${s.opacity/100}`];
+      if(s.z)rules.push(`z-index:${s.z}`);
+      if(s.backgroundOff)rules.push('background:transparent!important');
+      if(s.borderOff)rules.push('border:0!important');
+      if(s.shadowOff)rules.push('box-shadow:none!important');
+      if(s.hidden)rules.push('visibility:hidden!important','pointer-events:none!important');
+      return `${selector}{${rules.join(';')};}`;
+    }).join("\n");
+  }
+  async function copyText(text,label){
+    try{await navigator.clipboard.writeText(text);setStatus(`${label} copiado.`);}
+    catch(_){setStatus(`No se pudo copiar ${label.toLowerCase()}.`);}
+  }
+  function downloadJson(){
+    const blob=new Blob([exportJson()],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="hallvalla-universal-layout-dev.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  function onPanelDown(event){
+    if(event.target.closest("button,input,select,textarea"))return;
+    const panel=$("#hvUniversalLayoutTuner");if(!panel)return;
+    const rect=panel.getBoundingClientRect();panelDrag={id:event.pointerId,dx:event.clientX-rect.left,dy:event.clientY-rect.top};
+    try{event.currentTarget.setPointerCapture(event.pointerId);}catch(_){ }
+  }
+  function onPanelMove(event){
+    if(!panelDrag||event.pointerId!==panelDrag.id)return;
+    const panel=$("#hvUniversalLayoutTuner");if(!panel)return;
+    const left=clamp(event.clientX-panelDrag.dx,0,Math.max(0,innerWidth-panel.offsetWidth));
+    const top=clamp(event.clientY-panelDrag.dy,0,Math.max(0,innerHeight-panel.offsetHeight));
+    panel.style.left=`${left}px`;panel.style.top=`${top}px`;panel.style.right="auto";panel.style.bottom="auto";
+  }
+  function onPanelUp(event){
+    if(!panelDrag||event.pointerId!==panelDrag.id)return;
+    const panel=$("#hvUniversalLayoutTuner");
+    if(panel){try{localStorage.setItem(PANEL_KEY,JSON.stringify({left:panel.offsetLeft,top:panel.offsetTop}));}catch(_){ }}
+    panelDrag=null;
+  }
+  function restorePanelPosition(){
+    const panel=$("#hvUniversalLayoutTuner");if(!panel)return;
+    try{
+      const pos=JSON.parse(localStorage.getItem(PANEL_KEY)||"null");
+      if(pos&&Number.isFinite(Number(pos.left))&&Number.isFinite(Number(pos.top))){
+        panel.style.left=`${clamp(pos.left,0,Math.max(0,innerWidth-panel.offsetWidth))}px`;
+        panel.style.top=`${clamp(pos.top,0,Math.max(0,innerHeight-panel.offsetHeight))}px`;
+        panel.style.right="auto";panel.style.bottom="auto";
+      }
+    }catch(_){ }
+  }
+  function createPanel(){
+    if($("#hvUniversalLayoutTuner"))return;
+    const panel=document.createElement("aside");panel.id="hvUniversalLayoutTuner";panel.dataset.hvDevTool="";panel.className="hv-universal-layout-tuner hidden";
+    panel.innerHTML=`
+      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL</b><small>Cualquier elemento · ?dev</small></div><button id="hvUniversalClose" type="button">×</button></header>
+      <div class="hv-universal-body">
+        <button id="hvUniversalPick" class="hv-universal-primary" type="button">🎯 SELECCIONAR EN PANTALLA</button>
+        <div class="hv-universal-selected-label" id="hvUniversalSelected">Selecciona un elemento</div>
+        <input id="hvUniversalSelector" class="hv-universal-selector" readonly aria-label="Selector CSS">
+        <select id="hvUniversalSaved" class="hv-universal-saved"></select>
+        <div class="hv-universal-nav"><button id="hvUniversalParent" type="button">↑ PADRE</button><button id="hvUniversalChild" type="button">↓ HIJO</button><button id="hvUniversalDragToggle" type="button">ARRASTRAR: OFF</button></div>
+        <label>X <input id="hvUniversalX" type="number" min="-1200" max="1200" step="1"></label>
+        <label>Y <input id="hvUniversalY" type="number" min="-1200" max="1200" step="1"></label>
+        <label>ANCHO VISUAL % <input id="hvUniversalSX" type="number" min="20" max="400" step="1"></label>
+        <label>ALTO VISUAL % <input id="hvUniversalSY" type="number" min="20" max="400" step="1"></label>
+        <label>OPACIDAD % <input id="hvUniversalOpacity" type="number" min="5" max="100" step="1"></label>
+        <label>Z-INDEX <input id="hvUniversalZ" type="number" min="-100" max="99999" step="1"></label>
+        <div class="hv-universal-toggles"><button id="hvUniversalBg" type="button">FONDO INVISIBLE</button><button id="hvUniversalBorder" type="button">BORDE INVISIBLE</button><button id="hvUniversalShadow" type="button">SIN SOMBRA</button><button id="hvUniversalHidden" type="button">OCULTAR</button></div>
+        <div class="hv-universal-actions"><button id="hvUniversalReset" type="button">RESET ESTE</button><button id="hvUniversalResetAll" type="button">RESET TODO</button><button id="hvUniversalCopyJson" type="button">COPIAR JSON</button><button id="hvUniversalCopyCss" type="button">COPIAR CSS</button><button id="hvUniversalDownload" type="button">DESCARGAR JSON</button></div>
+        <p id="hvUniversalStatus" class="hv-universal-status">Selecciona cualquier punto visible del juego.</p>
+      </div>`;
+    document.body.appendChild(panel);
+    $("#hvUniversalClose",panel).addEventListener("click",()=>closePanel());
+    $("#hvUniversalPick",panel).addEventListener("click",()=>setPicking(!picking));
+    $("#hvUniversalParent",panel).addEventListener("click",()=>{if(selected?.parentElement&&!isDevNode(selected.parentElement))selectNode(selected.parentElement);});
+    $("#hvUniversalChild",panel).addEventListener("click",()=>{const child=selected?.firstElementChild;if(child&&!isDevNode(child))selectNode(child);});
+    $("#hvUniversalDragToggle",panel).addEventListener("click",()=>setDragEnabled(!dragEnabled));
+    ["#hvUniversalX","#hvUniversalY","#hvUniversalSX","#hvUniversalSY","#hvUniversalOpacity","#hvUniversalZ"].forEach(id=>$(id,panel).addEventListener("input",onControls));
+    $("#hvUniversalBg",panel).addEventListener("click",()=>toggleFlag("backgroundOff"));
+    $("#hvUniversalBorder",panel).addEventListener("click",()=>toggleFlag("borderOff"));
+    $("#hvUniversalShadow",panel).addEventListener("click",()=>toggleFlag("shadowOff"));
+    $("#hvUniversalHidden",panel).addEventListener("click",()=>toggleFlag("hidden"));
+    $("#hvUniversalReset",panel).addEventListener("click",resetCurrent);
+    $("#hvUniversalResetAll",panel).addEventListener("click",()=>{if(confirm("¿Restablecer TODOS los ajustes del Control Universal?"))resetAll();});
+    $("#hvUniversalCopyJson",panel).addEventListener("click",()=>copyText(exportJson(),"JSON"));
+    $("#hvUniversalCopyCss",panel).addEventListener("click",()=>copyText(exportCss(),"CSS"));
+    $("#hvUniversalDownload",panel).addEventListener("click",downloadJson);
+    $("#hvUniversalSaved",panel).addEventListener("change",event=>{if(event.target.value)selectBySelector(event.target.value);});
+    const handle=$("#hvUniversalDragHandle",panel);handle.addEventListener("pointerdown",onPanelDown);handle.addEventListener("pointermove",onPanelMove);handle.addEventListener("pointerup",onPanelUp);handle.addEventListener("pointercancel",onPanelUp);
+    syncSavedSelect();syncPanel();requestAnimationFrame(restorePanelPosition);
+  }
+  function openPanel(){
+    createPanel();const panel=$("#hvUniversalLayoutTuner");panel.classList.remove("hidden");syncPanel();syncSavedSelect();
+    setStatus("Usa SELECCIONAR EN PANTALLA y toca cualquier elemento.");
+  }
+  function closePanel(){
+    setPicking(false);setDragEnabled(false);clearSelectionClasses();$("#hvUniversalLayoutTuner")?.classList.add("hidden");
+  }
+  function bindGlobalEvents(){
+    document.addEventListener("pointermove",onPickMove,true);
+    document.addEventListener("click",onPickClick,true);
+    document.addEventListener("pointerdown",onElementPointerDown,true);
+    document.addEventListener("pointermove",onElementPointerMove,true);
+    document.addEventListener("pointerup",onElementPointerUp,true);
+    document.addEventListener("pointercancel",onElementPointerUp,true);
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"&&picking){event.preventDefault();setPicking(false);}
+      if(!selectedSelector||isDevNode(event.target))return;
+      const step=event.shiftKey?10:1;
+      if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(event.key)&&$("#hvUniversalLayoutTuner")&&!$("#hvUniversalLayoutTuner").classList.contains("hidden")){
+        event.preventDefault();const s=stateFor(selectedSelector);
+        if(event.key==="ArrowLeft")saveState({x:s.x-step});
+        if(event.key==="ArrowRight")saveState({x:s.x+step});
+        if(event.key==="ArrowUp")saveState({y:s.y-step});
+        if(event.key==="ArrowDown")saveState({y:s.y+step});
+      }
+    },true);
+    const observer=new MutationObserver(()=>{
+      if(mutationFrame)return;
+      mutationFrame=requestAnimationFrame(()=>{mutationFrame=0;applyAll();if(selectedSelector&&!selected?.isConnected)selectBySelector(selectedSelector);});
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+    addEventListener("resize",()=>applyAll(),{passive:true});
+  }
+
+  readConfig();
+  globalThis.hvUniversalLayoutDevOpen=openPanel;
+  globalThis.hvUniversalLayoutDevExport=()=>({json:exportJson(),css:exportCss()});
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{applyAll();bindGlobalEvents();},{once:true});
+  else{applyAll();bindGlobalEvents();}
 })();

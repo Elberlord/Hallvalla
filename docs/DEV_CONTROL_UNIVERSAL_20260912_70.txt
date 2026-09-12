@@ -1,0 +1,43 @@
+HallValla — CONTROL UNIVERSAL DEV — 2026-09-12 v70
+
+Objetivo
+Permitir ajustar manualmente cualquier punto visible de la interfaz desde ?dev, sin depender de una lista cerrada de pantallas o elementos.
+
+Acceso
+1. Abrir HallValla con ?dev al final de la URL.
+2. Abrir HV DEV.
+3. Entrar en PANTALLAS > CONTROL UNIVERSAL.
+4. Pulsar “SELECCIONAR EN PANTALLA”.
+5. Hacer clic sobre cualquier elemento visible del juego.
+
+Controles disponibles por elemento
+- X: mover horizontalmente.
+- Y: mover verticalmente.
+- ANCHO VISUAL %: escala horizontal.
+- ALTO VISUAL %: escala vertical.
+- OPACIDAD %.
+- Z-INDEX.
+- FONDO INVISIBLE.
+- BORDE INVISIBLE.
+- SIN SOMBRA.
+- OCULTAR / MOSTRAR.
+- PADRE / HIJO: cambiar rápidamente el nivel del DOM seleccionado.
+- ARRASTRAR ON/OFF: mover el elemento directamente con el mouse.
+- Flechas del teclado: mover 1 px; Shift + flecha: mover 10 px.
+
+Persistencia
+Los ajustes se guardan localmente en el navegador bajo:
+hallvalla_universal_layout_dev_v1
+
+Los cambios se reaplican automáticamente si una pantalla/modal vuelve a renderizar el mismo selector.
+
+Exportación
+- COPIAR JSON: copia todos los ajustes.
+- COPIAR CSS: genera reglas CSS equivalentes para convertir la calibración en código permanente.
+- DESCARGAR JSON: descarga el preset completo.
+
+Seguridad
+- El editor solo se carga con ?dev.
+- No reemplaza ni elimina los calibradores específicos existentes.
+- No altera mecánicas de combate, economía, Firebase ni ruleta.
+- Los estilos universales solo se aplican a elementos que el usuario haya guardado explícitamente dentro del editor.

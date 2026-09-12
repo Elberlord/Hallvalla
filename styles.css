@@ -28263,3 +28263,113 @@ html:has(#gameShell:not(.hidden)) body{
     flex-basis:220px;
   }
 }
+
+/* ============================================================
+   HallValla 20260912.69 — Mina rewards wheel clearance under chips
+   ============================================================ */
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-chip-row{
+  margin-bottom:4px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-stage{
+  padding-top:18px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+  margin-top:6px !important;
+}
+@media (max-width:760px){
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-chip-row{
+    margin-bottom:2px !important;
+  }
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-stage{
+    padding-top:14px !important;
+  }
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+    margin-top:4px !important;
+  }
+}
+
+/* ============================================================
+   HallValla 20260912.70 — DEV Control Universal
+   Solo se activa porque el JS existe únicamente dentro de hvdev (?dev).
+   ============================================================ */
+.hv-universal-layout-tuner{
+  position:fixed;
+  z-index:2147483000;
+  left:18px;
+  top:82px;
+  width:min(360px,calc(100vw - 36px));
+  max-height:calc(100dvh - 100px);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  color:#f4ead0;
+  background:linear-gradient(180deg,rgba(10,10,14,.985),rgba(3,4,7,.985));
+  border:1px solid rgba(218,171,72,.58);
+  border-radius:14px;
+  box-shadow:0 20px 52px rgba(0,0,0,.64),inset 0 0 0 1px rgba(255,226,145,.05);
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+}
+.hv-universal-layout-tuner.hidden{display:none!important;}
+.hv-universal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:11px 12px;
+  cursor:grab;
+  user-select:none;
+  background:linear-gradient(90deg,rgba(86,55,8,.42),rgba(14,13,12,.92));
+  border-bottom:1px solid rgba(218,171,72,.26);
+}
+.hv-universal-head:active{cursor:grabbing;}
+.hv-universal-head div{min-width:0;display:flex;flex-direction:column;gap:1px;}
+.hv-universal-head b{font:800 13px/1.15 Georgia,serif;letter-spacing:.08em;color:#f0c765;}
+.hv-universal-head small{font-size:9px;color:rgba(240,232,210,.68);}
+.hv-universal-head button{
+  width:30px;height:30px;border-radius:9px;border:1px solid rgba(218,171,72,.28);background:#090b10;color:#f2d487;font-size:19px;cursor:pointer;
+}
+.hv-universal-body{padding:11px;overflow:auto;display:flex;flex-direction:column;gap:8px;}
+.hv-universal-primary{
+  min-height:40px;border:1px solid rgba(233,190,91,.72);border-radius:10px;
+  background:linear-gradient(180deg,#6d4b0c,#2e1c04);color:#fff0bc;font-weight:900;letter-spacing:.04em;cursor:pointer;
+}
+.hv-universal-primary.is-active{background:linear-gradient(180deg,#0d6f72,#073638);border-color:#68eff4;box-shadow:0 0 14px rgba(91,227,236,.30);}
+.hv-universal-selected-label{
+  min-height:34px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  color:#fff7de;font-size:11px;font-weight:800;line-height:1.2;word-break:break-word;
+}
+.hv-universal-selector,.hv-universal-saved{
+  width:100%;box-sizing:border-box;min-height:31px;border-radius:8px;border:1px solid rgba(218,171,72,.22);background:#07090d;color:#d9d1bd;padding:5px 8px;font-size:10px;
+}
+.hv-universal-nav,.hv-universal-toggles,.hv-universal-actions{display:grid;gap:6px;}
+.hv-universal-nav{grid-template-columns:repeat(3,1fr);}
+.hv-universal-toggles{grid-template-columns:repeat(2,1fr);}
+.hv-universal-actions{grid-template-columns:repeat(2,1fr);}
+.hv-universal-nav button,.hv-universal-toggles button,.hv-universal-actions button{
+  min-height:31px;border-radius:8px;border:1px solid rgba(218,171,72,.20);background:#0a0d12;color:#e9dfc4;font-size:9px;font-weight:850;cursor:pointer;
+}
+.hv-universal-nav button:hover,.hv-universal-toggles button:hover,.hv-universal-actions button:hover{border-color:rgba(232,190,92,.62);filter:brightness(1.14);}
+.hv-universal-nav button.is-active,.hv-universal-toggles button.is-active{background:#583d0b;color:#fff1b7;border-color:#e7b84c;}
+.hv-universal-body>label{
+  display:grid;grid-template-columns:1fr 104px;align-items:center;gap:8px;
+  color:#d8cba9;font-size:10px;font-weight:850;letter-spacing:.03em;
+}
+.hv-universal-body>label input{
+  width:100%;box-sizing:border-box;height:29px;border-radius:7px;border:1px solid rgba(218,171,72,.22);background:#06080c;color:#fff0c7;padding:4px 7px;text-align:right;font-weight:800;
+}
+.hv-universal-status{margin:2px 0 0;padding-top:7px;border-top:1px solid rgba(218,171,72,.13);color:rgba(235,228,210,.67);font-size:9px;line-height:1.25;}
+html.hv-universal-picking{cursor:crosshair!important;}
+html.hv-universal-picking *:not([data-hv-dev-tool]):not([data-hv-dev-tool] *){cursor:crosshair!important;}
+.hv-universal-hover{
+  outline:2px dashed #4cf4ff!important;
+  outline-offset:3px!important;
+}
+.hv-universal-selected{
+  outline:2px solid #ffd666!important;
+  outline-offset:3px!important;
+}
+html.hv-universal-dragging-enabled .hv-universal-selected{cursor:move!important;}
+@media (max-width:700px){
+  .hv-universal-layout-tuner{left:7px;top:55px;width:min(340px,calc(100vw - 14px));max-height:calc(100dvh - 62px);}
+  .hv-universal-body{padding:9px;gap:7px;}
+}
