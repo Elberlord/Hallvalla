@@ -1,0 +1,11 @@
+HallValla 20260912.46
+
+Rediseño visual de la Mina / Producción.
+- 5 estaciones por página.
+- Un solo botón Comprar nuevo espacio; la compra sigue siendo secuencial.
+- Estaciones activas con pico/mina animados en CSS puro.
+- HUD integrado sobre la escena.
+- Navegación flotante negra/dorada.
+- Barra de comandos y dock de trabajadores con glass/metal frontend.
+- Se conserva la lógica económica/Firebase existente de 20260912.45; solo cambia el punto de entrada de compra a un CTA único.
+- Responsive con container queries y microinteracciones.
