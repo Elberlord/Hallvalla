@@ -27910,3 +27910,76 @@ html:has(#gameShell:not(.hidden)) body{
   .mine-shop-float-icon-btn{width:96px;height:96px;}
   .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{width:min(62vw,280px);min-width:220px;}
 }
+
+/* ============================================================
+   HallValla 20260912.57 — Mina Shop potion art + compact floating items
+   ============================================================ */
+.mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{
+  grid-template-columns:repeat(4,minmax(110px,1fr)) !important;
+  gap:12px 14px !important;
+}
+.mine-shop-float-icon-btn{
+  width:clamp(72px,7.8vw,96px) !important;
+  height:clamp(72px,7.8vw,96px) !important;
+}
+.mine-shop-potion-icon{
+  background:transparent !important;
+  border-radius:0 !important;
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.42));
+}
+.mine-shop-potion-icon img,
+.mine-shop-undead-btn img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.mine-shop-undead-btn img{
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.48));
+}
+.mine-shop-floating-offer{gap:4px !important;}
+.mine-shop-floating-offer b{
+  max-width:118px !important;
+  font-size:11px !important;
+  line-height:1.08 !important;
+}
+.mine-shop-floating-offer small,
+.mine-shop-action-text{
+  max-width:118px !important;
+  font-size:9px !important;
+  line-height:1.08 !important;
+}
+.mine-shop-piece-counter{
+  right:-4px !important;
+  bottom:1px !important;
+  padding:2px 6px !important;
+  font-size:10px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+  width:min(28vw,240px) !important;
+  min-width:190px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-fortune-wheel{
+  inset:8px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-stage{
+  gap:8px !important;
+  overflow:visible !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-pointer{
+  top:-5px !important;
+  border-left-width:13px !important;
+  border-right-width:13px !important;
+  border-top-width:28px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result{
+  width:min(380px,92%) !important;
+}
+@media (max-width: 1100px){
+  .mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(3,minmax(100px,1fr)) !important;}
+}
+@media (max-width: 760px){
+  .mine-panel[data-mine-panel="shop"] .mine-undead-shop-grid{grid-template-columns:repeat(2,minmax(92px,1fr)) !important;gap:12px !important;}
+  .mine-shop-float-icon-btn{width:82px !important;height:82px !important;}
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{width:min(56vw,220px) !important;min-width:180px !important;}
+}

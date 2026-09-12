@@ -1,0 +1,8 @@
+HallValla 20260912.57 — Mina Shop compacta + pociones finales
+
+Cambios:
+- Se integraron los iconos definitivos aprobados para Poción de Experiencia y Poción de Mando.
+- Tienda de la Mina: reducción global de tamaño para que los iconos no tapen información.
+- Unidades no-muertas ahora usan recortes tipo board/field figure, sin fondo.
+- Recompensas: se redujo más la ruleta para evitar que se salga en esquinas durante el giro.
+- Se mantuvo el estilo flotante, sin tarjetas visibles.

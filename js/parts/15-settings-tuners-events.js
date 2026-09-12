@@ -3359,6 +3359,11 @@ function getHallvallaMineShopTemplate(key){
   try{return (CARD_TEMPLATES||[]).find(card=>card?.key===wanted&&card?.mineExclusive===true)||null;}catch(_){return null;}
 }
 function createHallvallaMineShopUnitState(){return {pieces:0,lastPurchaseDay:-1};}
+function getHallvallaMineShopDisplayImage(key,card=null){
+  const safeKey=String(key||""), board=`assets/field_figures_light/no_muertos/${safeKey}.webp`;
+  if(safeKey)return board;
+  return String(card?.portrait||getHallvallaMineCardImage(card)||"");
+}
 function normalizeHallvallaMineShopUnitState(state={}){
   return {
     pieces:Math.max(0,Math.min(HALLVALLA_MINE_SHOP_PIECES_REQUIRED,Math.floor(Number(state?.pieces||0)))),
@@ -3519,13 +3524,13 @@ function renderHallvallaMineShop(state=getHallvallaMineShopState()){
   const unitPotionBought=Number(safe.potions?.unitLastPurchaseDay)===day,leaderPotionBought=Number(safe.potions?.leaderLastPurchaseDay)===day;
   const potionHtml=`<article class="mine-shop-floating-offer mine-shop-potion-float">
       <button class="mine-shop-float-icon-btn mine-shop-potion-icon" data-mine-potion-buy="unit" type="button" ${unitPotionBought?"disabled":""} aria-label="Poción de Experiencia">
-        <span class="mine-shop-potion-glyph" aria-hidden="true">🧪</span>
+        <img src="assets/mine/shop/potion_experience.png" alt="Poción de Experiencia" draggable="false">
       </button>
       <b>Poción de Experiencia</b><small>+1 nivel unidad · Máx. XV</small><span class="mine-shop-action-text">${unitPotionBought?"COMPRADA HOY":`COMPRAR · ${HALLVALLA_MINE_LEVEL_POTION_COST}💎`}</span>
     </article>
     <article class="mine-shop-floating-offer mine-shop-potion-float">
       <button class="mine-shop-float-icon-btn mine-shop-potion-icon" data-mine-potion-buy="leader" type="button" ${leaderPotionBought?"disabled":""} aria-label="Poción de Mando">
-        <span class="mine-shop-potion-glyph" aria-hidden="true">⚗️</span>
+        <img src="assets/mine/shop/potion_command.png" alt="Poción de Mando" draggable="false">
       </button>
       <b>Poción de Mando</b><small>+1 nivel líder · Máx. XV</small><span class="mine-shop-action-text">${leaderPotionBought?"COMPRADA HOY":`COMPRAR · ${HALLVALLA_MINE_LEVEL_POTION_COST}💎`}</span>
     </article>`;
@@ -3533,7 +3538,7 @@ function renderHallvallaMineShop(state=getHallvallaMineShopState()){
     const card=getHallvallaMineShopTemplate(key);if(!card)return "";
     const progress=safe.units?.[key]||createHallvallaMineShopUnitState(),pieces=Math.max(0,Math.min(25,Number(progress.pieces||0)));
     const complete=pieces>=25,boughtToday=Number(progress.lastPurchaseDay)===day;
-    const art=String(card.portrait||getHallvallaMineCardImage(card)||"");
+    const art=getHallvallaMineShopDisplayImage(key,card);
     const buttonText=complete?"DESBLOQUEADA":pieceVouchers>0?`USAR PIEZA GRATIS · ${pieceVouchers}`:boughtToday?"PIEZA COMPRADA HOY":`COMPRAR PIEZA · ${HALLVALLA_MINE_SHOP_PIECE_COST}💎`;
     return `<article class="mine-shop-floating-offer mine-undead-floating${complete?" unlocked":""}">
       <button class="mine-shop-float-icon-btn mine-shop-undead-btn" data-mine-shop-buy="${escapeHtml(key)}" type="button" ${complete||(boughtToday&&pieceVouchers<=0)?"disabled":""} aria-label="${escapeHtml(buttonText)}">
