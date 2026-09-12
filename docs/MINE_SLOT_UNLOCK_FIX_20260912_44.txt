@@ -1,0 +1,11 @@
+HALLVALLA · MINA · DESBLOQUEO DE RANURAS · BUILD 20260912.44
+
+Corrección reforzada:
+- La compra ya NO reescribe /mine/state completo.
+- Firebase transacciona únicamente /mine/state/unlockedSlots.
+- Esto evita que validaciones de slots, nivel u otros campos puedan abortar una compra válida.
+- Cuentas antiguas inicializan unlockedSlots=5 antes de comprar la ranura 6.
+- Confirmación reemplazada por hvConfirm propio de HallValla (compatible con touch/gamepad); window.confirm queda solo como fallback.
+- Todo fallo muestra un diálogo visible y deja log [HallValla][Mina][Unlock] en consola.
+- Las gemas solo se descuentan después de un commit confirmado.
+- Se mantiene toda la base 20260912.43 y actualizaciones anteriores.

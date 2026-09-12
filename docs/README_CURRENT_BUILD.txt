@@ -1,8 +1,7 @@
-20260911.42 · GAMEPAD + CURSOR VIRTUAL + FAVICON OFICIAL
+20260912.44 · MINA SLOT UNLOCK TRANSACTION FIX
 
-- Base conservada: 20260911.41.
-- Navegación de gamepad en Home, overlays, modales y escenas conservada.
-- Stick derecho conserva el cursor virtual libre dentro de HallValla.
-- Se incorpora el logo oficial de HallValla como favicon/icono del navegador.
-- Variantes preparadas: favicon.ico, 64x64, 180x180, 192x192 y 512x512.
-- No se modificaron reglas, economía, combate, PvP, Firebase ni Xsolla.
+- Base conservada: 20260912.43 y todas las actualizaciones anteriores.
+- Desbloqueo de ranuras de Mina ahora transacciona únicamente unlockedSlots en Firebase.
+- Confirmación nativa sustituida por modal HallValla hvConfirm.
+- Errores de desbloqueo siempre se muestran en diálogo y consola.
+- No se modificaron costes, combate, PvP, unidades, Xsolla ni otras reglas de juego.
