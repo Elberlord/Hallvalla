@@ -1,0 +1,6 @@
+HallValla 20260912.59 — Mina Recompensas hard-size + pociones WebP
+
+- Ruleta forzada a 148x148 px en escritorio y 132x132 px en pantallas estrechas.
+- Disco giratorio forzado a ancho y alto idénticos para mantener círculo real durante toda la animación.
+- Puntero reducido para acompañar la nueva escala.
+- Poción de Experiencia y Poción de Mando convertidas a WebP con transparencia y se eliminaron los PNG anteriores.

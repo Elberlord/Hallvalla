@@ -27983,3 +27983,175 @@ html:has(#gameShell:not(.hidden)) body{
   .mine-shop-float-icon-btn{width:82px !important;height:82px !important;}
   .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{width:min(56vw,220px) !important;min-width:180px !important;}
 }
+
+
+/* ============================================================
+   HallValla 20260912.58 — Mina Rewards smaller circular wheel
+   ============================================================ */
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+  width:min(24vw,210px) !important;
+  min-width:170px !important;
+  aspect-ratio:1 / 1 !important;
+  height:auto !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-fortune-wheel{
+  inset:10px !important;
+  width:auto !important;
+  height:auto !important;
+  border-radius:50% !important;
+  transform-origin:50% 50% !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-stage{
+  gap:6px !important;
+  padding-top:4px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-pointer{
+  top:-3px !important;
+  border-left-width:11px !important;
+  border-right-width:11px !important;
+  border-top-width:24px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result{
+  width:min(340px,90%) !important;
+}
+@media (max-width: 760px){
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+    width:min(48vw,190px) !important;
+    min-width:160px !important;
+  }
+}
+
+/* ============================================================
+   HallValla 20260912.59 — Wheel hard-size override
+   ============================================================ */
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+  width:148px !important;
+  height:148px !important;
+  min-width:0 !important;
+  max-width:148px !important;
+  aspect-ratio:auto !important;
+  flex:0 0 148px !important;
+  overflow:visible !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-fortune-wheel{
+  inset:auto !important;
+  left:8px !important;
+  top:8px !important;
+  width:132px !important;
+  height:132px !important;
+  min-width:132px !important;
+  min-height:132px !important;
+  max-width:132px !important;
+  max-height:132px !important;
+  aspect-ratio:auto !important;
+  border-radius:50% !important;
+  transform-origin:66px 66px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-pointer{
+  top:-1px !important;
+  border-left-width:9px !important;
+  border-right-width:9px !important;
+  border-top-width:19px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-pointer::after{
+  width:7px !important;
+  height:7px !important;
+  transform:translate(-3.5px,-17px) !important;
+  box-shadow:0 0 0 2px #f7d681 !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-stage{
+  gap:5px !important;
+  padding-top:2px !important;
+}
+@media (max-width:760px){
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+    width:132px !important;height:132px !important;max-width:132px !important;flex-basis:132px !important;
+  }
+  .mine-panel[data-mine-panel="rewards"] .mine-fortune-wheel{
+    left:7px !important;top:7px !important;width:118px !important;height:118px !important;min-width:118px !important;min-height:118px !important;max-width:118px !important;max-height:118px !important;transform-origin:59px 59px !important;
+  }
+}
+
+/* ============================================================
+   HallValla 20260912.60 — Mina Rewards faithful icon wheel
+   ============================================================ */
+.mine-wheel-slot-icons{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  pointer-events:none;
+}
+.mine-wheel-slot-icon{
+  --icon-size:11px;
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:var(--icon-size);
+  height:var(--icon-size);
+  margin:-5.5px 0 0 -5.5px;
+  display:grid;
+  place-items:center;
+  transform:rotate(var(--slot-angle)) translateY(calc(var(--slot-radius) * -1)) rotate(calc(var(--slot-angle) * -1));
+  transform-origin:center center;
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  color:#f4f8ff;
+  text-shadow:0 1px 4px rgba(0,0,0,.92),0 0 7px rgba(0,0,0,.68);
+  opacity:.96;
+}
+.mine-wheel-slot-icon > span{
+  display:block;
+  width:100%;
+  height:100%;
+  text-align:center;
+}
+.mine-wheel-slot-icon.positive{color:#dff9ef;}
+.mine-wheel-slot-icon.negative{color:#ffe0e0;}
+.mine-wheel-slot-icon.neutral{color:#f0e4bb;opacity:.75;}
+.mine-wheel-slot-icon.jackpot{color:#fff2a8;}
+.mine-wheel-slot-icon.time{color:#e5f0ff;}
+.mine-wheel-slot-icon.instant{color:#fff5cf;}
+.mine-wheel-slot-icon.cycle{color:#c8f6ff;}
+.mine-wheel-slot-icon.advance{color:#fff1c7;}
+.mine-wheel-slot-icon.gems{color:#8fe6ff;}
+.mine-wheel-slot-icon.gold{color:#ffd978;}
+.mine-wheel-slot-icon.fragments{color:#b3efff;}
+.mine-wheel-slot-icon.spin{color:#fff0b3;}
+.mine-wheel-slot-icon.piece{color:#d4d1ff;}
+.mine-wheel-slot-icon.clear{color:#dbf8ff;}
+.mine-wheel-slot-icon.pack{color:#ffe1ad;}
+.mine-wheel-slot-icon.loss-mine-gems,.mine-wheel-slot-icon.loss-gems{color:#ff9cc6;}
+.mine-wheel-slot-icon.loss-gold{color:#ffb79a;}
+.mine-wheel-slot-icon.loss-fragments{color:#ffb4d3;}
+.mine-wheel-slot-icon.loss-spin,.mine-wheel-slot-icon.penalty{color:#ffcfaa;}
+.mine-wheel-slot-icon.is-consumed{opacity:.22;filter:grayscale(.95);}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+  width:148px !important;
+  min-width:148px !important;
+  max-width:148px !important;
+  height:148px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-fortune-wheel{
+  inset:8px !important;
+  width:auto !important;
+  height:auto !important;
+  border-width:7px !important;
+}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-rings{inset:13% !important;}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-hub{width:26% !important;height:26% !important;}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-pointer{
+  top:-4px !important;
+  border-left-width:10px !important;
+  border-right-width:10px !important;
+  border-top-width:22px !important;
+}
+@media (max-width:760px){
+  .mine-panel[data-mine-panel="rewards"] .mine-wheel-shell{
+    width:132px !important;
+    min-width:132px !important;
+    max-width:132px !important;
+    height:132px !important;
+  }
+  .mine-wheel-slot-icon{--icon-size:10px;font-size:7px;}
+}

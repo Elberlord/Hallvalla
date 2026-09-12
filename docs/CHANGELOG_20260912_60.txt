@@ -1,0 +1,10 @@
+HallValla 20260912.60 — Mina Recompensas: ruleta fiel al sistema
+
+Cambios:
+- Se auditó el pool real de 50 resultados de la Ruleta de la Mina.
+- La ruleta ahora usa iconos por tipo de premio/penalización real, sin números.
+- Se mantiene el oscurecimiento de secciones ya gastadas del pool.
+- Se conserva el tamaño reducido de la ruleta.
+
+Familias visuales integradas:
+- jackpot, tiempo, completar, ciclos, adelantar, gemas, oro, fragmentos, tiros gratis, piezas de no-muerto, limpiar desastres, pack, nada, pérdidas y penalización de costo.

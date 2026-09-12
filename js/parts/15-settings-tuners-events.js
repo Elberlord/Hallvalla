@@ -2732,6 +2732,39 @@ function buildHallvallaMineWheelGradient(state=getHallvallaMineWheelState()){
     return `${tone} ${a}deg ${b}deg`;
   }).join(",")})`;
 }
+
+function getHallvallaMineWheelIconMeta(def){
+  const effect=String(def?.effect||"");
+  if(effect==="jackpot")return {glyph:"✦",family:"jackpot"};
+  if(effect==="half_all"||effect==="half_slot")return {glyph:"⌛",family:"time"};
+  if(effect==="complete_slot"||effect==="complete_all")return {glyph:"⛏",family:"instant"};
+  if(effect==="cycles_slot"||effect==="cycles_all")return {glyph:"◈",family:"cycle"};
+  if(effect==="advance_slot"||effect==="advance_all")return {glyph:"➜",family:"advance"};
+  if(effect==="gems")return {glyph:"◆",family:"gems"};
+  if(effect==="gold")return {glyph:"◉",family:"gold"};
+  if(effect==="fragments")return {glyph:"⬖",family:"fragments"};
+  if(effect==="free_spin")return {glyph:"↻",family:"spin"};
+  if(effect==="mine_piece")return {glyph:"✚",family:"piece"};
+  if(effect==="mine_disaster_clear")return {glyph:"🛡",family:"clear"};
+  if(effect==="pack")return {glyph:"▣",family:"pack"};
+  if(effect==="nothing")return {glyph:"•",family:"neutral"};
+  if(effect==="mine_gems")return {glyph:"◆",family:"loss-mine-gems"};
+  if(effect==="gold_loss")return {glyph:"◉",family:"loss-gold"};
+  if(effect==="fragments_loss")return {glyph:"⬖",family:"loss-fragments"};
+  if(effect==="free_loss")return {glyph:"↻",family:"loss-spin"};
+  if(effect==="paid_penalty")return {glyph:"➚",family:"penalty"};
+  if(effect==="gem_loss")return {glyph:"◆",family:"loss-gems"};
+  return {glyph:"•",family:def?.kind||"neutral"};
+}
+function renderHallvallaMineWheelIcons(state=getHallvallaMineWheelState()){
+  const wheel=$("mineFortuneWheel");
+  if(!wheel)return;
+  const available=new Set(state?.remaining||[]),step=360/HALLVALLA_MINE_WHEEL_OUTCOMES.length,radius=41.5;
+  wheel.innerHTML=`<div class="mine-wheel-slot-icons">${HALLVALLA_MINE_WHEEL_OUTCOMES.map((def,index)=>{
+    const meta=getHallvallaMineWheelIconMeta(def),consumed=def.kind!=="neutral"&&!available.has(def.id),angle=(index+.5)*step;
+    return `<span class="mine-wheel-slot-icon ${escapeHtml(meta.family)} ${def.kind}${consumed?" is-consumed":""}" style="--slot-angle:${angle.toFixed(3)}deg;--slot-radius:${radius}%" title="${escapeHtml(def.name)}" aria-hidden="true"><span>${escapeHtml(meta.glyph)}</span></span>`;
+  }).join("")}</div>`;
+}
 function describeHallvallaMineWheelOutcome(def,state=getHallvallaMineWheelState()){
   if(!def)return "Resultado desconocido";
   if(def.effect==="jackpot")return `${Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Number(state?.jackpot||0)).toLocaleString("es-ES")}💎 de Premio Mayor`;
@@ -2792,7 +2825,7 @@ function renderHallvallaMineWheel(state=getHallvallaMineWheelState()){
     const ms=getHallvallaMineWheelNextFreeMs(safe);
     next.textContent=safe.freeSpins>=HALLVALLA_MINE_WHEEL_FREE_MAX?"Tiros gratis al máximo":`Próximo tiro gratis ${formatHallvallaMineDuration(ms)}`;
   }
-  if(wheel)wheel.style.backgroundImage=buildHallvallaMineWheelGradient(safe);
+  if(wheel){wheel.style.backgroundImage=buildHallvallaMineWheelGradient(safe);renderHallvallaMineWheelIcons(safe);}
   const poolPanel=$("mineWheelPrizePool");
   if(poolPanel&&!poolPanel.hidden)renderHallvallaMineWheelPrizePool(safe);
   const cost=getHallvallaMineWheelPaidCost(safe),hasFree=safe.freeSpins>0;
@@ -3524,13 +3557,13 @@ function renderHallvallaMineShop(state=getHallvallaMineShopState()){
   const unitPotionBought=Number(safe.potions?.unitLastPurchaseDay)===day,leaderPotionBought=Number(safe.potions?.leaderLastPurchaseDay)===day;
   const potionHtml=`<article class="mine-shop-floating-offer mine-shop-potion-float">
       <button class="mine-shop-float-icon-btn mine-shop-potion-icon" data-mine-potion-buy="unit" type="button" ${unitPotionBought?"disabled":""} aria-label="Poción de Experiencia">
-        <img src="assets/mine/shop/potion_experience.png" alt="Poción de Experiencia" draggable="false">
+        <img src="assets/mine/shop/potion_experience.webp" alt="Poción de Experiencia" draggable="false">
       </button>
       <b>Poción de Experiencia</b><small>+1 nivel unidad · Máx. XV</small><span class="mine-shop-action-text">${unitPotionBought?"COMPRADA HOY":`COMPRAR · ${HALLVALLA_MINE_LEVEL_POTION_COST}💎`}</span>
     </article>
     <article class="mine-shop-floating-offer mine-shop-potion-float">
       <button class="mine-shop-float-icon-btn mine-shop-potion-icon" data-mine-potion-buy="leader" type="button" ${leaderPotionBought?"disabled":""} aria-label="Poción de Mando">
-        <img src="assets/mine/shop/potion_command.png" alt="Poción de Mando" draggable="false">
+        <img src="assets/mine/shop/potion_command.webp" alt="Poción de Mando" draggable="false">
       </button>
       <b>Poción de Mando</b><small>+1 nivel líder · Máx. XV</small><span class="mine-shop-action-text">${leaderPotionBought?"COMPRADA HOY":`COMPRAR · ${HALLVALLA_MINE_LEVEL_POTION_COST}💎`}</span>
     </article>`;

@@ -1,0 +1,9 @@
+HallValla 20260912.58 — Mina Recompensas: ruleta más pequeña y circular
+
+Cambios:
+- Se redujo el tamaño visual de la ruleta de la Mina.
+- Se reforzó la proporción 1:1 y el radio circular durante el giro.
+- Se ajustó el puntero y el espaciado para que la rueda no roce los bordes.
+
+Pendiente para siguiente ute:
+- convertir las 2 pociones aprobadas a .webp sin fondo.
