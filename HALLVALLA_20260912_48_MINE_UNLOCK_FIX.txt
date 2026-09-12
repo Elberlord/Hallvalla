@@ -1,0 +1,8 @@
+HallValla 20260912.48 — Mina / compra de ranura
+
+Cambio funcional único:
+- Corrige la transacción de unlockedSlots en Firebase Realtime Database.
+- La .47 abortaba si runTransaction() recibía null/undefined en su primer callback local aunque el servidor tuviera 5.
+- La .48 permite que RTDB reconcilie ese estado local con el valor remoto y hace un único reintento defensivo si el servidor sigue exactamente en el contador esperado.
+- No modifica el UI de la Mina en esta build; el rediseño visual se hará después de validar la compra.
+- No cambia precios, economía, PvP, combate, Xsolla ni reglas de Firebase.

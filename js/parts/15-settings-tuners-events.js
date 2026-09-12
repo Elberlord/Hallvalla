@@ -2136,16 +2136,44 @@ async function transactHallvallaMineSlotUnlockRemote(targetIndex){
 
     // IMPORTANTE: se transacciona SOLO el contador. La versión anterior reescribía todo state,
     // haciendo que validaciones ajenas (slots/nivel) pudieran bloquear una compra válida.
-    const result=await runTransaction(unlockedRef,current=>{
+    // RTDB puede invocar el callback de runTransaction() primero con el valor local en caché.
+    // En una carga reciente ese valor puede ser null aunque el servidor ya tenga 5.
+    // La versión .47 devolvía undefined en ese primer callback y abortaba la transacción
+    // ANTES de que Firebase pudiera reconciliarla con el valor remoto.
+    const txSeen=[];
+    const attemptUnlock=()=>runTransaction(unlockedRef,current=>{
+      txSeen.push(current);
+      if(current===null||typeof current==="undefined"){
+        // Proponer el siguiente valor. El protocolo de transacciones de RTDB lo volverá
+        // a ejecutar con el valor del servidor si el hash local estaba desactualizado.
+        return safeTarget+1;
+      }
       const remote=Math.floor(Number(current));
       if(!Number.isFinite(remote)||remote!==safeTarget||remote>=HALLVALLA_MINE_SLOT_COUNT)return;
       return remote+1;
     },{applyLocally:false});
 
+    let result=await attemptUnlock();
+
+    // Defensa adicional: si otro estado local provocó un aborto pero el servidor sigue
+    // exactamente en el contador esperado, refrescamos y hacemos UN solo reintento.
+    if(!result?.committed){
+      let latestValue=null;
+      try{
+        const latest=await get(unlockedRef);
+        latestValue=latest?.exists?.()?Number(latest.val()):null;
+      }catch(_){ }
+      console.warn("[HallValla][Mina][Unlock] primer intento no commit",{targetIndex:safeTarget,latestValue,txSeen:[...txSeen]});
+      if(Number(latestValue)===safeTarget){
+        txSeen.length=0;
+        result=await attemptUnlock();
+      }
+    }
+
     if(!result?.committed){
       let current=null;
       try{const latest=await get(unlockedRef);current=latest?.exists?.()?Number(latest.val()):null;}catch(_){ }
-      console.error("[HallValla][Mina][Unlock] transacción abortada",{targetIndex:safeTarget,current});
+      console.error("[HallValla][Mina][Unlock] transacción abortada",{targetIndex:safeTarget,current,txSeen:[...txSeen]});
       return {committed:false,reason:"STALE",current};
     }
 
