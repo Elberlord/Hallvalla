@@ -1,6 +1,36 @@
 /* HallValla Stage 10 · Adventure UI bundle
    Mapa, historia, escenas y presentación de Aventura. Se carga al abrir Aventura. */
 
+let adventureViewedChapterId="";
+function getUnlockedAdventureMapChapters(progress=getAdventureProgress()){
+  if(!progress?.guardianDefeated)return [ADVENTURE_CHAPTER_1_1];
+  return ADVENTURE_CHAPTERS.filter(chapter=>{
+    if(!chapter?.requiresChapter)return true;
+    const required=ADVENTURE_CHAPTER_BY_ID[chapter.requiresChapter];
+    return !!required&&isChapterComplete(required,progress);
+  });
+}
+function resolveAdventureViewedChapter(progress=getAdventureProgress()){
+  const unlocked=getUnlockedAdventureMapChapters(progress);
+  const selected=unlocked.find(ch=>ch.id===adventureViewedChapterId);
+  if(selected)return selected;
+  const current=getCurrentAdventureChapter(progress);
+  const fallback=unlocked.find(ch=>ch.id===current?.id)||unlocked[unlocked.length-1]||current||ADVENTURE_CHAPTER_1_1;
+  adventureViewedChapterId=fallback?.id||"";
+  return fallback;
+}
+function navigateAdventureMapChapter(delta){
+  const progress=getAdventureProgress();
+  const unlocked=getUnlockedAdventureMapChapters(progress);
+  const current=resolveAdventureViewedChapter(progress);
+  const index=Math.max(0,unlocked.findIndex(ch=>ch.id===current?.id));
+  const nextIndex=Math.max(0,Math.min(unlocked.length-1,index+Number(delta||0)));
+  if(nextIndex===index)return false;
+  adventureViewedChapterId=unlocked[nextIndex].id;
+  renderAdventureMap();
+  showAdventureStage("adventureMapStage");
+  return true;
+}
 function openAdventureMap(specialKey=pendingAdventureSpecial||getAdventureProgress().selectedSpecial||"mulan"){
   pendingAdventureSpecial=ADVENTURE_SPECIALS[specialKey]?specialKey:"mulan";
   setAdventureSpecialInProgress(pendingAdventureSpecial);
@@ -11,6 +41,7 @@ function openAdventureMap(specialKey=pendingAdventureSpecial||getAdventureProgre
     showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id);
     return;
   }
+  adventureViewedChapterId=getCurrentAdventureChapter(progress)?.id||"";
   renderAdventureMap();
   showAdventureStage("adventureMapIntroStage");
 }
@@ -47,7 +78,11 @@ function getAdventureBattleCode(chapter,battle){
 }
 function renderAdventureMap(){
   const progress=getAdventureProgress();
-  const activeChapter=getCurrentAdventureChapter(progress);
+  const activeChapter=resolveAdventureViewedChapter(progress);
+  const unlockedChapters=getUnlockedAdventureMapChapters(progress);
+  const activeChapterIndex=Math.max(0,unlockedChapters.findIndex(ch=>ch.id===activeChapter?.id));
+  const previousChapter=activeChapterIndex>0?unlockedChapters[activeChapterIndex-1]:null;
+  const nextChapter=activeChapterIndex>=0&&activeChapterIndex<unlockedChapters.length-1?unlockedChapters[activeChapterIndex+1]:null;
   const chapter=getChapterProgress(progress,activeChapter);
   const special=ADVENTURE_SPECIALS[progress.selectedSpecial||pendingAdventureSpecial]||ADVENTURE_SPECIALS.mulan;
   const introTitle=$("adventureMapIntroTitle"), introText=$("adventureMapIntroText"), introMeta=$("adventureMapIntroMeta"), nodes=$("adventureMapNodes");
@@ -69,6 +104,11 @@ function renderAdventureMap(){
       <span class="adventure-map-chip">${escapeHtml(chapterLabel)}</span>
       <span class="adventure-map-chip">${escapeHtml(progressLabel)}</span>
     </div>
+    <div class="adventure-map-chapter-nav" aria-label="Cambiar mapa de Aventura">
+      <button class="adventure-map-chapter-nav-btn" type="button" data-adventure-map-nav="-1" ${previousChapter?"":"disabled"} aria-label="${previousChapter?`Ir al mapa ${escapeHtml(previousChapter.number)}`:"No hay mapa anterior"}" title="${previousChapter?`Mapa anterior · ${escapeHtml(previousChapter.number)} ${escapeHtml(previousChapter.title)}`:"No hay mapa anterior"}">‹</button>
+      <span class="adventure-map-chapter-nav-label">MAPA ${escapeHtml(activeChapter.number)}</span>
+      <button class="adventure-map-chapter-nav-btn" type="button" data-adventure-map-nav="1" ${nextChapter?"":"disabled"} aria-label="${nextChapter?`Ir al mapa ${escapeHtml(nextChapter.number)}`:"No hay mapa siguiente desbloqueado"}" title="${nextChapter?`Mapa siguiente · ${escapeHtml(nextChapter.number)} ${escapeHtml(nextChapter.title)}`:"No hay mapa siguiente desbloqueado"}">›</button>
+    </div>
     ${(activeChapter.battles||[]).map((b,i)=>{
       const point=theme.points[i]||{x:14+((72/(Math.max(activeChapter.battles.length-1,1)))*i),y:i%2?36:68};
       const completed=!!chapter.completedBattles[b.id];
@@ -84,6 +124,9 @@ function renderAdventureMap(){
       </button>`;
     }).join("")}
   </div>`;
+  nodes.querySelectorAll("[data-adventure-map-nav]").forEach(btn=>{
+    btn.addEventListener("click",()=>navigateAdventureMapChapter(Number(btn.dataset.adventureMapNav||0)));
+  });
   refreshAdventureMapNodeTunerTargets();
   applyAdventureMapNodeTunerState(false);
   nodes.querySelectorAll(".map-node.unlocked:not(:disabled)").forEach(btn=>{
