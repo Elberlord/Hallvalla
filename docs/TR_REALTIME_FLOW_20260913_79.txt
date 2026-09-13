@@ -1,0 +1,21 @@
+HallValla · TR Experimental · Ajuste de flujo 2026-09-13 · v79
+
+Cambios de esta prueba:
+- Recurso TR unificado visualmente como MANÁ.
+- MANÁ máximo 10; inicia en 0 y recupera +1 cada 3 segundos para J1 e IA.
+- La recuperación usa tiempo transcurrido real para evitar deriva por ticks lentos.
+- El flujo TR no muestra Turno/Espera: ambos lados permanecen en COMBATE TR.
+- IA deja de esperar 4.5 s entre invocaciones; solo la limita el MANÁ y un cooldown corto de reacción.
+- J1 e IA pueden jugar sin alternancia de turnos.
+- Objetivo autónomo: cada unidad busca la invocación enemiga físicamente más cercana; si no quedan invocaciones, va al líder enemigo.
+- Pathing TR con desvío por congestión, reparto de carriles y tránsito blando a través de aliados para evitar paredes de unidades de rango.
+- Movimiento procesado por lotes para que varias unidades avancen en el mismo ciclo, en vez de una sola unidad global por tick.
+- Ataques intercalados entre ambos bandos para evitar prioridad fija de un lado.
+- Precisión TR ya no queda agotada permanentemente después de un ataque.
+- La Evasión sí se desgasta bajo fuego concentrado y se recupera por ventana temporal de 4 s; varios atacantes pueden saturar la defensa del mismo objetivo.
+- Corregido el ReferenceError del preview de Aventura cuando makeEnemyDeckForBattle todavía no está cargado.
+
+Pendiente de otra pasada específica:
+- Conversión definitiva de Quemadura, Veneno y Sangrado de turnos a timers independientes de segundos.
+- Balance fino de velocidad de MANÁ, cooldowns y frecuencia de habilidades de líder después de probar el gameplay.
+- Habilitación de este motor para PvP Online real una vez estabilizado contra IA.

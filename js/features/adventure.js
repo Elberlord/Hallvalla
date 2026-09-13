@@ -465,7 +465,9 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   const introConflict=battle.isGuardian
     ?"Más allá del umbral, Terral te espera para continuar hacia el interior de HallValla. Derrota al Hechicero guardián y demuestra que has regresado para defender esta tierra."
     :"";
-  const previewInitial=makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage");
+  const previewInitial=typeof makeEnemyDeckForBattle==="function"
+    ?makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage")
+    :[];
   hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
   const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
   const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);

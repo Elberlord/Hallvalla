@@ -246,12 +246,16 @@ function renderHud(){
     const b=$("p"+p+"Badge");
     if(b){
       const ended=isBattleEnded();
-      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):publicState.currentPlayer===p?"Turno":"Espera";
-      b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):publicState.currentPlayer===p?"#ffd166":"#d7c3a2";
+      const realtime=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
+      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):(realtime?"TR":(publicState.currentPlayer===p?"Turno":"Espera"));
+      b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):(realtime?"#ffd166":(publicState.currentPlayer===p?"#ffd166":"#d7c3a2"));
     }
   });
   const banner=$("phaseBanner");
-  if(banner)banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`);
+  if(banner){
+    const realtime=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
+    banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(realtime?"COMBATE TR":(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`));
+  }
   const battlefield=document.querySelector("#gameShell .battlefield");
   let moraleHud=$("moralePressureHud");
   if(!moraleHud&&battlefield){moraleHud=document.createElement("div");moraleHud.id="moralePressureHud";moraleHud.className="morale-pressure-hud hidden";moraleHud.setAttribute("aria-live","polite");battlefield.appendChild(moraleHud);}

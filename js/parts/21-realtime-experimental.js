@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260913.78 · Combate TR experimental (DEV only)
+/* HallValla 20260913.79 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
      selector táctico contextual, bindings finales y unidades autónomas.
@@ -7,15 +7,18 @@
 */
 
 const HALLVALLA_RT_CFG=Object.freeze({
-  resourceCap:20,
+  resourceCap:10,
   resourceEveryMs:3000,
   handMax:99,
-  aiThinkEveryMs:1250,
-  aiDeployCooldownMs:4500,
-  attackCooldownMs:1250,
-  baseMoveCooldownMs:1050,
-  loopMs:180,
-  leaderEffectEveryMs:6000
+  aiThinkEveryMs:450,
+  aiDeployCooldownMs:700,
+  attackCooldownMs:1200,
+  baseMoveCooldownMs:900,
+  loopMs:160,
+  leaderEffectEveryMs:6000,
+  combatRefreshEveryMs:4000,
+  maxAttacksPerTick:2,
+  maxMovesPerTick:10
 });
 const HALLVALLA_RT_HOME_STORAGE_KEY="hallvalla_rt_experimental_home_v1";
 function isHallvallaRealtimeExperimentalRequested(){
@@ -46,6 +49,11 @@ const hallvallaRtState={
   lastAiThinkAt:0,
   lastAiDeployAt:0,
   lastLeaderEffectAt:0,
+  lastCombatRefreshAt:0,
+  resourcesInitialized:false,
+  combatWindow:0,
+  ownerActionFlip:1,
+  lastUiAt:0,
   handSuppressed:false,
   inputDevice:(globalThis.matchMedia?.("(pointer:coarse)")?.matches?"touch":"keyboard"),
   playBusy:false,
@@ -153,7 +161,7 @@ function hallvallaRtUpdateUi(){
       const honor=Math.max(0,Number(privateState?.honor||0));
       const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.resourceCap));
       const remaining=(privateState?.hand||[]).length;
-      node.textContent=`TR EXP · ${getResourceLabel(myPlayer)} ${honor}/${max} · Arsenal ${remaining} · +1 ${getResourceLabel(myPlayer)} cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s`;
+      node.textContent=`TR EXP · MANÁ ${honor}/${max} · Arsenal ${remaining} · +1 MANÁ cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s`;
     }
   }
 }
@@ -393,19 +401,20 @@ function hallvallaRtValidEnemy(attacker,target){
   if(typeof isStealthedUnit==="function"&&isStealthedUnit(target)&&!target.revealed)return false;
   try{return inspectSharedAttackTargetBasics(attacker,target).ok===true;}catch(_){return true;}
 }
-function hallvallaRtChooseTarget(unit,units=publicState?.units||[]){
-  const ownLeader=hallvallaRtGetOwnerLeader(unit.owner,units);
+function hallvallaRtTargetCandidates(unit,units=publicState?.units||[]){
   const candidates=(units||[]).filter(t=>hallvallaRtValidEnemy(unit,t));
-  if(!candidates.length)return null;
+  if(!candidates.length)return[];
   const nonLeaders=candidates.filter(t=>!t.leader);
-  const pool=nonLeaders.length?nonLeaders:candidates;
+  const pool=[...(nonLeaders.length?nonLeaders:candidates)];
+  // TR: cada unidad persigue la amenaza rival físicamente más cercana a ella.
+  // Si ya no quedan invocaciones rivales, el líder enemigo pasa a ser el objetivo.
   pool.sort((a,b)=>{
-    const aThreat=ownLeader?dist(ownLeader,a):999;
-    const bThreat=ownLeader?dist(ownLeader,b):999;
-    return (aThreat-bThreat)||(dist(unit,a)-dist(unit,b))||(Number(a.hp||0)-Number(b.hp||0));
+    const da=dist(unit,a),db=dist(unit,b);
+    return (da-db)||(Number(a.hp||0)-Number(b.hp||0))||String(a.id||'').localeCompare(String(b.id||''));
   });
-  return pool[0]||null;
+  return pool;
 }
+function hallvallaRtChooseTarget(unit,units=publicState?.units||[]){return hallvallaRtTargetCandidates(unit,units)[0]||null;}
 function hallvallaRtCanAttackNow(unit,target){
   if(!hallvallaRtValidEnemy(unit,target))return false;
   try{
@@ -415,24 +424,105 @@ function hallvallaRtCanAttackNow(unit,target){
     return true;
   }catch(_){return false;}
 }
+function hallvallaRtCellKey(x,y){return `${Number(x)},${Number(y)}`;}
+function hallvallaRtStableLane(unit){
+  const text=String(unit?.id||unit?.key||unit?.name||'u');let n=0;
+  for(let i=0;i<text.length;i++)n=(n*31+text.charCodeAt(i))>>>0;
+  return COLS>0?n%COLS:0;
+}
+function hallvallaRtNeighbors(x,y){
+  const out=[];
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(dx===0&&dy===0)continue;
+    const nx=x+dx,ny=y+dy;
+    if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS)out.push({x:nx,y:ny});
+  }
+  return out;
+}
+function hallvallaRtCrowdPenalty(cell,owner,units){
+  let adjacent=0,sameLane=0;
+  for(const ally of (units||[])){
+    if(!ally||Number(ally.hp||0)<=0||Number(ally.owner)!==Number(owner))continue;
+    if(Number(ally.x)===Number(cell.x)&&Number(ally.y)===Number(cell.y))continue;
+    if(Math.max(Math.abs(Number(ally.x)-cell.x),Math.abs(Number(ally.y)-cell.y))<=1)adjacent++;
+    if(Number(ally.x)===Number(cell.x))sameLane++;
+  }
+  return adjacent*.28+sameLane*.08;
+}
+function hallvallaRtFindPath(unit,target,units=publicState?.units||[]){
+  if(!unit||!target)return[];
+  const sx=Number(unit.x),sy=Number(unit.y),range=Math.max(1,Number(getUnitAttackRange(unit)||1));
+  const occupied=new Map();
+  for(const u of (units||[])){
+    if(!u||u.id===unit.id||Number(u.hp||0)<=0)continue;
+    occupied.set(hallvallaRtCellKey(u.x,u.y),u);
+  }
+  const startKey=hallvallaRtCellKey(sx,sy);
+  const open=[{x:sx,y:sy,g:0,f:dist({x:sx,y:sy},target)}];
+  const best=new Map([[startKey,0]]),parent=new Map();
+  const lane=hallvallaRtStableLane(unit);
+  let goal=null;
+  const isGoal=(x,y)=>{
+    if(x===sx&&y===sy)return false;
+    if(dist({x,y},target)>range)return false;
+    const occ=occupied.get(hallvallaRtCellKey(x,y));
+    return !occ;
+  };
+  while(open.length){
+    open.sort((a,b)=>(a.f-b.f)||(a.g-b.g)||(Math.abs(a.x-lane)-Math.abs(b.x-lane)));
+    const cur=open.shift(),curKey=hallvallaRtCellKey(cur.x,cur.y);
+    if(cur.g!==best.get(curKey))continue;
+    if(isGoal(cur.x,cur.y)){goal=cur;break;}
+    for(const nb of hallvallaRtNeighbors(cur.x,cur.y)){
+      const key=hallvallaRtCellKey(nb.x,nb.y),occ=occupied.get(key);
+      // Enemigos son paredes. Aliados son tránsito blando: pueden cruzarse en la ruta,
+      // pero nunca terminar el movimiento en la misma casilla.
+      if(occ&&Number(occ.owner)!==Number(unit.owner))continue;
+      const diagonal=(nb.x!==cur.x&&nb.y!==cur.y)?1.03:1;
+      const allyTransit=occ&&Number(occ.owner)===Number(unit.owner)?0.45:0;
+      const crowd=hallvallaRtCrowdPenalty(nb,unit.owner,units);
+      const laneBias=Math.abs(nb.x-lane)*.025;
+      const ng=cur.g+diagonal+allyTransit+crowd+laneBias;
+      if(ng+1e-6>=(best.get(key)??Infinity))continue;
+      best.set(key,ng);parent.set(key,curKey);
+      const h=Math.max(0,dist(nb,target)-range);
+      open.push({x:nb.x,y:nb.y,g:ng,f:ng+h});
+    }
+  }
+  if(!goal)return[];
+  const rev=[];let key=hallvallaRtCellKey(goal.x,goal.y);
+  while(key&&key!==startKey){
+    const [x,y]=key.split(',').map(Number);rev.push({x,y});key=parent.get(key);
+  }
+  rev.reverse();return rev;
+}
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
-  if(!unit||!target||Number(typeof effectiveMov==="function"?effectiveMov(unit):unit.mov||0)<=0)return null;
-  let keys=[];
-  try{keys=getUnitMovementZonesForState(unit,units,1)||[];}catch(_){keys=[];}
-  const cells=keys.map(key=>{const [x,y]=String(key).split(",").map(Number);return{x,y};}).filter(c=>Number.isFinite(c.x)&&Number.isFinite(c.y));
-  if(!cells.length)return null;
-  const enemyLeader=hallvallaRtGetOwnerLeader(unit.owner===1?2:1,units);
-  const currentD=dist(unit,target);
-  cells.sort((a,b)=>{
-    const ad=dist(a,target),bd=dist(b,target);
-    const al=enemyLeader?dist(a,enemyLeader):0,bl=enemyLeader?dist(b,enemyLeader):0;
-    return (ad-bd)||(al-bl)||(Math.abs(a.y-target.y)-Math.abs(b.y-target.y));
-  });
-  const best=cells[0];
-  if(!best)return null;
-  // Evita caminar hacia atrás salvo bloqueo real.
-  if(dist(best,target)>currentD&&cells.some(c=>dist(c,target)<=currentD))return cells.find(c=>dist(c,target)<=currentD)||best;
-  return best;
+  if(!unit||!target||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
+  const path=hallvallaRtFindPath(unit,target,units);
+  if(!path.length)return null;
+  const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
+  // Normalmente avanza una casilla. Si un aliado ocupa el primer nodo de la ruta,
+  // TR permite sobrepasarlo y caer en la segunda casilla libre. No aumenta la velocidad
+  // normal: solo evita que una unidad detenida (por ejemplo un arquero disparando) cree
+  // una pared artificial para todo su ejército.
+  const firstBlocked=occupied.has(hallvallaRtCellKey(path[0]?.x,path[0]?.y));
+  const stride=Math.min(path.length,firstBlocked?3:1);
+  let chosen=null;
+  for(let i=0;i<stride;i++){
+    const cell=path[i];
+    if(cell&&!occupied.has(hallvallaRtCellKey(cell.x,cell.y)))chosen=cell;
+  }
+  if(chosen)return chosen;
+  // Fallback lateral si los primeros nodos siguen ocupados.
+  const legal=[];
+  try{
+    for(const key of (getUnitMovementZonesForState(unit,units,1)||[])){
+      const [x,y]=String(key).split(',').map(Number);
+      if(Number.isFinite(x)&&Number.isFinite(y)&&!occupied.has(hallvallaRtCellKey(x,y)))legal.push({x,y});
+    }
+  }catch(_){ }
+  legal.sort((a,b)=>(dist(a,target)-dist(b,target))||(hallvallaRtCrowdPenalty(a,unit.owner,units)-hallvallaRtCrowdPenalty(b,unit.owner,units)));
+  return legal[0]||null;
 }
 
 async function hallvallaRtMoveUnit(unit,step){
@@ -507,23 +597,43 @@ async function hallvallaRtAttackUnit(attacker,target){
   }catch(error){console.warn("[HallValla][RT] resolución de ataque falló",error);return false;}
 }
 
-async function hallvallaRtResourceAndDrawTick(now){
-  let publicPatch={};let privatePatch={};let changed=false;
-  if(now-hallvallaRtState.lastResourceAt>=HALLVALLA_RT_CFG.resourceEveryMs){
-    hallvallaRtState.lastResourceAt=now;hallvallaRtState.cycle+=1;
-    const max=HALLVALLA_RT_CFG.resourceCap;
-    const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+1);
-    privatePatch={...privatePatch,honor,maxHonor:max,lastTurnStarted:"RT"};
-    publicPatch={...publicPatch,turn:hallvallaRtState.cycle,turnKey:`RT-${hallvallaRtState.cycle}`,turnPhase:"realtime",currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
-    if(publicState?.mode==="adventure"&&publicState?.adventureAiState){
-      const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+1);ai.lastTurnStarted="RT";
-      publicPatch.adventureAiState=ai;
-      publicPatch["playerStats/2"]={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
-    }
-    changed=true;
+async function hallvallaRtInitializeResources(){
+  if(hallvallaRtState.resourcesInitialized)return false;
+  const max=HALLVALLA_RT_CFG.resourceCap,startMana=0;
+  const privatePatch={honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
+  const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor:startMana,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
+  if(publicState?.mode==='adventure'&&publicState?.adventureAiState){
+    const ai={...publicState.adventureAiState,honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
+    publicPatch.adventureAiState=ai;
+    publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:startMana,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
   }
-
-  if(changed)await commitGameplayAction({publicPatch,privatePatch});
+  const ok=await commitGameplayAction({publicPatch,privatePatch});
+  if(ok)hallvallaRtState.resourcesInitialized=true;
+  return !!ok;
+}
+async function hallvallaRtResourceAndDrawTick(now){
+  const elapsed=Math.max(0,now-hallvallaRtState.lastResourceAt);
+  const steps=Math.floor(elapsed/HALLVALLA_RT_CFG.resourceEveryMs);
+  if(steps<=0)return false;
+  hallvallaRtState.lastResourceAt+=steps*HALLVALLA_RT_CFG.resourceEveryMs;hallvallaRtState.cycle+=steps;
+  const max=HALLVALLA_RT_CFG.resourceCap;
+  const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+steps);
+  const privatePatch={honor,maxHonor:max,lastTurnStarted:'RT'};
+  const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
+  if(publicState?.mode==='adventure'&&publicState?.adventureAiState){
+    const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+steps);ai.lastTurnStarted='RT';
+    publicPatch.adventureAiState=ai;
+    publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
+  }
+  await commitGameplayAction({publicPatch,privatePatch});
+  return true;
+}
+async function hallvallaRtCombatRefreshTick(now){
+  if(now-hallvallaRtState.lastCombatRefreshAt<HALLVALLA_RT_CFG.combatRefreshEveryMs)return false;
+  hallvallaRtState.lastCombatRefreshAt=now;hallvallaRtState.combatWindow+=1;
+  const units=(publicState?.units||[]).map(u=>u&&Number(u.hp||0)>0&&!u.leader?{...u,evasionSpent:0}:u);
+  await updatePublic({units,turnKey:`RTW-${hallvallaRtState.combatWindow}`,turnPhase:'realtime',currentPlayer:0});
+  return true;
 }
 
 async function hallvallaRtAiDeploy(now){
@@ -573,32 +683,82 @@ async function hallvallaRtLeaderEffectsTick(now){
   return true;
 }
 
-async function hallvallaRtAutonomyTick(now){
-  const units=[...(publicState?.units||[])];
-  const leaders=units.filter(u=>u&&u.leader&&Number(u.hp||0)>0);
-  // Los líderes no se desplazan en TR, pero atacan automáticamente si un rival entra en su alcance.
-  for(const leader of leaders){
-    const live=(publicState?.units||[]).find(u=>u.id===leader.id&&Number(u.hp||0)>0);if(!live)continue;
+function hallvallaRtFairUnitIds(units,{leaders=true,nonLeaders=true}={}){
+  const valid=(units||[]).filter(u=>u&&Number(u.hp||0)>0&&((u.leader&&leaders)||(!u.leader&&nonLeaders)));
+  const a=valid.filter(u=>Number(u.owner)===1),b=valid.filter(u=>Number(u.owner)===2);
+  // Cambia quién abre cada ciclo para que ningún bando sea siempre procesado primero.
+  const first=hallvallaRtState.ownerActionFlip===2?b:a,second=hallvallaRtState.ownerActionFlip===2?a:b;
+  hallvallaRtState.ownerActionFlip=hallvallaRtState.ownerActionFlip===1?2:1;
+  const out=[];const n=Math.max(first.length,second.length);
+  for(let i=0;i<n;i++){if(first[i])out.push(first[i].id);if(second[i])out.push(second[i].id);}
+  return out;
+}
+async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAttacksPerTick){
+  let attacks=0;
+  const ids=hallvallaRtFairUnitIds(publicState?.units||[],{leaders:true,nonLeaders:true});
+  for(const id of ids){
+    if(attacks>=maxAttacks)break;
+    const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live)continue;
     const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
-    if(now-last>=HALLVALLA_RT_CFG.attackCooldownMs){hallvallaRtState.attackAt.set(live.id,now);return hallvallaRtAttackUnit(live,target);}
+    if(now-last<HALLVALLA_RT_CFG.attackCooldownMs)continue;
+    hallvallaRtState.attackAt.set(live.id,now);
+    if(await hallvallaRtAttackUnit(live,target))attacks++;
   }
-  const active=units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0);
-  // Amenazas más cercanas al líder tienen prioridad; dentro de cada bando actúa quien esté listo primero.
-  for(const unit of active){
-    const live=(publicState?.units||[]).find(u=>u.id===unit.id&&Number(u.hp||0)>0);if(!live)continue;
-    const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target)continue;
-    if(hallvallaRtCanAttackNow(live,target)){
-      const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
-      if(now-last>=HALLVALLA_RT_CFG.attackCooldownMs){hallvallaRtState.attackAt.set(live.id,now);return hallvallaRtAttackUnit(live,target);}
-      continue;
-    }
+  return attacks;
+}
+async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesPerTick){
+  let units=[...(publicState?.units||[])];
+  let legendaryTraps=[...(publicState?.legendaryTraps||[])];
+  let beastTraps=[...(publicState?.beastTraps||[])];
+  let statusFxEvent=null,floatFxEvent=null,moves=0;
+  const logs=[];
+  const ids=hallvallaRtFairUnitIds(units,{leaders:false,nonLeaders:true});
+  for(const id of ids){
+    if(moves>=maxMoves)break;
+    const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live)continue;
+    const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
+    // Si ya puede disparar/golpear, espera su cooldown de ataque; no abandona el rango.
+    if(hallvallaRtCanAttackNow(live,target))continue;
     const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
     if(now-lastMove<hallvallaRtMoveCooldown(live))continue;
-    const step=hallvallaRtChooseStep(live,target,publicState?.units||[]);if(!step)continue;
-    hallvallaRtState.moveAt.set(live.id,now);return hallvallaRtMoveUnit(live,step);
+    let step=hallvallaRtChooseStep(live,target,units);
+    if(!step){
+      for(const alt of hallvallaRtTargetCandidates(live,units).slice(1)){step=hallvallaRtChooseStep(live,alt,units);if(step)break;}
+    }
+    if(!step)continue;
+    if(units.some(u=>u.id!==live.id&&Number(u.hp||0)>0&&Number(u.x)===Number(step.x)&&Number(u.y)===Number(step.y)))continue;
+    const movedNow=Math.max(1,dist(live,step));
+    const dx=Math.sign(step.x-live.x),dy=Math.sign(step.y-live.y);
+    let trapMove;
+    try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
+    legendaryTraps=[...(trapMove.traps||legendaryTraps)];
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveTurnKey:publicState?.turnKey||'RT'}:u);
+    if(!trapMove.cancel){
+      const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
+      if(moved){
+        try{
+          const beast=resolveBeastCellTraps(moved,units,beastTraps);units=beast.units;beastTraps=[...(beast.traps||beastTraps)];
+          logs.push(...(beast.logs||[]));statusFxEvent=beast.statusFxEvent||statusFxEvent;floatFxEvent=beast.floatFxEvent||floatFxEvent;
+        }catch(_){ }
+      }
+    }
+    logs.push(...(trapMove.logs||[]));statusFxEvent=trapMove.statusFxEvent||statusFxEvent;floatFxEvent=trapMove.floatFxEvent||floatFxEvent;
+    hallvallaRtState.moveAt.set(live.id,now);moves++;
   }
-  return false;
+  if(!moves)return 0;
+  try{
+    const fear=applyAfricanLionFearAura(units);units=fear.units||units;logs.push(...(fear.logs||[]));statusFxEvent=fear.statusFxEvent||statusFxEvent;floatFxEvent=fear.floatFxEvent||floatFxEvent;
+  }catch(_){ }
+  const logText=logs.filter(Boolean).join(' ');
+  await updatePublic({units,beastTraps,legendaryTraps,statusFxEvent:statusFxEvent||null,floatFxEvent:floatFxEvent||null,...(logText?{log:[logText,...(publicState?.log||[])].slice(0,18)}:{})});
+  return moves;
+}
+async function hallvallaRtAutonomyTick(now){
+  // Ataques y movimiento no usan turnos. En cada tick se da oportunidad a ambos bandos.
+  await hallvallaRtAttackReadyUnits(now,HALLVALLA_RT_CFG.maxAttacksPerTick);
+  await hallvallaRtMoveReadyUnits(now,HALLVALLA_RT_CFG.maxMovesPerTick);
+  return true;
 }
 
 async function hallvallaRtLoop(){
@@ -608,11 +768,14 @@ async function hallvallaRtLoop(){
   try{
     const now=hallvallaRtNow();
     handOpen=false;
+    await hallvallaRtInitializeResources();
     await hallvallaRtResourceAndDrawTick(now);
+    await hallvallaRtCombatRefreshTick(now);
     await hallvallaRtAiDeploy(now);
     await hallvallaRtLeaderEffectsTick(now);
     await hallvallaRtAutonomyTick(now);
-    hallvallaRtUpdateUi();
+    // No repintar el arsenal 6 veces por segundo si no cambió nada relevante.
+    if(now-hallvallaRtState.lastUiAt>=300){hallvallaRtState.lastUiAt=now;hallvallaRtUpdateUi();}
   }catch(error){console.warn("[HallValla][RT] tick falló",error);}
   finally{hallvallaRtState.busy=false;}
 }
@@ -628,6 +791,11 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastAiThinkAt=now;
   hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
+  hallvallaRtState.lastCombatRefreshAt=now;
+  hallvallaRtState.resourcesInitialized=false;
+  hallvallaRtState.combatWindow=0;
+  hallvallaRtState.ownerActionFlip=1;
+  hallvallaRtState.lastUiAt=0;
   hallvallaRtState.handSuppressed=false;hallvallaRtState.playBusy=false;
   hallvallaRtState.arsenalCategory="unit";hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="root";hallvallaRtClearTargetCursor();
   hallvallaRtState.moveAt.clear();
