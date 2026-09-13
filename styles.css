@@ -28451,3 +28451,16 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:move!important;
 @media (max-width:760px){
   #mainMenu .home-rt-experimental-toggle{top:92px !important;min-width:230px !important;min-height:32px !important;font-size:10px !important;padding:6px 12px !important;}
 }
+
+
+/* ============================================================
+   HallValla 20260913.74 — TR targeting: campo libre mientras eliges carta
+   ============================================================ */
+.hv-rt-experimental.hv-rt-card-targeting #handDrawer,
+html.hv-rt-experimental.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer,
+body.hv-rt-experimental.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}

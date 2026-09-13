@@ -55,6 +55,7 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
   }
   pulseTurnHonorHud();
   if(!(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()))scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
+  else if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();
   return true;
 }
 

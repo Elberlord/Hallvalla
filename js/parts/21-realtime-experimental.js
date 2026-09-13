@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260912.73 · Combate TR experimental (DEV only)
+/* HallValla 20260913.74 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, robo automático, mano abierta,
      despliegue por arrastre y unidades autónomas.
@@ -14,7 +14,8 @@ const HALLVALLA_RT_CFG=Object.freeze({
   aiThinkEveryMs:1050,
   attackCooldownMs:1250,
   baseMoveCooldownMs:1050,
-  loopMs:180
+  loopMs:180,
+  leaderEffectEveryMs:6000
 });
 const HALLVALLA_RT_HOME_STORAGE_KEY="hallvalla_rt_experimental_home_v1";
 function isHallvallaRealtimeExperimentalRequested(){
@@ -38,6 +39,8 @@ const hallvallaRtState={
   lastResourceAt:0,
   lastDrawAt:0,
   lastAiThinkAt:0,
+  lastLeaderEffectAt:0,
+  handSuppressed:false,
   moveAt:new Map(),
   attackAt:new Map(),
   statusNode:null
@@ -52,12 +55,35 @@ function hallvallaRtGetSummonZones(owner,units=publicState?.units||[]){
   const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return[];
   const occupied=new Set((units||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>`${u.x},${u.y}`));
   const out=[];
+  const mid=(ROWS-1)/2;
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
     if(occupied.has(`${x},${y}`))continue;
-    if(dist(leader,{x,y})<=1)out.push({x,y});
+    const alliedHalf=Number(owner)===1?y>mid:y<mid;
+    if(alliedHalf)out.push({x,y});
   }
   return out;
 }
+function hallvallaRtIsHandSuppressed(){return hallvallaRtState.handSuppressed===true;}
+function hallvallaRtSuppressHandFocus(){
+  if(!isHallvallaRealtimeExperimental())return false;
+  hallvallaRtState.handSuppressed=true;
+  handOpen=false;
+  const drawer=document.getElementById("handDrawer");if(drawer)drawer.classList.remove("open");
+  hallvallaRtUpdateUi();
+  return true;
+}
+function hallvallaRtReleaseHandFocus(){
+  if(!isHallvallaRealtimeExperimental())return false;
+  hallvallaRtState.handSuppressed=false;
+  handOpen=true;handManualCloseKey="";
+  const drawer=document.getElementById("handDrawer");if(drawer)drawer.classList.add("open");
+  hallvallaRtUpdateUi();
+  return true;
+}
+globalThis.hallvallaRtIsHandSuppressed=hallvallaRtIsHandSuppressed;
+globalThis.hallvallaRtSuppressHandFocus=hallvallaRtSuppressHandFocus;
+globalThis.hallvallaRtReleaseHandFocus=hallvallaRtReleaseHandFocus;
+
 function hallvallaRtEnsureStatusNode(){
   if(hallvallaRtState.statusNode?.isConnected)return hallvallaRtState.statusNode;
   const shell=document.querySelector("#gameShell .battle")||document.getElementById("gameShell");
@@ -73,6 +99,8 @@ function hallvallaRtUpdateUi(){
   const active=isHallvallaRealtimeExperimental();
   document.documentElement.classList.toggle("hv-rt-experimental",active);
   document.body?.classList.toggle("hv-rt-experimental",active);
+  document.documentElement.classList.toggle("hv-rt-card-targeting",active&&hallvallaRtState.handSuppressed);
+  document.body?.classList.toggle("hv-rt-card-targeting",active&&hallvallaRtState.handSuppressed);
   const node=hallvallaRtEnsureStatusNode();
   if(node){
     node.hidden=!active;
@@ -258,8 +286,39 @@ async function hallvallaRtAiDeploy(now){
   return true;
 }
 
+async function hallvallaRtLeaderEffectsTick(now){
+  if(now-hallvallaRtState.lastLeaderEffectAt<HALLVALLA_RT_CFG.leaderEffectEveryMs)return false;
+  hallvallaRtState.lastLeaderEffectAt=now;
+  let units=[...(publicState?.units||[])];
+  const logs=[];
+  let changed=false,battleFxEvent=null;
+  for(const owner of [1,2]){
+    try{
+      const heroic=applyHeroicEdgeStartHealing(units,owner);
+      if(heroic?.logs?.length){units=heroic.units;logs.push(...heroic.logs);changed=true;}
+    }catch(_){ }
+    try{
+      const auto=resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps:publicState?.legendaryTraps||[],beastTraps:publicState?.beastTraps||[]});
+      if(auto?.triggered){units=auto.units;logs.push(...(auto.logs||[]));battleFxEvent=auto.battleFxEvent||battleFxEvent;changed=true;}
+    }catch(error){console.warn("[HallValla][RT] efecto automático de líder falló",error);}
+  }
+  if(!changed)return false;
+  const logText=logs.filter(Boolean).join(" ");
+  if(await finalizeBattle(units,logText))return true;
+  await updatePublic({units,battleFxEvent:battleFxEvent||null,log:logText?[logText,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  return true;
+}
+
 async function hallvallaRtAutonomyTick(now){
   const units=[...(publicState?.units||[])];
+  const leaders=units.filter(u=>u&&u.leader&&Number(u.hp||0)>0);
+  // Los líderes no se desplazan en TR, pero atacan automáticamente si un rival entra en su alcance.
+  for(const leader of leaders){
+    const live=(publicState?.units||[]).find(u=>u.id===leader.id&&Number(u.hp||0)>0);if(!live)continue;
+    const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
+    const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
+    if(now-last>=HALLVALLA_RT_CFG.attackCooldownMs){hallvallaRtState.attackAt.set(live.id,now);return hallvallaRtAttackUnit(live,target);}
+  }
   const active=units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0);
   // Amenazas más cercanas al líder tienen prioridad; dentro de cada bando actúa quien esté listo primero.
   for(const unit of active){
@@ -284,9 +343,10 @@ async function hallvallaRtLoop(){
   hallvallaRtState.busy=true;
   try{
     const now=hallvallaRtNow();
-    handOpen=true;
+    handOpen=!hallvallaRtState.handSuppressed;
     await hallvallaRtResourceAndDrawTick(now);
     await hallvallaRtAiDeploy(now);
+    await hallvallaRtLeaderEffectsTick(now);
     await hallvallaRtAutonomyTick(now);
     hallvallaRtUpdateUi();
   }catch(error){console.warn("[HallValla][RT] tick falló",error);}
@@ -294,7 +354,7 @@ async function hallvallaRtLoop(){
 }
 function hallvallaRtStop(){
   if(hallvallaRtState.timer){battleClearInterval?.(hallvallaRtState.timer);hallvallaRtState.timer=null;}
-  hallvallaRtState.enabled=false;hallvallaRtState.busy=false;
+  hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.handSuppressed=false;
   hallvallaRtUpdateUi();
 }
 function hallvallaRtPrimePreparedState(){
@@ -303,6 +363,8 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.lastDrawAt=now;
   hallvallaRtState.lastAiThinkAt=now;
+  hallvallaRtState.lastLeaderEffectAt=now;
+  hallvallaRtState.handSuppressed=false;
   hallvallaRtState.moveAt.clear();
   hallvallaRtState.attackAt.clear();
   handOpen=true;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
@@ -323,7 +385,7 @@ function hallvallaRtSyncPreparedBattle(){
     setHint("TR EXPERIMENTAL: combate iniciado desde Home · sin Principales desplegados · movimiento y ataque automáticos.");
     void hallvallaRtLoop();
   }else{
-    handOpen=true;
+    handOpen=!hallvallaRtState.handSuppressed;
   }
   hallvallaRtUpdateUi();
   return true;

@@ -1,0 +1,8 @@
+HallValla 20260913.74 — TR experimental
+
+- La mano se oculta temporalmente al seleccionar/arrastrar una carta y reaparece al resolver o cancelar.
+- En TR las unidades pueden invocarse en cualquier casilla libre de la mitad aliada del campo, no solo junto al líder.
+- La IA usa la misma regla de mitad aliada.
+- Los líderes atacan automáticamente cuando un enemigo entra en su alcance; no se mueven.
+- Los efectos de líder ligados a inicio/fin de turno se reinterpretan como activaciones automáticas TR con cooldown de 6 s.
+- Buffs, pasivos y triggers reactivos de líderes conservan las reglas existentes.

@@ -243,7 +243,7 @@ function beginBoardDragVisual(ev){
     dragSummonHighlights=summonZones(myPlayer);
     highlights=[...dragSummonHighlights];
     highlightType="summon";
-    setHint(`${card.name}: suéltala en una casilla amarilla junto a tu líder para invocar.`);
+    setHint(`${card.name}: suéltala en cualquier casilla amarilla libre de tu mitad del campo.`);
     boardDragGhost=makeBoardDragGhost(boardDragState.sourceEl,card.name);
     render();
   }
@@ -263,7 +263,7 @@ async function handleBoardDragEnd(ev){
   ev.preventDefault();
   lastBoardDragEndedAt=Date.now();
   const drop=getBoardCellFromPoint(ev.clientX,ev.clientY);
-  if(!drop){clearBoardDragVisuals();setHint("Arrastre cancelado.");return;}
+  if(!drop){clearBoardDragVisuals();if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();setHint("Arrastre cancelado.");return;}
   try{
     if(state.kind==="unit"){
       const u=getUnit(state.unitId);
@@ -294,7 +294,7 @@ async function handleBoardDragEnd(ev){
         return;
       }
       clearSelection();
-      setHint("Casilla inválida para invocación: suelta junto a tu líder.");
+      setHint("Casilla inválida para invocación: en TR usa una casilla libre de tu mitad del campo.");
     }
   }catch(err){
     console.warn("[HallValla] Error en arrastre táctico:",err);
@@ -306,6 +306,7 @@ function handleBoardDragCancel(){
   unbindBoardDragWindowListeners();
   boardDragState=null;
   clearBoardDragVisuals();
+  if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();
   setHint("Arrastre cancelado.");
 }
 
