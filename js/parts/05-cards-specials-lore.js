@@ -412,28 +412,64 @@ function applyBloodBaitAttackBonus(attacker,defender,traps=publicState?.beastTra
   return {mods:{attackerAtk:3,attackerDex:2},trapId:trap.id,logs:[`Carnada Ámbar: ${attacker.name} gana +3 AT y +2 DX durante este combate contra ${defender.name}.`]};
 }
 
-const DECK_RULES={basicMaxCopies:3,nonBasicMaxCopies:1,drawDeckSize:20,minPrincipalSlots:1,maxPrincipalSlots:3,maxDeckSize:23};
-function getPrincipalSlotsForLeaderLevel(level=1){
-  const tier=typeof getLeaderBuffTierFromLevel==="function"?Number(getLeaderBuffTierFromLevel(level)||1):1;
-  return Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,tier));
+const DECK_RULES={
+  basicMaxCopies:3,
+  nonBasicMaxCopies:1,
+  // 8D87 · Los antiguos Personajes Principales dejan de formar parte del mazo.
+  minPrincipalSlots:0,
+  maxPrincipalSlots:0,
+  // drawDeckSize se conserva como constante legacy para arquetipos antiguos.
+  // La capacidad REAL del mazo depende del TIER canónico del líder.
+  drawDeckSize:20,
+  minLeaderLevel:1,
+  maxLeaderLevel:15,
+  minLeaderTier:1,
+  maxLeaderTier:5,
+  baseDeckSize:10,
+  deckCardsPerTier:5,
+  maxDeckSize:30
+};
+function getLeaderDeckLevel(level=1){
+  const raw=typeof normalizeLeaderLevel==="function"?normalizeLeaderLevel(level):Math.floor(Number(level)||1);
+  return Math.max(DECK_RULES.minLeaderLevel,Math.min(DECK_RULES.maxLeaderLevel,raw));
 }
-function getPrincipalSlotsForLeaderType(type=""){
+function getLeaderDeckTierFromLevel(level=1){
+  const safeLevel=getLeaderDeckLevel(level);
+  const rawTier=typeof getLeaderBuffTierFromLevel==="function"
+    ? getLeaderBuffTierFromLevel(safeLevel)
+    : (safeLevel>=15?5:safeLevel>=9?4:safeLevel>=7?3:safeLevel>=4?2:1);
+  return Math.max(DECK_RULES.minLeaderTier,Math.min(DECK_RULES.maxLeaderTier,Math.floor(Number(rawTier)||1)));
+}
+function getDeckSizeForLeaderTier(tier=1){
+  const safeTier=Math.max(DECK_RULES.minLeaderTier,Math.min(DECK_RULES.maxLeaderTier,Math.floor(Number(tier)||1)));
+  return Math.min(DECK_RULES.maxDeckSize,DECK_RULES.baseDeckSize+((safeTier-1)*DECK_RULES.deckCardsPerTier));
+}
+function getDeckSizeForLeaderLevel(level=1){
+  return getDeckSizeForLeaderTier(getLeaderDeckTierFromLevel(level));
+}
+function getDeckSizeForLeaderType(type=""){
   const safeType=type||(typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"")||"warrior";
   const level=typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(safeType):1;
-  return getPrincipalSlotsForLeaderLevel(level);
+  return getDeckSizeForLeaderLevel(level);
 }
-function getCurrentPrincipalSlots(){return getPrincipalSlotsForLeaderType();}
-function getDeckSizeForPrincipalSlots(slots=DECK_RULES.minPrincipalSlots){
-  const safe=slots===0
-    ? 0
-    : Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(slots)||DECK_RULES.minPrincipalSlots));
-  return DECK_RULES.drawDeckSize+safe;
+function getCurrentLeaderDeckLevel(){
+  const type=(typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"")||"warrior";
+  const level=typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(type):1;
+  return getLeaderDeckLevel(level);
 }
-function getCurrentDeckSize(){return getDeckSizeForPrincipalSlots(getCurrentPrincipalSlots());}
+function getCurrentLeaderDeckTier(){return getLeaderDeckTierFromLevel(getCurrentLeaderDeckLevel());}
+// Compatibilidad: ningún modo nuevo debe extraer cartas como Principales.
+function getPrincipalSlotsForLeaderLevel(){return 0;}
+function getPrincipalSlotsForLeaderType(){return 0;}
+function getCurrentPrincipalSlots(){return 0;}
+// Alias legacy: los llamadores antiguos reciben ahora el tamaño real del líder activo.
+function getDeckSizeForPrincipalSlots(){return getCurrentDeckSize();}
+function getCurrentDeckSize(){return getDeckSizeForLeaderType();}
 function getPrincipalTierSummary(level=1){
-  const tier=Math.max(1,Number(typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(level):1)||1);
-  const slots=getPrincipalSlotsForLeaderLevel(level);
-  return `Tier ${tier}: ${slots} Personaje${slots===1?"":"s"} Principal${slots===1?"":"es"}${tier>DECK_RULES.maxPrincipalSlots?" (máximo)":""}`;
+  const safeLevel=getLeaderDeckLevel(level);
+  const tier=getLeaderDeckTierFromLevel(safeLevel);
+  const cards=getDeckSizeForLeaderTier(tier);
+  return `Nivel ${safeLevel} · Tier ${tier}: ${cards} cartas`;
 }
 const CRAFT_MATERIAL_COSTS={basic:800,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800,astral:3600};
 const CRAFT_MATERIAL_GAIN=50;
@@ -467,25 +503,33 @@ function maxCopiesForCard(card){
   const base=rarity==="básica"||rarity==="basica"||rarity==="basic"?DECK_RULES.basicMaxCopies:DECK_RULES.nonBasicMaxCopies;
   return applyHallvallaValueHooks("deck.maxCopies",base,{card});
 }
-function validateDeckList(cards=[],principalSlots=getCurrentPrincipalSlots()){
+function validateDeckList(cards=[],principalSlotsOrOptions=getCurrentPrincipalSlots()){
   const counts={};
   const errors=[];
-  const requiredSlots=principalSlots===0
-    ? 0
-    : Math.max(DECK_RULES.minPrincipalSlots,Math.min(DECK_RULES.maxPrincipalSlots,Number(principalSlots)||DECK_RULES.minPrincipalSlots));
-  const requiredSize=getDeckSizeForPrincipalSlots(requiredSlots);
   const selectedLeader=(typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"");
+  const options=principalSlotsOrOptions&&typeof principalSlotsOrOptions==="object"?principalSlotsOrOptions:{};
+  const leaderType=String(options.leaderType||selectedLeader||"");
+  const level=Number.isFinite(Number(options.leaderLevel))
+    ? Number(options.leaderLevel)
+    : (leaderType&&typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1);
+  const requiredSize=Number.isFinite(Number(options.deckSize))
+    ? Math.max(1,Math.min(DECK_RULES.maxDeckSize,Math.floor(Number(options.deckSize))))
+    : getDeckSizeForLeaderLevel(level);
   cards.forEach(card=>{
     const key=card.key||card.name;
     counts[key]=(counts[key]||0)+1;
     const max=maxCopiesForCard(card);
     if(counts[key]>max)errors.push(`${card.name||key}: máximo ${max} copia${max>1?"s":""}.`);
-    if(isEquipmentCard(card)&&selectedLeader&&!isEquipmentCardAllowedForLeader(card,selectedLeader)){
+    if(isEquipmentCard(card)&&leaderType&&!isEquipmentCardAllowedForLeader(card,leaderType)){
       errors.push(`${card.name||key}: este Equipo es exclusivo de ${getEquipmentLeaderLabel(card)}.`);
     }
   });
-  if(cards.length!==requiredSize)errors.push(`El mazo debe tener exactamente ${requiredSize} cartas: ${requiredSlots} Personaje${requiredSlots===1?"":"s"} Principal${requiredSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`);
-  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:requiredSlots,deckSize:requiredSize},{cards,principalSlots});
+  if(cards.length!==requiredSize){
+    const safeLevel=getLeaderDeckLevel(level);
+    const tier=getLeaderDeckTierFromLevel(safeLevel);
+    errors.push(`El mazo del líder Nivel ${safeLevel} (Tier ${tier}) debe tener exactamente ${requiredSize} cartas.`);
+  }
+  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:0,deckSize:requiredSize,deckLevel:getLeaderDeckLevel(level),deckTier:getLeaderDeckTierFromLevel(level)},{cards,principalSlots:0,leaderType,leaderLevel:level});
 }
 
 const SPECIAL_HUMAN_CARD_DATA=[

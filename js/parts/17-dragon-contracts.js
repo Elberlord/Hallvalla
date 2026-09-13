@@ -276,7 +276,7 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
     const egg=grantDragonEgg(battle);
     markDragonContractClaimed(battle.id);
     renderPlayerProfile(profile);renderHomeProgress();
-    setTimeout(()=>hvAlert(`Has reclamado un Huevo de Dragón. Debe equiparse como Personaje Principal y acumular 1000 eliminaciones aliadas para quedar listo para eclosionar.
+    setTimeout(()=>hvAlert(`Has reclamado un Huevo de Dragón. Ahora se equipa como una carta normal del mazo y debe acumular 1000 eliminaciones aliadas para quedar listo para eclosionar.
 
 Huevos guardados: ${getDragonEggs().length}.`,`Contrato completado: ${battle.enemyName}`),220);
     return{handled:true,value:{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps||0,cards:[],battle,progress:getAdventureProgress(),profile,dragonContract:true,eggAwarded:!!egg,egg}};
@@ -1819,10 +1819,10 @@ async function prepareDragonContractDeck(battleId){
   const battle=getAdventureBattle(battleId);
   if(!battle)return;
   if(!areDragonContractsUnlocked()){
-    await hvAlert('Los Contratos de las Bestias se desbloquean al nivel 7 del líder. En ese nivel entrarás con 3 Personajes Principales y 20 cartas de robo.','Contrato bloqueado');return;
+    await hvAlert('Los Contratos de las Bestias se desbloquean al nivel 7 del líder. El tamaño del mazo seguirá la capacidad normal de ese Nivel.','Contrato bloqueado');return;
   }
   if(!canAccessDecks()){
-    await hvAlert('Primero debes desbloquear la Forja de mazos para preparar las 23 cartas exigidas por este contrato.','Forja requerida');return;
+    await hvAlert('Primero debes desbloquear la Forja de mazos para preparar un mazo válido para el Nivel actual de tu líder.','Forja requerida');return;
   }
   const gold=Number(getPlayerProfile()?.gold||0);
   if(gold<DRAGON_CONTRACT_ENTRY_GOLD_COST){
@@ -1831,7 +1831,7 @@ async function prepareDragonContractDeck(battleId){
     return;
   }
   closeHallvallaEventModals();
-  const go=await hvConfirm(`${battle.enemyIntro}\n\nAntes de entrar se abrirá la Forja. Guarda un mazo válido: 3 Personajes Principales y 20 cartas de robo. El duelo cuesta 1000 de Oro por intento.`,`Contrato: ${battle.enemyName}`,'Preparar mazo','Cancelar');
+  const go=await hvConfirm(`${battle.enemyIntro}\n\nAntes de entrar se abrirá la Forja. Guarda un mazo válido para el Nivel actual de tu líder. Ya no existen Personajes Principales. El duelo cuesta 1000 de Oro por intento.`,`Contrato: ${battle.enemyName}`,'Preparar mazo','Cancelar');
   if(!go)return;
   pendingDragonContractBattleId=battle.id;
   openDeckBuilder();
@@ -1841,18 +1841,15 @@ applyHallvallaEventUiSettings();
 registerHallvallaHook("deckBuilder.closed",()=>{pendingDragonContractBattleId="";},{id:"dragon-contract:deck-builder-closed"});
 registerHallvallaHook("deck.save",async()=>{
   if(!pendingDragonContractBattleId)return{handled:false};
-  const principalSlots=getCurrentPrincipalSlots();
-  const requiredDeckSize=getDeckSizeForPrincipalSlots(principalSlots);
+  const requiredDeckSize=getCurrentDeckSize();
   currentDeckDraft=sanitizeDeckDraftToCollection(currentDeckDraft);
-  const deckValidation=validateDeckList(currentDeckDraft,principalSlots);
-  currentPrincipalKeys=sanitizePrincipalKeysForDeck(currentPrincipalKeys,currentDeckDraft,principalSlots);
-  const principalValidation=validatePrincipalSelection(currentPrincipalKeys,currentDeckDraft,principalSlots);
-  const errors=[...deckValidation.errors,...principalValidation.errors];
-  if(principalSlots!==3)errors.unshift("El Contrato exige líder nivel 7 y tres Personajes Principales.");
+  currentPrincipalKeys=[];
+  const deckValidation=validateDeckList(currentDeckDraft,{leaderType:getSelectedLeaderType?.()||"",deckSize:requiredDeckSize});
+  const errors=[...deckValidation.errors];
   if(errors.length){await hvAlert(`No se puede iniciar todavía: ${errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return{handled:true,value:undefined};}
   const battleId=pendingDragonContractBattleId;pendingDragonContractBattleId="";
-  saveDeck(currentDeckDraft);savePrincipalKeys(currentPrincipalKeys);closeDeckBuilder();
-  await hvAlert(`Mazo guardado con ${requiredDeckSize} cartas. Entrarás con 3 Personajes Principales ya desplegados y 20 cartas para robar.`,"Contrato preparado");
+  saveDeck(currentDeckDraft);savePrincipalKeys([]);closeDeckBuilder();
+  await hvAlert(`Mazo guardado con ${requiredDeckSize} cartas. Todas entran al mazo normal; no hay Personajes Principales desplegados.`,"Contrato preparado");
   const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
   await startAdventure(special,battleId);
   return{handled:true,value:undefined};

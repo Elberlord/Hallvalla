@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260913.85">
-<meta name="hallvalla-build" content="v8_MODULAR_20260913.85">
-<meta name="hallvalla-build-name" content="DEV · TR local + automatización + MANÁ 10 20260913.85 + Control Universal + Mina">
+<meta name="hallvalla-version" content="20260913.87">
+<meta name="hallvalla-build" content="v8_MODULAR_20260913.87">
+<meta name="hallvalla-build-name" content="DEV · Mazos por Tier 1–5 · sin Principales · TR local 20260913.87 + Control Universal + Mina">
 <link rel="stylesheet" href="styles.css?h=f00c228cb7f8"/>
 
-<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.85">
-<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.85">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.85">
+<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.87">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.87">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.87">
 </head>
 <!-- HALLVALLA ORGANIZED V2: index conserva la estructura visual original. -->
 <body>
@@ -513,20 +513,12 @@
 
     <div class="hv-match-team hv-match-team-player" aria-label="Tu equipo">
       <img id="matchmakingPlayerLeader" class="hv-match-leader hv-match-player-leader" alt="Tu líder">
-      <div class="hv-match-principals hv-match-player-principals">
-        <img id="matchmakingPlayerPrincipal1" class="hv-match-principal" alt="Tu personaje principal 1">
-        <img id="matchmakingPlayerPrincipal2" class="hv-match-principal" alt="Tu personaje principal 2">
-        <img id="matchmakingPlayerPrincipal3" class="hv-match-principal" alt="Tu personaje principal 3">
-      </div>
+      <div class="hv-match-principals hv-match-player-principals hidden" aria-hidden="true"></div>
     </div>
 
     <div class="hv-match-team hv-match-team-opponent" aria-label="Equipo rival">
       <img id="matchmakingOpponentLeader" class="hv-match-leader hv-match-opponent-leader" alt="Líder rival">
-      <div class="hv-match-principals hv-match-opponent-principals">
-        <img id="matchmakingOpponentPrincipal1" class="hv-match-principal" alt="Personaje principal rival 1">
-        <img id="matchmakingOpponentPrincipal2" class="hv-match-principal" alt="Personaje principal rival 2">
-        <img id="matchmakingOpponentPrincipal3" class="hv-match-principal" alt="Personaje principal rival 3">
-      </div>
+      <div class="hv-match-principals hv-match-opponent-principals hidden" aria-hidden="true"></div>
     </div>
 
     <div id="matchmakingSearchingState" class="hv-match-searching">
@@ -942,7 +934,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       </div>
       <section id="deckBuilderDeckPanel" class="deckbuilder-current" aria-hidden="false">
         <div id="currentDeckList" class="current-deck-list"></div>
-        <div id="deckPrincipalSlots" class="deck-principal-slots" aria-label="Personajes Principales"></div>
+        <div id="deckPrincipalSlots" class="deck-principal-slots hidden" aria-hidden="true"></div>
       </section>
     </div>
   </div>
@@ -1056,7 +1048,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     </div>
     <div class="deck-rule-box">
       <b>Regla de mazo</b>
-      <p>Cartas básicas: máximo 3 copias por mazo. Todas las demás rarezas: máximo 1 copia por mazo. Tamaño válido: 20 cartas de robo más 1, 2 o 3 Personajes Principales distintos según el tier del líder.</p>
+      <p>Cartas básicas: máximo 3 copias por mazo. Todas las demás rarezas: máximo 1 copia por mazo. El tamaño depende del Tier del líder: Tier 1 = 10 cartas, Tier 2 = 15, Tier 3 = 20, Tier 4 = 25 y Tier 5 = 30 cartas. El nivel del líder determina su Tier actual.</p>
     </div>
     <button id="closeNotificationsBtn" class="btn primary full" type="button">Cerrar</button>
   </div>
@@ -1499,6 +1491,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=714ee1a6046a"></script>
+<script type="module" src="js/bootstrap-loader.js?h=457d251e5e1a"></script>
 </body>
 </html>

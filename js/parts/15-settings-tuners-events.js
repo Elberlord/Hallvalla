@@ -964,10 +964,10 @@ function homeDeckTutorialEscape(value){
   return String(value==null?"":value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
 }
 function getHomeDeckTutorialDeckSummary(){
-  const slots=typeof getCurrentPrincipalSlots==="function"?getCurrentPrincipalSlots():1;
-  const draw=typeof DECK_RULES!=="undefined"?Number(DECK_RULES.drawDeckSize||20):20;
-  const total=typeof getDeckSizeForPrincipalSlots==="function"?getDeckSizeForPrincipalSlots(slots):draw+slots;
-  return{slots,draw,total};
+  const total=typeof getCurrentDeckSize==="function"?getCurrentDeckSize():10;
+  const level=typeof getCurrentLeaderDeckLevel==="function"?getCurrentLeaderDeckLevel():1;
+  const tier=typeof getCurrentLeaderDeckTier==="function"?getCurrentLeaderDeckTier():(typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(level):1);
+  return{draw:total,total,level,tier};
 }
 const HOME_DECK_TUTORIAL_STEPS=[
   {
@@ -976,7 +976,7 @@ const HOME_DECK_TUTORIAL_STEPS=[
   },
   {
     phase:"home",selector:"#profileBtn",title:"Perfil, nivel y experiencia",
-    body:()=>`Aquí ves tu nombre, nivel de cuenta, rango y barra de EXP. Ganar batallas de Aventura y otras actividades aumenta tu experiencia.<br><br>Tu progreso también hace crecer tus líderes; sus niveles determinan estadísticas, tiers y cuántos <b>Personajes Principales</b> puedes llevar.`
+    body:()=>`Aquí ves tu nombre, nivel de cuenta, rango y barra de EXP. Ganar batallas de Aventura y otras actividades aumenta tu experiencia.<br><br>Tu progreso también hace crecer tus líderes. La capacidad del mazo depende del <b>Tier del líder</b>: Tier 1 = 10 cartas, Tier 2 = 15, Tier 3 = 20, Tier 4 = 25 y Tier 5 = 30. El nivel del líder sigue determinando en qué tier se encuentra.`
   },
   {
     phase:"home",selector:".asset-resource-row",title:"Tus recursos",
@@ -1011,20 +1011,16 @@ const HOME_DECK_TUTORIAL_STEPS=[
     body:()=>`Estos filtros evitan buscar carta por carta. Puedes ordenar por:<br><br>• <b>Tipo:</b> Invocación, Magia, Trampa o Equipo.<br>• <b>Posesión:</b> obtenidas o no obtenidas.<br>• <b>Rareza.</b><br>• <b>Poder de Batalla (PB)</b> y orden de PB.<br><br>Los filtros solo cambian lo que ves; <b>no alteran el mazo</b>.`
   },
   {
-    phase:"deck",selector:"#currentDeckList",fallbackSelector:"#deckBuilderDeckPanel",title:"Las 20 cartas de robo",
-    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Esta zona contiene las cartas que formarán el <b>mazo de robo</b>. La regla base exige exactamente <b>${r.draw} cartas de robo</b>.<br><br>Para añadir usa <b>+</b> desde la colección. Para quitar una carta usa <b>×</b> sobre la carta que ya está en el mazo.<br><br>Regla de copias: una carta Básica permite hasta <b>3 copias</b>; una carta no Básica permite como máximo <b>1 copia</b>, además de estar limitada por las copias que realmente poseas.`;}
-  },
-  {
-    phase:"deck",selector:"#deckPrincipalSlots",fallbackSelector:"#deckBuilderDeckPanel",title:"Personajes Principales",
-    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Tu tier actual permite exactamente <b>${r.slots} Personaje${r.slots===1?"":"s"} Principal${r.slots===1?"":"es"}</b>.<br><br>Primero la unidad debe estar incluida en el mazo. Después usa la <b>★</b> para marcarla como Principal. Los Principales se separan de las ${r.draw} cartas de robo y <b>empiezan la batalla ya convocados</b>.<br><br>Por eso tu composición total actual es <b>${r.total} cartas: ${r.draw} de robo + ${r.slots} Principal${r.slots===1?"":"es"}</b>.`;}
+    phase:"deck",selector:"#currentDeckList",fallbackSelector:"#deckBuilderDeckPanel",title:"Capacidad del mazo por tier",
+    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Todas las cartas forman parte del mismo mazo. Tu líder está en <b>Nivel ${r.level} · Tier ${r.tier}</b>, por lo que debes llevar exactamente <b>${r.total} cartas</b>.<br><br>Tier 1 = 10 · Tier 2 = 15 · Tier 3 = 20 · Tier 4 = 25 · Tier 5 = 30.<br><br>Para añadir usa <b>+</b> desde la colección. Para quitar usa <b>×</b>. Las cartas Básicas permiten hasta <b>3 copias</b>; las demás rarezas, como máximo <b>1 copia</b>, además de las copias que realmente poseas.`;}
   },
   {
     phase:"deck",selector:"#deckBuilderActionGroup",fallbackSelector:"#saveDeckBtn",title:"Guardar el mazo",
-    body:()=>`Cuando la composición cumple todas las reglas, el botón de <b>Guardar</b> queda disponible. Si aparece desactivado, normalmente falta completar el número exacto de cartas, seleccionar todos los Principales exigidos o corregir alguna carta incompatible.<br><br>Guardar es lo que convierte esta composición en tu <b>mazo actual</b>.`
+    body:()=>`Cuando la composición cumple todas las reglas, el botón de <b>Guardar</b> queda disponible. Si aparece desactivado, normalmente falta completar el número exacto de cartas que exige el tier del líder o corregir alguna carta incompatible.<br><br>Guardar es lo que convierte esta composición en tu <b>mazo actual</b>.`
   },
   {
     phase:"deck",selector:".deckbuilder-card",title:"Tu mazo actual es el que combate",
-    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Resumen final:<br><br>1. Elige solo cartas que poseas.<br>2. Completa exactamente <b>${r.draw}</b> cartas de robo.<br>3. Selecciona exactamente <b>${r.slots}</b> Principal${r.slots===1?"":"es"} para tu tier actual.<br>4. Guarda la composición.<br><br>Después de guardarla, <b>Aventura y PvP utilizan ese mazo actual</b>. El tutorial no ha cambiado tu mazo; al finalizar puedes editarlo con libertad.`;}
+    body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Resumen final:<br><br>1. Elige solo cartas que poseas.<br>2. Completa exactamente <b>${r.total}</b> cartas para tu líder de Nivel ${r.level} · Tier ${r.tier}.<br>3. Guarda la composición.<br><br>Después de guardarla, <b>Aventura y PvP utilizan ese mazo actual</b>. El tutorial no ha cambiado tu mazo; al finalizar puedes editarlo con libertad.`;}
   }
 ];
 

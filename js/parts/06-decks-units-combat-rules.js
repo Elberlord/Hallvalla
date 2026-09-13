@@ -286,9 +286,9 @@ function requireLeaderSelection(force=false){
 function renderSelectedLeaderBadge(){const type=getSelectedLeaderType();const data=isInitialLeaderAllowed(type)?LEADER_DATA[type]:null;const badge=$("leaderCurrentBadge");if(badge)badge.textContent=data?`Líder actual: ${data.name} · ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`:(leaderProfileLoaded?"Elige un líder para comenzar.":"Cargando perfil de líder...")}
 
 function makeCard(t,owner,leaderType){let card={...t,id:uid8(),owner,leaderType};if(card.type==="unit"){card=applyArcherMovementRule(card);card.battlePower=getUnitBattlePower(card);card.hiddenUnitTag="unit";}return card}
-function getStarterBasicDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
-  const target=getDeckSizeForPrincipalSlots(principalSlots);
-  return STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).slice(0,Math.max(0,target-1));
+function getStarterBasicDeckTemplates(targetDeckSize=getCurrentDeckSize()){
+  const target=Math.max(1,Number(targetDeckSize)||getCurrentDeckSize());
+  return STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean).slice(0,target);
 }
 function getStarterChosenSpecialCard(selectedSpecial=""){
   const key=selectedSpecial||getAdventureProgress?.().selectedSpecial||pendingAdventureSpecial||"mulan";
@@ -358,28 +358,26 @@ function getStarterComplementTemplate(selectedSpecial=""){
   return ADVENTURE_SPECIALS[complementKey]?{...ADVENTURE_SPECIALS[complementKey]}:null;
 }
 function getLegacyDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
-  const target=getDeckSizeForPrincipalSlots(principalSlots);
-  const base=getStarterBasicDeckTemplates(principalSlots);
+  const target=getCurrentDeckSize();
+  const base=getStarterBasicDeckTemplates(target);
   const special=getStarterChosenSpecialCard(selectedSpecial);
   const deck=special?[...base,special]:base;
   return deck.slice(0,target);
 }
 function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
-  const target=getDeckSizeForPrincipalSlots(principalSlots);
+  const target=typeof getDeckSizeForLeaderType==="function"?getDeckSizeForLeaderType(leaderType):getCurrentDeckSize();
   const deck=getLeaderStarterFixedDeckTemplates(leaderType);
   const special=getStarterChosenSpecialCard(selectedSpecial);
   if(special)deck.push(special);
 
-  // Tras derrotar al Guardián, el mazo normal necesita 20 cartas de robo +
-  // Personaje(s) Principal(es). La carta no elegida es la primera expansión
-  // natural del starter porque se obtiene como recompensa del Guardián.
-  if(deck.length<target&&Number(principalSlots)>0){
+  // La carta complementaria es ahora una carta normal; no existe zona de Principales.
+  if(deck.length<target){
     const complement=getStarterComplementTemplate(selectedSpecial);
-    if(complement)deck.push(complement);
+    if(complement&&!deck.some(card=>card?.key===complement.key))deck.push(complement);
   }
 
-  // Fallback únicamente para tiers con 2-3 Principales si no existe mazo guardado.
-  // Respeta límites de copias y nunca altera las 19 cartas fijas del starter.
+  // Fallback temporal hasta definir los mazos canónicos completos de cada líder.
+  // Respeta límites de copias y nunca crea una zona de Principales.
   if(deck.length<target){
     const candidates=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
     for(const candidate of candidates){
@@ -391,9 +389,9 @@ function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPri
   }
   return deck.slice(0,target);
 }
-function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
-  const target=getDeckSizeForPrincipalSlots(principalSlots);
-  const base=getStarterBasicDeckTemplates(principalSlots);
+function getAiBasicDeckTemplates(targetDeckSize=DECK_RULES.drawDeckSize){
+  const target=Math.max(1,Math.min(DECK_RULES.maxDeckSize,Number(targetDeckSize)||DECK_RULES.drawDeckSize));
+  const base=getStarterBasicDeckTemplates(Math.max(target,DECK_RULES.drawDeckSize));
   const deck=[...base];
   let i=0;
   while(deck.length<target&&base.length){
@@ -403,8 +401,8 @@ function getAiBasicDeckTemplates(principalSlots=DECK_RULES.maxPrincipalSlots){
   return deck.slice(0,target);
 }
 function getStarterAdventureDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
-  const target=getDeckSizeForPrincipalSlots(principalSlots);
-  return getDefaultDeckTemplates(selectedSpecial,principalSlots,leaderType).slice(0,target);
+  const target=typeof getDeckSizeForLeaderType==="function"?getDeckSizeForLeaderType(leaderType):getCurrentDeckSize();
+  return getDefaultDeckTemplates(selectedSpecial,0,leaderType).slice(0,target);
 }
 function getPlayableSavedDeckTemplates(principalSlots=getCurrentPrincipalSlots()){
   if(!canAccessDecks())return [];
@@ -421,9 +419,8 @@ function getPlayableSavedDeckTemplates(principalSlots=getCurrentPrincipalSlots()
 
 function makeDeck(owner,leaderType=getSelectedLeaderType()||"warrior",options={}){
   const useSaved=!options.ai;
-  const principalSlots=options.principalSlots||getPrincipalSlotsForLeaderType(leaderType);
-  const savedTemplates=useSaved?getPlayableSavedDeckTemplates(principalSlots):[];
-  const starterTemplates=getDefaultDeckTemplates("",principalSlots,leaderType);
+  const savedTemplates=useSaved?getPlayableSavedDeckTemplates(0):[];
+  const starterTemplates=getDefaultDeckTemplates("",0,leaderType);
   const templates=savedTemplates.length?savedTemplates:starterTemplates;
   return shuffle(templates.map(card=>makeCard(card,owner,leaderType)));
 }
@@ -499,7 +496,7 @@ function getUnitEffectText(u){
   const eqText=equipped.map(eq=>`${eq.name}: ${eq.text||""}`).join(" ");
   return [base,`Equipo: ${eqText}`].filter(Boolean).join(" ");
 }
-function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,fixedMov:(card.fixedMov!==null&&card.fixedMov!==undefined&&card.fixedMov!==""&&Number.isFinite(Number(card.fixedMov)))?Math.max(0,Number(card.fixedMov)):null,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,elementalAffinity:card.elementalAffinity&&typeof card.elementalAffinity==="object"?{...card.elementalAffinity}:null,elementalNature:!!card.elementalNature,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryStatBonus=Math.max(0,Number(unit.masteryStatBonus??unit.masteryHpBonus??0));if(masteryStatBonus>0){unit.maxHp=(unit.maxHp||0)+masteryStatBonus;unit.hp=(unit.hp||0)+masteryStatBonus;unit.atk=(unit.atk||0)+masteryStatBonus;unit.baseGuard=(unit.baseGuard||0)+masteryStatBonus;unit.guard=(unit.guard||0)+masteryStatBonus;unit.dex=(unit.dex||0)+masteryStatBonus;unit.agi=(unit.agi||0)+masteryStatBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);return unit}
+function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,fixedMov:(card.fixedMov!==null&&card.fixedMov!==undefined&&card.fixedMov!==""&&Number.isFinite(Number(card.fixedMov)))?Math.max(0,Number(card.fixedMov)):null,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,elementalAffinity:card.elementalAffinity&&typeof card.elementalAffinity==="object"?{...card.elementalAffinity}:null,elementalNature:!!card.elementalNature,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryStatBonus=Math.max(0,Number(unit.masteryStatBonus??unit.masteryHpBonus??0));if(masteryStatBonus>0){unit.maxHp=(unit.maxHp||0)+masteryStatBonus;unit.hp=(unit.hp||0)+masteryStatBonus;unit.atk=(unit.atk||0)+masteryStatBonus;unit.baseGuard=(unit.baseGuard||0)+masteryStatBonus;unit.guard=(unit.guard||0)+masteryStatBonus;unit.dex=(unit.dex||0)+masteryStatBonus;unit.agi=(unit.agi||0)+masteryStatBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);unit=applyHallvallaValueHooks("unit.make",unit,{card,x,y})||unit;return unit}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}

@@ -1,0 +1,20 @@
+HallValla 20260913.87 — FULL CLEAN
+
+Base: v85 + cambios posteriores acumulados.
+Correcciones incluidas:
+- TR: recuperación de movimiento y fixedMov null ya no equivale a MOV 0.
+- Ritmo TR: movimiento 3600 ms base; ataque 4800 ms base; invocación mantiene su velocidad.
+- IA TR: invoca en cuanto dispone de maná para la mejor unidad asequible.
+- Gamepad: stick derecho mueve cursor; Start/Menu/Pause hace clic izquierdo con cursor activo.
+- Mazos: eliminada la lógica de Cartas/Personajes Principales.
+- Capacidad de mazo por Tier del líder:
+  Tier 1 = 10
+  Tier 2 = 15
+  Tier 3 = 20
+  Tier 4 = 25
+  Tier 5 = 30
+- Se mantiene Nivel 15 como nivel máximo; Tier máximo = 5.
+
+Empaquetado:
+- Eliminada la copia accidental completa Hallvalla_v85/ que había quedado dentro de v86.
+- No se duplican assets.

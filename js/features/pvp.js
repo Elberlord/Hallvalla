@@ -632,14 +632,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
   function getPvpDeckValidation(deck=[]){
     const cards=Array.isArray(deck)?deck:[];
+    let leaderType="warrior",leaderLevel=1;
+    try{ leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior"); }catch(_){ }
+    try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ }
     let validation=null;
-    try{ if(typeof globalThis.validateDeckList==="function") validation=globalThis.validateDeckList(cards,0); }catch(_){ }
+    try{ if(typeof globalThis.validateDeckList==="function") validation=globalThis.validateDeckList(cards,{leaderType,leaderLevel}); }catch(_){ }
     const errors=Array.isArray(validation?.errors)?validation.errors.map(v=>String(v||"")).filter(Boolean):[];
-    const nonSizeErrors=errors.filter(msg=>!/^El mazo debe tener exactamente \d+ cartas:/i.test(msg));
-    return {valid:cards.length>0&&nonSizeErrors.length===0,size:cards.length,errors:nonSizeErrors};
+    const required=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(leaderLevel):cards.length;
+    return {valid:validation?.valid===true,size:cards.length,required,leaderLevel,errors};
   }
   function getSavedOnlineDeckState(){
-    try{ if(typeof globalThis.isTestPromoActive==="function"&&globalThis.isTestPromoActive()) return {valid:true,size:21,errors:[]}; }catch(_){ }
     let deck=[]; try{ deck=typeof getSavedDeck==="function" ? (getSavedDeck()||[]) : JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]"); }catch(_){ deck=[]; }
     return getPvpDeckValidation(deck);
   }
@@ -661,15 +663,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const deckValidation=getPvpDeckValidation(deck);
     if(!deckValidation.valid){
       const detail=Array.isArray(deckValidation.errors)&&deckValidation.errors.length?` ${deckValidation.errors.join(" ")}`:"";
-      throw new Error(`El mazo online debe contener al menos 1 carta y respetar las demás reglas de cartas.${detail}`);
+      throw new Error(`El mazo online debe tener exactamente el tamaño permitido por el Tier de tu líder.${detail}`);
     }
     const deckKeys=deck.map(card=>String(card?.key||"").trim());
     if(deckKeys.some(k=>!k)) throw new Error("El mazo contiene una carta sin clave canónica.");
     const principalKeys=[];
-    getSavedPrincipalKeysSafe().forEach(key=>{
-      const safe=String(key||"").trim();
-      if(safe&&deckKeys.includes(safe)&&!principalKeys.includes(safe)) principalKeys.push(safe);
-    });
     let leaderType="warrior",leaderLevel=1,leaderAbility="";
     try{ leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior"); }catch(_){ leaderType="warrior"; }
     try{ leaderLevel=Math.max(1,Number(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(leaderType):1)||1); }catch(_){ leaderLevel=1; }
@@ -688,11 +686,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const data=value&&typeof value==="object"?value:{};
     const deckKeys=normalizeFirebaseArray(data?.loadout?.deckKeys).map(v=>String(v||""));
     const principalKeys=normalizeFirebaseArray(data?.loadout?.principalKeys).map(v=>String(v||""));
+    const leaderLevel=Math.max(1,Number(data?.battleProfile?.leaderLevel||1)||1);
+    const expectedDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(leaderLevel):deckKeys.length;
     return String(data?.ownerUid||"")===String(ownerUid||"")
       && Number(data?.role)===Number(role)
       && data?.prepared===true
-      && deckKeys.length>=1 && deckKeys.every(Boolean)
-      && principalKeys.every(Boolean)
+      && deckKeys.length===expectedDeckSize && deckKeys.every(Boolean)
+      && principalKeys.length===0 && principalKeys.every(Boolean)
       && new Set(principalKeys).size===principalKeys.length
       && principalKeys.every(key=>deckKeys.includes(key))
       && (!Number.isFinite(Number(data?.loadout?.deckSize)) || Number(data.loadout.deckSize)===deckKeys.length);
@@ -880,6 +880,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const basics=scored.filter(x=>x.rank===0).sort((a,b)=>(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
     const selected=[];
     const counts=new Map();
+    const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(PVP_BOT_LEADER_LEVEL):30;
     const add=(card)=>{
       if(!card)return false;
       const key=String(card.key||"");
@@ -903,24 +904,20 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
     // El resto del mazo usa Básicas. Se permiten hasta 3 copias, tal como el
     // constructor normal, y las preferencias de cada perfil cambian la composición.
-    for(let copyRound=0;selected.length<23&&copyRound<3;copyRound++){
+    for(let copyRound=0;selected.length<targetDeckSize&&copyRound<3;copyRound++){
       for(const entry of basics){
-        if(selected.length>=23)break;
+        if(selected.length>=targetDeckSize)break;
         if((counts.get(entry.card.key)||0)!==copyRound)continue;
         add(entry.card);
       }
     }
-    if(selected.length<23){
+    if(selected.length<targetDeckSize){
       const fallback=[];
       try{ fallback.push(...getLeaderStarterFixedDeckTemplates(profile.leaderType)); }catch(_){ }
-      for(const card of fallback){if(selected.length>=23)break;add(card);}
+      for(const card of fallback){if(selected.length>=targetDeckSize)break;add(card);}
     }
-    if(selected.length!==23)throw new Error(`Bot ${profile.id}: mazo incompleto ${selected.length}/23.`);
-
-    const uniqueUnits=[...new Map(selected.filter(card=>card?.type==="unit").map(card=>[card.key,card])).values()]
-      .sort((a,b)=>(pvpBotStyleScore(b,profile)+pvpBotRarityRank(b)*28)-(pvpBotStyleScore(a,profile)+pvpBotRarityRank(a)*28));
-    if(uniqueUnits.length<3)throw new Error(`Bot ${profile.id}: necesita al menos 3 unidades distintas para Principales.`);
-    const principalKeys=uniqueUnits.slice(0,3).map(card=>String(card.key));
+    if(selected.length!==targetDeckSize)throw new Error(`Bot ${profile.id}: mazo incompleto ${selected.length}/${targetDeckSize}.`);
+    const principalKeys=[];
     const keyCounts=[];
     for(const [key,count] of counts.entries())keyCounts.push([key,count]);
     const rarityCounts={basic:0,epic:0,glorious:0,mythic:0,legendary:0,demigod:0};
@@ -952,8 +949,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       for(const league of (globalThis.HALLVALLA_PVP_LEAGUES||[])){
         try{
           const deck=buildPvpBotDeck(profile,league);
-          if(deck.keys.length!==23)errors.push(`${profile.id}/${league.key}: ${deck.keys.length}/23.`);
-          if(deck.principalKeys.length!==3)errors.push(`${profile.id}/${league.key}: ${deck.principalKeys.length}/3 principales.`);
+          const expected=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(PVP_BOT_LEADER_LEVEL):30;
+          if(deck.keys.length!==expected)errors.push(`${profile.id}/${league.key}: ${deck.keys.length}/${expected}.`);
+          if(deck.principalKeys.length!==0)errors.push(`${profile.id}/${league.key}: no debe tener Principales.`);
           if(deck.keys.some(key=>!getPvpBotCatalog().some(card=>String(card?.key||"")===key)))errors.push(`${profile.id}/${league.key}: carta sin catálogo.`);
         }catch(error){errors.push(`${profile.id}/${league.key}: ${error?.message||error}`);}
       }

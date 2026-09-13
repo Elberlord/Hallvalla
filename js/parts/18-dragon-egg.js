@@ -189,12 +189,6 @@ registerHallvallaHook("deck.validation",(result,{cards})=>{
   if(countDragonCardsInDeck(cards)>1)errors.push("Solo puedes llevar un Huevo o Dragón de cualquier etapa por mazo.");
   return{...result,errors,valid:errors.length===0};
 },{id:"dragon-growth:deck-validation"});
-registerHallvallaHook("deck.principalValidation",(result,{deck})=>{
-  const errors=[...(result.errors||[])];
-  const dragonCards=(deck||[]).filter(card=>isDragonCompanionKey(card?.key));
-  if(dragonCards.some(card=>!result.keys.includes(card.key)))errors.push("El Huevo o Dragón incluido en el mazo debe ocupar un espacio de Personaje Principal.");
-  return{...result,errors,valid:errors.length===0};
-},{id:"dragon-growth:principal-validation"});
 registerHallvallaHook("deck.addCard",({cardKey})=>{
   if(isDragonCompanionKey(cardKey)&&countDragonCardsInDeck(currentDeckDraft)>0){setHint("Solo puedes incluir un Huevo o Dragón por mazo.");return{handled:true,value:false};}
   return{handled:false};
@@ -211,9 +205,6 @@ function replaceDragonCardInSavedDeck(oldKey,newKey){
     return card;
   });
   if(changed)saveDeck(nextDeck);
-  const principals=getSavedPrincipalKeys();
-  const nextPrincipals=principals.map(key=>key===oldKey?newKey:key);
-  if(nextPrincipals.some((key,index)=>key!==principals[index]))savePrincipalKeys(nextPrincipals);
 }
 
 function getLocalDragonOwner(){return Number(myPlayer||1);}
@@ -221,6 +212,14 @@ function setActiveDragonRecordId(id){
   try{id?sessionStorage.setItem(DRAGON_ACTIVE_RECORD_KEY,String(id)):sessionStorage.removeItem(DRAGON_ACTIVE_RECORD_KEY);}catch(e){}
 }
 function getActiveDragonRecordId(){try{return sessionStorage.getItem(DRAGON_ACTIVE_RECORD_KEY)||"";}catch(e){return"";}}
+registerHallvallaHook("unit.make",(unit,{card})=>{
+  if(!unit||!isDragonCompanionKey(unit.key))return unit;
+  const record=findDragonRecordForCardKey(unit.key);
+  if(Number(unit.owner)===getLocalDragonOwner()&&record)setActiveDragonRecordId(record.id);
+  const threshold=getDragonStageThreshold(record?.stage||unit.dragonStage||"adult");
+  return{...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,dragonElement:record?.element||unit.dragonElement,dragonGrowthThreshold:threshold};
+},{id:"dragon-growth:normal-unit"});
+// Compatibilidad con partidas antiguas que aún materialicen una unidad principal.
 registerHallvallaHook("principal.makeUnit",(unit,{owner})=>{
   if(!unit||!isDragonCompanionKey(unit.key))return unit;
   const record=findDragonRecordForCardKey(unit.key);
@@ -389,13 +388,8 @@ function processDragonGrowthAfterBattle(state){
   const records=getDragonCompanions();
   if(!activeId){
     const owner=getLocalDragonOwner();
-    const fieldDragon=(state.units||[]).find(unit=>unit&&Number(unit.owner)===owner&&unit.principal&&isDragonCompanionKey(unit.key));
+    const fieldDragon=(state.units||[]).find(unit=>unit&&Number(unit.owner)===owner&&isDragonCompanionKey(unit.key));
     if(fieldDragon?.dragonCompanionId)activeId=fieldDragon.dragonCompanionId;
-    if(!activeId){
-      const principalKeys=[...(privateState?.principalKeys||[]),privateState?.principalKey].filter(Boolean);
-      const dragonKey=principalKeys.find(isDragonCompanionKey);
-      if(dragonKey)activeId=findDragonRecordForCardKey(dragonKey,records)?.id||"";
-    }
   }
   if(!activeId)return[];
   const index=records.findIndex(record=>record.id===activeId);

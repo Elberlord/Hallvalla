@@ -28559,3 +28559,7 @@ html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){di
   .rt-target-cancel{left:54px;top:145px;width:34px;height:34px;}
   .rt-keybind-grid{grid-template-columns:1fr;}
 }
+
+/* 8D86 · Los Personajes Principales fueron retirados del sistema de mazos. */
+#deckBuilderPanel #deckPrincipalSlots{display:none !important;}
+.hv-match-principals{display:none !important;}

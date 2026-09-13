@@ -1,0 +1,19 @@
+HallValla · Capacidad de mazo por Tier de líder · Build 20260913.87
+
+REGLA CANÓNICA
+- Los antiguos Personajes Principales ya no existen como zona separada del mazo.
+- El líder permanece separado del mazo.
+- La capacidad del mazo depende del Tier canónico actual del líder, no de cada nivel individual.
+- Tier 1 = 10 cartas.
+- Tier 2 = 15 cartas.
+- Tier 3 = 20 cartas.
+- Tier 4 = 25 cartas.
+- Tier 5 = 30 cartas (máximo).
+- Cada aumento de Tier añade 5 cartas de capacidad.
+- El líder sigue teniendo niveles 1–15; esos niveles determinan su Tier mediante LEADER_LEVEL_TABLE.
+- Con la tabla canónica actual: Nivel XV pertenece a Tier 5 y por tanto usa 30 cartas.
+- La validación se aplica al editor, guardado, Aventura, PvP y bots.
+- Copias: Básicas máx. 3; demás rarezas máx. 1, sujeto a posesión y compatibilidad.
+
+SIGUIENTE ETAPA
+- Definir los mazos canónicos completos de cada tipo de líder para las cinco capacidades de Tier.

@@ -1019,7 +1019,7 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
       return templates.slice(0,target);
     }
     if(battle?.id==="battle5"&&String(enemyLeaderType||"")==="warrior"){
-      const drawBase=getAdaptiveCanonicalClassDeckTemplates("warrior").slice(0,DECK_RULES.drawDeckSize);
+      const drawBase=getAdaptiveCanonicalClassDeckTemplates("warrior").slice(0,target);
       const principals=[];
       for(const key of principalKeys||[]){
         const card=getAdventureDeckCardTemplateByKey(key);
@@ -1040,12 +1040,12 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
   let drawBase=getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType);
   if(!drawBase.length){
     drawBase=(typeof getLeaderStarterFixedDeckTemplates==="function"?getLeaderStarterFixedDeckTemplates(enemyLeaderType):[])
-      .filter(isAdaptiveBasicCard).slice(0,DECK_RULES.drawDeckSize);
+      .filter(isAdaptiveBasicCard).slice(0,target);
   }
-  if(drawBase.length<DECK_RULES.drawDeckSize){
-    const filler=getAiBasicDeckTemplates(0).filter(isAdaptiveBasicCard);
+  if(drawBase.length<target){
+    const filler=getAiBasicDeckTemplates(target).filter(isAdaptiveBasicCard);
     for(const card of filler){
-      if(drawBase.length>=DECK_RULES.drawDeckSize)break;
+      if(drawBase.length>=target)break;
       const copies=drawBase.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
       if(copies>=Math.min(3,maxCopiesForCard(card)))continue;
       drawBase.push(card);
@@ -1074,7 +1074,7 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
     const card=getAdventureDeckCardTemplateByKey(key);
     if(card?.type==="unit"&&!principals.some(c=>c.key===card.key))principals.push(card);
   }
-  const combined=[...drawBase.slice(0,DECK_RULES.drawDeckSize),...principals];
+  const combined=[...drawBase.slice(0,target),...principals];
   return combined.slice(0,target);
 }
 function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[],principalKeys=[]){
@@ -1214,7 +1214,7 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
 
   // Fallback sólo Básico y compatible; nunca rellena con rarezas futuras.
   if(templates.length<target){
-    const filler=getAiBasicDeckTemplates(0).filter(card=>isAdaptiveBasicCard(card)&&!isAdaptiveCampaignBeastRestricted(card,enemyLeaderType));
+    const filler=getAiBasicDeckTemplates(target).filter(card=>isAdaptiveBasicCard(card)&&!isAdaptiveCampaignBeastRestricted(card,enemyLeaderType));
     for(const card of filler){
       if(templates.length>=target)break;
       const copies=templates.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
@@ -1279,8 +1279,9 @@ function recordAdaptiveCampaignBattle(pub){
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
   const override=resolveHallvallaOverride("adventure.makeEnemyDeck",{battle,enemyLeaderType});
   if(override.handled)return override.value;
-  const principalSlots=typeof getAiPrincipalSlotsForBattle==="function"?getAiPrincipalSlotsForBattle(battle):0;
-  const targetDeckSize=DECK_RULES.drawDeckSize+principalSlots;
+  const principalSlots=0;
+  const enemyLevel=typeof getAdventureEnemyLeaderLevel==="function"?getAdventureEnemyLeaderLevel(battle):Math.max(1,Number(battle?.aiLevel||1)||1);
+  const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(enemyLevel):DECK_RULES.drawDeckSize;
   if(isAdventureAdaptiveCampaignBattle(battle)){
     const adaptiveTemplates=buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSize);
     if(adaptiveTemplates.length!==targetDeckSize){
@@ -1340,7 +1341,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     const draw=drawCards(fixedDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
-  const baseTemplates=getAiBasicDeckTemplates(Math.max(DECK_RULES.minPrincipalSlots,principalSlots)).slice(0,targetDeckSize);
+  const baseTemplates=getAiBasicDeckTemplates(targetDeckSize).slice(0,targetDeckSize);
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
   // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
   // Forzamos una unidad básica barata en la mano inicial y dejamos el resto aleatorio.

@@ -1229,13 +1229,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   let beastmasterEntryCharged=false;
   if(!isBattleUnlocked(battle)){await hvAlert("Esta batalla está bloqueada. Completa primero la batalla anterior o el mapa requerido.","Batalla bloqueada");openAdventureMap(specialKey);return;}
   const code=`ADV${code4()}`;
-  // El primer espacio de Personaje Principal y la edición de mazo se desbloquean
-  // al derrotar al Hechicero guardián. Antes de esa victoria, el mazo inicial tiene
-  // 20 cartas de robo y ninguna unidad comienza desplegada gratuitamente.
+  // 8D87 · Ya no existen Personajes Principales. La capacidad del mazo completo
+  // depende del Tier canónico del líder: T1=10, T2=15, T3=20, T4=25, T5=30.
   const playerPrincipalUnlocked=canAccessDecks();
-  // La prueba del Hechicero nunca usa Personaje Principal, incluso si se repite después.
-  const playerPrincipalSlots=battle.isGuardian?0:(playerPrincipalUnlocked?getPrincipalSlotsForLeaderLevel(leaderLevel):0);
-  const playerRequiredDeckSize=getDeckSizeForPrincipalSlots(playerPrincipalSlots);
+  const playerPrincipalSlots=0;
+  const playerRequiredDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(leaderLevel):getCurrentDeckSize();
   const starterLocked=!playerPrincipalUnlocked;
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
   const rawPlayerBase=mustUseStarterAdventureDeck
@@ -1257,8 +1255,8 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
   }
   const playerPrincipalPrep=extractPrincipalCardsFromDeck(rawPlayerBase,requestedPlayerPrincipals,playerPrincipalSlots);
-  if(playerPrincipalPrep.principalCards.length!==playerPrincipalSlots||playerPrincipalPrep.deck.length!==DECK_RULES.drawDeckSize){
-    await hvAlert(`Tu líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener ${playerRequiredDeckSize} cartas totales: ${playerPrincipalSlots} principal${playerPrincipalSlots===1?"":"es"} y ${DECK_RULES.drawDeckSize} cartas para robar.`,"Mazo inválido");
+  if(playerPrincipalPrep.principalCards.length!==0||playerPrincipalPrep.deck.length!==playerRequiredDeckSize){
+    await hvAlert(`Tu líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener exactamente ${playerRequiredDeckSize} cartas.`,"Mazo inválido");
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
     return;
   }
