@@ -669,7 +669,7 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   return{patch:cleanPatch,beforeUnits};
 }
 async function updatePublic(patch){
-  if(isTurnWriteBlockedByExpiredClock())return false;
+  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
   const writeGameId=gameId;
   const writeLifecycleToken=getBattleLifecycleToken();
   const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
@@ -680,6 +680,18 @@ async function updatePublic(patch){
   const cleanPatch=normalized.patch;
   const accountMasteryKillAfter=Array.isArray(cleanPatch.units)?[...(cleanPatch.units||[])]:null;
   const localFullPatch={...cleanPatch};
+  if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
+    const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
+    publicState=hallvallaApplyLocalPatch(publicState,localFullPatch);
+    networkPublicStateRaw=publicState?JSON.parse(JSON.stringify(publicState)):networkPublicStateRaw;
+    if(accountMasteryKillAfter){
+      if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,accountMasteryKillAfter);
+      if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(beforeUnits,accountMasteryKillAfter,sourcePatch);
+    }
+    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();
+    globalThis.hallvallaRtScheduleLocalSnapshot?.(false);
+    return true;
+  }
   const privacyProjection=projectStage8StealthPatchForNetwork(cleanPatch,myPlayer);
   const sharedVisibilityUnits=privacyProjection.visibilityUnits;
   let publicWritePatch=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
@@ -767,7 +779,7 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
   }
 }
 async function commitGameplayAction({publicPatch={},privatePatch={}}={}){
-  if(isTurnWriteBlockedByExpiredClock())return false;
+  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
   if(isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
   // Aventura/Tutorial conservan el flujo histórico.
   if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
@@ -775,7 +787,7 @@ async function commitGameplayAction({publicPatch={},privatePatch={}}={}){
   return true;
 }
 async function updatePrivate(patch){
-  if(isTurnWriteBlockedByExpiredClock())return false;
+  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
   const writeGameId=gameId;
   const writePlayer=myPlayer;
   const writeLifecycleToken=getBattleLifecycleToken();
@@ -790,6 +802,11 @@ async function updatePrivate(patch){
     const projectedPublic=publicState?hallvallaApplyLocalPatch(publicState,summaryPatch):publicState;
     if(projectedPublic)publicState=projectedPublic;
   };
+  if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
+    applyLocalProjection();
+    render();void maybeFinalizeUnitExhaustionFromPublicState();globalThis.hallvallaRtScheduleLocalSnapshot?.(false);
+    return true;
+  }
   if(hallvallaIsLocalTestGame()){
     applyLocalProjection();
     render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();maybeTriggerAdventureAI();
@@ -1503,6 +1520,7 @@ function enterGame(code,player){
   unsubPub=battleOwnDisposable(onValue(ref(db,`games/${code}/public`),snap=>{
     if(!isBattleLifecycleTokenActive(lifecycleToken))return;
     safeBattleTick("public",()=>{
+    if(globalThis.hallvallaRtIgnoreRemoteBattleSnapshot?.())return;
     const val=snap.val();
     if(!val){
       publicState=null;
@@ -1529,6 +1547,7 @@ function enterGame(code,player){
   unsubPriv=battleOwnDisposable(onValue(getGamePrivatePlayerRef(code,player),snap=>{
     if(!isBattleLifecycleTokenActive(lifecycleToken))return;
     safeBattleTick("private",()=>{
+    if(globalThis.hallvallaRtIgnoreRemoteBattleSnapshot?.())return;
     const val=snap.val();
     if(!val){
       privateState=null;

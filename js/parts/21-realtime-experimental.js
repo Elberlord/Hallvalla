@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260913.79 · Combate TR experimental (DEV only)
+/* HallValla 20260913.80 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
      selector táctico contextual, bindings finales y unidades autónomas.
@@ -10,15 +10,18 @@ const HALLVALLA_RT_CFG=Object.freeze({
   resourceCap:10,
   resourceEveryMs:3000,
   handMax:99,
-  aiThinkEveryMs:450,
-  aiDeployCooldownMs:700,
-  attackCooldownMs:1200,
-  baseMoveCooldownMs:900,
-  loopMs:160,
+  aiThinkEveryMs:180,
+  aiDeployCooldownMs:280,
+  attackCooldownMs:2400,
+  baseMoveCooldownMs:1800,
+  loopMs:100,
   leaderEffectEveryMs:6000,
   combatRefreshEveryMs:4000,
-  maxAttacksPerTick:2,
-  maxMovesPerTick:10
+  supportEffectEveryMs:6000,
+  statusTickEveryMs:3000,
+  localSnapshotEveryMs:2000,
+  maxAttacksPerTick:12,
+  maxMovesPerTick:32
 });
 const HALLVALLA_RT_HOME_STORAGE_KEY="hallvalla_rt_experimental_home_v1";
 function isHallvallaRealtimeExperimentalRequested(){
@@ -50,6 +53,9 @@ const hallvallaRtState={
   lastAiDeployAt:0,
   lastLeaderEffectAt:0,
   lastCombatRefreshAt:0,
+  lastSupportAt:0,
+  lastStatusAt:0,
+  lastLocalSnapshotAt:0,
   resourcesInitialized:false,
   combatWindow:0,
   ownerActionFlip:1,
@@ -59,10 +65,32 @@ const hallvallaRtState={
   playBusy:false,
   moveAt:new Map(),
   attackAt:new Map(),
+  supportAt:new Map(),
+  lastSummonedByOwner:{1:null,2:null},
+  summonHistory:{1:[],2:[]},
   statusNode:null
 };
 function isHallvallaRealtimeExperimental(){return hallvallaRtState.enabled===true||publicState?.realtimeExperimental===true;}
 globalThis.isHallvallaRealtimeExperimental=isHallvallaRealtimeExperimental;
+
+const HALLVALLA_RT_LOCAL_SNAPSHOT_KEY="hallvalla_rt_local_battle_snapshot_v1";
+function hallvallaRtUseLocalBattleRuntime(){
+  return !!(isHallvallaRealtimeExperimental()&&publicState&&publicState.mode!=="online");
+}
+function hallvallaRtIgnoreRemoteBattleSnapshot(){return hallvallaRtUseLocalBattleRuntime()&&hallvallaRtState.enabled===true;}
+function hallvallaRtScheduleLocalSnapshot(force=false){
+  if(!hallvallaRtUseLocalBattleRuntime())return false;
+  const now=Date.now();
+  if(!force&&now-hallvallaRtState.lastLocalSnapshotAt<HALLVALLA_RT_CFG.localSnapshotEveryMs)return false;
+  hallvallaRtState.lastLocalSnapshotAt=now;
+  try{
+    localStorage.setItem(HALLVALLA_RT_LOCAL_SNAPSHOT_KEY,JSON.stringify({gameId:String(gameId||""),savedAt:now,publicState,privateState}));
+    return true;
+  }catch(_){return false;}
+}
+globalThis.hallvallaRtUseLocalBattleRuntime=hallvallaRtUseLocalBattleRuntime;
+globalThis.hallvallaRtIgnoreRemoteBattleSnapshot=hallvallaRtIgnoreRemoteBattleSnapshot;
+globalThis.hallvallaRtScheduleLocalSnapshot=hallvallaRtScheduleLocalSnapshot;
 
 function hallvallaRtNow(){return Date.now();}
 function hallvallaRtBattleReady(){return !!(publicState&&privateState&&gameId&&!isBattleEnded());}
@@ -71,7 +99,7 @@ function hallvallaRtGetSpawnCells(owner,units=publicState?.units||[]){
   const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return[];
   const occupied=new Set((units||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>`${u.x},${u.y}`));
   const dir=Number(owner)===1?-1:1;
-  const offsets=[[0,dir],[-1,dir],[1,dir],[-1,0],[1,0]];
+  const offsets=[[0,dir],[-1,dir],[1,dir],[-1,0],[1,0],[-1,-dir],[1,-dir],[0,-dir]];
   return offsets.map(([dx,dy])=>({x:Number(leader.x)+dx,y:Number(leader.y)+dy}))
     .filter(c=>c.x>=0&&c.x<COLS&&c.y>=0&&c.y<ROWS&&!occupied.has(`${c.x},${c.y}`));
 }
@@ -254,6 +282,83 @@ function hallvallaRtChangePage(delta){
   const entries=hallvallaRtArsenalEntries(),pages=Math.max(1,Math.ceil(entries.length/3));
   hallvallaRtState.arsenalPage=(hallvallaRtState.arsenalPage+delta+pages)%pages;hallvallaRtRenderArsenal();return true;
 }
+function hallvallaRtRememberSummon(owner,unit){
+  if(!unit)return;
+  const o=Number(owner||unit.owner||0);if(o!==1&&o!==2)return;
+  hallvallaRtState.lastSummonedByOwner[o]=unit.id;
+  const history=[unit.id,...(hallvallaRtState.summonHistory[o]||[]).filter(id=>id!==unit.id)].slice(0,24);
+  hallvallaRtState.summonHistory[o]=history;
+}
+function hallvallaRtLastLivingSummon(owner,units=publicState?.units||[]){
+  const o=Number(owner||0),history=hallvallaRtState.summonHistory[o]||[];
+  for(const id of [hallvallaRtState.lastSummonedByOwner[o],...history]){
+    const found=(units||[]).find(u=>u&&u.id===id&&u.owner===o&&!u.leader&&Number(u.hp||0)>0);if(found)return found;
+  }
+  return (units||[]).filter(u=>u&&u.owner===o&&!u.leader&&Number(u.hp||0)>0).sort((a,b)=>Number(b.rtSummonedAt||0)-Number(a.rtSummonedAt||0)||String(b.id||"").localeCompare(String(a.id||"")))[0]||null;
+}
+function hallvallaRtNearestEnemy(owner,{nonLeaderOnly=false,predicate=null}={}){
+  const units=publicState?.units||[],leader=hallvallaRtGetOwnerLeader(owner,units)||{x:Math.floor(COLS/2),y:owner===1?ROWS-1:0};
+  return units.filter(u=>u&&u.owner!==owner&&Number(u.hp||0)>0&&(!nonLeaderOnly||!u.leader)&&(!predicate||predicate(u))).sort((a,b)=>(dist(leader,a)-dist(leader,b))||(Number(a.hp||0)-Number(b.hp||0))||String(a.id||"").localeCompare(String(b.id||"")))[0]||null;
+}
+function hallvallaRtAutoCardTarget(card,owner=myPlayer){
+  const units=publicState?.units||[];
+  const last=hallvallaRtLastLivingSummon(owner,units);
+  const allyFallback=units.filter(u=>u&&u.owner===owner&&!u.leader&&Number(u.hp||0)>0).sort((a,b)=>(getUnitBattlePower?.(b)||0)-(getUnitBattlePower?.(a)||0))[0]||hallvallaRtGetOwnerLeader(owner,units);
+  if(card?.spell==="damage"){
+    const target=hallvallaRtNearestEnemy(owner,{predicate:u=>typeof canDirectlyTarget!=="function"||canDirectlyTarget(card,u)});return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.spell==="paralysis"){
+    const target=hallvallaRtNearestEnemy(owner,{nonLeaderOnly:true,predicate:u=>(typeof canDirectlyTarget!=="function"||canDirectlyTarget(card,u))});return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.spell==="poison"){
+    const target=hallvallaRtNearestEnemy(owner,{nonLeaderOnly:true,predicate:u=>(typeof canDirectlyTarget!=="function"||canDirectlyTarget(card,u))&&!(typeof isPoisonImmuneUnit==="function"&&isPoisonImmuneUnit(u))});return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.spell==="heal"){
+    let target=(last&&typeof canReceiveHealFromCard==="function"&&canReceiveHealFromCard(card,last,owner))?last:null;
+    if(!target)target=units.filter(u=>u&&u.owner===owner&&Number(u.hp||0)>0&&(typeof canReceiveHealFromCard!=="function"||canReceiveHealFromCard(card,u,owner))).sort((a,b)=>(Math.max(0,effectiveMaxHp(b)-Number(b.hp||0))-Math.max(0,effectiveMaxHp(a)-Number(a.hp||0)))||String(a.id||"").localeCompare(String(b.id||"")))[0]||null;
+    return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.spell==="buff"||card?.spell==="shield"||card?.trap==="guard"){
+    const target=last||allyFallback;return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.trap==="beast_target"){
+    const leader=hallvallaRtGetOwnerLeader(owner,units)||{x:0,y:0};
+    const target=hallvallaRtNearestEnemy(owner,{nonLeaderOnly:true,predicate:u=>dist(leader,u)<=3&&(typeof canTargetStealth!=="function"||canTargetStealth(card,u))});return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.trap==="slow"){
+    const target=hallvallaRtNearestEnemy(owner,{nonLeaderOnly:true,predicate:u=>typeof canTargetStealth!=="function"||canTargetStealth(card,u)});return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.trap==="legendary_mark"){
+    const target=hallvallaRtNearestEnemy(owner,{nonLeaderOnly:true,predicate:u=>(typeof canTargetStealth!=="function"||canTargetStealth(card,u))&&(typeof canMarkWithLegendaryTrap!=="function"||canMarkWithLegendaryTrap(card,u))});return target?{x:target.x,y:target.y,target}:null;
+  }
+  if(card?.trap==="reveal_stealth"){
+    const target=hallvallaRtNearestEnemy(owner,{predicate:u=>typeof isStealthedUnit==="function"?isStealthedUnit(u):true})||hallvallaRtNearestEnemy(owner);return target?{x:target.x,y:target.y,target:null}:null;
+  }
+  if(card?.trap==="beast_cell"){
+    const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return null;
+    const enemy=hallvallaRtNearestEnemy(owner)||{x:leader.x,y:owner===1?0:ROWS-1};
+    const occupied=new Set(units.filter(u=>u&&Number(u.hp||0)>0).map(u=>`${u.x},${u.y}`));
+    const trapped=new Set((publicState?.beastTraps||[]).map(t=>`${t.x},${t.y}`));
+    const cells=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(!occupied.has(`${x},${y}`)&&!trapped.has(`${x},${y}`))cells.push({x,y});}
+    cells.sort((a,b)=>(dist(a,enemy)-dist(b,enemy))||(dist(a,leader)-dist(b,leader)));const cell=cells[0];return cell?{x:cell.x,y:cell.y,target:null}:null;
+  }
+  return null;
+}
+async function hallvallaRtPlayAutoCard(card){
+  if(!card||hallvallaRtState.playBusy)return false;
+  if(card.type==="unit")return hallvallaRtPlayUnitImmediate(card);
+  const state=getCardPlayState(card);if(!state.canPlay){setHint(state.reason||`No puedes jugar ${card.name}.`);return false;}
+  const auto=hallvallaRtAutoCardTarget(card,myPlayer);if(!auto){setHint(`No hay objetivo automático válido para ${card.name}.`);return false;}
+  hallvallaRtState.playBusy=true;
+  const before=(privateState?.hand||[]).some(c=>c.id===card.id);
+  selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;highlights=[];highlightType="";
+  try{await playCardOn(auto.x,auto.y,auto.target||null);}catch(error){console.warn("[HallValla][RT] carta automática falló",error);}
+  const consumed=before&&!(privateState?.hand||[]).some(c=>c.id===card.id);
+  hallvallaRtState.playBusy=false;selectedCard=null;highlights=[];highlightType="";hallvallaRtReleaseHandFocus();hallvallaRtRenderArsenal();
+  if(consumed)setHint(`${card.name} se resolvió automáticamente.`);else setHint(`No se pudo resolver ${card.name} automáticamente.`);
+  return consumed;
+}
+
 async function hallvallaRtPlayUnitImmediate(card){
   if(!card||card.type!=="unit"||hallvallaRtState.playBusy)return false;
   const state=getCardPlayState(card);if(!state.canPlay){setHint(state.reason||`No puedes jugar ${card.name}.`);return false;}
@@ -264,6 +369,7 @@ async function hallvallaRtPlayUnitImmediate(card){
   const summonCostInfo=getCardCostBreakdown(card,myPlayer,units);
   const paidCostText=getPaidSummonCostText(card,myPlayer,units);
   let newUnit=makeUnit({...card,owner:myPlayer,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
+  newUnit={...newUnit,rtSummonedAt:hallvallaRtNow()};
   if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){
     newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
   }
@@ -272,6 +378,7 @@ async function hallvallaRtPlayUnitImmediate(card){
   try{fear=applyAfricanLionFearAura(units)||fear;units=fear.units||units;}catch(_){ }
   const ok=await commitCardPlay(card,{units,statusFxEvent:fear.statusFxEvent||null,floatFxEvent:fear.floatFxEvent||null},summonCostInfo.effective,[`J${myPlayer} invoca ${card.name} automáticamente junto a su líder por ${paidCostText}.`,...(fear.logs||[])].join(" "));
   if(!ok){hallvallaRtState.playBusy=false;setHint("No se pudo confirmar la invocación.");return false;}
+  hallvallaRtRememberSummon(myPlayer,newUnit);
   selectedCard=null;highlights=[];highlightType="";
   setHint(`${card.name} fue invocada automáticamente junto a tu líder.`);
   hallvallaRtState.playBusy=false;
@@ -282,8 +389,7 @@ function hallvallaRtSelectSlot(index){
   if(hallvallaRtState.arsenalLevel!=="cards")return false;
   const entries=hallvallaRtArsenalEntries();const entry=entries[hallvallaRtState.arsenalPage*3+index];const card=entry?.card;if(!card)return false;
   const state=getCardPlayState(card);if(!state.canPlay){setHint(state.reason||`No tienes ${getResourceLabel(myPlayer)} suficiente para ${card.name}.`);return true;}
-  if(card.type==="unit"){void hallvallaRtPlayUnitImmediate(card);return true;}
-  selectCard(card);return true;
+  void hallvallaRtPlayAutoCard(card);return true;
 }
 function hallvallaRtMoveTargetCursor(dx,dy){
   if(hallvallaRtState.arsenalLevel!=="targeting"||!selectedCard)return false;
@@ -394,7 +500,7 @@ globalThis.hallvallaRtRenderArsenal=hallvallaRtRenderArsenal;
 
 function hallvallaRtMoveCooldown(unit){
   const mov=Math.max(1,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||1));
-  return Math.max(330,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+mov*0.30)));
+  return Math.max(660,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+mov*0.30)));
 }
 function hallvallaRtValidEnemy(attacker,target){
   if(!attacker||!target||Number(target.hp||0)<=0||target.owner===attacker.owner)return false;
@@ -652,11 +758,13 @@ async function hallvallaRtAiDeploy(now){
   const cell=hallvallaRtFindBestSpawnCell(2,units);if(!cell)return false;
   const cost=Math.max(0,Number(effectiveCardCost(card,2)||0));
   let newUnit=makeUnit({...card,owner:2,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
+  newUnit={...newUnit,rtSummonedAt:now};
   let nextUnits=[...units,newUnit];
   try{const fear=applyAfricanLionFearAura(nextUnits);nextUnits=fear.units;}catch(_){ }
   ai.hand=ai.hand.filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=HALLVALLA_RT_CFG.resourceCap;
   hallvallaRtState.lastAiDeployAt=now;
   await updatePublic({units:nextUnits,adventureAiState:ai,["playerStats/2"]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:ai.maxHonor,deck:ai.deck.length,hand:ai.hand.length},log:[`J2 invoca ${card.name} por ${cost} ${getResourceLabel(2)} (TR).`,...(publicState?.log||[])].slice(0,18)});
+  hallvallaRtRememberSummon(2,newUnit);
   return true;
 }
 
@@ -680,6 +788,101 @@ async function hallvallaRtLeaderEffectsTick(now){
   const logText=logs.filter(Boolean).join(" ");
   if(await finalizeBattle(units,logText))return true;
   await updatePublic({units,battleFxEvent:battleFxEvent||null,log:logText?[logText,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  return true;
+}
+
+function hallvallaRtOwnerMana(owner){
+  if(Number(owner)===Number(myPlayer))return Math.max(0,Number(privateState?.honor||0));
+  if(publicState?.mode==="adventure"&&Number(owner)===2)return Math.max(0,Number(publicState?.adventureAiState?.honor||0));
+  return Math.max(0,Number(publicState?.playerStats?.[owner]?.honor||0));
+}
+async function hallvallaRtSpendOwnerMana(owner,amount,extraPublicPatch={}){
+  const cost=Math.max(0,Number(amount||0)),max=HALLVALLA_RT_CFG.resourceCap;
+  if(Number(owner)===Number(myPlayer)){
+    const next=Math.max(0,Number(privateState?.honor||0)-cost);
+    return commitGameplayAction({privatePatch:{honor:next,maxHonor:max},publicPatch:{...extraPublicPatch,[`playerStats/${owner}`]:{...(publicState?.playerStats?.[owner]||{}),honor:next,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}}});
+  }
+  if(publicState?.mode==="adventure"&&Number(owner)===2){
+    const ai={...(publicState?.adventureAiState||{})};ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=max;
+    return updatePublic({...extraPublicPatch,adventureAiState:ai,[`playerStats/2`]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length}});
+  }
+  return updatePublic(extraPublicPatch);
+}
+function hallvallaRtNearestWoundedAlly(caster,units=publicState?.units||[]){
+  if(!caster)return null;
+  const rg=Math.max(1,Number(caster.effectRange||3));
+  return (units||[]).filter(u=>u&&u.owner===caster.owner&&!u.leader&&u.id!==caster.id&&Number(u.hp||0)>0&&Number(u.hp||0)<Number(effectiveMaxHp(u)||u.maxHp||u.hp||1)&&dist(caster,u)<=rg&&!u.noHealWhilePoisoned).sort((a,b)=>(dist(caster,a)-dist(caster,b))||((Number(a.hp||0)/Math.max(1,effectiveMaxHp(a)))-(Number(b.hp||0)/Math.max(1,effectiveMaxHp(b))))||String(a.id||"").localeCompare(String(b.id||"")))[0]||null;
+}
+async function hallvallaRtAutoAcolyte(caster,now){
+  const last=Number(hallvallaRtState.supportAt.get(caster.id)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
+  const units=[...(publicState?.units||[])],honor=hallvallaRtOwnerMana(caster.owner),grave=publicState?.erictoGraveyard||[];
+  const points=typeof getUnitServicePoints==="function"?getUnitServicePoints(caster):0;
+  let choice=null;
+  if(points>=100&&honor>=4){
+    const corpses=(typeof getAcolyteEligibleCorpses==="function"?getAcolyteEligibleCorpses(caster,grave):[]),cells=(typeof getAcolyteResurrectionCells==="function"?getAcolyteResurrectionCells(caster,units):[]);
+    if(corpses.length&&cells.length){const rec=[...corpses].sort((a,b)=>(Number(b.battlePower)||getUnitBattlePower(b.snapshot)||0)-(Number(a.battlePower)||getUnitBattlePower(a.snapshot)||0))[0];const enemyLeader=hallvallaRtGetOwnerLeader(caster.owner===1?2:1,units);const cell=[...cells].sort((a,b)=>enemyLeader?dist(a,enemyLeader)-dist(b,enemyLeader):0)[0];choice={technique:"resurrect",graveId:rec.graveId,x:cell.x,y:cell.y};}
+  }
+  if(!choice&&honor>=2){const wounded=hallvallaRtNearestWoundedAlly(caster,units);if(wounded)choice={technique:"transfer",targetId:wounded.id};}
+  if(!choice)return false;
+  const result=applyAcolyteHealerEffectState(caster,choice,units);if(!result?.success)return false;
+  const serviceGain=Math.max(0,Math.floor(Number(result.serviceGain||1))),beforePoints=typeof getUnitServicePoints==="function"?getUnitServicePoints(caster):0,afterPoints=beforePoints+serviceGain;
+  if(serviceGain>0&&typeof applyUnitServicePointsToUnits==="function")result.units=applyUnitServicePointsToUnits(result.units,caster,{key:getUnitMasteryKey(caster),name:caster.name,beforePoints,afterPoints,gain:serviceGain,unlockedPurification:beforePoints<50&&afterPoints>=50,unlockedResurrection:beforePoints<100&&afterPoints>=100});
+  hallvallaRtState.supportAt.set(caster.id,now);
+  await hallvallaRtSpendOwnerMana(caster.owner,result.honorCost||0,{units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log} (TR automático)`,...(publicState?.log||[])].slice(0,18)});
+  if(serviceGain>0&&Number(caster.owner)===Number(myPlayer)&&typeof registerLocalUnitServicePoint==="function")registerLocalUnitServicePoint(caster,serviceGain);
+  return true;
+}
+async function hallvallaRtAutoEricto(caster,now){
+  const last=Number(hallvallaRtState.supportAt.get(caster.id)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
+  const units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false,erictoUsedTurnKey:""}:u),grave=publicState?.erictoGraveyard||[];
+  const live=units.find(u=>u.id===caster.id)||{...caster,erictoUsedTurnKey:""};
+  const choice=typeof getBestErictoReanimationChoice==="function"?getBestErictoReanimationChoice(live,units,grave):null;if(!choice)return false;
+  const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
+  hallvallaRtState.supportAt.set(caster.id,now);
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log} (TR automático)`,...(publicState?.log||[])].slice(0,18)});
+  const revived=(result.units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===caster.id).sort((a,b)=>Number(b.rtSummonedAt||0)-Number(a.rtSummonedAt||0))[0];if(revived)hallvallaRtRememberSummon(caster.owner,revived);
+  return true;
+}
+async function hallvallaRtAutoGenericEffect(caster,now){
+  if(!caster||caster.leader||Number(caster.hp||0)<=0)return false;
+  const mode=typeof getUnitEffectMode==="function"?getUnitEffectMode(caster):"passive";if(mode==="passive"||mode==="choice"||caster.key==="ericto")return false;
+  const last=Number(hallvallaRtState.supportAt.get(`fx:${caster.id}`)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
+  let units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false,sunTzuUsedTurn:false,subotaiUsedTurn:false}:u);
+  const live=units.find(u=>u.id===caster.id)||caster;
+  const choice=mode==="self"?live:(typeof chooseSmartEffectTarget==="function"?chooseSmartEffectTarget(live,units):null);if(!choice)return false;
+  const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
+  hallvallaRtState.supportAt.set(`fx:${caster.id}`,now);
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,stealthAreaDamageEvent:result.stealthAreaDamageEvent||null,stealthDetectionEvent:result.stealthDetectionEvent||null,log:[`${result.log} (TR automático)`,...(publicState?.log||[])].slice(0,18)});
+  const beforeIds=new Set(units.map(u=>u.id));for(const u of (result.units||[])){if(!beforeIds.has(u.id)&&u.owner===caster.owner)hallvallaRtRememberSummon(caster.owner,u);}
+  return true;
+}
+async function hallvallaRtSupportTick(now){
+  const units=[...(publicState?.units||[])];
+  for(const unit of units){
+    if(!unit||unit.leader||Number(unit.hp||0)<=0)continue;
+    if(unit.key==="acolyte_healer"||unit.healer){if(await hallvallaRtAutoAcolyte(unit,now))continue;}
+    if(unit.key==="ericto"||unit.nigromante){if(await hallvallaRtAutoEricto(unit,now))continue;}
+    await hallvallaRtAutoGenericEffect(unit,now);
+  }
+}
+async function hallvallaRtStatusTick(now){
+  if(now-hallvallaRtState.lastStatusAt<HALLVALLA_RT_CFG.statusTickEveryMs)return false;
+  hallvallaRtState.lastStatusAt=now;
+  let units=[...(publicState?.units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
+  const before=[...units];
+  // Sangrado: un tick cada 3 s, conservando permanente cuando la regla original no tiene duración.
+  for(const owner of [1,2]){try{const r=applyBleedingToOwnerAtTurnStart(units,owner);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){}}
+  // Veneno: un tick cada 3 s y conserva la progresión de daño de la regla original.
+  units=units.map(u=>{
+    if(!u||Number(u.hp||0)<=0||Number(u.poisonTurns||0)<=0||Number(u.poisonDamage||0)<=0)return u;
+    if(typeof isPoisonImmuneUnit==="function"&&isPoisonImmuneUnit(u)){if(typeof clearPoisonStatus==="function")return clearPoisonStatus(u);return u;}
+    const dmg=Math.max(1,Number(u.poisonDamage||1));let next=typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:{...u,hp:Number(u.hp||0)-dmg};
+    next={...next,poisonTurns:Math.max(0,Number(u.poisonTurns||1)-1),poisonStage:Number(u.poisonStage||1)+1,poisonDamage:Math.max(1,dmg*2)};logs.push(`${u.name} sufre ${dmg} daño por Veneno (TR).`);if(next.poisonTurns<=0){delete next.poisonTurns;delete next.poisonDamage;delete next.noHealWhilePoisoned;}return next;
+  });
+  try{const r=applyBurnAtTurnEnd(units);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){ }
+  const fallen=units.filter(u=>Number(u.hp||0)<=0).map(u=>u.id);if(fallen.length&&typeof applyLegendaryFatalSaves==="function")units=applyLegendaryFatalSaves(units,fallen);units=units.filter(u=>Number(u.hp||0)>0);
+  if(JSON.stringify(before)===JSON.stringify(units))return false;
+  await updatePublic({units,statusFxEvent:statusFxEvent||null,floatFxEvent:floatFxEvent||null,log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
   return true;
 }
 
@@ -773,7 +976,10 @@ async function hallvallaRtLoop(){
     await hallvallaRtCombatRefreshTick(now);
     await hallvallaRtAiDeploy(now);
     await hallvallaRtLeaderEffectsTick(now);
+    await hallvallaRtSupportTick(now);
+    await hallvallaRtStatusTick(now);
     await hallvallaRtAutonomyTick(now);
+    hallvallaRtScheduleLocalSnapshot(false);
     // No repintar el arsenal 6 veces por segundo si no cambió nada relevante.
     if(now-hallvallaRtState.lastUiAt>=300){hallvallaRtState.lastUiAt=now;hallvallaRtUpdateUi();}
   }catch(error){console.warn("[HallValla][RT] tick falló",error);}
@@ -781,6 +987,7 @@ async function hallvallaRtLoop(){
 }
 function hallvallaRtStop(){
   if(hallvallaRtState.timer){battleClearInterval?.(hallvallaRtState.timer);hallvallaRtState.timer=null;}
+  hallvallaRtScheduleLocalSnapshot(true);
   hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.playBusy=false;hallvallaRtState.handSuppressed=false;
   hallvallaRtUpdateUi();
 }
@@ -792,6 +999,9 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
   hallvallaRtState.lastCombatRefreshAt=now;
+  hallvallaRtState.lastSupportAt=now;
+  hallvallaRtState.lastStatusAt=now;
+  hallvallaRtState.lastLocalSnapshotAt=0;
   hallvallaRtState.resourcesInitialized=false;
   hallvallaRtState.combatWindow=0;
   hallvallaRtState.ownerActionFlip=1;
@@ -800,6 +1010,8 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.arsenalCategory="unit";hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="root";hallvallaRtClearTargetCursor();
   hallvallaRtState.moveAt.clear();
   hallvallaRtState.attackAt.clear();
+  hallvallaRtState.supportAt.clear();
+  hallvallaRtState.lastSummonedByOwner={1:null,2:null};hallvallaRtState.summonHistory={1:[],2:[]};
   handOpen=false;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
   try{stopTurnTimerLoop();}catch(_){ }
 }
@@ -815,7 +1027,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtState.enabled=true;
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
-    setHint("TR EXPERIMENTAL: combate iniciado desde Home · sin Principales desplegados · movimiento y ataque automáticos.");
+    setHint("TR EXPERIMENTAL LOCAL: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque al 50% · automatización activa.");
     void hallvallaRtLoop();
   }else{
     handOpen=false;

@@ -1,0 +1,29 @@
+HallValla 20260913.80 — TR EXPERIMENTAL · runtime local y automatización
+
+OBJETIVO DE ESTA PRUEBA
+- El combate TR de Aventura corre en memoria local y ya no espera escrituras de Firebase para continuar.
+- Firebase conserva la carga inicial; mientras el TR local está activo se ignoran ecos remotos del estado de batalla.
+- Se guarda un snapshot local de seguridad aproximadamente cada 2 segundos.
+- Esta prueba NO activa todavía el nuevo netcode PvP por comandos.
+
+RITMO
+- Maná máximo: 10.
+- Regeneración: +1 cada 3 segundos.
+- Movimiento: aproximadamente 50% más lento que la prueba v79.
+- Cadencia de ataque: aproximadamente 50% más lenta que la prueba v79.
+- J1 e IA actúan simultáneamente; no se espera turno ni confirmación de red entre acciones.
+- Los bloqueos del reloj/turno heredado no pueden detener commits del runtime TR local.
+
+AUTOMATIZACIÓN
+- Unidades: invocación automática junto al líder y autonomía de movimiento/ataque.
+- Magias del jugador: selección de objetivo automática según el tipo de carta.
+  * ofensivas -> enemigo válido más cercano.
+  * curación/buff/protección -> última invocación válida, con fallback coherente.
+- Acólita/sanadoras: curan automáticamente al aliado herido más cercano cuando corresponde.
+- Reanimación: Acólita y Ericto priorizan automáticamente el cadáver elegible de mayor valor de combate cuando su regla/cooldown lo permite.
+- Efectos activos de unidades compatibles: se ejecutan automáticamente con cooldown TR.
+- Sangrado, Veneno y Quemadura: tick temporal cada 3 segundos en TR.
+
+SINCRONIZACIÓN FUTURA PVP
+- La arquitectura prevista para PvP TR es simulación determinista local + comandos de jugador + hashes/snapshots de seguridad.
+- No se enviará a Firebase cada movimiento o ataque automático.
