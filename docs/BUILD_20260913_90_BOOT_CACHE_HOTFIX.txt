@@ -1,0 +1,9 @@
+HallValla 20260913.90 — BOOT/CACHE HOTFIX
+
+Fix:
+- Corrige el fallo fatal "Versión inconsistente: index=20260913.89, loader=20260913.87".
+- El hash del bootstrap-loader en index ahora corresponde al archivo real.
+- Se regeneraron hashes de módulos y assets modificados.
+- Service Worker usa cache hallvalla-runtime-v2 para no reutilizar bootstrap v87/v89 obsoleto.
+- La comprobación de versión ya no bloquea el arranque durante propagación transitoria; avisa por consola.
+- Conserva el deck builder de 30 slots y eliminación de Principales de v89.
