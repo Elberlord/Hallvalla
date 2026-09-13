@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260913.74 · Combate TR experimental (DEV only)
+/* HallValla 20260913.75 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, robo automático, mano abierta,
      despliegue por arrastre y unidades autónomas.
@@ -11,7 +11,8 @@ const HALLVALLA_RT_CFG=Object.freeze({
   resourceEveryMs:3000,
   drawEveryMs:5000,
   handMax:5,
-  aiThinkEveryMs:1050,
+  aiThinkEveryMs:1250,
+  aiDeployCooldownMs:4500,
   attackCooldownMs:1250,
   baseMoveCooldownMs:1050,
   loopMs:180,
@@ -39,6 +40,7 @@ const hallvallaRtState={
   lastResourceAt:0,
   lastDrawAt:0,
   lastAiThinkAt:0,
+  lastAiDeployAt:0,
   lastLeaderEffectAt:0,
   handSuppressed:false,
   moveAt:new Map(),
@@ -108,7 +110,7 @@ function hallvallaRtUpdateUi(){
       const honor=Math.max(0,Number(privateState?.honor||0));
       const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.resourceCap));
       const hand=(privateState?.hand||[]).length;
-      node.textContent=`TR EXP · ${getResourceLabel(myPlayer)} ${honor}/${max} · Mano ${hand}/${HALLVALLA_RT_CFG.handMax} · +1/${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · carta/${HALLVALLA_RT_CFG.drawEveryMs/1000}s`;
+      node.textContent=`TR EXP · ${getResourceLabel(myPlayer)} ${honor}/${max} · Mano ${hand}/${HALLVALLA_RT_CFG.handMax} · +1 ${getResourceLabel(myPlayer)} cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · carta/${HALLVALLA_RT_CFG.drawEveryMs/1000}s`;
     }
   }
 }
@@ -268,6 +270,10 @@ async function hallvallaRtAiDeploy(now){
   if(publicState?.mode!=="adventure"||!publicState?.adventureAiState)return false;
   if(now-hallvallaRtState.lastAiThinkAt<HALLVALLA_RT_CFG.aiThinkEveryMs)return false;
   hallvallaRtState.lastAiThinkAt=now;
+  // La IA no debe reaccionar en el mismo instante en que obtiene recurso.
+  // Deja una ventana humana real entre despliegues para que el jugador pueda leer,
+  // seleccionar magia/unidad y responder antes de la siguiente carta enemiga.
+  if(now-hallvallaRtState.lastAiDeployAt<HALLVALLA_RT_CFG.aiDeployCooldownMs)return false;
   const ai={...publicState.adventureAiState,hand:[...(publicState.adventureAiState.hand||[])],deck:[...(publicState.adventureAiState.deck||[])]};
   const units=[...(publicState?.units||[])];
   const unitCards=ai.hand.filter(c=>c?.type==="unit").sort((a,b)=>effectiveCardCost(a,2)-effectiveCardCost(b,2));
@@ -282,6 +288,7 @@ async function hallvallaRtAiDeploy(now){
   let nextUnits=[...units,newUnit];
   try{const fear=applyAfricanLionFearAura(nextUnits);nextUnits=fear.units;}catch(_){ }
   ai.hand=ai.hand.filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=HALLVALLA_RT_CFG.resourceCap;
+  hallvallaRtState.lastAiDeployAt=now;
   await updatePublic({units:nextUnits,adventureAiState:ai,["playerStats/2"]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:ai.maxHonor,deck:ai.deck.length,hand:ai.hand.length},log:[`J2 invoca ${card.name} por ${cost} ${getResourceLabel(2)} (TR).`,...(publicState?.log||[])].slice(0,18)});
   return true;
 }
@@ -363,6 +370,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.lastDrawAt=now;
   hallvallaRtState.lastAiThinkAt=now;
+  hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
   hallvallaRtState.handSuppressed=false;
   hallvallaRtState.moveAt.clear();

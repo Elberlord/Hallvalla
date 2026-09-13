@@ -1161,7 +1161,16 @@ function ensureBattleHandDelegation(row){
     if(!el||!row.contains(el))return;
     if(Date.now()-lastBoardDragEndedAt<450){ev.preventDefault();ev.stopPropagation();return;}
     const card=(privateState?.hand||[]).find(c=>String(c.id)===String(el.dataset.id));
-    if(card)showCardInspectModal(card);
+    if(card){
+      const rt=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
+      if(rt){
+        const playState=getCardPlayState(card);
+        if(!playState.canPlay){setHint(playState.reason);return;}
+        selectCard(card);
+        return;
+      }
+      showCardInspectModal(card);
+    }
   });
 }
 function getHandCardRenderSpec(c){
