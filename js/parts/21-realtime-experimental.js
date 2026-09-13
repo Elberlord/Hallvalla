@@ -1,7 +1,7 @@
 "use strict";
-/* HallValla 20260913.84 · Combate TR experimental (DEV only)
-   - No sustituye el modo normal.
-   - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
+/* HallValla · Combate TR canónico
+   - Es el flujo estándar de combate de Aventura/Local.
+   - Recurso continuo, arsenal finito ordenado por coste,
      selector táctico contextual, bindings finales y unidades autónomas.
    - Los buffs de líder siguen pasando por los mismos cálculos de combate.
 */
@@ -24,15 +24,12 @@ const HALLVALLA_RT_CFG=Object.freeze({
   maxMovesPerTick:32
 });
 const HALLVALLA_RT_HOME_STORAGE_KEY="hallvalla_rt_experimental_home_v1";
-function isHallvallaRealtimeExperimentalRequested(){
-  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return false;
-  try{return localStorage.getItem(HALLVALLA_RT_HOME_STORAGE_KEY)==="1";}catch(_){return false;}
-}
-function setHallvallaRealtimeExperimentalRequested(enabled){
-  const next=!!enabled&&globalThis.__HALLVALLA_DEV_TOOLS__===true;
-  try{localStorage.setItem(HALLVALLA_RT_HOME_STORAGE_KEY,next?"1":"0");}catch(_){ }
+/* TR es canónico: ya no existe un interruptor Home ni depende de ?dev/localStorage. */
+function isHallvallaRealtimeExperimentalRequested(){return true;}
+function setHallvallaRealtimeExperimentalRequested(){
+  try{localStorage.removeItem(HALLVALLA_RT_HOME_STORAGE_KEY);}catch(_){ }
   hallvallaRtUpdateUi();
-  return next;
+  return true;
 }
 globalThis.isHallvallaRealtimeExperimentalRequested=isHallvallaRealtimeExperimentalRequested;
 globalThis.setHallvallaRealtimeExperimentalRequested=setHallvallaRealtimeExperimentalRequested;
@@ -177,9 +174,6 @@ function hallvallaRtEnsureStatusNode(){
   hallvallaRtState.statusNode=node;return node;
 }
 function hallvallaRtUpdateUi(){
-  const homeBtn=document.getElementById("homeRealtimeExperimentalBtn");
-  const requested=isHallvallaRealtimeExperimentalRequested();
-  if(homeBtn){homeBtn.textContent=requested?"TR EXPERIMENTAL: ON · SIGUIENTE COMBATE":"TR EXPERIMENTAL: OFF";homeBtn.classList.toggle("active",requested);homeBtn.setAttribute("aria-pressed",String(requested));}
   const active=isHallvallaRealtimeExperimental();
   if(active){
     const phaseBox=document.getElementById("phaseAnnounce");
@@ -198,7 +192,7 @@ function hallvallaRtUpdateUi(){
       const honor=Math.max(0,Number(privateState?.honor||0));
       const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.resourceCap));
       const remaining=(privateState?.hand||[]).length;
-      node.textContent=`TR EXP · MANÁ ${honor}/${max} · Arsenal ${remaining} · +1 MANÁ cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s`;
+      node.textContent=`TR · MANÁ ${honor}/${max} · Arsenal ${remaining} · +1 MANÁ cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s`;
     }
   }
 }
@@ -1092,7 +1086,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
     hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
-    setHint("TR EXPERIMENTAL LOCAL: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque autónomos.");
+    setHint("TR: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque autónomos.");
     void hallvallaRtLoop();
     void hallvallaRtMotionLoop();
   }else{
@@ -1125,21 +1119,13 @@ function hallvallaRtDebugSnapshot(){
 }
 globalThis.__HALLVALLA_RT_DEBUG__=hallvallaRtDebugSnapshot;
 async function enableHallvallaRealtimeExperimental(){
-  if(publicState){setHint("TR EXPERIMENTAL ya no se cambia durante una pelea. Actívalo en Home antes de iniciar el combate.");return false;}
-  return setHallvallaRealtimeExperimentalRequested(true);
+  /* Compatibilidad con llamadas antiguas: TR ya está siempre habilitado para nuevos combates. */
+  return true;
 }
 globalThis.enableHallvallaRealtimeExperimental=enableHallvallaRealtimeExperimental;
 globalThis.hallvallaRtSyncPreparedBattle=hallvallaRtSyncPreparedBattle;
 
 function hallvallaRtBind(){
-  const btn=document.getElementById("homeRealtimeExperimentalBtn");
-  if(btn&&!btn.dataset.hvRtBound){
-    btn.dataset.hvRtBound="1";
-    btn.addEventListener("click",()=>{
-      if(publicState){setHint("Sal del duelo para cambiar TR EXPERIMENTAL desde Home.");return;}
-      setHallvallaRealtimeExperimentalRequested(!isHallvallaRealtimeExperimentalRequested());
-    });
-  }
   const settings=document.getElementById("rtKeyboardBindings");
   if(settings&&!settings.dataset.bound){
     settings.dataset.bound="1";

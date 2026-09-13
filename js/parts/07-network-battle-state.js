@@ -1347,7 +1347,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const entryEffects=applyStartingPrincipalEntryEffects(startingUnits);
   startingUnits=entryEffects.units;
   const principalLogs=[];
-  if(realtimeExperimental)principalLogs.push("TR EXPERIMENTAL: la batalla nace directamente en tiempo real; no hay Personajes Principales desplegados y esas cartas entran al mazo normal.");
+  if(realtimeExperimental)principalLogs.push("TR: la batalla inicia directamente en tiempo real; las cartas del mazo se gestionan desde el arsenal.");
   if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
   if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
   if(battle.beastEvent){
