@@ -1,8 +1,8 @@
 "use strict";
-/* HallValla 20260913.77 · Gamepad estándar (PC / Android)
+/* HallValla 20260913.85 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B cancelar · X DEF · Y DET
-   View/Back mano · Menu/Start siguiente fase · LB/RB ciclar unidades.
+   View/Back mano · Menu/Start clic del cursor virtual; sin cursor, siguiente fase · LB/RB ciclar unidades.
 */
 
 const HV_GAMEPAD_BUTTONS=Object.freeze({
@@ -615,6 +615,14 @@ function hvGamepadHandleButtons(gp){
     LB:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LB),RB:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RB),LT:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LT),RT:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RT),
     VIEW:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.VIEW),MENU:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.MENU)
   };
+  /* Build 20260913.85: cuando el cursor virtual está activo, Menu/Start/Pause
+     funciona como clic izquierdo. Se consume aquí antes de cualquier acción de batalla
+     para que también funcione sobre modales, recompensas y escenas UI. */
+  if(pressed.MENU&&hvGamepadState.pointerMode&&hvGamepadState.pointerVisible){
+    hvGamepadPointerClick(0);
+    return;
+  }
+
   const rt=battle&&!modal&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function";
   if(rt){
     const level=hallvallaRtGetInputState();

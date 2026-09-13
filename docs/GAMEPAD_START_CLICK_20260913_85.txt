@@ -1,0 +1,16 @@
+HallValla · CLICK DE CURSOR CON START/PAUSE · build 20260913.85
+
+Cambio
+- Cuando el cursor virtual del gamepad está activo (stick derecho), el botón Menu / Start / Pause ejecuta clic izquierdo en la posición del cursor.
+- Funciona también sobre modales, pantallas de recompensa y otras escenas UI.
+- El clic se procesa antes de las acciones propias de batalla para evitar que Start avance fase mientras se está usando el cursor.
+- Si el cursor virtual NO está activo, Start conserva su comportamiento anterior de siguiente fase cuando corresponde.
+- A y RT conservan sus comportamientos previos; no se eliminó ningún control existente.
+
+Archivos funcionales modificados
+- js/parts/20-gamepad-controls.js
+- js/bootstrap-loader.js (build/hash)
+- index.html (build/hash)
+- service-worker.js (build/hash)
+
+No se tocaron reglas de combate, TR, IA, velocidad, economía, PvP, Firebase ni Xsolla.

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260913.82 · Combate TR experimental (DEV only)
+/* HallValla 20260913.84 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
      selector táctico contextual, bindings finales y unidades autónomas.
@@ -12,8 +12,8 @@ const HALLVALLA_RT_CFG=Object.freeze({
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
-  attackCooldownMs:2400,
-  baseMoveCooldownMs:1800,
+  attackCooldownMs:4800,
+  baseMoveCooldownMs:3600,
   loopMs:100,
   leaderEffectEveryMs:6000,
   combatRefreshEveryMs:4000,
@@ -767,14 +767,30 @@ async function hallvallaRtAiDeploy(now){
   if(publicState?.mode!=="adventure"||!publicState?.adventureAiState)return false;
   if(now-hallvallaRtState.lastAiThinkAt<HALLVALLA_RT_CFG.aiThinkEveryMs)return false;
   hallvallaRtState.lastAiThinkAt=now;
-  // La IA no debe reaccionar en el mismo instante en que obtiene recurso.
-  // Deja una ventana humana real entre despliegues para que el jugador pueda leer,
-  // seleccionar magia/unidad y responder antes de la siguiente carta enemiga.
+  // La IA reacciona en cuanto tiene MANÁ suficiente. El cooldown solo separa
+  // invocaciones consecutivas para conservar la velocidad visual de invocación.
   if(now-hallvallaRtState.lastAiDeployAt<HALLVALLA_RT_CFG.aiDeployCooldownMs)return false;
   const ai={...publicState.adventureAiState,hand:[...(publicState.adventureAiState.hand||[])],deck:[...(publicState.adventureAiState.deck||[])]};
   const units=[...(publicState?.units||[])];
-  const unitCards=ai.hand.filter(c=>c?.type==="unit").sort((a,b)=>effectiveCardCost(a,2)-effectiveCardCost(b,2));
-  const card=unitCards.find(c=>effectiveCardCost(c,2)<=Number(ai.honor||0));
+  const mana=Math.max(0,Number(ai.honor||0));
+  // Entre las unidades que YA puede pagar, prioriza la de mayor coste efectivo
+  // (proxy principal de potencia/balance) y usa estadísticas como desempate.
+  // Así no guarda MANÁ esperando una carta futura: si puede invocar algo útil, lo hace.
+  const unitValue=(c)=>
+    Math.max(0,Number(c?.atk||0))*4+
+    Math.max(0,Number(c?.hp||0))*3+
+    Math.max(0,Number(c?.guard||0))*2+
+    Math.max(0,Number(c?.range||0))*2+
+    Math.max(0,Number(c?.mov||0))*1.5+
+    Math.max(0,Number(c?.dex||0))*0.8+
+    Math.max(0,Number(c?.agi||0))*0.6;
+  const affordable=ai.hand.filter(c=>c?.type==="unit"&&Math.max(0,Number(effectiveCardCost(c,2)||0))<=mana);
+  affordable.sort((a,b)=>{
+    const costDiff=Math.max(0,Number(effectiveCardCost(b,2)||0))-Math.max(0,Number(effectiveCardCost(a,2)||0));
+    if(costDiff)return costDiff;
+    return unitValue(b)-unitValue(a);
+  });
+  const card=affordable[0]||null;
   if(!card)return false;
   const cell=hallvallaRtFindBestSpawnCell(2,units);if(!cell)return false;
   const cost=Math.max(0,Number(effectiveCardCost(card,2)||0));
@@ -1092,7 +1108,7 @@ function hallvallaRtDebugSnapshot(){
   const living=units.filter(u=>u&&Number(u.hp||0)>0);
   const mobile=living.filter(u=>!u.leader&&Number(typeof effectiveMov==='function'?effectiveMov(u):u.mov||0)>0);
   return {
-    build:"20260913.83",
+    build:"20260913.84",
     enabled:hallvallaRtState.enabled,
     battleReady:hallvallaRtBattleReady(),
     mainTimer:!!hallvallaRtState.timer,
