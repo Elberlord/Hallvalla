@@ -1092,7 +1092,7 @@ function hallvallaRtDebugSnapshot(){
   const living=units.filter(u=>u&&Number(u.hp||0)>0);
   const mobile=living.filter(u=>!u.leader&&Number(typeof effectiveMov==='function'?effectiveMov(u):u.mov||0)>0);
   return {
-    build:"20260913.82",
+    build:"20260913.83",
     enabled:hallvallaRtState.enabled,
     battleReady:hallvallaRtBattleReady(),
     mainTimer:!!hallvallaRtState.timer,

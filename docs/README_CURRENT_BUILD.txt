@@ -1,4 +1,4 @@
-BUILD ACTUAL: 20260913.82
+BUILD ACTUAL: 20260913.83
 
 Prueba DEV: Combate TR local experimental.
 - MANÁ 0–10, +1 cada 3 s.

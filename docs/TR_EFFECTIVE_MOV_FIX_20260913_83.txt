@@ -1,0 +1,20 @@
+HallValla v83 — TR effective MOV fix — 2026-09-13
+
+Diagnóstico confirmado con __HALLVALLA_RT_DEBUG__():
+- motionTimer activo y motionTickCount avanzando.
+- 11 unidades vivas.
+- mobileUnits = 0.
+- lastMotionResult = {moves:0, attacks:0}.
+
+Causa exacta:
+JavaScript convierte Number(null) en 0. El modelo de carga trataba fixedMov=null (que significa “sin override fijo”) como un fixedMov explícito de 0. Eso hacía que unidades normales terminaran con MOV efectivo 0. El TR local usa effectiveMov() para decidir si una unidad puede desplazarse, por lo que todas quedaban excluidas sin lanzar excepción.
+
+Corrección mínima:
+- makeUnit() solo acepta fixedMov cuando el valor existe realmente y es numérico.
+- applyHallvallaUnitLoadProfile() ignora null/undefined/cadena vacía como override.
+- effectiveMov() ignora null/undefined/cadena vacía y usa el MOV canónico por locomoción/carga.
+- No se modifica la estadística MOV acordada, el cooldown temporal ni la velocidad reducida del TR.
+- baseMoveCooldownMs permanece en 1800 ms.
+
+Resultado esperado:
+Al invocarse, una unidad móvil obtiene su MOV efectivo canónico, busca al rival vivo más cercano, avanza automáticamente hasta entrar en rango y entonces ataca según su cooldown.
