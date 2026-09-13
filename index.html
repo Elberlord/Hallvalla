@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260913.75">
-<meta name="hallvalla-build" content="v8_MODULAR_20260913.75">
-<meta name="hallvalla-build-name" content="DEV · TR magia directa + IA con cadencia humana 20260913.75 + Control Universal + Mina">
-<link rel="stylesheet" href="styles.css?h=d52b3a8a4eb5"/>
+<meta name="hallvalla-version" content="20260913.77">
+<meta name="hallvalla-build" content="v8_MODULAR_20260913.77">
+<meta name="hallvalla-build-name" content="DEV · TR arsenal táctico + bindings finales 20260913.77 + Control Universal + Mina">
+<link rel="stylesheet" href="styles.css?h=ce87d88311f6"/>
 
-<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.75">
-<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.75">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.75">
+<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.77">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.77">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.77">
 </head>
 <!-- HALLVALLA ORGANIZED V2: index conserva la estructura visual original. -->
 <body>
@@ -1071,6 +1071,24 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <button id="exportAiLearningLogBtn" class="btn ghost full" type="button">Exportar log de aprendizaje (.txt)</button>
       <p id="aiLearningLogStatus" class="settings-reset-status"></p>
     </div>
+    <div id="rtKeyboardBindings" class="settings-controls-zone">
+      <b>Controles TR · teclado</b>
+      <p>Elige cualquier tecla. Los tres botones principales cambian de función según estés en categorías, cartas u objetivo.</p>
+      <div class="rt-keybind-grid">
+        <button type="button" data-rt-bind-action="choice1"><span>Botón 1 · Unidades / opción 1</span><strong data-rt-bind-value>X</strong></button>
+        <button type="button" data-rt-bind-action="choice2"><span>Botón 2 · Magias / opción 2 / confirmar</span><strong data-rt-bind-value>A</strong></button>
+        <button type="button" data-rt-bind-action="choice3"><span>Botón 3 · Trampas / opción 3</span><strong data-rt-bind-value>Y</strong></button>
+        <button type="button" data-rt-bind-action="pagePrev"><span>Página anterior</span><strong data-rt-bind-value>Q</strong></button>
+        <button type="button" data-rt-bind-action="pageNext"><span>Página siguiente</span><strong data-rt-bind-value>E</strong></button>
+        <button type="button" data-rt-bind-action="cancel"><span>Volver / cancelar</span><strong data-rt-bind-value>B</strong></button>
+        <button type="button" data-rt-bind-action="up"><span>Cursor arriba</span><strong data-rt-bind-value>↑</strong></button>
+        <button type="button" data-rt-bind-action="down"><span>Cursor abajo</span><strong data-rt-bind-value>↓</strong></button>
+        <button type="button" data-rt-bind-action="left"><span>Cursor izquierda</span><strong data-rt-bind-value>←</strong></button>
+        <button type="button" data-rt-bind-action="right"><span>Cursor derecha</span><strong data-rt-bind-value>→</strong></button>
+      </div>
+      <button id="rtKeybindResetBtn" class="btn ghost full" type="button">Restaurar controles TR</button>
+      <p id="rtKeybindStatus" class="settings-reset-status">Los mismos botones son contextuales: menú → opción → confirmar.</p>
+    </div>
     <div class="settings-danger-zone">
       <b>Pruebas / partida nueva</b>
       <p>Reinicia solo los datos locales del progreso. No borra Firebase, no borra usuarios y conserva el líder elegido.</p>
@@ -1219,6 +1237,17 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <span id="p1Honor" class="hud-hidden-value" aria-hidden="true">0</span>
   </div>
 </div>
+<div id="rtArsenalPanel" class="rt-arsenal-panel" aria-label="Selector táctico TR" hidden>
+  <div class="rt-arsenal-context"><button type="button" class="rt-arsenal-back" data-rt-back aria-label="Volver" hidden>↶</button><strong id="rtArsenalContextTitle" hidden></strong></div>
+  <div class="rt-arsenal-categories" role="tablist" aria-label="Tipo de carta">
+    <button type="button" class="rt-arsenal-category" data-rt-category="unit" title="X · Unidades"><span aria-hidden="true">⚔</span><small>UNIDADES</small><i>X</i></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="spell" title="A · Magias"><span aria-hidden="true">✦</span><small>MAGIAS</small><i>A</i></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="trap" title="Y · Trampas"><span aria-hidden="true">◆</span><small>TRAMPAS</small><i>Y</i></button>
+  </div>
+  <div class="rt-arsenal-pagebar" hidden><button type="button" data-rt-page="prev" aria-label="Página anterior">LT / ‹</button><span id="rtArsenalPageLabel">1/1</span><button type="button" data-rt-page="next" aria-label="Página siguiente">› / RT</button></div>
+  <div id="rtArsenalCards" class="rt-arsenal-cards" hidden></div>
+</div>
+<button id="rtTargetCancelBtn" class="rt-target-cancel" type="button" aria-label="Cancelar selección" hidden>↶</button>
 <div id="hudP2" class="player-status-hud hud-player-right" aria-label="HUD de la IA">
   <div class="player-status-card">
     <div class="player-status-head">
@@ -1470,6 +1499,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=0009fba7f909"></script>
+<script type="module" src="js/bootstrap-loader.js?h=8b10326d0b5d"></script>
 </body>
 </html>

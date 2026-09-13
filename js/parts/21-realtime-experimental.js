@@ -1,16 +1,15 @@
 "use strict";
-/* HallValla 20260913.75 · Combate TR experimental (DEV only)
+/* HallValla 20260913.77 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
-   - Prueba de gameplay: recurso continuo, robo automático, mano abierta,
-     despliegue por arrastre y unidades autónomas.
+   - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
+     selector táctico contextual, bindings finales y unidades autónomas.
    - Los buffs de líder siguen pasando por los mismos cálculos de combate.
 */
 
 const HALLVALLA_RT_CFG=Object.freeze({
   resourceCap:20,
   resourceEveryMs:3000,
-  drawEveryMs:5000,
-  handMax:5,
+  handMax:99,
   aiThinkEveryMs:1250,
   aiDeployCooldownMs:4500,
   attackCooldownMs:1250,
@@ -38,7 +37,12 @@ const hallvallaRtState={
   busy:false,
   cycle:0,
   lastResourceAt:0,
-  lastDrawAt:0,
+  arsenalCategory:"unit",
+  arsenalPage:0,
+  arsenalLevel:"root",
+  targetCursorX:null,
+  targetCursorY:null,
+  keyCaptureAction:"",
   lastAiThinkAt:0,
   lastAiDeployAt:0,
   lastLeaderEffectAt:0,
@@ -66,17 +70,47 @@ function hallvallaRtGetSummonZones(owner,units=publicState?.units||[]){
   return out;
 }
 function hallvallaRtIsHandSuppressed(){return hallvallaRtState.handSuppressed===true;}
+function hallvallaRtClearTargetCursor(){
+  hallvallaRtState.targetCursorX=null;hallvallaRtState.targetCursorY=null;
+  document.querySelectorAll("#grid .cell.hv-rt-target-cursor").forEach(el=>el.classList.remove("hv-rt-target-cursor"));
+}
+function hallvallaRtPaintTargetCursor(){
+  document.querySelectorAll("#grid .cell.hv-rt-target-cursor").forEach(el=>el.classList.remove("hv-rt-target-cursor"));
+  const x=Number(hallvallaRtState.targetCursorX),y=Number(hallvallaRtState.targetCursorY);
+  if(!Number.isFinite(x)||!Number.isFinite(y))return;
+  const cell=document.querySelector(`#grid .cell[data-x="${x}"][data-y="${y}"]`);
+  if(cell)cell.classList.add("hv-rt-target-cursor");
+}
+function hallvallaRtInitTargetCursor(){
+  if(!isHallvallaRealtimeExperimental()||!selectedCard)return false;
+  let x=null,y=null;
+  const first=Array.isArray(highlights)&&highlights.length?String(highlights[0]):"";
+  if(first){const pair=first.split(",").map(Number);if(Number.isFinite(pair[0])&&Number.isFinite(pair[1])){x=pair[0];y=pair[1];}}
+  if(!Number.isFinite(x)||!Number.isFinite(y)){
+    const leader=typeof getLeader==="function"?getLeader(myPlayer):null;
+    x=Number.isFinite(Number(leader?.x))?Number(leader.x):Math.floor(COLS/2);
+    y=Number.isFinite(Number(leader?.y))?Number(leader.y):(myPlayer===1?ROWS-1:0);
+  }
+  hallvallaRtState.targetCursorX=Math.max(0,Math.min(COLS-1,x));
+  hallvallaRtState.targetCursorY=Math.max(0,Math.min(ROWS-1,y));
+  requestAnimationFrame(hallvallaRtPaintTargetCursor);
+  return true;
+}
 function hallvallaRtSuppressHandFocus(){
   if(!isHallvallaRealtimeExperimental())return false;
   hallvallaRtState.handSuppressed=true;
+  hallvallaRtState.arsenalLevel="targeting";
   handOpen=false;
   const drawer=document.getElementById("handDrawer");if(drawer)drawer.classList.remove("open");
-  hallvallaRtUpdateUi();
+  queueMicrotask(()=>{hallvallaRtInitTargetCursor();hallvallaRtUpdateUi();});
   return true;
 }
 function hallvallaRtReleaseHandFocus(){
   if(!isHallvallaRealtimeExperimental())return false;
   hallvallaRtState.handSuppressed=false;
+  hallvallaRtState.arsenalLevel="root";
+  hallvallaRtState.arsenalPage=0;
+  hallvallaRtClearTargetCursor();
   handOpen=true;handManualCloseKey="";
   const drawer=document.getElementById("handDrawer");if(drawer)drawer.classList.add("open");
   hallvallaRtUpdateUi();
@@ -104,16 +138,176 @@ function hallvallaRtUpdateUi(){
   document.documentElement.classList.toggle("hv-rt-card-targeting",active&&hallvallaRtState.handSuppressed);
   document.body?.classList.toggle("hv-rt-card-targeting",active&&hallvallaRtState.handSuppressed);
   const node=hallvallaRtEnsureStatusNode();
+  hallvallaRtBindArsenal();
+  hallvallaRtRenderArsenal();
   if(node){
     node.hidden=!active;
     if(active){
       const honor=Math.max(0,Number(privateState?.honor||0));
       const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.resourceCap));
-      const hand=(privateState?.hand||[]).length;
-      node.textContent=`TR EXP · ${getResourceLabel(myPlayer)} ${honor}/${max} · Mano ${hand}/${HALLVALLA_RT_CFG.handMax} · +1 ${getResourceLabel(myPlayer)} cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · carta/${HALLVALLA_RT_CFG.drawEveryMs/1000}s`;
+      const remaining=(privateState?.hand||[]).length;
+      node.textContent=`TR EXP · ${getResourceLabel(myPlayer)} ${honor}/${max} · Arsenal ${remaining} · +1 ${getResourceLabel(myPlayer)} cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s`;
     }
   }
 }
+
+
+const HALLVALLA_RT_KEYBINDS_STORAGE_KEY="hallvalla_rt_keybinds_v1";
+const HALLVALLA_RT_KEYBIND_DEFAULTS=Object.freeze({
+  choice1:"KeyX",choice2:"KeyA",choice3:"KeyY",pagePrev:"KeyQ",pageNext:"KeyE",cancel:"KeyB",
+  up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"
+});
+const HALLVALLA_RT_BINDING_LABELS=Object.freeze({
+  choice1:"Botón 1 · Unidades / opción 1",choice2:"Botón 2 · Magias / opción 2 / confirmar",choice3:"Botón 3 · Trampas / opción 3",
+  pagePrev:"Página anterior",pageNext:"Página siguiente",cancel:"Volver / cancelar",up:"Cursor arriba",down:"Cursor abajo",left:"Cursor izquierda",right:"Cursor derecha"
+});
+let hallvallaRtKeybinds=null;
+function hallvallaRtLoadKeybinds(){
+  if(hallvallaRtKeybinds)return hallvallaRtKeybinds;
+  let saved={};try{saved=JSON.parse(localStorage.getItem(HALLVALLA_RT_KEYBINDS_STORAGE_KEY)||"{}")||{};}catch(_){saved={};}
+  hallvallaRtKeybinds={...HALLVALLA_RT_KEYBIND_DEFAULTS,...saved};return hallvallaRtKeybinds;
+}
+function hallvallaRtSaveKeybinds(next){
+  hallvallaRtKeybinds={...HALLVALLA_RT_KEYBIND_DEFAULTS,...(next||{})};
+  try{localStorage.setItem(HALLVALLA_RT_KEYBINDS_STORAGE_KEY,JSON.stringify(hallvallaRtKeybinds));}catch(_){ }
+  hallvallaRtRefreshKeybindSettings();hallvallaRtRenderArsenal();return hallvallaRtKeybinds;
+}
+function hallvallaRtKeyLabel(code){
+  const c=String(code||"");
+  const map={ArrowUp:"↑",ArrowDown:"↓",ArrowLeft:"←",ArrowRight:"→",Space:"ESPACIO",Escape:"ESC",Enter:"ENTER",Backspace:"BACKSPACE",Tab:"TAB",ShiftLeft:"SHIFT IZQ",ShiftRight:"SHIFT DER",ControlLeft:"CTRL IZQ",ControlRight:"CTRL DER",AltLeft:"ALT IZQ",AltRight:"ALT DER"};
+  if(map[c])return map[c];
+  if(/^Key[A-Z]$/.test(c))return c.slice(3);
+  if(/^Digit[0-9]$/.test(c))return c.slice(5);
+  if(/^Numpad/.test(c))return c.replace("Numpad","NUM ");
+  return c.replace(/^BracketLeft$/,"[").replace(/^BracketRight$/,"]").replace(/^Semicolon$/,";").replace(/^Quote$/,"'").replace(/^Comma$/,",").replace(/^Period$/,".").replace(/^Slash$/, "/").replace(/^Backslash$/, "\\")||"—";
+}
+function hallvallaRtBindingActionForCode(code){
+  const binds=hallvallaRtLoadKeybinds();
+  for(const key of Object.keys(HALLVALLA_RT_KEYBIND_DEFAULTS))if(binds[key]===code)return key;
+  return "";
+}
+function hallvallaRtSetBinding(action,code){
+  if(!HALLVALLA_RT_KEYBIND_DEFAULTS[action]||!code)return false;
+  const binds={...hallvallaRtLoadKeybinds()};
+  const old=binds[action];
+  const conflict=Object.keys(binds).find(k=>k!==action&&binds[k]===code);
+  binds[action]=code;if(conflict)binds[conflict]=old;
+  hallvallaRtSaveKeybinds(binds);return true;
+}
+function hallvallaRtRefreshKeybindSettings(){
+  const binds=hallvallaRtLoadKeybinds();
+  document.querySelectorAll("[data-rt-bind-action]").forEach(btn=>{
+    const action=btn.dataset.rtBindAction;if(!action)return;
+    const value=btn.querySelector("[data-rt-bind-value]");if(value)value.textContent=hallvallaRtKeyLabel(binds[action]);
+    btn.classList.toggle("is-capturing",hallvallaRtState.keyCaptureAction===action);
+  });
+  const status=document.getElementById("rtKeybindStatus");
+  if(status&&hallvallaRtState.keyCaptureAction)status.textContent=`Presiona ahora la tecla para: ${HALLVALLA_RT_BINDING_LABELS[hallvallaRtState.keyCaptureAction]}.`;
+  else if(status)status.textContent="Los mismos botones son contextuales: menú → opción → confirmar.";
+}
+function hallvallaRtBeginKeyCapture(action){
+  if(!HALLVALLA_RT_KEYBIND_DEFAULTS[action])return;hallvallaRtState.keyCaptureAction=action;hallvallaRtRefreshKeybindSettings();
+}
+function hallvallaRtResetKeybinds(){hallvallaRtState.keyCaptureAction="";hallvallaRtSaveKeybinds({...HALLVALLA_RT_KEYBIND_DEFAULTS});}
+function hallvallaRtGetInputState(){return hallvallaRtState.arsenalLevel||"root";}
+function hallvallaRtOpenCategory(category){
+  if(!["unit","spell","trap"].includes(category))return false;
+  hallvallaRtState.arsenalCategory=category;hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="cards";hallvallaRtRenderArsenal();return true;
+}
+function hallvallaRtChangePage(delta){
+  if(hallvallaRtState.arsenalLevel!=="cards")return false;
+  const cards=hallvallaRtArsenalCards(),pages=Math.max(1,Math.ceil(cards.length/3));
+  hallvallaRtState.arsenalPage=(hallvallaRtState.arsenalPage+delta+pages)%pages;hallvallaRtRenderArsenal();return true;
+}
+function hallvallaRtSelectSlot(index){
+  if(hallvallaRtState.arsenalLevel!=="cards")return false;
+  const cards=hallvallaRtArsenalCards();const card=cards[hallvallaRtState.arsenalPage*3+index];if(!card)return false;
+  const state=getCardPlayState(card);if(!state.canPlay){setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente para ${card.name}.`);return true;}
+  selectCard(card);return true;
+}
+function hallvallaRtMoveTargetCursor(dx,dy){
+  if(hallvallaRtState.arsenalLevel!=="targeting"||!selectedCard)return false;
+  if(!Number.isFinite(Number(hallvallaRtState.targetCursorX))||!Number.isFinite(Number(hallvallaRtState.targetCursorY)))hallvallaRtInitTargetCursor();
+  hallvallaRtState.targetCursorX=Math.max(0,Math.min(COLS-1,Number(hallvallaRtState.targetCursorX||0)+Number(dx||0)));
+  hallvallaRtState.targetCursorY=Math.max(0,Math.min(ROWS-1,Number(hallvallaRtState.targetCursorY||0)+Number(dy||0)));
+  hallvallaRtPaintTargetCursor();return true;
+}
+async function hallvallaRtConfirmTarget(){
+  if(hallvallaRtState.arsenalLevel!=="targeting"||!selectedCard)return false;
+  if(!Number.isFinite(Number(hallvallaRtState.targetCursorX))||!Number.isFinite(Number(hallvallaRtState.targetCursorY))){if(!hallvallaRtInitTargetCursor())return false;}
+  const x=Number(hallvallaRtState.targetCursorX),y=Number(hallvallaRtState.targetCursorY);
+  if(typeof cellClick==="function")await cellClick(x,y);
+  return true;
+}
+function hallvallaRtCancelInput(){
+  const level=hallvallaRtState.arsenalLevel;
+  if(level==="targeting"){
+    if(typeof clearSelection==="function")clearSelection();
+    hallvallaRtState.handSuppressed=false;hallvallaRtState.arsenalLevel="cards";hallvallaRtClearTargetCursor();hallvallaRtUpdateUi();return true;
+  }
+  if(level==="cards"){hallvallaRtState.arsenalLevel="root";hallvallaRtState.arsenalPage=0;hallvallaRtRenderArsenal();return true;}
+  return false;
+}
+function hallvallaRtInputAction(action){
+  if(!isHallvallaRealtimeExperimental())return false;
+  const level=hallvallaRtState.arsenalLevel||"root";
+  if(action==="cancel")return hallvallaRtCancelInput();
+  if(level==="targeting"){
+    if(action==="choice2"||action==="confirm"){void hallvallaRtConfirmTarget();return true;}
+    if(action==="up")return hallvallaRtMoveTargetCursor(0,-1);if(action==="down")return hallvallaRtMoveTargetCursor(0,1);if(action==="left")return hallvallaRtMoveTargetCursor(-1,0);if(action==="right")return hallvallaRtMoveTargetCursor(1,0);
+    return true;
+  }
+  if(level==="root"){if(action==="choice1")return hallvallaRtOpenCategory("unit");if(action==="choice2")return hallvallaRtOpenCategory("spell");if(action==="choice3")return hallvallaRtOpenCategory("trap");return false;}
+  if(level==="cards"){if(action==="choice1")return hallvallaRtSelectSlot(0);if(action==="choice2")return hallvallaRtSelectSlot(1);if(action==="choice3")return hallvallaRtSelectSlot(2);if(action==="pagePrev")return hallvallaRtChangePage(-1);if(action==="pageNext")return hallvallaRtChangePage(1);return false;}
+  return false;
+}
+globalThis.hallvallaRtGetInputState=hallvallaRtGetInputState;
+globalThis.hallvallaRtInputAction=hallvallaRtInputAction;
+globalThis.hallvallaRtMoveTargetCursor=hallvallaRtMoveTargetCursor;
+globalThis.hallvallaRtConfirmTarget=hallvallaRtConfirmTarget;
+globalThis.hallvallaRtCancelInput=hallvallaRtCancelInput;
+
+function hallvallaRtCardCategory(card){
+  if(card?.type==="unit")return "unit";
+  if(card?.type==="trap")return "trap";
+  return "spell";
+}
+function hallvallaRtArsenalCards(category=hallvallaRtState.arsenalCategory){
+  return [...(privateState?.hand||[])].filter(c=>hallvallaRtCardCategory(c)===category).sort((a,b)=>(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a.name||"").localeCompare(String(b.name||"")));
+}
+function hallvallaRtRenderArsenal(){
+  const panel=document.getElementById("rtArsenalPanel");if(!panel)return;
+  const active=isHallvallaRealtimeExperimental();panel.hidden=!active;if(!active)return;
+  const level=hallvallaRtState.arsenalLevel||"root",category=hallvallaRtState.arsenalCategory||"unit";
+  panel.dataset.level=level;
+  panel.querySelectorAll("[data-rt-category]").forEach(btn=>btn.classList.toggle("active",btn.dataset.rtCategory===category&&level!=="root"));
+  const rootBox=panel.querySelector(".rt-arsenal-categories"),cardsBox=document.getElementById("rtArsenalCards"),pagebar=panel.querySelector(".rt-arsenal-pagebar"),back=panel.querySelector("[data-rt-back]"),title=document.getElementById("rtArsenalContextTitle");
+  if(rootBox)rootBox.hidden=level!=="root";if(cardsBox)cardsBox.hidden=level!=="cards";if(pagebar)pagebar.hidden=level!=="cards";if(back)back.hidden=level==="root";
+  if(title){title.hidden=level==="root";title.textContent=level==="targeting"?(selectedCard?.name||"OBJETIVO"):(category==="unit"?"UNIDADES":category==="spell"?"MAGIAS":"TRAMPAS");}
+  const cancel=document.getElementById("rtTargetCancelBtn");if(cancel)cancel.hidden=!(active&&level==="targeting");
+  if(level!=="cards")return;
+  const cards=hallvallaRtArsenalCards(category),pages=Math.max(1,Math.ceil(cards.length/3));
+  hallvallaRtState.arsenalPage=Math.max(0,Math.min(pages-1,Number(hallvallaRtState.arsenalPage)||0));
+  const page=hallvallaRtState.arsenalPage,slice=cards.slice(page*3,page*3+3);
+  const label=document.getElementById("rtArsenalPageLabel");if(label)label.textContent=`${page+1}/${pages}`;
+  if(!cardsBox)return;
+  cardsBox.innerHTML=slice.length?slice.map((card,i)=>{
+    const state=getCardPlayState(card),cost=Math.max(0,Number(effectiveCardCost(card,myPlayer)||0));
+    const pad=["X","A","Y"][i],key=hallvallaRtKeyLabel(hallvallaRtLoadKeybinds()[`choice${i+1}`]);
+    return `<button type="button" class="rt-arsenal-card${state.canPlay?" is-playable":""}${selectedCard?.id===card.id?" selected":""}" data-rt-card-id="${escapeHtml(String(card.id))}" title="${escapeHtml(card.name||"")}"><span class="rt-arsenal-slot">${pad}</span><span class="rt-arsenal-key">${escapeHtml(key)}</span><span class="rt-arsenal-art">${getCardVisualHtml(card,"rt-arsenal-art-img")}</span><span class="rt-arsenal-cost">${cost}</span></button>`;
+  }).join(""):`<div class="rt-arsenal-empty">Sin ${category==="unit"?"unidades":category==="spell"?"magias":"trampas"}</div>`;
+}
+function hallvallaRtBindArsenal(){
+  const panel=document.getElementById("rtArsenalPanel");if(!panel||panel.dataset.bound)return;panel.dataset.bound="1";
+  panel.addEventListener("click",ev=>{
+    const back=ev.target.closest?.("[data-rt-back]");if(back){hallvallaRtCancelInput();return;}
+    const cat=ev.target.closest?.("[data-rt-category]");if(cat){hallvallaRtOpenCategory(cat.dataset.rtCategory||"unit");return;}
+    const pg=ev.target.closest?.("[data-rt-page]");if(pg){hallvallaRtChangePage(pg.dataset.rtPage==="next"?1:-1);return;}
+    const cardBtn=ev.target.closest?.("[data-rt-card-id]");if(cardBtn){const cards=hallvallaRtArsenalCards();const idx=cards.findIndex(c=>String(c.id)===String(cardBtn.dataset.rtCardId));if(idx>=0){const pageIndex=idx-hallvallaRtState.arsenalPage*3;if(pageIndex>=0&&pageIndex<3)hallvallaRtSelectSlot(pageIndex);}}
+  });
+  const cancel=document.getElementById("rtTargetCancelBtn");if(cancel&&!cancel.dataset.bound){cancel.dataset.bound="1";cancel.addEventListener("click",()=>hallvallaRtCancelInput());}
+}
+globalThis.hallvallaRtRenderArsenal=hallvallaRtRenderArsenal;
 
 function hallvallaRtMoveCooldown(unit){
   const mov=Math.max(1,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||1));
@@ -253,16 +447,7 @@ async function hallvallaRtResourceAndDrawTick(now){
     }
     changed=true;
   }
-  if(now-hallvallaRtState.lastDrawAt>=HALLVALLA_RT_CFG.drawEveryMs){
-    hallvallaRtState.lastDrawAt=now;
-    const hand=[...(privateState?.hand||[])],deck=[...(privateState?.deck||[])];
-    if(hand.length<HALLVALLA_RT_CFG.handMax&&deck.length){const drawn=drawCards(deck,hand,1);privatePatch={...privatePatch,deck:drawn.deck,hand:drawn.hand};publicPatch[`playerStats/${myPlayer}`]={...(publicPatch[`playerStats/${myPlayer}`]||publicState?.playerStats?.[myPlayer]||{}),honor:Number((privatePatch.honor??privateState?.honor)||0),maxHonor:Number((privatePatch.maxHonor??privateState?.maxHonor)||HALLVALLA_RT_CFG.resourceCap),deck:drawn.deck.length,hand:drawn.hand.length};changed=true;}
-    if(publicState?.mode==="adventure"&&publicState?.adventureAiState){
-      const aiBase=publicPatch.adventureAiState||publicState.adventureAiState;
-      const aiHand=[...(aiBase.hand||[])],aiDeck=[...(aiBase.deck||[])];
-      if(aiHand.length<HALLVALLA_RT_CFG.handMax&&aiDeck.length){const drawn=drawCards(aiDeck,aiHand,1);const ai={...aiBase,deck:drawn.deck,hand:drawn.hand};publicPatch.adventureAiState=ai;publicPatch["playerStats/2"]={...(publicPatch["playerStats/2"]||publicState?.playerStats?.[2]||{}),honor:Number(ai.honor||0),maxHonor:Number(ai.maxHonor||HALLVALLA_RT_CFG.resourceCap),deck:drawn.deck.length,hand:drawn.hand.length};changed=true;}
-    }
-  }
+
   if(changed)await commitGameplayAction({publicPatch,privatePatch});
 }
 
@@ -368,11 +553,11 @@ function hallvallaRtPrimePreparedState(){
   const now=hallvallaRtNow();
   hallvallaRtState.cycle=Math.max(1,Number(publicState?.turn||1));
   hallvallaRtState.lastResourceAt=now;
-  hallvallaRtState.lastDrawAt=now;
   hallvallaRtState.lastAiThinkAt=now;
   hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
   hallvallaRtState.handSuppressed=false;
+  hallvallaRtState.arsenalCategory="unit";hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="root";hallvallaRtClearTargetCursor();
   hallvallaRtState.moveAt.clear();
   hallvallaRtState.attackAt.clear();
   handOpen=true;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
@@ -414,6 +599,26 @@ function hallvallaRtBind(){
       setHallvallaRealtimeExperimentalRequested(!isHallvallaRealtimeExperimentalRequested());
     });
   }
+  const settings=document.getElementById("rtKeyboardBindings");
+  if(settings&&!settings.dataset.bound){
+    settings.dataset.bound="1";
+    settings.addEventListener("click",ev=>{
+      const bind=ev.target.closest?.("[data-rt-bind-action]");if(bind){hallvallaRtBeginKeyCapture(bind.dataset.rtBindAction);return;}
+      if(ev.target.closest?.("#rtKeybindResetBtn"))hallvallaRtResetKeybinds();
+    });
+  }
+  hallvallaRtRefreshKeybindSettings();
   hallvallaRtUpdateUi();
 }
+function hallvallaRtKeyboardHandler(ev){
+  if(hallvallaRtState.keyCaptureAction){
+    if(ev.repeat)return;ev.preventDefault();ev.stopPropagation();
+    const code=String(ev.code||ev.key||"");if(!code)return;const action=hallvallaRtState.keyCaptureAction;hallvallaRtState.keyCaptureAction="";hallvallaRtSetBinding(action,code);return;
+  }
+  if(!isHallvallaRealtimeExperimental()||!hallvallaRtBattleReady()||ev.repeat)return;
+  const tag=String(ev.target?.tagName||"").toLowerCase();if(tag==="input"||tag==="textarea"||tag==="select"||ev.target?.isContentEditable)return;
+  const action=hallvallaRtBindingActionForCode(String(ev.code||""));if(!action)return;
+  if(hallvallaRtInputAction(action)){ev.preventDefault();ev.stopPropagation();}
+}
+document.addEventListener("keydown",hallvallaRtKeyboardHandler,true);
 hallvallaRtBind();

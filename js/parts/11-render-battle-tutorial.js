@@ -1184,6 +1184,7 @@ function getHandCardRenderSpec(c){
 function renderHand(){
   const drawer=$("handDrawer"),info=$("handInfo"),row=$("handRow");
   if(!drawer||!info||!row)return;
+  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()){drawer.classList.remove("open");if(typeof hallvallaRtRenderArsenal==="function")hallvallaRtRenderArsenal();return;}
   drawer.classList.toggle("open",handOpen);
   ensureBattleHandDelegation(row);
   const hand=privateState?.hand||[];

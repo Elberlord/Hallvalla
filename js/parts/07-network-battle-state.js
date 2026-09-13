@@ -1293,7 +1293,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     ?shuffle([...(playerPrincipalPrep.deck||[]),...(playerPrincipalPrep.principalCards||[])])
     :playerPrincipalPrep.deck;
   const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerCombatDeck,leaderType,1);
-  const playerDraw=drawCards(playerBattleDrawDeck,[],4);
+  const playerDraw=realtimeExperimental
+    ?{deck:[],hand:[...playerBattleDrawDeck].sort((a,b)=>(effectiveCardCost(a,1)-effectiveCardCost(b,1))||String(a.name||"").localeCompare(String(b.name||"")))}
+    :drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
   const adaptivePlayerSnapshot=typeof buildAdventureAdaptivePlayerSnapshot==="function"
@@ -1314,9 +1316,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   // Foco Estabilizador automáticamente porque sustituiría cartas fuera del constructor global.
   let enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
   if(realtimeExperimental){
-    const enemyCombatPool=shuffle([...(enemyInitial.hand||[]),...(enemyInitial.deck||[]),...(enemyInitial.principalCards||[])]);
-    const enemyDraw=drawCards(enemyCombatPool,[],Math.min(4,enemyCombatPool.length));
-    enemyInitial={...enemyInitial,deck:enemyDraw.deck,hand:enemyDraw.hand,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};
+    const enemyCombatPool=[...(enemyInitial.hand||[]),...(enemyInitial.deck||[]),...(enemyInitial.principalCards||[])];
+    enemyCombatPool.sort((a,b)=>(effectiveCardCost(a,2)-effectiveCardCost(b,2))||String(a.name||"").localeCompare(String(b.name||"")));
+    enemyInitial={...enemyInitial,deck:[],hand:enemyCombatPool,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};
   }
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   let startingUnits=[

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260911.41 · Gamepad estándar (PC / Android)
+/* HallValla 20260913.77 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B cancelar · X DEF · Y DET
    View/Back mano · Menu/Start siguiente fase · LB/RB ciclar unidades.
@@ -214,7 +214,7 @@ function hvGamepadConnect(gp){
   if(changed){
     const kind=hvGamepadState.mapping==="standard"?"estándar":"compatible";
     const badge=hvGamepadBadge();
-    badge.title=`${hvGamepadState.id} · ${kind} · A confirmar · B cancelar · X DEF · Y DET`;
+    badge.title=`${hvGamepadState.id} · ${kind} · TR: X Unidades · A Magias/Confirmar · Y Trampas · LT/RT páginas · B volver`;
     hvGamepadShowBadge("🎮 Control conectado");
     console.info(`[HallValla][GAMEPAD] conectado: ${hvGamepadState.id} · mapping=${hvGamepadState.mapping||"generic"}`);
   }
@@ -589,6 +589,10 @@ function hvGamepadUseDirection(dx,dy){
   hvGamepadPointerDeactivate();
   const modal=hvGamepadVisibleModal();
   if(modal){hvGamepadState.mode="ui";hvGamepadMoveUi(dx,dy);return;}
+  if(hvGamepadBattleOpen()&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function"){
+    if(hallvallaRtGetInputState()==="targeting"&&typeof hallvallaRtMoveTargetCursor==="function")hallvallaRtMoveTargetCursor(dx,dy);
+    return;
+  }
   if(hvGamepadBattleOpen()){
     if(hvGamepadState.mode==="hand"){
       if(dx)hvGamepadMoveHand(dx);
@@ -606,15 +610,36 @@ function hvGamepadUseDirection(dx,dy){
 function hvGamepadHandleButtons(gp){
   const modal=hvGamepadVisibleModal();
   const battle=hvGamepadBattleOpen();
+  const pressed={
+    A:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.A),B:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.B),X:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.X),Y:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.Y),
+    LB:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LB),RB:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RB),LT:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LT),RT:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RT),
+    VIEW:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.VIEW),MENU:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.MENU)
+  };
+  const rt=battle&&!modal&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function";
+  if(rt){
+    const level=hallvallaRtGetInputState();
+    if(level==="targeting"){
+      if(pressed.A&&typeof hallvallaRtConfirmTarget==="function")void hallvallaRtConfirmTarget();
+      if(pressed.B&&typeof hallvallaRtCancelInput==="function")hallvallaRtCancelInput();
+      return;
+    }
+    if(pressed.B&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("cancel");
+    if(pressed.X&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice1");
+    if(pressed.A&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice2");
+    if(pressed.Y&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice3");
+    if(pressed.LT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pagePrev");
+    if(pressed.RT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pageNext");
+    return;
+  }
 
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.A)){
+  if(pressed.A){
     if(hvGamepadState.pointerMode&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
     else if(modal||!battle)hvGamepadActivateUi();
     else if(hvGamepadState.mode==="hand")hvGamepadPlayHandCard();
     else void hvGamepadActivateBoard();
   }
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RT)&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.B)){
+  if(pressed.RT&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
+  if(pressed.B){
     if(hvGamepadCloseTopUi()){}
     else if(battle&&hvGamepadState.mode==="hand"){
       if(handOpen)document.getElementById("handBtn")?.click();
@@ -625,17 +650,17 @@ function hvGamepadHandleButtons(gp){
       document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true}));
     }
   }
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.Y)){
+  if(pressed.Y){
     if(!modal&&battle&&hvGamepadState.mode==="hand")hvGamepadDetailsHand();
     else if(!modal&&battle)hvGamepadDetailsBoard();
   }
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.X)&&battle&&!modal&&hvGamepadState.mode!=="hand")hvGamepadDefend();
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.VIEW)&&battle&&!modal)hvGamepadToggleHand();
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.MENU)&&battle&&!modal&&typeof advanceTurnPhase==="function")advanceTurnPhase();
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LB)&&battle&&!modal){
+  if(pressed.X&&battle&&!modal&&hvGamepadState.mode!=="hand")hvGamepadDefend();
+  if(pressed.VIEW&&battle&&!modal)hvGamepadToggleHand();
+  if(pressed.MENU&&battle&&!modal&&typeof advanceTurnPhase==="function")advanceTurnPhase();
+  if(pressed.LB&&battle&&!modal){
     if(hvGamepadState.mode==="hand")hvGamepadMoveHand(-1);else hvGamepadCycleOwnUnit(-1);
   }
-  if(hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RB)&&battle&&!modal){
+  if(pressed.RB&&battle&&!modal){
     if(hvGamepadState.mode==="hand")hvGamepadMoveHand(1);else hvGamepadCycleOwnUnit(1);
   }
 }
