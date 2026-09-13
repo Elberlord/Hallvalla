@@ -1,5 +1,5 @@
 /* HallValla Stage 10.1 · Forge layout lazy
-   Layout canónico de Forja disponible en producción; editor solo con ?dev. PROD ignora por completo el localStorage del editor. */
+   Layout canónico de Forja disponible en producción; editor solo con ?dev. DEV y PROD comparten exactamente el mismo motor geométrico; PROD ignora el localStorage del editor. */
 
 /* HallValla FORGE6CTRL · editor directo individual de la Forja */
 (()=>{
@@ -83,6 +83,7 @@
   let keyboardWired=false;
   let contentObserver=null;
   let mutationScheduled=false;
+  let baselineMetrics=new Map();
 
   function loadState(){
     const base=defaultState();
@@ -116,16 +117,48 @@
     for(const prop of ['translate','scale','width','height','min-height','max-height','transform-origin'])el.style.removeProperty(prop);
   }
 
+  /*
+     PARIDAD DEV/PROD:
+     Antes las medidas base se capturaban después de que otros controles ya
+     habían sido transformados. Esas medidas quedaban cacheadas solo en el DOM
+     de ?dev y NO viajaban dentro del JSON, por lo que el mismo JSON podía verse
+     diferente al abrir el juego normal.
+
+     Ahora cada aplicación parte de un lienzo limpio, captura TODAS las medidas
+     naturales antes de aplicar cualquier ajuste y usa ese mismo snapshot tanto
+     en ?dev como en producción. El JSON vuelve a ser autosuficiente.
+  */
+  function captureBaselineMetrics(){
+    baselineMetrics=new Map();
+    for(const key of Object.keys(TARGETS)){
+      const el=targetElement(key);
+      if(!el)continue;
+      clearTunerStyles(el);
+      delete el.dataset.hvTunerNaturalW;
+      delete el.dataset.hvTunerNaturalH;
+    }
+    /* Fuerza un único recálculo de layout con todos los targets en estado CSS natural. */
+    void document.documentElement.offsetWidth;
+    for(const key of Object.keys(TARGETS)){
+      const el=targetElement(key);
+      if(!el)continue;
+      const rect=el.getBoundingClientRect();
+      let w=rect.width,h=rect.height;
+      if(!(w>2))w=el.offsetWidth||160;
+      if(!(h>2))h=el.offsetHeight||40;
+      baselineMetrics.set(key,{width:w,height:h});
+      el.dataset.hvTunerNaturalW=String(w);
+      el.dataset.hvTunerNaturalH=String(h);
+    }
+  }
+
   function naturalMetrics(key,el){
     if(!el)return {width:1,height:1};
-    const attrW='hvTunerNaturalW',attrH='hvTunerNaturalH';
-    let w=Number(el.dataset[attrW]),h=Number(el.dataset[attrH]);
-    if(w>2&&h>2)return {width:w,height:h};
+    const fixed=baselineMetrics.get(key);
+    if(fixed&&fixed.width>2&&fixed.height>2)return fixed;
     const rect=el.getBoundingClientRect();
-    w=rect.width;h=rect.height;
-    if(!(w>2))w=160;
-    if(!(h>2))h=40;
-    el.dataset[attrW]=String(w);el.dataset[attrH]=String(h);
+    const w=rect.width>2?rect.width:(el.offsetWidth||160);
+    const h=rect.height>2?rect.height:(el.offsetHeight||40);
     return {width:w,height:h};
   }
 
@@ -160,6 +193,7 @@
   }
 
   function applyRuntimeLayout(){
+    captureBaselineMetrics();
     for(const key of Object.keys(TARGETS))applyTarget(key);
   }
 
@@ -401,6 +435,16 @@
   globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__=applyRuntimeLayout;
 
   if(!DEV_TOOLS_ENABLED){
+    /* PROD observa exactamente los mismos cambios estructurales que DEV.
+       Así el layout se aplica en el mismo momento, después de renderizar las
+       cartas/slots, y nunca sobre medidas intermedias. */
+    const forge=$('deckBuilderPanel');
+    if(forge){
+      new MutationObserver(()=>{if(isForgeOpen())scheduleReapply();})
+        .observe(forge,{attributes:true,attributeFilter:['class'],subtree:false});
+      contentObserver=new MutationObserver(()=>{if(isForgeOpen())scheduleReapply();});
+      contentObserver.observe(forge,{childList:true,subtree:true});
+    }
     if(isForgeOpen())applyRuntimeLayout();
     let resizeQueued=false;
     window.addEventListener('resize',()=>{
@@ -408,7 +452,6 @@
       resizeQueued=true;
       requestAnimationFrame(()=>{
         resizeQueued=false;
-        for(const key of Object.keys(TARGETS)){const el=targetElement(key);if(el){delete el.dataset.hvTunerNaturalW;delete el.dataset.hvTunerNaturalH;}}
         applyRuntimeLayout();
       });
     },{passive:true});
