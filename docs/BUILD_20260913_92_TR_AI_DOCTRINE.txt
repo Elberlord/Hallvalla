@@ -1,0 +1,14 @@
+HallValla build 20260913.92 — IA táctica para TR canónico
+
+Cambios limitados a la toma de decisiones de J2/IA en combate TR:
+- La IA evalúa todas las cartas pagables del arsenal, no solo unidades.
+- Unidades: invocación inmediata cuando no tiene ejército; después compiten por utilidad táctica.
+- Daño: prioriza letalidad, líderes, amenazas y evita sobre-daño innecesario.
+- Curación/limpieza: solo se usa cuando existe daño o estado curable; prioriza aliados críticos.
+- Buff, escudo y guardia: seleccionan aliados de mayor valor y evitan redundancia básica.
+- Parálisis, Veneno y ralentización: priorizan amenazas y evitan reaplicar estados inútiles.
+- Equipamiento: se coloca en una unidad compatible de alto valor.
+- Trampas de bestias, revelado y marcas legendarias: se usan solo con objetivos/condiciones válidas.
+- Mantiene el cooldown de invocación/acción TR existente; no cambia movimiento, ataque, MANÁ, Firebase, snapshot local, Aventura ni mazos.
+
+Archivos funcionales modificados: js/parts/21-realtime-experimental.js, js/bootstrap-loader.js, index.html.

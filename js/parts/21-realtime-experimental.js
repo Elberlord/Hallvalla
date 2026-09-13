@@ -757,46 +757,291 @@ async function hallvallaRtCombatRefreshTick(now){
   return true;
 }
 
+function hallvallaRtAiCardCost(card){return Math.max(0,Number(effectiveCardCost(card,2)||0));}
+function hallvallaRtAiUnitValue(card){
+  if(!card)return 0;
+  const bp=typeof getUnitBattlePower==="function"?Number(getUnitBattlePower(card)||0):0;
+  return bp+
+    Math.max(0,Number(card.atk||0))*6+
+    Math.max(0,Number(card.hp||0))*4+
+    Math.max(0,Number(card.guard||0))*3+
+    Math.max(0,Number(card.range||0))*4+
+    Math.max(0,Number(card.mov||0))*2+
+    Math.max(0,Number(card.dex||0))*1.1+
+    Math.max(0,Number(card.agi||0))*.9+
+    (card.special?45:0)+(card.caster?18:0);
+}
+function hallvallaRtAiThreatValue(unit){
+  if(!unit)return 0;
+  const bp=typeof getUnitBattlePower==="function"?Number(getUnitBattlePower(unit)||0):0;
+  const maxHp=Math.max(1,Number(typeof effectiveMaxHp==="function"?effectiveMaxHp(unit):unit.hp||1));
+  const hp=Math.max(0,Number(unit.hp||0));
+  return bp+Number(unit.atk||0)*7+Number(unit.guard||0)*3+Number(typeof getUnitAttackRange==="function"?getUnitAttackRange(unit):unit.range||1)*5+Number(typeof effectiveMov==="function"?effectiveMov(unit):unit.mov||0)*3+hp*2+(unit.special?50:0)+(unit.leader?80:0)+(hp/maxHp<=.35?25:0);
+}
+function hallvallaRtAiBestCellTrapTarget(owner,units){
+  const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return null;
+  const enemies=(units||[]).filter(u=>u&&u.owner!==owner&&Number(u.hp||0)>0);
+  if(!enemies.length)return null;
+  const focus=[...enemies].sort((a,b)=>hallvallaRtAiThreatValue(b)-hallvallaRtAiThreatValue(a)||dist(leader,a)-dist(leader,b))[0];
+  const occupied=new Set((units||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>`${u.x},${u.y}`));
+  const trapped=new Set((publicState?.beastTraps||[]).map(t=>`${t.x},${t.y}`));
+  const cells=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(!occupied.has(`${x},${y}`)&&!trapped.has(`${x},${y}`))cells.push({x,y});
+  cells.sort((a,b)=>(dist(a,focus)-dist(b,focus))||(dist(a,leader)-dist(b,leader))||(a.y-b.y)||(a.x-b.x));
+  return cells[0]||null;
+}
+function hallvallaRtAiChoosePlay(ai,units,mana){
+  const allies=(units||[]).filter(u=>u&&u.owner===2&&Number(u.hp||0)>0);
+  const allyUnits=allies.filter(u=>!u.leader);
+  const enemies=(units||[]).filter(u=>u&&u.owner===1&&Number(u.hp||0)>0);
+  const enemyUnits=enemies.filter(u=>!u.leader);
+  const aiLeader=hallvallaRtGetOwnerLeader(2,units);
+  const lastSummon=hallvallaRtLastLivingSummon(2,units);
+  const spawnCell=hallvallaRtFindBestSpawnCell(2,units);
+  const options=[];
+  const push=(kind,card,target,score,extra={})=>{if(card&&Number.isFinite(score))options.push({kind,card,target,score,...extra});};
+  const affordable=(ai.hand||[]).filter(card=>hallvallaRtAiCardCost(card)<=mana);
+  for(const card of affordable){
+    const cost=hallvallaRtAiCardCost(card);
+    if(card?.type==="unit"){
+      if(!spawnCell)continue;
+      let score=210+cost*35+hallvallaRtAiUnitValue(card);
+      if(!allyUnits.length)score+=2000; // Sin ejército, invocar es prioridad absoluta.
+      const closeThreat=aiLeader?enemies.filter(e=>dist(aiLeader,e)<=3).length:0;
+      if(closeThreat)score+=Math.max(0,Number(card.hp||0))*10+Math.max(0,Number(card.guard||0))*8+closeThreat*90;
+      const rg=Math.max(1,Number(card.range||1));if(rg>=2)score+=55+rg*12;
+      push("summon",card,null,score,{cell:spawnCell});
+      continue;
+    }
+    if(typeof isEquipmentCard==="function"&&isEquipmentCard(card)){
+      for(const ally of allyUnits){
+        if(typeof canEquipCardToUnit==="function"&&!canEquipCardToUnit(card,ally,2,units))continue;
+        let score=230+hallvallaRtAiThreatValue(ally)*.8+cost*12;
+        if(lastSummon?.id===ally.id)score+=35;
+        push("equipment",card,ally,score);
+      }
+      continue;
+    }
+    if(card?.spell==="damage"){
+      const dmg=Math.max(0,Number(effectiveCardValue(card,"damage")||0));if(dmg<=0)continue;
+      for(const target of enemies){
+        if(typeof canDirectlyTarget==="function"&&!canDirectlyTarget(card,target))continue;
+        let projected=dmg;
+        try{const kind=getCardMagicDamageType(card);const res=applyMagicHpDamage(target,dmg,kind);projected=Math.max(0,Number(res?.damage||0));}catch(_){ }
+        const hp=Math.max(0,Number(target.hp||0));
+        const lethal=projected>=hp&&hp>0;
+        const overkill=Math.max(0,projected-hp);
+        let score=260+hallvallaRtAiThreatValue(target)*1.25+projected*60-cost*9-overkill*8;
+        if(target.leader)score+=240;
+        if(lethal)score+=target.leader?2600:780;
+        if(card.key==="fireball"&&!target.leader)score+=70;
+        push("damage",card,target,score);
+      }
+      continue;
+    }
+    if(card?.spell==="heal"){
+      const amount=Math.max(0,Number(effectiveCardValue(card,"heal")||0));
+      for(const target of allies){
+        if(typeof canReceiveHealFromCard==="function"&&!canReceiveHealFromCard(card,target,2))continue;
+        if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)continue;
+        const maxHp=Math.max(1,Number(effectiveMaxHp(target)||target.hp||1)),hp=Math.max(0,Number(target.hp||0)),missing=Math.max(0,maxHp-hp);
+        const cleanse=typeof cardCleanseEnabled==="function"&&cardCleanseEnabled(card)&&typeof hasCurableStatus==="function"&&hasCurableStatus(target);
+        if(missing<=0&&!cleanse)continue;
+        const actual=Math.min(missing,amount);
+        let score=250+actual*85+(1-hp/maxHp)*520+hallvallaRtAiThreatValue(target)*.35-cost*6+(cleanse?240:0);
+        if(target.leader)score+=160;
+        if(hp/maxHp<=.3)score+=620;
+        push("heal",card,target,score);
+      }
+      continue;
+    }
+    if(card?.spell==="buff"){
+      const amount=Math.max(0,Number(effectiveCardValue(card,"buff")||0));
+      for(const target of allies){
+        let score=180+amount*70+hallvallaRtAiThreatValue(target)*.65-cost*7-(Number(target.buffAtk||0)>0?90:0);
+        if(lastSummon?.id===target.id)score+=85;
+        if(target.leader)score-=55;
+        push("buff",card,target,score);
+      }
+      continue;
+    }
+    if(card?.spell==="shield"||card?.trap==="guard"){
+      const amount=Math.max(0,Number(effectiveCardValue(card,"guard")||0));
+      for(const target of allies){
+        const maxHp=Math.max(1,Number(effectiveMaxHp(target)||target.hp||1)),hp=Math.max(0,Number(target.hp||0));
+        const already=card.trap==="guard"?Number(target.warningRuneGuard||0):Number(target.tempGuardBuff||0);
+        let score=195+amount*65+hallvallaRtAiThreatValue(target)*.5+(1-hp/maxHp)*260-cost*6-(already>0?150:0);
+        if(lastSummon?.id===target.id)score+=45;
+        if(target.leader&&hp/maxHp<=.55)score+=140;
+        push(card.trap==="guard"?"guard":"shield",card,target,score);
+      }
+      continue;
+    }
+    if(card?.spell==="paralysis"){
+      for(const target of enemyUnits){
+        if(typeof canDirectlyTarget==="function"&&!canDirectlyTarget(card,target))continue;
+        if(target.noMoveTurnKey===publicState?.turnKey||target.noAttackTurnKey===publicState?.turnKey)continue;
+        let score=275+hallvallaRtAiThreatValue(target)*1.45+Math.max(0,Number(target.mov||0))*22+Math.max(1,Number(target.range||1))*18-cost*7;
+        push("paralysis",card,target,score);
+      }
+      continue;
+    }
+    if(card?.spell==="poison"){
+      for(const target of enemyUnits){
+        if(typeof canDirectlyTarget==="function"&&!canDirectlyTarget(card,target))continue;
+        if(typeof isPoisonImmuneUnit==="function"&&isPoisonImmuneUnit(target))continue;
+        if(Number(target.poisonTurns||0)>0)continue;
+        const maxHp=Math.max(1,Number(effectiveMaxHp(target)||target.hp||1));
+        let score=250+hallvallaRtAiThreatValue(target)*1.05+maxHp*22-cost*7;
+        push("poison",card,target,score);
+      }
+      continue;
+    }
+    if(card?.trap==="slow"){
+      const amount=Math.max(0,Number(effectiveCardValue(card,"slow")||0));
+      for(const target of enemyUnits){
+        if(typeof canTargetStealth==="function"&&!canTargetStealth(card,target))continue;
+        if(Number(target.tempMovDebuff||0)>=amount&&amount>0)continue;
+        let score=210+hallvallaRtAiThreatValue(target)*1.05+Math.max(0,Number(target.mov||0))*35+amount*35-cost*6;
+        push("slow",card,target,score);
+      }
+      continue;
+    }
+    if(card?.trap==="beast_target"){
+      if(!aiLeader)continue;
+      for(const target of enemyUnits){
+        if(dist(aiLeader,target)>3)continue;
+        if(typeof canTargetStealth==="function"&&!canTargetStealth(card,target))continue;
+        let score=190+hallvallaRtAiThreatValue(target)+Math.max(0,Number(target.agi||0))*20-cost*6;
+        push("beast_target",card,target,score);
+      }
+      continue;
+    }
+    if(card?.trap==="reveal_stealth"){
+      const hidden=enemies.filter(u=>typeof isStealthedUnit==="function"&&isStealthedUnit(u));
+      if(!hidden.length)continue;
+      const target=[...hidden].sort((a,b)=>hallvallaRtAiThreatValue(b)-hallvallaRtAiThreatValue(a))[0];
+      push("reveal_stealth",card,target,320+hallvallaRtAiThreatValue(target)-cost*5,{cell:{x:target.x,y:target.y}});
+      continue;
+    }
+    if(card?.trap==="beast_cell"){
+      const cell=hallvallaRtAiBestCellTrapTarget(2,units);if(!cell)continue;
+      const nearest=enemies.length?Math.min(...enemies.map(e=>dist(cell,e))):9;
+      push("beast_cell",card,null,175+Math.max(0,8-nearest)*35-cost*5,{cell});
+      continue;
+    }
+    if(card?.trap==="legendary_mark"){
+      const active=typeof getActiveLegendaryTraps==="function"?getActiveLegendaryTraps():publicState?.legendaryTraps||[];
+      for(const target of enemyUnits){
+        if(typeof canTargetStealth==="function"&&!canTargetStealth(card,target))continue;
+        if(typeof canMarkLegendaryTrapForOwner==="function"&&!canMarkLegendaryTrapForOwner(card,target,2))continue;
+        if(active.some(t=>t?.owner===2&&t?.cardKey===card.key&&t?.targetId===target.id))continue;
+        let score=300+hallvallaRtAiThreatValue(target)*1.4+(target.special?100:0)-cost*6;
+        push("legendary_mark",card,target,score);
+      }
+      continue;
+    }
+  }
+  if(!options.length)return null;
+  // Si J2 aún no tiene ninguna invocación, una unidad pagable siempre abre el tablero.
+  if(!allyUnits.length){const forced=options.filter(o=>o.kind==="summon").sort((a,b)=>b.score-a.score)[0];if(forced)return forced;}
+  return options.sort((a,b)=>b.score-a.score||hallvallaRtAiCardCost(b.card)-hallvallaRtAiCardCost(a.card)||String(a.card?.name||"").localeCompare(String(b.card?.name||"")))[0]||null;
+}
+async function hallvallaRtAiResolvePlay(choice,ai,units,now){
+  if(!choice?.card)return false;
+  const card=choice.card,cost=hallvallaRtAiCardCost(card);
+  if(cost>Math.max(0,Number(ai.honor||0)))return false;
+  let nextUnits=[...(units||[])],patch={},log="",battleFxEvent=null,floatFxEvent=null,statusFxEvent=null;
+  let legendaryTraps=[...(publicState?.legendaryTraps||[])],beastTraps=[...(publicState?.beastTraps||[])];
+  const removeCard=()=>{ai.hand=(ai.hand||[]).filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=HALLVALLA_RT_CFG.resourceCap;};
+  if(choice.kind==="summon"){
+    const cell=choice.cell||hallvallaRtFindBestSpawnCell(2,nextUnits);if(!cell)return false;
+    let newUnit=makeUnit({...card,owner:2,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
+    newUnit={...newUnit,rtSummonedAt:now};
+    if(ownerHasUnit(1,"yi_sun_sin",nextUnits))newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
+    nextUnits.push(newUnit);
+    try{const fear=applyAfricanLionFearAura(nextUnits);nextUnits=fear.units||nextUnits;statusFxEvent=fear.statusFxEvent||null;floatFxEvent=fear.floatFxEvent||null;}catch(_){ }
+    removeCard();hallvallaRtRememberSummon(2,newUnit);
+    log=`J2 invoca ${card.name} por ${cost} ${getResourceLabel(2)} (TR).`;
+  }else if(choice.kind==="equipment"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===2&&Number(u.hp||0)>0);if(!target||!canEquipCardToUnit(card,target,2,nextUnits))return false;
+    nextUnits=nextUnits.map(u=>u.id===target.id?equipCardOnUnit(card,u):u);removeCard();
+    const equipped=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("buff",equipped,0,{iconText:card.icon||"✦",labelText:"EQUIPO"});
+    log=`J2 equipa ${card.name} a ${equipped.name}.`;
+  }else if(choice.kind==="damage"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&Number(u.hp||0)>0);if(!target||!canDirectlyTarget(card,target))return false;
+    const before=[...nextUnits],dmg=Math.max(0,Number(effectiveCardValue(card,"damage")||0)),kind=getCardMagicDamageType(card);
+    const appliesBurn=card.key==="fireball"&&!target.leader&&getUnitElementalAffinity(target,"fire")>0;
+    const appliesSandSlow=card.key==="bolt"&&!target.leader,sandSlow=Math.max(0,Number(card.slowPermanent||0));
+    const caster=hallvallaRtGetOwnerLeader(2,nextUnits);if(caster)battleFxEvent=makeMagicFxEvent(caster,target,kind,{type:"spell",spellKey:card.key,effectAction:"damage",impactScale:card.key==="fireball"?1.12:1,hit:true});
+    let actual=dmg,mult=1;
+    nextUnits=nextUnits.map(u=>{if(u.id!==target.id)return u;const r=applyMagicHpDamage(u,dmg,kind);actual=r.damage;mult=r.multiplier;return r.unit;});
+    nextUnits=applyLegendaryFatalSaves(nextUnits,[target.id]);
+    nextUnits=nextUnits.map(u=>{if(u.id!==target.id||Number(u.hp||0)<=0)return u;let n=u;if(appliesBurn)n=applyBurnToUnit(n,card.name,card.burnTurns||2,card.burnDamage||1);if(appliesSandSlow)n={...n,mov:Math.max(0,Number(n.mov||0)-sandSlow)};return n;}).filter(u=>Number(u.hp||0)>0);
+    try{const blood=applyBloodVictoryForDeaths(before,nextUnits);nextUnits=blood.units||nextUnits;if(blood.logs?.length)log+=` ${blood.logs.join(" ")}`;}catch(_){ }
+    const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("damage",live,actual);
+    statusFxEvent=appliesBurn?makeStatusFxEvent("burn_apply",live,1):(card.key==="fireball"&&target.leader?makeStatusFxEvent("fire_impact",live,0):(appliesSandSlow?makeStatusFxEvent("debuff",live,sandSlow):null));
+    removeCard();
+    const affinity=mult===0?" · INMUNE":mult>1?` · DEBILIDAD ×${mult}`:mult<1?` · RESISTENCIA ×${mult}`:"";
+    log=`J2 usa ${card.name}: ${target.name} recibe ${actual} daño mágico${affinity}.`+log;
+  }else if(choice.kind==="heal"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===2&&Number(u.hp||0)>0);if(!target||!canReceiveHealFromCard(card,target,2))return false;
+    if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return false;
+    const heal=Math.max(0,Number(effectiveCardValue(card,"heal")||0)),cleanse=cardCleanseEnabled(card),hadCleanse=cleanse&&hasCurableStatus(target),actual=Math.max(0,Math.min(effectiveMaxHp(target),Number(target.hp||0)+heal)-Number(target.hp||0));
+    const bh=resolveBuffHealLegendaryTraps(target,"curación",nextUnits);legendaryTraps=bh.traps||legendaryTraps;
+    if(!bh.cancel){const caster=hallvallaRtGetOwnerLeader(2,nextUnits);if(caster)battleFxEvent=makeMagicFxEvent(caster,target,"heal",{type:"heal",spellKey:card.key,effectAction:cleanse?"cleanse":"heal",hit:true});}
+    nextUnits=bh.cancel?bh.units:nextUnits.map(u=>u.id===target.id?(cleanse?clearCurableStatuses({...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+heal)}):{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+heal)}):u);
+    const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=bh.floatFxEvent||(bh.cancel?null:makeFloatFxEvent("heal",live,actual,{iconText:"✚",labelText:hadCleanse&&actual<=0?"LIMPIA":""}));statusFxEvent=bh.statusFxEvent||null;
+    removeCard();log=bh.cancel?(bh.logs||[]).join(" "):`J2 usa ${card.name}: ${target.name} ${actual>0?`cura ${actual} HP`:"limpia estados"}${hadCleanse?" y limpia estados curables":""}.`;
+  }else if(choice.kind==="buff"||choice.kind==="shield"||choice.kind==="guard"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===2&&Number(u.hp||0)>0);if(!target)return false;
+    const guard=choice.kind!=="buff",bh=resolveBuffHealLegendaryTraps(target,guard?"Guardia/buff":"buff",nextUnits);legendaryTraps=bh.traps||legendaryTraps;
+    if(choice.kind==="buff")nextUnits=bh.cancel?bh.units:nextUnits.map(u=>u.id===target.id?{...u,buffAtk:Number(u.buffAtk||0)+effectiveCardValue(card,"buff")}:u);
+    else if(choice.kind==="shield")nextUnits=bh.cancel?bh.units:nextUnits.map(u=>u.id===target.id?{...u,tempGuardBuff:Number(u.tempGuardBuff||0)+effectiveCardValue(card,"guard")}:u);
+    else nextUnits=bh.cancel?bh.units:nextUnits.map(u=>u.id===target.id?{...u,warningRuneGuard:effectiveCardValue(card,"guard"),warningRuneCardName:card.name}:u);
+    const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=bh.floatFxEvent||(bh.cancel?null:makeFloatFxEvent(choice.kind==="buff"?"buff":"guard_buff",live,effectiveCardValue(card,choice.kind==="buff"?"buff":"guard"),{iconText:choice.kind==="buff"?"▲":"🛡"}));statusFxEvent=bh.statusFxEvent||null;
+    removeCard();log=bh.cancel?(bh.logs||[]).join(" "):`J2 usa ${card.name} sobre ${target.name}.`;
+  }else if(choice.kind==="paralysis"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0);if(!target||!canDirectlyTarget(card,target))return false;
+    nextUnits=nextUnits.map(u=>u.id===target.id?applyBasicParalysisSpell(u,card.name,publicState):u);const live=nextUnits.find(u=>u.id===target.id)||target;const caster=hallvallaRtGetOwnerLeader(2,nextUnits);if(caster)battleFxEvent=makeMagicFxEvent(caster,live,"lightning",{type:"spell",spellKey:card.key,effectAction:"paralysis",impactSound:"impact_magic",hit:true});
+    statusFxEvent=makeStatusFxEvent("paralysis_apply",live,0);floatFxEvent=makeFloatFxEvent("paralysis",live,0,{iconText:"⚡",labelText:"PARÁLISIS"});removeCard();log=`J2 usa ${card.name}: ${target.name} queda paralizada.`;
+  }else if(choice.kind==="poison"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0);if(!target||!canDirectlyTarget(card,target)||isPoisonImmuneUnit(target))return false;
+    nextUnits=nextUnits.map(u=>u.id===target.id?applyBasicPoisonSpell(u,card.name,card.poisonTurns||3,card.poisonDamage||1):u);const live=nextUnits.find(u=>u.id===target.id)||target;const caster=hallvallaRtGetOwnerLeader(2,nextUnits);if(caster)battleFxEvent=makeMagicFxEvent(caster,live,"arcane",{type:"spell",spellKey:card.key,effectAction:"poison",impactSound:"impact_magic",hit:true});
+    statusFxEvent=makeStatusFxEvent("poison_apply",live,live.poisonDamage||1);floatFxEvent=makeFloatFxEvent("poison",live,live.poisonDamage||1,{iconText:"☠"});removeCard();log=`J2 usa ${card.name}: ${target.name} recibe Veneno.`;
+  }else if(choice.kind==="slow"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0);if(!target||!canTargetStealth(card,target))return false;
+    const amount=Math.max(0,Number(effectiveCardValue(card,"slow")||0)),agiSlow=Number(card.agiSlow||0);
+    nextUnits=nextUnits.map(u=>{if(u.id!==target.id)return u;const current=Number(u.tempMovDebuff||0);const n={...u,tempMovDebuff:Math.max(current,amount),tempMovDebuffSource:amount>=current?card.name:(u.tempMovDebuffSource||card.name)};if(agiSlow>0){n.tempAgiDebuff=Number(n.tempAgiDebuff||0)+agiSlow;n.tempAgiDebuffSource=card.name;}return n;});
+    const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("debuff",live,amount,{iconText:"▼"});removeCard();log=`J2 activa ${card.name}: ${target.name} pierde ${amount} MOV${agiSlow>0?` y ${agiSlow} AGI`:""}.`;
+  }else if(choice.kind==="beast_target"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0),leader=hallvallaRtGetOwnerLeader(2,nextUnits);if(!target||!leader||dist(leader,target)>3||!canTargetStealth(card,target))return false;
+    nextUnits=nextUnits.map(u=>u.id===target.id?{...u,tempAgiDebuff:Number(u.tempAgiDebuff||0)+2}:u);const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("debuff",live,2,{iconText:"▼"});removeCard();log=`J2 usa ${card.name}: ${target.name} pierde -2 AGI.`;
+  }else if(choice.kind==="reveal_stealth"){
+    const cell=choice.cell||{x:choice.target?.x,y:choice.target?.y};if(!Number.isFinite(Number(cell.x))||!Number.isFinite(Number(cell.y)))return false;
+    const rev=revealStealthInRadius(nextUnits,2,{x:Number(cell.x),y:Number(cell.y)},card.radius||2,card.name);nextUnits=rev.units;removeCard();log=`J2 usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
+  }else if(choice.kind==="beast_cell"){
+    const cell=choice.cell;if(!cell||getCellBeastTrapAt(cell.x,cell.y))return false;
+    beastTraps=[...beastTraps,makeBeastTrap(card,2,cell.x,cell.y)];removeCard();log=`J2 coloca ${card.name} en una celda de cacería.`;
+  }else if(choice.kind==="legendary_mark"){
+    const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0);if(!target||(typeof canMarkLegendaryTrapForOwner==="function"&&!canMarkLegendaryTrapForOwner(card,target,2)))return false;
+    legendaryTraps=[...legendaryTraps,makeTrapMark(card,target,2)];removeCard();log=`J2 coloca ${card.name} sobre ${target.name}.`;
+  }else return false;
+  hallvallaRtState.lastAiDeployAt=now;
+  patch={units:nextUnits,adventureAiState:ai,legendaryTraps,beastTraps,battleFxEvent:battleFxEvent||null,floatFxEvent:floatFxEvent||null,statusFxEvent:statusFxEvent||null,["playerStats/2"]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:ai.maxHonor,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length},log:[log,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
+  const ok=await updatePublic(patch);if(!ok)return false;
+  if(choice.kind==="damage")await finalizeBattle(nextUnits,log);
+  return true;
+}
 async function hallvallaRtAiDeploy(now){
   if(publicState?.mode!=="adventure"||!publicState?.adventureAiState)return false;
   if(now-hallvallaRtState.lastAiThinkAt<HALLVALLA_RT_CFG.aiThinkEveryMs)return false;
   hallvallaRtState.lastAiThinkAt=now;
-  // La IA reacciona en cuanto tiene MANÁ suficiente. El cooldown solo separa
-  // invocaciones consecutivas para conservar la velocidad visual de invocación.
   if(now-hallvallaRtState.lastAiDeployAt<HALLVALLA_RT_CFG.aiDeployCooldownMs)return false;
   const ai={...publicState.adventureAiState,hand:[...(publicState.adventureAiState.hand||[])],deck:[...(publicState.adventureAiState.deck||[])]};
-  const units=[...(publicState?.units||[])];
-  const mana=Math.max(0,Number(ai.honor||0));
-  // Entre las unidades que YA puede pagar, prioriza la de mayor coste efectivo
-  // (proxy principal de potencia/balance) y usa estadísticas como desempate.
-  // Así no guarda MANÁ esperando una carta futura: si puede invocar algo útil, lo hace.
-  const unitValue=(c)=>
-    Math.max(0,Number(c?.atk||0))*4+
-    Math.max(0,Number(c?.hp||0))*3+
-    Math.max(0,Number(c?.guard||0))*2+
-    Math.max(0,Number(c?.range||0))*2+
-    Math.max(0,Number(c?.mov||0))*1.5+
-    Math.max(0,Number(c?.dex||0))*0.8+
-    Math.max(0,Number(c?.agi||0))*0.6;
-  const affordable=ai.hand.filter(c=>c?.type==="unit"&&Math.max(0,Number(effectiveCardCost(c,2)||0))<=mana);
-  affordable.sort((a,b)=>{
-    const costDiff=Math.max(0,Number(effectiveCardCost(b,2)||0))-Math.max(0,Number(effectiveCardCost(a,2)||0));
-    if(costDiff)return costDiff;
-    return unitValue(b)-unitValue(a);
-  });
-  const card=affordable[0]||null;
-  if(!card)return false;
-  const cell=hallvallaRtFindBestSpawnCell(2,units);if(!cell)return false;
-  const cost=Math.max(0,Number(effectiveCardCost(card,2)||0));
-  let newUnit=makeUnit({...card,owner:2,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
-  newUnit={...newUnit,rtSummonedAt:now};
-  let nextUnits=[...units,newUnit];
-  try{const fear=applyAfricanLionFearAura(nextUnits);nextUnits=fear.units;}catch(_){ }
-  ai.hand=ai.hand.filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=HALLVALLA_RT_CFG.resourceCap;
-  hallvallaRtState.lastAiDeployAt=now;
-  await updatePublic({units:nextUnits,adventureAiState:ai,["playerStats/2"]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:ai.maxHonor,deck:ai.deck.length,hand:ai.hand.length},log:[`J2 invoca ${card.name} por ${cost} ${getResourceLabel(2)} (TR).`,...(publicState?.log||[])].slice(0,18)});
-  hallvallaRtRememberSummon(2,newUnit);
-  return true;
+  const units=[...(publicState?.units||[])],mana=Math.max(0,Number(ai.honor||0));
+  const choice=hallvallaRtAiChoosePlay(ai,units,mana);if(!choice)return false;
+  try{return await hallvallaRtAiResolvePlay(choice,ai,units,now);}catch(error){console.warn("[HallValla][RT][AI] jugada táctica falló",error);return false;}
 }
 
 async function hallvallaRtLeaderEffectsTick(now){
