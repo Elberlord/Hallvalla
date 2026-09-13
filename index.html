@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260913.77">
-<meta name="hallvalla-build" content="v8_MODULAR_20260913.77">
-<meta name="hallvalla-build-name" content="DEV · TR arsenal táctico + bindings finales 20260913.77 + Control Universal + Mina">
-<link rel="stylesheet" href="styles.css?h=ce87d88311f6"/>
+<meta name="hallvalla-version" content="20260913.78">
+<meta name="hallvalla-build" content="v8_MODULAR_20260913.78">
+<meta name="hallvalla-build-name" content="DEV · TR arsenal iconográfico + invocación automática 20260913.78 + Control Universal + Mina">
+<link rel="stylesheet" href="styles.css?h=f00c228cb7f8"/>
 
-<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.77">
-<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.77">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.77">
+<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.78">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.78">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.78">
 </head>
 <!-- HALLVALLA ORGANIZED V2: index conserva la estructura visual original. -->
 <body>
@@ -1238,13 +1238,13 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 <div id="rtArsenalPanel" class="rt-arsenal-panel" aria-label="Selector táctico TR" hidden>
-  <div class="rt-arsenal-context"><button type="button" class="rt-arsenal-back" data-rt-back aria-label="Volver" hidden>↶</button><strong id="rtArsenalContextTitle" hidden></strong></div>
+  <div class="rt-arsenal-context"><button type="button" class="rt-arsenal-back" data-rt-back aria-label="Volver" hidden><span aria-hidden="true">↶</span><span class="rt-back-bind-host"></span></button><strong id="rtArsenalContextTitle" hidden></strong></div>
   <div class="rt-arsenal-categories" role="tablist" aria-label="Tipo de carta">
-    <button type="button" class="rt-arsenal-category" data-rt-category="unit" title="X · Unidades"><span aria-hidden="true">⚔</span><small>UNIDADES</small><i>X</i></button>
-    <button type="button" class="rt-arsenal-category" data-rt-category="spell" title="A · Magias"><span aria-hidden="true">✦</span><small>MAGIAS</small><i>A</i></button>
-    <button type="button" class="rt-arsenal-category" data-rt-category="trap" title="Y · Trampas"><span aria-hidden="true">◆</span><small>TRAMPAS</small><i>Y</i></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="unit" aria-label="Unidades"><img src="assets/ui/realtime/category-units.webp" alt=""><span class="rt-category-bind-host"></span></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="spell" aria-label="Magias"><img src="assets/ui/realtime/category-spells.webp" alt=""><span class="rt-category-bind-host"></span></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="trap" aria-label="Trampas"><img src="assets/ui/realtime/category-traps.webp" alt=""><span class="rt-category-bind-host"></span></button>
   </div>
-  <div class="rt-arsenal-pagebar" hidden><button type="button" data-rt-page="prev" aria-label="Página anterior">LT / ‹</button><span id="rtArsenalPageLabel">1/1</span><button type="button" data-rt-page="next" aria-label="Página siguiente">› / RT</button></div>
+  <div class="rt-arsenal-pagebar" hidden><button type="button" data-rt-page="prev" aria-label="Página anterior"><span class="rt-page-arrow">‹</span><span class="rt-page-bind-host"></span></button><span id="rtArsenalPageLabel">1/1</span><button type="button" data-rt-page="next" aria-label="Página siguiente"><span class="rt-page-arrow">›</span><span class="rt-page-bind-host"></span></button></div>
   <div id="rtArsenalCards" class="rt-arsenal-cards" hidden></div>
 </div>
 <button id="rtTargetCancelBtn" class="rt-target-cancel" type="button" aria-label="Cancelar selección" hidden>↶</button>
@@ -1499,6 +1499,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=8b10326d0b5d"></script>
+<script type="module" src="js/bootstrap-loader.js?h=b642d135eb65"></script>
 </body>
 </html>

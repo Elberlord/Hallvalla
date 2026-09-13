@@ -623,12 +623,12 @@ function hvGamepadHandleButtons(gp){
       if(pressed.B&&typeof hallvallaRtCancelInput==="function")hallvallaRtCancelInput();
       return;
     }
-    if(pressed.B&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("cancel");
-    if(pressed.X&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice1");
-    if(pressed.A&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice2");
-    if(pressed.Y&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice3");
-    if(pressed.LT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pagePrev");
-    if(pressed.RT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pageNext");
+    if(pressed.B&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("cancel","gamepad");
+    if(pressed.X&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice1","gamepad");
+    if(pressed.A&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice2","gamepad");
+    if(pressed.Y&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice3","gamepad");
+    if(pressed.LT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pagePrev","gamepad");
+    if(pressed.RT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pageNext","gamepad");
     return;
   }
 

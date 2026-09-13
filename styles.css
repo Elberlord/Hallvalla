@@ -28465,16 +28465,97 @@ body.hv-rt-experimental.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer{
   pointer-events:none !important;
 }
 
-
-/* HallValla 20260913.76 - TR tactical arsenal selector */
+/* ============================================================
+   HallValla 20260913.78 — TR arsenal iconográfico canónico
+   ============================================================ */
 .rt-arsenal-panel{display:none;}
-html.hv-rt-experimental #rtArsenalPanel{display:flex!important;position:absolute;left:14px;top:122px;width:176px;z-index:46;flex-direction:column;gap:8px;padding:8px;border:1px solid rgba(218,178,82,.24);border-radius:14px;background:rgba(4,6,9,.78);box-shadow:0 8px 24px rgba(0,0,0,.32);backdrop-filter:blur(5px)}
-html.hv-rt-experimental #handDrawer,html.hv-rt-experimental #handBtn{display:none!important}
-.rt-arsenal-categories{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.rt-arsenal-category{min-width:0;height:42px;border:0;border-radius:10px;background:rgba(255,255,255,.045);color:#d7caa7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
-.rt-arsenal-category span{font-size:18px;line-height:1}.rt-arsenal-category small{font-size:7px;letter-spacing:.05em}.rt-arsenal-category.active{background:rgba(191,145,48,.22);color:#ffe5a0;box-shadow:inset 0 0 0 1px rgba(234,194,96,.36)}
-.rt-arsenal-pagebar{height:20px;display:flex;align-items:center;justify-content:center;gap:12px;color:#c9b77f;font:700 9px/1 system-ui}.rt-arsenal-pagebar button{width:24px;height:20px;border:0;background:transparent;color:#e9d18c;font-size:18px;line-height:16px;cursor:pointer}
-.rt-arsenal-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;min-height:58px}.rt-arsenal-card{position:relative;min-width:0;aspect-ratio:.78;border:0;border-radius:9px;padding:2px;background:rgba(255,255,255,.035);opacity:.45;overflow:hidden;cursor:not-allowed}.rt-arsenal-card.is-playable{opacity:1;cursor:pointer}.rt-arsenal-card.selected{box-shadow:0 0 0 2px #f1cf6c,0 0 16px rgba(241,207,108,.32)}
-.rt-arsenal-art{position:absolute;inset:2px;display:block;overflow:hidden;border-radius:7px}.rt-arsenal-art img,.rt-arsenal-art-img{width:100%!important;height:100%!important;object-fit:cover!important}.rt-arsenal-cost{position:absolute;right:3px;bottom:3px;min-width:17px;height:17px;border-radius:9px;background:#111a2a;color:#d9efff;font:800 10px/17px system-ui;text-align:center;box-shadow:0 0 0 1px rgba(133,199,255,.55)}.rt-arsenal-slot{position:absolute;z-index:3;left:3px;top:3px;width:15px;height:15px;border-radius:50%;background:rgba(0,0,0,.72);color:#f6d87b;font:800 9px/15px system-ui;text-align:center}.rt-arsenal-empty{grid-column:1/-1;color:rgba(228,218,190,.56);font:700 9px/58px system-ui;text-align:center;text-transform:uppercase}
-@media(max-width:760px){html.hv-rt-experimental #rtArsenalPanel{left:7px;top:96px;width:154px;padding:6px;gap:5px}.rt-arsenal-category{height:36px}.rt-arsenal-category span{font-size:16px}.rt-arsenal-category small{font-size:6px}}
-\n\n/* ============================================================\n   HallValla 20260913.77 — TR bindings finales: mando/teclado/móvil\n   ============================================================ */\nhtml.hv-rt-experimental #rtArsenalPanel{\n  width:184px!important;gap:6px!important;padding:7px!important;\n}\n.rt-arsenal-context{display:flex;align-items:center;justify-content:flex-start;gap:7px;min-height:0}\n.rt-arsenal-context:has([hidden]){min-height:0}\n.rt-arsenal-context strong{color:#f2d98c;font:800 9px/1 system-ui;letter-spacing:.08em}\n.rt-arsenal-back{width:26px;height:24px;border:1px solid rgba(222,181,79,.28);border-radius:8px;background:rgba(255,255,255,.035);color:#f2d98c;font:900 17px/20px system-ui;cursor:pointer}\n.rt-arsenal-category{position:relative}\n.rt-arsenal-category i{position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,.72);color:#f6d87b;font:900 8px/14px system-ui;font-style:normal;text-align:center}\n.rt-arsenal-pagebar button{width:auto;min-width:44px;font-size:9px;font-weight:900;letter-spacing:.02em}\n.rt-arsenal-key{position:absolute;z-index:3;left:3px;bottom:3px;max-width:30px;padding:1px 3px;border-radius:5px;background:rgba(0,0,0,.72);color:#e9d18c;font:800 7px/12px system-ui;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\nhtml.hv-rt-experimental.hv-rt-card-targeting #rtArsenalPanel,body.hv-rt-experimental.hv-rt-card-targeting #rtArsenalPanel{visibility:hidden!important;opacity:0!important;pointer-events:none!important}\n.rt-target-cancel{display:none;position:absolute;z-index:50;left:70px;top:175px;width:38px;height:38px;border:1px solid rgba(225,185,83,.55);border-radius:50%;background:rgba(4,6,9,.88);color:#f4d77f;font:900 22px/34px system-ui;box-shadow:0 4px 16px rgba(0,0,0,.35);cursor:pointer}\nhtml.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){display:block}\n#grid .cell.hv-rt-target-cursor{outline:3px solid rgba(255,226,122,.98)!important;outline-offset:-4px;box-shadow:inset 0 0 0 2px rgba(22,13,3,.9),inset 0 0 19px rgba(255,215,80,.22),0 0 12px rgba(255,215,80,.55)!important;z-index:30}\n#grid .cell.hv-rt-target-cursor::after{content:"";position:absolute;inset:5px;border:1px dashed rgba(255,244,194,.95);pointer-events:none;z-index:95}\n.settings-controls-zone{margin:12px 0;padding:12px;border:1px solid rgba(207,164,69,.24);border-radius:14px;background:rgba(8,10,14,.48)}\n.settings-controls-zone>b{display:block;margin-bottom:4px;color:#f1d58d}.settings-controls-zone>p{margin:4px 0 10px;color:#c8c1b1;font-size:11px;line-height:1.35}\n.rt-keybind-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}\n.rt-keybind-grid button{min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.035);color:#ddd3ba;text-align:left;cursor:pointer}\n.rt-keybind-grid button span{font:700 9px/1.18 system-ui}.rt-keybind-grid button strong{flex:none;min-width:42px;padding:4px 6px;border-radius:7px;background:#111723;color:#f2d47d;font:900 9px/1 system-ui;text-align:center}\n.rt-keybind-grid button.is-capturing{border-color:#f0c85e;box-shadow:0 0 0 1px rgba(240,200,94,.28),0 0 12px rgba(240,200,94,.16)}\n@media(max-width:760px){html.hv-rt-experimental #rtArsenalPanel{width:160px!important}.rt-target-cancel{left:54px;top:145px;width:34px;height:34px}.rt-keybind-grid{grid-template-columns:1fr}}\n
+html.hv-rt-experimental #rtArsenalPanel{
+  display:flex!important;
+  position:absolute;
+  left:16px;
+  top:122px;
+  width:186px;
+  z-index:46;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:7px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+  overflow:visible;
+}
+html.hv-rt-experimental #handDrawer,
+html.hv-rt-experimental #handBtn{display:none!important;}
+.rt-arsenal-context{display:flex;align-items:center;height:25px;overflow:visible;}
+.rt-arsenal-context strong{display:none!important;}
+.rt-arsenal-back{
+  position:relative;width:30px;height:25px;padding:0;border:0;background:transparent;color:#f1d58a;
+  font:900 21px/24px Georgia,serif;cursor:pointer;overflow:visible;
+}
+.rt-arsenal-categories{display:flex;align-items:center;justify-content:flex-start;gap:7px;width:100%;overflow:visible;}
+.rt-arsenal-category{
+  position:relative;flex:0 0 52px;width:52px;height:52px;padding:0;border:0;background:transparent;
+  border-radius:11px;cursor:pointer;overflow:visible;transition:transform .12s ease,filter .12s ease;
+}
+.rt-arsenal-category[hidden]{display:none!important;}
+.rt-arsenal-category>img{display:block;width:52px;height:52px;object-fit:cover;border-radius:11px;pointer-events:none;}
+.rt-arsenal-category:hover,.rt-arsenal-category.active{transform:translateY(-2px);filter:brightness(1.1) drop-shadow(0 0 8px rgba(242,198,83,.34));}
+.rt-arsenal-pagebar{display:flex;align-items:center;justify-content:flex-start;gap:7px;height:22px;overflow:visible;color:#d8c48a;font:800 9px/1 system-ui;}
+.rt-arsenal-pagebar button{position:relative;width:34px;height:22px;padding:0;border:0;background:transparent;color:#e7cd83;cursor:pointer;overflow:visible;}
+.rt-page-arrow{font:900 21px/18px Georgia,serif;}
+#rtArsenalPageLabel{min-width:25px;text-align:center;}
+.rt-arsenal-cards{display:flex;align-items:flex-start;justify-content:flex-start;gap:7px;width:100%;min-height:54px;overflow:visible;}
+.rt-arsenal-card{
+  position:relative;flex:0 0 52px;width:52px;height:52px;padding:0;border:0;border-radius:10px;
+  background:#070a10;overflow:visible;cursor:not-allowed;filter:grayscale(.78) brightness(.28) saturate(.35);
+  opacity:.72;transition:transform .12s ease,filter .15s ease,opacity .15s ease;
+}
+.rt-arsenal-card.is-playable{cursor:pointer;filter:none;opacity:1;}
+.rt-arsenal-card.is-playable:hover{transform:translateY(-3px) scale(1.035);filter:brightness(1.08) drop-shadow(0 0 8px rgba(242,198,83,.26));}
+.rt-arsenal-art{position:absolute;inset:0;display:block;overflow:hidden;border-radius:10px;background:#06080c;}
+.rt-arsenal-art img,.rt-arsenal-art-img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;}
+.rt-arsenal-cost{
+  position:absolute;z-index:5;right:-3px;bottom:-3px;min-width:18px;height:18px;padding:0 3px;border-radius:10px;
+  background:#081828;color:#cfefff;font:900 10px/18px system-ui;text-align:center;
+  box-shadow:0 0 0 1px rgba(93,190,255,.72),0 2px 5px rgba(0,0,0,.5);
+}
+.rt-arsenal-copies{
+  position:absolute;z-index:5;left:-3px;bottom:-3px;min-width:18px;height:18px;padding:0 3px;border-radius:10px;
+  background:#17120a;color:#f4d77d;font:900 9px/18px system-ui;text-align:center;
+  box-shadow:0 0 0 1px rgba(224,178,71,.66),0 2px 5px rgba(0,0,0,.5);
+}
+.rt-arsenal-empty{display:none!important;}
+.rt-category-bind-host,.rt-card-bind-host,.rt-back-bind-host,.rt-page-bind-host{position:absolute;z-index:9;display:block;pointer-events:none;}
+.rt-category-bind-host{right:-6px;top:-6px;width:21px;height:21px;}
+.rt-card-bind-host{right:-6px;top:-6px;width:20px;height:20px;}
+.rt-back-bind-host{right:-13px;top:-6px;width:18px;height:18px;}
+.rt-page-bind-host{right:-9px;top:-5px;width:18px;height:18px;}
+.rt-bind-badge{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55));}
+.rt-bind-badge-key{position:relative;width:100%;height:100%;display:block;}
+.rt-bind-badge-key>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+.rt-bind-badge-key>b{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 2px;color:#f6edda;
+  font:900 6px/1 system-ui;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;
+}
+html.hv-rt-experimental.hv-rt-card-targeting #rtArsenalPanel,
+body.hv-rt-experimental.hv-rt-card-targeting #rtArsenalPanel{visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
+.rt-target-cancel{display:none;position:absolute;z-index:50;left:70px;top:175px;width:38px;height:38px;border:1px solid rgba(225,185,83,.55);border-radius:50%;background:rgba(4,6,9,.88);color:#f4d77f;font:900 22px/34px system-ui;box-shadow:0 4px 16px rgba(0,0,0,.35);cursor:pointer;}
+html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){display:block;}
+#grid .cell.hv-rt-target-cursor{outline:3px solid rgba(255,226,122,.98)!important;outline-offset:-4px;box-shadow:inset 0 0 0 2px rgba(22,13,3,.9),inset 0 0 19px rgba(255,215,80,.22),0 0 12px rgba(255,215,80,.55)!important;z-index:30;}
+#grid .cell.hv-rt-target-cursor::after{content:"";position:absolute;inset:5px;border:1px dashed rgba(255,244,194,.95);pointer-events:none;z-index:95;}
+.settings-controls-zone{margin:12px 0;padding:12px;border:1px solid rgba(207,164,69,.24);border-radius:14px;background:rgba(8,10,14,.48);}
+.settings-controls-zone>b{display:block;margin-bottom:4px;color:#f1d58d}.settings-controls-zone>p{margin:4px 0 10px;color:#c8c1b1;font-size:11px;line-height:1.35}
+.rt-keybind-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.rt-keybind-grid button{min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.035);color:#ddd3ba;text-align:left;cursor:pointer}
+.rt-keybind-grid button span{font:700 9px/1.18 system-ui}.rt-keybind-grid button strong{flex:none;min-width:42px;padding:4px 6px;border-radius:7px;background:#111723;color:#f2d47d;font:900 9px/1 system-ui;text-align:center}
+.rt-keybind-grid button.is-capturing{border-color:#f0c85e;box-shadow:0 0 0 1px rgba(240,200,94,.28),0 0 12px rgba(240,200,94,.16)}
+@media(max-width:760px){
+  html.hv-rt-experimental #rtArsenalPanel{left:8px;top:96px;width:168px;gap:5px;}
+  .rt-arsenal-category,.rt-arsenal-category>img,.rt-arsenal-card{width:48px;height:48px;flex-basis:48px;}
+  .rt-arsenal-categories,.rt-arsenal-cards{gap:5px;}
+  .rt-target-cancel{left:54px;top:145px;width:34px;height:34px;}
+  .rt-keybind-grid{grid-template-columns:1fr;}
+}

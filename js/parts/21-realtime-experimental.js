@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260913.77 · Combate TR experimental (DEV only)
+/* HallValla 20260913.78 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
      selector táctico contextual, bindings finales y unidades autónomas.
@@ -47,6 +47,8 @@ const hallvallaRtState={
   lastAiDeployAt:0,
   lastLeaderEffectAt:0,
   handSuppressed:false,
+  inputDevice:(globalThis.matchMedia?.("(pointer:coarse)")?.matches?"touch":"keyboard"),
+  playBusy:false,
   moveAt:new Map(),
   attackAt:new Map(),
   statusNode:null
@@ -57,18 +59,21 @@ globalThis.isHallvallaRealtimeExperimental=isHallvallaRealtimeExperimental;
 function hallvallaRtNow(){return Date.now();}
 function hallvallaRtBattleReady(){return !!(publicState&&privateState&&gameId&&!isBattleEnded());}
 function hallvallaRtGetOwnerLeader(owner,units=publicState?.units||[]){return (units||[]).find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0)||null;}
-function hallvallaRtGetSummonZones(owner,units=publicState?.units||[]){
+function hallvallaRtGetSpawnCells(owner,units=publicState?.units||[]){
   const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return[];
   const occupied=new Set((units||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>`${u.x},${u.y}`));
-  const out=[];
-  const mid=(ROWS-1)/2;
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-    if(occupied.has(`${x},${y}`))continue;
-    const alliedHalf=Number(owner)===1?y>mid:y<mid;
-    if(alliedHalf)out.push({x,y});
-  }
-  return out;
+  const dir=Number(owner)===1?-1:1;
+  const offsets=[[0,dir],[-1,dir],[1,dir],[-1,0],[1,0]];
+  return offsets.map(([dx,dy])=>({x:Number(leader.x)+dx,y:Number(leader.y)+dy}))
+    .filter(c=>c.x>=0&&c.x<COLS&&c.y>=0&&c.y<ROWS&&!occupied.has(`${c.x},${c.y}`));
 }
+function hallvallaRtFindBestSpawnCell(owner,units=publicState?.units||[]){
+  return hallvallaRtGetSpawnCells(owner,units)[0]||null;
+}
+function hallvallaRtGetSummonZones(owner,units=publicState?.units||[]){
+  return hallvallaRtGetSpawnCells(owner,units);
+}
+globalThis.hallvallaRtFindBestSpawnCell=hallvallaRtFindBestSpawnCell;
 function hallvallaRtIsHandSuppressed(){return hallvallaRtState.handSuppressed===true;}
 function hallvallaRtClearTargetCursor(){
   hallvallaRtState.targetCursorX=null;hallvallaRtState.targetCursorY=null;
@@ -108,11 +113,13 @@ function hallvallaRtSuppressHandFocus(){
 function hallvallaRtReleaseHandFocus(){
   if(!isHallvallaRealtimeExperimental())return false;
   hallvallaRtState.handSuppressed=false;
-  hallvallaRtState.arsenalLevel="root";
-  hallvallaRtState.arsenalPage=0;
   hallvallaRtClearTargetCursor();
-  handOpen=true;handManualCloseKey="";
-  const drawer=document.getElementById("handDrawer");if(drawer)drawer.classList.add("open");
+  handOpen=false;handManualCloseKey="";
+  const drawer=document.getElementById("handDrawer");if(drawer)drawer.classList.remove("open");
+  const category=hallvallaRtState.arsenalCategory||"unit";
+  const remain=hallvallaRtArsenalCards(category).length;
+  hallvallaRtState.arsenalLevel=remain>0?"cards":"root";
+  if(!remain)hallvallaRtState.arsenalPage=0;
   hallvallaRtUpdateUi();
   return true;
 }
@@ -181,6 +188,26 @@ function hallvallaRtKeyLabel(code){
   if(/^Numpad/.test(c))return c.replace("Numpad","NUM ");
   return c.replace(/^BracketLeft$/,"[").replace(/^BracketRight$/,"]").replace(/^Semicolon$/,";").replace(/^Quote$/,"'").replace(/^Comma$/,",").replace(/^Period$/,".").replace(/^Slash$/, "/").replace(/^Backslash$/, "\\")||"—";
 }
+function hallvallaRtSetInputDevice(device){
+  const next=["gamepad","keyboard","touch"].includes(device)?device:"keyboard";
+  if(hallvallaRtState.inputDevice===next)return;
+  hallvallaRtState.inputDevice=next;
+  hallvallaRtRenderArsenal();
+}
+function hallvallaRtControllerBadgeSrc(action){
+  const map={choice1:"badge-x.webp",choice2:"badge-a.webp",choice3:"badge-y.webp",cancel:"badge-b.webp",pagePrev:"badge-lt.webp",pageNext:"badge-rt.webp"};
+  const file=map[action]||"";return file?`assets/ui/realtime/${file}`:"";
+}
+function hallvallaRtBindingBadgeHtml(action,extraClass=""){
+  const device=hallvallaRtState.inputDevice||"keyboard";
+  if(device==="touch")return "";
+  if(device==="gamepad"){
+    const src=hallvallaRtControllerBadgeSrc(action);return src?`<img class="rt-bind-badge ${extraClass}" src="${src}" alt="" aria-hidden="true">`:"";
+  }
+  const code=hallvallaRtLoadKeybinds()[action]||"";
+  const label=hallvallaRtKeyLabel(code);
+  return `<span class="rt-bind-badge rt-bind-badge-key ${extraClass}" aria-hidden="true"><img src="assets/ui/realtime/badge-key-blank.webp" alt=""><b>${escapeHtml(label)}</b></span>`;
+}
 function hallvallaRtBindingActionForCode(code){
   const binds=hallvallaRtLoadKeybinds();
   for(const key of Object.keys(HALLVALLA_RT_KEYBIND_DEFAULTS))if(binds[key]===code)return key;
@@ -211,18 +238,43 @@ function hallvallaRtBeginKeyCapture(action){
 function hallvallaRtResetKeybinds(){hallvallaRtState.keyCaptureAction="";hallvallaRtSaveKeybinds({...HALLVALLA_RT_KEYBIND_DEFAULTS});}
 function hallvallaRtGetInputState(){return hallvallaRtState.arsenalLevel||"root";}
 function hallvallaRtOpenCategory(category){
-  if(!["unit","spell","trap"].includes(category))return false;
+  if(!["unit","spell","trap"].includes(category)||hallvallaRtArsenalCards(category).length===0)return false;
   hallvallaRtState.arsenalCategory=category;hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="cards";hallvallaRtRenderArsenal();return true;
 }
 function hallvallaRtChangePage(delta){
   if(hallvallaRtState.arsenalLevel!=="cards")return false;
-  const cards=hallvallaRtArsenalCards(),pages=Math.max(1,Math.ceil(cards.length/3));
+  const entries=hallvallaRtArsenalEntries(),pages=Math.max(1,Math.ceil(entries.length/3));
   hallvallaRtState.arsenalPage=(hallvallaRtState.arsenalPage+delta+pages)%pages;hallvallaRtRenderArsenal();return true;
+}
+async function hallvallaRtPlayUnitImmediate(card){
+  if(!card||card.type!=="unit"||hallvallaRtState.playBusy)return false;
+  const state=getCardPlayState(card);if(!state.canPlay){setHint(state.reason||`No puedes jugar ${card.name}.`);return false;}
+  hallvallaRtState.playBusy=true;
+  let units=[...(publicState?.units||[])];
+  const cell=hallvallaRtFindBestSpawnCell(myPlayer,units);
+  if(!cell){hallvallaRtState.playBusy=false;setHint("SIN ESPACIO junto a tu líder.");return false;}
+  const summonCostInfo=getCardCostBreakdown(card,myPlayer,units);
+  const paidCostText=getPaidSummonCostText(card,myPlayer,units);
+  let newUnit=makeUnit({...card,owner:myPlayer,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
+  if(ownerHasUnit(myPlayer===1?2:1,"yi_sun_sin",units)){
+    newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
+  }
+  units.push(newUnit);
+  let fear={units,statusFxEvent:null,floatFxEvent:null,logs:[]};
+  try{fear=applyAfricanLionFearAura(units)||fear;units=fear.units||units;}catch(_){ }
+  const ok=await commitCardPlay(card,{units,statusFxEvent:fear.statusFxEvent||null,floatFxEvent:fear.floatFxEvent||null},summonCostInfo.effective,[`J${myPlayer} invoca ${card.name} automáticamente junto a su líder por ${paidCostText}.`,...(fear.logs||[])].join(" "));
+  if(!ok){hallvallaRtState.playBusy=false;setHint("No se pudo confirmar la invocación.");return false;}
+  selectedCard=null;highlights=[];highlightType="";
+  setHint(`${card.name} fue invocada automáticamente junto a tu líder.`);
+  hallvallaRtState.playBusy=false;
+  hallvallaRtRenderArsenal();
+  return true;
 }
 function hallvallaRtSelectSlot(index){
   if(hallvallaRtState.arsenalLevel!=="cards")return false;
-  const cards=hallvallaRtArsenalCards();const card=cards[hallvallaRtState.arsenalPage*3+index];if(!card)return false;
-  const state=getCardPlayState(card);if(!state.canPlay){setHint(`No tienes ${getResourceLabel(myPlayer)} suficiente para ${card.name}.`);return true;}
+  const entries=hallvallaRtArsenalEntries();const entry=entries[hallvallaRtState.arsenalPage*3+index];const card=entry?.card;if(!card)return false;
+  const state=getCardPlayState(card);if(!state.canPlay){setHint(state.reason||`No tienes ${getResourceLabel(myPlayer)} suficiente para ${card.name}.`);return true;}
+  if(card.type==="unit"){void hallvallaRtPlayUnitImmediate(card);return true;}
   selectCard(card);return true;
 }
 function hallvallaRtMoveTargetCursor(dx,dy){
@@ -248,8 +300,9 @@ function hallvallaRtCancelInput(){
   if(level==="cards"){hallvallaRtState.arsenalLevel="root";hallvallaRtState.arsenalPage=0;hallvallaRtRenderArsenal();return true;}
   return false;
 }
-function hallvallaRtInputAction(action){
+function hallvallaRtInputAction(action,source=""){
   if(!isHallvallaRealtimeExperimental())return false;
+  if(source)hallvallaRtSetInputDevice(source);
   const level=hallvallaRtState.arsenalLevel||"root";
   if(action==="cancel")return hallvallaRtCancelInput();
   if(level==="targeting"){
@@ -275,35 +328,57 @@ function hallvallaRtCardCategory(card){
 function hallvallaRtArsenalCards(category=hallvallaRtState.arsenalCategory){
   return [...(privateState?.hand||[])].filter(c=>hallvallaRtCardCategory(c)===category).sort((a,b)=>(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a.name||"").localeCompare(String(b.name||"")));
 }
+function hallvallaRtArsenalEntries(category=hallvallaRtState.arsenalCategory){
+  const groups=new Map();
+  for(const card of hallvallaRtArsenalCards(category)){
+    const key=`${hallvallaRtCardCategory(card)}:${card.key||card.name||card.id}`;
+    const hit=groups.get(key);if(hit){hit.copies+=1;hit.ids.push(card.id);}else groups.set(key,{card,copies:1,ids:[card.id]});
+  }
+  return [...groups.values()].sort((a,b)=>(effectiveCardCost(a.card,myPlayer)-effectiveCardCost(b.card,myPlayer))||String(a.card.name||"").localeCompare(String(b.card.name||"")));
+}
+function hallvallaRtAvailableCategories(){return ["unit","spell","trap"].filter(cat=>hallvallaRtArsenalCards(cat).length>0);}
+
 function hallvallaRtRenderArsenal(){
   const panel=document.getElementById("rtArsenalPanel");if(!panel)return;
   const active=isHallvallaRealtimeExperimental();panel.hidden=!active;if(!active)return;
-  const level=hallvallaRtState.arsenalLevel||"root",category=hallvallaRtState.arsenalCategory||"unit";
+  const categories=hallvallaRtAvailableCategories();
+  if(!categories.length){panel.hidden=true;return;}panel.hidden=false;
+  let level=hallvallaRtState.arsenalLevel||"root",category=hallvallaRtState.arsenalCategory||categories[0]||"unit";
+  if(level==="cards"&&!categories.includes(category)){level="root";hallvallaRtState.arsenalLevel="root";hallvallaRtState.arsenalPage=0;}
   panel.dataset.level=level;
-  panel.querySelectorAll("[data-rt-category]").forEach(btn=>btn.classList.toggle("active",btn.dataset.rtCategory===category&&level!=="root"));
   const rootBox=panel.querySelector(".rt-arsenal-categories"),cardsBox=document.getElementById("rtArsenalCards"),pagebar=panel.querySelector(".rt-arsenal-pagebar"),back=panel.querySelector("[data-rt-back]"),title=document.getElementById("rtArsenalContextTitle");
+  panel.querySelectorAll("[data-rt-category]").forEach(btn=>{
+    const cat=btn.dataset.rtCategory||"unit",visible=categories.includes(cat);btn.hidden=!visible;
+    btn.classList.toggle("active",cat===category&&level!=="root");
+    const host=btn.querySelector(".rt-category-bind-host");if(host)host.innerHTML=hallvallaRtBindingBadgeHtml(cat==="unit"?"choice1":cat==="spell"?"choice2":"choice3","rt-category-bind");
+  });
   if(rootBox)rootBox.hidden=level!=="root";if(cardsBox)cardsBox.hidden=level!=="cards";if(pagebar)pagebar.hidden=level!=="cards";if(back)back.hidden=level==="root";
-  if(title){title.hidden=level==="root";title.textContent=level==="targeting"?(selectedCard?.name||"OBJETIVO"):(category==="unit"?"UNIDADES":category==="spell"?"MAGIAS":"TRAMPAS");}
+  if(title){title.hidden=true;title.textContent="";}
+  if(back){const host=back.querySelector(".rt-back-bind-host");if(host)host.innerHTML=hallvallaRtBindingBadgeHtml("cancel","rt-back-bind");}
   const cancel=document.getElementById("rtTargetCancelBtn");if(cancel)cancel.hidden=!(active&&level==="targeting");
   if(level!=="cards")return;
-  const cards=hallvallaRtArsenalCards(category),pages=Math.max(1,Math.ceil(cards.length/3));
+  const entries=hallvallaRtArsenalEntries(category),pages=Math.max(1,Math.ceil(entries.length/3));
+  if(pagebar)pagebar.hidden=entries.length<=3;
   hallvallaRtState.arsenalPage=Math.max(0,Math.min(pages-1,Number(hallvallaRtState.arsenalPage)||0));
-  const page=hallvallaRtState.arsenalPage,slice=cards.slice(page*3,page*3+3);
+  const page=hallvallaRtState.arsenalPage,slice=entries.slice(page*3,page*3+3);
   const label=document.getElementById("rtArsenalPageLabel");if(label)label.textContent=`${page+1}/${pages}`;
+  const prev=pagebar?.querySelector('[data-rt-page="prev"] .rt-page-bind-host');if(prev)prev.innerHTML=hallvallaRtBindingBadgeHtml("pagePrev","rt-page-bind");
+  const next=pagebar?.querySelector('[data-rt-page="next"] .rt-page-bind-host');if(next)next.innerHTML=hallvallaRtBindingBadgeHtml("pageNext","rt-page-bind");
   if(!cardsBox)return;
-  cardsBox.innerHTML=slice.length?slice.map((card,i)=>{
-    const state=getCardPlayState(card),cost=Math.max(0,Number(effectiveCardCost(card,myPlayer)||0));
-    const pad=["X","A","Y"][i],key=hallvallaRtKeyLabel(hallvallaRtLoadKeybinds()[`choice${i+1}`]);
-    return `<button type="button" class="rt-arsenal-card${state.canPlay?" is-playable":""}${selectedCard?.id===card.id?" selected":""}" data-rt-card-id="${escapeHtml(String(card.id))}" title="${escapeHtml(card.name||"")}"><span class="rt-arsenal-slot">${pad}</span><span class="rt-arsenal-key">${escapeHtml(key)}</span><span class="rt-arsenal-art">${getCardVisualHtml(card,"rt-arsenal-art-img")}</span><span class="rt-arsenal-cost">${cost}</span></button>`;
-  }).join(""):`<div class="rt-arsenal-empty">Sin ${category==="unit"?"unidades":category==="spell"?"magias":"trampas"}</div>`;
+  cardsBox.innerHTML=slice.length?slice.map((entry,i)=>{
+    const card=entry.card,state=getCardPlayState(card),cost=Math.max(0,Number(effectiveCardCost(card,myPlayer)||0));
+    const action=`choice${i+1}`;
+    return `<button type="button" class="rt-arsenal-card${state.canPlay?" is-playable":""}" data-rt-card-id="${escapeHtml(String(card.id))}" title="${escapeHtml(card.name||"")}"${state.canPlay?"":" disabled"}><span class="rt-arsenal-art">${getCardVisualHtml(card,"rt-arsenal-art-img")}</span><span class="rt-arsenal-cost">${cost}</span>${entry.copies>1?`<span class="rt-arsenal-copies">×${entry.copies}</span>`:""}<span class="rt-card-bind-host">${hallvallaRtBindingBadgeHtml(action,"rt-card-bind")}</span></button>`;
+  }).join(""):`<div class="rt-arsenal-empty"></div>`;
 }
 function hallvallaRtBindArsenal(){
   const panel=document.getElementById("rtArsenalPanel");if(!panel||panel.dataset.bound)return;panel.dataset.bound="1";
+  panel.addEventListener("pointerdown",ev=>{hallvallaRtSetInputDevice(ev.pointerType==="touch"?"touch":"keyboard");},{passive:true});
   panel.addEventListener("click",ev=>{
     const back=ev.target.closest?.("[data-rt-back]");if(back){hallvallaRtCancelInput();return;}
     const cat=ev.target.closest?.("[data-rt-category]");if(cat){hallvallaRtOpenCategory(cat.dataset.rtCategory||"unit");return;}
     const pg=ev.target.closest?.("[data-rt-page]");if(pg){hallvallaRtChangePage(pg.dataset.rtPage==="next"?1:-1);return;}
-    const cardBtn=ev.target.closest?.("[data-rt-card-id]");if(cardBtn){const cards=hallvallaRtArsenalCards();const idx=cards.findIndex(c=>String(c.id)===String(cardBtn.dataset.rtCardId));if(idx>=0){const pageIndex=idx-hallvallaRtState.arsenalPage*3;if(pageIndex>=0&&pageIndex<3)hallvallaRtSelectSlot(pageIndex);}}
+    const cardBtn=ev.target.closest?.("[data-rt-card-id]");if(cardBtn){const entries=hallvallaRtArsenalEntries();const idx=entries.findIndex(e=>String(e.card.id)===String(cardBtn.dataset.rtCardId));if(idx>=0){const pageIndex=idx-hallvallaRtState.arsenalPage*3;if(pageIndex>=0&&pageIndex<3)hallvallaRtSelectSlot(pageIndex);}}
   });
   const cancel=document.getElementById("rtTargetCancelBtn");if(cancel&&!cancel.dataset.bound){cancel.dataset.bound="1";cancel.addEventListener("click",()=>hallvallaRtCancelInput());}
 }
@@ -464,10 +539,7 @@ async function hallvallaRtAiDeploy(now){
   const unitCards=ai.hand.filter(c=>c?.type==="unit").sort((a,b)=>effectiveCardCost(a,2)-effectiveCardCost(b,2));
   const card=unitCards.find(c=>effectiveCardCost(c,2)<=Number(ai.honor||0));
   if(!card)return false;
-  const zones=hallvallaRtGetSummonZones(2,units);if(!zones.length)return false;
-  const enemyLeader=hallvallaRtGetOwnerLeader(1,units);
-  zones.sort((a,b)=>(enemyLeader?dist(a,enemyLeader)-dist(b,enemyLeader):0));
-  const cell=zones[0];
+  const cell=hallvallaRtFindBestSpawnCell(2,units);if(!cell)return false;
   const cost=Math.max(0,Number(effectiveCardCost(card,2)||0));
   let newUnit=makeUnit({...card,owner:2,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
   let nextUnits=[...units,newUnit];
@@ -535,7 +607,7 @@ async function hallvallaRtLoop(){
   hallvallaRtState.busy=true;
   try{
     const now=hallvallaRtNow();
-    handOpen=!hallvallaRtState.handSuppressed;
+    handOpen=false;
     await hallvallaRtResourceAndDrawTick(now);
     await hallvallaRtAiDeploy(now);
     await hallvallaRtLeaderEffectsTick(now);
@@ -546,7 +618,7 @@ async function hallvallaRtLoop(){
 }
 function hallvallaRtStop(){
   if(hallvallaRtState.timer){battleClearInterval?.(hallvallaRtState.timer);hallvallaRtState.timer=null;}
-  hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.handSuppressed=false;
+  hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.playBusy=false;hallvallaRtState.handSuppressed=false;
   hallvallaRtUpdateUi();
 }
 function hallvallaRtPrimePreparedState(){
@@ -556,11 +628,11 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastAiThinkAt=now;
   hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
-  hallvallaRtState.handSuppressed=false;
+  hallvallaRtState.handSuppressed=false;hallvallaRtState.playBusy=false;
   hallvallaRtState.arsenalCategory="unit";hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="root";hallvallaRtClearTargetCursor();
   hallvallaRtState.moveAt.clear();
   hallvallaRtState.attackAt.clear();
-  handOpen=true;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
+  handOpen=false;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
   try{stopTurnTimerLoop();}catch(_){ }
 }
 function hallvallaRtSyncPreparedBattle(){
@@ -578,7 +650,7 @@ function hallvallaRtSyncPreparedBattle(){
     setHint("TR EXPERIMENTAL: combate iniciado desde Home · sin Principales desplegados · movimiento y ataque automáticos.");
     void hallvallaRtLoop();
   }else{
-    handOpen=!hallvallaRtState.handSuppressed;
+    handOpen=false;
   }
   hallvallaRtUpdateUi();
   return true;
@@ -618,7 +690,7 @@ function hallvallaRtKeyboardHandler(ev){
   if(!isHallvallaRealtimeExperimental()||!hallvallaRtBattleReady()||ev.repeat)return;
   const tag=String(ev.target?.tagName||"").toLowerCase();if(tag==="input"||tag==="textarea"||tag==="select"||ev.target?.isContentEditable)return;
   const action=hallvallaRtBindingActionForCode(String(ev.code||""));if(!action)return;
-  if(hallvallaRtInputAction(action)){ev.preventDefault();ev.stopPropagation();}
+  if(hallvallaRtInputAction(action,"keyboard")){ev.preventDefault();ev.stopPropagation();}
 }
 document.addEventListener("keydown",hallvallaRtKeyboardHandler,true);
 hallvallaRtBind();

@@ -1,0 +1,17 @@
+HallValla · TR Experimental · 20260913.78
+
+Implementación de la primera versión cerrada del Arsenal TR:
+- La mano física y el robo periódico permanecen eliminados en TR.
+- El arsenal usa todas las copias restantes del mazo desde el inicio.
+- Categorías dinámicas: Unidades / Magias / Trampas; una categoría vacía desaparece.
+- Iconos gráficos WebP para las tres categorías.
+- Hasta 3 opciones por página, ordenadas por coste; copias iguales se agrupan con contador.
+- Cartas no pagables quedan oscurecidas y bloqueadas hasta recuperar maná.
+- Badges independientes de input: imágenes X/A/Y/B/LT/RT para mando; keycap para teclado; sin badges en touch.
+- Unidades: selección = invocación inmediata. No existe cursor ni selección manual de casilla.
+- Spawn determinista junto al líder: frontal-centro, diagonales frontales y laterales.
+- Sin espacio: no consume carta ni maná.
+- IA usa la misma búsqueda de casilla junto a su líder y sigue consumiendo copias reales del arsenal.
+- El sistema normal por turnos no se modifica cuando TR está desactivado.
+
+Pendiente para una fase posterior: habilitación/sincronización del mismo flujo para PvP online real y conversión definitiva de DOT por segundos.
