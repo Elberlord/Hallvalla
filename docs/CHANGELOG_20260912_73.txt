@@ -1,0 +1,10 @@
+HallValla 20260912.73 — TR experimental pre-batalla
+
+- TR EXPERIMENTAL se activa desde Home (?dev), antes de crear el duelo.
+- Se eliminó el interruptor TR del menú dentro de la batalla para impedir conversiones a mitad de partida.
+- Una batalla creada con TR nace con currentPlayer=0, fase realtime y recurso máximo 20.
+- En TR no se despliegan Personajes Principales de ningún bando al inicio.
+- Las cartas que antes eran Principales vuelven al mazo y se roban/juegan como unidades normales.
+- La pantalla previa de Aventura refleja esta regla cuando TR está activo.
+- Se restauró hvFieldFigureBoardCandidates(), faltante en 20260912.72, que causaba ReferenceError al renderizar.
+- Modo normal sin TR conserva la lógica anterior de Personajes Principales y turnos.

@@ -115,6 +115,11 @@ function hvFieldFigureAssetCandidates(key,entity=null){
   const source=entity||entry?.entity||{key};
   return typeof getResolvedFieldFigureCandidates==="function"?getResolvedFieldFigureCandidates(source):[];
 }
+function hvFieldFigureBoardCandidates(key,entity=null){
+  const entry=HV_FIELD_FIGURES[key];
+  const source=entity||entry?.entity||{key};
+  return typeof getResolvedCardPortraitCandidates==="function"?getResolvedCardPortraitCandidates(source):[];
+}
 /* PERF8B · La colección ligera ya es la fuente canónica de figuras del campo.
    No se mantiene una segunda textura 1024×1536 como fallback. */
 function hvBattleFieldFigureAssetCandidates(key,entity=null){

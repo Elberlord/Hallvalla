@@ -469,8 +469,12 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
   const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
   const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);
-  const principalLine=principalCards.length?`
-Personajes Principales enemigos: ${principalCards.map(card=>card.name).join(", ")}. Comenzarán ya convocados.`:"";
+  const rtPreview=typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
+  const principalLine=principalCards.length
+    ?(rtPreview
+      ?`\nTR EXPERIMENTAL: los antiguos Personajes Principales no comienzan desplegados; entran al mazo como unidades normales.`
+      :`\nPersonajes Principales enemigos: ${principalCards.map(card=>card.name).join(", ")}. Comenzarán ya convocados.`)
+    :"";
   const guardianText=$("adventureGuardianText");
   guardianText.replaceChildren();
   const storyText=document.createElement("span");

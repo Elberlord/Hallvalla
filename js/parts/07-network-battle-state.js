@@ -1196,6 +1196,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const leaderLevel=getLocalLeaderLevel(leaderType);
   const leaderAbility=getLocalLeaderAbility(leaderType);
   const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);
+  const realtimeExperimental=typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
   const specialTemplate=ADVENTURE_SPECIALS[specialKey];
   if(!specialTemplate)return;
   let battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
@@ -1288,7 +1289,10 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     renderPlayerProfile(profile);
     battle={...battle,dragonContractEntryGoldCost:entryCost};
   }
-  const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerPrincipalPrep.deck,leaderType,1);
+  const playerCombatDeck=realtimeExperimental
+    ?shuffle([...(playerPrincipalPrep.deck||[]),...(playerPrincipalPrep.principalCards||[])])
+    :playerPrincipalPrep.deck;
+  const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerCombatDeck,leaderType,1);
   const playerDraw=drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
@@ -1308,19 +1312,25 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const enemyPrepared=prepareAiPrincipalInitialState(enemyDeckBattle,enemyRawInitial);
   // El Hechicero conserva Cañón Arcano como núcleo adaptativo. No se inyecta
   // Foco Estabilizador automáticamente porque sustituiría cartas fuera del constructor global.
-  const enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
+  let enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
+  if(realtimeExperimental){
+    const enemyCombatPool=shuffle([...(enemyInitial.hand||[]),...(enemyInitial.deck||[]),...(enemyInitial.principalCards||[])]);
+    const enemyDraw=drawCards(enemyCombatPool,[],Math.min(4,enemyCombatPool.length));
+    enemyInitial={...enemyInitial,deck:enemyDraw.deck,hand:enemyDraw.hand,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};
+  }
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;
   let startingUnits=[
     makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
     makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)
   ];
-  const playerPrincipalUnits=makeStartingPrincipalUnits(playerPrincipalPrep.principalCards,1,leaderType,startingUnits,playerPrincipalSlots);
+  const playerPrincipalUnits=realtimeExperimental?[]:makeStartingPrincipalUnits(playerPrincipalPrep.principalCards,1,leaderType,startingUnits,playerPrincipalSlots);
   startingUnits.push(...playerPrincipalUnits);
-  const enemyPrincipalUnits=makeStartingPrincipalUnits(enemyInitial.principalCards||[],2,enemyLeaderType,startingUnits,enemyInitial.principalSlots||0);
+  const enemyPrincipalUnits=realtimeExperimental?[]:makeStartingPrincipalUnits(enemyInitial.principalCards||[],2,enemyLeaderType,startingUnits,enemyInitial.principalSlots||0);
   startingUnits.push(...enemyPrincipalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(startingUnits);
   startingUnits=entryEffects.units;
   const principalLogs=[];
+  if(realtimeExperimental)principalLogs.push("TR EXPERIMENTAL: la batalla nace directamente en tiempo real; no hay Personajes Principales desplegados y esas cartas entran al mazo normal.");
   if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
   if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
   if(battle.beastEvent){
@@ -1350,19 +1360,20 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     beastmasterYoungDragonElement:battle.beastmasterYoungDragonElement||"",
     beastmasterEntryGoldCost:battle.beastmasterEntryGoldCost||0,
     adventureSpecial:specialKey,
-    principalSlots:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
-    adventurePrincipalKeys:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
-    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:enemyInitial.principalSlots||0,principalKeys:enemyInitial.principalKeys||[],principalKey:enemyInitial.principalKey||""},
-    createdAt:Date.now(),currentPlayer:1,turn:1,phase:"active",turnPhase:"draw",turnKey:"1-1",turnStartedAt:serverTimestamp(),
+    realtimeExperimental:!!realtimeExperimental,
+    principalSlots:realtimeExperimental?{1:0,2:0}:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
+    adventurePrincipalKeys:realtimeExperimental?{1:[],2:[]}:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
+    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.resourceCap:0,lastTurnStarted:realtimeExperimental?"RT":"",skipFirstTurnDraw:true,principalSlots:realtimeExperimental?0:(enemyInitial.principalSlots||0),principalKeys:realtimeExperimental?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeExperimental?"":(enemyInitial.principalKey||"")},
+    createdAt:Date.now(),currentPlayer:realtimeExperimental?0:1,turn:1,phase:"active",turnPhase:realtimeExperimental?"realtime":"draw",turnKey:realtimeExperimental?"RT-1":"1-1",turnStartedAt:serverTimestamp(),
     clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
-    playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:0,deck:playerDeck.length,hand:playerHand.length,hasHiddenUnits:countHiddenUnitCards([...playerDeck,...playerHand])>0},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length,hasHiddenUnits:countHiddenUnitCards([...(enemyInitial.deck||[]),...(enemyInitial.hand||[])])>0}},
+    playerStats:{1:{hp:leaderStats.hp,honor:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.resourceCap:0,deck:playerDeck.length,hand:playerHand.length,hasHiddenUnits:countHiddenUnitCards([...playerDeck,...playerHand])>0},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.resourceCap:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length,hasHiddenUnits:countHiddenUnitCards([...(enemyInitial.deck||[]),...(enemyInitial.hand||[])])>0}},
     erictoGraveyard:[],moralePressure:{1:0,2:0},units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
-  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:playerPrincipalSlots,principalKeys:playerPrincipalPrep.principalKeys||[],principalKey:playerPrincipalPrep.principalKeys?.[0]||""};
+  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.resourceCap:0,lastTurnStarted:realtimeExperimental?"RT":"",skipFirstTurnDraw:true,principalSlots:realtimeExperimental?0:playerPrincipalSlots,principalKeys:realtimeExperimental?[]:(playerPrincipalPrep.principalKeys||[]),principalKey:realtimeExperimental?"":(playerPrincipalPrep.principalKeys?.[0]||"")};
 
   // VS previo: aparece después de que el duelo ya está completamente preparado,
   // pero antes de publicar/iniciar el turno real para que el reloj no consuma estos 3 segundos.

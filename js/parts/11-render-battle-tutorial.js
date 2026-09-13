@@ -129,6 +129,7 @@ function render(reason="direct"){
   if(!String(reason).startsWith("batched:")&&hallvallaBattleRenderFrame)cancelQueuedBattleRender({countAsAbsorbed:true});
   const started=hallvallaRenderNow();
   syncBoardDimensionsFromState(publicState);
+  if(typeof globalThis.hallvallaRtSyncPreparedBattle==="function")globalThis.hallvallaRtSyncPreparedBattle();
   // Se conserva la proyección heredada de bonus de líder para no mezclar Stage 7 con reglas de gameplay.
   if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};
   syncHandAutoClose();

@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260912.72 · Combate TR experimental (DEV only)
+/* HallValla 20260912.73 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, robo automático, mano abierta,
      despliegue por arrastre y unidades autónomas.
@@ -16,6 +16,20 @@ const HALLVALLA_RT_CFG=Object.freeze({
   baseMoveCooldownMs:1050,
   loopMs:180
 });
+const HALLVALLA_RT_HOME_STORAGE_KEY="hallvalla_rt_experimental_home_v1";
+function isHallvallaRealtimeExperimentalRequested(){
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return false;
+  try{return localStorage.getItem(HALLVALLA_RT_HOME_STORAGE_KEY)==="1";}catch(_){return false;}
+}
+function setHallvallaRealtimeExperimentalRequested(enabled){
+  const next=!!enabled&&globalThis.__HALLVALLA_DEV_TOOLS__===true;
+  try{localStorage.setItem(HALLVALLA_RT_HOME_STORAGE_KEY,next?"1":"0");}catch(_){ }
+  hallvallaRtUpdateUi();
+  return next;
+}
+globalThis.isHallvallaRealtimeExperimentalRequested=isHallvallaRealtimeExperimentalRequested;
+globalThis.setHallvallaRealtimeExperimentalRequested=setHallvallaRealtimeExperimentalRequested;
+
 const hallvallaRtState={
   enabled:false,
   timer:null,
@@ -28,12 +42,11 @@ const hallvallaRtState={
   attackAt:new Map(),
   statusNode:null
 };
-function isHallvallaRealtimeExperimental(){return hallvallaRtState.enabled===true;}
+function isHallvallaRealtimeExperimental(){return hallvallaRtState.enabled===true||publicState?.realtimeExperimental===true;}
 globalThis.isHallvallaRealtimeExperimental=isHallvallaRealtimeExperimental;
 
 function hallvallaRtNow(){return Date.now();}
 function hallvallaRtBattleReady(){return !!(publicState&&privateState&&gameId&&!isBattleEnded());}
-function hallvallaRtCanEnable(){return globalThis.__HALLVALLA_DEV_TOOLS__===true&&hallvallaRtBattleReady()&&publicState?.mode!=="online";}
 function hallvallaRtGetOwnerLeader(owner,units=publicState?.units||[]){return (units||[]).find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0)||null;}
 function hallvallaRtGetSummonZones(owner,units=publicState?.units||[]){
   const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return[];
@@ -54,45 +67,22 @@ function hallvallaRtEnsureStatusNode(){
   hallvallaRtState.statusNode=node;return node;
 }
 function hallvallaRtUpdateUi(){
-  const btn=document.getElementById("battleRealtimeExperimentalBtn");
-  if(btn){btn.textContent=hallvallaRtState.enabled?"TR EXPERIMENTAL: ON · REINICIA PARA SALIR":"TR EXPERIMENTAL: OFF";btn.classList.toggle("active",hallvallaRtState.enabled);}
-  document.documentElement.classList.toggle("hv-rt-experimental",hallvallaRtState.enabled);
-  document.body?.classList.toggle("hv-rt-experimental",hallvallaRtState.enabled);
+  const homeBtn=document.getElementById("homeRealtimeExperimentalBtn");
+  const requested=isHallvallaRealtimeExperimentalRequested();
+  if(homeBtn){homeBtn.textContent=requested?"TR EXPERIMENTAL: ON · SIGUIENTE COMBATE":"TR EXPERIMENTAL: OFF";homeBtn.classList.toggle("active",requested);homeBtn.setAttribute("aria-pressed",String(requested));}
+  const active=isHallvallaRealtimeExperimental();
+  document.documentElement.classList.toggle("hv-rt-experimental",active);
+  document.body?.classList.toggle("hv-rt-experimental",active);
   const node=hallvallaRtEnsureStatusNode();
   if(node){
-    node.hidden=!hallvallaRtState.enabled;
-    if(hallvallaRtState.enabled){
+    node.hidden=!active;
+    if(active){
       const honor=Math.max(0,Number(privateState?.honor||0));
       const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.resourceCap));
       const hand=(privateState?.hand||[]).length;
       node.textContent=`TR EXP · ${getResourceLabel(myPlayer)} ${honor}/${max} · Mano ${hand}/${HALLVALLA_RT_CFG.handMax} · +1/${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · carta/${HALLVALLA_RT_CFG.drawEveryMs/1000}s`;
     }
   }
-}
-
-async function hallvallaRtInitializeState(){
-  const now=hallvallaRtNow();
-  hallvallaRtState.cycle=1;hallvallaRtState.lastResourceAt=now;hallvallaRtState.lastDrawAt=now;hallvallaRtState.lastAiThinkAt=now;
-  handOpen=true;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
-  try{stopTurnTimerLoop();}catch(_){ }
-  const playerHonor=Math.min(HALLVALLA_RT_CFG.resourceCap,Math.max(0,Number(privateState?.honor||0)));
-  const playerStats={...(publicState?.playerStats?.[myPlayer]||{}),honor:playerHonor,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length};
-  const patch={
-    realtimeExperimental:true,
-    currentPlayer:0,
-    turn:hallvallaRtState.cycle,
-    turnKey:`RT-${hallvallaRtState.cycle}`,
-    turnPhase:"realtime",
-    [`playerStats/${myPlayer}`]:playerStats
-  };
-  if(publicState?.mode==="adventure"&&publicState?.adventureAiState){
-    const ai={...publicState.adventureAiState,honor:Math.min(HALLVALLA_RT_CFG.resourceCap,Math.max(0,Number(publicState.adventureAiState.honor||0))),maxHonor:HALLVALLA_RT_CFG.resourceCap,lastTurnStarted:"RT"};
-    patch.adventureAiState=ai;
-    patch["playerStats/2"]={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:ai.maxHonor,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
-  }
-  await commitGameplayAction({publicPatch:patch,privatePatch:{honor:playerHonor,maxHonor:HALLVALLA_RT_CFG.resourceCap,lastTurnStarted:"RT",skipFirstTurnDraw:false}});
-  handOpen=true;render();hallvallaRtUpdateUi();
-  setHint("TR EXPERIMENTAL: despliega cartas; las unidades avanzan y combaten automáticamente. Reinicia el duelo para volver al sistema por turnos.");
 }
 
 function hallvallaRtMoveCooldown(unit){
@@ -307,31 +297,53 @@ function hallvallaRtStop(){
   hallvallaRtState.enabled=false;hallvallaRtState.busy=false;
   hallvallaRtUpdateUi();
 }
-async function enableHallvallaRealtimeExperimental(){
-  if(hallvallaRtState.enabled){setHint("TR EXPERIMENTAL ya está activo. Reinicia el duelo para volver al modo por turnos.");return true;}
-  if(!hallvallaRtCanEnable()){
-    if(publicState?.mode==="online")setHint("TR EXPERIMENTAL está bloqueado en PvP online mientras validamos el gameplay local.");
-    else setHint("Abre una batalla de Aventura/Local antes de activar TR EXPERIMENTAL.");
+function hallvallaRtPrimePreparedState(){
+  const now=hallvallaRtNow();
+  hallvallaRtState.cycle=Math.max(1,Number(publicState?.turn||1));
+  hallvallaRtState.lastResourceAt=now;
+  hallvallaRtState.lastDrawAt=now;
+  hallvallaRtState.lastAiThinkAt=now;
+  hallvallaRtState.moveAt.clear();
+  hallvallaRtState.attackAt.clear();
+  handOpen=true;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
+  try{stopTurnTimerLoop();}catch(_){ }
+}
+function hallvallaRtSyncPreparedBattle(){
+  if(publicState?.realtimeExperimental!==true){
+    if(hallvallaRtState.enabled)hallvallaRtStop();
+    else hallvallaRtUpdateUi();
     return false;
   }
-  hallvallaRtState.enabled=true;
-  try{
-    await hallvallaRtInitializeState();
+  if(publicState?.mode==="online")return false;
+  if(!hallvallaRtBattleReady())return false;
+  if(!hallvallaRtState.enabled){
+    hallvallaRtState.enabled=true;
+    hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
+    setHint("TR EXPERIMENTAL: combate iniciado desde Home · sin Principales desplegados · movimiento y ataque automáticos.");
     void hallvallaRtLoop();
-    return true;
-  }catch(error){
-    console.error("[HallValla][RT] No se pudo activar TR experimental:",error);
-    hallvallaRtStop();
-    setHint("TR EXPERIMENTAL no pudo iniciar. Revisa consola; el modo normal sigue intacto.");
-    return false;
+  }else{
+    handOpen=true;
   }
+  hallvallaRtUpdateUi();
+  return true;
+}
+async function enableHallvallaRealtimeExperimental(){
+  if(publicState){setHint("TR EXPERIMENTAL ya no se cambia durante una pelea. Actívalo en Home antes de iniciar el combate.");return false;}
+  return setHallvallaRealtimeExperimentalRequested(true);
 }
 globalThis.enableHallvallaRealtimeExperimental=enableHallvallaRealtimeExperimental;
+globalThis.hallvallaRtSyncPreparedBattle=hallvallaRtSyncPreparedBattle;
 
 function hallvallaRtBind(){
-  const btn=document.getElementById("battleRealtimeExperimentalBtn");
-  if(btn&&!btn.dataset.hvRtBound){btn.dataset.hvRtBound="1";btn.addEventListener("click",()=>{void enableHallvallaRealtimeExperimental();});}
+  const btn=document.getElementById("homeRealtimeExperimentalBtn");
+  if(btn&&!btn.dataset.hvRtBound){
+    btn.dataset.hvRtBound="1";
+    btn.addEventListener("click",()=>{
+      if(publicState){setHint("Sal del duelo para cambiar TR EXPERIMENTAL desde Home.");return;}
+      setHallvallaRealtimeExperimentalRequested(!isHallvallaRealtimeExperimentalRequested());
+    });
+  }
   hallvallaRtUpdateUi();
 }
 hallvallaRtBind();
