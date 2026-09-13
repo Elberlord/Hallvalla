@@ -26,9 +26,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260913.97";
+const BUILD = "20260913.99";
 const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"a0943e8bb720","parts/02-assets-leaders.js":"60db36dcbe58","parts/03-runtime-clocks.js":"339612f81c8c","parts/04-fx-audio-profile.js":"e5e8cf43ae0d","parts/05-cards-specials-lore.js":"192202d8cf43","parts/05b-unit-load-profiles.js":"253a868b8682","parts/06-decks-units-combat-rules.js":"6360f68c2e12","parts/07-network-battle-state.js":"ee455cc5fcd0","parts/08-actions-inspector.js":"6e0a1e506c0c","parts/09-combat-turn-ai.js":"0957d7d27b6e","parts/10-board-interactions.js":"cce1bbf2554c","parts/11-render-battle-tutorial.js":"04cc0be1e65b","parts/12-profile-shop-packs.js":"6df4acfa3de2","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"bd8e6f59d30f","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"eae3013a00b5","parts/16-exact-guides-mobile.js":"1db6635e3288","parts/17-dragon-contracts.js":"bdeabfec46a4","parts/18-dragon-egg.js":"710db18eafa2","parts/19-field-figures-3d.js":"a550ace2e3aa","parts/20-gamepad-controls.js":"3aa8ae46eec5","parts/21-realtime-experimental.js":"565ef8918040","features/adventure.js":"a406b6fc31b3","features/battle-layout.js":"58e6a324da41","features/forge-layout.js":"f0beaee0796f","features/forge.js":"c6f640f8f213","features/hvdev.js":"997a8bdef7f3","features/pve.js":"36f4dbeb30d9","features/pvp.js":"84fd236aa7f1","features/shop.js":"76ff462c9242"});
+const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"a0943e8bb720","parts/02-assets-leaders.js":"60db36dcbe58","parts/03-runtime-clocks.js":"339612f81c8c","parts/04-fx-audio-profile.js":"e5e8cf43ae0d","parts/05-cards-specials-lore.js":"192202d8cf43","parts/05b-unit-load-profiles.js":"253a868b8682","parts/06-decks-units-combat-rules.js":"6360f68c2e12","parts/07-network-battle-state.js":"ee455cc5fcd0","parts/08-actions-inspector.js":"6e0a1e506c0c","parts/09-combat-turn-ai.js":"0957d7d27b6e","parts/10-board-interactions.js":"cce1bbf2554c","parts/11-render-battle-tutorial.js":"04cc0be1e65b","parts/12-profile-shop-packs.js":"6df4acfa3de2","parts/12b-account-auth.js":"730360019682","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"bd8e6f59d30f","parts/14-adventure-engine-ui.js":"287cd3502b7f","parts/15-settings-tuners-events.js":"eae3013a00b5","parts/16-exact-guides-mobile.js":"1db6635e3288","parts/17-dragon-contracts.js":"bdeabfec46a4","parts/18-dragon-egg.js":"710db18eafa2","parts/19-field-figures-3d.js":"a550ace2e3aa","parts/20-gamepad-controls.js":"3aa8ae46eec5","parts/21-realtime-experimental.js":"565ef8918040","features/adventure.js":"a406b6fc31b3","features/battle-layout.js":"58e6a324da41","features/forge-layout.js":"830e66d6c386","features/forge.js":"c6f640f8f213","features/hvdev.js":"997a8bdef7f3","features/pve.js":"36f4dbeb30d9","features/pvp.js":"84fd236aa7f1","features/shop.js":"76ff462c9242","features/universal-layout-runtime.js":"88fc711a24de"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   console.warn(`[HallValla] Versión transitoria: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}. Se continúa para evitar bloquear el arranque durante propagación/caché.`);
@@ -152,7 +152,16 @@ const DEV_TOOLS_ENABLED = (() => {
   } catch (_) { return false; }
 })();
 globalThis.__HALLVALLA_DEV_TOOLS__ = DEV_TOOLS_ENABLED;
-document.documentElement.dataset.hvRuntime = DEV_TOOLS_ENABLED ? "dev" : "prod";
+/*
+   CONTRATO DEV=PROD:
+   ?dev NO cambia el runtime visual ni activa una hoja de estilo alternativa.
+   El juego base siempre se identifica como producción; ?dev únicamente monta
+   herramientas superpuestas mediante data-hv-dev-tools. Así cualquier ajuste
+   se realiza sobre exactamente el mismo DOM/CSS/asset/layout que verá el jugador.
+*/
+document.documentElement.dataset.hvRuntime = "prod";
+if(DEV_TOOLS_ENABLED)document.documentElement.dataset.hvDevTools = "on";
+else delete document.documentElement.dataset.hvDevTools;
 
 function sanitizeFirebaseValue(value, seen = new WeakSet()) {
   if (typeof value === "undefined") return undefined;
@@ -260,6 +269,7 @@ const CORE_PARTS = [
   "16-exact-guides-mobile.js",
   "20-gamepad-controls.js",
   "21-realtime-experimental.js",
+  "features/universal-layout-runtime.js",
 ];
 
 /* STAGE10 · Feature loading real + caché de sesión ---------------------------

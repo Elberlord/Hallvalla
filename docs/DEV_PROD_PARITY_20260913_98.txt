@@ -1,0 +1,8 @@
+HallValla 20260913.98 — CONTRATO DEV = PROD
+
+- ?dev ya no cambia el runtime visual del juego.
+- El DOM/CSS/assets base son exactamente los de producción.
+- ?dev solo añade herramientas superpuestas mediante data-hv-dev-tools=on.
+- El Control Universal exporta el mismo esquema que interpreta el runtime canónico compartido.
+- Producción nunca lee localStorage de los editores DEV.
+- Un JSON aprobado se integra como configuración canónica y debe reproducirse igual sin ?dev.

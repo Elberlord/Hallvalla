@@ -16211,7 +16211,7 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .profile-promo-status.active{color:#8bffb8;font-weight:800}
 /* Herramienta exclusivamente interna: oculta por defecto para evitar cualquier destello en usuarios normales. */
 .profile-promo-box[data-hv-dev-tool]{display:none!important}
-html[data-hv-runtime="dev"] .profile-promo-box[data-hv-dev-tool]{display:block!important}
+html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!important}
 .profile-promo-box--dev-compact{margin:10px 0 6px;padding:10px 12px}
 .profile-promo-box--dev-compact .profile-promo-status{margin-top:6px;font-size:11px}
 @media(max-width:620px){.profile-promo-controls{grid-template-columns:1fr}.profile-promo-controls .btn{width:100%}}
@@ -20231,7 +20231,7 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
 }
 
 /* STAGE9CLEAN1 · herramientas internas fuera del runtime de producción */
-html[data-hv-runtime="prod"] [data-hv-dev-tool]{display:none!important;}
+html:not([data-hv-dev-tools="on"]) [data-hv-dev-tool]{display:none!important;}
 
 /* ========================================================================== 
    PERF5GPU1 · Optimización de composición GPU / CSS para móvil
@@ -25696,24 +25696,24 @@ html.hv-battle-layout-editing #gameShell #rivalHonorHudValue{
      Configuración, menú de combate, PvP, DET o Forja.
    - Producción conserva únicamente el layout aprobado; el hub no se crea.
    ========================================================================== */
-html[data-hv-runtime="dev"] #openActionsHudTunerBtn,
-html[data-hv-runtime="dev"] #openActionsHudTunerBattleBtn,
-html[data-hv-runtime="dev"] #openFieldStatBadgesTunerBattleBtn,
-html[data-hv-runtime="dev"] #openBattleVisualSizeTunerBtn,
-html[data-hv-runtime="dev"] #openFieldBoardTunerBattleBtn,
-html[data-hv-runtime="dev"] #openBattleClockTunerBtn,
-html[data-hv-runtime="dev"] #openFieldFigureEditorBtn,
-html[data-hv-runtime="dev"] #openAdventureMapNodeTunerBtn,
-html[data-hv-runtime="dev"] #hvBattleLayoutTunerLauncher,
-html[data-hv-runtime="dev"] #hvOnlineLayoutTunerLauncher,
-html[data-hv-runtime="dev"] #hvDetLayoutTunerToggle{
+html[data-hv-dev-tools="on"] #openActionsHudTunerBtn,
+html[data-hv-dev-tools="on"] #openActionsHudTunerBattleBtn,
+html[data-hv-dev-tools="on"] #openFieldStatBadgesTunerBattleBtn,
+html[data-hv-dev-tools="on"] #openBattleVisualSizeTunerBtn,
+html[data-hv-dev-tools="on"] #openFieldBoardTunerBattleBtn,
+html[data-hv-dev-tools="on"] #openBattleClockTunerBtn,
+html[data-hv-dev-tools="on"] #openFieldFigureEditorBtn,
+html[data-hv-dev-tools="on"] #openAdventureMapNodeTunerBtn,
+html[data-hv-dev-tools="on"] #hvBattleLayoutTunerLauncher,
+html[data-hv-dev-tools="on"] #hvOnlineLayoutTunerLauncher,
+html[data-hv-dev-tools="on"] #hvDetLayoutTunerToggle{
   display:none!important;
 }
 
 /* La Forja conserva siempre su layout canónico, pero su editor solo se hace
    visible cuando se invoca desde el centro DEV. */
-html[data-hv-runtime="dev"] #hvForgeDirectTuner:not(.hv-dev-hub-tool-open){display:none!important;}
-html[data-hv-runtime="dev"] #hvForgeDirectTuner.hv-dev-hub-tool-open #hvForgeTunerToggle{display:none!important;}
+html[data-hv-dev-tools="on"] #hvForgeDirectTuner:not(.hv-dev-hub-tool-open){display:none!important;}
+html[data-hv-dev-tools="on"] #hvForgeDirectTuner.hv-dev-hub-tool-open #hvForgeTunerToggle{display:none!important;}
 
 #hvDevToolsHubLauncher{
   position:fixed;
