@@ -602,6 +602,7 @@ function canOpenHandForViewNow(){
 }
 
 function getPhaseAnnouncement(){
+  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return null;
   if(!publicState||isBattleEnded())return null;
   const owner=publicState.currentPlayer;
   const isMine=owner===myPlayer;
@@ -624,7 +625,12 @@ function showPhaseAnnouncement(info){
 }
 function maybeShowPhaseAnnouncement(){
   const info=getPhaseAnnouncement();
-  if(!info)return;
+  if(!info){
+    const box=$("phaseAnnounce");
+    if(box)box.classList.remove("show");
+    lastPhaseAnnounceKey="";
+    return;
+  }
   if(info.key===lastPhaseAnnounceKey)return;
   lastPhaseAnnounceKey=info.key;
   showPhaseAnnouncement(info);

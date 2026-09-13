@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260913.80 · Combate TR experimental (DEV only)
+/* HallValla 20260913.81 · Combate TR experimental (DEV only)
    - No sustituye el modo normal.
    - Prueba de gameplay: recurso continuo, arsenal finito ordenado por coste,
      selector táctico contextual, bindings finales y unidades autónomas.
@@ -40,7 +40,9 @@ globalThis.setHallvallaRealtimeExperimentalRequested=setHallvallaRealtimeExperim
 const hallvallaRtState={
   enabled:false,
   timer:null,
+  motionTimer:null,
   busy:false,
+  motionBusy:false,
   cycle:0,
   lastResourceAt:0,
   arsenalCategory:"unit",
@@ -176,6 +178,10 @@ function hallvallaRtUpdateUi(){
   const requested=isHallvallaRealtimeExperimentalRequested();
   if(homeBtn){homeBtn.textContent=requested?"TR EXPERIMENTAL: ON · SIGUIENTE COMBATE":"TR EXPERIMENTAL: OFF";homeBtn.classList.toggle("active",requested);homeBtn.setAttribute("aria-pressed",String(requested));}
   const active=isHallvallaRealtimeExperimental();
+  if(active){
+    const phaseBox=document.getElementById("phaseAnnounce");
+    if(phaseBox)phaseBox.classList.remove("show");
+  }
   document.documentElement.classList.toggle("hv-rt-experimental",active);
   document.body?.classList.toggle("hv-rt-experimental",active);
   document.documentElement.classList.toggle("hv-rt-card-targeting",active&&hallvallaRtState.handSuppressed);
@@ -964,6 +970,22 @@ async function hallvallaRtAutonomyTick(now){
   return true;
 }
 
+async function hallvallaRtSafeStage(name,fn){
+  try{return await fn();}
+  catch(error){console.warn(`[HallValla][RT] ${name} falló`,error);return false;}
+}
+async function hallvallaRtMotionLoop(){
+  if(!hallvallaRtState.enabled||hallvallaRtState.motionBusy)return;
+  if(!hallvallaRtBattleReady())return;
+  hallvallaRtState.motionBusy=true;
+  try{
+    await hallvallaRtAutonomyTick(hallvallaRtNow());
+  }catch(error){
+    console.warn("[HallValla][RT] motion tick falló",error);
+  }finally{
+    hallvallaRtState.motionBusy=false;
+  }
+}
 async function hallvallaRtLoop(){
   if(!hallvallaRtState.enabled||hallvallaRtState.busy)return;
   if(!hallvallaRtBattleReady()){hallvallaRtStop();return;}
@@ -971,24 +993,24 @@ async function hallvallaRtLoop(){
   try{
     const now=hallvallaRtNow();
     handOpen=false;
-    await hallvallaRtInitializeResources();
-    await hallvallaRtResourceAndDrawTick(now);
-    await hallvallaRtCombatRefreshTick(now);
-    await hallvallaRtAiDeploy(now);
-    await hallvallaRtLeaderEffectsTick(now);
-    await hallvallaRtSupportTick(now);
-    await hallvallaRtStatusTick(now);
-    await hallvallaRtAutonomyTick(now);
+    // El movimiento/ataque vive en un loop separado para que una habilidad,
+    // estado o actualización auxiliar nunca congele el avance de las unidades.
+    await hallvallaRtSafeStage("recursos iniciales",()=>hallvallaRtInitializeResources());
+    await hallvallaRtSafeStage("recarga de maná",()=>hallvallaRtResourceAndDrawTick(now));
+    await hallvallaRtSafeStage("IA",()=>hallvallaRtAiDeploy(now));
+    await hallvallaRtSafeStage("efectos de líder",()=>hallvallaRtLeaderEffectsTick(now));
+    await hallvallaRtSafeStage("soporte",()=>hallvallaRtSupportTick(now));
+    await hallvallaRtSafeStage("estados",()=>hallvallaRtStatusTick(now));
+    await hallvallaRtSafeStage("refresh TR",()=>hallvallaRtCombatRefreshTick(now));
     hallvallaRtScheduleLocalSnapshot(false);
-    // No repintar el arsenal 6 veces por segundo si no cambió nada relevante.
     if(now-hallvallaRtState.lastUiAt>=300){hallvallaRtState.lastUiAt=now;hallvallaRtUpdateUi();}
-  }catch(error){console.warn("[HallValla][RT] tick falló",error);}
-  finally{hallvallaRtState.busy=false;}
+  }finally{hallvallaRtState.busy=false;}
 }
 function hallvallaRtStop(){
   if(hallvallaRtState.timer){battleClearInterval?.(hallvallaRtState.timer);hallvallaRtState.timer=null;}
+  if(hallvallaRtState.motionTimer){battleClearInterval?.(hallvallaRtState.motionTimer);hallvallaRtState.motionTimer=null;}
   hallvallaRtScheduleLocalSnapshot(true);
-  hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.playBusy=false;hallvallaRtState.handSuppressed=false;
+  hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.motionBusy=false;hallvallaRtState.playBusy=false;hallvallaRtState.handSuppressed=false;
   hallvallaRtUpdateUi();
 }
 function hallvallaRtPrimePreparedState(){
@@ -1006,7 +1028,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.combatWindow=0;
   hallvallaRtState.ownerActionFlip=1;
   hallvallaRtState.lastUiAt=0;
-  hallvallaRtState.handSuppressed=false;hallvallaRtState.playBusy=false;
+  hallvallaRtState.handSuppressed=false;hallvallaRtState.playBusy=false;hallvallaRtState.motionBusy=false;
   hallvallaRtState.arsenalCategory="unit";hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="root";hallvallaRtClearTargetCursor();
   hallvallaRtState.moveAt.clear();
   hallvallaRtState.attackAt.clear();
@@ -1027,8 +1049,10 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtState.enabled=true;
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
-    setHint("TR EXPERIMENTAL LOCAL: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque al 50% · automatización activa.");
+    hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
+    setHint("TR EXPERIMENTAL LOCAL: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque autónomos.");
     void hallvallaRtLoop();
+    void hallvallaRtMotionLoop();
   }else{
     handOpen=false;
   }
