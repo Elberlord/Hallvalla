@@ -1,0 +1,17 @@
+HallValla 20260913.82 — TR motion recovery
+
+OBJETIVO
+- Corregir el caso observado donde MANÁ e IA seguían funcionando, pero ninguna unidad avanzaba en TR.
+
+CAMBIOS
+- El movimiento deja de depender de que una restricción de ataque considere al rival un blanco atacable: perseguir y atacar se validan por separado.
+- Ruta primaria TR simplificada a un paso local determinista hacia el enemigo más cercano. El pathfinder completo queda como fallback de congestión.
+- El loop principal de TR actúa como watchdog del loop de movimiento. Si el timer dedicado deja de ejecutar, el mismo runtime que está regenerando MANÁ vuelve a disparar movimiento/ataque.
+- Se añadieron contadores internos de diagnóstico sin cambiar el HUD. En DEV, __HALLVALLA_RT_DEBUG__() muestra timers, edad del último tick, cantidad de unidades móviles, objetivos y último resultado de movimiento/ataque.
+- Cache-bust actualizado a build 20260913.82 para impedir que el Service Worker conserve el runtime TR anterior.
+
+NO CAMBIA
+- MANÁ 0–10, +1 cada 3 s.
+- Velocidad/cooldown TR reducidos de la prueba anterior.
+- Automatización de magias, curación, reanimación y estados.
+- PvP online real sigue fuera de esta prueba.
