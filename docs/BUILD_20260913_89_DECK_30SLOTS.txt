@@ -1,0 +1,11 @@
+HallValla 20260913.89 — DECK BUILDER 30 SLOTS
+
+- Eliminado el control legacy de los 3 Personajes Principales del editor de Forja.
+- Eliminados los objetivos de estrella/principal del controlador de layout.
+- Se conservan las posiciones calibradas por el usuario para slots 1–20.
+- Se añaden objetivos deckCard21..deckCard30 y deckRemove21..deckRemove30.
+- El DOM de la Forja mantiene 30 posiciones visibles/calibrables incluso cuando el Tier actual solo permite 10/15/20/25 cartas.
+- La capacidad jugable sigue dependiendo del Tier: 10/15/20/25/30.
+- Los slots 21–30 usan un contenedor separado para no desplazar las posiciones 1–20 ya calibradas.
+- Asset collection_builder_hallvalla.webp actualizado al fondo 30 slots, 1448x1086.
+- STORAGE_KEY del tuner sube a clean_v7 para evitar cargar el esquema viejo con Principales.

@@ -28563,3 +28563,117 @@ html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){di
 /* 8D86 · Los Personajes Principales fueron retirados del sistema de mazos. */
 #deckBuilderPanel #deckPrincipalSlots{display:none !important;}
 .hv-match-principals{display:none !important;}
+
+
+/* ==========================================================================
+   8D89 · FORJA 30 SLOTS · sin Personajes Principales
+   Conserva intactas las posiciones calibradas 1–20 y reutiliza la zona
+   inferior para las posiciones 21–30. El fondo ya dibuja los 30 marcos.
+   ========================================================================== */
+#deckBuilderPanel #deckPrincipalSlots,
+#deckBuilderPanel .deck-mini-principal,
+#deckBuilderPanel .deck-principal-selector,
+#deckBuilderPanel .deck-principal-clear{
+  display:none !important;
+}
+
+/* Slots 21–30: contenedor independiente para no alterar la cuadrícula 1–20
+   que ya fue calibrada por el usuario. */
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots.deck-extra-slots{
+  position:absolute !important;
+  z-index:132 !important;
+  left:5.7% !important;
+  right:5.4% !important;
+  bottom:2.8% !important;
+  height:22.8% !important;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  gap:2.0% 2.15% !important;
+  overflow:visible !important;
+  align-items:center !important;
+  justify-items:center !important;
+  pointer-events:auto !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-card,
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-empty-slot{
+  position:relative !important;
+  width:84% !important;
+  height:92% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:visible !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-empty-slot span{
+  display:none !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-card.in-deck{
+  display:block !important;
+  z-index:140 !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  filter:none !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art,
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art img{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:visible !important;
+  border:0 !important;
+  background:transparent !important;
+  z-index:2 !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  filter:drop-shadow(0 5px 5px rgba(0,0,0,.48)) !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-remove{
+  z-index:12 !important;
+}
+
+/* Los espacios por encima del Tier actual siguen existiendo en el DOM para
+   que ?hvdev=1 pueda calibrar las 30 posiciones. La regla de capacidad real
+   se mantiene en addCardToDeck/validateDeckList. */
+#deckBuilderPanel.hv-forge-collection-v2 .deck-tier-locked-slot{
+  pointer-events:auto !important;
+}
+
+/* En el editor, ambos grupos del mazo se pueden seleccionar sin que el
+   contenedor parental secuestre el clic. */
+body.hv-forge-edit-active #deckBuilderPanel #deckExtraSlots,
+body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
+  cursor:default !important;
+}

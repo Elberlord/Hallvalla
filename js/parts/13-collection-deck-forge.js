@@ -654,10 +654,10 @@ function openDeckBuilder(){
 function releaseDeckBuilderDom(){
   // PERF4: las miniaturas y sus listeners son reconstruibles. Mantenerlas dentro
   // de un panel oculto retiene nodos e imágenes decodificadas sin aportar UI.
-  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),principalSlots=$("deckPrincipalSlots"),materialPanel=$("craftMaterialPanel");
+  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),extraSlots=$("deckExtraSlots"),materialPanel=$("craftMaterialPanel");
   collectionGrid?.replaceChildren();
   deckList?.replaceChildren();
-  principalSlots?.replaceChildren();
+  extraSlots?.replaceChildren();
   materialPanel?.replaceChildren();
   deckBuilderDragPayload=null;
   clearDeckBuilderDropActive();
@@ -802,10 +802,13 @@ function setDeckBuilderDropActive(el,active){
 function clearDeckBuilderDropActive(){
   setDeckBuilderDropActive($("deckCollectionGrid"),false);
   setDeckBuilderDropActive($("currentDeckList"),false);
+  setDeckBuilderDropActive($("deckExtraSlots"),false);
 }
-function bindDeckBuilderPersistentDropTargets(collectionGrid,deckList){
-  if(!collectionGrid||!deckList)return;
-  if(deckList.dataset.hvDeckDropBound!=="1"){
+function bindDeckBuilderPersistentDropTargets(collectionGrid,...deckContainers){
+  const lists=deckContainers.filter(Boolean);
+  if(!collectionGrid||!lists.length)return;
+  lists.forEach(deckList=>{
+    if(deckList.dataset.hvDeckDropBound==="1")return;
     deckList.addEventListener("dragover",ev=>{
       const payload=getDeckBuilderDragPayload(ev);
       if(payload?.action==="add"){ev.preventDefault();ev.dataTransfer.dropEffect="copy";setDeckBuilderDropActive(deckList,true);}
@@ -820,7 +823,7 @@ function bindDeckBuilderPersistentDropTargets(collectionGrid,deckList){
       }
     });
     deckList.dataset.hvDeckDropBound="1";
-  }
+  });
   if(collectionGrid.dataset.hvDeckDropBound!=="1"){
     collectionGrid.addEventListener("dragover",ev=>{
       const payload=getDeckBuilderDragPayload(ev);
@@ -838,12 +841,13 @@ function bindDeckBuilderPersistentDropTargets(collectionGrid,deckList){
     collectionGrid.dataset.hvDeckDropBound="1";
   }
 }
-function bindDeckBuilderDragAndClick(collectionGrid,deckList){
-  if(!collectionGrid||!deckList)return;
+function bindDeckBuilderDragAndClick(collectionGrid,...deckContainers){
+  const lists=deckContainers.filter(Boolean);
+  if(!collectionGrid||!lists.length)return;
   const clearDrop=clearDeckBuilderDropActive;
   collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
     const openDetail=ev=>{
-      if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust,.deck-mini-principal"))return;
+      if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<160)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
       if(card)showDeckBuilderCardDetail(card);
@@ -861,34 +865,30 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
     });
     el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
   });
-  deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
-    const openDetail=ev=>{
-      if(ev.target.closest(".deck-mini-remove,.deck-mini-principal,.deck-mini-craft,.deck-mini-dust"))return;
-      if(Date.now()-deckBuilderDragStartedAt<160)return;
-      const idx=Number(el.dataset.draftIndex);
-      showDeckBuilderCardDetail(currentDeckDraft[idx]);
-    };
-    el.addEventListener("click",openDetail);
-    el.addEventListener("dragstart",ev=>{
-      deckBuilderDragStartedAt=Date.now();
-      deckBuilderDragPayload={action:"remove",index:Number(el.dataset.draftIndex),key:el.dataset.deckCardKey};
-      ev.dataTransfer.effectAllowed="move";
-      ev.dataTransfer.setData("application/json",JSON.stringify(deckBuilderDragPayload));
-      ev.dataTransfer.setData("text/plain",JSON.stringify(deckBuilderDragPayload));
-      el.classList.add("dragging");
+  lists.forEach(deckList=>{
+    deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
+      const openDetail=ev=>{
+        if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust"))return;
+        if(Date.now()-deckBuilderDragStartedAt<160)return;
+        const idx=Number(el.dataset.draftIndex);
+        showDeckBuilderCardDetail(currentDeckDraft[idx]);
+      };
+      el.addEventListener("click",openDetail);
+      el.addEventListener("dragstart",ev=>{
+        deckBuilderDragStartedAt=Date.now();
+        deckBuilderDragPayload={action:"remove",index:Number(el.dataset.draftIndex),key:el.dataset.deckCardKey};
+        ev.dataTransfer.effectAllowed="move";
+        ev.dataTransfer.setData("application/json",JSON.stringify(deckBuilderDragPayload));
+        ev.dataTransfer.setData("text/plain",JSON.stringify(deckBuilderDragPayload));
+        el.classList.add("dragging");
+      });
+      el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
     });
-    el.addEventListener("dragend",()=>{deckBuilderDragPayload=null;el.classList.remove("dragging");clearDrop();});
   });
   // E26: las acciones del catálogo se delegan al grid persistente. Así ningún + queda
   // sin listener después de paginar, filtrar, abrir un pack o reconstruir las miniaturas.
   if(collectionGrid.dataset.hvCardActionsBound!=="1"){
     collectionGrid.addEventListener("click",ev=>{
-      const principalBtn=ev.target.closest?.("[data-set-principal]");
-      if(principalBtn&&collectionGrid.contains(principalBtn)){
-        ev.preventDefault();ev.stopPropagation();
-        setCurrentDeckPrincipal(principalBtn.dataset.setPrincipal);
-        return;
-      }
       const addBtn=ev.target.closest?.("[data-add-card]");
       if(addBtn&&collectionGrid.contains(addBtn)){
         ev.preventDefault();ev.stopPropagation();
@@ -912,19 +912,16 @@ function bindDeckBuilderDragAndClick(collectionGrid,deckList){
     });
     collectionGrid.dataset.hvCardActionsBound="1";
   }
-  deckList.querySelectorAll("[data-remove-index]").forEach(btn=>btn.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    removeCardFromDeckIndex(btn.dataset.removeIndex);
-  }));
-  deckList.querySelectorAll("[data-set-principal]").forEach(btn=>btn.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    setCurrentDeckPrincipal(btn.dataset.setPrincipal);
-  }));
-  bindDeckBuilderPersistentDropTargets(collectionGrid,deckList);
+  lists.forEach(deckList=>{
+    deckList.querySelectorAll("[data-remove-index]").forEach(btn=>btn.addEventListener("click",ev=>{
+      ev.stopPropagation();
+      removeCardFromDeckIndex(btn.dataset.removeIndex);
+    }));
+  });
+  bindDeckBuilderPersistentDropTargets(collectionGrid,...lists);
 }
 function renderDeckPrincipalSelector(){
-  const slots=$("deckPrincipalSlots");
-  if(slots){slots.replaceChildren();slots.classList.add("hidden");slots.setAttribute("aria-hidden","true");}
+  // Compatibilidad legacy: el sistema actual ya no tiene Personajes Principales.
   currentPrincipalKeys=[];
 }
 
@@ -982,8 +979,8 @@ function syncDeckBuilderUnitTabs(){
 }
 function renderDeckBuilder(){
   syncDeckBuilderUnitTabs();
-  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),principalSlotsEl=$("deckPrincipalSlots");
-  if(!collectionGrid||!deckList||!principalSlotsEl)return;
+  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),extraSlotsEl=$("deckExtraSlots");
+  if(!collectionGrid||!deckList||!extraSlotsEl)return;
   const browseOnly=isCollectionBrowseOnly();
   const panel=$("deckBuilderPanel");
   if(panel){
@@ -1064,8 +1061,8 @@ function renderDeckBuilder(){
   if(next){next.disabled=deckBuilderCollectionPage>=totalPages-1;next.onclick=()=>{deckBuilderCollectionPage=Math.min(totalPages-1,deckBuilderCollectionPage+1);renderDeckBuilder();};}
   if(browseOnly){
     deckList.innerHTML="";
-    principalSlotsEl.innerHTML="";
-    bindDeckBuilderDragAndClick(collectionGrid,deckList);
+    extraSlotsEl.innerHTML="";
+    bindDeckBuilderDragAndClick(collectionGrid,deckList,extraSlotsEl);
     const ownedUnique=allCards.filter(card=>Number(card.qty||0)>0).length;
     if($("deckCountText"))$("deckCountText").textContent=`${ownedUnique}/${allCards.length} desbloqueadas`;
     globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__?.();
@@ -1076,13 +1073,19 @@ function renderDeckBuilder(){
   const leaderTier=typeof getCurrentLeaderDeckTier==="function"?getCurrentLeaderDeckTier():(typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(leaderLevel):1);
   currentPrincipalKeys=[];
   const drawEntries=currentDeckDraft.map((card,index)=>({card,index}));
-  const visibleDrawEntries=drawEntries.slice(0,Math.max(requiredDeckSize,drawEntries.length));
-  const deckCardsHtml=visibleDrawEntries.map(({card,index})=>deckBuilderMiniCardHtml(card,{mode:"deck",index})).join("");
-  const emptySlots=Math.max(0,requiredDeckSize-visibleDrawEntries.length);
-  const emptyHtml=Array.from({length:emptySlots}).map((_,i)=>`<div class="deck-empty-slot" aria-label="Espacio vacío del mazo"><span>${visibleDrawEntries.length+i+1}</span></div>`).join("");
-  deckList.innerHTML=`${deckCardsHtml}${emptyHtml}`;
-  bindDeckBuilderDragAndClick(collectionGrid,deckList);
-  renderDeckPrincipalSelector();
+  const visualSlotCount=Math.max(30,Number(DECK_RULES?.maxDeckSize)||30);
+  const slotHtml=Array.from({length:visualSlotCount},(_,slotIndex)=>{
+    const card=currentDeckDraft[slotIndex];
+    if(card)return deckBuilderMiniCardHtml(card,{mode:"deck",index:slotIndex});
+    const locked=slotIndex>=requiredDeckSize;
+    const label=locked
+      ? `Espacio ${slotIndex+1} bloqueado hasta subir el Tier del líder`
+      : `Espacio vacío ${slotIndex+1} del mazo`;
+    return `<div class="deck-empty-slot${locked?" deck-tier-locked-slot":""}" data-deck-slot="${slotIndex+1}" aria-label="${escapeHtml(label)}"><span>${slotIndex+1}</span></div>`;
+  });
+  deckList.innerHTML=slotHtml.slice(0,20).join("");
+  extraSlotsEl.innerHTML=slotHtml.slice(20,30).join("");
+  bindDeckBuilderDragAndClick(collectionGrid,deckList,extraSlotsEl);
   const deckValidation=validateDeckList(currentDeckDraft,{leaderType:getSelectedLeaderType?.()||"",deckSize:requiredDeckSize});
   const validation={valid:deckValidation.valid,errors:[...deckValidation.errors]};
   if($("deckCountText"))$("deckCountText").textContent=`${drawEntries.length}/${requiredDeckSize} · Nivel ${leaderLevel} · Tier ${leaderTier}`;
@@ -1161,7 +1164,7 @@ function getNotificationItems(){
     items.push({type:"cards",title:"Paquetes/cartas nuevas",body:`Tienes ${newCards} carta${newCards===1?"":"s"} nueva${newCards===1?"":"s"} en tu colección. Se guardaron aunque los mazos estén bloqueados.`});
   }
   if(decksUnlocked&&!state.deckUnlockSeen){
-    items.push({type:"decks",title:"Mazos desbloqueados",body:"Derrotaste al Hechicero guardián. Ya puedes editar mazos. Su tamaño depende del Nivel de tu líder."});
+    items.push({type:"decks",title:"Mazos desbloqueados",body:"Derrotaste al Hechicero guardián. Ya puedes editar mazos. Su tamaño depende del Tier de tu líder."});
   }
   if(packShopUnlocked&&!state.packShopUnlockSeen){
     items.push({type:"shop",title:"Tienda de packs desbloqueada",body:"Completaste el mapa 2.1. Ya puedes comprar Pack básico usando oro."});
