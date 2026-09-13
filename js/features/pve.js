@@ -40,11 +40,13 @@ const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
   arcane_adept:2,guardian:2,spearman:2,samurai_katana:1,acolyte_healer:1,fireball:2,bolt:2
 });
 const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
-  battle1:Object.freeze({guardian:2,samurai_katana:2,archer:2,new_kingdom_archer:2,paralysis_spell:1}),
-  battle2:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,armored_man_at_arms:1,scythian_horse_archer:2}),
-  battle3:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,scythian_horse_archer:2,numidian_javelin_rider:1,bolt:1,paralysis_spell:1}),
-  battle4:Object.freeze({guardian:2,spearman:1,ulfhednar:2,berserker_de_oso:2,berserker:1,scythian_horse_archer:1,tanned_hide_harness:1,counterweighted_grip:1}),
-  battle5:Object.freeze({guardian:2,greek_hoplite:2,samurai_katana:2,armored_man_at_arms:1,scythian_horse_archer:2})
+  // Tier 1 = 10 cartas. Estos mínimos preservan la identidad del encuentro
+  // y dejan libres hasta 4 slots para la adaptación táctica de la IA.
+  battle1:Object.freeze({archer:2,new_kingdom_archer:1,guardian:1,paralysis_spell:1,retreat_strap:1}),
+  battle2:Object.freeze({guardian:1,greek_hoplite:1,samurai_katana:1,armored_man_at_arms:1,marching_greaves:1,war_visor:1}),
+  battle3:Object.freeze({scythian_horse_archer:2,numidian_javelin_rider:1,guardian:1,withdrawal_stirrups:1,light_barding:1}),
+  battle4:Object.freeze({ulfhednar:1,berserker_de_oso:1,berserker:1,spearman:1,tanned_hide_harness:1,counterweighted_grip:1}),
+  battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,guardian:1,marching_greaves:1,war_visor:1})
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:4,battle2:4,battle3:5,battle4:8,battle5:10});
 const ADAPTIVE_CAMPAIGN_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
@@ -1017,15 +1019,6 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
         for(let i=0;card&&i<count;i++)templates.push(card);
       });
       return templates.slice(0,target);
-    }
-    if(battle?.id==="battle5"&&String(enemyLeaderType||"")==="warrior"){
-      const drawBase=getAdaptiveCanonicalClassDeckTemplates("warrior").slice(0,target);
-      const principals=[];
-      for(const key of principalKeys||[]){
-        const card=getAdventureDeckCardTemplateByKey(key);
-        if(card?.type==="unit"&&!principals.some(c=>c.key===card.key))principals.push(card);
-      }
-      return [...drawBase,...principals].slice(0,target);
     }
     if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
       return expandEnemyFixedDeck(battle.enemyFixedDeck)
@@ -2912,6 +2905,15 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     Object.freeze(["heal",1]),
     Object.freeze(["withdrawal_stirrups",1])
   ]);
+  const MAP1_CAVALRY_COUNTS=Object.freeze([
+    Object.freeze(["scythian_horse_archer",3]),
+    Object.freeze(["numidian_javelin_rider",2]),
+    Object.freeze(["guardian",1]),
+    Object.freeze(["greek_hoplite",1]),
+    Object.freeze(["paralysis_spell",1]),
+    Object.freeze(["withdrawal_stirrups",1]),
+    Object.freeze(["light_barding",1])
+  ]);
 
   function n(value){
     const x=Number(value||0);
@@ -2947,7 +2949,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   }
   function getMap1DeckCounts(battleId,leaderType){
     if(String(leaderType||"")!=="cavalry"||String(battleId||"")!=="battle3")return null;
-    return CAVALRY_CANONICAL_COUNTS.map(([k,c])=>[k,c]);
+    return MAP1_CAVALRY_COUNTS.map(([k,c])=>[k,c]);
   }
 
   function getCoreMinimums(leaderType,battle){

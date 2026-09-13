@@ -1,0 +1,18 @@
+HallValla 20260913.95 · FORGE JSON EXACT
+
+Único cambio funcional:
+- El layout de Forja en producción usa exclusivamente USER_LAYOUT (JSON canónico embebido).
+- localStorage del editor ?dev ya NO puede sobreescribir posiciones en producción.
+- En ?dev, localStorage sigue funcionando para editar y Copiar JSON.
+
+Motivo:
+El editor guardaba sus posiciones en localStorage y el runtime de producción también las leía.
+Por eso un JSON correctamente integrado podía quedar visualmente sustituido por un estado viejo del navegador.
+
+No se modificaron:
+- imagen/fondo del constructor de mazos
+- mazos IA mapa 1
+- TR
+- Aventura
+- PvP/Firebase
+- balance/cartas

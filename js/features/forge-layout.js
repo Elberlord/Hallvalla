@@ -1,5 +1,5 @@
 /* HallValla Stage 10.1 · Forge layout lazy
-   Layout canónico de Forja disponible en producción; editor solo con ?hvdev=1. */
+   Layout canónico de Forja disponible en producción; editor solo con ?dev. PROD ignora por completo el localStorage del editor. */
 
 /* HallValla FORGE6CTRL · editor directo individual de la Forja */
 (()=>{
@@ -86,6 +86,11 @@
 
   function loadState(){
     const base=defaultState();
+    /* CRÍTICO: en producción el JSON canónico embebido es la única fuente de verdad.
+       El estado local del editor ?dev nunca puede sobreescribirlo. Antes se leía
+       localStorage también en PROD, por eso un ajuste viejo podía reaparecer aunque
+       el JSON nuevo estuviera correctamente integrado en USER_LAYOUT. */
+    if(!DEV_TOOLS_ENABLED)return base;
     try{
       let raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
       raw=raw||{};
@@ -99,7 +104,10 @@
     }catch(_){ }
     return base;
   }
-  function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){} }
+  function saveState(){
+    if(!DEV_TOOLS_ENABLED)return;
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}
+  }
   function isForgeOpen(){const panel=$('deckBuilderPanel');return !!(panel&&!panel.classList.contains('hidden'));}
   function targetElement(key){const cfg=TARGETS[key];return cfg?document.querySelector(cfg.selector):null;}
 
