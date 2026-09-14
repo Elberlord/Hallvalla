@@ -47,10 +47,11 @@ function hvGamepadInstallStyles(){
   const style=document.createElement("style");
   style.id="hallvallaGamepadStyles";
   style.textContent=`
-    #hallvallaGamepadBadge{position:fixed;z-index:2147482000;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));display:flex;align-items:center;gap:7px;max-width:min(72vw,410px);padding:7px 11px;border:1px solid rgba(201,157,72,.78);border-radius:999px;background:rgba(8,8,10,.88);box-shadow:0 0 18px rgba(0,0,0,.45),inset 0 0 10px rgba(201,157,72,.12);color:#f3ddb1;font:700 11px/1.15 Georgia,serif;letter-spacing:.03em;pointer-events:none;opacity:0;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease;backdrop-filter:blur(4px)}
-    #hallvallaGamepadBadge.show{opacity:.96;transform:translateY(0)}
+    #hallvallaGamepadBadge{position:fixed;z-index:2147482000;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));width:46px;height:28px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0;border:1px solid rgba(201,157,72,.72);border-radius:999px;background:rgba(8,8,10,.86);box-shadow:0 0 13px rgba(0,0,0,.42),inset 0 0 8px rgba(201,157,72,.10);pointer-events:none;opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease;backdrop-filter:blur(4px)}
+    #hallvallaGamepadBadge.show{opacity:.94;transform:translateY(0)}
     #hallvallaGamepadBadge .hv-gp-dot{width:8px;height:8px;border-radius:50%;background:#69db87;box-shadow:0 0 9px #69db87;flex:none}
-    #hallvallaGamepadBadge.disconnected .hv-gp-dot{background:#b45a5a;box-shadow:0 0 9px #b45a5a}
+    #hallvallaGamepadBadge .hv-gp-icon{font:400 15px/1 system-ui,sans-serif;color:#f3ddb1;transform:translateY(-.5px)}
+    #hallvallaGamepadBadge.disconnected .hv-gp-dot{background:#d44f4f;box-shadow:0 0 9px #d44f4f}
     .cell.hv-gamepad-cursor{outline:3px solid rgba(255,225,126,.96)!important;outline-offset:-4px;box-shadow:inset 0 0 0 2px rgba(25,13,2,.84),inset 0 0 20px rgba(255,211,79,.20),0 0 13px rgba(255,211,79,.52)!important;z-index:24}
     .cell.hv-gamepad-cursor::after{content:"";position:absolute;inset:5px;border:1px dashed rgba(255,242,185,.9);pointer-events:none;z-index:90}
     #handRow .hand-card.hv-gamepad-hand-focus{outline:3px solid rgba(255,225,126,.96)!important;outline-offset:2px;filter:brightness(1.08);transform:translateY(-7px) scale(1.025);z-index:40}
@@ -61,7 +62,7 @@ function hvGamepadInstallStyles(){
     #hallvallaGamepadPointer svg{display:block;width:27px;height:34px;overflow:visible}
     #hallvallaGamepadPointer .hv-gp-pointer-fill{fill:#ffe083}
     #hallvallaGamepadPointer .hv-gp-pointer-stroke{stroke:#160f05;stroke-width:2.2;stroke-linejoin:round}
-    @media(max-width:720px){#hallvallaGamepadBadge{font-size:10px;padding:6px 9px;max-width:82vw}}
+    @media(max-width:720px){#hallvallaGamepadBadge{width:42px;height:26px;gap:5px}}
   `;
   document.head.appendChild(style);
 }
@@ -72,18 +73,17 @@ function hvGamepadBadge(){
   badge=document.createElement("div");
   badge.id="hallvallaGamepadBadge";
   badge.setAttribute("aria-live","polite");
-  badge.innerHTML='<span class="hv-gp-dot" aria-hidden="true"></span><span class="hv-gp-text">🎮 Control conectado</span>';
+  badge.innerHTML='<span class="hv-gp-dot" aria-hidden="true"></span><span class="hv-gp-icon" aria-hidden="true">🎮</span>';
+  badge.setAttribute("aria-label","Control desconectado");
   document.body.appendChild(badge);
   return badge;
 }
-function hvGamepadShowBadge(text,{disconnected=false,linger=0}={}){
+function hvGamepadShowBadge(_text,{disconnected=false}={}){
   const badge=hvGamepadBadge();
-  const label=badge.querySelector(".hv-gp-text");
-  if(label)label.textContent=text;
   badge.classList.toggle("disconnected",!!disconnected);
   badge.classList.add("show");
+  badge.setAttribute("aria-label",disconnected?"Control desconectado":"Control conectado");
   clearTimeout(hvGamepadShowBadge._timer);
-  if(linger>0)hvGamepadShowBadge._timer=setTimeout(()=>badge.classList.remove("show"),linger);
 }
 hvGamepadShowBadge._timer=0;
 
@@ -215,7 +215,7 @@ function hvGamepadConnect(gp){
     const kind=hvGamepadState.mapping==="standard"?"estándar":"compatible";
     const badge=hvGamepadBadge();
     badge.title=`${hvGamepadState.id} · ${kind} · TR: X Unidades · A Magias/Confirmar · Y Trampas · LT/RT páginas · B volver`;
-    hvGamepadShowBadge("🎮 Control conectado");
+    hvGamepadShowBadge("",{disconnected:false});
     console.info(`[HallValla][GAMEPAD] conectado: ${hvGamepadState.id} · mapping=${hvGamepadState.mapping||"generic"}`);
   }
   if(!hvGamepadState.raf)hvGamepadState.raf=requestAnimationFrame(hvGamepadLoop);
@@ -235,7 +235,7 @@ function hvGamepadDisconnect(){
   hvGamepadState.pointerFrameAt=0;
   hvGamepadPointerRender();
   hvGamepadClearVisualFocus();
-  hvGamepadShowBadge("🎮 Control desconectado",{disconnected:true,linger:2200});
+  hvGamepadShowBadge("",{disconnected:true});
 }
 
 function hvGamepadIsVisible(el){
@@ -698,6 +698,7 @@ function hvGamepadInit(){
     return;
   }
   hvGamepadInstallStyles();
+  hvGamepadShowBadge("",{disconnected:true});
   window.addEventListener("gamepadconnected",ev=>hvGamepadConnect(ev.gamepad),{passive:true});
   window.addEventListener("gamepaddisconnected",ev=>{
     if(Number(ev.gamepad?.index)===Number(hvGamepadState.index))hvGamepadDisconnect();
