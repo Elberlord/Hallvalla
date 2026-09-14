@@ -401,6 +401,14 @@ function isBeastCollectionCard(card){
   const key=String(card.key||"");
   return !!(card.beast||BEAST_CARD_TEMPLATES.some(c=>c.key===key)||BEAST_TRAP_CARD_TEMPLATES.some(c=>c.key===key));
 }
+function isDragonCompanionCollectionCard(card){
+  if(!card)return false;
+  const key=String(card.key||"");
+  return !!(card.dragonCompanion||card.dragonEgg||key==="dragon_egg"||/^(baby|young|adult)_(lightning|fire|ice)_dragon$/.test(key));
+}
+function requiresBeastEventUnlockForDeck(card){
+  return isBeastCollectionCard(card)&&!isDragonCompanionCollectionCard(card);
+}
 function getUnlockedAdventureSpecialCollectionTemplates(){
   const progress=typeof getAdventureProgress==="function"?getAdventureProgress():{};
   const keys=[progress?.selectedSpecial].filter(key=>key&&ADVENTURE_SPECIALS[key]);
@@ -949,7 +957,7 @@ function getDeckBuilderAddLockReason(card,used=0,addLimit=0){
   if(!card)return "No se pudo identificar esta carta.";
   const ownedQty=Math.max(0,Number(card.qty||0));
   if(ownedQty<=0)return "No tienes copias de esta carta. Puedes crearla si tienes materiales.";
-  if(isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting())return "Esta carta de bestia todavía está bloqueada por su evento.";
+  if(requiresBeastEventUnlockForDeck(card)&&!hasUnlockedBeastCrafting())return "Esta carta de bestia todavía está bloqueada por su evento.";
   if(isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType()))return `${card.name} es exclusivo de ${getEquipmentLeaderLabel(card)}.`;
   if(currentDeckDraft.length>=getCurrentDeckSize())return `El mazo ya tiene ${getCurrentDeckSize()} cartas. Quita una antes de agregar otra.`;
   const limit=Math.max(0,Number(addLimit||0));
@@ -1044,7 +1052,7 @@ function renderDeckBuilder(){
     const maxAllowed=maxCopiesForCard(card);
     const addLimit=Math.min(ownedQty,maxAllowed);
     const collectionLocked=ownedQty<=0;
-    const cannotAddBeast=isBeastCollectionCard(card)&&!hasUnlockedBeastCrafting();
+    const cannotAddBeast=requiresBeastEventUnlockForDeck(card)&&!hasUnlockedBeastCrafting();
     const cannotAddEquipment=isEquipmentCard(card)&&!isEquipmentCardAllowedForLeader(card,getSelectedLeaderType());
     const hardLocked=collectionLocked||cannotAddBeast||cannotAddEquipment;
     const addLockReason=getDeckBuilderAddLockReason(card,used,addLimit);
