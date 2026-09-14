@@ -12,7 +12,7 @@ const HALLVALLA_RT_CFG=Object.freeze({
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
-  summonCooldownMs:2000,
+  summonCooldownMs:0,
   spawnEgressDelayMs:250,
   attackCooldownMs:9600,
   baseMoveCooldownMs:7200,
@@ -160,18 +160,39 @@ function hallvallaRtGetOwnerLeader(owner,units=publicState?.units||[]){return (u
 function hallvallaRtGetSpawnCells(owner,units=publicState?.units||[]){
   const leader=hallvallaRtGetOwnerLeader(owner,units);if(!leader)return[];
   const occupied=new Set((units||[]).filter(u=>u&&Number(u.hp||0)>0).map(u=>`${u.x},${u.y}`));
-  const dir=Number(owner)===1?-1:1;
-  const offsets=[[0,dir],[-1,dir],[1,dir],[-1,0],[1,0],[-1,-dir],[1,-dir],[0,-dir]];
-  return offsets.map(([dx,dy])=>({x:Number(leader.x)+dx,y:Number(leader.y)+dy}))
-    .filter(c=>c.x>=0&&c.x<COLS&&c.y>=0&&c.y<ROWS&&!occupied.has(`${c.x},${c.y}`));
+  const ownerNum=Number(owner),dir=ownerNum===1?-1:1;
+  const leaderX=Number(leader.x),leaderY=Number(leader.y);
+  const mid=Math.floor((ROWS-1)/2);
+  const cells=[];
+
+  // TR canónico: no existe un cupo artificial de invocaciones. El despliegue
+  // comienza en las 3 celdas frontales del líder, continúa por sus costados y,
+  // si están ocupadas, se expande anillo por anillo por toda la mitad aliada.
+  // Solo se bloquea cuando físicamente no queda ninguna celda libre en esa zona.
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(x===leaderX&&y===leaderY)continue;
+    if(occupied.has(`${x},${y}`))continue;
+    const forward=(y-leaderY)*dir;
+    // No desplegar detrás del líder. En el tablero normal el líder está en el borde,
+    // pero esta condición mantiene la regla correcta si alguna escena lo reposiciona.
+    if(forward<0)continue;
+    // Mantener las nuevas unidades en territorio propio/centro para que llenar la
+    // retaguardia no permita aparecer directamente en territorio enemigo.
+    if(ownerNum===1&&y<mid)continue;
+    if(ownerNum===2&&y>mid)continue;
+    const ring=dist(leader,{x,y});
+    if(ring<=0)continue;
+    const lateral=Math.abs(x-leaderX);
+    const sameRowPenalty=forward===0?1:0;
+    cells.push({x,y,_ring:ring,_forward:forward,_lateral:lateral,_sameRowPenalty:sameRowPenalty});
+  }
+  cells.sort((a,b)=>(a._ring-b._ring)||(a._sameRowPenalty-b._sameRowPenalty)||(b._forward-a._forward)||(a._lateral-b._lateral)||(a.x-b.x)||(a.y-b.y));
+  return cells.map(({x,y})=>({x,y}));
 }
 function hallvallaRtFindBestSpawnCell(owner,units=publicState?.units||[]){
   return hallvallaRtGetSpawnCells(owner,units)[0]||null;
 }
-function hallvallaRtSummonCooldownRemaining(owner,now=hallvallaRtNow()){
-  const last=Number(hallvallaRtState.lastSummonAt?.[Number(owner)]||0);
-  return Math.max(0,HALLVALLA_RT_CFG.summonCooldownMs-Math.max(0,Number(now||0)-last));
-}
+function hallvallaRtSummonCooldownRemaining(){return 0;}
 function hallvallaRtMarkSummoned(owner,now=hallvallaRtNow()){
   if(!hallvallaRtState.lastSummonAt||typeof hallvallaRtState.lastSummonAt!=="object")hallvallaRtState.lastSummonAt={1:0,2:0};
   hallvallaRtState.lastSummonAt[Number(owner)]=Number(now||hallvallaRtNow());
@@ -441,15 +462,13 @@ async function hallvallaRtPlayAutoCard(card){
 async function hallvallaRtPlayUnitImmediate(card){
   if(!card||card.type!=="unit")return false;
   const state=getCardPlayState(card);if(!state.canPlay){setHint(state.reason||`No puedes jugar ${card.name}.`);return false;}
-  const cooldownLeft=hallvallaRtSummonCooldownRemaining(myPlayer);
-  if(cooldownLeft>0){setHint(`Despliegue en curso: espera ${(cooldownLeft/1000).toFixed(1)} s para convocar otra unidad.`);return false;}
   const lockToken=hallvallaRtAcquirePlayLock(`invocación de ${card.name||"unidad"}`);if(!lockToken)return false;
   let newUnit=null;
   try{
     let units=[...(publicState?.units||[])];
     const cells=hallvallaRtGetSpawnCells(myPlayer,units);
     const cell=cells[0]||null;
-    if(!cell){setHint("No hay casillas libres junto a tu líder. No existe un límite global de unidades: libera una casilla de invocación.");return false;}
+    if(!cell){setHint("No queda ninguna celda libre en tu zona de despliegue. No hay límite artificial de unidades; solo ocupación física del tablero.");return false;}
     const summonCostInfo=getCardCostBreakdown(card,myPlayer,units);
     const paidCostText=getPaidSummonCostText(card,myPlayer,units);
     newUnit=makeUnit({...card,owner:myPlayer,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
@@ -946,7 +965,6 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
   for(const card of affordable){
     const cost=hallvallaRtAiCardCost(card);
     if(card?.type==="unit"){
-      if(hallvallaRtSummonCooldownRemaining(2)>0)continue;
       if(!spawnCell)continue;
       let score=210+cost*35+hallvallaRtAiUnitValue(card);
       if(!allyUnits.length)score+=2000; // Sin ejército, invocar es prioridad absoluta.

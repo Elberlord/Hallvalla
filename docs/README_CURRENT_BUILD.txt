@@ -1,3 +1,4 @@
+BUILD ACTUAL: 20260914.109 · TR despliegue expansivo sin cooldown
 BUILD ACTUAL: 20260913.83
 
 Prueba DEV: Combate TR local experimental.

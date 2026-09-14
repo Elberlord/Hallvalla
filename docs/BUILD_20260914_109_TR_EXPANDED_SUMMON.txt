@@ -1,0 +1,11 @@
+HallValla build 20260914.109
+
+Cambio solicitado:
+- Se elimina el cooldown artificial de 2 s entre invocaciones TR.
+- La invocación ya no depende de solo las celdas inmediatas al líder.
+- Orden de despliegue: 3 celdas frontales -> laterales del líder -> siguientes anillos libres dentro de la mitad aliada.
+- Solo se bloquea una invocación si físicamente no queda ninguna celda libre en la zona de despliegue.
+- J1 y J2/IA usan exactamente la misma búsqueda de celdas.
+- Los highlights manuales TR usan la misma zona expandida.
+
+No se modificaron: ritmo de movimiento/ataque, mana, mazos, IA táctica, Forja ni assets.
