@@ -707,7 +707,7 @@ async function resolveSharedAttackOutcome({
   units=units.map(u=>{
     if(u.id===a.id){
       const nextAttacker={...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
-      if(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)&&a.key!=="dragon_egg"){
+      if((a.dragonBoss||(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)))&&a.key!=="dragon_egg"){
         nextAttacker.dragonCharge=Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1;
       }else{
         delete nextAttacker.dragonCharge;

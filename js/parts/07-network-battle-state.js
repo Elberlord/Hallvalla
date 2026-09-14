@@ -424,6 +424,9 @@ function getOwnerHasHiddenUnits(owner,state=publicState){
   return raw===true;
 }
 function isOwnerOutOfUnits(owner,units=publicState?.units||[],state=publicState){
+  // Los jefes únicos (p. ej. Contratos de Dragón) combaten directamente como líder.
+  // Aunque no tengan mazo, mano ni invocaciones, NO están agotados mientras el jefe siga vivo.
+  if((units||[]).some(u=>u&&Number(u.owner)===Number(owner)&&u.leader&&u.dragonBoss&&Number(u.hp||0)>0))return false;
   if(hasLivingNonLeaderUnitsForOwner(owner,units))return false;
   const hasHiddenUnits=getOwnerHasHiddenUnits(owner,state);
   return hasHiddenUnits===false;

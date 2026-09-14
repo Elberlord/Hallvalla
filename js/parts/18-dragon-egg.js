@@ -263,7 +263,7 @@ function getDragonCompanionAreaDamage(attacker,cell){
 }
 function applyDragonCompanionAttackEffects(units,attacker,target,context={}){
   let out=[...(units||[])];
-  if(!attacker||!target||!isDragonCompanionKey(attacker.key)||attacker.key==="dragon_egg"||!context.hit){
+  if(!attacker||!target||!(attacker.dragonBoss||isDragonCompanionKey(attacker.key))||attacker.key==="dragon_egg"||!context.hit){
     return{units:out,text:"",statusFxEvent:null,floatFxEvent:null};
   }
   const stacks=getDragonCompanionStatusStacks(attacker);

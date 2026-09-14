@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260914.121 · Gamepad estándar (PC / Android)
+/* HallValla 20260914.122 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B volver/cerrar universal · X DEF · Y DET
    View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · LB/RB ciclar unidades.
@@ -771,7 +771,7 @@ function hvGamepadHandleButtons(gp){
   hvGamepadState.perfButtonEdges++;
   const modal=hvGamepadVisibleModal();
   const battle=hvGamepadBattleOpen();
-  /* Build 20260914.121: Menu/Start/Pause es SIEMPRE clic izquierdo.
+  /* Build 20260914.122: Menu/Start/Pause es SIEMPRE clic izquierdo.
      Si el cursor virtual ya existe, hace clic exactamente bajo el puntero aun cuando
      pointerMode haya sido desactivado por otra navegación. Si todavía no hay cursor
      visible dentro de una UI/modal, activa el control enfocado como equivalente. */
