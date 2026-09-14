@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260914.120 · Gamepad estándar (PC / Android)
+/* HallValla 20260914.121 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B volver/cerrar universal · X DEF · Y DET
    View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · LB/RB ciclar unidades.
@@ -329,12 +329,31 @@ function hvGamepadUiDepth(el){
   while(node&&node!==document.documentElement){depth++;node=node.parentElement;}
   return depth;
 }
+function hvGamepadOverlayBlocksInput(el){
+  if(!hvGamepadIsVisible(el))return false;
+  if(el.getAttribute?.("aria-hidden")==="true")return false;
+  const cs=getComputedStyle(el);
+  if(cs.pointerEvents!=="none")return true;
+  /*
+    Paridad con mouse/touch: varios FX de batalla ocupan visualmente una zona
+    pero declaran pointer-events:none (eventSplashOverlay, avisos, presentaciones).
+    Esas capas NO deben secuestrar el mando. Solo bloquean si contienen un
+    control realmente interactivo que haya reactivado pointer-events.
+  */
+  const interactive=el.querySelectorAll?.("button:not([disabled]),a[href],[role='button']:not([aria-disabled='true']),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])")||[];
+  for(const node of interactive){
+    if(hvGamepadIsVisible(node)&&getComputedStyle(node).pointerEvents!=="none")return true;
+  }
+  return false;
+}
 function hvGamepadVisibleModal(){
   /*
     El juego no usa una sola clase para sus escenas superpuestas. Aventura,
     tienda, perfil, PvP, recompensas, etc. pueden ser overlay-panel, overlay
     o modal. Si no aislamos la capa superior, la navegación termina viendo
     también los botones del Home que siguen detrás del panel.
+    Importante: overlays puramente visuales con pointer-events:none no bloquean
+    el mando, igual que tampoco bloquean mouse/touch.
   */
   const selectors=[
     "[role='dialog']:not(.hidden)","[aria-modal='true']:not(.hidden)",
@@ -351,7 +370,7 @@ function hvGamepadVisibleModal(){
   const seen=new Set();
   for(const selector of selectors){
     for(const el of document.querySelectorAll(selector)){
-      if(seen.has(el)||!hvGamepadIsVisible(el))continue;
+      if(seen.has(el)||!hvGamepadOverlayBlocksInput(el))continue;
       if(el.matches?.("[data-hv-dev-tool]")||el.closest?.("[data-hv-dev-tool]"))continue;
       seen.add(el);candidates.push(el);
     }
@@ -752,7 +771,7 @@ function hvGamepadHandleButtons(gp){
   hvGamepadState.perfButtonEdges++;
   const modal=hvGamepadVisibleModal();
   const battle=hvGamepadBattleOpen();
-  /* Build 20260914.120: Menu/Start/Pause es SIEMPRE clic izquierdo.
+  /* Build 20260914.121: Menu/Start/Pause es SIEMPRE clic izquierdo.
      Si el cursor virtual ya existe, hace clic exactamente bajo el puntero aun cuando
      pointerMode haya sido desactivado por otra navegación. Si todavía no hay cursor
      visible dentro de una UI/modal, activa el control enfocado como equivalente. */
