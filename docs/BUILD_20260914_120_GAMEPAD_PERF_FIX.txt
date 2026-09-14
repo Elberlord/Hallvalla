@@ -1,0 +1,27 @@
+HallValla build 20260914.120 · GAMEPAD PERF FIX
+
+Base
+- Parte de v119 TR NO PATHFINDING.
+- No cambia reglas de combate, IA, Firebase, movimiento TR, cooldowns, mazos ni economía.
+
+Problema confirmado
+- Con gamepad conectado, el loop requestAnimationFrame ejecutaba trabajo de DOM incluso sin input (~60 veces/s):
+  * búsqueda de modal visible y comprobaciones de visibilidad;
+  * quitar/poner cursor visual del tablero;
+  * quitar/poner foco de carta;
+  * scrollIntoView smooth de la carta enfocada.
+- Además, el scan del mando cada 1300 ms llamaba hvGamepadConnect() y reiniciaba prevButtons incluso si era el mismo mando. Un botón sostenido podía reaparecer como un nuevo press y duplicar acciones.
+
+Correcciones
+1. hvGamepadHandleButtons primero lee únicamente bordes de botones. Si no existe una pulsación nueva, retorna sin tocar DOM.
+2. El loop RAF ya no resincroniza cursor/foco visual cada frame. Esos cambios se aplican solo cuando cambia celda, modo o carta.
+3. hvGamepadSyncBoardCursor y hvGamepadSyncHandFocus conservan referencias y son idempotentes; scrollIntoView solo ocurre al cambiar de carta.
+4. El scan periódico ya no reinicia prevButtons/dirección salvo conexión real o cambio de mando.
+5. hvGamepadResolveActive evita crear Array/filter en cada frame.
+6. Cursor virtual conserva movimiento visual fluido, pero mousemove sintético se limita a ~30 Hz para evitar tormentas de listeners.
+7. __HALLVALLA_GAMEPAD_DEBUG__() incluye contadores perf.frames / idleFrames / buttonEdges / pointerMoves.
+
+Resultado esperado
+- Control conectado y quieto: casi cero trabajo DOM del subsistema gamepad.
+- Una pulsación física = una acción lógica.
+- La ruta TR X/A/Y/LT/RT/B conserva el mismo comportamiento.
