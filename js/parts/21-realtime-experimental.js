@@ -923,62 +923,15 @@ function hallvallaRtCrowdPenalty(cell,owner,units){
   }
   return adjacent*.28+sameLane*.08;
 }
-function hallvallaRtFindPath(unit,target,units=publicState?.units||[]){
-  if(!unit||!target)return[];
-  const sx=Number(unit.x),sy=Number(unit.y),range=Math.max(1,Number(getUnitAttackRange(unit)||1));
-  const occupied=new Map();
-  for(const u of (units||[])){
-    if(!u||u.id===unit.id||Number(u.hp||0)<=0)continue;
-    occupied.set(hallvallaRtCellKey(u.x,u.y),u);
-  }
-  const startKey=hallvallaRtCellKey(sx,sy);
-  const open=[{x:sx,y:sy,g:0,f:dist({x:sx,y:sy},target)}];
-  const best=new Map([[startKey,0]]),parent=new Map();
-  const lane=hallvallaRtStableLane(unit);
-  let goal=null;
-  const isGoal=(x,y)=>{
-    if(x===sx&&y===sy)return false;
-    if(dist({x,y},target)>range)return false;
-    const occ=occupied.get(hallvallaRtCellKey(x,y));
-    return !occ;
-  };
-  while(open.length){
-    open.sort((a,b)=>(a.f-b.f)||(a.g-b.g)||(Math.abs(a.x-lane)-Math.abs(b.x-lane)));
-    const cur=open.shift(),curKey=hallvallaRtCellKey(cur.x,cur.y);
-    if(cur.g!==best.get(curKey))continue;
-    if(isGoal(cur.x,cur.y)){goal=cur;break;}
-    for(const nb of hallvallaRtNeighbors(cur.x,cur.y)){
-      const key=hallvallaRtCellKey(nb.x,nb.y),occ=occupied.get(key);
-      // Enemigos son paredes. Aliados son tránsito blando: pueden cruzarse en la ruta,
-      // pero nunca terminar el movimiento en la misma casilla.
-      if(occ&&Number(occ.owner)!==Number(unit.owner))continue;
-      const diagonal=(nb.x!==cur.x&&nb.y!==cur.y)?1.03:1;
-      const allyTransit=occ&&Number(occ.owner)===Number(unit.owner)?0.45:0;
-      const crowd=hallvallaRtCrowdPenalty(nb,unit.owner,units);
-      const laneBias=Math.abs(nb.x-lane)*.025;
-      const ng=cur.g+diagonal+allyTransit+crowd+laneBias;
-      if(ng+1e-6>=(best.get(key)??Infinity))continue;
-      best.set(key,ng);parent.set(key,curKey);
-      const h=Math.max(0,dist(nb,target)-range);
-      open.push({x:nb.x,y:nb.y,g:ng,f:ng+h});
-    }
-  }
-  if(!goal)return[];
-  const rev=[];let key=hallvallaRtCellKey(goal.x,goal.y);
-  while(key&&key!==startKey){
-    const [x,y]=key.split(',').map(Number);rev.push({x,y});key=parent.get(key);
-  }
-  rev.reverse();return rev;
-}
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
   if(!unit||!target||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
   const lane=hallvallaRtStableLane(unit);
   const currentDistance=dist(unit,target);
 
-  // Ruta TR primaria: un paso local y determinista. El tablero de HallValla no
-  // necesita esperar el pathfinder completo para avanzar; esto evita que una
-  // búsqueda sin goal válido deje a TODO el ejército inmóvil silenciosamente.
+  // TR v119 · estilo MTGB: persecución local directa, sin pathfinding global.
+  // Solo se inspeccionan las 8 celdas vecinas y se elige una libre que acerque
+  // al objetivo. No hay A*, cola abierta, árbol de padres ni búsqueda de ruta.
   const direct=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
     .filter(cell=>!occupied.has(hallvallaRtCellKey(cell.x,cell.y)))
     .map(cell=>{
@@ -991,17 +944,9 @@ function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
     .sort((a,b)=>(a.score-b.score)||(a.cell.y-b.cell.y)||(a.cell.x-b.cell.x));
   if(direct.length)return direct[0].cell;
 
-  // Fallback de congestión: conserva el pathfinder para poder atravesar una fila
-  // aliada compacta y aterrizar en el primer nodo libre, sin ocupar dos unidades
-  // en la misma casilla.
-  const path=hallvallaRtFindPath(unit,target,units);
-  if(path.length){
-    const stride=Math.min(path.length,3);
-    for(let i=stride-1;i>=0;i--){
-      const cell=path[i];
-      if(cell&&!occupied.has(hallvallaRtCellKey(cell.x,cell.y)))return cell;
-    }
-  }
+  // Si las 8 celdas inmediatas están ocupadas, la unidad espera. Es deliberado:
+  // no se calcula una ruta alternativa ni se salta a través de aliados. En el
+  // siguiente pulso volverá a evaluar el espacio local y el objetivo más cercano.
   return null;
 }
 
@@ -1597,7 +1542,7 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
   for(const id of ids){
     if(attacks>=maxAttacks)break;
     const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now)continue;
-    // PERF v118: el cooldown se comprueba ANTES de buscar/ordenar objetivos.
+    // PERF v119: el cooldown se comprueba ANTES de buscar/ordenar objetivos.
     // Una unidad que aún no puede atacar no consume CPU en targeting 4 veces por segundo.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
     if(now-last<HALLVALLA_RT_CFG.attackCooldownMs)continue;
@@ -1620,7 +1565,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     const freshSpawn=live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing;
-    // PERF v118: para unidades normales, ni targeting ni pathfinding se ejecutan
+    // PERF v119: para unidades normales, ni targeting ni steering local se ejecutan
     // hasta que el cooldown real de movimiento vence. Se preserva la salida prioritaria
     // de una invocación recién creada.
     const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
@@ -1818,6 +1763,9 @@ function hallvallaRtDebugSnapshot(){
     motionTimer:!!hallvallaRtState.motionTimer,
     motionBusy:hallvallaRtState.motionBusy,
     motionTickCount:hallvallaRtState.motionTickCount,
+    pathfindingEnabled:false,
+    movementPolicy:"direct-neighbor-steering",
+    motionLoopMs:Number(HALLVALLA_RT_CFG.motionLoopMs||0),
     lastMotionAgeMs:hallvallaRtState.lastMotionTickAt?now-hallvallaRtState.lastMotionTickAt:null,
     lastMotionResult:{...hallvallaRtState.lastMotionResult},
     livingUnits:living.length,
