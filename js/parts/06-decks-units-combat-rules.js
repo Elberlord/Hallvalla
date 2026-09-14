@@ -692,12 +692,9 @@ function resolveCardCostOwner(card,player){
   return explicit===2?2:1;
 }
 function getHallvallaCanonicalRtBaseCost(rawCost){
-  const raw=Math.max(0,Math.ceil(Number(rawCost||0)));
-  if(raw<=0)return 0;
-  // Curva C canónica TR: 1-2 => 1, 3-5 => 2, 6+ => 3.
-  if(raw<=2)return 1;
-  if(raw<=5)return 2;
-  return 3;
+  // v126: TR vuelve a usar el costo original de cada carta.
+  // Ya no existe la compresión 1-2→1, 3-5→2, 6+→3.
+  return Math.max(0,Math.ceil(Number(rawCost||0)));
 }
 function getCardCostBreakdown(card,player=card?.owner,units=publicState?.units||[]){
   const owner=resolveCardCostOwner(card,player);
@@ -721,7 +718,6 @@ function getCardCostExplanation(card,player=card?.owner,units=publicState?.units
   const info=getCardCostBreakdown(card,player,units);
   const resource=getResourceLabel(info.owner);
   const details=[];
-  if(info.rawBase!==info.base)details.push(`curva TR ${info.rawBase}→${info.base}`);
   if(info.merlinDiscount>0)details.push(`-1 por Merlín`);
   if(info.sabotageStacks>0)details.push(`+1 por Sabotaje de Iga (no acumulable)`);
   return `Costo real: ${info.effective} ${resource}${details.length?` (${details.join(", ")})`:""}.`;

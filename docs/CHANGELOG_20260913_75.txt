@@ -1,7 +1,7 @@
 HallValla 20260913.75
 
 TR EXPERIMENTAL
-- El recurso continúa exactamente en +1 cada 3 segundos para jugador e IA.
+- El recurso continúa exactamente en +1 cada 4 segundos para jugador e IA.
 - La IA ya no encadena despliegues en cuanto dispone de recurso: mínimo 4.5 s entre invocaciones.
 - En TR, hacer clic/tap en una carta jugable de la mano la selecciona directamente en vez de abrir DET.
 - Magias dirigidas: seleccionar magia -> la mano se oculta -> tocar objetivo válido -> resolver -> reaparece la mano.

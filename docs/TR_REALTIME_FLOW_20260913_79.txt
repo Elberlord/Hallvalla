@@ -2,7 +2,7 @@ HallValla · TR Experimental · Ajuste de flujo 2026-09-13 · v79
 
 Cambios de esta prueba:
 - Recurso TR unificado visualmente como MANÁ.
-- MANÁ máximo 10; inicia en 0 y recupera +1 cada 3 segundos para J1 e IA.
+- MANÁ máximo 10; inicia en 0 y recupera +1 cada 4 segundos para J1 e IA.
 - La recuperación usa tiempo transcurrido real para evitar deriva por ticks lentos.
 - El flujo TR no muestra Turno/Espera: ambos lados permanecen en COMBATE TR.
 - IA deja de esperar 4.5 s entre invocaciones; solo la limita el MANÁ y un cooldown corto de reacción.

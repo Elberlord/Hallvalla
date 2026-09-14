@@ -167,7 +167,7 @@ function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(f
   if(!isWarriorLeaderSweepAttacker(attacker))return{units:out,triggered:false,text:"",hits:[]};
   const liveAttacker=out.find(u=>u.id===attacker.id&&Number(u.hp||0)>0)||attacker;
   const range=runInState(()=>getUnitAttackRange(liveAttacker),{units:out,legendaryTraps,beastTraps});
-  const sideTargets=out.filter(target=>target&&target.id!==primaryDefender?.id&&target.id!==liveAttacker.id&&target.owner!==liveAttacker.owner&&Number(target.hp||0)>0&&dist(liveAttacker,target)<=range&&canReceiveUntargetedAreaEffect(target)&&(!(target.aerial)||(range>3||liveAttacker.antiaerial)));
+  const sideTargets=out.filter(target=>target&&target.id!==primaryDefender?.id&&target.id!==liveAttacker.id&&target.owner!==liveAttacker.owner&&Number(target.hp||0)>0&&dist(liveAttacker,target)<=range&&canReceiveUntargetedAreaEffect(target)&&(!(target.aerial||target.flight)||canUnitAttackAerialTarget(liveAttacker,target)));
   if(!sideTargets.length)return{units:out,triggered:false,text:"",hits:[]};
   const hits=[];
   for(const originalTarget of sideTargets){
@@ -211,7 +211,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
   if(leader.leaderType==="warrior"){
     const liveLeader=out.find(u=>u.id===leader.id)||leader;
     const range=inState(()=>getUnitAttackRange(liveLeader),{units:out,legendaryTraps,beastTraps});
-    const targets=out.filter(target=>target&&target.owner===enemyOwner&&target.id!==liveLeader.id&&Number(target.hp||0)>0&&dist(liveLeader,target)<=range&&canReceiveUntargetedAreaEffect(target)&&(!(target.aerial)||(range>3||liveLeader.antiaerial)));
+    const targets=out.filter(target=>target&&target.owner===enemyOwner&&target.id!==liveLeader.id&&Number(target.hp||0)>0&&dist(liveLeader,target)<=range&&canReceiveUntargetedAreaEffect(target)&&(!(target.aerial||target.flight)||canUnitAttackAerialTarget(liveLeader,target)));
     if(!targets.length)return{units:out,logs:[],triggered:false,battleFxEvent:null};
     const before=[...out];
     const sweep=resolveWarriorLeaderSweep(out,liveLeader,null,{runInState:inState,legendaryTraps,beastTraps});
@@ -542,7 +542,7 @@ function inspectSharedAttackActionEligibility(attacker,defender,{turnKey="",runI
   const assassinFinalBlow=inState(()=>isAssassinFinalBlowEligible(attacker,defender));
   if(distance>rg&&!assassinFinalBlow)return{ok:false,code:"out_of_range",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
   if(inState(()=>isStealthedUnit(defender)))return{ok:false,code:"stealthed_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
-  if(defender.aerial&&!(inState(()=>getUnitAttackRange(attacker))>3||attacker.antiaerial))return{ok:false,code:"aerial_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
+  if((defender.aerial||defender.flight)&&!inState(()=>canUnitAttackAerialTarget(attacker,defender)))return{ok:false,code:"aerial_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
   return{ok:true,mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
 }
 function resolveSharedAttackPreparation({
@@ -1052,7 +1052,7 @@ async function attackUnit(a,d){
     if(declaration.code==="attack_locked")return setHint(`${a.name} no puede atacar durante el ciclo táctico actual.`);
     if(declaration.code==="out_of_range")return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${declaration.rg} y ${d.name} está a ${declaration.distance}.`);
     if(declaration.code==="stealthed_target")return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
-    if(declaration.code==="aerial_target")return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");
+    if(declaration.code==="aerial_target")return setHint("Las unidades terrestres cuerpo a cuerpo no pueden atacar objetivos en vuelo. Usa Arqueros, ataques a distancia, una unidad aérea o Antiaéreo.");
     return setHint("No se puede declarar ese ataque.");
   }
   const mulanChoiceAttack=declaration.mulanChoiceAttack;

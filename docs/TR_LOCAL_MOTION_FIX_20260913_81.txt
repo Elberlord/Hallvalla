@@ -4,4 +4,4 @@ HallValla 20260913.81 — TR local motion fix
 - Movimiento y ataque corren en un loop local dedicado, separado de IA, buffs, soporte y estados.
 - Un error de una habilidad auxiliar ya no puede congelar el desplazamiento completo.
 - La simulación TR continúa sin esperar turnos ni confirmaciones de Firebase.
-- Se conserva MANÁ 0–10, +1 cada 3 s y velocidades TR reducidas.
+- Se conserva MANÁ 0–10, +1 cada 4 s y velocidades TR reducidas.

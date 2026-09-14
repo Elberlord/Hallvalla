@@ -2489,6 +2489,27 @@ function hasExplicitRangedWeapon(card){
     || isArcherWeaponUnitCardLike(card)
     || EXPLICIT_NON_BOW_RANGED_UNIT_KEYS.has(key);
 }
+// Regla aérea canónica: Vuelo bloquea únicamente a atacantes terrestres de cuerpo a cuerpo.
+// Arqueros, otras armas explícitamente a distancia, líderes Arquero/Hechicero,
+// unidades aéreas y Antiaéreo sí pueden declarar ataques contra objetivos en vuelo.
+function canUnitAttackAerialTarget(attacker,target=null){
+  if(!attacker)return false;
+  if(target&&!(target.aerial||target.flight))return true;
+  if(attacker.antiaerial||attacker.aerial||attacker.flight)return true;
+  const leaderType=String(attacker.leaderType||"").toLowerCase();
+  if(leaderType==="archer"||leaderType==="mage")return true;
+  try{if(hasExplicitRangedWeapon(attacker))return true;}catch(_){ }
+  try{
+    const cls=String(getWeaponClassForCard(attacker)||"").toLowerCase();
+    if(cls==="bow"||cls==="mage")return true;
+  }catch(_){ }
+  // Compatibilidad con diseños heredados de largo alcance que ya podían golpear vuelo.
+  try{
+    const rg=typeof getUnitAttackRange==="function"?Number(getUnitAttackRange(attacker)||0):Number(attacker.range||0);
+    if(rg>3)return true;
+  }catch(_){if(Number(attacker.range||0)>3)return true;}
+  return false;
+}
 function applyArcherRangeRule(card){
   if(!isArcherWeaponUnitCardLike(card))return card;
   if(!card.archerRangeBonusApplied){

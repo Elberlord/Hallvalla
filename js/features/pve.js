@@ -3362,7 +3362,7 @@ async function adventureEnemyTurn(){
     && attacker.owner!==target.owner
     && canUnitAttackTarget(attacker,target)
     && canTargetStealth(attacker,target)
-    && (!(target.aerial)||(aiAttackRange(attacker)>3||attacker.antiaerial));
+    && (!(target.aerial||target.flight)||canUnitAttackAerialTarget(attacker,target));
   const aiAttackReachForTarget=(attacker,target)=>isAssassinFinalBlowEligible(attacker,target)?Math.max(aiAttackRange(attacker),ASSASSIN_FINAL_BLOW_RANGE):aiAttackRange(attacker);
   const canHit=(a,t)=>!!a&&!!t
     && (!a.acted||isKhalidChainAttackReady(a)||isMulanExecutionChoiceReady(a))

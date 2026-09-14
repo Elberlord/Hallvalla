@@ -8,7 +8,7 @@
 
 const HALLVALLA_RT_CFG=Object.freeze({
   resourceCap:10,
-  resourceEveryMs:3000,
+  resourceEveryMs:4000,
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
@@ -894,7 +894,7 @@ function hallvallaRtCanAttackNow(unit,target){
   try{
     const rg=Math.max(1,Number(getUnitAttackRange(unit)||1));
     if(dist(unit,target)>rg)return false;
-    if(target.aerial&&!(rg>3||unit.antiaerial))return false;
+    if((target.aerial||target.flight)&&!canUnitAttackAerialTarget(unit,target))return false;
     return true;
   }catch(_){return false;}
 }
@@ -1052,15 +1052,18 @@ async function hallvallaRtInitializeResources(){
 }
 async function hallvallaRtResourceAndDrawTick(now){
   const elapsed=Math.max(0,now-hallvallaRtState.lastResourceAt);
-  const steps=Math.floor(elapsed/HALLVALLA_RT_CFG.resourceEveryMs);
-  if(steps<=0)return false;
-  hallvallaRtState.lastResourceAt+=steps*HALLVALLA_RT_CFG.resourceEveryMs;hallvallaRtState.cycle+=steps;
+  if(elapsed<HALLVALLA_RT_CFG.resourceEveryMs)return false;
+  // v126: el MANÁ sube estrictamente de 1 en 1. Si el navegador se retrasa
+  // o la pestaña estuvo pausada, no se acumulan varios ticks para entregarlos
+  // de golpe al reanudarse. El siguiente punto necesita otros 4 s completos.
+  hallvallaRtState.lastResourceAt=now;
+  hallvallaRtState.cycle+=1;
   const max=HALLVALLA_RT_CFG.resourceCap;
-  const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+steps);
+  const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+1);
   const privatePatch={honor,maxHonor:max,lastTurnStarted:'RT'};
   const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
   if(publicState?.adventureAiState){
-    const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+steps);ai.lastTurnStarted='RT';
+    const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+1);ai.lastTurnStarted='RT';
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
   }
@@ -1740,7 +1743,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
     hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.motionLoopMs||HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
-    setHint("TR: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque autónomos.");
+    setHint("TR: sin turnos · +1 MANÁ cada 4 s · movimiento/ataque autónomos.");
     void hallvallaRtLoop();
     void hallvallaRtMotionLoop();
   }else{

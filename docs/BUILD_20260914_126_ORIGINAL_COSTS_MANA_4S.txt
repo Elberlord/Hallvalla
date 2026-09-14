@@ -1,0 +1,8 @@
+HallValla v126 · Costos originales + MANÁ 4 s
+
+- TR vuelve a usar el costo original definido en cada carta (sin curva comprimida 1-2→1 / 3-5→2 / 6+→3).
+- Sabotaje de Iga conserva +1 MANÁ total y Merlín conserva -1 a Magias/Trampas, mínimo 1.
+- MANÁ máximo 10. Inicia en 0.
+- Regeneración: exactamente +1 MANÁ cada 4 s.
+- No existe catch-up de varios puntos: si el runtime se retrasa o la pestaña se pausa, al volver solo puede entrar +1 y el siguiente punto requiere otros 4 s completos.
+- La IA usa la misma economía de MANÁ y los mismos costos efectivos.

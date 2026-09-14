@@ -11,7 +11,7 @@ CAMBIOS
 - Cache-bust actualizado a build 20260913.82 para impedir que el Service Worker conserve el runtime TR anterior.
 
 NO CAMBIA
-- MANÁ 0–10, +1 cada 3 s.
+- MANÁ 0–10, +1 cada 4 s.
 - Velocidad/cooldown TR reducidos de la prueba anterior.
 - Automatización de magias, curación, reanimación y estados.
 - PvP online real sigue fuera de esta prueba.

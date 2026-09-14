@@ -8,7 +8,7 @@ OBJETIVO DE ESTA PRUEBA
 
 RITMO
 - Maná máximo: 10.
-- Regeneración: +1 cada 3 segundos.
+- Regeneración: +1 cada 4 segundos.
 - Movimiento: aproximadamente 50% más lento que la prueba v79.
 - Cadencia de ataque: aproximadamente 50% más lenta que la prueba v79.
 - J1 e IA actúan simultáneamente; no se espera turno ni confirmación de red entre acciones.

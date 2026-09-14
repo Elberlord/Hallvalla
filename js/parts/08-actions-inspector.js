@@ -56,7 +56,7 @@ function getAttackableTargets(u,units=publicState?.units||[]){
     if(!t||t.id===live.id||t.owner===live.owner||(t.hp!==undefined&&t.hp<=0))return false;
     const inNormalRange=dist(live,t)<=rg;
     const finalBlow=isAssassinFinalBlowEligible(live,t);
-    return (inNormalRange||finalBlow)&&canTargetStealth(live,t)&&canUnitAttackTarget(live,t)&&(!(t.aerial)||(getUnitAttackRange(live)>3||live.antiaerial));
+    return (inNormalRange||finalBlow)&&canTargetStealth(live,t)&&canUnitAttackTarget(live,t)&&(!(t.aerial||t.flight)||canUnitAttackAerialTarget(live,t));
   });
 }
 function isDirectTacticalUnitSelection(){
@@ -149,7 +149,7 @@ function attackRangeCells(u,units=publicState?.units||[]){
     if(dist(u,{x,y})<=rg)res.push(`${x},${y}`);
   }
   for(const target of (units||[])){
-    if(isAssassinFinalBlowEligible(u,target)&&canTargetStealth(u,target)&&canUnitAttackTarget(u,target)&&(!(target.aerial)||(getUnitAttackRange(u)>3||u.antiaerial))){
+    if(isAssassinFinalBlowEligible(u,target)&&canTargetStealth(u,target)&&canUnitAttackTarget(u,target)&&(!(target.aerial||target.flight)||canUnitAttackAerialTarget(u,target))){
       const key=`${target.x},${target.y}`;
       if(!res.includes(key))res.push(key);
     }

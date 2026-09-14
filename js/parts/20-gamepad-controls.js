@@ -606,7 +606,19 @@ function hvGamepadDetailsHand(){
   }
 }
 
-function hvGamepadGetUiRoot(){return hvGamepadVisibleModal()||document;}
+function hvGamepadMineOpen(){
+  const mine=document.getElementById("mineScreen");
+  return !!(mine&&hvGamepadIsVisible(mine)&&!mine.classList.contains("hidden"));
+}
+function hvGamepadGetUiRoot(){
+  const modal=hvGamepadVisibleModal();
+  if(modal)return modal;
+  /* La Mina es una escena completa superpuesta al Home, no un modal genérico.
+     Mientras esté abierta el mando no debe navegar controles del Home que quedan
+     detrás de ella. */
+  if(hvGamepadMineOpen())return document.getElementById("mineScreen");
+  return document;
+}
 function hvGamepadEnsureUiFocus(){
   const root=hvGamepadGetUiRoot();
   const items=hvGamepadFocusable(root);
@@ -668,6 +680,22 @@ function hvGamepadFindCloseControl(root){
     .filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score||hvGamepadUiLayerZ(b.el)-hvGamepadUiLayerZ(a.el));
   return items[0]?.el||null;
+}
+function hvGamepadCloseMine(){
+  if(!hvGamepadMineOpen())return false;
+  const mine=document.getElementById("mineScreen");
+  /* Si hay un submodal interactivo DENTRO de la Mina, B debe cerrar primero ese
+     submodal (por ejemplo Premios posibles) y no abandonar toda la Mina. */
+  const modal=hvGamepadVisibleModal();
+  if(modal&&mine?.contains(modal))return false;
+  const back=document.getElementById("mineBackBtn");
+  if(back&&hvGamepadIsVisible(back)){
+    try{back.click();hvGamepadClearUiFocus();return true;}catch(_){ }
+  }
+  if(typeof closeMineScreen==="function"){
+    try{closeMineScreen();hvGamepadClearUiFocus();return true;}catch(_){ }
+  }
+  return false;
 }
 function hvGamepadClickUniversalBack(){
   /* Fuera de un modal, B debe comportarse como la X/flecha Atrás de la pantalla visible. */
@@ -811,7 +839,12 @@ function hvGamepadHandleButtons(gp){
   }
   if(pressed.RT&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
   if(pressed.B){
-    if(hvGamepadCloseTopUi()){}
+    /* Escena Mina: B sale directamente de la Mina, salvo que exista un submodal
+       propio que deba cerrarse primero. Evita depender del buscador universal. */
+    if(hvGamepadMineOpen()&&!hvGamepadVisibleModal()){
+      hvGamepadCloseMine();
+    }else if(hvGamepadCloseTopUi()){}
+    else if(hvGamepadCloseMine()){}
     else if(battle&&hvGamepadState.mode==="hand"){
       if(handOpen)document.getElementById("handBtn")?.click();
       hvGamepadState.mode="board";hvGamepadSyncHandFocus();hvGamepadSyncBoardCursor();
