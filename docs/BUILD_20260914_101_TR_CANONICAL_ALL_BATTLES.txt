@@ -1,0 +1,10 @@
+HALLVALLA build 20260914.101 — TR CANÓNICO EN TODO COMBATE
+
+- PvE/Aventura/Local/PvP usan un único runtime TR.
+- El runtime por turnos queda fuera de la ruta activa: no inicia reloj de turnos, no ejecuta Draw/Main/Action/Last/End ni IA por turnos.
+- MOV/ataque/soporte/estados/maná se simulan localmente.
+- En PvP Firebase deja de ser el reloj del combate: los ticks automáticos no escriben a Firebase.
+- En PvP solo las acciones nuevas del jugador (jugar carta) publican un checkpoint público + su privado para reconciliar ambos clientes.
+- Al entrar en TR, cualquier mazo heredado se convierte en arsenal completo y currentPlayer/turnPhase se normalizan a 0/realtime.
+- Los helpers de resolución de daño, cartas, estados y habilidades se conservan porque son reglas de cartas/unidades, no reglas de turnos.
+- No se modifican assets, creador de mazos, mazos IA, velocidad TR ni navegación de Aventura.

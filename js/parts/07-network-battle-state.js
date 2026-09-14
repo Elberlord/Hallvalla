@@ -683,7 +683,7 @@ async function updatePublic(patch){
   if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     publicState=hallvallaApplyLocalPatch(publicState,localFullPatch);
-    networkPublicStateRaw=publicState?JSON.parse(JSON.stringify(publicState)):networkPublicStateRaw;
+    if(publicState?.mode!=="online")networkPublicStateRaw=publicState?JSON.parse(JSON.stringify(publicState)):networkPublicStateRaw;
     if(accountMasteryKillAfter){
       if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,accountMasteryKillAfter);
       if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(beforeUnits,accountMasteryKillAfter,sourcePatch);
@@ -778,10 +778,45 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
     pvpStep6fAtomicActionInFlight=false;
   }
 }
-async function commitGameplayAction({publicPatch={},privatePatch={}}={}){
+async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kind=""){
+  if(!gameId||!publicState||!privateState||publicState.mode!=="online")return false;
+  const writeGameId=gameId,writePlayer=Number(myPlayer||0),lifecycleToken=getBattleLifecycleToken();
+  const stillActive=()=>gameId===writeGameId&&Number(myPlayer||0)===writePlayer&&isBattleLifecycleTokenActive(lifecycleToken);
+  if(!stillActive())return false;
+  const checkpoint={
+    units:Array.isArray(publicPatch?.units)?publicPatch.units:[...(publicState.units||[])],
+    beastTraps:Array.isArray(publicPatch?.beastTraps)?publicPatch.beastTraps:[...(publicState.beastTraps||[])],
+    legendaryTraps:Array.isArray(publicPatch?.legendaryTraps)?publicPatch.legendaryTraps:[...(publicState.legendaryTraps||[])],
+    erictoGraveyard:Array.isArray(publicPatch?.erictoGraveyard)?publicPatch.erictoGraveyard:[...(publicState.erictoGraveyard||[])],
+    undeadRemains:Array.isArray(publicPatch?.undeadRemains)?publicPatch.undeadRemains:[...(publicState.undeadRemains||[])],
+    moralePressure:publicPatch?.moralePressure||publicState.moralePressure||{1:0,2:0},
+    ...publicPatch,
+    realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",
+    rtCheckpoint:{owner:writePlayer,kind:String(kind||"card"),at:Date.now(),id:`${writePlayer}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
+  };
+  const normalized=(await normalizePublicPatchBeforeCommit(checkpoint,{sanitizeFirebase:true})).patch;
+  const privacyProjection=projectStage8StealthPatchForNetwork(normalized,writePlayer);
+  const sharedVisibilityUnits=privacyProjection.visibilityUnits;
+  let cleanPublic=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
+  cleanPublic=hallvallaSanitizeFirebaseValue(cleanPublic)||{};
+  const cleanPrivate={...(hallvallaSanitizeFirebaseValue(privatePatch||{})||{}),...(hallvallaSanitizeFirebaseValue(privacyProjection.privatePatch)||{})};
+  const rootPatch={};
+  for(const [key,value] of Object.entries(cleanPublic))rootPatch[`public/${key}`]=value;
+  for(const [key,value] of Object.entries(cleanPrivate))rootPatch[`private/${getGamePrivatePlayerKey(writePlayer)}/${key}`]=value;
+  try{
+    await update(ref(db,`games/${writeGameId}`),rootPatch);
+    if(!stillActive())return false;
+    publicState=hallvallaApplyLocalPatch(publicState,normalized);
+    privateState=hallvallaApplyLocalPatch(privateState,cleanPrivate);
+    networkPublicStateRaw=networkPublicStateRaw?hallvallaApplyLocalPatch(networkPublicStateRaw,cleanPublic):cleanPublic;
+    render();
+    return true;
+  }catch(error){console.error("[HallValla][TR PvP] checkpoint de acción falló",error);setHint("No se pudo sincronizar la acción PvP.");return false;}
+}
+async function commitGameplayAction({publicPatch={},privatePatch={},kind=""}={}){
   if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
-  if(isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
-  // Aventura/Tutorial conservan el flujo histórico.
+  if(globalThis.hallvallaRtShouldNetworkGameplayAction?.(kind))return commitRealtimeOnlineCheckpoint(publicPatch,privatePatch,kind);
+  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
   if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
   if(Object.keys(privatePatch||{}).length&&!(await updatePrivate(privatePatch)))return false;
   return true;
@@ -853,8 +888,10 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
   recordLocalLeaderBattleOutcome(outcome,pvpBot?"pvp_bot":(state.mode||"pvp"));
   const endedAt=Date.now();
-  const finalPatch={...getDuelClockHandoffPatch(state),units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
-  const wrote=await updatePublic(finalPatch);
+  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,turnPhase:"realtime",stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
+  const wrote=(state.mode==="online"&&typeof commitRealtimeOnlineCheckpoint==="function")
+    ?await commitRealtimeOnlineCheckpoint(finalPatch,{},"terminal")
+    :await updatePublic(finalPatch);
   if(wrote&&(state.mode==="online"||pvpBot)&&typeof globalThis.hvPvpRankingRecordResult==="function"){
     try{await globalThis.hvPvpRankingRecordResult({...state,...finalPatch},gameId);}catch(error){console.warn("[HallValla][PvP Ranking] El duelo terminó, pero el registro de ranking deberá reintentarse desde el snapshot final.",error);}
   }
@@ -1476,11 +1513,11 @@ function enterLocalGame(pub,priv,player=1){
   if(unsubPub){try{unsubPub();}catch(_){ }unsubPub=null}
   if(unsubPriv){try{unsubPriv();}catch(_){ }unsubPriv=null}
   stopTurnTimerLoop();
-  startTurnTimerLoop();
   render();
+  globalThis.hallvallaRtSyncPreparedBattle?.();
   setHint("Modo local de prueba: tablero real sin Firebase. Ajusta Rareza CTRL aquí mismo.");
   maybeStartTurn();
-  aiWatchdogTimer=battleSetInterval(()=>{safeBattleTick("localAiWatchdog",()=>{if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();});},1800,"adventure-ai-watchdog-local");
+  aiWatchdogTimer=null;
 }
 function enterGame(code,player){
   networkPublicStateRaw=null;
@@ -1513,7 +1550,6 @@ function enterGame(code,player){
   if(unsubPub)unsubPub();
   if(unsubPriv)unsubPriv();
   stopTurnTimerLoop();
-  startTurnTimerLoop();
   const lifecycleToken=getBattleLifecycleToken();
   unsubPub=battleOwnDisposable(onValue(ref(db,`games/${code}/public`),snap=>{
     if(!isBattleLifecycleTokenActive(lifecycleToken))return;
@@ -1529,6 +1565,7 @@ function enterGame(code,player){
     networkPublicStateRaw=val;
     publicState=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
     syncBoardDimensionsFromState(publicState);
+    globalThis.hallvallaRtSyncPreparedBattle?.();
     render();
     syncBattleMusic();
     maybePlayBattleFx(prevPublic,publicState);
@@ -1556,6 +1593,7 @@ function enterGame(code,player){
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     privateState=val;
     if(networkPublicStateRaw)publicState=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
+    globalThis.hallvallaRtSyncPreparedBattle?.();
     if(typeof requestBattleRender==="function")requestBattleRender("firebase-private");else render();
     if(prevPublic&&publicState)maybePlayBattleFx(prevPublic,publicState);
     maybeShowBattleResult();
@@ -1565,14 +1603,10 @@ function enterGame(code,player){
     maybeTriggerAdventureAI();
     });
   },e=>handleBattleListenerError("private:onValue",e)),"firebase","battle-private");
-  aiWatchdogTimer=battleSetInterval(()=>{
-    safeBattleTick("aiWatchdog",()=>{
-      if(publicState?.mode==="adventure"&&publicState.currentPlayer===2&&!isBattleEnded())maybeTriggerAdventureAI();
-    });
-  },1800,"adventure-ai-watchdog");
+  aiWatchdogTimer=null;
 }
 function maybeTriggerAdventureAI(){
-  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return;
+  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return;
   if(!gameId||!publicState||publicState.mode!=="adventure"||publicState.currentPlayer!==2||isBattleEnded())return;
   const key=`${gameId}:${publicState.turnKey||""}:${publicState.turn||0}`;
   if(aiTurnLock||lastAiTurnKey===key)return;
@@ -1600,7 +1634,7 @@ function maybeTriggerAdventureAI(){
   },650,"adventure-ai-action");
 }
 async function maybeStartTurn(){
-  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return;
+  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return;
   if(!publicState||!privateState||!isMyTurn()||isBattleEnded())return;
   if(publicState.mode==="tutorial"&&publicState.tutorialBasic&&typeof isBasicTutorialInitialDrawBlocked==="function"&&isBasicTutorialInitialDrawBlocked())return;
   if(privateState.lastTurnStarted===publicState.turnKey)return;

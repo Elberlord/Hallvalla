@@ -1480,22 +1480,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const profile=getBattleProfile6e(payload);
     const handKeys=normalizeFirebaseArray(combat6c.handKeys).map(v=>String(v||"")).filter(Boolean);
     const deckKeys=normalizeFirebaseArray(combat6c.deckKeys).map(v=>String(v||"")).filter(Boolean);
-    const combatPrincipalKeys=[];
-    normalizeFirebaseArray(combat6c.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
-      if(!combatPrincipalKeys.includes(key)) combatPrincipalKeys.push(key);
-    });
-    const payloadPrincipalKeys=[];
-    normalizeFirebaseArray(payload?.loadout?.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
-      if(!payloadPrincipalKeys.includes(key)) payloadPrincipalKeys.push(key);
-    });
-    const legacyPrincipalKey=String(combat6c.principalKey||payload?.loadout?.principalKeys?.[0]||payload?.loadout?.principalKeys?.["0"]||"").trim();
-    const principalKeys=combatPrincipalKeys.length?combatPrincipalKeys:(payloadPrincipalKeys.length?payloadPrincipalKeys:(legacyPrincipalKey?[legacyPrincipalKey]:[]));
-    const principalKey=principalKeys[0]||"";
+    // TR canónico: no existen Principales ni robo por turnos. Todo el mazo privado
+    // entra al arsenal desde el inicio, conservando privacidad entre jugadores.
+    const principalKeys=[];
+    const principalKey="";
     const playableCardCount=Math.max(0,Number(combat6c.initialPlayableCount)||0);
     const expectedHandCount=Math.min(STEP6C_INITIAL_HAND,playableCardCount);
     if(handKeys.length!==expectedHandCount||handKeys.length+deckKeys.length!==playableCardCount) throw new Error(`Estado inicial privado J${role} inválido para motor real.`);
-    const hand=handKeys.map(key=>buildRealCard6e(key,role,profile.leaderType));
-    const deck=deckKeys.map(key=>buildRealCard6e(key,role,profile.leaderType));
+    const arsenalKeys=[...handKeys,...deckKeys];
+    const hand=arsenalKeys.map(key=>buildRealCard6e(key,role,profile.leaderType)).sort((a,b)=>(effectiveCardCost(a,role)-effectiveCardCost(b,role))||String(a?.name||"").localeCompare(String(b?.name||"")));
+    const deck=[];
     return {
       combat6c,
       enginePrivate:{
@@ -1507,8 +1501,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         deck,
         hand,
         honor:0,
-        maxHonor:0,
-        lastTurnStarted:"",
+        maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),
+        lastTurnStarted:"RT",
         skipFirstTurnDraw:true,
         principalSlots:principalKeys.length,
         principalKeys,
@@ -1525,7 +1519,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         principalKeys,
         principalKey,
         handCount:hand.length,
-        deckCount:deck.length,
+        deckCount:0,
         playableCardCount,
         hasHiddenUnits:countHiddenKeys6e([...handKeys,...deckKeys])>0,
         preparedAt:Date.now()
@@ -1545,8 +1539,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       &&String(prep.ownerUid||"")===slotUid
       &&!!String(prep.leaderType||"")&&Number(prep.leaderLevel||0)>=1
       &&Number.isInteger(Number(prep.playableCardCount))&&Number(prep.playableCardCount)>=0
-      &&Number(prep.handCount||0)===Math.min(STEP6C_INITIAL_HAND,Number(prep.playableCardCount))
-      &&Number(prep.deckCount||0)===Math.max(0,Number(prep.playableCardCount)-Number(prep.handCount||0));
+      &&Number(prep.handCount||0)===Number(prep.playableCardCount||0)
+      &&Number(prep.deckCount||0)===0;
   }
 
   function bothEnginePrep6e(room){ return validateEnginePrep6e(room,1)&&validateEnginePrep6e(room,2); }
@@ -1573,12 +1567,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         deck:built.enginePrivate.deck,
         hand:built.enginePrivate.hand,
         honor:0,
-        maxHonor:0,
-        lastTurnStarted:"",
+        maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),
+        lastTurnStarted:"RT",
         skipFirstTurnDraw:true,
-        principalSlots:built.enginePrivate.principalSlots,
-        principalKeys:built.enginePrivate.principalKeys,
-        principalKey:built.enginePrivate.principalKey
+        principalSlots:0,
+        principalKeys:[],
+        principalKey:""
       };
       await withTimeout(update(ownRef,privatePatch),`Guardar estado privado del motor real J${activeRole}`,6000);
       await withTimeout(set(ref(db,`games/${code}/public/enginePrep/${activeRole}`),built.prep),`Publicar preparación visible J${activeRole}`,5000);
@@ -1607,24 +1601,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       makeLeader(2,Math.floor(cols/2),0,p2.leaderType,p2.leaderLevel,p2.leaderAbility)
     ];
     const p1PrincipalKeys=[];
-    normalizeFirebaseArray(p1.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
-      if(!p1PrincipalKeys.includes(key)) p1PrincipalKeys.push(key);
-    });
-    if(!p1PrincipalKeys.length&&p1.principalKey) p1PrincipalKeys.push(String(p1.principalKey));
     const p2PrincipalKeys=[];
-    normalizeFirebaseArray(p2.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).forEach(key=>{
-      if(!p2PrincipalKeys.includes(key)) p2PrincipalKeys.push(key);
-    });
-    if(!p2PrincipalKeys.length&&p2.principalKey) p2PrincipalKeys.push(String(p2.principalKey));
-    if((p1PrincipalKeys.length||p2PrincipalKeys.length)&&typeof makeStartingPrincipalUnits!=="function") throw new Error("El motor real no expuso makeStartingPrincipalUnits().");
-    if(p1PrincipalKeys.length){
-      const p1PrincipalCards=p1PrincipalKeys.map(key=>buildRealCard6e(key,1,p1.leaderType));
-      units.push(...makeStartingPrincipalUnits(p1PrincipalCards,1,p1.leaderType,units,p1PrincipalCards.length));
-    }
-    if(p2PrincipalKeys.length){
-      const p2PrincipalCards=p2PrincipalKeys.map(key=>buildRealCard6e(key,2,p2.leaderType));
-      units.push(...makeStartingPrincipalUnits(p2PrincipalCards,2,p2.leaderType,units,p2PrincipalCards.length));
-    }
     let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
     try{ if(typeof applyStartingPrincipalEntryEffects==="function") entryEffects=applyStartingPrincipalEntryEffects(units); }catch(_){ }
     units=entryEffects.units||units;
@@ -1656,10 +1633,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       prebattleStartedAt:ts,
       prebattleLeadInMs:250,
       prebattleDurationMs:3250,
-      currentPlayer:startingRole,
+      realtimeExperimental:true,
+      currentPlayer:0,
       turn:1,
       turnPhase:"prebattle",
-      turnKey:"",
+      turnKey:"RT-PRE",
       turnStartedAt:null,
       clockRulesetVersion:clockVersion,
       playerClockMs:{1:duelLimit,2:duelLimit},
@@ -1675,19 +1653,19 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       playerLeaders:{1:p1.leaderType,2:p2.leaderType},
       playerLeaderLevels:{1:Number(p1.leaderLevel||1),2:Number(p2.leaderLevel||1)},
       playerLeaderAbilities:{1:String(p1.leaderAbility||""),2:String(p2.leaderAbility||"")},
-      principalSlots:{1:p1PrincipalKeys.length,2:p2PrincipalKeys.length},
-      pvpPrincipalKeys:{1:p1PrincipalKeys,2:p2PrincipalKeys},
+      principalSlots:{1:0,2:0},
+      pvpPrincipalKeys:{1:[],2:[]},
       playerStats:{
-        1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:Number(p1.deckCount||0),hand:Number(p1.handCount||0),hasHiddenUnits:p1.hasHiddenUnits===true},
-        2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:Number(p2.deckCount||0),hand:Number(p2.handCount||0),hasHiddenUnits:p2.hasHiddenUnits===true}
+        1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:Number(p1.handCount||0),hasHiddenUnits:p1.hasHiddenUnits===true},
+        2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:Number(p2.handCount||0),hasHiddenUnits:p2.hasHiddenUnits===true}
       },
       erictoGraveyard:[],
       units,
       statusFxEvent:entryEffects.statusFxEvent||null,
       floatFxEvent:entryEffects.floatFxEvent||null,
       log:[
-        `PvP 6I: duelo completo habilitado sobre el motor real de HallValla. J${startingRole} tiene el primer turno.`,
-        `MOV, DEF, ATTK, EFFECT, unidades, magias, equipos, trampas, pasivos y estados usan las rutas reales del motor y sincronizan por Firebase.`,
+        `PvP TR: duelo continuo habilitado sobre el motor canónico de HallValla.`,
+        `Sin turnos: MANÁ continuo, arsenal completo y movimiento/ataque autónomos. Firebase sincroniza acciones nuevas del jugador, no cada tick automático.`,
         ...(entryEffects.logs||[])
       ].slice(0,18)
     };
@@ -1721,8 +1699,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
               if(freshSnap.exists()){
                 const fresh=freshSnap.val()||{};
                 if(isRealEnginePrebattle6e(fresh)){
-                  const firstRole=Number(fresh.currentPlayer||1);
-                  await withTimeout(update(publicRef,{phase:"active",turnPhase:"draw",turnKey:`1-${firstRole}`,turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate de matchmaking ${code}`,5000);
+                  await withTimeout(update(publicRef,{phase:"active",realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate TR de matchmaking ${code}`,5000);
                 }
               }
             }
@@ -1745,11 +1722,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
             if(freshSnap.exists()){
               const fresh=freshSnap.val()||{};
               if(isRealEnginePrebattle6e(fresh)){
-                const firstRole=Number(fresh.currentPlayer||1);
                 await withTimeout(update(publicRef,{
                   phase:"active",
-                  turnPhase:"draw",
-                  turnKey:`1-${firstRole}`,
+                  realtimeExperimental:true,
+                  currentPlayer:0,
+                  turnPhase:"realtime",
+                  turnKey:"RT-1",
                   turnStartedAt:serverTimestamp(),
                   engineStartedAt:Date.now(),
                   prebattleCompletedAt:serverTimestamp()
@@ -2420,7 +2398,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
       if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pve");
       if(typeof adventureEnemyTurn!=="function")throw new Error("La IA táctica no está disponible para el BOT PvP.");
-      if(typeof makeLeader!=="function"||typeof makeStartingPrincipalUnits!=="function"||typeof applyStartingPrincipalEntryEffects!=="function")throw new Error("El motor real de HallValla no está listo para crear el BOT PvP.");
+      if(typeof makeLeader!=="function")throw new Error("El motor TR de HallValla no está listo para crear el BOT PvP.");
 
       const profile=selectPvpBotProfile(leagueKey);
       if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
@@ -2438,24 +2416,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const human=humanBuilt.enginePrivate;
 
       const allBotCards=botDeck.keys.map(key=>buildRealCard6e(key,2,profile.leaderType));
-      const botPrincipalPrep=extractPrincipalCardsFromDeck(allBotCards,botDeck.principalKeys,3);
-      if(botPrincipalPrep.principalCards.length!==3||botPrincipalPrep.deck.length!==20)throw new Error(`Mazo BOT inválido: ${botPrincipalPrep.deck.length} de robo + ${botPrincipalPrep.principalCards.length} Principales.`);
-      const shuffledBotDeck=seededShuffle6c(botPrincipalPrep.deck,`${code}|BOT|${profile.id}|${leagueKey}`);
-      const botDraw=drawCards(shuffledBotDeck,[],STEP6C_INITIAL_HAND);
-
-      const requestedHumanPrincipalKeys=uniqueStrings(normalizeFirebaseArray(human.principalKeys).map(v=>String(v||"").trim()).filter(Boolean)).slice(0,3);
-      const humanPrincipalCards=requestedHumanPrincipalKeys.map(key=>buildRealCard6e(key,1,human.leaderType)).filter(card=>card?.type==="unit");
-      const humanPrincipalKeys=humanPrincipalCards.map(card=>String(card.key||"")).filter(Boolean);
-      const botPrincipalCards=botPrincipalPrep.principalCards;
+      const botArsenal=[...allBotCards].sort((a,b)=>(effectiveCardCost(a,2)-effectiveCardCost(b,2))||String(a?.name||"").localeCompare(String(b?.name||"")));
+      const botDraw={deck:[],hand:botArsenal};
+      const humanPrincipalKeys=[];
       const rows=typeof ROWS!=="undefined"?Number(ROWS):7;
       const cols=typeof COLS!=="undefined"?Number(COLS):5;
       let units=[
         makeLeader(1,Math.floor(cols/2),rows-1,human.leaderType,human.leaderLevel,human.leaderAbility),
         makeLeader(2,Math.floor(cols/2),0,profile.leaderType,PVP_BOT_LEADER_LEVEL,botAbility)
       ];
-      if(humanPrincipalCards.length)units.push(...makeStartingPrincipalUnits(humanPrincipalCards,1,human.leaderType,units,humanPrincipalCards.length));
-      units.push(...makeStartingPrincipalUnits(botPrincipalCards,2,profile.leaderType,units,3));
-      let entryEffects=applyStartingPrincipalEntryEffects(units)||{units,logs:[],statusFxEvent:null,floatFxEvent:null};
+      let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
       units=entryEffects.units||units;
       const p1Leader=units.find(u=>u?.owner===1&&u?.leader);
       const p2Leader=units.find(u=>u?.owner===2&&u?.leader);
@@ -2465,7 +2435,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const rarityCap=pvpBotRarityLabel(botDeck.policy.maxRarity);
       const publicShowcase={
         1:buildPublicShowcase(ownPayload),
-        2:{leaderType:profile.leaderType,principalKeys:botPrincipalPrep.principalKeys}
+        2:{leaderType:profile.leaderType,principalKeys:[]}
       };
       const pub={
         schema:"hallvalla-pvp-bot-v1",
@@ -2479,11 +2449,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventureAiDrawBonus:0,adventureAiHonorBonus:0,
         adventureAiStyle:`BOT PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")}`,
         adventureEnemyUnitMasteryRank:0,
-        adventurePrincipalKeys:{1:humanPrincipalKeys,2:botPrincipalPrep.principalKeys},
-        principalSlots:{1:humanPrincipalKeys.length,2:3},
-        pvpPrincipalKeys:{1:humanPrincipalKeys,2:botPrincipalPrep.principalKeys},
-        adventureAiState:{deck:botDraw.deck,hand:botDraw.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,principalSlots:3,principalKeys:botPrincipalPrep.principalKeys,principalKey:botPrincipalPrep.principalKeys[0]||""},
-        createdAt:Date.now(),currentPlayer:startingRole,turn:1,phase:"active",turnPhase:"draw",turnKey:`1-${startingRole}`,turnStartedAt:Date.now(),
+        realtimeExperimental:true,
+        adventurePrincipalKeys:{1:[],2:[]},
+        principalSlots:{1:0,2:0},
+        pvpPrincipalKeys:{1:[],2:[]},
+        adventureAiState:{deck:[],hand:botDraw.hand,honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
+        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:Date.now(),
         clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
         playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:PVP_BOT_LEADER_LEVEL},
@@ -2491,8 +2462,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:PVP_BOT_LEADER_LEVEL},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
         settings:buildDefaultRules(),matchSettings:{timerEnabled:false,stakeMode:"none",goldAmount:500,cardEntryFee:500,economyState:"not_required"},
         playerStats:{
-          1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:0,deck:human.deck.length,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
-          2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:0,deck:botDraw.deck.length,hand:botDraw.hand.length,hasHiddenUnits:countHiddenKeys6e([...botDraw.deck,...botDraw.hand].map(card=>card?.key||""))>0}
+          1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
+          2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:botDraw.hand.length,hasHiddenUnits:countHiddenKeys6e(botDraw.hand.map(card=>card?.key||""))>0}
         },
         erictoGraveyard:[],moralePressure:{1:0,2:0},units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
         battleEnded:false,winner:0,loser:0,
@@ -2507,8 +2478,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         combat6c:humanBuilt.combat6c,
         engine6e:{schema:"hallvalla-pvp-bot-private-v1",ready:true,preparedAt:Date.now()},
         leaderType:human.leaderType,leaderLevel:human.leaderLevel,leaderAbility:human.leaderAbility,
-        deck:human.deck,hand:human.hand,honor:0,maxHonor:0,lastTurnStarted:"",skipFirstTurnDraw:true,
-        principalSlots:humanPrincipalKeys.length,principalKeys:humanPrincipalKeys,principalKey:humanPrincipalKeys[0]||""
+        deck:[],hand:human.hand,honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),lastTurnStarted:"RT",skipFirstTurnDraw:true,
+        principalSlots:0,principalKeys:[],principalKey:""
       };
 
       // Última comprobación de carrera: un jugador humano siempre tiene prioridad.

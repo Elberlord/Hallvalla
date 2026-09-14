@@ -474,6 +474,7 @@ function tickTurnTimer(){
   if(isTurnLimitEnabled()&&getTurnTimerRemainingMs()<=0)void expireTurnByClock();
 }
 function startTurnTimerLoop(){
+  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return;
   if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return;
   if(turnTimerInterval)return;
   turnTimerInterval=battleSetInterval(()=>safeBattleTick("turnTimer",tickTurnTimer),TURN_TIMER_TICK_MS,"turn-timer-loop");
@@ -485,6 +486,7 @@ function stopTurnTimerLoop(){
   renderTurnTimerHud();
 }
 function isTurnWriteBlockedByExpiredClock(){
+  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return false;
   if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return false;
   if(turnTimerSystemUpdate)return false;
   const key=String(publicState?.turnKey||"");

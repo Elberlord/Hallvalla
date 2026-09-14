@@ -1188,6 +1188,7 @@ async function attackUnit(a,d){
   clearSelection();
 }
 async function finishTurn(){
+  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return setHint("TR canónico: no existen turnos ni End Phase.");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
   if(isTurnTimerEnabled()&&getDuelClockRemainingMs(Number(publicState?.currentPlayer||0))<=0){await expireDuelByClock();return;}
@@ -1224,6 +1225,7 @@ async function finishTurn(){
   }
 }
 async function advanceTurnPhase(){
+  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return setHint("TR canónico: no existen fases de turno.");
   if(isBattleEnded())return setHint("La batalla ya terminó.");
   if(!isMyTurn())return setHint("No es tu turno.");
   if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("phase_change");

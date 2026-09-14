@@ -77,9 +77,20 @@ globalThis.isHallvallaRealtimeExperimental=isHallvallaRealtimeExperimental;
 
 const HALLVALLA_RT_LOCAL_SNAPSHOT_KEY="hallvalla_rt_local_battle_snapshot_v1";
 function hallvallaRtUseLocalBattleRuntime(){
-  return !!(isHallvallaRealtimeExperimental()&&publicState&&publicState.mode!=="online");
+  // TR canónico: movimiento, ataques, recursos, estados y soporte se simulan localmente
+  // en PvE y PvP. Firebase deja de ser el reloj de la batalla.
+  return !!(isHallvallaRealtimeExperimental()&&publicState);
 }
-function hallvallaRtIgnoreRemoteBattleSnapshot(){return hallvallaRtUseLocalBattleRuntime()&&hallvallaRtState.enabled===true;}
+function hallvallaRtIgnoreRemoteBattleSnapshot(){
+  // En PvE/Aventura ignoramos ecos de snapshots durante la simulación local.
+  // En PvP sí aceptamos snapshots porque únicamente se publican como checkpoints
+  // cuando un jugador introduce una acción nueva (carta).
+  return !!(hallvallaRtUseLocalBattleRuntime()&&hallvallaRtState.enabled===true&&publicState?.mode!=="online");
+}
+function hallvallaRtShouldNetworkGameplayAction(kind=""){
+  return !!(hallvallaRtState.enabled&&publicState?.mode==="online"&&String(kind||"").startsWith("card:"));
+}
+globalThis.hallvallaRtShouldNetworkGameplayAction=hallvallaRtShouldNetworkGameplayAction;
 function hallvallaRtScheduleLocalSnapshot(force=false){
   if(!hallvallaRtUseLocalBattleRuntime())return false;
   const now=Date.now();
@@ -1306,6 +1317,20 @@ function hallvallaRtStop(){
 }
 function hallvallaRtPrimePreparedState(){
   const now=hallvallaRtNow();
+  // Cualquier estado heredado por turnos se normaliza una sola vez al entrar en TR.
+  // El mazo privado completo se convierte en arsenal: no existe robo por turnos.
+  if(privateState){
+    const pool=[...(privateState.hand||[]),...(privateState.deck||[])];
+    const seen=new Set();
+    const arsenal=[];
+    for(const card of pool){const k=String(card?.id||card?.key||card?.name||"");if(!k||seen.has(k))continue;seen.add(k);arsenal.push(card);}
+    arsenal.sort((a,b)=>(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a?.name||"").localeCompare(String(b?.name||"")));
+    privateState={...privateState,deck:[],hand:arsenal,honor:0,maxHonor:HALLVALLA_RT_CFG.resourceCap,lastTurnStarted:"RT",skipFirstTurnDraw:true};
+  }
+  if(publicState){
+    publicState={...publicState,realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:String(publicState.turnKey||"RT-1").startsWith("RT")?publicState.turnKey:"RT-1"};
+    if(publicState.playerStats?.[myPlayer])publicState={...publicState,playerStats:{...publicState.playerStats,[myPlayer]:{...publicState.playerStats[myPlayer],honor:0,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:0,hand:(privateState?.hand||[]).length}}};
+  }
   hallvallaRtState.cycle=Math.max(1,Number(publicState?.turn||1));
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.lastAiThinkAt=now;
@@ -1330,9 +1355,9 @@ function hallvallaRtPrimePreparedState(){
   try{stopTurnTimerLoop();}catch(_){ }
 }
 function hallvallaRtSyncPreparedBattle(){
-  // TR es canónico para todo combate local/Aventura. La marca guardada en el
-  // estado sigue aceptándose, pero ya no puede impedir que el runtime arranque.
-  const shouldRun=publicState?.mode!=="online"&&typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
+  // TR es el único runtime de batalla para PvE, Aventura, Local y PvP.
+  // Ya no existe una bifurcación hacia el motor por turnos.
+  const shouldRun=!!publicState&&typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
   if(!shouldRun){
     if(hallvallaRtState.enabled)hallvallaRtStop();
     else hallvallaRtUpdateUi();
@@ -1361,7 +1386,7 @@ function hallvallaRtDebugSnapshot(){
   const living=units.filter(u=>u&&Number(u.hp||0)>0);
   const mobile=living.filter(u=>!u.leader&&Number(typeof effectiveMov==='function'?effectiveMov(u):u.mov||0)>0);
   return {
-    build:"20260913.84",
+    build:"20260914.101",
     enabled:hallvallaRtState.enabled,
     battleReady:hallvallaRtBattleReady(),
     mainTimer:!!hallvallaRtState.timer,
