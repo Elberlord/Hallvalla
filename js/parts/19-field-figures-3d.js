@@ -162,6 +162,7 @@ function getFieldFigureHtml(u){
   if(typeof isStealthHiddenFromViewer==="function"&&isStealthHiddenFromViewer(u))return "";
   const candidates=hvUniqueAssetValues([
     ...hvBattleFieldFigureAssetCandidates(key,u),
+    ...(typeof getResolvedCardPortraitCandidates==="function"?getResolvedCardPortraitCandidates(u):[]),
     getAssetWarningImageSrc()
   ]);
   const src=candidates.shift()||getAssetWarningImageSrc();

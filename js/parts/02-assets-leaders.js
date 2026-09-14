@@ -144,7 +144,7 @@ function isBasicRarityLabel(value){
   Los buckets alternativos se prueban automáticamente para mantener compatibilidad
   con assets antiguos ubicados en carpetas distintas (por ejemplo Wallace/Mulan).
 */
-const HV_ASSET_BUCKETS=Object.freeze(["basic","special","beasts"]);
+const HV_ASSET_BUCKETS=Object.freeze(["basic","special","beasts","no_muertos"]);
 const HV_FIELD_FIGURE_SPECIAL_KEYS=new Set(["mulan","wallace","richard_lionheart"]);
 const HV_ASSET_LAYER_PROPS=Object.freeze({
   cards:{path:["portrait","cardPortrait","cardImage"],bucket:["cardAssetBucket","cardsAssetBucket"]},
@@ -197,9 +197,11 @@ function getAssetBucketCandidates(entity,layer="cards"){
   const cardPathBucket=getAssetBucketFromPath(source.portrait||source.cardPortrait||source.cardImage||"");
   const inferred=getCardAssetBucket(source);
   const identity=getAssetIdentityKey(source);
+  const undeadFieldBucket=layer==="field_figures"&&(source.undead||source.noMuerto)?"no_muertos":"";
   const legacyFieldBucket=layer==="field_figures"&&HV_FIELD_FIGURE_SPECIAL_KEYS.has(identity)?"special":"";
   return hvUniqueAssetValues([
     explicitLayerBucket,
+    undeadFieldBucket,
     legacyFieldBucket,
     HV_ASSET_BUCKETS.includes(commonBucket)?commonBucket:"",
     layerPathBucket,
@@ -284,7 +286,44 @@ function hvHandleImageFallback(img){
   return true;
 }
 
-Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolvedCardPortraitCandidates,getResolvedFieldFigureCandidates});
+/* ASSET105 · Recuperación centralizada. No dependemos solamente del atributo inline onerror:
+   si Brave/Chrome o una política del documento omite ese handler, el listener de captura
+   sigue recorriendo los fallbacks. También oculta adornos no críticos en vez de mostrar
+   el icono roto nativo del navegador. */
+if(!globalThis.__HALLVALLA_ASSET_ERROR_CAPTURE_BOUND__){
+  globalThis.__HALLVALLA_ASSET_ERROR_CAPTURE_BOUND__=true;
+  window.addEventListener("error",event=>{
+    const target=event?.target;
+    if(!target||target===window)return;
+    if(target?.dataset?.hvHideOnError==="1"){
+      try{target.style.display="none";}catch(_){ }
+      return;
+    }
+    if(target?.dataset?.hvFallbacks){
+      const failedSrc=String(target.currentSrc||target.src||target.getAttribute?.("href")||"");
+      if(target.dataset.hvFallbackHandledSrc===failedSrc)return;
+      target.dataset.hvFallbackHandledSrc=failedSrc;
+      try{hvHandleImageFallback(target);}catch(error){console.warn("[HallValla][ASSET] fallback falló",failedSrc,error);}
+    }
+  },true);
+}
+
+function hallvallaAssetDebug(){
+  const rows=[];
+  document.querySelectorAll("img").forEach(img=>{
+    const src=String(img.currentSrc||img.src||"");
+    const failed=img.complete&&Number(img.naturalWidth||0)===0;
+    if(failed||img.classList.contains("hv-missing-asset"))rows.push({tag:"img",failed,src,label:img.dataset?.hvMissingLabel||img.alt||img.title||"",fallbackIndex:img.dataset?.hvFallbackIndex||""});
+  });
+  document.querySelectorAll("svg image").forEach(img=>{
+    const href=String(img.getAttribute("href")||img.getAttribute("xlink:href")||"");
+    if(img.style.display==="none")rows.push({tag:"svg-image",failed:true,src:href,label:"adorno oculto tras error"});
+  });
+  console.table(rows);
+  return {build:document.querySelector('meta[name="hallvalla-version"]')?.content||"",failedCount:rows.length,failed:rows};
+}
+
+Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolvedCardPortraitCandidates,getResolvedFieldFigureCandidates,__HALLVALLA_ASSET_DEBUG__:hallvallaAssetDebug});
 
 /*
 -------------------------------------------------------------------------------

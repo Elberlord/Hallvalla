@@ -503,7 +503,7 @@ function getHpHeartBadgeHtml(u,scope="unit"){
       <path class="hp-heart-wave" d="M17 ${waveY} C25 ${Number(waveY)-1.6}, 31 ${Number(waveY)+2.6}, 40 ${Number(waveY)+0.8} S56 ${Number(waveY)-1.3}, 66 ${Number(waveY)+0.9} S79 ${Number(waveY)+1.5}, 84 ${Number(waveY)+0.7}" fill="none" stroke="rgba(255,238,238,.95)" stroke-width="1.8" stroke-linecap="round" clip-path="url(#${clipId})"/>
       <circle class="hp-heart-medallion-core" cx="70.6" cy="68.2" r="12.2" fill="#1b0f0b"/>
       <circle class="hp-heart-medallion-ring" cx="70.6" cy="68.2" r="11.3" fill="none" stroke="rgba(236,194,90,.34)" stroke-width="1.2"/>
-      <image class="hp-heart-frame-img" href="${frameHref}" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>
+      <image class="hp-heart-frame-img" href="${frameHref}" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid meet" data-hv-hide-on-error="1"/>
       <text x="70.6" y="73.2" text-anchor="middle" class="hp-heart-number">${escapeHtml(String(hp))}</text>
     </svg>
   </span>`;
@@ -517,7 +517,7 @@ function getGuardBadgeHtml(u,scope="unit"){
   const frameHref='assets/ui/guard_shield_emblem.webp?v=1';
   return `<span class="guard-emblem-badge guard-emblem-badge-${escapeHtml(scope)} ${broken?"is-broken":"is-intact"}" title="${title}" aria-label="${title}">
     <span class="guard-emblem-shell" aria-hidden="true">
-      <img class="guard-emblem-img" src="${frameHref}" alt="" draggable="false"/>
+      <img class="guard-emblem-img" src="${frameHref}" alt="" draggable="false" data-hv-hide-on-error="1"/>
       <span class="guard-emblem-crack crack-1"></span>
       <span class="guard-emblem-crack crack-2"></span>
       <span class="guard-emblem-crack crack-3"></span>
@@ -535,7 +535,7 @@ function getAttackBadgeHtml(u,scope="unit"){
   const frameHref='assets/ui/attack_sword_emblem.webp?v=1';
   return `<span class="attack-emblem-badge attack-emblem-badge-${escapeHtml(scope)}" title="${title}" aria-label="${title}">
     <span class="attack-emblem-shell" aria-hidden="true">
-      <img class="attack-emblem-img" src="${frameHref}" alt="" draggable="false"/>
+      <img class="attack-emblem-img" src="${frameHref}" alt="" draggable="false" data-hv-hide-on-error="1"/>
       <span class="attack-emblem-medallion"><b>${escapeHtml(String(atk))}</b></span>
     </span>
   </span>`;
@@ -547,7 +547,7 @@ function getFieldStatBadgeHtml(kind,value,titleText=""){
   const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.webp?v=2':'assets/ui/evasion_rogue_emblem.webp?v=2';
   return `<span class="field-stat-emblem-badge field-stat-emblem-${safeKind}" title="${title}" aria-label="${title}">
     <span class="field-stat-emblem-shell" aria-hidden="true">
-      <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false"/>
+      <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false" data-hv-hide-on-error="1"/>
       <span class="field-stat-emblem-medallion"><b>${escapeHtml(String(numeric))}</b></span>
     </span>
   </span>`;

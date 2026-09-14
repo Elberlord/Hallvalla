@@ -1,0 +1,10 @@
+HallValla 20260914.105 · Battle asset recovery
+
+Scope only: battle visual asset reliability.
+- Live units preserve canonical assetKey/bucket/fieldFigure metadata when summoned.
+- field_figures supports no_muertos bucket explicitly.
+- Field figure failure falls back to the card portrait, then warning art.
+- Global capture error handler executes asset fallback even if inline onerror does not.
+- Leader/unit stat ornaments hide on load failure instead of showing browser broken-image glyphs.
+- Debug helper: __HALLVALLA_ASSET_DEBUG__() lists failed images in the active DOM.
+No TR pacing, AI, decks, forge layout, adventure rules, or gamepad behavior changed.
