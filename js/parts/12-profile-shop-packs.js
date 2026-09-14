@@ -1263,7 +1263,11 @@ function retryCurrentAdventureBattle(){
 
 function canAccessDecks(){
   const progress=typeof getAdventureProgress==="function"?getAdventureProgress():null;
-  return isTestPromoActive()||!!progress?.guardianDefeated;
+  if(isTestPromoActive()||!!progress?.guardianDefeated||!!progress?.guardianRewardClaimed||!!progress?.guardianPackClaimed)return true;
+  // Si el jugador ya avanzó por la campaña, el guardián necesariamente fue
+  // superado. Esto evita que una migración de progreso vuelva la Colección a
+  // modo solo-lectura y bloquee la edición de mazo.
+  return !!Object.values(progress?.chapters||{}).some(ch=>Number(ch?.unlockedBattle||1)>1||Object.values(ch?.completedBattles||{}).some(Boolean));
 }
 function canAccessPackShop(){
   return true;

@@ -1,0 +1,10 @@
+HallValla 20260914.100
+
+Correcciones puntuales:
+- TR canónico: J2 arranca y juega siempre que exista adventureAiState, sin depender de la etiqueta mode.
+- El arsenal de J2 integra cualquier carta que llegue todavía en deck para evitar una IA inmóvil.
+- El runtime TR local/Aventura se inicia por la regla canónica, sin depender de una marca vieja del estado.
+- Edición de mazo: si la campaña ya tiene progreso avanzado, se conserva el acceso aunque una migración haya perdido guardianDefeated.
+- Producción: las herramientas ?dev quedan ocultas de forma defensiva si la URL no contiene ?dev.
+
+No se cambiaron: imagen del constructor, JSON canónico de Forja, mazos IA, balance, velocidades TR ni navegación de mapas.

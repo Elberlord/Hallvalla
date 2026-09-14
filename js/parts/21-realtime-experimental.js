@@ -723,7 +723,7 @@ async function hallvallaRtInitializeResources(){
   const max=HALLVALLA_RT_CFG.resourceCap,startMana=0;
   const privatePatch={honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
   const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor:startMana,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
-  if(publicState?.mode==='adventure'&&publicState?.adventureAiState){
+  if(publicState?.adventureAiState){
     const ai={...publicState.adventureAiState,honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:startMana,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
@@ -741,7 +741,7 @@ async function hallvallaRtResourceAndDrawTick(now){
   const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+steps);
   const privatePatch={honor,maxHonor:max,lastTurnStarted:'RT'};
   const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
-  if(publicState?.mode==='adventure'&&publicState?.adventureAiState){
+  if(publicState?.adventureAiState){
     const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+steps);ai.lastTurnStarted='RT';
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
@@ -1034,11 +1034,22 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
   return true;
 }
 async function hallvallaRtAiDeploy(now){
-  if(publicState?.mode!=="adventure"||!publicState?.adventureAiState)return false;
+  // En TR canónico, la existencia de adventureAiState define a J2. No dependemos
+  // del string mode, porque una restauración/local snapshot puede conservar la IA
+  // aunque el modo llegue con otra etiqueta durante el primer render.
+  if(!publicState?.adventureAiState)return false;
   if(now-hallvallaRtState.lastAiThinkAt<HALLVALLA_RT_CFG.aiThinkEveryMs)return false;
   hallvallaRtState.lastAiThinkAt=now;
   if(now-hallvallaRtState.lastAiDeployAt<HALLVALLA_RT_CFG.aiDeployCooldownMs)return false;
   const ai={...publicState.adventureAiState,hand:[...(publicState.adventureAiState.hand||[])],deck:[...(publicState.adventureAiState.deck||[])]};
+  // TR usa el mazo completo como arsenal. Si llega un estado legado con cartas
+  // todavía en deck, las integramos una sola vez al arsenal para que J2 nunca
+  // quede inmóvil por tener cartas fuera de hand.
+  if(ai.deck.length){
+    const seen=new Set((ai.hand||[]).map(c=>String(c?.id||c?.key||c?.name||"")));
+    for(const c of ai.deck){const k=String(c?.id||c?.key||c?.name||"");if(!seen.has(k)){ai.hand.push(c);seen.add(k);}}
+    ai.deck=[];
+  }
   const units=[...(publicState?.units||[])],mana=Math.max(0,Number(ai.honor||0));
   const choice=hallvallaRtAiChoosePlay(ai,units,mana);if(!choice)return false;
   try{return await hallvallaRtAiResolvePlay(choice,ai,units,now);}catch(error){console.warn("[HallValla][RT][AI] jugada táctica falló",error);return false;}
@@ -1319,13 +1330,16 @@ function hallvallaRtPrimePreparedState(){
   try{stopTurnTimerLoop();}catch(_){ }
 }
 function hallvallaRtSyncPreparedBattle(){
-  if(publicState?.realtimeExperimental!==true){
+  // TR es canónico para todo combate local/Aventura. La marca guardada en el
+  // estado sigue aceptándose, pero ya no puede impedir que el runtime arranque.
+  const shouldRun=publicState?.mode!=="online"&&typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
+  if(!shouldRun){
     if(hallvallaRtState.enabled)hallvallaRtStop();
     else hallvallaRtUpdateUi();
     return false;
   }
-  if(publicState?.mode==="online")return false;
   if(!hallvallaRtBattleReady())return false;
+  if(publicState&&publicState.realtimeExperimental!==true)publicState={...publicState,realtimeExperimental:true,turnPhase:"realtime",currentPlayer:0};
   if(!hallvallaRtState.enabled){
     hallvallaRtState.enabled=true;
     hallvallaRtPrimePreparedState();
