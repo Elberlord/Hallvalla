@@ -778,7 +778,7 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
     pvpStep6fAtomicActionInFlight=false;
   }
 }
-async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kind=""){
+async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kind="",options={}){
   if(!gameId||!publicState||!privateState||publicState.mode!=="online")return false;
   const writeGameId=gameId,writePlayer=Number(myPlayer||0),lifecycleToken=getBattleLifecycleToken();
   const stillActive=()=>gameId===writeGameId&&Number(myPlayer||0)===writePlayer&&isBattleLifecycleTokenActive(lifecycleToken);
@@ -792,7 +792,7 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
     moralePressure:publicPatch?.moralePressure||publicState.moralePressure||{1:0,2:0},
     ...publicPatch,
     realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",
-    rtCheckpoint:{owner:writePlayer,kind:String(kind||"card"),at:Date.now(),id:`${writePlayer}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
+    rtCheckpoint:{owner:writePlayer,kind:String(kind||"card"),seq:Math.max(0,Number(options?.rtClientSeq||0)),at:Date.now(),id:`${writePlayer}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
   };
   const normalized=(await normalizePublicPatchBeforeCommit(checkpoint,{sanitizeFirebase:true})).patch;
   const privacyProjection=projectStage8StealthPatchForNetwork(normalized,writePlayer);
@@ -800,22 +800,26 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
   let cleanPublic=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
   cleanPublic=hallvallaSanitizeFirebaseValue(cleanPublic)||{};
   const cleanPrivate={...(hallvallaSanitizeFirebaseValue(privatePatch||{})||{}),...(hallvallaSanitizeFirebaseValue(privacyProjection.privatePatch)||{})};
+  const rtClientSeq=Math.max(0,Number(options?.rtClientSeq||0));
+  if(rtClientSeq>0)cleanPrivate.rtClientSeq=rtClientSeq;
   const rootPatch={};
   for(const [key,value] of Object.entries(cleanPublic))rootPatch[`public/${key}`]=value;
   for(const [key,value] of Object.entries(cleanPrivate))rootPatch[`private/${getGamePrivatePlayerKey(writePlayer)}/${key}`]=value;
   try{
     await update(ref(db,`games/${writeGameId}`),rootPatch);
     if(!stillActive())return false;
-    publicState=hallvallaApplyLocalPatch(publicState,normalized);
-    privateState=hallvallaApplyLocalPatch(privateState,cleanPrivate);
+    if(options?.alreadyApplied!==true){
+      publicState=hallvallaApplyLocalPatch(publicState,normalized);
+      privateState=hallvallaApplyLocalPatch(privateState,cleanPrivate);
+      render();
+    }
     networkPublicStateRaw=networkPublicStateRaw?hallvallaApplyLocalPatch(networkPublicStateRaw,cleanPublic):cleanPublic;
-    render();
     return true;
   }catch(error){console.error("[HallValla][TR PvP] checkpoint de acción falló",error);setHint("No se pudo sincronizar la acción PvP.");return false;}
 }
-async function commitGameplayAction({publicPatch={},privatePatch={},kind=""}={}){
+async function commitGameplayAction({publicPatch={},privatePatch={},kind="",rtClientSeq=0,alreadyApplied=false}={}){
   if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
-  if(globalThis.hallvallaRtShouldNetworkGameplayAction?.(kind))return commitRealtimeOnlineCheckpoint(publicPatch,privatePatch,kind);
+  if(globalThis.hallvallaRtShouldNetworkGameplayAction?.(kind))return commitRealtimeOnlineCheckpoint(publicPatch,privatePatch,kind,{rtClientSeq,alreadyApplied});
   if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
   if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
   if(Object.keys(privatePatch||{}).length&&!(await updatePrivate(privatePatch)))return false;
@@ -1563,7 +1567,8 @@ function enterGame(code,player){
     }
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
     networkPublicStateRaw=val;
-    publicState=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
+    const remoteViewer=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
+    publicState=globalThis.hallvallaRtReconcileRemotePublicSnapshot?.(remoteViewer,networkPublicStateRaw)||remoteViewer;
     syncBoardDimensionsFromState(publicState);
     globalThis.hallvallaRtSyncPreparedBattle?.();
     render();
@@ -1591,8 +1596,11 @@ function enterGame(code,player){
       return;
     }
     const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
-    privateState=val;
-    if(networkPublicStateRaw)publicState=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
+    privateState=globalThis.hallvallaRtReconcileRemotePrivateSnapshot?.(val)||val;
+    if(networkPublicStateRaw){
+      const remoteViewer=composeStage8ViewerPublicState(networkPublicStateRaw,privateState,player);
+      publicState=globalThis.hallvallaRtReconcileRemotePublicSnapshot?.(remoteViewer,networkPublicStateRaw)||remoteViewer;
+    }
     globalThis.hallvallaRtSyncPreparedBattle?.();
     if(typeof requestBattleRender==="function")requestBattleRender("firebase-private");else render();
     if(prevPublic&&publicState)maybePlayBattleFx(prevPublic,publicState);

@@ -1,3 +1,2 @@
-HallValla v111 · TR PLAYER SUMMON ATOMIC + RICHARD ASSET FIX
-
-BUILD ACTUAL: 20260914.111 · TR ruta de invocación J1 reparada
+HallValla current build: 20260914.115 — TR CAST CORE
+Full package: Hallvalla_v115_TR_CAST_CORE_FULL.zip

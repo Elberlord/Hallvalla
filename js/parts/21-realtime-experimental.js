@@ -78,7 +78,10 @@ const hallvallaRtState={
   lastSummonAt:{1:0,2:0},
   lastPlayerSummonAttempt:null,
   lastPlayerCardInput:null,
-  playerSummonCommitActive:false,
+  onlineCastSeq:0,
+  onlinePendingCasts:[],
+  onlineCastLastAckPublic:0,
+  onlineCastLastAckPrivate:0,
   playerSummonLastInputAt:0,
   playerSummonLastInputCardId:"",
   lastPointerActivationAt:0,
@@ -124,9 +127,86 @@ function hallvallaRtNow(){return Date.now();}
 function hallvallaRtTraceInput(kind,data={}){
   try{
     const row={at:hallvallaRtNow(),kind:String(kind||""),...data};
-    hallvallaRtState.inputTrace=[...(hallvallaRtState.inputTrace||[]),row].slice(-40);
+    hallvallaRtState.inputTrace=[...(hallvallaRtState.inputTrace||[]),row].slice(-80);
     return row;
   }catch(_){return null;}
+}
+function hallvallaRtClone(value){
+  try{return value==null?value:JSON.parse(JSON.stringify(value));}catch(_){return value;}
+}
+let hallvallaRtOnlineCastQueue=Promise.resolve();
+function hallvallaRtCleanupOnlinePendingCasts(){
+  hallvallaRtState.onlinePendingCasts=(hallvallaRtState.onlinePendingCasts||[]).filter(entry=>!(entry.publicAck&&entry.privateAck));
+}
+function hallvallaRtReconcileRemotePublicSnapshot(viewerState,rawState){
+  const checkpoint=rawState?.rtCheckpoint||null;
+  const seq=Math.max(0,Number(checkpoint?.seq||0));
+  if(seq>0&&Number(checkpoint?.owner||0)===Number(myPlayer||0)){
+    hallvallaRtState.onlineCastSeq=Math.max(Number(hallvallaRtState.onlineCastSeq||0),seq);
+    hallvallaRtState.onlineCastLastAckPublic=Math.max(Number(hallvallaRtState.onlineCastLastAckPublic||0),seq);
+    for(const entry of (hallvallaRtState.onlinePendingCasts||[]))if(Number(entry.seq||0)<=seq)entry.publicAck=true;
+  }
+  let out=viewerState;
+  for(const entry of (hallvallaRtState.onlinePendingCasts||[])){
+    if(entry?.publicPatch&&Object.keys(entry.publicPatch).length)out=hallvallaApplyLocalPatch(out,entry.publicPatch);
+  }
+  hallvallaRtCleanupOnlinePendingCasts();
+  return out;
+}
+function hallvallaRtReconcileRemotePrivateSnapshot(remotePrivate){
+  const seq=Math.max(0,Number(remotePrivate?.rtClientSeq||0));
+  if(seq>0){
+    hallvallaRtState.onlineCastSeq=Math.max(Number(hallvallaRtState.onlineCastSeq||0),seq);
+    hallvallaRtState.onlineCastLastAckPrivate=Math.max(Number(hallvallaRtState.onlineCastLastAckPrivate||0),seq);
+    for(const entry of (hallvallaRtState.onlinePendingCasts||[]))if(Number(entry.seq||0)<=seq)entry.privateAck=true;
+  }
+  let out=remotePrivate;
+  for(const entry of (hallvallaRtState.onlinePendingCasts||[])){
+    if(entry?.privatePatch&&Object.keys(entry.privatePatch).length)out=hallvallaApplyLocalPatch(out,entry.privatePatch);
+  }
+  hallvallaRtCleanupOnlinePendingCasts();
+  return out;
+}
+globalThis.hallvallaRtReconcileRemotePublicSnapshot=hallvallaRtReconcileRemotePublicSnapshot;
+globalThis.hallvallaRtReconcileRemotePrivateSnapshot=hallvallaRtReconcileRemotePrivateSnapshot;
+function hallvallaRtQueueOnlineCastCheckpoint(publicPatch,privatePatch,kind="card"){
+  if(publicState?.mode!=="online")return 0;
+  const seq=Math.max(0,Number(hallvallaRtState.onlineCastSeq||0))+1;
+  hallvallaRtState.onlineCastSeq=seq;
+  const entry={seq,kind:String(kind||"card"),createdAt:hallvallaRtNow(),status:"queued",attempts:0,publicAck:false,privateAck:false,publicPatch:hallvallaRtClone(publicPatch||{}),privatePatch:hallvallaRtClone(privatePatch||{})};
+  hallvallaRtState.onlinePendingCasts=[...(hallvallaRtState.onlinePendingCasts||[]),entry].slice(-40);
+  hallvallaRtTraceInput("cast-network-queued",{seq,kind:entry.kind});
+  hallvallaRtOnlineCastQueue=hallvallaRtOnlineCastQueue.then(async()=>{
+    let ok=false;
+    entry.status="syncing";
+    for(let attempt=1;attempt<=4&&!ok;attempt++){
+      entry.attempts=attempt;
+      try{ok=!!(await commitGameplayAction({publicPatch:entry.publicPatch,privatePatch:entry.privatePatch,kind:entry.kind,rtClientSeq:seq,alreadyApplied:true}));}
+      catch(error){console.warn("[HallValla][TR PvP] sync de casteo falló",error);ok=false;}
+      if(!ok&&attempt<4)await new Promise(resolve=>setTimeout(resolve,180*attempt));
+    }
+    entry.status=ok?"written":"failed";
+    entry.writtenAt=hallvallaRtNow();
+    hallvallaRtTraceInput(ok?"cast-network-written":"cast-network-failed",{seq,kind:entry.kind,attempts:entry.attempts});
+    if(!ok)setHint("La acción se aplicó localmente, pero sigue pendiente de sincronización PvP.");
+    return ok;
+  });
+  return seq;
+}
+function hallvallaRtApplyImmediateCastState(publicPatch={},privatePatch={},beforeUnits=[]){
+  const prevPublic=publicState?hallvallaRtClone(publicState):null;
+  const before=[...(beforeUnits||publicState?.units||[])];
+  publicState=hallvallaApplyLocalPatch(publicState,publicPatch||{});
+  if(privatePatch&&Object.keys(privatePatch).length)privateState=hallvallaApplyLocalPatch(privateState,privatePatch);
+  if(publicState?.mode!=="online")networkPublicStateRaw=publicState?hallvallaRtClone(publicState):networkPublicStateRaw;
+  if(Array.isArray(publicPatch?.units)){
+    try{if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(before,publicPatch.units);}catch(_){ }
+    try{if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(before,publicPatch.units,publicPatch);}catch(_){ }
+  }
+  render();
+  try{syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();}catch(_){ }
+  hallvallaRtScheduleLocalSnapshot(false);
+  return true;
 }
 const HALLVALLA_RT_PLAY_LOCK_STALE_MS=12000;
 function hallvallaRtAcquirePlayLock(label="acción") {
@@ -167,6 +247,9 @@ function hallvallaRtSummonDebug(){
     playBusy:!!hallvallaRtState.playBusy,
     playBusyAgeMs:hallvallaRtState.playBusy?Math.max(0,hallvallaRtNow()-Number(hallvallaRtState.playBusySince||0)):0,
     playBusyLabel:hallvallaRtState.playBusyLabel||"",
+    unitCastBlocking:false,
+    onlineCastSeq:Number(hallvallaRtState.onlineCastSeq||0),
+    onlinePendingCasts:(hallvallaRtState.onlinePendingCasts||[]).map(e=>({seq:e.seq,kind:e.kind,status:e.status,attempts:e.attempts,publicAck:!!e.publicAck,privateAck:!!e.privateAck,ageMs:Math.max(0,hallvallaRtNow()-Number(e.createdAt||0))})),
     mana:Number(privateState?.honor||0),
     maxMana:Number(privateState?.maxHonor||0),
     arsenal:(privateState?.hand||[]).length,
@@ -513,113 +596,97 @@ async function hallvallaRtPlayAutoCard(card){
   }
 }
 
-async function hallvallaRtPlayUnitImmediate(card){
+function hallvallaRtCastUnitCore({owner,card,aiState=null,preferredCell=null,source="player",now=hallvallaRtNow()}={}){
+  const ownerNum=Number(owner||1);
+  if(!card||card.type!=="unit")return {ok:false,reason:"invalid_unit_card"};
+  const isPlayer=ownerNum===Number(myPlayer||1);
+  const inputAt=Number(now||hallvallaRtNow());
+  const hand=isPlayer?(privateState?.hand||[]):((aiState?.hand)||[]);
+  const liveCard=hand.find(c=>String(c?.id||"")===String(card.id||""))||null;
+  const mana=isPlayer?Math.max(0,Number(privateState?.honor||0)):Math.max(0,Number(aiState?.honor||0));
+  const unitsBefore=[...(publicState?.units||[])];
+  const costInfo=liveCard&&typeof getCardCostBreakdown==="function"?getCardCostBreakdown(liveCard,ownerNum,unitsBefore):null;
+  const cost=Math.max(0,Number(costInfo?.effective ?? (liveCard?effectiveCardCost(liveCard,ownerNum):0) ?? 0));
+  const cells=hallvallaRtGetSpawnCells(ownerNum,unitsBefore);
+  const preferred=preferredCell&&cells.some(c=>Number(c.x)===Number(preferredCell.x)&&Number(c.y)===Number(preferredCell.y))?{x:Number(preferredCell.x),y:Number(preferredCell.y)}:null;
+  const cell=preferred||cells[0]||null;
+  if(isPlayer){
+    hallvallaRtState.lastPlayerSummonAttempt={at:inputAt,stage:"validate",cardId:card.id,key:card.key,name:card.name,owner:ownerNum,mana,cost,spawnCells:cells.length,source};
+  }
+  if(!liveCard){if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"hand",ok:false,reason:"card_not_in_hand"};return {ok:false,reason:"card_not_in_hand"};}
+  if(mana<cost){if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"payment",ok:false,reason:"not_enough_mana",mana,cost};return {ok:false,reason:"not_enough_mana",mana,cost};}
+  if(!cell){if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"spawn",ok:false,reason:"no_spawn_cell"};return {ok:false,reason:"no_spawn_cell"};}
+
+  let units=[...unitsBefore];
+  let newUnit=makeUnit({...liveCard,owner:ownerNum,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
+  newUnit={...newUnit,rtSummonedAt:inputAt,rtSpawnExitPending:true};
+  if(ownerHasUnit(ownerNum===1?2:1,"yi_sun_sin",units))newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
+  units.push(newUnit);
+  let extraLogs=[],statusFxEvent=null,floatFxEvent=null;
+  try{const fear=applyAfricanLionFearAura(units);units=fear.units||units;statusFxEvent=fear.statusFxEvent||null;floatFxEvent=fear.floatFxEvent||null;extraLogs.push(...(fear.logs||[]));}catch(_){ }
+  try{const ericto=resolveErictoLifecycle(units);units=ericto.units||units;extraLogs.push(...(ericto.logs||[]));}catch(_){ }
+  try{const mongol=applyMongolExplorerAura(units);units=mongol.units||units;if(mongol.count)extraLogs.push(`Ojos de la estepa revela ${mongol.count} unidad${mongol.count===1?"":"es"} con Sigilo.`);}catch(_){ }
+
+  const nextMana=Math.max(0,mana-cost);
+  const nextHand=hand.filter(c=>String(c?.id||"")!==String(liveCard.id||""));
+  let privatePatch={};
+  let publicPatch={units,statusFxEvent,floatFxEvent};
+  const paidCostText=typeof getPaidSummonCostText==="function"?getPaidSummonCostText(liveCard,ownerNum,unitsBefore):`${cost} MANÁ`;
+  if(isPlayer){
+    privatePatch={hand:nextHand,honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap};
+    publicPatch={...publicPatch,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:(privateState?.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${paidCostText}.`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
+  }else{
+    const nextAi={...(aiState||{}),hand:nextHand,honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap};
+    publicPatch={...publicPatch,adventureAiState:nextAi,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:(nextAi.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${cost} ${getResourceLabel(ownerNum)} (TR).`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
+  }
+
+  if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"commit",cell,cost,manaBefore:mana,manaAfter:nextMana,handBefore:hand.length,handAfter:nextHand.length};
+  hallvallaRtApplyImmediateCastState(publicPatch,privatePatch,unitsBefore);
+  hallvallaRtRememberSummon(ownerNum,newUnit);hallvallaRtMarkSummoned(ownerNum,inputAt);
+  if(isPlayer&&publicState?.mode==="online"){
+    const seq=hallvallaRtQueueOnlineCastCheckpoint(publicPatch,privatePatch,`card:${liveCard.key||"summon"}`);
+    if(seq)hallvallaRtTraceInput("summon-network-seq",{cardId:liveCard.id,key:liveCard.key,seq});
+  }
+  if(isPlayer){
+    hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"done",ok:true,unitId:newUnit?.id||null,cell,committedAt:hallvallaRtNow(),mode:publicState?.mode==="online"?"online_optimistic":"local_sync"};
+    hallvallaRtTraceInput("summon-done",{cardId:liveCard.id,key:liveCard.key,ok:true,unitId:newUnit?.id||null,cell,manaBefore:mana,manaAfter:nextMana,handBefore:hand.length,handAfter:nextHand.length});
+  }
+  // Salomón conserva su elección/manifestación, pero ya no mantiene bloqueado el
+  // permiso para castear otra carta. Su ciclo se resuelve después del commit local.
+  if(String(liveCard.key||"")==="king_solomon"&&typeof resolveSolomonLifecycle==="function"){
+    Promise.resolve().then(async()=>{
+      try{
+        const current=[...(publicState?.units||[])];
+        const life=await resolveSolomonLifecycle(unitsBefore,current);
+        if(life?.units)await updatePublic({units:life.units,log:(life.logs||[]).length?[...(life.logs||[]),...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+      }catch(error){console.warn("[HallValla][TR] ciclo de Salomón falló",error);}
+    });
+  }
+  return {ok:true,unit:newUnit,cell,cost,manaBefore:mana,manaAfter:nextMana,publicPatch,privatePatch};
+}
+function hallvallaRtPlayUnitImmediate(card){
   if(!card||card.type!=="unit")return false;
-  const owner=Number(myPlayer||1);
-  const inputAt=hallvallaRtNow();
-  const cardId=String(card.id||"");
-
-  // Sin cooldown oculto de invocación. Los duplicados DOM se filtran en la capa
-  // pointer/click del arsenal; una pulsación real siempre llega aquí.
-  hallvallaRtState.playerSummonLastInputAt=inputAt;
-  hallvallaRtState.playerSummonLastInputCardId=cardId;
+  const owner=Number(myPlayer||1),inputAt=hallvallaRtNow(),cardId=String(card.id||"");
+  hallvallaRtState.playerSummonLastInputAt=inputAt;hallvallaRtState.playerSummonLastInputCardId=cardId;
   hallvallaRtTraceInput("summon-enter",{cardId,key:card.key,name:card.name,mana:Number(privateState?.honor||0)});
-
-  if(hallvallaRtState.playerSummonCommitActive){
-    hallvallaRtTraceInput("summon-inflight-block",{cardId,key:card.key});
-    setHint("La invocación anterior se está confirmando. Espera un instante.");
-    return false;
-  }
-
   const playState=hallvallaRtPlayerUnitPlayState(card);
-  hallvallaRtState.lastPlayerSummonAttempt={at:inputAt,stage:"validate",cardId:card.id,key:card.key,name:card.name,owner,mana:Number(privateState?.honor||0),result:playState};
-  if(!playState.canPlay){hallvallaRtTraceInput("summon-rejected",{cardId,key:card.key,reason:playState.reason||"",mana:Number(privateState?.honor||0)});setHint(playState.reason||`No puedes jugar ${card.name}.`);hallvallaRtRenderArsenal();return false;}
-
-  hallvallaRtState.playerSummonCommitActive=true;
-  let newUnit=null;
-  try{
-    let units=[...(publicState?.units||[])];
-    const cells=hallvallaRtGetSpawnCells(owner,units);
-    const cell=cells[0]||null;
-    if(!cell){hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"spawn",ok:false,reason:"no_spawn_cell"};hallvallaRtTraceInput("summon-no-cell",{cardId,key:card.key});setHint("No queda ninguna celda libre en tu zona de despliegue.");return false;}
-
-    const liveCard=(privateState?.hand||[]).find(c=>String(c?.id)===String(card.id));
-    if(!liveCard){hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"hand",ok:false,reason:"card_not_in_hand"};setHint("La carta ya no está en tu arsenal.");return false;}
-
-    const summonCostInfo=getCardCostBreakdown(liveCard,owner,units);
-    const cost=Math.max(0,Number(summonCostInfo.effective||0));
-    const mana=Math.max(0,Number(privateState?.honor||0));
-    if(mana<cost){hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"payment",ok:false,reason:"mana_changed",mana,cost};setHint(`Necesitas ${cost} MANÁ. Tienes ${mana}.`);return false;}
-
-    const paidCostText=getPaidSummonCostText(liveCard,owner,units);
-    newUnit=makeUnit({...liveCard,owner,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
-    newUnit={...newUnit,rtSummonedAt:hallvallaRtNow(),rtSpawnExitPending:true};
-    if(ownerHasUnit(owner===1?2:1,"yi_sun_sin",units)){
-      newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
-    }
-    units.push(newUnit);
-
-    let extraLogs=[];
-    let fear={units,statusFxEvent:null,floatFxEvent:null,logs:[]};
-    try{fear=applyAfricanLionFearAura(units)||fear;units=fear.units||units;extraLogs.push(...(fear.logs||[]));}catch(_){ }
-    try{const ericto=resolveErictoLifecycle(units);units=ericto.units||units;extraLogs.push(...(ericto.logs||[]));}catch(_){ }
-    try{const mongol=applyMongolExplorerAura(units);units=mongol.units||units;if(mongol.count)extraLogs.push(`Ojos de la estepa revela ${mongol.count} unidad${mongol.count===1?"":"es"} con Sigilo.`);}catch(_){ }
-
-    const nextHand=(privateState?.hand||[]).filter(c=>String(c?.id)!==String(liveCard.id));
-    const nextMana=Math.max(0,mana-cost);
-    const publicPatch={
-      units,
-      statusFxEvent:fear.statusFxEvent||null,
-      floatFxEvent:fear.floatFxEvent||null,
-      [`playerStats/${owner}`]:{...(publicState?.playerStats?.[owner]||{}),honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:(privateState?.deck||[]).length,hand:nextHand.length},
-      log:[`J${owner} invoca ${liveCard.name} automáticamente por ${paidCostText}.`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)
-    };
-    const privatePatch={hand:nextHand,honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap};
-    hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"commit",cell,cost,manaBefore:mana,manaAfter:nextMana,handBefore:(privateState?.hand||[]).length,handAfter:nextHand.length};
-
-    let ok=false;
-    const isOnline=publicState?.mode==="online";
-    const needsFullLifecycle=String(liveCard.key||"")==="king_solomon";
-
-    if(!isOnline&&!needsFullLifecycle){
-      // PvE/local TR: commit atómico e inmediato. Antes se aplicaba primero publicState y
-      // después privateState mediante dos commits; durante esa ventana la UI podía seguir
-      // mostrando la carta y una segunda pulsación terminaba resolviéndose más tarde.
-      const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
-      const beforeUnits=[...(publicState?.units||[])];
-      publicState=hallvallaApplyLocalPatch(publicState,publicPatch);
-      privateState=hallvallaApplyLocalPatch(privateState,privatePatch);
-      networkPublicStateRaw=publicState?JSON.parse(JSON.stringify(publicState)):networkPublicStateRaw;
-      try{if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,publicPatch.units||[]);}catch(_){ }
-      render();
-      try{syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();}catch(_){ }
-      hallvallaRtScheduleLocalSnapshot(false);
-      ok=true;
-    }else{
-      // PvP y Salomón conservan la ruta completa de normalización/sincronización.
-      ok=await commitGameplayAction({publicPatch,privatePatch,kind:`card:${liveCard.key||"summon"}`});
-    }
-
-    hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"done",ok:!!ok,unitId:newUnit?.id||null,cell,committedAt:hallvallaRtNow(),mode:isOnline?"online":"local_atomic"};
-    hallvallaRtTraceInput("summon-done",{cardId,key:liveCard.key,ok:!!ok,unitId:newUnit?.id||null,cell,manaBefore:mana,manaAfter:nextMana,handBefore:(privateState?.hand||[]).length,handAfter:nextHand.length});
-    if(!ok){setHint("No se pudo confirmar la invocación. Puedes volver a intentarlo.");return false;}
-
-    hallvallaRtRememberSummon(owner,newUnit);
-    hallvallaRtMarkSummoned(owner,newUnit.rtSummonedAt);
-    selectedCard=null;highlights=[];highlightType="";
-    setHint(`${liveCard.name} fue invocada por ${cost} MANÁ.`);
-    hallvallaRtRenderArsenal();
-    return true;
-  }catch(error){
-    console.error("[HallValla][TR] invocación del jugador falló",error);
-    hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"exception",ok:false,error:String(error?.stack||error?.message||error)};
-    hallvallaRtTraceInput("summon-exception",{cardId,key:card.key,error:String(error?.message||error)});
-    setHint(`Falló la invocación de ${card.name}. Puedes volver a intentarlo.`);
-    return false;
-  }finally{
-    hallvallaRtState.playerSummonCommitActive=false;
-    hallvallaRtRenderArsenal();
+  if(!playState.canPlay){
+    hallvallaRtState.lastPlayerSummonAttempt={at:inputAt,stage:"validate",cardId:card.id,key:card.key,name:card.name,owner,mana:Number(privateState?.honor||0),result:playState,ok:false};
+    hallvallaRtTraceInput("summon-rejected",{cardId,key:card.key,reason:playState.reason||"",mana:Number(privateState?.honor||0)});
+    setHint(playState.reason||`No puedes jugar ${card.name}.`);hallvallaRtRenderArsenal();return false;
   }
+  const result=hallvallaRtCastUnitCore({owner,card,source:"player",now:inputAt});
+  if(!result.ok){
+    if(result.reason==="card_not_in_hand")setHint("La carta ya no está en tu arsenal.");
+    else if(result.reason==="not_enough_mana")setHint(`Necesitas ${result.cost} MANÁ. Tienes ${result.mana}.`);
+    else if(result.reason==="no_spawn_cell")setHint("No queda ninguna celda libre en tu zona de despliegue.");
+    else setHint(`No se pudo invocar ${card.name}.`);
+    hallvallaRtRenderArsenal();return false;
+  }
+  selectedCard=null;highlights=[];highlightType="";
+  setHint(`${card.name} fue invocada por ${result.cost} MANÁ.`);
+  hallvallaRtRenderArsenal();
+  return true;
 }
 
 function hallvallaRtPlayCardById(cardId,source="direct"){
@@ -641,6 +708,7 @@ function hallvallaRtPlayCardById(cardId,source="direct"){
     return true;
   }
   hallvallaRtState.lastPlayerCardInput={...hallvallaRtState.lastPlayerCardInput,accepted:true};
+  if(live.type==="unit")return hallvallaRtPlayUnitImmediate(live);
   void hallvallaRtPlayAutoCard(live);
   return true;
 }
@@ -777,9 +845,10 @@ function hallvallaRtBindArsenal(){
     const cardBtn=ev.target.closest?.("[data-rt-card-id]");if(cardBtn){
       ev.preventDefault();ev.stopPropagation();
       const id=String(cardBtn.dataset.rtCardId||"");
-      const recent=id===String(hallvallaRtState.lastPointerActivationCardId||"")&&hallvallaRtNow()-Number(hallvallaRtState.lastPointerActivationAt||0)<700;
-      if(recent){hallvallaRtTraceInput("click-duplicate-filtered",{cardId:id});return;}
-      hallvallaRtTraceInput("click-card",{cardId:id});
+      // Pointer/touch ya se resolvió en pointerdown. Los clicks con detail=0 son
+      // teclado, gamepad o .click() programático y sí deben activar la carta.
+      if(Number(ev.detail||0)>0){hallvallaRtTraceInput("click-after-pointer-ignored",{cardId:id});return;}
+      hallvallaRtTraceInput("click-card",{cardId:id,detail:Number(ev.detail||0)});
       hallvallaRtPlayCardById(id,"click");
       return;
     }
@@ -1296,14 +1365,9 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],beastTraps=[...(publicState?.beastTraps||[])];
   const removeCard=()=>{ai.hand=(ai.hand||[]).filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=HALLVALLA_RT_CFG.resourceCap;};
   if(choice.kind==="summon"){
-    const cell=choice.cell||hallvallaRtFindBestSpawnCell(2,nextUnits);if(!cell)return false;
-    let newUnit=makeUnit({...card,owner:2,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
-    newUnit={...newUnit,rtSummonedAt:now,rtSpawnExitPending:true};
-    if(ownerHasUnit(1,"yi_sun_sin",nextUnits))newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
-    nextUnits.push(newUnit);
-    try{const fear=applyAfricanLionFearAura(nextUnits);nextUnits=fear.units||nextUnits;statusFxEvent=fear.statusFxEvent||null;floatFxEvent=fear.floatFxEvent||null;}catch(_){ }
-    removeCard();hallvallaRtRememberSummon(2,newUnit);hallvallaRtMarkSummoned(2,now);
-    log=`J2 invoca ${card.name} por ${cost} ${getResourceLabel(2)} (TR).`;
+    const cast=hallvallaRtCastUnitCore({owner:2,card,aiState:ai,preferredCell:choice.cell||null,source:"ai",now});
+    if(cast.ok)hallvallaRtState.lastAiDeployAt=now;
+    return !!cast.ok;
   }else if(choice.kind==="equipment"){
     const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===2&&Number(u.hp||0)>0);if(!target||!canEquipCardToUnit(card,target,2,nextUnits))return false;
     nextUnits=nextUnits.map(u=>u.id===target.id?equipCardOnUnit(card,u):u);removeCard();
@@ -1687,7 +1751,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastSummonAt={1:0,2:0};
   hallvallaRtState.lastPlayerSummonAttempt=null;
   hallvallaRtState.lastPlayerCardInput=null;
-  hallvallaRtState.playerSummonCommitActive=false;
+  hallvallaRtState.onlinePendingCasts=[];hallvallaRtState.onlineCastSeq=0;hallvallaRtState.onlineCastLastAckPublic=0;hallvallaRtState.onlineCastLastAckPrivate=0;hallvallaRtOnlineCastQueue=Promise.resolve();
   hallvallaRtState.playerSummonLastInputAt=0;
   hallvallaRtState.playerSummonLastInputCardId="";
   hallvallaRtState.lastPointerActivationAt=0;
@@ -1732,7 +1796,7 @@ function hallvallaRtDebugSnapshot(){
   const living=units.filter(u=>u&&Number(u.hp||0)>0);
   const mobile=living.filter(u=>!u.leader&&Number(typeof effectiveMov==='function'?effectiveMov(u):u.mov||0)>0);
   return {
-    build:"20260914.101",
+    build:globalThis.__HALLVALLA_BUILD__||"",
     enabled:hallvallaRtState.enabled,
     battleReady:hallvallaRtBattleReady(),
     mainTimer:!!hallvallaRtState.timer,

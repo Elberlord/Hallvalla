@@ -1,0 +1,35 @@
+HallValla build 20260914.115 — TR CAST CORE
+
+Objetivo
+- Rehacer el casteo de UNIDADES de TR con una ruta local inmediata y compartida por jugador e IA.
+- Eliminar el bloqueo global de invocación del jugador.
+- PvP: aplicar primero localmente y sincronizar después mediante checkpoints secuenciales.
+
+Cambios
+1. Unidades J1
+   - clic/pointer -> validar carta/maná/celda -> descontar maná -> retirar carta -> crear unidad, todo en la misma llamada local.
+   - No usa playBusy ni playerSummonCommitActive.
+   - No hay cooldown de invocación.
+   - Los clicks de puntero se procesan en pointerdown; el click posterior del mismo puntero se ignora.
+
+2. Núcleo compartido
+   - hallvallaRtCastUnitCore() es usado por el jugador y por la IA para invocar unidades.
+   - La IA conserva su decisión táctica, pero el commit de invocación usa el mismo núcleo.
+
+3. PvP optimista
+   - La unidad aparece y el maná/carta cambian localmente sin esperar Firebase.
+   - Los checkpoints de casteo se serializan con seq y se reintentan hasta 4 veces.
+   - Los listeners remoto público/privado re-aplican casts pendientes para evitar rollback visual mientras llega el ACK.
+
+4. Salomón
+   - Su ciclo/selección se resuelve después del commit local, sin mantener bloqueado el permiso de castear otra unidad.
+
+5. Diagnóstico
+   - __HALLVALLA_RT_SUMMON_DEBUG__ ahora muestra unitCastBlocking:false, onlineCastSeq y onlinePendingCasts.
+   - inputTrace conserva 80 eventos.
+
+No modificado
+- Forja / deck builder.
+- Imagen collection_builder_hallvalla.webp.
+- Velocidad de movimiento y ataque (se mantiene para una versión posterior).
+- Mazos, reglas de cartas, costes o IA de selección táctica.
