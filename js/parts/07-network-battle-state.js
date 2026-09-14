@@ -681,7 +681,7 @@ async function updatePublic(patch){
   const accountMasteryKillAfter=Array.isArray(cleanPatch.units)?[...(cleanPatch.units||[])]:null;
   const localFullPatch={...cleanPatch};
   if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
-    const prevPublic=publicState?JSON.parse(JSON.stringify(publicState)):null;
+    const prevPublic=publicState||null; // PERF v118: applyLocalPatch crea un nuevo objeto; no hace falta clonar todo el estado para FX.
     publicState=hallvallaApplyLocalPatch(publicState,localFullPatch);
     if(publicState?.mode!=="online")networkPublicStateRaw=publicState?JSON.parse(JSON.stringify(publicState)):networkPublicStateRaw;
     if(accountMasteryKillAfter){

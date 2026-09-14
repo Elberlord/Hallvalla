@@ -1,1 +1,1 @@
-20260914.116 · TR input estable + render agrupado · casteo PvE/PvP
+20260914.118 · TR local performance gate · basado directamente en v116

@@ -14,16 +14,17 @@ const HALLVALLA_RT_CFG=Object.freeze({
   aiDeployCooldownMs:280,
   summonCooldownMs:0,
   spawnEgressDelayMs:250,
-  attackCooldownMs:9600,
-  baseMoveCooldownMs:7200,
+  attackCooldownMs:10000,
+  baseMoveCooldownMs:8000,
   loopMs:100,
+  motionLoopMs:250,
   leaderEffectEveryMs:10000,
   combatRefreshEveryMs:10000,
   supportEffectEveryMs:10000,
   statusTickEveryMs:10000,
-  localSnapshotEveryMs:2000,
-  maxAttacksPerTick:12,
-  maxMovesPerTick:32
+  localSnapshotEveryMs:5000,
+  maxAttacksPerTick:4,
+  maxMovesPerTick:12
 });
 const HALLVALLA_RT_HOME_STORAGE_KEY="hallvalla_rt_experimental_home_v1";
 /* TR es canónico: ya no existe un interruptor Home ni depende de ?dev/localStorage. */
@@ -1596,9 +1597,11 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
   for(const id of ids){
     if(attacks>=maxAttacks)break;
     const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now)continue;
-    const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
+    // PERF v118: el cooldown se comprueba ANTES de buscar/ordenar objetivos.
+    // Una unidad que aún no puede atacar no consume CPU en targeting 4 veces por segundo.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
     if(now-last<HALLVALLA_RT_CFG.attackCooldownMs)continue;
+    const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
     hallvallaRtState.attackAt.set(live.id,now);
     if(await hallvallaRtAttackUnit(live,target))attacks++;
   }
@@ -1614,10 +1617,14 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   for(const id of ids){
     if(moves>=maxMoves)break;
     const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live)continue;
-    const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     const freshSpawn=live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing;
+    // PERF v118: para unidades normales, ni targeting ni pathfinding se ejecutan
+    // hasta que el cooldown real de movimiento vence. Se preserva la salida prioritaria
+    // de una invocación recién creada.
+    const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
+    if(!freshSpawn&&now-lastMove<hallvallaRtMoveCooldown(live))continue;
     let step=null;
     if(freshSpawn&&now-Number(live.rtSummonedAt||0)>=HALLVALLA_RT_CFG.spawnEgressDelayMs){
       // Prioridad absoluta tras invocar: abandonar el anillo del líder para no bloquear
@@ -1625,9 +1632,9 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
       step=hallvallaRtChooseSpawnExitStep(live,units);
     }
     if(!step){
+      const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
       // Fuera del corredor de salida, si ya puede atacar conserva su posición.
       if(hallvallaRtCanAttackNow(live,target))continue;
-      const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
       if(now-lastMove<hallvallaRtMoveCooldown(live))continue;
       step=hallvallaRtChooseStep(live,target,units);
       if(!step){
@@ -1699,7 +1706,7 @@ async function hallvallaRtLoop(){
     handOpen=false;
     // Watchdog: el loop principal que ya sabemos que está vivo (maná/IA) vuelve a
     // arrancar movimiento si el timer dedicado dejó de ejecutar por cualquier razón.
-    if(!hallvallaRtState.lastMotionTickAt||now-hallvallaRtState.lastMotionTickAt>=Math.max(250,HALLVALLA_RT_CFG.loopMs*2)){
+    if(!hallvallaRtState.lastMotionTickAt||now-hallvallaRtState.lastMotionTickAt>=Math.max(600,(HALLVALLA_RT_CFG.motionLoopMs||HALLVALLA_RT_CFG.loopMs)*2)){
       await hallvallaRtSafeStage("watchdog de movimiento TR",()=>hallvallaRtMotionLoop());
     }
     // El movimiento/ataque mantiene además su loop separado para que una habilidad,
@@ -1787,7 +1794,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtState.enabled=true;
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
-    hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
+    hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.motionLoopMs||HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
     setHint("TR: sin turnos · +1 MANÁ cada 3 s · movimiento/ataque autónomos.");
     void hallvallaRtLoop();
     void hallvallaRtMotionLoop();

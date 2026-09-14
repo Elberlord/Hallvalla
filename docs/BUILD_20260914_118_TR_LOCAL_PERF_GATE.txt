@@ -1,0 +1,15 @@
+HallValla build 20260914.118
+Base: 20260914.116 (sin incorporar el experimento de IA de v117)
+
+Objetivo: aislar y reducir lag del runtime TR local sin eliminar la doctrina táctica de J2/IA.
+
+Cambios:
+- Ataque: cooldown 10 s (v116: 9.6 s).
+- Movimiento: base 8 s; MOV 3 ~= 5 s (v116: base 7.2 s).
+- Loop dedicado de movimiento/ataque: 250 ms (v116: 100 ms).
+- Una unidad en cooldown ya NO calcula objetivo ni pathfinding hasta estar lista.
+- Máximo por tick suavizado: 4 ataques / 12 movimientos.
+- Snapshot local: cada 5 s (v116: 2 s), reduciendo escrituras síncronas localStorage.
+- En updatePublic local se elimina un deep-clone JSON completo usado solo para conservar prevPublic; se conserva la referencia anterior porque hallvallaApplyLocalPatch devuelve un nuevo objeto.
+- IA J2 conserva íntegra la doctrina táctica de v116 (incluida detección de amenazas/counters).
+- Firebase continúa fuera del reloj de microacciones; solo casteos/checkpoints online según runtime existente.
