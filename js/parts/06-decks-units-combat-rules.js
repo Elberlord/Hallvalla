@@ -1496,6 +1496,18 @@ function getUnitElementalAffinity(unit,damageType){
   if(type==="fire"&&unit.elementalNature)return 2;
   return 1;
 }
+function isHallvallaRtLeaderShieldActive(unit,now=Date.now()){
+  if(!unit?.leader||!publicState)return false;
+  return Number(publicState?.rtLeaderShieldUntil?.[Number(unit.owner)||0]||0)>Number(now||Date.now());
+}
+function applyHallvallaRtLeaderShieldDamage(unit,damage){
+  const raw=Math.max(0,Number(damage)||0);
+  if(raw<=0||!isHallvallaRtLeaderShieldActive(unit))return {damage:raw,reduced:0,active:false};
+  const next=Math.max(0,Math.round(raw*0.5));
+  return {damage:next,reduced:raw-next,active:true};
+}
+globalThis.isHallvallaRtLeaderShieldActive=isHallvallaRtLeaderShieldActive;
+
 function applyMagicHpDamage(unit,damage,damageType="arcane"){
   const raw=Math.max(0,Number(damage)||0);
   const type=normalizeMagicDamageType(damageType);
@@ -1504,17 +1516,20 @@ function applyMagicHpDamage(unit,damage,damageType="arcane"){
   // Armadura Natural del Tejón es una habilidad explícita de reducción de daño,
   // no Guardia. Se conserva; la GD nunca participa en esta resolución mágica.
   scaled=Math.max(0,Number(reduceDamageForHoneyBadger(unit,scaled))||0);
+  scaled=applyHallvallaRtLeaderShieldDamage(unit,scaled).damage;
   const damaged=resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit?.hp||0)-scaled,lastGuardLoss:0,lastHpLoss:scaled,damagedThisTurn:scaled>0||!!unit?.damagedThisTurn});
   return{unit:damaged,damage:scaled,rawDamage:raw,damageType:type,multiplier,immune:multiplier===0,weak:multiplier>1,resistant:multiplier>0&&multiplier<1};
 }
 
 function applyDirectHpDamageWithEquipment(unit,damage){
-  const prep=applyEquipmentHpDamageReduction(unit,damage);
+  const shield=applyHallvallaRtLeaderShieldDamage(unit,damage);
+  const prep=applyEquipmentHpDamageReduction(unit,shield.damage);
   const damaged=resolveBlessedArmorTransition(prep.unit,{...prep.unit,hp:Number(prep.unit?.hp||0)-prep.damage,lastGuardLoss:0,lastHpLoss:prep.damage,damagedThisTurn:prep.damage>0||!!prep.unit?.damagedThisTurn});
   return{unit:damaged,damage:prep.damage,reduced:prep.reduced};
 }
 function applyGuardDamage(defender,damage,guardMod=0,minHpDamage=0){
-  const incoming=Math.max(0,Number(damage)||0);
+  const shield=applyHallvallaRtLeaderShieldDamage(defender,Math.max(0,Number(damage)||0));
+  const incoming=shield.damage;
   const rawGuardMod=Number(guardMod)||0;
   const bonusGuard=Math.max(0,rawGuardMod);
   const preGuardReduction=Math.max(0,-rawGuardMod);

@@ -1073,7 +1073,8 @@ function renderLeaderBases(){
     const directTarget=!!(tacticalAttacker&&u.owner!==myPlayer&&getAttackableTargets(tacticalAttacker,publicState?.units||[]).some(t=>t.id===u.id));
     const isMarked=highlights.includes(key)||directTarget;
     const directSelected=u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard&&!selectedUnitActionMode;
-    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":"",directSelected?"leader-direct-selected":""].filter(Boolean).join(" ");
+    const rtShieldActive=typeof globalThis.isHallvallaRtLeaderShieldActive==="function"&&globalThis.isHallvallaRtLeaderShieldActive(u);
+    const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":"",directSelected?"leader-direct-selected":"",rtShieldActive?"rt-leader-shield-active":""].filter(Boolean).join(" ");
     return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
   }).join("");
   if(markup!==hallvallaLeaderRenderMarkup){

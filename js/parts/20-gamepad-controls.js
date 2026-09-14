@@ -2,7 +2,7 @@
 /* HallValla 20260914.122 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B volver/cerrar universal · X DEF · Y DET
-   View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · LB/RB ciclar unidades.
+   View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · TR: LB recoge orbe, RB escudo del líder.
 */
 
 const HV_GAMEPAD_BUTTONS=Object.freeze({
@@ -817,6 +817,10 @@ function hvGamepadHandleButtons(gp){
   const rt=battle&&!modal&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function";
   if(rt){
     const level=hallvallaRtGetInputState();
+    // TR canónico: LB y RB quedan reservados para recursos defensivos del duelo.
+    // LB captura SOLO el orbe propio; RB protege al líder 3 s y no prolonga un escudo ya activo.
+    if(pressed.LB&&typeof hallvallaRtCollectManaOrb==="function")void hallvallaRtCollectManaOrb(myPlayer,"gamepad");
+    if(pressed.RB&&typeof hallvallaRtActivateLeaderShield==="function")hallvallaRtActivateLeaderShield(myPlayer);
     if(level==="targeting"){
       if(pressed.A&&typeof hallvallaRtConfirmTarget==="function")void hallvallaRtConfirmTarget();
       if(pressed.B&&typeof hallvallaRtCancelInput==="function")hallvallaRtCancelInput();

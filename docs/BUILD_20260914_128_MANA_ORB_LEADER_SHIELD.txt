@@ -1,0 +1,12 @@
+HallValla build 20260914.128
+
+- MANÁ TR inicia 2/2.
+- El maná gastado recarga +1 cada 9 s hasta la capacidad ya obtenida.
+- La capacidad NO aumenta por tiempo.
+- Orbe de maná cada 14 s; dura 10 s; +1 capacidad y +1 maná disponible al recoger.
+- Al llegar a 10 de capacidad dejan de aparecer orbes para ese jugador.
+- El orbe usa assets/ui/realtime/mana-orb.webp con fondo transparente; no tiene contenedor visual.
+- LB recoge exclusivamente el orbe propio.
+- RB activa escudo del líder por 3 s; durante ese intervalo el daño recibido por el líder se reduce 50%.
+- Pulsar RB mientras el escudo sigue activo no prolonga los 3 s.
+- En PvP, captura de orbe y activación de escudo se publican como checkpoints de acción del jugador; no se sincroniza cada frame.

@@ -1500,8 +1500,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         leaderAbility:profile.leaderAbility,
         deck,
         hand,
-        honor:0,
-        maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),
+        honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),
+        maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),
         lastTurnStarted:"RT",
         skipFirstTurnDraw:true,
         principalSlots:principalKeys.length,
@@ -1566,8 +1566,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         leaderAbility:built.enginePrivate.leaderAbility,
         deck:built.enginePrivate.deck,
         hand:built.enginePrivate.hand,
-        honor:0,
-        maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),
+        honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),
+        maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),
         lastTurnStarted:"RT",
         skipFirstTurnDraw:true,
         principalSlots:0,
@@ -1656,8 +1656,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       principalSlots:{1:0,2:0},
       pvpPrincipalKeys:{1:[],2:[]},
       playerStats:{
-        1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:Number(p1.handCount||0),hasHiddenUnits:p1.hasHiddenUnits===true},
-        2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:Number(p2.handCount||0),hasHiddenUnits:p2.hasHiddenUnits===true}
+        1:{hp:Number(p1Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:Number(p1.handCount||0),hasHiddenUnits:p1.hasHiddenUnits===true},
+        2:{hp:Number(p2Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:Number(p2.handCount||0),hasHiddenUnits:p2.hasHiddenUnits===true}
       },
       erictoGraveyard:[],
       units,
@@ -2453,7 +2453,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventurePrincipalKeys:{1:[],2:[]},
         principalSlots:{1:0,2:0},
         pvpPrincipalKeys:{1:[],2:[]},
-        adventureAiState:{deck:[],hand:botDraw.hand,honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
+        adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
         createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:Date.now(),
         clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
@@ -2462,8 +2462,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:PVP_BOT_LEADER_LEVEL},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
         settings:buildDefaultRules(),matchSettings:{timerEnabled:false,stakeMode:"none",goldAmount:500,cardEntryFee:500,economyState:"not_required"},
         playerStats:{
-          1:{hp:Number(p1Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
-          2:{hp:Number(p2Leader?.hp||0),honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),deck:0,hand:botDraw.hand.length,hasHiddenUnits:countHiddenKeys6e(botDraw.hand.map(card=>card?.key||""))>0}
+          1:{hp:Number(p1Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
+          2:{hp:Number(p2Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:botDraw.hand.length,hasHiddenUnits:countHiddenKeys6e(botDraw.hand.map(card=>card?.key||""))>0}
         },
         erictoGraveyard:[],moralePressure:{1:0,2:0},units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
         battleEnded:false,winner:0,loser:0,
@@ -2478,7 +2478,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         combat6c:humanBuilt.combat6c,
         engine6e:{schema:"hallvalla-pvp-bot-private-v1",ready:true,preparedAt:Date.now()},
         leaderType:human.leaderType,leaderLevel:human.leaderLevel,leaderAbility:human.leaderAbility,
-        deck:[],hand:human.hand,honor:0,maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.resourceCap:10),lastTurnStarted:"RT",skipFirstTurnDraw:true,
+        deck:[],hand:human.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,
         principalSlots:0,principalKeys:[],principalKey:""
       };
 

@@ -8,7 +8,11 @@
 
 const HALLVALLA_RT_CFG=Object.freeze({
   resourceCap:10,
-  resourceEveryMs:4000,
+  initialMana:2,
+  resourceEveryMs:9000,
+  manaOrbEveryMs:14000,
+  manaOrbLifetimeMs:10000,
+  leaderShieldDurationMs:3000,
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
@@ -48,6 +52,7 @@ const hallvallaRtState={
   motionTickCount:0,
   cycle:0,
   lastResourceAt:0,
+  battleStartedAt:0,
   arsenalCategory:"unit",
   arsenalPage:0,
   arsenalLevel:"root",
@@ -401,12 +406,113 @@ function hallvallaRtUpdateUi(){
     node.hidden=!active;
     if(active){
       const honor=Math.max(0,Number(privateState?.honor||0));
-      const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.resourceCap));
+      const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana));
       const remaining=(privateState?.hand||[]).length;
-      node.textContent=`TR · MANÁ ${honor}/${max} · Arsenal ${remaining} · +1 MANÁ cada ${HALLVALLA_RT_CFG.resourceEveryMs/1000}s`;
+      node.textContent=`TR · MANÁ ${honor}/${max} · Arsenal ${remaining} · recarga 1/${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · orbe +1 capacidad/${HALLVALLA_RT_CFG.manaOrbEveryMs/1000}s`;
     }
   }
+  if(active)hallvallaRtRenderManaOrbs();
+  else hallvallaRtRemoveManaOrbNodes();
 }
+
+function hallvallaRtOwnerMaxMana(owner){
+  const who=Number(owner||0);
+  if(who===Number(myPlayer||0))return Math.max(1,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana)));
+  if(publicState?.adventureAiState&&who===2)return Math.max(1,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(publicState.adventureAiState.maxHonor||HALLVALLA_RT_CFG.initialMana)));
+  return Math.max(1,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(publicState?.playerStats?.[who]?.maxHonor||HALLVALLA_RT_CFG.initialMana)));
+}
+function hallvallaRtOwnerCurrentMana(owner){
+  const who=Number(owner||0);
+  if(who===Number(myPlayer||0))return Math.max(0,Number(privateState?.honor||0));
+  if(publicState?.adventureAiState&&who===2)return Math.max(0,Number(publicState.adventureAiState.honor||0));
+  return Math.max(0,Number(publicState?.playerStats?.[who]?.honor||0));
+}
+function hallvallaRtBattleEpoch(){
+  const candidates=[publicState?.engineStartedAt,hallvallaRtState.battleStartedAt,publicState?.createdAt];
+  for(const value of candidates){const n=Number(value||0);if(Number.isFinite(n)&&n>0)return n;}
+  return hallvallaRtNow();
+}
+function hallvallaRtManaOrbInfo(owner,now=hallvallaRtNow()){
+  const who=Number(owner||0),max=hallvallaRtOwnerMaxMana(who),epoch=hallvallaRtBattleEpoch();
+  if(!who||max>=HALLVALLA_RT_CFG.resourceCap)return {owner:who,active:false,max,cycle:0};
+  const elapsed=Math.max(0,now-epoch);
+  if(elapsed<HALLVALLA_RT_CFG.manaOrbEveryMs)return {owner:who,active:false,max,cycle:0,nextAt:epoch+HALLVALLA_RT_CFG.manaOrbEveryMs};
+  const cycle=Math.max(1,Math.floor(elapsed/HALLVALLA_RT_CFG.manaOrbEveryMs));
+  const startsAt=epoch+(cycle*HALLVALLA_RT_CFG.manaOrbEveryMs);
+  const expiresAt=startsAt+HALLVALLA_RT_CFG.manaOrbLifetimeMs;
+  const claimed=Number(publicState?.rtManaOrbClaims?.[who]||0)===cycle;
+  const active=!claimed&&now>=startsAt&&now<expiresAt;
+  const south=[{x:1,y:7},{x:3,y:6},{x:2,y:5},{x:0,y:6},{x:4,y:7}];
+  const north=[{x:3,y:1},{x:1,y:2},{x:2,y:3},{x:4,y:2},{x:0,y:1}];
+  const list=who===1?south:north;
+  const cell=list[(cycle+who)%list.length];
+  return {owner:who,active,max,cycle,startsAt,expiresAt,claimed,cell};
+}
+function hallvallaRtRemoveManaOrbNodes(){
+  document.querySelectorAll('.rt-mana-orb').forEach(node=>node.remove());
+}
+function hallvallaRtRenderManaOrbs(){
+  const battlefield=document.querySelector('#gameShell .battlefield'),grid=document.getElementById('grid');
+  if(!battlefield||!grid||!hallvallaRtBattleReady()){hallvallaRtRemoveManaOrbNodes();return;}
+  const now=hallvallaRtNow(),fieldRect=battlefield.getBoundingClientRect();
+  for(const owner of [1,2]){
+    const info=hallvallaRtManaOrbInfo(owner,now);
+    let node=battlefield.querySelector(`.rt-mana-orb[data-owner="${owner}"]`);
+    if(!info.active){if(node)node.remove();continue;}
+    const cell=grid.querySelector(`.cell[data-x="${info.cell.x}"][data-y="${info.cell.y}"]`);
+    if(!cell){if(node)node.remove();continue;}
+    if(!node){
+      node=document.createElement('button');node.type='button';node.className='rt-mana-orb';node.dataset.owner=String(owner);
+      node.innerHTML='<img src="assets/ui/realtime/mana-orb.webp" alt="">';
+      battlefield.appendChild(node);
+      node.addEventListener('click',()=>{if(Number(owner)===Number(myPlayer||0))void hallvallaRtCollectManaOrb(owner,'pointer');});
+    }
+    const own=Number(owner)===Number(myPlayer||0);
+    node.classList.toggle('own',own);node.classList.toggle('enemy',!own);
+    node.disabled=!own;node.setAttribute('aria-label',own?'Orbe de maná propio. LB para recoger.':'Orbe de maná rival.');
+    const rect=cell.getBoundingClientRect();
+    node.style.left=`${rect.left-fieldRect.left+(rect.width/2)}px`;
+    node.style.top=`${rect.top-fieldRect.top+(rect.height/2)}px`;
+  }
+}
+async function hallvallaRtCollectManaOrb(owner=myPlayer,source='gamepad'){
+  const who=Number(owner||myPlayer||0),now=hallvallaRtNow();
+  if(who!==Number(myPlayer||0)&&source!=='ai')return false;
+  const info=hallvallaRtManaOrbInfo(who,now);
+  if(!info.active){if(source!=='ai')setHint(info.max>=HALLVALLA_RT_CFG.resourceCap?'MANÁ máximo alcanzado.':'No hay un orbe de MANÁ activo en tu lado.');return false;}
+  const maxBefore=hallvallaRtOwnerMaxMana(who),manaBefore=hallvallaRtOwnerCurrentMana(who);
+  if(maxBefore>=HALLVALLA_RT_CFG.resourceCap)return false;
+  const maxAfter=Math.min(HALLVALLA_RT_CFG.resourceCap,maxBefore+1),manaAfter=Math.min(maxAfter,manaBefore+1);
+  const claims={...(publicState?.rtManaOrbClaims||{}),[who]:info.cycle};
+  let publicPatch={rtManaOrbClaims:claims,[`playerStats/${who}`]:{...(publicState?.playerStats?.[who]||{}),honor:manaAfter,maxHonor:maxAfter}};
+  let privatePatch={};
+  if(who===Number(myPlayer||0))privatePatch={honor:manaAfter,maxHonor:maxAfter};
+  else if(publicState?.adventureAiState&&who===2)publicPatch.adventureAiState={...publicState.adventureAiState,honor:manaAfter,maxHonor:maxAfter};
+  hallvallaRtApplyImmediateCastState(publicPatch,privatePatch,publicState?.units||[]);
+  if(who===Number(myPlayer||0)&&publicState?.mode==='online')hallvallaRtQueueOnlineCastCheckpoint(publicPatch,privatePatch,'resource:mana-orb');
+  if(source!=='ai')setHint(`Orbe recogido · MANÁ ${manaAfter}/${maxAfter}.`);
+  hallvallaRtRenderManaOrbs();
+  return true;
+}
+function hallvallaRtActivateLeaderShield(owner=myPlayer){
+  const who=Number(owner||myPlayer||0),now=hallvallaRtNow();
+  if(!hallvallaRtBattleReady())return false;
+  const leader=(publicState?.units||[]).find(u=>u&&u.leader&&Number(u.owner)===who&&Number(u.hp||0)>0);
+  if(!leader){setHint('No hay líder activo para proteger.');return false;}
+  const currentUntil=Number(publicState?.rtLeaderShieldUntil?.[who]||0);
+  if(currentUntil>now){setHint(`Escudo activo ${Math.max(1,Math.ceil((currentUntil-now)/1000))} s.`);return false;}
+  const until=now+HALLVALLA_RT_CFG.leaderShieldDurationMs;
+  const shieldMap={...(publicState?.rtLeaderShieldUntil||{}),[who]:until};
+  const publicPatch={rtLeaderShieldUntil:shieldMap};
+  hallvallaRtApplyImmediateCastState(publicPatch,{},publicState?.units||[]);
+  if(who===Number(myPlayer||0)&&publicState?.mode==='online')hallvallaRtQueueOnlineCastCheckpoint(publicPatch,{},'resource:leader-shield');
+  setHint('RB · Escudo del líder activo 3 s · daño recibido -50%.');
+  const expireRender=()=>{if(typeof requestBattleRender==='function')requestBattleRender('rt-leader-shield-expire');else if(typeof render==='function')render();};
+  if(typeof battleSetTimeout==='function')battleSetTimeout(expireRender,HALLVALLA_RT_CFG.leaderShieldDurationMs+40,'rt-leader-shield-expire');else setTimeout(expireRender,HALLVALLA_RT_CFG.leaderShieldDurationMs+40);
+  return true;
+}
+globalThis.hallvallaRtCollectManaOrb=hallvallaRtCollectManaOrb;
+globalThis.hallvallaRtActivateLeaderShield=hallvallaRtActivateLeaderShield;
 
 
 const HALLVALLA_RT_KEYBINDS_STORAGE_KEY="hallvalla_rt_keybinds_v1";
@@ -634,11 +740,11 @@ function hallvallaRtCastUnitCore({owner,card,aiState=null,preferredCell=null,sou
   let publicPatch={units,statusFxEvent,floatFxEvent};
   const paidCostText=typeof getPaidSummonCostText==="function"?getPaidSummonCostText(liveCard,ownerNum,unitsBefore):`${cost} MANÁ`;
   if(isPlayer){
-    privatePatch={hand:nextHand,honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap};
-    publicPatch={...publicPatch,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:(privateState?.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${paidCostText}.`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
+    privatePatch={hand:nextHand,honor:nextMana,maxHonor:Math.max(HALLVALLA_RT_CFG.initialMana,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana))};
+    publicPatch={...publicPatch,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:Math.max(HALLVALLA_RT_CFG.initialMana,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana)),deck:(privateState?.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${paidCostText}.`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
   }else{
-    const nextAi={...(aiState||{}),hand:nextHand,honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap};
-    publicPatch={...publicPatch,adventureAiState:nextAi,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:(nextAi.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${cost} ${getResourceLabel(ownerNum)} (TR).`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
+    const nextAi={...(aiState||{}),hand:nextHand,honor:nextMana,maxHonor:Math.max(HALLVALLA_RT_CFG.initialMana,Number(aiState?.maxHonor||HALLVALLA_RT_CFG.initialMana))};
+    publicPatch={...publicPatch,adventureAiState:nextAi,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:nextAi.maxHonor,deck:(nextAi.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${cost} ${getResourceLabel(ownerNum)} (TR).`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
   }
 
   if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"commit",cell,cost,manaBefore:mana,manaAfter:nextMana,handBefore:hand.length,handAfter:nextHand.length};
@@ -1038,7 +1144,7 @@ async function hallvallaRtAttackUnit(attacker,target){
 
 async function hallvallaRtInitializeResources(){
   if(hallvallaRtState.resourcesInitialized)return false;
-  const max=HALLVALLA_RT_CFG.resourceCap,startMana=0;
+  const max=HALLVALLA_RT_CFG.initialMana,startMana=HALLVALLA_RT_CFG.initialMana;
   const privatePatch={honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
   const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor:startMana,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
   if(publicState?.adventureAiState){
@@ -1053,29 +1159,39 @@ async function hallvallaRtInitializeResources(){
 async function hallvallaRtResourceAndDrawTick(now){
   const elapsed=Math.max(0,now-hallvallaRtState.lastResourceAt);
   if(elapsed<HALLVALLA_RT_CFG.resourceEveryMs)return false;
-  // v126: el MANÁ sube estrictamente de 1 en 1. Si el navegador se retrasa
-  // o la pestaña estuvo pausada, no se acumulan varios ticks para entregarlos
-  // de golpe al reanudarse. El siguiente punto necesita otros 4 s completos.
+  // La recarga NO aumenta capacidad: restaura un solo punto ya ganado cada 9 s.
+  // La única forma de subir el máximo es capturar el orbe de MANÁ.
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.cycle+=1;
-  const max=HALLVALLA_RT_CFG.resourceCap;
+  const max=Math.max(HALLVALLA_RT_CFG.initialMana,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana)));
   const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+1);
   const privatePatch={honor,maxHonor:max,lastTurnStarted:'RT'};
   const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
   if(publicState?.adventureAiState){
-    const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+1);ai.lastTurnStarted='RT';
+    const ai={...publicState.adventureAiState};
+    const aiMax=Math.max(HALLVALLA_RT_CFG.initialMana,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(ai.maxHonor||HALLVALLA_RT_CFG.initialMana)));
+    ai.maxHonor=aiMax;ai.honor=Math.min(aiMax,Math.max(0,Number(ai.honor||0))+1);ai.lastTurnStarted='RT';
     publicPatch.adventureAiState=ai;
-    publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
+    publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:aiMax,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
   }
   if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
     publicState=hallvallaApplyLocalPatch(publicState,publicPatch);
     privateState=hallvallaApplyLocalPatch(privateState,privatePatch);
-    if(publicState?.mode!=="online")networkPublicStateRaw=publicState?hallvallaRtClone(publicState):networkPublicStateRaw;
-    if(typeof requestBattleRender==="function")requestBattleRender("rt-mana");else render();
+    if(publicState?.mode!=='online')networkPublicStateRaw=publicState?hallvallaRtClone(publicState):networkPublicStateRaw;
+    if(typeof requestBattleRender==='function')requestBattleRender('rt-mana');else render();
     hallvallaRtScheduleLocalSnapshot(false);
     return true;
   }
   await commitGameplayAction({publicPatch,privatePatch});
+  return true;
+}
+async function hallvallaRtManaOrbTick(now){
+  hallvallaRtRenderManaOrbs();
+  // PvE/BOT: recoge su propio orbe con una pequeña demora para simular reacción.
+  if(publicState?.adventureAiState){
+    const info=hallvallaRtManaOrbInfo(2,now);
+    if(info.active&&now-info.startsAt>=5500)await hallvallaRtCollectManaOrb(2,'ai');
+  }
   return true;
 }
 async function hallvallaRtCombatRefreshTick(now){
@@ -1320,7 +1436,7 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
   if(cost>Math.max(0,Number(ai.honor||0)))return false;
   let nextUnits=[...(units||[])],patch={},log="",battleFxEvent=null,floatFxEvent=null,statusFxEvent=null;
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],beastTraps=[...(publicState?.beastTraps||[])];
-  const removeCard=()=>{ai.hand=(ai.hand||[]).filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=HALLVALLA_RT_CFG.resourceCap;};
+  const removeCard=()=>{ai.hand=(ai.hand||[]).filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=Math.max(HALLVALLA_RT_CFG.initialMana,Number(ai.maxHonor||HALLVALLA_RT_CFG.initialMana));};
   if(choice.kind==="summon"){
     const cast=hallvallaRtCastUnitCore({owner:2,card,aiState:ai,preferredCell:choice.cell||null,source:"ai",now});
     if(cast.ok)hallvallaRtState.lastAiDeployAt=now;
@@ -1446,13 +1562,13 @@ function hallvallaRtOwnerMana(owner){
   return Math.max(0,Number(publicState?.playerStats?.[owner]?.honor||0));
 }
 async function hallvallaRtSpendOwnerMana(owner,amount,extraPublicPatch={}){
-  const cost=Math.max(0,Number(amount||0)),max=HALLVALLA_RT_CFG.resourceCap;
+  const cost=Math.max(0,Number(amount||0));
   if(Number(owner)===Number(myPlayer)){
-    const next=Math.max(0,Number(privateState?.honor||0)-cost);
+    const max=hallvallaRtOwnerMaxMana(owner),next=Math.max(0,Number(privateState?.honor||0)-cost);
     return commitGameplayAction({privatePatch:{honor:next,maxHonor:max},publicPatch:{...extraPublicPatch,[`playerStats/${owner}`]:{...(publicState?.playerStats?.[owner]||{}),honor:next,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}}});
   }
   if(publicState?.mode==="adventure"&&Number(owner)===2){
-    const ai={...(publicState?.adventureAiState||{})};ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=max;
+    const ai={...(publicState?.adventureAiState||{})},max=hallvallaRtOwnerMaxMana(owner);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=max;
     return updatePublic({...extraPublicPatch,adventureAiState:ai,[`playerStats/2`]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length}});
   }
   return updatePublic(extraPublicPatch);
@@ -1661,6 +1777,7 @@ async function hallvallaRtLoop(){
     // estado o actualización auxiliar nunca congele el avance de las unidades.
     await hallvallaRtSafeStage("recursos iniciales",()=>hallvallaRtInitializeResources());
     await hallvallaRtSafeStage("recarga de maná",()=>hallvallaRtResourceAndDrawTick(now));
+    await hallvallaRtSafeStage("orbe de maná",()=>hallvallaRtManaOrbTick(now));
     await hallvallaRtSafeStage("IA",()=>hallvallaRtAiDeploy(now));
     // El ciclo táctico abre primero; después se aplican buffs/efectos para que duren el ciclo completo.
     await hallvallaRtSafeStage("ciclo táctico TR",()=>hallvallaRtCombatRefreshTick(now));
@@ -1676,6 +1793,7 @@ function hallvallaRtStop(){
   if(hallvallaRtState.motionTimer){battleClearInterval?.(hallvallaRtState.motionTimer);hallvallaRtState.motionTimer=null;}
   hallvallaRtScheduleLocalSnapshot(true);
   hallvallaRtState.enabled=false;hallvallaRtState.busy=false;hallvallaRtState.motionBusy=false;hallvallaRtState.playBusy=false;hallvallaRtState.handSuppressed=false;
+  hallvallaRtRemoveManaOrbNodes();
   hallvallaRtUpdateUi();
 }
 function hallvallaRtPrimePreparedState(){
@@ -1688,14 +1806,15 @@ function hallvallaRtPrimePreparedState(){
     const arsenal=[];
     for(const card of pool){const k=String(card?.id||card?.key||card?.name||"");if(!k||seen.has(k))continue;seen.add(k);arsenal.push(card);}
     arsenal.sort((a,b)=>(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a?.name||"").localeCompare(String(b?.name||"")));
-    privateState={...privateState,deck:[],hand:arsenal,honor:0,maxHonor:HALLVALLA_RT_CFG.resourceCap,lastTurnStarted:"RT",skipFirstTurnDraw:true};
+    privateState={...privateState,deck:[],hand:arsenal,honor:HALLVALLA_RT_CFG.initialMana,maxHonor:HALLVALLA_RT_CFG.initialMana,lastTurnStarted:"RT",skipFirstTurnDraw:true};
   }
   if(publicState){
-    publicState={...publicState,realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:String(publicState.turnKey||"RT-1").startsWith("RT")?publicState.turnKey:"RT-1"};
-    if(publicState.playerStats?.[myPlayer])publicState={...publicState,playerStats:{...publicState.playerStats,[myPlayer]:{...publicState.playerStats[myPlayer],honor:0,maxHonor:HALLVALLA_RT_CFG.resourceCap,deck:0,hand:(privateState?.hand||[]).length}}};
+    publicState={...publicState,realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:String(publicState.turnKey||"RT-1").startsWith("RT")?publicState.turnKey:"RT-1",rtManaOrbClaims:{1:0,2:0},rtLeaderShieldUntil:{1:0,2:0}};
+    if(publicState.playerStats?.[myPlayer])publicState={...publicState,playerStats:{...publicState.playerStats,[myPlayer]:{...publicState.playerStats[myPlayer],honor:HALLVALLA_RT_CFG.initialMana,maxHonor:HALLVALLA_RT_CFG.initialMana,deck:0,hand:(privateState?.hand||[]).length}}};
   }
   hallvallaRtState.cycle=Math.max(1,Number(publicState?.turn||1));
   hallvallaRtState.lastResourceAt=now;
+  hallvallaRtState.battleStartedAt=now;
   hallvallaRtState.lastAiThinkAt=now;
   hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
@@ -1743,7 +1862,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
     hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.motionLoopMs||HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
-    setHint("TR: sin turnos · +1 MANÁ cada 4 s · movimiento/ataque autónomos.");
+    setHint("TR: 2 MANÁ inicial · recarga 1 cada 9 s · orbe +1 capacidad cada 14 s · LB recoge · RB escudo 3 s.");
     void hallvallaRtLoop();
     void hallvallaRtMotionLoop();
   }else{
