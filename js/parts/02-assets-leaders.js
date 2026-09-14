@@ -311,8 +311,12 @@ if(!globalThis.__HALLVALLA_ASSET_ERROR_CAPTURE_BOUND__){
 function hallvallaAssetDebug(){
   const rows=[];
   document.querySelectorAll("img").forEach(img=>{
-    const src=String(img.currentSrc||img.src||"");
-    const failed=img.complete&&Number(img.naturalWidth||0)===0;
+    const declared=String(img.getAttribute("src")||"").trim();
+    const src=String(img.currentSrc||img.src||declared||"");
+    // Muchos paneles reutilizables contienen <img src=""> como placeholder intencional.
+    // No es un fallo de asset hasta que exista una URL real que haya intentado cargar.
+    if(!declared&&!src&&!img.classList.contains("hv-missing-asset"))return;
+    const failed=!!src&&img.complete&&Number(img.naturalWidth||0)===0;
     if(failed||img.classList.contains("hv-missing-asset"))rows.push({tag:"img",failed,src,label:img.dataset?.hvMissingLabel||img.alt||img.title||"",fallbackIndex:img.dataset?.hvFallbackIndex||""});
   });
   document.querySelectorAll("svg image").forEach(img=>{

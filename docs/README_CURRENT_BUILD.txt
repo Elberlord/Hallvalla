@@ -1,1 +1,3 @@
-BUILD ACTUAL: 20260914.110 · TR ruta de invocación J1 reparada
+HallValla v111 · TR PLAYER SUMMON ATOMIC + RICHARD ASSET FIX
+
+BUILD ACTUAL: 20260914.111 · TR ruta de invocación J1 reparada

@@ -1,0 +1,11 @@
+HallValla v111
+
+Cambios exclusivos:
+- Invocación J1 TR local ahora se confirma de forma atómica e inmediata: unidades + mana + arsenal cambian en un solo paso local.
+- Se elimina la ventana que podía dejar la carta visible y producir una segunda invocación tardía.
+- Guardia anti-evento duplicado de 140 ms: no es cooldown de gameplay.
+- lastPlayerSummonAttempt queda expuesto en consola y __HALLVALLA_RT_SUMMON_DEBUG__() lo incluye.
+- Richard Corazón de León declara explícitamente su fieldFigure special.
+- Se incluye alias basic/richard_lionheart.webp para compatibilidad con rutas heredadas y eliminar el 404.
+- El debug de assets ya no cuenta IMG con src vacío como asset roto.
+- Sin cambios de velocidad, IA, mazos, Forja, layout, costes ni gamepad.

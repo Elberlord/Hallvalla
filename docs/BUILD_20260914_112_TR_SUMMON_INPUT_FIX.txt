@@ -1,0 +1,7 @@
+HallValla build 20260914.112
+Corrección enfocada en la entrada del arsenal TR del jugador.
+- El clic sobre una carta usa directamente el ID vivo de esa carta, sin recalcular índice/página.
+- Los botones no usan disabled nativo; siempre aceptan el clic y validan contra el estado actual.
+- Listener en captura para evitar que otra capa intercepte el clic antes del arsenal.
+- Debug añade lastPlayerCardInput, desglose de coste y unidades enemigas.
+- Conserva la invocación local atómica de v111 y protección contra doble evento físico.
