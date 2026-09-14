@@ -953,7 +953,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }
   let out=[...(units||[])],log="",battleFxEvent=null,stealthAreaDamageEvent=null;
   if(liveCaster.leader&&((liveCaster.leaderType==="cavalry"&&getLeaderAbilityForOwner(owner,units)==="cavalry_call")||(liveCaster.leaderType==="archer"&&getLeaderAbilityForOwner(owner,units)==="arrow_rain")||(liveCaster.leaderType==="mage"&&getLeaderAbilityForOwner(owner,units)==="arcane_bolt"))){
-    return{success:false,reason:"Esta habilidad de líder se activa automáticamente al final del turno rival."};
+    return{success:false,reason:"Esta habilidad de líder se activa automáticamente al cerrar cada ciclo táctico de 10 s."};
   }
   if(liveCaster.leader&&liveCaster.leaderType==="beastmaster"&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt"){
     return{success:false,reason:"Veneno de la Manada es una habilidad pasiva."};
@@ -962,7 +962,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else if(liveCaster.key==="black_raven"){
     const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);const detection=typeof makeStage8StealthDetectionEvent==="function"?makeStage8StealthDetectionEvent(owner,liveCaster,2,"Ojo del Cazador"):null;log=detection?`${liveCaster.name} usa Ojo del Cazador y inspecciona el área en busca de Sigilo.`:`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;return{success:true,units:out,log,battleFxEvent,stealthDetectionEvent:detection};
   }else if(liveCaster.key==="ericto"){
-    if(liveCaster.erictoUsedTurnKey===publicState?.turnKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia este turno."};
+    if(liveCaster.erictoUsedTurnKey===publicState?.turnKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia durante este ciclo táctico."};
     const current=getErictoLinkedReanimated(liveCaster,out).length;
     const maximum=getErictoMaxReanimated(liveCaster);
     if(current>=maximum)return{success:false,reason:`Ericto ya controla el máximo de ${maximum} reanimado${maximum===1?"":"s"} para su rango.`};
@@ -994,21 +994,21 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     log=`${liveCaster.name} activa Media Luna del Desierto e invoca una Caballería Arquera en ${target.x+1},${target.y+1}.`;
   }else if(liveCaster.key==="sun_tzu"){
     out=out.map(it=>it.id===target.id?{...it,tempDexBuff:(it.tempDexBuff||0)+4,tempGuardBuff:(it.tempGuardBuff||0)+4}:it.id===liveCaster.id?{...it,acted:true,sunTzuUsedTurn:true}:it);
-    log=`${liveCaster.name} activa Arte de la Guerra: ${target.name} gana +4 Destreza y +4 Guardia temporal hasta su próximo turno.`;
+    log=`${liveCaster.name} activa Arte de la Guerra: ${target.name} gana +4 Destreza y +4 Guardia durante este ciclo táctico.`;
   }else if(liveCaster.key==="subotai"){
     out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedTurn:true}:it);
-    log=`${liveCaster.name} activa Marcha de Mil Horizontes: ${target.name} gana +2 Movimiento este turno.`;
+    log=`${liveCaster.name} activa Marcha de Mil Horizontes: ${target.name} gana +2 Movimiento durante este ciclo táctico.`;
   }else{
-    return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante combate/turno."};
+    return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante el combate TR."};
   }
   return{success:true,units:out,log,battleFxEvent,stealthAreaDamageEvent};
 }
 async function activateUnitEffect(u,choice=null){
   if(isPvpStep6fLimitedMode())return setHint("Paso 6H: EFFECT activo de unidades todavía está bloqueado. Esta prueba añade Fireball + Quemadura persistente sobre MOV/DEF/ATTK ya validados.");
   if(!u||u.owner!==myPlayer||!isUnitActionWindow(u))return setHint(unitActionPhaseHint("EFFECT"));
-  if(u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
+  if(u.acted)return setHint(`${u.name} ya usó su acción durante este ciclo táctico.`);
   const mode=getUnitEffectMode(u);
-  if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante combate/turno.");
+  if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante el combate TR.");
   invalidateImmediateMoveUndo("effect");
   let units=[...(publicState.units||[])];
   if(u.key==="acolyte_healer"){
@@ -1141,7 +1141,7 @@ function handleUnitContextAction(action){
   unitContextSelection=null;
   hideUnitContextMenu();
   if(action==="mov"){
-    if(u.acted)return setHint(`${u.name} ya usó su acción este turno. Puede moverse antes de DEF/ATTK/EFFECT, pero no después.`);
+    if(u.acted)return setHint(`${u.name} ya usó su acción durante este ciclo táctico. Puede moverse antes de DEF/ATTK/EFFECT, pero no después.`);
     if(u.moved)return setHint(`${u.name} ya se movió este turno.`);
     highlights=moveZones(u);
     highlightType="move";

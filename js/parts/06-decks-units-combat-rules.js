@@ -45,25 +45,25 @@ function hydrateCardVisualData(card){
 
 const LEGENDARY_TRAP_CARDS=[
   {key:"false_alliance_legendary",name:"Falsa Alianza",type:"trap",icon:"🤝",portrait:"assets/cards/basic/spells/inspiration.webp",cost:5,trap:"legendary_mark",legendaryTrap:"false_alliance",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Al jugarla, elige una unidad enemiga que no sea líder. Cuando la unidad marcada declare movimiento hacia una de tus unidades, cancela el movimiento y cambia de bando de forma permanente. Afecta unidades básicas, especiales y legendarias."},
-  {key:"primordial_serpent_poison",name:"Veneno de la Serpiente Primordial",type:"trap",icon:"🐍",portrait:"assets/cards/basic/spells/veneno.webp",cost:6,trap:"legendary_mark",legendaryTrap:"primordial_poison",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder. Al inicio del próximo turno de esa unidad aplica Veneno de la Serpiente Primordial: empieza en 2 y se multiplica por 3 turnos: 2, 4, 8. Si la unidad ya tenía Veneno, muere por regla general."},
-  {key:"traitors_bed",name:"La Cama del Traidor",type:"trap",icon:"🕯️",portrait:"assets/cards/basic/spells/paralisis.webp",cost:7,trap:"legendary_mark",legendaryTrap:"traitors_bed",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder y no haya atacado este turno. Al inicio del próximo turno enemigo: Básica: queda Dormida; no puede moverse, atacar ni contraatacar. Especial: Dormida y Vulnerable; el próximo daño ignora Guardia. Legendaria: Dormida y Expuesta; el próximo daño se duplica e ignora Guardia."},
-  {key:"broken_blood_oath",name:"Juramento de Sangre Roto",type:"trap",icon:"🩸",portrait:"assets/cards/basic/equipment/guardabrazos_de_ruptura.webp",cost:6,trap:"legendary_mark",legendaryTrap:"broken_oath",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada active un efecto o reciba un buff: Básica: cancela el efecto/buff y recibe -1 Ataque/-1 Guardia este turno. Especial: cancela, pierde buffs activos y recibe -2 Ataque/-2 Guardia hasta el próximo turno. Legendaria: cancela, pierde buffs, queda Silenciada hasta su próximo turno y recibe -3 Guardia."},
-  {key:"true_name_exile",name:"Exilio del Nombre Verdadero",type:"trap",icon:"🕳️",portrait:"assets/cards/basic/equipment/manto_del_ejecutor.webp",cost:7,trap:"legendary_mark",legendaryTrap:"true_name_exile",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada derrote una de tus unidades: Básica: sale del campo hasta el final de su próximo turno y vuelve con 1 Vida menos. Especial: Exilio 1 turno; vuelve junto a su líder con la mitad de su Vida máxima. Legendaria: Exilio 2 turnos; no puede atacar, bloquear, activar efectos ni recibir buffs; vuelve con mitad de Vida y sin buffs."},
-  {key:"ash_banquet",name:"Banquete de Ceniza",type:"trap",icon:"🍷",portrait:"assets/cards/basic/spells/fireball.webp",cost:6,trap:"legendary_mark",legendaryTrap:"ash_banquet",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga con Vida completa. Al inicio del próximo turno enemigo: Básica: pierde 3 Vida directa. Especial: pierde 40% de su Vida actual, ignora Guardia y no puede curarse este turno. Legendaria: pierde 50% de su Vida actual, ignora Guardia, no puede curarse ni recibir reducción de daño este turno."},
-  {key:"thousand_banners_ambush",name:"Emboscada de los Mil Estandartes",type:"trap",icon:"🏴",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:5,trap:"legendary_mark",legendaryTrap:"thousand_banners",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando termine su movimiento a 2 casillas o menos de tu líder: Básica: recibe 3 daño directo y es empujada 1 casilla si hay espacio. Especial: recibe 5 daño directo, es empujada 2 casillas y no puede atacar este turno. Legendaria: recibe 5 daño directo, es empujada 2 casillas y queda Aturdida; no puede atacar ni contraatacar."},
+  {key:"primordial_serpent_poison",name:"Veneno de la Serpiente Primordial",type:"trap",icon:"🐍",portrait:"assets/cards/basic/spells/veneno.webp",cost:6,trap:"legendary_mark",legendaryTrap:"primordial_poison",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder. Al abrir el siguiente ciclo táctico aplica Veneno de la Serpiente Primordial: causa 3 pulsos separados por 10 s, de 2, 4 y 8 de daño. Si la unidad ya tenía Veneno, muere por regla general."},
+  {key:"traitors_bed",name:"La Cama del Traidor",type:"trap",icon:"🕯️",portrait:"assets/cards/basic/spells/paralisis.webp",cost:7,trap:"legendary_mark",legendaryTrap:"traitors_bed",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder y no haya atacado durante el ciclo táctico actual. Al abrir el siguiente ciclo táctico: Básica: queda Dormida; no puede moverse, atacar ni contraatacar. Especial: Dormida y Vulnerable; el próximo daño ignora Guardia. Legendaria: Dormida y Expuesta; el próximo daño se duplica e ignora Guardia."},
+  {key:"broken_blood_oath",name:"Juramento de Sangre Roto",type:"trap",icon:"🩸",portrait:"assets/cards/basic/equipment/guardabrazos_de_ruptura.webp",cost:6,trap:"legendary_mark",legendaryTrap:"broken_oath",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada active un efecto o reciba un buff: Básica: cancela el efecto/buff y recibe -1 Ataque/-1 Guardia durante el ciclo táctico actual. Especial: cancela, pierde buffs activos y recibe -2 Ataque/-2 Guardia hasta el final del siguiente ciclo táctico. Legendaria: cancela, pierde buffs, queda Silenciada hasta el siguiente ciclo táctico y recibe -3 Guardia."},
+  {key:"true_name_exile",name:"Exilio del Nombre Verdadero",type:"trap",icon:"🕳️",portrait:"assets/cards/basic/equipment/manto_del_ejecutor.webp",cost:7,trap:"legendary_mark",legendaryTrap:"true_name_exile",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada derrote una de tus unidades: Básica: sale del campo hasta el final del siguiente ciclo táctico y vuelve con 1 Vida menos. Especial: Exilio 10 s; vuelve junto a su líder con la mitad de su Vida máxima. Legendaria: Exilio 20 s; no puede atacar, bloquear, activar efectos ni recibir buffs; vuelve con mitad de Vida y sin buffs."},
+  {key:"ash_banquet",name:"Banquete de Ceniza",type:"trap",icon:"🍷",portrait:"assets/cards/basic/spells/fireball.webp",cost:6,trap:"legendary_mark",legendaryTrap:"ash_banquet",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga con Vida completa. Al abrir el siguiente ciclo táctico: Básica: pierde 3 Vida directa. Especial: pierde 40% de su Vida actual, ignora Guardia y no puede curarse durante el ciclo táctico actual. Legendaria: pierde 50% de su Vida actual, ignora Guardia, no puede curarse ni recibir reducción de daño durante el ciclo táctico actual."},
+  {key:"thousand_banners_ambush",name:"Emboscada de los Mil Estandartes",type:"trap",icon:"🏴",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:5,trap:"legendary_mark",legendaryTrap:"thousand_banners",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando termine su movimiento a 2 casillas o menos de tu líder: Básica: recibe 3 daño directo y es empujada 1 casilla si hay espacio. Especial: recibe 5 daño directo, es empujada 2 casillas y no puede atacar durante el ciclo táctico actual. Legendaria: recibe 5 daño directo, es empujada 2 casillas y queda Aturdida; no puede atacar ni contraatacar."},
   {key:"shadow_cut",name:"Corte de Sombras",type:"trap",icon:"🌑",portrait:"assets/cards/basic/equipment/capa_de_escaramuza.webp",cost:6,trap:"legendary_mark",legendaryTrap:"shadow_cut",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga herida. Cuando la unidad marcada reciba daño, si después de ese daño queda con menos de la mitad de su Vida máxima, muere. Si queda exactamente en la mitad, no muere."},
-  {key:"false_crown",name:"La Corona Falsa",type:"trap",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:5,trap:"legendary_mark",legendaryTrap:"false_crown",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a atacar: Básica: cancela el ataque y recibe -2 Destreza este turno. Especial: cancela el ataque y, si tiene una unidad de su propio bando en rango, debe atacarla. Legendaria: cancela el ataque y, si tiene aliado propio en rango, debe atacarlo con +2 Ataque; si no, queda Aturdida y pierde -3 Destreza hasta el próximo turno."},
+  {key:"false_crown",name:"La Corona Falsa",type:"trap",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:5,trap:"legendary_mark",legendaryTrap:"false_crown",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a atacar: Básica: cancela el ataque y recibe -2 Destreza durante el ciclo táctico actual. Especial: cancela el ataque y, si tiene una unidad de su propio bando en rango, debe atacarla. Legendaria: cancela el ataque y, si tiene aliado propio en rango, debe atacarlo con +2 Ataque; si no, queda Aturdida y pierde -3 Destreza hasta el final del siguiente ciclo táctico."},
   {key:"fallen_kings_seal",name:"Sello de los Reyes Caídos",type:"trap",icon:"🜏",portrait:"assets/cards/basic/equipment/amuleto_de_canalizacion.webp",cost:7,trap:"legendary_mark",legendaryTrap:"fallen_kings_seal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a recibir curación, buff o reducción de daño, cancela esa ayuda y la unidad recibe -5 Guardia, -5 Destreza, -5 Agilidad, -5 Movimiento, -5 HP, -5 Rango y -5 en todos sus valores aplicables."},
-  {key:"camp_betrayal",name:"Traición del Campamento",type:"trap",icon:"⛺",portrait:"assets/cards/basic/equipment/visera_de_guerra.webp",cost:6,trap:"legendary_mark",legendaryTrap:"camp_betrayal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Al inicio de la Battle Phase enemiga, si tiene unidades aliadas adyacentes, esas unidades la traicionan y atacan a la unidad marcada."},
-  {key:"night_without_guard",name:"La Noche Sin Guardia",type:"trap",icon:"🌘",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:7,trap:"legendary_mark",legendaryTrap:"night_without_guard",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando se abre, aturde a todas las unidades enemigas por 1 turno."}
+  {key:"camp_betrayal",name:"Traición del Campamento",type:"trap",icon:"⛺",portrait:"assets/cards/basic/equipment/visera_de_guerra.webp",cost:6,trap:"legendary_mark",legendaryTrap:"camp_betrayal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Al inicio de la siguiente ciclo táctico enemigo, si tiene unidades aliadas adyacentes, esas unidades la traicionan y atacan a la unidad marcada."},
+  {key:"night_without_guard",name:"La Noche Sin Guardia",type:"trap",icon:"🌘",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:7,trap:"legendary_mark",legendaryTrap:"night_without_guard",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando se abre, aturde a todas las unidades enemigas por 10 s."}
 ];
 
 const IMPROVED_MAGIC_TRAP_PACK=[
   MORGANA_CARD,
   {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:2,spell:"damage",damageType:"sand",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
-  {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada este turno. Ideal para remates y presión."},
-  {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del turno."},
-  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",portrait:"assets/cards/beasts/iron_jaw_trap.webp",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante este turno."},
+  {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada durante el ciclo táctico actual. Ideal para remates y presión."},
+  {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del ciclo táctico actual."},
+  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",portrait:"assets/cards/beasts/iron_jaw_trap.webp",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante durante el ciclo táctico actual."},
   {key:"warning_rune_plus",name:"Runa de contraataque",type:"trap",icon:"◇",portrait:"assets/cards/basic/traps/warning_rune.webp",cost:2,trap:"guard",guard:3,rarity:"Épica",text:"Colócala sobre una unidad aliada. La primera vez que esa unidad sea atacada, obtiene +3 GUARDIA durante ese combate y la runa se consume."},
   ...LEGENDARY_TRAP_CARDS
 ];
@@ -691,13 +691,25 @@ function resolveCardCostOwner(card,player){
   const explicit=Number(player||card?.owner||myPlayer||0);
   return explicit===2?2:1;
 }
+function getHallvallaCanonicalRtBaseCost(rawCost){
+  const raw=Math.max(0,Math.ceil(Number(rawCost||0)));
+  if(raw<=0)return 0;
+  // Curva C canónica TR: 1-2 => 1, 3-5 => 2, 6+ => 3.
+  if(raw<=2)return 1;
+  if(raw<=5)return 2;
+  return 3;
+}
 function getCardCostBreakdown(card,player=card?.owner,units=publicState?.units||[]){
   const owner=resolveCardCostOwner(card,player);
-  const base=Math.max(0,Number(card?.cost||0));
+  const rawBase=Math.max(0,Number(card?.cost||0));
+  const base=getHallvallaCanonicalRtBaseCost(rawBase);
   const sabotageStacks=card?.type==="unit"?countEnemySaboteadoresIga(owner,units):0;
-  const sabotagePenalty=sabotageStacks*3;
-  const effective=Math.max(0,base+sabotagePenalty);
-  return{owner,base,sabotageStacks,sabotagePenalty,effective};
+  // Con la economía 1/2/3, Sabotaje pasa de +3 a +1 por Saboteador para no bloquear una carta completa durante demasiados segundos.
+  const sabotagePenalty=sabotageStacks;
+  // Merlín ya no roba en Draw Phase: en TR reduce en 1 el coste de Magias/Trampas (mínimo 1).
+  const merlinDiscount=(base>0&&(card?.type==="spell"||card?.type==="trap")&&ownerHasUnit(owner,"merlin",units))?1:0;
+  const effective=base<=0?0:Math.max(1,base-merlinDiscount+sabotagePenalty);
+  return{owner,rawBase,base,sabotageStacks,sabotagePenalty,merlinDiscount,effective};
 }
 function effectiveCardCost(card,player=card?.owner){return getCardCostBreakdown(card,player,publicState?.units||[]).effective}
 function getCardCostDisplayValue(card,player=card?.owner){
@@ -708,22 +720,22 @@ function getCardCostDisplayValue(card,player=card?.owner){
 function getCardCostExplanation(card,player=card?.owner,units=publicState?.units||[]){
   const info=getCardCostBreakdown(card,player,units);
   const resource=getResourceLabel(info.owner);
-  if(info.sabotageStacks>0){
-    const plural=info.sabotageStacks===1?"Saboteador enemigo":"Saboteadores enemigos";
-    return `Costo real: ${info.effective} ${resource} = base ${info.base} +${info.sabotagePenalty} por Sabotaje (${info.sabotageStacks} ${plural}, +3 cada uno).`;
-  }
-  return `Costo real: ${info.effective} ${resource}.`;
+  const details=[];
+  if(info.rawBase!==info.base)details.push(`curva TR ${info.rawBase}→${info.base}`);
+  if(info.merlinDiscount>0)details.push(`-1 por Merlín`);
+  if(info.sabotageStacks>0)details.push(`+${info.sabotagePenalty} por Sabotaje (${info.sabotageStacks} × +1)`);
+  return `Costo real: ${info.effective} ${resource}${details.length?` (${details.join(", ")})`:""}.`;
 }
 function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units||[]){
   const info=getCardCostBreakdown(card,player,units);
   const resource=getResourceLabel(info.owner);
-  if(info.sabotageStacks>0)return `paga ${info.effective} ${resource} (base ${info.base} +${info.sabotagePenalty} por Sabotaje de ${info.sabotageStacks} Saboteador${info.sabotageStacks===1?"":"es"}, +3 cada uno)`;
+  if(info.sabotageStacks>0)return `paga ${info.effective} ${resource} (base ${info.base} +${info.sabotagePenalty} por Sabotaje de ${info.sabotageStacks} Saboteador${info.sabotageStacks===1?"":"es"}, +1 cada uno)`;
   return `paga ${info.effective} ${resource}`;
 }
 function effectiveCardValue(card,field){const mageBuff=getMageLeaderBuff(card?.owner);const abilityBonus=0;const mageDamageBonus=getMageLeaderTypeForPlayer(card?.owner)==="mage"&&card?.type==="spell"&&field==="damage"&&typeof card?.damage==="number"?Math.max(0,Number(mageBuff.damageBonus||0)):0;return (card?.[field]||0)+mageDamageBonus+abilityBonus}
 function unitsInPlay(units=publicState?.units||[]){return units||[]}
 function ownerHasUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).some(u=>u.owner===owner&&u.key===key&&u.hp>0)}
-function getMerlinDrawBonus(owner,units=publicState?.units||[]){return ownerHasUnit(owner,"merlin",units)?1:0}
+function getMerlinDrawBonus(owner,units=publicState?.units||[]){return 0 /* TR canónico: Merlín ya no modifica robos; su efecto es descuento de Magias/Trampas. */}
 function firstOwnerUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).find(u=>u.owner===owner&&u.key===key&&u.hp>0)||null}
 function adjacentUnits(u,units=publicState?.units||[]){return unitsInPlay(units).filter(t=>t.id!==u?.id&&dist(u,t)<=1)}
 function adjacentAllies(u,units=publicState?.units||[]){return adjacentUnits(u,units).filter(t=>t.owner===u.owner)}
@@ -963,10 +975,10 @@ function spendActionStatsByAttack(attacker,defender,units,mods={},hitResult=null
   return {units:out,spent,remaining,available:attackAvailable,needed:defenseNeeded};
 }
 function evasionPressureText(unitName,spent,remaining){
-  return spent>0?` Presión: ${unitName} pierde ${spent} Evasión disponible ${typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()?"temporalmente":"hasta su próximo turno"}${typeof remaining==="number"?` (resta ${remaining})`:""}.`:"";
+  return spent>0?` Presión: ${unitName} pierde ${spent} Evasión disponible ${typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()?"durante el ciclo táctico actual":"hasta el final del siguiente ciclo táctico"}${typeof remaining==="number"?` (resta ${remaining})`:""}.`:"";
 }
 function actionStatSpendText(unitName,spent,remaining){
-  return spent>0?` Esfuerzo: ${unitName} gasta ${spent} PREC/EVA necesaria hasta su próximo turno${typeof remaining==="number"?` (reserva restante ${remaining})`:""}.`:"";
+  return spent>0?` Esfuerzo: ${unitName} gasta ${spent} PREC/EVA necesaria hasta el final del ciclo táctico actual${typeof remaining==="number"?` (reserva restante ${remaining})`:""}.`:"";
 }
 function isMulanBackstabAttack(attacker,defender,units=publicState?.units||[]){
   if(!attacker||!defender||attacker.key!=="mulan"||defender.leader)return false;
@@ -1250,8 +1262,8 @@ function countEnemySaboteadoresIga(owner,units=publicState?.units||[]){
 function normalizeSaboteadorRuleText(entity,value){
   let text=String(value||"");
   if(String(entity?.key||"")!=="saboteador_iga")return text;
-  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas\.\s*No se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +3 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
-  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas por cada Saboteador de Iga aliado vivo\.\s*El aumento se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +3 para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
+  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas\.\s*No se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 MANÁ para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
+  text=text.replace(/Sabotaje:\s*mientras permanezca en el campo, las unidades enemigas cuestan \+1 para ser invocadas por cada Saboteador de Iga aliado vivo\.\s*El aumento se acumula\.?/i,"Sabotaje: mientras permanezca en el campo, las unidades enemigas cuestan +1 MANÁ para ser invocadas por cada Saboteador de Iga aliado vivo. El aumento se acumula.");
   return text;
 }
 function applySaboteadorEscapeForzado(units,defenderId){
@@ -1268,7 +1280,7 @@ function applySaboteadorEscapeForzado(units,defenderId){
     if(Number(n.tempDexDebuff||0)>=90)n.tempDexDebuff=0;
     return n;
   });
-  return{units:next,triggered:true,text:` Escape Forzado: ${defender.name} sobrevive y fuerza la DX a 0 de ${affected.length} unidad${affected.length===1?" enemiga":"es enemigas"} en rango 1 hasta el final del turno actual.`};
+  return{units:next,triggered:true,text:` Escape Forzado: ${defender.name} sobrevive y fuerza la DX a 0 de ${affected.length} unidad${affected.length===1?" enemiga":"es enemigas"} en rango 1 hasta el final del ciclo táctico actual.`};
 }
 
 function consumeDefensiveStanceForAttack(defender,units,mods={}){
@@ -1681,7 +1693,7 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
     }
   }
 
-  logs.push(`${attacker.name} pierde 2 GD hasta el inicio de su próximo turno.`);
+  logs.push(`${attacker.name} pierde 2 GD hasta el inicio del siguiente ciclo táctico.`);
   const sideVectorsForStealth=[{x:-dy,y:dx},{x:dy,y:-dx}];
   const hiddenCells=hit?.hit?sideVectorsForStealth.map(vec=>({x:origin.x+vec.x,y:origin.y+vec.y,damage:10,pushDx:dx,pushDy:dy,pushSteps:1})).filter(cell=>cell.x>=0&&cell.x<COLS&&cell.y>=0&&cell.y<ROWS):[];
   const stealthAreaDamageEvent=hiddenCells.length&&typeof makeStage8StealthAreaDamageEvent==="function"
@@ -1958,9 +1970,11 @@ function resolveAfterKillLegendaryTraps(attacker,defender,units,trapList=null){
     const tier=getUnitTrapTier(liveAttacker);
     const ownerLeader=out.find(u=>u.owner===liveAttacker.owner&&u.leader);
     let n={...liveAttacker};
-    if(tier==="basic"){n.exiledUntilTurn=(publicState.turn||1)+1;n.hp=Math.max(1,(n.hp||1)-1);}
-    else{n.exiledUntilTurn=(publicState.turn||1)+(tier==="legendary"?2:1);n.hp=Math.max(1,Math.ceil(effectiveMaxHp(n)/2));n.buffAtk=0;n.tempAtkBuff=0;n.tempGuardBuff=0;}
-    n.x=ownerLeader?ownerLeader.x:n.x;n.y=ownerLeader?Math.min(ROWS-1,ownerLeader.y+1):n.y;n.noAttackTurnKey=publicState.turnKey;
+    const exileMs=(tier==="legendary"?20000:10000);
+    n.rtExiledUntil=Date.now()+exileMs;
+    if(tier==="basic"){n.hp=Math.max(1,(n.hp||1)-1);}
+    else{n.hp=Math.max(1,Math.ceil(effectiveMaxHp(n)/2));n.buffAtk=0;n.tempAtkBuff=0;n.tempGuardBuff=0;}
+    n.x=ownerLeader?ownerLeader.x:n.x;n.y=ownerLeader?Math.min(ROWS-1,ownerLeader.y+1):n.y;n.noAttackTurnKey=publicState.turnKey;n.noMoveTurnKey=publicState.turnKey;
     out=out.map(u=>u.id===liveAttacker.id?n:u);
     logs.push(`${trap.cardName} se revela: ${liveAttacker.name} es retirado al Exilio y volverá debilitado.`);
     traps=removeTrapById(traps,trap.id);

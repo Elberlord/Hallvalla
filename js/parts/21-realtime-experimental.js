@@ -12,13 +12,13 @@ const HALLVALLA_RT_CFG=Object.freeze({
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
-  attackCooldownMs:4800,
-  baseMoveCooldownMs:3600,
+  attackCooldownMs:9600,
+  baseMoveCooldownMs:7200,
   loopMs:100,
-  leaderEffectEveryMs:6000,
-  combatRefreshEveryMs:4000,
-  supportEffectEveryMs:6000,
-  statusTickEveryMs:3000,
+  leaderEffectEveryMs:10000,
+  combatRefreshEveryMs:10000,
+  supportEffectEveryMs:10000,
+  statusTickEveryMs:10000,
   localSnapshotEveryMs:2000,
   maxAttacksPerTick:12,
   maxMovesPerTick:32
@@ -518,6 +518,7 @@ function hallvallaRtMoveCooldown(unit){
 }
 function hallvallaRtVisibleEnemy(attacker,target){
   if(!attacker||!target||Number(target.hp||0)<=0||Number(target.owner)===Number(attacker.owner))return false;
+  if(Number(target.rtExiledUntil||0)>hallvallaRtNow())return false;
   if(typeof isStealthedUnit==="function"&&isStealthedUnit(target)&&!target.revealed)return false;
   return true;
 }
@@ -542,6 +543,7 @@ function hallvallaRtTargetCandidates(unit,units=publicState?.units||[]){
 }
 function hallvallaRtChooseTarget(unit,units=publicState?.units||[]){return hallvallaRtTargetCandidates(unit,units)[0]||null;}
 function hallvallaRtCanAttackNow(unit,target){
+  if(Number(unit?.rtExiledUntil||0)>hallvallaRtNow())return false;
   if(!hallvallaRtValidEnemy(unit,target))return false;
   try{
     const rg=Math.max(1,Number(getUnitAttackRange(unit)||1));
@@ -763,8 +765,46 @@ async function hallvallaRtResourceAndDrawTick(now){
 async function hallvallaRtCombatRefreshTick(now){
   if(now-hallvallaRtState.lastCombatRefreshAt<HALLVALLA_RT_CFG.combatRefreshEveryMs)return false;
   hallvallaRtState.lastCombatRefreshAt=now;hallvallaRtState.combatWindow+=1;
-  const units=(publicState?.units||[]).map(u=>u&&Number(u.hp||0)>0&&!u.leader?{...u,evasionSpent:0}:u);
-  await updatePublic({units,turnKey:`RTW-${hallvallaRtState.combatWindow}`,turnPhase:'realtime',currentPlayer:0});
+  const turnKey=`RTC-${hallvallaRtState.combatWindow}`;
+  let units=[...(publicState?.units||[])].map(u=>u&&Number(u.hp||0)>0&&typeof clearTurnTempStatsForOwnerUnit==="function"?clearTurnTempStatsForOwnerUnit(u,turnKey):u);
+  let legendaryTraps=[...(publicState?.legendaryTraps||[])],undeadRemains=[...(publicState?.undeadRemains||[])],logs=[];
+
+  // Sangre del Pélida: la antigua curación de inicio de turno pasa a cada ciclo TR de 10 s.
+  units=units.map(u=>u&&u.key==="achilles"&&Number(u.hp||0)>0?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+1)}:u);
+
+  // Restos Persistentes: cada ciclo equivale a una cuenta de reanimación. 3 ciclos ≈ 30 s; congelado 5 ≈ 50 s.
+  if(typeof advanceUndeadRemainsForOwner==="function"){
+    for(const owner of [1,2]){
+      const rr=advanceUndeadRemainsForOwner(undeadRemains,units,owner);units=rr.units;undeadRemains=rr.remains;logs.push(...(rr.logs||[]));
+    }
+  }
+
+  // Ericto paga su mantenimiento cada 10 s en lugar de End Phase.
+  if(typeof applyErictoUpkeepAtTurnEnd==="function"){
+    for(const owner of [1,2]){const er=applyErictoUpkeepAtTurnEnd(units,owner);units=er.units;logs.push(...(er.logs||[]));}
+    if(typeof resolveErictoLifecycle==="function"){const life=resolveErictoLifecycle(units);units=life.units;logs.push(...(life.logs||[]));}
+  }
+
+  // Trampas que antes esperaban Start/Battle Phase ahora abren en el siguiente ciclo táctico.
+  const previousState=publicState;
+  try{
+    publicState={...(publicState||{}),units,turnKey,legendaryTraps,undeadRemains};
+    if(typeof resolveStartTurnLegendaryTraps==="function"){
+      for(const owner of [1,2]){
+        publicState={...(publicState||{}),units,turnKey,legendaryTraps,undeadRemains};
+        const tr=resolveStartTurnLegendaryTraps(units,owner,turnKey);units=tr.units;legendaryTraps=tr.traps;logs.push(...(tr.logs||[]));
+      }
+    }
+    if(typeof resolveBattlePhaseLegendaryTraps==="function"){
+      for(const owner of [1,2]){
+        publicState={...(publicState||{}),units,turnKey,legendaryTraps,undeadRemains};
+        const br=resolveBattlePhaseLegendaryTraps(units,owner);units=br.units;legendaryTraps=br.traps;logs.push(...(br.logs||[]));
+      }
+    }
+  }finally{publicState=previousState;}
+
+  if(await finalizeBattle(units,logs.join(" ")))return true;
+  await updatePublic({units,legendaryTraps,undeadRemains,turnKey,turnPhase:'realtime',currentPlayer:0,log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
   return true;
 }
 
@@ -1145,7 +1185,7 @@ async function hallvallaRtAutoGenericEffect(caster,now){
   if(!caster||caster.leader||Number(caster.hp||0)<=0)return false;
   const mode=typeof getUnitEffectMode==="function"?getUnitEffectMode(caster):"passive";if(mode==="passive"||mode==="choice"||caster.key==="ericto")return false;
   const last=Number(hallvallaRtState.supportAt.get(`fx:${caster.id}`)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
-  let units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false,sunTzuUsedTurn:false,subotaiUsedTurn:false}:u);
+  let units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false}:u);
   const live=units.find(u=>u.id===caster.id)||caster;
   const choice=mode==="self"?live:(typeof chooseSmartEffectTarget==="function"?chooseSmartEffectTarget(live,units):null);if(!choice)return false;
   const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
@@ -1168,15 +1208,9 @@ async function hallvallaRtStatusTick(now){
   hallvallaRtState.lastStatusAt=now;
   let units=[...(publicState?.units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
   const before=[...units];
-  // Sangrado: un tick cada 3 s, conservando permanente cuando la regla original no tiene duración.
+  // Sangrado: un tick por ciclo táctico de 10 s; si no tiene duración explícita, permanece hasta curación/destrucción.
   for(const owner of [1,2]){try{const r=applyBleedingToOwnerAtTurnStart(units,owner);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){}}
-  // Veneno: un tick cada 3 s y conserva la progresión de daño de la regla original.
-  units=units.map(u=>{
-    if(!u||Number(u.hp||0)<=0||Number(u.poisonTurns||0)<=0||Number(u.poisonDamage||0)<=0)return u;
-    if(typeof isPoisonImmuneUnit==="function"&&isPoisonImmuneUnit(u)){if(typeof clearPoisonStatus==="function")return clearPoisonStatus(u);return u;}
-    const dmg=Math.max(1,Number(u.poisonDamage||1));let next=typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:{...u,hp:Number(u.hp||0)-dmg};
-    next={...next,poisonTurns:Math.max(0,Number(u.poisonTurns||1)-1),poisonStage:Number(u.poisonStage||1)+1,poisonDamage:Math.max(1,dmg*2)};logs.push(`${u.name} sufre ${dmg} daño por Veneno (TR).`);if(next.poisonTurns<=0){delete next.poisonTurns;delete next.poisonDamage;delete next.noHealWhilePoisoned;}return next;
-  });
+  // Veneno se procesa al abrir cada ciclo táctico junto con las trampas de inicio de ciclo.
   try{const r=applyBurnAtTurnEnd(units);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){ }
   const fallen=units.filter(u=>Number(u.hp||0)<=0).map(u=>u.id);if(fallen.length&&typeof applyLegendaryFatalSaves==="function")units=applyLegendaryFatalSaves(units,fallen);units=units.filter(u=>Number(u.hp||0)>0);
   if(JSON.stringify(before)===JSON.stringify(units))return false;
@@ -1199,7 +1233,7 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
   const ids=hallvallaRtFairUnitIds(publicState?.units||[],{leaders:true,nonLeaders:true});
   for(const id of ids){
     if(attacks>=maxAttacks)break;
-    const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live)continue;
+    const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now)continue;
     const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
     if(now-last<HALLVALLA_RT_CFG.attackCooldownMs)continue;
@@ -1300,10 +1334,11 @@ async function hallvallaRtLoop(){
     await hallvallaRtSafeStage("recursos iniciales",()=>hallvallaRtInitializeResources());
     await hallvallaRtSafeStage("recarga de maná",()=>hallvallaRtResourceAndDrawTick(now));
     await hallvallaRtSafeStage("IA",()=>hallvallaRtAiDeploy(now));
+    // El ciclo táctico abre primero; después se aplican buffs/efectos para que duren el ciclo completo.
+    await hallvallaRtSafeStage("ciclo táctico TR",()=>hallvallaRtCombatRefreshTick(now));
     await hallvallaRtSafeStage("efectos de líder",()=>hallvallaRtLeaderEffectsTick(now));
     await hallvallaRtSafeStage("soporte",()=>hallvallaRtSupportTick(now));
     await hallvallaRtSafeStage("estados",()=>hallvallaRtStatusTick(now));
-    await hallvallaRtSafeStage("refresh TR",()=>hallvallaRtCombatRefreshTick(now));
     hallvallaRtScheduleLocalSnapshot(false);
     if(now-hallvallaRtState.lastUiAt>=300){hallvallaRtState.lastUiAt=now;hallvallaRtUpdateUi();}
   }finally{hallvallaRtState.busy=false;}

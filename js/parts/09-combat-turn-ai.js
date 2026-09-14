@@ -85,7 +85,7 @@ function resolveBeastCellTraps(moving,units,traps){
   }else if(trap.trapKey==="rope_cage"){
     n=applyDirectHpDamage(n,3);
     if(n.hp>0)n.noAttackTurnKey=nextTurnKeyForOwner(n.owner);
-    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 3 daño directo${n.hp>0?" y no puede atacar en su próximo turno":" y cae"}.`);
+    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 3 daño directo${n.hp>0?" y no puede atacar durante el siguiente ciclo táctico":" y cae"}.`);
   }else if(trap.trapKey==="blood_bait"){
     return{units:out,traps:nextTraps,logs};
   }
@@ -106,11 +106,11 @@ async function moveUnit(u,x,y){
   if(u?.leader)return setHint("Los líderes están anclados en su Base y no pueden moverse.");
   if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
   const mulanExecMove=isMulanExecutionMoveReady(u);
-  if(!mulanExecMove&&u.acted)return setHint(`${u.name} ya usó su acción este turno.`);
-  if(!mulanExecMove&&u.moved)return setHint(`${u.name} ya se movió este turno.`);
+  if(!mulanExecMove&&u.acted)return setHint(`${u.name} ya usó su acción durante el ciclo táctico actual.`);
+  if(!mulanExecMove&&u.moved)return setHint(`${u.name} ya se movió durante el ciclo táctico actual.`);
   const movePath=getUnitMovementPath(u,x,y,publicState?.units||[],mulanExecMove?1:effectiveMov(u));
   if(!movePath)return setHint("Movimiento inválido: el destino supera el MOV disponible o está ocupado.");
-  if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse este turno.`);
+  if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse durante el ciclo táctico actual.`);
   hallvallaMoveActionInFlight=true;
   try{
   const moveStartUnits=JSON.parse(JSON.stringify(publicState.units||[]));
@@ -138,7 +138,7 @@ async function moveUnit(u,x,y){
       if(adjacentEnemies(moved,units).filter(a=>a.owner===h.owner).length>=2){
         const nextKey=nextTurnKeyForOwner(moved.owner);
         units=units.map(it=>it.id===moved.id?{...it,hannibalAtkDebuff:Math.max(5,Number(it.hannibalAtkDebuff||0),5),hannibalAtkDebuffTurnKey:nextKey,hannibalAtkDebuffSource:h.name||"Hannibal Barca",hannibalMovDebuff:Math.max(1,Number(it.hannibalMovDebuff||0),1),hannibalMovDebuffTurnKey:nextKey,hannibalMovDebuffSource:h.name||"Hannibal Barca"}:it.id===h.id?{...it,hannibalUsedTurn:true}:it);
-        extra=` Trampa de Cannas: ${moved.name} pierde -5 AT y -1 MOV hasta su próximo turno.`;
+        extra=` Trampa de Cannas: ${moved.name} pierde -5 AT y -1 MOV hasta el final del siguiente ciclo táctico.`;
         break;
       }
     }
@@ -221,7 +221,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     const visibleTargets=targets.filter(target=>!isHidden(target));
     const logs=[];
     if(!isPrivateStealth||visibleTargets.length>0){
-      logs.push(`${liveLeader.name} activa Barrido de Guerra al final del turno rival y golpea únicamente a los enemigos dentro de su alcance.`);
+      logs.push(`${liveLeader.name} activa Barrido de Guerra al cerrar el ciclo táctico y golpea únicamente a los enemigos dentro de su alcance.`);
       if(blood.logs.length)logs.push(...blood.logs);
     }
     return{units:out,logs,triggered:!!sweep.triggered,battleFxEvent:null};
@@ -245,7 +245,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     const visibleTargets=targets.filter(target=>!isHidden(target));
     const logs=[];
     if(!isPrivateStealth||visibleTargets.length>0){
-      logs.push(`${liveLeader.name} activa automáticamente Lluvia de flechas al final del turno rival: 1 daño directo a las unidades enemigas a rango 3 o menos, ignorando Guardia y stats.`);
+      logs.push(`${liveLeader.name} activa automáticamente Lluvia de flechas al cerrar el ciclo táctico: 1 daño directo a las unidades enemigas a rango 3 o menos, ignorando Guardia y stats.`);
       if(blood.logs.length)logs.push(...blood.logs);
     }
     return{units:out,logs,triggered:true,battleFxEvent:null};
@@ -258,7 +258,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     out=out.map(unit=>unit.id===enemyLeader.id?resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit.hp||0)-2,damagedThisTurn:true}):unit);
     out=applyLegendaryFatalSaves(out,[enemyLeader.id]).filter(unit=>Number(unit.hp||0)>0);
     const battleFxEvent=typeof makeMagicFxEvent==="function"?makeMagicFxEvent(liveLeader,out.find(unit=>unit.id===enemyLeader.id)||enemyLeader,"arcane",{type:"spell",spellKey:"arcane_bolt",effectAction:"damage",impactScale:1.15,hit:true}):null;
-    return{units:out,logs:[`${liveLeader.name} activa automáticamente Descarga arcana al final del turno rival: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`],triggered:true,battleFxEvent};
+    return{units:out,logs:[`${liveLeader.name} activa automáticamente Descarga arcana al cerrar el ciclo táctico: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`],triggered:true,battleFxEvent};
   }
 
   if(leader.leaderType==="cavalry"&&ability==="cavalry_call"){
@@ -267,7 +267,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     if(!spots.length||typeof makeLightCavalryToken!=="function")return{units:out,logs:[],triggered:false,battleFxEvent:null};
     const tokens=spots.map(spot=>makeLightCavalryToken(owner,spot.x,spot.y));
     out=out.concat(tokens);
-    return{units:out,logs:[`${liveLeader.name} activa automáticamente Llamado de la carga al final del turno rival: convoca ${tokens.length} Caballería${tokens.length===1?" Ligera":"s Ligeras"} en casillas libres adyacentes.`],triggered:true,battleFxEvent:null};
+    return{units:out,logs:[`${liveLeader.name} activa automáticamente Llamado de la carga al cerrar el ciclo táctico: convoca ${tokens.length} Caballería${tokens.length===1?" Ligera":"s Ligeras"} en casillas libres adyacentes.`],triggered:true,battleFxEvent:null};
   }
 
   return{units:out,logs:[],triggered:false,battleFxEvent:null};
@@ -793,7 +793,7 @@ async function resolveSharedAttackOutcome({
     alreadyBleeding=hasBleeding(targetAfterBleed);
     units=units.map(u=>u.id===d.id?applyBleedToUnit(u,a.name):u);
     const bleedTurnsInfo=d.leader?" durante 2 turnos":"";
-    bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado${d.leader?" y reinicia su duración a 2 turnos":""}.`:` ${d.name} queda con Sangrado: pierde 1 Vida al inicio de su turno${bleedTurnsInfo}.`;
+    bleedText=alreadyBleeding?` ${d.name} mantiene Sangrado${d.leader?" y reinicia su duración a 2 ciclos tácticos":""}.`:` ${d.name} queda con Sangrado: pierde 1 Vida al abrir cada ciclo táctico${bleedTurnsInfo}.`;
   }
   let arcaneAdeptStatusEvent=null;
   let poisonStatusEvent=taipanResult.statusFxEvent||null;
@@ -876,7 +876,7 @@ async function resolveSharedAttackOutcome({
   if(recoilBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...recoilBloodVictory.logs);}
   bloodVictoryCheckpoint=[...units];
   const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
-  const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta su próximo turno; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
+  const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta el final del siguiente ciclo táctico; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
   const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${d.name} no pierde Vida por ataques de unidades.`:"";
   const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanChoiceAttack&&!d.leader&&(!requireLivingAttackerForMulan||units.some(u=>u.id===a.id));
   const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&units.some(u=>u.id===a.id);
@@ -975,7 +975,7 @@ async function resolveSharedAttackOutcome({
   const prePostCombatUnits=[...units];
   const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
-  const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del turno.`:"";
+  const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del ciclo táctico actual.`:"";
   const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryLogs.join(" ")}`:"";
   const leonidasLastStandText=leonidasLastStand?.triggered?` Última Resistencia: Leónidas devuelve 3 Vida a su asesino${leonidasLastStand.saved?", lo derrota y queda con 1 Vida.":"."}`:"";
   const bloodMistText=hasShadowMistAssassin(a,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
@@ -985,7 +985,7 @@ async function resolveSharedAttackOutcome({
   const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
   const genghisDebuffText=genghisDebuffResult.log||"";
   const mulanExecutionText=mulanExecutionTriggered?(mulanExecutionTextMode==="ai"?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; hará su movimiento extra y elegirá ATK o DEF.`:` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`):"";
-  const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta su próximo turno.`:"";
+  const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta el final del ciclo táctico actual.`:"";
   const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
   const equipmentRetreatResult=units.some(u=>u.id===a.id)?applyPostCombatEquipmentRetreat(units,a,d):{units,moved:false,text:""};
   units=equipmentRetreatResult.units;
@@ -1005,7 +1005,7 @@ async function resolveSharedAttackOutcome({
   const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(geishaKeepsStealthAfterKill?` Danza del Engaño: ${a.name} destruye a su objetivo con Corte de Abanico y conserva Sigilo.`:(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`)):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD de este turno. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   return {
     units,
     prePostCombatUnits,
@@ -1048,8 +1048,8 @@ async function attackUnit(a,d){
 
   const declaration=inspectSharedAttackActionEligibility(a,d,{turnKey:publicState?.turnKey||""});
   if(!declaration.ok){
-    if(declaration.code==="already_acted")return setHint(`${a.name} ya atacó o defendió este turno.`);
-    if(declaration.code==="attack_locked")return setHint(`${a.name} no puede atacar este turno.`);
+    if(declaration.code==="already_acted")return setHint(`${a.name} ya atacó o defendió durante el ciclo táctico actual.`);
+    if(declaration.code==="attack_locked")return setHint(`${a.name} no puede atacar durante el ciclo táctico actual.`);
     if(declaration.code==="out_of_range")return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${declaration.rg} y ${d.name} está a ${declaration.distance}.`);
     if(declaration.code==="stealthed_target")return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
     if(declaration.code==="aerial_target")return setHint("Solo unidades con rango mayor a 3 o Antiaéreo pueden atacar unidades aéreas.");

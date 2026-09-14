@@ -1,0 +1,5 @@
+HallValla v102
+Cambio solicitado: desacelerar exclusivamente movimiento y ataque del TR.
+baseMoveCooldownMs: 3600 -> 7200 ms
+attackCooldownMs: 4800 -> 9600 ms
+Invocacion/IA/MANA/estados/soporte/Firebase/layout/mazos: sin cambios.

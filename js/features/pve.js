@@ -557,7 +557,7 @@ function getAdaptiveCardRoleMetrics(card){
   const out={ranged:0,tank:0,cavalry:0,assassin:0,arcane:0,swarm:0,heavy:0,burst:0,damageSpell:0,buffSpell:0,heal:0,control:0,unit:0,spell:0,trap:0,equipment:0,special:0,highGuard:0,highHp:0,highAgi:0,mobile:0};
   if(!card)return out;
   const key=String(card.key||card.name||"");
-  const cost=Math.max(0,Number(card.cost||0));
+  const cost=Math.max(0,Number(typeof effectiveCardCost==="function"?effectiveCardCost(card,2):card.cost||0));
   if(card.special)out.special=1;
   if(card.type==="unit"){
     out.unit=1;
@@ -598,7 +598,7 @@ function summarizeAdaptiveCards(cards=[]){
     cardCounts[key]=(cardCounts[key]||0)+1;
     const m=getAdaptiveCardRoleMetrics(card);
     Object.keys(roles).forEach(k=>roles[k]+=Number(m[k]||0));
-    totalCost+=Math.max(0,Number(card.cost||0));
+    totalCost+=Math.max(0,Number(typeof effectiveCardCost==="function"?effectiveCardCost(card,2):card.cost||0));
     totalCards++;
   }
   return{cardCounts,roles,totalCards,avgCost:totalCards?Number((totalCost/totalCards).toFixed(2)):0};
@@ -751,7 +751,7 @@ function getAdaptiveCampaignOpponentPressurePenalty(card,profile,leaderType=""){
   if(m.tank||m.highGuard)penalty+=t("berserker_de_oso")*14+t("berserker")*8+t("nasu_no_yoichi")*16;
   if(card.special)penalty+=t("spartacus")*18;
   if(m.heal||m.buffSpell)penalty+=t("broken_blood_oath")*14+t("fallen_kings_seal")*18;
-  if(card.type==="unit"&&Number(card.cost||0)<=1)penalty+=t("saboteador_iga")*9;
+  if(card.type==="unit"&&Number(typeof effectiveCardCost==="function"?effectiveCardCost(card,2):card.cost||0)<=1)penalty+=t("saboteador_iga")*9;
   if(card.type==="unit"&&Number(card.range||0)<=1&&isAdaptiveBasicCard(card))penalty+=t("samurai_naginata")*7;
   return Math.min(220,penalty);
 }
@@ -4723,7 +4723,7 @@ async function adventureEnemyTurn(){
         if(!inBounds(x,y)||at(x,y))continue;
         if(d(el,{x,y})<=1){
           const cell={x,y};
-          options.push({card,cell,score:evaluateSummonCell(card,cell)-(card.cost||0)*3});
+          options.push({card,cell,score:evaluateSummonCell(card,cell)-(effectiveCardCost(card,2)||0)*3});
         }
       }
     }
@@ -5087,7 +5087,7 @@ async function adventureEnemyTurn(){
     }
     return playable.map(card=>{
       const target=bestTargetForDamage(card);
-      const score=scoreTarget(target,effectiveCardValue(card,"damage")||card.damage||0)-(card.cost||0)*2;
+      const score=scoreTarget(target,effectiveCardValue(card,"damage")||card.damage||0)-(effectiveCardCost(card,2)||0)*2;
       return{card,target,score};
     }).filter(choice=>choice.target).sort((a,b)=>b.score-a.score)[0]||null;
   };

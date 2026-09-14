@@ -1,0 +1,16 @@
+HallValla v103 — TR coste C + efectos temporales adaptados
+
+- Curva C canónica de MANÁ: coste original 1-2 => 1; 3-5 => 2; 6+ => 3.
+- Sabotaje Iga: +1 MANÁ por Saboteador en TR (antes +3; incompatible con escala 1/2/3).
+- Ciclo táctico TR: 10 segundos. Sustituye semántica de “turno” para efectos temporales/una vez por turno.
+- Sun Tzu: autoelige aliado cada ciclo; +4 DX/+4 Guardia durante el ciclo.
+- Merlín: ya no roba en Draw Phase; reduce 1 MANÁ a Magias/Trampas (mínimo 1).
+- Ericto: reanimación y mantenimiento pasan a ciclo de 10 s.
+- Aquiles: Sangre del Pélida cura 1 cada 10 s; Cólera se reinicia por ciclo.
+- Flags una-vez-por-turno se reinician por ciclo táctico: Ragnar, Arjuna, Juana, Boudica, César, Aquiles, etc.
+- Trampas Start/Battle Phase se abren por ciclo táctico.
+- Restos Persistentes: 3 ciclos ≈30 s; congelado 5 ≈50 s; hielo retrasa 2 ciclos ≈20 s.
+- Veneno progresa una vez por ciclo, no cada 3 s. Sangrado/Quemadura también se ralentizan a ciclo de 10 s.
+- Exilio del Nombre Verdadero usa 10/20 s reales en TR.
+- IA adaptativa evalúa el nuevo coste efectivo.
+- No se cambió movimiento (7200 ms), ataque (9600 ms), imagen/layout de Forja ni mazos del Mapa 1.
