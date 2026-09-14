@@ -203,7 +203,7 @@ function hallvallaRtApplyImmediateCastState(publicPatch={},privatePatch={},befor
     try{if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(before,publicPatch.units);}catch(_){ }
     try{if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(before,publicPatch.units,publicPatch);}catch(_){ }
   }
-  render();
+  if(typeof requestBattleRender==="function")requestBattleRender("rt-cast");else render();
   try{syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();}catch(_){ }
   hallvallaRtScheduleLocalSnapshot(false);
   return true;
@@ -1117,6 +1117,14 @@ async function hallvallaRtResourceAndDrawTick(now){
     const ai={...publicState.adventureAiState};ai.maxHonor=max;ai.honor=Math.min(max,Math.max(0,Number(ai.honor||0))+steps);ai.lastTurnStarted='RT';
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
+  }
+  if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
+    publicState=hallvallaApplyLocalPatch(publicState,publicPatch);
+    privateState=hallvallaApplyLocalPatch(privateState,privatePatch);
+    if(publicState?.mode!=="online")networkPublicStateRaw=publicState?hallvallaRtClone(publicState):networkPublicStateRaw;
+    if(typeof requestBattleRender==="function")requestBattleRender("rt-mana");else render();
+    hallvallaRtScheduleLocalSnapshot(false);
+    return true;
   }
   await commitGameplayAction({publicPatch,privatePatch});
   return true;

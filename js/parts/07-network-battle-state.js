@@ -688,7 +688,8 @@ async function updatePublic(patch){
       if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,accountMasteryKillAfter);
       if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(beforeUnits,accountMasteryKillAfter,sourcePatch);
     }
-    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();
+    if(typeof requestBattleRender==="function")requestBattleRender("rt-public");else render();
+    syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();
     globalThis.hallvallaRtScheduleLocalSnapshot?.(false);
     return true;
   }
@@ -843,7 +844,8 @@ async function updatePrivate(patch){
   };
   if(globalThis.hallvallaRtUseLocalBattleRuntime?.()){
     applyLocalProjection();
-    render();void maybeFinalizeUnitExhaustionFromPublicState();globalThis.hallvallaRtScheduleLocalSnapshot?.(false);
+    if(typeof requestBattleRender==="function")requestBattleRender("rt-private");else render();
+    void maybeFinalizeUnitExhaustionFromPublicState();globalThis.hallvallaRtScheduleLocalSnapshot?.(false);
     return true;
   }
   if(hallvallaIsLocalTestGame()){

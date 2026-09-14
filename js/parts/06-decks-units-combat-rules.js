@@ -704,8 +704,8 @@ function getCardCostBreakdown(card,player=card?.owner,units=publicState?.units||
   const rawBase=Math.max(0,Number(card?.cost||0));
   const base=getHallvallaCanonicalRtBaseCost(rawBase);
   const sabotageStacks=card?.type==="unit"?countEnemySaboteadoresIga(owner,units):0;
-  // Con la economía 1/2/3, Sabotaje pasa de +3 a +1 por Saboteador para no bloquear una carta completa durante demasiados segundos.
-  const sabotagePenalty=sabotageStacks;
+  // En TR Sabotaje de Iga aplica +1 MANÁ total mientras exista al menos uno. No se acumula.
+  const sabotagePenalty=sabotageStacks>0?1:0;
   // Merlín ya no roba en Draw Phase: en TR reduce en 1 el coste de Magias/Trampas (mínimo 1).
   const merlinDiscount=(base>0&&(card?.type==="spell"||card?.type==="trap")&&ownerHasUnit(owner,"merlin",units))?1:0;
   const effective=base<=0?0:Math.max(1,base-merlinDiscount+sabotagePenalty);
@@ -723,7 +723,7 @@ function getCardCostExplanation(card,player=card?.owner,units=publicState?.units
   const details=[];
   if(info.rawBase!==info.base)details.push(`curva TR ${info.rawBase}→${info.base}`);
   if(info.merlinDiscount>0)details.push(`-1 por Merlín`);
-  if(info.sabotageStacks>0)details.push(`+${info.sabotagePenalty} por Sabotaje (${info.sabotageStacks} × +1)`);
+  if(info.sabotageStacks>0)details.push(`+1 por Sabotaje de Iga (no acumulable)`);
   return `Costo real: ${info.effective} ${resource}${details.length?` (${details.join(", ")})`:""}.`;
 }
 function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units||[]){

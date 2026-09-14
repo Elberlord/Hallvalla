@@ -1,0 +1,12 @@
+HallValla build 20260914.116
+
+Cambios focalizados:
+- START/MENU del mando: click semántico nativo y tolerancia de 24 px alrededor del puntero para botones/arsenal.
+- Pantalla de resultado incluida como modal del gamepad; Reintentar/Mapa/Home responden al cursor virtual.
+- Diagnóstico nuevo: __HALLVALLA_GAMEPAD_DEBUG__().
+- Casteo TR: el commit local ya no fuerza render() completo de forma síncrona; usa render agrupado al siguiente frame.
+- updatePublic/updatePrivate del runtime TR local agrupan renders para evitar tormentas de render durante movimiento, IA y recarga de maná.
+- Recarga de MANÁ local aplica estado público/privado en una sola operación síncrona antes del render, evitando ventana de estado intermedio.
+- Restaurado Sabotaje de Iga no acumulable: +1 MANÁ total mientras exista al menos uno.
+- Sin cooldown nuevo de invocación.
+- Forja y assets no modificados.

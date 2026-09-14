@@ -39,7 +39,8 @@ const hvGamepadState={
   pointerVisible:false,
   pointerMode:false,
   pointerHoverEl:null,
-  pointerFrameAt:0
+  pointerFrameAt:0,
+  lastPointerClick:null
 };
 
 function hvGamepadInstallStyles(){
@@ -131,6 +132,38 @@ function hvGamepadPointerTarget(){
   if(modal&&target&&target!==modal&&!modal.contains(target))target=null;
   return target;
 }
+function hvGamepadNormalizeClickTarget(target){
+  if(!target)return null;
+  const semantic=target.closest?.("button:not([disabled]),a[href],[role='button']:not([aria-disabled='true']),[data-rt-card-id],[data-battle-outcome-action]");
+  if(semantic&&hvGamepadIsVisible(semantic))return semantic;
+  const cell=target.closest?.("#grid .cell");
+  if(cell&&hvGamepadIsVisible(cell))return cell;
+  return target;
+}
+function hvGamepadPointerClickTarget(){
+  hvGamepadPointerEnsurePosition();
+  const x=Math.max(0,Math.min(innerWidth-1,Number(hvGamepadState.pointerX)||0));
+  const y=Math.max(0,Math.min(innerHeight-1,Number(hvGamepadState.pointerY)||0));
+  const direct=hvGamepadNormalizeClickTarget(hvGamepadPointerTarget());
+  if(direct&&(
+    direct.matches?.("button,a[href],[role='button'],[data-rt-card-id],[data-battle-outcome-action],#grid .cell")
+  ))return direct;
+  // El cursor dibujado es más ancho que su punto matemático. Si visualmente toca un
+  // control, acepta el control más cercano dentro de 24 px para que START se comporte
+  // como un clic humano y no falle por 2-3 píxeles en botones pequeños.
+  const modal=hvGamepadVisibleModal();
+  const root=modal||document;
+  const candidates=[...root.querySelectorAll("button:not([disabled]),a[href],[role='button']:not([aria-disabled='true']),[data-rt-card-id],[data-battle-outcome-action]")].filter(hvGamepadIsVisible);
+  let best=null,bestD=25;
+  for(const el of candidates){
+    const r=el.getBoundingClientRect();
+    const dx=x<r.left?r.left-x:x>r.right?x-r.right:0;
+    const dy=y<r.top?r.top-y:y>r.bottom?y-r.bottom:0;
+    const d=Math.hypot(dx,dy);
+    if(d<bestD){best=el;bestD=d;}
+  }
+  return best||direct;
+}
 function hvGamepadPointerDispatchMove(){
   const target=hvGamepadPointerTarget();
   const previous=hvGamepadState.pointerHoverEl;
@@ -176,17 +209,20 @@ function hvGamepadPointerUpdate(gp,now){
 }
 function hvGamepadPointerClick(button=0){
   if(!hvGamepadState.pointerVisible)return false;
-  const target=hvGamepadPointerTarget();
-  if(!target)return false;
+  const target=hvGamepadPointerClickTarget();
+  if(!target){hvGamepadState.lastPointerClick={at:Date.now(),ok:false,reason:"no_target"};return false;}
   const x=Number(hvGamepadState.pointerX)||0,y=Number(hvGamepadState.pointerY)||0;
+  hvGamepadState.lastPointerClick={at:Date.now(),ok:true,button,target:target.tagName||"",id:target.id||"",action:target.dataset?.battleOutcomeAction||"",cardId:target.dataset?.rtCardId||"",x,y};
   const common={bubbles:true,cancelable:true,view:window,clientX:x,clientY:y,button,buttons:button===0?1:button===2?2:0};
-  try{
-    if(typeof PointerEvent==="function")target.dispatchEvent(new PointerEvent("pointerdown",{...common,pointerId:1,pointerType:"mouse",isPrimary:true}));
-  }catch(_){ }
+  const semantic=target.matches?.("button,a[href],[role='button'],[data-rt-card-id],[data-battle-outcome-action]");
+  if(button===0&&semantic){
+    // Para controles semánticos usa click() nativo. Evita la secuencia sintética
+    // pointerdown+click que podía activar dos rutas distintas en el arsenal TR.
+    try{target.click();return true;}catch(_){ }
+  }
+  try{if(typeof PointerEvent==="function")target.dispatchEvent(new PointerEvent("pointerdown",{...common,pointerId:1,pointerType:"mouse",isPrimary:true}));}catch(_){ }
   try{target.dispatchEvent(new MouseEvent("mousedown",common));}catch(_){ }
-  try{
-    if(typeof PointerEvent==="function")target.dispatchEvent(new PointerEvent("pointerup",{...common,buttons:0,pointerId:1,pointerType:"mouse",isPrimary:true}));
-  }catch(_){ }
+  try{if(typeof PointerEvent==="function")target.dispatchEvent(new PointerEvent("pointerup",{...common,buttons:0,pointerId:1,pointerType:"mouse",isPrimary:true}));}catch(_){ }
   try{target.dispatchEvent(new MouseEvent("mouseup",{...common,buttons:0}));}catch(_){ }
   try{target.dispatchEvent(new MouseEvent(button===2?"contextmenu":"click",{...common,buttons:0}));}catch(_){ }
   return true;
@@ -281,6 +317,7 @@ function hvGamepadVisibleModal(){
     ".pvp-ranking-modal:not(.hidden)",".honor-recharge-modal:not(.hidden)",
     ".event-splash-overlay:not(.hidden)",".demigod-summon-modal:not(.hidden)",
     ".card-inspect-modal:not(.hidden)",".battle-menu-panel:not(.hidden)",
+    ".battle-outcome-splash.show.awaiting-action",
     ".mobile-rotate-overlay:not(.hidden)",".modal:not(.hidden)"
   ];
   const candidates=[];
@@ -744,6 +781,12 @@ function hvGamepadInit(){
   }
   hvGamepadInstallStyles();
   hvGamepadShowBadge("",{disconnected:true});
+
+function hvGamepadDebugSnapshot(){
+  return {connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,pointerVisible:hvGamepadState.pointerVisible,pointerMode:hvGamepadState.pointerMode,pointerX:hvGamepadState.pointerX,pointerY:hvGamepadState.pointerY,lastPointerClick:hvGamepadState.lastPointerClick,modal:hvGamepadVisibleModal()?.id||hvGamepadVisibleModal()?.className||null,target:(()=>{const t=hvGamepadPointerClickTarget();return t?{tag:t.tagName,id:t.id||"",text:String(t.textContent||"").trim().slice(0,80),action:t.dataset?.battleOutcomeAction||"",cardId:t.dataset?.rtCardId||""}:null;})()};
+}
+globalThis.__HALLVALLA_GAMEPAD_DEBUG__=hvGamepadDebugSnapshot;
+
   window.addEventListener("gamepadconnected",ev=>hvGamepadConnect(ev.gamepad),{passive:true});
   window.addEventListener("gamepaddisconnected",ev=>{
     if(Number(ev.gamepad?.index)===Number(hvGamepadState.index))hvGamepadDisconnect();
