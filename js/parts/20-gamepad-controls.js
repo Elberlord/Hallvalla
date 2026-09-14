@@ -1,8 +1,8 @@
 "use strict";
-/* HallValla 20260913.85 · Gamepad estándar (PC / Android)
+/* HallValla 20260914.106 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
-   A confirmar/seleccionar/mover/atacar · B cancelar · X DEF · Y DET
-   View/Back mano · Menu/Start clic del cursor virtual; sin cursor, siguiente fase · LB/RB ciclar unidades.
+   A confirmar/seleccionar/mover/atacar · B volver/cerrar universal · X DEF · Y DET
+   View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · LB/RB ciclar unidades.
 */
 
 const HV_GAMEPAD_BUTTONS=Object.freeze({
@@ -531,6 +531,40 @@ function hvGamepadActivateUi(){
   if(el.tagName==="INPUT"&&(el.type==="range"||el.type==="number"))return;
   try{el.click();}catch(_){ }
 }
+function hvGamepadCloseControlScore(el){
+  if(!el||!hvGamepadIsVisible(el))return -Infinity;
+  const text=`${el.textContent||""} ${el.getAttribute?.("aria-label")||""} ${el.getAttribute?.("title")||""} ${el.id||""} ${el.className||""}`.toLowerCase();
+  let score=0;
+  if(el.matches?.("[data-close],[data-cancel],[data-back],[data-dismiss],[data-modal-close]"))score+=120;
+  if(/(^|[^a-z])(cerrar|close|cancelar|cancel|volver|back|regresar|return|salir|exit)([^a-z]|$)/i.test(text))score+=90;
+  if(/[×✕✖❌]/.test(el.textContent||""))score+=80;
+  if(/[←‹]/.test((el.textContent||"").trim()))score+=30;
+  if(/close|back|cancel|return|exit|cerrar|volver|regresar|salir/.test(`${el.id||""} ${el.className||""}`.toLowerCase()))score+=70;
+  if(el.tagName==="BUTTON"||el.getAttribute?.("role")==="button")score+=12;
+  return score;
+}
+function hvGamepadFindCloseControl(root){
+  if(!root)return null;
+  const selectors=[
+    "[data-close]","[data-cancel]","[data-back]","[data-dismiss]","[data-modal-close]",
+    "button","a[href]","[role='button']","[tabindex]:not([tabindex='-1'])"
+  ].join(",");
+  const items=[...root.querySelectorAll(selectors)]
+    .filter(el=>hvGamepadIsVisible(el)&&!el.matches?.("[disabled],[aria-disabled='true'],[data-hv-dev-tool]")&&!el.closest?.("[data-hv-dev-tool]"))
+    .map(el=>({el,score:hvGamepadCloseControlScore(el)}))
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score||hvGamepadUiLayerZ(b.el)-hvGamepadUiLayerZ(a.el));
+  return items[0]?.el||null;
+}
+function hvGamepadClickUniversalBack(){
+  /* Fuera de un modal, B debe comportarse como la X/flecha Atrás de la pantalla visible. */
+  const roots=[document.getElementById("gameShell"),document.querySelector("main"),document.body].filter(Boolean);
+  for(const root of roots){
+    const close=hvGamepadFindCloseControl(root);
+    if(close){try{close.click();hvGamepadClearUiFocus();return true;}catch(_){ }}
+  }
+  return false;
+}
 function hvGamepadCloseTopUi(){
   const modal=hvGamepadVisibleModal();
   if(modal?.id==="cardInspectModal"&&typeof hideCardInspectModal==="function"){
@@ -548,9 +582,13 @@ function hvGamepadCloseTopUi(){
     closeBattleMenu();hvGamepadClearUiFocus();return true;
   }
   if(modal){
-    const close=hvGamepadFocusable(modal).find(el=>/cerrar|volver|cancelar|close/i.test(`${el.textContent||""} ${el.getAttribute("aria-label")||""}`));
-    if(close){close.click();hvGamepadClearUiFocus();return true;}
-    document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true}));
+    const close=hvGamepadFindCloseControl(modal);
+    if(close){try{close.click();hvGamepadClearUiFocus();return true;}catch(_){ }}
+    /* Muchos overlays cierran con Escape aunque su X sea un icono sin texto. */
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true,cancelable:true}));
+    /* Si el overlay implementa cierre al tocar el fondo, replica ese gesto como último recurso. */
+    try{modal.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}));}catch(_){ }
+    hvGamepadClearUiFocus();
     return true;
   }
   return false;
@@ -615,12 +653,19 @@ function hvGamepadHandleButtons(gp){
     LB:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LB),RB:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RB),LT:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.LT),RT:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.RT),
     VIEW:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.VIEW),MENU:hvGamepadPressed(gp,HV_GAMEPAD_BUTTONS.MENU)
   };
-  /* Build 20260913.85: cuando el cursor virtual está activo, Menu/Start/Pause
-     funciona como clic izquierdo. Se consume aquí antes de cualquier acción de batalla
-     para que también funcione sobre modales, recompensas y escenas UI. */
-  if(pressed.MENU&&hvGamepadState.pointerMode&&hvGamepadState.pointerVisible){
-    hvGamepadPointerClick(0);
-    return;
+  /* Build 20260914.106: Menu/Start/Pause es SIEMPRE clic izquierdo.
+     Si el cursor virtual ya existe, hace clic exactamente bajo el puntero aun cuando
+     pointerMode haya sido desactivado por otra navegación. Si todavía no hay cursor
+     visible dentro de una UI/modal, activa el control enfocado como equivalente. */
+  if(pressed.MENU){
+    if(hvGamepadState.pointerVisible){
+      hvGamepadPointerClick(0);
+      return;
+    }
+    if(modal||!battle){
+      hvGamepadActivateUi();
+      return;
+    }
   }
 
   const rt=battle&&!modal&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function";
@@ -654,8 +699,9 @@ function hvGamepadHandleButtons(gp){
       hvGamepadState.mode="board";hvGamepadSyncHandFocus();hvGamepadSyncBoardCursor();
     }else if(battle&&typeof handleBattleCancelButton==="function"){
       void handleBattleCancelButton();hvGamepadState.mode="board";requestAnimationFrame(hvGamepadSyncBoardCursor);
-    }else{
-      document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true}));
+    }else if(hvGamepadClickUniversalBack()){}
+    else{
+      document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true,cancelable:true}));
     }
   }
   if(pressed.Y){
@@ -664,7 +710,6 @@ function hvGamepadHandleButtons(gp){
   }
   if(pressed.X&&battle&&!modal&&hvGamepadState.mode!=="hand")hvGamepadDefend();
   if(pressed.VIEW&&battle&&!modal)hvGamepadToggleHand();
-  if(pressed.MENU&&battle&&!modal&&typeof advanceTurnPhase==="function")advanceTurnPhase();
   if(pressed.LB&&battle&&!modal){
     if(hvGamepadState.mode==="hand")hvGamepadMoveHand(-1);else hvGamepadCycleOwnUnit(-1);
   }
