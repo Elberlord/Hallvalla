@@ -1,0 +1,10 @@
+HallValla build 20260914.110
+
+Cambio exclusivo: ruta de invocación del jugador en TR.
+- J1 usa validación TR propia y owner numérico.
+- Invocación J1 ya no depende del commitCardPlay legado.
+- Commit atómico TR de unidad + gasto de MANÁ + retiro del arsenal.
+- IA J2 no cambia.
+- Sin cooldown de invocación.
+- Despliegue expansivo de v109 conservado.
+- __HALLVALLA_RT_SUMMON_DEBUG__ ahora muestra la última tentativa exacta de J1.
