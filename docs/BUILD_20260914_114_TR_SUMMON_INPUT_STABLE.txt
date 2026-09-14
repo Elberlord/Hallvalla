@@ -1,0 +1,10 @@
+HallValla build 20260914.114
+
+TR J1 — corrección raíz de invocación intermitente
+- El arsenal ya no reconstruye innerHTML cada ~300 ms si nada cambió.
+- Las cartas se activan en pointerdown para que un refresco de UI no pueda borrar el botón antes del click.
+- No existe cooldown oculto de invocación; summonCooldownRemainingMs sigue en 0.
+- Se elimina el debounce global de 140 ms del motor de invocación; el duplicado pointerdown/click se filtra solo en DOM.
+- Debug añade inputTrace (últimos 40 eventos) y arsenalRebuilds.
+- Service Worker captura fallos de fetch de assets/SFX para evitar TypeError no manejados.
+- No se cambia IA, mazos, costes, movimiento, ataque, Forja ni assets aprobados.
