@@ -1,0 +1,29 @@
+HallValla v132
+
+OBJETIVO
+- Corregir la lentitud de la IA en TR al recolectar MANÁ y desplegar unidades.
+- Añadir robo de orbe rival en PvP si el dueño tarda demasiado.
+- Mantener intactas las reglas de cartas, trampas y costos de v130.
+
+CAMBIOS
+1. PvE IA: recoge su propio orbe 1 segundo después de aparecer (antes ~5.5 s).
+2. Presencia mínima IA: con 0 o 1 invocaciones, J2 prioriza una unidad pagable. Si no puede pagar ninguna todavía, guarda MANÁ en vez de gastarlo en magia/trampas.
+3. PvP humano: cada orbe es exclusivo de su dueño durante los primeros 4 s. Del segundo 4 al 10 puede ser robado por el rival.
+4. LB: recoge primero el orbe propio; si no existe uno propio activo y el rival ya dejó pasar la ventana exclusiva, LB roba el orbe rival. También puede pulsarse/clicarse el orbe rival cuando es robable.
+5. El robo beneficia al ladrón: +1 capacidad máxima y +1 MANÁ actual; el dueño pierde ese orbe del ciclo.
+6. Los checkpoints resource:* ahora se sincronizan realmente en PvP (orbe, robo de orbe y escudo del líder), además de card:*.
+
+AUDITORÍA 6-3
+- chapter6_1_battle3 = El hechicero de ceniza.
+- La IA comienza TR con 2/2 MANÁ por la regla global actual; aiHonorBonus:7 es un dato legacy y no aumenta el MANÁ inicial en TR.
+- Su arsenal sí contiene unidades pagables desde el inicio: Hua Lan cuesta 1 y William Wallace cuesta 2.
+- Por tanto, el bloqueo observado no se explica por que todas sus unidades sean demasiado caras.
+- El problema práctico era de prioridad/pacing: después de poca presencia la IA podía gastar el MANÁ en control y además esperaba ~5.5 s para capturar cada orbe. v132 fuerza presencia mínima y acelera la captura.
+
+PvP ORBE
+- Aparición: cada 14 s.
+- Vida del orbe: 10 s.
+- Exclusividad del dueño: 4 s.
+- Ventana de robo: siguientes 6 s.
+
+No se cambió el balance base de costos de cartas.

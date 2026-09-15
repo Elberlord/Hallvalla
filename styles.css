@@ -28778,3 +28778,11 @@ body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
 
 /* v130 · En TR los splash de eventos se desactivan: el combate ya informa por FX de campo/estados. */
 #eventSplashOverlay,.event-splash-overlay{display:none!important;pointer-events:none!important;}
+
+/* v132 · Orbe rival robable en PvP tras la ventana exclusiva del dueño. */
+#gameShell .battlefield .rt-mana-orb.enemy.stealable{opacity:1;cursor:pointer;filter:none;}
+#gameShell .battlefield .rt-mana-orb.enemy.stealable img{
+  filter:drop-shadow(0 0 13px rgba(255,214,76,.98)) drop-shadow(0 0 28px rgba(255,116,32,.76));
+  animation:rtManaOrbFloat 1.45s ease-in-out infinite,rtManaOrbStealablePulse .72s ease-in-out infinite alternate;
+}
+@keyframes rtManaOrbStealablePulse{from{transform:scale(.98)}to{transform:scale(1.08)}}

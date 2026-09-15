@@ -12,6 +12,8 @@ const HALLVALLA_RT_CFG=Object.freeze({
   resourceEveryMs:9000,
   manaOrbEveryMs:14000,
   manaOrbLifetimeMs:10000,
+  manaOrbStealAfterMs:4000,
+  aiManaOrbCollectDelayMs:1000,
   leaderShieldDurationMs:3000,
   handMax:99,
   aiThinkEveryMs:180,
@@ -108,11 +110,14 @@ function hallvallaRtUseLocalBattleRuntime(){
 function hallvallaRtIgnoreRemoteBattleSnapshot(){
   // En PvE/Aventura ignoramos ecos de snapshots durante la simulación local.
   // En PvP sí aceptamos snapshots porque únicamente se publican como checkpoints
-  // cuando un jugador introduce una acción nueva (carta).
+  // cuando un jugador introduce una acción nueva (carta, orbe o escudo).
   return !!(hallvallaRtUseLocalBattleRuntime()&&hallvallaRtState.enabled===true&&publicState?.mode!=="online");
 }
 function hallvallaRtShouldNetworkGameplayAction(kind=""){
-  return !!(hallvallaRtState.enabled&&publicState?.mode==="online"&&String(kind||"").startsWith("card:"));
+  const actionKind=String(kind||"");
+  // PvP: además de cartas, los recursos que nacen de una decisión del jugador
+  // (orbe/robo de orbe/escudo del líder) son checkpoints autoritativos.
+  return !!(hallvallaRtState.enabled&&publicState?.mode==="online"&&(actionKind.startsWith("card:")||actionKind.startsWith("resource:")));
 }
 globalThis.hallvallaRtShouldNetworkGameplayAction=hallvallaRtShouldNetworkGameplayAction;
 function hallvallaRtScheduleLocalSnapshot(force=false){
@@ -451,6 +456,13 @@ function hallvallaRtManaOrbInfo(owner,now=hallvallaRtNow()){
 function hallvallaRtRemoveManaOrbNodes(){
   document.querySelectorAll('.rt-mana-orb').forEach(node=>node.remove());
 }
+function hallvallaRtIsHumanPvp(){
+  return publicState?.mode==='online'&&!publicState?.adventureAiState;
+}
+function hallvallaRtCanStealManaOrb(info,collector=myPlayer,now=hallvallaRtNow()){
+  const who=Number(collector||0);
+  return !!(info?.active&&hallvallaRtIsHumanPvp()&&who&&Number(info.owner)!==who&&now-Number(info.startsAt||0)>=HALLVALLA_RT_CFG.manaOrbStealAfterMs&&hallvallaRtOwnerMaxMana(who)<HALLVALLA_RT_CFG.resourceCap);
+}
 function hallvallaRtRenderManaOrbs(){
   const battlefield=document.querySelector('#gameShell .battlefield'),grid=document.getElementById('grid');
   if(!battlefield||!grid||!hallvallaRtBattleReady()){hallvallaRtRemoveManaOrbNodes();return;}
@@ -465,32 +477,54 @@ function hallvallaRtRenderManaOrbs(){
       node=document.createElement('button');node.type='button';node.className='rt-mana-orb';node.dataset.owner=String(owner);
       node.innerHTML='<img src="assets/ui/realtime/mana-orb.webp" alt="">';
       battlefield.appendChild(node);
-      node.addEventListener('click',()=>{if(Number(owner)===Number(myPlayer||0))void hallvallaRtCollectManaOrb(owner,'pointer');});
+      node.addEventListener('click',()=>{
+        const fresh=hallvallaRtManaOrbInfo(owner,hallvallaRtNow());
+        const ownNow=Number(owner)===Number(myPlayer||0);
+        if(ownNow||hallvallaRtCanStealManaOrb(fresh,myPlayer,hallvallaRtNow()))void hallvallaRtCollectManaOrb(owner,'pointer');
+      });
     }
-    const own=Number(owner)===Number(myPlayer||0);
-    node.classList.toggle('own',own);node.classList.toggle('enemy',!own);
-    node.disabled=!own;node.setAttribute('aria-label',own?'Orbe de maná propio. LB para recoger.':'Orbe de maná rival.');
+    const own=Number(owner)===Number(myPlayer||0),stealable=!own&&hallvallaRtCanStealManaOrb(info,myPlayer,now);
+    node.classList.toggle('own',own);node.classList.toggle('enemy',!own);node.classList.toggle('stealable',stealable);
+    node.disabled=!(own||stealable);
+    node.setAttribute('aria-label',own?'Orbe de maná propio. LB para recoger.':stealable?'Orbe de maná rival disponible para robar. LB si no tienes orbe propio.':'Orbe de maná rival. Disponible para robar si su dueño tarda demasiado.');
     const rect=cell.getBoundingClientRect();
     node.style.left=`${rect.left-fieldRect.left+(rect.width/2)}px`;
     node.style.top=`${rect.top-fieldRect.top+(rect.height/2)}px`;
   }
 }
-async function hallvallaRtCollectManaOrb(owner=myPlayer,source='gamepad'){
-  const who=Number(owner||myPlayer||0),now=hallvallaRtNow();
-  if(who!==Number(myPlayer||0)&&source!=='ai')return false;
-  const info=hallvallaRtManaOrbInfo(who,now);
-  if(!info.active){if(source!=='ai')setHint(info.max>=HALLVALLA_RT_CFG.resourceCap?'MANÁ máximo alcanzado.':'No hay un orbe de MANÁ activo en tu lado.');return false;}
-  const maxBefore=hallvallaRtOwnerMaxMana(who),manaBefore=hallvallaRtOwnerCurrentMana(who);
+async function hallvallaRtCollectManaOrb(owner=null,source='gamepad'){
+  const now=hallvallaRtNow();
+  const collector=source==='ai'?2:Number(myPlayer||0);
+  if(!collector)return false;
+  let orbOwner=Number(owner||0);
+  if(!orbOwner){
+    const ownInfo=hallvallaRtManaOrbInfo(collector,now);
+    if(ownInfo.active)orbOwner=collector;
+    else{
+      const rival=collector===1?2:1,rivalInfo=hallvallaRtManaOrbInfo(rival,now);
+      if(hallvallaRtCanStealManaOrb(rivalInfo,collector,now))orbOwner=rival;
+      else orbOwner=collector;
+    }
+  }
+  if(source==='ai'&&orbOwner!==2)return false;
+  const info=hallvallaRtManaOrbInfo(orbOwner,now);
+  const stealing=orbOwner!==collector;
+  if(stealing&&!hallvallaRtCanStealManaOrb(info,collector,now))return false;
+  if(!info.active){
+    if(source!=='ai')setHint(hallvallaRtOwnerMaxMana(collector)>=HALLVALLA_RT_CFG.resourceCap?'MANÁ máximo alcanzado.':'No hay un orbe de MANÁ disponible.');
+    return false;
+  }
+  const maxBefore=hallvallaRtOwnerMaxMana(collector),manaBefore=hallvallaRtOwnerCurrentMana(collector);
   if(maxBefore>=HALLVALLA_RT_CFG.resourceCap)return false;
   const maxAfter=Math.min(HALLVALLA_RT_CFG.resourceCap,maxBefore+1),manaAfter=Math.min(maxAfter,manaBefore+1);
-  const claims={...(publicState?.rtManaOrbClaims||{}),[who]:info.cycle};
-  let publicPatch={rtManaOrbClaims:claims,[`playerStats/${who}`]:{...(publicState?.playerStats?.[who]||{}),honor:manaAfter,maxHonor:maxAfter}};
+  const claims={...(publicState?.rtManaOrbClaims||{}),[orbOwner]:info.cycle};
+  let publicPatch={rtManaOrbClaims:claims,[`playerStats/${collector}`]:{...(publicState?.playerStats?.[collector]||{}),honor:manaAfter,maxHonor:maxAfter}};
   let privatePatch={};
-  if(who===Number(myPlayer||0))privatePatch={honor:manaAfter,maxHonor:maxAfter};
-  else if(publicState?.adventureAiState&&who===2)publicPatch.adventureAiState={...publicState.adventureAiState,honor:manaAfter,maxHonor:maxAfter};
+  if(collector===Number(myPlayer||0))privatePatch={honor:manaAfter,maxHonor:maxAfter};
+  else if(publicState?.adventureAiState&&collector===2)publicPatch.adventureAiState={...publicState.adventureAiState,honor:manaAfter,maxHonor:maxAfter};
   hallvallaRtApplyImmediateCastState(publicPatch,privatePatch,publicState?.units||[]);
-  if(who===Number(myPlayer||0)&&publicState?.mode==='online')hallvallaRtQueueOnlineCastCheckpoint(publicPatch,privatePatch,'resource:mana-orb');
-  if(source!=='ai')setHint(`Orbe recogido · MANÁ ${manaAfter}/${maxAfter}.`);
+  if(collector===Number(myPlayer||0)&&publicState?.mode==='online')hallvallaRtQueueOnlineCastCheckpoint(publicPatch,privatePatch,stealing?'resource:mana-orb-steal':'resource:mana-orb');
+  if(source!=='ai')setHint(stealing?`Orbe rival robado · MANÁ ${manaAfter}/${maxAfter}.`:`Orbe recogido · MANÁ ${manaAfter}/${maxAfter}.`);
   hallvallaRtRenderManaOrbs();
   return true;
 }
@@ -1190,7 +1224,7 @@ async function hallvallaRtManaOrbTick(now){
   // PvE/BOT: recoge su propio orbe con una pequeña demora para simular reacción.
   if(publicState?.adventureAiState){
     const info=hallvallaRtManaOrbInfo(2,now);
-    if(info.active&&now-info.startsAt>=5500)await hallvallaRtCollectManaOrb(2,'ai');
+    if(info.active&&now-info.startsAt>=HALLVALLA_RT_CFG.aiManaOrbCollectDelayMs)await hallvallaRtCollectManaOrb(2,'ai');
   }
   return true;
 }
@@ -1283,7 +1317,19 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
   const spawnCell=hallvallaRtFindBestSpawnCell(2,units);
   const options=[];
   const push=(kind,card,target,score,extra={})=>{if(card&&Number.isFinite(score))options.push({kind,card,target,score,...extra});};
-  const affordable=(ai.hand||[]).filter(card=>hallvallaRtAiCardCost(card)<=mana);
+  const handCards=ai.hand||[];
+  const affordable=handCards.filter(card=>hallvallaRtAiCardCost(card)<=mana);
+  // Presencia mínima TR: con 0–1 invocaciones J2 prioriza desplegar y no quema
+  // el MANÁ en magia/trampas mientras espera una unidad. Esto evita que una IA
+  // de control se quede lanzando hechizos sin construir ejército.
+  if(allyUnits.length<2&&spawnCell){
+    const affordableUnits=affordable.filter(card=>card?.type==='unit');
+    if(affordableUnits.length){
+      const best=affordableUnits.map(card=>({kind:"summon",card,target:null,cell:spawnCell,score:5000+hallvallaRtAiUnitValue(card)-hallvallaRtAiCardCost(card)*8})).sort((a,b)=>b.score-a.score)[0];
+      if(best)return best;
+    }
+    if(handCards.some(card=>card?.type==='unit'))return null;
+  }
   for(const card of affordable){
     const cost=hallvallaRtAiCardCost(card);
     if(card?.type==="unit"){

@@ -819,7 +819,7 @@ function hvGamepadHandleButtons(gp){
     const level=hallvallaRtGetInputState();
     // TR canónico: LB y RB quedan reservados para recursos defensivos del duelo.
     // LB captura SOLO el orbe propio; RB protege al líder 3 s y no prolonga un escudo ya activo.
-    if(pressed.LB&&typeof hallvallaRtCollectManaOrb==="function")void hallvallaRtCollectManaOrb(myPlayer,"gamepad");
+    if(pressed.LB&&typeof hallvallaRtCollectManaOrb==="function")void hallvallaRtCollectManaOrb(null,"gamepad");
     if(pressed.RB&&typeof hallvallaRtActivateLeaderShield==="function")hallvallaRtActivateLeaderShield(myPlayer);
     if(level==="targeting"){
       if(pressed.A&&typeof hallvallaRtConfirmTarget==="function")void hallvallaRtConfirmTarget();
