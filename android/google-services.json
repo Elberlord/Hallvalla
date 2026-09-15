@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "496903032464",
+    "firebase_url": "https://hallvalla-online-default-rtdb.firebaseio.com",
+    "project_id": "hallvalla-online",
+    "storage_bucket": "hallvalla-online.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:496903032464:android:cee145808dc723eb905215",
+        "android_client_info": {
+          "package_name": "com.hallvalla.game"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoJwvF56pa2jPOBNSycwcVp1ej-j9qOMI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

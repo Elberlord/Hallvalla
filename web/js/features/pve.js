@@ -20,8 +20,8 @@
    - Semidiós/Astral jamás entran por score adaptativo. Sólo un encuentro bespoke puede usarlos.
    - Los Principales guionizados son slots adicionales y se escogen por utilidad contra
      el expediente del humano, conservando el Principal firma del jefe cuando exista.
-   - Cada líder conserva una identidad mínima: la adaptación contrarresta al humano
-     sin convertir el mazo en una mezcla sin arquetipo.
+   - Cada líder conserva una preferencia táctica, pero NO bloquea unidades de otras clases.
+   - Todo mazo de IA mantiene al menos 70% de unidades, incluso si el líder es Hechicero.
    - Los encuentros especiales con enemyLegendaryMode="deck" conservan su constructor
      bespoke, pero sus resultados también alimentan el expediente global.
 ============================================================================ */
@@ -33,47 +33,26 @@ const ADAPTIVE_CAMPAIGN_HISTORY_LIMIT=64;
 const ADAPTIVE_MAP1_BATTLE_IDS=new Set(["battle1","battle2","battle3","battle4","battle5"]);
 const ADAPTIVE_MAGE_PILOT_BATTLE_ID="guardian_mage";
 const ADAPTIVE_MAGE_BASE_DECK_COUNTS=Object.freeze([
-  ["arcane_adept",3],["guardian",3],["spearman",3],["samurai_katana",2],["acolyte_healer",1],
-  ["fireball",3],["bolt",3],["stabilizing_focus",1],["channeling_amulet",1]
+  ["arcane_adept",3],["acolyte_healer",3],["fireball",3],["bolt",3],
+  ["stabilizing_focus",1],["channeling_amulet",1],["blessing",1],["heal",1],
+  ["shield_wall",1],["inspiration",1],["smoke_bomb",1],["warning_rune",1]
 ]);
 const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
-  arcane_adept:2,guardian:2,spearman:2,samurai_katana:1,acolyte_healer:1,fireball:2,bolt:2
+  arcane_adept:2,acolyte_healer:1,fireball:1,bolt:1,stabilizing_focus:1,channeling_amulet:1
 });
 const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
-  // Tier 1 = 10 cartas. Estos mínimos preservan la identidad del encuentro
-  // y dejan libres hasta 4 slots para la adaptación táctica de la IA.
-  battle1:Object.freeze({archer:2,new_kingdom_archer:1,guardian:1,paralysis_spell:1,retreat_strap:1}),
-  battle2:Object.freeze({guardian:1,greek_hoplite:1,samurai_katana:1,armored_man_at_arms:1,marching_greaves:1,war_visor:1}),
-  battle3:Object.freeze({scythian_horse_archer:2,numidian_javelin_rider:1,guardian:1,withdrawal_stirrups:1,light_barding:1}),
-  battle4:Object.freeze({ulfhednar:1,berserker_de_oso:1,berserker:1,spearman:1,tanned_hide_harness:1,counterweighted_grip:1}),
-  battle5:Object.freeze({richard_lionheart:1,mulan:1,wallace:1,guardian:1,marching_greaves:1,war_visor:1})
+  // Tier 1 = 10 cartas. Estos mínimos conservan identidad, pero la IA puede mezclar clases.
+  battle1:Object.freeze({archer:2,egyptian_line_archer:1,new_kingdom_archer:1,retreat_strap:1,skirmisher_cloak:1}),
+  battle2:Object.freeze({spearman:1,guardian:1,greek_hoplite:1,armored_man_at_arms:1,marching_greaves:1}),
+  battle3:Object.freeze({cavalry:1,scythian_horse_archer:1,numidian_javelin_rider:1,hungarian_hussar:1,withdrawal_stirrups:1}),
+  battle4:Object.freeze({ulfhednar:1,berserker_de_oso:1,berserker:1,huscarl_anglosajon_hacha:1,tanned_hide_harness:1}),
+  battle5:Object.freeze({richard_lionheart:1,wallace:1,guardian:1,greek_hoplite:1,marching_greaves:1,war_visor:1})
 });
 const ADAPTIVE_MAP1_MAX_SWAPS=Object.freeze({battle1:4,battle2:4,battle3:5,battle4:8,battle5:10});
 const ADAPTIVE_CAMPAIGN_CAVALRY_KEYS=new Set(["cavalry","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","mongol_explorer","cossack_rider","samurai_yabusame"]);
 const ADAPTIVE_CAMPAIGN_ASSASSIN_KEYS=new Set(["scout","geisha_encubierta","fuma_kotaro","saboteador_iga"]);
-const ADAPTIVE_MAP1_RICHARD_RARE_KEYS=new Set(["richard_lionheart","mulan","wallace"]);
-const ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS=Object.freeze({
-  mage:Object.freeze([
-    ["arcane_adept",3],["guardian",3],["spearman",3],["samurai_katana",2],["acolyte_healer",1],
-    ["fireball",3],["bolt",3],["stabilizing_focus",1],["channeling_amulet",1]
-  ]),
-  archer:Object.freeze([
-    ["guardian",3],["samurai_katana",3],["archer",3],["new_kingdom_archer",3],
-    ["paralysis_spell",3],["bolt",2],["fireball",1],["retreat_strap",1],["poison_spell",1]
-  ]),
-  warrior:Object.freeze([
-    ["guardian",3],["greek_hoplite",3],["samurai_katana",3],["armored_man_at_arms",2],["scythian_horse_archer",3],
-    ["fireball",2],["bolt",2],["heal",1],["smoke_bomb",1]
-  ]),
-  cavalry:Object.freeze([
-    ["guardian",3],["greek_hoplite",3],["samurai_katana",3],["scythian_horse_archer",3],["numidian_javelin_rider",2],
-    ["bolt",2],["paralysis_spell",2],["heal",1],["withdrawal_stirrups",1]
-  ]),
-  axe:Object.freeze([
-    ["guardian",3],["spearman",2],["ulfhednar",3],["berserker_de_oso",3],["berserker",2],["scythian_horse_archer",2],
-    ["fireball",1],["bolt",1],["paralysis_spell",1],["tanned_hide_harness",1],["counterweighted_grip",1]
-  ])
-});
+const ADAPTIVE_MAP1_RICHARD_RARE_KEYS=new Set(["richard_lionheart","wallace"]);
+// v133: los mazos canónicos por clase/Tier se definen en LEADER_CLASS_BASIC_PROGRESSION_KEYS.
 function isMineExclusiveCard(card){
   if(!card)return false;
   return card.mineExclusive===true
@@ -202,21 +181,47 @@ const ADAPTIVE_PRINCIPAL_PAIR_SYNERGY=Object.freeze({
   "boudica|lu_bu":72,"boudica|khalid_ibn_al_walid":66,"beowulf|ragnar_lodbrok":64
 });
 
-function getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType=""){
-  const doctrineCounts=globalThis.HallvallaAiDeckDoctrine?.getCanonicalDeckCounts?.(String(enemyLeaderType||""));
-  const counts=Array.isArray(doctrineCounts)&&doctrineCounts.length
-    ?doctrineCounts
-    :ADAPTIVE_CANONICAL_CLASS_DECK_COUNTS[String(enemyLeaderType||"")];
-  if(!counts)return[];
-  const out=[];
-  counts.forEach(([key,count])=>{
-    const card=getAdventureDeckCardTemplateByKey(key);
-    for(let i=0;card&&i<Math.max(0,Number(count)||0);i++)out.push(card);
-  });
-  if(out.length!==DECK_RULES.drawDeckSize){
-    console.error(`[HallValla] Arquetipo canónico ${enemyLeaderType}: ${out.length}/${DECK_RULES.drawDeckSize} cartas.`);
+function getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType="",targetDeckSize=DECK_RULES.drawDeckSize){
+  const target=Math.max(1,Math.min(30,Number(targetDeckSize)||DECK_RULES.drawDeckSize));
+  if(typeof getLeaderTierCanonicalDeckTemplates==="function"){
+    const canonical=getLeaderTierCanonicalDeckTemplates(String(enemyLeaderType||"warrior"),target);
+    if(canonical.length===target)return canonical;
+    console.error(`[HallValla] Arquetipo canónico ${enemyLeaderType}: ${canonical.length}/${target} cartas.`);
   }
-  return out.slice(0,DECK_RULES.drawDeckSize);
+  return [];
+}
+const ADAPTIVE_AI_MIN_UNIT_RATIO=.70;
+function getAdaptiveAiMinimumUnitCount(targetDeckSize){
+  return Math.max(1,Math.ceil(Math.max(1,Number(targetDeckSize)||1)*ADAPTIVE_AI_MIN_UNIT_RATIO));
+}
+function normalizeAdaptiveAiUnitRatio(cards,battle,enemyLeaderType,targetDeckSize){
+  const target=Math.max(1,Number(targetDeckSize)||cards?.length||DECK_RULES.drawDeckSize);
+  const out=(Array.isArray(cards)?cards:[]).slice(0,target);
+  const minUnits=getAdaptiveAiMinimumUnitCount(target);
+  let unitCount=out.filter(card=>card?.type==="unit").length;
+  if(unitCount>=minUnits)return out;
+  const candidates=getAdaptiveCampaignEvolutionPool(battle,enemyLeaderType)
+    .filter(card=>card?.type==="unit"&&isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType))
+    .sort((a,b)=>{
+      const aClass=(typeof isLeaderClassUnitCard==="function"&&isLeaderClassUnitCard(a,enemyLeaderType))?1:0;
+      const bClass=(typeof isLeaderClassUnitCard==="function"&&isLeaderClassUnitCard(b,enemyLeaderType))?1:0;
+      const aScore=getAdaptiveCampaignLeaderIdentityBonus(a,enemyLeaderType)+aClass*24-Math.max(0,Number(a?.cost||0))*2;
+      const bScore=getAdaptiveCampaignLeaderIdentityBonus(b,enemyLeaderType)+bClass*24-Math.max(0,Number(b?.cost||0))*2;
+      return bScore-aScore||String(a?.key||"").localeCompare(String(b?.key||""));
+    });
+  const countKey=key=>out.filter(card=>String(card?.key||"")===String(key||"")).length;
+  while(unitCount<minUnits){
+    const replaceIndex=out.map((card,index)=>({card,index,score:getAdaptiveCampaignLeaderIdentityBonus(card,enemyLeaderType)}))
+      .filter(entry=>entry.card?.type!=="unit")
+      .sort((a,b)=>a.score-b.score||b.index-a.index)[0]?.index;
+    if(!Number.isFinite(replaceIndex))break;
+    const candidate=candidates.find(card=>countKey(card?.key)<Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(card):3));
+    if(!candidate)break;
+    out.splice(replaceIndex,1,candidate);
+    unitCount++;
+  }
+  if(unitCount<minUnits)console.warn(`[HallValla][AI Deck] ${battle?.id||"batalla"}: solo ${unitCount}/${target} unidades; objetivo mínimo ${minUnits}.`);
+  return out;
 }
 function getAdaptiveCampaignRarityCapKey(battle){
   const chapter=Math.floor(getAdaptiveCampaignChapterNumber(battle));
@@ -532,6 +537,7 @@ function isAdaptiveBasicCard(card){
 function isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType=""){
   if(!card)return false;
   if(isAdaptiveCampaignBeastRestricted(card,enemyLeaderType))return false;
+  if(card?.type==="equipment"&&typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(card,enemyLeaderType))return false;
   if(isAdaptiveMap1Battle(battle)){
     if(isAdaptiveBasicCard(card))return true;
     return battle?.id==="battle5"&&ADAPTIVE_MAP1_RICHARD_RARE_KEYS.has(String(card?.key||""));
@@ -1030,13 +1036,13 @@ function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckS
   // MAPA 2+: SIEMPRE recicla el arquetipo canónico de su clase. Los enemyFixedDeck
   // antiguos dejan de sustituir la identidad del mazo; sólo sirven los nuevos campos
   // adaptiveScriptedDrawCards cuando queramos diseñar una excepción conscientemente.
-  let drawBase=getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType);
+  let drawBase=getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType,target);
   if(!drawBase.length){
     drawBase=(typeof getLeaderStarterFixedDeckTemplates==="function"?getLeaderStarterFixedDeckTemplates(enemyLeaderType):[])
       .filter(isAdaptiveBasicCard).slice(0,target);
   }
   if(drawBase.length<target){
-    const filler=getAiBasicDeckTemplates(target).filter(isAdaptiveBasicCard);
+    const filler=getAiBasicDeckTemplates(target,enemyLeaderType).filter(card=>isAdaptiveBasicCard(card));
     for(const card of filler){
       if(drawBase.length>=target)break;
       const copies=drawBase.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
@@ -1129,7 +1135,8 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
     : selectAdaptiveCampaignPrincipalKeys(battle,enemyLeaderType,profile,principalSlots);
   battle._adaptivePrincipalKeys=principalKeys;
 
-  const base=getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,target,principalKeys);
+  const rawBase=getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,target,principalKeys);
+  const base=normalizeAdaptiveAiUnitRatio(rawBase,battle,enemyLeaderType,target);
   const counts={};
   base.forEach(card=>{const key=String(card?.key||card?.name||"");if(key)counts[key]=(counts[key]||0)+1;});
   const candidates=adaptiveCampaignCounterCandidates(profile,enemyLeaderType,battle);
@@ -1207,7 +1214,7 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
 
   // Fallback sólo Básico y compatible; nunca rellena con rarezas futuras.
   if(templates.length<target){
-    const filler=getAiBasicDeckTemplates(target).filter(card=>isAdaptiveBasicCard(card)&&!isAdaptiveCampaignBeastRestricted(card,enemyLeaderType));
+    const filler=getAiBasicDeckTemplates(target,enemyLeaderType).filter(card=>isAdaptiveBasicCard(card)&&!isAdaptiveCampaignBeastRestricted(card,enemyLeaderType));
     for(const card of filler){
       if(templates.length>=target)break;
       const copies=templates.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
@@ -1215,9 +1222,10 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
       templates.push(card);
     }
   }
+  const normalizedFinal=normalizeAdaptiveAiUnitRatio(templates,battle,enemyLeaderType,target);
   const metaCount=(cards=[])=>cards.reduce((acc,card)=>{const key=String(card?.key||card?.name||"");if(key)acc[key]=(acc[key]||0)+1;return acc;},{});
   const canonicalDeckCounts=metaCount(base);
-  const finalDeckCounts=metaCount(templates.slice(0,target));
+  const finalDeckCounts=metaCount(normalizedFinal.slice(0,target));
   const adaptiveAdded={},adaptiveRemoved={};
   for(const key of new Set([...Object.keys(canonicalDeckCounts),...Object.keys(finalDeckCounts)])){
     const delta=Number(finalDeckCounts[key]||0)-Number(canonicalDeckCounts[key]||0);
@@ -1234,7 +1242,7 @@ function buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSiz
     topThreats:Object.entries(profile?.cards||{}).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,6).map(([key,weight])=>({key,weight:Number(weight||0)})),
     topCounters:active.slice(0,6).map(entry=>({key:entry.key,score:Number(entry.score||0),desired:Number(entry.desired||1)}))
   };
-  return templates.slice(0,target);
+  return normalizedFinal.slice(0,target);
 }
 function recordAdaptiveCampaignBattle(pub){
   try{
@@ -1317,29 +1325,44 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     return{deck:draw.deck,hand:draw.hand};
   }
   if(Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
-    const fixedTemplates=expandEnemyFixedDeck(battle.enemyFixedDeck);
-    if(fixedTemplates.length!==targetDeckSize){
-      console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} tiene ${fixedTemplates.length}/${targetDeckSize} cartas para este tier; se ajustará al tamaño requerido.`);
+    const rawFixedTemplates=expandEnemyFixedDeck(battle.enemyFixedDeck);
+    const fixedTemplates=[];
+    for(const card of rawFixedTemplates){
+      if(card?.type==="equipment"&&typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(card,enemyLeaderType))continue;
+      const copies=fixedTemplates.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
+      if(copies>=Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(card):3))continue;
+      fixedTemplates.push(card);
     }
-    // El primer Hechicero conserva su enseñanza tutorial: 1 Lancero solar garantizado en mano,
-    // pero las 20 cartas salen exclusivamente de su nuevo mazo fijo.
+    if(fixedTemplates.length<targetDeckSize&&typeof getLeaderTierCanonicalDeckTemplates==="function"){
+      for(const card of getLeaderTierCanonicalDeckTemplates(enemyLeaderType,targetDeckSize)){
+        if(fixedTemplates.length>=targetDeckSize)break;
+        const copies=fixedTemplates.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
+        if(copies>=Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(card):3))continue;
+        fixedTemplates.push(card);
+      }
+    }
+    const mixedFixedTemplates=normalizeAdaptiveAiUnitRatio(fixedTemplates,battle,enemyLeaderType,targetDeckSize);
+    if(mixedFixedTemplates.length!==targetDeckSize){
+      console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} quedó ${mixedFixedTemplates.length}/${targetDeckSize} tras aplicar Tier y mínimo 70% unidades.`);
+    }
+    // El primer Hechicero conserva su enseñanza tutorial con un Adepto Arcano garantizado en mano.
     if(battle?.id==="guardian_mage"){
-      const forcedUnit=fixedTemplates.find(card=>card?.key==="spearman")||fixedTemplates.find(card=>card?.type==="unit");
-      let pool=forcedUnit?removeOneTemplateByKey(fixedTemplates,forcedUnit.key):fixedTemplates;
+      const forcedUnit=mixedFixedTemplates.find(card=>card?.key==="arcane_adept")||mixedFixedTemplates.find(card=>card?.type==="unit");
+      let pool=forcedUnit?removeOneTemplateByKey(mixedFixedTemplates,forcedUnit.key):mixedFixedTemplates;
       pool=pool.slice(0,Math.max(0,targetDeckSize-(forcedUnit?1:0)));
       const draw=drawCards(shuffle(pool.map(card=>makeCard(card,2,enemyLeaderType))),[],forcedUnit?3:4);
       return{deck:draw.deck,hand:[...(forcedUnit?[makeCard(forcedUnit,2,enemyLeaderType)]:[]),...draw.hand]};
     }
-    const fixedDeck=shuffle(fixedTemplates.slice(0,targetDeckSize).map(card=>makeCard(card,2,enemyLeaderType)));
+    const fixedDeck=shuffle(mixedFixedTemplates.slice(0,targetDeckSize).map(card=>makeCard(card,2,enemyLeaderType)));
     const draw=drawCards(fixedDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
-  const baseTemplates=getAiBasicDeckTemplates(targetDeckSize).slice(0,targetDeckSize);
+  const baseTemplates=getAiBasicDeckTemplates(targetDeckSize,enemyLeaderType).slice(0,targetDeckSize);
   const improvedTemplates=(battle?.packType==="improved_magic_trap"||battle?.rewardCard==="improved_magic_trap_pack")?IMPROVED_MAGIC_TRAP_PACK:[];
   // El guardián inicial debe enseñar que la IA también invoca, no solo lanza hechizos.
   // Forzamos una unidad básica barata en la mano inicial y dejamos el resto aleatorio.
   if(battle?.id==="guardian_mage"){
-    const forcedUnit=baseTemplates.find(c=>c.key==="spearman")||baseTemplates.find(c=>c.type==="unit");
+    const forcedUnit=baseTemplates.find(c=>c.key==="arcane_adept")||baseTemplates.find(c=>c.type==="unit");
     let pool=forcedUnit?removeOneTemplateByKey(baseTemplates,forcedUnit.key):baseTemplates;
     const draw=drawCards(shuffle(pool).map(c=>makeCard(c,2,enemyLeaderType)),[],forcedUnit?3:4);
     return{deck:draw.deck,hand:[...(forcedUnit?[makeCard(forcedUnit,2,enemyLeaderType)]:[]),...draw.hand]};
@@ -1349,7 +1372,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   (battle?.enemyLegendaryCards||[]).forEach(key=>{const card=getLegendaryCardByKey(key);if(card)legendaryTemplates.push(card);});
   const uniqueLegendary=[...new Map(legendaryTemplates.map(c=>[c.key,c])).values()];
   const preferred=[...uniqueLegendary,...improvedTemplates];
-  const fullTemplates=buildDeckTemplatesWithLimits(preferred,shuffle([...baseTemplates]),targetDeckSize);
+  const fullTemplates=normalizeAdaptiveAiUnitRatio(buildDeckTemplatesWithLimits(preferred,shuffle([...baseTemplates]),targetDeckSize),battle,enemyLeaderType,targetDeckSize);
   const forceLegendaryInHand=battle?.enemyLegendaryMode!=="deck"&&uniqueLegendary.length>0;
   if(forceLegendaryInHand){
     const forced=uniqueLegendary.slice(0,Math.min(4,uniqueLegendary.length));
@@ -2944,27 +2967,19 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   function cardThreat(profile,key,cap=12){return Math.min(cap,n(profile?.cards?.[String(key||"")]));}
   function sumThreat(profile,keys){return keys.reduce((s,key)=>s+cardThreat(profile,key),0);}
 
-  function getCanonicalDeckCounts(leaderType){
-    return String(leaderType||"")==="cavalry"?CAVALRY_CANONICAL_COUNTS.map(([k,c])=>[k,c]):null;
+  function getCanonicalDeckCounts(){
+    // v133: la fuente canónica vive en LEADER_CLASS_BASIC_PROGRESSION_KEYS (10/15/20/25/30).
+    return null;
   }
-  function getMap1DeckCounts(battleId,leaderType){
-    if(String(leaderType||"")!=="cavalry"||String(battleId||"")!=="battle3")return null;
-    return MAP1_CAVALRY_COUNTS.map(([k,c])=>[k,c]);
+  function getMap1DeckCounts(){
+    // v133: Mapa 1 usa recetas de Tier 1 ya purificadas por clase.
+    return null;
   }
 
-  function getCoreMinimums(leaderType,battle){
-    if(String(leaderType||"")!=="cavalry")return null;
-    if(String(battle?.id||"")==="battle3"){
-      return Object.freeze({
-        guardian:2,greek_hoplite:2,samurai_katana:2,
-        scythian_horse_archer:2,numidian_javelin_rider:1,
-        bolt:1,paralysis_spell:1,fireball:1
-      });
-    }
-    return Object.freeze({
-      guardian:1,greek_hoplite:1,samurai_katana:1,
-      scythian_horse_archer:1,numidian_javelin_rider:1,bolt:1,fireball:1
-    });
+  function getCoreMinimums(){
+    // La identidad mínima se calcula desde el propio mazo de clase; no se fuerzan
+    // Guardianes/Samuráis dentro de Caballería ni otras unidades cruzadas.
+    return null;
   }
 
   function getMinimumRoleCount(leaderType,role,battle){
@@ -3094,47 +3109,16 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
 
   function canRemoveCardForCandidate(removingCard,candidateCard,currentCards,leaderType,battle){
     if(!removingCard)return false;
-
-    // Simulamos el intercambio y comprobamos que ninguna función estratégica desaparezca.
-    // Esta base funcional es común a TODAS las IA: pantalla real (5+ Vida),
-    // DPS ranged, rompedor, DPS melee y al menos una magia DOT.
-    const after=(currentCards||[]).filter((card,index)=>{
-      if(card!==removingCard)return true;
-      // elimina una sola instancia por identidad de objeto; fallback por key más abajo
-      const first=(currentCards||[]).indexOf(removingCard);
-      return index!==first;
-    });
-    if(after.length===(currentCards||[]).length){
-      const key=keyOf(removingCard);let skipped=false;
-      after.length=0;
-      for(const card of currentCards||[]){
-        if(!skipped&&keyOf(card)===key){skipped=true;continue;}
-        after.push(card);
-      }
+    if(candidateCard?.type==="equipment"&&typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(candidateCard,leaderType))return false;
+    const after=[];
+    let removed=false;
+    for(const card of currentCards||[]){
+      if(!removed&&(card===removingCard||keyOf(card)===keyOf(removingCard))){removed=true;continue;}
+      after.push(card);
     }
     if(candidateCard)after.push(candidateCard);
-
-    if(countBy(after,isTankCard)<1)return false;
-    if(countBy(after,isRangedDpsCard)<1)return false;
-    if(countBy(after,isBreaker)<1)return false;
-    if(countBy(after,isMeleeDpsCard)<1)return false;
-    if(countBy(after,isDotMagic)<1)return false;
-
-    // A partir de aquí las restricciones extra son propias del Señor de la Carga.
-    if(String(leaderType||"")!=="cavalry")return true;
-    const minCav=getMinimumRoleCount(leaderType,"cavalry",battle);
-    const minRangedCav=getMinimumRoleCount(leaderType,"rangedCavalry",battle);
-    const minBreaker=getMinimumRoleCount(leaderType,"breaker",battle);
-    const minBodyguard=getMinimumRoleCount(leaderType,"bodyguard",battle);
-    const minSuppressor=getMinimumRoleCount(leaderType,"suppressor",battle);
-    const minAntiPike=getMinimumRoleCount(leaderType,"antiPike",battle);
-    if(countBy(after,isCavalry)<minCav)return false;
-    if(countBy(after,isRangedCavalry)<minRangedCav)return false;
-    if(countBy(after,isBreaker)<minBreaker)return false;
-    if(countBy(after,isBodyguard)<minBodyguard)return false;
-    if(countBy(after,isSuppressor)<minSuppressor)return false;
-    if(countBy(after,isAntiPike)<minAntiPike)return false;
-    return true;
+    const minUnits=Math.ceil(Math.max(1,after.length)*.70);
+    return after.filter(card=>card?.type==="unit").length>=minUnits;
   }
 
   function getTacticalRole(card){

@@ -96,13 +96,13 @@ const IMPROVED_MAGIC_TRAP_PACK=[
 ];
 
 const ADVENTURE_PROGRESS_KEY="hallvalla_adventure_progress";
-const ADVENTURE_GUARDIAN_BATTLE={id:"guardian_mage",num:0,isGuardian:true,title:"El guardián hechicero",enemyName:"Hechicero guardián",enemyLeaderType:"mage",image:"assets/story/guardian_intro_bg.webp",actorImage:"assets/story/guardian_hechicero_actor.webp",enemyIntro:"Años atrás, una disputa con la Corona convirtió tu nombre en algo que HallValla aprendió a despreciar. Pudiste dejar que el reino se consumiera solo, pero cuando fuerzas extranjeras comenzaron a financiar levantamientos y cruzar la frontera, regresaste. No por la Corona: esta es la tierra donde nació tu madre.\n\nTerral regresó contigo sin pedir explicaciones. Es la única persona que permaneció a tu lado cuando todos los demás te llamaron traidor.\n\nEn las ruinas del umbral, un hechicero guardián reconoce tu rostro y te impide el paso. Para él sigues siendo el mercenario expulsado que no tiene derecho a volver armado.\n\nTerral retrocede unos pasos.\n\n—Esta pelea es tuya.\n\nEl guardián no necesita que le jures lealtad. Necesita comprobar de qué lado estás. Derrótalo y demuestra que no regresaste para terminar de destruir HallValla.",xp:20,gold:10,cardPack:true,rewardPackType:"shop_basic",rewardCard:"starter_complement",enemyFixedDeck:[["arcane_adept",2],["guardian",2],["acolyte_healer",1],["fireball",2],["bolt",1],["stabilizing_focus",1],["channeling_amulet",1]],aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial mágico",desc:"Derrota al Hechicero guardián y demuestra que tu regreso no forma parte de la conspiración contra HallValla."};
+const ADVENTURE_GUARDIAN_BATTLE={id:"guardian_mage",num:0,isGuardian:true,title:"El guardián hechicero",enemyName:"Hechicero guardián",enemyLeaderType:"mage",image:"assets/story/guardian_intro_bg.webp",actorImage:"assets/story/guardian_hechicero_actor.webp",enemyIntro:"Años atrás, una disputa con la Corona convirtió tu nombre en algo que HallValla aprendió a despreciar. Pudiste dejar que el reino se consumiera solo, pero cuando fuerzas extranjeras comenzaron a financiar levantamientos y cruzar la frontera, regresaste. No por la Corona: esta es la tierra donde nació tu madre.\n\nTerral regresó contigo sin pedir explicaciones. Es la única persona que permaneció a tu lado cuando todos los demás te llamaron traidor.\n\nEn las ruinas del umbral, un hechicero guardián reconoce tu rostro y te impide el paso. Para él sigues siendo el mercenario expulsado que no tiene derecho a volver armado.\n\nTerral retrocede unos pasos.\n\n—Esta pelea es tuya.\n\nEl guardián no necesita que le jures lealtad. Necesita comprobar de qué lado estás. Derrótalo y demuestra que no regresaste para terminar de destruir HallValla.",xp:20,gold:10,cardPack:true,rewardPackType:"shop_basic",rewardCard:"starter_complement",enemyFixedDeck:[["arcane_adept",3],["acolyte_healer",2],["fireball",2],["bolt",1],["stabilizing_focus",1],["channeling_amulet",1]],aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial mágico",desc:"Derrota al Hechicero guardián y demuestra que tu regreso no forma parte de la conspiración contra HallValla."};
 const ADVENTURE_CHAPTER_1_1={id:"chapter1_1",number:"1.1",title:"Los caminos sin bandera",desc:"Tú y Terral entráis en HallValla por rutas que la guerra dejó sin dueño. Desertores, ladrones y antiguos soldados viven de asaltar viajeros, pero algo no encaja: entre sus bolsas aparecen monedas extranjeras demasiado nuevas para ser botín. Lo que parece simple bandidaje es la primera señal de una guerra comprada.",introTitle:"1.1 Los caminos sin bandera",introText:"Los caminos hacia el interior de HallValla están casi vacíos. Puestos abandonados, patrullas rotas y soldados que renunciaron a sus juramentos han convertido la frontera en tierra de nadie.\n\nTerral observa los árboles mientras tú avanzas sin bajar el paso.\n\n—Podríamos rodear el bosque.\n\n—También podríamos ahorrar tiempo.\n\n—Siempre eliges la respuesta que incluye más espadas.\n\nNo tarda en aparecer la razón del silencio: una banda de desertores os cierra el camino. Su cabecilla, un arquero de las montañas, exige oro, caballos y provisiones.\n\nTodavía parece un asalto cualquiera. Pero uno de sus hombres lleva al cuello una moneda extranjera recién acuñada. Terral también la ve.\n\nAlguien está pagando a los hombres que mantienen estas rutas incomunicadas.",battles:[
-{id:"battle1",num:1,title:"El bribón de las montañas",legacyTitle:"Rumores en la frontera",enemyName:"Arquero bribón",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"Una banda de desertores os rodea entre los árboles. Su jefe, un arquero de las montañas, exige oro, caballos y provisiones.\n\nTerral baja la voz.\n\n—Podríamos entregarles algo.\n\n—Claro. Pueden llevarse mis botas cuando me las quiten del cadáver.\n\n—Sabía que ibas a decir eso.\n\nUno de los hombres lleva una moneda extranjera al cuello. Demasiado nueva, demasiado limpia. Estos desertores no solo sobreviven robando viajeros: alguien les paga por mantener la ruta vacía.",xp:20,gold:10,cardPack:true,enemyFixedDeck:[["archer",3],["new_kingdom_archer",2],["guardian",1],["samurai_katana",1],["paralysis_spell",1],["poison_spell",1],["retreat_strap",1]],aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial agresivo",desc:"Rompe el primer bloqueo de desertores y descubre quién está financiando el caos de la frontera."},
-{id:"battle2",num:2,title:"El puente sin bandera",legacyTitle:"El puente tomado",enemyName:"Guerrero del puente",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"El siguiente cruce está ocupado por antiguos soldados de HallValla. No roban a los viajeros: detienen mensajeros y destruyen cualquier carta dirigida a la capital.\n\nSobre uno de los escudos aparece un símbolo: un círculo negro atravesado por tres cortes.\n\nTerral te mira.\n\n—Lo conoces.\n\n—No.\n\n—También eres terrible mintiendo.\n\nHabías visto ese símbolo muchos años atrás entre las cosas de tu padre. Nunca supiste qué significaba.",xp:32,gold:12,cardPack:true,enemyFixedDeck:[["guardian",2],["greek_hoplite",2],["samurai_katana",2],["armored_man_at_arms",1],["marching_greaves",1],["war_visor",1],["heal",1]],aiLevel:2,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Presión frontal",desc:"Recupera el puente y sigue la primera pista que conecta esta guerra con el pasado de tu familia."},
-{id:"battle3",num:3,title:"Jinetes pagados",legacyTitle:"La noche del estandarte",enemyName:"Señor de la Carga",enemyLeaderType:"cavalry",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"Una columna de caballería cruza la ruta con órdenes de interceptar mensajeros reales antes de que alcancen la capital. No llevan un estandarte rebelde: llevan bolsas de la misma moneda extranjera que encontraste entre los desertores.\n\nTerral recoge una orden caída en el barro. El sello ha sido arrancado, pero quedan tres cortes negros en la cera.\n\nYa no parece coincidencia. Alguien está pagando a grupos que ni siquiera se conocen entre sí para cortar las comunicaciones de HallValla.",xp:48,gold:15,cardPack:true,enemyFixedDeck:[["scythian_horse_archer",3],["numidian_javelin_rider",2],["guardian",1],["greek_hoplite",1],["paralysis_spell",1],["withdrawal_stirrups",1],["light_barding",1]],aiLevel:3,aiDrawBonus:1,aiHonorBonus:0,aiStyle:"Movilidad, carga y flanqueo",desc:"Detén a los jinetes pagados antes de que aíslen por completo la frontera de la capital."},
-{id:"battle4",num:4,title:"El hacha ante la puerta",legacyTitle:"Asedio al salón del trono",enemyName:"Caudillo del Hacha",enemyLeaderType:"axe",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"La ruta termina en un bastión real atacado desde dentro y desde fuera. Un caudillo cubierto de cicatrices dirige a mercenarios y desertores contra la puerta principal mientras un grupo de guardias comprados intenta abrirla desde el interior.\n\nNo busca un trono. Busca algo más útil: abrir una brecha por la que las fuerzas extranjeras puedan entrar sin conquistar cada fortaleza del camino.\n\nTerral observa las bolsas de pago colgadas de los atacantes.\n\n—Quien esté detrás de esto tiene demasiado oro.\n\n—Entonces tendrá más cuando lo encontremos.",xp:64,gold:18,cardPack:true,enemyFixedDeck:[["ulfhednar",2],["berserker_de_oso",2],["berserker",2],["spearman",1],["tanned_hide_harness",1],["counterweighted_grip",1],["paralysis_spell",1]],aiLevel:4,aiDrawBonus:1,aiHonorBonus:1,aiStyle:"Ruptura, berserkers y presión brutal",desc:"Evita que el caudillo abra una ruta segura para la invasión extranjera."},
-{id:"battle5",num:5,title:"La prueba de Richard",legacyTitle:"El usurpador",enemyName:"Richard Corazón de León",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_5_el_usurpador.webp",enemyIntro:"Dentro del bastión espera Richard Corazón de León, comandante de una fuerza que todavía permanece leal a HallValla. Ha oído las mismas historias que el guardián: traición, mercenarios y un hombre expulsado que regresa justo cuando el reino empieza a caer.\n\nNo intenta arrestarte. Te ofrece una prueba.\n\n—Si vas a caminar armado por estas tierras, quiero saber qué haces cuando alguien te obliga a elegir entre orgullo y deber.\n\nTerral se apoya contra un muro.\n\n—Por una vez intenta no insultar al hombre antes de empezar.\n\nSupera a Richard y tendrás un aliado dentro del mismo reino que todavía desconfía de ti.",xp:80,gold:25,cardPack:false,rewardCard:"richard_lionheart",enemyLegendaryCards:["mulan","wallace","richard_lionheart"],enemyFixedDeck:[["richard_lionheart",1],["mulan",1],["wallace",1],["guardian",2],["greek_hoplite",1],["samurai_katana",1],["armored_man_at_arms",1],["marching_greaves",1],["war_visor",1]],aiLevel:5,aiDrawBonus:0,aiHonorBonus:2,aiStyle:"Bastión del León · adaptación total",desc:"Supera la prueba de Richard y consigue el primer aliado capaz de respaldar tu regreso ante HallValla."}
+{id:"battle1",num:1,title:"El bribón de las montañas",legacyTitle:"Rumores en la frontera",enemyName:"Arquero bribón",enemyLeaderType:"archer",image:"assets/story/adventure_1_1/1_1_1_rumores_en_la_frontera.webp",enemyIntro:"Una banda de desertores os rodea entre los árboles. Su jefe, un arquero de las montañas, exige oro, caballos y provisiones.\n\nTerral baja la voz.\n\n—Podríamos entregarles algo.\n\n—Claro. Pueden llevarse mis botas cuando me las quiten del cadáver.\n\n—Sabía que ibas a decir eso.\n\nUno de los hombres lleva una moneda extranjera al cuello. Demasiado nueva, demasiado limpia. Estos desertores no solo sobreviven robando viajeros: alguien les paga por mantener la ruta vacía.",xp:20,gold:10,cardPack:true,enemyFixedDeck:[["archer",3],["egyptian_line_archer",2],["new_kingdom_archer",1],["roman_auxiliary_sagittarius",1],["samurai_yabusame",1],["skirmisher_cloak",1],["retreat_strap",1]],aiLevel:1,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Tutorial agresivo",desc:"Rompe el primer bloqueo de desertores y descubre quién está financiando el caos de la frontera."},
+{id:"battle2",num:2,title:"El puente sin bandera",legacyTitle:"El puente tomado",enemyName:"Guerrero del puente",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"El siguiente cruce está ocupado por antiguos soldados de HallValla. No roban a los viajeros: detienen mensajeros y destruyen cualquier carta dirigida a la capital.\n\nSobre uno de los escudos aparece un símbolo: un círculo negro atravesado por tres cortes.\n\nTerral te mira.\n\n—Lo conoces.\n\n—No.\n\n—También eres terrible mintiendo.\n\nHabías visto ese símbolo muchos años atrás entre las cosas de tu padre. Nunca supiste qué significaba.",xp:32,gold:12,cardPack:true,enemyFixedDeck:[["spearman",2],["guardian",2],["greek_hoplite",1],["roman_legionary",1],["armored_man_at_arms",1],["samurai_katana",1],["samurai_naginata",1],["marching_greaves",1]],aiLevel:2,aiDrawBonus:0,aiHonorBonus:0,aiStyle:"Presión frontal",desc:"Recupera el puente y sigue la primera pista que conecta esta guerra con el pasado de tu familia."},
+{id:"battle3",num:3,title:"Jinetes pagados",legacyTitle:"La noche del estandarte",enemyName:"Señor de la Carga",enemyLeaderType:"cavalry",image:"assets/story/adventure_1_1/1_1_3_la_noche_del_estandarte.webp",enemyIntro:"Una columna de caballería cruza la ruta con órdenes de interceptar mensajeros reales antes de que alcancen la capital. No llevan un estandarte rebelde: llevan bolsas de la misma moneda extranjera que encontraste entre los desertores.\n\nTerral recoge una orden caída en el barro. El sello ha sido arrancado, pero quedan tres cortes negros en la cera.\n\nYa no parece coincidencia. Alguien está pagando a grupos que ni siquiera se conocen entre sí para cortar las comunicaciones de HallValla.",xp:48,gold:15,cardPack:true,enemyFixedDeck:[["cavalry",3],["numidian_javelin_rider",2],["scythian_horse_archer",2],["hungarian_hussar",1],["mongol_explorer",1],["withdrawal_stirrups",1]],aiLevel:3,aiDrawBonus:1,aiHonorBonus:0,aiStyle:"Movilidad, carga y flanqueo",desc:"Detén a los jinetes pagados antes de que aíslen por completo la frontera de la capital."},
+{id:"battle4",num:4,title:"El hacha ante la puerta",legacyTitle:"Asedio al salón del trono",enemyName:"Caudillo del Hacha",enemyLeaderType:"axe",image:"assets/story/adventure_1_1/1_1_4_asedio_al_salon_del_trono.webp",enemyIntro:"La ruta termina en un bastión real atacado desde dentro y desde fuera. Un caudillo cubierto de cicatrices dirige a mercenarios y desertores contra la puerta principal mientras un grupo de guardias comprados intenta abrirla desde el interior.\n\nNo busca un trono. Busca algo más útil: abrir una brecha por la que las fuerzas extranjeras puedan entrar sin conquistar cada fortaleza del camino.\n\nTerral observa las bolsas de pago colgadas de los atacantes.\n\n—Quien esté detrás de esto tiene demasiado oro.\n\n—Entonces tendrá más cuando lo encontremos.",xp:64,gold:18,cardPack:true,enemyFixedDeck:[["berserker",2],["berserker_de_oso",2],["ulfhednar",2],["huscarl_anglosajon_hacha",1],["guardia_varega_hacha",1],["guerrero_franco_hacha",1],["tanned_hide_harness",1]],aiLevel:4,aiDrawBonus:1,aiHonorBonus:1,aiStyle:"Ruptura, berserkers y presión brutal",desc:"Evita que el caudillo abra una ruta segura para la invasión extranjera."},
+{id:"battle5",num:5,title:"La prueba de Richard",legacyTitle:"El usurpador",enemyName:"Richard Corazón de León",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_5_el_usurpador.webp",enemyIntro:"Dentro del bastión espera Richard Corazón de León, comandante de una fuerza que todavía permanece leal a HallValla. Ha oído las mismas historias que el guardián: traición, mercenarios y un hombre expulsado que regresa justo cuando el reino empieza a caer.\n\nNo intenta arrestarte. Te ofrece una prueba.\n\n—Si vas a caminar armado por estas tierras, quiero saber qué haces cuando alguien te obliga a elegir entre orgullo y deber.\n\nTerral se apoya contra un muro.\n\n—Por una vez intenta no insultar al hombre antes de empezar.\n\nSupera a Richard y tendrás un aliado dentro del mismo reino que todavía desconfía de ti.",xp:80,gold:25,cardPack:false,rewardCard:"richard_lionheart",enemyLegendaryCards:["wallace","richard_lionheart"],enemyFixedDeck:[["richard_lionheart",1],["wallace",1],["guardian",2],["greek_hoplite",1],["roman_legionary",1],["samurai_katana",1],["armored_man_at_arms",1],["marching_greaves",1],["war_visor",1]],aiLevel:5,aiDrawBonus:0,aiHonorBonus:2,aiStyle:"Bastión del León · adaptación total",desc:"Supera la prueba de Richard y consigue el primer aliado capaz de respaldar tu regreso ante HallValla."}
 ]};
 const ADVENTURE_CHAPTER_2_1={id:"chapter2_1",number:"2.1",title:"Una guerra comprada",desc:"La ruta despejada revela algo peor que una rebelión organizada: facciones que ni siquiera comparten bandera reciben armas, oro e información del mismo origen. Terral empieza a seguir el dinero. Tú empiezas a sospechar que la guerra de HallValla fue preparada desde mucho antes de vuestro regreso.",introTitle:"2.1 Una guerra comprada",introText:"Después de la prueba de Richard, los informes de la frontera comienzan a encajar. Nobles ambiciosos, desertores, mercenarios extranjeros y pequeños grupos rebeldes creen estar peleando guerras distintas. Sin embargo, las mismas monedas aparecen en todos sus campamentos.\n\nTerral lleva varios días guardando sellos, órdenes rotas y fragmentos de correspondencia.\n\n—Esto no es una rebelión —dice al extenderlos sobre una mesa—. Es un mercado. Alguien compra enemigos y los coloca donde hacen más daño.\n\nEntre los documentos aparece una orden sin firma: no exige conquistar una ciudad ni matar a un general. Solo pide confirmar si una persona ha regresado a HallValla.\n\nLa orden no dice tu nombre.\n\nDice únicamente: «EL HIJO».",requiresChapter:"chapter1_1",packType:"improved_magic_trap",battles:[
 {id:"chapter2_1_battle1",num:1,title:"La vanguardia de oro",enemyName:"Guerrero de la Vanguardia Pagada",enemyLeaderType:"warrior",image:"assets/story/adventure_1_1/1_1_2_el_puente_tomado.webp",enemyIntro:"El primer campamento que seguís después de Richard reúne hombres de tres facciones distintas. Sus armaduras no coinciden, sus juramentos tampoco, pero todos cobran de la misma caja.\n\nTerral abre una de las bolsas capturadas y deja caer las monedas sobre una mesa.\n\n—No están unidos por una causa. Están unidos por un salario.\n\nLa vanguardia tiene una orden sencilla: obligarte a mostrar todas tus tácticas antes de dejarte avanzar.",xp:96,gold:28,cardPack:true,packType:"improved_magic_trap",rewardPackType:"shop_basic",enemyLegendaryCards:["richard_lionheart","mulan","wallace"],enemyFixedDeck:[["mulan",1],["wallace",1],["richard_lionheart",1],["sand_curse_plus",1],["fireball",3],["heal",3],["samurai_katana",3],["saboteador_iga",2],["berserker",2],["spearman",3],["archer",3],["guardian",3],["ulfhednar",3],["geisha_encubierta",1]],aiLevel:6,aiDrawBonus:1,aiHonorBonus:2,aiStyle:"Vanguardia legendaria",desc:"Desarma la vanguardia financiada desde el extranjero y sigue el rastro del dinero."},
@@ -322,42 +322,56 @@ function getStarterChosenSpecialCard(selectedSpecial=""){
   return ADVENTURE_SPECIALS[key]?{...ADVENTURE_SPECIALS[key]}:null;
 }
 
-/* === Starter fijo por Líder · 8CL ==========================================
-   Fuente de verdad: mazos_iniciales_lideres_hallvalla.csv (2026-08-10).
-   Cada especialización comienza con 19 cartas fijas. Antes del Guardián,
-   Hua Lan o William Wallace —la elección del jugador— ocupa la carta #20.
-   No se hacen sustituciones automáticas ni se rellena desde el starter genérico.
+/* === Progresión inicial por clase y Tier · v134 =============================
+   Regla canónica del JUGADOR al comenzar:
+   - Tier 1/2/3/4/5 = 10/15/20/25/30 cartas.
+   - Las 9 Básicas iniciales siguen el tipo del líder + Hua Lan O Wallace elegido.
+   - El equipo debe pertenecer a la clase que lo puede usar.
+   - Esta tabla también da identidad/preferencia a la IA, pero NO le prohíbe mezclar
+     unidades de otras clases: los mazos de IA se normalizan a >=70% unidades.
 ============================================================================ */
-const LEADER_STARTER_FIXED_DECK_KEYS=Object.freeze({
+const LEADER_CLASS_BASIC_PROGRESSION_KEYS=Object.freeze({
   warrior:Object.freeze([
-    "scout","archer","arcane_adept","spearman","spearman","cavalry","berserker",
-    "guardian","guardian","berserker_de_oso","ulfhednar","skipar_del_drakkar","heal",
-    "samurai_katana","shield_wall","fireball","saboteador_iga","marching_greaves","war_visor"
+    "spearman","spearman","guardian","guardian","greek_hoplite","roman_legionary","armored_man_at_arms","samurai_katana","samurai_naginata",
+    "marching_greaves","war_visor","huscarl_anglosajon_hacha","guardia_varega_hacha","gallowglass_irlandes_hacha","caballero_poleaxe",
+    "spearman","guardian","greek_hoplite","samurai_katana","shield_wall",
+    "roman_legionary","armored_man_at_arms","samurai_naginata","heal","inspiration",
+    "huscarl_anglosajon_hacha","guardia_varega_hacha","gallowglass_irlandes_hacha","caballero_poleaxe","smoke_bomb"
   ]),
   archer:Object.freeze([
-    "scout","archer","archer","egyptian_line_archer","egyptian_line_archer","spearman","cavalry",
-    "berserker","guardian","fireball","ulfhednar","roman_legionary","skipar_del_drakkar","bolt",
-    "heal","samurai_katana","saboteador_iga","skirmisher_cloak","retreat_strap"
+    "archer","archer","archer","egyptian_line_archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","samurai_yabusame","scythian_horse_archer",
+    "skirmisher_cloak","retreat_strap","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","samurai_yabusame",
+    "scythian_horse_archer","mongol_explorer","new_kingdom_archer","roman_auxiliary_sagittarius","samurai_yabusame",
+    "scythian_horse_archer","mongol_explorer","bolt","smoke_bomb","warning_rune",
+    "mongol_explorer","fireball","heal","paralysis_spell","poison_spell"
   ]),
   mage:Object.freeze([
-    "scout","archer","arcane_adept","arcane_adept","spearman","cavalry","berserker","guardian",
-    "fireball","fireball","bolt","inspiration","berserker_de_oso","ulfhednar","skipar_del_drakkar",
-    "samurai_katana","saboteador_iga","stabilizing_focus","channeling_amulet"
+    "arcane_adept","arcane_adept","arcane_adept","acolyte_healer","acolyte_healer","fireball","fireball","bolt","stabilizing_focus",
+    "channeling_amulet","acolyte_healer","bolt","blessing","heal","shield_wall",
+    "fireball","bolt","inspiration","smoke_bomb","warning_rune",
+    "heal","shield_wall","inspiration","paralysis_spell","poison_spell",
+    "heal","shield_wall","inspiration","paralysis_spell","poison_spell"
   ]),
   axe:Object.freeze([
-    "scout","archer","arcane_adept","spearman","cavalry","berserker","berserker","guardian",
-    "berserker_de_oso","fireball","bolt","inspiration","ulfhednar","ulfhednar","skipar_del_drakkar",
-    "samurai_katana","saboteador_iga","tanned_hide_harness","counterweighted_grip"
+    "berserker","berserker","berserker_de_oso","berserker_de_oso","ulfhednar","ulfhednar","huscarl_anglosajon_hacha","guardia_varega_hacha","guerrero_franco_hacha",
+    "tanned_hide_harness","counterweighted_grip","berserker","berserker_de_oso","ulfhednar","gallowglass_irlandes_hacha",
+    "huscarl_anglosajon_hacha","guardia_varega_hacha","guerrero_franco_hacha","gallowglass_irlandes_hacha","caballero_poleaxe",
+    "huscarl_anglosajon_hacha","guardia_varega_hacha","guerrero_franco_hacha","gallowglass_irlandes_hacha","caballero_poleaxe",
+    "caballero_poleaxe","fireball","smoke_bomb","inspiration","heal"
   ]),
   cavalry:Object.freeze([
-    "scout","archer","arcane_adept","spearman","cavalry","cavalry","berserker","berserker",
-    "guardian","heal","inspiration","berserker_de_oso","shield_wall","ulfhednar","skipar_del_drakkar",
-    "samurai_katana","saboteador_iga","withdrawal_stirrups","light_barding"
+    "cavalry","cavalry","cavalry","numidian_javelin_rider","numidian_javelin_rider","scythian_horse_archer","scythian_horse_archer","hungarian_hussar","mongol_explorer",
+    "withdrawal_stirrups","light_barding","numidian_javelin_rider","scythian_horse_archer","hungarian_hussar","cossack_rider",
+    "hungarian_hussar","mongol_explorer","cossack_rider","bolt","smoke_bomb",
+    "mongol_explorer","cossack_rider","paralysis_spell","heal","warning_rune",
+    "fireball","shield_wall","inspiration","poison_spell","blessing"
   ]),
   assassin:Object.freeze([
-    "scout","scout","archer","arcane_adept","spearman","spearman","cavalry","berserker","guardian",
-    "fireball","inspiration","geisha_encubierta","samurai_katana","samurai_katana","saboteador_iga",
-    "executioner_mantle","executioner_mantle","rupture_bracers","rupture_bracers"
+    "scout","scout","scout","geisha_encubierta","geisha_encubierta","geisha_encubierta","saboteador_iga","saboteador_iga","saboteador_iga",
+    "executioner_mantle","rupture_bracers","smoke_bomb","smoke_bomb","warning_rune","bolt",
+    "smoke_bomb","warning_rune","bolt","poison_spell","paralysis_spell",
+    "warning_rune","bolt","poison_spell","paralysis_spell","fireball",
+    "poison_spell","paralysis_spell","fireball","heal","inspiration"
   ])
 });
 function getLeaderStarterCardTemplateByKey(key){
@@ -372,10 +386,55 @@ function getLeaderStarterCardTemplateByKey(key){
   }
   return null;
 }
+function isLeaderClassUnitCard(card,leaderType="warrior"){
+  if(!card||String(card.type||"")!=="unit")return false;
+  const type=String(leaderType||"warrior").toLowerCase();
+  const key=String(card.key||"").toLowerCase();
+  if(typeof getUnitLeaderBuffTraits==="function"&&getUnitLeaderBuffTraits(card).includes(type))return true;
+  if(type==="warrior")return typeof isHeavyInfantryUnit==="function"&&isHeavyInfantryUnit(card);
+  if(type==="archer")return (typeof isArcherUnit==="function"&&isArcherUnit(card))||(typeof isArcherWeaponUnitCardLike==="function"&&isArcherWeaponUnitCardLike(card));
+  if(type==="mage")return typeof isMageUnitCardLike==="function"&&isMageUnitCardLike(card);
+  if(type==="axe")return typeof isAxeUnitCardLike==="function"&&isAxeUnitCardLike(card);
+  if(type==="cavalry")return typeof isLightCavalryUnit==="function"&&isLightCavalryUnit(card);
+  if(type==="assassin")return (typeof isAssassinUnit==="function"&&isAssassinUnit(card))||key==="hattori_hanzo"||key==="fuma_kotaro";
+  if(type==="beastmaster")return typeof isBeastUnit==="function"&&isBeastUnit(card);
+  return false;
+}
+function isLeaderClassAlignedDeckCard(card,leaderType="warrior"){
+  if(!card)return false;
+  const type=String(card.type||"");
+  if(type==="unit")return isLeaderClassUnitCard(card,leaderType);
+  if(type==="equipment")return String(card.equipmentLeader||"")===String(leaderType||"");
+  return type==="spell"||type==="trap";
+}
+function getLeaderClassBasicProgressionTemplates(leaderType=getSelectedLeaderType()||"warrior"){
+  const type=LEADER_CLASS_BASIC_PROGRESSION_KEYS[leaderType]?leaderType:"warrior";
+  const out=LEADER_CLASS_BASIC_PROGRESSION_KEYS[type].map(getLeaderStarterCardTemplateByKey).filter(Boolean);
+  if(out.length!==30)console.error(`[HallValla] Progresión Básica ${type}: ${out.length}/30 cartas resueltas.`);
+  return out;
+}
+function getLeaderTierCanonicalDeckTemplates(leaderType=getSelectedLeaderType()||"warrior",targetDeckSize=null){
+  const target=targetDeckSize==null
+    ?(typeof getDeckSizeForLeaderType==="function"?getDeckSizeForLeaderType(leaderType):getCurrentDeckSize())
+    :Math.max(1,Math.min(30,Number(targetDeckSize)||10));
+  const out=[];
+  for(const card of getLeaderClassBasicProgressionTemplates(leaderType)){
+    if(out.length>=target)break;
+    if(!isLeaderClassAlignedDeckCard(card,leaderType)){
+      console.error(`[HallValla] Carta fuera de clase en mazo ${leaderType}: ${card?.key||card?.name||"?"}.`);
+      continue;
+    }
+    const copies=out.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
+    if(copies>=Math.min(3,maxCopiesForCard(card)))continue;
+    out.push({...card});
+  }
+  if(out.length!==target)console.error(`[HallValla] Mazo canónico ${leaderType}: ${out.length}/${target}.`);
+  return out.slice(0,target);
+}
 function getLeaderStarterFixedDeckTemplates(leaderType=getSelectedLeaderType()||"warrior"){
-  const type=LEADER_STARTER_FIXED_DECK_KEYS[leaderType]?leaderType:"warrior";
-  const templates=LEADER_STARTER_FIXED_DECK_KEYS[type].map(getLeaderStarterCardTemplateByKey).filter(Boolean);
-  if(templates.length!==19)console.error(`[HallValla] Starter ${type}: se esperaban 19 cartas fijas y se resolvieron ${templates.length}.`);
+  // Inicio real: exactamente nueve Básicas del arquetipo. El héroe elegido es la #10.
+  const templates=getLeaderClassBasicProgressionTemplates(leaderType).slice(0,9);
+  if(templates.length!==9)console.error(`[HallValla] Starter ${leaderType}: ${templates.length}/9 Básicas.`);
   return templates;
 }
 function getStarterComplementTemplate(selectedSpecial=""){
@@ -393,37 +452,26 @@ function getLegacyDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurr
 }
 function getDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots(),leaderType=getSelectedLeaderType()||"warrior"){
   const target=typeof getDeckSizeForLeaderType==="function"?getDeckSizeForLeaderType(leaderType):getCurrentDeckSize();
-  const deck=getLeaderStarterFixedDeckTemplates(leaderType);
   const special=getStarterChosenSpecialCard(selectedSpecial);
+  const basicTarget=Math.max(0,target-(special?1:0));
+  const deck=getLeaderClassBasicProgressionTemplates(leaderType).slice(0,basicTarget).map(card=>({...card}));
   if(special)deck.push(special);
-
-  // La carta complementaria es ahora una carta normal; no existe zona de Principales.
-  if(deck.length<target){
-    const complement=getStarterComplementTemplate(selectedSpecial);
-    if(complement&&!deck.some(card=>card?.key===complement.key))deck.push(complement);
-  }
-
-  // Fallback temporal hasta definir los mazos canónicos completos de cada líder.
-  // Respeta límites de copias y nunca crea una zona de Principales.
-  if(deck.length<target){
-    const candidates=STARTER_BASIC_DECK_KEYS.map(getStarterBasicCardByKey).filter(Boolean);
-    for(const candidate of candidates){
-      if(deck.length>=target)break;
-      const copies=deck.filter(card=>card?.key===candidate.key).length;
-      if(copies>=maxCopiesForCard(candidate))continue;
-      deck.push({...candidate});
-    }
-  }
+  // Hua Lan/Wallace elegido es el único héroe gratuito del inicio. El complementario
+  // sigue siendo una recompensa de Aventura y ya no se inserta automáticamente.
   return deck.slice(0,target);
 }
-function getAiBasicDeckTemplates(targetDeckSize=DECK_RULES.drawDeckSize){
+function getAiBasicDeckTemplates(targetDeckSize=DECK_RULES.drawDeckSize,leaderType=""){
   const target=Math.max(1,Math.min(DECK_RULES.maxDeckSize,Number(targetDeckSize)||DECK_RULES.drawDeckSize));
+  if(leaderType&&LEADER_CLASS_BASIC_PROGRESSION_KEYS[leaderType])return getLeaderTierCanonicalDeckTemplates(leaderType,target);
   const base=getStarterBasicDeckTemplates(Math.max(target,DECK_RULES.drawDeckSize));
   const deck=[...base];
   let i=0;
   while(deck.length<target&&base.length){
-    deck.push({...base[i%base.length]});
+    const card=base[i%base.length];
+    const copies=deck.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
+    if(copies<Math.min(3,maxCopiesForCard(card)))deck.push({...card});
     i++;
+    if(i>base.length*4)break;
   }
   return deck.slice(0,target);
 }

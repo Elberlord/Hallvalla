@@ -1,0 +1,1 @@
+20260915.134 · IA por Tier 10/15/20/25/30 · mínimo 70% unidades y mezcla libre de clases para IA · starter jugador 9 Básicas del tipo del líder + Hua Lan o Wallace elegido · mantiene v132 IA de MANÁ y robo PvP

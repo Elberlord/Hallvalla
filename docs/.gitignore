@@ -1,0 +1,26 @@
+# HallValla signing secrets — NEVER commit
+*.p12
+*.jks
+*.keystore
+*.pem
+*.key
+SIGNING_INFO.txt
+signing.properties
+keystore.properties
+local.properties
+
+# Build outputs
+dist/
+**/build/
+.gradle/
+.idea/
+*.iml
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Temporary archives/logs
+*.tmp
+*.log

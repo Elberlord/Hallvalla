@@ -1,0 +1,9 @@
+HallValla v134 · IA mixta por Tier con mínimo 70% unidades
+
+- Conserva tamaños por Tier: 10/15/20/25/30.
+- Los mazos iniciales del jugador siguen siendo 9 Básicas del tipo del líder + héroe elegido.
+- La IA PvE y los bots PvP ya NO están bloqueados a unidades de la clase del líder.
+- El tipo de líder sigue dando preferencia/identidad táctica, pero puede mezclar arqueras, guerreros, caballería, etc.
+- Todo mazo de IA debe tener al menos 70% de cartas de unidad, incluso Hechicero.
+- Equipo sigue requiriendo compatibilidad con el líder.
+- Rarezas, caps de campaña, bestias y excepciones narrativas se conservan.

@@ -1,0 +1,9 @@
+{
+  "platform": "android",
+  "applicationId": "com.hallvalla.game",
+  "versionCode": 131,
+  "versionName": "1.0.131",
+  "file": "HallValla-Android.apk",
+  "sha256": "93a4e9cc61f8605ede4a46172680e1c2b6808e0352c5621581527d9dadbe7311",
+  "publicPath": "downloads/HallValla-Android.apk"
+}

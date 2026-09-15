@@ -1,0 +1,57 @@
+name: Publish HallValla Web + Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'releases/android/**'
+      - '.github/workflows/publish-hallvalla-public.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: hallvalla-public-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private source
+        uses: actions/checkout@v6
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build public distribution only
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/downloads
+          cp -a web/. dist/
+          cp releases/android/HallValla-Android-v131.apk dist/downloads/HallValla-Android.apk
+          cp releases/android/latest.json dist/downloads/latest.json
+          cp releases/android/SHA256SUMS.txt dist/downloads/SHA256SUMS.txt
+          printf '%s\n' 'Private source repository. Public artifact contains only the HallValla web runtime and stable Android APK.' > dist/DEPLOYMENT_INFO.txt
+
+      - name: Upload public Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy public HallValla
+        id: deployment
+        uses: actions/deploy-pages@v4

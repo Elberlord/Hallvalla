@@ -1,0 +1,52 @@
+HallValla v133 · Mazos por Tier y clase
+Fecha: 2026-09-15
+
+OBJETIVO
+- Rehacer los mazos de IA para que escalen realmente con el Tier del líder.
+- Evitar que la IA mezcle unidades de especializaciones ajenas.
+- Corregir el mazo inicial del jugador: 9 cartas Básicas del arquetipo + el héroe elegido al comenzar (Hua Lan o William Wallace).
+
+CAPACIDAD CANÓNICA
+- Tier 1: 10 cartas
+- Tier 2: 15 cartas
+- Tier 3: 20 cartas
+- Tier 4: 25 cartas
+- Tier 5: 30 cartas
+
+REGLA DE IDENTIDAD
+- Unidades: deben pertenecer al mismo arquetipo del líder.
+- Equipo: debe pertenecer al mismo arquetipo del líder.
+- Hechizos y trampas: son soporte neutral y pueden completar el mazo sin introducir unidades de otra clase.
+- Básicas: máximo 3 copias por carta.
+- Rarezas superiores: siguen sujetas a sus límites y al cap de campaña/liga existente.
+
+INICIO DEL JUGADOR
+- Se conservan los seis líderes iniciales.
+- Al crear la partida, el jugador elige Hua Lan o William Wallace.
+- El starter Tier 1 contiene exactamente 9 Básicas del tipo del líder + ese héroe elegido = 10.
+- El héroe NO elegido ya no se inserta automáticamente en el starter.
+- La recompensa existente del Guardián para obtener el complemento se conserva.
+
+STARTER 9 BÁSICAS
+Guerrero: Lancero solar x2, Guardián de piedra x2, Hoplita griego, Legionario romano, Hombre de armas acorazado, Samurai de Katana, Samurai de Naginata.
+Arquero: Arquera del desierto x3, Arquero egipcio de línea x2, Arquero del Imperio Nuevo, Arquero auxiliar romano, Samurai Yabusame, Arquero a caballo escita.
+Hechicero: Adepto Arcano x3, Acólita sanadora x2, Bola de fuego x2, Maldición de arena, Foco Estabilizador.
+Hacha: Berserker del norte x2, Berserker de Oso x2, Ulfhednar x2, Húscarl anglosajón, Guardia varega, Guerrero franco de hacha.
+Caballería: Caballería ligera x3, Jinete númida x2, Arquero a caballo escita x2, Húsar húngaro, Explorador mongol.
+Asesino: Asesina del desierto x3, Geisha Encubierta x3, Saboteador de Iga x3.
+
+IA PVE
+- Cada clase tiene una progresión Básica acumulativa de 30 slots.
+- El constructor toma exactamente 10/15/20/25/30 slots según el Tier actual del líder enemigo.
+- El sistema adaptativo solo puede sustituir por unidades compatibles con la clase y equipo de esa clase.
+- Los hechizos/trampas siguen disponibles como respuestas tácticas neutrales.
+- El Guardián hechicero ya no usa Guardián/Lancero; su mazo Tier 1 es arcano y fuerza Adepto Arcano en la mano tutorial.
+- Los cinco encuentros del Mapa 1 fueron rehechos para respetar su líder.
+- La vieja doctrina de Caballería que forzaba Guardianes/Hoplitas/Samuráis deja de controlar la composición del mazo.
+
+BOTS PVP
+- El catálogo del bot filtra también por clase: no puede seleccionar unidades de otra especialización ni equipo ajeno.
+- Si necesita completar slots, usa la progresión canónica de su clase y Tier.
+
+HERENCIA
+- Conserva v132: captura de orbe PvE al 1 s, prioridad de presencia, robo de MANÁ PvP tras 4 s y sincronización resource:* online.

@@ -1,0 +1,12 @@
+HallValla v135 — repository/public-distribution infrastructure
+
+Base gameplay: v134 AI mixed decks with >=70% units.
+No gameplay logic or balance changed in v135.
+
+Infrastructure changes:
+- Private source repository layout.
+- Public GitHub Pages workflow publishes only browser runtime + stable APK.
+- Stable v131 signed APK exposed as downloads/HallValla-Android.apk.
+- Browser Home gains a small Android download button.
+- Android app context (?apk=131) hides the download button.
+- Android source, Firebase Functions/rules, internal docs and signing secrets stay outside the public Pages artifact.

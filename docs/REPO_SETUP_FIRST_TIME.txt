@@ -1,0 +1,59 @@
+HALLVALLA — FIRST-TIME PRIVATE REPOSITORY SETUP
+================================================
+
+1. Make a backup of the current repository first.
+
+2. Extract this ZIP.
+
+3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v135
+   into the ROOT of your HallValla repository.
+   - Keep the hidden folder .github
+   - Keep .gitignore and .gitattributes
+   - If working from a local clone, DO NOT delete the hidden .git folder.
+
+4. Recommended clean-up:
+   Old game copies can be removed from the repository root after confirming
+   that `web/` contains the current game. The publishing workflow ignores old
+   root folders, but deleting obsolete copies keeps the private repo clean.
+
+5. Commit and push to the `main` branch.
+
+6. Make the repository PRIVATE.
+
+7. GitHub -> repository Settings -> Pages:
+   Set the publishing source to GitHub Actions.
+
+8. Open Actions -> "Publish HallValla Web + Android APK" -> Run workflow.
+   Future pushes that change `web/` or `releases/android/` will publish again.
+
+9. Public output:
+   - The browser game is the root of the Pages site.
+   - APK: <YOUR-PAGES-URL>/downloads/HallValla-Android.apk
+   - The browser Home contains a "Descargar app Android" button.
+   - Inside the installed APK the download button hides itself because the app
+     opens the game with `?apk=131`.
+
+IMPORTANT ABOUT THE EXISTING APK
+--------------------------------
+The current v131 APK opens:
+https://elberlord.github.io/Hallvalla/?apk=131
+
+Keep that public address working if you want the already-installed APK to keep
+loading the same site without rebuilding it. If the public game URL changes,
+we must rebuild a v132+ Android APK with the new HOME_URL and sign it with the
+SAME permanent HallValla signing key.
+
+IMPORTANT ABOUT PRIVATE GITHUB PAGES
+------------------------------------
+GitHub Pages from a private repository requires a GitHub plan that supports
+private-repository Pages (for personal accounts this is GitHub Pro or a higher
+eligible plan). If your account does not support that, do not make the live
+Pages repository private until we switch the deployment to a separate public
+mirror or another public host.
+
+DO NOT UPLOAD TO GITHUB
+-----------------------
+- hallvalla-release.p12
+- any .jks / .keystore
+- SIGNING_INFO.txt
+- passwords or signing.properties / keystore.properties

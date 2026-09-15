@@ -833,6 +833,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const type=String(card.type||"");
     if(!["unit","spell","trap","equipment"].includes(type))return false;
     if(pvpBotRarityRank(card)>Number(policy?.maxRarity||0))return false;
+    // v134: las unidades pueden ser de cualquier clase. El líder sólo sesga la puntuación
+    // táctica; el equipo sí debe seguir siendo compatible con su líder.
     if(type==="equipment"){
       try{ if(typeof isEquipmentCardAllowedForLeader==="function"&&!isEquipmentCardAllowedForLeader(card,leaderType))return false; }catch(_){ }
     }
@@ -913,10 +915,39 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
     if(selected.length<targetDeckSize){
       const fallback=[];
-      try{ fallback.push(...getLeaderStarterFixedDeckTemplates(profile.leaderType)); }catch(_){ }
+      try{
+        if(typeof getLeaderTierCanonicalDeckTemplates==="function")fallback.push(...getLeaderTierCanonicalDeckTemplates(profile.leaderType,targetDeckSize));
+        else fallback.push(...getLeaderStarterFixedDeckTemplates(profile.leaderType));
+      }catch(_){ }
       for(const card of fallback){if(selected.length>=targetDeckSize)break;add(card);}
     }
     if(selected.length!==targetDeckSize)throw new Error(`Bot ${profile.id}: mazo incompleto ${selected.length}/${targetDeckSize}.`);
+    // v134: la IA nunca baja del 70% de unidades, independientemente del líder.
+    const minUnitCards=Math.ceil(targetDeckSize*.70);
+    let unitCards=selected.filter(card=>card?.type==="unit").length;
+    if(unitCards<minUnitCards){
+      const unitCandidates=scored.filter(entry=>entry.card?.type==="unit")
+        .sort((a,b)=>(a.rank-b.rank)||(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
+      while(unitCards<minUnitCards){
+        const removable=selected.map((card,index)=>({card,index,score:pvpBotStyleScore(card,profile)}))
+          .filter(entry=>entry.card?.type!=="unit")
+          .sort((a,b)=>a.score-b.score||b.index-a.index)[0];
+        if(!removable)break;
+        const candidate=unitCandidates.find(entry=>{
+          const key=String(entry.card?.key||"");
+          return (counts.get(key)||0)<pvpBotCardCopies(entry.card);
+        });
+        if(!candidate)break;
+        const oldKey=String(removable.card?.key||"");
+        const oldCount=Math.max(0,(counts.get(oldKey)||0)-1);
+        if(oldCount)counts.set(oldKey,oldCount);else counts.delete(oldKey);
+        selected[removable.index]=candidate.card;
+        const newKey=String(candidate.card.key||"");
+        counts.set(newKey,(counts.get(newKey)||0)+1);
+        unitCards++;
+      }
+    }
+    if(unitCards<minUnitCards)throw new Error(`Bot ${profile.id}: sólo ${unitCards}/${targetDeckSize} unidades; mínimo ${minUnitCards}.`);
     const principalKeys=[];
     const keyCounts=[];
     for(const [key,count] of counts.entries())keyCounts.push([key,count]);
